@@ -121,18 +121,33 @@ def init_figure_and_elements():
     # Subplots for joint angles and torques of both legs
     ax2 = fig.add_subplot(grid_spec[2, 0])
     ax2.set_title("Joint Angles (Normal Leg)")
+    ax2_data = [ax2.plot([], [], 'r-', label='Hip Angle')[0], 
+                ax2.plot([], [], 'g-', label='Knee Angle')[0], 
+                ax2.plot([], [], 'b-', label='Ankle Angle')[0]]
     
     ax3 = fig.add_subplot(grid_spec[2, 1])
     ax3.set_title("Joint Angles (Contralateral Leg)")
+    ax3_data = [ax3.plot([], [], 'r--', label='Hip Angle (C)')[0],
+                ax3.plot([], [], 'g--', label='Knee Angle (C)')[0],
+                ax3.plot([], [], 'b--', label='Ankle Angle (C)')[0]]
+
 
     ax4 = fig.add_subplot(grid_spec[0, 2])
     ax4.set_title("Joint Torques (Normal Leg)")
+    ax4_data = [ax4.plot([], [], 'r-', label='Hip Torque')[0],
+                ax4.plot([], [], 'g-', label='Knee Torque')[0],
+                ax4.plot([], [], 'b-', label='Ankle Torque')[0]]
     
     ax5 = fig.add_subplot(grid_spec[1, 2])
     ax5.set_title("Joint Torques (Contralateral Leg)")
+    ax5_data = [ax5.plot([], [], 'r--', label='Hip Torque (C)')[0],
+                ax5.plot([], [], 'g--', label='Knee Torque (C)')[0],
+                ax5.plot([], [], 'b--', label='Ankle Torque (C)')[0]]
 
     ax6 = fig.add_subplot(grid_spec[2, 2])
     ax6.set_title("Global Foot Angle (Normal Leg)")
+    ax6_data = [ax6.plot([], [], 'b-', label='Foot Angle')[0],
+                ax6.plot([], [], 'b--', label='Foot Angle (C)')[0]]
 
     # Initialize lines for stick figure animation
     lines = {
@@ -155,12 +170,16 @@ def init_figure_and_elements():
         'ankle_torque_c': ax1.scatter([], [], s=50, marker='o', color='yellow')
       }
 
-    return fig, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers
+    return fig, ax1, (ax2,ax2_data), (ax3,ax3_data), (ax4,ax4_data), \
+           (ax5,ax5_data), (ax6,ax6_data), lines, torque_markers
 
 def animate(i, df, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers):
     """
     Update the animation for both the normal and contralateral legs and the plots for joint angles and torques.
     """
+    # Print in the same line the current iteration
+    print(f"\rProcessing frame {i+1}/{len(df)}", end='')
+
     #Set the torso position to be vertical 
     lines['torso'].set_data([0, 0], [0, segment_lengths['torso']])
 
@@ -207,46 +226,49 @@ def animate(i, df, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers):
     lines['knee_ankle_c'].set_data([knee_pos_c[0], ankle_pos_c[0]], [knee_pos_c[1], ankle_pos_c[1]])
     lines['ankle_foot_c'].set_data([ankle_pos_c[0], foot_pos_c[0]], [ankle_pos_c[1], foot_pos_c[1]])
 
-    # Update joint angles plot for the normal leg
+    # Set the x-axis limits for the joint angles and torques plots
     start_idx = max(0, i - 150)
     end_idx = i + 1
-    ax2.clear()
-    ax2.plot(df.loc[start_idx:end_idx, 'hip_angle'], label='Hip Angle', color='red')
-    ax2.plot(df.loc[start_idx:end_idx, 'knee_angle'], label='Knee Angle', color='green')
-    ax2.plot(df.loc[start_idx:end_idx, 'ankle_angle'], label='Ankle Angle', color='blue')
-    ax2.legend(loc='upper right')
-    ax2.set_title("Joint Angles (Normal Leg)")
+    x_axis = np.arange(start_idx, end_idx+1)
+
+    # Update joint angles plot for the normal leg
+    ax2, ax2_data = ax2
+    ax2_data[0].set_data(x_axis,df.loc[start_idx:end_idx, 'hip_angle'])
+    ax2_data[1].set_data(x_axis, df.loc[start_idx:end_idx, 'knee_angle'])
+    ax2_data[2].set_data(x_axis, df.loc[start_idx:end_idx, 'ankle_angle'])
+    ax2.set_ylim(-180, 180)
+    ax2.set_xlim(start_idx, end_idx)
 
     # Update joint angles plot for the contralateral leg
-    ax3.clear()
-    ax3.plot(df.loc[start_idx:end_idx, 'hip_angle_c'], label='Hip Angle (C)', color='red', linestyle='--')
-    ax3.plot(df.loc[start_idx:end_idx, 'knee_angle_c'], label='Knee Angle (C)', color='green', linestyle='--')
-    ax3.plot(df.loc[start_idx:end_idx, 'ankle_angle_c'], label='Ankle Angle (C)', color='blue', linestyle='--')
-    ax3.legend(loc='upper right')
-    ax3.set_title("Joint Angles (Contralateral Leg)")
+    ax3, ax3_data = ax3
+    ax3_data[0].set_data(x_axis, df.loc[start_idx:end_idx, 'hip_angle_c'])
+    ax3_data[1].set_data(x_axis, df.loc[start_idx:end_idx, 'knee_angle_c'])
+    ax3_data[2].set_data(x_axis, df.loc[start_idx:end_idx, 'ankle_angle_c'])
+    ax3.set_ylim(-180, 180)
+    ax3.set_xlim(start_idx, end_idx)
 
     # Update joint torques plot for the normal leg
-    ax4.clear()
-    ax4.plot(df.loc[start_idx:end_idx, 'hip_torque'], label='Hip Torque', color='red')
-    ax4.plot(df.loc[start_idx:end_idx, 'knee_torque'], label='Knee Torque', color='green')
-    ax4.plot(df.loc[start_idx:end_idx, 'ankle_torque'], label='Ankle Torque', color='blue')
-    ax4.legend(loc='upper right')
-    ax4.set_title("Joint Torques (Normal Leg)")
+    ax4, ax4_data = ax4
+    ax4_data[0].set_data(x_axis, df.loc[start_idx:end_idx, 'hip_torque'])
+    ax4_data[1].set_data(x_axis, df.loc[start_idx:end_idx, 'knee_torque'])
+    ax4_data[2].set_data(x_axis, df.loc[start_idx:end_idx, 'ankle_torque'])
+    ax4.set_ylim(-180, 180)
+    ax4.set_xlim(start_idx, end_idx)
 
     # Update joint torques plot for the contralateral leg
-    ax5.clear()
-    ax5.plot(df.loc[start_idx:end_idx, 'hip_torque_c'], label='Hip Torque (C)', color='red', linestyle='--')
-    ax5.plot(df.loc[start_idx:end_idx, 'knee_torque_c'], label='Knee Torque (C)', color='green', linestyle='--')
-    ax5.plot(df.loc[start_idx:end_idx, 'ankle_torque_c'], label='Ankle Torque (C)', color='blue', linestyle='--')
-    ax5.legend(loc='upper right')
-    ax5.set_title("Joint Torques (Contralateral Leg)")
+    ax5, ax5_data = ax5
+    ax5_data[0].set_data(x_axis, df.loc[start_idx:end_idx, 'hip_torque_c'])
+    ax5_data[1].set_data(x_axis, df.loc[start_idx:end_idx, 'knee_torque_c'])
+    ax5_data[2].set_data(x_axis, df.loc[start_idx:end_idx, 'ankle_torque_c'])
+    ax5.set_ylim(-180, 180)
+    ax5.set_xlim(start_idx, end_idx)
 
     # Update global foot angle plot for the normal and contralateral leg
-    ax6.clear()
-    ax6.plot(df.loc[start_idx:end_idx, 'foot_angle'], label='Foot Angle', color='blue')
-    ax6.plot(df.loc[start_idx:end_idx, 'foot_angle_c'], label='Foot Angle (C)', color='blue', linestyle='--')
-    ax6.legend(loc='upper right')
-    ax6.set_title("Global Foot Angle (Normal Leg)")
+    ax6, ax6_data = ax6
+    ax6_data[0].set_data(x_axis, df.loc[start_idx:end_idx, 'foot_angle'])
+    ax6_data[1].set_data(x_axis, df.loc[start_idx:end_idx, 'foot_angle_c'])
+    ax6.set_ylim(-180, 180)
+    ax6.set_xlim(start_idx, end_idx)
 
     # Update torque markers positions
     torque_markers['hip_torque'].set_offsets([hip_pos])
