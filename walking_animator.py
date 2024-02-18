@@ -9,7 +9,50 @@ from matplotlib.patches import Arc, FancyArrowPatch
 
 # Assuming the DataFrame is already loaded and named `df`
 # df = pd.read_csv("path_to_your_dataset.csv")
-df = pd.read_parquet("all_datasets_c.parquet")
+# df = pd.read_parquet("all_datasets_c.parquet")
+
+# The features that are used in the Georgia Tech non cyclic data
+dataset_features = [
+    
+
+    'hip_flexion_l','hip_flexion_l_moment',
+    'knee_angle_l', 'ankle_angle_l', 'foot_angle_l', 
+    'knee_velocity_l', 'ankle_velocity_l', 'foot_velocity_l', 
+    'knee_angle_l_moment', 'ankle_angle_l_moment', 
+
+    'hip_flexion_r','hip_flexion_r_moment',
+    'knee_angle_r', 'ankle_angle_r', 'foot_angle_r',
+    'knee_velocity_r', 'ankle_velocity_r', 'foot_velocity_r',
+    'knee_angle_r_moment', 'ankle_angle_r_moment',
+    
+    'activity', 'subject', 'time'
+]
+
+# Load the data
+print("Loading Georgia Tech non cyclic data")
+df = pd.read_parquet('../energy_shaping_ML/datasets/gtech_non_cyclic_raw.parquet',
+                                          columns=dataset_features)
+
+# Convert to the standardized naming
+df.columns = [
+    'hip_angle', 'hip_torque',
+    'knee_angle', 'ankle_angle', 'foot_angle',
+    'knee_velocity', 'ankle_velocity', 'foot_velocity', 
+    'knee_torque', 'ankle_torque', 
+
+    'hip_angle_c','hip_torque_c',
+    'knee_angle_c', 'ankle_angle_c', 'foot_angle_c',
+    'knee_velocity_c', 'ankle_velocity_c', 'foot_velocity_c',
+    'knee_torque_c', 'ankle_torque_c',
+    
+    'task', 'subject_name', 'time'
+]
+
+# Flip everything but task, subject_name, and time
+for feature in df.columns:
+    if feature not in ['task', 'subject_name', 'time']:
+        df[feature] = -df[feature]
+
 
 # Filter for the subjects and level-ground tasks
 # Print tasks and subjects
@@ -19,8 +62,8 @@ pivot_table = df.pivot_table(index='subject_name',
                                                 fill_value=0)
 print(df.columns)
 print(pivot_table//150)
-task = "Level-ground"
-subject = "r01-AB06"
+task = "normal_walk"
+subject = "Gtech_NC_AB01"
 df = df[(df['task'] == task) & (df['subject_name'] == subject)]
 print('Length of the filtered dataset:', len(df))
 df = df.reset_index(drop=True)
@@ -88,6 +131,9 @@ def init_figure_and_elements():
     ax5 = fig.add_subplot(grid_spec[1, 2])
     ax5.set_title("Joint Torques (Contralateral Leg)")
 
+    ax6 = fig.add_subplot(grid_spec[2, 2])
+    ax6.set_title("Global Foot Angle (Normal Leg)")
+
     # Initialize lines for stick figure animation
     lines = {
         'torso': ax1.plot([], [], 'k-')[0],
@@ -109,9 +155,9 @@ def init_figure_and_elements():
         'ankle_torque_c': ax1.scatter([], [], s=50, marker='o', color='yellow')
       }
 
-    return fig, ax1, ax2, ax3, ax4, ax5, lines, torque_markers
+    return fig, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers
 
-def animate(i, df, ax1, ax2, ax3, ax4, ax5, lines, torque_markers):
+def animate(i, df, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers):
     """
     Update the animation for both the normal and contralateral legs and the plots for joint angles and torques.
     """
@@ -195,6 +241,13 @@ def animate(i, df, ax1, ax2, ax3, ax4, ax5, lines, torque_markers):
     ax5.legend(loc='upper right')
     ax5.set_title("Joint Torques (Contralateral Leg)")
 
+    # Update global foot angle plot for the normal and contralateral leg
+    ax6.clear()
+    ax6.plot(df.loc[start_idx:end_idx, 'foot_angle'], label='Foot Angle', color='blue')
+    ax6.plot(df.loc[start_idx:end_idx, 'foot_angle_c'], label='Foot Angle (C)', color='blue', linestyle='--')
+    ax6.legend(loc='upper right')
+    ax6.set_title("Global Foot Angle (Normal Leg)")
+
     # Update torque markers positions
     torque_markers['hip_torque'].set_offsets([hip_pos])
     torque_markers['knee_torque'].set_offsets([knee_pos])
@@ -213,7 +266,8 @@ def animate(i, df, ax1, ax2, ax3, ax4, ax5, lines, torque_markers):
                       for t in torque_labels}
     markers_colors = {t:'purple' if df.loc[i,t] >= 0 else 'orange' 
                       for t in torque_labels}
-    marker_opacity = {t:abs(df.loc[i,t])/max_torque for t in torque_labels}
+    marker_opacity = {t:np.nan_to_num(abs(df.loc[i,t])/max_torque)  
+                      for t in torque_labels}
     for label in torque_labels:
         torque_markers[label].set_paths([markers_styles[label].get_path()])
         torque_markers[label].set_color(markers_colors[label])
@@ -224,9 +278,9 @@ def setup_animation(df):
     """
     Setup and start the animation with the adjusted layout and data.
     """
-    fig, ax1, ax2, ax3, ax4, ax5, lines, torque_markers = init_figure_and_elements()
-    anim = FuncAnimation(fig, animate, frames=len(df), interval=100,
-                         fargs=(df, ax1, ax2, ax3, ax4, ax5, lines, torque_markers))
+    fig, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers = init_figure_and_elements()
+    anim = FuncAnimation(fig, animate, frames=len(df), interval=1,
+                         fargs=(df, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers))
     plt.show()
     # Optionally, save the animation
     # anim.save('animation.gif', writer='imagemagick', fps=10)
