@@ -9,7 +9,7 @@ from matplotlib.patches import Arc, FancyArrowPatch
 
 # Assuming the DataFrame is already loaded and named `df`
 # df = pd.read_csv("path_to_your_dataset.csv")
-df = pd.read_parquet("all_datasets.parquet")
+df = pd.read_parquet("all_datasets_c.parquet")
 
 # Filter for the subjects and level-ground tasks
 # Print tasks and subjects
@@ -17,8 +17,11 @@ pivot_table = df.pivot_table(index='subject_name',
                                                 columns='task', 
                                                 aggfunc='size', 
                                                 fill_value=0)
+print(df.columns)
 print(pivot_table//150)
-df = df[(df['task'] == 'Up Stair') & (df['subject_name'] == 'gtech-AB06')]
+task = "Level-ground"
+subject = "r01-AB06"
+df = df[(df['task'] == task) & (df['subject_name'] == subject)]
 print('Length of the filtered dataset:', len(df))
 df = df.reset_index(drop=True)
 
@@ -33,16 +36,19 @@ df = df.reset_index(drop=True)
 #     'ankle_torque': np.cos(np.linspace(0, 10, 300)) * 20,
 # })
 
-# Define segment lengths
-segment_lengths = {'thigh': 1, 'shank': 1, 'foot': 0.5}
+# Define segment lengths (same for both legs)
+segment_lengths = {'thigh': 1, 'shank': 1, 'foot': 0.5, 'torso': 2}
+torque_labels = ['hip_torque', 'knee_torque', 'ankle_torque',
+                 'hip_torque_c', 'knee_torque_c', 'ankle_torque_c']
 
 def calculate_joint_positions(hip_angle, knee_angle, ankle_angle):
     """
     Calculate the positions of the hip, knee, ankle, and foot based on the given angles.
+    Adjust angles to match the animation coordinate system.
     """
-    hip_angle_rad = -np.radians(hip_angle) # Negative to match the animation coordinate system
+    hip_angle_rad = -np.radians(hip_angle)
     knee_angle_rad = np.radians(knee_angle)
-    ankle_angle_rad = -np.radians(ankle_angle) - np.pi / 2 # Adjust for the foot segment
+    ankle_angle_rad = -np.radians(ankle_angle) - np.pi / 2
 
     hip_position = np.array([0, 0])
     knee_position = hip_position + np.array([segment_lengths['thigh'] * np.sin(hip_angle_rad),
@@ -53,152 +59,177 @@ def calculate_joint_positions(hip_angle, knee_angle, ankle_angle):
     total_ankle_angle_rad = total_knee_angle_rad + ankle_angle_rad
     foot_position = ankle_position + np.array([segment_lengths['foot'] * np.sin(total_ankle_angle_rad),
                                                -segment_lengths['foot'] * np.cos(total_ankle_angle_rad)])
-
     return hip_position, knee_position, ankle_position, foot_position
 
 def init_figure_and_elements():
     """
-    Initialize the figure with one large subplot for the stick figure animation
-    and two smaller subplots for joint angles and torques on the side.
+    Initialize the figure with a layout for five subplots.
     """
-    fig = plt.figure(figsize=(14, 8))
+    fig = plt.figure(figsize=(18, 10))
+    grid_spec = fig.add_gridspec(3, 3)
 
-    # Main animation subplot: 2 row, 1 columns, first position
-    ax1 = fig.add_subplot(2, 2, (1, 3))
-    ax1.set_xlim(-2, 2)
+    # Main stick figure animation subplot
+    ax1 = fig.add_subplot(grid_spec[0:2, 0:2])
+    ax1.set_xlim(-3, 3)
     ax1.set_ylim(-3, 1)
+    ax1.set_aspect('equal')
+    ax1.set_title(f"Joint Kinematics for {subject} doing {task}")
 
-    # Joint angles subplot: 2 rows, 2 columns, second position
-    ax2 = fig.add_subplot(2, 2, 2)
-    ax2.set_xlim(0, 150)
-    ax2.set_ylim(-90, 90)
-    ax2.set_title("Joint Angles Over Last 150 Frames")
-
-    # Joint torques subplot: 2 rows, 2 columns, fourth position
-    ax3 = fig.add_subplot(2, 2, 4)
-    ax3.set_xlim(0, 150)
-    # Adjust these limits based on your torque data range
-    ax3.set_ylim(-3, 3)
-    ax3.set_title("Joint Torques Over Last 150 Frames")
+    # Subplots for joint angles and torques of both legs
+    ax2 = fig.add_subplot(grid_spec[2, 0])
+    ax2.set_title("Joint Angles (Normal Leg)")
     
-    # Initialize lines for stick figure
-    lines = {'hip_knee': ax1.plot([], [], 'ro-')[0],
-             'knee_ankle': ax1.plot([], [], 'go-')[0],
-             'ankle_foot': ax1.plot([], [], 'bo-')[0]}
+    ax3 = fig.add_subplot(grid_spec[2, 1])
+    ax3.set_title("Joint Angles (Contralateral Leg)")
+
+    ax4 = fig.add_subplot(grid_spec[0, 2])
+    ax4.set_title("Joint Torques (Normal Leg)")
     
-    # Initialize torque indicators (arcs and arrows)
-    torque_indicators = {'hip': Arc((0, 0), 0.5, 0.5, theta1=0, theta2=270, color='red', visible=False),
-                         'knee': Arc((0, 0), 0.5, 0.5, theta1=0, theta2=270, color='red', visible=False),
-                         'ankle': Arc((0, 0), 0.5, 0.5, theta1=0, theta2=270, color='red', visible=False),
-                         'hip_arrow': FancyArrowPatch((0, 0), (0, 0), color='red', visible=False, mutation_scale=10),
-                         'knee_arrow': FancyArrowPatch((0, 0), (0, 0), color='red', visible=False, mutation_scale=10),
-                         'ankle_arrow': FancyArrowPatch((0, 0), (0, 0), color='red', visible=False, mutation_scale=10)}
-    
-    for key in torque_indicators:
-        ax1.add_patch(torque_indicators[key])
+    ax5 = fig.add_subplot(grid_spec[1, 2])
+    ax5.set_title("Joint Torques (Contralateral Leg)")
 
-    return fig, ax1, ax2, ax3, lines, torque_indicators
+    # Initialize lines for stick figure animation
+    lines = {
+        'torso': ax1.plot([], [], 'k-')[0],
+        'hip_knee': ax1.plot([], [], 'ro-')[0],
+        'knee_ankle': ax1.plot([], [], 'go-')[0],
+        'ankle_foot': ax1.plot([], [], 'bo-')[0],
+        'hip_knee_c': ax1.plot([], [], 'r.--')[0],  # Dotted lines for contralateral leg
+        'knee_ankle_c': ax1.plot([], [], 'g.--')[0],
+        'ankle_foot_c': ax1.plot([], [], 'b.--')[0]
+    }
 
+    # Initialize torque indicators for both legs if needed
+    torque_markers = {
+        'hip_torque': ax1.scatter([], [], s=50, marker='o', color='yellow'),  
+        'knee_torque': ax1.scatter([], [], s=50, marker='o', color='yellow'),
+        'ankle_torque': ax1.scatter([], [], s=50, marker='o', color='yellow'),
+        'hip_torque_c': ax1.scatter([], [], s=50, marker='o', color='yellow'),
+        'knee_torque_c': ax1.scatter([], [], s=50, marker='o', color='yellow'),
+        'ankle_torque_c': ax1.scatter([], [], s=50, marker='o', color='yellow')
+      }
 
-def update_torque_indicator(joint_pos, torque, torque_indicator):
+    return fig, ax1, ax2, ax3, ax4, ax5, lines, torque_markers
+
+def animate(i, df, ax1, ax2, ax3, ax4, ax5, lines, torque_markers):
     """
-    Update the properties of the torque indicator for a joint based on torque magnitude and direction.
-
-    Parameters:
-    - joint_pos: The (x, y) position of the joint around which to display the torque indicator.
-    - torque_magnitude: The magnitude of the torque at the joint.
-    - torque_direction: The direction of the torque (positive or negative).
-    - torque_indicator: A dictionary containing the 'arc' and 'arrow' matplotlib objects for the joint.
+    Update the animation for both the normal and contralateral legs and the plots for joint angles and torques.
     """
-    # Set the visibility of the torque indicators
-    torque_indicator['arc'].set_visible(True)
-    torque_indicator['arrow'].set_visible(True)
+    #Set the torso position to be vertical 
+    lines['torso'].set_data([0, 0], [0, segment_lengths['torso']])
 
-    # Set the position and size of the arc
-    torque_indicator['arc'].center = joint_pos
-    torque_indicator['arc'].width = 0.4  # Adjust as necessary
-    torque_indicator['arc'].height = 0.4  # Adjust as necessary
-
-    # Set the color based on the direction of the torque
-    color = 'green' if np.sign(torque) >= 0 else 'red'
-    torque_indicator['arc'].set_edgecolor(color)
-
-    # Set the opacity based on the magnitude of the torque (normalize based on expected range)
-    max_torque = 2.0  # Example maximum expected torque, adjust based on your data
-    alpha = abs(torque) / max_torque
-    alpha = min(max(alpha, 0.1), 1.0)  # Ensure alpha is between 0.1 and 1.0
-    if np.isnan(alpha):
-        alpha = 0.1
-    torque_indicator['arc'].set_alpha(alpha)
-
-    # Update the arrow position and orientation
-    arrow_start = joint_pos
-    if np.sign(torque) >= 0:
-        arrow_end = (joint_pos[0] + 0.2 * np.sin(np.radians(45)), joint_pos[1] + 0.2 * np.cos(np.radians(45)))
-    else:
-        arrow_end = (joint_pos[0] - 0.2 * np.sin(np.radians(45)), joint_pos[1] - 0.2 * np.cos(np.radians(45)))
-    torque_indicator['arrow'].set_positions(arrow_start, arrow_end)
-    torque_indicator['arrow'].set_color(color)
-    torque_indicator['arrow'].set_alpha(alpha)
-
-
-def animate(i, df, ax1, ax2, ax3, lines, torque_indicators):
-    """ 
-    Animation update function.
-    """
+    # Update stick figure for the normal leg
     hip_angle, knee_angle, ankle_angle = df.loc[i, ['hip_angle', 'knee_angle', 'ankle_angle']]
     hip_pos, knee_pos, ankle_pos, foot_pos = calculate_joint_positions(hip_angle, knee_angle, ankle_angle)
 
-    # Update stick figure lines
+    # Calculate the global foot angle as the dot product of the vectors 
+    # (foot - ankle) and (-1, 0)
+    foot_angle = np.arccos(np.dot((foot_pos - ankle_pos), np.array([-1, 0])) /
+                            (np.linalg.norm(foot_pos - ankle_pos)))
+    # Rotate all the points by the global foot angle to align the foot with the y-axis
+    rotation_matrix = np.array([[np.cos(foot_angle), -np.sin(foot_angle)],
+                                [np.sin(foot_angle), np.cos(foot_angle)]])
+    hip_pos = np.dot(rotation_matrix, hip_pos)
+    knee_pos = np.dot(rotation_matrix, knee_pos)
+    ankle_pos = np.dot(rotation_matrix, ankle_pos)
+    foot_pos = np.dot(rotation_matrix, foot_pos)
+    
+    # Set the stick figure lines to the new positions
     lines['hip_knee'].set_data([hip_pos[0], knee_pos[0]], [hip_pos[1], knee_pos[1]])
     lines['knee_ankle'].set_data([knee_pos[0], ankle_pos[0]], [knee_pos[1], ankle_pos[1]])
     lines['ankle_foot'].set_data([ankle_pos[0], foot_pos[0]], [ankle_pos[1], foot_pos[1]])
 
-    # Update torque indicators 
-    update_torque_indicator(hip_pos, df.loc[i, 'hip_torque'], 
-                            {'arc': torque_indicators['hip'], 
-                             'arrow': torque_indicators['hip_arrow']}
-    )
-    update_torque_indicator(knee_pos, df.loc[i, 'knee_torque'], 
-                            {'arc': torque_indicators['knee'], 
-                             'arrow': torque_indicators['knee_arrow']}
-    )
-    update_torque_indicator(ankle_pos, df.loc[i, 'ankle_torque'], 
-                            {'arc': torque_indicators['ankle'], 
-                             'arrow': torque_indicators['ankle_arrow']}
-    )
+    # Update stick figure for the contralateral leg
+    hip_angle_c, knee_angle_c, ankle_angle_c = df.loc[i, ['hip_angle_c', 'knee_angle_c', 'ankle_angle_c']]
+    hip_pos_c, knee_pos_c, ankle_pos_c, foot_pos_c = calculate_joint_positions(hip_angle_c, knee_angle_c, ankle_angle_c)
 
-    # Update traces for last 150 data points
+    # Calculate the global foot angle as the dot product of the vectors
+    # (foot - ankle) and (-1, 0)
+    foot_angle_c = np.arccos(np.dot((foot_pos_c - ankle_pos_c), np.array([-1, 0])) /
+                            (np.linalg.norm(foot_pos_c - ankle_pos_c)))
+    # Rotate all the points by the global foot angle to align the foot with the y-axis
+    rotation_matrix_c = np.array([[np.cos(foot_angle_c), -np.sin(foot_angle_c)],
+                                [np.sin(foot_angle_c), np.cos(foot_angle_c)]])
+
+    # Rotate all the points by the global foot angle to align the foot with the y-axis
+    hip_pos_c = np.dot(rotation_matrix_c, hip_pos_c)
+    knee_pos_c = np.dot(rotation_matrix_c, knee_pos_c)
+    ankle_pos_c = np.dot(rotation_matrix_c, ankle_pos_c)
+    foot_pos_c = np.dot(rotation_matrix_c, foot_pos_c)
+    
+    lines['hip_knee_c'].set_data([hip_pos_c[0], knee_pos_c[0]], [hip_pos_c[1], knee_pos_c[1]])
+    lines['knee_ankle_c'].set_data([knee_pos_c[0], ankle_pos_c[0]], [knee_pos_c[1], ankle_pos_c[1]])
+    lines['ankle_foot_c'].set_data([ankle_pos_c[0], foot_pos_c[0]], [ankle_pos_c[1], foot_pos_c[1]])
+
+    # Update joint angles plot for the normal leg
     start_idx = max(0, i - 150)
     end_idx = i + 1
-
     ax2.clear()
-    ax2.set_xlim(0, 150)
-    ax2.set_ylim(-90, 90)
-    ax2.set_title("Joint Angles Over Last 150 Frames")
-    ax2.plot(df.loc[start_idx:end_idx, 'hip_angle'].values, label='Hip Angle', color='red')
-    ax2.plot(df.loc[start_idx:end_idx, 'knee_angle'].values, label='Knee Angle', color='green')
-    ax2.plot(df.loc[start_idx:end_idx, 'ankle_angle'].values, label='Ankle Angle', color='blue')
-    ax2.legend()
+    ax2.plot(df.loc[start_idx:end_idx, 'hip_angle'], label='Hip Angle', color='red')
+    ax2.plot(df.loc[start_idx:end_idx, 'knee_angle'], label='Knee Angle', color='green')
+    ax2.plot(df.loc[start_idx:end_idx, 'ankle_angle'], label='Ankle Angle', color='blue')
+    ax2.legend(loc='upper right')
+    ax2.set_title("Joint Angles (Normal Leg)")
 
+    # Update joint angles plot for the contralateral leg
     ax3.clear()
-    ax3.set_xlim(0, 150)
-    ax3.set_ylim(-3, 3)
-    ax3.set_title("Joint Torques Over Last 150 Frames")
-    ax3.plot(df.loc[start_idx:end_idx, 'hip_torque'].values, label='Hip Torque', color='red')
-    ax3.plot(df.loc[start_idx:end_idx, 'knee_torque'].values, label='Knee Torque', color='green')
-    ax3.plot(df.loc[start_idx:end_idx, 'ankle_torque'].values, label='Ankle Torque', color='blue')
-    ax3.legend()
+    ax3.plot(df.loc[start_idx:end_idx, 'hip_angle_c'], label='Hip Angle (C)', color='red', linestyle='--')
+    ax3.plot(df.loc[start_idx:end_idx, 'knee_angle_c'], label='Knee Angle (C)', color='green', linestyle='--')
+    ax3.plot(df.loc[start_idx:end_idx, 'ankle_angle_c'], label='Ankle Angle (C)', color='blue', linestyle='--')
+    ax3.legend(loc='upper right')
+    ax3.set_title("Joint Angles (Contralateral Leg)")
+
+    # Update joint torques plot for the normal leg
+    ax4.clear()
+    ax4.plot(df.loc[start_idx:end_idx, 'hip_torque'], label='Hip Torque', color='red')
+    ax4.plot(df.loc[start_idx:end_idx, 'knee_torque'], label='Knee Torque', color='green')
+    ax4.plot(df.loc[start_idx:end_idx, 'ankle_torque'], label='Ankle Torque', color='blue')
+    ax4.legend(loc='upper right')
+    ax4.set_title("Joint Torques (Normal Leg)")
+
+    # Update joint torques plot for the contralateral leg
+    ax5.clear()
+    ax5.plot(df.loc[start_idx:end_idx, 'hip_torque_c'], label='Hip Torque (C)', color='red', linestyle='--')
+    ax5.plot(df.loc[start_idx:end_idx, 'knee_torque_c'], label='Knee Torque (C)', color='green', linestyle='--')
+    ax5.plot(df.loc[start_idx:end_idx, 'ankle_torque_c'], label='Ankle Torque (C)', color='blue', linestyle='--')
+    ax5.legend(loc='upper right')
+    ax5.set_title("Joint Torques (Contralateral Leg)")
+
+    # Update torque markers positions
+    torque_markers['hip_torque'].set_offsets([hip_pos])
+    torque_markers['knee_torque'].set_offsets([knee_pos])
+    torque_markers['ankle_torque'].set_offsets([ankle_pos])
+    torque_markers['hip_torque_c'].set_offsets([hip_pos_c])
+    torque_markers['knee_torque_c'].set_offsets([knee_pos_c])
+    torque_markers['ankle_torque_c'].set_offsets([ankle_pos_c])
+
+    # Update the shapes of the torque markers
+    # Update hip torque marker based on torque direction
+    max_torque = 2.0 # Nm/kg
+    markers = [plt.matplotlib.markers.MarkerStyle(marker='x'), 
+               plt.matplotlib.markers.MarkerStyle(marker='o', 
+                                                  fillstyle='full')]
+    markers_styles = {t:markers[1] if df.loc[i,t] >= 0 else markers[0] 
+                      for t in torque_labels}
+    markers_colors = {t:'purple' if df.loc[i,t] >= 0 else 'orange' 
+                      for t in torque_labels}
+    marker_opacity = {t:abs(df.loc[i,t])/max_torque for t in torque_labels}
+    for label in torque_labels:
+        torque_markers[label].set_paths([markers_styles[label].get_path()])
+        torque_markers[label].set_color(markers_colors[label])
+        torque_markers[label].set_alpha(marker_opacity[label])
+    
 
 def setup_animation(df):
     """
-    Setup and start the animation.
+    Setup and start the animation with the adjusted layout and data.
     """
-    fig, ax1, ax2, ax3, lines, torque_indicators = init_figure_and_elements()
-    anim = FuncAnimation(fig, animate, frames=len(df), interval=100, fargs=(df, ax1, ax2, ax3, lines, torque_indicators))
+    fig, ax1, ax2, ax3, ax4, ax5, lines, torque_markers = init_figure_and_elements()
+    anim = FuncAnimation(fig, animate, frames=len(df), interval=100,
+                         fargs=(df, ax1, ax2, ax3, ax4, ax5, lines, torque_markers))
     plt.show()
     # Optionally, save the animation
-    # anim.save('animation.gif', writer=PillowWriter(fps=10))
+    # anim.save('animation.gif', writer='imagemagick', fps=10)
 
-# Make sure to replace `df` with your actual DataFrame
+# Ensure df is correctly loaded with contralateral columns before calling setup_animation
 setup_animation(df)
