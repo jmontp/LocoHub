@@ -37,10 +37,6 @@ rotm_sequence = 'YZX'; % Z should correspond to saggital plane angles
 % base_folder/SubjectName/Transforms/TaskName.mat
 base_folder = 'RawData';
 
-% This script will save the resulting files as follows:
-% base_folder/SubjectName/dest_sub_folder/TaskName.csv
-dest_sub_folder = 'Transforms_Euler';
-
 % Setting to true will make the script not save any of the euler angle 
 % csv files and just plot the x, y, and z angles. This is good way to 
 % verify that you're rotm sequence is correct.
@@ -73,13 +69,6 @@ for subject_num = 1:subject_count
 
     % Get the subject_name
     subject_name = subject_list(subject_num).name
-
-    % Create a subfolder for the processed data, only if it doesn't already
-    % exist
-    dest_folder = fullfile(base_folder, subject_name, dest_sub_folder);
-    if ~exist(dest_folder, 'dir')
-        mkdir(dest_folder)
-    end
 
     % Get all the folders for the Transformation subfolder
     task_list = dir(fullfile(base_folder, subject_name,'Transforms', '*'));
@@ -181,7 +170,7 @@ for subject_num = 1:subject_count
         % Save the table for the given task
         if ~just_plot
             dest_file_name = fullfile(base_folder, subject_name,...
-                dest_sub_folder, append(task_name, '.csv'));
+                'CSV_data', task_name, 'Link_Angle.csv');
             writetable(euler_table, dest_file_name)
         end
        
