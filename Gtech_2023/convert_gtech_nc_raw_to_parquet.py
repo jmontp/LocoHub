@@ -6,16 +6,32 @@ import pandas as pd
 import numpy as np
 import os
 
+###############################################################################
+# User configuration section
 
+# This is the base path to the dataset. If you extracted the dataset to the 
+# same folder as this file, you don't need to change this
+base_path = 'RawData'
+
+# This is the list of data types that we want to save. The options are:
+# 'Activity_Flag', 'GroundFrame_GRFs', 'Joint_Angle', 'Joint_Moments',
+# 'Joint_Powers', 'Joint_Velocities', 'Raw_EMGs', 'Real_IMUs', 'Virtual_IMUs',
+# 'Virtual_Insoles', 'Link_Angle',
+# Currently the only standardized names are
+# 'Joint_Angle', 'Joint_Velocities', 'Joint_Moments', 'Link_Angle'
+data_to_save = ['Joint_Moments', 'Angle', 'Velocities']
+
+###############################################################################
+# Don't modify anything below this line
+
+# These are used to convert the activity names to a shorter version
 short_activity_names = ['ball_toss', 'curb_down', 'curb_up', 'cutting',
                         'dynamic_walk', 'incline_walk', 'jump', 'lift_weight',
                         'lunges', 'meander', 'normal_walk', 'obstacle_walk',
                         'poses', 'push', 'side_shuffle', 'sit_to_stand', 
                         'squats', 'stairs', 'step_ups', 'tire_run', 
                         'tug_of_war', 'turn_and_step', 'twister', 
-                        'walk_backward', 'weighted_walk',]
-
-data_to_save = ['Moments', 'Angle', 'Velocities']
+                        'walk_backward', 'weighted_walk']
 
 def convert_dataset_to_pandas():
     '''
@@ -25,8 +41,6 @@ def convert_dataset_to_pandas():
     # Then we will filter down to the files that we are interested in saving,
     # and then append them to a dataframe
     file_list = []
-    # Loop through the subject folders
-    base_path = 'RawData'
     # Get the subject folders
     subject_dirs = os.listdir(base_path)
     # Remove the Subject_masses.csv file
@@ -35,9 +49,8 @@ def convert_dataset_to_pandas():
     except ValueError:
         pass
 
-    # Loop through the subject folders
+    # (1) Create a list of all the files that we want to potentially save
     for subject in subject_dirs:
-    # for subject in ["AB01", "AB02"]:
         # Loop through the activity folders
         for activity in os.listdir(os.path.join(base_path, subject, "CSV_Data")):
             # Loop through the files
@@ -51,11 +64,12 @@ def convert_dataset_to_pandas():
     # concatenate the dataframes later
     dataframes = {}
 
-    # Loop through the files and decide if we want to keep it
+    # (2) Loop through the files and decide if we want to keep it. If we do
+    # keep it, append it to the dictionary
     for subject, activity, file_name in file_list:
         
         # Get the data unit (moment_filt, angle, velocity, etc)
-        data_unit = file_name.split('_')[-1].split('.')[0]
+        data_unit = file_name.split('.')[0]
     
         # If the data type is not in the list of data to save, skip it
         if data_unit not in data_to_save:
@@ -76,17 +90,20 @@ def convert_dataset_to_pandas():
         # Add the dataframe to the dictionary
         dataframes[(subject, activity)].append(df)
 
-    # For all the (subject, activity) tuples, concatenate the dataframes since
-    # they have different data in them. Additionally add the marker data
-    # Create an empty dataframe
+    # (3) For all the (subject, activity) tuples, horizontally concatenate the 
+    # dataframes. Additionally add the global angles if they are in the 
+    # data_to_save list (assuming they have been calculated with 
+    # convert_gtech_nc_rotm_to_eul_csv.m) 
+    
+    #Create an empty dataframe
     df_total = pd.DataFrame()
 
     # Loop through the keys
     for key in dataframes.keys():
         
-        # Verify that we have all the data types
+        # Verify that we have all the data types that we want
         assert len(dataframes[key]) == len(data_to_save), \
-            print(f'Missing data type for {key}')
+            print(f'Missing data for {key}')
 
         # Get the subject and activity
         subject = key[0]
