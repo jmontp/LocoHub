@@ -89,34 +89,34 @@ standard_column_names = {
     'torso_Z':'torso_s',	
     'torso_X':'torso_t',
 
-    'femur_r_Y':'femur_f_r',
-    'femur_r_Z':'femur_s_r',
-    'femur_r_X':'femur_t_r',
-    'tibia_r_Y':'tibia_f_r',	
-    'tibia_r_Z':'tibia_s_r',	
-    'tibia_r_X':'tibia_t_r',	
+    'femur_r_Y':'thigh_f_r',
+    'femur_r_Z':'thigh_s_r',
+    'femur_r_X':'thigh_t_r',
+    'tibia_r_Y':'shank_f_r',	
+    'tibia_r_Z':'shank_s_r',	
+    'tibia_r_X':'shank_t_r',	
     'talus_r_Y':'talus_f_r',	
     'talus_r_Z':'talus_s_r',	
     'talus_r_X':'talus_t_r',	
-    'calcn_r_Y':'calcn_f_r',	
-    'calcn_r_Z':'calcn_s_r',	
-    'calcn_r_X':'calcn_t_r',	
+    'calcn_r_Y':'foot_f_r',	
+    'calcn_r_Z':'foot_s_r',	
+    'calcn_r_X':'foot_t_r',	
     'toes_r_Y':'toes_f_r',	
     'toes_r_Z':'toes_s_r',	
     'toes_r_X':'toes_t_r',	
     
-    'femur_l_Y':'femur_f_l',	
-    'femur_l_Z':'femur_s_l',	
-    'femur_l_X':'femur_t_l',	
-    'tibia_l_Y':'tibia_f_l',	
-    'tibia_l_Z':'tibia_s_l',	
-    'tibia_l_X':'tibia_t_l',	
+    'femur_l_Y':'thigh_f_l',	
+    'femur_l_Z':'thigh_s_l',	
+    'femur_l_X':'thigh_t_l',	
+    'tibia_l_Y':'shank_f_l',	
+    'tibia_l_Z':'shank_s_l',	
+    'tibia_l_X':'shank_t_l',	
     'talus_l_Y':'talus_f_l',
     'talus_l_Z':'talus_s_l',	
     'talus_l_X':'talus_t_l',	
-    'calcn_l_Y':'calcn_f_l',	
-    'calcn_l_Z':'calcn_s_l',	
-    'calcn_l_X':'calcn_t_l',	
+    'calcn_l_Y':'foot_f_l',	
+    'calcn_l_Z':'foot_s_l',	
+    'calcn_l_X':'foot_t_l',	
     'toes_l_Y':'toes_f_l',	
     'toes_l_Z':'toes_s_l',	
     'toes_l_X':'toes_t_l',	
@@ -234,7 +234,7 @@ def convert_dataset_to_pandas():
 
         # Add the activity and subject columns
         df['task_long'] = activity
-        df['subject'] = 'Gtech_NC_' + subject
+        df['subject'] = 'Gtech_2023_' + subject
 
         # Add the activity short name
         for short_activity_name in short_activity_names:
