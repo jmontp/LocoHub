@@ -19,7 +19,8 @@ base_path = 'RawData'
 # 'Virtual_Insoles', 'Link_Angle',
 # Currently the only standardized names are
 # 'Joint_Angle', 'Joint_Velocities', 'Joint_Moments', 'Link_Angle'
-data_to_save = ['Joint_Moments', 'Angle', 'Velocities']
+data_to_save = ['Joint_Moments', 'Joint_Angle', 
+                'Joint_Velocities', 'Link_Angle']
 
 ###############################################################################
 # Don't modify anything below this line
@@ -32,6 +33,116 @@ short_activity_names = ['ball_toss', 'curb_down', 'curb_up', 'cutting',
                         'squats', 'stairs', 'step_ups', 'tire_run', 
                         'tug_of_war', 'turn_and_step', 'twister', 
                         'walk_backward', 'weighted_walk']
+
+standard_column_names = {
+
+    # Joint Angle
+    'hip_flexion_r':'hip_angle_s_r',
+    'hip_adduction_r':'hip_angle_f_r',
+    'hip_rotation_r':'hip_angle_t_r',
+    'knee_angle_r':'knee_angle_s_r',
+    'ankle_angle_r':'ankle_angle_s_r',
+    'subtalar_angle_r':'ankle_angle_f_r',
+    
+    'hip_flexion_l':'hip_angle_s_l',
+    'hip_adduction_l':'hip_angle_f_l',
+    'hip_rotation_l':'hip_angle_t_l',
+    'knee_angle_l':'knee_angle_s_l',
+    'ankle_angle_l':'ankle_angle_s_l',
+    'subtalar_angle_l':'ankle_angle_f_l',
+
+    # Joint Velocities
+    'hip_flexion_velocity_r': 'hip_vel_s_r',
+    'hip_adduction_velocity_r': 'hip_vel_f_r',
+    'hip_rotation_velocity_r': 'hip_vel_t_r',
+    'knee_velocity_r': 'knee_vel_s_r',
+    'ankle_velocity_r': 'ankle_vel_s_r',
+    'subtalar_velocity_r': 'ankle_vel_f_r',	
+    
+    'hip_flexion_velocity_l': 'hip_vel_s_l',
+    'hip_adduction_velocity_l': 'hip_vel_f_l',
+    'hip_rotation_velocity_l': 'hip_vel_t_l',
+    'knee_velocity_l': 'knee_vel_s_l',
+    'ankle_velocity_l': 'ankle_vel_s_l',
+    'subtalar_velocity_l': 'ankle_vel_f_l',
+
+    # Joint Moments
+    'hip_flexion_r_moment': 'hip_torque_s_r',
+    'hip_adduction_r_moment': 'hip_torque_f_r',
+    'hip_rotation_r_moment': 'hip_torque_t_r',
+    'knee_angle_r_moment': 'knee_torque_s_r',
+    'ankle_angle_r_moment': 'ankle_torque_s_r',
+    'subtalar_angle_r_moment': 'ankle_torque_f_r',
+
+    'hip_flexion_l_moment': 'hip_torque_s_l',
+    'hip_adduction_l_moment': 'hip_torque_f_l',
+    'hip_rotation_l_moment': 'hip_torque_t_l',
+    'knee_angle_l_moment': 'knee_torque_s_l',
+    'ankle_angle_l_moment': 'ankle_torque_s_l',
+    'subtalar_angle_l_moment': 'ankle_torque_f_l',
+
+    # Link Angle
+    'pelvis_Y':'pelvis_f',
+    'pelvis_Z':'pelvis_s',
+    'pelvis_X':'pelvis_t',
+    'torso_Y':'torso_f',	
+    'torso_Z':'torso_s',	
+    'torso_X':'torso_t',
+
+    'femur_r_Y':'femur_f_r',
+    'femur_r_Z':'femur_s_r',
+    'femur_r_X':'femur_t_r',
+    'tibia_r_Y':'tibia_f_r',	
+    'tibia_r_Z':'tibia_s_r',	
+    'tibia_r_X':'tibia_t_r',	
+    'talus_r_Y':'talus_f_r',	
+    'talus_r_Z':'talus_s_r',	
+    'talus_r_X':'talus_t_r',	
+    'calcn_r_Y':'calcn_f_r',	
+    'calcn_r_Z':'calcn_s_r',	
+    'calcn_r_X':'calcn_t_r',	
+    'toes_r_Y':'toes_f_r',	
+    'toes_r_Z':'toes_s_r',	
+    'toes_r_X':'toes_t_r',	
+    
+    'femur_l_Y':'femur_f_l',	
+    'femur_l_Z':'femur_s_l',	
+    'femur_l_X':'femur_t_l',	
+    'tibia_l_Y':'tibia_f_l',	
+    'tibia_l_Z':'tibia_s_l',	
+    'tibia_l_X':'tibia_t_l',	
+    'talus_l_Y':'talus_f_l',
+    'talus_l_Z':'talus_s_l',	
+    'talus_l_X':'talus_t_l',	
+    'calcn_l_Y':'calcn_f_l',	
+    'calcn_l_Z':'calcn_s_l',	
+    'calcn_l_X':'calcn_t_l',	
+    'toes_l_Y':'toes_f_l',	
+    'toes_l_Z':'toes_s_l',	
+    'toes_l_X':'toes_t_l',	
+}
+
+
+# Create a function that will fix joint angle conventions. In the dataset the 
+# joint angles are defined as:
+# Hip extension is positive
+# Knee extension is positive
+# Ankle plantarflexion is positive
+cols_to_flip_signs = [  
+    # Hip extension is positive - flip
+    'hip_angle_s_r','hip_vel_s_r','hip_torque_s_r', 
+    'hip_angle_s_l','hip_vel_s_l','hip_torque_s_l',
+
+    # Knee extension is positive - no need to change
+
+    # Ankle plantarflexion is positive - flip                 
+    'ankle_angle_s_r', 'ankle_vel_s_r', 'ankle_torque_s_r',
+    'ankle_angle_s_l', 'ankle_vel_s_l', 'ankle_torque_s_l',
+
+    # Saggital link angles
+    'pelvis_s', 'torso_s', 'femur_s_r', 'tibia_s_r', 'talus_s_r',
+    'calcn_s_r', 'toes_s_r', 'femur_s_l', 'tibia_s_l', 'talus_s_l',
+]
 
 def convert_dataset_to_pandas():
     '''
@@ -75,7 +186,8 @@ def convert_dataset_to_pandas():
         if data_unit not in data_to_save:
             continue
         
-        print(f'Processing {subject} {activity} {data_unit}')
+        # Show the progress on the same line
+        print(f'Processing {subject} {activity} {data_unit}'+' '*20, end='\r')
 
         # Get the file path
         file_path = os.path.join(base_path, subject, "CSV_Data", activity, file_name)
@@ -88,7 +200,7 @@ def convert_dataset_to_pandas():
             dataframes[(subject, activity)] = []
 
         # Add the dataframe to the dictionary
-        dataframes[(subject, activity)].append(df)
+        dataframes[(subject, activity)].append((data_unit,df))
 
     # (3) For all the (subject, activity) tuples, horizontally concatenate the 
     # dataframes. Additionally add the global angles if they are in the 
@@ -99,8 +211,12 @@ def convert_dataset_to_pandas():
     df_total = pd.DataFrame()
 
     # Loop through the keys
-    for key in dataframes.keys():
-        
+    for key_num, key in enumerate(dataframes.keys()):
+
+        # Show percentage of completion in the same line
+        print(f'Processing {key_num+1}/{len(dataframes.keys())}'+' '*30, 
+              end='\r')
+
         # Verify that we have all the data types that we want
         assert len(dataframes[key]) == len(data_to_save), \
             print(f'Missing data for {key}')
@@ -110,36 +226,11 @@ def convert_dataset_to_pandas():
         activity = key[1]
 
         # Create an empty dataframe to concatenate the data units
-        df = pd.DataFrame()
+        _,df =  dataframes[key][0]
 
         # Merge all the dataframes
-        df = pd.merge(dataframes[key][0], dataframes[key][1], on='time')
-        df = pd.merge(df, dataframes[key][2], on='time')
-
-        # Load the global angle data. This is in the Transforms_Euler folder
-        # You need to run a matlab script to generate this data
-        try:
-            # Load the global angles
-            global_angles_file = os.path.join(base_path, subject, 
-                                              "Transforms_Euler", 
-                                              f"{activity}.csv")
-            cols = ['calcn_r_Z', 'calcn_l_Z']
-            global_angles_df = \
-                pd.read_csv(global_angles_file, usecols=cols, header=0)
-            
-            # Extract the global foot angle from the dataset. We are taking 
-            # this as the calcaneus angle
-            df['foot_angle_r'] = global_angles_df['calcn_r_Z']
-            df['foot_angle_l'] = global_angles_df['calcn_l_Z']
-
-            # Calculate the derivative of the global foot angle
-            df['foot_velocity_r'] = np.gradient(df['foot_angle_r'], df['time'])
-            df['foot_velocity_l'] = np.gradient(df['foot_angle_l'], df['time'])
-
-            print(f"Adding the marker data for {subject} {activity}")
-        
-        except(KeyError):
-            print(f"Missing global angle data for {subject} {activity}")
+        for data_type,sub_df in dataframes[key][1:]:
+            df = pd.merge(df, sub_df, on='time')
 
         # Add the activity and subject columns
         df['activity_long'] = activity
@@ -156,8 +247,13 @@ def convert_dataset_to_pandas():
         df_total = pd.concat([df_total, df], 
                              ignore_index=True, 
                              axis=0)
-            
-    # Save the dataframe
+
+    # (4) Update the column names to the standardized names and flip the signs
+    # of the joint angles and torques
+    df_total.rename(columns=standard_column_names, inplace=True)
+    df_total[cols_to_flip_signs] = df_total[cols_to_flip_signs] * -1
+
+    # (5) Save the dataframe
     df_total.to_parquet('gtech_non_cyclic_raw.parquet')
     print('Done')
         

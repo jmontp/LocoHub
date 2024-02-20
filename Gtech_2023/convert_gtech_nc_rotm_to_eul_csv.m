@@ -40,7 +40,7 @@ base_folder = 'RawData';
 % Setting to true will make the script not save any of the euler angle 
 % csv files and just plot the x, y, and z angles. This is good way to 
 % verify that you're rotm sequence is correct.
-just_plot = true;
+just_plot = false;
 plot_title = [rotm_sequence ' '];
 
 
@@ -131,7 +131,7 @@ for subject_num = 1:subject_count
             % The header column is just the time axis. Add it to the table
             % and move on to the next field.
             if strcmp(field_name, 'Header')
-                euler_table.(field_name) = field_data;
+                euler_table.time = field_data;
                 continue
             end
 
@@ -171,7 +171,12 @@ for subject_num = 1:subject_count
         if ~just_plot
             dest_file_name = fullfile(base_folder, subject_name,...
                 'CSV_data', task_name, 'Link_Angle.csv');
-            writetable(euler_table, dest_file_name)
+            try
+                writetable(euler_table, dest_file_name)
+            catch 
+                %If the folder for the task does not exist, then we just 
+                % don't do anything
+            end
         end
        
 
