@@ -20,7 +20,7 @@ base_path = 'RawData'
 # Currently the only standardized names are
 # 'Joint_Angle', 'Joint_Velocities', 'Joint_Moments', 'Link_Angle'
 data_to_save = ['Joint_Moments', 'Joint_Angle', 
-                'Joint_Velocities', 'Link_Angle']
+                'Joint_Velocities', 'Link_Angle', 'Link_Velocities']
 
 ###############################################################################
 # Don't modify anything below this line
@@ -82,66 +82,92 @@ standard_column_names = {
     'subtalar_angle_l_moment': 'ankle_torque_f_l',
 
     # Link Angle
-    'pelvis_Y':'pelvis_f',
-    'pelvis_Z':'pelvis_s',
-    'pelvis_X':'pelvis_t',
-    'torso_Y':'torso_f',	
-    'torso_Z':'torso_s',	
-    'torso_X':'torso_t',
+    'pelvis_Y':'pelvis_angle_f',
+    'pelvis_Z':'pelvis_angle_s',
+    'pelvis_X':'pelvis_angle_t',
+    'torso_Y':'torso_angle_f',	
+    'torso_Z':'torso_angle_s',	
+    'torso_X':'torso_angle_t',
 
-    'femur_r_Y':'thigh_f_r',
-    'femur_r_Z':'thigh_s_r',
-    'femur_r_X':'thigh_t_r',
-    'tibia_r_Y':'shank_f_r',	
-    'tibia_r_Z':'shank_s_r',	
-    'tibia_r_X':'shank_t_r',	
-    'talus_r_Y':'talus_f_r',	
-    'talus_r_Z':'talus_s_r',	
-    'talus_r_X':'talus_t_r',	
-    'calcn_r_Y':'foot_f_r',	
-    'calcn_r_Z':'foot_s_r',	
-    'calcn_r_X':'foot_t_r',	
-    'toes_r_Y':'toes_f_r',	
-    'toes_r_Z':'toes_s_r',	
-    'toes_r_X':'toes_t_r',	
+    'femur_r_Y':'thigh_angle_f_r',
+    'femur_r_Z':'thigh_angle_s_r',
+    'femur_r_X':'thigh_angle_t_r',
+    'tibia_r_Y':'shank_angle_f_r',	
+    'tibia_r_Z':'shank_angle_s_r',	
+    'tibia_r_X':'shank_angle_t_r',	
+    'talus_r_Y':'talus_angle_f_r',	
+    'talus_r_Z':'talus_angle_s_r',	
+    'talus_r_X':'talus_angle_t_r',	
+    'calcn_r_Y':'foot_angle_f_r',	
+    'calcn_r_Z':'foot_angle_s_r',	
+    'calcn_r_X':'foot_angle_t_r',	
+    'toes_r_Y':'toes_angle_f_r',	
+    'toes_r_Z':'toes_angle_s_r',	
+    'toes_r_X':'toes_angle_t_r',	
     
-    'femur_l_Y':'thigh_f_l',	
-    'femur_l_Z':'thigh_s_l',	
-    'femur_l_X':'thigh_t_l',	
-    'tibia_l_Y':'shank_f_l',	
-    'tibia_l_Z':'shank_s_l',	
-    'tibia_l_X':'shank_t_l',	
-    'talus_l_Y':'talus_f_l',
-    'talus_l_Z':'talus_s_l',	
-    'talus_l_X':'talus_t_l',	
-    'calcn_l_Y':'foot_f_l',	
-    'calcn_l_Z':'foot_s_l',	
-    'calcn_l_X':'foot_t_l',	
-    'toes_l_Y':'toes_f_l',	
-    'toes_l_Z':'toes_s_l',	
-    'toes_l_X':'toes_t_l',	
+    'femur_l_Y':'thigh_angle_f_l',	
+    'femur_l_Z':'thigh_angle_s_l',	
+    'femur_l_X':'thigh_angle_t_l',	
+    'tibia_l_Y':'shank_angle_f_l',	
+    'tibia_l_Z':'shank_angle_s_l',	
+    'tibia_l_X':'shank_angle_t_l',	
+    'talus_l_Y':'talus_angle_f_l',
+    'talus_l_Z':'talus_angle_s_l',	
+    'talus_l_X':'talus_angle_t_l',	
+    'calcn_l_Y':'foot_angle_f_l',	
+    'calcn_l_Z':'foot_angle_s_l',	
+    'calcn_l_X':'foot_angle_t_l',	
+    'toes_l_Y':'toes_angle_f_l',	
+    'toes_l_Z':'toes_angle_s_l',	
+    'toes_l_X':'toes_angle_t_l',	
+
+    # Link Velocities
+    'pelvis_vel_Y':'pelvis_vel_f',
+    'pelvis_vel_Z':'pelvis_vel_s',
+    'pelvis_vel_X':'pelvis_vel_t',
+    'torso_vel_Y':'torso_vel_f',
+    'torso_vel_Z':'torso_vel_s',
+    'torso_vel_X':'torso_vel_t',
+    'femur_r_vel_Y':'thigh_vel_f_r',
+    'femur_r_vel_Z':'thigh_vel_s_r',
+    'femur_r_vel_X':'thigh_vel_t_r',
+    'tibia_r_vel_Y':'shank_vel_f_r',
+    'tibia_r_vel_Z':'shank_vel_s_r',
+    'tibia_r_vel_X':'shank_vel_t_r',
+    'talus_r_vel_Y':'talus_vel_f_r',
+    'talus_r_vel_Z':'talus_vel_s_r',
+    'talus_r_vel_X':'talus_vel_t_r',
+    'calcn_r_vel_Y':'foot_vel_f_r',
+    'calcn_r_vel_Z':'foot_vel_s_r',
+    'calcn_r_vel_X':'foot_vel_t_r',
+    'toes_r_vel_Y':'toes_vel_f_r',
+    'toes_r_vel_Z':'toes_vel_s_r',
+    'toes_r_vel_X':'toes_vel_t_r',
+
+    'femur_l_vel_Y':'thigh_vel_f_l',
+    'femur_l_vel_Z':'thigh_vel_s_l',
+    'femur_l_vel_X':'thigh_vel_t_l',
+    'tibia_l_vel_Y':'shank_vel_f_l',
+    'tibia_l_vel_Z':'shank_vel_s_l',
+    'tibia_l_vel_X':'shank_vel_t_l',
+    'talus_l_vel_Y':'talus_vel_f_l',
+    'talus_l_vel_Z':'talus_vel_s_l',
+    'talus_l_vel_X':'talus_vel_t_l',
+    'calcn_l_vel_Y':'foot_vel_f_l',
+    'calcn_l_vel_Z':'foot_vel_s_l',
+    'calcn_l_vel_X':'foot_vel_t_l',
+    'toes_l_vel_Y':'toes_vel_f_l',
+    'toes_l_vel_Z':'toes_vel_s_l',
+    'toes_l_vel_X':'toes_vel_t_l',
 }
 
 
 # Create a function that will fix joint angle conventions. In the dataset the 
-# joint angles are defined as:
-# Hip extension is positive
-# Knee extension is positive
-# Ankle plantarflexion is positive
 cols_to_flip_signs = [  
-    # Hip extension is positive - flip
-    'hip_angle_s_r','hip_vel_s_r','hip_torque_s_r', 
-    'hip_angle_s_l','hip_vel_s_l','hip_torque_s_l',
 
-    # Knee extension is positive - no need to change
+    # Flip knee torques
+    'knee_torque_s_r','knee_torque_s_l',
 
-    # Ankle plantarflexion is positive - flip                 
-    'ankle_angle_s_r', 'ankle_vel_s_r', 'ankle_torque_s_r',
-    'ankle_angle_s_l', 'ankle_vel_s_l', 'ankle_torque_s_l',
-
-    # Saggital link angles
-    'pelvis_s', 'torso_s', 'femur_s_r', 'tibia_s_r', 'talus_s_r',
-    'calcn_s_r', 'toes_s_r', 'femur_s_l', 'tibia_s_l', 'talus_s_l',
 ]
 
 def convert_dataset_to_pandas():

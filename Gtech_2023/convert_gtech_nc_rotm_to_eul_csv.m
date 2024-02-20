@@ -107,7 +107,8 @@ for subject_num = 1:subject_count
 
         % Create an empty table that will store the data to be ultimately 
         % saved
-        euler_table = table;
+        euler_angle_table = table;
+        euler_velocity_table = table;
           
         % Print the subject, task, and field name
         disp([subject_name, " ", task_name]);
@@ -131,7 +132,8 @@ for subject_num = 1:subject_count
             % The header column is just the time axis. Add it to the table
             % and move on to the next field.
             if strcmp(field_name, 'Header')
-                euler_table.time = field_data;
+                euler_angle_table.time = field_data;
+                euler_velocity_table.time = field_data;
                 continue
             end
 
@@ -157,22 +159,30 @@ for subject_num = 1:subject_count
             % Convert the rotation matrices to euler angles
             % euler_angles = rotm2eul(rotation_matrices, "YZX"); %My order
             % euler_angles = rotm2eul(rotation_matrices, "ZYX"); %Default
-            euler_angles = rotm2eul(rotation_matrices, rotm_sequence);
+            euler_angles = rad2deg(rotm2eul(rotation_matrices, rotm_sequence));
+
+            % Calculate the euler velocities
+            euler_velocities = gradient(euler_angles)./gradient(Transforms.Header);
  
             % Add the field to the table
             for euler_idx = 1:3
-            euler_table.(append(field_name,"_",rotm_sequence(euler_idx))) ...
-                = euler_angles(:, euler_idx);
+                angle_name = append(field_name,"_",rotm_sequence(euler_idx));
+                euler_angle_table.(angle_name) = euler_angles(:, euler_idx);
+                vel_name = append(field_name,"_vel_",rotm_sequence(euler_idx));
+                euler_velocity_table.(vel_name) = euler_velocities(:, euler_idx);
             end
            
         end
 
         % Save the table for the given task
         if ~just_plot
-            dest_file_name = fullfile(base_folder, subject_name,...
+            angle_dest_file_name = fullfile(base_folder, subject_name,...
                 'CSV_data', task_name, 'Link_Angle.csv');
+            velocity_dest_file_name = fullfile(base_folder, subject_name,...
+                'CSV_data', task_name, 'Link_Velocities.csv');
             try
-                writetable(euler_table, dest_file_name)
+                writetable(euler_angle_table, angle_dest_file_name)
+                writetable(euler_velocity_table, velocity_dest_file_name)
             catch 
                 %If the folder for the task does not exist, then we just 
                 % don't do anything
@@ -211,12 +221,12 @@ for subject_num = 1:subject_count
                 ax = subplot(9, 4, subplot_num);
 
                 % Get the data to plot
-                d = euler_table.(task_order{euler_idx});
+                d = euler_angle_table.(task_order{euler_idx});
                 % plot_data = rad2deg(d(ns:ne) - d(1));  %Shift data
                 plot_data = rad2deg(d(ns:ne));       % Unshifted data
                 
                 % Plot the data
-                plot(euler_table.Header(ns:ne), plot_data);
+                plot(euler_angle_table.Header(ns:ne), plot_data);
 
                 % Set the title for every subject
                 if euler_idx == 1
