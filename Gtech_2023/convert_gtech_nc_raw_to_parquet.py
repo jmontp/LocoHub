@@ -233,13 +233,13 @@ def convert_dataset_to_pandas():
             df = pd.merge(df, sub_df, on='time')
 
         # Add the activity and subject columns
-        df['activity_long'] = activity
+        df['task_long'] = activity
         df['subject'] = 'Gtech_NC_' + subject
 
         # Add the activity short name
         for short_activity_name in short_activity_names:
             if short_activity_name in activity:
-                df['activity'] = short_activity_name
+                df['task'] = short_activity_name
                 break
 
         # Concatenate the different subject/activities with the rest of the 
