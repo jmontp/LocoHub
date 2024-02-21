@@ -20,7 +20,7 @@ parser.add_argument('-p', '--pivot', action=argparse.BooleanOptionalAction)
 parser.add_argument('-c', '--columns', action=argparse.BooleanOptionalAction)
 parser.add_argument('-j', '--jump-points', type=int, default=0,
                     help='Start running at this frame')
-
+parser.add_argument('-g', '--save-gif', action=argparse.BooleanOptionalAction)
 
 # Parse the command line arguments
 args = parser.parse_args()
@@ -32,6 +32,7 @@ task = args.task
 pivot = args.pivot
 columns = args.columns
 jump_points = args.jump_points
+save_gif = args.save_gif
 
 # Assuming the DataFrame is already loaded and named `df`
 df = pd.read_parquet(parquet_file)
@@ -65,7 +66,11 @@ df = df[(df['task'] == task) & (df['subject'] == subject)]
 df = df.reset_index(drop=True)
 df = df.loc[jump_points:].reset_index(drop=True)
 
+###############################################################################
 # Temporary fixes to the dataset that I am analyzing
+
+GLOBAL_FOOT_ANGLE_ROTATION = True
+###############################################################################
 
 # Sample DataFrame initialization (replace with your actual data)
 # df = pd.DataFrame({
@@ -113,7 +118,7 @@ def init_figure_and_elements():
     grid_spec = fig.add_gridspec(3, 3)
 
     # Set the y-axis limits for the joint angles and torques plots
-    angle_ylim = (-80, 80)
+    angle_ylim = (-100, 100)
     torque_ylim = (-3, 3)
 
     # Main stick figure animation subplot
@@ -217,7 +222,7 @@ def animate(i, df, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers):
     """
     # Print in the same line the current iteration and update the title
     print(f"\rProcessing frame {i+jump_points+1}/{len(df)}", end='')
-    ax1.set_title(f"Joint Kinematics for {subject} doing {task} (Frame {i+1}/{len(df)})")
+    ax1.set_title(f"Joint Kinematics for {subject} doing {task} (Frame {i+jump_points+1}/{len(df)})")
     
     #Set the torso position to be vertical 
     lines['torso'].set_data([0, 0], [0, segment_lengths['torso']])
@@ -225,28 +230,28 @@ def animate(i, df, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers):
     # Update stick figure for the right leg
     hip_angle_r, knee_angle_r, ankle_angle_r = df.loc[i, right_angles]
     hip_pos_r, knee_pos_r, ankle_pos_r, foot_pos_r = calculate_joint_positions(hip_angle_r, knee_angle_r, ankle_angle_r)
-
-    # Calculate the global foot angle as the dot product of the vectors 
-    # (foot - ankle) and (1, 0)
-    foot_angle_r_fig = np.arccos(np.dot((foot_pos_r - ankle_pos_r), np.array([0,-1])) /
-                            (np.linalg.norm(foot_pos_r - ankle_pos_r)))
-    foot_angle_r_fig = foot_angle_r_fig - np.pi/2
-
-    # Get the global foot angle from the data in degrees
-    foot_angle_r = np.deg2rad(df.loc[i, 'foot_angle_s_r'])
-
-    # Calculate the difference between the two angles
-    foot_angle_diff = foot_angle_r - foot_angle_r_fig
-
     
-    # Rotate all the points by the global foot angle to align the foot with the y-axis
-    rotation_matrix = np.array([[np.cos(foot_angle_diff), -np.sin(foot_angle_diff)],
-                                [np.sin(foot_angle_diff), np.cos(foot_angle_diff)]])
-    
-    hip_pos_r = np.dot(rotation_matrix, hip_pos_r)
-    knee_pos_r = np.dot(rotation_matrix, knee_pos_r)
-    ankle_pos_r = np.dot(rotation_matrix, ankle_pos_r)
-    foot_pos_r = np.dot(rotation_matrix, foot_pos_r)
+    if GLOBAL_FOOT_ANGLE_ROTATION:
+        # Calculate the global foot angle as the dot product of the vectors 
+        # (foot - ankle) and (1, 0)
+        foot_angle_r_fig = np.arccos(np.dot((foot_pos_r - ankle_pos_r), np.array([0,-1])) /
+                                (np.linalg.norm(foot_pos_r - ankle_pos_r)))
+        foot_angle_r_fig = foot_angle_r_fig - np.pi/2
+
+        # Get the global foot angle from the data in degrees
+        foot_angle_r = np.deg2rad(df.loc[i, 'foot_angle_s_r'])
+
+        # Calculate the difference between the two angles
+        foot_angle_diff = foot_angle_r - foot_angle_r_fig
+
+        
+        # Rotate all the points by the global foot angle to align the foot with the y-axis
+        rotation_matrix = np.array([[np.cos(foot_angle_diff), -np.sin(foot_angle_diff)],
+                                    [np.sin(foot_angle_diff), np.cos(foot_angle_diff)]])
+        hip_pos_r = np.dot(rotation_matrix, hip_pos_r)
+        knee_pos_r = np.dot(rotation_matrix, knee_pos_r)
+        ankle_pos_r = np.dot(rotation_matrix, ankle_pos_r)
+        foot_pos_r = np.dot(rotation_matrix, foot_pos_r)
     
     # Set the stick figure lines to the new positions
     lines['hip_knee_s_r'].set_data([hip_pos_r[0], knee_pos_r[0]], [hip_pos_r[1], knee_pos_r[1]])
@@ -257,28 +262,29 @@ def animate(i, df, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers):
     hip_angle_l, knee_angle_l, ankle_angle_l = df.loc[i, left_angles]
     hip_pos_l, knee_pos_l, ankle_pos_l, foot_pos_l = calculate_joint_positions(hip_angle_l, knee_angle_l, ankle_angle_l)
 
-    # Calculate the global foot angle as the dot product of the vectors
-    # (foot - ankle) and (0, 1)
-    foot_angle_l_fig = np.arccos(np.dot((foot_pos_l - ankle_pos_l), np.array([0, -1])) /
-                            (np.linalg.norm(foot_pos_l - ankle_pos_l)))
-    foot_angle_l_fig = foot_angle_l_fig - np.pi/2
+    if GLOBAL_FOOT_ANGLE_ROTATION:
+        # Calculate the global foot angle as the dot product of the vectors
+        # (foot - ankle) and (0, 1)
+        foot_angle_l_fig = np.arccos(np.dot((foot_pos_l - ankle_pos_l), np.array([0, -1])) /
+                                (np.linalg.norm(foot_pos_l - ankle_pos_l)))
+        foot_angle_l_fig = foot_angle_l_fig - np.pi/2
 
-    # Get the global foot angle from the data in degrees
-    foot_angle_l = np.deg2rad(df.loc[i, 'foot_angle_s_l'])
+        # Get the global foot angle from the data in degrees
+        foot_angle_l = np.deg2rad(df.loc[i, 'foot_angle_s_l'])
 
-    # Calculate the difference between the two angles
-    foot_angle_diff = foot_angle_l - foot_angle_l_fig
+        # Calculate the difference between the two angles
+        foot_angle_diff = foot_angle_l - foot_angle_l_fig
 
-    # Rotate all the points by the global foot angle to align the foot with the y-axis
-    rotation_matrix_l = np.array([[np.cos(foot_angle_diff), -np.sin(foot_angle_diff)],
-                                [np.sin(foot_angle_diff), np.cos(foot_angle_diff)]])
+        # Rotate all the points by the global foot angle to align the foot with the y-axis
+        rotation_matrix_l = np.array([[np.cos(foot_angle_diff), -np.sin(foot_angle_diff)],
+                                    [np.sin(foot_angle_diff), np.cos(foot_angle_diff)]])
 
-    # Rotate all the points by the global foot angle to align the foot with the y-axis
-    hip_pos_l = np.dot(rotation_matrix_l, hip_pos_l)
-    knee_pos_l = np.dot(rotation_matrix_l, knee_pos_l)
-    ankle_pos_l = np.dot(rotation_matrix_l, ankle_pos_l)
-    foot_pos_l = np.dot(rotation_matrix_l, foot_pos_l)
-    
+        # Rotate all the points by the global foot angle to align the foot with the y-axis
+        hip_pos_l = np.dot(rotation_matrix_l, hip_pos_l)
+        knee_pos_l = np.dot(rotation_matrix_l, knee_pos_l)
+        ankle_pos_l = np.dot(rotation_matrix_l, ankle_pos_l)
+        foot_pos_l = np.dot(rotation_matrix_l, foot_pos_l)
+
     # Set the stick figure lines to the new positions
     lines['hip_knee_s_l'].set_data([hip_pos_l[0], knee_pos_l[0]], [hip_pos_l[1], knee_pos_l[1]])
     lines['knee_ankle_s_l'].set_data([knee_pos_l[0], ankle_pos_l[0]], [knee_pos_l[1], ankle_pos_l[1]])
@@ -350,12 +356,22 @@ def setup_animation(df):
     """
     Setup and start the animation with the adjusted layout and data.
     """
+    # If we are saving, only plot the first 400 frames
+    if save_gif:
+        plt.ioff()
+        frames = 400
+    else:
+        frames = len(df)
+    # Initialize the figure and elements
     fig, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers = init_figure_and_elements()
-    anim = FuncAnimation(fig, animate, frames=len(df), interval=1,
+    anim = FuncAnimation(fig, animate, frames=frames, interval=1,
                          fargs=(df, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers))
-    plt.show()
     # Optionally, save the animation
-    # anim.save('animation.gif', writer='imagemagick', fps=10)
+    if save_gif:
+        anim.save(f'{subject}_{task}.gif', fps=30)
+        exit()
+    # Show the animation
+    plt.show()
 
 # Ensure df is correctly loaded with left columns before calling setup_animation
 setup_animation(df)
