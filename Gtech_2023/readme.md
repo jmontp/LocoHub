@@ -8,7 +8,7 @@ This folder contains the code to convert the hirearchical formatted data into th
 
 # Time indexed data
 
-The "convert_gtech_nc_raw_to_parquet.py" script converts the data from the raw data of the dataset to a tabular format. 
+The "convert_gtech_nc_raw_to_parquet.py" script converts the data from the raw data of the dataset to a tabular format. To use the script, you first need to download the "RawDataset.zip" from the [dataset repository](https://repository.gatech.edu/entities/publication/20860ffb-71fd-4049-a033-cd0ff308339e) and extract the contents inside this folder. 
 
 Usage Information
 * Sampling rate = 100Hz
