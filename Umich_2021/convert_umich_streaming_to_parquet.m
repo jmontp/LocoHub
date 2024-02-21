@@ -137,7 +137,7 @@ for subject_idx = 1:length(subjects)
 end
 
 % Save the data to a parquet file
-parquetwrite('umich_2021_streaming.parquet', total_data);
+parquetwrite('umich_2021_time_indexed.parquet', total_data);
 
 
 
