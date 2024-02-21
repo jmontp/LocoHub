@@ -24,6 +24,10 @@ for subject_idx = 1:length(subjects)
     % Get the data for the current subject
     subject_data = dataset.(subject);
 
+    % Create a string for the subject that will be used in the table
+    subject_str = strcat('Umich_2021_', subject);
+
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Process the Treadmill data
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -51,7 +55,7 @@ for subject_idx = 1:length(subjects)
         % trial_table.incline = repmat(incline, size(trial_table, 1), 1);
         
         % Add the subject to the table
-        trial_table.subject = repmat({subject}, size(trial_table, 1), 1);
+        trial_table.subject = repmat({subject_str}, size(trial_table, 1), 1);
 
         % Add the task to the table
         if incline < 0
@@ -121,7 +125,7 @@ for subject_idx = 1:length(subjects)
         % trial_table.speed = repmat(speed, size(trial_table, 1), 1);
 
         % Add the subject to the table
-        trial_table.subject = repmat({subject}, size(trial_table, 1), 1);
+        trial_table.subject = repmat({subject_str}, size(trial_table, 1), 1);
 
         % Add the task to the table
         trial_table.task = repmat({'running'}, size(trial_table, 1), 1);
