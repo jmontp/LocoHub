@@ -82,7 +82,7 @@ for subject_idx = 1:length(subjects)
         trial_table = process_trial(walk_to_run_data);
     
         % Add the subject to the table
-        trial_table.subject = repmat({subject}, size(trial_table, 1), 1);
+        trial_table.subject = repmat({subject_str}, size(trial_table, 1), 1);
     
         % Add the task to the table
         trial_table.task = repmat({'transitions'}, size(trial_table, 1), 1);
@@ -161,19 +161,19 @@ function trial_table = process_trial(trial_struct)
     % Joint angles
     joint_angles = trial_struct.jointAngles;
 
-    trial_table.hip_angle_s_r = joint_angles.RAnkleAngles(:, sagittal_plane);
-    trial_table.hip_angle_f_r = joint_angles.RAnkleAngles(:, frontal_plane);
-    trial_table.hip_angle_t_r = joint_angles.RAnkleAngles(:, transverse_plane);
+    trial_table.hip_angle_s_r = joint_angles.RHipAngles(:, sagittal_plane);
+    trial_table.hip_angle_f_r = joint_angles.RHipAngles(:, frontal_plane);
+    trial_table.hip_angle_t_r = joint_angles.RHipAngles(:, transverse_plane);
 
-    trial_table.hip_angle_s_l = joint_angles.LAnkleAngles(:, sagittal_plane);
-    trial_table.hip_angle_f_l = joint_angles.LAnkleAngles(:, frontal_plane);
-    trial_table.hip_angle_t_l = joint_angles.LAnkleAngles(:, transverse_plane);
+    trial_table.hip_angle_s_l = joint_angles.LHipAngles(:, sagittal_plane);
+    trial_table.hip_angle_f_l = joint_angles.LHipAngles(:, frontal_plane);
+    trial_table.hip_angle_t_l = joint_angles.LHipAngles(:, transverse_plane);
 
-    trial_table.knee_angle_s_r = joint_angles.RKneeAngles(:, sagittal_plane);
+    trial_table.knee_angle_s_r = -joint_angles.RKneeAngles(:, sagittal_plane);
     trial_table.knee_angle_f_r = joint_angles.RKneeAngles(:, frontal_plane);
     trial_table.knee_angle_t_r = joint_angles.RKneeAngles(:, transverse_plane);
 
-    trial_table.knee_angle_s_l = joint_angles.LKneeAngles(:, sagittal_plane);
+    trial_table.knee_angle_s_l = -joint_angles.LKneeAngles(:, sagittal_plane);
     trial_table.knee_angle_f_l = joint_angles.LKneeAngles(:, frontal_plane);
     trial_table.knee_angle_t_l = joint_angles.LKneeAngles(:, transverse_plane);
 
@@ -185,11 +185,11 @@ function trial_table = process_trial(trial_struct)
     trial_table.ankle_angle_f_l = joint_angles.LAnkleAngles(:, frontal_plane);
     trial_table.ankle_angle_t_l = joint_angles.LAnkleAngles(:, transverse_plane);
 
-    trial_table.foot_angle_s_r = joint_angles.RFootProgressAngles(:, sagittal_plane);
+    trial_table.foot_angle_s_r = -joint_angles.RFootProgressAngles(:, sagittal_plane) + 90;
     trial_table.foot_angle_f_r = joint_angles.RFootProgressAngles(:, frontal_plane);
     trial_table.foot_angle_t_r = joint_angles.RFootProgressAngles(:, transverse_plane);
 
-    trial_table.foot_angle_s_l = joint_angles.LFootProgressAngles(:, sagittal_plane);
+    trial_table.foot_angle_s_l = -joint_angles.LFootProgressAngles(:, sagittal_plane) + 90;
     trial_table.foot_angle_f_l = joint_angles.LFootProgressAngles(:, frontal_plane);
     trial_table.foot_angle_t_l = joint_angles.LFootProgressAngles(:, transverse_plane);
 
@@ -243,29 +243,29 @@ function trial_table = process_trial(trial_struct)
     % Joint moments
     joint_moments = trial_struct.jointMoments;
 
-    trial_table.hip_moment_s_r = joint_moments.RHipMoment(:, sagittal_plane);
-    trial_table.hip_moment_f_r = joint_moments.RHipMoment(:, frontal_plane);
-    trial_table.hip_moment_t_r = joint_moments.RHipMoment(:, transverse_plane);
+    trial_table.hip_torque_s_r = joint_moments.RHipMoment(:, sagittal_plane);
+    trial_table.hip_torque_f_r = joint_moments.RHipMoment(:, frontal_plane);
+    trial_table.hip_torque_t_r = joint_moments.RHipMoment(:, transverse_plane);
 
-    trial_table.hip_moment_s_l = joint_moments.LHipMoment(:, sagittal_plane);
-    trial_table.hip_moment_f_l = joint_moments.LHipMoment(:, frontal_plane);
-    trial_table.hip_moment_t_l = joint_moments.LHipMoment(:, transverse_plane);
+    trial_table.hip_torque_s_l = joint_moments.LHipMoment(:, sagittal_plane);
+    trial_table.hip_torque_f_l = joint_moments.LHipMoment(:, frontal_plane);
+    trial_table.hip_torque_t_l = joint_moments.LHipMoment(:, transverse_plane);
 
-    trial_table.knee_moment_s_r = joint_moments.RKneeMoment(:, sagittal_plane);
-    trial_table.knee_moment_f_r = joint_moments.RKneeMoment(:, frontal_plane);
-    trial_table.knee_moment_t_r = joint_moments.RKneeMoment(:, transverse_plane);
+    trial_table.knee_torque_s_r = joint_moments.RKneeMoment(:, sagittal_plane);
+    trial_table.knee_torque_f_r = joint_moments.RKneeMoment(:, frontal_plane);
+    trial_table.knee_torque_t_r = joint_moments.RKneeMoment(:, transverse_plane);
 
-    trial_table.knee_moment_s_l = joint_moments.LKneeMoment(:, sagittal_plane);
-    trial_table.knee_moment_f_l = joint_moments.LKneeMoment(:, frontal_plane);
-    trial_table.knee_moment_t_l = joint_moments.LKneeMoment(:, transverse_plane);
+    trial_table.knee_torque_s_l = joint_moments.LKneeMoment(:, sagittal_plane);
+    trial_table.knee_torque_f_l = joint_moments.LKneeMoment(:, frontal_plane);
+    trial_table.knee_torque_t_l = joint_moments.LKneeMoment(:, transverse_plane);
 
-    trial_table.ankle_moment_s_r = joint_moments.RAnkleMoment(:, sagittal_plane);
-    trial_table.ankle_moment_f_r = joint_moments.RAnkleMoment(:, frontal_plane);
-    trial_table.ankle_moment_t_r = joint_moments.RAnkleMoment(:, transverse_plane);
+    trial_table.ankle_torque_s_r = joint_moments.RAnkleMoment(:, sagittal_plane);
+    trial_table.ankle_torque_f_r = joint_moments.RAnkleMoment(:, frontal_plane);
+    trial_table.ankle_torque_t_r = joint_moments.RAnkleMoment(:, transverse_plane);
 
-    trial_table.ankle_moment_s_l = joint_moments.LAnkleMoment(:, sagittal_plane);
-    trial_table.ankle_moment_f_l = joint_moments.LAnkleMoment(:, frontal_plane);
-    trial_table.ankle_moment_t_l = joint_moments.LAnkleMoment(:, transverse_plane);
+    trial_table.ankle_torque_s_l = joint_moments.LAnkleMoment(:, sagittal_plane);
+    trial_table.ankle_torque_f_l = joint_moments.LAnkleMoment(:, frontal_plane);
+    trial_table.ankle_torque_t_l = joint_moments.LAnkleMoment(:, transverse_plane);
 
     % TODO: More data types will be added in here in the future
 
