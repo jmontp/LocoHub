@@ -166,7 +166,7 @@ standard_column_names = {
 cols_to_flip_signs = [  
 
     # Flip knee torques
-    'knee_torque_s_r','knee_torque_s_l',
+    # 'knee_torque_s_r','knee_torque_s_l',
 
 ]
 
