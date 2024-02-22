@@ -212,6 +212,41 @@ function trial_table = process_trial(trial_struct)
     trial_table.pelvis_angle_f_l = circshift(trial_table.pelvis_angle_f_r, shift);
     trial_table.pelvis_angle_t_l = circshift(trial_table.pelvis_angle_t_r, shift);
 
+    % Joint velocity, there are no joint velocities in the dataset, so we
+    % will calculate them using the joint angles and time axis
+    d_phase_dt = 1/150;
+    trial_table.hip_vel_s_r = gradient(trial_table.hip_angle_s_r)./gradient(trial_table.phase) * d_phase_dt;
+    trial_table.hip_vel_f_r = gradient(trial_table.hip_angle_f_r)./gradient(trial_table.phase) * d_phase_dt;
+    trial_table.hip_vel_t_r = gradient(trial_table.hip_angle_t_r)./gradient(trial_table.phase) * d_phase_dt;
+
+    trial_table.hip_vel_s_l = circshift(trial_table.hip_vel_s_r, shift);
+    trial_table.hip_vel_f_l = circshift(trial_table.hip_vel_f_r, shift);
+    trial_table.hip_vel_t_l = circshift(trial_table.hip_vel_t_r, shift);
+
+    trial_table.knee_vel_s_r = gradient(trial_table.knee_angle_s_r)./gradient(trial_table.phase) * d_phase_dt;
+    trial_table.knee_vel_f_r = gradient(trial_table.knee_angle_f_r)./gradient(trial_table.phase) * d_phase_dt;
+    trial_table.knee_vel_t_r = gradient(trial_table.knee_angle_t_r)./gradient(trial_table.phase) * d_phase_dt;
+
+    trial_table.knee_vel_s_l = circshift(trial_table.knee_vel_s_r, shift);
+    trial_table.knee_vel_f_l = circshift(trial_table.knee_vel_f_r, shift);
+    trial_table.knee_vel_t_l = circshift(trial_table.knee_vel_t_r, shift);
+
+    trial_table.ankle_vel_s_r = gradient(trial_table.ankle_angle_s_r)./gradient(trial_table.phase) * d_phase_dt;    
+    trial_table.ankle_vel_f_r = gradient(trial_table.ankle_angle_f_r)./gradient(trial_table.phase) * d_phase_dt;
+    trial_table.ankle_vel_t_r = gradient(trial_table.ankle_angle_t_r)./gradient(trial_table.phase) * d_phase_dt;
+
+    trial_table.ankle_vel_s_l = circshift(trial_table.ankle_vel_s_r, shift);
+    trial_table.ankle_vel_f_l = circshift(trial_table.ankle_vel_f_r, shift);
+    trial_table.ankle_vel_t_l = circshift(trial_table.ankle_vel_t_r, shift);
+
+    trial_table.foot_vel_s_r = gradient(trial_table.foot_angle_s_r)./gradient(trial_table.phase) * d_phase_dt;
+    trial_table.foot_vel_f_r = gradient(trial_table.foot_angle_f_r)./gradient(trial_table.phase) * d_phase_dt;
+    trial_table.foot_vel_t_r = gradient(trial_table.foot_angle_t_r)./gradient(trial_table.phase) * d_phase_dt;
+
+    trial_table.foot_vel_s_l = circshift(trial_table.foot_vel_s_r, shift);
+    trial_table.foot_vel_f_l = circshift(trial_table.foot_vel_f_r, shift);
+    trial_table.foot_vel_t_l = circshift(trial_table.foot_vel_t_r, shift);
+
     % Joint moments
     joint_moments = trial_struct.jointMoments;
 
