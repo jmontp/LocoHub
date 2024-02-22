@@ -5,67 +5,6 @@
 % "Segmentation"/{Subject}/{activity_name}.mat
 % activity_name = {activity}_{activity_number}_{subactivity_name}_segmented
 
-% The .mat file contains the following variables:
-% - angle: the angle of the joint
-% - moment: the moment of the joint
-% - moment_filt: the filtered moment of the joint
-
-% Each variable contains the following sub-variables, which are indexed by
-% the segmented step number:
-% - data_{leg}: the data for the leg
-% (where {leg} is either 'r' or 'l')
-
-% And finally, for angle, each sub-variable contains the following 
-% sub-sub-variables:
-% - data: the actual data
-% - - data.hip_flexion_{leg}: the hip flexion angle
-% - - data.hip_adduction_{leg}: the hip adduction angle
-% - - data.hip_rotation_{leg}: the hip rotation angle
-% - - data.knee_angle_{leg}: the knee angle
-% - - data.ankle_angle_{leg}: the ankle angle
-% - - data.subtalar_angle_{leg}: the subtalar angle (foot roll)
-% (where {leg} is either 'r' or 'l')
-% - time: the time of the data
-
-% For velocity, each sub-variable contains the following sub-sub-variables:
-% - data: the actual data
-% - - data.hip_flexion_velocity_{leg}
-% - - data.hip_adduction_velocity_{leg}
-% - - data.hip_rotation_velocity_{leg}
-% - - data.knee_angle_velocity_{leg}
-% - - data.ankle_angle_velocity_{leg}
-% - - data.subtalar_angle_velocity_{leg}
-% (where {leg} is either 'r' or 'l')
-% - time: the time of the data
-
-% For moment_filt, each sub-variable contains the following sub-sub-variables:
-% - data: the actual data
-% - - data.hip_flexion_{leg}_moment
-% - - data.hip_adduction_{leg}_moment
-% - - data.hip_rotation_{leg}_moment
-% - - data.knee_angle_{leg}_moment
-% - - data.ankle_angle_{leg}_moment
-% - - data.subtalar_angle_{leg}_moment
-% (where {leg} is either 'r' or 'l')
-% - time: the time of the data
-
-% One example of the data is then as follows:
-% angle.data_r(1).data.hip_flexion_r
-% moment_filt.data_r(2).data.hip_flexion_r_moment
-
-% The .csv file will contain the following columns:
-% - subject: the subject number
-% - activity: the activity name
-% - subactivity: the subactivity name
-% - leg: the leg (right or left)
-% - step: the step number
-% - time: the time of the data
-% - hip_flexion_{leg}, hip_adduction_{leg}, hip_rotation_{leg}, 
-% - knee_angle_{leg}, ankle_angle_{leg}, subtalar_angle_{leg},
-% - hip_flexion_{leg}_moment, hip_adduction_{leg}_moment,
-% - hip_rotation_{leg}_moment, knee_angle_{leg}_moment,
-% - ankle_angle_{leg}_moment, subtalar_angle_{leg}_moment
-
 clear all;
 close all;
 
@@ -95,7 +34,10 @@ subjects = subjects(3:end); % remove . and ..
 % Iterate through all the subjects
 for subject_idx = 1:length(subjects)
 % for subject_idx = 1:2
+
+    % Get the subject name
     subject = subjects(subject_idx).name
+    subject_save_name = strcat("Gtech_2023_",subject);
     subject_dir = fullfile(data_dir, subject);
     activities = dir(subject_dir);
     activities = activities(3:end); % remove . and ..
@@ -165,10 +107,12 @@ for subject_idx = 1:length(subjects)
             global_file_name = fullfile('RawData', subject,...
                 'Transforms_Euler',...
                 [activity_name '_' int2str(activity_number) '_' stair_num '.csv']);
+        
         % For step ups, we don't need the activity number if it is only 1
         elseif strcmp(activity_name, 'step_ups') & activity_number == 1
             global_file_name = fullfile('RawData', subject, ...
                 'Transforms_Euler', 'step_ups.csv');
+        
         % For jump, see if there is another number as the first character
         % of the subactivity name. If so, use that number to get the file
         elseif strcmp(activity_name, 'jump') & activity_number == 1 & ...
@@ -183,6 +127,7 @@ for subject_idx = 1:length(subjects)
                 'Transforms_Euler',...
                 [activity_name '_' int2str(activity_number) '.csv']);
         end
+        
         % Read the csv that contains the global angles
         global_raw_data = readtable(global_file_name);
         global_angles_time = global_raw_data.Header; % Get the time axis
@@ -228,7 +173,7 @@ for subject_idx = 1:length(subjects)
                 % Initialize with the subject, activity, and subactivity
                 table_data = table();
                 table_data.subject = ...
-                    repmat({subject}, num_points_per_step, 1);
+                    repmat(subject_save_name, num_points_per_step, 1);
                 table_data.activity = ...
                     repmat({activity_name}, num_points_per_step, 1);
                 table_data.subactivity = ...
@@ -362,7 +307,7 @@ for subject_idx = 1:length(subjects)
                 % Create a local table for the spoofed data
                 table_data = table();
                 table_data.subject = ...
-                    repmat({subject}, nan_fill_points, 1);
+                    repmat(subject_save_name, nan_fill_points, 1);
                 table_data.activity = ...
                     repmat({activity_name}, nan_fill_points, 1);
                 table_data.subactivity = ...
@@ -411,7 +356,7 @@ for subject_idx = 1:length(subjects)
 
             % Initialize with the subject, activity, and subactivity
             table_data.subject = ...
-                repmat({subject}, nan_fill_points, 1);
+                repmat(subject_save_name, nan_fill_points, 1);
             table_data.activity = ...
                 repmat({activity_name}, nan_fill_points, 1);
             table_data.subactivity = ...
@@ -467,8 +412,20 @@ end
 % them on the second dataset.
 combined_data = [total_data.r, total_data.l(:, 5:end)];
 
+% Update the names of the columns so that they match the standardized notation
+% for the data
+
+% Get the names of the columns
+old_col_names = ["knee_angle_r"  , "knee_angle_l"  , "knee_velocity_r", "knee_velocity_l", "knee_angle_r_moment", "knee_angle_l_moment", "ankle_angle_r"  , "ankle_angle_l"  , "ankle_velocity_r","ankle_velocity_l" , "ankle_angle_r_moment", "ankle_angle_l_moment", "calcn_r_Z"     , "calcn_l_Z"     , "calcn_r_Z_velocity", "calcn_l_Z_velocity", "hip_flexion_r"  , "hip_flexion_l"  , "hip_flexion_velocity_r", "hip_flexion_velocity_l", "hip_flexion_r_moment", "hip_flexion_l_moment", "activity"];
+new_col_names = ["knee_angle_s_r", "knee_angle_s_l", "knee_vel_s_r"   , "knee_vel_s_l"   , "knee_torque_s_r"    , "knee_torque_s_l"    , "ankle_angle_s_r", "ankle_angle_s_l", "ankle_vel_s_r"   , "ankle_vel_s_l"   , "ankle_torque_s_r"    , "ankle_torque_s_l"    , "foot_angle_s_r", "foot_angle_s_l", "foot_vel_s_r"      , "foot_vel_s_l"      , "hip_angle_s_r", "hip_angle_s_l", "hip_vel_s_r"           , "hip_vel_s_l"           , "hip_torque_s_r"      , "hip_torque_s_l"      , "task"];
+
+% Update the names of the columns
+combined_data = renamevars(combined_data, old_col_names, new_col_names);
+
+% Covert task data to string
+combined_data.task = convertCharsToStrings(combined_data.task);
 
 % Write the data to a parquet file
-file_name =  'gtech_non_cyclic_segmented.parquet';
+file_name =  'gtech_2023_phase_indexed.parquet';
 % parquet_file = fullfile(output_dir,file_name);
 parquetwrite(file_name,combined_data)
