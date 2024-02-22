@@ -185,11 +185,11 @@ function trial_table = process_trial(trial_struct)
     trial_table.ankle_angle_f_l = joint_angles.LAnkleAngles(:, frontal_plane);
     trial_table.ankle_angle_t_l = joint_angles.LAnkleAngles(:, transverse_plane);
 
-    trial_table.foot_angle_s_r = -joint_angles.RFootProgressAngles(:, sagittal_plane) + 90;
+    trial_table.foot_angle_s_r = -joint_angles.RFootProgressAngles(:, sagittal_plane) - 90;
     trial_table.foot_angle_f_r = joint_angles.RFootProgressAngles(:, frontal_plane);
     trial_table.foot_angle_t_r = joint_angles.RFootProgressAngles(:, transverse_plane);
 
-    trial_table.foot_angle_s_l = -joint_angles.LFootProgressAngles(:, sagittal_plane) + 90;
+    trial_table.foot_angle_s_l = -joint_angles.LFootProgressAngles(:, sagittal_plane) - 90;
     trial_table.foot_angle_f_l = joint_angles.LFootProgressAngles(:, frontal_plane);
     trial_table.foot_angle_t_l = joint_angles.LFootProgressAngles(:, transverse_plane);
 
@@ -214,6 +214,10 @@ function trial_table = process_trial(trial_struct)
     trial_table.knee_vel_s_r = gradient(trial_table.knee_angle_s_r)./gradient(trial_table.time);
     trial_table.knee_vel_f_r = gradient(trial_table.knee_angle_f_r)./gradient(trial_table.time);
     trial_table.knee_vel_t_r = gradient(trial_table.knee_angle_t_r)./gradient(trial_table.time);
+
+    trial_table.knee_vel_s_l = gradient(trial_table.knee_angle_s_l)./gradient(trial_table.time);
+    trial_table.knee_vel_f_l = gradient(trial_table.knee_angle_f_l)./gradient(trial_table.time);
+    trial_table.knee_vel_t_l = gradient(trial_table.knee_angle_t_l)./gradient(trial_table.time);
 
     trial_table.ankle_vel_s_r = gradient(trial_table.ankle_angle_s_r)./gradient(trial_table.time);
     trial_table.ankle_vel_f_r = gradient(trial_table.ankle_angle_f_r)./gradient(trial_table.time);

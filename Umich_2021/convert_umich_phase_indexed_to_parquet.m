@@ -196,7 +196,7 @@ function trial_table = process_trial(trial_struct)
     trial_table.ankle_angle_f_l = circshift(trial_table.ankle_angle_f_r, shift);
     trial_table.ankle_angle_t_l = circshift(trial_table.ankle_angle_t_r, shift);
 
-    trial_table.foot_angle_s_r = reshape(-joint_angles.FootProgressAngles(:, sagittal_plane, :) + 90, [], 1);
+    trial_table.foot_angle_s_r = reshape(-joint_angles.FootProgressAngles(:, sagittal_plane, :) - 90, [], 1);
     trial_table.foot_angle_f_r = reshape(joint_angles.FootProgressAngles(:, frontal_plane, :), [], 1);
     trial_table.foot_angle_t_r = reshape(joint_angles.FootProgressAngles(:, transverse_plane, :), [], 1);
 
