@@ -388,6 +388,12 @@ for subject_idx = 1:length(subjects)
              'left legs are different']);
         end
 
+        % Add a phase that goes from 0 to 100% for each leg
+        activity_data.r.phase_r = repmat(linspace(0, 1, num_points_per_step.r), ...
+            num_steps.r, 1)';
+        activity_data.l.phase_l =repmat(linspace(0, 1, num_points_per_step.r), ...
+            num_steps.r, 1)';
+
         % Introduce a phase shift of 50% to a leg so that it mimics
         % walking data. This is done by doing a circular shift of the data
         % by 50% of the number of steps. The leg that has the smallest first  
@@ -424,6 +430,10 @@ combined_data = renamevars(combined_data, old_col_names, new_col_names);
 
 % Covert task data to string
 combined_data.task = convertCharsToStrings(combined_data.task);
+
+% Add a phase columns to the entire dataset
+combined_data.phase = repmat(linspace(0, 1, num_points_per_step)', ...
+    height(combined_data)/num_points_per_step, 1);
 
 % Write the data to a parquet file
 file_name =  'gtech_2023_phase_indexed.parquet';
