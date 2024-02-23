@@ -61,8 +61,10 @@ subject_count = length(subject_list);
 % Create one big subplot that will have 12 total subplots
 % It will have 9 (3 subjects time three euler angles) rows and 4 columns, 
 % with the columns have different subjects
-figure;
-sgtitle(append("Testing rotation ordering: ", rotm_sequence, plot_title))
+if just_plot
+    figure;
+    sgtitle(append("Testing rotation ordering: ", rotm_sequence, plot_title))
+end
 
 % Iterate through all the subjects
 for subject_num = 1:subject_count
@@ -161,15 +163,20 @@ for subject_num = 1:subject_count
             % euler_angles = rotm2eul(rotation_matrices, "ZYX"); %Default
             euler_angles = rad2deg(rotm2eul(rotation_matrices, rotm_sequence));
 
-            % Calculate the euler velocities
-            euler_velocities = gradient(euler_angles)./gradient(Transforms.Header);
+       
  
             % Add the field to the table
             for euler_idx = 1:3
                 angle_name = append(field_name,"_",rotm_sequence(euler_idx));
                 euler_angle_table.(angle_name) = euler_angles(:, euler_idx);
+                   
+                % Calculate the euler velocities
+                Hz = 200; % For the motion capture data
+                dt = 1/Hz;
+
                 vel_name = append(field_name,"_vel_",rotm_sequence(euler_idx));
-                euler_velocity_table.(vel_name) = euler_velocities(:, euler_idx);
+                euler_velocity = gradient(euler_angles(:, euler_idx))/dt;
+                euler_velocity_table.(vel_name) = euler_velocity;
             end
            
         end
