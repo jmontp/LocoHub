@@ -214,7 +214,7 @@ function trial_table = process_trial(trial_struct)
 
     % Joint velocity, there are no joint velocities in the dataset, so we
     % will calculate them using the joint angles and time axis
-    d_phase_dt = 1/150;
+    d_phase_dt = 1;
     trial_table.hip_vel_s_r = gradient(trial_table.hip_angle_s_r)./gradient(trial_table.phase) * d_phase_dt;
     trial_table.hip_vel_f_r = gradient(trial_table.hip_angle_f_r)./gradient(trial_table.phase) * d_phase_dt;
     trial_table.hip_vel_t_r = gradient(trial_table.hip_angle_t_r)./gradient(trial_table.phase) * d_phase_dt;
