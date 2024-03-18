@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.patches import Arc, FancyArrowPatch
-
+import os
 import argparse
 
 # Create the argument parser
@@ -114,11 +114,11 @@ def init_figure_and_elements():
     """
     Initialize the figure with a layout for five subplots.
     """
-    fig = plt.figure(figsize=(18, 10))
-    grid_spec = fig.add_gridspec(3, 3)
+    fig = plt.figure(figsize=(18, 18))
+    grid_spec = fig.add_gridspec(4, 3)
 
     # Set the y-axis limits for the joint angles and torques plots
-    angle_ylim = (-100, 100)
+    angle_ylim = (-130, 130)
     torque_ylim = (-3, 3)
 
     # Main stick figure animation subplot
@@ -140,16 +140,17 @@ def init_figure_and_elements():
                 ax2.plot([], [], 'g-', label='Knee Angle')[0], 
                 ax2.plot([], [], 'b-', label='Ankle Angle')[0]]
     
+    # Joint angles plot for the left leg
     ax3 = fig.add_subplot(grid_spec[2, 1])
     ax3.set_title("Joint Angles (Left Leg)")
     ax3.set_xlim(0, 150)
     ax3.set_ylim(*angle_ylim)
     ax3.xaxis.set_visible(False) 
-    ax3_data = [ax3.plot([], [], 'r--', label='Hip Angle (C)')[0],
-                ax3.plot([], [], 'g--', label='Knee Angle (C)')[0],
-                ax3.plot([], [], 'b--', label='Ankle Angle (C)')[0]]
+    ax3_data = [ax3.plot([], [], 'r--', label='Hip Angle')[0],
+                ax3.plot([], [], 'g--', label='Knee Angle')[0],
+                ax3.plot([], [], 'b--', label='Ankle Angle')[0]]
 
-
+    # Joint torques plot for the right leg
     ax4 = fig.add_subplot(grid_spec[0, 2])
     ax4.set_title("Joint Torques (Right Leg)")
     ax4.set_xlim(0, 150)
@@ -159,22 +160,55 @@ def init_figure_and_elements():
                 ax4.plot([], [], 'g-', label='Knee Torque')[0],
                 ax4.plot([], [], 'b-', label='Ankle Torque')[0]]
     
+    # Joint torques plot for the left leg
     ax5 = fig.add_subplot(grid_spec[1, 2])
     ax5.set_title("Joint Torques (Left Leg)")
     ax5.set_xlim(0, 150)
     ax5.set_ylim(*torque_ylim)
     ax5.xaxis.set_visible(False)
-    ax5_data = [ax5.plot([], [], 'r--', label='Hip Torque (C)')[0],
-                ax5.plot([], [], 'g--', label='Knee Torque (C)')[0],
-                ax5.plot([], [], 'b--', label='Ankle Torque (C)')[0]]
-
+    ax5_data = [ax5.plot([], [], 'r--', label='Hip Torque')[0],
+                ax5.plot([], [], 'g--', label='Knee Torque')[0],
+                ax5.plot([], [], 'b--', label='Ankle Torque')[0]]
+    
+    # Global foot angle plot for both legs
     ax6 = fig.add_subplot(grid_spec[2, 2])
     ax6.set_title("Global Foot Angle (Right Leg)")
     ax6.set_xlim(0, 150)
     ax6.set_ylim(*angle_ylim)
     ax6.xaxis.set_visible(False)
-    ax6_data = [ax6.plot([], [], 'b-', label='Foot Angle')[0],
-                ax6.plot([], [], 'b--', label='Foot Angle (C)')[0]]
+    ax6_data = [ax6.plot([], [], 'b-', label='Foot Angle Right')[0],
+                ax6.plot([], [], 'b--', label='Foot Angle Left')[0]]
+    
+    # Joint Velocities plot for the right leg
+    ax7 = fig.add_subplot(grid_spec[3, 0])
+    ax7.set_title("Joint Velocities (Right Leg)")
+    ax7.set_xlim(0, 150)
+    ax7.set_ylim(-400, 400)
+    ax7.xaxis.set_visible(False)
+    ax7_data = [ax7.plot([], [], 'r-', label='Hip Velocity')[0],
+                ax7.plot([], [], 'g-', label='Knee Velocity')[0],
+                ax7.plot([], [], 'b-', label='Ankle Velocity')[0]
+               ]
+    
+    # Joint Velocities plot for the left leg
+    ax8 = fig.add_subplot(grid_spec[3, 1])
+    ax8.set_title("Joint Velocities (Left Leg)")
+    ax8.set_xlim(0, 150)
+    ax8.set_ylim(-400, 400)
+    ax8.xaxis.set_visible(False)
+    ax8_data = [ax8.plot([], [], 'r--', label='Hip Velocity')[0],
+                ax8.plot([], [], 'g--', label='Knee Velocity')[0],
+                ax8.plot([], [], 'b--', label='Ankle Velocity')[0]
+               ]
+    
+    # Global foot angle plot for both legs
+    ax9 = fig.add_subplot(grid_spec[3, 2])
+    ax9.set_title("Global Foot Velocity (Right Leg)")
+    ax9.set_xlim(0, 150)
+    ax9.set_ylim(-400, 400)
+    ax9.xaxis.set_visible(False)
+    ax9_data = [ax9.plot([], [], 'b-', label='Foot Velocity Right')[0],
+                ax9.plot([], [], 'b--', label='Foot Velocity Left')[0]]
     
     # Create a line at zero for all the joint angles and torques plots
     for ax in [ax2, ax3, ax4, ax5, ax6]:
@@ -211,18 +245,28 @@ def init_figure_and_elements():
     ax4.legend(loc='upper right')
     ax5.legend(loc='upper right')
     ax6.legend(loc='upper right')
+    ax7.legend(loc='upper right')
+    ax8.legend(loc='upper right')
+    ax9.legend(loc='upper right')
 
 
     return fig, ax1, (ax2,ax2_data), (ax3,ax3_data), (ax4,ax4_data), \
-           (ax5,ax5_data), (ax6,ax6_data), lines, torque_markers
+           (ax5,ax5_data), (ax6,ax6_data), (ax7,ax7_data), (ax8,ax8_data), \
+           (ax9,ax9_data), lines, torque_markers
 
-def animate(i, df, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers):
+def animate(i, df, ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9,
+             lines, torque_markers): 
     """
     Update the animation for both the right and left legs and the plots for joint angles and torques.
     """
     # Print in the same line the current iteration and update the title
     print(f"\rProcessing frame {i+jump_points+1}/{len(df)}", end='')
-    ax1.set_title(f"Joint Kinematics for {subject} doing {task} (Frame {i+jump_points+1}/{len(df)})")
+
+    # Get the time or phase for the current frame
+    time = df.loc[i, 'time'] if 'time' in df else df.loc[i, 'phase']
+    time_str = f'Time {time:.2f}' if 'time' in df else f'Phase {time:.2f}%'
+    # Update the title of the stick figure animation
+    ax1.set_title(f"Joint Kinematics for {subject} doing {task} (Frame {i+jump_points+1}/{len(df)}) ({time_str})")
     
     #Set the torso position to be vertical 
     lines['torso'].set_data([0, 0], [0, segment_lengths['torso']])
@@ -326,6 +370,23 @@ def animate(i, df, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers):
     ax6_data[0].set_data(x_axis, df.loc[start_idx:end_idx, 'foot_angle_s_r'])
     ax6_data[1].set_data(x_axis, df.loc[start_idx:end_idx, 'foot_angle_s_l'])
 
+    # Update joint velocities plot for the right leg
+    ax7, ax7_data = ax7
+    ax7_data[0].set_data(x_axis, df.loc[start_idx:end_idx, 'hip_vel_s_r'])
+    ax7_data[1].set_data(x_axis, df.loc[start_idx:end_idx, 'knee_vel_s_r'])
+    ax7_data[2].set_data(x_axis, df.loc[start_idx:end_idx, 'ankle_vel_s_r'])
+
+    # Update joint velocities plot for the left leg
+    ax8, ax8_data = ax8
+    ax8_data[0].set_data(x_axis, df.loc[start_idx:end_idx, 'hip_vel_s_l'])
+    ax8_data[1].set_data(x_axis, df.loc[start_idx:end_idx, 'knee_vel_s_l'])
+    ax8_data[2].set_data(x_axis, df.loc[start_idx:end_idx, 'ankle_vel_s_l'])
+
+    # Update global foot velocity plot for the right and left leg
+    ax9, ax9_data = ax9
+    ax9_data[0].set_data(x_axis, df.loc[start_idx:end_idx, 'foot_vel_s_r'])
+    ax9_data[1].set_data(x_axis, df.loc[start_idx:end_idx, 'foot_vel_s_l'])
+    
     # Update torque markers positions
     torque_markers['hip_torque_s_r'].set_offsets([hip_pos_r])
     torque_markers['knee_torque_s_r'].set_offsets([knee_pos_r])
@@ -358,18 +419,32 @@ def setup_animation(df):
     """
     # If we are saving, only plot the first 400 frames
     if save_gif:
-        plt.ioff()
-        frames = 400
+        # plt.ioff()
+        frames = 1000
     else:
         frames = len(df)
     # Initialize the figure and elements
-    fig, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers = init_figure_and_elements()
+    fig, ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9, lines, torque_markers = \
+        init_figure_and_elements()
     anim = FuncAnimation(fig, animate, frames=frames, interval=1,
-                         fargs=(df, ax1, ax2, ax3, ax4, ax5, ax6, lines, torque_markers))
-    # Optionally, save the animation
+                         fargs=(df, ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, 
+                                ax9, lines, torque_markers))
+    
+    # Optionally, save the animation and exit
     if save_gif:
-        anim.save(f'{subject}_{task}.gif', fps=30)
+        dataset_type = 'time' if 'time' in parquet_file else 'phase'
+        # Get the folder that the parquet file is in
+        parquet_folder = parquet_file.split('/')[0]
+        # Create a validation_gif folder
+        if not os.path.exists(f'{parquet_folder}/validation_gif'):
+            os.makedirs(f'{parquet_folder}/validation_gif')
+        # Get the gif name
+        gif_name = (f'{parquet_folder}/validation_gif/' 
+                    f'{subject}_{task}_{dataset_type}.gif')
+        # Save the animation as a gif
+        anim.save(gif_name, fps=30)
         exit()
+
     # Show the animation
     plt.show()
 
