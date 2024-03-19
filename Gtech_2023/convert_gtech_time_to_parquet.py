@@ -259,7 +259,7 @@ def convert_dataset_to_pandas():
             df = pd.merge(df, sub_df, on='time')
 
         # Add the activity and subject columns
-        df['task_long'] = activity
+        df['task_info'] = activity
         df['subject'] = 'Gtech_2023_' + subject
 
         # Add the activity short name
@@ -280,7 +280,7 @@ def convert_dataset_to_pandas():
     df_total[cols_to_flip_signs] = df_total[cols_to_flip_signs] * -1
 
     # (5) Save the dataframe
-    df_total.to_parquet('gtech_2023_time_indexed.parquet')
+    df_total.to_parquet('gtech_2023_time.parquet')
     print('Done')
         
 if __name__ == '__main__':

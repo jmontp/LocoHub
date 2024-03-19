@@ -176,7 +176,7 @@ for subject_idx = 1:length(subjects)
                     repmat(subject_save_name, num_points_per_step, 1);
                 table_data.activity = ...
                     repmat({activity_name}, num_points_per_step, 1);
-                table_data.subactivity = ...
+                table_data.task_info = ...
                     repmat({sub_activity_name}, num_points_per_step, 1);
                 table_data.activity_number = ...
                     repmat(activity_number, num_points_per_step, 1);
@@ -436,6 +436,6 @@ combined_data.phase = repmat(linspace(0, 1, num_points_per_step)', ...
     height(combined_data)/num_points_per_step, 1);
 
 % Write the data to a parquet file
-file_name =  'gtech_2023_phase_indexed.parquet';
+file_name =  'gtech_2023_phase.parquet';
 % parquet_file = fullfile(output_dir,file_name);
 parquetwrite(file_name,combined_data)

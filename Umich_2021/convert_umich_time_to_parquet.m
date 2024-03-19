@@ -58,12 +58,19 @@ for subject_idx = 1:length(subjects)
         trial_table.subject = repmat({subject_str}, size(trial_table, 1), 1);
 
         % Add the task to the table
+        incline_value = tread_inclines{incline_idx};
+        speed = tread_inclines_name{incline_idx};
+        long_task_substring =  strcat(num2str(abs(incline_value)), '_deg_',speed,'_m_s');
+
         if incline < 0
             trial_table.task = repmat({'decline_walking'}, size(trial_table, 1), 1);
+            trial_table.task_info = repmat({long_task_substring}, size(trial_table, 1), 1);
         elseif incline > 0
             trial_table.task = repmat({'incline_walking'}, size(trial_table, 1), 1);
+            trial_table.task_info = repmat({long_task_substring}, size(trial_table, 1), 1);
         else
             trial_table.task = repmat({'level_walking'}, size(trial_table, 1), 1);
+            trial_table.task_info = repmat({long_task_substring}, size(trial_table, 1), 1);
         end
 
         % Add the data to the total table
@@ -86,6 +93,7 @@ for subject_idx = 1:length(subjects)
     
         % Add the task to the table
         trial_table.task = repmat({'transitions'}, size(trial_table, 1), 1);
+        trial_table.task_info = repmat({'walk_to_run'}, size(trial_table, 1), 1);
     
         % Add the data to the total table
         total_data = [total_data; trial_table];
@@ -129,6 +137,7 @@ for subject_idx = 1:length(subjects)
 
         % Add the task to the table
         trial_table.task = repmat({'running'}, size(trial_table, 1), 1);
+        trial_table.task_info = repmat({strcat(num2str(speed), '_m_s')}, size(trial_table, 1), 1);
 
         % Add the data to the total table
         total_data = [total_data; trial_table];
@@ -137,7 +146,7 @@ for subject_idx = 1:length(subjects)
 end
 
 % Save the data to a parquet file
-parquetwrite('umich_2021_time_indexed.parquet', total_data);
+parquetwrite('umich_2021_time.parquet', total_data);
 
 
 

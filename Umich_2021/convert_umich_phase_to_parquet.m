@@ -72,19 +72,19 @@ for subject_idx = 1:length(subjects)
             trial_table.subject = repmat({subject_str}, size(trial_table, 1), 1);
 
             % Add the task to the table
-            long_task_substring =  strcat(num2str(abs(incline_value)), '_deg_',speed);
+            long_task_substring =  strcat(num2str(abs(incline_value)), '_deg_',speed,'_m_s');
             if incline_value < 0
                 trial_table.task = repmat({'decline_walking'}, size(trial_table, 1), 1);
                 long_task_name = strcat('decline_walking_',long_task_substring);
-                trial_table.task_long = repmat({'decline_walking'}, size(trial_table, 1), 1);
+                trial_table.task_info = repmat({long_task_name}, size(trial_table, 1), 1);
             elseif incline_value > 0
                 trial_table.task = repmat({'incline_walking'}, size(trial_table, 1), 1);
                 long_task_name = strcat('incline_walking_',long_task_substring);
-                trial_table.task_long = repmat({'incline_walking'}, size(trial_table, 1), 1);
+                trial_table.task_info = repmat({long_task_name}, size(trial_table, 1), 1);
             else
                 trial_table.task = repmat({'level_walking'}, size(trial_table, 1), 1);
                 long_task_name = strcat('level_walking_',speed);
-                trial_table.task_long = repmat({'level_walking'}, size(trial_table, 1), 1);
+                trial_table.task_info = repmat({long_task_name}, size(trial_table, 1), 1);
             end
 
             % Add the data to the total table
@@ -134,7 +134,7 @@ for subject_idx = 1:length(subjects)
 
         % Add the long task name
         long_task = strcat('running_',num2str(speed));
-        trial_table.task_long = repmat({long_task}, size(trial_table, 1), 1);
+        trial_table.task_info = repmat({long_task}, size(trial_table, 1), 1);
         
 
         % Add the data to the total table
@@ -144,7 +144,7 @@ for subject_idx = 1:length(subjects)
 end
 
 % Save the data to a parquet file
-parquetwrite('umich_2021_phase_indexed.parquet', total_data);
+parquetwrite('umich_2021_phase.parquet', total_data);
 
 
 
