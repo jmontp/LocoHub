@@ -264,11 +264,11 @@ function trial_table = process_trial(trial_struct)
     trial_table.hip_torque_f_l = joint_moments.LHipMoment(:, frontal_plane);
     trial_table.hip_torque_t_l = joint_moments.LHipMoment(:, transverse_plane);
 
-    trial_table.knee_torque_s_r = joint_moments.RKneeMoment(:, sagittal_plane);
+    trial_table.knee_torque_s_r = -joint_moments.RKneeMoment(:, sagittal_plane);
     trial_table.knee_torque_f_r = joint_moments.RKneeMoment(:, frontal_plane);
     trial_table.knee_torque_t_r = joint_moments.RKneeMoment(:, transverse_plane);
 
-    trial_table.knee_torque_s_l = joint_moments.LKneeMoment(:, sagittal_plane);
+    trial_table.knee_torque_s_l = -joint_moments.LKneeMoment(:, sagittal_plane);
     trial_table.knee_torque_f_l = joint_moments.LKneeMoment(:, frontal_plane);
     trial_table.knee_torque_t_l = joint_moments.LKneeMoment(:, transverse_plane);
 

@@ -259,7 +259,7 @@ function trial_table = process_trial(trial_struct)
     trial_table.hip_torque_f_l = circshift(trial_table.hip_torque_f_r, shift);
     trial_table.hip_torque_t_l = circshift(trial_table.hip_torque_t_r, shift);
 
-    trial_table.knee_torque_s_r = reshape(joint_moments.KneeMoment(:, sagittal_plane, :), [], 1);
+    trial_table.knee_torque_s_r = reshape(-joint_moments.KneeMoment(:, sagittal_plane, :), [], 1);
     trial_table.knee_torque_f_r = reshape(joint_moments.KneeMoment(:, frontal_plane, :), [], 1);
     trial_table.knee_torque_t_r = reshape(joint_moments.KneeMoment(:, transverse_plane, :), [], 1);
 
