@@ -43,9 +43,12 @@ The kinematics have indicator variables to give the joint in the different plane
 * ankle_torque_{plane}_{leg}
 
 
-# Ground Reaction Force
-* axis - z (up+), f (), t (transversal)
+# Forces
+Annotation regulations:
+* axis - z (up+), x (left+), y (forward+)
 * leg - r (right), l (left)
+  
+## Ground Reaction Force
 * Force_{axis}_{leg}
 * COP_{axis}_{leg}
   
