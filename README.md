@@ -42,8 +42,9 @@ The kinematics have indicator variables to give the joint in the different plane
 * knee_torque_{plane}_{leg}
 * ankle_torque_{plane}_{leg}
 
-## Ground Reaction Force
-*
+# Ground Reaction Force
+* Force_{axis}_{leg}
+* COP_{axis}_{leg}
 
 # Sagital plane conventions
 * Ankle dorsiflexion -> Positive
