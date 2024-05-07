@@ -49,7 +49,7 @@ Annotation regulations:
 * leg - r (right), l (left)
   
 ## Ground Reaction Force
-* Force_{axis}_{leg}
+* force_{axis}_{leg}
 * COP_{axis}_{leg}
   
 
