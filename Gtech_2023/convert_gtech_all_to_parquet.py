@@ -211,7 +211,7 @@ def convert_dataset_to_pandas():
     
     # Use list comprehension to filter out strings that start with non-letter characters
     subject_dirs = [string for string in subject_dirs if not pattern.match(string)]
-
+    print(subject_dirs)
 
 
     # Remove the Subject_masses.csv file
@@ -229,7 +229,7 @@ def convert_dataset_to_pandas():
         pass
 
     # (1) Create a list of all the files that we want to potentially save
-    for subject in subject_dirs:
+    for subject in tqdm(subject_dirs):
         # Loop through the activity folders
         for activity in os.listdir(os.path.join(base_path, subject, "CSV_Data")):
             # Loop through the files
@@ -245,7 +245,8 @@ def convert_dataset_to_pandas():
 
     # (2) Loop through the files and decide if we want to keep it. If we do
     # keep it, append it to the dictionary
-    for subject, activity, file_name in file_list:
+    print("Start picking\n")
+    for subject, activity, file_name in tqdm(file_list):
         
         # Get the data unit (moment_filt, angle, velocity, etc)
         data_unit = file_name.split('.')[0]
@@ -274,12 +275,12 @@ def convert_dataset_to_pandas():
     # dataframes. Additionally add the global angles if they are in the 
     # data_to_save list (assuming they have been calculated with 
     # convert_gtech_nc_rotm_to_eul_csv.m) 
-    
+    print("Start processing \n")
     #Create an empty dataframe
     df_total = pd.DataFrame()
 
     # Loop through the keys
-    for key_num, key in enumerate(dataframes.keys()):
+    for key_num, key in tqdm(enumerate(dataframes.keys())):
 
         # Show percentage of completion in the same line
         print(f'Processing {key_num+1}/{len(dataframes.keys())}'+' '*30, 
