@@ -5,7 +5,7 @@ This file is meant to convert the dataset to a pandas dataframe
 import pandas as pd
 import numpy as np
 import os
-
+from tqdm import tqdm
 ###############################################################################
 # User configuration section
 
@@ -20,7 +20,7 @@ base_path = './rawdata'
 # Currently the only standardized names are
 # 'Joint_Angle', 'Joint_Velocities', 'Joint_Moments', 'Link_Angle'
 data_to_save = ['Joint_Moments', 'Joint_Angle', 
-                'Joint_Velocities', 'Link_Angle', 'Link_Velocities']
+                'Joint_Velocities', 'Link_Angle', 'Link_Velocities',"GroundFrame_GRFs"]
 
 ###############################################################################
 # Don't modify anything below this line
