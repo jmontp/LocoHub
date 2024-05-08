@@ -256,7 +256,7 @@ def convert_dataset_to_pandas():
             continue
         
         # Show the progress on the same line
-        print(f'Processing {subject} {activity} {data_unit}'+' '*20, end='\r')
+        #print(f'Processing {subject} {activity} {data_unit}'+' '*20, end='\r')
 
         # Get the file path
         file_path = os.path.join(base_path, subject, "CSV_Data", activity, file_name)
@@ -283,8 +283,7 @@ def convert_dataset_to_pandas():
     for key_num, key in tqdm(enumerate(dataframes.keys())):
 
         # Show percentage of completion in the same line
-        print(f'Processing {key_num+1}/{len(dataframes.keys())}'+' '*30, 
-              end='\r')
+        #print(f'Processing {key_num+1}/{len(dataframes.keys())}'+' '*30,      end='\r')
 
         # Verify that we have all the data types that we want
         assert len(dataframes[key]) == len(data_to_save), \
