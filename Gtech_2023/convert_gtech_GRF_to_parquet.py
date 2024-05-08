@@ -162,15 +162,15 @@ standard_column_names = {
 
     #GRF
     "time": "time",
-    "RForceX": "RForceX",
-    "RForceY_Vertical": "RForceZ_vt",
-    "RForceZ": "RForceY",
-    "RCOPX": "RCOPY",
-    "RCOPY_Vertical": "RCOPX",
-    "RCOPZ": "RCOPZ_vt",
-    "LForceX": "LForceX",
-    "LForceY_Vertical": "LForceZ_vt",
-    "LForceZ": "LForceY",
+    "RForceX": "force_x_r",
+    "RForceY_Vertical": "force_z_r",
+    "RForceZ": "force_y_r",
+    "RCOPX": "COP_x_r",
+    "RCOPY_Vertical": "COP_z_r",
+    "RCOPZ": "COP_y_r",
+    "LForceX": "force_x_l",
+    "LForceY_Vertical": "force_z_l",
+    "LForceZ": "forc_y_l",
     "LCOPX": "LCOPY",
     "LCOPY_Vertical": "LCOPX",
     "LCOPZ": "LCOPZ_vt",
@@ -182,7 +182,8 @@ cols_to_flip_signs = [
 
     # Flip knee torques
     # 'knee_torque_s_r','knee_torque_s_l',
-    
+    "COP_x_r",
+    "COP_x_l",
 
 ]
 
