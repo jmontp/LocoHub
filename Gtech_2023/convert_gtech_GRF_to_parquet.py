@@ -171,9 +171,9 @@ standard_column_names = {
     "LForceX": "force_x_l",
     "LForceY_Vertical": "force_z_l",
     "LForceZ": "forc_y_l",
-    "LCOPX": "LCOPY",
-    "LCOPY_Vertical": "LCOPX",
-    "LCOPZ": "LCOPZ_vt",
+    "LCOPX": "COP_x_l",
+    "LCOPY_Vertical": "COP_z_l",
+    "LCOPZ": "COP_y_l",
 }
 
 
@@ -184,6 +184,12 @@ cols_to_flip_signs = [
     # 'knee_torque_s_r','knee_torque_s_l',
     "COP_x_r",
     "COP_x_l",
+    "COP_z_r",
+    "COP_z_l",
+    "force_x_r",
+    "force_x_l",
+    "force_z_r",
+    "force_z_l",
 
 ]
 
