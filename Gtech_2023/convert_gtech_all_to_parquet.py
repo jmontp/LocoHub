@@ -246,8 +246,8 @@ def convert_dataset_to_pandas():
     # (2) Loop through the files and decide if we want to keep it. If we do
     # keep it, append it to the dictionary
     print("Start picking\n")
-    for subject, activity, file_name in tqdm(file_list):
-        
+    for file_wrap in tqdm(file_list):
+        subject, activity, file_name=file_wrap
         # Get the data unit (moment_filt, angle, velocity, etc)
         data_unit = file_name.split('.')[0]
     
