@@ -11,7 +11,7 @@ import os
 
 # This is the base path to the dataset. If you extracted the dataset to the 
 # same folder as this file, you don't need to change this
-base_path = './'
+base_path = './rawdata'
 
 # This is the list of data types that we want to save. The options are:
 # 'Activity_Flag', 'GroundFrame_GRFs', 'Joint_Angle', 'Joint_Moments',
@@ -196,7 +196,7 @@ cols_to_flip_signs = [
     "force_z_l",
 
 ]
-
+import re
 def convert_dataset_to_pandas():
     '''
     This function is meant to convert the dataset to a pandas dataframe
@@ -207,9 +207,23 @@ def convert_dataset_to_pandas():
     file_list = []
     # Get the subject folders
     subject_dirs = os.listdir(base_path)
+    pattern = re.compile(r'^[^a-zA-Z]')
+    
+    # Use list comprehension to filter out strings that start with non-letter characters
+    subject_dirs = [string for string in subject_dirs if not pattern.match(string)]
+
+
+
     # Remove the Subject_masses.csv file
     try:
         subject_dirs.remove('Subject_masses.csv')
+        
+    except ValueError:
+        pass
+
+    # Remove pycache
+    try:
+        
         subject_dirs.remove('__pycache__')
     except ValueError:
         pass
