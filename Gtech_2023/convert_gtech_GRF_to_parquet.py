@@ -161,6 +161,7 @@ standard_column_names = {
     'toes_l_vel_X':'toes_vel_t_l',
 
     #GRF
+    # From z*x=y coordinate to x*y=z
     "time": "time",
     "RForceX": "force_x_r",
     "RForceY_Vertical": "force_z_r",
@@ -182,6 +183,9 @@ cols_to_flip_signs = [
 
     # Flip knee torques
     # 'knee_torque_s_r','knee_torque_s_l',
+
+
+    # From z*x=y coordinate to x*y=z
     "COP_x_r",
     "COP_x_l",
     "COP_z_r",
