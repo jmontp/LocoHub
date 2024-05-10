@@ -162,7 +162,7 @@ standard_column_names = {
 
     #GRF
     # From z*x=y coordinate to x*y=z
-    "time": "time",
+    
     "RForceX": "force_x_r",
     "RForceY_Vertical": "force_z_r",
     "RForceZ": "force_y_r",
@@ -279,6 +279,12 @@ def convert_dataset_to_pandas():
     #Create an empty dataframe
     df_total = pd.DataFrame()
 
+
+
+    # Log for missing data
+    missing_log= open("_datamissing.txt", "w")
+    
+
     # Loop through the keys
     for key_num, key in tqdm(enumerate(dataframes.keys())):
 
@@ -286,8 +292,13 @@ def convert_dataset_to_pandas():
         #print(f'Processing {key_num+1}/{len(dataframes.keys())}'+' '*30,      end='\r')
 
         # Verify that we have all the data types that we want
-        assert len(dataframes[key]) == len(data_to_save), \
-            print(f'Missing data for {key}')
+        # assert len(dataframes[key]) == len(data_to_save), \
+        #     print(f'Missing data for {key}')
+
+        #Report data missing in the log, instead of breaking
+        if len(dataframes[key]) != len(data_to_save):
+             missing_log.write(f'Missing data for {key}\n')
+             continue
 
         # Get the subject and activity
         subject = key[0]
