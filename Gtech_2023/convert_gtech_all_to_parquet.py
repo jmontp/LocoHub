@@ -179,22 +179,18 @@ standard_column_names = {
 
 
 # Create a function that will fix joint angle conventions. In the dataset the 
-cols_to_flip_signs = [  
-
-    # Flip knee torques
+cols_to_flip_signs = [ 
+     # Flip knee torques
     # 'knee_torque_s_r','knee_torque_s_l',
-
-
     # From z*x=y coordinate to x*y=z
-    "COP_x_r",
+    "COP_x_r", 
     "COP_x_l",
     "COP_z_r",
     "COP_z_l",
     "force_x_r",
     "force_x_l",
     "force_z_r",
-    "force_z_l",
-
+    "force_z_l"
 ]
 import re
 def convert_dataset_to_pandas():
@@ -283,7 +279,7 @@ def convert_dataset_to_pandas():
 
     # Log for missing data
     missing_log= open("_datamissing.txt", "w")
-    
+    print("hhh")
 
     # Loop through the keys
     for key_num, key in tqdm(enumerate(dataframes.keys())):
@@ -294,11 +290,11 @@ def convert_dataset_to_pandas():
         # Verify that we have all the data types that we want
         # assert len(dataframes[key]) == len(data_to_save), \
         #     print(f'Missing data for {key}')
-
+        
         #Report data missing in the log, instead of breaking
         if len(dataframes[key]) != len(data_to_save):
              missing_log.write(f'Missing data for {key}\n')
-             continue
+             
 
         # Get the subject and activity
         subject = key[0]
@@ -327,12 +323,20 @@ def convert_dataset_to_pandas():
                              ignore_index=True, 
                              axis=0)
 
+    print("Processing done")
     # (4) Update the column names to the standardized names and flip the signs
     # of the joint angles and torques
+    print(df_total.columns)
     df_total.rename(columns=standard_column_names, inplace=True)
-    df_total[cols_to_flip_signs] = df_total[cols_to_flip_signs] * -1
+    print(df_total.columns)
+    #testing for float/string bugs
+    #df_total[cols_to_flip_signs] = df_total[cols_to_flip_signs] * -1
 
+
+    
     # (5) Save the dataframe
+
+    print(df_total.columns)
     df_total.to_parquet('gtech_2023_time.parquet')
     print('Done')
         
