@@ -76,6 +76,7 @@ Annotation regulations:
 * run -> runing at level ground
 * sit_to_stand
 * stand_to_sit
+* ball_toss_(l,m,r) -> tossing the ball at left, mid, right
 * transitions -> transitions between different tasks
 
 
