@@ -88,28 +88,15 @@ Annotation regulations:
 * poses: standing in static postures 
 * push: experimenter pushes and pulls subject by torso/shoulders
 * side_shuffle: lateral shuffling to left and right
-* sit_to_stand: sit down and stand up from chair
 * squats: squatting w/ and w/o added weight
 * stairs: walking up and down stairs
-	
-
-start_stop: starting and stopping walking on overground force plates
-
-step_ups: stepping up onto tall object
-	_left: step up using left leg
-	_right: step up using right leg
-
-tire_run: jogging on toes overground with high knees (as if running through tires)
-
-tug_of_war: pushing and pulling broomstick between subject and experimenter
-
-turn_and_step: from standing, turn to left or right and start walking
-	_left-turn: turn to left
-	_right-turn: turn to right
-
-twister: experimenter calls out feet locations for subject to place feet
-
-walk_backward: walking backward on treadmill
+* start_stop: starting and stopping walking on overground force plates
+* step_ups: stepping up onto tall object
+* tire_run: jogging on toes overground with high knees (as if running through tires)
+* tug_of_war: pushing and pulling broomstick between subject and experimenter
+* turn_and_step: from standing, turn to left or right and start walking
+* twister: experimenter calls out feet locations for subject to place feet
+* walk_backward: walking backward on treadmill
 	_0-6: at 0.6 m/s
 	_0-8: at 0.8 m/s
 	_1-0: at 1.0 m/s
