@@ -31,4 +31,5 @@ Usage notes
 
 # Task naming
 
-Dynamic_walk -> 
+Dynamic_walking -> level_walking
+incline_walking(+-) -> inline_walking(+) & decline_walking(-)
