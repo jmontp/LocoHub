@@ -80,75 +80,18 @@ Annotation regulations:
 * curb_down: Stepping down from a street curb
 * curb_up: Stepping up onto a street curb
 * cutting: Jog/Run into sharp turn
-
-
-jump: Jumping trials
-	_fb: forward and backward jumping
-	_hop: hopping in place
-	_vertical: jumping in place for max height
-	_90-1: set 1 of 90 degree jumping (clockwise->counterclockwise->clockwise->counterclockwise->etc.)
-	_90-2: set 2 of 90 degree jumping (clockwise->counterclockwise->clockwise->counterclockwise->etc.)
-	_180: jump and turn 180 degrees (clockwise->counterclockwise->clockwise->counterclockwise->etc.)
-	_lateral: jump side-to-side
-
-lift_weight: lifting weighted/unweighted bag
-	0lbs-l-c: lift 0lbs bag in front (center) of subject with left hand
-	0lbs-l-l: lift 0lbs bag to left of subject with left hand
-	0lbs-r-c: lift 0lbs bag in front (center) of subject with right hand
-	0lbs-r-r: lift 0lbs bag to right of subject with right hand
-	25lbs-l-c: lift 25lbs bag in front (center) of subject with left hand
-	25lbs-l-l: lift 25lbs bag to left of subject with left hand
-	25lbs-r-c: lift 25lbs bag in front (center) of subject with right hand
-	25lbs-r-r: lift 25lbs bag to right of subject with right hand
+* jump: Jumping trials
+* lift_weight: lifting weighted/unweighted bag
+* lunges: lunging forward and backward with left and right legs
+* meander: freeform, slow walking overground
+* obstacle_walk: walking while foam block is placed on treadmill to disturb normal walking at 1.0 m/s
+* poses: standing in static postures 
+* push: experimenter pushes and pulls subject by torso/shoulders
+* side_shuffle: lateral shuffling to left and right
+* sit_to_stand: sit down and stand up from chair
+* squats: squatting w/ and w/o added weight
+* stairs: walking up and down stairs
 	
-lunges: lunging forward and backward with left and right legs
-	_set1: left/right forward/backward lunging
-	_set2: left/right forward/backward lunging
-	_set3: left/right forward/backward lunging
-	_set4: left/right forward/backward lunging
-	_set5: left/right forward/backward lunging
-	_left: lunge laterally to left
-	_right: lunge laterally to right
-
-meander: freeform, slow walking overground
-
-normal_walk: ambulating at different speeds on a level treadmill
-	_0-6: walking at 0.6 m/s
-	_1-2: walking at 1.2 m/s
-	_1-8: walking at 1.8 m/s
-	_2-0: walking at 2.0 m/s
-	_2-5: walking at 2.5 m/s
-	_shuffle: walking at 0.4 m/s
-	_skip: skipping at 1.2 m/s
-
-obstacle_walk: walking while foam block is placed on treadmill to disturb normal walking at 1.0 m/s
-
-poses: standing in static postures (normal standing, feet double shoulder width apart, left foot forward, right foot forward, squat, balance on left foot, balance on right foot, stand on toes, hips to left, hips to right, hips forward, hips backward, point toes in, point toes out, normal stand with 25 lbs weight held to left, normal stand with 25 lbs weight held to right, wide stance standing, wide stance standing w/ left foot forward, wide stance standing w/ right foot forward, normal standing but squeeze legs together)
-
-push: experimenter pushes and pulls subject by torso/shoulders
-
-side_shuffle: lateral shuffling to left and right
-
-sit_to_stand: sit down and stand up from chair
-	_short-arm: sit/stand using short chair w/ arm rests
-	_short-noarm: sit/stand using short chair w/o arm rests
-	_tall-noarm: sit/stand using tall chair w/o arm rests
-
-squats: squatting w/ and w/o added weight
-	_0lbs: bodyweight squats
-	_25lbs: squats with 25 lbs weight
-
-stairs: walking up and down stairs
-	_1_up: stair ascent
-	_2_down: stair descent
-	_3_up: stair ascent
-	_4_down: stair descent
-	_5_up: stair ascent
-	_6_down: stair descent
-	_7_up: stair ascent
-	_8_down: stair descent
-	_9_up: stair ascent
-	_10_down: stair descent
 
 start_stop: starting and stopping walking on overground force plates
 
