@@ -97,13 +97,8 @@ Annotation regulations:
 * turn_and_step: from standing, turn to left or right and start walking
 * twister: experimenter calls out feet locations for subject to place feet
 * walk_backward: walking backward on treadmill
-	_0-6: at 0.6 m/s
-	_0-8: at 0.8 m/s
-	_1-0: at 1.0 m/s
-
-weighted_walk: walking on treadmill at 1.0 m/s with weight
+* weighted_walk: walking on treadmill at 1.0 m/s with weight
 	_25lbs: carrying 25 lbs weight
-
 * transitions -> transitions between different tasks
 
 
