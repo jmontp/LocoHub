@@ -31,3 +31,12 @@
 * weighted_walk: walking on treadmill at 1.0 m/s with weight
 	_25lbs: carrying 25 lbs weight
 * transitions -> transitions between different tasks
+
+# Variables and Units
+* Markers
+ ## Data Sampling Rates
+
+- **Joint Angles, Forces, Moments, Powers:**
+  - 100 Hz
+- **Forceplate:**
+  - 1000 Hz
