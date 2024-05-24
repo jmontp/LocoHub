@@ -34,7 +34,14 @@
 
 # Variables and Units
 
-- **Joint Angles, Forces, Moments, Powers:**
-  - 100 Hz
-- **Forceplate:**
-  - 1000 Hz
+- **Body mass (kg):**
+  - Body mass of subjects
+  - 
+- **Joint Angles (rads):**
+  - Hip, ankle angles
+  - 
+- **GRF (N):**
+  - Ground reaction force measured by forceplates
+    
+- **COP (x,y,z) (m):**
+  - Center of pressure of GRF obtained by inverse dynamics. (x (side to side), y (propulsive/braking), z (Vertical)).
