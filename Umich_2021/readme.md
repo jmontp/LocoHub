@@ -1,7 +1,7 @@
 # A human lower-limb biomechanics and wearable sensors dataset during cyclic and non-cyclic activities
 
-[Link to publication](https://www.nature.com/articles/s41597-023-02840-6)
-
+[Link to publication](https://springernature.figshare.com/collections/_/5175254)
+[Link to detailed description](https://springernature.figshare.com/ndownloader/files/28998039)
 
 This folder contains the code to convert the hirearchical formatted data into the tabular representation. It has two flavors: time indexed and phase indexed. Additionally, an additional script is created to convert the global angles from a rotation matrix representation to euler angles. These scripts are explained below. 
 
