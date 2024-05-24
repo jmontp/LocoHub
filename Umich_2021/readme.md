@@ -14,7 +14,7 @@ The "convert_gtech_nc_raw_to_parquet.py" script converts the data from the raw d
 ## Data Sampling Frequencies
 
 - **Joint Metrics (Angles, Forces, Moments, Powers):** Recorded at 100 Hz
-- **Force Plate Data:** Captured at 1000 Hz
+- **Force Plate Data:** Recorded at 1000 Hz
 
 
 Usage notes:
