@@ -33,8 +33,6 @@
 * transitions -> transitions between different tasks
 
 # Variables and Units
-* Markers
- ## Data Sampling Rates
 
 - **Joint Angles, Forces, Moments, Powers:**
   - 100 Hz
