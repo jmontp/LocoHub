@@ -40,7 +40,7 @@
 - **Joint Angles (rads):**
   - Hip, ankle angles
   - 
-- **GRF (N):**
+- **GRF (x,y,z) (N):**
   - Ground reaction force measured by forceplates
     
 - **COP (x,y,z) (m):**
