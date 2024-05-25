@@ -36,10 +36,10 @@
 
 - **Body mass (kg):**
   - Body mass of subjects
-  - 
+    
 - **Joint Angles (rads):**
   - Hip, ankle angles
-  - 
+    
 - **GRF (x,y,z) (N):**
   - Ground reaction force measured by forceplates
     
