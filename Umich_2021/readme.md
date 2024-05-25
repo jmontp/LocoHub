@@ -31,10 +31,4 @@ Usage configuration
 
 
 
-# Task naming
 
-normal_walking -> level_walking
-
-incline_walking (+-) -> inline_walking(+) & decline_walking(-)
-
-stairs (+-) -> stairs_up (+) & stairs_down (-)
