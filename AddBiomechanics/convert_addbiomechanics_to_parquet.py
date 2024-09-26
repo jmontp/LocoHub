@@ -1,3 +1,20 @@
+"""
+This file is meant to convert the add_biomechanics datasets to tabular data 
+in the form of parquet files. To do this, it uses the nimblephysics library
+to process the b3d files and extract the relevant information.
+
+In general you need to select which datasets you want to proces (using the 
+"datasets_to_process" variable), and then point the script to the directory 
+where the file structure that is in the format of google drive download is
+(using the "base_dir" variable). This can be configured with the 
+
+author: José A. Montes Pérez
+date: 09/26/2024
+email:jmontp@umich.edu
+"""
+
+
+
 import pandas as pd
 from tqdm import tqdm
 import nimblephysics as nimble
@@ -16,9 +33,19 @@ base_dir = './raw_data/'
 output_dir='/processed_data/'
 
 datasets_to_process = [
+  'Moore2015',
+  'Camargo2021',
+  'Falisse2017',
+  'Fregly2012',
+  'Hamner2013',
+  'Han2023',
+  'Santos2017',
+  'Tan2021',
+  'Tan2022',
   'Tiziana2019',
-  
-  
+  'vanderZee2022',
+  'Wang2023',
+  'Carter2023',
 ]
 
 #### End of User Configuration Section ########################################
@@ -94,6 +121,7 @@ for dataset in datasets_to_process:
             for file in os.listdir(subject_path):
                 if file.endswith('.b3d'):#&file.startswith("P023")|file.startswith("P051"):
                     b3d_file_path = os.path.join(subject_path, file)
+            
             # If no b3d file was found, skip this subject
             if b3d_file_path is None:
                 print(f"Skipping {subject_path}, no b3d file found")
@@ -246,7 +274,6 @@ for dataset in datasets_to_process:
                         prev_thigh_angle_r=thigh_angle_r
                         prev_thigh_angle_l=thigh_angle_l
 
-
                         # Calculate the angles of the ankle
                         R_right_foot_all=np.dot(R_pelvis,np.dot(R_hip_r,np.dot(R_knee_r,R_ankle_r)))
                         R_left_foot_all=np.dot(R_pelvis,np.dot(R_hip_l,np.dot(R_knee_l,R_ankle_l)))
@@ -265,115 +292,123 @@ for dataset in datasets_to_process:
                         prev_dorsi_angle_r=dorsi_angle_r
                         prev_dorsi_angle_l=dorsi_angle_l
 
-                    record = {
-                            'subject': file.split('.')[0] ,
-                            'task': task,
-                            'frame_number': i,
-                            'accum_time': accum_time,
+                        # Format the subject name
+                        # Remove the _split{number}.
+                        if '_split' in file:
+                            subject = file.split('_split')[0]
+                        else:
+                            # Remove the file extension
+                            subject = file.split('.')[0]
 
-                            'contact_r': contacted[0],
-                            'contact_l': contacted[1],
+                        record = {
+                                'subject': subject,
+                                'task': task,
+                                'frame_number': i,
+                                'accum_time': accum_time,
 
-                            'GRF_x_r': grf[0],
-                            'GRF_y_r': grf[1],
-                            'GRF_z_r': grf[2],
-                            'GRF_x_l': grf[3],
-                            'GRF_y_l': grf[4],
-                            'GRF_z_l': grf[5],
-                            'COP_x_r': cop[0],
-                            'COP_y_r': cop[1],
-                            'COP_z_r': cop[2],
-                            'COP_x_l': cop[3],
-                            'COP_y_l': cop[4],
-                            'COP_z_l': cop[5],
+                                'contact_r': contacted[0],
+                                'contact_l': contacted[1],
 
-                            'pelvis_angle_s': pelvis_angle_s,
-                            'pelvis_angle_f': pelvis_angle_f,
-                            'pelvis_angle_t': pelvis_angle_t,
+                                'GRF_x_r': grf[0],
+                                'GRF_z_r': grf[1],
+                                'GRF_y_r': grf[2],
+                                'GRF_x_l': grf[3],
+                                'GRF_z_l': grf[4],
+                                'GRF_y_l': grf[5],
 
+                                'COP_x_r': cop[0],
+                                'COP_z_r': cop[1],
+                                'COP_y_r': cop[2],
+                                'COP_x_l': cop[3],
+                                'COP_z_l': cop[4],
+                                'COP_y_l': cop[5],
 
-                            'hip_angle_s_r': hip_angle_s_r,
-                            'hip_angle_f_r': hip_angle_f_r,
-                            'hip_angle_t_r': hip_angle_t_r,
-                            'knee_angle_s_r': knee_angle_s_r,
-                            'ankle_angle_s_r': ankle_angle_s_r,
-                            # 'ankle_angle_f_r': ankle_angle_f_r,
-                            'ankle_angle_t_r': ankle_angle_t_r,
-                            'hip_angle_s_l': hip_angle_s_l,
-                            'hip_angle_f_l': hip_angle_f_l,
-                            'hip_angle_t_l': hip_angle_t_l,
-                            'knee_angle_s_l': knee_angle_s_l,
-                            'ankle_angle_s_l': ankle_angle_s_l,
-                            # 'ankle_angle_f_l': ankle_angle_f_l,
-                            'ankle_angle_t_l': ankle_angle_t_l,
-                            'dorsi_angle_r': dorsi_angle_r,
-                            'dorsi_angle_l': dorsi_angle_l,
-                            'shank_angle_r': shank_angle_r,
-                            'shank_angle_l': shank_angle_l,
-                            'thigh_angle_r': thigh_angle_r,
-                            'thigh_angle_l': thigh_angle_l,
+                                'pelvis_angle_s': pelvis_angle_s,
+                                'pelvis_angle_f': pelvis_angle_f,
+                                'pelvis_angle_t': pelvis_angle_t,
 
-                            'shank_vel_r': shank_vel_r,
-                            'shank_vel_l': shank_vel_l,
-                            'thigh_vel_r': thigh_vel_r,
-                            'thigh_vel_l': thigh_vel_l,
-                            'ankle_vel_r': ankle_vel_r,
-                            'ankle_vel_l': ankle_vel_l,
+                                'hip_angle_s_r': hip_angle_s_r,
+                                'hip_angle_f_r': hip_angle_f_r,
+                                'hip_angle_t_r': hip_angle_t_r,
+                                'knee_angle_s_r': knee_angle_s_r,
+                                'ankle_angle_s_r': ankle_angle_s_r,
+                                # 'ankle_angle_f_r': ankle_angle_f_r,
+                                'ankle_angle_t_r': ankle_angle_t_r,
+                                'hip_angle_s_l': hip_angle_s_l,
+                                'hip_angle_f_l': hip_angle_f_l,
+                                'hip_angle_t_l': hip_angle_t_l,
+                                'knee_angle_s_l': knee_angle_s_l,
+                                'ankle_angle_s_l': ankle_angle_s_l,
+                                # 'ankle_angle_f_l': ankle_angle_f_l,
+                                'ankle_angle_t_l': ankle_angle_t_l,
+                                'dorsi_angle_r': dorsi_angle_r,
+                                'dorsi_angle_l': dorsi_angle_l,
+                                'shank_angle_r': shank_angle_r,
+                                'shank_angle_l': shank_angle_l,
+                                'thigh_angle_r': thigh_angle_r,
+                                'thigh_angle_l': thigh_angle_l,
 
-                            'pelvis_vel_s': pelvis_vel_s,
-                            'pelvis_vel_f': pelvis_vel_f,
-                            'pelvis_vel_t': pelvis_vel_t,
-                            'hip_vel_s_r': hip_vel_s_r,
-                            'hip_vel_f_r': hip_vel_f_r,
-                            'hip_vel_t_r': hip_vel_t_l,
-                            'knee_vel_s_r': knee_vel_s_r,
-                            'ankle_vel_s_r': ankle_vel_s_r,
-                            'ankle_vel_t_r': ankle_vel_t_r,
-                            'hip_vel_s_l': hip_vel_s_l,
-                            'hip_vel_f_l': hip_vel_f_l,
-                            'hip_vel_t_l': hip_vel_t_l,
-                            'knee_vel_s_l': knee_vel_s_l,
-                            'ankle_vel_s_l': ankle_vel_s_l,
-                            'ankle_vel_t_l': ankle_vel_t_l,
+                                'shank_vel_r': shank_vel_r,
+                                'shank_vel_l': shank_vel_l,
+                                'thigh_vel_r': thigh_vel_r,
+                                'thigh_vel_l': thigh_vel_l,
+                                'ankle_vel_r': ankle_vel_r,
+                                'ankle_vel_l': ankle_vel_l,
 
-                            'pelvis_tau_s': pelvis_tau_s,
-                            'pelvis_tau_f': pelvis_tau_f,
-                            'pelvis_tau_t': pelvis_tau_t,
-                            'hip_tau_s_r': hip_tau_s_r,
-                            'hip_tau_f_r': hip_tau_f_r,
-                            'hip_tau_t_r': hip_tau_t_r,
-                            'knee_tau_s_r': knee_tau_s_r,
-                            'ankle_tau_s_r': ankle_tau_s_r,
-                            'ankle_tau_t_r': ankle_tau_t_r,
-                            'hip_tau_s_l': hip_tau_s_l,
-                            'hip_tau_f_l': hip_tau_f_l,
-                            'hip_tau_t_l': hip_tau_t_l,
-                            'knee_tau_s_l': knee_tau_s_l,
-                            'ankle_tau_s_l': ankle_tau_s_l,
-                        }
-                    accum_time+=timestep
+                                'pelvis_vel_s': pelvis_vel_s,
+                                'pelvis_vel_f': pelvis_vel_f,
+                                'pelvis_vel_t': pelvis_vel_t,
+                                'hip_vel_s_r': hip_vel_s_r,
+                                'hip_vel_f_r': hip_vel_f_r,
+                                'hip_vel_t_r': hip_vel_t_l,
+                                'knee_vel_s_r': knee_vel_s_r,
+                                'ankle_vel_s_r': ankle_vel_s_r,
+                                'ankle_vel_t_r': ankle_vel_t_r,
+                                'hip_vel_s_l': hip_vel_s_l,
+                                'hip_vel_f_l': hip_vel_f_l,
+                                'hip_vel_t_l': hip_vel_t_l,
+                                'knee_vel_s_l': knee_vel_s_l,
+                                'ankle_vel_s_l': ankle_vel_s_l,
+                                'ankle_vel_t_l': ankle_vel_t_l,
 
-                    # Add the record to the data list
-                    data.append(record)
+                                'pelvis_tau_s': pelvis_tau_s,
+                                'pelvis_tau_f': pelvis_tau_f,
+                                'pelvis_tau_t': pelvis_tau_t,
+                                'hip_tau_s_r': hip_tau_s_r,
+                                'hip_tau_f_r': hip_tau_f_r,
+                                'hip_tau_t_r': hip_tau_t_r,
+                                'knee_tau_s_r': knee_tau_s_r,
+                                'ankle_tau_s_r': ankle_tau_s_r,
+                                'ankle_tau_t_r': ankle_tau_t_r,
+                                'hip_tau_s_l': hip_tau_s_l,
+                                'hip_tau_f_l': hip_tau_f_l,
+                                'hip_tau_t_l': hip_tau_t_l,
+                                'knee_tau_s_l': knee_tau_s_l,
+                                'ankle_tau_s_l': ankle_tau_s_l,
+                            }
+                        accum_time+=timestep
 
-                    # If we have enough data, then save it to a file
-                    if len(data)>=chunk_size:
+                        # Add the record to the data list
+                        data.append(record)
 
-                        df = pd.DataFrame(data)
+                        # If we have enough data, then save it to a file
+                        if len(data)>=chunk_size:
 
-                        # Save the DataFrame to a Parquet file. If it is the
-                        # first chunk, then we need to create the file. If it
-                        # is not the first chunk, then we need to append to the
-                        # existing file.
-                        output_path = os.path.join(output_dir, dataset+'.parquet')
-                        df.to_parquet(output_path, engine='fastparquet',
-                                      index=False,append=not is_first_chunk)
+                            df = pd.DataFrame(data)
 
-                        # Set the first chunk flag to false and reset data 
-                        # since it's already saved. 
-                        is_first_chunk=False
-                        data=[]
-            
+                            # Save the DataFrame to a Parquet file. If it is the
+                            # first chunk, then we need to create the file. If it
+                            # is not the first chunk, then we need to append to the
+                            # existing file.
+                            output_path = os.path.join(output_dir, dataset+'.parquet')
+                            df.to_parquet(output_path, engine='fastparquet',
+                                        index=False,append=not is_first_chunk)
+
+                            # Set the first chunk flag to false and reset data 
+                            # since it's already saved. 
+                            is_first_chunk=False
+                            data=[]
+                
             # If something fails, skip to the next subject
             except Exception as e:
                 continue
