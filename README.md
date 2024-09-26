@@ -69,4 +69,4 @@ The kinematics have indicator variables to give the joint in the different plane
 
 
 # Joint angle representation
-![Joint angle convention](joint_angle_references.png)
+![Joint angle convention](/figures/joint_angle_references.png)
