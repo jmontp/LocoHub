@@ -11,36 +11,45 @@ For now, we only have a subset of what is commonly found in datasets as standard
 * Joint Angles
 * Joint Kinetics
 * Link Angles (Global Angles)
+* Ground reaction forces
+* Center of pressure
 
-# Kinematics
+# Variable Naming
 The kinematics have indicator variables to give the joint in the different planes of the human and leg
 * plane - s (sagittal), f (frontal), t (transversal)
 * leg - r (right), l (left)
+* axis - x, y, z
 
-## Joint Angles
+## Joint Angles (degrees)
 * hip_angle_{plane}_{leg}
 * knee_angle_{plane}_{leg}
 * ankle_angle_{plane}_{leg}
 
-## Joint Velocities
+## Joint Velocities (degrees/second)
 * hip_vel_{plane}_{leg}
 * knee_vel_{plane}_{leg}
 * ankle_vel_{plane}_{leg}
 
-## Link angles (Global Angles)
+## Link angles (Global Angles) (degrees)
 * thigh_angle_{plane}_{leg}
 * shank_angle_{plane}_{leg}
 * foot_angle_{plane}_{leg}
 
-## Link Velocities (Global velocities)
+## Link Velocities (Global velocities) (degrees/sec)
 * thigh_vel_{plane}_{leg}
 * shank_vel_{plane}_{leg}
 * foot_vel_{plane}_{leg}
 
-# Kinetics
+# Kinetics (Nm)
 * hip_torque_{plane}_{leg}
 * knee_torque_{plane}_{leg}
 * ankle_torque_{plane}_{leg}
+
+# Ground Reaction Forces (N)
+* grf_{axi}_{leg}
+
+# Center of pressure (mm)
+* cop_{axis}_{leg}
 
 # Sagital plane conventions
 * Ankle dorsiflexion -> Positive
@@ -51,10 +60,11 @@ The kinematics have indicator variables to give the joint in the different plane
 # Task variables
 * subject - subject name. Usually contains the filel forlder in it
 * task - the current task being performed
-* sub_task - additional task info
+* task_info - additional task info
 * time - the time for a given task
-
-
+* incline - this provides the ground inclination for walking tasks
+* walking_speed - this provides the walking speed whenever possible 
+* step_height - this provides the step heights for stairs
 
 # Task naming
 * level_walking -> level ground walking at varying velocities
@@ -66,7 +76,6 @@ The kinematics have indicator variables to give the joint in the different plane
 * sit_to_stand
 * stand_to_sit
 * transitions -> transitions between different tasks
-
 
 # Joint angle representation
 ![Joint angle convention](joint_angle_references.png)
