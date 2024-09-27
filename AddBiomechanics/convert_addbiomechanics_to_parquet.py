@@ -52,6 +52,22 @@ datasets_to_process = [
 
 #### End of User Configuration Section ########################################
 
+# Data types to flip 
+flip_columns = [
+    'grf_x_r',
+    'grf_x_l',
+
+    # Only flip the left cop x 
+    'cop_x_l',
+
+    # Flip knee values
+    'knee_angle_s_r',
+    'knee_angle_s_l',
+    'knee_vel_s_r',
+    'knee_vel_s_l',
+    'knee_torque_s_r',
+    'knee_torque_s_l',
+]
 
 #### Function Definitions #####################################################
 
@@ -107,9 +123,9 @@ for dataset in datasets_to_process:
         for sub_idx,subject in tqdm(enumerate(os.listdir(dataset_path))):
             
             # For debugging purposes, we can limit the number of subjects
-            # if sub_idx>0:
-            #     break
-            
+            if sub_idx>0:
+                break
+
             # Get the path to the subject's folder
             subject_path = os.path.join(dataset_path, subject)
 
@@ -174,7 +190,7 @@ for dataset in datasets_to_process:
                         contacted=ss.contact
                         poses=ss.pos
                         vels=ss.vel
-                        tau=ss.tau
+                        torque=ss.tau
 
                         # Assigning variables to poses array elements
                         # The positions are not documented, so we had to 
@@ -212,21 +228,21 @@ for dataset in datasets_to_process:
                         ankle_vel_s_l = vels[17]
                         ankle_vel_t_l = vels[18]
 
-                        pelvis_tau_s = ss.tau[0]
-                        pelvis_tau_f = ss.tau[1]
-                        pelvis_tau_t = ss.tau[2]
-                        hip_tau_s_r = ss.tau[6]
-                        hip_tau_f_r = ss.tau[7]
-                        hip_tau_t_r = ss.tau[8]
-                        knee_tau_s_r = ss.tau[9]
-                        ankle_tau_s_r = ss.tau[10]
-                        ankle_tau_t_r = ss.tau[11]
-                        hip_tau_s_l = ss.tau[13]
-                        hip_tau_f_l = ss.tau[14]
-                        hip_tau_t_l = ss.tau[15]
-                        knee_tau_s_l = ss.tau[16]
-                        ankle_tau_s_l = ss.tau[17]
-                        ankle_tau_t_l = ss.tau[18]
+                        pelvis_torque_s = torque[0]
+                        pelvis_torque_f = torque[1]
+                        pelvis_torque_t = torque[2]
+                        hip_torque_s_r = torque[6]
+                        hip_torque_f_r = torque[7]
+                        hip_torque_t_r = torque[8]
+                        knee_torque_s_r = torque[9]
+                        ankle_torque_s_r = torque[10]
+                        ankle_torque_t_r = torque[11]
+                        hip_torque_s_l = torque[13]
+                        hip_torque_f_l = torque[14]
+                        hip_torque_t_l = torque[15]
+                        knee_torque_s_l = torque[16]
+                        ankle_torque_s_l = torque[17]
+                        ankle_torque_t_l = torque[18]
 
                         # We need to forwards propagate the pelvis angles 
                         # to the shank, thigh, and foot angles. Therefore, 
@@ -345,6 +361,7 @@ for dataset in datasets_to_process:
                                 'ankle_angle_s_l': ankle_angle_s_l,
                                 # 'ankle_angle_f_l': ankle_angle_f_l,
                                 'ankle_angle_t_l': ankle_angle_t_l,
+                                
                                 'dorsi_angle_r': dorsi_angle_r,
                                 'dorsi_angle_l': dorsi_angle_l,
                                 'shank_angle_r': shank_angle_r,
@@ -375,20 +392,20 @@ for dataset in datasets_to_process:
                                 'ankle_vel_s_l': ankle_vel_s_l,
                                 'ankle_vel_t_l': ankle_vel_t_l,
 
-                                'pelvis_tau_s': pelvis_tau_s,
-                                'pelvis_tau_f': pelvis_tau_f,
-                                'pelvis_tau_t': pelvis_tau_t,
-                                'hip_tau_s_r': hip_tau_s_r,
-                                'hip_tau_f_r': hip_tau_f_r,
-                                'hip_tau_t_r': hip_tau_t_r,
-                                'knee_tau_s_r': knee_tau_s_r,
-                                'ankle_tau_s_r': ankle_tau_s_r,
-                                'ankle_tau_t_r': ankle_tau_t_r,
-                                'hip_tau_s_l': hip_tau_s_l,
-                                'hip_tau_f_l': hip_tau_f_l,
-                                'hip_tau_t_l': hip_tau_t_l,
-                                'knee_tau_s_l': knee_tau_s_l,
-                                'ankle_tau_s_l': ankle_tau_s_l,
+                                'pelvis_torque_s': pelvis_torque_s,
+                                'pelvis_torque_f': pelvis_torque_f,
+                                'pelvis_torque_t': pelvis_torque_t,
+                                'hip_torque_s_r': hip_torque_s_r,
+                                'hip_torque_f_r': hip_torque_f_r,
+                                'hip_torque_t_r': hip_torque_t_r,
+                                'knee_torque_s_r': knee_torque_s_r,
+                                'ankle_torque_s_r': ankle_torque_s_r,
+                                'ankle_torque_t_r': ankle_torque_t_r,
+                                'hip_torque_s_l': hip_torque_s_l,
+                                'hip_torque_f_l': hip_torque_f_l,
+                                'hip_torque_t_l': hip_torque_t_l,
+                                'knee_torque_s_l': knee_torque_s_l,
+                                'ankle_torque_s_l': ankle_torque_s_l,
                             }
                         accum_time+=timestep
 
@@ -431,8 +448,19 @@ for dataset in datasets_to_process:
     final_output_name = os.path.join(output_dir, dataset+'.parquet')
     os.rename(output_path, final_output_name)
 
-    # Add Phase to the dataframe
+    ### Final post processing ################################################
+    # Invert the columns that need to be inverted
     df = pd.read_parquet(final_output_name)
+    for column in flip_columns:
+        df[column] = -df[column]
+
+    # Change from radians to degrees
+    angle_columns = [col for col in df.columns if 'angle' in col]
+    vel_columns = [col for col in df.columns if 'vel' in col]
+    df[angle_columns] = np.rad2deg(df[angle_columns])
+    df[vel_columns] = np.rad2deg(df[vel_columns])
+
+    # Add Phase to the dataframe
     add_phase_info(df, export_phase_dataframe=True,
                    save_name=final_output_name.replace('.parquet', ''),
                    remove_original_file=final_output_name)
