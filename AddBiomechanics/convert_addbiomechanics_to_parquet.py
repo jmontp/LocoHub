@@ -23,6 +23,8 @@ import fastparquet as fp
 import os
 import numpy as np
 
+from add_phase_info import add_phase_info
+
 #thus script requested the use of nimble physics
 # pip3 install nimblephysics
 
@@ -102,7 +104,11 @@ for dataset in datasets_to_process:
     if os.path.isdir(dataset_path):
 
         # Loop through each subject in the dataset with a progress bar (tqdm)
-        for subject in tqdm(os.listdir(dataset_path)):
+        for sub_idx,subject in tqdm(enumerate(os.listdir(dataset_path))):
+            
+            # For debugging purposes, we can limit the number of subjects
+            # if sub_idx>0:
+            #     break
             
             # Get the path to the subject's folder
             subject_path = os.path.join(dataset_path, subject)
@@ -300,26 +306,26 @@ for dataset in datasets_to_process:
                                 'subject': subject,
                                 'task': task,
                                 'frame_number': i,
-                                'accum_time': accum_time,
+                                'time_step': accum_time,
 
                                 'contact_r': contacted[0],
                                 'contact_l': contacted[1],
 
-                                'GRF_x_r': grf[0],
-                                'GRF_y_r': grf[1],
-                                'GRF_z_r': grf[2],
+                                'grf_x_r': grf[0],
+                                'grf_y_r': grf[1],
+                                'grf_z_r': grf[2],
 
-                                'GRF_x_l': grf[3],
-                                'GRF_y_l': grf[4],
-                                'GRF_z_l': grf[5],
+                                'grf_x_l': grf[3],
+                                'grf_y_l': grf[4],
+                                'grf_z_l': grf[5],
 
-                                'COP_x_r': cop[0],
-                                'COP_y_r': cop[1],
-                                'COP_z_r': cop[2],
+                                'cop_x_r': cop[0],
+                                'cop_y_r': cop[1],
+                                'cop_z_r': cop[2],
 
-                                'COP_x_l': cop[3],
-                                'COP_y_l': cop[4],
-                                'COP_z_l': cop[5],
+                                'cop_x_l': cop[3],
+                                'cop_y_l': cop[4],
+                                'cop_z_l': cop[5],
 
                                 'pelvis_angle_s': pelvis_angle_s,
                                 'pelvis_angle_f': pelvis_angle_f,
@@ -422,6 +428,13 @@ for dataset in datasets_to_process:
 
     # Rename the dataset file
     output_path = os.path.join(output_dir, dataset+'_partial_'+'.parquet')
-    os.rename(output_path, output_path.replace('_partial_',''))
+    final_output_name = os.path.join(output_dir, dataset+'.parquet')
+    os.rename(output_path, final_output_name)
 
-    print(f"Finished. Data saved to {output_path}")
+    # Add Phase to the dataframe
+    df = pd.read_parquet(final_output_name)
+    add_phase_info(df, export_phase_dataframe=True,
+                   save_name=final_output_name.replace('.parquet', ''),
+                   remove_original_file=final_output_name)
+
+    print(f"Finished. Data saved to {final_output_name}")

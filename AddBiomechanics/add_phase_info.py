@@ -18,8 +18,9 @@ email: jmontp@umich.edu
 import pandas as pd
 import numpy as np
 import os
+from tqdm import tqdm
 
-def add_phase_info(dataframe:pd.DataFrame, export_phase_dataframe=True,
+def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
                    remove_original_file=None, save_name=None):
     """
     This function adds phase information to a dataframe that has grf data 
@@ -61,7 +62,7 @@ def add_phase_info(dataframe:pd.DataFrame, export_phase_dataframe=True,
 
         ## Step 1: GRF thresholding to get swing (0) and stance (1) phases
         # Get the GRF data
-        grf_z = dataframe[f'grf_z_{leg}'].values
+        grf_z = df[f'grf_z_{leg}'].values
         stance_swing = grf_z > grf_threshold
 
         ## Step 2: Find swing-to-stance (1) and stance-to-swing (-1) transitions
@@ -101,22 +102,19 @@ def add_phase_info(dataframe:pd.DataFrame, export_phase_dataframe=True,
 
         ## Step 4: Calculate the phase for each step
         # Initialize the phase to be -1 for the dataframe
-        df[f'phase_{leg}'] = -1
+        df[f'phase_{leg}'] = -1.0
 
         # If we are exporting the phase dataframe, initialize it to be
         # len(valid_stride_num) * num_phase_points long
         df_phase_leg = pd.DataFrame(  # For a single leg
             index=np.arange(len(valid_stride_num) * num_phase_points),
-            columns=df.columns+['phase_leading_leg']
+            columns=list(df.columns)+['phase','phase_leading_leg']
         )
 
         # Iterate over each stride
-        for i, stride in enumerate(valid_stride_num):
-            
-            # Update user on progress
-            pct_done = i/len(valid_stride_num)*100
-            print(f"Adding phase information.") 
-            print(f"Percentage complete: {pct_done:.2f}%", end='\r')
+        print(f'Calculating phase for {leg} leg')
+        for i, stride in tqdm(enumerate(valid_stride_num), total=len(valid_stride_num)):
+           
 
             # Get the start and end of the stride
             start = swing_to_stance[stride]
@@ -132,7 +130,7 @@ def add_phase_info(dataframe:pd.DataFrame, export_phase_dataframe=True,
             if export_phase_dataframe:
                 # Get the start and end of the phase to index the dataframe
                 p_s = i*num_phase_points     # start
-                p_e = (i+1)*num_phase_points # end
+                p_e = (i+1)*num_phase_points-1 # end
 
                 # Create the axis to interpolate the data for the phase for 
                 # the given stride
@@ -153,6 +151,7 @@ def add_phase_info(dataframe:pd.DataFrame, export_phase_dataframe=True,
                 df_phase_leg.loc[p_s:p_e,'subject'] = df['subject'].iloc[start]
                 df_phase_leg.loc[p_s:p_e,'task'] = df['task'].iloc[start]
                 df_phase_leg.loc[p_s:p_e,'phase_leading_leg'] = leg
+                df_phase_leg.loc[p_s:p_e,'phase'] = phase_points
 
     
         # Add the stride to the phase dataframe
