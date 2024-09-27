@@ -30,22 +30,22 @@ import numpy as np
 
 
 base_dir = './raw_data/'
-output_dir='/processed_data/'
+output_dir='./processed_data/'
 
 datasets_to_process = [
   'Moore2015',
-  'Camargo2021',
-  'Falisse2017',
-  'Fregly2012',
-  'Hamner2013',
-  'Han2023',
-  'Santos2017',
-  'Tan2021',
-  'Tan2022',
-  'Tiziana2019',
-  'vanderZee2022',
-  'Wang2023',
-  'Carter2023',
+#   'Camargo2021',
+#   'Falisse2017',
+#   'Fregly2012',
+#   'Hamner2013',
+#   'Han2023',
+#   'Santos2017',
+#   'Tan2021',
+#   'Tan2022',
+#   'Tiziana2019',
+#   'vanderZee2022',
+#   'Wang2023',
+#   'Carter2023',
 ]
 
 #### End of User Configuration Section ########################################
@@ -94,18 +94,14 @@ chunk_size=100000
 # Process each dataset separately
 for dataset in datasets_to_process:
     
-
-    dataset_path = os.path.join(base_dir, dataset)
-
-    # Load the raw data
-    df = pd.read_parquet(os.path.join(base_dir, f'{dataset}_Formatted_No_Arm.parquet'))
+    dataset_path = os.path.join(base_dir, f'{dataset}_Formatted_No_Arm')
 
     data=[]
     is_first_chunk = True
     # Check if it's a directory
     if os.path.isdir(dataset_path):
 
-        # Loop through each subject in the dataset
+        # Loop through each subject in the dataset with a progress bar (tqdm)
         for subject in tqdm(os.listdir(dataset_path)):
             
             # Get the path to the subject's folder
@@ -119,7 +115,7 @@ for dataset in datasets_to_process:
             # Look for the b3d file in the subject's folder
             b3d_file_path = None
             for file in os.listdir(subject_path):
-                if file.endswith('.b3d'):#&file.startswith("P023")|file.startswith("P051"):
+                if file.endswith('.b3d'):
                     b3d_file_path = os.path.join(subject_path, file)
             
             # If no b3d file was found, skip this subject
@@ -142,14 +138,14 @@ for dataset in datasets_to_process:
                 num_trial=my_subject.getNumTrials()
                 
                 # Loop through each trial
-                for trial_turn in range(num_trial):
+                for trial_turn in tqdm(range(num_trial)):
 
                     # Lalbel the acumulated time
                     accum_time=0
 
                     #ff is the frames for a single piece of task
                     # We need to specify the number of frames to read.
-                    big_n=1e+10 # Needs arbitrary large number to read all frames
+                    big_n=1_000_000 # Needs arbitrary large number to read all frames
                     ff=my_subject.readFrames(trial_turn,0,big_n)
                     
                     # Get the task name and time interval
@@ -310,18 +306,20 @@ for dataset in datasets_to_process:
                                 'contact_l': contacted[1],
 
                                 'GRF_x_r': grf[0],
-                                'GRF_z_r': grf[1],
-                                'GRF_y_r': grf[2],
+                                'GRF_y_r': grf[1],
+                                'GRF_z_r': grf[2],
+
                                 'GRF_x_l': grf[3],
-                                'GRF_z_l': grf[4],
-                                'GRF_y_l': grf[5],
+                                'GRF_y_l': grf[4],
+                                'GRF_z_l': grf[5],
 
                                 'COP_x_r': cop[0],
-                                'COP_z_r': cop[1],
-                                'COP_y_r': cop[2],
+                                'COP_y_r': cop[1],
+                                'COP_z_r': cop[2],
+
                                 'COP_x_l': cop[3],
-                                'COP_z_l': cop[4],
-                                'COP_y_l': cop[5],
+                                'COP_y_l': cop[4],
+                                'COP_z_l': cop[5],
 
                                 'pelvis_angle_s': pelvis_angle_s,
                                 'pelvis_angle_f': pelvis_angle_f,
@@ -400,7 +398,7 @@ for dataset in datasets_to_process:
                             # first chunk, then we need to create the file. If it
                             # is not the first chunk, then we need to append to the
                             # existing file.
-                            output_path = os.path.join(output_dir, dataset+'.parquet')
+                            output_path = os.path.join(output_dir, dataset+'_partial_'+'.parquet')
                             df.to_parquet(output_path, engine='fastparquet',
                                         index=False,append=not is_first_chunk)
 
@@ -411,6 +409,7 @@ for dataset in datasets_to_process:
                 
             # If something fails, skip to the next subject
             except Exception as e:
+                print(f"Skipping {subject_path}, error: {e}")
                 continue
             
             # If there is any data left, save it to a file
@@ -418,7 +417,11 @@ for dataset in datasets_to_process:
                 df = pd.DataFrame(data)
                 print(len(data))
                 # Save the DataFrame to a Parquet file
-                output_path = os.path.join(output_dir, dataset+'.parquet')
+                output_path = os.path.join(output_dir,  dataset+'_partial_'+'.parquet')
                 df.to_parquet(output_path, engine='fastparquet',index=False,append=not is_first_chunk)
 
-                print(f"Finished. Data saved to {output_path}")
+    # Rename the dataset file
+    output_path = os.path.join(output_dir, dataset+'_partial_'+'.parquet')
+    os.rename(output_path, output_path.replace('_partial_',''))
+
+    print(f"Finished. Data saved to {output_path}")
