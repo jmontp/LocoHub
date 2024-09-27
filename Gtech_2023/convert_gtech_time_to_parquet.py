@@ -20,7 +20,8 @@ base_path = 'RawData'
 # Currently the only standardized names are
 # 'Joint_Angle', 'Joint_Velocities', 'Joint_Moments', 'Link_Angle'
 data_to_save = ['Joint_Moments', 'Joint_Angle', 
-                'Joint_Velocities', 'Link_Angle', 'Link_Velocities']
+                'Joint_Velocities', 'Link_Angle', 'Link_Velocities',
+                'Virtual_Insoles']
 
 ###############################################################################
 # Don't modify anything below this line
@@ -159,6 +160,23 @@ standard_column_names = {
     'toes_l_vel_Y':'toes_vel_f_l',
     'toes_l_vel_Z':'toes_vel_s_l',
     'toes_l_vel_X':'toes_vel_t_l',
+
+
+    # Center of Pressure
+    'RCOP_AP':'cop_z_r',
+    'RCOP_ML':'cop_x_r',
+
+    'LCOP_AP':'cop_z_l',
+    'LCOP_ML': 'cop_x_l',
+    
+    # Ground Reaction Forces
+    'RVerticalF': 'grf_y_r',
+    'RShearF_AP': 'grf_z_r',
+    'RShearF_ML': 'grf_x_r',
+
+    'LVerticalF': 'grf_y_l',
+    'LShearF_AP': 'grf_z_l',
+    'LShearF_ML': 'grf_x_l',
 }
 
 
@@ -167,7 +185,12 @@ cols_to_flip_signs = [
 
     # Flip knee torques
     # 'knee_torque_s_r','knee_torque_s_l',
+    # Ground Reaction forces
+    'grf_x_r','grf_x_l',
+    'grf_z_r','grf_z_l',
 
+    'cop_z_r','cop_z_l',
+    'cop_x_r','cop_x_l',
 ]
 
 def convert_dataset_to_pandas():
