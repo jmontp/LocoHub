@@ -14,6 +14,10 @@ date: 09/26/2024
 email: jmontp@umich.edu
 """
 
+# Reference for phase segmenting non-gait tasks (i.e. squats, jumps, etc.) 
+# How gtech 2023 did it, relevant content is at the end.
+# https://repository.gatech.edu/server/api/core/bitstreams/b51011a2-061f-419c-9bb3-88e1d6fdf8e8/content
+
 # Import stuff, load data
 import pandas as pd
 import numpy as np
@@ -87,6 +91,10 @@ def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
         positive_strides = stride_time > 0
         stride_time = stride_time[positive_strides]
         valid_stride_num = valid_stride[positive_strides]
+
+        # If there are no valid strides, skip the leg
+        if len(stride_time) == 0:
+            continue
 
         # Remove all the outliers of the box plot
         q1 = np.percentile(stride_time, 25)
@@ -175,11 +183,15 @@ def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
 
 if __name__ == '__main__':
     # Open file dialog to select file
-    import tkinter as tk
-    from tkinter import filedialog
+    # import tkinter as tk
+    # from tkinter import filedialog
+    # root = tk.Tk()
+    # root.withdraw()
+    # file_path = filedialog.askopenfilename()
 
-    root = tk.Tk()
-    root.withdraw()
-
-    file_path = filedialog.askopenfilename()
+    file_path = './processed_data/Santos2017.parquet'
     df = pd.read_parquet(file_path)
+
+    add_phase_info(df, save_name=file_path[:-8],
+                   remove_original_file=file_path,
+                   export_phase_dataframe=True)

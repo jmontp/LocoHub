@@ -24,6 +24,7 @@ import os
 import numpy as np
 
 from add_phase_info import add_phase_info
+from multiprocessing import Pool
 
 #thus script requested the use of nimble physics
 # pip3 install nimblephysics
@@ -37,16 +38,16 @@ output_dir='./processed_data/'
 datasets_to_process = [
   'Moore2015',
 #   'Camargo2021',
-#   'Falisse2017',
-#   'Fregly2012',
-#   'Hamner2013',
-#   'Han2023',
+  #'Falisse2017',
+  #'Fregly2012',
+  #'Hamner2013',
+  #'Han2023',
 #   'Santos2017',
 #   'Tan2021',
-#   'Tan2022',
-#   'Tiziana2019',
-#   'vanderZee2022',
-#   'Wang2023',
+  #'Tan2022',
+  #'Tiziana2019',
+  #'vanderZee2022',
+  #'Wang2023',
 #   'Carter2023',
 ]
 
@@ -59,6 +60,8 @@ flip_columns = [
 
     # Only flip the left cop x 
     'cop_x_l',
+
+    'cop_z_r'
 
     # Flip knee values
     'knee_angle_s_r',
@@ -110,21 +113,21 @@ def osim_rotate_matrix(x, y, z):
 dataset_count = 0 
 chunk_size=100000
 # Process each dataset separately
-for dataset in datasets_to_process:
-    
+def process_dataset(dataset):
     dataset_path = os.path.join(base_dir, f'{dataset}_Formatted_No_Arm')
 
-    data=[]
+    data = []
     is_first_chunk = True
     # Check if it's a directory
     if os.path.isdir(dataset_path):
 
         # Loop through each subject in the dataset with a progress bar (tqdm)
-        for sub_idx,subject in tqdm(enumerate(os.listdir(dataset_path))):
-            
+        for sub_idx, subject in tqdm(enumerate(os.listdir(dataset_path)),
+                                     desc=f'Subjects in {dataset}'):
+
             # For debugging purposes, we can limit the number of subjects
-            if sub_idx>0:
-                break
+            # if sub_idx > 0:
+            #     break
 
             # Get the path to the subject's folder
             subject_path = os.path.join(dataset_path, subject)
@@ -133,69 +136,61 @@ for dataset in datasets_to_process:
             if not os.path.isdir(subject_path):
                 print(f"Skipping {subject_path}, not a directory")
                 continue
-            
+
             # Look for the b3d file in the subject's folder
             b3d_file_path = None
             for file in os.listdir(subject_path):
                 if file.endswith('.b3d'):
                     b3d_file_path = os.path.join(subject_path, file)
-            
+
             # If no b3d file was found, skip this subject
             if b3d_file_path is None:
                 print(f"Skipping {subject_path}, no b3d file found")
                 continue
 
-                #print(f"Processing {b3d_file_path}")
-                # specific processing code here
-            
             # Process the dataset. If something fails, skip to the next subject
             try:
-
                 # Create a SubjectOnDisk object
                 my_subject = nimble.biomechanics.SubjectOnDisk(b3d_file_path)
 
-                # Process each trial in the subject. Each trial represents 
-                # one continuous recordin of the subject performing a task.
-                # There might be multiple trials for a particular task. 
-                num_trial=my_subject.getNumTrials()
-                
+                # Process each trial in the subject. Each trial represents
+                # one continuous recording of the subject performing a task.
+                # There might be multiple trials for a particular task.
+                num_trial = my_subject.getNumTrials()
+
                 # Loop through each trial
-                for trial_turn in tqdm(range(num_trial)):
+                for trial_turn in tqdm(range(num_trial),
+                                       desc=f'Trials in {subject}'):
 
-                    # Lalbel the acumulated time
-                    accum_time=0
+                    # Label the accumulated time
+                    accum_time = 0
 
-                    #ff is the frames for a single piece of task
+                    # ff is the frames for a single piece of task
                     # We need to specify the number of frames to read.
-                    big_n=1_000_000 # Needs arbitrary large number to read all frames
-                    ff=my_subject.readFrames(trial_turn,0,big_n)
-                    
+                    big_n = 1_000_000  # Needs arbitrary large number to read all frames
+                    ff = my_subject.readFrames(trial_turn, 0, big_n)
+
                     # Get the task name and time interval
-                    task=my_subject.getTrialOriginalName(trial_turn)
-                    timestep=my_subject.getTrialTimestep(trial_turn)
+                    task = my_subject.getTrialOriginalName(trial_turn)
+                    timestep = my_subject.getTrialTimestep(trial_turn)
 
                     # iterate through every frame
-                    for i,a in enumerate(ff):
+                    for i, a in enumerate(ff):
 
-                        # ss is a single frame of information  
-                        # There are 2 processing passes. The first one is for 
-                        # the kinematics and the second one is for the dynamics     
-                        ss=a.processingPasses[1] 
+                        # ss is a single frame of information
+                        # There are 2 processing passes. The first one is for
+                        # the kinematics and the second one is for the dynamics
+                        ss = a.processingPasses[1]
 
                         # Get the high level variables for each frame
-                        #acc=ss.acc
-                        grf=(ss.groundContactForce)
-                        cop=(ss.groundContactCenterOfPressureInRootFrame)
-                        cop_org=ss.groundContactCenterOfPressureInRootFrame
-                        contacted=ss.contact
-                        poses=ss.pos
-                        vels=ss.vel
-                        torque=ss.tau
+                        grf = (ss.groundContactForce)
+                        cop = (ss.groundContactCenterOfPressureInRootFrame)
+                        contacted = ss.contact
+                        poses = ss.pos
+                        vels = ss.vel
+                        torque = ss.tau
 
                         # Assigning variables to poses array elements
-                        # The positions are not documented, so we had to 
-                        # reverse engineer them from the positions that are 
-                        # found in opensim GUI (lol)
                         pelvis_angle_s = poses[0]
                         pelvis_angle_f = poses[1]
                         pelvis_angle_t = poses[2]
@@ -244,71 +239,71 @@ for dataset in datasets_to_process:
                         ankle_torque_s_l = torque[17]
                         ankle_torque_t_l = torque[18]
 
-                        # We need to forwards propagate the pelvis angles 
-                        # to the shank, thigh, and foot angles. Therefore, 
+                        # We need to forwards propagate the pelvis angles
+                        # to the shank, thigh, and foot angles. Therefore,
                         # we need to calculate the rotation matrices for each
                         # segment.
-                        R_pelvis=osim_rotate_matrix(pelvis_angle_f,pelvis_angle_t,pelvis_angle_s)
-                        R_hip_r=osim_rotate_matrix(hip_angle_f_r,hip_angle_t_r,hip_angle_s_r)
-                        R_hip_l=osim_rotate_matrix(hip_angle_f_l,hip_angle_t_l,hip_angle_s_l)
-                        R_knee_r=osim_rotate_matrix(0,0,-knee_angle_s_r)
-                        R_knee_l=osim_rotate_matrix(0,0,-knee_angle_s_l)
-                        R_ankle_r=osim_rotate_matrix(0,ankle_angle_t_r,ankle_angle_s_r)
-                        R_ankle_l=osim_rotate_matrix(0,ankle_angle_t_l,ankle_angle_s_l)
+                        R_pelvis = osim_rotate_matrix(pelvis_angle_f, pelvis_angle_t, pelvis_angle_s)
+                        R_hip_r = osim_rotate_matrix(hip_angle_f_r, hip_angle_t_r, hip_angle_s_r)
+                        R_hip_l = osim_rotate_matrix(hip_angle_f_l, hip_angle_t_l, hip_angle_s_l)
+                        R_knee_r = osim_rotate_matrix(0, 0, -knee_angle_s_r)
+                        R_knee_l = osim_rotate_matrix(0, 0, -knee_angle_s_l)
+                        R_ankle_r = osim_rotate_matrix(0, ankle_angle_t_r, ankle_angle_s_r)
+                        R_ankle_l = osim_rotate_matrix(0, ankle_angle_t_l, ankle_angle_s_l)
 
                         # Calculate the angles of the shank
-                        R_right_shank_all=np.dot(R_pelvis,np.dot(R_hip_r,(R_knee_r)))
-                        R_left_shank_all=np.dot(R_pelvis,np.dot(R_hip_l,R_knee_l))
-                        shank_angle_r=R_right_shank_all[1,0]
-                        shank_angle_l=R_left_shank_all[1,0]
-                        
+                        R_right_shank_all = np.dot(R_pelvis, np.dot(R_hip_r, (R_knee_r)))
+                        R_left_shank_all = np.dot(R_pelvis, np.dot(R_hip_l, R_knee_l))
+                        shank_angle_r = R_right_shank_all[1, 0]
+                        shank_angle_l = R_left_shank_all[1, 0]
+
                         # Calculate the velocities of the shank with finite
                         # differences. If it is the first frame, we need to
                         # initialize the previous angles.
-                        if i==0:
-                            prev_shank_angle_r=shank_angle_r
-                            prev_shank_angle_l=shank_angle_l
-                        # Fininte ineterval
-                        shank_vel_r=(shank_angle_r-prev_shank_angle_r)/timestep
-                        shank_vel_l=(shank_angle_l-prev_shank_angle_l)/timestep
+                        if i == 0:
+                            prev_shank_angle_r = shank_angle_r
+                            prev_shank_angle_l = shank_angle_l
+                        # Finite interval
+                        shank_vel_r = (shank_angle_r - prev_shank_angle_r) / timestep
+                        shank_vel_l = (shank_angle_l - prev_shank_angle_l) / timestep
                         # Update the previous angles for next finite difference
-                        prev_shank_angle_r=shank_angle_r
-                        prev_shank_angle_l=shank_angle_l
+                        prev_shank_angle_r = shank_angle_r
+                        prev_shank_angle_l = shank_angle_l
 
                         # Calculate the angles of the thigh
-                        R_right_thigh_all=np.dot(R_pelvis,R_hip_r)
-                        R_left_thigh_all=np.dot(R_pelvis,R_hip_l)
-                        thigh_angle_r=R_right_thigh_all[1,0]
-                        thigh_angle_l=R_left_thigh_all[1,0]
+                        R_right_thigh_all = np.dot(R_pelvis, R_hip_r)
+                        R_left_thigh_all = np.dot(R_pelvis, R_hip_l)
+                        thigh_angle_r = R_right_thigh_all[1, 0]
+                        thigh_angle_l = R_left_thigh_all[1, 0]
                         # Calculate the velocities of the thigh with finite
                         # differences.
-                        if i==0:
-                            prev_thigh_angle_r=thigh_angle_r
-                            prev_thigh_angle_l=thigh_angle_l
+                        if i == 0:
+                            prev_thigh_angle_r = thigh_angle_r
+                            prev_thigh_angle_l = thigh_angle_l
                         # Finite difference
-                        thigh_vel_l=(thigh_angle_l-prev_thigh_angle_l)/timestep
-                        thigh_vel_r=(thigh_angle_r-prev_thigh_angle_r)/timestep
+                        thigh_vel_l = (thigh_angle_l - prev_thigh_angle_l) / timestep
+                        thigh_vel_r = (thigh_angle_r - prev_thigh_angle_r) / timestep
                         # Update the previous angles for next finite difference
-                        prev_thigh_angle_r=thigh_angle_r
-                        prev_thigh_angle_l=thigh_angle_l
+                        prev_thigh_angle_r = thigh_angle_r
+                        prev_thigh_angle_l = thigh_angle_l
 
                         # Calculate the angles of the ankle
-                        R_right_foot_all=np.dot(R_pelvis,np.dot(R_hip_r,np.dot(R_knee_r,R_ankle_r)))
-                        R_left_foot_all=np.dot(R_pelvis,np.dot(R_hip_l,np.dot(R_knee_l,R_ankle_l)))
-                        dorsi_angle_r=R_right_foot_all[1,0]
-                        dorsi_angle_l=R_left_foot_all[1,0]
+                        R_right_foot_all = np.dot(R_pelvis, np.dot(R_hip_r, np.dot(R_knee_r, R_ankle_r)))
+                        R_left_foot_all = np.dot(R_pelvis, np.dot(R_hip_l, np.dot(R_knee_l, R_ankle_l)))
+                        dorsi_angle_r = R_right_foot_all[1, 0]
+                        dorsi_angle_l = R_left_foot_all[1, 0]
                         # Calculate the velocities of the ankle with finite
                         # differences. If it is the first frame, we need to
                         # initialize the previous angles.
-                        if i==0:
-                            prev_dorsi_angle_r=dorsi_angle_r
-                            prev_dorsi_angle_l=dorsi_angle_l
+                        if i == 0:
+                            prev_dorsi_angle_r = dorsi_angle_r
+                            prev_dorsi_angle_l = dorsi_angle_l
                         # Finite difference
-                        ankle_vel_r=(dorsi_angle_r-prev_dorsi_angle_r)/timestep
-                        ankle_vel_l=(dorsi_angle_l-prev_dorsi_angle_l)/timestep
+                        ankle_vel_r = (dorsi_angle_r - prev_dorsi_angle_r) / timestep
+                        ankle_vel_l = (dorsi_angle_l - prev_dorsi_angle_l) / timestep
                         # Update the previous angles for next finite difference
-                        prev_dorsi_angle_r=dorsi_angle_r
-                        prev_dorsi_angle_l=dorsi_angle_l
+                        prev_dorsi_angle_r = dorsi_angle_r
+                        prev_dorsi_angle_l = dorsi_angle_l
 
                         # Format the subject name
                         # Remove the _split{number}.
@@ -319,11 +314,21 @@ for dataset in datasets_to_process:
                             subject = file.split('.')[0]
 
                         record = {
-                                'subject': subject,
-                                'task': task,
-                                'frame_number': i,
-                                'time_step': accum_time,
+                            'subject': subject,
+                            'task': task,
+                            'frame_number': i,
+                            'time_step': accum_time,
 
+                            'contact_r': contacted[0],
+                            'contact_l': contacted[1],
+
+                            'grf_x_r': grf[0],
+                            'grf_y_r': grf[1],
+                            'grf_z_r': grf[2],
+
+                            'grf_x_l': grf[3],
+                            'grf_y_l': grf[4],
+                            'grf_z_l': grf[5],
                                 'contact_r': contacted[0],
                                 'contact_l': contacted[1],
 
@@ -454,6 +459,9 @@ for dataset in datasets_to_process:
     for column in flip_columns:
         df[column] = -df[column]
 
+    # Add task information
+    # TODO: Add task information
+
     # Change from radians to degrees
     angle_columns = [col for col in df.columns if 'angle' in col]
     vel_columns = [col for col in df.columns if 'vel' in col]
@@ -466,3 +474,7 @@ for dataset in datasets_to_process:
                    remove_original_file=final_output_name)
 
     print(f"Finished. Data saved to {final_output_name}")
+
+if __name__ == '__main__':
+    with Pool() as pool:
+        pool.map(process_dataset, datasets_to_process)

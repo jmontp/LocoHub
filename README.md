@@ -76,6 +76,26 @@ The kinematics have indicator variables to give the joint in the different plane
 * sit_to_stand
 * stand_to_sit
 * transitions -> transitions between different tasks
+* non_cyclic
+    * static_pose -> Standing still
+    * jump -> Jumpin
+    * squat -> Squatting
+    * land -> Land
+    * 
+* modified_walking -> Walking with certain alterations to gait
+    * medial thrust
+    * walking pole
+    * trunk sway
+    * crouch gait
+    * mild crouch gait,
+    * bouncy gait
+    * smooth gait
+    * turning
+
+# Other columns
+walking_speed -> usually belt speed of a treadmill in m/s
+subject_mass -> mass of the subject in kg
+
 
 # Joint angle representation
 ![Joint angle convention](/figures/joint_angle_references.png)
