@@ -1,5 +1,5 @@
 # locomotion-data-standardization
-
+[Standardized parquet files](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0)
 # Time indexing vs Phase indexing
 Tabular formats will be provided for both time indexed data and phase indexed data. The time indexed dat is generaly better to train since it can include transition and non-cyclic task, while the phase indexed data can provide easy ways to plot and analyze performance along a given task. 
 
@@ -45,11 +45,13 @@ The kinematics have indicator variables to give the joint in the different plane
 * knee_torque_{plane}_{leg}
 * ankle_torque_{plane}_{leg}
 
+
 # Ground Reaction Forces (N)
 * grf_{axi}_{leg}
 
 # Center of pressure (mm)
 * cop_{axis}_{leg}
+
 
 # Sagital plane conventions
 * Ankle dorsiflexion -> Positive
@@ -67,6 +69,7 @@ The kinematics have indicator variables to give the joint in the different plane
 * step_height - this provides the step heights for stairs
 
 # Task naming
+
 * level_walking -> level ground walking at varying velocities
 * incline_walking -> walking at an upward sloped angle
 * decline_walking -> walking at an downwards sloped angle
@@ -95,6 +98,7 @@ The kinematics have indicator variables to give the joint in the different plane
 # Other columns
 walking_speed -> usually belt speed of a treadmill in m/s
 subject_mass -> mass of the subject in kg
+
 
 
 # Joint angle representation
