@@ -153,10 +153,16 @@ function trial_table = process_trial(trial_struct)
 
     % Create a new table that will be returned
     trial_table = table;
-
+    
+    % Plane conventions
     sagittal_plane = 1;
     frontal_plane = 2;
     transverse_plane = 3;
+
+    % Linear forces directions
+    x = 1;
+    y = 3;
+    z = 2;
 
     % Create a phase axis. This is determined by the amount of steps times
     % 150, which is the points per step. The phase axis will be a linear 
@@ -176,6 +182,8 @@ function trial_table = process_trial(trial_struct)
     trial_table.hip_angle_f_r = reshape(joint_angles.HipAngles(:, frontal_plane, :), [], 1);
     trial_table.hip_angle_t_r = reshape(joint_angles.HipAngles(:, transverse_plane, :), [], 1);
 
+    % We do not have left side joint angles, so we will just shift the right
+    % side angles by half a step
     trial_table.hip_angle_s_l = circshift(trial_table.hip_angle_s_r, shift);
     trial_table.hip_angle_f_l = circshift(trial_table.hip_angle_f_r, shift);
     trial_table.hip_angle_t_l = circshift(trial_table.hip_angle_t_r, shift);
@@ -259,7 +267,7 @@ function trial_table = process_trial(trial_struct)
     trial_table.hip_torque_f_l = circshift(trial_table.hip_torque_f_r, shift);
     trial_table.hip_torque_t_l = circshift(trial_table.hip_torque_t_r, shift);
 
-    trial_table.knee_torque_s_r = reshape(joint_moments.KneeMoment(:, sagittal_plane, :), [], 1);
+    trial_table.knee_torque_s_r = reshape(-joint_moments.KneeMoment(:, sagittal_plane, :), [], 1);
     trial_table.knee_torque_f_r = reshape(joint_moments.KneeMoment(:, frontal_plane, :), [], 1);
     trial_table.knee_torque_t_r = reshape(joint_moments.KneeMoment(:, transverse_plane, :), [], 1);
 
@@ -274,6 +282,28 @@ function trial_table = process_trial(trial_struct)
     trial_table.ankle_torque_s_l = circshift(trial_table.ankle_torque_s_r, shift);
     trial_table.ankle_torque_f_l = circshift(trial_table.ankle_torque_f_r, shift);
     trial_table.ankle_torque_t_l = circshift(trial_table.ankle_torque_t_r, shift);
+
+    % Ground reaction forces
+    force_plates = trial_struct.forceplates;
+
+    trial_table.grf_z_r = -reshape(force_plates.Force(:, z, :), [], 1);
+    trial_table.grf_y_r = -reshape(force_plates.Force(:, y, :), [], 1);
+    trial_table.grf_x_r = -reshape(force_plates.Force(:, x, :), [], 1);
+
+    trial_table.grf_z_l = circshift(trial_table.grf_z_r, shift);
+    trial_table.grf_y_l = circshift(trial_table.grf_y_r, shift);
+    trial_table.grf_x_l = circshift(trial_table.grf_x_r, shift);
+
+    % Center of pressure, based on evaluating we have to switch 
+    % the y and z axis. It's not a typo
+    trial_table.cop_z_r = -reshape(force_plates.CoP(:, z, :), [], 1);
+    trial_table.cop_y_r = reshape(force_plates.CoP(:, y, :), [], 1);
+    trial_table.cop_x_r = -reshape(force_plates.CoP(:, x, :), [], 1);
+
+    trial_table.cop_z_l = circshift(trial_table.cop_z_r, shift);
+    trial_table.cop_y_l = circshift(trial_table.cop_y_r, shift);
+    trial_table.cop_x_l = circshift(trial_table.cop_x_r, shift);
+
 
     % TODO: More data types will be added in here in the future
 

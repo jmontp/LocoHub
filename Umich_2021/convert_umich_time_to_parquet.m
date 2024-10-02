@@ -160,6 +160,11 @@ function trial_table = process_trial(trial_struct)
     frontal_plane = 2;
     transverse_plane = 3;
 
+    % Linear forces directions
+    x = 1;
+    y = 3;
+    z = 2;
+
     % Create a time axis for the trial based on the length and the fact that
     % all data (minus force plates, which is 1000 Hz) is sampled at 100 Hz
     Hz = 100;
@@ -264,11 +269,11 @@ function trial_table = process_trial(trial_struct)
     trial_table.hip_torque_f_l = joint_moments.LHipMoment(:, frontal_plane);
     trial_table.hip_torque_t_l = joint_moments.LHipMoment(:, transverse_plane);
 
-    trial_table.knee_torque_s_r = joint_moments.RKneeMoment(:, sagittal_plane);
+    trial_table.knee_torque_s_r = -joint_moments.RKneeMoment(:, sagittal_plane);
     trial_table.knee_torque_f_r = joint_moments.RKneeMoment(:, frontal_plane);
     trial_table.knee_torque_t_r = joint_moments.RKneeMoment(:, transverse_plane);
 
-    trial_table.knee_torque_s_l = joint_moments.LKneeMoment(:, sagittal_plane);
+    trial_table.knee_torque_s_l = -joint_moments.LKneeMoment(:, sagittal_plane);
     trial_table.knee_torque_f_l = joint_moments.LKneeMoment(:, frontal_plane);
     trial_table.knee_torque_t_l = joint_moments.LKneeMoment(:, transverse_plane);
 
@@ -279,6 +284,27 @@ function trial_table = process_trial(trial_struct)
     trial_table.ankle_torque_s_l = joint_moments.LAnkleMoment(:, sagittal_plane);
     trial_table.ankle_torque_f_l = joint_moments.LAnkleMoment(:, frontal_plane);
     trial_table.ankle_torque_t_l = joint_moments.LAnkleMoment(:, transverse_plane);
+
+    % Ground reaction forces
+    force_plates = trial_struct.forceplates;
+
+    % Skip every 10th data point to match the 100 Hz sampling rate
+    trial_table.grf_z_r = -force_plates.RForce(1:10:end, z);
+    trial_table.grf_y_r = -force_plates.RForce(1:10:end, y);
+    trial_table.grf_x_r = force_plates.RForce(1:10:end, x);
+
+    trial_table.grf_z_l = -force_plates.LForce(1:10:end, z);
+    trial_table.grf_y_l = -force_plates.LForce(1:10:end, y);
+    trial_table.grf_x_l = force_plates.LForce(1:10:end, x);
+    
+    % Center of pressure
+    trial_table.cop_z_r = -force_plates.RCoP(1:10:end, z);
+    trial_table.cop_y_r = force_plates.RCoP(1:10:end, y);
+    trial_table.cop_x_r = -force_plates.RCoP(1:10:end, x);
+
+    trial_table.cop_z_l = -force_plates.LCoP(1:10:end, z);
+    trial_table.cop_y_l = force_plates.LCoP(1:10:end, y);
+    trial_table.cop_x_l = -force_plates.LCoP(1:10:end, x);
 
     % TODO: More data types will be added in here in the future
 
