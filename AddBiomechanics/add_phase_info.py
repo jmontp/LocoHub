@@ -61,120 +61,139 @@ def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
     phase_points = np.linspace(0, 1, num_phase_points)
     grf_threshold = 20 # N
 
-    # Iterate over each leg
-    for leg_idx, leg in enumerate(['l', 'r']):
+    # Process per subject
+    subjects = df['subject'].unique()
 
-        ## Step 1: GRF thresholding to get swing (0) and stance (1) phases
-        # Get the GRF data
-        grf_z = df[f'grf_z_{leg}'].values
-        stance_swing = grf_z > grf_threshold
-
-        ## Step 2: Find swing-to-stance (1) and stance-to-swing (-1) transitions
-        # Find the transitions using diff 
-        transitions = np.diff(stance_swing.astype(int))
-        swing_to_stance = np.where(transitions == 1)[0]
-        stance_to_swing = np.where(transitions == -1)[0]
-
-        ## Step 3: Find the steady-state strides by filtering for positive 
-        # stride times and removing the strides that are outliers based on 
-        # a boxplot analysis
-        time = df['time_step'].values
-
-        # Find the stride times which is defined by consecutive 
-        # swing-to-stance transitions
-        stride_time = time[swing_to_stance[1:]] - time[swing_to_stance[:-1]]
+    # Create the phase dataframe if requested
+    for subject_idx, subject in tqdm(enumerate(subjects),
+                                     total=len(subjects),
+                                     desc='Processing subjects'):
+        # Get the subject dataframe
+        df_subject = df.loc[df['subject'] == subject]
         
-        # Create a list that contains the indexes of the valid strides
-        valid_stride = np.arange(len(stride_time))
+        # Iterate over each leg
+        for leg_idx, leg in enumerate(['l', 'r']):
 
-        # First, remove the negative stride times
-        positive_strides = stride_time > 0
-        stride_time = stride_time[positive_strides]
-        valid_stride_num = valid_stride[positive_strides]
+            ## Step 1: GRF thresholding to get swing (0) and stance (1) phases
+            # Get the GRF data
+            grf_z = df_subject[f'grf_z_{leg}'].values
+            stance_swing = grf_z > grf_threshold
 
-        # If there are no valid strides, skip the leg
-        if len(stride_time) == 0:
-            continue
+            ## Step 2: Find swing-to-stance (1) and stance-to-swing (-1) transitions
+            # Find the transitions using diff 
+            transitions = np.diff(stance_swing.astype(int))
+            swing_to_stance = np.where(transitions == 1)[0]
+            stance_to_swing = np.where(transitions == -1)[0]
 
-        # Remove all the outliers of the box plot
-        q1 = np.percentile(stride_time, 25)
-        q3 = np.percentile(stride_time, 75)
-        iqr = q3 - q1
-        lower_bound = q1 - 1.5 * iqr
-        upper_bound = q3 + 1.5 * iqr
+            ## Step 3: Find the steady-state strides by filtering for positive 
+            # stride times and removing the strides that are outliers based on 
+            # a boxplot analysis
+            time = df_subject['time_step'].values
 
-        # Remove the outlier stride durations
-        in_bounds_strides = (stride_time > lower_bound) & (stride_time < upper_bound)
-        stride_time = stride_time[in_bounds_strides]
-        valid_stride_num = valid_stride_num[in_bounds_strides]
+            # Find the stride times which is defined by consecutive 
+            # swing-to-stance transitions
+            stride_time = time[swing_to_stance[1:]] - time[swing_to_stance[:-1]]
+            
+            # Create a list that contains the indexes of the valid strides
+            valid_stride = np.arange(len(stride_time))
 
-        ## Step 4: Calculate the phase for each step
-        # Initialize the phase to be -1 for the dataframe
-        df[f'phase_{leg}'] = -1.0
+            # First, remove the negative stride times
+            positive_strides = stride_time > 0
+            stride_time = stride_time[positive_strides]
+            valid_stride_num = valid_stride[positive_strides]
 
-        # If we are exporting the phase dataframe, initialize it to be
-        # len(valid_stride_num) * num_phase_points long
-        df_phase_leg = pd.DataFrame(  # For a single leg
-            index=np.arange(len(valid_stride_num) * num_phase_points),
-            columns=list(df.columns)+['phase','phase_leading_leg']
-        )
+            # If there are no valid strides, skip the leg
+            if len(stride_time) == 0:
+                continue
 
-        # Iterate over each stride
-        print(f'Calculating phase for {leg} leg')
-        for i, stride in tqdm(enumerate(valid_stride_num), total=len(valid_stride_num)):
-           
+            # Remove all the outliers of the box plot
+            q1 = np.percentile(stride_time, 25)
+            q3 = np.percentile(stride_time, 75)
+            iqr = q3 - q1
+            lower_bound = q1 - 1.5 * iqr
+            upper_bound = q3 + 1.5 * iqr
 
-            # Get the start and end of the stride
-            start = swing_to_stance[stride]
-            end = swing_to_stance[stride+1]
+            # Remove the outlier stride durations
+            in_bounds_strides = (stride_time > lower_bound) & (stride_time < upper_bound)
+            stride_time = stride_time[in_bounds_strides]
+            valid_stride_num = valid_stride_num[in_bounds_strides]
 
-            # Calculate the phase for the time dataset
-            phase = np.linspace(0, 1, end-start+1)
+            ## Step 4: Calculate the phase for each step
+            # Initialize the phase to be -1 for the dataframe
+            df[f'phase_{leg}'] = -1.0
 
-            # Add the phase to the dataframe
-            df.loc[start:end, f'phase_{leg}'] = phase
+            # If we are exporting the phase dataframe, initialize it to be
+            # len(valid_stride_num) * num_phase_points long
+            df_phase_leg = pd.DataFrame(  # For a single leg
+                index=np.arange(len(valid_stride_num) * num_phase_points),
+                columns=list(df_subject.columns)+['phase','phase_leading_leg']
+            )
 
-            # If we are exporting the phase dataframe, add the phase to it
-            if export_phase_dataframe:
-                # Get the start and end of the phase to index the dataframe
-                p_s = i*num_phase_points     # start
-                p_e = (i+1)*num_phase_points-1 # end
+            # Iterate over each stride
+            for i, stride in tqdm(enumerate(valid_stride_num), total=len(valid_stride_num),
+                                  desc=f'Calculating phase {leg}'):
+            
 
-                # Create the axis to interpolate the data for the phase for 
-                # the given stride
-                phase_stride_points = np.linspace(0,1,end-start+1)
+                # Get the start and end of the stride
+                start = swing_to_stance[stride]
+                end = swing_to_stance[stride+1]
 
-                # Interpolate the data
-                for column in df.columns:
-                    # Verify that the column is a float column
-                    if df[column].dtype != 'float64':
-                        continue
+                # Calculate the phase for the time dataset
+                phase = np.linspace(0, 1, end-start+1)
+
+                # Add the phase to the dataframe
+                df.loc[start:end, f'phase_{leg}'] = phase
+
+                # If we are exporting the phase dataframe, add the phase to it
+                if export_phase_dataframe:
+                    # Get the start and end of the phase to index the dataframe
+                    p_s = i*num_phase_points     # start
+                    p_e = (i+1)*num_phase_points-1 # end
+
+                    # Create the axis to interpolate the data for the phase for 
+                    # the given stride
+                    phase_stride_points = np.linspace(0,1,end-start+1)
+
                     # Interpolate the data
-                    data = df.loc[start:end, column].values
-                    interp_data = np.interp(
-                        phase_points, phase_stride_points, data
-                    )
-                    df_phase_leg.loc[p_s:p_e, column] = interp_data
-                # Add the subject and task information to the dataframe
-                df_phase_leg.loc[p_s:p_e,'subject'] = df['subject'].iloc[start]
-                df_phase_leg.loc[p_s:p_e,'task'] = df['task'].iloc[start]
-                df_phase_leg.loc[p_s:p_e,'phase_leading_leg'] = leg
-                df_phase_leg.loc[p_s:p_e,'phase'] = phase_points
+                    for column in df_subject.columns:
+                        # Verify that the column is a float column
+                        if df[column].dtype != 'float64':
+                            continue
+                        # Interpolate the data
+                        data = df.loc[start:end, column].values
+                        interp_data = np.interp(
+                            phase_points, phase_stride_points, data
+                        )
+                        df_phase_leg.loc[p_s:p_e, column] = interp_data
+                    # Add the subject and task information to the dataframe
+                    df_phase_leg.loc[p_s:p_e,'subject'] = df_subject['subject'].iloc[start]
+                    df_phase_leg.loc[p_s:p_e,'task'] = df_subject['task'].iloc[start]
+                    df_phase_leg.loc[p_s:p_e,'phase_leading_leg'] = leg
+                    df_phase_leg.loc[p_s:p_e,'phase'] = phase_points
 
-    
-        # Add the stride to the phase dataframe
-        if export_phase_dataframe:
-            # If it's the first leg, initialize the dataframe
-            if leg_idx == 0:
-                df_phase = df_phase_leg
-            else:
-                df_phase = pd.concat([df_phase, df_phase_leg], axis=0)
+        
+            # Add the stride to the phase dataframe
+            if export_phase_dataframe and save_name is not None:
+                # If it's the first leg, initialize the dataframe
+                if subject_idx == 0 and leg_idx == 0:
+                    # Save the first leg dataframe to parquet
+                    df_phase_leg.to_parquet(save_name+'_phase.parquet',
+                                            engine='fastparquet')
+                else:
+                    # Try to remove the phase_{leg} column from the dataframe
+                    try:
+                        df_phase_leg = df_phase_leg.drop(columns=['phase_l',
+                                                                  'phase_r'])
+                    except:
+                        pass
+                    # Append the dataframe to the existing one
+                    df_phase_leg.to_parquet(save_name+'_phase.parquet', 
+                                            engine='fastparquet',
+                                            append=True)
 
     # Save the dataframe if requested
     if save_name is not None:
         df.to_parquet(save_name+'_time.parquet')
-        if export_phase_dataframe:
-            df_phase.to_parquet(save_name+'_phase.parquet')
 
     # Remove the original file if requested
     if remove_original_file is not None:
@@ -189,7 +208,7 @@ if __name__ == '__main__':
     # root.withdraw()
     # file_path = filedialog.askopenfilename()
 
-    file_path = './processed_data/Santos2017.parquet'
+    file_path = '/datasets/AddBiomechanics/processed_data/Carter2023.parquet'
     df = pd.read_parquet(file_path)
 
     add_phase_info(df, save_name=file_path[:-8],
