@@ -25,14 +25,15 @@ import os
 from tqdm import tqdm
 
 def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
-                   remove_original_file=None, save_name=None):
+                   remove_original_file=None, save_name=None, 
+                   plot_distributions=False):
     """
     This function adds phase information to a dataframe that has grf data 
     in N units. It is expected that the dataframe has the following columns:
     - 'time' : time in seconds
     - 'task' : task being performed
-    - 'grf_z_r' : ground reaction force in x direction for the right leg
-    - 'grf_z_l' : ground reaction force in x direction for the left leg
+    - 'grf_y_r' : ground reaction force in x direction for the right leg
+    - 'grf_y_l' : ground reaction force in x direction for the left leg
 
     This function will add the following columns:
     - 'phase_r' : the phase of the gait cycle for the right leg
@@ -48,7 +49,8 @@ def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
         (optional)
     save_name (str) : the name of the file to save the dataframe to (optional)
         files will have "_time" and "_phase" appended to them.
-    
+    plot_distributions (bool) : whether to plot the distributions of the 
+        stride times for each subject and task before and after outlier removal
 
     Returns:
     pd.DataFrame : the dataframe with phase information
@@ -59,25 +61,35 @@ def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
     # Number of points to use for the interpolation
     num_phase_points = 150
     phase_points = np.linspace(0, 1, num_phase_points)
-    grf_threshold = 20 # N
+    grf_threshold = 50 # N
 
     # Process per subject
     subjects = df['subject'].unique()
+    
+    # Initialize the columns
+    df['phase_r'] = np.nan
+    df['phase_l'] = np.nan
+    df['stance_r'] = np.nan
+    df['stance_l'] = np.nan
+    
+    for leg in ['r', 'l']:
+        grf_y = df[f'grf_y_{leg}'].values
+        stance_swing = grf_y > grf_threshold
+        df.loc[stance_swing, f'stance_{leg}'] = 1
+        df.loc[~stance_swing, f'stance_{leg}'] = 0
 
     # Create the phase dataframe if requested
     for subject_idx, subject in tqdm(enumerate(subjects),
                                      total=len(subjects),
                                      desc='Processing subjects'):
-        # Get the subject dataframe
-        df_subject = df.loc[df['subject'] == subject]
         
         # Iterate over each leg
         for leg_idx, leg in enumerate(['l', 'r']):
 
             ## Step 1: GRF thresholding to get swing (0) and stance (1) phases
             # Get the GRF data
-            grf_z = df_subject[f'grf_z_{leg}'].values
-            stance_swing = grf_z > grf_threshold
+            stance_swing = df.loc[df['subject'] == subject, f'stance_{leg}'].values
+            subject_index = df.loc[df['subject'] == subject].index
 
             ## Step 2: Find swing-to-stance (1) and stance-to-swing (-1) transitions
             # Find the transitions using diff 
@@ -85,22 +97,31 @@ def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
             swing_to_stance = np.where(transitions == 1)[0]
             stance_to_swing = np.where(transitions == -1)[0]
 
+            # Update the index based on the swing-to-stance transitions
+            swing_to_stance_df_index = subject_index[swing_to_stance]
+
             ## Step 3: Find the steady-state strides by filtering for positive 
             # stride times and removing the strides that are outliers based on 
             # a boxplot analysis
-            time = df_subject['time_step'].values
+            time = df.loc[df['subject'] == subject, 'time']
 
             # Find the stride times which is defined by consecutive 
             # swing-to-stance transitions
-            stride_time = time[swing_to_stance[1:]] - time[swing_to_stance[:-1]]
-            
-            # Create a list that contains the indexes of the valid strides
-            valid_stride = np.arange(len(stride_time))
+            stride_time = time[swing_to_stance_df_index].diff().values
+            # Remove the first stride time because it is always 0
+            stride_time = stride_time[1:]
+            # Create stride tuples with the start and stop time for each stride
+            stride_tuples = [(swing_to_stance_df_index[i], 
+                              swing_to_stance_df_index[i+1]) 
+                             for i in range(len(stride_time))]
 
             # First, remove the negative stride times
             positive_strides = stride_time > 0
             stride_time = stride_time[positive_strides]
-            valid_stride_num = valid_stride[positive_strides]
+            stride_tuples = [stride_tuples[i] 
+                             for i in range(len(stride_tuples)) 
+                             if positive_strides[i]]
+            stride_time_pre_filter = stride_time.copy()
 
             # If there are no valid strides, skip the leg
             if len(stride_time) == 0:
@@ -110,34 +131,34 @@ def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
             q1 = np.percentile(stride_time, 25)
             q3 = np.percentile(stride_time, 75)
             iqr = q3 - q1
-            lower_bound = q1 - 1.5 * iqr
-            upper_bound = q3 + 1.5 * iqr
+            lower_bound = q1 - 3 * iqr
+            upper_bound = q3 + 3 * iqr
 
-            # Remove the outlier stride durations
+            # Remove the outlier stride durations that are longer than the upper
+            # do not do lower bound
             in_bounds_strides = (stride_time > lower_bound) & (stride_time < upper_bound)
+            # in_bounds_strides = stride_time < upper_bound
             stride_time = stride_time[in_bounds_strides]
-            valid_stride_num = valid_stride_num[in_bounds_strides]
+            stride_tuples = [stride_tuples[i] for i in range(len(stride_tuples)) if in_bounds_strides[i]]
+
+            # Plot the distributions of the stride times for each subject and task
+            if plot_distributions:
+                plot_distributions_function(stride_time_pre_filter, stride_time,
+                                            subject, leg)
 
             ## Step 4: Calculate the phase for each step
-            # Initialize the phase to be -1 for the dataframe
-            df[f'phase_{leg}'] = -1.0
-
             # If we are exporting the phase dataframe, initialize it to be
             # len(valid_stride_num) * num_phase_points long
             df_phase_leg = pd.DataFrame(  # For a single leg
-                index=np.arange(len(valid_stride_num) * num_phase_points),
-                columns=list(df_subject.columns)+['phase','phase_leading_leg']
+                index=np.arange(len(stride_tuples) * num_phase_points),
+                columns=list(df.columns)+['phase','phase_leading_leg']
             )
 
             # Iterate over each stride
-            for i, stride in tqdm(enumerate(valid_stride_num), total=len(valid_stride_num),
+            for i, (start,end) in tqdm(enumerate(stride_tuples), 
+                                  total=len(stride_tuples),
                                   desc=f'Calculating phase {leg}'):
-            
-
-                # Get the start and end of the stride
-                start = swing_to_stance[stride]
-                end = swing_to_stance[stride+1]
-
+      
                 # Calculate the phase for the time dataset
                 phase = np.linspace(0, 1, end-start+1)
 
@@ -155,7 +176,7 @@ def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
                     phase_stride_points = np.linspace(0,1,end-start+1)
 
                     # Interpolate the data
-                    for column in df_subject.columns:
+                    for column in df.columns:
                         # Verify that the column is a float column
                         if df[column].dtype != 'float64':
                             continue
@@ -166,8 +187,8 @@ def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
                         )
                         df_phase_leg.loc[p_s:p_e, column] = interp_data
                     # Add the subject and task information to the dataframe
-                    df_phase_leg.loc[p_s:p_e,'subject'] = df_subject['subject'].iloc[start]
-                    df_phase_leg.loc[p_s:p_e,'task'] = df_subject['task'].iloc[start]
+                    df_phase_leg.loc[p_s:p_e,'subject'] = df.loc[start, 'subject']
+                    df_phase_leg.loc[p_s:p_e,'task'] = df.loc[start, 'task']
                     df_phase_leg.loc[p_s:p_e,'phase_leading_leg'] = leg
                     df_phase_leg.loc[p_s:p_e,'phase'] = phase_points
 
@@ -190,15 +211,37 @@ def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
                     df_phase_leg.to_parquet(save_name+'_phase.parquet', 
                                             engine='fastparquet',
                                             append=True)
-
-    # Save the dataframe if requested
-    if save_name is not None:
-        df.to_parquet(save_name+'_time.parquet')
-
+    # Fill the NaN values with the previous value
+    # df = df.ffill()
+    
     # Remove the original file if requested
     if remove_original_file is not None:
         os.remove(remove_original_file)
+    # Save the dataframe if requested
+    if save_name is not None:
+        # Remove the 'time' in the save name
+        save_name = save_name.replace('_time', '')
+        df.to_parquet(save_name+'_time.parquet')
 
+    if plot_distributions:
+        import matplotlib.pyplot as plt
+        plt.show()
+
+def plot_distributions_function(time_distribution, filtered_time_distribution,
+                                subject, leg):
+    """
+    Plots the distributions of the stride times for each subject and task 
+    before and after outlier removal.
+    """
+    import matplotlib.pyplot as plt
+    # Plot the distributions
+    plt.figure()
+    plt.hist(time_distribution, bins=50, alpha=0.5, label='Pre-filter')
+    plt.hist(filtered_time_distribution, bins=50, alpha=0.5, label='Post-filter')
+    plt.title(f'Stride time distribution for {subject} {leg}')
+    plt.xlabel('Stride time (s)')
+    plt.ylabel('Frequency')
+    plt.legend()
 
 if __name__ == '__main__':
     # Open file dialog to select file
@@ -208,9 +251,11 @@ if __name__ == '__main__':
     # root.withdraw()
     # file_path = filedialog.askopenfilename()
 
-    file_path = '/datasets/AddBiomechanics/processed_data/Carter2023.parquet'
+    # file_path = '/datasets/AddBiomechanics/processed_data/Carter2023.parquet'
+    file_path = '../Umich_2021/umich_2021_time.parquet'
     df = pd.read_parquet(file_path)
 
     add_phase_info(df, save_name=file_path[:-8],
                    remove_original_file=file_path,
-                   export_phase_dataframe=True)
+                   export_phase_dataframe=False,
+                   plot_distributions=True)
