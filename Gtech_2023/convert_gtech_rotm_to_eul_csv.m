@@ -35,7 +35,7 @@ rotm_sequence = 'YZX'; % Z should correspond to saggital plane angles
 % Define the base folder and the destination sub folder
 % Structure of the files in the RawData folder is as follows:
 % base_folder/SubjectName/Transforms/TaskName.mat
-base_folder = 'RawData';
+base_folder = 'rawdata';
 
 % Setting to true will make the script not save any of the euler angle 
 % csv files and just plot the x, y, and z angles. This is good way to 
@@ -101,11 +101,12 @@ for subject_num = 1:subject_count
         data = load(data_file);
         Transforms = data.Transforms;
 
+        % Get the fields in the struct
+        field_list = fieldnames(Transforms);
         % Get the number of data points
         data_points = size(Transforms.Header, 1);
 
-        % Get the fields in the struct
-        field_list = fieldnames(Transforms);
+        
 
         % Create an empty table that will store the data to be ultimately 
         % saved
