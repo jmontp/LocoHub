@@ -41,35 +41,35 @@ datasets_to_process = [
   #'Falisse2017',
   #'Fregly2012',
   #'Hamner2013',
-  'Han2023',
+  #'Han2023',
   #'Santos2017',
   #'Tan2021',
   #'Tan2022',
   #'Tiziana2019',
   #'vanderZee2022',
   #'Wang2023',
-  #'Carter2023',
+  'Carter2023',
 ]
 
 #### End of User Configuration Section ########################################
 
 # Data types to flip 
 flip_columns = [
-    'grf_x_r',
-    'grf_x_l',
+    # 'grf_x_r',
+    # 'grf_x_l',
 
-    # Only flip the left cop x 
-    'cop_x_l',
+    # # Only flip the left cop x 
+    # 'cop_x_l',
 
-    'cop_z_r',
+    # 'cop_z_r',
 
-    # Flip knee values
-    'knee_angle_s_r',
-    'knee_angle_s_l',
-    'knee_vel_s_r',
-    'knee_vel_s_l',
-    'knee_torque_s_r',
-    'knee_torque_s_l',
+    # # Flip knee values
+    # 'knee_angle_s_r',
+    # 'knee_angle_s_l',
+    # 'knee_vel_s_r',
+    # 'knee_vel_s_l',
+    # 'knee_torque_s_r',
+    # 'knee_torque_s_l',
 ]
 
 #### Function Definitions #####################################################
@@ -186,14 +186,36 @@ def process_dataset(dataset):
                     ss = a.processingPasses[1]
 
                     # Get the high level variables for each frame
-                    grf = (ss.groundContactForce)
+                    grf = (ss.groundContactForceInRootFrame)
                     cop = (ss.groundContactCenterOfPressureInRootFrame)
                     contacted = ss.contact
                     poses = ss.pos
                     vels = ss.vel
                     torque = ss.tau
+                    jointposes=    ss.jointCentersInRootFrame
+                    jointposes=jointposes.reshape(-1, 3)
 
+               
+
+                    # Extract x, y, z coordinates
+                    mtpPos_x_r = jointposes[5, 0]
+                    mtpPos_y_r = jointposes[5, 1]
+                    mtpPos_z_r = jointposes[5, 2]
+                    
+                    mtpPos_x_l = jointposes[10, 0]
+                    mtpPos_y_l = jointposes[10, 1]
+                    mtpPos_z_l = jointposes[10, 2]
+
+                    COM_poses=ss.comPos
+                    COM_veles=ss.comVel
                     # Assigning variables to poses array elements
+                    comPos_x_c=COM_poses[0]
+                    comPos_y_c=COM_poses[1]
+                    comPos_z_c=COM_poses[2]
+                    comVel_x_c=COM_veles[0]
+                    comVel_y_c=COM_veles[1]
+                    comVel_z_c=COM_veles[2]
+                    
                     pelvis_angle_s = poses[0]
                     pelvis_angle_f = poses[1]
                     pelvis_angle_t = poses[2]
@@ -321,15 +343,27 @@ def process_dataset(dataset):
                     mass = my_subject.getMassKg()
 
                     record = {
+                        
                         'subject': subject,
                         'subject_mass': mass,
                         'task': task,
                         'frame_number': i,
                         'time_step': accum_time,
-
+                        'comPos_x_c':comPos_x_c,
+                        'comPos_y_c':comPos_y_c,
+                        'comPos_z_c':comPos_z_c,
+                        'comVel_x_c':comVel_x_c,
+                        'comVel_y_c':comVel_y_c,
+                        'comVel_z_c':comVel_z_c,
                         'contact_r': contacted[0],
                         'contact_l': contacted[1],
-
+                        'mtpPos_x_r': mtpPos_x_r,
+                        'mtpPos_y_r': mtpPos_y_r,
+                        'mtpPos_z_r': mtpPos_z_r,
+                        'mtpPos_x_l': mtpPos_x_l,
+                        'mtpPos_y_l': mtpPos_y_l,
+                        'mtpPos_z_l': mtpPos_z_l,
+                        
                         'grf_x_r': grf[0],
                         'grf_y_r': grf[1],
                         'grf_z_r': grf[2],
