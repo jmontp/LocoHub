@@ -191,23 +191,44 @@ def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
                     df_phase_leg.loc[p_s:p_e,'task'] = df.loc[start, 'task']
                     df_phase_leg.loc[p_s:p_e,'phase_leading_leg'] = leg
                     df_phase_leg.loc[p_s:p_e,'phase'] = phase_points
+            print("\naa\n")
+            for column in df_phase_leg.columns:
+                try:
+                    df_phase_leg[column].astype('str').apply(lambda x: x.encode('utf-8'))
+                except Exception as e:
+                    print(f"Error in column {column}: {e}")
+            # Check if there is any NaN in the entire DataFrame
+            if df_phase_leg.isna().any().any():
+                print("There are NaN values in the DataFrame.")
+            else:
+                print("No NaN values found.")
 
-        
+            print("bb")
+
             # Add the stride to the phase dataframe
             if export_phase_dataframe and save_name is not None:
                 # If it's the first leg, initialize the dataframe
+                
+            
+                df_phase_leg = df_phase_leg.fillna(0).infer_objects(copy=False)
+
                 if subject_idx == 0 and leg_idx == 0:
                     # Save the first leg dataframe to parquet
                     df_phase_leg.to_parquet(save_name+'_phase.parquet',
                                             engine='fastparquet')
                 else:
                     # Try to remove the phase_{leg} column from the dataframe
-                    try:
-                        df_phase_leg = df_phase_leg.drop(columns=['phase_l',
-                                                                  'phase_r'])
-                    except:
-                        pass
+                    # try:
+                    #     df_phase_leg = df_phase_leg.drop(columns=['phase_l',
+                    #                                               'phase_r'])
+                    # except:
+                    #     pass
                     # Append the dataframe to the existing one
+                    
+                    if df_phase_leg.isna().any().any():
+                        print("There are NaN values in the DataFrame.")
+                    else:
+                        print("No NaN values found.")
                     df_phase_leg.to_parquet(save_name+'_phase.parquet', 
                                             engine='fastparquet',
                                             append=True)

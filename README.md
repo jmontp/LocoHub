@@ -103,3 +103,8 @@ subject_mass -> mass of the subject in kg
 
 # Joint angle representation
 ![Joint angle convention](/figures/joint_angle_references.png)
+
+
+# Appendix/ Notes
+### Han2023
+This is a dataset focusing on posture and different types of activities (like yoga tennis). The walking data is collected based on a very short distance, non-treadmill task.
