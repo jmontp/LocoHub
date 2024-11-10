@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import nimblephysics as nimble
+import fastparquet as fp
+
 
 
 
@@ -421,3 +423,4 @@ def b3d_to_parquet(dataset):
     output_path = os.path.join(output_dir, dataset+'_partial_'+'.parquet')
     final_output_name = os.path.join(output_dir, dataset+'.parquet')
     os.rename(output_path, final_output_name)
+    return final_output_name
