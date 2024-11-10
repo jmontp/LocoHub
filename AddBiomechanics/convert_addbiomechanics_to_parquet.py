@@ -42,8 +42,8 @@ datasets_to_process = [
   #'Fregly2012',
   #'Hamner2013',
   #'Han2023',
-  #'Santos2017',
-  'Tan2021',
+  'Santos2017',
+  #'Tan2021',
   #'Tan2022',
   #'Tiziana2019',
   #'vanderZee2022',
@@ -114,14 +114,14 @@ dataset_count = 0
 chunk_size=100000
 # Process each dataset separately
 def process_dataset(dataset):
-    dataset_path = os.path.join(base_dir, f'{dataset}_Formatted_No_Arm')
+    dataset_path = os.path.join(base_dir, f'{dataset}')
 
     data = []
     is_first_chunk = True
     # Check if it's a directory
-    if not os.path.isdir(dataset_path):
-        print(f"Skipping {dataset_path}, not a directory")
-        return
+    # if not os.path.isdir(dataset_path):
+    #     print(f"Skipping {dataset_path}, not a directory")
+    #     return
     
     # Loop through each subject in the dataset with a progress bar (tqdm)
     for sub_idx, subject in tqdm(enumerate(os.listdir(dataset_path)),
@@ -135,19 +135,11 @@ def process_dataset(dataset):
         # Get the path to the subject's folder
         subject_path = os.path.join(dataset_path, subject)
 
-        # If it is not a directory, skip it
-        if not os.path.isdir(subject_path):
-            print(f"Skipping {subject_path}, not a directory")
-            continue
+        # Assume the b3d files are directly in the dataset path
+        b3d_file_path = os.path.join(dataset_path, f"{subject}")
 
-        # Look for the b3d file in the subject's folder
-        b3d_file_path = None
-        for file in os.listdir(subject_path):
-            if file.endswith('.b3d'):
-                b3d_file_path = os.path.join(subject_path, file)
-
-        # If no b3d file was found, skip this subject
-        if b3d_file_path is None:
+        # Skip the file if it does not end in .b3d
+        if not b3d_file_path.endswith('.b3d'):
             print(f"Skipping {subject_path}, no b3d file found")
             continue
 
@@ -330,13 +322,13 @@ def process_dataset(dataset):
                     prev_dorsi_angle_r = dorsi_angle_r
                     prev_dorsi_angle_l = dorsi_angle_l
 
-                    # Format the subject name
-                    # Remove the _split{number}.
-                    if '_split' in file:
-                        subject = file.split('_split')[0]
+                    # # Format the subject name
+                    # # Remove the _split{number}.
+                    if '_split' in subject:
+                        subject = subject.split('_split')[0]
                     else:
                         # Remove the file extension
-                        subject = file.split('.')[0]
+                        subject = subject.split('.')[0]
 
                     
                     # Get the mass of the subject
