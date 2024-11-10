@@ -1,3 +1,25 @@
+import numpy as np
+
+"""
+This file contains the functions to add task information to the dataframe. 
+There is also a column called "task_info_1" and "task_info_2" which contain
+additional information about the task. 
+
+The official task labels are: 
+     task             | task_info_1    | task_info_2
+- 0: standing_still   | ramp angle     | walking speed
+- 1: level_walking    | ramp angle     | walking speed
+- 3: decline_walking  | ramp angle     | walking speed
+- 4: incline_walking  | ramp angle     | walking speed
+- 5: stair_ascent     | step height    | step width
+- 6: stair_descent    | step height    | step width
+- 7: perturbations    | ramp angle     | walking speed
+- 8: sit_to_stand     | N/A            | N/A
+- 9: stand_to_sit     | N/A            | N/A
+"""
+
+
+
 def add_task_info_moore2015(df):
     pass
 
@@ -17,7 +39,14 @@ def add_task_info_han2023(df):
     pass
 
 def add_task_info_santos2017(df):
-    pass
+    """"
+    This dataset is only for standing still, therefore the entire 
+    dataframe is set to task 0: standing still. and the task_info_1 and 
+    task_info_2 are set to N/A.
+    """
+    df.loc[:, 'task'] = 'standing_still'
+    df.loc[:, 'task_info_1'] = np.nan
+    df.loc[:, 'task_info_2'] = np.nan
 
 def add_task_info_tan2021(df):
     pass
