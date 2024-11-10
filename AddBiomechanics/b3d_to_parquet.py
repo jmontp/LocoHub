@@ -1,8 +1,8 @@
 import os
 import numpy as np
 import pandas as pd
-import tqdm
-import nimble
+from tqdm import tqdm
+import nimblephysics as nimble
 
 
 

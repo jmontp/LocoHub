@@ -17,7 +17,6 @@ email:jmontp@umich.edu
 
 import pandas as pd
 from tqdm import tqdm
-import nimblephysics as nimble
 import matplotlib.pyplot as plt
 import fastparquet as fp
 import os
@@ -79,10 +78,11 @@ flip_columns = [
 def process_dataset(dataset_name):
 
     # Convert the b3d files to parquet
-    final_output_name = b3d_to_parquet(dataset_name)
+    b3d_to_parquet(dataset_name)
+    b3d_output_name = os.path.join(output_dir, dataset_name+'.parquet')
 
     # Invert the columns that need to be inverted
-    df = pd.read_parquet(final_output_name)
+    df = pd.read_parquet(b3d_output_name)
     for column in flip_columns:
         df[column] = -df[column]
 
@@ -109,10 +109,10 @@ def process_dataset(dataset_name):
     # Add Phase to the dataframe. This also saves the dataframe 
     # to a time and phase parquet files. 
     add_phase_info(df, export_phase_dataframe=True,
-                   save_name=final_output_name.replace('.parquet', ''),
-                   remove_original_file=final_output_name)
+                   save_name=b3d_output_name.replace('.parquet', ''),
+                   remove_original_file=b3d_output_name)
 
-    print(f"Finished. Data saved to {final_output_name}")
+    print(f"Finished. Data saved to {b3d_output_name}")
 
 if __name__ == '__main__':
     with Pool() as pool:
