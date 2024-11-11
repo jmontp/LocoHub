@@ -65,7 +65,45 @@ def add_task_info_moore2015(df):
 
 
 def add_task_info_camargo2021(df):
-    pass
+    def map_task_to_info_1(task):
+        '''Creating a column which describes the angle of the ramp for level, incline and decline walking 
+        and the the stair height for stair ascent and descent'''
+        ramp_mapping = {
+            'ramp_1': 5.2, 'ramp_2': 7.795, 'ramp_3': 9.2070,
+            'ramp_4': 10.9890, 'ramp_5': 12.7710, 'ramp_6': 18,
+            'stair_1': 4, 'stair_2': 5, 'stair_3': 6, 'stair_4': 7,
+        }
+        task_lower = task.lower()
+        for key, value in ramp_mapping.items():
+            if task_lower.startswith(key):
+                return value
+        if task_lower.startswith('level') or task_lower.startswith('treadmill'):
+            return 0
+        return task
+
+    def map_task_to_info_2(task):
+        '''Creating a column which describes the speed of the task'''
+        task_lower = task.lower()
+        list_of_speeds = ['fast', 'slow', 'normal']
+        for speed in list_of_speeds:
+            if speed in task_lower:
+                return speed
+        return 'N/A'
+
+    def map_task(task):
+        '''Making the task name consistent'''
+        task_lower = task.lower()
+        if task_lower.startswith('level') or task_lower.startswith('treadmill'):
+            return 'level_walking'
+        if task_lower.startswith('ramp'):
+            return 'ramp'
+        if task_lower.startswith('stair'):
+            return 'stair'
+    
+    # Ensure the map_task_to_info function is called
+    df['info_1'] = df['task'].apply(map_task_to_info_1)
+    df['info_2'] = df['task'].apply(map_task_to_info_2)
+    df['task'] = df['task'].apply(map_task)
 
 def add_task_info_falisse2017(df):
     pass
