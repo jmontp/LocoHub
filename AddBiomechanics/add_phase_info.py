@@ -79,6 +79,7 @@ def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
         df.loc[~stance_swing, f'stance_{leg}'] = 0
 
     # Create the phase dataframe if requested
+    isfirstchunk=True
     for subject_idx, subject in tqdm(enumerate(subjects),
                                      total=len(subjects),
                                      desc='Processing subjects'):
@@ -212,10 +213,12 @@ def add_phase_info(df:pd.DataFrame, export_phase_dataframe=True,
             
                 df_phase_leg = df_phase_leg.fillna(0).infer_objects(copy=False)
 
-                if subject_idx == 0 and leg_idx == 0:
+                if isfirstchunk or(subject_idx == 0 and leg_idx == 0):
+                    
                     # Save the first leg dataframe to parquet
                     df_phase_leg.to_parquet(save_name+'_phase.parquet',
                                             engine='fastparquet')
+                    isfirstchunk=False
                 else:
                     # Try to remove the phase_{leg} column from the dataframe
                     # try:
