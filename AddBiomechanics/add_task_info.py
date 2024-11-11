@@ -19,7 +19,8 @@ The official task labels are:
 - 9: stand_to_sit       | N/A            | N/A
 - 10: running           | ramp angle     | walking speed
 - 11: modified_walking  | ramp angle     | walking speed
-- 12: non_cyclic        | N/A            | N/A
+- 12: modified_running  | ramp angle     | walking speed
+- 13: non_cyclic        | N/A            | N/A
 """
 
 
@@ -148,9 +149,6 @@ def add_task_info_santos2017(df):
     df['task_info_2'] = np.nan
 
 def add_task_info_tan2021(df):
-    pass
-
-def add_task_info_tan2022(df):
     """
     This dataset only has running
     """
@@ -158,7 +156,24 @@ def add_task_info_tan2022(df):
     df['task_info'] = df['task']
     
     # This dataset only has running
-    df['task'] = 'running'
+    df['task'] = 'modified_running'
+
+    # Set the ramp angle to be zero 
+    df['task_info_1'] = 0
+
+    # Set the walking speed to be None
+    df['task_info_2'] = np.nan
+
+
+def add_task_info_tan2022(df):
+    """
+    This dataset only has modified_walking
+    """
+    # Preserve the original task information
+    df['task_info'] = df['task']
+    
+    # This dataset only has running
+    df['task'] = 'modified_walking'
 
     # Set the ramp angle to be zero 
     df['task_info_1'] = 0
