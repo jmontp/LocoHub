@@ -275,11 +275,14 @@ if __name__ == '__main__':
     # root.withdraw()
     # file_path = filedialog.askopenfilename()
 
-    # file_path = '/datasets/AddBiomechanics/processed_data/Carter2023.parquet'
-    file_path = '../Umich_2021/umich_2021_time.parquet'
+    file_path = '/datasets/AddBiomechanics/processed_data/Santos2017_time.parquet'
+    # file_path = '../Umich_2021/umich_2021_time.parquet'
     df = pd.read_parquet(file_path)
+    
+    # The save name is the file path without the _time.parquet
+    save_name = file_path[:-8]
 
-    add_phase_info(df, save_name=file_path[:-8],
+    add_phase_info(df, save_name=save_name,
                    remove_original_file=file_path,
-                   export_phase_dataframe=False,
+                   export_phase_dataframe=True,
                    plot_distributions=True)

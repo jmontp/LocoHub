@@ -8,6 +8,7 @@ additional information about the task.
 The official task labels are: 
      task               | task_info_1    | task_info_2   
      -------------------|----------------|----------------	
+<<<<<<< Updated upstream
 - 0: standing_still     | ramp angle     | walking speed
 - 1: level_walking      | ramp angle     | walking speed
 - 3: decline_walking    | ramp angle     | walking speed
@@ -21,6 +22,20 @@ The official task labels are:
 - 11: modified_walking  | ramp angle     | walking speed
 - 12: modified_running  | ramp angle     | walking speed
 - 13: non_cyclic        | N/A            | N/A
+=======
+-  0: standing_still     | ramp angle     | walking speed
+-  1: level_walking      | ramp angle     | walking speed
+-  2: decline_walking    | ramp angle     | walking speed
+-  3: incline_walking    | ramp angle     | walking speed
+-  4: stair_ascent       | step height    | step width
+-  5: stair_descent      | step height    | step width
+-  6: perturbations      | ramp angle     | walking speed
+-  7: sit_to_stand       | N/A            | N/A
+-  8: stand_to_sit       | N/A            | N/A
+-  9: running           | ramp angle     | walking speed
+- 10: modified_walking  | ramp angle     | walking speed
+- 11: non_cyclic        | N/A            | N/A
+>>>>>>> Stashed changes
 """
 
 
