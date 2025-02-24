@@ -68,6 +68,24 @@ for subject_idx = 1:length(subjects)
         activity_dir = fullfile(subject_dir, activity);
         data = load(activity_dir);
         
+        % Get parsing file path (replace "_segmented" with "_parsing")
+        [~,name] = fileparts(activity);
+        parsing_name = strrep(name, '_segmented', '_parsing');
+        parsing_file = fullfile(subject_dir, parsing_name);
+    
+        try
+            % Load heel strike indices if parsing file exists
+            parsing_data = load(parsing_file);
+            heel_strike_time.r = parsing_data.right; 
+            heel_strike_time.l = parsing_data.left;
+            parsing_file_exists = true;
+        catch
+            warning('Parsing file not found: %s', parsing_file);
+        end
+
+        % Get total activity name
+        total_activity_name = strrep(activity, '_segmented', '');
+        
         % Get the activity name. This is found as the string that occurs 
         % before the first integer in the activity name
         activity_name = strsplit(activity, '.'); % remove the .mat
@@ -113,12 +131,14 @@ for subject_idx = 1:length(subjects)
             global_file_name = fullfile('RawData', subject,...
                 'Transforms_Euler',...
                 [activity_name '_' int2str(activity_number) '_' stair_num '.csv']);
+            raw_activity_name = [activity_name '_' int2str(activity_number) '_' stair_num];
         
         % For step ups, we don't need the activity number if it is only 1
         elseif strcmp(activity_name, 'step_ups') && activity_number == 1
             global_file_name = fullfile('RawData', subject, ...
                 'Transforms_Euler', 'step_ups.csv');
-        
+            raw_activity_name = 'step_ups';
+
         % For jump, see if there is another number as the first character
         % of the subactivity name. If so, use that number to get the file
         elseif strcmp(activity_name, 'jump') && activity_number == 1 && ...
@@ -128,15 +148,22 @@ for subject_idx = 1:length(subjects)
             global_file_name = fullfile('RawData', subject, ...
                 'Transforms_Euler', ...
                 [activity_name '_' int2str(activity_number) '_' jump_num '.csv']);
+            raw_activity_name = [activity_name '_' int2str(activity_number) '_' jump_num];
         else
             global_file_name = fullfile('RawData', subject, ...
                 'Transforms_Euler',...
                 [activity_name '_' int2str(activity_number) '.csv']);
+            raw_activity_name = [activity_name '_' int2str(activity_number)];
         end
         
         % Read the csv that contains the global angles
         global_raw_data = readtable(global_file_name);
         global_angles_time = global_raw_data.Header; % Get the time axis
+
+        % Load GRF data
+        grf_file = fullfile('RawData', subject, 'CSV_data', raw_activity_name, 'GroundFrame_GRFs.csv');
+        grf_data = readtable(grf_file);
+        grf_time = grf_data.time; % Assuming first column is time
         
         % Verify how many data points each leg has. Sometimes the data
         % for one leg is missing. In that case, we will nan-fill the data
@@ -284,6 +311,55 @@ for subject_idx = 1:length(subjects)
                         "cubic")';
                     table_data.([field '_velocity']) = field_data_diff_interp;
 
+                end
+                
+                % Process GRF data
+                if strcmp(leg, 'r')
+                    grf_fields = {'RForceX', 'RForceY_Vertical', 'RForceZ', ...
+                        'RCOPX', 'RCOPY_Vertical', 'RCOPZ'};
+                else
+                    grf_fields = {'LForceX', 'LForceY_Vertical', 'LForceZ', ...
+                        'LCOPX', 'LCOPY_Vertical', 'LCOPZ'};
+                end
+
+                if parsing_file_exists && size(heel_strike_time.(leg), 1) >= step_idx
+                
+                    % Get step boundaries from heel strikes
+                    step_start = heel_strike_time.(leg)(step_idx,1);
+                    step_end = heel_strike_time.(leg)(step_idx,2);
+
+                    % Find indices where GRF time matches step boundaries
+                    start_idx = find(grf_time == step_start);
+                    end_idx = find(grf_time == step_end);
+                    
+                    % Check if indices were found
+                    if isempty(start_idx) || isempty(end_idx)
+                        % Indices not found, nan-fill all fields
+                        for field_idx = 1:length(grf_fields)
+                            field = grf_fields{field_idx};
+                            table_data.(field) = nan(num_points_per_step, 1);
+                        end
+                    else
+                        % Process GRF data normally
+                        grf_slice = grf_data(start_idx:end_idx,:);
+
+                        for field_idx = 1:length(grf_fields)
+                            field = grf_fields{field_idx};
+                            field_data = grf_slice.(field);
+                            
+                            % Interpolate to 150 points
+                            field_data_interp = interp1(1:length(field_data),...
+                                field_data, linspace(1, length(field_data), 150), "cubic")';
+                            
+                            table_data.(field) = field_data_interp;
+                        end
+                    end
+                
+                else % GRF data is missing, therefore nan-fill all fields
+                    for field_idx = 1:length(grf_fields)
+                        field = grf_fields{field_idx};
+                        table_data.(field) = nan(num_points_per_step, 1);
+                    end
                 end
                 
                 % Add the data to the total data
@@ -437,8 +513,8 @@ combined_data = [total_data.r, total_data.l(:, 5:end)];
 % for the data
 
 % Get the names of the columns
-old_col_names = ["knee_angle_r"  , "knee_angle_l"  , "knee_velocity_r", "knee_velocity_l", "knee_angle_r_moment", "knee_angle_l_moment", "ankle_angle_r"  , "ankle_angle_l"  , "ankle_velocity_r","ankle_velocity_l" , "ankle_angle_r_moment", "ankle_angle_l_moment", "calcn_r_Z"     , "calcn_l_Z"     , "calcn_r_Z_velocity", "calcn_l_Z_velocity", "hip_flexion_r"  , "hip_flexion_l"  , "hip_flexion_velocity_r", "hip_flexion_velocity_l", "hip_flexion_r_moment", "hip_flexion_l_moment", "activity", "RCOP_AP", "RCOP_ML", "LCOP_AP", "LCOP_ML", "RVerticalF", "RShearF_AP", "RShearF_ML", "LVerticalF", "LShearF_AP", "LShearF_ML"];
-new_col_names = ["knee_angle_s_r", "knee_angle_s_l", "knee_vel_s_r"   , "knee_vel_s_l"   , "knee_torque_s_r"    , "knee_torque_s_l"    , "ankle_angle_s_r", "ankle_angle_s_l", "ankle_vel_s_r"   , "ankle_vel_s_l"   , "ankle_torque_s_r"    , "ankle_torque_s_l"    , "foot_angle_s_r", "foot_angle_s_l", "foot_vel_s_r"      , "foot_vel_s_l"      , "hip_angle_s_r",   "hip_angle_s_l",   "hip_vel_s_r"           , "hip_vel_s_l"           , "hip_torque_s_r"      , "hip_torque_s_l"      , "task",     "cop_z_r", "cop_x_r", "cop_z_l", "cop_x_l", "grf_y_r",    "grf_z_r",    "grf_x_r",    "grf_y_l",    "grf_z_l",    "grf_x_l"];
+old_col_names = ["knee_angle_r"  , "knee_angle_l"  , "knee_velocity_r", "knee_velocity_l", "knee_angle_r_moment", "knee_angle_l_moment", "ankle_angle_r"  , "ankle_angle_l"  , "ankle_velocity_r","ankle_velocity_l" , "ankle_angle_r_moment", "ankle_angle_l_moment", "calcn_r_Z"     , "calcn_l_Z"     , "calcn_r_Z_velocity", "calcn_l_Z_velocity", "hip_flexion_r"  , "hip_flexion_l"  , "hip_flexion_velocity_r", "hip_flexion_velocity_l", "hip_flexion_r_moment", "hip_flexion_l_moment", "activity", "RCOPZ",   "RCOPX",   "LCOPZ",   "LCOPX",  "RForceY_Vertical", "RForceZ", "RForceX", "LForceY_Vertical", "RForceZ", "RForceX"];
+new_col_names = ["knee_angle_s_r", "knee_angle_s_l", "knee_vel_s_r"   , "knee_vel_s_l"   , "knee_torque_s_r"    , "knee_torque_s_l"    , "ankle_angle_s_r", "ankle_angle_s_l", "ankle_vel_s_r"   , "ankle_vel_s_l"   , "ankle_torque_s_r"    , "ankle_torque_s_l"    , "foot_angle_s_r", "foot_angle_s_l", "foot_vel_s_r"      , "foot_vel_s_l"      , "hip_angle_s_r",   "hip_angle_s_l",   "hip_vel_s_r"           , "hip_vel_s_l"           , "hip_torque_s_r"      , "hip_torque_s_l"      , "task",     "cop_z_r", "cop_x_r", "cop_z_l", "cop_x_l", "grf_y_r",         "grf_z_r", "grf_x_r",  "grf_y_l",         "grf_z_l", "grf_x_l"];
 
 % Find which columns are missing from the table
 missing_cols = ~ismember(old_col_names, combined_data.Properties.VariableNames);
