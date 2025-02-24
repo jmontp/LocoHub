@@ -324,6 +324,19 @@ for subject_idx = 1:length(subjects)
 
                 if parsing_file_exists && size(heel_strike_time.(leg), 1) >= step_idx
                 
+                    % Load transformation data
+                    transform_file = fullfile('RawData', subject, 'Transforms', [raw_activity_name '.mat']);
+                    try
+                        transform_data = load(transform_file);
+                        transform_struct = struct();
+                        transform_struct.r = transform_data.Transforms.calcn_r;
+                        transform_struct.l = transform_data.Transforms.calcn_l;
+                        transform_struct.time = transform_data.Transforms.Header;
+                    catch
+                        warning('Transform file not found: %s', transform_file);
+                        transform_struct = [];
+                    end
+
                     % Get step boundaries from heel strikes
                     step_start = heel_strike_time.(leg)(step_idx,1);
                     step_end = heel_strike_time.(leg)(step_idx,2);
@@ -333,8 +346,8 @@ for subject_idx = 1:length(subjects)
                     end_idx = find(grf_time == step_end);
                     
                     % Check if indices were found
-                    if isempty(start_idx) || isempty(end_idx)
-                        % Indices not found, nan-fill all fields
+                    if isempty(start_idx) || isempty(end_idx) || isempty(transform_struct)
+                        % Indices not found or transforms missing, nan-fill all fields
                         for field_idx = 1:length(grf_fields)
                             field = grf_fields{field_idx};
                             table_data.(field) = nan(num_points_per_step, 1);
@@ -342,16 +355,76 @@ for subject_idx = 1:length(subjects)
                     else
                         % Process GRF data normally
                         grf_slice = grf_data(start_idx:end_idx,:);
-
-                        for field_idx = 1:length(grf_fields)
-                            field = grf_fields{field_idx};
-                            field_data = grf_slice.(field);
+                        
+                        % Find corresponding transform indices
+                        transform_start_idx = find(transform_struct.time >= step_start, 1);
+                        transform_end_idx = find(transform_struct.time <= step_end, 1, 'last');
+                        
+                        if ~isempty(transform_start_idx) && ~isempty(transform_end_idx)
+                            transforms_slice = transform_struct.(leg)(transform_start_idx:transform_end_idx);
                             
-                            % Interpolate to 150 points
-                            field_data_interp = interp1(1:length(field_data),...
-                                field_data, linspace(1, length(field_data), 150), "cubic")';
+                            % Get COP data
+                            if strcmp(leg, 'r')
+                                cop_x = grf_slice.RCOPX;
+                                cop_z = grf_slice.RCOPZ;
+                            else
+                                cop_x = grf_slice.LCOPX;
+                                cop_z = grf_slice.LCOPZ;
+                            end
                             
-                            table_data.(field) = field_data_interp;
+                            % Transform COP to local frame
+                            cop_local_x = zeros(size(cop_x));
+                            cop_local_z = zeros(size(cop_z));
+                            
+                            for t = 1:length(cop_x)
+                                % Find closest transform
+                                [~, closest_idx] = min(abs(transform_struct.time - grf_slice.time(t)));
+                                T = transforms_slice{closest_idx - transform_start_idx + 1};
+                                
+                                % Extract translation from transform
+                                translation = T(1:3,4);
+                                
+                                % Transform COP point
+                                cop_global = [cop_x(t); 0; cop_z(t)];  % y is assumed 0
+                                cop_local = cop_global - translation;
+                                
+                                cop_local_x(t) = cop_local(1);
+                                cop_local_z(t) = cop_local(3);
+                            end
+                            
+                            % Interpolate transformed COP to 150 points
+                            cop_x_interp = interp1(1:length(cop_local_x), cop_local_x, ...
+                                linspace(1, length(cop_local_x), 150), "cubic")';
+                            cop_z_interp = interp1(1:length(cop_local_z), cop_local_z, ...
+                                linspace(1, length(cop_local_z), 150), "cubic")';
+                            
+                            % Store transformed COP
+                            if strcmp(leg, 'r')
+                                table_data.RCOPX = cop_x_interp;
+                                table_data.RCOPZ = cop_z_interp;
+                                table_data.RCOPY_Vertical = zeros(num_points_per_step, 1);
+                            else
+                                table_data.LCOPX = cop_x_interp;
+                                table_data.LCOPZ = cop_z_interp;
+                                table_data.LCOPY_Vertical = zeros(num_points_per_step, 1);
+                            end
+                            
+                            % Process other GRF fields normally
+                            for field_idx = 1:length(grf_fields)
+                                field = grf_fields{field_idx};
+                                if ~contains(field, 'COP')  % Skip COP fields as we handled them above
+                                    field_data = grf_slice.(field);
+                                    field_data_interp = interp1(1:length(field_data),...
+                                        field_data, linspace(1, length(field_data), 150), "cubic")';
+                                    table_data.(field) = field_data_interp;
+                                end
+                            end
+                        else
+                            % No matching transforms found, nan-fill all fields
+                            for field_idx = 1:length(grf_fields)
+                                field = grf_fields{field_idx};
+                                table_data.(field) = nan(num_points_per_step, 1);
+                            end
                         end
                     end
                 
