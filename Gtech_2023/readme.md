@@ -27,4 +27,12 @@ Usage configuration
 * Phase synchronization: When this flag is set to true, the phases for the right leg and the left leg will both be set to zero. When this flag is false, one leg will have a 50% phase offset so that the the time axis for the left and the right leg are approximately the same.
 
 Usage notes
-* Many of the right leg data is missing since there was a hardware error and force plate data could not be collected. Since segmentation of the right foot data could not be 
+* Many of the right leg data is missing since there was a hardware error and force plate data could not be collected. Since segmentation of the right foot data could not be
+
+# Task naming
+
+normal_walking -> level_walking
+
+incline_walking (+-) -> inline_walking(+) & decline_walking(-)
+
+stairs (+-) -> stairs_up (+) & stairs_down (-)
