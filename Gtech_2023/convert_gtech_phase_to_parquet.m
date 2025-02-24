@@ -42,12 +42,18 @@ for subject_idx = 1:length(subjects)
     activities = dir(subject_dir);
     activities = activities(3:end); % remove . and ..
     
+    % Create a progress indicator
+    num_activities = length(activities);
+    fprintf('Processing activities for subject %s:\n', subject);
+
     % Iterate through all the activities
     for activity_idx = 1:length(activities)
-        
         % Get the activity name
-        activity = activities(activity_idx).name
-       
+        activity = activities(activity_idx).name;
+        fprintf('Processing %d/%d (%3d%%): %s\r', ...
+                activity_idx, num_activities, ...
+                round(activity_idx/num_activities * 100), activity);
+        
         % Create a variable to store the data for the activity
         activity_data = struct();
         activity_data.r = [];
@@ -109,14 +115,14 @@ for subject_idx = 1:length(subjects)
                 [activity_name '_' int2str(activity_number) '_' stair_num '.csv']);
         
         % For step ups, we don't need the activity number if it is only 1
-        elseif strcmp(activity_name, 'step_ups') & activity_number == 1
+        elseif strcmp(activity_name, 'step_ups') && activity_number == 1
             global_file_name = fullfile('RawData', subject, ...
                 'Transforms_Euler', 'step_ups.csv');
         
         % For jump, see if there is another number as the first character
         % of the subactivity name. If so, use that number to get the file
-        elseif strcmp(activity_name, 'jump') & activity_number == 1 & ...
-                ~isnan(str2double(sub_activity_name(1))) & ...
+        elseif strcmp(activity_name, 'jump') && activity_number == 1 && ...
+                ~isnan(str2double(sub_activity_name(1))) && ...
                 str2double(sub_activity_name(1)) == 2
             jump_num = sub_activity_name(1);
             global_file_name = fullfile('RawData', subject, ...
@@ -186,8 +192,7 @@ for subject_idx = 1:length(subjects)
                 time_interp = interp1(...
                     1:length(angle_data(step_idx).time), ...
                     step_time, ...
-                    linspace(1, length(angle_data(step_idx).time), 150)...
-                )';
+                    linspace(1, length(angle_data(step_idx).time), 150),"cubic")';
                 table_data.(['time_' leg]) = time_interp;
                 
                 % Get all the fields that we want to process
@@ -195,6 +200,7 @@ for subject_idx = 1:length(subjects)
                 vel_fields = fieldnames(velocity_data(step_idx).data);
                 moment_fields = fieldnames(moment_data(step_idx).data);
                 global_fields = fieldnames(global_raw_data);
+                
                 % remove the 'properties', 'row', and 'Variables' fields
                 angle_fields = angle_fields(~ismember(angle_fields, ...
                     {'Properties', 'Row', 'Variables'}));
@@ -213,7 +219,7 @@ for subject_idx = 1:length(subjects)
                     
                     % Interpolate to make each step 150 data points long
                     field_data_interp = interp1(1:length(field_data), ...
-                        field_data, linspace(1, length(field_data), 150))';
+                        field_data, linspace(1, length(field_data), 150),"cubic")';
                     
                     % Add the data to the table
                     table_data.(field) = field_data_interp;
@@ -227,7 +233,7 @@ for subject_idx = 1:length(subjects)
                     
                     % Interpolate to make each step 150 data points long
                     field_data_interp = interp1(1:length(field_data), ...
-                        field_data, linspace(1, length(field_data), 150))';
+                        field_data, linspace(1, length(field_data), 150),"cubic")';
                     
                     % Add the data to the table
                     table_data.(field) = field_data_interp;
@@ -241,7 +247,7 @@ for subject_idx = 1:length(subjects)
                     
                     % Interpolate to make each step 150 data points long
                     field_data_interp = interp1(1:length(field_data), ...
-                        field_data, linspace(1, length(field_data), 150))';
+                        field_data, linspace(1, length(field_data), 150),"cubic")';
                     
                     % Add the data to the table
                     table_data.(field) = field_data_interp;
@@ -263,7 +269,7 @@ for subject_idx = 1:length(subjects)
 
                     % Interpolate to make each step 150 data points long
                     field_data_interp = interp1(1:length(field_data), ...
-                        field_data, linspace(1, length(field_data), 150))';
+                        field_data, linspace(1, length(field_data), 150),"cubic")';
 
                     % Add the data to the table
                     table_data.(field) = field_data_interp;
@@ -274,8 +280,8 @@ for subject_idx = 1:length(subjects)
                     field_data_diff_interp = interp1(...
                         1:length(field_data_diff), ...
                         field_data_diff, ...
-                        linspace(1, length(field_data_diff), 150)...
-                    )';
+                        linspace(1, length(field_data_diff), 150),...
+                        "cubic")';
                     table_data.([field '_velocity']) = field_data_diff_interp;
 
                 end
@@ -354,31 +360,27 @@ for subject_idx = 1:length(subjects)
             % Create the table
             table_data = table();
 
-            % Initialize with the subject, activity, and subactivity
-            table_data.subject = ...
-                repmat(subject_save_name, nan_fill_points, 1);
-            table_data.activity = ...
-                repmat({activity_name}, nan_fill_points, 1);
-            table_data.subactivity = ...
-                repmat({sub_activity_name}, nan_fill_points, 1);
-            table_data.activity_number = ...
-                repmat(activity_number, nan_fill_points, 1);
-            
-            % Copy all the fields from the more data leg and fill them with nan
-            more_data_leg_fields = activity_data.(less_data_leg).Properties.VariableNames;
-            % Remove the first four fields, since we already added them
-            more_data_leg_fields = more_data_leg_fields(5:end);
-            % remove the 'properties', 'row', and 'Variables' fields
-            more_data_leg_fields = more_data_leg_fields(~ismember(more_data_leg_fields, ...
-                {'Properties', 'Row', 'Variables'}));
-            for field_idx = 1:length(more_data_leg_fields)
-                field = more_data_leg_fields{field_idx};
-                table_data.(field) = nan(nan_fill_points, 1);
+            % Get the column names from the existing table
+            existing_fields = activity_data.(less_data_leg).Properties.VariableNames;
+
+            % Fill each field with appropriate data
+            for field_idx = 1:length(existing_fields)
+                field = existing_fields{field_idx};
+                if ismember(field, {'subject'})
+                    table_data.(field) = repmat(subject_save_name, nan_fill_points, 1);
+                elseif ismember(field, {'activity'})
+                    table_data.(field) = repmat({activity_name}, nan_fill_points, 1);
+                elseif ismember(field, {'task_info', 'subactivity'})
+                    table_data.(field) = repmat({sub_activity_name}, nan_fill_points, 1);
+                elseif ismember(field, {'activity_number'})
+                    table_data.(field) = repmat(activity_number, nan_fill_points, 1);
+                else
+                    table_data.(field) = nan(nan_fill_points, 1);
+                end
             end
 
             % Add the data to the total data
-            activity_data.(less_data_leg) = [activity_data.(less_data_leg); 
-                                             table_data];
+            activity_data.(less_data_leg) = [activity_data.(less_data_leg); table_data];
         end
 
         
@@ -388,29 +390,42 @@ for subject_idx = 1:length(subjects)
              'left legs are different']);
         end
 
-        % Add a phase that goes from 0 to 100% for each leg
-        activity_data.r.phase_r = repmat(linspace(0, 1, num_points_per_step.r), ...
-            num_steps.r, 1)';
-        activity_data.l.phase_l =repmat(linspace(0, 1, num_points_per_step.r), ...
-            num_steps.r, 1)';
+        % Use the actual table height to determine the number of steps captured.
+        num_steps_r_actual = height(activity_data.r) / num_points_per_step;
+        activity_data.r.phase_r = repmat(linspace(0, 1, num_points_per_step)', num_steps_r_actual, 1);
+
+        num_steps_l_actual = height(activity_data.l) / num_points_per_step;
+        activity_data.l.phase_l = repmat(linspace(0, 1, num_points_per_step)', num_steps_l_actual, 1);
 
         % Introduce a phase shift of 50% to a leg so that it mimics
         % walking data. This is done by doing a circular shift of the data
         % by 50% of the number of steps. The leg that has the smallest first  
         % time step will be the one that is shifted.
-        if activity_data.r.time_r(1) == activity_data.l.time_l(1)
-            % Do nothing
-        elseif activity_data.r.time_r(1) < activity_data.l.time_l(1)
-            activity_data.r=circshift(activity_data.r,-num_points_per_step/2);
-        else
-            activity_data.l=circshift(activity_data.l,-num_points_per_step/2);
+        % if activity_data.r.time_r(1) == activity_data.l.time_l(1)
+        %     % Do nothing
+        % elseif activity_data.r.time_r(1) < activity_data.l.time_l(1)
+        %     activity_data.r=circshift(activity_data.r,-num_points_per_step/2);
+        % else
+        activity_data.l=circshift(activity_data.l,-num_points_per_step/2);
+        % end
+
+        % Before adding activity_data to total_data, rename the column if it exists
+        if ismember('subactivity', activity_data.r.Properties.VariableNames)
+            activity_data.r = renamevars(activity_data.r, 'subactivity', 'task_info');
+        end
+        if ismember('subactivity', activity_data.l.Properties.VariableNames)
+            activity_data.l = renamevars(activity_data.l, 'subactivity', 'task_info');
         end
 
-        % Update the total data
+        % Now you can safely add to total_data
         total_data.r = [total_data.r; activity_data.r];
         total_data.l = [total_data.l; activity_data.l];
 
     end
+
+    % Complete the progress indicator
+    fprintf('\n');
+
 end
 
 % Append the data horizontally for the right and left legs. Since the first
@@ -422,10 +437,32 @@ combined_data = [total_data.r, total_data.l(:, 5:end)];
 % for the data
 
 % Get the names of the columns
-old_col_names = ["knee_angle_r"  , "knee_angle_l"  , "knee_velocity_r", "knee_velocity_l", "knee_angle_r_moment", "knee_angle_l_moment", "ankle_angle_r"  , "ankle_angle_l"  , "ankle_velocity_r","ankle_velocity_l" , "ankle_angle_r_moment", "ankle_angle_l_moment", "calcn_r_Z"     , "calcn_l_Z"     , "calcn_r_Z_velocity", "calcn_l_Z_velocity", "hip_flexion_r"  , "hip_flexion_l"  , "hip_flexion_velocity_r", "hip_flexion_velocity_l", "hip_flexion_r_moment", "hip_flexion_l_moment", "activity"];
-new_col_names = ["knee_angle_s_r", "knee_angle_s_l", "knee_vel_s_r"   , "knee_vel_s_l"   , "knee_torque_s_r"    , "knee_torque_s_l"    , "ankle_angle_s_r", "ankle_angle_s_l", "ankle_vel_s_r"   , "ankle_vel_s_l"   , "ankle_torque_s_r"    , "ankle_torque_s_l"    , "foot_angle_s_r", "foot_angle_s_l", "foot_vel_s_r"      , "foot_vel_s_l"      , "hip_angle_s_r", "hip_angle_s_l", "hip_vel_s_r"           , "hip_vel_s_l"           , "hip_torque_s_r"      , "hip_torque_s_l"      , "task"];
+old_col_names = ["knee_angle_r"  , "knee_angle_l"  , "knee_velocity_r", "knee_velocity_l", "knee_angle_r_moment", "knee_angle_l_moment", "ankle_angle_r"  , "ankle_angle_l"  , "ankle_velocity_r","ankle_velocity_l" , "ankle_angle_r_moment", "ankle_angle_l_moment", "calcn_r_Z"     , "calcn_l_Z"     , "calcn_r_Z_velocity", "calcn_l_Z_velocity", "hip_flexion_r"  , "hip_flexion_l"  , "hip_flexion_velocity_r", "hip_flexion_velocity_l", "hip_flexion_r_moment", "hip_flexion_l_moment", "activity", "RCOP_AP", "RCOP_ML", "LCOP_AP", "LCOP_ML", "RVerticalF", "RShearF_AP", "RShearF_ML", "LVerticalF", "LShearF_AP", "LShearF_ML"];
+new_col_names = ["knee_angle_s_r", "knee_angle_s_l", "knee_vel_s_r"   , "knee_vel_s_l"   , "knee_torque_s_r"    , "knee_torque_s_l"    , "ankle_angle_s_r", "ankle_angle_s_l", "ankle_vel_s_r"   , "ankle_vel_s_l"   , "ankle_torque_s_r"    , "ankle_torque_s_l"    , "foot_angle_s_r", "foot_angle_s_l", "foot_vel_s_r"      , "foot_vel_s_l"      , "hip_angle_s_r",   "hip_angle_s_l",   "hip_vel_s_r"           , "hip_vel_s_l"           , "hip_torque_s_r"      , "hip_torque_s_l"      , "task",     "cop_z_r", "cop_x_r", "cop_z_l", "cop_x_l", "grf_y_r",    "grf_z_r",    "grf_x_r",    "grf_y_l",    "grf_z_l",    "grf_x_l"];
 
-% Update the names of the columns
+% Find which columns are missing from the table
+missing_cols = ~ismember(old_col_names, combined_data.Properties.VariableNames);
+
+% Print info about missing columns that will be created
+missing_col_names = old_col_names(missing_cols);
+if ~isempty(missing_col_names)
+    fprintf('Creating NaN-filled columns for:\n%s\n', ...
+        strjoin(missing_col_names, '\n'));
+end
+
+% Add missing columns with NaN values
+for i = 1:length(old_col_names)
+    if ~ismember(old_col_names(i), combined_data.Properties.VariableNames)
+        % For 'activity' column, fill with empty strings instead of NaN
+        if strcmp(old_col_names(i), 'activity')
+            combined_data.(old_col_names(i)) = repmat("", height(combined_data), 1);
+        else
+            combined_data.(old_col_names(i)) = nan(height(combined_data), 1);
+        end
+    end
+end
+
+% Now rename all columns (since we know they all exist)
 combined_data = renamevars(combined_data, old_col_names, new_col_names);
 
 % Covert task data to string
