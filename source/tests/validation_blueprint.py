@@ -4,24 +4,21 @@ import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
 
-class ValidationError(Exception):
-    """Custom exception for validation failures."""
-    pass
-
 class BiomechanicsValidator:
     def __init__(self, df: pd.DataFrame,
                  subject_meta: pd.DataFrame = None,
                  task_meta: pd.DataFrame = None):
         """
-        df: time- or phase-indexed dataframe with columns:
+        df: time- or phase-indexed DataFrame with columns:
             ['subject_id','task_id','task_name','time_s','phase_%', ...features...]
-        subject_meta: dataframe keyed by subject_id (e.g., body_mass)
-        task_meta: dataframe keyed by task_id (e.g., walking_speed_m_s)
+        subject_meta: DataFrame keyed by subject_id (e.g., body_mass)
+        task_meta: DataFrame keyed by task_id (e.g., walking_speed_m_s)
         """
-        self.df = df
+        self.df = df.copy()
+        # 0 = valid, >0 indicates failure code by layer
+        self.df['valid_step'] = 0
         self.subject_meta = subject_meta.set_index('subject_id') if subject_meta is not None else None
         self.task_meta = task_meta.set_index('task_id') if task_meta is not None else None
-        self.failures = []
 
         # Controlled vocabulary for task_name
         self.allowed_tasks = {
@@ -32,156 +29,218 @@ class BiomechanicsValidator:
             'obstacle_walk','side_shuffle','curb_up','curb_down'
         }
 
-        # --- Layer 0 global rules (regex -> lambda series -> bool) ---
+        # Layer 0 global sanity rules: regex -> mask of invalid rows
         self.layer0_rules = {
-            r'.*_angle_rad$': lambda s: s.abs().le(np.pi),
-            r'.*_velocity_rad_s$': lambda s: np.isfinite(s),  # plus cycle_integral check if phase available
-            r'.*_moment_Nm$': lambda s: s.abs().le(4),
-            r'^vertical_grf_N$': lambda s: (s > 0).all() & (s.le(6 * self._get_BW(s.name)).all()),
-            r'^ap_grf_N$': lambda s: (s.le(0).all() and s.abs().le(0.6 * self._get_BW(s.name)).all()),
-            r'^ml_grf_N$': lambda s: (s.ge(0).all() and s.le(0.25 * self._get_BW(s.name)).all()),
-            r'^cop_[xy]_m$': lambda s: s[self._in_stance(s.name)].notna().all(),
-            r'^time_s$': lambda s: s.is_monotonic_increasing,
-            r'^phase_%$': lambda s: s.between(0,100).all()
+            r'.*_angle_rad$':   lambda s: ~s.abs().le(np.pi),
+            r'.*_velocity_rad_s$': lambda s: ~np.isfinite(s),
+            r'.*_moment_Nm$':   lambda s: ~s.abs().le(4),
+            r'^vertical_grf_N$': lambda s: ~((s > 0) & s.le(6 * self._get_BW())),
+            r'^ap_grf_N$':      lambda s: ~((s <= 0) & s.abs().le(0.6 * self._get_BW())),
+            r'^ml_grf_N$':      lambda s: ~((s >= 0) & s.le(0.25 * self._get_BW())),
+            r'^cop_[xy]_m$':    lambda s: self.df.loc[self._in_stance(), s.name].isna(),
+            r'^time_s$':        lambda s: ~s.is_monotonic_increasing,
+            r'^phase_%$':       lambda s: ~s.between(0,100)
         }
 
-        # --- Layer 1 baseline envelopes (feature -> (min, max)) ---
+        # Layer 1 baseline envelopes (min, max) for level_walking norms
         self.baseline = {
-            'hip_flexion_angle_rad': (0.30, 0.60),
-            'knee_flexion_angle_rad': (0.95, 1.20),
-            'ankle_flexion_angle_rad': (-0.30, 0.25),
-            'vertical_grf_N': (0.7, 1.3),   # valley to peak (in BW units)
-            'ap_grf_N': (-0.25, 0.25),
-            'ml_grf_N': (0.0, 0.10),
-            'cop_x_m': (0.75, 0.90),
-            'cop_y_m': (0.0, 0.30),
-            # … add the rest …
+            # Joint angles
+            'hip_flexion_angle_rad':      (0.30, 0.60),
+            'hip_adduction_angle_rad':    (-0.20, 0.20),
+            'hip_rotation_angle_rad':     (-0.15, 0.15),
+            'knee_flexion_angle_rad':     (0.95, 1.20),
+            'ankle_flexion_angle_rad':    (-0.30, 0.25),
+            'ankle_inversion_angle_rad':  (0.10, 0.25),
+            'ankle_rotation_angle_rad':   (-0.20, 0.20),
+            # Angular velocities
+            'hip_flexion_velocity_rad_s':     (-5.0, 5.0),
+            'hip_adduction_velocity_rad_s':   (-5.0, 5.0),
+            'hip_rotation_velocity_rad_s':    (-5.0, 5.0),
+            'knee_flexion_velocity_rad_s':    (-5.0, 5.0),
+            'ankle_flexion_velocity_rad_s':   (-5.0, 5.0),
+            'ankle_inversion_velocity_rad_s': (-5.0, 5.0),
+            'ankle_rotation_velocity_rad_s':  (-5.0, 5.0),
+            # Joint moments (normalized by BW)
+            'hip_moment_Nm':      (-2.0, 2.0),
+            'knee_moment_Nm':     (-2.0, 2.0),
+            'ankle_moment_Nm':     (-2.0, 2.0),
+            # Global link angles
+            'torso_angle_x_rad':  (-0.30, 0.30), 'torso_angle_y_rad': (-0.20,0.20), 'torso_angle_z_rad': (-0.30,0.30),
+            'thigh_angle_x_rad':  (-0.30, 0.30), 'thigh_angle_y_rad': (-0.30,0.30), 'thigh_angle_z_rad': (-0.30,0.30),
+            'shank_angle_x_rad':  (-0.30, 0.30), 'shank_angle_y_rad': (-0.30,0.30), 'shank_angle_z_rad': (-0.30,0.30),
+            'foot_angle_x_rad':   (-0.30, 0.30), 'foot_angle_y_rad':  (-0.30,0.30), 'foot_angle_z_rad':  (-0.30,0.30),
+            # Global link velocities
+            'torso_velocity_x_rad_s': (-2.0,2.0), 'torso_velocity_y_rad_s':(-2.0,2.0), 'torso_velocity_z_rad_s':(-2.0,2.0),
+            'thigh_velocity_x_rad_s': (-2.0,2.0), 'thigh_velocity_y_rad_s':(-2.0,2.0), 'thigh_velocity_z_rad_s':(-2.0,2.0),
+            'shank_velocity_x_rad_s': (-2.0,2.0), 'shank_velocity_y_rad_s':(-2.0,2.0), 'shank_velocity_z_rad_s':(-2.0,2.0),
+            'foot_velocity_x_rad_s':  (-2.0,2.0), 'foot_velocity_y_rad_s':(-2.0,2.0), 'foot_velocity_z_rad_s':(-2.0,2.0),
+            # GRFs (normalized by BW)
+            'vertical_grf_N':    (0.7, 1.3),
+            'ap_grf_N':         (-0.25, 0.25),
+            'ml_grf_N':         (0.0, 0.10),
+            # COP
+            'cop_x_m':          (0.75, 0.90),
+            'cop_y_m':          (0.0, 0.30)
         }
 
-        # --- Layer 2 task‐specific overrides ---
+        # Layer 2 task-specific overrides
+        inf = float('inf')
         self.overrides = {
             'incline_walking': {
-                'hip_flexion_angle_rad': (0.35, 0.72),  # baseline + [0.05,0.12]
-                'vertical_grf_N': (0, 1.5),
-                # …
+                'hip_flexion_angle_rad':    (0.35, 0.72),
+                'knee_flexion_angle_rad':   (1.00, 1.20),
+                'ankle_flexion_angle_rad':  (-0.40, -0.25),
+                'knee_moment_Nm':           (0.60, inf),
+                'vertical_grf_N':           (0.0, 1.5)
+            },
+            'decline_walking': {
+                'knee_flexion_angle_rad':   (0.35, inf),
+                'vertical_grf_N':           (0.0, 1.1),
+                'ap_grf_N':                (-0.35, -0.25)
             },
             'run': {
-                'vertical_grf_N': (2.0, 3.0),
-                # …
+                'vertical_grf_N':           (2.0, 3.0),
+                'ap_grf_N':                (-0.40, -0.25),
+                'hip_flexion_velocity_rad_s': (5.0, inf)
             },
-            # … all other tasks …
+            'up_stairs': {
+                'hip_flexion_angle_rad':    (0.95, 1.25),
+                'knee_flexion_angle_rad':   (1.50, 1.80),
+                'ankle_moment_Nm':          (1.60, 2.20),
+                'knee_moment_Nm':           (0.80, 1.20),
+                'vertical_grf_N':           (1.30, 1.60)
+            },
+            'down_stairs': {
+                'ankle_flexion_angle_rad':  (0.35, inf),
+                'knee_moment_Nm':           (1.50, 2.30),
+                'vertical_grf_N':           (1.40, 1.80)
+            },
+            'sit_to_stand': {
+                'hip_flexion_angle_rad':    (1.20, inf),
+                'knee_flexion_velocity_rad_s': (2.0, inf),
+                'vertical_grf_N':           (1.40, 1.90)
+            },
+            'stand_to_sit': {
+                'vertical_grf_N':           (0.0, 1.20)
+            },
+            'lift_weight': {
+                'knee_moment_Nm':           (0.80, 1.40),
+                'vertical_grf_N':           (1.50, 2.20)
+            },
+            'jump': {
+                'vertical_grf_N':           (3.0, 6.0),
+                'knee_flexion_angle_rad':   (0.80, 1.40),
+                'ankle_flexion_velocity_rad_s': (6.0, inf),
+                'cop_y_m':                 (0.0, 0.30)
+            },
+            'lunges': {
+                'knee_flexion_angle_rad':   (1.80, 2.00),
+                'hip_moment_Nm':            (1.00, inf)
+            },
+            'squats': {
+                'knee_flexion_angle_rad':   (2.00, inf),
+                'hip_rotation_angle_rad':  (-0.35, 0.35)
+            },
+            'side_shuffle': {
+                'ml_grf_N':                (0.30, inf),
+                'ankle_inversion_angle_rad': (-inf, 0.30)
+            },
+            'cutting': {
+                'hip_adduction_angle_rad':  (0.30, inf),
+                'knee_moment_Nm':           (-inf, 0.60)
+            },
+            # Other tasks use baseline
         }
 
-    def _get_BW(self, feature_name):
-        """Helper: look up subject body_mass × 9.81 for this feature's series."""
-        # Placeholder: returns standard BW for normalization
+    def _get_BW(self):
+        """Return body weight (N) placeholder."""
         return 1 * 9.81
 
-    def _in_stance(self, feature_name):
-        """Boolean mask for stance: vertical_grf_N > 0.05*BW"""
-        grf = self.df['vertical_grf_N']
-        return grf > 0.05 * self._get_BW('vertical_grf_N')
+    def _in_stance(self):
+        """Boolean mask for stance: vertical_grf_N > 0.05*BW."""
+        return self.df['vertical_grf_N'] > 0.05 * self._get_BW()
 
     def validate(self):
-        """Run all layers in sequence."""
-        self.failures.clear()
+        """Run all validation layers, annotate df['valid_step'], and return annotated df."""
         self.layer_prechecks()
         self.layer0()
         self.layer1_and_2()
         self.layer3()
         self.layer4()
-        return self.failures
+        return self.df
 
     # -------- Pre-checks: naming & vocabulary --------
     def layer_prechecks(self):
+        code = 1
         # Required columns
-        required = ['subject_id', 'task_id', 'task_name', 'time_s']
-        for col in required:
+        for col in ['subject_id', 'task_id', 'task_name', 'time_s']:
             if col not in self.df.columns:
-                self.failures.append(
-                    ('Precheck', 'column_presence', f'Missing required column: {col}')
-                )
-        # Column naming convention (snake_case + allowed chars)
-        naming_re = re.compile(r'^[a-z][a-z0-9_%]*$')
+                self.df['valid_step'] = code
+        # Column naming convention (snake_case, unit suffix)
+        naming_re = re.compile(r'^[a-z0-9_]+(_[a-z0-9]+)?(_rad|_deg|_N|_m|_s|_kg|_Nm|_rad_s)?$')
         for col in self.df.columns:
             if not naming_re.match(col):
-                self.failures.append(
-                    ('Precheck', 'column_naming',
-                     f'Invalid column name: "{col}" (must be snake_case, lowercase)')
-                )
+                self.df.loc[self.df['valid_step']==0, 'valid_step'] = code + 1
         # Task vocabulary
         if 'task_name' in self.df.columns:
             invalid = set(self.df['task_name'].unique()) - self.allowed_tasks
             if invalid:
-                self.failures.append(
-                    ('Precheck', 'task_vocab',
-                     f'Invalid task_name(s): {sorted(invalid)}')
-                )
+                self.df.loc[self.df['valid_step']==0, 'valid_step'] = code + 2
 
-    # -------- Layer 0 --------
+    # -------- Layer 0: Global sanity --------
     def layer0(self):
-        df = self.df
-        for pattern, check in self.layer0_rules.items():
+        code = 10
+        for pattern, mask_fn in self.layer0_rules.items():
             regex = re.compile(pattern)
-            for col in df.columns:
+            for col in self.df.columns:
                 if regex.match(col):
-                    series = df[col]
-                    if not check(series):
-                        self.failures.append(
-                            ('Layer0', col,
-                             f'Global sanity check failed for {col} (pattern: {pattern})')
-                        )
+                    mask = mask_fn(self.df[col])
+                    self.df.loc[mask, 'valid_step'] = code
 
-    # -------- Layers 1 & 2 --------
+    # -------- Layers 1 & 2: Baseline & overrides --------
     def layer1_and_2(self):
-        df = self.df
-        for task, task_df in df.groupby('task_name'):
+        code = 20
+        for task_name, group in self.df.groupby('task_name'):
             rules = self.baseline.copy()
-            if task in self.overrides:
-                rules.update(self.overrides[task])
+            if task_name in self.overrides:
+                rules.update(self.overrides[task_name])
             for feature, (mn, mx) in rules.items():
-                if feature in task_df:
-                    data = task_df[feature]
-                    # Normalize GRFs to BW units
-                    if feature.endswith('_N'):
-                        data = data / self._get_BW(feature)
-                    if not data.between(mn, mx).all():
-                        self.failures.append(
-                            ('Layer1/2', feature,
-                             f'{task}: {feature} outside [{mn}, {mx}]')
-                        )
+                if feature in self.df.columns:
+                    data = group[feature]
+                    # Normalize forces/moments by BW
+                    if feature.endswith('_N') or feature.endswith('_Nm'):
+                        data = data / self._get_BW()
+                    mask = ~data.between(mn, mx)
+                    idx = mask[mask].index
+                    self.df.loc[idx, 'valid_step'] = code
 
-    # -------- Layer 3 --------
+    # -------- Layer 3: Cross-variable physics --------
     def layer3(self):
-        df = self.df
-        # Example check: moment × velocity → power sign consistency
-        m_col = 'hip_flexion_moment_Nm'
-        v_col = 'hip_flexion_velocity_rad_s'
-        if m_col in df and v_col in df:
-            power = df[m_col] * df[v_col]
-            if power.sign().mean() < 0.1:
-                self.failures.append(
-                    ('Layer3', 'hip_power_sign',
-                     'Inconsistent hip joint power sign')
-                )
-        # Additional physics-based checks go here...
+        code = 30
+        # Moment × angular velocity → power sign consistency
+        for m_col in self.df.columns:
+            if m_col.endswith('_moment_Nm'):
+                v_col = m_col.replace('_moment_Nm', '_velocity_rad_s')
+                if v_col in self.df.columns:
+                    power = self.df[m_col] * self.df[v_col]
+                    # require both positive and negative phases
+                    if not (power.gt(0).any() and power.lt(0).any()):
+                        self.df.loc[:, 'valid_step'] = code
 
-    # -------- Layer 4 --------
+    # -------- Layer 4: Subject-level heuristics --------
     def layer4(self):
-        # Neutral-pose anchoring
-        stance = (self.df['vertical_grf_N'] > 0.9 * self._get_BW('vertical_grf_N')) & \
-                 (self.df['knee_flexion_velocity_rad_s'].abs() < 0.1)
+        code = 40
+        # Neutral-pose anchoring: quiet stance
+        stance = (self.df['vertical_grf_N'] > 0.9 * self._get_BW()) & \
+                 (self.df.get('knee_flexion_velocity_rad_s', 0).abs() < 0.1)
         for joint in ['hip_flexion_angle_rad', 'knee_flexion_angle_rad', 'ankle_flexion_angle_rad']:
             if joint in self.df:
                 mean_angle = self.df.loc[stance, joint].mean()
                 if abs(mean_angle) > 0.05:
-                    self.failures.append(
-                        ('Layer4', joint,
-                         f'Neutral-pose mean for {joint} = {mean_angle:.3f} rad (>0.05)')
-                    )
+                    self.df.loc[stance, 'valid_step'] = code
 
 # ----------------------
-# File selection dialog & example usage:
+# File selection dialog & example usage
 # ----------------------
 
 def select_file(prompt: str) -> str:
@@ -202,10 +261,6 @@ if __name__ == '__main__':
     task_meta = pd.read_parquet(task_path) if task_path else None
 
     validator = BiomechanicsValidator(df, subject_meta=subj_meta, task_meta=task_meta)
-    failures = validator.validate()
-    if failures:
-        for layer, feature, msg in failures:
-            print(f'[{layer}] {feature}: {msg}')
-        raise ValidationError(f'Validation failed with {len(failures)} errors')
-    else:
-        print('✅ All checks passed!')
+    annotated_df = validator.validate()
+    # Now annotated_df['valid_step'] shows 0 for valid rows, >0 for failures
+    print(annotated_df['valid_step'].value_counts())
