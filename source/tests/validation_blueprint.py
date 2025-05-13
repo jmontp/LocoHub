@@ -1,3 +1,36 @@
+"""
+BiomechanicsValidator Module
+
+This module provides a comprehensive data validator for locomotion datasets.
+
+Usage:
+    1. Run this script directly to launch file dialogs and select your Parquet files.
+    2. Import `BiomechanicsValidator` in your code:
+
+        from biomechanics_validator import BiomechanicsValidator, select_file
+        import pandas as pd
+
+        # Select files interactively or provide paths directly
+        data_path = select_file('Select dataset Parquet file')
+        subj_path = select_file('Select subject metadata file (or cancel)')
+        task_path = select_file('Select task metadata file (or cancel)')
+
+        df = pd.read_parquet(data_path)
+        subj_meta = pd.read_parquet(subj_path) if subj_path else None
+        task_meta = pd.read_parquet(task_path) if task_path else None
+
+        validator = BiomechanicsValidator(df, subject_meta=subj_meta, task_meta=task_meta)
+        annotated_df = validator.validate()
+
+        # `annotated_df['valid_step']` indicates validation status per row:
+        #    0 = valid; 1 = precheck failures; 10 = layer0; 20 = layer1/2; 30 = layer3; 40 = layer4
+        print(annotated_df['valid_step'].value_counts())
+
+Methods:
+    - validate(): Run all layers and return annotated DataFrame.
+    - select_file(prompt): Open a file dialog to pick Parquet files.
+
+"""
 import re
 import numpy as np
 import pandas as pd
