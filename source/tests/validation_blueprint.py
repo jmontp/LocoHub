@@ -23,6 +23,15 @@ class BiomechanicsValidator:
         self.task_meta = task_meta.set_index('task_id') if task_meta is not None else None
         self.failures = []
 
+        # Controlled vocabulary for task_name
+        self.allowed_tasks = {
+            'level_walking','incline_walking','decline_walking','run',
+            'up_stairs','down_stairs','sit_to_stand','stand_to_sit','poses',
+            'lift_weight','push','jump','lunges','squats',
+            'ball_toss_l','ball_toss_m','ball_toss_r','meander','cutting',
+            'obstacle_walk','side_shuffle','curb_up','curb_down'
+        }
+
         # --- Layer 0 global rules (regex -> lambda series -> bool) ---
         self.layer0_rules = {
             r'.*_angle_rad$': lambda s: s.abs().le(np.pi),
@@ -65,8 +74,7 @@ class BiomechanicsValidator:
 
     def _get_BW(self, feature_name):
         """Helper: look up subject body_mass × 9.81 for this feature's series."""
-        # Assumes df has 'subject_id' column
-        # Here we just return 1 * 9.81 as placeholder
+        # Placeholder: returns standard BW for normalization
         return 1 * 9.81
 
     def _in_stance(self, feature_name):
@@ -77,11 +85,38 @@ class BiomechanicsValidator:
     def validate(self):
         """Run all layers in sequence."""
         self.failures.clear()
+        self.layer_prechecks()
         self.layer0()
         self.layer1_and_2()
         self.layer3()
         self.layer4()
         return self.failures
+
+    # -------- Pre-checks: naming & vocabulary --------
+    def layer_prechecks(self):
+        # Required columns
+        required = ['subject_id', 'task_id', 'task_name', 'time_s']
+        for col in required:
+            if col not in self.df.columns:
+                self.failures.append(
+                    ('Precheck', 'column_presence', f'Missing required column: {col}')
+                )
+        # Column naming convention (snake_case + allowed chars)
+        naming_re = re.compile(r'^[a-z][a-z0-9_%]*$')
+        for col in self.df.columns:
+            if not naming_re.match(col):
+                self.failures.append(
+                    ('Precheck', 'column_naming',
+                     f'Invalid column name: "{col}" (must be snake_case, lowercase)')
+                )
+        # Task vocabulary
+        if 'task_name' in self.df.columns:
+            invalid = set(self.df['task_name'].unique()) - self.allowed_tasks
+            if invalid:
+                self.failures.append(
+                    ('Precheck', 'task_vocab',
+                     f'Invalid task_name(s): {sorted(invalid)}')
+                )
 
     # -------- Layer 0 --------
     def layer0(self):
@@ -94,7 +129,7 @@ class BiomechanicsValidator:
                     if not check(series):
                         self.failures.append(
                             ('Layer0', col,
-                             f'Global sanity check failed for {col} ({pattern})')
+                             f'Global sanity check failed for {col} (pattern: {pattern})')
                         )
 
     # -------- Layers 1 & 2 --------
@@ -107,36 +142,43 @@ class BiomechanicsValidator:
             for feature, (mn, mx) in rules.items():
                 if feature in task_df:
                     data = task_df[feature]
-                    if data.name.endswith('_N'):
-                        data = data / (self._get_BW(feature))
+                    # Normalize GRFs to BW units
+                    if feature.endswith('_N'):
+                        data = data / self._get_BW(feature)
                     if not data.between(mn, mx).all():
                         self.failures.append(
                             ('Layer1/2', feature,
-                             f'{task}: {feature} out of [{mn}, {mx}]')
+                             f'{task}: {feature} outside [{mn}, {mx}]')
                         )
 
     # -------- Layer 3 --------
     def layer3(self):
         df = self.df
-        if 'hip_flexion_moment_Nm' in df and 'hip_flexion_velocity_rad_s' in df:
-            power = df['hip_flexion_moment_Nm'] * df['hip_flexion_velocity_rad_s']
-            if (power.sign().mean() < 0.1):
+        # Example check: moment × velocity → power sign consistency
+        m_col = 'hip_flexion_moment_Nm'
+        v_col = 'hip_flexion_velocity_rad_s'
+        if m_col in df and v_col in df:
+            power = df[m_col] * df[v_col]
+            if power.sign().mean() < 0.1:
                 self.failures.append(
                     ('Layer3', 'hip_power_sign',
-                     'Hip power sign consistency failed')
+                     'Inconsistent hip joint power sign')
                 )
+        # Additional physics-based checks go here...
 
     # -------- Layer 4 --------
     def layer4(self):
-        standing = (self.df['vertical_grf_N'] > 0.9 * self._get_BW('vertical_grf_N')) & \
-                   (self.df['knee_flexion_velocity_rad_s'].abs() < 0.1)
+        # Neutral-pose anchoring
+        stance = (self.df['vertical_grf_N'] > 0.9 * self._get_BW('vertical_grf_N')) & \
+                 (self.df['knee_flexion_velocity_rad_s'].abs() < 0.1)
         for joint in ['hip_flexion_angle_rad', 'knee_flexion_angle_rad', 'ankle_flexion_angle_rad']:
-            mean_angle = self.df.loc[standing, joint].mean()
-            if abs(mean_angle) > 0.05:
-                self.failures.append(
-                    ('Layer4', joint,
-                     f'Neutral-pose mean for {joint} = {mean_angle:.3f} rad (>|0.05|)')
-                )
+            if joint in self.df:
+                mean_angle = self.df.loc[stance, joint].mean()
+                if abs(mean_angle) > 0.05:
+                    self.failures.append(
+                        ('Layer4', joint,
+                         f'Neutral-pose mean for {joint} = {mean_angle:.3f} rad (>0.05)')
+                    )
 
 # ----------------------
 # File selection dialog & example usage:
