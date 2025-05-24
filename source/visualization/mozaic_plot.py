@@ -148,7 +148,8 @@ def visualize_tasks(df: pd.DataFrame,
                     task_col: str = 'task_name',
                     features: list = None,
                     plots_dir: str = "plots",
-                    diagnostic_mode: bool = False):
+                    diagnostic_mode: bool = False,
+                    export_png: bool = False):
     """
     Generate one interactive plot per task with a grid layout.
     Features are organized as columns, subjects as rows.
@@ -373,6 +374,37 @@ def visualize_tasks(df: pd.DataFrame,
             # print(f"Plot for '{task}' saved to: {output_path}") # Removed for cleaner tqdm output
         except Exception as e:
             print(f"[ERROR] Could not save plot for task '{task}' to {output_path}: {str(e)}")
+        
+        # Export PNG versions if requested
+        if export_png:
+            try:
+                # Create PNG subdirectory if it doesn't exist
+                png_dir = os.path.join(plots_dir, "png")
+                if not os.path.exists(png_dir):
+                    os.makedirs(png_dir)
+                
+                # Export Mean+STD view
+                fig.update_layout(title_text=f"<b>{task}</b> - Mean + STD View")
+                fig.update_traces(visible=mean_std_visibility_mask)
+                png_path_mean = os.path.join(png_dir, f"{safe_task_name}_mean_std.png")
+                fig.write_image(png_path_mean, width=max(800, 200 * len(features)), 
+                               height=max(400, 150 * len(subjects) + 50))
+                
+                # Export Individual Steps view
+                fig.update_layout(title_text=f"<b>{task}</b> - Individual Steps View")
+                fig.update_traces(visible=individual_steps_visibility_mask)
+                png_path_steps = os.path.join(png_dir, f"{safe_task_name}_individual_steps.png")
+                fig.write_image(png_path_steps, width=max(800, 200 * len(features)), 
+                               height=max(400, 150 * len(subjects) + 50))
+                
+                # Reset to default view
+                fig.update_layout(title_text=f"<b>{task}</b> - Mean + STD View")
+                fig.update_traces(visible=mean_std_visibility_mask)
+                
+                print(f"  📸 Exported PNGs: {safe_task_name}_mean_std.png, {safe_task_name}_individual_steps.png")
+            except Exception as e:
+                print(f"  ⚠️  Could not export PNG for task '{task}': {str(e)}")
+                print(f"      Note: PNG export requires kaleido package. Install with: pip install kaleido")
 
     return figs
 
@@ -395,6 +427,7 @@ if __name__ == '__main__':
     parser.add_argument('--task_col', default='task_name')
     parser.add_argument('--features', nargs='+', help='List of feature columns to plot. Auto-detects if not specified.')
     parser.add_argument('--diagnostic', action='store_true', help='Run diagnostic mode to check data format compliance')
+    parser.add_argument('--export-png', dest='export_png', action='store_true', help='Export PNG versions of plots (requires kaleido)')
     # Removed --output_html as we save plots individually by task name
     # parser.add_argument('--output_html', help='Path to save HTML output (default: plots/[task_name].html)')
     args = parser.parse_args()
@@ -485,7 +518,8 @@ if __name__ == '__main__':
         task_col=args.task_col,
         features=args.features,
         plots_dir=plots_output_dir,
-        diagnostic_mode=args.diagnostic
+        diagnostic_mode=args.diagnostic,
+        export_png=args.export_png
     )
     
     if figs_dict:
