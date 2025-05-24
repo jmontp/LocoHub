@@ -115,6 +115,19 @@ Examples: `hip_angle_s_r`, `knee_torque_s_l`, `ankle_vel_f_r`
 ### Interactive Feedback Integration
 When performing tasks, use the @interactive-feedback-mcp MCP tool to get user feedback before completing requests, as specified in `.cursor/rules/interactive-feedback.mdc`.
 
+### Documentation Context
+Always keep the `/docs` folder contents in context when working on this project. The documentation contains critical information about:
+- Standard specifications (e.g., 150 points per gait cycle)
+- Sign conventions and coordinate systems
+- Data format requirements
+- Task definitions and naming conventions
+
+Key files to reference:
+- `docs/standard_spec/phase_calculation.md` - Phase normalization requirements
+- `docs/standard_spec/standard_spec.md` - Overall data format specification
+- `docs/standard_spec/sign_conventions.md` - Biomechanical sign conventions
+- `docs/standard_spec/units_and_conventions.md` - Units and naming conventions
+
 ## Project Improvement Tracking
 
 This project is actively improving its documentation and standards. When working on improvements:
