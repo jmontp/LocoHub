@@ -9,13 +9,13 @@ Normalize each gait cycle to **0–100%** phase for consistent comparison.
 - If the dataset already contains heel-strike event markers or frame indices, these may be used directly instead of detecting from GRF.
 
 ## 3. Cycle Segmentation
-- Identify consecutive heel strikes.
+- Identify consecutive heel strikes based on the lefft and right leg.
 - Define start (0%) and end (100%) of each cycle.
 
 ## 4. Interpolation
 - Default `points_per_cycle`: **150**.
 - Linearly interpolate intermediate samples to generate `phase_%` values.
-- Store `phase_%` as a float 0.0–100.0.
+- Store `phase_<l|r>` as a float [0.0, 100.0), for the left and right leg, respectively.
 
 ## 5. Configuration
 - Allow override of threshold and `points_per_cycle` in conversion scripts.

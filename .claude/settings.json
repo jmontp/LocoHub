@@ -1,0 +1,87 @@
+{
+    "permissions": {
+        "allowFileSystemAccess": true,
+        "allowProcessExecution": true,
+        "allowNetworkAccess": true,
+        "workspaceOnly": true,
+        "maxFileSize": "100MB",
+        "tempDirectory": "temp",
+        "allowedCommands": [
+            "python3",
+            "pip",
+            "git",
+            "bash",
+            "chmod",
+            "mkdir",
+            "rm",
+            "cp",
+            "mv",
+            "cat",
+            "head",
+            "tail",
+            "grep",
+            "find",
+            "ls",
+            "df",
+            "free",
+            "ps",
+            "kill",
+            "wget",
+            "curl",
+            "sed",
+            "awk"
+        ]
+    },
+    "resourceLimits": {
+        "maxMemoryMB": 4096,
+        "maxCpuPercent": 80,
+        "maxOpenFiles": 100,
+        "commandTimeout": 300000,
+        "parquetChunkSize": "100MB"
+    },
+    "environment": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PYARROW_IGNORE_TIMEZONE": "1",
+        "PYTHONUNBUFFERED": "1"
+    },
+    "commands": {
+        "install-deps": "python3 -m pip install --user pandas numpy plotly pyarrow matplotlib kaleido tqdm scipy --break-system-packages",
+        "check-memory": "free -h && df -h .",
+        "clean-temp": "rm -rf temp_* *.tmp miniconda.sh get-pip.py __pycache__ .pytest_cache",
+        "validate-all": "bash scripts/validate_all_datasets.sh",
+        "plot-all": "bash scripts/generate_all_plots.sh"
+    },
+    "dataProcessing": {
+        "parquetEngine": "pyarrow",
+        "chunkSize": 10000,
+        "useLazyLoading": true,
+        "memoryMap": true,
+        "maxRowsPerChunk": 100000,
+        "columnsToLoadByDefault": [
+            "subject_id",
+            "task_name", 
+            "task_id",
+            "phase_r",
+            "phase_l",
+            "phase",
+            "time_s"
+        ]
+    },
+    "documentation": {
+        "alwaysInclude": [
+            "docs/standard_spec/phase_calculation.md",
+            "docs/standard_spec/standard_spec.md",
+            "docs/standard_spec/sign_conventions.md",
+            "docs/standard_spec/units_and_conventions.md",
+            "CLAUDE.md",
+            "PROGRESS_TRACKING.md"
+        ]
+    },
+    "validation": {
+        "expectedPointsPerCycle": 150,
+        "phaseColumn": "phase_r",
+        "subjectColumn": "subject_id",
+        "taskColumn": "task_name",
+        "maxFileSizeForFullLoad": "500MB"
+    }
+}

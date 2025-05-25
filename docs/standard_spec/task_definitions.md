@@ -18,7 +18,9 @@ This document provides explicit definitions for each column in the `metadata_tas
 | `load_weight_kg`             | float     | No       | Weight lifted or carried during the task (if applicable)                                             |
 | `treadmill_speed_m_s`        | float     | No       | Belt speed for treadmill tasks                                                                       |
 | `path_length_m`              | float     | No       | Total distance covered during the task                                                                |
-| `step_height_m`              | float     | No       | Vertical rise per step, relevant for stair tasks                                                    || `instructions`               | string    | No       | Any verbal or protocol instructions provided to the subject (free-text)                              |
+| `step_height_m`              | float     | No       | Vertical rise per step, relevant for stair tasks                                                    |
+| `stair_inclination_deg`      | float     | No       | Inclination of the staircase in degrees. Relevant for `up_stairs` and `down_stairs` tasks.           |
+| `instructions`               | string    | No       | Any verbal or protocol instructions provided to the subject (free-text)                              |
 | `notes`                      | string    | No       | Free-text notes about the task (e.g., "data trimmed due to artifact at end")                       |
 | `source_marker_column`       | string    | No       | Original dataset column or event marker name for heel-strike (if used for phase calibration)         |
 | `source_marker_frame_index`  | int       | No       | Frame index for a provided heel-strike marker                                                        |
@@ -27,6 +29,7 @@ This document provides explicit definitions for each column in the `metadata_tas
 ## Field Details
 
 - **`step_height_m`**: vertical rise of each step, typically used in `up_stairs` and `down_stairs` tasks. Units: meters.
+- **`stair_inclination_deg`**: inclination of the staircase itself in degrees. Can be positive for both ascent and descent if describing the physical characteristic of the stairs. Relevant for `up_stairs` and `down_stairs` tasks. Units: degrees.
 - **`task_id`**: Prefer a structured format combining subject and trial, e.g. `S01_T03` for Subject 01, Task 03.
 - **`task_name`**: Must match one of the entries in `reference/task_vocabulary.csv`.
 - **Time Bounds (`start_time_s`, `end_time_s`)**: Used to extract continuous segments for each task; these may be omitted if segmentation is implicit in the fact table.

@@ -55,7 +55,7 @@ for subject_idx = 1:length(subjects)
         % trial_table.incline = repmat(incline, size(trial_table, 1), 1);
         
         % Add the subject to the table
-        trial_table.subject = repmat({subject_str}, size(trial_table, 1), 1);
+        trial_table.subject_id = repmat({subject_str}, size(trial_table, 1), 1);
 
         % Add the task to the table
         incline_value = tread_inclines{incline_idx};
@@ -63,13 +63,13 @@ for subject_idx = 1:length(subjects)
         long_task_substring =  strcat(num2str(abs(incline_value)), '_deg_',speed,'_m_s');
 
         if incline < 0
-            trial_table.task = repmat({'decline_walking'}, size(trial_table, 1), 1);
+            trial_table.task_name = repmat({'decline_walking'}, size(trial_table, 1), 1);
             trial_table.task_info = repmat({long_task_substring}, size(trial_table, 1), 1);
         elseif incline > 0
-            trial_table.task = repmat({'incline_walking'}, size(trial_table, 1), 1);
+            trial_table.task_name = repmat({'incline_walking'}, size(trial_table, 1), 1);
             trial_table.task_info = repmat({long_task_substring}, size(trial_table, 1), 1);
         else
-            trial_table.task = repmat({'level_walking'}, size(trial_table, 1), 1);
+            trial_table.task_name = repmat({'level_walking'}, size(trial_table, 1), 1);
             trial_table.task_info = repmat({long_task_substring}, size(trial_table, 1), 1);
         end
 
@@ -89,10 +89,10 @@ for subject_idx = 1:length(subjects)
         trial_table = process_trial(walk_to_run_data);
     
         % Add the subject to the table
-        trial_table.subject = repmat({subject_str}, size(trial_table, 1), 1);
+        trial_table.subject_id = repmat({subject_str}, size(trial_table, 1), 1);
     
         % Add the task to the table
-        trial_table.task = repmat({'transitions'}, size(trial_table, 1), 1);
+        trial_table.task_name = repmat({'transitions'}, size(trial_table, 1), 1);
         trial_table.task_info = repmat({'walk_to_run'}, size(trial_table, 1), 1);
     
         % Add the data to the total table
@@ -133,10 +133,10 @@ for subject_idx = 1:length(subjects)
         % trial_table.speed = repmat(speed, size(trial_table, 1), 1);
 
         % Add the subject to the table
-        trial_table.subject = repmat({subject_str}, size(trial_table, 1), 1);
+        trial_table.subject_id = repmat({subject_str}, size(trial_table, 1), 1);
 
         % Add the task to the table
-        trial_table.task = repmat({'running'}, size(trial_table, 1), 1);
+        trial_table.task_name = repmat({'running'}, size(trial_table, 1), 1);
         trial_table.task_info = repmat({strcat(num2str(speed), '_m_s')}, size(trial_table, 1), 1);
 
         % Add the data to the total table
@@ -169,7 +169,7 @@ function trial_table = process_trial(trial_struct)
     % all data (minus force plates, which is 1000 Hz) is sampled at 100 Hz
     Hz = 100;
     num_points = (length(trial_struct.jointAngles.RAnkleAngles)-1)/Hz;
-    trial_table.time = (0:1/Hz:num_points)';
+    trial_table.time_s = (0:1/Hz:num_points)';
 
 
     % Joint angles
@@ -217,45 +217,45 @@ function trial_table = process_trial(trial_struct)
     
     % Joint velocity, there are no joint velocities in the dataset, so we
     % will calculate them using the joint angles and time axis
-    trial_table.hip_vel_s_r = gradient(trial_table.hip_angle_s_r)./gradient(trial_table.time);
-    trial_table.hip_vel_f_r = gradient(trial_table.hip_angle_f_r)./gradient(trial_table.time);
-    trial_table.hip_vel_t_r = gradient(trial_table.hip_angle_t_r)./gradient(trial_table.time);
+    trial_table.hip_vel_s_r = gradient(trial_table.hip_angle_s_r)./gradient(trial_table.time_s);
+    trial_table.hip_vel_f_r = gradient(trial_table.hip_angle_f_r)./gradient(trial_table.time_s);
+    trial_table.hip_vel_t_r = gradient(trial_table.hip_angle_t_r)./gradient(trial_table.time_s);
 
-    trial_table.hip_vel_s_l = gradient(trial_table.hip_angle_s_l)./gradient(trial_table.time);
-    trial_table.hip_vel_f_l = gradient(trial_table.hip_angle_f_l)./gradient(trial_table.time);
-    trial_table.hip_vel_t_l = gradient(trial_table.hip_angle_t_l)./gradient(trial_table.time);
+    trial_table.hip_vel_s_l = gradient(trial_table.hip_angle_s_l)./gradient(trial_table.time_s);
+    trial_table.hip_vel_f_l = gradient(trial_table.hip_angle_f_l)./gradient(trial_table.time_s);
+    trial_table.hip_vel_t_l = gradient(trial_table.hip_angle_t_l)./gradient(trial_table.time_s);
 
-    trial_table.knee_vel_s_r = gradient(trial_table.knee_angle_s_r)./gradient(trial_table.time);
-    trial_table.knee_vel_f_r = gradient(trial_table.knee_angle_f_r)./gradient(trial_table.time);
-    trial_table.knee_vel_t_r = gradient(trial_table.knee_angle_t_r)./gradient(trial_table.time);
+    trial_table.knee_vel_s_r = gradient(trial_table.knee_angle_s_r)./gradient(trial_table.time_s);
+    trial_table.knee_vel_f_r = gradient(trial_table.knee_angle_f_r)./gradient(trial_table.time_s);
+    trial_table.knee_vel_t_r = gradient(trial_table.knee_angle_t_r)./gradient(trial_table.time_s);
 
-    trial_table.knee_vel_s_l = gradient(trial_table.knee_angle_s_l)./gradient(trial_table.time);
-    trial_table.knee_vel_f_l = gradient(trial_table.knee_angle_f_l)./gradient(trial_table.time);
-    trial_table.knee_vel_t_l = gradient(trial_table.knee_angle_t_l)./gradient(trial_table.time);
+    trial_table.knee_vel_s_l = gradient(trial_table.knee_angle_s_l)./gradient(trial_table.time_s);
+    trial_table.knee_vel_f_l = gradient(trial_table.knee_angle_f_l)./gradient(trial_table.time_s);
+    trial_table.knee_vel_t_l = gradient(trial_table.knee_angle_t_l)./gradient(trial_table.time_s);
 
-    trial_table.ankle_vel_s_r = gradient(trial_table.ankle_angle_s_r)./gradient(trial_table.time);
-    trial_table.ankle_vel_f_r = gradient(trial_table.ankle_angle_f_r)./gradient(trial_table.time);
-    trial_table.ankle_vel_t_r = gradient(trial_table.ankle_angle_t_r)./gradient(trial_table.time);
+    trial_table.ankle_vel_s_r = gradient(trial_table.ankle_angle_s_r)./gradient(trial_table.time_s);
+    trial_table.ankle_vel_f_r = gradient(trial_table.ankle_angle_f_r)./gradient(trial_table.time_s);
+    trial_table.ankle_vel_t_r = gradient(trial_table.ankle_angle_t_r)./gradient(trial_table.time_s);
 
-    trial_table.ankle_vel_s_l = gradient(trial_table.ankle_angle_s_l)./gradient(trial_table.time);
-    trial_table.ankle_vel_f_l = gradient(trial_table.ankle_angle_f_l)./gradient(trial_table.time);
-    trial_table.ankle_vel_t_l = gradient(trial_table.ankle_angle_t_l)./gradient(trial_table.time);
+    trial_table.ankle_vel_s_l = gradient(trial_table.ankle_angle_s_l)./gradient(trial_table.time_s);
+    trial_table.ankle_vel_f_l = gradient(trial_table.ankle_angle_f_l)./gradient(trial_table.time_s);
+    trial_table.ankle_vel_t_l = gradient(trial_table.ankle_angle_t_l)./gradient(trial_table.time_s);
 
-    trial_table.foot_vel_s_r = gradient(trial_table.foot_angle_s_r)./gradient(trial_table.time);
-    trial_table.foot_vel_f_r = gradient(trial_table.foot_angle_f_r)./gradient(trial_table.time);
-    trial_table.foot_vel_t_r = gradient(trial_table.foot_angle_t_r)./gradient(trial_table.time);
+    trial_table.foot_vel_s_r = gradient(trial_table.foot_angle_s_r)./gradient(trial_table.time_s);
+    trial_table.foot_vel_f_r = gradient(trial_table.foot_angle_f_r)./gradient(trial_table.time_s);
+    trial_table.foot_vel_t_r = gradient(trial_table.foot_angle_t_r)./gradient(trial_table.time_s);
 
-    trial_table.foot_vel_s_l = gradient(trial_table.foot_angle_s_l)./gradient(trial_table.time);
-    trial_table.foot_vel_f_l = gradient(trial_table.foot_angle_f_l)./gradient(trial_table.time);
-    trial_table.foot_vel_t_l = gradient(trial_table.foot_angle_t_l)./gradient(trial_table.time);
+    trial_table.foot_vel_s_l = gradient(trial_table.foot_angle_s_l)./gradient(trial_table.time_s);
+    trial_table.foot_vel_f_l = gradient(trial_table.foot_angle_f_l)./gradient(trial_table.time_s);
+    trial_table.foot_vel_t_l = gradient(trial_table.foot_angle_t_l)./gradient(trial_table.time_s);
 
-    trial_table.pelvis_vel_s_r = gradient(trial_table.pelvis_angle_s_r)./gradient(trial_table.time);
-    trial_table.pelvis_vel_f_r = gradient(trial_table.pelvis_angle_f_r)./gradient(trial_table.time);
-    trial_table.pelvis_vel_t_r = gradient(trial_table.pelvis_angle_t_r)./gradient(trial_table.time);
+    trial_table.pelvis_vel_s_r = gradient(trial_table.pelvis_angle_s_r)./gradient(trial_table.time_s);
+    trial_table.pelvis_vel_f_r = gradient(trial_table.pelvis_angle_f_r)./gradient(trial_table.time_s);
+    trial_table.pelvis_vel_t_r = gradient(trial_table.pelvis_angle_t_r)./gradient(trial_table.time_s);
 
-    trial_table.pelvis_vel_s_l = gradient(trial_table.pelvis_angle_s_l)./gradient(trial_table.time);
-    trial_table.pelvis_vel_f_l = gradient(trial_table.pelvis_angle_f_l)./gradient(trial_table.time);
-    trial_table.pelvis_vel_t_l = gradient(trial_table.pelvis_angle_t_l)./gradient(trial_table.time);
+    trial_table.pelvis_vel_s_l = gradient(trial_table.pelvis_angle_s_l)./gradient(trial_table.time_s);
+    trial_table.pelvis_vel_f_l = gradient(trial_table.pelvis_angle_f_l)./gradient(trial_table.time_s);
+    trial_table.pelvis_vel_t_l = gradient(trial_table.pelvis_angle_t_l)./gradient(trial_table.time_s);
 
 
     % Joint moments
