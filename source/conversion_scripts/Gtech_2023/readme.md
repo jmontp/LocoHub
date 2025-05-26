@@ -81,33 +81,39 @@ python combine_subjects_efficient.py
 # - converted_datasets/gtech_2023_time.parquet
 ```
 
+## Scripts Overview
+
+### Main Conversion Scripts
+- **convert_gtech_all_to_parquet.py** - Converts raw CSV data to time-indexed parquet
+- **convert_gtech_phase_to_parquet.m** - Converts segmented MATLAB data to phase-indexed parquet
+- **combine_subjects_efficient.py** - Combines individual subject parquet files
+
+### Utilities Folder
+Additional scripts for testing and validation are available in the `utilities/` folder:
+- **benchmark_processing.m** - Performance benchmarking
+- **plot_leg_alignment.m** - Visualization of leg alignment
+- **test_parquet_conversion.m** - Test script for parquet conversion
+- **verify_gtech_data.ipynb** - Data verification notebook
+- **convert_gtech_rotm_to_eul_csv.m** - Convert rotation matrices to Euler angles
+
 ## Processing Details
 
 ### Time-Indexed Data 
+- **Sampling rate**: 100Hz
+- **Note**: Currently does not include detailed task segmentation such as different walking speeds
 
-Usage Information
-* Sampling rate = 100Hz
+### Phase-Indexed Data
+- **Points per cycle**: 150
+- **Phase synchronization**: 
+  - When true: Both legs start at phase 0
+  - When false: One leg has 50% phase offset for temporal alignment
+- **Note**: Some right leg data missing due to hardware issues with force plate collection
 
-Usage notes:
-* Currently this does not include detalied task segmentation such as different walking speeds. 
+## Task Naming Conventions
 
-# Phase indexed data
-
-The "convert_gtech_nc_segmented_to_parquet.m" script converts the data from the segmented portion of the dataset to the tabular format.
-
-Usage Information
-* Points per step = 150
-
-Usage configuration
-* Phase synchronization: When this flag is set to true, the phases for the right leg and the left leg will both be set to zero. When this flag is false, one leg will have a 50% phase offset so that the the time axis for the left and the right leg are approximately the same.
-
-Usage notes
-* Many of the right leg data is missing since there was a hardware error and force plate data could not be collected. Since segmentation of the right foot data could not be
-
-# Task naming
-
-normal_walking -> level_walking
-
-incline_walking (+-) -> inline_walking(+) & decline_walking(-)
-
-stairs (+-) -> stairs_up (+) & stairs_down (-)
+The following task names are mapped during conversion:
+- `normal_walking` → `level_walking`
+- `incline_walking (+)` → `incline_walking`
+- `incline_walking (-)` → `decline_walking`
+- `stairs (+)` → `stairs_up`
+- `stairs (-)` → `stairs_down`
