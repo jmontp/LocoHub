@@ -85,19 +85,20 @@ GLOBAL_FOOT_ANGLE_ROTATION = True
 
 # Define segment lengths (same for both legs)
 segment_lengths = {'thigh': 1, 'shank': 1, 'foot': 0.5, 'torso': 2}
-torque_labels = ['hip_torque_s_r', 'knee_torque_s_r', 'ankle_torque_s_r',
-                 'hip_torque_s_l', 'knee_torque_s_l', 'ankle_torque_s_l']
-right_angles = ['hip_angle_s_r', 'knee_angle_s_r', 'ankle_angle_s_r']
-left_angles = ['hip_angle_s_l', 'knee_angle_s_l', 'ankle_angle_s_l']
+torque_labels = ['hip_flexion_moment_right_Nm', 'knee_flexion_moment_right_Nm', 'ankle_flexion_moment_right_Nm',
+                 'hip_flexion_moment_left_Nm', 'knee_flexion_moment_left_Nm', 'ankle_flexion_moment_left_Nm']
+right_angles = ['hip_flexion_angle_right_rad', 'knee_flexion_angle_right_rad', 'ankle_flexion_angle_right_rad']
+left_angles = ['hip_flexion_angle_left_rad', 'knee_flexion_angle_left_rad', 'ankle_flexion_angle_left_rad']
 
 def calculate_joint_positions(hip_angle, knee_angle, ankle_angle):
     """
     Calculate the positions of the hip, knee, ankle, and foot based on the given angles.
     Adjust angles to match the animation coordinate system.
+    Angles are already in radians.
     """
-    hip_angle_rad = np.radians(hip_angle)
-    knee_angle_rad = np.radians(knee_angle)
-    ankle_angle_rad = np.radians(ankle_angle) + np.pi / 2
+    hip_angle_rad = hip_angle
+    knee_angle_rad = knee_angle
+    ankle_angle_rad = ankle_angle + np.pi / 2
 
     hip_position = np.array([0, 0])
     knee_position = hip_position + np.array([segment_lengths['thigh'] * np.sin(hip_angle_rad),
@@ -118,7 +119,7 @@ def init_figure_and_elements():
     grid_spec = fig.add_gridspec(4, 3)
 
     # Set the y-axis limits for the joint angles and torques plots
-    angle_ylim = (-130, 130)
+    angle_ylim = (-2.3, 2.3)  # radians (~-130 to 130 degrees)
     torque_ylim = (-3, 3)
 
     # Main stick figure animation subplot

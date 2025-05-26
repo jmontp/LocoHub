@@ -246,22 +246,22 @@ classdef LocomotionData < handle
                 
                 % Range checks based on feature type
                 if contains(feature, 'angle')
-                    % Angles should be between -180 and 180 degrees
-                    outOfRange = any(featData < -180 | featData > 180, 2);
+                    % Angles should be between -pi and pi radians
+                    outOfRange = any(featData < -pi | featData > pi, 2);
                     validMask = validMask & ~outOfRange;
                     
                     % Check for large discontinuities
                     diffs = abs(diff(featData, 1, 2));
-                    largeJumps = any(diffs > 30, 2); % 30 degree jumps
+                    largeJumps = any(diffs > 0.5236, 2); % 30 degrees = 0.5236 radians
                     validMask = validMask & ~largeJumps;
                     
-                elseif contains(feature, 'vel')
-                    % Velocities reasonable range
-                    outOfRange = any(abs(featData) > 1000, 2);
+                elseif contains(feature, 'velocity')
+                    % Velocities reasonable range in rad/s
+                    outOfRange = any(abs(featData) > 17.45, 2); % 1000 deg/s = 17.45 rad/s
                     validMask = validMask & ~outOfRange;
                     
-                elseif contains(feature, 'torque')
-                    % Torques reasonable range
+                elseif contains(feature, 'moment')
+                    % Moments reasonable range
                     outOfRange = any(abs(featData) > 300, 2);
                     validMask = validMask & ~outOfRange;
                 end
@@ -390,8 +390,8 @@ classdef LocomotionData < handle
             for i = 1:length(allCols)
                 col = allCols{i};
                 if ~any(strcmp(col, excludeCols)) && ...
-                   (contains(col, 'angle') || contains(col, 'vel') || ...
-                    contains(col, 'torque') || contains(col, 'moment'))
+                   (contains(col, 'angle') || contains(col, 'velocity') || ...
+                    contains(col, 'moment'))
                     obj.features{end+1} = col;
                 end
             end

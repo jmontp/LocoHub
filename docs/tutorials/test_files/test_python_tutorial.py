@@ -27,26 +27,69 @@ try:
     print("\nData for 'incline_walking' task:")
     print(df_incline_walking)
 
-    # 4. Phase-Based Averaging
-    # 4.1 Add phase data for demonstration
+    # 4. Phase-Based Analysis with Efficient Reshaping
+    # For phase-indexed data (with 150 points per cycle), we can use efficient reshaping
+    # instead of groupby operations for better performance
+    
+    # 4.1 Simulate phase-indexed data structure
+    # In real datasets, phase data comes pre-normalized to 150 points per cycle
     df_with_phase = df_locomotion.copy()
-    for step in df_locomotion['step_id'].unique():
+    
+    # Add phase column (0-100%) for each step
+    df_with_phase['phase_%'] = 0.0
+    df_with_phase['step_number'] = 0
+    
+    for i, step in enumerate(df_locomotion['step_id'].unique()):
         step_mask = df_locomotion['step_id'] == step
         num_points = step_mask.sum()
-        df_with_phase.loc[step_mask, 'phase_%'] = np.linspace(0, 100, num_points)
-
-    # Create phase bins
+        
+        # Simulate 150-point normalization
+        if num_points > 0:
+            # In real data, this would be exactly 150 points
+            phase_values = np.linspace(0, 100 * (149/150), num_points)
+            df_with_phase.loc[step_mask, 'phase_%'] = phase_values
+            df_with_phase.loc[step_mask, 'step_number'] = i
+    
+    # 4.2 Efficient reshape method (recommended for phase-indexed data)
+    # Group by subject and task for efficient processing
+    df_with_phase = pd.merge(df_with_phase, df_tasks, on=['step_id', 'task_id', 'subject_id'], how='inner')
+    
+    # Example: Get all cycles for one task efficiently
+    level_walking = df_with_phase[df_with_phase['task_name'] == 'level_walking']
+    if len(level_walking) > 0:
+        # In real phase-indexed data with 150 points per cycle:
+        # n_cycles = len(level_walking) // 150
+        # knee_data = level_walking['knee_flexion_angle_rad'].values.reshape(n_cycles, 150)
+        
+        # For this demo with variable points:
+        unique_steps = level_walking['step_number'].unique()
+        print(f"\nEfficient processing for level_walking:")
+        print(f"  Number of cycles: {len(unique_steps)}")
+        
+        # Calculate mean curve efficiently
+        if len(unique_steps) > 0:
+            # Collect data for each cycle
+            cycle_data = []
+            for step_num in unique_steps:
+                cycle = level_walking[level_walking['step_number'] == step_num]['knee_flexion_angle_rad'].values
+                if len(cycle) > 0:
+                    cycle_data.append(cycle)
+            
+            # For demonstration, show statistics
+            cycle_lengths = [len(c) for c in cycle_data]
+            print(f"  Cycle lengths: min={min(cycle_lengths)}, max={max(cycle_lengths)}, mean={np.mean(cycle_lengths):.1f}")
+    
+    # 4.3 Traditional phase binning method (for comparison)
     phase_bins = np.linspace(0, 100, 101)
     labels = phase_bins[:-1]
     df_with_phase['phase_bin'] = pd.cut(df_with_phase['phase_%'], bins=phase_bins, labels=labels, include_lowest=True)
-
+    
     # Calculate average by phase
     phase_averages = df_with_phase.groupby('phase_bin')['knee_flexion_angle_rad'].mean()
     print("\nAverage knee flexion angle by phase (first 5 phases):")
     print(phase_averages.head(5))
-
+    
     # Compare tasks by phase
-    df_with_phase = pd.merge(df_with_phase, df_tasks, on=['step_id', 'task_id', 'subject_id'], how='inner')
     phase_by_task = {}
     for task in df_with_phase['task_name'].unique():
         if pd.notnull(task):

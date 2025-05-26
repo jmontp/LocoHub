@@ -60,7 +60,7 @@ def demonstrate_3d_operations():
     # Test parameters
     subject = df['subject'].iloc[0]
     task = 'normal_walk'
-    features = ['knee_angle_s_r', 'hip_angle_s_r', 'ankle_angle_s_r']
+    features = ['knee_flexion_angle_right_rad', 'hip_flexion_angle_right_rad', 'ankle_flexion_angle_right_rad']
     
     # Get 3D array
     data_3d, feature_names = efficient_reshape_3d(df, subject, task, features)
@@ -243,7 +243,7 @@ def compare_methods():
     df = pd.read_parquet("source/conversion_scripts/Gtech_2023/gtech_2023_phase.parquet")
     subject = df['subject'].iloc[0]
     task = 'normal_walk'
-    features = ['knee_angle_s_r', 'hip_angle_s_r', 'ankle_angle_s_r', 
+    features = ['knee_flexion_angle_right_rad', 'hip_flexion_angle_right_rad', 'ankle_flexion_angle_right_rad', 
                 'knee_vel_s_r', 'hip_vel_s_r', 'ankle_vel_s_r']
     
     # Method 1: Dictionary (original)
@@ -291,7 +291,7 @@ def advanced_3d_analysis():
     task = 'normal_walk'
     
     # Get angles and velocities
-    angle_features = ['hip_angle_s_r', 'knee_angle_s_r', 'ankle_angle_s_r']
+    angle_features = ['hip_flexion_angle_right_rad', 'knee_flexion_angle_right_rad', 'ankle_flexion_angle_right_rad']
     vel_features = ['hip_vel_s_r', 'knee_vel_s_r', 'ankle_vel_s_r']
     
     angles_3d, _ = efficient_reshape_3d(df, subject, task, angle_features)
@@ -382,7 +382,7 @@ if __name__ == "__main__":
     batch_process_3d(
         pd.read_parquet("source/conversion_scripts/Gtech_2023/gtech_2023_phase.parquet"),
         'normal_walk',
-        ['knee_angle_s_r', 'hip_angle_s_r', 'ankle_angle_s_r']
+        ['knee_flexion_angle_right_rad', 'hip_flexion_angle_right_rad', 'ankle_flexion_angle_right_rad']
     )
     advanced_3d_analysis()
     # save_and_load_3d()  # Uncomment to test saving/loading

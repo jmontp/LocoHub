@@ -5,6 +5,8 @@ This file is meant to convert the dataset to a pandas dataframe
 import pandas as pd
 import numpy as np
 import os
+import sys
+import gc
 from tqdm import tqdm
 ###############################################################################
 # User configuration section
@@ -37,49 +39,49 @@ short_activity_names = ['ball_toss', 'curb_down', 'curb_up', 'cutting',
 standard_column_names = {
 
     # Joint Angle
-    'hip_flexion_r':'hip_angle_s_r',
-    'hip_adduction_r':'hip_angle_f_r',
-    'hip_rotation_r':'hip_angle_t_r',
-    'knee_angle_r':'knee_angle_s_r',
-    'ankle_angle_r':'ankle_angle_s_r',
-    'subtalar_angle_r':'ankle_angle_f_r',
+    'hip_flexion_r':'hip_flexion_angle_r_rad',
+    'hip_adduction_r':'hip_adduction_angle_r_rad',
+    'hip_rotation_r':'hip_rotation_angle_r_rad',
+    'knee_angle_r':'knee_flexion_angle_r_rad',
+    'ankle_angle_r':'ankle_dorsiflexion_angle_r_rad',
+    'subtalar_angle_r':'ankle_eversion_angle_r_rad',
     
-    'hip_flexion_l':'hip_angle_s_l',
-    'hip_adduction_l':'hip_angle_f_l',
-    'hip_rotation_l':'hip_angle_t_l',
-    'knee_angle_l':'knee_angle_s_l',
-    'ankle_angle_l':'ankle_angle_s_l',
-    'subtalar_angle_l':'ankle_angle_f_l',
+    'hip_flexion_l':'hip_flexion_angle_l_rad',
+    'hip_adduction_l':'hip_adduction_angle_l_rad',
+    'hip_rotation_l':'hip_rotation_angle_l_rad',
+    'knee_angle_l':'knee_flexion_angle_l_rad',
+    'ankle_angle_l':'ankle_dorsiflexion_angle_l_rad',
+    'subtalar_angle_l':'ankle_eversion_angle_l_rad',
 
     # Joint Velocities
-    'hip_flexion_velocity_r': 'hip_vel_s_r',
-    'hip_adduction_velocity_r': 'hip_vel_f_r',
-    'hip_rotation_velocity_r': 'hip_vel_t_r',
-    'knee_velocity_r': 'knee_vel_s_r',
-    'ankle_velocity_r': 'ankle_vel_s_r',
-    'subtalar_velocity_r': 'ankle_vel_f_r',	
+    'hip_flexion_velocity_r': 'hip_flexion_velocity_r_rad_s',
+    'hip_adduction_velocity_r': 'hip_adduction_velocity_r_rad_s',
+    'hip_rotation_velocity_r': 'hip_rotation_velocity_r_rad_s',
+    'knee_velocity_r': 'knee_flexion_velocity_r_rad_s',
+    'ankle_velocity_r': 'ankle_dorsiflexion_velocity_r_rad_s',
+    'subtalar_velocity_r': 'ankle_eversion_velocity_r_rad_s',	
     
-    'hip_flexion_velocity_l': 'hip_vel_s_l',
-    'hip_adduction_velocity_l': 'hip_vel_f_l',
-    'hip_rotation_velocity_l': 'hip_vel_t_l',
-    'knee_velocity_l': 'knee_vel_s_l',
-    'ankle_velocity_l': 'ankle_vel_s_l',
-    'subtalar_velocity_l': 'ankle_vel_f_l',
+    'hip_flexion_velocity_l': 'hip_flexion_velocity_l_rad_s',
+    'hip_adduction_velocity_l': 'hip_adduction_velocity_l_rad_s',
+    'hip_rotation_velocity_l': 'hip_rotation_velocity_l_rad_s',
+    'knee_velocity_l': 'knee_flexion_velocity_l_rad_s',
+    'ankle_velocity_l': 'ankle_dorsiflexion_velocity_l_rad_s',
+    'subtalar_velocity_l': 'ankle_eversion_velocity_l_rad_s',
 
     # Joint Moments
-    'hip_flexion_r_moment': 'hip_torque_s_r',
-    'hip_adduction_r_moment': 'hip_torque_f_r',
-    'hip_rotation_r_moment': 'hip_torque_t_r',
-    'knee_angle_r_moment': 'knee_torque_s_r',
-    'ankle_angle_r_moment': 'ankle_torque_s_r',
-    'subtalar_angle_r_moment': 'ankle_torque_f_r',
+    'hip_flexion_r_moment': 'hip_flexion_moment_r_Nm',
+    'hip_adduction_r_moment': 'hip_adduction_moment_r_Nm',
+    'hip_rotation_r_moment': 'hip_rotation_moment_r_Nm',
+    'knee_angle_r_moment': 'knee_flexion_moment_r_Nm',
+    'ankle_angle_r_moment': 'ankle_dorsiflexion_moment_r_Nm',
+    'subtalar_angle_r_moment': 'ankle_eversion_moment_r_Nm',
 
-    'hip_flexion_l_moment': 'hip_torque_s_l',
-    'hip_adduction_l_moment': 'hip_torque_f_l',
-    'hip_rotation_l_moment': 'hip_torque_t_l',
-    'knee_angle_l_moment': 'knee_torque_s_l',
-    'ankle_angle_l_moment': 'ankle_torque_s_l',
-    'subtalar_angle_l_moment': 'ankle_torque_f_l',
+    'hip_flexion_l_moment': 'hip_flexion_moment_l_Nm',
+    'hip_adduction_l_moment': 'hip_adduction_moment_l_Nm',
+    'hip_rotation_l_moment': 'hip_rotation_moment_l_Nm',
+    'knee_angle_l_moment': 'knee_flexion_moment_l_Nm',
+    'ankle_angle_l_moment': 'ankle_dorsiflexion_moment_l_Nm',
+    'subtalar_angle_l_moment': 'ankle_eversion_moment_l_Nm',
 
     # Link Angle
     'pelvis_Y':'pelvis_angle_f',
@@ -181,7 +183,7 @@ standard_column_names = {
 # Create a function that will fix joint angle conventions. In the dataset the 
 cols_to_flip_signs = [ 
      # Flip knee torques
-    # 'knee_torque_s_r','knee_torque_s_l',
+    # 'knee_flexion_moment_r_Nm','knee_flexion_moment_l_Nm',
     # From z*x=y coordinate to x*y=z
     "COP_x_r", 
     "COP_x_l",
@@ -201,13 +203,24 @@ def convert_dataset_to_pandas():
     # Then we will filter down to the files that we are interested in saving,
     # and then append them to a dataframe
     file_list = []
-    # Get the subject folders
-    subject_dirs = os.listdir(base_path)
-    pattern = re.compile(r'^[^a-zA-Z]')
-    
-    # Use list comprehension to filter out strings that start with non-letter characters
-    subject_dirs = [string for string in subject_dirs if not pattern.match(string)]
-    print(subject_dirs)
+    # Check if a specific subject was provided as argument
+    if len(sys.argv) > 1:
+        subject_to_process = sys.argv[1]
+        # Verify the subject exists
+        if os.path.exists(os.path.join(base_path, subject_to_process)):
+            subject_dirs = [subject_to_process]
+            print(f"Processing single subject: {subject_to_process}")
+        else:
+            print(f"Subject {subject_to_process} not found in {base_path}")
+            sys.exit(1)
+    else:
+        # Get all subject folders
+        subject_dirs = os.listdir(base_path)
+        pattern = re.compile(r'^[^a-zA-Z]')
+        
+        # Use list comprehension to filter out strings that start with non-letter characters
+        subject_dirs = [string for string in subject_dirs if not pattern.match(string)]
+        print(f"Processing all subjects: {subject_dirs}")
 
 
     # Remove the Subject_masses.csv file
@@ -335,10 +348,17 @@ def convert_dataset_to_pandas():
 
     
     # (5) Save the dataframe
-
     print(df_total.columns)
-    df_total.to_parquet('gtech_2023_time.parquet')
-    print('Done')
+    
+    # Determine output filename
+    if len(sys.argv) > 1:
+        output_filename = f'gtech_2023_time_{sys.argv[1]}.parquet'
+    else:
+        output_filename = 'gtech_2023_time.parquet'
+    
+    df_total.to_parquet(output_filename)
+    print(f'Done - saved to {output_filename}')
+    print(f'Memory usage: {df_total.memory_usage(deep=True).sum() / 1024**2:.1f} MB')
         
 if __name__ == '__main__':
     convert_dataset_to_pandas()

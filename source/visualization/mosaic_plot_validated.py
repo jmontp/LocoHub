@@ -2,6 +2,11 @@
 """
 Generate mosaic plots with simple validation highlighting.
 Invalid steps are shown in red and excluded from mean/std calculations.
+
+Naming convention follows the standard specification:
+- Angles: <joint>_<motion>_angle_<side>_rad (e.g., hip_flexion_angle_right_rad)
+- Velocities: <joint>_<motion>_velocity_<side>_rad_s (e.g., knee_flexion_velocity_left_rad_s)
+- Moments: <joint>_moment_<side>_Nm (e.g., ankle_moment_right_Nm)
 """
 
 import pandas as pd
@@ -29,9 +34,9 @@ def simple_validate_cycles(df, subject_col='subject', task_col='task'):
     
     # Define physiological ranges for common variables
     ranges = {
-        'angle': (-180, 180),  # degrees
-        'vel': (-1000, 1000),  # deg/s
-        'torque': (-300, 300), # Nm/kg
+        'angle': (-3.14, 3.14),  # radians (~-180 to 180 degrees)
+        'velocity': (-17.45, 17.45),  # rad/s (~-1000 to 1000 deg/s)
+        'moment': (-300, 300), # Nm/kg
     }
     
     print("Running simple validation checks...")
@@ -50,16 +55,16 @@ def simple_validate_cycles(df, subject_col='subject', task_col='task'):
             
             # Check each biomechanical variable
             for col in subset.columns:
-                if any(x in col for x in ['angle', 'vel', 'torque']):
+                if any(x in col for x in ['angle', 'velocity', 'moment']):
                     data = subset[col].values
                     
                     # Determine expected range
                     if 'angle' in col:
                         min_val, max_val = ranges['angle']
-                    elif 'vel' in col:
-                        min_val, max_val = ranges['vel']
-                    elif 'torque' in col:
-                        min_val, max_val = ranges['torque']
+                    elif 'velocity' in col:
+                        min_val, max_val = ranges['velocity']
+                    elif 'moment' in col:
+                        min_val, max_val = ranges['moment']
                     else:
                         continue
                     
@@ -92,11 +97,11 @@ def simple_validate_cycles(df, subject_col='subject', task_col='task'):
                             max_diff = np.max(diffs) if len(diffs) > 0 else 0
                             
                             # Different thresholds for different variables
-                            if 'angle' in col and max_diff > 30:  # >30 deg jump
+                            if 'angle' in col and max_diff > 0.524:  # >30 deg jump (~0.524 rad)
                                 step_validity[i] = False
-                            elif 'vel' in col and max_diff > 200:  # >200 deg/s jump
+                            elif 'velocity' in col and max_diff > 3.49:  # >200 deg/s jump (~3.49 rad/s)
                                 step_validity[i] = False
-                            elif 'torque' in col and max_diff > 50:  # >50 Nm/kg jump
+                            elif 'moment' in col and max_diff > 50:  # >50 Nm/kg jump
                                 step_validity[i] = False
                                 
                     except:
@@ -279,7 +284,7 @@ def create_mosaic_plot_with_validation(df, task, features, validation_map,
                 ax.set_xlabel('Gait Cycle (%)')
             
             if j == 0:
-                ax.set_ylabel(f'{subject}\nAngle (deg)')
+                ax.set_ylabel(f'{subject}\nAngle (rad)')
             
             # Add legend for first subplot with invalid data
             if len(invalid_data) > 0 and i == 0 and j == 0:
@@ -346,11 +351,18 @@ def main():
     
     # If no features specified, use default biomechanical features
     if not args.features:
-        angle_cols = [c for c in df.columns if 'angle_s_' in c and not 'foot' in c]
+        # Look for new naming convention first
+        angle_cols = [c for c in df.columns if '_angle_' in c and '_rad' in c and not 'foot' in c]
         if angle_cols:
-            args.features = angle_cols[:3]
+            # Prioritize sagittal plane (flexion) angles
+            flexion_cols = [c for c in angle_cols if 'flexion' in c]
+            if flexion_cols:
+                args.features = flexion_cols[:3]
+            else:
+                args.features = angle_cols[:3]
         else:
-            args.features = ['knee_angle_s_r', 'hip_angle_s_r', 'ankle_angle_s_r']
+            # Fallback to new naming convention defaults
+            args.features = ['knee_flexion_angle_right_rad', 'hip_flexion_angle_right_rad', 'ankle_flexion_angle_right_rad']
     
     print(f"\nSelected {len(args.features)} features: {', '.join(args.features)}")
     

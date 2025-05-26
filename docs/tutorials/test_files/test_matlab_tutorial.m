@@ -44,10 +44,15 @@ try
         disp('Data for ''incline_walking'' task:');
         disp(tblInclineWalking);
         
-        % 4. Phase-Based Averaging
-        % Add phase column for demonstration
+        % 4. Phase-Based Analysis with Efficient Reshaping
+        % For phase-indexed data (with 150 points per cycle), we can use efficient reshaping
+        % instead of groupby operations for better performance
+        
+        % 4.1 Simulate phase-indexed data structure
+        % In real datasets, phase data comes pre-normalized to 150 points per cycle
         tblWithPhase = tblLocomotion;
         tblWithPhase.phase_ = zeros(height(tblLocomotion), 1);
+        tblWithPhase.step_number = zeros(height(tblLocomotion), 1);
         
         % Add phase column by step_id
         uniqueStepIds = unique(tblLocomotion.step_id);
@@ -56,6 +61,7 @@ try
             stepMask = tblLocomotion.step_id == stepId;
             numPoints = sum(stepMask);
             tblWithPhase.phase_(stepMask) = linspace(0, 100, numPoints)';
+            tblWithPhase.step_number(stepMask) = i-1;  % 0-indexed like Python
         end
         
         % Create phase bins
@@ -83,6 +89,14 @@ try
         disp('Average knee flexion angle by phase (first 5 phases):');
         phaseTable = table(phaseBinCenters(1:5)', phaseAverages(1:5), 'VariableNames', {'Phase', 'AvgKneeFlexionAngle'});
         disp(phaseTable);
+        
+        % 4.2 Demonstrate efficient reshape method (for 150-point normalized data)
+        % In real phase-indexed data:
+        % numCycles = length(data) / 150;
+        % reshapedData = reshape(data, 150, numCycles)';
+        % This gives a numCycles x 150 matrix for efficient processing
+        disp('NOTE: With standard 150-point phase data, use reshape() for efficiency');
+        disp('Example: kneeData = reshape(kneeValues, 150, numCycles)'';');
         
         % Join with task info for by-task analysis
         tblWithPhase = tblLocomotion;

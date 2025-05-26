@@ -38,14 +38,14 @@ class LocomotionData:
     POINTS_PER_CYCLE = 150
     
     # Standard feature groups
-    ANGLE_FEATURES = ['hip_angle_s_r', 'knee_angle_s_r', 'ankle_angle_s_r',
-                      'hip_angle_s_l', 'knee_angle_s_l', 'ankle_angle_s_l']
+    ANGLE_FEATURES = ['hip_flexion_angle_right_rad', 'knee_flexion_angle_right_rad', 'ankle_flexion_angle_right_rad',
+                      'hip_flexion_angle_left_rad', 'knee_flexion_angle_left_rad', 'ankle_flexion_angle_left_rad']
     
-    VELOCITY_FEATURES = ['hip_vel_s_r', 'knee_vel_s_r', 'ankle_vel_s_r',
-                         'hip_vel_s_l', 'knee_vel_s_l', 'ankle_vel_s_l']
+    VELOCITY_FEATURES = ['hip_flexion_velocity_right_rad_s', 'knee_flexion_velocity_right_rad_s', 'ankle_flexion_velocity_right_rad_s',
+                         'hip_flexion_velocity_left_rad_s', 'knee_flexion_velocity_left_rad_s', 'ankle_flexion_velocity_left_rad_s']
     
-    TORQUE_FEATURES = ['hip_torque_s_r', 'knee_torque_s_r', 'ankle_torque_s_r',
-                       'hip_torque_s_l', 'knee_torque_s_l', 'ankle_torque_s_l']
+    MOMENT_FEATURES = ['hip_flexion_moment_right_Nm', 'knee_flexion_moment_right_Nm', 'ankle_flexion_moment_right_Nm',
+                       'hip_flexion_moment_left_Nm', 'knee_flexion_moment_left_Nm', 'ankle_flexion_moment_left_Nm']
     
     def __init__(self, data_path: Union[str, Path], 
                  subject_col: str = 'subject',
@@ -87,7 +87,7 @@ class LocomotionData:
         
         self.features = [col for col in self.df.columns 
                         if col not in exclude_cols and 
-                        any(x in col for x in ['angle', 'vel', 'torque', 'moment'])]
+                        any(x in col for x in ['angle', 'velocity', 'moment'])]
         
         print(f"Loaded data with {len(self.df)} rows, {self.df[self.subject_col].nunique()} subjects, "
               f"{self.df[self.task_col].nunique()} tasks, {len(self.features)} features")
@@ -226,19 +226,21 @@ class LocomotionData:
             
             # Range checks
             if 'angle' in feature:
-                out_of_range = np.any((feat_data < -180) | (feat_data > 180), axis=1)
+                # Angles are now in radians
+                out_of_range = np.any((feat_data < -np.pi) | (feat_data > np.pi), axis=1)
                 valid_mask &= ~out_of_range
                 
                 # Check for large discontinuities
                 diffs = np.abs(np.diff(feat_data, axis=1))
-                large_jumps = np.any(diffs > 30, axis=1)  # 30 degree jumps
+                large_jumps = np.any(diffs > 0.5236, axis=1)  # 30 degrees = 0.5236 radians
                 valid_mask &= ~large_jumps
                 
-            elif 'vel' in feature:
-                out_of_range = np.any(np.abs(feat_data) > 1000, axis=1)
+            elif 'velocity' in feature:
+                # Velocities in rad/s
+                out_of_range = np.any(np.abs(feat_data) > 17.45, axis=1)  # 1000 deg/s = 17.45 rad/s
                 valid_mask &= ~out_of_range
                 
-            elif 'torque' in feature:
+            elif 'moment' in feature:
                 out_of_range = np.any(np.abs(feat_data) > 300, axis=1)
                 valid_mask &= ~out_of_range
             

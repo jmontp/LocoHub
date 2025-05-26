@@ -148,22 +148,22 @@ function validMask = validateCycles(data3D, featureNames)
         
         % Range checks
         if contains(feature, 'angle')
-            % Angles: -180 to 180 degrees
-            outOfRange = any(featData < -180 | featData > 180, 2);
+            % Angles: -pi to pi radians
+            outOfRange = any(featData < -pi | featData > pi, 2);
             validMask = validMask & ~outOfRange;
             
             % Large discontinuities
             diffs = abs(diff(featData, 1, 2));
-            largeJumps = any(diffs > 30, 2);
+            largeJumps = any(diffs > 0.5236, 2); % 30 degrees = 0.5236 radians
             validMask = validMask & ~largeJumps;
             
-        elseif contains(feature, 'vel')
-            % Velocities: reasonable range
-            outOfRange = any(abs(featData) > 1000, 2);
+        elseif contains(feature, 'velocity')
+            % Velocities: reasonable range in rad/s
+            outOfRange = any(abs(featData) > 17.45, 2); % 1000 deg/s = 17.45 rad/s
             validMask = validMask & ~outOfRange;
             
-        elseif contains(feature, 'torque')
-            % Torques: reasonable range
+        elseif contains(feature, 'moment')
+            % Moments: reasonable range
             outOfRange = any(abs(featData) > 300, 2);
             validMask = validMask & ~outOfRange;
         end
@@ -342,7 +342,7 @@ function exampleUsage()
     dataTable = parquetread('locomotion_data.parquet');
     
     % Define features of interest
-    features = {'hip_angle_s_r', 'knee_angle_s_r', 'ankle_angle_s_r'};
+    features = {'hip_flexion_angle_right_rad', 'knee_flexion_angle_right_rad', 'ankle_flexion_angle_right_rad'};
     
     % Reshape to 3D
     [data3D, featureNames] = efficientReshape3D(dataTable, 'SUB01', 'normal_walk', features);

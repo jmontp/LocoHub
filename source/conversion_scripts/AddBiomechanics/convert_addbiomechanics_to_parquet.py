@@ -68,12 +68,12 @@ flip_columns = [
     # 'cop_z_r',
 
     # # Flip knee values
-    # 'knee_angle_s_r',
-    # 'knee_angle_s_l',
-    # 'knee_vel_s_r',
-    # 'knee_vel_s_l',
-    # 'knee_torque_s_r',
-    # 'knee_torque_s_l',
+    # 'knee_flexion_angle_right_rad',
+    # 'knee_flexion_angle_left_rad',
+    # 'knee_flexion_velocity_right_rad_s',
+    # 'knee_flexion_velocity_left_rad_s',
+    # 'knee_flexion_moment_right_Nm',
+    # 'knee_flexion_moment_left_Nm',
 ]
 
 
@@ -91,10 +91,10 @@ def process_dataset(dataset_name):
     for column in flip_columns:
         df[column] = -df[column]
 
-    # Mass normalize the torques
+    # Mass normalize the moments
     mass_column = 'subject_mass'
-    torque_columns = [col for col in df.columns if 'torque' in col]
-    for col in torque_columns:
+    moment_columns = [col for col in df.columns if 'moment' in col]
+    for col in moment_columns:
         # Divide by the mass but check if the mass is zero
         df[col] = df[col] / df[mass_column].replace(0, 1)
         # If there are zero masses, report the subject
@@ -102,11 +102,8 @@ def process_dataset(dataset_name):
         if len(zero_subjects) > 0:
             print(f"Warning: Zero mass for subjects {zero_subjects}")
 
-    # Change from radians to degrees
-    angle_columns = [col for col in df.columns if 'angle' in col]
-    vel_columns = [col for col in df.columns if 'vel' in col]
-    df[angle_columns] = np.rad2deg(df[angle_columns])
-    df[vel_columns] = np.rad2deg(df[vel_columns])
+    # Note: We keep angles in radians and velocities in rad/s as per the new convention
+    # The _rad and _rad_s suffixes indicate the units are already correct
 
     # Add task information
     add_task_info(df,dataset_name)

@@ -172,33 +172,38 @@ function trial_table = process_trial(trial_struct)
     trial_table.time_s = (0:1/Hz:num_points)';
 
 
-    % Joint angles
+    % Joint angles - convert from degrees to radians and use new naming convention
     joint_angles = trial_struct.jointAngles;
+    deg2rad_factor = pi/180;
 
-    trial_table.hip_angle_s_r = joint_angles.RHipAngles(:, sagittal_plane);
-    trial_table.hip_angle_f_r = joint_angles.RHipAngles(:, frontal_plane);
-    trial_table.hip_angle_t_r = joint_angles.RHipAngles(:, transverse_plane);
+    % Hip angles
+    trial_table.hip_flexion_angle_r_rad = joint_angles.RHipAngles(:, sagittal_plane) * deg2rad_factor;
+    trial_table.hip_adduction_angle_r_rad = joint_angles.RHipAngles(:, frontal_plane) * deg2rad_factor;
+    trial_table.hip_rotation_angle_r_rad = joint_angles.RHipAngles(:, transverse_plane) * deg2rad_factor;
 
-    trial_table.hip_angle_s_l = joint_angles.LHipAngles(:, sagittal_plane);
-    trial_table.hip_angle_f_l = joint_angles.LHipAngles(:, frontal_plane);
-    trial_table.hip_angle_t_l = joint_angles.LHipAngles(:, transverse_plane);
+    trial_table.hip_flexion_angle_l_rad = joint_angles.LHipAngles(:, sagittal_plane) * deg2rad_factor;
+    trial_table.hip_adduction_angle_l_rad = joint_angles.LHipAngles(:, frontal_plane) * deg2rad_factor;
+    trial_table.hip_rotation_angle_l_rad = joint_angles.LHipAngles(:, transverse_plane) * deg2rad_factor;
 
-    trial_table.knee_angle_s_r = -joint_angles.RKneeAngles(:, sagittal_plane);
-    trial_table.knee_angle_f_r = joint_angles.RKneeAngles(:, frontal_plane);
-    trial_table.knee_angle_t_r = joint_angles.RKneeAngles(:, transverse_plane);
+    % Knee angles (note: negative sign for sagittal to match convention)
+    trial_table.knee_flexion_angle_r_rad = -joint_angles.RKneeAngles(:, sagittal_plane) * deg2rad_factor;
+    trial_table.knee_adduction_angle_r_rad = joint_angles.RKneeAngles(:, frontal_plane) * deg2rad_factor;
+    trial_table.knee_rotation_angle_r_rad = joint_angles.RKneeAngles(:, transverse_plane) * deg2rad_factor;
 
-    trial_table.knee_angle_s_l = -joint_angles.LKneeAngles(:, sagittal_plane);
-    trial_table.knee_angle_f_l = joint_angles.LKneeAngles(:, frontal_plane);
-    trial_table.knee_angle_t_l = joint_angles.LKneeAngles(:, transverse_plane);
+    trial_table.knee_flexion_angle_l_rad = -joint_angles.LKneeAngles(:, sagittal_plane) * deg2rad_factor;
+    trial_table.knee_adduction_angle_l_rad = joint_angles.LKneeAngles(:, frontal_plane) * deg2rad_factor;
+    trial_table.knee_rotation_angle_l_rad = joint_angles.LKneeAngles(:, transverse_plane) * deg2rad_factor;
 
-    trial_table.ankle_angle_s_r = joint_angles.RAnkleAngles(:, sagittal_plane);
-    trial_table.ankle_angle_f_r = joint_angles.RAnkleAngles(:, frontal_plane);
-    trial_table.ankle_angle_t_r = joint_angles.RAnkleAngles(:, transverse_plane);
+    % Ankle angles
+    trial_table.ankle_flexion_angle_r_rad = joint_angles.RAnkleAngles(:, sagittal_plane) * deg2rad_factor;
+    trial_table.ankle_inversion_angle_r_rad = joint_angles.RAnkleAngles(:, frontal_plane) * deg2rad_factor;
+    trial_table.ankle_rotation_angle_r_rad = joint_angles.RAnkleAngles(:, transverse_plane) * deg2rad_factor;
 
-    trial_table.ankle_angle_s_l = joint_angles.LAnkleAngles(:, sagittal_plane);
-    trial_table.ankle_angle_f_l = joint_angles.LAnkleAngles(:, frontal_plane);
-    trial_table.ankle_angle_t_l = joint_angles.LAnkleAngles(:, transverse_plane);
+    trial_table.ankle_flexion_angle_l_rad = joint_angles.LAnkleAngles(:, sagittal_plane) * deg2rad_factor;
+    trial_table.ankle_inversion_angle_l_rad = joint_angles.LAnkleAngles(:, frontal_plane) * deg2rad_factor;
+    trial_table.ankle_rotation_angle_l_rad = joint_angles.LAnkleAngles(:, transverse_plane) * deg2rad_factor;
 
+    % Keep foot and pelvis angles in old format for now (not in standard spec)
     trial_table.foot_angle_s_r = -joint_angles.RFootProgressAngles(:, sagittal_plane) - 90;
     trial_table.foot_angle_f_r = joint_angles.RFootProgressAngles(:, frontal_plane);
     trial_table.foot_angle_t_r = joint_angles.RFootProgressAngles(:, transverse_plane);
@@ -215,32 +220,35 @@ function trial_table = process_trial(trial_struct)
     trial_table.pelvis_angle_f_l = joint_angles.LPelvisAngles(:, frontal_plane);
     trial_table.pelvis_angle_t_l = joint_angles.LPelvisAngles(:, transverse_plane);
     
-    % Joint velocity, there are no joint velocities in the dataset, so we
-    % will calculate them using the joint angles and time axis
-    trial_table.hip_vel_s_r = gradient(trial_table.hip_angle_s_r)./gradient(trial_table.time_s);
-    trial_table.hip_vel_f_r = gradient(trial_table.hip_angle_f_r)./gradient(trial_table.time_s);
-    trial_table.hip_vel_t_r = gradient(trial_table.hip_angle_t_r)./gradient(trial_table.time_s);
+    % Joint velocity - calculate from angles (already in radians) using new naming convention
+    % Hip velocities
+    trial_table.hip_flexion_velocity_r_rad_s = gradient(trial_table.hip_flexion_angle_r_rad)./gradient(trial_table.time_s);
+    trial_table.hip_adduction_velocity_r_rad_s = gradient(trial_table.hip_adduction_angle_r_rad)./gradient(trial_table.time_s);
+    trial_table.hip_rotation_velocity_r_rad_s = gradient(trial_table.hip_rotation_angle_r_rad)./gradient(trial_table.time_s);
 
-    trial_table.hip_vel_s_l = gradient(trial_table.hip_angle_s_l)./gradient(trial_table.time_s);
-    trial_table.hip_vel_f_l = gradient(trial_table.hip_angle_f_l)./gradient(trial_table.time_s);
-    trial_table.hip_vel_t_l = gradient(trial_table.hip_angle_t_l)./gradient(trial_table.time_s);
+    trial_table.hip_flexion_velocity_l_rad_s = gradient(trial_table.hip_flexion_angle_l_rad)./gradient(trial_table.time_s);
+    trial_table.hip_adduction_velocity_l_rad_s = gradient(trial_table.hip_adduction_angle_l_rad)./gradient(trial_table.time_s);
+    trial_table.hip_rotation_velocity_l_rad_s = gradient(trial_table.hip_rotation_angle_l_rad)./gradient(trial_table.time_s);
 
-    trial_table.knee_vel_s_r = gradient(trial_table.knee_angle_s_r)./gradient(trial_table.time_s);
-    trial_table.knee_vel_f_r = gradient(trial_table.knee_angle_f_r)./gradient(trial_table.time_s);
-    trial_table.knee_vel_t_r = gradient(trial_table.knee_angle_t_r)./gradient(trial_table.time_s);
+    % Knee velocities
+    trial_table.knee_flexion_velocity_r_rad_s = gradient(trial_table.knee_flexion_angle_r_rad)./gradient(trial_table.time_s);
+    trial_table.knee_adduction_velocity_r_rad_s = gradient(trial_table.knee_adduction_angle_r_rad)./gradient(trial_table.time_s);
+    trial_table.knee_rotation_velocity_r_rad_s = gradient(trial_table.knee_rotation_angle_r_rad)./gradient(trial_table.time_s);
 
-    trial_table.knee_vel_s_l = gradient(trial_table.knee_angle_s_l)./gradient(trial_table.time_s);
-    trial_table.knee_vel_f_l = gradient(trial_table.knee_angle_f_l)./gradient(trial_table.time_s);
-    trial_table.knee_vel_t_l = gradient(trial_table.knee_angle_t_l)./gradient(trial_table.time_s);
+    trial_table.knee_flexion_velocity_l_rad_s = gradient(trial_table.knee_flexion_angle_l_rad)./gradient(trial_table.time_s);
+    trial_table.knee_adduction_velocity_l_rad_s = gradient(trial_table.knee_adduction_angle_l_rad)./gradient(trial_table.time_s);
+    trial_table.knee_rotation_velocity_l_rad_s = gradient(trial_table.knee_rotation_angle_l_rad)./gradient(trial_table.time_s);
 
-    trial_table.ankle_vel_s_r = gradient(trial_table.ankle_angle_s_r)./gradient(trial_table.time_s);
-    trial_table.ankle_vel_f_r = gradient(trial_table.ankle_angle_f_r)./gradient(trial_table.time_s);
-    trial_table.ankle_vel_t_r = gradient(trial_table.ankle_angle_t_r)./gradient(trial_table.time_s);
+    % Ankle velocities
+    trial_table.ankle_flexion_velocity_r_rad_s = gradient(trial_table.ankle_flexion_angle_r_rad)./gradient(trial_table.time_s);
+    trial_table.ankle_inversion_velocity_r_rad_s = gradient(trial_table.ankle_inversion_angle_r_rad)./gradient(trial_table.time_s);
+    trial_table.ankle_rotation_velocity_r_rad_s = gradient(trial_table.ankle_rotation_angle_r_rad)./gradient(trial_table.time_s);
 
-    trial_table.ankle_vel_s_l = gradient(trial_table.ankle_angle_s_l)./gradient(trial_table.time_s);
-    trial_table.ankle_vel_f_l = gradient(trial_table.ankle_angle_f_l)./gradient(trial_table.time_s);
-    trial_table.ankle_vel_t_l = gradient(trial_table.ankle_angle_t_l)./gradient(trial_table.time_s);
+    trial_table.ankle_flexion_velocity_l_rad_s = gradient(trial_table.ankle_flexion_angle_l_rad)./gradient(trial_table.time_s);
+    trial_table.ankle_inversion_velocity_l_rad_s = gradient(trial_table.ankle_inversion_angle_l_rad)./gradient(trial_table.time_s);
+    trial_table.ankle_rotation_velocity_l_rad_s = gradient(trial_table.ankle_rotation_angle_l_rad)./gradient(trial_table.time_s);
 
+    % Keep foot and pelvis velocities in old format for now (not in standard spec)
     trial_table.foot_vel_s_r = gradient(trial_table.foot_angle_s_r)./gradient(trial_table.time_s);
     trial_table.foot_vel_f_r = gradient(trial_table.foot_angle_f_r)./gradient(trial_table.time_s);
     trial_table.foot_vel_t_r = gradient(trial_table.foot_angle_t_r)./gradient(trial_table.time_s);
@@ -258,32 +266,35 @@ function trial_table = process_trial(trial_struct)
     trial_table.pelvis_vel_t_l = gradient(trial_table.pelvis_angle_t_l)./gradient(trial_table.time_s);
 
 
-    % Joint moments
+    % Joint moments - use new naming convention (moments stay in Nm)
     joint_moments = trial_struct.jointMoments;
 
-    trial_table.hip_torque_s_r = joint_moments.RHipMoment(:, sagittal_plane);
-    trial_table.hip_torque_f_r = joint_moments.RHipMoment(:, frontal_plane);
-    trial_table.hip_torque_t_r = joint_moments.RHipMoment(:, transverse_plane);
+    % Hip moments
+    trial_table.hip_flexion_moment_r_Nm = joint_moments.RHipMoment(:, sagittal_plane);
+    trial_table.hip_adduction_moment_r_Nm = joint_moments.RHipMoment(:, frontal_plane);
+    trial_table.hip_rotation_moment_r_Nm = joint_moments.RHipMoment(:, transverse_plane);
 
-    trial_table.hip_torque_s_l = joint_moments.LHipMoment(:, sagittal_plane);
-    trial_table.hip_torque_f_l = joint_moments.LHipMoment(:, frontal_plane);
-    trial_table.hip_torque_t_l = joint_moments.LHipMoment(:, transverse_plane);
+    trial_table.hip_flexion_moment_l_Nm = joint_moments.LHipMoment(:, sagittal_plane);
+    trial_table.hip_adduction_moment_l_Nm = joint_moments.LHipMoment(:, frontal_plane);
+    trial_table.hip_rotation_moment_l_Nm = joint_moments.LHipMoment(:, transverse_plane);
 
-    trial_table.knee_torque_s_r = -joint_moments.RKneeMoment(:, sagittal_plane);
-    trial_table.knee_torque_f_r = joint_moments.RKneeMoment(:, frontal_plane);
-    trial_table.knee_torque_t_r = joint_moments.RKneeMoment(:, transverse_plane);
+    % Knee moments (note: negative sign for sagittal to match convention)
+    trial_table.knee_flexion_moment_r_Nm = -joint_moments.RKneeMoment(:, sagittal_plane);
+    trial_table.knee_adduction_moment_r_Nm = joint_moments.RKneeMoment(:, frontal_plane);
+    trial_table.knee_rotation_moment_r_Nm = joint_moments.RKneeMoment(:, transverse_plane);
 
-    trial_table.knee_torque_s_l = -joint_moments.LKneeMoment(:, sagittal_plane);
-    trial_table.knee_torque_f_l = joint_moments.LKneeMoment(:, frontal_plane);
-    trial_table.knee_torque_t_l = joint_moments.LKneeMoment(:, transverse_plane);
+    trial_table.knee_flexion_moment_l_Nm = -joint_moments.LKneeMoment(:, sagittal_plane);
+    trial_table.knee_adduction_moment_l_Nm = joint_moments.LKneeMoment(:, frontal_plane);
+    trial_table.knee_rotation_moment_l_Nm = joint_moments.LKneeMoment(:, transverse_plane);
 
-    trial_table.ankle_torque_s_r = joint_moments.RAnkleMoment(:, sagittal_plane);
-    trial_table.ankle_torque_f_r = joint_moments.RAnkleMoment(:, frontal_plane);
-    trial_table.ankle_torque_t_r = joint_moments.RAnkleMoment(:, transverse_plane);
+    % Ankle moments
+    trial_table.ankle_flexion_moment_r_Nm = joint_moments.RAnkleMoment(:, sagittal_plane);
+    trial_table.ankle_inversion_moment_r_Nm = joint_moments.RAnkleMoment(:, frontal_plane);
+    trial_table.ankle_rotation_moment_r_Nm = joint_moments.RAnkleMoment(:, transverse_plane);
 
-    trial_table.ankle_torque_s_l = joint_moments.LAnkleMoment(:, sagittal_plane);
-    trial_table.ankle_torque_f_l = joint_moments.LAnkleMoment(:, frontal_plane);
-    trial_table.ankle_torque_t_l = joint_moments.LAnkleMoment(:, transverse_plane);
+    trial_table.ankle_flexion_moment_l_Nm = joint_moments.LAnkleMoment(:, sagittal_plane);
+    trial_table.ankle_inversion_moment_l_Nm = joint_moments.LAnkleMoment(:, frontal_plane);
+    trial_table.ankle_rotation_moment_l_Nm = joint_moments.LAnkleMoment(:, transverse_plane);
 
     % Ground reaction forces
     force_plates = trial_struct.forceplates;

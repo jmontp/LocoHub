@@ -21,15 +21,15 @@ def create_comprehensive_plot(df, task, subject_col='subject', task_col='task',
     
     # Define feature groups
     feature_groups = {
-        'Right Angles': ['hip_angle_s_r', 'knee_angle_s_r', 'ankle_angle_s_r'],
-        'Right Velocities': ['hip_vel_s_r', 'knee_vel_s_r', 'ankle_vel_s_r'],
-        'Right Torques': ['hip_torque_s_r', 'knee_torque_s_r', 'ankle_torque_s_r'],
-        'Left Angles': ['hip_angle_s_l', 'knee_angle_s_l', 'ankle_angle_s_l'],
-        'Left Velocities': ['hip_vel_s_l', 'knee_vel_s_l', 'ankle_vel_s_l'],
-        'Left Torques': ['hip_torque_s_l', 'knee_torque_s_l', 'ankle_torque_s_l'],
-        'Frontal Angles R': ['hip_adduction_r', 'subtalar_angle_r'],
-        'Frontal Angles L': ['hip_adduction_l', 'subtalar_angle_l'],
-        'Transverse Angles': ['hip_rotation_r', 'hip_rotation_l']
+        'Right Angles': ['hip_flexion_angle_right_rad', 'knee_flexion_angle_right_rad', 'ankle_flexion_angle_right_rad'],
+        'Right Velocities': ['hip_flexion_velocity_right_rad_s', 'knee_flexion_velocity_right_rad_s', 'ankle_flexion_velocity_right_rad_s'],
+        'Right Moments': ['hip_flexion_moment_right_Nm', 'knee_flexion_moment_right_Nm', 'ankle_flexion_moment_right_Nm'],
+        'Left Angles': ['hip_flexion_angle_left_rad', 'knee_flexion_angle_left_rad', 'ankle_flexion_angle_left_rad'],
+        'Left Velocities': ['hip_flexion_velocity_left_rad_s', 'knee_flexion_velocity_left_rad_s', 'ankle_flexion_velocity_left_rad_s'],
+        'Left Moments': ['hip_flexion_moment_left_Nm', 'knee_flexion_moment_left_Nm', 'ankle_flexion_moment_left_Nm'],
+        'Frontal Angles R': ['hip_adduction_angle_right_rad', 'ankle_inversion_angle_right_rad'],
+        'Frontal Angles L': ['hip_adduction_angle_left_rad', 'ankle_inversion_angle_left_rad'],
+        'Transverse Angles': ['hip_rotation_angle_right_rad', 'hip_rotation_angle_left_rad']
     }
     
     # Filter for this task

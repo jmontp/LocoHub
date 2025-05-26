@@ -2,6 +2,11 @@
 """
 Mosaic plot generator for phase-indexed locomotion data using matplotlib.
 Creates a grid of subplots showing biomechanical features across subjects and tasks.
+
+Naming convention follows the standard specification:
+- Angles: <joint>_<motion>_angle_<side>_rad (e.g., hip_flexion_angle_right_rad)
+- Velocities: <joint>_<motion>_velocity_<side>_rad_s (e.g., knee_flexion_velocity_left_rad_s)
+- Moments: <joint>_moment_<side>_Nm (e.g., ankle_moment_right_Nm)
 """
 
 import argparse
@@ -154,7 +159,7 @@ def create_mosaic_plot(df, task, features, subject_col='subject', task_col='task
                 if i == 0:
                     ax.set_title(feature.replace('_', ' ').title(), fontsize=10)
                 if j == 0:
-                    ax.set_ylabel(f'{subject}\nAngle (deg)', fontsize=9)
+                    ax.set_ylabel(f'{subject}\nAngle (rad)', fontsize=9)
                 if i == n_subjects - 1:
                     ax.set_xlabel('Gait Cycle (%)', fontsize=9)
                 
@@ -264,8 +269,8 @@ def main():
         exclude = {args.phase_col, args.subject_col, args.task_col, 'time', 'time_s', 'phase_l', 'phase_r'}
         numeric_cols = [c for c in df.columns if c not in exclude and pd.api.types.is_numeric_dtype(df[c])]
         
-        # Filter for actual biomechanical features (containing angle, torque, vel, etc.)
-        biomech_keywords = ['angle', 'torque', 'vel', 'moment', 'force', 'grf', 'cop']
+        # Filter for actual biomechanical features (containing angle, moment, velocity, etc.)
+        biomech_keywords = ['angle', 'moment', 'velocity', 'force', 'grf', 'cop']
         args.features = [c for c in numeric_cols if any(kw in c.lower() for kw in biomech_keywords)][:20]
         
         if not args.features:

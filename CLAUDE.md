@@ -84,14 +84,31 @@ python source/tests/validation_blueprint.py
 
 ### Standardization Conventions
 
-#### Variable Naming Pattern
+#### Variable Naming Pattern (TRANSITION IN PROGRESS)
+
+**Current Implementation (being phased out):**
 `<joint>_<measurement>_<plane>_<side>`
 - Joints: `hip`, `knee`, `ankle`
 - Measurements: `angle`, `vel`, `torque`
 - Planes: `s` (sagittal), `f` (frontal), `t` (transverse)
 - Sides: `r` (right), `l` (left)
-
 Examples: `hip_angle_s_r`, `knee_torque_s_l`, `ankle_vel_f_r`
+
+**New Convention (target - as per docs/standard_spec/units_and_conventions.md):**
+`<joint>_<motion>_<measurement>_<side>_<unit>`
+- Full descriptive motion terms: `flexion`, `adduction`, `rotation`
+- Measurements: `angle`, `velocity`, `moment`
+- Sides: `right`, `left` (as suffixes before units)
+- Units appended: `_rad`, `_rad_s`, `_Nm`
+Examples: `hip_flexion_angle_right_rad`, `knee_moment_left_Nm`, `ankle_flexion_velocity_right_rad_s`
+
+**Mapping Tool Available:**
+Use `source/naming_convention_mapping.py` for conversion between old and new names.
+
+**Status:** 
+- ~23 files need updating (18 Python, 5 MATLAB)
+- Conversion scripts, visualization tools, and library code all use old convention
+- Migration in progress as of January 2025
 
 #### Sign Conventions (Sagittal Plane)
 - Ankle dorsiflexion: Positive
@@ -148,3 +165,22 @@ This project is actively improving its documentation and standards. When working
    - Visual clarity with diagrams and interactive elements
    - Biomechanical rigor with ISB standards
    - User-friendly organization with progressive disclosure
+
+## Project Organization
+
+### Plot Output Structure
+All visualization outputs should be saved in `source/visualization/plots/` with descriptive subdirectories:
+
+```
+source/visualization/plots/
+├── validated_<dataset>_<year>/     # Validation plots showing invalid cycles in red
+├── comprehensive_<dataset>_<year>/ # All features organized by type
+└── <analysis_type>_<dataset>_<year>/  # Other analysis-specific plots
+```
+
+**Important Guidelines:**
+- Never save plots in the project root directory
+- Always include dataset name and year in directory names (e.g., `gtech_2023`, `umich_2021`)
+- Use lowercase with underscores for directory names
+- Clean up test outputs after validation
+- Document new plot types in the visualization script that generates them

@@ -47,49 +47,49 @@ short_activity_names = ['ball_toss', 'curb_down', 'curb_up', 'cutting',
 standard_column_names = {
 
     # Joint Angle
-    'hip_flexion_r':'hip_angle_s_r',
-    'hip_adduction_r':'hip_angle_f_r',
-    'hip_rotation_r':'hip_angle_t_r',
-    'knee_angle_r':'knee_angle_s_r',
-    'ankle_angle_r':'ankle_angle_s_r',
-    'subtalar_angle_r':'ankle_angle_f_r',
+    'hip_flexion_r':'hip_flexion_angle_r_rad',
+    'hip_adduction_r':'hip_adduction_angle_r_rad',
+    'hip_rotation_r':'hip_rotation_angle_r_rad',
+    'knee_angle_r':'knee_flexion_angle_r_rad',
+    'ankle_angle_r':'ankle_dorsiflexion_angle_r_rad',
+    'subtalar_angle_r':'ankle_eversion_angle_r_rad',
     
-    'hip_flexion_l':'hip_angle_s_l',
-    'hip_adduction_l':'hip_angle_f_l',
-    'hip_rotation_l':'hip_angle_t_l',
-    'knee_angle_l':'knee_angle_s_l',
-    'ankle_angle_l':'ankle_angle_s_l',
-    'subtalar_angle_l':'ankle_angle_f_l',
+    'hip_flexion_l':'hip_flexion_angle_l_rad',
+    'hip_adduction_l':'hip_adduction_angle_l_rad',
+    'hip_rotation_l':'hip_rotation_angle_l_rad',
+    'knee_angle_l':'knee_flexion_angle_l_rad',
+    'ankle_angle_l':'ankle_dorsiflexion_angle_l_rad',
+    'subtalar_angle_l':'ankle_eversion_angle_l_rad',
 
     # Joint Velocities
-    'hip_flexion_velocity_r': 'hip_vel_s_r',
-    'hip_adduction_velocity_r': 'hip_vel_f_r',
-    'hip_rotation_velocity_r': 'hip_vel_t_r',
-    'knee_velocity_r': 'knee_vel_s_r',
-    'ankle_velocity_r': 'ankle_vel_s_r',
-    'subtalar_velocity_r': 'ankle_vel_f_r',	
+    'hip_flexion_velocity_r': 'hip_flexion_velocity_r_rad_s',
+    'hip_adduction_velocity_r': 'hip_adduction_velocity_r_rad_s',
+    'hip_rotation_velocity_r': 'hip_rotation_velocity_r_rad_s',
+    'knee_velocity_r': 'knee_flexion_velocity_r_rad_s',
+    'ankle_velocity_r': 'ankle_dorsiflexion_velocity_r_rad_s',
+    'subtalar_velocity_r': 'ankle_eversion_velocity_r_rad_s',	
     
-    'hip_flexion_velocity_l': 'hip_vel_s_l',
-    'hip_adduction_velocity_l': 'hip_vel_f_l',
-    'hip_rotation_velocity_l': 'hip_vel_t_l',
-    'knee_velocity_l': 'knee_vel_s_l',
-    'ankle_velocity_l': 'ankle_vel_s_l',
-    'subtalar_velocity_l': 'ankle_vel_f_l',
+    'hip_flexion_velocity_l': 'hip_flexion_velocity_l_rad_s',
+    'hip_adduction_velocity_l': 'hip_adduction_velocity_l_rad_s',
+    'hip_rotation_velocity_l': 'hip_rotation_velocity_l_rad_s',
+    'knee_velocity_l': 'knee_flexion_velocity_l_rad_s',
+    'ankle_velocity_l': 'ankle_dorsiflexion_velocity_l_rad_s',
+    'subtalar_velocity_l': 'ankle_eversion_velocity_l_rad_s',
 
     # Joint Moments
-    'hip_flexion_r_moment': 'hip_torque_s_r',
-    'hip_adduction_r_moment': 'hip_torque_f_r',
-    'hip_rotation_r_moment': 'hip_torque_t_r',
-    'knee_angle_r_moment': 'knee_torque_s_r',
-    'ankle_angle_r_moment': 'ankle_torque_s_r',
-    'subtalar_angle_r_moment': 'ankle_torque_f_r',
+    'hip_flexion_r_moment': 'hip_flexion_moment_r_Nm',
+    'hip_adduction_r_moment': 'hip_adduction_moment_r_Nm',
+    'hip_rotation_r_moment': 'hip_rotation_moment_r_Nm',
+    'knee_angle_r_moment': 'knee_flexion_moment_r_Nm',
+    'ankle_angle_r_moment': 'ankle_dorsiflexion_moment_r_Nm',
+    'subtalar_angle_r_moment': 'ankle_eversion_moment_r_Nm',
 
-    'hip_flexion_l_moment': 'hip_torque_s_l',
-    'hip_adduction_l_moment': 'hip_torque_f_l',
-    'hip_rotation_l_moment': 'hip_torque_t_l',
-    'knee_angle_l_moment': 'knee_torque_s_l',
-    'ankle_angle_l_moment': 'ankle_torque_s_l',
-    'subtalar_angle_l_moment': 'ankle_torque_f_l',
+    'hip_flexion_l_moment': 'hip_flexion_moment_l_Nm',
+    'hip_adduction_l_moment': 'hip_adduction_moment_l_Nm',
+    'hip_rotation_l_moment': 'hip_rotation_moment_l_Nm',
+    'knee_angle_l_moment': 'knee_flexion_moment_l_Nm',
+    'ankle_angle_l_moment': 'ankle_dorsiflexion_moment_l_Nm',
+    'subtalar_angle_l_moment': 'ankle_eversion_moment_l_Nm',
 
     # Link Angle
     'pelvis_Y':'pelvis_angle_f',
@@ -191,44 +191,44 @@ standard_column_names = {
 # Define the alternative naming convention dictionary
 ipsi_contra_column_names = {
     # Joint Angle
-    'hip_flexion_r':'hip_angle_s_contra',
-    'hip_adduction_r':'hip_angle_f_contra',
-    'hip_rotation_r':'hip_angle_t_contra',
-    'knee_angle_r':'knee_angle_s_contra',
-    'ankle_angle_r':'ankle_angle_s_contra',
-    'subtalar_angle_r':'ankle_angle_f_contra',
-    'hip_flexion_l':'hip_angle_s_ipsi',
-    'hip_adduction_l':'hip_angle_f_ipsi',
-    'hip_rotation_l':'hip_angle_t_ipsi',
-    'knee_angle_l':'knee_angle_s_ipsi',
-    'ankle_angle_l':'ankle_angle_s_ipsi',
-    'subtalar_angle_l':'ankle_angle_f_ipsi',
+    'hip_flexion_r':'hip_flexion_angle_contra_rad',
+    'hip_adduction_r':'hip_adduction_angle_contra_rad',
+    'hip_rotation_r':'hip_rotation_angle_contra_rad',
+    'knee_angle_r':'knee_flexion_angle_contra_rad',
+    'ankle_angle_r':'ankle_dorsiflexion_angle_contra_rad',
+    'subtalar_angle_r':'ankle_eversion_angle_contra_rad',
+    'hip_flexion_l':'hip_flexion_angle_ipsi_rad',
+    'hip_adduction_l':'hip_adduction_angle_ipsi_rad',
+    'hip_rotation_l':'hip_rotation_angle_ipsi_rad',
+    'knee_angle_l':'knee_flexion_angle_ipsi_rad',
+    'ankle_angle_l':'ankle_dorsiflexion_angle_ipsi_rad',
+    'subtalar_angle_l':'ankle_eversion_angle_ipsi_rad',
     # Joint Velocities
-    'hip_flexion_velocity_r': 'hip_vel_s_contra',
-    'hip_adduction_velocity_r': 'hip_vel_f_contra',
-    'hip_rotation_velocity_r': 'hip_vel_t_contra',
-    'knee_velocity_r': 'knee_vel_s_contra',
-    'ankle_velocity_r': 'ankle_vel_s_contra',
-    'subtalar_velocity_r': 'ankle_vel_f_contra',
-    'hip_flexion_velocity_l': 'hip_vel_s_ipsi',
-    'hip_adduction_velocity_l': 'hip_vel_f_ipsi',
-    'hip_rotation_velocity_l': 'hip_vel_t_ipsi',
-    'knee_velocity_l': 'knee_vel_s_ipsi',
-    'ankle_velocity_l': 'ankle_vel_s_ipsi',
-    'subtalar_velocity_l': 'ankle_vel_f_ipsi',
+    'hip_flexion_velocity_r': 'hip_flexion_velocity_contra_rad_s',
+    'hip_adduction_velocity_r': 'hip_adduction_velocity_contra_rad_s',
+    'hip_rotation_velocity_r': 'hip_rotation_velocity_contra_rad_s',
+    'knee_velocity_r': 'knee_flexion_velocity_contra_rad_s',
+    'ankle_velocity_r': 'ankle_dorsiflexion_velocity_contra_rad_s',
+    'subtalar_velocity_r': 'ankle_eversion_velocity_contra_rad_s',
+    'hip_flexion_velocity_l': 'hip_flexion_velocity_ipsi_rad_s',
+    'hip_adduction_velocity_l': 'hip_adduction_velocity_ipsi_rad_s',
+    'hip_rotation_velocity_l': 'hip_rotation_velocity_ipsi_rad_s',
+    'knee_velocity_l': 'knee_flexion_velocity_ipsi_rad_s',
+    'ankle_velocity_l': 'ankle_dorsiflexion_velocity_ipsi_rad_s',
+    'subtalar_velocity_l': 'ankle_eversion_velocity_ipsi_rad_s',
     # Joint Moments
-    'hip_flexion_r_moment': 'hip_torque_s_contra',
-    'hip_adduction_r_moment': 'hip_torque_f_contra',
-    'hip_rotation_r_moment': 'hip_torque_t_contra',
-    'knee_angle_r_moment': 'knee_torque_s_contra',
-    'ankle_angle_r_moment': 'ankle_torque_s_contra',
-    'subtalar_angle_r_moment': 'ankle_torque_f_contra',
-    'hip_flexion_l_moment': 'hip_torque_s_ipsi',
-    'hip_adduction_l_moment': 'hip_torque_f_ipsi',
-    'hip_rotation_l_moment': 'hip_torque_t_ipsi',
-    'knee_angle_l_moment': 'knee_torque_s_ipsi',
-    'ankle_angle_l_moment': 'ankle_torque_s_ipsi',
-    'subtalar_angle_l_moment': 'ankle_torque_f_ipsi',
+    'hip_flexion_r_moment': 'hip_flexion_moment_contra_Nm',
+    'hip_adduction_r_moment': 'hip_adduction_moment_contra_Nm',
+    'hip_rotation_r_moment': 'hip_rotation_moment_contra_Nm',
+    'knee_angle_r_moment': 'knee_flexion_moment_contra_Nm',
+    'ankle_angle_r_moment': 'ankle_dorsiflexion_moment_contra_Nm',
+    'subtalar_angle_r_moment': 'ankle_eversion_moment_contra_Nm',
+    'hip_flexion_l_moment': 'hip_flexion_moment_ipsi_Nm',
+    'hip_adduction_l_moment': 'hip_adduction_moment_ipsi_Nm',
+    'hip_rotation_l_moment': 'hip_rotation_moment_ipsi_Nm',
+    'knee_angle_l_moment': 'knee_flexion_moment_ipsi_Nm',
+    'ankle_angle_l_moment': 'ankle_dorsiflexion_moment_ipsi_Nm',
+    'subtalar_angle_l_moment': 'ankle_eversion_moment_ipsi_Nm',
     # Link Angle (Global) - Pelvis/Torso unchanged
     'pelvis_Y':'pelvis_angle_f',
     'pelvis_Z':'pelvis_angle_s',
@@ -333,10 +333,17 @@ cols_to_flip_signs = [
     'cop_x_r','cop_x_l',
 ]
 
-def convert_dataset_to_pandas():
+def convert_dataset_to_pandas(args=None):
     '''
     This function is meant to convert the dataset to a pandas dataframe
     '''
+    # Handle default args if not provided
+    if args is None:
+        parser = argparse.ArgumentParser(description='Convert Gtech 2023 dataset to parquet.')
+        parser.add_argument('--naming', type=str, default='lr', 
+                            choices=['lr', 'ipsicontra'], 
+                            help='Naming convention: lr (left/right) or ipsicontra (ipsilateral/contralateral)')
+        args = parser.parse_args()
     # First, get a list of all the files that are available in the dataset
     # Then we will filter down to the files that we are interested in saving,
     # and then append them to a dataframe
@@ -449,9 +456,15 @@ def convert_dataset_to_pandas():
         # Example: cols_to_flip_signs_ic = ['grf_x_contra', 'grf_x_ipsi', ...]
         # df_total[cols_to_flip_signs_ic] = df_total[cols_to_flip_signs_ic] * -1
         # Applying original flips for now, assuming convention consistency:
-        cols_to_flip_ic = [ipsi_contra_column_names.get(col, col) for col in standard_column_names if col in cols_to_flip_signs]
-        # Filter out columns that weren't renamed (e.g., pelvis/torso) or don't exist
-        cols_to_flip_ic = [col for col in cols_to_flip_ic if col in df_total.columns and ('_ipsi' in col or '_contra' in col)]
+        # Map the original flip column names to their ipsi/contra equivalents
+        cols_to_flip_ic = []
+        for orig_col in cols_to_flip_signs:
+            if orig_col in ['grf_x_r', 'grf_z_r', 'cop_x_r', 'cop_z_r']:
+                cols_to_flip_ic.append(orig_col.replace('_r', '_contra'))
+            elif orig_col in ['grf_x_l', 'grf_z_l', 'cop_x_l', 'cop_z_l']:
+                cols_to_flip_ic.append(orig_col.replace('_l', '_ipsi'))
+        # Filter out columns that don't exist in the dataframe
+        cols_to_flip_ic = [col for col in cols_to_flip_ic if col in df_total.columns]
         df_total[cols_to_flip_ic] = df_total[cols_to_flip_ic] * -1
     else: # Default 'lr'
         print("Using left/right naming convention.")
@@ -467,4 +480,10 @@ def convert_dataset_to_pandas():
     print('Done')
         
 if __name__ == '__main__':
-    convert_dataset_to_pandas()
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Convert Gtech 2023 dataset to parquet.')
+    parser.add_argument('--naming', type=str, default='lr', 
+                        choices=['lr', 'ipsicontra'], 
+                        help='Naming convention: lr (left/right) or ipsicontra (ipsilateral/contralateral)')
+    args = parser.parse_args()
+    convert_dataset_to_pandas(args)
