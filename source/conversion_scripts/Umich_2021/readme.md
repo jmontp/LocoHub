@@ -1,6 +1,17 @@
-# Human Lower-Limb Biomechanics and Wearable Sensors Dataset
+# University of Michigan 2021 Dataset Converter
 
-**Gait and Non-Cyclic Activity Biomechanics** — *A comprehensive, open-source dataset of lower limb kinematics and kinetics during continuously varying locomotion* (Reznick et al., 2021). [Publication](https://doi.org/10.1038/s41597-021-01057-9)
+This directory contains conversion scripts for the University of Michigan 2021 human lower-limb biomechanics dataset.
+
+## Dataset Citation
+
+Reznick, E.*, Embry, K.R.*, Neuman, R., Bolívar-Nieto, E., Fey, N.P. & Gregg, R.D. **Lower-limb kinematics and kinetics during continuously varying human locomotion**. Sci Data 8, 282 (2021). https://doi.org/10.1038/s41597-021-01057-9
+
+[Link to publication](https://doi.org/10.1038/s41597-021-01057-9)
+
+## Detailed Documentation
+
+For comprehensive dataset information including structure, variables, and usage examples, see:
+- 📖 [**University of Michigan 2021 Dataset Documentation**](../../../docs/datasets_documentation/dataset_umich_2021.md)
 
 ## 1. Overview & Citation
 - **Description**:  

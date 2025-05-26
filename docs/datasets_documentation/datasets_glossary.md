@@ -24,29 +24,31 @@ This glossary provides a quick reference for all standardized locomotion dataset
 - **Publication**: [Scientific Data 2023](https://doi.org/10.1038/s41597-023-02341-6)
 - **Documentation**: [`dataset_gtech_2023.md`](dataset_gtech_2023.md)
 
-### 3. AddBiomechanics (Various Years)
-- **Focus**: Large-scale aggregated dataset from multiple sources
-- **Subjects**: [To be documented]
-- **Key Activities**: [To be documented]
-- **Unique Features**: B3D file format, nimblephysics processing
-- **Format**: Time series and phase-normalized
-- **Documentation**: [`dataset_addbiomechanics.md`](dataset_addbiomechanics.md) (to be created)
+### 3. AddBiomechanics 
+- **Focus**: OpenSim-processed biomechanics data with full-body kinematics and kinetics
+- **Subjects**: Multiple subjects from various sources
+- **Key Activities**: Walking, running, and various locomotion tasks
+- **Unique Features**: B3D file format, nimblephysics processing, pre-scaled OpenSim models
+- **Format**: Time series and phase-normalized (150 points/cycle)
+- **PI**: Stanford Neuromuscular Biomechanics Lab
+- **Publication**: [bioRxiv 2023](https://doi.org/10.1101/2023.06.15.545116)
+- **Documentation**: [`dataset_addbiomechanics.md`](dataset_addbiomechanics.md)
 
 ## Quick Comparison
 
 | Feature | UMich 2021 | GTech 2023 | AddBiomechanics |
 |---------|------------|------------|-----------------|
-| **Year** | 2021 | 2023 | Various |
-| **Subjects** | 10 | 12 | TBD |
-| **Primary Focus** | Treadmill locomotion | Multi-activity | Aggregated |
+| **Year** | 2021 | 2023 | Ongoing |
+| **Subjects** | 10 | 12 | Multiple |
+| **Primary Focus** | Treadmill locomotion | Multi-activity | Full-body biomechanics |
 | **Sampling Rate** | 100 Hz | 200 Hz | Variable |
-| **Incline Walking** | ✓ (-10° to +10°) | ✓ (5°, 10°) | TBD |
-| **Running** | ✓ (1.8-2.4 m/s) | ✓ | TBD |
-| **Stairs** | ✓ (limited) | ✓ (extensive) | TBD |
-| **Sports Movements** | ✗ | ✓ | TBD |
-| **EMG Data** | ✗ | ✓ (raw) | TBD |
-| **IMU Data** | ✗ | ✓ | TBD |
-| **Force Plates** | ✓ (treadmill) | ✓ (ground+treadmill) | TBD |
+| **Incline Walking** | ✓ (-10° to +10°) | ✓ (5°, 10°) | ✓ |
+| **Running** | ✓ (1.8-2.4 m/s) | ✓ | ✓ |
+| **Stairs** | ✓ (limited) | ✓ (extensive) | ✓ |
+| **Sports Movements** | ✗ | ✓ | ✓ |
+| **EMG Data** | ✗ | ✓ (raw) | ✗ |
+| **IMU Data** | ✗ | ✓ | ✗ |
+| **Force Plates** | ✓ (treadmill) | ✓ (ground+treadmill) | ✓ |
 
 ## Common Variables Across Datasets
 

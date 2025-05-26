@@ -1,6 +1,17 @@
-# A human lower-limb biomechanics and wearable sensors dataset during cyclic and non-cyclic activities
+# Georgia Tech 2023 Dataset Converter
+
+This directory contains conversion scripts for the Georgia Tech 2023 human lower-limb biomechanics dataset.
+
+## Dataset Citation
+
+Camargo, J., Flanagan, W., Csomay-Shanklin, N. et al. **A human lower-limb biomechanics and wearable sensors dataset during cyclic and non-cyclic activities**. Sci Data 10, 933 (2023). https://doi.org/10.1038/s41597-023-02840-6
 
 [Link to publication](https://www.nature.com/articles/s41597-023-02840-6)
+
+## Detailed Documentation
+
+For comprehensive dataset information including structure, variables, and usage examples, see:
+- 📖 [**Georgia Tech 2023 Dataset Documentation**](../../../docs/datasets_documentation/dataset_gtech_2023.md)
 
 
 This folder contains the code to convert the hirearchical formatted data into the tabular representation. It has two flavors: time indexed and phase indexed. Additionally, an additional script is created to convert the global angles from a rotation matrix representation to euler angles. These scripts are explained below. 
