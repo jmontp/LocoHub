@@ -3,24 +3,30 @@
 ## Overview
 **Brief Description**: Comprehensive treadmill-based locomotion dataset including walking at various speeds and inclines, running, and transitions between activities.
 
-**Collection Year**: 2021
+**Collection Year**: 2018-2021
 
-**Institution**: University of Michigan, Department of Mechanical Engineering
+**Institution**: University of Michigan, Department of Robotics, Mechanical Engineering, and Electrical and Computer Engineering
 
-**Principal Investigators**: [To be determined from R01 Dataset README.pdf]
+**Principal Investigators**: Robert D. Gregg IV, Ph.D. (Locomotor Control Systems Laboratory)
 
 ## Citation Information
 
 ### Primary Citation
 ```
-[Authors TBD]. (2021). University of Michigan Treadmill Locomotion Dataset. [Repository TBD]. [DOI/URL TBD]
+Locomotor Control Systems Laboratory. (2021). University of Michigan Treadmill Locomotion Dataset. 
+University of Michigan, Ann Arbor. [Contact lab for access]
 ```
 
 ### Associated Publications
-1. [To be added from R01 Dataset README.pdf]
+1. Gregg, R.D. et al. "The Effect of Walking Incline and Speed on Human Leg Kinematics, Kinetics, and EMG" 
+   IEEE DataPort (2018). https://ieee-dataport.org/open-access/effect-walking-incline-and-speed-human-leg-kinematics-kinetics-and-emg
+2. Related publications available at: https://scholar.google.com/citations?user=hEypYOEAAAAJ&hl=en
 
 ### Acknowledgments
-[To be added from R01 Dataset README.pdf]
+This research was supported by:
+- NIH Director's New Innovator Award (2013) - $2.3 million over 5 years for phase-based control research
+- NIH R01 Grant (2018) - $2.2 million for investigation of agile powered prosthetic leg control
+- NIH R01 Grant (2021) - $1.7 million for design and control of modular powered orthoses
 
 ## Dataset Contents
 
@@ -102,15 +108,20 @@ umich_2021/
 ## Data Collection Methods
 
 ### Motion Capture System
-- **System**: [To be determined]
-- **Marker Set**: [To be determined]
+- **System**: Vicon Motion Capture System
+- **Marker Set**: Modified Helen Hayes marker set
 - **Sampling Rate**: 100 Hz
-- **Camera Count**: [To be determined]
+- **Camera Count**: 10 cameras (when at UT Dallas)
 
 ### Force Plates
-- **Model**: Instrumented treadmill
+- **Model**: Bertec Instrumented Treadmill
 - **Sampling Rate**: 100 Hz (resampled)
 - **Configuration**: Dual-belt treadmill with embedded force plates
+
+### EMG System
+- **Model**: Delsys Trigno EMG System
+- **Muscles Recorded**: Rectus femoris, biceps femoris, tibialis anterior, gastrocnemius
+- **Sampling Rate**: 2000 Hz (downsampled to 100 Hz for analysis)
 
 ### Processing Pipeline
 1. Motion capture with marker-based system
@@ -149,9 +160,9 @@ umich_2021/
 - Turning or cutting maneuvers (treadmill constraint)
 
 ### Data Access Requirements
-- **License**: [To be determined]
-- **Access Process**: Contact dataset maintainers
-- **Usage Restrictions**: [To be determined]
+- **License**: Research use with appropriate citation
+- **Access Process**: Contact Locomotor Control Systems Laboratory (locolab@umich.edu)
+- **Usage Restrictions**: Academic research use only, commercial use requires separate agreement
 
 ## Version History
 | Version | Date | Changes | Notes |
@@ -160,18 +171,30 @@ umich_2021/
 | 2.0 | 2024 | Standardized format | Converted to parquet with aligned conventions |
 
 ## Contact Information
-- **Dataset Curator**: [To be determined]
-- **Technical Support**: [Contact via repository]
-- **Bug Reports**: GitHub issues
+- **Dataset Curator**: Robert D. Gregg IV, Ph.D.
+- **Lab Website**: https://gregg.engin.umich.edu/
+- **Lab Email**: locolab@umich.edu
+- **Technical Support**: Contact via lab email
+- **Bug Reports**: GitHub issues on this repository
 
 ## Additional Resources
+- **Lab Website**: https://locolab.robotics.umich.edu/
+- **Lab GitHub**: https://github.com/locolab (if available)
 - **Documentation**: `umich_2021_mat_structure.md`
 - **Code Examples**: See tutorials folder
 - **Visualization Tools**: `walking_animator.py`
 - **Related Datasets**: Georgia Tech datasets, AddBiomechanics
 
 ## Funding Acknowledgment
-[To be added from R01 Dataset README.pdf]
+This dataset was collected with support from:
+- NIH Director's New Innovator Award (DP2HD080349)
+- NIH R01 Grant for agile powered prosthetic legs (R01HD094772)
+- Burroughs Wellcome Fund Career Award at the Scientific Interface ($500,000)
+
+## Lab Description
+The Locomotor Control Systems Laboratory is a highly interdisciplinary environment dedicated to scientific innovation, 
+clinical translation, and individual career development. The lab develops high-performance control systems for robotic 
+prostheses and orthoses to enable mobility and improve quality of life for persons with disabilities.
 
 ---
 *Last Updated: January 2025*

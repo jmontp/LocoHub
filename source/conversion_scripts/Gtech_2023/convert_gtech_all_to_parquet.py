@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 # This is the base path to the dataset. If you extracted the dataset to the 
 # same folder as this file, you don't need to change this
-base_path = './rawdata'
+base_path = './RawData'
 
 # This is the list of data types that we want to save. The options are:
 # 'Activity_Flag', 'GroundFrame_GRFs', 'Joint_Angle', 'Joint_Moments',

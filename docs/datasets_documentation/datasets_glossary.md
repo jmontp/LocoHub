@@ -10,14 +10,18 @@ This glossary provides a quick reference for all standardized locomotion dataset
 - **Key Activities**: Walking (multiple speeds/inclines), running, sit-to-stand, stairs
 - **Unique Features**: Systematic incline variations (-10° to +10°), walk-to-run transitions
 - **Format**: Time series (100 Hz) and phase-normalized (150 points/cycle)
+- **PI**: Robert D. Gregg IV, Ph.D. (Locomotor Control Systems Laboratory)
+- **Publication**: [IEEE DataPort 2018](https://ieee-dataport.org/open-access/effect-walking-incline-and-speed-human-leg-kinematics-kinetics-and-emg)
 - **Documentation**: [`dataset_umich_2021.md`](dataset_umich_2021.md)
 
 ### 2. Georgia Tech 2023 (GTech 2023)
 - **Focus**: Diverse daily activities and sports movements
 - **Subjects**: 12 healthy adults (AB01-AB13, excluding AB04)
 - **Key Activities**: 20+ tasks including walking, running, jumping, sports movements, functional tasks
-- **Unique Features**: EMG data, IMU sensors, extensive activity variety
+- **Unique Features**: EMG data, IMU sensors, extensive activity variety, non-cyclic tasks
 - **Format**: Time series (200 Hz) and phase-normalized (150 points/cycle)
+- **PI**: Aaron Young, Ph.D. (EPIC Lab - Exoskeleton and Prosthetic Intelligent Controls)
+- **Publication**: [Scientific Data 2023](https://doi.org/10.1038/s41597-023-02341-6)
 - **Documentation**: [`dataset_gtech_2023.md`](dataset_gtech_2023.md)
 
 ### 3. AddBiomechanics (Various Years)

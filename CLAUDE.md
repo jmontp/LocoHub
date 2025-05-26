@@ -161,16 +161,17 @@ Key files to reference:
 - `docs/standard_spec/standard_spec.md` - Overall data format specification
 - `docs/standard_spec/sign_conventions.md` - Biomechanical sign conventions
 - `docs/standard_spec/units_and_conventions.md` - Units and naming conventions
-- `docs/standard_spec/datasets_glossary.md` - Summary of all available datasets
 - `docs/standard_spec/dataset_template.md` - Template for documenting new datasets
-- `docs/standard_spec/dataset_umich_2021.md` - UMich 2021 dataset details
-- `docs/standard_spec/dataset_gtech_2023.md` - GTech 2023 dataset details
+- `docs/datasets_documentation/datasets_glossary.md` - Summary of all available datasets
+- `docs/datasets_documentation/dataset_umich_2021.md` - UMich 2021 dataset details
+- `docs/datasets_documentation/dataset_gtech_2023.md` - GTech 2023 dataset details
 
 ### Dataset Documentation
 When adding new datasets or updating existing ones:
-1. Use `dataset_template.md` to create comprehensive documentation
-2. Update `datasets_glossary.md` with a summary entry
-3. Keep all dataset documentation files synchronized with actual data
+1. Use `docs/standard_spec/dataset_template.md` to create comprehensive documentation
+2. Update `docs/datasets_documentation/datasets_glossary.md` with a summary entry
+3. Keep all dataset documentation files in the `docs/datasets_documentation/` folder
+4. Ensure column names match the actual data structure in parquet files
 
 ## Project Improvement Tracking
 
