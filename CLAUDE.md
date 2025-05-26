@@ -59,6 +59,32 @@ matlab -batch "cd('source/conversion_scripts/Umich_2021'); convert_umich_phase_t
 # Output: converted_datasets/umich_2021_phase.parquet
 ```
 
+### Analysis Libraries
+
+#### Python Library
+```python
+# Import the library
+from source.lib.python.locomotion_analysis import LocomotionData
+
+# Load and analyze data
+loco = LocomotionData('path/to/data.parquet')
+data_3d, features = loco.get_cycles('SUB01', 'normal_walk')
+valid_mask = loco.validate_cycles('SUB01', 'normal_walk')
+loco.plot_phase_patterns('SUB01', 'normal_walk', ['knee_flexion_angle_right_rad'])
+```
+
+#### MATLAB Library
+```matlab
+% Add library to path
+addpath('source/lib/matlab');
+
+% Load and analyze data
+loco = LocomotionData('path/to/data.parquet');
+[data3D, features] = loco.getCycles('SUB01', 'normal_walk');
+validMask = loco.validateCycles('SUB01', 'normal_walk');
+loco.plotPhasePatterns('SUB01', 'normal_walk', {'knee_flexion_angle_right_rad'});
+```
+
 ### Visualization Tools
 
 ```bash

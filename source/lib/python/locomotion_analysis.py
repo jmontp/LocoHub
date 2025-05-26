@@ -28,6 +28,7 @@ import pandas as pd
 from pathlib import Path
 from typing import List, Tuple, Dict, Optional, Union
 import warnings
+import matplotlib.pyplot as plt
 
 
 class LocomotionData:
@@ -50,28 +51,37 @@ class LocomotionData:
     def __init__(self, data_path: Union[str, Path], 
                  subject_col: str = 'subject',
                  task_col: str = 'task',
-                 phase_col: str = 'phase'):
+                 phase_col: str = 'phase',
+                 file_type: str = 'auto'):
         """
         Initialize with phase-indexed locomotion data.
         
         Parameters
         ----------
         data_path : str or Path
-            Path to parquet file with phase-indexed data
+            Path to parquet or CSV file with phase-indexed data
         subject_col : str
             Column name for subject IDs
         task_col : str
             Column name for task names
         phase_col : str
             Column name for phase values
+        file_type : str
+            'parquet', 'csv', or 'auto' to detect from extension
         """
         self.data_path = Path(data_path)
         self.subject_col = subject_col
         self.task_col = task_col
         self.phase_col = phase_col
         
-        # Load data
-        self.df = pd.read_parquet(self.data_path)
+        # Load data based on file type
+        if file_type == 'auto':
+            file_type = 'parquet' if self.data_path.suffix == '.parquet' else 'csv'
+        
+        if file_type == 'parquet':
+            self.df = pd.read_parquet(self.data_path)
+        else:
+            self.df = pd.read_csv(self.data_path)
         
         # Cache for 3D arrays
         self._cache = {}
@@ -343,6 +353,293 @@ class LocomotionData:
         summary.index.name = 'feature'
         
         return summary
+    
+    def merge_with_task_data(self, task_data: pd.DataFrame, 
+                           join_keys: List[str] = None,
+                           how: str = 'outer') -> pd.DataFrame:
+        """
+        Merge locomotion data with task information.
+        
+        Parameters
+        ----------
+        task_data : DataFrame
+            DataFrame with task information
+        join_keys : list of str
+            Keys to join on. If None, uses [subject_col, task_col]
+        how : str
+            Type of join ('inner', 'outer', 'left', 'right')
+            
+        Returns
+        -------
+        merged_df : DataFrame
+            Merged data
+        """
+        if join_keys is None:
+            join_keys = [self.subject_col, self.task_col]
+        
+        # Ensure join keys exist in both dataframes
+        missing_keys = set(join_keys) - set(self.df.columns)
+        if missing_keys:
+            raise ValueError(f"Join keys {missing_keys} not found in locomotion data")
+        
+        missing_keys = set(join_keys) - set(task_data.columns)
+        if missing_keys:
+            raise ValueError(f"Join keys {missing_keys} not found in task data")
+        
+        merged_df = pd.merge(self.df, task_data, on=join_keys, how=how)
+        return merged_df
+    
+    def calculate_rom(self, subject: str, task: str, 
+                     features: Optional[List[str]] = None,
+                     by_cycle: bool = True) -> Dict[str, Union[float, np.ndarray]]:
+        """
+        Calculate Range of Motion (ROM) for features.
+        
+        Parameters
+        ----------
+        subject : str
+            Subject ID
+        task : str
+            Task name
+        features : list of str, optional
+            Features to calculate ROM for
+        by_cycle : bool
+            If True, calculate ROM per cycle. If False, overall ROM.
+            
+        Returns
+        -------
+        rom_data : dict
+            ROM values for each feature
+        """
+        data_3d, feature_names = self.get_cycles(subject, task, features)
+        
+        if data_3d is None:
+            return {}
+        
+        rom_data = {}
+        
+        for i, feature in enumerate(feature_names):
+            feat_data = data_3d[:, :, i]  # (n_cycles, 150)
+            
+            if by_cycle:
+                # ROM per cycle
+                rom_data[feature] = np.max(feat_data, axis=1) - np.min(feat_data, axis=1)
+            else:
+                # Overall ROM
+                rom_data[feature] = np.max(feat_data) - np.min(feat_data)
+        
+        return rom_data
+    
+    def plot_time_series(self, subject: str, task: str, features: List[str],
+                        time_col: str = 'time_s', save_path: Optional[str] = None):
+        """
+        Plot time series data for specific features.
+        
+        Parameters
+        ----------
+        subject : str
+            Subject ID
+        task : str
+            Task name
+        features : list of str
+            Features to plot
+        time_col : str
+            Column name for time data
+        save_path : str, optional
+            Path to save plot
+        """
+        # Filter data
+        mask = (self.df[self.subject_col] == subject) & (self.df[self.task_col] == task)
+        subset = self.df[mask]
+        
+        if len(subset) == 0:
+            print(f"No data found for {subject} - {task}")
+            return
+        
+        # Create subplots
+        n_features = len(features)
+        fig, axes = plt.subplots(n_features, 1, figsize=(12, 3*n_features), sharex=True)
+        
+        if n_features == 1:
+            axes = [axes]
+        
+        for i, feature in enumerate(features):
+            if feature in subset.columns and time_col in subset.columns:
+                axes[i].plot(subset[time_col], subset[feature], 'b-', linewidth=1)
+                axes[i].set_ylabel(feature.replace('_', ' '))
+                axes[i].grid(True, alpha=0.3)
+            else:
+                axes[i].text(0.5, 0.5, f'Feature {feature} not found', 
+                           ha='center', va='center', transform=axes[i].transAxes)
+        
+        axes[-1].set_xlabel('Time (s)')
+        plt.title(f'{subject} - {task}')
+        plt.tight_layout()
+        
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"Plot saved to {save_path}")
+        else:
+            plt.show()
+    
+    def plot_phase_patterns(self, subject: str, task: str, features: List[str],
+                           plot_type: str = 'both', save_path: Optional[str] = None):
+        """
+        Plot phase-normalized patterns.
+        
+        Parameters
+        ----------
+        subject : str
+            Subject ID
+        task : str  
+            Task name
+        features : list of str
+            Features to plot
+        plot_type : str
+            'mean', 'spaghetti', or 'both'
+        save_path : str, optional
+            Path to save plot
+        """
+        data_3d, feature_names = self.get_cycles(subject, task, features)
+        
+        if data_3d is None:
+            print(f"No data found for {subject} - {task}")
+            return
+        
+        # Get valid cycles
+        valid_mask = self.validate_cycles(subject, task, features)
+        
+        # Create subplots
+        n_features = len(feature_names)
+        n_cols = min(3, n_features)
+        n_rows = int(np.ceil(n_features / n_cols))
+        
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(5*n_cols, 4*n_rows))
+        if n_features == 1:
+            axes = [axes]
+        elif n_rows == 1:
+            axes = axes.reshape(1, -1)
+        
+        phase_x = np.linspace(0, 100, self.POINTS_PER_CYCLE)
+        
+        for i, feature in enumerate(feature_names):
+            row = i // n_cols
+            col = i % n_cols
+            ax = axes[row, col] if n_rows > 1 else axes[col]
+            
+            feat_data = data_3d[:, :, i]
+            valid_data = feat_data[valid_mask, :]
+            invalid_data = feat_data[~valid_mask, :]
+            
+            # Plot individual cycles
+            if plot_type in ['spaghetti', 'both']:
+                # Valid cycles in gray
+                for cycle in valid_data:
+                    ax.plot(phase_x, cycle, 'gray', alpha=0.3, linewidth=0.8)
+                # Invalid cycles in red
+                for cycle in invalid_data:
+                    ax.plot(phase_x, cycle, 'red', alpha=0.5, linewidth=0.8)
+            
+            # Plot mean pattern
+            if plot_type in ['mean', 'both'] and len(valid_data) > 0:
+                mean_curve = np.mean(valid_data, axis=0)
+                std_curve = np.std(valid_data, axis=0)
+                
+                if plot_type == 'mean':
+                    ax.fill_between(phase_x, mean_curve - std_curve, 
+                                   mean_curve + std_curve, alpha=0.3, color='blue')
+                
+                ax.plot(phase_x, mean_curve, 'blue', linewidth=2, label='Mean')
+            
+            ax.set_xlabel('Gait Cycle (%)')
+            ax.set_ylabel(feature.replace('_', ' '))
+            ax.set_title(feature, fontsize=10)
+            ax.grid(True, alpha=0.3)
+            ax.set_xlim([0, 100])
+        
+        # Hide empty subplots
+        for i in range(n_features, n_rows * n_cols):
+            row = i // n_cols
+            col = i % n_cols
+            if n_rows > 1:
+                axes[row, col].set_visible(False)
+            else:
+                axes[col].set_visible(False)
+        
+        plt.suptitle(f'{subject} - {task} (Valid: {np.sum(valid_mask)}/{len(valid_mask)} cycles)')
+        plt.tight_layout()
+        
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"Plot saved to {save_path}")
+        else:
+            plt.show()
+    
+    def plot_task_comparison(self, subject: str, tasks: List[str], features: List[str],
+                           save_path: Optional[str] = None):
+        """
+        Plot comparison of mean patterns across tasks.
+        
+        Parameters
+        ----------
+        subject : str
+            Subject ID
+        tasks : list of str
+            Tasks to compare
+        features : list of str
+            Features to plot
+        save_path : str, optional
+            Path to save plot
+        """
+        # Create subplots
+        n_features = len(features)
+        n_cols = min(3, n_features)
+        n_rows = int(np.ceil(n_features / n_cols))
+        
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(5*n_cols, 4*n_rows))
+        if n_features == 1:
+            axes = [axes]
+        elif n_rows == 1:
+            axes = axes.reshape(1, -1)
+        
+        phase_x = np.linspace(0, 100, self.POINTS_PER_CYCLE)
+        colors = plt.cm.tab10(np.linspace(0, 1, len(tasks)))
+        
+        for i, feature in enumerate(features):
+            row = i // n_cols
+            col = i % n_cols
+            ax = axes[row, col] if n_rows > 1 else axes[col]
+            
+            for j, task in enumerate(tasks):
+                mean_patterns = self.get_mean_patterns(subject, task, [feature])
+                if feature in mean_patterns:
+                    ax.plot(phase_x, mean_patterns[feature], 
+                           color=colors[j], linewidth=2, label=task)
+            
+            ax.set_xlabel('Gait Cycle (%)')
+            ax.set_ylabel(feature.replace('_', ' '))
+            ax.set_title(feature, fontsize=10)
+            ax.grid(True, alpha=0.3)
+            ax.set_xlim([0, 100])
+            ax.legend()
+        
+        # Hide empty subplots
+        for i in range(n_features, n_rows * n_cols):
+            row = i // n_cols
+            col = i % n_cols
+            if n_rows > 1:
+                axes[row, col].set_visible(False)
+            else:
+                axes[col].set_visible(False)
+        
+        plt.suptitle(f'{subject} - Task Comparison')
+        plt.tight_layout()
+        
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"Plot saved to {save_path}")
+        else:
+            plt.show()
 
 
 def efficient_reshape_3d(df: pd.DataFrame, subject: str, task: str, features: List[str],

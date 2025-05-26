@@ -370,6 +370,302 @@ classdef LocomotionData < handle
                            'VariableNames', {'Mean', 'Std', 'Min', 'Max', ...
                                            'Median', 'Q25', 'Q75'});
         end
+        
+        function mergedData = mergeWithTaskData(obj, taskData, varargin)
+            % Merge locomotion data with task information
+            %
+            % Inputs:
+            %   taskData - Table with task information
+            %   Optional name-value pairs:
+            %     'JoinKeys' - Cell array of keys to join on
+            %     'Type' - 'inner', 'outer', 'left', 'right'
+            %
+            % Returns:
+            %   mergedData - Merged table
+            
+            p = inputParser;
+            addParameter(p, 'JoinKeys', {obj.subjectCol, obj.taskCol}, @iscell);
+            addParameter(p, 'Type', 'outer', @ischar);
+            parse(p, varargin{:});
+            
+            joinKeys = p.Results.JoinKeys;
+            joinType = p.Results.Type;
+            
+            % Check if join keys exist
+            for i = 1:length(joinKeys)
+                if ~any(strcmp(joinKeys{i}, obj.data.Properties.VariableNames))
+                    error('Join key %s not found in locomotion data', joinKeys{i});
+                end
+                if ~any(strcmp(joinKeys{i}, taskData.Properties.VariableNames))
+                    error('Join key %s not found in task data', joinKeys{i});
+                end
+            end
+            
+            % Perform join based on type
+            switch lower(joinType)
+                case 'inner'
+                    mergedData = innerjoin(obj.data, taskData, 'Keys', joinKeys);
+                case 'outer'
+                    mergedData = outerjoin(obj.data, taskData, 'Keys', joinKeys);
+                case 'left'
+                    mergedData = leftjoin(obj.data, taskData, 'Keys', joinKeys);
+                case 'right'
+                    mergedData = leftjoin(taskData, obj.data, 'Keys', joinKeys);
+                otherwise
+                    error('Invalid join type: %s', joinType);
+            end
+        end
+        
+        function romData = calculateROM(obj, subject, task, features, byCycle)
+            % Calculate Range of Motion (ROM) for features
+            %
+            % Inputs:
+            %   subject - Subject ID
+            %   task - Task name
+            %   features - Cell array of feature names (optional)
+            %   byCycle - Logical, if true calculate ROM per cycle (default: true)
+            %
+            % Returns:
+            %   romData - Struct with ROM data for each feature
+            
+            if nargin < 4
+                features = obj.features;
+            end
+            if nargin < 5
+                byCycle = true;
+            end
+            
+            [data3D, featureNames] = obj.getCycles(subject, task, features);
+            
+            if isempty(data3D)
+                romData = struct();
+                return;
+            end
+            
+            romData = struct();
+            
+            for i = 1:length(featureNames)
+                featData = data3D(:, :, i); % (nCycles, 150)
+                fieldName = matlab.lang.makeValidName(featureNames{i});
+                
+                if byCycle
+                    % ROM per cycle
+                    romData.(fieldName) = max(featData, [], 2) - min(featData, [], 2);
+                else
+                    % Overall ROM
+                    romData.(fieldName) = max(featData(:)) - min(featData(:));
+                end
+            end
+        end
+        
+        function plotTimeSeries(obj, subject, task, features, varargin)
+            % Plot time series data for specific features
+            %
+            % Inputs:
+            %   subject - Subject ID
+            %   task - Task name
+            %   features - Cell array of feature names
+            %   Optional name-value pairs:
+            %     'TimeCol' - Column name for time data (default: 'time_s')
+            %     'SavePath' - Path to save plot
+            
+            p = inputParser;
+            addParameter(p, 'TimeCol', 'time_s', @ischar);
+            addParameter(p, 'SavePath', '', @ischar);
+            parse(p, varargin{:});
+            
+            timeCol = p.Results.TimeCol;
+            savePath = p.Results.SavePath;
+            
+            % Filter data
+            mask = strcmp(obj.data.(obj.subjectCol), subject) & ...
+                   strcmp(obj.data.(obj.taskCol), task);
+            subset = obj.data(mask, :);
+            
+            if height(subset) == 0
+                fprintf('No data found for %s - %s\n', subject, task);
+                return;
+            end
+            
+            % Create subplots
+            nFeatures = length(features);
+            figure;
+            
+            for i = 1:nFeatures
+                subplot(nFeatures, 1, i);
+                
+                if any(strcmp(features{i}, subset.Properties.VariableNames)) && ...
+                   any(strcmp(timeCol, subset.Properties.VariableNames))
+                    plot(subset.(timeCol), subset.(features{i}), 'b-', 'LineWidth', 1);
+                    ylabel(strrep(features{i}, '_', ' '));
+                    grid on;
+                else
+                    text(0.5, 0.5, sprintf('Feature %s not found', features{i}), ...
+                         'HorizontalAlignment', 'center', ...
+                         'VerticalAlignment', 'middle');
+                end
+                
+                if i == nFeatures
+                    xlabel('Time (s)');
+                end
+            end
+            
+            sgtitle(sprintf('%s - %s', subject, task));
+            
+            if ~isempty(savePath)
+                saveas(gcf, savePath);
+                fprintf('Plot saved to %s\n', savePath);
+            end
+        end
+        
+        function plotPhasePatterns(obj, subject, task, features, varargin)
+            % Plot phase-normalized patterns
+            %
+            % Inputs:
+            %   subject - Subject ID
+            %   task - Task name
+            %   features - Cell array of feature names
+            %   Optional name-value pairs:
+            %     'PlotType' - 'mean', 'spaghetti', or 'both' (default: 'both')
+            %     'SavePath' - Path to save plot
+            
+            p = inputParser;
+            addParameter(p, 'PlotType', 'both', @ischar);
+            addParameter(p, 'SavePath', '', @ischar);
+            parse(p, varargin{:});
+            
+            plotType = p.Results.PlotType;
+            savePath = p.Results.SavePath;
+            
+            [data3D, featureNames] = obj.getCycles(subject, task, features);
+            
+            if isempty(data3D)
+                fprintf('No data found for %s - %s\n', subject, task);
+                return;
+            end
+            
+            % Get valid cycles
+            validMask = obj.validateCycles(subject, task, features);
+            
+            % Create subplots
+            nFeatures = length(featureNames);
+            nCols = min(3, nFeatures);
+            nRows = ceil(nFeatures / nCols);
+            
+            figure('Position', [100, 100, 400*nCols, 300*nRows]);
+            phaseX = linspace(0, 100, obj.POINTS_PER_CYCLE);
+            
+            for i = 1:nFeatures
+                subplot(nRows, nCols, i);
+                
+                featData = data3D(:, :, i);
+                validData = featData(validMask, :);
+                invalidData = featData(~validMask, :);
+                
+                hold on;
+                
+                % Plot individual cycles
+                if strcmp(plotType, 'spaghetti') || strcmp(plotType, 'both')
+                    % Valid cycles in gray
+                    for j = 1:size(validData, 1)
+                        plot(phaseX, validData(j, :), 'Color', [0.7 0.7 0.7], ...
+                             'LineWidth', 0.8);
+                    end
+                    % Invalid cycles in red
+                    for j = 1:size(invalidData, 1)
+                        plot(phaseX, invalidData(j, :), 'r-', 'LineWidth', 0.8);
+                    end
+                end
+                
+                % Plot mean pattern
+                if (strcmp(plotType, 'mean') || strcmp(plotType, 'both')) && ...
+                   ~isempty(validData)
+                    meanCurve = mean(validData, 1);
+                    stdCurve = std(validData, 0, 1);
+                    
+                    if strcmp(plotType, 'mean')
+                        % Fill std region
+                        fill([phaseX, fliplr(phaseX)], ...
+                             [meanCurve + stdCurve, fliplr(meanCurve - stdCurve)], ...
+                             'b', 'FaceAlpha', 0.3, 'EdgeColor', 'none');
+                    end
+                    
+                    plot(phaseX, meanCurve, 'b-', 'LineWidth', 2);
+                end
+                
+                xlabel('Gait Cycle (%)');
+                ylabel(strrep(featureNames{i}, '_', ' '));
+                title(featureNames{i}, 'Interpreter', 'none');
+                xlim([0 100]);
+                grid on;
+                hold off;
+            end
+            
+            sgtitle(sprintf('%s - %s (Valid: %d/%d cycles)', ...
+                           subject, task, sum(validMask), length(validMask)));
+            
+            if ~isempty(savePath)
+                saveas(gcf, savePath);
+                fprintf('Plot saved to %s\n', savePath);
+            end
+        end
+        
+        function plotTaskComparison(obj, subject, tasks, features, varargin)
+            % Plot comparison of mean patterns across tasks
+            %
+            % Inputs:
+            %   subject - Subject ID
+            %   tasks - Cell array of task names
+            %   features - Cell array of feature names
+            %   Optional name-value pairs:
+            %     'SavePath' - Path to save plot
+            
+            p = inputParser;
+            addParameter(p, 'SavePath', '', @ischar);
+            parse(p, varargin{:});
+            
+            savePath = p.Results.SavePath;
+            
+            % Create subplots
+            nFeatures = length(features);
+            nCols = min(3, nFeatures);
+            nRows = ceil(nFeatures / nCols);
+            
+            figure('Position', [100, 100, 400*nCols, 300*nRows]);
+            phaseX = linspace(0, 100, obj.POINTS_PER_CYCLE);
+            colors = lines(length(tasks));
+            
+            for i = 1:nFeatures
+                subplot(nRows, nCols, i);
+                hold on;
+                
+                for j = 1:length(tasks)
+                    meanPatterns = obj.getMeanPatterns(subject, tasks{j}, features(i));
+                    fieldName = matlab.lang.makeValidName(features{i});
+                    
+                    if isfield(meanPatterns, fieldName)
+                        plot(phaseX, meanPatterns.(fieldName), ...
+                             'Color', colors(j, :), 'LineWidth', 2, ...
+                             'DisplayName', tasks{j});
+                    end
+                end
+                
+                xlabel('Gait Cycle (%)');
+                ylabel(strrep(features{i}, '_', ' '));
+                title(features{i}, 'Interpreter', 'none');
+                xlim([0 100]);
+                grid on;
+                legend('show');
+                hold off;
+            end
+            
+            sgtitle(sprintf('%s - Task Comparison', subject));
+            
+            if ~isempty(savePath)
+                saveas(gcf, savePath);
+                fprintf('Plot saved to %s\n', savePath);
+            end
+        end
     end
     
     methods (Access = private)
