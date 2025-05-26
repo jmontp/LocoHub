@@ -15,10 +15,13 @@ pip install -r requirements.txt
 
 ### Running Data Converters
 
+All conversion scripts output to the `converted_datasets/` folder in the project root.
+
 #### AddBiomechanics Dataset
 ```bash
 # Convert B3D files to standardized parquet format
 python source/conversion_scripts/AddBiomechanics/convert_addbiomechanics_to_parquet.py
+# Output: converted_datasets/<dataset_name>.parquet
 
 # Add phase information to existing parquet files
 python source/conversion_scripts/AddBiomechanics/add_phase_info.py
@@ -29,18 +32,31 @@ python source/conversion_scripts/AddBiomechanics/add_task_info.py
 
 #### Georgia Tech 2023 Dataset
 ```bash
-# Convert all Gtech data to parquet (configure base_path in script first)
+# Convert all subjects (configure base_path in script first)
 python source/conversion_scripts/Gtech_2023/convert_gtech_all_to_parquet.py
+# Output: converted_datasets/gtech_2023_time.parquet
 
-# Time-based conversion
-python source/conversion_scripts/Gtech_2023/convert_gtech_time_to_parquet.py
+# Convert individual subject
+python source/conversion_scripts/Gtech_2023/convert_gtech_all_to_parquet.py AB01
+# Output: converted_datasets/gtech_2023_time_AB01.parquet
+
+# Combine individual subjects efficiently
+python source/conversion_scripts/Gtech_2023/combine_subjects_efficient.py
+# Output: converted_datasets/gtech_2023_time.parquet
+
+# Phase-based conversion (MATLAB)
+matlab -batch "cd('source/conversion_scripts/Gtech_2023'); convert_gtech_phase_to_parquet"
+# Output: converted_datasets/gtech_2023_phase.parquet
 ```
 
 #### UMich 2021 Dataset
 ```bash
 # Run MATLAB scripts for conversion
-matlab -batch "run('source/conversion_scripts/Umich_2021/convert_umich_time_to_parquet.m')"
-matlab -batch "run('source/conversion_scripts/Umich_2021/convert_umich_phase_to_parquet.m')"
+matlab -batch "cd('source/conversion_scripts/Umich_2021'); convert_umich_time_to_parquet"
+# Output: converted_datasets/umich_2021_time.parquet
+
+matlab -batch "cd('source/conversion_scripts/Umich_2021'); convert_umich_phase_to_parquet"
+# Output: converted_datasets/umich_2021_phase.parquet
 ```
 
 ### Visualization Tools

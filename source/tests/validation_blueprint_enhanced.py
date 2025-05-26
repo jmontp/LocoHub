@@ -144,7 +144,11 @@ class BiomechanicsValidator:
     
     def _in_stance(self):
         """Boolean mask for stance phase."""
-        return self.df['vertical_grf_N'] > 0.05 * self._get_BW()
+        if 'vertical_grf_N' in self.df.columns:
+            return self.df['vertical_grf_N'] > 0.05 * self._get_BW()
+        else:
+            # If no GRF data, assume all points are in stance
+            return pd.Series([True] * len(self.df), index=self.df.index)
     
     def _add_error(self, mask, error_code: int, details: str = ""):
         """Add error code to affected rows."""
@@ -266,8 +270,12 @@ class BiomechanicsValidator:
     def layer4(self):
         """Subject-level heuristics."""
         # Quiet stance check
-        stance_mask = (self.df['vertical_grf_N'] > 0.9 * self._get_BW()) & \
-                      (self.df.get('knee_flexion_velocity_rad_s', 0).abs() < 0.1)
+        if 'vertical_grf_N' in self.df.columns:
+            stance_mask = (self.df['vertical_grf_N'] > 0.9 * self._get_BW()) & \
+                          (self.df.get('knee_flexion_velocity_rad_s', 0).abs() < 0.1)
+        else:
+            # Skip this check if no GRF data
+            return False
         
         for joint in ['hip_flexion_angle_rad', 'knee_flexion_angle_rad', 'ankle_flexion_angle_rad']:
             if joint in self.df.columns and stance_mask.any():
@@ -379,3 +387,44 @@ if __name__ == '__main__':
     export_path = input("\nEnter filename to export report (or press Enter to skip): ").strip()
     if export_path:
         validator.export_validation_report(export_path)
+
+
+def validate_phase_indexed_df(df, mode='comprehensive', subject_col='subject', task_col='task'):
+    """
+    Validate phase-indexed dataframe.
+    
+    Args:
+        df: Phase-indexed dataframe
+        mode: 'quick' or 'comprehensive'
+        subject_col: Name of subject column
+        task_col: Name of task column
+        
+    Returns:
+        tuple: (validated_df, failure_summary)
+    """
+    # Prepare dataframe for validation
+    df_validate = df.copy()
+    
+    # Rename columns to match validator expectations
+    if subject_col != 'subject_id':
+        df_validate['subject_id'] = df_validate[subject_col]
+    if task_col != 'task_name':
+        df_validate['task_name'] = df_validate[task_col]
+        
+    # Add task_id if missing
+    if 'task_id' not in df_validate.columns:
+        df_validate['task_id'] = df_validate['task_name']
+    
+    # Add time_s if missing (required by validator)
+    if 'time_s' not in df_validate.columns:
+        # Create synthetic time based on phase
+        df_validate['time_s'] = df_validate.index * 0.01  # Dummy time
+    
+    # Run validation
+    validator = BiomechanicsValidator(df_validate, mode=mode)
+    validated_df = validator.validate()
+    
+    # Get failure summary
+    failure_summary = validator.get_failure_report()
+    
+    return validated_df, failure_summary

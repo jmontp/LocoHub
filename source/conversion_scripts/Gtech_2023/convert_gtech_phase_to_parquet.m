@@ -8,7 +8,7 @@ close all;
 num_points_per_step = 150;
 naming_convention = 'lr'; % Options: 'lr', 'ipsicontra'
 data_dir_root = '.'; % Assumes RawData and Segmentation are subdirs of CWD
-output_dir = 'ParquetData';
+output_dir = fullfile('..', '..', '..', 'converted_datasets'); % Output to project root
 critical_activities = {'stairs', 'incline_walk', 'normal_walk', 'sit_to_stand'}; % Define critical tasks
 
 % Initialize a single table to hold all processed data

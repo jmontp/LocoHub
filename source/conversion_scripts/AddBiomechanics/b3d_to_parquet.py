@@ -47,7 +47,8 @@ def osim_rotate_matrix(x, y, z):
 #### Main Execution ###########################################################
 
 base_dir = '/datasets/AddBiomechanics/raw_data/'
-output_dir='/datasets/AddBiomechanics/processed_data/'
+output_dir = os.path.join('..', '..', '..', 'converted_datasets')
+os.makedirs(output_dir, exist_ok=True)
 chunk_size=100000
 # Process each dataset separately
 def b3d_to_parquet(dataset):

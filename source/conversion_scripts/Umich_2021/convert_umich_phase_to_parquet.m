@@ -144,7 +144,10 @@ for subject_idx = 1:length(subjects)
 end
 
 % Save the data to a parquet file
-parquetwrite('umich_2021_phase_monolithic.parquet', total_data);
+% Write to converted_datasets folder in project root
+output_path = fullfile('..', '..', '..', 'converted_datasets', 'umich_2021_phase.parquet');
+parquetwrite(output_path, total_data);
+fprintf('Saved phase-indexed data to: %s\n', output_path);
 
 
 

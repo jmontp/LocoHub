@@ -356,8 +356,12 @@ def convert_dataset_to_pandas():
     else:
         output_filename = 'gtech_2023_time.parquet'
     
-    df_total.to_parquet(output_filename)
-    print(f'Done - saved to {output_filename}')
+    # Save to converted_datasets folder in project root
+    output_path = os.path.join('..', '..', '..', 'converted_datasets', output_filename)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    
+    df_total.to_parquet(output_path)
+    print(f'Done - saved to {output_path}')
     print(f'Memory usage: {df_total.memory_usage(deep=True).sum() / 1024**2:.1f} MB')
         
 if __name__ == '__main__':

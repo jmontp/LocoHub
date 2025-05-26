@@ -12,15 +12,19 @@ import os
 import gc
 
 def combine_parquet_files_efficient():
-    # Find all individual subject parquet files
-    subject_files = sorted(glob.glob('gtech_2023_time_AB*.parquet'))
+    # Output directory
+    output_dir = os.path.join('..', '..', '..', 'converted_datasets')
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Find all individual subject parquet files in converted_datasets
+    subject_files = sorted(glob.glob(os.path.join(output_dir, 'gtech_2023_time_AB*.parquet')))
     print(f"Found {len(subject_files)} subject files to combine")
     
     if not subject_files:
         print("No subject files found!")
         return
     
-    output_file = 'gtech_2023_time.parquet'
+    output_file = os.path.join(output_dir, 'gtech_2023_time.parquet')
     
     # Initialize the parquet writer
     writer = None
