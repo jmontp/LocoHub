@@ -172,16 +172,12 @@ convert_umich_phase_to_parquet
 
 ## 📈 Visualization Examples
 
-<div align="center">
-<img src="source/conversion_scripts/AddBiomechanics/walking_demo.gif" alt="Walking Animation" width="400"/>
-</div>
-
 The framework includes comprehensive visualization tools:
 
 - **Time Series Plots**: Track biomechanical variables over time
 - **Phase Patterns**: Compare gait cycles across conditions
 - **Task Comparisons**: Analyze differences between activities
-- **3D Animations**: Visualize full-body motion
+- **Validation Plots**: Identify invalid cycles and outliers
 
 ## 📚 Documentation
 
