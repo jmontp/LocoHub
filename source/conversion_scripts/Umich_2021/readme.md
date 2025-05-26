@@ -13,44 +13,65 @@ Reznick, E.*, Embry, K.R.*, Neuman, R., Bolívar-Nieto, E., Fey, N.P. & Gregg, R
 For comprehensive dataset information including structure, variables, and usage examples, see:
 - 📖 [**University of Michigan 2021 Dataset Documentation**](../../../docs/datasets_documentation/dataset_umich_2021.md)
 
-## 1. Overview & Citation
-- **Description**:  
-  Data from ten able-bodied participants performing:  
-  - Level, incline (5°, 10°) and decline (−5°, −10°) walking at 0.8, 1.0, 1.2 m/s  
-  - Running at 1.8, 2.0, 2.2, 2.4 m/s  
-  - Constant acceleration/deceleration walking and running (±0.2, ±0.5 m/s²)  
-  - Walk–run and run–walk transitions  
-  - Sit-to-stand and stand-to-sit  
-  - Stair ascent/descent at 20°, 25°, 30°, 35°  
-  Collected with Vicon motion capture and Bertec instrumented treadmill; includes both time-continuous and stride-normalized (phase) representations :contentReference[oaicite:0]{index=0}:contentReference[oaicite:1]{index=1}  
-- **Citation**:  
-  Reznick, E.*, Embry, K.*, Neuman, R., Bolívar, E., Fey, N., & Gregg, R. (2021).  
-  *Human lower-limb kinematics and kinetics during continuously varying locomotion*.  
-  Scientific Data, 8, 112. https://doi.org/10.1038/s41597-021-01057-9
+## Downloading the Data
 
-## 2. Download & Setup
-1. **Download**:  
-   [Figshare Collection (3.47 GB)](https://springernature.figshare.com/collections/_/5175254)  
-   Detailed metadata: [Figshare download](https://springernature.figshare.com/ndownloader/files/28998039)  
-2. **Directory Structure**:
+1. Visit the Scientific Data publication: https://doi.org/10.1038/s41597-021-01057-9
+2. Access the Figshare repository: https://springernature.figshare.com/collections/_/5175254
+3. Download the following MATLAB files:
+   - **Streaming.mat** (2.38 GB) - Time-series data
+   - **Normalized.mat** (1.09 GB) - Phase-normalized data
+4. Place the downloaded files in this directory
+
+## Expected File Structure
+
+Before running the conversion scripts, ensure your files are organized as follows:
+
+```
+Umich_2021/
+├── Streaming.mat                    # Time-series data (download from Figshare)
+├── Normalized.mat                   # Phase-normalized data (download from Figshare)
+├── convert_umich_time_to_parquet.m  # Time-indexed converter
+├── convert_umich_phase_to_parquet.m # Phase-indexed converter
+└── readme.md                        # This file
 ```
 
-data/
-├── metadata\_subject.parquet
-├── metadata\_task.parquet
-├── time/
-│   └── \*.parquet
-└── phase/
-└── \*.parquet
+## Entry Points for Conversion
 
-````
-3. **Environment**:
-```bash
-pip install pandas pyarrow
+### 1. Time-Indexed Dataset Generation
+
+```matlab
+% In MATLAB, navigate to this directory and run:
+convert_umich_time_to_parquet
+
+% This will create:
+% - converted_datasets/umich_2021_time.parquet
+% - converted_datasets/metadata_subject.parquet
+% - converted_datasets/metadata_task_time.parquet
 ```
 
-4. **Configuration**:
-   Edit the top of each conversion script (or pass `--data-dir data/`) so it points to your local `data/` folder.
+### 2. Phase-Indexed Dataset Generation
+
+```matlab
+% In MATLAB, navigate to this directory and run:
+convert_umich_phase_to_parquet
+
+% This will create:
+% - converted_datasets/umich_2021_phase.parquet
+% - converted_datasets/metadata_task_phase.parquet
+```
+
+### 3. Running Both Conversions
+
+For convenience, you can run both conversions sequentially:
+
+```matlab
+% In MATLAB:
+cd('source/conversion_scripts/Umich_2021')
+convert_umich_time_to_parquet
+convert_umich_phase_to_parquet
+```
+
+## Dataset Overview
 
 ## 3. Task Descriptions & Kinetics Availability
 

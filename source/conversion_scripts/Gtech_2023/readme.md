@@ -13,13 +13,77 @@ Camargo, J., Flanagan, W., Csomay-Shanklin, N. et al. **A human lower-limb biome
 For comprehensive dataset information including structure, variables, and usage examples, see:
 - 📖 [**Georgia Tech 2023 Dataset Documentation**](../../../docs/datasets_documentation/dataset_gtech_2023.md)
 
+## Downloading the Data
 
-This folder contains the code to convert the hirearchical formatted data into the tabular representation. It has two flavors: time indexed and phase indexed. Additionally, an additional script is created to convert the global angles from a rotation matrix representation to euler angles. These scripts are explained below. 
+1. Visit the Georgia Tech SmartTech repository: https://repository.gatech.edu/entities/publication/20860ffb-71fd-4049-a033-cd0ff308339e
+2. Download the following files:
+   - **RawDataset.zip** (for time-indexed conversion)
+   - **ProcessedData_Standard_Gtech.zip** (for phase-indexed conversion)
+3. Extract the downloaded files to the expected directory structure below
 
+## Expected File Structure
 
-# Time indexed data
+Before running the conversion scripts, organize your data as follows:
 
-The "convert_gtech_nc_raw_to_parquet.py" script converts the data from the raw data of the dataset to a tabular format. To use the script, you first need to download the "RawDataset.zip" from the [dataset repository](https://repository.gatech.edu/entities/publication/20860ffb-71fd-4049-a033-cd0ff308339e) and extract the contents inside this folder. 
+```
+Gtech_2023/
+├── RawData/                         # Extract RawDataset.zip here
+│   ├── AB01/
+│   │   ├── incline_walk_1.csv
+│   │   ├── normal_walk_1.csv
+│   │   └── ...
+│   ├── AB02/
+│   │   └── ...
+│   └── Subject_masses.csv
+├── ProcessedData_Standard_Gtech/    # Extract ProcessedData_Standard_Gtech.zip here
+│   ├── AB01_segmented.mat
+│   ├── AB02_segmented.mat
+│   └── ...
+├── convert_gtech_all_to_parquet.py  # Time-indexed converter
+├── convert_gtech_phase_to_parquet.m # Phase-indexed converter
+└── combine_subjects_efficient.py     # Combines individual subject files
+```
+
+## Entry Points for Conversion
+
+### 1. Time-Indexed Dataset Generation
+
+```bash
+# Main entry point - converts all subjects to time-indexed parquet
+python convert_gtech_all_to_parquet.py
+
+# Or convert a single subject
+python convert_gtech_all_to_parquet.py AB01
+
+# This will create:
+# - converted_datasets/gtech_2023_time.parquet (all subjects)
+# - converted_datasets/gtech_2023_time_AB01.parquet (single subject)
+```
+
+### 2. Phase-Indexed Dataset Generation
+
+```matlab
+% In MATLAB, navigate to this directory and run:
+convert_gtech_phase_to_parquet
+
+% This will create:
+% - converted_datasets/gtech_2023_phase.parquet
+```
+
+### 3. Combining Individual Subject Files
+
+If you've converted subjects individually:
+
+```bash
+python combine_subjects_efficient.py
+
+# This will combine all individual subject files into:
+# - converted_datasets/gtech_2023_time.parquet
+```
+
+## Processing Details
+
+### Time-Indexed Data 
 
 Usage Information
 * Sampling rate = 100Hz
