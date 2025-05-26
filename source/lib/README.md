@@ -206,10 +206,10 @@ The libraries include comprehensive error handling:
 
 See the `docs/tutorials/` directory for comprehensive tutorials:
 
-- **`library_tutorial_python.md`** - Complete Python library guide
-- **`library_tutorial_matlab.md`** - Complete MATLAB library guide
-- **`getting_started_python.md`** - Basic pandas operations (legacy)
-- **`getting_started_matlab.md`** - Basic table operations (legacy)
+- **`python/library_tutorial_python.md`** - Complete Python library guide
+- **`matlab/library_tutorial_matlab.md`** - Complete MATLAB library guide
+- **`python/getting_started_python.md`** - Basic pandas operations (legacy)
+- **`matlab/getting_started_matlab.md`** - Basic table operations (legacy)
 
 ## Contributing
 

@@ -4,8 +4,8 @@ disp('Testing MATLAB tutorial...');
 % 1. Loading the Data
 try
     % Define file paths
-    locomotionDataFile = 'locomotion_data.csv';
-    taskInfoFile = 'task_info.csv';
+    locomotionDataFile = '../test_files/locomotion_data.csv';
+    taskInfoFile = '../test_files/task_info.csv';
     
     % Check if files exist
     if exist(locomotionDataFile, 'file') && exist(taskInfoFile, 'file')

@@ -9,8 +9,8 @@ print("Testing Python tutorial...")
 
 # 1. Loading Data
 try:
-    df_locomotion = pd.read_csv('locomotion_data.csv')
-    df_tasks = pd.read_csv('task_info.csv')
+    df_locomotion = pd.read_csv('../test_files/locomotion_data.csv')
+    df_tasks = pd.read_csv('../test_files/task_info.csv')
 
     print("\nLocomotion Data:")
     print(df_locomotion.head(3))

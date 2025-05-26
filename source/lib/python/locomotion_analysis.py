@@ -515,17 +515,21 @@ class LocomotionData:
         n_rows = int(np.ceil(n_features / n_cols))
         
         fig, axes = plt.subplots(n_rows, n_cols, figsize=(5*n_cols, 4*n_rows))
-        if n_features == 1:
-            axes = [axes]
+        
+        # Handle different subplot configurations
+        if n_rows == 1 and n_cols == 1:
+            axes = np.array([axes])
         elif n_rows == 1:
             axes = axes.reshape(1, -1)
+        elif n_cols == 1:
+            axes = axes.reshape(-1, 1)
         
         phase_x = np.linspace(0, 100, self.POINTS_PER_CYCLE)
         
         for i, feature in enumerate(feature_names):
             row = i // n_cols
             col = i % n_cols
-            ax = axes[row, col] if n_rows > 1 else axes[col]
+            ax = axes[row, col] if n_rows > 1 and n_cols > 1 else axes.flat[i]
             
             feat_data = data_3d[:, :, i]
             valid_data = feat_data[valid_mask, :]
@@ -559,12 +563,7 @@ class LocomotionData:
         
         # Hide empty subplots
         for i in range(n_features, n_rows * n_cols):
-            row = i // n_cols
-            col = i % n_cols
-            if n_rows > 1:
-                axes[row, col].set_visible(False)
-            else:
-                axes[col].set_visible(False)
+            axes.flat[i].set_visible(False)
         
         plt.suptitle(f'{subject} - {task} (Valid: {np.sum(valid_mask)}/{len(valid_mask)} cycles)')
         plt.tight_layout()
@@ -597,10 +596,14 @@ class LocomotionData:
         n_rows = int(np.ceil(n_features / n_cols))
         
         fig, axes = plt.subplots(n_rows, n_cols, figsize=(5*n_cols, 4*n_rows))
-        if n_features == 1:
-            axes = [axes]
+        
+        # Handle different subplot configurations
+        if n_rows == 1 and n_cols == 1:
+            axes = np.array([axes])
         elif n_rows == 1:
             axes = axes.reshape(1, -1)
+        elif n_cols == 1:
+            axes = axes.reshape(-1, 1)
         
         phase_x = np.linspace(0, 100, self.POINTS_PER_CYCLE)
         colors = plt.cm.tab10(np.linspace(0, 1, len(tasks)))
@@ -608,7 +611,7 @@ class LocomotionData:
         for i, feature in enumerate(features):
             row = i // n_cols
             col = i % n_cols
-            ax = axes[row, col] if n_rows > 1 else axes[col]
+            ax = axes[row, col] if n_rows > 1 and n_cols > 1 else axes.flat[i]
             
             for j, task in enumerate(tasks):
                 mean_patterns = self.get_mean_patterns(subject, task, [feature])
@@ -625,12 +628,7 @@ class LocomotionData:
         
         # Hide empty subplots
         for i in range(n_features, n_rows * n_cols):
-            row = i // n_cols
-            col = i % n_cols
-            if n_rows > 1:
-                axes[row, col].set_visible(False)
-            else:
-                axes[col].set_visible(False)
+            axes.flat[i].set_visible(False)
         
         plt.suptitle(f'{subject} - Task Comparison')
         plt.tight_layout()

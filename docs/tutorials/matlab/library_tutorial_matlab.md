@@ -12,7 +12,7 @@ Ensure you have MATLAB with the following capabilities:
 
 ```matlab
 % Add library path to MATLAB path
-addpath('../../source/lib/matlab');
+addpath('../../../source/lib/matlab');
 
 % Verify the library is available
 if exist('LocomotionData', 'class') == 8

@@ -16,7 +16,7 @@ import sys
 import os
 
 # Add the library path (adjust as needed)
-sys.path.append('../../source/lib/python')
+sys.path.append('../../../source/lib/python')
 
 # Import the library
 from locomotion_analysis import LocomotionData
