@@ -17,14 +17,45 @@
 
 The Locomotion Data Standardization project provides a unified framework for converting, validating, and analyzing biomechanical locomotion data from various research datasets. It standardizes diverse data formats into a common Parquet-based structure, enabling seamless cross-dataset analysis and machine learning applications.
 
-### Key Features
+## ✨ Key Features
 
-- 📊 **Standardized Data Format**: Consistent variable naming and structure across all datasets
-- 🔄 **Dual Indexing**: Support for both time-indexed and phase-normalized (150 points/cycle) data
-- ✅ **Comprehensive Validation**: 5-layer validation system ensuring data quality and biomechanical constraints
-- 🚀 **High Performance**: Optimized 3D array operations (100x faster than traditional pandas groupby)
-- 📈 **Rich Visualization**: Built-in plotting tools for time series, phase patterns, and task comparisons
-- 🔧 **Multi-Language Support**: Native libraries for both Python and MATLAB
+### 📊 Standardized Data Format
+- **Consistent naming convention** across all datasets following the pattern: `<joint>_<motion>_<measurement>_<side>_<unit>`
+- **Unified coordinate systems** with clearly defined sign conventions for all joint angles
+- **Comprehensive metadata** including subject info, task parameters, and experimental conditions
+- **Support for 100+ biomechanical variables** including kinematics, kinetics, and ground reaction forces
+
+### 🔄 Dual Data Indexing
+- **Time-based indexing** for preserving original temporal resolution and event timing
+- **Phase-normalized indexing** with 150 points per gait cycle for direct cycle comparisons
+- **Automatic phase detection** using validated heel strike and toe-off algorithms
+- **Seamless conversion** between time and phase representations
+
+### ✅ 5-Layer Validation System
+1. **File structure validation** - Ensures all required columns and metadata are present
+2. **Data type validation** - Verifies correct units and numeric ranges
+3. **Biomechanical constraints** - Checks joint angle limits and physical plausibility
+4. **Temporal consistency** - Validates phase calculations and event sequences
+5. **Cross-variable relationships** - Ensures consistency between related measurements
+
+### 🚀 High-Performance Computing
+- **Optimized 3D array operations** achieving 100x speedup over traditional pandas groupby
+- **Memory-efficient processing** for handling large datasets (>1GB)
+- **Parallel processing support** for multi-subject batch operations
+- **Smart caching** for repeated analysis workflows
+
+### 📈 Rich Visualization Suite
+- **Interactive time series plots** with zoom, pan, and selection tools
+- **Phase-averaged patterns** with confidence bands and outlier detection
+- **Multi-task comparison plots** for analyzing movement variations
+- **Animated stick figures** for visualizing full-body kinematics
+- **Validation heatmaps** showing data quality across subjects and trials
+
+### 🔧 Multi-Language Support
+- **Native Python library** with pandas, numpy, and matplotlib integration
+- **Native MATLAB toolbox** with full feature parity
+- **Consistent API design** across both languages
+- **Example notebooks** and test suites for both environments
 
 ## 📦 Installation
 
