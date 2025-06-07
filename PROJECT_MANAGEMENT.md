@@ -19,12 +19,58 @@
 - ✅ Comprehensive debugging reports with fix suggestions
 - ✅ Language model integration capabilities
 
-### 🚀 **ACTIVE GOAL: Testing & Validation**
+### 🚀 **ACTIVE GOAL: Enhanced Validation with Visual Kinematics**
 
-#### Step 1: Standard Spec Compliance (INITIAL IMPLEMENTATION DONE)
+#### Step 1: Markdown Validation System (COMPLETED)
+**Priority**: ✅ COMPLETE
+**Timeline**: Last week
+**Status**: ✅ Implementation Complete
+
+**Completed Objectives**:
+- [x] **Markdown-based validation specification format**
+  - ✅ Human-readable tables for sensor/task validation expectations (`validation_expectations.md`)
+  - ✅ Parseable structure for automated testing
+  - ✅ Single source of truth for all validation rules
+
+- [x] **Comprehensive validation tables** 
+  - ✅ All sensor inputs (joint angles, GRF, COP, etc.)
+  - ✅ All task types (walking, stairs, incline, etc.) 
+  - ✅ Expected ranges, patterns, and constraints
+
+- [x] **Markdown parser implementation**
+  - ✅ Parse markdown tables into validation rules
+  - ✅ Integration with existing test suite
+  - ✅ Backward compatibility maintained
+
+#### Step 2: Enhanced Visual Validation (NEW PRIORITY)
 **Priority**: 🔴 CRITICAL
 **Timeline**: This week
-**Status**: ✅ Initial Implementation Complete, Needs Refinement
+**Status**: 🔄 Starting
+
+**Objectives**:
+- [ ] **Two-Tier Validation Structure**
+  - Step 1: Generic biomechanical ranges (basic plausibility)
+  - Step 2: Task-specific sign convention checks with phase validation
+
+- [ ] **Phase-Specific Range Validation**
+  - Min/max angle validation at 4 phase points: 0%, 33%, 50%, 66%
+  - Individual validation per subject/task for intuitive user feedback
+
+- [ ] **Forward Kinematic Visualization**
+  - Extend `walking_animator.py` for static pose generation
+  - Generate min/max position images at each phase point
+  - Embed kinematic range visualizations in markdown specification
+
+**Deliverables**:
+- [ ] Enhanced two-tier validation system 
+- [ ] Phase-specific validation tables (4 phases × all joints)
+- [ ] Kinematic range image generator
+- [ ] Visual validation integration in markdown spec
+
+#### Step 1: Standard Spec Compliance (COMPLETED)
+**Priority**: ✅ COMPLETE
+**Timeline**: Last week  
+**Status**: ✅ Implementation Complete
 
 **Objectives**:
 - [x] **Create spec compliance test suite** 
@@ -63,9 +109,9 @@
 4. ✅ **Documentation Suite** - Complete specs and debugging guides
 
 ### **In Progress** (This week)
-1. ✅ **Standard Spec Compliance Testing** - Initial implementation complete, needs refinement
-2. 🔄 **Memory-Efficient Real-World Testing** - Test suite on actual GTech datasets
-3. 🔄 **Visual Validation Development** - Reporting and visualization improvements
+1. ✅ **Markdown Validation System** - Complete implementation with comprehensive tables
+2. 🔄 **Two-Tier Validation Structure** - Generic ranges + task-specific phase validation
+3. 🔄 **Forward Kinematic Visualization** - Static pose generation for range validation
 
 ### **Next Up**
 - Additional testing steps will be defined based on compliance test results
@@ -100,24 +146,27 @@
 
 ## 📈 **Progress Tracking**
 
-### Current Testing Progress: **40%** Complete
+### Current Validation Progress: **65%** Complete
 
-| Testing Step | Status | Progress | 
-|--------------|---------|----------|
-| Step 1: Spec Compliance | ✅ Initial Implementation | 75% |
-| Memory-Efficient Testing | 🔄 In Progress | 10% |
-| Visual Validation | 🔄 In Progress | 5% |
-| Integration Testing | 📅 Pending | 0% |
+| Validation Component | Status | Progress | 
+|---------------------|---------|----------|
+| Spec Compliance Testing | ✅ Complete | 100% |
+| Markdown Validation System | ✅ Complete | 100% |
+| Two-Tier Validation Structure | 🔄 Starting | 5% |
+| Phase-Specific Range Validation | 📅 Pending | 0% |
+| Forward Kinematic Visualization | 📅 Pending | 0% |
+| Visual Validation Integration | 📅 Pending | 0% |
 
 ---
 
 ## 🎯 **Immediate Next Actions**
 
 ### **This Week**:
-1. ✅ **Create spec compliance test suite** - Complete with variable naming, phase handling, sign conventions
-2. 🔴 **Memory-efficient real dataset testing** - Test GTech datasets without memory crashes
-3. 🔴 **Visual validation reports** - Improve reporting and visualization
-4. 🔴 **Test suite reliability validation** - Ensure robust testing framework
+1. ✅ **Complete markdown validation system** - Comprehensive tables and parser integration
+2. 🔴 **Implement two-tier validation structure** - Generic ranges + task-specific validation
+3. 🔴 **Develop phase-specific range validation** - 4 phase points (0%, 33%, 50%, 66%) validation
+4. 🔴 **Create forward kinematic visualizer** - Extend walking_animator.py for static poses
+5. 🔴 **Generate kinematic range images** - Min/max positions at each phase point
 
 ---
 
@@ -143,4 +192,4 @@
 
 **Last Updated**: 2025-06-06 by Development Team
 **Next Scheduled Review**: Upon Step 1 completion
-**Document Version**: 2.0 (Streamlined for Testing Focus)
+**Document Version**: 3.0 (Enhanced Visual Validation Focus)
