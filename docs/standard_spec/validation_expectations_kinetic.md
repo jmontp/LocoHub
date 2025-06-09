@@ -164,8 +164,8 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | vertical_grf_N_kg | 8.0 | 12.0 | N/kg | Initial loading response (0.8-1.2 BW) - **Research-based** |
 | ap_grf_N_kg | -2.0 | 0.5 | N/kg | Initial braking forces - **Research-based** |
 | ml_grf_N_kg | -1.0 | 1.0 | N/kg | Lateral balance (0.05-0.1 BW) - **Research-based** |
-| hip_moment_ipsi_Nm_kg | -0.4 | 0.4 | Nm/kg | Hip moment at contact - **Literature estimate** |
-| knee_moment_ipsi_Nm_kg | -0.5 | 0.5 | Nm/kg | Knee moment at contact - **Literature estimate** |
+| hip_moment_ipsi_Nm_kg | -0.1 | 0.3 | Nm/kg | Small hip flexor moment at heel strike - **Literature-based** |
+| knee_moment_ipsi_Nm_kg | -0.2 | 0.1 | Nm/kg | Small knee flexor moment at contact - **Literature-based** |
 | ankle_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Ankle moment at contact - **Literature estimate** |
 | cop_x_m | -0.10 | -0.05 | m | COP posterior at heel strike - **Literature estimate** |
 | cop_y_m | -0.03 | 0.03 | m | COP near foot center - **Literature estimate** |
@@ -176,8 +176,8 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | vertical_grf_N_kg | 9.0 | 11.0 | N/kg | Valley between peaks (0.9-1.1 BW) - **Research-based** |
 | ap_grf_N_kg | -1.0 | 1.0 | N/kg | Transition from braking to propulsion - **Research-based** |
 | ml_grf_N_kg | -0.5 | 0.5 | N/kg | Stable mediolateral forces - **Research-based** |
-| hip_moment_ipsi_Nm_kg | -1.3 | 1.3 | Nm/kg | Hip extension moment (peak ~1.3) - **Literature-based** |
-| knee_moment_ipsi_Nm_kg | -0.7 | 0.7 | Nm/kg | Knee stability moment - **Literature estimate** |
+| hip_moment_ipsi_Nm_kg | -1.2 | -0.2 | Nm/kg | Hip extension moment (peak ~0.9 Nm/kg) - **Literature-based** |
+| knee_moment_ipsi_Nm_kg | -0.4 | 0.2 | Nm/kg | Knee extensor moment during loading - **Literature-based** |
 | ankle_moment_ipsi_Nm_kg | 0.5 | 1.5 | Nm/kg | Ankle dorsiflexor moment - **Literature estimate** |
 | cop_x_m | -0.05 | 0.05 | m | COP mid-foot during single limb support - **Literature estimate** |
 | cop_y_m | -0.02 | 0.02 | m | COP stable near center - **Literature estimate** |
@@ -188,8 +188,8 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | vertical_grf_N_kg | 10.0 | 15.0 | N/kg | Second peak (1.0-1.5 BW) - **Research-based** |
 | ap_grf_N_kg | 0.5 | 3.0 | N/kg | Peak propulsive forces - **Research-based** |
 | ml_grf_N_kg | -1.0 | 1.0 | N/kg | Weight transfer forces - **Research-based** |
-| hip_moment_ipsi_Nm_kg | -1.0 | 1.0 | Nm/kg | Hip extension for propulsion - **Literature estimate** |
-| knee_moment_ipsi_Nm_kg | -1.0 | 1.0 | Nm/kg | Knee moment for push-off - **Literature estimate** |
+| hip_moment_ipsi_Nm_kg | 0.3 | 1.3 | Nm/kg | Hip flexor moment for propulsion (peak ~1.0 Nm/kg) - **Literature-based** |
+| knee_moment_ipsi_Nm_kg | -0.8 | -0.1 | Nm/kg | Knee extensor moment for push-off (peak ~0.5 Nm/kg) - **Literature-based** |
 | ankle_moment_ipsi_Nm_kg | -3.7 | -1.5 | Nm/kg | Peak plantarflexor moment (~-3.7) - **Literature-based** |
 | cop_x_m | 0.05 | 0.15 | m | COP anterior during push-off - **Literature estimate** |
 | cop_y_m | -0.03 | 0.03 | m | COP near foot center - **Literature estimate** |
@@ -200,9 +200,9 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | vertical_grf_N_kg | 0 | 1.0 | N/kg | Minimal forces during swing - **Research-based** |
 | ap_grf_N_kg | -0.3 | 0.3 | N/kg | Minimal AP forces during swing - **Research-based** |
 | ml_grf_N_kg | -0.2 | 0.2 | N/kg | Minimal ML forces during swing - **Research-based** |
-| hip_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Hip swing moment - **Literature estimate** |
-| knee_moment_ipsi_Nm_kg | -0.2 | 0.2 | Nm/kg | Knee swing moment - **Literature estimate** |
-| ankle_moment_ipsi_Nm_kg | -0.1 | 0.1 | Nm/kg | Ankle swing moment - **Literature estimate** |
+| hip_moment_ipsi_Nm_kg | -0.1 | 0.2 | Nm/kg | Small hip moment during swing - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.1 | 0.3 | Nm/kg | Knee flexor moment for clearance - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -0.1 | 0.1 | Nm/kg | Minimal ankle moment during swing - **Literature estimate** |
 | cop_x_m | -0.20 | 0.20 | m | COP undefined during swing (no ground contact) - **Literature estimate** |
 | cop_y_m | -0.20 | 0.20 | m | COP undefined during swing (no ground contact) - **Literature estimate** |
 
