@@ -15,7 +15,7 @@ Time-indexed tables preserve the source sampling frequency. Phase-indexed tables
 **Limitations:**
 
 * Currently supports only the modalities listed above.
-* Some datasets have missing right-leg data or incomplete segmentation; missing values are handled as NaN (see Section 9).
+* Some datasets have missing contralateral leg data or incomplete segmentation; missing values are handled as NaN (see Section 9).
 * Each Parquet file may contain multiple `task_id` entries. Time is generally **discontinuous** between tasks, especially at transition points. For continuous analysis within a task, it is recommended to filter by `task_id`.
 
 ---

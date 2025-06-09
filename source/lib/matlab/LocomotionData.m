@@ -677,8 +677,8 @@ classdef LocomotionData < handle
             
             % Identify biomechanical features
             excludeCols = {obj.subjectCol, obj.taskCol, obj.phaseCol, ...
-                          'time', 'time_s', 'step_number', 'is_reconstructed_r', ...
-                          'is_reconstructed_l', 'task_info', 'activity_number'};
+                          'time', 'time_s', 'step_number', 'is_reconstructed_contra', ...
+                          'is_reconstructed_ipsi', 'task_info', 'activity_number'};
             
             allCols = obj.data.Properties.VariableNames;
             obj.features = {};

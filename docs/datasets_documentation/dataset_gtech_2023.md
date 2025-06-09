@@ -51,19 +51,19 @@ This research was supported by:
 | dynamic_walk | Variable speed walking | Continuous | Speed changes | Treadmill |
 | walk_backward | Backward walking | Continuous | 1.0 m/s | Treadmill |
 | weighted_walk | Walking with load | Continuous | 25 lbs weight | 1.0 m/s |
-| side_shuffle | Lateral movement | Multiple cycles | Left/right | Overground |
+| side_shuffle | Lateral movement | Multiple cycles | Ipsilateral/contralateral | Overground |
 | jump | Jumping | Multiple trials | Vertical jumps | Force plates |
 | squats | Squatting | Multiple reps | With/without weight | Static |
-| lunges | Forward/backward lunges | Multiple reps | Left/right legs | Overground |
+| lunges | Forward/backward lunges | Multiple reps | Ipsilateral/contralateral legs | Overground |
 | sit_to_stand | Sit-to-stand transitions | Multiple cycles | Chair height | Functional |
 | ball_toss | Ball tossing | Multiple trials | Left/mid/right targets | Standing |
 | curb_up | Stepping up curb | Multiple cycles | Street curb height | Overground |
 | curb_down | Stepping down curb | Multiple cycles | Street curb height | Overground |
-| cutting | Sharp turning while jogging | Multiple trials | Left/right | Overground |
+| cutting | Sharp turning while jogging | Multiple trials | Ipsilateral/contralateral | Overground |
 | lift_weight | Weight lifting | Multiple trials | Weighted/unweighted bag | Functional |
 | step_ups | Step-up exercise | Multiple cycles | Tall platform | Exercise |
 | tire_run | High-knee jogging | Continuous | Toe running | Overground |
-| turn_and_step | Turn and walk initiation | Multiple trials | Left/right turns | From standing |
+| turn_and_step | Turn and walk initiation | Multiple trials | Ipsilateral/contralateral turns | From standing |
 | meander | Free-form slow walking | Continuous | Self-selected path | Overground |
 | obstacle_walk | Walking with obstacles | Continuous | Foam blocks | 1.0 m/s |
 | poses | Static postures | Hold positions | Various poses | Calibration |

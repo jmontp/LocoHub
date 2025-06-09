@@ -21,15 +21,15 @@ def create_comprehensive_plot(df, task, subject_col='subject', task_col='task',
     
     # Define feature groups
     feature_groups = {
-        'Right Angles': ['hip_flexion_angle_right_rad', 'knee_flexion_angle_right_rad', 'ankle_flexion_angle_right_rad'],
-        'Right Velocities': ['hip_flexion_velocity_right_rad_s', 'knee_flexion_velocity_right_rad_s', 'ankle_flexion_velocity_right_rad_s'],
-        'Right Moments': ['hip_flexion_moment_right_Nm', 'knee_flexion_moment_right_Nm', 'ankle_flexion_moment_right_Nm'],
-        'Left Angles': ['hip_flexion_angle_left_rad', 'knee_flexion_angle_left_rad', 'ankle_flexion_angle_left_rad'],
-        'Left Velocities': ['hip_flexion_velocity_left_rad_s', 'knee_flexion_velocity_left_rad_s', 'ankle_flexion_velocity_left_rad_s'],
-        'Left Moments': ['hip_flexion_moment_left_Nm', 'knee_flexion_moment_left_Nm', 'ankle_flexion_moment_left_Nm'],
-        'Frontal Angles R': ['hip_adduction_angle_right_rad', 'ankle_inversion_angle_right_rad'],
-        'Frontal Angles L': ['hip_adduction_angle_left_rad', 'ankle_inversion_angle_left_rad'],
-        'Transverse Angles': ['hip_rotation_angle_right_rad', 'hip_rotation_angle_left_rad']
+        'Contralateral Angles': ['hip_flexion_angle_contra_rad', 'knee_flexion_angle_contra_rad', 'ankle_flexion_angle_contra_rad'],
+        'Contralateral Velocities': ['hip_flexion_velocity_contra_rad_s', 'knee_flexion_velocity_contra_rad_s', 'ankle_flexion_velocity_contra_rad_s'],
+        'Contralateral Moments': ['hip_flexion_moment_contra_Nm', 'knee_flexion_moment_contra_Nm', 'ankle_flexion_moment_contra_Nm'],
+        'Ipsilateral Angles': ['hip_flexion_angle_ipsi_rad', 'knee_flexion_angle_ipsi_rad', 'ankle_flexion_angle_ipsi_rad'],
+        'Ipsilateral Velocities': ['hip_flexion_velocity_ipsi_rad_s', 'knee_flexion_velocity_ipsi_rad_s', 'ankle_flexion_velocity_ipsi_rad_s'],
+        'Ipsilateral Moments': ['hip_flexion_moment_ipsi_Nm', 'knee_flexion_moment_ipsi_Nm', 'ankle_flexion_moment_ipsi_Nm'],
+        'Frontal Angles R': ['hip_adduction_angle_contra_rad', 'ankle_inversion_angle_contra_rad'],
+        'Frontal Angles L': ['hip_adduction_angle_ipsi_rad', 'ankle_inversion_angle_ipsi_rad'],
+        'Transverse Angles': ['hip_rotation_angle_contra_rad', 'hip_rotation_angle_ipsi_rad']
     }
     
     # Filter for this task

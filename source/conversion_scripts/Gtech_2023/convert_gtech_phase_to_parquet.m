@@ -678,7 +678,7 @@ for subject_idx = 1:length(subjects)
                 step_data_single.phase_r = offset_phase_step;
             end
 
-            % --- Perform Data Swap if LR convention and Left Leg Led ---
+            % --- Perform Data Swap if LR convention and Ipsilateral Leg Led ---
             % This is to ensure that the right leg data is aligned to phase 0
             % and the left leg data is aligned to phase 0.5 at the start of 
             % each activity and therefore step.

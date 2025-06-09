@@ -39,12 +39,12 @@ if strcmpi(naming_convention, 'ipsicontra')
     leg_label_1 = 'Ipsi';
     leg_label_2 = 'Contra';
 else % Default to 'lr'
-    plot_variable_1 = [joint_to_plot, plot_variable_suffix, '_l']; % Left leg variable
-    plot_variable_2 = [joint_to_plot, plot_variable_suffix, '_r']; % Right leg variable
-    phase_col_1 = 'phase_l'; % Use Left phase as reference
+    plot_variable_1 = [joint_to_plot, plot_variable_suffix, '_l']; % Ipsilateral leg variable
+    plot_variable_2 = [joint_to_plot, plot_variable_suffix, '_r']; % Contralateral leg variable
+    phase_col_1 = 'phase_l'; % Use ipsilateral phase as reference
     phase_col_2 = 'phase_r';
-    leg_label_1 = 'Left';
-    leg_label_2 = 'Right';
+    leg_label_1 = 'Ipsilateral';
+    leg_label_2 = 'Contralateral';
 end
 
 % Construct GRF variable names
@@ -145,11 +145,11 @@ for combo_idx = 1:height(unique_all_combinations)
     x_phase_percent = task_subset.(phase_col_1) * 100; % Primary phase (e.g., phase_l)
     [sorted_x, sort_idx] = sort(task_subset.(phase_col_1)); % Sort by primary phase for potential future use, though not strictly needed for scatter
 
-    % Plot Leg 2 (e.g., Right or Contra)
+    % Plot Leg 2 (e.g., Contralateral)
     y_leg2 = task_subset.(plot_variable_2);
     scatter(x_phase_percent, y_leg2, 10, 'b', 'filled', 'MarkerFaceAlpha', 0.3);
     
-    % Plot Leg 1 (e.g., Left or Ipsi)
+    % Plot Leg 1 (e.g., Ipsilateral)
     y_leg1 = task_subset.(plot_variable_1);
     scatter(x_phase_percent, y_leg1, 10, 'r', 'filled', 'MarkerFaceAlpha', 0.3);
         
@@ -167,11 +167,11 @@ for combo_idx = 1:height(unique_all_combinations)
     ylabel('Vertical GRF (N)', 'FontSize', 12);
     grid on;
     
-    % Plot Leg 2 GRF (e.g., Right or Contra)
+    % Plot Leg 2 GRF (e.g., Contralateral)
     y_grf2 = task_subset.(grf_variable_2);
     scatter(x_phase_percent, y_grf2, 10, 'b', 'filled', 'MarkerFaceAlpha', 0.3);
         
-    % Plot Leg 1 GRF (e.g., Left or Ipsi)
+    % Plot Leg 1 GRF (e.g., Ipsilateral)
     y_grf1 = task_subset.(grf_variable_1);
     scatter(x_phase_percent, y_grf1, 10, 'r', 'filled', 'MarkerFaceAlpha', 0.3);
         
