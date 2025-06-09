@@ -226,8 +226,8 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | vertical_grf_N_kg | 6.0 | 14.0 | N/kg | Higher impact on incline (0.9-2.0 BW) - **NEEDS RESEARCH** |
 | ap_grf_N_kg | -4.0 | 0.0 | N/kg | Strong braking forces uphill - **NEEDS RESEARCH** |
 | ml_grf_N_kg | -1.2 | 1.2 | N/kg | Lateral balance on incline - **NEEDS RESEARCH** |
-| hip_moment_ipsi_Nm_kg | -0.6 | 0.8 | Nm/kg | Hip moment for incline approach - **NEEDS RESEARCH** |
-| knee_moment_ipsi_Nm_kg | -0.4 | 0.4 | Nm/kg | Knee moment at contact - **NEEDS RESEARCH** |
+| hip_moment_ipsi_Nm_kg | -0.2 | 0.4 | Nm/kg | Small hip flexor moment at incline heel strike - **NEEDS RESEARCH** |
+| knee_moment_ipsi_Nm_kg | -0.3 | 0.2 | Nm/kg | Small knee flexor moment at incline contact - **NEEDS RESEARCH** |
 | ankle_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Ankle moment at contact - **NEEDS RESEARCH** |
 | cop_x_m | -0.12 | -0.08 | m | COP posterior at incline heel strike - **NEEDS RESEARCH** |
 | cop_y_m | -0.04 | 0.04 | m | COP near foot center - **NEEDS RESEARCH** |
@@ -238,8 +238,8 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | vertical_grf_N_kg | 7.5 | 12.0 | N/kg | Single limb support uphill - **NEEDS RESEARCH** |
 | ap_grf_N_kg | -3.0 | 1.0 | N/kg | Transition to propulsion - **NEEDS RESEARCH** |
 | ml_grf_N_kg | -1.0 | 1.0 | N/kg | Lateral stability - **NEEDS RESEARCH** |
-| hip_moment_ipsi_Nm_kg | -1.2 | 1.2 | Nm/kg | Hip extension moment - **NEEDS RESEARCH** |
-| knee_moment_ipsi_Nm_kg | -0.8 | 0.8 | Nm/kg | Knee stability moment - **NEEDS RESEARCH** |
+| hip_moment_ipsi_Nm_kg | -1.4 | -0.3 | Nm/kg | Enhanced hip extension moment uphill - **NEEDS RESEARCH** |
+| knee_moment_ipsi_Nm_kg | -0.6 | 0.1 | Nm/kg | Knee extensor moment during incline loading - **NEEDS RESEARCH** |
 | ankle_moment_ipsi_Nm_kg | 0.8 | 2.0 | Nm/kg | Enhanced dorsiflexor moment - **NEEDS RESEARCH** |
 | cop_x_m | -0.08 | 0.02 | m | COP slightly posterior during incline stance - **NEEDS RESEARCH** |
 | cop_y_m | -0.03 | 0.03 | m | COP stable near center - **NEEDS RESEARCH** |
@@ -250,8 +250,8 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | vertical_grf_N_kg | 9.0 | 16.0 | N/kg | Peak propulsive forces uphill - **NEEDS RESEARCH** |
 | ap_grf_N_kg | -1.0 | 2.0 | N/kg | Limited propulsion uphill - **NEEDS RESEARCH** |
 | ml_grf_N_kg | -1.5 | 1.5 | N/kg | Weight transfer - **NEEDS RESEARCH** |
-| hip_moment_ipsi_Nm_kg | -1.8 | 1.2 | Nm/kg | Enhanced hip extension - **NEEDS RESEARCH** |
-| knee_moment_ipsi_Nm_kg | -1.0 | 1.0 | Nm/kg | Knee moment for propulsion - **NEEDS RESEARCH** |
+| hip_moment_ipsi_Nm_kg | 0.2 | 1.5 | Nm/kg | Strong hip flexor moment for incline propulsion - **NEEDS RESEARCH** |
+| knee_moment_ipsi_Nm_kg | -1.2 | -0.2 | Nm/kg | Enhanced knee extensor moment for incline push-off - **NEEDS RESEARCH** |
 | ankle_moment_ipsi_Nm_kg | -3.0 | -1.5 | Nm/kg | Enhanced plantarflexor moment - **NEEDS RESEARCH** |
 | cop_x_m | 0.02 | 0.12 | m | COP anterior during incline push-off - **NEEDS RESEARCH** |
 | cop_y_m | -0.04 | 0.04 | m | COP near foot center - **NEEDS RESEARCH** |
@@ -288,8 +288,8 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | vertical_grf_N_kg | 19.6 | 28.4 | N/kg | High impact forces (2.0-2.9 BW) - **Research-based** |
 | ap_grf_N_kg | -8.0 | 3.0 | N/kg | Strong braking forces - **Research-based** |
 | ml_grf_N_kg | -2.0 | 2.0 | N/kg | Lateral balance (higher in running) - **Research-based** |
-| hip_moment_ipsi_Nm_kg | -1.0 | 1.2 | Nm/kg | Hip moment at impact - **Literature estimate** |
-| knee_moment_ipsi_Nm_kg | -0.8 | 0.8 | Nm/kg | Knee moment at contact - **Literature estimate** |
+| hip_moment_ipsi_Nm_kg | -0.3 | 0.5 | Nm/kg | Small hip moment at running impact - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.4 | 0.3 | Nm/kg | Small knee moment at running contact - **Literature estimate** |
 | ankle_moment_ipsi_Nm_kg | -0.6 | 0.6 | Nm/kg | Ankle moment at contact - **Literature estimate** |
 | cop_x_m | -0.08 | -0.03 | m | COP posterior at running heel strike - **Literature estimate** |
 | cop_y_m | -0.05 | 0.05 | m | COP variable during running - **Literature estimate** |
@@ -300,8 +300,8 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | vertical_grf_N_kg | 15.0 | 25.0 | N/kg | Mid-stance loading - **Research-based** |
 | ap_grf_N_kg | -4.0 | 6.0 | N/kg | Transition to propulsion - **Research-based** |
 | ml_grf_N_kg | -1.5 | 1.5 | N/kg | Dynamic balance - **Research-based** |
-| hip_moment_ipsi_Nm_kg | -2.0 | 2.0 | Nm/kg | Hip extension moment - **Literature estimate** |
-| knee_moment_ipsi_Nm_kg | -1.5 | 1.5 | Nm/kg | Knee stability moment - **Literature estimate** |
+| hip_moment_ipsi_Nm_kg | -1.5 | -0.1 | Nm/kg | Hip extension moment during running stance - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.8 | 0.2 | Nm/kg | Knee extensor moment during running loading - **Literature estimate** |
 | ankle_moment_ipsi_Nm_kg | 0.0 | 3.0 | Nm/kg | Ankle dorsiflexor moment - **Literature estimate** |
 | cop_x_m | -0.03 | 0.08 | m | COP progresses forward during running stance - **Literature estimate** |
 | cop_y_m | -0.04 | 0.04 | m | COP dynamic balance - **Literature estimate** |
@@ -312,8 +312,8 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | vertical_grf_N_kg | 20.0 | 29.0 | N/kg | Peak propulsive forces (2.0-3.0 BW) - **Research-based** |
 | ap_grf_N_kg | 3.0 | 12.0 | N/kg | Maximum propulsion - **Research-based** |
 | ml_grf_N_kg | -2.5 | 2.5 | N/kg | Dynamic lateral forces - **Research-based** |
-| hip_moment_ipsi_Nm_kg | -2.5 | 2.0 | Nm/kg | Hip extension for propulsion - **Literature estimate** |
-| knee_moment_ipsi_Nm_kg | -2.0 | 2.0 | Nm/kg | Knee moment for push-off - **Literature estimate** |
+| hip_moment_ipsi_Nm_kg | 0.5 | 2.0 | Nm/kg | Strong hip flexor moment for running propulsion - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -1.5 | -0.2 | Nm/kg | Enhanced knee extensor moment for running push-off - **Literature estimate** |
 | ankle_moment_ipsi_Nm_kg | -6.0 | -3.0 | Nm/kg | Peak plantarflexor moment (higher in running) - **Literature estimate** |
 | cop_x_m | 0.08 | 0.18 | m | COP far anterior during running push-off - **Literature estimate** |
 | cop_y_m | -0.05 | 0.05 | m | COP variable during push-off - **Literature estimate** |
