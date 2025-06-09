@@ -6,8 +6,8 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 > **📊 Related**: See [validation_expectations_kinetic.md](validation_expectations_kinetic.md) for kinetic validation rules (forces and moments).
 
-> **📋 Version Information**: See [validation_expectations_changelog.md](validation_expectations_changelog.md) for detailed version history and changes.  
-> **🎨 Image Generation**: See [kinematic_visualization_guide.md](kinematic_visualization_guide.md) for generating validation images.
+> **📋 Version Information**: See [../development/validation_expectations_changelog.md](../development/validation_expectations_changelog.md) for detailed version history and changes.  
+> **🎨 Image Generation**: See [../development/kinematic_visualization_guide.md](../development/kinematic_visualization_guide.md) for generating validation images.
 
 ## Format Specification
 
