@@ -39,14 +39,14 @@ class LocomotionData:
     POINTS_PER_CYCLE = 150
     
     # Standard feature groups
-    ANGLE_FEATURES = ['hip_flexion_angle_right_rad', 'knee_flexion_angle_right_rad', 'ankle_flexion_angle_right_rad',
-                      'hip_flexion_angle_left_rad', 'knee_flexion_angle_left_rad', 'ankle_flexion_angle_left_rad']
+    ANGLE_FEATURES = ['hip_flexion_angle_contra_rad', 'knee_flexion_angle_contra_rad', 'ankle_flexion_angle_contra_rad',
+                      'hip_flexion_angle_ipsi_rad', 'knee_flexion_angle_ipsi_rad', 'ankle_flexion_angle_ipsi_rad']
     
-    VELOCITY_FEATURES = ['hip_flexion_velocity_right_rad_s', 'knee_flexion_velocity_right_rad_s', 'ankle_flexion_velocity_right_rad_s',
-                         'hip_flexion_velocity_left_rad_s', 'knee_flexion_velocity_left_rad_s', 'ankle_flexion_velocity_left_rad_s']
+    VELOCITY_FEATURES = ['hip_flexion_velocity_contra_rad_s', 'knee_flexion_velocity_contra_rad_s', 'ankle_flexion_velocity_contra_rad_s',
+                         'hip_flexion_velocity_ipsi_rad_s', 'knee_flexion_velocity_ipsi_rad_s', 'ankle_flexion_velocity_ipsi_rad_s']
     
-    MOMENT_FEATURES = ['hip_flexion_moment_right_Nm', 'knee_flexion_moment_right_Nm', 'ankle_flexion_moment_right_Nm',
-                       'hip_flexion_moment_left_Nm', 'knee_flexion_moment_left_Nm', 'ankle_flexion_moment_left_Nm']
+    MOMENT_FEATURES = ['hip_flexion_moment_contra_Nm', 'knee_flexion_moment_contra_Nm', 'ankle_flexion_moment_contra_Nm',
+                       'hip_flexion_moment_ipsi_Nm', 'knee_flexion_moment_ipsi_Nm', 'ankle_flexion_moment_ipsi_Nm']
     
     def __init__(self, data_path: Union[str, Path], 
                  subject_col: str = 'subject',

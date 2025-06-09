@@ -16,7 +16,7 @@ All sign conventions follow the OpenSim coordinate system, which is:
 
 ### Hip Joint Angles
 
-#### Hip Flexion (`hip_flexion_angle_[left|right]_rad`)
+#### Hip Flexion (`hip_flexion_angle_[ipsi|contra]_rad`)
 - **Positive hip flexion**: Thigh rotated **forward** relative to pelvis (sagittal plane)
 - **Zero reference**: Thigh aligned vertically downward (anatomical standing position)
 - **Typical ranges**:
@@ -30,7 +30,7 @@ All sign conventions follow the OpenSim coordinate system, which is:
 - **Negative values**: Thigh moves posterior (backward) - hip extensor action
 - **Clinical significance**: Hip flexion enables limb advancement during swing phase
 
-#### Hip Adduction (`hip_adduction_angle_[left|right]_rad`)
+#### Hip Adduction (`hip_adduction_angle_[ipsi|contra]_rad`)
 - **Positive hip adduction**: Thigh moves toward body midline (frontal plane)
 - **Zero reference**: Thigh aligned with pelvis in coronal plane
 - **Typical ranges**:
@@ -42,7 +42,7 @@ All sign conventions follow the OpenSim coordinate system, which is:
 - **Positive values**: Thigh toward midline - hip adductor action
 - **Negative values**: Thigh away from midline (abduction) - hip abductor action
 
-#### Hip Rotation (`hip_rotation_angle_[left|right]_rad`)
+#### Hip Rotation (`hip_rotation_angle_[ipsi|contra]_rad`)
 - **Positive hip internal rotation**: Thigh rotated inward (transverse plane)
 - **Zero reference**: Thigh aligned with pelvis in transverse plane
 - **Typical ranges**:
@@ -52,7 +52,7 @@ All sign conventions follow the OpenSim coordinate system, which is:
 
 ### Knee Joint Angles
 
-#### Knee Flexion (`knee_flexion_angle_[left|right]_rad`)
+#### Knee Flexion (`knee_flexion_angle_[ipsi|contra]_rad`)
 - **Zero reference**: Full knee extension (shank aligned with thigh) - **OpenSim Standard**
 - **Positive knee flexion**: Knee bending - angle increases from 0° (extension) toward flexion
 - **Negative values**: Not physiologically possible (hyperextension beyond anatomical limits)
@@ -72,14 +72,14 @@ All sign conventions follow the OpenSim coordinate system, which is:
 
 **IMPORTANT**: This follows **OpenSim convention** where extension is the zero reference and flexion is positive.
 
-#### Knee Adduction (`knee_adduction_angle_[left|right]_rad`)
+#### Knee Adduction (`knee_adduction_angle_[ipsi|contra]_rad`)
 - **Positive knee adduction**: Shank rotated toward midline relative to thigh (frontal plane)
 - **Also known as**: Knee valgus (positive) vs knee varus (negative)
 - **Typical ranges**:
   - Normal alignment: -5° to 5°
   - Dynamic loading: -10° to 15°
 
-#### Knee Rotation (`knee_rotation_angle_[left|right]_rad`)
+#### Knee Rotation (`knee_rotation_angle_[ipsi|contra]_rad`)
 - **Positive knee internal rotation**: Shank rotated inward relative to thigh (transverse plane)
 - **Typical ranges**:
   - Standing: -10° to 10°
@@ -87,10 +87,10 @@ All sign conventions follow the OpenSim coordinate system, which is:
 
 ### Ankle Joint Angles
 
-#### Ankle Flexion/Dorsiflexion (`ankle_flexion_angle_[left|right]_rad`)
-- **Positive ankle flexion (dorsiflexion)**: Foot rotated **upward** relative to shank (sagittal plane)
-- **Negative ankle flexion (plantarflexion)**: Foot rotated **downward** relative to shank
-- **Zero reference**: Foot perpendicular to shank (90° anatomical position)
+#### Ankle Flexion/Dorsiflexion (`ankle_flexion_angle_[ipsi|contra]_rad`)
+- **Zero reference**: Foot flat on ground (anatomical standing position)
+- **Positive ankle flexion (dorsiflexion)**: Foot rotated **upward** relative to ground (toes up)
+- **Negative ankle flexion (plantarflexion)**: Foot rotated **downward** relative to ground (toes down)
 - **Typical ranges**:
   - Standing: -5° to 5°
   - Walking heel strike: -5° to 5°
@@ -99,18 +99,21 @@ All sign conventions follow the OpenSim coordinate system, which is:
   - Squatting: 15° to 40° (dorsiflexion)
 
 **Biomechanical interpretation**:
+- **Zero degrees**: Foot flat on ground (functional reference position)
 - **Positive values (dorsiflexion)**: Toes up, heel down - tibialis anterior action
 - **Negative values (plantarflexion)**: Toes down, heel up - gastrocnemius/soleus action
 - **Clinical significance**: Dorsiflexion for ground clearance, plantarflexion for propulsion
 
-#### Ankle Inversion (`ankle_inversion_angle_[left|right]_rad`)
+**Visual Reference**: In validation images, 0° ankle angle shows foot horizontal (flat on ground) for intuitive interpretation.
+
+#### Ankle Inversion (`ankle_inversion_angle_[ipsi|contra]_rad`)
 - **Positive ankle inversion**: Sole of foot rotated toward midline (frontal plane)
 - **Negative ankle inversion (eversion)**: Sole of foot rotated away from midline
 - **Typical ranges**:
   - Standing: -5° to 5°
   - Dynamic activities: -15° to 20°
 
-#### Ankle Rotation (`ankle_rotation_angle_[left|right]_rad`)
+#### Ankle Rotation (`ankle_rotation_angle_[ipsi|contra]_rad`)
 - **Positive ankle internal rotation**: Foot rotated inward relative to shank (transverse plane)
 - **Typical ranges**:
   - Standing: -10° to 10°
@@ -155,12 +158,23 @@ Foot (rotates about ankle joint)
 | Knee | Flexion | Knee bending (0° → 140°) | Full extension (0°) | Shock absorption/clearance |
 | Knee | Adduction | Toward midline (valgus) | Neutral alignment | Frontal plane stability |
 | Knee | Internal Rotation | Inward rotation | Neutral alignment | Transverse plane control |
-| Ankle | Flexion (Dorsiflexion) | Toes up | 90° foot-shank | Ground clearance |
+| Ankle | Flexion (Dorsiflexion) | Toes up | Foot flat on ground (0°) | Ground clearance |
 | Ankle | Inversion | Sole toward midline | Neutral alignment | Foot positioning |
 | Ankle | Internal Rotation | Inward rotation | Neutral alignment | Transverse plane control |
 
 ### Validation Image Reference
 See validation images in `../../validation_images/` for visual examples of these joint angle ranges applied to realistic stick figure representations during different movement phases.
+
+**Visual Features**:
+- **Average-centered display**: Solid lines show middle of validation ranges (typical expected posture)
+- **Subtle range bounds**: Min (dashed, 10% alpha) and Max (solid, 10% alpha) provide context without distraction
+- **True frontal plane view**: Both legs shown from perfect perpendicular perspective (as if viewing person directly from the side)
+- **Identical hip positions**: Both legs originate from exactly the same point for true anatomical accuracy
+- **Ultra-clean presentation**: No axes, grid, or coordinate numbers - pure focus on biomechanical data
+- **Walking direction indicator**: Green arrow shows forward movement orientation
+- **Anatomical ankle reference**: 0° ankle angle displays foot flat on ground for intuitive interpretation
+- **Bilateral coordination**: Ipsilateral (blue) and contralateral (red) legs show proper bilateral relationships
+- **Comprehensive annotations**: Min / Avg / Max values displayed for each joint angle
 
 ## Implementation Notes
 

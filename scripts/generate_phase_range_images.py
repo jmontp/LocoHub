@@ -36,7 +36,7 @@ def generate_stick_figure(joint_angles: Dict[str, Tuple[float, float]], title: s
         task_type: 'gait' or 'bilateral' for different visualization styles
     """
     
-    fig, (ax_min, ax_max) = plt.subplots(1, 2, figsize=(12, 8))
+    fig, ax = plt.subplots(1, 1, figsize=(10, 8))
     fig.suptitle(title, fontsize=14, fontweight='bold')
     
     # Extract angles for both legs
@@ -51,20 +51,30 @@ def generate_stick_figure(joint_angles: Dict[str, Tuple[float, float]], title: s
                 # Default fallback values
                 angles[side][joint] = (0.0, 0.5)
     
-    # Generate stick figures for min and max configurations
-    for ax, config in [(ax_min, 'min'), (ax_max, 'max')]:
+    # Generate stick figures for min, average, and max configurations
+    for config, alpha, linestyle in [('min', 0.1, '--'), ('avg', 1.0, '-'), ('max', 0.1, '-')]:
         # Draw both legs
         for side, color in [('left', 'blue'), ('right', 'red')]:
             if side in angles:
-                hip_angle = angles[side]['hip'][0 if config == 'min' else 1]
-                knee_angle = angles[side]['knee'][0 if config == 'min' else 1]
-                ankle_angle = angles[side]['ankle'][0 if config == 'min' else 1]
+                # Calculate angles based on configuration
+                if config == 'min':
+                    hip_angle = angles[side]['hip'][0]
+                    knee_angle = angles[side]['knee'][0]
+                    ankle_angle = angles[side]['ankle'][0]
+                elif config == 'max':
+                    hip_angle = angles[side]['hip'][1]
+                    knee_angle = angles[side]['knee'][1]
+                    ankle_angle = angles[side]['ankle'][1]
+                else:  # avg
+                    hip_angle = (angles[side]['hip'][0] + angles[side]['hip'][1]) / 2
+                    knee_angle = (angles[side]['knee'][0] + angles[side]['knee'][1]) / 2
+                    ankle_angle = (angles[side]['ankle'][0] + angles[side]['ankle'][1]) / 2
                 
-                # Forward kinematics with proper joint angle interpretation
-                x_offset = -0.2 if side == 'left' else 0.2
+                # Forward kinematics - frontal plane view (looking perpendicular to person)
+                # Both legs originate from EXACTLY the same hip position (true frontal plane)
                 
-                # Hip position (pelvis attachment point)
-                hip_x = x_offset
+                # Hip position (both legs at identical position - no lateral offset)
+                hip_x = 0.0  # Identical position for both legs
                 hip_y = 1.0
                 
                 # Thigh segment (hip flexion from vertical reference)
@@ -81,44 +91,78 @@ def generate_stick_figure(joint_angles: Dict[str, Tuple[float, float]], title: s
                 shank_x = thigh_x + shank_length * np.sin(shank_angle_from_vertical)
                 shank_y = thigh_y - shank_length * np.cos(shank_angle_from_vertical)
                 
-                # Foot segment (ankle dorsiflexion relative to shank)
-                # Positive ankle flexion = foot dorsiflexed (toes up relative to shank)
+                # Foot segment with anatomical reference (0° = foot flat on ground)
+                # Add 90° offset so 0° ankle angle = foot horizontal (flat on ground)
                 foot_length = 0.15
-                foot_angle_from_vertical = shank_angle_from_vertical + ankle_angle
+                # Ankle angle: 0° = foot flat, positive = dorsiflexion (toes up), negative = plantarflexion
+                foot_angle_from_horizontal = ankle_angle  # Direct ankle angle interpretation
+                foot_angle_from_vertical = shank_angle_from_vertical + foot_angle_from_horizontal + np.pi/2
                 foot_x = shank_x + foot_length * np.sin(foot_angle_from_vertical)
                 foot_y = shank_y - foot_length * np.cos(foot_angle_from_vertical)
                 
-                # Draw leg segments
-                ax.plot([hip_x, thigh_x], [hip_y, thigh_y], color=color, linewidth=3, alpha=0.8, label=f'{side.title()} Leg')
-                ax.plot([thigh_x, shank_x], [thigh_y, shank_y], color=color, linewidth=3, alpha=0.8)
-                ax.plot([shank_x, foot_x], [shank_y, foot_y], color=color, linewidth=3, alpha=0.8)
+                # Create label only for average configuration to avoid legend clutter
+                leg_label = f'{side.title()} Leg' if config == 'avg' else None
                 
-                # Draw joints
-                ax.plot(hip_x, hip_y, 'ko', markersize=6)
-                ax.plot(thigh_x, thigh_y, 'ko', markersize=6)
-                ax.plot(shank_x, shank_y, 'ko', markersize=6)
-        
-        # Draw pelvis/torso
-        ax.plot([-0.3, 0.3], [1.0, 1.0], 'k-', linewidth=4)
-        ax.plot([0, 0], [1.0, 1.5], 'k-', linewidth=4)
-        
-        # Ground line
-        ax.axhline(y=0, color='gray', linestyle='-', alpha=0.5)
-        
-        # Formatting
-        ax.set_xlim(-0.8, 0.8)
-        ax.set_ylim(-0.2, 1.6)
-        ax.set_aspect('equal')
-        ax.grid(True, alpha=0.3)
-        ax.set_title(f'{config.title()} Configuration')
-        ax.legend(loc='upper right', fontsize=8)
-        
-        # Add angle annotations
-        if side in angles:
-            for i, (joint, angle_range) in enumerate(angles['left'].items()):
-                angle_val = angle_range[0 if config == 'min' else 1]
-                ax.text(-0.7, 1.4 - i*0.1, f'{joint.title()}: {np.degrees(angle_val):.0f}°', 
-                       fontsize=8, ha='left')
+                # Draw leg segments with varying alpha and line style (no lateral offset)
+                ax.plot([hip_x, thigh_x], [hip_y, thigh_y], 
+                       color=color, linewidth=3, alpha=alpha, linestyle=linestyle, label=leg_label)
+                ax.plot([thigh_x, shank_x], [thigh_y, shank_y], 
+                       color=color, linewidth=3, alpha=alpha, linestyle=linestyle)
+                ax.plot([shank_x, foot_x], [shank_y, foot_y], 
+                       color=color, linewidth=3, alpha=alpha, linestyle=linestyle)
+                
+                # Draw joints (only for average to avoid clutter)
+                if config == 'avg':
+                    ax.plot(hip_x, hip_y, 'ko', markersize=6)
+                    ax.plot(thigh_x, thigh_y, 'ko', markersize=6)
+                    ax.plot(shank_x, shank_y, 'ko', markersize=6)
+                    ax.plot(foot_x, foot_y, 'ko', markersize=4)  # Smaller for foot
+    
+    # Draw pelvis/torso centered (both legs attach here)
+    ax.plot([-0.15, 0.15], [1.0, 1.0], 'k-', linewidth=4, label='Pelvis')
+    ax.plot([0, 0], [1.0, 1.5], 'k-', linewidth=4)
+    
+    # Add walking direction arrow
+    arrow_y = 1.4
+    arrow_start_x = -0.4
+    arrow_end_x = 0.4
+    ax.annotate('', xy=(arrow_end_x, arrow_y), xytext=(arrow_start_x, arrow_y),
+               arrowprops=dict(arrowstyle='->', lw=2, color='green'))
+    ax.text(0, arrow_y + 0.05, 'Walking Direction', ha='center', va='bottom', 
+           fontsize=10, color='green', fontweight='bold')
+    
+    # Ground line
+    ax.axhline(y=0, color='gray', linestyle='-', alpha=0.5, label='Ground')
+    
+    # Add angle annotations showing min/avg/max ranges
+    for i, (joint, angle_range) in enumerate(angles['left'].items()):
+        min_val = np.degrees(angle_range[0])
+        max_val = np.degrees(angle_range[1])
+        avg_val = (min_val + max_val) / 2
+        ax.text(-0.7, 1.3 - i*0.08, 
+               f'{joint.title()}: {min_val:.0f}° / {avg_val:.0f}° / {max_val:.0f}°', 
+               fontsize=8, ha='left')
+    
+    # Add legend explanation
+    ax.text(-0.7, 1.0, 'Range: Min / Avg / Max\nAvg: solid line\nMin: dashed (10% alpha)\nMax: solid (10% alpha)', 
+           fontsize=7, ha='left', va='top', 
+           bbox=dict(boxstyle='round,pad=0.3', facecolor='lightgray', alpha=0.7))
+    
+    # Formatting
+    ax.set_xlim(-0.8, 0.8)
+    ax.set_ylim(-0.2, 1.6)
+    ax.set_aspect('equal')
+    
+    # Remove axes since cartesian coordinates don't have meaningful biomechanical units
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    
+    ax.set_title('Joint Angle Range Visualization\n(Frontal Plane View)', fontsize=12)
+    ax.legend(loc='upper right', fontsize=8)
     
     plt.tight_layout()
     os.makedirs(os.path.dirname(save_path), exist_ok=True)

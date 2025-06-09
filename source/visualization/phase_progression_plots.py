@@ -108,8 +108,8 @@ def apply_contralateral_offset(task_data: Dict, task_name: str) -> Dict:
             
             # Copy left leg data to right leg for contralateral phase
             for joint_type in joint_types:
-                left_joint = f'{joint_type}_left'
-                right_joint = f'{joint_type}_right'
+                left_joint = f'{joint_type}_ipsi'
+                right_joint = f'{joint_type}_contra'
                 
                 if left_joint in task_data[source_phase]:
                     if phase not in updated_task_data:
@@ -164,23 +164,23 @@ def parse_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[st
                 
                 for variable, min_val, max_val, unit in rows:
                     # Extract bilateral joint angles (both left and right legs)
-                    if ('_left_rad' in variable or '_right_rad' in variable) and unit == 'rad':
+                    if ('_ipsi_rad' in variable or '_contra_rad' in variable) and unit == 'rad':
                         # Determine joint type and side
                         if 'hip_flexion_angle' in variable:
-                            if '_left_rad' in variable:
-                                joint_name = 'hip_flexion_angle_left'
-                            elif '_right_rad' in variable:
-                                joint_name = 'hip_flexion_angle_right'
+                            if '_ipsi_rad' in variable:
+                                joint_name = 'hip_flexion_angle_ipsi'
+                            elif '_contra_rad' in variable:
+                                joint_name = 'hip_flexion_angle_contra'
                         elif 'knee_flexion_angle' in variable:
-                            if '_left_rad' in variable:
-                                joint_name = 'knee_flexion_angle_left'
-                            elif '_right_rad' in variable:
-                                joint_name = 'knee_flexion_angle_right'
+                            if '_ipsi_rad' in variable:
+                                joint_name = 'knee_flexion_angle_ipsi'
+                            elif '_contra_rad' in variable:
+                                joint_name = 'knee_flexion_angle_contra'
                         elif 'ankle_flexion_angle' in variable:
-                            if '_left_rad' in variable:
-                                joint_name = 'ankle_flexion_angle_left'
-                            elif '_right_rad' in variable:
-                                joint_name = 'ankle_flexion_angle_right'
+                            if '_ipsi_rad' in variable:
+                                joint_name = 'ankle_flexion_angle_ipsi'
+                            elif '_contra_rad' in variable:
+                                joint_name = 'ankle_flexion_angle_contra'
                         else:
                             continue
                         
