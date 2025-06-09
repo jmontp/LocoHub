@@ -65,29 +65,29 @@ def parse_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[st
                 phase = int(phase_str)
                 validation_data[task][phase] = {}
                 
-                # Parse table rows for joint angles
-                row_pattern = r'\| ([\w_]+) \| ([-\d.]+) \| ([-\d.]+) \| (\w+) \|'
+                # Parse table rows for joint angles - Updated to handle degree format
+                row_pattern = r'\| ([\w_]+) \| ([-\d.]+) \([^)]+\) \| ([-\d.]+) \([^)]+\) \| (\w+) \|'
                 rows = re.findall(row_pattern, table_content)
                 
                 for variable, min_val, max_val, unit in rows:
-                    # Extract bilateral joint angles (both left and right legs)
-                    if ('_left_rad' in variable or '_right_rad' in variable) and unit == 'rad':
+                    # Extract bilateral joint angles (both ipsi and contra legs)
+                    if ('_ipsi_rad' in variable or '_contra_rad' in variable) and unit == 'rad':
                         # Determine joint type and side
                         if 'hip_flexion_angle' in variable:
-                            if '_left_rad' in variable:
-                                joint_name = 'hip_flexion_angle_left'
-                            elif '_right_rad' in variable:
-                                joint_name = 'hip_flexion_angle_right'
+                            if '_ipsi_rad' in variable:
+                                joint_name = 'hip_flexion_angle_ipsi'
+                            elif '_contra_rad' in variable:
+                                joint_name = 'hip_flexion_angle_contra'
                         elif 'knee_flexion_angle' in variable:
-                            if '_left_rad' in variable:
-                                joint_name = 'knee_flexion_angle_left'
-                            elif '_right_rad' in variable:
-                                joint_name = 'knee_flexion_angle_right'
+                            if '_ipsi_rad' in variable:
+                                joint_name = 'knee_flexion_angle_ipsi'
+                            elif '_contra_rad' in variable:
+                                joint_name = 'knee_flexion_angle_contra'
                         elif 'ankle_flexion_angle' in variable:
-                            if '_left_rad' in variable:
-                                joint_name = 'ankle_flexion_angle_left'
-                            elif '_right_rad' in variable:
-                                joint_name = 'ankle_flexion_angle_right'
+                            if '_ipsi_rad' in variable:
+                                joint_name = 'ankle_flexion_angle_ipsi'
+                            elif '_contra_rad' in variable:
+                                joint_name = 'ankle_flexion_angle_contra'
                         else:
                             continue
                         
@@ -97,6 +97,94 @@ def parse_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[st
                         }
     
     return validation_data
+
+
+def get_task_classification(task_name: str) -> str:
+    """
+    Classify tasks as either gait-based (with contralateral offset) or bilateral symmetric.
+    
+    Args:
+        task_name: Name of the task
+        
+    Returns:
+        Task classification: 'gait' or 'bilateral'
+    """
+    gait_tasks = {
+        'level_walking', 'incline_walking', 'decline_walking', 
+        'up_stairs', 'down_stairs', 'run'
+    }
+    bilateral_tasks = {
+        'sit_to_stand', 'jump', 'squats'
+    }
+    
+    if task_name in gait_tasks:
+        return 'gait'
+    elif task_name in bilateral_tasks:
+        return 'bilateral'
+    else:
+        # Default to gait for unknown tasks
+        return 'gait'
+
+
+def apply_contralateral_offset(task_data: Dict, task_name: str) -> Dict:
+    """
+    Apply contralateral offset logic for gait-based tasks.
+    For bilateral tasks, return data as-is.
+    
+    Args:
+        task_data: Phase data for the task (contains only ipsilateral data)
+        task_name: Name of the task
+        
+    Returns:
+        Updated task data with contralateral ranges computed
+    """
+    task_type = get_task_classification(task_name)
+    
+    if task_type == 'bilateral':
+        # Bilateral tasks already have both legs specified in validation expectations
+        return task_data
+    
+    # For gait tasks, compute contralateral leg ranges with 50% offset
+    phases = [0, 25, 50, 75, 100]  # Include 100% for cyclical completion
+    joint_types = ['hip_flexion_angle', 'knee_flexion_angle', 'ankle_flexion_angle']
+    
+    # Create a new task_data copy to avoid modifying original
+    updated_task_data = {}
+    for phase in [0, 25, 50, 75]:  # Only process existing phases
+        if phase in task_data:
+            updated_task_data[phase] = task_data[phase].copy()
+        else:
+            updated_task_data[phase] = {}
+    
+    # Apply contralateral offset logic
+    for phase in [0, 25, 50, 75]:
+        if phase in task_data:
+            # Calculate contralateral phase with 50% offset
+            contralateral_phase = (phase + 50) % 100
+            
+            # Map contralateral phase to available phases
+            if contralateral_phase == 0:
+                source_phase = 0
+            elif contralateral_phase == 25:
+                source_phase = 25
+            elif contralateral_phase == 50:
+                source_phase = 50
+            elif contralateral_phase == 75:
+                source_phase = 75
+            else:
+                continue
+            
+            # Copy ipsilateral data to contralateral for the offset phase
+            for joint_type in joint_types:
+                ipsi_joint = f'{joint_type}_ipsi'
+                contra_joint = f'{joint_type}_contra'
+                
+                if ipsi_joint in task_data[source_phase]:
+                    if phase not in updated_task_data:
+                        updated_task_data[phase] = {}
+                    updated_task_data[phase][contra_joint] = task_data[source_phase][ipsi_joint].copy()
+    
+    return updated_task_data
 
 
 def generate_all_validation_images(validation_data: Dict, output_dir: str):
@@ -113,8 +201,11 @@ def generate_all_validation_images(validation_data: Dict, output_dir: str):
     for task_name, phase_data in validation_data.items():
         print(f"\nGenerating images for task: {task_name}")
         
+        # Apply contralateral offset logic for gait-based tasks
+        phase_data_with_offset = apply_contralateral_offset(phase_data, task_name)
+        
         # Process each phase
-        for phase, joint_ranges in phase_data.items():
+        for phase, joint_ranges in phase_data_with_offset.items():
             if joint_ranges:  # Only generate if we have data
                 # Generate the visualization
                 filepath = generator.generate_range_visualization(

@@ -76,7 +76,7 @@ class KinematicPoseGenerator:
             -self.segment_lengths['thigh'] * np.cos(hip_angle_rad)
         ])
         
-        total_knee_angle_rad = hip_angle_rad + knee_angle_rad
+        total_knee_angle_rad = hip_angle_rad - knee_angle_rad
         ankle_position = knee_position + np.array([
             self.segment_lengths['shank'] * np.sin(total_knee_angle_rad),
             -self.segment_lengths['shank'] * np.cos(total_knee_angle_rad)
@@ -91,104 +91,109 @@ class KinematicPoseGenerator:
         return hip_position, knee_position, ankle_position, foot_position
     
     def draw_bilateral_pose(self, ax: plt.Axes, 
-                           ipsi_hip_min: float, ipsi_knee_min: float, ipsi_ankle_min: float,
-                           ipsi_hip_max: float, ipsi_knee_max: float, ipsi_ankle_max: float,
-                           contra_hip_min: float, contra_knee_min: float, contra_ankle_min: float,
-                           contra_hip_max: float, contra_knee_max: float, contra_ankle_max: float):
+                           left_hip_min: float, left_knee_min: float, left_ankle_min: float,
+                           left_hip_avg: float, left_knee_avg: float, left_ankle_avg: float,
+                           left_hip_max: float, left_knee_max: float, left_ankle_max: float,
+                           right_hip_min: float, right_knee_min: float, right_ankle_min: float,
+                           right_hip_avg: float, right_knee_avg: float, right_ankle_avg: float,
+                           right_hip_max: float, right_knee_max: float, right_ankle_max: float):
         """
-        Draw bilateral min/max poses on the given axes.
+        Draw bilateral min/avg/max poses matching original style.
         
         Args:
             ax: Matplotlib axes to draw on
-            ipsi_hip_min/max, ipsi_knee_min/max, ipsi_ankle_min/max: Ipsilateral leg joint angle ranges
-            contra_hip_min/max, contra_knee_min/max, contra_ankle_min/max: Contralateral leg joint angle ranges
+            left/right joint angle ranges with min, avg, max values
         """
-        # Hip position at origin
+        # Hip position at origin (shared by both legs)
         hip_pos = np.array([0, 0])
         
         # Draw torso (vertical line from hip)
         torso_top = hip_pos + np.array([0, self.segment_lengths['torso']])
         ax.plot([hip_pos[0], torso_top[0]], [hip_pos[1], torso_top[1]], 
-                color=self.colors['torso'], linewidth=4, alpha=0.8)
+                color='black', linewidth=4)
         
-        # Calculate positions for min poses (dashed lines)
-        ipsi_hip_min_corrected = -ipsi_hip_min
-        left_min_hip_pos, left_min_knee_pos, left_min_ankle_pos, left_min_foot_pos = self.calculate_joint_positions(
-            ipsi_hip_min_corrected, ipsi_knee_min, ipsi_ankle_min
-        )
+        # Draw pelvis as horizontal line
+        pelvis_width = 0.3
+        ax.plot([hip_pos[0] - pelvis_width/2, hip_pos[0] + pelvis_width/2], 
+                [hip_pos[1], hip_pos[1]], 
+                color='black', linewidth=6, solid_capstyle='round')
         
-        contra_hip_min_corrected = -contra_hip_min
-        right_min_hip_pos, right_min_knee_pos, right_min_ankle_pos, right_min_foot_pos = self.calculate_joint_positions(
-            contra_hip_min_corrected, contra_knee_min, contra_ankle_min
-        )
+        # Calculate positions for all poses
+        # Left leg positions
+        left_avg_hip, left_avg_knee, left_avg_ankle, left_avg_foot = self.calculate_joint_positions(
+            left_hip_avg, left_knee_avg, left_ankle_avg)
+        left_min_hip, left_min_knee, left_min_ankle, left_min_foot = self.calculate_joint_positions(
+            left_hip_min, left_knee_min, left_ankle_min)
+        left_max_hip, left_max_knee, left_max_ankle, left_max_foot = self.calculate_joint_positions(
+            left_hip_max, left_knee_max, left_ankle_max)
         
-        # Calculate positions for max poses (solid lines)
-        ipsi_hip_max_corrected = -ipsi_hip_max
-        left_max_hip_pos, left_max_knee_pos, left_max_ankle_pos, left_max_foot_pos = self.calculate_joint_positions(
-            ipsi_hip_max_corrected, ipsi_knee_max, ipsi_ankle_max
-        )
+        # Right leg positions (offset from shared hip)
+        right_avg_hip, right_avg_knee, right_avg_ankle, right_avg_foot = self.calculate_joint_positions(
+            right_hip_avg, right_knee_avg, right_ankle_avg)
+        right_min_hip, right_min_knee, right_min_ankle, right_min_foot = self.calculate_joint_positions(
+            right_hip_min, right_knee_min, right_ankle_min)
+        right_max_hip, right_max_knee, right_max_ankle, right_max_foot = self.calculate_joint_positions(
+            right_hip_max, right_knee_max, right_ankle_max)
         
-        contra_hip_max_corrected = -contra_hip_max
-        right_max_hip_pos, right_max_knee_pos, right_max_ankle_pos, right_max_foot_pos = self.calculate_joint_positions(
-            contra_hip_max_corrected, contra_knee_max, contra_ankle_max
-        )
+        # Draw left leg (blue) - min pose with 10% alpha
+        ax.plot([hip_pos[0], left_min_knee[0]], [hip_pos[1], left_min_knee[1]], 
+                color='blue', linewidth=3, alpha=0.1, linestyle='--')
+        ax.plot([left_min_knee[0], left_min_ankle[0]], [left_min_knee[1], left_min_ankle[1]], 
+                color='blue', linewidth=3, alpha=0.1, linestyle='--')
+        ax.plot([left_min_ankle[0], left_min_foot[0]], [left_min_ankle[1], left_min_foot[1]], 
+                color='blue', linewidth=3, alpha=0.1, linestyle='--')
         
-        # Draw left leg (blue) - min pose (dashed)
-        ax.plot([hip_pos[0], left_min_knee_pos[0]], [hip_pos[1], left_min_knee_pos[1]], 
-                color=self.colors['ipsi_leg'], linewidth=3, alpha=0.7, linestyle='--')
-        ax.plot([left_min_knee_pos[0], left_min_ankle_pos[0]], [left_min_knee_pos[1], left_min_ankle_pos[1]], 
-                color=self.colors['ipsi_leg'], linewidth=3, alpha=0.7, linestyle='--')
-        ax.plot([left_min_ankle_pos[0], left_min_foot_pos[0]], [left_min_ankle_pos[1], left_min_foot_pos[1]], 
-                color=self.colors['ipsi_leg'], linewidth=3, alpha=0.7, linestyle='--')
+        # Draw left leg (blue) - max pose with 10% alpha
+        ax.plot([hip_pos[0], left_max_knee[0]], [hip_pos[1], left_max_knee[1]], 
+                color='blue', linewidth=3, alpha=0.1, linestyle='-')
+        ax.plot([left_max_knee[0], left_max_ankle[0]], [left_max_knee[1], left_max_ankle[1]], 
+                color='blue', linewidth=3, alpha=0.1, linestyle='-')
+        ax.plot([left_max_ankle[0], left_max_foot[0]], [left_max_ankle[1], left_max_foot[1]], 
+                color='blue', linewidth=3, alpha=0.1, linestyle='-')
         
-        # Draw left leg (blue) - max pose (solid)
-        ax.plot([hip_pos[0], left_max_knee_pos[0]], [hip_pos[1], left_max_knee_pos[1]], 
-                color=self.colors['ipsi_leg'], linewidth=3, alpha=0.9, linestyle='-')
-        ax.plot([left_max_knee_pos[0], left_max_ankle_pos[0]], [left_max_knee_pos[1], left_max_ankle_pos[1]], 
-                color=self.colors['ipsi_leg'], linewidth=3, alpha=0.9, linestyle='-')
-        ax.plot([left_max_ankle_pos[0], left_max_foot_pos[0]], [left_max_ankle_pos[1], left_max_foot_pos[1]], 
-                color=self.colors['ipsi_leg'], linewidth=3, alpha=0.9, linestyle='-')
+        # Draw left leg (blue) - average pose (solid)
+        ax.plot([hip_pos[0], left_avg_knee[0]], [hip_pos[1], left_avg_knee[1]], 
+                color='blue', linewidth=3, alpha=1.0, linestyle='-')
+        ax.plot([left_avg_knee[0], left_avg_ankle[0]], [left_avg_knee[1], left_avg_ankle[1]], 
+                color='blue', linewidth=3, alpha=1.0, linestyle='-')
+        ax.plot([left_avg_ankle[0], left_avg_foot[0]], [left_avg_ankle[1], left_avg_foot[1]], 
+                color='blue', linewidth=3, alpha=1.0, linestyle='-')
         
-        # Draw right leg (red) - min pose (dashed)
-        ax.plot([hip_pos[0], right_min_knee_pos[0]], [hip_pos[1], right_min_knee_pos[1]], 
-                color=self.colors['contra_leg'], linewidth=3, alpha=0.7, linestyle='--')
-        ax.plot([right_min_knee_pos[0], right_min_ankle_pos[0]], [right_min_knee_pos[1], right_min_ankle_pos[1]], 
-                color=self.colors['contra_leg'], linewidth=3, alpha=0.7, linestyle='--')
-        ax.plot([right_min_ankle_pos[0], right_min_foot_pos[0]], [right_min_ankle_pos[1], right_min_foot_pos[1]], 
-                color=self.colors['contra_leg'], linewidth=3, alpha=0.7, linestyle='--')
+        # Draw right leg (red) - min pose with 10% alpha
+        ax.plot([hip_pos[0], right_min_knee[0]], [hip_pos[1], right_min_knee[1]], 
+                color='red', linewidth=3, alpha=0.1, linestyle='--')
+        ax.plot([right_min_knee[0], right_min_ankle[0]], [right_min_knee[1], right_min_ankle[1]], 
+                color='red', linewidth=3, alpha=0.1, linestyle='--')
+        ax.plot([right_min_ankle[0], right_min_foot[0]], [right_min_ankle[1], right_min_foot[1]], 
+                color='red', linewidth=3, alpha=0.1, linestyle='--')
         
-        # Draw right leg (red) - max pose (solid)
-        ax.plot([hip_pos[0], right_max_knee_pos[0]], [hip_pos[1], right_max_knee_pos[1]], 
-                color=self.colors['contra_leg'], linewidth=3, alpha=0.9, linestyle='-')
-        ax.plot([right_max_knee_pos[0], right_max_ankle_pos[0]], [right_max_knee_pos[1], right_max_ankle_pos[1]], 
-                color=self.colors['contra_leg'], linewidth=3, alpha=0.9, linestyle='-')
-        ax.plot([right_max_ankle_pos[0], right_max_foot_pos[0]], [right_max_ankle_pos[1], right_max_foot_pos[1]], 
-                color=self.colors['contra_leg'], linewidth=3, alpha=0.9, linestyle='-')
+        # Draw right leg (red) - max pose with 10% alpha
+        ax.plot([hip_pos[0], right_max_knee[0]], [hip_pos[1], right_max_knee[1]], 
+                color='red', linewidth=3, alpha=0.1, linestyle='-')
+        ax.plot([right_max_knee[0], right_max_ankle[0]], [right_max_knee[1], right_max_ankle[1]], 
+                color='red', linewidth=3, alpha=0.1, linestyle='-')
+        ax.plot([right_max_ankle[0], right_max_foot[0]], [right_max_ankle[1], right_max_foot[1]], 
+                color='red', linewidth=3, alpha=0.1, linestyle='-')
         
-        # Draw joints as circles
+        # Draw right leg (red) - average pose (solid)
+        ax.plot([hip_pos[0], right_avg_knee[0]], [hip_pos[1], right_avg_knee[1]], 
+                color='red', linewidth=3, alpha=1.0, linestyle='-')
+        ax.plot([right_avg_knee[0], right_avg_ankle[0]], [right_avg_knee[1], right_avg_ankle[1]], 
+                color='red', linewidth=3, alpha=1.0, linestyle='-')
+        ax.plot([right_avg_ankle[0], right_avg_foot[0]], [right_avg_ankle[1], right_avg_foot[1]], 
+                color='red', linewidth=3, alpha=1.0, linestyle='-')
+        
+        # Draw joints as circles for average pose only
         joint_radius = 0.04
-        # Left leg joints
-        for pos in [left_min_knee_pos, left_min_ankle_pos]:
-            circle = Circle(pos, joint_radius, facecolor=self.colors['ipsi_leg'], edgecolor='black',
-                           alpha=0.7, zorder=10)
+        for pos in [left_avg_knee, left_avg_ankle]:
+            circle = Circle(pos, joint_radius, facecolor='blue', edgecolor='black', zorder=10)
             ax.add_patch(circle)
-        for pos in [left_max_knee_pos, left_max_ankle_pos]:
-            circle = Circle(pos, joint_radius, facecolor=self.colors['ipsi_leg'], edgecolor='black',
-                           alpha=0.9, zorder=10)
-            ax.add_patch(circle)
-        
-        # Right leg joints
-        for pos in [right_min_knee_pos, right_min_ankle_pos]:
-            circle = Circle(pos, joint_radius, facecolor=self.colors['contra_leg'], edgecolor='black',
-                           alpha=0.7, zorder=10)
-            ax.add_patch(circle)
-        for pos in [right_max_knee_pos, right_max_ankle_pos]:
-            circle = Circle(pos, joint_radius, facecolor=self.colors['contra_leg'], edgecolor='black',
-                           alpha=0.9, zorder=10)
+        for pos in [right_avg_knee, right_avg_ankle]:
+            circle = Circle(pos, joint_radius, facecolor='red', edgecolor='black', zorder=10)
             ax.add_patch(circle)
         
         # Hip joint (shared)
-        hip_circle = Circle(hip_pos, joint_radius*1.2, facecolor=self.colors['joints'], 
+        hip_circle = Circle(hip_pos, joint_radius*1.2, facecolor='black', 
                            edgecolor='black', alpha=1.0, zorder=15)
         ax.add_patch(hip_circle)
     
@@ -200,81 +205,108 @@ class KinematicPoseGenerator:
         
         Args:
             task_name: Name of the locomotion task
-            phase_point: Phase percentage (0, 33, 50, 66)
+            phase_point: Phase percentage (0, 25, 50, 75)
             joint_ranges: Dictionary with min/max values for each joint
             output_path: Directory to save the image
             
         Returns:
             Path to the generated image file
         """
-        fig, ax = plt.subplots(figsize=(10, 8))
+        fig, ax = plt.subplots(figsize=(12, 8))
         
-        # Extract bilateral joint angles for min and max poses
-        # Left leg angles
-        ipsi_hip_min = joint_ranges.get('hip_flexion_angle_left', {}).get('min', 0)
-        ipsi_hip_max = joint_ranges.get('hip_flexion_angle_left', {}).get('max', 0.5)
-        ipsi_knee_min = joint_ranges.get('knee_flexion_angle_left', {}).get('min', 0)
-        ipsi_knee_max = joint_ranges.get('knee_flexion_angle_left', {}).get('max', 1.0)
-        ipsi_ankle_min = joint_ranges.get('ankle_flexion_angle_left', {}).get('min', -0.2)
-        ipsi_ankle_max = joint_ranges.get('ankle_flexion_angle_left', {}).get('max', 0.2)
+        # Extract bilateral joint angles for min and max poses - Updated for ipsi/contra naming
+        # Ipsilateral leg angles
+        ipsi_hip_min = joint_ranges.get('hip_flexion_angle_ipsi', {}).get('min', 0)
+        ipsi_hip_max = joint_ranges.get('hip_flexion_angle_ipsi', {}).get('max', 0.5)
+        ipsi_knee_min = joint_ranges.get('knee_flexion_angle_ipsi', {}).get('min', 0)
+        ipsi_knee_max = joint_ranges.get('knee_flexion_angle_ipsi', {}).get('max', 1.0)
+        ipsi_ankle_min = joint_ranges.get('ankle_flexion_angle_ipsi', {}).get('min', -0.2)
+        ipsi_ankle_max = joint_ranges.get('ankle_flexion_angle_ipsi', {}).get('max', 0.2)
         
-        # Right leg angles
-        contra_hip_min = joint_ranges.get('hip_flexion_angle_right', {}).get('min', -0.2)
-        contra_hip_max = joint_ranges.get('hip_flexion_angle_right', {}).get('max', 0.3)
-        contra_knee_min = joint_ranges.get('knee_flexion_angle_right', {}).get('min', 0)
-        contra_knee_max = joint_ranges.get('knee_flexion_angle_right', {}).get('max', 1.0)
-        contra_ankle_min = joint_ranges.get('ankle_flexion_angle_right', {}).get('min', -0.2)
-        contra_ankle_max = joint_ranges.get('ankle_flexion_angle_right', {}).get('max', 0.2)
+        # Contralateral leg angles
+        contra_hip_min = joint_ranges.get('hip_flexion_angle_contra', {}).get('min', -0.2)
+        contra_hip_max = joint_ranges.get('hip_flexion_angle_contra', {}).get('max', 0.3)
+        contra_knee_min = joint_ranges.get('knee_flexion_angle_contra', {}).get('min', 0)
+        contra_knee_max = joint_ranges.get('knee_flexion_angle_contra', {}).get('max', 1.0)
+        contra_ankle_min = joint_ranges.get('ankle_flexion_angle_contra', {}).get('min', -0.2)
+        contra_ankle_max = joint_ranges.get('ankle_flexion_angle_contra', {}).get('max', 0.2)
         
-        # Draw bilateral poses (min=dashed, max=solid)
+        # Calculate average values for main pose
+        ipsi_hip_avg = (ipsi_hip_min + ipsi_hip_max) / 2
+        ipsi_knee_avg = (ipsi_knee_min + ipsi_knee_max) / 2
+        ipsi_ankle_avg = (ipsi_ankle_min + ipsi_ankle_max) / 2
+        contra_hip_avg = (contra_hip_min + contra_hip_max) / 2
+        contra_knee_avg = (contra_knee_min + contra_knee_max) / 2
+        contra_ankle_avg = (contra_ankle_min + contra_ankle_max) / 2
+        
+        # Draw min/avg/max poses with correct transparency
         self.draw_bilateral_pose(ax, 
                                ipsi_hip_min, ipsi_knee_min, ipsi_ankle_min,
+                               ipsi_hip_avg, ipsi_knee_avg, ipsi_ankle_avg,
                                ipsi_hip_max, ipsi_knee_max, ipsi_ankle_max,
                                contra_hip_min, contra_knee_min, contra_ankle_min,
+                               contra_hip_avg, contra_knee_avg, contra_ankle_avg,
                                contra_hip_max, contra_knee_max, contra_ankle_max)
         
+        # Draw walking direction arrow - lowered to avoid legend conflict
+        ax.annotate('', xy=(1.5, 1.3), xytext=(0.5, 1.3),
+                   arrowprops=dict(arrowstyle='->', lw=3, color='green'))
+        ax.text(1.0, 1.5, 'Walking Direction', ha='center', va='bottom', 
+               fontsize=12, color='green', fontweight='bold')
+        
         # Draw ground line
-        ground_level = -(self.segment_lengths['thigh'] + self.segment_lengths['shank'])
-        ax.axhline(y=ground_level, color=self.colors['ground'], 
-                  linestyle='-', linewidth=2, alpha=0.5, label='Ground')
+        ground_level = -2.0
+        ax.axhline(y=ground_level, color='gray', linestyle='-', linewidth=2)
         
-        # Set axis properties
-        ax.set_xlim(-2.5, 2.5)
-        ax.set_ylim(ground_level - 0.5, self.segment_lengths['torso'] + 0.5)
+        # Set axis properties - remove axis text as requested
+        ax.set_xlim(-2, 2)
+        ax.set_ylim(-2.5, 2.5)
         ax.set_aspect('equal')
-        ax.grid(True, alpha=0.3)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
         
-        # Add labels and title
-        ax.set_title(f'{task_name.replace("_", " ").title()}\nPhase {phase_point}% - Bilateral Joint Range Validation', 
+        # Title in original style
+        if phase_point == 25:
+            phase_name = "Mid Phase"
+        elif phase_point == 50:
+            phase_name = "Mid Phase" 
+        elif phase_point == 75:
+            phase_name = "Mid Phase"
+        else:
+            phase_name = f"Phase {phase_point}%"
+            
+        ax.set_title(f'{task_name.replace("_", " ").title()} - {phase_name}\n' +
+                    'Joint Angle Range Visualization\n(Frontal Plane View)', 
                     fontsize=14, fontweight='bold')
-        ax.set_xlabel('Anterior-Posterior (m)', fontsize=12)
-        ax.set_ylabel('Vertical (m)', fontsize=12)
         
-        # Add legend
+        # Simple legend with correct ipsi/contra terminology
         legend_elements = [
-            plt.Line2D([0], [0], color=self.colors['ipsi_leg'], linewidth=3, linestyle='-', label='Ipsilateral Leg (Max)'),
-            plt.Line2D([0], [0], color=self.colors['ipsi_leg'], linewidth=3, linestyle='--', label='Ipsilateral Leg (Min)'),
-            plt.Line2D([0], [0], color=self.colors['contra_leg'], linewidth=3, linestyle='-', label='Contralateral Leg (Max)'),
-            plt.Line2D([0], [0], color=self.colors['contra_leg'], linewidth=3, linestyle='--', label='Contralateral Leg (Min)'),
-            plt.Line2D([0], [0], color=self.colors['torso'], linewidth=4, label='Torso'),
-            plt.Line2D([0], [0], color=self.colors['ground'], linewidth=2, label='Ground')
+            plt.Line2D([0], [0], color='blue', linewidth=3, label='Ipsilateral Leg'),
+            plt.Line2D([0], [0], color='red', linewidth=3, label='Contralateral Leg'),
+            plt.Line2D([0], [0], color='black', linewidth=3, label='Pelvis'),
+            plt.Line2D([0], [0], color='gray', linewidth=2, label='Ground')
         ]
-        ax.legend(handles=legend_elements, loc='upper right', fontsize=9)
+        ax.legend(handles=legend_elements, loc='upper right', fontsize=10)
         
-        # Add bilateral angle annotations (fixed newline characters)
-        annotation_text = (
-            f"LEFT LEG RANGES:\n"
-            f"Hip: {np.degrees(ipsi_hip_min):.1f}° to {np.degrees(ipsi_hip_max):.1f}°\n"
-            f"Knee: {np.degrees(ipsi_knee_min):.1f}° to {np.degrees(ipsi_knee_max):.1f}°\n"
-            f"Ankle: {np.degrees(ipsi_ankle_min):.1f}° to {np.degrees(ipsi_ankle_max):.1f}°\n\n"
-            f"RIGHT LEG RANGES:\n"
-            f"Hip: {np.degrees(contra_hip_min):.1f}° to {np.degrees(contra_hip_max):.1f}°\n"
-            f"Knee: {np.degrees(contra_knee_min):.1f}° to {np.degrees(contra_knee_max):.1f}°\n"
-            f"Ankle: {np.degrees(contra_ankle_min):.1f}° to {np.degrees(contra_ankle_max):.1f}°"
-        )
-        ax.text(0.02, 0.98, annotation_text, transform=ax.transAxes, 
-               fontsize=9, verticalalignment='top', 
-               bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+        # Simple angle annotations in original min/avg/max format
+        ax.text(-1.8, 1.5, 
+               f"Hip: {np.degrees(ipsi_hip_min):.0f}° / {np.degrees(ipsi_hip_avg):.0f}° / {np.degrees(ipsi_hip_max):.0f}°\n\n"
+               f"Knee: {np.degrees(ipsi_knee_min):.0f}° / {np.degrees(ipsi_knee_avg):.0f}° / {np.degrees(ipsi_knee_max):.0f}°\n\n"
+               f"Ankle: {np.degrees(ipsi_ankle_min):.0f}° / {np.degrees(ipsi_ankle_avg):.0f}° / {np.degrees(ipsi_ankle_max):.0f}°",
+               fontsize=11, verticalalignment='top')
+        
+        # Range explanation box
+        ax.text(-1.8, 0.8,
+               "Range: Min / Avg / Max\n"
+               "Avg: solid line\n"
+               "Min: dashed (10% alpha)\n"
+               "Max: solid (10% alpha)",
+               fontsize=9, verticalalignment='top',
+               bbox=dict(boxstyle='round', facecolor='white', edgecolor='black', alpha=0.8))
         
         # Save the figure
         os.makedirs(output_path, exist_ok=True)
@@ -282,7 +314,7 @@ class KinematicPoseGenerator:
         filepath = os.path.join(output_path, filename)
         
         plt.tight_layout()
-        plt.savefig(filepath, dpi=150, bbox_inches='tight')
+        plt.savefig(filepath, dpi=150, bbox_inches='tight', facecolor='white')
         plt.close()
         
         return filepath

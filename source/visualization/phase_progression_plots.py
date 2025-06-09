@@ -222,8 +222,23 @@ def create_phase_progression_plot(validation_data: Dict, task_name: str, output_
     task_type = get_task_classification(task_name)
     
     # Add 100% phase data (same as 0% to show cyclical nature)
+    # For gait tasks, we need to apply the contralateral offset logic to 100% as well
     if 0 in task_data and 100 not in task_data:
         task_data[100] = task_data[0].copy()
+        
+        # Apply contralateral offset logic for 100% phase in gait tasks
+        if task_type == 'gait':
+            # For gait tasks, 100% contralateral should be same as 50% ipsilateral (offset logic)
+            joint_types = ['hip_flexion_angle', 'knee_flexion_angle', 'ankle_flexion_angle']
+            
+            # If we have phase 50 data, use its ipsilateral data for 100% contralateral
+            if 50 in task_data:
+                for joint_type in joint_types:
+                    ipsi_joint = f'{joint_type}_ipsi'
+                    contra_joint = f'{joint_type}_contra'
+                    
+                    if ipsi_joint in task_data[50]:
+                        task_data[100][contra_joint] = task_data[50][ipsi_joint].copy()
     
     # Create figure with subplots for each joint type
     fig, axes = plt.subplots(3, 2, figsize=(16, 12))
