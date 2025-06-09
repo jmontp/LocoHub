@@ -4,7 +4,8 @@
 
 This document provides biomechanically verified validation ranges based on published gait analysis literature. The specification uses a modern phase system (0%, 25%, 50%, 75%) with contralateral offset logic for optimal validation efficiency.
 
-> **📋 Version Information**: See [validation_expectations_changelog.md](validation_expectations_changelog.md) for detailed version history and changes.
+> **📋 Version Information**: See [validation_expectations_changelog.md](validation_expectations_changelog.md) for detailed version history and changes.  
+> **🎨 Image Generation**: See [kinematic_visualization_guide.md](kinematic_visualization_guide.md) for generating validation images.
 
 ## Format Specification
 
@@ -254,7 +255,7 @@ This document provides biomechanically verified validation ranges based on publi
 #### Phase 0% (Step Contact)
 | Variable | Min_Value | Max_Value | Units | Notes |
 |----------|-----------|-----------|-------|---------|
-| hip_flexion_angle_left_rad | 0.4 (23°) | 1.0 (57°) | rad | High hip flexion for step approach (23-57°) |
+| hip_flexion_angle_left_rad | 0.3 (17°) | 0.7 (40°) | rad | Moderate hip flexion for step approach (17-40°) |
 | knee_flexion_angle_left_rad | 0.1 (6°) | 0.6 (34°) | rad | Controlled loading on step (6-34°) |
 | ankle_flexion_angle_left_rad | 0.05 (3°) | 0.3 (17°) | rad | Dorsiflexion for step contact (3-17°) |
 | vertical_grf_N | 600 | 1800 | N | High vertical forces for lifting |
@@ -264,7 +265,7 @@ This document provides biomechanically verified validation ranges based on publi
 #### Phase 25% (Loading)
 | Variable | Min_Value | Max_Value | Units | Notes |
 |----------|-----------|-----------|-------|---------|
-| hip_flexion_angle_left_rad | 0.6 (34°) | 1.2 (69°) | rad | Peak hip flexion for lifting (34-69°) |
+| hip_flexion_angle_left_rad | 0.4 (23°) | 0.8 (46°) | rad | Hip flexion for lifting (23-46°) |
 | knee_flexion_angle_left_rad | 0.5 (29°) | 1.0 (57°) | rad | Eccentric to concentric transition (29-57°) |
 | ankle_flexion_angle_left_rad | 0.15 (9°) | 0.4 (23°) | rad | **VERIFIED: Dorsiflexion maintenance (9-23°)** |
 | vertical_grf_N | 800 | 2000 | N | Peak vertical lifting forces |
@@ -274,7 +275,7 @@ This document provides biomechanically verified validation ranges based on publi
 #### Phase 50% (Toe-Off)
 | Variable | Min_Value | Max_Value | Units | Notes |
 |----------|-----------|-----------|-------|---------|
-| hip_flexion_angle_left_rad | 0.7 (40°) | 1.4 (80°) | rad | Hip flexion for vertical lift (40-80°) |
+| hip_flexion_angle_left_rad | 0.2 (11°) | 0.6 (34°) | rad | Hip extension for vertical lift (11-34°) |
 | knee_flexion_angle_left_rad | 0.9 (52°) | 1.5 (86°) | rad | **VERIFIED: Concentric extension phase (52-86°)** |
 | ankle_flexion_angle_left_rad | -0.3 (-17°) | -0.1 (-6°) | rad | **VERIFIED: Plantarflexion for push-off (-17 to -6°)** |
 | vertical_grf_N | 1000 | 2200 | N | Maximum lifting forces |
@@ -284,7 +285,7 @@ This document provides biomechanically verified validation ranges based on publi
 #### Phase 75% (Mid-Swing)
 | Variable | Min_Value | Max_Value | Units | Notes |
 |----------|-----------|-----------|-------|---------|
-| hip_flexion_angle_left_rad | 0.5 (29°) | 1.1 (63°) | rad | Hip position at step completion (29-63°) |
+| hip_flexion_angle_left_rad | 0.4 (23°) | 0.8 (46°) | rad | Hip flexion for swing clearance (23-46°) |
 | knee_flexion_angle_left_rad | 1.2 (69°) | 1.7 (97°) | rad | Swing leg peak flexion (69-97°) |
 | ankle_flexion_angle_left_rad | 0.3 (17°) | 0.5 (29°) | rad | Maximum dorsiflexion (17-29°) |
 | vertical_grf_N | 0 | 300 | N | Minimal forces during swing |
@@ -314,7 +315,7 @@ This document provides biomechanically verified validation ranges based on publi
 #### Phase 0% (Step Contact)
 | Variable | Min_Value | Max_Value | Units | Notes |
 |----------|-----------|-----------|-------|---------|
-| hip_flexion_angle_left_rad | -0.05 (-3°) | 0.5 (29°) | rad | Controlled hip position for descent (-3 to 29°) |
+| hip_flexion_angle_left_rad | 0.0 (0°) | 0.4 (23°) | rad | Controlled hip position for descent (0 to 23°) |
 | knee_flexion_angle_left_rad | 0.0 (0°) | 0.4 (23°) | rad | Initial contact absorption (0-23°) |
 | ankle_flexion_angle_left_rad | -0.15 (-9°) | 0.05 (3°) | rad | Controlled landing (-9 to 3°) |
 | vertical_grf_N | 800 | 2200 | N | High impact absorption |
@@ -324,7 +325,7 @@ This document provides biomechanically verified validation ranges based on publi
 #### Phase 25% (Loading)
 | Variable | Min_Value | Max_Value | Units | Notes |
 |----------|-----------|-----------|-------|---------|
-| hip_flexion_angle_left_rad | -0.2 (-11°) | 0.3 (17°) | rad | Hip extension for control (-11 to 17°) |
+| hip_flexion_angle_left_rad | -0.1 (-6°) | 0.2 (11°) | rad | Hip extension for control (-6 to 11°) |
 | knee_flexion_angle_left_rad | 0.3 (17°) | 0.8 (46°) | rad | Eccentric loading peak (17-46°) |
 | ankle_flexion_angle_left_rad | 0.0 (0°) | 0.2 (11°) | rad | **VERIFIED: Controlled dorsiflexion (0-11°)** |
 | vertical_grf_N | 1000 | 2500 | N | Peak eccentric loading |
@@ -334,7 +335,7 @@ This document provides biomechanically verified validation ranges based on publi
 #### Phase 50% (Toe-Off)
 | Variable | Min_Value | Max_Value | Units | Notes |
 |----------|-----------|-----------|-------|---------|
-| hip_flexion_angle_left_rad | -0.15 (-9°) | 0.4 (23°) | rad | Hip position for push-off (-9 to 23°) |
+| hip_flexion_angle_left_rad | -0.2 (-11°) | 0.1 (6°) | rad | Hip extension for push-off (-11 to 6°) |
 | knee_flexion_angle_left_rad | 0.7 (40°) | 1.1 (63°) | rad | **VERIFIED: Controlled extension (40-63°)** |
 | ankle_flexion_angle_left_rad | -0.35 (-20°) | -0.15 (-9°) | rad | **VERIFIED: Push-off preparation (-20 to -9°)** |
 | vertical_grf_N | 600 | 1800 | N | Controlled push-off |
@@ -344,7 +345,7 @@ This document provides biomechanically verified validation ranges based on publi
 #### Phase 75% (Mid-Swing)
 | Variable | Min_Value | Max_Value | Units | Notes |
 |----------|-----------|-----------|-------|---------|
-| hip_flexion_angle_left_rad | 0.2 (11°) | 0.7 (40°) | rad | Swing hip flexion (11-40°) |
+| hip_flexion_angle_left_rad | 0.2 (11°) | 0.6 (34°) | rad | Swing hip flexion (11-34°) |
 | knee_flexion_angle_left_rad | 1.0 (57°) | 1.4 (80°) | rad | Swing clearance (57-80°) |
 | ankle_flexion_angle_left_rad | 0.0 (0°) | 0.3 (17°) | rad | Clearance dorsiflexion (0-17°) |
 | vertical_grf_N | 0 | 250 | N | Minimal swing forces |
