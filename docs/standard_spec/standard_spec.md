@@ -128,6 +128,8 @@ See [units\_and\_conventions.md](units_and_conventions.md)
 
 See [sign\_conventions.md](sign_conventions.md)
 
+**Key**: All joint angles follow **OpenSim conventions** for maximum compatibility with biomechanical modeling frameworks.
+
 ---
 
 ## 7. Temporal & Phase Indexing
