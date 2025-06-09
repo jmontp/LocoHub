@@ -47,12 +47,12 @@ for subject in [f'SUB{i:02d}' for i in range(1, n_subjects+1)]:
                     'subject': subject,
                     'task': task,
                     'phase': phase[i],
-                    'hip_flexion_angle_right_rad': hip_angle[i],
-                    'knee_flexion_angle_right_rad': knee_angle[i],
-                    'ankle_flexion_angle_right_rad': ankle_angle[i],
-                    'hip_flexion_angle_left_rad': hip_angle[i] + 0.05,
-                    'knee_flexion_angle_left_rad': knee_angle[i] + 0.05,
-                    'ankle_flexion_angle_left_rad': ankle_angle[i] + 0.05
+                    'hip_flexion_angle_contra_rad': hip_angle[i],
+                    'knee_flexion_angle_contra_rad': knee_angle[i],
+                    'ankle_flexion_angle_contra_rad': ankle_angle[i],
+                    'hip_flexion_angle_ipsi_rad': hip_angle[i] + 0.05,
+                    'knee_flexion_angle_ipsi_rad': knee_angle[i] + 0.05,
+                    'ankle_flexion_angle_ipsi_rad': ankle_angle[i] + 0.05
                 })
 
 df = pd.DataFrame(data)
@@ -77,7 +77,7 @@ print("\n3. Testing 3D array extraction...")
 try:
     subject = loco.get_subjects()[0]
     task = loco.get_tasks()[0]
-    features = ['hip_flexion_angle_right_rad', 'knee_flexion_angle_right_rad']
+    features = ['hip_flexion_angle_contra_rad', 'knee_flexion_angle_contra_rad']
     
     data_3d, feature_names = loco.get_cycles(subject, task, features)
     if data_3d is not None:

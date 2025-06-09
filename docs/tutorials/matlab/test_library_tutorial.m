@@ -16,9 +16,9 @@ try
     data.time_s = linspace(0, 3, 450)';
     data.phase = repmat((0:149)'/150 * 100, 3, 1);
     data.step_number = repelem((0:2)', 150, 1);
-    data.hip_flexion_angle_right_rad = 0.5 * sin(2*pi*data.phase/100) + 0.1*randn(450, 1);
-    data.knee_flexion_angle_right_rad = 0.8 * sin(2*pi*data.phase/100 + pi/4) + 0.1*randn(450, 1);
-    data.ankle_flexion_angle_right_rad = 0.3 * sin(2*pi*data.phase/100 - pi/4) + 0.1*randn(450, 1);
+    data.hip_flexion_angle_contra_rad = 0.5 * sin(2*pi*data.phase/100) + 0.1*randn(450, 1);
+    data.knee_flexion_angle_contra_rad = 0.8 * sin(2*pi*data.phase/100 + pi/4) + 0.1*randn(450, 1);
+    data.ankle_flexion_angle_contra_rad = 0.3 * sin(2*pi*data.phase/100 - pi/4) + 0.1*randn(450, 1);
     
     % Convert to table
     dataTable = struct2table(data);
@@ -29,7 +29,7 @@ try
     
     % 2. Test 3D Array Creation
     disp('2. Testing 3D array creation...');
-    features = {'hip_flexion_angle_right_rad', 'knee_flexion_angle_right_rad', 'ankle_flexion_angle_right_rad'};
+    features = {'hip_flexion_angle_contra_rad', 'knee_flexion_angle_contra_rad', 'ankle_flexion_angle_contra_rad'};
     [data3d, featureNames, cycleInfo] = ld.to3DArray(features);
     fprintf('3D array shape: %d x %d x %d\n', size(data3d));
     disp('Feature names:');
@@ -73,7 +73,7 @@ try
     
     % Time series plot
     figure('Visible', 'off');
-    ld.plotTimeSeries({'knee_flexion_angle_right_rad'}, 'AB01');
+    ld.plotTimeSeries({'knee_flexion_angle_contra_rad'}, 'AB01');
     saveas(gcf, 'test_time_series.png');
     close(gcf);
     disp('Time series plot saved');
@@ -87,7 +87,7 @@ try
     
     % Task comparison plot
     figure('Visible', 'off');
-    mergedLD.plotTaskComparison('knee_flexion_angle_right_rad', 'task_name');
+    mergedLD.plotTaskComparison('knee_flexion_angle_contra_rad', 'task_name');
     saveas(gcf, 'test_task_comparison.png');
     close(gcf);
     disp('Task comparison plot saved');
@@ -118,7 +118,7 @@ try
     % Test with multiple subjects
     data2 = data;
     data2.subject_id = repmat({'AB02'}, 450, 1);
-    data2.hip_flexion_angle_right_rad = 0.6 * sin(2*pi*data.phase/100) + 0.1*randn(450, 1);
+    data2.hip_flexion_angle_contra_rad = 0.6 * sin(2*pi*data.phase/100) + 0.1*randn(450, 1);
     
     combinedData = [dataTable; struct2table(data2)];
     ldMulti = LocomotionData(combinedData);

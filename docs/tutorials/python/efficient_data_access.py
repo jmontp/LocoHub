@@ -81,7 +81,7 @@ def demonstrate_efficiency():
     # Test parameters
     subject = df['subject'].iloc[0]
     task = df[df['subject'] == subject]['task'].iloc[0]
-    features = ['knee_flexion_angle_right_rad', 'hip_flexion_angle_right_rad', 'ankle_flexion_angle_right_rad']
+    features = ['knee_flexion_angle_contra_rad', 'hip_flexion_angle_contra_rad', 'ankle_flexion_angle_contra_rad']
     
     print(f"\nTesting with: {subject} - {task}")
     print(f"Features: {features}")
@@ -117,7 +117,7 @@ def plot_efficient_data():
     # Get data for one subject-task
     subject = df['subject'].iloc[0]
     task = 'normal_walk'  # Use a walking task
-    features = ['knee_flexion_angle_right_rad', 'hip_flexion_angle_right_rad', 'ankle_flexion_angle_right_rad']
+    features = ['knee_flexion_angle_contra_rad', 'hip_flexion_angle_contra_rad', 'ankle_flexion_angle_contra_rad']
     
     # Efficiently reshape data
     reshaped_data = efficient_reshape_method(df, subject, task, features)
@@ -173,7 +173,7 @@ def batch_process_subjects():
     
     # Process all subjects for a specific task
     task = 'normal_walk'
-    feature = 'knee_angle_s_r'
+    feature = 'knee_flexion_angle_contra_rad'
     
     subjects = df[df['task'] == task]['subject'].unique()
     print(f"\nProcessing {len(subjects)} subjects for task: {task}")
@@ -221,12 +221,12 @@ def advanced_analysis_example():
     task = 'normal_walk'
     
     # Get knee angle data
-    knee_data = efficient_reshape_method(df, subject, task, ['knee_angle_s_r'])
+    knee_data = efficient_reshape_method(df, subject, task, ['knee_flexion_angle_contra_rad'])
     
     if knee_data is None:
         return
     
-    knee_angles = knee_data['knee_angle_s_r']
+    knee_angles = knee_data['knee_flexion_angle_contra_rad']
     n_cycles, n_points = knee_angles.shape
     
     print(f"\nAnalyzing {n_cycles} gait cycles")
