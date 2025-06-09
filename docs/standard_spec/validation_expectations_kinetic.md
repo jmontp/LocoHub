@@ -206,6 +206,18 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | cop_x_m | -0.20 | 0.20 | m | COP undefined during swing (no ground contact) - **Literature estimate** |
 | cop_y_m | -0.20 | 0.20 | m | COP undefined during swing (no ground contact) - **Literature estimate** |
 
+#### Phase 100% (Heel Strike - Cycle Complete)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 8.0 | 12.0 | N/kg | Return to initial loading response (same as 0%) |
+| ap_grf_N_kg | -2.0 | 0.5 | N/kg | Return to initial braking forces (same as 0%) |
+| ml_grf_N_kg | -1.0 | 1.0 | N/kg | Return to lateral balance (same as 0%) |
+| hip_moment_ipsi_Nm_kg | -0.1 | 0.3 | Nm/kg | Return to small hip flexor moment (same as 0%) |
+| knee_moment_ipsi_Nm_kg | -0.2 | 0.1 | Nm/kg | Return to small knee flexor moment (same as 0%) |
+| ankle_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Return to ankle moment at contact (same as 0%) |
+| cop_x_m | -0.10 | -0.05 | m | Return to COP posterior position (same as 0%) |
+| cop_y_m | -0.03 | 0.03 | m | Return to COP near foot center (same as 0%) |
+
 **Contralateral Offset Logic:**
 - **Phase 0% ipsilateral** (heel strike) = **Phase 50% contralateral** (toe-off)
 - **Phase 25% ipsilateral** (mid-stance) = **Phase 75% contralateral** (mid-swing)  
@@ -268,6 +280,18 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | cop_x_m | -0.20 | 0.20 | m | COP undefined during swing - **NEEDS RESEARCH** |
 | cop_y_m | -0.20 | 0.20 | m | COP undefined during swing - **NEEDS RESEARCH** |
 
+#### Phase 100% (Heel Strike - Cycle Complete)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 6.0 | 14.0 | N/kg | Return to higher incline impact (same as 0%) |
+| ap_grf_N_kg | -4.0 | 0.0 | N/kg | Return to strong braking uphill (same as 0%) |
+| ml_grf_N_kg | -1.2 | 1.2 | N/kg | Return to lateral balance (same as 0%) |
+| hip_moment_ipsi_Nm_kg | -0.2 | 0.4 | Nm/kg | Return to small hip flexor moment (same as 0%) |
+| knee_moment_ipsi_Nm_kg | -0.3 | 0.2 | Nm/kg | Return to small knee moment (same as 0%) |
+| ankle_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Return to ankle moment at contact (same as 0%) |
+| cop_x_m | -0.12 | -0.08 | m | Return to COP posterior position (same as 0%) |
+| cop_y_m | -0.04 | 0.04 | m | Return to COP near center (same as 0%) |
+
 **Contralateral Offset Logic:**
 - **Phase 0% ipsilateral** (heel strike) = **Phase 50% contralateral** (toe-off)
 - **Phase 25% ipsilateral** (mid-stance) = **Phase 75% contralateral** (mid-swing)  
@@ -329,6 +353,18 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | ankle_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Ankle swing moment - **Literature estimate** |
 | cop_x_m | -0.20 | 0.20 | m | COP undefined during flight phase - **Literature estimate** |
 | cop_y_m | -0.20 | 0.20 | m | COP undefined during flight phase - **Literature estimate** |
+
+#### Phase 100% (Heel Strike - Cycle Complete)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 19.6 | 28.4 | N/kg | Return to high impact forces (same as 0%) |
+| ap_grf_N_kg | -8.0 | 3.0 | N/kg | Return to strong braking forces (same as 0%) |
+| ml_grf_N_kg | -2.0 | 2.0 | N/kg | Return to lateral balance (same as 0%) |
+| hip_moment_ipsi_Nm_kg | -0.3 | 0.5 | Nm/kg | Return to small hip moment (same as 0%) |
+| knee_moment_ipsi_Nm_kg | -0.4 | 0.3 | Nm/kg | Return to small knee moment (same as 0%) |
+| ankle_moment_ipsi_Nm_kg | -0.6 | 0.6 | Nm/kg | Return to ankle moment at contact (same as 0%) |
+| cop_x_m | -0.08 | -0.03 | m | Return to COP posterior position (same as 0%) |
+| cop_y_m | -0.05 | 0.05 | m | Return to COP variable position (same as 0%) |
 
 **Contralateral Offset Logic:**
 - **Phase 0% ipsilateral** (heel strike) = **Phase 50% contralateral** (toe-off)

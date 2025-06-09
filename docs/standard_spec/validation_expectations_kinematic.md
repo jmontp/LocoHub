@@ -112,6 +112,16 @@ This document provides biomechanically verified kinematic validation ranges (joi
 | ap_grf_N | -50 | 50 | N | Minimal AP forces during swing |
 | ml_grf_N | -30 | 30 | N | Minimal ML forces during swing |
 
+#### Phase 100% (Heel Strike - Cycle Complete)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| hip_flexion_angle_ipsi_rad | 0.15 (9°) | 0.6 (34°) | rad | Return to initial contact (same as 0%) |
+| knee_flexion_angle_ipsi_rad | 0.0 (0°) | 0.15 (9°) | rad | Return to nearly extended (same as 0%) |
+| ankle_flexion_angle_ipsi_rad | -0.05 (-3°) | 0.05 (3°) | rad | Return to neutral position (same as 0%) |
+| vertical_grf_N | 400 | 1200 | N | Return to initial loading (same as 0%) |
+| ap_grf_N | -300 | 100 | N | Return to initial braking (same as 0%) |
+| ml_grf_N | -100 | 100 | N | Return to initial balance (same as 0%) |
+
 **Contralateral Offset Logic:**
 - **Phase 0% ipsilateral** (heel strike) = **Phase 50% contralateral** (toe-off)
 - **Phase 25% ipsilateral** (mid-stance) = **Phase 75% contralateral** (mid-swing)  
@@ -171,6 +181,16 @@ This document provides biomechanically verified kinematic validation ranges (joi
 | vertical_grf_N | 0 | 100 | N | Minimal swing forces |
 | ap_grf_N | -30 | 30 | N | Minimal swing forces |
 | ml_grf_N | -20 | 20 | N | Minimal swing forces |
+
+#### Phase 100% (Heel Strike - Cycle Complete)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| hip_flexion_angle_ipsi_rad | 0.25 (14°) | 0.8 (46°) | rad | Return to increased hip flexion for incline (same as 0%) |
+| knee_flexion_angle_ipsi_rad | 0.0 (0°) | 0.25 (14°) | rad | Return to controlled loading (same as 0%) |
+| ankle_flexion_angle_ipsi_rad | 0.05 (3°) | 0.25 (14°) | rad | Return to dorsiflexion for incline contact (same as 0%) |
+| vertical_grf_N | 500 | 1400 | N | Return to higher incline impact (same as 0%) |
+| ap_grf_N | -400 | 0 | N | Return to strong braking uphill (same as 0%) |
+| ml_grf_N | -120 | 120 | N | Return to lateral balance (same as 0%) |
 
 **Contralateral Offset Logic:**
 - **Phase 0% ipsilateral** (heel strike) = **Phase 50% contralateral** (toe-off)
@@ -413,6 +433,16 @@ This document provides biomechanically verified kinematic validation ranges (joi
 | vertical_grf_N | 0 | 200 | N | Flight phase - minimal forces |
 | ap_grf_N | -80 | 80 | N | Minimal flight forces |
 | ml_grf_N | -50 | 50 | N | Minimal flight forces |
+
+#### Phase 100% (Heel Strike - Cycle Complete)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|---------|
+| hip_flexion_angle_ipsi_rad | -0.1 (-6°) | 0.8 (46°) | rad | Return to initial contact with forward lean (same as 0%) |
+| knee_flexion_angle_ipsi_rad | 0.0 (0°) | 0.35 (20°) | rad | Return to impact absorption (same as 0%) |
+| ankle_flexion_angle_ipsi_rad | -0.25 (-14°) | 0.15 (9°) | rad | Return to variable contact strategy (same as 0%) |
+| vertical_grf_N | 1200 | 2800 | N | Return to high impact forces (same as 0%) |
+| ap_grf_N | -600 | 200 | N | Return to strong braking forces (same as 0%) |
+| ml_grf_N | -250 | 250 | N | Return to lateral balance (same as 0%) |
 
 **Contralateral Offset Logic:**
 - **Phase 0% ipsilateral** (heel strike) = **Phase 50% contralateral** (toe-off)
