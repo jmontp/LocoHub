@@ -114,9 +114,9 @@ source/
 **Pattern**: `<joint>_<motion>_<measurement>_<side>_<unit>`
 
 **Examples**:
-- `knee_flexion_angle_right_rad`
-- `hip_moment_left_Nm`
-- `ankle_flexion_velocity_left_rad_s`
+- `knee_flexion_angle_contra_rad`
+- `hip_moment_ipsi_Nm`
+- `ankle_flexion_velocity_ipsi_rad_s`
 
 **Implementation**: `naming_convention_mapping.py` provides utilities for:
 - Variable name standardization

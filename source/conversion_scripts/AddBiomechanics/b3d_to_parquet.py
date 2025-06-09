@@ -149,34 +149,34 @@ def b3d_to_parquet(dataset):
                     pelvis_angle_s = poses[0]
                     pelvis_angle_f = poses[1]
                     pelvis_angle_t = poses[2]
-                    hip_flexion_angle_right_rad = poses[6]
-                    hip_adduction_angle_right_rad = poses[7]
-                    hip_rotation_angle_right_rad = poses[8]
-                    knee_flexion_angle_right_rad = poses[9]
-                    ankle_flexion_angle_right_rad = poses[10]
-                    ankle_rotation_angle_right_rad = poses[11]
-                    hip_flexion_angle_left_rad = poses[13]
-                    hip_adduction_angle_left_rad = poses[14]
-                    hip_rotation_angle_left_rad = poses[15]
-                    knee_flexion_angle_left_rad = poses[16]
-                    ankle_flexion_angle_left_rad = poses[17]
-                    ankle_rotation_angle_left_rad = poses[18]
+                    hip_flexion_angle_contra_rad = poses[6]
+                    hip_adduction_angle_contra_rad = poses[7]
+                    hip_rotation_angle_contra_rad = poses[8]
+                    knee_flexion_angle_contra_rad = poses[9]
+                    ankle_flexion_angle_contra_rad = poses[10]
+                    ankle_rotation_angle_contra_rad = poses[11]
+                    hip_flexion_angle_ipsi_rad = poses[13]
+                    hip_adduction_angle_ipsi_rad = poses[14]
+                    hip_rotation_angle_ipsi_rad = poses[15]
+                    knee_flexion_angle_ipsi_rad = poses[16]
+                    ankle_flexion_angle_ipsi_rad = poses[17]
+                    ankle_rotation_angle_ipsi_rad = poses[18]
 
                     pelvis_vel_s = vels[0]
                     pelvis_vel_f = vels[1]
                     pelvis_vel_t = vels[2]
-                    hip_flexion_velocity_right_rad_s = vels[6]
-                    hip_adduction_velocity_right_rad_s = vels[7]
-                    hip_rotation_velocity_right_rad_s = vels[8]
-                    knee_flexion_velocity_right_rad_s = vels[9]
-                    ankle_flexion_velocity_right_rad_s = vels[10]
-                    ankle_rotation_velocity_right_rad_s = vels[11]
-                    hip_flexion_velocity_left_rad_s = vels[13]
-                    hip_adduction_velocity_left_rad_s = vels[14]
-                    hip_rotation_velocity_left_rad_s = vels[15]
-                    knee_flexion_velocity_left_rad_s = vels[16]
-                    ankle_flexion_velocity_left_rad_s = vels[17]
-                    ankle_rotation_velocity_left_rad_s = vels[18]
+                    hip_flexion_velocity_contra_rad_s = vels[6]
+                    hip_adduction_velocity_contra_rad_s = vels[7]
+                    hip_rotation_velocity_contra_rad_s = vels[8]
+                    knee_flexion_velocity_contra_rad_s = vels[9]
+                    ankle_flexion_velocity_contra_rad_s = vels[10]
+                    ankle_rotation_velocity_contra_rad_s = vels[11]
+                    hip_flexion_velocity_ipsi_rad_s = vels[13]
+                    hip_adduction_velocity_ipsi_rad_s = vels[14]
+                    hip_rotation_velocity_ipsi_rad_s = vels[15]
+                    knee_flexion_velocity_ipsi_rad_s = vels[16]
+                    ankle_flexion_velocity_ipsi_rad_s = vels[17]
+                    ankle_rotation_velocity_ipsi_rad_s = vels[18]
 
                     pelvis_torque_s = torque[0]
                     pelvis_torque_f = torque[1]
@@ -199,12 +199,12 @@ def b3d_to_parquet(dataset):
                     # we need to calculate the rotation matrices for each
                     # segment.
                     R_pelvis = osim_rotate_matrix(pelvis_angle_f, pelvis_angle_t, pelvis_angle_s)
-                    R_hip_r = osim_rotate_matrix(hip_adduction_angle_right_rad, hip_rotation_angle_right_rad, hip_flexion_angle_right_rad)
-                    R_hip_l = osim_rotate_matrix(hip_adduction_angle_left_rad, hip_rotation_angle_left_rad, hip_flexion_angle_left_rad)
-                    R_knee_r = osim_rotate_matrix(0, 0, -knee_flexion_angle_right_rad)
-                    R_knee_l = osim_rotate_matrix(0, 0, -knee_flexion_angle_left_rad)
-                    R_ankle_r = osim_rotate_matrix(0, ankle_rotation_angle_right_rad, ankle_flexion_angle_right_rad)
-                    R_ankle_l = osim_rotate_matrix(0, ankle_rotation_angle_left_rad, ankle_flexion_angle_left_rad)
+                    R_hip_r = osim_rotate_matrix(hip_adduction_angle_contra_rad, hip_rotation_angle_contra_rad, hip_flexion_angle_contra_rad)
+                    R_hip_l = osim_rotate_matrix(hip_adduction_angle_ipsi_rad, hip_rotation_angle_ipsi_rad, hip_flexion_angle_ipsi_rad)
+                    R_knee_r = osim_rotate_matrix(0, 0, -knee_flexion_angle_contra_rad)
+                    R_knee_l = osim_rotate_matrix(0, 0, -knee_flexion_angle_ipsi_rad)
+                    R_ankle_r = osim_rotate_matrix(0, ankle_rotation_angle_contra_rad, ankle_flexion_angle_contra_rad)
+                    R_ankle_l = osim_rotate_matrix(0, ankle_rotation_angle_ipsi_rad, ankle_flexion_angle_ipsi_rad)
 
                     # Calculate the angles of the shank
                     R_right_shank_all = np.dot(R_pelvis, np.dot(R_hip_r, (R_knee_r)))
@@ -324,20 +324,20 @@ def b3d_to_parquet(dataset):
                             'pelvis_angle_f': pelvis_angle_f,
                             'pelvis_angle_t': pelvis_angle_t,
 
-                            'hip_flexion_angle_right_rad': hip_flexion_angle_right_rad,
-                            'hip_adduction_angle_right_rad': hip_adduction_angle_right_rad,
-                            'hip_rotation_angle_right_rad': hip_rotation_angle_right_rad,
-                            'knee_flexion_angle_right_rad': knee_flexion_angle_right_rad,
-                            'ankle_flexion_angle_right_rad': ankle_flexion_angle_right_rad,
-                            # 'ankle_adduction_angle_right_rad': ankle_adduction_angle_right_rad,
-                            'ankle_rotation_angle_right_rad': ankle_rotation_angle_right_rad,
-                            'hip_flexion_angle_left_rad': hip_flexion_angle_left_rad,
-                            'hip_adduction_angle_left_rad': hip_adduction_angle_left_rad,
-                            'hip_rotation_angle_left_rad': hip_rotation_angle_left_rad,
-                            'knee_flexion_angle_left_rad': knee_flexion_angle_left_rad,
-                            'ankle_flexion_angle_left_rad': ankle_flexion_angle_left_rad,
-                            # 'ankle_adduction_angle_left_rad': ankle_adduction_angle_left_rad,
-                            'ankle_rotation_angle_left_rad': ankle_rotation_angle_left_rad,
+                            'hip_flexion_angle_contra_rad': hip_flexion_angle_contra_rad,
+                            'hip_adduction_angle_contra_rad': hip_adduction_angle_contra_rad,
+                            'hip_rotation_angle_contra_rad': hip_rotation_angle_contra_rad,
+                            'knee_flexion_angle_contra_rad': knee_flexion_angle_contra_rad,
+                            'ankle_flexion_angle_contra_rad': ankle_flexion_angle_contra_rad,
+                            # 'ankle_adduction_angle_contra_rad': ankle_adduction_angle_contra_rad,
+                            'ankle_rotation_angle_contra_rad': ankle_rotation_angle_contra_rad,
+                            'hip_flexion_angle_ipsi_rad': hip_flexion_angle_ipsi_rad,
+                            'hip_adduction_angle_ipsi_rad': hip_adduction_angle_ipsi_rad,
+                            'hip_rotation_angle_ipsi_rad': hip_rotation_angle_ipsi_rad,
+                            'knee_flexion_angle_ipsi_rad': knee_flexion_angle_ipsi_rad,
+                            'ankle_flexion_angle_ipsi_rad': ankle_flexion_angle_ipsi_rad,
+                            # 'ankle_adduction_angle_ipsi_rad': ankle_adduction_angle_ipsi_rad,
+                            'ankle_rotation_angle_ipsi_rad': ankle_rotation_angle_ipsi_rad,
                             
                             'dorsi_angle_r': dorsi_angle_r,
                             'dorsi_angle_l': dorsi_angle_l,
@@ -356,18 +356,18 @@ def b3d_to_parquet(dataset):
                             'pelvis_vel_s': pelvis_vel_s,
                             'pelvis_vel_f': pelvis_vel_f,
                             'pelvis_vel_t': pelvis_vel_t,
-                            'hip_flexion_velocity_right_rad_s': hip_flexion_velocity_right_rad_s,
-                            'hip_adduction_velocity_right_rad_s': hip_adduction_velocity_right_rad_s,
-                            'hip_rotation_velocity_right_rad_s': hip_rotation_velocity_right_rad_s,
-                            'knee_flexion_velocity_right_rad_s': knee_flexion_velocity_right_rad_s,
-                            'ankle_flexion_velocity_right_rad_s': ankle_flexion_velocity_right_rad_s,
-                            'ankle_rotation_velocity_right_rad_s': ankle_rotation_velocity_right_rad_s,
-                            'hip_flexion_velocity_left_rad_s': hip_flexion_velocity_left_rad_s,
-                            'hip_adduction_velocity_left_rad_s': hip_adduction_velocity_left_rad_s,
-                            'hip_rotation_velocity_left_rad_s': hip_rotation_velocity_left_rad_s,
-                            'knee_flexion_velocity_left_rad_s': knee_flexion_velocity_left_rad_s,
-                            'ankle_flexion_velocity_left_rad_s': ankle_flexion_velocity_left_rad_s,
-                            'ankle_rotation_velocity_left_rad_s': ankle_rotation_velocity_left_rad_s,
+                            'hip_flexion_velocity_contra_rad_s': hip_flexion_velocity_contra_rad_s,
+                            'hip_adduction_velocity_contra_rad_s': hip_adduction_velocity_contra_rad_s,
+                            'hip_rotation_velocity_contra_rad_s': hip_rotation_velocity_contra_rad_s,
+                            'knee_flexion_velocity_contra_rad_s': knee_flexion_velocity_contra_rad_s,
+                            'ankle_flexion_velocity_contra_rad_s': ankle_flexion_velocity_contra_rad_s,
+                            'ankle_rotation_velocity_contra_rad_s': ankle_rotation_velocity_contra_rad_s,
+                            'hip_flexion_velocity_ipsi_rad_s': hip_flexion_velocity_ipsi_rad_s,
+                            'hip_adduction_velocity_ipsi_rad_s': hip_adduction_velocity_ipsi_rad_s,
+                            'hip_rotation_velocity_ipsi_rad_s': hip_rotation_velocity_ipsi_rad_s,
+                            'knee_flexion_velocity_ipsi_rad_s': knee_flexion_velocity_ipsi_rad_s,
+                            'ankle_flexion_velocity_ipsi_rad_s': ankle_flexion_velocity_ipsi_rad_s,
+                            'ankle_rotation_velocity_ipsi_rad_s': ankle_rotation_velocity_ipsi_rad_s,
 
                             'pelvis_torque_s': pelvis_torque_s,
                             'pelvis_torque_f': pelvis_torque_f,
