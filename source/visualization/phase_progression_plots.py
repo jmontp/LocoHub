@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 """
-Phase Progression Validation Plots
+Phase Progression Validation Plots - Version 5.0
 
-Creates validation plots showing how joint angle ranges change across gait phases.
-X-axis: Phase progression (0%, 33%, 50%, 66%)
+Creates validation plots showing how joint angle ranges change across movement phases.
+X-axis: Phase progression (0%, 25%, 50%, 75%) - NEW PHASE SYSTEM
 Y-axis: Joint angle ranges (with bounding boxes)
+
+NEW FEATURES:
+- Updated to 0%, 25%, 50%, 75% phase system
+- Automatic contralateral offset logic for gait-based tasks
+- Task-appropriate bilateral handling (gait vs bilateral symmetric)
+- Enhanced biomechanical accuracy with standard gait timing
 
 Generates separate plots for each task to avoid overcrowding.
 """
@@ -23,9 +29,100 @@ import argparse
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 
+def get_task_classification(task_name: str) -> str:
+    """
+    Classify tasks as either gait-based (with contralateral offset) or bilateral symmetric.
+    
+    Args:
+        task_name: Name of the task
+        
+    Returns:
+        Task classification: 'gait' or 'bilateral'
+    """
+    gait_tasks = {
+        'level_walking', 'incline_walking', 'decline_walking', 
+        'up_stairs', 'down_stairs', 'run'
+    }
+    bilateral_tasks = {
+        'sit_to_stand', 'jump', 'squats'
+    }
+    
+    if task_name in gait_tasks:
+        return 'gait'
+    elif task_name in bilateral_tasks:
+        return 'bilateral'
+    else:
+        # Default to gait for unknown tasks
+        return 'gait'
+
+
+def apply_contralateral_offset(task_data: Dict, task_name: str) -> Dict:
+    """
+    Apply contralateral offset logic for gait-based tasks.
+    For bilateral tasks, return data as-is.
+    
+    Args:
+        task_data: Phase data for the task
+        task_name: Name of the task
+        
+    Returns:
+        Updated task data with contralateral ranges computed
+    """
+    task_type = get_task_classification(task_name)
+    
+    if task_type == 'bilateral':
+        # Bilateral tasks already have both legs specified
+        return task_data
+    
+    # For gait tasks, compute contralateral leg ranges with 50% offset
+    phases = [0, 25, 50, 75]
+    joint_types = ['hip_flexion_angle', 'knee_flexion_angle', 'ankle_flexion_angle']
+    
+    # Create a new task_data copy to avoid modifying original
+    updated_task_data = {}
+    for phase in phases:
+        if phase in task_data:
+            updated_task_data[phase] = task_data[phase].copy()
+        else:
+            updated_task_data[phase] = {}
+    
+    # Apply contralateral offset logic
+    for phase in phases:
+        if phase in task_data:
+            # Calculate contralateral phase with 50% offset
+            contralateral_phase = (phase + 50) % 100
+            if contralateral_phase == 100:
+                contralateral_phase = 0
+            
+            # Map contralateral phase to available phases
+            if contralateral_phase == 0:
+                source_phase = 0
+            elif contralateral_phase == 25:
+                source_phase = 25
+            elif contralateral_phase == 50:
+                source_phase = 50
+            elif contralateral_phase == 75:
+                source_phase = 75
+            else:
+                continue
+            
+            # Copy left leg data to right leg for contralateral phase
+            for joint_type in joint_types:
+                left_joint = f'{joint_type}_left'
+                right_joint = f'{joint_type}_right'
+                
+                if left_joint in task_data[source_phase]:
+                    if phase not in updated_task_data:
+                        updated_task_data[phase] = {}
+                    updated_task_data[phase][right_joint] = task_data[source_phase][left_joint].copy()
+    
+    return updated_task_data
+
+
 def parse_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[str, Dict[str, float]]]]:
     """
     Parse the validation_expectations.md file to extract joint angle ranges.
+    Updated for v5.0 with new phase system and contralateral offset logic.
     
     Args:
         file_path: Path to the validation_expectations.md file
@@ -47,14 +144,14 @@ def parse_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[st
         validation_data[task] = {}
         
         # Find the task section
-        task_section_pattern = rf'### Task: {re.escape(task)}\n(.*?)(?=### Task:|## Joint Validation Range Summary|## Pattern Definitions|$)'
+        task_section_pattern = rf'### Task: {re.escape(task)}\n(.*?)(?=### Task:|## ✅ \*\*MAJOR UPDATE COMPLETED\*\*|## Joint Validation Range Summary|## Pattern Definitions|$)'
         task_match = re.search(task_section_pattern, content, re.DOTALL)
         
         if task_match:
             task_content = task_match.group(1)
             
-            # Find all phase sections within this task
-            phase_pattern = r'#### Phase (\d+)%.*?\n\| Variable \| Min_Value \| Max_Value \| Units \| Notes \|(.*?)(?=####|\*\*Kinematic|$)'
+            # Find all phase sections within this task - Updated for new phases
+            phase_pattern = r'#### Phase (\d+)%.*?\n\| Variable \| Min_Value \| Max_Value \| Units \| Notes \|(.*?)(?=####|\*\*Contralateral|\*\*Note:|\*\*Kinematic|$)'
             phase_matches = re.findall(phase_pattern, task_content, re.DOTALL)
             
             for phase_str, table_content in phase_matches:
@@ -91,6 +188,9 @@ def parse_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[st
                             'min': float(min_val),
                             'max': float(max_val)
                         }
+        
+        # Apply contralateral offset logic for gait-based tasks
+        validation_data[task] = apply_contralateral_offset(validation_data[task], task)
     
     return validation_data
 
@@ -98,6 +198,7 @@ def parse_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[st
 def create_phase_progression_plot(validation_data: Dict, task_name: str, output_dir: str) -> str:
     """
     Create a phase progression plot for a specific task showing joint ranges across phases.
+    Updated for v5.0 with new phase system and contralateral offset logic.
     
     Args:
         validation_data: Parsed validation data
@@ -111,11 +212,15 @@ def create_phase_progression_plot(validation_data: Dict, task_name: str, output_
         raise ValueError(f"Task {task_name} not found in validation data")
     
     task_data = validation_data[task_name]
-    phases = [0, 33, 50, 66]
+    phases = [0, 25, 50, 75]  # Updated to new phase system
+    task_type = get_task_classification(task_name)
     
     # Create figure with subplots for each joint type
     fig, axes = plt.subplots(3, 2, figsize=(16, 12))
-    fig.suptitle(f'{task_name.replace("_", " ").title()} - Joint Range Progression Across Phases', 
+    
+    # Add task classification to title
+    task_type_label = "Gait-Based Task (Contralateral Offset)" if task_type == 'gait' else "Bilateral Symmetric Task"
+    fig.suptitle(f'{task_name.replace("_", " ").title()} - Joint Range Progression Across Phases\n{task_type_label}', 
                  fontsize=16, fontweight='bold')
     
     # Define joint types and colors
@@ -206,11 +311,14 @@ def create_phase_progression_plot(validation_data: Dict, task_name: str, output_
                 ax.fill_between(valid_phases, phase_mins, phase_maxs, 
                                color=joint_colors[joint_type], alpha=0.2)
             
-            # Customize axes
-            ax.set_xlim(-5, 75)
+            # Customize axes - Updated for new phase system
+            ax.set_xlim(-5, 80)  # Adjusted for 0-75% range
             ax.set_xticks(phases)
             ax.set_xticklabels([f'{p}%' for p in phases])
-            ax.set_xlabel('Gait Phase', fontsize=11)
+            
+            # Update x-axis label based on task type
+            x_label = 'Gait Phase' if task_type == 'gait' else 'Movement Phase'
+            ax.set_xlabel(x_label, fontsize=11)
             ax.set_ylabel(f'{joint_type.replace("_", " ").title()} (radians)', fontsize=11)
             ax.set_title(f'{side.title()} Leg', fontsize=12, fontweight='bold')
             ax.grid(True, alpha=0.3)

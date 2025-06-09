@@ -39,8 +39,8 @@ class KinematicPoseGenerator:
             'ankle': {'min': -0.9, 'max': 0.7}     # -50° to +40°
         }
         
-        # Phase points for validation
-        self.phase_points = [0, 33, 50, 66]
+        # Phase points for validation - Updated to v5.0 system
+        self.phase_points = [0, 25, 50, 75]
         
         # Colors for different elements
         self.colors = {
