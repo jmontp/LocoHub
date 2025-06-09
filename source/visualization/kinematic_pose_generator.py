@@ -44,8 +44,8 @@ class KinematicPoseGenerator:
         
         # Colors for different elements
         self.colors = {
-            'min_pose': 'blue',
-            'max_pose': 'red',
+            'left_leg': 'blue',
+            'right_leg': 'red',
             'joints': 'black',
             'ground': 'gray',
             'torso': 'darkgreen'
@@ -90,44 +90,107 @@ class KinematicPoseGenerator:
         
         return hip_position, knee_position, ankle_position, foot_position
     
-    def draw_pose(self, ax: plt.Axes, hip_angle: float, knee_angle: float, ankle_angle: float, 
-                  color: str, label: str, alpha: float = 1.0):
+    def draw_bilateral_pose(self, ax: plt.Axes, 
+                           left_hip_min: float, left_knee_min: float, left_ankle_min: float,
+                           left_hip_max: float, left_knee_max: float, left_ankle_max: float,
+                           right_hip_min: float, right_knee_min: float, right_ankle_min: float,
+                           right_hip_max: float, right_knee_max: float, right_ankle_max: float):
         """
-        Draw a single pose on the given axes.
+        Draw bilateral min/max poses on the given axes.
         
         Args:
             ax: Matplotlib axes to draw on
-            hip_angle: Hip flexion angle in radians
-            knee_angle: Knee flexion angle in radians
-            ankle_angle: Ankle flexion angle in radians
-            color: Color for the pose
-            label: Label for the pose
-            alpha: Transparency level
+            left_hip_min/max, left_knee_min/max, left_ankle_min/max: Left leg joint angle ranges
+            right_hip_min/max, right_knee_min/max, right_ankle_min/max: Right leg joint angle ranges
         """
-        # Calculate joint positions
-        hip_pos, knee_pos, ankle_pos, foot_pos = self.calculate_joint_positions(
-            hip_angle, knee_angle, ankle_angle
-        )
+        # Hip position at origin
+        hip_pos = np.array([0, 0])
         
         # Draw torso (vertical line from hip)
         torso_top = hip_pos + np.array([0, self.segment_lengths['torso']])
         ax.plot([hip_pos[0], torso_top[0]], [hip_pos[1], torso_top[1]], 
-                color=self.colors['torso'], linewidth=3, alpha=alpha)
+                color=self.colors['torso'], linewidth=4, alpha=0.8)
         
-        # Draw leg segments
-        ax.plot([hip_pos[0], knee_pos[0]], [hip_pos[1], knee_pos[1]], 
-                color=color, linewidth=3, alpha=alpha, label=f'{label} Hip-Knee')
-        ax.plot([knee_pos[0], ankle_pos[0]], [knee_pos[1], ankle_pos[1]], 
-                color=color, linewidth=3, alpha=alpha, label=f'{label} Knee-Ankle')
-        ax.plot([ankle_pos[0], foot_pos[0]], [ankle_pos[1], foot_pos[1]], 
-                color=color, linewidth=3, alpha=alpha, label=f'{label} Ankle-Foot')
+        # Calculate positions for min poses (dashed lines)
+        left_hip_min_corrected = -left_hip_min
+        left_min_hip_pos, left_min_knee_pos, left_min_ankle_pos, left_min_foot_pos = self.calculate_joint_positions(
+            left_hip_min_corrected, left_knee_min, left_ankle_min
+        )
+        
+        right_hip_min_corrected = -right_hip_min
+        right_min_hip_pos, right_min_knee_pos, right_min_ankle_pos, right_min_foot_pos = self.calculate_joint_positions(
+            right_hip_min_corrected, right_knee_min, right_ankle_min
+        )
+        
+        # Calculate positions for max poses (solid lines)
+        left_hip_max_corrected = -left_hip_max
+        left_max_hip_pos, left_max_knee_pos, left_max_ankle_pos, left_max_foot_pos = self.calculate_joint_positions(
+            left_hip_max_corrected, left_knee_max, left_ankle_max
+        )
+        
+        right_hip_max_corrected = -right_hip_max
+        right_max_hip_pos, right_max_knee_pos, right_max_ankle_pos, right_max_foot_pos = self.calculate_joint_positions(
+            right_hip_max_corrected, right_knee_max, right_ankle_max
+        )
+        
+        # Draw left leg (blue) - min pose (dashed)
+        ax.plot([hip_pos[0], left_min_knee_pos[0]], [hip_pos[1], left_min_knee_pos[1]], 
+                color=self.colors['left_leg'], linewidth=3, alpha=0.7, linestyle='--')
+        ax.plot([left_min_knee_pos[0], left_min_ankle_pos[0]], [left_min_knee_pos[1], left_min_ankle_pos[1]], 
+                color=self.colors['left_leg'], linewidth=3, alpha=0.7, linestyle='--')
+        ax.plot([left_min_ankle_pos[0], left_min_foot_pos[0]], [left_min_ankle_pos[1], left_min_foot_pos[1]], 
+                color=self.colors['left_leg'], linewidth=3, alpha=0.7, linestyle='--')
+        
+        # Draw left leg (blue) - max pose (solid)
+        ax.plot([hip_pos[0], left_max_knee_pos[0]], [hip_pos[1], left_max_knee_pos[1]], 
+                color=self.colors['left_leg'], linewidth=3, alpha=0.9, linestyle='-')
+        ax.plot([left_max_knee_pos[0], left_max_ankle_pos[0]], [left_max_knee_pos[1], left_max_ankle_pos[1]], 
+                color=self.colors['left_leg'], linewidth=3, alpha=0.9, linestyle='-')
+        ax.plot([left_max_ankle_pos[0], left_max_foot_pos[0]], [left_max_ankle_pos[1], left_max_foot_pos[1]], 
+                color=self.colors['left_leg'], linewidth=3, alpha=0.9, linestyle='-')
+        
+        # Draw right leg (red) - min pose (dashed)
+        ax.plot([hip_pos[0], right_min_knee_pos[0]], [hip_pos[1], right_min_knee_pos[1]], 
+                color=self.colors['right_leg'], linewidth=3, alpha=0.7, linestyle='--')
+        ax.plot([right_min_knee_pos[0], right_min_ankle_pos[0]], [right_min_knee_pos[1], right_min_ankle_pos[1]], 
+                color=self.colors['right_leg'], linewidth=3, alpha=0.7, linestyle='--')
+        ax.plot([right_min_ankle_pos[0], right_min_foot_pos[0]], [right_min_ankle_pos[1], right_min_foot_pos[1]], 
+                color=self.colors['right_leg'], linewidth=3, alpha=0.7, linestyle='--')
+        
+        # Draw right leg (red) - max pose (solid)
+        ax.plot([hip_pos[0], right_max_knee_pos[0]], [hip_pos[1], right_max_knee_pos[1]], 
+                color=self.colors['right_leg'], linewidth=3, alpha=0.9, linestyle='-')
+        ax.plot([right_max_knee_pos[0], right_max_ankle_pos[0]], [right_max_knee_pos[1], right_max_ankle_pos[1]], 
+                color=self.colors['right_leg'], linewidth=3, alpha=0.9, linestyle='-')
+        ax.plot([right_max_ankle_pos[0], right_max_foot_pos[0]], [right_max_ankle_pos[1], right_max_foot_pos[1]], 
+                color=self.colors['right_leg'], linewidth=3, alpha=0.9, linestyle='-')
         
         # Draw joints as circles
-        joint_radius = 0.05
-        for pos, joint_name in [(hip_pos, 'Hip'), (knee_pos, 'Knee'), (ankle_pos, 'Ankle')]:
-            circle = Circle(pos, joint_radius, color=self.colors['joints'], 
-                          fill=True, alpha=alpha, zorder=10)
+        joint_radius = 0.04
+        # Left leg joints
+        for pos in [left_min_knee_pos, left_min_ankle_pos]:
+            circle = Circle(pos, joint_radius, facecolor=self.colors['left_leg'], edgecolor='black',
+                           alpha=0.7, zorder=10)
             ax.add_patch(circle)
+        for pos in [left_max_knee_pos, left_max_ankle_pos]:
+            circle = Circle(pos, joint_radius, facecolor=self.colors['left_leg'], edgecolor='black',
+                           alpha=0.9, zorder=10)
+            ax.add_patch(circle)
+        
+        # Right leg joints
+        for pos in [right_min_knee_pos, right_min_ankle_pos]:
+            circle = Circle(pos, joint_radius, facecolor=self.colors['right_leg'], edgecolor='black',
+                           alpha=0.7, zorder=10)
+            ax.add_patch(circle)
+        for pos in [right_max_knee_pos, right_max_ankle_pos]:
+            circle = Circle(pos, joint_radius, facecolor=self.colors['right_leg'], edgecolor='black',
+                           alpha=0.9, zorder=10)
+            ax.add_patch(circle)
+        
+        # Hip joint (shared)
+        hip_circle = Circle(hip_pos, joint_radius*1.2, facecolor=self.colors['joints'], 
+                           edgecolor='black', alpha=1.0, zorder=15)
+        ax.add_patch(hip_circle)
     
     def generate_range_visualization(self, task_name: str, phase_point: float, 
                                    joint_ranges: Dict[str, Dict[str, float]], 
@@ -144,23 +207,31 @@ class KinematicPoseGenerator:
         Returns:
             Path to the generated image file
         """
-        fig, ax = plt.subplots(figsize=(8, 10))
+        fig, ax = plt.subplots(figsize=(10, 8))
         
-        # Extract joint angles for min and max poses
-        hip_min = joint_ranges.get('hip_flexion_angle', {}).get('min', 0)
-        hip_max = joint_ranges.get('hip_flexion_angle', {}).get('max', 0.5)
-        knee_min = joint_ranges.get('knee_flexion_angle', {}).get('min', 0)
-        knee_max = joint_ranges.get('knee_flexion_angle', {}).get('max', 1.0)
-        ankle_min = joint_ranges.get('ankle_flexion_angle', {}).get('min', -0.2)
-        ankle_max = joint_ranges.get('ankle_flexion_angle', {}).get('max', 0.2)
+        # Extract bilateral joint angles for min and max poses
+        # Left leg angles
+        left_hip_min = joint_ranges.get('hip_flexion_angle_left', {}).get('min', 0)
+        left_hip_max = joint_ranges.get('hip_flexion_angle_left', {}).get('max', 0.5)
+        left_knee_min = joint_ranges.get('knee_flexion_angle_left', {}).get('min', 0)
+        left_knee_max = joint_ranges.get('knee_flexion_angle_left', {}).get('max', 1.0)
+        left_ankle_min = joint_ranges.get('ankle_flexion_angle_left', {}).get('min', -0.2)
+        left_ankle_max = joint_ranges.get('ankle_flexion_angle_left', {}).get('max', 0.2)
         
-        # Draw min pose (more extended)
-        self.draw_pose(ax, hip_min, knee_min, ankle_min, 
-                      self.colors['min_pose'], 'Min Range', alpha=0.7)
+        # Right leg angles
+        right_hip_min = joint_ranges.get('hip_flexion_angle_right', {}).get('min', -0.2)
+        right_hip_max = joint_ranges.get('hip_flexion_angle_right', {}).get('max', 0.3)
+        right_knee_min = joint_ranges.get('knee_flexion_angle_right', {}).get('min', 0)
+        right_knee_max = joint_ranges.get('knee_flexion_angle_right', {}).get('max', 1.0)
+        right_ankle_min = joint_ranges.get('ankle_flexion_angle_right', {}).get('min', -0.2)
+        right_ankle_max = joint_ranges.get('ankle_flexion_angle_right', {}).get('max', 0.2)
         
-        # Draw max pose (more flexed)
-        self.draw_pose(ax, hip_max, knee_max, ankle_max, 
-                      self.colors['max_pose'], 'Max Range', alpha=0.7)
+        # Draw bilateral poses (min=dashed, max=solid)
+        self.draw_bilateral_pose(ax, 
+                               left_hip_min, left_knee_min, left_ankle_min,
+                               left_hip_max, left_knee_max, left_ankle_max,
+                               right_hip_min, right_knee_min, right_ankle_min,
+                               right_hip_max, right_knee_max, right_ankle_max)
         
         # Draw ground line
         ground_level = -(self.segment_lengths['thigh'] + self.segment_lengths['shank'])
@@ -168,34 +239,41 @@ class KinematicPoseGenerator:
                   linestyle='-', linewidth=2, alpha=0.5, label='Ground')
         
         # Set axis properties
-        ax.set_xlim(-2, 2)
+        ax.set_xlim(-2.5, 2.5)
         ax.set_ylim(ground_level - 0.5, self.segment_lengths['torso'] + 0.5)
         ax.set_aspect('equal')
         ax.grid(True, alpha=0.3)
         
         # Add labels and title
-        ax.set_title(f'{task_name.replace("_", " ").title()}\nPhase {phase_point}% - Joint Range Validation', 
+        ax.set_title(f'{task_name.replace("_", " ").title()}\nPhase {phase_point}% - Bilateral Joint Range Validation', 
                     fontsize=14, fontweight='bold')
         ax.set_xlabel('Anterior-Posterior (m)', fontsize=12)
         ax.set_ylabel('Vertical (m)', fontsize=12)
         
         # Add legend
         legend_elements = [
-            plt.Line2D([0], [0], color=self.colors['min_pose'], linewidth=3, label='Minimum Range'),
-            plt.Line2D([0], [0], color=self.colors['max_pose'], linewidth=3, label='Maximum Range'),
-            plt.Line2D([0], [0], color=self.colors['torso'], linewidth=3, label='Torso'),
+            plt.Line2D([0], [0], color=self.colors['left_leg'], linewidth=3, linestyle='-', label='Left Leg (Max)'),
+            plt.Line2D([0], [0], color=self.colors['left_leg'], linewidth=3, linestyle='--', label='Left Leg (Min)'),
+            plt.Line2D([0], [0], color=self.colors['right_leg'], linewidth=3, linestyle='-', label='Right Leg (Max)'),
+            plt.Line2D([0], [0], color=self.colors['right_leg'], linewidth=3, linestyle='--', label='Right Leg (Min)'),
+            plt.Line2D([0], [0], color=self.colors['torso'], linewidth=4, label='Torso'),
             plt.Line2D([0], [0], color=self.colors['ground'], linewidth=2, label='Ground')
         ]
-        ax.legend(handles=legend_elements, loc='upper right')
+        ax.legend(handles=legend_elements, loc='upper right', fontsize=9)
         
-        # Add angle annotations
+        # Add bilateral angle annotations (fixed newline characters)
         annotation_text = (
-            f"Hip: {np.degrees(hip_min):.1f}° to {np.degrees(hip_max):.1f}°\\n"
-            f"Knee: {np.degrees(knee_min):.1f}° to {np.degrees(knee_max):.1f}°\\n"
-            f"Ankle: {np.degrees(ankle_min):.1f}° to {np.degrees(ankle_max):.1f}°"
+            f"LEFT LEG RANGES:\n"
+            f"Hip: {np.degrees(left_hip_min):.1f}° to {np.degrees(left_hip_max):.1f}°\n"
+            f"Knee: {np.degrees(left_knee_min):.1f}° to {np.degrees(left_knee_max):.1f}°\n"
+            f"Ankle: {np.degrees(left_ankle_min):.1f}° to {np.degrees(left_ankle_max):.1f}°\n\n"
+            f"RIGHT LEG RANGES:\n"
+            f"Hip: {np.degrees(right_hip_min):.1f}° to {np.degrees(right_hip_max):.1f}°\n"
+            f"Knee: {np.degrees(right_knee_min):.1f}° to {np.degrees(right_knee_max):.1f}°\n"
+            f"Ankle: {np.degrees(right_ankle_min):.1f}° to {np.degrees(right_ankle_max):.1f}°"
         )
         ax.text(0.02, 0.98, annotation_text, transform=ax.transAxes, 
-               fontsize=10, verticalalignment='top', 
+               fontsize=9, verticalalignment='top', 
                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
         
         # Save the figure

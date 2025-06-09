@@ -1,0 +1,333 @@
+#!/usr/bin/env python3
+"""
+Phase Progression Validation Plots
+
+Creates validation plots showing how joint angle ranges change across gait phases.
+X-axis: Phase progression (0%, 33%, 50%, 66%)
+Y-axis: Joint angle ranges (with bounding boxes)
+
+Generates separate plots for each task to avoid overcrowding.
+"""
+
+import os
+import sys
+import re
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from pathlib import Path
+from typing import Dict, List, Tuple
+import argparse
+
+# Add source directory to Python path
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+
+
+def parse_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[str, Dict[str, float]]]]:
+    """
+    Parse the validation_expectations.md file to extract joint angle ranges.
+    
+    Args:
+        file_path: Path to the validation_expectations.md file
+        
+    Returns:
+        Dictionary structured as: {task_name: {phase: {joint: {min, max}}}}
+    """
+    with open(file_path, 'r') as f:
+        content = f.read()
+    
+    # Dictionary to store parsed data
+    validation_data = {}
+    
+    # Find all task sections
+    task_pattern = r'### Task: ([\w_]+)\n'
+    tasks = re.findall(task_pattern, content)
+    
+    for task in tasks:
+        validation_data[task] = {}
+        
+        # Find the task section
+        task_section_pattern = rf'### Task: {re.escape(task)}\n(.*?)(?=### Task:|## Joint Validation Range Summary|## Pattern Definitions|$)'
+        task_match = re.search(task_section_pattern, content, re.DOTALL)
+        
+        if task_match:
+            task_content = task_match.group(1)
+            
+            # Find all phase sections within this task
+            phase_pattern = r'#### Phase (\d+)%.*?\n\| Variable \| Min_Value \| Max_Value \| Units \| Notes \|(.*?)(?=####|\*\*Kinematic|$)'
+            phase_matches = re.findall(phase_pattern, task_content, re.DOTALL)
+            
+            for phase_str, table_content in phase_matches:
+                phase = int(phase_str)
+                validation_data[task][phase] = {}
+                
+                # Parse table rows for joint angles - Updated to handle degree format
+                row_pattern = r'\| ([\w_]+) \| ([-\d.]+) \([^)]+\) \| ([-\d.]+) \([^)]+\) \| (\w+) \|'
+                rows = re.findall(row_pattern, table_content)
+                
+                for variable, min_val, max_val, unit in rows:
+                    # Extract bilateral joint angles (both left and right legs)
+                    if ('_left_rad' in variable or '_right_rad' in variable) and unit == 'rad':
+                        # Determine joint type and side
+                        if 'hip_flexion_angle' in variable:
+                            if '_left_rad' in variable:
+                                joint_name = 'hip_flexion_angle_left'
+                            elif '_right_rad' in variable:
+                                joint_name = 'hip_flexion_angle_right'
+                        elif 'knee_flexion_angle' in variable:
+                            if '_left_rad' in variable:
+                                joint_name = 'knee_flexion_angle_left'
+                            elif '_right_rad' in variable:
+                                joint_name = 'knee_flexion_angle_right'
+                        elif 'ankle_flexion_angle' in variable:
+                            if '_left_rad' in variable:
+                                joint_name = 'ankle_flexion_angle_left'
+                            elif '_right_rad' in variable:
+                                joint_name = 'ankle_flexion_angle_right'
+                        else:
+                            continue
+                        
+                        validation_data[task][phase][joint_name] = {
+                            'min': float(min_val),
+                            'max': float(max_val)
+                        }
+    
+    return validation_data
+
+
+def create_phase_progression_plot(validation_data: Dict, task_name: str, output_dir: str) -> str:
+    """
+    Create a phase progression plot for a specific task showing joint ranges across phases.
+    
+    Args:
+        validation_data: Parsed validation data
+        task_name: Name of the task
+        output_dir: Directory to save the plot
+        
+    Returns:
+        Path to the generated plot
+    """
+    if task_name not in validation_data:
+        raise ValueError(f"Task {task_name} not found in validation data")
+    
+    task_data = validation_data[task_name]
+    phases = [0, 33, 50, 66]
+    
+    # Create figure with subplots for each joint type
+    fig, axes = plt.subplots(3, 2, figsize=(16, 12))
+    fig.suptitle(f'{task_name.replace("_", " ").title()} - Joint Range Progression Across Phases', 
+                 fontsize=16, fontweight='bold')
+    
+    # Define joint types and colors
+    joint_types = ['hip_flexion_angle', 'knee_flexion_angle', 'ankle_flexion_angle']
+    sides = ['left', 'right']
+    
+    # Colors for different joint types
+    joint_colors = {
+        'hip_flexion_angle': '#FF6B6B',    # Red
+        'knee_flexion_angle': '#4ECDC4',   # Teal  
+        'ankle_flexion_angle': '#45B7D1'   # Blue
+    }
+    
+    # First pass: collect all data to determine shared y-axis ranges for each joint type
+    joint_y_ranges = {}
+    for joint_idx, joint_type in enumerate(joint_types):
+        all_mins = []
+        all_maxs = []
+        
+        for side in sides:
+            joint_var = f'{joint_type}_{side}'
+            
+            for phase in phases:
+                if phase in task_data and joint_var in task_data[phase]:
+                    min_val = task_data[phase][joint_var]['min']
+                    max_val = task_data[phase][joint_var]['max']
+                    all_mins.append(min_val)
+                    all_maxs.append(max_val)
+        
+        if all_mins and all_maxs:
+            # Add some padding to the range
+            data_range = max(all_maxs) - min(all_mins)
+            padding = data_range * 0.1  # 10% padding
+            joint_y_ranges[joint_type] = {
+                'min': min(all_mins) - padding,
+                'max': max(all_maxs) + padding
+            }
+    
+    # Second pass: create plots with shared y-axis ranges
+    for joint_idx, joint_type in enumerate(joint_types):
+        for side_idx, side in enumerate(sides):
+            ax = axes[joint_idx, side_idx]
+            joint_var = f'{joint_type}_{side}'
+            
+            # Extract data for this joint across phases
+            phase_mins = []
+            phase_maxs = []
+            valid_phases = []
+            
+            for phase in phases:
+                if phase in task_data and joint_var in task_data[phase]:
+                    min_val = task_data[phase][joint_var]['min']
+                    max_val = task_data[phase][joint_var]['max']
+                    phase_mins.append(min_val)
+                    phase_maxs.append(max_val)
+                    valid_phases.append(phase)
+            
+            if valid_phases:
+                # Create bounding boxes for each phase
+                box_width = 8  # Width of each phase box
+                for i, phase in enumerate(valid_phases):
+                    min_val = phase_mins[i]
+                    max_val = phase_maxs[i]
+                    
+                    # Create rectangle for this phase range
+                    height = max_val - min_val
+                    
+                    rect = patches.Rectangle(
+                        (phase - box_width/2, min_val), box_width, height,
+                        linewidth=2, edgecolor='black', 
+                        facecolor=joint_colors[joint_type], alpha=0.6
+                    )
+                    ax.add_patch(rect)
+                    
+                    # Add min/max value labels
+                    ax.text(phase, min_val - 0.05, f'{np.degrees(min_val):.0f}°', 
+                           ha='center', va='top', fontsize=8, fontweight='bold')
+                    ax.text(phase, max_val + 0.05, f'{np.degrees(max_val):.0f}°', 
+                           ha='center', va='bottom', fontsize=8, fontweight='bold')
+                
+                # Plot connecting lines to show progression
+                ax.plot(valid_phases, phase_mins, 'o-', color='darkred', linewidth=2, 
+                       markersize=6, label='Min Range', alpha=0.8)
+                ax.plot(valid_phases, phase_maxs, 'o-', color='darkblue', linewidth=2, 
+                       markersize=6, label='Max Range', alpha=0.8)
+                
+                # Fill area between min and max
+                ax.fill_between(valid_phases, phase_mins, phase_maxs, 
+                               color=joint_colors[joint_type], alpha=0.2)
+            
+            # Customize axes
+            ax.set_xlim(-5, 75)
+            ax.set_xticks(phases)
+            ax.set_xticklabels([f'{p}%' for p in phases])
+            ax.set_xlabel('Gait Phase', fontsize=11)
+            ax.set_ylabel(f'{joint_type.replace("_", " ").title()} (radians)', fontsize=11)
+            ax.set_title(f'{side.title()} Leg', fontsize=12, fontweight='bold')
+            ax.grid(True, alpha=0.3)
+            
+            # Set shared y-axis range for this joint type
+            if joint_type in joint_y_ranges:
+                y_min = joint_y_ranges[joint_type]['min']
+                y_max = joint_y_ranges[joint_type]['max']
+                ax.set_ylim(y_min, y_max)
+            
+            # Add degree labels on right axis
+            ax2 = ax.twinx()
+            rad_ticks = ax.get_yticks()
+            deg_ticks = np.degrees(rad_ticks)
+            ax2.set_yticks(rad_ticks)
+            ax2.set_yticklabels([f'{deg:.0f}°' for deg in deg_ticks])
+            ax2.set_ylabel(f'{joint_type.replace("_", " ").title()} (degrees)', fontsize=11)
+            ax2.set_ylim(ax.get_ylim())
+            
+            # Add legend only to the first subplot
+            if joint_idx == 0 and side_idx == 0:
+                ax.legend(loc='upper left', fontsize=9)
+    
+    # Adjust layout and save
+    plt.tight_layout()
+    
+    # Save the figure
+    os.makedirs(output_dir, exist_ok=True)
+    filename = f"{task_name}_phase_progression.png"
+    filepath = os.path.join(output_dir, filename)
+    
+    plt.savefig(filepath, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    return filepath
+
+
+def main():
+    """Main function to generate phase progression plots."""
+    
+    parser = argparse.ArgumentParser(
+        description='Generate phase progression validation plots'
+    )
+    parser.add_argument(
+        '--output-dir', 
+        type=str, 
+        default='validation_images',
+        help='Output directory for validation plots (default: validation_images)'
+    )
+    parser.add_argument(
+        '--validation-file',
+        type=str,
+        default='docs/standard_spec/validation_expectations.md',
+        help='Path to validation_expectations.md file'
+    )
+    parser.add_argument(
+        '--tasks',
+        type=str,
+        nargs='*',
+        help='Specific tasks to generate plots for (default: all tasks)'
+    )
+    
+    args = parser.parse_args()
+    
+    # Find the validation expectations file
+    if os.path.exists(args.validation_file):
+        validation_file = args.validation_file
+    else:
+        # Try from project root
+        project_root = Path(__file__).parent.parent.parent
+        validation_file = project_root / args.validation_file
+        if not validation_file.exists():
+            print(f"Error: Could not find validation file at {args.validation_file}")
+            return 1
+    
+    print(f"Parsing validation expectations from: {validation_file}")
+    
+    # Parse the validation expectations
+    try:
+        validation_data = parse_validation_expectations(str(validation_file))
+        print(f"Successfully parsed data for {len(validation_data)} tasks")
+        
+    except Exception as e:
+        print(f"Error parsing validation file: {e}")
+        return 1
+    
+    # Determine which tasks to process
+    if args.tasks:
+        tasks_to_process = [task for task in args.tasks if task in validation_data]
+        if not tasks_to_process:
+            print(f"Error: None of the specified tasks found in validation data")
+            return 1
+    else:
+        tasks_to_process = list(validation_data.keys())
+    
+    # Generate plots for each task
+    generated_files = []
+    
+    print(f"\nGenerating phase progression plots to: {args.output_dir}")
+    
+    for task_name in tasks_to_process:
+        try:
+            filepath = create_phase_progression_plot(validation_data, task_name, args.output_dir)
+            generated_files.append(filepath)
+            print(f"  - Generated: {filepath}")
+            
+        except Exception as e:
+            print(f"Error generating plot for {task_name}: {e}")
+            continue
+    
+    print(f"\n✅ Successfully generated {len(generated_files)} phase progression plots!")
+    print("\nGenerated files:")
+    for filepath in generated_files:
+        print(f"  - {filepath}")
+    
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -6,6 +6,7 @@ Tests the intuitive validation system against the standard specification require
 1. Variable naming convention compliance
 2. Phase calculation expectations (0-100%, 150 points/cycle) 
 3. Sign convention adherence
+4. Markdown-based validation expectations
 
 This ensures the intuitive validation system correctly implements the project standards.
 """
@@ -18,6 +19,7 @@ import unittest
 from pathlib import Path
 import tempfile
 import os
+from validation_markdown_parser import ValidationMarkdownParser
 
 class SpecComplianceTestSuite:
     """Test suite to verify specification compliance of validation systems"""
@@ -25,6 +27,7 @@ class SpecComplianceTestSuite:
     def __init__(self):
         self.test_results = []
         self.errors = []
+        self.markdown_parser = ValidationMarkdownParser()
         
     def test_variable_naming_convention(self, columns: List[str]) -> Dict[str, any]:
         """
@@ -435,6 +438,80 @@ class SpecComplianceTestSuite:
         
         return results
     
+    def test_markdown_validation_compliance(self, data: pd.DataFrame) -> Dict[str, any]:
+        """
+        Test compliance with markdown-based validation expectations.
+        
+        Args:
+            data: DataFrame with biomechanical data
+            
+        Returns:
+            Dict with test results
+        """
+        print("Testing Markdown Validation Compliance...")
+        
+        results = {
+            'validation_rules_loaded': False,
+            'task_validations': {},
+            'overall_compliance': {},
+            'errors': []
+        }
+        
+        # Load validation expectations
+        spec_file = Path("docs/standard_spec/validation_expectations.md")
+        if not spec_file.exists():
+            results['errors'].append(f"Validation expectations file not found: {spec_file}")
+            return results
+        
+        try:
+            validation_rules = self.markdown_parser.parse_file(str(spec_file))
+            results['validation_rules_loaded'] = True
+            print(f"  ✓ Loaded validation rules for {len(validation_rules)} tasks")
+        except Exception as e:
+            results['errors'].append(f"Error loading validation rules: {e}")
+            return results
+        
+        # Determine which tasks are present in the data
+        if 'task_name' in data.columns:
+            unique_tasks = data['task_name'].unique()
+            print(f"  ✓ Found {len(unique_tasks)} unique tasks in data")
+        else:
+            results['errors'].append("No task_name column found in data")
+            return results
+        
+        # Validate each task
+        total_task_rules = 0
+        total_passed = 0
+        total_failed = 0
+        
+        for task in unique_tasks:
+            if task in validation_rules:
+                task_data = data[data['task_name'] == task]
+                task_result = self.markdown_parser.validate_data(task_data, task)
+                
+                results['task_validations'][task] = task_result
+                total_task_rules += task_result['total_rules']
+                total_passed += task_result['passed_rules']
+                total_failed += task_result['failed_rules']
+                
+                print(f"    - {task}: {task_result['passed_rules']}/{task_result['total_rules']} rules passed ({task_result['success_rate']:.1%})")
+            else:
+                results['errors'].append(f"No validation rules found for task: {task}")
+        
+        # Overall compliance metrics
+        overall_success_rate = total_passed / total_task_rules if total_task_rules > 0 else 0
+        results['overall_compliance'] = {
+            'total_rules_tested': total_task_rules,
+            'total_passed': total_passed,
+            'total_failed': total_failed,
+            'success_rate': overall_success_rate,
+            'tasks_tested': len(results['task_validations'])
+        }
+        
+        print(f"  📊 Overall markdown compliance: {overall_success_rate:.1%} ({total_passed}/{total_task_rules} rules)")
+        
+        return results
+    
     def create_test_dataset(self) -> pd.DataFrame:
         """Create a test dataset that should pass all compliance tests"""
         
@@ -512,6 +589,9 @@ class SpecComplianceTestSuite:
         # Test 3: Sign convention adherence
         sign_results = self.test_sign_convention_adherence(data)
         
+        # Test 4: Markdown validation compliance
+        markdown_results = self.test_markdown_validation_compliance(data)
+        
         # Compile overall results
         overall_results = {
             'test_timestamp': pd.Timestamp.now().isoformat(),
@@ -524,6 +604,7 @@ class SpecComplianceTestSuite:
             'naming_convention': naming_results,
             'phase_calculation': phase_results,
             'sign_conventions': sign_results,
+            'markdown_validation': markdown_results,
             'overall_compliance': {}
         }
         
@@ -531,15 +612,18 @@ class SpecComplianceTestSuite:
         total_issues = (
             len(naming_results['non_compliant_columns']) +
             len(phase_results['compliance_issues']) +
-            len(sign_results['sign_convention_issues'])
+            len(sign_results['sign_convention_issues']) +
+            len(markdown_results['errors'])
         )
         
         overall_results['overall_compliance'] = {
-            'total_tests_run': 3,
+            'total_tests_run': 4,
             'total_issues_found': total_issues,
             'naming_compliance_rate': naming_results['compliance_rate'],
             'phase_issues_count': len(phase_results['compliance_issues']),
             'sign_issues_count': len(sign_results['sign_convention_issues']),
+            'markdown_issues_count': len(markdown_results['errors']),
+            'markdown_success_rate': markdown_results.get('overall_compliance', {}).get('success_rate', 0),
             'overall_pass': total_issues == 0
         }
         
@@ -551,6 +635,7 @@ class SpecComplianceTestSuite:
         print(f"📏 Naming compliance: {naming_results['compliance_rate']:.1%}")
         print(f"⏱️  Phase issues: {len(phase_results['compliance_issues'])}")
         print(f"📐 Sign convention issues: {len(sign_results['sign_convention_issues'])}")
+        print(f"📋 Markdown validation: {markdown_results.get('overall_compliance', {}).get('success_rate', 0):.1%}")
         
         return overall_results
     
