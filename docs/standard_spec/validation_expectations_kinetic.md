@@ -120,6 +120,26 @@ Following the **OpenSim right-hand rule** as defined in [sign_conventions.md](si
 - **ankle_power_ipsi_W_kg**: Ankle joint power per body mass (W/kg)
 - **ankle_power_contra_W_kg**: Ankle joint power per body mass (W/kg)
 
+### Center of Pressure (COP) - Normalized Position
+Following the **OpenSim coordinate system** as defined in [sign_conventions.md](sign_conventions.md):
+
+- **cop_x_m**: Anterior-posterior center of pressure position (m)
+  - **Positive**: Forward/anterior COP position (along global X-axis)
+  - **Negative**: Backward/posterior COP position
+  - **Zero reference**: Center of foot in AP direction
+  - **Typical values**: ±0.15 m from foot center during stance
+
+- **cop_y_m**: Medial-lateral center of pressure position (m)
+  - **Positive**: Rightward/lateral COP position (along global Z-axis)
+  - **Negative**: Leftward/medial COP position
+  - **Zero reference**: Center of foot in ML direction
+  - **Typical values**: ±0.05 m from foot center during stance
+
+- **cop_z_m**: Vertical center of pressure position (m)
+  - **Positive**: Above ground reference (along global Y-axis)
+  - **Zero reference**: Ground level (force platform surface)
+  - **Typical values**: 0 m (always at ground level during stance)
+
 **Normalization Rationale:**
 - **Forces normalized by body weight** enable comparison across subjects of different masses
 - **Moments normalized by body mass** account for scaling effects of anthropometric differences
@@ -147,6 +167,8 @@ Following the **OpenSim right-hand rule** as defined in [sign_conventions.md](si
 | hip_moment_ipsi_Nm_kg | -0.4 | 0.4 | Nm/kg | Hip moment at contact - **Literature estimate** |
 | knee_moment_ipsi_Nm_kg | -0.5 | 0.5 | Nm/kg | Knee moment at contact - **Literature estimate** |
 | ankle_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Ankle moment at contact - **Literature estimate** |
+| cop_x_m | -0.10 | -0.05 | m | COP posterior at heel strike - **Literature estimate** |
+| cop_y_m | -0.03 | 0.03 | m | COP near foot center - **Literature estimate** |
 
 #### Phase 25% (Mid-Stance)
 | Variable | Min_Value | Max_Value | Units | Notes |
@@ -157,6 +179,8 @@ Following the **OpenSim right-hand rule** as defined in [sign_conventions.md](si
 | hip_moment_ipsi_Nm_kg | -1.3 | 1.3 | Nm/kg | Hip extension moment (peak ~1.3) - **Literature-based** |
 | knee_moment_ipsi_Nm_kg | -0.7 | 0.7 | Nm/kg | Knee stability moment - **Literature estimate** |
 | ankle_moment_ipsi_Nm_kg | 0.5 | 1.5 | Nm/kg | Ankle dorsiflexor moment - **Literature estimate** |
+| cop_x_m | -0.05 | 0.05 | m | COP mid-foot during single limb support - **Literature estimate** |
+| cop_y_m | -0.02 | 0.02 | m | COP stable near center - **Literature estimate** |
 
 #### Phase 50% (Toe-Off)
 | Variable | Min_Value | Max_Value | Units | Notes |
@@ -167,6 +191,8 @@ Following the **OpenSim right-hand rule** as defined in [sign_conventions.md](si
 | hip_moment_ipsi_Nm_kg | -1.0 | 1.0 | Nm/kg | Hip extension for propulsion - **Literature estimate** |
 | knee_moment_ipsi_Nm_kg | -1.0 | 1.0 | Nm/kg | Knee moment for push-off - **Literature estimate** |
 | ankle_moment_ipsi_Nm_kg | -3.7 | -1.5 | Nm/kg | Peak plantarflexor moment (~-3.7) - **Literature-based** |
+| cop_x_m | 0.05 | 0.15 | m | COP anterior during push-off - **Literature estimate** |
+| cop_y_m | -0.03 | 0.03 | m | COP near foot center - **Literature estimate** |
 
 #### Phase 75% (Mid-Swing)
 | Variable | Min_Value | Max_Value | Units | Notes |
@@ -177,6 +203,8 @@ Following the **OpenSim right-hand rule** as defined in [sign_conventions.md](si
 | hip_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Hip swing moment - **Literature estimate** |
 | knee_moment_ipsi_Nm_kg | -0.2 | 0.2 | Nm/kg | Knee swing moment - **Literature estimate** |
 | ankle_moment_ipsi_Nm_kg | -0.1 | 0.1 | Nm/kg | Ankle swing moment - **Literature estimate** |
+| cop_x_m | -0.20 | 0.20 | m | COP undefined during swing (no ground contact) - **Literature estimate** |
+| cop_y_m | -0.20 | 0.20 | m | COP undefined during swing (no ground contact) - **Literature estimate** |
 
 **Contralateral Offset Logic:**
 - **Phase 0% ipsilateral** (heel strike) = **Phase 50% contralateral** (toe-off)
@@ -201,6 +229,8 @@ Following the **OpenSim right-hand rule** as defined in [sign_conventions.md](si
 | hip_moment_ipsi_Nm_kg | -0.6 | 0.8 | Nm/kg | Hip moment for incline approach - **NEEDS RESEARCH** |
 | knee_moment_ipsi_Nm_kg | -0.4 | 0.4 | Nm/kg | Knee moment at contact - **NEEDS RESEARCH** |
 | ankle_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Ankle moment at contact - **NEEDS RESEARCH** |
+| cop_x_m | -0.12 | -0.08 | m | COP posterior at incline heel strike - **NEEDS RESEARCH** |
+| cop_y_m | -0.04 | 0.04 | m | COP near foot center - **NEEDS RESEARCH** |
 
 #### Phase 25% (Mid-Stance)
 | Variable | Min_Value | Max_Value | Units | Notes |
@@ -211,6 +241,8 @@ Following the **OpenSim right-hand rule** as defined in [sign_conventions.md](si
 | hip_moment_ipsi_Nm_kg | -1.2 | 1.2 | Nm/kg | Hip extension moment - **NEEDS RESEARCH** |
 | knee_moment_ipsi_Nm_kg | -0.8 | 0.8 | Nm/kg | Knee stability moment - **NEEDS RESEARCH** |
 | ankle_moment_ipsi_Nm_kg | 0.8 | 2.0 | Nm/kg | Enhanced dorsiflexor moment - **NEEDS RESEARCH** |
+| cop_x_m | -0.08 | 0.02 | m | COP slightly posterior during incline stance - **NEEDS RESEARCH** |
+| cop_y_m | -0.03 | 0.03 | m | COP stable near center - **NEEDS RESEARCH** |
 
 #### Phase 50% (Toe-Off)
 | Variable | Min_Value | Max_Value | Units | Notes |
@@ -221,6 +253,8 @@ Following the **OpenSim right-hand rule** as defined in [sign_conventions.md](si
 | hip_moment_ipsi_Nm_kg | -1.8 | 1.2 | Nm/kg | Enhanced hip extension - **NEEDS RESEARCH** |
 | knee_moment_ipsi_Nm_kg | -1.0 | 1.0 | Nm/kg | Knee moment for propulsion - **NEEDS RESEARCH** |
 | ankle_moment_ipsi_Nm_kg | -3.0 | -1.5 | Nm/kg | Enhanced plantarflexor moment - **NEEDS RESEARCH** |
+| cop_x_m | 0.02 | 0.12 | m | COP anterior during incline push-off - **NEEDS RESEARCH** |
+| cop_y_m | -0.04 | 0.04 | m | COP near foot center - **NEEDS RESEARCH** |
 
 #### Phase 75% (Mid-Swing)
 | Variable | Min_Value | Max_Value | Units | Notes |
@@ -231,6 +265,8 @@ Following the **OpenSim right-hand rule** as defined in [sign_conventions.md](si
 | hip_moment_ipsi_Nm_kg | -0.5 | 0.5 | Nm/kg | Hip swing moment - **NEEDS RESEARCH** |
 | knee_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Knee swing moment - **NEEDS RESEARCH** |
 | ankle_moment_ipsi_Nm_kg | -0.15 | 0.15 | Nm/kg | Ankle swing moment - **NEEDS RESEARCH** |
+| cop_x_m | -0.20 | 0.20 | m | COP undefined during swing - **NEEDS RESEARCH** |
+| cop_y_m | -0.20 | 0.20 | m | COP undefined during swing - **NEEDS RESEARCH** |
 
 **Contralateral Offset Logic:**
 - **Phase 0% ipsilateral** (heel strike) = **Phase 50% contralateral** (toe-off)
@@ -255,6 +291,8 @@ Following the **OpenSim right-hand rule** as defined in [sign_conventions.md](si
 | hip_moment_ipsi_Nm_kg | -1.0 | 1.2 | Nm/kg | Hip moment at impact - **Literature estimate** |
 | knee_moment_ipsi_Nm_kg | -0.8 | 0.8 | Nm/kg | Knee moment at contact - **Literature estimate** |
 | ankle_moment_ipsi_Nm_kg | -0.6 | 0.6 | Nm/kg | Ankle moment at contact - **Literature estimate** |
+| cop_x_m | -0.08 | -0.03 | m | COP posterior at running heel strike - **Literature estimate** |
+| cop_y_m | -0.05 | 0.05 | m | COP variable during running - **Literature estimate** |
 
 #### Phase 25% (Mid-Stance)
 | Variable | Min_Value | Max_Value | Units | Notes |
@@ -265,6 +303,8 @@ Following the **OpenSim right-hand rule** as defined in [sign_conventions.md](si
 | hip_moment_ipsi_Nm_kg | -2.0 | 2.0 | Nm/kg | Hip extension moment - **Literature estimate** |
 | knee_moment_ipsi_Nm_kg | -1.5 | 1.5 | Nm/kg | Knee stability moment - **Literature estimate** |
 | ankle_moment_ipsi_Nm_kg | 0.0 | 3.0 | Nm/kg | Ankle dorsiflexor moment - **Literature estimate** |
+| cop_x_m | -0.03 | 0.08 | m | COP progresses forward during running stance - **Literature estimate** |
+| cop_y_m | -0.04 | 0.04 | m | COP dynamic balance - **Literature estimate** |
 
 #### Phase 50% (Toe-Off)
 | Variable | Min_Value | Max_Value | Units | Notes |
@@ -275,6 +315,8 @@ Following the **OpenSim right-hand rule** as defined in [sign_conventions.md](si
 | hip_moment_ipsi_Nm_kg | -2.5 | 2.0 | Nm/kg | Hip extension for propulsion - **Literature estimate** |
 | knee_moment_ipsi_Nm_kg | -2.0 | 2.0 | Nm/kg | Knee moment for push-off - **Literature estimate** |
 | ankle_moment_ipsi_Nm_kg | -6.0 | -3.0 | Nm/kg | Peak plantarflexor moment (higher in running) - **Literature estimate** |
+| cop_x_m | 0.08 | 0.18 | m | COP far anterior during running push-off - **Literature estimate** |
+| cop_y_m | -0.05 | 0.05 | m | COP variable during push-off - **Literature estimate** |
 
 #### Phase 75% (Mid-Swing)
 | Variable | Min_Value | Max_Value | Units | Notes |
@@ -285,6 +327,8 @@ Following the **OpenSim right-hand rule** as defined in [sign_conventions.md](si
 | hip_moment_ipsi_Nm_kg | -0.8 | 0.8 | Nm/kg | Hip swing moment - **Literature estimate** |
 | knee_moment_ipsi_Nm_kg | -0.6 | 0.6 | Nm/kg | Knee swing moment - **Literature estimate** |
 | ankle_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Ankle swing moment - **Literature estimate** |
+| cop_x_m | -0.20 | 0.20 | m | COP undefined during flight phase - **Literature estimate** |
+| cop_y_m | -0.20 | 0.20 | m | COP undefined during flight phase - **Literature estimate** |
 
 **Contralateral Offset Logic:**
 - **Phase 0% ipsilateral** (heel strike) = **Phase 50% contralateral** (toe-off)
