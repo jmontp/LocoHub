@@ -63,17 +63,54 @@ This document provides biomechanically verified kinetic validation ranges (force
 ## Kinetic Variable Categories
 
 ### Ground Reaction Forces (GRF) - Normalized by Body Mass
+Following the **OpenSim coordinate system** as defined in [sign_conventions.md](sign_conventions.md):
+
 - **vertical_grf_N_kg**: Vertical ground reaction force per body weight (N/kg)
+  - **Positive**: Upward force (along global Y-axis)
+  - **Zero reference**: No vertical force
+  - **Typical values**: 8-15 N/kg walking, 20-28 N/kg running
+
 - **ap_grf_N_kg**: Anterior-posterior ground reaction force per body weight (N/kg)
+  - **Positive**: Forward/anterior force (along global X-axis) - propulsive
+  - **Negative**: Backward/posterior force - braking/decelerative
+  - **Zero reference**: No anterior-posterior force
+  - **Typical values**: -3 to +3 N/kg walking, -8 to +12 N/kg running
+
 - **ml_grf_N_kg**: Medial-lateral ground reaction force per body weight (N/kg)
+  - **Positive**: Rightward/lateral force (along global Z-axis)
+  - **Negative**: Leftward/medial force
+  - **Zero reference**: No medial-lateral force
+  - **Typical values**: ±1 N/kg walking, ±2.5 N/kg running
 
 ### Joint Moments - Normalized by Body Mass
+Following the **OpenSim right-hand rule** as defined in [sign_conventions.md](sign_conventions.md):
+
 - **hip_moment_ipsi_Nm_kg**: Hip flexion/extension moment per body mass (Nm/kg)
+  - **Positive**: Hip flexion moment (thigh forward rotation)
+  - **Negative**: Hip extension moment (thigh backward rotation)
+  - **Zero reference**: No hip moment
+  - **Anatomical meaning**: Positive values assist hip flexor muscles, negative values assist hip extensor muscles
+
 - **hip_moment_contra_Nm_kg**: Hip flexion/extension moment per body mass (Nm/kg)
+  - Same sign convention as ipsilateral hip moment
+
 - **knee_moment_ipsi_Nm_kg**: Knee flexion/extension moment per body mass (Nm/kg)
+  - **Positive**: Knee flexion moment (promotes knee bending)
+  - **Negative**: Knee extension moment (promotes knee straightening)
+  - **Zero reference**: No knee moment
+  - **Anatomical meaning**: Positive values assist knee flexor muscles, negative values assist knee extensor muscles
+
 - **knee_moment_contra_Nm_kg**: Knee flexion/extension moment per body mass (Nm/kg)
+  - Same sign convention as ipsilateral knee moment
+
 - **ankle_moment_ipsi_Nm_kg**: Ankle dorsiflexion/plantarflexion moment per body mass (Nm/kg)
+  - **Positive**: Ankle dorsiflexion moment (toes up rotation)
+  - **Negative**: Ankle plantarflexion moment (toes down rotation)
+  - **Zero reference**: No ankle moment
+  - **Anatomical meaning**: Positive values assist dorsiflexor muscles (tibialis anterior), negative values assist plantarflexor muscles (gastrocnemius/soleus)
+
 - **ankle_moment_contra_Nm_kg**: Ankle dorsiflexion/plantarflexion moment per body mass (Nm/kg)
+  - Same sign convention as ipsilateral ankle moment
 
 ### Power Variables (Optional) - Normalized by Body Mass
 - **hip_power_ipsi_W_kg**: Hip joint power per body mass (W/kg)
@@ -129,7 +166,7 @@ This document provides biomechanically verified kinetic validation ranges (force
 | ml_grf_N_kg | -1.0 | 1.0 | N/kg | Weight transfer forces - **Research-based** |
 | hip_moment_ipsi_Nm_kg | -1.0 | 1.0 | Nm/kg | Hip extension for propulsion - **Literature estimate** |
 | knee_moment_ipsi_Nm_kg | -1.0 | 1.0 | Nm/kg | Knee moment for push-off - **Literature estimate** |
-| ankle_moment_ipsi_Nm_kg | 1.5 | 3.7 | Nm/kg | Peak plantarflexor moment (~3.7) - **Literature-based** |
+| ankle_moment_ipsi_Nm_kg | -3.7 | -1.5 | Nm/kg | Peak plantarflexor moment (~-3.7) - **Literature-based** |
 
 #### Phase 75% (Mid-Swing)
 | Variable | Min_Value | Max_Value | Units | Notes |
@@ -183,7 +220,7 @@ This document provides biomechanically verified kinetic validation ranges (force
 | ml_grf_N_kg | -1.5 | 1.5 | N/kg | Weight transfer - **NEEDS RESEARCH** |
 | hip_moment_ipsi_Nm_kg | -1.8 | 1.2 | Nm/kg | Enhanced hip extension - **NEEDS RESEARCH** |
 | knee_moment_ipsi_Nm_kg | -1.0 | 1.0 | Nm/kg | Knee moment for propulsion - **NEEDS RESEARCH** |
-| ankle_moment_ipsi_Nm_kg | 1.5 | 3.0 | Nm/kg | Enhanced plantarflexor moment - **NEEDS RESEARCH** |
+| ankle_moment_ipsi_Nm_kg | -3.0 | -1.5 | Nm/kg | Enhanced plantarflexor moment - **NEEDS RESEARCH** |
 
 #### Phase 75% (Mid-Swing)
 | Variable | Min_Value | Max_Value | Units | Notes |
@@ -237,7 +274,7 @@ This document provides biomechanically verified kinetic validation ranges (force
 | ml_grf_N_kg | -2.5 | 2.5 | N/kg | Dynamic lateral forces - **Research-based** |
 | hip_moment_ipsi_Nm_kg | -2.5 | 2.0 | Nm/kg | Hip extension for propulsion - **Literature estimate** |
 | knee_moment_ipsi_Nm_kg | -2.0 | 2.0 | Nm/kg | Knee moment for push-off - **Literature estimate** |
-| ankle_moment_ipsi_Nm_kg | 3.0 | 6.0 | Nm/kg | Peak plantarflexor moment (higher in running) - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -6.0 | -3.0 | Nm/kg | Peak plantarflexor moment (higher in running) - **Literature estimate** |
 
 #### Phase 75% (Mid-Swing)
 | Variable | Min_Value | Max_Value | Units | Notes |
