@@ -3,11 +3,11 @@
 Phase Progression Validation Plots - Version 5.0
 
 Creates validation plots showing how joint angle ranges change across movement phases.
-X-axis: Phase progression (0%, 25%, 50%, 75%) - NEW PHASE SYSTEM
+X-axis: Phase progression (0%, 25%, 50%, 75%, 100%) - NEW PHASE SYSTEM with cyclical completion
 Y-axis: Joint angle ranges (with bounding boxes)
 
 NEW FEATURES:
-- Updated to 0%, 25%, 50%, 75% phase system
+- Updated to 0%, 25%, 50%, 75%, 100% phase system with cyclical completion
 - Automatic contralateral offset logic for gait-based tasks
 - Task-appropriate bilateral handling (gait vs bilateral symmetric)
 - Enhanced biomechanical accuracy with standard gait timing
@@ -75,7 +75,7 @@ def apply_contralateral_offset(task_data: Dict, task_name: str) -> Dict:
         return task_data
     
     # For gait tasks, compute contralateral leg ranges with 50% offset
-    phases = [0, 25, 50, 75]
+    phases = [0, 25, 50, 75, 100]
     joint_types = ['hip_flexion_angle', 'knee_flexion_angle', 'ankle_flexion_angle']
     
     # Create a new task_data copy to avoid modifying original
@@ -88,6 +88,12 @@ def apply_contralateral_offset(task_data: Dict, task_name: str) -> Dict:
     
     # Apply contralateral offset logic
     for phase in phases:
+        if phase == 100:
+            # 100% phase should be the same as 0% to show cyclical nature
+            if 0 in task_data:
+                updated_task_data[100] = task_data[0].copy()
+            continue
+            
         if phase in task_data:
             # Calculate contralateral phase with 50% offset
             contralateral_phase = (phase + 50) % 100
@@ -212,8 +218,12 @@ def create_phase_progression_plot(validation_data: Dict, task_name: str, output_
         raise ValueError(f"Task {task_name} not found in validation data")
     
     task_data = validation_data[task_name]
-    phases = [0, 25, 50, 75]  # Updated to new phase system
+    phases = [0, 25, 50, 75, 100]  # Updated to include 100% for cyclical completion
     task_type = get_task_classification(task_name)
+    
+    # Add 100% phase data (same as 0% to show cyclical nature)
+    if 0 in task_data and 100 not in task_data:
+        task_data[100] = task_data[0].copy()
     
     # Create figure with subplots for each joint type
     fig, axes = plt.subplots(3, 2, figsize=(16, 12))
@@ -225,7 +235,7 @@ def create_phase_progression_plot(validation_data: Dict, task_name: str, output_
     
     # Define joint types and colors
     joint_types = ['hip_flexion_angle', 'knee_flexion_angle', 'ankle_flexion_angle']
-    sides = ['left', 'right']
+    sides = ['ipsi', 'contra']
     
     # Colors for different joint types
     joint_colors = {
@@ -311,8 +321,8 @@ def create_phase_progression_plot(validation_data: Dict, task_name: str, output_
                 ax.fill_between(valid_phases, phase_mins, phase_maxs, 
                                color=joint_colors[joint_type], alpha=0.2)
             
-            # Customize axes - Updated for new phase system
-            ax.set_xlim(-5, 80)  # Adjusted for 0-75% range
+            # Customize axes - Updated for new phase system with 100% completion
+            ax.set_xlim(-5, 105)  # Adjusted for 0-100% range
             ax.set_xticks(phases)
             ax.set_xticklabels([f'{p}%' for p in phases])
             
@@ -320,7 +330,8 @@ def create_phase_progression_plot(validation_data: Dict, task_name: str, output_
             x_label = 'Gait Phase' if task_type == 'gait' else 'Movement Phase'
             ax.set_xlabel(x_label, fontsize=11)
             ax.set_ylabel(f'{joint_type.replace("_", " ").title()} (radians)', fontsize=11)
-            ax.set_title(f'{side.title()} Leg', fontsize=12, fontweight='bold')
+            leg_title = 'Ipsilateral Leg' if side == 'ipsi' else 'Contralateral Leg'
+            ax.set_title(leg_title, fontsize=12, fontweight='bold')
             ax.grid(True, alpha=0.3)
             
             # Set shared y-axis range for this joint type
