@@ -1,8 +1,10 @@
-# Validation Expectations Specification
+# Kinematic Validation Expectations Specification
 
-**Single Source of Truth for Biomechanically Accurate Validation Rules**
+**Single Source of Truth for Biomechanically Accurate Kinematic Validation Rules**
 
-This document provides biomechanically verified validation ranges based on published gait analysis literature. The specification uses a modern phase system (0%, 25%, 50%, 75%) with contralateral offset logic for optimal validation efficiency.
+This document provides biomechanically verified kinematic validation ranges (joint angles) based on published gait analysis literature. The specification uses a modern phase system (0%, 25%, 50%, 75%) with contralateral offset logic for optimal validation efficiency.
+
+> **📊 Related**: See [validation_expectations_kinetic.md](validation_expectations_kinetic.md) for kinetic validation rules (forces and moments).
 
 > **📋 Version Information**: See [validation_expectations_changelog.md](validation_expectations_changelog.md) for detailed version history and changes.  
 > **🎨 Image Generation**: See [kinematic_visualization_guide.md](kinematic_visualization_guide.md) for generating validation images.
@@ -709,3 +711,4 @@ These ranges are verified against:
 7. Various peer-reviewed sources from 2024 literature searches
 
 > **📋 Version History**: See [validation_expectations_changelog.md](validation_expectations_changelog.md) for complete version history and detailed change documentation.
+> **🧪 Parser Testing**: See [test_validation_parser.md](test_validation_parser.md) for markdown parser unit test data.

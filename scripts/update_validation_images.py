@@ -2,16 +2,17 @@
 """
 Update Validation Images Script
 
-This script reads the validated biomechanical ranges from the validation_expectations.md file
+This script reads the validated biomechanical ranges from the validation_expectations_kinematic.md file
 and generates kinematic pose visualizations for all tasks and phases.
 
 Usage:
-    python update_validation_images.py [--output-dir OUTPUT_DIR]
+    python update_validation_images.py [--output-dir OUTPUT_DIR] [--validation-file FILE]
 
 The script will:
-1. Parse the validation_expectations.md file to extract joint angle ranges
-2. Generate pose visualizations for each task and phase (0%, 33%, 50%, 66%)
-3. Save images to the specified output directory
+1. Run unit tests on the markdown parser to ensure functionality
+2. Parse the validation_expectations_kinematic.md file to extract joint angle ranges
+3. Generate pose visualizations for each task and phase (0%, 25%, 50%, 75%)
+4. Save images to the specified output directory
 """
 
 import os
@@ -27,12 +28,81 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '
 from visualization.kinematic_pose_generator import KinematicPoseGenerator
 
 
+def run_parser_unit_tests() -> bool:
+    """
+    Run unit tests on the markdown parser using test data.
+    
+    Returns:
+        True if all tests pass, False otherwise
+    """
+    try:
+        # Path to test validation file
+        test_file = 'docs/standard_spec/test_validation_parser.md'
+        
+        if not os.path.exists(test_file):
+            print(f"⚠️  Warning: Test file not found at {test_file}")
+            return True  # Don't fail if test file is missing
+        
+        print(f"🧪 Running unit tests on markdown parser...")
+        
+        # Parse the test file
+        test_data = parse_validation_expectations(test_file)
+        
+        # Test 1: Task detection
+        expected_task = 'test_walking_parser'
+        if expected_task not in test_data:
+            print(f"❌ Test 1 FAILED: Expected task '{expected_task}' not found")
+            return False
+        print(f"✅ Test 1 PASSED: Task detection")
+        
+        # Test 2: Phase parsing
+        expected_phases = {0, 25, 50, 75}
+        actual_phases = set(test_data[expected_task].keys())
+        if not expected_phases.issubset(actual_phases):
+            print(f"❌ Test 2 FAILED: Expected phases {expected_phases}, got {actual_phases}")
+            return False
+        print(f"✅ Test 2 PASSED: Phase parsing")
+        
+        # Test 3: Variable extraction
+        phase_0_data = test_data[expected_task][0]
+        expected_vars = {'hip_flexion_angle_ipsi', 'knee_flexion_angle_ipsi', 'ankle_flexion_angle_ipsi'}
+        actual_vars = set(phase_0_data.keys())
+        if not expected_vars.issubset(actual_vars):
+            print(f"❌ Test 3 FAILED: Expected variables {expected_vars}, got {actual_vars}")
+            return False
+        print(f"✅ Test 3 PASSED: Variable extraction")
+        
+        # Test 4: Value parsing
+        hip_data = phase_0_data['hip_flexion_angle_ipsi']
+        if not (isinstance(hip_data['min'], (int, float)) and isinstance(hip_data['max'], (int, float))):
+            print(f"❌ Test 4 FAILED: Values should be numeric, got {hip_data}")
+            return False
+        if hip_data['min'] >= hip_data['max']:
+            print(f"❌ Test 4 FAILED: Min should be < Max, got {hip_data}")
+            return False
+        print(f"✅ Test 4 PASSED: Value parsing and validation")
+        
+        # Test 5: Negative value handling
+        ankle_data = phase_0_data['ankle_flexion_angle_ipsi']
+        if ankle_data['min'] != -0.1 or ankle_data['max'] != 0.1:
+            print(f"❌ Test 5 FAILED: Expected ankle range -0.1 to 0.1, got {ankle_data}")
+            return False
+        print(f"✅ Test 5 PASSED: Negative value handling")
+        
+        print(f"🎉 All parser unit tests PASSED!")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Unit tests FAILED with error: {e}")
+        return False
+
+
 def parse_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[str, Dict[str, float]]]]:
     """
-    Parse the validation_expectations.md file to extract joint angle ranges.
+    Parse the validation_expectations_kinematic.md file to extract joint angle ranges.
     
     Args:
-        file_path: Path to the validation_expectations.md file
+        file_path: Path to the validation_expectations_kinematic.md file
         
     Returns:
         Dictionary structured as: {task_name: {phase: {joint: {min, max}}}}
@@ -218,7 +288,7 @@ def main():
     """Main function to update validation images."""
     
     parser = argparse.ArgumentParser(
-        description='Update validation images based on validation_expectations.md'
+        description='Update validation images based on validation_expectations_kinematic.md'
     )
     parser.add_argument(
         '--output-dir', 
@@ -229,11 +299,24 @@ def main():
     parser.add_argument(
         '--validation-file',
         type=str,
-        default='docs/standard_spec/validation_expectations.md',
-        help='Path to validation_expectations.md file'
+        default='docs/standard_spec/validation_expectations_kinematic.md',
+        help='Path to validation_expectations_kinematic.md file'
+    )
+    parser.add_argument(
+        '--skip-tests',
+        action='store_true',
+        help='Skip unit tests (not recommended)'
     )
     
     args = parser.parse_args()
+    
+    # Run unit tests first (unless skipped)
+    if not args.skip_tests:
+        if not run_parser_unit_tests():
+            print("❌ Unit tests failed. Aborting to prevent parsing errors.")
+            print("   Use --skip-tests to bypass (not recommended)")
+            return 1
+        print("")  # Add spacing after tests
     
     # Find the validation expectations file
     if os.path.exists(args.validation_file):

@@ -127,11 +127,11 @@ def apply_contralateral_offset(task_data: Dict, task_name: str) -> Dict:
 
 def parse_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[str, Dict[str, float]]]]:
     """
-    Parse the validation_expectations.md file to extract joint angle ranges.
+    Parse the validation_expectations_kinematic.md file to extract joint angle ranges.
     Updated for v5.0 with new phase system and contralateral offset logic.
     
     Args:
-        file_path: Path to the validation_expectations.md file
+        file_path: Path to the validation_expectations_kinematic.md file
         
     Returns:
         Dictionary structured as: {task_name: {phase: {joint: {min, max}}}}
@@ -397,8 +397,8 @@ def main():
     parser.add_argument(
         '--validation-file',
         type=str,
-        default='docs/standard_spec/validation_expectations.md',
-        help='Path to validation_expectations.md file'
+        default='docs/standard_spec/validation_expectations_kinematic.md',
+        help='Path to validation_expectations_kinematic.md file'
     )
     parser.add_argument(
         '--tasks',
