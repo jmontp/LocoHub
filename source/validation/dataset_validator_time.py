@@ -1,5 +1,28 @@
 #!/usr/bin/env python3
 """
+⚠️  OUTDATED FILE - DO NOT USE WITHOUT THOROUGH REVIEW ⚠️
+
+This file appears to be misnamed and contains specification compliance testing code
+rather than dataset validation functionality. The filename suggests it should be a
+time-based dataset validator, but the content does not match this expectation.
+
+**CRITICAL WARNING**: This file has NOT been thoroughly vetted and may contain:
+- Outdated validation logic
+- Incorrect variable mappings  
+- Incompatible data structures
+- Security vulnerabilities
+
+**ACTION REQUIRED**: Before using this file:
+1. Review all validation logic against current specification
+2. Verify variable naming conventions are up-to-date
+3. Test thoroughly with known good datasets
+4. Update imports and dependencies
+5. Rename file to match actual functionality
+
+**RECOMMENDED**: Use the current dataset_validator.py instead, which has been
+thoroughly tested and validated for phase-based datasets.
+
+Original Description (may be outdated):
 Specification Compliance Test Suite
 
 Tests the intuitive validation system against the standard specification requirements:
@@ -10,6 +33,43 @@ Tests the intuitive validation system against the standard specification require
 
 This ensures the intuitive validation system correctly implements the project standards.
 """
+
+# CRITICAL: Prevent usage of this outdated file
+import sys
+
+def _prevent_usage():
+    """Prevent usage of this outdated file until it's thoroughly reviewed."""
+    error_msg = """
+    ⚠️  CRITICAL ERROR: Attempting to use outdated validation file ⚠️
+    
+    This file (dataset_validator_time.py) is OUTDATED and has not been thoroughly vetted.
+    
+    Using this file may result in:
+    - Incorrect validation results
+    - Data corruption or loss
+    - Security vulnerabilities
+    - Compatibility issues
+    
+    **SOLUTION**: Use the current dataset_validator.py instead:
+    
+    from validation.dataset_validator import DatasetValidator
+    
+    If you specifically need time-based validation functionality,
+    please review and update this file thoroughly before use.
+    
+    To override this safety check (NOT RECOMMENDED), set environment variable:
+    ALLOW_OUTDATED_VALIDATOR=true
+    """
+    
+    import os
+    if os.environ.get('ALLOW_OUTDATED_VALIDATOR', '').lower() != 'true':
+        print(error_msg, file=sys.stderr)
+        sys.exit(1)
+    else:
+        print("⚠️  WARNING: Using outdated validator despite safety warnings!", file=sys.stderr)
+
+# Check for usage attempt
+_prevent_usage()
 
 import pandas as pd
 import numpy as np
