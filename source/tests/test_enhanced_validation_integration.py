@@ -22,7 +22,7 @@ import os
 sys.path.append(str(Path(__file__).parent.parent))
 
 from tests.enhanced_validation_system import EnhancedValidationSystem
-from visualization.kinematic_pose_generator import KinematicPoseGenerator
+from visualization.forward_kinematics_plots import KinematicPoseGenerator
 
 def create_comprehensive_test_data(task_name: str = 'level_walking', n_subjects: int = 3) -> pd.DataFrame:
     """

@@ -16,6 +16,15 @@
 
 ## Recent Work (Last 15 Items)
 
+### 2025-06-10
+1. **Naming Refactor: Phase Progression → Filters by Phase** - Complete terminology and file structure update
+   - Renamed "phase progression" to "filters by phase" throughout all documentation and scripts
+   - Added "forward kinematics" to pose visualization naming for clarity
+   - Merged individual plotting scripts into unified `filters_by_phase_plots.py` with mode toggle
+   - Renamed `kinematic_pose_generator.py` → `forward_kinematics_plots.py` for consistency
+   - Updated all cross-references, imports, and documentation to reflect new structure
+   - Maintained 5-phase system (0%, 25%, 50%, 75%, 100%) with cyclical completion
+
 ### 2025-01-09
 1. **Forward Kinematics Correction** - Fixed joint angle calculations for anatomically accurate stick figures
    - Corrected knee flexion interpretation to match OpenSim convention
@@ -58,8 +67,8 @@
 
 ### Key Visualization Files
 - **generate_phase_range_images.py**: Individual phase range stick figure generation
-- **phase_progression_plots.py**: Joint angle progression across phases  
-- **kinematic_pose_generator.py**: Static pose validation images
+- **filters_by_phase_plots.py**: Unified kinematic and kinetic range validation plots  
+- **forward_kinematics_plots.py**: Static pose validation images
 - **mosaic_plot_validated.py**: Comprehensive validation plotting
 
 ### Forward Kinematics Implementation
@@ -69,8 +78,9 @@
 
 ### Image Generation Commands
 - `python3 scripts/generate_phase_range_images.py` - Generate individual phase images
-- `python3 source/visualization/phase_progression_plots.py` - Generate progression plots
-- `python3 source/visualization/kinematic_pose_generator.py` - Generate pose validation images
+- `python3 source/visualization/filters_by_phase_plots.py --mode kinematic` - Generate kinematic validation plots
+- `python3 source/visualization/filters_by_phase_plots.py --mode kinetic` - Generate kinetic validation plots
+- `python3 source/visualization/forward_kinematics_plots.py` - Generate pose validation images
 
 ### Output Directories
 - **validation_images/**: Main validation image output (45 total images)

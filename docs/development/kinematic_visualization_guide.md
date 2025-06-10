@@ -8,7 +8,7 @@ The kinematic visualization system generates static pose images showing the mini
 
 ## Components
 
-### 1. Kinematic Pose Generator (`source/visualization/kinematic_pose_generator.py`)
+### 1. Forward Kinematics Plots (`source/visualization/forward_kinematics_plots.py`)
 
 The core visualization module that:
 - Performs forward kinematics calculations to position body segments
@@ -41,7 +41,7 @@ Options:
 ### Generating Images for Specific Tasks
 
 ```python
-from source.visualization.kinematic_pose_generator import KinematicPoseGenerator
+from source.visualization.forward_kinematics_plots import KinematicPoseGenerator
 
 # Create generator
 generator = KinematicPoseGenerator()

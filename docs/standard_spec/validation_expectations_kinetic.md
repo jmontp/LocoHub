@@ -224,9 +224,9 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 - **Phase 50% ipsilateral** (toe-off) = **Phase 0% contralateral** (heel strike)
 - **Phase 75% ipsilateral** (mid-swing) = **Phase 25% contralateral** (mid-stance)
 
-**Phase Progression Validation:**
+**Kinetic Filters by Phase Validation:**
 
-![Level Walking Kinetic Phase Progression](validation/level_walking_kinetic_phase_progression.png)
+![Level Walking Kinetic Filters by Phase](validation/level_walking_kinetic_filters_by_phase.png)
 
 ### Task: incline_walking
 
@@ -298,9 +298,9 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 - **Phase 50% ipsilateral** (toe-off) = **Phase 0% contralateral** (heel strike)
 - **Phase 75% ipsilateral** (mid-swing) = **Phase 25% contralateral** (mid-stance)
 
-**Phase Progression Validation:**
+**Kinetic Filters by Phase Validation:**
 
-![Incline Walking Kinetic Phase Progression](validation/incline_walking_kinetic_phase_progression.png)
+![Incline Walking Kinetic Filters by Phase](validation/incline_walking_kinetic_filters_by_phase.png)
 
 ### Task: run
 
@@ -372,9 +372,9 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 - **Phase 50% ipsilateral** (toe-off) = **Phase 0% contralateral** (heel strike)
 - **Phase 75% ipsilateral** (mid-swing) = **Phase 25% contralateral** (mid-stance)
 
-**Phase Progression Validation:**
+**Kinetic Filters by Phase Validation:**
 
-![Run Kinetic Phase Progression](validation/run_kinetic_phase_progression.png)
+![Run Kinetic Filters by Phase](validation/run_kinetic_filters_by_phase.png)
 
 ## Research Requirements
 

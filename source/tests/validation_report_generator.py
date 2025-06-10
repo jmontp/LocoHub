@@ -34,9 +34,8 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 # Import existing plotting modules
 try:
-    from visualization.phase_progression_plots import parse_validation_expectations, apply_contralateral_offset
-    from visualization.kinetic_phase_progression_plots import parse_validation_expectations as parse_kinetic_validation_expectations
-    from visualization.kinematic_pose_generator import KinematicPoseGenerator
+    from visualization.filters_by_phase_plots import parse_kinematic_validation_expectations, parse_kinetic_validation_expectations, apply_contralateral_offset_kinematic
+    from visualization.forward_kinematics_plots import KinematicPoseGenerator
 except ImportError as e:
     print(f"Warning: Could not import existing plotting modules: {e}")
     print("Some functionality may be limited.")

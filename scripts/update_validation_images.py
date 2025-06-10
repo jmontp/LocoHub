@@ -25,7 +25,7 @@ from typing import Dict, List, Tuple
 # Add source directory to Python path
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'source'))
 
-from visualization.kinematic_pose_generator import KinematicPoseGenerator
+from visualization.forward_kinematics_plots import KinematicPoseGenerator
 
 
 def run_parser_unit_tests() -> bool:

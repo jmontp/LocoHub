@@ -52,11 +52,11 @@ This document provides biomechanically verified kinematic validation ranges (joi
 - Phase 0% ipsilateral = Phase 50% contralateral (heel strike vs toe-off)
 - Phase 25% ipsilateral = Phase 75% contralateral (mid-stance vs mid-swing)
 
-**Kinematic Range Visualization:**
-![Task Validation - Phase 0%](validation/{task_name}_phase_00_range.png)
-![Task Validation - Phase 25%](validation/{task_name}_phase_25_range.png)
-![Task Validation - Phase 50%](validation/{task_name}_phase_50_range.png)
-![Task Validation - Phase 75%](validation/{task_name}_phase_75_range.png)
+**Forward Kinematics Range Visualization:**
+![Task Forward Kinematics - Phase 0%](validation/{task_name}_forward_kinematics_phase_00_range.png)
+![Task Forward Kinematics - Phase 25%](validation/{task_name}_forward_kinematics_phase_25_range.png)
+![Task Forward Kinematics - Phase 50%](validation/{task_name}_forward_kinematics_phase_50_range.png)
+![Task Forward Kinematics - Phase 75%](validation/{task_name}_forward_kinematics_phase_75_range.png)
 ```
 
 **Column Definitions:**
@@ -128,15 +128,15 @@ This document provides biomechanically verified kinematic validation ranges (joi
 - **Phase 50% ipsilateral** (toe-off) = **Phase 0% contralateral** (heel strike)
 - **Phase 75% ipsilateral** (mid-swing) = **Phase 25% contralateral** (mid-stance)
 
-**Kinematic Range Visualization:**
+**Forward Kinematics Range Visualization:**
 
 | Phase 0% (Heel Strike) | Phase 25% (Mid-Stance) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Level Walking Heel Strike](validation/level_walking_phase_00_range.png) | ![Level Walking Mid-Stance](validation/level_walking_phase_25_range.png) | ![Level Walking Toe-Off](validation/level_walking_phase_50_range.png) | ![Level Walking Mid-Swing](validation/level_walking_phase_75_range.png) |
+| ![Level Walking Forward Kinematics Heel Strike](validation/level_walking_forward_kinematics_phase_00_range.png) | ![Level Walking Forward Kinematics Mid-Stance](validation/level_walking_forward_kinematics_phase_25_range.png) | ![Level Walking Forward Kinematics Toe-Off](validation/level_walking_forward_kinematics_phase_50_range.png) | ![Level Walking Forward Kinematics Mid-Swing](validation/level_walking_forward_kinematics_phase_75_range.png) |
 
-**Phase Progression Validation:**
+**Filters by Phase Validation:**
 
-![Level Walking Phase Progression](validation/level_walking_phase_progression.png)
+![Level Walking Kinematic Filters by Phase](validation/level_walking_kinematic_filters_by_phase.png)
 
 ### Task: incline_walking
 
@@ -198,15 +198,15 @@ This document provides biomechanically verified kinematic validation ranges (joi
 - **Phase 50% ipsilateral** (toe-off) = **Phase 0% contralateral** (heel strike)
 - **Phase 75% ipsilateral** (mid-swing) = **Phase 25% contralateral** (mid-stance)
 
-**Kinematic Range Visualization:**
+**Forward Kinematics Range Visualization:**
 
 | Phase 0% (Heel Strike) | Phase 25% (Mid-Stance) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Incline Walking Heel Strike](validation/incline_walking_phase_00_range.png) | ![Incline Walking Mid-Stance](validation/incline_walking_phase_25_range.png) | ![Incline Walking Toe-Off](validation/incline_walking_phase_50_range.png) | ![Incline Walking Mid-Swing](validation/incline_walking_phase_75_range.png) |
+| ![Incline Walking Forward Kinematics Heel Strike](validation/incline_walking_forward_kinematics_phase_00_range.png) | ![Incline Walking Forward Kinematics Mid-Stance](validation/incline_walking_forward_kinematics_phase_25_range.png) | ![Incline Walking Forward Kinematics Toe-Off](validation/incline_walking_forward_kinematics_phase_50_range.png) | ![Incline Walking Forward Kinematics Mid-Swing](validation/incline_walking_forward_kinematics_phase_75_range.png) |
 
-**Phase Progression Validation:**
+**Filters by Phase Validation:**
 
-![Incline Walking Phase Progression](validation/incline_walking_phase_progression.png)
+![Incline Walking Kinematic Filters by Phase](validation/incline_walking_kinematic_filters_by_phase.png)
 
 ---
 
@@ -260,15 +260,15 @@ This document provides biomechanically verified kinematic validation ranges (joi
 - **Phase 50% ipsilateral** (toe-off) = **Phase 0% contralateral** (heel strike)
 - **Phase 75% ipsilateral** (mid-swing) = **Phase 25% contralateral** (mid-stance)
 
-**Kinematic Range Visualization:**
+**Forward Kinematics Range Visualization:**
 
 | Phase 0% (Heel Strike) | Phase 25% (Mid-Stance) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Decline Walking Heel Strike](validation/decline_walking_phase_00_range.png) | ![Decline Walking Mid-Stance](validation/decline_walking_phase_25_range.png) | ![Decline Walking Toe-Off](validation/decline_walking_phase_50_range.png) | ![Decline Walking Mid-Swing](validation/decline_walking_phase_75_range.png) |
+| ![Decline Walking Forward Kinematics Heel Strike](validation/decline_walking_forward_kinematics_phase_00_range.png) | ![Decline Walking Forward Kinematics Mid-Stance](validation/decline_walking_forward_kinematics_phase_25_range.png) | ![Decline Walking Forward Kinematics Toe-Off](validation/decline_walking_forward_kinematics_phase_50_range.png) | ![Decline Walking Forward Kinematics Mid-Swing](validation/decline_walking_forward_kinematics_phase_75_range.png) |
 
-**Phase Progression Validation:**
+**Filters by Phase Validation:**
 
-![Decline Walking Phase Progression](validation/decline_walking_phase_progression.png)
+![Decline Walking Kinematic Filters by Phase](validation/decline_walking_kinematic_filters_by_phase.png)
 
 ### Task: up_stairs
 
@@ -320,15 +320,15 @@ This document provides biomechanically verified kinematic validation ranges (joi
 - **Phase 50% ipsilateral** (toe-off) = **Phase 0% contralateral** (step contact)
 - **Phase 75% ipsilateral** (mid-swing) = **Phase 25% contralateral** (loading)
 
-**Kinematic Range Visualization:**
+**Forward Kinematics Range Visualization:**
 
 | Phase 0% (Step Contact) | Phase 25% (Loading) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Up Stairs Step Contact](validation/up_stairs_phase_00_range.png) | ![Up Stairs Loading](validation/up_stairs_phase_25_range.png) | ![Up Stairs Toe-Off](validation/up_stairs_phase_50_range.png) | ![Up Stairs Mid-Swing](validation/up_stairs_phase_75_range.png) |
+| ![Up Stairs Forward Kinematics Step Contact](validation/up_stairs_forward_kinematics_phase_00_range.png) | ![Up Stairs Forward Kinematics Loading](validation/up_stairs_forward_kinematics_phase_25_range.png) | ![Up Stairs Forward Kinematics Toe-Off](validation/up_stairs_forward_kinematics_phase_50_range.png) | ![Up Stairs Forward Kinematics Mid-Swing](validation/up_stairs_forward_kinematics_phase_75_range.png) |
 
-**Phase Progression Validation:**
+**Filters by Phase Validation:**
 
-![Up Stairs Phase Progression](validation/up_stairs_phase_progression.png)
+![Up Stairs Kinematic Filters by Phase](validation/up_stairs_kinematic_filters_by_phase.png)
 
 ### Task: down_stairs
 
@@ -380,15 +380,15 @@ This document provides biomechanically verified kinematic validation ranges (joi
 - **Phase 50% ipsilateral** (toe-off) = **Phase 0% contralateral** (step contact)
 - **Phase 75% ipsilateral** (mid-swing) = **Phase 25% contralateral** (loading)
 
-**Kinematic Range Visualization:**
+**Forward Kinematics Range Visualization:**
 
 | Phase 0% (Step Contact) | Phase 25% (Loading) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Down Stairs Step Contact](validation/down_stairs_phase_00_range.png) | ![Down Stairs Loading](validation/down_stairs_phase_25_range.png) | ![Down Stairs Toe-Off](validation/down_stairs_phase_50_range.png) | ![Down Stairs Mid-Swing](validation/down_stairs_phase_75_range.png) |
+| ![Down Stairs Forward Kinematics Step Contact](validation/down_stairs_forward_kinematics_phase_00_range.png) | ![Down Stairs Forward Kinematics Loading](validation/down_stairs_forward_kinematics_phase_25_range.png) | ![Down Stairs Forward Kinematics Toe-Off](validation/down_stairs_forward_kinematics_phase_50_range.png) | ![Down Stairs Forward Kinematics Mid-Swing](validation/down_stairs_forward_kinematics_phase_75_range.png) |
 
-**Phase Progression Validation:**
+**Filters by Phase Validation:**
 
-![Down Stairs Phase Progression](validation/down_stairs_phase_progression.png)
+![Down Stairs Kinematic Filters by Phase](validation/down_stairs_kinematic_filters_by_phase.png)
 
 ### Task: run
 
@@ -450,15 +450,15 @@ This document provides biomechanically verified kinematic validation ranges (joi
 - **Phase 50% ipsilateral** (toe-off) = **Phase 0% contralateral** (heel strike)
 - **Phase 75% ipsilateral** (mid-swing) = **Phase 25% contralateral** (mid-stance)
 
-**Kinematic Range Visualization:**
+**Forward Kinematics Range Visualization:**
 
 | Phase 0% (Heel Strike) | Phase 25% (Mid-Stance) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Run Heel Strike](validation/run_phase_00_range.png) | ![Run Mid-Stance](validation/run_phase_25_range.png) | ![Run Toe-Off](validation/run_phase_50_range.png) | ![Run Mid-Swing](validation/run_phase_75_range.png) |
+| ![Run Forward Kinematics Heel Strike](validation/run_forward_kinematics_phase_00_range.png) | ![Run Forward Kinematics Mid-Stance](validation/run_forward_kinematics_phase_25_range.png) | ![Run Forward Kinematics Toe-Off](validation/run_forward_kinematics_phase_50_range.png) | ![Run Forward Kinematics Mid-Swing](validation/run_forward_kinematics_phase_75_range.png) |
 
-**Phase Progression Validation:**
+**Filters by Phase Validation:**
 
-![Run Phase Progression](validation/run_phase_progression.png)
+![Run Kinematic Filters by Phase](validation/run_kinematic_filters_by_phase.png)
 
 ### Task: sit_to_stand
 
@@ -518,15 +518,15 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 **Note:** Sit-to-stand is a bilateral symmetric movement, so both legs maintain similar ranges throughout all phases.
 
-**Kinematic Range Visualization:**
+**Forward Kinematics Range Visualization:**
 
 | Phase 0% (Seated) | Phase 25% (Initiation) | Phase 50% (Mid-Rise) | Phase 75% (Standing) |
 |---|---|---|---|
-| ![Sit To Stand Seated](validation/sit_to_stand_phase_00_range.png) | ![Sit To Stand Initiation](validation/sit_to_stand_phase_25_range.png) | ![Sit To Stand Mid-Rise](validation/sit_to_stand_phase_50_range.png) | ![Sit To Stand Standing](validation/sit_to_stand_phase_75_range.png) |
+| ![Sit To Stand Forward Kinematics Seated](validation/sit_to_stand_forward_kinematics_phase_00_range.png) | ![Sit To Stand Forward Kinematics Initiation](validation/sit_to_stand_forward_kinematics_phase_25_range.png) | ![Sit To Stand Forward Kinematics Mid-Rise](validation/sit_to_stand_forward_kinematics_phase_50_range.png) | ![Sit To Stand Forward Kinematics Standing](validation/sit_to_stand_forward_kinematics_phase_75_range.png) |
 
-**Phase Progression Validation:**
+**Filters by Phase Validation:**
 
-![Sit To Stand Phase Progression](validation/sit_to_stand_phase_progression.png)
+![Sit To Stand Kinematic Filters by Phase](validation/sit_to_stand_kinematic_filters_by_phase.png)
 
 ### Task: jump
 
@@ -586,15 +586,15 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 **Note:** Jumping is a bilateral symmetric movement, so both legs maintain similar ranges throughout all phases.
 
-**Kinematic Range Visualization:**
+**Forward Kinematics Range Visualization:**
 
 | Phase 0% (Initial) | Phase 25% (Countermovement) | Phase 50% (Takeoff) | Phase 75% (Flight) |
 |---|---|---|---|
-| ![Jump Initial](validation/jump_phase_00_range.png) | ![Jump Countermovement](validation/jump_phase_25_range.png) | ![Jump Takeoff](validation/jump_phase_50_range.png) | ![Jump Flight](validation/jump_phase_75_range.png) |
+| ![Jump Forward Kinematics Initial](validation/jump_forward_kinematics_phase_00_range.png) | ![Jump Forward Kinematics Countermovement](validation/jump_forward_kinematics_phase_25_range.png) | ![Jump Forward Kinematics Takeoff](validation/jump_forward_kinematics_phase_50_range.png) | ![Jump Forward Kinematics Flight](validation/jump_forward_kinematics_phase_75_range.png) |
 
-**Phase Progression Validation:**
+**Filters by Phase Validation:**
 
-![Jump Phase Progression](validation/jump_phase_progression.png)
+![Jump Kinematic Filters by Phase](validation/jump_kinematic_filters_by_phase.png)
 
 ### Task: squats
 
@@ -654,21 +654,21 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 **Note:** Squats are a bilateral symmetric movement, so both legs maintain similar ranges throughout all phases.
 
-**Kinematic Range Visualization:**
+**Forward Kinematics Range Visualization:**
 
 | Phase 0% (Standing) | Phase 25% (Descent) | Phase 50% (Bottom) | Phase 75% (Ascent) |
 |---|---|---|---|
-| ![Squats Standing](validation/squats_phase_00_range.png) | ![Squats Descent](validation/squats_phase_25_range.png) | ![Squats Bottom](validation/squats_phase_50_range.png) | ![Squats Ascent](validation/squats_phase_75_range.png) |
+| ![Squats Forward Kinematics Standing](validation/squats_forward_kinematics_phase_00_range.png) | ![Squats Forward Kinematics Descent](validation/squats_forward_kinematics_phase_25_range.png) | ![Squats Forward Kinematics Bottom](validation/squats_forward_kinematics_phase_50_range.png) | ![Squats Forward Kinematics Ascent](validation/squats_forward_kinematics_phase_75_range.png) |
 
-**Phase Progression Validation:**
+**Filters by Phase Validation:**
 
-![Squats Phase Progression](validation/squats_phase_progression.png)
+![Squats Kinematic Filters by Phase](validation/squats_kinematic_filters_by_phase.png)
 
 ## Joint Validation Range Summary
 
-The phase progression validation plots have been moved to their corresponding individual task sections above. Each task now includes both kinematic range visualizations and phase progression validation plots.
+The filters by phase validation plots have been moved to their corresponding individual task sections above. Each task now includes both forward kinematics range visualizations and filters by phase validation plots.
 
-**Reading the Phase Progression Plots:**
+**Reading the Filters by Phase Plots:**
 - **X-axis**: Movement phase progression (0%, 25%, 50%, 75%)
 - **Y-axis**: Joint angle values in radians (left) and degrees (right)
 - **Layout**: 3 rows (hip, knee, ankle) × 2 columns (left leg, right leg)
