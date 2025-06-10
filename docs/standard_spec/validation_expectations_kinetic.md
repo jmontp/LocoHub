@@ -9,6 +9,11 @@ This document provides biomechanically verified kinetic validation ranges (force
 > **📋 Version Information**: See [validation_expectations_changelog.md](validation_expectations_changelog.md) for detailed version history and changes.  
 > **🔬 Research Status**: **REQUIRES LITERATURE RESEARCH** - Kinetic ranges need verification against published biomechanics literature.
 
+> **🔄 Plot Generation**: To regenerate the validation plots referenced in this document, run:
+> ```bash
+> python3 source/validation/generate_validation_plots.py --filters-only
+> ```
+
 ## Format Specification
 
 ### Two-Tier Validation Structure

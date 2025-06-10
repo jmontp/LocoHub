@@ -221,7 +221,7 @@ class KinematicPoseGenerator:
         """
         fig, ax = plt.subplots(figsize=(12, 8))
         
-        # Extract bilateral joint angles for min and max poses - Updated for ipsi/contra naming
+        # Extract bilateral joint angles for min and max poses - Using parser output variable names
         # Ipsilateral leg angles
         ipsi_hip_min = joint_ranges['hip_flexion_angle_ipsi']['min']
         ipsi_hip_max = joint_ranges['hip_flexion_angle_ipsi']['max']

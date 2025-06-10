@@ -9,6 +9,16 @@ This document provides biomechanically verified kinematic validation ranges (joi
 > **📋 Version Information**: See [../development/validation_expectations_changelog.md](../development/validation_expectations_changelog.md) for detailed version history and changes.  
 > **🎨 Image Generation**: See [../development/kinematic_visualization_guide.md](../development/kinematic_visualization_guide.md) for generating validation images.
 
+> **🔄 Plot Generation**: To regenerate all validation plots referenced in this document, run:
+> ```bash
+> python3 source/validation/generate_validation_plots.py
+> # Or for specific tasks:
+> python3 source/validation/generate_validation_plots.py --tasks level_walking incline_walking
+> # Or for specific plot types:
+> python3 source/validation/generate_validation_plots.py --forward-kinematic-only
+> python3 source/validation/generate_validation_plots.py --filters-only
+> ```
+
 ## Format Specification
 
 ### Two-Tier Validation Structure
