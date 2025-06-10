@@ -1,27 +1,30 @@
 #!/usr/bin/env python3
 """
-Dataset Validator
+Dataset Validator (Phase-based)
 
-Focused validation script that loads phase-based datasets and validates each step
-against the kinematic and kinetic expectations defined in the specification files:
-- docs/standard_spec/validation_expectations_kinematic.md
-- docs/standard_spec/validation_expectations_kinetic.md
+Entry point script for validating phase-based locomotion datasets using the validation library modules.
+Uses step_classifier.py and filters_by_phase_plots.py to provide comprehensive validation.
 
 This validator:
 1. Loads phase-based parquet datasets (requires _phase.parquet format)
-2. Validates each step against expected ranges at key phases (0%, 25%, 50%, 75%)
+2. Uses StepClassifier.validate_data_against_specs() for consistent validation
 3. Reports validation failures with detailed analysis
 4. Provides step-by-step validation results
 5. Generates filters by phase plots with step validation overlays (optional)
 
-The plotting functionality integrates with the filters_by_phase_plots module to create
-visual validation reports showing:
-- Validation ranges at key phases (0%, 25%, 50%, 75%)
-- Step data overlaid with color-coded validation status
-- Step colors: gray (valid), red (violations), pink (other violations)
+**Library Integration:**
+- Uses validation.step_classifier.StepClassifier for validation logic (single source of truth)
+- Uses validation.filters_by_phase_plots.create_filters_by_phase_plot for visualization
+- Ensures consistency with specification files and other validation tools
+
+**Validation Features:**
+- Efficient representative phase validation (0%, 25%, 50%, 75%)
+- Step color classification: gray (valid), red (violations), pink (other violations)
+- Support for both kinematic (joint angles) and kinetic (forces/moments) validation
+- Automatic contralateral offset handling for gait-based tasks
 
 Usage:
-    python dataset_validator.py --dataset <dataset>_phase.parquet [--output validation_reports/] [--no-plots]
+    python dataset_validator_phase.py --dataset <dataset>_phase.parquet [--output validation_reports/] [--no-plots]
 """
 
 import os
@@ -36,18 +39,12 @@ from datetime import datetime
 # Add source directory to Python path
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
-# Import validation parser modules
-try:
-    from validation.validation_expectations_parser import parse_kinematic_validation_expectations, parse_kinetic_validation_expectations
-except ImportError as e:
-    raise ImportError(f"Could not import validation parser modules: {e}")
-
-# Import plotting modules
+# Import library modules
 try:
     from validation.filters_by_phase_plots import create_filters_by_phase_plot
     from validation.step_classifier import StepClassifier
 except ImportError as e:
-    raise ImportError(f"Could not import plotting modules: {e}")
+    raise ImportError(f"Could not import validation library modules: {e}")
 
 class DatasetValidator:
     """
@@ -83,39 +80,26 @@ class DatasetValidator:
             self.plots_dir = self.output_dir / "plots"
             self.plots_dir.mkdir(exist_ok=True)
             
-        # Load validation expectations from specification files
-        self.kinematic_expectations = self._load_kinematic_expectations()
-        self.kinetic_expectations = self._load_kinetic_expectations()
+        # Load validation expectations from specification files using the step classifier
+        try:
+            self.kinematic_expectations = self.step_classifier.load_validation_ranges_from_specs('kinematic')
+        except FileNotFoundError:
+            print("⚠️  Warning: Kinematic validation expectations not found")
+            self.kinematic_expectations = {}
+        
+        try:
+            self.kinetic_expectations = self.step_classifier.load_validation_ranges_from_specs('kinetic')
+        except FileNotFoundError:
+            print("⚠️  Warning: Kinetic validation expectations not found")
+            self.kinetic_expectations = {}
         
         # Storage for validation results
         self.validation_results = {}
         self.step_failures = []
         
-        # Initialize step classifier for visualization
-        if self.generate_plots:
-            self.step_classifier = StepClassifier()
+        # Initialize step classifier (needed for both validation and visualization)
+        self.step_classifier = StepClassifier()
         
-    def _load_kinematic_expectations(self) -> Dict:
-        """Load kinematic validation expectations from markdown file."""
-        expectations_path = Path(__file__).parent.parent.parent / "docs" / "standard_spec" / "validation_expectations_kinematic.md"
-        if expectations_path.exists():
-            try:
-                return parse_kinematic_validation_expectations(str(expectations_path))
-            except Exception as e:
-                print(f"Warning: Could not parse kinematic expectations: {e}")
-                return {}
-        return {}
-    
-    def _load_kinetic_expectations(self) -> Dict:
-        """Load kinetic validation expectations from markdown file."""
-        expectations_path = Path(__file__).parent.parent.parent / "docs" / "standard_spec" / "validation_expectations_kinetic.md" 
-        if expectations_path.exists():
-            try:
-                return parse_kinetic_validation_expectations(str(expectations_path))
-            except Exception as e:
-                print(f"Warning: Could not parse kinetic expectations: {e}")
-                return {}
-        return {}
     
     def load_dataset(self) -> pd.DataFrame:
         """Load and validate the dataset structure. Only works with phase-based datasets."""
@@ -156,106 +140,81 @@ class DatasetValidator:
         except Exception as e:
             raise RuntimeError(f"Error loading dataset: {e}")
     
-    def validate_data_point(self, value: float, expected_range: Dict[str, float], variable: str, phase: float) -> Tuple[bool, str]:
-        """
-        Validate a single data point against expected ranges.
-        
-        Args:
-            value: The data value to validate
-            expected_range: Dictionary with 'min' and 'max' values
-            variable: Variable name being validated
-            phase: Phase percentage where validation occurs
-            
-        Returns:
-            Tuple of (is_valid, failure_reason)
-        """
-        if pd.isna(value):
-            return False, f"NaN value at phase {phase:.1f}%"
-        
-        min_val = expected_range['min']
-        max_val = expected_range['max']
-        
-        if value < min_val:
-            return False, f"Value {value:.3f} below minimum {min_val:.3f} at phase {phase:.1f}%"
-        elif value > max_val:
-            return False, f"Value {value:.3f} above maximum {max_val:.3f} at phase {phase:.1f}%"
-        else:
-            return True, "Valid"
     
     def validate_step_against_expectations(self, step_data: pd.DataFrame, task: str, 
-                                         expectations_dict: Dict, validation_type: str = "kinematic") -> List[Dict]:
+                                         validation_type: str = "kinematic") -> List[Dict]:
         """
-        Validate a single step against expectations at key phases (0%, 25%, 50%, 75%).
+        Validate a single step against expectations using the step classifier library.
         
         Args:
             step_data: DataFrame containing step data with phase column
             task: Task name for validation
-            expectations_dict: Dictionary of expectations (kinematic or kinetic)
             validation_type: "kinematic" or "kinetic"
             
         Returns:
             List of validation failure dictionaries
         """
-        failures = []
+        # Convert step data to format expected by step classifier
+        step_data_array = self._convert_single_step_to_array(step_data, validation_type)
         
-        # Task must match exactly what's in validation expectations
-        if task not in expectations_dict:
-            raise ValueError(f"No validation expectations found for task '{task}'. Available tasks: {list(expectations_dict.keys())}")
+        # Create step task mapping (single step)
+        step_task_mapping = {0: task}
         
-        # Get phase column
-        phase_col = self._get_phase_column(step_data)
-        if phase_col is None:
-            raise ValueError("No phase column found in step data. Expected: 'phase_percent', 'phase_%', 'phase_r', or 'phase_l'")
-        
-        # Check key phases: 0%, 25%, 50%, 75%
-        key_phases = [0, 25, 50, 75]
-        
-        for target_phase in key_phases:
-            if target_phase not in expectations_dict[task]:
-                raise ValueError(f"Task '{task}' missing phase {target_phase}% in validation expectations")
-                
-            # Find data points near this phase (within ±2.5%)
-            phase_mask = (
-                (step_data[phase_col] >= target_phase - 2.5) & 
-                (step_data[phase_col] <= target_phase + 2.5)
-            )
-            phase_data = step_data[phase_mask]
-            
-            if phase_data.empty:
-                continue
-                
-            # Get the data point closest to target phase
-            closest_idx = (phase_data[phase_col] - target_phase).abs().idxmin()
-            data_point = step_data.loc[closest_idx]
-            actual_phase = data_point[phase_col]
-            
-            # Validate each expected variable at this phase
-            phase_expectations = expectations_dict[task][target_phase]
-            
-            for var_name, expected_range in phase_expectations.items():
-                # Variable name must match exactly - no mapping
-                if var_name not in step_data.columns:
-                    raise ValueError(f"Variable '{var_name}' not found in dataset. Available columns: {list(step_data.columns)}")
-                    
-                value = data_point[var_name]
-                is_valid, failure_reason = self.validate_data_point(
-                    value, expected_range, var_name, actual_phase
-                )
-                
-                if not is_valid:
-                    failures.append({
-                        'task': task,
-                        'variable': var_name,
-                        'phase': actual_phase,
-                        'target_phase': target_phase,
-                        'value': value,
-                        'expected_min': expected_range['min'],
-                        'expected_max': expected_range['max'],
-                        'failure_reason': failure_reason,
-                        'validation_type': validation_type
-                    })
+        # Use step classifier to validate this step
+        failures = self.step_classifier.validate_data_against_specs(
+            step_data_array, task, step_task_mapping, validation_type
+        )
         
         return failures
+    
+    def _convert_single_step_to_array(self, step_data: pd.DataFrame, validation_type: str) -> np.ndarray:
+        """
+        Convert single step DataFrame to array format expected by step classifier.
+        
+        Args:
+            step_data: DataFrame containing step data with phase column
+            validation_type: "kinematic" or "kinetic"
+            
+        Returns:
+            Array with shape (1, 150, num_features)
+        """
+        # Define standard variable order
+        if validation_type == 'kinematic':
+            variables = [
+                'hip_flexion_angle_ipsi', 'hip_flexion_angle_contra',
+                'knee_flexion_angle_ipsi', 'knee_flexion_angle_contra',
+                'ankle_flexion_angle_ipsi', 'ankle_flexion_angle_contra'
+            ]
+        elif validation_type == 'kinetic':
+            variables = [
+                'hip_moment_ipsi_Nm_kg', 'hip_moment_contra_Nm_kg',
+                'knee_moment_ipsi_Nm_kg', 'knee_moment_contra_Nm_kg',
+                'ankle_moment_ipsi_Nm_kg', 'ankle_moment_contra_Nm_kg'
+            ]
+        else:
+            raise ValueError(f"Unknown validation type: {validation_type}")
+        
+        # Check which variables are available in the data
+        available_variables = [var for var in variables if var in step_data.columns]
+        if not available_variables:
+            raise ValueError(f"No {validation_type} variables found in step data. Expected: {variables}")
+        
+        # Create array with shape (1, 150, num_features)
+        step_array = np.zeros((1, 150, len(available_variables)))
+        
+        # Extract and resample data to 150 points
+        for var_idx, var_name in enumerate(available_variables):
+            var_data = step_data[var_name].values
+            
+            # Resample to 150 points if needed
+            if len(var_data) != 150:
+                old_indices = np.linspace(0, len(var_data)-1, len(var_data))
+                new_indices = np.linspace(0, len(var_data)-1, 150)
+                var_data = np.interp(new_indices, old_indices, var_data)
+            
+            step_array[0, :, var_idx] = var_data
+        
+        return step_array
     
     def _get_phase_column(self, df: pd.DataFrame) -> Optional[str]:
         """Find the phase column in the dataset."""
@@ -308,22 +267,28 @@ class DatasetValidator:
             step_valid = True
             
             # Validate against kinematic expectations
-            if self.kinematic_expectations:
-                kinematic_failures = self.validate_step_against_expectations(
-                    step_data, task, self.kinematic_expectations, "kinematic"
-                )
-                if kinematic_failures:
-                    validation_results['kinematic_failures'].extend(kinematic_failures)
-                    step_valid = False
+            if self.kinematic_expectations and task in self.kinematic_expectations:
+                try:
+                    kinematic_failures = self.validate_step_against_expectations(
+                        step_data, task, "kinematic"
+                    )
+                    if kinematic_failures:
+                        validation_results['kinematic_failures'].extend(kinematic_failures)
+                        step_valid = False
+                except Exception as e:
+                    print(f"⚠️  Warning: Could not validate kinematic data for step {step_id}: {e}")
             
             # Validate against kinetic expectations  
-            if self.kinetic_expectations:
-                kinetic_failures = self.validate_step_against_expectations(
-                    step_data, task, self.kinetic_expectations, "kinetic"
-                )
-                if kinetic_failures:
-                    validation_results['kinetic_failures'].extend(kinetic_failures)
-                    step_valid = False
+            if self.kinetic_expectations and task in self.kinetic_expectations:
+                try:
+                    kinetic_failures = self.validate_step_against_expectations(
+                        step_data, task, "kinetic"
+                    )
+                    if kinetic_failures:
+                        validation_results['kinetic_failures'].extend(kinetic_failures)
+                        step_valid = False
+                except Exception as e:
+                    print(f"⚠️  Warning: Could not validate kinetic data for step {step_id}: {e}")
             
             if step_valid:
                 validation_results['valid_steps'] += 1
@@ -536,11 +501,6 @@ class DatasetValidator:
         Returns:
             Array of step colors with shape (num_steps,)
         """
-        if not hasattr(self, 'step_classifier'):
-            # Fallback to simple approach if classifier not available
-            num_steps = len(step_task_mapping)
-            return np.array(['gray'] * num_steps)
-        
         # Get appropriate failures based on plot mode
         if plot_mode == 'kinematic':
             failures = validation_results.get('kinematic_failures', [])
@@ -552,7 +512,7 @@ class DatasetValidator:
                        validation_results.get('kinetic_failures', []))
         
         # Use step classifier to generate colors
-        # For now, use summary classification since we don't know the specific feature
+        # Use summary classification since we don't know the specific feature
         step_colors = self.step_classifier.get_step_summary_classification(
             failures, step_task_mapping
         )
