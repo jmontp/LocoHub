@@ -14,10 +14,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 import os
-import re
+import sys
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 import argparse
+
+# Add source directory to Python path for imports
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+
+# Import centralized validation parser
+from validation.validation_expectations_parser import parse_kinematic_validation_expectations
 
 class KinematicPoseGenerator:
     """Generator for static kinematic poses for validation visualization"""
@@ -419,7 +425,7 @@ class KinematicPoseGenerator:
                 
                 if validation_ranges is None:
                     print(f"Parsing validation expectations from: {validation_path}")
-                    all_validation_data = self.parse_validation_expectations(validation_path)
+                    all_validation_data = parse_kinematic_validation_expectations(validation_path)
                     validation_ranges = all_validation_data.get(task_name, {})
                     
                     if not validation_ranges:
@@ -491,67 +497,6 @@ class KinematicPoseGenerator:
         
         return task_defaults.get(task_name, task_defaults['level_walking'])
     
-    def parse_validation_expectations(self, file_path: str) -> Dict[str, Dict[int, Dict[str, Dict[str, float]]]]:
-        """
-        Parse the validation_expectations_kinematic.md file to extract joint angle ranges.
-        
-        Args:
-            file_path: Path to the validation_expectations_kinematic.md file
-            
-        Returns:
-            Dictionary structured as: {task_name: {phase: {joint: {min, max}}}}
-        """
-        with open(file_path, 'r') as f:
-            content = f.read()
-        
-        # Dictionary to store parsed data
-        validation_data = {}
-        
-        # Find all task sections
-        task_pattern = r'### Task: ([\w_]+)\n'
-        tasks = re.findall(task_pattern, content)
-        
-        for task in tasks:
-            validation_data[task] = {}
-            
-            # Find the task section
-            task_section_pattern = rf'### Task: {re.escape(task)}\n(.*?)(?=### Task:|## ✅ \*\*MAJOR UPDATE COMPLETED\*\*|## Joint Validation Range Summary|## Pattern Definitions|$)'
-            task_match = re.search(task_section_pattern, content, re.DOTALL)
-            
-            if task_match:
-                task_content = task_match.group(1)
-                
-                # Find all phase sections within this task
-                phase_pattern = r'#### Phase (\d+)%.*?\n\| Variable \| Min_Value \| Max_Value \| Units \| Notes \|(.*?)(?=####|\*\*Contralateral|\*\*Note:|\*\*Kinematic|$)'
-                phase_matches = re.findall(phase_pattern, task_content, re.DOTALL)
-                
-                for phase_str, table_content in phase_matches:
-                    phase = int(phase_str)
-                    validation_data[task][phase] = {}
-                    
-                    # Parse table rows for joint angles
-                    row_pattern = r'\| ([\w_]+) \| ([-\d.]+) \([^)]+\) \| ([-\d.]+) \([^)]+\) \| (\w+) \|'
-                    rows = re.findall(row_pattern, table_content)
-                    
-                    for variable, min_val, max_val, unit in rows:
-                        # Extract bilateral joint angles (both left and right legs)
-                        if ('_ipsi_rad' in variable) and unit == 'rad':
-                            # Determine joint type and side
-                            if 'hip_flexion_angle' in variable:
-                                joint_name = 'hip_flexion_angle_ipsi'
-                            elif 'knee_flexion_angle' in variable:
-                                joint_name = 'knee_flexion_angle_ipsi'
-                            elif 'ankle_flexion_angle' in variable:
-                                joint_name = 'ankle_flexion_angle_ipsi'
-                            else:
-                                continue
-                            
-                            validation_data[task][phase][joint_name] = {
-                                'min': float(min_val),
-                                'max': float(max_val)
-                            }
-        
-        return validation_data
     
     def _get_default_phase_ranges(self, task_name: str, phase_point: float) -> Dict[str, Dict[str, float]]:
         """Get default ranges for a specific phase point"""
