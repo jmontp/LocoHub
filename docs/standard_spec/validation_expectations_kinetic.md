@@ -226,7 +226,7 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 
 **Phase Progression Validation:**
 
-![Level Walking Kinetic Phase Progression](../../validation_images/level_walking_kinetic_phase_progression.png)
+![Level Walking Kinetic Phase Progression](validation/level_walking_kinetic_phase_progression.png)
 
 ### Task: incline_walking
 
@@ -300,7 +300,7 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 
 **Phase Progression Validation:**
 
-![Incline Walking Kinetic Phase Progression](../../validation_images/incline_walking_kinetic_phase_progression.png)
+![Incline Walking Kinetic Phase Progression](validation/incline_walking_kinetic_phase_progression.png)
 
 ### Task: run
 
@@ -374,7 +374,7 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 
 **Phase Progression Validation:**
 
-![Run Kinetic Phase Progression](../../validation_images/run_kinetic_phase_progression.png)
+![Run Kinetic Phase Progression](validation/run_kinetic_phase_progression.png)
 
 ## Research Requirements
 

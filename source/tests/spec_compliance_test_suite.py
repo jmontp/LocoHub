@@ -535,8 +535,10 @@ class SpecComplianceTestSuite:
             # Joint angles (in radians, following OpenSim conventions)
             'hip_flexion_angle_left_rad': 0.3 + 0.5 * np.sin(2 * np.pi * phase_l / 100),
             'hip_flexion_angle_right_rad': 0.3 + 0.5 * np.sin(2 * np.pi * (phase_l + 50) / 100),
-            'knee_flexion_angle_left_rad': 0.3 + 0.6 * np.maximum(0, np.sin(2 * np.pi * phase_l / 100)),
-            'knee_flexion_angle_right_rad': 0.3 + 0.6 * np.maximum(0, np.sin(2 * np.pi * (phase_l + 50) / 100)),
+            # Knee flexion with motion capture error tolerance (allows -10° to +120° range)
+            # Base pattern: mostly positive but some values near heel strike can be slightly negative
+            'knee_flexion_angle_left_rad': 0.3 + 0.6 * np.maximum(0, np.sin(2 * np.pi * phase_l / 100)) + 0.02 * np.random.randn(n_samples),
+            'knee_flexion_angle_right_rad': 0.3 + 0.6 * np.maximum(0, np.sin(2 * np.pi * (phase_l + 50) / 100)) + 0.02 * np.random.randn(n_samples),
             'ankle_flexion_angle_left_rad': 0.1 * np.sin(2 * np.pi * phase_l / 100),
             'ankle_flexion_angle_right_rad': 0.1 * np.sin(2 * np.pi * (phase_l + 50) / 100),
             

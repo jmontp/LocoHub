@@ -14,6 +14,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 import os
+import re
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 import argparse
@@ -384,23 +385,52 @@ class KinematicPoseGenerator:
     
     def generate_task_validation_images(self, task_name: str, 
                                       validation_ranges: Optional[Dict] = None,
-                                      output_dir: str = "validation_images") -> List[str]:
+                                      output_dir: str = "docs/standard_spec/validation",
+                                      validation_file: str = "docs/standard_spec/validation_expectations_kinematic.md") -> List[str]:
         """
         Generate validation images for all phase points of a task.
         
         Args:
             task_name: Name of the locomotion task
-            validation_ranges: Optional pre-computed ranges, otherwise uses defaults
+            validation_ranges: Optional pre-computed ranges, otherwise parses from validation file
             output_dir: Directory to save images
+            validation_file: Path to validation expectations markdown file
             
         Returns:
             List of generated image file paths
         """
         generated_files = []
         
-        # Use default ranges if none provided
+        # Parse validation expectations if no ranges provided
         if validation_ranges is None:
-            validation_ranges = self._get_default_task_ranges(task_name)
+            try:
+                # Find the validation file
+                if os.path.exists(validation_file):
+                    validation_path = validation_file
+                else:
+                    # Try from project root
+                    project_root = Path(__file__).parent.parent.parent
+                    validation_path = project_root / validation_file
+                    if not validation_path.exists():
+                        print(f"Warning: Could not find validation file at {validation_file}, using defaults")
+                        validation_ranges = self._get_default_task_ranges(task_name)
+                    else:
+                        validation_path = str(validation_path)
+                
+                if validation_ranges is None:
+                    print(f"Parsing validation expectations from: {validation_path}")
+                    all_validation_data = self.parse_validation_expectations(validation_path)
+                    validation_ranges = all_validation_data.get(task_name, {})
+                    
+                    if not validation_ranges:
+                        print(f"Warning: No validation data found for task {task_name}, using defaults")
+                        validation_ranges = self._get_default_task_ranges(task_name)
+                    else:
+                        print(f"Successfully loaded validation data for {task_name}")
+                        
+            except Exception as e:
+                print(f"Error parsing validation file: {e}, using defaults")
+                validation_ranges = self._get_default_task_ranges(task_name)
         
         # Generate image for each phase point
         for phase_point in self.phase_points:
@@ -461,6 +491,68 @@ class KinematicPoseGenerator:
         
         return task_defaults.get(task_name, task_defaults['level_walking'])
     
+    def parse_validation_expectations(self, file_path: str) -> Dict[str, Dict[int, Dict[str, Dict[str, float]]]]:
+        """
+        Parse the validation_expectations_kinematic.md file to extract joint angle ranges.
+        
+        Args:
+            file_path: Path to the validation_expectations_kinematic.md file
+            
+        Returns:
+            Dictionary structured as: {task_name: {phase: {joint: {min, max}}}}
+        """
+        with open(file_path, 'r') as f:
+            content = f.read()
+        
+        # Dictionary to store parsed data
+        validation_data = {}
+        
+        # Find all task sections
+        task_pattern = r'### Task: ([\w_]+)\n'
+        tasks = re.findall(task_pattern, content)
+        
+        for task in tasks:
+            validation_data[task] = {}
+            
+            # Find the task section
+            task_section_pattern = rf'### Task: {re.escape(task)}\n(.*?)(?=### Task:|## ✅ \*\*MAJOR UPDATE COMPLETED\*\*|## Joint Validation Range Summary|## Pattern Definitions|$)'
+            task_match = re.search(task_section_pattern, content, re.DOTALL)
+            
+            if task_match:
+                task_content = task_match.group(1)
+                
+                # Find all phase sections within this task
+                phase_pattern = r'#### Phase (\d+)%.*?\n\| Variable \| Min_Value \| Max_Value \| Units \| Notes \|(.*?)(?=####|\*\*Contralateral|\*\*Note:|\*\*Kinematic|$)'
+                phase_matches = re.findall(phase_pattern, task_content, re.DOTALL)
+                
+                for phase_str, table_content in phase_matches:
+                    phase = int(phase_str)
+                    validation_data[task][phase] = {}
+                    
+                    # Parse table rows for joint angles
+                    row_pattern = r'\| ([\w_]+) \| ([-\d.]+) \([^)]+\) \| ([-\d.]+) \([^)]+\) \| (\w+) \|'
+                    rows = re.findall(row_pattern, table_content)
+                    
+                    for variable, min_val, max_val, unit in rows:
+                        # Extract bilateral joint angles (both left and right legs)
+                        if ('_ipsi_rad' in variable) and unit == 'rad':
+                            # Determine joint type and side
+                            if 'hip_flexion_angle' in variable:
+                                joint_name = 'hip_flexion_angle_ipsi'
+                            elif 'knee_flexion_angle' in variable:
+                                joint_name = 'knee_flexion_angle_ipsi'
+                            elif 'ankle_flexion_angle' in variable:
+                                joint_name = 'ankle_flexion_angle_ipsi'
+                            else:
+                                continue
+                            
+                            validation_data[task][phase][joint_name] = {
+                                'min': float(min_val),
+                                'max': float(max_val)
+                            }
+        
+        return validation_data
+    
     def _get_default_phase_ranges(self, task_name: str, phase_point: float) -> Dict[str, Dict[str, float]]:
         """Get default ranges for a specific phase point"""
         defaults = self._get_default_task_ranges(task_name)
@@ -477,7 +569,7 @@ def main():
     parser = argparse.ArgumentParser(description='Generate kinematic validation poses')
     parser.add_argument('--task', type=str, default='level_walking', 
                        help='Task name for pose generation')
-    parser.add_argument('--output-dir', type=str, default='validation_images',
+    parser.add_argument('--output-dir', type=str, default='docs/standard_spec/validation',
                        help='Output directory for images')
     parser.add_argument('--data-file', type=str, 
                        help='Optional data file to extract real ranges')

@@ -72,6 +72,8 @@ All sign conventions follow the OpenSim coordinate system, which is:
 
 **IMPORTANT**: This follows **OpenSim convention** where extension is the zero reference and flexion is positive.
 
+**Motion Capture Tolerance**: Due to measurement noise and calibration errors, knee angles may register as slightly negative (up to -10°) even at full extension. This is acceptable and accounted for in validation ranges.
+
 #### Knee Adduction (`knee_adduction_angle_[ipsi|contra]_rad`)
 - **Positive knee adduction**: Shank rotated toward midline relative to thigh (frontal plane)
 - **Also known as**: Knee valgus (positive) vs knee varus (negative)

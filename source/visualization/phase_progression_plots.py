@@ -391,8 +391,8 @@ def main():
     parser.add_argument(
         '--output-dir', 
         type=str, 
-        default='validation_images',
-        help='Output directory for validation plots (default: validation_images)'
+        default='docs/standard_spec/validation',
+        help='Output directory for validation plots (default: docs/standard_spec/validation)'
     )
     parser.add_argument(
         '--validation-file',
