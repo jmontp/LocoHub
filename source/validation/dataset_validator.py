@@ -44,7 +44,7 @@ except ImportError as e:
 
 # Import plotting modules
 try:
-    from visualization.filters_by_phase_plots import create_filters_by_phase_plot, classify_step_violations
+    from validation.filters_by_phase_plots import create_filters_by_phase_plot
 except ImportError as e:
     raise ImportError(f"Could not import plotting modules: {e}")
 
@@ -89,24 +89,6 @@ class DatasetValidator:
         # Storage for validation results
         self.validation_results = {}
         self.step_failures = []
-        
-        # Task mapping from dataset names to validation expectation names
-        self.task_mapping = {
-            'normal_walk': 'level_walking',
-            'level_walking': 'level_walking',
-            'incline_walk': 'incline_walking', 
-            'incline_walking': 'incline_walking',
-            'decline_walk': 'decline_walking',
-            'decline_walking': 'decline_walking',
-            'up_stairs': 'up_stairs',
-            'down_stairs': 'down_stairs',
-            'stairs': 'up_stairs',  # Default to up_stairs if not specified
-            'sit_to_stand': 'sit_to_stand',
-            'jump': 'jump',
-            'squats': 'squats',
-            'run': 'run',
-            'running': 'run'
-        }
         
     def _load_kinematic_expectations(self) -> Dict:
         """Load kinematic validation expectations from markdown file."""
@@ -211,36 +193,21 @@ class DatasetValidator:
         """
         failures = []
         
-        # Map task to validation expectations
-        validation_task = self.task_mapping.get(task, task)
-        if validation_task not in expectations_dict:
-            return [{
-                'task': task,
-                'validation_task': validation_task,
-                'error': f"No validation expectations found for task {validation_task}",
-                'variable': 'N/A',
-                'phase': 'N/A',
-                'value': 'N/A'
-            }]
+        # Task must match exactly what's in validation expectations
+        if task not in expectations_dict:
+            raise ValueError(f"No validation expectations found for task '{task}'. Available tasks: {list(expectations_dict.keys())}")
         
         # Get phase column
         phase_col = self._get_phase_column(step_data)
         if phase_col is None:
-            return [{
-                'task': task,
-                'validation_task': validation_task,
-                'error': "No phase column found in step data",
-                'variable': 'N/A',
-                'phase': 'N/A',
-                'value': 'N/A'
-            }]
+            raise ValueError("No phase column found in step data. Expected: 'phase_percent', 'phase_%', 'phase_r', or 'phase_l'")
         
         # Check key phases: 0%, 25%, 50%, 75%
         key_phases = [0, 25, 50, 75]
         
         for target_phase in key_phases:
-            if target_phase not in expectations_dict[validation_task]:
-                continue
+            if target_phase not in expectations_dict[task]:
+                raise ValueError(f"Task '{task}' missing phase {target_phase}% in validation expectations")
                 
             # Find data points near this phase (within ±2.5%)
             phase_mask = (
@@ -258,16 +225,14 @@ class DatasetValidator:
             actual_phase = data_point[phase_col]
             
             # Validate each expected variable at this phase
-            phase_expectations = expectations_dict[validation_task][target_phase]
+            phase_expectations = expectations_dict[task][target_phase]
             
             for var_name, expected_range in phase_expectations.items():
-                # Map validation variable to dataset variable
-                dataset_var = self._map_validation_to_dataset_variable(var_name, step_data.columns)
-                
-                if dataset_var is None:
-                    continue  # Skip variables not present in dataset
+                # Variable name must match exactly - no mapping
+                if var_name not in step_data.columns:
+                    raise ValueError(f"Variable '{var_name}' not found in dataset. Available columns: {list(step_data.columns)}")
                     
-                value = data_point[dataset_var]
+                value = data_point[var_name]
                 is_valid, failure_reason = self.validate_data_point(
                     value, expected_range, var_name, actual_phase
                 )
@@ -275,9 +240,7 @@ class DatasetValidator:
                 if not is_valid:
                     failures.append({
                         'task': task,
-                        'validation_task': validation_task,
                         'variable': var_name,
-                        'dataset_variable': dataset_var,
                         'phase': actual_phase,
                         'target_phase': target_phase,
                         'value': value,
@@ -297,42 +260,6 @@ class DatasetValidator:
                 return col
         return None
     
-    def _map_validation_to_dataset_variable(self, validation_var: str, dataset_columns: List[str]) -> Optional[str]:
-        """Map validation variable name to actual dataset variable name."""
-        # Common mapping patterns
-        mappings = {
-            # Kinematic variables
-            'hip_flexion_angle_ipsi': ['hip_flexion_angle_right_rad', 'hip_flexion_angle_r_rad', 'hip_angle_right_rad'],
-            'hip_flexion_angle_contra': ['hip_flexion_angle_left_rad', 'hip_flexion_angle_l_rad', 'hip_angle_left_rad'],
-            'knee_flexion_angle_ipsi': ['knee_flexion_angle_right_rad', 'knee_flexion_angle_r_rad', 'knee_angle_right_rad'],
-            'knee_flexion_angle_contra': ['knee_flexion_angle_left_rad', 'knee_flexion_angle_l_rad', 'knee_angle_left_rad'],
-            'ankle_flexion_angle_ipsi': ['ankle_flexion_angle_right_rad', 'ankle_flexion_angle_r_rad', 'ankle_angle_right_rad'],
-            'ankle_flexion_angle_contra': ['ankle_flexion_angle_left_rad', 'ankle_flexion_angle_l_rad', 'ankle_angle_left_rad'],
-            
-            # Kinetic variables
-            'hip_moment_ipsi_Nm_kg': ['hip_moment_right_Nm_kg', 'hip_moment_r_Nm_kg', 'hip_flexion_moment_right_Nm'],
-            'hip_moment_contra_Nm_kg': ['hip_moment_left_Nm_kg', 'hip_moment_l_Nm_kg', 'hip_flexion_moment_left_Nm'],
-            'knee_moment_ipsi_Nm_kg': ['knee_moment_right_Nm_kg', 'knee_moment_r_Nm_kg', 'knee_flexion_moment_right_Nm'],
-            'knee_moment_contra_Nm_kg': ['knee_moment_left_Nm_kg', 'knee_moment_l_Nm_kg', 'knee_flexion_moment_left_Nm'],
-            'ankle_moment_ipsi_Nm_kg': ['ankle_moment_right_Nm_kg', 'ankle_moment_r_Nm_kg', 'ankle_flexion_moment_right_Nm'],
-            'ankle_moment_contra_Nm_kg': ['ankle_moment_left_Nm_kg', 'ankle_moment_l_Nm_kg', 'ankle_flexion_moment_left_Nm'],
-            
-            # Ground reaction forces
-            'vertical_grf_N_kg': ['vertical_grf_N_kg', 'vertical_grf_right_N_kg', 'vgrf_N_kg'],
-            'ap_grf_N_kg': ['ap_grf_N_kg', 'anteroposterior_grf_N_kg', 'fore_aft_grf_N_kg'],
-            'ml_grf_N_kg': ['ml_grf_N_kg', 'mediolateral_grf_N_kg', 'lateral_grf_N_kg']
-        }
-        
-        if validation_var in mappings:
-            for candidate in mappings[validation_var]:
-                if candidate in dataset_columns:
-                    return candidate
-        
-        # Try exact match
-        if validation_var in dataset_columns:
-            return validation_var
-            
-        return None
     
     def validate_dataset(self, df: pd.DataFrame) -> Dict[str, any]:
         """
@@ -520,9 +447,9 @@ class DatasetValidator:
         
         # Define standard variable order for plotting (kinematic)
         kinematic_variables = [
-            'hip_flexion_angle_ipsi_rad', 'hip_flexion_angle_contra_rad',
-            'knee_flexion_angle_ipsi_rad', 'knee_flexion_angle_contra_rad',
-            'ankle_flexion_angle_ipsi_rad', 'ankle_flexion_angle_contra_rad'
+            'hip_flexion_angle_ipsi', 'hip_flexion_angle_contra',
+            'knee_flexion_angle_ipsi', 'knee_flexion_angle_contra',
+            'ankle_flexion_angle_ipsi', 'ankle_flexion_angle_contra'
         ]
         
         # Define standard variable order for plotting (kinetic) 
@@ -532,7 +459,7 @@ class DatasetValidator:
             'ankle_moment_ipsi_Nm_kg', 'ankle_moment_contra_Nm_kg'
         ]
         
-        # Find available variables in dataset
+        # Check for exact matches - no mapping, fail if not found
         available_kinematic = [var for var in kinematic_variables if var in df.columns]
         available_kinetic = [var for var in kinetic_variables if var in df.columns]
         
@@ -544,7 +471,7 @@ class DatasetValidator:
             variables_to_use = available_kinetic
             plot_mode = 'kinetic'
         else:
-            raise ValueError("No standard kinematic or kinetic variables found in dataset")
+            raise ValueError(f"No standard kinematic or kinetic variables found in dataset. Expected kinematic: {kinematic_variables} or kinetic: {kinetic_variables}")
         
         # Convert to 3D array format: (num_steps, 150, num_features)
         step_data_list = []
@@ -568,20 +495,19 @@ class DatasetValidator:
             step_array = np.zeros((150, len(variables_to_use)))
             
             for var_idx, var_name in enumerate(variables_to_use):
-                if var_name in step_data.columns:
-                    var_data = step_data[var_name].values
-                    
-                    # Resample to 150 points if needed
-                    if len(var_data) != 150:
-                        # Simple linear interpolation to 150 points
-                        old_indices = np.linspace(0, len(var_data)-1, len(var_data))
-                        new_indices = np.linspace(0, len(var_data)-1, 150)
-                        var_data = np.interp(new_indices, old_indices, var_data)
-                    
-                    step_array[:, var_idx] = var_data
-                else:
-                    # Fill with NaN if variable not present
-                    step_array[:, var_idx] = np.nan
+                if var_name not in step_data.columns:
+                    raise ValueError(f"Required variable '{var_name}' not found in dataset columns: {list(step_data.columns)}")
+                
+                var_data = step_data[var_name].values
+                
+                # Resample to 150 points if needed
+                if len(var_data) != 150:
+                    # Simple linear interpolation to 150 points
+                    old_indices = np.linspace(0, len(var_data)-1, len(var_data))
+                    new_indices = np.linspace(0, len(var_data)-1, 150)
+                    var_data = np.interp(new_indices, old_indices, var_data)
+                
+                step_array[:, var_idx] = var_data
             
             step_data_list.append(step_array)
             step_index += 1
