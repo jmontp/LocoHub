@@ -39,22 +39,24 @@ def generate_stick_figure(joint_angles: Dict[str, Tuple[float, float]], title: s
     fig, ax = plt.subplots(1, 1, figsize=(10, 8))
     fig.suptitle(title, fontsize=14, fontweight='bold')
     
-    # Extract angles for both legs
+    # Extract angles for both legs using ipsi/contra convention
     angles = {}
-    for side in ['left', 'right']:
+    for side in ['ipsi', 'contra']:
         angles[side] = {}
         for joint in ['hip', 'knee', 'ankle']:
             joint_key = f'{joint}_flexion_angle_{side}'
             if joint_key in joint_angles:
                 angles[side][joint] = joint_angles[joint_key]
             else:
-                # Default fallback values
-                angles[side][joint] = (0.0, 0.5)
+                # Raise explicit error instead of using defaults
+                available_keys = list(joint_angles.keys())
+                raise KeyError(f"Required joint angle '{joint_key}' not found in validation data. "
+                              f"Available keys: {available_keys}")
     
     # Generate stick figures for min, average, and max configurations
     for config, alpha, linestyle in [('min', 0.1, '--'), ('avg', 1.0, '-'), ('max', 0.1, '-')]:
         # Draw both legs
-        for side, color in [('left', 'blue'), ('right', 'red')]:
+        for side, color in [('ipsi', 'blue'), ('contra', 'red')]:
             if side in angles:
                 # Calculate angles based on configuration
                 if config == 'min':
@@ -101,7 +103,8 @@ def generate_stick_figure(joint_angles: Dict[str, Tuple[float, float]], title: s
                 foot_y = shank_y - foot_length * np.cos(foot_angle_from_vertical)
                 
                 # Create label only for average configuration to avoid legend clutter
-                leg_label = f'{side.title()} Leg' if config == 'avg' else None
+                leg_display_name = 'Ipsilateral' if side == 'ipsi' else 'Contralateral'
+                leg_label = f'{leg_display_name} Leg' if config == 'avg' else None
                 
                 # Draw leg segments with varying alpha and line style (no lateral offset)
                 ax.plot([hip_x, thigh_x], [hip_y, thigh_y], 
@@ -135,7 +138,7 @@ def generate_stick_figure(joint_angles: Dict[str, Tuple[float, float]], title: s
     ax.axhline(y=0, color='gray', linestyle='-', alpha=0.5, label='Ground')
     
     # Add angle annotations showing min/avg/max ranges
-    for i, (joint, angle_range) in enumerate(angles['left'].items()):
+    for i, (joint, angle_range) in enumerate(angles['ipsi'].items()):
         min_val = np.degrees(angle_range[0])
         max_val = np.degrees(angle_range[1])
         avg_val = (min_val + max_val) / 2

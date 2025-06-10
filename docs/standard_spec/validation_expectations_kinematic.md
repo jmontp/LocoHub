@@ -53,10 +53,10 @@ This document provides biomechanically verified kinematic validation ranges (joi
 - Phase 25% ipsilateral = Phase 75% contralateral (mid-stance vs mid-swing)
 
 **Kinematic Range Visualization:**
-![Task Validation - Phase 0%](../../validation_images/{task_name}_phase_00_range.png)
-![Task Validation - Phase 25%](../../validation_images/{task_name}_phase_25_range.png)
-![Task Validation - Phase 50%](../../validation_images/{task_name}_phase_50_range.png)
-![Task Validation - Phase 75%](../../validation_images/{task_name}_phase_75_range.png)
+![Task Validation - Phase 0%](validation/{task_name}_phase_00_range.png)
+![Task Validation - Phase 25%](validation/{task_name}_phase_25_range.png)
+![Task Validation - Phase 50%](validation/{task_name}_phase_50_range.png)
+![Task Validation - Phase 75%](validation/{task_name}_phase_75_range.png)
 ```
 
 **Column Definitions:**
@@ -132,11 +132,11 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 | Phase 0% (Heel Strike) | Phase 25% (Mid-Stance) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Level Walking Heel Strike](../../validation_images/level_walking_phase_00_range.png) | ![Level Walking Mid-Stance](../../validation_images/level_walking_phase_25_range.png) | ![Level Walking Toe-Off](../../validation_images/level_walking_phase_50_range.png) | ![Level Walking Mid-Swing](../../validation_images/level_walking_phase_75_range.png) |
+| ![Level Walking Heel Strike](validation/level_walking_phase_00_range.png) | ![Level Walking Mid-Stance](validation/level_walking_phase_25_range.png) | ![Level Walking Toe-Off](validation/level_walking_phase_50_range.png) | ![Level Walking Mid-Swing](validation/level_walking_phase_75_range.png) |
 
 **Phase Progression Validation:**
 
-![Level Walking Phase Progression](../../validation_images/level_walking_phase_progression.png)
+![Level Walking Phase Progression](validation/level_walking_phase_progression.png)
 
 ### Task: incline_walking
 
@@ -202,11 +202,11 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 | Phase 0% (Heel Strike) | Phase 25% (Mid-Stance) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Incline Walking Heel Strike](../../validation_images/incline_walking_phase_00_range.png) | ![Incline Walking Mid-Stance](../../validation_images/incline_walking_phase_25_range.png) | ![Incline Walking Toe-Off](../../validation_images/incline_walking_phase_50_range.png) | ![Incline Walking Mid-Swing](../../validation_images/incline_walking_phase_75_range.png) |
+| ![Incline Walking Heel Strike](validation/incline_walking_phase_00_range.png) | ![Incline Walking Mid-Stance](validation/incline_walking_phase_25_range.png) | ![Incline Walking Toe-Off](validation/incline_walking_phase_50_range.png) | ![Incline Walking Mid-Swing](validation/incline_walking_phase_75_range.png) |
 
 **Phase Progression Validation:**
 
-![Incline Walking Phase Progression](../../validation_images/incline_walking_phase_progression.png)
+![Incline Walking Phase Progression](validation/incline_walking_phase_progression.png)
 
 ---
 
@@ -264,11 +264,11 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 | Phase 0% (Heel Strike) | Phase 25% (Mid-Stance) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Decline Walking Heel Strike](../../validation_images/decline_walking_phase_00_range.png) | ![Decline Walking Mid-Stance](../../validation_images/decline_walking_phase_25_range.png) | ![Decline Walking Toe-Off](../../validation_images/decline_walking_phase_50_range.png) | ![Decline Walking Mid-Swing](../../validation_images/decline_walking_phase_75_range.png) |
+| ![Decline Walking Heel Strike](validation/decline_walking_phase_00_range.png) | ![Decline Walking Mid-Stance](validation/decline_walking_phase_25_range.png) | ![Decline Walking Toe-Off](validation/decline_walking_phase_50_range.png) | ![Decline Walking Mid-Swing](validation/decline_walking_phase_75_range.png) |
 
 **Phase Progression Validation:**
 
-![Decline Walking Phase Progression](../../validation_images/decline_walking_phase_progression.png)
+![Decline Walking Phase Progression](validation/decline_walking_phase_progression.png)
 
 ### Task: up_stairs
 
@@ -324,11 +324,11 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 | Phase 0% (Step Contact) | Phase 25% (Loading) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Up Stairs Step Contact](../../validation_images/up_stairs_phase_00_range.png) | ![Up Stairs Loading](../../validation_images/up_stairs_phase_25_range.png) | ![Up Stairs Toe-Off](../../validation_images/up_stairs_phase_50_range.png) | ![Up Stairs Mid-Swing](../../validation_images/up_stairs_phase_75_range.png) |
+| ![Up Stairs Step Contact](validation/up_stairs_phase_00_range.png) | ![Up Stairs Loading](validation/up_stairs_phase_25_range.png) | ![Up Stairs Toe-Off](validation/up_stairs_phase_50_range.png) | ![Up Stairs Mid-Swing](validation/up_stairs_phase_75_range.png) |
 
 **Phase Progression Validation:**
 
-![Up Stairs Phase Progression](../../validation_images/up_stairs_phase_progression.png)
+![Up Stairs Phase Progression](validation/up_stairs_phase_progression.png)
 
 ### Task: down_stairs
 
@@ -384,11 +384,11 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 | Phase 0% (Step Contact) | Phase 25% (Loading) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Down Stairs Step Contact](../../validation_images/down_stairs_phase_00_range.png) | ![Down Stairs Loading](../../validation_images/down_stairs_phase_25_range.png) | ![Down Stairs Toe-Off](../../validation_images/down_stairs_phase_50_range.png) | ![Down Stairs Mid-Swing](../../validation_images/down_stairs_phase_75_range.png) |
+| ![Down Stairs Step Contact](validation/down_stairs_phase_00_range.png) | ![Down Stairs Loading](validation/down_stairs_phase_25_range.png) | ![Down Stairs Toe-Off](validation/down_stairs_phase_50_range.png) | ![Down Stairs Mid-Swing](validation/down_stairs_phase_75_range.png) |
 
 **Phase Progression Validation:**
 
-![Down Stairs Phase Progression](../../validation_images/down_stairs_phase_progression.png)
+![Down Stairs Phase Progression](validation/down_stairs_phase_progression.png)
 
 ### Task: run
 
@@ -454,11 +454,11 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 | Phase 0% (Heel Strike) | Phase 25% (Mid-Stance) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Run Heel Strike](../../validation_images/run_phase_00_range.png) | ![Run Mid-Stance](../../validation_images/run_phase_25_range.png) | ![Run Toe-Off](../../validation_images/run_phase_50_range.png) | ![Run Mid-Swing](../../validation_images/run_phase_75_range.png) |
+| ![Run Heel Strike](validation/run_phase_00_range.png) | ![Run Mid-Stance](validation/run_phase_25_range.png) | ![Run Toe-Off](validation/run_phase_50_range.png) | ![Run Mid-Swing](validation/run_phase_75_range.png) |
 
 **Phase Progression Validation:**
 
-![Run Phase Progression](../../validation_images/run_phase_progression.png)
+![Run Phase Progression](validation/run_phase_progression.png)
 
 ### Task: sit_to_stand
 
@@ -522,11 +522,11 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 | Phase 0% (Seated) | Phase 25% (Initiation) | Phase 50% (Mid-Rise) | Phase 75% (Standing) |
 |---|---|---|---|
-| ![Sit To Stand Seated](../../validation_images/sit_to_stand_phase_00_range.png) | ![Sit To Stand Initiation](../../validation_images/sit_to_stand_phase_25_range.png) | ![Sit To Stand Mid-Rise](../../validation_images/sit_to_stand_phase_50_range.png) | ![Sit To Stand Standing](../../validation_images/sit_to_stand_phase_75_range.png) |
+| ![Sit To Stand Seated](validation/sit_to_stand_phase_00_range.png) | ![Sit To Stand Initiation](validation/sit_to_stand_phase_25_range.png) | ![Sit To Stand Mid-Rise](validation/sit_to_stand_phase_50_range.png) | ![Sit To Stand Standing](validation/sit_to_stand_phase_75_range.png) |
 
 **Phase Progression Validation:**
 
-![Sit To Stand Phase Progression](../../validation_images/sit_to_stand_phase_progression.png)
+![Sit To Stand Phase Progression](validation/sit_to_stand_phase_progression.png)
 
 ### Task: jump
 
@@ -590,11 +590,11 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 | Phase 0% (Initial) | Phase 25% (Countermovement) | Phase 50% (Takeoff) | Phase 75% (Flight) |
 |---|---|---|---|
-| ![Jump Initial](../../validation_images/jump_phase_00_range.png) | ![Jump Countermovement](../../validation_images/jump_phase_25_range.png) | ![Jump Takeoff](../../validation_images/jump_phase_50_range.png) | ![Jump Flight](../../validation_images/jump_phase_75_range.png) |
+| ![Jump Initial](validation/jump_phase_00_range.png) | ![Jump Countermovement](validation/jump_phase_25_range.png) | ![Jump Takeoff](validation/jump_phase_50_range.png) | ![Jump Flight](validation/jump_phase_75_range.png) |
 
 **Phase Progression Validation:**
 
-![Jump Phase Progression](../../validation_images/jump_phase_progression.png)
+![Jump Phase Progression](validation/jump_phase_progression.png)
 
 ### Task: squats
 
@@ -658,11 +658,11 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 | Phase 0% (Standing) | Phase 25% (Descent) | Phase 50% (Bottom) | Phase 75% (Ascent) |
 |---|---|---|---|
-| ![Squats Standing](../../validation_images/squats_phase_00_range.png) | ![Squats Descent](../../validation_images/squats_phase_25_range.png) | ![Squats Bottom](../../validation_images/squats_phase_50_range.png) | ![Squats Ascent](../../validation_images/squats_phase_75_range.png) |
+| ![Squats Standing](validation/squats_phase_00_range.png) | ![Squats Descent](validation/squats_phase_25_range.png) | ![Squats Bottom](validation/squats_phase_50_range.png) | ![Squats Ascent](validation/squats_phase_75_range.png) |
 
 **Phase Progression Validation:**
 
-![Squats Phase Progression](../../validation_images/squats_phase_progression.png)
+![Squats Phase Progression](validation/squats_phase_progression.png)
 
 ## Joint Validation Range Summary
 
