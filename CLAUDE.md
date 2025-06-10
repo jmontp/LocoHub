@@ -69,3 +69,6 @@ python scripts/pm_update.py --full-update                # Update project status
 
 ### Coding Principles
 - Do not use default values/synthetic data/soft failures, if you don't find a variable raise an explicit error that can be then debugged instead of failing softly.
+
+### File Structure Guidelines
+- Every file should include a header that describes the intent and purpose of the file

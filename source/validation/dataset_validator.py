@@ -45,6 +45,7 @@ except ImportError as e:
 # Import plotting modules
 try:
     from validation.filters_by_phase_plots import create_filters_by_phase_plot
+    from validation.step_classifier import StepClassifier
 except ImportError as e:
     raise ImportError(f"Could not import plotting modules: {e}")
 
@@ -89,6 +90,10 @@ class DatasetValidator:
         # Storage for validation results
         self.validation_results = {}
         self.step_failures = []
+        
+        # Initialize step classifier for visualization
+        if self.generate_plots:
+            self.step_classifier = StepClassifier()
         
     def _load_kinematic_expectations(self) -> Dict:
         """Load kinematic validation expectations from markdown file."""
@@ -517,50 +522,40 @@ class DatasetValidator:
         
         return data_array, task_step_mapping, step_task_mapping, plot_mode, variables_to_use
     
-    def _generate_step_colors_from_validation(self, validation_results: Dict, step_task_mapping: Dict[str, str]) -> np.ndarray:
+    def _generate_step_colors_from_validation(self, validation_results: Dict, 
+                                            step_task_mapping: Dict[str, str], 
+                                            plot_mode: str) -> np.ndarray:
         """
-        Generate step color classifications based on validation results.
+        Generate step color classifications based on validation results using the step classifier.
         
         Args:
             validation_results: Validation results from validate_dataset
             step_task_mapping: Mapping from step index to task name
+            plot_mode: 'kinematic' or 'kinetic' - determines which failures to use
             
         Returns:
             Array of step colors with shape (num_steps,)
         """
-        num_steps = len(step_task_mapping)
-        step_colors = np.array(['gray'] * num_steps)  # Default to valid (gray)
+        if not hasattr(self, 'step_classifier'):
+            # Fallback to simple approach if classifier not available
+            num_steps = len(step_task_mapping)
+            return np.array(['gray'] * num_steps)
         
-        # Collect all failure step indices
-        failure_step_indices = set()
+        # Get appropriate failures based on plot mode
+        if plot_mode == 'kinematic':
+            failures = validation_results.get('kinematic_failures', [])
+        elif plot_mode == 'kinetic':
+            failures = validation_results.get('kinetic_failures', [])
+        else:
+            # Use all failures for unknown modes
+            failures = (validation_results.get('kinematic_failures', []) + 
+                       validation_results.get('kinetic_failures', []))
         
-        # Process kinematic failures
-        for failure in validation_results.get('kinematic_failures', []):
-            # Find step index - this is tricky without additional tracking
-            # For now, we'll mark all steps of the same task as having violations
-            task = failure.get('task', '')
-            # This is a simplified approach - we'd need better step tracking for precise mapping
-            pass
-        
-        # Process kinetic failures  
-        for failure in validation_results.get('kinetic_failures', []):
-            task = failure.get('task', '')
-            # Same simplified approach
-            pass
-        
-        # For now, use a simpler approach: classify based on whether any failures exist
-        # In a full implementation, we'd need to track which specific steps failed
-        total_failures = len(validation_results.get('kinematic_failures', [])) + len(validation_results.get('kinetic_failures', []))
-        
-        if total_failures > 0:
-            # Mark some steps as having violations (demonstration)
-            # In reality, this would be based on specific step failures
-            failure_ratio = min(0.3, total_failures / (validation_results.get('total_steps', 1)))
-            num_failure_steps = max(1, int(failure_ratio * num_steps))
-            
-            # Mark first few steps as having violations (simplified)
-            for i in range(min(num_failure_steps, num_steps)):
-                step_colors[i] = 'red'
+        # Use step classifier to generate colors
+        # For now, use summary classification since we don't know the specific feature
+        step_colors = self.step_classifier.get_step_summary_classification(
+            failures, step_task_mapping
+        )
         
         return step_colors
     
@@ -585,7 +580,7 @@ class DatasetValidator:
             data_array, task_step_mapping, step_task_mapping, plot_mode, variables_used = self._convert_dataset_to_plotting_format(df)
             
             # Generate step colors based on validation results
-            step_colors = self._generate_step_colors_from_validation(validation_results, step_task_mapping)
+            step_colors = self._generate_step_colors_from_validation(validation_results, step_task_mapping, plot_mode)
             
             print(f"📊 Generating {plot_mode} validation plots...")
             print(f"   Data shape: {data_array.shape}")
