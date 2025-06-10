@@ -34,10 +34,10 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 # Import existing plotting modules
 try:
-    from visualization.filters_by_phase_plots import parse_kinematic_validation_expectations, parse_kinetic_validation_expectations, apply_contralateral_offset_kinematic
+    from validation.validation_expectations_parser import parse_kinematic_validation_expectations, parse_kinetic_validation_expectations, apply_contralateral_offset_kinematic
     from visualization.forward_kinematics_plots import KinematicPoseGenerator
 except ImportError as e:
-    print(f"Warning: Could not import existing plotting modules: {e}")
+    print(f"Error: Could not import required modules: {e}")
     print("Some functionality may be limited.")
 
 class ValidationReportGenerator:
@@ -103,7 +103,7 @@ class ValidationReportGenerator:
         expectations_path = Path(__file__).parent.parent.parent / "docs" / "standard_spec" / "validation_expectations_kinematic.md"
         if expectations_path.exists():
             try:
-                return parse_validation_expectations(str(expectations_path))
+                return parse_kinematic_validation_expectations(str(expectations_path))
             except Exception as e:
                 print(f"Warning: Could not parse kinematic expectations: {e}")
                 return {}

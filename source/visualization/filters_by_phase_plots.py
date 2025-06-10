@@ -30,6 +30,14 @@ import argparse
 # Add source directory to Python path
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
+# Import validation expectations parser
+from validation.validation_expectations_parser import (
+    parse_kinematic_validation_expectations,
+    parse_kinetic_validation_expectations,
+    apply_contralateral_offset_kinematic,
+    apply_contralateral_offset_kinetic
+)
+
 
 def get_task_classification(task_name: str) -> str:
     """
@@ -58,298 +66,118 @@ def get_task_classification(task_name: str) -> str:
         return 'gait'
 
 
-def apply_contralateral_offset_kinematic(task_data: Dict, task_name: str) -> Dict:
+
+
+def classify_step_violations(data: np.ndarray, task_data: Dict, feature_map: Dict, mode: str, current_feature_idx: int) -> np.ndarray:
     """
-    Apply contralateral offset logic for gait-based tasks (kinematic variables).
-    For bilateral tasks, return data as-is.
+    Classify steps based on validation violations for the current feature being plotted.
     
     Args:
-        task_data: Phase data for the task
-        task_name: Name of the task
+        data: Array with shape (num_steps, 150, num_features)
+        task_data: Validation data for specific task phases
+        feature_map: Mapping of (variable_type, side) to feature indices
+        mode: 'kinematic' or 'kinetic'
+        current_feature_idx: Index of the feature being plotted (for local violations)
         
     Returns:
-        Updated task data with contralateral ranges computed
+        Array with shape (num_steps,) containing color types for each step:
+        - 'red': Steps with violations in the current feature (local violations)
+        - 'pink': Steps with violations in other features (global violations but not local)
+        - 'gray': Valid steps (no violations)
     """
-    task_type = get_task_classification(task_name)
-    
-    if task_type == 'bilateral':
-        # Bilateral tasks already have both legs specified
-        return task_data
-    
-    # For gait tasks, compute contralateral leg ranges with 50% offset
+    num_steps = data.shape[0]
     phases = [0, 25, 50, 75, 100]
-    joint_types = ['hip_flexion_angle', 'knee_flexion_angle', 'ankle_flexion_angle']
     
-    # Create a new task_data copy to avoid modifying original
-    updated_task_data = {}
-    for phase in phases:
-        if phase in task_data:
-            updated_task_data[phase] = task_data[phase].copy()
-        else:
-            updated_task_data[phase] = {}
+    # Map phase percentages to indices in the 150-point array
+    phase_indices = [int(phase * 1.5) for phase in phases]  # 0%, 25%, 50%, 75%, 100% -> indices 0, 37, 75, 112, 150
+    phase_indices[-1] = 149  # Ensure last index is within bounds
     
-    # Apply contralateral offset logic
-    for phase in phases:
-        if phase == 100:
-            # 100% phase should be the same as 0% to show cyclical nature
-            if 0 in task_data:
-                updated_task_data[100] = task_data[0].copy()
-                
-                # Apply contralateral offset for 100% phase: 100% contra = 50% ipsi
-                if 50 in task_data:
-                    for joint_type in joint_types:
-                        ipsi_joint = f'{joint_type}_ipsi'
-                        contra_joint = f'{joint_type}_contra'
-                        if ipsi_joint in task_data[50]:
-                            updated_task_data[100][contra_joint] = task_data[50][ipsi_joint].copy()
-            continue
-            
-        if phase in task_data:
-            # Calculate contralateral phase with 50% offset
-            contralateral_phase = (phase + 50) % 100
-            if contralateral_phase == 100:
-                contralateral_phase = 0
-            
-            # Map contralateral phase to available phases
-            if contralateral_phase == 0:
-                source_phase = 0
-            elif contralateral_phase == 25:
-                source_phase = 25
-            elif contralateral_phase == 50:
-                source_phase = 50
-            elif contralateral_phase == 75:
-                source_phase = 75
-            else:
+    global_violating_steps = set()
+    local_violating_steps = set()
+    
+    # Check each step for violations
+    for step_idx in range(num_steps):
+        step_violates_global = False
+        step_violates_local = False
+        
+        # Check all features for this step
+        for (var_type, side), feature_idx in feature_map.items():
+            if feature_idx >= data.shape[2]:
                 continue
-            
-            # Copy left leg data to right leg for contralateral phase
-            for joint_type in joint_types:
-                left_joint = f'{joint_type}_ipsi'
-                right_joint = f'{joint_type}_contra'
                 
-                if left_joint in task_data[source_phase]:
-                    if phase not in updated_task_data:
-                        updated_task_data[phase] = {}
-                    updated_task_data[phase][right_joint] = task_data[source_phase][left_joint].copy()
+            # Get variable name for validation lookup
+            if mode == 'kinematic':
+                var_name = f'{var_type}_{side}'
+            else:  # kinetic
+                var_name = f'{var_type}_{side}_Nm_kg'
+            
+            # Check this feature at each phase point
+            for phase, phase_idx in zip(phases, phase_indices):
+                if phase in task_data and var_name in task_data[phase]:
+                    min_val = task_data[phase][var_name]['min']
+                    max_val = task_data[phase][var_name]['max']
+                    
+                    # Get data value at this phase
+                    data_val = data[step_idx, phase_idx, feature_idx]
+                    
+                    # Check if this value violates the range
+                    if data_val < min_val or data_val > max_val:
+                        step_violates_global = True
+                        
+                        # Check if this is the current feature
+                        if feature_idx == current_feature_idx:
+                            step_violates_local = True
+        
+        if step_violates_global:
+            global_violating_steps.add(step_idx)
+        if step_violates_local:
+            local_violating_steps.add(step_idx)
     
-    return updated_task_data
+    # Convert to color classification array
+    step_colors = np.full(num_steps, 'gray', dtype='<U5')  # Default all to gray
+    
+    for step_idx in range(num_steps):
+        if step_idx in local_violating_steps:
+            step_colors[step_idx] = 'red'  # Local violations (current feature)
+        elif step_idx in global_violating_steps:
+            step_colors[step_idx] = 'pink'  # Global violations (other features)
+    
+    return step_colors
 
 
-def apply_contralateral_offset_kinetic(task_data: Dict, task_name: str) -> Dict:
+def detect_filter_violations(data: np.ndarray, task_data: Dict, feature_map: Dict, mode: str, current_feature_idx: int) -> Tuple[set, set]:
     """
-    Apply contralateral offset logic for gait-based tasks (kinetic variables).
-    For bilateral tasks, return data as-is.
+    Legacy function for detecting violations. Use classify_step_violations instead for new code.
     
     Args:
-        task_data: Phase data for the task
-        task_name: Name of the task
+        data: Numpy array with shape (num_steps, 150, num_features)
+        task_data: Task validation ranges organized by phase
+        feature_map: Mapping from (var_type, side) to feature index
+        mode: 'kinematic' or 'kinetic'
+        current_feature_idx: Index of the current feature being plotted
         
     Returns:
-        Updated task data with contralateral ranges computed
+        Tuple of (global_violating_steps, local_violating_steps)
+        - global_violating_steps: set of step indices that violate any filter
+        - local_violating_steps: set of step indices that violate the current feature filter
     """
-    task_type = get_task_classification(task_name)
+    step_colors = classify_step_violations(data, task_data, feature_map, mode, current_feature_idx)
     
-    if task_type == 'bilateral':
-        # Bilateral tasks already have both legs specified
-        return task_data
+    global_violating_steps = set()
+    local_violating_steps = set()
     
-    # For gait tasks, compute contralateral leg ranges with 50% offset
-    phases = [0, 25, 50, 75, 100]
-    kinetic_types = ['hip_moment', 'knee_moment', 'ankle_moment', 'vertical_grf', 'ap_grf', 'ml_grf']
+    for step_idx, color in enumerate(step_colors):
+        if color == 'red':
+            local_violating_steps.add(step_idx)
+            global_violating_steps.add(step_idx)
+        elif color == 'pink':
+            global_violating_steps.add(step_idx)
     
-    updated_task_data = task_data.copy()
-    
-    for phase in phases:
-        if phase not in updated_task_data:
-            updated_task_data[phase] = {}
-        
-        # Apply 50% offset logic for contralateral variables
-        # Phase 0% ipsi = Phase 50% contra, Phase 25% ipsi = Phase 75% contra, etc.
-        contralateral_phase = (phase + 50) % 100
-        
-        if contralateral_phase in task_data:
-            source_phase = contralateral_phase
-        else:
-            # Fallback to same phase if offset phase not available
-            source_phase = phase
-            
-        for kinetic_type in kinetic_types:
-            # For moments, apply offset logic to ipsi/contra
-            if 'moment' in kinetic_type:
-                ipsi_var = f'{kinetic_type}_ipsi_Nm_kg'
-                contra_var = f'{kinetic_type}_contra_Nm_kg'
-                
-                if ipsi_var in task_data[source_phase]:
-                    updated_task_data[phase][contra_var] = task_data[source_phase][ipsi_var].copy()
-            
-            # For GRF, forces are shared between legs (no ipsi/contra distinction needed)
-            # GRF represents the combined ground reaction, but we can model bilateral patterns
-    
-    return updated_task_data
+    return global_violating_steps, local_violating_steps
 
 
-def parse_kinematic_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[str, Dict[str, float]]]]:
-    """
-    Parse the validation_expectations_kinematic.md file to extract joint angle ranges.
-    Updated for v6.0 with new phase system and contralateral offset logic.
-    
-    Args:
-        file_path: Path to the validation_expectations_kinematic.md file
-        
-    Returns:
-        Dictionary structured as: {task_name: {phase: {joint: {min, max}}}}
-    """
-    with open(file_path, 'r') as f:
-        content = f.read()
-    
-    # Dictionary to store parsed data
-    validation_data = {}
-    
-    # Find all task sections
-    task_pattern = r'### Task: ([\w_]+)\n'
-    tasks = re.findall(task_pattern, content)
-    
-    for task in tasks:
-        validation_data[task] = {}
-        
-        # Find the task section
-        task_section_pattern = rf'### Task: {re.escape(task)}\n(.*?)(?=### Task:|## ✅ \*\*MAJOR UPDATE COMPLETED\*\*|## Joint Validation Range Summary|## Pattern Definitions|$)'
-        task_match = re.search(task_section_pattern, content, re.DOTALL)
-        
-        if task_match:
-            task_content = task_match.group(1)
-            
-            # Find all phase sections within this task - Updated for new phases
-            phase_pattern = r'#### Phase (\d+)%.*?\n\| Variable \| Min_Value \| Max_Value \| Units \| Notes \|(.*?)(?=####|\*\*Contralateral|\*\*Note:|\*\*Forward|$)'
-            phase_matches = re.findall(phase_pattern, task_content, re.DOTALL)
-            
-            for phase_str, table_content in phase_matches:
-                phase = int(phase_str)
-                validation_data[task][phase] = {}
-                
-                # Parse table rows for joint angles - Updated to handle degree format
-                row_pattern = r'\| ([\w_]+) \| ([-\d.]+) \([^)]+\) \| ([-\d.]+) \([^)]+\) \| (\w+) \|'
-                rows = re.findall(row_pattern, table_content)
-                
-                for variable, min_val, max_val, unit in rows:
-                    # Extract bilateral joint angles (both left and right legs)
-                    if ('_ipsi_rad' in variable or '_contra_rad' in variable) and unit == 'rad':
-                        # Determine joint type and side
-                        if 'hip_flexion_angle' in variable:
-                            if '_ipsi_rad' in variable:
-                                joint_name = 'hip_flexion_angle_ipsi'
-                            elif '_contra_rad' in variable:
-                                joint_name = 'hip_flexion_angle_contra'
-                        elif 'knee_flexion_angle' in variable:
-                            if '_ipsi_rad' in variable:
-                                joint_name = 'knee_flexion_angle_ipsi'
-                            elif '_contra_rad' in variable:
-                                joint_name = 'knee_flexion_angle_contra'
-                        elif 'ankle_flexion_angle' in variable:
-                            if '_ipsi_rad' in variable:
-                                joint_name = 'ankle_flexion_angle_ipsi'
-                            elif '_contra_rad' in variable:
-                                joint_name = 'ankle_flexion_angle_contra'
-                        else:
-                            continue
-                        
-                        validation_data[task][phase][joint_name] = {
-                            'min': float(min_val),
-                            'max': float(max_val)
-                        }
-        
-        # Apply contralateral offset logic for gait-based tasks
-        validation_data[task] = apply_contralateral_offset_kinematic(validation_data[task], task)
-    
-    return validation_data
-
-
-def parse_kinetic_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[str, Dict[str, float]]]]:
-    """
-    Parse the validation_expectations_kinetic.md file to extract force/moment ranges.
-    
-    Args:
-        file_path: Path to the validation_expectations_kinetic.md file
-        
-    Returns:
-        Dictionary structured as: {task_name: {phase: {variable: {min, max}}}}
-    """
-    with open(file_path, 'r') as f:
-        content = f.read()
-    
-    # Dictionary to store parsed data
-    validation_data = {}
-    
-    # Find all task sections
-    task_pattern = r'### Task: ([\w_]+)\n'
-    tasks = re.findall(task_pattern, content)
-    
-    for task in tasks:
-        validation_data[task] = {}
-        
-        # Find the task section
-        task_section_pattern = rf'### Task: {re.escape(task)}\n(.*?)(?=### Task:|## Research Requirements|$)'
-        task_match = re.search(task_section_pattern, content, re.DOTALL)
-        
-        if task_match:
-            task_content = task_match.group(1)
-            
-            # Find all phase tables within this task
-            phase_pattern = r'#### Phase (\d+)% \([^)]+\)\n\| Variable.*?\n((?:\|.*?\n)*)'
-            phase_matches = re.findall(phase_pattern, task_content, re.MULTILINE)
-            
-            for phase_str, table_content in phase_matches:
-                phase = int(phase_str)
-                validation_data[task][phase] = {}
-                
-                # Parse each row in the table
-                row_pattern = r'\| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \|'
-                rows = re.findall(row_pattern, table_content)
-                
-                for row in rows:
-                    if len(row) == 5:
-                        variable, min_val_str, max_val_str, units, notes = [col.strip() for col in row]
-                        
-                        # Skip header rows
-                        if variable == 'Variable' or '---' in variable:
-                            continue
-                        
-                        # Extract numeric values, handling both simple numbers and degree annotations
-                        min_val = extract_numeric_value(min_val_str)
-                        max_val = extract_numeric_value(max_val_str)
-                        
-                        # Store the variable data
-                        validation_data[task][phase][variable] = {
-                            'min': min_val,
-                            'max': max_val
-                        }
-    
-    return validation_data
-
-
-def extract_numeric_value(value_str: str) -> float:
-    """
-    Extract numeric value from a string that may contain degree annotations.
-    
-    Args:
-        value_str: String containing numeric value (e.g., "0.1", "-0.5")
-        
-    Returns:
-        Extracted numeric value as float
-    """
-    # Remove any whitespace
-    value_str = value_str.strip()
-    
-    # Extract the first number found (handles negative numbers)
-    match = re.search(r'-?\d*\.?\d+', value_str)
-    if match:
-        return float(match.group())
-    else:
-        # Fallback to 0 if no number found
-        return 0.0
-
-
-def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_dir: str, mode: str = 'kinematic') -> str:
+def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_dir: str, mode: str = 'kinematic', 
+                                 data: np.ndarray = None, step_colors: np.ndarray = None) -> str:
     """
     Create a filters by phase plot for a specific task showing ranges across phases.
     Updated for v6.0 with unified kinematic/kinetic plotting.
@@ -359,6 +187,12 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
         task_name: Name of the task
         output_dir: Directory to save the plot
         mode: 'kinematic' for joint angles or 'kinetic' for forces/moments
+        data: Optional numpy array with shape (num_steps, 150, num_features) containing actual data to plot
+              Each feature corresponds to one plot (ordered by: hip_ipsi, hip_contra, knee_ipsi, knee_contra, ankle_ipsi, ankle_contra)
+        step_colors: Optional array with shape (num_steps,) containing color types for each step:
+                    - 'gray': valid steps (no violations)
+                    - 'red': steps with violations in the current feature (local violations)
+                    - 'pink': steps with violations in other features (global violations)
         
     Returns:
         Path to the generated filters by phase plot
@@ -517,6 +351,82 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                 ax.fill_between(valid_phases, phase_mins, phase_maxs, 
                                color=colors[var_type], alpha=0.2)
             
+            # Plot actual data if provided
+            if data is not None:
+                # Map variable and side to feature index
+                if mode == 'kinematic':
+                    feature_map = {
+                        ('hip_flexion_angle', 'ipsi'): 0,
+                        ('hip_flexion_angle', 'contra'): 1,
+                        ('knee_flexion_angle', 'ipsi'): 2,
+                        ('knee_flexion_angle', 'contra'): 3,
+                        ('ankle_flexion_angle', 'ipsi'): 4,
+                        ('ankle_flexion_angle', 'contra'): 5
+                    }
+                else:  # kinetic
+                    feature_map = {
+                        ('hip_moment', 'ipsi'): 0,
+                        ('hip_moment', 'contra'): 1,
+                        ('knee_moment', 'ipsi'): 2,
+                        ('knee_moment', 'contra'): 3,
+                        ('ankle_moment', 'ipsi'): 4,
+                        ('ankle_moment', 'contra'): 5
+                    }
+                
+                # Get feature index for current subplot
+                if (var_type, side) in feature_map:
+                    feature_idx = feature_map[(var_type, side)]
+                    
+                    if feature_idx < data.shape[2]:
+                        # Extract data for this feature across all steps
+                        feature_data = data[:, :, feature_idx]  # Shape: (num_steps, 150)
+                        
+                        # Create phase percentage array (0 to 100%)
+                        phase_percent = np.linspace(0, 100, 150)
+                        
+                        # Plot each step with appropriate color coding
+                        legend_added = {'red': False, 'pink': False, 'gray': False}
+                        
+                        for step_idx in range(feature_data.shape[0]):
+                            step_data = feature_data[step_idx, :]
+                            
+                            # Determine color and style based on step_colors array
+                            if step_colors is not None and step_idx < len(step_colors):
+                                color_type = step_colors[step_idx]
+                                if color_type == 'red':
+                                    color = 'red'  # Bright red for local violations
+                                    alpha = 0.8
+                                    linewidth = 1.0
+                                    label = 'Local Violation' if not legend_added['red'] else ""
+                                    legend_added['red'] = True
+                                elif color_type == 'pink':
+                                    color = 'hotpink'  # Pink for other violations
+                                    alpha = 0.6
+                                    linewidth = 0.8
+                                    label = 'Other Violation' if not legend_added['pink'] else ""
+                                    legend_added['pink'] = True
+                                else:  # 'gray' or any other value defaults to gray
+                                    color = 'gray'  # Valid steps
+                                    alpha = 0.3
+                                    linewidth = 0.5
+                                    label = 'Valid Steps' if not legend_added['gray'] else ""
+                                    legend_added['gray'] = True
+                            else:
+                                # Default to gray if no color mapping provided
+                                color = 'gray'
+                                alpha = 0.3
+                                linewidth = 0.5
+                                label = 'Valid Steps' if not legend_added['gray'] else ""
+                                legend_added['gray'] = True
+                            
+                            ax.plot(phase_percent, step_data, 
+                                   color=color, alpha=alpha, linewidth=linewidth, label=label)
+                        
+                        # Plot mean trajectory
+                        mean_trajectory = np.mean(feature_data, axis=0)
+                        ax.plot(phase_percent, mean_trajectory, 
+                               color='black', linewidth=2, label='Mean Data')
+            
             # Customize axes
             ax.set_xlim(-5, 105)
             ax.set_xticks(phases)
@@ -548,14 +458,18 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
             
             # Add legend only to the first subplot
             if var_idx == 0 and side_idx == 0:
-                ax.legend(loc='upper left', fontsize=9)
+                if data is not None:
+                    ax.legend(loc='upper left', fontsize=9)
+                else:
+                    ax.legend(loc='upper left', fontsize=9)
     
     # Adjust layout and save
     plt.tight_layout()
     
     # Save the figure
     os.makedirs(output_dir, exist_ok=True)
-    filename = f"{task_name}_{mode}_filters_by_phase.png"
+    data_suffix = "_with_data" if data is not None else ""
+    filename = f"{task_name}_{mode}_filters_by_phase{data_suffix}.png"
     filepath = os.path.join(output_dir, filename)
     
     plt.savefig(filepath, dpi=300, bbox_inches='tight')
