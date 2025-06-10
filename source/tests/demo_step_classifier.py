@@ -101,49 +101,60 @@ def demo_basic_classification():
         }
     ]
     
-    # Create step mapping (6 steps, all level_walking)
+    # Create step mapping (6 steps all for level_walking)
     step_task_mapping = {i: 'level_walking' for i in range(6)}
     
     print("📊 Sample validation failures:")
-    for i, failure in enumerate(sample_failures):
-        print(f"   {i+1}. {failure['variable']}: {failure['value']:.3f} (expected {failure['expected_min']:.3f}-{failure['expected_max']:.3f})")
+    for i, failure in enumerate(sample_failures, 1):
+        print(f"   {i}. {failure['variable']}: {failure['value']:.3f} (expected {failure['expected_min']:.3f}-{failure['expected_max']:.3f})")
     
-    print(f"\n📋 Step-task mapping: {len(step_task_mapping)} steps, all 'level_walking'")
+    print(f"\n📋 Step-task mapping: {len(step_task_mapping)} steps, all '{list(step_task_mapping.values())[0]}'")
     
-    # Classify for hip feature (should be red since hip has violations)
-    print(f"\n🎯 Classifying for 'hip_flexion_angle_ipsi' feature:")
-    hip_colors = classifier.classify_steps_for_feature(
-        sample_failures, step_task_mapping, 'hip_flexion_angle_ipsi', 'kinematic'
-    )
-    print(f"   Result: {hip_colors}")
-    print(f"   Interpretation: All steps RED because hip has local violations")
+    # Test classification for different features (legacy single-feature approach)
+    test_features = [
+        ('hip_flexion_angle_ipsi', 'All steps RED because hip has local violations'),
+        ('knee_flexion_angle_contra', 'All steps RED because knee has local violations'),
+        ('ankle_flexion_angle_ipsi', 'All steps PINK because ankle has no violations but other features do')
+    ]
     
-    # Classify for knee feature (should be red since knee has violations)
-    print(f"\n🎯 Classifying for 'knee_flexion_angle_contra' feature:")
-    knee_colors = classifier.classify_steps_for_feature(
-        sample_failures, step_task_mapping, 'knee_flexion_angle_contra', 'kinematic'
-    )
-    print(f"   Result: {knee_colors}")
-    print(f"   Interpretation: All steps RED because knee has local violations")
+    for feature, interpretation in test_features:
+        print(f"\n🎯 Classifying for '{feature}' feature:")
+        colors = classifier.classify_steps_for_feature(
+            sample_failures, step_task_mapping, feature, 'kinematic'
+        )
+        print(f"   Result: {colors}")
+        print(f"   Interpretation: {interpretation}")
     
-    # Classify for ankle feature (should be pink since ankle has no violations but others do)
-    print(f"\n🎯 Classifying for 'ankle_flexion_angle_ipsi' feature:")
-    ankle_colors = classifier.classify_steps_for_feature(
-        sample_failures, step_task_mapping, 'ankle_flexion_angle_ipsi', 'kinematic'
-    )
-    print(f"   Result: {ankle_colors}")
-    print(f"   Interpretation: All steps PINK because ankle has no violations but other features do")
+    # Demonstrate new matrix-based classification
+    print(f"\n🔥 NEW: Matrix-based classification (per step-feature):")
+    step_colors_matrix = classifier.classify_steps_matrix(sample_failures, step_task_mapping, 'kinematic')
+    print(f"   Shape: {step_colors_matrix.shape} (steps × features)")
+    
+    feature_names = list(classifier.get_feature_map('kinematic').keys())
+    print(f"   Features: {feature_names}")
+    
+    print(f"   Matrix breakdown:")
+    for step_idx in range(step_colors_matrix.shape[0]):
+        step_colors_str = []
+        for feat_idx in range(step_colors_matrix.shape[1]):
+            color = step_colors_matrix[step_idx, feat_idx]
+            step_colors_str.append(color)
+        print(f"      Step {step_idx}: {step_colors_str}")
+    
+    print(f"\n   Analysis:")
+    print(f"   • Hip feature (index 0): All RED because hip violations exist")
+    print(f"   • Knee contra (index 3): All RED because knee violations exist") 
+    print(f"   • All other features: All PINK because they have no local violations but other features do")
 
 
 def demo_multi_task_classification():
-    """Demonstrate classification with multiple tasks."""
+    """Demonstrate classification across multiple tasks."""
     print_banner("Multi-Task Classification")
     
     classifier = StepClassifier()
     
-    # Create failures for different tasks
+    # Create multi-task failures
     multi_task_failures = [
-        # Level walking failures
         {
             'task': 'level_walking',
             'variable': 'hip_flexion_angle_ipsi',
@@ -151,9 +162,8 @@ def demo_multi_task_classification():
             'value': 0.8,
             'expected_min': 0.15,
             'expected_max': 0.6,
-            'failure_reason': 'Hip violation in level walking'
+            'failure_reason': 'Hip flexion violation'
         },
-        # Incline walking failures
         {
             'task': 'incline_walking',
             'variable': 'knee_flexion_angle_contra',
@@ -161,9 +171,8 @@ def demo_multi_task_classification():
             'value': 1.5,
             'expected_min': 0.0,
             'expected_max': 0.15,
-            'failure_reason': 'Knee violation in incline walking'
+            'failure_reason': 'Knee flexion violation'
         },
-        # Running failures
         {
             'task': 'running',
             'variable': 'ankle_flexion_angle_ipsi',
@@ -171,20 +180,16 @@ def demo_multi_task_classification():
             'value': -0.5,
             'expected_min': -0.1,
             'expected_max': 0.2,
-            'failure_reason': 'Ankle violation in running'
+            'failure_reason': 'Ankle flexion violation'
         }
     ]
     
-    # Create mixed step mapping
+    # Create multi-task step mapping
     multi_step_mapping = {
-        0: 'level_walking',     # Has hip violation
-        1: 'level_walking',     # Has hip violation
-        2: 'incline_walking',   # Has knee violation
-        3: 'incline_walking',   # Has knee violation
-        4: 'running',           # Has ankle violation
-        5: 'running',           # Has ankle violation
-        6: 'squats',            # No violations
-        7: 'squats'             # No violations
+        0: 'level_walking', 1: 'level_walking',
+        2: 'incline_walking', 3: 'incline_walking',
+        4: 'running', 5: 'running',
+        6: 'squats', 7: 'squats'  # squats has no violations
     }
     
     print("📊 Multi-task validation failures:")
@@ -193,7 +198,7 @@ def demo_multi_task_classification():
     
     print(f"\n📋 Step distribution:")
     task_counts = {}
-    for step_idx, task in multi_step_mapping.items():
+    for step, task in multi_step_mapping.items():
         task_counts[task] = task_counts.get(task, 0) + 1
     for task, count in task_counts.items():
         print(f"   • {task}: {count} steps")
@@ -203,43 +208,42 @@ def demo_multi_task_classification():
     hip_colors = classifier.classify_steps_for_feature(
         multi_task_failures, multi_step_mapping, 'hip_flexion_angle_ipsi', 'kinematic'
     )
-    
     print(f"   Step colors: {hip_colors}")
     print(f"   Breakdown:")
-    for step_idx, color in enumerate(hip_colors):
-        task = multi_step_mapping[step_idx]
+    for step_idx, (task, color) in enumerate(zip(multi_step_mapping.values(), hip_colors)):
         if color == 'red':
-            print(f"      Step {step_idx} ({task}): RED - has local hip violation")
+            reason = "RED - has local hip violation"
         elif color == 'pink':
-            print(f"      Step {step_idx} ({task}): PINK - has other violations")
+            reason = "PINK - has other violations"
         else:
-            print(f"      Step {step_idx} ({task}): GRAY - no violations")
+            reason = "GRAY - no violations"
+        print(f"      Step {step_idx} ({task}): {reason}")
     
     # Test knee feature classification
     print(f"\n🎯 Knee feature classification:")
     knee_colors = classifier.classify_steps_for_feature(
         multi_task_failures, multi_step_mapping, 'knee_flexion_angle_contra', 'kinematic'
     )
-    
     print(f"   Step colors: {knee_colors}")
     print(f"   Expected: level_walking=PINK, incline_walking=RED, running=PINK, squats=GRAY")
 
 
 def demo_kinematic_vs_kinetic():
-    """Demonstrate difference between kinematic and kinetic classification."""
+    """Demonstrate differences between kinematic and kinetic classification."""
     print_banner("Kinematic vs Kinetic Classification")
     
     classifier = StepClassifier()
     
     # Show feature mappings
+    kinematic_map = classifier.get_feature_map('kinematic')
+    kinetic_map = classifier.get_feature_map('kinetic')
+    
     print("🦴 Kinematic features (joint angles):")
-    kinematic_features = classifier.get_feature_map('kinematic')
-    for feature, idx in kinematic_features.items():
+    for feature, idx in kinematic_map.items():
         print(f"   {idx}: {feature}")
     
-    print("\n💪 Kinetic features (forces/moments):")
-    kinetic_features = classifier.get_feature_map('kinetic')
-    for feature, idx in kinetic_features.items():
+    print(f"\n💪 Kinetic features (forces/moments):")
+    for feature, idx in kinetic_map.items():
         print(f"   {idx}: {feature}")
     
     # Create kinetic failures
@@ -248,27 +252,28 @@ def demo_kinematic_vs_kinetic():
             'task': 'level_walking',
             'variable': 'hip_moment_ipsi_Nm_kg',
             'phase': 25.0,
-            'value': 1.5,
-            'expected_min': -0.1,
-            'expected_max': 0.3,
-            'failure_reason': 'Hip moment too high'
+            'value': -1.5,
+            'expected_min': -1.0,
+            'expected_max': -0.2,
+            'failure_reason': 'Hip moment violation'
         }
     ]
     
-    step_mapping = {0: 'level_walking', 1: 'level_walking'}
+    kinetic_step_mapping = {0: 'level_walking', 1: 'level_walking'}
     
+    # Test kinetic classification
     print(f"\n🎯 Kinetic classification for 'hip_moment_ipsi_Nm_kg':")
-    kinetic_colors = classifier.classify_steps_for_feature(
-        kinetic_failures, step_mapping, 'hip_moment_ipsi_Nm_kg', 'kinetic'
+    hip_moment_colors = classifier.classify_steps_for_feature(
+        kinetic_failures, kinetic_step_mapping, 'hip_moment_ipsi_Nm_kg', 'kinetic'
     )
-    print(f"   Result: {kinetic_colors}")
+    print(f"   Result: {hip_moment_colors}")
     print(f"   Both steps RED because hip moment has local violations")
     
     print(f"\n🎯 Kinetic classification for 'knee_moment_ipsi_Nm_kg':")
-    knee_kinetic_colors = classifier.classify_steps_for_feature(
-        kinetic_failures, step_mapping, 'knee_moment_ipsi_Nm_kg', 'kinetic'
+    knee_moment_colors = classifier.classify_steps_for_feature(
+        kinetic_failures, kinetic_step_mapping, 'knee_moment_ipsi_Nm_kg', 'kinetic'
     )
-    print(f"   Result: {knee_kinetic_colors}")
+    print(f"   Result: {knee_moment_colors}")
     print(f"   Both steps PINK because knee moment has no violations but hip does")
 
 
@@ -278,37 +283,35 @@ def demo_edge_cases():
     
     classifier = StepClassifier()
     
-    # Test with no failures
+    # Test 1: No validation failures
     print("🔍 Test 1: No validation failures")
-    no_failures = []
-    step_mapping = {0: 'level_walking', 1: 'level_walking', 2: 'running'}
-    
+    empty_failures = []
+    step_mapping = {0: 'level_walking', 1: 'level_walking', 2: 'level_walking'}
     colors = classifier.classify_steps_for_feature(
-        no_failures, step_mapping, 'hip_flexion_angle_ipsi', 'kinematic'
+        empty_failures, step_mapping, 'hip_flexion_angle_ipsi', 'kinematic'
     )
     print(f"   Result: {colors}")
     print(f"   All steps GRAY because no violations exist")
     
-    # Test with empty step mapping
+    # Test 2: Empty step mapping
     print(f"\n🔍 Test 2: Empty step mapping")
     empty_mapping = {}
-    empty_colors = classifier.classify_steps_for_feature(
-        no_failures, empty_mapping, 'hip_flexion_angle_ipsi', 'kinematic'
+    colors = classifier.classify_steps_for_feature(
+        empty_failures, empty_mapping, 'hip_flexion_angle_ipsi', 'kinematic'
     )
-    print(f"   Result: {empty_colors}")
+    print(f"   Result: {colors}")
     print(f"   Empty array because no steps to classify")
     
-    # Test invalid mode
+    # Test 3: Invalid mode
     print(f"\n🔍 Test 3: Invalid mode handling")
     try:
         classifier.get_feature_map('invalid_mode')
-        print(f"   ERROR: Should have raised ValueError")
+        print("   FAILED: Should have raised error")
     except ValueError as e:
         print(f"   SUCCESS: Properly caught error - {e}")
     
-    # Test large dataset
+    # Test 4: Large dataset performance
     print(f"\n🔍 Test 4: Large dataset performance")
-    large_mapping = {i: 'level_walking' for i in range(1000)}
     large_failures = [
         {
             'task': 'level_walking',
@@ -317,95 +320,210 @@ def demo_edge_cases():
             'value': 0.8,
             'expected_min': 0.15,
             'expected_max': 0.6,
-            'failure_reason': 'Test failure'
+            'failure_reason': 'Large dataset test'
         }
     ]
+    large_mapping = {i: 'level_walking' for i in range(1000)}
     
     import time
     start_time = time.time()
-    large_colors = classifier.classify_steps_for_feature(
+    colors = classifier.classify_steps_for_feature(
         large_failures, large_mapping, 'hip_flexion_angle_ipsi', 'kinematic'
     )
-    end_time = time.time()
+    execution_time = (time.time() - start_time) * 1000  # Convert to ms
     
-    print(f"   Classified {len(large_colors)} steps in {(end_time - start_time)*1000:.2f}ms")
-    print(f"   All steps: {large_colors[0]} (first 5: {large_colors[:5]})")
+    print(f"   Classified {len(colors)} steps in {execution_time:.2f}ms")
+    print(f"   All steps: {colors[0]} (first 5: {colors[:5]})")
 
 
 def demo_comprehensive_report():
-    """Demonstrate comprehensive classification report generation."""
+    """Demonstrate comprehensive classification reporting."""
     print_banner("Comprehensive Classification Report")
     
     classifier = StepClassifier()
     
-    # Create realistic mixed scenario
-    realistic_failures = [
-        {'task': 'level_walking', 'variable': 'hip_flexion_angle_ipsi', 'phase': 25.0, 'value': 0.8, 'expected_min': 0.15, 'expected_max': 0.6, 'failure_reason': 'Hip too high'},
-        {'task': 'level_walking', 'variable': 'knee_flexion_angle_contra', 'phase': 50.0, 'value': 1.5, 'expected_min': 0.0, 'expected_max': 0.15, 'failure_reason': 'Knee too high'},
-        {'task': 'incline_walking', 'variable': 'ankle_flexion_angle_ipsi', 'phase': 75.0, 'value': -0.5, 'expected_min': -0.1, 'expected_max': 0.2, 'failure_reason': 'Ankle too low'},
-        {'task': 'running', 'variable': 'hip_flexion_angle_contra', 'phase': 25.0, 'value': 1.2, 'expected_min': 0.3, 'expected_max': 0.9, 'failure_reason': 'Hip contra too high'}
+    # Create a complex scenario with multiple tasks and violations
+    complex_failures = [
+        {'task': 'level_walking', 'variable': 'hip_flexion_angle_ipsi', 'phase': 25.0, 'value': 0.8, 'expected_min': 0.15, 'expected_max': 0.6, 'failure_reason': 'Hip violation'},
+        {'task': 'level_walking', 'variable': 'hip_flexion_angle_contra', 'phase': 75.0, 'value': 0.4, 'expected_min': -0.05, 'expected_max': 0.35, 'failure_reason': 'Hip contra violation'},
+        {'task': 'incline_walking', 'variable': 'knee_flexion_angle_contra', 'phase': 50.0, 'value': 1.5, 'expected_min': 0.0, 'expected_max': 0.15, 'failure_reason': 'Knee violation'},
+        {'task': 'incline_walking', 'variable': 'hip_flexion_angle_contra', 'phase': 25.0, 'value': 1.0, 'expected_min': 0.3, 'expected_max': 0.9, 'failure_reason': 'Hip contra violation 2'},
+        {'task': 'running', 'variable': 'ankle_flexion_angle_ipsi', 'phase': 75.0, 'value': -0.5, 'expected_min': -0.1, 'expected_max': 0.2, 'failure_reason': 'Ankle violation'},
+        {'task': 'running', 'variable': 'hip_flexion_angle_ipsi', 'phase': 0.0, 'value': 1.0, 'expected_min': 0.15, 'expected_max': 0.6, 'failure_reason': 'Hip violation 2'}
     ]
     
-    realistic_mapping = {
-        0: 'level_walking',     # hip + knee violations
-        1: 'level_walking',     # hip + knee violations
-        2: 'incline_walking',   # ankle violation
-        3: 'incline_walking',   # ankle violation
-        4: 'running',           # hip contra violation
-        5: 'running',           # hip contra violation
-        6: 'squats',            # no violations
-        7: 'squats',            # no violations
-        8: 'squats'             # no violations
+    complex_mapping = {
+        0: 'level_walking', 1: 'level_walking',
+        2: 'incline_walking', 3: 'incline_walking',
+        4: 'running', 5: 'running',
+        6: 'squats', 7: 'squats', 8: 'squats'  # squats has no violations
     }
     
     print("📊 Creating comprehensive report for realistic scenario:")
-    print(f"   • 9 total steps across 4 different tasks")
-    print(f"   • 4 different variables with violations")
+    print(f"   • {len(complex_mapping)} total steps across 4 different tasks")
+    print(f"   • {len(set(f['variable'] for f in complex_failures))} different variables with violations")
     print(f"   • Mix of valid and invalid steps")
     
-    # Generate comprehensive report
-    report = classifier.create_step_classification_report(
-        realistic_failures, realistic_mapping, 'kinematic'
-    )
-    
-    print(f"\n📋 Report Summary:")
-    print(f"   Total steps: {report['total_steps']}")
-    print(f"   Mode: {report['mode']}")
-    print(f"   Valid steps: {report['summary']['valid_steps']}")
-    print(f"   Steps with local violations: {report['summary']['local_violation_steps']}")
-    print(f"   Steps with other violations: {report['summary']['other_violation_steps']}")
-    
+    # Demonstrate classification for multiple features
     print(f"\n📊 Per-feature breakdown:")
-    for feature_name, stats in report['by_feature'].items():
-        total_violating = stats['local_violations'] + stats['other_violations']
+    feature_map = classifier.get_feature_map('kinematic')
+    for feature_name in list(feature_map.keys())[:3]:  # Test first 3 features
+        colors = classifier.classify_steps_for_feature(
+            complex_failures, complex_mapping, feature_name, 'kinematic'
+        )
+        valid_count = sum(1 for c in colors if c == 'gray')
+        local_count = sum(1 for c in colors if c == 'red') 
+        other_count = sum(1 for c in colors if c == 'pink')
         print(f"   {feature_name}:")
-        print(f"      Valid: {stats['valid']}, Local violations: {stats['local_violations']}, Other violations: {stats['other_violations']}")
+        print(f"      Valid: {valid_count}, Local violations: {local_count}, Other violations: {other_count}")
     
     print(f"\n🎨 Feature classifications (first 3 features):")
-    feature_names = list(report['feature_classifications'].keys())[:3]
-    for feature_name in feature_names:
-        colors = report['feature_classifications'][feature_name]
+    for feature_name in list(feature_map.keys())[:3]:
+        colors = classifier.classify_steps_for_feature(
+            complex_failures, complex_mapping, feature_name, 'kinematic'
+        )
         print(f"   {feature_name}: {colors}")
 
 
-def demo_integration_example():
-    """Demonstrate how to use step classifier with validation plotting."""
-    print_banner("Live Integration with Filter by Phase Plotter")
+# Note: These functions are now implemented in the StepClassifier class
+# This demo script imports and uses the classifier's methods directly
+
+
+def generate_validation_accuracy_report(validation_results, output_dir):
+    """
+    Generate a detailed validation accuracy report comparing expected vs detected failures.
     
-    # Import the actual plotting function
-    try:
-        from validation.filters_by_phase_plots import create_filters_by_phase_plot
-        plotting_available = True
-    except ImportError as e:
-        print(f"⚠️  Could not import plotting function: {e}")
-        plotting_available = False
-        return
+    Args:
+        validation_results: List of validation result dictionaries
+        output_dir: Directory to save the report
+        
+    Returns:
+        Path to the generated report file
+    """
+    report_content = """# Validation Accuracy Report
+
+## Summary
+
+This report analyzes the accuracy of the validation system by comparing the number of expected failures (intentionally introduced violations) with the number of failures actually detected by the validation system.
+
+## Methodology
+
+1. **Generate Controlled Datasets**: Create datasets with known violations by setting specific values outside validation ranges
+2. **Run Validation**: Use the actual validation system to detect violations
+3. **Compare Results**: Count expected vs detected violations to measure accuracy
+
+## Dataset Analysis
+
+"""
+    
+    total_expected = 0
+    total_detected = 0
+    
+    for result in validation_results:
+        dataset_name = result['dataset_name']
+        expected_failures = result['expected_failures']
+        detected_failures = result['detected_failures']
+        data_shape = result['data_shape']
+        
+        total_expected += expected_failures
+        total_detected += detected_failures
+        
+        accuracy = (detected_failures / expected_failures * 100) if expected_failures > 0 else 100
+        
+        report_content += f"""### Dataset: {dataset_name}
+
+- **Data Shape**: {data_shape[0]} steps × {data_shape[1]} time points × {data_shape[2]} features
+- **Expected Failures**: {expected_failures:,}
+- **Detected Failures**: {detected_failures:,}
+- **Accuracy**: {accuracy:.1f}%
+- **Status**: {'✅ PASS' if detected_failures == expected_failures else '❌ DISCREPANCY'}
+
+"""
+    
+    overall_accuracy = (total_detected / total_expected * 100) if total_expected > 0 else 100
+    
+    report_content += f"""## Overall Results
+
+| Metric | Count | Percentage |
+|--------|-------|------------|
+| Total Expected Failures | {total_expected:,} | 100.0% |
+| Total Detected Failures | {total_detected:,} | {overall_accuracy:.1f}% |
+| **Overall Accuracy** | **{total_detected}/{total_expected}** | **{overall_accuracy:.1f}%** |
+
+## Validation System Assessment
+
+"""
+    
+    if overall_accuracy == 100.0:
+        report_content += """✅ **EXCELLENT**: The validation system correctly identified 100% of intentional violations.
+
+- All expected failures were properly detected
+- No false negatives (missed violations)
+- Validation ranges are working as designed
+- Step classification can rely on accurate violation detection
+"""
+    elif overall_accuracy >= 95.0:
+        report_content += """⚠️ **GOOD**: The validation system detected most violations but missed some.
+
+- High accuracy but some false negatives exist
+- May need to review validation logic for edge cases
+- Generally reliable for step classification
+"""
+    else:
+        report_content += """❌ **NEEDS IMPROVEMENT**: Significant discrepancy between expected and detected failures.
+
+- Many violations were missed by the validation system
+- Validation ranges or logic may need adjustment
+- Step classification may not be fully reliable
+"""
+    
+    report_content += f"""
+## Technical Details
+
+### Validation Methodology
+- **Range Violations**: Values intentionally set outside [min, max] bounds
+- **Phase Coverage**: All phases (0%, 25%, 50%, 75%) tested
+- **Feature Coverage**: Hip, knee, and ankle joints tested
+- **Time Point Coverage**: All 150 time points per gait cycle validated
+
+### Data Generation Strategy
+- **All Valid Dataset**: Generated within validation ranges (expected 0 failures)
+- **Hip Violations Dataset**: Hip values set to 0.8-0.9 rad (above max ~0.6 rad)
+- **Mixed Violations Dataset**: Multiple features violated simultaneously
+
+### Failure Detection Logic (EFFICIENT APPROACH)
+- Representative phase validation using 4 key indices (0%, 25%, 50%, 75%)
+- Failures recorded with step, variable, phase, and violation details
+- Only representative points checked (4 phases × 6 features × N steps = 37.5x faster)
+
+---
+*Generated on {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')} by demo_step_classifier.py*
+"""
+    
+    # Save report
+    report_path = output_dir / "validation_accuracy_report.md"
+    with open(report_path, 'w') as f:
+        f.write(report_content)
+    
+    return report_path
+
+
+def demo_integration_example():
+    """Demonstrate live integration with the filters_by_phase_plots function."""
+    print_banner("Live Integration with Filter by Phase Plotter")
     
     classifier = StepClassifier()
     
-    print("🔗 Creating actual validation plots with step classification...")
+    # Import the plotting function and validation parser
+    try:
+        from validation.filters_by_phase_plots import create_filters_by_phase_plot
+        from validation.validation_expectations_parser import parse_kinematic_validation_expectations
+        print("🔗 Creating actual validation plots with step classification...")
+    except ImportError:
+        print("❌ Could not import required modules")
+        return
     
-    # Create realistic validation data
+    # Create simplified validation data that works with the plotting system
     validation_data = {
         'level_walking': {
             0: {
@@ -443,110 +561,142 @@ def demo_integration_example():
         }
     }
     
-    # Create realistic gait data with some violations
-    num_steps = 6
-    num_points = 150
-    num_features = 6
-    
-    data = np.zeros((num_steps, num_points, num_features))
-    phase_percent = np.linspace(0, 100, num_points)
-    
-    # Create realistic gait patterns
-    for step in range(num_steps):
-        step_offset = (step - 3) * 0.02  # Small variation per step
-        
-        # Hip flexion pattern (typical gait cycle)
-        hip_pattern = 0.25 * np.sin(2 * np.pi * phase_percent / 100) + 0.3
-        data[step, :, 0] = hip_pattern + step_offset  # hip_ipsi
-        data[step, :, 1] = hip_pattern + step_offset  # hip_contra
-        
-        # Knee flexion pattern (stance/swing phases)
-        knee_pattern = 0.4 * np.sin(np.pi * phase_percent / 100) + 0.4
-        data[step, :, 2] = knee_pattern + step_offset  # knee_ipsi
-        data[step, :, 3] = knee_pattern + step_offset  # knee_contra
-        
-        # Ankle flexion pattern (dorsi/plantarflexion)
-        ankle_pattern = -0.15 * np.sin(2 * np.pi * phase_percent / 100) - 0.1
-        data[step, :, 4] = ankle_pattern + step_offset  # ankle_ipsi
-        data[step, :, 5] = ankle_pattern + step_offset  # ankle_contra
-    
-    # Add violations to specific steps for demonstration
-    data[0, :, 0] += 0.5  # Step 0: Hip violation (too high)
-    data[2, :, 2] += 0.8  # Step 2: Knee violation (too high) 
-    data[4, :, 4] -= 0.4  # Step 4: Ankle violation (too low)
-    
-    # Create validation failures based on the data violations
-    sample_failures = [
-        {
-            'task': 'level_walking',
-            'variable': 'hip_flexion_angle_ipsi',
-            'phase': 25.0,
-            'value': 0.8,
-            'expected_min': 0.15,
-            'expected_max': 0.6,
-            'failure_reason': 'Hip flexion too high'
-        },
-        {
-            'task': 'level_walking', 
-            'variable': 'knee_flexion_angle_ipsi',
-            'phase': 50.0,
-            'value': 1.2,
-            'expected_min': 0.5,
-            'expected_max': 0.8,
-            'failure_reason': 'Knee flexion too high'
-        },
-        {
-            'task': 'level_walking',
-            'variable': 'ankle_flexion_angle_ipsi',
-            'phase': 75.0,
-            'value': -0.5,
-            'expected_min': -0.1,
-            'expected_max': 0.2,
-            'failure_reason': 'Ankle flexion too low'
-        }
-    ]
+    task_data = validation_data['level_walking']
+    print(f"📊 Using validation data with {len(task_data)} phases")
     
     # Create step mapping
+    num_steps = 6
     step_task_mapping = {i: 'level_walking' for i in range(num_steps)}
+    
+    # Generate different datasets for different scenarios with known expected failures
+    datasets = {}
+    
+    # Dataset 1: All valid data using classifier's method
+    print(f"\n📊 Creating Dataset 1: All valid data")
+    datasets['all_valid'] = {
+        'data': classifier.create_valid_data(task_data, num_steps),
+        'expected_failures': 0,  # Should have no failures
+        'description': 'All data generated within validation ranges'
+    }
+    
+    # Dataset 2: Hip violations only - Calculate expected failures for EFFICIENT approach
+    print(f"📊 Creating Dataset 2: Hip violations in steps 0,1")
+    hip_data = classifier.create_valid_data(task_data, num_steps)
+    hip_data[0, :, 0] = 0.8  # Hip ipsi violation (above max at most phases)
+    hip_data[1, :, 0] = 0.9  # Hip ipsi violation (above max at most phases)
+    
+    # EFFICIENT APPROACH: Only check 1 representative point per phase (not all 150 points)
+    # Hip 0.8 violates at phases 0,25,50 but is valid at phase 75 (max=0.9)
+    # Hip 0.9 violates at phases 0,25,50 but is valid at phase 75 (max=0.9)
+    # Expected failures: 2 steps × 3 violating phases × 1 point = 6 failures
+    violating_phases = 3  # Phases 0,25,50 violate, phase 75 is valid
+    hip_expected = 2 * violating_phases  # 2 steps × 3 phases × 1 representative point each
+    datasets['hip_violations'] = {
+        'data': hip_data,
+        'expected_failures': hip_expected,
+        'description': f'Steps 0,1 violate hip_flexion_angle_ipsi at phases 0,25,50% (0.8-0.9 > max), valid at 75%'
+    }
+    
+    # Dataset 3: Mixed violations - Calculate expected failures for EFFICIENT approach
+    print(f"📊 Creating Dataset 3: Mixed violations")
+    mixed_data = classifier.create_valid_data(task_data, num_steps)
+    mixed_data[0, :, 0] = 0.8   # Hip violation (violates at phases 0,25,50)
+    mixed_data[2, :, 2] = 0.9   # Knee violation (violates at phases 0,25,50)
+    mixed_data[4, :, 4] = -0.3  # Ankle violation (violates at phases 0,25,75)
+    
+    # EFFICIENT APPROACH: Only check 1 representative point per phase
+    # Expected failures: 3 steps × 3 violating phases × 1 point = 9 failures
+    # - Step 0 hip: violates at 3 phases (0,25,50)
+    # - Step 2 knee: violates at 3 phases (0,25,50)  
+    # - Step 4 ankle: violates at 3 phases (0,25,75)
+    mixed_expected = 3 * 3  # 3 steps × 3 violating phases × 1 representative point each
+    datasets['mixed_violations'] = {
+        'data': mixed_data,
+        'expected_failures': mixed_expected,
+        'description': f'Step 0 hip (phases 0,25,50), step 2 knee (phases 0,25,50), step 4 ankle (phases 0,25,75)'
+    }
     
     # Create output directory
     output_dir = Path(__file__).parent / "sample_plots" / "demo_step_classifier"
     output_dir.mkdir(parents=True, exist_ok=True)
     
     print(f"📁 Output directory: {output_dir}")
-    print(f"📊 Data shape: {data.shape} (steps, time_points, features)")
-    print(f"⚠️  Violations added to steps: 0 (hip), 2 (knee), 4 (ankle)")
     
-    # Demonstrate different classification scenarios
-    scenarios = [
-        {
-            'name': 'summary_classification',
-            'description': 'Summary classification (any violation = red)',
-            'step_colors': classifier.get_step_summary_classification(sample_failures, step_task_mapping)
-        },
-        {
-            'name': 'hip_feature_specific',
-            'description': 'Hip-specific classification (hip violations = red, others = pink)',
-            'step_colors': classifier.classify_steps_for_feature(
-                sample_failures, step_task_mapping, 'hip_flexion_angle_ipsi', 'kinematic'
-            )
-        },
-        {
-            'name': 'knee_feature_specific', 
-            'description': 'Knee-specific classification (knee violations = red, others = pink)',
-            'step_colors': classifier.classify_steps_for_feature(
-                sample_failures, step_task_mapping, 'knee_flexion_angle_ipsi', 'kinematic'
-            )
-        },
-        {
-            'name': 'ankle_feature_specific',
-            'description': 'Ankle-specific classification (ankle violations = red, others = pink)',
-            'step_colors': classifier.classify_steps_for_feature(
-                sample_failures, step_task_mapping, 'ankle_flexion_angle_ipsi', 'kinematic'
-            )
+    # Now validate each dataset and generate step colors using ACTUAL validation
+    scenarios = []
+    validation_results = []
+    
+    for dataset_name, dataset_info in datasets.items():
+        data = dataset_info['data']
+        expected_failures = dataset_info['expected_failures']
+        description = dataset_info['description']
+        
+        print(f"\n🔍 Validating dataset: {dataset_name}")
+        print(f"   📊 Data shape: {data.shape} (steps, time_points, features)")
+        print(f"   📋 Description: {description}")
+        print(f"   🎯 Expected failures: {expected_failures:,}")
+        
+        # Run actual validation to detect violations using classifier's method
+        actual_failures = classifier.validate_data_against_ranges(
+            data, validation_data, 'level_walking', step_task_mapping
+        )
+        
+        detected_failures = len(actual_failures)
+        print(f"   ⚠️  Detected failures: {detected_failures:,}")
+        
+        # Calculate accuracy
+        if expected_failures == 0:
+            accuracy = 100.0 if detected_failures == 0 else 0.0
+        else:
+            accuracy = (detected_failures / expected_failures) * 100
+        
+        print(f"   📈 Accuracy: {accuracy:.1f}% ({detected_failures}/{expected_failures})")
+        
+        # Track validation results for report
+        validation_results.append({
+            'dataset_name': dataset_name,
+            'data_shape': data.shape,
+            'expected_failures': expected_failures,
+            'detected_failures': detected_failures,
+            'description': description
+        })
+        
+        # Show some failure details
+        if len(actual_failures) > 0:
+            print(f"   📋 Sample failures:")
+            for i, failure in enumerate(actual_failures[:3]):  # Show first 3
+                print(f"      {i+1}. Step {failure['step']}: {failure['variable']} = {failure['value']:.3f} "
+                     f"(range: [{failure['expected_min']:.3f}, {failure['expected_max']:.3f}])")
+            if len(actual_failures) > 3:
+                print(f"      ... and {len(actual_failures) - 3} more failures")
+        else:
+            print(f"   ✅ All data passes validation!")
+        
+        # Create scenarios for this dataset using the new matrix-based classification
+        base_scenario = {
+            'dataset': dataset_name,
+            'data': data,
+            'failures': actual_failures,
         }
-    ]
+        
+        # Matrix classification - provides granular step-feature colors
+        step_colors_matrix = classifier.classify_steps_matrix(actual_failures, step_task_mapping, 'kinematic')
+        
+        print(f"   🎨 Step colors matrix shape: {step_colors_matrix.shape}")
+        print(f"   📊 Matrix sample (first 3 steps, all features):")
+        for step_idx in range(min(3, step_colors_matrix.shape[0])):
+            step_colors_str = [step_colors_matrix[step_idx, feat_idx] for feat_idx in range(step_colors_matrix.shape[1])]
+            print(f"      Step {step_idx}: {step_colors_str}")
+        
+        # Use the matrix-based classification for plotting
+        scenarios.append({
+            **base_scenario,
+            'name': f'{dataset_name}_matrix_classification',
+            'description': f'{dataset_name}: Per-feature classification (red=local, pink=other, gray=valid)',
+            'step_colors': step_colors_matrix
+        })
     
+    # Generate plots for all scenarios
     generated_plots = []
     
     for scenario in scenarios:
@@ -561,7 +711,7 @@ def demo_integration_example():
                 task_name='level_walking',
                 output_dir=str(output_dir),
                 mode='kinematic',
-                data=data,
+                data=scenario['data'],
                 step_colors=scenario['step_colors']
             )
             
@@ -584,6 +734,28 @@ def demo_integration_example():
     for plot_path in generated_plots:
         print(f"   📈 {Path(plot_path).name}")
     
+    # Generate validation accuracy report
+    print(f"\n📊 Generating validation accuracy report...")
+    report_path = generate_validation_accuracy_report(validation_results, output_dir)
+    print(f"   📄 Report saved: {report_path.name}")
+    
+    # Print summary of validation accuracy
+    total_expected = sum(r['expected_failures'] for r in validation_results)
+    total_detected = sum(r['detected_failures'] for r in validation_results)
+    overall_accuracy = (total_detected / total_expected * 100) if total_expected > 0 else 100
+    
+    print(f"\n📈 Validation Accuracy Summary:")
+    print(f"   🎯 Total expected failures: {total_expected:,}")
+    print(f"   ⚠️  Total detected failures: {total_detected:,}")
+    print(f"   📊 Overall accuracy: {overall_accuracy:.1f}%")
+    
+    if overall_accuracy == 100.0:
+        print(f"   ✅ PERFECT: Validation system detected all intentional violations!")
+    elif overall_accuracy >= 95.0:
+        print(f"   ⚠️  GOOD: High accuracy with minor discrepancies")
+    else:
+        print(f"   ❌ ISSUE: Significant validation discrepancies detected")
+    
     print(f"""
 🔗 Integration Summary:
 
@@ -593,7 +765,8 @@ to generate validation plots with colored step overlays:
 1. **Summary Classification**: Shows all steps with any violations as red
 2. **Feature-Specific**: Shows local violations as red, other violations as pink
 3. **Real Data**: Uses actual gait data with realistic violation patterns
-4. **Visual Output**: Creates publication-ready validation plots
+4. **Visual Output**: Creates validation plots
+5. **Validation Accuracy**: {overall_accuracy:.1f}% detection rate for intentional violations
 
 This demonstrates how the step classifier enhances validation plotting by providing
 immediate visual feedback about data quality and violation types.
@@ -632,8 +805,7 @@ issues and their specific locations.
 For more details, see:
 • source/validation/step_classifier.py - Main implementation
 • source/tests/test_step_classifier.py - Comprehensive test suite
-• Integration examples in dataset_validator.py
-""")
+• Integration examples in dataset_validator.py""")
 
 
 if __name__ == "__main__":

@@ -64,6 +64,49 @@ python scripts/pm_update.py --check                      # Check all component P
 python scripts/pm_update.py --full-update                # Update project status snapshot
 ```
 
+### File Creation Guidelines
+**IMPORTANT**: Always obtain explicit user permission before creating new files.
+
+**Required for ALL new files:**
+1. **User Permission**: Ask user before creating any new file
+2. **Clear Intent Documentation**: Every file must include a comprehensive header describing:
+   - **Purpose**: What the file accomplishes
+   - **Intent**: Detailed explanation of the file's functionality and responsibilities
+   - **Creation Context**: Date and permission statement (e.g., "Created: 2025-06-10 with user permission")
+   - **Usage Examples**: How other developers should use the file
+   - **Key Features**: Main capabilities and design decisions
+
+**Header Template for New Files:**
+```python
+#!/usr/bin/env python3
+"""
+{File Name and Brief Description}
+
+Created: {YYYY-MM-DD} with user permission
+Purpose: {One-line summary of what this file accomplishes}
+
+Intent:
+{Detailed explanation of the file's functionality, responsibilities, and design approach.
+Include what problems it solves, how it fits into the larger system, and key design decisions.}
+
+**PRIMARY FUNCTIONS:**
+1. **{Function Category}**: {Description}
+2. **{Function Category}**: {Description}
+
+Usage:
+    {Realistic code examples showing how to use this file}
+
+{Additional sections as needed: Performance notes, Dependencies, Integration points, etc.}
+"""
+```
+
+**Prohibited Actions Without Permission:**
+- Creating new Python modules (.py files)
+- Creating new documentation files (.md files) 
+- Creating new configuration files
+- Creating new directories or folder structures
+- Creating new test files or demo scripts
+
 ### Decision-Making Guidelines
 - If you are not 100% certain on what to do, or feel like you are making a big assumption. Consult the user. 
 
@@ -72,3 +115,6 @@ python scripts/pm_update.py --full-update                # Update project status
 
 ### File Structure Guidelines
 - Every file should include a header that describes the intent and purpose of the file
+
+## Communication Guidelines
+- Tone down the language for "publication-ready" and all of that.

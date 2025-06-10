@@ -1,10 +1,22 @@
 #!/usr/bin/env python3
 """
-Kinematic Pose Generator
+Kinematic Pose Generator Library
 
-Extends walking_animator.py functionality to generate static pose visualizations
-for validation purposes. Creates min/max position images at specific phase points
-to embed in validation documentation.
+Library module for generating static kinematic pose visualizations for validation purposes.
+Creates min/max position images at specific phase points based on forward kinematics calculations.
+
+LIBRARY FEATURES:
+- Static pose visualization generation for validation documentation
+- Forward kinematics calculations based on joint angle ranges
+- Min/max position visualization at specific phase points
+- Integration with validation expectations for accurate pose generation
+
+**ENTRY POINTS:**
+This is a library module. For standalone execution, use these entry points:
+- source/validation/generate_validation_plots.py - Generate kinematic pose plots
+- source/tests/demo_forward_kinematics_plots.py - Interactive demonstration  
+- source/validation/dataset_validator_phase.py - Full validation with kinematic poses
+- source/validation/dataset_validator_time.py - Time-indexed validation with poses
 
 Based on walking_animator.py forward kinematics calculations.
 """
@@ -17,7 +29,6 @@ import os
 import sys
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
-import argparse
 
 # Add source directory to Python path for imports
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
@@ -447,44 +458,3 @@ class KinematicPoseGenerator:
     
 
 
-def main():
-    """Main function for testing the kinematic pose generator"""
-    
-    parser = argparse.ArgumentParser(description='Generate kinematic validation poses')
-    parser.add_argument('--task', type=str, default='level_walking', 
-                       help='Task name for pose generation')
-    parser.add_argument('--output-dir', type=str, default='docs/standard_spec/validation',
-                       help='Output directory for images')
-    parser.add_argument('--data-file', type=str, 
-                       help='Optional data file to extract real ranges')
-    
-    args = parser.parse_args()
-    
-    # Create pose generator
-    generator = KinematicPoseGenerator()
-    
-    # Load data if provided
-    validation_ranges = None
-    if args.data_file:
-        data = pd.read_parquet(args.data_file)
-        print(f"Loaded data from {args.data_file}")
-        validation_ranges = generator.extract_phase_ranges_from_data(
-            data, args.task, generator.phase_points
-        )
-        print(f"Extracted ranges for {len(validation_ranges)} phase points")
-    
-    # Generate validation images
-    print(f"Generating validation images for task: {args.task}")
-    generated_files = generator.generate_task_validation_images(
-        args.task, validation_ranges, args.output_dir
-    )
-    
-    print(f"\\nGenerated {len(generated_files)} validation images:")
-    for filepath in generated_files:
-        print(f"  - {filepath}")
-    
-    return generated_files
-
-
-if __name__ == "__main__":
-    main()

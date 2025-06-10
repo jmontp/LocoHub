@@ -1,20 +1,27 @@
 #!/usr/bin/env python3
 """
-Unified Filters by Phase Validation Plots Generator - Version 6.0
+Filters by Phase Validation Plots Library
 
-Creates validation plots showing how joint angle ranges and kinetic variables filter data across movement phases.
-X-axis: Phase progression (0%, 25%, 50%, 75%, 100%) - NEW PHASE SYSTEM with cyclical completion
-Y-axis: Joint angle ranges or kinetic variable ranges (with bounding boxes)
+Library module for generating validation plots showing joint angle and kinetic variable ranges across movement phases.
+X-axis: Phase progression (0%, 25%, 50%, 75%, 100%) with cyclical completion
+Y-axis: Variable ranges with validation bounding boxes
 
-UNIFIED FEATURES:
-- Single script handles both kinematic (joint angles) and kinetic (forces/moments) validation
-- Updated to 0%, 25%, 50%, 75%, 100% phase system with cyclical completion
+LIBRARY FEATURES:
+- Handles both kinematic (joint angles) and kinetic (forces/moments) validation
+- Phase system with 0%, 25%, 50%, 75%, 100% progression and cyclical completion
 - Automatic contralateral offset logic for gait-based tasks
 - Task-appropriate bilateral handling (gait vs bilateral symmetric)
 - Enhanced biomechanical accuracy with standard gait timing
-- Toggle between kinematic and kinetic validation modes
+- Support for both validation modes (kinematic/kinetic)
 
-Generates separate plots for each task to avoid overcrowding.
+**ENTRY POINTS:**
+This is a library module. For standalone execution, use these entry points:
+- source/validation/generate_validation_plots.py - Generate validation plots
+- source/tests/demo_filters_by_phase_plots.py - Interactive demonstration
+- source/validation/dataset_validator_phase.py - Full validation with plots
+- source/validation/dataset_validator_time.py - Time-indexed validation with plots
+
+Generates separate plots for each task to avoid visual overcrowding.
 """
 
 import os
@@ -25,7 +32,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from pathlib import Path
 from typing import Dict, List, Tuple
-import argparse
 
 # Add source directory to Python path
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
@@ -83,10 +89,11 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
         mode: 'kinematic' for joint angles or 'kinetic' for forces/moments
         data: Optional numpy array with shape (num_steps, 150, num_features) containing actual data to plot
               Each feature corresponds to one plot (ordered by: hip_ipsi, hip_contra, knee_ipsi, knee_contra, ankle_ipsi, ankle_contra)
-        step_colors: Optional array with shape (num_steps,) containing color types for each step:
-                    - 'gray': valid steps (no violations)
-                    - 'red': steps with violations in the current feature (local violations)
-                    - 'pink': steps with violations in other features (global violations)
+        step_colors: Optional array with shape (num_steps, num_features) containing color types for each step-feature combination:
+                    - 'gray': valid (no violations)
+                    - 'red': local violation (violation in current feature)
+                    - 'pink': other violation (violations in other features)
+                    If shape is (num_steps,), will use same color for all features of each step (backward compatibility)
         
     Returns:
         Path to the generated filters by phase plot
@@ -223,7 +230,7 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                 
                 rect = patches.Rectangle(
                     (phase - box_width/2, min_val), box_width, height,
-                    linewidth=2, edgecolor='black', 
+                    linewidth=0, edgecolor='none', 
                     facecolor=colors[var_type], alpha=0.6
                 )
                 ax.add_patch(rect)
@@ -242,10 +249,10 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                        ha='center', va='bottom', fontsize=8, fontweight='bold')
             
             # Plot connecting lines to show progression
-            ax.plot(valid_phases, phase_mins, 'o-', color='darkred', linewidth=2, 
-                   markersize=6, label='Min Range', alpha=0.8)
-            ax.plot(valid_phases, phase_maxs, 'o-', color='darkblue', linewidth=2, 
-                   markersize=6, label='Max Range', alpha=0.8)
+            ax.plot(valid_phases, phase_mins, 'o-', color=colors[var_type], linewidth=2, 
+                   markersize=6, alpha=0.8)
+            ax.plot(valid_phases, phase_maxs, 'o-', color=colors[var_type], linewidth=2, 
+                   markersize=6, alpha=0.8)
             
             # Fill area between min and max
             ax.fill_between(valid_phases, phase_mins, phase_maxs, 
@@ -291,29 +298,32 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                             step_data = feature_data[step_idx, :]
                             
                             # Determine color and style based on step_colors array
-                            if step_colors is not None and step_idx < len(step_colors):
-                                color_type = step_colors[step_idx]
-                                if color_type == 'red':
-                                    color = 'red'  # Bright red for local violations
-                                    alpha = 0.8
-                                    linewidth = 1.0
-                                    label = 'Local Violation' if not legend_added['red'] else ""
-                                    legend_added['red'] = True
-                                elif color_type == 'pink':
-                                    color = 'hotpink'  # Pink for other violations
-                                    alpha = 0.6
-                                    linewidth = 0.8
-                                    label = 'Other Violation' if not legend_added['pink'] else ""
-                                    legend_added['pink'] = True
-                                else:  # 'gray' or any other value defaults to gray
-                                    color = 'gray'  # Valid steps
-                                    alpha = 0.3
-                                    linewidth = 0.5
-                                    label = 'Valid Steps' if not legend_added['gray'] else ""
-                                    legend_added['gray'] = True
-                            else:
-                                # Default to gray if no color mapping provided
-                                color = 'gray'
+                            color_type = 'gray'  # Default color
+                            
+                            if step_colors is not None and step_idx < step_colors.shape[0]:
+                                if len(step_colors.shape) == 2:
+                                    # 2D array: step_colors[step_idx, feature_idx]
+                                    if feature_idx < step_colors.shape[1]:
+                                        color_type = step_colors[step_idx, feature_idx]
+                                else:
+                                    # 1D array: step_colors[step_idx] (backward compatibility)
+                                    color_type = step_colors[step_idx]
+                            
+                            # Apply color styling
+                            if color_type == 'red':
+                                color = 'red'  # Bright red for local violations
+                                alpha = 0.8
+                                linewidth = 1.0
+                                label = 'Local Violation' if not legend_added['red'] else ""
+                                legend_added['red'] = True
+                            elif color_type == 'pink':
+                                color = 'hotpink'  # Pink for other violations
+                                alpha = 0.6
+                                linewidth = 0.8
+                                label = 'Other Violation' if not legend_added['pink'] else ""
+                                legend_added['pink'] = True
+                            else:  # 'gray' or any other value defaults to gray
+                                color = 'gray'  # Valid steps
                                 alpha = 0.3
                                 linewidth = 0.5
                                 label = 'Valid Steps' if not legend_added['gray'] else ""
@@ -321,11 +331,6 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                             
                             ax.plot(phase_percent, step_data, 
                                    color=color, alpha=alpha, linewidth=linewidth, label=label)
-                        
-                        # Plot mean trajectory
-                        mean_trajectory = np.mean(feature_data, axis=0)
-                        ax.plot(phase_percent, mean_trajectory, 
-                               color='black', linewidth=2, label='Mean Data')
             
             # Customize axes
             ax.set_xlim(-5, 105)
@@ -356,10 +361,17 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                 ax2.set_ylabel(f'{var_type.replace("_", " ").title()} (degrees)', fontsize=11)
                 ax2.set_ylim(ax.get_ylim())
             
-            # Add legend only to the first subplot
+            # Add legend only to the first subplot - always show all three categories
             if var_idx == 0 and side_idx == 0:
                 if data is not None:
-                    ax.legend(loc='upper left', fontsize=9)
+                    # Ensure all three legend categories are always present
+                    from matplotlib.lines import Line2D
+                    legend_elements = [
+                        Line2D([0], [0], color='gray', linewidth=2, alpha=0.7, label='Valid Steps'),
+                        Line2D([0], [0], color='red', linewidth=2, alpha=0.8, label='Local Violation'), 
+                        Line2D([0], [0], color='hotpink', linewidth=2, alpha=0.6, label='Other Violation')
+                    ]
+                    ax.legend(handles=legend_elements, loc='upper left', fontsize=9)
                 else:
                     ax.legend(loc='upper left', fontsize=9)
     
@@ -377,148 +389,3 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
     
     return filepath
 
-
-def main():
-    """Main function to generate unified filters by phase plots."""
-    
-    parser = argparse.ArgumentParser(
-        description='Generate unified filters by phase validation plots for kinematic or kinetic data'
-    )
-    parser.add_argument(
-        '--mode',
-        type=str,
-        choices=['kinematic', 'kinetic', 'both'],
-        default='kinematic',
-        help='Type of validation plots to generate (default: kinematic)'
-    )
-    # Hard-coded output directory for validation images
-    validation_output_dir = 'docs/standard_spec/validation'
-    parser.add_argument(
-        '--kinematic-file',
-        type=str,
-        default='docs/standard_spec/validation_expectations_kinematic.md',
-        help='Path to validation_expectations_kinematic.md file'
-    )
-    parser.add_argument(
-        '--kinetic-file',
-        type=str,
-        default='docs/standard_spec/validation_expectations_kinetic.md',
-        help='Path to validation_expectations_kinetic.md file'
-    )
-    parser.add_argument(
-        '--tasks',
-        type=str,
-        nargs='*',
-        help='Specific tasks to generate plots for (default: all tasks)'
-    )
-    
-    args = parser.parse_args()
-    
-    generated_files = []
-    
-    # Process kinematic plots
-    if args.mode in ['kinematic', 'both']:
-        # Find the kinematic validation expectations file
-        if os.path.exists(args.kinematic_file):
-            kinematic_file = args.kinematic_file
-        else:
-            # Try from project root
-            project_root = Path(__file__).parent.parent.parent
-            kinematic_file = project_root / args.kinematic_file
-            if not kinematic_file.exists():
-                print(f"Error: Could not find kinematic validation file at {args.kinematic_file}")
-                return 1
-        
-        print(f"Parsing kinematic validation expectations from: {kinematic_file}")
-        
-        # Parse the kinematic validation expectations
-        try:
-            kinematic_data = parse_kinematic_validation_expectations(str(kinematic_file))
-            print(f"Successfully parsed kinematic data for {len(kinematic_data)} tasks")
-            
-        except Exception as e:
-            print(f"Error parsing kinematic validation file: {e}")
-            return 1
-        
-        # Determine which tasks to process for kinematic
-        if args.tasks:
-            tasks_to_process = [task for task in args.tasks if task in kinematic_data]
-            if not tasks_to_process:
-                print(f"Error: None of the specified tasks found in kinematic validation data")
-                return 1
-        else:
-            tasks_to_process = list(kinematic_data.keys())
-        
-        # Generate kinematic plots for each task
-        print(f"\nGenerating kinematic filters by phase plots to: {validation_output_dir}")
-        
-        for task_name in tasks_to_process:
-            try:
-                filepath = create_filters_by_phase_plot(kinematic_data, task_name, validation_output_dir, 'kinematic')
-                generated_files.append(filepath)
-                print(f"  - Generated: {filepath}")
-                
-            except Exception as e:
-                print(f"Error generating kinematic plot for {task_name}: {e}")
-                continue
-    
-    # Process kinetic plots
-    if args.mode in ['kinetic', 'both']:
-        # Find the kinetic validation expectations file
-        if os.path.exists(args.kinetic_file):
-            kinetic_file = args.kinetic_file
-        else:
-            # Try from project root
-            project_root = Path(__file__).parent.parent.parent
-            kinetic_file = project_root / args.kinetic_file
-            if not kinetic_file.exists():
-                print(f"Error: Could not find kinetic validation file at {args.kinetic_file}")
-                return 1
-        
-        print(f"Parsing kinetic validation expectations from: {kinetic_file}")
-        
-        # Parse the kinetic validation expectations
-        try:
-            kinetic_data = parse_kinetic_validation_expectations(str(kinetic_file))
-            print(f"Successfully parsed kinetic data for {len(kinetic_data)} tasks")
-            
-        except Exception as e:
-            print(f"Error parsing kinetic validation file: {e}")
-            return 1
-        
-        # Determine which tasks to process for kinetic
-        if args.tasks:
-            tasks_to_process = [task for task in args.tasks if task in kinetic_data]
-            if not tasks_to_process:
-                print(f"Error: None of the specified tasks found in kinetic validation data")
-                return 1
-        else:
-            tasks_to_process = list(kinetic_data.keys())
-        
-        # Generate kinetic plots for each task
-        print(f"\nGenerating kinetic filters by phase plots to: {validation_output_dir}")
-        
-        for task_name in tasks_to_process:
-            try:
-                # Apply contralateral offset if needed
-                task_data_with_offset = apply_contralateral_offset_kinetic(kinetic_data[task_name], task_name)
-                kinetic_data[task_name] = task_data_with_offset
-                
-                filepath = create_filters_by_phase_plot(kinetic_data, task_name, validation_output_dir, 'kinetic')
-                generated_files.append(filepath)
-                print(f"  - Generated: {filepath}")
-                
-            except Exception as e:
-                print(f"Error generating kinetic plot for {task_name}: {e}")
-                continue
-    
-    print(f"\n✅ Successfully generated {len(generated_files)} filters by phase plots!")
-    print("\nGenerated files:")
-    for filepath in generated_files:
-        print(f"  - {filepath}")
-    
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

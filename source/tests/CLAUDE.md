@@ -20,10 +20,25 @@ source/tests/
 └── spec_compliance*.py        # Specification compliance testing
 ```
 
+## File Creation Requirements
+**CRITICAL**: All file creation in the tests directory requires explicit user permission.
+
+**Before creating ANY new file:**
+1. **Ask for permission**: "May I create a new test file: `test_{module_name}.py`?"
+2. **Explain intent**: Clearly state what the file will test and why it's needed
+3. **Wait for approval**: Do not proceed without explicit user consent
+
+**Required documentation for new test files:**
+- Creation date with permission statement
+- Comprehensive intent description
+- Clear explanation of what functionality is being tested
+- Usage examples and integration patterns
+
 ## Testing Conventions
 
 ### 1. Test File Naming (`test_{module}.py`)
 **Purpose**: Comprehensive test suites for individual modules using pytest framework
+**Permission Required**: YES - Must ask user before creating
 
 **Naming Pattern**: `test_{module_name}.py`
 - `test_step_classifier.py` - Tests for `validation/step_classifier.py`
@@ -77,6 +92,7 @@ except ImportError:
 
 ### 2. Demo File Naming (`demo_{module}.py`)
 **Purpose**: Interactive demonstrations showing real-world usage with visual outputs
+**Permission Required**: YES - Must ask user before creating
 
 **Naming Pattern**: `demo_{module_name}.py`
 - `demo_step_classifier.py` - Demonstration of step classification functionality
