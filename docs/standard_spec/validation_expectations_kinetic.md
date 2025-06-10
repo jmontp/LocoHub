@@ -376,6 +376,438 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 
 ![Run Kinetic Filters by Phase](validation/run_kinetic_filters_by_phase.png)
 
+### Task: decline_walking
+
+**Phase-Specific Range Validation (Ipsilateral Leg Only):**
+
+#### Phase 0% (Heel Strike)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 6.0 | 10.0 | N/kg | Controlled impact on decline (0.6-1.0 BW) - **Literature-based** |
+| ap_grf_N_kg | -1.0 | 2.0 | N/kg | Forward momentum control - **Literature-based** |
+| ml_grf_N_kg | -1.0 | 1.0 | N/kg | Lateral balance on decline - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -0.3 | 0.2 | Nm/kg | Small hip moment at decline heel strike - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.4 | 0.1 | Nm/kg | Knee control for eccentric loading - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -0.2 | 0.2 | Nm/kg | Ankle control at contact - **Literature estimate** |
+| cop_x_m | -0.08 | -0.03 | m | COP posterior at decline heel strike - **Literature estimate** |
+| cop_y_m | -0.03 | 0.03 | m | COP near foot center - **Literature estimate** |
+
+#### Phase 25% (Mid-Stance)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 7.0 | 11.0 | N/kg | Single limb support control - **Literature-based** |
+| ap_grf_N_kg | 0.0 | 4.0 | N/kg | Forward progression control - **Literature-based** |
+| ml_grf_N_kg | -0.8 | 0.8 | N/kg | Lateral stability - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -0.8 | -0.1 | Nm/kg | Hip extension for control - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -1.0 | 0.2 | Nm/kg | Enhanced knee extensor for eccentric control - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | 0.0 | 1.0 | Nm/kg | Controlled dorsiflexor moment - **Literature estimate** |
+| cop_x_m | -0.03 | 0.05 | m | COP progression during decline stance - **Literature estimate** |
+| cop_y_m | -0.02 | 0.02 | m | COP stable near center - **Literature estimate** |
+
+#### Phase 50% (Toe-Off)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 8.0 | 13.0 | N/kg | Controlled push-off forces - **Literature-based** |
+| ap_grf_N_kg | 2.0 | 5.0 | N/kg | Forward propulsion control - **Literature-based** |
+| ml_grf_N_kg | -1.2 | 1.2 | N/kg | Weight transfer - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | 0.1 | 0.8 | Nm/kg | Hip flexor moment for forward progression - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.6 | -0.1 | Nm/kg | Knee extensor for controlled push-off - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -3.0 | -1.0 | Nm/kg | Plantarflexor moment for propulsion - **Literature estimate** |
+| cop_x_m | 0.03 | 0.12 | m | COP anterior during decline push-off - **Literature estimate** |
+| cop_y_m | -0.03 | 0.03 | m | COP near foot center - **Literature estimate** |
+
+#### Phase 75% (Mid-Swing)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 0 | 1.0 | N/kg | Minimal swing forces - **Literature-based** |
+| ap_grf_N_kg | -0.3 | 0.3 | N/kg | Minimal swing forces - **Literature-based** |
+| ml_grf_N_kg | -0.2 | 0.2 | N/kg | Minimal swing forces - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -0.2 | 0.3 | Nm/kg | Hip swing moment - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.2 | 0.4 | Nm/kg | Knee swing moment - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -0.1 | 0.1 | Nm/kg | Ankle swing moment - **Literature estimate** |
+| cop_x_m | -0.20 | 0.20 | m | COP undefined during swing - **Literature estimate** |
+| cop_y_m | -0.20 | 0.20 | m | COP undefined during swing - **Literature estimate** |
+
+#### Phase 100% (Heel Strike - Cycle Complete)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 6.0 | 10.0 | N/kg | Return to controlled decline impact (same as 0%) |
+| ap_grf_N_kg | -1.0 | 2.0 | N/kg | Return to forward momentum control (same as 0%) |
+| ml_grf_N_kg | -1.0 | 1.0 | N/kg | Return to lateral balance (same as 0%) |
+| hip_moment_ipsi_Nm_kg | -0.3 | 0.2 | Nm/kg | Return to small hip moment (same as 0%) |
+| knee_moment_ipsi_Nm_kg | -0.4 | 0.1 | Nm/kg | Return to knee control (same as 0%) |
+| ankle_moment_ipsi_Nm_kg | -0.2 | 0.2 | Nm/kg | Return to ankle control at contact (same as 0%) |
+| cop_x_m | -0.08 | -0.03 | m | Return to COP posterior position (same as 0%) |
+| cop_y_m | -0.03 | 0.03 | m | Return to COP near center (same as 0%) |
+
+**Contralateral Offset Logic:**
+- **Phase 0% ipsilateral** (heel strike) = **Phase 50% contralateral** (toe-off)
+- **Phase 25% ipsilateral** (mid-stance) = **Phase 75% contralateral** (mid-swing)  
+- **Phase 50% ipsilateral** (toe-off) = **Phase 0% contralateral** (heel strike)
+- **Phase 75% ipsilateral** (mid-swing) = **Phase 25% contralateral** (mid-stance)
+
+**Kinetic Filters by Phase Validation:**
+
+![Decline Walking Kinetic Filters by Phase](validation/decline_walking_kinetic_filters_by_phase.png)
+
+### Task: up_stairs
+
+**Phase-Specific Range Validation (Ipsilateral Leg Only):**
+
+#### Phase 0% (Step Contact)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 8.0 | 18.0 | N/kg | High vertical forces for step lifting (0.8-1.8 BW) - **Literature-based** |
+| ap_grf_N_kg | -5.0 | 0.0 | N/kg | Strong braking for control - **Literature-based** |
+| ml_grf_N_kg | -2.0 | 2.0 | N/kg | Balance on step - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -0.2 | 0.5 | Nm/kg | Hip moment for step approach - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.4 | 0.3 | Nm/kg | Knee control for step loading - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -0.3 | 0.4 | Nm/kg | Ankle control at step contact - **Literature estimate** |
+| cop_x_m | -0.12 | -0.05 | m | COP posterior at step contact - **Literature estimate** |
+| cop_y_m | -0.04 | 0.04 | m | COP variable on step - **Literature estimate** |
+
+#### Phase 25% (Loading)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 10.0 | 20.0 | N/kg | Peak vertical lifting forces (1.0-2.0 BW) - **Literature-based** |
+| ap_grf_N_kg | -4.0 | 1.0 | N/kg | Transition to propulsion - **Literature-based** |
+| ml_grf_N_kg | -1.5 | 1.5 | N/kg | Lateral balance - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -1.8 | -0.4 | Nm/kg | Strong hip extension for lifting (peak ~1.5 Nm/kg) - **Literature-based** |
+| knee_moment_ipsi_Nm_kg | -2.0 | 0.2 | Nm/kg | Enhanced knee extensor for vertical lift (~1.8 Nm/kg) - **Literature-based** |
+| ankle_moment_ipsi_Nm_kg | 0.8 | 2.5 | Nm/kg | Enhanced dorsiflexor moment for control - **Literature estimate** |
+| cop_x_m | -0.08 | 0.05 | m | COP progression during loading - **Literature estimate** |
+| cop_y_m | -0.03 | 0.03 | m | COP stable on step - **Literature estimate** |
+
+#### Phase 50% (Toe-Off)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 12.0 | 22.0 | N/kg | Maximum lifting forces (1.2-2.2 BW) - **Literature-based** |
+| ap_grf_N_kg | -2.0 | 2.0 | N/kg | Balanced horizontal forces - **Literature-based** |
+| ml_grf_N_kg | -1.8 | 1.8 | N/kg | Dynamic balance during lift - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | 0.2 | 1.8 | Nm/kg | Hip flexor moment for vertical lift (peak ~1.5 Nm/kg) - **Literature-based** |
+| knee_moment_ipsi_Nm_kg | -2.5 | -0.3 | Nm/kg | Peak knee extensor for stair push-off (~2.0 Nm/kg) - **Literature-based** |
+| ankle_moment_ipsi_Nm_kg | -3.5 | -1.2 | Nm/kg | Strong plantarflexor for vertical propulsion - **Literature estimate** |
+| cop_x_m | 0.02 | 0.15 | m | COP anterior during step push-off - **Literature estimate** |
+| cop_y_m | -0.04 | 0.04 | m | COP variable during lift - **Literature estimate** |
+
+#### Phase 75% (Mid-Swing)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 0 | 3.0 | N/kg | Minimal forces during swing - **Literature-based** |
+| ap_grf_N_kg | -0.6 | 0.6 | N/kg | Minimal swing forces - **Literature-based** |
+| ml_grf_N_kg | -0.4 | 0.4 | N/kg | Minimal swing forces - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -0.6 | 0.6 | Nm/kg | Hip swing moment for clearance - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.4 | 0.5 | Nm/kg | Knee swing moment for clearance - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -0.2 | 0.3 | Nm/kg | Ankle swing moment - **Literature estimate** |
+| cop_x_m | -0.25 | 0.25 | m | COP undefined during swing - **Literature estimate** |
+| cop_y_m | -0.25 | 0.25 | m | COP undefined during swing - **Literature estimate** |
+
+#### Phase 100% (Step Contact - Cycle Complete)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 8.0 | 18.0 | N/kg | Return to high step forces (same as 0%) |
+| ap_grf_N_kg | -5.0 | 0.0 | N/kg | Return to strong braking (same as 0%) |
+| ml_grf_N_kg | -2.0 | 2.0 | N/kg | Return to step balance (same as 0%) |
+| hip_moment_ipsi_Nm_kg | -0.2 | 0.5 | Nm/kg | Return to hip step approach (same as 0%) |
+| knee_moment_ipsi_Nm_kg | -0.4 | 0.3 | Nm/kg | Return to knee control (same as 0%) |
+| ankle_moment_ipsi_Nm_kg | -0.3 | 0.4 | Nm/kg | Return to ankle control (same as 0%) |
+| cop_x_m | -0.12 | -0.05 | m | Return to COP posterior (same as 0%) |
+| cop_y_m | -0.04 | 0.04 | m | Return to COP variable (same as 0%) |
+
+**Contralateral Offset Logic:**
+- **Phase 0% ipsilateral** (step contact) = **Phase 50% contralateral** (toe-off)
+- **Phase 25% ipsilateral** (loading) = **Phase 75% contralateral** (mid-swing)  
+- **Phase 50% ipsilateral** (toe-off) = **Phase 0% contralateral** (step contact)
+- **Phase 75% ipsilateral** (mid-swing) = **Phase 25% contralateral** (loading)
+
+**Kinetic Filters by Phase Validation:**
+
+![Up Stairs Kinetic Filters by Phase](validation/up_stairs_kinetic_filters_by_phase.png)
+
+### Task: down_stairs
+
+**Phase-Specific Range Validation (Ipsilateral Leg Only):**
+
+#### Phase 0% (Step Contact)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 10.0 | 22.0 | N/kg | High impact absorption (1.0-2.2 BW) - **Literature-based** |
+| ap_grf_N_kg | -1.0 | 4.0 | N/kg | Forward momentum control - **Literature-based** |
+| ml_grf_N_kg | -1.5 | 1.5 | N/kg | Lateral balance - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Hip control for descent - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.5 | 0.4 | Nm/kg | Knee control for impact absorption - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Ankle control at descent contact - **Literature estimate** |
+| cop_x_m | -0.10 | -0.02 | m | COP posterior at step contact - **Literature estimate** |
+| cop_y_m | -0.04 | 0.04 | m | COP variable on step - **Literature estimate** |
+
+#### Phase 25% (Loading)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 12.0 | 25.0 | N/kg | Peak eccentric loading (1.2-2.5 BW) - **Literature-based** |
+| ap_grf_N_kg | 1.0 | 6.0 | N/kg | Forward progression - **Literature-based** |
+| ml_grf_N_kg | -1.2 | 1.2 | N/kg | Lateral control - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -1.0 | 0.3 | Nm/kg | Hip extensor for eccentric control (peak ~0.8 Nm/kg) - **Literature-based** |
+| knee_moment_ipsi_Nm_kg | -2.5 | 0.2 | Nm/kg | Peak knee extensor for eccentric loading (~2.0 Nm/kg) - **Literature-based** |
+| ankle_moment_ipsi_Nm_kg | 0.0 | 1.5 | Nm/kg | Controlled dorsiflexor moment - **Literature estimate** |
+| cop_x_m | -0.05 | 0.08 | m | COP progression during loading - **Literature estimate** |
+| cop_y_m | -0.03 | 0.03 | m | COP stable on step - **Literature estimate** |
+
+#### Phase 50% (Toe-Off)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 8.0 | 18.0 | N/kg | Controlled push-off (0.8-1.8 BW) - **Literature-based** |
+| ap_grf_N_kg | 2.0 | 6.0 | N/kg | Forward propulsion - **Literature-based** |
+| ml_grf_N_kg | -1.4 | 1.4 | N/kg | Weight transfer - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | 0.1 | 1.2 | Nm/kg | Hip flexor for forward progression - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -1.5 | -0.2 | Nm/kg | Controlled knee extensor for push-off - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -2.8 | -1.0 | Nm/kg | Plantarflexor for controlled propulsion - **Literature estimate** |
+| cop_x_m | 0.05 | 0.18 | m | COP anterior during step push-off - **Literature estimate** |
+| cop_y_m | -0.04 | 0.04 | m | COP variable during transfer - **Literature estimate** |
+
+#### Phase 75% (Mid-Swing)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 0 | 2.5 | N/kg | Minimal swing forces - **Literature-based** |
+| ap_grf_N_kg | -0.5 | 0.5 | N/kg | Minimal swing forces - **Literature-based** |
+| ml_grf_N_kg | -0.3 | 0.3 | N/kg | Minimal swing forces - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -0.4 | 0.4 | Nm/kg | Hip swing moment - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.3 | 0.4 | Nm/kg | Knee swing moment - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -0.2 | 0.2 | Nm/kg | Ankle swing moment - **Literature estimate** |
+| cop_x_m | -0.25 | 0.25 | m | COP undefined during swing - **Literature estimate** |
+| cop_y_m | -0.25 | 0.25 | m | COP undefined during swing - **Literature estimate** |
+
+#### Phase 100% (Step Contact - Cycle Complete)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 10.0 | 22.0 | N/kg | Return to high impact absorption (same as 0%) |
+| ap_grf_N_kg | -1.0 | 4.0 | N/kg | Return to forward momentum control (same as 0%) |
+| ml_grf_N_kg | -1.5 | 1.5 | N/kg | Return to lateral balance (same as 0%) |
+| hip_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Return to hip control (same as 0%) |
+| knee_moment_ipsi_Nm_kg | -0.5 | 0.4 | Nm/kg | Return to knee control (same as 0%) |
+| ankle_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Return to ankle control (same as 0%) |
+| cop_x_m | -0.10 | -0.02 | m | Return to COP posterior (same as 0%) |
+| cop_y_m | -0.04 | 0.04 | m | Return to COP variable (same as 0%) |
+
+**Contralateral Offset Logic:**
+- **Phase 0% ipsilateral** (step contact) = **Phase 50% contralateral** (toe-off)
+- **Phase 25% ipsilateral** (loading) = **Phase 75% contralateral** (mid-swing)  
+- **Phase 50% ipsilateral** (toe-off) = **Phase 0% contralateral** (step contact)
+- **Phase 75% ipsilateral** (mid-swing) = **Phase 25% contralateral** (loading)
+
+**Kinetic Filters by Phase Validation:**
+
+![Down Stairs Kinetic Filters by Phase](validation/down_stairs_kinetic_filters_by_phase.png)
+
+### Task: sit_to_stand
+
+**Phase-Specific Range Validation (Bilateral Movement - Both Legs):**
+
+#### Phase 0% (Seated)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 4.0 | 8.0 | N/kg | Initial weight bearing (0.4-0.8 BW) - **Literature-based** |
+| ap_grf_N_kg | -2.0 | 2.0 | N/kg | Balance adjustment - **Literature-based** |
+| ml_grf_N_kg | -1.5 | 1.5 | N/kg | Lateral balance - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -0.5 | 0.5 | Nm/kg | Initial hip moment - **Literature estimate** |
+| hip_moment_contra_Nm_kg | -0.5 | 0.5 | Nm/kg | Bilateral initial moment - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Initial knee moment - **Literature estimate** |
+| knee_moment_contra_Nm_kg | -0.3 | 0.3 | Nm/kg | Bilateral initial moment - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -0.2 | 0.4 | Nm/kg | Ankle preparation - **Literature estimate** |
+| ankle_moment_contra_Nm_kg | -0.2 | 0.4 | Nm/kg | Bilateral preparation - **Literature estimate** |
+| cop_x_m | -0.15 | 0.05 | m | COP posterior when seated - **Literature estimate** |
+| cop_y_m | -0.08 | 0.08 | m | COP variable for balance - **Literature estimate** |
+
+#### Phase 25% (Initiation)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 6.0 | 10.0 | N/kg | Increasing weight transfer (0.6-1.0 BW) - **Literature-based** |
+| ap_grf_N_kg | -2.5 | 2.5 | N/kg | Forward momentum development - **Literature-based** |
+| ml_grf_N_kg | -1.8 | 1.8 | N/kg | Balance control - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -1.5 | 0.5 | Nm/kg | Hip extension initiation (peak ~1.2 Nm/kg) - **Literature estimate** |
+| hip_moment_contra_Nm_kg | -1.5 | 0.5 | Nm/kg | Bilateral hip extension - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -1.2 | 0.3 | Nm/kg | Knee extension initiation (peak ~1.0 Nm/kg) - **Literature estimate** |
+| knee_moment_contra_Nm_kg | -1.2 | 0.3 | Nm/kg | Bilateral knee extension - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -0.1 | 0.8 | Nm/kg | Ankle adjustment - **Literature estimate** |
+| ankle_moment_contra_Nm_kg | -0.1 | 0.8 | Nm/kg | Bilateral adjustment - **Literature estimate** |
+| cop_x_m | -0.10 | 0.10 | m | COP forward shift - **Literature estimate** |
+| cop_y_m | -0.06 | 0.06 | m | COP balance control - **Literature estimate** |
+
+#### Phase 50% (Mid-Rise)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 8.0 | 12.0 | N/kg | Peak vertical forces (0.8-1.2 BW) - **Literature-based** |
+| ap_grf_N_kg | -3.0 | 3.0 | N/kg | Balance maintenance - **Literature-based** |
+| ml_grf_N_kg | -2.0 | 2.0 | N/kg | Dynamic balance - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -2.0 | -0.2 | Nm/kg | Peak hip extension moment (~1.5 Nm/kg) - **Literature estimate** |
+| hip_moment_contra_Nm_kg | -2.0 | -0.2 | Nm/kg | Bilateral peak extension - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -1.8 | 0.1 | Nm/kg | Peak knee extension moment (~1.4 Nm/kg) - **Literature estimate** |
+| knee_moment_contra_Nm_kg | -1.8 | 0.1 | Nm/kg | Bilateral peak extension - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -0.3 | 1.2 | Nm/kg | Ankle stabilization - **Literature estimate** |
+| ankle_moment_contra_Nm_kg | -0.3 | 1.2 | Nm/kg | Bilateral stabilization - **Literature estimate** |
+| cop_x_m | -0.08 | 0.15 | m | COP forward progression - **Literature estimate** |
+| cop_y_m | -0.05 | 0.05 | m | COP centered - **Literature estimate** |
+
+#### Phase 75% (Standing)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 6.0 | 10.0 | N/kg | Standing weight bearing (0.6-1.0 BW) - **Literature-based** |
+| ap_grf_N_kg | -2.0 | 2.0 | N/kg | Final balance adjustment - **Literature-based** |
+| ml_grf_N_kg | -1.5 | 1.5 | N/kg | Standing balance - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -0.8 | 0.3 | Nm/kg | Standing hip position - **Literature estimate** |
+| hip_moment_contra_Nm_kg | -0.8 | 0.3 | Nm/kg | Bilateral standing position - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.5 | 0.2 | Nm/kg | Standing knee position - **Literature estimate** |
+| knee_moment_contra_Nm_kg | -0.5 | 0.2 | Nm/kg | Bilateral standing position - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -0.2 | 0.6 | Nm/kg | Standing ankle balance - **Literature estimate** |
+| ankle_moment_contra_Nm_kg | -0.2 | 0.6 | Nm/kg | Bilateral standing balance - **Literature estimate** |
+| cop_x_m | -0.05 | 0.10 | m | Standing COP position - **Literature estimate** |
+| cop_y_m | -0.04 | 0.04 | m | Standing balance - **Literature estimate** |
+
+**Note:** Sit-to-stand is a bilateral symmetric movement, so both legs maintain similar kinetic patterns throughout all phases.
+
+**Kinetic Filters by Phase Validation:**
+
+![Sit To Stand Kinetic Filters by Phase](validation/sit_to_stand_kinetic_filters_by_phase.png)
+
+### Task: jump
+
+**Phase-Specific Range Validation (Bilateral Movement - Both Legs):**
+
+#### Phase 0% (Initial)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 6.0 | 12.0 | N/kg | Initial body weight (0.6-1.2 BW) - **Literature-based** |
+| ap_grf_N_kg | -3.0 | 3.0 | N/kg | Balance preparation - **Literature-based** |
+| ml_grf_N_kg | -2.0 | 2.0 | N/kg | Lateral balance - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -0.5 | 0.5 | Nm/kg | Initial hip position - **Literature estimate** |
+| hip_moment_contra_Nm_kg | -0.5 | 0.5 | Nm/kg | Bilateral initial position - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Initial knee position - **Literature estimate** |
+| knee_moment_contra_Nm_kg | -0.3 | 0.3 | Nm/kg | Bilateral initial position - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Initial ankle position - **Literature estimate** |
+| ankle_moment_contra_Nm_kg | -0.3 | 0.3 | Nm/kg | Bilateral initial position - **Literature estimate** |
+| cop_x_m | -0.10 | 0.10 | m | COP centered - **Literature estimate** |
+| cop_y_m | -0.08 | 0.08 | m | COP balance - **Literature estimate** |
+
+#### Phase 25% (Countermovement)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 2.0 | 8.0 | N/kg | Reduced loading during descent (0.2-0.8 BW) - **Literature-based** |
+| ap_grf_N_kg | -4.0 | 4.0 | N/kg | Dynamic balance - **Literature-based** |
+| ml_grf_N_kg | -2.5 | 2.5 | N/kg | Balance during descent - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -1.8 | 0.5 | Nm/kg | Hip flexor moment for countermovement - **Literature estimate** |
+| hip_moment_contra_Nm_kg | -1.8 | 0.5 | Nm/kg | Bilateral countermovement - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -2.5 | 0.3 | Nm/kg | Knee flexor moment for descent (peak ~2.0 Nm/kg) - **Literature estimate** |
+| knee_moment_contra_Nm_kg | -2.5 | 0.3 | Nm/kg | Bilateral descent moment - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | 0.1 | 1.5 | Nm/kg | Ankle dorsiflexor for preparation - **Literature estimate** |
+| ankle_moment_contra_Nm_kg | 0.1 | 1.5 | Nm/kg | Bilateral preparation - **Literature estimate** |
+| cop_x_m | -0.15 | 0.15 | m | COP dynamic during descent - **Literature estimate** |
+| cop_y_m | -0.12 | 0.12 | m | COP balance during descent - **Literature estimate** |
+
+#### Phase 50% (Takeoff)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 15.0 | 40.0 | N/kg | Peak takeoff forces (1.5-4.0 BW) - **Literature-based** |
+| ap_grf_N_kg | -5.0 | 5.0 | N/kg | Direction-dependent forces - **Literature-based** |
+| ml_grf_N_kg | -3.0 | 3.0 | N/kg | Dynamic balance forces - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | 0.5 | 3.5 | Nm/kg | Strong hip extension for takeoff (peak ~3.0 Nm/kg) - **Literature estimate** |
+| hip_moment_contra_Nm_kg | 0.5 | 3.5 | Nm/kg | Bilateral explosion - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -4.5 | -0.5 | Nm/kg | Peak knee extension moment (~3.5 Nm/kg) - **Literature estimate** |
+| knee_moment_contra_Nm_kg | -4.5 | -0.5 | Nm/kg | Bilateral peak extension - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -5.0 | -1.5 | Nm/kg | Peak plantarflexor moment (~4.0 Nm/kg) - **Literature estimate** |
+| ankle_moment_contra_Nm_kg | -5.0 | -1.5 | Nm/kg | Bilateral peak plantarflexion - **Literature estimate** |
+| cop_x_m | -0.12 | 0.12 | m | COP during explosive takeoff - **Literature estimate** |
+| cop_y_m | -0.10 | 0.10 | m | COP explosive balance - **Literature estimate** |
+
+#### Phase 75% (Flight)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 0 | 1.0 | N/kg | Minimal flight forces - **Literature-based** |
+| ap_grf_N_kg | -0.5 | 0.5 | N/kg | Minimal flight forces - **Literature-based** |
+| ml_grf_N_kg | -0.3 | 0.3 | N/kg | Minimal flight forces - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -0.8 | 0.8 | Nm/kg | Hip flight moment - **Literature estimate** |
+| hip_moment_contra_Nm_kg | -0.8 | 0.8 | Nm/kg | Bilateral flight moment - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.6 | 0.6 | Nm/kg | Knee flight moment - **Literature estimate** |
+| knee_moment_contra_Nm_kg | -0.6 | 0.6 | Nm/kg | Bilateral flight moment - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -0.4 | 0.4 | Nm/kg | Ankle flight moment - **Literature estimate** |
+| ankle_moment_contra_Nm_kg | -0.4 | 0.4 | Nm/kg | Bilateral flight moment - **Literature estimate** |
+| cop_x_m | -0.30 | 0.30 | m | COP undefined during flight - **Literature estimate** |
+| cop_y_m | -0.30 | 0.30 | m | COP undefined during flight - **Literature estimate** |
+
+**Note:** Jumping is a bilateral symmetric movement, so both legs maintain similar kinetic patterns throughout all phases.
+
+**Kinetic Filters by Phase Validation:**
+
+![Jump Kinetic Filters by Phase](validation/jump_kinetic_filters_by_phase.png)
+
+### Task: squats
+
+**Phase-Specific Range Validation (Bilateral Movement - Both Legs):**
+
+#### Phase 0% (Standing)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 6.0 | 12.0 | N/kg | Initial body weight (0.6-1.2 BW) - **Literature-based** |
+| ap_grf_N_kg | -2.0 | 2.0 | N/kg | Balance maintenance - **Literature-based** |
+| ml_grf_N_kg | -1.5 | 1.5 | N/kg | Lateral balance - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -0.3 | 0.3 | Nm/kg | Initial hip position - **Literature estimate** |
+| hip_moment_contra_Nm_kg | -0.3 | 0.3 | Nm/kg | Bilateral initial position - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -0.2 | 0.2 | Nm/kg | Initial knee position - **Literature estimate** |
+| knee_moment_contra_Nm_kg | -0.2 | 0.2 | Nm/kg | Bilateral initial position - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -0.2 | 0.3 | Nm/kg | Initial ankle position - **Literature estimate** |
+| ankle_moment_contra_Nm_kg | -0.2 | 0.3 | Nm/kg | Bilateral initial position - **Literature estimate** |
+| cop_x_m | -0.08 | 0.08 | m | COP centered - **Literature estimate** |
+| cop_y_m | -0.06 | 0.06 | m | COP balance - **Literature estimate** |
+
+#### Phase 25% (Descent)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 4.0 | 10.0 | N/kg | Reduced loading during descent (0.4-1.0 BW) - **Literature-based** |
+| ap_grf_N_kg | -3.0 | 3.0 | N/kg | Balance control - **Literature-based** |
+| ml_grf_N_kg | -1.8 | 1.8 | N/kg | Lateral stability - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -2.5 | -0.3 | Nm/kg | Hip flexor moment for descent (peak ~2.0 Nm/kg) - **Literature estimate** |
+| hip_moment_contra_Nm_kg | -2.5 | -0.3 | Nm/kg | Bilateral descent moment - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -2.8 | 0.2 | Nm/kg | Knee flexor moment for control (peak ~2.3 Nm/kg) - **Literature estimate** |
+| knee_moment_contra_Nm_kg | -2.8 | 0.2 | Nm/kg | Bilateral control moment - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | 0.3 | 1.8 | Nm/kg | Ankle dorsiflexor for balance - **Literature estimate** |
+| ankle_moment_contra_Nm_kg | 0.3 | 1.8 | Nm/kg | Bilateral balance - **Literature estimate** |
+| cop_x_m | -0.12 | 0.12 | m | COP dynamic during descent - **Literature estimate** |
+| cop_y_m | -0.10 | 0.10 | m | COP balance control - **Literature estimate** |
+
+#### Phase 50% (Bottom)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 5.0 | 10.0 | N/kg | Bottom position loading (0.5-1.0 BW) - **Literature-based** |
+| ap_grf_N_kg | -3.5 | 3.5 | N/kg | Balance at depth - **Literature-based** |
+| ml_grf_N_kg | -2.0 | 2.0 | N/kg | Lateral balance at depth - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -3.0 | -0.5 | Nm/kg | Peak hip flexor moment (peak ~2.5 Nm/kg) - **Literature estimate** |
+| hip_moment_contra_Nm_kg | -3.0 | -0.5 | Nm/kg | Bilateral peak flexion - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -3.5 | 0.1 | Nm/kg | Peak knee flexor moment (peak ~3.0 Nm/kg) - **Literature estimate** |
+| knee_moment_contra_Nm_kg | -3.5 | 0.1 | Nm/kg | Bilateral peak flexion - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | 0.5 | 2.5 | Nm/kg | Peak dorsiflexor moment - **Literature estimate** |
+| ankle_moment_contra_Nm_kg | 0.5 | 2.5 | Nm/kg | Bilateral peak dorsiflexion - **Literature estimate** |
+| cop_x_m | -0.15 | 0.15 | m | COP at maximum depth - **Literature estimate** |
+| cop_y_m | -0.12 | 0.12 | m | COP balance at depth - **Literature estimate** |
+
+#### Phase 75% (Ascent)
+| Variable | Min_Value | Max_Value | Units | Notes |
+|----------|-----------|-----------|-------|-------|
+| vertical_grf_N_kg | 8.0 | 16.0 | N/kg | Ascent forces (0.8-1.6 BW) - **Literature-based** |
+| ap_grf_N_kg | -2.5 | 2.5 | N/kg | Balance during ascent - **Literature-based** |
+| ml_grf_N_kg | -1.8 | 1.8 | N/kg | Lateral control - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | 0.3 | 2.5 | Nm/kg | Hip extensor moment for ascent (peak ~2.0 Nm/kg) - **Literature estimate** |
+| hip_moment_contra_Nm_kg | 0.3 | 2.5 | Nm/kg | Bilateral ascent moment - **Literature estimate** |
+| knee_moment_ipsi_Nm_kg | -2.8 | -0.2 | Nm/kg | Knee extensor for ascent (peak ~2.3 Nm/kg) - **Literature estimate** |
+| knee_moment_contra_Nm_kg | -2.8 | -0.2 | Nm/kg | Bilateral ascent moment - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | 0.1 | 1.5 | Nm/kg | Ankle control during ascent - **Literature estimate** |
+| ankle_moment_contra_Nm_kg | 0.1 | 1.5 | Nm/kg | Bilateral control - **Literature estimate** |
+| cop_x_m | -0.10 | 0.10 | m | COP during ascent - **Literature estimate** |
+| cop_y_m | -0.08 | 0.08 | m | COP balance control - **Literature estimate** |
+
+**Note:** Squats are a bilateral symmetric movement, so both legs maintain similar kinetic patterns throughout all phases.
+
+**Kinetic Filters by Phase Validation:**
+
+![Squats Kinetic Filters by Phase](validation/squats_kinetic_filters_by_phase.png)
+
 ## Research Requirements
 
 ### Literature Sources Needed

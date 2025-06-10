@@ -577,12 +577,8 @@ def main():
         default='kinematic',
         help='Type of validation plots to generate (default: kinematic)'
     )
-    parser.add_argument(
-        '--output-dir', 
-        type=str, 
-        default='validation_images',
-        help='Output directory for validation plots (default: validation_images)'
-    )
+    # Hard-coded output directory for validation images
+    validation_output_dir = 'docs/standard_spec/validation'
     parser.add_argument(
         '--kinematic-file',
         type=str,
@@ -640,11 +636,11 @@ def main():
             tasks_to_process = list(kinematic_data.keys())
         
         # Generate kinematic plots for each task
-        print(f"\nGenerating kinematic filters by phase plots to: {args.output_dir}")
+        print(f"\nGenerating kinematic filters by phase plots to: {validation_output_dir}")
         
         for task_name in tasks_to_process:
             try:
-                filepath = create_filters_by_phase_plot(kinematic_data, task_name, args.output_dir, 'kinematic')
+                filepath = create_filters_by_phase_plot(kinematic_data, task_name, validation_output_dir, 'kinematic')
                 generated_files.append(filepath)
                 print(f"  - Generated: {filepath}")
                 
@@ -686,7 +682,7 @@ def main():
             tasks_to_process = list(kinetic_data.keys())
         
         # Generate kinetic plots for each task
-        print(f"\nGenerating kinetic filters by phase plots to: {args.output_dir}")
+        print(f"\nGenerating kinetic filters by phase plots to: {validation_output_dir}")
         
         for task_name in tasks_to_process:
             try:
@@ -694,7 +690,7 @@ def main():
                 task_data_with_offset = apply_contralateral_offset_kinetic(kinetic_data[task_name], task_name)
                 kinetic_data[task_name] = task_data_with_offset
                 
-                filepath = create_filters_by_phase_plot(kinetic_data, task_name, args.output_dir, 'kinetic')
+                filepath = create_filters_by_phase_plot(kinetic_data, task_name, validation_output_dir, 'kinetic')
                 generated_files.append(filepath)
                 print(f"  - Generated: {filepath}")
                 
