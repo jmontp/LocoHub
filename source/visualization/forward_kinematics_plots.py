@@ -223,20 +223,20 @@ class KinematicPoseGenerator:
         
         # Extract bilateral joint angles for min and max poses - Updated for ipsi/contra naming
         # Ipsilateral leg angles
-        ipsi_hip_min = joint_ranges.get('hip_flexion_angle_ipsi', {}).get('min', 0)
-        ipsi_hip_max = joint_ranges.get('hip_flexion_angle_ipsi', {}).get('max', 0.5)
-        ipsi_knee_min = joint_ranges.get('knee_flexion_angle_ipsi', {}).get('min', 0)
-        ipsi_knee_max = joint_ranges.get('knee_flexion_angle_ipsi', {}).get('max', 1.0)
-        ipsi_ankle_min = joint_ranges.get('ankle_flexion_angle_ipsi', {}).get('min', -0.2)
-        ipsi_ankle_max = joint_ranges.get('ankle_flexion_angle_ipsi', {}).get('max', 0.2)
+        ipsi_hip_min = joint_ranges['hip_flexion_angle_ipsi']['min']
+        ipsi_hip_max = joint_ranges['hip_flexion_angle_ipsi']['max']
+        ipsi_knee_min = joint_ranges['knee_flexion_angle_ipsi']['min']
+        ipsi_knee_max = joint_ranges['knee_flexion_angle_ipsi']['max']
+        ipsi_ankle_min = joint_ranges['ankle_flexion_angle_ipsi']['min']
+        ipsi_ankle_max = joint_ranges['ankle_flexion_angle_ipsi']['max']
         
         # Contralateral leg angles
-        contra_hip_min = joint_ranges.get('hip_flexion_angle_contra', {}).get('min', -0.2)
-        contra_hip_max = joint_ranges.get('hip_flexion_angle_contra', {}).get('max', 0.3)
-        contra_knee_min = joint_ranges.get('knee_flexion_angle_contra', {}).get('min', 0)
-        contra_knee_max = joint_ranges.get('knee_flexion_angle_contra', {}).get('max', 1.0)
-        contra_ankle_min = joint_ranges.get('ankle_flexion_angle_contra', {}).get('min', -0.2)
-        contra_ankle_max = joint_ranges.get('ankle_flexion_angle_contra', {}).get('max', 0.2)
+        contra_hip_min = joint_ranges['hip_flexion_angle_contra']['min']
+        contra_hip_max = joint_ranges['hip_flexion_angle_contra']['max']
+        contra_knee_min = joint_ranges['knee_flexion_angle_contra']['min']
+        contra_knee_max = joint_ranges['knee_flexion_angle_contra']['max']
+        contra_ankle_min = joint_ranges['ankle_flexion_angle_contra']['min']
+        contra_ankle_max = joint_ranges['ankle_flexion_angle_contra']['max']
         
         # Calculate average values for main pose
         ipsi_hip_avg = (ipsi_hip_min + ipsi_hip_max) / 2
@@ -409,42 +409,33 @@ class KinematicPoseGenerator:
         
         # Parse validation expectations if no ranges provided
         if validation_ranges is None:
-            try:
-                # Find the validation file
-                if os.path.exists(validation_file):
-                    validation_path = validation_file
+            # Find the validation file
+            if os.path.exists(validation_file):
+                validation_path = validation_file
+            else:
+                # Try from project root
+                project_root = Path(__file__).parent.parent.parent
+                validation_path = project_root / validation_file
+                if not validation_path.exists():
+                    raise ValueError(f"Could not find validation file at {validation_file}")
                 else:
-                    # Try from project root
-                    project_root = Path(__file__).parent.parent.parent
-                    validation_path = project_root / validation_file
-                    if not validation_path.exists():
-                        print(f"Warning: Could not find validation file at {validation_file}, using defaults")
-                        validation_ranges = self._get_default_task_ranges(task_name)
-                    else:
-                        validation_path = str(validation_path)
-                
-                if validation_ranges is None:
-                    print(f"Parsing validation expectations from: {validation_path}")
-                    all_validation_data = parse_kinematic_validation_expectations(validation_path)
-                    validation_ranges = all_validation_data.get(task_name, {})
-                    
-                    if not validation_ranges:
-                        print(f"Warning: No validation data found for task {task_name}, using defaults")
-                        validation_ranges = self._get_default_task_ranges(task_name)
-                    else:
-                        print(f"Successfully loaded validation data for {task_name}")
-                        
-            except Exception as e:
-                print(f"Error parsing validation file: {e}, using defaults")
-                validation_ranges = self._get_default_task_ranges(task_name)
+                    validation_path = str(validation_path)
+            
+            print(f"Parsing validation expectations from: {validation_path}")
+            all_validation_data = parse_kinematic_validation_expectations(validation_path)
+            if task_name not in all_validation_data:
+                raise ValueError(f"No validation data found for task {task_name} in validation file")
+            
+            validation_ranges = all_validation_data[task_name]
+            
+            print(f"Successfully loaded validation data for {task_name}")
         
         # Generate image for each phase point
         for phase_point in self.phase_points:
-            phase_ranges = validation_ranges.get(phase_point, {})
+            if phase_point not in validation_ranges:
+                raise ValueError(f"No validation data found for task {task_name} at phase {phase_point}%")
             
-            # Ensure we have some default ranges if data is missing
-            if not phase_ranges:
-                phase_ranges = self._get_default_phase_ranges(task_name, phase_point)
+            phase_ranges = validation_ranges[phase_point]
             
             filepath = self.generate_range_visualization(
                 task_name, phase_point, phase_ranges, output_dir
@@ -454,58 +445,6 @@ class KinematicPoseGenerator:
         
         return generated_files
     
-    def _get_default_task_ranges(self, task_name: str) -> Dict[float, Dict[str, Dict[str, float]]]:
-        """Get default ranges for a task if no data is available"""
-        
-        # Define task-specific default ranges based on typical biomechanics
-        task_defaults = {
-            'level_walking': {
-                0: {    # Heel strike
-                    'hip_flexion_angle': {'min': 0.1, 'max': 0.6},
-                    'knee_flexion_angle': {'min': 0.0, 'max': 0.3},
-                    'ankle_flexion_angle': {'min': -0.1, 'max': 0.1}
-                },
-                33: {   # Mid-stance
-                    'hip_flexion_angle': {'min': -0.1, 'max': 0.3},
-                    'knee_flexion_angle': {'min': 0.0, 'max': 0.4},
-                    'ankle_flexion_angle': {'min': -0.2, 'max': 0.1}
-                },
-                50: {   # Push-off
-                    'hip_flexion_angle': {'min': -0.3, 'max': 0.2},
-                    'knee_flexion_angle': {'min': 0.1, 'max': 0.5},
-                    'ankle_flexion_angle': {'min': -0.3, 'max': 0.0}
-                },
-                66: {   # Mid-swing
-                    'hip_flexion_angle': {'min': 0.2, 'max': 0.8},
-                    'knee_flexion_angle': {'min': 0.3, 'max': 1.2},
-                    'ankle_flexion_angle': {'min': -0.1, 'max': 0.3}
-                }
-            },
-            'incline_walking': {
-                0: {'hip_flexion_angle': {'min': 0.2, 'max': 0.8}, 'knee_flexion_angle': {'min': 0.0, 'max': 0.4}, 'ankle_flexion_angle': {'min': 0.0, 'max': 0.2}},
-                33: {'hip_flexion_angle': {'min': 0.0, 'max': 0.5}, 'knee_flexion_angle': {'min': 0.1, 'max': 0.6}, 'ankle_flexion_angle': {'min': -0.1, 'max': 0.2}},
-                50: {'hip_flexion_angle': {'min': -0.2, 'max': 0.3}, 'knee_flexion_angle': {'min': 0.2, 'max': 0.7}, 'ankle_flexion_angle': {'min': -0.2, 'max': 0.1}},
-                66: {'hip_flexion_angle': {'min': 0.3, 'max': 1.0}, 'knee_flexion_angle': {'min': 0.4, 'max': 1.4}, 'ankle_flexion_angle': {'min': 0.0, 'max': 0.4}}
-            },
-            'up_stairs': {
-                0: {'hip_flexion_angle': {'min': 0.3, 'max': 1.0}, 'knee_flexion_angle': {'min': 0.1, 'max': 0.6}, 'ankle_flexion_angle': {'min': 0.0, 'max': 0.3}},
-                33: {'hip_flexion_angle': {'min': 0.5, 'max': 1.2}, 'knee_flexion_angle': {'min': 0.3, 'max': 1.0}, 'ankle_flexion_angle': {'min': 0.1, 'max': 0.4}},
-                50: {'hip_flexion_angle': {'min': 0.6, 'max': 1.4}, 'knee_flexion_angle': {'min': 0.5, 'max': 1.4}, 'ankle_flexion_angle': {'min': 0.2, 'max': 0.5}},
-                66: {'hip_flexion_angle': {'min': 0.4, 'max': 1.1}, 'knee_flexion_angle': {'min': 0.7, 'max': 1.6}, 'ankle_flexion_angle': {'min': 0.3, 'max': 0.5}}
-            }
-        }
-        
-        return task_defaults.get(task_name, task_defaults['level_walking'])
-    
-    
-    def _get_default_phase_ranges(self, task_name: str, phase_point: float) -> Dict[str, Dict[str, float]]:
-        """Get default ranges for a specific phase point"""
-        defaults = self._get_default_task_ranges(task_name)
-        return defaults.get(phase_point, {
-            'hip_flexion_angle': {'min': 0.0, 'max': 0.5},
-            'knee_flexion_angle': {'min': 0.0, 'max': 1.0},
-            'ankle_flexion_angle': {'min': -0.2, 'max': 0.2}
-        })
 
 
 def main():
@@ -527,16 +466,12 @@ def main():
     # Load data if provided
     validation_ranges = None
     if args.data_file:
-        try:
-            data = pd.read_parquet(args.data_file)
-            print(f"Loaded data from {args.data_file}")
-            validation_ranges = generator.extract_phase_ranges_from_data(
-                data, args.task, generator.phase_points
-            )
-            print(f"Extracted ranges for {len(validation_ranges)} phase points")
-        except Exception as e:
-            print(f"Error loading data: {e}")
-            print("Using default ranges instead")
+        data = pd.read_parquet(args.data_file)
+        print(f"Loaded data from {args.data_file}")
+        validation_ranges = generator.extract_phase_ranges_from_data(
+            data, args.task, generator.phase_points
+        )
+        print(f"Extracted ranges for {len(validation_ranges)} phase points")
     
     # Generate validation images
     print(f"Generating validation images for task: {args.task}")
