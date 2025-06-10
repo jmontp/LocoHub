@@ -146,7 +146,7 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 - **Typical body weight**: ~70kg adult (9.8 m/s² × 70kg = 686N body weight = 9.8 N/kg)
 - **Walking GRF ranges**: 0.8-1.5 BW (8-15 N/kg) for vertical, ±0.3 BW (±3 N/kg) for horizontal
 - **Running GRF ranges**: 2.0-2.9 BW (20-28 N/kg) for vertical, higher horizontal forces
-- **Joint moment ranges**: Hip 1-3 Nm/kg, Knee 1-3 Nm/kg, Ankle 1-4 Nm/kg (peak values)
+- **Joint moment ranges**: Hip 0.8-1.1 Nm/kg, Knee 0.4-0.6 Nm/kg, Ankle 1.2-1.6 Nm/kg (peak values)
 
 ## Validation Tables - RESEARCH-BASED PRELIMINARY VALUES
 
@@ -176,7 +176,7 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | vertical_grf_N_kg | 9.0 | 11.0 | N/kg | Valley between peaks (0.9-1.1 BW) - **Research-based** |
 | ap_grf_N_kg | -1.0 | 1.0 | N/kg | Transition from braking to propulsion - **Research-based** |
 | ml_grf_N_kg | -0.5 | 0.5 | N/kg | Stable mediolateral forces - **Research-based** |
-| hip_moment_ipsi_Nm_kg | -1.2 | -0.2 | Nm/kg | Hip extension moment (peak ~0.9 Nm/kg) - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | -1.0 | -0.2 | Nm/kg | Hip extension moment (peak ~0.8 Nm/kg) - **Literature-based** |
 | knee_moment_ipsi_Nm_kg | -0.4 | 0.2 | Nm/kg | Knee extensor moment during loading - **Literature-based** |
 | ankle_moment_ipsi_Nm_kg | 0.5 | 1.5 | Nm/kg | Ankle dorsiflexor moment - **Literature estimate** |
 | cop_x_m | -0.05 | 0.05 | m | COP mid-foot during single limb support - **Literature estimate** |
@@ -188,9 +188,9 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | vertical_grf_N_kg | 10.0 | 15.0 | N/kg | Second peak (1.0-1.5 BW) - **Research-based** |
 | ap_grf_N_kg | 0.5 | 3.0 | N/kg | Peak propulsive forces - **Research-based** |
 | ml_grf_N_kg | -1.0 | 1.0 | N/kg | Weight transfer forces - **Research-based** |
-| hip_moment_ipsi_Nm_kg | 0.3 | 1.3 | Nm/kg | Hip flexor moment for propulsion (peak ~1.0 Nm/kg) - **Literature-based** |
-| knee_moment_ipsi_Nm_kg | -0.8 | -0.1 | Nm/kg | Knee extensor moment for push-off (peak ~0.5 Nm/kg) - **Literature-based** |
-| ankle_moment_ipsi_Nm_kg | -3.7 | -1.5 | Nm/kg | Peak plantarflexor moment (~-3.7) - **Literature-based** |
+| hip_moment_ipsi_Nm_kg | 0.3 | 1.1 | Nm/kg | Hip flexor moment for propulsion (peak ~0.9 Nm/kg) - **Literature-based** |
+| knee_moment_ipsi_Nm_kg | -0.6 | -0.1 | Nm/kg | Knee extensor moment for push-off (peak ~0.4 Nm/kg) - **Literature-based** |
+| ankle_moment_ipsi_Nm_kg | -1.6 | -1.2 | Nm/kg | Peak plantarflexor moment (~-1.4 Nm/kg) - **Literature-based** |
 | cop_x_m | 0.05 | 0.15 | m | COP anterior during push-off - **Literature estimate** |
 | cop_y_m | -0.03 | 0.03 | m | COP near foot center - **Literature estimate** |
 
@@ -264,7 +264,7 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | ml_grf_N_kg | -1.5 | 1.5 | N/kg | Weight transfer - **NEEDS RESEARCH** |
 | hip_moment_ipsi_Nm_kg | 0.2 | 1.5 | Nm/kg | Strong hip flexor moment for incline propulsion - **NEEDS RESEARCH** |
 | knee_moment_ipsi_Nm_kg | -1.2 | -0.2 | Nm/kg | Enhanced knee extensor moment for incline push-off - **NEEDS RESEARCH** |
-| ankle_moment_ipsi_Nm_kg | -3.0 | -1.5 | Nm/kg | Enhanced plantarflexor moment - **NEEDS RESEARCH** |
+| ankle_moment_ipsi_Nm_kg | -1.8 | -1.2 | Nm/kg | Enhanced plantarflexor moment - **Literature estimate** |
 | cop_x_m | 0.02 | 0.12 | m | COP anterior during incline push-off - **NEEDS RESEARCH** |
 | cop_y_m | -0.04 | 0.04 | m | COP near foot center - **NEEDS RESEARCH** |
 
@@ -338,7 +338,7 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | ml_grf_N_kg | -2.5 | 2.5 | N/kg | Dynamic lateral forces - **Research-based** |
 | hip_moment_ipsi_Nm_kg | 0.5 | 2.0 | Nm/kg | Strong hip flexor moment for running propulsion - **Literature estimate** |
 | knee_moment_ipsi_Nm_kg | -1.5 | -0.2 | Nm/kg | Enhanced knee extensor moment for running push-off - **Literature estimate** |
-| ankle_moment_ipsi_Nm_kg | -6.0 | -3.0 | Nm/kg | Peak plantarflexor moment (higher in running) - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -2.0 | -1.5 | Nm/kg | Peak plantarflexor moment (higher in running) - **Literature estimate** |
 | cop_x_m | 0.08 | 0.18 | m | COP far anterior during running push-off - **Literature estimate** |
 | cop_y_m | -0.05 | 0.05 | m | COP variable during push-off - **Literature estimate** |
 
@@ -412,7 +412,7 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | ml_grf_N_kg | -1.2 | 1.2 | N/kg | Weight transfer - **Literature-based** |
 | hip_moment_ipsi_Nm_kg | 0.1 | 0.8 | Nm/kg | Hip flexor moment for forward progression - **Literature estimate** |
 | knee_moment_ipsi_Nm_kg | -0.6 | -0.1 | Nm/kg | Knee extensor for controlled push-off - **Literature estimate** |
-| ankle_moment_ipsi_Nm_kg | -3.0 | -1.0 | Nm/kg | Plantarflexor moment for propulsion - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -1.8 | -1.0 | Nm/kg | Plantarflexor moment for propulsion - **Literature estimate** |
 | cop_x_m | 0.03 | 0.12 | m | COP anterior during decline push-off - **Literature estimate** |
 | cop_y_m | -0.03 | 0.03 | m | COP near foot center - **Literature estimate** |
 
@@ -486,7 +486,7 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | ml_grf_N_kg | -1.8 | 1.8 | N/kg | Dynamic balance during lift - **Literature-based** |
 | hip_moment_ipsi_Nm_kg | 0.2 | 1.8 | Nm/kg | Hip flexor moment for vertical lift (peak ~1.5 Nm/kg) - **Literature-based** |
 | knee_moment_ipsi_Nm_kg | -2.5 | -0.3 | Nm/kg | Peak knee extensor for stair push-off (~2.0 Nm/kg) - **Literature-based** |
-| ankle_moment_ipsi_Nm_kg | -3.5 | -1.2 | Nm/kg | Strong plantarflexor for vertical propulsion - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -1.8 | -1.0 | Nm/kg | Strong plantarflexor for vertical propulsion - **Literature estimate** |
 | cop_x_m | 0.02 | 0.15 | m | COP anterior during step push-off - **Literature estimate** |
 | cop_y_m | -0.04 | 0.04 | m | COP variable during lift - **Literature estimate** |
 
@@ -560,7 +560,7 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | ml_grf_N_kg | -1.4 | 1.4 | N/kg | Weight transfer - **Literature-based** |
 | hip_moment_ipsi_Nm_kg | 0.1 | 1.2 | Nm/kg | Hip flexor for forward progression - **Literature estimate** |
 | knee_moment_ipsi_Nm_kg | -1.5 | -0.2 | Nm/kg | Controlled knee extensor for push-off - **Literature estimate** |
-| ankle_moment_ipsi_Nm_kg | -2.8 | -1.0 | Nm/kg | Plantarflexor for controlled propulsion - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -1.6 | -0.8 | Nm/kg | Plantarflexor for controlled propulsion - **Literature estimate** |
 | cop_x_m | 0.05 | 0.18 | m | COP anterior during step push-off - **Literature estimate** |
 | cop_y_m | -0.04 | 0.04 | m | COP variable during transfer - **Literature estimate** |
 
@@ -712,7 +712,7 @@ Following the **OpenSim coordinate system** as defined in [sign_conventions.md](
 | hip_moment_contra_Nm_kg | 0.5 | 3.5 | Nm/kg | Bilateral explosion - **Literature estimate** |
 | knee_moment_ipsi_Nm_kg | -4.5 | -0.5 | Nm/kg | Peak knee extension moment (~3.5 Nm/kg) - **Literature estimate** |
 | knee_moment_contra_Nm_kg | -4.5 | -0.5 | Nm/kg | Bilateral peak extension - **Literature estimate** |
-| ankle_moment_ipsi_Nm_kg | -5.0 | -1.5 | Nm/kg | Peak plantarflexor moment (~4.0 Nm/kg) - **Literature estimate** |
+| ankle_moment_ipsi_Nm_kg | -2.2 | -1.8 | Nm/kg | Peak plantarflexor moment (~2.0 Nm/kg) - **Literature estimate** |
 | ankle_moment_contra_Nm_kg | -5.0 | -1.5 | Nm/kg | Bilateral peak plantarflexion - **Literature estimate** |
 | cop_x_m | -0.12 | 0.12 | m | COP during explosive takeoff - **Literature estimate** |
 | cop_y_m | -0.10 | 0.10 | m | COP explosive balance - **Literature estimate** |
