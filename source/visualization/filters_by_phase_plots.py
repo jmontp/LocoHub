@@ -35,7 +35,8 @@ from validation.validation_expectations_parser import (
     parse_kinematic_validation_expectations,
     parse_kinetic_validation_expectations,
     apply_contralateral_offset_kinematic,
-    apply_contralateral_offset_kinetic
+    apply_contralateral_offset_kinetic,
+    validate_task_completeness
 )
 
 
@@ -113,20 +114,23 @@ def classify_step_violations(data: np.ndarray, task_data: Dict, feature_map: Dic
             
             # Check this feature at each phase point
             for phase, phase_idx in zip(phases, phase_indices):
-                if phase in task_data and var_name in task_data[phase]:
-                    min_val = task_data[phase][var_name]['min']
-                    max_val = task_data[phase][var_name]['max']
+                if phase == 100:  # Skip 100% phase as it's computed from 0%
+                    continue
                     
-                    # Get data value at this phase
-                    data_val = data[step_idx, phase_idx, feature_idx]
+                # Data is guaranteed to exist due to validation
+                min_val = task_data[phase][var_name]['min']
+                max_val = task_data[phase][var_name]['max']
+                
+                # Get data value at this phase
+                data_val = data[step_idx, phase_idx, feature_idx]
+                
+                # Check if this value violates the range
+                if data_val < min_val or data_val > max_val:
+                    step_violates_global = True
                     
-                    # Check if this value violates the range
-                    if data_val < min_val or data_val > max_val:
-                        step_violates_global = True
-                        
-                        # Check if this is the current feature
-                        if feature_idx == current_feature_idx:
-                            step_violates_local = True
+                    # Check if this is the current feature
+                    if feature_idx == current_feature_idx:
+                        step_violates_local = True
         
         if step_violates_global:
             global_violating_steps.add(step_idx)
@@ -201,6 +205,9 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
         raise ValueError(f"Task {task_name} not found in validation data")
     
     task_data = validation_data[task_name]
+    
+    # Validate that task data is complete - fail explicitly if missing required data
+    validate_task_completeness(task_data, task_name, mode)
     phases = [0, 25, 50, 75, 100]  # Updated to include 100% for cyclical completion
     task_type = get_task_classification(task_name)
     
@@ -273,11 +280,14 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                 var_name = f'{var_type}_{side}_Nm_kg'
             
             for phase in phases:
-                if phase in task_data and var_name in task_data[phase]:
-                    min_val = task_data[phase][var_name]['min']
-                    max_val = task_data[phase][var_name]['max']
-                    all_mins.append(min_val)
-                    all_maxs.append(max_val)
+                if phase == 100:  # Skip 100% phase as it's computed from 0%
+                    continue
+                    
+                # Data is guaranteed to exist due to validation
+                min_val = task_data[phase][var_name]['min']
+                max_val = task_data[phase][var_name]['max']
+                all_mins.append(min_val)
+                all_maxs.append(max_val)
         
         if all_mins and all_maxs:
             # Add some padding to the range
@@ -304,52 +314,52 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
             valid_phases = []
             
             for phase in phases:
-                if phase in task_data and var_name in task_data[phase]:
+                # Data is guaranteed to exist due to validation (except 100% which is computed from 0%)
+                if phase in task_data:
                     min_val = task_data[phase][var_name]['min']
                     max_val = task_data[phase][var_name]['max']
                     phase_mins.append(min_val)
                     phase_maxs.append(max_val)
                     valid_phases.append(phase)
             
-            if valid_phases:
-                # Create bounding boxes for each phase
-                box_width = 8  # Width of each phase box
-                for i, phase in enumerate(valid_phases):
-                    min_val = phase_mins[i]
-                    max_val = phase_maxs[i]
-                    
-                    # Create rectangle for this phase range
-                    height = max_val - min_val
-                    
-                    rect = patches.Rectangle(
-                        (phase - box_width/2, min_val), box_width, height,
-                        linewidth=2, edgecolor='black', 
-                        facecolor=colors[var_type], alpha=0.6
-                    )
-                    ax.add_patch(rect)
-                    
-                    # Add min/max value labels
-                    if mode == 'kinematic':
-                        min_label = f'{value_conversion(min_val):.0f}{unit_suffix}'
-                        max_label = f'{value_conversion(max_val):.0f}{unit_suffix}'
-                    else:
-                        min_label = f'{min_val:.1f}'
-                        max_label = f'{max_val:.1f}'
-                    
-                    ax.text(phase, min_val - 0.05, min_label, 
-                           ha='center', va='top', fontsize=8, fontweight='bold')
-                    ax.text(phase, max_val + 0.05, max_label, 
-                           ha='center', va='bottom', fontsize=8, fontweight='bold')
+            # Create bounding boxes for each phase
+            box_width = 8  # Width of each phase box
+            for i, phase in enumerate(valid_phases):
+                min_val = phase_mins[i]
+                max_val = phase_maxs[i]
                 
-                # Plot connecting lines to show progression
-                ax.plot(valid_phases, phase_mins, 'o-', color='darkred', linewidth=2, 
-                       markersize=6, label='Min Range', alpha=0.8)
-                ax.plot(valid_phases, phase_maxs, 'o-', color='darkblue', linewidth=2, 
-                       markersize=6, label='Max Range', alpha=0.8)
+                # Create rectangle for this phase range
+                height = max_val - min_val
                 
-                # Fill area between min and max
-                ax.fill_between(valid_phases, phase_mins, phase_maxs, 
-                               color=colors[var_type], alpha=0.2)
+                rect = patches.Rectangle(
+                    (phase - box_width/2, min_val), box_width, height,
+                    linewidth=2, edgecolor='black', 
+                    facecolor=colors[var_type], alpha=0.6
+                )
+                ax.add_patch(rect)
+                
+                # Add min/max value labels
+                if mode == 'kinematic':
+                    min_label = f'{value_conversion(min_val):.0f}{unit_suffix}'
+                    max_label = f'{value_conversion(max_val):.0f}{unit_suffix}'
+                else:
+                    min_label = f'{min_val:.1f}'
+                    max_label = f'{max_val:.1f}'
+                
+                ax.text(phase, min_val - 0.05, min_label, 
+                       ha='center', va='top', fontsize=8, fontweight='bold')
+                ax.text(phase, max_val + 0.05, max_label, 
+                       ha='center', va='bottom', fontsize=8, fontweight='bold')
+            
+            # Plot connecting lines to show progression
+            ax.plot(valid_phases, phase_mins, 'o-', color='darkred', linewidth=2, 
+                   markersize=6, label='Min Range', alpha=0.8)
+            ax.plot(valid_phases, phase_maxs, 'o-', color='darkblue', linewidth=2, 
+                   markersize=6, label='Max Range', alpha=0.8)
+            
+            # Fill area between min and max
+            ax.fill_between(valid_phases, phase_mins, phase_maxs, 
+                           color=colors[var_type], alpha=0.2)
             
             # Plot actual data if provided
             if data is not None:

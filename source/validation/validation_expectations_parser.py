@@ -20,6 +20,9 @@ def extract_numeric_value(value_str: str) -> float:
         
     Returns:
         Extracted numeric value as float
+        
+    Raises:
+        ValueError: If no numeric value can be extracted
     """
     # Remove any whitespace
     value_str = value_str.strip()
@@ -29,8 +32,55 @@ def extract_numeric_value(value_str: str) -> float:
     if match:
         return float(match.group())
     else:
-        # Fallback to 0 if no number found
-        return 0.0
+        # Fail explicitly instead of returning 0
+        raise ValueError(f"Could not extract numeric value from '{value_str}'")
+
+
+def validate_task_completeness(task_data: Dict, task_name: str, mode: str) -> None:
+    """
+    Validate that task data contains all required phases and variables.
+    
+    Args:
+        task_data: Task validation data 
+        task_name: Name of the task
+        mode: 'kinematic' or 'kinetic'
+        
+    Raises:
+        ValueError: If required validation data is missing
+    """
+    required_phases = [0, 25, 50, 75]  # Don't require 100% as it's computed
+    
+    if mode == 'kinematic':
+        required_variables = [
+            'hip_flexion_angle_ipsi', 'hip_flexion_angle_contra',
+            'knee_flexion_angle_ipsi', 'knee_flexion_angle_contra', 
+            'ankle_flexion_angle_ipsi', 'ankle_flexion_angle_contra'
+        ]
+    else:  # kinetic
+        required_variables = [
+            'hip_moment_ipsi_Nm_kg', 'hip_moment_contra_Nm_kg',
+            'knee_moment_ipsi_Nm_kg', 'knee_moment_contra_Nm_kg',
+            'ankle_moment_ipsi_Nm_kg', 'ankle_moment_contra_Nm_kg'
+        ]
+    
+    # Check that all required phases exist
+    missing_phases = [phase for phase in required_phases if phase not in task_data]
+    if missing_phases:
+        raise ValueError(f"Task '{task_name}' missing required phases: {missing_phases}")
+    
+    # Check that all required variables exist in each phase
+    for phase in required_phases:
+        if phase in task_data:
+            missing_vars = [var for var in required_variables if var not in task_data[phase]]
+            if missing_vars:
+                raise ValueError(f"Task '{task_name}' phase {phase}% missing required variables: {missing_vars}")
+            
+            # Check that each variable has both min and max values
+            for var in required_variables:
+                if var in task_data[phase]:
+                    var_data = task_data[phase][var]
+                    if not isinstance(var_data, dict) or 'min' not in var_data or 'max' not in var_data:
+                        raise ValueError(f"Task '{task_name}' phase {phase}% variable '{var}' missing 'min' or 'max' values")
 
 
 def parse_kinematic_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[str, Dict[str, float]]]]:
