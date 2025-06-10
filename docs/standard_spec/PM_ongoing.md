@@ -2,19 +2,35 @@
 
 ## High Level Tasks
 
-### 1. OpenSim Convention Alignment
+### 1. Complete Kinetic Validation Coverage
+- **Description**: Expand kinetic validation ranges to all 9 tasks (currently only 3 tasks have kinetic data)
+- **Status**: 🚧 NEXT PRIORITY
+- **Missing Tasks**: decline_walking, up_stairs, down_stairs, sit_to_stand, jump, squats
+- **Requirements**: Literature research for GRF and joint moment patterns for each missing task
+
+### 2. OpenSim Convention Alignment
 - **Description**: Ensure all joint angle sign conventions match OpenSim standards for maximum biomechanical modeling compatibility
 - **Status**: ✅ PRODUCTION READY
 
-### 2. Motion Capture Error Tolerance
+### 3. Motion Capture Error Tolerance
 - **Description**: Implement realistic validation ranges that accommodate measurement noise and calibration errors
 - **Status**: ✅ PRODUCTION READY
 
-### 3. Validation Expectations Enhancement
+### 4. Validation Expectations Enhancement
 - **Description**: Develop comprehensive phase-specific validation ranges with visual kinematic verification
 - **Status**: ✅ PRODUCTION READY
 
 ## Recent Work (Last 15 Items)
+
+### 2025-06-10
+1. **Visualization Naming Refactor Complete** - Updated terminology and unified plotting architecture
+   - Renamed "phase progression" → "filters by phase" throughout all documentation
+   - Added "forward kinematics" to pose visualization naming for clarity
+   - Merged individual plotting scripts into unified `filters_by_phase_plots.py` with mode toggle
+   - Renamed `kinematic_pose_generator.py` → `forward_kinematics_plots.py` for consistency
+   - Fixed contralateral offset logic for complete 100% phase cyclical data
+   - Generated all 48 validation images with new naming convention
+   - Updated all cross-references and import statements
 
 ### 2025-01-09
 1. **OpenSim Convention Alignment Complete** - Fixed knee flexion sign convention throughout standard specification
