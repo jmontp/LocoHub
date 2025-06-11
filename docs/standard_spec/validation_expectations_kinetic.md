@@ -9,9 +9,11 @@ This document provides biomechanically verified kinetic validation ranges (force
 > **📋 Version Information**: See [validation_expectations_changelog.md](validation_expectations_changelog.md) for detailed version history and changes.  
 > **🔬 Research Status**: **REQUIRES LITERATURE RESEARCH** - Kinetic ranges need verification against published biomechanics literature.
 
-> **🔄 Plot Generation**: Click to regenerate kinetic validation plots:
+> **🔄 Plot Generation**: 
 > 
-> [![Regenerate Kinetic Plots](https://img.shields.io/badge/🔄_Regenerate-Kinetic_Plots-blue?style=for-the-badge&logo=github)](https://github.com/jmontp/locomotion-data-standardization/actions/workflows/regenerate-validation-plots.yml)
+> **One-click regeneration (VS Code):** `Ctrl+Shift+P` → `Tasks: Run Task` → `🔄 Regenerate Kinetic Plots`
+> 
+> **GitHub Actions:** [![Regenerate Kinetic Plots](https://img.shields.io/badge/🔄_Regenerate-Kinetic_Plots-blue?style=for-the-badge&logo=github)](https://github.com/jmontp/locomotion-data-standardization/actions/workflows/regenerate-validation-plots.yml)
 > 
 > **Manual command:**
 > ```bash

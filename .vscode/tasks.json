@@ -1,0 +1,135 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "🔄 Regenerate Kinetic Plots",
+            "type": "shell",
+            "command": "python3",
+            "args": ["source/validation/generate_validation_plots.py", "--filters-only"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "detail": "Generate kinetic validation plots (forces and moments)",
+            "icon": {
+                "id": "graph",
+                "color": "terminal.ansiBlue"
+            }
+        },
+        {
+            "label": "🔄 Regenerate Kinematic Plots",
+            "type": "shell",
+            "command": "python3",
+            "args": ["source/validation/generate_validation_plots.py", "--forward-kinematic-only"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "detail": "Generate kinematic validation plots (joint angles)",
+            "icon": {
+                "id": "graph",
+                "color": "terminal.ansiGreen"
+            }
+        },
+        {
+            "label": "🔄 Regenerate ALL Validation Plots",
+            "type": "shell",
+            "command": "python3",
+            "args": ["source/validation/generate_validation_plots.py"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "detail": "Generate all validation plots (kinetic + kinematic)",
+            "icon": {
+                "id": "graph",
+                "color": "terminal.ansiMagenta"
+            }
+        },
+        {
+            "label": "🔄 Regenerate Specific Task Plots",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "source/validation/generate_validation_plots.py",
+                "--tasks",
+                "${input:taskSelection}"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "detail": "Generate plots for specific tasks",
+            "icon": {
+                "id": "filter",
+                "color": "terminal.ansiYellow"
+            }
+        },
+        {
+            "label": "🎬 Generate Validation GIFs",
+            "type": "shell",
+            "command": "python3",
+            "args": ["source/validation/generate_validation_gifs.py", "--all-datasets"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "detail": "Generate animated GIFs for biomechanical validation",
+            "icon": {
+                "id": "play",
+                "color": "terminal.ansiCyan"
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "taskSelection",
+            "description": "Select tasks to generate plots for",
+            "type": "pickString",
+            "options": [
+                "level_walking",
+                "incline_walking", 
+                "decline_walking",
+                "run",
+                "up_stairs",
+                "down_stairs",
+                "sit_to_stand",
+                "jump",
+                "squats",
+                "level_walking incline_walking",
+                "level_walking run",
+                "up_stairs down_stairs"
+            ]
+        }
+    ]
+}
