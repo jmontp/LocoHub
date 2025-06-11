@@ -46,7 +46,7 @@ source/
 **Main Class**: `LocomotionData` in `locomotion_analysis.py`
 
 **Key Features**:
-- **Efficient 3D array operations** (100x faster than pandas groupby)
+- **Efficient 3D array operations** for multi-cycle analysis
 - **Dual indexing support** (time and phase-based data)
 - **Integrated validation** using validation blueprint
 - **Statistical analysis** and phase pattern extraction

@@ -63,11 +63,11 @@ This file tracks the implementation of comprehensive improvements to the locomot
 | Task | Status | Details |
 |------|--------|---------|
 | Add step_number column to datasets | 🟢 | Created add_step_numbers.py script |
-| Update Python tutorial for efficient reshape | 🟢 | Shows 10-100x performance improvement |
+| Update Python tutorial for efficient reshape | 🟢 | Shows significant performance improvement |
 | Update MATLAB tutorial for efficient reshape | 🟢 | Added reshape() examples |
 | Create comprehensive efficiency guide | 🟢 | docs/tutorials/efficient_reshape_guide.md |
 | Document reshape in mosaic plotter | 🟢 | Added detailed comments |
-| Test performance improvements | 🟢 | Verified 10-100x speedup |
+| Test performance improvements | 🟢 | Verified significant speedup |
 
 ---
 

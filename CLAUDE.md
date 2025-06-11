@@ -118,3 +118,42 @@ Usage:
 
 ## Communication Guidelines
 - Tone down the language for "publication-ready" and all of that.
+
+## Documentation Philosophy
+**Minimal yet highly effective**: All user-facing documentation should follow these principles:
+
+### Core Principles
+- **Essential information only** - Remove everything that doesn't directly help users succeed
+- **Immediate actionability** - Every section should enable immediate next steps
+- **Scannable structure** - Use headers, bullets, and short paragraphs for fast consumption
+- **No fluff** - Eliminate introductory text, explanations of obvious concepts, and verbose descriptions
+
+### Writing Style for User Documentation
+- **Start with action** - Begin with what users can do, not what the project is
+- **Use imperative voice** - "Load data" not "You can load data"
+- **Concrete examples** - Show actual code/commands, not abstract descriptions
+- **Minimal context** - Assume users are intelligent and want to get started quickly
+- **No meta-commentary** - Remove phrases like "This guide will show you" or "As you can see"
+
+### Structure Guidelines
+- **Front-load critical paths** - Most common use cases first
+- **Eliminate redundancy** - Don't repeat information across files
+- **Flat navigation** - Minimize clicks to reach actionable content
+- **Progressive disclosure** - Basic → advanced, with clear separation
+
+### What to Remove from User Docs
+- Long introductions or project background
+- Multiple ways to do the same thing (pick the best one)
+- Exhaustive feature lists (show the essential features)
+- Step-by-step explanations of obvious operations
+- Motivational or persuasive language
+- Complex directory structure explanations
+
+### Examples of Minimal Style
+**Before**: "This comprehensive tutorial will walk you through the complete process of getting started with our locomotion analysis framework, covering everything from basic data loading concepts to advanced analytical capabilities."
+
+**After**: "Load and analyze locomotion data."
+
+**Before**: "As you can see from the example above, the system provides multiple flexible options for data access patterns depending on your specific analytical requirements."
+
+**After**: "```python\ndata = LocomotionData.from_parquet('dataset.parquet')\n```"

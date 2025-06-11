@@ -221,7 +221,7 @@ feature_values = df[feature].values
 result = feature_values.reshape(n_cycles, 150)
 ```
 
-**Performance improvement: ~10-100x faster** depending on dataset size!
+**Significant performance improvement** for large datasets!
 
 ## Common Operations with Reshaped Data
 

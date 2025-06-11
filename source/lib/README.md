@@ -53,7 +53,7 @@ loco.plotPhasePatterns('SUB01', 'normal_walk', {'knee_flexion_angle_right_rad'})
 
 ### 🚀 **Efficient 3D Array Operations**
 - Convert phase-indexed data to 3D arrays (cycles × points × features)
-- 10-100x faster than traditional groupby operations
+- Optimized for large multi-cycle datasets
 - Memory-efficient processing of large datasets
 
 ### ✅ **Automatic Data Validation**
@@ -118,16 +118,12 @@ The libraries support both legacy and modern naming conventions:
 `<joint>_<motion>_<measurement>_<side>_<unit>`
 - Example: `knee_flexion_angle_right_rad`
 
-## Performance Benchmarks
+## Performance Benefits
 
-### 3D Array Extraction
-- **Traditional pandas groupby**: ~2.5 seconds for 1000 cycles
-- **Library reshape method**: ~0.025 seconds for 1000 cycles
-- **Speedup**: ~100x faster
-
-### Memory Usage
-- **Efficient storage**: 3D arrays use ~50% less memory than nested structures
-- **Caching**: Repeated access is nearly instantaneous
+### 3D Array Operations
+- **Efficient extraction**: Rapid conversion to analysis-ready format
+- **Memory optimization**: Compact storage for multi-cycle data
+- **Caching**: Fast repeated access to processed data
 
 ## Library Comparison
 
