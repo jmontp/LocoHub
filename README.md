@@ -1,6 +1,6 @@
 # Locomotion Data Standardization
 
-Standardized biomechanical datasets for cross-study analysis.
+Easy-to-use, cleaned up and tested biomechanical datasets that enable reproducible results across studies.
 
 **Quick Links:** [Datasets](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) • [Standard Spec](docs/standard_spec/standard_spec.md) • [Python Tutorial](docs/tutorials/python/getting_started_python.md)
 
