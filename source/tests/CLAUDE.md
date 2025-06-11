@@ -36,9 +36,15 @@ source/tests/
 
 ## Testing Conventions
 
+**IMPORTANT FILE DISTINCTIONS:**
+- **`test_*.py` files**: Headless validation of libraries for automated testing (no visual outputs)
+- **`demo_*.py` files**: Generate plots and visual outputs for user observation and documentation
+
 ### 1. Test File Naming (`test_{module}.py`)
-**Purpose**: Comprehensive test suites for individual modules using pytest framework
+**Purpose**: Headless validation of library functionality using pytest framework for automated testing
 **Permission Required**: YES - Must ask user before creating
+
+**Intent**: Test files are designed for automated, headless validation of libraries without generating visual outputs. They focus on unit testing, integration testing, and performance validation that can run in CI/CD pipelines.
 
 **Naming Pattern**: `test_{module_name}.py`
 - `test_step_classifier.py` - Tests for `validation/step_classifier.py`
@@ -91,8 +97,10 @@ except ImportError:
 - `test_performance()` - Performance with large datasets
 
 ### 2. Demo File Naming (`demo_{module}.py`)
-**Purpose**: Interactive demonstrations showing real-world usage with visual outputs
+**Purpose**: Generate plots for user observation and interactive demonstrations showing real-world usage
 **Permission Required**: YES - Must ask user before creating
+
+**Intent**: Demo files are designed to generate visual outputs, plots, and interactive demonstrations that users can observe to understand functionality. They create comprehensive visual documentation and examples of library capabilities.
 
 **Naming Pattern**: `demo_{module_name}.py`
 - `demo_step_classifier.py` - Demonstration of step classification functionality
