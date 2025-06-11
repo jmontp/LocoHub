@@ -6,14 +6,18 @@ Standardized biomechanical datasets for cross-study analysis.
 
 ## Use Cases
 
-### Standard Specification Reference
+### 1. Standard Specification Reference
+*Download the tables and manage them yourself*
+
 Use the standardized variable names and data format in your own work:
 - **Variable naming**: `knee_flexion_angle_ipsi_rad`, `hip_moment_contra_Nm`  
 - **Time indexing**: Original sampling rate preserved
 - **Phase indexing**: 150 points per normalized gait cycle
 - **Reference**: [Data Format Spec](docs/standard_spec/standard_spec.md)
 
-### Data Analysis Library  
+### 2. Data Analysis Library
+*Use library code to help manage the tables*
+
 Load and analyze standardized datasets with optimized 3D array operations:
 
 **Python:**
@@ -33,18 +37,15 @@ knee_angles = data.get_variable('knee_flexion_angle_ipsi_rad');
 
 **Tutorials**: [Python](docs/tutorials/python/getting_started_python.md) • [MATLAB](docs/tutorials/matlab/getting_started_matlab.md)
 
-### Dataset Development
+### 3. Dataset Development
+*Contribute new datasets to the standard*
+
 Convert new datasets or contribute to the project:
 
-```bash
-# Convert new datasets
-python source/conversion_scripts/AddBiomechanics/convert_addbiomechanics_to_parquet.py
-python source/conversion_scripts/Gtech_2023/convert_gtech_all_to_parquet.py
-matlab -batch "convert_umich_phase_to_parquet"
-
-# Validate outputs
-python source/validation/dataset_validator_phase.py --dataset your_dataset.parquet
-```
+1. **Create conversion scripts** following existing patterns
+2. **Fill out dataset documentation** using [Dataset Template](docs/standard_spec/dataset_template.md)
+3. **Submit validation report** with `python source/validation/dataset_validator_phase.py --dataset your_dataset_phase.parquet`
+4. **Follow pull request guidelines** in [Contributing Guide](CONTRIBUTING.md)
 
 **Reference**: [Contributing Guide](CONTRIBUTING.md)
 
@@ -61,6 +62,19 @@ python source/validation/dataset_validator_phase.py --dataset your_dataset.parqu
 - [Data Format Spec](docs/standard_spec/standard_spec.md)
 - [Python Tutorial](docs/tutorials/python/getting_started_python.md)
 - [MATLAB Tutorial](docs/tutorials/matlab/getting_started_matlab.md)
+
+## Contribution Process
+
+To contribute a new dataset:
+
+1. **Create conversion scripts** following existing patterns in `source/conversion_scripts/`
+2. **Fill out dataset documentation** using [Dataset Template](docs/standard_spec/dataset_template.md)  
+3. **Submit validation report** with `python source/validation/dataset_validator_phase.py --dataset your_dataset_phase.parquet`
+4. **Follow pull request guidelines** in [Contributing Guide](CONTRIBUTING.md)
+
+## Future
+
+Release standardized datasets with train/test benchmarks to accelerate biomechanics research and enable reproducible ML-based control algorithms for prosthetics and exoskeletons.
 
 ---
 
