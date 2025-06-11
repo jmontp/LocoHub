@@ -64,18 +64,18 @@ for subject_idx = 1:length(subjects)
             % Process the trial data
             trial_table = process_trial(trial_struct);
 
-            % Add the subject to the table
-            trial_table.subject_id = repmat({subject_str}, size(trial_table, 1), 1);
+            % Add the subject to the table (using standard naming)
+            trial_table.subject = repmat({subject_str}, size(trial_table, 1), 1);
 
             % Add the task to the table following standard spec
             if incline_value < 0
-                trial_table.task_name = repmat({'decline_walking'}, size(trial_table, 1), 1);
+                trial_table.task = repmat({'decline_walking'}, size(trial_table, 1), 1);
                 trial_table.task_id = repmat({[subject_str '_decline_' speed]}, size(trial_table, 1), 1);
             elseif incline_value > 0
-                trial_table.task_name = repmat({'incline_walking'}, size(trial_table, 1), 1);
+                trial_table.task = repmat({'incline_walking'}, size(trial_table, 1), 1);
                 trial_table.task_id = repmat({[subject_str '_incline_' speed]}, size(trial_table, 1), 1);
             else
-                trial_table.task_name = repmat({'level_walking'}, size(trial_table, 1), 1);
+                trial_table.task = repmat({'level_walking'}, size(trial_table, 1), 1);
                 trial_table.task_id = repmat({[subject_str '_level_' speed]}, size(trial_table, 1), 1);
             end
 
@@ -109,11 +109,11 @@ for subject_idx = 1:length(subjects)
         % Process the trial data
         trial_table = process_trial(trial_struct);
 
-        % Add the subject to the table
-        trial_table.subject_id = repmat({subject_str}, size(trial_table, 1), 1);
+        % Add the subject to the table (using standard naming)
+        trial_table.subject = repmat({subject_str}, size(trial_table, 1), 1);
 
         % Add the task to the table following standard spec
-        trial_table.task_name = repmat({'run'}, size(trial_table, 1), 1);
+        trial_table.task = repmat({'run'}, size(trial_table, 1), 1);
         trial_table.task_id = repmat({[subject_str '_run_' run_speed_name{speed_idx}]}, size(trial_table, 1), 1);
 
         % Add the data to the total table
@@ -152,15 +152,15 @@ function trial_table = process_trial(trial_struct)
     pps = 150; % points per step
     num_strides = size(trial_struct.jointAngles.HipAngles,3);
     
-    % Create phase_l (left leg phase) based on standard specification (0-100%)
-    trial_table.phase_l = repmat((0:1/pps:1-1/pps)'*100, num_strides, 1);
+    % Create phase_percent based on standard specification (0-100%)
+    trial_table.phase_percent = repmat((0:1/pps:1-1/pps)'*100, num_strides, 1);
     
     % Add step numbers for proper step identification
     step_numbers = [];
     for step = 1:num_strides
         step_numbers = [step_numbers; repmat(step, pps, 1)];
     end
-    trial_table.step_number = step_numbers;
+    trial_table.step = step_numbers;
 
     % Set how much of a circ shift we need to do to get the contralateral leg
     shift = pps/2;
@@ -169,63 +169,104 @@ function trial_table = process_trial(trial_struct)
     joint_angles = trial_struct.jointAngles;
     deg2rad_factor = pi/180;
 
-    % Hip angles - reshape and convert to radians (right leg = ipsilateral)
-    trial_table.hip_flexion_angle_right_rad = reshape(joint_angles.HipAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
-    trial_table.hip_adduction_angle_right_rad = reshape(joint_angles.HipAngles(:, frontal_plane, :), [], 1) * deg2rad_factor;
-    trial_table.hip_rotation_angle_right_rad = reshape(joint_angles.HipAngles(:, transverse_plane, :), [], 1) * deg2rad_factor;
+    % Hip angles - reshape and convert to radians (use standard ipsi/contra naming)
+    hip_flexion_ipsi = reshape(joint_angles.HipAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
+    hip_adduction_ipsi = reshape(joint_angles.HipAngles(:, frontal_plane, :), [], 1) * deg2rad_factor;
+    hip_rotation_ipsi = reshape(joint_angles.HipAngles(:, transverse_plane, :), [], 1) * deg2rad_factor;
 
-    % Left leg - shift by half a step for gait offset
-    trial_table.hip_flexion_angle_left_rad = circshift(trial_table.hip_flexion_angle_right_rad, shift);
-    trial_table.hip_adduction_angle_left_rad = circshift(trial_table.hip_adduction_angle_right_rad, shift);
-    trial_table.hip_rotation_angle_left_rad = circshift(trial_table.hip_rotation_angle_right_rad, shift);
+    % Apply standard naming convention (right leg = ipsi, left leg = contra)
+    % Original data is left leg, so shifted data becomes ipsi (right leg)
+    trial_table.hip_flexion_angle_ipsi_rad = circshift(hip_flexion_ipsi, shift);
+    trial_table.hip_adduction_angle_ipsi_rad = circshift(hip_adduction_ipsi, shift);
+    trial_table.hip_rotation_angle_ipsi_rad = circshift(hip_rotation_ipsi, shift);
+    
+    % Original data becomes contra (left leg)
+    trial_table.hip_flexion_angle_contra_rad = hip_flexion_ipsi;
+    trial_table.hip_adduction_angle_contra_rad = hip_adduction_ipsi;
+    trial_table.hip_rotation_angle_contra_rad = hip_rotation_ipsi;
 
     % Knee angles - reshape, negate sagittal (OpenSim convention), and convert to radians
-    trial_table.knee_flexion_angle_right_rad = reshape(-joint_angles.KneeAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
-    trial_table.knee_adduction_angle_right_rad = reshape(joint_angles.KneeAngles(:, frontal_plane, :), [], 1) * deg2rad_factor;
-    trial_table.knee_rotation_angle_right_rad = reshape(joint_angles.KneeAngles(:, transverse_plane, :), [], 1) * deg2rad_factor;
+    knee_flexion_ipsi = reshape(-joint_angles.KneeAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
+    knee_adduction_ipsi = reshape(joint_angles.KneeAngles(:, frontal_plane, :), [], 1) * deg2rad_factor;
+    knee_rotation_ipsi = reshape(joint_angles.KneeAngles(:, transverse_plane, :), [], 1) * deg2rad_factor;
 
-    trial_table.knee_flexion_angle_left_rad = circshift(trial_table.knee_flexion_angle_right_rad, shift);
-    trial_table.knee_adduction_angle_left_rad = circshift(trial_table.knee_adduction_angle_right_rad, shift);
-    trial_table.knee_rotation_angle_left_rad = circshift(trial_table.knee_rotation_angle_right_rad, shift);
+    % Apply standard naming convention (right leg = ipsi, left leg = contra)
+    % Original data is left leg, so shifted data becomes ipsi (right leg)
+    trial_table.knee_flexion_angle_ipsi_rad = circshift(knee_flexion_ipsi, shift);
+    trial_table.knee_adduction_angle_ipsi_rad = circshift(knee_adduction_ipsi, shift);
+    trial_table.knee_rotation_angle_ipsi_rad = circshift(knee_rotation_ipsi, shift);
+    
+    % Original data becomes contra (left leg)
+    trial_table.knee_flexion_angle_contra_rad = knee_flexion_ipsi;
+    trial_table.knee_adduction_angle_contra_rad = knee_adduction_ipsi;
+    trial_table.knee_rotation_angle_contra_rad = knee_rotation_ipsi;
 
-    % Ankle angles - reshape and convert to radians (use flexion naming per standard)
-    trial_table.ankle_flexion_angle_right_rad = reshape(joint_angles.AnkleAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
-    trial_table.ankle_adduction_angle_right_rad = reshape(joint_angles.AnkleAngles(:, frontal_plane, :), [], 1) * deg2rad_factor;
-    trial_table.ankle_rotation_angle_right_rad = reshape(joint_angles.AnkleAngles(:, transverse_plane, :), [], 1) * deg2rad_factor;
+    % Ankle angles - reshape and convert to radians (use standard ipsi/contra naming)
+    ankle_flexion_ipsi = reshape(joint_angles.AnkleAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
+    ankle_adduction_ipsi = reshape(joint_angles.AnkleAngles(:, frontal_plane, :), [], 1) * deg2rad_factor;
+    ankle_rotation_ipsi = reshape(joint_angles.AnkleAngles(:, transverse_plane, :), [], 1) * deg2rad_factor;
 
-    trial_table.ankle_flexion_angle_left_rad = circshift(trial_table.ankle_flexion_angle_right_rad, shift);
-    trial_table.ankle_adduction_angle_left_rad = circshift(trial_table.ankle_adduction_angle_right_rad, shift);
-    trial_table.ankle_rotation_angle_left_rad = circshift(trial_table.ankle_rotation_angle_right_rad, shift);
+    % Apply standard naming convention (right leg = ipsi, left leg = contra)
+    % Original data is left leg, so shifted data becomes ipsi (right leg)
+    trial_table.ankle_flexion_angle_ipsi_rad = circshift(ankle_flexion_ipsi, shift);
+    trial_table.ankle_adduction_angle_ipsi_rad = circshift(ankle_adduction_ipsi, shift);
+    trial_table.ankle_rotation_angle_ipsi_rad = circshift(ankle_rotation_ipsi, shift);
+    
+    % Original data becomes contra (left leg)
+    trial_table.ankle_flexion_angle_contra_rad = ankle_flexion_ipsi;
+    trial_table.ankle_adduction_angle_contra_rad = ankle_adduction_ipsi;
+    trial_table.ankle_rotation_angle_contra_rad = ankle_rotation_ipsi;
 
-    % Joint moments - convert from Nm to Nm (already correct) and use left/right naming
+    % Joint moments - convert from Nm to Nm (already correct) and use standard ipsi/contra naming
     joint_moments = trial_struct.jointMoments;
 
     % Hip moments
-    trial_table.hip_flexion_moment_right_Nm = reshape(joint_moments.HipMoment(:, sagittal_plane, :), [], 1);
-    trial_table.hip_adduction_moment_right_Nm = reshape(joint_moments.HipMoment(:, frontal_plane, :), [], 1);
-    trial_table.hip_rotation_moment_right_Nm = reshape(joint_moments.HipMoment(:, transverse_plane, :), [], 1);
+    hip_flexion_moment_ipsi = reshape(joint_moments.HipMoment(:, sagittal_plane, :), [], 1);
+    hip_adduction_moment_ipsi = reshape(joint_moments.HipMoment(:, frontal_plane, :), [], 1);
+    hip_rotation_moment_ipsi = reshape(joint_moments.HipMoment(:, transverse_plane, :), [], 1);
 
-    trial_table.hip_flexion_moment_left_Nm = circshift(trial_table.hip_flexion_moment_right_Nm, shift);
-    trial_table.hip_adduction_moment_left_Nm = circshift(trial_table.hip_adduction_moment_right_Nm, shift);
-    trial_table.hip_rotation_moment_left_Nm = circshift(trial_table.hip_rotation_moment_right_Nm, shift);
+    % Apply standard naming convention (right leg = ipsi, left leg = contra)
+    % Original data is left leg, so shifted data becomes ipsi (right leg)
+    trial_table.hip_flexion_moment_ipsi_Nm = circshift(hip_flexion_moment_ipsi, shift);
+    trial_table.hip_adduction_moment_ipsi_Nm = circshift(hip_adduction_moment_ipsi, shift);
+    trial_table.hip_rotation_moment_ipsi_Nm = circshift(hip_rotation_moment_ipsi, shift);
+    
+    % Original data becomes contra (left leg)
+    trial_table.hip_flexion_moment_contra_Nm = hip_flexion_moment_ipsi;
+    trial_table.hip_adduction_moment_contra_Nm = hip_adduction_moment_ipsi;
+    trial_table.hip_rotation_moment_contra_Nm = hip_rotation_moment_ipsi;
 
     % Knee moments
-    trial_table.knee_flexion_moment_right_Nm = reshape(joint_moments.KneeMoment(:, sagittal_plane, :), [], 1);
-    trial_table.knee_adduction_moment_right_Nm = reshape(joint_moments.KneeMoment(:, frontal_plane, :), [], 1);
-    trial_table.knee_rotation_moment_right_Nm = reshape(joint_moments.KneeMoment(:, transverse_plane, :), [], 1);
+    knee_flexion_moment_ipsi = reshape(joint_moments.KneeMoment(:, sagittal_plane, :), [], 1);
+    knee_adduction_moment_ipsi = reshape(joint_moments.KneeMoment(:, frontal_plane, :), [], 1);
+    knee_rotation_moment_ipsi = reshape(joint_moments.KneeMoment(:, transverse_plane, :), [], 1);
 
-    trial_table.knee_flexion_moment_left_Nm = circshift(trial_table.knee_flexion_moment_right_Nm, shift);
-    trial_table.knee_adduction_moment_left_Nm = circshift(trial_table.knee_adduction_moment_right_Nm, shift);
-    trial_table.knee_rotation_moment_left_Nm = circshift(trial_table.knee_rotation_moment_right_Nm, shift);
+    % Apply standard naming convention (right leg = ipsi, left leg = contra)
+    % Original data is left leg, so shifted data becomes ipsi (right leg)
+    trial_table.knee_flexion_moment_ipsi_Nm = circshift(knee_flexion_moment_ipsi, shift);
+    trial_table.knee_adduction_moment_ipsi_Nm = circshift(knee_adduction_moment_ipsi, shift);
+    trial_table.knee_rotation_moment_ipsi_Nm = circshift(knee_rotation_moment_ipsi, shift);
+    
+    % Original data becomes contra (left leg)
+    trial_table.knee_flexion_moment_contra_Nm = knee_flexion_moment_ipsi;
+    trial_table.knee_adduction_moment_contra_Nm = knee_adduction_moment_ipsi;
+    trial_table.knee_rotation_moment_contra_Nm = knee_rotation_moment_ipsi;
 
     % Ankle moments
-    trial_table.ankle_flexion_moment_right_Nm = reshape(joint_moments.AnkleMoment(:, sagittal_plane, :), [], 1);
-    trial_table.ankle_adduction_moment_right_Nm = reshape(joint_moments.AnkleMoment(:, frontal_plane, :), [], 1);
-    trial_table.ankle_rotation_moment_right_Nm = reshape(joint_moments.AnkleMoment(:, transverse_plane, :), [], 1);
+    ankle_flexion_moment_ipsi = reshape(joint_moments.AnkleMoment(:, sagittal_plane, :), [], 1);
+    ankle_adduction_moment_ipsi = reshape(joint_moments.AnkleMoment(:, frontal_plane, :), [], 1);
+    ankle_rotation_moment_ipsi = reshape(joint_moments.AnkleMoment(:, transverse_plane, :), [], 1);
 
-    trial_table.ankle_flexion_moment_left_Nm = circshift(trial_table.ankle_flexion_moment_right_Nm, shift);
-    trial_table.ankle_adduction_moment_left_Nm = circshift(trial_table.ankle_adduction_moment_right_Nm, shift);
-    trial_table.ankle_rotation_moment_left_Nm = circshift(trial_table.ankle_rotation_moment_right_Nm, shift);
+    % Apply standard naming convention (right leg = ipsi, left leg = contra)
+    % Original data is left leg, so shifted data becomes ipsi (right leg)
+    trial_table.ankle_flexion_moment_ipsi_Nm = circshift(ankle_flexion_moment_ipsi, shift);
+    trial_table.ankle_adduction_moment_ipsi_Nm = circshift(ankle_adduction_moment_ipsi, shift);
+    trial_table.ankle_rotation_moment_ipsi_Nm = circshift(ankle_rotation_moment_ipsi, shift);
+    
+    % Original data becomes contra (left leg)
+    trial_table.ankle_flexion_moment_contra_Nm = ankle_flexion_moment_ipsi;
+    trial_table.ankle_adduction_moment_contra_Nm = ankle_adduction_moment_ipsi;
+    trial_table.ankle_rotation_moment_contra_Nm = ankle_rotation_moment_ipsi;
 
     % Ground reaction forces - use standard naming convention
     grf_data = trial_struct.forceplates;
