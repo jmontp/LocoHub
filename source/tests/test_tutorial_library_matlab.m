@@ -1,10 +1,39 @@
-% Test script for MATLAB library tutorial
-% This script tests the LocomotionData library functionality
+%{
+Tutorial Test: MATLAB Library Functionality
+
+Created: 2025-06-11 (moved from docs/tutorials/matlab/)
+Purpose: Validates the MATLAB LocomotionData library functionality from the library tutorial
+
+Intent:
+This test script validates all functionality covered in the MATLAB library tutorial,
+ensuring that the LocomotionData class works correctly for:
+
+PRIMARY FUNCTIONS:
+1. Library Import: Verify LocomotionData class can be loaded successfully
+2. Data Creation: Test creation of test datasets with proper MATLAB structure
+3. 3D Array Operations: Validate efficient reshape operations for phase data
+4. Statistical Analysis: Test mean, std, and range calculations across cycles
+5. Data Validation: Ensure data integrity and expected outputs
+
+Usage:
+    cd source/tests
+    matlab -batch "test_tutorial_library_matlab"
+
+Expected Output:
+- Successful class loading confirmation
+- Test data creation and validation
+- 3D array operation results
+- Statistical calculations
+- All tests passing confirmation
+
+This test ensures the library tutorial examples work correctly and validates
+the core functionality users will rely on for biomechanical data analysis in MATLAB.
+%}
 
 disp('Testing MATLAB LocomotionData library...');
 
 % Add library to path
-addpath('../../../source/lib/matlab');
+addpath('../lib/matlab');
 
 try
     % 1. Test Basic Data Loading

@@ -29,12 +29,12 @@ Time-indexed tables preserve the source sampling frequency. Phase-indexed tables
    * [2.2 Monolithic Format](#22-monolithic-format)
 3. [Metadata Handling](#metadata-handling)
 4. [Column Naming Convention](#column-naming-convention)
-5. [Units & Conventions](units_and_conventions.md)
+5. [Units & Conventions](#units--conventions)
 6. [Sign Conventions](sign_conventions.md)
 7. [Temporal & Phase Indexing](#temporal--phase-indexing)
 
    * [7.1 Temporal Indexing](#temporal-indexing)
-   * [7.2 Phase Calculation](phase_calculation.md)
+   * [7.2 Phase Calculation](#phase-calculation)
 8. [Task Vocabulary](#task-vocabulary)
 9. [Coordinate Frames](#coordinate-frames)
 10. [Missing Data & Quality Flags](#missing-data--quality-flags)
@@ -120,7 +120,103 @@ Two **organizational formats** are supported:
 
 ## 5. Units & Conventions
 
-See [units\_and\_conventions.md](units_and_conventions.md)
+### 5.1 SI Units
+- Mass: kilograms (kg)
+- Length: meters (m)
+- Time: seconds (s)
+- Angle: radians (rad) or degrees (deg)
+- Force: Newtons (N)
+- Moment: Newton-meters (N·m)
+- Power: Watts (W)
+
+### 5.2 Variables & Standard Units
+
+#### Subject Metadata
+| Variable     | Standard Units | Notes                  |
+|--------------|----------------|------------------------|
+| body_mass    | kg             | from subject metadata  |
+| height       | m              | optional               |
+| leg_length   | m              | optional               |
+
+#### Joint Angles (3DOF where available)
+| Variable                      | Standard Units | Notes                          |
+|-------------------------------|----------------|--------------------------------|
+| hip_flexion_angle             | rad            | sagittal plane                 |
+| hip_adduction_angle           | rad            | optional: frontal plane        |
+| hip_rotation_angle            | rad            | optional: transverse plane     |
+| knee_flexion_angle            | rad            | sagittal plane                 |
+| ankle_flexion_angle           | rad            | sagittal plane                 |
+| ankle_inversion_angle         | rad            | optional: frontal plane        |
+| ankle_rotation_angle          | rad            | optional: transverse plane     |
+
+#### Joint Angular Velocities
+| Variable                      | Standard Units | Notes                          |
+|-------------------------------|----------------|--------------------------------|
+| hip_flexion_velocity          | rad/s          | angular velocity               |
+| hip_adduction_velocity        | rad/s          | optional                       |
+| hip_rotation_velocity         | rad/s          | optional                       |
+| knee_flexion_velocity         | rad/s          | angular velocity               |
+| ankle_flexion_velocity        | rad/s          | angular velocity               |
+| ankle_inversion_velocity      | rad/s          | optional                       |
+| ankle_rotation_velocity       | rad/s          | optional                       |
+
+#### Joint Moments
+| Variable        | Standard Units | Notes              |
+|-----------------|----------------|--------------------|
+| hip_moment      | N·m            |                    |
+| knee_moment     | N·m            |                    |
+| ankle_moment    | N·m            |                    |
+
+#### Ground Reaction Forces (GRF)
+| Variable      | Standard Units | Notes                        |
+|---------------|----------------|------------------------------|
+| vertical_grf  | N              | positive upward              |
+| ap_grf        | N              | positive anterior            |
+| ml_grf        | N              | positive medial/right        |
+
+#### Center of Pressure (COP)
+| Variable | Standard Units | Notes                     |
+|----------|----------------|---------------------------|
+| cop_x    | m              | mediolateral              |
+| cop_y    | m              | anterior-posterior        |
+| cop_z    | m              | vertical                  |
+
+#### Global Link Angles
+| Variable          | Standard Units | Notes                                |
+|-------------------|----------------|--------------------------------------|
+| torso_angle_x     | rad            | global orientation X (OpenSim)       |
+| torso_angle_y     | rad            | global orientation Y (OpenSim)       |
+| torso_angle_z     | rad            | global orientation Z (OpenSim)       |
+| thigh_angle_x     | rad            | global orientation X                 |
+| thigh_angle_y     | rad            | global orientation Y                 |
+| thigh_angle_z     | rad            | global orientation Z                 |
+| shank_angle_x     | rad            | global orientation X                 |
+| shank_angle_y     | rad            | global orientation Y                 |
+| shank_angle_z     | rad            | global orientation Z                 |
+| foot_angle_x      | rad            | global orientation X                 |
+| foot_angle_y      | rad            | global orientation Y                 |
+| foot_angle_z      | rad            | global orientation Z                 |
+
+#### Global Link Angular Velocities
+| Variable            | Standard Units | Notes                         |
+|---------------------|----------------|-------------------------------|
+| torso_velocity_x    | rad/s          | global angular velocity       |
+| torso_velocity_y    | rad/s          |                               |
+| torso_velocity_z    | rad/s          |                               |
+| thigh_velocity_x    | rad/s          |                               |
+| thigh_velocity_y    | rad/s          |                               |
+| thigh_velocity_z    | rad/s          |                               |
+| shank_velocity_x    | rad/s          |                               |
+| shank_velocity_y    | rad/s          |                               |
+| shank_velocity_z    | rad/s          |                               |
+| foot_velocity_x     | rad/s          |                               |
+| foot_velocity_y     | rad/s          |                               |
+| foot_velocity_z     | rad/s          |                               |
+
+### 5.3 Column Naming
+Use `<variable>_<unit>`:
+- `hip_flexion_angle_rad`  
+- `knee_moment_Nm`
 
 ---
 
@@ -142,7 +238,25 @@ See [sign\_conventions.md](sign_conventions.md)
 
 ### 7.2 Phase Calculation
 
-See detailed algorithm in [phase\_calculation.md](phase_calculation.md).
+#### Overview
+Normalize each gait cycle to **0–100%** phase for consistent comparison.
+
+#### Heel-Strike Detection
+- Use `vertical_grf_N` with a threshold of **20 N**.
+- Mark timestamps where force crosses above threshold from below.
+- If the dataset already contains heel-strike event markers or frame indices, these may be used directly instead of detecting from GRF.
+
+#### Cycle Segmentation
+- Identify consecutive heel strikes based on the left and right leg.
+- Define start (0%) and end (100%) of each cycle.
+
+#### Interpolation
+- Default `points_per_cycle`: **150**.
+- Linearly interpolate intermediate samples to generate `phase_%` values.
+- Store `phase_<l|r>` as a float [0.0, 100.0), for the left and right leg, respectively.
+
+#### Configuration
+- Allow override of threshold and `points_per_cycle` in conversion scripts.
 
 ---
 

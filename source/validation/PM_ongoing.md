@@ -4,7 +4,7 @@
 
 ### 1. Dataset Validation Infrastructure
 - **Description**: Core validation system for phase-indexed datasets against specification expectations
-- **Status**: ✅ PRODUCTION READY
+- **Status**: ✅ PRODUCTION READY - Undergoing validation range tuning
 
 ### 2. Step Classification and Color-Coding
 - **Description**: Intelligent step classification system for validation plot visualization
@@ -14,10 +14,29 @@
 - **Description**: Comprehensive plotting system for kinematic and kinetic validation visualization
 - **Status**: ✅ PRODUCTION READY
 
+### 4. Validation Range Calibration
+- **Description**: Tuning validation expectations to match real biomechanical data patterns
+- **Status**: 🔄 IN PROGRESS - Testing with UMich 2021 dataset
+
 ## Recent Work (Last 15 Items)
 
 ### 2025-06-11
-1. **Professional Color Scheme Implementation** - Enhanced validation visual identity
+1. **Documentation Consolidation & Organization** - Streamlined documentation structure for improved user experience
+   - Consolidated standard_spec files: merged units_and_conventions.md and phase_calculation.md into main standard_spec.md
+   - Reduced standard_spec complexity from 7 files to 5 files (29% reduction)  
+   - Added comprehensive headers to all tutorial test files with usage instructions
+   - Moved tutorial test files to source/tests/ for proper organization
+   - Enhanced content density while maintaining approachability for new users
+
+2. **UMich 2021 Dataset Validation Testing** - Deployed validation system on real biomechanical data
+   - Fixed data mapping issue in UMich conversion (corrected ipsi/contra assignment)
+   - Successfully regenerated corrected phase-indexed dataset (umich_2021_phase.parquet)
+   - Completed comprehensive validation report generation (8,305 steps analyzed)
+   - Identified 100% failure rate indicating need for validation range calibration
+   - Generated detailed failure analysis with phase-specific biomechanical insights
+   - Validation system performed efficiently on large dataset (>8K steps)
+
+2. **Professional Color Scheme Implementation** - Enhanced validation visual identity
    - Updated step colors: green (valid), red (local violations), yellow (other violations)
    - Updated filter colors: uniform light gray (#D3D3D3) for better data line visibility
    - Fixed legends to match actual plot colors across all validation reports

@@ -1,11 +1,42 @@
-% Test script for MATLAB tutorial
+%{
+Tutorial Test: MATLAB Getting Started Guide
+
+Created: 2025-06-11 (moved from docs/tutorials/matlab/)
+Purpose: Validates the MATLAB getting started tutorial functionality and examples
+
+Intent:
+This test script validates all functionality covered in the MATLAB getting started tutorial,
+ensuring that basic data loading and manipulation operations work correctly for:
+
+PRIMARY FUNCTIONS:
+1. Data Loading: Verify CSV data loading from tutorial test files using readtable
+2. Data Joining: Test MATLAB outerjoin operations on locomotion and task data
+3. Task Filtering: Validate filtering operations for specific locomotion tasks
+4. Phase Analysis: Test phase-based data manipulation and grouping operations
+5. Basic Calculations: Verify range of motion and summary statistics
+
+Usage:
+    cd source/tests
+    matlab -batch "test_tutorial_getting_started_matlab"
+
+Expected Output:
+- Successful data loading from test CSV files
+- Data combination and filtering results
+- Phase-based analysis outputs
+- Range of motion calculations
+- Tutorial completion confirmation
+
+This test ensures new users can successfully follow the getting started guide
+and perform basic biomechanical data analysis operations in MATLAB.
+%}
+
 disp('Testing MATLAB tutorial...');
 
 % 1. Loading the Data
 try
     % Define file paths
-    locomotionDataFile = '../test_files/locomotion_data.csv';
-    taskInfoFile = '../test_files/task_info.csv';
+    locomotionDataFile = '../../docs/tutorials/test_files/locomotion_data.csv';
+    taskInfoFile = '../../docs/tutorials/test_files/task_info.csv';
     
     % Check if files exist
     if exist(locomotionDataFile, 'file') && exist(taskInfoFile, 'file')

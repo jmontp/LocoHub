@@ -1,8 +1,34 @@
 #!/usr/bin/env python3
 """
-Test script to verify the LocomotionData library functionality.
-Run from the python tutorial directory:
-    python test_library.py
+Tutorial Test: Python Library Functionality
+
+Created: 2025-06-11 (moved from docs/tutorials/python/)
+Purpose: Validates the Python LocomotionData library functionality from the library tutorial
+
+Intent:
+This test script validates all functionality covered in the Python library tutorial,
+ensuring that the LocomotionData class works correctly for:
+
+**PRIMARY FUNCTIONS:**
+1. **Library Import**: Verify LocomotionData can be imported successfully
+2. **Data Creation**: Test creation of test datasets with proper structure
+3. **3D Array Operations**: Validate efficient reshape operations for phase data
+4. **Statistical Analysis**: Test mean, std, and range calculations across cycles
+5. **Data Validation**: Ensure data integrity and expected outputs
+
+Usage:
+    cd source/tests
+    python test_tutorial_library_python.py
+
+Expected Output:
+- Successful import confirmation
+- Test data creation and validation
+- 3D array operation results
+- Statistical calculations
+- All tests passing confirmation
+
+This test ensures the library tutorial examples work correctly and validates
+the core functionality users will rely on for biomechanical data analysis.
 """
 
 import sys
@@ -11,7 +37,7 @@ import numpy as np
 import pandas as pd
 
 # Add library path
-sys.path.append('../../../source/lib/python')
+sys.path.append('../lib/python')
 
 print("Testing LocomotionData library...")
 print(f"Current directory: {os.getcwd()}")

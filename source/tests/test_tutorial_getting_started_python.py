@@ -1,4 +1,36 @@
-# Test script for Python tutorial
+#!/usr/bin/env python3
+"""
+Tutorial Test: Python Getting Started Guide
+
+Created: 2025-06-11 (moved from docs/tutorials/python/)
+Purpose: Validates the Python getting started tutorial functionality and examples
+
+Intent:
+This test script validates all functionality covered in the Python getting started tutorial,
+ensuring that basic data loading and manipulation operations work correctly for:
+
+**PRIMARY FUNCTIONS:**
+1. **Data Loading**: Verify CSV data loading from tutorial test files
+2. **Data Joining**: Test pandas merge operations on locomotion and task data
+3. **Task Filtering**: Validate filtering operations for specific locomotion tasks
+4. **Phase Analysis**: Test phase-based data manipulation and groupby operations
+5. **Basic Calculations**: Verify range of motion and summary statistics
+
+Usage:
+    cd source/tests
+    python test_tutorial_getting_started_python.py
+
+Expected Output:
+- Successful data loading from test CSV files
+- Data combination and filtering results
+- Phase-based analysis outputs
+- Range of motion calculations
+- Tutorial completion confirmation
+
+This test ensures new users can successfully follow the getting started guide
+and perform basic biomechanical data analysis operations.
+"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,8 +41,8 @@ print("Testing Python tutorial...")
 
 # 1. Loading Data
 try:
-    df_locomotion = pd.read_csv('../test_files/locomotion_data.csv')
-    df_tasks = pd.read_csv('../test_files/task_info.csv')
+    df_locomotion = pd.read_csv('../../docs/tutorials/test_files/locomotion_data.csv')
+    df_tasks = pd.read_csv('../../docs/tutorials/test_files/task_info.csv')
 
     print("\nLocomotion Data:")
     print(df_locomotion.head(3))
