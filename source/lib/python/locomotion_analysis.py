@@ -272,8 +272,12 @@ class LocomotionData:
         # Create identity mapping for standard features
         self.feature_mappings = {feature: feature for feature in self.features}
         
-        print(f"Loaded data with {len(self.df)} rows, {self.df[self.subject_col].nunique()} subjects, "
-              f"{self.df[self.task_col].nunique()} tasks, {len(self.features)} features")
+        # Store unique subjects and tasks for external access
+        self.subjects = sorted(self.df[self.subject_col].unique())
+        self.tasks = sorted(self.df[self.task_col].unique())
+        
+        print(f"Loaded data with {len(self.df)} rows, {len(self.subjects)} subjects, "
+              f"{len(self.tasks)} tasks, {len(self.features)} features")
     
     def _validate_variable_names(self):
         """Validate variable names against standard naming convention."""
