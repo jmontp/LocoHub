@@ -6,6 +6,8 @@ Standardized biomechanical datasets for cross-study analysis.
 
 ## Use Cases
 
+---
+
 ### 1. Standard Specification Reference
 *Download the tables and manage them yourself*
 
@@ -14,6 +16,8 @@ Use the standardized variable names and data format in your own work:
 - **Time indexing**: Original sampling rate preserved
 - **Phase indexing**: 150 points per normalized gait cycle
 - **Reference**: [Data Format Spec](docs/standard_spec/standard_spec.md)
+
+---
 
 ### 2. Data Analysis Library
 *Use library code to help manage the tables*
@@ -36,6 +40,8 @@ knee_angles = data.get_variable('knee_flexion_angle_ipsi_rad');
 ```
 
 **Tutorials**: [Python](docs/tutorials/python/getting_started_python.md) • [MATLAB](docs/tutorials/matlab/getting_started_matlab.md)
+
+---
 
 ### 3. Dataset Development
 *Contribute new datasets to the standard*
