@@ -17,7 +17,20 @@
 ## Recent Work (Last 15 Items)
 
 ### 2025-06-10
-1. **Naming Refactor: Phase Progression → Filters by Phase** - Complete terminology and file structure update
+1. **Validation Library Refactor** - Moved plotting modules to validation library and cleaned interfaces
+   - Moved filters_by_phase_plots.py and forward_kinematics_plots.py to source/validation/
+   - Removed main() functions from library modules - clean separation of library vs entry points
+   - Updated docstrings to clarify library usage with proper entry point documentation
+   - Integrated step classifier color-coding functionality for validation plot overlays
+   - Maintained backward compatibility while improving code organization
+
+2. **Plotting Module Cleanup** - Removed non-plotting code from visualization modules
+   - Cleaned up visualization modules to focus only on plotting functionality
+   - Removed step classification and default handling code from visualization modules
+   - Moved validation plotting modules to appropriate source/validation/ directory
+   - Added unified validation plots generator for coordinated plot creation
+
+3. **Naming Refactor: Phase Progression → Filters by Phase** - Complete terminology and file structure update
    - Renamed "phase progression" to "filters by phase" throughout all documentation and scripts
    - Added "forward kinematics" to pose visualization naming for clarity
    - Merged individual plotting scripts into unified `filters_by_phase_plots.py` with mode toggle

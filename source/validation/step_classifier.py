@@ -16,9 +16,9 @@ biomechanical gait data. It serves as a reusable validation system that:
    - Eliminates boundary effects and rounding errors from full time-series validation
 
 2. **Step Classification System**: Maps validation results to visualization colors
-   - Gray: Valid steps with no violations
+   - Green: Valid steps with no violations
    - Red: Steps with local violations (violations in the feature being plotted)  
-   - Pink: Steps with other violations (violations in different features)
+   - Yellow: Steps with other violations (violations in different features)
 
 **VALIDATION APPROACH:**
 - **Single Source of Truth**: Loads validation ranges from standard specification markdown files
@@ -112,9 +112,9 @@ class StepClassifier:
         
         # Color scheme definitions
         self.color_scheme = {
-            'valid': 'gray',
+            'valid': 'green',
             'local_violation': 'red',
-            'other_violation': 'pink'
+            'other_violation': 'yellow'
         }
         
         # Cache for validation ranges loaded from specification files
@@ -303,7 +303,7 @@ class StepClassifier:
             elif violated_variables:
                 # This step has violations in other features (other violation)
                 step_colors[step_idx] = self.color_scheme['other_violation']
-            # Otherwise, step remains gray (valid)
+            # Otherwise, step remains green (valid)
         
         return step_colors
     
@@ -350,8 +350,8 @@ class StepClassifier:
             Array with shape (num_steps, num_features) where each cell contains
             the appropriate color for that step-feature combination:
             - 'red': Local violation (step has violation in this feature)
-            - 'pink': Other violation (step has violations in other features)
-            - 'gray': Valid (step has no violations at all)
+            - 'yellow': Other violation (step has violations in other features)
+            - 'green': Valid (step has no violations at all)
         """
         feature_map = self.get_feature_map(mode)
         feature_names = list(feature_map.keys())
@@ -377,7 +377,7 @@ class StepClassifier:
                 elif violated_variables:
                     # This step has violations in other features (other violation)
                     step_colors[step_idx, feature_idx] = self.color_scheme['other_violation']
-                # Otherwise, remains gray (valid)
+                # Otherwise, remains green (valid)
         
         return step_colors
     
@@ -724,7 +724,14 @@ class StepClassifier:
         
         # Generate realistic patterns that stay within ranges
         for step in range(num_steps):
-            step_offset = (step - num_steps/2) * 0.01  # Small variation per step
+            # Create unique step characteristics for each step
+            step_offset = (step - num_steps/2) * 0.01  # Progressive step variation
+            
+            # Add random step-specific variations (each step gets unique pattern)
+            np.random.seed(42 + step)  # Deterministic but unique per step
+            step_amplitude_variation = np.random.uniform(0.8, 1.2)  # ±20% amplitude variation
+            step_phase_shift = np.random.uniform(-0.2, 0.2)  # Small phase shifts
+            step_baseline_shift = np.random.uniform(-0.05, 0.05)  # Small baseline shifts
             
             for point_idx, phase_idx in enumerate(phase_indices):
                 if phase_idx not in task_data:
@@ -739,14 +746,28 @@ class StepClassifier:
                     
                     # Create realistic patterns within bounds
                     range_center = (min_val + max_val) / 2
-                    range_width = (max_val - min_val) * 0.3  # Use 30% of available range
+                    range_width = (max_val - min_val) * 0.4  # Use 40% of available range (increased from 30%)
                     
-                    # Add some gait-like periodicity
-                    phase_rad = phase_idx * np.pi / 50  # Convert phase to radians
-                    pattern_value = range_center + range_width * np.sin(phase_rad) + step_offset
+                    # Add gait-like periodicity with step-specific variations
+                    phase_rad = (phase_idx + step_phase_shift * 10) * np.pi / 50  # Convert phase to radians with shift
                     
-                    # Ensure we stay within bounds
-                    pattern_value = max(min_val + 0.01, min(max_val - 0.01, pattern_value))
+                    # Create more complex, realistic patterns
+                    primary_pattern = np.sin(phase_rad)
+                    secondary_pattern = 0.3 * np.sin(2 * phase_rad + step * 0.5)  # Harmonic component
+                    combined_pattern = (primary_pattern + secondary_pattern) * step_amplitude_variation
+                    
+                    pattern_value = (range_center + 
+                                   range_width * combined_pattern + 
+                                   step_offset + 
+                                   step_baseline_shift)
+                    
+                    # Add small amount of measurement noise
+                    noise_scale = (max_val - min_val) * 0.02  # 2% of range as noise
+                    pattern_value += np.random.normal(0, noise_scale)
+                    
+                    # Ensure we stay within bounds with safety margin
+                    safety_margin = (max_val - min_val) * 0.05  # 5% safety margin
+                    pattern_value = max(min_val + safety_margin, min(max_val - safety_margin, pattern_value))
                     data[step, point_idx, feature_idx] = pattern_value
         
         return data

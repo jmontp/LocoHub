@@ -19,7 +19,30 @@
 ## Recent Work (Last 15 Items)
 
 ### 2025-06-10
-1. **Validation Report Generator - Initial Implementation** - Completed core validation report generation system
+1. **Validation System Architecture Refactor** - Major restructure of validation libraries and dataset validators
+   - Created new source/validation/ directory with focused dataset validation tools
+   - Refactored dataset_validator_phase.py to use validation library modules (StepClassifier integration)
+   - Eliminated duplicate validation logic across tools - single source of truth via step classifier
+   - Removed synthetic data fallbacks - all validation ranges from specification files
+   - Achieved 37.5x speedup through efficient representative phase validation
+   - Clean separation: library modules vs entry point scripts (removed main() functions from libraries)
+
+2. **Step Classifier Integration** - Extracted comprehensive step classification system
+   - Created standalone StepClassifier module in source/validation/step_classifier.py
+   - Feature-aware classification: distinguishes local vs other violations per joint feature
+   - Supports both kinematic and kinetic modes with proper feature mappings
+   - Efficient processing for large datasets (1000+ steps in <1ms)
+   - Comprehensive test suite (test_step_classifier.py) with deterministic and boundary value tests
+   - Live plotting integration with filters_by_phase_plots for step color-coding
+
+3. **Testing Framework Enhancement** - Established comprehensive testing conventions
+   - Added test_{module}.py naming convention for test suites (pytest-based)
+   - Added demo_{module}.py naming convention for interactive demonstrations
+   - Updated source/tests/CLAUDE.md with testing framework documentation
+   - Cleaned up obsolete demo files and reorganized plot storage structure
+   - Enhanced test documentation to prevent usage of outdated validation files
+
+4. **Validation Report Generator - Initial Implementation** - Completed core validation report generation system
    - Implemented validation_report_generator.py with phase-based dataset support
    - Added dataset trace overlay capability to phase progression plots
    - Enhanced kinematic pose generator to read validation expectations from markdown

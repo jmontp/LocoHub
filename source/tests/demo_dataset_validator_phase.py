@@ -53,76 +53,241 @@ def print_banner(title):
     print(f"🎯 {title}")
     print('='*60)
 
-def create_realistic_gait_cycle(task: str = 'level_walking', validation_ranges: Dict = None) -> np.ndarray:
+def create_realistic_gait_cycle(task: str = 'level_walking', validation_ranges: Dict = None, 
+                               use_validation_ranges: bool = True, subject_variation_seed: int = None) -> np.ndarray:
     """
     Create realistic gait cycle data for 6 joint angles over 150 phase points.
     
     Args:
         task: Task name for determining gait patterns
         validation_ranges: Optional validation ranges to ensure data stays within bounds
+        use_validation_ranges: If True, use StepClassifier to generate valid data (recommended)
+        subject_variation_seed: Optional seed for subject-specific variations
         
     Returns:
         Array of shape (150, 6) with joint angles in radians
     """
-    phase_points = np.linspace(0, 100, 150)  # Phase percentage 0-100%
     
-    # Define joint patterns based on typical gait biomechanics
-    if task == 'level_walking':
-        # Hip flexion patterns (ipsi and contra with phase offset)
-        hip_ipsi = 0.3 * np.sin(np.radians(phase_points * 3.6)) + 0.15
-        hip_contra = 0.3 * np.sin(np.radians(phase_points * 3.6 + 180)) + 0.15
-        
-        # Knee flexion patterns  
-        knee_ipsi = 0.4 * np.sin(np.radians(phase_points * 7.2)) + 0.3
-        knee_contra = 0.4 * np.sin(np.radians(phase_points * 7.2 + 180)) + 0.3
-        
-        # Ankle flexion patterns
-        ankle_ipsi = 0.15 * np.sin(np.radians(phase_points * 3.6 + 90)) - 0.05
-        ankle_contra = 0.15 * np.sin(np.radians(phase_points * 3.6 + 270)) - 0.05
-        
-    elif task == 'incline_walking':
-        # Modified patterns for incline walking (more hip flexion, different ankle)
-        hip_ipsi = 0.4 * np.sin(np.radians(phase_points * 3.6)) + 0.25
-        hip_contra = 0.4 * np.sin(np.radians(phase_points * 3.6 + 180)) + 0.25
-        
-        knee_ipsi = 0.5 * np.sin(np.radians(phase_points * 7.2)) + 0.4
-        knee_contra = 0.5 * np.sin(np.radians(phase_points * 7.2 + 180)) + 0.4
-        
-        ankle_ipsi = 0.2 * np.sin(np.radians(phase_points * 3.6 + 45)) + 0.1
-        ankle_contra = 0.2 * np.sin(np.radians(phase_points * 3.6 + 225)) + 0.1
-        
-    elif task == 'running':
-        # Running patterns (higher amplitudes, faster oscillations)
-        hip_ipsi = 0.5 * np.sin(np.radians(phase_points * 3.6)) + 0.2
-        hip_contra = 0.5 * np.sin(np.radians(phase_points * 3.6 + 180)) + 0.2
-        
-        knee_ipsi = 0.8 * np.sin(np.radians(phase_points * 7.2)) + 0.5
-        knee_contra = 0.8 * np.sin(np.radians(phase_points * 7.2 + 180)) + 0.5
-        
-        ankle_ipsi = 0.3 * np.sin(np.radians(phase_points * 3.6 + 90)) + 0.1
-        ankle_contra = 0.3 * np.sin(np.radians(phase_points * 3.6 + 270)) + 0.1
-        
-    else:  # Default to level walking
-        hip_ipsi = 0.3 * np.sin(np.radians(phase_points * 3.6)) + 0.15
-        hip_contra = 0.3 * np.sin(np.radians(phase_points * 3.6 + 180)) + 0.15
-        knee_ipsi = 0.4 * np.sin(np.radians(phase_points * 7.2)) + 0.3
-        knee_contra = 0.4 * np.sin(np.radians(phase_points * 7.2 + 180)) + 0.3
-        ankle_ipsi = 0.15 * np.sin(np.radians(phase_points * 3.6 + 90)) - 0.05
-        ankle_contra = 0.15 * np.sin(np.radians(phase_points * 3.6 + 270)) - 0.05
+    if use_validation_ranges:
+        # Use StepClassifier to generate data that respects validation ranges
+        try:
+            classifier = StepClassifier()
+            
+            # Create multiple steps to get varied data, then select one
+            num_steps_to_generate = 5  # Generate several steps for variety
+            valid_data = classifier.create_valid_data_from_specs(
+                task_name=task, 
+                mode='kinematic', 
+                num_steps=num_steps_to_generate,
+                num_points=150, 
+                num_features=6
+            )
+            
+            # Use subject variation seed to select which step pattern to use
+            if subject_variation_seed is not None:
+                np.random.seed(subject_variation_seed)
+                step_choice = np.random.randint(0, num_steps_to_generate)
+                selected_step_data = valid_data[step_choice, :, :]  # Shape: (150, 6)
+                
+                # Add substantial realistic noise while staying within bounds
+                # Load validation ranges to ensure we don't go outside bounds
+                from validation.validation_expectations_parser import parse_kinematic_validation_expectations
+                import os
+                validation_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'docs', 'standard_spec', 'validation_expectations_kinematic.md')
+                validation_data = parse_kinematic_validation_expectations(validation_file)
+                
+                if task in validation_data:
+                    task_ranges = validation_data[task]
+                    
+                    # Add noise feature by feature, ensuring bounds are respected
+                    feature_names = [
+                        'hip_flexion_angle_contra', 'knee_flexion_angle_contra', 'ankle_flexion_angle_contra',
+                        'hip_flexion_angle_ipsi', 'knee_flexion_angle_ipsi', 'ankle_flexion_angle_ipsi'
+                    ]
+                    
+                    for feature_idx, feature_name in enumerate(feature_names):
+                        if feature_name in task_ranges:
+                            # Get the phase-specific ranges for this feature
+                            phase_ranges = task_ranges[feature_name]
+                            
+                            for phase_key, range_dict in phase_ranges.items():
+                                # Extract phase percentage and find corresponding data points
+                                phase_pct = float(phase_key.replace('%', ''))
+                                phase_idx = int(phase_pct * 149 / 100)  # Convert to 0-149 index
+                                
+                                # Get min/max bounds for this phase
+                                min_val = range_dict['min']
+                                max_val = range_dict['max']
+                                
+                                # Calculate safe noise bounds (stay 20% away from edges for extra safety)
+                                range_width = max_val - min_val
+                                safe_margin = range_width * 0.2  # Increased margin for safety
+                                safe_min = min_val + safe_margin
+                                safe_max = max_val - safe_margin
+                                
+                                # Ensure safe range is valid
+                                if safe_max <= safe_min:
+                                    # Range too small for noise, skip this phase
+                                    continue
+                                
+                                # Apply bounded noise around current value, staying well within bounds
+                                current_val = selected_step_data[phase_idx, feature_idx]
+                                
+                                # Add conservative noise (±5% of safe range) and ensure bounds are respected
+                                safe_range_width = safe_max - safe_min
+                                noise_amplitude = safe_range_width * 0.05  # Very conservative noise
+                                noise = np.random.normal(0, noise_amplitude)
+                                new_val = current_val + noise
+                                
+                                # Double-check bounds: clamp to safe bounds and then add extra buffer
+                                new_val = np.clip(new_val, safe_min, safe_max)
+                                
+                                # Final safety check: ensure we're not too close to actual validation bounds
+                                final_margin = range_width * 0.05  # 5% final safety buffer
+                                new_val = np.clip(new_val, min_val + final_margin, max_val - final_margin)
+                                
+                                selected_step_data[phase_idx, feature_idx] = new_val
+                    
+                    # Add smaller general noise to other time points (±1% of local value) 
+                    general_noise_scale = 0.01  # Reduced for safety
+                    general_noise = np.random.normal(0, general_noise_scale, selected_step_data.shape)
+                    selected_step_data += general_noise * np.abs(selected_step_data)  # Proportional noise
+                    
+                    # Final safety pass: ensure ALL data points are within validation bounds
+                    # Load validation ranges again to do final bounds checking on all points
+                    for feature_idx, feature_name in enumerate(feature_names):
+                        if feature_name in task_ranges:
+                            phase_ranges = task_ranges[feature_name]
+                            
+                            # Apply bounds checking to all time points for this feature
+                            for point_idx in range(150):
+                                phase_pct = (point_idx / 149.0) * 100  # Convert index to phase percentage
+                                
+                                # Find closest validation phase for bounds checking
+                                closest_phase = None
+                                min_distance = float('inf')
+                                for phase_key in phase_ranges.keys():
+                                    phase_val = float(phase_key.replace('%', ''))
+                                    distance = abs(phase_val - phase_pct)
+                                    if distance < min_distance:
+                                        min_distance = distance
+                                        closest_phase = phase_key
+                                
+                                if closest_phase:
+                                    range_dict = phase_ranges[closest_phase]
+                                    min_val = range_dict['min']
+                                    max_val = range_dict['max']
+                                    
+                                    # Add small safety buffer (2% of range)
+                                    range_width = max_val - min_val
+                                    safety_buffer = range_width * 0.02
+                                    safe_min = min_val + safety_buffer
+                                    safe_max = max_val - safety_buffer
+                                    
+                                    # Clamp to safe bounds
+                                    current_val = selected_step_data[point_idx, feature_idx]
+                                    selected_step_data[point_idx, feature_idx] = np.clip(current_val, safe_min, safe_max)
+                else:
+                    # Fallback: add conservative noise if no validation ranges available
+                    noise_scale = 0.05  # 5% noise
+                    step_noise = np.random.normal(0, noise_scale, selected_step_data.shape)
+                    selected_step_data += step_noise
+                
+                return selected_step_data
+            else:
+                # Return the first step if no seed provided
+                return valid_data[0, :, :]  # Shape: (150, 6)
+                
+        except Exception as e:
+            print(f"   ⚠️  Could not load validation ranges for {task}: {e}")
+            print(f"   ⚠️  Falling back to legacy sine wave patterns")
+            # Fall back to legacy method if validation ranges not available
+            use_validation_ranges = False
     
-    # Combine into standard variable order matching LocomotionData.ANGLE_FEATURES
-    gait_cycle = np.column_stack([
-        hip_contra,   # hip_flexion_angle_contra_rad
-        knee_contra,  # knee_flexion_angle_contra_rad  
-        ankle_contra, # ankle_flexion_angle_contra_rad
-        hip_ipsi,     # hip_flexion_angle_ipsi_rad
-        knee_ipsi,    # knee_flexion_angle_ipsi_rad
-        ankle_ipsi    # ankle_flexion_angle_ipsi_rad
-    ])
-    
-    # Add realistic noise
-    noise_scale = 0.02  # 2% noise
-    gait_cycle += np.random.normal(0, noise_scale, gait_cycle.shape)
+    if not use_validation_ranges:
+        # Legacy approach using hardcoded sine wave patterns (may violate validation ranges)
+        phase_points = np.linspace(0, 100, 150)  # Phase percentage 0-100%
+        
+        # Define joint patterns based on typical gait biomechanics
+        if task == 'level_walking':
+            # Hip flexion patterns (ipsi and contra with phase offset)
+            hip_ipsi = 0.3 * np.sin(np.radians(phase_points * 3.6)) + 0.15
+            hip_contra = 0.3 * np.sin(np.radians(phase_points * 3.6 + 180)) + 0.15
+            
+            # Knee flexion patterns  
+            knee_ipsi = 0.4 * np.sin(np.radians(phase_points * 7.2)) + 0.3
+            knee_contra = 0.4 * np.sin(np.radians(phase_points * 7.2 + 180)) + 0.3
+            
+            # Ankle flexion patterns
+            ankle_ipsi = 0.15 * np.sin(np.radians(phase_points * 3.6 + 90)) - 0.05
+            ankle_contra = 0.15 * np.sin(np.radians(phase_points * 3.6 + 270)) - 0.05
+            
+        elif task == 'incline_walking':
+            # Modified patterns for incline walking (more hip flexion, different ankle)
+            hip_ipsi = 0.4 * np.sin(np.radians(phase_points * 3.6)) + 0.25
+            hip_contra = 0.4 * np.sin(np.radians(phase_points * 3.6 + 180)) + 0.25
+            
+            knee_ipsi = 0.5 * np.sin(np.radians(phase_points * 7.2)) + 0.4
+            knee_contra = 0.5 * np.sin(np.radians(phase_points * 7.2 + 180)) + 0.4
+            
+            ankle_ipsi = 0.2 * np.sin(np.radians(phase_points * 3.6 + 45)) + 0.1
+            ankle_contra = 0.2 * np.sin(np.radians(phase_points * 3.6 + 225)) + 0.1
+            
+        elif task == 'running':
+            # Running patterns (higher amplitudes, faster oscillations)
+            hip_ipsi = 0.5 * np.sin(np.radians(phase_points * 3.6)) + 0.2
+            hip_contra = 0.5 * np.sin(np.radians(phase_points * 3.6 + 180)) + 0.2
+            
+            knee_ipsi = 0.8 * np.sin(np.radians(phase_points * 7.2)) + 0.5
+            knee_contra = 0.8 * np.sin(np.radians(phase_points * 7.2 + 180)) + 0.5
+            
+            ankle_ipsi = 0.3 * np.sin(np.radians(phase_points * 3.6 + 90)) + 0.1
+            ankle_contra = 0.3 * np.sin(np.radians(phase_points * 3.6 + 270)) + 0.1
+            
+        elif task == 'decline_walking':
+            # Decline walking patterns (similar to level but modified)
+            hip_ipsi = 0.25 * np.sin(np.radians(phase_points * 3.6)) + 0.1
+            hip_contra = 0.25 * np.sin(np.radians(phase_points * 3.6 + 180)) + 0.1
+            
+            knee_ipsi = 0.35 * np.sin(np.radians(phase_points * 7.2)) + 0.25
+            knee_contra = 0.35 * np.sin(np.radians(phase_points * 7.2 + 180)) + 0.25
+            
+            ankle_ipsi = 0.2 * np.sin(np.radians(phase_points * 3.6 + 45)) - 0.1
+            ankle_contra = 0.2 * np.sin(np.radians(phase_points * 3.6 + 225)) - 0.1
+            
+        else:  # Default to level walking
+            hip_ipsi = 0.3 * np.sin(np.radians(phase_points * 3.6)) + 0.15
+            hip_contra = 0.3 * np.sin(np.radians(phase_points * 3.6 + 180)) + 0.15
+            knee_ipsi = 0.4 * np.sin(np.radians(phase_points * 7.2)) + 0.3
+            knee_contra = 0.4 * np.sin(np.radians(phase_points * 7.2 + 180)) + 0.3
+            ankle_ipsi = 0.15 * np.sin(np.radians(phase_points * 3.6 + 90)) - 0.05
+            ankle_contra = 0.15 * np.sin(np.radians(phase_points * 3.6 + 270)) - 0.05
+        
+        # Combine into standard variable order matching LocomotionData.ANGLE_FEATURES
+        gait_cycle = np.column_stack([
+            hip_contra,   # hip_flexion_angle_contra_rad
+            knee_contra,  # knee_flexion_angle_contra_rad  
+            ankle_contra, # ankle_flexion_angle_contra_rad
+            hip_ipsi,     # hip_flexion_angle_ipsi_rad
+            knee_ipsi,    # knee_flexion_angle_ipsi_rad
+            ankle_ipsi    # ankle_flexion_angle_ipsi_rad
+        ])
+        
+        # Add realistic noise with subject-specific variation
+        if subject_variation_seed is not None:
+            np.random.seed(subject_variation_seed)
+        
+        # Subject-specific amplitude and offset variations
+        subject_amplitude_variation = np.random.uniform(0.85, 1.15, size=6)  # ±15% per joint
+        subject_offset_variation = np.random.uniform(-0.05, 0.05, size=6)    # Small baseline shifts per joint
+        
+        # Apply subject variations
+        gait_cycle *= subject_amplitude_variation  # Scale each joint uniquely
+        gait_cycle += subject_offset_variation     # Shift each joint baseline
+        
+        # Add measurement noise
+        noise_scale = 0.03  # 3% noise (increased from 2%)
+        gait_cycle += np.random.normal(0, noise_scale, gait_cycle.shape)
     
     return gait_cycle
 
@@ -184,11 +349,20 @@ def create_phase_indexed_dataset(
     total_steps = 0
     violation_count = 0
     
-    for subject in subjects:
-        for task in tasks:
+    for subject_idx, subject in enumerate(subjects):
+        for task_idx, task in enumerate(tasks):
             for step in range(steps_per_subject_task):
-                # Create realistic gait cycle data
-                gait_data = create_realistic_gait_cycle(task)  # Shape: (150, 6)
+                # Create realistic gait cycle data with subject-specific variation
+                # For "clean" datasets, use validation ranges; for "violations" datasets, use legacy patterns
+                use_valid_ranges = validation_scenarios is None  # Clean data if no violations specified
+                
+                # Add subject and task-specific variation by adjusting random seed
+                subject_task_seed = (subject_idx * 100) + (task_idx * 10) + step
+                gait_data = create_realistic_gait_cycle(
+                    task, 
+                    use_validation_ranges=use_valid_ranges,
+                    subject_variation_seed=subject_task_seed
+                )  # Shape: (150, 6)
                 
                 # Apply validation scenarios (introduce known violations)
                 if validation_scenarios and subject in validation_scenarios:

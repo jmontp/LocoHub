@@ -90,9 +90,9 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
         data: Optional numpy array with shape (num_steps, 150, num_features) containing actual data to plot
               Each feature corresponds to one plot (ordered by: hip_ipsi, hip_contra, knee_ipsi, knee_contra, ankle_ipsi, ankle_contra)
         step_colors: Optional array with shape (num_steps, num_features) containing color types for each step-feature combination:
-                    - 'gray': valid (no violations)
+                    - 'green': valid (no violations)
                     - 'red': local violation (violation in current feature)
-                    - 'pink': other violation (violations in other features)
+                    - 'yellow': other violation (violations in other features)
                     If shape is (num_steps,), will use same color for all features of each step (backward compatibility)
         
     Returns:
@@ -144,9 +144,9 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
     if mode == 'kinematic':
         var_types = ['hip_flexion_angle', 'knee_flexion_angle', 'ankle_flexion_angle']
         colors = {
-            'hip_flexion_angle': '#FF6B6B',    # Red
-            'knee_flexion_angle': '#4ECDC4',   # Teal  
-            'ankle_flexion_angle': '#45B7D1'   # Blue
+            'hip_flexion_angle': '#D3D3D3',    # Light Gray
+            'knee_flexion_angle': '#D3D3D3',   # Light Gray  
+            'ankle_flexion_angle': '#D3D3D3'   # Light Gray
         }
         units = 'radians'
         value_conversion = np.degrees  # Convert to degrees for display
@@ -154,9 +154,9 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
     else:  # kinetic
         var_types = ['hip_moment', 'knee_moment', 'ankle_moment']
         colors = {
-            'hip_moment': '#E74C3C',      # Red
-            'knee_moment': '#8E44AD',     # Purple  
-            'ankle_moment': '#3498DB'     # Blue
+            'hip_moment': '#D3D3D3',      # Light Gray
+            'knee_moment': '#D3D3D3',     # Light Gray  
+            'ankle_moment': '#D3D3D3'     # Light Gray
         }
         units = 'Nm/kg'
         value_conversion = lambda x: x  # No conversion for kinetic values
@@ -292,7 +292,7 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                         phase_percent = np.linspace(0, 100, 150)
                         
                         # Plot each step with appropriate color coding
-                        legend_added = {'red': False, 'pink': False, 'gray': False}
+                        legend_added = {'red': False, 'yellow': False, 'green': False}
                         
                         for step_idx in range(feature_data.shape[0]):
                             step_data = feature_data[step_idx, :]
@@ -316,18 +316,18 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                                 linewidth = 1.0
                                 label = 'Local Violation' if not legend_added['red'] else ""
                                 legend_added['red'] = True
-                            elif color_type == 'pink':
-                                color = 'hotpink'  # Pink for other violations
+                            elif color_type == 'yellow':
+                                color = 'yellow'  # Yellow for other violations
                                 alpha = 0.6
                                 linewidth = 0.8
-                                label = 'Other Violation' if not legend_added['pink'] else ""
-                                legend_added['pink'] = True
-                            else:  # 'gray' or any other value defaults to gray
-                                color = 'gray'  # Valid steps
+                                label = 'Other Violation' if not legend_added['yellow'] else ""
+                                legend_added['yellow'] = True
+                            else:  # 'green' or any other value defaults to green
+                                color = 'green'  # Valid steps
                                 alpha = 0.3
                                 linewidth = 0.5
-                                label = 'Valid Steps' if not legend_added['gray'] else ""
-                                legend_added['gray'] = True
+                                label = 'Valid Steps' if not legend_added['green'] else ""
+                                legend_added['green'] = True
                             
                             ax.plot(phase_percent, step_data, 
                                    color=color, alpha=alpha, linewidth=linewidth, label=label)
@@ -367,9 +367,9 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                     # Ensure all three legend categories are always present
                     from matplotlib.lines import Line2D
                     legend_elements = [
-                        Line2D([0], [0], color='gray', linewidth=2, alpha=0.7, label='Valid Steps'),
+                        Line2D([0], [0], color='green', linewidth=2, alpha=0.7, label='Valid Steps'),
                         Line2D([0], [0], color='red', linewidth=2, alpha=0.8, label='Local Violation'), 
-                        Line2D([0], [0], color='hotpink', linewidth=2, alpha=0.6, label='Other Violation')
+                        Line2D([0], [0], color='yellow', linewidth=2, alpha=0.6, label='Other Violation')
                     ]
                     ax.legend(handles=legend_elements, loc='upper left', fontsize=9)
                 else:

@@ -19,8 +19,8 @@ source/
 │   ├── python/                  # Python implementation
 │   └── matlab/                  # MATLAB implementation
 ├── tests/                       # Validation and testing framework
-├── visualization/               # Plotting and animation tools
-└── naming_convention_mapping.py # Variable name standardization utilities
+├── validation/                  # Centralized validation system (new)
+└── visualization/               # Plotting and animation tools
 ```
 
 ## Core Components
@@ -68,47 +68,66 @@ source/
 - **Optimized for MATLAB** data structures and operations
 - **Cross-platform compatibility** with Python-generated datasets
 
-### 3. Validation System (`tests/`)
+### 3. Validation System (`validation/` and `tests/`)
 **Purpose**: Ensure data quality and standard compliance
 
-#### `validation_blueprint.py` - Core Validator
-**5-Layer Validation System**:
-1. **Pre-checks** (Codes 1-9): Column existence, naming, vocabulary
-2. **Layer 0** (Codes 10-29): Global sanity checks (ranges, units)
-3. **Layer 1-2** (Codes 30-49): Biomechanical envelopes (baseline + task-specific)
-4. **Layer 3** (Codes 50-59): Physics consistency (power analysis)
-5. **Layer 4** (Codes 60-69): Subject heuristics (neutral pose)
+#### Centralized Validation (`validation/`)
+**NEW: Comprehensive validation system with library modules**
 
-#### `validation_blueprint_enhanced.py` - Advanced Validator
-**Enhanced Features**:
-- **Comprehensive mode**: Collects all validation errors
-- **Detailed reporting**: Human-readable error descriptions
-- **Export capabilities**: CSV reports with failure analysis
-- **Error tracking**: Multiple error codes per data point
+**Key Components**:
+- `step_classifier.py` - Step classification and efficient validation library (37.5x speedup)
+- `validation_expectations_parser.py` - Single source of truth parser for specification files
+- `filters_by_phase_plots.py` - Validation plotting library with phase progression
+- `forward_kinematics_plots.py` - Kinematic pose visualization library
+- `dataset_validator_phase.py` - Entry point for phase-based dataset validation
+- `dataset_validator_time.py` - Entry point for time-indexed dataset validation
+
+**Features**:
+- **Efficient validation**: Representative phase approach (4 points vs 150 per cycle)
+- **Step classification**: Gray (valid), red (local violations), pink (other violations)
+- **Single source of truth**: Loads ranges from docs/standard_spec/ markdown files
+- **Integrated visualization**: Real-time validation overlay on plots
+- **Library architecture**: Clean separation of library modules vs entry points
+
+#### Legacy Validation (`tests/`)
+**Testing and demonstration framework for validation system**
+
+**Key Components**:
+- `test_step_classifier.py` - Comprehensive pytest test suite for step classification
+- `test_filters_by_phase_plots.py` - Tests for validation plotting functionality
+- `demo_step_classifier.py` - Interactive demonstration of step classification
+- `demo_filters_by_phase_plots.py` - Interactive demonstration of validation plots
+
+**Features**:
+- **Comprehensive testing**: Unit tests for all validation functionality
+- **Interactive demos**: Live demonstrations of validation and classification
+- **Test data**: Pre-generated test datasets with known validation patterns
+- **Performance benchmarking**: Validation of 37.5x speedup claims
 
 ### 4. Visualization Tools (`visualization/`)
 **Purpose**: Generate plots, animations, and visual validation
 
 **Key Scripts**:
-- `mozaic_plot.py` - Multi-task comparison plots
-- `mosaic_plot_validated.py` - Validation-integrated plotting
 - `walking_animator.py` - Animated stick figure visualizations
-- `mosaic_plot_with_failure_analysis.py` - Error analysis plots
+- `refresh_validation_gifs.py` - Generate validation animation sequences
 
 **Features**:
-- **Task comparison visualizations** across multiple activities
-- **Validation overlay plots** showing data quality
-- **Interactive plotting** with Plotly integration
 - **Animation generation** for documentation and validation
-- **Performance optimization** for large datasets
+- **Stick figure visualization** of biomechanical movements
+- **GIF generation** for validation sequences
+- **Plot storage** in organized directory structure
+
+**Note**: Primary validation plotting functionality has moved to `validation/` directory for better organization. The `visualization/` directory now focuses on non-validation specific plotting and animation tools.
 
 ## Development Patterns and Standards
 
 ### Code Organization Principles
 1. **Dataset-specific conversion** in isolated subdirectories
 2. **Common functionality** in shared libraries
-3. **Validation as a service** used by all components
-4. **Visualization as post-processing** operating on standardized data
+3. **Centralized validation system** in `validation/` with library modules and entry points
+4. **Validation as a service** used by all components
+5. **Clean library interfaces** - library modules have no main() functions
+6. **Visualization as post-processing** operating on standardized data
 
 ### Variable Naming Standards
 **Pattern**: `<joint>_<motion>_<measurement>_<side>_<unit>`
@@ -118,11 +137,10 @@ source/
 - `hip_moment_ipsi_Nm`
 - `ankle_flexion_velocity_ipsi_rad_s`
 
-**Implementation**: `naming_convention_mapping.py` provides utilities for:
-- Variable name standardization
-- Legacy name mapping
-- Unit conversion helpers
-- Validation of naming compliance
+**Implementation**: Naming convention utilities are available in:
+- Conversion scripts handle variable name standardization
+- Validation system ensures naming compliance
+- Library classes provide standardized access patterns
 
 ### Data Format Standards
 **Time-indexed Data**:
@@ -145,22 +163,24 @@ source/
 
 ### Conversion → Validation → Library → Visualization Flow
 ```
-Raw Data → Conversion Scripts → Standardized Parquet → Validation → Library Classes → Visualization
+Raw Data → Conversion Scripts → Standardized Parquet → Validation (source/validation/) → Library Classes → Visualization
 ```
 
 ### Cross-Component Dependencies
 - **Conversion scripts** use validation system for output verification
 - **Libraries** integrate validation for data quality assurance
+- **Validation system** (`source/validation/`) provides centralized validation and plotting
 - **Visualization** tools use library classes for data access
 - **All components** follow specifications in `../../docs/standard_spec/`
+- **Validation expectations** loaded from markdown files as single source of truth
 
 ### Data Flow Patterns
 1. **Load**: Raw data loaded by dataset-specific conversion scripts
 2. **Transform**: Data standardized using naming conventions and format rules
-3. **Validate**: Output validated using 5-layer validation system
+3. **Validate**: Output validated using centralized validation system (`source/validation/`)
 4. **Export**: Standardized Parquet files created for both time and phase indexing
 5. **Analyze**: Library classes provide efficient access and analysis
-6. **Visualize**: Plotting tools generate insights and validation plots
+6. **Visualize**: Plotting tools generate insights and validation plots with step classification
 
 ## Common Development Tasks
 
