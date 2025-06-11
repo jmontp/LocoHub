@@ -110,11 +110,37 @@ Usage:
 ### Decision-Making Guidelines
 - If you are not 100% certain on what to do, or feel like you are making a big assumption. Consult the user. 
 
-### Coding Principles
-- Do not use default values/synthetic data/soft failures, if you don't find a variable raise an explicit error that can be then debugged instead of failing softly.
+### Coding Philosophy and Standards
+
+**Core Principles:**
+- **Minimal Code**: Write only what is necessary - less code is better code
+- **Clear Intent**: Every function, class, and file must document its purpose and intent
+- **Understandable**: Code should be readable by biomechanics researchers, not just programmers
+- **Well-tested**: All functionality must have corresponding tests
+
+**Implementation Guidelines:**
+- **Explicit over implicit**: Raise clear errors instead of soft failures or default values
+- **Single purpose**: Each function/class should do one thing well
+- **Clear naming**: Variable and function names should explain intent without comments
+- **Comprehensive headers**: Every file must include purpose, intent, and usage documentation
+
+### Code Quality Standards
+
+**Testing Requirements:**
+- **Unit tests**: All functions must have corresponding tests
+- **Integration tests**: Key workflows must be tested end-to-end
+- **Validation tests**: Data outputs must be validated against expectations
+- **Documentation tests**: Code examples in documentation must be tested
+
+**Code Organization:**
+- **Minimal codebase**: Prefer fewer, well-designed components over many small utilities
+- **Clear dependencies**: Minimize external dependencies and document all requirements
+- **Modular design**: Components should be independent and reusable
+- **No duplication**: Eliminate redundant functionality across the codebase
 
 ### File Structure Guidelines
 - Every file should include a header that describes the intent and purpose of the file
+- Follow the comprehensive header template from File Creation Guidelines section
 
 ## Communication Guidelines
 - Tone down the language for "publication-ready" and all of that.
