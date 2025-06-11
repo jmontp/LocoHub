@@ -219,12 +219,17 @@ class DatasetValidator:
         
         try:
             # Use LocomotionData library for loading and validation
-            self.locomotion_data = LocomotionData(self.dataset_path)
+            # Update to use proper phase column naming
+            phase_col = 'phase_percent' if 'phase_percent' in pd.read_parquet(self.dataset_path).columns else 'phase'
+            self.locomotion_data = LocomotionData(self.dataset_path, phase_col=phase_col)
             
             print(f"✅ Loaded phase-based dataset using LocomotionData library")
-            print(f"   Subjects: {len(self.locomotion_data.get_subjects())}")
-            print(f"   Tasks: {len(self.locomotion_data.get_tasks())}")
+            print(f"   Subjects: {len(self.locomotion_data.subjects)}")
+            print(f"   Tasks: {len(self.locomotion_data.tasks)}")
             print(f"   Features: {len(self.locomotion_data.features)}")
+            
+            # Check for standard variable naming
+            self._validate_standard_naming()
             
             # Get the DataFrame for additional validation
             df = self.locomotion_data.df
@@ -265,6 +270,30 @@ class DatasetValidator:
         except Exception as e:
             raise RuntimeError(f"Error loading dataset with LocomotionData: {e}")
     
+    def _validate_standard_naming(self):
+        """Validate that the dataset uses standard variable naming convention."""
+        expected_patterns = [
+            # Standard kinematic variables
+            'hip_flexion_angle_ipsi_rad', 'hip_flexion_angle_contra_rad',
+            'knee_flexion_angle_ipsi_rad', 'knee_flexion_angle_contra_rad', 
+            'ankle_flexion_angle_ipsi_rad', 'ankle_flexion_angle_contra_rad',
+            # Standard kinetic variables
+            'hip_moment_ipsi_Nm', 'hip_moment_contra_Nm',
+            'knee_moment_ipsi_Nm', 'knee_moment_contra_Nm',
+            'ankle_moment_ipsi_Nm', 'ankle_moment_contra_Nm'
+        ]
+        
+        available_features = self.locomotion_data.features
+        standard_features = [f for f in expected_patterns if f in available_features]
+        legacy_features = [f for f in available_features if f not in expected_patterns and ('_angle_' in f or '_moment_' in f)]
+        
+        if standard_features:
+            print(f"   ✅ Found {len(standard_features)} standard naming variables")
+        
+        if legacy_features:
+            print(f"   ⚠️  Found {len(legacy_features)} legacy naming variables: {legacy_features[:3]}...")
+            print(f"   📝 Consider updating to standard naming: <joint>_<motion>_<measurement>_<side>_<unit>")
+            print(f"      Example: hip_flexion_angle_ipsi_rad, knee_moment_contra_Nm")
     
     def validate_step_against_expectations(self, step_data: pd.DataFrame, task: str, 
                                          validation_type: str = "kinematic") -> List[Dict]:
@@ -410,8 +439,8 @@ class DatasetValidator:
         }
         
         # Get all subjects and tasks from LocomotionData
-        subjects = locomotion_data.get_subjects()
-        tasks = locomotion_data.get_tasks()
+        subjects = locomotion_data.subjects
+        tasks = locomotion_data.tasks
         
         print(f"📊 Validating {len(subjects)} subjects across {len(tasks)} tasks")
         

@@ -90,8 +90,16 @@ class StepClassifier:
     
     def __init__(self):
         """Initialize the step classifier."""
-        # Define feature mappings for kinematic variables
+        # Define feature mappings for kinematic variables (support both standard and legacy naming)
         self.kinematic_feature_map = {
+            # Standard naming convention
+            'hip_flexion_angle_ipsi_rad': 0,
+            'hip_flexion_angle_contra_rad': 1,
+            'knee_flexion_angle_ipsi_rad': 2,
+            'knee_flexion_angle_contra_rad': 3,
+            'ankle_flexion_angle_ipsi_rad': 4,
+            'ankle_flexion_angle_contra_rad': 5,
+            # Legacy naming convention (for backward compatibility)
             'hip_flexion_angle_ipsi': 0,
             'hip_flexion_angle_contra': 1,
             'knee_flexion_angle_ipsi': 2,
@@ -100,8 +108,16 @@ class StepClassifier:
             'ankle_flexion_angle_contra': 5
         }
         
-        # Define feature mappings for kinetic variables
+        # Define feature mappings for kinetic variables (support both standard and legacy naming)
         self.kinetic_feature_map = {
+            # Standard naming convention
+            'hip_moment_ipsi_Nm': 0,
+            'hip_moment_contra_Nm': 1,
+            'knee_moment_ipsi_Nm': 2,
+            'knee_moment_contra_Nm': 3,
+            'ankle_moment_ipsi_Nm': 4,
+            'ankle_moment_contra_Nm': 5,
+            # Legacy naming convention (for backward compatibility)
             'hip_moment_ipsi_Nm_kg': 0,
             'hip_moment_contra_Nm_kg': 1,
             'knee_moment_ipsi_Nm_kg': 2,

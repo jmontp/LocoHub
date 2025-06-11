@@ -29,8 +29,8 @@ import argparse
 import multiprocessing
 from pathlib import Path
 
-# Add validation module path
-sys.path.append(str(Path(__file__).parent))
+# Add source directory to path for library imports
+sys.path.append(str(Path(__file__).parent.parent))
 
 def calculate_joint_positions(hip_angle, knee_angle, ankle_angle, segment_lengths):
     """Calculate joint positions for stick figure animation."""
@@ -56,69 +56,63 @@ def calculate_joint_positions(hip_angle, knee_angle, ankle_angle, segment_length
     
     return (hip_x, hip_y), (knee_x, knee_y), (ankle_x, ankle_y), (foot_x, foot_y)
 
-def detect_variable_names(df):
-    """Detect variable naming convention and return appropriate column names."""
-    columns = df.columns.tolist()
-    
-    # Try standard naming convention first
-    angle_patterns = {
-        'hip_ipsi': ['hip_flexion_angle_ipsi_rad'],
-        'knee_ipsi': ['knee_flexion_angle_ipsi_rad'], 
-        'ankle_ipsi': ['ankle_flexion_angle_ipsi_rad'],
-        'hip_contra': ['hip_flexion_angle_contra_rad'],
-        'knee_contra': ['knee_flexion_angle_contra_rad'],
-        'ankle_contra': ['ankle_flexion_angle_contra_rad']
-    }
-    
-    # Try legacy naming conventions
-    legacy_patterns = {
-        'hip_ipsi': ['hip_flexion_angle_right_rad', 'hip_angle_right', 'hip_flexion_angle_left_rad'],
-        'knee_ipsi': ['knee_flexion_angle_right_rad', 'knee_angle_right', 'knee_flexion_angle_left_rad'],
-        'ankle_ipsi': ['ankle_flexion_angle_right_rad', 'ankle_angle_right', 'ankle_flexion_angle_left_rad'],
-        'hip_contra': ['hip_flexion_angle_left_rad', 'hip_angle_left', 'hip_flexion_angle_right_rad'],
-        'knee_contra': ['knee_flexion_angle_left_rad', 'knee_angle_left', 'knee_flexion_angle_right_rad'],
-        'ankle_contra': ['ankle_flexion_angle_left_rad', 'ankle_angle_left', 'ankle_flexion_angle_right_rad']
-    }
-    
-    detected_vars = {}
-    
-    # Try standard patterns first
-    for joint, patterns in angle_patterns.items():
-        for pattern in patterns:
-            if pattern in columns:
-                detected_vars[joint] = pattern
-                break
-    
-    # Fall back to legacy patterns if needed
-    for joint, patterns in legacy_patterns.items():
-        if joint not in detected_vars:
-            for pattern in patterns:
-                if pattern in columns:
-                    detected_vars[joint] = pattern
-                    break
-    
-    return detected_vars
-
-def create_stick_figure_animation(df, subject, task, segment_lengths, output_path):
-    """Create animated stick figure for biomechanical validation."""
-    
-    # Detect variable names
-    vars_dict = detect_variable_names(df)
-    required_vars = ['hip_ipsi', 'knee_ipsi', 'ankle_ipsi', 'hip_contra', 'knee_contra', 'ankle_contra']
-    
-    missing_vars = [var for var in required_vars if var not in vars_dict]
-    if missing_vars:
-        print(f"Warning: Missing variables {missing_vars} for {subject}-{task}")
+def create_stick_figure_animation_from_locomotion_data(loco_data, subject, task, segment_lengths, output_path):
+    """Create animated stick figure using LocomotionData library."""
+    try:
+        # Import LocomotionData library
+        from lib.python.locomotion_analysis import LocomotionData
+        
+        # Get angle features for this subject-task
+        angle_features = [f for f in loco_data.ANGLE_FEATURES if f in loco_data.features]
+        
+        if len(angle_features) < 6:
+            print(f"Warning: Insufficient angle features ({len(angle_features)}/6) for {subject}-{task}")
+            return False
+        
+        # Get 3D data for this subject-task
+        data_3d, feature_names = loco_data.get_cycles(subject, task, angle_features)
+        
+        if data_3d is None or data_3d.shape[0] == 0:
+            print(f"Warning: No cycle data for {subject}-{task}")
+            return False
+        
+        # Use first cycle for animation (can be made configurable)
+        cycle_data = data_3d[0, :, :]  # Shape: (150, n_features)
+        n_frames = cycle_data.shape[0]
+        
+        # Map features to animation variables
+        feature_mapping = {}
+        for i, feature in enumerate(feature_names):
+            if 'hip_flexion_angle_ipsi' in feature:
+                feature_mapping['hip_ipsi'] = i
+            elif 'hip_flexion_angle_contra' in feature:
+                feature_mapping['hip_contra'] = i
+            elif 'knee_flexion_angle_ipsi' in feature:
+                feature_mapping['knee_ipsi'] = i
+            elif 'knee_flexion_angle_contra' in feature:
+                feature_mapping['knee_contra'] = i
+            elif 'ankle_flexion_angle_ipsi' in feature:
+                feature_mapping['ankle_ipsi'] = i
+            elif 'ankle_flexion_angle_contra' in feature:
+                feature_mapping['ankle_contra'] = i
+        
+        required_joints = ['hip_ipsi', 'knee_ipsi', 'ankle_ipsi', 'hip_contra', 'knee_contra', 'ankle_contra']
+        missing_joints = [j for j in required_joints if j not in feature_mapping]
+        
+        if missing_joints:
+            print(f"Warning: Missing joint mappings {missing_joints} for {subject}-{task}")
+            return False
+        
+        return create_stick_figure_animation(cycle_data, feature_mapping, segment_lengths, output_path, subject, task)
+        
+    except Exception as e:
+        print(f"Error creating animation from LocomotionData: {e}")
         return False
+
+def create_stick_figure_animation(cycle_data, feature_mapping, segment_lengths, output_path, subject, task):
+    """Create animated stick figure for biomechanical validation using 3D cycle data."""
     
-    # Extract angle data
-    angles_data = {}
-    for joint in required_vars:
-        col_name = vars_dict[joint]
-        angles_data[joint] = df[col_name].values
-    
-    # Determine animation length
-    n_frames = len(df)
+    n_frames = cycle_data.shape[0]
     if n_frames < 10:
         print(f"Warning: Too few frames ({n_frames}) for {subject}-{task}")
         return False
@@ -139,14 +133,14 @@ def create_stick_figure_animation(df, subject, task, segment_lengths, output_pat
     def animate(frame):
         """Animation function for each frame."""
         try:
-            # Get angles for current frame
-            hip_ipsi = angles_data['hip_ipsi'][frame]
-            knee_ipsi = angles_data['knee_ipsi'][frame] 
-            ankle_ipsi = angles_data['ankle_ipsi'][frame]
+            # Get angles for current frame from cycle data
+            hip_ipsi = cycle_data[frame, feature_mapping['hip_ipsi']]
+            knee_ipsi = cycle_data[frame, feature_mapping['knee_ipsi']]
+            ankle_ipsi = cycle_data[frame, feature_mapping['ankle_ipsi']]
             
-            hip_contra = angles_data['hip_contra'][frame]
-            knee_contra = angles_data['knee_contra'][frame]
-            ankle_contra = angles_data['ankle_contra'][frame]
+            hip_contra = cycle_data[frame, feature_mapping['hip_contra']]
+            knee_contra = cycle_data[frame, feature_mapping['knee_contra']]
+            ankle_contra = cycle_data[frame, feature_mapping['ankle_contra']]
             
             # Calculate positions for ipsilateral leg
             positions_ipsi = calculate_joint_positions(hip_ipsi, knee_ipsi, ankle_ipsi, segment_lengths)
@@ -184,15 +178,18 @@ def create_stick_figure_animation(df, subject, task, segment_lengths, output_pat
         return False
 
 def process_dataset_config(config):
-    """Process a single dataset configuration."""
+    """Process a single dataset configuration using LocomotionData library."""
     dataset_file = config['file']
     subject_task_pairs = config['subject_task_pairs']
     
     print(f"Processing dataset: {dataset_file}")
     
     try:
-        # Load dataset
-        df = pd.read_parquet(dataset_file)
+        # Import LocomotionData library
+        from lib.python.locomotion_analysis import LocomotionData
+        
+        # Load dataset using LocomotionData
+        loco_data = LocomotionData(dataset_file)
         
         # Define segment lengths
         segment_lengths = {'thigh': 1.0, 'shank': 1.0, 'foot': 0.5, 'torso': 2.0}
@@ -205,24 +202,24 @@ def process_dataset_config(config):
         for subject, task, jump_frames in subject_task_pairs:
             print(f"  Processing {subject} - {task}")
             
-            # Filter data
-            task_data = df[(df['subject'] == subject) & (df['task'] == task)].copy()
-            
-            if len(task_data) == 0:
-                print(f"    Warning: No data found for {subject} - {task}")
+            # Check if subject and task exist in dataset
+            if subject not in loco_data.subjects:
+                print(f"    Warning: Subject {subject} not found in dataset")
                 continue
             
-            # Skip initial frames if requested
-            if jump_frames > 0:
-                task_data = task_data.iloc[jump_frames:].reset_index(drop=True)
+            if task not in loco_data.tasks:
+                print(f"    Warning: Task {task} not found in dataset")
+                continue
             
             # Create output filename
             safe_subject = subject.replace('/', '_').replace(' ', '_')
             safe_task = task.replace('/', '_').replace(' ', '_')
             output_file = output_dir / f"{safe_subject}_{safe_task}_validation.gif"
             
-            # Generate animation
-            success = create_stick_figure_animation(task_data, subject, task, segment_lengths, output_file)
+            # Generate animation using LocomotionData
+            success = create_stick_figure_animation_from_locomotion_data(
+                loco_data, subject, task, segment_lengths, output_file
+            )
             
             if success:
                 print(f"    ✓ Generated: {output_file}")
