@@ -219,46 +219,7 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                     phase_maxs.append(max_val)
                     valid_phases.append(phase)
             
-            # Create bounding boxes for each phase
-            box_width = 8  # Width of each phase box
-            for i, phase in enumerate(valid_phases):
-                min_val = phase_mins[i]
-                max_val = phase_maxs[i]
-                
-                # Create rectangle for this phase range
-                height = max_val - min_val
-                
-                rect = patches.Rectangle(
-                    (phase - box_width/2, min_val), box_width, height,
-                    linewidth=0, edgecolor='none', 
-                    facecolor=colors[var_type], alpha=0.6
-                )
-                ax.add_patch(rect)
-                
-                # Add min/max value labels
-                if mode == 'kinematic':
-                    min_label = f'{value_conversion(min_val):.0f}{unit_suffix}'
-                    max_label = f'{value_conversion(max_val):.0f}{unit_suffix}'
-                else:
-                    min_label = f'{min_val:.1f}'
-                    max_label = f'{max_val:.1f}'
-                
-                ax.text(phase, min_val - 0.05, min_label, 
-                       ha='center', va='top', fontsize=8, fontweight='bold')
-                ax.text(phase, max_val + 0.05, max_label, 
-                       ha='center', va='bottom', fontsize=8, fontweight='bold')
-            
-            # Plot connecting lines to show progression
-            ax.plot(valid_phases, phase_mins, 'o-', color=colors[var_type], linewidth=2, 
-                   markersize=6, alpha=0.8)
-            ax.plot(valid_phases, phase_maxs, 'o-', color=colors[var_type], linewidth=2, 
-                   markersize=6, alpha=0.8)
-            
-            # Fill area between min and max
-            ax.fill_between(valid_phases, phase_mins, phase_maxs, 
-                           color=colors[var_type], alpha=0.2)
-            
-            # Plot actual data if provided
+            # Plot actual data FIRST if provided (so it appears behind the filters)
             if data is not None:
                 # Map variable and side to feature index
                 if mode == 'kinematic':
@@ -309,28 +270,67 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                                     # 1D array: step_colors[step_idx] (backward compatibility)
                                     color_type = step_colors[step_idx]
                             
-                            # Apply color styling
+                            # Apply color styling with reduced alpha so filters are visible
                             if color_type == 'red':
                                 color = 'red'  # Bright red for local violations
-                                alpha = 0.8
+                                alpha = 0.4  # Reduced from 0.8
                                 linewidth = 1.0
                                 label = 'Local Violation' if not legend_added['red'] else ""
                                 legend_added['red'] = True
                             elif color_type == 'yellow':
                                 color = 'yellow'  # Yellow for other violations
-                                alpha = 0.6
+                                alpha = 0.3  # Reduced from 0.6
                                 linewidth = 0.8
                                 label = 'Other Violation' if not legend_added['yellow'] else ""
                                 legend_added['yellow'] = True
                             else:  # 'green' or any other value defaults to green
                                 color = 'green'  # Valid steps
-                                alpha = 0.3
+                                alpha = 0.2  # Reduced from 0.3
                                 linewidth = 0.5
                                 label = 'Valid Steps' if not legend_added['green'] else ""
                                 legend_added['green'] = True
                             
                             ax.plot(phase_percent, step_data, 
                                    color=color, alpha=alpha, linewidth=linewidth, label=label)
+            
+            # Create bounding boxes for each phase (plotted AFTER data so they're visible)
+            box_width = 8  # Width of each phase box
+            for i, phase in enumerate(valid_phases):
+                min_val = phase_mins[i]
+                max_val = phase_maxs[i]
+                
+                # Create rectangle for this phase range with reduced alpha
+                height = max_val - min_val
+                
+                rect = patches.Rectangle(
+                    (phase - box_width/2, min_val), box_width, height,
+                    linewidth=1, edgecolor='black', 
+                    facecolor=colors[var_type], alpha=0.5  # Reduced from default 0.6
+                )
+                ax.add_patch(rect)
+                
+                # Add min/max value labels
+                if mode == 'kinematic':
+                    min_label = f'{value_conversion(min_val):.0f}{unit_suffix}'
+                    max_label = f'{value_conversion(max_val):.0f}{unit_suffix}'
+                else:
+                    min_label = f'{min_val:.1f}'
+                    max_label = f'{max_val:.1f}'
+                
+                ax.text(phase, min_val - 0.05, min_label, 
+                       ha='center', va='top', fontsize=8, fontweight='bold')
+                ax.text(phase, max_val + 0.05, max_label, 
+                       ha='center', va='bottom', fontsize=8, fontweight='bold')
+            
+            # Plot connecting lines to show progression (on top of everything)
+            ax.plot(valid_phases, phase_mins, 'o-', color='black', linewidth=2, 
+                   markersize=6, alpha=0.8)  # Changed to black for visibility
+            ax.plot(valid_phases, phase_maxs, 'o-', color='black', linewidth=2, 
+                   markersize=6, alpha=0.8)  # Changed to black for visibility
+            
+            # Fill area between min and max with reduced alpha
+            ax.fill_between(valid_phases, phase_mins, phase_maxs, 
+                           color=colors[var_type], alpha=0.1)  # Reduced for visibility
             
             # Customize axes
             ax.set_xlim(-5, 105)
