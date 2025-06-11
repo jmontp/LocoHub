@@ -6,21 +6,57 @@ Locomotion Analysis Library
 A Python library for loading and processing standardized locomotion data.
 Implements efficient 3D array operations for phase-indexed biomechanical data.
 
-Example Usage:
---------------
+Features:
+---------
+- Strict variable name validation with standard convention enforcement
+- Efficient 3D array operations for gait cycle analysis
+- Comprehensive data quality assessment
+- Statistical analysis and outlier detection
+- Publication-ready visualization tools
+- Multi-format data loading (parquet, CSV)
+
+Quick Start:
+------------
     from locomotion_analysis import LocomotionData
     
-    # Load data
-    loco = LocomotionData('path/to/data.parquet')
+    # Load standardized locomotion data
+    loco = LocomotionData('gait_data.parquet')
     
-    # Get data for specific subject/task
-    data_3d = loco.get_cycles('SUB01', 'normal_walk')
-    
-    # Calculate mean patterns
+    # Basic analysis
+    data_3d, features = loco.get_cycles('SUB01', 'normal_walk')
     mean_patterns = loco.get_mean_patterns('SUB01', 'normal_walk')
+    rom_data = loco.calculate_rom('SUB01', 'normal_walk')
     
-    # Validate cycles
+    # Quality assessment
     valid_mask = loco.validate_cycles('SUB01', 'normal_walk')
+    outliers = loco.find_outlier_cycles('SUB01', 'normal_walk')
+    
+    # Variable name validation
+    validation_report = loco.get_validation_report()
+    
+    # Visualization
+    loco.plot_phase_patterns('SUB01', 'normal_walk', ['knee_flexion_angle_contra_rad'])
+
+Real-World Examples:
+-------------------
+For comprehensive examples demonstrating practical research workflows, see:
+    python source/lib/python/examples.py --example all
+
+This includes:
+- Basic gait analysis with publication-ready plots
+- Data quality assessment workflows
+- Comparative biomechanics studies
+- Population-level analyses
+
+Variable Naming:
+---------------
+Standard convention: <joint>_<motion>_<measurement>_<side>_<unit>
+Examples:
+- knee_flexion_angle_contra_rad
+- hip_flexion_moment_ipsi_Nm
+- ankle_flexion_velocity_contra_rad_s
+
+All variable names must follow the standard convention. Non-compliant names will raise an error.
 """
 
 import numpy as np
@@ -28,8 +64,19 @@ import pandas as pd
 from pathlib import Path
 from typing import List, Tuple, Dict, Optional, Union
 import warnings
-import matplotlib.pyplot as plt
-import seaborn as sns
+
+# Optional imports for visualization
+try:
+    import matplotlib.pyplot as plt
+    MATPLOTLIB_AVAILABLE = True
+except ImportError:
+    MATPLOTLIB_AVAILABLE = False
+
+try:
+    import seaborn as sns
+    SEABORN_AVAILABLE = True
+except ImportError:
+    SEABORN_AVAILABLE = False
 
 
 class LocomotionData:
@@ -38,6 +85,13 @@ class LocomotionData:
     """
     
     POINTS_PER_CYCLE = 150
+    
+    # Standard variable naming convention: <joint>_<motion>_<measurement>_<side>_<unit>
+    STANDARD_JOINTS = ['hip', 'knee', 'ankle']
+    STANDARD_MOTIONS = ['flexion', 'adduction', 'rotation']
+    STANDARD_MEASUREMENTS = ['angle', 'velocity', 'moment', 'power']
+    STANDARD_SIDES = ['contra', 'ipsi']
+    STANDARD_UNITS = ['rad', 'rad_s', 'Nm', 'Nm_kg', 'W', 'W_kg', 'deg', 'deg_s']
     
     # Standard feature groups
     ANGLE_FEATURES = ['hip_flexion_angle_contra_rad', 'knee_flexion_angle_contra_rad', 'ankle_flexion_angle_contra_rad',
@@ -48,6 +102,7 @@ class LocomotionData:
     
     MOMENT_FEATURES = ['hip_flexion_moment_contra_Nm', 'knee_flexion_moment_contra_Nm', 'ankle_flexion_moment_contra_Nm',
                        'hip_flexion_moment_ipsi_Nm', 'knee_flexion_moment_ipsi_Nm', 'ankle_flexion_moment_ipsi_Nm']
+    
     
     def __init__(self, data_path: Union[str, Path], 
                  subject_col: str = 'subject',
@@ -69,20 +124,34 @@ class LocomotionData:
             Column name for phase values
         file_type : str
             'parquet', 'csv', or 'auto' to detect from extension
+        
+        Raises
+        ------
+        FileNotFoundError
+            If data file does not exist
+        ValueError
+            If required columns are missing or data format is invalid
         """
         self.data_path = Path(data_path)
         self.subject_col = subject_col
         self.task_col = task_col
         self.phase_col = phase_col
         
-        # Load data based on file type
-        if file_type == 'auto':
-            file_type = 'parquet' if self.data_path.suffix == '.parquet' else 'csv'
+        # Validate file existence
+        if not self.data_path.exists():
+            raise FileNotFoundError(f"Data file not found: {self.data_path}")
         
-        if file_type == 'parquet':
-            self.df = pd.read_parquet(self.data_path)
-        else:
-            self.df = pd.read_csv(self.data_path)
+        # Load data with enhanced error handling
+        try:
+            self.df = self._load_data_with_validation(file_type)
+        except Exception as e:
+            raise ValueError(f"Failed to load data from {self.data_path}: {str(e)}")
+        
+        # Validate required columns
+        self._validate_required_columns()
+        
+        # Validate data format
+        self._validate_data_format()
         
         # Cache for 3D arrays
         self._cache = {}
@@ -90,18 +159,220 @@ class LocomotionData:
         # Identify biomechanical features
         self._identify_features()
         
+        # Validate variable names
+        self._validate_variable_names()
+    
+    def _load_data_with_validation(self, file_type: str) -> pd.DataFrame:
+        """Load data with format detection and validation."""
+        # Auto-detect file type
+        if file_type == 'auto':
+            if self.data_path.suffix.lower() == '.parquet':
+                file_type = 'parquet'
+            elif self.data_path.suffix.lower() in ['.csv', '.txt']:
+                file_type = 'csv'
+            else:
+                # Try to detect based on file content
+                try:
+                    # Try parquet first
+                    df = pd.read_parquet(self.data_path)
+                    return df
+                except:
+                    try:
+                        # Fall back to CSV
+                        df = pd.read_csv(self.data_path)
+                        return df
+                    except:
+                        raise ValueError(f"Unable to determine file format for {self.data_path.suffix}")
+        
+        # Load based on specified type
+        if file_type == 'parquet':
+            try:
+                df = pd.read_parquet(self.data_path)
+            except Exception as e:
+                raise ValueError(f"Failed to read parquet file: {str(e)}")
+        elif file_type == 'csv':
+            try:
+                df = pd.read_csv(self.data_path)
+            except Exception as e:
+                raise ValueError(f"Failed to read CSV file: {str(e)}")
+        else:
+            raise ValueError(f"Unsupported file type: {file_type}. Use 'parquet', 'csv', or 'auto'")
+        
+        return df
+    
+    def _validate_required_columns(self):
+        """Validate that required columns exist in the dataset."""
+        required_cols = [self.subject_col, self.task_col, self.phase_col]
+        missing_cols = [col for col in required_cols if col not in self.df.columns]
+        
+        if missing_cols:
+            available_cols = list(self.df.columns)
+            error_msg = (f"Missing required columns: {missing_cols}\n"
+                        f"Available columns: {available_cols}\n"
+                        f"Hint: Use custom column names in constructor if your data uses different names")
+            raise ValueError(error_msg)
+    
+    def _validate_data_format(self):
+        """Validate basic data format requirements."""
+        # Check for empty dataset
+        if len(self.df) == 0:
+            raise ValueError("Dataset is empty")
+        
+        # Check for phase data format
+        if self.phase_col in self.df.columns:
+            phase_values = self.df[self.phase_col].dropna()
+            
+            if len(phase_values) == 0:
+                warnings.warn("Phase column contains only NaN values")
+            else:
+                # Check phase range
+                min_phase, max_phase = phase_values.min(), phase_values.max()
+                
+                if min_phase < 0 or max_phase > 100:
+                    warnings.warn(f"Phase values outside expected range [0-100]: [{min_phase:.1f}, {max_phase:.1f}]")
+                
+                # Check for time-indexed vs phase-indexed data
+                if 'time' in self.df.columns or 'time_s' in self.df.columns:
+                    # Detect if this is time-indexed data
+                    phase_unique_per_subject_task = []
+                    for (subject, task), group in self.df.groupby([self.subject_col, self.task_col]):
+                        phase_unique_per_subject_task.append(group[self.phase_col].nunique())
+                    
+                    avg_unique_phases = np.mean(phase_unique_per_subject_task)
+                    
+                    if avg_unique_phases < 100:  # Likely time-indexed
+                        warnings.warn(
+                            f"Data appears to be time-indexed (avg {avg_unique_phases:.1f} unique phase values per subject-task). "
+                            f"LocomotionData works best with phase-indexed data (150 points per cycle). "
+                            f"Consider converting to phase-indexed format."
+                        )
+        
+        # Check for reasonable data dimensions
+        n_subjects = self.df[self.subject_col].nunique()
+        n_tasks = self.df[self.task_col].nunique()
+        
+        if n_subjects == 0:
+            raise ValueError("No subjects found in dataset")
+        if n_tasks == 0:
+            raise ValueError("No tasks found in dataset")
+        
+        print(f"Data validation passed: {n_subjects} subjects, {n_tasks} tasks")
+        
     def _identify_features(self):
         """Identify available biomechanical features in the dataset."""
         exclude_cols = {self.subject_col, self.task_col, self.phase_col, 
                        'time', 'time_s', 'step_number', 'is_reconstructed_r', 
-                       'is_reconstructed_l', 'task_info', 'activity_number'}
+                       'is_reconstructed_l', 'task_info', 'activity_number', 'cycle', 'step'}
         
+        # Identify biomechanical features - only standard naming accepted
         self.features = [col for col in self.df.columns 
                         if col not in exclude_cols and 
-                        any(x in col for x in ['angle', 'velocity', 'moment'])]
+                        any(x in col for x in ['angle', 'velocity', 'moment', 'power'])]
+        
+        # Create identity mapping for standard features
+        self.feature_mappings = {feature: feature for feature in self.features}
         
         print(f"Loaded data with {len(self.df)} rows, {self.df[self.subject_col].nunique()} subjects, "
               f"{self.df[self.task_col].nunique()} tasks, {len(self.features)} features")
+    
+    def _validate_variable_names(self):
+        """Validate variable names against standard naming convention."""
+        self.validation_report = {
+            'standard_compliant': [],
+            'non_standard': [],
+            'warnings': [],
+            'errors': []
+        }
+        
+        for feature in self.features:
+            if self._is_standard_compliant(feature):
+                self.validation_report['standard_compliant'].append(feature)
+            else:
+                self.validation_report['non_standard'].append(feature)
+                error_msg = f"Variable '{feature}' does not follow standard naming convention: <joint>_<motion>_<measurement>_<side>_<unit>"
+                self.validation_report['errors'].append(error_msg)
+                # Raise error for ALL non-compliant names
+                raise ValueError(f"Non-standard variable name detected: '{feature}'. "
+                               f"Expected format: <joint>_<motion>_<measurement>_<side>_<unit>. "
+                               f"Suggestion: {self.suggest_standard_name(feature)}")
+        
+        # Print validation summary
+        if self.validation_report['non_standard']:
+            print(f"Variable name validation: {len(self.validation_report['standard_compliant'])} standard, "
+                  f"{len(self.validation_report['non_standard'])} non-standard")
+        else:
+            print(f"Variable name validation: All {len(self.validation_report['standard_compliant'])} variables are standard compliant")
+    
+    def _is_standard_compliant(self, variable_name: str) -> bool:
+        """Check if variable name follows standard convention: <joint>_<motion>_<measurement>_<side>_<unit>"""
+        parts = variable_name.split('_')
+        
+        if len(parts) != 5:
+            return False
+        
+        joint, motion, measurement, side, unit = parts
+        
+        return (joint in self.STANDARD_JOINTS and
+                motion in self.STANDARD_MOTIONS and
+                measurement in self.STANDARD_MEASUREMENTS and
+                side in self.STANDARD_SIDES and
+                unit in self.STANDARD_UNITS)
+    
+    def _has_biomechanical_keywords(self, variable_name: str) -> bool:
+        """Check if variable name contains biomechanical keywords."""
+        biomech_keywords = (self.STANDARD_JOINTS + self.STANDARD_MOTIONS + 
+                          self.STANDARD_MEASUREMENTS + self.STANDARD_SIDES)
+        return any(keyword in variable_name.lower() for keyword in biomech_keywords)
+    
+    def get_validation_report(self) -> Dict:
+        """Get variable name validation report."""
+        return self.validation_report.copy()
+    
+    def suggest_standard_name(self, variable_name: str) -> str:
+        """Suggest standard compliant name for a variable."""
+        # Basic heuristics for suggestion
+        lower_name = variable_name.lower()
+        suggested_parts = []
+        
+        # Try to identify joint
+        joint = next((j for j in self.STANDARD_JOINTS if j in lower_name), 'unknown')
+        suggested_parts.append(joint)
+        
+        # Try to identify motion
+        motion = next((m for m in self.STANDARD_MOTIONS if m in lower_name), 'flexion')
+        suggested_parts.append(motion)
+        
+        # Try to identify measurement
+        measurement = next((m for m in self.STANDARD_MEASUREMENTS if m in lower_name), 'angle')
+        suggested_parts.append(measurement)
+        
+        # Try to identify side
+        if 'contra' in lower_name or 'contralateral' in lower_name:
+            side = 'contra'
+        elif 'ipsi' in lower_name or 'ipsilateral' in lower_name:
+            side = 'ipsi'
+        else:
+            side = 'ipsi'  # default
+        suggested_parts.append(side)
+        
+        # Try to identify unit
+        if 'rad' in lower_name and 's' in lower_name:
+            unit = 'rad_s'
+        elif 'rad' in lower_name:
+            unit = 'rad'
+        elif 'deg' in lower_name and 's' in lower_name:
+            unit = 'deg_s'
+        elif 'deg' in lower_name:
+            unit = 'deg'
+        elif 'nm' in lower_name and 'kg' in lower_name:
+            unit = 'Nm_kg'
+        elif 'nm' in lower_name:
+            unit = 'Nm'
+        else:
+            unit = 'rad'  # default for angles
+        suggested_parts.append(unit)
+        
+        return '_'.join(suggested_parts)
     
     def get_subjects(self) -> List[str]:
         """Get list of unique subjects."""
@@ -157,13 +428,23 @@ class LocomotionData:
         if features is None:
             features = self.features
         
-        valid_features = [f for f in features if f in subset.columns]
+        # Map requested features to actual column names
+        valid_features = []
+        actual_columns = []
+        
+        for feature in features:
+            if feature in self.feature_mappings:
+                actual_col = self.feature_mappings[feature]
+                if actual_col in subset.columns:
+                    valid_features.append(feature)
+                    actual_columns.append(actual_col)
+        
         if not valid_features:
-            warnings.warn(f"No valid features found")
+            warnings.warn(f"No valid features found among {features}")
             return None, []
         
-        # Extract and reshape to 3D
-        feature_data = subset[valid_features].values
+        # Extract and reshape to 3D using actual column names
+        feature_data = subset[actual_columns].values
         data_3d = feature_data.reshape(n_cycles, self.POINTS_PER_CYCLE, len(valid_features))
         
         # Cache result
@@ -449,6 +730,8 @@ class LocomotionData:
         save_path : str, optional
             Path to save plot
         """
+        if not MATPLOTLIB_AVAILABLE:
+            raise ImportError("matplotlib is required for plotting. Install with: pip install matplotlib")
         # Filter data
         mask = (self.df[self.subject_col] == subject) & (self.df[self.task_col] == task)
         subset = self.df[mask]
@@ -501,6 +784,8 @@ class LocomotionData:
         save_path : str, optional
             Path to save plot
         """
+        if not MATPLOTLIB_AVAILABLE:
+            raise ImportError("matplotlib is required for plotting. Install with: pip install matplotlib")
         data_3d, feature_names = self.get_cycles(subject, task, features)
         
         if data_3d is None:
@@ -591,6 +876,8 @@ class LocomotionData:
         save_path : str, optional
             Path to save plot
         """
+        if not MATPLOTLIB_AVAILABLE:
+            raise ImportError("matplotlib is required for plotting. Install with: pip install matplotlib")
         # Create subplots
         n_features = len(features)
         n_cols = min(3, n_features)
