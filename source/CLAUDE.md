@@ -1,306 +1,63 @@
 # CLAUDE.md - Source Directory
 
-This file provides Claude Code guidance for working with the core source code in this directory.
-
-## Directory Overview
-
-The `source/` directory contains the core implementation of the Locomotion Data Standardization framework, including conversion scripts, libraries, validation systems, and visualization tools.
+Core implementation of the locomotion data standardization framework.
 
 ## Directory Structure
 
-```
-source/
-├── conversion_scripts/           # Dataset-specific conversion implementations
-│   ├── AddBiomechanics/         # OpenSim/AddBiomechanics dataset conversion
-│   ├── Gtech_2023/              # Georgia Tech 2023 dataset conversion  
-│   ├── Umich_2021/              # University of Michigan 2021 dataset conversion
-│   └── CONSOLIDATION_PLAN.md    # Future conversion consolidation strategy
-├── lib/                         # Core analysis libraries
-│   ├── python/                  # Python implementation
-│   └── matlab/                  # MATLAB implementation
-├── tests/                       # Validation and testing framework
-├── validation/                  # Centralized validation system (new)
-└── visualization/               # Plotting and animation tools
-```
-
-## Core Components
-
-### 1. Conversion Scripts (`conversion_scripts/`)
-**Purpose**: Transform raw research datasets into standardized Parquet format
-
-**Architecture**:
-- Each dataset has its own subdirectory with specific conversion logic
-- Common patterns: load raw data → standardize variables → validate → export Parquet
-- Both time-indexed and phase-indexed outputs supported
-
-**Key Features**:
-- Dataset-specific format handling (B3D, MATLAB .mat, CSV)
-- Standardized variable naming following `<joint>_<motion>_<measurement>_<side>_<unit>`
-- Phase normalization to 150 points per gait cycle
-- Metadata extraction and standardization
-
-### 2. Core Libraries (`lib/`)
-**Purpose**: Provide unified analysis interface for standardized data
-
-#### Python Library (`lib/python/`)
-**Main Class**: `LocomotionData` in `locomotion_analysis.py`
-
-**Key Features**:
-- **Efficient 3D array operations** for multi-cycle analysis
-- **Dual indexing support** (time and phase-based data)
-- **Integrated validation** using validation blueprint
-- **Statistical analysis** and phase pattern extraction
-- **Visualization integration** with plotting tools
-
-**Core Methods**:
-- `from_parquet()` - Load standardized datasets
-- `to_3d_array()` - Convert to efficient 3D arrays for analysis
-- `validate_data()` - Run 5-layer validation system
-- `calculate_statistics()` - Compute descriptive statistics
-- `plot_phase_patterns()` - Generate phase-normalized plots
-
-#### MATLAB Library (`lib/matlab/`)
-**Main Class**: `LocomotionData` in `LocomotionData.m`
-
-**Features**:
-- **Feature parity** with Python implementation
-- **Native MATLAB integration** with existing workflows
-- **Optimized for MATLAB** data structures and operations
-- **Cross-platform compatibility** with Python-generated datasets
-
-### 3. Validation System (`validation/` and `tests/`)
-**Purpose**: Ensure data quality and standard compliance
-
-#### Centralized Validation (`validation/`)
-**NEW: Comprehensive validation system with library modules**
-
 **Key Components**:
-- `step_classifier.py` - Step classification and efficient validation library (37.5x speedup)
-- `validation_expectations_parser.py` - Single source of truth parser for specification files
-- `filters_by_phase_plots.py` - Validation plotting library with phase progression
-- `forward_kinematics_plots.py` - Kinematic pose visualization library
-- `dataset_validator_phase.py` - Entry point for phase-based dataset validation
-- `dataset_validator_time.py` - Entry point for time-indexed dataset validation
+- `conversion_scripts/` - Dataset-specific conversion implementations
+- `lib/` - Core analysis libraries (Python and MATLAB)
+- `validation/` - Centralized validation system
+- `tests/` - Testing and demonstration framework
+- `visualization/` - Plotting and animation tools
 
-**Features**:
-- **Efficient validation**: Representative phase approach (4 points vs 150 per cycle)
-- **Step classification**: Gray (valid), red (local violations), pink (other violations)
-- **Single source of truth**: Loads ranges from docs/standard_spec/ markdown files
-- **Integrated visualization**: Real-time validation overlay on plots
-- **Library architecture**: Clean separation of library modules vs entry points
+## Development Patterns
 
-#### Legacy Validation (`tests/`)
-**Testing and demonstration framework for validation system**
+**Minimal Code Philosophy**:
+- Dataset-specific conversion in isolated subdirectories
+- Common functionality in shared libraries
+- Centralized validation system with library modules
+- Clean separation: library modules vs entry points
 
-**Key Components**:
-- `test_step_classifier.py` - Comprehensive pytest test suite for step classification
-- `test_filters_by_phase_plots.py` - Tests for validation plotting functionality
-- `demo_step_classifier.py` - Interactive demonstration of step classification
-- `demo_filters_by_phase_plots.py` - Interactive demonstration of validation plots
+**Variable Naming**: `<joint>_<motion>_<measurement>_<side>_<unit>`
+- Examples: `knee_flexion_angle_contra_rad`, `hip_moment_ipsi_Nm`
 
-**Features**:
-- **Comprehensive testing**: Unit tests for all validation functionality
-- **Interactive demos**: Live demonstrations of validation and classification
-- **Test data**: Pre-generated test datasets with known validation patterns
-- **Performance benchmarking**: Validation of 37.5x speedup claims
+**Data Formats**:
+- Time-indexed: Original sampling frequency with `time_s`
+- Phase-indexed: 150 points per cycle with `phase_%`
 
-### 4. Visualization Tools (`visualization/`)
-**Purpose**: Generate plots, animations, and visual validation
+## Integration Flow
 
-**Key Scripts**:
-- `walking_animator.py` - Animated stick figure visualizations
-- `refresh_validation_gifs.py` - Generate validation animation sequences
-
-**Features**:
-- **Animation generation** for documentation and validation
-- **Stick figure visualization** of biomechanical movements
-- **GIF generation** for validation sequences
-- **Plot storage** in organized directory structure
-
-**Note**: Primary validation plotting functionality has moved to `validation/` directory for better organization. The `visualization/` directory now focuses on non-validation specific plotting and animation tools.
-
-## Development Patterns and Standards
-
-### Code Organization Principles
-1. **Dataset-specific conversion** in isolated subdirectories
-2. **Common functionality** in shared libraries
-3. **Centralized validation system** in `validation/` with library modules and entry points
-4. **Validation as a service** used by all components
-5. **Clean library interfaces** - library modules have no main() functions
-6. **Visualization as post-processing** operating on standardized data
-
-### Variable Naming Standards
-**Pattern**: `<joint>_<motion>_<measurement>_<side>_<unit>`
-
-**Examples**:
-- `knee_flexion_angle_contra_rad`
-- `hip_moment_ipsi_Nm`
-- `ankle_flexion_velocity_ipsi_rad_s`
-
-**Implementation**: Naming convention utilities are available in:
-- Conversion scripts handle variable name standardization
-- Validation system ensures naming compliance
-- Library classes provide standardized access patterns
-
-### Data Format Standards
-**Time-indexed Data**:
-- Preserves original sampling frequency
-- Includes `time_s` column with monotonic progression
-- Suitable for temporal analysis and event detection
-
-**Phase-indexed Data**:
-- Normalized to 150 points per gait cycle
-- Includes `phase_%` column (0-100%)
-- Suitable for cross-subject comparison and averaging
-
-### Error Handling Patterns
-1. **Graceful degradation**: Missing data handled as NaN
-2. **Informative errors**: Clear error messages with context
-3. **Validation integration**: All outputs validated before export
-4. **Logging**: Comprehensive logging for debugging
-
-## Integration Between Components
-
-### Conversion → Validation → Library → Visualization Flow
 ```
-Raw Data → Conversion Scripts → Standardized Parquet → Validation (source/validation/) → Library Classes → Visualization
+Raw Data → Conversion Scripts → Standardized Parquet → Validation → Library Classes → Visualization
 ```
 
-### Cross-Component Dependencies
-- **Conversion scripts** use validation system for output verification
-- **Libraries** integrate validation for data quality assurance
-- **Validation system** (`source/validation/`) provides centralized validation and plotting
-- **Visualization** tools use library classes for data access
-- **All components** follow specifications in `../../docs/standard_spec/`
-- **Validation expectations** loaded from markdown files as single source of truth
+**Cross-Component Dependencies**:
+- All components follow specifications in `../docs/standard_spec/`
+- Validation system provides centralized quality assurance
+- Library classes integrate validation for data access
+- Conversion scripts use validation for output verification
 
-### Data Flow Patterns
-1. **Load**: Raw data loaded by dataset-specific conversion scripts
-2. **Transform**: Data standardized using naming conventions and format rules
-3. **Validate**: Output validated using centralized validation system (`source/validation/`)
-4. **Export**: Standardized Parquet files created for both time and phase indexing
-5. **Analyze**: Library classes provide efficient access and analysis
-6. **Visualize**: Plotting tools generate insights and validation plots with step classification
+## Common Tasks
 
-## Common Development Tasks
+**New Dataset**: Create conversion directory, implement conversion, add validation rules, test integration
+**New Variables**: Define name, update validation, extend library support, add visualization
+**Performance**: Profile bottlenecks, optimize 3D operations, implement chunked processing
 
-### Adding Support for a New Dataset
-1. **Create conversion directory**: `conversion_scripts/<DatasetName>/`
-2. **Implement conversion script**: Following existing patterns
-3. **Add validation rules**: Dataset-specific rules if needed
-4. **Test integration**: Ensure library compatibility
-5. **Update documentation**: Create dataset documentation
-6. **Add visualizations**: Dataset-specific plotting if needed
+## Quality Standards
 
-### Adding New Biomechanical Variables
-1. **Define variable name**: Following naming convention
-2. **Update validation rules**: Add to appropriate validation layers
-3. **Extend library support**: Add to LocomotionData classes
-4. **Update conversion scripts**: Include in relevant datasets
-5. **Add visualization**: Support in plotting tools
-6. **Document specification**: Update standard documentation
+**Testing**:
+- Unit tests for individual methods
+- Integration tests for cross-module workflows
+- Performance tests with realistic dataset sizes
+- Memory usage monitoring
 
-### Modifying Validation Rules
-1. **Update validation blueprint**: Modify validation layers
-2. **Test on existing datasets**: Ensure no false positives
-3. **Update error documentation**: Add new error codes
-4. **Regenerate validation reports**: Check impact on datasets
-5. **Update library integration**: Ensure compatibility
+**Error Handling**:
+- Explicit errors over silent failures
+- Informative messages with context
+- Graceful degradation for missing data
+- Comprehensive logging for debugging
 
-### Performance Optimization
-1. **Profile code**: Identify bottlenecks in conversion/analysis
-2. **Optimize 3D operations**: Use vectorized operations where possible
-3. **Memory management**: Implement chunked processing for large datasets
-4. **Caching strategies**: Cache frequently accessed data
-5. **Parallel processing**: Use multiprocessing where appropriate
+---
 
-## Testing and Quality Assurance
-
-### Validation Testing
-- **Unit tests**: Individual validation rules tested
-- **Integration tests**: Full validation pipeline tested
-- **Regression tests**: Ensure changes don't break existing functionality
-- **Performance tests**: Monitor validation speed and memory usage
-
-### Library Testing
-- **API tests**: Public methods tested with various inputs
-- **Data integrity tests**: Ensure operations preserve data quality
-- **Cross-platform tests**: Python and MATLAB compatibility
-- **Performance benchmarks**: Monitor operation speed and efficiency
-
-### Conversion Testing
-- **Format compliance**: Outputs tested against standard specification
-- **Data preservation**: Ensure no data loss during conversion
-- **Edge case handling**: Test with problematic or incomplete data
-- **Round-trip testing**: Verify data integrity through full pipeline
-
-## Dependencies and Requirements
-
-### Core Python Dependencies
-```python
-pandas>=1.5.0       # Data manipulation and analysis
-numpy>=1.20.0       # Numerical computing
-pyarrow>=10.0.0     # Parquet file handling
-matplotlib>=3.5.0   # Basic plotting
-plotly>=5.0.0       # Interactive visualizations
-scipy>=1.8.0        # Scientific computing
-```
-
-### Conversion-Specific Dependencies
-- **AddBiomechanics**: `nimblephysics`, `torch` (heavy physics simulation dependencies)
-- **GTech/UMich**: Standard scientific Python stack
-- **MATLAB**: R2019b+ with Signal Processing Toolbox
-
-### Development Dependencies
-```python
-pytest>=7.0.0       # Testing framework
-memory_profiler     # Memory usage monitoring  
-black>=22.0.0       # Code formatting
-flake8>=4.0.0       # Linting
-jupyter>=1.0.0      # Notebook development
-```
-
-## Performance Considerations
-
-### Memory Management
-- **Chunked processing**: For datasets >1GB
-- **Lazy loading**: Load data only when needed
-- **Memory monitoring**: Track usage during operations
-- **Garbage collection**: Explicit cleanup for large operations
-
-### Computational Efficiency
-- **Vectorized operations**: Use NumPy/pandas vectorization
-- **3D array optimization**: Reshape for efficient mathematical operations
-- **Caching**: Cache computed results for repeated access
-- **Parallel processing**: Use multiprocessing for independent operations
-
-### Storage Optimization
-- **Parquet compression**: Use efficient compression algorithms
-- **Data types**: Use appropriate dtypes to minimize storage
-- **Column selection**: Load only required columns when possible
-- **Indexing**: Use appropriate indexing for common access patterns
-
-## Best Practices for Claude Code
-
-### When Working with Source Code
-1. **Follow established patterns**: Use existing conversion scripts as templates
-2. **Validate early and often**: Run validation on all generated data
-3. **Test with multiple datasets**: Ensure cross-dataset compatibility
-4. **Document changes**: Update relevant documentation files
-5. **Performance test**: Monitor memory and speed for large datasets
-
-### Code Style and Standards
-- **PEP 8 compliance**: Follow Python style guidelines
-- **Descriptive naming**: Use clear, descriptive variable and function names
-- **Comprehensive docstrings**: Document all public methods and classes
-- **Error handling**: Implement robust error handling with informative messages
-- **Testing**: Write tests for new functionality
-
-### Integration Guidelines
-- **Library first**: Use existing library functionality where possible
-- **Validation integration**: Always validate outputs before export
-- **Documentation updates**: Update relevant docs when changing functionality
-- **Backward compatibility**: Maintain compatibility with existing datasets
-- **Cross-platform testing**: Test Python and MATLAB implementations
-
-This source directory represents the core implementation of the locomotion data standardization framework, providing the foundation for converting, validating, analyzing, and visualizing biomechanical datasets in a standardized format.
+*Implements the core standardization framework with minimal, tested, well-documented code.*
