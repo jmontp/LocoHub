@@ -85,5 +85,7 @@ Release standardized datasets with train/test benchmarks to accelerate biomechan
 ---
 
 <div align="center">
-Made with ❤️ for the biomechanics community
+Made with ❤️ for the biomechanics community<br>
+<br>
+<a href="https://github.com/jmontp/locomotion-data-standardization/actions/workflows/test.yml"><img src="https://github.com/jmontp/locomotion-data-standardization/actions/workflows/test.yml/badge.svg" alt="Tests"></a>
 </div>
