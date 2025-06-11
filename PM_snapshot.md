@@ -17,6 +17,7 @@
 - **PM File**: [docs/standard_spec/PM_ongoing.md](./docs/standard_spec/PM_ongoing.md)
 - **High Level Tasks**:
   - Complete Kinetic Validation Coverage
+  - **HIGH PRIORITY**: Pathology Task Extensions (tasks_<pathology>)
 - **Status**: 💤 IDLE (0 recent work items)
 
 ### 2. Data Conversion Scripts (`source/conversion_scripts/`)

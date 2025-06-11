@@ -1,0 +1,82 @@
+name: Regenerate Validation Plots
+
+on:
+  workflow_dispatch:
+    inputs:
+      plot_type:
+        description: 'Type of plots to regenerate'
+        required: true
+        default: 'kinetic'
+        type: choice
+        options:
+          - kinetic
+          - kinematic
+          - both
+      tasks:
+        description: 'Specific tasks (comma-separated, optional)'
+        required: false
+        default: ''
+
+jobs:
+  regenerate-plots:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          
+      - name: Install dependencies
+        run: |
+          pip install pandas numpy matplotlib pyarrow seaborn
+          
+      - name: Regenerate kinetic plots
+        if: inputs.plot_type == 'kinetic' || inputs.plot_type == 'both'
+        run: |
+          echo "🔄 Regenerating kinetic validation plots..."
+          if [ -n "${{ inputs.tasks }}" ]; then
+            python3 source/validation/generate_validation_plots.py --filters-only --tasks $(echo "${{ inputs.tasks }}" | tr ',' ' ')
+          else
+            python3 source/validation/generate_validation_plots.py --filters-only
+          fi
+          
+      - name: Regenerate kinematic plots  
+        if: inputs.plot_type == 'kinematic' || inputs.plot_type == 'both'
+        run: |
+          echo "🔄 Regenerating kinematic validation plots..."
+          if [ -n "${{ inputs.tasks }}" ]; then
+            python3 source/validation/generate_validation_plots.py --forward-kinematic-only --tasks $(echo "${{ inputs.tasks }}" | tr ',' ' ')
+          else
+            python3 source/validation/generate_validation_plots.py --forward-kinematic-only
+          fi
+          
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet docs/standard_spec/validation/; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Commit updated plots
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add docs/standard_spec/validation/
+          git commit -m "🔄 Regenerate ${{ inputs.plot_type }} validation plots via GitHub Actions
+
+          🤖 Generated with [Claude Code](https://claude.ai/code)
+
+          Co-Authored-By: Claude <noreply@anthropic.com>"
+          git push
+          
+      - name: No changes detected
+        if: steps.changes.outputs.has_changes == 'false'
+        run: |
+          echo "ℹ️ No changes detected in validation plots - plots are already up to date"
