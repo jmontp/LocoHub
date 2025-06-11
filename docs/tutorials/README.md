@@ -1,90 +1,49 @@
-# Locomotion Data Analysis Tutorials
+# Tutorials
 
-This directory contains comprehensive tutorials for analyzing standardized locomotion data using both Python and MATLAB.
+Step-by-step guides for using standardized locomotion datasets.
 
-## Directory Structure
+**Quick Start:** [Python](python/getting_started_python.md) • [MATLAB](matlab/getting_started_matlab.md) • [Test Status](TESTING_STATUS.md)
 
-```
-tutorials/
-├── python/          # Python tutorials and examples
-├── matlab/          # MATLAB tutorials and examples
-├── test_files/      # Sample data files for tutorials
-└── README.md        # This file
-```
+## Getting Started
 
-## Python Tutorials (`python/`)
+**Python Tutorial** - [python/getting_started_python.md](python/getting_started_python.md):
+- Load and analyze Parquet datasets
+- Basic data operations and filtering
+- Quick plotting and visualization
 
-### Getting Started
-- **`getting_started_python.md`** - Basic pandas operations for locomotion data
-- **`library_tutorial_python.md`** - Comprehensive guide to using the LocomotionData library
-
-### Advanced Topics
-- **`efficient_data_access.py`** - Efficient methods for accessing phase-indexed data
-- **`efficient_reshape_3d.py`** - 3D array reshaping operations
-- **`efficient_reshape_guide.md`** - Guide to efficient data reshaping techniques
-
-### Test Scripts
-- **`test_python_tutorial.py`** - Test script for basic tutorial operations
-
-## MATLAB Tutorials (`matlab/`)
-
-### Getting Started
-- **`getting_started_matlab.md`** - Basic table operations for locomotion data
-- **`library_tutorial_matlab.md`** - Comprehensive guide to using the LocomotionData class
-
-### Test Scripts
-- **`test_matlab_tutorial.m`** - Test script for basic tutorial operations
-
-## Test Files (`test_files/`)
-
-Sample data files used in tutorials:
-- **`locomotion_data.csv`** - Sample locomotion time series data
-- **`task_info.csv`** - Sample task information for merging
-- **`*.png`** - Example output plots from tutorials
-
-## Quick Start
-
-### Python
-```python
-# Using the library (recommended)
-from source.lib.python.locomotion_analysis import LocomotionData
-loco = LocomotionData('path/to/data.parquet')
-data_3d, features = loco.get_cycles('SUB01', 'normal_walk')
-```
-
-### MATLAB
-```matlab
-% Using the library (recommended)
-addpath('source/lib/matlab');
-loco = LocomotionData('path/to/data.parquet');
-[data3D, features] = loco.getCycles('SUB01', 'normal_walk');
-```
-
-## Prerequisites
-
-### Python
-- pandas ≥ 1.3.0
-- numpy ≥ 1.20.0
-- matplotlib ≥ 3.3.0
-- pyarrow ≥ 5.0.0
-
-### MATLAB
-- MATLAB R2019b or later
-- Statistics and Machine Learning Toolbox (optional)
-
-## Tutorial Progression
-
-1. **Start with Getting Started guides** to understand basic data operations
-2. **Move to Library tutorials** for production-ready analysis workflows
-3. **Explore efficient data access** for performance optimization
-4. **Use test files** to practice with sample data
-
-## Additional Resources
-
-- **Library Documentation**: See `source/lib/README.md`
-- **Data Format Specification**: See `docs/standard_spec/`
-- **Example Datasets**: See `docs/datasets_documentation/`
+**MATLAB Tutorial** - [matlab/getting_started_matlab.md](matlab/getting_started_matlab.md):
+- Load Parquet files in MATLAB
+- Data manipulation and analysis
+- Plotting and visualization examples
 
 ---
 
-*These tutorials are part of the Locomotion Data Standardization project. For more information, see the main repository README.*
+## Advanced Usage
+
+**Python Library** - [python/library_tutorial_python.md](python/library_tutorial_python.md):
+- LocomotionData class advanced features
+- 3D array operations for multi-cycle analysis
+- Efficient data reshaping and processing
+
+**MATLAB Library** - [matlab/library_tutorial_matlab.md](matlab/library_tutorial_matlab.md):
+- LocomotionData class comprehensive guide
+- Advanced analysis and visualization
+- Integration with existing MATLAB workflows
+
+---
+
+## Test Files and Examples
+
+**Sample Data** - [test_files/](test_files/):
+- `locomotion_data.csv` - Sample dataset for tutorials
+- `task_info.csv` - Task metadata examples
+- Example plots: `knee_angle_by_task.png`, `knee_angle_incline.png`
+
+**Testing Status** - [TESTING_STATUS.md](TESTING_STATUS.md):
+- Current testing coverage for tutorials
+- Known issues and limitations
+- Testing procedure documentation
+
+---
+
+*Learn to effectively use standardized biomechanical datasets for reproducible research.*
