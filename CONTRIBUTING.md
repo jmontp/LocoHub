@@ -1,268 +1,122 @@
-# Contributing to Locomotion Data Standardization
+# Contributing
 
-Thank you for your interest in contributing to the Locomotion Data Standardization project! This guide will help you get started with contributing to our codebase.
+Essential guide for contributing to locomotion data standardization.
 
-## 🎯 Ways to Contribute
+## Contribution Types
 
-We welcome contributions in several areas:
+**Dataset Converters** • **Validation Rules** • **Library Features** • **Documentation** • **Bug Fixes**
 
-- **New Dataset Converters**: Add support for additional biomechanics datasets
-- **Feature Enhancements**: Implement new biomechanical variables or analysis methods
-- **Validation Rules**: Improve data quality checks and biomechanical constraints
-- **Visualization Tools**: Create new plotting functions or improve existing ones
-- **Documentation**: Enhance tutorials, fix typos, or clarify explanations
-- **Bug Fixes**: Report or fix issues you encounter
-
-## 🚀 Getting Started
-
-### 1. Fork and Clone
-
-1. Fork the repository on GitHub
-2. Clone your fork locally:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/locomotion-data-standardization.git
-   cd locomotion-data-standardization
-   ```
-3. Add the upstream repository:
-   ```bash
-   git remote add upstream https://github.com/jmontp/locomotion-data-standardization.git
-   ```
-
-### 2. Set Up Your Environment
-
-**Python Setup:**
-```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# For specific converters (e.g., AddBiomechanics)
-cd source/conversion_scripts/AddBiomechanics
-pip install -r requirements.txt
-```
-
-**MATLAB Setup:**
-- Ensure MATLAB R2019b or later is installed
-- Add the library path: `addpath('source/lib/matlab')`
-
-### 3. Create a Feature Branch
+## Setup
 
 ```bash
-git checkout -b feature/your-feature-name
-# Or for bug fixes:
-git checkout -b fix/issue-description
+git clone https://github.com/YOUR_USERNAME/locomotion-data-standardization.git
+cd locomotion-data-standardization
+git remote add upstream https://github.com/jmontp/locomotion-data-standardization.git
 ```
 
-## 📝 Development Guidelines
+**Dependencies:**
+```bash
+pip install pandas numpy matplotlib pyarrow  # Core
+pip install -r source/conversion_scripts/AddBiomechanics/requirements.txt  # Optional
+```
 
-### Code Style
+**MATLAB:** R2019b+, `addpath('source/lib/matlab')`
+
+## Standards
+
+**Variable Naming:** `<joint>_<motion>_<measurement>_<side>_<unit>`  
+Examples: `knee_flexion_angle_contra_rad`, `hip_moment_ipsi_Nm`
+
+**Code Style:**
+- Python: PEP 8, 100 char lines, type hints
+- MATLAB: camelCase, 4 spaces, function headers
+- Documentation: All functions need docstrings with examples
+
+## Adding Dataset Converters
+
+**Structure:** `source/conversion_scripts/YourDataset/`
+
+**Converter Template:**
+```python
+def convert_to_parquet(input_path, output_path):
+    # 1. Load raw data
+    # 2. Map to standard names: joint_motion_measurement_side_unit
+    # 3. Convert units (angles→rad, forces→N)
+    # 4. Add metadata: subject, task, phase/time_s
+    # 5. Validate with LocomotionData library
+    # 6. Save as parquet
+```
+
+**Documentation:** Add to `docs/datasets_documentation/README.md`
+
+## Testing
 
 **Python:**
-- Follow PEP 8 style guidelines
-- Use descriptive variable names
-- Add type hints where appropriate
-- Maximum line length: 100 characters
+```bash
+python source/tests/test_locomotion_data_library.py
+python source/lib/python/examples.py --example basic
+```
 
 **MATLAB:**
-- Use camelCase for function names
-- Use descriptive variable names
-- Include function headers with descriptions
-- Indent with 4 spaces
-
-### Variable Naming Convention
-
-Follow our standardized naming pattern:
-```
-<joint>_<motion>_<measurement>_<side>_<unit>
-```
-
-Examples:
-- `hip_flexion_angle_right_rad`
-- `knee_flexion_velocity_left_rad_s`
-- `ankle_moment_right_Nm`
-
-See `docs/standard_spec/units_and_conventions.md` for full details.
-
-### Documentation Standards
-
-- All functions must have docstrings/headers
-- Include examples in docstrings where helpful
-- Update relevant documentation when adding features
-- Add your dataset to `docs/datasets_documentation/` if contributing a converter
-
-## 🔧 Adding a New Dataset Converter
-
-1. **Create converter directory**: `source/conversion_scripts/YourDataset/`
-
-2. **Implement converter script** following this template:
-   ```python
-   """
-   Converter for YourDataset to standardized parquet format.
-   
-   Dataset description: Brief description
-   Original format: CSV/MAT/etc.
-   Subjects: N
-   Tasks: List main tasks
-   """
-   
-   def convert_to_parquet(input_path, output_path):
-       # 1. Load raw data
-       # 2. Map column names to standard names
-       # 3. Convert units (angles to rad, forces to N)
-       # 4. Add required metadata columns
-       # 5. Validate data structure
-       # 6. Save as parquet
-   ```
-
-3. **Create dataset documentation**: `docs/datasets_documentation/dataset_yourdataset.md`
-   - Use `docs/standard_spec/dataset_template.md` as a template
-   - Include sample data structure
-   - Document any dataset-specific quirks
-
-4. **Update the glossary**: Add entry to `docs/datasets_documentation/datasets_glossary.md`
-
-5. **Add tests**: Create validation script to verify conversion
-
-## ✅ Testing Your Changes
-
-### Python Testing
-```bash
-# Run validation on your converted data
-python source/tests/validation_blueprint.py your_dataset.parquet
-
-# Test library functionality
-cd docs/tutorials/python
-python test_library.py
-```
-
-### MATLAB Testing
 ```matlab
-% Test library functionality
-cd('docs/tutorials/matlab')
-test_library_tutorial
+cd('source/tests')
+test_tutorial_library_matlab
 ```
 
-### Pre-commit Checklist
+**Pre-commit:**
+- Style guidelines followed
+- Tests pass
+- Documentation updated
+- No sensitive data
 
-- [ ] Code follows style guidelines
-- [ ] All tests pass
-- [ ] Documentation is updated
-- [ ] Commit messages are descriptive
-- [ ] No sensitive data or credentials included
+## Submitting Contributions
 
-## 📤 Submitting Your Contribution
-
-### 1. Commit Your Changes
-
-Write clear, descriptive commit messages:
+**Commit Messages:**
 ```bash
-git add .
-git commit -m "Add XYZ dataset converter with phase normalization support
+git commit -m "Add XYZ dataset converter
 
-- Implement converter for XYZ lab format
-- Map 23 biomechanical variables to standard names
-- Add support for multiple walking speeds
+- Map 23 variables to standard names
+- Support multiple walking speeds  
 - Include dataset documentation"
 ```
 
-### 2. Push to Your Fork
+**Pull Request:**
+1. `git push origin feature/your-feature-name`
+2. Create PR on GitHub
+3. Describe changes, reference issues, include test results
+4. Address review feedback
 
-```bash
-git push origin feature/your-feature-name
-```
+## Issues
 
-### 3. Create a Pull Request
+**Bug Reports:** Dataset affected, reproduction steps, error messages, environment details
 
-1. Go to your fork on GitHub
-2. Click "New Pull Request"
-3. Select your feature branch
-4. Fill out the PR template:
-   - Describe what changes you made
-   - Reference any related issues
-   - Include test results or examples
-   - Note any breaking changes
+**Feature Requests:** Use case, implementation approach, examples, impact assessment
 
-### 4. PR Review Process
-
-- Maintainers will review your code
-- Address any requested changes
-- Once approved, your PR will be merged
-
-## 🐛 Reporting Issues
-
-### Bug Reports
-
-Include:
-- Dataset and version affected
-- Steps to reproduce
-- Expected vs actual behavior
-- Error messages and stack traces
-- Environment details (OS, Python/MATLAB version)
-
-### Feature Requests
-
-Include:
-- Use case description
-- Proposed implementation approach
-- Examples from other tools/papers
-- Potential impact on existing code
-
-## 💡 Best Practices
-
-### For Dataset Converters
-
-1. **Preserve raw data**: Never modify source files
-2. **Handle edge cases**: Missing data, inconsistent formats
-3. **Validate thoroughly**: Check biomechanical constraints
-4. **Document assumptions**: Note any data interpolation or filtering
-5. **Maintain traceability**: Map original to standard column names
-
-### For Library Enhancements
-
-1. **Backward compatibility**: Don't break existing functionality
-2. **Performance**: Use vectorized operations, test with large datasets
-3. **Cross-platform**: Ensure Python/MATLAB compatibility
-4. **Examples**: Add usage examples to docstrings
-
-## 🏗️ Project Architecture
-
-Understanding the codebase structure:
+## Project Structure
 
 ```
-source/
-├── lib/                      # Core libraries
-│   ├── python/              # Python analysis library
-│   └── matlab/              # MATLAB analysis library
-├── conversion_scripts/       # Dataset-specific converters
-│   ├── AddBiomechanics/     
-│   ├── Gtech_2023/          
-│   └── Umich_2021/          
-└── visualization/           # Plotting tools
-
-docs/
-├── tutorials/               # Usage guides
-├── standard_spec/          # Format specifications
-└── datasets_documentation/ # Dataset details
+source/lib/              # Core libraries (Python/MATLAB)
+source/conversion_scripts/  # Dataset converters
+source/validation/       # Quality checks and GIF generation
+source/tests/           # Testing framework
+docs/                   # Specifications and tutorials
 ```
 
-## 🤝 Community Guidelines
+## Best Practices
 
-- Be respectful and constructive
-- Help others in discussions
-- Give credit where due
-- Follow the code of conduct
+**Dataset Converters:**
+- Preserve raw data
+- Handle missing data gracefully
+- Validate biomechanical constraints
+- Document assumptions
+- Maintain traceability
 
-## 📧 Questions?
-
-- Open an issue for questions
-- Check existing issues/PRs first
-- Join discussions in the issues section
-
-Thank you for contributing to making biomechanics data more accessible and standardized!
+**Library Features:**
+- Maintain compatibility
+- Use vectorized operations
+- Test with large datasets
+- Include usage examples
 
 ---
 
-*By contributing, you agree that your contributions will be licensed under the project's MIT License.*
+*Contributions are licensed under MIT License.*
