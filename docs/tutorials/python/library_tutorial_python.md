@@ -6,7 +6,7 @@ This tutorial demonstrates how to use the **LocomotionData** library for efficie
 
 Ensure you have the required packages:
 ```bash
-pip install pandas numpy matplotlib pyarrow
+pip install pandas numpy matplotlib pyarrow seaborn
 ```
 
 ## 0. Setup and Import
@@ -175,36 +175,102 @@ print(f"New columns: {set(merged_df.columns) - set(loco.df.columns)}")
 
 ## 8. Visualization
 
-### Phase-Normalized Patterns
+The library provides comprehensive plotting utilities for phase-normalized locomotion data with three main plot types.
+
+### Phase Pattern Plotting
+
+The library offers three plotting styles for phase-normalized data:
 
 ```python
-# Plot phase patterns with both individual cycles and mean
+# 1. Spaghetti plots - show all individual cycles
+loco.plot_phase_patterns(subject, task, angle_features, 
+                        plot_type='spaghetti', 
+                        save_path='spaghetti_plot.png')
+
+# 2. Mean ± standard deviation plots with shaded confidence bands
+loco.plot_phase_patterns(subject, task, angle_features, 
+                        plot_type='mean',
+                        save_path='mean_patterns.png')
+
+# 3. Combined plots - both individual cycles and mean pattern overlay
 loco.plot_phase_patterns(subject, task, angle_features, 
                         plot_type='both', 
                         save_path='phase_patterns.png')
-
-# Plot only mean patterns with standard deviation
-loco.plot_phase_patterns(subject, task, angle_features, 
-                        plot_type='mean')
 ```
 
-### Time Series Plots
+**Plot Features:**
+- **Gray lines**: Valid cycles passing biomechanical validation
+- **Red lines**: Invalid cycles failing validation criteria  
+- **Blue line**: Mean pattern across valid cycles only
+- **Blue shaded area**: ±1 standard deviation (in 'mean' mode)
+- **Automatic layout**: Intelligent subplot arrangement (up to 3 columns)
 
-```python
-# Plot time series data (if time column exists)
-if 'time_s' in loco.df.columns:
-    loco.plot_time_series(subject, task, angle_features,
-                         save_path='time_series.png')
-```
+### Task Comparison Plots
 
-### Task Comparison
+Compare mean patterns across different tasks for the same subject:
 
 ```python
 # Compare multiple tasks for the same subject
-available_tasks = [task for task in tasks if task in ['normal_walk', 'incline_walk']]
-if len(available_tasks) > 1:
-    loco.plot_task_comparison(subject, available_tasks, angle_features,
+available_tasks = ['normal_walk', 'incline_walk', 'decline_walk']
+# Filter to only available tasks in dataset
+valid_tasks = [task for task in available_tasks if task in loco.get_tasks()]
+
+if len(valid_tasks) > 1:
+    loco.plot_task_comparison(subject, valid_tasks, angle_features,
                              save_path='task_comparison.png')
+```
+
+### Time Series Plotting
+
+For time-indexed data analysis:
+
+```python
+# Plot time series data (useful for time-indexed datasets)
+if 'time_s' in loco.df.columns:
+    loco.plot_time_series(subject, task, angle_features,
+                         time_col='time_s', 
+                         save_path='time_series.png')
+```
+
+### Custom Plotting with Raw Data
+
+Access underlying 3D arrays for advanced custom visualizations:
+
+```python
+import matplotlib.pyplot as plt
+
+# Get 3D data arrays
+data_3d, feature_names = loco.get_cycles(subject, task, angle_features)
+valid_mask = loco.validate_cycles(subject, task, angle_features)
+
+# Create custom percentile plot
+fig, axes = plt.subplots(1, len(feature_names), figsize=(15, 4))
+phase_x = np.linspace(0, 100, 150)
+
+for i, feature in enumerate(feature_names):
+    feat_data = data_3d[:, :, i]
+    valid_data = feat_data[valid_mask, :]
+    
+    # Calculate percentiles
+    p25 = np.percentile(valid_data, 25, axis=0)
+    p50 = np.percentile(valid_data, 50, axis=0)  # Median
+    p75 = np.percentile(valid_data, 75, axis=0)
+    
+    # Plot with custom styling
+    axes[i].fill_between(phase_x, p25, p75, alpha=0.3, 
+                        color='lightblue', label='IQR (25-75%)')
+    axes[i].plot(phase_x, p50, 'navy', linewidth=2, label='Median')
+    
+    axes[i].set_xlabel('Gait Cycle (%)')
+    axes[i].set_ylabel(feature.replace('_', ' '))
+    axes[i].set_title(feature, fontsize=10)
+    axes[i].legend()
+    axes[i].grid(True, alpha=0.3)
+    axes[i].set_xlim([0, 100])
+
+plt.tight_layout()
+plt.savefig('custom_percentile_plot.png', dpi=300, bbox_inches='tight')
+plt.show()
 ```
 
 ## 9. Advanced Analysis Example

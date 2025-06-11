@@ -219,45 +219,124 @@ fprintf('New columns: %s\n', strjoin(newCols, ', '));
 
 ## 8. Visualization
 
-### Phase-Normalized Patterns
+The MATLAB library provides comprehensive plotting utilities for phase-normalized locomotion data with multiple visualization styles.
+
+### Phase Pattern Plotting
+
+The library offers three main plotting styles for phase-normalized data:
 
 ```matlab
-% Plot phase patterns with both individual cycles and mean
+% 1. Spaghetti plots - show all individual cycles
+loco.plotPhasePatterns(subject, task, angleFeatures, ...
+                      'PlotType', 'spaghetti', ...
+                      'SavePath', 'spaghetti_plot.png');
+
+% 2. Mean ± standard deviation plots with shaded confidence bands
+loco.plotPhasePatterns(subject, task, angleFeatures, ...
+                      'PlotType', 'mean', ...
+                      'SavePath', 'mean_patterns.png');
+
+% 3. Combined plots - both individual cycles and mean pattern overlay  
 loco.plotPhasePatterns(subject, task, angleFeatures, ...
                       'PlotType', 'both', ...
                       'SavePath', 'phase_patterns.png');
-
-% Plot only mean patterns with standard deviation
-loco.plotPhasePatterns(subject, task, angleFeatures, ...
-                      'PlotType', 'mean');
-
-% Using helper function for custom plotting
-validMask = loco.validateCycles(subject, task, angleFeatures);
-fig = plotMosaicData(angleData, angleNames, ...
-                    'Title', sprintf('%s - %s', subject, task), ...
-                    'ValidMask', validMask, ...
-                    'PlotType', 'both');
 ```
 
-### Time Series Plots
+**Plot Features:**
+- **Gray lines**: Valid cycles passing biomechanical validation
+- **Red lines**: Invalid cycles failing validation criteria
+- **Blue line**: Mean pattern across valid cycles only
+- **Blue shaded area**: ±1 standard deviation (in 'mean' mode)
+- **Automatic layout**: Intelligent subplot arrangement (up to 3 columns)
+
+### Task Comparison Plots
+
+Compare mean patterns across different tasks for the same subject:
+
+```matlab
+% Compare multiple tasks for the same subject
+availableTasks = intersect(loco.tasks, {'normal_walk', 'incline_walk', 'decline_walk'});
+if length(availableTasks) > 1
+    loco.plotTaskComparison(subject, availableTasks, angleFeatures, ...
+                           'SavePath', 'task_comparison.png');
+end
+```
+
+### Time Series Plotting
+
+For time-indexed data analysis:
 
 ```matlab
 % Plot time series data (if time column exists)
 if any(strcmp('time_s', loco.data.Properties.VariableNames))
     loco.plotTimeSeries(subject, task, angleFeatures, ...
+                       'TimeCol', 'time_s', ...
                        'SavePath', 'time_series.png');
 end
 ```
 
-### Task Comparison
+### Custom Plotting with Raw Data
+
+Access underlying 3D arrays for advanced custom visualizations:
 
 ```matlab
-% Compare multiple tasks for the same subject
-availableTasks = intersect(loco.tasks, {'normal_walk', 'incline_walk'});
-if length(availableTasks) > 1
-    loco.plotTaskComparison(subject, availableTasks, angleFeatures, ...
-                           'SavePath', 'task_comparison.png');
+% Get 3D data arrays
+[data3D, featureNames] = loco.getCycles(subject, task, angleFeatures);
+validMask = loco.validateCycles(subject, task, angleFeatures);
+
+% Create custom percentile plot
+figure('Position', [100, 100, 1200, 300]);
+phaseX = linspace(0, 100, 150);
+
+for i = 1:length(featureNames)
+    subplot(1, length(featureNames), i);
+    
+    featData = data3D(:, :, i);
+    validData = featData(validMask, :);
+    
+    % Calculate percentiles
+    p25 = prctile(validData, 25, 1);
+    p50 = prctile(validData, 50, 1);  % Median
+    p75 = prctile(validData, 75, 1);
+    
+    % Plot with custom styling
+    fill([phaseX, fliplr(phaseX)], [p25, fliplr(p75)], ...
+         [0.7, 0.9, 1.0], 'FaceAlpha', 0.5, 'EdgeColor', 'none');
+    hold on;
+    plot(phaseX, p50, 'Color', [0, 0.2, 0.6], 'LineWidth', 2);
+    
+    xlabel('Gait Cycle (%)');
+    ylabel(strrep(featureNames{i}, '_', ' '));
+    title(featureNames{i}, 'Interpreter', 'none');
+    xlim([0, 100]);
+    grid on;
+    legend({'IQR (25-75%)', 'Median'}, 'Location', 'best');
 end
+
+sgtitle(sprintf('%s - %s: Custom Percentile Analysis', subject, task));
+print('custom_percentile_plot.png', '-dpng', '-r300');
+```
+
+### Alternative Helper Function Plotting
+
+For more control over plotting, use the helper functions directly:
+
+```matlab
+% Using helper function for custom plotting
+validMask = loco.validateCycles(subject, task, angleFeatures);
+[data3D, featureNames] = loco.getCycles(subject, task, angleFeatures);
+
+% Create mosaic plot with custom options
+fig = figure('Position', [100, 100, 1000, 600]);
+plotMosaicData(data3D, featureNames, ...
+              'Title', sprintf('%s - %s', subject, task), ...
+              'ValidMask', validMask, ...
+              'PlotType', 'both', ...
+              'ColorScheme', 'custom', ...
+              'ShowLegend', true);
+
+% Save with high resolution
+print(fig, 'custom_mosaic_plot.png', '-dpng', '-r300');
 ```
 
 ## 9. Advanced Analysis Example

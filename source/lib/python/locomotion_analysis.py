@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import List, Tuple, Dict, Optional, Union
 import warnings
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 class LocomotionData:
