@@ -1,379 +1,163 @@
-# Standard Specification (with Monolithic Format Option)
+# Locomotion Data Standard
 
-## Overview
+Standardized format for biomechanical datasets with consistent variable naming and structure.
 
-This repository standardizes locomotion datasets into a consistent Parquet-based format, providing both **time-indexed** and **phase-indexed** tables. Supported modalities include:
+**Quick Reference:** [Variable Naming](#variable-naming) • [Data Formats](#data-formats) • [Task Definitions](#task-definitions)
 
-* Joint Angles
-* Joint Kinetics (moments, powers)
-* Link (global) Angles
-* Ground Reaction Forces (GRFs)
-* Center of Pressure (COP)
-
-Time-indexed tables preserve the source sampling frequency. Phase-indexed tables normalize each gait cycle to a fixed number of points for cross-subject comparison.
-
-**Limitations:**
-
-* Currently supports only the modalities listed above.
-* Some datasets have missing contralateral leg data or incomplete segmentation; missing values are handled as NaN (see Section 9).
-* Each Parquet file may contain multiple `task_id` entries. Time is generally **discontinuous** between tasks, especially at transition points. For continuous analysis within a task, it is recommended to filter by `task_id`.
+## Data Formats
 
 ---
 
-## Contents
+### Time-Indexed Data
+*Original sampling frequency preserved*
 
-1. [Variable Coverage](#variable-coverage)
-2. [File Format & Schema](#file-format--schema)
-
-   * [2.1 Normalized (Split) Format](#21-normalized-split-format)
-   * [2.2 Monolithic Format](#22-monolithic-format)
-3. [Metadata Handling](#metadata-handling)
-4. [Column Naming Convention](#column-naming-convention)
-5. [Units & Conventions](#units--conventions)
-6. [Sign Conventions](sign_conventions.md)
-7. [Temporal & Phase Indexing](#temporal--phase-indexing)
-
-   * [7.1 Temporal Indexing](#temporal-indexing)
-   * [7.2 Phase Calculation](#phase-calculation)
-8. [Task Vocabulary](#task-vocabulary)
-9. [Coordinate Frames](#coordinate-frames)
-10. [Missing Data & Quality Flags](#missing-data--quality-flags)
-11. [Monolithic Format: Usage Notes](#monolithic-format-usage-notes)
-12. [Example: Export to Monolithic Format](#example-export-to-monolithic-format)
-13. [Backward Compatibility](#backward-compatibility)
-14. [Schema Declaration](#schema-declaration)
-15. [Summary Table](#summary-table)
+- **Format**: `dataset_time.parquet`
+- **Structure**: Continuous time series data
+- **Use case**: Temporal analysis, event detection
 
 ---
 
-## 1. Variable Coverage
+### Phase-Indexed Data  
+*Normalized to 150 points per gait cycle*
 
-The standardized format includes both required and optional biomechanical variables:
-
-* **Global Link Angles** (RECOMMENDED): orientation of torso, thigh, shank, and foot segments in global coordinates, following OpenSim's XYZ frame.
-* **Joint Angles** (3DOF Schema):
-
-  * Sagittal plane (required): `hip_flexion_angle_rad`, `knee_flexion_angle_rad`, `ankle_flexion_angle_rad`
-  * Frontal/transverse planes (optional): `hip_adduction_angle_rad`, `hip_rotation_angle_rad`, `ankle_inversion_angle_rad`, `ankle_rotation_angle_rad`
-* These optional fields should be included in the schema and populated as `NaN` where not available.
-
-## 2. File Format & Schema
-
-Two **organizational formats** are supported:
-
-### 2.1 Normalized ("Split") Format (Recommended for Storage Efficiency)
-
-* **Fact Table**: Main data (e.g., kinematics, kinetics) per sample with `subject_id` and `task_id` as foreign keys.
-* **metadata\_subject.parquet**: Static subject info, one row per `subject_id`
-* **metadata\_task.parquet**: Task/session info, one row per `task_id`
-* **How to use**: Join fact table to metadata tables as needed.
-* **Filename example**: `<dataset>_<time|phase>.parquet`
-
-### 2.2 Monolithic Format (All Metadata In-Row)
-
-* **Single Parquet file** with all columns, including:
-
-  * All biomechanical data columns (joint angles, kinetics, etc.)
-  * All relevant **subject-level metadata**: `age`, `gender`, `height`, `body_mass`, etc.
-  * All **task-level metadata**: `task_id`, `task_name`, `walking_speed_m_s`, `ground_inclination_deg`, etc.
-* Each data row contains the full set of metadata relevant to that row’s `subject_id` and `task_id`.
-* **Filename example**: `<dataset>_<time|phase>_monolithic.parquet`
-* **Storage note**: This approach **increases file size** (repetition of metadata), but simplifies downstream use (no joins needed).
-
-#### 2.2.1 Example Schema (Monolithic Format)
-
-| time\_s | subject\_id | age | gender | height | body\_mass | task\_id | task\_name     | walking\_speed\_m\_s | ... biomech data ... |
-| ------- | ----------- | --- | ------ | ------ | ---------- | -------- | -------------- | -------------------- | -------------------- |
-| 0.00    | S01         | 23  | male   | 1.78   | 72.1       | T001     | level\_walking | 1.25                 | ...                  |
-| 0.01    | S01         | 23  | male   | 1.78   | 72.1       | T001     | level\_walking | 1.25                 | ...                  |
-
-*Subject and task metadata are repeated for every row in the corresponding task.*
+- **Format**: `dataset_phase.parquet` 
+- **Structure**: 150 points per cycle (0-100%)
+- **Use case**: Cross-subject comparison, averaging
 
 ---
 
-## 3. Metadata Handling
-
-**Choose one of:**
-
-* **Split/normalized format** for maximum storage efficiency (separate metadata and fact tables, use foreign keys for join).
-* **Monolithic/denormalized format** for convenience (all metadata embedded in each row).
-
-**Consumers should check the schema** to detect which format is present:
-
-* If `age`, `gender`, etc., are columns in the data table, it is monolithic.
-* If only `subject_id`, `task_id` present, use external metadata tables.
-
----
-
-## 4. Column Naming Convention
-
-* Use **snake\_case** for all column names
-* Append unit suffix for clarity: `_kg`, `_rad`, `_deg`, `_N`, `_m`, `_s.`
-* Examples:
-
-  * `hip_flexion_angle_rad`
-  * `knee_moment_Nm`
-  * `vertical_grf_N`
-  * `cop_y_m`
-
----
-
-## 5. Units & Conventions
-
-### 5.1 SI Units
-- Mass: kilograms (kg)
-- Length: meters (m)
-- Time: seconds (s)
-- Angle: radians (rad) or degrees (deg)
-- Force: Newtons (N)
-- Moment: Newton-meters (N·m)
-- Power: Watts (W)
-
-### 5.2 Variables & Standard Units
-
-#### Subject Metadata
-| Variable     | Standard Units | Notes                  |
-|--------------|----------------|------------------------|
-| body_mass    | kg             | from subject metadata  |
-| height       | m              | optional               |
-| leg_length   | m              | optional               |
-
-#### Joint Angles (3DOF where available)
-| Variable                      | Standard Units | Notes                          |
-|-------------------------------|----------------|--------------------------------|
-| hip_flexion_angle             | rad            | sagittal plane                 |
-| hip_adduction_angle           | rad            | optional: frontal plane        |
-| hip_rotation_angle            | rad            | optional: transverse plane     |
-| knee_flexion_angle            | rad            | sagittal plane                 |
-| ankle_flexion_angle           | rad            | sagittal plane                 |
-| ankle_inversion_angle         | rad            | optional: frontal plane        |
-| ankle_rotation_angle          | rad            | optional: transverse plane     |
-
-#### Joint Angular Velocities
-| Variable                      | Standard Units | Notes                          |
-|-------------------------------|----------------|--------------------------------|
-| hip_flexion_velocity          | rad/s          | angular velocity               |
-| hip_adduction_velocity        | rad/s          | optional                       |
-| hip_rotation_velocity         | rad/s          | optional                       |
-| knee_flexion_velocity         | rad/s          | angular velocity               |
-| ankle_flexion_velocity        | rad/s          | angular velocity               |
-| ankle_inversion_velocity      | rad/s          | optional                       |
-| ankle_rotation_velocity       | rad/s          | optional                       |
-
-#### Joint Moments
-| Variable        | Standard Units | Notes              |
-|-----------------|----------------|--------------------|
-| hip_moment      | N·m            |                    |
-| knee_moment     | N·m            |                    |
-| ankle_moment    | N·m            |                    |
-
-#### Ground Reaction Forces (GRF)
-| Variable      | Standard Units | Notes                        |
-|---------------|----------------|------------------------------|
-| vertical_grf  | N              | positive upward              |
-| ap_grf        | N              | positive anterior            |
-| ml_grf        | N              | positive medial/right        |
-
-#### Center of Pressure (COP)
-| Variable | Standard Units | Notes                     |
-|----------|----------------|---------------------------|
-| cop_x    | m              | mediolateral              |
-| cop_y    | m              | anterior-posterior        |
-| cop_z    | m              | vertical                  |
-
-#### Global Link Angles
-| Variable          | Standard Units | Notes                                |
-|-------------------|----------------|--------------------------------------|
-| torso_angle_x     | rad            | global orientation X (OpenSim)       |
-| torso_angle_y     | rad            | global orientation Y (OpenSim)       |
-| torso_angle_z     | rad            | global orientation Z (OpenSim)       |
-| thigh_angle_x     | rad            | global orientation X                 |
-| thigh_angle_y     | rad            | global orientation Y                 |
-| thigh_angle_z     | rad            | global orientation Z                 |
-| shank_angle_x     | rad            | global orientation X                 |
-| shank_angle_y     | rad            | global orientation Y                 |
-| shank_angle_z     | rad            | global orientation Z                 |
-| foot_angle_x      | rad            | global orientation X                 |
-| foot_angle_y      | rad            | global orientation Y                 |
-| foot_angle_z      | rad            | global orientation Z                 |
+## Variable Naming
+
+**Pattern**: `<joint>_<motion>_<measurement>_<side>_<unit>`
 
-#### Global Link Angular Velocities
-| Variable            | Standard Units | Notes                         |
-|---------------------|----------------|-------------------------------|
-| torso_velocity_x    | rad/s          | global angular velocity       |
-| torso_velocity_y    | rad/s          |                               |
-| torso_velocity_z    | rad/s          |                               |
-| thigh_velocity_x    | rad/s          |                               |
-| thigh_velocity_y    | rad/s          |                               |
-| thigh_velocity_z    | rad/s          |                               |
-| shank_velocity_x    | rad/s          |                               |
-| shank_velocity_y    | rad/s          |                               |
-| shank_velocity_z    | rad/s          |                               |
-| foot_velocity_x     | rad/s          |                               |
-| foot_velocity_y     | rad/s          |                               |
-| foot_velocity_z     | rad/s          |                               |
-
-### 5.3 Column Naming
-Use `<variable>_<unit>`:
-- `hip_flexion_angle_rad`  
-- `knee_moment_Nm`
-
----
-
-## 6. Sign Conventions
-
-See [sign\_conventions.md](sign_conventions.md)
-
-**Key**: All joint angles follow **OpenSim conventions** for maximum compatibility with biomechanical modeling frameworks.
-
----
-
-## 7. Temporal & Phase Indexing
-
-### 7.1 Temporal Indexing
-
-* Column `time_s`: seconds, monotonic increasing within a task.
-* Time is **discontinuous across task transitions** in a multi-task file.
-* Sampling rate given by metadata `sampling_frequency_hz`.
-
-### 7.2 Phase Calculation
-
-#### Overview
-Normalize each gait cycle to **0–100%** phase for consistent comparison.
-
-#### Heel-Strike Detection
-- Use `vertical_grf_N` with a threshold of **20 N**.
-- Mark timestamps where force crosses above threshold from below.
-- If the dataset already contains heel-strike event markers or frame indices, these may be used directly instead of detecting from GRF.
-
-#### Cycle Segmentation
-- Identify consecutive heel strikes based on the left and right leg.
-- Define start (0%) and end (100%) of each cycle.
-
-#### Interpolation
-- Default `points_per_cycle`: **150**.
-- Linearly interpolate intermediate samples to generate `phase_%` values.
-- Store `phase_<l|r>` as a float [0.0, 100.0), for the left and right leg, respectively.
-
-#### Configuration
-- Allow override of threshold and `points_per_cycle` in conversion scripts.
-
----
-
-## 8. Task Vocabulary
-
-Defined in `reference/task_vocabulary.csv`. Each `task_name` **must** be drawn from the following standardized list:
-
-### Locomotion
-
-* `level_walking`
-* `incline_walking`
-* `decline_walking`
-* `run`
-* `up_stairs`
-* `down_stairs`
-
-### Transitions
-
-* `sit_to_stand`
-* `stand_to_sit`
-* `poses`
-
-### Load-bearing Tasks
-
-* `lift_weight`
-* `push`
-* `jump`
-* `lunges`
-* `squats`
-
-### Object Interaction
-
-* `ball_toss_l`
-* `ball_toss_m`
-* `ball_toss_r`
-
-### Misc.
-
-* `meander`
-* `cutting`
-* `obstacle_walk`
-* `side_shuffle`
-* `curb_up`
-* `curb_down`
-
-Each row in the dataset must include a `task_id` and `task_name` that match one of these values. New tasks must be explicitly added to the controlled vocabulary and documented in the changelog.
-
----
-
-## 9. Coordinate Frames
-
-* **Global frame:** OpenSim convention — X-forward, Y-up, Z-right (right-handed)
-* **Local link frames:** consistent per dataset and aligned with OpenSim's right-handed coordinate system. Visualize a person walking to the left, where the local axes should match OpenSim's conventions for limb segment orientation.
-
----
-
-## 10. Missing Data & Quality Flags
-
-* Missing values are `NaN`
-* Outliers are flagged in boolean column `is_outlier`
-
----
-
-## 11. Monolithic Format: Usage Notes
-
-* Use when:
-
-  * Data consumers prioritize ease of analysis (e.g., for scikit-learn, pandas, Excel).
-  * Data is being shared for end-users who may not be comfortable with database-style joins.
-  * Storage footprint is not a primary concern.
-
-* Avoid if:
-
-  * The dataset is very large and storage/bandwidth is critical.
-  * Multiple tasks and subjects result in highly repetitive metadata.
-
-* **When exporting** to monolithic format, merge metadata tables into the main data table using left-joins on `subject_id` and `task_id`, then export to a single Parquet file.
-
----
-
-## 12. Example: Export to Monolithic Format in Python
-
-```python
-import pandas as pd
-
-fact = pd.read_parquet('dataset_time.parquet')
-meta_subj = pd.read_parquet('metadata_subject.parquet')
-meta_task = pd.read_parquet('metadata_task.parquet')
-
-# Merge in subject metadata
-out = fact.merge(meta_subj, on='subject_id', how='left')
-# Merge in task metadata
-out = out.merge(meta_task, on=['subject_id', 'task_id'], how='left')
-
-out.to_parquet('dataset_time_monolithic.parquet')
+**Examples**:
+- `knee_flexion_angle_ipsi_rad`
+- `hip_moment_contra_Nm`
+- `ankle_flexion_velocity_ipsi_rad_s`
+
+**Sides**:
+- `ipsi` - Ipsilateral (same side as leading leg)
+- `contra` - Contralateral (opposite side)
+
+**Units**:
+- Angles: `rad` (radians)
+- Moments: `Nm` (Newton-meters) 
+- Velocities: `rad_s` (radians per second)
+- Forces: `N` (Newtons)
+
+## Required Columns
+
+**Structural**:
+- `subject` - Subject identifier
+- `task` - Task name
+- `step` - Step/cycle number
+
+**Phase Data**:
+- `phase_percent` - Gait cycle phase (0-100%)
+
+**Time Data**:
+- `time_s` - Time in seconds
+
+## Standard Variables
+
+**Joint Angles** (required):
+- `hip_flexion_angle_<side>_rad`
+- `knee_flexion_angle_<side>_rad` 
+- `ankle_flexion_angle_<side>_rad`
+
+**Joint Moments** (optional):
+- `hip_moment_<side>_Nm`
+- `knee_moment_<side>_Nm`
+- `ankle_moment_<side>_Nm`
+
+**Ground Forces** (optional):
+- `vertical_grf_<side>_N`
+- `anterior_grf_<side>_N`
+- `lateral_grf_<side>_N`
+
+## Task Definitions
+
+**Standard Task Names**:
+- `level_walking` - Walking on level ground
+- `incline_walking` - Walking uphill
+- `decline_walking` - Walking downhill  
+- `up_stairs` - Stair ascent
+- `down_stairs` - Stair descent
+- `run` - Running
+- `sit_to_stand` - Chair rise
+- `jump` - Jumping
+- `squats` - Squatting motion
+
+## Sign Conventions
+
+**Joint Angles**:
+- **Positive flexion**: Hip, knee, ankle dorsiflexion
+- **Negative extension**: Hip, knee, ankle plantarflexion
+
+**Coordinate System**:
+- **X**: Anterior (forward)
+- **Y**: Superior (up)
+- **Z**: Lateral (right)
+
+**Ground Forces**:
+- **Positive Y**: Upward (vertical)
+- **Positive X**: Forward (anterior)
+- **Positive Z**: Rightward (lateral)
+
+## Phase Calculation
+
+**Phase-indexed data normalization**:
+1. Detect gait events (heel strike to heel strike)
+2. Normalize each cycle to exactly 150 points
+3. Calculate phase percentage: `phase_percent = (point_index / 149) * 100`
+
+**Phase Interpretation**:
+- `0%` - Heel strike (start of gait cycle)
+- `~60%` - Opposite heel strike (typical)
+- `100%` - Next heel strike (end of cycle)
+
+## Missing Data
+
+**Handling**:
+- Missing values: `NaN` (Not a Number)
+- Invalid measurements: `NaN`
+- No synthetic data generation
+
+**Quality Flags** (optional):
+- `is_reconstructed_<side>` - Boolean flag for filled data
+- Use `true` for interpolated/reconstructed values
+
+## File Examples
+
+**Time-indexed**:
+```
+subject,task,step,time_s,knee_flexion_angle_ipsi_rad,hip_moment_contra_Nm
+SUB01,level_walking,0,0.00,0.123,-0.456
+SUB01,level_walking,0,0.01,0.126,-0.445
+SUB01,level_walking,1,1.20,0.120,-0.460
 ```
 
+**Phase-indexed**:
+```
+subject,task,step,phase_percent,knee_flexion_angle_ipsi_rad,hip_moment_contra_Nm
+SUB01,level_walking,0,0.0,0.123,-0.456
+SUB01,level_walking,0,0.7,0.126,-0.445
+SUB01,level_walking,0,100.0,0.120,-0.460
+SUB01,level_walking,1,0.0,0.125,-0.458
+```
+
+## Validation Requirements
+
+**Phase Data Validation**:
+- Exactly 150 points per cycle
+- Phase values: 0.0 to 100.0
+- No gaps in phase progression
+
+**Variable Validation**:
+- Joint angles: -π to π radians  
+- Realistic biomechanical ranges
+- Consistent units across datasets
+
 ---
 
-## 13. Backward Compatibility
-
-* Both formats must match the **column naming conventions**, **units**, and **controlled vocabulary**.
-* Scripts and code examples should indicate if they require monolithic format.
-
----
-
-## 14. Schema Declaration
-
-**In each dataset README,** specify whether data is provided in normalized (split) or monolithic format (or both), and how to load each.
-
----
-
-## 15. Summary Table
-
-| Format     | Structure                                | Pros                       | Cons                     |
-| ---------- | ---------------------------------------- | -------------------------- | ------------------------ |
-| Split      | Fact + Metadata tables, use keys to join | Storage efficient, modular | Requires join            |
-| Monolithic | One table, all metadata per row          | Simple, join-free analysis | Larger files, redundancy |
-
----
+*For detailed implementation examples, see the [Python Tutorial](../tutorials/python/getting_started_python.md) and [MATLAB Tutorial](../tutorials/matlab/getting_started_matlab.md).*

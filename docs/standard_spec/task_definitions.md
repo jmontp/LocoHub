@@ -1,29 +1,41 @@
-**File: standard\_spec/task\_definitions.md**
+# Task Definitions
 
-````markdown
-# Task Definitions & `metadata_task.parquet` Schema
+Standardized task vocabulary and metadata structure for locomotion datasets.
 
-This document provides explicit definitions for each column in the `metadata_task.parquet` file. Each row represents one unique task instance (identified by `task_id`) performed by a subject.
+## Standard Task Names
 
-## Schema Overview
-| Column Name                  | Data Type | Required | Description                                                                                         |
-|------------------------------|-----------|----------|-----------------------------------------------------------------------------------------------------|
-| `task_id`                    | string    | Yes      | Unique identifier for the task/trial (e.g., `S01_T03`)                                               |
-| `subject_id`                 | string    | Yes      | Links to `metadata_subject.parquet` subject record                                                   |
-| `task_name`                  | string    | Yes      | Standardized name of the task (see Controlled Vocabulary)                                            |
-| `start_time_s`               | float     | No       | Relative time (in seconds) when the task begins within the raw recording                             |
-| `end_time_s`                 | float     | No       | Relative time (in seconds) when the task ends within the raw recording                               |
-| `ground_inclination_deg`     | float     | No       | Surface incline angle in degrees (positive = upward slope)                                           |
-| `walking_speed_m_s`          | float     | No       | Nominal or target walking/running speed in meters/second                                             |
-| `load_weight_kg`             | float     | No       | Weight lifted or carried during the task (if applicable)                                             |
-| `treadmill_speed_m_s`        | float     | No       | Belt speed for treadmill tasks                                                                       |
-| `path_length_m`              | float     | No       | Total distance covered during the task                                                                |
-| `step_height_m`              | float     | No       | Vertical rise per step, relevant for stair tasks                                                    |
-| `stair_inclination_deg`      | float     | No       | Inclination of the staircase in degrees. Relevant for `up_stairs` and `down_stairs` tasks.           |
-| `instructions`               | string    | No       | Any verbal or protocol instructions provided to the subject (free-text)                              |
-| `notes`                      | string    | No       | Free-text notes about the task (e.g., "data trimmed due to artifact at end")                       |
-| `source_marker_column`       | string    | No       | Original dataset column or event marker name for heel-strike (if used for phase calibration)         |
-| `source_marker_frame_index`  | int       | No       | Frame index for a provided heel-strike marker                                                        |
+**Walking Tasks**:
+- `level_walking` - Walking on level ground
+- `incline_walking` - Walking uphill (positive incline)
+- `decline_walking` - Walking downhill (negative incline)
+- `treadmill_walking` - Treadmill walking
+
+**Stair Tasks**:
+- `up_stairs` - Stair ascent
+- `down_stairs` - Stair descent
+
+**Dynamic Tasks**:
+- `run` - Running or jogging
+- `jump` - Jumping motion
+- `hop` - Single-leg hopping
+
+**Functional Tasks**:
+- `sit_to_stand` - Chair rise
+- `squats` - Squatting motion
+- `lunges` - Lunge exercise
+
+## Task Metadata Schema
+
+**Required Fields**:
+- `task_id` - Unique task identifier (e.g., `SUB01_T01`)
+- `subject` - Subject identifier
+- `task` - Standardized task name
+
+**Optional Parameters**:
+- `ground_inclination_deg` - Surface angle (degrees)
+- `walking_speed_m_s` - Target speed (m/s)
+- `step_height_m` - Step height for stairs (meters)
+- `load_weight_kg` - Carried weight (kg)
 
 
 ## Field Details
