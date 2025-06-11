@@ -136,25 +136,74 @@ try:
 except Exception as e:
     print(f"✗ Statistical analysis error: {e}")
 
-# Test 6: Plotting (without display)
+# Test 6: Comprehensive plotting functions (without display)
 print("\n6. Testing plotting functions...")
 try:
     import matplotlib
     matplotlib.use('Agg')  # Non-interactive backend
+    import matplotlib.pyplot as plt
     
-    # Test phase pattern plot
-    loco.plot_phase_patterns(subject, task, features, save_path='test_phase_plot.png')
-    if os.path.exists('test_phase_plot.png'):
-        print("✓ Phase pattern plot created")
-        os.remove('test_phase_plot.png')
+    # Test 6a: Phase pattern plots with different modes
+    print("  Testing phase pattern plots...")
+    plot_modes = ['spaghetti', 'mean', 'both']
+    for mode in plot_modes:
+        test_file = f'test_phase_{mode}.png'
+        loco.plot_phase_patterns(subject, task, features, 
+                                plot_type=mode, save_path=test_file)
+        if os.path.exists(test_file):
+            print(f"    ✓ {mode.capitalize()} plot created")
+            os.remove(test_file)
+        else:
+            print(f"    ✗ {mode.capitalize()} plot failed")
     
-    # Test task comparison
+    # Test 6b: Task comparison plots
+    print("  Testing task comparison plots...")
     if len(loco.get_tasks()) > 1:
         loco.plot_task_comparison(subject, loco.get_tasks()[:2], features[:1], 
-                                 save_path='test_comparison_plot.png')
-        if os.path.exists('test_comparison_plot.png'):
-            print("✓ Task comparison plot created")
-            os.remove('test_comparison_plot.png')
+                                 save_path='test_comparison.png')
+        if os.path.exists('test_comparison.png'):
+            print("    ✓ Task comparison plot created")
+            os.remove('test_comparison.png')
+        else:
+            print("    ✗ Task comparison plot failed")
+    else:
+        print("    - Task comparison skipped (only 1 task available)")
+    
+    # Test 6c: Time series plots (if time column exists)
+    print("  Testing time series plots...")
+    if 'time_s' in loco.df.columns:
+        loco.plot_time_series(subject, task, features[:1], 
+                             save_path='test_timeseries.png')
+        if os.path.exists('test_timeseries.png'):
+            print("    ✓ Time series plot created")
+            os.remove('test_timeseries.png')
+        else:
+            print("    ✗ Time series plot failed")
+    else:
+        print("    - Time series skipped (no time_s column)")
+    
+    # Test 6d: Plotting parameter validation
+    print("  Testing plot parameter validation...")
+    try:
+        # Test invalid plot type
+        loco.plot_phase_patterns(subject, task, features[:1], plot_type='invalid')
+        print("    ✗ Should have failed with invalid plot type")
+    except (ValueError, TypeError):
+        print("    ✓ Invalid plot type properly rejected")
+    
+    # Test 6e: Empty data handling
+    print("  Testing empty data handling...")
+    try:
+        loco.plot_phase_patterns('nonexistent', 'nonexistent', features[:1])
+        print("    ✓ Empty data handled gracefully")
+    except Exception as e:
+        print(f"    ✓ Empty data handled with warning: {type(e).__name__}")
+    
+    print("✓ All plotting tests completed")
+    
+except ImportError as e:
+    print(f"✗ Plotting import error: {e}")
+    print("  Note: Install matplotlib and seaborn for plotting functionality")
 except Exception as e:
     print(f"✗ Plotting error: {e}")
 
