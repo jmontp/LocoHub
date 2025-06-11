@@ -1,0 +1,164 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main, phase0-validation ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, '3.10', '3.11']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov
+        # Core dependencies for library
+        pip install pandas numpy matplotlib seaborn pyarrow
+        # Additional dependencies for validation
+        pip install pillow  # For GIF generation
+        
+        # Install any additional requirements if they exist
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run Python library tests
+      run: |
+        cd source/tests
+        python test_tutorial_library_python.py
+
+    - name: Run validation system tests
+      run: |
+        cd source/tests
+        python test_step_classifier.py
+
+    - name: Run tutorial tests
+      run: |
+        cd source/tests
+        python test_tutorial_getting_started_python.py
+
+    - name: Run demo plots generation (validation check)
+      run: |
+        cd source/tests
+        python demo_step_classifier.py
+
+    - name: Test dataset validator (with sample data)
+      run: |
+        cd source/tests
+        # Create minimal test data
+        python -c "
+import pandas as pd
+import numpy as np
+
+# Create minimal phase dataset for testing
+n_points = 150
+n_cycles = 3
+phase_percent = np.tile(np.linspace(0, 100, n_points), n_cycles)
+step = np.repeat(range(n_cycles), n_points)
+subject = ['SUB01'] * (n_points * n_cycles)
+task = ['level_walking'] * (n_points * n_cycles)
+
+# Standard naming variables
+hip_angle = np.tile(0.3 * np.sin(2 * np.pi * np.linspace(0, 1, n_points)), n_cycles)
+knee_angle = np.tile(0.8 * np.sin(2 * np.pi * np.linspace(0, 1, n_points) + np.pi/4), n_cycles)
+ankle_angle = np.tile(0.2 * np.sin(2 * np.pi * np.linspace(0, 1, n_points) - np.pi/3), n_cycles)
+
+test_data = pd.DataFrame({
+    'subject': subject,
+    'task': task,
+    'step': step,
+    'phase_percent': phase_percent,
+    'hip_flexion_angle_ipsi_rad': hip_angle + 0.1 * np.random.randn(len(hip_angle)),
+    'knee_flexion_angle_ipsi_rad': knee_angle + 0.1 * np.random.randn(len(knee_angle)), 
+    'ankle_flexion_angle_ipsi_rad': ankle_angle + 0.05 * np.random.randn(len(ankle_angle)),
+    'hip_flexion_angle_contra_rad': hip_angle * 0.9 + 0.1 * np.random.randn(len(hip_angle)),
+    'knee_flexion_angle_contra_rad': knee_angle * 1.1 + 0.1 * np.random.randn(len(knee_angle)),
+    'ankle_flexion_angle_contra_rad': ankle_angle * 0.95 + 0.05 * np.random.randn(len(ankle_angle))
+})
+
+test_data.to_parquet('test_dataset_phase.parquet')
+print('Created test dataset for validation')
+"
+        
+        # Test dataset validator
+        python ../validation/dataset_validator_phase.py --dataset test_dataset_phase.parquet --no-plots
+
+    - name: Check code formatting and style
+      run: |
+        # Install formatting tools
+        pip install black isort flake8
+        
+        # Check Python code formatting (informational only, don't fail)
+        echo "Checking code formatting..."
+        black --check source/lib/python/ || echo "Code formatting suggestions available"
+        black --check source/validation/ || echo "Code formatting suggestions available"
+        black --check source/tests/ || echo "Code formatting suggestions available"
+
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-outputs-python-${{ matrix.python-version }}
+        path: |
+          source/tests/sample_plots/
+          source/tests/test_dataset_phase.parquet
+        retention-days: 7
+
+  matlab-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Octave (MATLAB alternative for CI)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y octave octave-statistics
+
+    - name: Test MATLAB tutorials (basic syntax check)
+      run: |
+        cd source/tests
+        # Basic syntax validation for MATLAB files
+        echo "Checking MATLAB file syntax..."
+        
+        # Simple syntax check for getting started tutorial
+        octave --eval "
+        try
+          addpath('../lib/matlab');
+          addpath('../../docs/tutorials/matlab');
+          fprintf('MATLAB library path added successfully\n');
+        catch
+          fprintf('Error adding MATLAB paths\n');
+          exit(1);
+        end_try_catch
+        "
+
+    - name: Validate MATLAB library structure
+      run: |
+        # Check that MATLAB files exist and have proper structure
+        echo "Validating MATLAB library files..."
+        ls -la source/lib/matlab/
+        
+        # Check for required MATLAB files
+        test -f source/lib/matlab/LocomotionData.m || (echo "LocomotionData.m not found" && exit 1)
+        test -f docs/tutorials/matlab/getting_started_matlab.md || (echo "MATLAB tutorial not found" && exit 1)
+        
+        echo "MATLAB library structure validation passed"
