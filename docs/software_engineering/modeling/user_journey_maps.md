@@ -1,4 +1,8 @@
-# User Journey Maps - Locomotion Data Consumers
+# User Journey Maps
+
+## Dataset Consumers (90% - Future Focus)
+
+The following journeys represent the primary users who will consume standardized datasets for research and analysis.
 
 ## Journey 1: Graduate Student Needs Gait Data for Exoskeleton Control
 
@@ -284,3 +288,185 @@ journey
 - **Application**: Professional fulfillment applying research to real problems
 
 The validation system operates behind the scenes to ensure the 90% of users can trust and effectively use the datasets without needing to understand the complex validation processes.
+
+---
+
+## Dataset Contributors (10% - Current Focus)
+
+The following journeys represent the specialists who contribute to and validate the standardization ecosystem.
+
+## Journey 6: Data Scientist Validates a New Dataset
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+journey
+    title Data Scientist Validates New Dataset
+    section Discovery
+      Check dataset format: 3: Data Scientist
+      Review validation docs: 4: Data Scientist
+      Understand requirements: 4: Data Scientist
+    section Setup
+      Convert to parquet: 2: Data Scientist
+      Check variable names: 3: Data Scientist
+      Verify phase alignment: 2: Data Scientist
+    section Validation
+      Run phase validation: 5: Data Scientist
+      Review validation report: 4: Data Scientist
+      Check failure details: 2: Data Scientist
+    section Visualization
+      Generate validation plots: 5: Data Scientist
+      Create animated GIFs: 4: Data Scientist
+      Review visual patterns: 5: Data Scientist
+    section Decision
+      Assess data quality: 4: Data Scientist
+      Document findings: 3: Data Scientist
+      Approve for analysis: 5: Data Scientist
+```
+
+**Pain Points:**
+- Variable name mismatches cause confusion
+- Validation failures lack clear guidance
+- Plot generation takes time for large datasets
+
+**Emotional Journey:**
+- **Discovery**: Cautious optimism about new data
+- **Setup**: Frustration with format inconsistencies  
+- **Validation**: Anxiety about potential failures
+- **Visualization**: Excitement seeing data patterns
+- **Decision**: Confidence in data quality assessment
+
+---
+
+## Journey 7: Data Scientist Tunes Validation Ranges
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+journey
+    title Data Scientist Tunes Validation Ranges
+    section Investigation
+      Analyze validation failures: 2: Data Scientist
+      Review biomechanical literature: 3: Data Scientist
+      Examine outlier patterns: 2: Data Scientist
+    section Analysis
+      Run automated tuning: 5: Data Scientist
+      Review statistical ranges: 4: Data Scientist
+      Compare with literature: 3: Data Scientist
+    section Adjustment
+      Edit validation specs: 3: Data Scientist
+      Test with sample data: 4: Data Scientist
+      Iterate on ranges: 2: Data Scientist
+    section Validation
+      Re-run full validation: 4: Data Scientist
+      Generate updated plots: 4: Data Scientist
+      Verify improvements: 5: Data Scientist
+    section Documentation
+      Update range rationale: 3: Data Scientist
+      Document changes: 2: Data Scientist
+      Share with team: 4: Data Scientist
+```
+
+**Pain Points:**
+- Manual range editing is tedious
+- Unclear impact of range changes
+- No version control for validation specs
+
+**Emotional Journey:**
+- **Investigation**: Frustration with validation failures
+- **Analysis**: Hope that automation will help
+- **Adjustment**: Satisfaction with data-driven ranges
+- **Validation**: Relief when validation passes
+- **Documentation**: Pride in improved validation system
+
+---
+
+## Journey 8: Data Scientist Generates Validation Reports
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+journey
+    title Data Scientist Generates Validation Reports
+    section Planning
+      Define report scope: 4: Data Scientist
+      Select datasets: 4: Data Scientist
+      Choose visualization types: 3: Data Scientist
+    section Generation
+      Run validation pipeline: 5: Data Scientist
+      Generate static plots: 4: Data Scientist
+      Create animated GIFs: 4: Data Scientist
+    section Review
+      Check plot quality: 4: Data Scientist
+      Verify data patterns: 5: Data Scientist
+      Identify anomalies: 3: Data Scientist
+    section Compilation
+      Organize outputs: 3: Data Scientist
+      Write summary: 3: Data Scientist
+      Prepare presentation: 4: Data Scientist
+    section Sharing
+      Present to stakeholders: 4: Data Scientist
+      Discuss findings: 5: Data Scientist
+      Archive results: 2: Data Scientist
+```
+
+**Pain Points:**
+- Long generation times for comprehensive reports
+- Manual organization of multiple output files
+- Inconsistent plot formatting across datasets
+
+**Emotional Journey:**
+- **Planning**: Excitement about showcasing data insights
+- **Generation**: Anticipation mixed with concern about processing time
+- **Review**: Satisfaction with visual data quality
+- **Compilation**: Mild frustration with manual organization
+- **Sharing**: Pride in comprehensive validation results
+
+---
+
+## Journey 9: Data Scientist Debugs Validation Failures
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+journey
+    title Data Scientist Debugs Validation Failures
+    section Detection
+      Receive failure notification: 1: Data Scientist
+      Open validation report: 2: Data Scientist
+      Identify failure scope: 2: Data Scientist
+    section Investigation
+      Examine failed variables: 2: Data Scientist
+      Check validation ranges: 3: Data Scientist
+      Review raw data: 2: Data Scientist
+    section Analysis
+      Compare with standards: 3: Data Scientist
+      Identify root cause: 4: Data Scientist
+      Assess data vs rules: 4: Data Scientist
+    section Resolution
+      Fix data issues: 3: Data Scientist
+      Adjust validation ranges: 4: Data Scientist
+      Re-run validation: 5: Data Scientist
+    section Verification
+      Confirm fixes work: 5: Data Scientist
+      Document resolution: 3: Data Scientist
+      Update procedures: 2: Data Scientist
+```
+
+**Pain Points:**
+- Unclear error messages make debugging difficult
+- No guidance on whether to fix data or ranges
+- Time-consuming iterative process
+
+**Emotional Journey:**
+- **Detection**: Anxiety about data quality issues
+- **Investigation**: Frustration with unclear diagnostics
+- **Analysis**: Growing confidence as patterns emerge
+- **Resolution**: Satisfaction with problem-solving
+- **Verification**: Relief and confidence in data quality
+
+---
+
+## Combined Insights
+
+### **Consumer vs Contributor Patterns**
+- **Consumers**: Focus on data access, analysis, and application
+- **Contributors**: Focus on quality assurance, validation, and system improvement
+- **Shared Need**: Clear documentation and reliable tools
+- **Key Difference**: Contributors need debugging/tuning tools, consumers need analysis tools

@@ -324,3 +324,252 @@ The validation system operates **behind the scenes** to ensure:
 5. **Multiple tools**: Python, MATLAB, R, and direct data access
 
 These consumer-focused sequences show how the standardized locomotion data ecosystem serves its primary users while the validation system ensures quality behind the scenes.
+
+---
+
+## Dataset Contributor Workflows (10% - Current Focus)
+
+The following sequences represent the technical workflows for specialists who validate and contribute datasets.
+
+## Sequence 6: Data Scientist Validates a New Dataset
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+sequenceDiagram
+    participant DS as Data Scientist
+    participant VP as validate_phase_data.py
+    participant PV as PhaseValidator
+    participant LD as LocomotionData
+    participant SM as SpecificationManager
+    participant VS as Validation Specs
+    participant PD as Parquet Dataset
+    participant VR as Validation Report
+
+    DS->>VP: python validate_phase_data.py dataset.parquet
+    VP->>PV: validate_dataset(dataset_path)
+    
+    PV->>LD: load_dataset(dataset_path)
+    LD->>PD: read parquet file
+    PD-->>LD: return locomotion data
+    LD-->>PV: return LocomotionData object
+    
+    PV->>SM: load_validation_specs(mode='kinematic')
+    SM->>VS: read validation rules
+    VS-->>SM: return validation ranges
+    SM-->>PV: return parsed specifications
+    
+    loop For each task-phase-variable
+        PV->>PV: check_value_ranges(data, specs)
+        alt Value in range
+            PV->>PV: record_pass()
+        else Value out of range
+            PV->>PV: record_failure(details)
+        end
+    end
+    
+    PV->>VR: generate_validation_report(results)
+    VR-->>PV: report file path
+    PV-->>VP: return validation results
+    VP-->>DS: display summary + report path
+    
+    DS->>DS: review validation report
+    DS->>DS: decide on data quality
+```
+
+---
+
+## Sequence 7: Data Scientist Tunes Validation Ranges
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+sequenceDiagram
+    participant DS as Data Scientist
+    participant AT as auto_tune_ranges.py
+    participant ATL as AutomatedTuner
+    participant LD as LocomotionData
+    participant PD as Parquet Dataset
+    participant SM as SpecificationManager
+    participant VS as Validation Specs
+    participant FC as FeatureConstants
+
+    DS->>AT: python auto_tune_ranges.py --dataset data.parquet --method percentile_95
+    AT->>ATL: AutomatedTuner(dataset_path, mode)
+    
+    ATL->>LD: load_dataset(dataset_path)
+    LD->>PD: read parquet file
+    PD-->>LD: return locomotion data
+    LD-->>ATL: return LocomotionData object
+    
+    ATL->>FC: get_feature_list(mode)
+    FC-->>ATL: return standard features
+    
+    loop For each task
+        loop For each phase [0%, 25%, 50%, 75%]
+            loop For each variable
+                ATL->>ATL: extract_phase_values(task, phase, variable)
+                ATL->>ATL: calculate_statistical_range(values, method)
+            end
+        end
+    end
+    
+    ATL->>ATL: generate_statistics_report(ranges, method)
+    ATL->>SM: write_validation_data(ranges, mode)
+    SM->>VS: update validation specifications
+    VS-->>SM: confirm write
+    SM-->>ATL: confirm update
+    
+    ATL-->>AT: return tuning results
+    AT-->>DS: display tuning summary + statistics
+    
+    DS->>DS: review statistical ranges
+    DS->>DS: approve automated changes
+```
+
+---
+
+## Sequence 8: Data Scientist Generates Validation Reports
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+sequenceDiagram
+    participant DS as Data Scientist
+    participant GP as generate_validation_plots.py
+    participant PE as PlotEngine
+    participant GG as generate_validation_gifs.py
+    participant GE as GifEngine
+    participant LD as LocomotionData
+    participant SM as SpecificationManager
+    participant PD as Parquet Dataset
+    participant VS as Validation Specs
+    participant VR as Validation Report
+
+    par Generate Static Plots
+        DS->>GP: python generate_validation_plots.py --dataset data.parquet
+        GP->>PE: PlotEngine(dataset_path)
+        
+        PE->>LD: load_dataset(dataset_path)
+        LD->>PD: read parquet file
+        PD-->>LD: return locomotion data
+        LD-->>PE: return LocomotionData object
+        
+        PE->>SM: load_validation_specs()
+        SM->>VS: read validation rules
+        VS-->>SM: return validation ranges
+        SM-->>PE: return parsed specifications
+        
+        loop For each task
+            PE->>PE: generate_filters_by_phase_plot(task)
+            PE->>PE: generate_forward_kinematics_plots(task)
+            PE->>VR: save plot files
+        end
+        
+        PE-->>GP: return plot generation results
+        GP-->>DS: display plot summary
+    
+    and Generate Animated GIFs
+        DS->>GG: python generate_validation_gifs.py --dataset data.parquet
+        GG->>GE: GifEngine(dataset_path)
+        
+        GE->>LD: load_dataset(dataset_path)
+        LD->>PD: read parquet file
+        PD-->>LD: return locomotion data
+        LD-->>GE: return LocomotionData object
+        
+        loop For each task
+            GE->>GE: create_walking_animation(task)
+            GE->>GE: overlay_validation_ranges()
+            GE->>VR: save GIF files
+        end
+        
+        GE-->>GG: return GIF generation results
+        GG-->>DS: display GIF summary
+    end
+    
+    DS->>VR: organize validation outputs
+    DS->>DS: compile comprehensive report
+    DS->>DS: present findings to stakeholders
+```
+
+---
+
+## Sequence 9: Data Scientist Debugs Validation Failures
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+sequenceDiagram
+    participant DS as Data Scientist
+    participant VP as validate_phase_data.py
+    participant PV as PhaseValidator
+    participant MS as manage_validation_specs.py
+    participant SM as SpecificationManager
+    participant VS as Validation Specs
+    participant VR as Validation Report
+
+    DS->>VP: python validate_phase_data.py dataset.parquet
+    VP->>PV: validate_dataset(dataset_path)
+    PV-->>VP: return validation failures
+    VP-->>DS: display failure summary
+    
+    DS->>VR: review detailed failure report
+    VR-->>DS: show failed variables and ranges
+    
+    alt Fix validation ranges
+        DS->>MS: python manage_validation_specs.py --edit kinematic
+        MS->>SM: load_current_specs()
+        SM->>VS: read current validation rules
+        VS-->>SM: return current ranges
+        SM-->>MS: return editable specifications
+        
+        MS-->>DS: open interactive editor
+        DS->>MS: modify validation ranges
+        MS->>SM: save_updated_specs(modified_ranges)
+        SM->>VS: write updated validation rules
+        VS-->>SM: confirm save
+        SM-->>MS: confirm update
+        MS-->>DS: display save confirmation
+        
+    else Fix data issues
+        DS->>DS: identify data quality problems
+        DS->>DS: clean or filter problematic data
+        DS->>DS: regenerate parquet file
+    end
+    
+    DS->>VP: python validate_phase_data.py dataset.parquet
+    VP->>PV: validate_dataset(dataset_path)
+    
+    alt Validation passes
+        PV-->>VP: return success
+        VP-->>DS: display validation success
+        DS->>DS: document resolution steps
+    else Validation still fails
+        PV-->>VP: return remaining failures
+        VP-->>DS: display updated failure summary
+        DS->>DS: iterate debugging process
+    end
+```
+
+---
+
+## Combined Sequence Analysis
+
+### **Consumer vs Contributor Interaction Patterns**
+
+**Consumer Patterns:**
+1. **Simple Data Access**: Direct parquet loading or library usage
+2. **Domain-Specific Analysis**: Each user group has specific workflows
+3. **Quality Trust**: Users rely on behind-the-scenes validation
+4. **Multiple Access Methods**: Library tools AND direct data access
+
+**Contributor Patterns:**  
+1. **Complex Validation Workflows**: Multi-step quality assurance processes
+2. **Iterative Problem Solving**: Debugging and range tuning cycles
+3. **Tool Integration**: Multiple specialized tools working together
+4. **Quality Assurance**: Focus on ensuring data meets standards
+
+### **Shared Integration Points**
+1. **LocomotionData**: Central data access layer for both user types
+2. **SpecificationManager**: Validation rules accessed by contributors, trusted by consumers  
+3. **FeatureConstants**: Shared variable definitions ensure consistency
+4. **Quality Bridge**: Validation system enables consumer confidence
+
+The contributor workflows ensure the quality that enables simple consumer workflows.
