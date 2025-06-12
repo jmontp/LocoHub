@@ -121,8 +121,8 @@ def parse_kinematic_validation_expectations(file_path: str) -> Dict[str, Dict[in
                 phase = int(phase_str)
                 validation_data[task][phase] = {}
                 
-                # Parse table rows for joint angles - Updated to handle degree format
-                row_pattern = r'\| ([\w_]+) \| ([-\d.]+) \([^)]+\) \| ([-\d.]+) \([^)]+\) \| (\w+) \|'
+                # Parse table rows for joint angles - Updated for radians-only format
+                row_pattern = r'\| ([\w_]+) \| ([-\d.]+) \| ([-\d.]+) \| (\w+) \|'
                 rows = re.findall(row_pattern, table_content)
                 
                 for variable, min_val, max_val, unit in rows:
