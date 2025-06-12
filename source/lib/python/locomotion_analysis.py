@@ -64,6 +64,14 @@ import pandas as pd
 from pathlib import Path
 from typing import List, Tuple, Dict, Optional, Union
 import warnings
+import sys
+import os
+
+# Add source directory to Python path for feature mappings
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
+
+# Import shared feature mappings
+from validation.feature_mappings import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES
 
 # Optional imports for visualization
 try:
@@ -93,15 +101,11 @@ class LocomotionData:
     STANDARD_SIDES = ['contra', 'ipsi']
     STANDARD_UNITS = ['rad', 'rad_s', 'Nm', 'Nm_kg', 'W', 'W_kg', 'deg', 'deg_s']
     
-    # Standard feature groups
-    ANGLE_FEATURES = ['hip_flexion_angle_contra_rad', 'knee_flexion_angle_contra_rad', 'ankle_flexion_angle_contra_rad',
-                      'hip_flexion_angle_ipsi_rad', 'knee_flexion_angle_ipsi_rad', 'ankle_flexion_angle_ipsi_rad']
-    
-    VELOCITY_FEATURES = ['hip_flexion_velocity_contra_rad_s', 'knee_flexion_velocity_contra_rad_s', 'ankle_flexion_velocity_contra_rad_s',
-                         'hip_flexion_velocity_ipsi_rad_s', 'knee_flexion_velocity_ipsi_rad_s', 'ankle_flexion_velocity_ipsi_rad_s']
-    
-    MOMENT_FEATURES = ['hip_flexion_moment_contra_Nm', 'knee_flexion_moment_contra_Nm', 'ankle_flexion_moment_contra_Nm',
-                       'hip_flexion_moment_ipsi_Nm', 'knee_flexion_moment_ipsi_Nm', 'ankle_flexion_moment_ipsi_Nm']
+    # Standard feature groups - imported from shared feature mappings module
+    # Order: [hip_ipsi, hip_contra, knee_ipsi, knee_contra, ankle_ipsi, ankle_contra]
+    ANGLE_FEATURES = ANGLE_FEATURES
+    VELOCITY_FEATURES = VELOCITY_FEATURES
+    MOMENT_FEATURES = MOMENT_FEATURES
     
     
     def __init__(self, data_path: Union[str, Path], 

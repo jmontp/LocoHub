@@ -153,6 +153,7 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 - **PM_ongoing.md** - Project management for validation
 - **dataset_validator_phase.py** - Phase-indexed dataset validation (main validator)
 - **dataset_validator_time.py** - Time-indexed dataset validation
+- **feature_mappings.py** - Shared feature ordering and mapping constants (single source of truth)
 - **filters_by_phase_plots.py** - Phase-based validation plot generator
 - **forward_kinematics_plots.py** - Joint angle visualization generator
 - **generate_validation_plots.py** - Unified plot generation script (static plots)
@@ -195,14 +196,17 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 
 ## Coding Philosophy
 
-**Minimal, understandable, documented code - less is more.**
+**Minimal, understandable, documented code following software engineering best practices.**
 
 **Core Principles**:
 - **Minimal code**: Write just enough, no more
 - **Clear intent**: Document why, not what  
 - **Explicit failures**: Raise clear errors instead of silent failures
 - **Testing required**: All code must be tested
-- **No duplication**: Reuse over recreation
+- **No duplication**: Reuse over recreation via shared modules
+- **Single source of truth**: Avoid duplicating constants/data across files
+- **Imports over copy-paste**: Create shared modules for common functionality
+- **Refactor when you see duplication**: Proactively suggest better software engineering practices
 
 ## File Creation
 

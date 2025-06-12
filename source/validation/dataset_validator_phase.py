@@ -332,19 +332,14 @@ class DatasetValidator:
         Returns:
             Array with shape (1, 150, num_features)
         """
-        # Define standard variable order
+        # Import shared feature mappings for consistency
+        from validation.feature_mappings import get_feature_list
+        
+        # Get standard variable order from shared mappings
         if validation_type == 'kinematic':
-            variables = [
-                'hip_flexion_angle_ipsi', 'hip_flexion_angle_contra',
-                'knee_flexion_angle_ipsi', 'knee_flexion_angle_contra',
-                'ankle_flexion_angle_ipsi', 'ankle_flexion_angle_contra'
-            ]
+            variables = get_feature_list('kinematic')
         elif validation_type == 'kinetic':
-            variables = [
-                'hip_moment_ipsi_Nm_kg', 'hip_moment_contra_Nm_kg',
-                'knee_moment_ipsi_Nm_kg', 'knee_moment_contra_Nm_kg',
-                'ankle_moment_ipsi_Nm_kg', 'ankle_moment_contra_Nm_kg'
-            ]
+            variables = get_feature_list('kinetic')
         else:
             raise ValueError(f"Unknown validation type: {validation_type}")
         
