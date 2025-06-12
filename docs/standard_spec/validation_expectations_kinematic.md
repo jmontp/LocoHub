@@ -25,106 +25,29 @@ This document provides biomechanically verified kinematic validation ranges (joi
 > python3 source/validation/generate_validation_plots.py --filters-only
 > ```
 
-## Format Specification
-
-### Two-Tier Validation Structure
-
-**Tier 1: Generic Range Validation**
-- Basic biomechanical plausibility checks
-- Anatomically possible ranges across all tasks
-- Applied to all variables regardless of task
-
-**Tier 2: Task-Specific Phase Validation**
-- Task-specific expected ranges and patterns
-- Phase-specific validation at key points: **0%, 25%, 50%, 75%**
-- Contralateral leg automatically computed with 50% phase offset
-- Visual kinematic validation with min/max pose images
-
-### Validation Table Structure
-
-```markdown
-### Task: {task_name}
-
-**Phase-Specific Range Validation:**
-
-#### Phase 0% (Heel Strike)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-
-#### Phase 25% (Mid-Stance)  
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-
-#### Phase 50% (Toe-Off)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-
-#### Phase 75% (Mid-Swing)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-
-**Contralateral Offset Logic:**
-- Contralateral leg values automatically computed with 50% phase offset
-- Phase 0% ipsilateral = Phase 50% contralateral (heel strike vs toe-off)
-- Phase 25% ipsilateral = Phase 75% contralateral (mid-stance vs mid-swing)
-
-**Forward Kinematics Range Visualization:**
-![Task Forward Kinematics - Phase 0%](validation/{task_name}_forward_kinematics_phase_00_range.png)
-![Task Forward Kinematics - Phase 25%](validation/{task_name}_forward_kinematics_phase_25_range.png)
-![Task Forward Kinematics - Phase 50%](validation/{task_name}_forward_kinematics_phase_50_range.png)
-![Task Forward Kinematics - Phase 75%](validation/{task_name}_forward_kinematics_phase_75_range.png)
-```
-
-**Column Definitions:**
-- `Variable`: Exact variable name (must match dataset columns)
-- `Min_Value`: Minimum expected value at this phase point
-- `Max_Value`: Maximum expected value at this phase point
-- `Units`: Variable units (rad, N, m, etc.)
-- `Notes`: Additional context or exceptions
-
-## Validation Tables - VERIFIED
+## Validation Tables
 
 
 
 
-### Task: decline_walking
+
+
+
 
 **🤖 AUTOMATED TUNING - DECLINE_WALKING**
 
 ⚠️  **Data-Driven Ranges**: These validation ranges were automatically generated using statistical analysis.
 
-📊 **Source**: `umich_2021_phase.parquet` | 📈 **Method**: 95% Percentile | 🕒 **Generated**: 2025-06-12 00:25:38
+📊 **Source**: `umich_2021_phase.parquet` | 📈 **Method**: 95% Percentile | 🕒 **Generated**: 2025-06-12 12:32:24
 
+
+### Task: decline_walking
 
 **Phase-Specific Range Validation (Ipsilateral Leg Only):**
 
-#### Phase 0% (Heel Strike)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| hip_flexion_angle_ipsi_rad | 0.27 | 0.71 | rad | Data-driven statistical range |
-| knee_flexion_angle_ipsi_rad | -0.08 | 0.20 | rad | Data-driven statistical range |
-| ankle_flexion_angle_ipsi_rad | -0.18 | 0.35 | rad | Data-driven statistical range |
-
-#### Phase 25% (Mid-Stance)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| hip_flexion_angle_ipsi_rad | -0.03 | 0.56 | rad | Data-driven statistical range |
-| knee_flexion_angle_ipsi_rad | 0.08 | 0.62 | rad | Data-driven statistical range |
-| ankle_flexion_angle_ipsi_rad | -0.21 | 0.01 | rad | Data-driven statistical range |
-
-#### Phase 50% (Toe-Off)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| hip_flexion_angle_ipsi_rad | -0.34 | 0.37 | rad | Data-driven statistical range |
-| knee_flexion_angle_ipsi_rad | 0.02 | 0.79 | rad | Data-driven statistical range |
-| ankle_flexion_angle_ipsi_rad | -0.42 | -0.15 | rad | Data-driven statistical range |
-
-#### Phase 75% (Mid-Swing)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| hip_flexion_angle_ipsi_rad | 0.19 | 0.73 | rad | Data-driven statistical range |
-| knee_flexion_angle_ipsi_rad | 0.83 | 1.34 | rad | Data-driven statistical range |
-| ankle_flexion_angle_ipsi_rad | -0.22 | 0.13 | rad | Data-driven statistical range |
+| Variable | | 0% | | | 25% | | | 50% | | | 75% | | | 95% | | |Units|Notes|
+|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|:---:|:---|
+| | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | | |
 
 **Contralateral Offset Logic:**
 - **Phase 0% ipsilateral** (heel strike) = **Phase 50% contralateral** (toe-off)
@@ -144,44 +67,20 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 ---
 
-### Task: incline_walking
-
 **🤖 AUTOMATED TUNING - INCLINE_WALKING**
 
 ⚠️  **Data-Driven Ranges**: These validation ranges were automatically generated using statistical analysis.
 
-📊 **Source**: `umich_2021_phase.parquet` | 📈 **Method**: 95% Percentile | 🕒 **Generated**: 2025-06-12 00:25:38
+📊 **Source**: `umich_2021_phase.parquet` | 📈 **Method**: 95% Percentile | 🕒 **Generated**: 2025-06-12 12:32:25
 
+
+### Task: incline_walking
 
 **Phase-Specific Range Validation (Ipsilateral Leg Only):**
 
-#### Phase 0% (Heel Strike)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| hip_flexion_angle_ipsi_rad | 0.55 | 1.25 | rad | Data-driven statistical range |
-| knee_flexion_angle_ipsi_rad | 0.07 | 0.74 | rad | Data-driven statistical range |
-| ankle_flexion_angle_ipsi_rad | -0.35 | 0.08 | rad | Data-driven statistical range |
-
-#### Phase 25% (Mid-Stance)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| hip_flexion_angle_ipsi_rad | 0.11 | 0.78 | rad | Data-driven statistical range |
-| knee_flexion_angle_ipsi_rad | 0.08 | 0.54 | rad | Data-driven statistical range |
-| ankle_flexion_angle_ipsi_rad | -0.46 | -0.12 | rad | Data-driven statistical range |
-
-#### Phase 50% (Toe-Off)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| hip_flexion_angle_ipsi_rad | -0.36 | 0.41 | rad | Data-driven statistical range |
-| knee_flexion_angle_ipsi_rad | -0.14 | 0.26 | rad | Data-driven statistical range |
-| ankle_flexion_angle_ipsi_rad | -0.42 | -0.14 | rad | Data-driven statistical range |
-
-#### Phase 75% (Mid-Swing)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| hip_flexion_angle_ipsi_rad | 0.31 | 0.93 | rad | Data-driven statistical range |
-| knee_flexion_angle_ipsi_rad | 0.91 | 1.22 | rad | Data-driven statistical range |
-| ankle_flexion_angle_ipsi_rad | -0.13 | 0.16 | rad | Data-driven statistical range |
+| Variable | | 0% | | | 25% | | | 50% | | | 75% | | | 95% | | |Units|Notes|
+|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|:---:|:---|
+| | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | | |
 
 **Contralateral Offset Logic:**
 - **Phase 0% ipsilateral** (heel strike) = **Phase 50% contralateral** (toe-off)
@@ -201,44 +100,20 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 ---
 
-### Task: level_walking
-
 **🤖 AUTOMATED TUNING - LEVEL_WALKING**
 
 ⚠️  **Data-Driven Ranges**: These validation ranges were automatically generated using statistical analysis.
 
-📊 **Source**: `umich_2021_phase.parquet` | 📈 **Method**: 95% Percentile | 🕒 **Generated**: 2025-06-12 00:25:38
+📊 **Source**: `umich_2021_phase.parquet` | 📈 **Method**: 95% Percentile | 🕒 **Generated**: 2025-06-12 12:32:25
 
+
+### Task: level_walking
 
 **Phase-Specific Range Validation (Ipsilateral Leg Only):**
 
-#### Phase 0% (Heel Strike)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| hip_flexion_angle_ipsi_rad | 0.35 | 0.83 | rad | Data-driven statistical range |
-| knee_flexion_angle_ipsi_rad | -0.05 | 0.25 | rad | Data-driven statistical range |
-| ankle_flexion_angle_ipsi_rad | -0.15 | 0.15 | rad | Data-driven statistical range |
-
-#### Phase 25% (Mid-Stance)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| hip_flexion_angle_ipsi_rad | -0.04 | 0.53 | rad | Data-driven statistical range |
-| knee_flexion_angle_ipsi_rad | 0.02 | 0.36 | rad | Data-driven statistical range |
-| ankle_flexion_angle_ipsi_rad | -0.22 | -0.05 | rad | Data-driven statistical range |
-
-#### Phase 50% (Toe-Off)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| hip_flexion_angle_ipsi_rad | -0.36 | 0.27 | rad | Data-driven statistical range |
-| knee_flexion_angle_ipsi_rad | -0.02 | 0.30 | rad | Data-driven statistical range |
-| ankle_flexion_angle_ipsi_rad | -0.33 | -0.15 | rad | Data-driven statistical range |
-
-#### Phase 75% (Mid-Swing)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| hip_flexion_angle_ipsi_rad | 0.25 | 0.78 | rad | Data-driven statistical range |
-| knee_flexion_angle_ipsi_rad | 0.96 | 1.26 | rad | Data-driven statistical range |
-| ankle_flexion_angle_ipsi_rad | -0.09 | 0.17 | rad | Data-driven statistical range |
+| Variable | | 0% | | | 25% | | | 50% | | | 75% | | | 95% | | |Units|Notes|
+|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|:---:|:---|
+| | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | | |
 
 **Contralateral Offset Logic:**
 - **Phase 0% ipsilateral** (heel strike) = **Phase 50% contralateral** (toe-off)

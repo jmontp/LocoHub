@@ -23,103 +23,21 @@ This document provides biomechanically verified kinetic validation ranges (force
 
 ## Validation Tables
 
+
 **🤖 AUTOMATED TUNING - DECLINE_WALKING**
 
 ⚠️  **Data-Driven Ranges**: These validation ranges were automatically generated using statistical analysis.
 
-📊 **Source**: `umich_2021_phase.parquet` | 📈 **Method**: 95% Percentile (2.5th-97.5th percentiles) | 🕒 **Generated**: 2025-06-12 10:17:06
+📊 **Source**: `umich_2021_phase.parquet` | 📈 **Method**: 95% Percentile | 🕒 **Generated**: 2025-06-12 12:33:33
+
 
 ### Task: decline_walking
 
 **Phase-Specific Range Validation (Ipsilateral Leg Only):**
 
-#### Phase 0% (Heel Strike)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| ankle_adduction_moment_contra_Nm | -0.094 | 0.301 | Nm | Data-driven statistical range |
-| ankle_adduction_moment_ipsi_Nm | -0.056 | 0.024 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_contra_Nm | -1.656 | -0.761 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_ipsi_Nm | -0.067 | 0.114 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_contra_Nm | -0.022 | 0.191 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_ipsi_Nm | -0.180 | 0.037 | Nm | Data-driven statistical range |
-| hip_adduction_moment_contra_Nm | 0.143 | 0.855 | Nm | Data-driven statistical range |
-| hip_adduction_moment_ipsi_Nm | -0.155 | 0.176 | Nm | Data-driven statistical range |
-| hip_flexion_moment_contra_Nm | 0.203 | 1.100 | Nm | Data-driven statistical range |
-| hip_flexion_moment_ipsi_Nm | -0.624 | -0.053 | Nm | Data-driven statistical range |
-| hip_rotation_moment_contra_Nm | -0.212 | 0.105 | Nm | Data-driven statistical range |
-| hip_rotation_moment_ipsi_Nm | -0.174 | 0.057 | Nm | Data-driven statistical range |
-| knee_adduction_moment_contra_Nm | -0.010 | 0.539 | Nm | Data-driven statistical range |
-| knee_adduction_moment_ipsi_Nm | -0.083 | 0.112 | Nm | Data-driven statistical range |
-| knee_flexion_moment_contra_Nm | -0.792 | 0.198 | Nm | Data-driven statistical range |
-| knee_flexion_moment_ipsi_Nm | 0.041 | 0.363 | Nm | Data-driven statistical range |
-| knee_rotation_moment_contra_Nm | -0.036 | 0.187 | Nm | Data-driven statistical range |
-| knee_rotation_moment_ipsi_Nm | -0.188 | 0.038 | Nm | Data-driven statistical range |
-
-#### Phase 25% (Mid-Stance)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| ankle_adduction_moment_contra_Nm | -0.000 | 0.185 | Nm | Data-driven statistical range |
-| ankle_adduction_moment_ipsi_Nm | -0.107 | 0.233 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_contra_Nm | -0.027 | 0.067 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_ipsi_Nm | -1.464 | -0.298 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_contra_Nm | -0.148 | 0.020 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_ipsi_Nm | -0.295 | 0.115 | Nm | Data-driven statistical range |
-| hip_adduction_moment_contra_Nm | -0.045 | 0.220 | Nm | Data-driven statistical range |
-| hip_adduction_moment_ipsi_Nm | 0.364 | 0.958 | Nm | Data-driven statistical range |
-| hip_flexion_moment_contra_Nm | -0.239 | 0.157 | Nm | Data-driven statistical range |
-| hip_flexion_moment_ipsi_Nm | -0.283 | 0.515 | Nm | Data-driven statistical range |
-| hip_rotation_moment_contra_Nm | -0.353 | 0.013 | Nm | Data-driven statistical range |
-| hip_rotation_moment_ipsi_Nm | -0.435 | 0.043 | Nm | Data-driven statistical range |
-| knee_adduction_moment_contra_Nm | -0.022 | 0.314 | Nm | Data-driven statistical range |
-| knee_adduction_moment_ipsi_Nm | 0.062 | 0.619 | Nm | Data-driven statistical range |
-| knee_flexion_moment_contra_Nm | -0.112 | 0.109 | Nm | Data-driven statistical range |
-| knee_flexion_moment_ipsi_Nm | -0.653 | 0.252 | Nm | Data-driven statistical range |
-| knee_rotation_moment_contra_Nm | -0.125 | 0.020 | Nm | Data-driven statistical range |
-| knee_rotation_moment_ipsi_Nm | -0.268 | 0.138 | Nm | Data-driven statistical range |
-
-#### Phase 50% (Toe-Off)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| ankle_adduction_moment_contra_Nm | -0.056 | 0.024 | Nm | Data-driven statistical range |
-| ankle_adduction_moment_ipsi_Nm | -0.094 | 0.301 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_contra_Nm | -0.067 | 0.114 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_ipsi_Nm | -1.656 | -0.761 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_contra_Nm | -0.180 | 0.037 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_ipsi_Nm | -0.022 | 0.191 | Nm | Data-driven statistical range |
-| hip_adduction_moment_contra_Nm | -0.155 | 0.176 | Nm | Data-driven statistical range |
-| hip_adduction_moment_ipsi_Nm | 0.143 | 0.855 | Nm | Data-driven statistical range |
-| hip_flexion_moment_contra_Nm | -0.624 | -0.053 | Nm | Data-driven statistical range |
-| hip_flexion_moment_ipsi_Nm | 0.203 | 1.100 | Nm | Data-driven statistical range |
-| hip_rotation_moment_contra_Nm | -0.174 | 0.057 | Nm | Data-driven statistical range |
-| hip_rotation_moment_ipsi_Nm | -0.212 | 0.105 | Nm | Data-driven statistical range |
-| knee_adduction_moment_contra_Nm | -0.083 | 0.112 | Nm | Data-driven statistical range |
-| knee_adduction_moment_ipsi_Nm | -0.010 | 0.539 | Nm | Data-driven statistical range |
-| knee_flexion_moment_contra_Nm | 0.041 | 0.363 | Nm | Data-driven statistical range |
-| knee_flexion_moment_ipsi_Nm | -0.792 | 0.198 | Nm | Data-driven statistical range |
-| knee_rotation_moment_contra_Nm | -0.188 | 0.038 | Nm | Data-driven statistical range |
-| knee_rotation_moment_ipsi_Nm | -0.036 | 0.187 | Nm | Data-driven statistical range |
-
-#### Phase 75% (Mid-Swing)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| ankle_adduction_moment_contra_Nm | -0.107 | 0.233 | Nm | Data-driven statistical range |
-| ankle_adduction_moment_ipsi_Nm | -0.000 | 0.185 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_contra_Nm | -1.464 | -0.298 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_ipsi_Nm | -0.027 | 0.067 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_contra_Nm | -0.295 | 0.115 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_ipsi_Nm | -0.148 | 0.020 | Nm | Data-driven statistical range |
-| hip_adduction_moment_contra_Nm | 0.364 | 0.958 | Nm | Data-driven statistical range |
-| hip_adduction_moment_ipsi_Nm | -0.045 | 0.220 | Nm | Data-driven statistical range |
-| hip_flexion_moment_contra_Nm | -0.283 | 0.515 | Nm | Data-driven statistical range |
-| hip_flexion_moment_ipsi_Nm | -0.239 | 0.157 | Nm | Data-driven statistical range |
-| hip_rotation_moment_contra_Nm | -0.435 | 0.043 | Nm | Data-driven statistical range |
-| hip_rotation_moment_ipsi_Nm | -0.353 | 0.013 | Nm | Data-driven statistical range |
-| knee_adduction_moment_contra_Nm | 0.062 | 0.619 | Nm | Data-driven statistical range |
-| knee_adduction_moment_ipsi_Nm | -0.022 | 0.314 | Nm | Data-driven statistical range |
-| knee_flexion_moment_contra_Nm | -0.653 | 0.252 | Nm | Data-driven statistical range |
-| knee_flexion_moment_ipsi_Nm | -0.112 | 0.109 | Nm | Data-driven statistical range |
-| knee_rotation_moment_contra_Nm | -0.268 | 0.138 | Nm | Data-driven statistical range |
-| knee_rotation_moment_ipsi_Nm | -0.125 | 0.020 | Nm | Data-driven statistical range |
+| Variable | | 0% | | | 25% | | | 50% | | | 75% | | |Units|Notes|
+|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|:---:|:---|
+| | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | | |
 
 **Filters by Phase Validation:**
 
@@ -131,99 +49,16 @@ This document provides biomechanically verified kinetic validation ranges (force
 
 ⚠️  **Data-Driven Ranges**: These validation ranges were automatically generated using statistical analysis.
 
-📊 **Source**: `umich_2021_phase.parquet` | 📈 **Method**: 95% Percentile (2.5th-97.5th percentiles) | 🕒 **Generated**: 2025-06-12 10:17:06
+📊 **Source**: `umich_2021_phase.parquet` | 📈 **Method**: 95% Percentile | 🕒 **Generated**: 2025-06-12 12:33:33
+
 
 ### Task: incline_walking
 
 **Phase-Specific Range Validation (Ipsilateral Leg Only):**
 
-#### Phase 0% (Heel Strike)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| ankle_adduction_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_adduction_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_flexion_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_flexion_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_rotation_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_rotation_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_adduction_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_adduction_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_flexion_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_flexion_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_rotation_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_rotation_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_adduction_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_adduction_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_flexion_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_flexion_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_rotation_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_rotation_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-
-#### Phase 25% (Mid-Stance)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| ankle_adduction_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_adduction_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_flexion_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_flexion_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_rotation_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_rotation_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_adduction_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_adduction_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_flexion_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_flexion_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_rotation_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_rotation_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_adduction_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_adduction_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_flexion_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_flexion_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_rotation_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_rotation_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-
-#### Phase 50% (Toe-Off)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| ankle_adduction_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_adduction_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_flexion_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_flexion_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_rotation_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_rotation_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_adduction_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_adduction_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_flexion_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_flexion_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_rotation_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_rotation_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_adduction_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_adduction_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_flexion_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_flexion_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_rotation_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_rotation_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-
-#### Phase 75% (Mid-Swing)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| ankle_adduction_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_adduction_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_flexion_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_flexion_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_rotation_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| ankle_rotation_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_adduction_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_adduction_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_flexion_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_flexion_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_rotation_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| hip_rotation_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_adduction_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_adduction_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_flexion_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_flexion_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_rotation_moment_contra_Nm | nan | nan | Nm | Data-driven statistical range |
-| knee_rotation_moment_ipsi_Nm | nan | nan | Nm | Data-driven statistical range |
+| Variable | | 0% | | | 25% | | | 50% | | | 75% | | |Units|Notes|
+|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|:---:|:---|
+| | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | | |
 
 **Filters by Phase Validation:**
 
@@ -235,105 +70,20 @@ This document provides biomechanically verified kinetic validation ranges (force
 
 ⚠️  **Data-Driven Ranges**: These validation ranges were automatically generated using statistical analysis.
 
-📊 **Source**: `umich_2021_phase.parquet` | 📈 **Method**: 95% Percentile (2.5th-97.5th percentiles) | 🕒 **Generated**: 2025-06-12 10:17:06
+📊 **Source**: `umich_2021_phase.parquet` | 📈 **Method**: 95% Percentile | 🕒 **Generated**: 2025-06-12 12:33:33
+
 
 ### Task: level_walking
 
 **Phase-Specific Range Validation (Ipsilateral Leg Only):**
 
-#### Phase 0% (Heel Strike)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| ankle_adduction_moment_contra_Nm | -0.090 | 0.257 | Nm | Data-driven statistical range |
-| ankle_adduction_moment_ipsi_Nm | -0.018 | 0.055 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_contra_Nm | -1.916 | -0.990 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_ipsi_Nm | -0.034 | 0.067 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_contra_Nm | -0.015 | 0.171 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_ipsi_Nm | -0.018 | 0.017 | Nm | Data-driven statistical range |
-| hip_adduction_moment_contra_Nm | 0.144 | 0.826 | Nm | Data-driven statistical range |
-| hip_adduction_moment_ipsi_Nm | -0.188 | 0.148 | Nm | Data-driven statistical range |
-| hip_flexion_moment_contra_Nm | 0.096 | 0.977 | Nm | Data-driven statistical range |
-| hip_flexion_moment_ipsi_Nm | -0.773 | -0.113 | Nm | Data-driven statistical range |
-| hip_rotation_moment_contra_Nm | 0.011 | 0.153 | Nm | Data-driven statistical range |
-| hip_rotation_moment_ipsi_Nm | -0.034 | 0.054 | Nm | Data-driven statistical range |
-| knee_adduction_moment_contra_Nm | -0.184 | 0.374 | Nm | Data-driven statistical range |
-| knee_adduction_moment_ipsi_Nm | -0.078 | 0.086 | Nm | Data-driven statistical range |
-| knee_flexion_moment_contra_Nm | 0.007 | 0.512 | Nm | Data-driven statistical range |
-| knee_flexion_moment_ipsi_Nm | 0.077 | 0.387 | Nm | Data-driven statistical range |
-| knee_rotation_moment_contra_Nm | -0.035 | 0.196 | Nm | Data-driven statistical range |
-| knee_rotation_moment_ipsi_Nm | -0.017 | 0.018 | Nm | Data-driven statistical range |
-
-#### Phase 25% (Mid-Stance)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| ankle_adduction_moment_contra_Nm | -0.000 | 0.000 | Nm | Data-driven statistical range |
-| ankle_adduction_moment_ipsi_Nm | -0.164 | 0.192 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_contra_Nm | 0.000 | 0.031 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_ipsi_Nm | -1.206 | -0.251 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_contra_Nm | -0.011 | 0.018 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_ipsi_Nm | -0.016 | 0.127 | Nm | Data-driven statistical range |
-| hip_adduction_moment_contra_Nm | -0.060 | 0.153 | Nm | Data-driven statistical range |
-| hip_adduction_moment_ipsi_Nm | 0.324 | 0.872 | Nm | Data-driven statistical range |
-| hip_flexion_moment_contra_Nm | -0.064 | 0.166 | Nm | Data-driven statistical range |
-| hip_flexion_moment_ipsi_Nm | -0.422 | 0.248 | Nm | Data-driven statistical range |
-| hip_rotation_moment_contra_Nm | -0.041 | 0.011 | Nm | Data-driven statistical range |
-| hip_rotation_moment_ipsi_Nm | -0.031 | 0.085 | Nm | Data-driven statistical range |
-| knee_adduction_moment_contra_Nm | -0.029 | 0.058 | Nm | Data-driven statistical range |
-| knee_adduction_moment_ipsi_Nm | -0.001 | 0.522 | Nm | Data-driven statistical range |
-| knee_flexion_moment_contra_Nm | -0.116 | -0.000 | Nm | Data-driven statistical range |
-| knee_flexion_moment_ipsi_Nm | -0.208 | 0.445 | Nm | Data-driven statistical range |
-| knee_rotation_moment_contra_Nm | -0.011 | 0.019 | Nm | Data-driven statistical range |
-| knee_rotation_moment_ipsi_Nm | -0.015 | 0.148 | Nm | Data-driven statistical range |
-
-#### Phase 50% (Toe-Off)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| ankle_adduction_moment_contra_Nm | -0.018 | 0.055 | Nm | Data-driven statistical range |
-| ankle_adduction_moment_ipsi_Nm | -0.090 | 0.257 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_contra_Nm | -0.034 | 0.067 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_ipsi_Nm | -1.916 | -0.990 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_contra_Nm | -0.018 | 0.017 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_ipsi_Nm | -0.015 | 0.171 | Nm | Data-driven statistical range |
-| hip_adduction_moment_contra_Nm | -0.188 | 0.148 | Nm | Data-driven statistical range |
-| hip_adduction_moment_ipsi_Nm | 0.144 | 0.826 | Nm | Data-driven statistical range |
-| hip_flexion_moment_contra_Nm | -0.773 | -0.113 | Nm | Data-driven statistical range |
-| hip_flexion_moment_ipsi_Nm | 0.096 | 0.977 | Nm | Data-driven statistical range |
-| hip_rotation_moment_contra_Nm | -0.034 | 0.054 | Nm | Data-driven statistical range |
-| hip_rotation_moment_ipsi_Nm | 0.011 | 0.153 | Nm | Data-driven statistical range |
-| knee_adduction_moment_contra_Nm | -0.078 | 0.086 | Nm | Data-driven statistical range |
-| knee_adduction_moment_ipsi_Nm | -0.184 | 0.374 | Nm | Data-driven statistical range |
-| knee_flexion_moment_contra_Nm | 0.077 | 0.387 | Nm | Data-driven statistical range |
-| knee_flexion_moment_ipsi_Nm | 0.007 | 0.512 | Nm | Data-driven statistical range |
-| knee_rotation_moment_contra_Nm | -0.017 | 0.018 | Nm | Data-driven statistical range |
-| knee_rotation_moment_ipsi_Nm | -0.035 | 0.196 | Nm | Data-driven statistical range |
-
-#### Phase 75% (Mid-Swing)
-| Variable | Min_Value | Max_Value | Units | Notes |
-|----------|-----------|-----------|-------|-------|
-| ankle_adduction_moment_contra_Nm | -0.164 | 0.192 | Nm | Data-driven statistical range |
-| ankle_adduction_moment_ipsi_Nm | -0.000 | 0.000 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_contra_Nm | -1.206 | -0.251 | Nm | Data-driven statistical range |
-| ankle_flexion_moment_ipsi_Nm | 0.000 | 0.031 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_contra_Nm | -0.016 | 0.127 | Nm | Data-driven statistical range |
-| ankle_rotation_moment_ipsi_Nm | -0.011 | 0.018 | Nm | Data-driven statistical range |
-| hip_adduction_moment_contra_Nm | 0.324 | 0.872 | Nm | Data-driven statistical range |
-| hip_adduction_moment_ipsi_Nm | -0.060 | 0.153 | Nm | Data-driven statistical range |
-| hip_flexion_moment_contra_Nm | -0.422 | 0.248 | Nm | Data-driven statistical range |
-| hip_flexion_moment_ipsi_Nm | -0.064 | 0.166 | Nm | Data-driven statistical range |
-| hip_rotation_moment_contra_Nm | -0.031 | 0.085 | Nm | Data-driven statistical range |
-| hip_rotation_moment_ipsi_Nm | -0.041 | 0.011 | Nm | Data-driven statistical range |
-| knee_adduction_moment_contra_Nm | -0.001 | 0.522 | Nm | Data-driven statistical range |
-| knee_adduction_moment_ipsi_Nm | -0.029 | 0.058 | Nm | Data-driven statistical range |
-| knee_flexion_moment_contra_Nm | -0.208 | 0.445 | Nm | Data-driven statistical range |
-| knee_flexion_moment_ipsi_Nm | -0.116 | -0.000 | Nm | Data-driven statistical range |
-| knee_rotation_moment_contra_Nm | -0.015 | 0.148 | Nm | Data-driven statistical range |
-| knee_rotation_moment_ipsi_Nm | -0.011 | 0.019 | Nm | Data-driven statistical range |
+| Variable | | 0% | | | 25% | | | 50% | | | 75% | | |Units|Notes|
+|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|---:|:---:|:---|:---:|:---|
+| | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | **Min** | **Max** | | | |
 
 **Filters by Phase Validation:**
 
 ![Level Walking Kinetic Filters by Phase](validation/level_walking_kinetic_filters_by_phase.png)
-
----
 
 ## Research Requirements
 

@@ -50,19 +50,44 @@ VELOCITY_FEATURES = [
     'ankle_flexion_velocity_ipsi_rad_s', 'ankle_flexion_velocity_contra_rad_s'
 ]
 
-# Kinetic features (joint moments)
+# Kinetic features (joint moments) - Standard order: [hip, knee, ankle] x [flexion, adduction, rotation] x [ipsi, contra]
 MOMENT_FEATURES = [
     'hip_flexion_moment_ipsi_Nm', 'hip_flexion_moment_contra_Nm',
+    'hip_adduction_moment_ipsi_Nm', 'hip_adduction_moment_contra_Nm',
+    'hip_rotation_moment_ipsi_Nm', 'hip_rotation_moment_contra_Nm',
     'knee_flexion_moment_ipsi_Nm', 'knee_flexion_moment_contra_Nm',
-    'ankle_flexion_moment_ipsi_Nm', 'ankle_flexion_moment_contra_Nm'
+    'knee_adduction_moment_ipsi_Nm', 'knee_adduction_moment_contra_Nm',
+    'knee_rotation_moment_ipsi_Nm', 'knee_rotation_moment_contra_Nm',
+    'ankle_flexion_moment_ipsi_Nm', 'ankle_flexion_moment_contra_Nm',
+    'ankle_adduction_moment_ipsi_Nm', 'ankle_adduction_moment_contra_Nm',
+    'ankle_rotation_moment_ipsi_Nm', 'ankle_rotation_moment_contra_Nm'
 ]
 
 # Alternative kinetic features (normalized by body weight)
 MOMENT_FEATURES_NORMALIZED = [
     'hip_flexion_moment_ipsi_Nm_kg', 'hip_flexion_moment_contra_Nm_kg',
+    'hip_adduction_moment_ipsi_Nm_kg', 'hip_adduction_moment_contra_Nm_kg',
+    'hip_rotation_moment_ipsi_Nm_kg', 'hip_rotation_moment_contra_Nm_kg',
     'knee_flexion_moment_ipsi_Nm_kg', 'knee_flexion_moment_contra_Nm_kg',
-    'ankle_flexion_moment_ipsi_Nm_kg', 'ankle_flexion_moment_contra_Nm_kg'
+    'knee_adduction_moment_ipsi_Nm_kg', 'knee_adduction_moment_contra_Nm_kg',
+    'knee_rotation_moment_ipsi_Nm_kg', 'knee_rotation_moment_contra_Nm_kg',
+    'ankle_flexion_moment_ipsi_Nm_kg', 'ankle_flexion_moment_contra_Nm_kg',
+    'ankle_adduction_moment_ipsi_Nm_kg', 'ankle_adduction_moment_contra_Nm_kg',
+    'ankle_rotation_moment_ipsi_Nm_kg', 'ankle_rotation_moment_contra_Nm_kg'
 ]
+
+# Ground reaction force features
+GRF_FEATURES = [
+    'vertical_grf_N', 'ap_grf_N', 'ml_grf_N'
+]
+
+# Center of pressure features  
+COP_FEATURES = [
+    'cop_x_m', 'cop_y_m', 'cop_z_m'
+]
+
+# All kinetic features combined
+ALL_KINETIC_FEATURES = MOMENT_FEATURES + GRF_FEATURES + COP_FEATURES
 
 
 def get_kinematic_feature_map() -> Dict[str, int]:
@@ -142,7 +167,7 @@ def get_feature_list(mode: str) -> list:
     if mode == 'kinematic':
         return ANGLE_FEATURES.copy()
     elif mode == 'kinetic':
-        return MOMENT_FEATURES.copy()
+        return ALL_KINETIC_FEATURES.copy()
     elif mode == 'velocity':
         return VELOCITY_FEATURES.copy()
     else:

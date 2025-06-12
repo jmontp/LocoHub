@@ -123,11 +123,11 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                         if ipsi_joint in task_data[50]:
                             task_data[100][contra_joint] = task_data[50][ipsi_joint].copy()
             elif mode == 'kinetic':
-                kinetic_types = ['hip_moment', 'knee_moment', 'ankle_moment']
+                kinetic_types = ['hip_flexion_moment', 'knee_flexion_moment', 'ankle_flexion_moment']
                 if 50 in task_data:
                     for kinetic_type in kinetic_types:
-                        ipsi_var = f'{kinetic_type}_ipsi_Nm_kg'
-                        contra_var = f'{kinetic_type}_contra_Nm_kg'
+                        ipsi_var = f'{kinetic_type}_ipsi_Nm'
+                        contra_var = f'{kinetic_type}_contra_Nm'
                         if ipsi_var in task_data[50]:
                             task_data[100][contra_var] = task_data[50][ipsi_var].copy()
     
@@ -152,11 +152,11 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
         value_conversion = np.degrees  # Convert to degrees for display
         unit_suffix = '°'
     else:  # kinetic
-        var_types = ['hip_moment', 'knee_moment', 'ankle_moment']
+        var_types = ['hip_flexion_moment', 'knee_flexion_moment', 'ankle_flexion_moment']
         colors = {
-            'hip_moment': '#D3D3D3',      # Light Gray
-            'knee_moment': '#D3D3D3',     # Light Gray  
-            'ankle_moment': '#D3D3D3'     # Light Gray
+            'hip_flexion_moment': '#D3D3D3',      # Light Gray
+            'knee_flexion_moment': '#D3D3D3',     # Light Gray  
+            'ankle_flexion_moment': '#D3D3D3'     # Light Gray
         }
         units = 'Nm/kg'
         value_conversion = lambda x: x  # No conversion for kinetic values
@@ -174,7 +174,7 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
             if mode == 'kinematic':
                 var_name = f'{var_type}_{side}'
             else:  # kinetic
-                var_name = f'{var_type}_{side}_Nm_kg'
+                var_name = f'{var_type}_{side}_Nm'
             
             for phase in phases:
                 if phase == 100:  # Skip 100% phase as it's computed from 0%
@@ -203,7 +203,7 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
             if mode == 'kinematic':
                 var_name = f'{var_type}_{side}'
             else:  # kinetic
-                var_name = f'{var_type}_{side}_Nm_kg'
+                var_name = f'{var_type}_{side}_Nm'
             
             # Extract data for this variable across phases
             phase_mins = []
@@ -233,12 +233,12 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                     }
                 else:  # kinetic
                     feature_map = {
-                        ('hip_moment', 'ipsi'): 0,
-                        ('hip_moment', 'contra'): 1,
-                        ('knee_moment', 'ipsi'): 2,
-                        ('knee_moment', 'contra'): 3,
-                        ('ankle_moment', 'ipsi'): 4,
-                        ('ankle_moment', 'contra'): 5
+                        ('hip_flexion_moment', 'ipsi'): 0,
+                        ('hip_flexion_moment', 'contra'): 1,
+                        ('knee_flexion_moment', 'ipsi'): 2,
+                        ('knee_flexion_moment', 'contra'): 3,
+                        ('ankle_flexion_moment', 'ipsi'): 4,
+                        ('ankle_flexion_moment', 'contra'): 5
                     }
                 
                 # Get feature index for current subplot
