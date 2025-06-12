@@ -78,8 +78,11 @@ from .validation_expectations_parser import (
     validate_task_completeness
 )
 
-# Import shared feature mappings for consistency
-from .feature_mappings import get_kinematic_feature_map, get_kinetic_feature_map
+# Import feature constants from library
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+from lib.python.feature_constants import get_kinematic_feature_map, get_kinetic_feature_map
 
 
 class StepClassifier:

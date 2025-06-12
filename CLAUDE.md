@@ -127,6 +127,7 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 
 ##### Python Library (`source/lib/python/`)
 - **locomotion_analysis.py** - Core LocomotionData class with 3D array operations
+- **feature_constants.py** - Feature definitions and mappings (single source of truth)
 - **examples.py** - Real-world usage examples (4 comprehensive scenarios)
 
 #### Testing Framework (`source/tests/`)
@@ -153,7 +154,6 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 - **PM_ongoing.md** - Project management for validation
 - **dataset_validator_phase.py** - Phase-indexed dataset validation (main validator)
 - **dataset_validator_time.py** - Time-indexed dataset validation
-- **feature_mappings.py** - Shared feature ordering and mapping constants (single source of truth)
 - **filters_by_phase_plots.py** - Phase-based validation plot generator
 - **forward_kinematics_plots.py** - Joint angle visualization generator
 - **generate_validation_plots.py** - Unified plot generation script (static plots)

@@ -67,11 +67,8 @@ import warnings
 import sys
 import os
 
-# Add source directory to Python path for feature mappings
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
-
-# Import shared feature mappings
-from validation.feature_mappings import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES
+# Import feature constants from same library
+from .feature_constants import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES
 
 # Optional imports for visualization
 try:

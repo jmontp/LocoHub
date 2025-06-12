@@ -332,8 +332,8 @@ class DatasetValidator:
         Returns:
             Array with shape (1, 150, num_features)
         """
-        # Import shared feature mappings for consistency
-        from validation.feature_mappings import get_feature_list
+        # Import feature constants from library
+        from lib.python.feature_constants import get_feature_list
         
         # Get standard variable order from shared mappings
         if validation_type == 'kinematic':
