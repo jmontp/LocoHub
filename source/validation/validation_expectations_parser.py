@@ -352,3 +352,336 @@ def apply_contralateral_offset_kinetic(task_data: Dict, task_name: str) -> Dict:
             # GRF represents the combined ground reaction, but we can model bilateral patterns
     
     return updated_task_data
+
+
+def write_kinematic_validation_expectations(file_path: str, 
+                                          validation_data: Dict[str, Dict[int, Dict[str, Dict[str, float]]]],
+                                          dataset_name: str = None,
+                                          method: str = None) -> None:
+    """
+    Write kinematic validation expectations to a markdown file.
+    
+    This function provides programmatic writing capabilities for the validation
+    expectations parser, enabling automated updates to validation specification files.
+    
+    Args:
+        file_path: Path to the validation_expectations_kinematic.md file to write
+        validation_data: Dictionary structured as: {task_name: {phase: {variable: {min, max}}}}
+        dataset_name: Name of dataset used for tuning (optional, for disclaimer)
+        method: Statistical method used for tuning (optional, for disclaimer)
+        
+    Raises:
+        RuntimeError: If file writing fails
+    """
+    try:
+        # Read the existing file to preserve non-table content
+        with open(file_path, 'r') as f:
+            content = f.read()
+        
+        # Generate new content with updated tables and disclaimer
+        updated_content = _generate_kinematic_markdown_content(
+            content, validation_data, dataset_name, method
+        )
+        
+        # Write the updated content back to file
+        with open(file_path, 'w') as f:
+            f.write(updated_content)
+            
+    except Exception as e:
+        raise RuntimeError(f"Failed to write kinematic validation expectations to {file_path}: {e}")
+
+
+def _generate_kinematic_markdown_content(original_content: str, 
+                                       validation_data: Dict[str, Dict[int, Dict[str, Dict[str, float]]]],
+                                       dataset_name: str = None,
+                                       method: str = None) -> str:
+    """
+    Generate updated markdown content with new validation tables.
+    
+    Args:
+        original_content: Original markdown file content
+        validation_data: New validation data to write
+        dataset_name: Name of dataset used for tuning (optional)
+        method: Statistical method used (optional)
+        
+    Returns:
+        Updated markdown content with new tables
+    """
+    # Find the start of the validation tables section
+    validation_start_pattern = r'(## Validation Tables - VERIFIED\s*\n)'
+    validation_start_match = re.search(validation_start_pattern, original_content)
+    
+    if not validation_start_match:
+        raise ValueError("Could not find 'Validation Tables - VERIFIED' section in markdown file")
+    
+    # Preserve content before validation tables
+    prefix_content = original_content[:validation_start_match.end()]
+    
+    # Find content after all validation tables (before Joint Validation Range Summary)
+    end_pattern = r'(## Joint Validation Range Summary|## Pattern Definitions|$)'
+    end_match = re.search(end_pattern, original_content)
+    
+    suffix_content = ""
+    if end_match:
+        suffix_content = "\n" + original_content[end_match.start():]
+    
+    # Generate new task sections with per-task disclaimers
+    task_sections = _generate_task_sections(validation_data, dataset_name, method)
+    
+    # Combine all parts
+    return prefix_content + "\n" + task_sections + suffix_content
+
+
+def _generate_tuning_disclaimer(dataset_name: str = None, method: str = None) -> str:
+    """
+    Generate a disclaimer section documenting the automated tuning process.
+    
+    Args:
+        dataset_name: Name of dataset used for tuning
+        method: Statistical method used for tuning
+        
+    Returns:
+        Formatted disclaimer markdown
+    """
+    from datetime import datetime
+    
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    disclaimer = ["**🤖 AUTOMATED TUNING DISCLAIMER**"]
+    disclaimer.append("")
+    disclaimer.append("⚠️  **Important**: These validation ranges were automatically generated using statistical analysis of biomechanical data.")
+    disclaimer.append("")
+    
+    if dataset_name:
+        disclaimer.append(f"📊 **Source Dataset**: `{dataset_name}`")
+    if method:
+        method_descriptions = {
+            'mean_3std': 'Mean ± 3 Standard Deviations (~99.7% coverage)',
+            'percentile_95': '95% Percentile Range (2.5th to 97.5th percentiles)',
+            'percentile_90': '90% Percentile Range (5th to 95th percentiles)', 
+            'iqr_expansion': 'IQR Expansion (Q1-1.5×IQR to Q3+1.5×IQR)',
+            'robust_percentile': 'Robust Percentiles (10th to 90th)',
+            'conservative': 'Conservative Min/Max with 5% buffer'
+        }
+        method_desc = method_descriptions.get(method, method)
+        disclaimer.append(f"📈 **Statistical Method**: `{method}` ({method_desc})")
+    
+    disclaimer.append(f"🕒 **Generated**: {timestamp}")
+    disclaimer.append("")
+    disclaimer.append("**Key Points**:")
+    disclaimer.append("- Ranges derived from real biomechanical data, not literature estimates")
+    disclaimer.append("- Statistical coverage optimized for data-driven validation")
+    disclaimer.append("- May need adjustment for different populations or experimental conditions")
+    disclaimer.append("- Regenerate ranges when adding new datasets for optimal coverage")
+    disclaimer.append("")
+    disclaimer.append("---")
+    
+    return "\n".join(disclaimer)
+
+
+def _generate_task_tuning_disclaimer(task_name: str, dataset_name: str = None, method: str = None) -> str:
+    """
+    Generate a per-task disclaimer documenting the automated tuning process.
+    
+    Args:
+        task_name: Name of the task being documented
+        dataset_name: Name of dataset used for tuning
+        method: Statistical method used for tuning
+        
+    Returns:
+        Formatted per-task disclaimer markdown
+    """
+    from datetime import datetime
+    
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    disclaimer = [f"**🤖 AUTOMATED TUNING - {task_name.upper()}**"]
+    disclaimer.append("")
+    disclaimer.append("⚠️  **Data-Driven Ranges**: These validation ranges were automatically generated using statistical analysis.")
+    disclaimer.append("")
+    
+    # Build info line with dataset and method
+    info_parts = []
+    if dataset_name:
+        info_parts.append(f"📊 **Source**: `{dataset_name}`")
+    if method:
+        method_descriptions = {
+            'mean_3std': 'Mean ± 3σ',
+            'percentile_95': '95% Percentile',
+            'percentile_90': '90% Percentile', 
+            'iqr_expansion': 'IQR Expansion',
+            'robust_percentile': 'Robust Percentiles',
+            'conservative': 'Conservative Min/Max'
+        }
+        method_desc = method_descriptions.get(method, method)
+        info_parts.append(f"📈 **Method**: {method_desc}")
+    
+    if info_parts:
+        info_parts.append(f"🕒 **Generated**: {timestamp}")
+        disclaimer.append(" | ".join(info_parts))
+        disclaimer.append("")
+    
+    return "\n".join(disclaimer)
+
+
+def _generate_task_sections(validation_data: Dict[str, Dict[int, Dict[str, Dict[str, float]]]], 
+                          dataset_name: str = None, method: str = None) -> str:
+    """
+    Generate markdown task sections with validation tables.
+    
+    Args:
+        validation_data: Validation data by task
+        dataset_name: Name of dataset used for tuning (optional)
+        method: Statistical method used (optional)
+        
+    Returns:
+        Markdown content for all task sections
+    """
+    sections = []
+    
+    for task_name, task_data in validation_data.items():
+        sections.append(f"### Task: {task_name}\n")
+        
+        # Add per-task disclaimer if dataset/method provided
+        if dataset_name or method:
+            sections.append(_generate_task_tuning_disclaimer(task_name, dataset_name, method))
+            sections.append("")
+        
+        sections.append("**Phase-Specific Range Validation (Ipsilateral Leg Only):**\n")
+        
+        # Sort phases for consistent output (0, 25, 50, 75)
+        phases = sorted([p for p in task_data.keys() if p in [0, 25, 50, 75]])
+        
+        for phase in phases:
+            phase_data = task_data[phase]
+            
+            # Generate phase section
+            phase_section = _generate_phase_section(phase, phase_data)
+            sections.append(phase_section)
+        
+        # Add standard contralateral offset explanation and forward kinematics references
+        sections.append("**Contralateral Offset Logic:**")
+        sections.append("- **Phase 0% ipsilateral** (heel strike) = **Phase 50% contralateral** (toe-off)")
+        sections.append("- **Phase 25% ipsilateral** (mid-stance) = **Phase 75% contralateral** (mid-swing)")  
+        sections.append("- **Phase 50% ipsilateral** (toe-off) = **Phase 0% contralateral** (heel strike)")
+        sections.append("- **Phase 75% ipsilateral** (mid-swing) = **Phase 25% contralateral** (mid-stance)")
+        sections.append("")
+        
+        sections.append("**Forward Kinematics Range Visualization:**")
+        sections.append("")
+        sections.append("| Phase 0% (Heel Strike) | Phase 25% (Mid-Stance) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |")
+        sections.append("|---|---|---|---|")
+        sections.append(f"| ![{task_name.title().replace('_', ' ')} Forward Kinematics Heel Strike](validation/{task_name}_forward_kinematics_phase_00_range.png) | ![{task_name.title().replace('_', ' ')} Forward Kinematics Mid-Stance](validation/{task_name}_forward_kinematics_phase_25_range.png) | ![{task_name.title().replace('_', ' ')} Forward Kinematics Toe-Off](validation/{task_name}_forward_kinematics_phase_50_range.png) | ![{task_name.title().replace('_', ' ')} Forward Kinematics Mid-Swing](validation/{task_name}_forward_kinematics_phase_75_range.png) |")
+        sections.append("")
+        
+        sections.append("**Filters by Phase Validation:**")
+        sections.append("")
+        sections.append(f"![{task_name.title().replace('_', ' ')} Kinematic Filters by Phase](validation/{task_name}_kinematic_filters_by_phase.png)")
+        sections.append("")
+        
+        # Add separator between tasks except for the last one
+        if task_name != list(validation_data.keys())[-1]:
+            sections.append("---")
+            sections.append("")
+    
+    return "\n".join(sections)
+
+
+def _generate_phase_section(phase: int, phase_data: Dict[str, Dict[str, float]]) -> str:
+    """
+    Generate markdown for a single phase section with validation table.
+    
+    Args:
+        phase: Phase percentage (0, 25, 50, 75)
+        phase_data: Phase validation data
+        
+    Returns:
+        Markdown content for the phase section
+    """
+    # Add phase description based on percentage
+    if phase == 0:
+        phase_content = [f"#### Phase {phase}% (Heel Strike)"]
+    elif phase == 25:
+        phase_content = [f"#### Phase {phase}% (Mid-Stance)"]
+    elif phase == 50:
+        phase_content = [f"#### Phase {phase}% (Toe-Off)"]
+    elif phase == 75:
+        phase_content = [f"#### Phase {phase}% (Mid-Swing)"]
+    else:
+        phase_content = [f"#### Phase {phase}%"]
+    
+    # Generate validation table
+    phase_content.append("| Variable | Min_Value | Max_Value | Units | Notes |")
+    phase_content.append("|----------|-----------|-----------|-------|-------|")
+    
+    # Standard variable order for consistency (match the automated fine tuning output)
+    variable_order = [
+        'hip_flexion_angle_ipsi',
+        'knee_flexion_angle_ipsi', 
+        'ankle_flexion_angle_ipsi'
+    ]
+    
+    # Add rows for variables that exist in the data
+    for variable in variable_order:
+        if variable in phase_data:
+            var_data = phase_data[variable]
+            min_val = var_data['min']
+            max_val = var_data['max']
+            
+            # Format values to 2 decimal places with appropriate descriptive notes
+            notes = {
+                'hip_flexion_angle_ipsi': 'Data-driven statistical range',
+                'knee_flexion_angle_ipsi': 'Data-driven statistical range', 
+                'ankle_flexion_angle_ipsi': 'Data-driven statistical range'
+            }
+            
+            note = notes.get(variable, 'Optimized range')
+            phase_content.append(f"| {variable}_rad | {min_val:.2f} | {max_val:.2f} | rad | {note} |")
+    
+    phase_content.append("")  # Empty line after table
+    
+    return "\n".join(phase_content)
+
+
+def write_kinetic_validation_expectations(file_path: str,
+                                        validation_data: Dict[str, Dict[int, Dict[str, Dict[str, float]]]]) -> None:
+    """
+    Write kinetic validation expectations to a markdown file.
+    
+    Args:
+        file_path: Path to the validation_expectations_kinetic.md file to write  
+        validation_data: Dictionary structured as: {task_name: {phase: {variable: {min, max}}}}
+        
+    Raises:
+        RuntimeError: If file writing fails
+    """
+    try:
+        # Similar implementation to kinematic version but for kinetic variables
+        with open(file_path, 'r') as f:
+            content = f.read()
+        
+        updated_content = _generate_kinetic_markdown_content(content, validation_data)
+        
+        with open(file_path, 'w') as f:
+            f.write(updated_content)
+            
+    except Exception as e:
+        raise RuntimeError(f"Failed to write kinetic validation expectations to {file_path}: {e}")
+
+
+def _generate_kinetic_markdown_content(original_content: str,
+                                     validation_data: Dict[str, Dict[int, Dict[str, Dict[str, float]]]]) -> str:
+    """
+    Generate updated kinetic markdown content with new validation tables.
+    
+    Args:
+        original_content: Original markdown file content
+        validation_data: New validation data to write
+        
+    Returns:
+        Updated markdown content with new tables
+    """
+    # Implementation similar to kinematic version but adapted for kinetic file structure
+    # This would need to be customized based on the actual kinetic file format
+    # For now, return the original content as a placeholder
+    return original_content

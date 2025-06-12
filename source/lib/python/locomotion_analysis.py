@@ -98,11 +98,11 @@ class LocomotionData:
     STANDARD_SIDES = ['contra', 'ipsi']
     STANDARD_UNITS = ['rad', 'rad_s', 'Nm', 'Nm_kg', 'W', 'W_kg', 'deg', 'deg_s']
     
-    # Standard feature groups - imported from shared feature mappings module
+    # Standard feature groups - imported from shared feature constants module
     # Order: [hip_ipsi, hip_contra, knee_ipsi, knee_contra, ankle_ipsi, ankle_contra]
-    ANGLE_FEATURES = ANGLE_FEATURES
-    VELOCITY_FEATURES = VELOCITY_FEATURES
-    MOMENT_FEATURES = MOMENT_FEATURES
+    ANGLE_FEATURES = ANGLE_FEATURES.copy()
+    VELOCITY_FEATURES = VELOCITY_FEATURES.copy()
+    MOMENT_FEATURES = MOMENT_FEATURES.copy()
     
     
     def __init__(self, data_path: Union[str, Path], 

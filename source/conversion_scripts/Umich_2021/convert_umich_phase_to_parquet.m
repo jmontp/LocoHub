@@ -28,7 +28,7 @@ for subject_idx = 1:length(subjects)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Process the Walking data
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%f%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     % Get the treadmill data
     walk_data = subject_data.Walk;
@@ -185,7 +185,7 @@ function trial_table = process_trial(trial_struct)
     trial_table.hip_rotation_angle_contra_rad = circshift(hip_rotation_ipsi, shift);
 
     % Knee angles - reshape, negate sagittal (OpenSim convention), and convert to radians
-    knee_flexion_ipsi = reshape(-joint_angles.KneeAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
+    knee_flexion_ipsi = reshape(joint_angles.KneeAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
     knee_adduction_ipsi = reshape(joint_angles.KneeAngles(:, frontal_plane, :), [], 1) * deg2rad_factor;
     knee_rotation_ipsi = reshape(joint_angles.KneeAngles(:, transverse_plane, :), [], 1) * deg2rad_factor;
 
@@ -200,7 +200,7 @@ function trial_table = process_trial(trial_struct)
     trial_table.knee_rotation_angle_contra_rad = circshift(knee_rotation_ipsi, shift);
 
     % Ankle angles - reshape and convert to radians (use standard ipsi/contra naming)
-    ankle_flexion_ipsi = reshape(joint_angles.AnkleAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
+    ankle_flexion_ipsi = reshape(-joint_angles.AnkleAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
     ankle_adduction_ipsi = reshape(joint_angles.AnkleAngles(:, frontal_plane, :), [], 1) * deg2rad_factor;
     ankle_rotation_ipsi = reshape(joint_angles.AnkleAngles(:, transverse_plane, :), [], 1) * deg2rad_factor;
 
@@ -218,7 +218,7 @@ function trial_table = process_trial(trial_struct)
     joint_moments = trial_struct.jointMoments;
 
     % Hip moments
-    hip_flexion_moment_ipsi = reshape(joint_moments.HipMoment(:, sagittal_plane, :), [], 1);
+    hip_flexion_moment_ipsi = reshape(-joint_moments.HipMoment(:, sagittal_plane, :), [], 1);
     hip_adduction_moment_ipsi = reshape(joint_moments.HipMoment(:, frontal_plane, :), [], 1);
     hip_rotation_moment_ipsi = reshape(joint_moments.HipMoment(:, transverse_plane, :), [], 1);
 
@@ -233,7 +233,7 @@ function trial_table = process_trial(trial_struct)
     trial_table.hip_rotation_moment_contra_Nm = circshift(hip_rotation_moment_ipsi, shift);
 
     % Knee moments
-    knee_flexion_moment_ipsi = reshape(joint_moments.KneeMoment(:, sagittal_plane, :), [], 1);
+    knee_flexion_moment_ipsi = reshape(-joint_moments.KneeMoment(:, sagittal_plane, :), [], 1);
     knee_adduction_moment_ipsi = reshape(joint_moments.KneeMoment(:, frontal_plane, :), [], 1);
     knee_rotation_moment_ipsi = reshape(joint_moments.KneeMoment(:, transverse_plane, :), [], 1);
 
@@ -248,7 +248,7 @@ function trial_table = process_trial(trial_struct)
     trial_table.knee_rotation_moment_contra_Nm = circshift(knee_rotation_moment_ipsi, shift);
 
     % Ankle moments
-    ankle_flexion_moment_ipsi = reshape(joint_moments.AnkleMoment(:, sagittal_plane, :), [], 1);
+    ankle_flexion_moment_ipsi = reshape(-joint_moments.AnkleMoment(:, sagittal_plane, :), [], 1);
     ankle_adduction_moment_ipsi = reshape(joint_moments.AnkleMoment(:, frontal_plane, :), [], 1);
     ankle_rotation_moment_ipsi = reshape(joint_moments.AnkleMoment(:, transverse_plane, :), [], 1);
 

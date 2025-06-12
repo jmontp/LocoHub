@@ -66,7 +66,7 @@ This is a library module. For standalone execution and demonstration, use these 
 """
 
 import numpy as np
-from typing import Dict, List, Union, Optional, Tuple
+from typing import Dict, List, Union, Optional, Tuple, Any
 from pathlib import Path
 
 # Import validation expectations parser for single source of truth
@@ -259,6 +259,242 @@ class StepClassifier:
                         step_violations[step_idx].append(variable)
         
         return step_violations
+    
+    def export_detailed_phase_failures(self, validation_failures: List[Dict],
+                                     step_task_mapping: Dict[int, str]) -> Dict[str, Any]:
+        """
+        Export detailed phase-level failure information for optimization algorithms.
+        
+        This method provides comprehensive failure analysis that can be used by
+        automated fine-tuning systems to identify specific optimization targets.
+        
+        Args:
+            validation_failures: List of validation failure dictionaries
+            step_task_mapping: Mapping from step index to task name
+            
+        Returns:
+            Dictionary with detailed phase-level failure analysis including:
+            - failure_patterns: Patterns by task, variable, and phase
+            - optimization_targets: Specific ranges that need adjustment
+            - statistical_analysis: Failure value statistics for range suggestions
+            - phase_severity: Ranking of phases by failure frequency
+        """
+        # Group failures by multiple dimensions for comprehensive analysis
+        failure_analysis = {
+            'failure_patterns': {},
+            'optimization_targets': [],
+            'statistical_analysis': {},
+            'phase_severity': {},
+            'variable_impact': {},
+            'task_performance': {}
+        }
+        
+        # Group failures by task, variable, and phase
+        grouped_failures = {}
+        for failure in validation_failures:
+            task = failure.get('task', 'unknown')
+            variable = failure.get('variable', 'unknown')
+            phase = failure.get('phase', -1)
+            
+            # Create hierarchical grouping
+            if task not in grouped_failures:
+                grouped_failures[task] = {}
+            if variable not in grouped_failures[task]:
+                grouped_failures[task][variable] = {}
+            if phase not in grouped_failures[task][variable]:
+                grouped_failures[task][variable][phase] = []
+            
+            grouped_failures[task][variable][phase].append(failure)
+        
+        # Analyze failure patterns
+        failure_analysis['failure_patterns'] = grouped_failures
+        
+        # Generate optimization targets with statistical recommendations
+        for task, task_failures in grouped_failures.items():
+            for variable, variable_failures in task_failures.items():
+                for phase, phase_failures in variable_failures.items():
+                    if not phase_failures:
+                        continue
+                    
+                    # Extract failure values and current bounds
+                    values = [f.get('value', 0) for f in phase_failures]
+                    current_mins = [f.get('expected_min', 0) for f in phase_failures]
+                    current_maxs = [f.get('expected_max', 0) for f in phase_failures]
+                    
+                    if values:
+                        # Statistical analysis of failure values
+                        value_stats = {
+                            'count': len(values),
+                            'min': min(values),
+                            'max': max(values),
+                            'mean': np.mean(values),
+                            'std': np.std(values),
+                            'median': np.median(values),
+                            'percentile_5': np.percentile(values, 5),
+                            'percentile_95': np.percentile(values, 95)
+                        }
+                        
+                        # Current range information
+                        current_range = {
+                            'min': current_mins[0] if current_mins else 0,
+                            'max': current_maxs[0] if current_maxs else 0
+                        }
+                        
+                        # Suggested range based on failure statistics
+                        # Use percentiles to avoid outliers affecting range too much
+                        buffer_factor = 1.2  # 20% buffer beyond observed values
+                        suggested_range = {
+                            'min': value_stats['percentile_5'] * buffer_factor if value_stats['min'] < current_range['min'] else current_range['min'],
+                            'max': value_stats['percentile_95'] * buffer_factor if value_stats['max'] > current_range['max'] else current_range['max']
+                        }
+                        
+                        # Create optimization target
+                        target = {
+                            'task': task,
+                            'variable': variable,
+                            'phase': phase,
+                            'failure_count': len(phase_failures),
+                            'current_range': current_range,
+                            'suggested_range': suggested_range,
+                            'value_statistics': value_stats,
+                            'optimization_priority': len(phase_failures),  # Higher priority for more failures
+                            'range_adjustment_needed': {
+                                'expand_min': value_stats['min'] < current_range['min'],
+                                'expand_max': value_stats['max'] > current_range['max'],
+                                'min_expansion': abs(value_stats['min'] - current_range['min']) if value_stats['min'] < current_range['min'] else 0,
+                                'max_expansion': abs(value_stats['max'] - current_range['max']) if value_stats['max'] > current_range['max'] else 0
+                            }
+                        }
+                        
+                        failure_analysis['optimization_targets'].append(target)
+        
+        # Analyze phase severity (which phases have most failures)
+        phase_failure_counts = {}
+        for failure in validation_failures:
+            phase = failure.get('phase', -1)
+            if phase not in phase_failure_counts:
+                phase_failure_counts[phase] = 0
+            phase_failure_counts[phase] += 1
+        
+        # Rank phases by failure count
+        sorted_phases = sorted(phase_failure_counts.items(), key=lambda x: x[1], reverse=True)
+        failure_analysis['phase_severity'] = {
+            'failure_counts': phase_failure_counts,
+            'ranked_phases': sorted_phases,
+            'most_problematic_phase': sorted_phases[0][0] if sorted_phases else None
+        }
+        
+        # Analyze variable impact (which variables fail most often)
+        variable_failure_counts = {}
+        for failure in validation_failures:
+            variable = failure.get('variable', 'unknown')
+            if variable not in variable_failure_counts:
+                variable_failure_counts[variable] = 0
+            variable_failure_counts[variable] += 1
+        
+        sorted_variables = sorted(variable_failure_counts.items(), key=lambda x: x[1], reverse=True)
+        failure_analysis['variable_impact'] = {
+            'failure_counts': variable_failure_counts,
+            'ranked_variables': sorted_variables,
+            'most_problematic_variable': sorted_variables[0][0] if sorted_variables else None
+        }
+        
+        # Analyze task performance
+        task_step_counts = {}
+        task_failure_counts = {}
+        
+        for step_idx, task in step_task_mapping.items():
+            if task not in task_step_counts:
+                task_step_counts[task] = 0
+            task_step_counts[task] += 1
+        
+        for failure in validation_failures:
+            task = failure.get('task', 'unknown')
+            if task not in task_failure_counts:
+                task_failure_counts[task] = 0
+            task_failure_counts[task] += 1
+        
+        task_performance = {}
+        for task in task_step_counts:
+            total_steps = task_step_counts[task]
+            failed_steps = len(set(f.get('step', -1) for f in validation_failures if f.get('task') == task))
+            success_rate = (total_steps - failed_steps) / total_steps if total_steps > 0 else 0
+            
+            task_performance[task] = {
+                'total_steps': total_steps,
+                'failed_steps': failed_steps,
+                'passed_steps': total_steps - failed_steps,
+                'success_rate': success_rate,
+                'failure_count': task_failure_counts.get(task, 0)
+            }
+        
+        failure_analysis['task_performance'] = task_performance
+        
+        # Sort optimization targets by priority (failure count)
+        failure_analysis['optimization_targets'].sort(
+            key=lambda x: x['optimization_priority'], reverse=True
+        )
+        
+        return failure_analysis
+    
+    def generate_optimization_summary(self, detailed_failures: Dict[str, Any]) -> str:
+        """
+        Generate a human-readable summary of optimization opportunities.
+        
+        Args:
+            detailed_failures: Output from export_detailed_phase_failures
+            
+        Returns:
+            Formatted string summary for reporting
+        """
+        summary = []
+        summary.append("# Phase-Level Failure Analysis for Optimization\n")
+        
+        # Task performance overview
+        summary.append("## Task Performance Overview\n")
+        for task, performance in detailed_failures['task_performance'].items():
+            success_rate = performance['success_rate']
+            summary.append(f"- **{task}**: {success_rate:.1%} success rate ({performance['passed_steps']}/{performance['total_steps']} steps)")
+        
+        # Most problematic phases
+        summary.append("\n## Most Problematic Phases\n")
+        phase_names = {0: "Heel Strike", 25: "Mid-Stance", 50: "Toe-Off", 75: "Mid-Swing"}
+        for phase, count in detailed_failures['phase_severity']['ranked_phases'][:3]:
+            phase_name = phase_names.get(phase, f"Phase {phase}%")
+            summary.append(f"- **{phase_name} ({phase}%)**: {count} failures")
+        
+        # Most problematic variables
+        summary.append("\n## Most Problematic Variables\n")
+        for variable, count in detailed_failures['variable_impact']['ranked_variables'][:3]:
+            summary.append(f"- **{variable}**: {count} failures")
+        
+        # Top optimization targets
+        summary.append("\n## Top Optimization Targets\n")
+        for i, target in enumerate(detailed_failures['optimization_targets'][:5]):
+            task = target['task']
+            variable = target['variable']
+            phase = target['phase']
+            count = target['failure_count']
+            
+            current_range = target['current_range']
+            suggested_range = target['suggested_range']
+            
+            summary.append(f"{i+1}. **{task} - {variable} - Phase {phase}%**")
+            summary.append(f"   - Failures: {count}")
+            summary.append(f"   - Current range: [{current_range['min']:.3f}, {current_range['max']:.3f}]")
+            summary.append(f"   - Suggested range: [{suggested_range['min']:.3f}, {suggested_range['max']:.3f}]")
+            
+            adj = target['range_adjustment_needed']
+            if adj['expand_min'] or adj['expand_max']:
+                expansions = []
+                if adj['expand_min']:
+                    expansions.append(f"min by {adj['min_expansion']:.3f}")
+                if adj['expand_max']:
+                    expansions.append(f"max by {adj['max_expansion']:.3f}")
+                summary.append(f"   - Needs to expand {' and '.join(expansions)}")
+            summary.append("")
+        
+        return "\n".join(summary)
     
     def classify_steps_for_feature(self, validation_failures: List[Dict], 
                                  step_task_mapping: Dict[int, str],
