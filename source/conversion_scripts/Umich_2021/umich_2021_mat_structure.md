@@ -149,7 +149,7 @@ Additionally, the `Tread` field (described under 'Data Structure' -> 'Subject') 
 
 ## Data Conventions
 
-This section describes the conventions for data as present in the raw `.mat` files. The conversion scripts (`convert_umich_time_to_parquet.m` and `convert_umich_phase_to_parquet.m`) transform this data to align with OpenSim conventions (XYZ: Anterior+, Up+, Right+) as specified in the main project `sign_conventions.md` document.
+This section describes the conventions for data as present in the raw `.mat` files. The conversion scripts (`convert_umich_time_to_parquet.m` and `convert_umich_phase_to_parquet.m`) transform this data to align with OpenSim conventions (XYZ: Anterior+, Up+, Right+) as specified in the main project `units_and_conventions.md` document.
 
 ### Coordinate System for Joint Angles & Moments (Indices in MAT files)
 - Index 1 (e.g., `HipAngles(:,1)`): Sagittal plane motion (Flexion/Extension)

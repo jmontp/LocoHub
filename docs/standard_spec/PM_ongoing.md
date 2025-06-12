@@ -31,7 +31,7 @@
 ### 2025-06-11
 1. **Documentation Streamlining to Minimal Aesthetic** - Applied refined minimal style across all standard specification files
    - Streamlined standard_spec.md from verbose technical documentation to concise reference
-   - Reduced sign_conventions.md from 224 lines to 95 lines (58% reduction) while maintaining technical accuracy
+   - Consolidated sign_conventions.md into units_and_conventions.md with typical biomechanical values
    - Applied minimal aesthetic with quick reference navigation and visual separators
    - Maintained OpenSim compatibility and biomechanical accuracy while improving accessibility
    - Created consistent documentation structure with essential information focus
@@ -120,7 +120,7 @@
 - **Motion Capture Tolerance**: -10° minimum for knee due to measurement errors
 
 ### Key Files
-- **sign_conventions.md**: Authoritative source for joint angle interpretation
+- **units_and_conventions.md**: Authoritative source for joint angle interpretation, sign conventions, and typical values
 - **validation_expectations_kinematic.md**: Phase-specific validation ranges  
 - **validation_expectations_changelog.md**: Version history and changes
 - **generate_phase_range_images.py**: Stick figure generation with corrected kinematics

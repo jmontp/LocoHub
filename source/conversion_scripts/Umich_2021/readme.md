@@ -93,8 +93,7 @@ convert_umich_phase_to_parquet
 
 ## 4. Reference Documentation Links
 
-* [Units & Conventions](units_and_conventions.md)
-* [Sign Conventions](sign_conventions.md)
+* [Units & Conventions](../../../docs/standard_spec/units_and_conventions.md)
 * [Phase Calculation](phase_calculation.md)
 * [Task Definitions](task_definitions.md)
 

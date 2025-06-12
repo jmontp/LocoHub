@@ -349,4 +349,4 @@ This tutorial covered basic operations for handling standardized locomotion data
 
 These examples provide a starting point. MATLAB offers extensive toolboxes for more advanced signal processing, statistics, and machine learning that can be applied to locomotion data.
 
-Refer to the [MATLAB documentation](https://www.mathworks.com/help/matlab/) for more comprehensive information. Consult your dataset's specific metadata and the [Units & Conventions](../standard_spec/units_and_conventions.md) and [Sign Conventions](../standard_spec/sign_conventions.md) documentation for details on column names, units, and conventions. 
+Refer to the [MATLAB documentation](https://www.mathworks.com/help/matlab/) for more comprehensive information. Consult your dataset's specific metadata and the [Units & Conventions](../../standard_spec/units_and_conventions.md) documentation for details on column names, units, and conventions. 

@@ -261,4 +261,4 @@ This tutorial covered basic operations for handling standardized locomotion data
 
 These examples provide a starting point. Depending on the complexity of your data and analyses, you might explore more advanced Pandas functionalities, time-series analysis libraries, or specific biomechanics-focused Python packages.
 
-Refer to the [Pandas documentation](https://pandas.pydata.org/pandas-docs/stable/) for more comprehensive information on its capabilities. Consult your dataset's specific metadata and the [Units & Conventions](../standard_spec/units_and_conventions.md) and [Sign Conventions](../standard_spec/sign_conventions.md) documentation for details on column names, units, and conventions.
+Refer to the [Pandas documentation](https://pandas.pydata.org/pandas-docs/stable/) for more comprehensive information on its capabilities. Consult your dataset's specific metadata and the [Units & Conventions](../../standard_spec/units_and_conventions.md) documentation for details on column names, units, and conventions.

@@ -53,10 +53,9 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 - **PM_ongoing.md** - Project management for specifications
 - **dataset_template.md** - Template for new dataset documentation
 - **phase_calculation.md** - Gait cycle phase calculation methods
-- **sign_conventions.md** - Biomechanical sign convention definitions
+- **units_and_conventions.md** - Units, sign conventions, and typical biomechanical values
 - **standard_spec.md** - Core data format specification
 - **task_definitions.md** - Locomotion task taxonomy
-- **units_and_conventions.md** - Units and measurement conventions
 - **validation_expectations_kinematic.md** - Kinematic validation rules and ranges
 - **validation_expectations_kinetic.md** - Kinetic validation rules and ranges
 
@@ -277,6 +276,10 @@ python scripts/pm_update.py --check   # Check PM files
 - Prefer editing existing files over creating new ones
 - Raise explicit errors instead of soft failures
 - Document intent, not implementation details
+
+## Development Status
+
+**Pre-release**: Tool is not released to public yet. Don't worry about backwards compatibility since people are not using it yet. Focus on clean, optimal implementation over migration concerns.
 
 ---
 

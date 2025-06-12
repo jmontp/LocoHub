@@ -8,9 +8,9 @@
 
 ## Reference
 
-- **[Sign Conventions](standard_spec/sign_conventions.md)** - Joint angle definitions
+- **[Units & Conventions](standard_spec/units_and_conventions.md)** - Units, sign conventions, and typical values
 - **[Task Definitions](standard_spec/task_definitions.md)** - Standardized activity names
-- **[Dataset List](datasets_documentation/datasets_glossary.md)** - Available datasets
+- **[Dataset List](datasets_documentation/README.md)** - Available datasets
 
 ## Advanced
 

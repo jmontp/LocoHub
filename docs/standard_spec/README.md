@@ -2,7 +2,7 @@
 
 Data format specifications and validation rules for locomotion datasets.
 
-**Quick Reference:** [Format Spec](standard_spec.md) • [Sign Conventions](sign_conventions.md) • [Task Definitions](task_definitions.md)
+**Quick Reference:** [Format Spec](standard_spec.md) • [Units & Conventions](units_and_conventions.md) • [Task Definitions](task_definitions.md)
 
 ## Core Specifications
 
@@ -11,10 +11,10 @@ Data format specifications and validation rules for locomotion datasets.
 - Time vs phase-indexed formats
 - Required columns and validation rules
 
-**Sign Conventions** - [sign_conventions.md](sign_conventions.md):
-- OpenSim-compatible joint angle definitions
-- Coordinate system and force directions
-- Reference table for all joint motions
+**Units & Conventions** - [units_and_conventions.md](units_and_conventions.md):
+- OpenSim-compatible coordinate system and sign conventions
+- Variable naming patterns and units
+- Typical biomechanical values and ranges
 
 **Task Definitions** - [task_definitions.md](task_definitions.md):
 - Standard task vocabulary
