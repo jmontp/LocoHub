@@ -57,7 +57,8 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.append(str(project_root / 'source'))
 
 from lib.python.locomotion_analysis import LocomotionData
-from validation.validation_expectations_parser import write_kinematic_validation_expectations
+from lib.python.feature_constants import get_feature_list
+from validation.validation_expectations_parser import ValidationExpectationsParser
 
 class AutomatedFineTuner:
     """
@@ -124,6 +125,20 @@ class AutomatedFineTuner:
         print(f"   📊 Found {len(tasks)} tasks: {tasks}")
         print(f"   👥 Found {len(subjects)} subjects: {subjects}")
         
+        # Get standard feature list for the mode
+        standard_features = get_feature_list(self.mode)
+        
+        # Filter to only features actually available in the dataset
+        available_features = self.locomotion_data.features
+        feature_order = [f for f in standard_features if f in available_features]
+        
+        # Warn about missing features (but don't fail)
+        missing_features = [f for f in standard_features if f not in available_features]
+        if missing_features:
+            print(f"   ⚠️  Missing {len(missing_features)} standard {self.mode} features: {missing_features[:3]}{'...' if len(missing_features) > 3 else ''}")
+        
+        print(f"   🔧 Using {len(feature_order)} standard {self.mode} features: {feature_order[:3]}{'...' if len(feature_order) > 3 else feature_order}")
+        
         # Phase mapping (convert 0-149 indices to phase percentages)
         phase_indices = {
             0: 0,      # 0% -> index 0
@@ -131,16 +146,6 @@ class AutomatedFineTuner:
             50: 75,    # 50% -> index ~75
             75: 112    # 75% -> index ~112
         }
-        
-        # Standard feature order (matching validation expectations)
-        feature_order = [
-            'hip_flexion_angle_contra_rad',
-            'knee_flexion_angle_contra_rad', 
-            'ankle_flexion_angle_contra_rad',
-            'hip_flexion_angle_ipsi_rad',
-            'knee_flexion_angle_ipsi_rad',
-            'ankle_flexion_angle_ipsi_rad'
-        ]
         
         # Organize data by task, phase, and variable
         task_phase_data = {}
@@ -346,12 +351,12 @@ class AutomatedFineTuner:
                         print(f"      ✅ {var_name} Phase {phase_pct}%: [{min_val:.3f}, {max_val:.3f}] "
                               f"(from {len(values)} values)")
                     else:
-                        # No data available - use placeholder
+                        # No data available - use NaN to indicate missing data
                         validation_ranges[task][phase_pct][var_name] = {
-                            'min': 0.0,
-                            'max': 0.0
+                            'min': float('nan'),
+                            'max': float('nan')
                         }
-                        print(f"      ⚠️  {var_name} Phase {phase_pct}%: No data available")
+                        print(f"      ⚠️  {var_name} Phase {phase_pct}%: No data available, using NaN")
         
         return validation_ranges
     
@@ -523,16 +528,25 @@ class AutomatedFineTuner:
             if save_ranges:
                 print(f"\n💾 Saving statistical ranges...")
                 specs_dir = project_root / "docs" / "standard_spec"
-                spec_file = specs_dir / "validation_expectations_kinematic.md"
                 
-                # Pass dataset name and method for disclaimer
+                # Use unified parser API
+                parser = ValidationExpectationsParser()
                 dataset_name = self.dataset_path.name
-                write_kinematic_validation_expectations(
+                
+                if self.mode == 'kinematic':
+                    spec_file = specs_dir / "validation_expectations_kinematic.md"
+                elif self.mode == 'kinetic':
+                    spec_file = specs_dir / "validation_expectations_kinetic.md"
+                
+                # Write using unified API with explicit mode
+                parser.write_validation_data(
                     str(spec_file), 
                     validation_ranges, 
                     dataset_name=dataset_name,
-                    method=method
+                    method=method,
+                    mode=self.mode
                 )
+                
                 saved_file = str(spec_file)
                 print(f"   ✅ Ranges saved to: {spec_file.name}")
             
