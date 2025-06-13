@@ -275,10 +275,16 @@ journey
   - Sports scientists (performance analysis)
   - Students (learning biomechanics)
 
-- **10% Dataset Contributors**: Researchers adding to the standard
+- **9% Dataset Contributors**: Researchers adding to the standard
   - Data validation specialists
   - Dataset curators
   - Standard developers
+
+- **1% System Administrators**: Infrastructure and project management
+  - Release managers
+  - Benchmark creators
+  - Infrastructure maintainers
+  - Community coordinators
 
 ### **Emotional Journey Patterns**
 - **Discovery Phase**: Initial excitement finding quality datasets
@@ -291,9 +297,9 @@ The validation system operates behind the scenes to ensure the 90% of users can 
 
 ---
 
-## Dataset Contributors (10% - Current Focus)
+## Dataset Contributors & System Administrators (10% - Current Focus)
 
-The following journeys represent the specialists who contribute to and validate the standardization ecosystem.
+The following journeys represent the specialists who contribute to and validate the standardization ecosystem, plus the system administrators who manage infrastructure.
 
 ## Journey 6: Data Scientist Validates a New Dataset
 
@@ -463,10 +469,62 @@ journey
 
 ---
 
+## Journey 10: System Administrator Creates ML Benchmarks for Public Release
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+journey
+    title System Administrator: ML Benchmark Creation & Release
+    section Planning
+      Review validated datasets: 4: System Administrator
+      Define benchmark requirements: 5: System Administrator
+      Plan demographic stratification: 4: System Administrator
+      Set quality thresholds: 4: System Administrator
+    section Benchmark Creation
+      Select quality datasets: 5: System Administrator
+      Create train/validation/test splits: 4: System Administrator
+      Validate no data leakage: 3: System Administrator
+      Generate ML-ready features: 4: System Administrator
+    section Quality Assurance
+      Run benchmark validation tests: 3: System Administrator
+      Check demographic balance: 4: System Administrator
+      Verify baseline performance: 4: System Administrator
+      Review documentation completeness: 3: System Administrator
+    section Release Preparation
+      Package benchmark suite: 4: System Administrator
+      Generate usage documentation: 3: System Administrator
+      Create example notebooks: 2: System Administrator
+      Prepare version metadata: 4: System Administrator
+    section Public Release
+      Deploy to data repository: 5: System Administrator
+      Announce to community: 4: System Administrator
+      Monitor initial usage: 4: System Administrator
+      Address user feedback: 3: System Administrator
+```
+
+**Pain Points:**
+- Manual validation of split quality and data leakage
+- Time-consuming documentation preparation 
+- Ensuring benchmark scientific validity across domains
+- Coordinating release timing with contributor workflows
+
+**Emotional Journey:**
+- **Planning**: Excitement about enabling ML research community
+- **Benchmark Creation**: Technical satisfaction with automated tooling
+- **Quality Assurance**: Anxiety about maintaining scientific standards
+- **Release Preparation**: Mild frustration with documentation overhead
+- **Public Release**: Pride in providing quality research infrastructure
+
+---
+
 ## Combined Insights
 
-### **Consumer vs Contributor Patterns**
-- **Consumers**: Focus on data access, analysis, and application
-- **Contributors**: Focus on quality assurance, validation, and system improvement
+### **Consumer vs Contributor vs Administrator Patterns**
+- **Consumers (90%)**: Focus on data access, analysis, and application
+- **Contributors (9%)**: Focus on quality assurance, validation, and system improvement
+- **Administrators (1%)**: Focus on infrastructure, releases, and community management
 - **Shared Need**: Clear documentation and reliable tools
-- **Key Difference**: Contributors need debugging/tuning tools, consumers need analysis tools
+- **Key Differences**: 
+  - Contributors need debugging/tuning tools
+  - Consumers need analysis tools
+  - Administrators need automation and orchestration tools

@@ -12,13 +12,22 @@ Researchers who use standardized locomotion datasets for their own analysis and 
 - **Sports Scientists** (athletic performance analysis)
 - **Students** (learning biomechanics and gait analysis)
 
-### **10% Dataset Contributors** (Current Focus)
+### **9% Dataset Contributors** (Current Focus)
 Researchers who contribute to the standardization ecosystem by adding and validating datasets.
 
 **Primary Personas:**
 - **Data Validation Specialists** (ensuring biomechanical accuracy)
 - **Dataset Curators** (converting existing datasets to standard format)
 - **Standard Developers** (evolving validation rules and specifications)
+
+### **1% System Administrators** (Infrastructure Focus)
+Technical specialists who manage the project infrastructure, releases, and organizational aspects.
+
+**Primary Personas:**
+- **Release Managers** (coordinating public dataset releases)
+- **Benchmark Creators** (developing ML benchmarks and evaluation standards)
+- **Infrastructure Maintainers** (managing hosting, CI/CD, and project tools)
+- **Community Coordinators** (managing contributors, documentation, and governance)
 
 ---
 
@@ -117,10 +126,60 @@ Researchers who contribute to the standardization ecosystem by adding and valida
 
 ---
 
+## System Administrator Insights (1% - Infrastructure Focus)
+
+### **Primary Needs**
+1. **Release Management** - Coordinating public dataset releases with proper versioning
+2. **ML Benchmark Creation** - Developing standardized train/test/validation splits
+3. **Infrastructure Automation** - CI/CD, testing, and deployment automation
+4. **Community Management** - Contributor onboarding and governance processes
+5. **Quality Oversight** - Ensuring overall project quality and consistency
+
+### **Core Responsibilities**
+1. **Dataset Publishing** - Preparing validated datasets for public consumption
+2. **Benchmark Standardization** - Creating ML benchmarks with no data leakage
+3. **Release Coordination** - Managing versions, changelogs, and documentation
+4. **Infrastructure Maintenance** - Hosting, backup, and access management
+5. **Community Governance** - Contributor guidelines, review processes, and standards
+
+### **Success Factors**
+1. **Automated Workflows** - Minimal manual intervention for routine tasks
+2. **Quality Metrics** - Clear visibility into dataset quality and system health
+3. **Reproducible Processes** - Standardized procedures for releases and benchmarks
+4. **Documentation Integration** - Automated documentation generation and updates
+5. **Community Tools** - Efficient contributor onboarding and management systems
+
+### **Key Pain Points**
+1. **Manual Release Processes** - Time-consuming preparation of public releases
+2. **Benchmark Validation** - Ensuring ML benchmarks are scientifically sound
+3. **Version Management** - Tracking dataset versions and compatibility
+4. **Quality Assurance** - Maintaining high standards across all contributions
+5. **Resource Management** - Balancing infrastructure costs with access needs
+
+### **Administrator Workflows**
+
+#### **1. ML Benchmark Creation**
+**Current**: Manual creation of train/test splits with custom scripts
+**Future**: Automated CLI tool (`create_benchmarks.py`) with leakage detection
+
+#### **2. Dataset Release Management**
+**Current**: Manual preparation and documentation of public releases
+**Future**: Automated release pipeline (`publish_datasets.py`) with version control
+
+#### **3. Quality Oversight**
+**Current**: Manual review of contributor validation reports
+**Future**: Automated quality dashboards with trend analysis
+
+#### **4. Infrastructure Management**
+**Current**: Manual deployment and monitoring of project infrastructure
+**Future**: Automated CI/CD with health monitoring and alerts
+
+---
+
 ## Strategic Development Approach
 
 ### **Phase 1: Complete Dataset Contributor Tools** (Current)
-**Focus**: 10% of users who contribute and validate datasets
+**Focus**: 9% of users who contribute and validate datasets + 1% system administrators
 - ✅ Validation parser architecture with comprehensive testing
 - 🚧 User-centric CLI entry points for validation workflows
 - 🚧 Clean library separation (validation vs core functionality)

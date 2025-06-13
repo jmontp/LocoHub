@@ -5,8 +5,12 @@
 ```mermaid
 %%{init: {'theme': 'dark'}}%%
 graph TD
-    subgraph "Dataset Contributors (10%)"
+    subgraph "Dataset Contributors (9%)"
         contributors["Data Validation Specialists<br/><font size='-2'>Person</font><br/><font size='-1'>Dataset curators and standard developers<br/>who ensure data quality.</font>"]
+    end
+
+    subgraph "System Administrators (1%)"
+        admins["Infrastructure Managers<br/><font size='-2'>Person</font><br/><font size='-1'>Release managers, benchmark creators,<br/>and community coordinators.</font>"]
     end
 
     subgraph "Dataset Consumers (90%)"  
@@ -18,10 +22,12 @@ graph TD
     end
 
     contributors -- "Contribute & Validate" --> system
+    admins -- "Manage & Release" --> system
     system -- "Provides Quality Data" --> consumers
     
     %% Styling
     style contributors fill:#e76f51,stroke:#d62828,stroke-width:2px,color:#ffffff
+    style admins fill:#f4a261,stroke:#e76f51,stroke-width:2px,color:#ffffff
     style consumers fill:#2a9d8f,stroke:#264653,stroke-width:2px,color:#ffffff
     style system fill:#457b9d,stroke:#1d3557,stroke-width:2px,color:#ffffff
     
@@ -73,8 +79,9 @@ graph TD
 %%{init: {'theme': 'dark'}}%%
 graph TD
     subgraph "Users"
-        contributors["Dataset Contributors<br/><font size='-2'>Person</font><br/><font size='-1'>Specialists who validate and contribute data.</font>"]
-        consumers["Dataset Consumers<br/><font size='-2'>Person</font><br/><font size='-1'>Researchers who analyze standardized data.</font>"]
+        contributors["Dataset Contributors (9%)<br/><font size='-2'>Person</font><br/><font size='-1'>Specialists who validate and contribute data.</font>"]
+        admins["System Administrators (1%)<br/><font size='-2'>Person</font><br/><font size='-1'>Release managers and infrastructure specialists.</font>"]
+        consumers["Dataset Consumers (90%)<br/><font size='-2'>Person</font><br/><font size='-1'>Researchers who analyze standardized data.</font>"]
     end
 
     subgraph "External Data Sources"
@@ -106,6 +113,11 @@ graph TD
     contributors -- "Edits" --> validation_specs
     contributors -- "Reviews" --> documentation
 
+    %% User Interactions - Administrators (Infrastructure Focus)
+    admins -- "Manages" --> validation_engine
+    admins -- "Publishes" --> datasets
+    admins -- "Maintains" --> documentation
+
     %% User Interactions - Consumers (Future Focus)
     consumers -- "Uses" --> analysis_tools
     consumers -- "Downloads" --> datasets
@@ -120,6 +132,7 @@ graph TD
 
     %% Styling
     style contributors fill:#e76f51,stroke:#d62828,stroke-width:2px,color:#ffffff
+    style admins fill:#f4a261,stroke:#e76f51,stroke-width:2px,color:#ffffff
     style consumers fill:#2a9d8f,stroke:#264653,stroke-width:2px,color:#ffffff,stroke-dasharray:3
     style raw_datasets fill:#8d99ae,stroke:#6c757d,stroke-width:2px,color:#ffffff
     style validation_engine fill:#f4a261,stroke:#e76f51,stroke-width:2px,color:#ffffff

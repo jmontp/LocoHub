@@ -572,4 +572,59 @@ sequenceDiagram
 3. **FeatureConstants**: Shared variable definitions ensure consistency
 4. **Quality Bridge**: Validation system enables consumer confidence
 
-The contributor workflows ensure the quality that enables simple consumer workflows.
+---
+
+## Sequence 10: System Administrator Creates ML Benchmark Release
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+sequenceDiagram
+    participant SA as System Administrator
+    participant BC as create_benchmarks.py
+    participant QA as Quality Assessment
+    participant VS as Validated Datasets
+    participant BS as Benchmark Suite
+    participant DR as Data Repository
+    participant CI as CI/CD Pipeline
+    participant CM as Community
+
+    SA->>QA: review validated dataset quality scores
+    QA-->>SA: show quality metrics and coverage statistics
+    
+    SA->>BC: python create_benchmarks.py --split-strategy subject gtech2023.parquet umich2021.parquet ./ml_benchmarks/
+    BC->>VS: load quality-validated datasets
+    VS-->>BC: return combined locomotion data
+    
+    BC->>BC: create subject-based train/validation/test splits
+    BC->>BC: validate no data leakage between splits
+    BC->>BC: extract ML-ready features (scikit-learn, PyTorch, TensorFlow)
+    BC->>BC: train baseline models for performance targets
+    
+    BC->>BS: generate benchmark suite with documentation
+    BS-->>BC: confirm benchmark creation
+    BC-->>SA: display benchmark creation summary
+    
+    SA->>BS: review benchmark quality metrics
+    BS-->>SA: show split demographics, leakage analysis, baseline performance
+    
+    SA->>CI: commit benchmark suite to release branch
+    CI->>CI: run automated tests and validation
+    CI->>DR: deploy benchmark to public data repository
+    DR-->>CI: confirm deployment success
+    CI-->>SA: release deployment notification
+    
+    SA->>CM: announce new ML benchmark release
+    CM-->>SA: community feedback and adoption metrics
+    
+    SA->>SA: monitor benchmark usage and performance
+    SA->>SA: document lessons learned for future releases
+```
+
+---
+
+The combined workflows show how all three user types contribute to the locomotion data standardization ecosystem:
+- **Consumers (90%)** rely on simple, reliable data access
+- **Contributors (9%)** ensure data quality through validation workflows  
+- **Administrators (1%)** manage infrastructure and enable community growth
+
+The contributor workflows ensure the quality that enables simple consumer workflows, while administrator workflows ensure the infrastructure supports both groups effectively.

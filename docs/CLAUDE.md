@@ -9,6 +9,7 @@ Guidance for working with project documentation.
 - `datasets_documentation/` - Implementation details for each dataset
 - `tutorials/` - Python and MATLAB usage guides
 - `development/` - Progress tracking and development notes
+- `software_engineering/` - Architecture, user research, and implementation specifications
 
 ## Documentation Standards
 
@@ -34,6 +35,7 @@ Guidance for working with project documentation.
 - Link to conversion scripts: `../../source/conversion_scripts/<Dataset>/`
 - Reference validation: `../../source/tests/validation_blueprint.py`
 - Library implementations: `../../source/lib/python/locomotion_analysis.py`
+- Software engineering docs: `../software_engineering/README.md`
 
 ## Maintenance Guidelines
 
