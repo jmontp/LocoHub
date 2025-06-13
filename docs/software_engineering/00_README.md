@@ -165,6 +165,14 @@
 
 *Use when*: Creating new documentation, maintaining documentation quality
 
+#### `15_entry_points_reference.md`
+**Quick reference catalog of all CLI tools**
+- Complete entry points organized by user role and priority
+- Implementation status and usage patterns
+- Common workflow examples for each user type
+
+*Use when*: Finding specific CLI tools, planning implementation priorities, understanding user workflows
+
 ---
 
 ## 🗺️ Usage Scenarios
