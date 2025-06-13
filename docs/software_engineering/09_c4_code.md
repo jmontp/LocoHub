@@ -90,7 +90,7 @@ class PhaseValidator:
         - Validates file accessibility and basic structure
         - Checks phase indexing (exactly 150 points per cycle)
         - Validates biomechanical ranges against specifications
-        - Generates HTML report with embedded plots
+        - Generates markdown report with embedded plot references
         - Provides specific failure details with fix recommendations
         - Creates validation summary suitable for documentation
         
@@ -131,19 +131,19 @@ class TimeValidator:
         - Validates consistent sampling frequency
         - Checks for temporal gaps or inconsistencies
         - Validates biomechanical data ranges
-        - Generates time-series validation plots
+        - Generates markdown report with time-series plots
         
         Returns: TimeValidationResult with validation status and reports
         """
 ```
 
-### ValidationPlotGenerator - Generate Validation Visualizations (UC-C03)
+### ValidationSpecVisualizer - Generate Validation Specifications (UC-C03)
 
 **Interface Contract:**
 ```python
-class ValidationPlotGenerator:
+class ValidationSpecVisualizer:
     """
-    Creates plots and animations for dataset validation.
+    Creates visualizations of validation specifications and validation plots for datasets.
     Satisfies UC-C03: Generate Validation Visualizations
     """
     
@@ -153,7 +153,7 @@ class ValidationPlotGenerator:
     def generate_validation_plots(self, data: pd.DataFrame, output_dir: str, 
                                  plot_types: List[str] = None) -> PlotGenerationResult:
         """
-        Generate static validation plots.
+        Generate static validation plots with data overlaid on specification ranges.
         
         MUST generate static plots showing joint angles and moments across gait phases
         MUST overlay validation ranges on visualizations
@@ -180,8 +180,16 @@ class ValidationPlotGenerator:
         Returns: GifGenerationResult with generated animation paths
         """
     
-    def generate_range_plots(self, tasks: List[str], output_dir: str) -> PlotGenerationResult:
-        """Generate plots showing validation ranges without data"""
+    def generate_validation_spec_plots(self, tasks: List[str], output_dir: str) -> PlotGenerationResult:
+        """
+        Generate plots showing validation specification ranges without data.
+        
+        MUST visualize validation ranges for specified tasks
+        MUST show acceptable biomechanical ranges for each variable
+        MUST create reference plots for specification documentation
+        
+        Returns: PlotGenerationResult with specification visualization paths
+        """
 ```
 
 ---
@@ -196,39 +204,44 @@ class ValidationPlotGenerator:
 ```python
 class QualityAssessor:
     """
-    Generates comprehensive quality reports for datasets.
+    Assesses dataset quality by determining when steps are bad based on validation spec ranges.
     Satisfies UC-V01: Assess Dataset Quality
     """
     
     def __init__(self, spec_manager: SpecificationManager):
-        """Dependencies: SpecificationManager for population norms"""
+        """Dependencies: SpecificationManager for validation ranges"""
     
     def assess_quality(self, file_path: str) -> QualityAssessmentResult:
         """
-        Generate comprehensive quality report for dataset.
+        Generate quality report focusing on validation spec compliance.
         
         MUST calculate coverage statistics (subjects, tasks, gait cycles)
-        MUST identify missing data patterns and outliers
-        MUST generate biomechanical plausibility scores
-        MUST compare against population norms from literature
+        MUST identify bad steps based on validation spec range violations
+        MUST generate biomechanical quality scores based on spec compliance
         MUST export quality metrics for tracking over time
         
         Behavioral Contract:
         - Calculates subject, task, and cycle coverage
-        - Identifies systematic missing data patterns
-        - Scores biomechanical plausibility using population norms
-        - Detects statistical outliers with biomechanical context
+        - Identifies steps that violate validation specification ranges
+        - Scores quality based on percentage of steps within spec ranges
+        - Flags systematic violations and outliers
         - Generates exportable quality metrics
         
-        Returns: QualityAssessmentResult with scores, coverage, recommendations
+        Returns: QualityAssessmentResult with coverage, spec compliance scores, bad steps
         """
     
-    def compare_quality_metrics(self, file_paths: List[str]) -> QualityComparisonResult:
-        """Compare quality metrics across multiple datasets"""
+    def identify_bad_steps(self, data: pd.DataFrame, task: str) -> List[Dict]:
+        """
+        Identify individual steps that violate validation specifications.
+        
+        MUST check each step against validation spec ranges
+        MUST identify specific variables and values that are out of range
+        
+        Returns: List of bad steps with violation details
+        """
     
-    def export_quality_timeline(self, assessments: List[QualityAssessmentResult], 
-                               output_path: str) -> None:
-        """Export quality metrics for tracking over time"""
+    def calculate_spec_compliance_score(self, data: pd.DataFrame) -> float:
+        """Calculate overall compliance score with validation specifications"""
 ```
 
 ### DatasetComparator - Multi-Dataset Comparison (UC-V02)
@@ -237,41 +250,31 @@ class QualityAssessor:
 ```python
 class DatasetComparator:
     """
-    Systematically compares datasets from different sources.
+    Basic comparison of datasets from different sources.
     Satisfies UC-V02: Compare Multiple Datasets
+    
+    NOTE: LOW PRIORITY - Simple implementation for now, needs further review
     """
     
     def __init__(self, spec_manager: SpecificationManager):
-        """Dependencies: SpecificationManager for standard references"""
+        """Dependencies: SpecificationManager for references"""
     
-    def compare_datasets(self, file_paths: List[str], comparison_type: str = 'comprehensive') -> DatasetComparisonResult:
+    def compare_datasets(self, file_paths: List[str]) -> DatasetComparisonResult:
         """
-        Systematic comparison of datasets from different sources.
+        Basic statistical comparison of datasets.
         
-        MUST perform statistical comparison of means, distributions, and ranges
-        MUST create visual comparison plots showing overlays and differences
-        MUST identify systematic biases between data sources
-        MUST generate compatibility reports for dataset combinations
-        MUST recommend harmonization strategies for inconsistencies
+        MUST perform basic statistical comparison of means and ranges
+        MUST generate simple comparison report
         
         Behavioral Contract:
-        - Statistical analysis (means, std, distributions) across datasets
-        - Visual overlays showing dataset differences
-        - Bias detection using statistical tests
-        - Compatibility scoring for dataset combinations
-        - Harmonization recommendations with specific strategies
+        - Basic statistical comparison (means, ranges)
+        - Simple comparison report generation
         
-        Returns: DatasetComparisonResult with statistics, plots, recommendations
+        Returns: DatasetComparisonResult with basic statistics
         """
-    
-    def generate_compatibility_matrix(self, file_paths: List[str]) -> CompatibilityMatrix:
-        """Generate compatibility scores between all dataset pairs"""
-    
-    def recommend_harmonization(self, comparison_result: DatasetComparisonResult) -> HarmonizationStrategy:
-        """Provide specific strategies for addressing dataset inconsistencies"""
 ```
 
-### ValidationSpecManager - Manage Validation Rules (UC-V04)
+### ValidationSpecManager - Manage Validation Rules (UC-V04) ⭐ CRITICAL COMPONENT
 
 **Interface Contract:**
 ```python
@@ -279,6 +282,8 @@ class ValidationSpecManager:
     """
     Manages validation rules and ranges with interactive editing.
     Satisfies UC-V04: Manage Validation Specifications
+    
+    ⭐ SUPER IMPORTANT: Core component for maintaining validation standards
     """
     
     def __init__(self, config_manager: ConfigurationManager):
@@ -320,7 +325,7 @@ class ValidationSpecManager:
         """Generate change documentation for release notes"""
 ```
 
-### AutomatedFineTuner - Range Optimization (UC-V05)
+### AutomatedFineTuner - Range Optimization (UC-V05) ⭐ IMPORTANT COMPONENT
 
 **Interface Contract:**
 ```python
@@ -328,6 +333,8 @@ class AutomatedFineTuner:
     """
     Automatically tunes validation ranges based on dataset statistics.
     Satisfies UC-V05: Optimize Validation Ranges
+    
+    ⭐ PRETTY IMPORTANT: Key component for data-driven validation standards
     """
     
     def __init__(self, spec_manager: SpecificationManager):
@@ -366,6 +373,8 @@ class AutomatedFineTuner:
 
 ## Medium Priority Components
 
+> **⚠️ NEEDS FURTHER REVIEW - These components are not current focus, specifications require refinement**
+> 
 > **These components satisfy Medium priority user stories and Administrator requirements for release management**
 
 ### ValidationDebugger - Debug Validation Failures (UC-V03)
@@ -708,7 +717,7 @@ class PhaseValidationResult:
     file_path: str
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
-    report_path: str = ""
+    report_path: str = ""  # Path to markdown report
     plot_paths: List[str] = field(default_factory=list)
     validation_summary: Dict = field(default_factory=dict)
 
@@ -720,6 +729,7 @@ class TimeValidationResult:
     sampling_frequency: float = 0.0
     temporal_issues: List[str] = field(default_factory=list)
     validation_summary: Dict = field(default_factory=dict)
+    report_path: str = ""  # Path to markdown report
 
 @dataclass
 class QualityAssessmentResult:
@@ -802,8 +812,10 @@ validate_time_data.py dataset.parquet --output-dir validation_results
 
 **generate_validation_plots.py** (UC-C03)
 ```bash
-# Generate validation plots
+# Generate validation plots and specification visualizations
 generate_validation_plots.py --data dataset.parquet --output plots/ --types forward_kinematics
+# Generate validation specification plots (without data)
+generate_validation_plots.py --specs-only --tasks walking running --output spec_plots/
 ```
 
 ### High Priority CLI Tools
