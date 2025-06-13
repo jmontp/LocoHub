@@ -17,51 +17,10 @@
 
 ## Critical Priority Components
 
-> **These components satisfy Critical priority user stories (UC-C01, UC-C02) that are required for all new datasets**
-
-### DatasetConverter - Convert Raw Datasets (UC-C01)
-
-**Interface Contract:**
-```python
-class DatasetConverter:
-    """
-    Converts raw datasets to standardized parquet format.
-    Satisfies UC-C01: Convert Raw Dataset
-    """
-    
-    def __init__(self, error_handler: ErrorHandler):
-        """Dependencies: ErrorHandler for consistent error reporting"""
-    
-    def convert_dataset(self, input_path: str, output_path: str, 
-                       source_format: str, mapping_config: Dict = None) -> ConversionResult:
-        """
-        Convert raw dataset to standard parquet format.
-        
-        MUST support formats: MATLAB .mat, CSV, AddBiomechanics B3D
-        MUST map variable names automatically where possible
-        MUST generate conversion report with mapping decisions and statistics
-        MUST handle missing variables gracefully with warnings
-        MUST preserve original metadata and add standardization metadata
-        
-        Behavioral Contract:
-        - Validates input file exists and is readable
-        - Detects source format automatically if not specified
-        - Maps variables using standard naming conventions
-        - Warns about unmapped variables without failing
-        - Generates detailed conversion report
-        - Preserves all original metadata in 'source_metadata' field
-        - Adds conversion timestamp and tool version
-        
-        Returns: ConversionResult with success status, report path, warnings
-        Raises: ConversionError if input file invalid or conversion impossible
-        """
-    
-    def get_supported_formats(self) -> List[str]:
-        """Returns list of supported input formats"""
-    
-    def validate_mapping_config(self, config: Dict) -> Tuple[bool, List[str]]:
-        """Validates user-provided variable mapping configuration"""
-```
+> **These components satisfy Critical priority user stories (UC-C02, UC-C03) that are required for all new datasets**
+> 
+> **Note: UC-C01 (Dataset Conversion) is handled by external scripts that vary widely. 
+> We only validate the parquet outputs they produce.**
 
 ### PhaseValidator - Validate Converted Datasets (UC-C02)
 
@@ -702,13 +661,16 @@ class DataTransformer:
 ```python
 @dataclass
 class ConversionResult:
-    """Result of dataset conversion operation"""
+    """Result of dataset conversion operation (External scripts only - for reference)"""
     success: bool
     output_path: str = ""
     report_path: str = ""
     warnings: List[str] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
     metadata: Dict = field(default_factory=dict)
+    
+    # NOTE: This is for reference only - external conversion scripts 
+    # may use completely different result formats
 
 @dataclass
 class PhaseValidationResult:
@@ -792,10 +754,13 @@ class ReleaseConfig:
 
 ### Critical Priority CLI Tools
 
-**convert_dataset.py** (UC-C01)
+**convert_dataset.py** (UC-C01) - External Scripts Only
 ```bash
-# Convert raw dataset to standard format
-convert_dataset.py input.mat output.parquet --format matlab --mapping-config config.json
+# NOTE: Conversion scripts are provided by external collaborators and vary widely
+# We do not provide standardized conversion interfaces - only validation of outputs
+# Example external conversion scripts might look like:
+python external_matlab_converter.py input.mat output.parquet
+python collaborator_csv_converter.py input.csv output.parquet --custom-mapping
 ```
 
 **validate_phase_data.py** (UC-C02)

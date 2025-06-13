@@ -17,24 +17,29 @@
 
 ## Test Strategy Overview
 
+### 🎯 Testing Philosophy
+
+**PhaseValidator is the critical quality gate** - Since conversion scripts will come from external collaborators in various formats, the PhaseValidator must robustly validate all parquet files regardless of their conversion source.
+
 ### Test Categories
 
-**Unit Tests** - Individual component behavior validation
+**Parquet Validation Tests** - Ensuring parquet file consistency and standards compliance 🔥
+**Interface Contract Tests** - Component behavior according to specifications  
 **Integration Tests** - Component interaction validation  
 **Acceptance Tests** - User story acceptance criteria validation
-**Contract Tests** - Interface specification compliance
 **Performance Tests** - Large dataset handling validation
 
 ### Test Priorities
 
-**Priority 1 (Critical)** - Must pass for any release
-**Priority 2 (High)** - Should pass for quality release
-**Priority 3 (Medium)** - Nice to have for complete coverage
+**Priority 1 (Critical) 🔥** - Must pass for any release - FOCUS: PhaseValidator parquet consistency
+**Priority 2 (High)** - Should pass for quality release - FOCUS: High priority components  
+**Priority 3 (Lower)** - Basic functionality - FOCUS: DatasetConverter basic operations
 
 ### Test Data Strategy
 
-**Real Dataset Tests** - Using actual converted datasets
-**Synthetic Dataset Tests** - Generated test data with known properties
+**Parquet File Tests** - Testing various parquet structures from different conversion sources 🔥
+**Synthetic Dataset Tests** - Generated test data with known properties and violations
+**External Conversion Tests** - Parquet files from external collaborator conversion scripts
 **Edge Case Tests** - Boundary conditions and error scenarios
 **Performance Tests** - Large datasets for scalability validation
 
@@ -42,156 +47,329 @@
 
 ## Critical Priority Component Tests
 
-> **These tests validate components required for all new datasets (UC-C01, UC-C02, UC-C03)**
+> **These tests validate components required for all new datasets (UC-C02, UC-C03)**
+> 
+> **🎯 PRIMARY FOCUS: PhaseValidator is the critical quality gate for all parquet files from external conversion scripts**
+> **UC-C01 (Dataset Conversion) is handled by external collaborators with varying scripts - we only validate outputs**
 
-### DatasetConverter Tests (UC-C01)
+### PhaseValidator Tests (UC-C02) - 🔥 HIGHEST PRIORITY
 
-#### Unit Tests - Priority 1
+> **PhaseValidator is the most critical component - it's the quality gate that ensures all parquet files (regardless of conversion source) meet standards**
 
-**Test: convert_matlab_to_parquet**
+#### Parquet File Structure Tests - Priority 1 🔥
+
+**Test: validate_standard_parquet_structure**
 ```python
-def test_convert_matlab_to_parquet_success():
-    """Test successful MATLAB .mat file conversion"""
-    # Given: Valid MATLAB file with biomechanical data
-    input_file = "test_data/sample_gait.mat"
-    output_file = "test_output/converted.parquet"
+def test_validate_standard_parquet_structure():
+    """Test validation of parquet files with standard structure (MOST CRITICAL TEST)"""
+    # Given: Parquet file with correct standard structure
+    data = create_standard_phase_parquet()
+    test_file = save_test_data(data, "standard_structure.parquet")
     
-    # When: Converting with DatasetConverter
-    converter = DatasetConverter(error_handler)
-    result = converter.convert_dataset(input_file, output_file, "matlab")
+    # When: Validating parquet structure
+    validator = PhaseValidator(spec_manager, error_handler)
+    result = validator.validate_dataset(test_file)
     
-    # Then: Conversion succeeds with proper output
-    assert result.success == True
-    assert os.path.exists(output_file)
-    assert os.path.exists(result.report_path)
+    # Then: Standard structure validation passes
+    assert result.is_valid == True
+    assert len(result.errors) == 0
     
-    # And: Output has standard structure
-    data = pd.read_parquet(output_file)
-    assert 'subject_id' in data.columns
-    assert 'trial_id' in data.columns
-    assert 'cycle_id' in data.columns
-    assert len(data) > 0
+    # And: All required columns are present
+    required_columns = ['subject_id', 'trial_id', 'cycle_id', 'phase', 'task']
+    data = pd.read_parquet(test_file)
+    for col in required_columns:
+        assert col in data.columns, f"Required column {col} missing"
 ```
 
-**Test: convert_csv_to_parquet** 
+**Test: detect_malformed_parquet_structure**
 ```python
-def test_convert_csv_to_parquet_with_mapping():
-    """Test CSV conversion with variable mapping"""
-    # Given: CSV file with non-standard variable names
-    input_file = "test_data/custom_variables.csv" 
-    mapping_config = {
-        "knee_angle": "knee_flexion_angle_ipsi_rad",
-        "hip_torque": "hip_moment_contra_Nm"
-    }
+def test_detect_malformed_parquet_structure():
+    """Test detection of parquet files with malformed structure"""
+    # Given: Parquet file missing required columns
+    data = create_malformed_parquet(missing_columns=['subject_id', 'cycle_id'])
+    test_file = save_test_data(data, "malformed_structure.parquet")
     
-    # When: Converting with mapping configuration
-    result = converter.convert_dataset(input_file, output_file, "csv", mapping_config)
+    # When: Validating malformed structure
+    result = validator.validate_dataset(test_file)
     
-    # Then: Variables are properly mapped
-    assert result.success == True
-    data = pd.read_parquet(result.output_path)
-    assert 'knee_flexion_angle_ipsi_rad' in data.columns
-    assert 'hip_moment_contra_Nm' in data.columns
-    assert 'knee_angle' not in data.columns  # Original name removed
+    # Then: Structure validation fails with specific errors
+    assert result.is_valid == False
+    assert any("subject_id" in error for error in result.errors)
+    assert any("cycle_id" in error for error in result.errors)
 ```
 
-**Test: handle_missing_variables**
+**Test: validate_phase_indexing_exactly_150_points**
 ```python
-def test_handle_missing_variables_with_warnings():
-    """Test graceful handling of missing standard variables"""
-    # Given: Input file missing some standard variables
-    input_file = "test_data/incomplete_dataset.mat"
+def test_validate_phase_indexing_exactly_150_points():
+    """Test validation of correct phase indexing (exactly 150 points per cycle)"""
+    # Given: Phase dataset with exactly 150 points per cycle
+    data = create_test_phase_data(subjects=2, trials=3, cycles=5, points_per_cycle=150)
+    test_file = save_test_data(data, "correct_phase.parquet")
     
-    # When: Converting incomplete dataset
-    result = converter.convert_dataset(input_file, output_file, "matlab")
+    # When: Validating phase structure
+    result = validator.validate_dataset(test_file)
     
-    # Then: Conversion succeeds with warnings
-    assert result.success == True
-    assert len(result.warnings) > 0
-    assert any("missing" in warning.lower() for warning in result.warnings)
-    
-    # And: Available variables are converted properly
-    data = pd.read_parquet(result.output_path)
-    assert len(data.columns) > 0
+    # Then: Phase validation passes
+    assert result.is_valid == True
+    assert "phase_structure" in result.validation_summary
+    assert result.validation_summary["phase_structure"]["points_per_cycle"] == 150
 ```
 
-**Test: preserve_metadata**
+**Test: detect_incorrect_phase_points**
 ```python
-def test_preserve_original_metadata():
-    """Test original metadata preservation during conversion"""
-    # Given: Input file with metadata
-    input_file = "test_data/dataset_with_metadata.mat"
+def test_detect_incorrect_phase_points():
+    """Test detection of incorrect phase point counts (CRITICAL FAILURE MODE)"""
+    # Given: Phase dataset with wrong number of points per cycle
+    data = create_test_phase_data(subjects=1, trials=1, cycles=2, points_per_cycle=149)  # Should be 150
+    test_file = save_test_data(data, "incorrect_phase.parquet")
     
-    # When: Converting dataset
-    result = converter.convert_dataset(input_file, output_file, "matlab")
+    # When: Validating phase structure
+    result = validator.validate_dataset(test_file)
     
-    # Then: Original metadata is preserved
-    data = pd.read_parquet(result.output_path)
-    # Check for metadata columns or separate metadata file
-    assert 'source_metadata' in result.metadata
-    assert 'conversion_timestamp' in result.metadata
-    assert 'tool_version' in result.metadata
+    # Then: Validation fails with specific error
+    assert result.is_valid == False
+    assert any("150 points" in error for error in result.errors)
+    assert "phase_structure" in result.validation_summary
+    assert result.validation_summary["phase_structure"]["valid"] == False
+```
+
+#### Biomechanical Range Validation Tests - Priority 1 🔥
+
+**Test: validate_biomechanical_ranges_within_spec**
+```python
+def test_validate_biomechanical_ranges_within_spec():
+    """Test validation when all data is within specification ranges (QUALITY GATE)"""
+    # Given: Phase data with values within validation spec ranges
+    data = create_test_phase_data_within_ranges(task="walking")
+    test_file = save_test_data(data, "within_ranges.parquet")
+    
+    # When: Validating biomechanical ranges
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Range validation passes
+    assert result.is_valid == True
+    assert "range_validation" in result.validation_summary
+    assert result.validation_summary["range_validation"]["passed"] == True
+    assert result.validation_summary["range_validation"]["pass_rate"] >= 0.95
+```
+
+**Test: detect_range_violations**
+```python
+def test_detect_biomechanical_range_violations():
+    """Test detection of values outside specification ranges (CRITICAL DETECTION)"""
+    # Given: Phase data with values outside validation ranges
+    data = create_test_phase_data_with_outliers(task="walking")
+    test_file = save_test_data(data, "range_violations.parquet")
+    
+    # When: Validating biomechanical ranges
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Range violations detected with specific details
+    assert result.is_valid == False
+    assert any("range" in error.lower() for error in result.errors)
+    assert "range_validation" in result.validation_summary
+    
+    # And: Specific variables and violations identified
+    range_summary = result.validation_summary["range_validation"]
+    assert "failed_variables" in range_summary
+    assert len(range_summary["failed_variables"]) > 0
+```
+
+**Test: validate_multiple_tasks_in_single_file**
+```python
+def test_validate_multiple_tasks_in_single_file():
+    """Test validation of parquet files containing multiple tasks"""
+    # Given: Parquet file with walking and running data
+    walking_data = create_test_phase_data_within_ranges(task="walking")
+    running_data = create_test_phase_data_within_ranges(task="running")
+    combined_data = pd.concat([walking_data, running_data], ignore_index=True)
+    test_file = save_test_data(combined_data, "multi_task.parquet")
+    
+    # When: Validating multi-task dataset
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Each task is validated against its specific ranges
+    assert result.is_valid == True
+    assert "task_breakdown" in result.validation_summary
+    assert "walking" in result.validation_summary["task_breakdown"]
+    assert "running" in result.validation_summary["task_breakdown"]
+```
+
+#### Parquet Consistency Tests - Priority 1 🔥
+
+**Test: validate_data_types_and_formats**
+```python
+def test_validate_data_types_and_formats():
+    """Test validation of proper data types in parquet files"""
+    # Given: Parquet file with correct data types
+    data = create_test_data_with_correct_types()
+    test_file = save_test_data(data, "correct_types.parquet")
+    
+    # When: Validating data types
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Data type validation passes
+    assert result.is_valid == True
+    
+    # And: Specific type checks
+    data = pd.read_parquet(test_file)
+    assert data['subject_id'].dtype == 'object'  # String
+    assert data['phase'].dtype in ['float64', 'int64']  # Numeric
+    assert pd.api.types.is_numeric_dtype(data['knee_flexion_angle_ipsi_rad'])
+```
+
+**Test: detect_inconsistent_subject_trial_structure**
+```python
+def test_detect_inconsistent_subject_trial_structure():
+    """Test detection of inconsistent subject/trial/cycle structure"""
+    # Given: Parquet file with inconsistent ID structure
+    data = create_test_data_with_inconsistent_ids()
+    test_file = save_test_data(data, "inconsistent_ids.parquet")
+    
+    # When: Validating ID structure
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Inconsistencies detected
+    assert result.is_valid == False
+    assert any("subject_id" in error or "trial_id" in error for error in result.errors)
+```
+
+#### External Collaborator Integration Tests - Priority 1
+
+**Test: validate_external_matlab_conversion**
+```python
+def test_validate_parquet_from_external_matlab_conversion():
+    """Test validation of parquet files converted by external collaborators from MATLAB"""
+    # Given: Parquet file converted by external MATLAB script (potential quality issues)
+    test_file = "test_data/external_matlab_converted.parquet"
+    
+    # When: Validating externally converted file
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Validator catches any structural or range issues
+    # (This test verifies the validator works regardless of conversion source)
+    assert result is not None  # Should not crash
+    if not result.is_valid:
+        assert len(result.errors) > 0  # Should provide specific feedback
+        assert result.report_path.endswith('.md')  # Should generate report
+```
+
+**Test: validate_external_csv_conversion**
+```python
+def test_validate_parquet_from_external_csv_conversion():
+    """Test validation of parquet files converted by external collaborators from CSV"""
+    # Given: Parquet file from external CSV conversion (different naming conventions)
+    test_file = "test_data/external_csv_converted.parquet"
+    
+    # When: Validating externally converted file
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Validator provides clear feedback on any standard violations
+    assert result is not None
+    # Validator should identify any non-standard column names or structures
 ```
 
 #### Integration Tests - Priority 1
 
-**Test: end_to_end_conversion_workflow**
+**Test: generate_comprehensive_validation_report**
 ```python
-def test_complete_conversion_workflow():
-    """Test complete conversion workflow from raw data to validated output"""
-    # Given: Raw dataset file
-    input_file = "test_data/gtech_sample.mat"
+def test_generate_comprehensive_markdown_validation_report():
+    """Test generation of complete markdown validation report for parquet files"""
+    # Given: Mixed quality dataset (some good, some problematic data)
+    data = create_mixed_quality_phase_data()
+    test_file = save_test_data(data, "mixed_quality.parquet")
     
-    # When: Running complete conversion workflow
-    converter = DatasetConverter(error_handler)
-    result = converter.convert_dataset(input_file, output_file, "matlab")
+    # When: Running full validation
+    result = validator.validate_dataset(test_file, generate_plots=True)
     
-    # Then: Output is ready for validation
-    assert result.success == True
+    # Then: Complete markdown report generated
+    assert os.path.exists(result.report_path)
+    assert result.report_path.endswith('.md')
     
-    # And: Can be loaded by PhaseValidator
+    # And: Report contains expected sections for parquet file analysis
+    with open(result.report_path, 'r') as f:
+        report_content = f.read()
+    
+    assert "# Parquet Dataset Validation Report" in report_content
+    assert "## File Structure Analysis" in report_content
+    assert "## Phase Indexing Validation" in report_content
+    assert "## Biomechanical Range Validation" in report_content
+    assert "## Data Quality Summary" in report_content
+    assert "## Recommendations" in report_content
+    
+    # And: Plots are generated and referenced
+    assert len(result.plot_paths) > 0
+    assert all(os.path.exists(plot) for plot in result.plot_paths)
+```
+
+### External Conversion Script Integration Tests
+
+> **NOTE: We do not test conversion scripts themselves since they vary widely from external collaborators.
+> Instead, we test how well PhaseValidator handles various parquet outputs from different conversion approaches.**
+
+#### External Script Output Validation Tests - Priority 1
+
+**Test: validate_various_external_conversions**
+```python
+def test_validate_parquet_from_various_external_sources():
+    """Test PhaseValidator robustness with parquet files from different conversion sources"""
+    
+    # Test files representing different external conversion approaches
+    external_conversions = [
+        "test_data/external_matlab_script_output.parquet",
+        "test_data/external_python_csv_converter_output.parquet", 
+        "test_data/external_r_script_output.parquet",
+        "test_data/external_addbiomechanics_converter_output.parquet"
+    ]
+    
+    # When: Validating each external conversion output
     validator = PhaseValidator(spec_manager, error_handler)
-    validation_result = validator.validate_dataset(result.output_path)
-    assert validation_result is not None  # Should not crash
+    results = []
+    
+    for test_file in external_conversions:
+        result = validator.validate_dataset(test_file)
+        results.append(result)
+    
+    # Then: Validator provides clear feedback for each conversion approach
+    for i, result in enumerate(results):
+        assert result is not None, f"Validator crashed on {external_conversions[i]}"
+        
+        # Each result should have clear validation status
+        if not result.is_valid:
+            assert len(result.errors) > 0, f"Invalid file should have specific errors: {external_conversions[i]}"
+            assert result.report_path.endswith('.md'), f"Should generate markdown report: {external_conversions[i]}"
 ```
 
-#### Error Handling Tests - Priority 1
-
-**Test: invalid_input_file**
+**Test: handle_malformed_external_conversions**
 ```python
-def test_conversion_with_invalid_input_file():
-    """Test error handling for invalid input files"""
-    # Given: Non-existent input file
-    input_file = "nonexistent/path/file.mat"
+def test_handle_malformed_parquet_from_external_scripts():
+    """Test PhaseValidator handling of malformed parquet files from external scripts"""
     
-    # When: Attempting conversion
-    with pytest.raises(ConversionError) as exc_info:
-        converter.convert_dataset(input_file, output_file, "matlab")
+    # Test files with common issues from external conversion scripts
+    problematic_conversions = [
+        "test_data/external_missing_columns.parquet",  # Missing required columns
+        "test_data/external_wrong_phase_count.parquet",  # Wrong number of phase points
+        "test_data/external_incorrect_datatypes.parquet",  # Wrong data types
+        "test_data/external_inconsistent_structure.parquet"  # Inconsistent subject/trial structure
+    ]
     
-    # Then: Clear error message provided
-    assert "not found" in str(exc_info.value).lower()
+    # When: Validating problematic external conversions
+    for test_file in problematic_conversions:
+        result = validator.validate_dataset(test_file)
+        
+        # Then: Validator gracefully handles issues and provides helpful feedback
+        assert result is not None, f"Validator should not crash on malformed file: {test_file}"
+        assert result.is_valid == False, f"Malformed file should fail validation: {test_file}"
+        assert len(result.errors) > 0, f"Should provide specific error messages: {test_file}"
+        
+        # And: Errors are helpful for external collaborators
+        error_text = ' '.join(result.errors).lower()
+        assert any(keyword in error_text for keyword in 
+                  ['column', 'structure', 'phase', 'points', 'format']), \
+               f"Errors should be descriptive for external users: {test_file}"
 ```
 
-**Test: corrupted_input_file**
-```python
-def test_conversion_with_corrupted_file():
-    """Test error handling for corrupted input files"""
-    # Given: Corrupted MATLAB file
-    input_file = "test_data/corrupted.mat"
-    
-    # When: Attempting conversion  
-    with pytest.raises(ConversionError) as exc_info:
-        converter.convert_dataset(input_file, output_file, "matlab")
-    
-    # Then: Specific corruption error reported
-    assert "corrupted" in str(exc_info.value).lower() or "invalid format" in str(exc_info.value).lower()
-```
-
-### PhaseValidator Tests (UC-C02)
-
-#### Unit Tests - Priority 1
-
-**Test: validate_phase_structure**
+### TimeValidator Tests (UC-C02)
 ```python
 def test_validate_correct_phase_structure():
     """Test validation of correctly structured phase data"""
@@ -748,41 +926,50 @@ def test_tune_ranges_with_large_dataset_collection():
 
 ### Complete Dataset Processing Workflow
 
-**Test: raw_to_validated_dataset_workflow**
+**Test: external_conversion_to_validated_workflow**
 ```python
-def test_complete_raw_to_validated_workflow():
-    """Test complete workflow from raw data to validated, assessed dataset"""
-    # Given: Raw MATLAB dataset
-    raw_file = "test_data/raw_gait_data.mat"
+def test_complete_external_conversion_to_validated_workflow():
+    """Test complete workflow from external conversion output to validated, assessed dataset"""
+    # Given: Parquet file produced by external conversion script
+    external_converted_file = "test_data/external_collaborator_output.parquet"
     
-    # When: Running complete processing workflow
-    # Step 1: Convert raw data
-    converter = DatasetConverter(error_handler)
-    conversion_result = converter.convert_dataset(raw_file, "converted.parquet", "matlab")
-    
-    # Step 2: Validate converted data  
+    # When: Running complete validation and assessment workflow
+    # Step 1: Validate externally converted data  
     validator = PhaseValidator(spec_manager, error_handler)
-    validation_result = validator.validate_dataset(conversion_result.output_path)
+    validation_result = validator.validate_dataset(external_converted_file)
     
-    # Step 3: Assess quality
-    assessor = QualityAssessor(spec_manager)
-    quality_result = assessor.assess_quality(conversion_result.output_path)
+    # Step 2: Assess quality (if validation passes)
+    if validation_result.is_valid:
+        assessor = QualityAssessor(spec_manager)
+        quality_result = assessor.assess_quality(external_converted_file)
+        
+        # Step 3: Generate visualizations
+        visualizer = ValidationSpecVisualizer(spec_manager)
+        plot_result = visualizer.generate_validation_plots(
+            pd.read_parquet(external_converted_file), "plots/"
+        )
+    else:
+        quality_result = None
+        plot_result = None
     
-    # Step 4: Generate visualizations
-    visualizer = ValidationSpecVisualizer(spec_manager)
-    plot_result = visualizer.generate_validation_plots(
-        pd.read_parquet(conversion_result.output_path), "plots/"
-    )
-    
-    # Then: Complete workflow succeeds
-    assert conversion_result.success == True
+    # Then: Workflow provides clear feedback regardless of external conversion quality
     assert validation_result is not None
-    assert quality_result is not None
-    assert plot_result.success == True
-    
-    # And: All outputs are properly linked
     assert os.path.exists(validation_result.report_path)
-    assert len(plot_result.generated_plots) > 0
+    
+    # And: If data is valid, complete analysis is performed
+    if validation_result.is_valid:
+        assert quality_result is not None
+        assert plot_result.success == True
+        assert len(plot_result.generated_plots) > 0
+    
+    # And: If data is invalid, clear feedback is provided to external collaborator
+    else:
+        assert len(validation_result.errors) > 0
+        with open(validation_result.report_path, 'r') as f:
+            report = f.read()
+        # Report should be helpful for external collaborators
+        assert any(keyword in report.lower() for keyword in 
+                  ['structure', 'columns', 'phase', 'requirements', 'fix'])
 ```
 
 ### Specification Management Workflow
