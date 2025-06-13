@@ -132,7 +132,7 @@ python manage_releases.py --version 1.2.0 --changelog changes.md
 **Architecture Context**:
 - **Future CLI Architecture**: [`08_c4_component_future_cli.md`](08_c4_component_future_cli.md)
 - **User Journey Maps**: [`03_user_journey_maps.md`](03_user_journey_maps.md)
-- **Class Design**: [`10_class_design_uml.md`](10_class_design_uml.md)
+- **Class Design**: [`10_uml_class_design.md`](10_uml_class_design.md)
 
 ---
 

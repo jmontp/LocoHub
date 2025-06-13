@@ -117,7 +117,7 @@
 
 *Use when*: Implementing specific components, understanding detailed interfaces
 
-#### `10_class_design_uml.md`
+#### `10_uml_class_design.md`
 **Complete UML class diagrams and relationships**
 - Core component class structures
 - Interface and abstract base classes
