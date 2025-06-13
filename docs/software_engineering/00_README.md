@@ -73,23 +73,23 @@
 
 ### **System Architecture**
 
-#### `05_system_context_diagrams.md`
+#### `05_c4_system_context_diagrams.md`
 **High-level system overview and user interactions**
 - Progressive detail levels: Simple User Split → Data Flow → Intermediate Detail
-- 90/10 user population visualization
+- 90/9/1 user population visualization
 - External system boundaries and interfaces
 
 *Use when*: Explaining system to stakeholders, onboarding new team members
 
-#### `06_container_architecture.md`
+#### `06_c4_container_architecture.md`
 **System containers and major component relationships**
-- Data processing containers, validation systems, user interfaces
+- Current and future container architectures
+- Complete CLI entry points organized by user role
 - Technology choices and container responsibilities
-- Integration patterns between major components
 
 *Use when*: Understanding system boundaries, planning deployments
 
-#### `07_component_current_validation.md`
+#### `07_c4_component_current_validation.md`
 **Current validation system component details**
 - Existing validation workflow components
 - Current entry points and library structure
@@ -97,7 +97,7 @@
 
 *Use when*: Working with current validation system, understanding existing architecture
 
-#### `08_component_future_cli.md`
+#### `08_c4_component_future_cli.md`
 **Future user-centric CLI architecture design**
 - Clean CLI entry points with supporting libraries
 - User-friendly tool organization
@@ -109,7 +109,7 @@
 
 ### **Technical Specifications**
 
-#### `09_detailed_component_specs.md`
+#### `09_c4_detailed_component_specs.md`
 **C4 Level 4 detailed component specifications**
 - Critical entry points: convert_dataset.py, validate_phase_data.py, validate_time_data.py, create_benchmarks.py
 - Component responsibilities and interfaces

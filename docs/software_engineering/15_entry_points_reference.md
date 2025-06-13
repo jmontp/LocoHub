@@ -125,12 +125,12 @@ python manage_releases.py --version 1.2.0 --changelog changes.md
 
 **Detailed Documentation**:
 - **User Stories**: [`04_user_stories_acceptance_criteria.md`](04_user_stories_acceptance_criteria.md)
-- **Technical Specs**: [`09_detailed_component_specs.md`](09_detailed_component_specs.md)  
+- **Technical Specs**: [`09_c4_detailed_component_specs.md`](09_c4_detailed_component_specs.md)  
 - **Interface Standards**: [`13_interface_standards.md`](13_interface_standards.md)
 - **Test Specifications**: [`12_test_specifications.md`](12_test_specifications.md)
 
 **Architecture Context**:
-- **Future CLI Architecture**: [`08_component_future_cli.md`](08_component_future_cli.md)
+- **Future CLI Architecture**: [`08_c4_component_future_cli.md`](08_c4_component_future_cli.md)
 - **User Journey Maps**: [`03_user_journey_maps.md`](03_user_journey_maps.md)
 - **Class Design**: [`10_class_design_uml.md`](10_class_design_uml.md)
 
