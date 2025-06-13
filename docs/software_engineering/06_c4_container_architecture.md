@@ -223,160 +223,154 @@ graph TD
 ```mermaid
 %%{init: {'theme': 'dark'}}%%
 graph TD
-    subgraph "Dataset Contributors (10% User Population)"
+    subgraph "Contributors"
         DC["Dataset Curators (5%)<br/><font size='-2'>Person</font><br/><font size='-1'>Convert and validate new datasets</font>"]
         VS["Validation Specialists (4%)<br/><font size='-2'>Person</font><br/><font size='-1'>Quality assurance and standards</font>"]
         SA["System Administrators (1%)<br/><font size='-2'>Person</font><br/><font size='-1'>Releases and benchmarks</font>"]
     end
 
-    subgraph "Contributor CLI Tools"
-        style ContributorTools fill:#00000000,stroke:#e76f51,stroke-width:3px,stroke-dasharray:5
+    subgraph "CLI Entry Points (validation/)"
+        style CLIEntryPoints fill:#00000000,stroke:#e76f51,stroke-width:3px,stroke-dasharray:5
         
         subgraph "Data Conversion & Validation"
-            convert_tool["convert_dataset.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Convert raw data to parquet</font>"]
-            validate_phase["validate_phase_data.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Validate phase-indexed data</font>"]
-            validate_time["validate_time_data.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Validate time-indexed data</font>"]
+            convert_dataset["convert_dataset.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Convert raw data to parquet format</font>"]
+            validate_phase["validate_phase_data.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Validate phase-indexed datasets</font>"]
+            validate_time["validate_time_data.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Validate time-indexed datasets</font>"]
         end
 
         subgraph "Quality Assurance"
-            specs_tool["manage_validation_specs.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Edit validation rules</font>"]
-            tune_tool["auto_tune_ranges.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Optimize validation ranges</font>"]
-            compare_tool["compare_datasets.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Cross-dataset analysis</font>"]
+            manage_specs["manage_validation_specs.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Edit validation rules interactively</font>"]
+            auto_tune["auto_tune_ranges.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Optimize validation ranges statistically</font>"]
+            compare_datasets["compare_datasets.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Cross-dataset analysis and comparison</font>"]
         end
 
         subgraph "Release Management"
-            benchmark_tool["create_benchmarks.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Create ML benchmarks</font>"]
-            publish_tool["publish_datasets.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Prepare public releases</font>"]
-            plots_tool["generate_validation_plots.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Create validation visualizations</font>"]
+            create_benchmarks["create_benchmarks.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Create ML train/test splits</font>"]
+            publish_datasets["publish_datasets.py<br/><font size='-2'>CLI Container</font><br/><font size='-1'>Prepare datasets for public release</font>"]
         end
     end
 
-    subgraph "Validation Infrastructure"
-        style ValidationInfra fill:#00000000,stroke:#aaa,stroke-width:1px,stroke-dasharray:3
+    subgraph "Validation Engines (lib/validation/)"
+        style ValidationEngines fill:#00000000,stroke:#6baed6,stroke-width:2px,stroke-dasharray:3
         
-        subgraph "Core Engines"
-            locomotion_core["LocomotionData Core<br/><font size='-2'>Container</font><br/><font size='-1'>Data loading and manipulation</font>"]
-            phase_validator["PhaseValidator<br/><font size='-2'>Container</font><br/><font size='-1'>Phase validation engine</font>"]
-            time_validator["TimeValidator<br/><font size='-2'>Container</font><br/><font size='-1'>Time validation engine</font>"]
+        subgraph "Core Validation"
+            phase_validator["PhaseValidator<br/><font size='-2'>Container</font><br/><font size='-1'>Phase validation logic and reporting</font>"]
+            time_validator["TimeValidator<br/><font size='-2'>Container</font><br/><font size='-1'>Time validation logic and reporting</font>"]
+            spec_manager["SpecificationManager<br/><font size='-2'>Container</font><br/><font size='-1'>Validation rule management</font>"]
         end
 
-        subgraph "Support Systems"
-            spec_manager["SpecificationManager<br/><font size='-2'>Container</font><br/><font size='-1'>Validation rule management</font>"]
-            benchmark_engine["BenchmarkCreator<br/><font size='-2'>Container</font><br/><font size='-1'>ML benchmark engine</font>"]
-            plot_engine["PlotEngine<br/><font size='-2'>Container</font><br/><font size='-1'>Visualization generator</font>"]
+        subgraph "Analysis & Visualization"
+            plot_engine["PlotEngine<br/><font size='-2'>Container</font><br/><font size='-1'>Visualization generation engine</font>"]
+            benchmark_engine["BenchmarkEngine<br/><font size='-2'>Container</font><br/><font size='-1'>ML benchmark creation engine</font>"]
         end
     end
 
-    subgraph "Internal Data & Configuration"
+    subgraph "Core Infrastructure (lib/core/)"
+        locomotion_core["LocomotionData Core<br/><font size='-2'>Container</font><br/><font size='-1'>Data loading and manipulation engine</font>"]
+        feature_constants["FeatureConstants<br/><font size='-2'>Container</font><br/><font size='-1'>Variable definitions and mappings</font>"]
+    end
+
+    subgraph "Data Storage & Configuration"
         direction LR
         subgraph "Input/Output Data"
-            raw_data["Raw Datasets<br/><font size='-1'>Input formats (MAT, CSV, B3D)</font>"]
-            parquet_output["Validated Parquet<br/><font size='-1'>Quality-assured outputs</font>"]
-            benchmark_output["ML Benchmarks<br/><font size='-1'>Train/test splits</font>"]
+            raw_datasets["Raw Datasets<br/><font size='-1'>MAT, CSV, B3D formats</font>"]
+            parquet_datasets["Validated Parquet<br/><font size='-1'>Quality-assured datasets</font>"]
+            benchmark_datasets["ML Benchmarks<br/><font size='-1'>Train/test splits</font>"]
         end
         
         subgraph "Configuration & Reports"
-            validation_specs["Validation Specs<br/><font size='-1'>Rules and acceptable ranges</font>"]
-            dataset_validation_reports["Dataset Validation Reports<br/><font size='-1'>Phase and time validation results</font>"]
-            plots_output["Validation Plots<br/><font size='-1'>Visual verification outputs</font>"]
+            validation_specs["Validation Specs<br/><font size='-1'>Rules and ranges (includes plots)</font>"]
+            validation_reports["Dataset Validation Reports<br/><font size='-1'>Phase and time results (includes plots)</font>"]
         end
     end
 
-    %% User to CLI Tool Relationships
-    DC -- "Uses" --> convert_tool
+    %% User to CLI Relationships
+    DC -- "Uses" --> convert_dataset
     DC -- "Uses" --> validate_phase
     DC -- "Uses" --> validate_time
-    DC -- "Uses" --> plots_tool
 
-    VS -- "Uses" --> specs_tool
-    VS -- "Uses" --> tune_tool
-    VS -- "Uses" --> compare_tool
-
-    SA -- "Uses" --> benchmark_tool
-    SA -- "Uses" --> publish_tool
-
-    %% Direct user access to validation specs (manual editing)
+    VS -- "Uses" --> manage_specs
+    VS -- "Uses" --> auto_tune
+    VS -- "Uses" --> compare_datasets
     VS -- "Directly edits" --> validation_specs
 
-    %% CLI Tools to Engines
-    convert_tool -- "Uses" --> locomotion_core
+    SA -- "Uses" --> create_benchmarks
+    SA -- "Uses" --> publish_datasets
+
+    %% CLI to Engine Relationships
+    convert_dataset -- "Uses" --> locomotion_core
     validate_phase -- "Uses" --> phase_validator
     validate_time -- "Uses" --> time_validator
-    specs_tool -- "Uses" --> spec_manager
-    tune_tool -- "Uses" --> spec_manager
-    tune_tool -- "Uses" --> locomotion_core
-    compare_tool -- "Uses" --> locomotion_core
-    compare_tool -- "Uses" --> plot_engine
-    benchmark_tool -- "Uses" --> benchmark_engine
-    publish_tool -- "Uses" --> benchmark_output
-    plots_tool -- "Uses" --> plot_engine
+    manage_specs -- "Uses" --> spec_manager
+    auto_tune -- "Uses" --> spec_manager
+    auto_tune -- "Uses" --> locomotion_core
+    compare_datasets -- "Uses" --> locomotion_core
+    compare_datasets -- "Uses" --> plot_engine
+    create_benchmarks -- "Uses" --> benchmark_engine
+    publish_datasets -- "Uses" --> benchmark_datasets
 
-    %% Engine Dependencies - All data access through LocomotionData Core
+    %% Engine Dependencies - Clean Data Flow
     phase_validator -- "Uses" --> locomotion_core
     time_validator -- "Uses" --> locomotion_core
-    benchmark_engine -- "Uses" --> locomotion_core
     plot_engine -- "Uses" --> locomotion_core
-    plot_engine -- "Gets specs from" --> spec_manager
+    benchmark_engine -- "Uses" --> locomotion_core
     
-    %% Validation engines get specs through SpecificationManager (not directly)
+    %% Specification Access
     phase_validator -- "Gets specs from" --> spec_manager
     time_validator -- "Gets specs from" --> spec_manager
-    
-    %% Validation engines use PlotEngine for report generation
-    phase_validator -- "Uses for reports" --> plot_engine
-    time_validator -- "Uses for reports" --> plot_engine
+    plot_engine -- "Gets specs from" --> spec_manager
     
     spec_manager -- "Manages" --> validation_specs
     spec_manager -- "Triggers redraw" --> plot_engine
 
-    %% Core Data Access - Single point of data loading
-    locomotion_core -- "Loads" --> parquet_output
-    locomotion_core -- "References" --> feature_lib
+    %% Core Infrastructure
+    locomotion_core -- "Loads" --> parquet_datasets
+    locomotion_core -- "References" --> feature_constants
 
     %% Data Flow
-    convert_tool -- "Reads" --> raw_data
-    convert_tool -- "Creates" --> parquet_output
+    convert_dataset -- "Reads" --> raw_datasets
+    convert_dataset -- "Creates" --> parquet_datasets
     
-    %% Validation specs accessed only through SpecificationManager (not directly by tools)
-    
-    %% All output generation done by engines (not CLI tools directly)
-    phase_validator -- "Generates" --> dataset_validation_reports
-    time_validator -- "Generates" --> dataset_validation_reports
-    plot_engine -- "Generates" --> plots_output
-    benchmark_engine -- "Creates" --> benchmark_output
+    %% Output Generation by Engines
+    phase_validator -- "Generates" --> validation_reports
+    time_validator -- "Generates" --> validation_reports
+    phase_validator -- "Uses for reports" --> plot_engine
+    time_validator -- "Uses for reports" --> plot_engine
+    benchmark_engine -- "Creates" --> benchmark_datasets
 
     %% Styling
-    %% Contributor Users
+    %% Users
     style DC fill:#e76f51,stroke:#d62828,stroke-width:2px,color:#ffffff
     style VS fill:#e76f51,stroke:#d62828,stroke-width:2px,color:#ffffff
     style SA fill:#f4a261,stroke:#e76f51,stroke-width:2px,color:#ffffff
-
-    %% CLI Tools
-    style convert_tool fill:#e76f51,color:white
+    
+    %% CLI Entry Points
+    style convert_dataset fill:#e76f51,color:white
     style validate_phase fill:#e76f51,color:white
     style validate_time fill:#e76f51,color:white
-    style specs_tool fill:#e76f51,color:white
-    style tune_tool fill:#e76f51,color:white
-    style compare_tool fill:#e76f51,color:white
-    style benchmark_tool fill:#e76f51,color:white
-    style publish_tool fill:#e76f51,color:white
-    style plots_tool fill:#e76f51,color:white
-
-    %% Validation Infrastructure
-    style locomotion_core fill:#438dd5,color:white
+    style manage_specs fill:#e76f51,color:white
+    style auto_tune fill:#e76f51,color:white
+    style compare_datasets fill:#e76f51,color:white
+    style create_benchmarks fill:#e76f51,color:white
+    style publish_datasets fill:#e76f51,color:white
+    
+    %% Validation Engines
     style phase_validator fill:#6baed6,color:white
     style time_validator fill:#6baed6,color:white
     style spec_manager fill:#6baed6,color:white
-    style benchmark_engine fill:#96c93d,color:white
     style plot_engine fill:#96c93d,color:white
+    style benchmark_engine fill:#96c93d,color:white
+    
+    %% Core Infrastructure
+    style locomotion_core fill:#438dd5,color:white
+    style feature_constants fill:#438dd5,color:white
 
     %% Data Storage
-    style raw_data fill:#707070,color:white
-    style parquet_output fill:#707070,color:white
-    style benchmark_output fill:#707070,color:white
+    style raw_datasets fill:#707070,color:white
+    style parquet_datasets fill:#707070,color:white
+    style benchmark_datasets fill:#707070,color:white
     style validation_specs fill:#707070,color:white
-    style dataset_validation_reports fill:#707070,color:white
-    style plots_output fill:#707070,color:white
+    style validation_reports fill:#707070,color:white
     
     linkStyle default stroke:white
 ```
