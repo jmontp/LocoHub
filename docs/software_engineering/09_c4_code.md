@@ -42,32 +42,77 @@ class PhaseValidator:
         MUST perform stride-level validation and filtering
         MUST show which strides are kept vs deleted in validation report
         MUST report stride pass rate as quality metric
-        MUST only fail dataset if NO strides pass validation
+        MUST only fail dataset if NO strides pass validation AND basic structure is invalid
         MUST create visual validation plots for manual review
         MUST export validation summary with stride statistics
+        MUST use task-specific and phase-specific validation ranges from validation specifications
+        MUST read tasks from data['task'] column
+        MUST validate against known tasks from feature_constants
+        MUST handle unknown tasks gracefully (warn but continue with available specs)
+        MUST track standard specification coverage
+        MUST handle partial failures gracefully (report but continue)
         
         Behavioral Contract:
         - Validates file accessibility and basic structure
+        - Detects tasks from data['task'] column and validates against feature_constants
         - Checks phase indexing (exactly 150 points per cycle) for each stride
-        - Validates biomechanical ranges against specifications for each stride
+        - Retrieves task-specific validation ranges from SpecificationManager
+        - Validates biomechanical ranges against task and phase-specific specifications for each stride
+        - Tracks which standard specification variables are available vs missing
         - Filters strides: keeps valid strides, marks invalid strides for deletion
         - Generates markdown report showing kept vs deleted strides with reasons
         - Reports stride-level statistics (total, kept, deleted, pass rate)
-        - Only fails if zero strides pass validation
+        - Reports standard specification coverage and validation scope
+        - Only fails if zero strides pass validation AND structure is fundamentally broken
         
-        Returns: PhaseValidationResult with stride filtering results, pass rate, report path
-        Raises: ValidationError if file cannot be processed at all
+        Returns: PhaseValidationResult with stride filtering results, coverage tracking, report path
+        Raises: ValidationError only for catastrophic failures (file corruption, etc.)
         """
     
-    def filter_valid_strides(self, data: pd.DataFrame) -> StrideFilterResult:
+    def filter_valid_strides(self, data: pd.DataFrame, available_variables: List[str] = None) -> StrideFilterResult:
         """
-        Filter dataset to keep only valid strides based on validation specifications.
+        Filter dataset to keep only valid strides based on task-specific validation specifications.
         
-        MUST identify valid vs invalid strides
-        MUST provide detailed reasons for stride rejection
+        MUST identify valid vs invalid strides using task and phase-specific ranges
+        MUST check each stride against available validation specifications
+        MUST validate at 0%, 25%, 50%, 75% phases for each stride
+        MUST provide detailed reasons for stride rejection with specific variables and phases
         MUST return filtered dataset with only valid strides
+        MUST handle partial specification coverage gracefully
+        MUST only validate variables that exist in both data and specifications
         
-        Returns: StrideFilterResult with filtered data, stride statistics, rejection reasons
+        Behavioral Contract:
+        - Groups data by task from data['task'] column for task-specific validation
+        - For each stride, validates available variables at key phases (0%, 25%, 50%, 75%)
+        - Uses SpecificationManager to get task-specific upper/lower bounds
+        - Skips validation for variables not in standard specification or missing from data
+        - Marks stride as invalid if ANY available variable at ANY phase violates bounds
+        - Provides rejection reasons specifying variable, phase, value, and expected range
+        - Tracks which variables were validated vs skipped
+        
+        Returns: StrideFilterResult with filtered data, stride statistics, rejection reasons, coverage info
+        """
+    
+    def get_available_tasks(self, data: pd.DataFrame) -> List[str]:
+        """
+        Get unique tasks from dataset, filtered to known standard tasks.
+        
+        MUST read from data['task'] column
+        MUST filter to tasks known in feature_constants
+        MUST warn about unknown tasks but continue processing
+        
+        Returns: List of valid task names found in dataset
+        """
+    
+    def analyze_standard_spec_coverage(self, data: pd.DataFrame) -> Dict[str, Dict[str, bool]]:
+        """
+        Analyze which standard specification variables are available in the dataset.
+        
+        MUST check against feature_constants standard variables
+        MUST organize by task and variable
+        MUST identify missing vs available variables
+        
+        Returns: Dictionary of task -> variable -> present(bool)
         """
     
     def validate_batch(self, file_paths: List[str], parallel: bool = True) -> BatchValidationResult:
@@ -123,7 +168,8 @@ class ValidationSpecVisualizer:
         """Dependencies: SpecificationManager for validation ranges"""
     
     def generate_validation_plots(self, data: pd.DataFrame, output_dir: str, 
-                                 plot_types: List[str] = None) -> PlotGenerationResult:
+                                 plot_types: List[str] = None, 
+                                 available_variables: List[str] = None) -> PlotGenerationResult:
         """
         Generate static validation plots with data overlaid on specification ranges.
         
@@ -131,15 +177,22 @@ class ValidationSpecVisualizer:
         MUST overlay validation ranges on visualizations
         MUST export plots in publication-ready formats
         MUST support batch generation for multiple tasks and subjects
+        MUST plot only variables that exist in both data and standard specification
+        MUST gracefully skip missing variables with warnings
+        MUST adapt plot layouts based on available data
+        MUST include coverage summary in plot titles/annotations
         
         Behavioral Contract:
-        - Creates forward kinematics plots at key phases (0%, 25%, 50%, 75%)
-        - Generates phase filter plots for kinematic and kinetic variables
-        - Overlays validation ranges as reference bands
+        - Creates forward kinematics plots at key phases (0%, 25%, 50%, 75%) for available variables
+        - Generates phase filter plots for kinematic and kinetic variables present in data
+        - Overlays validation ranges as reference bands for validated variables only
         - Exports in high-quality PNG format (150 DPI minimum)
         - Organizes plots by task and variable category
+        - Adapts plot grid layouts based on number of available variables
+        - Annotates plots with coverage information (e.g., "3/6 kinematic variables")
+        - Logs warnings for missing standard variables
         
-        Returns: PlotGenerationResult with generated plot paths
+        Returns: PlotGenerationResult with generated plot paths and coverage summary
         """
     
     def generate_validation_gifs(self, data: pd.DataFrame, output_dir: str) -> GifGenerationResult:
@@ -152,13 +205,23 @@ class ValidationSpecVisualizer:
         Returns: GifGenerationResult with generated animation paths
         """
     
-    def generate_validation_spec_plots(self, tasks: List[str], output_dir: str) -> PlotGenerationResult:
+    def generate_validation_spec_plots(self, tasks: List[str], output_dir: str, 
+                                      variables_subset: List[str] = None) -> PlotGenerationResult:
         """
         Generate plots showing validation specification ranges without data.
         
         MUST visualize validation ranges for specified tasks
         MUST show acceptable biomechanical ranges for each variable
         MUST create reference plots for specification documentation
+        MUST handle partial variable coverage when subset is specified
+        MUST adapt plot layouts based on available variables
+        
+        Behavioral Contract:
+        - Generates specification range plots for all standard variables by default
+        - Filters to variables_subset if provided
+        - Creates task-specific range visualizations
+        - Adapts plot layouts based on number of variables
+        - Annotates plots with variable coverage information
         
         Returns: PlotGenerationResult with specification visualization paths
         """
@@ -187,34 +250,50 @@ class QualityAssessor:
         """
         Generate quality report focusing on validation spec compliance.
         
-        MUST calculate coverage statistics (subjects, tasks, gait cycles)
-        MUST identify bad strides based on validation spec range violations
-        MUST generate biomechanical quality scores based on stride pass rate
+        MUST calculate coverage statistics (subjects, tasks, gait cycles, total strides)
+        MUST identify bad strides based on task and phase-specific validation spec range violations
+        MUST generate biomechanical quality scores based on stride-level compliance rate
         MUST export quality metrics for tracking over time
         
         Behavioral Contract:
-        - Calculates subject, task, and stride coverage statistics
-        - Identifies strides that violate validation specification ranges
-        - Scores quality based on percentage of strides that pass validation
+        - Calculates subject, task, and stride-level coverage statistics
+        - Identifies individual strides that violate task-specific validation specification ranges
+        - Scores quality based on percentage of strides that pass task and phase-specific validation
         - Flags systematic violations and outliers at stride level
-        - Generates exportable quality metrics including stride pass rates
+        - Generates exportable quality metrics including stride compliance rates and stride pass rates
         
-        Returns: QualityAssessmentResult with coverage, stride pass rates, rejected strides
+        Returns: QualityAssessmentResult with coverage, stride compliance rates, rejected strides
         """
     
     def identify_bad_strides(self, data: pd.DataFrame, task: str) -> List[Dict]:
         """
-        Identify individual strides that violate validation specifications.
+        Identify individual strides that violate task-specific validation specifications.
         
-        MUST check each stride against validation spec ranges
-        MUST identify specific variables and values that are out of range
-        MUST provide reasons for stride rejection
+        MUST check each stride against task and phase-specific validation spec ranges
+        MUST identify specific variables, phases, and values that are out of range
+        MUST provide detailed reasons for stride rejection with expected ranges
         
-        Returns: List of bad strides with violation details and rejection reasons
+        Args:
+            data: Phase-indexed dataset with stride-level data
+            task: Task name for task-specific validation ranges
+        
+        Returns: List of bad strides with violation details, task context, and rejection reasons
         """
     
-    def calculate_stride_pass_rate(self, data: pd.DataFrame) -> float:
-        """Calculate stride pass rate based on validation specifications"""
+    def calculate_stride_compliance_score(self, data: pd.DataFrame, task: str) -> float:
+        """
+        Calculate stride-level compliance score based on task-specific validation specifications.
+        
+        MUST evaluate compliance at individual stride level 
+        MUST use task-specific validation ranges for accurate assessment
+        MUST consider phase-specific validation for each stride
+        
+        Args:
+            data: Phase-indexed dataset
+            task: Task name for task-specific validation
+            
+        Returns: Float between 0.0 and 1.0 representing stride compliance rate
+        """
 ```
 
 ### DatasetComparator - Multi-Dataset Comparison (UC-V02)
@@ -499,21 +578,45 @@ class ConfigurationManager:
         MUST load ranges from standard specification files
         MUST support layered configuration (user overrides > defaults)
         MUST cache configurations for performance
+        MUST parse task and phase-specific ranges from validation_expectations files
         
         Behavioral Contract:
-        - Loads from docs/standard_spec/ markdown files
+        - Loads from docs/standard_spec/validation_expectations_kinematic.md and kinetic files
+        - Parses task-specific tables with phase-specific upper/lower bounds (0%, 25%, 50%, 75%)
         - Supports user configuration overrides
-        - Caches parsed configurations
-        - Returns structured range data by task and variable
+        - Caches parsed configurations for performance
+        - Returns structured range data by task, variable, and phase
         
-        Returns: Dictionary of validation ranges organized by task and variable
+        Returns: Dictionary of validation ranges organized by task, variable, and phase (0%, 25%, 50%, 75%)
         """
     
     def get_task_ranges(self, task: str) -> Dict:
-        """Get validation ranges for a specific task"""
+        """
+        Get validation ranges for a specific task.
+        
+        MUST return phase-specific ranges for the specified task
+        MUST include both kinematic and kinetic validation ranges
+        
+        Returns: Dictionary with variable -> phase -> {min, max} structure
+        Example: {"knee_flexion_angle_ipsi_rad": {"0%": {"min": -0.1, "max": 0.2}, "25%": {...}}}
+        """
     
-    def get_variable_range(self, task: str, variable: str) -> Dict:
-        """Get validation range for a specific variable in a task"""
+    def get_variable_range(self, task: str, variable: str, phase: str = None) -> Dict:
+        """
+        Get validation range for a specific variable in a task.
+        
+        MUST return phase-specific ranges if phase is specified
+        MUST return all phases if phase is None
+        
+        Args:
+            task: Task name (walking, running, etc.)
+            variable: Variable name (knee_flexion_angle_ipsi_rad, etc.)
+            phase: Optional phase ("0%", "25%", "50%", "75%")
+        
+        Returns: 
+            If phase specified: {"min": value, "max": value}
+            If phase None: {"0%": {"min": val, "max": val}, "25%": {...}, ...}
+        """
     
     def update_ranges(self, new_ranges: Dict) -> None:
         """Update validation ranges with backup and version control"""
@@ -688,9 +791,11 @@ class ConversionResult:
 
 @dataclass
 class PhaseValidationResult:
-    """Result of phase-indexed dataset validation with stride-level filtering"""
-    is_valid: bool  # True if ANY strides pass validation
+    """Result of phase-indexed dataset validation with stride-level filtering and coverage tracking"""
+    is_valid: bool  # True if ANY strides pass validation AND basic structure is valid
     file_path: str
+    
+    # Stride filtering results
     total_strides: int = 0
     valid_strides: int = 0
     invalid_strides: int = 0
@@ -698,8 +803,21 @@ class PhaseValidationResult:
     kept_stride_ids: List[str] = field(default_factory=list)  # IDs of strides to keep
     deleted_stride_ids: List[str] = field(default_factory=list)  # IDs of strides to delete
     stride_rejection_reasons: Dict[str, List[str]] = field(default_factory=dict)  # stride_id -> reasons
-    errors: List[str] = field(default_factory=list)  # File-level errors only
-    warnings: List[str] = field(default_factory=list)
+    
+    # Coverage and scope tracking
+    detected_tasks: List[str] = field(default_factory=list)  # Tasks found in data
+    validated_tasks: List[str] = field(default_factory=list)  # Tasks with available specs
+    skipped_tasks: List[str] = field(default_factory=list)   # Tasks without specs
+    standard_spec_coverage: Dict[str, Dict[str, bool]] = field(default_factory=dict)  # task -> variable -> present
+    available_variables: List[str] = field(default_factory=list)  # Variables present in dataset
+    missing_standard_variables: List[str] = field(default_factory=list)  # Standard variables missing
+    validation_coverage: Dict[str, float] = field(default_factory=dict)  # task -> % of standard variables validated
+    validation_scope: str = ""  # "full", "partial", "minimal"
+    
+    # Reports and outputs
+    errors: List[str] = field(default_factory=list)  # Catastrophic errors only
+    warnings: List[str] = field(default_factory=list)  # Missing variables, unknown tasks, etc.
+    recommendations: List[str] = field(default_factory=list)  # Actionable next steps
     report_path: str = ""  # Path to markdown report
     plot_paths: List[str] = field(default_factory=list)
     validation_summary: Dict = field(default_factory=dict)
@@ -716,7 +834,7 @@ class TimeValidationResult:
 
 @dataclass
 class StrideFilterResult:
-    """Result of stride-level filtering operation"""
+    """Result of stride-level filtering operation with coverage tracking"""
     filtered_data: pd.DataFrame  # DataFrame with only valid strides
     total_strides: int
     valid_strides: int
@@ -725,14 +843,20 @@ class StrideFilterResult:
     kept_stride_ids: List[str] = field(default_factory=list)
     deleted_stride_ids: List[str] = field(default_factory=list)
     rejection_reasons: Dict[str, List[str]] = field(default_factory=dict)  # stride_id -> reasons
+    
+    # Coverage tracking
+    validated_variables: List[str] = field(default_factory=list)  # Variables that were validated
+    skipped_variables: List[str] = field(default_factory=list)   # Variables skipped (missing specs/data)
+    validation_coverage_by_task: Dict[str, float] = field(default_factory=dict)  # task -> % variables validated
 
 @dataclass
 class QualityAssessmentResult:
     """Result of dataset quality assessment with stride-level analysis"""
     file_path: str
     coverage_stats: Dict = field(default_factory=dict)  # subjects, tasks, total_strides
-    stride_pass_rate: float = 0.0
-    quality_scores: Dict = field(default_factory=dict)
+    stride_pass_rate: float = 0.0  # Based on stride-level filtering results
+    stride_compliance_rate: float = 0.0  # Based on stride-level compliance assessment
+    quality_scores: Dict = field(default_factory=dict)  # Stride-level quality scores
     rejected_strides: List[Dict] = field(default_factory=list)  # stride info + rejection reasons
     missing_data_patterns: List[str] = field(default_factory=list)
     recommendations: List[str] = field(default_factory=list)
@@ -750,11 +874,18 @@ class TuningResult:
 
 @dataclass
 class PlotGenerationResult:
-    """Result of plot generation operation"""
+    """Result of plot generation operation with coverage tracking"""
     success: bool
-    generated_plots: Dict[str, List[str]] = field(default_factory=dict)
+    generated_plots: Dict[str, List[str]] = field(default_factory=dict)  # plot_type -> [paths]
     output_directory: str = ""
     error_message: str = ""
+    
+    # Coverage tracking
+    requested_variables: List[str] = field(default_factory=list)  # Variables requested for plotting
+    plotted_variables: List[str] = field(default_factory=list)    # Variables actually plotted
+    skipped_variables: List[str] = field(default_factory=list)    # Variables skipped (missing data/specs)
+    coverage_summary: str = ""  # Human-readable coverage summary (e.g., "5/8 kinematic variables plotted")
+    warnings: List[str] = field(default_factory=list)  # Warnings about missing variables
 ```
 
 ### Configuration Types

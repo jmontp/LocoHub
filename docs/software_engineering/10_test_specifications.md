@@ -62,8 +62,8 @@
 ```python
 def test_validate_standard_parquet_structure():
     """Test validation of parquet files with standard structure (MOST CRITICAL TEST)"""
-    # Given: Parquet file with correct standard structure
-    data = create_standard_phase_parquet()
+    # Given: Parquet file with correct standard structure including task column
+    data = create_standard_phase_parquet_with_tasks(['walking', 'running'])
     test_file = save_test_data(data, "standard_structure.parquet")
     
     # When: Validating parquet structure
@@ -79,6 +79,11 @@ def test_validate_standard_parquet_structure():
     data = pd.read_parquet(test_file)
     for col in required_columns:
         assert col in data.columns, f"Required column {col} missing"
+    
+    # And: Tasks are properly detected
+    assert result.detected_tasks == ['walking', 'running']
+    assert result.validated_tasks == ['walking', 'running']  # Both have specs
+    assert len(result.skipped_tasks) == 0
 ```
 
 **Test: detect_malformed_parquet_structure**
@@ -96,6 +101,61 @@ def test_detect_malformed_parquet_structure():
     assert result.is_valid == False
     assert any("subject_id" in error for error in result.errors)
     assert any("cycle_id" in error for error in result.errors)
+```
+
+**Test: validate_dataset_missing_task_column**
+```python
+def test_validate_dataset_missing_task_column():
+    """Test handling of dataset missing required task column"""
+    # Given: Parquet file missing task column
+    data = create_test_phase_data_without_task_column()
+    test_file = save_test_data(data, "no_task_column.parquet")
+    
+    # When: Validating dataset without task column
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Validation fails with clear error message
+    assert result.is_valid == False
+    assert any("task column" in error.lower() for error in result.errors)
+    assert "Unable to detect tasks" in result.validation_scope
+```
+
+**Test: validate_dataset_with_unknown_tasks_only**
+```python
+def test_validate_dataset_with_unknown_tasks_only():
+    """Test handling of dataset with only unknown/unsupported tasks"""
+    # Given: Dataset with tasks not in feature_constants
+    data = create_test_phase_data_with_unknown_tasks(['custom_task', 'experimental_gait'])
+    test_file = save_test_data(data, "unknown_tasks.parquet")
+    
+    # When: Validating dataset with unknown tasks
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Validation handles gracefully but reports issues
+    assert result.is_valid == False  # No valid tasks to validate
+    assert result.detected_tasks == ['custom_task', 'experimental_gait']
+    assert len(result.validated_tasks) == 0
+    assert result.skipped_tasks == ['custom_task', 'experimental_gait']
+    assert any("unknown task" in warning.lower() for warning in result.warnings)
+```
+
+**Test: validate_dataset_with_mixed_known_unknown_tasks**
+```python
+def test_validate_dataset_with_mixed_known_unknown_tasks():
+    """Test handling of dataset mixing known and unknown tasks"""
+    # Given: Dataset with both known and unknown tasks
+    data = create_test_phase_data_with_mixed_tasks(['walking', 'unknown_task', 'running'])
+    test_file = save_test_data(data, "mixed_tasks.parquet")
+    
+    # When: Validating dataset with mixed tasks
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Validates known tasks, warns about unknown
+    assert result.detected_tasks == ['walking', 'unknown_task', 'running']
+    assert result.validated_tasks == ['walking', 'running']
+    assert result.skipped_tasks == ['unknown_task']
+    assert any("unknown_task" in warning for warning in result.warnings)
+    # Should be valid if known tasks have valid strides
 ```
 
 **Test: validate_phase_indexing_exactly_150_points**
@@ -303,6 +363,155 @@ def test_detect_inconsistent_subject_trial_structure():
     # Then: Inconsistencies detected
     assert result.is_valid == False
     assert any("subject_id" in error or "trial_id" in error for error in result.errors)
+```
+
+#### Standard Specification Coverage Tests - Priority 1 🔥
+
+**Test: validate_dataset_missing_all_kinematic_variables**
+```python
+def test_validate_dataset_missing_all_kinematic_variables():
+    """Test handling of dataset missing all kinematic variables"""
+    # Given: Dataset with only kinetic variables (no joint angles)
+    data = create_test_phase_data_kinetic_only(task="walking")
+    test_file = save_test_data(data, "kinetic_only.parquet")
+    
+    # When: Validating dataset missing kinematic variables
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Validation continues with available variables
+    assert result.validation_scope == "partial"
+    assert len(result.missing_standard_variables) > 0
+    assert "kinematic" in str(result.missing_standard_variables)
+    assert any("missing kinematic" in warning.lower() for warning in result.warnings)
+    # Should still validate kinetic variables if present
+```
+
+**Test: validate_dataset_with_partial_standard_spec_coverage**
+```python
+def test_validate_dataset_with_partial_standard_spec_coverage():
+    """Test handling of dataset with partial standard specification coverage"""
+    # Given: Dataset with only 3 of 8 standard kinematic variables
+    partial_variables = ['knee_flexion_angle_ipsi', 'hip_flexion_angle_ipsi', 'ankle_flexion_angle_ipsi']
+    data = create_test_phase_data_with_subset_variables(task="walking", variables=partial_variables)
+    test_file = save_test_data(data, "partial_coverage.parquet")
+    
+    # When: Validating partially covered dataset
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Validates available variables and reports coverage
+    assert result.validation_scope == "partial"
+    assert result.available_variables == partial_variables
+    assert len(result.missing_standard_variables) > 0
+    assert result.validation_coverage['walking'] < 1.0  # Partial coverage
+    assert result.standard_spec_coverage['walking']  # Has coverage mapping
+```
+
+**Test: validate_dataset_with_non_standard_variables_only**
+```python
+def test_validate_dataset_with_non_standard_variables_only():
+    """Test handling of dataset with only non-standard variables"""
+    # Given: Dataset with custom variables not in standard specification
+    custom_variables = ['custom_metric_1', 'proprietary_angle', 'experimental_force']
+    data = create_test_phase_data_with_custom_variables(task="walking", variables=custom_variables)
+    test_file = save_test_data(data, "non_standard_only.parquet")
+    
+    # When: Validating dataset with no standard variables
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Reports inability to validate
+    assert result.validation_scope == "minimal"
+    assert len(result.available_variables) == 0  # No standard variables
+    assert len(result.missing_standard_variables) > 0
+    assert any("no standard variables" in warning.lower() for warning in result.warnings)
+```
+
+#### User Experience Tests - Priority 1 🔥
+
+**Test: error_messages_specify_which_variables_missing**
+```python
+def test_error_messages_specify_which_variables_missing():
+    """Test that error messages clearly specify missing variables"""
+    # Given: Dataset missing specific standard variables
+    data = create_test_phase_data_missing_specific_variables(
+        task="walking",
+        missing_variables=['knee_flexion_angle_ipsi', 'ankle_moment_ipsi']
+    )
+    test_file = save_test_data(data, "missing_variables.parquet")
+    
+    # When: Validating dataset with missing variables
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Warning messages specifically mention missing variables
+    warning_text = ' '.join(result.warnings).lower()
+    assert 'knee_flexion_angle_ipsi' in warning_text
+    assert 'ankle_moment_ipsi' in warning_text
+    assert 'missing' in warning_text or 'not found' in warning_text
+```
+
+**Test: validation_report_provides_actionable_next_steps**
+```python
+def test_validation_report_provides_actionable_next_steps():
+    """Test that validation reports include actionable recommendations"""
+    # Given: Dataset with various issues (partial coverage, some bad strides)
+    problematic_data = create_test_phase_data_with_issues(
+        task="walking",
+        missing_variables=['ankle_flexion_angle_ipsi'],
+        bad_stride_percentage=0.3
+    )
+    test_file = save_test_data(problematic_data, "problematic.parquet")
+    
+    # When: Validating problematic dataset
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Recommendations are specific and actionable
+    assert len(result.recommendations) > 0
+    recommendations_text = ' '.join(result.recommendations).lower()
+    assert any(word in recommendations_text for word in ['add', 'fix', 'check', 'review'])
+    assert any(word in recommendations_text for word in ['variable', 'stride', 'data'])
+```
+
+**Test: validation_report_shows_spec_coverage_clearly**
+```python
+def test_validation_report_shows_spec_coverage_clearly():
+    """Test that validation reports clearly show specification coverage"""
+    # Given: Dataset with partial standard specification coverage
+    partial_data = create_test_phase_data_with_partial_coverage(task="walking")
+    test_file = save_test_data(partial_data, "partial_coverage.parquet")
+    
+    # When: Validating and generating report
+    result = validator.validate_dataset(test_file, generate_plots=True)
+    
+    # Then: Report clearly shows coverage information
+    assert os.path.exists(result.report_path)
+    with open(result.report_path, 'r') as f:
+        report_content = f.read()
+    
+    assert "Standard Specification Coverage" in report_content
+    assert "Available Variables" in report_content
+    assert "Missing Variables" in report_content
+    assert result.validation_scope in report_content  # "full", "partial", "minimal"
+```
+
+**Test: external_collaborator_can_understand_validation_failures**
+```python
+def test_external_collaborator_can_understand_validation_failures():
+    """Test that validation failures are understandable for external collaborators"""
+    # Given: Dataset from external collaborator with common issues
+    external_data = create_external_collaborator_problematic_data(
+        issues=['wrong_column_names', 'missing_task_column', 'incorrect_phase_count']
+    )
+    test_file = save_test_data(external_data, "external_problematic.parquet")
+    
+    # When: Validating external collaborator data
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Error messages are clear for non-experts
+    error_text = ' '.join(result.errors + result.warnings).lower()
+    # Should avoid technical jargon and provide clear guidance
+    assert any(word in error_text for word in ['required', 'expected', 'should'])
+    # Should mention specific issues clearly
+    assert 'task' in error_text  # Missing task column
+    assert '150' in error_text   # Incorrect phase count
 ```
 
 #### External Collaborator Integration Tests - Priority 1
@@ -730,44 +939,47 @@ def test_generate_validation_gifs():
 
 **Test: assess_spec_compliance**
 ```python
-def test_assess_quality_with_good_spec_compliance():
-    """Test quality assessment for dataset with good spec compliance"""
-    # Given: Dataset with 95% of steps within validation spec ranges
-    data = create_test_data_with_compliance_rate(0.95, task="walking")
-    test_file = save_test_data(data, "good_compliance.parquet")
+def test_assess_quality_with_good_stride_compliance():
+    """Test quality assessment for dataset with good stride-level spec compliance"""
+    # Given: Dataset with 95% of strides within validation spec ranges
+    data = create_test_data_with_stride_compliance_rate(0.95, task="walking")
+    test_file = save_test_data(data, "good_stride_compliance.parquet")
     
-    # When: Assessing quality
+    # When: Assessing quality using stride-level assessment
     assessor = QualityAssessor(spec_manager)
     result = assessor.assess_quality(test_file)
     
-    # Then: High quality score assigned
-    assert result.quality_scores['spec_compliance'] >= 0.90
+    # Then: High quality score based on stride-level compliance
+    assert result.quality_scores['stride_compliance'] >= 0.90
+    assert result.stride_compliance_rate >= 0.90  # High stride compliance rate
+    assert result.stride_pass_rate >= 0.90  # High stride pass rate
     assert len(result.recommendations) >= 0
     
-    # And: Coverage statistics calculated
+    # And: Coverage statistics calculated at stride level
     assert 'subjects' in result.coverage_stats
     assert 'tasks' in result.coverage_stats
     assert 'cycles' in result.coverage_stats
+    assert 'total_strides' in result.coverage_stats  # Stride-level coverage tracking
 ```
 
 **Test: identify_bad_steps**
 ```python
-def test_identify_bad_steps_with_violations():
-    """Test identification of steps that violate validation specifications"""
+def test_identify_bad_strides_with_violations():
+    """Test identification of strides that violate validation specifications"""
     # Given: Dataset with known validation spec violations
     data = create_test_data_with_known_violations()
     
-    # When: Identifying bad steps
-    bad_steps = assessor.identify_bad_steps(data, "walking")
+    # When: Identifying bad strides
+    bad_strides = assessor.identify_bad_strides(data, "walking")
     
-    # Then: Bad steps are correctly identified
-    assert len(bad_steps) > 0
-    for bad_step in bad_steps:
-        assert 'subject_id' in bad_step
-        assert 'cycle_id' in bad_step
-        assert 'phase' in bad_step
-        assert 'violations' in bad_step
-        assert len(bad_step['violations']) > 0
+    # Then: Bad strides are correctly identified
+    assert len(bad_strides) > 0
+    for bad_stride in bad_strides:
+        assert 'subject_id' in bad_stride
+        assert 'cycle_id' in bad_stride
+        assert 'phase' in bad_stride
+        assert 'violations' in bad_stride
+        assert len(bad_stride['violations']) > 0
 ```
 
 **Test: calculate_spec_compliance_score**
