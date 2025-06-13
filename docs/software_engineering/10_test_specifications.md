@@ -135,44 +135,115 @@ def test_detect_incorrect_phase_points():
 
 #### Biomechanical Range Validation Tests - Priority 1 🔥
 
-**Test: validate_biomechanical_ranges_within_spec**
+**Test: validate_stride_filtering_with_good_data**
 ```python
-def test_validate_biomechanical_ranges_within_spec():
-    """Test validation when all data is within specification ranges (QUALITY GATE)"""
-    # Given: Phase data with values within validation spec ranges
-    data = create_test_phase_data_within_ranges(task="walking")
-    test_file = save_test_data(data, "within_ranges.parquet")
+def test_validate_stride_filtering_with_good_data():
+    """Test stride filtering when all data is within specification ranges"""
+    # Given: Phase data with all strides within validation spec ranges
+    data = create_test_phase_data_within_ranges(task="walking", num_strides=10)
+    test_file = save_test_data(data, "good_strides.parquet")
     
-    # When: Validating biomechanical ranges
+    # When: Validating with stride filtering
     result = validator.validate_dataset(test_file)
     
-    # Then: Range validation passes
+    # Then: All strides are kept
     assert result.is_valid == True
-    assert "range_validation" in result.validation_summary
-    assert result.validation_summary["range_validation"]["passed"] == True
-    assert result.validation_summary["range_validation"]["pass_rate"] >= 0.95
+    assert result.total_strides == 10
+    assert result.valid_strides == 10
+    assert result.invalid_strides == 0
+    assert result.stride_pass_rate == 1.0
+    assert len(result.kept_stride_ids) == 10
+    assert len(result.deleted_stride_ids) == 0
+    assert len(result.stride_rejection_reasons) == 0
 ```
 
-**Test: detect_range_violations**
+**Test: filter_bad_strides_with_mixed_data**
 ```python
-def test_detect_biomechanical_range_violations():
-    """Test detection of values outside specification ranges (CRITICAL DETECTION)"""
-    # Given: Phase data with values outside validation ranges
-    data = create_test_phase_data_with_outliers(task="walking")
-    test_file = save_test_data(data, "range_violations.parquet")
+def test_filter_bad_strides_with_mixed_data():
+    """Test stride filtering with mixed good and bad strides (CRITICAL FILTERING)"""
+    # Given: Phase data with 7 good strides and 3 bad strides
+    data = create_test_phase_data_mixed_quality(
+        task="walking", 
+        good_strides=7, 
+        bad_strides=3,
+        bad_stride_issues=["knee_angle_too_high", "hip_moment_out_of_range"]
+    )
+    test_file = save_test_data(data, "mixed_strides.parquet")
     
-    # When: Validating biomechanical ranges
+    # When: Validating with stride filtering
     result = validator.validate_dataset(test_file)
     
-    # Then: Range violations detected with specific details
-    assert result.is_valid == False
-    assert any("range" in error.lower() for error in result.errors)
-    assert "range_validation" in result.validation_summary
+    # Then: Dataset is valid (some strides pass) with proper filtering
+    assert result.is_valid == True  # Dataset valid because some strides pass
+    assert result.total_strides == 10
+    assert result.valid_strides == 7
+    assert result.invalid_strides == 3
+    assert result.stride_pass_rate == 0.7
+    assert len(result.kept_stride_ids) == 7
+    assert len(result.deleted_stride_ids) == 3
     
-    # And: Specific variables and violations identified
-    range_summary = result.validation_summary["range_validation"]
-    assert "failed_variables" in range_summary
-    assert len(range_summary["failed_variables"]) > 0
+    # And: Rejection reasons are provided for bad strides
+    assert len(result.stride_rejection_reasons) == 3
+    for stride_id, reasons in result.stride_rejection_reasons.items():
+        assert stride_id in result.deleted_stride_ids
+        assert len(reasons) > 0
+        assert any("knee_angle" in reason or "hip_moment" in reason for reason in reasons)
+```
+
+**Test: reject_dataset_with_no_valid_strides**
+```python
+def test_reject_dataset_with_no_valid_strides():
+    """Test rejection when NO strides pass validation"""
+    # Given: Phase data where all strides violate validation ranges
+    data = create_test_phase_data_all_bad_strides(task="walking", num_strides=5)
+    test_file = save_test_data(data, "all_bad_strides.parquet")
+    
+    # When: Validating completely bad dataset
+    result = validator.validate_dataset(test_file)
+    
+    # Then: Dataset is rejected (no valid strides)
+    assert result.is_valid == False  # Dataset invalid because NO strides pass
+    assert result.total_strides == 5
+    assert result.valid_strides == 0
+    assert result.invalid_strides == 5
+    assert result.stride_pass_rate == 0.0
+    assert len(result.kept_stride_ids) == 0
+    assert len(result.deleted_stride_ids) == 5
+    
+    # And: All strides have rejection reasons
+    assert len(result.stride_rejection_reasons) == 5
+```
+
+**Test: filter_valid_strides_function**
+```python
+def test_filter_valid_strides_function():
+    """Test the stride filtering function directly"""
+    # Given: DataFrame with mixed stride quality
+    data = create_test_phase_data_mixed_quality(
+        task="walking", good_strides=8, bad_strides=2
+    )
+    
+    # When: Filtering valid strides directly
+    filter_result = validator.filter_valid_strides(data)
+    
+    # Then: Filtering results are correct
+    assert filter_result.total_strides == 10
+    assert filter_result.valid_strides == 8
+    assert filter_result.invalid_strides == 2
+    assert filter_result.stride_pass_rate == 0.8
+    
+    # And: Filtered data contains only valid strides
+    assert len(filter_result.filtered_data) > 0
+    valid_stride_data = filter_result.filtered_data['cycle_id'].unique()
+    assert len(valid_stride_data) == 8
+    
+    # And: All kept strides are in the filtered data
+    for stride_id in filter_result.kept_stride_ids:
+        assert stride_id in filter_result.filtered_data['cycle_id'].values
+    
+    # And: No deleted strides are in the filtered data
+    for stride_id in filter_result.deleted_stride_ids:
+        assert stride_id not in filter_result.filtered_data['cycle_id'].values
 ```
 
 **Test: validate_multiple_tasks_in_single_file**
@@ -271,31 +342,44 @@ def test_validate_parquet_from_external_csv_conversion():
 
 #### Integration Tests - Priority 1
 
-**Test: generate_comprehensive_validation_report**
+**Test: generate_stride_filtering_validation_report**
 ```python
-def test_generate_comprehensive_markdown_validation_report():
-    """Test generation of complete markdown validation report for parquet files"""
-    # Given: Mixed quality dataset (some good, some problematic data)
-    data = create_mixed_quality_phase_data()
-    test_file = save_test_data(data, "mixed_quality.parquet")
+def test_generate_stride_filtering_validation_report():
+    """Test generation of stride filtering validation report"""
+    # Given: Mixed quality dataset with known good/bad strides
+    data = create_test_phase_data_mixed_quality(
+        task="walking", good_strides=6, bad_strides=4
+    )
+    test_file = save_test_data(data, "mixed_stride_quality.parquet")
     
-    # When: Running full validation
+    # When: Running full validation with stride filtering
     result = validator.validate_dataset(test_file, generate_plots=True)
     
-    # Then: Complete markdown report generated
+    # Then: Complete markdown report generated with stride details
     assert os.path.exists(result.report_path)
     assert result.report_path.endswith('.md')
     
-    # And: Report contains expected sections for parquet file analysis
+    # And: Report contains stride filtering sections
     with open(result.report_path, 'r') as f:
         report_content = f.read()
     
-    assert "# Parquet Dataset Validation Report" in report_content
-    assert "## File Structure Analysis" in report_content
-    assert "## Phase Indexing Validation" in report_content
-    assert "## Biomechanical Range Validation" in report_content
-    assert "## Data Quality Summary" in report_content
-    assert "## Recommendations" in report_content
+    assert "# Stride Filtering Validation Report" in report_content
+    assert "## Stride Summary" in report_content
+    assert "## Kept Strides" in report_content
+    assert "## Deleted Strides" in report_content
+    assert "## Rejection Reasons" in report_content
+    assert "## Quality Metrics" in report_content
+    
+    # And: Stride statistics are in the report
+    assert f"Total Strides: {result.total_strides}" in report_content
+    assert f"Valid Strides: {result.valid_strides}" in report_content
+    assert f"Pass Rate: {result.stride_pass_rate:.1%}" in report_content
+    
+    # And: Individual stride details are listed
+    for stride_id in result.kept_stride_ids[:3]:  # Check first few
+        assert stride_id in report_content
+    for stride_id in result.deleted_stride_ids[:3]:  # Check first few
+        assert stride_id in report_content
     
     # And: Plots are generated and referenced
     assert len(result.plot_paths) > 0

@@ -37,31 +37,44 @@ class PhaseValidator:
     
     def validate_dataset(self, file_path: str, generate_plots: bool = True) -> PhaseValidationResult:
         """
-        Run comprehensive validation on phase-indexed dataset.
+        Run comprehensive validation on phase-indexed dataset with stride-level filtering.
         
-        MUST run comprehensive validation on phase-indexed data
-        MUST generate detailed validation report with pass/fail status
-        MUST show specific failures with recommended fixes
+        MUST perform stride-level validation and filtering
+        MUST show which strides are kept vs deleted in validation report
+        MUST report stride pass rate as quality metric
+        MUST only fail dataset if NO strides pass validation
         MUST create visual validation plots for manual review
-        MUST export validation summary for documentation
+        MUST export validation summary with stride statistics
         
         Behavioral Contract:
         - Validates file accessibility and basic structure
-        - Checks phase indexing (exactly 150 points per cycle)
-        - Validates biomechanical ranges against specifications
-        - Generates markdown report with embedded plot references
-        - Provides specific failure details with fix recommendations
-        - Creates validation summary suitable for documentation
+        - Checks phase indexing (exactly 150 points per cycle) for each stride
+        - Validates biomechanical ranges against specifications for each stride
+        - Filters strides: keeps valid strides, marks invalid strides for deletion
+        - Generates markdown report showing kept vs deleted strides with reasons
+        - Reports stride-level statistics (total, kept, deleted, pass rate)
+        - Only fails if zero strides pass validation
         
-        Returns: PhaseValidationResult with validation status, report path, plot paths
-        Raises: ValidationError if file cannot be processed
+        Returns: PhaseValidationResult with stride filtering results, pass rate, report path
+        Raises: ValidationError if file cannot be processed at all
+        """
+    
+    def filter_valid_strides(self, data: pd.DataFrame) -> StrideFilterResult:
+        """
+        Filter dataset to keep only valid strides based on validation specifications.
+        
+        MUST identify valid vs invalid strides
+        MUST provide detailed reasons for stride rejection
+        MUST return filtered dataset with only valid strides
+        
+        Returns: StrideFilterResult with filtered data, stride statistics, rejection reasons
         """
     
     def validate_batch(self, file_paths: List[str], parallel: bool = True) -> BatchValidationResult:
-        """Validate multiple datasets with summary reporting"""
+        """Validate multiple datasets with stride-level summary reporting"""
     
     def get_validation_summary(self, results: List[PhaseValidationResult]) -> ValidationSummary:
-        """Generate batch validation summary with pass/fail statistics"""
+        """Generate batch validation summary with stride pass rate statistics"""
 ```
 
 ### TimeValidator - Validate Time-Indexed Datasets (UC-C02)
@@ -175,32 +188,33 @@ class QualityAssessor:
         Generate quality report focusing on validation spec compliance.
         
         MUST calculate coverage statistics (subjects, tasks, gait cycles)
-        MUST identify bad steps based on validation spec range violations
-        MUST generate biomechanical quality scores based on spec compliance
+        MUST identify bad strides based on validation spec range violations
+        MUST generate biomechanical quality scores based on stride pass rate
         MUST export quality metrics for tracking over time
         
         Behavioral Contract:
-        - Calculates subject, task, and cycle coverage
-        - Identifies steps that violate validation specification ranges
-        - Scores quality based on percentage of steps within spec ranges
-        - Flags systematic violations and outliers
-        - Generates exportable quality metrics
+        - Calculates subject, task, and stride coverage statistics
+        - Identifies strides that violate validation specification ranges
+        - Scores quality based on percentage of strides that pass validation
+        - Flags systematic violations and outliers at stride level
+        - Generates exportable quality metrics including stride pass rates
         
-        Returns: QualityAssessmentResult with coverage, spec compliance scores, bad steps
+        Returns: QualityAssessmentResult with coverage, stride pass rates, rejected strides
         """
     
-    def identify_bad_steps(self, data: pd.DataFrame, task: str) -> List[Dict]:
+    def identify_bad_strides(self, data: pd.DataFrame, task: str) -> List[Dict]:
         """
-        Identify individual steps that violate validation specifications.
+        Identify individual strides that violate validation specifications.
         
-        MUST check each step against validation spec ranges
+        MUST check each stride against validation spec ranges
         MUST identify specific variables and values that are out of range
+        MUST provide reasons for stride rejection
         
-        Returns: List of bad steps with violation details
+        Returns: List of bad strides with violation details and rejection reasons
         """
     
-    def calculate_spec_compliance_score(self, data: pd.DataFrame) -> float:
-        """Calculate overall compliance score with validation specifications"""
+    def calculate_stride_pass_rate(self, data: pd.DataFrame) -> float:
+        """Calculate stride pass rate based on validation specifications"""
 ```
 
 ### DatasetComparator - Multi-Dataset Comparison (UC-V02)
@@ -674,10 +688,17 @@ class ConversionResult:
 
 @dataclass
 class PhaseValidationResult:
-    """Result of phase-indexed dataset validation"""
-    is_valid: bool
+    """Result of phase-indexed dataset validation with stride-level filtering"""
+    is_valid: bool  # True if ANY strides pass validation
     file_path: str
-    errors: List[str] = field(default_factory=list)
+    total_strides: int = 0
+    valid_strides: int = 0
+    invalid_strides: int = 0
+    stride_pass_rate: float = 0.0
+    kept_stride_ids: List[str] = field(default_factory=list)  # IDs of strides to keep
+    deleted_stride_ids: List[str] = field(default_factory=list)  # IDs of strides to delete
+    stride_rejection_reasons: Dict[str, List[str]] = field(default_factory=dict)  # stride_id -> reasons
+    errors: List[str] = field(default_factory=list)  # File-level errors only
     warnings: List[str] = field(default_factory=list)
     report_path: str = ""  # Path to markdown report
     plot_paths: List[str] = field(default_factory=list)
@@ -694,13 +715,26 @@ class TimeValidationResult:
     report_path: str = ""  # Path to markdown report
 
 @dataclass
+class StrideFilterResult:
+    """Result of stride-level filtering operation"""
+    filtered_data: pd.DataFrame  # DataFrame with only valid strides
+    total_strides: int
+    valid_strides: int
+    invalid_strides: int
+    stride_pass_rate: float
+    kept_stride_ids: List[str] = field(default_factory=list)
+    deleted_stride_ids: List[str] = field(default_factory=list)
+    rejection_reasons: Dict[str, List[str]] = field(default_factory=dict)  # stride_id -> reasons
+
+@dataclass
 class QualityAssessmentResult:
-    """Result of dataset quality assessment"""
+    """Result of dataset quality assessment with stride-level analysis"""
     file_path: str
-    coverage_stats: Dict = field(default_factory=dict)
+    coverage_stats: Dict = field(default_factory=dict)  # subjects, tasks, total_strides
+    stride_pass_rate: float = 0.0
     quality_scores: Dict = field(default_factory=dict)
+    rejected_strides: List[Dict] = field(default_factory=list)  # stride info + rejection reasons
     missing_data_patterns: List[str] = field(default_factory=list)
-    outliers: List[Dict] = field(default_factory=list)
     recommendations: List[str] = field(default_factory=list)
 
 @dataclass
