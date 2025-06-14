@@ -2,65 +2,56 @@
 
 ## User Types
 
-**Dataset Curators:** Convert raw datasets to standard format
-**Validation Specialists:** Ensure data quality and maintain standards  
+**Dataset Curator - Programmer:** Convert raw datasets to standard format (typically graduate students)
+**Dataset Curator - Biomechanical Validation:** Ensure data quality and maintain standards (biomechanics domain experts)  
 **Administrators:** Prepare releases and create ML benchmarks
 
 ## User Stories
 
-### Dataset Curator Stories
+### Dataset Curator - Programmer Stories
 
-**C01: Convert Raw Dataset**
-As a dataset curator I want to convert raw datasets (MATLAB, CSV, B3D) to standardized parquet so I can integrate them with the collection.
+**C01: Develop Dataset Conversion Script**
+As a dataset curator I want to develop a conversion script for my specific dataset format so I can contribute standardized data to the community collection.
 
 Acceptance Criteria:
-- Support MATLAB .mat, CSV, AddBiomechanics B3D formats
-- Automatic variable name mapping where possible
-- Conversion report with mapping decisions and statistics
-- Graceful handling of missing variables with warnings
-- Preserve original metadata and add standardization metadata
+- Access to validation scaffolding and standard specification
+- Clear guidelines for variable name mapping
+- Example conversion scripts for reference
+- Validation tools to verify conversion success
+- Documentation templates for new dataset contributions
 
-Entry Point: `convert_dataset.py` • Priority: Critical
+Supporting Tools: Validation scaffolding, example scripts, documentation templates • Priority: Critical
 
 **C02: Validate Converted Dataset**
-As a dataset curator I want to validate newly converted datasets against biomechanical standards so I can ensure conversion success and data quality.
+As a dataset curator I want to validate my newly converted dataset against biomechanical standards so I can ensure conversion success and data quality.
 
 Acceptance Criteria:
 - Comprehensive validation on phase and time-indexed data
 - Detailed validation report with pass/fail status
 - Specific failures with recommended fixes
 - Visual validation plots for manual review
-- Export validation summary for documentation
+- Export validation summary for contribution documentation
 
 Entry Points: `validate_phase_data.py`, `validate_time_data.py` • Priority: Critical
 
-**C03: Generate Validation Visualizations**
-As a dataset curator I want to create plots and animations of validated datasets so I can manually verify biomechanical reasonableness.
+**C03: Generate Dataset Report**
+As a dataset curator I want to generate a comprehensive quality and validation report so I can assess data completeness, identify issues, and document my contribution.
 
 Acceptance Criteria:
-- Static plots showing joint angles and moments across gait phases
-- Animated GIFs showing walking patterns
-- Overlay validation ranges on visualizations
-- Export plots in publication-ready formats
-- Batch generation for multiple tasks and subjects
-
-Entry Points: `generate_validation_plots.py`, `generate_validation_gifs.py` • Priority: High
-
-### Validation Specialist Stories
-
-**V01: Assess Dataset Quality**
-As a validation specialist I want to generate comprehensive quality reports so I can understand data completeness, coverage, and potential issues.
-
-Acceptance Criteria:
+- Dataset summary statistics and metadata
+- Validation results with pass/fail status and specific failures
 - Coverage statistics (subjects, tasks, gait cycles)
 - Missing data patterns and outlier identification
-- Biomechanical plausibility scores
-- Comparison against population norms from literature
-- Export quality metrics for tracking over time
+- Biomechanical plausibility scores and population comparisons
+- Automatically generated visualizations for manual review
+- Export report in standard format for contribution documentation
+- Quality metrics tracking over time
 
-Entry Point: `assess_quality.py` • Priority: High
+Entry Point: `generate_dataset_report.py` • Priority: High
 
-**V02: Compare Multiple Datasets**
+### Dataset Curator - Biomechanical Validation Stories
+
+**V01: Compare Multiple Datasets**
 As a validation specialist I want to systematically compare datasets from different sources so I can identify inconsistencies and ensure cross-dataset compatibility.
 
 Acceptance Criteria:
@@ -120,7 +111,7 @@ Acceptance Criteria:
 - Export in ML-ready formats (scikit-learn, PyTorch, TensorFlow)
 - Benchmark documentation with baseline performance metrics
 
-Entry Point: `create_benchmarks.py` • Priority: Critical
+Entry Point: `create_benchmarks.py` • Priority: Low
 
 **A02: Publish Dataset Release**
 As an administrator I want to prepare validated datasets for public hosting and download so researchers worldwide can access high-quality standardized locomotion data.
@@ -132,7 +123,7 @@ Acceptance Criteria:
 - Anonymize sensitive information while preserving scientific value
 - Prepare multiple format options (parquet, CSV, MATLAB)
 
-Entry Point: `publish_datasets.py` • Priority: Medium
+Entry Point: `publish_datasets.py` • Priority: Low
 
 **A03: Manage Dataset Versions**
 As an administrator I want to track dataset versions and manage release documentation so users can understand dataset evolution and choose appropriate versions.
@@ -144,25 +135,28 @@ Acceptance Criteria:
 - Citation guidance and DOI management integration
 - Release timeline and deprecation planning
 
-Entry Point: `manage_releases.py` • Priority: Medium
+Entry Point: `manage_releases.py` • Priority: Low
 
 ## Implementation Priority
 
 **Critical:**
-- `convert_dataset.py` - Cannot add new datasets without this
+- Validation scaffolding infrastructure - Cannot assess dataset quality without this
 - `validate_phase_data.py` - Core validation functionality
 - `validate_time_data.py` - Core validation functionality  
-- `create_benchmarks.py` - Required for ML research community
+- Conversion script examples and templates - Cannot guide community contributions without these
 
 **High:**
-- `assess_quality.py` - Essential for maintaining standards
+- `generate_dataset_report.py` - Essential for dataset quality assessment and contribution documentation
 - `manage_validation_specs.py` - Critical for standard evolution
 - `auto_tune_ranges.py` - Important for data-driven improvements
-- `generate_validation_plots.py` - Important for manual verification
+- `generate_validation_plots.py` - Important for updating validation specification documents
 - `compare_datasets.py` - Important for multi-dataset consistency
 
 **Medium:**
 - `generate_validation_gifs.py` - Nice to have for visualization
 - `investigate_errors.py` - Valuable for complex debugging
-- `publish_datasets.py` - Important for polished releases
-- `manage_releases.py` - Important for long-term management
+
+**Low:**
+- `create_benchmarks.py` - Future priority after validation infrastructure is stable
+- `publish_datasets.py` - Future priority for polished releases
+- `manage_releases.py` - Future priority for long-term management

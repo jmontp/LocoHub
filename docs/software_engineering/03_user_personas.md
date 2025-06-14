@@ -2,47 +2,47 @@
 
 **Detailed user profiles for development focus.**
 
-## Dr. Sarah Chen - Dataset Curator
+## Dr. Sarah Chen - Dataset Curator (Biomechanical Validation)
 
-**Role:** Biomechanics postdoc converting lab datasets to standard format  
-**Experience:** 5 years MATLAB, 2 years Python, deep biomechanics knowledge  
-**Goal:** Convert raw datasets efficiently with minimal data loss
-
-**Context:**
-- Works with mixed-format lab data (MATLAB .mat, CSV files, motion capture systems)
-- Needs to preserve original metadata while adding standardization
-- Limited time for tool learning - prefers clear documentation
-- Responsible for data quality before integration
-
-**Pain Points:**
-- Complex variable name mapping between datasets
-- Unclear conversion decisions and their impact
-- Time-consuming manual validation steps
-- Difficulty debugging conversion failures
-
-**Tools:** `convert_dataset.py`, `validate_phase_data.py`, `generate_validation_plots.py`
-
----
-
-## Dr. Marcus Rodriguez - Validation Specialist
-
-**Role:** Senior researcher maintaining biomechanical validation standards  
-**Experience:** 10+ years biomechanics, statistics background, standards development  
-**Goal:** Ensure data quality and evolve validation standards with scientific knowledge
+**Role:** Biomechanics postdoc ensuring data quality and maintaining validation standards  
+**Experience:** 5 years MATLAB, 2 years Python, deep biomechanics knowledge, statistics background  
+**Goal:** Ensure biomechanical correctness and evolve validation standards with scientific knowledge
 
 **Context:**
 - Reviews validation failures to determine data vs. range issues
 - Updates validation ranges based on literature and statistical analysis
-- Compares datasets from different sources for consistency
-- Collaborates with international standards committees
+- Collaborates with conversion teams to ensure biomechanical accuracy
+- Works closely with graduate students doing the technical conversion work
 
 **Pain Points:**
 - Manual investigation of outliers and validation failures
 - Balancing strict standards with real-world data variability
 - Tracking rationale for validation range changes
-- Time-intensive dataset comparison workflows
+- Communicating biomechanical requirements to programmer colleagues
 
-**Tools:** `assess_quality.py`, `manage_validation_specs.py`, `auto_tune_ranges.py`, `investigate_errors.py`
+**Tools:** `generate_dataset_report.py`, `manage_validation_specs.py`, `auto_tune_ranges.py`, `investigate_errors.py`
+
+---
+
+## Marcus Rodriguez - Dataset Curator (Programmer)
+
+**Role:** Graduate student developing conversion scripts for lab datasets  
+**Experience:** 3 years Python, 1 year MATLAB, learning biomechanics concepts, strong programming skills  
+**Goal:** Convert raw datasets efficiently with minimal data loss and technical errors
+
+**Context:**
+- Develops dataset-specific conversion scripts using validation scaffolding
+- Works with mixed-format lab data (MATLAB .mat, CSV files, motion capture systems)
+- Collaborates with biomechanics experts to understand domain requirements
+- Limited time for biomechanics learning - relies on validation tools for guidance
+
+**Pain Points:**
+- Complex variable name mapping between datasets
+- Understanding biomechanical conventions and coordinate systems
+- Debugging conversion failures with domain-specific context
+- Balancing programming efficiency with biomechanical accuracy
+
+**Tools:** Validation scaffolding, example conversion scripts, `validate_phase_data.py`, `generate_dataset_report.py`
 
 ---
 
