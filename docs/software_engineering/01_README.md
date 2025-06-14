@@ -4,43 +4,45 @@
 
 ## Navigation
 
-**Get Started (What exists and how to use it):**
-- [Entry Points Reference](02_entry_points_reference.md) • [Interface Standards](03_interface_standards.md)
+**User Focus (Roles → Actions → Tools):**
+- [User Stories](02_user_stories_acceptance_criteria.md) • [User Research](03_user_research_insights.md) • [User Journeys](04_user_journey_maps.md) • [User Personas](05_user_personas.md) • [Requirements](06_requirements.md)
 
-**Requirements (What we're building and why):**
-- [User Stories](04_user_stories_acceptance_criteria.md) • [User Research](05_user_research_insights.md) • [User Journeys](06_user_journey_maps.md)
+**Developer Tools (What exists and how to use it):**
+- [Entry Points Reference](07_entry_points_reference.md) • [Interface Standards](08_interface_standards.md)
 
 **Architecture (How the system works):**
-- [System Context](07_c4_context.md) • [Containers](08_c4_container.md) • [Components](09_c4_component.md) • [Code](10_c4_code.md)
+- [System Context](09_c4_context.md) • [Containers](10_c4_container.md) • [Components](11_c4_component.md) • [Code](12_c4_code.md)
 
 **Implementation (How to build and test):**
-- [Sequence Workflows](11_sequence_workflows.md) • [Test Specifications](12_test_specifications.md)
+- [Sequence Workflows](13_sequence_workflows.md) • [Test Specifications](14_test_specifications.md)
 
 **Project Management (Strategic planning):**
-- [Project Roadmap](13_project_roadmap.md) • [Project Charter](14_project_charter.md) • [Documentation Standards](15_documentation_standards.md)
+- [Project Roadmap](15_project_roadmap.md) • [Project Charter](16_project_charter.md) • [Documentation Standards](17_documentation_standards.md)
 
 ## File Index with Purpose
 
-**Immediate Developer Needs:**
-- `02_entry_points_reference.md` - Complete catalog of CLI tools by user role and priority
-- `03_interface_standards.md` - CLI patterns, error codes, and configuration standards
+**User Focus (Roles → Actions → Tools):**
+- `02_user_stories_acceptance_criteria.md` - User stories with acceptance criteria for testing
+- `03_user_research_insights.md` - User population analysis and development priorities  
+- `04_user_journey_maps.md` - User workflows with sequence diagrams
+- `05_user_personas.md` - Detailed user profiles for development focus
+- `06_requirements.md` - Functional and non-functional requirements specification
 
-**Requirements & User Focus:**
-- `04_user_stories_acceptance_criteria.md` - User stories with acceptance criteria for testing
-- `05_user_research_insights.md` - User population analysis and development priorities  
-- `06_user_journey_maps.md` - User workflows with sequence diagrams
+**Developer Tools:**
+- `07_entry_points_reference.md` - Complete catalog of CLI tools by user role and priority
+- `08_interface_standards.md` - CLI patterns, error codes, and configuration standards
 
 **Architecture (C4 Model Progression):**
-- `07_c4_context.md` - System boundaries and external user interactions
-- `08_c4_container.md` - Container architecture (current and future phases)
-- `09_c4_component.md` - Internal component structure with data flow patterns
-- `10_c4_code.md` - Detailed interface specifications (split into 3 focused files)
+- `09_c4_context.md` - System boundaries and external user interactions
+- `10_c4_container.md` - Container architecture (current and future phases)
+- `11_c4_component.md` - Internal component structure with data flow patterns
+- `12_c4_code.md` - Detailed interface specifications (split into 3 focused files)
 
 **Technical Implementation:**
-- `11_sequence_workflows.md` - Technical sequence diagrams for all user workflows
-- `12_test_specifications.md` - Test cases by type (split into unit/integration/acceptance)
+- `13_sequence_workflows.md` - Technical sequence diagrams for all user workflows
+- `14_test_specifications.md` - Test cases by type (split into unit/integration/acceptance)
 
 **Strategic & Meta:**
-- `13_project_roadmap.md` - Development phases, milestones, and feature timeline
-- `14_project_charter.md` - Mission, vision, goals, and success metrics
-- `15_documentation_standards.md` - Documentation requirements and improvement checklist
+- `15_project_roadmap.md` - Development phases, milestones, and feature timeline
+- `16_project_charter.md` - Mission, vision, goals, and success metrics
+- `17_documentation_standards.md` - Documentation requirements and improvement checklist
