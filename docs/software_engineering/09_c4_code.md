@@ -1,26 +1,18 @@
-# C4 Level 4: Interface Specifications
+# C4 Level 4: Code Specifications
 
-**Interface contracts, behavioral specifications, and component dependencies for all critical components satisfying user story acceptance criteria.**
+**Detailed component specifications split into focused documents.**
 
----
+## Split Documentation
 
-## Table of Contents
+This document has been split into three focused files for better maintainability:
 
-1. [Critical Priority Components](#critical-priority-components)
-2. [High Priority Components](#high-priority-components)
-3. [Medium Priority Components](#medium-priority-components)
-4. [Supporting Infrastructure](#supporting-infrastructure)
-5. [Interface Contracts](#interface-contracts)
-6. [Data Structures](#data-structures)
+**[Interface Contracts](09a_interface_contracts.md)** - Method signatures and behavioral contracts  
+**[Data Structures](09b_data_structures.md)** - Result classes and type definitions  
+**[CLI Specifications](09c_cli_specifications.md)** - Command-line interface patterns
 
----
+## Legacy Content
 
-## Critical Priority Components
-
-> **These components satisfy Critical priority user stories (UC-C02, UC-C03) that are required for all new datasets**
-> 
-> **Note: UC-C01 (Dataset Conversion) is handled by external scripts that vary widely. 
-> We only validate the parquet outputs they produce.**
+The content below is preserved for reference but should be migrated to the split documents above.
 
 ### PhaseValidator - Validate Converted Datasets (UC-C02)
 

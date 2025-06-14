@@ -1,21 +1,18 @@
 # Test Specifications
 
-**Comprehensive test cases derived from user story acceptance criteria for Critical and High priority components.**
+**Test cases split into focused documents for better organization.**
 
----
+## Split Documentation
 
-## Table of Contents
+This document has been split into three focused files:
 
-1. [Test Strategy Overview](#test-strategy-overview)
-2. [Critical Priority Component Tests](#critical-priority-component-tests)
-3. [High Priority Component Tests](#high-priority-component-tests)
-4. [Integration Test Scenarios](#integration-test-scenarios)
-5. [Test Data Requirements](#test-data-requirements)
-6. [Test Execution Framework](#test-execution-framework)
+**[Unit Tests](10a_unit_tests.md)** - Component-level tests for individual functions  
+**[Integration Tests](10b_integration_tests.md)** - Component interaction and workflow tests  
+**[Acceptance Tests](10c_acceptance_tests.md)** - User story acceptance criteria validation
 
----
+## Legacy Content
 
-## Test Strategy Overview
+The content below is preserved for reference but should be migrated to the split documents above.
 
 ### 🎯 Testing Philosophy
 

@@ -1,8 +1,6 @@
-# C4 Component Diagrams - Enhanced Internal Architecture
+# C4 Component Architecture
 
-**Detailed internal structure of core containers with enhanced data flow and coverage tracking.**
-
----
+**Internal structure diagrams for core containers.**
 
 ## Core Infrastructure Components (lib/core/)
 
@@ -226,55 +224,21 @@ graph TD
 - **StrideClassifier**: Identifies bad strides based on validation specification violations
 - **QualityScorer**: Calculates stride compliance scores and quality metrics for tracking
 
----
+## Data Flow Patterns
 
-## Enhanced Data Flow Patterns
+**Phase Validation:** Task Detection → Coverage Analysis → Range Retrieval → Stride Filtering → Report Generation → Adaptive Plotting
 
-### **Phase Validation Flow with Coverage Tracking**
-1. **Task Detection**: TaskDetector reads data['task'] column → validates against feature_constants → identifies known vs unknown tasks
-2. **Coverage Analysis**: CoverageAnalyzer checks dataset variables against standard specification → calculates coverage percentages → identifies missing variables
-3. **Range Retrieval**: RangeProvider gets task and phase-specific ranges from ValidationSpecManager → filters to available variables only
-4. **Stride Filtering**: StrideFilter validates each stride against task-specific ranges → keeps valid strides → marks invalid strides for deletion → provides rejection reasons
-5. **Report Generation**: PhaseReportGenerator combines coverage info + stride filtering results → generates actionable recommendations → creates markdown report
-6. **Adaptive Plotting**: PlotAdapter + CoverageAnnotator create plots for available variables only → annotate with coverage info → skip missing gracefully
+**Specification Management:** Parsing → Range Provision → Interactive Editing → Change Persistence
 
-### **ValidationSpecManager Data Flow ⭐**
-1. **Specification Parsing**: SpecificationParser reads validation_expectations markdown files → structures by task/variable/phase
-2. **Range Provision**: RangeProvider serves task-specific ranges (walking vs incline_walking) → phase-specific bounds (0%, 25%, 50%, 75%)
-3. **Interactive Editing**: SpecificationEditor modifies ranges → previews impact on existing datasets → shows affected stride counts
-4. **Change Persistence**: SpecificationPersistence saves with backup → tracks change rationale → maintains version history
+**Quality Assessment:** Stride Classification → Quality Scoring
 
-### **Quality Assessment Flow**
-1. **Stride Classification**: StrideClassifier identifies bad strides using validation spec violations → provides detailed rejection reasons
-2. **Quality Scoring**: QualityScorer calculates stride compliance rates → generates quality metrics → tracks improvement over time
+**Visualization:** Variable Adaptation → Coverage Annotation → Plot Generation
 
-### **Flexible Visualization Flow**
-1. **Variable Adaptation**: PlotAdapter determines available variables → adapts plot layouts → warns about missing variables
-2. **Coverage Annotation**: CoverageAnnotator adds coverage info to plots → creates human-readable summaries ("5/8 variables plotted")
-3. **Plot Generation**: ValidationPlotter creates plots for available variables only → overlays validation ranges → exports with coverage warnings
+## Design Principles
 
----
+**Error Handling:** Graceful degradation, actionable errors, partial failure handling
 
-## Cross-Cutting Concerns
+**Coverage-Aware:** Flexible validation, coverage tracking, adaptive output, scope communication  
 
-### **Error Handling Strategy**
-- **Graceful Degradation**: Validation continues with partial specification coverage, warns about missing variables
-- **Actionable Errors**: Error messages specify which variables are missing, what ranges are violated, how to fix issues
-- **External Collaborator Focus**: Error messages clear for non-experts, avoid technical jargon
-- **Partial Failure Handling**: Reports issues but continues processing (warns about unknown tasks, missing variables)
+**Task-Specific:** Automatic task detection, dynamic range loading, mixed task handling, unknown task handling
 
-### **Coverage-Aware Processing**
-- **Flexible Validation**: Only validates variables present in both dataset and specifications
-- **Coverage Tracking**: Tracks standard specification coverage throughout processing pipeline
-- **Adaptive Output**: Reports and plots adapt to available data rather than failing on missing variables
-- **Scope Communication**: Clearly communicates validation scope ("full", "partial", "minimal") to users
-
-### **Task-Specific Processing**
-- **Task Detection**: Automatic task detection from data with validation against known task list
-- **Dynamic Range Loading**: Loads appropriate validation ranges based on detected tasks
-- **Mixed Task Handling**: Supports datasets with multiple tasks, validates each against appropriate ranges
-- **Unknown Task Handling**: Gracefully handles unknown tasks with warnings but continues with known tasks
-
----
-
-This enhanced component architecture focuses on realistic data processing scenarios where datasets may have partial standard specification coverage, unknown tasks, or missing variables. The system gracefully adapts while providing clear feedback to users about what was validated and what was skipped.
