@@ -39,6 +39,11 @@ class PhaseValidator:
         """
         Run comprehensive validation on phase-indexed dataset with stride-level filtering.
         
+        VALIDATION REPORT THREE CORE GOALS:
+        1. Sign Convention Adherence - Verify biomechanical data follows standard sign conventions
+        2. Outlier Detection - Identify strides with biomechanical values outside acceptable ranges  
+        3. Phase Segmentation Validation - Ensure exactly 150 points per gait cycle with proper phase indexing
+        
         MUST perform stride-level validation and filtering
         MUST show which strides are kept vs deleted in validation report
         MUST report stride pass rate as quality metric

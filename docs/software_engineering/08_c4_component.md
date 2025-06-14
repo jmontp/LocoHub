@@ -198,10 +198,17 @@ graph TD
 **Key Components:**
 
 **PhaseValidator Critical Components:**
+
+**VALIDATION REPORT THREE CORE GOALS:**
+1. **Sign Convention Adherence** - Verify biomechanical data follows standard sign conventions
+2. **Outlier Detection** - Identify strides with biomechanical values outside acceptable ranges  
+3. **Phase Segmentation Validation** - Ensure exactly 150 points per gait cycle with proper phase indexing
+
+**Components:**
 - **TaskDetector**: Reads tasks from data['task'] column, validates against feature_constants known tasks, handles unknown tasks gracefully
 - **CoverageAnalyzer**: Analyzes which standard specification variables are present vs missing, calculates coverage percentages
-- **StrideFilter**: Performs task-specific stride filtering using validation ranges from ValidationSpecManager
-- **PhaseStructureValidator**: Validates exactly 150 points per cycle requirement for phase-indexed data
+- **StrideFilter**: Performs task-specific stride filtering using validation ranges from ValidationSpecManager (Goal 2: Outlier Detection)
+- **PhaseStructureValidator**: Validates exactly 150 points per cycle requirement for phase-indexed data (Goal 3: Phase Segmentation)
 - **PhaseReportGenerator**: Creates markdown reports with coverage information, stride filtering results, and actionable recommendations
 
 **ValidationSpecManager Critical Components ⭐:**

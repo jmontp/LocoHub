@@ -55,6 +55,11 @@
 ### PhaseValidator Tests (UC-C02) - 🔥 HIGHEST PRIORITY
 
 > **PhaseValidator is the most critical component - it's the quality gate that ensures all parquet files (regardless of conversion source) meet standards**
+> 
+> **VALIDATION REPORT THREE CORE GOALS:**
+> 1. **Sign Convention Adherence** - Verify biomechanical data follows standard sign conventions
+> 2. **Outlier Detection** - Identify strides with biomechanical values outside acceptable ranges  
+> 3. **Phase Segmentation Validation** - Ensure exactly 150 points per gait cycle with proper phase indexing
 
 #### Parquet File Structure Tests - Priority 1 🔥
 
