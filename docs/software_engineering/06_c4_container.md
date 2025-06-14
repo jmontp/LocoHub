@@ -1,88 +1,206 @@
-# C4 Container Diagram
+# C4 Container Diagrams
+
+## Current Implementation - Contributor Focus (Phase 1)
 
 ```mermaid
 %%{init: {'theme': 'dark'}}%%
 graph TD
-    subgraph "User"
-        data_scientist["Data Scientist<br/><font size='-2'>Person</font><br/><font size='-1'>Analyzes and validates locomotion data.</font>"]
+    subgraph "Current Users (10%)"
+        contributors["Dataset Contributors<br/><font size='-2'>Person</font><br/><font size='-1'>Convert and validate locomotion data</font>"]
+        specialists["Validation Specialists<br/><font size='-2'>Person</font><br/><font size='-1'>Manage quality standards</font>"]
+        admins["System Administrators<br/><font size='-2'>Person</font><br/><font size='-1'>Release and benchmark management</font>"]
     end
 
-    subgraph "Validation System API (Containers)"
-        style ValidationSystemBoundary fill:#00000000,stroke:#888,stroke-width:2px,stroke-dasharray:5
+    subgraph "Validation & Conversion System (Current Implementation)"
+        style ValidationSystem fill:#00000000,stroke:#e76f51,stroke-width:3px,stroke-dasharray:5
         
-        subgraph "User-Facing Tools"
+        subgraph "CLI Tools"
             direction LR
-            conversion_scripts["Conversion Scripts"]
-            reporting_engine["Validation Report Generator"]
-            shared_lib["Shared Library"]
+            convert_dataset["convert_dataset.py<br/><font size='-2'>Container</font><br/><font size='-1'>Convert raw data to parquet</font>"]
+            validate_phase["validate_phase_data.py<br/><font size='-2'>Container</font><br/><font size='-1'>Validate phase-indexed data</font>"]
+            validate_time["validate_time_data.py<br/><font size='-2'>Container</font><br/><font size='-1'>Validate time-indexed data</font>"]
         end
 
-        subgraph "Configuration & Tuning Tools"
-             direction LR
-            spec_manager["Specification Manager"]
-            auto_tuner["Automated Tuner"]
+        subgraph "Quality Management Tools"
+            direction LR
+            manage_specs["manage_validation_specs.py<br/><font size='-2'>Container</font><br/><font size='-1'>Edit validation rules</font>"]
+            auto_tune["auto_tune_ranges.py<br/><font size='-2'>Container</font><br/><font size='-1'>Optimize validation ranges</font>"]
+            assess_quality["assess_quality.py<br/><font size='-2'>Container</font><br/><font size='-1'>Generate quality reports</font>"]
+        end
+
+        subgraph "Core Validation Engine"
+            direction LR
+            phase_validator["PhaseValidator<br/><font size='-2'>Container</font><br/><font size='-1'>Phase validation logic</font>"]
+            spec_manager["ValidationSpecManager<br/><font size='-2'>Container</font><br/><font size='-1'>Validation rule management</font>"]
+            shared_lib["LocomotionData Core<br/><font size='-2'>Container</font><br/><font size='-1'>Data loading and manipulation</font>"]
         end
     end
 
-    subgraph "Data & Specifications"
+    subgraph "Data Storage & Configuration (Current)"
         direction LR
-        subgraph "Interactive Files"
-            style InteractiveFiles fill:#00000000,stroke:#aaa,stroke-width:1px,stroke-dasharray:3
-            parquet_storage["Parquet Datasets"]
-            validation_spec["Validation Spec<br/><font size='-1'>(Editable Rules)</font>"]
+        subgraph "Raw Inputs"
+            raw_data["Raw Datasets<br/><font size='-1'>MATLAB, CSV, B3D formats</font>"]
         end
-        subgraph "Read-Only Files"
-            style ReadOnlyFiles fill:#00000000,stroke:#aaa,stroke-width:1px,stroke-dasharray:3
-            validation_report["Validation Report<br/><font size='-1'>(Includes plots, GIFs, etc.)</font>"]
-            project_docs["Project Documentation"]
+        subgraph "Validated Outputs"
+            parquet_storage["Validated Parquet<br/><font size='-1'>Quality-assured datasets</font>"]
+            validation_specs["Validation Specs<br/><font size='-1'>Editable biomechanical rules</font>"]
+            validation_reports["Validation Reports<br/><font size='-1'>Quality assessment outputs</font>"]
         end
     end
 
-
-    %% User Relationships
-    data_scientist -- "Uses" --> conversion_scripts
-    data_scientist -- "Uses" --> reporting_engine
-    data_scientist -- "Uses" --> shared_lib
-    data_scientist -- "Uses" --> auto_tuner
-    data_scientist -- "Read/Write" --> validation_spec
-    data_scientist -- "Manages/Reads" --> parquet_storage
-    data_scientist -- "Reads" --> validation_report
-    data_scientist -- "Reads" --> project_docs
-
-
-    %% Internal System Relationships
-    conversion_scripts -- "Uses" --> shared_lib
-    reporting_engine -- "Uses" --> shared_lib
-    spec_manager -- "Uses" --> shared_lib
-    auto_tuner -- "Uses" --> shared_lib
+    %% User to CLI Relationships
+    contributors -- "Uses" --> convert_dataset
+    contributors -- "Uses" --> validate_phase
+    contributors -- "Uses" --> validate_time
     
-    spec_manager -- "Triggers Redraw" --> reporting_engine
-    auto_tuner -- "Suggests Changes" --> spec_manager
+    specialists -- "Uses" --> manage_specs
+    specialists -- "Uses" --> auto_tune
+    specialists -- "Uses" --> assess_quality
+    specialists -- "Edits" --> validation_specs
 
+    admins -- "Manages" --> parquet_storage
+    admins -- "Reviews" --> validation_reports
 
-    %% System to File Relationships
-    conversion_scripts -- "Writes" --> parquet_storage
+    %% CLI to Engine Relationships
+    convert_dataset -- "Uses" --> shared_lib
+    validate_phase -- "Uses" --> phase_validator
+    validate_time -- "Uses" --> shared_lib
+    manage_specs -- "Uses" --> spec_manager
+    auto_tune -- "Uses" --> spec_manager
+    assess_quality -- "Uses" --> phase_validator
+
+    %% Engine Dependencies
+    phase_validator -- "Uses" --> shared_lib
+    phase_validator -- "Gets specs from" --> spec_manager
+    spec_manager -- "Manages" --> validation_specs
+
+    %% Data Flow
+    raw_data -- "Converted by" --> convert_dataset
+    convert_dataset -- "Creates" --> parquet_storage
     shared_lib -- "Reads" --> parquet_storage
-    spec_manager -- "Reads/Writes" --> validation_spec
-    auto_tuner -- "Reads" --> parquet_storage
-    reporting_engine -- "Reads" --> parquet_storage
-    reporting_engine -- "Reads" --> validation_spec
-    reporting_engine -- "Generates" --> validation_report
-    
+    phase_validator -- "Generates" --> validation_reports
 
-    %% Styling
-    style data_scientist fill:#08427b,color:white
-    style conversion_scripts fill:#1168bd,color:white
-    style reporting_engine fill:#1168bd,color:white
+    %% Styling - Current Implementation (Solid)
+    style contributors fill:#e76f51,color:white
+    style specialists fill:#e76f51,color:white
+    style admins fill:#f4a261,color:white
+    
+    style convert_dataset fill:#1168bd,color:white
+    style validate_phase fill:#1168bd,color:white
+    style validate_time fill:#1168bd,color:white
+    style manage_specs fill:#1168bd,color:white
+    style auto_tune fill:#1168bd,color:white
+    style assess_quality fill:#1168bd,color:white
+    
+    style phase_validator fill:#2a9d8f,color:white
+    style spec_manager fill:#2a9d8f,color:white
     style shared_lib fill:#2a9d8f,color:white
-    style spec_manager fill:#4a4e69,color:white
-    style auto_tuner fill:#4a4e69,color:white
+    
+    style raw_data fill:#707070,color:white
     style parquet_storage fill:#707070,color:white
-    style validation_spec fill:#707070,color:white
-    style validation_report fill:#707070,color:white
-    style project_docs fill:#707070,color:white
+    style validation_specs fill:#707070,color:white
+    style validation_reports fill:#707070,color:white
     
     linkStyle default stroke:white
+```
+
+---
+
+## Future Contributor Architecture - Enhanced (Phase 2)
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+graph TD
+    subgraph "Enhanced Contributors (10%)"
+        contributors["Dataset Contributors<br/><font size='-2'>Person</font><br/><font size='-1'>Streamlined data contribution</font>"]
+        specialists["Validation Specialists<br/><font size='-2'>Person</font><br/><font size='-1'>Advanced quality analytics</font>"]
+        admins["System Administrators<br/><font size='-2'>Person</font><br/><font size='-1'>Automated release management</font>"]
+        reviewers["Community Reviewers<br/><font size='-2'>Person</font><br/><font size='-1'>Peer validation and standards</font>"]
+    end
+
+    subgraph "Enhanced Validation Platform (Future Contributor Tools)"
+        style EnhancedPlatform fill:#00000000,stroke:#f4a261,stroke-width:3px,stroke-dasharray:3
+        
+        subgraph "Advanced CLI Tools"
+            direction LR
+            batch_validate["batch_validate.py<br/><font size='-2'>Container</font><br/><font size='-1'>Multi-dataset validation</font>"]
+            debug_failures["debug_validation_failures.py<br/><font size='-2'>Container</font><br/><font size='-1'>Deep failure analysis</font>"]
+            compare_datasets["compare_datasets.py<br/><font size='-2'>Container</font><br/><font size='-1'>Cross-dataset comparison</font>"]
+        end
+
+        subgraph "ML & Analytics Tools"
+            direction LR
+            create_benchmarks["create_benchmarks.py<br/><font size='-2'>Container</font><br/><font size='-1'>ML benchmark creation</font>"]
+            publish_datasets["publish_datasets.py<br/><font size='-2'>Container</font><br/><font size='-1'>Release preparation</font>"]
+            analytics_dashboard["Analytics Dashboard<br/><font size='-2'>Container</font><br/><font size='-1'>Quality trend analysis</font>"]
+        end
+
+        subgraph "Community Tools"
+            direction LR
+            review_portal["Review Portal<br/><font size='-2'>Container</font><br/><font size='-1'>Peer review workflows</font>"]
+            standards_wiki["Standards Wiki<br/><font size='-2'>Container</font><br/><font size='-1'>Community documentation</font>"]
+            feedback_system["Feedback System<br/><font size='-2'>Container</font><br/><font size='-1'>User suggestions and issues</font>"]
+        end
+    end
+
+    subgraph "Enhanced Data Infrastructure (Future)"
+        direction LR
+        subgraph "Intelligent Processing"
+            auto_converter["Smart Converter<br/><font size='-1'>AI-assisted format detection</font>"]
+            quality_predictor["Quality Predictor<br/><font size='-1'>ML-based quality estimation</font>"]
+        end
+        subgraph "Advanced Storage"
+            versioned_datasets["Versioned Datasets<br/><font size='-1'>Git-like data versioning</font>"]
+            ml_benchmarks["ML Benchmarks<br/><font size='-1'>Standardized train/test splits</font>"]
+            community_standards["Community Standards<br/><font size='-1'>Collaboratively evolved rules</font>"]
+        end
+    end
+
+    %% Enhanced User Interactions
+    contributors -- "Uses" --> batch_validate
+    contributors -- "Benefits from" --> auto_converter
+    
+    specialists -- "Uses" --> debug_failures
+    specialists -- "Monitors" --> analytics_dashboard
+    specialists -- "Uses" --> quality_predictor
+    
+    admins -- "Uses" --> create_benchmarks
+    admins -- "Uses" --> publish_datasets
+    admins -- "Manages" --> versioned_datasets
+    
+    reviewers -- "Uses" --> review_portal
+    reviewers -- "Contributes to" --> standards_wiki
+    reviewers -- "Provides" --> feedback_system
+
+    %% Advanced Data Flow
+    auto_converter -- "Creates" --> versioned_datasets
+    create_benchmarks -- "Generates" --> ml_benchmarks
+    analytics_dashboard -- "Analyzes" --> quality_predictor
+    review_portal -- "Updates" --> community_standards
+
+    %% Styling - Future Implementation (Dashed)
+    style contributors fill:#f4a261,color:white,stroke-dasharray:3
+    style specialists fill:#f4a261,color:white,stroke-dasharray:3
+    style admins fill:#f4a261,color:white,stroke-dasharray:3
+    style reviewers fill:#f4a261,color:white,stroke-dasharray:3
+    
+    style batch_validate fill:#6baed6,color:white,stroke-dasharray:3
+    style debug_failures fill:#6baed6,color:white,stroke-dasharray:3
+    style compare_datasets fill:#6baed6,color:white,stroke-dasharray:3
+    style create_benchmarks fill:#6baed6,color:white,stroke-dasharray:3
+    style publish_datasets fill:#6baed6,color:white,stroke-dasharray:3
+    style analytics_dashboard fill:#6baed6,color:white,stroke-dasharray:3
+    style review_portal fill:#6baed6,color:white,stroke-dasharray:3
+    style standards_wiki fill:#6baed6,color:white,stroke-dasharray:3
+    style feedback_system fill:#6baed6,color:white,stroke-dasharray:3
+    
+    style auto_converter fill:#96c93d,color:white,stroke-dasharray:3
+    style quality_predictor fill:#96c93d,color:white,stroke-dasharray:3
+    style versioned_datasets fill:#8d99ae,color:white,stroke-dasharray:3
+    style ml_benchmarks fill:#8d99ae,color:white,stroke-dasharray:3
+    style community_standards fill:#8d99ae,color:white,stroke-dasharray:3
+    
+    linkStyle default stroke:white,stroke-dasharray:3
 ```
 
 ---
@@ -375,54 +493,83 @@ graph TD
     linkStyle default stroke:white
 ```
 
-## Key Improvements with Separated Architectures
+## Three-Phase Development Strategy
 
-### **1. Clear User Population Separation**
+### **Phase 1: Foundation - Current Implementation (2025)**
+**Goal**: Establish robust validation infrastructure for quality-assured datasets
 
-#### **Consumer Architecture (90%)** - *Research-Focused Interface*
-- **Clean, Simple Interfaces**: Data repository, web portal, and API optimized for research workflows
-- **Multi-Platform Libraries**: Native Python, MATLAB, and R integration for diverse research communities
-- **Educational Focus**: Tutorials and documentation that connect data to biomechanical theory
-- **Quality Transparency**: Visible quality metrics without exposing technical validation complexity
+**Current Contributor Architecture (10%)**:
+- **CLI Tools**: Basic conversion, validation, and quality assessment
+- **Core Engine**: PhaseValidator, ValidationSpecManager, LocomotionData Core
+- **Focus**: Manual workflows for dataset validation and quality control
+- **Success Criteria**: External collaborators can successfully contribute validated datasets
 
-#### **Contributor Architecture (10%)** - *Quality Assurance Infrastructure*
-- **Specialized CLI Tools**: Purpose-built tools for conversion, validation, and quality management
-- **Technical Workflows**: Complex validation engines and quality assessment systems
-- **Behind-the-Scenes**: Infrastructure that enables consumer confidence through rigorous quality control
+### **Phase 2: Enhancement - Future Contributor Tools (2025-2026)**
+**Goal**: Advanced contributor workflows with community features
 
-### **2. Minimal Overlap, Maximum Clarity**
-- **Shared Component**: Only LocomotionData Core library is used by both architectures
-- **Separate Concerns**: Consumer interfaces focus on usability, contributor tools focus on quality
-- **Clear Data Flow**: Contributors create validated datasets → Consumers access for research
+**Enhanced Contributor Architecture (10%)**:
+- **Advanced Tools**: Batch processing, deep debugging, ML benchmarks
+- **Community Features**: Peer review workflows, collaborative standards
+- **AI-Assisted**: Smart format detection, quality prediction
+- **Focus**: Streamlined contribution workflows and community governance
+- **Success Criteria**: Self-sustaining contributor community with automated workflows
 
-### **3. Architecture-Specific Design Principles**
+### **Phase 3: Scale - Consumer Architecture (2026-2027)**
+**Goal**: Accessible research tools for the broader community
 
-#### **Consumer Architecture Principles**
-- **Fast Access**: Optimized data repository and API for quick dataset access
-- **Research Enablement**: Libraries designed for common biomechanical analysis patterns
-- **Learning Support**: Progressive documentation from tutorials to advanced examples
-- **Platform Diversity**: Support for Python, MATLAB, R, and direct file access
+**Consumer Architecture (90%)**:
+- **Simple Interfaces**: Web portal, data repository, API access
+- **Multi-Platform Libraries**: Python, MATLAB, R integration
+- **Educational Resources**: Tutorials, documentation, learning paths
+- **Focus**: Researcher productivity and biomechanical analysis workflows
+- **Success Criteria**: Widespread adoption for routine locomotion data analysis
 
-#### **Contributor Architecture Principles**
-- **Quality First**: Comprehensive validation and quality assessment tools
-- **Technical Depth**: Advanced debugging, comparison, and optimization capabilities
-- **Automation Support**: CLI tools designed for scripting and batch processing
-- **Standards Management**: Tools for evolving and maintaining validation specifications
+---
 
-### **4. Development Benefits of Separation**
-- **Independent Development**: Consumer and contributor features can be developed in parallel
-- **Focused User Testing**: Separate usability testing for research vs quality assurance workflows
-- **Clear Success Metrics**: Consumer adoption vs contributor efficiency can be measured independently
-- **Simplified Documentation**: Role-specific documentation avoids confusion between user types
+## Key Strategic Insights
 
-### **5. Strategic Implementation Approach**
-- **Phase 1 (Current)**: Complete contributor architecture to ensure data quality foundation
-- **Phase 2 (Future)**: Build consumer architecture with confidence in underlying data quality
-- **Quality Foundation**: 10% contributor infrastructure enables 90% consumer success
+### **1. Quality-First Foundation**
+- **Phase 1 builds quality infrastructure** that enables consumer confidence
+- **10% contributor effort enables 90% consumer success** through rigorous validation
+- **Data quality is non-negotiable** - better to serve fewer high-quality datasets than many questionable ones
 
-### **6. System Integration Points**
-- **Data Handoff**: Contributors produce validated parquet datasets for consumer access
-- **Quality Metrics**: Consumer interfaces display quality summaries generated by contributor tools
-- **Shared Core**: LocomotionData library provides consistent data handling across both architectures
+### **2. Progressive Complexity**
+- **Current**: Manual validation with basic CLI tools
+- **Enhanced**: Automated workflows with community governance  
+- **Consumer**: Simple interfaces hiding validation complexity
 
-This separation recognizes that consumers and contributors have fundamentally different needs and workflows. By designing separate architectures, each can be optimized for its specific user population while maintaining the essential data quality bridge between them. 
+### **3. Community Evolution**
+- **Phase 1**: Small expert community establishing standards
+- **Phase 2**: Growing contributor community with peer review
+- **Phase 3**: Large research community with diverse analysis needs
+
+### **4. Technology Maturation**
+- **Phase 1**: Proven validation logic and quality standards
+- **Phase 2**: AI-assisted tools and automated workflows
+- **Phase 3**: Optimized libraries and user-friendly interfaces
+
+### **5. Validation as Competitive Advantage**
+- **Other platforms**: Focus on data quantity or ease of use
+- **Our approach**: Uncompromising quality validation creates trusted brand
+- **Market differentiation**: "The only locomotion data you can trust for publication"
+
+---
+
+## Architecture Benefits
+
+### **Clear User Population Separation**
+- **Contributors (10%)**: Technical specialists focused on data quality
+- **Consumers (90%)**: Researchers focused on analysis and discovery
+- **Different tools for different goals**: Quality assurance vs research productivity
+
+### **Phased Implementation Benefits**
+- **Risk Reduction**: Validate approach with small expert community before scaling
+- **Resource Efficiency**: Build quality foundation once, serve many consumers
+- **Clear Success Metrics**: Phase-specific goals enable focused development
+
+### **Sustainable Growth Model**
+- **Phase 1**: Establish validation credibility
+- **Phase 2**: Build contributor community sustainability  
+- **Phase 3**: Enable widespread research adoption
+
+This three-phase approach ensures that quality validation infrastructure matures before widespread adoption, creating a sustainable foundation for long-term success in the biomechanics research community. 
