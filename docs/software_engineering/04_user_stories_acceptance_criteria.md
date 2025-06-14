@@ -37,7 +37,7 @@ Acceptance Criteria:
 - Automatically generated visualizations for manual review
 - Export comprehensive report for contribution documentation
 
-Entry Point: `generate_dataset_report.py` • Priority: Critical
+Entry Point: `validation_dataset_report.py` • Priority: Critical
 
 **C03: Generate Phase-Indexed Dataset**
 As a dataset curator I want to convert time-indexed locomotion data to phase-indexed format so I can create the standardized 150-point-per-cycle datasets required for validation.
@@ -51,7 +51,7 @@ Acceptance Criteria:
 - Robust handling of incomplete or irregular gait cycles
 - Quality report showing cycle detection success rates
 
-Entry Point: `generate_phase_dataset.py` • Priority: Critical
+Entry Point: `conversion_generate_phase_dataset.py` • Priority: Critical
 
 ### Dataset Curator - Biomechanical Validation Stories
 
@@ -65,7 +65,7 @@ Acceptance Criteria:
 - Compatibility reports for dataset combinations
 - Harmonization strategy recommendations for inconsistencies
 
-Entry Point: `compare_datasets.py` • Priority: High
+Entry Point: `validation_compare_datasets.py` • Priority: High
 
 **V03: Debug Validation Failures**
 As a validation specialist I want to investigate why specific data points fail validation so I can determine whether to fix data or adjust validation ranges.
@@ -77,7 +77,7 @@ Acceptance Criteria:
 - Recommendations for data fixes vs. range adjustments
 - Detailed debugging reports with evidence
 
-Entry Point: `investigate_errors.py` • Priority: Medium
+Entry Point: `validation_investigate_errors.py` • Priority: Medium
 
 **V04: Manage Validation Specifications**
 As a validation specialist I want to edit and update validation rules and ranges so I can maintain current biomechanical standards as knowledge evolves.
@@ -89,7 +89,7 @@ Acceptance Criteria:
 - Validate specification changes against test datasets
 - Generate change documentation for release notes
 
-Entry Point: `manage_validation_specs.py` • Priority: High
+Entry Point: `validation_manual_tune_spec.py` • Priority: High
 
 **V05: Optimize Validation Ranges**
 As a validation specialist I want to automatically tune validation ranges based on current dataset statistics so I can ensure ranges reflect the best available data while maintaining quality.
@@ -101,7 +101,7 @@ Acceptance Criteria:
 - Generate tuning reports with statistical justification
 - Integration with specification management workflow
 
-Entry Point: `auto_tune_ranges.py` • Priority: High
+Entry Point: `validation_auto_tune_spec.py` • Priority: High
 
 ### Administrator Stories
 
@@ -145,19 +145,19 @@ Entry Point: `manage_releases.py` • Priority: Low
 
 **Critical:**
 - Validation scaffolding infrastructure - Cannot assess dataset quality without this
-- `generate_dataset_report.py` - Comprehensive validation and quality assessment
-- `generate_phase_dataset.py` - Required for creating phase-indexed datasets from time data
+- `validation_dataset_report.py` - Comprehensive validation and quality assessment
+- `conversion_generate_phase_dataset.py` - Required for creating phase-indexed datasets from time data
 - Conversion script examples and templates - Cannot guide community contributions without these
 
 **High:**
-- `manage_validation_specs.py` - Critical for standard evolution
-- `auto_tune_ranges.py` - Important for data-driven improvements
+- `validation_manual_tune_spec.py` - Critical for standard evolution
+- `validation_auto_tune_spec.py` - Important for data-driven improvements
 - `generate_validation_plots.py` - Important for updating validation specification documents
-- `compare_datasets.py` - Important for multi-dataset consistency
+- `validation_compare_datasets.py` - Important for multi-dataset consistency
 
 **Medium:**
 - `generate_validation_gifs.py` - Nice to have for visualization
-- `investigate_errors.py` - Valuable for complex debugging
+- `validation_investigate_errors.py` - Valuable for complex debugging
 
 **Low:**
 - `create_benchmarks.py` - Future priority after validation infrastructure is stable

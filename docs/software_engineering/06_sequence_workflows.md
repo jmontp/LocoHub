@@ -15,9 +15,9 @@ sequenceDiagram
     participant RD as Raw Dataset
     participant CS as Conversion Script
     participant PF as Time Parquet File
-    participant GP as generate_phase_dataset.py
+    participant GP as conversion_generate_phase_dataset.py
     participant PP as Phase Parquet File
-    participant DR as generate_dataset_report.py
+    participant DR as validation_dataset_report.py
     participant QR as Quality Report
 
     DC->>VS: access validation scaffolding docs
@@ -37,7 +37,7 @@ sequenceDiagram
     PF-->>CS: confirm write success
     CS-->>DC: time-indexed conversion complete
     
-    DC->>GP: python generate_phase_dataset.py time_dataset.parquet
+    DC->>GP: python conversion_generate_phase_dataset.py time_dataset.parquet
     GP->>PF: read time-indexed parquet with ground reaction forces
     PF-->>GP: return time-series locomotion data
     GP->>GP: detect gait cycles from vertical GRF
@@ -46,7 +46,7 @@ sequenceDiagram
     PP-->>GP: confirm phase dataset creation
     GP-->>DC: phase-indexed dataset ready
     
-    DC->>DR: python generate_dataset_report.py phase_dataset.parquet
+    DC->>DR: python validation_dataset_report.py phase_dataset.parquet
     DR->>PP: analyze phase-indexed dataset
     PP-->>DR: return dataset structure and data
     DR->>DR: auto-detect dataset type and run comprehensive validation
@@ -75,18 +75,18 @@ sequenceDiagram
 %%{init: {'theme': 'dark'}}%%
 sequenceDiagram
     participant BV as Biomechanical Validator
-    participant MS as manage_validation_specs.py
+    participant MS as validation_manual_tune_spec.py
     participant SM as SpecificationManager
     participant VS as Validation Specs
     participant LT as Literature Review
-    participant AT as auto_tune_ranges.py
+    participant AT as validation_auto_tune_spec.py
     participant PD as Parquet Datasets
     participant VR as Validation Report
 
     BV->>LT: review recent biomechanical literature
     LT-->>BV: identify updated normal ranges
     
-    BV->>MS: python manage_validation_specs.py --edit kinematic
+    BV->>MS: python validation_manual_tune_spec.py --edit kinematic
     MS->>SM: load_current_specs()
     SM->>VS: read current validation rules
     VS-->>SM: return current ranges
@@ -98,7 +98,7 @@ sequenceDiagram
     SM-->>MS: show impact analysis
     MS-->>BV: display affected datasets and variables
     
-    BV->>AT: python auto_tune_ranges.py --dataset combined_data.parquet --method percentile_95
+    BV->>AT: python validation_auto_tune_spec.py --dataset combined_data.parquet --method percentile_95
     AT->>PD: analyze statistical distributions
     PD-->>AT: return variable statistics
     AT-->>BV: suggest data-driven ranges
@@ -124,14 +124,14 @@ sequenceDiagram
 %%{init: {'theme': 'dark'}}%%
 sequenceDiagram
     participant DC as Dataset Curator
-    participant GR as generate_dataset_report.py
+    participant GR as validation_dataset_report.py
     participant LD as LocomotionData
     participant PF as Parquet File
     participant SM as SpecificationManager
     participant VS as Validation Specs
     participant QR as Quality Report
 
-    DC->>GR: python generate_dataset_report.py dataset.parquet
+    DC->>GR: python validation_dataset_report.py dataset.parquet
     GR->>LD: load_dataset(dataset_path)
     LD->>PF: read parquet file
     PF-->>LD: return locomotion data
@@ -216,7 +216,7 @@ sequenceDiagram
 
 ### Success Factors
 - **Clear Scaffolding**: Examples and guidelines enable conversion script development
-- **Phase Generation Tool**: `generate_phase_dataset.py` automates gait cycle detection and interpolation
+- **Phase Generation Tool**: `conversion_generate_phase_dataset.py` automates gait cycle detection and interpolation
 - **Statistical Tools**: Automated range tuning supports evidence-based validation
 - **Comprehensive Reporting**: Quality metrics guide contribution decisions
 - **Iterative Debugging**: Validation feedback enables continuous improvement
