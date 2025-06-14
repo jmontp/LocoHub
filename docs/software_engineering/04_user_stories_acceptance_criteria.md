@@ -17,37 +17,41 @@ Acceptance Criteria:
 - Access to validation scaffolding and standard specification
 - Clear guidelines for variable name mapping
 - Example conversion scripts for reference
+- Phase segmentation example code (calculating 150 points per gait cycle)
 - Validation tools to verify conversion success
 - Documentation templates for new dataset contributions
 
-Supporting Tools: Validation scaffolding, example scripts, documentation templates • Priority: Critical
+Supporting Tools: Validation scaffolding, example scripts, phase segmentation utilities, documentation templates • Priority: Critical
 
-**C02: Validate Converted Dataset**
-As a dataset curator I want to validate my newly converted dataset against biomechanical standards so I can ensure conversion success and data quality.
-
-Acceptance Criteria:
-- Comprehensive validation on phase and time-indexed data
-- Detailed validation report with pass/fail status
-- Specific failures with recommended fixes
-- Visual validation plots for manual review
-- Export validation summary for contribution documentation
-
-Entry Points: `validate_phase_data.py`, `validate_time_data.py` • Priority: Critical
-
-**C03: Generate Dataset Report**
-As a dataset curator I want to generate a comprehensive quality and validation report so I can assess data completeness, identify issues, and document my contribution.
+**C02: Assess Dataset Quality and Validation**
+As a dataset curator I want to generate a comprehensive quality and validation report so I can assess data completeness, identify issues, and ensure my dataset meets biomechanical standards.
 
 Acceptance Criteria:
+- Auto-detect dataset type (phase vs time-indexed) from filename or structure
+- Comprehensive validation against biomechanical standards
 - Dataset summary statistics and metadata
-- Validation results with pass/fail status and specific failures
-- Coverage statistics (subjects, tasks, gait cycles)
+- Coverage statistics (subjects, tasks, gait cycles)  
 - Missing data patterns and outlier identification
 - Biomechanical plausibility scores and population comparisons
+- Detailed validation report with pass/fail status and specific failures
 - Automatically generated visualizations for manual review
-- Export report in standard format for contribution documentation
-- Quality metrics tracking over time
+- Export comprehensive report for contribution documentation
 
-Entry Point: `generate_dataset_report.py` • Priority: High
+Entry Point: `generate_dataset_report.py` • Priority: Critical
+
+**C03: Generate Phase-Indexed Dataset**
+As a dataset curator I want to convert time-indexed locomotion data to phase-indexed format so I can create the standardized 150-point-per-cycle datasets required for validation.
+
+Acceptance Criteria:
+- Input time-indexed parquet with vertical ground reaction forces
+- Automatic gait cycle detection from force data
+- Interpolation to exactly 150 points per gait cycle
+- Preservation of all original variables and metadata
+- Output phase-indexed parquet with cycle metadata
+- Robust handling of incomplete or irregular gait cycles
+- Quality report showing cycle detection success rates
+
+Entry Point: `generate_phase_dataset.py` • Priority: Critical
 
 ### Dataset Curator - Biomechanical Validation Stories
 
@@ -141,12 +145,11 @@ Entry Point: `manage_releases.py` • Priority: Low
 
 **Critical:**
 - Validation scaffolding infrastructure - Cannot assess dataset quality without this
-- `validate_phase_data.py` - Core validation functionality
-- `validate_time_data.py` - Core validation functionality  
+- `generate_dataset_report.py` - Comprehensive validation and quality assessment
+- `generate_phase_dataset.py` - Required for creating phase-indexed datasets from time data
 - Conversion script examples and templates - Cannot guide community contributions without these
 
 **High:**
-- `generate_dataset_report.py` - Essential for dataset quality assessment and contribution documentation
 - `manage_validation_specs.py` - Critical for standard evolution
 - `auto_tune_ranges.py` - Important for data-driven improvements
 - `generate_validation_plots.py` - Important for updating validation specification documents

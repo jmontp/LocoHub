@@ -2,6 +2,19 @@
 
 **Essential guidance for locomotion data standardization architecture.**
 
+## Software Engineering Philosophy
+
+**Follow best software engineering practices throughout development.** 
+
+**Claude Code Role**: Guide user through software engineering best practices. While Claude Code is an expert in software engineering, the user is still learning. The user owns the vision and makes final decisions, but Claude Code should proactively suggest improvements whenever they would build a better project.
+
+**Collaboration Approach**:
+- User defines project vision and requirements
+- Claude Code can suggest improvements to vision, mission, and strategic direction
+- Claude Code suggests architectural improvements, design patterns, and engineering practices
+- Focus on maintainable, testable, and scalable code
+- Prioritize code quality, documentation, and proper abstractions
+
 ---
 
 ## Key Documents

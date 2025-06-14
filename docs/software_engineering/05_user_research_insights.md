@@ -1,51 +1,49 @@
 # User Research Insights
 
+**User population analysis and development priorities.**
+
 ## User Population (90/9/1 Split)
 
-**Dataset Consumers (90%):** Graduate students, clinical researchers, biomechanics engineers, sports scientists, students
+**Dataset Consumers (90%):** Graduate students, clinical researchers, biomechanics engineers, sports scientists
 
-**Dataset Contributors (9%):** Data validation specialists, dataset curators, standard developers
+**Dataset Contributors (9%):** Dataset curators (programmers + biomechanical validation)
 
-**System Administrators (1%):** Release managers, benchmark creators, infrastructure maintainers
+**System Administrators (1%):** Release managers, infrastructure maintainers
 
-## User Requirements
+## Current Development Focus (9% + 1%)
 
-### Dataset Consumers (Priority: Future Development)
-**Needs:** Easy data access, clear documentation, standard formats, quality assurance, proper attribution
+### Dataset Contributors - Programmers
+**Critical Tools:**
+- Validation scaffolding for conversion script development
+- Example conversion scripts for major formats
+- `generate_phase_dataset.py` - Convert time-indexed to phase-indexed data
+- `generate_dataset_report.py` - Comprehensive validation and quality assessment
 
-**Success Factors:** Standardized variable names, rich documentation, multiple access methods, visible quality metrics, educational resources
+**Success Factors:** Clear validation feedback, automated quality assessment, minimal setup complexity
 
-**Pain Points:** Biomechanical complexity, format conversion, population matching, real-time constraints, limited task diversity
+### Dataset Contributors - Biomechanical Validation  
+**Critical Tools:**
+- `manage_validation_specs.py` - Update ranges based on literature
+- `auto_tune_ranges.py` - Statistical range optimization
+- `investigate_errors.py` - Debug biomechanical outliers
+- `compare_datasets.py` - Cross-dataset consistency
 
-**Architecture Requirements:** Data repository priority, Python/MATLAB libraries, documentation focus, quality transparency, multi-platform support
+**Success Factors:** Domain-specific debugging, statistical justification, change tracking
 
-### Dataset Contributors (Priority: Current Development)
-**Needs:** Validation tools, conversion workflows, range tuning, quality reporting, standard evolution
-
-**Development Priorities:** ValidationExpectationsParser ✅, AutomatedFineTuner ✅, user-centric CLI tools, comprehensive testing ✅
-
-**Tool Requirements:**
-- Dataset Validation: `validate_phase_data.py`, `validate_time_data.py`
-- Range Optimization: `auto_tune_ranges.py` 
-- Report Generation: `generate_validation_plots.py`, `generate_validation_gifs.py`
-- Specification Management: `manage_validation_specs.py`
-
-### System Administrators (Priority: Infrastructure)
-**Needs:** Release management, ML benchmark creation, infrastructure automation, community management, quality oversight
-
-**Core Tools:** Dataset publishing, benchmark standardization, release coordination, infrastructure maintenance, community governance
-
-**Success Factors:** Automated workflows, quality metrics visibility, reproducible processes
+### System Administrators
+**Future Tools:** Release coordination, infrastructure maintenance *(Low priority until validation infrastructure complete)*
 ## Development Strategy
 
-**Phase 1 (Current):** Complete contributor tools for 9% + 1% users
-- ✅ Validation parser architecture 
-- 🚧 CLI entry points for workflows
-- 📋 Performance optimization
+**Phase 1 (Current):** Validation infrastructure for dataset contributors
+- ✅ Core validation architecture (ValidationExpectationsParser, PhaseValidator)
+- 🚧 Dataset quality assessment and reporting tools
+- 📋 Validation specification management
+- 📋 Conversion scaffolding and examples
+- 📋 `generate_phase_dataset.py` - Automated time-to-phase conversion tool
 
-**Phase 2 (Future):** Consumer experience for 90% users  
-- 📋 Data repository with fast access
-- 📋 Python/MATLAB libraries 
-- 📋 Tutorials and guides
+**Phase 2 (Future):** Consumer tools for 90% users
+- 📋 Data repository with standardized access
+- 📋 Python/MATLAB analysis libraries
+- 📋 Educational tutorials and documentation
 
-**Rationale:** Build quality foundation first, then consumer tools with validated datasets
+**Rationale:** Establish quality datasets through robust validation before building consumer tools
