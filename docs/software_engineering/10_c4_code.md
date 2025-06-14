@@ -6,9 +6,9 @@
 
 This document has been split into three focused files for better maintainability:
 
-**[Interface Contracts](09a_interface_contracts.md)** - Method signatures and behavioral contracts  
-**[Data Structures](09b_data_structures.md)** - Result classes and type definitions  
-**[CLI Specifications](09c_cli_specifications.md)** - Command-line interface patterns
+**[Interface Contracts](10a_interface_contracts.md)** - Method signatures and behavioral contracts  
+**[Data Structures](10b_data_structures.md)** - Result classes and type definitions  
+**[CLI Specifications](10c_cli_specifications.md)** - Command-line interface patterns
 
 ## Legacy Content
 

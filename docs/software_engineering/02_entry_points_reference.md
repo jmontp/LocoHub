@@ -1,8 +1,8 @@
-# Entry Points Reference - Complete CLI Tool Catalog
+# Entry Points Reference
 
-**Quick reference for all user-facing CLI tools organized by role and priority.**
+**Complete CLI tool catalog organized by user role and priority.**
 
----
+*What tools exist and their implementation status for each user type.*
 
 ## 🎯 Entry Points by User Role
 

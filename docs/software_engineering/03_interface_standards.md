@@ -1,8 +1,8 @@
-# Interface Standards - Consistent Patterns for CLI Tools and APIs
+# Interface Standards
 
-## Overview
+**Consistent patterns for CLI tools and APIs.**
 
-This document defines standardized patterns for all CLI tools and APIs in the locomotion data standardization project. Following these standards ensures consistency, predictability, and maintainability across all user-facing components.
+*How to use the tools: CLI patterns, error codes, and configuration standards.*
 
 ---
 
