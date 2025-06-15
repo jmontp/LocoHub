@@ -6,27 +6,23 @@
 
 ## 🎯 Entry Points by User Role
 
-### **Dataset Curators (9% of users)**
-*Convert and initially validate new datasets*
+### **Dataset Curators - Programmers (9% of users)**
+*Convert datasets and perform quality assessment*
 
 | Priority | Tool | Purpose | Status |
 |----------|------|---------|--------|
-| **Critical** | `convert_dataset.py` | Convert raw datasets to standardized parquet | 📋 Planned |
-| **Critical** | `validate_phase_data.py` | Validate phase-indexed datasets | 🚧 Refactor existing |
-| **Critical** | `validate_time_data.py` | Validate time-indexed datasets | 🚧 Refactor existing |
-| **High** | `generate_validation_plots.py` | Create static validation plots | 🚧 Refactor existing |
-| **Medium** | `generate_validation_gifs.py` | Create animated validation GIFs | 🚧 Refactor existing |
+| **Critical** | `conversion_generate_phase_dataset.py` | Convert time-indexed to phase-indexed datasets | 📋 Planned |
+| **Critical** | `validation_dataset_report.py [--generate-gifs]` | Comprehensive validation and quality assessment | 🚧 Refactor existing |
 
-### **Validation Specialists (9% of users)**  
-*Ensure data quality and maintain standards*
+### **Dataset Curators - Biomechanical Validation (9% of users)**  
+*Ensure data quality and maintain validation standards*
 
 | Priority | Tool | Purpose | Status |
 |----------|------|---------|--------|
-| **High** | `assess_quality.py` | Generate comprehensive quality reports | 📋 Planned |
-| **High** | `manage_validation_specs.py` | Interactive editing of validation rules | 🚧 Refactor existing |
-| **High** | `auto_tune_ranges.py` | Automatically optimize validation ranges | 🚧 Refactor existing |
-| **High** | `compare_datasets.py` | Compare datasets from different sources | 📋 Planned |
-| **Medium** | `investigate_errors.py` | Debug validation failures in detail | 📋 Planned |
+| **High** | `validation_manual_tune_spec.py [--generate-gifs]` | Interactive editing of validation rules | 🚧 Refactor existing |
+| **High** | `validation_auto_tune_spec.py [--generate-gifs]` | Automatically optimize validation ranges | 🚧 Refactor existing |
+| **High** | `validation_compare_datasets.py` | Compare datasets from different sources | 📋 Planned |
+| **Medium** | `validation_investigate_errors.py` | Debug validation failures in detail | 📋 Planned |
 
 ### **System Administrators (1% of users)**
 *Manage releases and create ML benchmarks*
@@ -44,35 +40,26 @@
 ### **Phase 1: Core Infrastructure (4-6 weeks)**
 ```bash
 # Critical tools needed for basic functionality
-python convert_dataset.py         # Enable new dataset addition
-python validate_phase_data.py     # Core validation workflow
-python validate_time_data.py      # Core validation workflow  
-python create_benchmarks.py       # Enable ML research community
+python conversion_generate_phase_dataset.py # Enable phase dataset creation
+python validation_dataset_report.py         # Core validation and quality assessment
+python create_benchmarks.py                 # Enable ML research community
 ```
 
 ### **Phase 2: Quality Tools (3-4 weeks)**
 ```bash
 # High-priority quality assurance tools
-python assess_quality.py          # Quality oversight
-python manage_validation_specs.py # Standards evolution
-python auto_tune_ranges.py        # Data-driven improvements
+python validation_manual_tune_spec.py  # Literature-based range updates
+python validation_auto_tune_spec.py    # Statistical range optimization
+python validation_compare_datasets.py  # Multi-dataset consistency
 ```
 
-### **Phase 3: Analysis & Visualization (2-3 weeks)**
+### **Phase 3: Advanced Features (2-3 weeks)**
 ```bash
-# Analysis and visualization tools
-python generate_validation_plots.py # Visual verification
-python compare_datasets.py          # Multi-dataset analysis
+# Advanced debugging and investigation
+python validation_investigate_errors.py # Complex failure debugging
 ```
 
-### **Phase 4: Advanced Features (2-3 weeks)**
-```bash
-# Advanced debugging and visualization
-python generate_validation_gifs.py # Animation visualization
-python investigate_errors.py       # Complex debugging
-```
-
-### **Phase 5: Release Management (1-2 weeks)**
+### **Phase 4: Release Management (1-2 weeks)**
 ```bash
 # Public release and version management
 python publish_datasets.py    # Public dataset releases
@@ -85,26 +72,29 @@ python manage_releases.py     # Version and lifecycle management
 
 ### **Dataset Curator Workflow**
 ```bash
-# 1. Convert new dataset
-python convert_dataset.py raw_data.mat ./output/
+# 1. Generate phase-indexed dataset from time data
+python conversion_generate_phase_dataset.py time_dataset.parquet
 
-# 2. Validate converted data
-python validate_phase_data.py output/dataset_phase.parquet
+# 2. Comprehensive validation and quality assessment
+python validation_dataset_report.py dataset_phase.parquet
 
-# 3. Generate visual verification
-python generate_validation_plots.py output/dataset_phase.parquet
+# 3. Generate visual verification with animations (optional)
+python validation_dataset_report.py dataset_phase.parquet --generate-gifs
 ```
 
 ### **Validation Specialist Workflow**
 ```bash
-# 1. Assess overall quality
-python assess_quality.py dataset_phase.parquet
+# 1. Update validation ranges based on literature
+python validation_manual_tune_spec.py --edit kinematic
 
-# 2. Tune validation ranges if needed
-python auto_tune_ranges.py --dataset dataset_phase.parquet --method percentile_95
+# 2. Optimize ranges using statistical analysis
+python validation_auto_tune_spec.py --dataset combined_data.parquet --method percentile_95
 
-# 3. Compare with other datasets
-python compare_datasets.py dataset1.parquet dataset2.parquet
+# 3. Compare datasets from different sources
+python validation_compare_datasets.py dataset1.parquet dataset2.parquet
+
+# 4. Debug specific validation failures
+python validation_investigate_errors.py dataset_phase.parquet --variable knee_flexion_angle
 ```
 
 ### **System Administrator Workflow**
