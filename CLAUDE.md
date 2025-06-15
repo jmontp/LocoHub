@@ -19,12 +19,12 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 
 ### Project Root
 - **CLAUDE.md** - Main guidance for Claude Code (this file)
-- **CLAUDE.local.md** - User's private local instructions
+- **CLAUDE.local.md** - User's private local instructions with custom slash commands
 - **CONTRIBUTING.md** - Contribution guidelines with minimal style
 - **LICENSE** - MIT license for open source distribution
-- **PM_snapshot.md** - Auto-generated project status overview
-- **PROJECT_MANAGEMENT_SYSTEM_GUIDE.md** - PM system documentation
 - **README.md** - Repository overview and quick start guide
+- **scratchpad.md** - Current work context and recent decisions (last 3 context clears)
+- **scratchpad_history.md** - Archive of older context clears and project notes
 
 ### Documentation (`docs/`)
 - **CLAUDE.md** - Documentation directory guidance
@@ -50,7 +50,6 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 - **validation_expectations_changelog.md** - Validation rule change history
 
 #### Standard Specification (`docs/standard_spec/`)
-- **PM_ongoing.md** - Project management for specifications
 - **dataset_template.md** - Template for new dataset documentation
 - **phase_calculation.md** - Gait cycle phase calculation methods
 - **units_and_conventions.md** - Units, sign conventions, and typical biomechanical values
@@ -86,7 +85,6 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 
 #### Conversion Scripts (`source/conversion_scripts/`)
 - **CONSOLIDATION_PLAN.md** - Dataset consolidation strategy
-- **PM_ongoing.md** - Project management for conversions
 
 ##### AddBiomechanics (`source/conversion_scripts/AddBiomechanics/`)
 - **CLAUDE.md** - AddBiomechanics conversion guidance
@@ -131,7 +129,6 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 
 #### Testing Framework (`source/tests/`)
 - **CLAUDE.md** - Testing framework guidance
-- **PM_ongoing.md** - Project management for testing
 - **demo_dataset_validator_phase.py** - Visual validation demonstration
 - **demo_filters_by_phase_plots.py** - Filter plots demonstration
 - **demo_step_classifier.py** - Step classification demonstration
@@ -150,7 +147,6 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 - **[various directories]** - Test output validation images organized by test type
 
 #### Validation System (`source/validation/`)
-- **PM_ongoing.md** - Project management for validation
 - **dataset_validator_phase.py** - Phase-indexed dataset validation (main validator)
 - **dataset_validator_time.py** - Time-indexed dataset validation
 - **filters_by_phase_plots.py** - Phase-based validation plot generator
@@ -161,7 +157,6 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 - **validation_expectations_parser.py** - Markdown validation rule parser
 
 #### Visualization (`source/visualization/`)
-- **PM_ongoing.md** - Project management for visualization
 - **refresh_validation_gifs.py** - GIF regeneration automation
 - **walking_animator.py** - Walking pattern animation generator
 
@@ -179,7 +174,6 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 - **generate_validation_gifs.py** - Validation GIF generation
 - **memory_safe_validator.py** - Memory-efficient validation
 - **mosaic_plot_3d_efficient.py** - Efficient 3D plotting
-- **pm_update.py** - Project management automation
 - **quick_phase_check.py** - Fast phase validation
 - **update_validation_images.py** - Validation image updates
 - **update_validation_table_format.py** - Table format standardization
@@ -228,6 +222,26 @@ Intent: {Why this file exists and what problems it solves}
 - New documentation files (.md files)
 - New directories or configuration files
 
+## Context Management
+
+**Scratchpad System**: Lightweight project context tracking without complex PM overhead.
+
+**Core Files**:
+- `scratchpad.md` - Current work context (last 3 context clears)
+- `scratchpad_history.md` - Archive of older work sessions
+
+**Usage Pattern**:
+1. Work on tasks normally with Claude Code
+2. Use `/my_clear` slash command when ready to clear context
+3. Claude summarizes current session and updates scratchpad
+4. Start fresh with continuity preserved in scratchpad
+
+**Benefits**:
+- **Context preservation**: No lost work when clearing Claude context
+- **Minimal overhead**: Simple markdown files, no complex PM system
+- **Natural workflow**: Integrates with Claude Code session management
+- **Easy review**: Scannable history of recent work and decisions
+
 ## Common Commands
 
 **Git**:
@@ -235,10 +249,10 @@ Intent: {Why this file exists and what problems it solves}
 - Always include co-author information
 - Get current date: `python3 -c "import datetime; print(datetime.datetime.now().strftime('%Y-%m-%d'))"`
 
-**Project Management**:
+**Project Context Management**:
 ```bash
-cat PM_snapshot.md                    # Current project status
-python scripts/pm_update.py --check   # Check PM files
+cat scratchpad.md                     # Current work context and recent decisions
+# Use /my_clear slash command to manage context and scratchpad
 ```
 
 **MATLAB**: Executable at default Windows install location (WSL environment)

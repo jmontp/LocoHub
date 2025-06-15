@@ -17,7 +17,7 @@
 - [System Context](11_c4_context.md) • [Containers](12_c4_container.md) • [Components](13_c4_component.md) • [Code](14_c4_code.md)
 
 **Implementation (How to build and test):**
-- [Test Specifications](15_test_specifications.md)
+- [Test Specifications](15_test_specifications.md) • [Implementation Strategy](18_implementation_strategy.md)
 
 **Project Management (Strategic planning):**
 - [Project Roadmap](16_project_roadmap.md) • [Documentation Standards](17_documentation_standards.md)
@@ -47,7 +47,11 @@
 
 **Technical Implementation:**
 - `15_test_specifications.md` - Test cases by type (split into unit/integration/acceptance)
+- `18_implementation_strategy.md` - Evolutionary development approach with vertical slices
 
 **Strategic & Meta:**
 - `16_project_roadmap.md` - Development phases, milestones, and feature timeline
 - `17_documentation_standards.md` - Documentation requirements and improvement checklist
+
+**Implementation Workflows:**
+- `workflows/` - Sub-agent templates and concrete implementation examples
