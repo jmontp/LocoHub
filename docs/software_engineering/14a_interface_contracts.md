@@ -69,29 +69,9 @@ class TimeValidator:
         """Check sampling rate consistency across subjects and tasks"""
 ```
 
-## ValidationSpecVisualizer - Validation Plot Generation
+## Integrated Visualization in PhaseValidator
 
-```python
-class ValidationSpecVisualizer:
-    def __init__(self, spec_manager: SpecificationManager):
-        """Dependencies: SpecificationManager"""
-    
-    def generate_validation_plots(self, file_path: str, output_dir: str) -> ValidationPlotResult:
-        """
-        Generate static plots showing joint angles and moments across gait phases.
-        
-        MUST generate plots for all available tasks
-        MUST overlay validation ranges on visualizations
-        MUST export plots in publication-ready formats
-        MUST support batch generation for multiple subjects
-        """
-    
-    def generate_validation_gifs(self, file_path: str, output_dir: str) -> ValidationGifResult:
-        """Create animated GIFs showing walking patterns with validation overlays"""
-    
-    def create_phase_range_plots(self, task: str, output_path: str) -> PlotResult:
-        """Generate phase-specific range visualization for a task"""
-```
+**Note:** Visualization is now integrated within the PhaseValidator component. Plot generation occurs automatically during validation report generation when `generate_plots=True`. Animated GIFs are optionally generated with the `--generate-gifs` flag in the CLI.
 
 ## QualityAssessor - Dataset Quality Assessment
 

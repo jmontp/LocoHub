@@ -16,8 +16,8 @@ All CLI tools follow this consistent pattern:
 python {tool_name}.py [REQUIRED_ARGS] [OPTIONS]
 
 # Examples:
-python convert_dataset.py INPUT_PATH OUTPUT_DIR [OPTIONS]
-python validate_phase_data.py DATASET_PATH [OPTIONS]
+python conversion_generate_phase_dataset.py DATASET_PATH [OPTIONS]
+python validation_dataset_report.py DATASET_PATH [OPTIONS]
 python create_benchmarks.py DATASET_PATHS OUTPUT_DIR [OPTIONS]
 ```
 
@@ -39,7 +39,6 @@ python create_benchmarks.py DATASET_PATHS OUTPUT_DIR [OPTIONS]
 --verbose, -v          Enable verbose logging output
 --quiet, -q            Minimal output for automation scripts
 --config FILE          Configuration file override
---output-format TYPE   Report format (json, html, text, all)
 --help, -h             Show usage information and exit
 --version              Show version information and exit
 ```
@@ -54,8 +53,13 @@ python create_benchmarks.py DATASET_PATHS OUTPUT_DIR [OPTIONS]
 # Validation Tools  
 --mode TYPE           Validation mode (kinematic, kinetic, all)
 --specs-file FILE     Custom validation specifications
---plots               Generate validation plots
+--generate-gifs       Generate animated GIF visualizations (computationally intensive)
 --fail-fast           Stop on first critical failure
+
+# Specification Management Tools
+--edit TYPE           Edit mode (kinematic, kinetic, all)
+--dataset FILE        Dataset for statistical analysis
+--method TYPE         Statistical method (percentile_95, iqr, etc)
 
 # Benchmark Tools
 --split-strategy TYPE  Data splitting method
@@ -191,25 +195,25 @@ class ProgressReporter:
 
 #### **Verbose Mode**
 ```bash
-[2024-12-06 10:30:15] Starting dataset conversion...
-[2024-12-06 10:30:16] Step 1/5: Detecting input format... DONE (MATLAB)
-[2024-12-06 10:30:18] Step 2/5: Loading data... DONE (1,247 gait cycles)
-[2024-12-06 10:30:25] Step 3/5: Mapping variables... DONE (23/25 mapped)
-[2024-12-06 10:30:35] Step 4/5: Converting to parquet... DONE
-[2024-12-06 10:30:37] Step 5/5: Generating report... DONE
-[2024-12-06 10:30:37] Conversion completed successfully in 22 seconds
+[2024-12-06 10:30:15] Starting dataset validation...
+[2024-12-06 10:30:16] Step 1/5: Loading dataset... DONE (1,247 gait cycles)
+[2024-12-06 10:30:18] Step 2/5: Running validation checks... DONE (kinematic and kinetic)
+[2024-12-06 10:30:25] Step 3/5: Calculating quality metrics... DONE (coverage: 94%)
+[2024-12-06 10:30:35] Step 4/5: Generating validation plots... DONE
+[2024-12-06 10:30:37] Step 5/5: Compiling report... DONE
+[2024-12-06 10:30:37] Validation completed successfully in 22 seconds
 ```
 
 #### **Normal Mode**
 ```bash
-Converting dataset: ████████████████████░░ 80% (Step 4/5: Converting to parquet)
-Conversion completed successfully in 22 seconds
+Validating dataset: ████████████████████░░ 80% (Step 4/5: Generating validation plots)
+Validation completed successfully in 22 seconds
 ```
 
 #### **Quiet Mode** 
 ```bash
 # Minimal output - only critical information
-Conversion completed: gtech_2023_phase.parquet, gtech_2023_time.parquet
+Validation completed: 1,247 cycles validated, 94% pass rate, report saved
 ```
 
 ---
@@ -219,7 +223,7 @@ Conversion completed: gtech_2023_phase.parquet, gtech_2023_time.parquet
 ### **Configuration File Format**
 ```yaml
 # config.yaml - Standard configuration structure
-tool_name: "convert_dataset"
+tool_name: "validation_dataset_report"
 version: "1.0.0"
 
 # Input/Output Settings
@@ -240,7 +244,6 @@ processing:
   
 # Reporting Settings
 reporting:
-  format: "html"  # json, html, text, all
   include_plots: true
   verbose: false
 ```
@@ -313,45 +316,44 @@ logger.debug(f"Applied mapping: {source_var} -> {standard_var}")
 {dataset_name}_time.parquet      # Time-indexed data
 {dataset_name}_phase.parquet     # Phase-indexed data (150 points/cycle)
 
-# Report outputs
-{tool_name}_report.{format}      # Main tool report
-{dataset_name}_validation_report.html
-{dataset_name}_conversion_report.json
+# Report outputs (markdown format)
+{tool_name}_report.md            # Main tool report
+{dataset_name}_validation_report.md
+{dataset_name}_conversion_report.md
 
-# Plot outputs
-{dataset_name}_{task}_{plot_type}.png
-{dataset_name}_{task}_animation.gif
+# Validation plots (integrated with validation tools)
+{dataset_name}_{task}_kinematic_filters_by_phase.png
+{dataset_name}_{task}_kinetic_filters_by_phase.png
+{dataset_name}_{task}_forward_kinematics_phase_{00,25,50,75}_range.png
+{dataset_name}_{task}_animation.gif  # With --generate-gifs flag
 
 # Metadata outputs
 {dataset_name}_metadata.json
 {tool_name}_configuration.yaml
 ```
 
-### **Report Structure Standards**
-```json
-{
-  "tool": "validate_phase_data",
-  "version": "1.0.0",
-  "timestamp": "2024-12-06T10:30:00Z",
-  "input": {
-    "dataset_path": "/data/gtech_2023_phase.parquet",
-    "configuration": {}
-  },
-  "results": {
-    "overall_status": "PASS",
-    "summary": {},
-    "details": {}
-  },
-  "performance": {
-    "processing_time_seconds": 45.2,
-    "memory_usage_mb": 234.5,
-    "dataset_size_mb": 123.4
-  },
-  "metadata": {
-    "system_info": {},
-    "environment": {}
-  }
-}
+### **Report Structure Standards (Markdown)**
+```markdown
+# Dataset Validation Report
+
+**Tool**: validation_dataset_report v1.0.0  
+**Dataset**: /data/gtech_2023_phase.parquet  
+**Generated**: 2024-12-06 10:30:00
+
+## Summary
+- **Overall Status**: PASS
+- **Processing Time**: 45.2 seconds
+- **Dataset Size**: 123.4 MB
+- **Memory Usage**: 234.5 MB
+
+## Validation Results
+[Tool-specific validation details]
+
+## Quality Metrics
+[Tool-specific quality assessment]
+
+## Recommendations
+[Tool-specific recommendations]
 ```
 
 ---

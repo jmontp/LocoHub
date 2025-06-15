@@ -100,10 +100,10 @@ graph TD
             spec_persistence["SpecificationPersistence<br/><font size='-2'>Component</font><br/><font size='-1'>File I/O and versioning with backup</font>"]
         end
         
-        subgraph "ValidationSpecVisualizer Components"
+        subgraph "Integrated Visualization Components"
             plot_adapter["PlotAdapter<br/><font size='-2'>Component</font><br/><font size='-1'>Adapts plots to available variables, skips missing gracefully</font>"]
             coverage_annotator["CoverageAnnotator<br/><font size='-2'>Component</font><br/><font size='-1'>Adds coverage information to plot titles and annotations</font>"]
-            validation_plotter["ValidationPlotter<br/><font size='-2'>Component</font><br/><font size='-1'>Generates forward kinematics and phase filter plots</font>"]
+            validation_plotter["ValidationPlotter<br/><font size='-2'>Component</font><br/><font size='-1'>Generates plots as part of validation reports</font>"]
         end
         
         subgraph "QualityAssessor Components"
@@ -135,11 +135,12 @@ graph TD
     spec_editor -- "Modified specs" --> spec_persistence
     spec_persistence -- "Updated files" --> spec_parser
     
-    %% ValidationSpecVisualizer Internal Data Flow
+    %% Integrated Visualization Internal Data Flow
     plot_adapter -- "Available variables list" --> validation_plotter
     coverage_analyzer -- "Coverage info" --> coverage_annotator
     coverage_annotator -- "Annotated metadata" --> validation_plotter
-    validation_plotter -- "Generated plots" --> plot_outputs
+    validation_plotter -- "Generated plots" --> phase_report_generator
+    phase_report_generator -- "Embeds plots in report" --> validation_reports
     
     %% QualityAssessor Internal Data Flow
     stride_classifier -- "Bad stride identifications" --> quality_scorer
@@ -174,10 +175,10 @@ graph TD
     style spec_editor fill:#96c93d,color:white
     style spec_persistence fill:#96c93d,color:white
     
-    %% Styling - ValidationSpecVisualizer (Critical)
-    style plot_adapter fill:#f4a261,color:white
-    style coverage_annotator fill:#f4a261,color:white
-    style validation_plotter fill:#f4a261,color:white
+    %% Styling - Integrated Visualization (Part of PhaseValidator)
+    style plot_adapter fill:#e76f51,color:white
+    style coverage_annotator fill:#e76f51,color:white
+    style validation_plotter fill:#e76f51,color:white
     
     %% Styling - QualityAssessor (High Priority)
     style stride_classifier fill:#6baed6,color:white

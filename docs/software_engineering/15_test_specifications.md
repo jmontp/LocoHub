@@ -1241,14 +1241,11 @@ def test_complete_external_conversion_to_validated_workflow():
         assessor = QualityAssessor(spec_manager)
         quality_result = assessor.assess_quality(external_converted_file)
         
-        # Step 3: Generate visualizations
-        visualizer = ValidationSpecVisualizer(spec_manager)
-        plot_result = visualizer.generate_validation_plots(
-            pd.read_parquet(external_converted_file), "plots/"
-        )
+        # Step 3: Verify plots were generated during validation
+        assert len(validation_result.plot_paths) > 0
+        assert all(os.path.exists(path) for path in validation_result.plot_paths)
     else:
         quality_result = None
-        plot_result = None
     
     # Then: Workflow provides clear feedback regardless of external conversion quality
     assert validation_result is not None
@@ -1257,8 +1254,7 @@ def test_complete_external_conversion_to_validated_workflow():
     # And: If data is valid, complete analysis is performed
     if validation_result.is_valid:
         assert quality_result is not None
-        assert plot_result.success == True
-        assert len(plot_result.generated_plots) > 0
+        assert len(validation_result.plot_paths) > 0
     
     # And: If data is invalid, clear feedback is provided to external collaborator
     else:

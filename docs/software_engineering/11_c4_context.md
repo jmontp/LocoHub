@@ -9,14 +9,12 @@
 graph LR
     DC["🔬 Dataset Contributor<br/><font size='-1'>I have raw locomotion data</font>"] 
     
-    DC --> CONVERT["📝 convert_dataset.py<br/><font size='-1'>Convert raw data to parquet</font>"]
-    DC --> VALIDATE["✅ validate_phase_data.py<br/><font size='-1'>Validate converted datasets</font>"]
-    DC --> ASSESS["📊 assess_quality.py<br/><font size='-1'>Check data quality metrics</font>"]
+    DC --> CONVERT["📝 conversion_generate_phase_dataset.py<br/><font size='-1'>Convert time to phase data</font>"]
+    DC --> VALIDATE["✅ validation_dataset_report.py<br/><font size='-1'>Validate and assess quality</font>"]
     
     style DC fill:#e76f51,color:white
     style CONVERT fill:#1168bd,color:white
     style VALIDATE fill:#1168bd,color:white  
-    style ASSESS fill:#1168bd,color:white
     
     linkStyle default stroke:white
 ```
@@ -28,10 +26,10 @@ graph LR
 graph LR
     VS["⚙️ Validation Specialist<br/><font size='-1'>I manage data quality standards</font>"]
     
-    VS --> MANAGE["📋 manage_validation_specs.py<br/><font size='-1'>Edit validation rules</font>"]
-    VS --> TUNE["🎯 auto_tune_ranges.py<br/><font size='-1'>Optimize validation ranges</font>"]
-    VS --> COMPARE["📈 compare_datasets.py<br/><font size='-1'>Cross-dataset analysis</font>"]
-    VS --> DEBUG["🔍 debug_validation_failures.py<br/><font size='-1'>Investigate data issues</font>"]
+    VS --> MANAGE["📋 validation_manual_tune_spec.py<br/><font size='-1'>Edit validation rules</font>"]
+    VS --> TUNE["🎯 validation_auto_tune_spec.py<br/><font size='-1'>Optimize validation ranges</font>"]
+    VS --> COMPARE["📈 validation_compare_datasets.py<br/><font size='-1'>Cross-dataset analysis</font>"]
+    VS --> DEBUG["🔍 validation_investigate_errors.py<br/><font size='-1'>Investigate data issues</font>"]
     
     style VS fill:#e76f51,color:white
     style MANAGE fill:#1168bd,color:white

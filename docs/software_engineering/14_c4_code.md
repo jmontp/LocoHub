@@ -151,53 +151,9 @@ class TimeValidator:
         """
 ```
 
-### ValidationSpecVisualizer - Generate Validation Specifications (UC-C03)
+### Integrated Visualization in PhaseValidator
 
-**Interface Contract:**
-```python
-class ValidationSpecVisualizer:
-    """
-    Creates visualizations of validation specifications and validation plots for datasets.
-    Satisfies UC-C03: Generate Validation Visualizations
-    """
-    
-    def __init__(self, spec_manager: SpecificationManager):
-        """Dependencies: SpecificationManager for validation ranges"""
-    
-    def generate_validation_plots(self, data: pd.DataFrame, output_dir: str, 
-                                 plot_types: List[str] = None, 
-                                 available_variables: List[str] = None) -> PlotGenerationResult:
-        """
-        Generate static validation plots with data overlaid on specification ranges.
-        
-        MUST generate static plots showing joint angles and moments across gait phases
-        MUST overlay validation ranges on visualizations
-        MUST export plots in publication-ready formats
-        MUST support batch generation for multiple tasks and subjects
-        MUST plot only variables that exist in both data and standard specification
-        MUST gracefully skip missing variables with warnings
-        MUST adapt plot layouts based on available data
-        MUST include coverage summary in plot titles/annotations
-        
-        Behavioral Contract:
-        - Creates forward kinematics plots at key phases (0%, 25%, 50%, 75%) for available variables
-        - Generates phase filter plots for kinematic and kinetic variables present in data
-        - Overlays validation ranges as reference bands for validated variables only
-        - Exports in high-quality PNG format (150 DPI minimum)
-        - Organizes plots by task and variable category
-        - Adapts plot grid layouts based on number of available variables
-        - Annotates plots with coverage information (e.g., "3/6 kinematic variables")
-        - Logs warnings for missing standard variables
-        
-        Returns: PlotGenerationResult with generated plot paths and coverage summary
-        """
-    
-    def generate_validation_gifs(self, data: pd.DataFrame, output_dir: str) -> GifGenerationResult:
-        """
-        Generate animated GIFs showing walking patterns.
-        
-        MUST create animated GIFs showing walking patterns
-        MUST show biomechanical progression through gait cycle
+**Note:** Visualization is now integrated within the PhaseValidator component as part of the validation report generation. Plot generation occurs automatically during validation with the `generate_plots` parameter, and optionally with animated GIFs using the `--generate-gifs` flag.
         
         Returns: GifGenerationResult with generated animation paths
         """
@@ -916,59 +872,48 @@ class ReleaseConfig:
 
 ### Critical Priority CLI Tools
 
-**convert_dataset.py** (UC-C01) - External Scripts Only
+**conversion_generate_phase_dataset.py** (UC-C03)
 ```bash
-# NOTE: Conversion scripts are provided by external collaborators and vary widely
-# We do not provide standardized conversion interfaces - only validation of outputs
-# Example external conversion scripts might look like:
-python external_matlab_converter.py input.mat output.parquet
-python collaborator_csv_converter.py input.csv output.parquet --custom-mapping
+# Convert time-indexed to phase-indexed dataset
+conversion_generate_phase_dataset.py time_dataset.parquet --output phase_dataset.parquet
 ```
 
-**validate_phase_data.py** (UC-C02)
+**validation_dataset_report.py** (UC-C02)
 ```bash
-# Validate phase-indexed dataset
-validate_phase_data.py dataset.parquet --output-dir validation_results --plots
-```
-
-**validate_time_data.py** (UC-C02)
-```bash
-# Validate time-indexed dataset
-validate_time_data.py dataset.parquet --output-dir validation_results
-```
-
-**generate_validation_plots.py** (UC-C03)
-```bash
-# Generate validation plots and specification visualizations
-generate_validation_plots.py --data dataset.parquet --output plots/ --types forward_kinematics
-# Generate validation specification plots (without data)
-generate_validation_plots.py --specs-only --tasks walking running --output spec_plots/
+# Comprehensive validation and quality assessment
+validation_dataset_report.py dataset.parquet --output-dir validation_results
+# With animated visualizations
+validation_dataset_report.py dataset.parquet --output-dir validation_results --generate-gifs
 ```
 
 ### High Priority CLI Tools
 
-**assess_quality.py** (UC-V01)
-```bash
-# Assess dataset quality
-assess_quality.py dataset.parquet --export-metrics quality_timeline.json
-```
-
-**compare_datasets.py** (UC-V02)
+**validation_compare_datasets.py** (UC-V01)
 ```bash
 # Compare multiple datasets
-compare_datasets.py dataset1.parquet dataset2.parquet --output comparison_report.html
+validation_compare_datasets.py dataset1.parquet dataset2.parquet --output comparison_report.md
 ```
 
-**auto_tune_ranges.py** (UC-V05)
+**validation_auto_tune_spec.py** (UC-V05)
 ```bash
 # Automatically tune validation ranges
-auto_tune_ranges.py data/*.parquet --method percentile --confidence 0.95 --apply
+validation_auto_tune_spec.py --dataset data/*.parquet --method percentile_95
+# With visualization
+validation_auto_tune_spec.py --dataset data/*.parquet --method percentile_95 --generate-gifs
 ```
 
-**manage_validation_specs.py** (UC-V04)
+**validation_manual_tune_spec.py** (UC-V04)
 ```bash
 # Manage validation specifications
-manage_validation_specs.py --edit walking knee_flexion_angle_ipsi_rad --interactive
+validation_manual_tune_spec.py --edit kinematic
+# With visualization
+validation_manual_tune_spec.py --edit kinematic --generate-gifs
+```
+
+**validation_investigate_errors.py** (UC-V03)
+```bash
+# Debug validation failures
+validation_investigate_errors.py dataset.parquet --variable knee_flexion_angle_ipsi_rad
 ```
 
 ---

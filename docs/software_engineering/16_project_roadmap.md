@@ -18,20 +18,21 @@
 
 ### **Architecture Restructuring**
 - [ ] **Validation Entry Points (`validation/`)**
-  - [ ] `validate_phase_data.py` - CLI for phase-indexed validation
-  - [ ] `validate_time_data.py` - CLI for time-indexed validation
-  - [ ] `generate_validation_plots.py` - CLI for static plots
-  - [ ] `generate_validation_gifs.py` - CLI for animated GIFs
-  - [ ] `manage_validation_specs.py` - CLI for editing validation rules
-  - [ ] `auto_tune_ranges.py` - CLI for automated range optimization
+  - [ ] `validation_dataset_report.py` - CLI for comprehensive validation and quality assessment
+  - [ ] `validation_manual_tune_spec.py` - CLI for editing validation rules
+  - [ ] `validation_auto_tune_spec.py` - CLI for automated range optimization
+  - [ ] `validation_compare_datasets.py` - CLI for cross-dataset analysis
+  - [ ] `validation_investigate_errors.py` - CLI for debugging validation failures
+
+- [ ] **Conversion Entry Points (`conversion/`)**
+  - [ ] `conversion_generate_phase_dataset.py` - CLI for time-to-phase conversion
 
 - [ ] **Supporting Libraries (`lib/validation/`)**
   - [ ] `PhaseValidator` - Core phase validation engine
   - [ ] `TimeValidator` - Core time validation engine
-  - [ ] `PlotEngine` - Static plot generation
-  - [ ] `GifEngine` - Animated GIF creation
   - [ ] `SpecificationManager` - Validation rule management
   - [ ] `AutomatedTuner` - Statistical range optimization
+  - [ ] Integrated plot generation within validation reports
 
 - [ ] **Shared Core (`lib/core/`)**
   - [ ] Migrate `LocomotionData` to core library

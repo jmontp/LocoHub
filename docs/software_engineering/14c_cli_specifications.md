@@ -4,21 +4,35 @@
 
 ## Critical Priority CLI Tools
 
-### validate_phase_data.py (UC-C02)
-**Purpose:** Validate phase-indexed dataset with stride-level filtering
+### conversion_generate_phase_dataset.py (UC-C03)
+**Purpose:** Convert time-indexed to phase-indexed datasets
 
 ```bash
-# Basic validation with default settings
-validate_phase_data.py dataset.parquet
+# Basic conversion
+conversion_generate_phase_dataset.py time_dataset.parquet
 
-# Comprehensive validation with plots and custom output
-validate_phase_data.py dataset.parquet --output-dir validation_results --plots --verbose
+# Conversion with custom output
+conversion_generate_phase_dataset.py time_dataset.parquet --output phase_dataset.parquet
 
-# Batch validation of multiple datasets
-validate_phase_data.py data/*.parquet --parallel --summary-report batch_results.md
+# Batch conversion
+conversion_generate_phase_dataset.py data/*_time.parquet --batch --output-dir phase_data/
+```
 
-# Validation with custom specifications
-validate_phase_data.py dataset.parquet --specs custom_validation_specs.md --strict
+### validation_dataset_report.py (UC-C02)
+**Purpose:** Comprehensive validation and quality assessment
+
+```bash
+# Basic validation
+validation_dataset_report.py dataset.parquet
+
+# Validation with animated GIFs
+validation_dataset_report.py dataset.parquet --generate-gifs
+
+# Custom output directory
+validation_dataset_report.py dataset.parquet --output-dir validation_results/
+
+# Batch validation
+validation_dataset_report.py data/*.parquet --batch --summary batch_summary.md
 ```
 
 **Arguments:**
@@ -39,93 +53,35 @@ validate_phase_data.py dataset.parquet --specs custom_validation_specs.md --stri
 - Validation plots (if enabled)
 - Quality metrics summary
 
-### validate_time_data.py (UC-C02)
-**Purpose:** Validate time-indexed dataset with temporal integrity checks
-
-```bash
-# Basic time series validation
-validate_time_data.py dataset.parquet
-
-# Validation with sampling frequency checks
-validate_time_data.py dataset.parquet --expected-freq 100 --tolerance 0.05
-
-# Temporal integrity assessment
-validate_time_data.py dataset.parquet --check-gaps --max-gap 0.1
-```
-
-**Arguments:**
+**Arguments for conversion_generate_phase_dataset.py:**
 - `file_path` (required): Path to time-indexed parquet file
-- `--output-dir, -o`: Output directory for reports
-- `--expected-freq`: Expected sampling frequency (Hz)
-- `--tolerance`: Frequency tolerance (default: 0.02)
-- `--check-gaps`: Enable temporal gap detection
-- `--max-gap`: Maximum acceptable gap (seconds)
-- `--format`: Output format (markdown, json, html)
+- `--output, -o`: Output file path for phase dataset
+- `--batch`: Enable batch processing
+- `--output-dir`: Output directory for batch processing
+- `--force`: Overwrite existing files
 
-### generate_validation_plots.py (UC-C03)
-**Purpose:** Generate validation visualizations and specification plots
-
-```bash
-# Generate plots for validated dataset
-generate_validation_plots.py --data dataset.parquet --output plots/
-
-# Generate specification-only plots (without data)
-generate_validation_plots.py --specs-only --tasks walking running --output spec_plots/
-
-# Generate specific plot types
-generate_validation_plots.py --data dataset.parquet --types forward_kinematics phase_ranges --output plots/
-
-# Batch plot generation
-generate_validation_plots.py --data data/*.parquet --batch --output batch_plots/
-```
-
-**Arguments:**
-- `--data`: Path to dataset file (required unless --specs-only)
-- `--specs-only`: Generate specification plots without data
-- `--tasks`: Specific tasks to plot (default: all available)
-- `--types`: Plot types (forward_kinematics, phase_ranges, validation_overlays)
-- `--output, -o`: Output directory
-- `--batch`: Batch processing mode
-- `--format`: Plot format (png, svg, pdf)
-- `--dpi`: Plot resolution (default: 300)
+**Arguments for validation_dataset_report.py:**
+- `file_path` (required): Path to dataset file (phase or time)
+- `--output-dir, -o`: Output directory for reports and plots
+- `--generate-gifs`: Generate animated GIF visualizations
+- `--batch`: Enable batch processing
+- `--summary`: Path for batch summary report
+- `--verbose, -v`: Detailed progress output
 
 ## High Priority CLI Tools
 
-### assess_quality.py (UC-V01)
-**Purpose:** Generate comprehensive dataset quality assessment
-
-```bash
-# Basic quality assessment
-assess_quality.py dataset.parquet
-
-# Quality assessment with metrics export
-assess_quality.py dataset.parquet --export-metrics quality_timeline.json
-
-# Multi-dataset quality comparison
-assess_quality.py dataset1.parquet dataset2.parquet --compare --output quality_comparison.html
-```
-
-**Arguments:**
-- `file_path` (required): Path to dataset file(s)
-- `--export-metrics`: Export quality metrics to JSON
-- `--compare`: Compare multiple datasets
-- `--output, -o`: Output file path
-- `--threshold`: Quality threshold for pass/fail
-- `--detailed`: Include detailed outlier analysis
-- `--population-norms`: Population norms reference file
-
-### compare_datasets.py (UC-V02)
+### validation_compare_datasets.py (UC-V01)
 **Purpose:** Systematic comparison of multiple datasets
 
 ```bash
 # Compare two datasets
-compare_datasets.py dataset1.parquet dataset2.parquet
+validation_compare_datasets.py dataset1.parquet dataset2.parquet
 
-# Multi-dataset comparison with visual outputs
-compare_datasets.py data/*.parquet --output comparison_report.html --plots
+# Multi-dataset comparison with report
+validation_compare_datasets.py data/*.parquet --output comparison_report.md
 
-# Statistical comparison with custom significance level
-compare_datasets.py dataset1.parquet dataset2.parquet --alpha 0.01 --effect-size 0.3
+# Statistical comparison
+validation_compare_datasets.py dataset1.parquet dataset2.parquet --alpha 0.01
 ```
 
 **Arguments:**
@@ -137,45 +93,32 @@ compare_datasets.py dataset1.parquet dataset2.parquet --alpha 0.01 --effect-size
 - `--variables`: Specific variables to compare
 - `--tasks`: Specific tasks to compare
 
-### auto_tune_ranges.py (UC-V05)
+### validation_auto_tune_spec.py (UC-V05)
 **Purpose:** Automatically optimize validation ranges
 
 ```bash
 # Tune ranges using percentile method
-auto_tune_ranges.py data/*.parquet --method percentile --confidence 0.95
+validation_auto_tune_spec.py --dataset data/*.parquet --method percentile_95
 
-# Preview range changes without applying
-auto_tune_ranges.py data/*.parquet --method statistical --preview-only
+# With visualization
+validation_auto_tune_spec.py --dataset data/*.parquet --method percentile_95 --generate-gifs
 
-# Apply tuned ranges to specifications
-auto_tune_ranges.py data/*.parquet --method percentile --apply --backup
+# Preview changes
+validation_auto_tune_spec.py --dataset data/*.parquet --method iqr --preview
 ```
 
-**Arguments:**
-- `datasets` (required): Dataset files for range calculation
-- `--method`: Tuning method (percentile, statistical, robust)
-- `--confidence`: Confidence level for range calculation
-- `--preview-only`: Show changes without applying
-- `--apply`: Apply changes to specification files
-- `--backup`: Create backup before applying changes
-- `--variables`: Specific variables to tune
-- `--tasks`: Specific tasks to tune
-
-### manage_validation_specs.py (UC-V04)
-**Purpose:** Interactive management of validation specifications
+### validation_manual_tune_spec.py (UC-V04)
+**Purpose:** Interactive editing of validation rules
 
 ```bash
-# Interactive editing of specific variable ranges
-manage_validation_specs.py --edit walking knee_flexion_angle_ipsi_rad --interactive
+# Edit kinematic ranges
+validation_manual_tune_spec.py --edit kinematic
 
-# Import ranges from literature or statistical analysis
-manage_validation_specs.py --import-ranges literature_ranges.json --task walking
+# Edit specific task
+validation_manual_tune_spec.py --edit kinetic --task walking
 
-# Export current specifications
-manage_validation_specs.py --export current_specs.json
-
-# Version control and change tracking
-manage_validation_specs.py --commit "Updated knee flexion ranges based on new data"
+# With visualization
+validation_manual_tune_spec.py --edit all --generate-gifs
 ```
 
 **Arguments:**
@@ -191,12 +134,12 @@ manage_validation_specs.py --commit "Updated knee flexion ranges based on new da
 
 ## Medium Priority CLI Tools
 
-### investigate_errors.py (UC-V03)
+### validation_investigate_errors.py (UC-V03)
 **Purpose:** Debug validation failures with detailed analysis
 
 ```bash
 # Investigate specific validation failures
-investigate_errors.py dataset.parquet --stride S001_001 --variable knee_flexion_angle_ipsi_rad
+validation_investigate_errors.py dataset.parquet --variable knee_flexion_angle_ipsi_rad
 
 # Pattern analysis of validation failures
 investigate_errors.py dataset.parquet --failure-patterns --output debug_report.html

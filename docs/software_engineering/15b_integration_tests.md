@@ -16,9 +16,9 @@ def test_complete_dataset_processing_pipeline():
     phase_validator = PhaseValidator(spec_manager, error_handler)
     validation_result = phase_validator.validate_dataset("test_dataset.parquet", generate_plots=True)
     
-    # 3. Generate visualizations
-    visualizer = ValidationSpecVisualizer(spec_manager)
-    plot_result = visualizer.generate_validation_plots("test_dataset.parquet", "test_plots/")
+    # 3. Verify plots were generated during validation
+    assert len(validation_result.plot_paths) > 0
+    assert all(os.path.exists(path) for path in validation_result.plot_paths)
     
     # 4. Assess quality
     assessor = QualityAssessor(spec_manager)
@@ -26,9 +26,7 @@ def test_complete_dataset_processing_pipeline():
     
     # Verify complete workflow
     assert validation_result.is_valid == True
-    assert plot_result.success == True
     assert quality_result.quality_metrics["overall_score"] > 0.8
-    assert len(validation_result.plot_paths) > 0
     assert os.path.exists(validation_result.report_path)
 
 def test_multi_dataset_comparison_workflow():
