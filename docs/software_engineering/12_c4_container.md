@@ -7,19 +7,19 @@
 ## Architecture Files
 
 ### **Current Implementation (Phase 1 - 2025)**
-📄 **[Current Container Architecture](06a_c4_container_current.md)**
+📄 **[Current Container Architecture](12a_c4_container_current.md)**
 - Target: Dataset contributors and validation specialists (10% population)
 - Focus: Basic validation and conversion infrastructure
 - Status: **Active Development**
 
 ### **Future Contributors (Phase 2 - 2025-2026)**
-📄 **[Enhanced Contributor Architecture](06b_c4_container_future_contributors.md)**
+📄 **[Enhanced Contributor Architecture](12b_c4_container_future_contributors.md)**
 - Target: Advanced contributor workflows with community features
 - Focus: Automation, ML tools, and peer governance
 - Status: **Planned Development**
 
 ### **Future Consumers (Phase 3 - 2026-2027)**
-📄 **[Consumer Architecture](06c_c4_container_future_consumers.md)**
+📄 **[Consumer Architecture](12c_c4_container_future_consumers.md)**
 - Target: Dataset consumers and researchers (90% population)  
 - Focus: Research productivity and accessibility
 - Status: **Future Development**
