@@ -17,14 +17,14 @@
 - Validation scaffolding for conversion script development
 - Example conversion scripts for major formats
 - `conversion_generate_phase_dataset.py` - Convert time-indexed to phase-indexed data
-- `validation_dataset_report.py` - Comprehensive validation and quality assessment
+- `validation_dataset_report.py [--generate-gifs]` - Comprehensive validation and quality assessment
 
 **Success Factors:** Clear validation feedback, automated quality assessment, minimal setup complexity
 
 ### Dataset Contributors - Biomechanical Validation  
 **Critical Tools:**
-- `validation_manual_tune_spec.py` - Update ranges based on literature
-- `validation_auto_tune_spec.py` - Statistical range optimization
+- `validation_manual_tune_spec.py [--generate-gifs]` - Update ranges based on literature
+- `validation_auto_tune_spec.py [--generate-gifs]` - Statistical range optimization
 - `validation_investigate_errors.py` - Debug biomechanical outliers
 - `validation_compare_datasets.py` - Cross-dataset consistency
 

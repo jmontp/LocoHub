@@ -34,10 +34,11 @@ Acceptance Criteria:
 - Missing data patterns and outlier identification
 - Biomechanical plausibility scores and population comparisons
 - Detailed validation report with pass/fail status and specific failures
-- Automatically generated visualizations for manual review
+- Automatically generated static validation plots for manual review
+- Optional animated GIFs with `--generate-gifs` flag (computationally intensive)
 - Export comprehensive report for contribution documentation
 
-Entry Point: `validation_dataset_report.py` • Priority: Critical
+Entry Point: `validation_dataset_report.py [--generate-gifs]` • Priority: Critical
 
 **C03: Generate Phase-Indexed Dataset**
 As a dataset curator I want to convert time-indexed locomotion data to phase-indexed format so I can create the standardized 150-point-per-cycle datasets required for validation.
@@ -87,9 +88,11 @@ Acceptance Criteria:
 - Import ranges from literature or statistical analysis
 - Track changes with rationale and version control
 - Validate specification changes against test datasets
+- Automatically generate updated validation plots after changes
+- Optional animated GIFs with `--generate-gifs` flag for comprehensive review
 - Generate change documentation for release notes
 
-Entry Point: `validation_manual_tune_spec.py` • Priority: High
+Entry Point: `validation_manual_tune_spec.py [--generate-gifs]` • Priority: High
 
 **V05: Optimize Validation Ranges**
 As a validation specialist I want to automatically tune validation ranges based on current dataset statistics so I can ensure ranges reflect the best available data while maintaining quality.
@@ -99,9 +102,11 @@ Acceptance Criteria:
 - Preview changes before applying with impact analysis
 - Preserve manual adjustments and exceptions
 - Generate tuning reports with statistical justification
+- Automatically generate updated validation plots showing statistical ranges
+- Optional animated GIFs with `--generate-gifs` flag for comprehensive review
 - Integration with specification management workflow
 
-Entry Point: `validation_auto_tune_spec.py` • Priority: High
+Entry Point: `validation_auto_tune_spec.py [--generate-gifs]` • Priority: High
 
 ### Administrator Stories
 
@@ -152,11 +157,9 @@ Entry Point: `manage_releases.py` • Priority: Low
 **High:**
 - `validation_manual_tune_spec.py` - Critical for standard evolution
 - `validation_auto_tune_spec.py` - Important for data-driven improvements
-- `generate_validation_plots.py` - Important for updating validation specification documents
 - `validation_compare_datasets.py` - Important for multi-dataset consistency
 
 **Medium:**
-- `generate_validation_gifs.py` - Nice to have for visualization
 - `validation_investigate_errors.py` - Valuable for complex debugging
 
 **Low:**

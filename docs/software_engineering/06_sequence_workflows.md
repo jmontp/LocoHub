@@ -69,51 +69,109 @@ sequenceDiagram
 
 ---
 
-### Sequence 2: Dataset Curator (Biomechanical Validation) Manages Validation Ranges
+### Sequence 2A: Manual Validation (Literature-Based Updates)
 
 ```mermaid
 %%{init: {'theme': 'dark'}}%%
 sequenceDiagram
     participant BV as Biomechanical Validator
-    participant MS as validation_manual_tune_spec.py
-    participant SM as SpecificationManager
-    participant VS as Validation Specs
     participant LT as Literature Review
-    participant AT as validation_auto_tune_spec.py
-    participant PD as Parquet Datasets
-    participant VR as Validation Report
+    participant MS as validation_manual_tune_spec.py
+    participant IE as Interactive Editor
+    participant SM as SpecificationManager
+    participant SF as Staging File
+    participant VP as Validation Plots
+    participant VS as Live Validation Specs
 
     BV->>LT: review recent biomechanical literature
-    LT-->>BV: identify updated normal ranges
+    LT-->>BV: identify updated normal ranges with citations
     
     BV->>MS: python validation_manual_tune_spec.py --edit kinematic
     MS->>SM: load_current_specs()
-    SM->>VS: read current validation rules
-    VS-->>SM: return current ranges
-    SM-->>MS: return editable specifications
-    MS-->>BV: open interactive editor
+    SM-->>MS: return current validation ranges
+    MS->>IE: launch interactive editor
+    IE-->>BV: display current ranges with literature input fields
     
-    BV->>MS: update ranges based on literature
-    MS->>SM: preview_changes(modified_ranges)
-    SM-->>MS: show impact analysis
-    MS-->>BV: display affected datasets and variables
+    BV->>IE: input new ranges with literature citations
+    IE->>SM: preview_changes(proposed_ranges)
+    SM->>SM: validate_integrity(check NaNs, missing cyclic tasks)
+    SM-->>IE: show impact analysis and validation results
+    IE-->>BV: display affected datasets and integrity warnings
     
+    BV->>IE: approve changes for staging
+    IE->>SF: write_staging_specs(proposed_ranges, rationale)
+    SF-->>IE: confirm staging file created
+    
+    IE->>IE: auto-generate validation plots from staging specs
+    IE->>VP: create updated validation plots
+    VP-->>IE: confirm plots generated
+    
+    BV->>VP: review updated validation plots
+    VP-->>BV: show range visualizations with current vs proposed
+    
+    alt Plots look good
+        BV->>IE: commit staging to live specs
+        IE->>SM: apply_staged_changes(staging_file)
+        SM->>SM: final_validation_check()
+        SM->>VS: write updated validation specifications
+        VS-->>SM: confirm spec update
+        SM-->>IE: confirm changes applied
+        IE-->>BV: display success confirmation
+    else Plots need adjustment
+        BV->>IE: modify ranges and regenerate plots
+        IE->>IE: auto-regenerate plots with new ranges
+    end
+```
+
+---
+
+### Sequence 2B: Automatic Validation (Statistics-Based Updates)
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+sequenceDiagram
+    participant BV as Biomechanical Validator
+    participant AT as validation_auto_tune_spec.py
+    participant PD as Parquet Datasets
+    participant SM as SpecificationManager
+    participant SF as Staging File
+    participant VP as Validation Plots
+    participant VS as Live Validation Specs
+
     BV->>AT: python validation_auto_tune_spec.py --dataset combined_data.parquet --method percentile_95
-    AT->>PD: analyze statistical distributions
-    PD-->>AT: return variable statistics
-    AT-->>BV: suggest data-driven ranges
+    AT->>PD: analyze statistical distributions across all tasks
+    PD-->>AT: return variable statistics by task and phase
     
-    BV->>BV: compare literature vs statistical ranges
-    BV->>MS: finalize range updates with rationale
-    MS->>SM: save_updated_specs(modified_ranges, rationale)
-    SM->>VS: write updated validation rules
-    VS-->>SM: confirm save
-    SM-->>MS: confirm update
-    MS-->>BV: display save confirmation
+    AT->>AT: calculate proposed ranges using statistical method
+    AT->>SM: preview_statistical_ranges(proposed_ranges)
+    SM->>SM: validate_integrity(check NaNs, missing cyclic tasks)
+    SM-->>AT: return validation results and impact analysis
+    AT-->>BV: display proposed ranges with statistical justification
     
-    BV->>VR: test updated ranges on existing datasets
-    VR-->>BV: show validation impact summary
-    BV->>BV: document range change rationale
+    BV->>AT: approve statistical proposals for staging
+    AT->>SF: write_staging_specs(statistical_ranges, methodology)
+    SF-->>AT: confirm staging file created
+    
+    AT->>AT: auto-generate validation plots from staging specs
+    AT->>VP: create updated validation plots showing statistical ranges
+    VP-->>AT: confirm plots generated
+    
+    BV->>VP: review statistical range plots
+    VP-->>BV: show data distribution vs proposed ranges
+    
+    alt Statistical ranges acceptable
+        BV->>AT: commit staging to live specs
+        AT->>SM: apply_staged_changes(staging_file)
+        SM->>SM: final_validation_check()
+        SM->>VS: write updated validation specifications
+        VS-->>SM: confirm spec update
+        SM-->>AT: confirm changes applied
+        AT-->>BV: display success confirmation
+    else Need manual refinement
+        BV->>AT: suggest adjustments to statistical method
+        AT->>AT: recalculate with adjusted parameters
+        AT->>AT: auto-regenerate plots with refined ranges
+    end
 ```
 
 ---
@@ -217,7 +275,12 @@ sequenceDiagram
 ### Success Factors
 - **Clear Scaffolding**: Examples and guidelines enable conversion script development
 - **Phase Generation Tool**: `conversion_generate_phase_dataset.py` automates gait cycle detection and interpolation
-- **Statistical Tools**: Automated range tuning supports evidence-based validation
+- **Safe Staging Workflow**: Preview changes before committing to live validation specs
+- **Automatic Validation**: SpecificationManager checks for NaNs and missing cyclic tasks
+- **Integrated Visualization**: Automatic plot generation within validation workflows
+- **Optional Animation**: `--generate-gifs` flag for computationally intensive animations
+- **Dual Validation Approaches**: Literature-based manual and statistics-based automatic workflows
+- **Interactive Editing**: No error-prone manual markdown editing
 - **Comprehensive Reporting**: Quality metrics guide contribution decisions
 - **Iterative Debugging**: Validation feedback enables continuous improvement
 
