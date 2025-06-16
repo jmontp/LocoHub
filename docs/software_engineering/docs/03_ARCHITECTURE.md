@@ -252,25 +252,166 @@ The primary validation infrastructure implementing the three core validation goa
 2. **Outlier Detection** - Identify strides with values outside acceptable ranges  
 3. **Phase Segmentation Validation** - Ensure exactly 150 points per gait cycle
 
+!!! info "Interactive Architecture Diagram"
+    The following diagram shows the complete lib/validation/ architecture with component relationships and data flow. **Zoom and pan controls are available** - click and drag to explore component details. Hover over components to see detailed descriptions of their responsibilities.
+
+    **Color Legend:**
+    - **Blue**: Core validation components (orchestrators and validation logic)
+    - **Purple**: Specification management (parsing and optimization)  
+    - **Green**: Visualization and reporting components
+    - **Orange**: External core library dependencies
+    - **Gray**: Data sources and specifications
+    - **Pink**: Entry points and integration layers
+
+```mermaid
+%%{init: {'theme': 'default', 'themeVariables': {'primaryColor': '#fff4e6', 'primaryTextColor': '#000000', 'primaryBorderColor': '#ffb74d', 'lineColor': '#333333', 'secondaryColor': '#f0f0f0', 'tertiaryColor': '#e8f5e8'}}}%%
+graph TB
+    subgraph "lib/validation/ Architecture"
+        style ValidationLibrary fill:#00000000,stroke:#ffb74d,stroke-width:3px,stroke-dasharray:5
+        
+        subgraph "Core Validation Components"
+            dataset_validator_phase["DatasetValidator<br/><font size='-2'>dataset_validator_phase.py</font><br/><font size='-1'>• Main validation orchestrator<br/>• Uses LocomotionData for efficient 3D ops<br/>• Generates validation reports</font>"]
+            
+            dataset_validator_time["DatasetValidator<br/><font size='-2'>dataset_validator_time.py</font><br/><font size='-1'>• Time-indexed validation<br/>• Handles variable sampling rates<br/>• Converts to phase for validation</font>"]
+            
+            step_classifier["StepClassifier<br/><font size='-2'>step_classifier.py</font><br/><font size='-1'>• Validation logic engine<br/>• Representative phase validation<br/>• Step color classification</font>"]
+        end
+        
+        subgraph "Specification Management"
+            validation_parser["ValidationExpectationsParser<br/><font size='-2'>validation_expectations_parser.py</font><br/><font size='-1'>• Unified markdown parser<br/>• Dictionary API abstraction<br/>• Reads/writes validation specs</font>"]
+            
+            automated_tuner["AutomatedFineTuner<br/><font size='-2'>automated_fine_tuning.py</font><br/><font size='-1'>• Statistical range optimization<br/>• 6 statistical methods<br/>• Data-driven validation ranges</font>"]
+        end
+        
+        subgraph "Visualization & Reporting"
+            filters_plots["FiltersPlotter<br/><font size='-2'>filters_by_phase_plots.py</font><br/><font size='-1'>• Phase-based validation plots<br/>• Kinematic/kinetic visualization<br/>• Step color overlays</font>"]
+            
+            forward_kinematics["ForwardKinematicsPlotter<br/><font size='-2'>forward_kinematics_plots.py</font><br/><font size='-1'>• Joint angle range visualization<br/>• Phase-specific plots (0%, 25%, 50%, 75%)<br/>• Biomechanical pose generation</font>"]
+            
+            validation_plots["ValidationPlotsGenerator<br/><font size='-2'>generate_validation_plots.py</font><br/><font size='-1'>• Unified plot generation<br/>• Batch processing<br/>• Static validation plots</font>"]
+            
+            validation_gifs["ValidationGIFGenerator<br/><font size='-2'>generate_validation_gifs.py</font><br/><font size='-1'>• Animated validation plots<br/>• Gait cycle animations<br/>• Dynamic visualization</font>"]
+        end
+    end
+    
+    subgraph "External Dependencies"
+        locomotion_data["LocomotionData<br/><font size='-2'>lib/core/locomotion_analysis.py</font><br/><font size='-1'>• Efficient 3D array operations<br/>• Parquet file handling<br/>• Data manipulation</font>"]
+        
+        feature_constants["FeatureConstants<br/><font size='-2'>lib/core/feature_constants.py</font><br/><font size='-1'>• Variable name mappings<br/>• Feature definitions<br/>• Single source of truth</font>"]
+        
+        validation_specs["Validation Specifications<br/><font size='-2'>docs/standard_spec/validation_expectations_*.md</font><br/><font size='-1'>• Kinematic validation ranges<br/>• Kinetic validation ranges<br/>• Task-specific expectations</font>"]
+        
+        parquet_datasets["Parquet Datasets<br/><font size='-2'>*_phase.parquet, *_time.parquet</font><br/><font size='-1'>• Phase-indexed data (150 points/cycle)<br/>• Time-indexed data (variable sampling)<br/>• Standardized format</font>"]
+    end
+    
+    subgraph "Entry Points & Integration"
+        contributor_scripts["Contributor Scripts<br/><font size='-2'>contributor_scripts/</font><br/><font size='-1'>• Dataset conversion tools<br/>• Validation workflows<br/>• Integration examples</font>"]
+        
+        test_framework["Testing Framework<br/><font size='-2'>source/tests/</font><br/><font size='-1'>• Demo scripts<br/>• Unit tests<br/>• Integration tests</font>"]
+    end
+    
+    %% Core Validation Flow
+    dataset_validator_phase --> step_classifier
+    dataset_validator_time --> step_classifier
+    step_classifier --> validation_parser
+    
+    %% Specification Management Flow
+    validation_parser --> automated_tuner
+    automated_tuner --> validation_parser
+    validation_parser --> validation_specs
+    
+    %% Visualization Flow
+    dataset_validator_phase --> filters_plots
+    dataset_validator_phase --> forward_kinematics
+    validation_plots --> filters_plots
+    validation_plots --> forward_kinematics
+    validation_gifs --> filters_plots
+    
+    %% External Dependencies
+    dataset_validator_phase --> locomotion_data
+    dataset_validator_time --> locomotion_data
+    step_classifier --> feature_constants
+    validation_parser --> validation_specs
+    dataset_validator_phase --> parquet_datasets
+    dataset_validator_time --> parquet_datasets
+    automated_tuner --> locomotion_data
+    automated_tuner --> parquet_datasets
+    
+    %% Entry Point Integration
+    contributor_scripts --> dataset_validator_phase
+    contributor_scripts --> dataset_validator_time
+    contributor_scripts --> automated_tuner
+    test_framework --> dataset_validator_phase
+    test_framework --> step_classifier
+    test_framework --> filters_plots
+    
+    %% Data Flow Arrows
+    parquet_datasets -.-> dataset_validator_phase
+    parquet_datasets -.-> dataset_validator_time
+    validation_specs -.-> step_classifier
+    locomotion_data -.-> dataset_validator_phase
+    locomotion_data -.-> dataset_validator_time
+    
+    %% Styling
+    style dataset_validator_phase fill:#bbdefb,color:#000000,stroke:#1565c0
+    style dataset_validator_time fill:#bbdefb,color:#000000,stroke:#1565c0
+    style step_classifier fill:#e3f2fd,color:#000000,stroke:#1976d2
+    style validation_parser fill:#f3e5f5,color:#000000,stroke:#7b1fa2
+    style automated_tuner fill:#f3e5f5,color:#000000,stroke:#7b1fa2
+    style filters_plots fill:#e8f5e8,color:#000000,stroke:#388e3c
+    style forward_kinematics fill:#e8f5e8,color:#000000,stroke:#388e3c
+    style validation_plots fill:#e8f5e8,color:#000000,stroke:#388e3c
+    style validation_gifs fill:#e8f5e8,color:#000000,stroke:#388e3c
+    style locomotion_data fill:#fff3e0,color:#000000,stroke:#f57c00
+    style feature_constants fill:#fff3e0,color:#000000,stroke:#f57c00
+    style validation_specs fill:#f5f5f5,color:#000000,stroke:#616161
+    style parquet_datasets fill:#f5f5f5,color:#000000,stroke:#616161
+    style contributor_scripts fill:#fce4ec,color:#000000,stroke:#c2185b
+    style test_framework fill:#fce4ec,color:#000000,stroke:#c2185b
+    
+    linkStyle default stroke:#333333,stroke-width:2px
+```
+
 **Key Component Groups:**
 
-**PhaseValidator Components:**
-- `TaskDetector`: Reads tasks from data['task'] column, validates against feature_constants
-- `CoverageAnalyzer`: Analyzes standard spec coverage, identifies missing variables  
-- `StrideFilter`: Task-specific stride filtering using validation ranges
-- `PhaseStructureValidator`: Validates 150 points per cycle requirement
-- `PhaseReportGenerator`: Generates markdown reports with coverage and stride filtering results
+**Core Validation Components:**
+- `DatasetValidator` (Phase/Time): Main validation orchestrators that coordinate validation workflows
+- `StepClassifier`: Validation logic engine using representative phase validation for 37.5x performance improvement
+- Implements three core validation goals: sign convention adherence, outlier detection, phase segmentation
 
-**ValidationSpecManager Components:**
-- `SpecificationParser`: Parses validation_expectations markdown files
-- `RangeProvider`: Provides task and phase-specific validation ranges
-- `SpecificationEditor`: Interactive rule modification with impact preview
-- `SpecificationPersistence`: File I/O and versioning with backup
+**Specification Management:**
+- `ValidationExpectationsParser`: Unified markdown parser with dictionary API abstraction
+- `AutomatedFineTuner`: Statistical range optimization using 6 different statistical methods
+- Provides data-driven validation ranges based on actual data distributions
 
-**Integrated Visualization Components:**
-- `PlotAdapter`: Adapts plots to available variables, skips missing gracefully
-- `CoverageAnnotator`: Adds coverage information to plot titles and annotations
-- `ValidationPlotter`: Generates plots as part of validation reports
+**Visualization & Reporting:**
+- `FiltersPlotter`: Phase-based validation plots with step color overlays
+- `ForwardKinematicsPlotter`: Joint angle range visualization at key phases
+- `ValidationPlotsGenerator`: Unified plot generation for batch processing
+- `ValidationGIFGenerator`: Animated validation plots for dynamic visualization
+
+!!! note "Data Flow Patterns"
+    The diagram illustrates three key data flow patterns:
+    
+    **1. Validation Workflow (Solid Lines):** 
+    Dataset validators → Step classifier → Validation parser → Specifications
+    
+    **2. Specification Management (Bidirectional):**
+    Automated tuner ↔ Validation parser ↔ Validation specifications
+    
+    **3. Visualization Integration (Dotted Lines):**
+    Data sources flow into validators and visualization components for comprehensive reporting
+
+!!! tip "Component Integration Points" 
+    **Primary Entry Points:**
+    - `dataset_validator_phase.py`: Main orchestrator for phase-indexed validation workflows
+    - `automated_fine_tuning.py`: Statistical optimization entry point for data-driven ranges
+    - `generate_validation_plots.py`: Batch visualization generation for documentation
+    
+    **Core Dependencies:**
+    - All validation components depend on `lib/core/` for data handling and feature definitions
+    - Specification management components provide validation ranges to all validators
+    - Visualization components integrate with validators for comprehensive reporting
 
 ### Component Execution Flow
 
