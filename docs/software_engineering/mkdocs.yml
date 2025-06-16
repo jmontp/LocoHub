@@ -1,5 +1,6 @@
 site_name: Dataset Standardization
 site_description: 'Locomotion Data Standardization - Software Engineering Documentation'
+site_url: 'https://localhost:8000'
 
 theme:
   name: material
@@ -39,6 +40,16 @@ plugins:
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - mermaid2
+  - panzoom:
+      # Enable interactive pan & zoom for mermaid diagrams
+      include_selectors:
+        - ".mermaid"
+        - ".mermaid > svg"
+        - "img"
+      # Use Alt key to activate pan & zoom
+      key: "alt"
+      # Always show usage hint
+      always_show_hint: true
 
 markdown_extensions:
   - abbr
@@ -87,6 +98,12 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/your-username/locomotion-data-standardization
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/diagram-controls.js
 nav:
   - Overview: 00_OVERVIEW.md
   - User Personas:

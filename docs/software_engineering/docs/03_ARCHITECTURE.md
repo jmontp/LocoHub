@@ -245,7 +245,7 @@ graph TD
     linkStyle default stroke:black
 ```
 
-### Enhanced Validation Engine Components (validation/)
+### Enhanced Validation Engine Components (lib/validation/)
 
 The primary validation infrastructure implementing the three core validation goals:
 1. **Sign Convention Adherence** - Verify biomechanical data follows standard conventions
@@ -282,6 +282,32 @@ The validation workflow follows a structured execution pattern implementing thre
 Key execution sequence: TaskDetector → CoverageAnalyzer → StrideFilter → ValidationPlotter → PhaseReportGenerator
 
 ## Code Architecture
+
+### Library Structure
+
+The codebase is organized into three main architectural layers:
+
+**Core Libraries (`lib/`):**
+- **`lib/core/`**: Core locomotion data functionality
+  - `locomotion_analysis.py`: Main LocomotionData class with 3D array operations
+  - `feature_constants.py`: Feature definitions and mappings (single source of truth)
+  - `examples.py`: Real-world usage examples and demonstrations
+- **`lib/validation/`**: Validation-specific libraries and tools
+  - `dataset_validator_phase.py`: Phase-indexed dataset validation
+  - `step_classifier.py`: Gait cycle step classification
+  - `validation_expectations_parser.py`: Markdown validation rule parser
+  - `filters_by_phase_plots.py`: Phase-based validation visualization
+  - `automated_fine_tuning.py`: Validation range optimization
+
+**Contributor Scripts (`contributor_scripts/`):**
+- Dataset conversion and processing tools
+- Entry points for dataset contributors
+- Dataset-specific conversion workflows (AddBiomechanics, GTech, UMich)
+
+**Testing Framework (`source/tests/`):**
+- Comprehensive test suite for all components
+- Demo scripts for visual validation
+- Integration tests for end-to-end workflows
 
 ### Core Classes and Integration
 

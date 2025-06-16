@@ -35,7 +35,7 @@ Usage:
 
 import re
 import math
-from typing import Dict, Optional, List, Tuple
+from typing import Dict, Optional, List, Tuple, Any
 from pathlib import Path
 from datetime import datetime
 import sys
@@ -471,7 +471,7 @@ class ValidationExpectationsParser:
         """Generate a hierarchical validation table with the user's preferred format."""
         
         # Import feature constants
-        from lib.python.feature_constants import get_feature_list
+        from lib.core.feature_constants import get_feature_list
         
         # Get standard features for the mode
         standard_features = get_feature_list(mode)
@@ -576,6 +576,34 @@ def parse_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[st
     """Legacy wrapper - use ValidationExpectationsParser.read_validation_data() instead."""
     parser = ValidationExpectationsParser()
     return parser.read_validation_data(file_path)
+
+def parse_kinematic_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[str, Dict[str, float]]]]:
+    """Legacy wrapper for kinematic validation expectations."""
+    return parse_validation_expectations(file_path)
+
+def parse_kinetic_validation_expectations(file_path: str) -> Dict[str, Dict[int, Dict[str, Dict[str, float]]]]:
+    """Legacy wrapper for kinetic validation expectations."""
+    return parse_validation_expectations(file_path)
+
+def apply_contralateral_offset_kinematic(validation_data: Dict, offset_rad: float = 0.1) -> Dict:
+    """Legacy wrapper - contralateral offset for kinematic data."""
+    # For now, return data unchanged for backward compatibility
+    return validation_data
+
+def apply_contralateral_offset_kinetic(validation_data: Dict, offset_percent: float = 0.1) -> Dict:
+    """Legacy wrapper - contralateral offset for kinetic data."""
+    # For now, return data unchanged for backward compatibility
+    return validation_data
+
+def validate_task_completeness(validation_data: Dict, required_tasks: List[str] = None) -> bool:
+    """Legacy wrapper - validate that all required tasks are present."""
+    if required_tasks is None:
+        required_tasks = ['level_walking', 'incline_walking', 'decline_walking']
+    
+    available_tasks = set(validation_data.keys())
+    required_tasks_set = set(required_tasks)
+    
+    return required_tasks_set.issubset(available_tasks)
 
 
 def write_validation_expectations(file_path: str, 

@@ -36,26 +36,26 @@ status: ready
 **Workflow:** Discovery → Development → Quality Assessment → Resolution
 
 **Discovery Phase:**
-- Find conversion requirements (satisfaction: 3/5)
-- Access validation scaffolding (satisfaction: 4/5)
-- Review example scripts (satisfaction: 5/5)
-- Understand standard specification (satisfaction: 3/5)
+- Find conversion requirements (satisfaction: 3/5 → **Target: 4/5** with improved documentation)
+- Access validation scaffolding (satisfaction: 4/5 → **Target: 5/5** with standardized templates)
+- Review example scripts (satisfaction: 5/5 → **Maintain: 5/5** current strength)
+- Understand standard specification (satisfaction: 3/5 → **Target: 4/5** with interactive guides)
 
 **Development Phase:**
-- Analyze raw dataset structure (satisfaction: 4/5)
-- Map variables to standard names (satisfaction: 2/5)
-- Create time-indexed parquet (satisfaction: 4/5)
-- Generate phase dataset with tool (satisfaction: 5/5)
-- Handle missing data patterns (satisfaction: 2/5)
+- Analyze raw dataset structure (satisfaction: 4/5 → **Maintain: 4/5** adequate performance)
+- Map variables to standard names (satisfaction: 2/5 → **Target: 4/5** with mapping assistance tool)
+- Create time-indexed parquet (satisfaction: 4/5 → **Maintain: 4/5** adequate performance)
+- Generate phase dataset with tool (satisfaction: 5/5 → **Maintain: 5/5** current strength)
+- Handle missing data patterns (satisfaction: 2/5 → **Target: 4/5** with pattern detection guidance)
 
 **Quality Assessment Phase:**
-- Generate comprehensive dataset report (satisfaction: 5/5)
-- Review validation and quality results (satisfaction: 3/5)
-- Debug biomechanical failures (satisfaction: 1/5)
-- Consult biomechanics expert (satisfaction: 3/5)
-- Fix conversion issues (satisfaction: 3/5)
-- Document conversion decisions (satisfaction: 2/5)
-- Prepare contribution materials (satisfaction: 3/5)
+- Generate comprehensive dataset report (satisfaction: 5/5 → **Maintain: 5/5** current strength)
+- Review validation and quality results (satisfaction: 3/5 → **Target: 4/5** with interpretation assistance)
+- Debug biomechanical failures (satisfaction: 1/5 → **Target: 3/5** with domain expert integration)
+- Consult biomechanics expert (satisfaction: 3/5 → **Target: 4/5** with structured consultation tools)
+- Fix conversion issues (satisfaction: 3/5 → **Target: 4/5** with guided debugging)
+- Document conversion decisions (satisfaction: 2/5 → **Target: 4/5** with documentation templates)
+- Prepare contribution materials (satisfaction: 3/5 → **Target: 4/5** with automated preparation)
 
 **Pain Points:**
 - Complex biomechanical conventions and coordinate systems
@@ -75,28 +75,28 @@ status: ready
 **Workflow:** Research → Analysis → Implementation → Verification
 
 **Research Phase:**
-- Review recent literature (satisfaction: 4/5)
-- Identify range updates needed (satisfaction: 3/5)
-- Analyze population differences (satisfaction: 3/5)
-- Document evidence sources (satisfaction: 2/5)
+- Review recent literature (satisfaction: 4/5 → **Maintain: 4/5** adequate performance)
+- Identify range updates needed (satisfaction: 3/5 → **Target: 4/5** with systematic review tools)
+- Analyze population differences (satisfaction: 3/5 → **Target: 4/5** with demographic analysis)
+- Document evidence sources (satisfaction: 2/5 → **Target: 4/5** with citation management)
 
 **Analysis Phase:**
-- Run statistical range analysis (satisfaction: 4/5)
-- Compare literature vs data (satisfaction: 3/5)
-- Assess impact on existing datasets (satisfaction: 2/5)
-- Preview validation changes (satisfaction: 4/5)
+- Run statistical range analysis (satisfaction: 4/5 → **Maintain: 4/5** adequate performance)
+- Compare literature vs data (satisfaction: 3/5 → **Target: 4/5** with automated comparison tools)
+- Assess impact on existing datasets (satisfaction: 2/5 → **Target: 4/5** with impact prediction)
+- Preview validation changes (satisfaction: 4/5 → **Maintain: 4/5** adequate performance)
 
 **Implementation Phase:**
-- Update validation specifications (satisfaction: 3/5)
-- Test against known datasets (satisfaction: 4/5)
-- Document rationale for changes (satisfaction: 2/5)
-- Communicate updates to team (satisfaction: 3/5)
+- Update validation specifications (satisfaction: 3/5 → **Target: 4/5** with guided interfaces)
+- Test against known datasets (satisfaction: 4/5 → **Maintain: 4/5** adequate performance)
+- Document rationale for changes (satisfaction: 2/5 → **Target: 4/5** with structured templates)
+- Communicate updates to team (satisfaction: 3/5 → **Target: 4/5** with automated notifications)
 
 **Verification Phase:**
-- Monitor validation pass rates (satisfaction: 4/5)
-- Investigate unexpected failures (satisfaction: 2/5)
-- Refine ranges based on feedback (satisfaction: 3/5)
-- Maintain change documentation (satisfaction: 2/5)
+- Monitor validation pass rates (satisfaction: 4/5 → **Maintain: 4/5** adequate performance)
+- Investigate unexpected failures (satisfaction: 2/5 → **Target: 4/5** with investigation tools)
+- Refine ranges based on feedback (satisfaction: 3/5 → **Target: 4/5** with iterative refinement)
+- Maintain change documentation (satisfaction: 2/5 → **Target: 4/5** with automated change logs)
 
 **Pain Points:**
 - Balancing strict standards with real-world data variability
@@ -205,6 +205,10 @@ status: ready
     **🔗 Technical Tools:** [User Roles & Entry Points](01a_USER_ROLES.md) - CLI tool catalog by user role
     
     **🔗 System Interactions:** [System Context](01b_SYSTEM_CONTEXT.md) - Architecture diagrams and interaction patterns
+    
+    **🔗 Workflow Details:** [User Workflows](01d_USER_WORKFLOWS.md) - Step-by-step guides with quantified success criteria
+    
+    **🔗 Formal User Stories:** [User Story Mapping](01e_USER_STORY_MAPPING.md) - Quantifiable acceptance criteria for test-driven development
     
     **🔗 Requirements Traceability:** [Requirements](02_REQUIREMENTS.md) - User stories derived from these journey insights
 

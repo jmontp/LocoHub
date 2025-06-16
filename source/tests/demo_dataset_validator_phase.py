@@ -41,11 +41,11 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 import warnings
 
-# Add source directory to Python path
+# Get project root for relative imports  
 project_root = Path(__file__).parent.parent.parent
-sys.path.append(str(project_root / 'source'))
+sys.path.append(str(project_root))
 
-from validation.step_classifier import StepClassifier
+from lib.validation.step_classifier import StepClassifier
 
 def print_banner(title):
     """Print a formatted banner for section separation."""
@@ -91,7 +91,7 @@ def create_realistic_gait_cycle(task: str = 'level_walking', validation_ranges: 
                 
                 # Add substantial realistic noise while staying within bounds
                 # Load validation ranges to ensure we don't go outside bounds
-                from validation.validation_expectations_parser import parse_kinematic_validation_expectations
+                from lib.validation.validation_expectations_parser import parse_kinematic_validation_expectations
                 import os
                 validation_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'docs', 'standard_spec', 'validation_expectations_kinematic.md')
                 validation_data = parse_kinematic_validation_expectations(validation_file)

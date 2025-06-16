@@ -105,11 +105,13 @@ python validation_dataset_report.py dataset_phase.parquet
 - Summary of validation passes/failures
 - Quality metrics and recommendations
 
-### Success Indicators
-- ✅ Phase dataset has exactly 150 points per gait cycle
-- ✅ All required variables present with correct units
-- ✅ Validation report shows acceptable failure rates
-- ✅ No critical data integrity issues
+### Success Indicators & Quantifiable Acceptance Criteria
+- ✅ **Phase Indexing Compliance**: Exactly 150 points per gait cycle (100% of cycles)
+- ✅ **Variable Completeness**: All required variables present with correct units (100% coverage)
+- ✅ **Validation Performance**: >90% validation pass rate for quality datasets
+- ✅ **Processing Time**: Complete conversion in <60 minutes for typical dataset (500-1000 trials)
+- ✅ **Data Integrity**: Zero critical errors (missing required variables, unit mismatches)
+- ✅ **Quality Score**: Achieve "High" or "Medium" biomechanical plausibility rating
 
 ### Common Troubleshooting
 
@@ -182,11 +184,13 @@ python validation_manual_tune_spec.py --edit kinetic
    - System automatically updates validation specs
    - Receive success confirmation
 
-### Success Indicators
-- ✅ Staging plots show reasonable ranges on real data
-- ✅ No integrity warnings about missing cyclic tasks
-- ✅ Literature citations properly documented
-- ✅ Impact analysis shows acceptable dataset effects
+### Success Indicators & Quantifiable Acceptance Criteria
+- ✅ **Range Validation**: Staging plots show ranges capturing 95-99% of quality data
+- ✅ **Integrity Compliance**: Zero warnings about missing cyclic tasks or NaN values
+- ✅ **Documentation Quality**: Literature citations properly formatted with DOI links
+- ✅ **Processing Time**: Complete range update in <30 minutes per variable group
+- ✅ **Impact Assessment**: <10% change in validation pass rates for existing quality datasets
+- ✅ **Change Tracking**: All updates logged with rationale and reviewer approval
 
 ### Common Troubleshooting
 
@@ -262,11 +266,13 @@ python validation_auto_tune_spec.py --dataset combined_data.parquet --method per
    - Regenerate plots with refined ranges
    - Repeat validation process
 
-### Success Indicators
-- ✅ Statistical ranges align with biomechanical expectations
-- ✅ Data distribution plots show appropriate coverage
-- ✅ No significant increase in false positive failures
-- ✅ Methodology appropriate for variable characteristics
+### Success Indicators & Quantifiable Acceptance Criteria
+- ✅ **Biomechanical Validity**: Statistical ranges within 15% of literature-based ranges
+- ✅ **Coverage Performance**: Distribution plots show 95-99% data coverage depending on method
+- ✅ **False Positive Control**: <5% false positive rate for known quality datasets
+- ✅ **Processing Efficiency**: Complete analysis in <20 minutes for >1000 gait cycles
+- ✅ **Method Appropriateness**: Automated guidance for statistical method selection
+- ✅ **Reproducibility**: Identical results for same dataset and method parameters
 
 ### Common Troubleshooting
 
@@ -361,11 +367,13 @@ python validation_dataset_report.py your_dataset_phase.parquet
 - Medium quality: Check if limitations affect specific research questions
 - Low quality: Consider data exclusion criteria
 
-### Success Indicators
-- ✅ Report generates successfully without errors
-- ✅ Quality metrics align with intended use case
-- ✅ Clear action items identified from recommendations
-- ✅ Understanding of dataset strengths and limitations
+### Success Indicators & Quantifiable Acceptance Criteria
+- ✅ **Report Generation**: Complete quality report in <5 minutes for phase-indexed datasets
+- ✅ **Quality Scoring**: Clear High/Medium/Low biomechanical plausibility rating
+- ✅ **Actionable Insights**: >80% of validation failures have specific debugging guidance
+- ✅ **Visualization Quality**: All plots render correctly with appropriate scaling
+- ✅ **Completeness Check**: Report covers all required quality dimensions (coverage, validation, integrity)
+- ✅ **Decision Support**: Clear recommendations for dataset contribution/usage suitability
 
 ### Common Troubleshooting
 

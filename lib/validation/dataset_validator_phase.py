@@ -38,14 +38,11 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 from datetime import datetime
 
-# Add source directory to Python path
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-
 # Import library modules
 try:
-    from validation.filters_by_phase_plots import create_filters_by_phase_plot
-    from validation.step_classifier import StepClassifier
-    from lib.python.locomotion_analysis import LocomotionData
+    from .filters_by_phase_plots import create_filters_by_phase_plot
+    from .step_classifier import StepClassifier
+    from lib.core.locomotion_analysis import LocomotionData
 except ImportError as e:
     raise ImportError(f"Could not import required library modules: {e}")
 
@@ -333,7 +330,7 @@ class DatasetValidator:
             Array with shape (1, 150, num_features)
         """
         # Import feature constants from library
-        from lib.python.feature_constants import get_feature_list
+        from lib.core.feature_constants import get_feature_list
         
         # Get standard variable order from shared mappings
         if validation_type == 'kinematic':

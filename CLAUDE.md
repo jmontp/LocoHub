@@ -80,13 +80,30 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 - **task_info.csv** - Task metadata sample
 - **[various].png** - Tutorial output validation images
 
-### Source Code (`source/`)
-- **CLAUDE.md** - Source directory guidance
+### Core Libraries (`lib/`)
 
-#### Conversion Scripts (`source/conversion_scripts/`)
+#### Core Functionality (`lib/core/`)
+- **locomotion_analysis.py** - Core LocomotionData class with 3D array operations
+- **feature_constants.py** - Feature definitions and mappings (single source of truth)
+- **examples.py** - Real-world usage examples (4 comprehensive scenarios)
+- **__init__.py** - Python package initialization
+
+#### Validation Libraries (`lib/validation/`)
+- **dataset_validator_phase.py** - Phase-indexed dataset validation (main validator)
+- **dataset_validator_time.py** - Time-indexed dataset validation
+- **filters_by_phase_plots.py** - Phase-based validation plot generator
+- **forward_kinematics_plots.py** - Joint angle visualization generator
+- **generate_validation_plots.py** - Unified plot generation script (static plots)
+- **generate_validation_gifs.py** - Animated GIF generation for validation
+- **step_classifier.py** - Gait cycle step classification
+- **validation_expectations_parser.py** - Markdown validation rule parser
+- **automated_fine_tuning.py** - Validation range tuning system
+- **__init__.py** - Python package initialization
+
+### Contributor Scripts (`contributor_scripts/`)
 - **CONSOLIDATION_PLAN.md** - Dataset consolidation strategy
 
-##### AddBiomechanics (`source/conversion_scripts/AddBiomechanics/`)
+#### AddBiomechanics (`contributor_scripts/AddBiomechanics/`)
 - **CLAUDE.md** - AddBiomechanics conversion guidance
 - **README.md** - AddBiomechanics conversion overview
 - **b3d_to_parquet.py** - B3D file format to parquet converter
@@ -96,11 +113,11 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 - **requirements.txt** - Python dependencies
 - **[various].ipynb** - Jupyter notebooks for analysis and validation
 
-###### GTech 2021 (`source/conversion_scripts/AddBiomechanics/Gtech_2021/`)
+##### GTech 2021 (`contributor_scripts/AddBiomechanics/Gtech_2021/`)
 - **add_task_info.py** - GTech 2021 task metadata processor
 - **validate_dataset.py** - GTech 2021 data validation
 
-##### GTech 2023 (`source/conversion_scripts/Gtech_2023/`)
+#### GTech 2023 (`contributor_scripts/Gtech_2023/`)
 - **CLAUDE.md** - GTech 2023 conversion guidance
 - **readme.md** - GTech 2023 conversion instructions
 - **combine_subjects_efficient.py** - Multi-subject data combination
@@ -108,11 +125,11 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 - **convert_gtech_phase_to_parquet.m** - MATLAB phase conversion
 - **process_all_subjects.sh** - Batch processing script
 
-###### Utilities (`source/conversion_scripts/Gtech_2023/utilities/`)
+##### Utilities (`contributor_scripts/Gtech_2023/utilities/`)
 - **[various].m** - MATLAB utility functions for GTech 2023 processing
 - **verify_gtech_data.ipynb** - Data verification notebook
 
-##### UMich 2021 (`source/conversion_scripts/Umich_2021/`)
+#### UMich 2021 (`contributor_scripts/Umich_2021/`)
 - **CLAUDE.md** - UMich 2021 conversion guidance
 - **readme.md** - UMich 2021 conversion instructions
 - **convert_umich_phase_to_parquet.m** - MATLAB phase-indexed converter
@@ -120,12 +137,14 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 - **umich_2021_mat_structure.md** - MATLAB file structure documentation
 - **verify_umich_data.ipynb** - Data verification notebook
 
+### Source Code (`source/`)
+- **CLAUDE.md** - Source directory guidance
+
 #### Libraries (`source/lib/`)
 
-##### Python Library (`source/lib/python/`)
-- **locomotion_analysis.py** - Core LocomotionData class with 3D array operations
-- **feature_constants.py** - Feature definitions and mappings (single source of truth)
-- **examples.py** - Real-world usage examples (4 comprehensive scenarios)
+##### MATLAB Library (`source/lib/matlab/`)
+- **LocomotionData.m** - MATLAB LocomotionData class
+- **locomotion_helpers.m** - MATLAB utility functions
 
 #### Testing Framework (`source/tests/`)
 - **CLAUDE.md** - Testing framework guidance
@@ -146,15 +165,6 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 ##### Sample Outputs (`source/tests/sample_plots/`)
 - **[various directories]** - Test output validation images organized by test type
 
-#### Validation System (`source/validation/`)
-- **dataset_validator_phase.py** - Phase-indexed dataset validation (main validator)
-- **dataset_validator_time.py** - Time-indexed dataset validation
-- **filters_by_phase_plots.py** - Phase-based validation plot generator
-- **forward_kinematics_plots.py** - Joint angle visualization generator
-- **generate_validation_plots.py** - Unified plot generation script (static plots)
-- **generate_validation_gifs.py** - Animated GIF generation for validation
-- **step_classifier.py** - Gait cycle step classification
-- **validation_expectations_parser.py** - Markdown validation rule parser
 
 #### Visualization (`source/visualization/`)
 - **refresh_validation_gifs.py** - GIF regeneration automation

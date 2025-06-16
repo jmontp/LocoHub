@@ -52,13 +52,12 @@ import warnings
 import time
 from datetime import datetime
 
-# Add source directory to Python path
+# Get project root for file paths
 project_root = Path(__file__).parent.parent.parent
-sys.path.append(str(project_root / 'source'))
 
-from lib.python.locomotion_analysis import LocomotionData
-from lib.python.feature_constants import get_feature_list
-from validation.validation_expectations_parser import ValidationExpectationsParser
+from lib.core.locomotion_analysis import LocomotionData
+from lib.core.feature_constants import get_feature_list
+from .validation_expectations_parser import ValidationExpectationsParser
 
 class AutomatedFineTuner:
     """

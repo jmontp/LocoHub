@@ -26,9 +26,9 @@ import sys
 
 # Add source directory to Python path
 project_root = Path(__file__).parent.parent.parent
-sys.path.append(str(project_root / 'source'))
+sys.path.append(str(project_root))
 
-from validation.automated_fine_tuning import AutomatedFineTuner
+from lib.validation.automated_fine_tuning import AutomatedFineTuner
 
 
 class TestAutomatedFineTuner(unittest.TestCase):

@@ -79,10 +79,7 @@ from .validation_expectations_parser import (
 )
 
 # Import feature constants from library
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-from lib.python.feature_constants import get_kinematic_feature_map, get_kinetic_feature_map
+from lib.core.feature_constants import get_kinematic_feature_map, get_kinetic_feature_map
 
 
 class StepClassifier:

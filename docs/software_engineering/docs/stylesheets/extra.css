@@ -1,0 +1,134 @@
+/* Enhanced Interactive Mermaid Diagrams */
+
+/* Improve mermaid diagram container */
+.mermaid {
+    background-color: var(--md-code-bg-color, #f8f8f8);
+    border: 1px solid var(--md-default-fg-color--lighter, #ddd);
+    border-radius: 4px;
+    padding: 1rem;
+    margin: 1rem 0;
+    position: relative;
+    overflow: visible;
+}
+
+/* Dark theme support */
+[data-md-color-scheme="slate"] .mermaid {
+    background-color: var(--md-code-bg-color, #2d2d2d);
+    border-color: var(--md-default-fg-color--lighter, #444);
+}
+
+/* Improve diagram visibility during zoom */
+.mermaid svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Enhanced zoom hint styling */
+.panzoom-hint {
+    background: rgba(0, 0, 0, 0.8) !important;
+    color: white !important;
+    padding: 8px 12px !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    font-family: var(--md-code-font-family) !important;
+    z-index: 1000 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Dark theme hint */
+[data-md-color-scheme="slate"] .panzoom-hint {
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: black !important;
+}
+
+/* Fullscreen diagram support */
+.mermaid.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background: white;
+    margin: 0;
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+[data-md-color-scheme="slate"] .mermaid.fullscreen {
+    background: var(--md-default-bg-color);
+}
+
+/* Diagram controls */
+.diagram-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.mermaid:hover .diagram-controls {
+    opacity: 1;
+}
+
+.diagram-control-btn {
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: background 0.2s;
+}
+
+.diagram-control-btn:hover {
+    background: rgba(0, 0, 0, 0.9);
+}
+
+[data-md-color-scheme="slate"] .diagram-control-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+[data-md-color-scheme="slate"] .diagram-control-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .mermaid {
+        margin: 0.5rem -0.8rem;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    
+    .diagram-controls {
+        position: static;
+        opacity: 1;
+        justify-content: center;
+        margin-bottom: 8px;
+    }
+}
+
+/* Loading indicator for diagrams */
+.mermaid-loading {
+    text-align: center;
+    padding: 2rem;
+    color: var(--md-default-fg-color--light);
+    font-style: italic;
+}
+
+.mermaid-loading::before {
+    content: "🔄 ";
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}

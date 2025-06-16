@@ -28,6 +28,8 @@ status: ready
     
     **📋 Common workflows?** → [User Workflows](01d_USER_WORKFLOWS.md)
     
+    **🗺️ Formal user stories?** → [User Story Mapping](01e_USER_STORY_MAPPING.md)
+    
     **⚡ Technical workflows?** → [Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md)
     
     **🏗️ System context?** → [System Context](01b_SYSTEM_CONTEXT.md)
@@ -238,6 +240,102 @@ graph TD
 - **Reference workflows** when performing actual tasks
 - **Review context** for architectural understanding
 
+## User Stories & Acceptance Criteria
+
+**Formal user stories derived from persona analysis with quantifiable success measures.**
+
+### Dataset Curator - Programmer Stories
+
+#### Story 1: Dataset Conversion Workflow
+**As a** Dataset Curator (Programmer)  
+**I want** to convert raw biomechanical datasets to standardized parquet format efficiently  
+**So that** I can contribute quality datasets without extensive biomechanical expertise
+
+**Acceptance Criteria:**
+- Complete dataset conversion in <60 minutes for typical lab dataset (500-1000 trials)
+- Generate phase-indexed dataset with exactly 150 points per gait cycle (100% compliance)
+- Achieve >90% validation pass rate for correctly formatted source data
+- Receive clear error messages for 95% of common failure modes
+- Access working example scripts for 3+ different source formats
+
+#### Story 2: Quality Assessment Confidence
+**As a** Dataset Curator (Programmer)  
+**I want** comprehensive quality reports that I can interpret without domain expertise  
+**So that** I can confidently contribute datasets and debug conversion issues
+
+**Acceptance Criteria:**
+- Generate quality report in <5 minutes for phase-indexed datasets
+- Receive biomechanical plausibility score with clear interpretation (High/Medium/Low)
+- Get specific debugging guidance for >80% of validation failures
+- Access visual verification plots showing data patterns vs expected ranges
+- Complete workflow documentation review in <15 minutes
+
+### Dataset Curator - Biomechanical Validation Stories
+
+#### Story 3: Literature-Based Range Updates
+**As a** Dataset Curator (Biomechanical Validation Specialist)  
+**I want** to update validation ranges based on recent literature efficiently  
+**So that** validation standards remain current with biomechanical research
+
+**Acceptance Criteria:**
+- Complete range update workflow in <30 minutes per variable group
+- Preview impact on existing datasets before committing changes
+- Document literature citations with automated referencing
+- Generate staging plots showing proposed vs current ranges
+- Maintain change history with rationale for future reference
+
+#### Story 4: Statistical Range Optimization
+**As a** Dataset Curator (Biomechanical Validation Specialist)  
+**I want** to optimize validation ranges using statistical analysis of existing data  
+**So that** ranges reflect real-world data variability while maintaining quality standards
+
+**Acceptance Criteria:**
+- Process combined datasets with >1000 gait cycles in <20 minutes
+- Support 3+ statistical methods (percentiles, IQR, standard deviation)
+- Generate distribution plots with proposed ranges overlay
+- Achieve <5% false positive rate for known quality datasets
+- Provide method appropriateness guidance for different variable types
+
+### System Administrator Stories
+
+#### Story 5: ML Benchmark Creation
+**As a** System Administrator  
+**I want** to create standardized ML train/test/validation splits from quality datasets  
+**So that** the research community has reproducible benchmarks
+
+**Acceptance Criteria:**
+- Process multiple datasets with consistent split ratios (70/15/15 default)
+- Ensure demographic balance across splits within 5% tolerance
+- Generate benchmark metadata with population characteristics
+- Complete benchmark creation in <45 minutes for typical multi-dataset corpus
+- Validate no subject leakage between splits (100% compliance)
+
+#### Story 6: Dataset Release Management
+**As a** System Administrator  
+**I want** to prepare validated datasets for public release with proper documentation  
+**So that** researchers can access quality-assured data with confidence
+
+**Acceptance Criteria:**
+- Bundle datasets with quality reports and documentation in <30 minutes
+- Verify all datasets pass validation with >95% success rate
+- Generate release notes with dataset characteristics and known limitations
+- Create version-controlled release artifacts with reproducible builds
+- Provide download verification (checksums) for all released files
+
+### Collaborative Workflow Stories
+
+#### Story 7: Multi-Role Dataset Contribution
+**As a** collaborative team (Programmer + Validator)  
+**I want** clear role definitions and shared tools for dataset contribution  
+**So that** we can efficiently produce high-quality standardized datasets
+
+**Acceptance Criteria:**
+- Complete collaborative workflow in <90 minutes for typical dataset
+- Achieve >95% validation pass rate through iterative improvement
+- Document both technical and biomechanical decisions with shared templates
+- Enable asynchronous review with clear hand-off points
+- Maintain communication trail linking conversion decisions to validation outcomes
+
 ## Development Strategy
 
 **Phase 1 (Current):** Validation infrastructure for dataset contributors
@@ -294,6 +392,30 @@ graph TD
     **Time:** 12 minutes
     
     **Best For:** UX designers, user researchers, product managers
+
+-   **📋 [User Workflows](01d_USER_WORKFLOWS.md)**
+    
+    ---
+    
+    Step-by-step workflow guides with quantified acceptance criteria
+    
+    **Key Content:** 4 comprehensive workflows, success indicators, troubleshooting
+    
+    **Time:** 20 minutes
+    
+    **Best For:** Dataset curators, system users
+
+-   **🗺️ [User Story Mapping](01e_USER_STORY_MAPPING.md)**
+    
+    ---
+    
+    Formal user stories with quantifiable acceptance criteria for test-driven development
+    
+    **Key Content:** 7 user stories, traceability matrix, performance thresholds
+    
+    **Time:** 25 minutes
+    
+    **Best For:** Product managers, developers, QA engineers
 </div>
 
 ---

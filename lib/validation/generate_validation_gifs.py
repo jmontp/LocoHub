@@ -60,7 +60,7 @@ def create_stick_figure_animation_from_locomotion_data(loco_data, subject, task,
     """Create animated stick figure using LocomotionData library."""
     try:
         # Import LocomotionData library
-        from lib.python.locomotion_analysis import LocomotionData
+        from lib.core.locomotion_analysis import LocomotionData
         
         # Get angle features for this subject-task
         angle_features = [f for f in loco_data.ANGLE_FEATURES if f in loco_data.features]
@@ -186,7 +186,7 @@ def process_dataset_config(config):
     
     try:
         # Import LocomotionData library
-        from lib.python.locomotion_analysis import LocomotionData
+        from lib.core.locomotion_analysis import LocomotionData
         
         # Load dataset using LocomotionData
         loco_data = LocomotionData(dataset_file)

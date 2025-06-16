@@ -43,7 +43,7 @@ from unittest.mock import patch
 import warnings
 
 # Add library path
-sys.path.append('../lib/python')
+sys.path.append('../../lib/core')
 
 try:
     import pytest

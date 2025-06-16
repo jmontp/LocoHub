@@ -24,9 +24,9 @@ import sys
 
 # Add source directory to Python path
 project_root = Path(__file__).parent.parent.parent
-sys.path.append(str(project_root / 'source'))
+sys.path.append(str(project_root))
 
-from validation.validation_expectations_parser import ValidationExpectationsParser
+from lib.validation.validation_expectations_parser import ValidationExpectationsParser
 
 
 class TestValidationExpectationsParser(unittest.TestCase):

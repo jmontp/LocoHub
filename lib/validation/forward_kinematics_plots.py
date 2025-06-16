@@ -30,11 +30,8 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
-# Add source directory to Python path for imports
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-
 # Import centralized validation parser
-from validation.validation_expectations_parser import parse_kinematic_validation_expectations
+from .validation_expectations_parser import parse_kinematic_validation_expectations
 
 class KinematicPoseGenerator:
     """Generator for static kinematic poses for validation visualization"""

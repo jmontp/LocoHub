@@ -40,7 +40,7 @@ import pandas as pd
 from pathlib import Path
 
 # Add library path
-sys.path.append('../lib/python')
+sys.path.append('../../lib/core')
 
 def print_banner(title):
     """Print a formatted banner for demo sections."""

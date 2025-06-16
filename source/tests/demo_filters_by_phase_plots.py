@@ -44,11 +44,11 @@ from pathlib import Path
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
 
-# Add source directories to Python path
+# Add directories to Python path
 project_root = Path(__file__).parent.parent.parent
-sys.path.append(str(project_root / 'source'))
+sys.path.append(str(project_root))
 
-from validation.filters_by_phase_plots import create_filters_by_phase_plot
+from lib.validation.filters_by_phase_plots import create_filters_by_phase_plot
 
 
 def create_demo_plots():

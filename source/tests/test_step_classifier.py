@@ -51,7 +51,7 @@ import numpy as np
 from pathlib import Path
 
 # Add source directory to Python path
-sys.path.append(str(Path(__file__).parent.parent))
+sys.path.append(str(Path(__file__).parent.parent.parent))
 
 try:
     import pytest
@@ -72,7 +72,7 @@ except ImportError:
                     return decorator
             return Mark()
 
-from validation.step_classifier import StepClassifier
+from lib.validation.step_classifier import StepClassifier
 
 
 class TestStepClassifier:

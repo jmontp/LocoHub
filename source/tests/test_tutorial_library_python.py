@@ -37,7 +37,7 @@ import numpy as np
 import pandas as pd
 
 # Add library path
-sys.path.append('../lib/python')
+sys.path.append('../../lib/core')
 
 print("Testing LocomotionData library...")
 print(f"Current directory: {os.getcwd()}")

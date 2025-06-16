@@ -37,9 +37,30 @@ status: ready
 
 ```python
 class PhaseValidator:
-    def validate_dataset(self, dataset_path: str) -> ValidationReport
-    def generate_quality_report(self, dataset_path: str, include_gifs: bool = False)
-    def get_validation_failures(self, dataset_path: str) -> List[ValidationFailure]
+    def __init__(self, spec_manager: ValidationSpecManager, error_handler: ErrorHandler,
+                 progress_reporter: ProgressReporter = None):
+        """Initialize validator with standardized dependencies."""
+        
+    def validate_dataset(self, file_path: str, generate_plots: bool = True, 
+                        generate_gifs: bool = False, output_dir: str = None) -> PhaseValidationResult:
+        """Run comprehensive validation on phase-indexed dataset with stride-level filtering."""
+        
+    def filter_valid_strides(self, data: pd.DataFrame, available_variables: List[str] = None) -> StrideFilterResult:
+        """Filter dataset to keep only valid strides based on task-specific validation specifications."""
+        
+    def get_available_tasks(self, data: pd.DataFrame) -> List[str]:
+        """Get unique tasks from dataset, filtered to known standard tasks."""
+        
+    def analyze_standard_spec_coverage(self, data: pd.DataFrame) -> Dict[str, Dict[str, bool]]:
+        """Analyze which standard specification variables are available in the dataset."""
+        
+    def validate_batch(self, file_paths: List[str], parallel: bool = True, 
+                      max_workers: int = None) -> BatchValidationResult:
+        """Validate multiple datasets with stride-level summary reporting."""
+        
+    def generate_validation_report(self, result: PhaseValidationResult, 
+                                 output_path: str) -> ReportGenerationResult:
+        """Generate comprehensive markdown validation report."""
 ```
 
 ### ValidationSpecManager
@@ -48,9 +69,27 @@ class PhaseValidator:
 
 ```python
 class ValidationSpecManager:
-    def get_range(self, task: str, variable: str, phase: int) -> Range
-    def update_range(self, task: str, variable: str, phase: int, min_val: float, max_val: float)
-    def validate_specification(self, spec_path: str) -> bool
+    def __init__(self, config_manager: ConfigurationManager, error_handler: ErrorHandler,
+                 progress_reporter: ProgressReporter = None):
+        """Initialize specification manager with standardized dependencies."""
+        
+    def load_validation_specs(self, task_type: str = None) -> ValidationSpecification:
+        """Load complete validation specifications with task filtering."""
+        
+    def get_range(self, task: str, variable: str, phase: int) -> ValidationRange:
+        """Get validation range for specific task, variable, and phase."""
+        
+    def update_validation_ranges(self, variable: str, new_ranges: Dict[str, Tuple[float, float]]) -> bool:
+        """Update validation ranges for a variable across all phases."""
+        
+    def validate_specification_integrity(self, spec_path: str = None) -> SpecIntegrityResult:
+        """Validate specification file integrity and completeness."""
+        
+    def preview_range_changes(self, proposed_changes: Dict[str, Any]) -> RangeChangePreview:
+        """Preview impact of proposed validation range changes."""
+        
+    def commit_staged_changes(self, staging_file: str, commit_message: str) -> bool:
+        """Commit staged changes to live validation specifications."""
 ```
 
 ## CLI Tools

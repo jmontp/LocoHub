@@ -1,0 +1,243 @@
+/* Custom CSS for Locomotion Data Standardization User Guide */
+
+/* Enhanced grid cards for landing page */
+.grid.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.grid.cards > * {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  background: var(--md-default-bg-color);
+  transition: all 0.2s ease;
+}
+
+.grid.cards > *:hover {
+  border-color: var(--md-primary-fg-color);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+/* Code block enhancements */
+.highlight {
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+/* Copy button for code blocks */
+.md-clipboard {
+  border-radius: 0.25rem;
+}
+
+/* Enhanced admonitions */
+.md-typeset .admonition {
+  border-radius: 0.5rem;
+  border-left-width: 4px;
+}
+
+/* Tab styling improvements */
+.tabbed-set {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.tabbed-labels {
+  background: var(--md-default-fg-color--lightest);
+}
+
+.tabbed-labels > label {
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.tabbed-labels > label:hover {
+  background: var(--md-accent-fg-color--transparent);
+}
+
+/* Progress indicators */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: var(--md-default-fg-color--lightest);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--md-primary-fg-color);
+  transition: width 0.3s ease;
+}
+
+/* Feature callouts */
+.feature-callout {
+  background: linear-gradient(135deg, var(--md-primary-fg-color--light), var(--md-accent-fg-color--light));
+  color: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.feature-callout h3 {
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+/* Navigation breadcrumbs enhancement */
+.md-nav__title {
+  font-weight: 600;
+}
+
+/* Search result highlighting */
+.md-search-result__article {
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.md-search-result__article:hover {
+  background: var(--md-default-fg-color--lightest);
+}
+
+/* Table enhancements */
+.md-typeset table:not([class]) {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.md-typeset table:not([class]) th {
+  background: var(--md-primary-fg-color--light);
+  color: white;
+  font-weight: 600;
+}
+
+/* Responsive improvements */
+@media screen and (max-width: 768px) {
+  .grid.cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .feature-callout {
+    padding: 1.5rem;
+    margin: 1rem 0;
+  }
+  
+  .tabbed-set {
+    font-size: 0.9rem;
+  }
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid var(--md-primary-fg-color);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Enhanced button styling */
+.md-button {
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.md-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Print styles */
+@media print {
+  .md-header,
+  .md-nav,
+  .md-footer {
+    display: none;
+  }
+  
+  .md-content {
+    margin: 0;
+  }
+  
+  .grid.cards {
+    display: block;
+  }
+  
+  .grid.cards > * {
+    border: 1px solid #ddd;
+    margin-bottom: 1rem;
+    break-inside: avoid;
+  }
+}
+
+/* Dark mode adjustments */
+[data-md-color-scheme="slate"] {
+  --md-code-bg-color: #2d3748;
+}
+
+[data-md-color-scheme="slate"] .grid.cards > * {
+  background: var(--md-default-bg-color);
+  border-color: var(--md-default-fg-color--lightest);
+}
+
+[data-md-color-scheme="slate"] .feature-callout {
+  background: linear-gradient(135deg, var(--md-primary-fg-color), var(--md-accent-fg-color));
+}
+
+/* Accessibility improvements */
+.md-nav__link:focus,
+.md-nav__link:hover {
+  outline: 2px solid var(--md-accent-fg-color);
+  outline-offset: 2px;
+}
+
+/* Skip to content link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--md-primary-fg-color);
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 0 0 4px 4px;
+  z-index: 1000;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Enhanced focus indicators */
+*:focus {
+  outline: 2px solid var(--md-accent-fg-color);
+  outline-offset: 2px;
+}
+
+/* Remove outline for mouse users */
+.js-focus-visible *:focus:not(.focus-visible) {
+  outline: none;
+}
