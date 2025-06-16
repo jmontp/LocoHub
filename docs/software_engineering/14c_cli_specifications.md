@@ -1,77 +1,78 @@
 # CLI Tool Specifications
 
-**Command-line interface patterns and entry point specifications.**
+**Command-line interface patterns and entry point specifications with canonical tool names.**
 
 ## Critical Priority CLI Tools
 
-### conversion_generate_phase_dataset.py (UC-C03)
-**Purpose:** Convert time-indexed to phase-indexed datasets
+### validation_dataset_report.py (UC-C02) - PRIMARY VALIDATION TOOL
+**Purpose:** Comprehensive validation and quality assessment of phase-indexed datasets
+
+**Priority:** CRITICAL - This is the main validation tool for the platform
 
 ```bash
-# Basic conversion
-conversion_generate_phase_dataset.py time_dataset.parquet
+# Basic validation with comprehensive report
+validation_dataset_report.py dataset_phase.parquet
 
-# Conversion with custom output
-conversion_generate_phase_dataset.py time_dataset.parquet --output phase_dataset.parquet
+# Validation with animated GIF visualizations (computationally intensive)
+validation_dataset_report.py dataset_phase.parquet --generate-gifs
 
-# Batch conversion
-conversion_generate_phase_dataset.py data/*_time.parquet --batch --output-dir phase_data/
+# Validation with custom specifications
+validation_dataset_report.py dataset_phase.parquet --specs custom_validation_specs.yaml
+
+# Batch validation with summary report
+validation_dataset_report.py data/*_phase.parquet --batch --summary validation_summary.md
+
+# Strict validation mode (fail on warnings)
+validation_dataset_report.py dataset_phase.parquet --strict --output-dir validation_results/
 ```
 
-### validation_dataset_report.py (UC-C02)
-**Purpose:** Comprehensive validation and quality assessment
+**Core Arguments:**
+- `file_path` (required): Path to phase-indexed parquet file
+- `--output-dir, -o`: Output directory for reports and plots (default: current directory)
+- `--generate-gifs`: Generate animated GIF visualizations (default: False, computationally intensive)
+- `--specs`: Custom validation specification file (default: built-in specifications)
+- `--strict`: Fail on any validation warnings (default: False)
+- `--batch`: Enable batch processing for multiple files
+- `--summary`: Path for batch validation summary report
+- `--verbose, -v`: Detailed progress output and diagnostics
+- `--quiet, -q`: Minimal output for automation
+- `--format`: Output format (markdown, json, html) (default: markdown)
+- `--no-plots`: Disable plot generation to save time
+
+**Standard Outputs:**
+- `{dataset_name}_validation_report.md`: Comprehensive validation report
+- `{dataset_name}_quality_metrics.json`: Machine-readable quality assessment
+- `{dataset_name}_{task}_kinematic_filters_by_phase.png`: Kinematic validation plots
+- `{dataset_name}_{task}_kinetic_filters_by_phase.png`: Kinetic validation plots
+- `{dataset_name}_{task}_animation.gif`: Animated visualizations (with --generate-gifs)
+- `validation_summary.md`: Batch processing summary (with --batch)
+
+### conversion_generate_phase_dataset.py (UC-C03) - LEGACY SUPPORT
+**Purpose:** Convert time-indexed to phase-indexed datasets
+
+**Priority:** MEDIUM - Most datasets already include phase-indexed versions
 
 ```bash
-# Basic validation
-validation_dataset_report.py dataset.parquet
+# Basic conversion (rarely needed for existing datasets)
+conversion_generate_phase_dataset.py time_dataset.parquet
 
-# Validation with animated GIFs
-validation_dataset_report.py dataset.parquet --generate-gifs
-
-# Custom output directory
-validation_dataset_report.py dataset.parquet --output-dir validation_results/
-
-# Batch validation
-validation_dataset_report.py data/*.parquet --batch --summary batch_summary.md
+# Conversion with validation
+conversion_generate_phase_dataset.py time_dataset.parquet --validate --output phase_dataset.parquet
 ```
 
 **Arguments:**
-- `file_path` (required): Path to phase-indexed parquet file
-- `--output-dir, -o`: Output directory for reports and plots (default: current directory)
-- `--plots, -p`: Generate validation plots (default: True)
-- `--verbose, -v`: Detailed progress output
-- `--parallel`: Enable parallel processing for batch validation
-- `--summary-report`: Path for batch validation summary
-- `--specs`: Custom validation specification file
-- `--strict`: Fail on any validation warnings
-- `--no-plots`: Disable plot generation
-- `--format`: Output format (markdown, json, html)
-
-**Outputs:**
-- Validation report (markdown)
-- Stride filtering results
-- Validation plots (if enabled)
-- Quality metrics summary
-
-**Arguments for conversion_generate_phase_dataset.py:**
 - `file_path` (required): Path to time-indexed parquet file
 - `--output, -o`: Output file path for phase dataset
-- `--batch`: Enable batch processing
-- `--output-dir`: Output directory for batch processing
+- `--validate`: Run validation on generated phase dataset
 - `--force`: Overwrite existing files
-
-**Arguments for validation_dataset_report.py:**
-- `file_path` (required): Path to dataset file (phase or time)
-- `--output-dir, -o`: Output directory for reports and plots
-- `--generate-gifs`: Generate animated GIF visualizations
-- `--batch`: Enable batch processing
-- `--summary`: Path for batch summary report
 - `--verbose, -v`: Detailed progress output
 
 ## High Priority CLI Tools
 
 ### validation_compare_datasets.py (UC-V01)
-**Purpose:** Systematic comparison of multiple datasets
+**Purpose:** Systematic statistical comparison of multiple datasets
+
+**Priority:** HIGH - Essential for multi-dataset analysis
 
 ```bash
 # Compare two datasets
@@ -94,7 +95,9 @@ validation_compare_datasets.py dataset1.parquet dataset2.parquet --alpha 0.01
 - `--tasks`: Specific tasks to compare
 
 ### validation_auto_tune_spec.py (UC-V05)
-**Purpose:** Automatically optimize validation ranges
+**Purpose:** Automatically optimize validation ranges using statistical methods
+
+**Priority:** HIGH - Critical for maintaining validation accuracy
 
 ```bash
 # Tune ranges using percentile method
@@ -108,7 +111,9 @@ validation_auto_tune_spec.py --dataset data/*.parquet --method iqr --preview
 ```
 
 ### validation_manual_tune_spec.py (UC-V04)
-**Purpose:** Interactive editing of validation rules
+**Purpose:** Interactive editing and management of validation specifications
+
+**Priority:** HIGH - Required for validation specification maintenance
 
 ```bash
 # Edit kinematic ranges
@@ -135,7 +140,9 @@ validation_manual_tune_spec.py --edit all --generate-gifs
 ## Medium Priority CLI Tools
 
 ### validation_investigate_errors.py (UC-V03)
-**Purpose:** Debug validation failures with detailed analysis
+**Purpose:** Debug and analyze validation failures with detailed diagnostics
+
+**Priority:** MEDIUM - Important for troubleshooting validation issues
 
 ```bash
 # Investigate specific validation failures
@@ -159,7 +166,9 @@ investigate_errors.py dataset.parquet --outlier-analysis --threshold 3.0
 - `--recommendations`: Generate fix recommendations
 
 ### create_benchmarks.py (UC-A01)
-**Purpose:** Create ML benchmarks with stratified splits
+**Purpose:** Create machine learning benchmarks with stratified data splits
+
+**Priority:** MEDIUM - Important for ML applications
 
 ```bash
 # Create subject-level splits
@@ -184,7 +193,9 @@ create_benchmarks.py dataset.parquet --formats scikit pytorch tensorflow --outpu
 - `--baseline`: Calculate baseline performance metrics
 
 ### publish_datasets.py (UC-A02)
-**Purpose:** Prepare datasets for public release
+**Purpose:** Package and prepare datasets for public distribution
+
+**Priority:** MEDIUM - Required for dataset publication
 
 ```bash
 # Package dataset for release
@@ -204,41 +215,251 @@ publish_datasets.py dataset.parquet --formats parquet csv matlab --docs --checks
 - `--anonymize`: Anonymize sensitive information
 - `--license`: License information file
 
+## Canonical Tool Name Mapping
+
+**MASTER REFERENCE - Use these exact names across all documentation:**
+
+### Core Validation Tools
+- `validation_dataset_report.py` - Primary validation and quality assessment
+- `validation_compare_datasets.py` - Multi-dataset statistical comparison  
+- `validation_investigate_errors.py` - Validation failure analysis and debugging
+- `validation_auto_tune_spec.py` - Automated validation range optimization
+- `validation_manual_tune_spec.py` - Interactive validation specification editing
+
+### Data Conversion Tools
+- `conversion_generate_phase_dataset.py` - Time-to-phase data conversion (legacy support)
+
+### Analysis and Benchmarking Tools  
+- `create_benchmarks.py` - ML benchmark creation with stratified splits
+- `publish_datasets.py` - Dataset packaging for public distribution
+
+### Core Library Components
+- `locomotion_analysis.py` - LocomotionData class and 3D array operations
+- `feature_constants.py` - Feature definitions and mappings (single source of truth)
+- `dataset_validator_phase.py` - Phase-indexed dataset validation engine
+- `filters_by_phase_plots.py` - Phase-based validation plot generator
+- `step_classifier.py` - Gait cycle step classification
+
+### Test and Demo Scripts
+- `test_*.py` - Headless validation tests for automation
+- `demo_*.py` - Visual demonstration scripts for user observation
+
+---
+
 ## CLI Pattern Standards
 
 ### Common Arguments
-All CLI tools follow these common patterns:
+All CLI tools follow these common patterns consistent with interface standards:
 
-**Standard Arguments:**
+**Standard Arguments (All Tools):**
 - `--help, -h`: Show help message and exit
 - `--version`: Show version information
-- `--verbose, -v`: Verbose output
-- `--quiet, -q`: Suppress non-error output
-- `--output, -o`: Output directory or file
-- `--config`: Configuration file path
+- `--verbose, -v`: Enable verbose logging output
+- `--quiet, -q`: Minimal output for automation scripts
+- `--output, -o`: Output directory or file path
+- `--config`: Configuration file override
 
-**Exit Codes:**
-- `0`: Success
-- `1`: General error
-- `2`: Invalid arguments
-- `3`: File not found
-- `4`: Validation failure
-- `5`: Processing error
+**Tool-Specific Arguments:**
+```bash
+# Validation Tools
+--generate-gifs         Generate animated GIF visualizations (computationally intensive)
+--specs FILE           Custom validation specifications file
+--strict               Fail on any validation warnings
+--batch                Enable batch processing for multiple files
+--summary FILE         Path for batch validation summary report
 
-### Error Handling
-- Clear error messages with actionable suggestions
-- Progress reporting for long-running operations
-- Graceful handling of interrupted operations
-- Detailed logging available via `--verbose`
+# Conversion Tools (Legacy)
+--validate             Run validation on generated phase dataset
+--force                Overwrite existing output files
 
-### Output Formats
-- **Markdown**: Human-readable reports (default)
-- **JSON**: Machine-readable structured data
-- **HTML**: Rich formatted reports with plots
-- **CSV**: Tabular data for analysis
+# Analysis Tools
+--split-strategy TYPE  Data splitting method (subject, temporal, task, random)
+--formats LIST         Export formats for ML frameworks
+```
 
-### Configuration
-- Global configuration via `~/.locomotion_data/config.yaml`
-- Per-project configuration via `locomotion_config.yaml`
-- Command-line arguments override configuration files
-- Environment variables for sensitive settings
+**Exit Codes (Aligned with Interface Standards):**
+- `0`: EXIT_SUCCESS - Operation completed successfully
+- `1`: EXIT_GENERAL_ERROR - General error (catch-all)
+- `2`: EXIT_INVALID_ARGS - Invalid command line arguments
+- `3`: EXIT_DATA_ERROR - Data quality or format error
+- `4`: EXIT_VALIDATION_ERROR - Validation failure
+- `5`: EXIT_CONFIG_ERROR - Configuration file error
+- `6`: EXIT_PERMISSION_ERROR - File permission or access error
+- `7`: EXIT_RESOURCE_ERROR - Insufficient resources (memory, disk)
+
+### Error Handling (Interface Standard Compliance)
+- **Structured Error Messages**: ERROR: {error_type}: {error_description}
+- **Context Information**: File path, variable names, biomechanical context
+- **Actionable Suggestions**: Recommended fixes based on error type
+- **Progress Reporting**: Standardized progress display for long operations
+- **Graceful Interruption**: Clean handling of Ctrl+C and system signals
+- **Detailed Diagnostics**: Available via `--verbose` flag
+
+### Output Formats (Standardized)
+- **Markdown**: Human-readable reports (default for all tools)
+- **JSON**: Machine-readable structured data (quality metrics, metadata)
+- **HTML**: Rich formatted reports with embedded plots
+- **PNG/GIF**: Validation plots and animations
+- **YAML**: Configuration and specification files
+
+### File Naming Conventions (Interface Standard)
+```bash
+# Dataset outputs
+{dataset_name}_time.parquet           # Time-indexed data
+{dataset_name}_phase.parquet          # Phase-indexed data (150 points/cycle)
+
+# Validation reports
+{dataset_name}_validation_report.md   # Main validation report
+{dataset_name}_quality_metrics.json   # Machine-readable metrics
+
+# Validation plots
+{dataset_name}_{task}_kinematic_filters_by_phase.png
+{dataset_name}_{task}_kinetic_filters_by_phase.png
+{dataset_name}_{task}_animation.gif   # With --generate-gifs
+
+# Tool reports
+{tool_name}_report.md                 # General tool reports
+{tool_name}_configuration.yaml        # Tool configuration
+```
+
+### Configuration Management (Interface Standard Aligned)
+```yaml
+# Standard configuration structure
+tool_name: "validation_dataset_report"
+version: "1.0.0"
+
+# Input/Output Settings
+input:
+  format: "auto"  # auto, parquet, csv
+  validation_level: "moderate"  # strict, moderate, lenient
+  
+output:
+  directory: "./output"
+  formats: ["markdown", "json"]
+  include_plots: true
+  
+# Processing Settings
+processing:
+  memory_limit_gb: 8
+  parallel_processing: true
+  
+# Validation Settings (for validation tools)
+validation:
+  specs_file: "auto"  # auto, custom file path
+  generate_gifs: false
+  strict_mode: false
+```
+
+**Configuration Hierarchy:**
+1. Command-line arguments (highest priority)
+2. Project configuration: `locomotion_config.yaml`  
+3. Global configuration: `~/.locomotion_data/config.yaml`
+4. Built-in defaults (lowest priority)
+
+---
+
+## Implementation Standards
+
+### Tool Execution Pattern
+```python
+# Standard CLI tool structure
+def main():
+    try:
+        args = parse_arguments()
+        config = ConfigurationManager(tool_name)
+        progress = ProgressReporter(args.verbose, args.quiet)
+        
+        # Tool-specific implementation
+        result = execute_tool_logic(args, config, progress)
+        return EXIT_SUCCESS
+        
+    except InvalidArgumentError as e:
+        logger.error(f"Invalid arguments: {e}")
+        return EXIT_INVALID_ARGS
+    except DataFormatError as e:
+        logger.error(f"Data format error: {e}")
+        return EXIT_DATA_ERROR
+    except ValidationError as e:
+        logger.error(f"Validation failed: {e}")
+        return EXIT_VALIDATION_ERROR
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        return EXIT_GENERAL_ERROR
+
+if __name__ == "__main__":
+    sys.exit(main())
+```
+
+### Integration with Core Libraries
+```python
+# Standard integration pattern
+from locomotion_analysis import LocomotionData
+from feature_constants import FeatureConstants
+from dataset_validator_phase import PhaseValidator
+
+class ValidationTool:
+    def __init__(self, args):
+        self.args = args
+        self.feature_constants = FeatureConstants()
+        self.validator = PhaseValidator()
+    
+    def process_dataset(self, dataset_path):
+        data = LocomotionData.from_parquet(dataset_path)
+        return self.validator.validate(data)
+```
+
+---
+
+## COMPLETE CANONICAL TOOL NAME REFERENCE
+
+**Use these exact names for consistency across all 19 software engineering documents:**
+
+### Primary CLI Tools
+- `validation_dataset_report.py` - Main validation and quality assessment tool
+- `validation_compare_datasets.py` - Multi-dataset statistical comparison
+- `validation_investigate_errors.py` - Validation failure debugging and analysis
+- `validation_auto_tune_spec.py` - Automated validation range optimization
+- `validation_manual_tune_spec.py` - Interactive validation specification editing
+- `conversion_generate_phase_dataset.py` - Time-to-phase conversion (legacy support)
+- `create_benchmarks.py` - ML benchmark creation with stratified splits
+- `publish_datasets.py` - Dataset packaging for public distribution
+
+### Core Library Modules
+- `locomotion_analysis.py` - LocomotionData class with 3D array operations
+- `feature_constants.py` - Feature definitions and mappings (single source of truth)
+- `dataset_validator_phase.py` - Phase-indexed dataset validation engine
+- `dataset_validator_time.py` - Time-indexed dataset validation engine
+- `filters_by_phase_plots.py` - Phase-based validation plot generator
+- `forward_kinematics_plots.py` - Joint angle visualization generator
+- `step_classifier.py` - Gait cycle step classification
+- `validation_expectations_parser.py` - Markdown validation rule parser
+
+### Visualization and Animation
+- `walking_animator.py` - Walking pattern animation generator
+- `generate_validation_plots.py` - Unified plot generation script
+- `generate_validation_gifs.py` - Animated GIF generation for validation
+- `refresh_validation_gifs.py` - GIF regeneration automation
+
+### Testing Framework
+- `test_tutorial_getting_started_python.py` - Python tutorial validation tests
+- `test_tutorial_library_python.py` - Python library comprehensive tests
+- `test_tutorial_getting_started_matlab.m` - MATLAB tutorial validation tests
+- `test_tutorial_library_matlab.m` - MATLAB library comprehensive tests
+- `demo_dataset_validator_phase.py` - Visual validation demonstration
+- `demo_filters_by_phase_plots.py` - Filter plots demonstration
+- `demo_step_classifier.py` - Step classification demonstration
+
+### Utility Scripts
+- `check_file_structure.py` - Repository structure validation
+- `check_parquet_structure.py` - Parquet file validation
+- `memory_safe_validator.py` - Memory-efficient validation
+- `quick_phase_check.py` - Fast phase validation
+- `validate_all_datasets.sh` - Comprehensive dataset validation script
+
+**Tool Priority Classification:**
+- **CRITICAL**: `validation_dataset_report.py` (primary validation tool)
+- **HIGH**: `validation_compare_datasets.py`, `validation_auto_tune_spec.py`, `validation_manual_tune_spec.py`
+- **MEDIUM**: `validation_investigate_errors.py`, `create_benchmarks.py`, `publish_datasets.py`
+- **LEGACY**: `conversion_generate_phase_dataset.py` (existing datasets have phase data)
+
+This canonical reference ensures consistent tool naming across all documentation and prevents naming conflicts or confusion in the software engineering documentation suite.

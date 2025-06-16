@@ -20,7 +20,7 @@
 - Tracking rationale for validation range changes
 - Communicating biomechanical requirements to programmer colleagues
 
-**Tools:** `generate_dataset_report.py`, `manage_validation_specs.py`, `auto_tune_ranges.py`, `investigate_errors.py`
+**Tools:** `validation_dataset_report.py`, `validation_manual_tune_spec.py`, `validation_auto_tune_spec.py`, `validation_investigate_errors.py`
 
 ---
 
@@ -42,7 +42,7 @@
 - Debugging conversion failures with domain-specific context
 - Balancing programming efficiency with biomechanical accuracy
 
-**Tools:** Validation scaffolding, example conversion scripts, `validate_phase_data.py`, `generate_dataset_report.py`
+**Tools:** Validation scaffolding, example conversion scripts, `validation_dataset_report.py`, `validation_dataset_report.py`
 
 ---
 

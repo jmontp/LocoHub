@@ -232,15 +232,22 @@ Intent: {Why this file exists and what problems it solves}
 
 **Usage Pattern**:
 1. Work on tasks normally with Claude Code
-2. Use `/my_clear` slash command when ready to clear context
-3. Claude summarizes current session and updates scratchpad
-4. Start fresh with continuity preserved in scratchpad
+2. Use `/my_clear [next_steps]` slash command when ready to clear context
+3. Claude intelligently filters context based on next steps and updates scratchpad
+4. Start fresh with only relevant continuity preserved
+
+**Smart Filtering**: When next steps are specified, Claude preserves only relevant context:
+- **Keeps**: Dependencies, constraining decisions, unfinished related work, blockers
+- **Archives**: Completed unrelated work streams  
+- **Discards**: Tangential discussions, resolved issues, rejected alternatives
 
 **Benefits**:
 - **Context preservation**: No lost work when clearing Claude context
+- **Intelligent filtering**: Only keeps context relevant to next steps, reduces noise
 - **Minimal overhead**: Simple markdown files, no complex PM system
 - **Natural workflow**: Integrates with Claude Code session management
 - **Easy review**: Scannable history of recent work and decisions
+- **Multi-goal sessions**: Handles sessions with multiple work streams effectively
 
 ## Common Commands
 

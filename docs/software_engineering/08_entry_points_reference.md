@@ -31,7 +31,6 @@
 |----------|------|---------|--------|
 | **Critical** | `create_benchmarks.py` | Create ML train/test/validation splits | 📋 Planned |
 | **Medium** | `publish_datasets.py` | Prepare datasets for public release | 📋 Planned |
-| **Medium** | `manage_releases.py` | Manage dataset versions and releases | 📋 Planned |
 
 ---
 

@@ -95,7 +95,7 @@ graph TD
 
 ### **User-Facing Tools**
 - **Conversion Scripts**: Convert raw locomotion data (MATLAB, CSV, B3D) to standardized parquet format
-- **Validation Report Generator**: Create comprehensive validation reports with plots and quality metrics
+- **Validation Report Generator (validation_dataset_report.py)**: **PRIMARY CONTAINER** - Create comprehensive validation reports with plots and quality metrics
 - **Shared Library**: Core LocomotionData library for data loading and manipulation
 
 ### **Configuration & Tuning Tools**
@@ -120,3 +120,27 @@ graph TD
 3. **Phase Segmentation Validation** - Ensure exactly 150 points per gait cycle
 
 **Success Criteria**: External collaborators can successfully contribute validated datasets that meet quality standards for research use.
+
+---
+
+## Workflow Integration
+
+**validation_dataset_report.py serves as the central validation hub** for all contributor workflows:
+
+### **Container Workflow Mapping**
+1. **Dataset Conversion (Sequence 1)**: Conversion Scripts → conversion_generate_phase_dataset.py → **validation_dataset_report.py**
+2. **Manual Validation Tuning (Sequence 2A)**: Specification Manager → **validation_dataset_report.py** 
+3. **Statistical Validation Tuning (Sequence 2B)**: Automated Tuner → **validation_dataset_report.py**
+4. **Quality Assessment (Sequence 3)**: **validation_dataset_report.py** as primary container
+
+### **Validation Data Flow**
+```
+Raw Data → Conversion Scripts → Parquet Files → validation_dataset_report.py → Quality Reports
+Specification Updates → SpecificationManager → validation_dataset_report.py → Updated Validation
+```
+
+### **Container Dependencies**
+- **All workflows converge** on validation_dataset_report.py for quality assessment
+- **Shared Library** provides common data loading and manipulation across all containers
+- **Validation specifications** drive the validation logic in the primary container
+- **Quality reports** inform both conversion decisions and specification updates

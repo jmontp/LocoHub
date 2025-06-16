@@ -664,7 +664,13 @@ def test_handle_malformed_parquet_from_external_scripts():
                f"Errors should be descriptive for external users: {test_file}"
 ```
 
-### TimeValidator Tests (UC-C02)
+### TimeValidator Tests (User Story C03)
+
+**Requirements: F4 (Phase-Indexed Dataset Generation) - Time Validation**
+**Interface Contract: Document 14a TimeValidator.validate_dataset() specification**
+**User Story: C03 (Generate Phase-Indexed Dataset) - Input validation acceptance criteria**
+**Workflow Integration: Document 06 Sequence 1 (Dataset Conversion) component**
+
 ```python
 def test_validate_correct_phase_structure():
     """Test validation of correctly structured phase data"""
