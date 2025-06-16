@@ -24,7 +24,7 @@ status: ready
 ### Sequence 1: Dataset Curator (Programmer) Develops Conversion Script
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 sequenceDiagram
     participant DC as Dataset Curator (Programmer)
     participant VS as Validation Scaffolding
@@ -89,7 +89,7 @@ sequenceDiagram
 ### Sequence 2A: Manual Validation (Literature-Based Updates)
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 sequenceDiagram
     participant BV as Biomechanical Validator
     participant LT as Literature Review
@@ -145,7 +145,7 @@ sequenceDiagram
 ### Sequence 2B: Automatic Validation (Statistics-Based Updates)
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 sequenceDiagram
     participant BV as Biomechanical Validator
     participant AT as validation_auto_tune_spec.py
@@ -196,7 +196,7 @@ sequenceDiagram
 ### Sequence 3: Dataset Curator Generates Quality Report
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 sequenceDiagram
     participant DC as Dataset Curator
     participant GR as validation_dataset_report.py
@@ -246,7 +246,7 @@ sequenceDiagram
 ### Sequence 4: System Administrator (Future) - ML Benchmark Creation
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 sequenceDiagram
     participant SA as System Administrator
     participant BC as create_benchmarks.py

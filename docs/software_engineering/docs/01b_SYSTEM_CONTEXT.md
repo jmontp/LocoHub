@@ -34,18 +34,18 @@ This document translates the functional requirements into system context and use
 *Primary validation tool user (9% of system usage) serving 90% consumer population*
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 graph LR
     DC["🔬 Dataset Contributor<br/><font size='-1'>Research collaborator with raw locomotion data</font>"] 
     
     DC --> CONVERT["📝 conversion_generate_phase_dataset.py<br/><font size='-1'>Convert time to phase data<br/>→ Workflow Sequence 1</font>"]
     DC --> VALIDATE["✅ validation_dataset_report.py<br/><font size='-1'>PRIMARY TOOL: Validate and assess quality<br/>→ Workflow Sequence 3</font>"]
     
-    style DC fill:#e76f51,color:white
-    style CONVERT fill:#1168bd,color:white
-    style VALIDATE fill:#f4b942,color:white
+    style DC fill:#e3f2fd,color:#000000,stroke:#1976d2
+    style CONVERT fill:#f3e5f5,color:#000000,stroke:#7b1fa2
+    style VALIDATE fill:#fff3e0,color:#000000,stroke:#f57c00
     
-    linkStyle default stroke:white
+    linkStyle default stroke:black
 ```
 
 ### Validation Specialist Workflow  
@@ -53,7 +53,7 @@ graph LR
 *Expert biomechanics reviewer collaborating on quality standards*
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 graph LR
     VS["⚙️ Validation Specialist<br/><font size='-1'>Research collaborator managing quality standards</font>"]
     
@@ -62,13 +62,13 @@ graph LR
     VS --> COMPARE["📈 validation_compare_datasets.py<br/><font size='-1'>Cross-dataset analysis</font>"]
     VS --> DEBUG["🔍 validation_investigate_errors.py<br/><font size='-1'>Investigate data issues</font>"]
     
-    style VS fill:#e76f51,color:white
-    style MANAGE fill:#1168bd,color:white
-    style TUNE fill:#1168bd,color:white
-    style COMPARE fill:#1168bd,color:white
-    style DEBUG fill:#1168bd,color:white
+    style VS fill:#e3f2fd,color:#000000,stroke:#1976d2
+    style MANAGE fill:#bbdefb,color:#000000,stroke:#1565c0
+    style TUNE fill:#bbdefb,color:#000000,stroke:#1565c0
+    style COMPARE fill:#bbdefb,color:#000000,stroke:#1565c0
+    style DEBUG fill:#bbdefb,color:#000000,stroke:#1565c0
     
-    linkStyle default stroke:white
+    linkStyle default stroke:black
 ```
 
 ### System Administrator Workflow
@@ -76,7 +76,7 @@ graph LR
 *Infrastructure management using workflow sequences*
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 graph LR
     SA["👨‍💼 System Administrator<br/><font size='-1'>I manage releases and benchmarks</font>"]
     
@@ -84,12 +84,12 @@ graph LR
     SA --> PUBLISH["📦 publish_datasets.py<br/><font size='-1'>Prepare public releases</font>"]
     SA --> BATCH["⚡ validation_dataset_report.py (batch)<br/><font size='-1'>Validate multiple datasets</font>"]
     
-    style SA fill:#f4a261,color:white
-    style BENCHMARK fill:#1168bd,color:white
-    style PUBLISH fill:#1168bd,color:white
-    style BATCH fill:#1168bd,color:white
+    style SA fill:#fff3e0,color:#000000,stroke:#f57c00
+    style BENCHMARK fill:#bbdefb,color:#000000,stroke:#1565c0
+    style PUBLISH fill:#bbdefb,color:#000000,stroke:#1565c0
+    style BATCH fill:#bbdefb,color:#000000,stroke:#1565c0
     
-    linkStyle default stroke:white
+    linkStyle default stroke:black
 ```
 
 ### Dataset Consumer Workflow (Future)
@@ -98,7 +98,7 @@ graph LR
 *Future implementation: F5 (Dataset Comparison) and consumer-focused tools*
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 graph LR
     DC["🎓 Dataset Consumer<br/><font size='-1'>Research collaborator analyzing locomotion data<br/>Graduate students, clinical researchers, etc.</font>"]
     
@@ -107,13 +107,13 @@ graph LR
     DC --> PYTHON["🐍 Python Library<br/><font size='-1'>LocomotionData class<br/>→ Future workflow development</font>"]
     DC --> MATLAB["📊 MATLAB Tools<br/><font size='-1'>Native MATLAB integration<br/>→ Future workflow development</font>"]
     
-    style DC fill:#2a9d8f,color:white,stroke-dasharray:3
-    style BROWSE fill:#6baed6,color:white,stroke-dasharray:3
-    style DOWNLOAD fill:#6baed6,color:white,stroke-dasharray:3
-    style PYTHON fill:#6baed6,color:white,stroke-dasharray:3
-    style MATLAB fill:#6baed6,color:white,stroke-dasharray:3
+    style DC fill:#e8f5e8,color:#000000,stroke:#388e3c,stroke-dasharray:3
+    style BROWSE fill:#f5f5f5,color:#000000,stroke:#616161,stroke-dasharray:3
+    style DOWNLOAD fill:#f5f5f5,color:#000000,stroke:#616161,stroke-dasharray:3
+    style PYTHON fill:#f5f5f5,color:#000000,stroke:#616161,stroke-dasharray:3
+    style MATLAB fill:#f5f5f5,color:#000000,stroke:#616161,stroke-dasharray:3
     
-    linkStyle default stroke:white,stroke-dasharray:3
+    linkStyle default stroke:black,stroke-dasharray:3
 ```
 
 **Legend**: 
@@ -132,7 +132,7 @@ graph LR
 ### Level 1A: Simple User Split
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 graph TD
     subgraph "Dataset Contributors (9%)"
         contributors["Research Collaborators - Contributors<br/><font size='-2'>Person</font><br/><font size='-1'>External researchers contributing data:<br/>dataset curators, validation specialists<br/>using validation_dataset_report.py</font>"]
@@ -155,12 +155,12 @@ graph TD
     system -- "Provides Quality-Assured Data<br/>(validated by contributors)" --> consumers
     
     %% Styling
-    style contributors fill:#e76f51,stroke:#d62828,stroke-width:2px,color:#ffffff
-    style admins fill:#f4a261,stroke:#e76f51,stroke-width:2px,color:#ffffff
-    style consumers fill:#2a9d8f,stroke:#264653,stroke-width:2px,color:#ffffff
-    style system fill:#457b9d,stroke:#1d3557,stroke-width:2px,color:#ffffff
+    style contributors fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000000
+    style admins fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
+    style consumers fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
+    style system fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#000000
     
-    linkStyle default stroke:white
+    linkStyle default stroke:black
 ```
 
 **Use Case**: Stakeholder communication and high-level system overview  
@@ -171,7 +171,7 @@ graph TD
 ## Level 1B: Data Flow Focus
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 graph TD
     subgraph "External Data Sources"
         raw["Raw Locomotion Datasets<br/><font size='-2'>External System</font><br/><font size='-1'>GTech, UMich, AddBiomechanics<br/>and other research datasets.</font>"]
@@ -191,12 +191,12 @@ graph TD
     system -- "Generates" --> docs
     
     %% Styling
-    style raw fill:#8d99ae,stroke:#6c757d,stroke-width:2px,color:#ffffff
-    style system fill:#457b9d,stroke:#1d3557,stroke-width:2px,color:#ffffff
-    style datasets fill:#2a9d8f,stroke:#264653,stroke-width:2px,color:#ffffff
-    style docs fill:#f4a261,stroke:#e76f51,stroke-width:2px,color:#ffffff
+    style raw fill:#f5f5f5,stroke:#616161,stroke-width:2px,color:#000000
+    style system fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#000000
+    style datasets fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
+    style docs fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
     
-    linkStyle default stroke:white
+    linkStyle default stroke:black
 ```
 
 **Use Case**: Technical understanding and data transformation explanation  
@@ -207,7 +207,7 @@ graph TD
 ## Level 1C: Intermediate Detail
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 graph TD
     subgraph "External Research Collaborators"
         contributors["Dataset Contributors (9%)<br/><font size='-2'>Person</font><br/><font size='-1'>Research collaborators who validate<br/>and contribute data via workflows.</font>"]
@@ -262,17 +262,17 @@ graph TD
     validation_engine -.-> analysis_tools
 
     %% Styling
-    style contributors fill:#e76f51,stroke:#d62828,stroke-width:2px,color:#ffffff
-    style admins fill:#f4a261,stroke:#e76f51,stroke-width:2px,color:#ffffff
-    style consumers fill:#2a9d8f,stroke:#264653,stroke-width:2px,color:#ffffff,stroke-dasharray:3
-    style raw_datasets fill:#8d99ae,stroke:#6c757d,stroke-width:2px,color:#ffffff
-    style validation_engine fill:#f4a261,stroke:#e76f51,stroke-width:2px,color:#ffffff
-    style analysis_tools fill:#94d3a2,stroke:#2a9d8f,stroke-width:2px,color:#ffffff,stroke-dasharray:3
-    style datasets fill:#457b9d,stroke:#1d3557,stroke-width:2px,color:#ffffff
-    style validation_specs fill:#457b9d,stroke:#1d3557,stroke-width:2px,color:#ffffff
-    style documentation fill:#a8dadc,stroke:#457b9d,stroke-width:1px,color:#000000
+    style contributors fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000000
+    style admins fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
+    style consumers fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000,stroke-dasharray:3
+    style raw_datasets fill:#f5f5f5,stroke:#616161,stroke-width:2px,color:#000000
+    style validation_engine fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000000
+    style analysis_tools fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000,stroke-dasharray:3
+    style datasets fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
+    style validation_specs fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#000000
+    style documentation fill:#f5f5f5,stroke:#616161,stroke-width:1px,color:#000000
     
-    linkStyle default stroke:white
+    linkStyle default stroke:black
 ```
 
 **Use Case**: Architecture planning and detailed system understanding  

@@ -1,10 +1,10 @@
 ---
-title: User Guide
-tags: [user, guide]
+title: User Personas
+tags: [user, personas, research]
 status: ready
 ---
 
-# User Guide
+# User Personas
 
 !!! info "🎯 **You are here** → User Research & Personas Hub"
     **Purpose:** Understand who uses the system and how they work
@@ -20,11 +20,13 @@ status: ready
 !!! tip "**Quick Navigation**"
     **👥 Who are our users?** → [User Population Analysis](#user-population-analysis)
     
-    **🧑‍💼 Detailed profiles?** → [User Personas](#user-personas)
+    **🧑‍💼 Detailed profiles?** → [User Roles & Entry Points](01a_USER_ROLES.md)
     
-    **🛤️ How do they work?** → [User Journey Maps](#user-journey-maps)
+    **🛤️ How do they work?** → [User Journeys](01c_USER_JOURNEYS.md)
     
-    **🔍 What did we learn?** → [Journey Insights](#journey-insights)
+    **📋 Common workflows?** → [User Workflows](01d_USER_WORKFLOWS.md)
+    
+    **🏗️ System context?** → [System Context](01b_SYSTEM_CONTEXT.md)
 
 ## 🎯 User Population Analysis
 
@@ -50,162 +52,15 @@ status: ready
 - **System Administrators (1%)**: Infrastructure managers and release coordinators
 - **Dataset Consumers (90%)**: Researchers analyzing quality-assured data *(Future Phase 2)*
 
-## User Journey Maps
+## User Journeys
 
-### Current Focus: Dataset Contributor Journeys
+**Detailed Workflow Analysis**: See [User Journeys](01c_USER_JOURNEYS.md) for complete workflow maps and interaction patterns.
 
-#### Journey 1: Dataset Curator (Programmer) Converts Lab Dataset
-
-**Workflow:** Discovery → Development → Quality Assessment → Resolution
-
-**Discovery Phase:**
-- Find conversion requirements (satisfaction: 3/5)
-- Access validation scaffolding (satisfaction: 4/5)
-- Review example scripts (satisfaction: 5/5)
-- Understand standard specification (satisfaction: 3/5)
-
-**Development Phase:**
-- Analyze raw dataset structure (satisfaction: 4/5)
-- Map variables to standard names (satisfaction: 2/5)
-- Create time-indexed parquet (satisfaction: 4/5)
-- Generate phase dataset with tool (satisfaction: 5/5)
-- Handle missing data patterns (satisfaction: 2/5)
-
-**Quality Assessment Phase:**
-- Generate comprehensive dataset report (satisfaction: 5/5)
-- Review validation and quality results (satisfaction: 3/5)
-- Debug biomechanical failures (satisfaction: 1/5)
-- Consult biomechanics expert (satisfaction: 3/5)
-- Fix conversion issues (satisfaction: 3/5)
-- Document conversion decisions (satisfaction: 2/5)
-- Prepare contribution materials (satisfaction: 3/5)
-
-**Pain Points:**
-- Complex biomechanical conventions and coordinate systems
-- Variable naming inconsistencies across source datasets
-- Ensuring vertical ground reaction force data is properly formatted for phase generation
-- Debugging validation failures requires domain expertise
-- Time-consuming iteration between conversion and validation
-
-**Emotional Journey:**
-- **Discovery**: Confidence with clear examples and scaffolding
-- **Development**: Frustration with biomechanical complexity
-- **Quality Assessment**: Relief with unified validation and quality reporting
-- **Resolution**: Satisfaction when comprehensive report shows dataset quality
-
-#### Journey 2: Dataset Curator (Biomechanical Validation) Updates Validation Ranges
-
-**Workflow:** Research → Analysis → Implementation → Verification
-
-**Research Phase:**
-- Review recent literature (satisfaction: 4/5)
-- Identify range updates needed (satisfaction: 3/5)
-- Analyze population differences (satisfaction: 3/5)
-- Document evidence sources (satisfaction: 2/5)
-
-**Analysis Phase:**
-- Run statistical range analysis (satisfaction: 4/5)
-- Compare literature vs data (satisfaction: 3/5)
-- Assess impact on existing datasets (satisfaction: 2/5)
-- Preview validation changes (satisfaction: 4/5)
-
-**Implementation Phase:**
-- Update validation specifications (satisfaction: 3/5)
-- Test against known datasets (satisfaction: 4/5)
-- Document rationale for changes (satisfaction: 2/5)
-- Communicate updates to team (satisfaction: 3/5)
-
-**Verification Phase:**
-- Monitor validation pass rates (satisfaction: 4/5)
-- Investigate unexpected failures (satisfaction: 2/5)
-- Refine ranges based on feedback (satisfaction: 3/5)
-- Maintain change documentation (satisfaction: 2/5)
-
-**Pain Points:**
-- Balancing strict standards with real-world data variability
-- Explaining biomechanical rationale to programming colleagues
-- Manual investigation of outliers and edge cases
-- Tracking change rationale across multiple updates
-
-**Emotional Journey:**
-- **Research**: Professional satisfaction with evidence-based decisions
-- **Analysis**: Analytical engagement with statistical tools
-- **Implementation**: Confidence in systematic change management
-- **Verification**: Responsibility for community data quality
-
-#### Journey 3: Collaborative Dataset Contribution
-
-**Workflow:** Planning → Development → Quality Review → Documentation
-
-**Planning Phase:**
-- Define dataset contribution goals (satisfaction: 5/5)
-- Assign programmer and validator roles (satisfaction: 4/5)
-- Review existing similar datasets (satisfaction: 3/5)
-- Plan conversion approach (satisfaction: 4/5)
-
-**Development Phase:**
-- Programmer creates conversion script (satisfaction: 3/5)
-- Validator reviews biomechanical accuracy (satisfaction: 4/5)
-- Iterate on validation failures (satisfaction: 2/5)
-- Document conversion decisions (satisfaction: 3/5)
-
-**Quality Review Phase:**
-- Run comprehensive validation (satisfaction: 4/5)
-- Generate quality assessment report (satisfaction: 4/5)
-- Compare against population norms (satisfaction: 3/5)
-- Approve dataset for contribution (satisfaction: 5/5)
-
-**Documentation Phase:**
-- Create dataset documentation (satisfaction: 3/5)
-- Document biomechanical considerations (satisfaction: 4/5)
-- Prepare contribution materials (satisfaction: 3/5)
-- Submit to community repository (satisfaction: 5/5)
-
-**Pain Points:**
-- Communication gaps between programming and biomechanics expertise
-- Iterative debugging cycle requires both skill sets
-- Documentation must serve both technical and domain audiences
-- Quality standards require consensus between roles
-
-**Emotional Journey:**
-- **Planning**: Excitement about contributing to community
-- **Development**: Collaborative problem-solving satisfaction
-- **Quality Review**: Shared responsibility for data integrity
-- **Documentation**: Pride in professional contribution
-
-### Future: Consumer Journey Preview *(90% of users - Phase 2)*
-
-**Simplified Consumer Experience:**
-- Discovery: Find standardized repository → Browse quality-assured datasets → Review population demographics → Download parquet files
-- Analysis: Load data with Python library → Apply domain-specific analysis → Trust data quality implicitly → Focus on research questions
-
-**Design Goal:** Consumer confidence through behind-the-scenes validation quality.
-
-## Journey Insights
-
-### Contributor Success Factors
-1. **Clear Scaffolding**: Examples and guidelines reduce development friction
-2. **Automated Phase Generation**: `generate_phase_dataset.py` handles complex gait cycle detection
-3. **Domain Expertise Integration**: Biomechanics knowledge accessible to programmers
-4. **Iterative Feedback**: Validation tools enable continuous improvement
-5. **Comprehensive Documentation**: Technical and domain perspectives both covered
-
-### Collaboration Patterns
-- **Programmer Focus**: Technical implementation, data processing, tool usage
-- **Validator Focus**: Biomechanical accuracy, standard evolution, quality oversight
-- **Shared Responsibility**: Dataset quality, documentation, community contribution
-
-### Pain Point Mitigation
-- **Technical Complexity**: Scaffolding and examples reduce learning curve
-- **Domain Knowledge Gaps**: Validation tools provide biomechanical guidance
-- **Quality Uncertainty**: Comprehensive reporting builds confidence
-- **Collaboration Friction**: Clear role definitions and shared tools
-
-### Emotional Design Principles
-- **Confidence Through Examples**: Proven patterns reduce uncertainty
-- **Satisfaction Through Quality**: Comprehensive tools enable thorough work
-- **Pride Through Contribution**: Community impact motivates quality standards
-- **Support Through Collaboration**: Shared expertise reduces individual burden
+**Current Focus Journeys:**
+- **Journey 1**: Dataset Curator (Programmer) - Technical dataset conversion workflow
+- **Journey 2**: Dataset Curator (Biomechanical Validation) - Validation specification updates  
+- **Journey 3**: Collaborative Dataset Contribution - Multi-role workflow coordination
+- **Future Preview**: Simplified consumer experience (Phase 2 development target)
 
 ## System Context
 
@@ -219,7 +74,7 @@ The system serves external research collaborators through a quality-first approa
 ### Quick Context Overview
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 graph TD
     subgraph "Dataset Contributors (9%)"
         contributors["Research Collaborators - Contributors<br/><font size='-1'>Dataset curators, validation specialists</font>"]
@@ -236,16 +91,34 @@ graph TD
     contributors -- "Contribute & Validate<br/>(via validation_dataset_report.py)" --> system
     system -- "Provides Quality-Assured Data" --> consumers
     
-    style contributors fill:#e76f51,stroke:#d62828,stroke-width:2px,color:#ffffff
-    style consumers fill:#2a9d8f,stroke:#264653,stroke-width:2px,color:#ffffff
-    style system fill:#457b9d,stroke:#1d3557,stroke-width:2px,color:#ffffff
+    style contributors fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000000
+    style consumers fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
+    style system fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#000000
     
-    linkStyle default stroke:white
+    linkStyle default stroke:black
 ```
 
 **Detailed Documentation:**
 - **[User Roles & Entry Points →](01a_USER_ROLES.md)** - Complete CLI tool catalog by user role
 - **[System Context →](01b_SYSTEM_CONTEXT.md)** - Architecture diagrams and interaction patterns
+
+---
+
+## Complete User Documentation Structure
+
+**User Research & Guidance Documentation:**
+
+- **[User Personas](01_USER_GUIDE.md)** *(this document)* - Population analysis and personas overview
+- **[User Roles & Entry Points](01a_USER_ROLES.md)** - Detailed persona descriptions and tool requirements  
+- **[System Context](01b_SYSTEM_CONTEXT.md)** - Architecture overview and interaction patterns
+- **[User Journeys](01c_USER_JOURNEYS.md)** - Detailed workflow maps and emotional journey analysis
+- **[User Workflows](01d_USER_WORKFLOWS.md)** - Step-by-step guides for common user tasks
+
+**How to Navigate:**
+- **Start here** for population understanding and persona overview
+- **Drill down** to specific roles, journeys, or workflows as needed
+- **Reference workflows** when performing actual tasks
+- **Review context** for architectural understanding
 
 ## Development Strategy
 
@@ -291,6 +164,18 @@ graph TD
     **Time:** 12 minutes
     
     **Best For:** Architects, system designers
+
+-   **🛤️ [User Journeys](01c_USER_JOURNEYS.md)**
+    
+    ---
+    
+    Detailed workflow maps showing how users interact with the system
+    
+    **Key Content:** 3 contributor journeys, pain points, success factors
+    
+    **Time:** 12 minutes
+    
+    **Best For:** UX designers, user researchers, product managers
 </div>
 
 ---
@@ -314,6 +199,8 @@ graph TD
     **🔗 Detailed Tools:** [User Roles & Entry Points](01a_USER_ROLES.md) - Complete CLI tool catalog by user role
     
     **🔗 System Context:** [System Context Diagrams](01b_SYSTEM_CONTEXT.md) - Technical interaction patterns
+    
+    **🔗 Workflow Details:** [User Journeys](01c_USER_JOURNEYS.md) - Detailed workflow maps and interaction patterns
     
     **🔗 Requirements Traceability:** [Requirements](02_REQUIREMENTS.md) - User stories derived from these personas
 

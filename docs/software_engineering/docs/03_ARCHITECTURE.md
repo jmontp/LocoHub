@@ -69,7 +69,7 @@ The system provides distinct workflows for three user populations:
 The system follows a three-phase development approach with the current implementation targeting dataset contributors and validation specialists.
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 graph TD
     subgraph "User"
         data_scientist["Data Scientist<br/><font size='-2'>Person</font><br/><font size='-1'>Analyzes and validates locomotion data.</font>"]
@@ -139,18 +139,18 @@ graph TD
     
 
     %% Styling
-    style data_scientist fill:#08427b,color:white
-    style conversion_scripts fill:#1168bd,color:white
-    style reporting_engine fill:#1168bd,color:white
-    style shared_lib fill:#2a9d8f,color:white
-    style spec_manager fill:#4a4e69,color:white
-    style auto_tuner fill:#4a4e69,color:white
-    style parquet_storage fill:#707070,color:white
-    style validation_spec fill:#707070,color:white
-    style validation_report fill:#707070,color:white
-    style project_docs fill:#707070,color:white
+    style data_scientist fill:#e3f2fd,color:#000000,stroke:#1976d2
+    style conversion_scripts fill:#f3e5f5,color:#000000,stroke:#7b1fa2
+    style reporting_engine fill:#f3e5f5,color:#000000,stroke:#7b1fa2
+    style shared_lib fill:#bbdefb,color:#000000,stroke:#1565c0
+    style spec_manager fill:#bbdefb,color:#000000,stroke:#1565c0
+    style auto_tuner fill:#bbdefb,color:#000000,stroke:#1565c0
+    style parquet_storage fill:#e8f5e8,color:#000000,stroke:#388e3c
+    style validation_spec fill:#bbdefb,color:#000000,stroke:#1565c0
+    style validation_report fill:#f5f5f5,color:#000000,stroke:#616161
+    style project_docs fill:#f5f5f5,color:#000000,stroke:#616161
     
-    linkStyle default stroke:white
+    linkStyle default stroke:black
 ```
 
 ### Container Workflow Integration
@@ -175,7 +175,7 @@ graph TD
 Core data handling and manipulation components that provide the foundation for all validation workflows.
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 graph TD
     subgraph "Core Infrastructure Container"
         style CoreInfrastructure fill:#00000000,stroke:#438dd5,stroke-width:3px,stroke-dasharray:5
@@ -227,22 +227,22 @@ graph TD
     data_validator -- "Gets validation rules from" --> spec_manager_api
 
     %% Styling
-    style data_loader fill:#438dd5,color:white
-    style data_validator fill:#438dd5,color:white
-    style data_transformer fill:#438dd5,color:white
-    style data_api fill:#438dd5,color:white
-    style error_handler fill:#e76f51,color:white
+    style data_loader fill:#bbdefb,color:#000000,stroke:#1565c0
+    style data_validator fill:#bbdefb,color:#000000,stroke:#1565c0
+    style data_transformer fill:#bbdefb,color:#000000,stroke:#1565c0
+    style data_api fill:#bbdefb,color:#000000,stroke:#1565c0
+    style error_handler fill:#ffebee,color:#000000,stroke:#d32f2f
     
-    style variable_registry fill:#6baed6,color:white
-    style biomech_conventions fill:#6baed6,color:white
-    style config_manager fill:#96c93d,color:white
+    style variable_registry fill:#f5f5f5,color:#000000,stroke:#616161
+    style biomech_conventions fill:#f5f5f5,color:#000000,stroke:#616161
+    style config_manager fill:#e8f5e8,color:#000000,stroke:#388e3c
     
-    style parquet_files fill:#707070,color:white
-    style standard_spec fill:#707070,color:white
-    style spec_manager_api fill:#6baed6,color:white
-    style user_config fill:#707070,color:white
+    style parquet_files fill:#e8f5e8,color:#000000,stroke:#388e3c
+    style standard_spec fill:#f5f5f5,color:#000000,stroke:#616161
+    style spec_manager_api fill:#bbdefb,color:#000000,stroke:#1565c0
+    style user_config fill:#f5f5f5,color:#000000,stroke:#616161
     
-    linkStyle default stroke:white
+    linkStyle default stroke:black
 ```
 
 ### Enhanced Validation Engine Components (validation/)

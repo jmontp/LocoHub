@@ -6,434 +6,116 @@ status: ready
 
 # Test Strategy
 
-!!! info ":test_tube: **You are here** → Testing Framework & Quality Assurance"
-    **Purpose:** Comprehensive test framework for locomotion data standardization with focus on PhaseValidator quality gates
+!!! info ":test_tube: **You are here** → Testing Strategy & Validation Framework"
+    **Purpose:** Comprehensive testing approach ensuring system reliability and user satisfaction
     
-    **Who should read this:** QA engineers, developers, contributors, maintainers
+    **Who should read this:** QA engineers, developers, product managers, validation specialists
     
-    **Value:** Ensure system reliability and data quality through robust testing
+    **Value:** Clear testing methodology prevents defects and ensures quality delivery
     
-    **Connection:** Validates [Requirements](02_REQUIREMENTS.md) and [Architecture](03_ARCHITECTURE.md) implementations
+    **Connection:** Validates [Requirements](02_REQUIREMENTS.md), guides [Implementation](05_IMPLEMENTATION_GUIDE.md)
     
-    **:clock4: Reading time:** 12 minutes | **:test_tube: Test types:** 4 comprehensive categories
+    **:clock4: Reading time:** 15 minutes | **:memo: User stories:** 10 comprehensive test plans
 
-!!! abstract ":zap: TL;DR - Testing Philosophy"
-    - **PhaseValidator is the critical quality gate** - Must robustly validate all parquet files
-    - **Validation-First Testing** - Test data quality and biomechanical correctness
-    - **Comprehensive Coverage** - Unit, integration, acceptance, and validation tests
-    - **Real Data Testing** - Use actual datasets for realistic validation
-
-**Comprehensive test framework for locomotion data standardization with focus on PhaseValidator quality gates.**
-
-*Requirements Foundation: [Requirements](02_REQUIREMENTS.md) (F1-F6) | Architecture Decisions: [Architecture](03_ARCHITECTURE.md) suite | Interface Contracts: [Data Contracts](04b_DATA_CONTRACTS.md)*
+!!! abstract ":zap: TL;DR - Refined Testing Approach"
+    - **Code-Free Methodology:** Focus on test scenarios, validation criteria, and success metrics
+    - **User-Centric Design:** Test plans mirror actual dataset curator workflows
+    - **Scientific Rigor:** Biomechanical accuracy and statistical validity are mandatory
+    - **Quality Gates:** Comprehensive validation before any feature deployment
 
 ## Testing Philosophy
 
-**PhaseValidator is the critical quality gate** - Since conversion scripts will come from external collaborators in various formats, the PhaseValidator must robustly validate all parquet files regardless of their conversion source.
+### Core Principles
+- **Quality-First Validation**: Every feature must demonstrate reliability before deployment
+- **User-Centric Testing**: Test plans focus on actual user workflows and pain points
+- **Scientific Rigor**: Biomechanical accuracy and statistical validity are non-negotiable
+- **Privacy Protection**: Data anonymization and consent compliance are mandatory
+- **Reproducibility**: All test scenarios must be repeatable and traceable
 
 ### Test Categories
+- **Functional Testing**: Verify features meet acceptance criteria
+- **Integration Testing**: Ensure components work together seamlessly
+- **Performance Testing**: Validate scalability and resource efficiency
+- **Usability Testing**: Confirm tools are intuitive for domain experts
+- **Security Testing**: Protect data privacy and system integrity
 
-**Unit Tests** - Component-level tests for individual functions and classes
-- PhaseValidator parquet file structure and validation tests
-- TimeValidator temporal integrity tests  
-- ValidationSpecVisualizer plot generation tests
-- QualityAssessor coverage statistics tests
-- ValidationSpecManager specification management tests
-- AutomatedFineTuner range optimization tests
+## User Story Validation Testing
 
-**Integration Tests** - Component interaction and workflow validation
-- Complete dataset processing workflow (conversion → validation → assessment)
-- Specification management workflow (tuning → updating → revalidation)
-- External system integration (MATLAB/CSV/B3D conversion validation)
-- Component integration (validator ↔ visualizer, assessor ↔ validator)
+**[→ Complete User Story Test Plans](06e_USER_STORY_TESTING.md)**
 
-**Acceptance Tests** - User story acceptance criteria validation
-- Dataset Curator workflows (UC-C02, UC-C03)
-- Validation Specialist workflows (UC-V01, UC-V02, UC-V04, UC-V05)
-- Administrator workflows (UC-A01, UC-A02, UC-A03)
+Comprehensive test validation for all 10 user stories with detailed test objectives, scenarios, and success metrics. Each user story includes specific validation criteria ensuring system functionality meets acceptance requirements for dataset curators, validation specialists, and administrators.
 
-**Performance Tests** - Large dataset handling validation
-- Scale requirements for production use
-- Memory usage constraints (<4GB RAM)
-- Processing time limits (<10 minutes for large datasets)
+**Quick Reference:**
+- **US-01 to US-03**: Dataset conversion and quality validation workflows
+- **US-04 to US-07**: Multi-dataset analysis and specification management
+- **US-08 to US-10**: ML benchmarks, publishing, and version management
 
-### Test Priorities
+## Testing Infrastructure Requirements
 
-**Priority 1 (Critical) 🔥** - Must pass for any release
-- PhaseValidator parquet consistency and structure validation
-- Biomechanical range validation and stride filtering
-- External collaborator integration (parquet files from any source)
-- User experience tests (clear error messages, actionable feedback)
+### Test Data Management
+- **Synthetic Datasets**: Controlled statistical properties for validation
+- **Real Dataset Samples**: Actual biomechanical data for realistic testing
+- **Edge Case Collections**: Boundary conditions and error scenarios
+- **Performance Benchmarks**: Scalability testing datasets
 
-**Priority 2 (High)** - Should pass for quality release
-- QualityAssessor specification compliance scoring
-- ValidationSpecManager interactive range editing
-- AutomatedFineTuner statistical optimization
-- Complete workflow integration tests
+### Quality Assurance Framework
+- **Expert Review Panels**: Domain expert validation of test results
+- **Cross-Validation**: Independent verification of critical functionality
+- **Regression Testing**: Continuous validation of existing functionality
+- **Performance Monitoring**: Resource usage and efficiency tracking
 
-**Priority 3 (Lower)** - Basic functionality validation
-- Performance tests with large datasets
-- Advanced visualization features
-- Edge case handling
+### Success Validation
+- **Quantitative Metrics**: Measurable performance standards
+- **Qualitative Assessment**: Expert evaluation of domain appropriateness
+- **User Acceptance**: Stakeholder satisfaction with testing outcomes
+- **Compliance Verification**: Adherence to scientific and privacy standards
 
-## Unit Test Specifications
+## Test Execution Strategy
 
-### PhaseValidator Unit Tests - Priority 1 🔥
+### Phase 1: Component Testing
+**[→ Detailed Component Testing Guide](06a_COMPONENT_TESTING.md)**
+- Individual feature validation against acceptance criteria
+- Unit-level functionality verification for PhaseValidator, ValidationSpecManager, and data processing components
+- Error handling and edge case testing with scientific rigor
+- Performance baseline establishment and scalability verification
 
-**Parquet File Structure Tests**
-```python
-def test_validate_dataset_file_access():
-    """Test file accessibility and basic structure validation"""
-    # Valid parquet file
-    result = validator.validate_dataset("valid_dataset.parquet")
-    assert result.is_valid == True
-    
-    # Non-existent file
-    with pytest.raises(ValidationError):
-        validator.validate_dataset("nonexistent.parquet")
-    
-    # Corrupted parquet file
-    result = validator.validate_dataset("corrupted.parquet")
-    assert result.is_valid == False
-    assert "file corruption" in result.errors[0].lower()
+### Phase 2: Integration Testing
+**[→ Detailed Integration Testing Guide](06b_INTEGRATION_TESTING.md)**
+- End-to-end workflow validation across system boundaries
+- Cross-component interaction testing for data pipeline integrity
+- Data flow and transformation verification through complete processing chains
+- System-level performance assessment and resource optimization
 
-def test_phase_indexing_validation():
-    """Test phase indexing requirement (exactly 150 points per cycle)"""
-    # Valid phase indexing (150 points per cycle)
-    data = create_test_data(phases_per_cycle=150, cycles=10)
-    result = validator.validate_dataset(data)
-    assert result.is_valid == True
-    
-    # Invalid phase indexing (incorrect point count)
-    data = create_test_data(phases_per_cycle=100, cycles=10)
-    result = validator.validate_dataset(data)
-    assert result.is_valid == False
-    assert "phase indexing" in result.errors[0].lower()
-```
+### Phase 3: User Acceptance Testing
+**[→ Detailed User Acceptance Testing Guide](06c_USER_ACCEPTANCE_TESTING.md)**
+- Domain expert workflow validation with biomechanics researchers
+- Usability and efficiency assessment for dataset curators
+- Scientific accuracy verification by expert review panels
+- Stakeholder feedback integration and continuous improvement
 
-**Biomechanical Range Validation Tests**
-```python
-def test_stride_level_filtering():
-    """Test stride-level validation and filtering"""
-    # Create data with some valid and some invalid strides
-    data = create_mixed_validity_data()
-    result = validator.filter_valid_strides(data)
-    
-    assert result.total_strides == 20
-    assert result.valid_strides == 15
-    assert result.invalid_strides == 5
-    assert result.pass_rate == 0.75
-    assert len(result.kept_stride_ids) == 15
-    assert len(result.deleted_stride_ids) == 5
-
-def test_task_specific_validation():
-    """Test task-specific validation ranges"""
-    # Walking task with valid ranges
-    walking_data = create_task_data("walking", valid_ranges=True)
-    result = validator.filter_valid_strides(walking_data)
-    assert result.pass_rate > 0.95
-    
-    # Running task with different valid ranges
-    running_data = create_task_data("running", valid_ranges=True)
-    result = validator.filter_valid_strides(running_data)
-    assert result.pass_rate > 0.95
-```
-
-### TimeValidator Unit Tests
-
-**Temporal Integrity Tests**
-```python
-def test_sampling_frequency_validation():
-    """Test sampling frequency consistency checks"""
-    # Consistent sampling rate
-    data = create_time_series_data(frequency=100, duration=10)
-    result = time_validator.validate_sampling_frequency(data)
-    assert result.frequency_acceptable == True
-    assert abs(result.actual_frequency - 100) < 0.1
-    
-    # Inconsistent sampling rate
-    data = create_irregular_time_series_data()
-    result = time_validator.validate_sampling_frequency(data)
-    assert result.frequency_acceptable == False
-    assert result.irregular_sampling_detected == True
-```
-
-### ValidationSpecVisualizer Unit Tests
-
-**Plot Generation Tests**
-```python
-def test_validation_plot_generation():
-    """Test generation of validation plots"""
-    data = create_test_dataset()
-    result = visualizer.generate_validation_plots(data, "test_plots/")
-    
-    assert result.success == True
-    assert len(result.generated_plots["forward_kinematics"]) > 0
-    assert os.path.exists(result.output_directory)
-
-def test_specification_only_plots():
-    """Test generation of specification plots without data"""
-    result = visualizer.generate_validation_plots(
-        specs_only=True, 
-        tasks=["walking", "running"], 
-        output_dir="spec_plots/"
-    )
-    
-    assert result.success == True
-    assert "walking" in result.generated_plots
-    assert "running" in result.generated_plots
-```
-
-## Integration Test Specifications
-
-### Complete Dataset Processing Workflow
-
-**End-to-End Dataset Validation Workflow**
-```python
-def test_complete_dataset_processing_pipeline():
-    """Test complete workflow from raw dataset to validated output"""
-    # 1. Load dataset
-    data_loader = DataLoader()
-    dataset = data_loader.load_parquet("test_dataset.parquet")
-    
-    # 2. Validate with PhaseValidator
-    phase_validator = PhaseValidator(spec_manager, error_handler)
-    validation_result = phase_validator.validate_dataset("test_dataset.parquet", generate_plots=True)
-    
-    # 3. Verify plots were generated during validation
-    assert len(validation_result.plot_paths) > 0
-    assert all(os.path.exists(path) for path in validation_result.plot_paths)
-    
-    # 4. Assess quality
-    assessor = QualityAssessor(spec_manager)
-    quality_result = assessor.assess_dataset_quality("test_dataset.parquet")
-    
-    # Verify complete workflow
-    assert validation_result.is_valid == True
-    assert quality_result.quality_metrics["overall_score"] > 0.8
-    assert os.path.exists(validation_result.report_path)
-```
-
-### External System Integration
-
-**External Conversion Script Integration**
-```python
-def test_external_matlab_converter_integration():
-    """Test integration with external MATLAB conversion scripts"""
-    # 1. Run external MATLAB converter (simulated)
-    matlab_output = simulate_matlab_conversion("test_data.mat")
-    assert os.path.exists(matlab_output)
-    assert matlab_output.endswith(".parquet")
-    
-    # 2. Validate converted output
-    validation_result = phase_validator.validate_dataset(matlab_output)
-    
-    # 3. Check for common MATLAB conversion issues
-    assert validation_result.coverage_analysis.available_tasks is not None
-    assert len(validation_result.errors) == 0  # Should handle MATLAB quirks gracefully
-```
-
-## Acceptance Test Specifications
-
-### Dataset Curator Acceptance Tests (UC-C02, UC-C03)
-
-**UC-C02: Validate Converted Dataset**
-```python
-def test_dataset_curator_validation_workflow():
-    """
-    As a dataset curator I want to validate a newly converted dataset 
-    against biomechanical standards so I can ensure conversion success 
-    and data quality.
-    """
-    # Given: A newly converted dataset
-    converted_dataset = "newly_converted_dataset.parquet"
-    
-    # When: I run comprehensive validation
-    result = phase_validator.validate_dataset(converted_dataset, generate_plots=True)
-    
-    # Then: I receive comprehensive validation results
-    # Acceptance Criteria: Run comprehensive validation on both phase and time-indexed data
-    assert result is not None
-    assert hasattr(result, 'is_valid')
-    
-    # Acceptance Criteria: Generate detailed validation report with pass/fail status
-    assert result.report_path != ""
-    assert os.path.exists(result.report_path)
-    with open(result.report_path, 'r') as f:
-        report_content = f.read()
-        assert "VALIDATION SUMMARY" in report_content
-        assert "PASS" in report_content or "FAIL" in report_content
-```
-
-### Validation Specialist Acceptance Tests (UC-V01, UC-V04, UC-V05)
-
-**UC-V04: Manage Validation Specifications**
-```python
-def test_validation_specialist_spec_management():
-    """
-    As a validation specialist I want to edit and update validation rules 
-    and ranges so I can maintain current biomechanical standards as knowledge evolves.
-    """
-    # Given: Current validation specifications
-    current_specs = spec_manager.load_specifications("current_specs.md")
-    original_range = spec_manager.get_validation_ranges("walking", "knee_flexion_angle_ipsi_rad")
-    
-    # When: I update validation ranges
-    new_ranges = {"min": -20, "max": 90, "rationale": "Updated based on latest literature"}
-    
-    # Then: I can manage specifications effectively
-    # Acceptance Criteria: Interactive editing of validation ranges with preview
-    preview = spec_manager.preview_range_changes("walking", "knee_flexion_angle_ipsi_rad", new_ranges)
-    assert preview.impact_analysis is not None
-    assert preview.datasets_affected >= 0
-```
-
-## Performance and Scale Requirements
-
-### Performance Acceptance Tests
-
-```python
-def test_performance_acceptance_criteria():
-    """Validate that all components meet performance requirements for production use"""
-    # Large dataset processing
-    large_dataset = create_large_test_dataset(subjects=1000, cycles_per_subject=100)
-    
-    # Performance requirements
-    start_time = time.time()
-    validation_result = phase_validator.validate_dataset(large_dataset, parallel=True)
-    validation_time = time.time() - start_time
-    
-    # Acceptance criteria: Process large datasets within reasonable time
-    assert validation_time < 600  # 10 minutes max for very large datasets
-    assert validation_result.is_valid is not None  # Should complete successfully
-    
-    # Memory usage acceptance criteria
-    import psutil
-    process = psutil.Process()
-    peak_memory = process.memory_info().peak_wss if hasattr(process.memory_info(), 'peak_wss') else process.memory_info().rss
-    assert peak_memory < 4 * 1024 * 1024 * 1024  # Less than 4GB RAM
-```
-
-## Test Data Strategy
-
-### Test Data Types
-
-**Parquet File Tests** - Testing various parquet structures from different conversion sources 🔥
-- Standard structure validation
-- Malformed file detection  
-- External collaborator outputs
-- Task-specific validation
-
-**Synthetic Dataset Tests** - Generated test data with known properties and violations
-- Known good/bad stride mixtures
-- Biomechanical range violations
-- Phase structure issues
-- Multi-task datasets
-
-**Real Dataset Tests** - Actual locomotion data for integration testing
-- Small sample datasets from each supported format (MATLAB, CSV, B3D)
-- Datasets with known validation spec violations
-- Large datasets for performance testing
-
-### Test Infrastructure
-
-**Test Data Generation**
-```python
-def create_test_data(phases_per_cycle=150, cycles=10, subjects=["S001"], tasks=["walking"]):
-    """Create synthetic test data with specified properties"""
-    
-def create_mixed_validity_data():
-    """Create dataset with mix of valid and invalid strides"""
-    
-def create_task_data(task_name, valid_ranges=True):
-    """Create task-specific test data"""
-```
-
-**Test Environment Setup**
-```python
-@pytest.fixture
-def temp_test_dir():
-    """Provide temporary directory for test outputs"""
-    
-@pytest.fixture  
-def spec_manager():
-    """Provide configured SpecificationManager for tests"""
-    
-@pytest.fixture
-def error_handler():
-    """Provide configured ErrorHandler for tests"""
-```
-
-## Test Execution Framework
-
-### Priority-Based Test Execution
-
-```bash
-# Run only Critical priority tests (fast feedback)
-pytest -m "priority1" tests/
-
-# Run Critical + High priority tests (comprehensive)
-pytest -m "priority1 or priority2" tests/
-
-# Run all tests including performance tests
-pytest tests/
-```
-
-### Component-Specific Test Execution
-
-```bash
-# Test specific components
-pytest tests/test_phase_validator.py
-pytest tests/test_validation_spec_manager.py
-pytest tests/test_automated_fine_tuner.py
-```
-
-### Success Criteria
-
-**Quality Gates**
-1. **Working Software**: Every test produces functional validation
-2. **Real Data Testing**: All tests work with actual datasets  
-3. **Performance Standards**: <30s validation for typical datasets
-4. **User Value**: Each test validates documented user problems
-5. **Interface Integrity**: Components follow validated interface contracts
-6. **Architecture Consistency**: Implementation matches C4 documentation
-
-**Coverage Requirements**
-- Minimum 90% test coverage for Critical components (PhaseValidator, ValidationSpecManager)
-- All user story acceptance criteria validated
-- Performance requirements verified
-- External integration scenarios covered
-
-**Continuous Integration Pipeline**
-1. **Fast Tests** - Unit tests for critical components (< 5 minutes)
-2. **Integration Tests** - Component interaction tests (< 15 minutes)  
-3. **Performance Tests** - Large dataset handling (< 30 minutes)
-4. **Acceptance Tests** - User story validation (< 45 minutes)
-
-This comprehensive test strategy ensures all Critical and High priority components meet their interface contracts and satisfy user story acceptance criteria while maintaining performance and reliability standards for production biomechanical data validation workflows.
+### Phase 4: Regression and Maintenance
+**[→ Detailed Regression & Maintenance Guide](06d_REGRESSION_MAINTENANCE.md)**
+- Continuous validation of existing functionality with automated testing
+- Performance monitoring and optimization for long-term stability
+- Long-term reliability assessment and system health metrics
+- System evolution support and backward compatibility validation
 
 ---
 
-## 🧭 Navigation Context
+## Hierarchical Testing Documentation
 
-!!! info "**📍 You are here:** Testing Approach & Quality Assurance Hub"
-    **⬅️ Previous:** [Implementation Guide](05_IMPLEMENTATION_GUIDE.md) - Development strategy and coding standards
-    
-    **➡️ Next:** [Roadmap](07_ROADMAP.md) - Future development plans and milestones
-    
-    **📖 Reading time:** 8 minutes
-    
-    **🎯 Prerequisites:** [Implementation Guide](05_IMPLEMENTATION_GUIDE.md) - Development approach understanding
-    
-    **🔄 Follow-up sections:** Roadmap planning, Documentation standards
+**Testing Phase Implementation:**
+- **[Component Testing](06a_COMPONENT_TESTING.md)**: Comprehensive unit testing for individual system components
+- **[Integration Testing](06b_INTEGRATION_TESTING.md)**: End-to-end workflow and cross-component validation
+- **[User Acceptance Testing](06c_USER_ACCEPTANCE_TESTING.md)**: Domain expert validation and stakeholder feedback
+- **[Regression & Maintenance](06d_REGRESSION_MAINTENANCE.md)**: Long-term system reliability and evolution support
+- **[User Story Testing](06e_USER_STORY_TESTING.md)**: Detailed test plans for all 10 user stories with acceptance criteria validation
 
-!!! tip "**Cross-References & Related Content**"
-    **🔗 Implementation Foundation:** [Implementation Guide](05_IMPLEMENTATION_GUIDE.md) - Development strategy being tested
-    
-    **🔗 Requirements Validation:** [Requirements](02_REQUIREMENTS.md) - User stories and acceptance criteria being validated
-    
-    **🔗 Interface Testing:** [Interface Spec](04_INTERFACE_SPEC.md) - APIs and contracts being tested
-    
-    **🔗 Component Architecture:** [Architecture](03_ARCHITECTURE.md) - System components under test
-    
-    **🔗 Quality Standards:** [Doc Standards](08_DOC_STANDARDS.md) - Documentation testing requirements
+**Testing Documentation Structure:**
+- **Test Strategy (this document)**: Overview, philosophy, and coordination of all testing phases
+- **Phase-Specific Guides**: Detailed implementation strategies for each testing phase
+- **User Story Validation**: Comprehensive test plans ensuring user requirements are met
+
+Each document includes detailed test scenarios, success criteria, infrastructure requirements, and automation strategies specifically designed for biomechanical data standardization systems.
+
+This refined testing strategy provides comprehensive, actionable test plans for all user story requirements. Each test phase focuses on validation methodologies, success criteria, and quality assurance approaches that ensure the dataset standardization system meets all user needs while maintaining scientific rigor and data privacy.

@@ -13,7 +13,7 @@ status: ready
     
     **Value:** Clear requirements enable focused development and testing
     
-    **Connection:** Based on [User Guide](01_USER_GUIDE.md), drives [Architecture](03_ARCHITECTURE.md)
+    **Connection:** Based on [User Personas](01_USER_GUIDE.md), drives [Architecture](03_ARCHITECTURE.md)
     
     **:clock4: Reading time:** 12 minutes | **:memo: User stories:** 15 detailed stories
 
@@ -35,6 +35,28 @@ status: ready
 - **Administrators:** Prepare releases and create ML benchmarks
 
 ## User Stories
+
+### User Story Index
+
+**Quick Navigation:** Jump to specific user stories and their acceptance criteria.
+
+#### Dataset Curator - Programmer Stories
+- **[US-01: Develop Dataset Conversion Script](#us-01-develop-dataset-conversion-script)** - Create conversion scripts for specific dataset formats
+- **[US-02: Assess Dataset Quality and Validation](#us-02-assess-dataset-quality-and-validation)** - Generate comprehensive quality reports
+- **[US-03: Generate Phase-Indexed Dataset](#us-03-generate-phase-indexed-dataset)** - Convert time-indexed to phase-indexed format
+
+#### Dataset Curator - Biomechanical Validation Stories  
+- **[US-04: Compare Multiple Datasets](#us-04-compare-multiple-datasets)** - Systematic cross-dataset compatibility analysis
+- **[US-05: Debug Validation Failures](#us-05-debug-validation-failures)** - Investigate and resolve validation issues
+- **[US-06: Manage Validation Specifications](#us-06-manage-validation-specifications)** - Update and maintain validation criteria
+- **[US-07: Optimize Validation Ranges](#us-07-optimize-validation-ranges)** - Statistical optimization of validation thresholds
+
+#### Administrator Stories
+- **[US-08: Create ML Benchmarks](#us-08-create-ml-benchmarks)** - Generate machine learning benchmark datasets
+- **[US-09: Publish Dataset Releases](#us-09-publish-dataset-releases)** - Prepare and distribute standardized datasets
+- **[US-10: Manage Dataset Versions](#us-10-manage-dataset-versions)** - Version control and compatibility management
+
+---
 
 ### Dataset Curator - Programmer Stories
 

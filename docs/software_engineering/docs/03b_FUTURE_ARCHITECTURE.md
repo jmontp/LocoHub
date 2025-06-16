@@ -26,7 +26,7 @@ status: ready
 **Enhanced Phase 2 architecture for advanced contributor workflows and community features.**
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 graph TD
     subgraph "Enhanced Contributors (10%)"
         contributors["Dataset Contributors<br/><font size='-2'>Person</font><br/><font size='-1'>Streamlined data contribution</font>"]
@@ -96,28 +96,28 @@ graph TD
     review_portal -- "Updates" --> community_standards
 
     %% Styling - Future Implementation (Dashed)
-    style contributors fill:#f4a261,color:white,stroke-dasharray:3
-    style specialists fill:#f4a261,color:white,stroke-dasharray:3
-    style admins fill:#f4a261,color:white,stroke-dasharray:3
-    style reviewers fill:#f4a261,color:white,stroke-dasharray:3
+    style contributors fill:#e3f2fd,color:#000000,stroke:#1976d2,stroke-dasharray:3
+    style specialists fill:#e3f2fd,color:#000000,stroke:#1976d2,stroke-dasharray:3
+    style admins fill:#fff3e0,color:#000000,stroke:#f57c00,stroke-dasharray:3
+    style reviewers fill:#e3f2fd,color:#000000,stroke:#1976d2,stroke-dasharray:3
     
-    style batch_validate fill:#6baed6,color:white,stroke-dasharray:3
-    style debug_failures fill:#6baed6,color:white,stroke-dasharray:3
-    style compare_datasets fill:#6baed6,color:white,stroke-dasharray:3
-    style create_benchmarks fill:#6baed6,color:white,stroke-dasharray:3
-    style publish_datasets fill:#6baed6,color:white,stroke-dasharray:3
-    style analytics_dashboard fill:#6baed6,color:white,stroke-dasharray:3
-    style review_portal fill:#6baed6,color:white,stroke-dasharray:3
-    style standards_wiki fill:#6baed6,color:white,stroke-dasharray:3
-    style feedback_system fill:#6baed6,color:white,stroke-dasharray:3
+    style batch_validate fill:#f3e5f5,color:#000000,stroke:#7b1fa2,stroke-dasharray:3
+    style debug_failures fill:#f3e5f5,color:#000000,stroke:#7b1fa2,stroke-dasharray:3
+    style compare_datasets fill:#f3e5f5,color:#000000,stroke:#7b1fa2,stroke-dasharray:3
+    style create_benchmarks fill:#bbdefb,color:#000000,stroke:#1565c0,stroke-dasharray:3
+    style publish_datasets fill:#bbdefb,color:#000000,stroke:#1565c0,stroke-dasharray:3
+    style analytics_dashboard fill:#bbdefb,color:#000000,stroke:#1565c0,stroke-dasharray:3
+    style review_portal fill:#fff3e0,color:#000000,stroke:#f57c00,stroke-dasharray:3
+    style standards_wiki fill:#f5f5f5,color:#000000,stroke:#616161,stroke-dasharray:3
+    style feedback_system fill:#fff3e0,color:#000000,stroke:#f57c00,stroke-dasharray:3
     
-    style auto_converter fill:#96c93d,color:white,stroke-dasharray:3
-    style quality_predictor fill:#96c93d,color:white,stroke-dasharray:3
-    style versioned_datasets fill:#8d99ae,color:white,stroke-dasharray:3
-    style ml_benchmarks fill:#8d99ae,color:white,stroke-dasharray:3
-    style community_standards fill:#8d99ae,color:white,stroke-dasharray:3
+    style auto_converter fill:#f3e5f5,color:#000000,stroke:#7b1fa2,stroke-dasharray:3
+    style quality_predictor fill:#bbdefb,color:#000000,stroke:#1565c0,stroke-dasharray:3
+    style versioned_datasets fill:#e8f5e8,color:#000000,stroke:#388e3c,stroke-dasharray:3
+    style ml_benchmarks fill:#e8f5e8,color:#000000,stroke:#388e3c,stroke-dasharray:3
+    style community_standards fill:#f5f5f5,color:#000000,stroke:#616161,stroke-dasharray:3
     
-    linkStyle default stroke:white,stroke-dasharray:3
+    linkStyle default stroke:black,stroke-dasharray:3
 ```
 
 ### Enhanced Features (Phase 2)
@@ -161,7 +161,7 @@ graph TD
 **Phase 3 architecture optimized for dataset consumers (90% of user population) with focus on research productivity.**
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'default'}}%%
 graph TD
     subgraph "Dataset Consumers (90% User Population)"
         GRAD["Graduate Students (30%)<br/><font size='-2'>Person</font><br/><font size='-1'>Exoskeleton control, gait analysis research</font>"]
@@ -255,36 +255,36 @@ graph TD
 
     %% Styling
     %% Consumer Users
-    style GRAD fill:#2a9d8f,stroke:#168f70,stroke-width:2px,color:#ffffff,stroke-dasharray:3
-    style CLIN fill:#2a9d8f,stroke:#168f70,stroke-width:2px,color:#ffffff,stroke-dasharray:3
-    style ENG fill:#2a9d8f,stroke:#168f70,stroke-width:2px,color:#ffffff,stroke-dasharray:3
-    style SPORT fill:#2a9d8f,stroke:#168f70,stroke-width:2px,color:#ffffff,stroke-dasharray:3
-    style STUD fill:#2a9d8f,stroke:#168f70,stroke-width:2px,color:#ffffff,stroke-dasharray:3
+    style GRAD fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000,stroke-dasharray:3
+    style CLIN fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000,stroke-dasharray:3
+    style ENG fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000,stroke-dasharray:3
+    style SPORT fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000,stroke-dasharray:3
+    style STUD fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000,stroke-dasharray:3
 
     %% Consumer Interfaces
-    style data_repo fill:#2a9d8f,color:white,stroke-dasharray:3
-    style web_portal fill:#2a9d8f,color:white,stroke-dasharray:3
-    style dataset_api fill:#2a9d8f,color:white,stroke-dasharray:3
-    style python_lib fill:#438dd5,color:white,stroke-dasharray:3
-    style matlab_tools fill:#438dd5,color:white,stroke-dasharray:3
-    style r_package fill:#438dd5,color:white,stroke-dasharray:3
-    style tutorials fill:#6baed6,color:white,stroke-dasharray:3
-    style api_docs fill:#6baed6,color:white,stroke-dasharray:3
-    style biomech_guide fill:#6baed6,color:white,stroke-dasharray:3
+    style data_repo fill:#e8f5e8,color:#000000,stroke:#388e3c,stroke-dasharray:3
+    style web_portal fill:#e8f5e8,color:#000000,stroke:#388e3c,stroke-dasharray:3
+    style dataset_api fill:#e8f5e8,color:#000000,stroke:#388e3c,stroke-dasharray:3
+    style python_lib fill:#bbdefb,color:#000000,stroke:#1565c0,stroke-dasharray:3
+    style matlab_tools fill:#bbdefb,color:#000000,stroke:#1565c0,stroke-dasharray:3
+    style r_package fill:#bbdefb,color:#000000,stroke:#1565c0,stroke-dasharray:3
+    style tutorials fill:#fff3e0,color:#000000,stroke:#f57c00,stroke-dasharray:3
+    style api_docs fill:#f5f5f5,color:#000000,stroke:#616161,stroke-dasharray:3
+    style biomech_guide fill:#f5f5f5,color:#000000,stroke:#616161,stroke-dasharray:3
 
     %% Core Infrastructure
-    style locomotion_core fill:#96c93d,color:white,stroke-dasharray:3
-    style feature_lib fill:#96c93d,color:white,stroke-dasharray:3
+    style locomotion_core fill:#bbdefb,color:#000000,stroke:#1565c0,stroke-dasharray:3
+    style feature_lib fill:#bbdefb,color:#000000,stroke:#1565c0,stroke-dasharray:3
 
     %% Data Storage
-    style parquet_data fill:#707070,color:white,stroke-dasharray:3
-    style ml_benchmarks_data fill:#707070,color:white,stroke-dasharray:3
-    style metadata fill:#707070,color:white,stroke-dasharray:3
-    style user_guides fill:#707070,color:white,stroke-dasharray:3
-    style code_examples fill:#707070,color:white,stroke-dasharray:3
-    style quality_summaries fill:#707070,color:white,stroke-dasharray:3
+    style parquet_data fill:#e8f5e8,color:#000000,stroke:#388e3c,stroke-dasharray:3
+    style ml_benchmarks_data fill:#e8f5e8,color:#000000,stroke:#388e3c,stroke-dasharray:3
+    style metadata fill:#f5f5f5,color:#000000,stroke:#616161,stroke-dasharray:3
+    style user_guides fill:#f5f5f5,color:#000000,stroke:#616161,stroke-dasharray:3
+    style code_examples fill:#f5f5f5,color:#000000,stroke:#616161,stroke-dasharray:3
+    style quality_summaries fill:#f5f5f5,color:#000000,stroke:#616161,stroke-dasharray:3
     
-    linkStyle default stroke:white,stroke-dasharray:3
+    linkStyle default stroke:black,stroke-dasharray:3
 ```
 
 ### Consumer-Focused Features (Phase 3)
