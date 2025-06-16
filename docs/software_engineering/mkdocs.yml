@@ -1,0 +1,114 @@
+site_name: Dataset Standardization
+site_description: 'Locomotion Data Standardization - Software Engineering Documentation'
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.indexes
+    - toc.follow
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.tabs.link
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - mermaid2
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      title: On this page
+  - tables
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: squidfunk
+      repo: mkdocs-material
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-username/locomotion-data-standardization
+nav:
+  - Overview:
+    - Overview: 00_OVERVIEW.md
+    - Project Charter: 00a_PROJECT_CHARTER.md
+  - User Guide:
+    - User Guide: 01_USER_GUIDE.md
+    - User Roles & Entry Points: 01a_USER_ROLES.md
+    - System Context: 01b_SYSTEM_CONTEXT.md
+  - Requirements: 02_REQUIREMENTS.md
+  - Architecture:
+    - Architecture: 03_ARCHITECTURE.md
+    - Sequence Diagrams: 03a_SEQUENCE_DIAGRAMS.md
+    - Future Architecture: 03b_FUTURE_ARCHITECTURE.md
+  - Interface Specification:
+    - Interface Spec: 04_INTERFACE_SPEC.md
+    - CLI Specification: 04a_CLI_SPECIFICATION.md
+    - Data Contracts: 04b_DATA_CONTRACTS.md
+    - Interface Standards: 04c_INTERFACE_STANDARDS.md
+  - Implementation Guide: 05_IMPLEMENTATION_GUIDE.md
+  - Test Strategy: 06_TEST_STRATEGY.md
+  - Roadmap: 07_ROADMAP.md
+  - Documentation:
+    - Doc Standards: 08_DOC_STANDARDS.md
+    - Admin Runbook: 09_ADMIN_RUNBOOK.md
+  - Changelog: 99_CHANGELOG.md
