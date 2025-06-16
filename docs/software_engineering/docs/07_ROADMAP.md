@@ -13,7 +13,7 @@ status: ready
     
     **Value:** Clear timeline and expectations for project evolution
     
-    **Connection:** Implements strategic vision from [Project Charter](00a_PROJECT_CHARTER.md)
+    **Connection:** Implements strategic vision from [Overview](00_OVERVIEW.md)
     
     **:clock4: Reading time:** 8 minutes | **:rocket: Phases:** 3 development phases
 
@@ -99,6 +99,6 @@ status: ready
     
     **🔗 Requirements Evolution:** [Requirements](02_REQUIREMENTS.md) - User story priorities driving roadmap decisions
     
-    **🔗 Project Charter:** [Project Charter](00a_PROJECT_CHARTER.md) - Long-term vision and goals context
+    **🔗 Project Overview:** [Overview](00_OVERVIEW.md) - Long-term vision and goals context
     
     **🔗 Testing Milestones:** [Test Strategy](06_TEST_STRATEGY.md) - Quality gates and success criteria

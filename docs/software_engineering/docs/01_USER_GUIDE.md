@@ -15,16 +15,20 @@ status: ready
     
     **Connection:** Feeds into [Requirements](02_REQUIREMENTS.md) and [Architecture](03_ARCHITECTURE.md)
     
-    **:clock4: Reading time:** 15 minutes | **:busts_in_silhouette: User types:** 4 personas
+    **:clock4: Reading time:** 20 minutes | **:busts_in_silhouette: User types:** 4 detailed personas
 
 !!! tip "**Quick Navigation**"
     **👥 Who are our users?** → [User Population Analysis](#user-population-analysis)
     
-    **🧑‍💼 Detailed profiles?** → [User Roles & Entry Points](01a_USER_ROLES.md)
+    **🎭 Named personas?** → [Detailed Personas](#detailed-personas)
+    
+    **🧑‍💼 Tool mappings?** → [User Roles & Entry Points](01a_USER_ROLES.md)
     
     **🛤️ How do they work?** → [User Journeys](01c_USER_JOURNEYS.md)
     
     **📋 Common workflows?** → [User Workflows](01d_USER_WORKFLOWS.md)
+    
+    **⚡ Technical workflows?** → [Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md)
     
     **🏗️ System context?** → [System Context](01b_SYSTEM_CONTEXT.md)
 
@@ -51,6 +55,120 @@ status: ready
 - **Dataset Curators - Programmers (9%)**: Technical specialists developing conversion scripts  
 - **System Administrators (1%)**: Infrastructure managers and release coordinators
 - **Dataset Consumers (90%)**: Researchers analyzing quality-assured data *(Future Phase 2)*
+
+## Detailed Personas
+
+*These concrete personas represent our primary users with specific backgrounds, actions, and pain points that drive design decisions.*
+
+### Dr. Sarah Validator - Biomechanical Validation Specialist
+
+**Background**: PhD in Biomechanics from Stanford, 8 years experience in gait analysis, currently Senior Research Scientist at rehabilitation engineering lab, published 25+ papers on lower-limb biomechanics.
+
+**Role & Responsibilities**: 
+- Maintains validation specifications based on current literature
+- Reviews and approves biomechanical data quality standards
+- Investigates validation failures and edge cases
+- Bridges gap between technical implementation and domain expertise
+
+**System Actions**:
+- Updates validation ranges using `validation_manual_tune_spec.py` after literature reviews
+- Runs statistical analysis with `validation_auto_tune_spec.py` to optimize thresholds
+- Debugs complex validation failures with `validation_investigate_errors.py`
+- Compares datasets from different sources using `validation_compare_datasets.py`
+
+**Tools Used**: MATLAB for biomechanical analysis, Python validation tools, literature databases (PubMed, Scopus), statistical analysis software
+
+**Pain Points**:
+- Validation failures often require deep biomechanical knowledge to debug
+- Balancing literature-based ranges with real-world data variability
+- Communicating biomechanical rationale to technical team members
+- Time-consuming manual review of complex validation edge cases
+
+**Goals**: Maintain high data quality standards while enabling practical dataset contribution workflows
+
+---
+
+### Alex Converter - Dataset Curator Programmer
+
+**Background**: MS in Computer Science, 5 years Python/MATLAB experience, works at biomechanics research lab, comfortable with data processing but limited biomechanics domain knowledge.
+
+**Role & Responsibilities**:
+- Converts lab datasets from proprietary formats to standardized parquet
+- Develops and maintains conversion scripts for different data sources
+- Troubleshoots technical issues in data processing pipelines
+- Collaborates with biomechanics experts on data quality validation
+
+**System Actions**:
+- Generates phase-indexed datasets using `conversion_generate_phase_dataset.py`
+- Runs comprehensive validation reports with `validation_dataset_report.py --generate-gifs`
+- Debugs conversion issues and data format inconsistencies
+- Documents conversion decisions and maintains processing scripts
+
+**Tools Used**: Python (pandas, numpy), version control (git), IDE (VS Code), command line tools, parquet inspection tools
+
+**Pain Points**:
+- Complex biomechanical conventions and coordinate systems are unfamiliar
+- Variable naming inconsistencies across source datasets require domain knowledge
+- Debugging validation failures without biomechanics expertise is frustrating
+- Time-consuming iteration between conversion attempts and quality assessment
+
+**Goals**: Efficiently convert datasets to standard format with minimal back-and-forth with domain experts
+
+---
+
+### Dr. Morgan Administrator - System Administrator
+
+**Background**: PhD in Biomedical Engineering, 12 years experience managing research data infrastructure, leads data management for multi-lab consortium, expertise in reproducible research practices.
+
+**Role & Responsibilities**:
+- Manages dataset releases and version control
+- Creates ML benchmarks for research community
+- Maintains infrastructure and ensures system reliability
+- Coordinates between multiple research collaborators
+
+**System Actions**:
+- Creates standardized ML splits using `create_benchmarks.py`
+- Prepares public dataset releases with `publish_datasets.py`
+- Manages version control and release documentation
+- Monitors system health and dataset quality metrics
+
+**Tools Used**: Command line administration, docker containers, cloud infrastructure, data management platforms, CI/CD pipelines
+
+**Pain Points**:
+- Coordinating releases across multiple datasets and contributors
+- Ensuring reproducible benchmarks for ML research community
+- Managing growing dataset sizes and storage requirements
+- Balancing data accessibility with quality assurance processes
+
+**Goals**: Provide reliable, high-quality datasets that enable reproducible biomechanics research and ML development
+
+---
+
+### Dr. Sam Consumer - Dataset Consumer *(Future Phase 2)*
+
+**Background**: PhD candidate in Biomedical Engineering, developing ML models for gait analysis, strong programming skills but prefers pre-validated datasets over data curation.
+
+**Role & Responsibilities**:
+- Uses quality-assured datasets for research and ML model development
+- Focuses on analysis and modeling rather than data curation
+- Requires standardized, well-documented datasets for reproducible research
+- Contributes to research community through publications and open-source tools
+
+**Future System Actions**:
+- Downloads validated datasets through simplified interface
+- Uses standardized analysis libraries for common biomechanics tasks
+- Accesses educational tutorials and documentation
+- Provides feedback on dataset usability and analysis tools
+
+**Tools Used**: Python (scikit-learn, PyTorch), Jupyter notebooks, statistical analysis tools, visualization libraries
+
+**Pain Points** *(anticipated)*:
+- Need for simple, reliable access to quality datasets
+- Desire for standardized analysis tools and best practices
+- Requirement for clear documentation and educational resources
+- Expectation of dataset stability and version management
+
+**Goals**: Focus on research questions and model development using reliable, quality-assured biomechanical datasets
 
 ## User Journeys
 
@@ -187,7 +305,7 @@ graph TD
     
     **➡️ Next:** [Requirements](02_REQUIREMENTS.md) - User stories and system requirements
     
-    **📖 Reading time:** 15 minutes
+    **📖 Reading time:** 20 minutes
     
     **🎯 Prerequisites:** [Overview](00_OVERVIEW.md) - Project understanding
     
@@ -196,21 +314,19 @@ graph TD
 !!! tip "**Cross-References & Related Content**"
     **🔗 Direct Implementation:** [Architecture - User Context](03_ARCHITECTURE.md#user-context-and-benefits) - How these user insights shaped system design
     
+    **🔗 Persona Details:** [Detailed Personas](#detailed-personas) - Named personas with specific backgrounds and pain points
+    
     **🔗 Detailed Tools:** [User Roles & Entry Points](01a_USER_ROLES.md) - Complete CLI tool catalog by user role
     
     **🔗 System Context:** [System Context Diagrams](01b_SYSTEM_CONTEXT.md) - Technical interaction patterns
     
     **🔗 Workflow Details:** [User Journeys](01c_USER_JOURNEYS.md) - Detailed workflow maps and interaction patterns
     
+    **🔗 Technical Workflows:** [Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md) - Technical implementation details for all user workflows
+    
     **🔗 Requirements Traceability:** [Requirements](02_REQUIREMENTS.md) - User stories derived from these personas
 
----
-
-!!! success "**Key Takeaways**"
-    ✅ **90/9/1 Strategy:** Focus on contributors first to ensure data quality
+!!! tip "**Technical Implementation Details**"
+    For detailed technical sequence diagrams showing component interactions and data flow for all user workflows, see [Architecture - Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md).
     
-    ✅ **Phase 1 Validation:** Build quality infrastructure before consumer tools
-    
-    ✅ **User Collaboration:** Contributors work together (programmer + domain expert)
-    
-    ✅ **Quality First:** Fewer high-quality datasets preferred over many questionable ones
+    These technical diagrams complement the user-focused personas and journeys with implementation-level detail for developers and system integrators.

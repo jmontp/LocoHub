@@ -70,7 +70,7 @@ status: ready|review|final
 ## Mermaid Diagrams
 
 ### **Standards**
-- Always use `%%{init: {'theme': 'dark'}}%%`
+- Always use `%%{init: {'theme': 'default'}}%%` for light theme compatibility
 - Clear node labels with type and description
 - Consistent color coding across diagrams
 - Readable styling and layout
@@ -105,7 +105,7 @@ status: ready|review|final
     **🔄 Follow-up sections:** Admin procedures, Project maintenance
 
 !!! tip "**Cross-References & Related Content**"
-    **🔗 Project Charter:** [Project Charter](00a_PROJECT_CHARTER.md) - Mission and vision informing documentation style
+    **🔗 Project Overview:** [Overview](00_OVERVIEW.md) - Mission and vision informing documentation style
     
     **🔗 Implementation Quality:** [Implementation Guide](05_IMPLEMENTATION_GUIDE.md) - Code quality standards alignment
     

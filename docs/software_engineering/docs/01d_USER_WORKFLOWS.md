@@ -13,7 +13,7 @@ status: ready
     
     **Value:** Practical guidance for common tasks with clear success indicators
     
-    **Connection:** User-friendly guides based on [Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md)
+    **Connection:** User-friendly guides based on [Architecture - Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md)
     
     **:clock4: Reading time:** 20 minutes | **:walking: Workflows:** 4 comprehensive guides
 
@@ -411,7 +411,7 @@ python validation_dataset_report.py your_dataset_phase.parquet
 ## Getting Help
 
 ### Documentation References
-- **Technical details:** [Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md)
+- **Technical details:** [Architecture - Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md)
 - **System architecture:** [Architecture Overview](03_ARCHITECTURE.md)
 - **Standard specification:** `docs/standard_spec/standard_spec.md`
 - **Example scripts:** `source/conversion_scripts/` directories

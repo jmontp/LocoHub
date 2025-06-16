@@ -369,7 +369,7 @@ The system supports structured workflows for dataset contributors and validation
 - **PhaseValidator**: Core validation engine with comprehensive quality metrics
 - **Interactive Tools**: No manual markdown editing, automated plot generation
 
-**Detailed Workflows**: See [Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md) for complete technical workflow specifications.
+**Detailed Workflows**: See [Architecture - Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md) for complete technical workflow specifications.
 
 ## Future Architecture
 
@@ -417,7 +417,7 @@ The architecture follows a three-phase strategy:
 ## 📊 Section Contents
 
 <div class="grid cards" markdown>
--   **⚡ [Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md)**
+-   **⚡ [Architecture - Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md)**
     
     ---
     
@@ -462,7 +462,7 @@ The architecture follows a three-phase strategy:
     
     **🔗 User Research:** [User Guide - Journey Maps](01_USER_GUIDE.md#user-journey-maps) - User workflows informing architecture
     
-    **🔗 Technical Details:** [Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md) - Detailed component interactions
+    **🔗 Technical Details:** [Architecture - Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md) - Detailed component interactions
     
     **🔗 Future Planning:** [Future Architecture](03b_FUTURE_ARCHITECTURE.md) - Phase 2 and Phase 3 evolution plans
     

@@ -9,7 +9,7 @@ status: ready
 !!! info "🎯 **You are here** → Project Overview & Navigation Hub"
     This is your starting point for understanding the locomotion data standardization project. Choose your path based on your role and needs.
     
-    **:clock4: Reading time:** 10 minutes | **:books: Pages:** 19 total docs
+    **:clock4: Reading time:** 10 minutes | **:books: Pages:** 18 total docs
 
 ## 🚀 Project at a Glance
 
@@ -49,25 +49,22 @@ status: ready
 
 ## 🎯 User Population Strategy
 
-<div class="grid cards" markdown>
--   **📊 Dataset Consumers (90%)**
-    
-    Graduate students, clinical researchers, biomechanics engineers, sports scientists
-    
-    *Future Phase 2 focus*
+**Dataset Consumers (90%):**
+- Graduate Students (30%) - tutorials, Python/MATLAB libraries  
+- Clinical Researchers (25%) - quality-assured datasets, validation summaries
+- Biomechanics Engineers (20%) - ML-ready datasets, technical docs
+- Sports Scientists (10%) - sports-specific datasets, performance tools
+- Students (5%) - educational resources, simplified interfaces
 
--   **🔧 Dataset Contributors (9%)**
-    
-    Dataset curators (programmers + biomechanical validation)
-    
-    *Current Phase 1 focus*
+**Dataset Contributors (10%):**
+- Dataset Curators (5%) - validation pipelines, quality reporting
+- Validation Specialists (4%) - range management, automated tuning
+- System Administrators (1%) - release pipelines, infrastructure
 
--   **⚙️ System Administrators (1%)**
+!!! tip "**User Focus Strategy**"
+    **Phase 1 (Current):** Dataset Contributors (10%) - Building validation infrastructure
     
-    Release managers, infrastructure maintainers
-    
-    *Current Phase 1 focus*
-</div>
+    **Phase 2 (Future):** Dataset Consumers (90%) - Consumer-facing tools and interfaces
 
 ## 📈 Development Progress
 
@@ -79,7 +76,7 @@ status: ready
     
     **Current Focus:** Quality-first foundation with validation tools
 
-!!! abstract "**Phase 1:** Validation Infrastructure (Current)"
+!!! abstract "**Phase 1 (Current-2025):** Validation Infrastructure"
     === "Completed :white_check_mark:"
         - **Core validation architecture** - ValidationExpectationsParser, PhaseValidator
         - **Dataset validation reporting** - Comprehensive quality assessment
@@ -96,7 +93,7 @@ status: ready
     
     **Target:** Enable high-quality dataset contribution and validation
 
-!!! note "**Phase 2:** Consumer Tools (Future)"
+!!! note "**Phase 2 (2025-2026):** Consumer Tools"
     === "Research Tools :microscope:"
         - **Data repository** - Standardized access portal
         - **Python/MATLAB libraries** - Analysis and manipulation tools
@@ -107,6 +104,14 @@ status: ready
         - **Quality metrics** - Automated assessment for ML workflows
     
     **Target:** Serve 90% of users with quality-assured datasets
+
+!!! info "**Phase 3 (2026-2027):** Community Growth"
+    === "Scale & Impact :globe_with_meridians:"
+        - **Community growth** - 10+ institutions contributing
+        - **ML benchmarks** - Standardized datasets for algorithm development
+        - **Research impact** - 50+ papers citing standardized datasets
+    
+    **Target:** Global biomechanics research transformation
 
 ## 🧭 Documentation Navigation
 
@@ -230,13 +235,39 @@ status: ready
     **Time:** 2 minutes
 </div>
 
----
+## 🎯 Strategic Goals & Success Metrics
 
-## 📄 Project Charter
+### Core Goals
 
-**Mission:** Standardize locomotion datasets across research institutions for reproducible biomechanical research.
+**Data Quality:** 95%+ stride-level pass rates, zero sign convention violations, 100% phase segmentation accuracy
 
-**Key Goals**: See [Project Charter](00a_PROJECT_CHARTER.md) for complete mission, vision, success metrics, and stakeholder analysis.
+**Format Standardization:** Convert MATLAB/CSV/B3D to unified parquet, support 5+ major data sources
+
+**Research Accessibility:** Python/MATLAB libraries, interactive tutorials, web portal for discovery
+
+**Community Contribution:** 10+ institutions, streamlined submission workflow
+
+**ML Enablement:** Standardized benchmarks, proper train/test splits, ML framework integration
+
+**Open Science:** Public releases with attribution, open-source tools, community governance
+
+### Success Metrics
+
+**Technical Metrics:**
+- >95% stride-level validation pass rate
+- 5+ institutions actively contributing datasets
+- 100+ active researchers using standardized data
+- <1% critical validation failures
+
+**Community Impact:**
+- 50+ research papers citing standardized datasets
+- 20+ new dataset contributions annually
+- 25% year-over-year user growth
+
+**Research Efficiency:**
+- 50% reduction in data preprocessing time
+- Enable cross-study biomechanical comparisons
+- Accelerate ML algorithm development
 
 ---
 
@@ -267,7 +298,7 @@ status: ready
 
 !!! info "Documentation Information"
     === "Status & Metrics"
-        - **Total pages:** 19 comprehensive documents
+        - **Total pages:** 18 comprehensive documents
         - **Last updated:** {{ "now" | date("Y-m-d") }}
         - **Documentation status:** Ready for Phase 1 development
         - **Maintenance:** Active - updated with each major release

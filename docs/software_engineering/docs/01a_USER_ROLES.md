@@ -153,7 +153,7 @@ python manage_releases.py --version 1.2.0 --changelog changes.md
     **🔄 Follow-up sections:** System context, Requirements analysis
 
 !!! tip "**Cross-References & Related Content**"
-    **🔗 User Foundation:** [User Guide - User Personas](01_USER_GUIDE.md#user-personas) - Detailed user profiles for these tools
+    **🔗 User Foundation:** [User Guide - Detailed Personas](01_USER_GUIDE.md#detailed-personas) - Named personas with specific backgrounds and pain points
     
     **🔗 Interface Details:** [CLI Specification](04a_CLI_SPECIFICATION.md) - Complete technical documentation for these tools
     

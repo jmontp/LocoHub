@@ -25,7 +25,7 @@ status: ready
 
 **Practical development approach using evolutionary design and vertical slice implementation.**
 
-*Requirements Foundation: [Requirements](02_REQUIREMENTS.md) (F1-F6) | Architecture Decisions: [Architecture](03_ARCHITECTURE.md) suite | Workflow Implementation: [Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md)*
+*Requirements Foundation: [Requirements](02_REQUIREMENTS.md) (F1-F6) | Architecture Decisions: [Architecture](03_ARCHITECTURE.md) suite | Workflow Implementation: [Architecture - Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md)*
 
 ## Strategic Approach
 
