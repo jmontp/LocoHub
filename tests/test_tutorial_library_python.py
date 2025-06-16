@@ -35,15 +35,17 @@ import sys
 import os
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
-# Add library path
-sys.path.append('../lib/core')
+# Add parent directory to path for lib imports
+project_root = Path(__file__).parent.parent
+sys.path.append(str(project_root))
 
 print("Testing LocomotionData library...")
 print(f"Current directory: {os.getcwd()}")
 
 try:
-    from locomotion_analysis import LocomotionData
+    from lib.core.locomotion_analysis import LocomotionData
     print("✓ Successfully imported LocomotionData")
 except ImportError as e:
     print(f"✗ Failed to import LocomotionData: {e}")

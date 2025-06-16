@@ -1,4 +1,110 @@
-/* Custom CSS for Locomotion Data Standardization User Guide */
+/* Locomotion Data Standardization - User Guide Styles */
+/* Consistent Material Design theme with enhanced user experience */
+
+/* Enhanced Interactive Mermaid Diagrams */
+/* Improve mermaid diagram container - only for actual diagrams with SVG */
+.mermaid:has(svg) {
+    background-color: var(--md-code-bg-color, #f8f8f8);
+    border: 1px solid var(--md-default-fg-color--lighter, #ddd);
+    border-radius: 4px;
+    padding: 1rem;
+    margin: 1rem 0;
+    position: relative;
+    overflow: visible;
+}
+
+/* Fallback for browsers that don't support :has() */
+.mermaid {
+    position: relative;
+}
+
+.mermaid.has-diagram {
+    background-color: var(--md-code-bg-color, #f8f8f8);
+    border: 1px solid var(--md-default-fg-color--lighter, #ddd);
+    border-radius: 4px;
+    padding: 1rem;
+    margin: 1rem 0;
+    position: relative;
+    overflow: visible;
+}
+
+/* Dark theme support - only for actual diagrams with SVG */
+[data-md-color-scheme="slate"] .mermaid:has(svg),
+[data-md-color-scheme="slate"] .mermaid.has-diagram {
+    background-color: var(--md-code-bg-color, #2d2d2d);
+    border-color: var(--md-default-fg-color--lighter, #444);
+}
+
+/* Improve diagram visibility during zoom */
+.mermaid svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Diagram controls */
+.diagram-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.mermaid:has(svg):hover .diagram-controls,
+.mermaid:hover .diagram-controls {
+    opacity: 1;
+}
+
+.diagram-control-btn {
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: background 0.2s;
+}
+
+.diagram-control-btn:hover {
+    background: rgba(0, 0, 0, 0.9);
+}
+
+[data-md-color-scheme="slate"] .diagram-control-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+[data-md-color-scheme="slate"] .diagram-control-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Fullscreen diagram support */
+.mermaid.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background: white;
+    margin: 0;
+    padding: 2rem;
+    box-sizing: border-box;
+    background-color: var(--md-code-bg-color, #f8f8f8) !important;
+    border: 1px solid var(--md-default-fg-color--lighter, #ddd) !important;
+    border-radius: 4px !important;
+}
+
+[data-md-color-scheme="slate"] .mermaid.fullscreen {
+    background: var(--md-default-bg-color);
+    background-color: var(--md-code-bg-color, #2d2d2d) !important;
+    border-color: var(--md-default-fg-color--lighter, #444) !important;
+}
+
+/* User Experience Features */
 
 /* Enhanced grid cards for landing page */
 .grid.cards {

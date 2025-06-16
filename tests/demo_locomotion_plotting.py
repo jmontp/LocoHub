@@ -39,8 +39,9 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-# Add library path
-sys.path.append('../lib/core')
+# Add parent directory to path for lib imports
+project_root = Path(__file__).parent.parent
+sys.path.append(str(project_root))
 
 def print_banner(title):
     """Print a formatted banner for demo sections."""
@@ -324,7 +325,7 @@ def main():
     
     try:
         # Import library
-        from locomotion_analysis import LocomotionData
+        from lib.core.locomotion_analysis import LocomotionData
         print("✓ Successfully imported LocomotionData library")
         
         # Set up matplotlib for demo

@@ -312,7 +312,7 @@ class TestAutomatedFineTuner(unittest.TestCase):
         
         # Test that validation ranges can be used with parser
         try:
-            from validation.validation_expectations_parser import ValidationExpectationsParser
+            from lib.validation.validation_expectations_parser import ValidationExpectationsParser
             parser = ValidationExpectationsParser()
             
             # Create temporary file for testing

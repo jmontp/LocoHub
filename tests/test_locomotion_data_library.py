@@ -42,8 +42,8 @@ from pathlib import Path
 from unittest.mock import patch
 import warnings
 
-# Add library path
-sys.path.append('../lib/core')
+# Add parent directory to path for lib imports
+sys.path.append('..')
 
 try:
     import pytest
@@ -64,8 +64,8 @@ except ImportError:
                     return decorator
             return Mark()
 
-sys.path.append('../lib/core')
-from locomotion_analysis import LocomotionData, efficient_reshape_3d
+# Import from lib package
+from lib.core import LocomotionData, efficient_reshape_3d
 
 
 class TestLocomotionDataLibrary:

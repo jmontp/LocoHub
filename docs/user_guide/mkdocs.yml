@@ -6,7 +6,7 @@ repo_name: locomotion-data-standardization
 repo_url: https://github.com/your-org/locomotion-data-standardization
 edit_uri: edit/main/docs/user_guide/docs/
 
-# User-focused theme configuration
+# User-focused theme configuration with consistent Material Design
 theme:
   name: material
   palette:
@@ -27,19 +27,23 @@ theme:
   
   features:
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
     - navigation.expand
     - navigation.path
+    - navigation.indexes
     - navigation.top
+    - navigation.footer
+    - toc.follow
+    - toc.integrate
+    - search.suggest
     - search.highlight
     - search.share
-    - search.suggest
+    - content.tabs.link
     - content.code.copy
     - content.code.annotate
-    - content.tabs.link
     - content.tooltips
     - announce.dismiss
-    - navigation.footer
 
   font:
     text: Roboto
@@ -83,12 +87,13 @@ nav:
     - Dataset Documentation: reference/datasets_documentation/README.md
     - API Reference: reference/api_reference.md
 
-# User experience plugins
+# User experience plugins with enhanced features
 plugins:
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - mermaid2
 
-# Enhanced markdown extensions for user experience
+# Enhanced markdown extensions for professional user experience
 markdown_extensions:
   - abbr
   - admonition
@@ -131,7 +136,7 @@ markdown_extensions:
       custom_checkbox: true
   - pymdownx.tilde
 
-# User-focused extra configuration
+# User-focused extra configuration with consistent features
 extra:
   version:
     provider: mike
@@ -145,12 +150,13 @@ extra:
   announcement:
     text: "🚀 Welcome to the Locomotion Data Standardization User Guide! Start with our <a href='getting_started/quick_start/'>Quick Start</a> guide."
 
-# Custom CSS for user experience
+# Enhanced styling and interactivity for user experience
 extra_css:
   - stylesheets/extra.css
 
-# JavaScript for enhanced user experience
+# JavaScript for enhanced user experience with diagram interactivity
 extra_javascript:
+  - javascripts/diagram-controls.js
   - javascripts/mathjax.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

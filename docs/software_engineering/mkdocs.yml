@@ -1,24 +1,30 @@
-site_name: Dataset Standardization
-site_description: 'Locomotion Data Standardization - Software Engineering Documentation'
-site_url: 'https://localhost:8000'
+site_name: Locomotion Data Standardization - Software Engineering
+site_description: 'Software engineering documentation for the Locomotion Data Standardization project - architecture, testing, and implementation guides'
+site_url: 'https://locomotion-data-standardization.readthedocs.io/software-engineering/'
 
+repo_name: locomotion-data-standardization
+repo_url: https://github.com/your-org/locomotion-data-standardization
+edit_uri: edit/main/docs/software_engineering/docs/
+
+# Professional theme configuration for software engineering documentation
 theme:
   name: material
   palette:
     # Palette toggle for light mode
     - scheme: default
       primary: blue
-      accent: blue
+      accent: light blue
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     # Palette toggle for dark mode
     - scheme: slate
       primary: blue
-      accent: blue
+      accent: light blue
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+  
   features:
     - navigation.tabs
     - navigation.tabs.sticky
@@ -35,22 +41,25 @@ theme:
     - content.tabs.link
     - content.code.copy
     - content.code.annotate
+    - content.tooltips
+    - announce.dismiss
+    - navigation.footer
 
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+  icon:
+    logo: material/code-braces
+    repo: fontawesome/brands/github
+
+# Professional plugins for software engineering documentation
 plugins:
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - mermaid2
-  - panzoom:
-      # Enable interactive pan & zoom for mermaid diagrams
-      include_selectors:
-        - ".mermaid"
-        - ".mermaid > svg"
-        - "img"
-      # Use Alt key to activate pan & zoom
-      key: "alt"
-      # Always show usage hint
-      always_show_hint: true
 
+# Enhanced markdown extensions for professional documentation
 markdown_extensions:
   - abbr
   - admonition
@@ -79,8 +88,8 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.magiclink:
       repo_url_shorthand: true
-      user: squidfunk
-      repo: mkdocs-material
+      user: your-org
+      repo: locomotion-data-standardization
   - pymdownx.mark
   - pymdownx.smartsymbols
   - pymdownx.superfences:
@@ -94,16 +103,29 @@ markdown_extensions:
       custom_checkbox: true
   - pymdownx.tilde
 
+# Professional extra configuration
 extra:
+  version:
+    provider: mike
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/your-username/locomotion-data-standardization
+      link: https://github.com/your-org/locomotion-data-standardization
+    - icon: fontawesome/solid/paper-plane
+      link: mailto:contact@locomotion-data-standardization.org
+  
+  # Professional announcement for software engineering documentation
+  announcement:
+    text: "🔧 Software Engineering Documentation - Architecture, testing, and implementation guides for contributors and maintainers."
 
+# Enhanced styling and interactivity
 extra_css:
   - stylesheets/extra.css
 
 extra_javascript:
   - javascripts/diagram-controls.js
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 nav:
   - Overview: 00_OVERVIEW.md
   - User Personas:
@@ -112,6 +134,7 @@ nav:
     - System Context: 01b_SYSTEM_CONTEXT.md
     - User Journeys: 01c_USER_JOURNEYS.md
     - User Workflows: 01d_USER_WORKFLOWS.md
+    - User Story Mapping: 01e_USER_STORY_MAPPING.md
   - Requirements: 02_REQUIREMENTS.md
   - Architecture:
     - Architecture: 03_ARCHITECTURE.md
@@ -130,6 +153,7 @@ nav:
     - User Acceptance Testing: 06c_USER_ACCEPTANCE_TESTING.md
     - Regression & Maintenance: 06d_REGRESSION_MAINTENANCE.md
     - User Story Testing: 06e_USER_STORY_TESTING.md
+    - Three Agent Orchestration: 06f_THREE_AGENT_ORCHESTRATION.md
   - Roadmap: 07_ROADMAP.md
   - Documentation:
     - Doc Standards: 08_DOC_STANDARDS.md

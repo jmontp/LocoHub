@@ -313,6 +313,13 @@ status: ready
         - **Issues:** Report documentation issues via GitHub
         - **Updates:** Documentation updated with each feature release
         - **Feedback:** Suggestions welcome from all user types
+        
+    === "Interactive Features"
+        - **Enhanced diagrams:** Technical diagrams include interactive controls
+        - **Navigation:** Smooth scrolling and responsive design
+        - **Search:** Full-text search with highlighting
+        - **Mobile support:** Optimized for all device sizes
+        - **Best used in:** [Architecture](03_ARCHITECTURE.md), [Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md)
 
 ---
 
@@ -328,35 +335,6 @@ status: ready
     **🎯 Prerequisites:** None - this is your starting point
     
     **🔄 Follow-up sections:** All documentation paths begin here
-
-## 🎨 Interactive Diagrams
-
-!!! tip "**Enhanced Mermaid Diagrams**"
-    All diagrams in this documentation now support interactive navigation with enhanced zoom and pan capabilities.
-    
-    **🖱️ Mouse Controls:**
-    - Hold **Alt** + scroll wheel to zoom in/out
-    - Hold **Alt** + drag to pan around large diagrams
-    - Hover over diagrams to see additional controls
-    
-    **⌨️ Keyboard Shortcuts:**
-    - **Alt + F**: Toggle fullscreen mode
-    - **Alt + R**: Reset zoom and position
-    - **Escape**: Exit fullscreen mode
-    
-    **📱 Touch Controls:**
-    - Tap diagram control buttons for zoom and fullscreen
-    - Pinch to zoom on mobile devices
-    
-    **🔧 Diagram Controls:**
-    - **⛶ Fullscreen**: View diagram in full browser window
-    - **↺ Reset**: Return to original size and position  
-    - **📋 Copy**: Copy SVG source to clipboard
-    
-    **🎯 Best Used For:**
-    - Complex architecture diagrams in [Architecture](03_ARCHITECTURE.md)
-    - Detailed sequence diagrams in [Sequence Diagrams](03a_SEQUENCE_DIAGRAMS.md)
-    - Large workflow diagrams throughout the documentation
 
 !!! tip "**Recommended Reading Paths**"
     **📚 Complete Linear Path (60 minutes):**
