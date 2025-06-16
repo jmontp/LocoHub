@@ -146,24 +146,33 @@ Standardized biomechanical datasets with time-indexed and phase-indexed variants
 - **LocomotionData.m** - MATLAB LocomotionData class
 - **locomotion_helpers.m** - MATLAB utility functions
 
-#### Testing Framework (`source/tests/`)
+### Testing Framework (`tests/`)
 - **CLAUDE.md** - Testing framework guidance
 - **demo_dataset_validator_phase.py** - Visual validation demonstration
 - **demo_filters_by_phase_plots.py** - Filter plots demonstration
 - **demo_step_classifier.py** - Step classification demonstration
+- **demo_locomotion_plotting.py** - LocomotionData plotting demonstration
 - **test_tutorial_getting_started_matlab.m** - MATLAB tutorial tests
 - **test_tutorial_getting_started_python.py** - Python tutorial tests
 - **test_tutorial_library_matlab.m** - MATLAB library tests
 - **test_tutorial_library_python.py** - Python library tests
+- **test_locomotion_data_library.py** - Comprehensive LocomotionData library tests
 - **test_data_with_mocap_tolerance.csv** - Motion capture tolerance test data
 - **test_filters_by_phase_plots.py** - Filter plot validation tests
 - **test_step_classifier.py** - Step classifier validation tests
+- **test_validation_parser.py** - Validation parser tests
+- **test_automated_tuner.py** - Automated tuner tests
 
-##### Test Data (`source/tests/test_data/`)
+#### Test Data (`tests/test_data/`)
 - **expected_failures_report.md** - Known test failure documentation
+- **demo_*.parquet** - Test datasets for validation demonstrations
+- **validation_parser/** - Test data for validation parser
 
-##### Sample Outputs (`source/tests/sample_plots/`)
+#### Sample Outputs (`tests/sample_plots/`)
 - **[various directories]** - Test output validation images organized by test type
+
+#### User Story Tests (`tests/us_*/`)
+- **test_placeholder.py** - Placeholder test files for user stories
 
 
 #### Visualization (`source/visualization/`)

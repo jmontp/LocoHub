@@ -68,7 +68,11 @@ import sys
 import os
 
 # Import feature constants from same library
-from .feature_constants import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES
+try:
+    from .feature_constants import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES
+except ImportError:
+    # Fallback for standalone scripts
+    from feature_constants import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES
 
 # Optional imports for visualization
 try:

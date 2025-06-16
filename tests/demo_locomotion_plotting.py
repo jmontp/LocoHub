@@ -16,7 +16,7 @@ This script demonstrates the key plotting features of the LocomotionData library
 5. **Validation Integration**: Automatic validation overlay with color coding
 
 Output:
-Generates demonstration plots in source/tests/sample_plots/demo_locomotion_plotting/:
+Generates demonstration plots in tests/sample_plots/demo_locomotion_plotting/:
 - Phase pattern plots (spaghetti, mean, combined modes)
 - Task comparison plots with multiple tasks
 - Time series plots for time-indexed data
@@ -24,7 +24,7 @@ Generates demonstration plots in source/tests/sample_plots/demo_locomotion_plott
 - Validation overlay demonstrations
 
 Usage:
-    python3 source/tests/demo_locomotion_plotting.py
+    python3 tests/demo_locomotion_plotting.py
 
 This demo helps developers understand:
 - How to visualize phase-normalized locomotion data
@@ -40,7 +40,7 @@ import pandas as pd
 from pathlib import Path
 
 # Add library path
-sys.path.append('../../lib/core')
+sys.path.append('../lib/core')
 
 def print_banner(title):
     """Print a formatted banner for demo sections."""

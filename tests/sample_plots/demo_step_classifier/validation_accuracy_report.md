@@ -72,4 +72,4 @@ This report analyzes the accuracy of the validation system by comparing the numb
 - Only representative points checked (4 phases × 6 features × N steps = 37.5x faster)
 
 ---
-*Generated on 2025-06-10 18:53:28 by demo_step_classifier.py*
+*Generated on 2025-06-16 17:12:26 by demo_step_classifier.py*

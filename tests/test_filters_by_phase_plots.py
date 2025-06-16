@@ -113,7 +113,7 @@ except ImportError:
             return func
 
 # Add source directories to Python path
-project_root = Path(__file__).parent.parent.parent
+project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
 from lib.validation.filters_by_phase_plots import (

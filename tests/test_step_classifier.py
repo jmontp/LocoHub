@@ -51,7 +51,7 @@ import numpy as np
 from pathlib import Path
 
 # Add source directory to Python path
-sys.path.append(str(Path(__file__).parent.parent.parent))
+sys.path.append(str(Path(__file__).parent.parent))
 
 try:
     import pytest

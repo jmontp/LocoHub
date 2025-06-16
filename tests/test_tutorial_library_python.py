@@ -17,7 +17,7 @@ ensuring that the LocomotionData class works correctly for:
 5. **Data Validation**: Ensure data integrity and expected outputs
 
 Usage:
-    cd source/tests
+    cd tests
     python test_tutorial_library_python.py
 
 Expected Output:
@@ -37,7 +37,7 @@ import numpy as np
 import pandas as pd
 
 # Add library path
-sys.path.append('../../lib/core')
+sys.path.append('../lib/core')
 
 print("Testing LocomotionData library...")
 print(f"Current directory: {os.getcwd()}")

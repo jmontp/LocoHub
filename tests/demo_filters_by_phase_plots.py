@@ -19,7 +19,7 @@ This script demonstrates the key features of the unified filters by phase plotti
 5. **Gait Pattern Visualization**: Realistic biomechanical patterns across gait phases
 
 Output:
-Generates 6 demonstration plots in source/tests/sample_plots/demo_filters_by_phase_plots/:
+Generates 6 demonstration plots in tests/sample_plots/demo_filters_by_phase_plots/:
 - Baseline validation ranges only
 - All valid steps (gray lines)
 - Mixed violation scenarios (red/pink/gray)
@@ -28,7 +28,7 @@ Generates 6 demonstration plots in source/tests/sample_plots/demo_filters_by_pha
 - Kinetic baseline example
 
 Usage:
-    python3 source/tests/demo_filters_by_phase_plots.py
+    python3 tests/demo_filters_by_phase_plots.py
 
 This demo helps developers understand how to:
 - Structure step data arrays for the plotting function
@@ -45,7 +45,7 @@ import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
 
 # Add directories to Python path
-project_root = Path(__file__).parent.parent.parent
+project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
 from lib.validation.filters_by_phase_plots import create_filters_by_phase_plot

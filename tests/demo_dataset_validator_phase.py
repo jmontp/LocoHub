@@ -19,10 +19,10 @@ match the LocomotionData library's expected format.
 4. **Performance Testing**: Test LocomotionData integration with realistic dataset sizes
 
 Usage:
-    python source/tests/demo_dataset_validator_phase.py
+    python tests/demo_dataset_validator_phase.py
     
     # Then test the generated dataset:
-    python source/validation/dataset_validator_phase.py --dataset source/tests/test_data/demo_dataset_phase.parquet
+    python lib/validation/dataset_validator_phase.py --dataset tests/test_data/demo_dataset_phase.parquet
 
 Key Features:
 - Creates realistic phase-indexed datasets (150 points per gait cycle)
@@ -42,7 +42,7 @@ from typing import Dict, List, Tuple
 import warnings
 
 # Get project root for relative imports  
-project_root = Path(__file__).parent.parent.parent
+project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
 from lib.validation.step_classifier import StepClassifier

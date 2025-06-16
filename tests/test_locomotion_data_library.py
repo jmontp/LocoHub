@@ -18,7 +18,7 @@ to ensure robust data loading, processing, and analysis capabilities:
 6. **Error Handling**: Validate graceful handling of edge cases and invalid inputs
 
 Usage:
-    cd source/tests
+    cd tests
     python test_locomotion_data_library.py
 
 Expected Output:
@@ -43,7 +43,7 @@ from unittest.mock import patch
 import warnings
 
 # Add library path
-sys.path.append('../../lib/core')
+sys.path.append('../lib/core')
 
 try:
     import pytest
@@ -64,6 +64,7 @@ except ImportError:
                     return decorator
             return Mark()
 
+sys.path.append('../lib/core')
 from locomotion_analysis import LocomotionData, efficient_reshape_3d
 
 

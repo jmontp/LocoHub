@@ -26,7 +26,7 @@ Demonstrates classification scenarios with detailed explanations and visual outp
 showing step-by-step color classification logic.
 
 Usage:
-    python3 source/tests/demo_step_classifier.py
+    python3 tests/demo_step_classifier.py
 
 This demo helps developers understand:
 - How validation failures map to step colors
@@ -43,7 +43,7 @@ import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
 
 # Add source directory to Python path
-project_root = Path(__file__).parent.parent.parent
+project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
 from lib.validation.step_classifier import StepClassifier
