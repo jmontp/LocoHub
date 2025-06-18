@@ -216,8 +216,19 @@ class DatasetValidator:
         
         try:
             # Use LocomotionData library for loading and validation
-            # Update to use proper phase column naming
-            phase_col = 'phase_percent' if 'phase_percent' in pd.read_parquet(self.dataset_path).columns else 'phase'
+            # Detect proper phase column naming
+            temp_df = pd.read_parquet(self.dataset_path)
+            phase_col = None
+            
+            # Check for standard phase column names in order of preference
+            for candidate in ['phase_percent', 'phase_%', 'phase_r', 'phase_l', 'phase']:
+                if candidate in temp_df.columns:
+                    phase_col = candidate
+                    break
+            
+            if phase_col is None:
+                raise ValueError(f"No valid phase column found. Expected one of: phase_percent, phase_%, phase_r, phase_l, phase")
+            
             self.locomotion_data = LocomotionData(self.dataset_path, phase_col=phase_col)
             
             print(f"✅ Loaded phase-based dataset using LocomotionData library")
