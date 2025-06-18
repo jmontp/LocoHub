@@ -222,7 +222,10 @@ class ReleaseManager:
                 archive_format = 'zip'
         
         # Ensure output directory exists
-        os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+        try:
+            os.makedirs(os.path.dirname(archive_path), exist_ok=True)
+        except (PermissionError, OSError) as e:
+            raise ReleaseError(f"Cannot create archive directory: {e}")
         
         checksums = {}
         total_files = len(files_mapping)
@@ -304,7 +307,7 @@ class ReleaseManager:
                 'estimated_rows': metadata.num_rows,
                 'column_count': len(schema),
                 'data_types': {
-                    field.name: str(field.type) 
+                    field.name: str(field.logical_type) if hasattr(field, 'logical_type') else str(field.physical_type)
                     for field in schema
                 },
                 'parquet_version': metadata.format_version,

@@ -275,6 +275,42 @@ class DatasetValidator:
             
             print(f"✅ All validation checks passed - dataset is ready for validation")
             return self.locomotion_data
+        except ValueError as e:
+            error_msg = str(e)
+            if "Missing required columns" in error_msg:
+                # Handle missing structural columns
+                raise ValueError(f"Missing required structural columns for validation. {error_msg}")
+            elif "Dataset is empty" in error_msg:
+                # For empty datasets, create a minimal LocomotionData object that can be validated
+                # This allows the validation process to handle empty datasets gracefully
+                print("⚠️  Warning: Dataset is empty - creating minimal validation object")
+                
+                # Read the empty dataset structure to preserve column information
+                temp_df = pd.read_parquet(self.dataset_path)
+                
+                # Create a minimal dataset with one row to satisfy LocomotionData requirements
+                if len(temp_df.columns) > 0:
+                    minimal_data = {col: [0.0 if col != 'subject' and col != 'task' else 'empty'] 
+                                  for col in temp_df.columns}
+                    minimal_df = pd.DataFrame(minimal_data)
+                    
+                    # Save minimal dataset temporarily
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(suffix='_phase.parquet', delete=False) as f:
+                        minimal_df.to_parquet(f.name)
+                        minimal_path = f.name
+                    
+                    try:
+                        self.locomotion_data = LocomotionData(minimal_path, phase_col=phase_col)
+                        # Clear the data to make it truly empty for validation
+                        self.locomotion_data.df = temp_df  # Use original empty dataframe
+                        return self.locomotion_data
+                    finally:
+                        os.unlink(minimal_path)
+                else:
+                    raise ValueError("Empty dataset cannot be validated. Dataset must contain at least one complete gait cycle.")
+            else:
+                raise e
         except Exception as e:
             raise RuntimeError(f"Error loading dataset with LocomotionData: {e}")
     

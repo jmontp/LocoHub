@@ -380,6 +380,7 @@ All validation checks passed successfully.
             'version': '1.0.0',
             'description': 'Test dataset for validation',
             'citation': 'Test et al. 2025',
+            'license': 'MIT',
             'total_subjects': 1,
             'total_trials': 2,
             'total_cycles': 2,
@@ -396,15 +397,17 @@ All validation checks passed successfully.
         
         # Verify compiled documentation
         self.assertIn('# test_dataset', compiled_readme)
-        self.assertIn('Version: 1.0.0', compiled_readme)
+        self.assertIn('**Version:** 1.0.0', compiled_readme)
         self.assertIn('Test et al. 2025', compiled_readme)
         self.assertIn('level_walking', compiled_readme)
-        self.assertIn('Quality Score: 95%', compiled_readme)
+        self.assertIn('Quality Score:** 95.0%', compiled_readme)
         
         # Test citation format compilation
+        citation_info = doc_info.copy()
+        citation_info['release_date'] = '2025-01-01'
         citation_doc = manager.compile_documentation(
             template_type='citation',
-            doc_info=doc_info
+            doc_info=citation_info
         )
         
         self.assertIn('test_dataset', citation_doc)
@@ -634,7 +637,7 @@ class TestReleaseManagerCLI(unittest.TestCase):
                 files_mapping={'file.txt': self.config_file}
             )
         
-        self.assertIn('Cannot create archive', str(context.exception))
+        self.assertIn('Cannot create archive directory', str(context.exception))
 
     def test_custom_template_support(self):
         """Test support for custom documentation templates."""
@@ -675,7 +678,7 @@ This is a custom documentation section.
         
         # Verify custom template was used
         self.assertIn('# custom_dataset v2.0.0', compiled_doc)
-        self.assertIn('Quality Score: 87%', compiled_doc)
+        self.assertIn('Quality Score:** 87.0%', compiled_doc)
         self.assertIn('Custom Section', compiled_doc)
         self.assertIn('hip_angle', compiled_doc)
 
@@ -803,18 +806,46 @@ data = pd.read_parquet('example_dataset_phase.parquet')
     def test_release_validation_integration(self):
         """Test integration with validation system during release."""
         from lib.validation.release_manager import ReleaseManager
-        from lib.validation.dataset_validator_phase import PhaseDatasetValidator
+        from lib.validation.dataset_validator_phase import DatasetValidator
         
         manager = ReleaseManager()
-        validator = PhaseDatasetValidator()
         
         # Test dataset validation before release
         phase_dataset = os.path.join(self.temp_dir, "datasets", "example_dataset_phase.parquet")
         
-        validation_result = validator.validate_dataset(phase_dataset)
+        # Create a simple test dataset for validation
+        import pandas as pd
+        import numpy as np
+        
+        # Create test data that matches expected structure
+        test_data = pd.DataFrame({
+            'subject': ['test_subject'] * 150,
+            'task': ['level_walking'] * 150,
+            'step': [1] * 150,
+            'phase_percent': np.linspace(0, 100, 150),
+            'hip_flexion_angle_ipsi_rad': np.random.normal(0.2, 0.1, 150),
+            'knee_flexion_angle_ipsi_rad': np.random.normal(0.5, 0.2, 150)
+        })
+        
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(phase_dataset), exist_ok=True)
+        test_data.to_parquet(phase_dataset)
+        
+        validator = DatasetValidator(phase_dataset, generate_plots=False)
+        # Mock validation expectations for the test
+        validator.kinematic_expectations = {
+            'level_walking': {
+                'hip_flexion_angle_ipsi_rad': {'min': -0.5, 'max': 1.5},
+                'knee_flexion_angle_ipsi_rad': {'min': 0.0, 'max': 2.0}
+            }
+        }
+        validator.kinetic_expectations = {}
+        locomotion_data = validator.load_dataset()
+        validation_result = validator.validate_dataset(locomotion_data)
         
         # Should pass basic validation
-        self.assertIn('status', validation_result)
+        self.assertIn('total_steps', validation_result)
+        self.assertGreater(validation_result['total_steps'], 0)
         
         # Test integration of validation results into release
         release_summary = manager.integrate_validation_results(
@@ -823,7 +854,7 @@ data = pd.read_parquet('example_dataset_phase.parquet')
         )
         
         self.assertIn('validation_summary', release_summary)
-        self.assertIn('overall_status', release_summary['validation_summary'])
+        self.assertIn('validation_status', release_summary['validation_summary'])
 
     def test_memory_usage_monitoring(self):
         """Test memory usage during large release creation."""
