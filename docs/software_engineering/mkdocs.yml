@@ -1,0 +1,161 @@
+site_name: Locomotion Data Standardization - Software Engineering
+site_description: 'Software engineering documentation for the Locomotion Data Standardization project - architecture, testing, and implementation guides'
+site_url: 'https://locomotion-data-standardization.readthedocs.io/software-engineering/'
+
+repo_name: locomotion-data-standardization
+repo_url: https://github.com/your-org/locomotion-data-standardization
+edit_uri: edit/main/docs/software_engineering/docs/
+
+# Professional theme configuration for software engineering documentation
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.indexes
+    - toc.follow
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.tabs.link
+    - content.code.copy
+    - content.code.annotate
+    - content.tooltips
+    - announce.dismiss
+    - navigation.footer
+
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+  icon:
+    logo: material/code-braces
+    repo: fontawesome/brands/github
+
+# Professional plugins for software engineering documentation
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - mermaid2
+
+# Enhanced markdown extensions for professional documentation
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      title: On this page
+  - tables
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: your-org
+      repo: locomotion-data-standardization
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Professional extra configuration
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-org/locomotion-data-standardization
+    - icon: fontawesome/solid/paper-plane
+      link: mailto:contact@locomotion-data-standardization.org
+  
+  # Professional announcement for software engineering documentation
+  announcement:
+    text: "🔧 Software Engineering Documentation - Architecture, testing, and implementation guides for contributors and maintainers."
+
+# Enhanced styling and interactivity
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/diagram-controls.js
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+nav:
+  - Overview: 00_OVERVIEW.md
+  - User Personas:
+    - User Personas: 01_USER_GUIDE.md
+    - User Roles & Entry Points: 01a_USER_ROLES.md
+    - System Context: 01b_SYSTEM_CONTEXT.md
+    - User Journeys: 01c_USER_JOURNEYS.md
+    - User Workflows: 01d_USER_WORKFLOWS.md
+    - User Story Mapping: 01e_USER_STORY_MAPPING.md
+  - Requirements: 02_REQUIREMENTS.md
+  - Architecture:
+    - Architecture: 03_ARCHITECTURE.md
+    - Sequence Diagrams: 03a_SEQUENCE_DIAGRAMS.md
+    - Future Architecture: 03b_FUTURE_ARCHITECTURE.md
+  - Interface Specification:
+    - Interface Spec: 04_INTERFACE_SPEC.md
+    - CLI Specification: 04a_CLI_SPECIFICATION.md
+    - Data Contracts: 04b_DATA_CONTRACTS.md
+    - Interface Standards: 04c_INTERFACE_STANDARDS.md
+  - Implementation Guide: 05_IMPLEMENTATION_GUIDE.md
+  - Testing:
+    - Test Strategy: 06_TEST_STRATEGY.md
+    - Component Testing: 06a_COMPONENT_TESTING.md
+    - Integration Testing: 06b_INTEGRATION_TESTING.md
+    - User Acceptance Testing: 06c_USER_ACCEPTANCE_TESTING.md
+    - Regression & Maintenance: 06d_REGRESSION_MAINTENANCE.md
+    - User Story Testing: 06e_USER_STORY_TESTING.md
+    - Three Agent Orchestration: 06f_THREE_AGENT_ORCHESTRATION.md
+  - Roadmap: 07_ROADMAP.md
+  - Documentation:
+    - Doc Standards: 08_DOC_STANDARDS.md
+    - Admin Runbook: 09_ADMIN_RUNBOOK.md
+  - Changelog: 99_CHANGELOG.md
