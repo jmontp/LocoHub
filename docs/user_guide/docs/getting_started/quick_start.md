@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get up and running with standardized locomotion data in 10 minutes.
+Get up and running with standardized locomotion data in 5 minutes.
 
 !!! tip "Prerequisites"
     Make sure you've completed the [Installation](installation/) first.
@@ -9,9 +9,9 @@ Get up and running with standardized locomotion data in 10 minutes.
 
 In this quick start, you'll:
 
-1. Load a standardized dataset
+1. Load a standardized dataset using the LocomotionData class
 2. Explore the data structure
-3. Filter data for specific tasks
+3. Extract gait cycle data
 4. Create your first visualization
 5. Calculate basic biomechanical metrics
 
@@ -20,26 +20,33 @@ In this quick start, you'll:
 === "Python"
 
     ```python
-    import pandas as pd
-    import matplotlib.pyplot as plt
+    # Import the locomotion analysis library
+    import sys
+    sys.path.append('lib/core')  # Adjust path to your installation
+    from locomotion_analysis import LocomotionData
     import numpy as np
+    import matplotlib.pyplot as plt
 
-    # Load a standardized dataset
-    # Note: Replace with actual dataset path
-    data = pd.read_parquet('sample_gtech_2023_phase.parquet')
+    # Load a standardized dataset with built-in validation
+    # Using demo data included with the library
+    # Note: Specify phase column name if different from default
+    loco = LocomotionData('tests/test_data/demo_clean_phase.parquet',
+                         phase_col='phase_percent')
     
     # Explore the dataset
-    print(f"Dataset shape: {data.shape}")
-    print(f"Columns: {list(data.columns)}")
-    print(f"Unique tasks: {data['task'].unique()}")
-    print(f"Unique subjects: {data['subject'].unique()}")
+    print(f"Subjects: {loco.get_subjects()}")
+    print(f"Tasks: {loco.get_tasks()}")
+    
+    # Check data validation
+    validation_report = loco.get_validation_report()
+    print(f"Valid features: {validation_report['standard_compliant']}")
     ```
 
 === "MATLAB"
 
     ```matlab
     % Load a standardized dataset
-    data = readtable('sample_gtech_2023_phase.parquet');
+    data = readtable('tests/test_data/demo_clean_phase.parquet');
     
     % Explore the dataset
     fprintf('Dataset size: %d rows, %d columns\n', height(data), width(data));
@@ -50,10 +57,9 @@ In this quick start, you'll:
 
 **Expected Output:**
 ```
-Dataset shape: (1500, 8)
-Columns: ['subject', 'task', 'step', 'phase_percent', 'knee_flexion_angle_ipsi_rad', 'hip_flexion_angle_ipsi_rad', 'ankle_flexion_angle_ipsi_rad', 'vertical_grf_ipsi_N']
-Unique tasks: ['level_walking', 'incline_walking', 'up_stairs']
-Unique subjects: ['SUB01', 'SUB02', 'SUB03']
+Subjects: ['SUB01', 'SUB02', 'SUB03']
+Tasks: ['decline_walking', 'incline_walking', 'level_walking']
+Valid features: ['hip_flexion_angle_contra_rad', 'knee_flexion_angle_contra_rad', 'ankle_flexion_angle_contra_rad', 'hip_flexion_angle_ipsi_rad', 'knee_flexion_angle_ipsi_rad', 'ankle_flexion_angle_ipsi_rad']
 ```
 
 ## Understanding the Data Structure
@@ -67,33 +73,35 @@ All standardized datasets follow the same structure:
 - **`phase_percent`**: Gait cycle phase (0-100%)
 
 ### Biomechanical Variables
+The demo dataset includes joint angles for the lower extremity:
 - **Joint angles**: `{joint}_flexion_angle_{side}_rad`
-- **Joint moments**: `{joint}_moment_{side}_Nm`
-- **Ground forces**: `{direction}_grf_{side}_N`
+  - Hip: `hip_flexion_angle_ipsi_rad`, `hip_flexion_angle_contra_rad`
+  - Knee: `knee_flexion_angle_ipsi_rad`, `knee_flexion_angle_contra_rad`
+  - Ankle: `ankle_flexion_angle_ipsi_rad`, `ankle_flexion_angle_contra_rad`
 
 ### Naming Convention
 - **Side**: `ipsi` (ipsilateral) or `contra` (contralateral)
-- **Units**: Always included in variable name (`rad`, `Nm`, `N`)
+- **Units**: Always included in variable name (`rad` for radians)
+- **Phase**: Data is phase-indexed with exactly 150 points per gait cycle (0-100%)
 
-## Filter Data for Analysis
+## Extract Gait Cycle Data
 
-Focus on specific conditions for your analysis:
+Use the LocomotionData class methods to extract structured gait cycle data:
 
 === "Python"
 
     ```python
-    # Filter for level walking from one subject
-    level_walking = data[
-        (data['task'] == 'level_walking') & 
-        (data['subject'] == 'SUB01')
-    ]
+    # Extract gait cycles for level walking from one subject
+    cycles, features = loco.get_cycles('SUB01', 'level_walking')
     
-    print(f"Level walking data: {level_walking.shape[0]} rows")
-    print(f"Number of gait cycles: {level_walking['step'].nunique()}")
+    print(f"Cycles shape: {cycles.shape}")  # (n_cycles, 150, n_features)
+    print(f"Features: {features}")
+    print(f"Number of gait cycles: {cycles.shape[0]}")
+    print(f"Points per cycle: {cycles.shape[1]}")
     
-    # Look at one complete gait cycle
-    single_cycle = level_walking[level_walking['step'] == 1]
-    print(f"Single gait cycle: {single_cycle.shape[0]} points")
+    # Get mean patterns across all cycles
+    mean_patterns = loco.get_mean_patterns('SUB01', 'level_walking')
+    print(f"Mean knee angle range: {np.degrees(mean_patterns['knee_flexion_angle_ipsi_rad'].min()):.1f} to {np.degrees(mean_patterns['knee_flexion_angle_ipsi_rad'].max()):.1f} degrees")
     ```
 
 === "MATLAB"
@@ -111,34 +119,47 @@ Focus on specific conditions for your analysis:
     fprintf('Single gait cycle: %d points\n', height(single_cycle));
     ```
 
+**Expected Output:**
+```
+Cycles shape: (3, 150, 6)
+Features: ['hip_flexion_angle_contra_rad', 'knee_flexion_angle_contra_rad', 'ankle_flexion_angle_contra_rad', 'hip_flexion_angle_ipsi_rad', 'knee_flexion_angle_ipsi_rad', 'ankle_flexion_angle_ipsi_rad']
+Number of gait cycles: 3
+Points per cycle: 150
+Mean knee angle range: -6.2 to 40.5 degrees
+```
+
 ## Create Your First Visualization
 
-Plot knee angle across the gait cycle:
+Use the built-in plotting methods to create publication-ready figures:
 
 === "Python"
 
     ```python
-    # Calculate average knee angle across all steps
-    avg_knee = level_walking.groupby('phase_percent')['knee_flexion_angle_ipsi_rad'].mean()
+    # Create a phase pattern plot using the LocomotionData method
+    fig = loco.plot_phase_patterns('SUB01', 'level_walking', 
+                                   ['knee_flexion_angle_ipsi_rad'])
     
-    # Create the plot
+    # Save the plot
+    plt.savefig('knee_angle_level_walking.png', dpi=300, bbox_inches='tight')
+    print("Plot saved as 'knee_angle_level_walking.png'")
+    
+    # Optional: Create a custom plot with mean patterns
+    mean_patterns = loco.get_mean_patterns('SUB01', 'level_walking')
+    phase_points = np.linspace(0, 100, 150)  # 150 points from 0-100%
+    
     plt.figure(figsize=(10, 6))
-    plt.plot(avg_knee.index, np.degrees(avg_knee.values), 'b-', linewidth=2)
+    plt.plot(phase_points, np.degrees(mean_patterns['knee_flexion_angle_ipsi_rad']), 
+             'b-', linewidth=2, label='Knee Flexion')
     plt.xlabel('Gait Cycle (%)')
-    plt.ylabel('Knee Flexion Angle (degrees)')
-    plt.title('Average Knee Angle - Level Walking')
+    plt.ylabel('Joint Angle (degrees)')
+    plt.title('SUB01 - Level Walking: Knee Flexion Angle')
     plt.grid(True, alpha=0.3)
     plt.xlim(0, 100)
-    
-    # Add reference lines
     plt.axhline(y=0, color='k', linestyle='--', alpha=0.5, label='Full Extension')
     plt.legend()
-    
     plt.tight_layout()
-    plt.savefig('knee_angle_level_walking.png', dpi=300, bbox_inches='tight')
-    plt.show()
-    
-    print("Plot saved as 'knee_angle_level_walking.png'")
+    plt.savefig('custom_knee_plot.png', dpi=300, bbox_inches='tight')
+    print("Custom plot saved as 'custom_knee_plot.png'")
     ```
 
 === "MATLAB"
@@ -169,43 +190,47 @@ Plot knee angle across the gait cycle:
 
 ## Compare Across Tasks
 
-See how gait patterns differ between tasks:
+Compare gait patterns between different locomotion tasks:
 
 === "Python"
 
     ```python
     # Compare knee angles across different tasks
-    tasks = ['level_walking', 'incline_walking', 'up_stairs']
+    tasks = ['level_walking', 'incline_walking', 'decline_walking']
+    phase_points = np.linspace(0, 100, 150)
     
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(15, 5))
     
     for i, task in enumerate(tasks):
-        if task in data['task'].values:
-            task_data = data[data['task'] == task]
-            avg_knee = task_data.groupby('phase_percent')['knee_flexion_angle_ipsi_rad'].mean()
-            
-            plt.subplot(2, 2, i+1)
-            plt.plot(avg_knee.index, np.degrees(avg_knee.values), 'b-', linewidth=2)
-            plt.xlabel('Gait Cycle (%)')
-            plt.ylabel('Knee Flexion (degrees)')
-            plt.title(f'Knee Angle - {task.replace("_", " ").title()}')
-            plt.grid(True, alpha=0.3)
-            plt.xlim(0, 100)
+        mean_patterns = loco.get_mean_patterns('SUB01', task)
+        
+        plt.subplot(1, 3, i+1)
+        plt.plot(phase_points, np.degrees(mean_patterns['knee_flexion_angle_ipsi_rad']), 
+                 'b-', linewidth=2)
+        plt.xlabel('Gait Cycle (%)')
+        plt.ylabel('Knee Flexion (degrees)')
+        plt.title(f'{task.replace("_", " ").title()}')
+        plt.grid(True, alpha=0.3)
+        plt.xlim(0, 100)
+        plt.axhline(y=0, color='k', linestyle='--', alpha=0.5)
     
     plt.tight_layout()
-    plt.savefig('knee_angle_comparison.png', dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.savefig('knee_angle_task_comparison.png', dpi=300, bbox_inches='tight')
+    print("Task comparison plot saved as 'knee_angle_task_comparison.png'")
     
-    print("Comparison plot saved as 'knee_angle_comparison.png'")
+    # Use built-in task comparison method
+    fig = loco.plot_task_comparison('SUB01', tasks, ['knee_flexion_angle_ipsi_rad'])
+    plt.savefig('builtin_task_comparison.png', dpi=300, bbox_inches='tight')
+    print("Built-in comparison plot saved as 'builtin_task_comparison.png'")
     ```
 
 === "MATLAB"
 
     ```matlab
     % Compare knee angles across different tasks
-    tasks = {'level_walking', 'incline_walking', 'up_stairs'};
+    tasks = {'level_walking', 'incline_walking', 'decline_walking'};
     
-    figure('Position', [100, 100, 1200, 800]);
+    figure('Position', [100, 100, 1200, 400]);
     
     for i = 1:length(tasks)
         task = tasks{i};
@@ -214,44 +239,59 @@ See how gait patterns differ between tasks:
         if ~isempty(task_data)
             avg_knee = groupsummary(task_data, 'phase_percent', 'mean', 'knee_flexion_angle_ipsi_rad');
             
-            subplot(2, 2, i);
+            subplot(1, 3, i);
             plot(avg_knee.phase_percent, rad2deg(avg_knee.mean_knee_flexion_angle_ipsi_rad), 'b-', 'LineWidth', 2);
             xlabel('Gait Cycle (%)');
             ylabel('Knee Flexion (degrees)');
-            title(['Knee Angle - ', strrep(task, '_', ' ')]);
+            title(strrep(task, '_', ' '));
             grid on;
             xlim([0, 100]);
+            yline(0, 'k--', 'Alpha', 0.5);
         end
     end
     
-    saveas(gcf, 'knee_angle_comparison.png');
+    saveas(gcf, 'knee_angle_task_comparison.png');
     
-    fprintf('Comparison plot saved as ''knee_angle_comparison.png''\n');
+    fprintf('Task comparison plot saved as ''knee_angle_task_comparison.png''\n');
     ```
 
 ## Calculate Basic Metrics
 
-Extract meaningful biomechanical parameters:
+Extract meaningful biomechanical parameters using built-in analysis methods:
 
 === "Python"
 
     ```python
-    # Calculate range of motion (ROM) for each gait cycle
-    def calculate_rom(group):
-        return group.max() - group.min()
+    # Get summary statistics for the gait cycles
+    stats = loco.get_summary_statistics('SUB01', 'level_walking')
     
-    # ROM for each step
-    knee_rom = level_walking.groupby('step')['knee_flexion_angle_ipsi_rad'].apply(calculate_rom)
+    print("Summary Statistics for Level Walking:")
+    print(f"Number of cycles: {stats['cycle_count']}")
+    print(f"Phase points per cycle: {stats['phase_points']}")
     
-    print("Knee ROM by step (degrees):")
-    print(np.degrees(knee_rom))
-    print(f"\nAverage knee ROM: {np.degrees(knee_rom.mean()):.1f} ± {np.degrees(knee_rom.std()):.1f} degrees")
+    # Calculate range of motion (ROM) from the 3D cycle data
+    cycles, features = loco.get_cycles('SUB01', 'level_walking')
     
-    # Peak knee flexion in stance phase (0-60% of gait cycle)
-    stance_phase = level_walking[level_walking['phase_percent'] <= 60]
-    peak_knee_stance = stance_phase.groupby('step')['knee_flexion_angle_ipsi_rad'].max()
+    # ROM for knee angle across all cycles
+    knee_idx = features.index('knee_flexion_angle_ipsi_rad')
+    knee_rom_per_cycle = np.max(cycles[:, :, knee_idx], axis=1) - np.min(cycles[:, :, knee_idx], axis=1)
+    
+    print(f"\nKnee ROM Analysis:")
+    print(f"ROM per cycle (degrees): {np.degrees(knee_rom_per_cycle)}")
+    print(f"Average ROM: {np.degrees(knee_rom_per_cycle.mean()):.1f} ± {np.degrees(knee_rom_per_cycle.std()):.1f} degrees")
+    
+    # Peak values during stance phase (first 60% of gait cycle)
+    stance_points = int(0.6 * 150)  # 60% of 150 points
+    peak_knee_stance = np.max(cycles[:, :stance_points, knee_idx], axis=1)
     
     print(f"Peak knee flexion in stance: {np.degrees(peak_knee_stance.mean()):.1f} ± {np.degrees(peak_knee_stance.std()):.1f} degrees")
+    
+    # Compare mean patterns between subjects
+    mean_sub1 = loco.get_mean_patterns('SUB01', 'level_walking')
+    mean_sub2 = loco.get_mean_patterns('SUB02', 'level_walking')
+    
+    diff = np.degrees(mean_sub1['knee_flexion_angle_ipsi_rad'] - mean_sub2['knee_flexion_angle_ipsi_rad'])
+    print(f"Mean difference between SUB01 and SUB02: {diff.mean():.1f} ± {diff.std():.1f} degrees")
     ```
 
 === "MATLAB"
@@ -279,11 +319,25 @@ Extract meaningful biomechanical parameters:
 
 Congratulations! You've successfully:
 
-- ✅ Loaded a standardized dataset
-- ✅ Explored the data structure
-- ✅ Filtered data for specific conditions
-- ✅ Created visualizations
-- ✅ Calculated biomechanical metrics
+- ✅ Loaded a standardized dataset with the LocomotionData class
+- ✅ Explored the data structure and validation features
+- ✅ Extracted structured gait cycle data (3D arrays)
+- ✅ Created publication-ready visualizations
+- ✅ Calculated biomechanical metrics and statistics
+
+## Key Concepts Learned
+
+### Data Organization
+- **Phase-indexed data**: 150 points per gait cycle (0-100%)
+- **3D arrays**: (n_cycles, 150_points, n_features) for efficient analysis
+- **Standard naming**: Consistent variable names with units included
+
+### LocomotionData Methods
+- `get_subjects()`, `get_tasks()` - Explore available data
+- `get_cycles()` - Extract 3D gait cycle arrays
+- `get_mean_patterns()` - Calculate ensemble averages
+- `plot_phase_patterns()` - Built-in visualization
+- `get_summary_statistics()` - Basic descriptive statistics
 
 ## What's Next?
 
@@ -297,7 +351,8 @@ Congratulations! You've successfully:
 - **[Validation Reports](../user_guide/validation_reports/)** - Quality assessment tools
 - **[API Reference](../reference/api_reference/)** - Complete function documentation
 
-### Contribute Data
+### Real Datasets
+- **[Dataset Documentation](../reference/datasets_documentation/)** - Available standardized datasets
 - **[Contributor Guide](../contributor_guide/)** - Add your own datasets
 - **[Dataset Conversion](../contributor_guide/dataset_conversion/)** - Technical conversion guide
 
@@ -311,6 +366,42 @@ Congratulations! You've successfully:
 
 !!! question "Working with large datasets?"
     Learn about memory-efficient techniques in [Working with Data](../user_guide/working_with_data/).
+
+!!! tip "Demo Data Location"
+    The demo data used in this guide is located at: `tests/test_data/demo_clean_phase.parquet`
+    
+    You can use this for testing and learning before working with your own datasets.
+
+## Troubleshooting
+
+!!! warning "Common Issues"
+
+    **ImportError: No module named 'locomotion_analysis'**
+    
+    Make sure the path to `lib/core` is correct for your installation:
+    ```python
+    import sys
+    sys.path.append('/path/to/your/locomotion-data-standardization/lib/core')
+    ```
+
+    **ValueError: Missing required columns**
+    
+    Your dataset may use different column names. Specify them explicitly:
+    ```python
+    loco = LocomotionData('your_data.parquet',
+                         subject_col='participant_id',
+                         task_col='condition', 
+                         phase_col='gait_percent')
+    ```
+
+    **Empty plots or no output**
+    
+    For non-interactive environments, save plots instead of showing them:
+    ```python
+    import matplotlib
+    matplotlib.use('Agg')  # Use before importing pyplot
+    import matplotlib.pyplot as plt
+    ```
 
 ---
 

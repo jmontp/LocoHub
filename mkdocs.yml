@@ -1,0 +1,234 @@
+site_name: Locomotion Data Standardization
+site_description: Transform biomechanical datasets into unified, quality-assured formats for reproducible research
+site_url: https://locomotion-data-standardization.readthedocs.io/
+
+repo_name: locomotion-data-standardization
+repo_url: https://github.com/your-org/locomotion-data-standardization
+edit_uri: edit/main/docs/
+
+# Task-oriented theme configuration
+theme:
+  name: material
+  palette:
+    # Light mode
+    - scheme: default
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - scheme: slate
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.tabs.link
+    - content.code.copy
+    - content.code.annotate
+    - content.tooltips
+    - announce.dismiss
+
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+  icon:
+    logo: material/run
+    repo: fontawesome/brands/github
+
+# Fixed navigation with only existing pages
+nav:
+  - Home: index.md
+  
+  # Getting Started - Points to existing content
+  - Getting Started:
+    - Overview: getting_started/index.md
+    - Quick Start: user_guide/docs/getting_started/quick_start.md
+    - Installation Guide: user_guide/docs/getting_started/installation.md
+    - First Dataset: user_guide/docs/getting_started/first_dataset.md
+  
+  # Examples & Tutorials - Rich existing content
+  - Examples & Tutorials:
+    - Example Gallery: user_guide/docs/examples/index.md
+    - Code Walkthroughs: user_guide/docs/examples/code_walkthroughs.md
+    - Case Studies: user_guide/docs/examples/case_studies.md
+    - Learning Paths: user_guide/docs/examples/learning_paths.md
+    - Python Basics: user_guide/docs/tutorials/python/getting_started_python.md
+    - Python Advanced: user_guide/docs/tutorials/python/library_tutorial_python.md
+    - MATLAB Basics: user_guide/docs/tutorials/matlab/getting_started_matlab.md
+    - MATLAB Advanced: user_guide/docs/tutorials/matlab/library_tutorial_matlab.md
+  
+  # API Reference - Technical documentation
+  - API Reference:
+    - LocomotionData API: api/locomotion-data-api.md
+    - Validation API: api/validation-api.md
+    - Complete API Index: api/api-index.md
+    - API Overview: api/README.md
+  
+  # Datasets & Standards
+  - Datasets:
+    - Available Datasets: user_guide/docs/reference/datasets_documentation/README.md
+    - Georgia Tech 2023: user_guide/docs/reference/datasets_documentation/dataset_gtech_2023.md
+    - UMich 2021: user_guide/docs/reference/datasets_documentation/dataset_umich_2021.md
+    - AddBiomechanics: user_guide/docs/reference/datasets_documentation/dataset_addbiomechanics.md
+    - Data Format Spec: user_guide/docs/reference/standard_spec/standard_spec.md
+    - Units & Conventions: user_guide/docs/reference/standard_spec/units_and_conventions.md
+    - Task Definitions: user_guide/docs/reference/standard_spec/task_definitions.md
+    - Validation Rules: user_guide/docs/reference/standard_spec/validation_expectations_kinematic.md
+  
+  # Contributing
+  - Contributing:
+    - How to Contribute: contributing/index.md
+    - Contributor Overview: user_guide/docs/contributor_guide/overview.md
+    - Dataset Conversion: user_guide/docs/contributor_guide/dataset_conversion.md
+    - Best Practices: user_guide/docs/contributor_guide/best_practices.md
+    - Validation Tuning: user_guide/docs/contributor_guide/validation_tuning.md
+  
+  # Advanced Topics
+  - Advanced:
+    - ML Pipeline Integration: integration/ml-pipeline-integration.md
+    - Performance Optimization: integration/performance-optimization.md
+    - Developer Guide: developer/README.md
+  
+  # For Different Users
+  - User Guides:
+    - Researchers: user_guide/docs/audiences/researchers/index.md
+    - Clinicians: user_guide/docs/audiences/clinicians/index.md  
+    - Developers: user_guide/docs/audiences/developers/index.md
+    - Data Scientists: user_guide/docs/audiences/data_scientists/index.md
+
+# Enhanced plugins for better user experience
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - mermaid2
+
+# Enhanced markdown extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      title: On this page
+  - tables
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: your-org
+      repo: locomotion-data-standardization
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Enhanced configuration for user experience - Wave 4 with PWA support
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-org/locomotion-data-standardization
+    - icon: fontawesome/solid/paper-plane
+      link: mailto:contact@locomotion-data-standardization.org
+  
+  # Smart routing based on user intent
+  announcement:
+    text: "🚀 New to biomechanical data analysis? Start with our <a href='getting_started/quick_start/'>10-minute Quick Start</a> guide!"
+  
+  # PWA Configuration
+  manifest: manifest.json
+  
+  # Performance and Analytics
+  analytics:
+    provider: google
+    property: GA_MEASUREMENT_ID
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/thumb-up-outline
+          name: This page was helpful
+          data: 1
+          note: >-
+            Thanks for your feedback!
+        - icon: material/thumb-down-outline
+          name: This page could be improved
+          data: 0
+          note: >-
+            Thanks for your feedback! Help us improve this page by
+            <a href="https://github.com/your-org/locomotion-data-standardization/issues/new/?title=[Feedback]+{title}+-+{url}" target="_blank" rel="noopener">telling us what you need</a>.
+  
+  # SEO Enhancement
+  meta:
+    - name: google-site-verification
+      content: YOUR_GOOGLE_SITE_VERIFICATION_CODE
+    - name: msvalidate.01
+      content: YOUR_BING_VERIFICATION_CODE
+    - property: og:type
+      content: website
+    - property: og:locale
+      content: en_US
+    - name: twitter:card
+      content: summary_large_image
+    - name: twitter:site
+      content: '@locomotion_data'
+  
+  # Performance Optimization
+  optimize:
+    enabled: true
+    gzip: true
+    minify_html: true
+    minify_css: true
+    minify_js: true
+
+# Enhanced styling with high contrast improvements
+extra_css:
+  - stylesheets/extra.css  # Enhanced contrast and readability styles
+
+# JavaScript for enhanced user experience
+extra_javascript:
+  # Mathematical rendering
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

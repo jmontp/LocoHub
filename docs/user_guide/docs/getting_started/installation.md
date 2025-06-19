@@ -7,8 +7,8 @@ Get set up to work with standardized locomotion data in just a few minutes.
 === "Python Users"
 
     ### System Requirements
-    - Python 3.8 or newer
-    - 8GB RAM recommended (4GB minimum)
+    - Python 3.10 or newer (tested with Python 3.12)
+    - 8GB RAM recommended (4GB minimum) 
     - 2GB disk space for datasets
 
     ### Quick Install
@@ -17,17 +17,17 @@ Get set up to work with standardized locomotion data in just a few minutes.
     pip install pandas matplotlib numpy pyarrow
 
     # Verify installation
-    python -c "import pandas, matplotlib, numpy; print('Ready to go!')"
+    python -c "import pandas, matplotlib, numpy, pyarrow; print('Ready to go!')"
     ```
 
     ### Conda Environment (Recommended)
     ```bash
     # Create dedicated environment
-    conda create -n locomotion python=3.10 pandas matplotlib numpy pyarrow
+    conda create -n locomotion python=3.12 pandas matplotlib numpy pyarrow
     conda activate locomotion
 
     # Verify installation
-    python -c "import pandas, matplotlib, numpy; print('Environment ready!')"
+    python -c "import pandas, matplotlib, numpy, pyarrow; print('Environment ready!')"
     ```
 
 === "MATLAB Users"
@@ -56,40 +56,31 @@ Get set up to work with standardized locomotion data in just a few minutes.
     disp('MATLAB ready for locomotion data analysis!')
     ```
 
-## Download Sample Data
+## Get the Library Code
 
-Get started with a small sample dataset:
+Clone the repository to access the locomotion analysis libraries:
 
-=== "Command Line"
+=== "Git Clone"
 
     ```bash
-    # Create workspace directory
-    mkdir locomotion_analysis
-    cd locomotion_analysis
+    # Clone the repository (replace with actual repository URL)
+    git clone https://github.com/your-org/locomotion-data-standardization.git
+    cd locomotion-data-standardization
 
-    # Download sample dataset (placeholder - will be updated with actual URLs)
-    curl -O https://example.com/sample_gtech_2023_phase.parquet
-    
-    # Verify download
-    ls -la *.parquet
+    # Verify you have the library files
+    ls lib/core/locomotion_analysis.py
+    ls lib/validation/
     ```
 
-=== "Python Script"
+=== "Download ZIP"
 
-    ```python
-    import os
-    import urllib.request
+    1. Go to the GitHub repository (contact maintainers for URL)
+    2. Click "Code" > "Download ZIP" 
+    3. Extract the ZIP file
+    4. Navigate to the extracted folder
 
-    # Create workspace
-    os.makedirs('locomotion_analysis', exist_ok=True)
-    os.chdir('locomotion_analysis')
-
-    # Download sample dataset
-    url = 'https://example.com/sample_gtech_2023_phase.parquet'
-    urllib.request.urlretrieve(url, 'sample_data.parquet')
-    
-    print("Sample data downloaded successfully!")
-    ```
+!!! note "Sample Data Included"
+    The repository includes small test datasets in the `tests/` directory for immediate experimentation.
 
 ## Verify Your Setup
 
@@ -98,65 +89,105 @@ Test that everything works correctly:
 === "Python Test"
 
     ```python
+    import sys
     import pandas as pd
     import matplotlib.pyplot as plt
     import numpy as np
 
-    # Test data loading (using built-in sample data)
-    # This creates a minimal test dataset
-    test_data = pd.DataFrame({
-        'subject': ['SUB01'] * 150,
-        'task': ['level_walking'] * 150,
-        'step': [1] * 150,
-        'phase_percent': np.linspace(0, 100, 150),
-        'knee_flexion_angle_ipsi_rad': np.sin(np.linspace(0, 2*np.pi, 150)) * 0.5 + 0.3
-    })
+    # Add library to path (assuming you're in the repo root)
+    sys.path.append('.')
+    from lib.core.locomotion_analysis import LocomotionData
 
-    # Test basic operations
-    print(f"Dataset shape: {test_data.shape}")
-    print(f"Available columns: {list(test_data.columns)}")
-    
-    # Test plotting
-    plt.figure(figsize=(8, 4))
-    plt.plot(test_data['phase_percent'], test_data['knee_flexion_angle_ipsi_rad'])
-    plt.xlabel('Gait Cycle (%)')
-    plt.ylabel('Knee Flexion (rad)')
-    plt.title('Test Plot - Installation Successful!')
-    plt.grid(True)
-    plt.savefig('installation_test.png')
-    print("✅ Python setup verified! Test plot saved as 'installation_test.png'")
+    # Test with included sample data
+    try:
+        # Load the test dataset
+        data = LocomotionData('test_locomotion_data.csv')
+        print("✅ LocomotionData library works!")
+        
+        # Test basic operations
+        subjects = data.get_subjects()
+        tasks = data.get_tasks()
+        print(f"Subjects: {subjects}")
+        print(f"Tasks: {tasks}")
+        
+        # Test plotting with real data (keep it minimal for verification)
+        plt.figure(figsize=(8, 4))
+        # Create a simple synthetic plot for verification
+        phase = np.linspace(0, 100, 150)
+        knee_angle = np.sin(np.linspace(0, 2*np.pi, 150)) * 0.5 + 0.3
+        plt.plot(phase, knee_angle)
+        plt.xlabel('Gait Cycle (%)')
+        plt.ylabel('Knee Flexion (rad)')
+        plt.title('Installation Verification - All Systems Working!')
+        plt.grid(True)
+        plt.savefig('installation_test.png')
+        plt.close()  # Close to avoid display issues
+        
+        print("✅ Python setup fully verified! Test plot saved as 'installation_test.png'")
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        print("Make sure you're running this from the repository root directory.")
+    ```
+
+    **Expected Output:**
+    ```
+    Data validation passed: 2 subjects, 2 tasks
+    Loaded data with 1800 rows, 2 subjects, 2 tasks, 6 features
+    Variable name validation: All 6 variables are standard compliant
+    ✅ LocomotionData library works!
+    Subjects: ['SUB01', 'SUB02']
+    Tasks: ['fast_walk', 'normal_walk']
+    ✅ Python setup fully verified! Test plot saved as 'installation_test.png'
     ```
 
 === "MATLAB Test"
 
     ```matlab
-    % Test data loading and basic operations
-    % Create test dataset
-    phase_percent = linspace(0, 100, 150)';
-    knee_angle = sin(linspace(0, 2*pi, 150))' * 0.5 + 0.3;
+    % Add the library to MATLAB path
+    addpath('source/lib/matlab');
     
-    test_data = table(...
-        repmat({'SUB01'}, 150, 1), ...
-        repmat({'level_walking'}, 150, 1), ...
-        ones(150, 1), ...
-        phase_percent, ...
-        knee_angle, ...
-        'VariableNames', {'subject', 'task', 'step', 'phase_percent', 'knee_flexion_angle_ipsi_rad'});
+    % Test basic MATLAB functionality
+    try
+        % Test if LocomotionData class is available
+        if exist('LocomotionData.m', 'file')
+            fprintf('✅ LocomotionData MATLAB class found!\n');
+        else
+            fprintf('⚠️ LocomotionData.m not found. Using basic functionality.\n');
+        end
+        
+        % Test basic data operations
+        phase_percent = linspace(0, 100, 150)';
+        knee_angle = sin(linspace(0, 2*pi, 150))' * 0.5 + 0.3;
+        
+        test_data = table(...
+            repmat({'SUB01'}, 150, 1), ...
+            repmat({'level_walking'}, 150, 1), ...
+            ones(150, 1), ...
+            phase_percent, ...
+            knee_angle, ...
+            'VariableNames', {'subject', 'task', 'step', 'phase_percent', 'knee_flexion_angle_ipsi_rad'});
 
-    % Test basic operations
-    fprintf('Dataset size: %d rows, %d columns\n', height(test_data), width(test_data));
-    fprintf('Available columns: %s\n', strjoin(test_data.Properties.VariableNames, ', '));
+        % Test basic operations
+        fprintf('Dataset size: %d rows, %d columns\n', height(test_data), width(test_data));
+        fprintf('Available columns: %s\n', strjoin(test_data.Properties.VariableNames, ', '));
 
-    % Test plotting
-    figure;
-    plot(test_data.phase_percent, test_data.knee_flexion_angle_ipsi_rad);
-    xlabel('Gait Cycle (%)');
-    ylabel('Knee Flexion (rad)');
-    title('Test Plot - Installation Successful!');
-    grid on;
-    saveas(gcf, 'installation_test.png');
-    
-    fprintf('✅ MATLAB setup verified! Test plot saved as ''installation_test.png''\n');
+        % Test plotting
+        figure;
+        plot(test_data.phase_percent, test_data.knee_flexion_angle_ipsi_rad);
+        xlabel('Gait Cycle (%)');
+        ylabel('Knee Flexion (rad)');
+        title('MATLAB Installation Verification');
+        grid on;
+        saveas(gcf, 'matlab_installation_test.png');
+        close;  % Close figure
+        
+        fprintf('✅ MATLAB setup verified! Test plot saved as ''matlab_installation_test.png''\n');
+        
+    catch ME
+        fprintf('❌ Error: %s\n', ME.message);
+        fprintf('Make sure you''re running from the repository root directory.\n');
+    end
     ```
 
 ## Common Installation Issues
@@ -169,12 +200,37 @@ Test that everything works correctly:
     pip install pandas
     ```
 
-!!! warning "Memory Error when loading large datasets"
-    **Solution:** Use chunked loading
+!!! warning "ModuleNotFoundError: No module named 'lib'"
+    **Solution:** Make sure you're running Python from the repository root directory
+    ```bash
+    # Navigate to the repository root
+    cd locomotion-data-standardization
+    python your_script.py
+    ```
+
+!!! warning "Missing required columns: ['subject', 'task', 'phase']"
+    **Solution:** Your dataset uses different column names. The LocomotionData library expects standardized names.
     ```python
-    # For large datasets, load in chunks
-    chunk_size = 10000
-    data_chunks = pd.read_parquet('large_dataset.parquet', chunksize=chunk_size)
+    # Check what columns your data has
+    import pandas as pd
+    df = pd.read_csv('your_data.csv')
+    print(df.columns.tolist())
+    
+    # For non-standard datasets, rename columns first:
+    df = df.rename(columns={
+        'subject_id': 'subject',
+        'task_id': 'task', 
+        'phase_pct': 'phase'  # and so on
+    })
+    df.to_csv('standardized_data.csv', index=False)
+    ```
+
+!!! warning "Memory Error when loading large datasets"
+    **Solution:** Use chunked loading or work with smaller subsets
+    ```python
+    # Load only specific subjects or tasks
+    data = LocomotionData('large_dataset.parquet')
+    subset = data.get_cycles('SUB01', 'normal_walk')  # Work with smaller subsets
     ```
 
 ### MATLAB Issues
@@ -199,11 +255,32 @@ Test that everything works correctly:
     feature('memstats')
     ```
 
+## What's Working and What's Not
+
+After installation, here's what you can expect:
+
+### ✅ Fully Working
+- **Python LocomotionData library** - Load and analyze standardized CSV/parquet data
+- **Data validation system** - Comprehensive biomechanical validation
+- **Basic plotting** - matplotlib-based visualization
+- **Variable name validation** - Ensures standard naming conventions
+- **Memory-efficient operations** - Handles large datasets with 3D array operations
+
+### ⚠️ Limited or Beta Status
+- **MATLAB integration** - Basic MATLAB class available but less feature-complete than Python
+- **Large dataset handling** - Some memory limitations with very large files
+- **Advanced visualizations** - Basic plots work, advanced features may need customization
+
+### ❌ Known Gaps
+- **Column mapping** - Non-standard datasets need manual column renaming
+- **Real-time analysis** - System designed for batch processing
+- **GUI interface** - Command-line and script-based only
+
 ## Next Steps
 
 Once your installation is verified:
 
-1. **[Quick Start](quick_start/)** - Load and analyze your first dataset
+1. **[Quick Start](quick_start/)** - Load and analyze your first dataset  
 2. **[First Dataset](first_dataset/)** - Work through a complete analysis example
 3. **[Python Tutorial](../tutorials/python/getting_started_python/)** - Comprehensive Python guide
 4. **[MATLAB Tutorial](../tutorials/matlab/getting_started_matlab/)** - Comprehensive MATLAB guide
@@ -212,7 +289,7 @@ Once your installation is verified:
 
 - **Installation problems?** Check our [Troubleshooting Guide](../user_guide/troubleshooting/)
 - **Environment issues?** See platform-specific guides below
-- **Still stuck?** Open an issue on [GitHub](https://github.com/your-org/locomotion-data-standardization/issues)
+- **Still stuck?** Contact the project maintainers or check project documentation
 
 ### Platform-Specific Notes
 
