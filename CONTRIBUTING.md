@@ -54,7 +54,7 @@ def convert_to_parquet(input_path, output_path):
 **Python:**
 ```bash
 python source/tests/test_locomotion_data_library.py
-python source/lib/python/examples.py --example basic
+python -c "import sys; sys.path.append('lib/core'); from examples import run_basic_example; run_basic_example()"
 ```
 
 **MATLAB:**
@@ -95,11 +95,12 @@ git commit -m "Add XYZ dataset converter
 ## Project Structure
 
 ```
-source/lib/              # Core libraries (Python/MATLAB)
-source/conversion_scripts/  # Dataset converters
-source/validation/       # Quality checks and GIF generation
-source/tests/           # Testing framework
-docs/                   # Specifications and tutorials
+lib/core/                # Core Python libraries
+lib/validation/          # Quality checks and GIF generation
+source/lib/matlab/       # MATLAB libraries
+contributor_scripts/     # Dataset converters
+tests/                   # Testing framework
+docs/                    # Specifications and tutorials
 ```
 
 ## Best Practices

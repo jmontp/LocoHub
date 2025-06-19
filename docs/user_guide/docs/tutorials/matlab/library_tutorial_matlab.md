@@ -10,15 +10,27 @@ Ensure you have MATLAB with the following capabilities:
 
 ## 0. Setup and Path Configuration
 
+**Important**: Make sure you are running MATLAB from the **project root directory** (the directory containing `README.md`, `lib/`, `docs/`, etc.).
+
 ```matlab
-% Add library path to MATLAB path
-addpath('../../../source/lib/matlab');
+% Display current directory
+fprintf('Current directory: %s\n', pwd);
+
+% Add library path to MATLAB path (correct path)
+matlab_lib_path = fullfile(pwd, 'source', 'lib', 'matlab');
+if exist(matlab_lib_path, 'dir')
+    addpath(matlab_lib_path);
+    fprintf('Added MATLAB library path: %s\n', matlab_lib_path);
+else
+    error(['MATLAB library not found at: ', matlab_lib_path, ...
+           '\nMake sure you are running from the project root directory.']);
+end
 
 % Verify the library is available
 if exist('LocomotionData', 'class') == 8
-    fprintf('LocomotionData library loaded successfully\n');
+    fprintf('✅ LocomotionData library loaded successfully\n');
 else
-    error('LocomotionData library not found. Check path.');
+    error('❌ LocomotionData library not found. Check path configuration.');
 end
 ```
 

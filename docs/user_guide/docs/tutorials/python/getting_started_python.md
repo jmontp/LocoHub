@@ -12,6 +12,8 @@ Ensure you have Pandas and Matplotlib installed. If not, you can install them us
 pip install pandas matplotlib numpy
 ```
 
+**Important**: Make sure you are running your Python script from the **project root directory** (the directory containing `README.md`, `lib/`, `docs/`, etc.).
+
 In your Python script or Jupyter notebook, you'll typically start by importing the necessary libraries:
 
 ```python
@@ -19,6 +21,19 @@ import pandas as pd
 import numpy as np # Often useful for numerical operations
 import matplotlib.pyplot as plt # For plotting
 import os # For operating system dependent functionality like getting current directory
+import sys
+from pathlib import Path
+
+# Verify you're in the correct directory
+current_dir = Path.cwd()
+print(f"Current working directory: {current_dir}")
+
+# Add library paths for locomotion analysis (if needed)
+if (current_dir / "lib" / "core").exists():
+    sys.path.append(str(current_dir / "lib" / "core"))
+    print("✅ Added lib/core to Python path")
+else:
+    print("⚠️  Warning: lib/core not found. Make sure you're in the project root directory.")
 ```
 
 **Running the Examples/Test Script:**

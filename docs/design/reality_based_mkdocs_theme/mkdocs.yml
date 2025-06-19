@@ -67,12 +67,13 @@ theme:
   # Favicon
   favicon: assets/images/favicon.png
 
-# Custom CSS for status-aware styling
+# High-Performance CSS with status-aware styling
 extra_css:
   - design/reality_based_mkdocs_theme/extra.css
 
-# Custom JavaScript for enhanced functionality
+# Enhanced JavaScript for professional interactivity
 extra_javascript:
+  - design/reality_based_mkdocs_theme/enhanced-interactivity.js
   - javascripts/status-enhancement.js
   - javascripts/mathjax.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
@@ -171,26 +172,41 @@ nav:
     - Validation Tuning: contributor_guide/validation_tuning.md
     - Best Practices: contributor_guide/best_practices.md
 
-# Plugins for enhanced functionality
+# High-Performance Plugins for enhanced functionality
 plugins:
   - search:
       separator: '[\s\-,:!=\[\]()"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
+      lang: en
+      indexing: 'full'
   - minify:
       minify_html: true
       minify_css: true
       minify_js: true
       htmlmin_opts:
         remove_comments: true
+        remove_empty_space: true
+        remove_all_empty_space: false
+        strip_whitespace: true
+        reduce_boolean_attributes: true
+        remove_optional_attribute_quotes: false
       cache_safe: true
   - git-revision-date-localized:
       type: date
       timezone: UTC
       locale: en
       fallback_to_build_date: true
+      enable_creation_date: true
   - git-authors:
       show_contribution: true
       show_line_count: true
       count_empty_lines: false
+      sort_authors_by: contribution
+  - optimize:
+      enabled: !ENV [OPTIMIZE, false]
+      cache: true
+      optimize_css: true
+      optimize_js: true
+      print_gain: true
 
 # Extra configuration
 extra:

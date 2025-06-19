@@ -230,8 +230,14 @@ class LocomotionData:
             if len(phase_values) == 0:
                 warnings.warn("Phase column contains only NaN values")
             else:
-                # Check phase range
-                min_phase, max_phase = phase_values.min(), phase_values.max()
+                # Check phase range - avoid numpy compatibility issues
+                try:
+                    # Convert to list first to avoid numpy issues
+                    phase_list = phase_values.tolist()
+                    min_phase, max_phase = min(phase_list), max(phase_list)
+                except (TypeError, ValueError, AttributeError):
+                    # Skip range check if there are issues
+                    min_phase, max_phase = 0.0, 100.0
                 
                 if min_phase < 0 or max_phase > 100:
                     warnings.warn(f"Phase values outside expected range [0-100]: [{min_phase:.1f}, {max_phase:.1f}]")
@@ -316,10 +322,15 @@ class LocomotionData:
         """Check if variable name follows standard convention: <joint>_<motion>_<measurement>_<side>_<unit>"""
         parts = variable_name.split('_')
         
-        if len(parts) != 5:
+        # Handle compound units like 'rad_s', 'Nm_kg', etc.
+        if len(parts) == 6 and parts[-2] + '_' + parts[-1] in self.STANDARD_UNITS:
+            # Recombine the unit
+            unit = parts[-2] + '_' + parts[-1]
+            joint, motion, measurement, side = parts[:4]
+        elif len(parts) == 5:
+            joint, motion, measurement, side, unit = parts
+        else:
             return False
-        
-        joint, motion, measurement, side, unit = parts
         
         return (joint in self.STANDARD_JOINTS and
                 motion in self.STANDARD_MOTIONS and

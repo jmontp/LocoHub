@@ -114,7 +114,7 @@ decline_walking:hip_flexion:75,60,0         # Phase 75%: [0°, 60°] = [0.00, 1.
 
 ### Automatic Actions After Each Command
 1. **Range updates**: Values automatically converted from degrees to radians
-2. **Plot generation**: `python3 source/validation/generate_validation_plots.py --tasks <task>` 
+2. **Plot generation**: Generated automatically by update tools 
 3. **File updates**: `docs/standard_spec/validation_expectations_kinematic.md` modified in-place
 
 ### Degree to Radian Conversion
@@ -152,8 +152,8 @@ decline_walking:hip_flexion:75,60,0         # Phase 75%: [0°, 60°] = [0.00, 1.
 ### File Locations
 
 - **Main validation file**: `docs/standard_spec/validation_expectations_kinematic.md`
-- **Plot generator**: `source/validation/generate_validation_plots.py`
-- **Dataset validator**: `source/validation/dataset_validator_phase.py`
+- **Range updater**: `contributor_scripts/update_validation_ranges.py`
+- **Dataset validator**: `contributor_scripts/validate_phase_dataset.py`
 - **Validation plots output**: `docs/standard_spec/validation/`
 - **Validation reports**: `docs/datasets_documentation/validation_reports/`
 

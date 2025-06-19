@@ -11,12 +11,25 @@ pip install pandas numpy matplotlib pyarrow seaborn
 
 ## 0. Setup and Import
 
+**Important**: Make sure you are running your Python script from the **project root directory**.
+
 ```python
 import sys
 import os
+from pathlib import Path
 
-# Add the library path (adjust as needed)
-sys.path.append('../../../source/lib/python')
+# Verify we're in the project root
+current_dir = Path.cwd()
+print(f"Current working directory: {current_dir}")
+
+# Add the correct library path
+lib_core_path = current_dir / "lib" / "core"
+if lib_core_path.exists():
+    sys.path.append(str(lib_core_path))
+    print("✅ Added lib/core to Python path")
+else:
+    print("❌ Error: lib/core not found. Make sure you're in the project root directory.")
+    print("Project root should contain: README.md, lib/, docs/, etc.")
 
 # Import the library
 from locomotion_analysis import LocomotionData
@@ -421,4 +434,4 @@ This tutorial covered the main features of the LocomotionData library:
 
 The library provides a powerful, efficient interface for analyzing standardized locomotion data while maintaining the flexibility to access underlying data structures when needed.
 
-For more advanced usage, see the source code in `source/lib/python/locomotion_analysis.py` which includes additional methods and customization options.
+For more advanced usage, see the source code in `lib/core/locomotion_analysis.py` which includes additional methods and customization options.

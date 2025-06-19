@@ -26,8 +26,14 @@ Load and analyze standardized datasets with optimized 3D array operations:
 
 **Python:**
 ```python
-sys.path.append('source/lib/python')
+import sys
+from pathlib import Path
+
+# Add library path (run from project root)
+sys.path.append('lib/core')
 from locomotion_analysis import LocomotionData
+
+# Load and analyze data
 data = LocomotionData.from_parquet('dataset.parquet')
 data_3d = data.to_3d_array(['knee_flexion_angle_ipsi_rad'])
 ```
@@ -50,7 +56,7 @@ Convert new datasets or contribute to the project:
 
 1. **Create conversion scripts** following existing patterns
 2. **Fill out dataset documentation** using [Dataset Template](docs/standard_spec/dataset_template.md)
-3. **Submit validation report** with `python source/validation/dataset_validator_phase.py --dataset your_dataset_phase.parquet`
+3. **Submit validation report** with `python contributor_scripts/validate_phase_dataset.py --dataset your_dataset_phase.parquet`
 4. **Follow pull request guidelines** in [Contributing Guide](CONTRIBUTING.md)
 
 **Reference**: [Contributing Guide](CONTRIBUTING.md)
@@ -75,7 +81,7 @@ To contribute a new dataset:
 
 1. **Create conversion scripts** following existing patterns in `source/conversion_scripts/`
 2. **Fill out dataset documentation** using [Dataset Template](docs/standard_spec/dataset_template.md)  
-3. **Submit validation report** with `python source/validation/dataset_validator_phase.py --dataset your_dataset_phase.parquet`
+3. **Submit validation report** with `python contributor_scripts/validate_phase_dataset.py --dataset your_dataset_phase.parquet`
 4. **Follow pull request guidelines** in [Contributing Guide](CONTRIBUTING.md)
 
 ## Future
