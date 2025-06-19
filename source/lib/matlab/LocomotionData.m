@@ -666,6 +666,183 @@ classdef LocomotionData < handle
                 fprintf('Plot saved to %s\n', savePath);
             end
         end
+        
+        function fig = plotPhasePatterns_v2(obj, subject, task, features, varargin)
+            % PLOTPHASEPATTERNS_V2 - Enhanced ggplot2-style phase pattern visualization
+            %
+            % This method provides publication-ready visualization with biomechanics-specific
+            % themes, colorblind-friendly palettes, and advanced statistical annotations.
+            %
+            % Inputs:
+            %   subject - Subject ID
+            %   task - Task name  
+            %   features - Cell array of feature names
+            %   Optional name-value pairs:
+            %     'PlotType' - 'mean', 'spaghetti', 'both', or 'ribbon' (default: 'both')
+            %     'Theme' - 'publication', 'presentation', or 'manuscript' (default: 'publication')
+            %     'Colors' - 'joints', 'tasks', or 'subjects' (default: 'joints')
+            %     'ShowInvalid' - Show invalid cycles (default: true)
+            %     'ConfidenceLevel' - Confidence level for bands (default: 0.95)
+            %     'SavePath' - Path to save figure
+            %     'ExportFormat' - Export format(s) (default: {'png', 'pdf'})
+            %     'AddPhaseLines' - Add stance/swing phase markers (default: true)
+            %
+            % Returns:
+            %   fig - Figure handle
+            %
+            % Example:
+            %   fig = loco.plotPhasePatterns_v2('SUB01', 'normal_walk', {'knee_flexion_angle_ipsi_rad'}, ...
+            %                                   'PlotType', 'ribbon', 'Theme', 'publication', ...
+            %                                   'SavePath', 'knee_analysis');
+            
+            % Use the enhanced visualization system
+            fig = plotPhasePatterns(obj, subject, task, features, varargin{:});
+        end
+        
+        function fig = plotTaskComparison_v2(obj, subject, tasks, features, varargin)
+            % PLOTTASKCOMPARISON_V2 - Enhanced ggplot2-style task comparison
+            %
+            % Creates publication-ready task comparison plots with confidence bands,
+            % biomechanics-specific color schemes, and advanced statistical visualization.
+            %
+            % Inputs:
+            %   subject - Subject ID
+            %   tasks - Cell array of task names
+            %   features - Cell array of feature names
+            %   Optional name-value pairs:
+            %     'Theme' - 'publication', 'presentation', or 'manuscript' (default: 'publication')
+            %     'Colors' - Color palette name (default: 'tasks')
+            %     'ShowConfidence' - Show confidence bands (default: true)
+            %     'ConfidenceLevel' - Confidence level (default: 0.95)
+            %     'SavePath' - Path to save figure
+            %     'AddPhaseLines' - Add stance/swing markers (default: true)
+            %
+            % Returns:
+            %   fig - Figure handle
+            %
+            % Example:
+            %   fig = loco.plotTaskComparison_v2('SUB01', {'normal_walk', 'fast_walk'}, ...
+            %                                    {'knee_flexion_angle_ipsi_rad'}, ...
+            %                                    'ShowConfidence', true, 'SavePath', 'task_comparison');
+            
+            % Use the enhanced visualization system
+            fig = plotTaskComparison(obj, subject, tasks, features, varargin{:});
+        end
+        
+        function fig = plotSubjectComparison_v2(obj, subjects, task, features, varargin)
+            % PLOTSUBJECTCOMPARISON_V2 - Enhanced population/group comparison plots
+            %
+            % Creates publication-ready population analysis plots with group statistics,
+            % confidence intervals, and optional individual subject overlays.
+            %
+            % Inputs:
+            %   subjects - Cell array of subject IDs
+            %   task - Task name
+            %   features - Cell array of feature names
+            %   Optional name-value pairs:
+            %     'GroupBy' - Grouping variable name (optional)
+            %     'GroupData' - Table with grouping information (optional)
+            %     'ShowIndividuals' - Show individual subject lines (default: false)
+            %     'Theme' - 'publication', 'presentation', or 'manuscript' (default: 'publication')
+            %     'Colors' - Color palette name (default: 'subjects')
+            %     'SavePath' - Path to save figure
+            %
+            % Returns:
+            %   fig - Figure handle
+            %
+            % Example:
+            %   % Simple population analysis
+            %   fig = loco.plotSubjectComparison_v2({'SUB01', 'SUB02', 'SUB03'}, 'normal_walk', ...
+            %                                       {'knee_flexion_angle_ipsi_rad'});
+            %
+            %   % Group comparison with metadata
+            %   groupData = table({'SUB01'; 'SUB02'; 'SUB03'}, {'Control'; 'Control'; 'Patient'}, ...
+            %                    'VariableNames', {'subject', 'group'});
+            %   fig = loco.plotSubjectComparison_v2({'SUB01', 'SUB02', 'SUB03'}, 'normal_walk', ...
+            %                                       {'knee_flexion_angle_ipsi_rad'}, ...
+            %                                       'GroupBy', 'group', 'GroupData', groupData);
+            
+            % Use the enhanced visualization system
+            fig = plotSubjectComparison(obj, subjects, task, features, varargin{:});
+        end
+        
+        function fig = createPublicationFigure_v2(obj, figureSpec, varargin)
+            % CREATEPUBLICATIONFIGURE_V2 - Create multi-panel publication figures
+            %
+            % Creates complex, multi-panel figures suitable for scientific publication
+            % with consistent formatting, proper spacing, and publication-quality output.
+            %
+            % Inputs:
+            %   figureSpec - Struct defining figure layout and content
+            %   Optional name-value pairs:
+            %     'Theme' - 'publication', 'presentation', or 'manuscript' (default: 'publication')
+            %     'Size' - Figure size preset: 'single', 'double', 'full' (default: 'double')
+            %     'SavePath' - Path to save figure
+            %     'ExportFormat' - Export formats (default: {'png', 'pdf', 'eps'})
+            %
+            % figureSpec format:
+            %   .layout - [nRows, nCols] or 'custom'
+            %   .panels - Cell array of panel specifications
+            %   .title - Main figure title
+            %   .caption - Figure caption (optional)
+            %
+            % Panel specification format:
+            %   .type - 'phase_patterns', 'task_comparison', 'correlation_matrix', 'rom_comparison'
+            %   .position - Panel position in subplot grid
+            %   .subject - Subject ID (if applicable)
+            %   .task - Task name (if applicable)
+            %   .tasks - Task array (for comparisons)
+            %   .features - Feature array
+            %   .label - Panel label (A, B, C, etc.)
+            %   .options - Additional plotting options
+            %
+            % Returns:
+            %   fig - Figure handle
+            %
+            % Example:
+            %   figSpec.layout = [2, 2];
+            %   figSpec.title = 'Knee Kinematics Analysis';
+            %   figSpec.panels{1} = struct('type', 'phase_patterns', 'position', 1, ...
+            %                              'subject', 'SUB01', 'task', 'normal_walk', ...
+            %                              'features', {{'knee_flexion_angle_ipsi_rad'}}, ...
+            %                              'label', 'A');
+            %   figSpec.panels{2} = struct('type', 'task_comparison', 'position', 2, ...
+            %                              'subject', 'SUB01', 'tasks', {{'normal_walk', 'fast_walk'}}, ...
+            %                              'features', {{'knee_flexion_angle_ipsi_rad'}}, ...
+            %                              'label', 'B');
+            %   fig = loco.createPublicationFigure_v2(figSpec, 'SavePath', 'publication_figure');
+            
+            % Use the enhanced visualization system
+            fig = createPublicationFigure(obj, figureSpec, varargin{:});
+        end
+        
+        function exportFigure_v2(obj, fig, savePath, varargin)
+            % EXPORTFIGURE_V2 - Export figures with publication-quality settings
+            %
+            % Exports figures in multiple formats with proper DPI settings for
+            % different publication requirements.
+            %
+            % Inputs:
+            %   fig - Figure handle
+            %   savePath - Base path for saving (without extension)
+            %   Optional name-value pairs:
+            %     'Format' - Cell array of formats (default: {'png', 'pdf'})
+            %     'DPI' - Resolution for raster formats (default: 300)
+            %     'Theme' - Theme struct for sizing adjustments
+            %
+            % Supported formats:
+            %   'png' - High-resolution raster (300 DPI default)
+            %   'pdf' - Vector format for publications
+            %   'eps' - Vector format with TIFF preview
+            %   'svg' - Scalable vector graphics
+            %   'tiff' - High-quality raster format
+            %
+            % Example:
+            %   loco.exportFigure_v2(fig, 'my_figure', 'Format', {'png', 'pdf', 'eps'}, 'DPI', 600);
+            
+            % Use the enhanced export system
+            exportFigure(fig, savePath, varargin{:});
+        end
     end
     
     methods (Access = private)
