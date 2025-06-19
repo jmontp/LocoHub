@@ -314,21 +314,22 @@ class StepClassifier:
                         continue
                     
                     # Extract failure values and current bounds
-                    values = [f.get('value', 0) for f in phase_failures]
+                    values = [f.get('value', 0) for f in phase_failures if f.get('value') is not None]
                     current_mins = [f.get('expected_min', 0) for f in phase_failures]
                     current_maxs = [f.get('expected_max', 0) for f in phase_failures]
                     
                     if values:
                         # Statistical analysis of failure values
+                        values_array = np.array(values)
                         value_stats = {
                             'count': len(values),
-                            'min': min(values),
-                            'max': max(values),
-                            'mean': np.mean(values),
-                            'std': np.std(values),
-                            'median': np.median(values),
-                            'percentile_5': np.percentile(values, 5),
-                            'percentile_95': np.percentile(values, 95)
+                            'min': float(np.min(values_array)),
+                            'max': float(np.max(values_array)),
+                            'mean': float(np.mean(values_array)),
+                            'std': float(np.std(values_array)),
+                            'median': float(np.median(values_array)),
+                            'percentile_5': float(np.percentile(values_array, 5)),
+                            'percentile_95': float(np.percentile(values_array, 95))
                         }
                         
                         # Current range information
@@ -509,7 +510,7 @@ class StepClassifier:
             Array of step colors with shape (num_steps,)
         """
         num_steps = len(step_task_mapping)
-        step_colors = np.array([self.color_scheme['valid']] * num_steps)
+        step_colors = np.array([self.color_scheme['valid']] * num_steps, dtype=object)
         
         # Extract step violations
         step_violations = self.extract_step_violations_from_failures(
@@ -620,7 +621,7 @@ class StepClassifier:
             Array of step colors with shape (num_steps,)
         """
         num_steps = len(step_task_mapping)
-        step_colors = np.array([self.color_scheme['valid']] * num_steps)
+        step_colors = np.array([self.color_scheme['valid']] * num_steps, dtype=object)
         
         # Extract step violations
         step_violations = self.extract_step_violations_from_failures(
