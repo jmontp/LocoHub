@@ -73,7 +73,6 @@ def create_default_config(output_path: str) -> str:
 
 def validate_datasets(dataset_files: List[str], quality_threshold: float = 0.8) -> Dict[str, Any]:
     """Validate datasets before release."""
-    validator = DatasetValidator()
     validation_results = {}
     
     print(f"🔍 Validating {len(dataset_files)} datasets...")
@@ -83,7 +82,10 @@ def validate_datasets(dataset_files: List[str], quality_threshold: float = 0.8) 
         
         try:
             if dataset_file.endswith('_phase.parquet'):
-                result = validator.validate_dataset(dataset_file)
+                # Create validator for this specific dataset
+                validator = DatasetValidator(dataset_file, generate_plots=False)
+                locomotion_data = validator.load_dataset()
+                result = validator.validate_dataset(locomotion_data)
                 validation_results[os.path.basename(dataset_file)] = result
                 
                 # Check quality threshold
