@@ -1,0 +1,330 @@
+# MkDocs Configuration with Integrated Verification
+# 
+# Created: 2025-06-19 with user permission
+# Purpose: MkDocs config that validates content accuracy before deployment
+#
+# Intent: This configuration integrates verification systems into the documentation
+# build process, ensuring all content is validated against actual code implementation
+# before being deployed to users.
+
+site_name: 'Locomotion Data Standardization'
+site_description: 'Standardized biomechanical datasets with automated accuracy verification'
+site_url: 'https://locomotion-data-standardization.readthedocs.io'
+
+# Repository Configuration
+repo_name: 'locomotion-data-standardization'
+repo_url: 'https://github.com/jmontp/locomotion-data-standardization'
+edit_uri: 'edit/main/docs/'
+
+# Theme Configuration with Verification Status
+theme:
+  name: 'material'
+  custom_dir: 'docs/infrastructure/synchronized_mkdocs_config/overrides'
+  palette:
+    # Primary color scheme
+    - scheme: default
+      primary: 'blue'
+      accent: 'blue'
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - scheme: slate
+      primary: 'blue'
+      accent: 'blue'
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  
+  font:
+    text: 'Roboto'
+    code: 'Roboto Mono'
+  
+  features:
+    # Navigation
+    - navigation.tabs              # Top-level sections as tabs
+    - navigation.tabs.sticky       # Sticky navigation tabs
+    - navigation.sections          # Group sections in sidebar
+    - navigation.expand            # Expand sections by default
+    - navigation.path              # Show path breadcrumbs
+    - navigation.top               # Back to top button
+    
+    # Search
+    - search.highlight             # Highlight search terms
+    - search.share                 # Share search results
+    - search.suggest               # Search suggestions
+    
+    # Content
+    - content.code.copy            # Copy code blocks
+    - content.code.annotate        # Code annotations
+    - content.tabs.link            # Link similar content tabs
+    
+    # Header
+    - header.autohide              # Auto-hide header on scroll
+    
+    # Verification Status Display
+    - announce.dismiss             # Allow dismissing announcements
+
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+# Verification Integration Plugins
+plugins:
+  # Core MkDocs plugins
+  - search:
+      lang: en
+      separator: '[\s\-,:!=\[\]()"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
+  
+  # Custom verification plugins
+  - verify-code-examples:
+      enabled: true
+      python_executable: 'python3'
+      test_environment: 'docs/infrastructure/test_env'
+      timeout: 30
+      fail_on_error: true
+      exclude_patterns:
+        - '# SKIP-VERIFICATION'
+        - '# TODO:'
+  
+  - verify-api-docs:
+      enabled: true
+      source_paths:
+        - 'lib/'
+        - 'contributor_scripts/'
+      api_reference_path: 'docs/reference/api_reference.md'
+      fail_on_mismatch: true
+      generate_api_diff: true
+  
+  - verify-links:
+      enabled: true
+      check_internal: true
+      check_external: true
+      external_timeout: 10
+      fail_on_broken: true
+      exclude_external:
+        - 'http://localhost'
+        - 'https://example.com'
+  
+  - verify-file-references:
+      enabled: true
+      base_path: '.'
+      fail_on_missing: true
+      ignore_patterns:
+        - '*.tmp'
+        - '*.cache'
+  
+  - verify-features:
+      enabled: true
+      feature_test_path: 'docs/infrastructure/feature_tests/'
+      cli_test_timeout: 15
+      fail_on_feature_missing: true
+  
+  # Content enhancement plugins  
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: timeago
+      timezone: UTC
+      locale: en
+      fallback_to_build_date: false
+  
+  - git-authors:
+      show_contribution: true
+      show_line_count: true
+      count_empty_lines: false
+  
+  # Performance and optimization
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
+      htmlmin_opts:
+        remove_comments: true
+        remove_empty_space: true
+      cache_safe: true
+
+# Verification-Enhanced Markdown Extensions
+markdown_extensions:
+  # Standard extensions
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      title: "On this page"
+  - tables
+  
+  # Code highlighting with verification
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path: 
+        - '.'
+        - 'docs/infrastructure/verified_snippets'
+      check_paths: true
+      auto_append:
+        - 'docs/infrastructure/abbreviations.md'
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+        - name: verification-report
+          class: verification-report
+          format: !!python/name:docs.infrastructure.formatters.verification_report_format
+  
+  # Mathematical expressions
+  - pymdownx.arithmatex:
+      generic: true
+  
+  # Enhanced content features
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.tilde
+  
+  # Task lists and content tabs
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+
+# Navigation Structure with Verification Status
+nav:
+  - Home: 
+      - Overview: index.md
+      - Quick Start: getting_started/quick_start.md
+      - Documentation Status: infrastructure/verification_status.md
+  
+  - Getting Started:
+      - Installation: getting_started/installation.md
+      - First Dataset: getting_started/first_dataset.md
+      - Basic Analysis: getting_started/basic_analysis.md
+  
+  - User Guide:
+      - Working with Data: user_guide/working_with_data.md
+      - Validation Reports: user_guide/validation_reports.md
+      - Troubleshooting: user_guide/troubleshooting.md
+  
+  - Tutorials:
+      - Overview: tutorials/README.md
+      - Python:
+          - Getting Started: tutorials/python/getting_started_python.md
+          - Library Tutorial: tutorials/python/library_tutorial_python.md
+      - MATLAB:
+          - Getting Started: tutorials/matlab/getting_started_matlab.md
+          - Library Tutorial: tutorials/matlab/library_tutorial_matlab.md
+      - Testing Status: tutorials/TESTING_STATUS.md
+  
+  - Reference:
+      - API Reference: reference/api_reference.md
+      - Standard Specification: reference/standard_spec/standard_spec.md
+      - Dataset Documentation: reference/datasets_documentation/README.md
+      - Validation Rules: 
+          - Kinematic: reference/standard_spec/validation_expectations_kinematic.md
+          - Kinetic: reference/standard_spec/validation_expectations_kinetic.md
+  
+  - Contributor Guide:
+      - Overview: contributor_guide/overview.md
+      - Dataset Conversion: contributor_guide/dataset_conversion.md
+      - Validation Tuning: contributor_guide/validation_tuning.md
+      - Best Practices: contributor_guide/best_practices.md
+  
+  - Documentation Infrastructure:
+      - Verification Pipeline: infrastructure/verification_pipeline.md
+      - Accuracy Monitoring: infrastructure/accuracy_monitoring.md
+      - Truth-Focused Search: infrastructure/truth_focused_search.md
+      - Development Workflow: infrastructure/verification_workflow.md
+
+# Extra Configuration for Verification
+extra:
+  # Verification status display
+  verification:
+    enabled: true
+    badge_location: 'top-right'
+    show_last_validated: true
+    show_coverage_stats: true
+  
+  # Version and build info with verification
+  version:
+    provider: mike
+    default: latest
+    alias: true
+  
+  # Social links
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/jmontp/locomotion-data-standardization
+      name: GitHub Repository
+    - icon: fontawesome/solid/book
+      link: https://locomotion-data-standardization.readthedocs.io
+      name: Documentation
+  
+  # Analytics (if needed)
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/thumb-up-outline
+          name: This page was helpful
+          data: 1
+          note: >-
+            Thanks for your feedback!
+        - icon: material/thumb-down-outline
+          name: This page could be improved
+          data: 0
+          note: >-
+            Thanks for your feedback! Help us improve this page by
+            <a href="https://github.com/jmontp/locomotion-data-standardization/issues/new/?title=[Feedback]+{title}+-+{url}" target="_blank" rel="noopener">telling us what you found unhelpful.</a>
+
+# CSS and JavaScript for Verification Features
+extra_css:
+  - 'infrastructure/synchronized_mkdocs_config/stylesheets/verification.css'
+  - 'infrastructure/synchronized_mkdocs_config/stylesheets/enhanced-search.css'
+
+extra_javascript:
+  # MathJax for mathematical expressions
+  - 'javascripts/mathjax.js'
+  - 'https://polyfill.io/v3/polyfill.min.js?features=es6'
+  - 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
+  
+  # Custom verification scripts
+  - 'infrastructure/synchronized_mkdocs_config/javascripts/verification-status.js'
+  - 'infrastructure/synchronized_mkdocs_config/javascripts/interactive-examples.js'
+  - 'infrastructure/synchronized_mkdocs_config/javascripts/enhanced-search.js'
+
+# Build Configuration with Verification
+strict: true  # Fail build on warnings
+site_dir: 'site_verified'  # Separate output for verified builds
+
+# Hooks for verification integration
+hooks:
+  - 'docs/infrastructure/synchronized_mkdocs_config/hooks/pre_build_verification.py'
+  - 'docs/infrastructure/synchronized_mkdocs_config/hooks/post_build_validation.py'
+
+# Watch additional files for changes
+watch:
+  - 'lib/'
+  - 'contributor_scripts/'
+  - 'tests/'
+  - 'docs/infrastructure/'

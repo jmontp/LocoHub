@@ -1,0 +1,270 @@
+# Reality-Based MkDocs Configuration
+# Created: 2025-06-19 with user permission
+# Purpose: MkDocs configuration for truth-oriented documentation
+
+site_name: Locomotion Data Standardization
+site_description: Standardized biomechanical datasets with honest status reporting
+site_url: https://locomotion-data-standardization.example.com
+repo_url: https://github.com/example/locomotion-data-standardization
+repo_name: locomotion-data-standardization
+
+# Copyright and author info
+copyright: Copyright &copy; 2025 Locomotion Data Standardization Project
+
+# Theme configuration with reality-based styling
+theme:
+  name: material
+  custom_dir: docs/design/reality_based_mkdocs_theme/overrides
+  
+  # Color scheme supporting status-aware design
+  palette:
+    # Light mode - professional and scientific
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    
+    # Dark mode - with status-aware colors
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  
+  # Professional features
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - search.highlight
+    - search.share
+    - search.suggest
+    - content.code.copy
+    - content.code.select
+    - content.tabs.link
+    - toc.follow
+    - toc.integrate
+  
+  # Professional typography
+  font:
+    text: Inter
+    code: Roboto Mono
+  
+  # Icons and logo
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+  
+  # Favicon
+  favicon: assets/images/favicon.png
+
+# Custom CSS for status-aware styling
+extra_css:
+  - design/reality_based_mkdocs_theme/extra.css
+
+# Custom JavaScript for enhanced functionality
+extra_javascript:
+  - javascripts/status-enhancement.js
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+# Markdown extensions for enhanced functionality
+markdown_extensions:
+  # Python Markdown extensions
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      title: On this page
+  - tables
+  
+  # PyMdown Extensions for enhanced features
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Site navigation with status-aware organization
+nav:
+  - Home: index.md
+  
+  - Getting Started:
+    - Overview: getting_started/overview.md
+    - Installation: getting_started/installation.md
+    - Quick Start: getting_started/quick_start.md
+    - First Dataset: getting_started/first_dataset.md
+  
+  - User Guide:
+    - Working with Data: user_guide/working_with_data.md
+    - Validation Reports: user_guide/validation_reports.md
+    - Troubleshooting: user_guide/troubleshooting.md
+  
+  - Tutorials:
+    - Overview: tutorials/README.md
+    - Python:
+      - Getting Started: tutorials/python/getting_started_python.md
+      - Library Tutorial: tutorials/python/library_tutorial_python.md
+    - MATLAB:
+      - Getting Started: tutorials/matlab/getting_started_matlab.md
+      - Library Tutorial: tutorials/matlab/library_tutorial_matlab.md
+    - Testing Status: tutorials/TESTING_STATUS.md
+  
+  - Reference:
+    - API Reference: reference/api_reference.md
+    - Standard Specification:
+      - Overview: reference/standard_spec/README.md
+      - Core Specification: reference/standard_spec/standard_spec.md
+      - Units & Conventions: reference/standard_spec/units_and_conventions.md
+      - Task Definitions: reference/standard_spec/task_definitions.md
+      - Validation Expectations:
+        - Kinematic: reference/standard_spec/validation_expectations_kinematic.md
+        - Kinetic: reference/standard_spec/validation_expectations_kinetic.md
+    - Datasets Documentation:
+      - Overview: reference/datasets_documentation/README.md
+      - GTech 2023: reference/datasets_documentation/dataset_gtech_2023.md
+      - UMich 2021: reference/datasets_documentation/dataset_umich_2021.md
+      - AddBiomechanics: reference/datasets_documentation/dataset_addbiomechanics.md
+  
+  - Contributor Guide:
+    - Overview: contributor_guide/overview.md
+    - Dataset Conversion: contributor_guide/dataset_conversion.md
+    - Validation Tuning: contributor_guide/validation_tuning.md
+    - Best Practices: contributor_guide/best_practices.md
+
+# Plugins for enhanced functionality
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
+  - minify:
+      minify_html: true
+      minify_css: true
+      minify_js: true
+      htmlmin_opts:
+        remove_comments: true
+      cache_safe: true
+  - git-revision-date-localized:
+      type: date
+      timezone: UTC
+      locale: en
+      fallback_to_build_date: true
+  - git-authors:
+      show_contribution: true
+      show_line_count: true
+      count_empty_lines: false
+
+# Extra configuration
+extra:
+  # Version information
+  version:
+    provider: mike
+    default: latest
+  
+  # Social links
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/example/locomotion-data-standardization
+      name: GitHub Repository
+    - icon: fontawesome/solid/paper-plane
+      link: mailto:contact@locomotion-data.example.com
+      name: Contact Email
+  
+  # Analytics (if needed)
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/thumb-up-outline
+          name: This page was helpful
+          data: 1
+          note: Thanks for your feedback!
+        - icon: material/thumb-down-outline
+          name: This page could be improved
+          data: 0
+          note: >-
+            Thanks for your feedback! Help us improve this page by
+            <a href="https://github.com/example/locomotion-data-standardization/issues/new" target="_blank" rel="noopener">opening an issue</a>.
+  
+  # Feature status tracking
+  status:
+    last_updated: "2025-06-19"
+    system_version: "v1.0.0"
+    features:
+      locomotion_data: 
+        status: "available"
+        coverage: 95
+        verified: "2025-06-19"
+      phase_validation:
+        status: "available" 
+        coverage: 90
+        verified: "2025-06-19"
+      cli_tools:
+        status: "partial"
+        coverage: 75
+        verified: "2025-06-19"
+      tutorials:
+        status: "verified"
+        coverage: 85
+        verified: "2025-06-19"
+
+# Hooks for custom processing
+hooks:
+  - docs/design/reality_based_mkdocs_theme/status_processor.py
+
+# Watch additional files during development
+watch:
+  - docs/design/reality_based_mkdocs_theme/
+  - lib/
+  - tests/
+
+# Validation and strict mode
+strict: true
+dev_addr: "127.0.0.1:8000"
+
+# Build directory
+site_dir: site
+
+# Additional configuration for status-aware documentation
+extra_templates:
+  - docs/design/reality_based_mkdocs_theme/status_macros.html
