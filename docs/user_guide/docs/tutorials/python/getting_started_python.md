@@ -2,13 +2,64 @@
 
 [Skip to main content](#main-content)
 
-This tutorial provides a basic guide on how to work with standardized locomotion data using Python.
+**Learning Path**: [5-Minute Quick Start](#5-minute-quick-start) → [30-Minute Complete Guide](#30-minute-complete-guide) → [Advanced Library Tutorial](library_tutorial_python.md)
 
-<a name="main-content"></a> We'll cover common tasks such as joining different data sources (e.g., primary data and task data), filtering by specific criteria, and performing basic analyses like calculating averages for features.
+This tutorial provides a progressive guide for working with standardized locomotion data using Python, designed for different time commitments and skill levels.
 
-We will primarily use the [Pandas](https://pandas.pydata.org/) library, which is a powerful tool for data manipulation and analysis in Python.
+<a name="main-content"></a>
 
-## 0. Setup
+---
+
+## 5-Minute Quick Start
+**⏱️ Time Required**: 5 minutes  
+**Prerequisites**: Basic Python knowledge  
+**Goal**: Load data, view structure, create your first plot
+
+This ultra-quick introduction gets you analyzing locomotion data immediately.
+
+### Setup
+```bash
+pip install pandas matplotlib
+```
+
+### Load and Explore Data
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load sample data (use your own file path)
+df = pd.read_csv('locomotion_data.csv')
+print(f"Loaded {len(df)} rows with columns: {list(df.columns)}")
+print("\nFirst 3 rows:")
+print(df.head(3))
+```
+
+### Quick Visualization
+```python
+# Plot knee angle over time
+df_subset = df[df['task_id'] == df['task_id'].iloc[0]]  # First task only
+plt.figure(figsize=(10, 4))
+plt.plot(df_subset['time_s'], df_subset['knee_flexion_angle_rad'])
+plt.xlabel('Time (s)')
+plt.ylabel('Knee Angle (rad)')
+plt.title('Knee Flexion Angle - Quick View')
+plt.grid(True)
+plt.show()
+print("✅ Your first locomotion data plot is ready!")
+```
+
+**Next Steps**: Continue to the [30-Minute Complete Guide](#30-minute-complete-guide) for joining data, filtering by tasks, and phase-based analysis.
+
+---
+
+## 30-Minute Complete Guide
+**⏱️ Time Required**: 30 minutes  
+**Prerequisites**: Completed [5-Minute Quick Start](#5-minute-quick-start)  
+**Goal**: Master common workflows including data joining, task filtering, and phase-based analysis
+
+This section covers the essential workflows you'll use regularly in locomotion data analysis.
+
+### Extended Setup
 
 Ensure you have Pandas and Matplotlib installed. If not, you can install them using pip:
 
@@ -49,7 +100,7 @@ The code examples in this tutorial are designed to match the `test_python_tutori
 
 The test script wraps all operations in a `try...except` block to catch errors. For clarity, this tutorial presents code in separate blocks.
 
-## 1. Loading Your Data
+### 1. Loading Your Data
 
 Let's assume your standardized locomotion data is stored in CSV files. Create these files in the same directory where you are running your Python script.
 
@@ -105,7 +156,7 @@ except FileNotFoundError:
 
 This setup provides `df_locomotion` with time-series data and `df_tasks` with information about the tasks performed.
 
-## 2. Combining Locomotion Data with Task Data (Outer Join)
+### 2. Combining Locomotion Data with Task Data (Outer Join)
 
 To analyze locomotion features in the context of specific tasks, you'll often need to combine these datasets. An **outer join** is useful if you want to keep all records from both dataframes, filling in missing values with `NaN` where a match isn't found. In Pandas, `pd.merge()` is used for this.
 
@@ -127,7 +178,7 @@ print(df_combined.head(3))
 *   You might have task definitions for which no locomotion data was recorded (they will also be included, though less common in this specific example structure).
 In many cases, a `left` join (keeping all records from `df_locomotion` and matching task info) or an `inner` join (keeping only records where the key combination exists in both) might be more appropriate depending on your specific data and analysis goals.
 
-## 3. Filtering for a Particular Task
+### 3. Filtering for a Particular Task
 
 Once your data is combined, you can easily filter it to focus on a specific task. For example, let's filter the data for the 'incline_walking' task.
 
@@ -143,7 +194,7 @@ print(df_incline_walking)
 
 This allows you to isolate the data segments relevant to your particular research question or analysis.
 
-## 4. Phase-Based Averaging for Gait Analysis
+### 4. Phase-Based Averaging for Gait Analysis
 
 A common operation in biomechanics is to normalize gait cycles to 0-100% phase and then generate average curves across multiple steps or subjects. This allows for comparing gait patterns regardless of differences in cycle duration.
 
@@ -192,7 +243,7 @@ for task, data in phase_by_task.items():
 
 Note: The standardized data format may also provide data already indexed by phase (e.g., in Parquet files), typically with 150 equally spaced points per gait cycle. Working with such pre-processed phase-indexed data can simplify these types of analyses.
 
-## 5. Basic Plotting
+### 5. Basic Plotting
 
 Visualizing your data is a crucial step. Matplotlib is a widely used library for plotting in Python.
 The test script saves plots to files rather than displaying them interactively.
@@ -238,7 +289,7 @@ else:
 
 ```
 
-## 6. Calculating Derived Metrics
+### 6. Calculating Derived Metrics
 
 Often, you'll need to compute new metrics from your existing data.
 
@@ -268,9 +319,19 @@ else:
 print("\nPython tutorial operations completed (mimicking test script structure).")
 ```
 
-## Conclusion
+**🎉 Congratulations!** You've completed the 30-minute guide and can now:
+- Join locomotion data with task information
+- Filter data by specific tasks or conditions  
+- Perform phase-based analysis for gait cycle comparisons
+- Create visualizations and calculate derived metrics
 
-This tutorial covered basic operations for handling standardized locomotion data in Python:
+**Ready for Advanced Analysis?** Continue to the [Advanced Library Tutorial](library_tutorial_python.md) for 3D data operations, validation, statistical analysis, and batch processing.
+
+---
+
+## Summary
+
+This tutorial covered progressive operations for handling standardized locomotion data in Python:
 *   Loading data with Pandas.
 *   Joining different data sources using `pd.merge()`.
 *   Filtering data based on task information or other criteria.

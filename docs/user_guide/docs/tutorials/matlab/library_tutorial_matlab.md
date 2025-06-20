@@ -1,10 +1,12 @@
-# MATLAB Library Tutorial for Locomotion Data Analysis
+# Advanced MATLAB Library Tutorial for Locomotion Data Analysis
 
 [Skip to main content](#main-content)
 
-This tutorial demonstrates how to use the **LocomotionData** class and helper functions for efficient analysis of standardized locomotion data in MATLAB.
+**⏱️ Time Required**: 60+ minutes  
+**Prerequisites**: Completed [Getting Started Tutorial](getting_started_matlab.md)  
+**Learning Path**: [5-Min Quick Start](getting_started_matlab.md#5-minute-quick-start) → [30-Min Complete Guide](getting_started_matlab.md#30-minute-complete-guide) → **Advanced Library Tutorial** ← *You are here*
 
-<a name="main-content"></a> The library provides both object-oriented and functional approaches for common operations.
+<a name="main-content"></a> This advanced tutorial demonstrates the **LocomotionData** class and helper functions for efficient analysis of standardized locomotion data, including object-oriented approaches, 3D array operations, statistical validation, and batch processing workflows.
 
 ## Prerequisites
 
@@ -630,5 +632,21 @@ This tutorial covered the main features of the MATLAB LocomotionData library:
 - `exportToCSV()` - Data export
 
 The library provides efficient, validated methods for analyzing standardized locomotion data while maintaining MATLAB's familiar syntax and functionality.
+
+### What You've Mastered
+After completing this advanced tutorial, you can:
+- **Use object-oriented and functional approaches** for different programming styles
+- **Efficiently process large datasets** using 3D array operations
+- **Validate data quality** with automated biomechanical constraints
+- **Perform statistical analysis** including variability and outlier detection
+- **Create publication-quality visualizations** with customizable plots
+- **Handle batch processing** for multiple subjects and conditions
+- **Export results** for further analysis or reporting
+
+### Next Steps
+- Apply these techniques to your own locomotion datasets
+- Integrate with MATLAB toolboxes (Statistics, Signal Processing, Machine Learning)
+- Develop custom visualization functions for specific research needs
+- Create automated analysis pipelines for routine data processing
 
 For more advanced usage, see the source code in `source/lib/matlab/` which includes additional customization options and implementation details.

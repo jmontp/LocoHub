@@ -1,10 +1,12 @@
-# Python Library Tutorial for Locomotion Data Analysis
+# Advanced Python Library Tutorial for Locomotion Data Analysis
 
 [Skip to main content](#main-content)
 
-This tutorial demonstrates how to use the **LocomotionData** library for efficient analysis of standardized locomotion data.
+**⏱️ Time Required**: 60+ minutes  
+**Prerequisites**: Completed [Getting Started Tutorial](getting_started_python.md)  
+**Learning Path**: [5-Min Quick Start](getting_started_python.md#5-minute-quick-start) → [30-Min Complete Guide](getting_started_python.md#30-minute-complete-guide) → **Advanced Library Tutorial** ← *You are here*
 
-<a name="main-content"></a> The library provides a high-level interface for common operations like loading data, filtering, phase-based analysis, validation, and visualization.
+<a name="main-content"></a> This advanced tutorial demonstrates the **LocomotionData** library for efficient analysis of standardized locomotion data, including 3D array operations, statistical validation, and batch processing workflows.
 
 ## Prerequisites
 
@@ -437,5 +439,20 @@ This tutorial covered the main features of the LocomotionData library:
 - **Batch processing** for multiple subjects
 
 The library provides a powerful, efficient interface for analyzing standardized locomotion data while maintaining the flexibility to access underlying data structures when needed.
+
+### What You've Mastered
+After completing this advanced tutorial, you can:
+- **Efficiently process large datasets** using 3D array operations
+- **Validate data quality** with automated biomechanical constraints
+- **Perform statistical analysis** including variability and outlier detection
+- **Create publication-quality visualizations** with multiple plot styles
+- **Handle batch processing** for multiple subjects and conditions
+- **Export results** for further analysis or reporting
+
+### Next Steps
+- Apply these techniques to your own locomotion datasets
+- Combine with machine learning libraries (scikit-learn, TensorFlow) for advanced modeling
+- Integrate with biomechanical simulation tools
+- Develop custom validation rules for specific research questions
 
 For more advanced usage, see the source code in `lib/core/locomotion_analysis.py` which includes additional methods and customization options.

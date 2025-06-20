@@ -2,9 +2,56 @@
 
 [Skip to main content](#main-content)
 
-This tutorial provides a basic guide on how to work with standardized locomotion data using MATLAB.
+**Learning Path**: [5-Minute Quick Start](#5-minute-quick-start) → [30-Minute Complete Guide](#30-minute-complete-guide) → [Advanced Library Tutorial](library_tutorial_matlab.md)
 
-<a name="main-content"></a> We'll cover common tasks such as joining different data sources (e.g., primary data and task data), filtering by specific criteria, and performing basic analyses like calculating averages for features.
+This tutorial provides a progressive guide for working with standardized locomotion data using MATLAB, designed for different time commitments and skill levels.
+
+<a name="main-content"></a>
+
+---
+
+## 5-Minute Quick Start
+**⏱️ Time Required**: 5 minutes  
+**Prerequisites**: Basic MATLAB knowledge  
+**Goal**: Load data, view structure, create your first plot
+
+This ultra-quick introduction gets you analyzing locomotion data immediately.
+
+### Load and Explore Data
+```matlab
+% Load sample data (use your own file path)
+tbl = readtable('locomotion_data.csv');
+fprintf('Loaded %d rows with %d columns\n', height(tbl), width(tbl));
+fprintf('Columns: %s\n', strjoin(tbl.Properties.VariableNames, ', '));
+disp('First 3 rows:');
+disp(tbl(1:3,:));
+```
+
+### Quick Visualization
+```matlab
+% Plot knee angle over time for first task
+firstTask = tbl.task_id(1);
+tblSubset = tbl(tbl.task_id == firstTask, :);
+
+figure;
+plot(tblSubset.time_s, tblSubset.knee_flexion_angle_rad, 'b-', 'LineWidth', 1.5);
+xlabel('Time (s)');
+ylabel('Knee Angle (rad)');
+title('Knee Flexion Angle - Quick View');
+grid on;
+fprintf('✅ Your first locomotion data plot is ready!\n');
+```
+
+**Next Steps**: Continue to the [30-Minute Complete Guide](#30-minute-complete-guide) for joining data, filtering by tasks, and phase-based analysis.
+
+---
+
+## 30-Minute Complete Guide
+**⏱️ Time Required**: 30 minutes  
+**Prerequisites**: Completed [5-Minute Quick Start](#5-minute-quick-start)  
+**Goal**: Master common workflows including data joining, task filtering, and phase-based analysis
+
+This section covers the essential workflows you'll use regularly in locomotion data analysis.
 
 MATLAB's built-in table data type and functions are well-suited for these operations.
 
@@ -17,7 +64,7 @@ The code examples in this tutorial are designed to match the `test_matlab_tutori
 
 The test script wraps all operations in a `try...catch ME ... end` block to handle errors. For clarity, this tutorial presents code in separate blocks where logical, but aims to reflect the test script's flow.
 
-## 1. Loading Your Data
+### 1. Loading Your Data
 
 Let's assume your standardized locomotion data is stored in CSV files. MATLAB can easily import this data into `table` objects.
 
@@ -76,7 +123,7 @@ end
 
 This setup provides `tblLocomotion` with time-series data and `tblTasks` with information about the tasks performed.
 
-## 2. Combining Locomotion Data with Task Data (Outer Join)
+### 2. Combining Locomotion Data with Task Data (Outer Join)
 
 To analyze locomotion features in the context of specific tasks, you'll combine these tables. An **outer join** keeps all rows from both tables, filling in missing values with appropriate fill values (e.g., `NaN` for numeric, `<missing>` for categorical/string) where a match isn't found. In MATLAB, `outerjoin` is used for this.
 
@@ -103,7 +150,7 @@ disp(tblCombined(1:3,:)); % Display first 3 rows, matching test script
 *   You might have task definitions for which no locomotion data was recorded (they will also be included).
 In many cases, a `leftjoin` or `innerjoin` might be more appropriate depending on your specific data and analysis goals.
 
-## 3. Filtering for a Particular Task
+### 3. Filtering for a Particular Task
 
 Once your data is combined, you can easily filter it to focus on a specific task. For example, let's filter the data for the 'incline_walking' task.
 
@@ -129,7 +176,7 @@ disp(tblInclineWalking);
 
 This allows you to isolate the data segments relevant to your particular research question or analysis.
 
-## 4. Phase-Based Averaging for Gait Analysis
+### 4. Phase-Based Averaging for Gait Analysis
 
 A common operation in biomechanics is to normalize gait cycles to 0-100% phase and then generate average curves. This allows for comparing gait patterns regardless of differences in cycle duration.
 
@@ -239,7 +286,7 @@ end
 
 Note: The standardized data format may also provide data already indexed by phase (e.g., in Parquet files). MATLAB can read Parquet files using `parquetread()` (requires appropriate setup/addons if not built-in to your version).
 
-## 5. Basic Plotting
+### 5. Basic Plotting
 
 Visualizing your data is essential. MATLAB has powerful built-in plotting capabilities. The test script saves plots to files.
 
@@ -285,7 +332,7 @@ else
 end
 ```
 
-## 6. Calculating Derived Metrics
+### 6. Calculating Derived Metrics
 
 Often, you'll need to compute new metrics from your existing data.
 
@@ -341,9 +388,19 @@ end
 disp('MATLAB tutorial operations completed (mimicking test script structure).');
 ```
 
-## Conclusion
+**🎉 Congratulations!** You've completed the 30-minute guide and can now:
+- Join locomotion data with task information using table operations
+- Filter data by specific tasks or conditions
+- Perform phase-based analysis for gait cycle comparisons
+- Create visualizations and calculate derived metrics
 
-This tutorial covered basic operations for handling standardized locomotion data in MATLAB:
+**Ready for Advanced Analysis?** Continue to the [Advanced Library Tutorial](library_tutorial_matlab.md) for object-oriented approaches, 3D data operations, statistical validation, and batch processing.
+
+---
+
+## Summary
+
+This tutorial covered progressive operations for handling standardized locomotion data in MATLAB:
 *   Loading data into tables using `readtable`.
 *   Joining different tables using `outerjoin` (and `innerjoin` for specific analyses).
 *   Filtering tables based on task information or other criteria.
