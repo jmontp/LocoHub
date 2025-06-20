@@ -1,0 +1,248 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Locomotion Data Analysis - System Performance",
+    "tags": ["locomotion", "biomechanics", "system"],
+    "timezone": "browser",
+    "schemaVersion": 30,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Container Resource Utilization",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "avg(rate(container_cpu_usage_seconds_total{name=~\"matlab-dev|python-analysis\"}[5m])) * 100",
+            "legendFormat": "CPU Usage %",
+            "refId": "A"
+          },
+          {
+            "expr": "avg(container_memory_usage_bytes{name=~\"matlab-dev|python-analysis\"} / container_spec_memory_limit_bytes) * 100",
+            "legendFormat": "Memory Usage %",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 70},
+                {"color": "red", "value": 90}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "MATLAB License Status",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "matlab_runtime_status",
+            "legendFormat": "MATLAB Runtime",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"type": "value", "value": "1", "text": "Active"},
+              {"type": "value", "value": "0", "text": "Inactive"}
+            ],
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "green", "value": 1}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Data Processing Performance",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 6},
+        "targets": [
+          {
+            "expr": "rate(locomotion_data_processing_duration_seconds_sum[5m]) / rate(locomotion_data_processing_duration_seconds_count[5m])",
+            "legendFormat": "Avg Processing Time - {{dataset_type}}",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(locomotion_data_processing_duration_seconds_count[5m])",
+            "legendFormat": "Processing Rate - {{dataset_type}}",
+            "refId": "B"
+          }
+        ],
+        "xAxis": {"show": true},
+        "yAxes": [
+          {
+            "label": "Seconds",
+            "show": true,
+            "min": 0
+          },
+          {
+            "label": "Rate (ops/sec)",
+            "show": true,
+            "min": 0
+          }
+        ],
+        "legend": {"show": true}
+      },
+      {
+        "id": 4,
+        "title": "Validation Metrics",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14},
+        "targets": [
+          {
+            "expr": "rate(locomotion_validation_failures_total[5m])",
+            "legendFormat": "Validation Failures - {{validation_type}}",
+            "refId": "A"
+          },
+          {
+            "expr": "gait_cycle_validation_accuracy",
+            "legendFormat": "Validation Accuracy - {{subject}}",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Failures/sec",
+            "show": true,
+            "min": 0
+          },
+          {
+            "label": "Accuracy %",
+            "show": true,
+            "min": 90,
+            "max": 100
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Memory Usage by Container",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 14},
+        "targets": [
+          {
+            "expr": "locomotion_memory_usage_bytes{processing_stage=\"data_loading\"}",
+            "legendFormat": "Data Loading - {{container_id}}",
+            "refId": "A"
+          },
+          {
+            "expr": "locomotion_memory_usage_bytes{processing_stage=\"analysis\"}",
+            "legendFormat": "Analysis - {{container_id}}",
+            "refId": "B"
+          },
+          {
+            "expr": "locomotion_memory_usage_bytes{processing_stage=\"visualization\"}",
+            "legendFormat": "Visualization - {{container_id}}",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Bytes",
+            "show": true,
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Processing Queue Status",
+        "type": "singlestat",
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 22},
+        "targets": [
+          {
+            "expr": "dataset_processing_queue_length",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 5},
+                {"color": "red", "value": 15}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Container Health Status",
+        "type": "table",
+        "gridPos": {"h": 4, "w": 16, "x": 8, "y": 22},
+        "targets": [
+          {
+            "expr": "up{job=~\"matlab-metrics|python-analysis|health-checks\"}",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "columns": [
+                {"text": "Service", "value": "job"},
+                {"text": "Instance", "value": "instance"},
+                {"text": "Status", "value": "Value"}
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "container",
+          "type": "query",
+          "query": "label_values(container_memory_usage_bytes, name)",
+          "refresh": 1,
+          "multi": true,
+          "includeAll": true
+        },
+        {
+          "name": "dataset_type",
+          "type": "query", 
+          "query": "label_values(locomotion_data_processing_duration_seconds, dataset_type)",
+          "refresh": 1,
+          "multi": true,
+          "includeAll": true
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "prometheus",
+          "expr": "changes(up[1m]) > 0",
+          "titleFormat": "Service {{job}} changed state",
+          "textFormat": "Service state changed on {{instance}}"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,162 @@
+# Prometheus Configuration for Locomotion Data Analysis Monitoring
+#
+# Created: 2025-06-20 with user permission  
+# Purpose: Prometheus monitoring configuration for biomechanical data processing systems
+#
+# Intent: Configure comprehensive monitoring of MATLAB/Python analysis workflows,
+# container health, data processing metrics, and system performance.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: 'locomotion-analysis'
+    cluster: 'biomechanics-research'
+
+# Rules for alerting
+rule_files:
+  - "rules/*.yml"
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Container monitoring (cAdvisor)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 5s
+    metrics_path: /metrics
+
+  # Node monitoring (host system metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 10s
+
+  # MATLAB application metrics
+  - job_name: 'matlab-metrics'
+    static_configs:
+      - targets: ['matlab-dev:9091']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    params:
+      format: ['prometheus']
+
+  # Python analysis metrics
+  - job_name: 'python-analysis'
+    static_configs:
+      - targets: ['python-analysis:8000']
+    scrape_interval: 15s
+    metrics_path: /metrics
+
+  # Custom biomechanical data processing metrics
+  - job_name: 'locomotion-processing'
+    static_configs:
+      - targets: ['locomotion-processor:9092']
+    scrape_interval: 10s
+    honor_labels: true
+    params:
+      collect[]:
+        - 'locomotion_data_processing_duration_seconds'
+        - 'locomotion_validation_failures_total'
+        - 'locomotion_memory_usage_bytes'
+        - 'matlab_runtime_status'
+        - 'dataset_processing_queue_length'
+        - 'gait_cycle_validation_accuracy'
+
+  # Kubernetes monitoring (if deployed on k8s)
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - locomotion-analysis
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+
+  # Application-specific health checks
+  - job_name: 'health-checks'
+    static_configs:
+      - targets: 
+          - 'matlab-dev:8080'
+          - 'python-analysis:8888'
+    scrape_interval: 30s
+    metrics_path: /health
+    scrape_timeout: 5s
+
+  # License server monitoring (MATLAB)
+  - job_name: 'matlab-license-server'
+    static_configs:
+      - targets: ['license-server:27000']
+    scrape_interval: 60s
+    metrics_path: /license_status
+    params:
+      format: ['json']
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'matlab_license_(.*)'
+        target_label: license_type
+        replacement: '${1}'
+
+# Recording rules for common queries
+recording_rules:
+  - name: locomotion_analysis.rules
+    rules:
+      # Average processing time per dataset type
+      - record: locomotion:processing_time_avg_5m
+        expr: rate(locomotion_data_processing_duration_seconds_sum[5m]) / rate(locomotion_data_processing_duration_seconds_count[5m])
+        labels:
+          job: locomotion-processing
+
+      # Validation failure rate
+      - record: locomotion:validation_failure_rate_5m
+        expr: rate(locomotion_validation_failures_total[5m])
+        labels:
+          job: locomotion-processing
+
+      # Memory utilization percentage
+      - record: locomotion:memory_utilization_pct
+        expr: (locomotion_memory_usage_bytes / container_spec_memory_limit_bytes) * 100
+        labels:
+          job: container-monitoring
+
+      # Processing queue health
+      - record: locomotion:queue_health_status
+        expr: |
+          (
+            (dataset_processing_queue_length < 10) * 1 +
+            (rate(locomotion_data_processing_duration_seconds_count[5m]) > 0) * 1
+          ) / 2
+        labels:
+          job: locomotion-processing
