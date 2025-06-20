@@ -1,6 +1,10 @@
 # Getting Started with MATLAB for Locomotion Data Analysis
 
-This tutorial provides a basic guide on how to work with standardized locomotion data using MATLAB. We'll cover common tasks such as joining different data sources (e.g., primary data and task data), filtering by specific criteria, and performing basic analyses like calculating averages for features.
+[Skip to main content](#main-content)
+
+This tutorial provides a basic guide on how to work with standardized locomotion data using MATLAB.
+
+<a name="main-content"></a> We'll cover common tasks such as joining different data sources (e.g., primary data and task data), filtering by specific criteria, and performing basic analyses like calculating averages for features.
 
 MATLAB's built-in table data type and functions are well-suited for these operations.
 
@@ -295,7 +299,7 @@ We use `tblPhaseWithTask` from Section 4 which contains `task_name`.
 % Filter for level_walking task
 if iscellstr(tblPhaseWithTask.task_name) || isstring(tblPhaseWithTask.task_name)
     is_level_walking = strcmp(tblPhaseWithTask.task_name, 'level_walking');
-elsel
+else
     is_level_walking = tblPhaseWithTask.task_name == 'level_walking';
 end
 tblLevelWalking = tblPhaseWithTask(is_level_walking, :);

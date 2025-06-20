@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-Automated Fine-Tuning System
+Automated Fine-Tuning System - SUSPENDED PENDING BIOMECHANICAL VALIDATION
 
 Created: 2025-06-11 with user permission
 Purpose: Automated validation range setting using simple statistical methods
+
+**IMPORTANT: This system is suspended as of 2025-06-20 pending integration of biomechanical constraints**
+See biomechanical_constraints_requirements.md for details on required validation.
 
 Intent:
 This system automatically sets validation ranges by analyzing the actual data distribution

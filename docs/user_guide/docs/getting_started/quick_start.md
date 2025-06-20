@@ -1,9 +1,25 @@
 # Quick Start Guide
 
+[Skip to main content](#main-content)
+
 Get up and running with standardized locomotion data in 5 minutes.
+
+<a name="main-content"></a>
 
 !!! tip "Prerequisites"
     Make sure you've completed the [Installation](installation/) first.
+
+## Biomechanics Primer
+
+!!! info "New to Gait Analysis?"
+    **Gait Cycle**: The walking pattern from heel strike to the next heel strike of the same foot (typically 1-2 seconds)
+    
+    **Phase-Indexed Data**: Normalizes each gait cycle to exactly 150 data points (0-100% of cycle), enabling comparison across different walking speeds and individuals
+    
+    **Key Variables**: 
+    - Joint angles (knee_flexion_angle) measure how much joints bend/extend
+    - Joint moments (hip_moment) measure forces acting around joints
+    - Ipsilateral/Contralateral: Same-side vs opposite-side relative to a reference
 
 ## What You'll Learn
 

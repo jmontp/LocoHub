@@ -1,6 +1,10 @@
 # Python Library Tutorial for Locomotion Data Analysis
 
-This tutorial demonstrates how to use the **LocomotionData** library for efficient analysis of standardized locomotion data. The library provides a high-level interface for common operations like loading data, filtering, phase-based analysis, validation, and visualization.
+[Skip to main content](#main-content)
+
+This tutorial demonstrates how to use the **LocomotionData** library for efficient analysis of standardized locomotion data.
+
+<a name="main-content"></a> The library provides a high-level interface for common operations like loading data, filtering, phase-based analysis, validation, and visualization.
 
 ## Prerequisites
 

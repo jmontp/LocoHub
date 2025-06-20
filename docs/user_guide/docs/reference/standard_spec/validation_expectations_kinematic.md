@@ -1,8 +1,12 @@
 # Kinematic Validation Expectations Specification
 
+[Skip to main content](#main-content)
+
 **Single Source of Truth for Biomechanically Accurate Kinematic Validation Rules**
 
-This document provides biomechanically verified kinematic validation ranges (joint angles) based on published gait analysis literature. The specification uses a modern phase system (0%, 25%, 50%, 75%) with contralateral offset logic for optimal validation efficiency.
+This document provides biomechanically verified kinematic validation ranges (joint angles) based on published gait analysis literature.
+
+<a name="main-content"></a> The specification uses a modern phase system (0%, 25%, 50%, 75%) with contralateral offset logic for optimal validation efficiency.
 
 > **📊 Related**: See [validation_expectations_kinetic.md](validation_expectations_kinetic.md) for kinetic validation rules (forces and moments).
 
@@ -59,11 +63,11 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 | Phase 0% (Heel Strike) | Phase 25% (Mid-Stance) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Decline Walking Forward Kinematics Heel Strike](validation/decline_walking_forward_kinematics_phase_00_range.png) | ![Decline Walking Forward Kinematics Mid-Stance](validation/decline_walking_forward_kinematics_phase_25_range.png) | ![Decline Walking Forward Kinematics Toe-Off](validation/decline_walking_forward_kinematics_phase_50_range.png) | ![Decline Walking Forward Kinematics Mid-Swing](validation/decline_walking_forward_kinematics_phase_75_range.png) |
+| ![Joint angle stick figures during decline walking at heel strike (0% gait cycle): ankle plantarflexed, knee extended, hip neutral position](validation/decline_walking_forward_kinematics_phase_00_range.png) | ![Joint angle stick figures during decline walking at mid-stance (25% gait cycle): ankle dorsiflexed, knee flexed ~15°, hip slightly extended](validation/decline_walking_forward_kinematics_phase_25_range.png) | ![Joint angle stick figures during decline walking at toe-off (50% gait cycle): ankle plantarflexed, knee extended, hip flexed ~20°](validation/decline_walking_forward_kinematics_phase_50_range.png) | ![Joint angle stick figures during decline walking at mid-swing (75% gait cycle): ankle dorsiflexed, knee flexed ~60°, hip flexed ~30°](validation/decline_walking_forward_kinematics_phase_75_range.png) |
 
 **Filters by Phase Validation:**
 
-![Decline Walking Kinematic Filters by Phase](validation/decline_walking_kinematic_filters_by_phase.png)
+![Phase-based kinematic validation plots for decline walking showing hip, knee, and ankle joint angle ranges across 0-100% gait cycle with statistical boundaries and data distribution](validation/decline_walking_kinematic_filters_by_phase.png)
 
 ---
 
@@ -92,11 +96,11 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 | Phase 0% (Heel Strike) | Phase 25% (Mid-Stance) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Incline Walking Forward Kinematics Heel Strike](validation/incline_walking_forward_kinematics_phase_00_range.png) | ![Incline Walking Forward Kinematics Mid-Stance](validation/incline_walking_forward_kinematics_phase_25_range.png) | ![Incline Walking Forward Kinematics Toe-Off](validation/incline_walking_forward_kinematics_phase_50_range.png) | ![Incline Walking Forward Kinematics Mid-Swing](validation/incline_walking_forward_kinematics_phase_75_range.png) |
+| ![Joint angle stick figures during incline walking at heel strike (0% gait cycle): ankle neutral, knee extended, hip slightly flexed for ground clearance](validation/incline_walking_forward_kinematics_phase_00_range.png) | ![Joint angle stick figures during incline walking at mid-stance (25% gait cycle): ankle dorsiflexed, knee flexed ~20°, hip extended to accommodate slope](validation/incline_walking_forward_kinematics_phase_25_range.png) | ![Joint angle stick figures during incline walking at toe-off (50% gait cycle): ankle plantarflexed, knee extended, hip flexed ~25° for propulsion](validation/incline_walking_forward_kinematics_phase_50_range.png) | ![Joint angle stick figures during incline walking at mid-swing (75% gait cycle): ankle dorsiflexed, knee flexed ~65°, hip flexed ~35° for ground clearance](validation/incline_walking_forward_kinematics_phase_75_range.png) |
 
 **Filters by Phase Validation:**
 
-![Incline Walking Kinematic Filters by Phase](validation/incline_walking_kinematic_filters_by_phase.png)
+![Phase-based kinematic validation plots for incline walking showing hip, knee, and ankle joint angle ranges across 0-100% gait cycle with increased hip flexion and knee flexion to accommodate uphill terrain demands](validation/incline_walking_kinematic_filters_by_phase.png)
 
 ---
 
@@ -125,11 +129,11 @@ This document provides biomechanically verified kinematic validation ranges (joi
 
 | Phase 0% (Heel Strike) | Phase 25% (Mid-Stance) | Phase 50% (Toe-Off) | Phase 75% (Mid-Swing) |
 |---|---|---|---|
-| ![Level Walking Forward Kinematics Heel Strike](validation/level_walking_forward_kinematics_phase_00_range.png) | ![Level Walking Forward Kinematics Mid-Stance](validation/level_walking_forward_kinematics_phase_25_range.png) | ![Level Walking Forward Kinematics Toe-Off](validation/level_walking_forward_kinematics_phase_50_range.png) | ![Level Walking Forward Kinematics Mid-Swing](validation/level_walking_forward_kinematics_phase_75_range.png) |
+| ![Joint angle stick figures during level walking at heel strike (0% gait cycle): ankle neutral to slightly dorsiflexed, knee extended, hip neutral position for initial contact](validation/level_walking_forward_kinematics_phase_00_range.png) | ![Joint angle stick figures during level walking at mid-stance (25% gait cycle): ankle dorsiflexed, knee flexed ~15°, hip slightly extended for weight acceptance](validation/level_walking_forward_kinematics_phase_25_range.png) | ![Joint angle stick figures during level walking at toe-off (50% gait cycle): ankle plantarflexed, knee extended, hip flexed ~20° for push-off propulsion](validation/level_walking_forward_kinematics_phase_50_range.png) | ![Joint angle stick figures during level walking at mid-swing (75% gait cycle): ankle dorsiflexed, knee flexed ~60°, hip flexed ~30° for limb advancement](validation/level_walking_forward_kinematics_phase_75_range.png) |
 
 **Filters by Phase Validation:**
 
-![Level Walking Kinematic Filters by Phase](validation/level_walking_kinematic_filters_by_phase.png)
+![Phase-based kinematic validation plots for level walking showing hip, knee, and ankle joint angle ranges across 0-100% gait cycle with typical normal walking patterns and bilateral coordination](validation/level_walking_kinematic_filters_by_phase.png)
 
 ## Joint Validation Range Summary
 

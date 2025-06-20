@@ -41,7 +41,7 @@ This document provides biomechanically verified kinetic validation ranges (force
 
 **Filters by Phase Validation:**
 
-![Decline Walking Kinetic Filters by Phase](validation/decline_walking_kinetic_filters_by_phase.png)
+![Kinetic validation ranges for decline walking showing joint moments and ground reaction forces across gait cycle phases (0%, 25%, 50%, 75%), with expected patterns including increased plantarflexor moments during late stance and higher braking forces during early stance compared to level walking](validation/decline_walking_kinetic_filters_by_phase.png)
 
 ---
 
@@ -62,7 +62,7 @@ This document provides biomechanically verified kinetic validation ranges (force
 
 **Filters by Phase Validation:**
 
-![Incline Walking Kinetic Filters by Phase](validation/incline_walking_kinetic_filters_by_phase.png)
+![Kinetic validation ranges for incline walking displaying joint moment patterns and ground reaction forces throughout gait cycle phases (0%, 25%, 50%, 75%), featuring elevated hip extensor moments during early stance and increased ankle plantarflexor moments during push-off compared to level walking](validation/incline_walking_kinetic_filters_by_phase.png)
 
 ---
 
@@ -83,7 +83,7 @@ This document provides biomechanically verified kinetic validation ranges (force
 
 **Filters by Phase Validation:**
 
-![Level Walking Kinetic Filters by Phase](validation/level_walking_kinetic_filters_by_phase.png)
+![Kinetic validation ranges for level walking demonstrating typical joint moment patterns and ground reaction forces across gait cycle phases (0%, 25%, 50%, 75%), showing characteristic double-peak vertical ground reaction forces, knee extensor moments during loading response, and ankle plantarflexor moments during terminal stance](validation/level_walking_kinetic_filters_by_phase.png)
 
 ## Research Requirements
 

@@ -1,6 +1,10 @@
 # MATLAB Library Tutorial for Locomotion Data Analysis
 
-This tutorial demonstrates how to use the **LocomotionData** class and helper functions for efficient analysis of standardized locomotion data in MATLAB. The library provides both object-oriented and functional approaches for common operations.
+[Skip to main content](#main-content)
+
+This tutorial demonstrates how to use the **LocomotionData** class and helper functions for efficient analysis of standardized locomotion data in MATLAB.
+
+<a name="main-content"></a> The library provides both object-oriented and functional approaches for common operations.
 
 ## Prerequisites
 

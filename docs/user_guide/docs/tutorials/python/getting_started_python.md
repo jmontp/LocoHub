@@ -1,6 +1,10 @@
 # Getting Started with Python for Locomotion Data Analysis
 
-This tutorial provides a basic guide on how to work with standardized locomotion data using Python. We'll cover common tasks such Datalab joining different data sources (e.g., primary data and task data), filtering by specific criteria, and performing basic analyses like calculating averages for features.
+[Skip to main content](#main-content)
+
+This tutorial provides a basic guide on how to work with standardized locomotion data using Python.
+
+<a name="main-content"></a> We'll cover common tasks such as joining different data sources (e.g., primary data and task data), filtering by specific criteria, and performing basic analyses like calculating averages for features.
 
 We will primarily use the [Pandas](https://pandas.pydata.org/) library, which is a powerful tool for data manipulation and analysis in Python.
 
