@@ -1,0 +1,362 @@
+# Test Coverage Configuration for R Package
+# 
+# Created: 2025-06-19 with user permission
+# Purpose: Detailed test coverage analysis and reporting configuration
+#
+# Intent: Provide comprehensive test coverage metrics with detailed reporting,
+# integration with code quality tools, and coverage tracking over time.
+
+name: Detailed Test Coverage
+
+on:
+  push:
+    branches: [ main, phase1-implementation ]
+    paths:
+      - 'source/lib/r/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'source/lib/r/**'
+
+jobs:
+  coverage-analysis:
+    runs-on: ubuntu-latest
+    name: Comprehensive Coverage Analysis
+    
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup R environment
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Setup R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: source/lib/r
+          extra-packages: |
+            any::covr
+            any::testthat
+            any::devtools
+            any::DT
+            any::htmltools
+            any::jsonlite
+
+      - name: Generate detailed coverage analysis
+        run: |
+          library(covr)
+          library(jsonlite)
+          
+          cat("📊 Generating Comprehensive Test Coverage Analysis\n")
+          cat("=" , rep("=", 50), "\n", sep = "")
+          
+          # Generate coverage with detailed options
+          coverage <- package_coverage(
+            type = c("tests", "examples"),
+            code = c("source/lib/r/R"),
+            quiet = FALSE,
+            clean = FALSE,
+            install_path = file.path(normalizePath("."), "coverage_temp")
+          )
+          
+          # Overall coverage metrics
+          overall_coverage <- percent_coverage(coverage)
+          cat(sprintf("\n🎯 Overall Coverage: %.2f%%\n", overall_coverage))
+          
+          # File-by-file coverage
+          file_coverage <- coverage_to_cobertura(coverage)
+          
+          # Function-level coverage
+          cat("\n📋 File Coverage Breakdown:\n")
+          file_summary <- attr(coverage, "package")$coverage
+          
+          if (!is.null(file_summary)) {
+            for (file in names(file_summary)) {
+              file_percent <- percent_coverage(file_summary[[file]])
+              cat(sprintf("  %-30s: %6.2f%%\n", basename(file), file_percent))
+            }
+          }
+          
+          # Generate detailed HTML report
+          cat("\n📄 Generating detailed HTML coverage report...\n")
+          report(coverage, file = "detailed-coverage-report.html", browse = FALSE)
+          
+          # Generate coverage badge data
+          badge_color <- if (overall_coverage >= 90) "brightgreen" else
+                        if (overall_coverage >= 80) "green" else
+                        if (overall_coverage >= 70) "yellow" else
+                        if (overall_coverage >= 60) "orange" else "red"
+          
+          badge_data <- list(
+            schemaVersion = 1,
+            label = "coverage",
+            message = sprintf("%.1f%%", overall_coverage),
+            color = badge_color
+          )
+          
+          write_json(badge_data, "coverage-badge.json", auto_unbox = TRUE)
+          
+          # Generate machine-readable coverage data
+          coverage_data <- list(
+            timestamp = Sys.time(),
+            overall_coverage = overall_coverage,
+            total_lines = attr(coverage, "package")$totalLines %||% 0,
+            covered_lines = attr(coverage, "package")$coveredLines %||% 0,
+            files = if (!is.null(file_summary)) {
+              lapply(names(file_summary), function(file) {
+                list(
+                  filename = basename(file),
+                  coverage = percent_coverage(file_summary[[file]]),
+                  lines_total = length(file_summary[[file]]),
+                  lines_covered = sum(file_summary[[file]] > 0, na.rm = TRUE)
+                )
+              })
+            } else list()
+          )
+          
+          write_json(coverage_data, "coverage-data.json", auto_unbox = TRUE)
+          
+          # Coverage quality assessment
+          cat("\n🔍 Coverage Quality Assessment:\n")
+          
+          # Check for untested functions
+          zero_coverage_files <- if (!is.null(file_summary)) {
+            names(file_summary)[sapply(file_summary, function(x) percent_coverage(x) == 0)]
+          } else character(0)
+          
+          if (length(zero_coverage_files) > 0) {
+            cat("❌ Files with zero coverage:\n")
+            for (file in zero_coverage_files) {
+              cat(sprintf("  - %s\n", basename(file)))
+            }
+          } else {
+            cat("✅ No files with zero coverage\n")
+          }
+          
+          # Coverage thresholds
+          excellent_threshold <- 90
+          good_threshold <- 80
+          acceptable_threshold <- 70
+          
+          cat("\n📈 Coverage Rating:\n")
+          if (overall_coverage >= excellent_threshold) {
+            cat("🏆 EXCELLENT: Coverage is outstanding\n")
+          } else if (overall_coverage >= good_threshold) {
+            cat("✅ GOOD: Coverage meets high standards\n")
+          } else if (overall_coverage >= acceptable_threshold) {
+            cat("⚠️  ACCEPTABLE: Coverage could be improved\n")
+          } else {
+            cat("❌ NEEDS IMPROVEMENT: Coverage is below acceptable levels\n")
+          }
+          
+          # Line-by-line coverage analysis
+          cat("\n🔬 Detailed Coverage Analysis:\n")
+          uncovered_lines <- coverage[coverage$value == 0, ]
+          if (nrow(uncovered_lines) > 0) {
+            cat(sprintf("Found %d uncovered lines across %d files\n", 
+                       nrow(uncovered_lines), 
+                       length(unique(uncovered_lines$filename))))
+            
+            # Show first few uncovered lines as examples
+            head_uncovered <- head(uncovered_lines, 10)
+            cat("\nSample uncovered lines:\n")
+            for (i in seq_len(nrow(head_uncovered))) {
+              cat(sprintf("  %s:%d\n", 
+                         basename(head_uncovered$filename[i]), 
+                         head_uncovered$first_line[i]))
+            }
+          }
+          
+          # Test coverage recommendations
+          cat("\n💡 Coverage Improvement Recommendations:\n")
+          if (overall_coverage < excellent_threshold) {
+            cat("- Add tests for uncovered functions and methods\n")
+            cat("- Include edge case testing for better coverage\n")
+            cat("- Test error handling and validation logic\n")
+            
+            if (overall_coverage < good_threshold) {
+              cat("- Focus on core functionality testing first\n")
+              cat("- Add integration tests for complete workflows\n")
+            }
+          } else {
+            cat("- Coverage is excellent! Consider adding performance tests\n")
+            cat("- Focus on test quality and edge cases\n")
+          }
+          
+          cat("\n✅ Coverage analysis completed successfully!\n")
+        shell: Rscript {0}
+        working-directory: source/lib/r
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: comprehensive-coverage-reports
+          path: |
+            source/lib/r/detailed-coverage-report.html
+            source/lib/r/coverage-badge.json
+            source/lib/r/coverage-data.json
+          retention-days: 30
+
+      - name: Comment coverage summary on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            try {
+              // Read coverage data
+              const coverageData = JSON.parse(
+                fs.readFileSync('source/lib/r/coverage-data.json', 'utf8')
+              );
+              
+              const overallCoverage = coverageData.overall_coverage;
+              const totalLines = coverageData.total_lines;
+              const coveredLines = coverageData.covered_lines;
+              
+              // Determine coverage status
+              let status, emoji;
+              if (overallCoverage >= 90) {
+                status = "Excellent";
+                emoji = "🏆";
+              } else if (overallCoverage >= 80) {
+                status = "Good";
+                emoji = "✅";
+              } else if (overallCoverage >= 70) {
+                status = "Acceptable";
+                emoji = "⚠️";
+              } else {
+                status = "Needs Improvement";
+                emoji = "❌";
+              }
+              
+              // Generate file coverage table
+              let fileTable = "";
+              if (coverageData.files && coverageData.files.length > 0) {
+                fileTable = "\n\n### File Coverage Breakdown\n\n";
+                fileTable += "| File | Coverage |\n";
+                fileTable += "|------|----------|\n";
+                
+                coverageData.files.forEach(file => {
+                  const fileEmoji = file.coverage >= 80 ? "✅" : file.coverage >= 60 ? "⚠️" : "❌";
+                  fileTable += `| ${file.filename} | ${fileEmoji} ${file.coverage.toFixed(1)}% |\n`;
+                });
+              }
+              
+              // Create comment body
+              const commentBody = `## ${emoji} R Package Test Coverage Report
+              
+              **Overall Coverage:** ${overallCoverage.toFixed(2)}% (${status})
+              
+              **Details:**
+              - **Lines Covered:** ${coveredLines} / ${totalLines}
+              - **Status:** ${status}
+              - **Threshold:** 70% (Acceptable), 80% (Good), 90% (Excellent)
+              
+              ${fileTable}
+              
+              📊 **Detailed Reports:** Available in build artifacts
+              
+              ---
+              *Generated by R Package Test Coverage Analysis*`;
+              
+              // Post comment
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody
+              });
+              
+            } catch (error) {
+              console.log('Error posting coverage comment:', error);
+              
+              // Fallback comment
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 📊 R Package Test Coverage Report
+                
+                Coverage analysis completed. Detailed reports are available in the build artifacts.
+                
+                *Note: Unable to parse detailed coverage data - check build logs for details.*`
+              });
+            }
+
+      - name: Generate coverage trend data
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Store coverage data for trend analysis
+          mkdir -p coverage-history
+          
+          # Copy current coverage data with timestamp
+          timestamp=$(date +"%Y%m%d_%H%M%S")
+          cp coverage-data.json "coverage-history/coverage_${timestamp}.json"
+          
+          # Keep only last 30 days of coverage data
+          find coverage-history -name "coverage_*.json" -mtime +30 -delete
+          
+          cat "Coverage trend data saved for timestamp: ${timestamp}\n"
+        shell: bash
+        working-directory: source/lib/r
+
+  # ============================================================================
+  # Coverage Quality Gates
+  # ============================================================================
+  coverage-gate:
+    runs-on: ubuntu-latest
+    needs: coverage-analysis
+    name: Coverage Quality Gate
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Download coverage data
+        uses: actions/download-artifact@v4
+        with:
+          name: comprehensive-coverage-reports
+
+      - name: Evaluate coverage quality gate
+        run: |
+          # Read coverage data
+          if [ -f coverage-data.json ]; then
+            overall_coverage=$(jq -r '.overall_coverage' coverage-data.json)
+            
+            echo "Coverage: ${overall_coverage}%"
+            
+            # Define quality gates
+            excellent_threshold=90
+            good_threshold=80
+            acceptable_threshold=70
+            minimum_threshold=60
+            
+            # Check against thresholds
+            if (( $(echo "$overall_coverage >= $excellent_threshold" | bc -l) )); then
+              echo "🏆 EXCELLENT: Coverage exceeds $excellent_threshold%"
+              exit 0
+            elif (( $(echo "$overall_coverage >= $good_threshold" | bc -l) )); then
+              echo "✅ GOOD: Coverage meets $good_threshold% threshold"
+              exit 0
+            elif (( $(echo "$overall_coverage >= $acceptable_threshold" | bc -l) )); then
+              echo "⚠️ ACCEPTABLE: Coverage meets minimum $acceptable_threshold% threshold"
+              exit 0
+            elif (( $(echo "$overall_coverage >= $minimum_threshold" | bc -l) )); then
+              echo "❌ WARNING: Coverage ${overall_coverage}% is below good threshold but above minimum"
+              echo "Consider adding more tests before merging"
+              exit 1
+            else
+              echo "❌ FAILED: Coverage ${overall_coverage}% is below minimum threshold of $minimum_threshold%"
+              echo "Please add tests to improve coverage before merging"
+              exit 1
+            fi
+          else
+            echo "❌ Coverage data not found"
+            exit 1
+          fi
+        shell: bash

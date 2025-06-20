@@ -1,0 +1,305 @@
+url: https://jmontp.github.io/locomotion-data-standardization/r/
+
+template:
+  bootstrap: 5
+  theme: flatly
+  bslib:
+    primary: "#2c3e50"
+    secondary: "#3498db"
+    success: "#27ae60"
+    info: "#17a2b8"
+    warning: "#f39c12"
+    danger: "#e74c3c"
+    light: "#ecf0f1"
+    dark: "#34495e"
+    base_font: {google: "Source Sans Pro"}
+    heading_font: {google: "Source Sans Pro"}
+    code_font: {google: "Source Code Pro"}
+  
+navbar:
+  title: "LocomotionData"
+  type: light
+  structure:
+    left: [home, intro, reference, articles, tutorials, news]
+    right: [search, github]
+  components:
+    home:
+      icon: fas fa-home fa-lg
+      href: index.html
+    intro:
+      text: Getting Started
+      href: articles/getting-started.html
+    reference:
+      text: Reference
+      href: reference/index.html
+    articles:
+      text: Articles
+      menu:
+      - text: Advanced Analysis
+        href: articles/advanced-statistical-analysis.html
+      - text: Machine Learning
+        href: articles/machine-learning-biomechanics.html
+      - text: Visualization Guide
+        href: articles/visualization-best-practices.html
+      - text: Clinical Workflows
+        href: articles/clinical-workflow-integration.html
+      - text: "---"
+      - text: Migration Guides
+      - text: From Python
+        href: articles/python-to-r-migration.html
+      - text: From MATLAB
+        href: articles/matlab-to-r-migration.html
+    tutorials:
+      text: Tutorials
+      href: articles/index.html
+    github:
+      icon: fab fa-github fa-lg
+      href: https://github.com/jmontp/locomotion-data-standardization
+      aria-label: GitHub
+
+home:
+  title: "LocomotionData R Package"
+  description: "Standardized biomechanical locomotion data analysis in R"
+  strip_header: false
+  
+  links:
+  - text: Python Package
+    href: https://github.com/jmontp/locomotion-data-standardization
+  - text: MATLAB Tools
+    href: https://github.com/jmontp/locomotion-data-standardization/tree/main/source/lib/matlab
+  - text: Report Issues
+    href: https://github.com/jmontp/locomotion-data-standardization/issues
+
+reference:
+- title: "Data Loading and Creation"
+  desc: "Functions for loading and creating LocomotionData objects"
+  contents:
+  - loadLocomotionData
+  - createLocomotionData
+  - loadFromCSV
+  - loadFromParquet
+  - validateDataStructure
+
+- title: "Core S4 Class and Methods"
+  desc: "LocomotionData S4 class definition and core methods"
+  contents:
+  - LocomotionData-class
+  - show,LocomotionData-method
+  - summary,LocomotionData-method
+  - length,LocomotionData-method
+  - names,LocomotionData-method
+
+- title: "Data Access and Extraction"
+  desc: "Functions to extract and access data from LocomotionData objects"
+  contents:
+  - getCycles
+  - getMeanPatterns
+  - getSubjects
+  - getTasks
+  - getFeatures
+  - getStepNumbers
+  - extractSubjectData
+  - extractTaskData
+
+- title: "Data Quality and Validation"
+  desc: "Functions for data quality assessment and validation"
+  contents:
+  - validateCycles
+  - findOutlierCycles
+  - getSummaryStatistics
+  - getValidationReport
+  - assessDataQuality
+  - identifyMissingData
+  - checkDataConsistency
+
+- title: "Biomechanical Analysis"
+  desc: "Core biomechanical analysis functions"
+  contents:
+  - calculateROM
+  - calculatePeakValues
+  - calculateSymmetryIndices
+  - calculateGaitParameters
+  - computePhaseStatistics
+  - analyzeCyclicPatterns
+
+- title: "Visualization and Plotting"
+  desc: "Publication-ready visualization functions"
+  contents:
+  - plotPhasePatterns
+  - plotTaskComparison
+  - plotSubjectComparison
+  - plotTimeSeries
+  - plotValidationResults
+  - plotSummaryStatistics
+  - createDashboard
+  - plotBiomechanicalOverview
+
+- title: "Statistical Analysis"
+  desc: "Advanced statistical analysis methods"
+  contents:
+  - fitMixedEffectsModel
+  - performANOVA
+  - calculateCorrelations
+  - performTTests
+  - computeConfidenceIntervals
+  - runPermutationTests
+  - analyzeTrendOverTime
+
+- title: "Bayesian Analysis"
+  desc: "Bayesian statistical methods for biomechanical data"
+  contents:
+  - fitBayesianModel
+  - calculateBayesFactors
+  - performBayesianComparison
+  - runMCMCAnalysis
+  - assessModelConvergence
+  - extractPosteriorSamples
+
+- title: "Machine Learning"
+  desc: "Machine learning methods for biomechanical data"
+  contents:
+  - performClassification
+  - performClustering
+  - performDimensionalityReduction
+  - trainRandomForest
+  - trainSVM
+  - performCrossValidation
+  - evaluateModelPerformance
+  - extractFeatureImportance
+
+- title: "Workflow Functions"
+  desc: "High-level workflow and pipeline functions"
+  contents:
+  - runStandardAnalysis
+  - createAnalysisReport
+  - compareGroups
+  - performLongitudinalAnalysis
+  - runClinicalWorkflow
+  - generateSummaryReport
+
+- title: "Feature Constants and Utilities"
+  desc: "Feature definitions, constants, and utility functions"
+  contents:
+  - ANGLE_FEATURES
+  - VELOCITY_FEATURES
+  - MOMENT_FEATURES
+  - TASK_DEFINITIONS
+  - getFeatureConstants
+  - getKinematicFeatureMap
+  - getKineticFeatureMap
+  - isStandardCompliant
+  - suggestStandardName
+
+- title: "Utility Functions"
+  desc: "Helper functions and utilities"
+  contents:
+  - deg2rad
+  - rad2deg
+  - calculatePhase
+  - interpolateToPhase
+  - efficientReshape3D
+  - validateDataDimensions
+  - createFeatureSummary
+  - formatBiomechanicalTable
+  - exportResults
+
+articles:
+- title: "Getting Started"
+  navbar: ~
+  contents:
+  - getting-started
+
+- title: "Analysis Guides"
+  desc: "Comprehensive analysis tutorials"
+  contents:
+  - advanced-statistical-analysis
+  - machine-learning-biomechanics
+  - visualization-best-practices
+
+- title: "Migration Guides"
+  desc: "Transition from other platforms"
+  contents:
+  - python-to-r-migration
+  - matlab-to-r-migration
+
+- title: "Advanced Topics"
+  desc: "Specialized analysis methods"
+  contents:
+  - functional-data-analysis
+  - bayesian-gait-analysis
+  - clinical-decision-support
+
+- title: "Case Studies"
+  desc: "Real-world application examples"
+  contents:
+  - gait-analysis-case-study
+  - intervention-study-analysis
+  - population-comparison-study
+
+authors:
+  José A. Montes Pérez:
+    href: https://github.com/jmontp
+  Claude AI Assistant:
+    href: https://claude.ai
+
+search:
+  exclude: ['news/index.html']
+  algolia:
+    application_id: 'LocomotionData'
+    search_only_api_key: 'biomechanics_search'
+    index_name: 'locomotion_data_r'
+
+extra:
+  examples_gallery:
+    enabled: true
+    categories:
+      - name: "Basic Analysis"
+        examples:
+          - name: "Data Loading"
+            description: "Load and explore locomotion data"
+            file: "examples/basic_loading.R"
+          - name: "Phase Patterns"
+            description: "Visualize gait cycle patterns"
+            file: "examples/phase_visualization.R"
+      - name: "Statistical Analysis"
+        examples:
+          - name: "Mixed-Effects Models"
+            description: "Hierarchical modeling for gait data"
+            file: "examples/mixed_effects_demo.R"
+          - name: "Bayesian Analysis"
+            description: "Bayesian statistics for biomechanics"
+            file: "examples/bayesian_demo.R"
+      - name: "Machine Learning"
+        examples:
+          - name: "Classification"
+            description: "Classify gait patterns"
+            file: "examples/ml_classification.R"
+          - name: "Clustering"
+            description: "Discover gait pattern groups"
+            file: "examples/clustering_demo.R"
+
+footer:
+  structure:
+    left: [developed_by, built_with]
+    right: [package_version]
+  components:
+    package_version: "Package version {version}"
+    developed_by: "Developed by [José A. Montes Pérez](https://github.com/jmontp)"
+    built_with: "Built with [pkgdown](https://pkgdown.r-lib.org/)"
+
+development:
+  mode: auto
+  version_label: danger
+  version_tooltip: "Development version"
+
+figures:
+  dev: ragg::agg_png
+  dpi: 96
+  dev.args: []
+  fig.ext: png
+  fig.width: 7.2916667
+  fig.height: ~
+  fig.retina: 2
+  fig.asp: 1.618
+  bg: NA
+  other.parameters: []

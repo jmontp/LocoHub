@@ -15,8 +15,8 @@ hide:
 
 <div class="hero-actions" markdown>
 
-[**:material-rocket-launch: Try It Now**](getting_started/quick_start/){ .md-button .md-button--primary .hero-button }
-[**:material-eye: View Examples**](examples/){ .md-button .hero-button }
+[**:material-rocket-launch: Try It Now**](user_guide/docs/getting_started/quick_start/){ .md-button .md-button--primary .hero-button }
+[**:material-eye: View Examples**](user_guide/docs/examples/){ .md-button .hero-button }
 [**:material-download: Get Data**](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0){ .md-button .hero-button }
 
 </div>
@@ -59,7 +59,7 @@ hide:
 ✓ Build analysis skills progressively  
 ✓ Get comfortable with the tools  
 
-[**Start Learning :material-arrow-right:**](tutorials/basic/load_explore/){ .md-button .learn-button }
+[**Start Learning :material-arrow-right:**](user_guide/docs/tutorials/basic/load_explore/){ .md-button .learn-button }
 
 </div>
 
@@ -74,7 +74,7 @@ hide:
 ✓ Increase research impact and citations  
 ✓ Join the standardization movement  
 
-[**Start Contributing :material-arrow-right:**](user_guides/lab_directors/contributing_data/){ .md-button .contribute-button }
+[**Start Contributing :material-arrow-right:**](user_guide/docs/lab_directors/contributing_data/){ .md-button .contribute-button }
 
 </div>
 
@@ -89,7 +89,7 @@ hide:
 ✓ Add new analysis capabilities  
 ✓ Contribute to the codebase  
 
-[**Start Developing :material-arrow-right:**](contributing/development/setup/){ .md-button .develop-button }
+[**Start Developing :material-arrow-right:**](user_guide/docs/contributing/setup/){ .md-button .develop-button }
 
 </div>
 
@@ -171,7 +171,7 @@ hide:
 
 **All datasets include:** Joint angles, moments, ground reaction forces, and metadata with standardized variable names
 
-[:material-information: View Dataset Details](reference/datasets/overview/){ .md-button }
+[:material-information: View Dataset Details](user_guide/docs/reference/datasets_documentation/overview/){ .md-button }
 
 </div>
 
@@ -180,20 +180,20 @@ hide:
 <div class="quick-navigation" markdown>
 
 ### :material-clock-fast: **Quick Access**
-- [**Installation**](getting_started/installation/) - Get set up in 5 minutes
-- [**Quick Start**](getting_started/quick_start/) - Your first analysis in 10 minutes  
-- [**API Reference**](reference/api/python/) - Function documentation
+- [**Installation**](user_guide/docs/getting_started/installation/) - Get set up in 5 minutes
+- [**Quick Start**](user_guide/docs/getting_started/quick_start/) - Your first analysis in 10 minutes  
+- [**API Reference**](user_guide/docs/reference/api/python/) - Function documentation
 - [**Download Data**](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) - Get standardized datasets
 
 ### :material-school: **Learning Paths**
-- [**Beginner Tutorial**](tutorials/basic/load_explore/) - Start with basics
-- [**Research Workflow**](user_guides/researchers/analysis_workflows/) - For research projects
-- [**Clinical Applications**](user_guides/clinicians/clinical_applications/) - For clinical work
-- [**ML Pipeline Setup**](user_guides/data_scientists/ml_pipelines/) - For data science
+- [**Beginner Tutorial**](user_guide/docs/tutorials/basic/load_explore/) - Start with basics
+- [**Research Workflow**](user_guide/docs/user_guides/researchers/analysis_workflows/) - For research projects
+- [**Clinical Applications**](user_guide/docs/audiences/clinicians/clinical_applications/) - For clinical work
+- [**ML Pipeline Setup**](user_guide/docs/user_guides/data_scientists/ml_pipelines/) - For data science
 
 ### :material-help-circle: **Need Help?**
-- [**Examples**](examples/) - Real-world use cases
-- [**Troubleshooting**](user_guides/researchers/getting_data/) - Common issues and solutions
+- [**Examples**](user_guide/docs/examples/) - Real-world use cases
+- [**Troubleshooting**](user_guide/docs/audiences/researchers/getting_data/) - Common issues and solutions
 - [**GitHub Issues**](https://github.com/your-org/locomotion-data-standardization/issues) - Bug reports and questions
 - [**Community**](mailto:contact@locomotion-data-standardization.org) - Connect with other researchers
 
@@ -207,8 +207,8 @@ hide:
 
 **Join researchers from 20+ institutions who trust our standardized datasets for reproducible science.**
 
-[**:material-rocket-launch: Start Your Analysis**](getting_started/quick_start/){ .md-button .md-button--primary .footer-button }
-[**:material-eye: Explore Examples**](examples/){ .md-button .footer-button }
+[**:material-rocket-launch: Start Your Analysis**](user_guide/docs/getting_started/quick_start/){ .md-button .md-button--primary .footer-button }
+[**:material-eye: Explore Examples**](user_guide/docs/examples/){ .md-button .footer-button }
 
 *Maintained by biomechanics researchers and software engineers committed to open, reproducible science.*
 

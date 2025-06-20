@@ -1,0 +1,764 @@
+---
+title: "Python to R Migration Guide for LocomotionData"
+author: "José A. Montes Pérez"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Python to R Migration Guide for LocomotionData}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 6,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+# Introduction
+
+This guide helps Python users transition to the R implementation of the LocomotionData package. We provide side-by-side code comparisons, explain key differences in data structures and workflows, and highlight R-specific advantages for biomechanical analysis.
+
+## Key Differences Overview
+
+| Aspect | Python | R |
+|--------|--------|---|
+| **Data Structure** | Pandas DataFrame + NumPy arrays | S4 classes with integrated validation |
+| **Package System** | pip/conda + imports | CRAN/devtools + library() |
+| **Indexing** | 0-based, [row, col] | 1-based, [row, col] |
+| **Analysis Paradigm** | Object-oriented + functional | Functional + S4 classes |
+| **Plotting** | matplotlib/seaborn/plotly | ggplot2/plotly |
+| **Statistics** | scipy.stats/statsmodels | Built-in stats + specialized packages |
+
+## Installation Comparison
+
+### Python Installation
+```python
+# Python installation
+pip install locomotion-data-standardization
+# or
+conda install -c conda-forge locomotion-data-standardization
+```
+
+### R Installation
+```{r eval=FALSE}
+# R installation
+# Install dependencies first
+install.packages(c("data.table", "arrow", "ggplot2", "dplyr", "lme4"))
+
+# Install from GitHub (when available)
+# devtools::install_github("jmontp/locomotion-data-standardization", 
+#                          subdir = "source/lib/r")
+
+# Load the library
+library(LocomotionData)
+```
+
+# Data Loading and Basic Operations
+
+## Loading Data
+
+### Python Approach
+```python
+# Python
+import pandas as pd
+from locomotion_data import LocomotionData
+
+# Load from parquet
+loco = LocomotionData.from_parquet("data.parquet")
+
+# Load from CSV
+loco = LocomotionData.from_csv("data.csv", 
+                              subject_col="subject",
+                              task_col="task", 
+                              phase_col="phase")
+
+# Basic information
+print(f"Subjects: {len(loco.get_subjects())}")
+print(f"Tasks: {loco.get_tasks()}")
+print(f"Features: {len(loco.get_features())}")
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R
+library(LocomotionData)
+
+# Load from parquet
+loco <- loadLocomotionData("data.parquet")
+
+# Load from CSV with custom columns
+loco <- loadLocomotionData("data.csv",
+                          subject_col = "subject",
+                          task_col = "task",
+                          phase_col = "phase")
+
+# Basic information
+cat("Subjects:", length(getSubjects(loco)), "\n")
+cat("Tasks:", paste(getTasks(loco), collapse = ", "), "\n")
+cat("Features:", length(getFeatures(loco)), "\n")
+
+# S4 object summary
+summary(loco)
+show(loco)
+```
+
+## Data Exploration
+
+### Python Approach
+```python
+# Python
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Get data for specific subject/task
+cycles_data = loco.get_cycles("SUB01", "normal_walk")
+feature_names = cycles_data['feature_names']
+data_3d = cycles_data['data_3d']  # (n_cycles, 150, n_features)
+
+# Calculate mean patterns
+mean_patterns = loco.get_mean_patterns("SUB01", "normal_walk")
+knee_angle = mean_patterns['knee_flexion_angle_contra_rad']
+
+# Basic statistics
+print(f"Data shape: {data_3d.shape}")
+print(f"Mean knee flexion: {np.mean(knee_angle):.3f} rad")
+print(f"Max knee flexion: {np.max(knee_angle):.3f} rad")
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R
+library(dplyr)
+
+# Get data for specific subject/task
+cycles_result <- getCycles(loco, "SUB01", "normal_walk")
+feature_names <- cycles_result$feature_names
+data_3d <- cycles_result$data_3d  # array(n_cycles, 150, n_features)
+
+# Calculate mean patterns
+mean_patterns <- getMeanPatterns(loco, "SUB01", "normal_walk")
+knee_angle <- mean_patterns[["knee_flexion_angle_contra_rad"]]
+
+# Basic statistics
+cat("Data dimensions:", dim(data_3d), "\n")
+cat("Mean knee flexion:", round(mean(knee_angle, na.rm = TRUE), 3), "rad\n")
+cat("Max knee flexion:", round(max(knee_angle, na.rm = TRUE), 3), "rad\n")
+
+# R-style summary
+summary(knee_angle)
+```
+
+# Data Analysis Workflows
+
+## Range of Motion Analysis
+
+### Python Approach
+```python
+# Python
+def calculate_rom_python(loco_data, subject, task, feature):
+    """Calculate range of motion in Python"""
+    cycles = loco_data.get_cycles(subject, task)
+    feature_idx = cycles['feature_names'].index(feature)
+    data = cycles['data_3d'][:, :, feature_idx]
+    
+    # Calculate ROM for each cycle
+    rom_per_cycle = np.max(data, axis=1) - np.min(data, axis=1)
+    
+    # Convert to degrees if needed
+    if 'rad' in feature:
+        rom_per_cycle = np.degrees(rom_per_cycle)
+    
+    return {
+        'mean_rom': np.mean(rom_per_cycle),
+        'std_rom': np.std(rom_per_cycle),
+        'rom_per_cycle': rom_per_cycle
+    }
+
+# Usage
+rom_result = calculate_rom_python(loco, "SUB01", "normal_walk", 
+                                "knee_flexion_angle_contra_rad")
+print(f"Mean ROM: {rom_result['mean_rom']:.2f}°")
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - Built-in function
+rom_result <- calculateROM(loco, "SUB01", "normal_walk", 
+                          feature = "knee_flexion_angle_contra_rad",
+                          by_cycle = TRUE)
+
+# Access results
+mean_rom <- mean(rom_result[["knee_flexion_angle_contra_rad"]], na.rm = TRUE)
+std_rom <- sd(rom_result[["knee_flexion_angle_contra_rad"]], na.rm = TRUE)
+
+cat("Mean ROM:", round(rad2deg(mean_rom), 2), "°\n")
+cat("Std ROM:", round(rad2deg(std_rom), 2), "°\n")
+
+# R provides built-in summary statistics
+summary(rad2deg(rom_result[["knee_flexion_angle_contra_rad"]]))
+```
+
+## Statistical Analysis
+
+### Python Approach
+```python
+# Python
+import scipy.stats as stats
+from scipy.stats import ttest_ind
+import statsmodels.api as sm
+from statsmodels.formula.api import mixedlm
+
+# Extract data for statistical analysis
+def extract_summary_measures(loco_data, subjects, tasks, feature):
+    """Extract summary measures for statistical analysis"""
+    results = []
+    
+    for subject in subjects:
+        for task in tasks:
+            try:
+                patterns = loco_data.get_mean_patterns(subject, task)
+                if feature in patterns:
+                    data = patterns[feature]
+                    results.append({
+                        'subject': subject,
+                        'task': task,
+                        'max_value': np.max(data),
+                        'min_value': np.min(data),
+                        'mean_value': np.mean(data),
+                        'range_value': np.max(data) - np.min(data)
+                    })
+            except:
+                continue
+    
+    return pd.DataFrame(results)
+
+# Statistical analysis
+subjects = loco.get_subjects()[:10]
+tasks = ['normal_walk', 'fast_walk']
+feature = 'knee_flexion_angle_contra_rad'
+
+df = extract_summary_measures(loco, subjects, tasks, feature)
+
+# T-test between tasks
+normal_data = df[df['task'] == 'normal_walk']['max_value']
+fast_data = df[df['task'] == 'fast_walk']['max_value']
+
+t_stat, p_value = ttest_ind(normal_data, fast_data)
+print(f"T-test: t={t_stat:.3f}, p={p_value:.3f}")
+
+# Mixed-effects model
+model = mixedlm("max_value ~ task", df, groups=df["subject"])
+result = model.fit()
+print(result.summary())
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - More streamlined with built-in functions
+library(lme4)
+library(broom)
+
+# Extract summary measures (built-in function)
+summary_data <- extractAnalysisData(loco, 
+                                   subjects = getSubjects(loco)[1:10],
+                                   tasks = c("normal_walk", "fast_walk"),
+                                   features = "knee_flexion_angle_contra_rad",
+                                   summary_measures = c("max", "min", "mean", "range"))
+
+# T-test between tasks
+normal_data <- summary_data$knee_flexion_max[summary_data$task == "normal_walk"]
+fast_data <- summary_data$knee_flexion_max[summary_data$task == "fast_walk"]
+
+t_test_result <- t.test(normal_data, fast_data)
+cat("T-test: t =", round(t_test_result$statistic, 3), 
+    ", p =", round(t_test_result$p.value, 3), "\n")
+
+# Mixed-effects model (simpler syntax)
+mixed_model <- lmer(knee_flexion_max ~ task + (1 | subject), 
+                   data = summary_data)
+
+# Clean output with broom
+tidy(mixed_model)
+summary(mixed_model)
+```
+
+# Visualization Comparisons
+
+## Basic Phase Plots
+
+### Python Approach
+```python
+# Python
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+def plot_phase_patterns_python(loco_data, subject, task, features):
+    """Create phase pattern plots in Python"""
+    fig, axes = plt.subplots(len(features), 1, figsize=(10, 6*len(features)))
+    if len(features) == 1:
+        axes = [axes]
+    
+    for i, feature in enumerate(features):
+        patterns = loco_data.get_mean_patterns(subject, task)
+        cycles = loco_data.get_cycles(subject, task)
+        
+        if feature in patterns:
+            # Mean pattern
+            phase = np.linspace(0, 100, 150)
+            mean_data = patterns[feature]
+            
+            # Individual cycles for confidence bands
+            feature_idx = cycles['feature_names'].index(feature)
+            all_cycles = cycles['data_3d'][:, :, feature_idx]
+            
+            # Calculate confidence intervals
+            mean_curve = np.mean(all_cycles, axis=0)
+            std_curve = np.std(all_cycles, axis=0)
+            ci_upper = mean_curve + 1.96 * std_curve / np.sqrt(all_cycles.shape[0])
+            ci_lower = mean_curve - 1.96 * std_curve / np.sqrt(all_cycles.shape[0])
+            
+            # Plot
+            axes[i].plot(phase, np.degrees(mean_curve), 'b-', linewidth=2, label='Mean')
+            axes[i].fill_between(phase, np.degrees(ci_lower), np.degrees(ci_upper), 
+                               alpha=0.3, color='blue')
+            axes[i].set_xlabel('Gait Cycle (%)')
+            axes[i].set_ylabel('Angle (degrees)')
+            axes[i].set_title(f'{feature.replace("_", " ").title()}')
+            axes[i].grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    return fig
+
+# Usage
+fig = plot_phase_patterns_python(loco, "SUB01", "normal_walk", 
+                                ["knee_flexion_angle_contra_rad"])
+plt.show()
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - Much simpler with built-in functions
+library(ggplot2)
+
+# Single function call with automatic styling
+plot1 <- plotPhasePatterns(loco, "SUB01", "normal_walk",
+                          features = "knee_flexion_angle_contra_rad",
+                          plot_type = "mean")
+
+print(plot1)
+
+# Multiple features with automatic faceting
+plot2 <- plotPhasePatterns(loco, "SUB01", "normal_walk",
+                          features = c("knee_flexion_angle_contra_rad",
+                                     "hip_flexion_angle_contra_rad",
+                                     "ankle_flexion_angle_contra_rad"),
+                          plot_type = "both")  # Mean + individual cycles
+
+print(plot2)
+```
+
+## Advanced Visualizations
+
+### Python Approach
+```python
+# Python - Task comparison plot
+def plot_task_comparison_python(loco_data, subject, tasks, feature):
+    """Compare tasks in Python"""
+    plt.figure(figsize=(12, 6))
+    
+    colors = ['blue', 'red', 'green', 'orange', 'purple']
+    phase = np.linspace(0, 100, 150)
+    
+    for i, task in enumerate(tasks):
+        try:
+            patterns = loco_data.get_mean_patterns(subject, task)
+            if feature in patterns:
+                data = patterns[feature]
+                plt.plot(phase, np.degrees(data), 
+                        color=colors[i % len(colors)], 
+                        linewidth=2, label=task.replace('_', ' ').title())
+        except:
+            continue
+    
+    plt.xlabel('Gait Cycle (%)')
+    plt.ylabel('Angle (degrees)')
+    plt.title(f'{feature.replace("_", " ").title()} - Task Comparison')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    return plt.gcf()
+
+# Usage
+fig = plot_task_comparison_python(loco, "SUB01", 
+                                ["normal_walk", "fast_walk", "slow_walk"],
+                                "knee_flexion_angle_contra_rad")
+plt.show()
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - Built-in with professional styling
+plot_comparison <- plotTaskComparison(loco, "SUB01",
+                                     tasks = c("normal_walk", "fast_walk", "slow_walk"),
+                                     features = "knee_flexion_angle_contra_rad")
+
+print(plot_comparison)
+
+# Interactive version
+library(plotly)
+interactive_plot <- ggplotly(plot_comparison)
+interactive_plot
+```
+
+# Advanced Analysis Workflows
+
+## Machine Learning
+
+### Python Approach
+```python
+# Python
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+import pandas as pd
+
+# Extract features for ML
+def extract_ml_features_python(loco_data, subjects, tasks):
+    """Extract ML features in Python"""
+    features = []
+    labels = []
+    
+    for subject in subjects:
+        for task in tasks:
+            try:
+                patterns = loco_data.get_mean_patterns(subject, task)
+                
+                # Calculate summary statistics
+                feature_vector = []
+                for feature_name in patterns.keys():
+                    data = patterns[feature_name]
+                    feature_vector.extend([
+                        np.max(data),
+                        np.min(data), 
+                        np.mean(data),
+                        np.std(data)
+                    ])
+                
+                features.append(feature_vector)
+                labels.append(task)
+            except:
+                continue
+    
+    return np.array(features), np.array(labels)
+
+# ML pipeline
+subjects = loco.get_subjects()
+tasks = ['normal_walk', 'fast_walk', 'slow_walk']
+
+X, y = extract_ml_features_python(loco, subjects, tasks)
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Train classifier
+clf = RandomForestClassifier(n_estimators=100, random_state=42)
+clf.fit(X_train, y_train)
+
+# Predict and evaluate
+y_pred = clf.predict(X_test)
+print(classification_report(y_test, y_pred))
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - Streamlined with built-in functions
+library(randomForest)
+library(caret)
+
+# Extract ML features (built-in function)
+ml_data <- extractMLFeatures(loco, 
+                            subjects = getSubjects(loco),
+                            tasks = c("normal_walk", "fast_walk", "slow_walk"),
+                            feature_types = c("max", "min", "mean", "std"))
+
+# Train-test split
+set.seed(42)
+train_indices <- createDataPartition(ml_data$task, p = 0.7, list = FALSE)
+train_data <- ml_data[train_indices, ]
+test_data <- ml_data[-train_indices, ]
+
+# Train Random Forest (built-in function)
+rf_result <- performClassification(train_data, 
+                                  target = "task",
+                                  method = "randomForest")
+
+# Evaluate model
+predictions <- predict(rf_result$model, test_data)
+confusionMatrix(predictions, test_data$task)
+
+# Feature importance plot
+plot(rf_result$model)
+```
+
+## Mixed-Effects Modeling
+
+### Python Approach
+```python
+# Python
+import statsmodels.api as sm
+from statsmodels.formula.api import mixedlm
+
+# Prepare data for mixed-effects modeling
+def prepare_mixed_effects_data_python(loco_data, subjects, tasks, feature):
+    """Prepare data for mixed-effects analysis"""
+    data_list = []
+    
+    for subject in subjects:
+        for task in tasks:
+            try:
+                rom_data = calculate_rom_python(loco_data, subject, task, feature)
+                
+                data_list.append({
+                    'subject': subject,
+                    'task': task,
+                    'rom': rom_data['mean_rom'],
+                    'task_numeric': 0 if task == 'normal_walk' else 1
+                })
+            except:
+                continue
+    
+    return pd.DataFrame(data_list)
+
+# Fit mixed-effects model
+df = prepare_mixed_effects_data_python(loco, subjects, 
+                                     ['normal_walk', 'fast_walk'],
+                                     'knee_flexion_angle_contra_rad')
+
+model = mixedlm("rom ~ task_numeric", df, groups=df["subject"])
+result = model.fit()
+print(result.summary())
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - Much simpler syntax
+library(lme4)
+
+# Prepare data (built-in function)
+mixed_data <- prepareAnalysisData(loco,
+                                 subjects = getSubjects(loco),
+                                 tasks = c("normal_walk", "fast_walk"),
+                                 features = "knee_flexion_angle_contra_rad",
+                                 measures = "rom")
+
+# Fit mixed-effects model (R has cleaner syntax)
+model <- lmer(knee_flexion_rom ~ task + (1 | subject), 
+             data = mixed_data)
+
+# Built-in R functions for model analysis
+summary(model)
+anova(model)
+plot(model)  # Diagnostic plots
+
+# Built-in function for mixed-effects analysis
+mixed_result <- fitMixedEffectsModel(loco, 
+                                    formula = "knee_flexion_rom ~ task + (1 | subject)",
+                                    data = mixed_data)
+```
+
+# Package Ecosystem Comparison
+
+## Statistical Analysis
+
+| Task | Python | R |
+|------|--------|---|
+| **T-tests** | `scipy.stats.ttest_ind()` | `t.test()` |
+| **ANOVA** | `scipy.stats.f_oneway()` | `aov()`, `anova()` |
+| **Mixed-effects** | `statsmodels.mixedlm()` | `lme4::lmer()` |
+| **Bayesian** | `pymc3`, `arviz` | `BayesFactor`, `MCMCglmm` |
+| **Regression** | `sklearn`, `statsmodels` | Built-in `lm()`, `glm()` |
+
+## Machine Learning
+
+| Task | Python | R |
+|------|--------|---|
+| **Random Forest** | `sklearn.RandomForestClassifier` | `randomForest::randomForest` |
+| **SVM** | `sklearn.svm.SVC` | `e1071::svm` |
+| **Cross-validation** | `sklearn.model_selection` | `caret::trainControl` |
+| **Feature selection** | `sklearn.feature_selection` | `caret::rfe` |
+| **Model evaluation** | `sklearn.metrics` | `caret::confusionMatrix` |
+
+## Visualization
+
+| Task | Python | R |
+|------|--------|---|
+| **Static plots** | `matplotlib`, `seaborn` | `ggplot2` |
+| **Interactive plots** | `plotly`, `bokeh` | `plotly`, `ggplotly` |
+| **Statistical plots** | `seaborn` | `ggplot2` + extensions |
+| **Faceting** | Manual or `seaborn.FacetGrid` | `facet_wrap()`, `facet_grid()` |
+| **Themes** | Custom styling | Built-in themes + easy customization |
+
+# Migration Checklist
+
+## Code Migration Steps
+
+### 1. Data Loading
+- [ ] Replace `LocomotionData.from_*()` with `loadLocomotionData()`
+- [ ] Update variable assignment syntax (`=` to `<-`)
+- [ ] Change indexing from 0-based to 1-based
+
+### 2. Function Calls
+- [ ] Replace Python methods with R functions (e.g., `loco.get_cycles()` → `getCycles(loco)`)
+- [ ] Update parameter names to R conventions (snake_case → camelCase for some functions)
+- [ ] Add explicit namespace prefixes if needed (`package::function`)
+
+### 3. Data Structures
+- [ ] Replace NumPy arrays with R arrays/matrices
+- [ ] Convert Pandas DataFrames concepts to R data.frames/tibbles
+- [ ] Update dictionary access (`dict['key']`) to list access (`list[["key"]]`)
+
+### 4. Analysis Workflows
+- [ ] Replace scikit-learn pipelines with caret workflows
+- [ ] Update statistical test functions
+- [ ] Modify plotting code from matplotlib/seaborn to ggplot2
+
+### 5. Error Handling
+- [ ] Replace Python try/except with R tryCatch
+- [ ] Update error message handling
+
+## Performance Considerations
+
+### Python Strengths
+- **Large-scale data processing**: Pandas + NumPy efficiency
+- **Deep learning**: TensorFlow, PyTorch ecosystem
+- **Production deployment**: Web frameworks, APIs
+
+### R Strengths
+- **Statistical analysis**: Built-in statistical functions
+- **Data visualization**: ggplot2 grammar of graphics
+- **Package ecosystem**: CRAN quality control
+- **Interactive analysis**: RStudio IDE integration
+- **Publication**: R Markdown reports
+
+## Best Practices for Migration
+
+### 1. Start Small
+```{r eval=FALSE}
+# Begin with simple data loading and exploration
+loco <- loadLocomotionData("small_dataset.parquet")
+summary(loco)
+```
+
+### 2. Use Built-in Functions
+```{r eval=FALSE}
+# Leverage R's extensive built-in functionality
+# Instead of writing custom loops, use vectorized operations
+means <- sapply(features, function(f) mean(data[[f]], na.rm = TRUE))
+```
+
+### 3. Embrace R Idioms
+```{r eval=FALSE}
+# Use R's apply family and dplyr for data manipulation
+library(dplyr)
+
+results <- data %>%
+  group_by(subject, task) %>%
+  summarise(
+    mean_knee = mean(knee_flexion_angle_contra_rad, na.rm = TRUE),
+    max_knee = max(knee_flexion_angle_contra_rad, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+### 4. Leverage R Packages
+```{r eval=FALSE}
+# Use specialized R packages for specific analyses
+library(lme4)      # Mixed-effects models
+library(BayesFactor)  # Bayesian analysis
+library(caret)     # Machine learning
+library(ggplot2)   # Visualization
+```
+
+# Common Pitfalls and Solutions
+
+## 1. Indexing Differences
+```python
+# Python (0-based)
+first_cycle = data_3d[0, :, :]  # First cycle
+```
+
+```{r eval=FALSE}
+# R (1-based)
+first_cycle <- data_3d[1, , ]  # First cycle
+```
+
+## 2. List/Dictionary Access
+```python
+# Python
+value = patterns['knee_flexion_angle_contra_rad']
+```
+
+```{r eval=FALSE}
+# R
+value <- patterns[["knee_flexion_angle_contra_rad"]]
+# or
+value <- patterns$knee_flexion_angle_contra_rad  # if valid name
+```
+
+## 3. Boolean Indexing
+```python
+# Python
+filtered_data = data[data['task'] == 'normal_walk']
+```
+
+```{r eval=FALSE}
+# R
+filtered_data <- data[data$task == "normal_walk", ]
+# or with dplyr
+filtered_data <- filter(data, task == "normal_walk")
+```
+
+## 4. Function Definition
+```python
+# Python
+def calculate_mean(data, axis=1):
+    return np.mean(data, axis=axis)
+```
+
+```{r eval=FALSE}
+# R
+calculate_mean <- function(data, margin = 2) {
+  return(apply(data, margin, mean, na.rm = TRUE))
+}
+```
+
+# Conclusion
+
+Migrating from Python to R for biomechanical analysis offers several advantages:
+
+## R Advantages for Biomechanics
+1. **Statistical Depth**: Extensive built-in statistical functions
+2. **Visualization**: Grammar of graphics with ggplot2
+3. **Package Quality**: CRAN's rigorous review process
+4. **Interactive Analysis**: Excellent IDE support with RStudio
+5. **Publication**: Seamless R Markdown workflow
+
+## Migration Benefits
+1. **Cleaner Code**: Often fewer lines for complex statistical operations
+2. **Better Documentation**: Comprehensive help system and vignettes
+3. **Integrated Workflow**: From data analysis to publication
+4. **Statistical Rigor**: Built-in support for proper statistical methods
+
+## Next Steps
+1. Start with the "Getting Started" vignette
+2. Explore built-in functions with `?function_name`
+3. Try the advanced statistical analysis vignette
+4. Build interactive visualizations with the visualization guide
+
+The R LocomotionData package provides a more integrated, statistically robust environment for biomechanical analysis while maintaining the same core functionality as the Python implementation.

@@ -1,0 +1,953 @@
+---
+title: "MATLAB to R Migration Guide for LocomotionData"
+author: "José A. Montes Pérez"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{MATLAB to R Migration Guide for LocomotionData}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 6,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+# Introduction
+
+This guide helps MATLAB users transition to the R implementation of the LocomotionData package. MATLAB and R share many similarities for scientific computing, making the transition smoother than other language migrations. We provide side-by-side code comparisons and highlight R-specific advantages for statistical analysis.
+
+## Key Similarities and Differences
+
+| Aspect | MATLAB | R |
+|--------|--------|---|
+| **Paradigm** | Matrix-oriented computing | Statistical computing + data analysis |
+| **Indexing** | 1-based, (row, col) | 1-based, [row, col] |
+| **Data Types** | Matrices, cell arrays, structures | Arrays, data.frames, lists |
+| **Plotting** | Built-in plotting functions | ggplot2 grammar of graphics |
+| **Statistics** | Statistics Toolbox | Extensive built-in + packages |
+| **Package System** | Toolboxes (commercial) | CRAN packages (free) |
+| **IDE** | MATLAB Desktop | RStudio |
+
+## Installation Comparison
+
+### MATLAB Setup
+```matlab
+% MATLAB - Add to path
+addpath('path/to/locomotion_data_matlab');
+
+% Load data
+loco = LocomotionData('data.mat');
+```
+
+### R Setup
+```{r eval=FALSE}
+# R - Install and load package
+install.packages(c("data.table", "arrow", "ggplot2", "dplyr"))
+# devtools::install_github("jmontp/locomotion-data-standardization", 
+#                          subdir = "source/lib/r")
+
+library(LocomotionData)
+
+# Load data
+loco <- loadLocomotionData("data.parquet")
+```
+
+# Data Loading and Structures
+
+## Basic Data Loading
+
+### MATLAB Approach
+```matlab
+% MATLAB
+% Load from .mat file
+load('gait_data.mat');
+
+% Create LocomotionData object
+loco = LocomotionData();
+loco.data = data_table;
+loco.subjects = unique(data_table.subject);
+loco.tasks = unique(data_table.task);
+
+% Basic information
+fprintf('Subjects: %d\n', length(loco.subjects));
+fprintf('Tasks: %s\n', strjoin(loco.tasks, ', '));
+
+% Get data dimensions
+[n_rows, n_cols] = size(loco.data);
+fprintf('Data dimensions: %d x %d\n', n_rows, n_cols);
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - More streamlined data loading
+library(LocomotionData)
+
+# Load from multiple formats
+loco <- loadLocomotionData("gait_data.parquet")  # Preferred
+# loco <- loadLocomotionData("gait_data.csv")
+
+# Basic information (built-in methods)
+cat("Subjects:", length(getSubjects(loco)), "\n")
+cat("Tasks:", paste(getTasks(loco), collapse = ", "), "\n")
+
+# S4 object provides structured information
+summary(loco)
+show(loco)
+
+# Data dimensions
+cat("Data dimensions:", dim(loco@data), "\n")
+```
+
+## Data Access Patterns
+
+### MATLAB Approach
+```matlab
+% MATLAB - Manual data extraction
+function [cycles_3d, feature_names] = get_cycles_matlab(loco, subject, task)
+    % Extract cycles for specific subject and task
+    
+    % Filter data
+    mask = strcmp(loco.data.subject, subject) & strcmp(loco.data.task, task);
+    filtered_data = loco.data(mask, :);
+    
+    % Get feature columns (exclude metadata)
+    metadata_cols = {'subject', 'task', 'phase', 'step_number'};
+    all_cols = filtered_data.Properties.VariableNames;
+    feature_cols = setdiff(all_cols, metadata_cols);
+    
+    % Extract unique steps
+    steps = unique(filtered_data.step_number);
+    n_steps = length(steps);
+    n_features = length(feature_cols);
+    
+    % Assume 150 points per cycle
+    n_points = 150;
+    cycles_3d = zeros(n_steps, n_points, n_features);
+    
+    for i = 1:n_steps
+        step_mask = filtered_data.step_number == steps(i);
+        step_data = filtered_data(step_mask, feature_cols);
+        
+        if height(step_data) == n_points
+            cycles_3d(i, :, :) = table2array(step_data);
+        end
+    end
+    
+    feature_names = feature_cols;
+end
+
+% Usage
+[cycles_3d, features] = get_cycles_matlab(loco, 'SUB01', 'normal_walk');
+fprintf('Cycles shape: %d x %d x %d\n', size(cycles_3d));
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - Built-in function with automatic handling
+cycles_result <- getCycles(loco, "SUB01", "normal_walk")
+
+# Access results
+cycles_3d <- cycles_result$data_3d
+feature_names <- cycles_result$feature_names
+valid_cycles <- cycles_result$valid_cycles
+
+# Information automatically provided
+cat("Cycles shape:", dim(cycles_3d), "\n")
+cat("Valid cycles:", sum(valid_cycles), "out of", length(valid_cycles), "\n")
+cat("Features:", length(feature_names), "\n")
+```
+
+# Mathematical Operations and Analysis
+
+## Matrix Operations
+
+### MATLAB Approach
+```matlab
+% MATLAB - Matrix-centric operations
+function rom_results = calculate_rom_matlab(cycles_3d, feature_names, feature_name)
+    % Calculate range of motion
+    
+    % Find feature index
+    feature_idx = find(strcmp(feature_names, feature_name));
+    
+    if isempty(feature_idx)
+        error('Feature not found: %s', feature_name);
+    end
+    
+    % Extract feature data
+    feature_data = cycles_3d(:, :, feature_idx);  % (n_cycles, 150)
+    
+    % Calculate ROM for each cycle
+    max_vals = max(feature_data, [], 2);  % Max across phases
+    min_vals = min(feature_data, [], 2);  % Min across phases
+    rom_per_cycle = max_vals - min_vals;
+    
+    % Convert to degrees if radians
+    if contains(feature_name, 'rad')
+        rom_per_cycle = rad2deg(rom_per_cycle);
+    end
+    
+    % Summary statistics
+    rom_results.mean_rom = mean(rom_per_cycle);
+    rom_results.std_rom = std(rom_per_cycle);
+    rom_results.rom_per_cycle = rom_per_cycle;
+    
+    fprintf('Mean ROM: %.2f degrees\n', rom_results.mean_rom);
+end
+
+% Usage
+rom_results = calculate_rom_matlab(cycles_3d, features, 'knee_flexion_angle_contra_rad');
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - Built-in function with comprehensive options
+rom_results <- calculateROM(loco, "SUB01", "normal_walk",
+                           feature = "knee_flexion_angle_contra_rad",
+                           by_cycle = TRUE)
+
+# Access results (automatic unit conversion)
+knee_rom <- rom_results[["knee_flexion_angle_contra_rad"]]
+
+# Summary statistics (built-in R functions)
+cat("Mean ROM:", round(mean(knee_rom, na.rm = TRUE), 2), "degrees\n")
+cat("Std ROM:", round(sd(knee_rom, na.rm = TRUE), 2), "degrees\n")
+
+# R provides rich statistical summaries
+summary(knee_rom)
+boxplot(knee_rom, main = "ROM Distribution")
+```
+
+## Statistical Analysis
+
+### MATLAB Approach
+```matlab
+% MATLAB - Statistical Toolbox required
+function stats_results = compare_tasks_matlab(loco, subject, tasks, feature)
+    % Compare feature across tasks using t-test
+    
+    task_data = {};
+    task_labels = {};
+    
+    for i = 1:length(tasks)
+        [cycles, features] = get_cycles_matlab(loco, subject, tasks{i});
+        
+        % Calculate mean pattern
+        feature_idx = find(strcmp(features, feature));
+        if ~isempty(feature_idx)
+            feature_data = cycles(:, :, feature_idx);
+            mean_pattern = mean(feature_data, 1);  % Mean across cycles
+            max_val = max(mean_pattern);
+            
+            task_data{end+1} = max_val;
+            task_labels{end+1} = tasks{i};
+        end
+    end
+    
+    % Perform t-test (requires Statistics Toolbox)
+    if length(task_data) >= 2
+        [h, p, ci, stats] = ttest2(task_data{1}, task_data{2});
+        
+        stats_results.h = h;
+        stats_results.p = p;
+        stats_results.ci = ci;
+        stats_results.tstat = stats.tstat;
+        
+        fprintf('T-test: t=%.3f, p=%.3f\n', stats.tstat, p);
+    end
+end
+
+% Usage (requires Statistics Toolbox)
+stats = compare_tasks_matlab(loco, 'SUB01', {'normal_walk', 'fast_walk'}, ...
+                            'knee_flexion_angle_contra_rad');
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - Built-in statistical functions (no additional toolbox needed)
+library(dplyr)
+
+# Extract data for multiple tasks (built-in function)
+comparison_data <- extractAnalysisData(loco,
+                                      subjects = "SUB01",
+                                      tasks = c("normal_walk", "fast_walk"),
+                                      features = "knee_flexion_angle_contra_rad",
+                                      summary_measures = "max")
+
+# Statistical comparison (built-in functions)
+normal_data <- comparison_data$knee_flexion_max[comparison_data$task == "normal_walk"]
+fast_data <- comparison_data$knee_flexion_max[comparison_data$task == "fast_walk"]
+
+# T-test (built-in, no toolbox required)
+t_result <- t.test(normal_data, fast_data)
+
+# Rich output with confidence intervals
+print(t_result)
+
+# Effect size calculation
+cohens_d <- (mean(fast_data) - mean(normal_data)) / 
+           sqrt(((length(fast_data)-1)*var(fast_data) + (length(normal_data)-1)*var(normal_data)) /
+                (length(fast_data) + length(normal_data) - 2))
+
+cat("Cohen's d:", round(cohens_d, 3), "\n")
+```
+
+# Visualization Comparisons
+
+## Basic Plotting
+
+### MATLAB Approach
+```matlab
+% MATLAB - Traditional plotting
+function plot_phase_patterns_matlab(loco, subject, task, features)
+    % Create phase pattern plots
+    
+    n_features = length(features);
+    figure('Position', [100, 100, 800, 200*n_features]);
+    
+    for i = 1:n_features
+        subplot(n_features, 1, i);
+        
+        [cycles, feature_names] = get_cycles_matlab(loco, subject, task);
+        feature_idx = find(strcmp(feature_names, features{i}));
+        
+        if ~isempty(feature_idx)
+            feature_data = cycles(:, :, feature_idx);
+            
+            % Calculate mean and standard error
+            mean_pattern = mean(feature_data, 1);
+            std_pattern = std(feature_data, 0, 1);
+            n_cycles = size(feature_data, 1);
+            se_pattern = std_pattern / sqrt(n_cycles);
+            
+            % Phase vector
+            phase = linspace(0, 100, 150);
+            
+            % Convert to degrees if needed
+            if contains(features{i}, 'rad')
+                mean_pattern = rad2deg(mean_pattern);
+                se_pattern = rad2deg(se_pattern);
+            end
+            
+            % Plot with error bands
+            fill([phase, fliplr(phase)], ...
+                 [mean_pattern - 1.96*se_pattern, fliplr(mean_pattern + 1.96*se_pattern)], ...
+                 'b', 'FaceAlpha', 0.3, 'EdgeColor', 'none');
+            hold on;
+            plot(phase, mean_pattern, 'b-', 'LineWidth', 2);
+            
+            xlabel('Gait Cycle (%)');
+            ylabel('Angle (degrees)');
+            title(strrep(features{i}, '_', ' '));
+            grid on;
+        end
+    end
+    
+    sgtitle(sprintf('%s - %s', subject, strrep(task, '_', ' ')));
+end
+
+% Usage
+plot_phase_patterns_matlab(loco, 'SUB01', 'normal_walk', ...
+                           {'knee_flexion_angle_contra_rad'});
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - ggplot2 with professional styling
+library(ggplot2)
+
+# Single function call with automatic styling
+phase_plot <- plotPhasePatterns(loco, "SUB01", "normal_walk",
+                               features = "knee_flexion_angle_contra_rad",
+                               plot_type = "mean")
+
+print(phase_plot)
+
+# Multiple features with automatic layout
+multi_plot <- plotPhasePatterns(loco, "SUB01", "normal_walk",
+                               features = c("knee_flexion_angle_contra_rad",
+                                          "hip_flexion_angle_contra_rad",
+                                          "ankle_flexion_angle_contra_rad"),
+                               plot_type = "both")
+
+print(multi_plot)
+
+# Customization with ggplot2
+library(viridis)
+custom_plot <- phase_plot +
+  scale_color_viridis_d() +
+  theme_minimal() +
+  labs(title = "Professional Publication Plot",
+       subtitle = "Automatic confidence intervals and styling")
+
+print(custom_plot)
+```
+
+## Advanced Visualizations
+
+### MATLAB Approach
+```matlab
+% MATLAB - 3D plotting
+function plot_3d_trajectory_matlab(loco, subject, task)
+    % Create 3D joint coordination plot
+    
+    [cycles, features] = get_cycles_matlab(loco, subject, task);
+    
+    % Find joint angle indices
+    hip_idx = find(strcmp(features, 'hip_flexion_angle_contra_rad'));
+    knee_idx = find(strcmp(features, 'knee_flexion_angle_contra_rad'));
+    ankle_idx = find(strcmp(features, 'ankle_flexion_angle_contra_rad'));
+    
+    if ~isempty(hip_idx) && ~isempty(knee_idx) && ~isempty(ankle_idx)
+        % Calculate mean patterns
+        hip_mean = rad2deg(mean(cycles(:, :, hip_idx), 1));
+        knee_mean = rad2deg(mean(cycles(:, :, knee_idx), 1));
+        ankle_mean = rad2deg(mean(cycles(:, :, ankle_idx), 1));
+        
+        % Create 3D plot
+        figure;
+        plot3(hip_mean, knee_mean, ankle_mean, 'b-', 'LineWidth', 2);
+        hold on;
+        
+        % Color code by phase
+        phase_colors = jet(150);
+        for i = 1:10:150  % Subsample for clarity
+            scatter3(hip_mean(i), knee_mean(i), ankle_mean(i), 50, ...
+                    phase_colors(i, :), 'filled');
+        end
+        
+        xlabel('Hip Flexion (degrees)');
+        ylabel('Knee Flexion (degrees)');
+        zlabel('Ankle Flexion (degrees)');
+        title(sprintf('3D Joint Coordination: %s - %s', subject, ...
+                     strrep(task, '_', ' ')));
+        grid on;
+        view(45, 30);
+    end
+end
+
+% Usage
+plot_3d_trajectory_matlab(loco, 'SUB01', 'normal_walk');
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - Interactive 3D with plotly
+library(plotly)
+
+# Built-in 3D trajectory function
+trajectory_3d <- create3DTrajectory(loco, "SUB01", "normal_walk")
+
+# Display interactive plot
+trajectory_3d
+
+# Alternative: Custom interactive plot
+library(dplyr)
+
+# Extract joint data
+joint_data <- extractJointTrajectory(loco, "SUB01", "normal_walk",
+                                    joints = c("hip", "knee", "ankle"))
+
+# Create interactive 3D plot
+interactive_3d <- plot_ly(joint_data,
+  x = ~hip_flexion_deg, y = ~knee_flexion_deg, z = ~ankle_flexion_deg,
+  type = "scatter3d", mode = "lines+markers",
+  line = list(color = ~phase_percent, colorscale = "Viridis", width = 4),
+  marker = list(size = 3, color = ~phase_percent, colorscale = "Viridis"),
+  text = ~paste("Phase:", round(phase_percent, 1), "%"),
+  hovertemplate = "Hip: %{x:.1f}°<br>Knee: %{y:.1f}°<br>Ankle: %{z:.1f}°<br>%{text}<extra></extra>"
+) %>%
+  layout(
+    title = "Interactive 3D Joint Coordination",
+    scene = list(
+      xaxis = list(title = "Hip Flexion (°)"),
+      yaxis = list(title = "Knee Flexion (°)"),
+      zaxis = list(title = "Ankle Flexion (°)")
+    )
+  )
+
+interactive_3d
+```
+
+# Advanced Analysis Workflows
+
+## Signal Processing
+
+### MATLAB Approach
+```matlab
+% MATLAB - Signal Processing Toolbox
+function filtered_data = filter_gait_data_matlab(cycles_3d, feature_idx)
+    % Apply low-pass filter to gait data
+    
+    feature_data = cycles_3d(:, :, feature_idx);
+    [n_cycles, n_points] = size(feature_data);
+    
+    % Filter parameters
+    fs = 150;  % 150 points per cycle
+    fc = 10;   % Cutoff frequency
+    
+    % Design filter (requires Signal Processing Toolbox)
+    [b, a] = butter(4, fc/(fs/2), 'low');
+    
+    % Apply filter to each cycle
+    filtered_data = zeros(size(feature_data));
+    for i = 1:n_cycles
+        filtered_data(i, :) = filtfilt(b, a, feature_data(i, :));
+    end
+    
+    % Plot comparison
+    figure;
+    subplot(2, 1, 1);
+    plot(1:n_points, mean(feature_data, 1), 'b-', 'LineWidth', 2);
+    title('Original Data');
+    ylabel('Angle (rad)');
+    
+    subplot(2, 1, 2);
+    plot(1:n_points, mean(filtered_data, 1), 'r-', 'LineWidth', 2);
+    title('Filtered Data');
+    xlabel('Phase Points');
+    ylabel('Angle (rad)');
+end
+
+% Usage (requires Signal Processing Toolbox)
+[cycles, features] = get_cycles_matlab(loco, 'SUB01', 'normal_walk');
+knee_idx = find(strcmp(features, 'knee_flexion_angle_contra_rad'));
+filtered = filter_gait_data_matlab(cycles, knee_idx);
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - Built-in signal processing with signal package
+library(signal)
+library(ggplot2)
+
+# Built-in filtering function
+filtered_data <- filterGaitSignals(loco, "SUB01", "normal_walk",
+                                  features = "knee_flexion_angle_contra_rad",
+                                  filter_type = "butterworth",
+                                  cutoff_freq = 10,
+                                  order = 4)
+
+# Compare original vs filtered
+comparison_plot <- plotSignalComparison(filtered_data,
+                                       feature = "knee_flexion_angle_contra_rad")
+
+print(comparison_plot)
+
+# Manual filtering with R's signal package
+apply_filter <- function(data, cutoff = 10, order = 4) {
+  fs <- 150  # Sampling frequency equivalent
+  nyquist <- fs / 2
+  butter_filter <- butter(order, cutoff / nyquist, type = "low")
+  
+  # Apply filter to each cycle
+  filtered <- apply(data, 1, function(cycle) {
+    filtfilt(butter_filter, cycle)
+  })
+  
+  return(t(filtered))  # Transpose back to original orientation
+}
+
+# Usage
+cycles_result <- getCycles(loco, "SUB01", "normal_walk")
+knee_idx <- which(cycles_result$feature_names == "knee_flexion_angle_contra_rad")
+original_data <- cycles_result$data_3d[, , knee_idx]
+filtered_manual <- apply_filter(original_data)
+```
+
+## Statistical Modeling
+
+### MATLAB Approach
+```matlab
+% MATLAB - Statistics and Machine Learning Toolbox
+function model_results = fit_mixed_model_matlab(data_table)
+    % Fit mixed-effects model (requires Statistics Toolbox)
+    
+    % Prepare data - assumes data_table has columns:
+    % subject, task, knee_flexion_max
+    
+    % Fit linear mixed-effects model
+    lme = fitlme(data_table, 'knee_flexion_max ~ task + (1|subject)');
+    
+    % Extract results
+    model_results.coefficients = lme.Coefficients;
+    model_results.random_effects = lme.randomEffects;
+    model_results.aic = lme.ModelCriterion.AIC;
+    model_results.r_squared = lme.Rsquared.Ordinary;
+    
+    % Display results
+    disp(lme);
+    
+    % Diagnostic plots
+    figure;
+    subplot(2, 2, 1);
+    plotResiduals(lme, 'fitted');
+    
+    subplot(2, 2, 2);
+    plotResiduals(lme, 'lagged');
+    
+    subplot(2, 2, 3);
+    qqplot(lme.residuals);
+    
+    subplot(2, 2, 4);
+    plotResiduals(lme, 'probability');
+end
+
+% Usage (requires Statistics and Machine Learning Toolbox)
+% model_results = fit_mixed_model_matlab(data_table);
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - Built-in mixed-effects modeling with lme4
+library(lme4)
+library(broom.mixed)
+library(performance)
+
+# Extract data for modeling (built-in function)
+model_data <- extractAnalysisData(loco,
+                                 subjects = getSubjects(loco),
+                                 tasks = c("normal_walk", "fast_walk"),
+                                 features = "knee_flexion_angle_contra_rad",
+                                 summary_measures = "max")
+
+# Fit mixed-effects model (built-in, no toolbox required)
+mixed_model <- lmer(knee_flexion_max ~ task + (1 | subject), 
+                   data = model_data)
+
+# Comprehensive results
+summary(mixed_model)
+
+# Clean output with broom
+tidy_results <- tidy(mixed_model)
+print(tidy_results)
+
+# Model diagnostics (automatic)
+check_model(mixed_model)
+
+# Model performance metrics
+model_performance(mixed_model)
+
+# Custom diagnostic plots with ggplot2
+library(ggplot2)
+
+# Residuals vs fitted
+ggplot(model_data, aes(x = fitted(mixed_model), y = residuals(mixed_model))) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "loess", se = FALSE) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(title = "Residuals vs Fitted Values",
+       x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+```
+
+# Data Management and Workflow
+
+## File I/O and Data Formats
+
+### MATLAB Approach
+```matlab
+% MATLAB - Limited format support
+% Save to .mat format
+save('analysis_results.mat', 'rom_results', 'stats_results', 'model_results');
+
+% Export to CSV (limited)
+writetable(data_table, 'exported_data.csv');
+
+% Load different formats requires additional toolboxes or custom functions
+% For Parquet: need external libraries
+% For Excel: readtable() supports .xlsx
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - Extensive format support built-in
+library(arrow)
+library(readr)
+library(writexl)
+
+# Save R objects
+save(loco, rom_results, file = "analysis_results.RData")
+saveRDS(loco, "locomotion_data.rds")
+
+# Export to multiple formats
+write_parquet(model_data, "analysis_data.parquet")
+write_csv(model_data, "analysis_data.csv")
+write_xlsx(model_data, "analysis_data.xlsx")
+
+# Load from multiple formats
+loco_parquet <- loadLocomotionData("data.parquet")
+loco_csv <- loadLocomotionData("data.csv")
+
+# Built-in support for many formats:
+# JSON, XML, SPSS, SAS, Stata, etc.
+```
+
+## Reproducible Research
+
+### MATLAB Approach
+```matlab
+% MATLAB - Limited reproducibility features
+% Live Scripts (.mlx) provide some documentation
+
+%% Analysis Script
+% Manual documentation in comments
+
+% Set random seed for reproducibility
+rng(42);
+
+% Analysis code...
+fprintf('Analysis completed on %s\n', datestr(now));
+
+% Manual report generation
+% publish('analysis_script.m', 'html');  % Requires additional setup
+```
+
+### R Equivalent
+```{r eval=FALSE}
+# R - Comprehensive reproducible research with R Markdown
+# This entire vignette is written in R Markdown!
+
+# Built-in reproducibility features
+set.seed(42)
+
+# Session information for reproducibility
+sessionInfo()
+
+# Package versions
+packageVersion("LocomotionData")
+
+# Automatic report generation
+# rmarkdown::render("analysis_report.Rmd", output_format = "html_document")
+# rmarkdown::render("analysis_report.Rmd", output_format = "pdf_document")
+# rmarkdown::render("analysis_report.Rmd", output_format = "word_document")
+```
+
+# Package Ecosystem Comparison
+
+## Statistical Analysis
+
+| Analysis Type | MATLAB | R |
+|---------------|--------|---|
+| **Basic Statistics** | Statistics Toolbox | Built-in |
+| **Mixed-Effects** | Statistics Toolbox | lme4 (free) |
+| **Bayesian Analysis** | Statistics Toolbox | BayesFactor, MCMCglmm |
+| **Survival Analysis** | Statistics Toolbox | survival (built-in) |
+| **Time Series** | Econometrics Toolbox | Built-in stats |
+
+## Machine Learning
+
+| Method | MATLAB | R |
+|--------|--------|---|
+| **Random Forest** | Statistics and ML Toolbox | randomForest |
+| **SVM** | Statistics and ML Toolbox | e1071 |
+| **Neural Networks** | Deep Learning Toolbox | nnet, torch |
+| **Cross-Validation** | Statistics and ML Toolbox | caret |
+
+## Visualization
+
+| Feature | MATLAB | R |
+|---------|--------|---|
+| **Basic Plots** | Built-in plot functions | ggplot2 |
+| **Statistical Plots** | Statistics Toolbox | ggplot2 + extensions |
+| **Interactive Plots** | Limited built-in | plotly, shiny |
+| **Publication Quality** | Manual customization | Automatic with themes |
+
+# Migration Strategy
+
+## Phase 1: Basic Operations
+```{r eval=FALSE}
+# Start with simple data loading and exploration
+loco <- loadLocomotionData("data.parquet")
+summary(loco)
+
+# Basic analysis
+cycles <- getCycles(loco, "SUB01", "normal_walk")
+mean_patterns <- getMeanPatterns(loco, "SUB01", "normal_walk")
+```
+
+## Phase 2: Analysis Workflows
+```{r eval=FALSE}
+# Statistical analysis
+rom_results <- calculateROM(loco, "SUB01", "normal_walk")
+statistical_summary <- getSummaryStatistics(loco, "SUB01", "normal_walk")
+
+# Visualization
+phase_plot <- plotPhasePatterns(loco, "SUB01", "normal_walk")
+```
+
+## Phase 3: Advanced Features
+```{r eval=FALSE}
+# Mixed-effects modeling
+model_data <- extractAnalysisData(loco)
+mixed_model <- fitMixedEffectsModel(model_data)
+
+# Machine learning
+ml_results <- performClassification(model_data)
+```
+
+# Common MATLAB to R Translations
+
+## Basic Operations
+```matlab
+% MATLAB
+length(array)           % Array length
+size(matrix)            % Matrix dimensions
+find(condition)         % Find indices
+mean(data, 1)          % Mean along first dimension
+std(data, 0, 1)        % Standard deviation
+```
+
+```{r eval=FALSE}
+# R
+length(vector)          # Vector length
+dim(matrix)             # Matrix dimensions
+which(condition)        # Find indices
+apply(data, 2, mean)    # Mean along columns (dimension 2)
+apply(data, 2, sd)      # Standard deviation
+```
+
+## Data Manipulation
+```matlab
+% MATLAB
+data(condition, :)      % Row selection
+data(:, columns)        % Column selection
+data(rows, columns)     % Subset selection
+vertcat(a, b)          % Vertical concatenation
+horzcat(a, b)          % Horizontal concatenation
+```
+
+```{r eval=FALSE}
+# R
+data[condition, ]       # Row selection
+data[, columns]         # Column selection  
+data[rows, columns]     # Subset selection
+rbind(a, b)            # Row bind (vertical)
+cbind(a, b)            # Column bind (horizontal)
+
+# Or with dplyr (more readable)
+library(dplyr)
+data %>% filter(condition)
+data %>% select(columns)
+```
+
+## Statistical Functions
+```matlab
+% MATLAB (requires Statistics Toolbox)
+[h, p] = ttest2(group1, group2);
+[p, table, stats] = anova1(data, groups);
+corrcoef(x, y)
+```
+
+```{r eval=FALSE}
+# R (built-in)
+t.test(group1, group2)
+anova(lm(value ~ group, data))
+cor(x, y)
+```
+
+# Performance Considerations
+
+## MATLAB Strengths
+- **Matrix Operations**: Highly optimized for numerical computing
+- **Parallel Computing**: Parallel Computing Toolbox
+- **Memory Management**: Efficient for large matrices
+- **Compiled Code**: Generally faster execution
+
+## R Strengths
+- **Statistical Computing**: Built-in statistical functions
+- **Data Manipulation**: Excellent data.frame handling
+- **Package Ecosystem**: Vast collection of free packages
+- **Memory Efficiency**: Better for mixed data types
+- **Vectorization**: Highly optimized vectorized operations
+
+## Performance Tips for Migration
+
+### MATLAB Habits to Change
+```matlab
+% MATLAB - Avoid in R
+for i = 1:length(data)
+    result(i) = some_function(data(i));
+end
+```
+
+```{r eval=FALSE}
+# R - Use vectorization instead
+result <- some_function(data)  # Vectorized
+# or
+result <- sapply(data, some_function)  # Apply family
+```
+
+### R Best Practices
+```{r eval=FALSE}
+# Use built-in functions
+mean(data, na.rm = TRUE)  # Handle missing values
+apply(matrix, 2, mean)    # Apply to columns
+
+# Use dplyr for data manipulation
+library(dplyr)
+data %>%
+  group_by(subject) %>%
+  summarise(mean_value = mean(value, na.rm = TRUE))
+
+# Preallocate when necessary
+result <- numeric(n)  # Preallocate vector
+result <- vector("list", n)  # Preallocate list
+```
+
+# Advantages of R for Biomechanics
+
+## 1. Cost
+- **MATLAB**: Expensive licenses, additional toolboxes
+- **R**: Completely free, all packages free
+
+## 2. Statistical Depth
+- **MATLAB**: Statistics require additional toolbox
+- **R**: Comprehensive statistics built-in
+
+## 3. Reproducible Research
+- **MATLAB**: Limited documentation features
+- **R**: R Markdown for complete reproducible workflows
+
+## 4. Community and Support
+- **MATLAB**: Commercial support, limited community
+- **R**: Large open-source community, extensive documentation
+
+## 5. Integration
+- **MATLAB**: Standalone environment
+- **R**: Integrates with databases, web services, other languages
+
+# Conclusion
+
+Migrating from MATLAB to R for biomechanical analysis offers significant advantages:
+
+## Key Benefits
+1. **Cost Savings**: No licensing fees for R or packages
+2. **Statistical Rigor**: Built-in statistical functions
+3. **Reproducibility**: R Markdown for complete analysis workflows
+4. **Community**: Large, active community with extensive packages
+5. **Integration**: Better integration with modern data science workflows
+
+## Migration Path
+1. **Start Simple**: Begin with basic data loading and exploration
+2. **Learn R Idioms**: Embrace vectorization and the apply family
+3. **Use Built-ins**: Leverage R's extensive built-in statistical functions
+4. **Explore Packages**: Take advantage of the rich package ecosystem
+5. **Document Everything**: Use R Markdown for reproducible analysis
+
+## Next Steps
+1. Work through the "Getting Started" vignette
+2. Explore statistical analysis capabilities
+3. Learn ggplot2 for advanced visualization
+4. Set up RStudio for an integrated development environment
+5. Join the R community for ongoing support
+
+The R LocomotionData package provides a more cost-effective, statistically comprehensive, and reproducible environment for biomechanical analysis while maintaining the mathematical rigor that MATLAB users expect.

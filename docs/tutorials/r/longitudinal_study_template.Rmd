@@ -1,0 +1,780 @@
+---
+title: "Longitudinal Study Analysis"
+subtitle: "Time-Series Biomechanical Assessment with Mixed-Effects Modeling"
+author: "Research Team"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    code_folding: hide
+    fig_width: 12
+    fig_height: 8
+params:
+  datasets: ["baseline.parquet", "month3.parquet", "month6.parquet", "month12.parquet"]
+  timepoints: ["Baseline", "3 Months", "6 Months", "12 Months"]
+  time_numeric: [0, 3, 6, 12]  # numeric time for modeling
+  primary_task: "normal_walk"
+  subject_id_col: "subject"
+  longitudinal_variable: "time_point"
+  covariates: ["age", "sex", "height", "weight"]  # if demographic data available
+  trajectory_modeling: TRUE
+  individual_trajectories: TRUE
+  random_effects: ["intercept", "slope"]
+  alpha_level: 0.05
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 12,
+  fig.height = 8,
+  dpi = 300
+)
+
+# Load required libraries
+library(LocomotionData)
+library(ggplot2)
+library(plotly)
+library(dplyr)
+library(tidyr)
+library(DT)
+library(knitr)
+library(kableExtra)
+library(viridis)
+library(patchwork)
+library(lme4)        # for mixed-effects models
+library(lmerTest)    # for p-values in lme4
+library(emmeans)     # for marginal means
+library(broom.mixed) # for tidy mixed-effects output
+library(splines)     # for spline modeling
+library(mgcv)        # for GAM models
+
+# Set plotting theme
+theme_set(theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 12, color = "gray50"),
+    strip.text = element_text(face = "bold"),
+    legend.position = "bottom"
+  ))
+
+# Color palette for timepoints
+time_colors <- viridis::viridis_discrete(n = length(params$timepoints))
+names(time_colors) <- params$timepoints
+```
+
+# Study Overview
+
+```{r load-data, include=FALSE}
+# Validate inputs
+if (length(params$datasets) != length(params$timepoints) || 
+    length(params$datasets) != length(params$time_numeric)) {
+  stop("Datasets, timepoints, and time_numeric must have same length")
+}
+
+# Load longitudinal data
+longitudinal_data <- list()
+all_subjects <- list()
+all_tasks <- list()
+all_features <- list()
+
+for (i in seq_along(params$datasets)) {
+  dataset_path <- params$datasets[i]
+  timepoint <- params$timepoints[i]
+  
+  if (!file.exists(dataset_path)) {
+    warning("Dataset file not found: ", dataset_path, ". Skipping timepoint: ", timepoint)
+    next
+  }
+  
+  # Load data
+  loco_data <- loadLocomotionData(dataset_path)
+  longitudinal_data[[timepoint]] <- loco_data
+  
+  # Extract metadata
+  all_subjects[[timepoint]] <- getSubjects(loco_data)
+  all_tasks[[timepoint]] <- getTasks(loco_data)
+  all_features[[timepoint]] <- getFeatures(loco_data)
+}
+
+# Find subjects with complete longitudinal data
+common_subjects <- Reduce(intersect, all_subjects)
+common_tasks <- Reduce(intersect, all_tasks)
+common_features <- Reduce(intersect, all_features)
+
+# Set analysis parameters
+analysis_task <- if (params$primary_task %in% common_tasks) {
+  params$primary_task
+} else {
+  common_tasks[1]
+}
+
+# Select key biomechanical features
+key_features <- intersect(c(
+  "knee_flexion_angle_ipsi_rad", "knee_flexion_angle_contra_rad",
+  "hip_flexion_angle_ipsi_rad", "hip_flexion_angle_contra_rad",
+  "ankle_flexion_angle_ipsi_rad", "ankle_flexion_angle_contra_rad"
+), common_features)
+
+# Create timepoint mapping
+timepoint_map <- data.frame(
+  Timepoint = params$timepoints,
+  Time_Numeric = params$time_numeric,
+  Dataset = basename(params$datasets[1:length(params$timepoints)])
+)
+```
+
+**Study Design:** Longitudinal biomechanical analysis  
+**Analysis Date:** `r Sys.Date()`  
+**Primary Task:** `r analysis_task`  
+**Follow-up Duration:** `r max(params$time_numeric)` months
+
+## Study Timeline
+
+```{r timeline-table}
+kable(timepoint_map,
+      col.names = c("Timepoint", "Months", "Dataset"),
+      align = c("l", "c", "l")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+## Participant Flow
+
+```{r participant-flow}
+# Create participant flow summary
+flow_summary <- data.frame(
+  Timepoint = params$timepoints,
+  N_Available = sapply(all_subjects, length),
+  N_Complete = length(common_subjects),
+  Retention_Rate = round(length(common_subjects) / sapply(all_subjects, length) * 100, 1)
+)
+
+# Add cumulative retention
+baseline_n <- flow_summary$N_Available[1]
+flow_summary$Cumulative_Retention <- round(flow_summary$N_Complete / baseline_n * 100, 1)
+
+kable(flow_summary,
+      col.names = c("Timepoint", "N Available", "N Complete", "Retention Rate (%)", "Cumulative Retention (%)"),
+      align = c("l", rep("c", 4))) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  column_spec(5, color = ifelse(flow_summary$Cumulative_Retention >= 80, "green", 
+                               ifelse(flow_summary$Cumulative_Retention >= 60, "orange", "red")))
+```
+
+**Complete Longitudinal Data:** `r length(common_subjects)` participants  
+**Overall Retention Rate:** `r round(length(common_subjects) / baseline_n * 100, 1)`%  
+**Features for Analysis:** `r length(key_features)` biomechanical variables
+
+---
+
+# Data Preparation for Longitudinal Analysis
+
+```{r data-preparation}
+# Create long-format dataset for mixed-effects modeling
+longitudinal_df <- data.frame()
+
+for (timepoint in names(longitudinal_data)) {
+  loco_data <- longitudinal_data[[timepoint]]
+  time_numeric <- params$time_numeric[params$timepoints == timepoint]
+  
+  for (subject in common_subjects) {
+    # Calculate summary metrics for this subject at this timepoint
+    subject_metrics <- data.frame(
+      Subject = subject,
+      Timepoint = timepoint,
+      Time_Numeric = time_numeric
+    )
+    
+    # Calculate ROM and peak values for each feature
+    for (feature in key_features) {
+      mean_pattern <- getMeanPatterns(loco_data, subject, analysis_task, feature)[[1]]
+      
+      # ROM (converted to degrees)
+      rom_value <- (max(mean_pattern) - min(mean_pattern)) * 180/pi
+      subject_metrics[[paste0(gsub("_rad$", "", feature), "_ROM")]] <- rom_value
+      
+      # Peak value (converted to degrees)
+      peak_value <- max(abs(mean_pattern)) * 180/pi
+      subject_metrics[[paste0(gsub("_rad$", "", feature), "_Peak")]] <- peak_value
+    }
+    
+    longitudinal_df <- rbind(longitudinal_df, subject_metrics)
+  }
+}
+
+# Convert to long format for modeling
+rom_columns <- grep("_ROM$", names(longitudinal_df), value = TRUE)
+peak_columns <- grep("_Peak$", names(longitudinal_df), value = TRUE)
+
+# ROM data
+rom_long <- longitudinal_df %>%
+  select(Subject, Timepoint, Time_Numeric, all_of(rom_columns)) %>%
+  pivot_longer(cols = all_of(rom_columns), 
+               names_to = "Feature", 
+               values_to = "ROM") %>%
+  mutate(Feature = gsub("_ROM$", "", Feature),
+         Feature = gsub("_", " ", Feature))
+
+# Peak data  
+peak_long <- longitudinal_df %>%
+  select(Subject, Timepoint, Time_Numeric, all_of(peak_columns)) %>%
+  pivot_longer(cols = all_of(peak_columns), 
+               names_to = "Feature", 
+               values_to = "Peak") %>%
+  mutate(Feature = gsub("_Peak$", "", Feature),
+         Feature = gsub("_", " ", Feature))
+
+cat("**Longitudinal Dataset Prepared:**\n")
+cat("- Total observations: ", nrow(longitudinal_df), "\n")
+cat("- Participants: ", length(unique(longitudinal_df$Subject)), "\n")
+cat("- Timepoints per participant: ", nrow(longitudinal_df) / length(unique(longitudinal_df$Subject)), "\n")
+cat("- Features analyzed: ", length(key_features), "\n\n")
+```
+
+---
+
+# Trajectory Analysis
+
+```{r trajectory-visualization, eval=params$individual_trajectories, fig.height=10}
+if (params$individual_trajectories) {
+  
+  cat("## Individual Trajectories\n\n")
+  
+  # Plot individual trajectories for ROM
+  features_to_plot <- unique(rom_long$Feature)[1:4]  # Plot first 4 features
+  
+  trajectory_plots <- list()
+  
+  for (i in seq_along(features_to_plot)) {
+    feature <- features_to_plot[i]
+    feature_data <- rom_long[rom_long$Feature == feature, ]
+    
+    p <- ggplot(feature_data, aes(x = Time_Numeric, y = ROM)) +
+      geom_line(aes(group = Subject), alpha = 0.3, color = "gray50") +
+      geom_smooth(method = "loess", se = TRUE, color = "blue", size = 1.5) +
+      geom_point(aes(color = Timepoint), size = 2, alpha = 0.7) +
+      labs(
+        title = paste("Trajectory:", feature),
+        x = "Time (months)",
+        y = "ROM (degrees)",
+        color = "Timepoint"
+      ) +
+      scale_color_manual(values = time_colors) +
+      theme(legend.position = "none")
+    
+    trajectory_plots[[i]] <- p
+  }
+  
+  # Combine plots
+  if (length(trajectory_plots) >= 4) {
+    combined_trajectories <- (trajectory_plots[[1]] | trajectory_plots[[2]]) /
+                            (trajectory_plots[[3]] | trajectory_plots[[4]])
+  } else {
+    combined_trajectories <- do.call("|", trajectory_plots)
+  }
+  
+  print(combined_trajectories)
+}
+```
+
+## Group-Level Trajectories
+
+```{r group-trajectories, fig.height=8}
+# Calculate group means at each timepoint
+group_trajectories <- rom_long %>%
+  group_by(Feature, Timepoint, Time_Numeric) %>%
+  summarise(
+    Mean_ROM = mean(ROM, na.rm = TRUE),
+    SE_ROM = sd(ROM, na.rm = TRUE) / sqrt(n()),
+    N = n(),
+    .groups = 'drop'
+  )
+
+# Plot group trajectories for selected features
+selected_features <- unique(group_trajectories$Feature)[1:3]
+group_data <- group_trajectories[group_trajectories$Feature %in% selected_features, ]
+
+p_group <- ggplot(group_data, aes(x = Time_Numeric, y = Mean_ROM, color = Feature)) +
+  geom_errorbar(aes(ymin = Mean_ROM - SE_ROM, ymax = Mean_ROM + SE_ROM), 
+                width = 0.2, alpha = 0.7) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  facet_wrap(~ Feature, scales = "free_y") +
+  labs(
+    title = "Group-Level Trajectories Over Time",
+    subtitle = "Mean ± SE across all participants",
+    x = "Time (months)",
+    y = "ROM (degrees)",
+    color = "Feature"
+  ) +
+  scale_color_viridis_d() +
+  theme(legend.position = "none")
+
+print(p_group)
+```
+
+---
+
+# Mixed-Effects Modeling
+
+```{r mixed-effects-setup, eval=params$trajectory_modeling}
+if (params$trajectory_modeling) {
+  
+  cat("## Mixed-Effects Model Results\n\n")
+  
+  # Fit mixed-effects models for each feature
+  mixed_models <- list()
+  model_summaries <- list()
+  
+  for (feature in unique(rom_long$Feature)) {
+    feature_data <- rom_long[rom_long$Feature == feature, ]
+    
+    # Basic mixed-effects model with random intercept and slope
+    if ("slope" %in% params$random_effects && "intercept" %in% params$random_effects) {
+      model_formula <- ROM ~ Time_Numeric + (Time_Numeric | Subject)
+    } else if ("intercept" %in% params$random_effects) {
+      model_formula <- ROM ~ Time_Numeric + (1 | Subject)
+    } else {
+      model_formula <- ROM ~ Time_Numeric  # Fixed effects only
+    }
+    
+    # Fit model
+    tryCatch({
+      model <- lmer(model_formula, data = feature_data)
+      mixed_models[[feature]] <- model
+      
+      # Extract model summary
+      model_summary <- summary(model)
+      model_summaries[[feature]] <- model_summary
+      
+    }, error = function(e) {
+      warning("Model fitting failed for feature: ", feature, ". Error: ", e$message)
+    })
+  }
+  
+  # Create summary table of fixed effects
+  if (length(mixed_models) > 0) {
+    fixed_effects_df <- data.frame()
+    
+    for (feature in names(mixed_models)) {
+      model <- mixed_models[[feature]]
+      fixed_effects <- summary(model)$coefficients
+      
+      # Extract intercept and slope effects
+      intercept_row <- data.frame(
+        Feature = feature,
+        Effect = "Intercept",
+        Estimate = round(fixed_effects["(Intercept)", "Estimate"], 3),
+        SE = round(fixed_effects["(Intercept)", "Std. Error"], 3),
+        t_value = round(fixed_effects["(Intercept)", "t value"], 3),
+        p_value = ifelse(fixed_effects["(Intercept)", "Pr(>|t|)"] < 0.001, 
+                        "<0.001", round(fixed_effects["(Intercept)", "Pr(>|t|)"], 3))
+      )
+      
+      slope_row <- data.frame(
+        Feature = feature,
+        Effect = "Time (slope)",
+        Estimate = round(fixed_effects["Time_Numeric", "Estimate"], 3),
+        SE = round(fixed_effects["Time_Numeric", "Std. Error"], 3),
+        t_value = round(fixed_effects["Time_Numeric", "t value"], 3),
+        p_value = ifelse(fixed_effects["Time_Numeric", "Pr(>|t|)"] < 0.001, 
+                        "<0.001", round(fixed_effects["Time_Numeric", "Pr(>|t|)"], 3))
+      )
+      
+      fixed_effects_df <- rbind(fixed_effects_df, intercept_row, slope_row)
+    }
+    
+    # Display fixed effects table
+    kable(fixed_effects_df,
+          col.names = c("Feature", "Effect", "Estimate", "SE", "t", "p-value"),
+          align = c("l", "l", rep("c", 4))) %>%
+      kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+      column_spec(6, color = ifelse(
+        fixed_effects_df$p_value == "<0.001" | as.numeric(fixed_effects_df$p_value) < 0.05, 
+        "green", "red")) %>%
+      pack_rows(index = table(fixed_effects_df$Feature))
+  }
+}
+```
+
+```{r model-interpretation, eval=params$trajectory_modeling && length(mixed_models) > 0, results='asis'}
+if (params$trajectory_modeling && length(mixed_models) > 0) {
+  
+  cat("\n### Model Interpretation\n\n")
+  
+  # Analyze slope significance
+  slope_effects <- fixed_effects_df[fixed_effects_df$Effect == "Time (slope)", ]
+  significant_slopes <- slope_effects[
+    slope_effects$p_value == "<0.001" | as.numeric(slope_effects$p_value) < params$alpha_level, 
+  ]
+  
+  if (nrow(significant_slopes) > 0) {
+    cat("**Features with Significant Time Trends:**\n")
+    for (i in 1:nrow(significant_slopes)) {
+      feature <- significant_slopes$Feature[i]
+      estimate <- significant_slopes$Estimate[i]
+      direction <- ifelse(estimate > 0, "increasing", "decreasing")
+      
+      cat("-", feature, ": ", direction, " trajectory (", estimate, "°/month)\n")
+    }
+    cat("\n")
+  } else {
+    cat("**No significant time trends detected** in the analyzed features.\n\n")
+  }
+  
+  # Random effects interpretation
+  cat("### Random Effects (Individual Variation)\n\n")
+  
+  for (feature in names(mixed_models)[1:3]) {  # Show first 3 features
+    model <- mixed_models[[feature]]
+    random_effects <- VarCorr(model)
+    
+    cat("**", feature, ":**\n")
+    cat("- Between-subject variability in baseline values\n")
+    if ("slope" %in% params$random_effects) {
+      cat("- Individual differences in rate of change over time\n")
+    }
+    cat("\n")
+  }
+}
+```
+
+---
+
+# Change Detection Analysis
+
+```{r change-detection}
+# Calculate change from baseline for each participant
+change_analysis <- rom_long %>%
+  arrange(Subject, Feature, Time_Numeric) %>%
+  group_by(Subject, Feature) %>%
+  mutate(
+    Baseline_ROM = first(ROM),
+    Change_from_Baseline = ROM - Baseline_ROM,
+    Percent_Change = (Change_from_Baseline / Baseline_ROM) * 100
+  ) %>%
+  filter(Time_Numeric > 0) %>%  # Exclude baseline
+  ungroup()
+
+# Summary of changes at each timepoint
+change_summary <- change_analysis %>%
+  group_by(Feature, Timepoint, Time_Numeric) %>%
+  summarise(
+    Mean_Change = round(mean(Change_from_Baseline, na.rm = TRUE), 2),
+    SD_Change = round(sd(Change_from_Baseline, na.rm = TRUE), 2),
+    Mean_Percent_Change = round(mean(Percent_Change, na.rm = TRUE), 1),
+    N_Increased = sum(Change_from_Baseline > 0, na.rm = TRUE),
+    N_Decreased = sum(Change_from_Baseline < 0, na.rm = TRUE),
+    N_Total = n(),
+    .groups = 'drop'
+  ) %>%
+  mutate(
+    Percent_Increased = round(N_Increased / N_Total * 100, 1),
+    Percent_Decreased = round(N_Decreased / N_Total * 100, 1)
+  )
+
+cat("## Change from Baseline Analysis\n\n")
+
+# Display change summary for selected features and timepoints
+selected_changes <- change_summary %>%
+  filter(Feature %in% unique(change_summary$Feature)[1:3],
+         Timepoint %in% params$timepoints[c(2, length(params$timepoints))]) %>%  # Show 2nd and last timepoints
+  select(Feature, Timepoint, Mean_Change, Mean_Percent_Change, 
+         Percent_Increased, Percent_Decreased)
+
+kable(selected_changes,
+      col.names = c("Feature", "Timepoint", "Mean Change (°)", "Mean Change (%)", 
+                    "% Increased", "% Decreased"),
+      align = c("l", "l", rep("c", 4))) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+## Individual Response Patterns
+
+```{r response-patterns, fig.height=8}
+# Analyze individual response patterns at final timepoint
+final_timepoint <- params$timepoints[length(params$timepoints)]
+final_changes <- change_analysis %>%
+  filter(Timepoint == final_timepoint) %>%
+  select(Subject, Feature, Change_from_Baseline, Percent_Change)
+
+# Create response pattern plot
+p_response <- ggplot(final_changes, aes(x = Feature, y = Percent_Change)) +
+  geom_hline(yintercept = c(-10, 10), linetype = "dashed", color = "gray50") +
+  geom_boxplot(alpha = 0.7, outlier.shape = NA) +
+  geom_jitter(width = 0.2, alpha = 0.6, size = 2) +
+  labs(
+    title = paste("Individual Response Patterns at", final_timepoint),
+    subtitle = "Dashed lines indicate ±10% change threshold",
+    x = "Feature",
+    y = "Change from Baseline (%)"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(p_response)
+
+# Calculate responder rates
+responder_summary <- final_changes %>%
+  group_by(Feature) %>%
+  summarise(
+    N_Total = n(),
+    N_Improved = sum(Percent_Change > 10, na.rm = TRUE),
+    N_Worsened = sum(Percent_Change < -10, na.rm = TRUE),
+    N_Stable = sum(abs(Percent_Change) <= 10, na.rm = TRUE),
+    .groups = 'drop'
+  ) %>%
+  mutate(
+    Percent_Improved = round(N_Improved / N_Total * 100, 1),
+    Percent_Worsened = round(N_Worsened / N_Total * 100, 1),
+    Percent_Stable = round(N_Stable / N_Total * 100, 1)
+  )
+
+cat("\n### Response Classification (>10% change threshold)\n\n")
+
+kable(responder_summary %>% select(Feature, Percent_Improved, Percent_Stable, Percent_Worsened),
+      col.names = c("Feature", "Improved (%)", "Stable (%)", "Worsened (%)"),
+      align = c("l", rep("c", 3))) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+---
+
+# Interactive Longitudinal Visualization
+
+```{r interactive-longitudinal, fig.height=6}
+# Create interactive trajectory plot
+primary_feature <- unique(rom_long$Feature)[1]
+interactive_data <- rom_long %>%
+  filter(Feature == primary_feature) %>%
+  left_join(
+    change_analysis %>% 
+      filter(Feature == primary_feature) %>%
+      select(Subject, Timepoint, Change_from_Baseline, Percent_Change),
+    by = c("Subject", "Timepoint")
+  )
+
+# Replace NA values for baseline (Time_Numeric = 0)
+interactive_data$Change_from_Baseline[is.na(interactive_data$Change_from_Baseline)] <- 0
+interactive_data$Percent_Change[is.na(interactive_data$Percent_Change)] <- 0
+
+p_interactive <- ggplot(interactive_data, aes(x = Time_Numeric, y = ROM, group = Subject)) +
+  geom_line(alpha = 0.3, color = "gray60") +
+  geom_point(aes(color = Timepoint, 
+                text = paste("Subject:", Subject, 
+                           "<br>Time:", Time_Numeric, "months",
+                           "<br>ROM:", round(ROM, 1), "°",
+                           "<br>Change:", round(Change_from_Baseline, 1), "°",
+                           "<br>% Change:", round(Percent_Change, 1), "%")),
+             size = 2, alpha = 0.8) +
+  geom_smooth(aes(group = 1), method = "loess", se = TRUE, color = "blue", size = 1.5) +
+  labs(
+    title = paste("Interactive Longitudinal Analysis:", primary_feature),
+    subtitle = "Hover for individual participant details",
+    x = "Time (months)",
+    y = "ROM (degrees)",
+    color = "Timepoint"
+  ) +
+  scale_color_manual(values = time_colors)
+
+ggplotly(p_interactive, tooltip = "text") %>%
+  layout(hovermode = "closest")
+```
+
+---
+
+# Clinical Significance Assessment
+
+```{r clinical-significance, results='asis'}
+cat("## Clinical Interpretation\n\n")
+
+# Determine clinical significance based on trajectory analysis
+if (params$trajectory_modeling && length(mixed_models) > 0) {
+  
+  # Count significant trends
+  significant_trends <- nrow(significant_slopes)
+  total_features <- length(unique(rom_long$Feature))
+  
+  cat("### Temporal Trends\n")
+  cat("- **Features with significant time trends:** ", significant_trends, " out of ", total_features, "\n")
+  cat("- **Proportion showing change:** ", round(significant_trends/total_features * 100, 1), "%\n\n")
+  
+  if (significant_trends > 0) {
+    # Analyze direction of changes
+    improving_features <- significant_slopes$Feature[significant_slopes$Estimate > 0]
+    declining_features <- significant_slopes$Feature[significant_slopes$Estimate < 0]
+    
+    if (length(improving_features) > 0) {
+      cat("**Improving over time:**\n")
+      cat(paste("-", improving_features, collapse = "\n"))
+      cat("\n\n")
+    }
+    
+    if (length(declining_features) > 0) {
+      cat("**Declining over time:**\n")
+      cat(paste("-", declining_features, collapse = "\n"))
+      cat("\n\n")
+    }
+  }
+}
+
+# Response pattern analysis
+cat("### Individual Response Patterns\n")
+
+highly_responsive_features <- responder_summary$Feature[responder_summary$Percent_Improved >= 30]
+stable_features <- responder_summary$Feature[responder_summary$Percent_Stable >= 60]
+
+if (length(highly_responsive_features) > 0) {
+  cat("**Features with high improvement rates (≥30%):**\n")
+  cat(paste("-", highly_responsive_features, collapse = "\n"))
+  cat("\n\n")
+}
+
+if (length(stable_features) > 0) {
+  cat("**Features showing stability (≥60% stable):**\n")
+  cat(paste("-", stable_features, collapse = "\n"))
+  cat("\n\n")
+}
+
+cat("### Clinical Recommendations\n\n")
+
+# Generate recommendations based on findings
+if (params$trajectory_modeling && significant_trends > total_features * 0.5) {
+  cat("**High temporal variability detected** - Consider:\n")
+  cat("- Intervention timing optimization\n")
+  cat("- Individual trajectory monitoring\n")
+  cat("- Predictive modeling for response patterns\n\n")
+} else if (significant_trends > 0) {
+  cat("**Moderate temporal changes observed** - Consider:\n")
+  cat("- Targeted monitoring of changing features\n")
+  cat("- Investigation of change mechanisms\n")
+  cat("- Subgroup analysis based on response patterns\n\n")
+} else {
+  cat("**Stable longitudinal patterns** - Consider:\n")
+  cat("- Longer follow-up periods\n")
+  cat("- More sensitive outcome measures\n")
+  cat("- Investigation of plateau effects\n\n")
+}
+
+cat("### Study Implications\n\n")
+cat("- **Natural history:** Understanding of typical progression patterns\n")
+cat("- **Intervention timing:** Optimal windows for therapeutic intervention\n")
+cat("- **Monitoring protocols:** Features requiring frequent assessment\n")
+cat("- **Prognosis:** Predictive factors for long-term outcomes\n\n")
+```
+
+---
+
+# Study Quality and Limitations
+
+```{r study-limitations, results='asis'}
+cat("## Data Quality Assessment\n\n")
+
+# Assess completion rates
+completion_rates <- sapply(params$timepoints, function(tp) {
+  length(common_subjects) / length(all_subjects[[tp]]) * 100
+})
+
+quality_df <- data.frame(
+  Timepoint = params$timepoints,
+  Completion_Rate = round(completion_rates, 1),
+  Quality_Rating = ifelse(completion_rates >= 80, "Excellent",
+                         ifelse(completion_rates >= 60, "Good", "Fair"))
+)
+
+kable(quality_df,
+      col.names = c("Timepoint", "Completion Rate (%)", "Quality Rating"),
+      align = c("l", "c", "c")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+cat("\n## Study Limitations\n\n")
+
+limitations <- c(
+  "**Attrition bias:** Differential dropout may affect trajectory estimates",
+  "**Measurement error:** Accumulation over multiple timepoints",
+  "**Temporal confounding:** External factors may influence outcomes",
+  "**Sample size:** Power may be limited for detecting small changes"
+)
+
+# Add specific limitations based on analysis
+if (min(completion_rates) < 70) {
+  limitations <- c(limitations, 
+    "**High attrition:** Completion rates below 70% at some timepoints")
+}
+
+if (length(common_subjects) < 20) {
+  limitations <- c(limitations,
+    "**Small sample:** Limited power for mixed-effects modeling")
+}
+
+cat(paste("-", limitations, collapse = "\n"))
+cat("\n\n")
+
+cat("## Future Research Directions\n\n")
+cat("- **Predictive modeling:** Identify early indicators of trajectory patterns\n")
+cat("- **Mechanistic studies:** Investigate drivers of observed changes\n")
+cat("- **Intervention studies:** Test trajectory modification strategies\n")
+cat("- **Harmonization:** Combine with other longitudinal cohorts\n\n")
+
+cat("## Statistical Considerations\n\n")
+cat("- **Missing data:** Consider multiple imputation for missing timepoints\n")
+cat("- **Non-linear trajectories:** Explore spline or polynomial models\n")
+cat("- **Covariates:** Include demographic and clinical factors\n")
+cat("- **Power analysis:** Post-hoc power calculation for trajectory detection\n\n")
+```
+
+---
+
+# Technical Appendix
+
+```{r technical-appendix}
+cat("## Analysis Configuration\n\n")
+
+cat("**Datasets and Timepoints:**\n")
+for (i in seq_along(params$datasets)) {
+  cat("-", params$timepoints[i], "(", params$time_numeric[i], "months ):", 
+      basename(params$datasets[i]), "\n")
+}
+
+cat("\n**Modeling Parameters:**\n")
+cat("- **Primary task:** ", analysis_task, "\n")
+cat("- **Random effects:** ", paste(params$random_effects, collapse = ", "), "\n")
+cat("- **Alpha level:** ", params$alpha_level, "\n")
+cat("- **Complete cases:** ", length(common_subjects), " participants\n\n")
+
+cat("**Features Analyzed:**\n")
+for (i in seq_along(key_features)) {
+  cat(i, ". ", gsub("_", " ", key_features[i]), "\n")
+}
+
+cat("\n**Mixed-Effects Model Specifications:**\n")
+if (params$trajectory_modeling) {
+  cat("- **Fixed effects:** Time (linear trend)\n")
+  cat("- **Random effects:** ", paste(params$random_effects, collapse = ", "), " by participant\n")
+  cat("- **Estimation method:** Restricted Maximum Likelihood (REML)\n")
+} else {
+  cat("- Mixed-effects modeling disabled\n")
+}
+
+cat("\n**Software Information:**\n")
+cat("- **Package:** LocomotionData R Package\n")
+cat("- **Mixed-effects:** lme4, lmerTest\n")
+cat("- **Visualization:** ggplot2, plotly\n")
+cat("- **Analysis date:** ", as.character(Sys.Date()), "\n\n")
+
+if (params$trajectory_modeling && length(mixed_models) > 0) {
+  cat("## Model Diagnostics\n\n")
+  cat("*Note: Full model diagnostics (residual plots, random effects distributions) ")
+  cat("should be examined for each fitted model to ensure assumptions are met.*\n\n")
+}
+
+cat("## R Session Information\n\n")
+print(sessionInfo())
+```
+
+---
+
+*This longitudinal analysis was generated using the LocomotionData R package with mixed-effects modeling. Trajectory interpretation should consider individual variability, clinical context, and study design limitations.*

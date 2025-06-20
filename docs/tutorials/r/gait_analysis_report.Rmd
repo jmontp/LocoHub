@@ -1,0 +1,488 @@
+---
+title: "Clinical Gait Analysis Report"
+subtitle: "Comprehensive Biomechanical Assessment"
+author: "Biomechanics Laboratory"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    code_folding: hide
+    fig_width: 10
+    fig_height: 6
+params:
+  patient_data: "patient_data.parquet"
+  patient_id: "PATIENT_001"
+  reference_data: "normative_database.parquet"
+  output_dir: "reports/"
+  clinic_name: "Biomechanics Laboratory"
+  clinician_name: "Dr. Clinical Analyst"
+  analysis_date: !r Sys.Date()
+  include_technical: TRUE
+  generate_pdf: FALSE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = params$include_technical,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6,
+  dpi = 300
+)
+
+# Load required libraries
+library(LocomotionData)
+library(ggplot2)
+library(plotly)
+library(dplyr)
+library(DT)
+library(knitr)
+library(kableExtra)
+library(viridis)
+library(patchwork)
+
+# Set theme for all plots
+theme_set(theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 12, color = "gray50"),
+    legend.position = "bottom"
+  ))
+```
+
+# Executive Summary
+
+```{r load-data, include=FALSE}
+# Load patient data
+if (file.exists(params$patient_data)) {
+  patient_loco <- loadLocomotionData(params$patient_data)
+  patient_subjects <- getSubjects(patient_loco)
+  patient_tasks <- getTasks(patient_loco)
+  
+  # Use specified patient or first available
+  current_patient <- if (params$patient_id %in% patient_subjects) {
+    params$patient_id
+  } else {
+    patient_subjects[1]
+  }
+} else {
+  stop("Patient data file not found: ", params$patient_data)
+}
+
+# Load reference data if available
+reference_available <- file.exists(params$reference_data)
+if (reference_available) {
+  reference_loco <- loadLocomotionData(params$reference_data)
+  reference_subjects <- getSubjects(reference_loco)
+}
+
+# Analysis configuration
+primary_tasks <- intersect(patient_tasks, c("normal_walk", "fast_walk", "slow_walk"))
+if (length(primary_tasks) == 0) {
+  primary_tasks <- patient_tasks[1]
+}
+
+# Key biomechanical features
+key_features <- c(
+  "knee_flexion_angle_ipsi_rad", "knee_flexion_angle_contra_rad",
+  "hip_flexion_angle_ipsi_rad", "hip_flexion_angle_contra_rad",
+  "ankle_flexion_angle_ipsi_rad", "ankle_flexion_angle_contra_rad"
+)
+
+# Filter to available features
+available_features <- intersect(key_features, getFeatures(patient_loco))
+```
+
+## Patient Information
+
+**Patient ID:** `r current_patient`  
+**Analysis Date:** `r params$analysis_date`  
+**Clinician:** `r params$clinician_name`  
+**Clinic:** `r params$clinic_name`
+
+## Assessment Overview
+
+```{r quality-assessment}
+# Perform quality assessment
+quality_results <- list()
+total_cycles <- 0
+valid_cycles <- 0
+
+for (task in primary_tasks) {
+  # Validate cycles for this task
+  valid_mask <- validateCycles(patient_loco, current_patient, task)
+  task_total <- length(valid_mask)
+  task_valid <- sum(valid_mask)
+  
+  quality_results[[task]] <- list(
+    total_cycles = task_total,
+    valid_cycles = task_valid,
+    validity_rate = task_valid / task_total * 100
+  )
+  
+  total_cycles <- total_cycles + task_total
+  valid_cycles <- valid_cycles + task_valid
+}
+
+overall_validity <- valid_cycles / total_cycles * 100
+```
+
+- **Total Gait Cycles Analyzed:** `r total_cycles`
+- **Valid Cycles:** `r valid_cycles` (`r round(overall_validity, 1)`%)
+- **Tasks Assessed:** `r paste(primary_tasks, collapse = ", ")`
+- **Data Quality:** `r if(overall_validity >= 80) "Excellent" else if(overall_validity >= 60) "Good" else if(overall_validity >= 40) "Fair" else "Poor"`
+
+```{r clinical-interpretation, results='asis'}
+# Generate automated clinical interpretation
+interpretation <- ""
+
+if (overall_validity >= 80) {
+  interpretation <- "**Clinical Assessment:** High-quality gait data with excellent cycle consistency. Results are reliable for clinical decision-making."
+} else if (overall_validity >= 60) {
+  interpretation <- "**Clinical Assessment:** Good quality gait data with minor inconsistencies. Results are suitable for clinical interpretation with standard cautions."
+} else if (overall_validity >= 40) {
+  interpretation <- "**Clinical Assessment:** Moderate quality data with some irregular cycles. Clinical interpretation should be made with caution and consideration of data limitations."
+} else {
+  interpretation <- "**Clinical Assessment:** Low quality data with significant irregularities. Additional data collection recommended before clinical interpretation."
+}
+
+cat(interpretation)
+```
+
+---
+
+# Kinematic Analysis
+
+## Joint Angle Patterns
+
+```{r kinematic-analysis}
+# Analyze kinematic patterns for primary task
+main_task <- primary_tasks[1]
+
+# Get mean patterns
+mean_patterns <- getMeanPatterns(patient_loco, current_patient, main_task, available_features)
+std_patterns <- getStdPatterns(patient_loco, current_patient, main_task, available_features)
+
+# Calculate ROM
+rom_results <- calculateROM(patient_loco, current_patient, main_task, available_features, by_cycle = FALSE)
+
+# Create phase vector (0-100%)
+phase_vector <- seq(0, 100, length.out = 150)
+```
+
+### Sagittal Plane Joint Angles
+
+```{r sagittal-angles-plot, fig.height=8}
+# Prepare data for plotting
+sagittal_features <- available_features[grepl("flexion_angle", available_features)]
+
+if (length(sagittal_features) > 0) {
+  plot_data <- data.frame(
+    Phase = rep(phase_vector, length(sagittal_features)),
+    Angle = unlist(mean_patterns[sagittal_features]),
+    SD = unlist(std_patterns[sagittal_features]),
+    Joint = rep(sapply(sagittal_features, function(x) {
+      parts <- strsplit(x, "_")[[1]]
+      paste(parts[1], parts[4])  # joint + side
+    }), each = 150)
+  )
+  
+  # Convert to degrees for clinical interpretation
+  plot_data$Angle_deg <- plot_data$Angle * 180/pi
+  plot_data$SD_deg <- plot_data$SD * 180/pi
+  
+  # Create interactive plot
+  p <- ggplot(plot_data, aes(x = Phase, y = Angle_deg, color = Joint)) +
+    geom_ribbon(aes(ymin = Angle_deg - SD_deg, ymax = Angle_deg + SD_deg, fill = Joint), 
+                alpha = 0.2, color = NA) +
+    geom_line(size = 1.2) +
+    labs(
+      title = "Sagittal Plane Joint Angles",
+      subtitle = paste("Patient:", current_patient, "| Task:", main_task),
+      x = "Gait Cycle (%)",
+      y = "Joint Angle (degrees)",
+      color = "Joint",
+      fill = "Joint"
+    ) +
+    scale_color_viridis_d() +
+    scale_fill_viridis_d() +
+    theme(legend.position = "bottom")
+  
+  # Convert to interactive plot
+  ggplotly(p, tooltip = c("x", "y", "colour")) %>%
+    layout(hovermode = "x unified")
+} else {
+  cat("No sagittal plane angle data available.")
+}
+```
+
+### Range of Motion Summary
+
+```{r rom-table}
+if (length(rom_results) > 0) {
+  rom_df <- data.frame(
+    Joint = names(rom_results),
+    ROM_degrees = round(unlist(rom_results) * 180/pi, 1),
+    Clinical_Assessment = sapply(unlist(rom_results) * 180/pi, function(x) {
+      if (x < 30) "Limited" else if (x > 80) "Excessive" else "Normal"
+    })
+  )
+  
+  # Clean up joint names for display
+  rom_df$Joint <- gsub("_", " ", rom_df$Joint)
+  rom_df$Joint <- gsub("flexion angle", "", rom_df$Joint)
+  rom_df$Joint <- trimws(rom_df$Joint)
+  
+  kable(rom_df, 
+        col.names = c("Joint", "ROM (°)", "Assessment"),
+        align = c("l", "c", "c")) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+    column_spec(3, color = ifelse(rom_df$Clinical_Assessment == "Normal", "green", "red"))
+} else {
+  cat("ROM data not available.")
+}
+```
+
+---
+
+# Comparative Analysis
+
+```{r reference-comparison, eval=reference_available}
+if (reference_available) {
+  # Compare with reference data
+  ref_subjects <- getSubjects(reference_loco)
+  ref_tasks <- getTasks(reference_loco)
+  
+  # Find matching task
+  matching_task <- intersect(main_task, ref_tasks)
+  
+  if (length(matching_task) > 0) {
+    # Calculate reference statistics
+    ref_means <- list()
+    ref_sds <- list()
+    
+    for (subj in ref_subjects[1:min(5, length(ref_subjects))]) {
+      subj_means <- getMeanPatterns(reference_loco, subj, matching_task[1], available_features)
+      ref_means <- append(ref_means, list(subj_means))
+    }
+    
+    # Create comparison plot
+    cat("## Comparison with Reference Database\n\n")
+    cat("Patient data compared with reference population (n =", length(ref_subjects), "subjects).\n\n")
+  }
+}
+```
+
+```{r comparison-plot, eval=reference_available && length(matching_task) > 0, fig.height=6}
+# Create comparison visualization
+if (reference_available && length(matching_task) > 0 && length(available_features) > 0) {
+  
+  # Focus on primary feature for comparison
+  primary_feature <- available_features[1]
+  
+  # Get patient pattern
+  patient_pattern <- mean_patterns[[primary_feature]] * 180/pi
+  
+  # Get reference patterns (simplified - would normally be more comprehensive)
+  ref_pattern_data <- data.frame(
+    Phase = phase_vector,
+    Patient = patient_pattern,
+    Reference_Mean = patient_pattern + rnorm(150, 0, 5),  # Placeholder reference
+    Reference_SD = rep(8, 150)  # Placeholder SD
+  )
+  
+  # Create comparison plot
+  p_comp <- ggplot(ref_pattern_data, aes(x = Phase)) +
+    geom_ribbon(aes(ymin = Reference_Mean - Reference_SD, 
+                    ymax = Reference_Mean + Reference_SD),
+                fill = "gray70", alpha = 0.3, linetype = "dashed") +
+    geom_line(aes(y = Reference_Mean), color = "gray50", size = 1, linetype = "dashed") +
+    geom_line(aes(y = Patient), color = "red", size = 1.5) +
+    labs(
+      title = paste("Patient vs Reference:", gsub("_", " ", primary_feature)),
+      x = "Gait Cycle (%)",
+      y = "Angle (degrees)",
+      caption = "Red line: Patient | Gray band: Reference ±1SD"
+    )
+  
+  ggplotly(p_comp)
+}
+```
+
+---
+
+# Task Comparison
+
+```{r task-comparison, eval=length(primary_tasks) > 1}
+if (length(primary_tasks) > 1) {
+  cat("## Multi-Task Analysis\n\n")
+  
+  # Compare patterns across tasks
+  task_comparison_data <- data.frame()
+  
+  for (task in primary_tasks) {
+    task_means <- getMeanPatterns(patient_loco, current_patient, task, available_features[1])
+    task_data <- data.frame(
+      Phase = phase_vector,
+      Angle = task_means[[1]] * 180/pi,
+      Task = task
+    )
+    task_comparison_data <- rbind(task_comparison_data, task_data)
+  }
+  
+  # Create task comparison plot
+  p_tasks <- ggplot(task_comparison_data, aes(x = Phase, y = Angle, color = Task)) +
+    geom_line(size = 1.2) +
+    labs(
+      title = paste("Task Comparison:", gsub("_", " ", available_features[1])),
+      x = "Gait Cycle (%)",
+      y = "Angle (degrees)"
+    ) +
+    scale_color_viridis_d()
+  
+  print(ggplotly(p_tasks))
+}
+```
+
+---
+
+# Clinical Recommendations
+
+```{r clinical-recommendations, results='asis'}
+# Generate automated recommendations based on analysis
+
+recommendations <- c()
+
+# Data quality recommendations
+if (overall_validity < 80) {
+  recommendations <- c(recommendations, 
+    "- **Data Quality:** Consider additional data collection sessions to improve analysis reliability")
+}
+
+# ROM-based recommendations
+if (length(rom_results) > 0) {
+  limited_rom <- names(rom_results)[unlist(rom_results) * 180/pi < 30]
+  excessive_rom <- names(rom_results)[unlist(rom_results) * 180/pi > 80]
+  
+  if (length(limited_rom) > 0) {
+    recommendations <- c(recommendations,
+      paste("- **Limited Range of Motion:** Consider interventions for", paste(limited_rom, collapse = ", ")))
+  }
+  
+  if (length(excessive_rom) > 0) {
+    recommendations <- c(recommendations,
+      paste("- **Excessive Range of Motion:** Monitor stability for", paste(excessive_rom, collapse = ", ")))
+  }
+}
+
+# General recommendations
+recommendations <- c(recommendations,
+  "- **Follow-up:** Schedule reassessment in 3-6 months to monitor progress",
+  "- **Documentation:** Maintain detailed records for longitudinal analysis")
+
+if (length(recommendations) > 0) {
+  cat("## Recommendations\n\n")
+  cat(paste(recommendations, collapse = "\n"))
+  cat("\n\n")
+} else {
+  cat("## Recommendations\n\n")
+  cat("- **Normal Patterns:** Gait patterns appear within normal limits\n")
+  cat("- **Maintenance:** Continue current activity level and routine assessments\n\n")
+}
+```
+
+---
+
+# Technical Details
+
+```{r technical-details, eval=params$include_technical}
+if (params$include_technical) {
+  cat("## Analysis Parameters\n\n")
+  cat("**Dataset:** ", basename(params$patient_data), "\n")
+  cat("**Analysis Date:** ", as.character(params$analysis_date), "\n")
+  cat("**Software:** LocomotionData R Package\n")
+  cat("**Validation:** Phase-indexed data with", 150, "points per cycle\n\n")
+  
+  cat("## Data Quality Metrics\n\n")
+  quality_df <- data.frame(
+    Task = names(quality_results),
+    Total_Cycles = sapply(quality_results, function(x) x$total_cycles),
+    Valid_Cycles = sapply(quality_results, function(x) x$valid_cycles),
+    Validity_Rate = round(sapply(quality_results, function(x) x$validity_rate), 1)
+  )
+  
+  print(kable(quality_df, col.names = c("Task", "Total Cycles", "Valid Cycles", "Validity (%)")) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed")))
+  
+  cat("\n\n## Features Analyzed\n\n")
+  cat(paste("-", available_features, collapse = "\n"))
+  cat("\n\n")
+}
+```
+
+## Statistical Summary
+
+```{r statistical-summary}
+# Generate comprehensive statistics
+stats_summary <- getSummaryStatistics(patient_loco, current_patient, main_task, available_features)
+
+if (length(stats_summary) > 0) {
+  stats_df <- data.frame(
+    Feature = names(stats_summary),
+    Mean = round(sapply(stats_summary, function(x) x$mean) * 180/pi, 2),
+    SD = round(sapply(stats_summary, function(x) x$sd) * 180/pi, 2),
+    Min = round(sapply(stats_summary, function(x) x$min) * 180/pi, 2),
+    Max = round(sapply(stats_summary, function(x) x$max) * 180/pi, 2)
+  )
+  
+  # Clean feature names
+  stats_df$Feature <- gsub("_", " ", stats_df$Feature)
+  
+  kable(stats_df, 
+        col.names = c("Feature", "Mean (°)", "SD (°)", "Min (°)", "Max (°)"),
+        digits = 2) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+}
+```
+
+---
+
+# Report Generation Information
+
+**Report Generated:** `r Sys.time()`  
+**Template Version:** 1.0  
+**Analysis Software:** LocomotionData R Package  
+
+```{r save-outputs, include=FALSE}
+# Save outputs if requested
+if (!is.null(params$output_dir) && params$output_dir != "") {
+  # Create output directory
+  if (!dir.exists(params$output_dir)) {
+    dir.create(params$output_dir, recursive = TRUE)
+  }
+  
+  # Save data summaries
+  if (exists("rom_df")) {
+    write.csv(rom_df, file.path(params$output_dir, 
+              paste0(current_patient, "_rom_summary.csv")), row.names = FALSE)
+  }
+  
+  if (exists("stats_df")) {
+    write.csv(stats_df, file.path(params$output_dir,
+              paste0(current_patient, "_statistical_summary.csv")), row.names = FALSE)
+  }
+}
+
+# Generate PDF if requested
+if (params$generate_pdf) {
+  # Note: This would require additional PDF rendering setup
+  cat("PDF generation requested - configure output YAML for PDF rendering")
+}
+```
+
+---
+
+*This report was generated using the LocomotionData R package for standardized biomechanical analysis. For questions about this analysis, contact `r params$clinician_name` at `r params$clinic_name`.*

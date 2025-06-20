@@ -1,0 +1,838 @@
+---
+title: "R Basics for Biomechanical Analysis"
+subtitle: "Hands-on Introduction to Locomotion Data Analysis in R"
+author: "Biomechanics Education Team"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    code_folding: show
+    fig_width: 10
+    fig_height: 6
+    number_sections: true
+params:
+  tutorial_data: "tutorial_gait_data.parquet"
+  interactive_mode: TRUE
+  show_solutions: FALSE
+  difficulty_level: "beginner"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6,
+  comment = "#>",
+  collapse = TRUE
+)
+
+# Set up for tutorial
+tutorial_mode <- params$interactive_mode
+show_answers <- params$show_solutions
+```
+
+# Welcome to Biomechanical Analysis in R! {.intro}
+
+Welcome to your first step into the world of biomechanical data analysis using R! This tutorial will teach you the fundamentals of working with gait data, from loading your first dataset to creating publication-ready visualizations.
+
+## What You'll Learn
+
+By the end of this tutorial, you'll be able to:
+
+- ✅ Load and explore biomechanical datasets
+- ✅ Understand gait cycle data structure  
+- ✅ Calculate basic biomechanical metrics
+- ✅ Create professional visualizations
+- ✅ Perform quality assessment of gait data
+- ✅ Export results for reports and publications
+
+## Prerequisites
+
+- **R Knowledge:** Basic familiarity with R (variables, functions, data frames)
+- **Biomechanics:** Understanding of basic gait concepts (heel strike, gait cycle)
+- **Time Required:** ~45 minutes
+
+Let's get started! 🚀
+
+---
+
+# Setting Up Your Environment
+
+First, let's make sure you have everything you need for biomechanical analysis.
+
+## Required Packages
+
+```{r packages, eval=FALSE}
+# Install required packages (run this once)
+install.packages(c(
+  "ggplot2",    # For beautiful plots
+  "dplyr",      # For data manipulation
+  "plotly",     # For interactive plots
+  "DT",         # For interactive tables
+  "viridis"     # For color schemes
+))
+
+# Load LocomotionData package (assuming it's installed)
+# devtools::load_all("path/to/locomotion-data-standardization/source/lib/r")
+```
+
+```{r load-packages}
+# Load the packages we'll use
+library(LocomotionData)  # Our main biomechanics package
+library(ggplot2)         # For plotting
+library(dplyr)           # For data manipulation
+library(plotly)          # For interactive plots
+library(DT)              # For tables
+library(viridis)         # For colors
+
+# Set a nice theme for our plots
+theme_set(theme_minimal(base_size = 12) + 
+  theme(plot.title = element_text(face = "bold", size = 14)))
+```
+
+## Understanding the Data Format
+
+Biomechanical data in our system follows a specific structure:
+
+```{r data-format, echo=FALSE, results='asis'}
+cat("**Standard Data Format:**\n\n")
+cat("- **Phase-indexed:** Each gait cycle has exactly 150 data points (0-100%)\n")
+cat("- **Standard naming:** Variables follow the pattern `joint_motion_measurement_side_unit`\n")
+cat("- **Required columns:** subject, task, phase\n")
+cat("- **File format:** Parquet (preferred) or CSV\n\n")
+
+cat("**Example variable names:**\n")
+cat("- `knee_flexion_angle_contra_rad` - Knee flexion angle, contralateral side, radians\n")
+cat("- `hip_flexion_moment_ipsi_Nm` - Hip flexion moment, ipsilateral side, Newton-meters\n\n")
+```
+
+---
+
+# Loading Your First Dataset
+
+Let's start by loading a sample gait dataset and exploring its structure.
+
+## Load the Data
+
+```{r load-data}
+# For this tutorial, we'll create some sample data
+# In practice, you'd load your own data like this:
+# loco_data <- loadLocomotionData("your_data.parquet")
+
+# Create sample data for this tutorial
+set.seed(123)  # For reproducible results
+
+# Simulate gait data for demonstration
+n_subjects <- 3
+n_cycles <- 5
+n_phases <- 150
+tasks <- c("normal_walk", "fast_walk")
+
+# Create sample dataset
+sample_data <- data.frame()
+
+for (subj_id in paste0("SUB", sprintf("%02d", 1:n_subjects))) {
+  for (task in tasks) {
+    for (cycle in 1:n_cycles) {
+      # Generate realistic-looking gait data
+      phase <- seq(0, 100, length.out = n_phases)
+      
+      # Knee flexion angle (typical gait pattern)
+      knee_base <- 15 + 45 * sin(2 * pi * phase/100 + pi/4)
+      knee_contra <- knee_base + rnorm(n_phases, 0, 2)
+      knee_ipsi <- knee_base + rnorm(n_phases, 0, 2) + 3
+      
+      # Hip flexion angle
+      hip_base <- 10 + 25 * sin(2 * pi * phase/100)
+      hip_contra <- hip_base + rnorm(n_phases, 0, 1.5)
+      hip_ipsi <- hip_base + rnorm(n_phases, 0, 1.5) + 2
+      
+      # Convert to radians
+      cycle_data <- data.frame(
+        subject = subj_id,
+        task = task,
+        cycle = cycle,
+        phase = phase,
+        knee_flexion_angle_contra_rad = knee_contra * pi/180,
+        knee_flexion_angle_ipsi_rad = knee_ipsi * pi/180,
+        hip_flexion_angle_contra_rad = hip_contra * pi/180,
+        hip_flexion_angle_ipsi_rad = hip_ipsi * pi/180
+      )
+      
+      sample_data <- rbind(sample_data, cycle_data)
+    }
+  }
+}
+
+# Save as temporary file for loading
+temp_file <- tempfile(fileext = ".csv")
+write.csv(sample_data, temp_file, row.names = FALSE)
+
+# Now load it using our package
+loco_data <- loadLocomotionData(temp_file, 
+                               subject_col = "subject",
+                               task_col = "task", 
+                               phase_col = "phase")
+
+cat("✅ Data loaded successfully!\n")
+```
+
+## Explore the Dataset
+
+Let's examine what we just loaded:
+
+```{r explore-data}
+# Basic information about our dataset
+cat("📊 Dataset Overview:\n")
+cat("===================\n")
+
+# Get basic info
+subjects <- getSubjects(loco_data)
+tasks <- getTasks(loco_data)
+features <- getFeatures(loco_data)
+
+cat("📋 Subjects:", length(subjects), "\n")
+cat("   ", paste(subjects, collapse = ", "), "\n\n")
+
+cat("🚶 Tasks:", length(tasks), "\n")
+cat("   ", paste(tasks, collapse = ", "), "\n\n")
+
+cat("📈 Features:", length(features), "\n")
+cat("   ", paste(features, collapse = ", "), "\n\n")
+
+# Display the LocomotionData object
+print(loco_data)
+```
+
+<div class="alert alert-info">
+**💡 Understanding the Output:**
+- **Subjects:** Individual participants (SUB01, SUB02, etc.)
+- **Tasks:** Different walking conditions (normal_walk, fast_walk)
+- **Features:** Biomechanical variables (joint angles in this case)
+- **Data points:** Total observations in the dataset
+</div>
+
+---
+
+# Understanding Gait Cycles
+
+Gait analysis focuses on repeating patterns called **gait cycles**. Let's explore how our data is organized.
+
+## What is a Gait Cycle?
+
+A gait cycle is one complete sequence of walking, from one heel strike to the next heel strike of the same foot. We normalize each cycle to 150 time points (0-100% of the cycle).
+
+```{r gait-cycle-demo, fig.height=5}
+# Let's look at one subject's gait cycles
+subject_id <- "SUB01"
+task_name <- "normal_walk"
+
+# Get the cycles for this subject and task
+cycles_result <- getCycles(loco_data, subject_id, task_name)
+
+if (!is.null(cycles_result)) {
+  # Extract the 3D data array
+  data_3d <- cycles_result$data_3d  # dimensions: (cycles, phases, features)
+  feature_names <- cycles_result$feature_names
+  
+  cat("📐 Data structure for", subject_id, "-", task_name, ":\n")
+  cat("   Dimensions:", paste(dim(data_3d), collapse = " x "), 
+      "(cycles x phases x features)\n")
+  cat("   Features:", paste(feature_names, collapse = ", "), "\n\n")
+  
+  # Plot individual cycles for knee angle
+  phase_vector <- seq(0, 100, length.out = 150)
+  
+  # Prepare data for plotting
+  plot_data <- data.frame()
+  knee_idx <- which(grepl("knee.*contra", feature_names))[1]
+  
+  if (!is.na(knee_idx)) {
+    for (cycle in 1:min(5, dim(data_3d)[1])) {
+      cycle_data <- data.frame(
+        Phase = phase_vector,
+        Angle = data_3d[cycle, , knee_idx] * 180/pi,  # Convert to degrees
+        Cycle = paste("Cycle", cycle)
+      )
+      plot_data <- rbind(plot_data, cycle_data)
+    }
+    
+    # Create the plot
+    p <- ggplot(plot_data, aes(x = Phase, y = Angle, color = Cycle)) +
+      geom_line(size = 1) +
+      labs(
+        title = "Individual Gait Cycles - Knee Flexion Angle",
+        subtitle = paste("Subject:", subject_id, "| Task:", task_name),
+        x = "Gait Cycle (%)",
+        y = "Knee Angle (degrees)",
+        color = "Cycle"
+      ) +
+      scale_color_viridis_d() +
+      theme_minimal()
+    
+    print(p)
+  }
+} else {
+  cat("❌ No data found for", subject_id, "-", task_name, "\n")
+}
+```
+
+<div class="alert alert-success">
+**🎯 Key Observation:** Each colored line represents one gait cycle. Notice how they follow a similar pattern but have some natural variation - this is normal in human movement!
+</div>
+
+---
+
+# Your First Analysis: Mean Patterns
+
+Now let's calculate the average pattern across all cycles - this is fundamental in gait analysis.
+
+## Calculate Mean Patterns
+
+```{r mean-patterns}
+# Calculate mean patterns for our subject
+mean_patterns <- getMeanPatterns(loco_data, subject_id, task_name)
+
+cat("📊 Mean patterns calculated for", length(mean_patterns), "features:\n")
+for (feature in names(mean_patterns)) {
+  cat("   ", gsub("_", " ", feature), "\n")
+}
+
+# Let's look at the knee angle pattern
+knee_feature <- names(mean_patterns)[grepl("knee.*contra", names(mean_patterns))][1]
+knee_mean <- mean_patterns[[knee_feature]]
+
+cat("\n📈 Knee angle statistics:\n")
+cat("   Min:", round(min(knee_mean) * 180/pi, 1), "degrees\n")
+cat("   Max:", round(max(knee_mean) * 180/pi, 1), "degrees\n")
+cat("   Range of Motion:", round((max(knee_mean) - min(knee_mean)) * 180/pi, 1), "degrees\n")
+```
+
+## Visualize Mean vs Individual Patterns
+
+```{r mean-vs-individual, fig.height=6}
+# Create a comparison plot
+if (!is.null(cycles_result) && !is.na(knee_idx)) {
+  
+  # Prepare data combining individual cycles and mean
+  comparison_data <- data.frame()
+  
+  # Individual cycles (first 3 for clarity)
+  for (cycle in 1:min(3, dim(data_3d)[1])) {
+    cycle_data <- data.frame(
+      Phase = phase_vector,
+      Angle = data_3d[cycle, , knee_idx] * 180/pi,
+      Type = paste("Individual Cycle", cycle),
+      Category = "Individual"
+    )
+    comparison_data <- rbind(comparison_data, cycle_data)
+  }
+  
+  # Add mean pattern
+  mean_data <- data.frame(
+    Phase = phase_vector,
+    Angle = knee_mean * 180/pi,
+    Type = "Mean Pattern",
+    Category = "Mean"
+  )
+  comparison_data <- rbind(comparison_data, mean_data)
+  
+  # Create the plot
+  p_comparison <- ggplot(comparison_data, aes(x = Phase, y = Angle, color = Type)) +
+    geom_line(aes(linetype = Category, size = Category), alpha = 0.8) +
+    scale_size_manual(values = c("Individual" = 0.8, "Mean" = 2)) +
+    scale_linetype_manual(values = c("Individual" = "solid", "Mean" = "solid")) +
+    labs(
+      title = "Individual Cycles vs Mean Pattern",
+      subtitle = "The mean pattern represents the 'typical' movement",
+      x = "Gait Cycle (%)",
+      y = "Knee Angle (degrees)",
+      color = "Pattern Type"
+    ) +
+    scale_color_viridis_d() +
+    guides(size = "none", linetype = "none")
+  
+  print(p_comparison)
+}
+```
+
+<div class="alert alert-info">
+**💡 Understanding the Plot:**
+- **Thin lines:** Individual gait cycles showing natural variation
+- **Thick line:** Mean pattern - the average across all cycles
+- **Clinical insight:** The mean pattern removes noise while preserving the essential movement characteristics
+</div>
+
+---
+
+# Interactive Exercise: Explore Different Features 🎮
+
+Now it's your turn! Let's explore different biomechanical features interactively.
+
+## Exercise 1: Compare Joint Angles
+
+```{r exercise-1, fig.height=8}
+# Get all available features for plotting
+available_features <- getFeatures(loco_data)
+angle_features <- available_features[grepl("angle", available_features)]
+
+cat("🎯 Exercise: Compare different joint angles\n")
+cat("Available angle features:\n")
+for (i in seq_along(angle_features)) {
+  cat("  ", i, ".", gsub("_", " ", angle_features[i]), "\n")
+}
+
+# Calculate mean patterns for all angle features
+all_means <- getMeanPatterns(loco_data, subject_id, task_name, angle_features)
+
+# Create comparison plot
+angle_plot_data <- data.frame()
+
+for (feature in names(all_means)) {
+  feature_data <- data.frame(
+    Phase = phase_vector,
+    Angle = all_means[[feature]] * 180/pi,
+    Joint = gsub("_", " ", feature)
+  )
+  angle_plot_data <- rbind(angle_plot_data, feature_data)
+}
+
+# Create the comparison plot
+p_joints <- ggplot(angle_plot_data, aes(x = Phase, y = Angle, color = Joint)) +
+  geom_line(size = 1.2) +
+  labs(
+    title = "Joint Angle Comparison During Gait",
+    subtitle = "Compare how different joints move throughout the gait cycle",
+    x = "Gait Cycle (%)",
+    y = "Joint Angle (degrees)",
+    color = "Joint"
+  ) +
+  scale_color_viridis_d() +
+  theme(legend.position = "bottom")
+
+print(p_joints)
+```
+
+<div class="alert alert-warning">
+**🤔 Think About It:**
+1. Which joint shows the largest range of motion?
+2. At what phase of gait does the knee reach maximum flexion?
+3. How do the left and right sides (ipsi vs contra) compare?
+</div>
+
+```{r exercise-1-solution, eval=show_answers, echo=show_answers}
+# SOLUTION (only shown if show_solutions = TRUE)
+cat("💡 SOLUTION:\n")
+cat("1. The knee typically shows the largest ROM (~60-70 degrees)\n")
+cat("2. Maximum knee flexion usually occurs around 60-70% of gait cycle (swing phase)\n")
+cat("3. Left and right sides should be similar in healthy individuals\n")
+```
+
+## Exercise 2: Calculate Range of Motion
+
+```{r exercise-2}
+cat("🎯 Exercise: Calculate and compare Range of Motion (ROM)\n\n")
+
+# Calculate ROM for our subject
+rom_results <- calculateROM(loco_data, subject_id, task_name, angle_features, by_cycle = FALSE)
+
+# Convert to degrees and create a nice table
+rom_df <- data.frame(
+  Joint = gsub("_", " ", names(rom_results)),
+  ROM_degrees = round(unlist(rom_results) * 180/pi, 1)
+) %>%
+  arrange(desc(ROM_degrees))
+
+# Display as interactive table
+DT::datatable(rom_df, 
+              caption = "Range of Motion by Joint",
+              options = list(dom = 't', pageLength = 10),
+              rownames = FALSE) %>%
+  DT::formatStyle("ROM_degrees",
+    background = DT::styleColorBar(range(rom_df$ROM_degrees), "lightblue"),
+    backgroundSize = "100% 90%",
+    backgroundRepeat = "no-repeat",
+    backgroundPosition = "center"
+  )
+```
+
+<div class="alert alert-success">
+**🏆 Challenge:** Try changing the `subject_id` or `task_name` in the code above to see how ROM differs between subjects or tasks!
+</div>
+
+---
+
+# Task Comparison Analysis
+
+Real research often involves comparing different conditions. Let's compare normal and fast walking.
+
+## Compare Walking Speeds
+
+```{r task-comparison, fig.height=8}
+cat("🏃 Comparing Normal vs Fast Walking\n")
+
+# Get mean patterns for both tasks
+normal_means <- getMeanPatterns(loco_data, subject_id, "normal_walk", angle_features)
+fast_means <- getMeanPatterns(loco_data, subject_id, "fast_walk", angle_features)
+
+# Prepare data for comparison
+task_comparison_data <- data.frame()
+
+for (feature in names(normal_means)) {
+  # Normal walking
+  normal_data <- data.frame(
+    Phase = phase_vector,
+    Angle = normal_means[[feature]] * 180/pi,
+    Task = "Normal Walk",
+    Joint = gsub("_", " ", feature)
+  )
+  
+  # Fast walking
+  fast_data <- data.frame(
+    Phase = phase_vector,
+    Angle = fast_means[[feature]] * 180/pi,
+    Task = "Fast Walk", 
+    Joint = gsub("_", " ", feature)
+  )
+  
+  task_comparison_data <- rbind(task_comparison_data, normal_data, fast_data)
+}
+
+# Create faceted comparison plot
+p_tasks <- ggplot(task_comparison_data, aes(x = Phase, y = Angle, color = Task)) +
+  geom_line(size = 1.2) +
+  facet_wrap(~ Joint, scales = "free_y", ncol = 2) +
+  labs(
+    title = "Task Comparison: Normal vs Fast Walking",
+    subtitle = "How does walking speed affect joint kinematics?",
+    x = "Gait Cycle (%)",
+    y = "Joint Angle (degrees)",
+    color = "Walking Task"
+  ) +
+  scale_color_manual(values = c("Normal Walk" = "blue", "Fast Walk" = "red")) +
+  theme(strip.text = element_text(face = "bold"))
+
+print(p_tasks)
+```
+
+## Statistical Comparison
+
+```{r task-stats}
+# Calculate ROM differences between tasks
+cat("📊 ROM Comparison: Fast vs Normal Walking\n")
+cat("=========================================\n")
+
+normal_rom <- calculateROM(loco_data, subject_id, "normal_walk", angle_features, by_cycle = FALSE)
+fast_rom <- calculateROM(loco_data, subject_id, "fast_walk", angle_features, by_cycle = FALSE)
+
+comparison_df <- data.frame(
+  Joint = gsub("_", " ", names(normal_rom)),
+  Normal_ROM = round(unlist(normal_rom) * 180/pi, 1),
+  Fast_ROM = round(unlist(fast_rom) * 180/pi, 1)
+) %>%
+  mutate(
+    Difference = Fast_ROM - Normal_ROM,
+    Percent_Change = round((Difference / Normal_ROM) * 100, 1)
+  )
+
+# Display results
+DT::datatable(comparison_df,
+              caption = "ROM Changes with Fast Walking",
+              options = list(dom = 't'),
+              rownames = FALSE) %>%
+  DT::formatStyle("Percent_Change",
+    color = DT::styleInterval(c(-5, 5), c("red", "black", "blue")),
+    fontWeight = "bold"
+  )
+```
+
+<div class="alert alert-info">
+**🔍 Clinical Interpretation:**
+- **Positive changes** (blue): Increased ROM with fast walking
+- **Negative changes** (red): Decreased ROM with fast walking  
+- **Small changes** (<5%): Minimal difference between conditions
+</div>
+
+---
+
+# Data Quality Assessment
+
+Professional biomechanical analysis always includes quality control. Let's learn how to assess our data.
+
+## Validate Data Quality
+
+```{r quality-assessment}
+cat("🔍 Data Quality Assessment\n")
+cat("=========================\n")
+
+# Check data quality for each subject and task
+quality_summary <- data.frame()
+
+for (subj in getSubjects(loco_data)) {
+  for (task in getTasks(loco_data)) {
+    # Validate cycles
+    valid_mask <- validateCycles(loco_data, subj, task)
+    
+    quality_row <- data.frame(
+      Subject = subj,
+      Task = task,
+      Total_Cycles = length(valid_mask),
+      Valid_Cycles = sum(valid_mask),
+      Validity_Rate = round(sum(valid_mask) / length(valid_mask) * 100, 1)
+    )
+    
+    quality_summary <- rbind(quality_summary, quality_row)
+  }
+}
+
+# Display quality summary
+DT::datatable(quality_summary,
+              caption = "Data Quality by Subject and Task",
+              options = list(dom = 't'),
+              rownames = FALSE) %>%
+  DT::formatStyle("Validity_Rate",
+    background = DT::styleColorBar(c(0, 100), "lightgreen"),
+    backgroundSize = "100% 90%",
+    backgroundRepeat = "no-repeat",
+    backgroundPosition = "center"
+  )
+```
+
+## Identify Outlier Cycles
+
+```{r outlier-detection}
+# Find outlier cycles that might need further inspection
+cat("🚨 Outlier Detection\n")
+
+outliers_found <- findOutlierCycles(loco_data, subject_id, task_name, threshold = 2.0)
+
+if (length(outliers_found) > 0) {
+  cat("⚠️  Outlier cycles detected for", subject_id, "-", task_name, ":\n")
+  cat("   Cycles:", paste(outliers_found, collapse = ", "), "\n")
+  cat("   Recommendation: Review these cycles for potential artifacts\n")
+} else {
+  cat("✅ No outlier cycles detected for", subject_id, "-", task_name, "\n")
+  cat("   Data quality appears good!\n")
+}
+```
+
+<div class="alert alert-warning">
+**⚠️ Important:** Always check data quality before drawing clinical conclusions. Outliers might represent:
+- **Measurement artifacts** (sensor issues, movement artifacts)
+- **Genuine biomechanical variations** (compensatory movements, fatigue)
+- **Data processing errors** (incorrect cycle segmentation)
+</div>
+
+---
+
+# Creating Publication-Ready Plots
+
+Let's create a professional plot suitable for research publications.
+
+## Publication Plot
+
+```{r publication-plot, fig.width=12, fig.height=8}
+cat("📝 Creating Publication-Ready Visualization\n")
+
+# Calculate mean and standard deviation patterns
+subject_list <- getSubjects(loco_data)
+feature_of_interest <- angle_features[1]  # Focus on first angle feature
+
+# Calculate group statistics
+group_data <- data.frame()
+
+for (task in getTasks(loco_data)) {
+  # Collect data from all subjects for this task
+  all_patterns <- list()
+  
+  for (subj in subject_list) {
+    pattern <- getMeanPatterns(loco_data, subj, task, feature_of_interest)[[1]]
+    all_patterns[[subj]] <- pattern
+  }
+  
+  # Convert to matrix and calculate statistics
+  pattern_matrix <- do.call(rbind, all_patterns)
+  group_mean <- colMeans(pattern_matrix, na.rm = TRUE)
+  group_sd <- apply(pattern_matrix, 2, sd, na.rm = TRUE)
+  
+  # Create data frame
+  task_data <- data.frame(
+    Phase = phase_vector,
+    Mean = group_mean * 180/pi,
+    SD = group_sd * 180/pi,
+    Task = task,
+    Upper = (group_mean + group_sd) * 180/pi,
+    Lower = (group_mean - group_sd) * 180/pi
+  )
+  
+  group_data <- rbind(group_data, task_data)
+}
+
+# Create publication-quality plot
+p_pub <- ggplot(group_data, aes(x = Phase, y = Mean, color = Task, fill = Task)) +
+  geom_ribbon(aes(ymin = Lower, ymax = Upper), alpha = 0.2, color = NA) +
+  geom_line(size = 1.5) +
+  labs(
+    title = "Joint Kinematics During Walking",
+    subtitle = paste("Mean ± SD patterns for", gsub("_", " ", feature_of_interest)),
+    x = "Gait Cycle (%)",
+    y = "Joint Angle (degrees)",
+    color = "Walking Condition",
+    fill = "Walking Condition",
+    caption = paste("n =", length(subject_list), "subjects")
+  ) +
+  scale_color_manual(values = c("normal_walk" = "#2E86AB", "fast_walk" = "#A23B72")) +
+  scale_fill_manual(values = c("normal_walk" = "#2E86AB", "fast_walk" = "#A23B72")) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(size = 12, hjust = 0.5, color = "gray50"),
+    legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    axis.title = element_text(face = "bold")
+  )
+
+print(p_pub)
+
+# Show how to save the plot
+cat("\n💾 To save this plot:\n")
+cat("ggsave('publication_plot.png', plot = p_pub, width = 12, height = 8, dpi = 300)\n")
+```
+
+## Interactive Version
+
+```{r interactive-plot}
+# Convert to interactive plot
+p_interactive <- ggplotly(p_pub, tooltip = c("x", "y", "colour"))
+
+p_interactive %>%
+  layout(
+    title = list(text = "Interactive Joint Kinematics", font = list(size = 16)),
+    hovermode = "x unified"
+  )
+```
+
+<div class="alert alert-success">
+**🎨 Pro Tips for Publication Plots:**
+- Use consistent color schemes across your paper
+- Include sample size in caption
+- Choose clear, descriptive titles
+- Save as high-resolution PNG (300 DPI) or vector format (SVG/PDF)
+- Consider colorblind-friendly palettes
+</div>
+
+---
+
+# Summary and Next Steps
+
+Congratulations! 🎉 You've completed your first biomechanical analysis in R. Let's review what you accomplished:
+
+## What You Learned
+
+✅ **Data Loading:** How to load and explore biomechanical datasets  
+✅ **Gait Cycles:** Understanding the structure of phase-normalized data  
+✅ **Mean Patterns:** Calculating average movement patterns  
+✅ **Comparisons:** Analyzing differences between conditions  
+✅ **Quality Control:** Assessing data validity and detecting outliers  
+✅ **Visualization:** Creating both exploratory and publication-ready plots  
+
+## Key Functions You Mastered
+
+```{r summary-functions, eval=FALSE}
+# Data exploration
+loadLocomotionData()    # Load biomechanical data
+getSubjects()          # List available subjects
+getTasks()             # List available tasks
+getFeatures()          # List available features
+
+# Analysis functions
+getCycles()            # Extract individual gait cycles
+getMeanPatterns()      # Calculate average patterns
+calculateROM()         # Compute range of motion
+validateCycles()       # Check data quality
+findOutlierCycles()    # Detect potential outliers
+
+# Visualization
+ggplot() + geom_line() # Create line plots
+ggplotly()            # Make plots interactive
+```
+
+## Your Next Learning Path
+
+### **Immediate Next Steps (Easy)**
+1. 📊 [**Statistical Analysis Tutorial**](statistical_analysis.Rmd) - Learn t-tests, ANOVA, and effect sizes
+2. 📈 [**Advanced Plotting Tutorial**](advanced_plotting.Rmd) - Multi-panel figures and customization
+3. 🔍 [**Quality Control Deep Dive**](quality_control.Rmd) - Advanced data validation techniques
+
+### **Intermediate Level**
+4. 🏥 [**Clinical Case Studies**](clinical_cases.Rmd) - Real-world analysis examples
+5. 📋 [**Batch Processing**](batch_processing.Rmd) - Analyze multiple subjects efficiently
+6. 🎯 [**Custom Analysis Functions**](custom_functions.Rmd) - Write your own analysis tools
+
+### **Advanced Level**
+7. 🧮 [**Mixed-Effects Modeling**](mixed_effects.Rmd) - Account for subject-level variability
+8. 🤖 [**Machine Learning Applications**](ml_applications.Rmd) - Pattern recognition and classification
+9. 📑 [**Automated Reporting**](automated_reports.Rmd) - Generate reports programmatically
+
+## Practice Exercises
+
+<div class="alert alert-info">
+**🎯 Try These Challenges:**
+
+**Easy:**
+- Load a different dataset and repeat this analysis
+- Compare 3 or more walking conditions
+- Create plots for different joints
+
+**Medium:**
+- Analyze the same joint across multiple subjects
+- Calculate and compare ROM for all subjects
+- Create a comprehensive quality report
+
+**Hard:**
+- Build a function to automatically generate subject reports
+- Implement your own outlier detection algorithm
+- Create an interactive dashboard for data exploration
+</div>
+
+## Getting Help
+
+Need assistance? Here are your resources:
+
+- 📚 **Package Documentation:** `?functionName` or `help(functionName)`
+- 🌐 **Online Resources:** Package website and tutorials  
+- 👥 **Community:** GitHub issues and discussion forums
+- 📧 **Direct Support:** Contact the development team
+
+## Final Thoughts
+
+Biomechanical analysis is both an art and a science. You now have the fundamental tools to:
+
+- **Explore data systematically** and identify meaningful patterns
+- **Apply quality control** to ensure reliable results  
+- **Create compelling visualizations** that communicate your findings
+- **Build towards more advanced analyses** with confidence
+
+Remember: **Good analysis starts with understanding your data**. Always visualize before you analyze, and never skip quality control!
+
+---
+
+<div style="background-color: #f0f9ff; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+**🚀 Ready for More?**
+
+You're now prepared to tackle real biomechanical research questions! Choose your next tutorial based on your research interests:
+
+- **Clinical Focus:** Start with clinical case studies
+- **Research Focus:** Dive into statistical analysis  
+- **Technology Focus:** Explore machine learning applications
+
+**Happy analyzing!** 🎉
+</div>
+
+---
+
+*Tutorial completed on `r Sys.Date()`. Generated using the LocomotionData R package for biomechanical analysis.*

@@ -1,0 +1,485 @@
+---
+title: "Advanced Statistical Analysis with LocomotionData"
+author: "José A. Montes Pérez"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Advanced Statistical Analysis with LocomotionData}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 6,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+# Introduction
+
+This vignette demonstrates advanced statistical analysis techniques for biomechanical locomotion data using the LocomotionData package. We cover mixed-effects modeling, Bayesian analysis, and functional data analysis (FDA) approaches commonly used in biomechanics research.
+
+## Prerequisites
+
+```{r eval=FALSE}
+# Install required packages
+install.packages(c("lme4", "BayesFactor", "fda", "car", "performance", 
+                   "coda", "ggplot2", "dplyr", "broom", "broom.mixed"))
+```
+
+```{r eval=FALSE}
+library(LocomotionData)
+library(lme4)
+library(BayesFactor)
+library(fda)
+library(car)
+library(performance)
+library(ggplot2)
+library(dplyr)
+library(broom)
+library(broom.mixed)
+```
+
+# Mixed-Effects Modeling
+
+Mixed-effects models are essential for analyzing hierarchical biomechanical data where observations are nested within subjects, and subjects may belong to different groups or conditions.
+
+## Setting Up the Data
+
+```{r eval=FALSE}
+# Load example dataset
+loco <- loadLocomotionData("gait_intervention_study.parquet")
+
+# Extract data for analysis - focus on knee flexion angle
+knee_data <- extractAnalysisData(loco, 
+                                features = "knee_flexion_angle_contra_rad",
+                                summary_measures = c("max", "min", "rom"))
+
+# Add group information (e.g., intervention vs control)
+knee_data$group <- factor(knee_data$group, levels = c("control", "intervention"))
+knee_data$time_point <- factor(knee_data$time_point, levels = c("baseline", "post"))
+
+head(knee_data)
+```
+
+## Basic Mixed-Effects Model
+
+```{r eval=FALSE}
+# Model: outcome ~ fixed effects + (random effects | grouping factor)
+model_basic <- lmer(knee_flexion_max ~ group * time_point + (1 | subject), 
+                    data = knee_data)
+
+# Model summary
+summary(model_basic)
+
+# Extract fixed effects
+fixed_effects <- fixef(model_basic)
+print(fixed_effects)
+
+# Extract random effects
+random_effects <- ranef(model_basic)
+print(random_effects)
+```
+
+## Advanced Mixed-Effects with Covariates
+
+```{r eval=FALSE}
+# Include covariates like age, BMI, walking speed
+model_advanced <- lmer(knee_flexion_max ~ group * time_point + age + bmi + 
+                       walking_speed + (1 + time_point | subject), 
+                       data = knee_data)
+
+summary(model_advanced)
+
+# Model comparison
+anova(model_basic, model_advanced)
+
+# Check model assumptions
+check_model(model_advanced)
+```
+
+## Repeated Measures Analysis
+
+```{r eval=FALSE}
+# For multiple time points
+model_repeated <- lmer(knee_flexion_max ~ group * poly(time_numeric, 2) + 
+                       (1 + time_numeric | subject), 
+                       data = knee_data)
+
+# Visualize trajectories
+plot_trajectories <- knee_data %>%
+  group_by(subject, group) %>%
+  do(model = lm(knee_flexion_max ~ time_numeric, data = .)) %>%
+  mutate(slope = map_dbl(model, ~ coef(.)[2])) %>%
+  ggplot(aes(x = group, y = slope, fill = group)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.6) +
+  labs(title = "Individual Trajectories by Group",
+       y = "Slope (change per time unit)",
+       x = "Group") +
+  theme_minimal()
+
+print(plot_trajectories)
+```
+
+## Effect Size Calculations
+
+```{r eval=FALSE}
+# Calculate Cohen's d for group differences
+cohens_d <- function(x, y) {
+  pooled_sd <- sqrt(((length(x) - 1) * var(x) + (length(y) - 1) * var(y)) / 
+                    (length(x) + length(y) - 2))
+  (mean(x) - mean(y)) / pooled_sd
+}
+
+# Effect size for group difference at post-intervention
+post_data <- knee_data[knee_data$time_point == "post", ]
+effect_size <- cohens_d(post_data$knee_flexion_max[post_data$group == "intervention"],
+                       post_data$knee_flexion_max[post_data$group == "control"])
+
+cat(sprintf("Cohen's d for group difference: %.3f\n", effect_size))
+```
+
+# Bayesian Analysis
+
+Bayesian approaches provide probability distributions for parameters and enable direct probabilistic interpretation of results.
+
+## Bayesian t-tests
+
+```{r eval=FALSE}
+# Bayesian independent samples t-test
+bayes_ttest <- ttestBF(formula = knee_flexion_max ~ group, 
+                      data = knee_data[knee_data$time_point == "post", ])
+
+print(bayes_ttest)
+
+# Extract Bayes Factor
+bf_value <- extractBF(bayes_ttest)$bf
+cat(sprintf("Bayes Factor (BF10): %.3f\n", bf_value))
+
+# Interpretation
+if (bf_value > 10) {
+  cat("Strong evidence for group difference\n")
+} else if (bf_value > 3) {
+  cat("Moderate evidence for group difference\n")
+} else if (bf_value > 1) {
+  cat("Weak evidence for group difference\n")
+} else {
+  cat("Evidence favors null hypothesis\n")
+}
+```
+
+## Bayesian ANOVA
+
+```{r eval=FALSE}
+# Bayesian repeated measures ANOVA
+bayes_anova <- anovaBF(knee_flexion_max ~ group * time_point + subject, 
+                      data = knee_data, 
+                      whichRandom = "subject")
+
+print(bayes_anova)
+
+# Model comparison
+bf_comparison <- bayes_anova / bayes_anova[1]  # Compare to null model
+print(bf_comparison)
+```
+
+## Bayesian Mixed-Effects Model
+
+```{r eval=FALSE}
+# Using MCMCglmm for Bayesian mixed-effects
+library(MCMCglmm)
+
+# Specify priors
+prior_weakly_informative <- list(
+  R = list(V = 1, nu = 0.002),
+  G = list(G1 = list(V = 1, nu = 0.002))
+)
+
+# Fit Bayesian mixed-effects model
+bayes_mixed <- MCMCglmm(knee_flexion_max ~ group * time_point,
+                       random = ~ subject,
+                       data = knee_data,
+                       prior = prior_weakly_informative,
+                       nitt = 50000, burnin = 10000, thin = 20)
+
+# Model summary
+summary(bayes_mixed)
+
+# Check convergence
+plot(bayes_mixed$Sol)  # Trace plots for fixed effects
+plot(bayes_mixed$VCV)  # Trace plots for variance components
+
+# Extract credible intervals
+hpd_intervals <- HPDinterval(bayes_mixed$Sol)
+print(hpd_intervals)
+```
+
+## Posterior Predictive Checks
+
+```{r eval=FALSE}
+# Generate posterior predictions
+posterior_predictions <- simulate(bayes_mixed, nsim = 1000)
+
+# Compare observed vs predicted
+obs_mean <- mean(knee_data$knee_flexion_max, na.rm = TRUE)
+pred_means <- apply(posterior_predictions, 2, mean, na.rm = TRUE)
+
+cat(sprintf("Observed mean: %.3f\n", obs_mean))
+cat(sprintf("Predicted mean (95%% CI): %.3f [%.3f, %.3f]\n", 
+           mean(pred_means), 
+           quantile(pred_means, 0.025), 
+           quantile(pred_means, 0.975)))
+```
+
+# Functional Data Analysis (FDA)
+
+FDA treats entire curves as single observations, which is ideal for phase-indexed gait data.
+
+## Functional Principal Component Analysis (fPCA)
+
+```{r eval=FALSE}
+# Prepare functional data
+phase_grid <- seq(0, 100, length.out = 150)  # 0-100% gait cycle
+knee_curves <- getCurveMatrix(loco, feature = "knee_flexion_angle_contra_rad",
+                             subjects = getSubjects(loco)[1:20],
+                             task = "normal_walk")
+
+# Create basis functions (B-splines)
+n_basis <- 15
+basis_bspline <- create.bspline.basis(range(phase_grid), n_basis)
+
+# Convert to functional data object
+fd_knee <- Data2fd(phase_grid, t(knee_curves), basis_bspline)
+
+# Functional PCA
+fpca_result <- pca.fd(fd_knee, nharm = 5)
+
+# Plot mean curve and principal components
+plot(fpca_result$meanfd, main = "Mean Knee Flexion Curve")
+
+# Plot first three principal components
+par(mfrow = c(2, 2))
+plot(fpca_result$harmonics[1], main = "PC1")
+plot(fpca_result$harmonics[2], main = "PC2") 
+plot(fpca_result$harmonics[3], main = "PC3")
+plot(fpca_result$varprop, main = "Variance Explained")
+```
+
+## Functional Regression
+
+```{r eval=FALSE}
+# Functional regression: scalar outcome on functional predictor
+# Predict walking speed from knee flexion curve
+
+# Prepare scalar outcome
+walking_speeds <- getWalkingSpeedVector(loco, subjects = getSubjects(loco)[1:20])
+
+# Functional linear model
+fregress_result <- fRegress(walking_speeds, list(fd_knee), list(basis_bspline))
+
+# Plot regression coefficient function
+plot(fregress_result$betaestlist[[1]], 
+     main = "Regression Coefficient Function",
+     ylab = "Coefficient",
+     xlab = "Gait Cycle (%)")
+
+# Confidence intervals
+beta_stderr <- fregress_result$betastderrlist[[1]]
+beta_mean <- fregress_result$betaestlist[[1]]
+
+# Plot with confidence bands
+plot(beta_mean, main = "Coefficient Function with 95% CI")
+lines(beta_mean + 1.96 * beta_stderr, lty = 2, col = "red")
+lines(beta_mean - 1.96 * beta_stderr, lty = 2, col = "red")
+```
+
+## Functional ANOVA
+
+```{r eval=FALSE}
+# Compare functional curves between groups
+group_labels <- rep(c("young", "elderly"), each = 10)
+group_factor <- factor(group_labels)
+
+# Fit functional ANOVA model
+fanova_model <- fRegress(fd_knee, list(group_factor), list(basis_bspline))
+
+# Test for group differences
+fanova_result <- Fstat.fd(fd_knee, group_factor)
+
+# Plot group mean curves
+young_mean <- mean.fd(fd_knee[group_factor == "young"])
+elderly_mean <- mean.fd(fd_knee[group_factor == "elderly"])
+
+plot(young_mean, col = "blue", main = "Group Mean Curves")
+lines(elderly_mean, col = "red")
+legend("topright", legend = c("Young", "Elderly"), 
+       col = c("blue", "red"), lty = 1)
+```
+
+# Clinical Interpretation and Reporting
+
+## Effect Size Interpretation
+
+```{r eval=FALSE}
+# Function to interpret effect sizes
+interpret_effect_size <- function(d) {
+  if (abs(d) < 0.2) {
+    "Negligible effect"
+  } else if (abs(d) < 0.5) {
+    "Small effect"
+  } else if (abs(d) < 0.8) {
+    "Medium effect"
+  } else {
+    "Large effect"
+  }
+}
+
+# Apply to results
+cat(sprintf("Group difference effect size: %s (d = %.3f)\n", 
+           interpret_effect_size(effect_size), effect_size))
+```
+
+## Clinical Significance vs Statistical Significance
+
+```{r eval=FALSE}
+# Define minimal clinically important difference (MCID)
+mcid_knee_flexion <- deg2rad(5)  # 5 degrees in radians
+
+# Calculate confidence interval for group difference
+model_summary <- summary(model_advanced)
+group_diff <- model_summary$coefficients["groupintervention", "Estimate"]
+group_se <- model_summary$coefficients["groupintervention", "Std. Error"]
+group_ci <- c(group_diff - 1.96 * group_se, group_diff + 1.96 * group_se)
+
+# Check clinical significance
+clinically_significant <- abs(group_diff) > mcid_knee_flexion
+lower_bound_significant <- abs(group_ci[1]) > mcid_knee_flexion
+
+cat(sprintf("Group difference: %.3f rad (95%% CI: [%.3f, %.3f])\n", 
+           group_diff, group_ci[1], group_ci[2]))
+cat(sprintf("MCID: %.3f rad\n", mcid_knee_flexion))
+cat(sprintf("Clinically significant: %s\n", clinically_significant))
+cat(sprintf("Lower bound exceeds MCID: %s\n", lower_bound_significant))
+```
+
+## Comprehensive Results Table
+
+```{r eval=FALSE}
+# Create publication-ready results table
+results_table <- data.frame(
+  Measure = c("Knee Flexion Max", "Knee Flexion ROM", "Hip Flexion Max"),
+  Control_Baseline = c("45.2 ± 8.1", "52.3 ± 6.7", "28.1 ± 5.4"),
+  Control_Post = c("46.1 ± 7.9", "53.1 ± 6.8", "28.8 ± 5.2"),
+  Intervention_Baseline = c("44.8 ± 8.4", "51.9 ± 7.1", "27.9 ± 5.8"),
+  Intervention_Post = c("52.3 ± 8.0", "58.7 ± 6.9", "32.4 ± 5.1"),
+  Group_x_Time_p = c("< 0.001", "0.023", "0.041"),
+  Effect_Size = c("0.78", "0.45", "0.32"),
+  Clinical_Significance = c("Yes", "Yes", "No")
+)
+
+print(results_table)
+
+# Export to CSV
+write.csv(results_table, "biomechanical_analysis_results.csv", row.names = FALSE)
+```
+
+# Best Practices for Statistical Analysis
+
+## Power Analysis
+
+```{r eval=FALSE}
+# Post-hoc power analysis
+library(pwr)
+
+# Calculate achieved power
+achieved_power <- pwr.t.test(n = 20, d = effect_size, sig.level = 0.05)$power
+cat(sprintf("Achieved power: %.3f\n", achieved_power))
+
+# Sample size for future studies
+future_n <- pwr.t.test(d = 0.5, power = 0.8, sig.level = 0.05)$n
+cat(sprintf("Required sample size for d=0.5: %.0f per group\n", ceiling(future_n)))
+```
+
+## Multiple Comparisons Correction
+
+```{r eval=FALSE}
+# When testing multiple outcomes, adjust p-values
+p_values <- c(0.001, 0.023, 0.041, 0.089, 0.156)
+adjusted_p <- p.adjust(p_values, method = "holm")
+
+comparison_table <- data.frame(
+  Variable = c("Knee Max", "Knee ROM", "Hip Max", "Ankle Max", "Ankle ROM"),
+  Raw_p = p_values,
+  Adjusted_p = adjusted_p,
+  Significant = adjusted_p < 0.05
+)
+
+print(comparison_table)
+```
+
+## Model Diagnostics
+
+```{r eval=FALSE}
+# Comprehensive model checking
+check_model(model_advanced)
+
+# Specific checks
+check_normality(model_advanced)
+check_homogeneity(model_advanced)
+check_outliers(model_advanced)
+check_collinearity(model_advanced)
+
+# Model performance metrics
+model_performance(model_advanced)
+```
+
+# Integration with Other Analyses
+
+## Combining with Machine Learning
+
+```{r eval=FALSE}
+# Use statistical results to inform ML feature selection
+significant_features <- c("knee_flexion_max", "knee_flexion_rom", "hip_flexion_max")
+
+# Create ML dataset with statistically significant features
+ml_data <- prepareMLData(loco, features = significant_features)
+
+# Train classifier with selected features
+classifier_result <- performClassification(ml_data, method = "randomForest")
+```
+
+## Longitudinal Analysis
+
+```{r eval=FALSE}
+# Growth curve modeling for longitudinal data
+growth_model <- lmer(knee_flexion_max ~ age + age^2 + (1 + age | subject), 
+                    data = longitudinal_data)
+
+# Predict future trajectories
+future_ages <- seq(20, 80, by = 10)
+predictions <- predict(growth_model, 
+                      newdata = data.frame(age = future_ages, 
+                                          subject = "average"),
+                      re.form = NA)  # Population average
+```
+
+# Conclusion
+
+Advanced statistical analysis in biomechanics requires careful consideration of the hierarchical nature of gait data, proper model selection, and clinical interpretation of results. The LocomotionData package provides the foundation for rigorous statistical analysis while maintaining focus on biomechanical meaning and clinical relevance.
+
+## Key Takeaways
+
+1. **Mixed-effects models** account for subject-specific variability and repeated measures
+2. **Bayesian approaches** provide probabilistic interpretation and handle uncertainty
+3. **Functional data analysis** treats entire gait curves as single observations
+4. **Clinical significance** should be considered alongside statistical significance
+5. **Model diagnostics** are essential for valid inferences
+6. **Effect sizes** provide practical significance beyond p-values
+
+For more examples and advanced techniques, see the machine learning and visualization vignettes.

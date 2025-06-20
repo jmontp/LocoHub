@@ -99,7 +99,30 @@ export(
     test_random_effects_structures,
     run_model_diagnostics,
     check_model_assumptions,
-    calculate_effect_sizes
+    calculate_effect_sizes,
+    # Bayesian analysis functions
+    bayes_ttest_biomech,
+    bayes_anova_biomech,
+    bayes_correlation_biomech,
+    compare_bayes_models,
+    interpret_bayes_factor,
+    bayes_model_averaging,
+    bayes_robustness_check,
+    # Machine learning functions
+    prepare_ml_data,
+    biomech_pca,
+    biomech_tsne,
+    biomech_umap,
+    biomech_kmeans,
+    biomech_hierarchical,
+    biomech_svm,
+    biomech_random_forest,
+    # ML workflow functions
+    biomech_cross_validation,
+    biomech_hyperparameter_tuning,
+    biomech_feature_selection,
+    biomech_model_comparison,
+    biomech_ml_pipeline
 )
 
 # Import dependencies
@@ -110,6 +133,11 @@ importFrom(ggplot2, ggplot, aes, geom_line, geom_ribbon, facet_wrap, theme_minim
 importFrom(dplyr, filter, select, group_by, summarise, mutate, arrange, n)
 importFrom(tibble, tibble, as_tibble)
 importFrom(readr, read_csv)
-importFrom(stats, sd, median, quantile, cor, na.omit)
+importFrom(stats, sd, median, quantile, cor, na.omit, prcomp, dist, kmeans, aov, glm, t.test)
 importFrom(utils, head, tail)
 importFrom(magrittr, "%>%")
+importFrom(lme4, lmer, fixef, ranef, VarCorr, ngrps)
+importFrom(BayesFactor, ttestBF, anovaBF, correlationBF, extractBF, posterior)
+importFrom(randomForest, randomForest)
+importFrom(e1071, svm, tune)
+importFrom(cluster, silhouette)
