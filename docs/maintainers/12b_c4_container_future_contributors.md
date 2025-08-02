@@ -5,7 +5,7 @@
 ---
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'base'}}%%
 graph TD
     subgraph "Enhanced Contributors (10%)"
         contributors["Dataset Contributors<br/><font size='-2'>Person</font><br/><font size='-1'>Streamlined data contribution</font>"]
@@ -96,7 +96,7 @@ graph TD
     style ml_benchmarks fill:#8d99ae,color:white,stroke-dasharray:3
     style community_standards fill:#8d99ae,color:white,stroke-dasharray:3
     
-    linkStyle default stroke:white,stroke-dasharray:3
+    linkStyle default stroke:#666,stroke-dasharray:3
 ```
 
 ---

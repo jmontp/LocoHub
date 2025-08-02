@@ -5,7 +5,7 @@
 ---
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'base'}}%%
 graph TD
     subgraph "Dataset Consumers (90% User Population)"
         GRAD["Graduate Students (30%)<br/><font size='-2'>Person</font><br/><font size='-1'>Exoskeleton control, gait analysis research</font>"]
@@ -128,7 +128,7 @@ graph TD
     style code_examples fill:#707070,color:white,stroke-dasharray:3
     style quality_summaries fill:#707070,color:white,stroke-dasharray:3
     
-    linkStyle default stroke:white,stroke-dasharray:3
+    linkStyle default stroke:#666,stroke-dasharray:3
 ```
 
 ---

@@ -65,7 +65,7 @@ This document translates the functional requirements from [Document 10](10_requi
 *Primary validation tool user (9% of system usage) serving 90% consumer population*
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'base'}}%%
 graph LR
     DC["🔬 Dataset Contributor<br/><font size='-1'>Research collaborator with raw locomotion data</font>"] 
     
@@ -76,7 +76,7 @@ graph LR
     style CONVERT fill:#1168bd,color:white
     style VALIDATE fill:#f4b942,color:white
     
-    linkStyle default stroke:white
+    linkStyle default stroke:#666
 ```
 
 ### Validation Specialist Workflow  
@@ -84,7 +84,7 @@ graph LR
 *Expert biomechanics reviewer collaborating on quality standards using [Sequences 2A/2B](06_sequence_workflows.md)*
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'base'}}%%
 graph LR
     VS["⚙️ Validation Specialist<br/><font size='-1'>Research collaborator managing quality standards</font>"]
     
@@ -99,7 +99,7 @@ graph LR
     style COMPARE fill:#1168bd,color:white
     style DEBUG fill:#1168bd,color:white
     
-    linkStyle default stroke:white
+    linkStyle default stroke:#666
 ```
 
 ### System Administrator Workflow
@@ -107,7 +107,7 @@ graph LR
 *Infrastructure management using [Sequence 4](06_sequence_workflows.md) workflows*
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'base'}}%%
 graph LR
     SA["👨‍💼 System Administrator<br/><font size='-1'>I manage releases and benchmarks</font>"]
     
@@ -120,7 +120,7 @@ graph LR
     style PUBLISH fill:#1168bd,color:white
     style BATCH fill:#1168bd,color:white
     
-    linkStyle default stroke:white
+    linkStyle default stroke:#666
 ```
 
 ### Dataset Consumer Workflow (Future)
@@ -129,7 +129,7 @@ graph LR
 *Future implementation: F5 (Dataset Comparison) and consumer-focused tools*
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'base'}}%%
 graph LR
     DC["🎓 Dataset Consumer<br/><font size='-1'>Research collaborator analyzing locomotion data<br/>Graduate students, clinical researchers, etc.</font>"]
     
@@ -144,7 +144,7 @@ graph LR
     style PYTHON fill:#6baed6,color:white,stroke-dasharray:3
     style MATLAB fill:#6baed6,color:white,stroke-dasharray:3
     
-    linkStyle default stroke:white,stroke-dasharray:3
+    linkStyle default stroke:#666,stroke-dasharray:3
 ```
 
 **Legend**: 
@@ -165,7 +165,7 @@ graph LR
 ### Level 1A: Simple User Split
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'base'}}%%
 graph TD
     subgraph "Dataset Contributors (9%)"
         contributors["Research Collaborators - Contributors<br/><font size='-2'>Person</font><br/><font size='-1'>External researchers contributing data:<br/>dataset curators, validation specialists<br/>using validation_dataset_report.py</font>"]
@@ -193,7 +193,7 @@ graph TD
     style consumers fill:#2a9d8f,stroke:#264653,stroke-width:2px,color:#ffffff
     style system fill:#457b9d,stroke:#1d3557,stroke-width:2px,color:#ffffff
     
-    linkStyle default stroke:white
+    linkStyle default stroke:#666
 ```
 
 **Use Case**: Stakeholder communication and high-level system overview  
@@ -204,7 +204,7 @@ graph TD
 ## Level 1B: Data Flow Focus
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'base'}}%%
 graph TD
     subgraph "External Data Sources"
         raw["Raw Locomotion Datasets<br/><font size='-2'>External System</font><br/><font size='-1'>GTech, UMich, AddBiomechanics<br/>and other research datasets.</font>"]
@@ -229,7 +229,7 @@ graph TD
     style datasets fill:#2a9d8f,stroke:#264653,stroke-width:2px,color:#ffffff
     style docs fill:#f4a261,stroke:#e76f51,stroke-width:2px,color:#ffffff
     
-    linkStyle default stroke:white
+    linkStyle default stroke:#666
 ```
 
 **Use Case**: Technical understanding and data transformation explanation  
@@ -240,7 +240,7 @@ graph TD
 ## Level 1C: Intermediate Detail
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'base'}}%%
 graph TD
     subgraph "External Research Collaborators"
         contributors["Dataset Contributors (9%)<br/><font size='-2'>Person</font><br/><font size='-1'>Research collaborators who validate<br/>and contribute data via workflows.</font>"]
@@ -305,7 +305,7 @@ graph TD
     style validation_specs fill:#457b9d,stroke:#1d3557,stroke-width:2px,color:#ffffff
     style documentation fill:#a8dadc,stroke:#457b9d,stroke-width:1px,color:#000000
     
-    linkStyle default stroke:white
+    linkStyle default stroke:#666
 ```
 
 **Use Case**: Architecture planning and detailed system understanding  

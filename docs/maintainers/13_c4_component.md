@@ -76,7 +76,7 @@ This document details the internal component structure of the containers defined
 **Workflow Support**: Enables dataset loading and processing for [Sequence 1](06_sequence_workflows.md) and all validation workflows
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'base'}}%%
 graph TD
     subgraph "Core Infrastructure Container"
         style CoreInfrastructure fill:#00000000,stroke:#438dd5,stroke-width:3px,stroke-dasharray:5
@@ -143,7 +143,7 @@ graph TD
     style spec_manager_api fill:#6baed6,color:white
     style user_config fill:#707070,color:white
     
-    linkStyle default stroke:white
+    linkStyle default stroke:#666
 ```
 
 ---
@@ -172,7 +172,7 @@ graph TD
 **Validation Workflow Support Components**:
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'base'}}%%
 graph TD
     subgraph "Validation Engine Container"
         style ValidationEngine fill:#00000000,stroke:#e76f51,stroke-width:3px,stroke-dasharray:5
@@ -283,7 +283,7 @@ graph TD
     style validation_reports fill:#707070,color:white
     style plot_outputs fill:#707070,color:white
     
-    linkStyle default stroke:white
+    linkStyle default stroke:#666
 ```
 
 **Key Components Supporting validation_dataset_report.py Primary Use Case:**

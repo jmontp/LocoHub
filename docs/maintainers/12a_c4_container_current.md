@@ -5,7 +5,7 @@
 ---
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
+%%{init: {'theme': 'base'}}%%
 graph TD
     subgraph "User"
         data_scientist["Data Scientist<br/><font size='-2'>Person</font><br/><font size='-1'>Analyzes and validates locomotion data.</font>"]
@@ -86,7 +86,7 @@ graph TD
     style validation_report fill:#707070,color:white
     style project_docs fill:#707070,color:white
     
-    linkStyle default stroke:white
+    linkStyle default stroke:#666
 ```
 
 ---
