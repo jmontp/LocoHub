@@ -37,7 +37,7 @@ from typing import Dict, List, Tuple
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 # Import validation offset utilities
-from validation.validation_offset_utils import (
+from ..validation_engine.validator import (
     apply_contralateral_offset_kinematic,
     apply_contralateral_offset_kinetic,
     validate_task_completeness

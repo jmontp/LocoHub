@@ -36,16 +36,15 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
-# Add the lib directory to the path for imports
-sys.path.insert(0, str(Path(__file__).parent / 'lib'))
+# Add the project root to the path for imports
+sys.path.insert(0, str(Path(__file__).parent))
 
 try:
-    from core.locomotion_analysis import LocomotionData
-    from validation.step_classifier import StepClassifier
-    from validation.dataset_validator_phase import DatasetValidator
+    from user_libs.python.locomotion_data import LocomotionData
+    from internal.validation_engine.validator import StepClassifier, DatasetValidator
 except ImportError as e:
     print(f"Error: Cannot import required libraries. {e}")
-    print("Solution: Ensure you are running from the project root directory and lib/ exists.")
+    print("Solution: Ensure you are running from the project root directory.")
     sys.exit(2)
 
 

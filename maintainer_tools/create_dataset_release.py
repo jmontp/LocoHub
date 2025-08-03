@@ -26,7 +26,7 @@ sys.path.append(str(project_root))
 from internal.validation_engine.release_manager import (
     ReleaseManager, ReleaseConfig, ReleaseError, validate_release_config
 )
-from internal.validation_engine.dataset_validator_phase import DatasetValidator
+from internal.validation_engine.validator import DatasetValidator
 
 
 def create_default_config(output_path: str) -> str:

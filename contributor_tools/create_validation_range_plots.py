@@ -27,7 +27,7 @@ sys.path.insert(0, str(repo_root))
 
 # Import validation modules
 from internal.config_management.config_manager import ValidationConfigManager
-from internal.validation_engine.validation_offset_utils import (
+from internal.validation_engine.validator import (
     apply_contralateral_offset_kinematic,
     apply_contralateral_offset_kinetic
 )

@@ -37,7 +37,7 @@ sys.path.insert(0, str(repo_root))
 
 # Import validation modules
 try:
-    from internal.validation_engine.dataset_validator_phase import DatasetValidator
+    from internal.validation_engine.validator import DatasetValidator
     from internal.config_management.config_manager import ValidationConfigManager
 except ImportError as e:
     print(f"❌ Error importing validation modules: {e}")
