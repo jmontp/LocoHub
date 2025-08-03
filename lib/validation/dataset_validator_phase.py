@@ -614,7 +614,7 @@ class DatasetValidator:
     
     def generate_validation_report(self, validation_results: Dict, task_plots: Dict[str, Dict[str, str]] = None) -> str:
         """
-        Generate a comprehensive validation report in the requested format.
+        Generate a minimal validation report with images and status.
         
         Args:
             validation_results: Results from dataset validation
@@ -626,101 +626,35 @@ class DatasetValidator:
         report_path = self.reports_dir / f"{self.dataset_name}_validation_report.md"
         
         with open(report_path, 'w') as f:
-            f.write("# Dataset Validation Report\n\n")
-            f.write(f"**Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write(f"**Dataset**: `{self.dataset_path}`\n\n")
+            f.write("# Validation Report\n\n")
             
-            # Summary statistics
-            f.write("## Validation Summary\n\n")
-            f.write(f"- **Total Steps Validated**: {validation_results['total_steps']}\n")
-            f.write(f"- **Valid Steps**: {validation_results['valid_steps']}\n")
-            f.write(f"- **Failed Steps**: {validation_results['failed_steps']}\n")
-            
+            # Overall status
             if validation_results['total_steps'] > 0:
                 success_rate = (validation_results['valid_steps'] / validation_results['total_steps']) * 100
-                f.write(f"- **Success Rate**: {success_rate:.1f}%\n")
+                if success_rate >= 95:
+                    status = "✅ PASSED"
+                elif success_rate >= 50:
+                    status = f"⚠️ PARTIAL ({success_rate:.1f}% valid)"
+                else:
+                    status = f"❌ FAILED ({success_rate:.1f}% valid)"
+                f.write(f"**Status**: {status}\n\n")
+            else:
+                f.write("**Status**: ⚠️ NO DATA\n\n")
             
-            f.write(f"- **Tasks Validated**: {', '.join(validation_results['tasks_validated'])}\n\n")
-            
-            # Task-by-task validation plots and results
+            # Task validation images only
             if task_plots:
-                f.write("## Task Validation Results\n\n")
-                
                 for task_name in sorted(validation_results['tasks_validated']):
-                    f.write(f"### {task_name.replace('_', ' ').title()}\n\n")
+                    f.write(f"## {task_name.replace('_', ' ').title()}\n\n")
                     
                     # Include plots if available
                     if task_name in task_plots:
                         if 'kinematic' in task_plots[task_name]:
                             kinematic_plot_name = Path(task_plots[task_name]['kinematic']).name
-                            f.write(f"**Kinematic Validation:**\n")
-                            f.write(f"![{task_name} Kinematic Validation]({kinematic_plot_name})\n\n")
+                            f.write(f"![]({kinematic_plot_name})\n\n")
                         
                         if 'kinetic' in task_plots[task_name]:
                             kinetic_plot_name = Path(task_plots[task_name]['kinetic']).name
-                            f.write(f"**Kinetic Validation:**\n")
-                            f.write(f"![{task_name} Kinetic Validation]({kinetic_plot_name})\n\n")
-                    
-                    # Add task-specific failure summary with percentages
-                    task_kinematic_failures = [f for f in validation_results['kinematic_failures'] 
-                                             if f.get('task') == task_name]
-                    task_kinetic_failures = [f for f in validation_results['kinetic_failures'] 
-                                           if f.get('task') == task_name]
-                    total_task_failures = len(task_kinematic_failures) + len(task_kinetic_failures)
-                    
-                    # Get step counts and calculate percentages for this task
-                    task_counts = validation_results.get('task_step_counts', {}).get(task_name, {'total': 0, 'failed': 0, 'valid': 0})
-                    total_steps_task = task_counts['total']
-                    failed_steps_task = task_counts['failed']
-                    valid_steps_task = task_counts['valid']
-                    
-                    if total_steps_task > 0:
-                        failure_percentage = (failed_steps_task / total_steps_task) * 100
-                        success_percentage = (valid_steps_task / total_steps_task) * 100
-                        
-                        f.write(f"**Step Summary**: {failed_steps_task}/{total_steps_task} failed steps ({failure_percentage:.1f}%)\n")
-                        f.write(f"**Success Rate**: {success_percentage:.1f}%\n\n")
-                    
-                    if total_task_failures > 0:
-                        f.write(f"**Validation Issues**: {total_task_failures} failures detected\n")
-                        if task_kinematic_failures:
-                            f.write(f"- Kinematic: {len(task_kinematic_failures)} failures\n")
-                        if task_kinetic_failures:
-                            f.write(f"- Kinetic: {len(task_kinetic_failures)} failures\n")
-                    else:
-                        f.write(f"**Status**: ✅ All validation checks passed\n")
-                    
-                    f.write("\n")
-            
-            # Detailed failure analysis
-            total_failures = len(validation_results['kinematic_failures']) + len(validation_results['kinetic_failures'])
-            
-            if total_failures == 0:
-                f.write("## ✅ No Validation Failures\n\n")
-                f.write("All steps passed validation against expected ranges.\n")
-            else:
-                f.write(f"## ⚠️ Detailed Failure Analysis ({total_failures} total)\n\n")
-                
-                # Kinematic failures
-                if validation_results['kinematic_failures']:
-                    f.write(f"### Kinematic Failures ({len(validation_results['kinematic_failures'])})\n\n")
-                    self._write_failure_table(f, validation_results['kinematic_failures'])
-                
-                # Kinetic failures
-                if validation_results['kinetic_failures']:
-                    f.write(f"### Kinetic Failures ({len(validation_results['kinetic_failures'])})\n\n")
-                    self._write_failure_table(f, validation_results['kinetic_failures'])
-            
-            # Recommendations
-            f.write("\n## Recommendations\n\n")
-            if total_failures > 0:
-                f.write("1. Review data collection protocols for tasks with high failure rates\n")
-                f.write("2. Check sensor calibration for variables consistently out of range\n")
-                f.write("3. Verify subject instructions and movement quality\n")
-                f.write("4. Consider if validation ranges need updating for your population\n")
-            else:
-                f.write("1. Dataset appears to be high quality with no validation failures\n")
-                f.write("2. Data is ready for analysis and publication\n")
+                            f.write(f"![]({kinetic_plot_name})\n\n")
         
         return str(report_path)
     
@@ -875,14 +809,17 @@ class DatasetValidator:
                         )
                         
                         
-                        # Generate kinematic plot
+                        # Generate kinematic plot with metadata
+                        from datetime import datetime
                         kinematic_plot_path = create_filters_by_phase_plot(
                             validation_data={task_name: self.kinematic_expectations[task_name]},
                             task_name=task_name,
                             output_dir=str(self.plots_dir),
                             mode='kinematic',
                             data=kinematic_data_3d,
-                            step_colors=kinematic_step_colors
+                            step_colors=kinematic_step_colors,
+                            dataset_name=str(self.dataset_path),
+                            timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                         )
                         
                         task_plots[task_name]['kinematic'] = kinematic_plot_path
@@ -909,14 +846,16 @@ class DatasetValidator:
                         )
                         
                         
-                        # Generate kinetic plot
+                        # Generate kinetic plot with metadata
                         kinetic_plot_path = create_filters_by_phase_plot(
                             validation_data={task_name: self.kinetic_expectations[task_name]},
                             task_name=task_name,
                             output_dir=str(self.plots_dir),
                             mode='kinetic',
                             data=kinetic_data_3d,
-                            step_colors=kinetic_step_colors
+                            step_colors=kinetic_step_colors,
+                            dataset_name=str(self.dataset_path),
+                            timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                         )
                         
                         task_plots[task_name]['kinetic'] = kinetic_plot_path

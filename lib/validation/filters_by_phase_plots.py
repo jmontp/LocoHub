@@ -75,7 +75,8 @@ def get_task_classification(task_name: str) -> str:
 
 
 def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_dir: str, mode: str = 'kinematic', 
-                                 data: np.ndarray = None, step_colors: np.ndarray = None) -> str:
+                                 data: np.ndarray = None, step_colors: np.ndarray = None,
+                                 dataset_name: str = None, timestamp: str = None) -> str:
     """
     Create a filters by phase plot for a specific task showing ranges across phases.
     Updated for v6.0 with unified kinematic/kinetic plotting.
@@ -92,6 +93,8 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                     - 'red': local violation (violation in current feature)
                     - 'yellow': other violation (violations in other features)
                     If shape is (num_steps,), will use same color for all features of each step (backward compatibility)
+        dataset_name: Optional dataset name to display on the plot
+        timestamp: Optional timestamp to display on the plot
         
     Returns:
         Path to the generated filters by phase plot
@@ -135,8 +138,15 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
     # Add task classification to title
     task_type_label = "Gait-Based Task (Contralateral Offset)" if task_type == 'gait' else "Bilateral Symmetric Task"
     mode_label = "Kinematic" if mode == 'kinematic' else "Kinetic"
-    fig.suptitle(f'{task_name.replace("_", " ").title()} - {mode_label} Range Filters by Phase\n{task_type_label}', 
-                 fontsize=16, fontweight='bold')
+    
+    # Build title with optional metadata
+    title = f'{task_name.replace("_", " ").title()} - {mode_label} Validation\n{task_type_label}'
+    if dataset_name:
+        title += f'\nDataset: {dataset_name}'
+    if timestamp:
+        title += f' | Generated: {timestamp}'
+    
+    fig.suptitle(title, fontsize=14, fontweight='bold')
     
     # Define variable types and colors based on mode
     if mode == 'kinematic':
@@ -372,6 +382,22 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
                     ax.legend(handles=legend_elements, loc='upper left', fontsize=9)
                 else:
                     ax.legend(loc='upper left', fontsize=9)
+    
+    # Add success rate if we have data
+    if data is not None and step_colors is not None:
+        # Calculate success rate from step colors
+        if len(step_colors.shape) == 2:
+            # 2D array - count any step with all green as valid
+            valid_steps = np.sum(np.all(step_colors == 'green', axis=1))
+        else:
+            # 1D array
+            valid_steps = np.sum(step_colors == 'green')
+        total_steps = step_colors.shape[0]
+        success_rate = (valid_steps / total_steps * 100) if total_steps > 0 else 0
+        
+        # Add success rate as text annotation
+        fig.text(0.99, 0.01, f'Success Rate: {success_rate:.1f}% ({valid_steps}/{total_steps} valid steps)',
+                ha='right', va='bottom', fontsize=10, style='italic', color='darkgreen' if success_rate > 50 else 'darkred')
     
     # Adjust layout and save
     plt.tight_layout()
