@@ -9,8 +9,9 @@ from .feature_constants import (
     ANGLE_FEATURES,
     VELOCITY_FEATURES, 
     MOMENT_FEATURES,
-    FORCE_FEATURES,
-    POWER_FEATURES,
+    GRF_FEATURES,
+    COP_FEATURES,
+    ALL_KINETIC_FEATURES,
     get_feature_list,
     get_kinematic_feature_map,
     get_kinetic_feature_map
@@ -22,8 +23,9 @@ __all__ = [
     'ANGLE_FEATURES',
     'VELOCITY_FEATURES',
     'MOMENT_FEATURES',
-    'FORCE_FEATURES',
-    'POWER_FEATURES',
+    'GRF_FEATURES',
+    'COP_FEATURES',
+    'ALL_KINETIC_FEATURES',
     'get_feature_list',
     'get_kinematic_feature_map',
     'get_kinetic_feature_map'
