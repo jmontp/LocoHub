@@ -34,8 +34,8 @@ from io import StringIO
 sys.path.append(str(Path(__file__).parent.parent))
 
 # Import the libraries we're testing
-from lib.validation.forward_kinematics_plots import KinematicPoseGenerator
-from lib.validation.generate_validation_gifs import (
+from internal.plot_generation.forward_kinematics_plots import KinematicPoseGenerator
+from internal.plot_generation.generate_validation_gifs import (
     calculate_joint_positions,
     create_stick_figure_animation_from_locomotion_data,
     create_stick_figure_animation,
@@ -1149,7 +1149,7 @@ class TestAnimationFunctionCoverage(unittest.TestCase):
     
     def test_animation_frame_logic_coverage(self):
         """Test the internal animation logic without complex matplotlib mocking"""
-        from lib.validation.generate_validation_gifs import calculate_joint_positions
+        from internal.plot_generation.generate_validation_gifs import calculate_joint_positions
         
         # Test the core calculation that happens in the animation frame
         segment_lengths = {'thigh': 1.0, 'shank': 1.0, 'foot': 0.5, 'torso': 2.0}
@@ -1186,7 +1186,7 @@ class TestAnimationFunctionCoverage(unittest.TestCase):
         
         # This tests the error handling inside the animation function
         # by calling the core calculation with problematic data
-        from lib.validation.generate_validation_gifs import calculate_joint_positions
+        from internal.plot_generation.generate_validation_gifs import calculate_joint_positions
         
         try:
             # Test with NaN - should handle gracefully
@@ -1199,7 +1199,7 @@ class TestAnimationFunctionCoverage(unittest.TestCase):
     
     def test_create_stick_figure_animation_from_locomotion_data_direct(self):
         """Test the LocomotionData import path directly to achieve coverage"""
-        from lib.validation.generate_validation_gifs import create_stick_figure_animation_from_locomotion_data
+        from internal.plot_generation.generate_validation_gifs import create_stick_figure_animation_from_locomotion_data
         
         # Create a mock that simulates the import failing
         with patch('builtins.__import__', side_effect=ImportError("Module not found")):
@@ -1211,7 +1211,7 @@ class TestAnimationFunctionCoverage(unittest.TestCase):
     
     def test_process_dataset_config_direct(self):
         """Test process_dataset_config directly to achieve coverage"""
-        from lib.validation.generate_validation_gifs import process_dataset_config
+        from internal.plot_generation.generate_validation_gifs import process_dataset_config
         
         config = {
             'file': 'nonexistent.parquet',
@@ -1225,7 +1225,7 @@ class TestAnimationFunctionCoverage(unittest.TestCase):
     
     def test_gif_main_function_coverage(self):
         """Test main function paths to achieve coverage"""
-        from lib.validation.generate_validation_gifs import main
+        from internal.plot_generation.generate_validation_gifs import main
         
         # Test the usage message path
         with patch('argparse.ArgumentParser.parse_args') as mock_parse:
@@ -1248,7 +1248,7 @@ class TestAdditionalCoverageTargets(unittest.TestCase):
     
     def test_forward_kinematics_missing_lines(self):
         """Test specific uncovered lines in forward_kinematics_plots.py"""
-        from lib.validation.forward_kinematics_plots import KinematicPoseGenerator
+        from internal.plot_generation.forward_kinematics_plots import KinematicPoseGenerator
         
         generator = KinematicPoseGenerator()
         
@@ -1268,7 +1268,7 @@ class TestAdditionalCoverageTargets(unittest.TestCase):
     
     def test_forward_kinematics_validation_file_paths(self):
         """Test validation file path resolution"""
-        from lib.validation.forward_kinematics_plots import KinematicPoseGenerator
+        from internal.plot_generation.forward_kinematics_plots import KinematicPoseGenerator
         
         generator = KinematicPoseGenerator()
         

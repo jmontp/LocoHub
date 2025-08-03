@@ -33,7 +33,7 @@ project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
 try:
-    from lib.validation.range_optimizer import (
+    from internal.validation_engine.range_optimizer import (
         StreamingStatsCalculator,
         RangeOptimizer,
         PercentileMethod,
@@ -478,7 +478,7 @@ class TestIntegrationWithValidationSystem(unittest.TestCase):
     
     def test_feature_constants_compatibility(self):
         """Test compatibility with feature_constants.py."""
-        from lib.core.feature_constants import ANGLE_FEATURES, MOMENT_FEATURES
+        from user_libs.python.feature_constants import ANGLE_FEATURES, MOMENT_FEATURES
         
         optimizer = RangeOptimizer()
         

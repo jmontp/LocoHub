@@ -916,7 +916,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
     def test_feature_constants_import_coverage(self, mock_updater_class):
         """Test feature constants import is covered."""
         # The get_feature_list import should be tested
-        from lib.core.feature_constants import get_feature_list
+        from user_libs.python.feature_constants import get_feature_list
         features = get_feature_list('kinematic')
         self.assertIsInstance(features, (list, tuple))
 

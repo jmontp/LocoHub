@@ -47,46 +47,43 @@ class TestCLIScripts(unittest.TestCase):
         test_data.to_parquet(dataset_path)
         return dataset_path
     
-    def test_detect_dataset_type_cli(self):
-        """Test detect_dataset_type.py CLI functionality."""
+    def test_create_dataset_validation_report_cli(self):
+        """Test create_dataset_validation_report.py CLI functionality."""
         cmd = [
             sys.executable, 
-            "contributor_scripts/detect_dataset_type.py",
-            "--json",
-            self.test_dataset
-        ]
-        
-        result = subprocess.run(cmd, capture_output=True, text=True, cwd=os.getcwd())
-        
-        # Should run without error
-        self.assertEqual(result.returncode, 0, f"CLI failed with: {result.stderr}")
-        
-        # Should contain detection results
-        output = result.stdout
-        self.assertIn("confidence", output.lower())
-        
-    def test_validate_phase_dataset_cli(self):
-        """Test validate_phase_dataset.py CLI functionality."""
-        cmd = [
-            sys.executable,
-            "contributor_scripts/validate_phase_dataset.py", 
+            "contributor_tools/create_dataset_validation_report.py",
             "--dataset", self.test_dataset,
-            "--quick"
+            "--no-plots",  # Skip plots for speed
+            "--no-index-update"  # Skip index update
         ]
         
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=os.getcwd())
         
-        # Should run without error (even if validation fails due to missing specs)
+        # Should run (may fail due to missing validation specs but shouldn't crash)
         self.assertIn(result.returncode, [0, 1], f"CLI failed unexpectedly: {result.stderr}")
         
-    def test_optimize_validation_ranges_cli(self):
-        """Test optimize_validation_ranges.py CLI functionality."""
+    def test_create_validation_range_plots_cli(self):
+        """Test create_validation_range_plots.py CLI functionality."""
         cmd = [
             sys.executable,
-            "contributor_scripts/optimize_validation_ranges.py",
-            "--datasets", self.test_dataset,
-            "--method", "percentile", 
-            "--output", os.path.join(self.temp_dir, "optimized_ranges.json")
+            "contributor_tools/create_validation_range_plots.py", 
+            "--tasks", "level_walking",
+            "--filters-only"  # Only generate filter plots for speed
+        ]
+        
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=os.getcwd())
+        
+        # Should run (may fail due to missing config but shouldn't crash)
+        self.assertIn(result.returncode, [0, 1], f"CLI failed unexpectedly: {result.stderr}")
+        
+    def test_automated_fine_tuning_cli(self):
+        """Test automated_fine_tuning.py CLI functionality."""
+        cmd = [
+            sys.executable,
+            "contributor_tools/automated_fine_tuning.py",
+            "--dataset", self.test_dataset,
+            "--method", "percentile_95", 
+            "--no-save-ranges"  # Don't save to avoid modifying configs
         ]
         
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=os.getcwd())
@@ -94,11 +91,11 @@ class TestCLIScripts(unittest.TestCase):
         # Should run without critical error
         self.assertIn(result.returncode, [0, 1], f"CLI failed unexpectedly: {result.stderr}")
         
-    def test_update_validation_ranges_cli(self):
-        """Test update_validation_ranges.py CLI functionality."""
+    def test_automated_fine_tuning_help_cli(self):
+        """Test automated_fine_tuning.py help functionality."""
         cmd = [
             sys.executable,
-            "contributor_scripts/update_validation_ranges.py",
+            "contributor_tools/automated_fine_tuning.py",
             "--help"
         ]
         
@@ -112,7 +109,7 @@ class TestCLIScripts(unittest.TestCase):
         """Test create_ml_benchmark.py CLI functionality."""
         cmd = [
             sys.executable,
-            "contributor_scripts/create_ml_benchmark.py",
+            "maintainer_tools/create_ml_benchmark.py",
             self.test_dataset,
             "--output", os.path.join(self.temp_dir, "benchmark")
         ]
@@ -139,7 +136,7 @@ class TestCLIScripts(unittest.TestCase):
             
         cmd = [
             sys.executable,
-            "contributor_scripts/create_dataset_release.py",
+            "maintainer_tools/create_dataset_release.py",
             "--config", config_path,
             "--output", os.path.join(self.temp_dir, "release")
         ]
@@ -152,12 +149,11 @@ class TestCLIScripts(unittest.TestCase):
     def test_all_cli_help_commands(self):
         """Test that all CLI scripts have functional help."""
         cli_scripts = [
-            "contributor_scripts/detect_dataset_type.py",
-            "contributor_scripts/validate_phase_dataset.py",
-            "contributor_scripts/optimize_validation_ranges.py", 
-            "contributor_scripts/update_validation_ranges.py",
-            "contributor_scripts/create_ml_benchmark.py",
-            "contributor_scripts/create_dataset_release.py"
+            "contributor_tools/create_dataset_validation_report.py",
+            "contributor_tools/create_validation_range_plots.py",
+            "contributor_tools/automated_fine_tuning.py",
+            "maintainer_tools/create_ml_benchmark.py",
+            "maintainer_tools/create_dataset_release.py"
         ]
         
         for script in cli_scripts:
@@ -183,7 +179,7 @@ class TestCoreLibraryFunctionality(unittest.TestCase):
         
     def test_locomotion_data_comprehensive(self):
         """Test LocomotionData core functionality."""
-        from lib.core.locomotion_analysis import LocomotionData
+        from user_libs.python.locomotion_data import LocomotionData
         
         # Create comprehensive test dataset
         n_points = 300
@@ -227,7 +223,7 @@ class TestCoreLibraryFunctionality(unittest.TestCase):
             
     def test_feature_constants(self):
         """Test feature constants functionality."""
-        import lib.core.feature_constants as fc
+        import user_libs.python.feature_constants as fc
         
         # Test that module loads without error
         self.assertTrue(hasattr(fc, '__file__'))

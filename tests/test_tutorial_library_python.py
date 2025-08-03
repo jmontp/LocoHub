@@ -45,7 +45,7 @@ print("Testing LocomotionData library...")
 print(f"Current directory: {os.getcwd()}")
 
 try:
-    from lib.core.locomotion_analysis import LocomotionData
+    from user_libs.python.locomotion_data import LocomotionData
     print("✓ Successfully imported LocomotionData")
 except ImportError as e:
     print(f"✗ Failed to import LocomotionData: {e}")

@@ -60,7 +60,7 @@ class TestDatasetTypeDetection(unittest.TestCase):
     def test_filename_pattern_recognition(self):
         """Test that filename patterns are correctly identified."""
         # Import the detector module (will be created in Phase 2)
-        from lib.validation.dataset_type_detector import DatasetTypeDetector
+        from internal.validation_engine.dataset_type_detector import DatasetTypeDetector
         
         detector = DatasetTypeDetector()
         
@@ -90,7 +90,7 @@ class TestDatasetTypeDetection(unittest.TestCase):
     
     def test_confidence_scoring(self):
         """Test confidence scoring algorithm."""
-        from lib.validation.dataset_type_detector import DatasetTypeDetector
+        from internal.validation_engine.dataset_type_detector import DatasetTypeDetector
         
         detector = DatasetTypeDetector()
         
@@ -110,7 +110,7 @@ class TestDatasetTypeDetection(unittest.TestCase):
     @patch('lib.validation.dataset_type_detector.pd.read_parquet')
     def test_metadata_analysis_mock(self, mock_read_parquet):
         """Test metadata analysis using mocked parquet reading to avoid memory usage."""
-        from lib.validation.dataset_type_detector import DatasetTypeDetector
+        from internal.validation_engine.dataset_type_detector import DatasetTypeDetector
         
         detector = DatasetTypeDetector()
         
@@ -140,7 +140,7 @@ class TestDatasetTypeDetection(unittest.TestCase):
     
     def test_combined_detection(self):
         """Test combined filename and metadata detection."""
-        from lib.validation.dataset_type_detector import DatasetTypeDetector
+        from internal.validation_engine.dataset_type_detector import DatasetTypeDetector
         import tempfile
         
         detector = DatasetTypeDetector()
@@ -169,7 +169,7 @@ class TestDatasetTypeDetection(unittest.TestCase):
     
     def test_conflicting_detection(self):
         """Test handling of conflicting filename and metadata signals."""
-        from lib.validation.dataset_type_detector import DatasetTypeDetector
+        from internal.validation_engine.dataset_type_detector import DatasetTypeDetector
         import tempfile
         
         detector = DatasetTypeDetector()
@@ -202,7 +202,7 @@ class TestDatasetTypeDetection(unittest.TestCase):
             import psutil
             import os
             
-            from lib.validation.dataset_type_detector import DatasetTypeDetector
+            from internal.validation_engine.dataset_type_detector import DatasetTypeDetector
             
             # Get initial memory usage
             process = psutil.Process(os.getpid())
@@ -227,7 +227,7 @@ class TestDatasetTypeDetection(unittest.TestCase):
     
     def test_batch_detection_efficiency(self):
         """Test efficient batch processing of multiple files."""
-        from lib.validation.dataset_type_detector import DatasetTypeDetector
+        from internal.validation_engine.dataset_type_detector import DatasetTypeDetector
         
         detector = DatasetTypeDetector()
         
@@ -249,7 +249,7 @@ class TestDatasetTypeDetection(unittest.TestCase):
     
     def test_error_handling(self):
         """Test graceful error handling for problematic files."""
-        from lib.validation.dataset_type_detector import DatasetTypeDetector
+        from internal.validation_engine.dataset_type_detector import DatasetTypeDetector
         
         detector = DatasetTypeDetector()
         

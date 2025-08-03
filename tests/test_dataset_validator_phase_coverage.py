@@ -61,7 +61,7 @@ sys.modules['lib.validation.step_classifier'] = MagicMock()
 sys.modules['lib.core.feature_constants'] = MagicMock()
 
 # Import the module to test
-from lib.validation.dataset_validator_phase import DatasetValidator
+from internal.validation_engine.dataset_validator_phase import DatasetValidator
 
 
 class TestDatasetValidatorPhaseComprehensive(unittest.TestCase):

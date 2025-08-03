@@ -54,7 +54,7 @@ except ImportError:
                     return decorator
             return Mark()
 
-from lib.validation.step_classifier import StepClassifier
+from internal.validation_engine.step_classifier import StepClassifier
 
 
 class TestStepClassifierComprehensiveCoverage:

@@ -62,7 +62,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 # Import from lib package
-from lib.core.locomotion_analysis import LocomotionData, efficient_reshape_3d
+from user_libs.python.locomotion_data import LocomotionData, efficient_reshape_3d
 
 
 class TestLocomotionAnalysisCoverage:
@@ -1078,7 +1078,7 @@ if __name__ == "__main__":
     except ImportError:
         print("⚠️  pytest not available - running basic import test")
         try:
-            from lib.core.locomotion_analysis import LocomotionData
+            from user_libs.python.locomotion_data import LocomotionData
             print("✅ LocomotionData import successful")
         except Exception as e:
             print(f"❌ Import failed: {e}")

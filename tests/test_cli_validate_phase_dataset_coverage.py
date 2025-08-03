@@ -40,8 +40,8 @@ sys.path.insert(0, str(repo_root))
 sys.path.insert(0, str(lib_path))
 
 # Import modules needed for testing
-from lib.validation.phase_validator import EnhancedPhaseValidator, PhaseValidationResult, PhaseLengthViolation
-from lib.validation.dataset_validator_phase import DatasetValidator
+from internal.validation_engine.phase_validator import EnhancedPhaseValidator, PhaseValidationResult, PhaseLengthViolation
+from internal.validation_engine.dataset_validator_phase import DatasetValidator
 
 
 class TestValidatePhaseDatasetCLICoverage(unittest.TestCase):

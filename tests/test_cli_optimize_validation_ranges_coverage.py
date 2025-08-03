@@ -43,7 +43,7 @@ from io import StringIO
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
-from lib.core.feature_constants import ANGLE_FEATURES, MOMENT_FEATURES
+from user_libs.python.feature_constants import ANGLE_FEATURES, MOMENT_FEATURES
 
 # Import the CLI script components for direct testing
 sys.path.append(str(project_root / "contributor_scripts"))

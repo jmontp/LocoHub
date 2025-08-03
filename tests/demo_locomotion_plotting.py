@@ -325,7 +325,7 @@ def main():
     
     try:
         # Import library
-        from lib.core.locomotion_analysis import LocomotionData
+        from user_libs.python.locomotion_data import LocomotionData
         print("✓ Successfully imported LocomotionData library")
         
         # Set up matplotlib for demo

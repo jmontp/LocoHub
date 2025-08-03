@@ -46,7 +46,7 @@ matplotlib.use('Agg')  # Use non-interactive backend
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
-from lib.validation.step_classifier import StepClassifier
+from internal.validation_engine.step_classifier import StepClassifier
 
 
 def print_banner(title):
@@ -516,7 +516,7 @@ def demo_integration_example():
     
     # Import the plotting function and validation parser
     try:
-        from lib.validation.filters_by_phase_plots import create_filters_by_phase_plot
+        from internal.plot_generation.filters_by_phase_plots import create_filters_by_phase_plot
         from lib.validation.validation_expectations_parser import parse_kinematic_validation_expectations
         print("🔗 Creating actual validation plots with step classification...")
     except ImportError:

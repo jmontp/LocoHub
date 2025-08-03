@@ -48,7 +48,7 @@ matplotlib.use('Agg')  # Use non-interactive backend
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
-from lib.validation.filters_by_phase_plots import create_filters_by_phase_plot
+from internal.plot_generation.filters_by_phase_plots import create_filters_by_phase_plot
 
 
 def create_demo_plots():

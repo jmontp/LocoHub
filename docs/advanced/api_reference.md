@@ -453,7 +453,7 @@ feature_index = kinematic_map['knee_flexion_angle_ipsi_rad']
 
 ```python
 # Command line usage
-python contributor_scripts/create_dataset_release.py \
+python maintainer_scripts/create_dataset_release.py \
     --input dataset_phase.parquet \
     --output release/ \
     --version 1.0.0 \
@@ -470,7 +470,7 @@ python contributor_scripts/create_dataset_release.py \
 
 ```python
 # Command line usage
-python contributor_scripts/create_ml_benchmark.py \
+python maintainer_scripts/create_ml_benchmark.py \
     --dataset dataset_phase.parquet \
     --tasks normal_walk,fast_walk \
     --output ml_benchmark/ \

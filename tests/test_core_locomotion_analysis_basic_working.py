@@ -24,7 +24,7 @@ import pytest
 # Add parent directory to path for lib imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from lib.core.locomotion_analysis import LocomotionData, efficient_reshape_3d
+from user_libs.python.locomotion_data import LocomotionData, efficient_reshape_3d
 
 
 class TestBasicWorkingCoverage:

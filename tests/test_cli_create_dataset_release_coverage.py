@@ -31,7 +31,7 @@ import pandas as pd
 import numpy as np
 
 # Import the CLI script functions for direct testing
-cli_script_path = project_root / 'contributor_scripts' / 'create_dataset_release.py'
+cli_script_path = project_root / 'maintainer_scripts' / 'create_dataset_release.py'
 sys.path.append(str(cli_script_path.parent))
 
 

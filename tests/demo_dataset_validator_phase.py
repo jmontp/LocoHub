@@ -45,7 +45,7 @@ import warnings
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
-from lib.validation.step_classifier import StepClassifier
+from internal.validation_engine.step_classifier import StepClassifier
 
 def print_banner(title):
     """Print a formatted banner for section separation."""

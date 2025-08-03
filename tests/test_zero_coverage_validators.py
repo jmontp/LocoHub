@@ -32,15 +32,15 @@ project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
 # Import the target modules for testing
-from lib.validation.phase_validator import (
+from internal.validation_engine.phase_validator import (
     EnhancedPhaseValidator,
     PhaseValidationResult,
     PhaseLengthViolation,
     validate_phase_dataset_enhanced
 )
-from lib.validation.automated_fine_tuning import AutomatedFineTuner
-from lib.core.locomotion_analysis import LocomotionData
-from lib.core.feature_constants import ANGLE_FEATURES, MOMENT_FEATURES
+from internal.validation_engine.automated_fine_tuning import AutomatedFineTuner
+from user_libs.python.locomotion_data import LocomotionData
+from user_libs.python.feature_constants import ANGLE_FEATURES, MOMENT_FEATURES
 
 
 class TestEnhancedPhaseValidator(unittest.TestCase):
@@ -1330,7 +1330,7 @@ class TestAutomatedFineTunerMain(unittest.TestCase):
     @patch('lib.validation.automated_fine_tuning.AutomatedFineTuner')
     def test_main_function_default_args(self, mock_tuner_class, mock_argv):
         """Test main() function with default arguments - Lines 591-658."""
-        from lib.validation.automated_fine_tuning import main
+        from internal.validation_engine.automated_fine_tuning import main
         
         # Mock command line arguments
         mock_argv.__getitem__.side_effect = [
@@ -1370,7 +1370,7 @@ class TestAutomatedFineTunerMain(unittest.TestCase):
     @patch('builtins.print')
     def test_main_function_dataset_not_found(self, mock_print, mock_argv):
         """Test main() function with non-existent dataset - Lines 640-643."""
-        from lib.validation.automated_fine_tuning import main
+        from internal.validation_engine.automated_fine_tuning import main
         
         mock_argv.__getitem__.side_effect = ['automated_fine_tuning.py']
         
@@ -1389,7 +1389,7 @@ class TestAutomatedFineTunerMain(unittest.TestCase):
     @patch('lib.validation.automated_fine_tuning.AutomatedFineTuner')
     def test_main_function_tuning_failure(self, mock_tuner_class, mock_argv):
         """Test main() function with tuning failure - Lines 652-657."""
-        from lib.validation.automated_fine_tuning import main
+        from internal.validation_engine.automated_fine_tuning import main
         
         mock_argv.__getitem__.side_effect = ['automated_fine_tuning.py']
         
@@ -1423,7 +1423,7 @@ class TestAutomatedFineTunerMain(unittest.TestCase):
     @patch('sys.argv')
     def test_main_function_help_text(self, mock_argv):
         """Test main() function help text and argument parser - Lines 593-637."""
-        from lib.validation.automated_fine_tuning import main
+        from internal.validation_engine.automated_fine_tuning import main
         
         mock_argv.__getitem__.side_effect = ['automated_fine_tuning.py']
         
@@ -1438,7 +1438,7 @@ class TestAutomatedFineTunerMain(unittest.TestCase):
     
     def test_argparse_choices_and_defaults(self):
         """Test argument parser choices and default values - Lines 622-636."""
-        from lib.validation.automated_fine_tuning import main
+        from internal.validation_engine.automated_fine_tuning import main
         import argparse
         
         # Create parser manually to test choices

@@ -17,10 +17,10 @@ git remote add upstream https://github.com/jmontp/locomotion-data-standardizatio
 **Dependencies:**
 ```bash
 pip install pandas numpy matplotlib pyarrow  # Core
-pip install -r source/conversion_scripts/AddBiomechanics/requirements.txt  # Optional
+pip install -r contributor_tools/conversion_scripts/AddBiomechanics/requirements.txt  # Optional
 ```
 
-**MATLAB:** R2019b+, `addpath('source/lib/matlab')`
+**MATLAB:** R2019b+, `addpath('user_libs/matlab')`
 
 ## Standards
 
@@ -34,7 +34,7 @@ Examples: `knee_flexion_angle_contra_rad`, `hip_moment_ipsi_Nm`
 
 ## Adding Dataset Converters
 
-**Structure:** `source/conversion_scripts/YourDataset/`
+**Structure:** `contributor_tools/conversion_scripts/YourDataset/`
 
 **Converter Template:**
 ```python
@@ -53,13 +53,13 @@ def convert_to_parquet(input_path, output_path):
 
 **Python:**
 ```bash
-python source/tests/test_locomotion_data_library.py
-python -c "import sys; sys.path.append('lib/core'); from examples import run_basic_example; run_basic_example()"
+python tests/test_locomotion_data_library.py
+python -c "from user_libs.python.examples.basic_examples import run_basic_example; run_basic_example()"
 ```
 
 **MATLAB:**
 ```matlab
-cd('source/tests')
+cd('tests')
 test_tutorial_library_matlab
 ```
 
@@ -95,12 +95,14 @@ git commit -m "Add XYZ dataset converter
 ## Project Structure
 
 ```
-lib/core/                # Core Python libraries
-lib/validation/          # Quality checks and GIF generation
-source/lib/matlab/       # MATLAB libraries
-contributor_scripts/     # Dataset converters
-tests/                   # Testing framework
-docs/                    # Specifications and tutorials
+user_libs/python/        # Core Python libraries
+user_libs/matlab/        # MATLAB libraries
+user_libs/r/            # R libraries
+contributor_tools/      # Dataset converters and validation
+maintainer_tools/       # Release and benchmark management
+internal/               # Core infrastructure
+tests/                  # Testing framework
+docs/                   # Specifications and tutorials
 ```
 
 ## Best Practices

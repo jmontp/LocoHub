@@ -3,7 +3,7 @@
 test_cli_create_ml_benchmark_coverage.py
 
 Created: 2025-06-18 with user permission
-Purpose: Complete line coverage test for contributor_scripts/create_ml_benchmark.py
+Purpose: Complete line coverage test for maintainer_scripts/create_ml_benchmark.py
 
 Intent: Achieves 100% line coverage for the create_ml_benchmark.py CLI script
 by testing all code paths, error conditions, and functionality through both
@@ -27,7 +27,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 # Import the module under test
-sys.path.insert(0, str(project_root / "contributor_scripts"))
+sys.path.insert(0, str(project_root / "maintainer_scripts"))
 import create_ml_benchmark
 
 
@@ -38,7 +38,7 @@ class TestCreateMLBenchmarkCLI(unittest.TestCase):
         """Set up test fixtures."""
         self.temp_dir = Path(tempfile.mkdtemp())
         self.test_datasets = []
-        self.cli_script = str(project_root / "contributor_scripts" / "create_ml_benchmark.py")
+        self.cli_script = str(project_root / "maintainer_scripts" / "create_ml_benchmark.py")
         
         # Create comprehensive test datasets
         self.single_dataset = self._create_single_dataset()

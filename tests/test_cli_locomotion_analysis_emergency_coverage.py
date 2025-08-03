@@ -27,7 +27,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 # Import directly to avoid import issues
-from lib.core.locomotion_analysis import LocomotionData, efficient_reshape_3d
+from user_libs.python.locomotion_data import LocomotionData, efficient_reshape_3d
 
 
 class TestEmergencyCoverage:

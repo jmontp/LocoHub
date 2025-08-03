@@ -124,7 +124,7 @@ All validation checks passed successfully.
 
     def test_create_dataset_metadata(self):
         """Test creation of comprehensive dataset metadata."""
-        from lib.validation.release_manager import ReleaseManager
+        from internal.validation_engine.release_manager import ReleaseManager
         
         manager = ReleaseManager()
         
@@ -161,7 +161,7 @@ All validation checks passed successfully.
 
     def test_streaming_archive_creation(self):
         """Test memory-efficient streaming archive creation."""
-        from lib.validation.release_manager import ReleaseManager
+        from internal.validation_engine.release_manager import ReleaseManager
         
         manager = ReleaseManager()
         archive_path = os.path.join(self.temp_dir, "test_release.zip")
@@ -206,7 +206,7 @@ All validation checks passed successfully.
 
     def test_validation_summary_generation(self):
         """Test generation of validation summaries without loading full datasets."""
-        from lib.validation.release_manager import ReleaseManager
+        from internal.validation_engine.release_manager import ReleaseManager
         
         manager = ReleaseManager()
         
@@ -248,7 +248,7 @@ All validation checks passed successfully.
 
     def test_release_configuration(self):
         """Test release configuration validation and loading."""
-        from lib.validation.release_manager import ReleaseConfig
+        from internal.validation_engine.release_manager import ReleaseConfig
         
         # Create test configuration
         config_data = {
@@ -291,7 +291,7 @@ All validation checks passed successfully.
 
     def test_integrity_verification(self):
         """Test release archive integrity verification."""
-        from lib.validation.release_manager import ReleaseManager
+        from internal.validation_engine.release_manager import ReleaseManager
         
         manager = ReleaseManager()
         
@@ -323,7 +323,7 @@ All validation checks passed successfully.
 
     def test_memory_efficient_processing(self):
         """Test memory efficiency with larger dataset simulation."""
-        from lib.validation.release_manager import ReleaseManager
+        from internal.validation_engine.release_manager import ReleaseManager
         
         manager = ReleaseManager()
         
@@ -370,7 +370,7 @@ All validation checks passed successfully.
 
     def test_documentation_compilation(self):
         """Test automatic documentation compilation."""
-        from lib.validation.release_manager import ReleaseManager
+        from internal.validation_engine.release_manager import ReleaseManager
         
         manager = ReleaseManager()
         
@@ -416,7 +416,7 @@ All validation checks passed successfully.
 
     def test_incremental_archive_creation(self):
         """Test incremental archive creation for large releases."""
-        from lib.validation.release_manager import ReleaseManager
+        from internal.validation_engine.release_manager import ReleaseManager
         
         manager = ReleaseManager()
         archive_path = os.path.join(self.temp_dir, "incremental_archive.zip")
@@ -452,7 +452,7 @@ All validation checks passed successfully.
 
     def test_tar_archive_support(self):
         """Test support for tar.gz archive format."""
-        from lib.validation.release_manager import ReleaseManager
+        from internal.validation_engine.release_manager import ReleaseManager
         
         manager = ReleaseManager()
         archive_path = os.path.join(self.temp_dir, "test_release.tar.gz")
@@ -540,7 +540,7 @@ class TestReleaseManagerCLI(unittest.TestCase):
 
     def test_configuration_validation(self):
         """Test configuration file validation."""
-        from lib.validation.release_manager import validate_release_config
+        from internal.validation_engine.release_manager import validate_release_config
         
         # Test valid configuration
         is_valid, errors = validate_release_config(self.config_data)
@@ -561,7 +561,7 @@ class TestReleaseManagerCLI(unittest.TestCase):
 
     def test_output_directory_creation(self):
         """Test automatic output directory creation."""
-        from lib.validation.release_manager import ReleaseManager
+        from internal.validation_engine.release_manager import ReleaseManager
         
         manager = ReleaseManager()
         
@@ -575,7 +575,7 @@ class TestReleaseManagerCLI(unittest.TestCase):
 
     def test_progress_reporting(self):
         """Test progress reporting for long operations."""
-        from lib.validation.release_manager import ReleaseManager
+        from internal.validation_engine.release_manager import ReleaseManager
         
         manager = ReleaseManager()
         
@@ -617,7 +617,7 @@ class TestReleaseManagerCLI(unittest.TestCase):
 
     def test_error_handling(self):
         """Test comprehensive error handling."""
-        from lib.validation.release_manager import ReleaseManager, ReleaseError
+        from internal.validation_engine.release_manager import ReleaseManager, ReleaseError
         
         manager = ReleaseManager()
         
@@ -641,7 +641,7 @@ class TestReleaseManagerCLI(unittest.TestCase):
 
     def test_custom_template_support(self):
         """Test support for custom documentation templates."""
-        from lib.validation.release_manager import ReleaseManager
+        from internal.validation_engine.release_manager import ReleaseManager
         
         manager = ReleaseManager()
         
@@ -739,7 +739,7 @@ data = pd.read_parquet('example_dataset_phase.parquet')
 
     def test_complete_release_workflow(self):
         """Test complete end-to-end release creation workflow."""
-        from lib.validation.release_manager import ReleaseManager
+        from internal.validation_engine.release_manager import ReleaseManager
         
         manager = ReleaseManager()
         
@@ -805,8 +805,8 @@ data = pd.read_parquet('example_dataset_phase.parquet')
 
     def test_release_validation_integration(self):
         """Test integration with validation system during release."""
-        from lib.validation.release_manager import ReleaseManager
-        from lib.validation.dataset_validator_phase import DatasetValidator
+        from internal.validation_engine.release_manager import ReleaseManager
+        from internal.validation_engine.dataset_validator_phase import DatasetValidator
         
         manager = ReleaseManager()
         
@@ -880,7 +880,7 @@ data = pd.read_parquet('example_dataset_phase.parquet')
         pd.DataFrame(large_data).to_parquet(large_dataset_file)
         
         # Create release with larger dataset
-        from lib.validation.release_manager import ReleaseManager
+        from internal.validation_engine.release_manager import ReleaseManager
         
         manager = ReleaseManager()
         archive_path = os.path.join(self.temp_dir, "large_release.zip")

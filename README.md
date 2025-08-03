@@ -4,6 +4,15 @@ Easy-to-use, cleaned up and tested biomechanical datasets that enable reproducib
 
 **Quick Links:** [Datasets](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) • [Standard Spec](docs/standard_spec/standard_spec.md) • [Python Tutorial](docs/tutorials/python/getting_started_python.md)
 
+## Project Structure
+
+- **`user_libs/`** - Analysis libraries (Python, MATLAB, R)
+- **`contributor_tools/`** - Dataset conversion and validation tools  
+- **`maintainer_tools/`** - Release and benchmark management
+- **`internal/`** - Core infrastructure (validation engine, plotting)
+- **`converted_datasets/`** - Standardized parquet files
+- **`docs/`** - Documentation and tutorials
+
 ## Use Cases
 
 ---
@@ -26,21 +35,16 @@ Load and analyze standardized datasets with optimized 3D array operations:
 
 **Python:**
 ```python
-import sys
-from pathlib import Path
-
-# Add library path (run from project root)
-sys.path.append('lib/core')
-from locomotion_analysis import LocomotionData
+from user_libs.python.locomotion_data import LocomotionData
 
 # Load and analyze data
-data = LocomotionData.from_parquet('dataset.parquet')
+data = LocomotionData('dataset.parquet')
 data_3d = data.to_3d_array(['knee_flexion_angle_ipsi_rad'])
 ```
 
 **MATLAB:**
 ```matlab
-addpath('source/lib/matlab')
+addpath('user_libs/matlab')
 data = LocomotionData('dataset.parquet');
 knee_angles = data.get_variable('knee_flexion_angle_ipsi_rad');
 ```
@@ -56,7 +60,7 @@ Convert new datasets or contribute to the project:
 
 1. **Create conversion scripts** following existing patterns
 2. **Fill out dataset documentation** using [Dataset Template](docs/standard_spec/dataset_template.md)
-3. **Submit validation report** with `python contributor_scripts/validate_phase_dataset.py --dataset your_dataset_phase.parquet`
+3. **Submit validation report** with `python contributor_tools/create_dataset_validation_report.py --dataset your_dataset_phase.parquet`
 4. **Follow pull request guidelines** in [Contributing Guide](CONTRIBUTING.md)
 
 **Reference**: [Contributing Guide](CONTRIBUTING.md)
@@ -79,9 +83,9 @@ Convert new datasets or contribute to the project:
 
 To contribute a new dataset:
 
-1. **Create conversion scripts** following existing patterns in `source/conversion_scripts/`
+1. **Create conversion scripts** following existing patterns in `contributor_tools/conversion_scripts/`
 2. **Fill out dataset documentation** using [Dataset Template](docs/standard_spec/dataset_template.md)  
-3. **Submit validation report** with `python contributor_scripts/validate_phase_dataset.py --dataset your_dataset_phase.parquet`
+3. **Submit validation report** with `python contributor_tools/create_dataset_validation_report.py --dataset your_dataset_phase.parquet`
 4. **Follow pull request guidelines** in [Contributing Guide](CONTRIBUTING.md)
 
 ## Future

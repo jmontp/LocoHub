@@ -35,7 +35,7 @@ import pytest
 # Add parent directory to path for lib imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from lib.core.locomotion_analysis import LocomotionData, efficient_reshape_3d
+from user_libs.python.locomotion_data import LocomotionData, efficient_reshape_3d
 
 
 class TestEmergencyFinalCoverage:
@@ -635,7 +635,7 @@ class TestEmergencyFinalCoverage:
         """Test matplotlib import error handling (lines 73-75, 81-82, 86)."""
         
         # These lines are import-time, so we test the available flags
-        from lib.core.locomotion_analysis import MATPLOTLIB_AVAILABLE
+        from user_libs.python.locomotion_data import MATPLOTLIB_AVAILABLE
         
         # Test plotting when matplotlib unavailable
         if not MATPLOTLIB_AVAILABLE:
