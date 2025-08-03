@@ -62,7 +62,7 @@ class DatasetValidator:
         
         Args:
             dataset_path: Path to the phase-based dataset parquet file (must be *_phase.parquet)
-            output_dir: Directory to save validation reports (default: source/tests/sample_plots/validation_reports)
+            output_dir: Directory to save validation reports (default: docs/user_guide/docs/reference/datasets_documentation/validation_reports)
             generate_plots: Whether to generate filters by phase plots with validation overlays (default: True)
         """
         self.dataset_path = dataset_path
@@ -71,14 +71,15 @@ class DatasetValidator:
         # Extract dataset name for use in output files
         self.dataset_name = Path(dataset_path).stem  # Extract dataset name without .parquet extension
         
-        # Set default output directory to sample_plots if not specified
+        # Set default output directory to MkDocs documentation if not specified
         if output_dir is None:
-            # Find the source/tests directory using absolute path resolution
+            # Find the project root using absolute path resolution
             current_file = Path(__file__).resolve()  # Absolute path to this file
-            validation_dir = current_file.parent     # source/validation/
-            source_dir = validation_dir.parent       # source/
-            tests_dir = source_dir / "tests"         # source/tests/
-            output_dir = tests_dir / "sample_plots" / "validation_reports" / self.dataset_name
+            validation_dir = current_file.parent     # lib/validation/
+            lib_dir = validation_dir.parent          # lib/
+            project_root = lib_dir.parent            # project root
+            # Use MkDocs documentation directory for validation reports
+            output_dir = project_root / "docs" / "user_guide" / "docs" / "reference" / "datasets_documentation" / "validation_reports"
         
         # Create output directory structure
         self.output_dir = Path(output_dir)
@@ -1026,7 +1027,7 @@ def main():
     """Main function to run the dataset validator."""
     parser = argparse.ArgumentParser(description="Validate phase-based locomotion datasets against specification ranges")
     parser.add_argument("--dataset", required=True, help="Path to phase-based dataset parquet file (*_phase.parquet)")
-    parser.add_argument("--output", default=None, help="Output directory for validation reports (default: source/tests/sample_plots/validation_reports/<dataset_name>)")
+    parser.add_argument("--output", default=None, help="Output directory for validation reports (default: docs/user_guide/docs/reference/datasets_documentation/validation_reports)")
     parser.add_argument("--no-plots", action="store_true", help="Disable generation of validation plots")
     
     args = parser.parse_args()
