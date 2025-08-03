@@ -36,8 +36,14 @@ from .config_manager import ValidationConfigManager
 class KinematicPoseGenerator:
     """Generator for static kinematic poses for validation visualization"""
     
-    def __init__(self):
-        """Initialize the pose generator with segment parameters"""
+    def __init__(self, config_manager=None):
+        """
+        Initialize the pose generator with segment parameters.
+        
+        Args:
+            config_manager: Optional ValidationConfigManager for dynamic phase detection
+        """
+        self.config_manager = config_manager
         
         # Define segment lengths (same as walking_animator.py)
         self.segment_lengths = {
@@ -54,8 +60,8 @@ class KinematicPoseGenerator:
             'ankle': {'min': -0.9, 'max': 0.7}     # -50° to +40°
         }
         
-        # Phase points for validation - Updated to v5.0 system
-        self.phase_points = [0, 25, 50, 75]
+        # Default phase points - will be overridden if config available
+        self.default_phase_points = [0, 25, 50, 75]
         
         # Colors for different elements
         self.colors = {
@@ -65,6 +71,29 @@ class KinematicPoseGenerator:
             'ground': 'gray',
             'torso': 'darkgreen'
         }
+    
+    def get_phase_points(self, task_name: str = None) -> List[int]:
+        """
+        Get phase points dynamically from configuration or use defaults.
+        
+        Args:
+            task_name: Optional task name to get specific phases for
+            
+        Returns:
+            List of phase percentages to use for visualization
+        """
+        if self.config_manager and task_name:
+            try:
+                # Try to load validation ranges to get phases
+                ranges = self.config_manager.load_validation_ranges('kinematic')
+                if task_name in ranges:
+                    phases = sorted([int(p) for p in ranges[task_name].keys()])
+                    if phases:
+                        return phases
+            except:
+                pass  # Fall back to defaults
+        
+        return self.default_phase_points
     
     def calculate_joint_positions(self, hip_angle: float, knee_angle: float, ankle_angle: float) -> Tuple[np.ndarray, ...]:
         """
@@ -439,10 +468,14 @@ class KinematicPoseGenerator:
             
             print(f"Successfully loaded validation data for {task_name}")
         
+        # Get phase points dynamically
+        phase_points = self.get_phase_points(task_name)
+        
         # Generate image for each phase point
-        for phase_point in self.phase_points:
+        for phase_point in phase_points:
             if phase_point not in validation_ranges:
-                raise ValueError(f"No validation data found for task {task_name} at phase {phase_point}%")
+                print(f"Warning: No validation data for phase {phase_point}%, skipping")
+                continue
             
             phase_ranges = validation_ranges[phase_point]
             

@@ -25,9 +25,24 @@ from user_libs.python.locomotion_data import LocomotionData
 
 def apply_contralateral_offset_kinematic(
     phase_data: Dict[int, Dict[str, Dict[str, float]]], 
-    task_name: str = None
+    task_name: str = None,
+    offset_percent: int = 50
 ) -> Dict[int, Dict[str, Dict[str, float]]]:
-    """Apply contralateral offset for gait tasks (50% phase shift)."""
+    """
+    Apply contralateral offset for gait tasks with configurable offset.
+    
+    For gait tasks, the contralateral limb is offset by a percentage of the cycle
+    (typically 50% for symmetric gait). This function dynamically calculates
+    the offset for any phase points defined in the configuration.
+    
+    Args:
+        phase_data: Validation ranges organized by phase
+        task_name: Name of the task being validated
+        offset_percent: Phase offset for contralateral limb (default 50%)
+        
+    Returns:
+        Updated phase data with contralateral values
+    """
     gait_tasks = ['level_walking', 'incline_walking', 'decline_walking',
                   'up_stairs', 'down_stairs', 'run']
     
@@ -35,28 +50,38 @@ def apply_contralateral_offset_kinematic(
         return phase_data
     
     result = {}
-    phase_offset_map = {0: 50, 25: 75, 50: 0, 75: 25}
+    available_phases = sorted(phase_data.keys())
     
-    for phase in phase_data:
+    for phase in available_phases:
         result[phase] = phase_data[phase].copy()
         
-        if phase in phase_offset_map:
-            offset_phase = phase_offset_map[phase]
-            if offset_phase in phase_data:
-                for var_name, var_range in phase_data[offset_phase].items():
-                    if '_ipsi' in var_name:
-                        contra_name = var_name.replace('_ipsi', '_contra')
-                        result[phase][contra_name] = var_range
+        # Calculate contralateral phase dynamically
+        contra_phase = (phase + offset_percent) % 100
+        
+        # Find closest available phase if exact match not found
+        if contra_phase not in phase_data:
+            # Find nearest phase in available data
+            if available_phases:
+                contra_phase = min(available_phases, 
+                                 key=lambda x: abs(x - contra_phase))
+        
+        # Apply contralateral data if source phase exists
+        if contra_phase in phase_data:
+            for var_name, var_range in phase_data[contra_phase].items():
+                if '_ipsi' in var_name:
+                    contra_name = var_name.replace('_ipsi', '_contra')
+                    result[phase][contra_name] = var_range
     
     return result
 
 
 def apply_contralateral_offset_kinetic(
     phase_data: Dict[int, Dict[str, Dict[str, float]]], 
-    task_name: str = None
+    task_name: str = None,
+    offset_percent: int = 50
 ) -> Dict[int, Dict[str, Dict[str, float]]]:
     """Apply contralateral offset for kinetic variables in gait tasks."""
-    return apply_contralateral_offset_kinematic(phase_data, task_name)
+    return apply_contralateral_offset_kinematic(phase_data, task_name, offset_percent)
 
 
 # ============================================================================
@@ -72,6 +97,8 @@ class Validator:
     2. Check phase structure (150 points per cycle)
     3. Validate against YAML specifications
     4. Return simple pass/fail with details
+    
+    Supports arbitrary phase points defined in YAML configuration.
     """
     
     def __init__(self, config_dir: Optional[Path] = None):
@@ -82,7 +109,8 @@ class Validator:
             config_dir: Optional path to config directory with YAML files
         """
         self.config_manager = ValidationConfigManager(config_dir)
-        self.representative_phases = {0: 0, 25: 37, 50: 75, 75: 112}
+        # Phase points will be determined dynamically from configuration
+        self.default_phases = {0: 0, 25: 37, 50: 75, 75: 112}
         
     def validate(self, dataset_path: str) -> Dict[str, Any]:
         """
@@ -146,6 +174,32 @@ class Validator:
             return False, f"Invalid phase length: {data.shape[1]} (expected 150)"
         return True, "Phase structure valid (150 points per cycle)"
     
+    def _get_phase_indices(self, task_ranges: Dict) -> Dict[int, int]:
+        """
+        Dynamically calculate phase indices from configuration.
+        
+        Assumes 150 points per cycle (0-149 indices).
+        Maps phase percentages to array indices.
+        
+        Args:
+            task_ranges: Dictionary with phase percentages as keys
+            
+        Returns:
+            Dictionary mapping phase percentage to array index
+        """
+        # Extract phase percentages from config
+        phases = sorted([int(p) for p in task_ranges.keys()])
+        
+        phase_indices = {}
+        for phase in phases:
+            # Map phase percentage to index (0-149)
+            # Phase 0% = index 0, Phase 100% = index 149
+            # Use 149 as max index since array is 0-indexed
+            index = int(round((phase / 100.0) * 149))
+            phase_indices[phase] = index
+        
+        return phase_indices
+    
     def _validate_task(self, task_data: np.ndarray, task_name: str) -> Dict[str, List[int]]:
         """
         Validate task data against specifications.
@@ -163,14 +217,17 @@ class Validator:
                 
             task_ranges = ranges[task_name]
             
+            # Get phase indices dynamically from configuration
+            phase_indices = self._get_phase_indices(task_ranges)
+            
             # Apply contralateral offset
             if mode == 'kinematic':
                 task_ranges = apply_contralateral_offset_kinematic(task_ranges, task_name)
             else:
                 task_ranges = apply_contralateral_offset_kinetic(task_ranges, task_name)
             
-            # Check each representative phase
-            for phase_pct, phase_idx in self.representative_phases.items():
+            # Check each phase from configuration
+            for phase_pct, phase_idx in phase_indices.items():
                 if phase_pct not in task_ranges:
                     continue
                     
@@ -327,11 +384,21 @@ def __getattr__(name):
 
 # Utility function for compatibility
 def validate_task_completeness(task_data: Dict, task_name: str, mode: str):
-    """Check if task data is complete for validation."""
-    required_phases = [0, 25, 50, 75]
-    for phase in required_phases:
-        if phase not in task_data:
-            raise ValueError(f"Missing phase {phase}% for task {task_name}")
+    """
+    Check if task data is complete for validation.
+    
+    For dynamic phase support, this now validates that at least some phases
+    exist rather than requiring specific hardcoded phases.
+    """
+    # Extract numeric phases from task data
+    phases = [int(p) for p in task_data.keys() if str(p).isdigit()]
+    
+    if not phases:
+        raise ValueError(f"No valid phase data found for task {task_name}")
+    
+    # Ensure we have at least 2 phases for meaningful validation
+    if len(phases) < 2:
+        raise ValueError(f"Task {task_name} has only {len(phases)} phase(s). At least 2 required for validation.")
 
 
 if __name__ == "__main__":

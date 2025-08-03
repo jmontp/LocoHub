@@ -109,7 +109,14 @@ def create_filters_by_phase_plot(validation_data: Dict, task_name: str, output_d
     
     # Validate that task data is complete - fail explicitly if missing required data
     validate_task_completeness(task_data, task_name, mode)
-    phases = [0, 25, 50, 75, 100]  # Updated to include 100% for cyclical completion
+    
+    # Extract phases dynamically from the validation data
+    phases = sorted([int(p) for p in task_data.keys() if str(p).isdigit()])
+    
+    # Add 100% for cyclical completion if not present
+    if 100 not in phases and 0 in task_data:
+        phases.append(100)
+    
     task_type = get_task_classification(task_name)
     
     # Add 100% phase data (same as 0% to show cyclical nature)

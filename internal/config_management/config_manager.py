@@ -85,7 +85,14 @@ class ValidationConfigManager:
                 validation_data[task_name] = {}
                 if 'phases' in task_data:
                     for phase_str, variables in task_data['phases'].items():
-                        phase = int(phase_str)
+                        try:
+                            phase = int(phase_str)
+                        except ValueError:
+                            raise ValueError(f"Invalid phase '{phase_str}' in task {task_name}. Phase must be a number.")
+                        
+                        # Validate phase is between 0-100
+                        if not 0 <= phase <= 100:
+                            raise ValueError(f"Phase {phase} in task {task_name} is out of range. Must be 0-100.")
                         
                         # Filter by mode if using consolidated file and specific mode requested
                         if use_consolidated and mode != 'all':

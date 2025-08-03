@@ -175,6 +175,43 @@ pytest tests/test_dataset_validator_phase_coverage.py
 pytest tests/ -v
 ```
 
+## Advanced Features
+
+### Arbitrary Validation Phases
+
+The validation system supports any phase percentages (0-100), not just the standard 0/25/50/75:
+
+```yaml
+# Example: Custom phase points for detailed analysis
+tasks:
+  detailed_walking:
+    phases:
+      '10':   # Early stance
+        knee_flexion_angle_ipsi_rad:
+          min: 0.1
+          max: 0.4
+      '33':   # One-third through cycle
+        knee_flexion_angle_ipsi_rad:
+          min: 0.3
+          max: 0.8
+      '67':   # Two-thirds through cycle
+        knee_flexion_angle_ipsi_rad:
+          min: 0.6
+          max: 1.2
+      '90':   # Late swing
+        knee_flexion_angle_ipsi_rad:
+          min: 0.4
+          max: 0.9
+```
+
+The system automatically:
+- Maps phase percentages to array indices (0-149)
+- Handles contralateral offsets for any phase configuration
+- Generates plots at specified phase points
+- Validates at exactly the phases you define
+
+See `contributor_scripts/validation_ranges/test_custom_phases.yaml` for examples.
+
 ## Development Status
 
 **Active Development**: Breaking changes expected. Focus on correctness over compatibility.
