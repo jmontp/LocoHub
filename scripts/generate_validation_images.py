@@ -60,7 +60,7 @@ Examples:
     parser.add_argument(
         '--output-dir',
         type=str,
-        help='Custom output directory (default: docs/user_guide/docs/reference/datasets_documentation/validation_reports)'
+        help='Custom output directory (default: docs/user_guide/docs/reference/standard_spec/validation)'
     )
     
     args = parser.parse_args()
@@ -75,7 +75,7 @@ Examples:
     if args.output_dir:
         output_dir = Path(args.output_dir)
     else:
-        output_dir = project_root / "docs" / "user_guide" / "docs" / "reference" / "datasets_documentation" / "validation_reports"
+        output_dir = project_root / "docs" / "user_guide" / "docs" / "reference" / "standard_spec" / "validation"
     
     output_dir.mkdir(parents=True, exist_ok=True)
     

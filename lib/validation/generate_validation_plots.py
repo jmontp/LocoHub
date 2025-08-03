@@ -54,8 +54,8 @@ class ValidationPlotsGenerator:
         if not self.config_manager.config_exists(mode):
             raise FileNotFoundError(f"{mode.title()} validation config not found.")
             
-        # Use the same output directory as the dataset documentation
-        self.output_dir = self.project_root / "docs" / "user_guide" / "docs" / "reference" / "datasets_documentation" / "validation_reports"
+        # Output directory where markdown files expect the images
+        self.output_dir = self.project_root / "docs" / "user_guide" / "docs" / "reference" / "standard_spec" / "validation"
         
         # Create output directory if it doesn't exist
         self.output_dir.mkdir(parents=True, exist_ok=True)
