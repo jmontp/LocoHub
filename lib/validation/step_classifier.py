@@ -78,6 +78,9 @@ from .validation_expectations_parser import (
     validate_task_completeness
 )
 
+# Import config manager for YAML-based validation ranges
+from .config_manager import ValidationConfigManager
+
 # Import feature constants from library
 from lib.core.feature_constants import get_kinematic_feature_map, get_kinetic_feature_map
 
@@ -137,57 +140,50 @@ class StepClassifier:
         Returns:
             Dictionary structured as: {task_name: {phase: {variable: {min, max}}}}
         """
-        if specs_dir is None:
-            # Use project default path
-            current_file = Path(__file__).resolve()
-            project_root = current_file.parent.parent.parent  # Go up from source/validation/ to project root
-            specs_dir = project_root / "docs" / "standard_spec"
-        else:
-            specs_dir = Path(specs_dir)
+        # Use ConfigManager for loading validation ranges from YAML
+        config_manager = ValidationConfigManager(config_dir=specs_dir)
         
         if mode == 'kinematic':
             if self._kinematic_validation_ranges is None:
-                spec_file = specs_dir / "validation_expectations_kinematic.md"
-                if not spec_file.exists():
-                    raise FileNotFoundError(f"Kinematic validation spec file not found: {spec_file}")
-                
-                # Parse raw ranges from specification
-                raw_ranges = parse_kinematic_validation_expectations(str(spec_file))
-                
-                # Apply contralateral offset logic for gait tasks
-                processed_ranges = {}
-                for task_name, task_data in raw_ranges.items():
-                    processed_task_data = apply_contralateral_offset_kinematic(task_data, task_name)
+                try:
+                    # Load ranges from YAML config
+                    raw_ranges = config_manager.load_validation_ranges('kinematic')
                     
-                    # Validate completeness
-                    validate_task_completeness(processed_task_data, task_name, mode)
+                    # Apply contralateral offset logic for gait tasks
+                    processed_ranges = {}
+                    for task_name, task_data in raw_ranges.items():
+                        processed_task_data = apply_contralateral_offset_kinematic(task_data, task_name)
+                        
+                        # Validate completeness
+                        validate_task_completeness(processed_task_data, task_name, mode)
+                        
+                        processed_ranges[task_name] = processed_task_data
                     
-                    processed_ranges[task_name] = processed_task_data
-                
-                self._kinematic_validation_ranges = processed_ranges
+                    self._kinematic_validation_ranges = processed_ranges
+                except FileNotFoundError:
+                    raise FileNotFoundError(f"Kinematic validation config file not found")
             
             return self._kinematic_validation_ranges
             
         elif mode == 'kinetic':
             if self._kinetic_validation_ranges is None:
-                spec_file = specs_dir / "validation_expectations_kinetic.md"
-                if not spec_file.exists():
-                    raise FileNotFoundError(f"Kinetic validation spec file not found: {spec_file}")
-                
-                # Parse raw ranges from specification
-                raw_ranges = parse_kinetic_validation_expectations(str(spec_file))
-                
-                # Apply contralateral offset logic for gait tasks
-                processed_ranges = {}
-                for task_name, task_data in raw_ranges.items():
-                    processed_task_data = apply_contralateral_offset_kinetic(task_data, task_name)
+                try:
+                    # Load ranges from YAML config
+                    raw_ranges = config_manager.load_validation_ranges('kinetic')
                     
-                    # Validate completeness
-                    validate_task_completeness(processed_task_data, task_name, mode)
+                    # Apply contralateral offset logic for gait tasks
+                    processed_ranges = {}
+                    for task_name, task_data in raw_ranges.items():
+                        processed_task_data = apply_contralateral_offset_kinetic(task_data, task_name)
+                        
+                        # Validate completeness
+                        validate_task_completeness(processed_task_data, task_name, mode)
+                        
+                        processed_ranges[task_name] = processed_task_data
                     
-                    processed_ranges[task_name] = processed_task_data
-                
-                self._kinetic_validation_ranges = processed_ranges
+                    self._kinetic_validation_ranges = processed_ranges
+                except FileNotFoundError:
+                    raise FileNotFoundError(f"Kinetic validation config file not found")
             
             return self._kinetic_validation_ranges
         

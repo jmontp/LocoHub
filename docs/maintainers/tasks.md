@@ -25,17 +25,38 @@ KINEMATIC_VARIABLES = [
 
 ### 2. Add Validation Ranges
 
-```markdown
-# docs/standard_spec/validation_expectations_kinematic.md
+```python
+# Update YAML config file
+from lib.validation.config_manager import ValidationConfigManager
 
-## Pelvis Kinematics
+# Load existing config
+config_mgr = ValidationConfigManager()
+kinematic_ranges = config_mgr.load_validation_ranges('kinematic')
 
-### pelvis_tilt_angle_abs_rad
-- **Range**: [-0.35, 0.35]  # ±20 degrees
-- **Mean**: ~0.0
-- **Units**: radians
-- **Sign**: Positive = anterior tilt
-- **Source**: Winter (2009) Biomechanics
+# Add new variable ranges for each task
+for task in ['level_walking', 'incline_walking', 'decline_walking']:
+    for phase in [0, 25, 50, 75]:
+        kinematic_ranges[task][phase]['pelvis_tilt_angle_abs_rad'] = {
+            'min': -0.35,  # -20 degrees
+            'max': 0.35    # +20 degrees
+        }
+
+# Save updated config
+config_mgr.save_validation_ranges('kinematic', kinematic_ranges,
+    metadata={'updated': 'Added pelvis tilt angle'})
+```
+
+Or manually edit `config/validation/kinematic_ranges.yaml`:
+
+```yaml
+tasks:
+  level_walking:
+    phases:
+      '0':
+        pelvis_tilt_angle_abs_rad: {min: -0.35, max: 0.35}
+      '25':
+        pelvis_tilt_angle_abs_rad: {min: -0.35, max: 0.35}
+      # ... repeat for all phases
 ```
 
 ### 3. Update Tests
@@ -136,10 +157,10 @@ When validation is too strict/loose based on new data:
 ```python
 # scripts/analyze_validation_failures.py
 
-from lib.validation.dataset_validator_phase import PhaseValidator
+from lib.validation.dataset_validator_phase import DatasetValidator
 
-validator = PhaseValidator()
-results = validator.validate('problematic_dataset.parquet')
+validator = DatasetValidator('problematic_dataset.parquet')
+results = validator.validate()
 
 # Check what's failing
 for variable, stats in results['failed_variables'].items():
@@ -154,6 +175,7 @@ for variable, stats in results['failed_variables'].items():
 # lib/validation/automated_fine_tuning.py
 
 from lib.validation.automated_fine_tuning import AutomatedFineTuner
+from lib.validation.config_manager import ValidationConfigManager
 
 tuner = AutomatedFineTuner()
 new_ranges = tuner.suggest_ranges(
@@ -166,24 +188,37 @@ print(f"Suggested range: {new_ranges}")
 # Suggested range: [-0.35, 2.45] (was [-0.2, 2.0])
 ```
 
-### 3. Update Specification
+### 3. Update Configuration
 
-```markdown
-# docs/standard_spec/validation_expectations_kinematic.md
+```python
+# Update YAML config programmatically
+from lib.validation.config_manager import ValidationConfigManager
 
-## Knee Kinematics - Stair Ascent
+config_mgr = ValidationConfigManager()
+ranges = config_mgr.load_validation_ranges('kinematic')
 
-### knee_flexion_angle_ipsi_rad
-- **Range**: [-0.35, 2.45]  # Updated based on N=50 subjects
-- **Previous**: [-0.2, 2.0]
-- **Reason**: Larger flexion during stair ascent than expected
-- **Date Updated**: 2024-03-15
-- **Datasets Used**: GTech_2023, UMich_2021
+# Update specific task/phase/variable
+ranges['stair_ascent'][0]['knee_flexion_angle_ipsi_rad'] = {
+    'min': -0.35,
+    'max': 2.45
+}
+
+# Save with detailed metadata
+config_mgr.save_validation_ranges('kinematic', ranges,
+    metadata={
+        'updated': '2024-03-15',
+        'reason': 'Larger flexion during stair ascent than expected',
+        'datasets_used': 'GTech_2023, UMich_2021',
+        'previous_range': '[-0.2, 2.0]'
+    })
 ```
 
-### 4. Test Impact
+### 4. Regenerate Images & Test
 
 ```bash
+# Regenerate images with embedded config
+python lib/validation/generate_validation_plots.py --tasks stair_ascent
+
 # Re-validate datasets with new ranges
 python lib/validation/dataset_validator_phase.py dataset1.parquet
 # Check that previously failing data now passes

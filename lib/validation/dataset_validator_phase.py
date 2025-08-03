@@ -42,6 +42,7 @@ from datetime import datetime
 try:
     from .filters_by_phase_plots import create_filters_by_phase_plot
     from .step_classifier import StepClassifier
+    from .config_manager import ValidationConfigManager
     from lib.core.locomotion_analysis import LocomotionData
 except ImportError as e:
     raise ImportError(f"Could not import required library modules: {e}")
@@ -89,18 +90,21 @@ class DatasetValidator:
         
         # Initialize step classifier (needed for both validation and visualization)
         self.step_classifier = StepClassifier()
+        
+        # Initialize config manager for loading validation ranges
+        self.config_manager = ValidationConfigManager()
             
-        # Load validation expectations from specification files using the step classifier
+        # Load validation expectations from YAML config files
         try:
-            self.kinematic_expectations = self.step_classifier.load_validation_ranges_from_specs('kinematic')
+            self.kinematic_expectations = self.config_manager.load_validation_ranges('kinematic')
         except FileNotFoundError:
-            print("⚠️  Warning: Kinematic validation expectations not found")
+            print("⚠️  Warning: Kinematic validation config not found")
             self.kinematic_expectations = {}
         
         try:
-            self.kinetic_expectations = self.step_classifier.load_validation_ranges_from_specs('kinetic')
+            self.kinetic_expectations = self.config_manager.load_validation_ranges('kinetic')
         except FileNotFoundError:
-            print("⚠️  Warning: Kinetic validation expectations not found")
+            print("⚠️  Warning: Kinetic validation config not found")
             self.kinetic_expectations = {}
         
         # Storage for validation results

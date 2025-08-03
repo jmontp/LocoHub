@@ -120,6 +120,67 @@ STANDARD_VARIABLES = [
 - **Complete**: Includes all necessary information
 - **Consistent**: Same pattern everywhere
 
+## Validation System Architecture
+
+### Configuration-Based Validation
+
+The validation system uses YAML configuration files to store validation ranges, separating data storage from documentation:
+
+```yaml
+# config/validation/kinematic_ranges.yaml
+version: '1.0'
+generated: '2025-08-03'
+source_dataset: 'umich_2021_phase.parquet'
+method: '95th percentile'
+
+tasks:
+  level_walking:
+    phases:
+      0:  # Heel strike
+        hip_flexion_angle_ipsi_rad: {min: 0.35, max: 0.83}
+        knee_flexion_angle_ipsi_rad: {min: -0.05, max: 0.25}
+      25: # Mid-stance
+        hip_flexion_angle_ipsi_rad: {min: -0.04, max: 0.53}
+        # ... more variables
+```
+
+### Key Components
+
+1. **ConfigManager** (`lib/validation/config_manager.py`)
+   - Centralized YAML config management
+   - Clean API for reading/writing validation ranges
+   - Metadata tracking (dataset, method, generation date)
+
+2. **ValidationImageGenerator** (`lib/validation/image_generator_with_config.py`)
+   - Creates self-documenting images with embedded config
+   - Each image shows the exact ranges used
+   - Includes metadata panel for traceability
+
+3. **Updated Validators**
+   - `PhaseValidator` and `StepClassifier` now use ConfigManager
+   - Consistent config loading across all validation tools
+   - Backward compatibility maintained through adapter methods
+
+### Data Flow
+
+```mermaid
+graph LR
+    A[YAML Config<br/>validation ranges] --> B[ConfigManager]
+    B --> C[PhaseValidator]
+    B --> D[StepClassifier]
+    B --> E[Image Generator]
+    E --> F[Self-documenting<br/>Images]
+    C --> G[Validation<br/>Reports]
+```
+
+### Benefits of Config-Based Architecture
+
+- **Single Source of Truth**: YAML configs store all validation ranges
+- **Version Control Friendly**: Clean diffs for range changes
+- **Self-Documenting Images**: Each plot shows its configuration
+- **Separation of Concerns**: Config (data), Markdown (docs), Images (visualization)
+- **Easier Updates**: Change ranges without touching documentation
+
 ## Component Interactions
 
 ```mermaid
@@ -130,7 +191,7 @@ graph TD
     D -->|If Valid| E[LocomotionData]
     E -->|Analysis| F[Research Results]
     
-    C -->|Validation Spec| G[validation_expectations_*.md]
+    C -->|Validation Config| G[config/validation/*.yaml]
     E -->|Variable Names| H[feature_constants.py]
 ```
 
