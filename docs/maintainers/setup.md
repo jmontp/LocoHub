@@ -1,54 +1,29 @@
-# Development Environment Setup
+# Development Setup
 
-This guide walks you through setting up a complete development environment for maintaining the locomotion data standardization system.
+Quick setup for working with dataset conversion and validation.
 
-## Prerequisites
+## Requirements
 
-### Required Software
-- **Python 3.8+** - Core language for validation and analysis
+- **Python 3.8+** - For validation and conversion scripts
 - **Git** - Version control
-- **MATLAB R2021b+** (optional) - For MATLAB converters and libraries
-- **Docker** (optional) - For containerized development
+- **MATLAB** (optional) - For UMich converter only
 
-### Recommended Tools
-- **VS Code** or **PyCharm** - IDE with Python support
-- **GitHub CLI** - For easier PR management
-- **Make** - For automation (on Windows: use WSL or Git Bash)
-
-## Step 1: Clone and Fork
+## Step 1: Clone Repository
 
 ```bash
-# Fork the repository on GitHub first, then:
-git clone https://github.com/YOUR_USERNAME/locomotion-data-standardization
+git clone https://github.com/your-org/locomotion-data-standardization
 cd locomotion-data-standardization
-
-# Add upstream remote
-git remote add upstream https://github.com/original-org/locomotion-data-standardization
 ```
 
-## Step 2: Python Environment
+## Step 2: Python Setup
 
-### Option A: Virtual Environment (Recommended)
 ```bash
 # Create virtual environment
 python -m venv venv
 
-# Activate it
-# Linux/Mac:
-source venv/bin/activate
-# Windows:
-venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-pip install -r requirements-dev.txt  # Development tools
-```
-
-### Option B: Conda Environment
-```bash
-# Create conda environment
-conda create -n locomotion python=3.9
-conda activate locomotion
+# Activate
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
 
 # Install dependencies
 pip install -r requirements.txt
@@ -57,139 +32,71 @@ pip install -r requirements.txt
 ## Step 3: Verify Installation
 
 ```bash
-# Run basic tests
-pytest tests/test_locomotion_data_library.py -v
+# Test data loading
+python -c "from lib.core.locomotion_analysis import LocomotionData; print('✓ Data library works')"
 
-# Check imports work
-python -c "from lib.core.locomotion_analysis import LocomotionData; print('✓ Core library works')"
+# Test validation
 python -c "from lib.validation.dataset_validator_phase import PhaseValidator; print('✓ Validation works')"
 ```
 
-## Step 4: Set Up Pre-commit Hooks
+## Step 4: Test Core Functionality
 
+### Convert a Dataset
 ```bash
-# Install pre-commit
-pip install pre-commit
-
-# Set up hooks
-pre-commit install
-
-# Run on all files to verify
-pre-commit run --all-files
+# Example with GTech (Python)
+cd contributor_scripts/conversion_scripts/Gtech_2023/
+python3 convert_gtech_all_to_parquet.py
+cd ../../..
 ```
 
-## Step 5: Documentation Setup
-
+### Generate Validation Report
 ```bash
-# Install documentation tools
-pip install mkdocs mkdocs-material mkdocs-mermaid2
+python3 contributor_scripts/create_dataset_validation_report.py \
+    --dataset converted_datasets/gtech_2023_phase.parquet
+```
 
-# Test documentation build
+### View Documentation
+```bash
+pip install mkdocs mkdocs-material
+cd docs/user_guide
 mkdocs serve
-# Visit http://localhost:8000
+# Open http://localhost:8000
 ```
 
-## Step 6: Download Sample Data
+## Step 5: MATLAB Setup (Optional)
 
-```bash
-# Create data directory
-mkdir -p converted_datasets
-
-# Download sample datasets (if available)
-# wget https://example.com/sample_data/umich_2021_phase.parquet -P converted_datasets/
-# Or use the Dropbox link from the documentation
-```
-
-## Step 7: MATLAB Setup (Optional)
-
-If you're working with MATLAB converters:
+For UMich dataset converter only:
 
 ```matlab
-% In MATLAB, add paths
-addpath('source/lib/matlab')
-addpath('contributor_scripts/Gtech_2023')
-addpath('contributor_scripts/Umich_2021')
+% Navigate to converter
+cd contributor_scripts/conversion_scripts/Umich_2021/
 
-% Test MATLAB functionality
-data = LocomotionData('path/to/data.parquet');
-disp('MATLAB setup complete!')
+% Run converter
+convert_umich_phase_to_parquet
 ```
 
-## IDE Configuration
+## Common Issues
 
-### VS Code
-1. Install Python extension
-2. Select interpreter: `Ctrl+Shift+P` → "Python: Select Interpreter" → Choose venv
-3. Configure test discovery in `.vscode/settings.json`:
-```json
-{
-    "python.testing.pytestEnabled": true,
-    "python.testing.pytestArgs": ["tests"],
-    "python.linting.enabled": true,
-    "python.linting.pylintEnabled": true,
-    "python.formatting.provider": "black"
-}
-```
-
-### PyCharm
-1. Set project interpreter to venv
-2. Mark directories:
-   - `lib` as Sources Root
-   - `tests` as Test Sources Root
-3. Configure pytest as test runner
-
-## Troubleshooting
-
-### Common Issues
-
-**Import errors**
+### Import Errors
 ```bash
-# Ensure you're in the project root
+# Ensure you're in project root
 pwd  # Should show .../locomotion-data-standardization
 
 # Add to PYTHONPATH if needed
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 ```
 
-**Missing dependencies**
-```bash
-# Update pip and reinstall
-pip install --upgrade pip
-pip install -r requirements.txt --force-reinstall
-```
-
-**MATLAB parquet errors**
+### MATLAB Parquet Issues
 ```matlab
-% Install parquet support
-% Follow MATLAB's documentation for parquetread/parquetwrite
+% Ensure parquet support is installed
+% Check MATLAB documentation for parquetread/parquetwrite
 ```
 
-## Docker Development (Alternative)
+## Quick Reference
 
-For a consistent environment:
-
-```bash
-# Build development container
-docker build -t locomotion-dev -f containers/python-analysis.Dockerfile .
-
-# Run with mounted code
-docker run -it -v $(pwd):/workspace locomotion-dev bash
-
-# Inside container
-cd /workspace
-pytest tests/
-```
+See [Scripts Cheat Sheet](../reference/scripts_cheatsheet.md) for all essential commands.
 
 ## Next Steps
 
-Now that your environment is set up:
-1. Review the [architecture](architecture.md)
-2. Try some [common tasks](tasks.md)
-3. Run the [test suite](testing.md)
-4. Make your first contribution!
-
-## Getting Help
-
-- Check existing issues on GitHub
-- Review test files for usage examples
-- Ask questions in discussions/issues
+- [Common Tasks](tasks.md) - Maintenance procedures
+- [Testing](testing.md) - Test suite guide

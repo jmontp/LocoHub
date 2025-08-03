@@ -1,6 +1,6 @@
 # System Architecture
 
-A practical overview of how the locomotion data system is organized.
+How the locomotion data conversion and validation system is organized.
 
 ## Data Flow Overview
 
@@ -221,10 +221,43 @@ graph TD
 - **Disk**: Parquet files are compressed (~100MB per dataset)
 - **CPU**: Validation is the slowest part (~30s per dataset)
 
-## For Deeper Dive
+## File Interactions
 
-- [C4 Context Diagram](architecture/c4_context.md) - System boundaries
-- [C4 Container Diagram](architecture/c4_container.md) - Technical components
-- [C4 Component Diagram](architecture/c4_component.md) - Detailed design
+### Core Script Dependencies
+
+```mermaid
+graph TD
+    A[Raw Data Files] --> B[Dataset Converters<br/>contributor_scripts/conversion_scripts/*/]
+    B --> C[Parquet Files<br/>converted_datasets/*.parquet]
+    C --> D[create_dataset_validation_report.py<br/>contributor_scripts/]
+    
+    D --> E[PhaseValidator<br/>lib/validation/dataset_validator_phase.py]
+    D --> F[Plot Generator<br/>lib/validation/filters_by_phase_plots.py]
+    
+    E --> G[ConfigManager<br/>lib/validation/config_manager.py]
+    G --> H[YAML Configs<br/>contributor_scripts/validation_ranges/]
+    
+    C --> I[LocomotionData<br/>lib/core/locomotion_analysis.py]
+    I --> J[FeatureConstants<br/>lib/core/feature_constants.py]
+    
+    D --> K[Validation Reports<br/>docs/...validation_reports/*.md]
+    F --> L[Plot Images<br/>*.png]
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style C fill:#9f9,stroke:#333,stroke-width:2px
+    style K fill:#99f,stroke:#333,stroke-width:2px
+    style L fill:#99f,stroke:#333,stroke-width:2px
+```
+
+### Key File Responsibilities
+
+| File | Purpose | Dependencies |
+|------|---------|-------------|
+| **Converters** (`contributor_scripts/conversion_scripts/*/`) | Convert raw data to standard parquet | pandas, numpy |
+| **create_dataset_validation_report.py** | Main validation script | PhaseValidator, plot generator |
+| **PhaseValidator** (`lib/validation/dataset_validator_phase.py`) | Check data quality | ConfigManager, FeatureConstants |
+| **ConfigManager** (`lib/validation/config_manager.py`) | Load/save YAML validation ranges | YAML files |
+| **LocomotionData** (`lib/core/locomotion_analysis.py`) | Load and access parquet data | pandas, FeatureConstants |
+| **FeatureConstants** (`lib/core/feature_constants.py`) | Define standard variable names | None |
 
 ## Next: [Common Maintenance Tasks](tasks.md)

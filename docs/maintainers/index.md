@@ -1,119 +1,103 @@
-# Maintaining the Locomotion Data System
+# Maintainer Guide
 
-Welcome! This guide helps you maintain and improve the locomotion data standardization system.
+Maintaining the locomotion data standardization system's core functionality.
 
-## Who You're Supporting
+## Core System Components
 
-This system serves three distinct user groups, each with different needs:
+### 1. 🔄 **Dataset Conversion**
+Converting biomechanical data to standardized parquet format:
+- `contributor_scripts/conversion_scripts/` - Dataset-specific converters
+- `converted_datasets/` - Standardized output files
+- Phase-indexed format: 150 points per gait cycle
 
-### 1. 🔬 **Researchers** (Users of Data)
-**What they need from you:**
-- Reliable `LocomotionData` class that loads data correctly
-- Clear documentation and working tutorials
-- Consistent variable naming across all datasets
-- Fast data access (3D array operations)
+### 2. 🔍 **Validation & Visualization**
+Validating data quality with visual reports:
+- `lib/validation/dataset_validator_phase.py` - Validation engine
+- `contributor_scripts/validation_ranges/` - YAML configuration
+- `contributor_scripts/create_dataset_validation_report.py` - Report generator
+- Generates plots with data overlaid on expected ranges
 
-**What you maintain for them:**
-- `lib/core/locomotion_analysis.py` - Main data loading interface
-- `docs/users/tutorials/` - Python, MATLAB, R examples
-- `lib/core/feature_constants.py` - Standard variable names
+### 3. 📊 **Data Access Library**
+Python interface for loading standardized data:
+- `lib/core/locomotion_analysis.py` - Main LocomotionData class
+- `lib/core/feature_constants.py` - Standard variable definitions
+- 3D numpy array access for efficient analysis
 
-### 2. 🔄 **Data Contributors** (Dataset Converters)
-**What they need from you:**
-- Clear data format specifications
-- Working conversion examples to follow
-- Validation tools that explain failures
-- Documentation of naming conventions
-
-**What you maintain for them:**
-- `contributor_scripts/*/` - Reference converters (GTech, UMich, etc.)
-- `lib/validation/dataset_validator_phase.py` - Validation with clear error messages
-- `docs/standard_spec/validation_expectations_*.md` - Acceptable data ranges
-- `conversion_generate_phase_dataset.py` - Phase conversion tool
-
-### 3. 🛠️ **System Developers** (Like You!)
-**What they need from you:**
-- Clean, testable code architecture
-- Comprehensive test coverage
-- Clear development documentation
-- Consistent code standards
-
-**What you maintain for them:**
-- This documentation (`docs/maintainers/`)
-- Test suite (`tests/`)
-- CI/CD pipelines
-- Release processes
-
-## Quick Start (5 minutes)
+## Quick Start
 
 ```bash
-# 1. Clone the repository
+# 1. Clone and set up
 git clone https://github.com/your-org/locomotion-data-standardization
 cd locomotion-data-standardization
-
-# 2. Set up Python environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# 3. Run tests to verify setup
-pytest tests/
+# 2. Test a conversion (example with GTech)
+cd contributor_scripts/conversion_scripts/Gtech_2023/
+python3 convert_gtech_all_to_parquet.py
 
-# 4. Build documentation locally
+# 3. Generate validation report
+cd ../../..
+python3 contributor_scripts/create_dataset_validation_report.py \
+    --dataset converted_datasets/gtech_2023_phase.parquet
+
+# 4. View documentation
+cd docs/user_guide
 mkdocs serve
-
-# 5. Make your first change
-# Edit lib/core/feature_constants.py to add a new variable
-# Run tests to ensure nothing breaks
-pytest tests/test_locomotion_data_library.py
+# Open http://localhost:8000
 ```
 
 ## Key Files to Know
 
-| File | Purpose | When to Edit |
-|------|---------|--------------|
-| `lib/core/locomotion_analysis.py` | Main data loading class | Adding new analysis methods |
-| `lib/core/feature_constants.py` | Variable name definitions | Adding new biomechanical variables |
-| `lib/validation/dataset_validator_phase.py` | Phase data validation | Updating validation logic |
-| `docs/standard_spec/validation_expectations_*.md` | Validation ranges | Adjusting acceptable data ranges |
+| File | Purpose | Location |
+|------|---------|----------|
+| Dataset Converters | Convert raw data to standard | `contributor_scripts/conversion_scripts/*/` |
+| Validation Config | Expected data ranges | `contributor_scripts/validation_ranges/*.yaml` |
+| Validation Engine | Checks data quality | `lib/validation/dataset_validator_phase.py` |
+| Data Interface | Load standardized data | `lib/core/locomotion_analysis.py` |
+| Report Generator | Create validation reports | `contributor_scripts/create_dataset_validation_report.py` |
 
-## Common Tasks
+## Common Maintenance Tasks
+
+### Converting a New Dataset
+1. Create converter in `contributor_scripts/conversion_scripts/NewDataset/`
+2. Follow existing converter patterns (UMich, GTech, AddBiomechanics)
+3. Output to `converted_datasets/dataset_phase.parquet`
+4. Validate with report generator
+
+### Updating Validation Ranges
+1. Edit YAML files in `contributor_scripts/validation_ranges/`
+2. Regenerate validation reports to see impact
+3. Test with affected datasets
 
 ### Adding a New Variable
-1. Edit `lib/core/feature_constants.py`
-2. Add validation ranges to `docs/standard_spec/validation_expectations_*.md`
-3. Update tests in `tests/`
-4. Document in relevant tutorials
+1. Add to `lib/core/feature_constants.py`
+2. Update validation YAML configs
+3. Update converter scripts if needed
 
-### Fixing a Bug
-1. Create a test that reproduces the issue
-2. Fix the bug in the relevant module
-3. Ensure all tests pass
-4. Update documentation if behavior changed
+## Key Scripts Reference
 
-### Updating Validation Rules
-1. Edit the markdown specs in `docs/standard_spec/`
-2. Run the automated tuner if needed
-3. Test with sample datasets
-4. Document the reasoning for changes
+See [Scripts Cheat Sheet](../reference/scripts_cheatsheet.md) for all commands.
 
-## Next Steps
+### Essential Workflows
+```bash
+# Convert dataset
+cd contributor_scripts/conversion_scripts/[Dataset]/
+# Run converter (MATLAB or Python)
 
-- [Set up your development environment](setup.md)
-- [Understand the architecture](architecture.md)
-- [Learn common maintenance tasks](tasks.md)
-- [Review testing practices](testing.md)
+# Validate dataset
+python3 contributor_scripts/create_dataset_validation_report.py \
+    --dataset converted_datasets/dataset_phase.parquet
 
-## Getting Help
+# Load data for analysis
+python3
+>>> from lib.core.locomotion_analysis import LocomotionData
+>>> data = LocomotionData('converted_datasets/dataset_phase.parquet')
+```
 
-- **GitHub Issues**: Report bugs or request features
-- **Documentation**: Check `docs/` for detailed specs
-- **Tests**: Look at `tests/` for usage examples
+## Documentation
 
-## Project Philosophy
-
-This project prioritizes:
-1. **Data Quality** - Validation is mandatory, not optional
-2. **Reproducibility** - Same input always produces same output
-3. **Simplicity** - Clear code over clever code
-4. **Documentation** - Every decision should be documented
+- [Setup Guide](setup.md) - Environment setup
+- [Common Tasks](tasks.md) - Detailed maintenance procedures
+- [Testing](testing.md) - Test suite information
