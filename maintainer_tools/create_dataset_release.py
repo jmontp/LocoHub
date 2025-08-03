@@ -1,33 +1,373 @@
 #!/usr/bin/env python3
 """
-Dataset Release Creation CLI
+Dataset Release Creation Tool
+
+Creates comprehensive dataset releases with validation and documentation.
+Combines CLI and release management logic in one self-contained file.
 
 Created: 2025-06-18 with user permission
-Purpose: CLI for creating comprehensive dataset releases with documentation
-
-Intent: Provides command-line interface for creating complete dataset releases
-including validation, documentation compilation, metadata generation, and
-archive creation. Supports flexible configuration and memory-efficient
-streaming operations for large datasets.
+Purpose: Creates complete dataset releases including validation,
+documentation compilation, metadata generation, and archive creation.
 """
 
 import argparse
 import sys
 import os
 import json
+import zipfile
+import tarfile
+import hashlib
+import shutil
+import pandas as pd
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Union, Callable, Tuple
+from dataclasses import dataclass, asdict
+from contextlib import contextmanager
 
-# Add project root to path
+# Add project root to path for validator import
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
-from internal.validation_engine.release_manager import (
-    ReleaseManager, ReleaseConfig, ReleaseError, validate_release_config
-)
 from internal.validation_engine.validator import DatasetValidator
 
+
+# ============================================================================
+# LIBRARY SECTION - Release Management Classes and Functions
+# ============================================================================
+
+class ReleaseError(Exception):
+    """Custom exception for release management errors."""
+    pass
+
+
+@dataclass
+class ReleaseConfig:
+    """Configuration for dataset release creation."""
+    release_name: str
+    version: str
+    description: str
+    citation: str
+    license_type: str = "MIT"
+    include_phase_datasets: bool = True
+    include_time_datasets: bool = False
+    validation_required: bool = True
+    archive_format: str = "zip"
+    compression_level: int = 6
+    include_checksums: bool = True
+    
+    @classmethod
+    def from_file(cls, config_path: str) -> 'ReleaseConfig':
+        """Load configuration from JSON file."""
+        with open(config_path, 'r') as f:
+            config_data = json.load(f)
+        return cls(**config_data)
+
+
+def validate_release_config(config: Dict[str, Any]) -> Tuple[bool, List[str]]:
+    """
+    Validate release configuration structure.
+    
+    Args:
+        config: Configuration dictionary
+        
+    Returns:
+        Tuple of (is_valid, list_of_errors)
+    """
+    errors = []
+    
+    # Check required sections
+    required_sections = ['release_info', 'datasets', 'output']
+    for section in required_sections:
+        if section not in config:
+            errors.append(f"Missing required section: {section}")
+    
+    # Validate release_info
+    if 'release_info' in config:
+        required_fields = ['name', 'version']
+        for field in required_fields:
+            if field not in config['release_info']:
+                errors.append(f"Missing required field in release_info: {field}")
+    
+    # Validate datasets section
+    if 'datasets' in config:
+        if 'source_directory' not in config['datasets']:
+            errors.append("Missing source_directory in datasets section")
+    
+    # Validate output section
+    if 'output' in config:
+        if 'directory' not in config['output']:
+            errors.append("Missing directory in output section")
+    
+    return len(errors) == 0, errors
+
+
+class IncrementalArchive:
+    """Memory-efficient incremental archive builder."""
+    
+    def __init__(self, archive_path: str, archive_format: str = "zip", 
+                 compression_level: int = 6):
+        """
+        Initialize incremental archive builder.
+        
+        Args:
+            archive_path: Path for the output archive
+            archive_format: Format of archive (zip, tar, tar.gz)
+            compression_level: Compression level (0-9)
+        """
+        self.archive_path = archive_path
+        self.archive_format = archive_format
+        self.compression_level = compression_level
+        self.archive = None
+        self._open_archive()
+    
+    def _open_archive(self):
+        """Open the archive for writing."""
+        if self.archive_format == "zip":
+            self.archive = zipfile.ZipFile(
+                self.archive_path, 'w', 
+                compression=zipfile.ZIP_DEFLATED,
+                compresslevel=self.compression_level
+            )
+        elif self.archive_format == "tar":
+            self.archive = tarfile.open(self.archive_path, 'w')
+        elif self.archive_format == "tar.gz":
+            self.archive = tarfile.open(self.archive_path, 'w:gz')
+        else:
+            raise ValueError(f"Unsupported archive format: {self.archive_format}")
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+    
+    def add_file(self, archive_name: str, file_path: str):
+        """Add a file to the archive."""
+        if self.archive_format == "zip":
+            self.archive.write(file_path, archive_name)
+        else:
+            self.archive.add(file_path, archive_name)
+    
+    def add_json(self, archive_name: str, data: Dict[str, Any]):
+        """Add JSON data to the archive."""
+        json_str = json.dumps(data, indent=2)
+        self.add_string(archive_name, json_str)
+    
+    def add_string(self, archive_name: str, content: str):
+        """Add string content to the archive."""
+        if self.archive_format == "zip":
+            self.archive.writestr(archive_name, content)
+        else:
+            # For tar archives, create a file-like object
+            import io
+            content_bytes = content.encode('utf-8')
+            file_obj = io.BytesIO(content_bytes)
+            
+            tarinfo = tarfile.TarInfo(name=archive_name)
+            tarinfo.size = len(content_bytes)
+            self.archive.addfile(tarinfo, file_obj)
+    
+    def close(self):
+        """Close the archive."""
+        if self.archive:
+            self.archive.close()
+            self.archive = None
+
+
+class ReleaseManager:
+    """Manages dataset release creation with memory-efficient streaming."""
+    
+    def __init__(self):
+        """Initialize release manager."""
+        self.logger = self._setup_logger()
+    
+    def _setup_logger(self):
+        """Set up logging for release manager."""
+        import logging
+        logger = logging.getLogger('ReleaseManager')
+        if not logger.handlers:
+            handler = logging.StreamHandler()
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
+            logger.setLevel(logging.INFO)
+        return logger
+    
+    def create_complete_release(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Create a complete dataset release based on configuration.
+        
+        Args:
+            config: Release configuration dictionary
+            
+        Returns:
+            Dictionary with release creation results
+        """
+        self.logger.info("Starting release creation...")
+        
+        # Extract configuration
+        release_info = config['release_info']
+        datasets_config = config['datasets']
+        output_config = config['output']
+        archive_config = config.get('archive', {})
+        
+        # Prepare output directory
+        output_dir = Path(output_config['directory'])
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Generate release name
+        release_name = f"{release_info['name']}_v{release_info['version']}"
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        archive_name = f"{release_name}_{timestamp}"
+        
+        # Determine archive format and path
+        archive_format = archive_config.get('format', 'zip')
+        archive_extension = '.zip' if archive_format == 'zip' else '.tar.gz' if archive_format == 'tar.gz' else '.tar'
+        archive_path = output_dir / f"{archive_name}{archive_extension}"
+        
+        # Create archive
+        with IncrementalArchive(
+            str(archive_path), 
+            archive_format,
+            archive_config.get('compression_level', 6)
+        ) as archive:
+            
+            # Add datasets
+            dataset_files = self._collect_datasets(
+                Path(datasets_config['source_directory']),
+                datasets_config.get('include_phase', True),
+                datasets_config.get('include_time', False)
+            )
+            
+            for dataset_file in dataset_files:
+                archive.add_file(
+                    f"datasets/{dataset_file.name}",
+                    str(dataset_file)
+                )
+                self.logger.info(f"Added dataset: {dataset_file.name}")
+            
+            # Add metadata
+            metadata = self._generate_metadata(
+                release_info, 
+                dataset_files,
+                config
+            )
+            archive.add_json("metadata.json", metadata)
+            
+            # Add documentation
+            if config.get('documentation'):
+                self._add_documentation(archive, config['documentation'])
+            
+            # Add checksums if requested
+            if archive_config.get('include_checksums', True):
+                checksums = self._generate_checksums(dataset_files)
+                archive.add_json("checksums.json", checksums)
+        
+        # Calculate archive size
+        archive_size_mb = archive_path.stat().st_size / (1024 * 1024)
+        
+        # Generate result
+        result = {
+            'success': True,
+            'archive_path': str(archive_path),
+            'metadata_path': str(output_dir / f"{release_name}_metadata.json"),
+            'total_files': len(dataset_files),
+            'total_size_mb': archive_size_mb,
+            'creation_timestamp': timestamp
+        }
+        
+        # Save metadata separately as well
+        metadata_path = output_dir / f"{release_name}_metadata.json"
+        with open(metadata_path, 'w') as f:
+            json.dump(metadata, f, indent=2)
+        
+        if archive_config.get('include_checksums', True):
+            checksum_path = output_dir / f"{release_name}_checksums.json"
+            with open(checksum_path, 'w') as f:
+                json.dump(checksums, f, indent=2)
+            result['checksum_path'] = str(checksum_path)
+        
+        self.logger.info(f"Release created successfully: {archive_path}")
+        return result
+    
+    def _collect_datasets(self, source_dir: Path, include_phase: bool, 
+                         include_time: bool) -> List[Path]:
+        """Collect dataset files from source directory."""
+        datasets = []
+        
+        if include_phase:
+            datasets.extend(source_dir.glob('*_phase.parquet'))
+        
+        if include_time:
+            datasets.extend(source_dir.glob('*_time.parquet'))
+        
+        return sorted(datasets)
+    
+    def _generate_metadata(self, release_info: Dict[str, Any], 
+                          dataset_files: List[Path],
+                          config: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate comprehensive release metadata."""
+        metadata = {
+            'release': release_info,
+            'creation_date': datetime.now().isoformat(),
+            'datasets': {
+                'count': len(dataset_files),
+                'files': [f.name for f in dataset_files]
+            },
+            'configuration': config
+        }
+        
+        # Add dataset statistics if available
+        dataset_stats = []
+        for dataset_file in dataset_files[:5]:  # Sample first 5 for stats
+            try:
+                df = pd.read_parquet(dataset_file)
+                stats = {
+                    'file': dataset_file.name,
+                    'rows': len(df),
+                    'columns': len(df.columns),
+                    'size_mb': dataset_file.stat().st_size / (1024 * 1024)
+                }
+                dataset_stats.append(stats)
+            except Exception as e:
+                self.logger.warning(f"Could not get stats for {dataset_file.name}: {e}")
+        
+        if dataset_stats:
+            metadata['dataset_statistics'] = dataset_stats
+        
+        return metadata
+    
+    def _add_documentation(self, archive: IncrementalArchive, 
+                          docs_config: Dict[str, Any]):
+        """Add documentation files to archive."""
+        docs_dir = docs_config.get('source_directory')
+        if docs_dir and os.path.exists(docs_dir):
+            docs_path = Path(docs_dir)
+            for doc_file in docs_path.glob('*.md'):
+                archive.add_file(
+                    f"documentation/{doc_file.name}",
+                    str(doc_file)
+                )
+                self.logger.info(f"Added documentation: {doc_file.name}")
+    
+    def _generate_checksums(self, files: List[Path]) -> Dict[str, str]:
+        """Generate SHA256 checksums for files."""
+        checksums = {}
+        
+        for file_path in files:
+            sha256_hash = hashlib.sha256()
+            with open(file_path, "rb") as f:
+                for byte_block in iter(lambda: f.read(4096), b""):
+                    sha256_hash.update(byte_block)
+            checksums[file_path.name] = sha256_hash.hexdigest()
+        
+        return checksums
+
+
+# ============================================================================
+# CLI HELPER FUNCTIONS
+# ============================================================================
 
 def create_default_config(output_path: str) -> str:
     """Create a default configuration file."""

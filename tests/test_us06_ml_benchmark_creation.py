@@ -21,7 +21,7 @@ import sys
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from internal.validation_engine.benchmark_creator import BenchmarkCreator, BenchmarkMetadata
+from maintainer_tools.create_ml_benchmark import BenchmarkCreator, BenchmarkMetadata
 
 class TestBenchmarkCreator:
     """Test efficient ML benchmark creation with memory constraints."""
