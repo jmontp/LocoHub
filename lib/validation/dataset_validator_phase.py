@@ -43,6 +43,7 @@ try:
     from .filters_by_phase_plots import create_filters_by_phase_plot
     from .step_classifier import StepClassifier
     from .config_manager import ValidationConfigManager
+    from .validation_offset_utils import apply_contralateral_offset_kinematic, apply_contralateral_offset_kinetic
     from lib.core.locomotion_analysis import LocomotionData
 except ImportError as e:
     raise ImportError(f"Could not import required library modules: {e}")
@@ -98,12 +99,22 @@ class DatasetValidator:
         # Load validation expectations from YAML config files
         try:
             self.kinematic_expectations = self.config_manager.load_validation_ranges('kinematic')
+            # Apply contralateral offset for each task
+            for task_name in list(self.kinematic_expectations.keys()):
+                self.kinematic_expectations[task_name] = apply_contralateral_offset_kinematic(
+                    self.kinematic_expectations[task_name], task_name
+                )
         except FileNotFoundError:
             print("⚠️  Warning: Kinematic validation config not found")
             self.kinematic_expectations = {}
         
         try:
             self.kinetic_expectations = self.config_manager.load_validation_ranges('kinetic')
+            # Apply contralateral offset for each task
+            for task_name in list(self.kinetic_expectations.keys()):
+                self.kinetic_expectations[task_name] = apply_contralateral_offset_kinetic(
+                    self.kinetic_expectations[task_name], task_name
+                )
         except FileNotFoundError:
             print("⚠️  Warning: Kinetic validation config not found")
             self.kinetic_expectations = {}
