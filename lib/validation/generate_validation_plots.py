@@ -17,22 +17,18 @@ Examples:
 """
 
 import os
-import sys
 from pathlib import Path
 from typing import List, Optional
 import argparse
 
-# Add source directory to Python path
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-
-# Import validation modules
-from validation.config_manager import ValidationConfigManager
-from validation.validation_offset_utils import (
+# Import validation modules using relative imports
+from .config_manager import ValidationConfigManager
+from .validation_offset_utils import (
     apply_contralateral_offset_kinematic,
     apply_contralateral_offset_kinetic
 )
-from validation.forward_kinematics_plots import KinematicPoseGenerator
-from validation.filters_by_phase_plots import create_filters_by_phase_plot
+from .forward_kinematics_plots import KinematicPoseGenerator
+from .filters_by_phase_plots import create_filters_by_phase_plot
 
 class ValidationPlotsGenerator:
     """
@@ -48,7 +44,7 @@ class ValidationPlotsGenerator:
         """
         self.mode = mode
         
-        # Project root (assumes script is in source/validation/)
+        # Project root 
         self.project_root = Path(__file__).parent.parent.parent
         
         # Initialize config manager
@@ -56,9 +52,10 @@ class ValidationPlotsGenerator:
         
         # Check if config exists
         if not self.config_manager.config_exists(mode):
-            raise FileNotFoundError(f"{mode.title()} validation config not found. Run migration script first.")
+            raise FileNotFoundError(f"{mode.title()} validation config not found.")
             
-        self.output_dir = self.project_root / "docs" / "standard_spec" / "validation"
+        # Use the same output directory as the dataset documentation
+        self.output_dir = self.project_root / "docs" / "user_guide" / "docs" / "reference" / "datasets_documentation" / "validation_reports"
         
         # Create output directory if it doesn't exist
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -245,75 +242,3 @@ class ValidationPlotsGenerator:
             print(f"\n❌ ERROR: Failed to generate validation plots: {e}")
             raise
 
-
-def main():
-    """Main function with command line interface."""
-    parser = argparse.ArgumentParser(
-        description='Generate all validation plots for kinematic specification',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  python generate_validation_plots.py                    # Generate all plots
-  python generate_validation_plots.py --tasks level_walking incline_walking
-  python generate_validation_plots.py --forward-kinematic-only     # Only forward kinematics
-  python generate_validation_plots.py --filters-only     # Only filters by phase
-        """
-    )
-    
-    parser.add_argument(
-        '--tasks',
-        nargs='*',
-        help='Specific tasks to generate plots for (default: all tasks)'
-    )
-    
-    parser.add_argument(
-        '--forward-kinematic-only',
-        action='store_true',
-        help='Generate only forward kinematics plots'
-    )
-    
-    parser.add_argument(
-        '--filters-only', 
-        action='store_true',
-        help='Generate only filters by phase plots'
-    )
-    
-    parser.add_argument(
-        '--mode',
-        choices=['kinematic', 'kinetic'],
-        default='kinematic',
-        help='Validation mode: kinematic (joint angles) or kinetic (forces/moments)'
-    )
-    
-    args = parser.parse_args()
-    
-    # Validate mutually exclusive options
-    if args.forward_kinematic_only and args.filters_only:
-        print("❌ ERROR: Cannot specify both --forward-kinematic-only and --filters-only")
-        return 1
-    
-    try:
-        # Initialize generator with specified mode
-        generator = ValidationPlotsGenerator(mode=args.mode)
-        
-        # Generate plots based on options
-        if args.forward_kinematic_only:
-            if args.mode == 'kinetic':
-                print("⚠️  Forward kinematics plots are only available for kinematic mode")
-                return 1
-            generator.generate_forward_kinematics_plots(args.tasks)
-        elif args.filters_only:
-            generator.generate_filters_by_phase_plots(args.tasks)
-        else:
-            generator.generate_all_plots(args.tasks)
-        
-        print(f"\n✅ Validation plots generation completed successfully!")
-        return 0
-        
-    except Exception as e:
-        print(f"\n❌ ERROR: {e}")
-        return 1
-
-
-if __name__ == "__main__":
-    sys.exit(main())
