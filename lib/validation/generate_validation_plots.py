@@ -26,9 +26,8 @@ import argparse
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 # Import validation modules
-from validation.validation_expectations_parser import (
-    parse_kinematic_validation_expectations, 
-    parse_kinetic_validation_expectations,
+from validation.config_manager import ValidationConfigManager
+from validation.validation_offset_utils import (
     apply_contralateral_offset_kinematic,
     apply_contralateral_offset_kinetic
 )
@@ -42,7 +41,7 @@ class ValidationPlotsGenerator:
     """
     
     def __init__(self, mode: str = 'kinematic'):
-        """Initialize with hardcoded paths.
+        """Initialize with config manager.
         
         Args:
             mode: 'kinematic' or 'kinetic' to determine which plots to generate
@@ -52,17 +51,14 @@ class ValidationPlotsGenerator:
         # Project root (assumes script is in source/validation/)
         self.project_root = Path(__file__).parent.parent.parent
         
-        # Hardcoded paths
-        if mode == 'kinematic':
-            self.spec_file = self.project_root / "docs" / "standard_spec" / "validation_expectations_kinematic.md"
-        else:  # kinetic
-            self.spec_file = self.project_root / "docs" / "standard_spec" / "validation_expectations_kinetic.md"
+        # Initialize config manager
+        self.config_manager = ValidationConfigManager()
+        
+        # Check if config exists
+        if not self.config_manager.config_exists(mode):
+            raise FileNotFoundError(f"{mode.title()} validation config not found. Run migration script first.")
             
         self.output_dir = self.project_root / "docs" / "standard_spec" / "validation"
-        
-        # Validate paths exist
-        if not self.spec_file.exists():
-            raise FileNotFoundError(f"{mode.title()} specification file not found: {self.spec_file}")
         
         # Create output directory if it doesn't exist
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -72,27 +68,27 @@ class ValidationPlotsGenerator:
             self.pose_generator = KinematicPoseGenerator()
         
         print(f"✅ Initialized ValidationPlotsGenerator ({mode} mode)")
-        print(f"   📄 Spec file: {self.spec_file}")
+        print(f"   📁 Config dir: {self.config_manager.config_dir}")
         print(f"   📁 Output dir: {self.output_dir}")
     
     def load_validation_data(self) -> dict:
-        """Load validation expectations from specification file."""
-        print(f"📊 Loading validation data from: {self.spec_file}")
+        """Load validation expectations from YAML config."""
+        print(f"📊 Loading validation data from config")
         
         try:
-            if self.mode == 'kinematic':
-                validation_data = parse_kinematic_validation_expectations(str(self.spec_file))
-                # Apply contralateral offset for all gait-based tasks
-                for task_name, task_data in validation_data.items():
-                    validation_data[task_name] = apply_contralateral_offset_kinematic(task_data, task_name)
-            else:  # kinetic
-                validation_data = parse_kinetic_validation_expectations(str(self.spec_file))
-                # Apply contralateral offset for all gait-based tasks
-                for task_name, task_data in validation_data.items():
-                    validation_data[task_name] = apply_contralateral_offset_kinetic(task_data, task_name)
+            # Load from config manager
+            validation_data = self.config_manager.load_validation_ranges(self.mode)
             
-            print(f"✅ Successfully loaded validation data for {len(validation_data)} tasks: {list(validation_data.keys())}")
-            return validation_data
+            # Apply contralateral offset for all gait-based tasks
+            processed_data = {}
+            for task_name, task_data in validation_data.items():
+                if self.mode == 'kinematic':
+                    processed_data[task_name] = apply_contralateral_offset_kinematic(task_data, task_name)
+                else:  # kinetic
+                    processed_data[task_name] = apply_contralateral_offset_kinetic(task_data, task_name)
+            
+            print(f"✅ Successfully loaded validation data for {len(processed_data)} tasks: {list(processed_data.keys())}")
+            return processed_data
         except Exception as e:
             raise RuntimeError(f"Failed to load validation data: {e}")
     

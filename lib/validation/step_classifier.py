@@ -69,10 +69,8 @@ import numpy as np
 from typing import Dict, List, Union, Optional, Tuple, Any
 from pathlib import Path
 
-# Import validation expectations parser for single source of truth
-from .validation_expectations_parser import (
-    parse_kinematic_validation_expectations,
-    parse_kinetic_validation_expectations,
+# Import validation offset utilities
+from .validation_offset_utils import (
     apply_contralateral_offset_kinematic,
     apply_contralateral_offset_kinetic,
     validate_task_completeness

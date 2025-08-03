@@ -60,7 +60,7 @@ project_root = Path(__file__).parent.parent.parent
 
 from lib.core.locomotion_analysis import LocomotionData
 from lib.core.feature_constants import get_feature_list
-from .validation_expectations_parser import ValidationExpectationsParser
+from .config_manager import ValidationConfigManager
 
 class AutomatedFineTuner:
     """
@@ -525,32 +525,36 @@ class AutomatedFineTuner:
                     f.write(report_content)
                 print(f"   ✅ Report saved: {report_file.relative_to(project_root)}")
             
-            # Step 4: Save ranges to validation file
+            # Step 4: Save ranges to YAML config file
             saved_file = None
             if save_ranges:
-                print(f"\n💾 Saving statistical ranges...")
-                specs_dir = project_root / "docs" / "standard_spec"
+                print(f"\n💾 Saving statistical ranges to YAML config...")
                 
-                # Use unified parser API
-                parser = ValidationExpectationsParser()
+                # Use ConfigManager to save ranges
+                config_mgr = ValidationConfigManager()
                 dataset_name = self.dataset_path.name
                 
-                if self.mode == 'kinematic':
-                    spec_file = specs_dir / "validation_expectations_kinematic.md"
-                elif self.mode == 'kinetic':
-                    spec_file = specs_dir / "validation_expectations_kinetic.md"
+                # Prepare metadata
+                metadata = {
+                    'source_dataset': dataset_name,
+                    'method': method,
+                    'generated_by': 'AutomatedFineTuner',
+                    'description': f'{self.mode.title()} validation ranges generated from {dataset_name} using {method} method'
+                }
                 
-                # Write using unified API with explicit mode
-                parser.write_validation_data(
-                    str(spec_file), 
-                    validation_ranges, 
-                    dataset_name=dataset_name,
-                    method=method,
-                    mode=self.mode
+                # Save to YAML config
+                config_mgr.save_validation_ranges(
+                    self.mode,
+                    validation_ranges,
+                    metadata=metadata
                 )
                 
-                saved_file = str(spec_file)
-                print(f"   ✅ Ranges saved to: {spec_file.name}")
+                if self.mode == 'kinematic':
+                    saved_file = str(config_mgr.kinematic_config)
+                else:
+                    saved_file = str(config_mgr.kinetic_config)
+                
+                print(f"   ✅ Ranges saved to: {Path(saved_file).name}")
             
             # Step 5: Generate summary
             end_time = time.time()
