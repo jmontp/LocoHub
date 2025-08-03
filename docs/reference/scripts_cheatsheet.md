@@ -46,6 +46,21 @@ python3 contributor_scripts/create_dataset_validation_report.py \
     --no-plots
 ```
 
+### Generate Validation Plots from Config
+```bash
+# Generate all validation plots from YAML config
+python3 contributor_scripts/generate_validation_plots.py
+
+# Generate for specific tasks
+python3 contributor_scripts/generate_validation_plots.py --tasks level_walking decline_walking
+
+# Generate only forward kinematics plots
+python3 contributor_scripts/generate_validation_plots.py --forward-kinematic-only --mode kinematic
+
+# Use custom config file
+python3 contributor_scripts/generate_validation_plots.py --config path/to/custom_ranges.yaml
+```
+
 ## 📊 Basic Data Analysis
 
 ### Load and Explore Data (Python)
