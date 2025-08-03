@@ -144,13 +144,15 @@ class ValidationDocumentationGenerator:
             lines.append("| " + " | ".join(phase_images) + " |")
             lines.append("")
         
-        # Check for time series visualizations
+        # Check for phase-based visualizations
         kinematic_plot = self.image_dir / f"{task_name}_kinematic_filters_by_phase.png"
         kinetic_plot = self.image_dir / f"{task_name}_kinetic_filters_by_phase.png"
         
-        # Add time series visualizations if they exist
+        # Add phase-based visualizations if they exist
         if kinematic_plot.exists() or kinetic_plot.exists():
-            lines.append("### Time Series Visualizations")
+            lines.append("### Phase-Based Visualizations")
+            lines.append("")
+            lines.append("Validation ranges across the full gait cycle (0-100% phase):")
             lines.append("")
             
             if kinematic_plot.exists():
