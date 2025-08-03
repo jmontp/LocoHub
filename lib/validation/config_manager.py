@@ -41,15 +41,17 @@ class ValidationConfigManager:
         self.config_dir.mkdir(parents=True, exist_ok=True)
         
         # Define config file paths
+        self.consolidated_config = self.config_dir / "validation_ranges.yaml"
+        # Legacy paths for backward compatibility
         self.kinematic_config = self.config_dir / "kinematic_ranges.yaml"
         self.kinetic_config = self.config_dir / "kinetic_ranges.yaml"
     
-    def load_validation_ranges(self, mode: str) -> Dict[str, Dict[int, Dict[str, Dict[str, float]]]]:
+    def load_validation_ranges(self, mode: str = 'all') -> Dict[str, Dict[int, Dict[str, Dict[str, float]]]]:
         """
         Load validation ranges from YAML config file.
         
         Args:
-            mode: 'kinematic' or 'kinetic'
+            mode: 'kinematic', 'kinetic', or 'all' (default)
             
         Returns:
             Dictionary structured as: {task_name: {phase: {variable: {min, max}}}}
@@ -58,15 +60,19 @@ class ValidationConfigManager:
             FileNotFoundError: If config file doesn't exist
             ValueError: If mode is invalid
         """
-        if mode == 'kinematic':
+        # Check for consolidated config first
+        if self.consolidated_config.exists():
+            config_file = self.consolidated_config
+            # For consolidated file, we'll filter by mode if needed
+            use_consolidated = True
+        elif mode == 'kinematic' and self.kinematic_config.exists():
             config_file = self.kinematic_config
-        elif mode == 'kinetic':
+            use_consolidated = False
+        elif mode == 'kinetic' and self.kinetic_config.exists():
             config_file = self.kinetic_config
+            use_consolidated = False
         else:
-            raise ValueError(f"Invalid mode: {mode}. Must be 'kinematic' or 'kinetic'")
-        
-        if not config_file.exists():
-            raise FileNotFoundError(f"Config file not found: {config_file}")
+            raise FileNotFoundError(f"No config file found for mode: {mode}")
         
         with open(config_file, 'r') as f:
             config = yaml.safe_load(f)
@@ -80,7 +86,18 @@ class ValidationConfigManager:
                 if 'phases' in task_data:
                     for phase_str, variables in task_data['phases'].items():
                         phase = int(phase_str)
-                        validation_data[task_name][phase] = variables
+                        
+                        # Filter by mode if using consolidated file and specific mode requested
+                        if use_consolidated and mode != 'all':
+                            filtered_vars = {}
+                            for var_name, var_ranges in variables.items():
+                                if mode == 'kinematic' and ('angle' in var_name or 'velocity' in var_name):
+                                    filtered_vars[var_name] = var_ranges
+                                elif mode == 'kinetic' and ('moment' in var_name or 'force' in var_name or 'grf' in var_name):
+                                    filtered_vars[var_name] = var_ranges
+                            validation_data[task_name][phase] = filtered_vars
+                        else:
+                            validation_data[task_name][phase] = variables
         
         return validation_data
     
