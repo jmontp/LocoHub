@@ -46,7 +46,7 @@ config_mgr.save_validation_ranges('kinematic', kinematic_ranges,
     metadata={'updated': 'Added pelvis tilt angle'})
 ```
 
-Or manually edit `config/validation/kinematic_ranges.yaml`:
+Or manually edit `contributor_scripts/validation_ranges/kinematic_ranges.yaml`:
 
 ```yaml
 tasks:

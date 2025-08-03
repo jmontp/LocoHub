@@ -250,7 +250,7 @@ Examples:
     # Optional arguments
     parser.add_argument(
         "--config-dir",
-        help="Directory containing validation YAML config files (default: config/validation/)"
+        help="Directory containing validation YAML config files (default: contributor_scripts/validation_ranges/)"
     )
     
     parser.add_argument(

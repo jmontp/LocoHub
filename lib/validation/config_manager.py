@@ -31,9 +31,9 @@ class ValidationConfigManager:
             config_dir: Directory containing config files. If None, uses project default.
         """
         if config_dir is None:
-            # Default to project_root/config/validation/
+            # Default to project_root/contributor_scripts/validation_ranges/
             project_root = Path(__file__).parent.parent.parent
-            self.config_dir = project_root / "config" / "validation"
+            self.config_dir = project_root / "contributor_scripts" / "validation_ranges"
         else:
             self.config_dir = Path(config_dir)
         
