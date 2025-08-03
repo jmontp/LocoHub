@@ -17,7 +17,15 @@
 
 ## Task: Decline Walking
 
-### Visualizations
+### Forward Kinematics Visualizations
+
+Joint angle ranges visualized at key gait phases:
+
+| Phase 0% | Phase 25% | Phase 50% | Phase 75% |
+|---|---|---|---|
+| ![Phase 0%](validation/decline_walking_forward_kinematics_phase_00_range.png) | ![Phase 25%](validation/decline_walking_forward_kinematics_phase_25_range.png) | ![Phase 50%](validation/decline_walking_forward_kinematics_phase_50_range.png) | ![Phase 75%](validation/decline_walking_forward_kinematics_phase_75_range.png) |
+
+### Time Series Visualizations
 
 #### Kinematic Variables
 ![decline_walking Kinematic Validation](validation/decline_walking_kinematic_filters_by_phase.png)
@@ -58,7 +66,15 @@
 
 ## Task: Incline Walking
 
-### Visualizations
+### Forward Kinematics Visualizations
+
+Joint angle ranges visualized at key gait phases:
+
+| Phase 0% | Phase 25% | Phase 50% | Phase 75% |
+|---|---|---|---|
+| ![Phase 0%](validation/incline_walking_forward_kinematics_phase_00_range.png) | ![Phase 25%](validation/incline_walking_forward_kinematics_phase_25_range.png) | ![Phase 50%](validation/incline_walking_forward_kinematics_phase_50_range.png) | ![Phase 75%](validation/incline_walking_forward_kinematics_phase_75_range.png) |
+
+### Time Series Visualizations
 
 #### Kinematic Variables
 ![incline_walking Kinematic Validation](validation/incline_walking_kinematic_filters_by_phase.png)
@@ -99,7 +115,15 @@
 
 ## Task: Level Walking
 
-### Visualizations
+### Forward Kinematics Visualizations
+
+Joint angle ranges visualized at key gait phases:
+
+| Phase 0% | Phase 25% | Phase 50% | Phase 75% |
+|---|---|---|---|
+| ![Phase 0%](validation/level_walking_forward_kinematics_phase_00_range.png) | ![Phase 25%](validation/level_walking_forward_kinematics_phase_25_range.png) | ![Phase 50%](validation/level_walking_forward_kinematics_phase_50_range.png) | ![Phase 75%](validation/level_walking_forward_kinematics_phase_75_range.png) |
+
+### Time Series Visualizations
 
 #### Kinematic Variables
 ![level_walking Kinematic Validation](validation/level_walking_kinematic_filters_by_phase.png)
@@ -140,4 +164,4 @@
 
 ---
 
-*Generated from `validation_ranges.yaml` on 2025-08-03 15:30:28*
+*Generated from `validation_ranges.yaml` on 2025-08-03 15:40:06*

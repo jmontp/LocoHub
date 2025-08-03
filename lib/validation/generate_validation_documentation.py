@@ -117,13 +117,40 @@ class ValidationDocumentationGenerator:
         lines.append(f"## Task: {task_name.replace('_', ' ').title()}")
         lines.append("")
         
-        # Check for visualizations
+        # Check for forward kinematics plots (static pose visualizations)
+        forward_kinematics_plots = []
+        for phase in ['00', '25', '50', '75']:
+            plot_path = self.image_dir / f"{task_name}_forward_kinematics_phase_{phase}_range.png"
+            if plot_path.exists():
+                forward_kinematics_plots.append((phase, plot_path))
+        
+        # Add forward kinematics visualizations if they exist
+        if forward_kinematics_plots:
+            lines.append("### Forward Kinematics Visualizations")
+            lines.append("")
+            lines.append("Joint angle ranges visualized at key gait phases:")
+            lines.append("")
+            
+            # Create table with all phase plots
+            phase_headers = []
+            phase_images = []
+            for phase, plot_path in forward_kinematics_plots:
+                phase_int = int(phase)
+                phase_headers.append(f"Phase {phase_int}%")
+                phase_images.append(f"![Phase {phase_int}%](validation/{plot_path.name})")
+            
+            lines.append("| " + " | ".join(phase_headers) + " |")
+            lines.append("|" + "---|" * len(phase_headers))
+            lines.append("| " + " | ".join(phase_images) + " |")
+            lines.append("")
+        
+        # Check for time series visualizations
         kinematic_plot = self.image_dir / f"{task_name}_kinematic_filters_by_phase.png"
         kinetic_plot = self.image_dir / f"{task_name}_kinetic_filters_by_phase.png"
         
-        # Add visualizations if they exist
+        # Add time series visualizations if they exist
         if kinematic_plot.exists() or kinetic_plot.exists():
-            lines.append("### Visualizations")
+            lines.append("### Time Series Visualizations")
             lines.append("")
             
             if kinematic_plot.exists():
