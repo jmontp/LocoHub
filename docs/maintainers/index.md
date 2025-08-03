@@ -2,24 +2,47 @@
 
 Welcome! This guide helps you maintain and improve the locomotion data standardization system.
 
-## What You're Maintaining
+## Who You're Supporting
 
-The locomotion data standardization system converts biomechanical research data into a common format for analysis. It consists of three main parts:
+This system serves three distinct user groups, each with different needs:
 
-### 1. Core Libraries (`lib/`)
-- **LocomotionData** - Python/MATLAB classes for loading and analyzing gait data
-- **Validation System** - Ensures data quality through biomechanical checks
-- **Feature Constants** - Single source of truth for variable names
+### 1. 🔬 **Researchers** (Users of Data)
+**What they need from you:**
+- Reliable `LocomotionData` class that loads data correctly
+- Clear documentation and working tutorials
+- Consistent variable naming across all datasets
+- Fast data access (3D array operations)
 
-### 2. Dataset Converters (`contributor_scripts/`)
-- **GTech 2023** - Georgia Tech treadmill data
-- **UMich 2021** - University of Michigan incline walking
-- **AddBiomechanics** - OpenSim-based datasets
+**What you maintain for them:**
+- `lib/core/locomotion_analysis.py` - Main data loading interface
+- `docs/users/tutorials/` - Python, MATLAB, R examples
+- `lib/core/feature_constants.py` - Standard variable names
 
-### 3. Documentation & Tests
-- **User tutorials** - Python, MATLAB, R examples
-- **Test suite** - Unit and integration tests
-- **Validation specs** - Biomechanical range definitions
+### 2. 🔄 **Data Contributors** (Dataset Converters)
+**What they need from you:**
+- Clear data format specifications
+- Working conversion examples to follow
+- Validation tools that explain failures
+- Documentation of naming conventions
+
+**What you maintain for them:**
+- `contributor_scripts/*/` - Reference converters (GTech, UMich, etc.)
+- `lib/validation/dataset_validator_phase.py` - Validation with clear error messages
+- `docs/standard_spec/validation_expectations_*.md` - Acceptable data ranges
+- `conversion_generate_phase_dataset.py` - Phase conversion tool
+
+### 3. 🛠️ **System Developers** (Like You!)
+**What they need from you:**
+- Clean, testable code architecture
+- Comprehensive test coverage
+- Clear development documentation
+- Consistent code standards
+
+**What you maintain for them:**
+- This documentation (`docs/maintainers/`)
+- Test suite (`tests/`)
+- CI/CD pipelines
+- Release processes
 
 ## Quick Start (5 minutes)
 
