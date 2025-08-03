@@ -2,13 +2,17 @@
 
 Comprehensive validation reports for all standardized locomotion datasets.
 
-## Available Reports
+## Available Validation Reports
 
-### UMich 2021 Dataset Validation
-- [Phase-indexed Validation Report](umich_2021_phase_validation_report.md)
-- Comprehensive analysis of 8,305 gait cycles across walking tasks
-- Validation success rates and detailed failure analysis
-- Visual validation plots for kinematic and kinetic data
+### Phase-Indexed Datasets
+<!-- AUTO-GENERATED-REPORTS-START -->
+- **Umich 2021**: [⚠️ View Report](umich_2021_phase_validation_report.md) - PARTIAL (55.7% valid)
+<!-- AUTO-GENERATED-REPORTS-END -->
+
+### Time-Indexed Datasets
+<!-- AUTO-GENERATED-TIME-REPORTS-START -->
+*(No validation reports available yet)*
+<!-- AUTO-GENERATED-TIME-REPORTS-END -->
 
 ## Understanding Validation Reports
 
