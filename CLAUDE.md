@@ -22,24 +22,44 @@ Standardized biomechanical datasets with consistent naming and validation.
 
 **Core Value**: Validated, reproducible biomechanical datasets for research.
 
-## Project Structure
+## Actual Project Structure
 
-### Audience-Based Organization
+### Core Implementation
+```
+user_libs/
+├── python/          # Main Python library
+│   ├── locomotion_data.py    # Core LocomotionData class
+│   ├── feature_constants.py  # Task and variable definitions
+│   └── statistics/           # Statistical analysis modules
+├── matlab/          # MATLAB analysis tools
+└── r/              # R package implementation
+
+internal/           # Backend modules (not user-facing)
+├── validation_engine/
+│   ├── validator.py          # DatasetValidator class
+│   └── report_generator.py   # Validation reports
+├── plot_generation/          # Visualization tools
+└── config_management/        # Config and specs
+
+contributor_tools/  # Dataset conversion & validation
+├── conversion_scripts/       # Dataset-specific converters
+│   ├── Umich_2021/
+│   ├── Gtech_2023/
+│   └── AddBiomechanics/
+└── create_dataset_validation_report.py
+
+converted_datasets/ # Standardized parquet files
+tests/             # Comprehensive test suite
+```
+
+### Documentation
 ```
 docs/
-├── users/          # Researchers using the data
-├── contributors/   # Teams adding new datasets
-├── maintainers/    # Developers improving the system
-└── reference/      # Shared technical specifications
+├── users/          # User guides and tutorials
+├── reference/      # Data format specifications
+│   └── standard_spec/
+└── maintainers/    # Development documentation
 ```
-
-### Key Directories
-- **lib/core/** - LocomotionData analysis library
-- **lib/validation/** - Dataset validation tools
-- **contributor_scripts/** - Dataset conversion scripts
-- **converted_datasets/** - Standardized parquet files
-- **tests/** - Comprehensive test suite
-
 
 ## Development Philosophy
 
@@ -54,41 +74,105 @@ docs/
 ## Working with this Project
 
 **For Users**: 
-- Start with `docs/users/tutorials/`
-- Use `LocomotionData` class from `lib/core/locomotion_analysis.py`
-- See example workflows in `lib/core/examples.py`
+```python
+# Import from user_libs
+from user_libs.python.locomotion_data import LocomotionData
+
+# Load and analyze data
+data = LocomotionData('converted_datasets/umich_2021_phase.parquet')
+
+# Get data for analysis
+cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
+mean_patterns = data.get_mean_patterns('SUB01', 'level_walking')
+```
 
 **For Contributors**:
-- Review `docs/reference/standard_spec/` for data format
-- Use existing converters in `contributor_scripts/` as templates
-- Validate with tools in `lib/validation/`
+```bash
+# Convert a new dataset
+cd contributor_tools/conversion_scripts/YourDataset/
+python convert_to_parquet.py
+
+# Validate your dataset
+python contributor_tools/create_dataset_validation_report.py \
+    --dataset converted_datasets/your_dataset_phase.parquet
+```
 
 **For Maintainers**:
-- Architecture docs in `docs/maintainers/`
-- Run tests with `pytest tests/`
-- Follow existing code patterns in `lib/`
+```bash
+# Run tests
+pytest tests/ -v
+
+# Check specific functionality
+pytest tests/test_locomotion_data_library.py -k "test_basic_loading"
+
+# Generate validation reports
+python contributor_tools/create_dataset_validation_report.py \
+    --dataset converted_datasets/umich_2021_phase.parquet
+```
 
 ## Common Tasks
 
+### Load and Analyze Data
 ```python
-# Load and analyze data
-from lib.core.locomotion_analysis import LocomotionData
-data = LocomotionData('converted_datasets/umich_2021_phase.parquet')
+from user_libs.python.locomotion_data import LocomotionData
 
-# Validate new dataset
-from lib.validation.dataset_validator_phase import PhaseValidator
-validator = PhaseValidator()
-results = validator.validate('new_dataset.parquet')
+# Load phase-indexed data
+loco = LocomotionData('converted_datasets/umich_2021_phase.parquet')
+
+# Basic analysis
+data_3d, features = loco.get_cycles('SUB01', 'level_walking')
+mean_patterns = loco.get_mean_patterns('SUB01', 'level_walking')
+rom_data = loco.calculate_rom('SUB01', 'level_walking')
+
+# Visualization
+loco.plot_phase_patterns('SUB01', 'level_walking', 
+                         ['knee_flexion_angle_ipsi_rad'])
 ```
+
+### Validate Dataset
+```python
+from internal.validation_engine.validator import DatasetValidator
+
+validator = DatasetValidator()
+results = validator.validate('converted_datasets/new_dataset_phase.parquet')
+print(results['summary'])
+```
+
+### Convert New Dataset
+1. Create conversion script in `contributor_tools/conversion_scripts/YourDataset/`
+2. Follow existing patterns (see Umich_2021 or Gtech_2023)
+3. Ensure output has required columns and 150 points per cycle
+4. Run validation to confirm compliance
+
+## Key Files to Know
+
+- `user_libs/python/locomotion_data.py` - Main analysis class
+- `user_libs/python/feature_constants.py` - Valid tasks and variables
+- `internal/validation_engine/validator.py` - Validation logic
+- `contributor_tools/create_dataset_validation_report.py` - Report generator
+- `tests/test_locomotion_data_library.py` - Usage examples
 
 ## Git Workflow
 
 ```bash
 # Always use specific files, never -A
-git add lib/core/specific_file.py
+git add user_libs/python/specific_file.py
 git commit -m "Clear, action-focused message
 
 Co-authored-by: José A. Montes Pérez <jmontp@umich.edu>"
+```
+
+## Testing Approach
+
+```bash
+# Test core functionality
+pytest tests/test_locomotion_data_library.py
+
+# Test validation system
+pytest tests/test_dataset_validator_phase_coverage.py
+
+# Run all tests
+pytest tests/ -v
 ```
 
 ## Development Status

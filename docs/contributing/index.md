@@ -1,257 +1,208 @@
-# Contributing
+# Contributing Datasets
+
+Convert your biomechanical data to the standardized format and contribute to the research community.
+
+## Dataset Conversion Workflow
+
+Follow this flowchart to convert and validate your dataset:
+
+```mermaid
+flowchart TD
+    Start([Start: Have Biomechanical Data]) --> Step1[Step 1: Study Reference Dataset]
+    
+    Step1 --> Step1Details[/"
+    • Review existing datasets (e.g., umich_2021_phase.parquet)
+    • Understand required columns
+    • Note: 150 points per cycle for phase data
+    "/]
+    
+    Step1Details --> Step2[Step 2: Convert to Table Format]
+    
+    Step2 --> Step2Details[/"
+    • Create conversion script (dataset-specific)
+    • Map variables to standard names
+    • Follow examples in contributor_tools/conversion_scripts/
+    "/]
+    
+    Step2Details --> CheckPhase{Does your data<br/>have phase indexing?}
+    
+    CheckPhase -->|No| ConvertPhase[Convert Time to Phase]
+    ConvertPhase --> ConvertDetails[/"
+    Run: python conversion_generate_phase_dataset.py dataset_time.parquet
+    Converts to 150 points per gait cycle
+    "/]
+    ConvertDetails --> CheckRanges
+    
+    CheckPhase -->|Yes| CheckRanges{Do validation ranges<br/>exist for your population?}
+    
+    CheckRanges -->|Yes, Standard Population| Step3[Step 3: Validate Dataset]
+    
+    CheckRanges -->|No, or Special Population| CreateRanges[Create Validation Ranges]
+    CreateRanges --> RangeOptions[/"
+    Choose Method:
+    • Generate from your data (automated_fine_tuning.py)
+    • Copy and modify existing ranges
+    • Create manually for special needs
+    "/]
+    RangeOptions --> SaveRanges[/"
+    Save to: contributor_scripts/validation_ranges/
+    "/]
+    SaveRanges --> Step3
+    
+    Step3 --> ValidateCmd[/"
+    Run: python contributor_tools/create_dataset_validation_report.py \
+         --dataset your_dataset_phase.parquet
+    "/]
+    
+    ValidateCmd --> CheckValid{Validation<br/>Pass Rate ≥90%?}
+    
+    CheckValid -->|Yes| Success([✓ Success!<br/>Dataset Ready])
+    Success --> SuccessSteps[/"
+    • Add to converted_datasets/
+    • Update documentation
+    • Share with community
+    "/]
+    
+    CheckValid -->|No| Review[Review Validation Report]
+    Review --> FixIssues[/"
+    • Check error messages
+    • Fix variable mapping
+    • Adjust data processing
+    • Consider custom ranges
+    "/]
+    FixIssues --> Step2
+    
+    style Start fill:#e1f5e1
+    style Success fill:#c8e6c9
+    style CheckPhase fill:#fff3e0
+    style CheckRanges fill:#fff3e0
+    style CheckValid fill:#fff3e0
+    style CreateRanges fill:#e3f2fd
+    style Review fill:#ffebee
+```
+
+## Quick Start Guide
+
+### 1. Study Reference Dataset
+
+First, examine an existing converted dataset to understand the expected structure:
+
+```python
+import pandas as pd
+
+# Load a reference dataset
+reference = pd.read_parquet('converted_datasets/umich_2021_phase.parquet')
+
+# Check structure
+print(f"Shape: {reference.shape}")
+print(f"Columns: {reference.columns.tolist()}")
+print(f"Required columns: subject_id, task, phase_percent")
+print(f"Points per cycle: {reference[reference['subject_id'] == reference['subject_id'].iloc[0]].groupby('phase_percent').size().iloc[0]}")
+```
 
-Join the movement to standardize biomechanical data for reproducible research.
+### 2. Convert Your Data
 
-## :material-heart: Why Contribute?
+Create a conversion script for your dataset. See working examples:
+- **MATLAB data**: [`contributor_tools/conversion_scripts/Umich_2021/`](../../contributor_tools/conversion_scripts/Umich_2021/)
+- **Python data**: [`contributor_tools/conversion_scripts/Gtech_2023/`](../../contributor_tools/conversion_scripts/Gtech_2023/)
 
-<div class="contribution-benefits" markdown>
+Key requirements:
+- **Standard variable names**: e.g., `knee_flexion_angle_ipsi_rad`, `hip_moment_contra_Nm`
+- **Required columns**: `subject_id`, `task`, `phase_percent` (0-100)
+- **Units**: Angles in radians, forces in Newtons, distances in meters
 
-**For the Community:**
-- Accelerate biomechanics research across institutions
-- Enable reproducible science with standardized data
-- Bridge the gap between research labs and applications
+### 3. Handle Phase Indexing
 
-**For You:**
-- Increase your research impact and citations
-- Build your open-source portfolio
-- Connect with leading biomechanics researchers
-- Learn best practices for research data management
+#### If your data is time-indexed:
+```bash
+# Convert time-indexed to phase-indexed (150 points per cycle)
+python conversion_generate_phase_dataset.py converted_datasets/your_dataset_time.parquet
 
-</div>
+# This creates: your_dataset_phase.parquet
+```
 
-## :material-account-group: Types of Contributors
+#### If your data is already phase-indexed:
+- Ensure exactly 150 points per gait cycle
+- Phase values from 0 to 100 (percent of gait cycle)
 
-<div class="contributor-types" markdown>
+### 4. Validate Your Dataset
 
-<div class="contributor-card casual" markdown>
+```bash
+# Run validation
+python contributor_tools/create_dataset_validation_report.py \
+    --dataset converted_datasets/your_dataset_phase.parquet
 
-### :material-flash: **Quick Contributors**
+# Check the generated report
+# Look for pass rate ≥90%
+```
 
-**Perfect for:** First-time contributors, busy researchers
+## Common Issues and Solutions
 
-**Time Investment:** 5-30 minutes
+### Issue: Variable names don't match standard
+**Solution**: Map your variables to standard names in your conversion script:
+```python
+# Example mapping
+variable_mapping = {
+    'KneeAngle_L': 'knee_flexion_angle_ipsi_rad',
+    'HipMoment_R': 'hip_moment_contra_Nm',
+    # Add all your mappings
+}
+```
 
-**You Can:**
-- Report bugs and issues
-- Suggest feature improvements  
-- Fix documentation typos
-- Share your use cases
+### Issue: Wrong number of points per cycle
+**Solution**: Use the phase conversion tool:
+```bash
+python conversion_generate_phase_dataset.py your_dataset_time.parquet
+```
 
-[:material-arrow-right: **Make Your First Contribution**](quick/first_contribution/){ .md-button .casual-button }
+### Issue: Validation failures
+**Solution**: Check the validation report for specific issues:
+- Out-of-range values at certain phases
+- Missing required variables
+- Incorrect units (degrees vs radians)
 
-</div>
+## Working Examples
 
-<div class="contributor-card dataset" markdown>
+### Example 1: MATLAB Dataset (Umich_2021)
 
-### :material-database: **Dataset Contributors**
+See the complete conversion workflow in [`examples/umich_2021_example.md`](examples/umich_2021_example.md)
 
-**Perfect for:** Research labs with valuable datasets
+Key files:
+- Input: MATLAB `.mat` files
+- Converter: `convert_umich_phase_to_parquet.m`
+- Output: `umich_2021_phase.parquet`
 
-**Time Investment:** 2-8 hours (one-time setup)
+### Example 2: Python Dataset (Gtech_2023)
 
-**You Can:**
-- Share your lab's datasets
-- Increase research impact
-- Enable cross-study comparisons
-- Build research collaborations
+See the complete conversion workflow in [`examples/gtech_2023_example.md`](examples/gtech_2023_example.md)
 
-[:material-arrow-right: **Contribute Your Data**](datasets/conversion_process/){ .md-button .dataset-button }
+Key files:
+- Input: Multiple subject files
+- Converter: `convert_gtech_all_to_parquet.py`
+- Output: `gtech_2023_phase.parquet`
 
-</div>
+## Resources
 
-<div class="contributor-card developer" markdown>
+- **[Conversion Guide](conversion_guide.md)** - Detailed step-by-step instructions
+- **[Validation Reference](validation_reference.md)** - Understanding validation checks
+- **[Standard Specification](../reference/standard_spec/standard_spec.md)** - Complete data format specification
+- **[Variable Naming](../reference/standard_spec/units_and_conventions.md)** - Standard variable names and units
 
-### :material-code-braces: **Code Contributors**
+## Getting Help
 
-**Perfect for:** Developers, advanced users
+1. **Check existing examples** in `contributor_tools/conversion_scripts/`
+2. **Review validation errors** carefully - they usually indicate the exact issue
+3. **Open an issue** on GitHub if you encounter problems
+4. **Contact maintainers** for dataset-specific questions
 
-**Time Investment:** 1-10+ hours per contribution
+## Next Steps
 
-**You Can:**
-- Add new analysis features
-- Improve performance
-- Enhance documentation
-- Build new tools
+Once your dataset passes validation:
 
-[:material-arrow-right: **Start Developing**](development/setup/){ .md-button .developer-button }
-
-</div>
-
-</div>
-
-## :material-rocket: Quick Start Contributing
-
-<div class="contribution-quickstart" markdown>
-
-### **In 5 Minutes:** [Report an Issue](quick/bug_reports/)
-Found a bug or have a suggestion? Help us improve!
-
-### **In 15 Minutes:** [Fix Documentation](quick/first_contribution/)  
-Spot a typo or unclear explanation? Make it better!
-
-### **In 30 Minutes:** [Share Your Experience](quick/feature_requests/)
-Tell us how you use the platform and what's missing!
-
-### **Ready for More?** Choose your path below:
-
-</div>
-
-## :material-map: Contribution Pathways
-
-<div class="contribution-paths" markdown>
-
-### :material-database: **Share Your Research Data**
-
-**Impact:** Enable other researchers to build on your work
-
-<div class="contribution-steps" markdown>
-
-1. **[Prepare Your Data](datasets/conversion_process/)** (1-2 hours)
-   - Convert to standard format
-   - Validate data quality
-   - Document your dataset
-
-2. **[Submit for Review](datasets/quality_standards/)** (30 min)
-   - Upload to review system  
-   - Address reviewer feedback
-   - Finalize documentation
-
-3. **[Publication & Impact](datasets/documentation/)** (ongoing)
-   - Your data joins the collection
-   - Track usage and citations
-   - Collaborate with users
-
-</div>
-
-**Result:** Your data becomes part of a standardized collection used by researchers worldwide.
-
-[:material-arrow-right: **Start Data Contribution**](datasets/conversion_process/){ .md-button .md-button--primary }
-
-### :material-tools: **Improve the Platform**
-
-**Impact:** Help thousands of researchers with better tools
-
-<div class="contribution-steps" markdown>
-
-1. **[Development Setup](development/setup/)** (30 min)
-   - Set up development environment
-   - Understand the architecture
-   - Run tests and examples
-
-2. **[Choose Your Contribution](development/code_standards/)** (varies)
-   - Bug fixes (1-2 hours)
-   - New features (2-10+ hours)
-   - Documentation (30 min - 2 hours)
-
-3. **[Submit & Collaborate](development/testing/)** (1-2 hours)
-   - Create pull request
-   - Work with maintainers
-   - See your code in production
-
-</div>
-
-**Result:** Your improvements help researchers worldwide analyze biomechanical data more effectively.
-
-[:material-arrow-right: **Start Code Contribution**](development/setup/){ .md-button .md-button--primary }
-
-</div>
-
-## :material-star: Recognition & Impact
-
-<div class="recognition" markdown>
-
-### **Your Contributions Matter**
-
-**For Dataset Contributors:**
-- Your dataset gets cited in research papers
-- Authors acknowledge your contribution
-- You become part of the research community
-- Track impact through download statistics
-
-**For Code Contributors:**  
-- Your GitHub profile showcases your contributions
-- Maintainer recognition in release notes
-- Direct impact on research workflows
-- Build your open-source reputation
-
-### **Success Stories**
-
-!!! success "Dr. Sarah Chen, Georgia Tech"
-    *"Contributing our lab's dataset led to 15 new collaborations and increased our citation count by 40%. The standardization process also improved our internal data management."*
-
-!!! success "Alex Kumar, Software Developer"
-    *"My performance optimization contributions are now used by hundreds of researchers. It's incredibly rewarding to see my code accelerating scientific discovery."*
-
-</div>
-
-## :material-help-circle: Getting Help
-
-<div class="contribution-help" markdown>
-
-### **Before You Start**
-- Read our [Code of Conduct](https://github.com/your-org/locomotion-data-standardization/blob/main/CODE_OF_CONDUCT.md)
-- Browse [open issues](https://github.com/your-org/locomotion-data-standardization/issues) for inspiration
-- Join our [community discussions](https://github.com/your-org/locomotion-data-standardization/discussions)
-
-### **During Your Contribution**
-- :material-chat: [Ask questions in discussions](https://github.com/your-org/locomotion-data-standardization/discussions)
-- :material-email: [Email maintainers](mailto:contact@locomotion-data-standardization.org)
-- :material-github: [Comment on relevant issues](https://github.com/your-org/locomotion-data-standardization/issues)
-
-### **Need Technical Help?**
-- [Development setup issues](development/setup/#troubleshooting)
-- [Data conversion problems](datasets/conversion_process/#troubleshooting)
-- [Testing and validation help](development/testing/#getting-help)
-
-</div>
-
-## :material-timeline: Contribution Timeline
-
-<div class="timeline" markdown>
-
-### **Typical Timelines**
-
-| Contribution Type | Initial Time | Review Time | Total Time |
-|-------------------|--------------|-------------|------------|
-| **Bug Report** | 5-15 min | 1-3 days | ~1 week |
-| **Documentation Fix** | 15-30 min | 1-2 days | ~1 week |
-| **Dataset Contribution** | 2-8 hours | 1-2 weeks | 2-3 weeks |
-| **New Feature** | 2-20+ hours | 1-3 weeks | 2-4 weeks |
-
-### **Review Process**
-1. **Automated checks** (immediate) - Code style, tests
-2. **Maintainer review** (1-7 days) - Technical review
-3. **Community feedback** (optional) - User testing  
-4. **Final approval** (1-2 days) - Integration and release
-
-</div>
+1. **Document your dataset** - Add README describing the data source
+2. **Test with analysis tools** - Verify it works with `LocomotionData` class
+3. **Share with community** - Submit pull request with your converted dataset
 
 ---
 
-## :material-arrow-right: Ready to Contribute?
-
-Choose how you want to contribute to standardized biomechanical data:
-
-[**:material-flash: Quick Contribution**](quick/first_contribution/){ .md-button .md-button--primary }
-[**:material-database: Share Your Data**](datasets/conversion_process/){ .md-button }
-[**:material-code-braces: Develop Features**](development/setup/){ .md-button }
-
-## :material-frequently-asked-questions: Common Questions
-
-??? question "Do I need to be an expert to contribute?"
-
-    No! We welcome contributions from all skill levels. Start with documentation fixes or bug reports, then work your way up to more complex contributions.
-
-??? question "How do I get credit for my contributions?"
-
-    All contributors are recognized in our release notes, README, and through GitHub's contribution tracking. Dataset contributors get formal acknowledgment and citation opportunities.
-
-??? question "What if I'm not sure about my contribution idea?"
-
-    Start a [discussion](https://github.com/your-org/locomotion-data-standardization/discussions) or [open an issue](https://github.com/your-org/locomotion-data-standardization/issues) to get feedback before investing significant time.
-
-??? question "Can my organization become an official partner?"
-
-    Yes! We're always looking for institutional partnerships. [Contact us](mailto:contact@locomotion-data-standardization.org) to discuss collaboration opportunities.
-
-**Questions?** [Contact the maintainers](mailto:contact@locomotion-data-standardization.org) or [start a discussion](https://github.com/your-org/locomotion-data-standardization/discussions).
+**Ready to start?** Follow the flowchart above and use the working examples as templates for your conversion.
