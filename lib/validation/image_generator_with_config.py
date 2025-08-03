@@ -61,13 +61,13 @@ class ValidationImageGenerator:
         
         # Use GridSpec for custom layout
         # Left 75%: Main plot, Right 25%: Config panel
-        gs = GridSpec(1, 4, figure=fig, width_ratios=[3, 1])
+        gs = GridSpec(1, 2, figure=fig, width_ratios=[3, 1])
         
         # Main plot area
-        ax_main = fig.add_subplot(gs[0, :3])
+        ax_main = fig.add_subplot(gs[0, 0])
         
         # Config panel area
-        ax_config = fig.add_subplot(gs[0, 3])
+        ax_config = fig.add_subplot(gs[0, 1])
         ax_config.axis('off')
         
         # Draw the main validation plot

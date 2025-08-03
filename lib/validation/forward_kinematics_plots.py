@@ -30,8 +30,8 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
-# Import centralized validation parser
-from .validation_expectations_parser import parse_kinematic_validation_expectations
+# Import config manager for loading validation ranges
+from .config_manager import ValidationConfigManager
 
 class KinematicPoseGenerator:
     """Generator for static kinematic poses for validation visualization"""
@@ -429,10 +429,11 @@ class KinematicPoseGenerator:
                 else:
                     validation_path = str(validation_path)
             
-            print(f"Parsing validation expectations from: {validation_path}")
-            all_validation_data = parse_kinematic_validation_expectations(validation_path)
+            # Use ConfigManager to load validation ranges
+            config_manager = ValidationConfigManager()
+            all_validation_data = config_manager.load_validation_ranges('kinematic')
             if task_name not in all_validation_data:
-                raise ValueError(f"No validation data found for task {task_name} in validation file")
+                raise ValueError(f"No validation data found for task {task_name} in config")
             
             validation_ranges = all_validation_data[task_name]
             

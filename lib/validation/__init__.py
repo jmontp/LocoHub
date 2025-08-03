@@ -10,15 +10,19 @@ Intent: Provides access to validation tools, validators, and plotting functions
 from .dataset_validator_phase import DatasetValidator
 from .step_classifier import StepClassifier
 from .filters_by_phase_plots import create_filters_by_phase_plot
-from .validation_expectations_parser import ValidationExpectationsParser
-from .range_updater import RangeUpdater, RangeUpdate, create_range_update_from_input
+from .config_manager import ValidationConfigManager
+from .validation_offset_utils import (
+    apply_contralateral_offset_kinematic,
+    apply_contralateral_offset_kinetic,
+    validate_task_completeness
+)
 
 __all__ = [
     'DatasetValidator',
     'StepClassifier', 
     'create_filters_by_phase_plot',
-    'ValidationExpectationsParser',
-    'RangeUpdater',
-    'RangeUpdate',
-    'create_range_update_from_input'
+    'ValidationConfigManager',
+    'apply_contralateral_offset_kinematic',
+    'apply_contralateral_offset_kinetic',
+    'validate_task_completeness'
 ]
