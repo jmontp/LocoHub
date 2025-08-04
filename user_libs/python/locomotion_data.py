@@ -402,15 +402,15 @@ class LocomotionData:
         """Get list of unique tasks."""
         return sorted(self.df[self.task_col].unique())
     
-    def get_cycles(self, subject: str, task: str, 
+    def get_cycles(self, subject: Optional[str], task: str, 
                    features: Optional[List[str]] = None) -> Tuple[np.ndarray, List[str]]:
         """
         Get 3D array of cycles for a subject-task combination.
         
         Parameters
         ----------
-        subject : str
-            Subject ID
+        subject : str or None
+            Subject ID. If None, returns data for all subjects.
         task : str
             Task name
         features : list of str, optional
@@ -429,11 +429,19 @@ class LocomotionData:
             return self._cache[cache_key]
         
         # Filter data
-        mask = (self.df[self.subject_col] == subject) & (self.df[self.task_col] == task)
+        if subject is None:
+            # Get all subjects for this task
+            mask = self.df[self.task_col] == task
+        else:
+            # Get specific subject for this task
+            mask = (self.df[self.subject_col] == subject) & (self.df[self.task_col] == task)
         subset = self.df[mask]
         
         if len(subset) == 0:
-            warnings.warn(f"No data found for subject '{subject}', task '{task}'")
+            if subject is None:
+                warnings.warn(f"No data found for task '{task}'")
+            else:
+                warnings.warn(f"No data found for subject '{subject}', task '{task}'")
             return None, []
         
         # Check data length

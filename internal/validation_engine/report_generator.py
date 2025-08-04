@@ -17,7 +17,7 @@ import pandas as pd
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 # Avoid circular import - import only what's needed
-from internal.plot_generation.filters_by_phase_plots_v2 import create_filters_by_phase_plot
+from internal.plot_generation.filters_by_phase_plots import create_filters_by_phase_plot
 from internal.plot_generation.step_classifier import StepClassifier
 from user_libs.python.locomotion_data import LocomotionData
 
