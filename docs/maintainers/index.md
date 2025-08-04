@@ -13,7 +13,7 @@ Converting biomechanical data to standardized parquet format:
 ### 2. 🔍 **Validation & Visualization**
 Validating data quality with visual reports:
 - `lib/validation/dataset_validator_phase.py` - Validation engine
-- `contributor_scripts/validation_ranges/` - YAML configuration
+- `contributor_tools/validation_ranges/` - YAML configuration
 - `contributor_scripts/create_dataset_validation_report.py` - Report generator
 - Generates plots with data overlaid on expected ranges
 
@@ -53,7 +53,7 @@ mkdocs serve
 | File | Purpose | Location |
 |------|---------|----------|
 | Dataset Converters | Convert raw data to standard | `contributor_scripts/conversion_scripts/*/` |
-| Validation Config | Expected data ranges | `contributor_scripts/validation_ranges/*.yaml` |
+| Validation Config | Expected data ranges | `contributor_tools/validation_ranges/*.yaml` |
 | Validation Engine | Checks data quality | `lib/validation/dataset_validator_phase.py` |
 | Data Interface | Load standardized data | `lib/core/locomotion_analysis.py` |
 | Report Generator | Create validation reports | `contributor_scripts/create_dataset_validation_report.py` |
@@ -67,7 +67,7 @@ mkdocs serve
 4. Validate with report generator
 
 ### Updating Validation Ranges
-1. Edit YAML files in `contributor_scripts/validation_ranges/`
+1. Edit YAML files in `contributor_tools/validation_ranges/`
 2. Regenerate validation reports to see impact
 3. Test with affected datasets
 

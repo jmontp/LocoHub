@@ -3,7 +3,7 @@
 CLI Scripts Testing
 
 Created: 2025-06-18 with user permission
-Purpose: Test coverage for contributor_scripts CLI tools
+Purpose: Test coverage for contributor_tools CLI tools
 
 Intent: Achieve 100% test coverage by testing all CLI entry points
 for user stories US-02 through US-07

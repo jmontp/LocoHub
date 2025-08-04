@@ -26,7 +26,7 @@ project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
 # Import modules to test
-from contributor_scripts.update_validation_ranges import (
+from contributor_tools.update_validation_ranges import (
     main, handle_update, handle_batch, handle_history, 
     handle_rollback, handle_interactive, handle_info
 )
@@ -127,8 +127,8 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
                 main()
                 mock_help.assert_called_once()
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
-    @patch('contributor_scripts.update_validation_ranges.create_range_update_from_input')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.create_range_update_from_input')
     def test_handle_update_success(self, mock_create_update, mock_updater_class):
         """Test successful update handling."""
         # Mock the range updater and update
@@ -164,7 +164,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             handle_update(args)
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_update_with_version_file(self, mock_updater_class):
         """Test update handling with version tracking."""
         mock_updater = MagicMock()
@@ -183,12 +183,12 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
         args.version_file = self.test_version_file
         
         with patch('builtins.print') as mock_print:
-            with patch('contributor_scripts.update_validation_ranges.create_range_update_from_input'):
+            with patch('contributor_tools.update_validation_ranges.create_range_update_from_input'):
                 handle_update(args)
                 # Verify version file message is printed
                 mock_print.assert_any_call(f"📝 Version tracked in {self.test_version_file}")
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_batch_success(self, mock_updater_class):
         """Test successful batch update handling."""
         mock_updater = MagicMock()
@@ -223,7 +223,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             handle_batch(args)
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_batch_with_conflicts(self, mock_updater_class):
         """Test batch handling with conflicts detected."""
         mock_updater = MagicMock()
@@ -248,7 +248,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
                 handle_batch(args)
             mock_print.assert_any_call("❌ Conflicts detected:")
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_history_success(self, mock_updater_class):
         """Test successful history handling."""
         mock_updater = MagicMock()
@@ -292,7 +292,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
             handle_history(args)
             mock_print.assert_called_with("No version history found")
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_history_no_matching_entries(self, mock_updater_class):
         """Test history handling with no matching entries."""
         mock_updater = MagicMock()
@@ -309,7 +309,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
             handle_history(args)
             mock_print.assert_called_with("No version history found matching filters")
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_rollback_success(self, mock_updater_class):
         """Test successful rollback handling."""
         mock_updater = MagicMock()
@@ -336,7 +336,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
                 mock_updater.update_validation_file.assert_called_once()
                 mock_print.assert_any_call("✅ Rollback completed successfully")
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_rollback_cancelled(self, mock_updater_class):
         """Test rollback handling when user cancels."""
         mock_updater = MagicMock()
@@ -373,7 +373,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             handle_rollback(args)
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_interactive_success(self, mock_updater_class):
         """Test successful interactive handling."""
         mock_updater = MagicMock()
@@ -410,7 +410,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
         
         with patch('builtins.input', side_effect=inputs):
             with patch('builtins.print') as mock_print:
-                with patch('contributor_scripts.update_validation_ranges.create_range_update_from_input'):
+                with patch('contributor_tools.update_validation_ranges.create_range_update_from_input'):
                     handle_interactive(args)
                     mock_print.assert_any_call("✅ Update applied successfully")
 
@@ -423,7 +423,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             handle_interactive(args)
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_interactive_invalid_task(self, mock_updater_class):
         """Test interactive handling with invalid task."""
         mock_updater = MagicMock()
@@ -444,7 +444,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
             with self.assertRaises(ValueError):
                 handle_interactive(args)
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_interactive_invalid_phase(self, mock_updater_class):
         """Test interactive handling with invalid phase."""
         mock_updater = MagicMock()
@@ -467,7 +467,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
             with self.assertRaises(ValueError):
                 handle_interactive(args)
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_interactive_invalid_variable(self, mock_updater_class):
         """Test interactive handling with invalid variable."""
         mock_updater = MagicMock()
@@ -490,7 +490,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
             with self.assertRaises(ValueError):
                 handle_interactive(args)
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_interactive_min_greater_than_max(self, mock_updater_class):
         """Test interactive handling with min > max error."""
         mock_updater = MagicMock()
@@ -519,7 +519,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
             with self.assertRaises(ValueError):
                 handle_interactive(args)
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_interactive_cancelled(self, mock_updater_class):
         """Test interactive handling when user cancels."""
         mock_updater = MagicMock()
@@ -554,7 +554,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
                 mock_print.assert_any_call("Update cancelled")
                 mock_updater.update_validation_file.assert_not_called()
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_info_success(self, mock_updater_class):
         """Test successful info handling."""
         mock_updater = MagicMock()
@@ -596,7 +596,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             handle_info(args)
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_handle_info_with_many_variables(self, mock_updater_class):
         """Test info handling with more than 3 variables per phase."""
         mock_updater = MagicMock()
@@ -627,7 +627,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
         """Test main function exception handling."""
         with patch('argparse.ArgumentParser.parse_args') as mock_args:
             mock_args.return_value.command = 'update'
-            with patch('contributor_scripts.update_validation_ranges.handle_update', side_effect=Exception("Test error")):
+            with patch('contributor_tools.update_validation_ranges.handle_update', side_effect=Exception("Test error")):
                 with patch('sys.exit') as mock_exit:
                     with patch('builtins.print') as mock_print:
                         main()
@@ -641,13 +641,13 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
         for command in commands:
             with patch('argparse.ArgumentParser.parse_args') as mock_args:
                 mock_args.return_value.command = command
-                with patch(f'contributor_scripts.update_validation_ranges.handle_{command}') as mock_handler:
+                with patch(f'contributor_tools.update_validation_ranges.handle_{command}') as mock_handler:
                     main()
                     mock_handler.assert_called_once()
 
     def test_cli_integration_update(self):
         """Test CLI integration for update command."""
-        script_path = str(project_root / 'contributor_scripts' / 'update_validation_ranges.py')
+        script_path = str(project_root / 'contributor_tools' / 'update_validation_ranges.py')
         
         # Test help output
         result = subprocess.run([
@@ -659,7 +659,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
 
     def test_cli_integration_batch(self):
         """Test CLI integration for batch command."""
-        script_path = str(project_root / 'contributor_scripts' / 'update_validation_ranges.py')
+        script_path = str(project_root / 'contributor_tools' / 'update_validation_ranges.py')
         
         result = subprocess.run([
             sys.executable, script_path, 'batch', '--help'
@@ -670,7 +670,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
 
     def test_cli_integration_history(self):
         """Test CLI integration for history command."""
-        script_path = str(project_root / 'contributor_scripts' / 'update_validation_ranges.py')
+        script_path = str(project_root / 'contributor_tools' / 'update_validation_ranges.py')
         
         result = subprocess.run([
             sys.executable, script_path, 'history', '--help'
@@ -681,7 +681,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
 
     def test_cli_integration_rollback(self):
         """Test CLI integration for rollback command."""
-        script_path = str(project_root / 'contributor_scripts' / 'update_validation_ranges.py')
+        script_path = str(project_root / 'contributor_tools' / 'update_validation_ranges.py')
         
         result = subprocess.run([
             sys.executable, script_path, 'rollback', '--help'
@@ -692,7 +692,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
 
     def test_cli_integration_interactive(self):
         """Test CLI integration for interactive command."""
-        script_path = str(project_root / 'contributor_scripts' / 'update_validation_ranges.py')
+        script_path = str(project_root / 'contributor_tools' / 'update_validation_ranges.py')
         
         result = subprocess.run([
             sys.executable, script_path, 'interactive', '--help'
@@ -703,7 +703,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
 
     def test_cli_integration_info(self):
         """Test CLI integration for info command."""
-        script_path = str(project_root / 'contributor_scripts' / 'update_validation_ranges.py')
+        script_path = str(project_root / 'contributor_tools' / 'update_validation_ranges.py')
         
         result = subprocess.run([
             sys.executable, script_path, 'info', '--help'
@@ -714,7 +714,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
 
     def test_cli_integration_no_args(self):
         """Test CLI integration with no arguments."""
-        script_path = str(project_root / 'contributor_scripts' / 'update_validation_ranges.py')
+        script_path = str(project_root / 'contributor_tools' / 'update_validation_ranges.py')
         
         result = subprocess.run([
             sys.executable, script_path
@@ -750,7 +750,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
 
     def test_datetime_formatting_coverage(self):
         """Test datetime formatting in history display."""
-        with patch('contributor_scripts.update_validation_ranges.RangeUpdater') as mock_updater_class:
+        with patch('contributor_tools.update_validation_ranges.RangeUpdater') as mock_updater_class:
             mock_updater = MagicMock()
             mock_updater_class.return_value = mock_updater
             
@@ -786,7 +786,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
 
     def test_enumerate_usage_coverage(self):
         """Test enumerate usage in history display."""
-        with patch('contributor_scripts.update_validation_ranges.RangeUpdater') as mock_updater_class:
+        with patch('contributor_tools.update_validation_ranges.RangeUpdater') as mock_updater_class:
             mock_updater = MagicMock()
             mock_updater_class.return_value = mock_updater
             
@@ -876,7 +876,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
     def test_additional_arg_parser_coverage(self):
         """Test additional argument parser branches for coverage."""
         # Test epilog examples are included
-        from contributor_scripts.update_validation_ranges import main
+        from contributor_tools.update_validation_ranges import main
         with patch('argparse.ArgumentParser.parse_args') as mock_args:
             with patch('argparse.ArgumentParser.print_help') as mock_help:
                 mock_args.return_value.command = None
@@ -886,7 +886,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
 
     def test_sorted_keys_in_info(self):
         """Test sorted() function usage in handle_info."""
-        with patch('contributor_scripts.update_validation_ranges.RangeUpdater') as mock_updater_class:
+        with patch('contributor_tools.update_validation_ranges.RangeUpdater') as mock_updater_class:
             mock_updater = MagicMock()
             mock_updater_class.return_value = mock_updater
             
@@ -912,7 +912,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
                 mock_print.assert_any_call("  Phase 50%: 1 variables")
                 mock_print.assert_any_call("  Phase 75%: 1 variables")
 
-    @patch('contributor_scripts.update_validation_ranges.RangeUpdater')
+    @patch('contributor_tools.update_validation_ranges.RangeUpdater')
     def test_feature_constants_import_coverage(self, mock_updater_class):
         """Test feature constants import is covered."""
         # The get_feature_list import should be tested
@@ -924,7 +924,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
         """Test project root path calculation coverage."""
         # Test the Path(__file__).parent.parent logic at module level
         from pathlib import Path
-        import contributor_scripts.update_validation_ranges as script_module
+        import contributor_tools.update_validation_ranges as script_module
         
         # Verify project_root is calculated correctly
         expected_root = Path(__file__).parent.parent
@@ -960,7 +960,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
     def test_main_entry_point_coverage(self):
         """Test the if __name__ == '__main__': main() entry point."""
         # This tests line 388 which is the main() call in the if __name__ == '__main__' block
-        script_path = str(project_root / 'contributor_scripts' / 'update_validation_ranges.py')
+        script_path = str(project_root / 'contributor_tools' / 'update_validation_ranges.py')
         
         # Run the script with no arguments to trigger the if __name__ == '__main__' block
         result = subprocess.run([
@@ -988,7 +988,7 @@ class TestUpdateValidationRangesCLI(unittest.TestCase):
                     
                     # Execute module as main to trigger __name__ == '__main__'
                     try:
-                        runpy.run_module('contributor_scripts.update_validation_ranges', run_name='__main__')
+                        runpy.run_module('contributor_tools.update_validation_ranges', run_name='__main__')
                     except SystemExit:
                         pass  # Expected when no command provided
                     

@@ -103,7 +103,7 @@ mkdocs serve
 ## 🔧 Configuration
 
 ### Validation Ranges
-Located in `contributor_scripts/validation_ranges/`:
+Located in `contributor_tools/validation_ranges/`:
 - `kinematic_ranges.yaml` - Joint angle validation ranges
 - `kinetic_ranges.yaml` - Force/moment validation ranges
 

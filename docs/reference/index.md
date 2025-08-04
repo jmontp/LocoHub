@@ -24,7 +24,7 @@ Scripts to convert biomechanical data to standardized format:
 ### Validation System
 Visual validation and quality assessment:
 - **Validation Reports** - Generated in `docs/user_guide/docs/reference/datasets_documentation/validation_reports/`
-- **Configuration** - YAML files in `contributor_scripts/validation_ranges/`
+- **Configuration** - YAML files in `contributor_tools/validation_ranges/`
 - **Visualization** - Plots showing data overlaid on expected ranges
 
 ### Data Access

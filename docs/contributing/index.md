@@ -45,7 +45,7 @@ flowchart TD
     • Create manually for special needs
     "/]
     RangeOptions --> SaveRanges[/"
-    Save to: contributor_scripts/validation_ranges/
+    Save to: contributor_tools/validation_ranges/
     "/]
     SaveRanges --> Step3
     

@@ -200,17 +200,17 @@ function trial_table = process_trial(trial_struct)
     trial_table.knee_rotation_angle_contra_rad = circshift(knee_rotation_ipsi, shift);
 
     % Ankle angles - reshape and convert to radians (use standard ipsi/contra naming)
-    ankle_flexion_ipsi = reshape(-joint_angles.AnkleAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
+    ankle_dorsiflexion_ipsi = reshape(joint_angles.AnkleAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
     ankle_adduction_ipsi = reshape(joint_angles.AnkleAngles(:, frontal_plane, :), [], 1) * deg2rad_factor;
     ankle_rotation_ipsi = reshape(joint_angles.AnkleAngles(:, transverse_plane, :), [], 1) * deg2rad_factor;
 
     % Apply standard naming convention (right leg = ipsi, left leg = contra)
-    trial_table.ankle_flexion_angle_ipsi_rad = ankle_flexion_ipsi;
+    trial_table.ankle_dorsiflexion_angle_ipsi_rad = ankle_dorsiflexion_ipsi;
     trial_table.ankle_adduction_angle_ipsi_rad = ankle_adduction_ipsi;
     trial_table.ankle_rotation_angle_ipsi_rad = ankle_rotation_ipsi;
     
     % Original data becomes contra (left leg)
-    trial_table.ankle_flexion_angle_contra_rad = circshift(ankle_flexion_ipsi, shift);
+    trial_table.ankle_dorsiflexion_angle_contra_rad = circshift(ankle_dorsiflexion_ipsi, shift);
     trial_table.ankle_adduction_angle_contra_rad = circshift(ankle_adduction_ipsi, shift);
     trial_table.ankle_rotation_angle_contra_rad = circshift(ankle_rotation_ipsi, shift);
 
@@ -248,17 +248,17 @@ function trial_table = process_trial(trial_struct)
     trial_table.knee_rotation_moment_contra_Nm = circshift(knee_rotation_moment_ipsi, shift);
 
     % Ankle moments
-    ankle_flexion_moment_ipsi = reshape(-joint_moments.AnkleMoment(:, sagittal_plane, :), [], 1);
+    ankle_dorsiflexion_moment_ipsi = reshape(joint_moments.AnkleMoment(:, sagittal_plane, :), [], 1);
     ankle_adduction_moment_ipsi = reshape(joint_moments.AnkleMoment(:, frontal_plane, :), [], 1);
     ankle_rotation_moment_ipsi = reshape(joint_moments.AnkleMoment(:, transverse_plane, :), [], 1);
 
     % Apply standard naming convention (right leg = ipsi, left leg = contra)
-    trial_table.ankle_flexion_moment_ipsi_Nm = ankle_flexion_moment_ipsi;
+    trial_table.ankle_dorsiflexion_moment_ipsi_Nm = ankle_dorsiflexion_moment_ipsi;
     trial_table.ankle_adduction_moment_ipsi_Nm = ankle_adduction_moment_ipsi;
     trial_table.ankle_rotation_moment_ipsi_Nm = ankle_rotation_moment_ipsi;
     
     % Original data becomes contra (left leg)
-    trial_table.ankle_flexion_moment_contra_Nm = circshift(ankle_flexion_moment_ipsi, shift);
+    trial_table.ankle_dorsiflexion_moment_contra_Nm = circshift(ankle_dorsiflexion_moment_ipsi, shift);
     trial_table.ankle_adduction_moment_contra_Nm = circshift(ankle_adduction_moment_ipsi, shift);
     trial_table.ankle_rotation_moment_contra_Nm = circshift(ankle_rotation_moment_ipsi, shift);
 

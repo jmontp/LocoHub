@@ -10,7 +10,7 @@ Before you can validate your dataset, you need validation ranges that define acc
 
 The project includes default validation ranges for healthy adult populations:
 ```
-contributor_scripts/validation_ranges/validation_ranges.yaml
+contributor_tools/validation_ranges/validation_ranges.yaml
 ```
 
 These ranges were generated from the UMich 2021 dataset and cover standard locomotion tasks.
@@ -43,7 +43,7 @@ python contributor_tools/automated_fine_tuning.py \
 # --method conservative     # Min/max with 5% buffer
 ```
 
-This creates YAML files in `contributor_scripts/validation_ranges/`:
+This creates YAML files in `contributor_tools/validation_ranges/`:
 - `kinematic_ranges.yaml` for angles and velocities
 - `kinetic_ranges.yaml` for forces and moments
 
@@ -53,8 +53,8 @@ For populations similar to healthy adults:
 
 1. Copy the default ranges:
    ```bash
-   cp contributor_scripts/validation_ranges/validation_ranges.yaml \
-      contributor_scripts/validation_ranges/my_population_ranges.yaml
+   cp contributor_tools/validation_ranges/validation_ranges.yaml \
+      contributor_tools/validation_ranges/my_population_ranges.yaml
    ```
 
 2. Adjust ranges based on your population's characteristics:
@@ -80,7 +80,7 @@ For populations similar to healthy adults:
 For completely new activities or special requirements:
 
 ```yaml
-# contributor_scripts/validation_ranges/custom_activity_ranges.yaml
+# contributor_tools/validation_ranges/custom_activity_ranges.yaml
 version: '1.0'
 generated: '2024-01-15 10:30:00'
 dataset: 'special_population_dataset'
@@ -131,7 +131,7 @@ Once you've created your custom ranges:
 # Validate using custom ranges
 python contributor_tools/create_dataset_validation_report.py \
     --dataset your_dataset_phase.parquet \
-    --config-dir contributor_scripts/validation_ranges/
+    --config-dir contributor_tools/validation_ranges/
 ```
 
 The validator will automatically find and use your YAML files.

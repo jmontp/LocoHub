@@ -92,8 +92,8 @@ class ValidationReportGenerator:
         """Generate validation plots for the dataset."""
         plot_paths = {}
         
-        # Load dataset for plotting
-        locomotion_data = LocomotionData(dataset_path)
+        # Load dataset for plotting with proper phase column name
+        locomotion_data = LocomotionData(dataset_path, phase_col='phase_percent')
         data = locomotion_data.df
         tasks = locomotion_data.get_tasks()
         

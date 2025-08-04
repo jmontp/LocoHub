@@ -63,7 +63,7 @@ Standardized format for biomechanical datasets with consistent variable naming a
 **Joint Angles** (required):
 - `hip_flexion_angle_<side>_rad`
 - `knee_flexion_angle_<side>_rad` 
-- `ankle_flexion_angle_<side>_rad`
+- `ankle_dorsiflexion_angle_<side>_rad`
 
 **Joint Moments** (optional):
 - `hip_moment_<side>_Nm`

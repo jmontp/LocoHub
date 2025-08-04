@@ -124,8 +124,8 @@ class Validator:
             - violations: Dict of violations by task and variable
             - stats: Summary statistics
         """
-        # Load dataset
-        locomotion_data = LocomotionData(dataset_path)
+        # Load dataset with proper phase column name
+        locomotion_data = LocomotionData(dataset_path, phase_col='phase_percent')
         
         # Validate phase structure
         phase_valid, phase_msg = self._validate_phase_structure(locomotion_data)

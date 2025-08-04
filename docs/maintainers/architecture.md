@@ -127,7 +127,7 @@ STANDARD_VARIABLES = [
 The validation system uses YAML configuration files to store validation ranges, separating data storage from documentation:
 
 ```yaml
-# contributor_scripts/validation_ranges/kinematic_ranges.yaml
+# contributor_tools/validation_ranges/kinematic_ranges.yaml
 version: '1.0'
 generated: '2025-08-03'
 source_dataset: 'umich_2021_phase.parquet'
@@ -191,7 +191,7 @@ graph TD
     D -->|If Valid| E[LocomotionData]
     E -->|Analysis| F[Research Results]
     
-    C -->|Validation Config| G[contributor_scripts/validation_ranges/*.yaml]
+    C -->|Validation Config| G[contributor_tools/validation_ranges/*.yaml]
     E -->|Variable Names| H[feature_constants.py]
 ```
 
@@ -235,7 +235,7 @@ graph TD
     D --> F[Plot Generator<br/>lib/validation/filters_by_phase_plots.py]
     
     E --> G[ConfigManager<br/>lib/validation/config_manager.py]
-    G --> H[YAML Configs<br/>contributor_scripts/validation_ranges/]
+    G --> H[YAML Configs<br/>contributor_tools/validation_ranges/]
     
     C --> I[LocomotionData<br/>lib/core/locomotion_analysis.py]
     I --> J[FeatureConstants<br/>lib/core/feature_constants.py]

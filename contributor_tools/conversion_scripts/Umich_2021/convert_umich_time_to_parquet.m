@@ -198,11 +198,11 @@ function trial_table = process_trial(trial_struct)
     trial_table.knee_rotation_angle_l_rad = joint_angles.LKneeAngles(:, transverse_plane) * deg2rad_factor;
 
     % Ankle angles
-    trial_table.ankle_flexion_angle_r_rad = joint_angles.RAnkleAngles(:, sagittal_plane) * deg2rad_factor;
+    trial_table.ankle_dorsiflexion_angle_r_rad = joint_angles.RAnkleAngles(:, sagittal_plane) * deg2rad_factor;
     trial_table.ankle_inversion_angle_r_rad = joint_angles.RAnkleAngles(:, frontal_plane) * deg2rad_factor;
     trial_table.ankle_rotation_angle_r_rad = joint_angles.RAnkleAngles(:, transverse_plane) * deg2rad_factor;
 
-    trial_table.ankle_flexion_angle_l_rad = joint_angles.LAnkleAngles(:, sagittal_plane) * deg2rad_factor;
+    trial_table.ankle_dorsiflexion_angle_l_rad = joint_angles.LAnkleAngles(:, sagittal_plane) * deg2rad_factor;
     trial_table.ankle_inversion_angle_l_rad = joint_angles.LAnkleAngles(:, frontal_plane) * deg2rad_factor;
     trial_table.ankle_rotation_angle_l_rad = joint_angles.LAnkleAngles(:, transverse_plane) * deg2rad_factor;
 
@@ -243,11 +243,11 @@ function trial_table = process_trial(trial_struct)
     trial_table.knee_rotation_velocity_l_rad_s = gradient(trial_table.knee_rotation_angle_l_rad)./gradient(trial_table.time_s);
 
     % Ankle velocities
-    trial_table.ankle_flexion_velocity_r_rad_s = gradient(trial_table.ankle_flexion_angle_r_rad)./gradient(trial_table.time_s);
+    trial_table.ankle_dorsiflexion_velocity_r_rad_s = gradient(trial_table.ankle_dorsiflexion_angle_r_rad)./gradient(trial_table.time_s);
     trial_table.ankle_inversion_velocity_r_rad_s = gradient(trial_table.ankle_inversion_angle_r_rad)./gradient(trial_table.time_s);
     trial_table.ankle_rotation_velocity_r_rad_s = gradient(trial_table.ankle_rotation_angle_r_rad)./gradient(trial_table.time_s);
 
-    trial_table.ankle_flexion_velocity_l_rad_s = gradient(trial_table.ankle_flexion_angle_l_rad)./gradient(trial_table.time_s);
+    trial_table.ankle_dorsiflexion_velocity_l_rad_s = gradient(trial_table.ankle_dorsiflexion_angle_l_rad)./gradient(trial_table.time_s);
     trial_table.ankle_inversion_velocity_l_rad_s = gradient(trial_table.ankle_inversion_angle_l_rad)./gradient(trial_table.time_s);
     trial_table.ankle_rotation_velocity_l_rad_s = gradient(trial_table.ankle_rotation_angle_l_rad)./gradient(trial_table.time_s);
 
@@ -291,11 +291,11 @@ function trial_table = process_trial(trial_struct)
     trial_table.knee_rotation_moment_l_Nm = joint_moments.LKneeMoment(:, transverse_plane);
 
     % Ankle moments
-    trial_table.ankle_flexion_moment_r_Nm = joint_moments.RAnkleMoment(:, sagittal_plane);
+    trial_table.ankle_dorsiflexion_moment_r_Nm = joint_moments.RAnkleMoment(:, sagittal_plane);
     trial_table.ankle_inversion_moment_r_Nm = joint_moments.RAnkleMoment(:, frontal_plane);
     trial_table.ankle_rotation_moment_r_Nm = joint_moments.RAnkleMoment(:, transverse_plane);
 
-    trial_table.ankle_flexion_moment_l_Nm = joint_moments.LAnkleMoment(:, sagittal_plane);
+    trial_table.ankle_dorsiflexion_moment_l_Nm = joint_moments.LAnkleMoment(:, sagittal_plane);
     trial_table.ankle_inversion_moment_l_Nm = joint_moments.LAnkleMoment(:, frontal_plane);
     trial_table.ankle_rotation_moment_l_Nm = joint_moments.LAnkleMoment(:, transverse_plane);
 

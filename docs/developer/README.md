@@ -104,7 +104,7 @@ ankle_flexion_moment_ipsi_Nm
 ## Validation System
 
 ### Configuration
-YAML files in `contributor_scripts/validation_ranges/`:
+YAML files in `contributor_tools/validation_ranges/`:
 - `kinematic_ranges.yaml` - Joint angle ranges
 - `kinetic_ranges.yaml` - Moment ranges
 

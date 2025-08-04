@@ -64,7 +64,7 @@ OpenSim-compatible coordinate system, variable naming, and biomechanical referen
 
 ### Ankle Joint
 
-**Ankle Flexion** (`ankle_flexion_angle_[ipsi|contra]_rad`):
+**Ankle Dorsiflexion** (`ankle_dorsiflexion_angle_[ipsi|contra]_rad`):
 - **Zero**: Foot flat on ground
 - **Positive**: Dorsiflexion (toes up)
 - **Negative**: Plantarflexion (toes down)
@@ -109,7 +109,7 @@ Following the **OpenSim right-hand rule**:
   - **Negative**: Knee extension moment
   - **Anatomical meaning**: Positive values assist knee flexor muscles, negative values assist knee extensor muscles
 
-- **ankle_flexion_moment_[ipsi|contra]_Nm**: Ankle dorsiflexion/plantarflexion moment
+- **ankle_dorsiflexion_moment_[ipsi|contra]_Nm**: Ankle dorsiflexion/plantarflexion moment
   - **Positive**: Ankle dorsiflexion moment (dorsiflexor muscles)
   - **Negative**: Ankle plantarflexion moment (plantarflexor muscles)
   - **Anatomical meaning**: Positive values assist dorsiflexor muscles, negative values assist plantarflexor muscles
@@ -146,7 +146,7 @@ Following the **OpenSim right-hand rule**:
 | Hip | Adduction | Toward midline | Neutral | -20° to 30° |
 | Knee | Flexion | Bending | Full extension | 0° to 140° |
 | Knee | Adduction | Valgus | Neutral | -10° to 15° |
-| Ankle | Flexion | Dorsiflexion | Foot flat | -25° to 40° |
+| Ankle | Dorsiflexion | Dorsiflexion (positive) | Foot flat | -25° to 40° |
 | Ankle | Inversion | Toward midline | Neutral | -15° to 20° |
 
 ## Implementation

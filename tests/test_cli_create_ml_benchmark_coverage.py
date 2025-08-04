@@ -784,7 +784,7 @@ sys.argv = [
     '--output', '{output_dir}',
     '--benchmark-name', 'direct_test'
 ]
-import contributor_scripts.create_ml_benchmark
+import contributor_tools.create_ml_benchmark
 """
         ]
         
@@ -798,7 +798,7 @@ import contributor_scripts.create_ml_benchmark
         
         cmd = [
             sys.executable,
-            str(project_root / "contributor_scripts" / "create_ml_benchmark.py"),
+            str(project_root / "contributor_tools" / "create_ml_benchmark.py"),
             str(self.single_dataset),
             '--output', str(output_dir),
             '--benchmark-name', 'script_test'

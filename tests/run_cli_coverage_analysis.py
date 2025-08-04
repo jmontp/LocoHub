@@ -21,7 +21,7 @@ def run_coverage_analysis():
     
     # Set up paths
     project_root = Path(__file__).parent.parent
-    cli_script = project_root / "contributor_scripts" / "optimize_validation_ranges.py"
+    cli_script = project_root / "contributor_tools" / "optimize_validation_ranges.py"
     test_file = project_root / "tests" / "test_cli_optimize_validation_ranges_coverage.py"
     
     print("="*60)
@@ -42,7 +42,7 @@ def run_coverage_analysis():
     
     try:
         # Import and run the module to get coverage
-        sys.path.insert(0, str(project_root / "contributor_scripts"))
+        sys.path.insert(0, str(project_root / "contributor_tools"))
         
         print("Importing CLI script for coverage analysis...")
         import optimize_validation_ranges

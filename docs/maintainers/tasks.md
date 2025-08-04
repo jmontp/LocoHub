@@ -41,7 +41,7 @@ When validation is too strict/loose:
 
 ### 1. Edit YAML Configuration
 ```yaml
-# contributor_scripts/validation_ranges/kinematic_ranges.yaml
+# contributor_tools/validation_ranges/kinematic_ranges.yaml
 
 tasks:
   level_walking:
@@ -75,7 +75,7 @@ STANDARD_VARIABLES = [
 
 ### 2. Add to Validation Config
 ```yaml
-# contributor_scripts/validation_ranges/kinematic_ranges.yaml
+# contributor_tools/validation_ranges/kinematic_ranges.yaml
 # Add ranges for the new variable
 ```
 

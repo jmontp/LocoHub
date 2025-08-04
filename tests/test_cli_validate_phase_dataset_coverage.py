@@ -3,7 +3,7 @@
 CLI Validate Phase Dataset Coverage Test
 
 Created: 2025-06-18 with user permission
-Purpose: Achieve 100% line coverage for contributor_scripts/validate_phase_dataset.py
+Purpose: Achieve 100% line coverage for contributor_tools/validate_phase_dataset.py
 
 Intent:
 Emergency government audit compliance test to achieve 100% line coverage for the
@@ -50,7 +50,7 @@ class TestValidatePhaseDatasetCLICoverage(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures with various dataset types."""
         self.temp_dir = tempfile.mkdtemp()
-        self.cli_script = str(repo_root / "contributor_scripts" / "validate_phase_dataset.py")
+        self.cli_script = str(repo_root / "contributor_tools" / "validate_phase_dataset.py")
         
         # Create test datasets
         self.valid_dataset = self._create_valid_phase_dataset()
@@ -451,13 +451,13 @@ class TestValidatePhaseDatasetCLICoverage(unittest.TestCase):
     def test_keyboard_interrupt_handling(self):
         """Test KeyboardInterrupt handling."""
         # Mock a long-running validation that gets interrupted
-        with patch('contributor_scripts.validate_phase_dataset.EnhancedPhaseValidator') as mock_validator:
+        with patch('contributor_tools.validate_phase_dataset.EnhancedPhaseValidator') as mock_validator:
             mock_instance = MagicMock()
             mock_instance.validate_comprehensive.side_effect = KeyboardInterrupt()
             mock_validator.return_value = mock_instance
             
             # Import and run main function directly to test exception handling
-            import contributor_scripts.validate_phase_dataset as cli_module
+            import contributor_tools.validate_phase_dataset as cli_module
             
             # Mock sys.argv
             with patch('sys.argv', ['validate_phase_dataset.py', '--dataset', self.valid_dataset]):
@@ -515,7 +515,7 @@ class TestValidatePhaseDatasetCLICoverage(unittest.TestCase):
         with patch('builtins.__import__', side_effect=ImportError("Mock import error")):
             # Import the module directly to test import error handling
             try:
-                import contributor_scripts.validate_phase_dataset as cli_module
+                import contributor_tools.validate_phase_dataset as cli_module
                 # This won't work due to mocked import, but tests the path
             except SystemExit as e:
                 self.assertEqual(e.code, 1)
@@ -815,7 +815,7 @@ class TestValidateQuickFunction(unittest.TestCase):
         data.to_parquet(dataset_path)
         
         # Import the function and test directly
-        sys.path.insert(0, str(repo_root / "contributor_scripts"))
+        sys.path.insert(0, str(repo_root / "contributor_tools"))
         import validate_phase_dataset
         
         # Test the function
@@ -832,7 +832,7 @@ class TestDirectFunctionCalls(unittest.TestCase):
         """Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
         # Import the CLI module
-        sys.path.insert(0, str(repo_root / "contributor_scripts"))
+        sys.path.insert(0, str(repo_root / "contributor_tools"))
         import validate_phase_dataset
         self.cli_module = validate_phase_dataset
         
@@ -1132,7 +1132,7 @@ class TestImportErrorHandling(unittest.TestCase):
 import sys
 sys.path.insert(0, 'broken_path_that_does_not_exist')
 try:
-    exec(open('contributor_scripts/validate_phase_dataset.py').read())
+    exec(open('contributor_tools/validate_phase_dataset.py').read())
 except SystemExit as e:
     sys.exit(e.code)
 except Exception:
@@ -1154,7 +1154,7 @@ class TestEdgeCases(unittest.TestCase):
         """Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
         # Import the CLI module
-        sys.path.insert(0, str(repo_root / "contributor_scripts"))
+        sys.path.insert(0, str(repo_root / "contributor_tools"))
         import validate_phase_dataset
         self.cli_module = validate_phase_dataset
         
@@ -1311,7 +1311,7 @@ class TestEdgeCases(unittest.TestCase):
         # Run the script directly to test the __name__ == '__main__' block
         cmd = [
             sys.executable,
-            str(repo_root / "contributor_scripts" / "validate_phase_dataset.py"),
+            str(repo_root / "contributor_tools" / "validate_phase_dataset.py"),
             "--dataset", str(dataset_path),
             "--quick"
         ]

@@ -97,7 +97,7 @@ class LocomotionData:
     
     # Standard variable naming convention: <joint>_<motion>_<measurement>_<side>_<unit>
     STANDARD_JOINTS = ['hip', 'knee', 'ankle']
-    STANDARD_MOTIONS = ['flexion', 'adduction', 'rotation']
+    STANDARD_MOTIONS = ['flexion', 'adduction', 'rotation', 'dorsiflexion']
     STANDARD_MEASUREMENTS = ['angle', 'velocity', 'moment', 'power']
     STANDARD_SIDES = ['contra', 'ipsi']
     STANDARD_UNITS = ['rad', 'rad_s', 'Nm', 'Nm_kg', 'W', 'W_kg', 'deg', 'deg_s']

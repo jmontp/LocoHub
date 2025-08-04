@@ -210,7 +210,7 @@ The system automatically:
 - Generates plots at specified phase points
 - Validates at exactly the phases you define
 
-See `contributor_scripts/validation_ranges/test_custom_phases.yaml` for examples.
+See `contributor_tools/validation_ranges/test_custom_phases.yaml` for examples.
 
 ## Development Status
 

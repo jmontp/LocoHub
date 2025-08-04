@@ -3,7 +3,7 @@
 Comprehensive Coverage Tests for CLI Optimize Validation Ranges
 
 Created: 2025-06-18 with user permission  
-Purpose: Achieve 100% line coverage for contributor_scripts/optimize_validation_ranges.py
+Purpose: Achieve 100% line coverage for contributor_tools/optimize_validation_ranges.py
 
 Intent:
 This test file provides comprehensive coverage for all 252 lines of the CLI script
@@ -46,7 +46,7 @@ sys.path.append(str(project_root))
 from user_libs.python.feature_constants import ANGLE_FEATURES, MOMENT_FEATURES
 
 # Import the CLI script components for direct testing
-sys.path.append(str(project_root / "contributor_scripts"))
+sys.path.append(str(project_root / "contributor_tools"))
 try:
     import optimize_validation_ranges
     from optimize_validation_ranges import ValidationRangeOptimizer, main
@@ -224,7 +224,7 @@ class TestCLIOptimizeValidationRanges:
     @pytest.fixture
     def cli_script_path(self):
         """Get path to CLI script."""
-        return project_root / "contributor_scripts" / "optimize_validation_ranges.py"
+        return project_root / "contributor_tools" / "optimize_validation_ranges.py"
     
     def run_cli(self, cli_script_path, args, expected_success=True):
         """Run CLI script with given arguments."""

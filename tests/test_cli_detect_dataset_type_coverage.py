@@ -3,7 +3,7 @@
 test_cli_detect_dataset_type_coverage.py
 
 Created: 2025-06-18 with user permission
-Purpose: 100% line coverage testing for contributor_scripts/detect_dataset_type.py
+Purpose: 100% line coverage testing for contributor_tools/detect_dataset_type.py
 
 Intent: Emergency government audit compliance - achieve complete test coverage
 for all 106 lines of the detect_dataset_type.py CLI script through comprehensive
@@ -38,7 +38,7 @@ class TestDetectDatasetTypeCLICoverage(unittest.TestCase):
         self.test_files = self._create_test_datasets()
         
         # Path to CLI script
-        self.cli_script = "contributor_scripts/detect_dataset_type.py"
+        self.cli_script = "contributor_tools/detect_dataset_type.py"
         
     def _create_test_datasets(self):
         """Create test datasets with various naming patterns."""
@@ -118,7 +118,7 @@ class TestDetectDatasetTypeCLICoverage(unittest.TestCase):
     def test_setup_logging_verbose(self):
         """Test setup_logging function with verbose=True."""
         # Import the function to test it directly
-        from contributor_scripts.detect_dataset_type import setup_logging
+        from contributor_tools.detect_dataset_type import setup_logging
         
         # Reset logging to a known state
         logger = logging.getLogger()
@@ -136,7 +136,7 @@ class TestDetectDatasetTypeCLICoverage(unittest.TestCase):
         
     def test_setup_logging_non_verbose(self):
         """Test setup_logging function with verbose=False."""
-        from contributor_scripts.detect_dataset_type import setup_logging
+        from contributor_tools.detect_dataset_type import setup_logging
         
         # Reset logging to a known state
         logger = logging.getLogger()
@@ -154,7 +154,7 @@ class TestDetectDatasetTypeCLICoverage(unittest.TestCase):
     
     def test_detect_single_file_verbose(self):
         """Test detect_single_file function with verbose=True."""
-        from contributor_scripts.detect_dataset_type import detect_single_file
+        from contributor_tools.detect_dataset_type import detect_single_file
         
         filepath = self.test_files['addbiomechanics_walk_01.parquet']
         result = detect_single_file(filepath, use_metadata=True, verbose=True)
@@ -167,7 +167,7 @@ class TestDetectDatasetTypeCLICoverage(unittest.TestCase):
         
     def test_detect_single_file_non_verbose(self):
         """Test detect_single_file function with verbose=False."""
-        from contributor_scripts.detect_dataset_type import detect_single_file
+        from contributor_tools.detect_dataset_type import detect_single_file
         
         filepath = self.test_files['addbiomechanics_walk_01.parquet']
         result = detect_single_file(filepath, use_metadata=True, verbose=False)
@@ -180,7 +180,7 @@ class TestDetectDatasetTypeCLICoverage(unittest.TestCase):
         
     def test_detect_batch_files_verbose(self):
         """Test detect_batch_files function with verbose=True."""
-        from contributor_scripts.detect_dataset_type import detect_batch_files
+        from contributor_tools.detect_dataset_type import detect_batch_files
         
         filepaths = [
             self.test_files['addbiomechanics_walk_01.parquet'],
@@ -197,7 +197,7 @@ class TestDetectDatasetTypeCLICoverage(unittest.TestCase):
             
     def test_detect_batch_files_non_verbose(self):
         """Test detect_batch_files function with verbose=False."""
-        from contributor_scripts.detect_dataset_type import detect_batch_files
+        from contributor_tools.detect_dataset_type import detect_batch_files
         
         filepaths = [
             self.test_files['addbiomechanics_walk_01.parquet'],
@@ -214,7 +214,7 @@ class TestDetectDatasetTypeCLICoverage(unittest.TestCase):
             
     def test_print_summary_report_empty_results(self):
         """Test print_summary_report with empty results."""
-        from contributor_scripts.detect_dataset_type import print_summary_report
+        from contributor_tools.detect_dataset_type import print_summary_report
         from io import StringIO
         
         # Capture stdout
@@ -227,7 +227,7 @@ class TestDetectDatasetTypeCLICoverage(unittest.TestCase):
         
     def test_print_summary_report_with_results(self):
         """Test print_summary_report with actual results."""
-        from contributor_scripts.detect_dataset_type import print_summary_report
+        from contributor_tools.detect_dataset_type import print_summary_report
         from io import StringIO
         
         # Create mock results
@@ -494,7 +494,7 @@ class TestDetectDatasetTypeCLICoverage(unittest.TestCase):
                 
     def test_main_function_directly(self):
         """Test main function directly to cover edge cases."""
-        from contributor_scripts.detect_dataset_type import main
+        from contributor_tools.detect_dataset_type import main
         
         # Test with mock arguments
         test_args = [
@@ -571,7 +571,7 @@ class TestCompleteCoverageEdgeCases(unittest.TestCase):
         """Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.temp_dir, ignore_errors=True)
-        self.cli_script = "contributor_scripts/detect_dataset_type.py"
+        self.cli_script = "contributor_tools/detect_dataset_type.py"
         
         # Create test parquet file
         test_data = pd.DataFrame({
@@ -799,7 +799,7 @@ class TestCLIErrorHandling(unittest.TestCase):
         """Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.temp_dir, ignore_errors=True)
-        self.cli_script = "contributor_scripts/detect_dataset_type.py"
+        self.cli_script = "contributor_tools/detect_dataset_type.py"
         
     def test_import_error_handling(self):
         """Test CLI behavior when imports fail."""
@@ -875,7 +875,7 @@ class TestDirectFunctionCoverage(unittest.TestCase):
         
     def test_direct_main_function_execution(self):
         """Test main function directly with mocked sys.argv."""
-        from contributor_scripts.detect_dataset_type import main
+        from contributor_tools.detect_dataset_type import main
         
         # Test all argument combinations directly
         test_cases = [
@@ -909,7 +909,7 @@ class TestDirectFunctionCoverage(unittest.TestCase):
                                 
     def test_direct_function_calls(self):
         """Test individual functions directly."""
-        from contributor_scripts.detect_dataset_type import (
+        from contributor_tools.detect_dataset_type import (
             setup_logging, detect_single_file, detect_batch_files, print_summary_report
         )
         
@@ -948,7 +948,7 @@ class TestDirectFunctionCoverage(unittest.TestCase):
             
     def test_main_with_all_edge_cases(self):
         """Test main function with all edge cases using mocked arguments."""
-        from contributor_scripts.detect_dataset_type import main
+        from contributor_tools.detect_dataset_type import main
         
         # Create test files for edge cases
         unknown_file = os.path.join(self.temp_dir, "unknown.parquet")
@@ -983,7 +983,7 @@ class TestDirectFunctionCoverage(unittest.TestCase):
                                 
     def test_final_missing_lines(self):
         """Test the final missing lines for 100% coverage."""
-        from contributor_scripts.detect_dataset_type import main
+        from contributor_tools.detect_dataset_type import main
         
         # Test glob pattern with no matches (line 218) 
         with patch('sys.argv', ['detect_dataset_type.py', '/tmp/nonexistent_*.parquet']):
@@ -1021,7 +1021,7 @@ class TestDirectFunctionCoverage(unittest.TestCase):
             with contextlib.redirect_stdout(f):
                 with contextlib.redirect_stderr(f):
                     # Execute the module as main - this covers line 278
-                    runpy.run_path('contributor_scripts/detect_dataset_type.py', run_name='__main__')
+                    runpy.run_path('contributor_tools/detect_dataset_type.py', run_name='__main__')
         except SystemExit:
             # Expected for successful execution
             pass
