@@ -106,13 +106,21 @@ class ValidationReportGenerator:
             kinematic_features = [
                 'hip_flexion_angle_ipsi_rad', 'hip_flexion_angle_contra_rad',
                 'knee_flexion_angle_ipsi_rad', 'knee_flexion_angle_contra_rad',
-                'ankle_flexion_angle_ipsi_rad', 'ankle_flexion_angle_contra_rad'
+                'ankle_dorsiflexion_angle_ipsi_rad', 'ankle_dorsiflexion_angle_contra_rad'
             ]
             
             kinetic_features = [
                 'hip_flexion_moment_ipsi_Nm', 'hip_flexion_moment_contra_Nm',
                 'knee_flexion_moment_ipsi_Nm', 'knee_flexion_moment_contra_Nm',
-                'ankle_flexion_moment_ipsi_Nm', 'ankle_flexion_moment_contra_Nm'
+                'ankle_dorsiflexion_moment_ipsi_Nm', 'ankle_dorsiflexion_moment_contra_Nm'
+            ]
+            
+            segment_features = [
+                'pelvis_tilt_angle_rad', 'pelvis_obliquity_angle_rad', 'pelvis_rotation_angle_rad',
+                'trunk_flexion_angle_rad', 'trunk_lateral_angle_rad', 'trunk_rotation_angle_rad',
+                'thigh_angle_ipsi_rad', 'thigh_angle_contra_rad',
+                'shank_angle_ipsi_rad', 'shank_angle_contra_rad',
+                'foot_angle_ipsi_rad', 'foot_angle_contra_rad'
             ]
             
             # Get 3D array data for all subjects for this task
@@ -168,6 +176,39 @@ class ValidationReportGenerator:
                 timestamp=timestamp
             )
             plot_paths[f"{task}_kinetic"] = kinetic_plot
+            
+            # Try to get segment data (may not exist in dataset)
+            try:
+                segment_data_3d, segment_features_present = locomotion_data.get_cycles(
+                    subject=None, task=task, features=segment_features
+                )
+            except:
+                segment_data_3d = None
+                segment_features_present = []
+            
+            # Load and prepare segment validation data
+            segment_ranges = self.validator.config_manager.load_validation_ranges('segment')
+            if task in segment_ranges:
+                segment_task_data = segment_ranges[task]
+                # Apply contralateral offset for gait tasks
+                from internal.validation_engine.validator import apply_contralateral_offset_kinematic
+                segment_task_data = apply_contralateral_offset_kinematic(segment_task_data, task)
+            else:
+                segment_task_data = {}
+            
+            # Generate segment plot (will show empty if data not available)
+            if segment_task_data:  # Only generate if we have validation ranges
+                segment_plot = create_filters_by_phase_plot(
+                    validation_data={task: segment_task_data},
+                    task_name=task,
+                    output_dir=str(self.plots_dir),
+                    mode='segment',
+                    data=segment_data_3d,  # May be None if data not available
+                    failing_features=failing_features,
+                    dataset_name=Path(dataset_path).stem,
+                    timestamp=timestamp
+                )
+                plot_paths[f"{task}_segment"] = segment_plot
         
         return plot_paths
     
@@ -318,6 +359,15 @@ class ValidationReportGenerator:
                     rel_path = Path(plot_paths[kinetic_key]).relative_to(self.output_dir)
                     lines.append(f"#### Kinetic Validation")
                     lines.append(f"![{task} Kinetic]({rel_path})")
+                    lines.append("")
+                
+                # Segment angle plot
+                segment_key = f"{task}_segment"
+                if segment_key in plot_paths:
+                    rel_path = Path(plot_paths[segment_key]).relative_to(self.output_dir)
+                    lines.append(f"#### Segment Angles Validation")
+                    lines.append(f"![{task} Segment Angles]({rel_path})")
+                    lines.append("*Note: Segment angle data not available in this dataset*")
                     lines.append("")
         
         # Violations detail

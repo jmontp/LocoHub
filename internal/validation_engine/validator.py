@@ -262,8 +262,8 @@ class Validator:
         all_phase_indices = set()
         validation_specs = {}
         
-        # Load validation ranges for both modes
-        for mode in ['kinematic', 'kinetic']:
+        # Load validation ranges for all modes (kinematic, kinetic, and segment)
+        for mode in ['kinematic', 'kinetic', 'segment']:
             ranges = self.config_manager.load_validation_ranges(mode)
             
             if task_name not in ranges:
@@ -278,8 +278,11 @@ class Validator:
             # Apply contralateral offset
             if mode == 'kinematic':
                 task_ranges = apply_contralateral_offset_kinematic(task_ranges, task_name)
-            else:
+            elif mode == 'kinetic':
                 task_ranges = apply_contralateral_offset_kinetic(task_ranges, task_name)
+            elif mode == 'segment':
+                # Segment angles also need contralateral offset for ipsi/contra variables
+                task_ranges = apply_contralateral_offset_kinematic(task_ranges, task_name)
             
             # Store validation specs for later use
             validation_specs[mode] = (task_ranges, phase_indices)
@@ -326,8 +329,18 @@ class Validator:
                         value = data_3d[stride_idx, phase_idx, var_idx]
                         
                         # Check if within range
-                        min_val = var_range.get('min', -float('inf'))
-                        max_val = var_range.get('max', float('inf'))
+                        min_val = var_range.get('min')
+                        max_val = var_range.get('max')
+                        
+                        # Skip if ranges are None (missing data placeholders)
+                        if min_val is None or max_val is None:
+                            continue
+                        
+                        # Use infinity for missing bounds
+                        if min_val is None:
+                            min_val = -float('inf')
+                        if max_val is None:
+                            max_val = float('inf')
                         
                         if value < min_val or value > max_val:
                             if var_name not in stride_failures:

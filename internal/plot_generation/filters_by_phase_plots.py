@@ -84,21 +84,21 @@ def create_filters_by_phase_plot(
         variables = [
             'hip_flexion_angle_ipsi_rad', 'hip_flexion_angle_contra_rad',
             'knee_flexion_angle_ipsi_rad', 'knee_flexion_angle_contra_rad',
-            'ankle_flexion_angle_ipsi_rad', 'ankle_flexion_angle_contra_rad'
+            'ankle_dorsiflexion_angle_ipsi_rad', 'ankle_dorsiflexion_angle_contra_rad'
         ]
         variable_labels = [
             'Hip Flexion (Ipsi)', 'Hip Flexion (Contra)',
             'Knee Flexion (Ipsi)', 'Knee Flexion (Contra)',
-            'Ankle Flexion (Ipsi)', 'Ankle Flexion (Contra)'
+            'Ankle Dorsiflexion (Ipsi)', 'Ankle Dorsiflexion (Contra)'
         ]
         units = 'rad'
         value_conversion = np.degrees
         unit_suffix = '°'
-    else:  # kinetic
+    elif mode == 'kinetic':
         variables = [
             'hip_flexion_moment_ipsi_Nm', 'hip_flexion_moment_contra_Nm',
             'knee_flexion_moment_ipsi_Nm', 'knee_flexion_moment_contra_Nm',
-            'ankle_flexion_moment_ipsi_Nm', 'ankle_flexion_moment_contra_Nm'
+            'ankle_dorsiflexion_moment_ipsi_Nm', 'ankle_dorsiflexion_moment_contra_Nm'
         ]
         variable_labels = [
             'Hip Moment (Ipsi)', 'Hip Moment (Contra)',
@@ -108,12 +108,47 @@ def create_filters_by_phase_plot(
         units = 'Nm'
         value_conversion = lambda x: x
         unit_suffix = ''
+    elif mode == 'segment':  # Link/segment angles
+        variables = [
+            'pelvis_tilt_angle_rad', 'pelvis_obliquity_angle_rad', 'pelvis_rotation_angle_rad',
+            'trunk_flexion_angle_rad', 'trunk_lateral_angle_rad', 'trunk_rotation_angle_rad',
+            'thigh_angle_ipsi_rad', 'thigh_angle_contra_rad',
+            'shank_angle_ipsi_rad', 'shank_angle_contra_rad',
+            'foot_angle_ipsi_rad', 'foot_angle_contra_rad'
+        ]
+        variable_labels = [
+            'Pelvis Tilt', 'Pelvis Obliquity', 'Pelvis Rotation',
+            'Trunk Flexion', 'Trunk Lateral', 'Trunk Rotation',
+            'Thigh Angle (Ipsi)', 'Thigh Angle (Contra)',
+            'Shank Angle (Ipsi)', 'Shank Angle (Contra)',
+            'Foot Angle (Ipsi)', 'Foot Angle (Contra)'
+        ]
+        units = 'rad'
+        value_conversion = np.degrees
+        unit_suffix = '°'
+    else:
+        raise ValueError(f"Unknown mode: {mode}")
     
-    # Create figure with 6x2 layout (6 variables x pass/fail)
-    fig, axes = plt.subplots(6, 2, figsize=(14, 20))
+    # Create figure with appropriate layout based on number of variables
+    n_vars = len(variables)
+    if mode == 'segment':
+        # For segment angles, use 6x4 layout (12 variables, 2 cols for pass/fail each)
+        fig, axes = plt.subplots(6, 4, figsize=(20, 20))
+        # Reshape axes for consistent indexing
+        axes = axes.reshape(12, 2)
+    else:
+        # For kinematic/kinetic, use 6x2 layout (6 variables x pass/fail)
+        fig, axes = plt.subplots(6, 2, figsize=(14, 20))
     
     # Build title
-    mode_label = "Kinematic" if mode == 'kinematic' else "Kinetic"
+    if mode == 'kinematic':
+        mode_label = "Kinematic"
+    elif mode == 'kinetic':
+        mode_label = "Kinetic"
+    elif mode == 'segment':
+        mode_label = "Segment Angles"
+    else:
+        mode_label = mode.capitalize()
     task_type_label = "Gait-Based Task" if task_type == 'gait' else "Bilateral Symmetric Task"
     
     title = f'{task_name.replace("_", " ").title()} - {mode_label} Validation\n{task_type_label}'
@@ -158,6 +193,10 @@ def create_filters_by_phase_plot(
             if 'min' in ranges and 'max' in ranges:
                 min_val = ranges['min']
                 max_val = ranges['max']
+                # Skip None values (missing data placeholders)
+                if min_val is None or max_val is None:
+                    continue
+                # Check for inf/nan after None check
                 if not (np.isinf(min_val) or np.isinf(max_val) or np.isnan(min_val) or np.isnan(max_val)):
                     all_mins.append(min_val)
                     all_maxs.append(max_val)
@@ -173,7 +212,7 @@ def create_filters_by_phase_plot(
         passed_count = 0
         
         # Plot data FIRST (behind validation ranges)
-        if data is not None and var_idx < data.shape[2]:
+        if data is not None and data.size > 0 and var_idx < data.shape[2]:
             phase_percent = np.linspace(0, 100, 150)
             
             for stride_idx in range(data.shape[0]):
@@ -185,6 +224,11 @@ def create_filters_by_phase_plot(
         # Plot validation ranges on TOP of data (higher z-order)
         _plot_validation_ranges(ax_pass, var_ranges, phases, 'lightgreen', value_conversion, unit_suffix)
         
+        # Add message if no data available
+        if data is None or data.size == 0:
+            ax_pass.text(50, (y_min + y_max) / 2, 'Data Not Available', 
+                        ha='center', va='center', fontsize=12, color='gray', alpha=0.7)
+        
         ax_pass.set_title(f'{var_label} - ✓ Passed ({passed_count} strides)', fontsize=10, fontweight='bold')
         ax_pass.set_xlim(-5, 105)
         ax_pass.set_ylim(y_min, y_max)
@@ -194,7 +238,8 @@ def create_filters_by_phase_plot(
         ax_pass.grid(True, alpha=0.3)
         
         # Only add x-label to bottom row
-        if var_idx == 5:
+        last_row_idx = (n_vars - 1) if mode == 'segment' else 5
+        if var_idx == last_row_idx:
             x_label = 'Gait Phase' if task_type == 'gait' else 'Movement Phase'
             ax_pass.set_xlabel(x_label, fontsize=10)
         
@@ -203,7 +248,7 @@ def create_filters_by_phase_plot(
         failed_count = 0
         
         # Plot data FIRST (behind validation ranges)
-        if data is not None and var_idx < data.shape[2]:
+        if data is not None and data.size > 0 and var_idx < data.shape[2]:
             for stride_idx in range(data.shape[0]):
                 if stride_idx in failed_strides:
                     stride_data = data[stride_idx, :, var_idx]
@@ -213,6 +258,11 @@ def create_filters_by_phase_plot(
         # Plot validation ranges on TOP of data (higher z-order)
         _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix)
         
+        # Add message if no data available
+        if data is None or data.size == 0:
+            ax_fail.text(50, (y_min + y_max) / 2, 'Data Not Available', 
+                        ha='center', va='center', fontsize=12, color='gray', alpha=0.7)
+        
         ax_fail.set_title(f'{var_label} - ✗ Failed ({failed_count} strides)', fontsize=10, fontweight='bold')
         ax_fail.set_xlim(-5, 105)
         ax_fail.set_ylim(y_min, y_max)
@@ -221,11 +271,11 @@ def create_filters_by_phase_plot(
         ax_fail.grid(True, alpha=0.3)
         
         # Only add x-label to bottom row
-        if var_idx == 5:
+        if var_idx == last_row_idx:
             ax_fail.set_xlabel(x_label, fontsize=10)
         
-        # Add degree conversion on right y-axis for kinematic plots
-        if mode == 'kinematic':
+        # Add degree conversion on right y-axis for kinematic and segment plots
+        if mode in ['kinematic', 'segment']:
             ax2_pass = ax_pass.twinx()
             ax2_pass.set_ylim(value_conversion(y_min), value_conversion(y_max))
             ax2_pass.set_ylabel('degrees', fontsize=9)
@@ -264,6 +314,10 @@ def _plot_validation_ranges(ax, var_ranges, phases, color, value_conversion, uni
             
         min_val = ranges['min']
         max_val = ranges['max']
+        
+        # Skip None values (missing data placeholders)
+        if min_val is None or max_val is None:
+            continue
         
         if np.isinf(min_val) or np.isinf(max_val) or np.isnan(min_val) or np.isnan(max_val):
             continue
