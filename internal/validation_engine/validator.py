@@ -7,10 +7,8 @@ Focuses solely on checking if biomechanical data meets specifications.
 """
 
 import numpy as np
-import pandas as pd
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Any
-from datetime import datetime
 
 # Import configuration manager
 import sys
@@ -23,7 +21,7 @@ from user_libs.python.locomotion_data import LocomotionData
 # VALIDATION UTILITIES
 # ============================================================================
 
-def apply_contralateral_offset_kinematic(
+def apply_contralateral_offset(
     phase_data: Dict[int, Dict[str, Dict[str, float]]], 
     task_name: str = None,
     offset_percent: int = 50
@@ -34,6 +32,8 @@ def apply_contralateral_offset_kinematic(
     For gait tasks, the contralateral limb is offset by a percentage of the cycle
     (typically 50% for symmetric gait). This function dynamically calculates
     the offset for any phase points defined in the configuration.
+    
+    Works for all variable types: kinematic, kinetic, and segment angles.
     
     Args:
         phase_data: Validation ranges organized by phase
@@ -73,15 +73,6 @@ def apply_contralateral_offset_kinematic(
                     result[phase][contra_name] = var_range
     
     return result
-
-
-def apply_contralateral_offset_kinetic(
-    phase_data: Dict[int, Dict[str, Dict[str, float]]], 
-    task_name: str = None,
-    offset_percent: int = 50
-) -> Dict[int, Dict[str, Dict[str, float]]]:
-    """Apply contralateral offset for kinetic variables in gait tasks."""
-    return apply_contralateral_offset_kinematic(phase_data, task_name, offset_percent)
 
 
 # ============================================================================
@@ -226,16 +217,14 @@ class Validator:
     
     def _validate_task(self, locomotion_data: LocomotionData, task_name: str) -> Dict[str, List[int]]:
         """
-        Validate task data against specifications using 3D array structure.
+        Validate task data against specifications.
         
         Returns dict of violations: {variable_name: [stride_indices]}
-        NOTE: This returns the old format for backward compatibility.
-        Use _validate_task_with_failing_features for the new format.
         """
-        # Get the new format
+        # Get failing features per stride
         failing_features = self._validate_task_with_failing_features(locomotion_data, task_name)
         
-        # Convert to old format for backward compatibility
+        # Convert to variable-centric format
         violations = {}
         for stride_idx, failed_vars in failing_features.items():
             for var_name in failed_vars:
@@ -254,50 +243,33 @@ class Validator:
         """
         failing_features = {}
         
-        # Get all available features for this task
-        all_features = locomotion_data.features
+        # Load validation ranges (all features, no mode filtering)
+        ranges = self.config_manager.load_validation_ranges()
         
-        # Collect all variables we need to check from both modes
+        if task_name not in ranges:
+            return failing_features
+            
+        task_ranges = ranges[task_name]
+        
+        # Get phase indices dynamically from configuration
+        phase_indices = self._get_phase_indices(task_ranges)
+        
+        # Apply contralateral offset for all features
+        task_ranges = apply_contralateral_offset(task_ranges, task_name)
+        
+        # Collect all variables we need to check
         all_variables_to_check = set()
-        all_phase_indices = set()
-        validation_specs = {}
-        
-        # Load validation ranges for all modes (kinematic, kinetic, and segment)
-        for mode in ['kinematic', 'kinetic', 'segment']:
-            ranges = self.config_manager.load_validation_ranges(mode)
-            
-            if task_name not in ranges:
-                continue
-                
-            task_ranges = ranges[task_name]
-            
-            # Get phase indices dynamically from configuration
-            phase_indices = self._get_phase_indices(task_ranges)
-            all_phase_indices.update(phase_indices.items())
-            
-            # Apply contralateral offset
-            if mode == 'kinematic':
-                task_ranges = apply_contralateral_offset_kinematic(task_ranges, task_name)
-            elif mode == 'kinetic':
-                task_ranges = apply_contralateral_offset_kinetic(task_ranges, task_name)
-            elif mode == 'segment':
-                # Segment angles also need contralateral offset for ipsi/contra variables
-                task_ranges = apply_contralateral_offset_kinematic(task_ranges, task_name)
-            
-            # Store validation specs for later use
-            validation_specs[mode] = (task_ranges, phase_indices)
-            
-            # Collect variables to check
-            for phase_ranges in task_ranges.values():
-                all_variables_to_check.update(phase_ranges.keys())
+        for phase_ranges in task_ranges.values():
+            all_variables_to_check.update(phase_ranges.keys())
         
         # Filter to only variables that exist in the dataset
+        all_features = locomotion_data.features
         valid_variables = [v for v in all_variables_to_check if v in all_features]
         
         if not valid_variables:
             return failing_features
         
-        # Get 3D array for this task with all subjects
+        # Get 3D array for this task with all subjects (single unified load)
         data_3d, feature_names = locomotion_data.get_cycles(None, task_name, list(valid_variables))
         
         if data_3d is None:
@@ -308,43 +280,35 @@ class Validator:
         for stride_idx in range(n_strides):
             stride_failures = []
             
-            # Check all validation specs
-            for mode, (task_ranges, phase_indices) in validation_specs.items():
-                # Check each phase
-                for phase_pct, phase_idx in phase_indices.items():
-                    if phase_pct not in task_ranges:
+            # Check each phase
+            for phase_pct, phase_idx in phase_indices.items():
+                if phase_pct not in task_ranges:
+                    continue
+                
+                phase_ranges = task_ranges[phase_pct]
+                
+                # Check each variable
+                for var_name, var_range in phase_ranges.items():
+                    if var_name not in feature_names:
                         continue
                     
-                    phase_ranges = task_ranges[phase_pct]
+                    # Get variable index in the feature array
+                    var_idx = feature_names.index(var_name)
                     
-                    # Check each variable
-                    for var_name, var_range in phase_ranges.items():
-                        if var_name not in feature_names:
-                            continue
-                        
-                        # Get variable index in the feature array
-                        var_idx = feature_names.index(var_name)
-                        
-                        # Get value at this stride, phase, and variable
-                        value = data_3d[stride_idx, phase_idx, var_idx]
-                        
-                        # Check if within range
-                        min_val = var_range.get('min')
-                        max_val = var_range.get('max')
-                        
-                        # Skip if ranges are None (missing data placeholders)
-                        if min_val is None or max_val is None:
-                            continue
-                        
-                        # Use infinity for missing bounds
-                        if min_val is None:
-                            min_val = -float('inf')
-                        if max_val is None:
-                            max_val = float('inf')
-                        
-                        if value < min_val or value > max_val:
-                            if var_name not in stride_failures:
-                                stride_failures.append(var_name)
+                    # Get value at this stride, phase, and variable
+                    value = data_3d[stride_idx, phase_idx, var_idx]
+                    
+                    # Check if within range
+                    min_val = var_range.get('min')
+                    max_val = var_range.get('max')
+                    
+                    # Skip if ranges are None (missing data placeholders)
+                    if min_val is None or max_val is None:
+                        continue
+                    
+                    if value < min_val or value > max_val:
+                        if var_name not in stride_failures:
+                            stride_failures.append(var_name)
             
             # Only add to failing_features if this stride had failures
             if stride_failures:
@@ -426,76 +390,3 @@ def format_validation_result(result: Dict[str, Any]) -> str:
     
     return "\n".join(lines)
 
-
-# ============================================================================
-# CLI INTERFACE
-# ============================================================================
-
-def main():
-    """Command-line interface for validation."""
-    import argparse
-    
-    parser = argparse.ArgumentParser(
-        description="Validate locomotion datasets against specifications"
-    )
-    parser.add_argument("dataset", help="Path to phase-indexed parquet file")
-    parser.add_argument("--config-dir", help="Optional config directory path")
-    
-    args = parser.parse_args()
-    
-    # Initialize validator
-    config_dir = Path(args.config_dir) if args.config_dir else None
-    validator = Validator(config_dir)
-    
-    # Run validation
-    print(f"Validating: {args.dataset}")
-    result = validator.validate(args.dataset)
-    
-    # Display results
-    print(format_validation_result(result))
-    
-    # Exit with appropriate code
-    sys.exit(0 if result['passed'] else 1)
-
-
-# ============================================================================
-# BACKWARD COMPATIBILITY
-# ============================================================================
-
-# Provide DatasetValidator and StepClassifier for backward compatibility
-# These are imported dynamically to avoid circular imports
-
-def __getattr__(name):
-    """Dynamic import for backward compatibility."""
-    if name == 'DatasetValidator':
-        from internal.validation_engine.report_generator import DatasetValidator
-        return DatasetValidator
-    elif name == 'StepClassifier':
-        from internal.plot_generation.step_classifier import StepClassifier
-        return StepClassifier
-    elif name == 'ValidationReportGenerator':
-        from internal.validation_engine.report_generator import ValidationReportGenerator
-        return ValidationReportGenerator
-    raise AttributeError(f"module {__name__} has no attribute {name}")
-
-# Utility function for compatibility
-def validate_task_completeness(task_data: Dict, task_name: str, mode: str):
-    """
-    Check if task data is complete for validation.
-    
-    For dynamic phase support, this now validates that at least some phases
-    exist rather than requiring specific hardcoded phases.
-    """
-    # Extract numeric phases from task data
-    phases = [int(p) for p in task_data.keys() if str(p).isdigit()]
-    
-    if not phases:
-        raise ValueError(f"No valid phase data found for task {task_name}")
-    
-    # Ensure we have at least 2 phases for meaningful validation
-    if len(phases) < 2:
-        raise ValueError(f"Task {task_name} has only {len(phases)} phase(s). At least 2 required for validation.")
-
-
-if __name__ == "__main__":
-    main()

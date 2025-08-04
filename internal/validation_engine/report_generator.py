@@ -6,10 +6,9 @@ Generates markdown reports and coordinates plot generation for validation result
 Separated from core validation logic for better modularity.
 """
 
-import os
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any, Optional, List
+from typing import Dict, Optional, List
 
 import sys
 import numpy as np
@@ -32,27 +31,32 @@ class ValidationReportGenerator:
     - Output directory management
     """
     
-    def __init__(self, output_dir: Optional[str] = None):
+    def __init__(self, ranges_file: Optional[str] = None):
         """
         Initialize report generator.
         
         Args:
-            output_dir: Output directory for reports and plots
+            ranges_file: Optional path to specific validation ranges YAML file
         """
-        if output_dir:
-            self.output_dir = Path(output_dir)
-        else:
-            # Default to user_guide documentation directory (where MkDocs on port 8001 serves from)
-            project_root = Path(__file__).parent.parent.parent
-            self.output_dir = project_root / "docs" / "user_guide" / "docs" / "reference" / "datasets_documentation" / "validation_reports"
-        
+        # Use fixed output directory
+        project_root = Path(__file__).parent.parent.parent
+        self.output_dir = project_root / "docs" / "reference" / "datasets_documentation" / "validation_reports"
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.plots_dir = self.output_dir / "plots"
+        self.plots_dir = self.output_dir / "plots" 
         self.plots_dir.mkdir(exist_ok=True)
         
         # Import here to avoid circular dependency
         from internal.validation_engine.validator import Validator
-        self.validator = Validator()
+        
+        # Initialize validator with specific ranges file if provided
+        if ranges_file:
+            config_dir = Path(ranges_file).parent
+            self.validator = Validator(config_dir)
+            # Override the default config file
+            self.validator.config_manager.consolidated_config = Path(ranges_file)
+        else:
+            self.validator = Validator()
+        
         self.step_classifier = StepClassifier()
         
     def generate_report(self, dataset_path: str, generate_plots: bool = True) -> str:
@@ -97,12 +101,11 @@ class ValidationReportGenerator:
         data = locomotion_data.df
         tasks = locomotion_data.get_tasks()
         
-        # Convert violations to boolean array for step classification
-        violations = self._violations_to_array(validation_result['violations'], data.shape)
+        # Note: violations conversion removed as we now use failing_features directly
         
         # Generate plots for each task
         for task in tasks:
-            # Define feature ordering for kinematic and kinetic plots
+            # Define feature groupings for plotting
             kinematic_features = [
                 'hip_flexion_angle_ipsi_rad', 'hip_flexion_angle_contra_rad',
                 'knee_flexion_angle_ipsi_rad', 'knee_flexion_angle_contra_rad',
@@ -123,87 +126,91 @@ class ValidationReportGenerator:
                 'foot_angle_ipsi_rad', 'foot_angle_contra_rad'
             ]
             
-            # Get 3D array data for all subjects for this task
-            kinematic_data_3d, _ = locomotion_data.get_cycles(subject=None, task=task, features=kinematic_features)
-            kinetic_data_3d, _ = locomotion_data.get_cycles(subject=None, task=task, features=kinetic_features)
+            # Collect all features we might need
+            all_features = kinematic_features + kinetic_features + segment_features
             
-            # Get failing features for this task (new stride-centric format)
-            # This returns {stride_idx: [failed_variable_names]}
+            # Filter to only features that exist in the dataset
+            available_features = [f for f in all_features if f in locomotion_data.features]
+            
+            # Single unified data load for all features
+            all_data_3d, all_feature_names = locomotion_data.get_cycles(subject=None, task=task, features=available_features)
+            
+            # Get failing features for this task (unified validation)
             failing_features = self.validator._validate_task_with_failing_features(locomotion_data, task)
             
-            # Load and prepare kinematic validation data
-            kinematic_ranges = self.validator.config_manager.load_validation_ranges('kinematic')
-            if task in kinematic_ranges:
-                kinematic_task_data = kinematic_ranges[task]
-                # Apply contralateral offset for gait tasks
-                from internal.validation_engine.validator import apply_contralateral_offset_kinematic
-                kinematic_task_data = apply_contralateral_offset_kinematic(kinematic_task_data, task)
+            # Load unified validation data (all features)
+            all_ranges = self.validator.config_manager.load_validation_ranges()
+            if task in all_ranges:
+                task_validation_data = all_ranges[task]
+                # Apply contralateral offset for all features
+                from internal.validation_engine.validator import apply_contralateral_offset
+                task_validation_data = apply_contralateral_offset(task_validation_data, task)
             else:
-                kinematic_task_data = {}
+                task_validation_data = {}
             
-            # Generate kinematic plot
-            kinematic_plot = create_filters_by_phase_plot(
-                validation_data={task: kinematic_task_data},
-                task_name=task,
-                output_dir=str(self.plots_dir),
-                mode='kinematic',
-                data=kinematic_data_3d,
-                failing_features=failing_features,  # Use new format
-                dataset_name=Path(dataset_path).stem,
-                timestamp=timestamp
-            )
-            plot_paths[f"{task}_kinematic"] = kinematic_plot
+            # Generate plots for each feature type using consistent data
             
-            # Load and prepare kinetic validation data
-            kinetic_ranges = self.validator.config_manager.load_validation_ranges('kinetic')
-            if task in kinetic_ranges:
-                kinetic_task_data = kinetic_ranges[task]
-                # Apply contralateral offset for gait tasks
-                from internal.validation_engine.validator import apply_contralateral_offset_kinetic
-                kinetic_task_data = apply_contralateral_offset_kinetic(kinetic_task_data, task)
-            else:
-                kinetic_task_data = {}
-            
-            # Generate kinetic plot
-            kinetic_plot = create_filters_by_phase_plot(
-                validation_data={task: kinetic_task_data},
-                task_name=task,
-                output_dir=str(self.plots_dir),
-                mode='kinetic',
-                data=kinetic_data_3d,
-                failing_features=failing_features,  # Use new format
-                dataset_name=Path(dataset_path).stem,
-                timestamp=timestamp
-            )
-            plot_paths[f"{task}_kinetic"] = kinetic_plot
-            
-            # Try to get segment data (may not exist in dataset)
-            try:
-                segment_data_3d, segment_features_present = locomotion_data.get_cycles(
-                    subject=None, task=task, features=segment_features
+            # Filter kinematic features and data
+            kinematic_available = [f for f in kinematic_features if f in all_feature_names]
+            if kinematic_available and all_data_3d is not None:
+                kinematic_indices = [all_feature_names.index(f) for f in kinematic_available]
+                kinematic_data_3d = all_data_3d[:, :, kinematic_indices]
+                
+                kinematic_plot = create_filters_by_phase_plot(
+                    validation_data={task: task_validation_data},
+                    task_name=task,
+                    output_dir=str(self.plots_dir),
+                    mode='kinematic',
+                    data=kinematic_data_3d,
+                    failing_features=failing_features,
+                    dataset_name=Path(dataset_path).stem,
+                    timestamp=timestamp
                 )
-            except:
-                segment_data_3d = None
-                segment_features_present = []
+                plot_paths[f"{task}_kinematic"] = kinematic_plot
             
-            # Load and prepare segment validation data
-            segment_ranges = self.validator.config_manager.load_validation_ranges('segment')
-            if task in segment_ranges:
-                segment_task_data = segment_ranges[task]
-                # Apply contralateral offset for gait tasks
-                from internal.validation_engine.validator import apply_contralateral_offset_kinematic
-                segment_task_data = apply_contralateral_offset_kinematic(segment_task_data, task)
-            else:
-                segment_task_data = {}
+            # Filter kinetic features and data
+            kinetic_available = [f for f in kinetic_features if f in all_feature_names]
+            if kinetic_available and all_data_3d is not None:
+                kinetic_indices = [all_feature_names.index(f) for f in kinetic_available]
+                kinetic_data_3d = all_data_3d[:, :, kinetic_indices]
+                
+                kinetic_plot = create_filters_by_phase_plot(
+                    validation_data={task: task_validation_data},
+                    task_name=task,
+                    output_dir=str(self.plots_dir),
+                    mode='kinetic',
+                    data=kinetic_data_3d,
+                    failing_features=failing_features,
+                    dataset_name=Path(dataset_path).stem,
+                    timestamp=timestamp
+                )
+                plot_paths[f"{task}_kinetic"] = kinetic_plot
             
-            # Generate segment plot (will show empty if data not available)
-            if segment_task_data:  # Only generate if we have validation ranges
+            # Filter segment features and data
+            segment_available = [f for f in segment_features if f in all_feature_names]
+            if segment_available and all_data_3d is not None:
+                segment_indices = [all_feature_names.index(f) for f in segment_available]
+                segment_data_3d = all_data_3d[:, :, segment_indices]
+                
                 segment_plot = create_filters_by_phase_plot(
-                    validation_data={task: segment_task_data},
+                    validation_data={task: task_validation_data},
                     task_name=task,
                     output_dir=str(self.plots_dir),
                     mode='segment',
-                    data=segment_data_3d,  # May be None if data not available
+                    data=segment_data_3d,
+                    failing_features=failing_features,
+                    dataset_name=Path(dataset_path).stem,
+                    timestamp=timestamp
+                )
+                plot_paths[f"{task}_segment"] = segment_plot
+            else:
+                # Generate empty segment plot if no data available
+                segment_plot = create_filters_by_phase_plot(
+                    validation_data={task: task_validation_data},
+                    task_name=task,
+                    output_dir=str(self.plots_dir),
+                    mode='segment',
+                    data=None,  # No data available
                     failing_features=failing_features,
                     dataset_name=Path(dataset_path).stem,
                     timestamp=timestamp
@@ -388,42 +395,3 @@ class ValidationReportGenerator:
         return report_path
 
 
-# ============================================================================
-# STANDALONE VALIDATOR WITH REPORTING
-# ============================================================================
-
-class DatasetValidator:
-    """
-    Compatibility wrapper that combines validation and reporting.
-    Maintains the original API for backward compatibility.
-    """
-    
-    def __init__(self, dataset_path: str, output_dir: Optional[str] = None,
-                 generate_plots: bool = True):
-        """Initialize validator with dataset."""
-        self.dataset_path = dataset_path
-        self.dataset_name = Path(dataset_path).stem
-        self.generate_plots = generate_plots
-        self.report_generator = ValidationReportGenerator(output_dir)
-        
-    def load_dataset(self) -> LocomotionData:
-        """Load the dataset."""
-        return LocomotionData(self.dataset_path)
-    
-    def validate_dataset(self, locomotion_data: LocomotionData) -> Dict[str, Any]:
-        """Validate the dataset."""
-        result = self.report_generator.validator.validate(self.dataset_path)
-        
-        # Convert to expected format
-        return {
-            'quality_score': result['stats']['pass_rate'],
-            'status': 'PASS' if result['passed'] else 'FAIL',
-            'violations': result['violations']
-        }
-    
-    def run_validation(self) -> str:
-        """Run complete validation workflow."""
-        return self.report_generator.generate_report(
-            self.dataset_path, 
-            self.generate_plots
-        )

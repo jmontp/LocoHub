@@ -13,22 +13,18 @@ Features:
 - Outputs directly to documentation directory
 
 Usage:
-    # Basic validation report generation
+    # Basic validation report generation (uses default_ranges.yaml)
     python create_dataset_validation_report.py --dataset converted_datasets/umich_2021_phase.parquet
     
-    # With custom config directory
-    python create_dataset_validation_report.py --dataset my_data.parquet --config-dir custom/config/
-    
-    # Without plots (faster)
-    python create_dataset_validation_report.py --dataset my_data.parquet --no-plots
+    # With custom validation ranges file
+    python create_dataset_validation_report.py --dataset my_data.parquet --ranges-file contributor_tools/validation_ranges/custom_ranges.yaml
 """
 
 import sys
 import argparse
 import re
 from pathlib import Path
-from datetime import datetime
-from typing import Optional, Dict, Tuple
+from typing import Tuple
 
 # Add parent directories to path for imports
 current_dir = Path(__file__).parent
@@ -37,8 +33,7 @@ sys.path.insert(0, str(repo_root))
 
 # Import validation modules
 try:
-    from internal.validation_engine.validator import DatasetValidator
-    from internal.config_management.config_manager import ValidationConfigManager
+    from internal.validation_engine.report_generator import ValidationReportGenerator
 except ImportError as e:
     print(f"❌ Error importing validation modules: {e}")
     print("Make sure you're running from the repository root directory")
@@ -224,17 +219,11 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  Basic validation report:
+  Basic validation report (uses default_ranges.yaml):
     python create_dataset_validation_report.py --dataset converted_datasets/umich_2021_phase.parquet
     
-  With custom config directory:
-    python create_dataset_validation_report.py --dataset my_data.parquet --config-dir custom/config/
-    
-  Without plots (faster):
-    python create_dataset_validation_report.py --dataset my_data.parquet --no-plots
-    
-  Custom output directory:
-    python create_dataset_validation_report.py --dataset my_data.parquet --output custom/docs/
+  With custom validation ranges file:
+    python create_dataset_validation_report.py --dataset my_data.parquet --ranges-file contributor_tools/validation_ranges/custom_ranges.yaml
         """
     )
     
@@ -247,25 +236,8 @@ Examples:
     
     # Optional arguments
     parser.add_argument(
-        "--config-dir",
-        help="Directory containing validation YAML config files (default: contributor_scripts/validation_ranges/)"
-    )
-    
-    parser.add_argument(
-        "--output",
-        help="Output directory for validation reports (default: docs/user_guide/docs/reference/datasets_documentation/validation_reports/)"
-    )
-    
-    parser.add_argument(
-        "--no-plots",
-        action="store_true",
-        help="Skip generation of validation plots (faster)"
-    )
-    
-    parser.add_argument(
-        "--no-index-update",
-        action="store_true",
-        help="Skip updating the index.md file"
+        "--ranges-file",
+        help="Path to validation ranges YAML file (default: contributor_tools/validation_ranges/default_ranges.yaml)"
     )
     
     args = parser.parse_args()
@@ -283,48 +255,48 @@ Examples:
     print(f"🚀 Dataset Validation Report Generator")
     print(f"📂 Dataset: {dataset_path}")
     print(f"📝 Report Name: {dataset_display_name}")
-    print(f"📊 Generate Plots: {'No' if args.no_plots else 'Yes'}")
     
     try:
-        # Check config directory
-        if args.config_dir:
-            config_dir = Path(args.config_dir)
-            if not config_dir.exists():
-                print(f"❌ Error: Config directory not found: {config_dir}")
+        # Determine which validation ranges file to use
+        if args.ranges_file:
+            ranges_file = Path(args.ranges_file)
+            if not ranges_file.exists():
+                print(f"❌ Error: Validation ranges file not found: {ranges_file}")
                 return 1
-            print(f"⚙️  Using custom config: {config_dir}")
+            print(f"⚙️  Using custom validation ranges: {ranges_file}")
+        else:
+            # Use default ranges file
+            project_root = Path(__file__).parent.parent
+            ranges_file = project_root / "contributor_tools" / "validation_ranges" / "default_ranges.yaml"
+            if not ranges_file.exists():
+                print(f"❌ Error: Default validation ranges file not found: {ranges_file}")
+                return 1
+            print(f"⚙️  Using default validation ranges: {ranges_file}")
         
-        # Initialize validator with appropriate output directory
-        print(f"\n🔍 Initializing validator...")
-        validator = DatasetValidator(
-            dataset_path=str(dataset_path),
-            output_dir=args.output,
-            generate_plots=not args.no_plots
-        )
+        # Initialize report generator with ranges file
+        print(f"\n🔍 Initializing report generator...")
+        report_generator = ValidationReportGenerator(ranges_file=str(ranges_file))
         
-        # Run validation
+        # Generate validation report
         print(f"🔍 Running validation...")
-        report_path = validator.run_validation()
+        report_path = report_generator.generate_report(str(dataset_path), generate_plots=True)
         
         print(f"\n✅ Validation complete!")
         print(f"📄 Report saved: {report_path}")
         
-        # Update index.md if not disabled
-        if not args.no_index_update:
-            report_file = Path(report_path)
-            mkdocs_dir = report_file.parent
-            
-            print(f"\n📝 Updating documentation index...")
-            update_index_file(
-                report_file.name,
-                dataset_display_name,
-                mkdocs_dir
-            )
-            
-            print(f"\n🎉 SUCCESS! Report created and documentation updated!")
-            print(f"🌐 View in MkDocs at: /reference/datasets_documentation/validation_reports/")
-        else:
-            print(f"\n🎉 SUCCESS! Report created (index update skipped)")
+        # Always update index.md
+        report_file = Path(report_path)
+        mkdocs_dir = report_file.parent
+        
+        print(f"\n📝 Updating documentation index...")
+        update_index_file(
+            report_file.name,
+            dataset_display_name,
+            mkdocs_dir
+        )
+        
+        print(f"\n🎉 SUCCESS! Report created and documentation updated!")
+        print(f"🌐 View in MkDocs at: /reference/datasets_documentation/validation_reports/")
         
         return 0
         

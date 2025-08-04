@@ -10,7 +10,7 @@ import matplotlib.patches as patches
 from pathlib import Path
 import warnings
 
-from internal.validation_engine.validator import validate_task_completeness
+# Removed: validate_task_completeness (no longer needed in unified system)
 
 
 def get_task_classification(task_name: str) -> str:
@@ -66,8 +66,7 @@ def create_filters_by_phase_plot(
     
     task_data = validation_data[task_name]
     
-    # Validate that task data is complete
-    validate_task_completeness(task_data, task_name, mode)
+    # Task data validation removed (handled by unified validation system)
     
     # Extract phases dynamically from the validation data
     phases = sorted([int(p) for p in task_data.keys() if str(p).isdigit()])
@@ -87,9 +86,9 @@ def create_filters_by_phase_plot(
             'ankle_dorsiflexion_angle_ipsi_rad', 'ankle_dorsiflexion_angle_contra_rad'
         ]
         variable_labels = [
-            'Hip Flexion (Ipsi)', 'Hip Flexion (Contra)',
-            'Knee Flexion (Ipsi)', 'Knee Flexion (Contra)',
-            'Ankle Dorsiflexion (Ipsi)', 'Ankle Dorsiflexion (Contra)'
+            'Hip Flexion Angle (Ipsi)', 'Hip Flexion Angle (Contra)',
+            'Knee Flexion Angle (Ipsi)', 'Knee Flexion Angle (Contra)',
+            'Ankle Dorsiflexion Angle (Ipsi)', 'Ankle Dorsiflexion Angle (Contra)'
         ]
         units = 'rad'
         value_conversion = np.degrees
@@ -101,9 +100,9 @@ def create_filters_by_phase_plot(
             'ankle_dorsiflexion_moment_ipsi_Nm', 'ankle_dorsiflexion_moment_contra_Nm'
         ]
         variable_labels = [
-            'Hip Moment (Ipsi)', 'Hip Moment (Contra)',
-            'Knee Moment (Ipsi)', 'Knee Moment (Contra)',
-            'Ankle Moment (Ipsi)', 'Ankle Moment (Contra)'
+            'Hip Flexion Moment (Ipsi)', 'Hip Flexion Moment (Contra)',
+            'Knee Flexion Moment (Ipsi)', 'Knee Flexion Moment (Contra)',
+            'Ankle Dorsiflexion Moment (Ipsi)', 'Ankle Dorsiflexion Moment (Contra)'
         ]
         units = 'Nm'
         value_conversion = lambda x: x
@@ -117,8 +116,8 @@ def create_filters_by_phase_plot(
             'foot_angle_ipsi_rad', 'foot_angle_contra_rad'
         ]
         variable_labels = [
-            'Pelvis Tilt', 'Pelvis Obliquity', 'Pelvis Rotation',
-            'Trunk Flexion', 'Trunk Lateral', 'Trunk Rotation',
+            'Pelvis Tilt Angle', 'Pelvis Obliquity Angle', 'Pelvis Rotation Angle',
+            'Trunk Flexion Angle', 'Trunk Lateral Angle', 'Trunk Rotation Angle',
             'Thigh Angle (Ipsi)', 'Thigh Angle (Contra)',
             'Shank Angle (Ipsi)', 'Shank Angle (Contra)',
             'Foot Angle (Ipsi)', 'Foot Angle (Contra)'
@@ -132,10 +131,8 @@ def create_filters_by_phase_plot(
     # Create figure with appropriate layout based on number of variables
     n_vars = len(variables)
     if mode == 'segment':
-        # For segment angles, use 6x4 layout (12 variables, 2 cols for pass/fail each)
-        fig, axes = plt.subplots(6, 4, figsize=(20, 20))
-        # Reshape axes for consistent indexing
-        axes = axes.reshape(12, 2)
+        # For segment angles, use 12x2 layout (12 variables x pass/fail)
+        fig, axes = plt.subplots(12, 2, figsize=(14, 24))
     else:
         # For kinematic/kinetic, use 6x2 layout (6 variables x pass/fail)
         fig, axes = plt.subplots(6, 2, figsize=(14, 20))
@@ -172,13 +169,23 @@ def create_filters_by_phase_plot(
     elif failing_features is None:
         failing_features = {}
     
+    # Build global set of failed stride indices for ANY variable being plotted
+    # A stride is only "clean" if it passes validation for ALL variables
+    global_failed_strides = set()
+    for stride_idx, failed_vars in failing_features.items():
+        # Check if this stride failed validation for any of the variables being plotted
+        for var_name in variables:
+            if var_name in failed_vars:
+                global_failed_strides.add(stride_idx)
+                break  # Once we know this stride failed, no need to check other variables
+    
     # Process each variable
     for var_idx, (var_name, var_label) in enumerate(zip(variables, variable_labels)):
-        # Build set of failed stride indices for this specific variable
-        failed_strides = set()
+        # Build variable-specific failed strides (for red plot)
+        variable_failed_strides = set()
         for stride_idx, failed_vars in failing_features.items():
             if var_name in failed_vars:
-                failed_strides.add(stride_idx)
+                variable_failed_strides.add(stride_idx)
         
         # Get validation ranges for this variable
         var_ranges = {}
@@ -216,7 +223,7 @@ def create_filters_by_phase_plot(
             phase_percent = np.linspace(0, 100, 150)
             
             for stride_idx in range(data.shape[0]):
-                if stride_idx not in failed_strides:
+                if stride_idx not in global_failed_strides:
                     stride_data = data[stride_idx, :, var_idx]
                     ax_pass.plot(phase_percent, stride_data, color='green', alpha=0.3, linewidth=0.5, zorder=1)
                     passed_count += 1
@@ -238,7 +245,7 @@ def create_filters_by_phase_plot(
         ax_pass.grid(True, alpha=0.3)
         
         # Only add x-label to bottom row
-        last_row_idx = (n_vars - 1) if mode == 'segment' else 5
+        last_row_idx = 11 if mode == 'segment' else 5  # 12th variable is at index 11
         if var_idx == last_row_idx:
             x_label = 'Gait Phase' if task_type == 'gait' else 'Movement Phase'
             ax_pass.set_xlabel(x_label, fontsize=10)
@@ -250,7 +257,7 @@ def create_filters_by_phase_plot(
         # Plot data FIRST (behind validation ranges)
         if data is not None and data.size > 0 and var_idx < data.shape[2]:
             for stride_idx in range(data.shape[0]):
-                if stride_idx in failed_strides:
+                if stride_idx in variable_failed_strides:
                     stride_data = data[stride_idx, :, var_idx]
                     ax_fail.plot(phase_percent, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
                     failed_count += 1
