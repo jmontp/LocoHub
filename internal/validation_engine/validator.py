@@ -109,8 +109,6 @@ class Validator:
             config_dir: Optional path to config directory with YAML files
         """
         self.config_manager = ValidationConfigManager(config_dir)
-        # Phase points will be determined dynamically from configuration
-        self.default_phases = {0: 0, 25: 37, 50: 75, 75: 112}
         
     def validate(self, dataset_path: str) -> Dict[str, Any]:
         """
@@ -128,10 +126,9 @@ class Validator:
         """
         # Load dataset
         locomotion_data = LocomotionData(dataset_path)
-        data = locomotion_data.get_expanded_data()
         
         # Validate phase structure
-        phase_valid, phase_msg = self._validate_phase_structure(data)
+        phase_valid, phase_msg = self._validate_phase_structure(locomotion_data)
         
         # Get task information
         tasks = locomotion_data.get_tasks()
@@ -142,14 +139,20 @@ class Validator:
         total_violations = 0
         
         for task in tasks:
-            task_data = locomotion_data.get_task_data(task)
-            task_violations = self._validate_task(task_data, task)
+            task_violations = self._validate_task(locomotion_data, task)
             
             if task_violations:
                 violations[task] = task_violations
                 total_violations += sum(len(v) for v in task_violations.values())
             
-            total_checks += len(task_data) * 6 * 4  # steps * variables * phases
+            # Count number of cycles for this task
+            task_data = locomotion_data.df[locomotion_data.df['task'] == task]
+            n_cycles = len(task_data) // 150  # Each cycle is 150 points
+            
+            # Get number of variables and phases being checked from config
+            n_variables = 12  # 6 kinematic + 6 kinetic variables
+            n_phases = 4  # Default 4 phases (0%, 25%, 50%, 75%)
+            total_checks += n_cycles * n_variables * n_phases
         
         # Calculate pass rate
         pass_rate = 1.0 - (total_violations / total_checks if total_checks > 0 else 0)
@@ -168,10 +171,31 @@ class Validator:
             }
         }
     
-    def _validate_phase_structure(self, data: np.ndarray) -> Tuple[bool, str]:
+    def _validate_phase_structure(self, locomotion_data: LocomotionData) -> Tuple[bool, str]:
         """Check if all cycles have exactly 150 points."""
-        if data.shape[1] != 150:
-            return False, f"Invalid phase length: {data.shape[1]} (expected 150)"
+        # Check each task to ensure proper phase structure
+        tasks = locomotion_data.get_tasks()
+        
+        for task in tasks:
+            task_data = locomotion_data.df[locomotion_data.df['task'] == task]
+            n_points = len(task_data)
+            
+            # Check if divisible by 150
+            if n_points % 150 != 0:
+                return False, f"Task '{task}' has {n_points} points, not divisible by 150"
+            
+            # Verify phase values if present
+            if 'phase' in task_data.columns:
+                # Group by cycle and check each has 150 points
+                n_cycles = n_points // 150
+                for cycle_idx in range(n_cycles):
+                    cycle_start = cycle_idx * 150
+                    cycle_end = (cycle_idx + 1) * 150
+                    cycle_data = task_data.iloc[cycle_start:cycle_end]
+                    
+                    if len(cycle_data) != 150:
+                        return False, f"Cycle {cycle_idx} in task '{task}' has {len(cycle_data)} points"
+        
         return True, "Phase structure valid (150 points per cycle)"
     
     def _get_phase_indices(self, task_ranges: Dict) -> Dict[int, int]:
@@ -200,13 +224,43 @@ class Validator:
         
         return phase_indices
     
-    def _validate_task(self, task_data: np.ndarray, task_name: str) -> Dict[str, List[int]]:
+    def _validate_task(self, locomotion_data: LocomotionData, task_name: str) -> Dict[str, List[int]]:
         """
-        Validate task data against specifications.
+        Validate task data against specifications using 3D array structure.
         
-        Returns dict of violations: {variable_name: [step_indices]}
+        Returns dict of violations: {variable_name: [stride_indices]}
+        NOTE: This returns the old format for backward compatibility.
+        Use _validate_task_with_failing_features for the new format.
         """
+        # Get the new format
+        failing_features = self._validate_task_with_failing_features(locomotion_data, task_name)
+        
+        # Convert to old format for backward compatibility
         violations = {}
+        for stride_idx, failed_vars in failing_features.items():
+            for var_name in failed_vars:
+                if var_name not in violations:
+                    violations[var_name] = []
+                violations[var_name].append(stride_idx)
+        
+        return violations
+    
+    def _validate_task_with_failing_features(self, locomotion_data: LocomotionData, task_name: str) -> Dict[int, List[str]]:
+        """
+        Validate task data and return failing features per stride.
+        
+        Returns dict: {stride_idx: [list_of_failed_variable_names]}
+        Strides not in the dict passed all checks.
+        """
+        failing_features = {}
+        
+        # Get all available features for this task
+        all_features = locomotion_data.features
+        
+        # Collect all variables we need to check from both modes
+        all_variables_to_check = set()
+        all_phase_indices = set()
+        validation_specs = {}
         
         # Load validation ranges for both modes
         for mode in ['kinematic', 'kinetic']:
@@ -219,6 +273,7 @@ class Validator:
             
             # Get phase indices dynamically from configuration
             phase_indices = self._get_phase_indices(task_ranges)
+            all_phase_indices.update(phase_indices.items())
             
             # Apply contralateral offset
             if mode == 'kinematic':
@@ -226,67 +281,95 @@ class Validator:
             else:
                 task_ranges = apply_contralateral_offset_kinetic(task_ranges, task_name)
             
-            # Check each phase from configuration
-            for phase_pct, phase_idx in phase_indices.items():
-                if phase_pct not in task_ranges:
-                    continue
-                    
-                phase_ranges = task_ranges[phase_pct]
-                
-                # Check each variable
-                for var_name, var_range in phase_ranges.items():
-                    var_violations = self._check_variable(
-                        task_data, phase_idx, var_name, var_range
-                    )
-                    
-                    if var_violations:
-                        if var_name not in violations:
-                            violations[var_name] = []
-                        violations[var_name].extend(var_violations)
+            # Store validation specs for later use
+            validation_specs[mode] = (task_ranges, phase_indices)
+            
+            # Collect variables to check
+            for phase_ranges in task_ranges.values():
+                all_variables_to_check.update(phase_ranges.keys())
         
-        return violations
+        # Filter to only variables that exist in the dataset
+        valid_variables = [v for v in all_variables_to_check if v in all_features]
+        
+        if not valid_variables:
+            return failing_features
+        
+        # Get 3D array for this task with all subjects
+        data_3d, feature_names = locomotion_data.get_cycles(None, task_name, list(valid_variables))
+        
+        if data_3d is None:
+            return failing_features
+        
+        # Check each stride
+        n_strides = data_3d.shape[0]
+        for stride_idx in range(n_strides):
+            stride_failures = []
+            
+            # Check all validation specs
+            for mode, (task_ranges, phase_indices) in validation_specs.items():
+                # Check each phase
+                for phase_pct, phase_idx in phase_indices.items():
+                    if phase_pct not in task_ranges:
+                        continue
+                    
+                    phase_ranges = task_ranges[phase_pct]
+                    
+                    # Check each variable
+                    for var_name, var_range in phase_ranges.items():
+                        if var_name not in feature_names:
+                            continue
+                        
+                        # Get variable index in the feature array
+                        var_idx = feature_names.index(var_name)
+                        
+                        # Get value at this stride, phase, and variable
+                        value = data_3d[stride_idx, phase_idx, var_idx]
+                        
+                        # Check if within range
+                        min_val = var_range.get('min', -float('inf'))
+                        max_val = var_range.get('max', float('inf'))
+                        
+                        if value < min_val or value > max_val:
+                            if var_name not in stride_failures:
+                                stride_failures.append(var_name)
+            
+            # Only add to failing_features if this stride had failures
+            if stride_failures:
+                failing_features[stride_idx] = stride_failures
+        
+        return failing_features
     
-    def _check_variable(self, data: np.ndarray, phase_idx: int, 
-                       var_name: str, var_range: Dict) -> List[int]:
-        """Check if variable values are within range at given phase."""
-        violations = []
+    def _check_variable_3d(self, data_3d: np.ndarray, phase_idx: int, 
+                          var_idx: int, var_range: Dict) -> List[int]:
+        """
+        Check if variable values are within range at given phase using 3D array.
         
-        # Map variable name to data column index
-        var_idx = self._get_variable_index(var_name)
-        if var_idx is None:
-            return violations
+        Args:
+            data_3d: 3D array of shape (n_cycles, 150, n_features)
+            phase_idx: Index into the 150-point cycle (0-149)
+            var_idx: Index of the variable in the features dimension
+            var_range: Dict with 'min' and 'max' keys
+            
+        Returns:
+            List of cycle indices that violate the range
+        """
+        violations = []
         
         min_val = var_range.get('min', -float('inf'))
         max_val = var_range.get('max', float('inf'))
         
-        # Check each step
-        for step_idx in range(data.shape[0]):
-            value = data[step_idx, phase_idx, var_idx]
+        # Check each cycle at the specified phase
+        n_cycles = data_3d.shape[0]
+        for cycle_idx in range(n_cycles):
+            # Direct indexing: get value at this cycle, phase, and variable
+            value = data_3d[cycle_idx, phase_idx, var_idx]
             
+            # Check if value is within range
             if value < min_val or value > max_val:
-                violations.append(step_idx)
+                violations.append(cycle_idx)
         
         return violations
     
-    def _get_variable_index(self, var_name: str) -> Optional[int]:
-        """Map variable name to data array index."""
-        # Standard ordering in LocomotionData expanded format
-        variable_map = {
-            'hip_flexion_angle_ipsi_rad': 0,
-            'hip_flexion_angle_contra_rad': 1,
-            'knee_flexion_angle_ipsi_rad': 2,
-            'knee_flexion_angle_contra_rad': 3,
-            'ankle_flexion_angle_ipsi_rad': 4,
-            'ankle_flexion_angle_contra_rad': 5,
-            'hip_flexion_moment_ipsi_Nm': 6,
-            'hip_flexion_moment_contra_Nm': 7,
-            'knee_flexion_moment_ipsi_Nm': 8,
-            'knee_flexion_moment_contra_Nm': 9,
-            'ankle_flexion_moment_ipsi_Nm': 10,
-            'ankle_flexion_moment_contra_Nm': 11
-        }
-        
-        return variable_map.get(var_name)
 
 
 # ============================================================================
