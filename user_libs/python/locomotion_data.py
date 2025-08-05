@@ -69,10 +69,10 @@ import os
 
 # Import feature constants from same library
 try:
-    from .feature_constants import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES
+    from .feature_constants import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES, SEGMENT_ANGLE_FEATURES
 except ImportError:
     # Fallback for standalone scripts
-    from feature_constants import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES
+    from feature_constants import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES, SEGMENT_ANGLE_FEATURES
 
 # Optional imports for visualization
 try:
@@ -96,8 +96,9 @@ class LocomotionData:
     POINTS_PER_CYCLE = 150
     
     # Standard variable naming convention: <joint>_<motion>_<measurement>_<side>_<unit>
-    STANDARD_JOINTS = ['hip', 'knee', 'ankle']
-    STANDARD_MOTIONS = ['flexion', 'adduction', 'rotation', 'dorsiflexion']
+    STANDARD_JOINTS = ['hip', 'knee', 'ankle', 'pelvis', 'trunk', 'thigh', 'shank', 'foot']
+    STANDARD_MOTIONS = ['flexion', 'adduction', 'rotation', 'dorsiflexion', 'tilt', 'obliquity', 'lateral', 'progression',
+                        'sagittal', 'frontal', 'transverse']  # Added anatomical plane names
     STANDARD_MEASUREMENTS = ['angle', 'velocity', 'moment', 'power']
     STANDARD_SIDES = ['contra', 'ipsi']
     STANDARD_UNITS = ['rad', 'rad_s', 'Nm', 'Nm_kg', 'W', 'W_kg', 'deg', 'deg_s']
@@ -320,6 +321,14 @@ class LocomotionData:
     
     def _is_standard_compliant(self, variable_name: str) -> bool:
         """Check if variable name follows standard convention: <joint>_<motion>_<measurement>_<side>_<unit>"""
+        # First, check if it's in one of our known feature lists
+        if (variable_name in ANGLE_FEATURES or 
+            variable_name in VELOCITY_FEATURES or 
+            variable_name in MOMENT_FEATURES or
+            variable_name in SEGMENT_ANGLE_FEATURES):
+            return True
+        
+        # Otherwise, check against standard naming convention
         parts = variable_name.split('_')
         
         # Handle compound units like 'rad_s', 'Nm_kg', etc.
@@ -329,14 +338,24 @@ class LocomotionData:
             joint, motion, measurement, side = parts[:4]
         elif len(parts) == 5:
             joint, motion, measurement, side, unit = parts
+        elif len(parts) == 4:
+            # Handle segment angles without side (e.g., pelvis_sagittal_angle_rad)
+            joint, motion, measurement, unit = parts
+            side = None
         else:
             return False
         
-        return (joint in self.STANDARD_JOINTS and
-                motion in self.STANDARD_MOTIONS and
-                measurement in self.STANDARD_MEASUREMENTS and
-                side in self.STANDARD_SIDES and
-                unit in self.STANDARD_UNITS)
+        # Standard validation
+        valid_standard = (joint in self.STANDARD_JOINTS and
+                         motion in self.STANDARD_MOTIONS and
+                         measurement in self.STANDARD_MEASUREMENTS and
+                         unit in self.STANDARD_UNITS)
+        
+        # Check side if present
+        if side is not None:
+            valid_standard = valid_standard and side in self.STANDARD_SIDES
+            
+        return valid_standard
     
     def _has_biomechanical_keywords(self, variable_name: str) -> bool:
         """Check if variable name contains biomechanical keywords."""

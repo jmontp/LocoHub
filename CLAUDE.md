@@ -92,9 +92,14 @@ mean_patterns = data.get_mean_patterns('SUB01', 'level_walking')
 cd contributor_tools/conversion_scripts/YourDataset/
 python convert_to_parquet.py
 
-# Validate your dataset
+# Validate your dataset (uses default_ranges.yaml)
 python contributor_tools/create_dataset_validation_report.py \
     --dataset converted_datasets/your_dataset_phase.parquet
+    
+# Use custom validation ranges
+python contributor_tools/create_dataset_validation_report.py \
+    --dataset converted_datasets/your_dataset_phase.parquet \
+    --ranges-file contributor_tools/validation_ranges/custom_ranges.yaml
 ```
 
 **For Maintainers**:
@@ -129,13 +134,15 @@ loco.plot_phase_patterns('SUB01', 'level_walking',
                          ['knee_flexion_angle_ipsi_rad'])
 ```
 
-### Validate Dataset
-```python
-from internal.validation_engine.validator import DatasetValidator
-
-validator = DatasetValidator()
-results = validator.validate('converted_datasets/new_dataset_phase.parquet')
-print(results['summary'])
+### Generate Validation Report
+```bash
+# Basic validation (uses default ranges)
+python contributor_tools/create_dataset_validation_report.py \
+    --dataset converted_datasets/umich_2021_phase.parquet
+    
+# Generates plots with consistent pass/fail visualization:
+# - Green: strides passing ALL variables
+# - Red: strides failing each specific variable
 ```
 
 ### Convert New Dataset
@@ -148,8 +155,9 @@ print(results['summary'])
 
 - `user_libs/python/locomotion_data.py` - Main analysis class
 - `user_libs/python/feature_constants.py` - Valid tasks and variables
-- `internal/validation_engine/validator.py` - Validation logic
+- `internal/validation_engine/validator.py` - Unified validation logic
 - `contributor_tools/create_dataset_validation_report.py` - Report generator
+- `contributor_tools/validation_ranges/default_ranges.yaml` - Default validation ranges
 - `tests/test_locomotion_data_library.py` - Usage examples
 
 ## Git Workflow
@@ -210,7 +218,11 @@ The system automatically:
 - Generates plots at specified phase points
 - Validates at exactly the phases you define
 
-See `contributor_tools/validation_ranges/test_custom_phases.yaml` for examples.
+See `contributor_tools/validation_ranges/default_ranges.yaml` for the current validation ranges.
+
+## Validation System
+
+**Unified Feature-Based**: All biomechanical variables (kinematic, kinetic, segment) validated consistently. Green strides pass ALL variables; red strides show variable-specific failures.
 
 ## Development Status
 

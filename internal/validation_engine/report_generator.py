@@ -86,7 +86,8 @@ class ValidationReportGenerator:
             dataset_name, 
             validation_result, 
             plot_paths, 
-            timestamp
+            timestamp,
+            dataset_path
         )
         
         return str(report_path)
@@ -119,11 +120,11 @@ class ValidationReportGenerator:
             ]
             
             segment_features = [
-                'pelvis_tilt_angle_rad', 'pelvis_obliquity_angle_rad', 'pelvis_rotation_angle_rad',
-                'trunk_flexion_angle_rad', 'trunk_lateral_angle_rad', 'trunk_rotation_angle_rad',
-                'thigh_angle_ipsi_rad', 'thigh_angle_contra_rad',
-                'shank_angle_ipsi_rad', 'shank_angle_contra_rad',
-                'foot_angle_ipsi_rad', 'foot_angle_contra_rad'
+                'pelvis_sagittal_angle_rad', 'pelvis_frontal_angle_rad', 'pelvis_transverse_angle_rad',
+                'trunk_sagittal_angle_rad', 'trunk_frontal_angle_rad', 'trunk_transverse_angle_rad',
+                'thigh_sagittal_angle_ipsi_rad', 'thigh_sagittal_angle_contra_rad',
+                'shank_sagittal_angle_ipsi_rad', 'shank_sagittal_angle_contra_rad',
+                'foot_sagittal_angle_ipsi_rad', 'foot_sagittal_angle_contra_rad'
             ]
             
             # Collect all features we might need
@@ -316,7 +317,7 @@ class ValidationReportGenerator:
         return violation_array
     
     def _generate_markdown_report(self, dataset_name: str, validation_result: Dict,
-                                 plot_paths: Dict, timestamp: str) -> Path:
+                                 plot_paths: Dict, timestamp: str, dataset_path: str) -> Path:
         """Generate markdown validation report."""
         report_name = f"{dataset_name}_validation_report.md"
         report_path = self.output_dir / report_name
@@ -374,19 +375,24 @@ class ValidationReportGenerator:
                     rel_path = Path(plot_paths[segment_key]).relative_to(self.output_dir)
                     lines.append(f"#### Segment Angles Validation")
                     lines.append(f"![{task} Segment Angles]({rel_path})")
-                    lines.append("*Note: Segment angle data not available in this dataset*")
+                    
+                    # Check if segment angle data is actually available - define segment features here
+                    segment_features = [
+                        'pelvis_sagittal_angle_rad', 'pelvis_frontal_angle_rad', 'pelvis_transverse_angle_rad',
+                        'trunk_sagittal_angle_rad', 'trunk_frontal_angle_rad', 'trunk_transverse_angle_rad',
+                        'thigh_sagittal_angle_ipsi_rad', 'thigh_sagittal_angle_contra_rad',
+                        'shank_sagittal_angle_ipsi_rad', 'shank_sagittal_angle_contra_rad',
+                        'foot_sagittal_angle_ipsi_rad', 'foot_sagittal_angle_contra_rad'
+                    ]
+                    
+                    # Get available features from the data
+                    from user_libs.python.locomotion_data import LocomotionData
+                    temp_loco = LocomotionData(dataset_path, phase_col='phase_percent')
+                    segment_available = any(f in temp_loco.features for f in segment_features)
+                    if not segment_available:
+                        lines.append("*Note: Segment angle data not available in this dataset*")
                     lines.append("")
         
-        # Violations detail
-        if validation_result['violations']:
-            lines.append("## Violations Detail")
-            lines.append("")
-            
-            for task, task_violations in validation_result['violations'].items():
-                lines.append(f"### {task.replace('_', ' ').title()}")
-                for var, steps in task_violations.items():
-                    lines.append(f"- **{var}**: {len(steps)} violations")
-                lines.append("")
         
         # Write report
         with open(report_path, 'w') as f:

@@ -40,14 +40,14 @@ from typing import Dict
 ANGLE_FEATURES = [
     'hip_flexion_angle_ipsi_rad', 'hip_flexion_angle_contra_rad',
     'knee_flexion_angle_ipsi_rad', 'knee_flexion_angle_contra_rad', 
-    'ankle_flexion_angle_ipsi_rad', 'ankle_flexion_angle_contra_rad'
+    'ankle_dorsiflexion_angle_ipsi_rad', 'ankle_dorsiflexion_angle_contra_rad'
 ]
 
 # Kinematic velocities (joint angular velocities)
 VELOCITY_FEATURES = [
     'hip_flexion_velocity_ipsi_rad_s', 'hip_flexion_velocity_contra_rad_s',
     'knee_flexion_velocity_ipsi_rad_s', 'knee_flexion_velocity_contra_rad_s',
-    'ankle_flexion_velocity_ipsi_rad_s', 'ankle_flexion_velocity_contra_rad_s'
+    'ankle_dorsiflexion_velocity_ipsi_rad_s', 'ankle_dorsiflexion_velocity_contra_rad_s'
 ]
 
 # Kinetic features (joint moments) - Standard order: [hip, knee, ankle] x [flexion, adduction, rotation] x [ipsi, contra]
@@ -58,7 +58,7 @@ MOMENT_FEATURES = [
     'knee_flexion_moment_ipsi_Nm', 'knee_flexion_moment_contra_Nm',
     'knee_adduction_moment_ipsi_Nm', 'knee_adduction_moment_contra_Nm',
     'knee_rotation_moment_ipsi_Nm', 'knee_rotation_moment_contra_Nm',
-    'ankle_flexion_moment_ipsi_Nm', 'ankle_flexion_moment_contra_Nm',
+    'ankle_dorsiflexion_moment_ipsi_Nm', 'ankle_dorsiflexion_moment_contra_Nm',
     'ankle_adduction_moment_ipsi_Nm', 'ankle_adduction_moment_contra_Nm',
     'ankle_rotation_moment_ipsi_Nm', 'ankle_rotation_moment_contra_Nm'
 ]
@@ -71,7 +71,7 @@ MOMENT_FEATURES_NORMALIZED = [
     'knee_flexion_moment_ipsi_Nm_kg', 'knee_flexion_moment_contra_Nm_kg',
     'knee_adduction_moment_ipsi_Nm_kg', 'knee_adduction_moment_contra_Nm_kg',
     'knee_rotation_moment_ipsi_Nm_kg', 'knee_rotation_moment_contra_Nm_kg',
-    'ankle_flexion_moment_ipsi_Nm_kg', 'ankle_flexion_moment_contra_Nm_kg',
+    'ankle_dorsiflexion_moment_ipsi_Nm_kg', 'ankle_dorsiflexion_moment_contra_Nm_kg',
     'ankle_adduction_moment_ipsi_Nm_kg', 'ankle_adduction_moment_contra_Nm_kg',
     'ankle_rotation_moment_ipsi_Nm_kg', 'ankle_rotation_moment_contra_Nm_kg'
 ]
@@ -86,8 +86,24 @@ COP_FEATURES = [
     'cop_x_m', 'cop_y_m', 'cop_z_m'
 ]
 
+# Segment angle features (link/segment orientations in space)
+# Uses anatomical plane naming convention:
+# - Sagittal plane: flexion/extension movements (forward/backward tilt)
+# - Frontal plane: abduction/adduction movements (side-to-side tilt)
+# - Transverse plane: rotation movements (axial rotation for long bones)
+SEGMENT_ANGLE_FEATURES = [
+    'pelvis_sagittal_angle_rad', 'pelvis_frontal_angle_rad', 'pelvis_transverse_angle_rad',
+    'trunk_sagittal_angle_rad', 'trunk_frontal_angle_rad', 'trunk_transverse_angle_rad', 
+    'thigh_sagittal_angle_ipsi_rad', 'thigh_sagittal_angle_contra_rad',
+    'shank_sagittal_angle_ipsi_rad', 'shank_sagittal_angle_contra_rad',
+    'foot_sagittal_angle_ipsi_rad', 'foot_sagittal_angle_contra_rad'
+]
+
 # All kinetic features combined
 ALL_KINETIC_FEATURES = MOMENT_FEATURES + GRF_FEATURES + COP_FEATURES
+
+# All kinematic features combined (angles + segments + velocities)
+ALL_KINEMATIC_FEATURES = ANGLE_FEATURES + SEGMENT_ANGLE_FEATURES + VELOCITY_FEATURES
 
 
 def get_kinematic_feature_map() -> Dict[str, int]:

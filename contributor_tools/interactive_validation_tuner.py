@@ -164,6 +164,52 @@ class DraggableBox:
                                        ha='center', va='bottom', fontsize=8,
                                        fontweight='bold', color='blue', zorder=11)
         
+        # Create phase indicator for dragging (initially hidden)
+        self.drag_phase_text = self.ax.text(phase, (min_val + max_val) / 2, '',
+                                           ha='center', va='center', fontsize=10,
+                                           fontweight='bold', color='black', 
+                                           bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.8),
+                                           visible=False, zorder=20)
+        
+        # Create larger circular resize handles positioned outside the box
+        handle_radius = 18  # pixels radius (much larger and easier to target)
+        handle_offset = 28  # pixels offset from box edge (farther away)
+        data_range = self.ax.get_ylim()[1] - self.ax.get_ylim()[0]
+        # Convert pixels to data units for consistent size
+        fig_height_inches = self.ax.figure.get_size_inches()[1]
+        axes_position = self.ax.get_position()
+        axes_height_inches = axes_position.height * fig_height_inches
+        dpi = self.ax.figure.dpi
+        pixels_per_data_unit = (axes_height_inches * dpi) / data_range
+        handle_radius_data = handle_radius / pixels_per_data_unit
+        handle_offset_data = handle_offset / pixels_per_data_unit
+        
+        # Position circles outside the box
+        self.top_handle = patches.Circle(
+            (phase, max_val + handle_offset_data), handle_radius_data,
+            facecolor='white', edgecolor='black', linewidth=2,
+            visible=False, zorder=20
+        )
+        self.bottom_handle = patches.Circle(
+            (phase, min_val - handle_offset_data), handle_radius_data,
+            facecolor='white', edgecolor='black', linewidth=2,
+            visible=False, zorder=20
+        )
+        self.ax.add_patch(self.top_handle)
+        self.ax.add_patch(self.bottom_handle)
+        
+        # Create transparent hover zone for better UX
+        hover_extend = 35  # pixels extension for hover zone (larger to accommodate bigger circles)
+        hover_extend_data = hover_extend / pixels_per_data_unit
+        self.hover_zone = patches.Rectangle(
+            (phase - self.box_width/2, min_val - hover_extend_data),
+            self.box_width,
+            (max_val - min_val) + 2 * hover_extend_data,
+            facecolor='none', edgecolor='none', alpha=0,
+            visible=True, zorder=1
+        )
+        self.ax.add_patch(self.hover_zone)
+        
         # Dragging state
         self.dragging = None  # None, 'top', 'bottom', or 'middle'
         self.drag_start_x = None
@@ -179,40 +225,91 @@ class DraggableBox:
         self.cidpress = self.ax.figure.canvas.mpl_connect('button_press_event', self.on_press)
         self.cidrelease = self.ax.figure.canvas.mpl_connect('button_release_event', self.on_release)
         self.cidmotion = self.ax.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
+        self.cidhover = self.ax.figure.canvas.mpl_connect('motion_notify_event', self.on_hover)
+        
+        # Track if this box is selected
+        self.selected = False
     
     def on_press(self, event):
-        """Handle mouse press event."""
-        if event.inaxes != self.ax:
+        """Handle mouse press event with generous Y-range resize zones."""
+        if event.inaxes != self.ax or event.xdata is None or event.ydata is None:
             return
         
-        # Check if click is within the box x-range
+        # Check if click is within the box x-range (hover zone)
         if abs(event.xdata - self.phase) > self.box_width/2:
             return
         
-        # Determine what part of the box was clicked
-        edge_threshold = 0.05 * (self.max_val - self.min_val)  # 5% of box height
+        # Simple Y-coordinate based interaction zones
+        if event.ydata > self.max_val:
+            # Above box - resize top edge
+            self.dragging = 'top'
+            self.rect.set_edgecolor('red')
+        elif event.ydata < self.min_val:
+            # Below box - resize bottom edge
+            self.dragging = 'bottom'
+            self.rect.set_edgecolor('blue')
+        elif self.min_val <= event.ydata <= self.max_val:
+            # Inside box - drag both X and Y
+            self.dragging = 'middle'
+            self.rect.set_edgecolor('green')
+        else:
+            # Should not reach here
+            return
         
-        if self.min_val <= event.ydata <= self.max_val:
-            if abs(event.ydata - self.max_val) < edge_threshold:
-                self.dragging = 'top'
-                self.rect.set_edgecolor('red')
-            elif abs(event.ydata - self.min_val) < edge_threshold:
-                self.dragging = 'bottom'
-                self.rect.set_edgecolor('blue')
+        # Initialize drag
+        self.drag_start_x = event.xdata
+        self.drag_start_y = event.ydata
+        self.drag_start_phase = self.phase
+        self.drag_start_min = self.min_val
+        self.drag_start_max = self.max_val
+        
+        # Store background for blitting
+        canvas = self.ax.figure.canvas
+        canvas.draw()
+        self.background = canvas.copy_from_bbox(self.ax.bbox)
+        
+        # Show phase indicator if dragging horizontally
+        if self.dragging == 'middle' and self.allow_x_drag:
+            self.drag_phase_text.set_visible(True)
+            self.drag_phase_text.set_position((self.phase, (self.min_val + self.max_val) / 2))
+            self.drag_phase_text.set_text(f'Phase: {self.phase}%')
+    
+    def on_hover(self, event):
+        """Handle mouse hover using transparent hover zone to show/hide handles."""
+        if self.dragging is not None:  # Skip hover logic while dragging
+            return
+            
+        if event.inaxes == self.ax and event.xdata is not None and event.ydata is not None:
+            # Calculate hover zone bounds
+            fig_height_inches = self.ax.figure.get_size_inches()[1]
+            axes_position = self.ax.get_position()
+            axes_height_inches = axes_position.height * fig_height_inches
+            dpi = self.ax.figure.dpi
+            data_range = self.ax.get_ylim()[1] - self.ax.get_ylim()[0]
+            pixels_per_data_unit = (axes_height_inches * dpi) / data_range
+            
+            hover_extend_data = 35 / pixels_per_data_unit
+            
+            # Check if in extended hover zone
+            in_x_range = abs(event.xdata - self.phase) <= self.box_width/2
+            in_y_range = ((self.min_val - hover_extend_data) <= event.ydata <= 
+                         (self.max_val + hover_extend_data))
+            
+            if in_x_range and in_y_range:
+                # Show both handles when in hover zone
+                self.top_handle.set_visible(True)
+                self.bottom_handle.set_visible(True)
             else:
-                self.dragging = 'middle'
-                self.rect.set_edgecolor('green')
-            
-            self.drag_start_x = event.xdata
-            self.drag_start_y = event.ydata
-            self.drag_start_phase = self.phase
-            self.drag_start_min = self.min_val
-            self.drag_start_max = self.max_val
-            
-            # Store background for blitting
-            canvas = self.ax.figure.canvas
-            canvas.draw()
-            self.background = canvas.copy_from_bbox(self.ax.bbox)
+                # Outside hover zone - hide handles
+                self.top_handle.set_visible(False)
+                self.bottom_handle.set_visible(False)
+        else:
+            # Not in this axis - hide handles
+            self.top_handle.set_visible(False)
+            self.bottom_handle.set_visible(False)
+        
+        # Redraw to show/hide handles
+        self.ax.figure.canvas.draw_idle()
     
     def on_motion(self, event):
         """Handle mouse motion event."""
@@ -249,6 +346,9 @@ class DraggableBox:
                     # Update phase label
                     self.phase_text.set_text(f'{self.phase}%')
                     self.phase_text.set_position((self.phase, self.ax.get_ylim()[1]))
+                    # Update drag indicator
+                    self.drag_phase_text.set_position((self.phase, (self.min_val + self.max_val) / 2))
+                    self.drag_phase_text.set_text(f'Phase: {self.phase}%')
         
         # Update rectangle y position and height
         self.rect.set_y(self.min_val)
@@ -260,6 +360,24 @@ class DraggableBox:
         self.max_text.set_text(f'{self.max_val:.3f}')
         self.max_text.set_position((self.phase, self.max_val + 0.02))
         
+        # Update circular handle positions (outside the box)
+        fig_height_inches = self.ax.figure.get_size_inches()[1]
+        axes_position = self.ax.get_position()
+        axes_height_inches = axes_position.height * fig_height_inches
+        dpi = self.ax.figure.dpi
+        data_range = self.ax.get_ylim()[1] - self.ax.get_ylim()[0]
+        pixels_per_data_unit = (axes_height_inches * dpi) / data_range
+        handle_offset_data = 28 / pixels_per_data_unit
+        
+        self.top_handle.center = (self.phase, self.max_val + handle_offset_data)
+        self.bottom_handle.center = (self.phase, self.min_val - handle_offset_data)
+        
+        # Update hover zone position
+        hover_extend_data = 35 / pixels_per_data_unit
+        self.hover_zone.set_x(self.phase - self.box_width/2)
+        self.hover_zone.set_y(self.min_val - hover_extend_data)
+        self.hover_zone.set_height((self.max_val - self.min_val) + 2 * hover_extend_data)
+        
         # Use blitting for fast updates
         if self.background is not None:
             canvas = self.ax.figure.canvas
@@ -270,6 +388,8 @@ class DraggableBox:
             self.ax.draw_artist(self.min_text)
             self.ax.draw_artist(self.max_text)
             self.ax.draw_artist(self.phase_text)
+            if self.drag_phase_text.get_visible():
+                self.ax.draw_artist(self.drag_phase_text)
             # Blit the changes
             canvas.blit(self.ax.bbox)
         else:
@@ -280,6 +400,11 @@ class DraggableBox:
         if self.dragging is not None:
             self.dragging = None
             self.rect.set_edgecolor(self.edgecolor)
+            # Hide phase indicator
+            self.drag_phase_text.set_visible(False)
+            # Hide resize handles
+            self.top_handle.set_visible(False)
+            self.bottom_handle.set_visible(False)
             self.ax.figure.canvas.draw_idle()
             
             # Call callback if provided
@@ -308,6 +433,23 @@ class DraggableBox:
         self.min_text.set_position((self.phase, self.min_val - 0.02))
         self.max_text.set_text(f'{self.max_val:.3f}')
         self.max_text.set_position((self.phase, self.max_val + 0.02))
+        
+        # Update circular handle positions (outside the box)
+        fig_height_inches = self.ax.figure.get_size_inches()[1]
+        axes_position = self.ax.get_position()
+        axes_height_inches = axes_position.height * fig_height_inches
+        dpi = self.ax.figure.dpi
+        data_range = self.ax.get_ylim()[1] - self.ax.get_ylim()[0]
+        pixels_per_data_unit = (axes_height_inches * dpi) / data_range
+        handle_offset_data = 28 / pixels_per_data_unit
+        
+        self.top_handle.center = (self.phase, self.max_val + handle_offset_data)
+        self.bottom_handle.center = (self.phase, self.min_val - handle_offset_data)
+        
+        # Update hover zone position
+        hover_extend_data = 35 / pixels_per_data_unit
+        self.hover_zone.set_y(self.min_val - hover_extend_data)
+        self.hover_zone.set_height((self.max_val - self.min_val) + 2 * hover_extend_data)
     
     def remove(self):
         """Remove the box from the plot."""
@@ -321,6 +463,15 @@ class DraggableBox:
                 self.ax.texts.remove(self.max_text)
             if self.phase_text in self.ax.texts:
                 self.ax.texts.remove(self.phase_text)
+            if hasattr(self, 'drag_phase_text') and self.drag_phase_text in self.ax.texts:
+                self.ax.texts.remove(self.drag_phase_text)
+            # Remove resize handles and hover zone
+            if self.top_handle in self.ax.patches:
+                self.ax.patches.remove(self.top_handle)
+            if self.bottom_handle in self.ax.patches:
+                self.ax.patches.remove(self.bottom_handle)
+            if self.hover_zone in self.ax.patches:
+                self.ax.patches.remove(self.hover_zone)
         except:
             pass  # Ignore if already removed
         
@@ -329,6 +480,7 @@ class DraggableBox:
             self.ax.figure.canvas.mpl_disconnect(self.cidpress)
             self.ax.figure.canvas.mpl_disconnect(self.cidrelease)
             self.ax.figure.canvas.mpl_disconnect(self.cidmotion)
+            self.ax.figure.canvas.mpl_disconnect(self.cidhover)
         except:
             pass
 
@@ -481,8 +633,7 @@ class InteractiveValidationTuner:
                 # Update plot if validation ranges are loaded
                 if self.validation_data and self.current_task:
                     self.update_plot(force_redraw=True)
-                    # Run initial validation
-                    self.run_validation_update()
+                    # Don't run validation automatically - wait for user
             except Exception as e:
                 print(f"Could not load default dataset: {e}")
     
@@ -604,6 +755,7 @@ class InteractiveValidationTuner:
                 self.update_plot()
             
         except Exception as e:
+            print(f"ERROR: Failed to load validation ranges: {str(e)}")
             messagebox.showerror("Error", f"Failed to load validation ranges:\n{str(e)}")
     
     def load_dataset(self):
@@ -646,6 +798,7 @@ class InteractiveValidationTuner:
                 self.run_validation_update()
             
         except Exception as e:
+            print(f"ERROR: Failed to load dataset: {str(e)}")
             messagebox.showerror("Error", f"Failed to load dataset:\n{str(e)}")
     
     def on_task_changed(self, event=None):
@@ -680,20 +833,20 @@ class InteractiveValidationTuner:
             'Ankle Dorsiflexion Moment'
         ]
         
-        # Segment angle features
+        # Segment angle features - only sagittal plane for now
         segment_vars = [
-            'pelvis_tilt_angle_rad', 'pelvis_obliquity_angle_rad', 'pelvis_rotation_angle_rad',
-            'trunk_flexion_angle_rad', 'trunk_lateral_angle_rad', 'trunk_rotation_angle_rad',
-            'thigh_angle_ipsi_rad',
-            'shank_angle_ipsi_rad',
-            'foot_angle_ipsi_rad'
+            'pelvis_sagittal_angle_rad',
+            'trunk_sagittal_angle_rad',
+            'thigh_sagittal_angle_ipsi_rad',
+            'shank_sagittal_angle_ipsi_rad',
+            'foot_sagittal_angle_ipsi_rad'
         ]
         segment_labels = [
-            'Pelvis Tilt', 'Pelvis Obliquity', 'Pelvis Rotation',
-            'Trunk Flexion', 'Trunk Lateral', 'Trunk Rotation',
-            'Thigh Angle',
-            'Shank Angle',
-            'Foot Angle'
+            'Pelvis Sagittal Angle',
+            'Trunk Sagittal Angle',
+            'Thigh Sagittal Angle',
+            'Shank Sagittal Angle',
+            'Foot Sagittal Angle'
         ]
         
         # Combine all
@@ -739,9 +892,9 @@ class InteractiveValidationTuner:
         # Store current variables for later validation
         self.current_variables = variables
         
-        # Use cached validation results if available, otherwise show all as gray
-        if not hasattr(self, 'cached_failing_strides'):
-            self.cached_failing_strides = {}
+        # Use cached validation results if available, otherwise run validation
+        if not hasattr(self, 'cached_failing_strides') or force_redraw:
+            self.cached_failing_strides = self.run_validation(variables)
         failing_strides = self.cached_failing_strides
         
         # Calculate dynamic figure height based on number of variables
@@ -876,6 +1029,9 @@ class InteractiveValidationTuner:
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         self.canvas.draw()
+        
+        # Connect right-click event for context menu
+        self.fig.canvas.mpl_connect('button_press_event', self.on_plot_click)
         
         # Update scroll region
         self.plot_frame.update_idletasks()
@@ -1037,43 +1193,96 @@ class InteractiveValidationTuner:
         if not self.current_task or var_name is None:
             return y_min, y_max
         
-        task_data = self.validation_data.get(self.current_task, {})
-        
-        # Get range from validation boxes
-        all_mins = []
-        all_maxs = []
-        
-        for phase in task_data.keys():
-            if not str(phase).isdigit():
-                continue
-            phase = int(phase)
-            
-            if var_name in task_data[phase]:
-                range_data = task_data[phase][var_name]
-                if 'min' in range_data and 'max' in range_data:
-                    min_val = range_data['min']
-                    max_val = range_data['max']
-                    
-                    if min_val is not None and max_val is not None:
-                        all_mins.append(min_val)
-                        all_maxs.append(max_val)
-        
-        # Also include data range if available
+        # First, try to get actual data range
         cache_key = f"{self.current_task}_{var_name}"
+        data_min, data_max = None, None
+        
         if cache_key in self.data_cache and len(self.data_cache[cache_key]) > 0:
             data = self.data_cache[cache_key]
-            all_mins.append(np.min(data))
-            all_maxs.append(np.max(data))
+            data_min = np.min(data)
+            data_max = np.max(data)
+        else:
+            # Try to load the data if not in cache
+            self.load_variable_data(var_name)
+            if cache_key in self.data_cache and len(self.data_cache[cache_key]) > 0:
+                data = self.data_cache[cache_key]
+                data_min = np.min(data)
+                data_max = np.max(data)
         
-        if all_mins and all_maxs:
-            data_min = min(all_mins)
-            data_max = max(all_maxs)
-            # Expand range by 30% for more dragging space
-            margin = (data_max - data_min) * 0.3
+        # If we have actual data, use it as the primary range
+        if data_min is not None and data_max is not None:
+            # Expand range by 50% for more dragging space
+            margin = (data_max - data_min) * 0.5
             y_min = data_min - margin
             y_max = data_max + margin
+        else:
+            # Fall back to validation ranges if no data available
+            task_data = self.validation_data.get(self.current_task, {})
+            all_mins = []
+            all_maxs = []
+            
+            for phase in task_data.keys():
+                if not str(phase).isdigit():
+                    continue
+                phase = int(phase)
+                
+                if var_name in task_data[phase]:
+                    range_data = task_data[phase][var_name]
+                    if 'min' in range_data and 'max' in range_data:
+                        min_val = range_data['min']
+                        max_val = range_data['max']
+                        
+                        if min_val is not None and max_val is not None:
+                            all_mins.append(min_val)
+                            all_maxs.append(max_val)
+            
+            if all_mins and all_maxs:
+                val_min = min(all_mins)
+                val_max = max(all_maxs)
+                # Expand range by 30% for validation ranges
+                margin = (val_max - val_min) * 0.3
+                y_min = val_min - margin
+                y_max = val_max + margin
+        
+        # Ensure minimum range for usability
+        if (y_max - y_min) < 0.1:
+            center = (y_max + y_min) / 2
+            y_min = center - 0.5
+            y_max = center + 0.5
         
         return y_min, y_max
+    
+    def load_variable_data(self, var_name):
+        """Load data for a specific variable into the cache."""
+        if not self.locomotion_data or not self.current_task:
+            return
+        
+        cache_key = f"{self.current_task}_{var_name}"
+        if cache_key in self.data_cache:
+            return  # Already cached
+        
+        all_data = []
+        try:
+            subjects = self.locomotion_data.get_subjects()
+            for subject in subjects:
+                try:
+                    cycles_data, feature_names = self.locomotion_data.get_cycles(
+                        subject=subject,
+                        task=self.current_task,
+                        features=None
+                    )
+                    
+                    if cycles_data.size > 0 and var_name in feature_names:
+                        var_idx = feature_names.index(var_name)
+                        all_data.append(cycles_data[:, :, var_idx])
+                except:
+                    continue
+            
+            if all_data:
+                all_data = np.vstack(all_data)
+                self.data_cache[cache_key] = all_data
+        except:
+            pass
     
     def plot_variable_data_pass_fail(self, ax, var_name, failed_stride_indices, show_pass=True):
         """Plot data for a variable using LineCollection for fast rendering.
@@ -1299,6 +1508,7 @@ class InteractiveValidationTuner:
                 messagebox.showinfo("Info", f"No data available for task: {self.current_task}")
                 
         except Exception as e:
+            print(f"ERROR: Auto-tuning failed: {str(e)}")
             messagebox.showerror("Error", f"Auto-tuning failed:\n{str(e)}")
             self.status_bar.config(text="Auto-tuning failed.")
     
@@ -1312,6 +1522,126 @@ class InteractiveValidationTuner:
         if result:
             # Reload validation ranges
             self.load_validation_ranges()
+    
+    def on_plot_click(self, event):
+        """Handle right-click events for adding/deleting boxes."""
+        if event.button == 3 and event.inaxes:  # Right-click
+            # Check if we clicked on a box
+            clicked_box = None
+            for box in self.draggable_boxes:
+                if box.ax == event.inaxes:
+                    # Use matplotlib's contains method for more reliable hit detection
+                    contains, _ = box.rect.contains(event)
+                    if contains:
+                        clicked_box = box
+                        break
+            
+            # Create context menu
+            menu = tk.Menu(self.root, tearoff=0)
+            
+            if clicked_box:
+                # Right-clicked on a box - show delete option
+                menu.add_command(label=f"Delete box at {clicked_box.phase}%", 
+                               command=lambda: self.delete_box(clicked_box))
+            else:
+                # Right-clicked on empty space - show add option
+                phase = int(round(event.xdata))
+                phase = max(0, min(100, phase))  # Constrain to 0-100
+                
+                # Find which variable this axis corresponds to
+                var_idx = None
+                for i, (ax_pass, ax_fail) in enumerate(zip(self.axes_pass, self.axes_fail)):
+                    if event.inaxes == ax_pass or event.inaxes == ax_fail:
+                        var_idx = i
+                        break
+                
+                if var_idx is not None and var_idx < len(self.current_variables):
+                    var_name = self.current_variables[var_idx]
+                    menu.add_command(label=f"Add box at {phase}% for {var_name}", 
+                                   command=lambda: self.add_box(phase, var_name, event.ydata))
+            
+            # Show menu at cursor position
+            try:
+                # Convert matplotlib coordinates to tkinter coordinates
+                x = self.root.winfo_pointerx()
+                y = self.root.winfo_pointery()
+                menu.tk_popup(x, y)
+            finally:
+                menu.grab_release()
+    
+    def delete_box(self, box):
+        """Delete a validation box and its paired box."""
+        print(f"Deleting box at phase {box.phase} for {box.var_name}")
+        
+        # Remove from validation data
+        if (self.current_task in self.validation_data and 
+            box.phase in self.validation_data[self.current_task] and
+            box.var_name in self.validation_data[self.current_task][box.phase]):
+            del self.validation_data[self.current_task][box.phase][box.var_name]
+            
+            # Clean up empty phase
+            if not self.validation_data[self.current_task][box.phase]:
+                del self.validation_data[self.current_task][box.phase]
+        
+        # Mark as modified
+        self.modified = True
+        self.validate_button.config(state='normal')
+        self.status_bar.config(text=f"Deleted validation box at {box.phase}% for {box.var_name}")
+        
+        # Force complete redraw to properly remove boxes
+        self.update_plot(force_redraw=True)
+    
+    def add_box(self, phase, var_name, click_value):
+        """Add a new validation box at the specified phase."""
+        # Create default range around click position
+        range_size = 0.4  # Default range size - larger for easier manipulation
+        min_val = click_value - range_size/2
+        max_val = click_value + range_size/2
+        
+        # Add to validation data
+        if self.current_task not in self.validation_data:
+            self.validation_data[self.current_task] = {}
+        if phase not in self.validation_data[self.current_task]:
+            self.validation_data[self.current_task][phase] = {}
+        
+        self.validation_data[self.current_task][phase][var_name] = {
+            'min': min_val,
+            'max': max_val
+        }
+        
+        # Find the axes for this variable
+        var_idx = self.current_variables.index(var_name)
+        ax_pass = self.axes_pass[var_idx]
+        ax_fail = self.axes_fail[var_idx]
+        
+        # Create draggable boxes on both axes directly for immediate responsiveness
+        box_pass = DraggableBox(
+            ax_pass, phase, var_name, min_val, max_val,
+            callback=self.on_box_changed,
+            color='lightgreen',
+            allow_x_drag=True
+        )
+        self.draggable_boxes.append(box_pass)
+        
+        box_fail = DraggableBox(
+            ax_fail, phase, var_name, min_val, max_val,
+            callback=self.on_box_changed,
+            color='lightcoral',
+            allow_x_drag=True
+        )
+        self.draggable_boxes.append(box_fail)
+        
+        # Pair the boxes
+        box_pass.paired_box = box_fail
+        box_fail.paired_box = box_pass
+        
+        # Update canvas to show new boxes
+        self.canvas.draw()
+        
+        # Mark as modified
+        self.modified = True
+        self.validate_button.config(state='normal')
+        self.status_bar.config(text=f"Added validation box at {phase}% for {var_name}")
     
     def run_validation_update(self):
         """Run validation and update stride colors based on current ranges."""
@@ -1345,62 +1675,14 @@ class InteractiveValidationTuner:
             self.status_bar.config(text="Validation complete.")
     
     def update_stride_colors(self):
-        """Update only the stride colors without recreating the entire plot."""
-        if not hasattr(self, 'axes_pass') or not hasattr(self, 'axes_fail'):
-            return
-        
-        failing_strides = self.cached_failing_strides
-        
-        # Clear and redraw data on each axis
-        for i, (ax_pass, ax_fail) in enumerate(zip(self.axes_pass, self.axes_fail)):
-            var_name = self.current_variables[i] if i < len(self.current_variables) else None
-            
-            if not var_name:
-                continue
-            
-            # Clear LineCollections and lines (keep boxes)
-            # Remove LineCollections from both axes
-            for ax in [ax_pass, ax_fail]:
-                collections_to_remove = []
-                for coll in ax.collections:
-                    # LineCollections have zorder=1, boxes are patches with zorder=10
-                    if hasattr(coll, 'get_zorder') and coll.get_zorder() < 10:
-                        collections_to_remove.append(coll)
-                
-                for coll in collections_to_remove:
-                    coll.remove()
-            
-            # Also clear any regular lines (e.g., mean lines)
-            lines_to_remove = []
-            for line in ax_pass.lines + ax_fail.lines:
-                # Keep the boxes, remove the data lines
-                if line.get_zorder() < 10:  # Data lines have lower z-order than boxes
-                    lines_to_remove.append(line)
-            
-            for line in lines_to_remove:
-                line.remove()
-            
-            # Replot with updated pass/fail status
-            if self.locomotion_data and var_name:
-                passed_count = self.plot_variable_data_pass_fail(
-                    ax_pass, var_name, failing_strides.get(var_name, set()), 
-                    show_pass=True
-                )
-                failed_count = self.plot_variable_data_pass_fail(
-                    ax_fail, var_name, failing_strides.get(var_name, set()),
-                    show_pass=False
-                )
-                
-                # Update titles with new counts
-                var_label = ax_pass.get_title().split(' - ')[0]  # Get original label
-                ax_pass.set_title(f'{var_label} - ✓ Pass ({passed_count})', fontsize=9, fontweight='bold')
-                ax_fail.set_title(f'{var_label} - ✗ Fail ({failed_count})', fontsize=9, fontweight='bold')
-        
-        self.canvas.draw_idle()
+        """Update stride colors by forcing a complete redraw."""
+        # The incremental update approach doesn't work well with blitting optimizations
+        # Force a complete redraw instead
+        self.update_plot(force_redraw=True)
     
     def refresh_plot(self):
         """Refresh the current plot."""
-        self.update_plot()
+        self.update_plot(force_redraw=True)
         self.status_bar.config(text="Plot refreshed.")
     
     def save_validation_ranges(self):
@@ -1425,7 +1707,7 @@ class InteractiveValidationTuner:
                 'version': '2.0',
                 'generated': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 'source': 'Interactive Validation Tuner',
-                'description': f'Interactively tuned validation ranges for {self.current_mode} features',
+                'description': 'Interactively tuned validation ranges for all features',
                 'tasks': {}
             }
             
@@ -1444,6 +1726,7 @@ class InteractiveValidationTuner:
             messagebox.showinfo("Success", f"Validation ranges saved to:\n{Path(file_path).name}")
             
         except Exception as e:
+            print(f"ERROR: Failed to save validation ranges: {str(e)}")
             messagebox.showerror("Error", f"Failed to save validation ranges:\n{str(e)}")
     
     def run(self):

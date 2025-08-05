@@ -200,7 +200,7 @@ function trial_table = process_trial(trial_struct)
     trial_table.knee_rotation_angle_contra_rad = circshift(knee_rotation_ipsi, shift);
 
     % Ankle angles - reshape and convert to radians (use standard ipsi/contra naming)
-    ankle_dorsiflexion_ipsi = reshape(joint_angles.AnkleAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
+    ankle_dorsiflexion_ipsi = reshape(-joint_angles.AnkleAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
     ankle_adduction_ipsi = reshape(joint_angles.AnkleAngles(:, frontal_plane, :), [], 1) * deg2rad_factor;
     ankle_rotation_ipsi = reshape(joint_angles.AnkleAngles(:, transverse_plane, :), [], 1) * deg2rad_factor;
 
@@ -218,7 +218,7 @@ function trial_table = process_trial(trial_struct)
     joint_moments = trial_struct.jointMoments;
 
     % Hip moments
-    hip_flexion_moment_ipsi = reshape(-joint_moments.HipMoment(:, sagittal_plane, :), [], 1);
+    hip_flexion_moment_ipsi = reshape(joint_moments.HipMoment(:, sagittal_plane, :), [], 1);
     hip_adduction_moment_ipsi = reshape(joint_moments.HipMoment(:, frontal_plane, :), [], 1);
     hip_rotation_moment_ipsi = reshape(joint_moments.HipMoment(:, transverse_plane, :), [], 1);
 
@@ -233,7 +233,7 @@ function trial_table = process_trial(trial_struct)
     trial_table.hip_rotation_moment_contra_Nm = circshift(hip_rotation_moment_ipsi, shift);
 
     % Knee moments
-    knee_flexion_moment_ipsi = reshape(-joint_moments.KneeMoment(:, sagittal_plane, :), [], 1);
+    knee_flexion_moment_ipsi = reshape(joint_moments.KneeMoment(:, sagittal_plane, :), [], 1);
     knee_adduction_moment_ipsi = reshape(joint_moments.KneeMoment(:, frontal_plane, :), [], 1);
     knee_rotation_moment_ipsi = reshape(joint_moments.KneeMoment(:, transverse_plane, :), [], 1);
 
@@ -274,5 +274,36 @@ function trial_table = process_trial(trial_struct)
     trial_table.cop_x_m = reshape(grf_data.CoP(:, x, :), [], 1);
     trial_table.cop_y_m = reshape(grf_data.CoP(:, y, :), [], 1);
     trial_table.cop_z_m = reshape(grf_data.CoP(:, z, :), [], 1);
+
+    % Segment angles - extract from motion capture data and calculate derived angles
+    segment_angles = trial_struct.jointAngles;
+    
+    % Pelvis angles - extract directly from PelvisAngles data
+    pelvis_tilt = reshape(segment_angles.PelvisAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
+    pelvis_obliquity = reshape(segment_angles.PelvisAngles(:, frontal_plane, :), [], 1) * deg2rad_factor;
+    pelvis_rotation = reshape(segment_angles.PelvisAngles(:, transverse_plane, :), [], 1) * deg2rad_factor;
+    
+    % Apply anatomical plane naming convention (pelvis angles are global, no ipsi/contra distinction)
+    trial_table.pelvis_sagittal_angle_rad = pelvis_tilt;
+    trial_table.pelvis_frontal_angle_rad = pelvis_obliquity;
+    trial_table.pelvis_transverse_angle_rad = pelvis_rotation;
+    
+    % Foot angles - extract from FootProgressAngles data (sagittal plane for foot progression)
+    foot_progression_ipsi = -reshape(segment_angles.FootProgressAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
+    
+    % Apply anatomical plane naming convention (right leg = ipsi, left leg = contra)
+    trial_table.foot_sagittal_angle_ipsi_rad = foot_progression_ipsi;
+    trial_table.foot_sagittal_angle_contra_rad = circshift(foot_progression_ipsi, shift);
+    
+    % Calculate derived segment angles using biomechanical relationships
+    % thigh_angle = pelvis_tilt + hip_flexion
+    thigh_angle_ipsi = (pelvis_tilt + hip_flexion_ipsi);
+    trial_table.thigh_sagittal_angle_ipsi_rad = thigh_angle_ipsi;
+    trial_table.thigh_sagittal_angle_contra_rad = circshift(thigh_angle_ipsi, shift);
+    
+    % shank_angle = thigh_angle - knee_flexion (note: using original thigh_angle calculation for consistency)
+    shank_angle_ipsi = ((pelvis_tilt + hip_flexion_ipsi) - knee_flexion_ipsi);
+    trial_table.shank_sagittal_angle_ipsi_rad = shank_angle_ipsi;
+    trial_table.shank_sagittal_angle_contra_rad = circshift(shank_angle_ipsi, shift);
 
 end
