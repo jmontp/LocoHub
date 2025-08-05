@@ -193,9 +193,11 @@ def create_filters_by_phase_plot(
             if phase in task_data and var_name in task_data[phase]:
                 var_ranges[phase] = task_data[phase][var_name]
         
-        # Determine y-axis range from validation ranges
+        # Determine y-axis range from both validation ranges and actual data
         all_mins = []
         all_maxs = []
+        
+        # Include validation ranges
         for phase, ranges in var_ranges.items():
             if 'min' in ranges and 'max' in ranges:
                 min_val = ranges['min']
@@ -207,6 +209,15 @@ def create_filters_by_phase_plot(
                 if not (np.isinf(min_val) or np.isinf(max_val) or np.isnan(min_val) or np.isnan(max_val)):
                     all_mins.append(min_val)
                     all_maxs.append(max_val)
+        
+        # Include actual data range if available
+        if data is not None and data.size > 0 and var_idx < data.shape[2]:
+            data_values = data[:, :, var_idx]
+            data_min = np.nanmin(data_values)
+            data_max = np.nanmax(data_values)
+            if not (np.isinf(data_min) or np.isinf(data_max) or np.isnan(data_min) or np.isnan(data_max)):
+                all_mins.append(data_min)
+                all_maxs.append(data_max)
         
         if all_mins and all_maxs:
             y_min = min(all_mins) - 0.1 * (max(all_maxs) - min(all_mins))

@@ -108,7 +108,7 @@ class DraggableBox:
     """
     
     def __init__(self, ax, phase: int, var_name: str, min_val: float, max_val: float, 
-                 callback=None, color='lightgreen', edgecolor='black', allow_x_drag=True):
+                 callback=None, color='lightgreen', edgecolor='black', allow_x_drag=True, parent=None):
         """
         Initialize a draggable validation range box.
         
@@ -122,6 +122,7 @@ class DraggableBox:
             color: Fill color
             edgecolor: Edge color
             allow_x_drag: Whether to allow horizontal dragging
+            parent: Reference to InteractiveValidationTuner for unit conversion
         """
         # Validate input values to prevent None arithmetic errors
         if min_val is None or max_val is None:
@@ -136,6 +137,7 @@ class DraggableBox:
         self.edgecolor = edgecolor
         self.box_width = 8
         self.allow_x_drag = allow_x_drag
+        self.parent = parent  # Store parent reference for unit conversion
         
         # Current values
         self.min_val = min_val
@@ -175,10 +177,14 @@ class DraggableBox:
         label_buffer = 0.02  # Additional buffer for readability
         
         # Add text labels positioned outside grab handle areas
-        self.min_text = self.ax.text(phase, min_val - handle_height - handle_offset - label_buffer, f'{min_val:.3f}',
+        # Convert to display units if needed
+        display_min = self._get_display_value(min_val)
+        display_max = self._get_display_value(max_val)
+        
+        self.min_text = self.ax.text(phase, min_val - handle_height - handle_offset - label_buffer, f'{display_min:.3f}',
                                      ha='center', va='top', fontsize=7, 
                                      fontweight='bold', zorder=11)
-        self.max_text = self.ax.text(phase, max_val + handle_offset + handle_height + label_buffer, f'{max_val:.3f}',
+        self.max_text = self.ax.text(phase, max_val + handle_offset + handle_height + label_buffer, f'{display_max:.3f}',
                                      ha='center', va='bottom', fontsize=7,
                                      fontweight='bold', zorder=11)
         
@@ -237,6 +243,12 @@ class DraggableBox:
         
         # Track if this box is selected
         self.selected = False
+    
+    def _get_display_value(self, value):
+        """Convert value to display units if parent has conversion method."""
+        if self.parent and hasattr(self.parent, 'convert_to_display_units'):
+            return self.parent.convert_to_display_units(value, self.var_name)
+        return value
     
     def _update_conversion_cache(self):
         """
@@ -449,9 +461,13 @@ class DraggableBox:
         handle_offset = 0.03  # Match handle offset
         label_buffer = 0.02  # Additional buffer for readability
         
-        self.min_text.set_text(f'{self.min_val:.3f}')
+        # Convert to display units if needed
+        display_min = self._get_display_value(self.min_val)
+        display_max = self._get_display_value(self.max_val)
+        
+        self.min_text.set_text(f'{display_min:.3f}')
         self.min_text.set_position((self.phase, self.min_val - handle_height - handle_offset - label_buffer))
-        self.max_text.set_text(f'{self.max_val:.3f}')
+        self.max_text.set_text(f'{display_max:.3f}')
         self.max_text.set_position((self.phase, self.max_val + handle_offset + handle_height + label_buffer))
         
         # Update rectangular handle positions with slight offset from box edges
@@ -635,6 +651,16 @@ class InteractiveValidationTuner:
             command=self.on_show_local_toggle
         )
         self.show_local_checkbox.pack(side=tk.LEFT, padx=10)
+        
+        # Checkbox to toggle between radians and degrees
+        self.show_degrees_var = tk.BooleanVar(value=False)
+        self.show_degrees_checkbox = ttk.Checkbutton(
+            toolbar_frame,
+            text="Show in Degrees",
+            variable=self.show_degrees_var,
+            command=self.on_degrees_toggle
+        )
+        self.show_degrees_checkbox.pack(side=tk.LEFT, padx=10)
         
         # Create scrollable matplotlib figure frame
         self.create_scrollable_plot_area()
@@ -999,6 +1025,32 @@ class InteractiveValidationTuner:
             # Use the 4-step algorithm to ensure proper background caching
             self.run_validation_update()
     
+    def on_degrees_toggle(self):
+        """Handle toggling between radians and degrees display."""
+        if self.locomotion_data and self.current_task:
+            # Need to redraw everything with new units
+            self.run_validation_update()
+    
+    def convert_to_display_units(self, value, var_name):
+        """Convert value to display units based on checkbox state."""
+        if value is None or var_name is None:
+            return value
+        
+        # Only convert radians to degrees if checkbox is checked and variable is in radians
+        if self.show_degrees_var.get() and var_name.endswith('_rad'):
+            return value * 180 / np.pi
+        return value
+    
+    def convert_from_display_units(self, value, var_name):
+        """Convert value from display units back to storage units."""
+        if value is None or var_name is None:
+            return value
+        
+        # Only convert degrees to radians if checkbox is checked and variable is in radians
+        if self.show_degrees_var.get() and var_name.endswith('_rad'):
+            return value * np.pi / 180
+        return value
+    
     def get_variable_unit(self, var_name):
         """Determine the unit of a variable from its name suffix."""
         if var_name is None:
@@ -1006,7 +1058,7 @@ class InteractiveValidationTuner:
         
         # Check suffixes
         if var_name.endswith('_rad'):
-            return 'rad'
+            return 'deg' if self.show_degrees_var.get() else 'rad'
         elif var_name.endswith('_Nm'):
             return 'Nm'
         elif var_name.endswith('_N'):
@@ -1201,7 +1253,8 @@ class InteractiveValidationTuner:
                                 callback=self.on_box_changed,
                                 color='lightgreen',  # Light green fill for pass column
                                 edgecolor='black',  # Black outline
-                                allow_x_drag=True
+                                allow_x_drag=True,
+                                parent=self
                             )
                             self.draggable_boxes.append(box_pass)
                             
@@ -1211,7 +1264,8 @@ class InteractiveValidationTuner:
                                 callback=self.on_box_changed,  # Add callback for fail side too
                                 color='lightcoral',  # Light red fill for fail column
                                 edgecolor='black',  # Black outline
-                                allow_x_drag=True  # Allow dragging on fail side as well
+                                allow_x_drag=True,  # Allow dragging on fail side as well
+                                parent=self
                             )
                             self.draggable_boxes.append(box_fail)
                             
@@ -1244,18 +1298,6 @@ class InteractiveValidationTuner:
                     unit = self.get_variable_unit(var_name)
                     if unit:
                         ax.set_ylabel(unit, fontsize=8)
-            
-            # Add dual axis for radians (showing degrees) on fail column
-            if var_name and var_name.endswith('_rad'):
-                ax2 = ax_fail.twinx()
-                # Convert radians to degrees for the secondary axis
-                ax2.set_ylim(y_min * 180 / np.pi, y_max * 180 / np.pi)
-                ax2.set_ylabel('deg', fontsize=8)
-                # Format tick labels to show as integers when appropriate
-                ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.0f}' if abs(x) >= 1 else f'{x:.1f}'))
-                # Make twin axis transparent to mouse events so draggable boxes work
-                ax2.set_navigate(False)
-                ax2.patch.set_visible(False)
         
         # Add title
         self.fig.suptitle(f'{self.current_task.replace("_", " ").title()} - All Validation Ranges',
@@ -1494,6 +1536,11 @@ class InteractiveValidationTuner:
         if np.isnan(y_min) or np.isnan(y_max) or np.isinf(y_min) or np.isinf(y_max):
             y_min, y_max = -1, 1  # Safe fallback
         
+        # Convert to display units if showing degrees
+        if self.show_degrees_var.get() and var_name.endswith('_rad'):
+            y_min = self.convert_to_display_units(y_min, var_name)
+            y_max = self.convert_to_display_units(y_max, var_name)
+        
         return y_min, y_max
     
     def load_variable_data(self, var_name):
@@ -1586,13 +1633,16 @@ class InteractiveValidationTuner:
                 local_lines = []
                 
                 for stride_idx, stride in enumerate(all_data):
+                    # Convert to display units if needed
+                    display_stride = self.convert_to_display_units(stride, var_name)
+                    
                     if stride_idx in global_passing:
                         # Globally passing (green)
-                        global_lines.append(list(zip(phase_percent, stride)))
+                        global_lines.append(list(zip(phase_percent, display_stride)))
                         count += 1
                     elif show_local_passing and stride_idx not in failed_stride_indices:
                         # Locally passing but not globally (yellow)
-                        local_lines.append(list(zip(phase_percent, stride)))
+                        local_lines.append(list(zip(phase_percent, display_stride)))
                         local_count += 1
                 
                 # Plot globally passing strides in green
@@ -1609,20 +1659,24 @@ class InteractiveValidationTuner:
                 if global_lines:
                     global_pass_strides = [all_data[i] for i in range(len(all_data)) if i in global_passing]
                     mean_pattern = np.mean(global_pass_strides, axis=0)
-                    ax.plot(phase_percent, mean_pattern, color='darkgreen', linewidth=2, zorder=5)
+                    display_mean = self.convert_to_display_units(mean_pattern, var_name)
+                    ax.plot(phase_percent, display_mean, color='darkgreen', linewidth=2, zorder=5)
                 
                 if local_lines:
                     local_pass_indices = [i for i in range(len(all_data)) 
                                          if i not in global_passing and i not in failed_stride_indices]
                     local_pass_strides = [all_data[i] for i in local_pass_indices]
                     mean_pattern = np.mean(local_pass_strides, axis=0)
-                    ax.plot(phase_percent, mean_pattern, color='darkorange', linewidth=2, zorder=6)
+                    display_mean = self.convert_to_display_units(mean_pattern, var_name)
+                    ax.plot(phase_percent, display_mean, color='darkorange', linewidth=2, zorder=6)
             else:
                 # For fail column: show strides that fail this specific feature
                 lines = []
                 for stride_idx, stride in enumerate(all_data):
                     if stride_idx in failed_stride_indices:
-                        lines.append(list(zip(phase_percent, stride)))
+                        # Convert to display units if needed
+                        display_stride = self.convert_to_display_units(stride, var_name)
+                        lines.append(list(zip(phase_percent, display_stride)))
                         count += 1
                 
                 # Use LineCollection for fast batch plotting
@@ -1635,7 +1689,8 @@ class InteractiveValidationTuner:
                     fail_strides = [all_data[i] for i in range(len(all_data)) if i in failed_stride_indices]
                     if fail_strides:
                         mean_pattern = np.mean(fail_strides, axis=0)
-                        ax.plot(phase_percent, mean_pattern, color='darkred', linewidth=2, zorder=5)
+                        display_mean = self.convert_to_display_units(mean_pattern, var_name)
+                        ax.plot(phase_percent, display_mean, color='darkred', linewidth=2, zorder=5)
         
         # Return both counts for title updates
         if show_pass and show_local_passing:
@@ -1972,7 +2027,8 @@ class InteractiveValidationTuner:
             callback=self.on_box_changed,
             color='lightgreen',  # Light green fill for pass column
             edgecolor='black',  # Black outline
-            allow_x_drag=True
+            allow_x_drag=True,
+            parent=self
         )
         self.draggable_boxes.append(box_pass)
         
@@ -1981,7 +2037,8 @@ class InteractiveValidationTuner:
             callback=self.on_box_changed,
             color='lightcoral',  # Light red fill for fail column
             edgecolor='black',  # Black outline
-            allow_x_drag=True
+            allow_x_drag=True,
+            parent=self
         )
         self.draggable_boxes.append(box_fail)
         
@@ -2210,18 +2267,6 @@ class InteractiveValidationTuner:
                     unit = self.get_variable_unit(var_name)
                     if unit:
                         ax.set_ylabel(unit, fontsize=8)
-            
-            # Add dual axis for radians (showing degrees) on fail column
-            if var_name and var_name.endswith('_rad'):
-                ax2 = ax_fail.twinx()
-                # Convert radians to degrees for the secondary axis
-                ax2.set_ylim(y_min * 180 / np.pi, y_max * 180 / np.pi)
-                ax2.set_ylabel('deg', fontsize=8)
-                # Format tick labels to show as integers when appropriate
-                ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.0f}' if abs(x) >= 1 else f'{x:.1f}'))
-                # Make twin axis transparent to mouse events so draggable boxes work
-                ax2.set_navigate(False)
-                ax2.patch.set_visible(False)
         
         # Add comprehensive title with stats
         self.fig.suptitle(self._get_summary_title(), 
@@ -2295,7 +2340,8 @@ class InteractiveValidationTuner:
                                 callback=self.on_box_changed,
                                 color='lightgreen',  # Light green fill for pass column
                                 edgecolor='black',  # Black outline
-                                allow_x_drag=True
+                                allow_x_drag=True,
+                                parent=self
                             )
                             self.draggable_boxes.append(box_pass)
                             

@@ -65,6 +65,17 @@ Standardized format for biomechanical datasets with consistent variable naming a
 - `knee_flexion_angle_<side>_rad` 
 - `ankle_dorsiflexion_angle_<side>_rad`
 
+**Segment Angles** (optional):
+- `pelvis_sagittal_angle_rad` - Anterior/posterior tilt
+- `pelvis_frontal_angle_rad` - Lateral tilt (obliquity)
+- `pelvis_transverse_angle_rad` - Axial rotation
+- `trunk_sagittal_angle_rad` - Forward/backward lean
+- `trunk_frontal_angle_rad` - Lateral bend
+- `trunk_transverse_angle_rad` - Axial rotation
+- `thigh_sagittal_angle_<side>_rad` - Thigh orientation
+- `shank_sagittal_angle_<side>_rad` - Shank orientation
+- `foot_sagittal_angle_<side>_rad` - Foot orientation
+
 **Joint Moments** (optional):
 - `hip_moment_<side>_Nm`
 - `knee_moment_<side>_Nm`
