@@ -61,8 +61,16 @@ for subject_idx = 1:length(subjects)
                 continue
             end
             
-            % Process the trial data
-            trial_table = process_trial(trial_struct);
+            % Process the trial data (pass task info for data fixes)
+            task_type = '';
+            if incline_value < 0
+                task_type = 'decline_walking';
+            elseif incline_value > 0
+                task_type = 'incline_walking';
+            else
+                task_type = 'level_walking';
+            end
+            trial_table = process_trial(trial_struct, task_type, subject_str, incline_value);
 
             % Add the subject to the table (using standard naming)
             trial_table.subject = repmat({subject_str}, size(trial_table, 1), 1);
@@ -106,8 +114,8 @@ for subject_idx = 1:length(subjects)
             continue
         end
 
-        % Process the trial data
-        trial_table = process_trial(trial_struct);
+        % Process the trial data (pass task info for data fixes)
+        trial_table = process_trial(trial_struct, 'run', subject_str, 0);  % 0 incline for running
 
         % Add the subject to the table (using standard naming)
         trial_table.subject = repmat({subject_str}, size(trial_table, 1), 1);
@@ -122,6 +130,62 @@ for subject_idx = 1:length(subjects)
 
 end
 
+
+% This section is dedicated for fixes to the data itself. I.e. it consolidates 
+% Any formatting issues that we have found in the data. 
+
+% Foot angle fix for decline and level walking
+% Apply offset correction first (per stride), then check for sign flip
+if strcmp(task_type, 'decline_walking') || strcmp(task_type, 'level_walking')
+    
+    % Determine expected midstance angle based on task
+    if strcmp(task_type, 'decline_walking')
+        expected_midstance = incline_value * pi/180;  % Ramp angle in radians
+    else  % level walking
+        expected_midstance = 0;  % Flat ground
+    end
+    
+    % Get foot angle data from current trial (already added to total_data)
+    foot_ipsi = total_data.foot_sagittal_angle_ipsi_rad(end-size(trial_table,1)+1:end);
+    foot_contra = total_data.foot_sagittal_angle_contra_rad(end-size(trial_table,1)+1:end);
+    
+    % Process each stride
+    num_strides = length(foot_ipsi) / 150;
+    midstance_idx = 30;  % 20% of 150-point cycle
+    toeoff_idx = 105;    % 70% of 150-point cycle
+    
+    for stride = 1:num_strides
+        stride_start = (stride-1)*150 + 1;
+        stride_end = stride*150;
+        
+        % Step 1: Apply offset correction based on midstance
+        midstance_angle = foot_ipsi(stride_start + midstance_idx - 1);
+        offset = expected_midstance - midstance_angle;
+        foot_ipsi(stride_start:stride_end) = foot_ipsi(stride_start:stride_end) + offset;
+        foot_contra(stride_start:stride_end) = foot_contra(stride_start:stride_end) + offset;
+        
+        % Step 2: Check and fix sign flip based on toe-off
+        toeoff_angle = foot_ipsi(stride_start + toeoff_idx - 1);
+        if toeoff_angle > 0  % Should be negative (plantarflexion at push-off)
+            foot_ipsi(stride_start:stride_end) = -foot_ipsi(stride_start:stride_end);
+            foot_contra(stride_start:stride_end) = -foot_contra(stride_start:stride_end);
+        end
+    end
+    
+    % Update the data in total_data
+    total_data.foot_sagittal_angle_ipsi_rad(end-size(trial_table,1)+1:end) = foot_ipsi;
+    total_data.foot_sagittal_angle_contra_rad(end-size(trial_table,1)+1:end) = foot_contra;
+    
+    fprintf('  Fixed foot angles for %s %s (offset + sign check)\n', subject_str, task_type);
+end 
+
+
+
+
+
+
+
+
 % Save the phase-indexed data
 output_path = fullfile('..', '..', '..', 'converted_datasets', 'umich_2021_phase.parquet');
 parquetwrite(output_path, total_data);
@@ -131,7 +195,7 @@ fprintf('Saved phase-indexed data to: %s\n', output_path);
 
 
 % This function will process the data for a single trial
-function trial_table = process_trial(trial_struct)
+function trial_table = process_trial(trial_struct, task_type, subject_str, incline_value)
 
     % Create a new table that will be returned
     trial_table = table;
