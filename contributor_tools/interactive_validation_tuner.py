@@ -1703,9 +1703,8 @@ class InteractiveValidationTuner:
         # Update canvas to show new boxes
         self.canvas.draw()
         
-        # PERFORMANCE: Eagerly prepare all backgrounds - eliminates 500ms click delay!
-        # This moves expensive operation from click time to plot update time
-        self.prepare_all_backgrounds()
+        # Note: Individual box backgrounds will be cached on first interaction
+        # This avoids expensive redraw and GUI reset issues
         
         # Mark as modified
         self.modified = True
