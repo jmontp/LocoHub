@@ -307,12 +307,8 @@ class DraggableBox:
         # No expensive operations needed here - drag/resize initiation is instant!
         canvas = self.ax.figure.canvas
         
-        # Background should be ready from 4-step algorithm, but provide minimal fallback
-        if self.background is None:
-            print("FALLBACK: Preparing background on-demand (should be rare with 4-step algorithm)")
-            # Minimal fallback - just capture background without full canvas.draw()
-            self.background = canvas.copy_from_bbox(self.ax.bbox)
-            self.background_invalid = False
+        # Background should be ready from 4-step algorithm
+        # NO FALLBACK CACHING - this would capture boxes and cause trails!
         
         # Show phase indicator if dragging horizontally
         if self.dragging == 'middle' and self.allow_x_drag:
@@ -396,8 +392,8 @@ class DraggableBox:
         self.hover_zone.set_y(self.min_val - self._hover_extend_data)
         self.hover_zone.set_height((self.max_val - self.min_val) + 2 * self._hover_extend_data)
         
-        # Use blitting for fast updates
-        if self.background is not None:
+        # Use blitting for fast updates only if background is valid
+        if self.background is not None and not self.background_invalid:
             canvas = self.ax.figure.canvas
             # Restore the background
             canvas.restore_region(self.background)
@@ -593,6 +589,11 @@ class InteractiveValidationTuner:
         self.root.bind('<Escape>', self.exit_fullscreen)
         self.fullscreen = False
         
+        # Bind window resize with debouncing
+        self.resize_timer = None
+        self.last_window_size = None
+        self.root.bind('<Configure>', self.on_window_configure)
+        
         # Create menu bar
         menubar = tk.Menu(self.root)
         self.root.config(menu=menubar)
@@ -752,6 +753,81 @@ class InteractiveValidationTuner:
         self.fullscreen = False
         self.root.attributes('-fullscreen', False)
     
+    def on_window_configure(self, event):
+        """Handle window configuration changes (resize, move, etc.)."""
+        if event.widget == self.root:
+            current_size = (self.root.winfo_width(), self.root.winfo_height())
+            
+            # Check if size actually changed (not just a move)
+            if current_size != self.last_window_size:
+                self.last_window_size = current_size
+                
+                # Cancel any active drags
+                if hasattr(self, 'draggable_boxes'):
+                    for box in self.draggable_boxes:
+                        if box.dragging is not None:
+                            box.dragging = None
+                            box.rect.set_edgecolor(box.edgecolor)
+                            box.drag_phase_text.set_visible(False)
+                            # Mark background as invalid
+                            box.background_invalid = True
+                
+                # Cancel previous timer if exists
+                if self.resize_timer:
+                    self.root.after_cancel(self.resize_timer)
+                
+                # Set new timer - cache backgrounds 500ms after resize stops
+                self.resize_timer = self.root.after(500, self.on_resize_complete)
+    
+    def on_resize_complete(self):
+        """Called after window resize has completed (debounced)."""
+        self.resize_timer = None
+        
+        # Only re-cache if we have draggable boxes
+        if not hasattr(self, 'draggable_boxes') or not self.draggable_boxes:
+            return
+        
+        # Re-cache backgrounds for all boxes
+        self._recache_backgrounds_after_resize()
+    
+    def _recache_backgrounds_after_resize(self):
+        """Re-cache clean backgrounds after window resize."""
+        if not hasattr(self, 'canvas'):
+            return
+        
+        print("Re-caching backgrounds after window resize...")
+        
+        # Hide all boxes temporarily
+        for box in self.draggable_boxes:
+            box.rect.set_visible(False)
+            box.top_handle.set_visible(False)
+            box.bottom_handle.set_visible(False)
+            box.min_text.set_visible(False)
+            box.max_text.set_visible(False)
+            box.phase_text.set_visible(False)
+        
+        # Draw canvas with boxes hidden to get clean backgrounds
+        self.canvas.draw()
+        
+        # Cache background for each box
+        for box in self.draggable_boxes:
+            box.background = self.canvas.copy_from_bbox(box.ax.bbox)
+            box.background_invalid = False
+        
+        # Restore visibility
+        for box in self.draggable_boxes:
+            box.rect.set_visible(True)
+            box.top_handle.set_visible(True)
+            box.bottom_handle.set_visible(True)
+            box.min_text.set_visible(True)
+            box.max_text.set_visible(True)
+            box.phase_text.set_visible(True)
+        
+        # Final draw to show boxes again
+        self.canvas.draw_idle()
+        
+        print(f"Re-cached backgrounds for {len(self.draggable_boxes)} boxes")
+    
     def create_empty_plot(self):
         """Create an empty matplotlib figure."""
         from matplotlib.figure import Figure
@@ -766,7 +842,7 @@ class InteractiveValidationTuner:
         fig_width = (window_width - 100) / dpi  # Account for scrollbar and padding
         fig_height = 8  # Start with reasonable height
         
-        self.fig = Figure(figsize=(fig_width, fig_height), dpi=dpi, constrained_layout=True)
+        self.fig = Figure(figsize=(fig_width, fig_height), dpi=dpi)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         
@@ -1798,6 +1874,10 @@ class InteractiveValidationTuner:
             self.status_bar.config(text=status_text)
         else:
             self.status_bar.config(text="Validation complete.")
+        
+        # Update scroll region to match new figure size
+        self.plot_frame.update_idletasks()
+        self.on_plot_frame_configure()
     
     def _draw_traces_only(self):
         """Step 2: Draw traces without draggable boxes."""
@@ -1827,7 +1907,17 @@ class InteractiveValidationTuner:
         # Reuse existing figure to maintain canvas connection, just resize and clear
         self.fig.set_size_inches(fig_width, fig_height)
         self.fig.clear()  # Clear all existing content but keep figure connected to canvas
+        # Ensure constrained_layout is off so subplots_adjust works properly
+        self.fig.set_constrained_layout(False)
         self.fig.subplots_adjust(left=0.06, right=0.98, top=0.94, bottom=0.02, hspace=0.25, wspace=0.15)
+        
+        # Recreate canvas to match new figure size
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        if hasattr(self, 'canvas'):
+            self.canvas.get_tk_widget().destroy()
+        
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         
         # Create subplots (pass/fail columns)
         self.axes_pass = []
