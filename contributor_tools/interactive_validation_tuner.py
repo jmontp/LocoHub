@@ -1712,23 +1712,49 @@ class InteractiveValidationTuner:
         3. Cache clean trace backgrounds
         4. Add boxes back for interaction
         """
-        if not self.locomotion_data or not hasattr(self, 'current_variables'):
+        if not self.locomotion_data:
             return
         
-        self.status_bar.config(text="Running validation...")
+        # Ensure current_variables is set for validation (fix validate button issue)
+        if not hasattr(self, 'current_variables') or not self.current_variables:
+            variables, variable_labels = self.get_all_features()
+            self.current_variables = variables
+            print(f"Set current_variables for validation: {len(variables)} features")
+        
+        self.status_bar.config(text="Step 1/4: Running validation...")
         self.root.update()
         
         # Step 1: Run validation
         self.cached_failing_strides = self.run_validation(self.current_variables)
         
+        self.status_bar.config(text="Step 2/4: Drawing traces...")
+        self.root.update()
+        
         # Step 2: Draw traces without boxes
         self._draw_traces_only()
+        
+        self.status_bar.config(text="Step 3/4: Caching backgrounds...")
+        self.root.update()
         
         # Step 3: Cache clean trace backgrounds
         self._cache_trace_backgrounds()
         
+        self.status_bar.config(text="Step 4/4: Adding interactive elements...")
+        self.root.update()
+        
         # Step 4: Add boxes back for interaction
         self._add_boxes_for_interaction()
+        
+        # Force final canvas refresh to ensure display updates
+        self.status_bar.config(text="Refreshing display...")
+        self.root.update()
+        self.canvas.draw_idle()  # Use draw_idle for better performance
+        self.canvas.flush_events()  # Ensure all events are processed
+        
+        # Debug: Verify figure/canvas connection
+        print(f"Figure has {len(self.fig.axes)} axes, Canvas figure ID: {id(self.canvas.figure)}, Self figure ID: {id(self.fig)}")
+        if id(self.canvas.figure) != id(self.fig):
+            print("WARNING: Canvas and self.fig are different objects - display may be blank!")
         
         # Disable validate button
         self.validate_button.config(state='disabled')
@@ -1772,9 +1798,9 @@ class InteractiveValidationTuner:
         row_height = 2.5
         fig_height = n_vars * row_height + 1
         
-        # Create new figure with dynamic size
-        from matplotlib.figure import Figure
-        self.fig = Figure(figsize=(fig_width, fig_height), dpi=dpi)
+        # Reuse existing figure to maintain canvas connection, just resize and clear
+        self.fig.set_size_inches(fig_width, fig_height)
+        self.fig.clear()  # Clear all existing content but keep figure connected to canvas
         self.fig.subplots_adjust(left=0.06, right=0.98, top=0.96, bottom=0.02, hspace=0.25, wspace=0.15)
         
         # Create subplots (pass/fail columns)
