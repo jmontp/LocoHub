@@ -955,8 +955,9 @@ class InteractiveValidationTuner:
     def on_task_changed(self, event=None):
         """Handle task selection change."""
         self.current_task = self.task_var.get()
-        if self.current_task:
-            self.update_plot()
+        if self.current_task and self.locomotion_data:
+            # Use the 4-step validation process to ensure proper background caching
+            self.run_validation_update()
     
     def on_show_local_toggle(self):
         """Handle toggling of show locally passing checkbox."""
