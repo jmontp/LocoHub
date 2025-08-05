@@ -1417,7 +1417,7 @@ class InteractiveValidationTuner:
                 data_max = np.max(data)
         
         # If we have actual data, use it as the primary range
-        if data_min is not None and data_max is not None:
+        if data_min is not None and data_max is not None and not np.isnan(data_min) and not np.isnan(data_max):
             # Expand range by 50% for more dragging space
             margin = (data_max - data_min) * 0.5
             y_min = data_min - margin
@@ -1456,6 +1456,10 @@ class InteractiveValidationTuner:
             center = (y_max + y_min) / 2
             y_min = center - 0.5
             y_max = center + 0.5
+        
+        # Final safety check - never return NaN or Inf
+        if np.isnan(y_min) or np.isnan(y_max) or np.isinf(y_min) or np.isinf(y_max):
+            y_min, y_max = -1, 1  # Safe fallback
         
         return y_min, y_max
     
