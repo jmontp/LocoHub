@@ -628,9 +628,6 @@ class InteractiveValidationTuner:
         self.validate_button = ttk.Button(toolbar_frame, text="Validate", command=self.run_validation_update, state='disabled')
         self.validate_button.pack(side=tk.LEFT, padx=5)
         
-        ttk.Button(toolbar_frame, text="Reset", command=self.reset_ranges).pack(side=tk.LEFT, padx=5)
-        ttk.Button(toolbar_frame, text="Refresh Plot", command=self.refresh_plot).pack(side=tk.LEFT, padx=5)
-        
         # Create scrollable matplotlib figure frame
         self.create_scrollable_plot_area()
         
@@ -1588,16 +1585,6 @@ class InteractiveValidationTuner:
             messagebox.showerror("Error", f"Auto-tuning failed:\n{str(e)}")
             self.status_bar.config(text="Auto-tuning failed.")
     
-    def reset_ranges(self):
-        """Reset ranges to original values."""
-        if not self.modified:
-            messagebox.showinfo("Info", "No changes to reset.")
-            return
-        
-        result = messagebox.askyesno("Confirm Reset", "Reset all changes to original values?")
-        if result:
-            # Reload validation ranges
-            self.load_validation_ranges()
     
     def on_plot_click(self, event):
         """Handle right-click events for adding/deleting boxes."""
@@ -2072,10 +2059,6 @@ class InteractiveValidationTuner:
         # Force a complete redraw instead
         self.update_plot(force_redraw=True)
     
-    def refresh_plot(self):
-        """Refresh the current plot."""
-        self.update_plot(force_redraw=True)
-        self.status_bar.config(text="Plot refreshed.")
     
     def save_validation_ranges(self):
         """Save current validation ranges to YAML file."""
