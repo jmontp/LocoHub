@@ -472,24 +472,21 @@ class DraggableBox:
     def remove(self):
         """Remove the box from the plot."""
         try:
-            # Remove from axes instead of calling remove() on artist
-            if self.rect in self.ax.patches:
-                self.ax.patches.remove(self.rect)
-            if self.min_text in self.ax.texts:
-                self.ax.texts.remove(self.min_text)
-            if self.max_text in self.ax.texts:
-                self.ax.texts.remove(self.max_text)
-            if self.phase_text in self.ax.texts:
-                self.ax.texts.remove(self.phase_text)
-            if hasattr(self, 'drag_phase_text') and self.drag_phase_text in self.ax.texts:
-                self.ax.texts.remove(self.drag_phase_text)
+            # Properly unregister all artists from matplotlib
+            # Note: ax.patches and ax.texts don't have a remove() method,
+            # but calling artist.remove() handles everything properly
+            self.rect.remove()
+            self.min_text.remove()
+            self.max_text.remove()
+            self.phase_text.remove()
+            
+            if hasattr(self, 'drag_phase_text'):
+                self.drag_phase_text.remove()
+            
             # Remove resize handles and hover zone
-            if self.top_handle in self.ax.patches:
-                self.ax.patches.remove(self.top_handle)
-            if self.bottom_handle in self.ax.patches:
-                self.ax.patches.remove(self.bottom_handle)
-            if self.hover_zone in self.ax.patches:
-                self.ax.patches.remove(self.hover_zone)
+            self.top_handle.remove()
+            self.bottom_handle.remove()
+            self.hover_zone.remove()
         except:
             pass  # Ignore if already removed
         
@@ -1598,7 +1595,7 @@ class InteractiveValidationTuner:
                 box.paired_box.rect.set_x(box.phase - box.paired_box.box_width/2)
                 box.paired_box.phase_text.set_text(f'{box.phase}%')
                 box.paired_box.phase_text.set_position((box.phase, box.paired_box.ax.get_ylim()[1]))
-                box.paired_box.ax.figure.canvas.draw_idle()
+                # Don't call draw_idle() here - paired box updates happen through blitting
             
             self.modified = True
             self.status_bar.config(text=f"Modified: {box.var_name} at phase {box.phase}% - Press Validate to update")
@@ -1722,13 +1719,102 @@ class InteractiveValidationTuner:
             if not self.validation_data[self.current_task][box.phase]:
                 del self.validation_data[self.current_task][box.phase]
         
+        # Step 1: Remove BOTH boxes from the list first
+        paired_box = box.paired_box if hasattr(box, 'paired_box') else None
+        
+        # Disconnect callbacks to prevent re-adding to validation_data
+        box.callback = None
+        if paired_box:
+            paired_box.callback = None
+        
+        # Clear paired_box references to prevent ghost boxes
+        box.paired_box = None
+        if paired_box:
+            paired_box.paired_box = None
+        
+        if box in self.draggable_boxes:
+            self.draggable_boxes.remove(box)
+        
+        if paired_box and paired_box in self.draggable_boxes:
+            self.draggable_boxes.remove(paired_box)
+        
+        # Step 2: Call remove() on both to disconnect events and remove from plot
+        box.remove()
+        if paired_box:
+            paired_box.remove()
+        
+        # Step 3: Now redraw the affected axes with remaining boxes
+        if hasattr(self, 'trace_backgrounds') and hasattr(self, 'current_variables'):
+            try:
+                var_idx = self.current_variables.index(box.var_name)
+                
+                # Collect axes that need updating
+                axes_to_update = []
+                
+                # Determine which axes need updating and their background keys
+                if hasattr(self, 'axes_pass') and box.ax in self.axes_pass:
+                    axes_to_update.append((box.ax, f'pass_{var_idx}'))
+                elif hasattr(self, 'axes_fail') and box.ax in self.axes_fail:
+                    axes_to_update.append((box.ax, f'fail_{var_idx}'))
+                
+                if paired_box:
+                    if hasattr(self, 'axes_pass') and paired_box.ax in self.axes_pass:
+                        axes_to_update.append((paired_box.ax, f'pass_{var_idx}'))
+                    elif hasattr(self, 'axes_fail') and paired_box.ax in self.axes_fail:
+                        axes_to_update.append((paired_box.ax, f'fail_{var_idx}'))
+                
+                # Update each affected axis
+                for ax, bg_key in axes_to_update:
+                    bg = self.trace_backgrounds.get(bg_key)
+                    if bg:
+                        # Restore the clean trace background
+                        self.canvas.restore_region(bg)
+                        
+                        # Redraw ALL remaining boxes on this axis
+                        for other_box in self.draggable_boxes:
+                            if other_box.ax == ax:
+                                ax.draw_artist(other_box.rect)
+                                ax.draw_artist(other_box.min_text)
+                                ax.draw_artist(other_box.max_text)
+                                ax.draw_artist(other_box.phase_text)
+                                ax.draw_artist(other_box.top_handle)
+                                ax.draw_artist(other_box.bottom_handle)
+                        
+                        # Blit the changes
+                        self.canvas.blit(ax.bbox)
+                        
+            except (ValueError, IndexError):
+                pass  # Variable not found in current_variables
+        
+        # Update cached backgrounds for all remaining boxes on affected axes
+        # They should all use the same trace-only background from self.trace_backgrounds
+        if hasattr(self, 'trace_backgrounds') and hasattr(self, 'axes_pass') and hasattr(self, 'axes_fail'):
+            affected_axes = set()
+            affected_axes.add(box.ax)
+            if paired_box:
+                affected_axes.add(paired_box.ax)
+            
+            for ax in affected_axes:
+                # Determine which trace background to use
+                bg = None
+                if ax in self.axes_pass:
+                    idx = self.axes_pass.index(ax)
+                    bg = self.trace_backgrounds.get(f'pass_{idx}')
+                elif ax in self.axes_fail:
+                    idx = self.axes_fail.index(ax)
+                    bg = self.trace_backgrounds.get(f'fail_{idx}')
+                
+                # Assign the same trace background to all boxes on this axis
+                if bg:
+                    for b in self.draggable_boxes:
+                        if b.ax == ax:
+                            b.background = bg
+                            b.background_invalid = False
+        
         # Mark as modified
         self.modified = True
         self.validate_button.config(state='normal')
         self.status_bar.config(text=f"Deleted validation box at {box.phase}% for {box.var_name}")
-        
-        # Force complete redraw to properly remove boxes
-        self.update_plot(force_redraw=True)
     
     def add_box(self, phase, var_name, click_value):
         """Add a new validation box at the specified phase."""
@@ -1776,11 +1862,22 @@ class InteractiveValidationTuner:
         box_pass.paired_box = box_fail
         box_fail.paired_box = box_pass
         
-        # Update canvas to show new boxes
-        self.canvas.draw()
+        # Assign cached trace backgrounds to new boxes for proper blitting
+        if hasattr(self, 'trace_backgrounds'):
+            pass_bg = self.trace_backgrounds.get(f'pass_{var_idx}')
+            fail_bg = self.trace_backgrounds.get(f'fail_{var_idx}')
+            
+            if pass_bg is not None and fail_bg is not None:
+                box_pass.background = pass_bg
+                box_fail.background = fail_bg
+                box_pass.background_invalid = False
+                box_fail.background_invalid = False
+                print(f"Assigned cached backgrounds to new boxes for {var_name}")
+            else:
+                print(f"WARNING: Missing cached backgrounds for {var_name}")
         
-        # Note: Individual box backgrounds will be cached on first interaction
-        # This avoids expensive redraw and GUI reset issues
+        # Update canvas without destroying cached backgrounds
+        self.canvas.draw_idle()
         
         # Mark as modified
         self.modified = True
