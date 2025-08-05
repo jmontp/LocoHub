@@ -1711,6 +1711,24 @@ class InteractiveValidationTuner:
         self.validate_button.config(state='normal')
         self.status_bar.config(text=f"Added validation box at {phase}% for {var_name}")
     
+    def _get_summary_title(self):
+        """Generate comprehensive summary title with validation stats."""
+        # Main title components
+        task_title = self.current_task.replace("_", " ").title() if self.current_task else "No Task"
+        dataset_name = self.dataset_path.name if hasattr(self, 'dataset_path') else "No Dataset"
+        
+        # Stats line (if validation has been run)
+        if hasattr(self, 'validation_stats'):
+            stats = self.validation_stats
+            pass_pct = stats['passing_strides']/stats['total_strides']*100 if stats['total_strides'] > 0 else 0
+            stats_line = (f"\n{stats['total_strides']} strides | "
+                         f"{stats['features_validated']}/{stats['features_displayed']} features validated | "
+                         f"{stats['passing_strides']} passing ({pass_pct:.1f}%)")
+        else:
+            stats_line = "\nNo validation run yet - click Validate to analyze"
+        
+        return f"{task_title} - {dataset_name}{stats_line}"
+    
     def run_validation_update(self):
         """Run validation using the 4-step algorithm for optimal performance.
         
@@ -1809,7 +1827,7 @@ class InteractiveValidationTuner:
         # Reuse existing figure to maintain canvas connection, just resize and clear
         self.fig.set_size_inches(fig_width, fig_height)
         self.fig.clear()  # Clear all existing content but keep figure connected to canvas
-        self.fig.subplots_adjust(left=0.06, right=0.98, top=0.96, bottom=0.02, hspace=0.25, wspace=0.15)
+        self.fig.subplots_adjust(left=0.06, right=0.98, top=0.94, bottom=0.02, hspace=0.25, wspace=0.15)
         
         # Create subplots (pass/fail columns)
         self.axes_pass = []
@@ -1867,6 +1885,10 @@ class InteractiveValidationTuner:
                 if i == 0:  # Only on first row
                     y_unit = 'Nm' if any('moment' in v for v in variables[:3]) else 'rad'
                     ax.set_ylabel(y_unit)
+        
+        # Add comprehensive title with stats
+        self.fig.suptitle(self._get_summary_title(), 
+                          fontsize=11, fontweight='bold', y=0.99)
         
         # Update canvas to show traces
         self.canvas.draw()
@@ -2006,7 +2028,7 @@ class InteractiveValidationTuner:
         # Create new figure with dynamic size (like original update_plot())
         from matplotlib.figure import Figure
         self.fig = Figure(figsize=(fig_width, fig_height), dpi=dpi)
-        self.fig.subplots_adjust(left=0.06, right=0.98, top=0.96, bottom=0.02, hspace=0.25, wspace=0.15)
+        self.fig.subplots_adjust(left=0.06, right=0.98, top=0.94, bottom=0.02, hspace=0.25, wspace=0.15)
         
         # Create subplots (pass/fail columns)
         self.axes_pass = []
@@ -2025,6 +2047,10 @@ class InteractiveValidationTuner:
         
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        
+        # Add initial title (will be updated with stats after validation)
+        self.fig.suptitle(self._get_summary_title(),
+                          fontsize=11, fontweight='bold', y=0.99)
         
         # Connect right-click event for context menu
         self.fig.canvas.mpl_connect('button_press_event', self.on_plot_click)
