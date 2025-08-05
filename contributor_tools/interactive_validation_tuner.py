@@ -137,6 +137,14 @@ class DraggableBox:
         self.min_val = min_val
         self.max_val = max_val
         
+        # Performance optimization: Cache expensive pixel-to-data conversion factors
+        self._pixels_per_data_unit = None
+        self._handle_offset_data = None
+        self._hover_extend_data = None
+        self._last_ylim = None
+        self._last_figure_size = None
+        self._last_axes_position = None
+        
         # Create rectangle
         self.rect = patches.Rectangle(
             (phase - self.box_width/2, min_val), 
@@ -173,38 +181,29 @@ class DraggableBox:
         
         # Create larger circular resize handles positioned outside the box
         handle_radius = 18  # pixels radius (much larger and easier to target)
-        handle_offset = 28  # pixels offset from box edge (farther away)
-        data_range = self.ax.get_ylim()[1] - self.ax.get_ylim()[0]
-        # Convert pixels to data units for consistent size
-        fig_height_inches = self.ax.figure.get_size_inches()[1]
-        axes_position = self.ax.get_position()
-        axes_height_inches = axes_position.height * fig_height_inches
-        dpi = self.ax.figure.dpi
-        pixels_per_data_unit = (axes_height_inches * dpi) / data_range
-        handle_radius_data = handle_radius / pixels_per_data_unit
-        handle_offset_data = handle_offset / pixels_per_data_unit
+        # Initialize cached conversion factors
+        self._update_conversion_cache()
+        handle_radius_data = handle_radius / self._pixels_per_data_unit
         
-        # Position circles outside the box
+        # Position circles outside the box (ALWAYS VISIBLE for better performance)
         self.top_handle = patches.Circle(
-            (phase, max_val + handle_offset_data), handle_radius_data,
+            (phase, max_val + self._handle_offset_data), handle_radius_data,
             facecolor='white', edgecolor='black', linewidth=2,
-            visible=False, zorder=20
+            visible=True, zorder=20  # Always visible for performance
         )
         self.bottom_handle = patches.Circle(
-            (phase, min_val - handle_offset_data), handle_radius_data,
+            (phase, min_val - self._handle_offset_data), handle_radius_data,
             facecolor='white', edgecolor='black', linewidth=2,
-            visible=False, zorder=20
+            visible=True, zorder=20  # Always visible for performance
         )
         self.ax.add_patch(self.top_handle)
         self.ax.add_patch(self.bottom_handle)
         
         # Create transparent hover zone for better UX
-        hover_extend = 35  # pixels extension for hover zone (larger to accommodate bigger circles)
-        hover_extend_data = hover_extend / pixels_per_data_unit
         self.hover_zone = patches.Rectangle(
-            (phase - self.box_width/2, min_val - hover_extend_data),
+            (phase - self.box_width/2, min_val - self._hover_extend_data),
             self.box_width,
-            (max_val - min_val) + 2 * hover_extend_data,
+            (max_val - min_val) + 2 * self._hover_extend_data,
             facecolor='none', edgecolor='none', alpha=0,
             visible=True, zorder=1
         )
@@ -221,14 +220,44 @@ class DraggableBox:
         # Blitting background storage
         self.background = None
         
-        # Connect events
+        # Connect events (PERFORMANCE: Remove separate hover handler)
         self.cidpress = self.ax.figure.canvas.mpl_connect('button_press_event', self.on_press)
         self.cidrelease = self.ax.figure.canvas.mpl_connect('button_release_event', self.on_release)
         self.cidmotion = self.ax.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
-        self.cidhover = self.ax.figure.canvas.mpl_connect('motion_notify_event', self.on_hover)
+        # NOTE: on_hover removed for performance - circles now always visible
         
         # Track if this box is selected
         self.selected = False
+    
+    def _update_conversion_cache(self):
+        """
+        Update cached pixel-to-data conversion factors only when needed.
+        PERFORMANCE OPTIMIZATION: Avoids recalculating on every mouse move.
+        """
+        current_ylim = self.ax.get_ylim()
+        current_size = self.ax.figure.get_size_inches()
+        current_position = self.ax.get_position()
+        
+        # Only recalculate if something changed
+        if (self._pixels_per_data_unit is None or 
+            current_ylim != self._last_ylim or 
+            not np.array_equal(current_size, self._last_figure_size) or
+            current_position.bounds != (self._last_axes_position.bounds if self._last_axes_position else None)):
+            
+            # Expensive calculations done only when needed
+            fig_height_inches = current_size[1]
+            axes_height_inches = current_position.height * fig_height_inches
+            dpi = self.ax.figure.dpi
+            data_range = current_ylim[1] - current_ylim[0]
+            
+            self._pixels_per_data_unit = (axes_height_inches * dpi) / data_range
+            self._handle_offset_data = 28 / self._pixels_per_data_unit  # 28 pixels offset
+            self._hover_extend_data = 35 / self._pixels_per_data_unit   # 35 pixels extension
+            
+            # Cache current state
+            self._last_ylim = current_ylim
+            self._last_figure_size = current_size.copy()
+            self._last_axes_position = current_position
     
     def on_press(self, event):
         """Handle mouse press event with generous Y-range resize zones."""
@@ -312,7 +341,7 @@ class DraggableBox:
         self.ax.figure.canvas.draw_idle()
     
     def on_motion(self, event):
-        """Handle mouse motion event."""
+        """Handle mouse motion event with performance optimizations."""
         if self.dragging is None or event.inaxes != self.ax:
             return
         
@@ -360,23 +389,16 @@ class DraggableBox:
         self.max_text.set_text(f'{self.max_val:.3f}')
         self.max_text.set_position((self.phase, self.max_val + 0.02))
         
-        # Update circular handle positions (outside the box)
-        fig_height_inches = self.ax.figure.get_size_inches()[1]
-        axes_position = self.ax.get_position()
-        axes_height_inches = axes_position.height * fig_height_inches
-        dpi = self.ax.figure.dpi
-        data_range = self.ax.get_ylim()[1] - self.ax.get_ylim()[0]
-        pixels_per_data_unit = (axes_height_inches * dpi) / data_range
-        handle_offset_data = 28 / pixels_per_data_unit
+        # PERFORMANCE: Update positions using cached conversion factors
+        self._update_conversion_cache()  # Fast cache check
         
-        self.top_handle.center = (self.phase, self.max_val + handle_offset_data)
-        self.bottom_handle.center = (self.phase, self.min_val - handle_offset_data)
+        self.top_handle.center = (self.phase, self.max_val + self._handle_offset_data)
+        self.bottom_handle.center = (self.phase, self.min_val - self._handle_offset_data)
         
-        # Update hover zone position
-        hover_extend_data = 35 / pixels_per_data_unit
+        # Update hover zone position (using cached values)
         self.hover_zone.set_x(self.phase - self.box_width/2)
-        self.hover_zone.set_y(self.min_val - hover_extend_data)
-        self.hover_zone.set_height((self.max_val - self.min_val) + 2 * hover_extend_data)
+        self.hover_zone.set_y(self.min_val - self._hover_extend_data)
+        self.hover_zone.set_height((self.max_val - self.min_val) + 2 * self._hover_extend_data)
         
         # Use blitting for fast updates
         if self.background is not None:
@@ -388,6 +410,9 @@ class DraggableBox:
             self.ax.draw_artist(self.min_text)
             self.ax.draw_artist(self.max_text)
             self.ax.draw_artist(self.phase_text)
+            # PERFORMANCE: Always draw handles since they're always visible
+            self.ax.draw_artist(self.top_handle)
+            self.ax.draw_artist(self.bottom_handle)
             if self.drag_phase_text.get_visible():
                 self.ax.draw_artist(self.drag_phase_text)
             # Blit the changes
@@ -402,9 +427,7 @@ class DraggableBox:
             self.rect.set_edgecolor(self.edgecolor)
             # Hide phase indicator
             self.drag_phase_text.set_visible(False)
-            # Hide resize handles
-            self.top_handle.set_visible(False)
-            self.bottom_handle.set_visible(False)
+            # PERFORMANCE: Handles remain visible (no more hide/show)
             self.ax.figure.canvas.draw_idle()
             
             # Call callback if provided
@@ -480,7 +503,7 @@ class DraggableBox:
             self.ax.figure.canvas.mpl_disconnect(self.cidpress)
             self.ax.figure.canvas.mpl_disconnect(self.cidrelease)
             self.ax.figure.canvas.mpl_disconnect(self.cidmotion)
-            self.ax.figure.canvas.mpl_disconnect(self.cidhover)
+            # NOTE: cidhover removed for performance optimization
         except:
             pass
 
