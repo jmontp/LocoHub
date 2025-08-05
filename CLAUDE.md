@@ -46,7 +46,8 @@ contributor_tools/  # Dataset conversion & validation
 │   ├── Umich_2021/
 │   ├── Gtech_2023/
 │   └── AddBiomechanics/
-└── create_dataset_validation_report.py
+├── create_dataset_validation_report.py
+└── interactive_validation_tuner.py  # GUI for tuning validation ranges
 
 converted_datasets/ # Standardized parquet files
 tests/             # Comprehensive test suite
@@ -100,6 +101,15 @@ python contributor_tools/create_dataset_validation_report.py \
 python contributor_tools/create_dataset_validation_report.py \
     --dataset converted_datasets/your_dataset_phase.parquet \
     --ranges-file contributor_tools/validation_ranges/custom_ranges.yaml
+
+# Interactively tune validation ranges with GUI
+python contributor_tools/interactive_validation_tuner.py
+# Features:
+# - Visual comparison of passing/failing strides
+# - Draggable validation boxes for real-time adjustment
+# - Show locally passing strides (pass current feature, fail others)
+# - Toggle between radians and degrees display
+# - Auto-load dataset and validation ranges on startup
 ```
 
 **For Maintainers**:
@@ -157,6 +167,7 @@ python contributor_tools/create_dataset_validation_report.py \
 - `user_libs/python/feature_constants.py` - Valid tasks and variables
 - `internal/validation_engine/validator.py` - Unified validation logic
 - `contributor_tools/create_dataset_validation_report.py` - Report generator
+- `contributor_tools/interactive_validation_tuner.py` - Interactive GUI for validation tuning
 - `contributor_tools/validation_ranges/default_ranges.yaml` - Default validation ranges
 - `tests/test_locomotion_data_library.py` - Usage examples
 
@@ -219,6 +230,25 @@ The system automatically:
 - Validates at exactly the phases you define
 
 See `contributor_tools/validation_ranges/default_ranges.yaml` for the current validation ranges.
+
+### Interactive Validation Tuning
+
+The `interactive_validation_tuner.py` tool provides a GUI for visually tuning validation ranges:
+
+**Features**:
+- **Side-by-side visualization**: Passing strides (left) vs failing strides (right)
+- **Draggable validation boxes**: Adjust min/max ranges with mouse
+- **Real-time updates**: See validation results instantly as you adjust
+- **Local vs global passing**: Yellow shows strides passing current feature but failing others
+- **Unit conversion**: Toggle between radians and degrees for angular variables
+- **YAML compatibility**: Load/save validation ranges in standard format
+
+**Usage Tips**:
+- Boxes can be dragged vertically to adjust min/max values
+- Pass column boxes can also be dragged horizontally to change phase
+- All values stored internally in radians for consistency
+- Use "Show Locally Passing" to identify strides with specific issues
+- Use "Show in Degrees" for more intuitive angular values
 
 ## Validation System
 
