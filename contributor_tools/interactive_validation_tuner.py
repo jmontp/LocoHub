@@ -168,11 +168,17 @@ class DraggableBox:
         )
         self.ax.add_patch(self.rect)
         
-        # Add text labels
-        self.min_text = self.ax.text(phase, min_val - 0.02, f'{min_val:.3f}',
+        # Define handle dimensions and offsets first
+        handle_width = 3  # Fixed width in data units (narrow rectangle)
+        handle_height = 0.15  # Fixed height in data units (vertically long)
+        handle_offset = 0.03  # Small gap between handle and box for visual separation
+        label_buffer = 0.02  # Additional buffer for readability
+        
+        # Add text labels positioned outside grab handle areas
+        self.min_text = self.ax.text(phase, min_val - handle_height - handle_offset - label_buffer, f'{min_val:.3f}',
                                      ha='center', va='top', fontsize=7, 
                                      fontweight='bold', zorder=11)
-        self.max_text = self.ax.text(phase, max_val + 0.02, f'{max_val:.3f}',
+        self.max_text = self.ax.text(phase, max_val + handle_offset + handle_height + label_buffer, f'{max_val:.3f}',
                                      ha='center', va='bottom', fontsize=7,
                                      fontweight='bold', zorder=11)
         
@@ -188,19 +194,15 @@ class DraggableBox:
                                            bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.8),
                                            visible=False, zorder=20)
         
-        # Create vertical rectangular resize handles touching the box edges
-        handle_width = 3  # Fixed width in data units (narrow rectangle)
-        handle_height = 0.15  # Fixed height in data units (vertically long)
-        
-        # Position rectangular handles touching the box edges (ALWAYS VISIBLE for better performance)
+        # Create vertical rectangular resize handles with slight offset from box edges (ALWAYS VISIBLE for better performance)
         self.top_handle = patches.Rectangle(
-            (phase - handle_width/2, max_val), handle_width, handle_height,
-            facecolor='none', edgecolor='black', linewidth=2,
+            (phase - handle_width/2, max_val + handle_offset), handle_width, handle_height,
+            facecolor='lightgrey', edgecolor='black', linewidth=2,
             visible=True, zorder=20  # Always visible for performance
         )
         self.bottom_handle = patches.Rectangle(
-            (phase - handle_width/2, min_val - handle_height), handle_width, handle_height,
-            facecolor='none', edgecolor='black', linewidth=2,
+            (phase - handle_width/2, min_val - handle_height - handle_offset), handle_width, handle_height,
+            facecolor='lightgrey', edgecolor='black', linewidth=2,
             visible=True, zorder=20  # Always visible for performance
         )
         self.ax.add_patch(self.top_handle)
@@ -369,23 +371,25 @@ class DraggableBox:
         self.rect.set_y(self.min_val)
         self.rect.set_height(self.max_val - self.min_val)
         
-        # Update text labels
-        self.min_text.set_text(f'{self.min_val:.3f}')
-        self.min_text.set_position((self.phase, self.min_val - 0.02))
-        self.max_text.set_text(f'{self.max_val:.3f}')
-        self.max_text.set_position((self.phase, self.max_val + 0.02))
-        
-        # Update handle positions to stay touching the box edges
+        # Update text labels positioned outside grab handle areas
         handle_width = 3  # Same width as used in initialization
         handle_height = 0.15  # Same height as used in initialization
+        handle_offset = 0.03  # Match handle offset
+        label_buffer = 0.02  # Additional buffer for readability
         
-        # Top handle: positioned at the top edge of the validation box
+        self.min_text.set_text(f'{self.min_val:.3f}')
+        self.min_text.set_position((self.phase, self.min_val - handle_height - handle_offset - label_buffer))
+        self.max_text.set_text(f'{self.max_val:.3f}')
+        self.max_text.set_position((self.phase, self.max_val + handle_offset + handle_height + label_buffer))
+        
+        # Update handle positions with slight offset from box edges
+        # Top handle: positioned above the validation box with offset
         self.top_handle.set_x(self.phase - handle_width/2)
-        self.top_handle.set_y(self.max_val)
+        self.top_handle.set_y(self.max_val + handle_offset)
         
-        # Bottom handle: positioned at the bottom edge of the validation box
+        # Bottom handle: positioned below the validation box with offset
         self.bottom_handle.set_x(self.phase - handle_width/2) 
-        self.bottom_handle.set_y(self.min_val - handle_height)
+        self.bottom_handle.set_y(self.min_val - handle_height - handle_offset)
         
         # Update hover zone position (using cached values)
         self.hover_zone.set_x(self.phase - self.box_width/2)
@@ -443,23 +447,25 @@ class DraggableBox:
         self.rect.set_y(self.min_val)
         self.rect.set_height(self.max_val - self.min_val)
         
-        # Update text labels
-        self.min_text.set_text(f'{self.min_val:.3f}')
-        self.min_text.set_position((self.phase, self.min_val - 0.02))
-        self.max_text.set_text(f'{self.max_val:.3f}')
-        self.max_text.set_position((self.phase, self.max_val + 0.02))
-        
-        # Update rectangular handle positions (touching the box edges)
+        # Update text labels positioned outside grab handle areas
         handle_width = 3  # Same width as used in initialization
         handle_height = 0.15  # Same height as used in initialization
+        handle_offset = 0.03  # Match handle offset
+        label_buffer = 0.02  # Additional buffer for readability
         
-        # Top handle: positioned at the top edge of the validation box
+        self.min_text.set_text(f'{self.min_val:.3f}')
+        self.min_text.set_position((self.phase, self.min_val - handle_height - handle_offset - label_buffer))
+        self.max_text.set_text(f'{self.max_val:.3f}')
+        self.max_text.set_position((self.phase, self.max_val + handle_offset + handle_height + label_buffer))
+        
+        # Update rectangular handle positions with slight offset from box edges
+        # Top handle: positioned above the validation box with offset
         self.top_handle.set_x(self.phase - handle_width/2)
-        self.top_handle.set_y(self.max_val)
+        self.top_handle.set_y(self.max_val + handle_offset)
         
-        # Bottom handle: positioned at the bottom edge of the validation box
+        # Bottom handle: positioned below the validation box with offset
         self.bottom_handle.set_x(self.phase - handle_width/2) 
-        self.bottom_handle.set_y(self.min_val - handle_height)
+        self.bottom_handle.set_y(self.min_val - handle_height - handle_offset)
         
         # Update hover zone position
         self._update_conversion_cache()  # Ensure cache is current
@@ -1042,8 +1048,8 @@ class InteractiveValidationTuner:
                             box_pass = DraggableBox(
                                 ax_pass, phase, var_name, min_val, max_val,
                                 callback=self.on_box_changed,
-                                color='none',  # No fill
-                                edgecolor='black',  # Thin black outline
+                                color='lightgreen',  # Light green fill for pass column
+                                edgecolor='black',  # Black outline
                                 allow_x_drag=True
                             )
                             self.draggable_boxes.append(box_pass)
@@ -1052,8 +1058,8 @@ class InteractiveValidationTuner:
                             box_fail = DraggableBox(
                                 ax_fail, phase, var_name, min_val, max_val,
                                 callback=self.on_box_changed,  # Add callback for fail side too
-                                color='none',  # No fill
-                                edgecolor='black',  # Thin black outline
+                                color='lightcoral',  # Light red fill for fail column
+                                edgecolor='black',  # Black outline
                                 allow_x_drag=True  # Allow dragging on fail side as well
                             )
                             self.draggable_boxes.append(box_fail)
@@ -1688,8 +1694,8 @@ class InteractiveValidationTuner:
         box_pass = DraggableBox(
             ax_pass, phase, var_name, min_val, max_val,
             callback=self.on_box_changed,
-            color='none',  # No fill
-            edgecolor='black',  # Thin black outline
+            color='lightgreen',  # Light green fill for pass column
+            edgecolor='black',  # Black outline
             allow_x_drag=True
         )
         self.draggable_boxes.append(box_pass)
@@ -1697,8 +1703,8 @@ class InteractiveValidationTuner:
         box_fail = DraggableBox(
             ax_fail, phase, var_name, min_val, max_val,
             callback=self.on_box_changed,
-            color='none',  # No fill
-            edgecolor='black',  # Thin black outline
+            color='lightcoral',  # Light red fill for fail column
+            edgecolor='black',  # Black outline
             allow_x_drag=True
         )
         self.draggable_boxes.append(box_fail)
@@ -1942,18 +1948,18 @@ class InteractiveValidationTuner:
                             box_pass = DraggableBox(
                                 ax_pass, phase, var_name, min_val, max_val,
                                 callback=self.on_box_changed,
-                                color='none',  # No fill
-                                edgecolor='black',  # Thin black outline
+                                color='lightgreen',  # Light green fill for pass column
+                                edgecolor='black',  # Black outline
                                 allow_x_drag=True
                             )
                             self.draggable_boxes.append(box_pass)
                             
-                            # Create draggable box on fail axis (thin black rectangle)
+                            # Create draggable box on fail axis (light red rectangle)
                             box_fail = DraggableBox(
                                 ax_fail, phase, var_name, min_val, max_val,
                                 callback=self.on_box_changed,
-                                color='none',  # No fill
-                                edgecolor='black',  # Thin black outline
+                                color='lightcoral',  # Light red fill for fail column
+                                edgecolor='black',  # Black outline
                                 allow_x_drag=True
                             )
                             self.draggable_boxes.append(box_fail)
