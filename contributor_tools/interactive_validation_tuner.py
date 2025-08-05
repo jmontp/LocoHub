@@ -86,6 +86,8 @@ except ImportError as e:
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.widgets import Button, RadioButtons, TextBox
+from matplotlib.collections import LineCollection
+import matplotlib.animation as animation
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -102,6 +104,7 @@ from contributor_tools.automated_fine_tuning import AutomatedFineTuner
 class DraggableBox:
     """
     A draggable validation range box that can be interactively adjusted.
+    Optimized with blitting for fast dragging performance.
     """
     
     def __init__(self, ax, phase: int, var_name: str, min_val: float, max_val: float, 
@@ -169,6 +172,9 @@ class DraggableBox:
         self.drag_start_min = None
         self.drag_start_max = None
         
+        # Blitting background storage
+        self.background = None
+        
         # Connect events
         self.cidpress = self.ax.figure.canvas.mpl_connect('button_press_event', self.on_press)
         self.cidrelease = self.ax.figure.canvas.mpl_connect('button_release_event', self.on_release)
@@ -202,7 +208,11 @@ class DraggableBox:
             self.drag_start_phase = self.phase
             self.drag_start_min = self.min_val
             self.drag_start_max = self.max_val
-            self.ax.figure.canvas.draw_idle()
+            
+            # Store background for blitting
+            canvas = self.ax.figure.canvas
+            canvas.draw()
+            self.background = canvas.copy_from_bbox(self.ax.bbox)
     
     def on_motion(self, event):
         """Handle mouse motion event."""
@@ -250,7 +260,20 @@ class DraggableBox:
         self.max_text.set_text(f'{self.max_val:.3f}')
         self.max_text.set_position((self.phase, self.max_val + 0.02))
         
-        self.ax.figure.canvas.draw_idle()
+        # Use blitting for fast updates
+        if self.background is not None:
+            canvas = self.ax.figure.canvas
+            # Restore the background
+            canvas.restore_region(self.background)
+            # Redraw the animated artists
+            self.ax.draw_artist(self.rect)
+            self.ax.draw_artist(self.min_text)
+            self.ax.draw_artist(self.max_text)
+            self.ax.draw_artist(self.phase_text)
+            # Blit the changes
+            canvas.blit(self.ax.bbox)
+        else:
+            self.ax.figure.canvas.draw_idle()
     
     def on_release(self, event):
         """Handle mouse release event."""
@@ -321,7 +344,6 @@ class InteractiveValidationTuner:
         self.dataset_path = None
         self.locomotion_data = None
         self.current_task = None
-        self.current_mode = 'kinematic'
         self.draggable_boxes = []
         self.data_cache = {}
         self.modified = False
@@ -374,13 +396,9 @@ class InteractiveValidationTuner:
         self.task_dropdown.pack(side=tk.LEFT, padx=5)
         self.task_dropdown.bind('<<ComboboxSelected>>', self.on_task_changed)
         
-        # Mode selection
-        ttk.Label(toolbar_frame, text="Mode:").pack(side=tk.LEFT, padx=20)
-        self.mode_var = tk.StringVar(value='kinematic')
-        modes = [('Kinematic', 'kinematic'), ('Kinetic', 'kinetic'), ('Segment', 'segment')]
-        for text, value in modes:
-            ttk.Radiobutton(toolbar_frame, text=text, variable=self.mode_var, 
-                          value=value, command=self.on_mode_changed).pack(side=tk.LEFT, padx=5)
+        # Display info label
+        self.info_label = ttk.Label(toolbar_frame, text="Displaying all features (kinematic + kinetic + segment angles)")
+        self.info_label.pack(side=tk.LEFT, padx=20)
         
         # Buttons
         ttk.Button(toolbar_frame, text="Auto-Tune", command=self.auto_tune).pack(side=tk.LEFT, padx=20)
@@ -462,7 +480,7 @@ class InteractiveValidationTuner:
                 
                 # Update plot if validation ranges are loaded
                 if self.validation_data and self.current_task:
-                    self.update_plot()
+                    self.update_plot(force_redraw=True)
                     # Run initial validation
                     self.run_validation_update()
             except Exception as e:
@@ -623,7 +641,7 @@ class InteractiveValidationTuner:
             
             # Update plot if validation ranges are loaded
             if self.validation_data and self.current_task:
-                self.update_plot()
+                self.update_plot(force_redraw=True)
                 # Run initial validation
                 self.run_validation_update()
             
@@ -636,65 +654,87 @@ class InteractiveValidationTuner:
         if self.current_task:
             self.update_plot()
     
-    def on_mode_changed(self):
-        """Handle mode selection change."""
-        self.current_mode = self.mode_var.get()
-        self.update_plot()
+    def get_all_features(self):
+        """Get all features to display (kinematic + kinetic + segment)."""
+        # Kinematic features
+        kinematic_vars = [
+            'hip_flexion_angle_ipsi_rad',
+            'knee_flexion_angle_ipsi_rad',
+            'ankle_dorsiflexion_angle_ipsi_rad'
+        ]
+        kinematic_labels = [
+            'Hip Flexion Angle',
+            'Knee Flexion Angle',
+            'Ankle Dorsiflexion Angle'
+        ]
+        
+        # Kinetic features
+        kinetic_vars = [
+            'hip_flexion_moment_ipsi_Nm',
+            'knee_flexion_moment_ipsi_Nm',
+            'ankle_dorsiflexion_moment_ipsi_Nm'
+        ]
+        kinetic_labels = [
+            'Hip Flexion Moment',
+            'Knee Flexion Moment',
+            'Ankle Dorsiflexion Moment'
+        ]
+        
+        # Segment angle features
+        segment_vars = [
+            'pelvis_tilt_angle_rad', 'pelvis_obliquity_angle_rad', 'pelvis_rotation_angle_rad',
+            'trunk_flexion_angle_rad', 'trunk_lateral_angle_rad', 'trunk_rotation_angle_rad',
+            'thigh_angle_ipsi_rad',
+            'shank_angle_ipsi_rad',
+            'foot_angle_ipsi_rad'
+        ]
+        segment_labels = [
+            'Pelvis Tilt', 'Pelvis Obliquity', 'Pelvis Rotation',
+            'Trunk Flexion', 'Trunk Lateral', 'Trunk Rotation',
+            'Thigh Angle',
+            'Shank Angle',
+            'Foot Angle'
+        ]
+        
+        # Combine all
+        all_vars = kinematic_vars + kinetic_vars + segment_vars
+        all_labels = kinematic_labels + kinetic_labels + segment_labels
+        
+        return all_vars, all_labels
     
-    def update_plot(self):
+    def update_plot(self, force_redraw=False):
         """Update the plot with current task and mode using two-column layout."""
         if not self.current_task or self.current_task not in self.validation_data:
             return
         
-        # Clear existing plot
-        self.fig.clear()
+        # Check if we need a full redraw or can reuse existing plot
+        needs_redraw = force_redraw or not hasattr(self, 'axes_pass') or not self.axes_pass
         
-        # Remove existing draggable boxes
-        for box in self.draggable_boxes:
-            box.remove()
-        self.draggable_boxes = []
+        if needs_redraw:
+            # Clear existing plot
+            self.fig.clear()
+            
+            # Remove existing draggable boxes
+            for box in self.draggable_boxes:
+                box.remove()
+            self.draggable_boxes = []
+        else:
+            # Just clear the line collections from existing axes
+            for ax_pass, ax_fail in zip(self.axes_pass, self.axes_fail):
+                # Remove old line collections
+                for coll in ax_pass.collections[:]:
+                    coll.remove()
+                for coll in ax_fail.collections[:]:
+                    coll.remove()
+                # Remove old lines
+                for line in ax_pass.lines[:]:
+                    line.remove()
+                for line in ax_fail.lines[:]:
+                    line.remove()
         
-        # Get variables for current mode
-        if self.current_mode == 'kinematic':
-            variables = [
-                'hip_flexion_angle_ipsi_rad',
-                'knee_flexion_angle_ipsi_rad',
-                'ankle_dorsiflexion_angle_ipsi_rad'
-            ]
-            variable_labels = [
-                'Hip Flexion Angle',
-                'Knee Flexion Angle',
-                'Ankle Dorsiflexion Angle'
-            ]
-            n_vars = 3
-        elif self.current_mode == 'kinetic':
-            variables = [
-                'hip_flexion_moment_ipsi_Nm',
-                'knee_flexion_moment_ipsi_Nm',
-                'ankle_dorsiflexion_moment_ipsi_Nm'
-            ]
-            variable_labels = [
-                'Hip Flexion Moment',
-                'Knee Flexion Moment',
-                'Ankle Dorsiflexion Moment'
-            ]
-            n_vars = 3
-        elif self.current_mode == 'segment':
-            variables = [
-                'pelvis_tilt_angle_rad', 'pelvis_obliquity_angle_rad', 'pelvis_rotation_angle_rad',
-                'trunk_flexion_angle_rad', 'trunk_lateral_angle_rad', 'trunk_rotation_angle_rad',
-                'thigh_angle_ipsi_rad',
-                'shank_angle_ipsi_rad',
-                'foot_angle_ipsi_rad'
-            ]
-            variable_labels = [
-                'Pelvis Tilt', 'Pelvis Obliquity', 'Pelvis Rotation',
-                'Trunk Flexion', 'Trunk Lateral', 'Trunk Rotation',
-                'Thigh Angle',
-                'Shank Angle',
-                'Foot Angle'
-            ]
-            n_vars = 9
+        # Get all features to display
+        variables, variable_labels = self.get_all_features()
+        n_vars = len(variables)
         
         # Store current variables for later validation
         self.current_variables = variables
@@ -720,16 +760,22 @@ class InteractiveValidationTuner:
         # Use tight layout to minimize whitespace
         self.fig.subplots_adjust(left=0.06, right=0.98, top=0.96, bottom=0.02, hspace=0.25, wspace=0.15)
         
-        # Create subplots with 2 columns (pass/fail)
-        self.axes_pass = []
-        self.axes_fail = []
+        # Create subplots with 2 columns (pass/fail) only if needed
+        if needs_redraw:
+            self.axes_pass = []
+            self.axes_fail = []
+            
+            for i in range(n_vars):
+                # Create pass and fail axes side by side
+                ax_pass = self.fig.add_subplot(n_vars, 2, i*2 + 1)
+                ax_fail = self.fig.add_subplot(n_vars, 2, i*2 + 2)
+                self.axes_pass.append(ax_pass)
+                self.axes_fail.append(ax_fail)
         
+        # Process each variable
         for i in range(n_vars):
-            # Create pass and fail axes side by side
-            ax_pass = self.fig.add_subplot(n_vars, 2, i*2 + 1)
-            ax_fail = self.fig.add_subplot(n_vars, 2, i*2 + 2)
-            self.axes_pass.append(ax_pass)
-            self.axes_fail.append(ax_fail)
+            ax_pass = self.axes_pass[i]
+            ax_fail = self.axes_fail[i]
             
             var_name = variables[i] if i < len(variables) else None
             var_label = variable_labels[i] if i < len(variable_labels) else f"Variable {i}"
@@ -753,8 +799,8 @@ class InteractiveValidationTuner:
                     show_pass=False
                 )
             
-            # Add draggable boxes for validation ranges on BOTH axes
-            if var_name and self.current_task in self.validation_data:
+            # Add draggable boxes for validation ranges on BOTH axes (only if redrawing)
+            if needs_redraw and var_name and self.current_task in self.validation_data:
                 task_data = self.validation_data[self.current_task]
                 
                 # Get all phases from task data
@@ -810,16 +856,16 @@ class InteractiveValidationTuner:
                     x_label = 'Gait Phase' if task_type == 'gait' else 'Movement Phase'
                     ax.set_xlabel(x_label, fontsize=9)
                 
-                # Set y-label only on left column
+                # Set y-label only on left column based on variable type
                 if ax == ax_pass:
-                    if self.current_mode == 'kinematic' or self.current_mode == 'segment':
-                        ax.set_ylabel('rad', fontsize=8)
-                    else:
+                    # Check if this is a moment (kinetic) variable
+                    if 'moment' in var_name:
                         ax.set_ylabel('Nm', fontsize=8)
+                    else:
+                        ax.set_ylabel('rad', fontsize=8)
         
         # Add title
-        mode_label = self.current_mode.capitalize()
-        self.fig.suptitle(f'{self.current_task.replace("_", " ").title()} - {mode_label} Validation Ranges',
+        self.fig.suptitle(f'{self.current_task.replace("_", " ").title()} - All Validation Ranges',
                          fontsize=12, fontweight='bold', y=0.99)
         
         # Create/update canvas
@@ -836,8 +882,18 @@ class InteractiveValidationTuner:
         self.on_plot_frame_configure()
     
     def run_validation(self, variables):
-        """Run validation to determine which strides fail for each variable."""
+        """Run validation to determine which strides fail for each variable.
+        
+        Only validates features that:
+        1. Are in the displayed variables list
+        2. Actually exist in the dataset
+        3. Have validation ranges defined
+        
+        Returns failing_strides dict and sets self.global_passing_strides
+        """
         failing_strides = {}
+        all_stride_indices = set()
+        features_validated = set()
         
         if not self.locomotion_data or not self.current_task:
             return failing_strides
@@ -850,32 +906,80 @@ class InteractiveValidationTuner:
         try:
             subjects = self.locomotion_data.get_subjects()
             
+            # Get dataset features once
+            sample_features = None
+            for subject in subjects:
+                try:
+                    _, sample_features = self.locomotion_data.get_cycles(
+                        subject=subject,
+                        task=self.current_task,
+                        features=None
+                    )
+                    if sample_features:
+                        break
+                except:
+                    continue
+            
+            if not sample_features:
+                return failing_strides
+            
+            # Only validate displayed features that exist in dataset
+            validated_features = []
             for var_name in variables:
-                failing_strides[var_name] = set()
-                stride_idx = 0
-                
-                for subject in subjects:
-                    try:
-                        cycles_data, feature_names = self.locomotion_data.get_cycles(
-                            subject=subject,
-                            task=self.current_task,
-                            features=None
-                        )
+                if var_name in sample_features:
+                    # Check if this feature has any validation ranges
+                    has_ranges = False
+                    for phase_data in task_data.values():
+                        if isinstance(phase_data, dict) and var_name in phase_data:
+                            has_ranges = True
+                            break
+                    if has_ranges:
+                        validated_features.append(var_name)
+                        features_validated.add(var_name)
+            
+            print(f"\nValidation Summary:")
+            print(f"  Total displayed features: {len(variables)}")
+            print(f"  Features in dataset: {len([v for v in variables if v in sample_features])}")
+            print(f"  Features being validated: {len(validated_features)}")
+            if len(validated_features) < len(variables):
+                missing = [v for v in variables if v not in sample_features]
+                if missing:
+                    print(f"  Missing from dataset: {', '.join(missing[:3])}{'...' if len(missing) > 3 else ''}")
+            
+            # Track stride index globally across subjects
+            global_stride_idx = 0
+            
+            for subject in subjects:
+                try:
+                    cycles_data, feature_names = self.locomotion_data.get_cycles(
+                        subject=subject,
+                        task=self.current_task,
+                        features=None
+                    )
+                    
+                    if cycles_data.size == 0:
+                        continue
+                    
+                    # Check each stride
+                    for stride in range(cycles_data.shape[0]):
+                        all_stride_indices.add(global_stride_idx)
                         
-                        if cycles_data.size == 0 or var_name not in feature_names:
-                            continue
-                        
-                        var_idx = feature_names.index(var_name)
-                        
-                        # Check each stride against validation ranges
-                        for stride in range(cycles_data.shape[0]):
+                        # Only check features we're actually validating
+                        for var_name in validated_features:
+                            if var_name not in feature_names:
+                                continue
+                                
+                            if var_name not in failing_strides:
+                                failing_strides[var_name] = set()
+                            
+                            var_idx = feature_names.index(var_name)
                             stride_data = cycles_data[stride, :, var_idx]
                             
                             # Check each phase
-                            for phase in task_data.keys():
-                                if not str(phase).isdigit():
+                            for phase_str in task_data.keys():
+                                if not str(phase_str).isdigit():
                                     continue
-                                phase = int(phase)
+                                phase = int(phase_str)
                                 
                                 if var_name in task_data[phase]:
                                     range_data = task_data[phase][var_name]
@@ -891,14 +995,38 @@ class InteractiveValidationTuner:
                                         
                                         # Check if value is outside range
                                         if stride_data[phase_idx] < min_val or stride_data[phase_idx] > max_val:
-                                            failing_strides[var_name].add(stride_idx)
-                                            break  # This stride fails, no need to check other phases
-                            
-                            stride_idx += 1
-                    except:
-                        continue
+                                            failing_strides[var_name].add(global_stride_idx)
+                                            break  # This stride fails for this variable
+                        
+                        global_stride_idx += 1
+                        
+                except:
+                    continue
         except:
             pass
+        
+        # Calculate global passing strides (those that pass ALL validated features)
+        global_failing_strides = set()
+        for var_failures in failing_strides.values():
+            global_failing_strides.update(var_failures)
+        
+        # Store the global passing strides
+        self.global_passing_strides = all_stride_indices - global_failing_strides
+        
+        # Store validation stats
+        self.validation_stats = {
+            'total_strides': len(all_stride_indices),
+            'passing_strides': len(self.global_passing_strides),
+            'features_validated': len(features_validated),
+            'features_displayed': len(variables)
+        }
+        
+        # Print summary
+        print(f"  Total strides: {len(all_stride_indices)}")
+        if len(all_stride_indices) > 0:
+            print(f"  Passing all features: {len(self.global_passing_strides)} ({len(self.global_passing_strides)/len(all_stride_indices)*100:.1f}%)")
+        else:
+            print(f"  Passing all features: 0 (0.0%)")
         
         return failing_strides
     
@@ -948,7 +1076,11 @@ class InteractiveValidationTuner:
         return y_min, y_max
     
     def plot_variable_data_pass_fail(self, ax, var_name, failed_stride_indices, show_pass=True):
-        """Plot data for a variable, showing either passing or failing strides."""
+        """Plot data for a variable using LineCollection for fast rendering.
+        
+        For pass column: Shows only strides that pass ALL features (global intersection)
+        For fail column: Shows strides that fail this specific feature
+        """
         count = 0
         
         # Check cache first
@@ -985,24 +1117,38 @@ class InteractiveValidationTuner:
             except:
                 pass
         
-        # Plot data if available
+        # Plot data if available using LineCollection for speed
         if len(all_data) > 0:
             phase_percent = np.linspace(0, 100, 150)
             
+            # Get global passing strides if available
+            global_passing = getattr(self, 'global_passing_strides', set())
+            
+            # Collect lines for batch plotting
+            lines = []
             for stride_idx, stride in enumerate(all_data):
-                if show_pass and stride_idx not in failed_stride_indices:
-                    # Plot passing stride in green
-                    ax.plot(phase_percent, stride, color='green', alpha=0.2, linewidth=0.5, zorder=1)
-                    count += 1
-                elif not show_pass and stride_idx in failed_stride_indices:
-                    # Plot failing stride in red
-                    ax.plot(phase_percent, stride, color='red', alpha=0.3, linewidth=0.5, zorder=1)
-                    count += 1
+                if show_pass:
+                    # For pass column: show only globally passing strides
+                    if stride_idx in global_passing:
+                        lines.append(list(zip(phase_percent, stride)))
+                        count += 1
+                else:
+                    # For fail column: show strides that fail this specific feature
+                    if stride_idx in failed_stride_indices:
+                        lines.append(list(zip(phase_percent, stride)))
+                        count += 1
+            
+            # Use LineCollection for fast batch plotting
+            if lines:
+                color = 'green' if show_pass else 'red'
+                alpha = 0.2 if show_pass else 0.3
+                lc = LineCollection(lines, colors=color, alpha=alpha, linewidths=0.5, zorder=1)
+                ax.add_collection(lc)
             
             # Plot mean of the displayed strides
             if count > 0:
                 if show_pass:
-                    pass_strides = [all_data[i] for i in range(len(all_data)) if i not in failed_stride_indices]
+                    pass_strides = [all_data[i] for i in range(len(all_data)) if i in global_passing]
                     if pass_strides:
                         mean_pattern = np.mean(pass_strides, axis=0)
                         ax.plot(phase_percent, mean_pattern, color='darkgreen', linewidth=2, zorder=5)
@@ -1104,7 +1250,7 @@ class InteractiveValidationTuner:
                 self.validate_button.config(state='normal')
     
     def auto_tune(self):
-        """Run auto-tuning for current task and mode."""
+        """Run auto-tuning for current task."""
         if not self.dataset_path:
             messagebox.showwarning("Warning", "Please load a dataset first.")
             return
@@ -1114,39 +1260,43 @@ class InteractiveValidationTuner:
             return
         
         try:
-            # Create auto-tuner
-            tuner = AutomatedFineTuner(str(self.dataset_path), mode=self.current_mode)
-            
-            # Run tuning (using percentile_95 method by default)
-            self.status_bar.config(text="Running auto-tuning...")
+            # Create auto-tuner - we'll run for all modes and combine results
+            self.status_bar.config(text="Running auto-tuning for all features...")
             self.root.update()
             
-            results = tuner.run_statistical_tuning(
-                method='percentile_95',
-                save_ranges=False,
-                save_report=False
-            )
+            # Run auto-tuning for all three modes and combine results
+            combined_ranges = {}
             
-            if results['success']:
-                # Update validation data with tuned ranges
-                tuned_ranges = results['validation_ranges']
+            for mode in ['kinematic', 'kinetic', 'segment']:
+                tuner = AutomatedFineTuner(str(self.dataset_path), mode=mode)
+                results = tuner.run_statistical_tuning(
+                    method='percentile_95',
+                    save_ranges=False,
+                    save_report=False
+                )
                 
-                if self.current_task in tuned_ranges:
-                    # Update our validation data
-                    self.validation_data[self.current_task] = tuned_ranges[self.current_task]
-                    
-                    # Update the plot
-                    self.update_plot()
-                    
-                    # Run validation with new ranges
-                    self.run_validation_update()
-                    
-                    self.modified = True
-                    self.status_bar.config(text="Auto-tuning complete. Ranges updated and validated.")
-                else:
-                    messagebox.showinfo("Info", f"No data available for task: {self.current_task}")
+                if results['success'] and self.current_task in results['validation_ranges']:
+                    task_ranges = results['validation_ranges'][self.current_task]
+                    # Merge phase data
+                    for phase, variables in task_ranges.items():
+                        if phase not in combined_ranges:
+                            combined_ranges[phase] = {}
+                        combined_ranges[phase].update(variables)
+            
+            if combined_ranges:
+                # Update our validation data with combined ranges
+                self.validation_data[self.current_task] = combined_ranges
+                
+                # Update the plot
+                self.update_plot()
+                
+                # Run validation with new ranges
+                self.run_validation_update()
+                
+                self.modified = True
+                self.status_bar.config(text="Auto-tuning complete for all features.")
             else:
-                messagebox.showerror("Error", f"Auto-tuning failed: {results.get('error', 'Unknown error')}")
+                messagebox.showinfo("Info", f"No data available for task: {self.current_task}")
                 
         except Exception as e:
             messagebox.showerror("Error", f"Auto-tuning failed:\n{str(e)}")
@@ -1179,7 +1329,20 @@ class InteractiveValidationTuner:
         
         # Disable validate button
         self.validate_button.config(state='disabled')
-        self.status_bar.config(text="Validation complete.")
+        
+        # Update status bar with validation stats
+        if hasattr(self, 'validation_stats'):
+            stats = self.validation_stats
+            if stats['total_strides'] > 0:
+                pass_pct = stats['passing_strides']/stats['total_strides']*100
+            else:
+                pass_pct = 0.0
+            status_text = (f"Validation complete | {stats['total_strides']} strides | "
+                          f"Validating {stats['features_validated']}/{stats['features_displayed']} features | "
+                          f"{stats['passing_strides']} pass all ({pass_pct:.1f}%)")
+            self.status_bar.config(text=status_text)
+        else:
+            self.status_bar.config(text="Validation complete.")
     
     def update_stride_colors(self):
         """Update only the stride colors without recreating the entire plot."""
@@ -1195,7 +1358,19 @@ class InteractiveValidationTuner:
             if not var_name:
                 continue
             
-            # Clear only the data lines (keep boxes)
+            # Clear LineCollections and lines (keep boxes)
+            # Remove LineCollections from both axes
+            for ax in [ax_pass, ax_fail]:
+                collections_to_remove = []
+                for coll in ax.collections:
+                    # LineCollections have zorder=1, boxes are patches with zorder=10
+                    if hasattr(coll, 'get_zorder') and coll.get_zorder() < 10:
+                        collections_to_remove.append(coll)
+                
+                for coll in collections_to_remove:
+                    coll.remove()
+            
+            # Also clear any regular lines (e.g., mean lines)
             lines_to_remove = []
             for line in ax_pass.lines + ax_fail.lines:
                 # Keep the boxes, remove the data lines
