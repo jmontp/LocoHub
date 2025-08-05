@@ -626,6 +626,16 @@ class InteractiveValidationTuner:
         self.validate_button = ttk.Button(toolbar_frame, text="Validate", command=self.run_validation_update, state='disabled')
         self.validate_button.pack(side=tk.LEFT, padx=5)
         
+        # Checkbox to show locally passing strides
+        self.show_local_passing_var = tk.BooleanVar(value=False)
+        self.show_local_checkbox = ttk.Checkbutton(
+            toolbar_frame, 
+            text="Show Locally Passing (Yellow)",
+            variable=self.show_local_passing_var,
+            command=self.on_show_local_toggle
+        )
+        self.show_local_checkbox.pack(side=tk.LEFT, padx=10)
+        
         # Create scrollable matplotlib figure frame
         self.create_scrollable_plot_area()
         
@@ -948,6 +958,13 @@ class InteractiveValidationTuner:
         if self.current_task:
             self.update_plot()
     
+    def on_show_local_toggle(self):
+        """Handle toggling of show locally passing checkbox."""
+        if self.locomotion_data and self.current_task:
+            # Need to redraw traces and recache backgrounds for blitting
+            # Use the 4-step algorithm to ensure proper background caching
+            self.run_validation_update()
+    
     def get_all_features(self):
         """Get all features to display (kinematic + kinetic + segment)."""
         # Kinematic features
@@ -1082,11 +1099,18 @@ class InteractiveValidationTuner:
             
             # Plot data for PASS column
             passed_count = 0
+            local_count = 0
             if self.locomotion_data and var_name:
-                passed_count = self.plot_variable_data_pass_fail(
+                result = self.plot_variable_data_pass_fail(
                     ax_pass, var_name, failing_strides.get(var_name, set()), 
-                    show_pass=True
+                    show_pass=True,
+                    show_local_passing=self.show_local_passing_var.get()
                 )
+                # Handle return value based on whether local passing is shown
+                if self.show_local_passing_var.get():
+                    passed_count, local_count = result
+                else:
+                    passed_count = result
             
             # Plot data for FAIL column  
             failed_count = 0
@@ -1139,7 +1163,10 @@ class InteractiveValidationTuner:
                             box_fail.paired_box = box_pass  # Bidirectional pairing
             
             # Setup axes
-            ax_pass.set_title(f'{var_label} - ✓ Pass ({passed_count})', fontsize=9, fontweight='bold')
+            if self.show_local_passing_var.get() and local_count > 0:
+                ax_pass.set_title(f'{var_label} - ✓ Pass ({passed_count} green, {local_count} yellow)', fontsize=9, fontweight='bold')
+            else:
+                ax_pass.set_title(f'{var_label} - ✓ Pass ({passed_count})', fontsize=9, fontweight='bold')
             ax_fail.set_title(f'{var_label} - ✗ Fail ({failed_count})', fontsize=9, fontweight='bold')
             
             for ax in [ax_pass, ax_fail]:
@@ -1430,13 +1457,15 @@ class InteractiveValidationTuner:
         except:
             pass
     
-    def plot_variable_data_pass_fail(self, ax, var_name, failed_stride_indices, show_pass=True):
+    def plot_variable_data_pass_fail(self, ax, var_name, failed_stride_indices, show_pass=True, show_local_passing=False):
         """Plot data for a variable using LineCollection for fast rendering.
         
         For pass column: Shows only strides that pass ALL features (global intersection)
+                        Optionally shows locally passing strides in yellow
         For fail column: Shows strides that fail this specific feature
         """
         count = 0
+        local_count = 0
         
         # Check cache first
         cache_key = f"{self.current_task}_{var_name}"
@@ -1480,39 +1509,66 @@ class InteractiveValidationTuner:
             global_passing = getattr(self, 'global_passing_strides', set())
             
             # Collect lines for batch plotting
-            lines = []
-            for stride_idx, stride in enumerate(all_data):
-                if show_pass:
-                    # For pass column: show only globally passing strides
+            if show_pass:
+                # For pass column: separate globally passing and locally passing
+                global_lines = []
+                local_lines = []
+                
+                for stride_idx, stride in enumerate(all_data):
                     if stride_idx in global_passing:
-                        lines.append(list(zip(phase_percent, stride)))
+                        # Globally passing (green)
+                        global_lines.append(list(zip(phase_percent, stride)))
                         count += 1
-                else:
-                    # For fail column: show strides that fail this specific feature
+                    elif show_local_passing and stride_idx not in failed_stride_indices:
+                        # Locally passing but not globally (yellow)
+                        local_lines.append(list(zip(phase_percent, stride)))
+                        local_count += 1
+                
+                # Plot globally passing strides in green
+                if global_lines:
+                    lc = LineCollection(global_lines, colors='green', alpha=0.2, linewidths=0.5, zorder=1)
+                    ax.add_collection(lc)
+                
+                # Plot locally passing strides in yellow (if enabled)
+                if local_lines:
+                    lc = LineCollection(local_lines, colors='gold', alpha=0.3, linewidths=0.5, zorder=2)
+                    ax.add_collection(lc)
+                
+                # Plot means
+                if global_lines:
+                    global_pass_strides = [all_data[i] for i in range(len(all_data)) if i in global_passing]
+                    mean_pattern = np.mean(global_pass_strides, axis=0)
+                    ax.plot(phase_percent, mean_pattern, color='darkgreen', linewidth=2, zorder=5)
+                
+                if local_lines:
+                    local_pass_indices = [i for i in range(len(all_data)) 
+                                         if i not in global_passing and i not in failed_stride_indices]
+                    local_pass_strides = [all_data[i] for i in local_pass_indices]
+                    mean_pattern = np.mean(local_pass_strides, axis=0)
+                    ax.plot(phase_percent, mean_pattern, color='darkorange', linewidth=2, zorder=6)
+            else:
+                # For fail column: show strides that fail this specific feature
+                lines = []
+                for stride_idx, stride in enumerate(all_data):
                     if stride_idx in failed_stride_indices:
                         lines.append(list(zip(phase_percent, stride)))
                         count += 1
-            
-            # Use LineCollection for fast batch plotting
-            if lines:
-                color = 'green' if show_pass else 'red'
-                alpha = 0.2 if show_pass else 0.3
-                lc = LineCollection(lines, colors=color, alpha=alpha, linewidths=0.5, zorder=1)
-                ax.add_collection(lc)
-            
-            # Plot mean of the displayed strides
-            if count > 0:
-                if show_pass:
-                    pass_strides = [all_data[i] for i in range(len(all_data)) if i in global_passing]
-                    if pass_strides:
-                        mean_pattern = np.mean(pass_strides, axis=0)
-                        ax.plot(phase_percent, mean_pattern, color='darkgreen', linewidth=2, zorder=5)
-                else:
+                
+                # Use LineCollection for fast batch plotting
+                if lines:
+                    lc = LineCollection(lines, colors='red', alpha=0.3, linewidths=0.5, zorder=1)
+                    ax.add_collection(lc)
+                
+                # Plot mean of the displayed strides
+                if count > 0:
                     fail_strides = [all_data[i] for i in range(len(all_data)) if i in failed_stride_indices]
                     if fail_strides:
                         mean_pattern = np.mean(fail_strides, axis=0)
                         ax.plot(phase_percent, mean_pattern, color='darkred', linewidth=2, zorder=5)
         
+        # Return both counts for title updates
+        if show_pass and show_local_passing:
+            return count, local_count
         return count
     
     def plot_variable_data(self, ax, var_name):
@@ -2042,11 +2098,18 @@ class InteractiveValidationTuner:
             
             # Plot data for PASS column
             passed_count = 0
+            local_count = 0
             if self.locomotion_data and var_name:
-                passed_count = self.plot_variable_data_pass_fail(
+                result = self.plot_variable_data_pass_fail(
                     ax_pass, var_name, failing_strides.get(var_name, set()), 
-                    show_pass=True
+                    show_pass=True,
+                    show_local_passing=self.show_local_passing_var.get()
                 )
+                # Handle return value based on whether local passing is shown
+                if self.show_local_passing_var.get():
+                    passed_count, local_count = result
+                else:
+                    passed_count = result
             
             # Plot data for FAIL column
             failed_count = 0
@@ -2057,7 +2120,10 @@ class InteractiveValidationTuner:
                 )
             
             # Setup axes (but NO draggable boxes!)
-            ax_pass.set_title(f'{var_label} - ✓ Pass ({passed_count})', fontsize=9, fontweight='bold')
+            if self.show_local_passing_var.get() and local_count > 0:
+                ax_pass.set_title(f'{var_label} - ✓ Pass ({passed_count} green, {local_count} yellow)', fontsize=9, fontweight='bold')
+            else:
+                ax_pass.set_title(f'{var_label} - ✓ Pass ({passed_count})', fontsize=9, fontweight='bold')
             ax_fail.set_title(f'{var_label} - ✗ Fail ({failed_count})', fontsize=9, fontweight='bold')
             
             for ax in [ax_pass, ax_fail]:
