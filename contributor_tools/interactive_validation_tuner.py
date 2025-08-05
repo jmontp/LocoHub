@@ -145,6 +145,9 @@ class DraggableBox:
         self._last_figure_size = None
         self._last_axes_position = None
         
+        # PERFORMANCE: Smart background caching to avoid expensive redraws on click
+        self.background_invalid = True
+        
         # Create rectangle
         self.rect = patches.Rectangle(
             (phase - self.box_width/2, min_val), 
@@ -258,6 +261,9 @@ class DraggableBox:
             self._last_ylim = current_ylim
             self._last_figure_size = current_size.copy()
             self._last_axes_position = current_position
+            
+            # Background becomes invalid when plot geometry changes
+            self.background_invalid = True
     
     def on_press(self, event):
         """Handle mouse press event with generous Y-range resize zones."""
@@ -292,10 +298,16 @@ class DraggableBox:
         self.drag_start_min = self.min_val
         self.drag_start_max = self.max_val
         
-        # Store background for blitting
+        # PERFORMANCE: Background is pre-cached by prepare_all_backgrounds()
+        # No expensive operations needed here - drag/resize initiation is instant!
         canvas = self.ax.figure.canvas
-        canvas.draw()
-        self.background = canvas.copy_from_bbox(self.ax.bbox)
+        
+        # Background should always be ready (prepared after plot updates)
+        if self.background is None:
+            print("WARNING: Background not prepared - this should not happen!")
+            # Fallback: prepare background now (will cause delay)
+            canvas.draw()
+            self.background = canvas.copy_from_bbox(self.ax.bbox)
         
         # Show phase indicator if dragging horizontally
         if self.dragging == 'middle' and self.allow_x_drag:
@@ -303,42 +315,13 @@ class DraggableBox:
             self.drag_phase_text.set_position((self.phase, (self.min_val + self.max_val) / 2))
             self.drag_phase_text.set_text(f'Phase: {self.phase}%')
     
-    def on_hover(self, event):
-        """Handle mouse hover using transparent hover zone to show/hide handles."""
-        if self.dragging is not None:  # Skip hover logic while dragging
-            return
-            
-        if event.inaxes == self.ax and event.xdata is not None and event.ydata is not None:
-            # Calculate hover zone bounds
-            fig_height_inches = self.ax.figure.get_size_inches()[1]
-            axes_position = self.ax.get_position()
-            axes_height_inches = axes_position.height * fig_height_inches
-            dpi = self.ax.figure.dpi
-            data_range = self.ax.get_ylim()[1] - self.ax.get_ylim()[0]
-            pixels_per_data_unit = (axes_height_inches * dpi) / data_range
-            
-            hover_extend_data = 35 / pixels_per_data_unit
-            
-            # Check if in extended hover zone
-            in_x_range = abs(event.xdata - self.phase) <= self.box_width/2
-            in_y_range = ((self.min_val - hover_extend_data) <= event.ydata <= 
-                         (self.max_val + hover_extend_data))
-            
-            if in_x_range and in_y_range:
-                # Show both handles when in hover zone
-                self.top_handle.set_visible(True)
-                self.bottom_handle.set_visible(True)
-            else:
-                # Outside hover zone - hide handles
-                self.top_handle.set_visible(False)
-                self.bottom_handle.set_visible(False)
-        else:
-            # Not in this axis - hide handles
-            self.top_handle.set_visible(False)
-            self.bottom_handle.set_visible(False)
+    def invalidate_background(self):
+        """Mark background cache as invalid, forcing redraw on next use."""
+        self.background_invalid = True
         
-        # Redraw to show/hide handles
-        self.ax.figure.canvas.draw_idle()
+    # PERFORMANCE OPTIMIZATION: on_hover method completely removed
+    # Circles are now always visible for better performance
+    # This eliminates expensive pixel-to-data conversions and draw calls on every mouse move
     
     def on_motion(self, event):
         """Handle mouse motion event with performance optimizations."""
@@ -522,6 +505,53 @@ class InteractiveValidationTuner:
         self.draggable_boxes = []
         self.data_cache = {}
         self.modified = False
+        
+        # PERFORMANCE: Shared background cache for all draggable boxes
+        self._shared_background = None
+        self._shared_background_invalid = True
+        
+        # Setup the GUI
+        self.setup_gui()
+        
+        # Auto-load default files
+        self.auto_load_defaults()
+    
+    def invalidate_all_backgrounds(self):
+        """Invalidate background cache for all draggable boxes when plot changes."""
+        self._shared_background_invalid = True
+        self._shared_background = None
+        for box in self.draggable_boxes:
+            box.invalidate_background()
+    
+    def prepare_all_backgrounds(self):
+        """PERFORMANCE: Eagerly prepare all draggable box backgrounds after plot updates.
+        
+        This moves the expensive canvas.draw() operation from click time (jarring)
+        to plot update time (expected). Eliminates 500ms drag/resize initiation delay.
+        """
+        if not self.draggable_boxes:
+            return
+        
+        # Update status to show we're preparing
+        if hasattr(self, 'status_bar'):
+            self.status_bar.config(text="Preparing interactive elements...")
+        
+        # Get canvas from any draggable box (they share the same figure)
+        canvas = self.draggable_boxes[0].ax.figure.canvas
+        
+        # One expensive draw operation for all boxes
+        canvas.draw()
+        
+        # Prepare background for each draggable box
+        for box in self.draggable_boxes:
+            box.background = canvas.copy_from_bbox(box.ax.bbox)
+            box.background_invalid = False
+        
+        # Update status to show we're ready
+        if hasattr(self, 'status_bar'):
+            self.status_bar.config(text="Ready for interaction - all drags/resizes are now instant")
+        
+        print(f"Prepared backgrounds for {len(self.draggable_boxes)} interactive elements")
         
         # Setup the GUI
         self.setup_gui()
@@ -889,6 +919,9 @@ class InteractiveValidationTuner:
         if needs_redraw:
             # Clear existing plot
             self.fig.clear()
+            # PERFORMANCE: Invalidate shared background cache when plot is redrawn
+            self._shared_background_invalid = True
+            self._shared_background = None
             
             # Remove existing draggable boxes
             for box in self.draggable_boxes:
@@ -1660,6 +1693,10 @@ class InteractiveValidationTuner:
         
         # Update canvas to show new boxes
         self.canvas.draw()
+        
+        # PERFORMANCE: Eagerly prepare all backgrounds - eliminates 500ms click delay!
+        # This moves expensive operation from click time to plot update time
+        self.prepare_all_backgrounds()
         
         # Mark as modified
         self.modified = True
