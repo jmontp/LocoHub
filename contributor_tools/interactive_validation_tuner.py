@@ -865,6 +865,27 @@ class InteractiveValidationTuner:
         self.plot_frame.update_idletasks()
         self.on_plot_frame_configure()
     
+    def _convert_numpy_to_python(self, obj):
+        """Recursively convert numpy types to Python native types."""
+        import numpy as np
+        
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, (np.integer, np.signedinteger, np.unsignedinteger)):
+            return int(obj)
+        elif isinstance(obj, (np.floating, np.complexfloating)):
+            return float(obj)
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        elif isinstance(obj, dict):
+            return {key: self._convert_numpy_to_python(value) for key, value in obj.items()}
+        elif isinstance(obj, list):
+            return [self._convert_numpy_to_python(item) for item in obj]
+        elif isinstance(obj, tuple):
+            return tuple(self._convert_numpy_to_python(item) for item in obj)
+        else:
+            return obj
+    
     def load_validation_ranges(self):
         """Load validation ranges from YAML file."""
         file_path = filedialog.askopenfilename(
@@ -877,9 +898,17 @@ class InteractiveValidationTuner:
             return
         
         try:
-            # Load YAML directly
+            # Load YAML with support for numpy types
             with open(file_path, 'r') as f:
-                config = yaml.safe_load(f)
+                # Try safe_load first
+                try:
+                    config = yaml.safe_load(f)
+                except yaml.YAMLError:
+                    # If safe_load fails, try with unsafe load but convert numpy to Python types
+                    f.seek(0)  # Reset file pointer
+                    config = yaml.unsafe_load(f)
+                    # Convert any numpy types to Python types
+                    config = self._convert_numpy_to_python(config)
             
             # Extract validation data
             self.validation_data = {}
@@ -902,12 +931,17 @@ class InteractiveValidationTuner:
             self.modified = False
             
             # Update plot if dataset is loaded
-            if self.locomotion_data is not None:
-                self.update_plot()
+            if self.locomotion_data is not None and self.current_task:
+                # Use the 4-step validation process to ensure proper display
+                self.run_validation_update()
             
         except Exception as e:
-            print(f"ERROR: Failed to load validation ranges: {str(e)}")
-            messagebox.showerror("Error", f"Failed to load validation ranges:\n{str(e)}")
+            import traceback
+            error_msg = f"Failed to load validation ranges: {str(e)}"
+            print(f"ERROR: {error_msg}")
+            print("Full traceback:")
+            traceback.print_exc()
+            messagebox.showerror("Error", f"{error_msg}\n\nCheck terminal for full traceback.")
     
     def load_dataset(self):
         """Load dataset from parquet file."""
@@ -944,8 +978,7 @@ class InteractiveValidationTuner:
             
             # Update plot if validation ranges are loaded
             if self.validation_data and self.current_task:
-                self.update_plot(force_redraw=True)
-                # Run initial validation
+                # Run validation with 4-step process for proper display
                 self.run_validation_update()
             
         except Exception as e:
@@ -2365,11 +2398,12 @@ class InteractiveValidationTuner:
                 'tasks': {}
             }
             
-            # Add task data
+            # Add task data (convert numpy types to Python native types)
             for task_name, task_data in self.validation_data.items():
                 config['tasks'][task_name] = {'phases': {}}
                 for phase, variables in task_data.items():
-                    config['tasks'][task_name]['phases'][str(phase)] = variables
+                    # Convert numpy types to Python types before saving
+                    config['tasks'][task_name]['phases'][str(phase)] = self._convert_numpy_to_python(variables)
             
             # Save to file
             with open(file_path, 'w') as f:
