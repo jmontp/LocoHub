@@ -123,6 +123,10 @@ class DraggableBox:
             edgecolor: Edge color
             allow_x_drag: Whether to allow horizontal dragging
         """
+        # Validate input values to prevent None arithmetic errors
+        if min_val is None or max_val is None:
+            raise ValueError(f"DraggableBox cannot be created with None values: min_val={min_val}, max_val={max_val}")
+        
         self.ax = ax
         self.phase = phase
         self.original_phase = phase  # Store original phase
@@ -139,11 +143,13 @@ class DraggableBox:
         
         # Performance optimization: Cache expensive pixel-to-data conversion factors
         self._pixels_per_data_unit = None
-        self._handle_offset_data = None
         self._hover_extend_data = None
         self._last_ylim = None
         self._last_figure_size = None
         self._last_axes_position = None
+        
+        # Initialize conversion cache before using it
+        self._update_conversion_cache()
         
         # PERFORMANCE: Smart background caching to avoid expensive redraws on click
         self.background_invalid = True
@@ -182,21 +188,19 @@ class DraggableBox:
                                            bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.8),
                                            visible=False, zorder=20)
         
-        # Create larger circular resize handles positioned outside the box
-        handle_radius = 18  # pixels radius (much larger and easier to target)
-        # Initialize cached conversion factors
-        self._update_conversion_cache()
-        handle_radius_data = handle_radius / self._pixels_per_data_unit
+        # Create vertical rectangular resize handles touching the box edges
+        handle_width = 3  # Fixed width in data units (narrow rectangle)
+        handle_height = 0.15  # Fixed height in data units (vertically long)
         
-        # Position circles outside the box (ALWAYS VISIBLE for better performance)
-        self.top_handle = patches.Circle(
-            (phase, max_val + self._handle_offset_data), handle_radius_data,
-            facecolor='white', edgecolor='black', linewidth=2,
+        # Position rectangular handles touching the box edges (ALWAYS VISIBLE for better performance)
+        self.top_handle = patches.Rectangle(
+            (phase - handle_width/2, max_val), handle_width, handle_height,
+            facecolor='none', edgecolor='black', linewidth=2,
             visible=True, zorder=20  # Always visible for performance
         )
-        self.bottom_handle = patches.Circle(
-            (phase, min_val - self._handle_offset_data), handle_radius_data,
-            facecolor='white', edgecolor='black', linewidth=2,
+        self.bottom_handle = patches.Rectangle(
+            (phase - handle_width/2, min_val - handle_height), handle_width, handle_height,
+            facecolor='none', edgecolor='black', linewidth=2,
             visible=True, zorder=20  # Always visible for performance
         )
         self.ax.add_patch(self.top_handle)
@@ -254,7 +258,6 @@ class DraggableBox:
             data_range = current_ylim[1] - current_ylim[0]
             
             self._pixels_per_data_unit = (axes_height_inches * dpi) / data_range
-            self._handle_offset_data = 28 / self._pixels_per_data_unit  # 28 pixels offset
             self._hover_extend_data = 35 / self._pixels_per_data_unit   # 35 pixels extension
             
             # Cache current state
@@ -372,11 +375,17 @@ class DraggableBox:
         self.max_text.set_text(f'{self.max_val:.3f}')
         self.max_text.set_position((self.phase, self.max_val + 0.02))
         
-        # PERFORMANCE: Update positions using cached conversion factors
-        self._update_conversion_cache()  # Fast cache check
+        # Update handle positions to stay touching the box edges
+        handle_width = 3  # Same width as used in initialization
+        handle_height = 0.15  # Same height as used in initialization
         
-        self.top_handle.center = (self.phase, self.max_val + self._handle_offset_data)
-        self.bottom_handle.center = (self.phase, self.min_val - self._handle_offset_data)
+        # Top handle: positioned at the top edge of the validation box
+        self.top_handle.set_x(self.phase - handle_width/2)
+        self.top_handle.set_y(self.max_val)
+        
+        # Bottom handle: positioned at the bottom edge of the validation box
+        self.bottom_handle.set_x(self.phase - handle_width/2) 
+        self.bottom_handle.set_y(self.min_val - handle_height)
         
         # Update hover zone position (using cached values)
         self.hover_zone.set_x(self.phase - self.box_width/2)
@@ -440,20 +449,21 @@ class DraggableBox:
         self.max_text.set_text(f'{self.max_val:.3f}')
         self.max_text.set_position((self.phase, self.max_val + 0.02))
         
-        # Update circular handle positions (outside the box)
-        fig_height_inches = self.ax.figure.get_size_inches()[1]
-        axes_position = self.ax.get_position()
-        axes_height_inches = axes_position.height * fig_height_inches
-        dpi = self.ax.figure.dpi
-        data_range = self.ax.get_ylim()[1] - self.ax.get_ylim()[0]
-        pixels_per_data_unit = (axes_height_inches * dpi) / data_range
-        handle_offset_data = 28 / pixels_per_data_unit
+        # Update rectangular handle positions (touching the box edges)
+        handle_width = 3  # Same width as used in initialization
+        handle_height = 0.15  # Same height as used in initialization
         
-        self.top_handle.center = (self.phase, self.max_val + handle_offset_data)
-        self.bottom_handle.center = (self.phase, self.min_val - handle_offset_data)
+        # Top handle: positioned at the top edge of the validation box
+        self.top_handle.set_x(self.phase - handle_width/2)
+        self.top_handle.set_y(self.max_val)
+        
+        # Bottom handle: positioned at the bottom edge of the validation box
+        self.bottom_handle.set_x(self.phase - handle_width/2) 
+        self.bottom_handle.set_y(self.min_val - handle_height)
         
         # Update hover zone position
-        hover_extend_data = 35 / pixels_per_data_unit
+        self._update_conversion_cache()  # Ensure cache is current
+        hover_extend_data = self._hover_extend_data
         self.hover_zone.set_y(self.min_val - hover_extend_data)
         self.hover_zone.set_height((self.max_val - self.min_val) + 2 * hover_extend_data)
     
@@ -683,12 +693,14 @@ class InteractiveValidationTuner:
                 
                 self.status_bar.config(text=f"Loaded defaults: {default_ranges_path.name} and {default_dataset_path.name}")
                 
-                # Update plot if validation ranges are loaded
+                # Initialize complete validation display (GUI setup + validation)
                 if self.validation_data and self.current_task:
-                    self.update_plot(force_redraw=True)
-                    # Don't run validation automatically - wait for user
+                    # Use hybrid approach: GUI infrastructure + proven 4-step algorithm
+                    self.initialize_validation_display()
             except Exception as e:
                 print(f"Could not load default dataset: {e}")
+                import traceback
+                traceback.print_exc()  # Show full error traceback for debugging
     
     def create_scrollable_plot_area(self):
         """Create a scrollable area for the plots."""
@@ -1030,7 +1042,8 @@ class InteractiveValidationTuner:
                             box_pass = DraggableBox(
                                 ax_pass, phase, var_name, min_val, max_val,
                                 callback=self.on_box_changed,
-                                color='lightgreen',
+                                color='none',  # No fill
+                                edgecolor='black',  # Thin black outline
                                 allow_x_drag=True
                             )
                             self.draggable_boxes.append(box_pass)
@@ -1039,7 +1052,8 @@ class InteractiveValidationTuner:
                             box_fail = DraggableBox(
                                 ax_fail, phase, var_name, min_val, max_val,
                                 callback=self.on_box_changed,  # Add callback for fail side too
-                                color='lightcoral',
+                                color='none',  # No fill
+                                edgecolor='black',  # Thin black outline
                                 allow_x_drag=True  # Allow dragging on fail side as well
                             )
                             self.draggable_boxes.append(box_fail)
@@ -1674,7 +1688,8 @@ class InteractiveValidationTuner:
         box_pass = DraggableBox(
             ax_pass, phase, var_name, min_val, max_val,
             callback=self.on_box_changed,
-            color='lightgreen',
+            color='none',  # No fill
+            edgecolor='black',  # Thin black outline
             allow_x_drag=True
         )
         self.draggable_boxes.append(box_pass)
@@ -1682,7 +1697,8 @@ class InteractiveValidationTuner:
         box_fail = DraggableBox(
             ax_fail, phase, var_name, min_val, max_val,
             callback=self.on_box_changed,
-            color='lightcoral',
+            color='none',  # No fill
+            edgecolor='black',  # Thin black outline
             allow_x_drag=True
         )
         self.draggable_boxes.append(box_fail)
@@ -1922,20 +1938,22 @@ class InteractiveValidationTuner:
                             if min_val is None or max_val is None:
                                 continue
                             
-                            # Create draggable box on pass axis
+                            # Create draggable box on pass axis (thin black rectangle)
                             box_pass = DraggableBox(
                                 ax_pass, phase, var_name, min_val, max_val,
                                 callback=self.on_box_changed,
-                                color='lightgreen',
+                                color='none',  # No fill
+                                edgecolor='black',  # Thin black outline
                                 allow_x_drag=True
                             )
                             self.draggable_boxes.append(box_pass)
                             
-                            # Create draggable box on fail axis
+                            # Create draggable box on fail axis (thin black rectangle)
                             box_fail = DraggableBox(
                                 ax_fail, phase, var_name, min_val, max_val,
                                 callback=self.on_box_changed,
-                                color='lightcoral',
+                                color='none',  # No fill
+                                edgecolor='black',  # Thin black outline
                                 allow_x_drag=True
                             )
                             self.draggable_boxes.append(box_fail)
@@ -1963,15 +1981,84 @@ class InteractiveValidationTuner:
         # Update canvas to show boxes
         self.canvas.draw()
         
-        # Re-cache backgrounds after drawing boxes (the canvas.draw() invalidates cached backgrounds)
-        if hasattr(self, 'trace_backgrounds'):
-            print("Re-caching backgrounds after canvas.draw()...")
-            for box in self.draggable_boxes:
-                if hasattr(box, 'ax'):
-                    box.background = self.canvas.copy_from_bbox(box.ax.bbox)
-                    box.background_invalid = False
+        # Verify that boxes are using clean trace backgrounds (no re-caching needed!)
+        print(f"Added {len(self.draggable_boxes)} interactive boxes using clean trace backgrounds")
+    
+    def setup_plot_infrastructure(self):
+        """Setup GUI infrastructure (figure sizing, canvas integration, subplots) without data plotting."""
+        if not self.current_task or self.current_task not in self.validation_data:
+            return
         
-        print(f"Added {len(self.draggable_boxes)} interactive boxes with backgrounds")
+        # Get variables to determine plot structure
+        variables, variable_labels = self.get_all_features()
+        n_vars = len(variables)
+        
+        # Store current variables for later use
+        self.current_variables = variables
+        
+        # Remove existing draggable boxes
+        if hasattr(self, 'draggable_boxes'):
+            for box in self.draggable_boxes:
+                box.remove()
+            self.draggable_boxes = []
+        
+        # Calculate dynamic figure height based on number of variables
+        window_width = self.root.winfo_width() if self.root.winfo_width() > 1 else 1400
+        dpi = 100
+        fig_width = (window_width - 100) / dpi
+        
+        # Height per subplot row (in inches)
+        row_height = 2.5  # Increased for better dragging space
+        fig_height = n_vars * row_height + 1  # Add space for title
+        
+        # Create new figure with dynamic size (like original update_plot())
+        from matplotlib.figure import Figure
+        self.fig = Figure(figsize=(fig_width, fig_height), dpi=dpi)
+        self.fig.subplots_adjust(left=0.06, right=0.98, top=0.96, bottom=0.02, hspace=0.25, wspace=0.15)
+        
+        # Create subplots (pass/fail columns)
+        self.axes_pass = []
+        self.axes_fail = []
+        
+        for i in range(n_vars):
+            ax_pass = self.fig.add_subplot(n_vars, 2, i*2 + 1)
+            ax_fail = self.fig.add_subplot(n_vars, 2, i*2 + 2)
+            self.axes_pass.append(ax_pass)
+            self.axes_fail.append(ax_fail)
+        
+        # CRITICAL: Canvas widget recreation (missing from original implementation)
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        if hasattr(self, 'canvas'):
+            self.canvas.get_tk_widget().destroy()
+        
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        
+        # Connect right-click event for context menu
+        self.fig.canvas.mpl_connect('button_press_event', self.on_plot_click)
+        
+        # Update scroll region (essential for proper scrolling)
+        self.plot_frame.update_idletasks()
+        self.on_plot_frame_configure()
+        
+        print(f"Setup plot infrastructure: {n_vars} variables, {len(self.axes_pass)} axis pairs")
+    
+    def initialize_validation_display(self):
+        """Complete startup initialization: GUI setup + 4-step validation algorithm."""
+        if not self.validation_data or not self.current_task:
+            return
+        
+        self.status_bar.config(text="Initializing validation display...")
+        self.root.update()
+        
+        # Step 1: Setup GUI infrastructure (figure sizing, subplots, scrolling)
+        self.setup_plot_infrastructure()
+        
+        # Step 2: Run the proven 4-step validation algorithm
+        self.run_validation_update()
+        
+        # Update final status
+        self.status_bar.config(text="Validation display initialized and ready")
     
     def update_stride_colors(self):
         """Update stride colors by forcing a complete redraw."""
