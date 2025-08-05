@@ -999,6 +999,29 @@ class InteractiveValidationTuner:
             # Use the 4-step algorithm to ensure proper background caching
             self.run_validation_update()
     
+    def get_variable_unit(self, var_name):
+        """Determine the unit of a variable from its name suffix."""
+        if var_name is None:
+            return ""
+        
+        # Check suffixes
+        if var_name.endswith('_rad'):
+            return 'rad'
+        elif var_name.endswith('_Nm'):
+            return 'Nm'
+        elif var_name.endswith('_N'):
+            return 'N'
+        elif var_name.endswith('_m'):
+            return 'm'
+        elif var_name.endswith('_deg'):
+            return 'deg'
+        elif 'moment' in var_name.lower():
+            return 'Nm'  # Fallback for moments
+        elif 'angle' in var_name.lower():
+            return 'rad'  # Fallback for angles
+        else:
+            return ''  # No unit or unknown
+    
     def get_all_features(self):
         """Get all features to display (kinematic + kinetic + segment)."""
         # Kinematic features
@@ -1216,13 +1239,20 @@ class InteractiveValidationTuner:
                     x_label = 'Gait Phase' if task_type == 'gait' else 'Movement Phase'
                     ax.set_xlabel(x_label, fontsize=9)
                 
-                # Set y-label only on left column based on variable type
+                # Set y-label only on left column with correct units
                 if ax == ax_pass:
-                    # Check if this is a moment (kinetic) variable
-                    if 'moment' in var_name:
-                        ax.set_ylabel('Nm', fontsize=8)
-                    else:
-                        ax.set_ylabel('rad', fontsize=8)
+                    unit = self.get_variable_unit(var_name)
+                    if unit:
+                        ax.set_ylabel(unit, fontsize=8)
+            
+            # Add dual axis for radians (showing degrees) on fail column
+            if var_name and var_name.endswith('_rad'):
+                ax2 = ax_fail.twinx()
+                # Convert radians to degrees for the secondary axis
+                ax2.set_ylim(y_min * 180 / np.pi, y_max * 180 / np.pi)
+                ax2.set_ylabel('deg', fontsize=8)
+                # Format tick labels to show as integers when appropriate
+                ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.0f}' if abs(x) >= 1 else f'{x:.1f}'))
         
         # Add title
         self.fig.suptitle(f'{self.current_task.replace("_", " ").title()} - All Validation Ranges',
@@ -2172,10 +2202,20 @@ class InteractiveValidationTuner:
                 ax.grid(True, alpha=0.3)
                 ax.set_xlabel('Phase (%)' if i == n_vars - 1 else '')
                 
-                # Set y-label based on mode
-                if i == 0:  # Only on first row
-                    y_unit = 'Nm' if any('moment' in v for v in variables[:3]) else 'rad'
-                    ax.set_ylabel(y_unit)
+                # Set y-label only on left column with correct units
+                if ax == ax_pass:
+                    unit = self.get_variable_unit(var_name)
+                    if unit:
+                        ax.set_ylabel(unit, fontsize=8)
+            
+            # Add dual axis for radians (showing degrees) on fail column
+            if var_name and var_name.endswith('_rad'):
+                ax2 = ax_fail.twinx()
+                # Convert radians to degrees for the secondary axis
+                ax2.set_ylim(y_min * 180 / np.pi, y_max * 180 / np.pi)
+                ax2.set_ylabel('deg', fontsize=8)
+                # Format tick labels to show as integers when appropriate
+                ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.0f}' if abs(x) >= 1 else f'{x:.1f}'))
         
         # Add comprehensive title with stats
         self.fig.suptitle(self._get_summary_title(), 
