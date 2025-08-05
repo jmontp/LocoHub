@@ -298,16 +298,16 @@ class DraggableBox:
         self.drag_start_min = self.min_val
         self.drag_start_max = self.max_val
         
-        # PERFORMANCE: Background is pre-cached by prepare_all_backgrounds()
+        # PERFORMANCE: Background is pre-cached by _cache_trace_backgrounds()
         # No expensive operations needed here - drag/resize initiation is instant!
         canvas = self.ax.figure.canvas
         
-        # Background should always be ready (prepared after plot updates)
+        # Background should be ready from 4-step algorithm, but provide minimal fallback
         if self.background is None:
-            print("WARNING: Background not prepared - this should not happen!")
-            # Fallback: prepare background now (will cause delay)
-            canvas.draw()
+            print("FALLBACK: Preparing background on-demand (should be rare with 4-step algorithm)")
+            # Minimal fallback - just capture background without full canvas.draw()
             self.background = canvas.copy_from_bbox(self.ax.bbox)
+            self.background_invalid = False
         
         # Show phase indicator if dragging horizontally
         if self.dragging == 'middle' and self.allow_x_drag:
@@ -1704,18 +1704,31 @@ class InteractiveValidationTuner:
         self.status_bar.config(text=f"Added validation box at {phase}% for {var_name}")
     
     def run_validation_update(self):
-        """Run validation and update stride colors based on current ranges."""
+        """Run validation using the 4-step algorithm for optimal performance.
+        
+        Steps:
+        1. Run validation
+        2. Draw traces without boxes
+        3. Cache clean trace backgrounds
+        4. Add boxes back for interaction
+        """
         if not self.locomotion_data or not hasattr(self, 'current_variables'):
             return
         
         self.status_bar.config(text="Running validation...")
         self.root.update()
         
-        # Run validation with current ranges
+        # Step 1: Run validation
         self.cached_failing_strides = self.run_validation(self.current_variables)
         
-        # Update the plot to show new pass/fail colors
-        self.update_stride_colors()
+        # Step 2: Draw traces without boxes
+        self._draw_traces_only()
+        
+        # Step 3: Cache clean trace backgrounds
+        self._cache_trace_backgrounds()
+        
+        # Step 4: Add boxes back for interaction
+        self._add_boxes_for_interaction()
         
         # Disable validate button
         self.validate_button.config(state='disabled')
@@ -1733,6 +1746,206 @@ class InteractiveValidationTuner:
             self.status_bar.config(text=status_text)
         else:
             self.status_bar.config(text="Validation complete.")
+    
+    def _draw_traces_only(self):
+        """Step 2: Draw traces without draggable boxes."""
+        if not self.current_task or self.current_task not in self.validation_data:
+            return
+        
+        # Clear existing plot and remove any existing boxes
+        self.fig.clear()
+        for box in self.draggable_boxes:
+            box.remove()
+        self.draggable_boxes = []
+        
+        # Get all features to display
+        variables, variable_labels = self.get_all_features()
+        n_vars = len(variables)
+        
+        # Store current variables for later use
+        self.current_variables = variables
+        
+        # Calculate dynamic figure size
+        window_width = self.root.winfo_width() if self.root.winfo_width() > 1 else 1400
+        dpi = 100
+        fig_width = (window_width - 100) / dpi
+        row_height = 2.5
+        fig_height = n_vars * row_height + 1
+        
+        # Create new figure with dynamic size
+        from matplotlib.figure import Figure
+        self.fig = Figure(figsize=(fig_width, fig_height), dpi=dpi)
+        self.fig.subplots_adjust(left=0.06, right=0.98, top=0.96, bottom=0.02, hspace=0.25, wspace=0.15)
+        
+        # Create subplots (pass/fail columns)
+        self.axes_pass = []
+        self.axes_fail = []
+        
+        for i in range(n_vars):
+            ax_pass = self.fig.add_subplot(n_vars, 2, i*2 + 1)
+            ax_fail = self.fig.add_subplot(n_vars, 2, i*2 + 2)
+            self.axes_pass.append(ax_pass)
+            self.axes_fail.append(ax_fail)
+        
+        # Get failing strides from cached results
+        failing_strides = self.cached_failing_strides
+        
+        # Process each variable - draw traces but NO boxes
+        for i in range(n_vars):
+            ax_pass = self.axes_pass[i]
+            ax_fail = self.axes_fail[i]
+            
+            var_name = variables[i] if i < len(variables) else None
+            var_label = variable_labels[i] if i < len(variable_labels) else f"Variable {i}"
+            
+            # Get y-axis range
+            y_min, y_max = self.get_expanded_y_range(var_name) if var_name else (-1, 1)
+            
+            # Plot data for PASS column
+            passed_count = 0
+            if self.locomotion_data and var_name:
+                passed_count = self.plot_variable_data_pass_fail(
+                    ax_pass, var_name, failing_strides.get(var_name, set()), 
+                    show_pass=True
+                )
+            
+            # Plot data for FAIL column
+            failed_count = 0
+            if self.locomotion_data and var_name:
+                failed_count = self.plot_variable_data_pass_fail(
+                    ax_fail, var_name, failing_strides.get(var_name, set()),
+                    show_pass=False
+                )
+            
+            # Setup axes (but NO draggable boxes!)
+            ax_pass.set_title(f'{var_label} - ✓ Pass ({passed_count})', fontsize=9, fontweight='bold')
+            ax_fail.set_title(f'{var_label} - ✗ Fail ({failed_count})', fontsize=9, fontweight='bold')
+            
+            for ax in [ax_pass, ax_fail]:
+                ax.set_xlim(-5, 105)
+                ax.set_ylim(y_min, y_max)
+                ax.set_xticks([0, 25, 50, 75, 100])
+                ax.set_xticklabels(['0%', '25%', '50%', '75%', '100%'])
+                ax.grid(True, alpha=0.3)
+                ax.set_xlabel('Phase (%)' if i == n_vars - 1 else '')
+                
+                # Set y-label based on mode
+                if i == 0:  # Only on first row
+                    y_unit = 'Nm' if any('moment' in v for v in variables[:3]) else 'rad'
+                    ax.set_ylabel(y_unit)
+        
+        # Update canvas to show traces
+        self.canvas.draw()
+    
+    def _cache_trace_backgrounds(self):
+        """Step 3: Cache clean trace backgrounds for each axis."""
+        if not hasattr(self, 'axes_pass') or not hasattr(self, 'axes_fail'):
+            return
+        
+        # Ensure canvas is fully drawn with just traces
+        self.canvas.draw()
+        
+        # Cache background for each axis pair
+        self.trace_backgrounds = {}
+        
+        for i, (ax_pass, ax_fail) in enumerate(zip(self.axes_pass, self.axes_fail)):
+            # Cache background for pass axis
+            self.trace_backgrounds[f'pass_{i}'] = self.canvas.copy_from_bbox(ax_pass.bbox)
+            
+            # Cache background for fail axis  
+            self.trace_backgrounds[f'fail_{i}'] = self.canvas.copy_from_bbox(ax_fail.bbox)
+        
+        print(f"Cached trace backgrounds for {len(self.axes_pass)} axis pairs")
+    
+    def _add_boxes_for_interaction(self):
+        """Step 4: Add draggable boxes back over the cached trace backgrounds."""
+        if not hasattr(self, 'axes_pass') or not hasattr(self, 'axes_fail'):
+            return
+        
+        if not hasattr(self, 'current_variables') or not self.current_variables:
+            return
+        
+        # Clear any existing boxes
+        for box in self.draggable_boxes:
+            box.remove()
+        self.draggable_boxes = []
+        
+        # Add draggable boxes for each variable
+        variables = self.current_variables
+        
+        for i in range(len(variables)):
+            var_name = variables[i]
+            ax_pass = self.axes_pass[i]
+            ax_fail = self.axes_fail[i]
+            
+            # Create boxes only if validation data exists for this variable
+            if self.current_task in self.validation_data:
+                task_data = self.validation_data[self.current_task]
+                
+                # Get all phases from task data
+                phases = sorted([int(p) for p in task_data.keys() if str(p).isdigit()])
+                
+                for phase in phases:
+                    if phase in task_data and var_name in task_data[phase]:
+                        range_data = task_data[phase][var_name]
+                        if 'min' in range_data and 'max' in range_data:
+                            min_val = range_data['min']
+                            max_val = range_data['max']
+                            
+                            # Skip None values
+                            if min_val is None or max_val is None:
+                                continue
+                            
+                            # Create draggable box on pass axis
+                            box_pass = DraggableBox(
+                                ax_pass, phase, var_name, min_val, max_val,
+                                callback=self.on_box_changed,
+                                color='lightgreen',
+                                allow_x_drag=True
+                            )
+                            self.draggable_boxes.append(box_pass)
+                            
+                            # Create draggable box on fail axis
+                            box_fail = DraggableBox(
+                                ax_fail, phase, var_name, min_val, max_val,
+                                callback=self.on_box_changed,
+                                color='lightcoral',
+                                allow_x_drag=True
+                            )
+                            self.draggable_boxes.append(box_fail)
+                            
+                            # Store bidirectional references for synchronization
+                            box_pass.paired_box = box_fail
+                            box_fail.paired_box = box_pass
+                            
+                            # Use cached trace backgrounds for instant blitting
+                            if hasattr(self, 'trace_backgrounds'):
+                                pass_bg = self.trace_backgrounds.get(f'pass_{i}')
+                                fail_bg = self.trace_backgrounds.get(f'fail_{i}')
+                                
+                                if pass_bg is not None and fail_bg is not None:
+                                    box_pass.background = pass_bg
+                                    box_fail.background = fail_bg
+                                    box_pass.background_invalid = False
+                                    box_fail.background_invalid = False
+                                    print(f"Assigned cached backgrounds to boxes for axis {i}")
+                                else:
+                                    print(f"WARNING: Missing cached backgrounds for axis {i} (pass={pass_bg is not None}, fail={fail_bg is not None})")
+                            else:
+                                print("WARNING: No trace_backgrounds attribute found")
+        
+        # Update canvas to show boxes
+        self.canvas.draw()
+        
+        # Re-cache backgrounds after drawing boxes (the canvas.draw() invalidates cached backgrounds)
+        if hasattr(self, 'trace_backgrounds'):
+            print("Re-caching backgrounds after canvas.draw()...")
+            for box in self.draggable_boxes:
+                if hasattr(box, 'ax'):
+                    box.background = self.canvas.copy_from_bbox(box.ax.bbox)
+                    box.background_invalid = False
+        
+        print(f"Added {len(self.draggable_boxes)} interactive boxes with backgrounds")
     
     def update_stride_colors(self):
         """Update stride colors by forcing a complete redraw."""
