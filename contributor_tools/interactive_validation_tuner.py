@@ -1253,6 +1253,9 @@ class InteractiveValidationTuner:
                 ax2.set_ylabel('deg', fontsize=8)
                 # Format tick labels to show as integers when appropriate
                 ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.0f}' if abs(x) >= 1 else f'{x:.1f}'))
+                # Make twin axis transparent to mouse events so draggable boxes work
+                ax2.set_navigate(False)
+                ax2.patch.set_visible(False)
         
         # Add title
         self.fig.suptitle(f'{self.current_task.replace("_", " ").title()} - All Validation Ranges',
@@ -2216,6 +2219,9 @@ class InteractiveValidationTuner:
                 ax2.set_ylabel('deg', fontsize=8)
                 # Format tick labels to show as integers when appropriate
                 ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x:.0f}' if abs(x) >= 1 else f'{x:.1f}'))
+                # Make twin axis transparent to mouse events so draggable boxes work
+                ax2.set_navigate(False)
+                ax2.patch.set_visible(False)
         
         # Add comprehensive title with stats
         self.fig.suptitle(self._get_summary_title(), 
