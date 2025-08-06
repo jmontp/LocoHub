@@ -131,53 +131,7 @@ for subject_idx = 1:length(subjects)
 end
 
 
-% This section is dedicated for fixes to the data itself. I.e. it consolidates 
-% Any formatting issues that we have found in the data. 
-
-% Foot angle fix for decline and level walking
-% Apply offset correction first (per stride), then check for sign flip
-if strcmp(task_type, 'decline_walking') || strcmp(task_type, 'level_walking')
-    
-    % Determine expected midstance angle based on task
-    if strcmp(task_type, 'decline_walking')
-        expected_midstance = incline_value * pi/180;  % Ramp angle in radians
-    else  % level walking
-        expected_midstance = 0;  % Flat ground
-    end
-    
-    % Get foot angle data from current trial (already added to total_data)
-    foot_ipsi = total_data.foot_sagittal_angle_ipsi_rad(end-size(trial_table,1)+1:end);
-    foot_contra = total_data.foot_sagittal_angle_contra_rad(end-size(trial_table,1)+1:end);
-    
-    % Process each stride
-    num_strides = length(foot_ipsi) / 150;
-    midstance_idx = 30;  % 20% of 150-point cycle
-    toeoff_idx = 105;    % 70% of 150-point cycle
-    
-    for stride = 1:num_strides
-        stride_start = (stride-1)*150 + 1;
-        stride_end = stride*150;
-        
-        % Step 1: Apply offset correction based on midstance
-        midstance_angle = foot_ipsi(stride_start + midstance_idx - 1);
-        offset = expected_midstance - midstance_angle;
-        foot_ipsi(stride_start:stride_end) = foot_ipsi(stride_start:stride_end) + offset;
-        foot_contra(stride_start:stride_end) = foot_contra(stride_start:stride_end) + offset;
-        
-        % Step 2: Check and fix sign flip based on toe-off
-        toeoff_angle = foot_ipsi(stride_start + toeoff_idx - 1);
-        if toeoff_angle > 0  % Should be negative (plantarflexion at push-off)
-            foot_ipsi(stride_start:stride_end) = -foot_ipsi(stride_start:stride_end);
-            foot_contra(stride_start:stride_end) = -foot_contra(stride_start:stride_end);
-        end
-    end
-    
-    % Update the data in total_data
-    total_data.foot_sagittal_angle_ipsi_rad(end-size(trial_table,1)+1:end) = foot_ipsi;
-    total_data.foot_sagittal_angle_contra_rad(end-size(trial_table,1)+1:end) = foot_contra;
-    
-    fprintf('  Fixed foot angles for %s %s (offset + sign check)\n', subject_str, task_type);
-end 
+ 
 
 
 
@@ -355,7 +309,42 @@ function trial_table = process_trial(trial_struct, task_type, subject_str, incli
     % Foot angles - extract from FootProgressAngles data (sagittal plane for foot progression)
     foot_progression_ipsi = -reshape(segment_angles.FootProgressAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
     
+    % =========================================================================
+    % FOOT ANGLE FIX: Apply corrections to foot sagittal angles BEFORE circshift
+    % =========================================================================
+    % Process each stride independently to:
+    % 1. Apply iterative 90-degree offsets to bring first point within [-90, 90] range
+    % 2. Check 70% midstance - if positive, sign flip entire stride
+    
+    midstance_idx = 105;  % 70% of 150-point cycle
+    
+    for stride = 1:num_strides
+        stride_start = (stride-1)*pps + 1;
+        stride_end = stride*pps;
+        
+        % Step 1: Apply iterative 90-degree offset correction to first point
+        first_point = foot_progression_ipsi(stride_start);
+        
+        % Keep applying ±90 degree offsets until within range
+        while first_point > deg2rad_factor * 50  % Greater than 90 degrees
+            foot_progression_ipsi(stride_start:stride_end) = foot_progression_ipsi(stride_start:stride_end) - pi/2;
+            first_point = first_point - pi/2;
+        end
+        
+        while first_point < - deg2rad_factor * 50  % Less than -90 degrees
+            foot_progression_ipsi(stride_start:stride_end) = foot_progression_ipsi(stride_start:stride_end) + pi/2;
+            first_point = first_point + pi/2;
+        end
+        
+        % Step 2: Check 70% midstance point for sign flip
+        midstance_angle = foot_progression_ipsi(stride_start + midstance_idx - 1);
+        if midstance_angle > 0  % Should be negative (plantarflexion at 70% cycle)
+            foot_progression_ipsi(stride_start:stride_end) = -foot_progression_ipsi(stride_start:stride_end);
+        end
+    end
+    
     % Apply anatomical plane naming convention (right leg = ipsi, left leg = contra)
+    % Now the contra gets the corrected ipsi data through circshift
     trial_table.foot_sagittal_angle_ipsi_rad = foot_progression_ipsi;
     trial_table.foot_sagittal_angle_contra_rad = circshift(foot_progression_ipsi, shift);
     

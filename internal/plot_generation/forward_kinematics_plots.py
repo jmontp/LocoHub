@@ -61,6 +61,7 @@ class KinematicPoseGenerator:
         }
         
         # Default phase points - will be overridden if config available
+        # Now supports arbitrary phases from validation data
         self.default_phase_points = [0, 25, 50, 75]
         
         # Colors for different elements
@@ -243,7 +244,7 @@ class KinematicPoseGenerator:
     
     def generate_range_visualization(self, task_name: str, phase_point: float, 
                                    joint_ranges: Dict[str, Dict[str, float]], 
-                                   output_path: str) -> str:
+                                   output_path: str, timestamp: Optional[str] = None) -> str:
         """
         Generate a visualization showing min and max poses at a specific phase point.
         
@@ -252,6 +253,7 @@ class KinematicPoseGenerator:
             phase_point: Phase percentage (0, 25, 50, 75)
             joint_ranges: Dictionary with min/max values for each joint
             output_path: Directory to save the image
+            timestamp: Optional timestamp to display on the plot
             
         Returns:
             Path to the generated image file
@@ -323,9 +325,11 @@ class KinematicPoseGenerator:
         else:
             phase_name = f"Phase {phase_point}%"
             
-        ax.set_title(f'{task_name.replace("_", " ").title()} - {phase_name}\n' +
-                    'Joint Angle Range Visualization\n(Frontal Plane View)', 
-                    fontsize=14, fontweight='bold')
+        title_text = f'{task_name.replace("_", " ").title()} - {phase_name}\n' + \
+                    'Joint Angle Range Visualization\n(Frontal Plane View)'
+        if timestamp:
+            title_text += f'\nGenerated: {timestamp}'
+        ax.set_title(title_text, fontsize=14, fontweight='bold')
         
         # Simple legend with correct ipsi/contra terminology
         legend_elements = [
@@ -429,7 +433,8 @@ class KinematicPoseGenerator:
     def generate_task_validation_images(self, task_name: str, 
                                       validation_ranges: Optional[Dict] = None,
                                       output_dir: str = "docs/standard_spec/validation",
-                                      validation_file: str = "docs/standard_spec/validation_expectations_kinematic.md") -> List[str]:
+                                      validation_file: str = "docs/standard_spec/validation_expectations_kinematic.md",
+                                      timestamp: Optional[str] = None) -> List[str]:
         """
         Generate validation images for all phase points of a task.
         
@@ -438,6 +443,7 @@ class KinematicPoseGenerator:
             validation_ranges: Optional pre-computed ranges, otherwise parses from validation file
             output_dir: Directory to save images
             validation_file: Path to validation expectations markdown file
+            timestamp: Optional timestamp to display on the plots
             
         Returns:
             List of generated image file paths
@@ -480,7 +486,7 @@ class KinematicPoseGenerator:
             phase_ranges = validation_ranges[phase_point]
             
             filepath = self.generate_range_visualization(
-                task_name, phase_point, phase_ranges, output_dir
+                task_name, phase_point, phase_ranges, output_dir, timestamp
             )
             generated_files.append(filepath)
             print(f"Generated: {filepath}")
