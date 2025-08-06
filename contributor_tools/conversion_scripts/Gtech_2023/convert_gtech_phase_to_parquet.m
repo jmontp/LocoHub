@@ -6,7 +6,7 @@ clear all;
 close all;
 
 num_points_per_step = 150;
-naming_convention = 'lr'; % Options: 'lr', 'ipsicontra'
+naming_convention = 'ipsicontra'; % Options: 'lr', 'ipsicontra'
 data_dir_root = '.'; % Assumes RawData and Segmentation are subdirs of CWD
 output_dir = fullfile('..', '..', '..', 'converted_datasets'); % Output to project root
 critical_activities = {'stairs', 'incline_walk', 'normal_walk', 'sit_to_stand'}; % Define critical tasks
@@ -414,8 +414,77 @@ for subject_idx = 1:length(subjects)
 
             % Add Metadata
             step_data_single.subject = repmat(subject_save_name, num_points_per_step, 1);
-            step_data_single.activity = repmat({activity_name}, num_points_per_step, 1);
-            step_data_single.task_info = repmat({sub_activity_name}, num_points_per_step, 1);
+            
+            % Map activity names to standard task names and task_ids
+            % Convert activity_name to standard task and task_id
+            if strcmp(activity_name, 'stairs')
+                % Determine ascent/descent from sub_activity_name
+                if contains(sub_activity_name, 'up', 'IgnoreCase', true) || contains(sub_activity_name, 'ascent', 'IgnoreCase', true)
+                    task_name = 'stair_ascent';
+                    task_id = 'stair_ascent';
+                    task_info_str = sprintf('steps:4,overground:true');
+                elseif contains(sub_activity_name, 'down', 'IgnoreCase', true) || contains(sub_activity_name, 'descent', 'IgnoreCase', true)
+                    task_name = 'stair_descent';
+                    task_id = 'stair_descent';
+                    task_info_str = sprintf('steps:4,overground:true');
+                else
+                    % Default to ascent if unclear
+                    task_name = 'stair_ascent';
+                    task_id = 'stair_ascent';
+                    task_info_str = sprintf('steps:4,overground:true,direction:unknown');
+                end
+            elseif strcmp(activity_name, 'normal_walk')
+                task_name = 'level_walking';
+                task_id = 'level';
+                task_info_str = sprintf('speed_m_s:self_selected,overground:true');
+            elseif strcmp(activity_name, 'incline_walk')
+                % Check sub_activity_name for incline/decline direction
+                if contains(sub_activity_name, 'down', 'IgnoreCase', true) || contains(sub_activity_name, 'decline', 'IgnoreCase', true)
+                    task_name = 'decline_walking';
+                    task_id = 'decline_10deg'; % Assuming 10 degree
+                    task_info_str = sprintf('incline_deg:-10,overground:true');
+                else
+                    % Default to incline (uphill)
+                    task_name = 'incline_walking';
+                    task_id = 'incline_10deg'; % Assuming 10 degree
+                    task_info_str = sprintf('incline_deg:10,overground:true');
+                end
+            elseif contains(activity_name, 'walk', 'IgnoreCase', true)
+                task_name = 'level_walking';
+                task_id = 'level';
+                task_info_str = sprintf('speed_m_s:self_selected,overground:true');
+            elseif contains(activity_name, 'ramp', 'IgnoreCase', true)
+                if contains(activity_name, 'up', 'IgnoreCase', true)
+                    task_name = 'incline_walking';
+                    task_id = 'incline_10deg'; % Assuming 10 degree ramp
+                    task_info_str = sprintf('incline_deg:10,overground:true');
+                else
+                    task_name = 'decline_walking';
+                    task_id = 'decline_10deg';
+                    task_info_str = sprintf('incline_deg:-10,overground:true');
+                end
+            elseif contains(activity_name, 'run', 'IgnoreCase', true)
+                task_name = 'run';
+                task_id = 'run';
+                task_info_str = sprintf('speed_m_s:self_selected,overground:true');
+            elseif contains(activity_name, 'jump', 'IgnoreCase', true)
+                task_name = 'jump';
+                task_id = 'jump';
+                task_info_str = sprintf('type:vertical,overground:true');
+            elseif strcmp(activity_name, 'sit_to_stand') || contains(activity_name, 'sts', 'IgnoreCase', true) || contains(activity_name, 'sit', 'IgnoreCase', true)
+                task_name = 'sit_to_stand';
+                task_id = 'sit_to_stand';
+                task_info_str = sprintf('repetitions:1');
+            else
+                % Default fallback
+                task_name = lower(activity_name);
+                task_id = lower(activity_name);
+                task_info_str = sprintf('activity:%s', sub_activity_name);
+            end
+            
+            step_data_single.task = repmat({task_name}, num_points_per_step, 1);
+            step_data_single.task_id = repmat({task_id}, num_points_per_step, 1);
+            step_data_single.task_info = repmat({task_info_str}, num_points_per_step, 1);
             step_data_single.activity_number = repmat(activity_number, num_points_per_step, 1);
             step_data_single.leading_leg_step = repmat({leading_leg}, num_points_per_step, 1); % Add leading leg marker
             step_data_single.step = repmat(step_idx, num_points_per_step, 1);
@@ -660,13 +729,20 @@ for subject_idx = 1:length(subjects)
                         end
                     end
                     
-            % --- Assign Phase based on Leading Leg --- 
-             if strcmp(leading_leg, 'r')
-                step_data_single.phase_r = base_phase_step;
-                step_data_single.phase_l = offset_phase_step;
-            else % leading_leg == 'l'
-                step_data_single.phase_l = base_phase_step;
-                step_data_single.phase_r = offset_phase_step;
+            % --- Assign Phase based on Leading Leg and Naming Convention --- 
+            if strcmpi(naming_convention, 'ipsicontra')
+                % For ipsi/contra, ipsi is always the leading leg at phase 0
+                step_data_single.phase_ipsi = base_phase_step;
+                % No need for phase_contra as it's redundant
+            else
+                % For left/right naming
+                if strcmp(leading_leg, 'r')
+                    step_data_single.phase_r = base_phase_step;
+                    step_data_single.phase_l = offset_phase_step;
+                else % leading_leg == 'l'
+                    step_data_single.phase_l = base_phase_step;
+                    step_data_single.phase_r = offset_phase_step;
+                end
             end
 
             % --- Perform Data Swap if LR convention and Ipsilateral Leg Led ---
@@ -789,6 +865,7 @@ else
     end
 end
 fprintf('----------------------------------------\n');
+fprintf('Total number of subjects processed: %d\n', length(subjects));
 fprintf('Total number of activity instances resulting in exactly one processed step: %d\n', one_step_activity_count);
 
 combined_data = total_data;
@@ -827,7 +904,7 @@ new_col_names_ipsi = {...
     'task', ...
     'cop_x_ipsi', 'cop_y_ipsi', 'cop_z_ipsi', 'cop_x_contra', 'cop_y_contra', 'cop_z_contra', ...
     'grf_x_ipsi', 'grf_y_ipsi', 'grf_z_ipsi', 'grf_x_contra', 'grf_y_contra', 'grf_z_contra', ...
-    'phase_ipsi', 'step', ... % Final phase column names (phase_contra removed - redundant)
+    'phase_ipsi', 'phase_ipsi', 'step', ... % Map both phase_l and phase_r to phase_ipsi
      % Add final global angle names
     };
 
@@ -858,6 +935,58 @@ else
      warning('No columns found to rename based on the defined map.');
 end
 
+% --- Convert joint angles and velocities from degrees to radians ---
+fprintf('Converting joint angles and velocities from degrees to radians...\n');
+
+% Define the joint angle and velocity columns to convert based on naming convention
+if strcmpi(naming_convention, 'ipsicontra')
+    % Joint angle columns (not segment/link angles)
+    joint_angle_cols = {
+        'hip_flexion_angle_ipsi_rad', 'hip_flexion_angle_contra_rad', ...
+        'knee_flexion_angle_ipsi_rad', 'knee_flexion_angle_contra_rad', ...
+        'ankle_dorsiflexion_angle_ipsi_rad', 'ankle_dorsiflexion_angle_contra_rad'
+    };
+    
+    % Joint velocity columns  
+    joint_velocity_cols = {
+        'hip_flexion_velocity_ipsi_rad_s', 'hip_flexion_velocity_contra_rad_s', ...
+        'knee_flexion_velocity_ipsi_rad_s', 'knee_flexion_velocity_contra_rad_s', ...
+        'ankle_dorsiflexion_velocity_ipsi_rad_s', 'ankle_dorsiflexion_velocity_contra_rad_s'
+    };
+else % 'lr' naming convention
+    % Joint angle columns (not segment/link angles)
+    joint_angle_cols = {
+        'hip_flexion_angle_l_rad', 'hip_flexion_angle_r_rad', ...
+        'knee_flexion_angle_l_rad', 'knee_flexion_angle_r_rad', ...
+        'ankle_dorsiflexion_angle_l_rad', 'ankle_dorsiflexion_angle_r_rad'
+    };
+    
+    % Joint velocity columns
+    joint_velocity_cols = {
+        'hip_flexion_velocity_l_rad_s', 'hip_flexion_velocity_r_rad_s', ...
+        'knee_flexion_velocity_l_rad_s', 'knee_flexion_velocity_r_rad_s', ...
+        'ankle_dorsiflexion_velocity_l_rad_s', 'ankle_dorsiflexion_velocity_r_rad_s'
+    };
+end
+
+% Convert joint angles from degrees to radians
+for i = 1:length(joint_angle_cols)
+    col_name = joint_angle_cols{i};
+    if ismember(col_name, combined_data.Properties.VariableNames)
+        combined_data.(col_name) = combined_data.(col_name) * (pi/180);
+        fprintf('  Converted %s from degrees to radians\n', col_name);
+    end
+end
+
+% Convert joint velocities from deg/s to rad/s
+for i = 1:length(joint_velocity_cols)
+    col_name = joint_velocity_cols{i};
+    if ismember(col_name, combined_data.Properties.VariableNames)
+        combined_data.(col_name) = combined_data.(col_name) * (pi/180);
+        fprintf('  Converted %s from deg/s to rad/s\n', col_name);
+    end
+end
+
 % Convert task data to string (if column exists after rename)
 final_task_col = 'task'; % Standard name
 if ismember(final_task_col, combined_data.Properties.VariableNames)
@@ -869,11 +998,15 @@ end
 % Final Check for phase columns based on naming convention
 if strcmpi(naming_convention, 'ipsicontra')
      final_phase_col_1 = 'phase_ipsi'; % Only need ipsi phase (contra is redundant)
+     if ~ismember(final_phase_col_1, combined_data.Properties.VariableNames)
+         warning('Final table missing expected phase column (%s)! Check interpolation and renaming.', final_phase_col_1);
+     end
 else % 'lr'
-     final_phase_col_1 = 'phase_l'; final_phase_col_2 = 'phase_r';
-end
-if ~ismember(final_phase_col_1, combined_data.Properties.VariableNames) || ~ismember(final_phase_col_2, combined_data.Properties.VariableNames)
-     warning('Final table missing expected phase columns (%s or %s)! Check interpolation and renaming.', final_phase_col_1, final_phase_col_2);
+     final_phase_col_1 = 'phase_l'; 
+     final_phase_col_2 = 'phase_r';
+     if ~ismember(final_phase_col_1, combined_data.Properties.VariableNames) || ~ismember(final_phase_col_2, combined_data.Properties.VariableNames)
+         warning('Final table missing expected phase columns (%s or %s)! Check interpolation and renaming.', final_phase_col_1, final_phase_col_2);
+     end
 end
 
 % Write the data to a parquet file
