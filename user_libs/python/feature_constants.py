@@ -211,3 +211,63 @@ def get_feature_map(mode: str) -> Dict[str, int]:
         return get_velocity_feature_map()
     else:
         raise ValueError(f"Unsupported mode: {mode}. Use 'kinematic', 'kinetic', or 'velocity'")
+
+
+def get_sagittal_features() -> list:
+    """
+    Get list of sagittal plane features for validation and plotting.
+    
+    Returns list of (variable_name, display_label) tuples for all sagittal plane features
+    including kinematic, kinetic, and segment angle variables.
+    
+    Returns:
+        List of tuples containing (feature_name, display_label)
+    """
+    return [
+        # Kinematic features
+        ('hip_flexion_angle_ipsi_rad', 'Hip Flexion Angle (Ipsi)'),
+        ('hip_flexion_angle_contra_rad', 'Hip Flexion Angle (Contra)'),
+        ('knee_flexion_angle_ipsi_rad', 'Knee Flexion Angle (Ipsi)'),
+        ('knee_flexion_angle_contra_rad', 'Knee Flexion Angle (Contra)'),
+        ('ankle_dorsiflexion_angle_ipsi_rad', 'Ankle Dorsiflexion Angle (Ipsi)'),
+        ('ankle_dorsiflexion_angle_contra_rad', 'Ankle Dorsiflexion Angle (Contra)'),
+        # Kinetic features
+        ('hip_flexion_moment_ipsi_Nm', 'Hip Flexion Moment (Ipsi)'),
+        ('hip_flexion_moment_contra_Nm', 'Hip Flexion Moment (Contra)'),
+        ('knee_flexion_moment_ipsi_Nm', 'Knee Flexion Moment (Ipsi)'),
+        ('knee_flexion_moment_contra_Nm', 'Knee Flexion Moment (Contra)'),
+        ('ankle_dorsiflexion_moment_ipsi_Nm', 'Ankle Dorsiflexion Moment (Ipsi)'),
+        ('ankle_dorsiflexion_moment_contra_Nm', 'Ankle Dorsiflexion Moment (Contra)'),
+        # Segment angles
+        ('pelvis_sagittal_angle_rad', 'Pelvis Sagittal Angle'),
+        ('thigh_sagittal_angle_ipsi_rad', 'Thigh Sagittal Angle (Ipsi)'),
+        ('thigh_sagittal_angle_contra_rad', 'Thigh Sagittal Angle (Contra)'),
+        ('shank_sagittal_angle_ipsi_rad', 'Shank Sagittal Angle (Ipsi)'),
+        ('shank_sagittal_angle_contra_rad', 'Shank Sagittal Angle (Contra)'),
+        ('foot_sagittal_angle_ipsi_rad', 'Foot Sagittal Angle (Ipsi)'),
+        ('foot_sagittal_angle_contra_rad', 'Foot Sagittal Angle (Contra)')
+    ]
+
+
+def get_task_classification(task_name: str) -> str:
+    """
+    Classify a task as 'gait' or 'bilateral' based on its name.
+    
+    This classification determines how the task is treated in validation and visualization:
+    - 'gait': Walking, running, stairs tasks with alternating leg patterns
+    - 'bilateral': Symmetric tasks like squats, jumps, sit-to-stand
+    
+    Args:
+        task_name: Name of the task to classify
+        
+    Returns:
+        'gait' for walking/running/stairs tasks, 'bilateral' for others
+    """
+    gait_keywords = ['walk', 'run', 'stairs', 'gait', 'stair']
+    task_lower = task_name.lower()
+    
+    for keyword in gait_keywords:
+        if keyword in task_lower:
+            return 'gait'
+    
+    return 'bilateral'

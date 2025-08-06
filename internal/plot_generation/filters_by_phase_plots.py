@@ -10,28 +10,17 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from pathlib import Path
 import warnings
+import sys
+
+# Add parent directories to path for imports
+current_dir = Path(__file__).parent
+repo_root = current_dir.parent.parent
+sys.path.insert(0, str(repo_root))
+
+# Import feature definitions from user library
+from user_libs.python.feature_constants import get_sagittal_features, get_task_classification
 
 # Removed: validate_task_completeness (no longer needed in unified system)
-
-
-def get_task_classification(task_name: str) -> str:
-    """
-    Classify task as 'gait' or 'bilateral' based on name.
-    
-    Args:
-        task_name: Name of the task
-        
-    Returns:
-        'gait' for walking/running/stairs tasks, 'bilateral' for others
-    """
-    gait_keywords = ['walk', 'run', 'stairs', 'gait', 'stair']
-    task_lower = task_name.lower()
-    
-    for keyword in gait_keywords:
-        if keyword in task_lower:
-            return 'gait'
-    
-    return 'bilateral'
 
 
 def create_single_feature_plot(
@@ -226,43 +215,15 @@ def create_single_feature_plot(
     
     # Save the plot with variable name in filename
     safe_var_name = var_name.replace('/', '_')
-    output_path = Path(output_dir) / f"{task_name}_{safe_var_name}.png"
+    if dataset_name:
+        output_path = Path(output_dir) / f"{dataset_name}_{task_name}_{safe_var_name}.png"
+    else:
+        output_path = Path(output_dir) / f"{task_name}_{safe_var_name}.png"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.close()
     
     return str(output_path)
-
-
-def get_sagittal_features() -> List[Tuple[str, str]]:
-    """
-    Get list of sagittal plane features to validate and plot.
-    Returns list of (variable_name, display_label) tuples.
-    """
-    return [
-        # Kinematic features
-        ('hip_flexion_angle_ipsi_rad', 'Hip Flexion Angle (Ipsi)'),
-        ('hip_flexion_angle_contra_rad', 'Hip Flexion Angle (Contra)'),
-        ('knee_flexion_angle_ipsi_rad', 'Knee Flexion Angle (Ipsi)'),
-        ('knee_flexion_angle_contra_rad', 'Knee Flexion Angle (Contra)'),
-        ('ankle_dorsiflexion_angle_ipsi_rad', 'Ankle Dorsiflexion Angle (Ipsi)'),
-        ('ankle_dorsiflexion_angle_contra_rad', 'Ankle Dorsiflexion Angle (Contra)'),
-        # Kinetic features
-        ('hip_flexion_moment_ipsi_Nm', 'Hip Flexion Moment (Ipsi)'),
-        ('hip_flexion_moment_contra_Nm', 'Hip Flexion Moment (Contra)'),
-        ('knee_flexion_moment_ipsi_Nm', 'Knee Flexion Moment (Ipsi)'),
-        ('knee_flexion_moment_contra_Nm', 'Knee Flexion Moment (Contra)'),
-        ('ankle_dorsiflexion_moment_ipsi_Nm', 'Ankle Dorsiflexion Moment (Ipsi)'),
-        ('ankle_dorsiflexion_moment_contra_Nm', 'Ankle Dorsiflexion Moment (Contra)'),
-        # Segment angles
-        ('pelvis_sagittal_angle_rad', 'Pelvis Sagittal Angle'),
-        ('thigh_sagittal_angle_ipsi_rad', 'Thigh Sagittal Angle (Ipsi)'),
-        ('thigh_sagittal_angle_contra_rad', 'Thigh Sagittal Angle (Contra)'),
-        ('shank_sagittal_angle_ipsi_rad', 'Shank Sagittal Angle (Ipsi)'),
-        ('shank_sagittal_angle_contra_rad', 'Shank Sagittal Angle (Contra)'),
-        ('foot_sagittal_angle_ipsi_rad', 'Foot Sagittal Angle (Ipsi)'),
-        ('foot_sagittal_angle_contra_rad', 'Foot Sagittal Angle (Contra)')
-    ]
 
 
 def create_task_combined_plot(
@@ -484,7 +445,10 @@ def create_task_combined_plot(
     plt.tight_layout(rect=[0, 0.02, 1, 0.96])
     
     # Save the plot
-    output_path = Path(output_dir) / f"{task_name}_all_features_validation.png"
+    if dataset_name:
+        output_path = Path(output_dir) / f"{dataset_name}_{task_name}_all_features_validation.png"
+    else:
+        output_path = Path(output_dir) / f"{task_name}_all_features_validation.png"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.close()
@@ -765,7 +729,10 @@ def create_filters_by_phase_plot(
     plt.tight_layout(rect=[0, 0.03, 1, 0.96])
     
     # Save the plot
-    output_path = Path(output_dir) / f"{task_name}_{mode}_filters_by_phase_with_data.png"
+    if dataset_name:
+        output_path = Path(output_dir) / f"{dataset_name}_{task_name}_{mode}_filters_by_phase_with_data.png"
+    else:
+        output_path = Path(output_dir) / f"{task_name}_{mode}_filters_by_phase_with_data.png"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.close()
