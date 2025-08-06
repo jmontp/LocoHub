@@ -34,14 +34,21 @@ class Validator:
     Supports arbitrary phase points defined in YAML configuration.
     """
     
-    def __init__(self, config_dir: Optional[Path] = None):
+    def __init__(self, config_path: Optional[Path] = None):
         """
         Initialize validator with configuration.
         
         Args:
-            config_dir: Optional path to config directory with YAML files
+            config_path: Optional path to config file or directory. 
+                        If file, loads that specific config.
+                        If directory or None, uses default config.
         """
-        self.config_manager = ValidationConfigManager(config_dir)
+        if config_path and Path(config_path).is_file():
+            # If it's a file, load it directly
+            self.config_manager = ValidationConfigManager(config_path)
+        else:
+            # If it's a directory or None, use default behavior
+            self.config_manager = ValidationConfigManager()
         
     def validate(self, dataset_path: str) -> Dict[str, Any]:
         """

@@ -50,10 +50,10 @@ class ValidationReportGenerator:
         
         # Initialize validator with specific ranges file if provided
         if ranges_file:
-            config_dir = Path(ranges_file).parent
-            self.validator = Validator(config_dir)
-            # Override the default config file
-            self.validator.config_manager.consolidated_config = Path(ranges_file)
+            # Create validator with empty config manager
+            self.validator = Validator()
+            # Load the specific ranges file
+            self.validator.config_manager.load(Path(ranges_file))
         else:
             self.validator = Validator()
         
