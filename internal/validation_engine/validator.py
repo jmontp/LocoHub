@@ -18,64 +18,6 @@ from user_libs.python.locomotion_data import LocomotionData
 
 
 # ============================================================================
-# VALIDATION UTILITIES
-# ============================================================================
-
-def apply_contralateral_offset(
-    phase_data: Dict[int, Dict[str, Dict[str, float]]], 
-    task_name: str = None,
-    offset_percent: int = 50
-) -> Dict[int, Dict[str, Dict[str, float]]]:
-    """
-    Apply contralateral offset for gait tasks with configurable offset.
-    
-    For gait tasks, the contralateral limb is offset by a percentage of the cycle
-    (typically 50% for symmetric gait). This function dynamically calculates
-    the offset for any phase points defined in the configuration.
-    
-    Works for all variable types: kinematic, kinetic, and segment angles.
-    
-    Args:
-        phase_data: Validation ranges organized by phase
-        task_name: Name of the task being validated
-        offset_percent: Phase offset for contralateral limb (default 50%)
-        
-    Returns:
-        Updated phase data with contralateral values
-    """
-    gait_tasks = ['level_walking', 'incline_walking', 'decline_walking',
-                  'up_stairs', 'down_stairs', 'run']
-    
-    if not task_name or task_name not in gait_tasks:
-        return phase_data
-    
-    result = {}
-    available_phases = sorted(phase_data.keys())
-    
-    for phase in available_phases:
-        result[phase] = phase_data[phase].copy()
-        
-        # Calculate contralateral phase dynamically
-        contra_phase = (phase + offset_percent) % 100
-        
-        # Find closest available phase if exact match not found
-        if contra_phase not in phase_data:
-            # Find nearest phase in available data
-            if available_phases:
-                contra_phase = min(available_phases, 
-                                 key=lambda x: abs(x - contra_phase))
-        
-        # Apply contralateral data if source phase exists
-        if contra_phase in phase_data:
-            for var_name, var_range in phase_data[contra_phase].items():
-                if '_ipsi' in var_name:
-                    contra_name = var_name.replace('_ipsi', '_contra')
-                    result[phase][contra_name] = var_range
-    
-    return result
-
-
-# ============================================================================
 # SIMPLIFIED VALIDATOR
 # ============================================================================
 
@@ -243,19 +185,16 @@ class Validator:
         """
         failing_features = {}
         
-        # Load validation ranges (all features, no mode filtering)
-        ranges = self.config_manager.load_validation_ranges()
-        
-        if task_name not in ranges:
+        # Check if task exists in configuration
+        if not self.config_manager.has_task(task_name):
             return failing_features
             
-        task_ranges = ranges[task_name]
+        # Get validation ranges for this specific task (includes generated contra features)
+        self.config_manager.load()  # Ensure data is loaded
+        task_ranges = self.config_manager.get_task_data(task_name)
         
         # Get phase indices dynamically from configuration
         phase_indices = self._get_phase_indices(task_ranges)
-        
-        # Apply contralateral offset for all features
-        task_ranges = apply_contralateral_offset(task_ranges, task_name)
         
         # Collect all variables we need to check
         all_variables_to_check = set()

@@ -531,30 +531,29 @@ class AutomatedFineTuner:
             if save_ranges:
                 print(f"\n💾 Saving statistical ranges to YAML config...")
                 
-                # Use ConfigManager to save ranges
+                # Create ConfigManager and set data
                 config_mgr = ValidationConfigManager()
                 dataset_name = self.dataset_path.name
                 
-                # Prepare metadata
-                metadata = {
-                    'source_dataset': dataset_name,
-                    'method': method,
-                    'generated_by': 'AutomatedFineTuner',
-                    'description': f'{self.mode.title()} validation ranges generated from {dataset_name} using {method} method'
-                }
+                # Set the validation data
+                config_mgr.set_data(validation_ranges)
+                
+                # Set metadata
+                config_mgr.set_metadata('source_dataset', dataset_name)
+                config_mgr.set_metadata('method', method)
+                config_mgr.set_metadata('generated_by', 'AutomatedFineTuner')
+                config_mgr.set_metadata('description', f'Validation ranges generated from {dataset_name} using {method} method')
+                
+                # Generate filename based on timestamp
+                from datetime import datetime
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename = f"tuned_ranges_{timestamp}.yaml"
+                save_path = config_mgr.config_dir / filename
                 
                 # Save to YAML config
-                config_mgr.save_validation_ranges(
-                    self.mode,
-                    validation_ranges,
-                    metadata=metadata
-                )
+                config_mgr.save(save_path)
                 
-                if self.mode == 'kinematic':
-                    saved_file = str(config_mgr.kinematic_config)
-                else:
-                    saved_file = str(config_mgr.kinetic_config)
-                
+                saved_file = str(save_path)
                 print(f"   ✅ Ranges saved to: {Path(saved_file).name}")
             
             # Step 5: Generate summary

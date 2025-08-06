@@ -139,15 +139,8 @@ class ValidationReportGenerator:
             # Get failing features for this task (unified validation)
             failing_features = self.validator._validate_task_with_failing_features(locomotion_data, task)
             
-            # Load unified validation data (all features)
-            all_ranges = self.validator.config_manager.load_validation_ranges()
-            if task in all_ranges:
-                task_validation_data = all_ranges[task]
-                # Apply contralateral offset for all features
-                from internal.validation_engine.validator import apply_contralateral_offset
-                task_validation_data = apply_contralateral_offset(task_validation_data, task)
-            else:
-                task_validation_data = {}
+            # Get task data with generated contra features
+            task_validation_data = self.validator.config_manager.get_task_data(task) if self.validator.config_manager.has_task(task) else {}
             
             # Generate plots for each feature type using consistent data
             

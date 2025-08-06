@@ -2485,25 +2485,25 @@ class InteractiveValidationTuner:
             return
         
         try:
-            # Prepare YAML structure
-            config = {
-                'version': '2.0',
-                'generated': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'source': 'Interactive Validation Tuner',
-                'description': 'Interactively tuned validation ranges for all features',
-                'tasks': {}
-            }
+            # Create config manager and set data
+            config_manager = ValidationConfigManager()
             
-            # Add task data (convert numpy types to Python native types)
+            # Convert numpy types to Python native types and ensure integer phases
+            clean_data = {}
             for task_name, task_data in self.validation_data.items():
-                config['tasks'][task_name] = {'phases': {}}
+                clean_data[task_name] = {}
                 for phase, variables in task_data.items():
-                    # Convert numpy types to Python types before saving
-                    config['tasks'][task_name]['phases'][str(phase)] = self._convert_numpy_to_python(variables)
+                    # Ensure phase is an integer
+                    phase = int(phase) if not isinstance(phase, int) else phase
+                    clean_data[task_name][phase] = self._convert_numpy_to_python(variables)
+            
+            # Set data and metadata
+            config_manager.set_data(clean_data)
+            config_manager.set_metadata('source', 'Interactive Validation Tuner')
+            config_manager.set_metadata('description', 'Interactively tuned validation ranges for all features')
             
             # Save to file
-            with open(file_path, 'w') as f:
-                yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+            config_manager.save(Path(file_path))
             
             self.modified = False
             self.status_bar.config(text=f"Saved validation ranges to: {Path(file_path).name}")

@@ -27,10 +27,6 @@ sys.path.insert(0, str(repo_root))
 
 # Import validation modules
 from internal.config_management.config_manager import ValidationConfigManager
-from internal.validation_engine.validator import (
-    apply_contralateral_offset_kinematic,
-    apply_contralateral_offset_kinetic
-)
 from internal.plot_generation.forward_kinematics_plots import KinematicPoseGenerator
 from internal.plot_generation.filters_by_phase_plots import create_filters_by_phase_plot
 
@@ -78,16 +74,12 @@ class ValidationPlotsGenerator:
         print(f"📊 Loading validation data from config")
         
         try:
-            # Load from config manager
-            validation_data = self.config_manager.load_validation_ranges(self.mode)
-            
-            # Apply contralateral offset for all gait-based tasks
+            # Load from config manager (contralateral features are generated automatically)
+            self.config_manager.load()
             processed_data = {}
-            for task_name, task_data in validation_data.items():
-                if self.mode == 'kinematic':
-                    processed_data[task_name] = apply_contralateral_offset_kinematic(task_data, task_name)
-                else:  # kinetic
-                    processed_data[task_name] = apply_contralateral_offset_kinetic(task_data, task_name)
+            for task_name in self.config_manager.get_tasks():
+                # get_task_data returns data with generated contra features
+                processed_data[task_name] = self.config_manager.get_task_data(task_name)
             
             print(f"✅ Successfully loaded validation data for {len(processed_data)} tasks: {list(processed_data.keys())}")
             return processed_data
@@ -227,7 +219,6 @@ class ValidationPlotsGenerator:
                     output_dir=str(self.output_dir),
                     mode=self.mode,
                     data=None,  # No actual data overlay
-                    step_colors=None,  # No step coloring
                     dataset_name=f"Derived from: {dataset_name}",  # Show source dataset
                     timestamp=timestamp  # Show when ranges were generated
                 )
