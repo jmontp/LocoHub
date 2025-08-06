@@ -1,9 +1,10 @@
 """
-Filters by phase plotting for validation reports - Version 2.
-This version implements pass/fail separation for clearer violation visibility.
+Filters by phase plotting for validation reports - Version 3.
+This version implements single-feature plots with pass/fail columns,
+matching the style from interactive_validation_tuner.py.
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -33,6 +34,268 @@ def get_task_classification(task_name: str) -> str:
     return 'bilateral'
 
 
+def create_single_feature_plot(
+    validation_data: Dict,
+    task_name: str,
+    var_name: str,
+    var_label: str,
+    output_dir: str,
+    data: Optional[np.ndarray] = None,
+    failing_features: Optional[Dict[int, List[str]]] = None,
+    dataset_name: Optional[str] = None,
+    timestamp: Optional[str] = None
+) -> str:
+    """
+    Create a single-feature validation plot with pass/fail columns.
+    
+    Args:
+        validation_data: Parsed validation data with ranges
+        task_name: Name of the task
+        var_name: Variable name to plot
+        var_label: Display label for the variable
+        output_dir: Directory to save the plot
+        data: Optional numpy array with shape (num_strides, 150, num_features)
+        failing_features: Dict mapping stride indices to lists of failed variable names
+        dataset_name: Optional dataset name to display
+        timestamp: Optional timestamp to display
+        
+    Returns:
+        Path to the generated plot
+    """
+    if task_name not in validation_data:
+        raise ValueError(f"Task {task_name} not found in validation data")
+    
+    task_data = validation_data[task_name]
+    
+    # Extract phases dynamically from the validation data
+    phases = sorted([int(p) for p in task_data.keys() if str(p).isdigit()])
+    
+    # Add 100% for cyclical completion if not present
+    if 100 not in phases and 0 in task_data:
+        phases.append(100)
+        task_data[100] = task_data[0].copy()
+    
+    task_type = get_task_classification(task_name)
+    
+    # Create figure with 1 row, 2 columns (pass/fail)
+    fig, (ax_pass, ax_fail) = plt.subplots(1, 2, figsize=(14, 3))
+    
+    # Build title
+    task_type_label = "Gait-Based Task" if task_type == 'gait' else "Bilateral Symmetric Task"
+    title = f'{task_name.replace("_", " ").title()} - {var_label}\n{task_type_label}'
+    if dataset_name:
+        title += f'\nDataset: {dataset_name}'
+    if timestamp:
+        title += f' | Generated: {timestamp}'
+    
+    fig.suptitle(title, fontsize=12, fontweight='bold')
+    
+    # Handle failing features
+    if failing_features is None:
+        failing_features = {}
+    
+    # Find the feature index in the data array
+    var_idx = None
+    if data is not None and data.size > 0:
+        # Determine the index based on the variable name
+        # This is a simplified mapping - in practice, you'd need the actual feature list
+        var_idx = _get_variable_index(var_name)
+    
+    # Build global set of failed stride indices for ANY variable
+    global_failed_strides = set()
+    for stride_idx, failed_vars in failing_features.items():
+        # Check if any variable failed for this stride
+        if failed_vars:  # If any variable failed
+            global_failed_strides.add(stride_idx)
+    
+    # Build variable-specific failed strides
+    variable_failed_strides = set()
+    for stride_idx, failed_vars in failing_features.items():
+        if var_name in failed_vars:
+            variable_failed_strides.add(stride_idx)
+    
+    # Get validation ranges for this variable
+    var_ranges = {}
+    for phase in phases:
+        if phase in task_data and var_name in task_data[phase]:
+            var_ranges[phase] = task_data[phase][var_name]
+    
+    # Determine y-axis range
+    all_mins = []
+    all_maxs = []
+    
+    # Include validation ranges
+    for phase, ranges in var_ranges.items():
+        if 'min' in ranges and 'max' in ranges:
+            min_val = ranges['min']
+            max_val = ranges['max']
+            if min_val is not None and max_val is not None:
+                if not (np.isinf(min_val) or np.isinf(max_val) or np.isnan(min_val) or np.isnan(max_val)):
+                    all_mins.append(min_val)
+                    all_maxs.append(max_val)
+    
+    # Include actual data range if available
+    if data is not None and data.size > 0 and var_idx is not None and var_idx < data.shape[2]:
+        data_values = data[:, :, var_idx]
+        data_min = np.nanmin(data_values)
+        data_max = np.nanmax(data_values)
+        if not (np.isinf(data_min) or np.isinf(data_max) or np.isnan(data_min) or np.isnan(data_max)):
+            all_mins.append(data_min)
+            all_maxs.append(data_max)
+    
+    if all_mins and all_maxs:
+        y_min = min(all_mins) - 0.1 * (max(all_maxs) - min(all_mins))
+        y_max = max(all_maxs) + 0.1 * (max(all_maxs) - min(all_mins))
+    else:
+        y_min, y_max = -1, 1
+    
+    # Determine unit and conversion
+    if var_name.endswith('_rad'):
+        units = 'rad'
+        value_conversion = np.degrees
+        unit_suffix = '°'
+    elif var_name.endswith('_Nm'):
+        units = 'Nm'
+        value_conversion = lambda x: x
+        unit_suffix = ''
+    else:
+        units = ''
+        value_conversion = lambda x: x
+        unit_suffix = ''
+    
+    # Plot PASSED strides (left column)
+    passed_count = 0
+    if data is not None and data.size > 0 and var_idx is not None and var_idx < data.shape[2]:
+        phase_percent = np.linspace(0, 100, 150)
+        
+        for stride_idx in range(data.shape[0]):
+            if stride_idx not in global_failed_strides:
+                stride_data = data[stride_idx, :, var_idx]
+                ax_pass.plot(phase_percent, stride_data, color='green', alpha=0.3, linewidth=0.5, zorder=1)
+                passed_count += 1
+    
+    # Plot validation ranges on pass axis
+    _plot_validation_ranges(ax_pass, var_ranges, phases, 'lightgreen', value_conversion, unit_suffix)
+    
+    if data is None or data.size == 0:
+        ax_pass.text(50, (y_min + y_max) / 2, 'Data Not Available', 
+                    ha='center', va='center', fontsize=12, color='gray', alpha=0.7)
+    
+    ax_pass.set_title(f'{var_label} - ✓ Passed ({passed_count} strides)', fontsize=10, fontweight='bold')
+    ax_pass.set_xlim(-5, 105)
+    ax_pass.set_ylim(y_min, y_max)
+    ax_pass.set_xticks([0, 25, 50, 75, 100])
+    ax_pass.set_xticklabels(['0%', '25%', '50%', '75%', '100%'])
+    ax_pass.set_ylabel(units, fontsize=9)
+    ax_pass.grid(True, alpha=0.3)
+    x_label = 'Gait Phase' if task_type == 'gait' else 'Movement Phase'
+    ax_pass.set_xlabel(x_label, fontsize=10)
+    
+    # Plot FAILED strides (right column)
+    failed_count = 0
+    if data is not None and data.size > 0 and var_idx is not None and var_idx < data.shape[2]:
+        for stride_idx in range(data.shape[0]):
+            if stride_idx in variable_failed_strides:
+                stride_data = data[stride_idx, :, var_idx]
+                ax_fail.plot(phase_percent, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
+                failed_count += 1
+    
+    # Plot validation ranges on fail axis
+    _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix)
+    
+    if data is None or data.size == 0:
+        ax_fail.text(50, (y_min + y_max) / 2, 'Data Not Available', 
+                    ha='center', va='center', fontsize=12, color='gray', alpha=0.7)
+    
+    ax_fail.set_title(f'{var_label} - ✗ Failed ({failed_count} strides)', fontsize=10, fontweight='bold')
+    ax_fail.set_xlim(-5, 105)
+    ax_fail.set_ylim(y_min, y_max)
+    ax_fail.set_xticks([0, 25, 50, 75, 100])
+    ax_fail.set_xticklabels(['0%', '25%', '50%', '75%', '100%'])
+    ax_fail.grid(True, alpha=0.3)
+    ax_fail.set_xlabel(x_label, fontsize=10)
+    
+    # Add degree conversion on right y-axis for angular variables
+    if var_name.endswith('_rad'):
+        ax2_pass = ax_pass.twinx()
+        ax2_pass.set_ylim(value_conversion(y_min), value_conversion(y_max))
+        ax2_pass.set_ylabel('degrees', fontsize=9)
+        
+        ax2_fail = ax_fail.twinx()
+        ax2_fail.set_ylim(value_conversion(y_min), value_conversion(y_max))
+        ax2_fail.set_ylabel('degrees', fontsize=9)
+    
+    plt.tight_layout(rect=[0, 0.03, 1, 0.93])
+    
+    # Save the plot with variable name in filename
+    safe_var_name = var_name.replace('/', '_')
+    output_path = Path(output_dir) / f"{task_name}_{safe_var_name}.png"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.close()
+    
+    return str(output_path)
+
+
+def _get_variable_index(var_name: str) -> Optional[int]:
+    """
+    Get the index of a variable in the standard feature order.
+    This is a placeholder - actual implementation would use feature_constants.
+    """
+    # Define the standard order of sagittal plane features
+    sagittal_features = [
+        # Kinematic features (sagittal plane only)
+        'hip_flexion_angle_ipsi_rad', 'hip_flexion_angle_contra_rad',
+        'knee_flexion_angle_ipsi_rad', 'knee_flexion_angle_contra_rad',
+        'ankle_dorsiflexion_angle_ipsi_rad', 'ankle_dorsiflexion_angle_contra_rad',
+        # Kinetic features (sagittal plane only)
+        'hip_flexion_moment_ipsi_Nm', 'hip_flexion_moment_contra_Nm',
+        'knee_flexion_moment_ipsi_Nm', 'knee_flexion_moment_contra_Nm',
+        'ankle_dorsiflexion_moment_ipsi_Nm', 'ankle_dorsiflexion_moment_contra_Nm',
+        # Segment angles (sagittal plane only)
+        'pelvis_sagittal_angle_rad',
+        'thigh_sagittal_angle_ipsi_rad', 'thigh_sagittal_angle_contra_rad',
+        'shank_sagittal_angle_ipsi_rad', 'shank_sagittal_angle_contra_rad',
+        'foot_sagittal_angle_ipsi_rad', 'foot_sagittal_angle_contra_rad'
+    ]
+    
+    if var_name in sagittal_features:
+        return sagittal_features.index(var_name)
+    return None
+
+
+def get_sagittal_features() -> List[Tuple[str, str]]:
+    """
+    Get list of sagittal plane features to validate and plot.
+    Returns list of (variable_name, display_label) tuples.
+    """
+    return [
+        # Kinematic features
+        ('hip_flexion_angle_ipsi_rad', 'Hip Flexion Angle (Ipsi)'),
+        ('hip_flexion_angle_contra_rad', 'Hip Flexion Angle (Contra)'),
+        ('knee_flexion_angle_ipsi_rad', 'Knee Flexion Angle (Ipsi)'),
+        ('knee_flexion_angle_contra_rad', 'Knee Flexion Angle (Contra)'),
+        ('ankle_dorsiflexion_angle_ipsi_rad', 'Ankle Dorsiflexion Angle (Ipsi)'),
+        ('ankle_dorsiflexion_angle_contra_rad', 'Ankle Dorsiflexion Angle (Contra)'),
+        # Kinetic features
+        ('hip_flexion_moment_ipsi_Nm', 'Hip Flexion Moment (Ipsi)'),
+        ('hip_flexion_moment_contra_Nm', 'Hip Flexion Moment (Contra)'),
+        ('knee_flexion_moment_ipsi_Nm', 'Knee Flexion Moment (Ipsi)'),
+        ('knee_flexion_moment_contra_Nm', 'Knee Flexion Moment (Contra)'),
+        ('ankle_dorsiflexion_moment_ipsi_Nm', 'Ankle Dorsiflexion Moment (Ipsi)'),
+        ('ankle_dorsiflexion_moment_contra_Nm', 'Ankle Dorsiflexion Moment (Contra)'),
+        # Segment angles
+        ('pelvis_sagittal_angle_rad', 'Pelvis Sagittal Angle'),
+        ('thigh_sagittal_angle_ipsi_rad', 'Thigh Sagittal Angle (Ipsi)'),
+        ('thigh_sagittal_angle_contra_rad', 'Thigh Sagittal Angle (Contra)'),
+        ('shank_sagittal_angle_ipsi_rad', 'Shank Sagittal Angle (Ipsi)'),
+        ('shank_sagittal_angle_contra_rad', 'Shank Sagittal Angle (Contra)'),
+        ('foot_sagittal_angle_ipsi_rad', 'Foot Sagittal Angle (Ipsi)'),
+        ('foot_sagittal_angle_contra_rad', 'Foot Sagittal Angle (Contra)')
+    ]
+
+
+# Keep the old function for backward compatibility but mark as deprecated
 def create_filters_by_phase_plot(
     validation_data: Dict, 
     task_name: str, 
@@ -109,17 +372,17 @@ def create_filters_by_phase_plot(
         unit_suffix = ''
     elif mode == 'segment':  # Link/segment angles
         variables = [
-            'pelvis_tilt_angle_rad', 'pelvis_obliquity_angle_rad', 'pelvis_rotation_angle_rad',
-            'trunk_flexion_angle_rad', 'trunk_lateral_angle_rad', 'trunk_rotation_angle_rad',
-            'thigh_angle_ipsi_rad', 'thigh_angle_contra_rad',
-            'shank_angle_ipsi_rad', 'shank_angle_contra_rad',
+            'pelvis_sagittal_angle_rad', 'pelvis_frontal_angle_rad', 'pelvis_transverse_angle_rad',
+            'trunk_sagittal_angle_rad', 'trunk_frontal_angle_rad', 'trunk_transverse_angle_rad',
+            'thigh_sagittal_angle_ipsi_rad', 'thigh_sagittal_angle_contra_rad',
+            'shank_sagittal_angle_ipsi_rad', 'shank_sagittal_angle_contra_rad',
             'foot_angle_ipsi_rad', 'foot_angle_contra_rad'
         ]
         variable_labels = [
-            'Pelvis Tilt Angle', 'Pelvis Obliquity Angle', 'Pelvis Rotation Angle',
-            'Trunk Flexion Angle', 'Trunk Lateral Angle', 'Trunk Rotation Angle',
-            'Thigh Angle (Ipsi)', 'Thigh Angle (Contra)',
-            'Shank Angle (Ipsi)', 'Shank Angle (Contra)',
+            'Pelvis Sagittal Angle', 'Pelvis Frontal Angle', 'Pelvis Transverse Angle',
+            'Trunk Sagittal Angle', 'Trunk Frontal Angle', 'Trunk Transverse Angle',
+            'Thigh Sagittal Angle (Ipsi)', 'Thigh Sagittal Angle (Contra)',
+            'Shank Sagittal Angle (Ipsi)', 'Shank Sagittal Angle (Contra)',
             'Foot Angle (Ipsi)', 'Foot Angle (Contra)'
         ]
         units = 'rad'
