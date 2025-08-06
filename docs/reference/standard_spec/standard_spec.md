@@ -1,8 +1,8 @@
-# Locomotion Data Standard
+# Locomotion Data Standard - Technical Specification
 
-Standardized format for biomechanical datasets with consistent variable naming and structure.
+Core technical specification for parquet file structure and data organization.
 
-**Quick Reference:** [Variable Naming](#variable-naming) • [Data Formats](#data-formats) • [Task Definitions](#task-definitions)
+**For comprehensive reference including biomechanics, see:** [Biomechanical Standard](../biomechanical_standard.md) | [Quick Reference](../quick_reference.md)
 
 ## Data Formats
 
@@ -28,108 +28,34 @@ Standardized format for biomechanical datasets with consistent variable naming a
 
 ## Variable Naming
 
-**Pattern**: `<joint>_<motion>_<measurement>_<side>_<unit>`
-
-**Examples**:
-- `knee_flexion_angle_ipsi_rad`
-- `hip_moment_contra_Nm`
-- `ankle_flexion_velocity_ipsi_rad_s`
-
-**Sides**:
-- `ipsi` - Ipsilateral (same side as leading leg)
-- `contra` - Contralateral (opposite side)
-
-**Units**:
-- Angles: `rad` (radians)
-- Moments: `Nm` (Newton-meters) 
-- Velocities: `rad_s` (radians per second)
-- Forces: `N` (Newtons)
+See [Biomechanical Standard - Variable Naming System](../biomechanical_standard.md#variable-naming-system) for complete variable reference.
 
 ## Required Columns
 
-**Structural**:
+**Metadata** (required for all datasets):
 - `subject` - Subject identifier
-- `task` - Task name
+- `task` - Biomechanical category (e.g., level_walking, incline_walking)
+- `task_id` - Task variant with primary parameter (e.g., incline_10deg, stair_ascent)
+- `task_info` - Metadata in key:value format (e.g., "incline_deg:10,speed_m_s:1.2")
 - `step` - Step/cycle number
 
-**Phase Data**:
+**Phase Data** (required for phase-indexed):
 - `phase_ipsi` - Gait cycle phase (0-100%) aligned to ipsilateral heel strike
 
-**Time Data**:
+**Time Data** (required for time-indexed):
 - `time_s` - Time in seconds
 
 ## Standard Variables
 
-**Joint Angles** (required):
-- `hip_flexion_angle_<side>_rad`
-- `knee_flexion_angle_<side>_rad` 
-- `ankle_dorsiflexion_angle_<side>_rad`
-
-**Segment Angles** (optional):
-- `pelvis_sagittal_angle_rad` - Anterior/posterior tilt
-- `pelvis_frontal_angle_rad` - Lateral tilt (obliquity)
-- `pelvis_transverse_angle_rad` - Axial rotation
-- `trunk_sagittal_angle_rad` - Forward/backward lean
-- `trunk_frontal_angle_rad` - Lateral bend
-- `trunk_transverse_angle_rad` - Axial rotation
-- `thigh_sagittal_angle_<side>_rad` - Thigh orientation
-- `shank_sagittal_angle_<side>_rad` - Shank orientation
-- `foot_sagittal_angle_<side>_rad` - Foot orientation
-
-**Joint Angular Velocities** (optional):
-- `hip_flexion_velocity_<side>_rad_s` - Hip flexion/extension angular velocity
-- `knee_flexion_velocity_<side>_rad_s` - Knee flexion/extension angular velocity
-- `ankle_dorsiflexion_velocity_<side>_rad_s` - Ankle dorsiflexion/plantarflexion angular velocity
-
-**Segment Angular Velocities** (optional):
-- `pelvis_sagittal_velocity_rad_s` - Pelvis tilt angular velocity
-- `pelvis_frontal_velocity_rad_s` - Pelvis obliquity angular velocity
-- `pelvis_transverse_velocity_rad_s` - Pelvis rotation angular velocity
-- `trunk_sagittal_velocity_rad_s` - Trunk lean angular velocity
-- `trunk_frontal_velocity_rad_s` - Trunk bend angular velocity
-- `trunk_transverse_velocity_rad_s` - Trunk rotation angular velocity
-- `thigh_sagittal_velocity_<side>_rad_s` - Thigh angular velocity
-- `shank_sagittal_velocity_<side>_rad_s` - Shank angular velocity
-- `foot_sagittal_velocity_<side>_rad_s` - Foot angular velocity
-
-**Joint Moments** (optional):
-- `hip_flexion_moment_<side>_Nm`
-- `knee_flexion_moment_<side>_Nm`
-- `ankle_dorsiflexion_moment_<side>_Nm`
-
-**Ground Forces** (optional):
-- `vertical_grf_<side>_N`
-- `anterior_grf_<side>_N`
-- `lateral_grf_<side>_N`
+See [Biomechanical Standard - Comprehensive Variable Reference](../biomechanical_standard.md#variable-naming-system) for complete list of standardized variables.
 
 ## Task Definitions
 
-**Standard Task Names**:
-- `level_walking` - Walking on level ground
-- `incline_walking` - Walking uphill
-- `decline_walking` - Walking downhill  
-- `up_stairs` - Stair ascent
-- `down_stairs` - Stair descent
-- `run` - Running
-- `sit_to_stand` - Chair rise
-- `jump` - Jumping
-- `squats` - Squatting motion
+See [Biomechanical Standard - Task Classification System](../biomechanical_standard.md#task-classification-system) for complete task hierarchy and metadata specifications.
 
 ## Sign Conventions
 
-**Joint Angles**:
-- **Positive flexion**: Hip, knee, ankle dorsiflexion
-- **Negative extension**: Hip, knee, ankle plantarflexion
-
-**Coordinate System**:
-- **X**: Anterior (forward)
-- **Y**: Superior (up)
-- **Z**: Lateral (right)
-
-**Ground Forces**:
-- **Positive Y**: Upward (vertical)
-- **Positive X**: Forward (anterior)
-- **Positive Z**: Rightward (lateral)
+See [Biomechanical Standard - Coordinate System & Conventions](../biomechanical_standard.md#coordinate-system--conventions) for detailed sign conventions and coordinate system definitions.
 
 ## Phase Calculation
 
@@ -158,19 +84,19 @@ Standardized format for biomechanical datasets with consistent variable naming a
 
 **Time-indexed**:
 ```
-subject,task,step,time_s,knee_flexion_angle_ipsi_rad,hip_moment_contra_Nm
-SUB01,level_walking,0,0.00,0.123,-0.456
-SUB01,level_walking,0,0.01,0.126,-0.445
-SUB01,level_walking,1,1.20,0.120,-0.460
+subject,task,task_id,task_info,step,time_s,knee_flexion_angle_ipsi_rad,hip_moment_contra_Nm
+SUB01,level_walking,level,"speed_m_s:1.2,treadmill:true",0,0.00,0.123,-0.456
+SUB01,level_walking,level,"speed_m_s:1.2,treadmill:true",0,0.01,0.126,-0.445
+SUB01,level_walking,level,"speed_m_s:1.2,treadmill:true",1,1.20,0.120,-0.460
 ```
 
 **Phase-indexed**:
 ```
-subject,task,step,phase_percent,knee_flexion_angle_ipsi_rad,hip_moment_contra_Nm
-SUB01,level_walking,0,0.0,0.123,-0.456
-SUB01,level_walking,0,0.7,0.126,-0.445
-SUB01,level_walking,0,100.0,0.120,-0.460
-SUB01,level_walking,1,0.0,0.125,-0.458
+subject,task,task_id,task_info,step,phase_ipsi,knee_flexion_angle_ipsi_rad,hip_moment_contra_Nm
+SUB01,incline_walking,incline_10deg,"incline_deg:10,speed_m_s:1.0,treadmill:true",0,0.0,0.123,-0.456
+SUB01,incline_walking,incline_10deg,"incline_deg:10,speed_m_s:1.0,treadmill:true",0,0.7,0.126,-0.445
+SUB01,incline_walking,incline_10deg,"incline_deg:10,speed_m_s:1.0,treadmill:true",0,100.0,0.120,-0.460
+SUB01,incline_walking,incline_10deg,"incline_deg:10,speed_m_s:1.0,treadmill:true",1,0.0,0.125,-0.458
 ```
 
 ## Validation Requirements

@@ -1,85 +1,137 @@
 # Reference Documentation
 
-Technical reference for dataset conversion and validation.
+**Technical specifications and standards for biomechanical data standardization**
 
-## 🚀 [Scripts Cheat Sheet](scripts_cheatsheet.md)
-Quick reference for all essential scripts - conversion, validation, and data access.
+---
 
-## 📋 [Data Standard Specification](standard_spec/standard_spec.md)
-Complete specification for the locomotion data standard:
-- [Variable naming and structure](standard_spec/standard_spec.md)
-- [Units and sign conventions](standard_spec/units_and_conventions.md)
-- [Standard task definitions](standard_spec/task_definitions.md)
-- [Kinematic validation ranges](standard_spec/validation_expectations_kinematic.md)
-- [Kinetic validation ranges](standard_spec/validation_expectations_kinetic.md)
+## 📚 Essential References
 
-## Core Components
+### 🔬 [Biomechanical Standard](biomechanical_standard.md)
+**Complete Technical Reference**
+- Variable definitions with units & ranges
+- Coordinate systems & sign conventions  
+- Joint & segment angle mathematics
+- Forces, moments, and GRF specifications
+- Task classification hierarchy
+- Validation requirements & ranges
 
-### Dataset Conversion
-Scripts to convert biomechanical data to standardized format:
-- **UMich 2021** - MATLAB converter in `contributor_scripts/conversion_scripts/Umich_2021/`
-- **GTech 2023** - Python converter in `contributor_scripts/conversion_scripts/Gtech_2023/`
-- **AddBiomechanics** - Python converter in `contributor_scripts/conversion_scripts/AddBiomechanics/`
+### 📋 [Quick Reference](quick_reference.md)
+**Daily Use Cheat Sheet**
+- Copy-ready variable names
+- Sign convention tables
+- Unit conversion formulas
+- Typical value ranges
+- Common troubleshooting
+- Print-friendly format
 
-### Validation System
-Visual validation and quality assessment:
-- **Validation Reports** - Generated in `docs/user_guide/docs/reference/datasets_documentation/validation_reports/`
-- **Configuration** - YAML files in `contributor_tools/validation_ranges/`
-- **Visualization** - Plots showing data overlaid on expected ranges
+### 📄 [Technical Specification](standard_spec/standard_spec.md)
+**File Format Details**
+- Parquet structure requirements
+- Required columns & metadata
+- Phase vs time indexing
+- Data organization patterns
+- Implementation examples
 
-### Data Access
-Python library for loading and analyzing standardized data:
-- **LocomotionData** - Main interface in `lib/core/locomotion_analysis.py`
-- **3D Array Access** - Efficient numpy operations on gait cycles
-- **Standard Features** - Defined in `lib/core/feature_constants.py`
+---
 
-## Data Format Overview
+## 🗂️ Additional Documentation
 
-**Phase-Indexed Format**: 150 points per gait cycle (0-100%)
+### 📊 [Dataset Documentation](datasets_documentation/)
+Information about specific datasets in the standardized format:
+- [Validation Reports](datasets_documentation/validation_reports/) - Quality assessment for each dataset
+- Individual dataset specifications and known issues
 
-**Standard Naming**: `<joint>_<motion>_<measurement>_<side>_<unit>`
+### ✅ [Validation Specifications](standard_spec/validation_ranges.md)
+Detailed validation ranges and criteria:
+- Task-specific biomechanical ranges
+- Phase-based validation points
+- Statistical validation methods
 
-**Example Variables**:
-- `knee_flexion_angle_ipsi_rad` - Knee angle (radians)
-- `hip_flexion_moment_contra_Nm` - Hip moment (Newton-meters)
+### 🔧 [Task Definitions](standard_spec/task_definitions.md)
+Complete task classification system:
+- Three-level hierarchy (task/task_id/task_info)
+- Standard activity definitions
+- Metadata specifications
 
-See [Data Standard Specification](standard_spec/standard_spec.md) for complete details.
+---
 
-## Common Tasks
+## 🚀 Quick Start Examples
 
-### Convert a Dataset
-```bash
-cd contributor_scripts/conversion_scripts/[dataset]/
-# Run converter script (MATLAB or Python)
-```
-
-### Validate a Dataset
-```bash
-python3 contributor_scripts/create_dataset_validation_report.py \
-    --dataset converted_datasets/dataset_phase.parquet
-```
-
-### Load Data for Analysis
+### Loading Data
 ```python
-from lib.core.locomotion_analysis import LocomotionData
+from user_libs.python.locomotion_data import LocomotionData
 
-loco = LocomotionData('converted_datasets/dataset_phase.parquet')
-data_3d, features = loco.get_cycles('SUB01', 'level_walking')
+# Load standardized dataset
+data = LocomotionData('converted_datasets/umich_2021_phase.parquet')
+
+# Get gait cycles for analysis
+cycles, features = data.get_cycles('SUB01', 'level_walking')
 ```
 
-## Available Datasets
+### Converting Datasets
+```bash
+# Run dataset-specific converter
+cd contributor_tools/conversion_scripts/YourDataset/
+python convert_to_parquet.py  # or MATLAB equivalent
+```
 
-### Converted Datasets
-Located in `converted_datasets/`:
-- `umich_2021_phase.parquet` - University of Michigan 2021
-- `gtech_2023_phase.parquet` - Georgia Tech 2023
-- `addbiomechanics_phase.parquet` - AddBiomechanics
+### Validating Data
+```bash
+# Generate validation report
+python contributor_tools/create_dataset_validation_report.py \
+    --dataset converted_datasets/your_dataset_phase.parquet
+```
 
-### Validation Reports
-View at: `/reference/datasets_documentation/validation_reports/` when running MkDocs
+---
 
-## Further Information
+## 📁 Directory Structure
 
-- [Developer Guide](../developer/README.md) - Detailed development workflows
-- [Scripts Cheat Sheet](scripts_cheatsheet.md) - Quick command reference
-- [Maintainer Tasks](../maintainers/tasks.md) - System maintenance
+```
+docs/reference/
+├── biomechanical_standard.md    # Comprehensive reference
+├── quick_reference.md            # Cheat sheet
+├── standard_spec/               # Technical specifications
+│   ├── standard_spec.md        # File format spec
+│   ├── task_definitions.md     # Task classifications
+│   └── validation_ranges.md    # Validation criteria
+└── datasets_documentation/      # Dataset-specific docs
+    └── validation_reports/      # Quality reports
+```
+
+---
+
+## 🔍 Finding Information
+
+| **Looking for...** | **Go to...** |
+|-------------------|--------------|
+| Variable naming conventions | [Biomechanical Standard § Variable Naming](biomechanical_standard.md#variable-naming-system) |
+| Sign conventions | [Quick Reference § Sign Conventions](quick_reference.md#sign-conventions) |
+| Unit conversions | [Quick Reference § Unit Conversions](quick_reference.md#unit-conversions) |
+| Coordinate system | [Biomechanical Standard § Coordinate System](biomechanical_standard.md#coordinate-system--conventions) |
+| Task classifications | [Biomechanical Standard § Task Classification](biomechanical_standard.md#task-classification-system) |
+| File format requirements | [Technical Specification](standard_spec/standard_spec.md) |
+| Validation ranges | [Biomechanical Standard § Validation](biomechanical_standard.md#validation-requirements) |
+| Common issues | [Quick Reference § Common Issues](quick_reference.md#common-issues) |
+
+---
+
+## 📝 Key Concepts
+
+### Data Formats
+- **Phase-Indexed**: 150 points per gait cycle (0-100%)
+- **Time-Indexed**: Original sampling frequency preserved
+
+### Variable Pattern
+```
+<joint/segment>_<motion>_<measurement>_<side>_<unit>
+```
+Example: `knee_flexion_angle_ipsi_rad`
+
+### Coordinate System
+- **X**: Anterior (forward) positive
+- **Y**: Superior (upward) positive  
+- **Z**: Right (lateral) positive
+
+---
+
+*For development and contribution guidelines, see the [Maintainers Guide](../maintainers/index.md)*
