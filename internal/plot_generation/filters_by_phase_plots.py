@@ -94,12 +94,9 @@ def create_single_feature_plot(
     if failing_features is None:
         failing_features = {}
     
-    # Find the feature index in the data array
-    var_idx = None
-    if data is not None and data.size > 0:
-        # Determine the index based on the variable name
-        # This is a simplified mapping - in practice, you'd need the actual feature list
-        var_idx = _get_variable_index(var_name)
+    # Since we're receiving single-feature data with shape (n_strides, 150, 1),
+    # the feature is always at index 0
+    var_idx = 0 if data is not None and data.size > 0 and data.shape[2] > 0 else None
     
     # Build global set of failed stride indices for ANY variable
     global_failed_strides = set()
@@ -135,7 +132,7 @@ def create_single_feature_plot(
                     all_maxs.append(max_val)
     
     # Include actual data range if available
-    if data is not None and data.size > 0 and var_idx is not None and var_idx < data.shape[2]:
+    if data is not None and data.size > 0 and var_idx is not None:
         data_values = data[:, :, var_idx]
         data_min = np.nanmin(data_values)
         data_max = np.nanmax(data_values)
@@ -165,7 +162,7 @@ def create_single_feature_plot(
     
     # Plot PASSED strides (left column)
     passed_count = 0
-    if data is not None and data.size > 0 and var_idx is not None and var_idx < data.shape[2]:
+    if data is not None and data.size > 0 and var_idx is not None:
         phase_percent = np.linspace(0, 100, 150)
         
         for stride_idx in range(data.shape[0]):
@@ -193,7 +190,7 @@ def create_single_feature_plot(
     
     # Plot FAILED strides (right column)
     failed_count = 0
-    if data is not None and data.size > 0 and var_idx is not None and var_idx < data.shape[2]:
+    if data is not None and data.size > 0 and var_idx is not None:
         for stride_idx in range(data.shape[0]):
             if stride_idx in variable_failed_strides:
                 stride_data = data[stride_idx, :, var_idx]
@@ -237,33 +234,6 @@ def create_single_feature_plot(
     return str(output_path)
 
 
-def _get_variable_index(var_name: str) -> Optional[int]:
-    """
-    Get the index of a variable in the standard feature order.
-    This is a placeholder - actual implementation would use feature_constants.
-    """
-    # Define the standard order of sagittal plane features
-    sagittal_features = [
-        # Kinematic features (sagittal plane only)
-        'hip_flexion_angle_ipsi_rad', 'hip_flexion_angle_contra_rad',
-        'knee_flexion_angle_ipsi_rad', 'knee_flexion_angle_contra_rad',
-        'ankle_dorsiflexion_angle_ipsi_rad', 'ankle_dorsiflexion_angle_contra_rad',
-        # Kinetic features (sagittal plane only)
-        'hip_flexion_moment_ipsi_Nm', 'hip_flexion_moment_contra_Nm',
-        'knee_flexion_moment_ipsi_Nm', 'knee_flexion_moment_contra_Nm',
-        'ankle_dorsiflexion_moment_ipsi_Nm', 'ankle_dorsiflexion_moment_contra_Nm',
-        # Segment angles (sagittal plane only)
-        'pelvis_sagittal_angle_rad',
-        'thigh_sagittal_angle_ipsi_rad', 'thigh_sagittal_angle_contra_rad',
-        'shank_sagittal_angle_ipsi_rad', 'shank_sagittal_angle_contra_rad',
-        'foot_sagittal_angle_ipsi_rad', 'foot_sagittal_angle_contra_rad'
-    ]
-    
-    if var_name in sagittal_features:
-        return sagittal_features.index(var_name)
-    return None
-
-
 def get_sagittal_features() -> List[Tuple[str, str]]:
     """
     Get list of sagittal plane features to validate and plot.
@@ -293,6 +263,233 @@ def get_sagittal_features() -> List[Tuple[str, str]]:
         ('foot_sagittal_angle_ipsi_rad', 'Foot Sagittal Angle (Ipsi)'),
         ('foot_sagittal_angle_contra_rad', 'Foot Sagittal Angle (Contra)')
     ]
+
+
+def create_task_combined_plot(
+    validation_data: Dict,
+    task_name: str,
+    output_dir: str,
+    data_3d: Optional[np.ndarray] = None,
+    feature_names: Optional[List[str]] = None,
+    failing_features: Optional[Dict[int, List[str]]] = None,
+    dataset_name: Optional[str] = None,
+    timestamp: Optional[str] = None
+) -> str:
+    """
+    Create a combined validation plot with all features for a single task.
+    
+    Args:
+        validation_data: Parsed validation data with ranges for this task
+        task_name: Name of the task
+        output_dir: Directory to save the plot
+        data_3d: Optional numpy array with shape (num_strides, 150, num_features)
+        feature_names: List of feature names corresponding to data_3d columns
+        failing_features: Dict mapping stride indices to lists of failed variable names
+        dataset_name: Optional dataset name to display
+        timestamp: Optional timestamp to display
+        
+    Returns:
+        Path to the generated plot
+    """
+    # Get sagittal features and their labels
+    sagittal_features = get_sagittal_features()
+    feature_labels = {f[0]: f[1] for f in sagittal_features}
+    
+    # Filter to only features that exist in the data
+    if feature_names:
+        available_features = [(name, feature_labels[name]) for name, _ in sagittal_features 
+                             if name in feature_names]
+    else:
+        available_features = sagittal_features
+    
+    n_features = len(available_features)
+    
+    # Create figure with grid layout - 10 rows x 2 columns (pass/fail)
+    # Adjust figure height based on number of features
+    fig_height = max(20, n_features * 1.5)
+    fig, axes = plt.subplots(n_features, 2, figsize=(14, fig_height))
+    
+    # Ensure axes is always 2D
+    if n_features == 1:
+        axes = axes.reshape(1, -1)
+    
+    # Build title
+    task_type = get_task_classification(task_name)
+    task_type_label = "Gait-Based Task" if task_type == 'gait' else "Bilateral Symmetric Task"
+    title = f'{task_name.replace("_", " ").title()} - All Features Validation\n{task_type_label}'
+    if dataset_name:
+        title += f'\nDataset: {dataset_name}'
+    if timestamp:
+        title += f' | Generated: {timestamp}'
+    
+    fig.suptitle(title, fontsize=14, fontweight='bold')
+    
+    # Handle failing features
+    if failing_features is None:
+        failing_features = {}
+    
+    # Build global set of failed stride indices for ANY variable
+    global_failed_strides = set()
+    for stride_idx, failed_vars in failing_features.items():
+        if failed_vars:  # If any variable failed
+            global_failed_strides.add(stride_idx)
+    
+    # Extract phases from validation data
+    phases = sorted([int(p) for p in validation_data.keys() if str(p).isdigit()])
+    
+    # Add 100% for cyclical completion if not present
+    if 100 not in phases and 0 in validation_data:
+        phases.append(100)
+        validation_data[100] = validation_data[0].copy()
+    
+    # Process each feature
+    for feat_idx, (var_name, var_label) in enumerate(available_features):
+        ax_pass = axes[feat_idx, 0]
+        ax_fail = axes[feat_idx, 1]
+        
+        # Get the index of this feature in the data array
+        if feature_names and var_name in feature_names:
+            var_idx = feature_names.index(var_name)
+        else:
+            var_idx = None
+        
+        # Build variable-specific failed strides
+        variable_failed_strides = set()
+        for stride_idx, failed_vars in failing_features.items():
+            if var_name in failed_vars:
+                variable_failed_strides.add(stride_idx)
+        
+        # Get validation ranges for this variable
+        var_ranges = {}
+        for phase in phases:
+            if phase in validation_data and var_name in validation_data[phase]:
+                var_ranges[phase] = validation_data[phase][var_name]
+        
+        # Determine y-axis range
+        all_mins = []
+        all_maxs = []
+        
+        # Include validation ranges
+        for phase, ranges in var_ranges.items():
+            if 'min' in ranges and 'max' in ranges:
+                min_val = ranges['min']
+                max_val = ranges['max']
+                if min_val is not None and max_val is not None:
+                    if not (np.isinf(min_val) or np.isinf(max_val) or np.isnan(min_val) or np.isnan(max_val)):
+                        all_mins.append(min_val)
+                        all_maxs.append(max_val)
+        
+        # Include actual data range if available
+        if data_3d is not None and data_3d.size > 0 and var_idx is not None:
+            data_values = data_3d[:, :, var_idx]
+            data_min = np.nanmin(data_values)
+            data_max = np.nanmax(data_values)
+            if not (np.isinf(data_min) or np.isinf(data_max) or np.isnan(data_min) or np.isnan(data_max)):
+                all_mins.append(data_min)
+                all_maxs.append(data_max)
+        
+        if all_mins and all_maxs:
+            y_min = min(all_mins) - 0.1 * (max(all_maxs) - min(all_mins))
+            y_max = max(all_maxs) + 0.1 * (max(all_maxs) - min(all_mins))
+        else:
+            y_min, y_max = -1, 1
+        
+        # Determine unit and conversion
+        if var_name.endswith('_rad'):
+            units = 'rad'
+            value_conversion = np.degrees
+            unit_suffix = '°'
+        elif var_name.endswith('_Nm'):
+            units = 'Nm'
+            value_conversion = lambda x: x
+            unit_suffix = ''
+        else:
+            units = ''
+            value_conversion = lambda x: x
+            unit_suffix = ''
+        
+        # Plot PASSED strides (left column)
+        passed_count = 0
+        if data_3d is not None and data_3d.size > 0 and var_idx is not None:
+            phase_percent = np.linspace(0, 100, 150)
+            
+            for stride_idx in range(data_3d.shape[0]):
+                if stride_idx not in global_failed_strides:
+                    stride_data = data_3d[stride_idx, :, var_idx]
+                    ax_pass.plot(phase_percent, stride_data, color='green', alpha=0.3, linewidth=0.5, zorder=1)
+                    passed_count += 1
+        
+        # Plot validation ranges on pass axis
+        _plot_validation_ranges(ax_pass, var_ranges, phases, 'lightgreen', value_conversion, unit_suffix)
+        
+        if data_3d is None or data_3d.size == 0 or var_idx is None:
+            ax_pass.text(50, (y_min + y_max) / 2, 'Data Not Available', 
+                        ha='center', va='center', fontsize=10, color='gray', alpha=0.7)
+        
+        # Compact title for subplot
+        ax_pass.set_title(f'{var_label} ✓ ({passed_count})', fontsize=8, fontweight='bold')
+        ax_pass.set_xlim(-5, 105)
+        ax_pass.set_ylim(y_min, y_max)
+        ax_pass.set_xticks([0, 25, 50, 75, 100])
+        ax_pass.set_xticklabels(['0%', '25%', '50%', '75%', '100%'], fontsize=7)
+        ax_pass.set_ylabel(units, fontsize=7)
+        ax_pass.grid(True, alpha=0.3)
+        ax_pass.tick_params(axis='y', labelsize=7)
+        
+        # Only add x-label to bottom row
+        if feat_idx == n_features - 1:
+            x_label = 'Gait Phase' if task_type == 'gait' else 'Movement Phase'
+            ax_pass.set_xlabel(x_label, fontsize=8)
+        
+        # Plot FAILED strides (right column)
+        failed_count = 0
+        if data_3d is not None and data_3d.size > 0 and var_idx is not None:
+            for stride_idx in range(data_3d.shape[0]):
+                if stride_idx in variable_failed_strides:
+                    stride_data = data_3d[stride_idx, :, var_idx]
+                    ax_fail.plot(phase_percent, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
+                    failed_count += 1
+        
+        # Plot validation ranges on fail axis
+        _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix)
+        
+        if data_3d is None or data_3d.size == 0 or var_idx is None:
+            ax_fail.text(50, (y_min + y_max) / 2, 'Data Not Available', 
+                        ha='center', va='center', fontsize=10, color='gray', alpha=0.7)
+        
+        ax_fail.set_title(f'{var_label} ✗ ({failed_count})', fontsize=8, fontweight='bold')
+        ax_fail.set_xlim(-5, 105)
+        ax_fail.set_ylim(y_min, y_max)
+        ax_fail.set_xticks([0, 25, 50, 75, 100])
+        ax_fail.set_xticklabels(['0%', '25%', '50%', '75%', '100%'], fontsize=7)
+        ax_fail.grid(True, alpha=0.3)
+        ax_fail.tick_params(axis='y', labelsize=7)
+        
+        # Only add x-label to bottom row
+        if feat_idx == n_features - 1:
+            ax_fail.set_xlabel(x_label, fontsize=8)
+        
+        # Add degree conversion on right y-axis for angular variables
+        if var_name.endswith('_rad'):
+            ax2_pass = ax_pass.twinx()
+            ax2_pass.set_ylim(value_conversion(y_min), value_conversion(y_max))
+            ax2_pass.set_ylabel('deg', fontsize=7)
+            ax2_pass.tick_params(axis='y', labelsize=7)
+            
+            ax2_fail = ax_fail.twinx()
+            ax2_fail.set_ylim(value_conversion(y_min), value_conversion(y_max))
+            ax2_fail.set_ylabel('deg', fontsize=7)
+            ax2_fail.tick_params(axis='y', labelsize=7)
+    
+    plt.tight_layout(rect=[0, 0.02, 1, 0.96])
+    
+    # Save the plot
+    output_path = Path(output_dir) / f"{task_name}_all_features_validation.png"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.close()
+    
+    return str(output_path)
 
 
 # Keep the old function for backward compatibility but mark as deprecated

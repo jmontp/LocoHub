@@ -18,6 +18,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 # Avoid circular import - import only what's needed
 from internal.plot_generation.filters_by_phase_plots import (
     create_single_feature_plot, 
+    create_task_combined_plot,
     get_sagittal_features,
     get_task_classification,
     create_filters_by_phase_plot  # Keep for backward compatibility
@@ -114,7 +115,7 @@ class ValidationReportGenerator:
         feature_names = [f[0] for f in sagittal_features]
         feature_labels = {f[0]: f[1] for f in sagittal_features}
         
-        # Generate plots for each task
+        # Generate combined plot for each task
         for task in tasks:
             # Filter to only features that exist in the dataset
             available_features = [f for f in feature_names if f in locomotion_data.features]
@@ -129,33 +130,18 @@ class ValidationReportGenerator:
                 # Get task data with generated contra features
                 task_validation_data = self.validator.config_manager.get_task_data(task) if self.validator.config_manager.has_task(task) else {}
                 
-                # Generate individual plot for each available feature
-                for var_name in available_features:
-                    if var_name in all_feature_names:
-                        # Get the index of this feature in the data array
-                        var_idx = all_feature_names.index(var_name)
-                        
-                        # Extract just this feature's data
-                        feature_data_3d = all_data_3d[:, :, [var_idx]] if all_data_3d is not None else None
-                        
-                        # Get display label
-                        var_label = feature_labels.get(var_name, var_name)
-                        
-                        # Generate plot for this single feature
-                        plot_path = create_single_feature_plot(
-                            validation_data={task: task_validation_data},
-                            task_name=task,
-                            var_name=var_name,
-                            var_label=var_label,
-                            output_dir=str(self.plots_dir),
-                            data=feature_data_3d,
-                            failing_features=failing_features,
-                            dataset_name=Path(dataset_path).stem,
-                            timestamp=timestamp
-                        )
-                        # Use feature name in the plot path key
-                        safe_var_name = var_name.replace('/', '_')
-                        plot_paths[f"{task}_{safe_var_name}"] = plot_path
+                # Generate combined plot for all features
+                plot_path = create_task_combined_plot(
+                    validation_data=task_validation_data,
+                    task_name=task,
+                    output_dir=str(self.plots_dir),
+                    data_3d=all_data_3d,
+                    feature_names=all_feature_names,
+                    failing_features=failing_features,
+                    dataset_name=Path(dataset_path).stem,
+                    timestamp=timestamp
+                )
+                plot_paths[task] = plot_path
         
         return plot_paths
     
@@ -285,63 +271,23 @@ class ValidationReportGenerator:
             lines.append("## Validation Plots")
             lines.append("")
             
-            # Get unique tasks from plot paths
-            # Extract task names by removing the feature part after the task name
-            tasks = set()
-            for key in plot_paths.keys():
-                # Key format is now: "task_feature_name"
-                # Find task by removing everything after the task name
-                for task_name in ['level_walking', 'incline_walking', 'decline_walking']:
-                    if key.startswith(task_name):
-                        tasks.add(task_name)
-                        break
-            
-            # Get sagittal features for categorization
+            # Get sagittal features to count validated features
             sagittal_features = get_sagittal_features()
             
-            for task in sorted(tasks):
+            # Process each task with its combined plot
+            for task in sorted(plot_paths.keys()):
+                # Task header
                 lines.append(f"### {task.replace('_', ' ').title()}")
                 lines.append("")
                 
-                # Group plots by category for better organization
-                kinematic_plots = []
-                kinetic_plots = []
-                segment_plots = []
+                # Add summary
+                lines.append(f"*All {len(sagittal_features)} sagittal plane features validated*")
+                lines.append("")
                 
-                # Find all plots for this task
-                for feature_name, feature_label in sagittal_features:
-                    plot_key = f"{task}_{feature_name}"
-                    if plot_key in plot_paths:
-                        rel_path = Path(plot_paths[plot_key]).relative_to(self.output_dir)
-                        
-                        # Categorize by feature type
-                        if 'moment' in feature_name:
-                            kinetic_plots.append((feature_label, rel_path))
-                        elif any(seg in feature_name for seg in ['pelvis', 'thigh', 'shank', 'foot']):
-                            segment_plots.append((feature_label, rel_path))
-                        else:
-                            kinematic_plots.append((feature_label, rel_path))
-                
-                # Output kinematic plots
-                if kinematic_plots:
-                    lines.append("#### Kinematic Validation")
-                    for label, rel_path in kinematic_plots:
-                        lines.append(f"![{label}]({rel_path})")
-                    lines.append("")
-                
-                # Output kinetic plots
-                if kinetic_plots:
-                    lines.append("#### Kinetic Validation")
-                    for label, rel_path in kinetic_plots:
-                        lines.append(f"![{label}]({rel_path})")
-                    lines.append("")
-                
-                # Output segment angle plots
-                if segment_plots:
-                    lines.append("#### Segment Angles Validation")
-                    for label, rel_path in segment_plots:
-                        lines.append(f"![{label}]({rel_path})")
-                    lines.append("")
+                # Add the combined plot
+                rel_path = Path(plot_paths[task]).relative_to(self.output_dir)
+                lines.append(f"![{task.replace('_', ' ').title()} Validation]({rel_path})")
+                lines.append("")
         
         
         # Write report
