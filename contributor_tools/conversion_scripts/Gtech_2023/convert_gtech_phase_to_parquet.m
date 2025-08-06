@@ -959,17 +959,31 @@ if strcmpi(naming_convention, 'ipsicontra')
         new_base = lateralized_patterns{i, 2};
         suffix = lateralized_patterns{i, 3};
         
-        % Handle special cases for moments
-        if contains(old_base, '_moment')
+        % Handle special cases for segment angles where L/R is embedded in the name
+        if contains(old_base, 'femur_') || contains(old_base, 'tibia_') || contains(old_base, 'calcn_')
+            % For segment angles, L/R is already in the base name
+            col_l = old_base;  % e.g., 'femur_l_Z'
+            col_r = strrep(old_base, '_l_', '_r_');  % e.g., 'femur_r_Z'
+            
+            % For segment angles, the new names already include ipsi/contra
+            col_ipsi = new_base;  % e.g., 'thigh_sagittal_angle_ipsi'
+            col_contra = strrep(new_base, '_ipsi', '_contra');  % e.g., 'thigh_sagittal_angle_contra'
+            % Add the suffix (e.g., '_rad')
+            col_ipsi = [col_ipsi suffix];
+            col_contra = [col_contra suffix];
+        elseif contains(old_base, '_moment')
+            % Handle moments
             col_l = old_base;
             col_r = strrep(old_base, '_l_', '_r_');
+            col_ipsi = [new_base '_ipsi' suffix];
+            col_contra = [new_base '_contra' suffix];
         else
+            % Standard pattern: append _l and _r
             col_l = [old_base '_l'];
             col_r = [old_base '_r'];
+            col_ipsi = [new_base '_ipsi' suffix];
+            col_contra = [new_base '_contra' suffix];
         end
-        
-        col_ipsi = [new_base '_ipsi' suffix];
-        col_contra = [new_base '_contra' suffix];
         
         % Check if both L and R columns exist
         if ismember(col_l, combined_data.Properties.VariableNames) && ...
@@ -1158,9 +1172,7 @@ if strcmpi(naming_convention, 'ipsicontra')
     ankle_velocity_cols_to_flip = {
         'ankle_dorsiflexion_velocity_ipsi_rad_s', 'ankle_dorsiflexion_velocity_contra_rad_s'
     };
-    ankle_moment_cols_to_flip = {
-        'ankle_dorsiflexion_moment_ipsi_Nm', 'ankle_dorsiflexion_moment_contra_Nm'
-    };
+    % Note: Ankle moments should NOT be flipped
 else
     knee_angle_cols_to_flip = {
         'knee_flexion_angle_l_rad', 'knee_flexion_angle_r_rad'
@@ -1177,9 +1189,7 @@ else
     ankle_velocity_cols_to_flip = {
         'ankle_dorsiflexion_velocity_l_rad_s', 'ankle_dorsiflexion_velocity_r_rad_s'
     };
-    ankle_moment_cols_to_flip = {
-        'ankle_dorsiflexion_moment_l_Nm', 'ankle_dorsiflexion_moment_r_Nm'
-    };
+    % Note: Ankle moments should NOT be flipped
 end
 
 % Flip knee angle signs
@@ -1227,14 +1237,7 @@ for i = 1:length(ankle_velocity_cols_to_flip)
     end
 end
 
-% Flip ankle moment signs to match angle convention
-for i = 1:length(ankle_moment_cols_to_flip)
-    col_name = ankle_moment_cols_to_flip{i};
-    if ismember(col_name, combined_data.Properties.VariableNames)
-        combined_data.(col_name) = -1 * combined_data.(col_name);
-        fprintf('  Flipped sign for %s to match angle convention\n', col_name);
-    end
-end
+% Note: Ankle moments should NOT be flipped - only angles and velocities
 
 % 2. Check for and remove duplicate rows
 initial_rows = height(combined_data);
