@@ -569,8 +569,18 @@ for subject_idx = 1:length(subjects)
                  for v = 1:length(mom_vars); var_base = mom_vars{v}; prefix = strrep(var_base, '_moment', ''); step_data_single.([prefix '_l_moment']) = nan(num_points_per_step, 1); step_data_single.([prefix '_r_moment']) = nan(num_points_per_step, 1); end
             end
 
-            % --- Interpolate Link Angles (Example for Foot Angle Z - Add others) ---
-            link_angle_cols_to_process = {'calcn_l_Z', 'calcn_r_Z'}; % Define expected input cols
+            % --- Interpolate Link Angles (Segment Angles) ---
+            % Process all segment angles: pelvis, femur (thigh), tibia (shank), calcn (foot)
+            link_angle_cols_to_process = {
+                'pelvis_X', 'pelvis_Y', 'pelvis_Z', ...  % Pelvis angles
+                'femur_l_X', 'femur_l_Y', 'femur_l_Z', ... % Left thigh
+                'femur_r_X', 'femur_r_Y', 'femur_r_Z', ... % Right thigh
+                'tibia_l_X', 'tibia_l_Y', 'tibia_l_Z', ... % Left shank
+                'tibia_r_X', 'tibia_r_Y', 'tibia_r_Z', ... % Right shank
+                'calcn_l_X', 'calcn_l_Y', 'calcn_l_Z', ... % Left foot
+                'calcn_r_X', 'calcn_r_Y', 'calcn_r_Z'  % Right foot
+            };
+            
             if isfield(raw_data, 'Link_Angle') && ~isempty(raw_data.Link_Angle)
                  raw_link_ang_table = raw_data.Link_Angle;
                  idx_link_ang = (raw_kin_time >= step_start & raw_kin_time <= step_end);
@@ -733,7 +743,8 @@ for subject_idx = 1:length(subjects)
             if strcmpi(naming_convention, 'ipsicontra')
                 % For ipsi/contra, ipsi is always the leading leg at phase 0
                 step_data_single.phase_ipsi = base_phase_step;
-                % No need for phase_contra as it's redundant
+                % Store which anatomical leg is ipsi for this step
+                step_data_single.ipsi_is_left = repmat(strcmp(leading_leg, 'l'), num_points_per_step, 1);
             else
                 % For left/right naming
                 if strcmp(leading_leg, 'r')
@@ -870,77 +881,177 @@ fprintf('Total number of activity instances resulting in exactly one processed s
 
 combined_data = total_data;
 
-% --- Define column renaming map (Intermediate names from interpolation -> Final names) ---
-% Verify these intermediate names match the ones created in the step loop!
-old_col_names_map = {...
-    'knee_angle_l', 'knee_angle_r', 'knee_velocity_l', 'knee_velocity_r', 'knee_angle_l_moment', 'knee_angle_r_moment', ...
-    'ankle_angle_l', 'ankle_angle_r', 'ankle_velocity_l', 'ankle_velocity_r', 'ankle_angle_l_moment', 'ankle_angle_r_moment', ...
-    'calcn_l_Z', 'calcn_r_Z', ... % Foot angle only
-    'hip_flexion_l', 'hip_flexion_r', 'hip_flexion_velocity_l', 'hip_flexion_velocity_r', 'hip_flexion_l_moment', 'hip_flexion_r_moment', ...
-    'activity', ... % Source activity name used for intermediate table
-    'cop_x_l', 'cop_y_l', 'cop_z_l', 'cop_x_r', 'cop_y_r', 'cop_z_r', ... % Names created during interpolation
-    'grf_x_l', 'grf_y_l', 'grf_z_l', 'grf_x_r', 'grf_y_r', 'grf_z_r', ... % Names created during interpolation
-    'phase_l', 'phase_r', 'step', ... % Names created during interpolation
-    % Add Global angle intermediate names if they need renaming (e.g., 'foot_l_X')
-    };
-
-new_col_names_lr = {...
-    'knee_flexion_angle_l_rad', 'knee_flexion_angle_r_rad', 'knee_flexion_velocity_l_rad_s', 'knee_flexion_velocity_r_rad_s', 'knee_flexion_moment_l_Nm', 'knee_flexion_moment_r_Nm', ...
-    'ankle_dorsiflexion_angle_l_rad', 'ankle_dorsiflexion_angle_r_rad', 'ankle_dorsiflexion_velocity_l_rad_s', 'ankle_dorsiflexion_velocity_r_rad_s', 'ankle_dorsiflexion_moment_l_Nm', 'ankle_dorsiflexion_moment_r_Nm', ...
-    'foot_sagittal_angle_l_rad', 'foot_sagittal_angle_r_rad', ... % Standard foot angle naming
-    'hip_flexion_angle_l_rad', 'hip_flexion_angle_r_rad', 'hip_flexion_velocity_l_rad_s', 'hip_flexion_velocity_r_rad_s', 'hip_flexion_moment_l_Nm', 'hip_flexion_moment_r_Nm', ...
-    'task', ... % Standard name for activity
-    'cop_x_l', 'cop_y_l', 'cop_z_l', 'cop_x_r', 'cop_y_r', 'cop_z_r', ... % Keep simple?
-    'grf_x_l', 'grf_y_l', 'grf_z_l', 'grf_x_r', 'grf_y_r', 'grf_z_r', ... % Keep simple?
-    'phase_l', 'phase_r', 'step', ... % Keep final phase names standard
-    % Add final global angle names
-    };
-
-new_col_names_ipsi = {...
-    'knee_flexion_angle_ipsi_rad', 'knee_flexion_angle_contra_rad', 'knee_flexion_velocity_ipsi_rad_s', 'knee_flexion_velocity_contra_rad_s', 'knee_flexion_moment_ipsi_Nm', 'knee_flexion_moment_contra_Nm', ...
-    'ankle_dorsiflexion_angle_ipsi_rad', 'ankle_dorsiflexion_angle_contra_rad', 'ankle_dorsiflexion_velocity_ipsi_rad_s', 'ankle_dorsiflexion_velocity_contra_rad_s', 'ankle_dorsiflexion_moment_ipsi_Nm', 'ankle_dorsiflexion_moment_contra_Nm', ...
-    'foot_sagittal_angle_ipsi_rad', 'foot_sagittal_angle_contra_rad', ... % Standard foot angle naming
-    'hip_flexion_angle_ipsi_rad', 'hip_flexion_angle_contra_rad', 'hip_flexion_velocity_ipsi_rad_s', 'hip_flexion_velocity_contra_rad_s', 'hip_flexion_moment_ipsi_Nm', 'hip_flexion_moment_contra_Nm', ...
-    'task', ...
-    'cop_x_ipsi', 'cop_y_ipsi', 'cop_z_ipsi', 'cop_x_contra', 'cop_y_contra', 'cop_z_contra', ...
-    'grf_x_ipsi', 'grf_y_ipsi', 'grf_z_ipsi', 'grf_x_contra', 'grf_y_contra', 'grf_z_contra', ...
-    'phase_ipsi', 'phase_ipsi', 'step', ... % Map both phase_l and phase_r to phase_ipsi
-     % Add final global angle names
-    };
-
-% Select the final naming convention map
+% --- Column Renaming Strategy for Ipsi/Contra ---
 if strcmpi(naming_convention, 'ipsicontra')
-    fprintf('Using ipsi/contra naming convention.\n');
-    final_new_names_map = new_col_names_ipsi;
+    fprintf('Using ipsi/contra naming convention with dynamic mapping based on leading leg.\n');
+    
+    % For ipsi/contra naming, we need to dynamically map L/R to ipsi/contra
+    % based on which leg was leading for each step
+    
+    % First, do standard renaming for non-lateralized variables
+    standard_renames = {...
+        'activity', 'task'; ...
+        'phase_ipsi', 'phase_ipsi'; ...  % Already created as phase_ipsi
+        'step', 'step'; ...
+        'pelvis_Z', 'pelvis_sagittal_angle_rad'; ...  % Pelvis sagittal
+        'pelvis_X', 'pelvis_frontal_angle_rad'; ...   % Pelvis frontal
+        'pelvis_Y', 'pelvis_transverse_angle_rad'     % Pelvis transverse
+    };
+    
+    for i = 1:size(standard_renames, 1)
+        old_name = standard_renames{i, 1};
+        new_name = standard_renames{i, 2};
+        if ismember(old_name, combined_data.Properties.VariableNames)
+            combined_data = renamevars(combined_data, old_name, new_name);
+        end
+    end
+    
+    % Now handle lateralized variables with dynamic ipsi/contra mapping
+    % We need to swap data based on the ipsi_is_left flag
+    
+    % Define variable patterns to process
+    lateralized_patterns = {
+        'knee_angle', 'knee_flexion_angle', '_rad';
+        'knee_velocity', 'knee_flexion_velocity', '_rad_s';
+        'knee_angle_l_moment', 'knee_flexion_moment', '_Nm';
+        'knee_angle_r_moment', 'knee_flexion_moment', '_Nm';
+        'ankle_angle', 'ankle_dorsiflexion_angle', '_rad';
+        'ankle_velocity', 'ankle_dorsiflexion_velocity', '_rad_s';
+        'ankle_angle_l_moment', 'ankle_dorsiflexion_moment', '_Nm';
+        'ankle_angle_r_moment', 'ankle_dorsiflexion_moment', '_Nm';
+        'hip_flexion', 'hip_flexion_angle', '_rad';
+        'hip_flexion_velocity', 'hip_flexion_velocity', '_rad_s';
+        'hip_flexion_l_moment', 'hip_flexion_moment', '_Nm';
+        'hip_flexion_r_moment', 'hip_flexion_moment', '_Nm';
+        % Segment angles - sagittal plane (Z is sagittal in Gtech convention)
+        'femur_l_Z', 'thigh_sagittal_angle_ipsi', '_rad';
+        'femur_r_Z', 'thigh_sagittal_angle_contra', '_rad';
+        'tibia_l_Z', 'shank_sagittal_angle_ipsi', '_rad';
+        'tibia_r_Z', 'shank_sagittal_angle_contra', '_rad';
+        'calcn_l_Z', 'foot_sagittal_angle_ipsi', '_rad';
+        'calcn_r_Z', 'foot_sagittal_angle_contra', '_rad';
+        % Segment angles - frontal plane (X is frontal)
+        'femur_l_X', 'thigh_frontal_angle_ipsi', '_rad';
+        'femur_r_X', 'thigh_frontal_angle_contra', '_rad';
+        'tibia_l_X', 'shank_frontal_angle_ipsi', '_rad';
+        'tibia_r_X', 'shank_frontal_angle_contra', '_rad';
+        'calcn_l_X', 'foot_frontal_angle_ipsi', '_rad';
+        'calcn_r_X', 'foot_frontal_angle_contra', '_rad';
+        % Segment angles - transverse plane (Y is transverse)
+        'femur_l_Y', 'thigh_transverse_angle_ipsi', '_rad';
+        'femur_r_Y', 'thigh_transverse_angle_contra', '_rad';
+        'tibia_l_Y', 'shank_transverse_angle_ipsi', '_rad';
+        'tibia_r_Y', 'shank_transverse_angle_contra', '_rad';
+        'calcn_l_Y', 'foot_transverse_angle_ipsi', '_rad';
+        'calcn_r_Y', 'foot_transverse_angle_contra', '_rad';
+        % GRF and COP
+        'cop_x', 'cop_x', '';
+        'cop_y', 'cop_y', '';
+        'cop_z', 'cop_z', '';
+        'grf_x', 'grf_x', '';
+        'grf_y', 'grf_y', '';
+        'grf_z', 'grf_z', ''
+    };
+    
+    % Process each lateralized variable
+    for i = 1:size(lateralized_patterns, 1)
+        old_base = lateralized_patterns{i, 1};
+        new_base = lateralized_patterns{i, 2};
+        suffix = lateralized_patterns{i, 3};
+        
+        % Handle special cases for moments
+        if contains(old_base, '_moment')
+            col_l = old_base;
+            col_r = strrep(old_base, '_l_', '_r_');
+        else
+            col_l = [old_base '_l'];
+            col_r = [old_base '_r'];
+        end
+        
+        col_ipsi = [new_base '_ipsi' suffix];
+        col_contra = [new_base '_contra' suffix];
+        
+        % Check if both L and R columns exist
+        if ismember(col_l, combined_data.Properties.VariableNames) && ...
+           ismember(col_r, combined_data.Properties.VariableNames)
+            
+            % Create ipsi and contra columns based on leading leg
+            combined_data.(col_ipsi) = zeros(height(combined_data), 1);
+            combined_data.(col_contra) = zeros(height(combined_data), 1);
+            
+            % When ipsi_is_left is true (left leg leading): L->ipsi, R->contra
+            % When ipsi_is_left is false (right leg leading): R->ipsi, L->contra
+            if ismember('ipsi_is_left', combined_data.Properties.VariableNames)
+                left_leading_idx = combined_data.ipsi_is_left == 1;
+                right_leading_idx = combined_data.ipsi_is_left == 0;
+                
+                combined_data.(col_ipsi)(left_leading_idx) = combined_data.(col_l)(left_leading_idx);
+                combined_data.(col_contra)(left_leading_idx) = combined_data.(col_r)(left_leading_idx);
+                
+                combined_data.(col_ipsi)(right_leading_idx) = combined_data.(col_r)(right_leading_idx);
+                combined_data.(col_contra)(right_leading_idx) = combined_data.(col_l)(right_leading_idx);
+            else
+                % Fallback: simple L->ipsi, R->contra if ipsi_is_left not found
+                warning('ipsi_is_left column not found, using simple L->ipsi mapping');
+                combined_data.(col_ipsi) = combined_data.(col_l);
+                combined_data.(col_contra) = combined_data.(col_r);
+            end
+            
+            % Remove the original L/R columns
+            combined_data = removevars(combined_data, {col_l, col_r});
+            
+            fprintf('  Mapped %s/%s -> %s/%s\n', col_l, col_r, col_ipsi, col_contra);
+        end
+    end
+    
+    % Remove the helper column
+    if ismember('ipsi_is_left', combined_data.Properties.VariableNames)
+        combined_data = removevars(combined_data, 'ipsi_is_left');
+    end
+    
 else
+    % Standard L/R renaming (existing code)
     fprintf('Using left/right naming convention.\n');
-    final_new_names_map = new_col_names_lr;
+    
+    % Define column renaming map
+    old_col_names_map = {...
+        'knee_angle_l', 'knee_angle_r', 'knee_velocity_l', 'knee_velocity_r', 'knee_angle_l_moment', 'knee_angle_r_moment', ...
+        'ankle_angle_l', 'ankle_angle_r', 'ankle_velocity_l', 'ankle_velocity_r', 'ankle_angle_l_moment', 'ankle_angle_r_moment', ...
+        'calcn_l_Z', 'calcn_r_Z', ...
+        'hip_flexion_l', 'hip_flexion_r', 'hip_flexion_velocity_l', 'hip_flexion_velocity_r', 'hip_flexion_l_moment', 'hip_flexion_r_moment', ...
+        'activity', ...
+        'cop_x_l', 'cop_y_l', 'cop_z_l', 'cop_x_r', 'cop_y_r', 'cop_z_r', ...
+        'grf_x_l', 'grf_y_l', 'grf_z_l', 'grf_x_r', 'grf_y_r', 'grf_z_r', ...
+        'phase_l', 'phase_r', 'step'
+    };
+    
+    new_col_names_lr = {...
+        'knee_flexion_angle_l_rad', 'knee_flexion_angle_r_rad', 'knee_flexion_velocity_l_rad_s', 'knee_flexion_velocity_r_rad_s', 'knee_flexion_moment_l_Nm', 'knee_flexion_moment_r_Nm', ...
+        'ankle_dorsiflexion_angle_l_rad', 'ankle_dorsiflexion_angle_r_rad', 'ankle_dorsiflexion_velocity_l_rad_s', 'ankle_dorsiflexion_velocity_r_rad_s', 'ankle_dorsiflexion_moment_l_Nm', 'ankle_dorsiflexion_moment_r_Nm', ...
+        'foot_sagittal_angle_l_rad', 'foot_sagittal_angle_r_rad', ...
+        'hip_flexion_angle_l_rad', 'hip_flexion_angle_r_rad', 'hip_flexion_velocity_l_rad_s', 'hip_flexion_velocity_r_rad_s', 'hip_flexion_moment_l_Nm', 'hip_flexion_moment_r_Nm', ...
+        'task', ...
+        'cop_x_l', 'cop_y_l', 'cop_z_l', 'cop_x_r', 'cop_y_r', 'cop_z_r', ...
+        'grf_x_l', 'grf_y_l', 'grf_z_l', 'grf_x_r', 'grf_y_r', 'grf_z_r', ...
+        'phase_l', 'phase_r', 'step'
+    };
+    
+    % Rename columns
+    present_old_cols = old_col_names_map(ismember(old_col_names_map, combined_data.Properties.VariableNames));
+    if ~isempty(present_old_cols)
+        [~, idx_map] = ismember(present_old_cols, old_col_names_map);
+        present_new_names = new_col_names_lr(idx_map);
+        fprintf('Renaming %d columns...\n', length(present_old_cols));
+        combined_data = renamevars(combined_data, present_old_cols, present_new_names);
+    end
 end
 
-% Ensure map lengths match
-if length(old_col_names_map) ~= length(final_new_names_map)
-    error('Column renaming map lengths do not match (%d vs %d). Check definitions.', length(old_col_names_map), length(final_new_names_map));
-end
-
-% Identify columns present in the data AND in the old_col_names map
-present_old_cols = old_col_names_map(ismember(old_col_names_map, combined_data.Properties.VariableNames));
-if ~isempty(present_old_cols)
-    [~, idx_map] = ismember(present_old_cols, old_col_names_map); % Get indices in original map
-    present_new_names = final_new_names_map(idx_map); % Select corresponding new names
-
-    % Rename only the present columns
-    fprintf('Renaming %d columns...\n', length(present_old_cols));
-    combined_data = renamevars(combined_data, present_old_cols, present_new_names);
-else
-     warning('No columns found to rename based on the defined map.');
-end
-
-% --- Convert joint angles and velocities from degrees to radians ---
-fprintf('Converting joint angles and velocities from degrees to radians...\n');
+% --- Convert joint and segment angles from degrees to radians ---
+fprintf('Converting joint and segment angles from degrees to radians...\n');
 
 % Define the joint angle and velocity columns to convert based on naming convention
 if strcmpi(naming_convention, 'ipsicontra')
-    % Joint angle columns (not segment/link angles)
+    % Joint angle columns
     joint_angle_cols = {
         'hip_flexion_angle_ipsi_rad', 'hip_flexion_angle_contra_rad', ...
         'knee_flexion_angle_ipsi_rad', 'knee_flexion_angle_contra_rad', ...
@@ -953,8 +1064,22 @@ if strcmpi(naming_convention, 'ipsicontra')
         'knee_flexion_velocity_ipsi_rad_s', 'knee_flexion_velocity_contra_rad_s', ...
         'ankle_dorsiflexion_velocity_ipsi_rad_s', 'ankle_dorsiflexion_velocity_contra_rad_s'
     };
+    
+    % Segment angle columns (all planes)
+    segment_angle_cols = {
+        'pelvis_sagittal_angle_rad', 'pelvis_frontal_angle_rad', 'pelvis_transverse_angle_rad', ...
+        'thigh_sagittal_angle_ipsi_rad', 'thigh_sagittal_angle_contra_rad', ...
+        'thigh_frontal_angle_ipsi_rad', 'thigh_frontal_angle_contra_rad', ...
+        'thigh_transverse_angle_ipsi_rad', 'thigh_transverse_angle_contra_rad', ...
+        'shank_sagittal_angle_ipsi_rad', 'shank_sagittal_angle_contra_rad', ...
+        'shank_frontal_angle_ipsi_rad', 'shank_frontal_angle_contra_rad', ...
+        'shank_transverse_angle_ipsi_rad', 'shank_transverse_angle_contra_rad', ...
+        'foot_sagittal_angle_ipsi_rad', 'foot_sagittal_angle_contra_rad', ...
+        'foot_frontal_angle_ipsi_rad', 'foot_frontal_angle_contra_rad', ...
+        'foot_transverse_angle_ipsi_rad', 'foot_transverse_angle_contra_rad'
+    };
 else % 'lr' naming convention
-    % Joint angle columns (not segment/link angles)
+    % Joint angle columns
     joint_angle_cols = {
         'hip_flexion_angle_l_rad', 'hip_flexion_angle_r_rad', ...
         'knee_flexion_angle_l_rad', 'knee_flexion_angle_r_rad', ...
@@ -966,6 +1091,20 @@ else % 'lr' naming convention
         'hip_flexion_velocity_l_rad_s', 'hip_flexion_velocity_r_rad_s', ...
         'knee_flexion_velocity_l_rad_s', 'knee_flexion_velocity_r_rad_s', ...
         'ankle_dorsiflexion_velocity_l_rad_s', 'ankle_dorsiflexion_velocity_r_rad_s'
+    };
+    
+    % Segment angle columns (all planes)
+    segment_angle_cols = {
+        'pelvis_sagittal_angle_rad', 'pelvis_frontal_angle_rad', 'pelvis_transverse_angle_rad', ...
+        'thigh_sagittal_angle_l_rad', 'thigh_sagittal_angle_r_rad', ...
+        'thigh_frontal_angle_l_rad', 'thigh_frontal_angle_r_rad', ...
+        'thigh_transverse_angle_l_rad', 'thigh_transverse_angle_r_rad', ...
+        'shank_sagittal_angle_l_rad', 'shank_sagittal_angle_r_rad', ...
+        'shank_frontal_angle_l_rad', 'shank_frontal_angle_r_rad', ...
+        'shank_transverse_angle_l_rad', 'shank_transverse_angle_r_rad', ...
+        'foot_sagittal_angle_l_rad', 'foot_sagittal_angle_r_rad', ...
+        'foot_frontal_angle_l_rad', 'foot_frontal_angle_r_rad', ...
+        'foot_transverse_angle_l_rad', 'foot_transverse_angle_r_rad'
     };
 end
 
@@ -985,6 +1124,126 @@ for i = 1:length(joint_velocity_cols)
         combined_data.(col_name) = combined_data.(col_name) * (pi/180);
         fprintf('  Converted %s from deg/s to rad/s\n', col_name);
     end
+end
+
+% Convert segment angles from degrees to radians
+for i = 1:length(segment_angle_cols)
+    col_name = segment_angle_cols{i};
+    if ismember(col_name, combined_data.Properties.VariableNames)
+        combined_data.(col_name) = combined_data.(col_name) * (pi/180);
+        fprintf('  Converted %s from degrees to radians\n', col_name);
+    end
+end
+
+% --- Post-Processing: Apply Standard Corrections ---
+fprintf('\n--- Applying post-processing corrections ---\n');
+
+% 1. Fix knee angle sign convention (positive = flexion)
+% In the Gtech data, knee angles appear to be negative for flexion
+% We need to flip the sign to match the standard convention
+if strcmpi(naming_convention, 'ipsicontra')
+    knee_angle_cols_to_flip = {
+        'knee_flexion_angle_ipsi_rad', 'knee_flexion_angle_contra_rad'
+    };
+    knee_velocity_cols_to_flip = {
+        'knee_flexion_velocity_ipsi_rad_s', 'knee_flexion_velocity_contra_rad_s'
+    };
+    knee_moment_cols_to_flip = {
+        'knee_flexion_moment_ipsi_Nm', 'knee_flexion_moment_contra_Nm'
+    };
+    % Ankle angles also need flipping (positive = dorsiflexion)
+    ankle_angle_cols_to_flip = {
+        'ankle_dorsiflexion_angle_ipsi_rad', 'ankle_dorsiflexion_angle_contra_rad'
+    };
+    ankle_velocity_cols_to_flip = {
+        'ankle_dorsiflexion_velocity_ipsi_rad_s', 'ankle_dorsiflexion_velocity_contra_rad_s'
+    };
+    ankle_moment_cols_to_flip = {
+        'ankle_dorsiflexion_moment_ipsi_Nm', 'ankle_dorsiflexion_moment_contra_Nm'
+    };
+else
+    knee_angle_cols_to_flip = {
+        'knee_flexion_angle_l_rad', 'knee_flexion_angle_r_rad'
+    };
+    knee_velocity_cols_to_flip = {
+        'knee_flexion_velocity_l_rad_s', 'knee_flexion_velocity_r_rad_s'
+    };
+    knee_moment_cols_to_flip = {
+        'knee_flexion_moment_l_Nm', 'knee_flexion_moment_r_Nm'
+    };
+    ankle_angle_cols_to_flip = {
+        'ankle_dorsiflexion_angle_l_rad', 'ankle_dorsiflexion_angle_r_rad'
+    };
+    ankle_velocity_cols_to_flip = {
+        'ankle_dorsiflexion_velocity_l_rad_s', 'ankle_dorsiflexion_velocity_r_rad_s'
+    };
+    ankle_moment_cols_to_flip = {
+        'ankle_dorsiflexion_moment_l_Nm', 'ankle_dorsiflexion_moment_r_Nm'
+    };
+end
+
+% Flip knee angle signs
+for i = 1:length(knee_angle_cols_to_flip)
+    col_name = knee_angle_cols_to_flip{i};
+    if ismember(col_name, combined_data.Properties.VariableNames)
+        combined_data.(col_name) = -1 * combined_data.(col_name);
+        fprintf('  Flipped sign for %s (positive = flexion)\n', col_name);
+    end
+end
+
+% Flip knee velocity signs to match angle convention
+for i = 1:length(knee_velocity_cols_to_flip)
+    col_name = knee_velocity_cols_to_flip{i};
+    if ismember(col_name, combined_data.Properties.VariableNames)
+        combined_data.(col_name) = -1 * combined_data.(col_name);
+        fprintf('  Flipped sign for %s to match angle convention\n', col_name);
+    end
+end
+
+% Flip knee moment signs to match angle convention
+for i = 1:length(knee_moment_cols_to_flip)
+    col_name = knee_moment_cols_to_flip{i};
+    if ismember(col_name, combined_data.Properties.VariableNames)
+        combined_data.(col_name) = -1 * combined_data.(col_name);
+        fprintf('  Flipped sign for %s to match angle convention\n', col_name);
+    end
+end
+
+% Flip ankle angle signs (positive = dorsiflexion)
+for i = 1:length(ankle_angle_cols_to_flip)
+    col_name = ankle_angle_cols_to_flip{i};
+    if ismember(col_name, combined_data.Properties.VariableNames)
+        combined_data.(col_name) = -1 * combined_data.(col_name);
+        fprintf('  Flipped sign for %s (positive = dorsiflexion)\n', col_name);
+    end
+end
+
+% Flip ankle velocity signs to match angle convention
+for i = 1:length(ankle_velocity_cols_to_flip)
+    col_name = ankle_velocity_cols_to_flip{i};
+    if ismember(col_name, combined_data.Properties.VariableNames)
+        combined_data.(col_name) = -1 * combined_data.(col_name);
+        fprintf('  Flipped sign for %s to match angle convention\n', col_name);
+    end
+end
+
+% Flip ankle moment signs to match angle convention
+for i = 1:length(ankle_moment_cols_to_flip)
+    col_name = ankle_moment_cols_to_flip{i};
+    if ismember(col_name, combined_data.Properties.VariableNames)
+        combined_data.(col_name) = -1 * combined_data.(col_name);
+        fprintf('  Flipped sign for %s to match angle convention\n', col_name);
+    end
+end
+
+% 2. Check for and remove duplicate rows
+initial_rows = height(combined_data);
+[~, unique_idx] = unique(combined_data(:, {'subject', 'task', 'step', 'phase_ipsi'}), 'rows', 'stable');
+if length(unique_idx) < initial_rows
+    combined_data = combined_data(unique_idx, :);
+    fprintf('  Removed %d duplicate rows\n', initial_rows - length(unique_idx));
+else
+    fprintf('  No duplicate rows found\n');
 end
 
 % Convert task data to string (if column exists after rename)
