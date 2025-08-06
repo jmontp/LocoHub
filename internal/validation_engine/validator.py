@@ -65,7 +65,7 @@ class Validator:
             - stats: Summary statistics
         """
         # Load dataset with proper phase column name
-        locomotion_data = LocomotionData(dataset_path, phase_col='phase_percent')
+        locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
         
         # Validate phase structure
         phase_valid, phase_msg = self._validate_phase_structure(locomotion_data)

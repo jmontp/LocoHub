@@ -50,6 +50,15 @@ VELOCITY_FEATURES = [
     'ankle_dorsiflexion_velocity_ipsi_rad_s', 'ankle_dorsiflexion_velocity_contra_rad_s'
 ]
 
+# Segment angular velocities
+SEGMENT_VELOCITY_FEATURES = [
+    'pelvis_sagittal_velocity_rad_s', 'pelvis_frontal_velocity_rad_s', 'pelvis_transverse_velocity_rad_s',
+    'trunk_sagittal_velocity_rad_s', 'trunk_frontal_velocity_rad_s', 'trunk_transverse_velocity_rad_s',
+    'thigh_sagittal_velocity_ipsi_rad_s', 'thigh_sagittal_velocity_contra_rad_s',
+    'shank_sagittal_velocity_ipsi_rad_s', 'shank_sagittal_velocity_contra_rad_s',
+    'foot_sagittal_velocity_ipsi_rad_s', 'foot_sagittal_velocity_contra_rad_s'
+]
+
 # Kinetic features (joint moments) - Standard order: [hip, knee, ankle] x [flexion, adduction, rotation] x [ipsi, contra]
 MOMENT_FEATURES = [
     'hip_flexion_moment_ipsi_Nm', 'hip_flexion_moment_contra_Nm',
@@ -103,7 +112,7 @@ SEGMENT_ANGLE_FEATURES = [
 ALL_KINETIC_FEATURES = MOMENT_FEATURES + GRF_FEATURES + COP_FEATURES
 
 # All kinematic features combined (angles + segments + velocities)
-ALL_KINEMATIC_FEATURES = ANGLE_FEATURES + SEGMENT_ANGLE_FEATURES + VELOCITY_FEATURES
+ALL_KINEMATIC_FEATURES = ANGLE_FEATURES + SEGMENT_ANGLE_FEATURES + VELOCITY_FEATURES + SEGMENT_VELOCITY_FEATURES
 
 
 def get_kinematic_feature_map() -> Dict[str, int]:

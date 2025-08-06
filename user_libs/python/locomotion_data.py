@@ -113,7 +113,7 @@ class LocomotionData:
     def __init__(self, data_path: Union[str, Path], 
                  subject_col: str = 'subject',
                  task_col: str = 'task',
-                 phase_col: str = 'phase',
+                 phase_col: str = 'phase_ipsi',
                  file_type: str = 'auto'):
         """
         Initialize with phase-indexed locomotion data.

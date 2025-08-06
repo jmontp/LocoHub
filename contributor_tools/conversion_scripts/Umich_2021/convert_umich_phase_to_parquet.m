@@ -170,8 +170,8 @@ function trial_table = process_trial(trial_struct, task_type, subject_str, incli
     pps = 150; % points per step
     num_strides = size(trial_struct.jointAngles.HipAngles,3);
     
-    % Create phase_percent based on standard specification (0-100%)
-    trial_table.phase_percent = repmat((0:1/pps:1-1/pps)'*100, num_strides, 1);
+    % Create phase_ipsi based on standard specification (0-100% aligned to ipsilateral heel strike)
+    trial_table.phase_ipsi = repmat((0:1/pps:1-1/pps)'*100, num_strides, 1);
     
     % Add step numbers for proper step identification
     step_numbers = [];

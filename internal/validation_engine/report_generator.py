@@ -104,7 +104,7 @@ class ValidationReportGenerator:
         plot_paths = {}
         
         # Load dataset for plotting with proper phase column name
-        locomotion_data = LocomotionData(dataset_path, phase_col='phase_percent')
+        locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
         data = locomotion_data.df
         tasks = locomotion_data.get_tasks()
         

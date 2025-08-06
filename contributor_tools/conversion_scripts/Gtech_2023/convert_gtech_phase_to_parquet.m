@@ -418,6 +418,7 @@ for subject_idx = 1:length(subjects)
             step_data_single.task_info = repmat({sub_activity_name}, num_points_per_step, 1);
             step_data_single.activity_number = repmat(activity_number, num_points_per_step, 1);
             step_data_single.leading_leg_step = repmat({leading_leg}, num_points_per_step, 1); % Add leading leg marker
+            step_data_single.step = repmat(step_idx, num_points_per_step, 1);
 
             % Generate Time & Phase Vectors for this step
                             time_interp = linspace(step_start, step_end, num_points_per_step)';
@@ -516,17 +517,7 @@ for subject_idx = 1:length(subjects)
                 for v = 1:length(link_angle_cols_to_process); step_data_single.(link_angle_cols_to_process{v}) = nan(num_points_per_step, 1); end
             end
             
-            % --- Calculate Foot Velocity from Interpolated Foot Angle ---
-            if ismember('calcn_l_Z', step_data_single.Properties.VariableNames) && ~all(isnan(step_data_single.calcn_l_Z))
-                step_data_single.calcn_vel_l_Z = gradient(step_data_single.calcn_l_Z, step_data_single.time);
-            else
-                step_data_single.calcn_vel_l_Z = nan(num_points_per_step, 1); % Ensure column exists even if source is NaN
-            end
-             if ismember('calcn_r_Z', step_data_single.Properties.VariableNames) && ~all(isnan(step_data_single.calcn_r_Z))
-                step_data_single.calcn_vel_r_Z = gradient(step_data_single.calcn_r_Z, step_data_single.time);
-            else
-                step_data_single.calcn_vel_r_Z = nan(num_points_per_step, 1); % Ensure column exists even if source is NaN
-            end
+            % --- Foot angle already interpolated, no velocity calculation needed ---
             
             % --- Interpolate Global Angles ---
              if isfield(raw_data, 'Transforms_Euler') && ~isempty(raw_data.Transforms_Euler)
@@ -807,36 +798,36 @@ combined_data = total_data;
 old_col_names_map = {...
     'knee_angle_l', 'knee_angle_r', 'knee_velocity_l', 'knee_velocity_r', 'knee_angle_l_moment', 'knee_angle_r_moment', ...
     'ankle_angle_l', 'ankle_angle_r', 'ankle_velocity_l', 'ankle_velocity_r', 'ankle_angle_l_moment', 'ankle_angle_r_moment', ...
-    'calcn_l_Z', 'calcn_r_Z', 'calcn_vel_l_Z', 'calcn_vel_r_Z', ... % Foot angle and calculated velocity
+    'calcn_l_Z', 'calcn_r_Z', ... % Foot angle only
     'hip_flexion_l', 'hip_flexion_r', 'hip_flexion_velocity_l', 'hip_flexion_velocity_r', 'hip_flexion_l_moment', 'hip_flexion_r_moment', ...
     'activity', ... % Source activity name used for intermediate table
     'cop_x_l', 'cop_y_l', 'cop_z_l', 'cop_x_r', 'cop_y_r', 'cop_z_r', ... % Names created during interpolation
     'grf_x_l', 'grf_y_l', 'grf_z_l', 'grf_x_r', 'grf_y_r', 'grf_z_r', ... % Names created during interpolation
-    'phase_l', 'phase_r', ... % Names created during interpolation
+    'phase_l', 'phase_r', 'step', ... % Names created during interpolation
     % Add Global angle intermediate names if they need renaming (e.g., 'foot_l_X')
     };
 
 new_col_names_lr = {...
     'knee_flexion_angle_l_rad', 'knee_flexion_angle_r_rad', 'knee_flexion_velocity_l_rad_s', 'knee_flexion_velocity_r_rad_s', 'knee_flexion_moment_l_Nm', 'knee_flexion_moment_r_Nm', ...
     'ankle_dorsiflexion_angle_l_rad', 'ankle_dorsiflexion_angle_r_rad', 'ankle_dorsiflexion_velocity_l_rad_s', 'ankle_dorsiflexion_velocity_r_rad_s', 'ankle_dorsiflexion_moment_l_Nm', 'ankle_dorsiflexion_moment_r_Nm', ...
-    'foot_angle_s_l', 'foot_angle_s_r', 'foot_vel_s_l', 'foot_vel_s_r', ... % Final foot angle and velocity - keeping old naming for global angles
+    'foot_sagittal_angle_l_rad', 'foot_sagittal_angle_r_rad', ... % Standard foot angle naming
     'hip_flexion_angle_l_rad', 'hip_flexion_angle_r_rad', 'hip_flexion_velocity_l_rad_s', 'hip_flexion_velocity_r_rad_s', 'hip_flexion_moment_l_Nm', 'hip_flexion_moment_r_Nm', ...
     'task', ... % Standard name for activity
     'cop_x_l', 'cop_y_l', 'cop_z_l', 'cop_x_r', 'cop_y_r', 'cop_z_r', ... % Keep simple?
     'grf_x_l', 'grf_y_l', 'grf_z_l', 'grf_x_r', 'grf_y_r', 'grf_z_r', ... % Keep simple?
-    'phase_l', 'phase_r', ... % Keep final phase names standard
+    'phase_l', 'phase_r', 'step', ... % Keep final phase names standard
     % Add final global angle names
     };
 
 new_col_names_ipsi = {...
     'knee_flexion_angle_ipsi_rad', 'knee_flexion_angle_contra_rad', 'knee_flexion_velocity_ipsi_rad_s', 'knee_flexion_velocity_contra_rad_s', 'knee_flexion_moment_ipsi_Nm', 'knee_flexion_moment_contra_Nm', ...
     'ankle_dorsiflexion_angle_ipsi_rad', 'ankle_dorsiflexion_angle_contra_rad', 'ankle_dorsiflexion_velocity_ipsi_rad_s', 'ankle_dorsiflexion_velocity_contra_rad_s', 'ankle_dorsiflexion_moment_ipsi_Nm', 'ankle_dorsiflexion_moment_contra_Nm', ...
-    'foot_angle_s_ipsi', 'foot_angle_s_contra', 'foot_vel_s_ipsi', 'foot_vel_s_contra', ... % Final foot angle and velocity - keeping old naming for global angles
+    'foot_sagittal_angle_ipsi_rad', 'foot_sagittal_angle_contra_rad', ... % Standard foot angle naming
     'hip_flexion_angle_ipsi_rad', 'hip_flexion_angle_contra_rad', 'hip_flexion_velocity_ipsi_rad_s', 'hip_flexion_velocity_contra_rad_s', 'hip_flexion_moment_ipsi_Nm', 'hip_flexion_moment_contra_Nm', ...
     'task', ...
     'cop_x_ipsi', 'cop_y_ipsi', 'cop_z_ipsi', 'cop_x_contra', 'cop_y_contra', 'cop_z_contra', ...
     'grf_x_ipsi', 'grf_y_ipsi', 'grf_z_ipsi', 'grf_x_contra', 'grf_y_contra', 'grf_z_contra', ...
-    'phase_ipsi', 'phase_contra', ... % Final phase column names
+    'phase_ipsi', 'step', ... % Final phase column names (phase_contra removed - redundant)
      % Add final global angle names
     };
 
@@ -877,7 +868,7 @@ end
 
 % Final Check for phase columns based on naming convention
 if strcmpi(naming_convention, 'ipsicontra')
-     final_phase_col_1 = 'phase_ipsi'; final_phase_col_2 = 'phase_contra';
+     final_phase_col_1 = 'phase_ipsi'; % Only need ipsi phase (contra is redundant)
 else % 'lr'
      final_phase_col_1 = 'phase_l'; final_phase_col_2 = 'phase_r';
 end

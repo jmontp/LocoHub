@@ -152,12 +152,12 @@ def create_single_feature_plot(
     # Plot PASSED strides (left column)
     passed_count = 0
     if data is not None and data.size > 0 and var_idx is not None:
-        phase_percent = np.linspace(0, 100, 150)
+        phase_ipsi = np.linspace(0, 100, 150)
         
         for stride_idx in range(data.shape[0]):
             if stride_idx not in global_failed_strides:
                 stride_data = data[stride_idx, :, var_idx]
-                ax_pass.plot(phase_percent, stride_data, color='green', alpha=0.3, linewidth=0.5, zorder=1)
+                ax_pass.plot(phase_ipsi, stride_data, color='green', alpha=0.3, linewidth=0.5, zorder=1)
                 passed_count += 1
     
     # Plot validation ranges on pass axis
@@ -183,7 +183,7 @@ def create_single_feature_plot(
         for stride_idx in range(data.shape[0]):
             if stride_idx in variable_failed_strides:
                 stride_data = data[stride_idx, :, var_idx]
-                ax_fail.plot(phase_percent, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
+                ax_fail.plot(phase_ipsi, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
                 failed_count += 1
     
     # Plot validation ranges on fail axis
@@ -372,12 +372,12 @@ def create_task_combined_plot(
         # Plot PASSED strides (left column)
         passed_count = 0
         if data_3d is not None and data_3d.size > 0 and var_idx is not None:
-            phase_percent = np.linspace(0, 100, 150)
+            phase_ipsi = np.linspace(0, 100, 150)
             
             for stride_idx in range(data_3d.shape[0]):
                 if stride_idx not in global_failed_strides:
                     stride_data = data_3d[stride_idx, :, var_idx]
-                    ax_pass.plot(phase_percent, stride_data, color='green', alpha=0.3, linewidth=0.5, zorder=1)
+                    ax_pass.plot(phase_ipsi, stride_data, color='green', alpha=0.3, linewidth=0.5, zorder=1)
                     passed_count += 1
         
         # Plot validation ranges on pass axis
@@ -408,7 +408,7 @@ def create_task_combined_plot(
             for stride_idx in range(data_3d.shape[0]):
                 if stride_idx in variable_failed_strides:
                     stride_data = data_3d[stride_idx, :, var_idx]
-                    ax_fail.plot(phase_percent, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
+                    ax_fail.plot(phase_ipsi, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
                     failed_count += 1
         
         # Plot validation ranges on fail axis
@@ -655,12 +655,12 @@ def create_filters_by_phase_plot(
         
         # Plot data FIRST (behind validation ranges)
         if data is not None and data.size > 0 and var_idx < data.shape[2]:
-            phase_percent = np.linspace(0, 100, 150)
+            phase_ipsi = np.linspace(0, 100, 150)
             
             for stride_idx in range(data.shape[0]):
                 if stride_idx not in global_failed_strides:
                     stride_data = data[stride_idx, :, var_idx]
-                    ax_pass.plot(phase_percent, stride_data, color='green', alpha=0.3, linewidth=0.5, zorder=1)
+                    ax_pass.plot(phase_ipsi, stride_data, color='green', alpha=0.3, linewidth=0.5, zorder=1)
                     passed_count += 1
         
         # Plot validation ranges on TOP of data (higher z-order)
@@ -694,7 +694,7 @@ def create_filters_by_phase_plot(
             for stride_idx in range(data.shape[0]):
                 if stride_idx in variable_failed_strides:
                     stride_data = data[stride_idx, :, var_idx]
-                    ax_fail.plot(phase_percent, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
+                    ax_fail.plot(phase_ipsi, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
                     failed_count += 1
         
         # Plot validation ranges on TOP of data (higher z-order)

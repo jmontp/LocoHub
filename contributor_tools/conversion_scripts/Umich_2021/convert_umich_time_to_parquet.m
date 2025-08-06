@@ -206,14 +206,14 @@ function trial_table = process_trial(trial_struct)
     trial_table.ankle_inversion_angle_l_rad = joint_angles.LAnkleAngles(:, frontal_plane) * deg2rad_factor;
     trial_table.ankle_rotation_angle_l_rad = joint_angles.LAnkleAngles(:, transverse_plane) * deg2rad_factor;
 
-    % Keep foot and pelvis angles in old format for now (not in standard spec)
-    trial_table.foot_angle_s_r = -joint_angles.RFootProgressAngles(:, sagittal_plane) - 90;
-    trial_table.foot_angle_f_r = joint_angles.RFootProgressAngles(:, frontal_plane);
-    trial_table.foot_angle_t_r = joint_angles.RFootProgressAngles(:, transverse_plane);
+    % Foot angles using standard naming convention
+    trial_table.foot_sagittal_angle_r_rad = (-joint_angles.RFootProgressAngles(:, sagittal_plane) - 90) * deg2rad_factor;
+    trial_table.foot_frontal_angle_r_rad = joint_angles.RFootProgressAngles(:, frontal_plane) * deg2rad_factor;
+    trial_table.foot_transverse_angle_r_rad = joint_angles.RFootProgressAngles(:, transverse_plane) * deg2rad_factor;
 
-    trial_table.foot_angle_s_l = -joint_angles.LFootProgressAngles(:, sagittal_plane) - 90;
-    trial_table.foot_angle_f_l = joint_angles.LFootProgressAngles(:, frontal_plane);
-    trial_table.foot_angle_t_l = joint_angles.LFootProgressAngles(:, transverse_plane);
+    trial_table.foot_sagittal_angle_l_rad = (-joint_angles.LFootProgressAngles(:, sagittal_plane) - 90) * deg2rad_factor;
+    trial_table.foot_frontal_angle_l_rad = joint_angles.LFootProgressAngles(:, frontal_plane) * deg2rad_factor;
+    trial_table.foot_transverse_angle_l_rad = joint_angles.LFootProgressAngles(:, transverse_plane) * deg2rad_factor;
 
     trial_table.pelvis_angle_s_r = joint_angles.RPelvisAngles(:, sagittal_plane);
     trial_table.pelvis_angle_f_r = joint_angles.RPelvisAngles(:, frontal_plane);
@@ -251,14 +251,7 @@ function trial_table = process_trial(trial_struct)
     trial_table.ankle_inversion_velocity_l_rad_s = gradient(trial_table.ankle_inversion_angle_l_rad)./gradient(trial_table.time_s);
     trial_table.ankle_rotation_velocity_l_rad_s = gradient(trial_table.ankle_rotation_angle_l_rad)./gradient(trial_table.time_s);
 
-    % Keep foot and pelvis velocities in old format for now (not in standard spec)
-    trial_table.foot_vel_s_r = gradient(trial_table.foot_angle_s_r)./gradient(trial_table.time_s);
-    trial_table.foot_vel_f_r = gradient(trial_table.foot_angle_f_r)./gradient(trial_table.time_s);
-    trial_table.foot_vel_t_r = gradient(trial_table.foot_angle_t_r)./gradient(trial_table.time_s);
-
-    trial_table.foot_vel_s_l = gradient(trial_table.foot_angle_s_l)./gradient(trial_table.time_s);
-    trial_table.foot_vel_f_l = gradient(trial_table.foot_angle_f_l)./gradient(trial_table.time_s);
-    trial_table.foot_vel_t_l = gradient(trial_table.foot_angle_t_l)./gradient(trial_table.time_s);
+    % Foot angular velocities (removed - not in standard spec)
 
     trial_table.pelvis_vel_s_r = gradient(trial_table.pelvis_angle_s_r)./gradient(trial_table.time_s);
     trial_table.pelvis_vel_f_r = gradient(trial_table.pelvis_angle_f_r)./gradient(trial_table.time_s);

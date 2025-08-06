@@ -53,7 +53,7 @@ Standardized format for biomechanical datasets with consistent variable naming a
 - `step` - Step/cycle number
 
 **Phase Data**:
-- `phase_percent` - Gait cycle phase (0-100%)
+- `phase_ipsi` - Gait cycle phase (0-100%) aligned to ipsilateral heel strike
 
 **Time Data**:
 - `time_s` - Time in seconds
@@ -76,10 +76,26 @@ Standardized format for biomechanical datasets with consistent variable naming a
 - `shank_sagittal_angle_<side>_rad` - Shank orientation
 - `foot_sagittal_angle_<side>_rad` - Foot orientation
 
+**Joint Angular Velocities** (optional):
+- `hip_flexion_velocity_<side>_rad_s` - Hip flexion/extension angular velocity
+- `knee_flexion_velocity_<side>_rad_s` - Knee flexion/extension angular velocity
+- `ankle_dorsiflexion_velocity_<side>_rad_s` - Ankle dorsiflexion/plantarflexion angular velocity
+
+**Segment Angular Velocities** (optional):
+- `pelvis_sagittal_velocity_rad_s` - Pelvis tilt angular velocity
+- `pelvis_frontal_velocity_rad_s` - Pelvis obliquity angular velocity
+- `pelvis_transverse_velocity_rad_s` - Pelvis rotation angular velocity
+- `trunk_sagittal_velocity_rad_s` - Trunk lean angular velocity
+- `trunk_frontal_velocity_rad_s` - Trunk bend angular velocity
+- `trunk_transverse_velocity_rad_s` - Trunk rotation angular velocity
+- `thigh_sagittal_velocity_<side>_rad_s` - Thigh angular velocity
+- `shank_sagittal_velocity_<side>_rad_s` - Shank angular velocity
+- `foot_sagittal_velocity_<side>_rad_s` - Foot angular velocity
+
 **Joint Moments** (optional):
-- `hip_moment_<side>_Nm`
-- `knee_moment_<side>_Nm`
-- `ankle_moment_<side>_Nm`
+- `hip_flexion_moment_<side>_Nm`
+- `knee_flexion_moment_<side>_Nm`
+- `ankle_dorsiflexion_moment_<side>_Nm`
 
 **Ground Forces** (optional):
 - `vertical_grf_<side>_N`
