@@ -16,7 +16,12 @@ import pandas as pd
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 # Avoid circular import - import only what's needed
-from internal.plot_generation.filters_by_phase_plots import create_filters_by_phase_plot
+from internal.plot_generation.filters_by_phase_plots import (
+    create_single_feature_plot, 
+    get_sagittal_features,
+    get_task_classification,
+    create_filters_by_phase_plot  # Keep for backward compatibility
+)
 from internal.plot_generation.step_classifier import StepClassifier
 from user_libs.python.locomotion_data import LocomotionData
 
@@ -104,112 +109,53 @@ class ValidationReportGenerator:
         
         # Note: violations conversion removed as we now use failing_features directly
         
+        # Get sagittal plane features only
+        sagittal_features = get_sagittal_features()
+        feature_names = [f[0] for f in sagittal_features]
+        feature_labels = {f[0]: f[1] for f in sagittal_features}
+        
         # Generate plots for each task
         for task in tasks:
-            # Define feature groupings for plotting
-            kinematic_features = [
-                'hip_flexion_angle_ipsi_rad', 'hip_flexion_angle_contra_rad',
-                'knee_flexion_angle_ipsi_rad', 'knee_flexion_angle_contra_rad',
-                'ankle_dorsiflexion_angle_ipsi_rad', 'ankle_dorsiflexion_angle_contra_rad'
-            ]
-            
-            kinetic_features = [
-                'hip_flexion_moment_ipsi_Nm', 'hip_flexion_moment_contra_Nm',
-                'knee_flexion_moment_ipsi_Nm', 'knee_flexion_moment_contra_Nm',
-                'ankle_dorsiflexion_moment_ipsi_Nm', 'ankle_dorsiflexion_moment_contra_Nm'
-            ]
-            
-            segment_features = [
-                'pelvis_sagittal_angle_rad', 'pelvis_frontal_angle_rad', 'pelvis_transverse_angle_rad',
-                'trunk_sagittal_angle_rad', 'trunk_frontal_angle_rad', 'trunk_transverse_angle_rad',
-                'thigh_sagittal_angle_ipsi_rad', 'thigh_sagittal_angle_contra_rad',
-                'shank_sagittal_angle_ipsi_rad', 'shank_sagittal_angle_contra_rad',
-                'foot_sagittal_angle_ipsi_rad', 'foot_sagittal_angle_contra_rad'
-            ]
-            
-            # Collect all features we might need
-            all_features = kinematic_features + kinetic_features + segment_features
-            
             # Filter to only features that exist in the dataset
-            available_features = [f for f in all_features if f in locomotion_data.features]
+            available_features = [f for f in feature_names if f in locomotion_data.features]
             
-            # Single unified data load for all features
-            all_data_3d, all_feature_names = locomotion_data.get_cycles(subject=None, task=task, features=available_features)
-            
-            # Get failing features for this task (unified validation)
-            failing_features = self.validator._validate_task_with_failing_features(locomotion_data, task)
-            
-            # Get task data with generated contra features
-            task_validation_data = self.validator.config_manager.get_task_data(task) if self.validator.config_manager.has_task(task) else {}
-            
-            # Generate plots for each feature type using consistent data
-            
-            # Filter kinematic features and data
-            kinematic_available = [f for f in kinematic_features if f in all_feature_names]
-            if kinematic_available and all_data_3d is not None:
-                kinematic_indices = [all_feature_names.index(f) for f in kinematic_available]
-                kinematic_data_3d = all_data_3d[:, :, kinematic_indices]
+            if available_features:
+                # Single unified data load for all available features
+                all_data_3d, all_feature_names = locomotion_data.get_cycles(subject=None, task=task, features=available_features)
                 
-                kinematic_plot = create_filters_by_phase_plot(
-                    validation_data={task: task_validation_data},
-                    task_name=task,
-                    output_dir=str(self.plots_dir),
-                    mode='kinematic',
-                    data=kinematic_data_3d,
-                    failing_features=failing_features,
-                    dataset_name=Path(dataset_path).stem,
-                    timestamp=timestamp
-                )
-                plot_paths[f"{task}_kinematic"] = kinematic_plot
-            
-            # Filter kinetic features and data
-            kinetic_available = [f for f in kinetic_features if f in all_feature_names]
-            if kinetic_available and all_data_3d is not None:
-                kinetic_indices = [all_feature_names.index(f) for f in kinetic_available]
-                kinetic_data_3d = all_data_3d[:, :, kinetic_indices]
+                # Get failing features for this task (unified validation)
+                failing_features = self.validator._validate_task_with_failing_features(locomotion_data, task)
                 
-                kinetic_plot = create_filters_by_phase_plot(
-                    validation_data={task: task_validation_data},
-                    task_name=task,
-                    output_dir=str(self.plots_dir),
-                    mode='kinetic',
-                    data=kinetic_data_3d,
-                    failing_features=failing_features,
-                    dataset_name=Path(dataset_path).stem,
-                    timestamp=timestamp
-                )
-                plot_paths[f"{task}_kinetic"] = kinetic_plot
-            
-            # Filter segment features and data
-            segment_available = [f for f in segment_features if f in all_feature_names]
-            if segment_available and all_data_3d is not None:
-                segment_indices = [all_feature_names.index(f) for f in segment_available]
-                segment_data_3d = all_data_3d[:, :, segment_indices]
+                # Get task data with generated contra features
+                task_validation_data = self.validator.config_manager.get_task_data(task) if self.validator.config_manager.has_task(task) else {}
                 
-                segment_plot = create_filters_by_phase_plot(
-                    validation_data={task: task_validation_data},
-                    task_name=task,
-                    output_dir=str(self.plots_dir),
-                    mode='segment',
-                    data=segment_data_3d,
-                    failing_features=failing_features,
-                    dataset_name=Path(dataset_path).stem,
-                    timestamp=timestamp
-                )
-                plot_paths[f"{task}_segment"] = segment_plot
-            else:
-                # Generate empty segment plot if no data available
-                segment_plot = create_filters_by_phase_plot(
-                    validation_data={task: task_validation_data},
-                    task_name=task,
-                    output_dir=str(self.plots_dir),
-                    mode='segment',
-                    data=None,  # No data available
-                    failing_features=failing_features,
-                    dataset_name=Path(dataset_path).stem,
-                    timestamp=timestamp
-                )
-                plot_paths[f"{task}_segment"] = segment_plot
+                # Generate individual plot for each available feature
+                for var_name in available_features:
+                    if var_name in all_feature_names:
+                        # Get the index of this feature in the data array
+                        var_idx = all_feature_names.index(var_name)
+                        
+                        # Extract just this feature's data
+                        feature_data_3d = all_data_3d[:, :, [var_idx]] if all_data_3d is not None else None
+                        
+                        # Get display label
+                        var_label = feature_labels.get(var_name, var_name)
+                        
+                        # Generate plot for this single feature
+                        plot_path = create_single_feature_plot(
+                            validation_data={task: task_validation_data},
+                            task_name=task,
+                            var_name=var_name,
+                            var_label=var_label,
+                            output_dir=str(self.plots_dir),
+                            data=feature_data_3d,
+                            failing_features=failing_features,
+                            dataset_name=Path(dataset_path).stem,
+                            timestamp=timestamp
+                        )
+                        # Use feature name in the plot path key
+                        safe_var_name = var_name.replace('/', '_')
+                        plot_paths[f"{task}_{safe_var_name}"] = plot_path
         
         return plot_paths
     
@@ -339,51 +285,62 @@ class ValidationReportGenerator:
             lines.append("## Validation Plots")
             lines.append("")
             
-            # Group plots by task
-            tasks = set(key.rsplit('_', 1)[0] for key in plot_paths.keys())
+            # Get unique tasks from plot paths
+            # Extract task names by removing the feature part after the task name
+            tasks = set()
+            for key in plot_paths.keys():
+                # Key format is now: "task_feature_name"
+                # Find task by removing everything after the task name
+                for task_name in ['level_walking', 'incline_walking', 'decline_walking']:
+                    if key.startswith(task_name):
+                        tasks.add(task_name)
+                        break
+            
+            # Get sagittal features for categorization
+            sagittal_features = get_sagittal_features()
             
             for task in sorted(tasks):
                 lines.append(f"### {task.replace('_', ' ').title()}")
                 lines.append("")
                 
-                # Kinematic plot
-                kinematic_key = f"{task}_kinematic"
-                if kinematic_key in plot_paths:
-                    rel_path = Path(plot_paths[kinematic_key]).relative_to(self.output_dir)
-                    lines.append(f"#### Kinematic Validation")
-                    lines.append(f"![{task} Kinematic]({rel_path})")
+                # Group plots by category for better organization
+                kinematic_plots = []
+                kinetic_plots = []
+                segment_plots = []
+                
+                # Find all plots for this task
+                for feature_name, feature_label in sagittal_features:
+                    plot_key = f"{task}_{feature_name}"
+                    if plot_key in plot_paths:
+                        rel_path = Path(plot_paths[plot_key]).relative_to(self.output_dir)
+                        
+                        # Categorize by feature type
+                        if 'moment' in feature_name:
+                            kinetic_plots.append((feature_label, rel_path))
+                        elif any(seg in feature_name for seg in ['pelvis', 'thigh', 'shank', 'foot']):
+                            segment_plots.append((feature_label, rel_path))
+                        else:
+                            kinematic_plots.append((feature_label, rel_path))
+                
+                # Output kinematic plots
+                if kinematic_plots:
+                    lines.append("#### Kinematic Validation")
+                    for label, rel_path in kinematic_plots:
+                        lines.append(f"![{label}]({rel_path})")
                     lines.append("")
                 
-                # Kinetic plot  
-                kinetic_key = f"{task}_kinetic"
-                if kinetic_key in plot_paths:
-                    rel_path = Path(plot_paths[kinetic_key]).relative_to(self.output_dir)
-                    lines.append(f"#### Kinetic Validation")
-                    lines.append(f"![{task} Kinetic]({rel_path})")
+                # Output kinetic plots
+                if kinetic_plots:
+                    lines.append("#### Kinetic Validation")
+                    for label, rel_path in kinetic_plots:
+                        lines.append(f"![{label}]({rel_path})")
                     lines.append("")
                 
-                # Segment angle plot
-                segment_key = f"{task}_segment"
-                if segment_key in plot_paths:
-                    rel_path = Path(plot_paths[segment_key]).relative_to(self.output_dir)
-                    lines.append(f"#### Segment Angles Validation")
-                    lines.append(f"![{task} Segment Angles]({rel_path})")
-                    
-                    # Check if segment angle data is actually available - define segment features here
-                    segment_features = [
-                        'pelvis_sagittal_angle_rad', 'pelvis_frontal_angle_rad', 'pelvis_transverse_angle_rad',
-                        'trunk_sagittal_angle_rad', 'trunk_frontal_angle_rad', 'trunk_transverse_angle_rad',
-                        'thigh_sagittal_angle_ipsi_rad', 'thigh_sagittal_angle_contra_rad',
-                        'shank_sagittal_angle_ipsi_rad', 'shank_sagittal_angle_contra_rad',
-                        'foot_sagittal_angle_ipsi_rad', 'foot_sagittal_angle_contra_rad'
-                    ]
-                    
-                    # Get available features from the data
-                    from user_libs.python.locomotion_data import LocomotionData
-                    temp_loco = LocomotionData(dataset_path, phase_col='phase_percent')
-                    segment_available = any(f in temp_loco.features for f in segment_features)
-                    if not segment_available:
-                        lines.append("*Note: Segment angle data not available in this dataset*")
+                # Output segment angle plots
+                if segment_plots:
+                    lines.append("#### Segment Angles Validation")
+                    for label, rel_path in segment_plots:
+                        lines.append(f"![{label}]({rel_path})")
                     lines.append("")
         
         
