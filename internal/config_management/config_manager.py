@@ -314,33 +314,31 @@ class ValidationConfigManager:
             Dictionary with both ipsi and generated contra features
         """
         result = {}
-        available_phases = sorted(phases_data.keys())
         
-        for phase in available_phases:
-            result[phase] = phases_data[phase].copy()  # Start with ipsi features
-            
-            # Calculate source phase for contralateral features
+        # First, copy all ipsi data as-is
+        for phase in phases_data:
+            result[phase] = phases_data[phase].copy()
+        
+        # Then, generate contra features at appropriate phases
+        for phase in phases_data:
+            # Calculate target phase for contralateral features
             if apply_offset:
                 # Apply 50% offset for gait tasks
-                contra_source_phase = (phase + 50) % 100
-                
-                # Find closest available phase if exact match not found
-                if contra_source_phase not in phases_data:
-                    if available_phases:
-                        contra_source_phase = min(available_phases,
-                                                 key=lambda x: abs(x - contra_source_phase))
-                    else:
-                        contra_source_phase = phase
+                # If ipsi is at phase 20, contra should be at phase 70
+                contra_phase = (phase + 50) % 100
             else:
                 # No offset for bilateral tasks (squat, jump, etc.)
-                contra_source_phase = phase
+                contra_phase = phase
             
-            # Generate contra features from ipsi at the source phase
-            if contra_source_phase in phases_data:
-                for var_name, var_range in phases_data[contra_source_phase].items():
-                    if '_ipsi' in var_name:
-                        contra_name = var_name.replace('_ipsi', '_contra')
-                        result[phase][contra_name] = var_range
+            # Ensure the target phase exists in result
+            if contra_phase not in result:
+                result[contra_phase] = {}
+            
+            # Copy ipsi features from current phase to contra at target phase
+            for var_name, var_range in phases_data[phase].items():
+                if '_ipsi' in var_name:
+                    contra_name = var_name.replace('_ipsi', '_contra')
+                    result[contra_phase][contra_name] = var_range
         
         return result
     
