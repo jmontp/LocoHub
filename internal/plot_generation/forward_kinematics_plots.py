@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
 # Import config manager for loading validation ranges
-from .config_manager import ValidationConfigManager
+from internal.config_management.config_manager import ValidationConfigManager
 
 class KinematicPoseGenerator:
     """Generator for static kinematic poses for validation visualization"""
@@ -85,7 +85,7 @@ class KinematicPoseGenerator:
         if self.config_manager and task_name:
             try:
                 # Try to load validation ranges to get phases
-                ranges = self.config_manager.load_validation_ranges('kinematic')
+                ranges = self.config_manager.load_validation_ranges()
                 if task_name in ranges:
                     phases = sorted([int(p) for p in ranges[task_name].keys()])
                     if phases:
@@ -460,7 +460,7 @@ class KinematicPoseGenerator:
             
             # Use ConfigManager to load validation ranges
             config_manager = ValidationConfigManager()
-            all_validation_data = config_manager.load_validation_ranges('kinematic')
+            all_validation_data = config_manager.load_validation_ranges()
             if task_name not in all_validation_data:
                 raise ValueError(f"No validation data found for task {task_name} in config")
             
