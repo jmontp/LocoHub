@@ -197,7 +197,6 @@ class Validator:
             return failing_features
             
         # Get validation ranges for this specific task (includes generated contra features)
-        self.config_manager.load()  # Ensure data is loaded
         task_ranges = self.config_manager.get_task_data(task_name)
         
         # Get phase indices dynamically from configuration
