@@ -123,25 +123,48 @@ Learn how to load biomechanical datasets efficiently, understanding memory impli
 
 ### Loading Variable Groups
 
-```python
-# Load only kinematic variables
-kinematic_columns = ['subject', 'task', 'cycle_id', 'phase_percent']
-kinematic_columns.extend([col for col in data.columns if 'angle' in col])
+=== "Using Library"
+    ```python
+    # Load only kinematic variables
+    data_kinematics = LocomotionData(
+        'converted_datasets/umich_2021_phase.parquet',
+        variable_group='kinematics'
+    )
+    
+    # Load only kinetic variables
+    data_kinetics = LocomotionData(
+        'converted_datasets/umich_2021_phase.parquet',
+        variable_group='kinetics'
+    )
+    
+    # Load multiple groups
+    data_lower = LocomotionData(
+        'converted_datasets/umich_2021_phase.parquet',
+        joints=['hip', 'knee', 'ankle']
+    )
+    ```
 
-data_kinematics = LocomotionData(
-    'converted_datasets/umich_2021_phase.parquet',
-    columns=kinematic_columns
-)
-
-# Load only kinetic variables
-kinetic_columns = ['subject', 'task', 'cycle_id', 'phase_percent']
-kinetic_columns.extend([col for col in data.columns if 'moment' in col or 'force' in col])
-
-data_kinetics = LocomotionData(
-    'converted_datasets/umich_2021_phase.parquet',
-    columns=kinetic_columns
-)
-```
+=== "Using Raw Data"
+    ```python
+    # Load only kinematic variables
+    full_data = pd.read_parquet('converted_datasets/umich_2021_phase.parquet')
+    kinematic_columns = ['subject', 'task', 'cycle_id', 'phase_percent']
+    kinematic_columns.extend([col for col in full_data.columns if 'angle' in col])
+    
+    data_kinematics = pd.read_parquet(
+        'converted_datasets/umich_2021_phase.parquet',
+        columns=kinematic_columns
+    )
+    
+    # Load only kinetic variables
+    kinetic_columns = ['subject', 'task', 'cycle_id', 'phase_percent']
+    kinetic_columns.extend([col for col in full_data.columns if 'moment' in col or 'force' in col])
+    
+    data_kinetics = pd.read_parquet(
+        'converted_datasets/umich_2021_phase.parquet',
+        columns=kinetic_columns
+    )
+    ```
 
 ## Exploring Available Data
 
@@ -184,37 +207,70 @@ data_kinetics = LocomotionData(
 
 ### Understanding Variable Naming
 
-```python
-# Identify variable types
-angles = [col for col in data.columns if 'angle' in col]
-moments = [col for col in data.columns if 'moment' in col]
-forces = [col for col in data.columns if 'force' in col]
+=== "Using Library"
+    ```python
+    # Identify variable types
+    variable_info = data.get_variable_info()
+    
+    print(f"Joint angles: {variable_info['kinematics']['count']} variables")
+    print(f"Joint moments: {variable_info['kinetics']['moments']['count']} variables")
+    print(f"Ground reaction forces: {variable_info['kinetics']['forces']['count']} variables")
+    
+    # Get detailed variable descriptions
+    data.describe_variables()
+    
+    # Understanding naming convention
+    print("\nNaming convention examples:")
+    for var in data.get_variables()[:3]:
+        print(f"- {var}: {data.get_variable_description(var)}")
+    ```
 
-print(f"Joint angles: {len(angles)} variables")
-print(f"Joint moments: {len(moments)} variables")
-print(f"Ground reaction forces: {len(forces)} variables")
-
-# Understanding naming convention
-print("\nNaming convention examples:")
-print("- knee_flexion_angle_ipsi_rad: Ipsilateral knee flexion angle in radians")
-print("- hip_moment_contra_Nm: Contralateral hip moment in Newton-meters")
-print("- grf_vertical_N: Vertical ground reaction force in Newtons")
-```
+=== "Using Raw Data"
+    ```python
+    # Identify variable types
+    angles = [col for col in data.columns if 'angle' in col]
+    moments = [col for col in data.columns if 'moment' in col]
+    forces = [col for col in data.columns if 'force' in col]
+    
+    print(f"Joint angles: {len(angles)} variables")
+    print(f"Joint moments: {len(moments)} variables")
+    print(f"Ground reaction forces: {len(forces)} variables")
+    
+    # Understanding naming convention
+    print("\nNaming convention examples:")
+    print("- knee_flexion_angle_ipsi_rad: Ipsilateral knee flexion angle in radians")
+    print("- hip_moment_contra_Nm: Contralateral hip moment in Newton-meters")
+    print("- grf_vertical_N: Vertical ground reaction force in Newtons")
+    ```
 
 ## Time-Indexed vs Phase-Indexed Data
 
 ### Loading Different Data Types
 
-```python
-# Phase-indexed: 150 points per gait cycle
-data_phase = LocomotionData('converted_datasets/umich_2021_phase.parquet')
-print(f"Phase data points per cycle: {len(data_phase[data_phase['cycle_id'] == data_phase['cycle_id'].iloc[0]])}")
+=== "Using Library"
+    ```python
+    # Phase-indexed: 150 points per gait cycle
+    data_phase = LocomotionData('converted_datasets/umich_2021_phase.parquet')
+    print(f"Phase data points per cycle: {data_phase.points_per_cycle}")
+    print(f"Data type: {data_phase.data_type}")  # 'phase' or 'time'
+    
+    # Time-indexed: original sampling frequency
+    data_time = LocomotionData('converted_datasets/umich_2021_time.parquet')
+    print(f"Sampling frequency: {data_time.sampling_frequency} Hz")
+    print(f"Time column available: {data_time.has_time_column}")
+    ```
 
-# Time-indexed: original sampling frequency
-data_time = LocomotionData('converted_datasets/umich_2021_time.parquet')
-print(f"Time data shape: {data_time.shape}")
-print(f"Sampling info available in time data: {' time' in data_time.columns}")
-```
+=== "Using Raw Data"
+    ```python
+    # Phase-indexed: 150 points per gait cycle
+    data_phase = pd.read_parquet('converted_datasets/umich_2021_phase.parquet')
+    print(f"Phase data points per cycle: {len(data_phase[data_phase['cycle_id'] == data_phase['cycle_id'].iloc[0]])}")
+    
+    # Time-indexed: original sampling frequency
+    data_time = pd.read_parquet('converted_datasets/umich_2021_time.parquet')
+    print(f"Time data shape: {data_time.shape}")
+    print(f"Sampling info available in time data: {'time' in data_time.columns}")
+    ```
 
 ## Practice Exercises
 

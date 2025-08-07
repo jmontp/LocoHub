@@ -14,52 +14,98 @@ Learn to create essential biomechanical visualizations: phase averages with stan
 
 ## Setup and Imports
 
-```python
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from user_libs.python.locomotion_data import LocomotionData
+=== "Using Library"
+    ```python
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from user_libs.python.locomotion_data import LocomotionData
+    
+    # Set style for better-looking plots
+    plt.style.use('seaborn-v0_8-darkgrid')
+    
+    # Load and filter data
+    data = LocomotionData('converted_datasets/umich_2021_phase.parquet')
+    level_walking = data.filter(task='level_walking', subject='SUB01')
+    ```
 
-# Set style for better-looking plots
-plt.style.use('seaborn-v0_8-darkgrid')
-
-# Load and filter data
-data = LocomotionData('converted_datasets/umich_2021_phase.parquet')
-level_walking = data[(data['task'] == 'level_walking') & (data['subject'] == 'SUB01')]
-```
+=== "Using Raw Data"
+    ```python
+    import numpy as np
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    
+    # Set style for better-looking plots
+    plt.style.use('seaborn-v0_8-darkgrid')
+    
+    # Load and filter data
+    data = pd.read_parquet('converted_datasets/umich_2021_phase.parquet')
+    level_walking = data[(data['task'] == 'level_walking') & (data['subject'] == 'SUB01')]
+    ```
 
 ## Computing Phase Averages
 
 ### Basic Phase Average
 
-```python
-def compute_phase_average(data, variable):
-    """Compute mean and std across cycles for each phase point."""
-    # Group by phase_percent and compute statistics
-    grouped = data.groupby('phase_percent')[variable]
+=== "Using Library"
+    ```python
+    # Compute average knee flexion using library method
+    mean_patterns = level_walking.get_mean_patterns('SUB01', 'level_walking')
+    knee_mean = mean_patterns['knee_flexion_angle_ipsi_rad']['mean']
+    knee_std = mean_patterns['knee_flexion_angle_ipsi_rad']['std']
     
-    mean_curve = grouped.mean()
-    std_curve = grouped.std()
+    # Convert to degrees for plotting
+    knee_mean_deg = np.degrees(knee_mean)
+    knee_std_deg = np.degrees(knee_std)
+    ```
+
+=== "Using Raw Data"
+    ```python
+    def compute_phase_average(data, variable):
+        """Compute mean and std across cycles for each phase point."""
+        # Group by phase_percent and compute statistics
+        grouped = data.groupby('phase_percent')[variable]
+        
+        mean_curve = grouped.mean()
+        std_curve = grouped.std()
+        
+        return mean_curve, std_curve
     
-    return mean_curve, std_curve
-
-# Compute average knee flexion
-knee_mean, knee_std = compute_phase_average(level_walking, 'knee_flexion_angle_ipsi_rad')
-
-# Convert to degrees for plotting
-knee_mean_deg = np.degrees(knee_mean)
-knee_std_deg = np.degrees(knee_std)
-```
+    # Compute average knee flexion
+    knee_mean, knee_std = compute_phase_average(level_walking, 'knee_flexion_angle_ipsi_rad')
+    
+    # Convert to degrees for plotting
+    knee_mean_deg = np.degrees(knee_mean)
+    knee_std_deg = np.degrees(knee_std)
+    ```
 
 ### Using Built-in Methods
 
-```python
-# Using LocomotionData methods
-mean_patterns = level_walking.get_mean_patterns('SUB01', 'level_walking')
+=== "Using Library"
+    ```python
+    # Using LocomotionData methods
+    mean_patterns = level_walking.get_mean_patterns('SUB01', 'level_walking')
+    
+    # Access specific variable
+    knee_mean = mean_patterns['knee_flexion_angle_ipsi_rad']['mean']
+    
+    # Get all statistics at once
+    stats = level_walking.get_statistics('SUB01', 'level_walking')
+    ```
 
-# Access specific variable
-knee_mean = mean_patterns['knee_flexion_angle_ipsi_rad']
-```
+=== "Using Raw Data"
+    ```python
+    # Manual computation with pandas
+    mean_patterns = {}
+    for col in level_walking.columns:
+        if col not in ['subject', 'task', 'cycle_id', 'phase_percent']:
+            mean_patterns[col] = {
+                'mean': level_walking.groupby('phase_percent')[col].mean(),
+                'std': level_walking.groupby('phase_percent')[col].std()
+            }
+    
+    # Access specific variable
+    knee_mean = mean_patterns['knee_flexion_angle_ipsi_rad']['mean']
+    ```
 
 ## Creating Basic Plots
 
