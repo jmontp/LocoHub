@@ -39,7 +39,7 @@ Learn to analyze standardized biomechanical data using Python with our comprehen
 
 ---
 
-### :material-numeric-4-circle: Cycle Analysis *(Coming Soon)*
+### :material-numeric-4-circle: [Cycle Analysis](04_cycle_analysis.md)
 **Analyze individual gait cycles**
 - Extract individual cycles
 - Calculate ROM and peak values
@@ -50,7 +50,7 @@ Learn to analyze standardized biomechanical data using Python with our comprehen
 
 ---
 
-### :material-numeric-5-circle: Group Analysis *(Coming Soon)*
+### :material-numeric-5-circle: [Group Analysis](05_group_analysis.md)
 **Aggregate data across subjects**
 - Compute group means and variability
 - Handle missing data appropriately
@@ -61,7 +61,7 @@ Learn to analyze standardized biomechanical data using Python with our comprehen
 
 ---
 
-### :material-numeric-6-circle: Publication Outputs *(Coming Soon)*
+### :material-numeric-6-circle: [Publication Outputs](06_publication_outputs.md)
 **Generate publication-ready figures and tables**
 - Create multi-panel figures
 - Export summary statistics
