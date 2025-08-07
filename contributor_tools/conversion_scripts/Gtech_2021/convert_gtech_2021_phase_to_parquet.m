@@ -20,8 +20,8 @@
 % 4. Segment angles: Calculated from kinematic chain
 %    - pelvis_sagittal_angle = pelvis_tilt (from data)
 %    - trunk_sagittal_angle = pelvis_sagittal_angle + lumbar_extension  
-%    - thigh_sagittal_angle_ipsi = pelvis_sagittal_angle - hip_flexion
-%    - shank_sagittal_angle_ipsi = thigh_sagittal_angle_ipsi - knee_flexion
+%    - thigh_sagittal_angle_ipsi = pelvis_sagittal_angle + hip_flexion (sign flipped)
+%    - shank_sagittal_angle_ipsi = thigh_sagittal_angle_ipsi - knee_flexion (original)
 %    - foot_sagittal_angle_ipsi = shank_sagittal_angle_ipsi - ankle_dorsiflexion
 
 clear all;
@@ -699,10 +699,10 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
             stride_data.trunk_sagittal_angle_rad = stride_data.pelvis_sagittal_angle_rad;  % Same as pelvis if no lumbar
         end
         
-        % Thigh sagittal angle (pelvis - hip flexion)
-        stride_data.thigh_sagittal_angle_ipsi_rad = stride_data.pelvis_sagittal_angle_rad - stride_data.hip_flexion_angle_ipsi_rad;
+        % Thigh sagittal angle (pelvis + hip flexion) - SIGN FLIPPED
+        stride_data.thigh_sagittal_angle_ipsi_rad = stride_data.pelvis_sagittal_angle_rad + stride_data.hip_flexion_angle_ipsi_rad;
         
-        % Shank sagittal angle (thigh - knee flexion)
+        % Shank sagittal angle (thigh - knee flexion) - ORIGINAL SIGN
         stride_data.shank_sagittal_angle_ipsi_rad = stride_data.thigh_sagittal_angle_ipsi_rad - stride_data.knee_flexion_angle_ipsi_rad;
         
         % Foot sagittal angle (shank - ankle dorsiflexion)
