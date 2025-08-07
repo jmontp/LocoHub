@@ -212,6 +212,60 @@ class ValidationReportGenerator:
         
         return plot_paths
     
+    def _generate_comparison_plots(self, dataset_path: str, timestamp: str) -> None:
+        """
+        Generate comparison plots (single-column, passing strides only).
+        
+        Args:
+            dataset_path: Path to the dataset
+            timestamp: Timestamp for the plots
+        """
+        # Create comparison plots directory
+        comparison_plots_dir = self.docs_dir / "comparison_plots"
+        comparison_plots_dir.mkdir(exist_ok=True)
+        
+        # Load dataset
+        locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
+        tasks = locomotion_data.get_tasks()
+        dataset_name = Path(dataset_path).stem.replace('_phase', '').replace('_time', '')
+        
+        # Get sagittal features
+        sagittal_features = get_sagittal_features()
+        feature_names = [f[0] for f in sagittal_features]
+        
+        # Generate comparison plot for each task
+        for task in tasks:
+            # Filter to available features
+            available_features = [f for f in feature_names if f in locomotion_data.features]
+            
+            if available_features:
+                # Load data for all features
+                all_data_3d, all_feature_names = locomotion_data.get_cycles(
+                    subject=None, task=task, features=available_features
+                )
+                
+                # Get failing features for filtering
+                failing_features = self.validator._validate_task_with_failing_features(
+                    locomotion_data, task
+                )
+                
+                # Get task validation data
+                task_validation_data = self.validator.config_manager.get_task_data(task) \
+                    if self.validator.config_manager.has_task(task) else {}
+                
+                # Generate comparison plot (single column, passing strides only)
+                create_task_combined_plot(
+                    validation_data=task_validation_data,
+                    task_name=task,
+                    output_dir=str(comparison_plots_dir),
+                    data_3d=all_data_3d,
+                    feature_names=all_feature_names,
+                    failing_features=failing_features,
+                    dataset_name=dataset_name,
+                    timestamp=timestamp,
+                    comparison_mode=True  # KEY: Single column layout
+                )
+    
     def _get_task_violations_by_variable(self, violations: Dict, task: str) -> Dict[str, List[int]]:
         """
         Extract violations for a specific task, organized by variable name.
@@ -363,13 +417,14 @@ class ValidationReportGenerator:
         
         return report_path
     
-    def update_dataset_documentation(self, dataset_path: str, generate_plots: bool = True, short_code: Optional[str] = None) -> str:
+    def update_dataset_documentation(self, dataset_path: str, generate_plots: bool = True, generate_comparison: bool = True, short_code: Optional[str] = None) -> str:
         """
         Update dataset documentation with validation results.
         
         Args:
             dataset_path: Path to dataset to validate
             generate_plots: Whether to generate validation plots
+            generate_comparison: Whether to generate comparison plots
             short_code: Optional short code for the dataset (e.g., 'UM21', 'GT23')
             
         Returns:
@@ -388,6 +443,10 @@ class ValidationReportGenerator:
         plot_paths = {}
         if generate_plots:
             plot_paths = self._generate_plots(dataset_path, validation_result, timestamp)
+        
+        # Generate comparison plots if requested
+        if generate_comparison:
+            self._generate_comparison_plots(dataset_path, timestamp)
         
         # Find the corresponding dataset documentation file
         doc_name = dataset_name.replace('_phase', '').replace('_time', '')

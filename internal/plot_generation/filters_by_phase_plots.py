@@ -234,7 +234,8 @@ def create_task_combined_plot(
     feature_names: Optional[List[str]] = None,
     failing_features: Optional[Dict[int, List[str]]] = None,
     dataset_name: Optional[str] = None,
-    timestamp: Optional[str] = None
+    timestamp: Optional[str] = None,
+    comparison_mode: bool = False
 ) -> str:
     """
     Create a combined validation plot with all features for a single task.
@@ -248,6 +249,7 @@ def create_task_combined_plot(
         failing_features: Dict mapping stride indices to lists of failed variable names
         dataset_name: Optional dataset name to display
         timestamp: Optional timestamp to display
+        comparison_mode: If True, generate single-column comparison plot (passing strides only)
         
     Returns:
         Path to the generated plot
@@ -265,19 +267,33 @@ def create_task_combined_plot(
     
     n_features = len(available_features)
     
-    # Create figure with grid layout - 10 rows x 2 columns (pass/fail)
-    # Adjust figure height based on number of features
+    # Create figure with layout based on mode
     fig_height = max(20, n_features * 1.5)
-    fig, axes = plt.subplots(n_features, 2, figsize=(14, fig_height))
     
-    # Ensure axes is always 2D
-    if n_features == 1:
-        axes = axes.reshape(1, -1)
+    if comparison_mode:
+        # Single column layout for comparison plots
+        fig, axes = plt.subplots(n_features, 1, figsize=(7, fig_height))
+        # Ensure axes is always 2D for consistent indexing
+        if n_features == 1:
+            axes = axes.reshape(1, 1)
+        else:
+            axes = axes.reshape(n_features, 1)
+    else:
+        # Original 2-column layout for validation plots
+        fig, axes = plt.subplots(n_features, 2, figsize=(14, fig_height))
+        # Ensure axes is always 2D
+        if n_features == 1:
+            axes = axes.reshape(1, -1)
     
     # Build title
     task_type = get_task_classification(task_name)
     task_type_label = "Gait-Based Task" if task_type == 'gait' else "Bilateral Symmetric Task"
-    title = f'{task_name.replace("_", " ").title()} - All Features Validation\n{task_type_label}'
+    
+    if comparison_mode:
+        title = f'{task_name.replace("_", " ").title()} - Clean Data Comparison\n{task_type_label}'
+    else:
+        title = f'{task_name.replace("_", " ").title()} - All Features Validation\n{task_type_label}'
+    
     if dataset_name:
         title += f'\nDataset: {dataset_name}'
     if timestamp:
@@ -305,8 +321,14 @@ def create_task_combined_plot(
     
     # Process each feature
     for feat_idx, (var_name, var_label) in enumerate(available_features):
-        ax_pass = axes[feat_idx, 0]
-        ax_fail = axes[feat_idx, 1]
+        if comparison_mode:
+            # Single column - only pass axis
+            ax_pass = axes[feat_idx, 0]
+            ax_fail = None
+        else:
+            # Two columns - pass and fail axes
+            ax_pass = axes[feat_idx, 0]
+            ax_fail = axes[feat_idx, 1]
         
         # Get the index of this feature in the data array
         if feature_names and var_name in feature_names:
@@ -402,33 +424,34 @@ def create_task_combined_plot(
             x_label = 'Gait Phase' if task_type == 'gait' else 'Movement Phase'
             ax_pass.set_xlabel(x_label, fontsize=8)
         
-        # Plot FAILED strides (right column)
-        failed_count = 0
-        if data_3d is not None and data_3d.size > 0 and var_idx is not None:
-            for stride_idx in range(data_3d.shape[0]):
-                if stride_idx in variable_failed_strides:
-                    stride_data = data_3d[stride_idx, :, var_idx]
-                    ax_fail.plot(phase_ipsi, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
-                    failed_count += 1
-        
-        # Plot validation ranges on fail axis
-        _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix)
-        
-        if data_3d is None or data_3d.size == 0 or var_idx is None:
-            ax_fail.text(50, (y_min + y_max) / 2, 'Data Not Available', 
-                        ha='center', va='center', fontsize=10, color='gray', alpha=0.7)
-        
-        ax_fail.set_title(f'{var_label} ✗ ({failed_count})', fontsize=8, fontweight='bold')
-        ax_fail.set_xlim(-5, 105)
-        ax_fail.set_ylim(y_min, y_max)
-        ax_fail.set_xticks([0, 25, 50, 75, 100])
-        ax_fail.set_xticklabels(['0%', '25%', '50%', '75%', '100%'], fontsize=7)
-        ax_fail.grid(True, alpha=0.3)
-        ax_fail.tick_params(axis='y', labelsize=7)
-        
-        # Only add x-label to bottom row
-        if feat_idx == n_features - 1:
-            ax_fail.set_xlabel(x_label, fontsize=8)
+        # Plot FAILED strides (right column) - only in validation mode
+        if not comparison_mode and ax_fail is not None:
+            failed_count = 0
+            if data_3d is not None and data_3d.size > 0 and var_idx is not None:
+                for stride_idx in range(data_3d.shape[0]):
+                    if stride_idx in variable_failed_strides:
+                        stride_data = data_3d[stride_idx, :, var_idx]
+                        ax_fail.plot(phase_ipsi, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
+                        failed_count += 1
+            
+            # Plot validation ranges on fail axis
+            _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix)
+            
+            if data_3d is None or data_3d.size == 0 or var_idx is None:
+                ax_fail.text(50, (y_min + y_max) / 2, 'Data Not Available', 
+                            ha='center', va='center', fontsize=10, color='gray', alpha=0.7)
+            
+            ax_fail.set_title(f'{var_label} ✗ ({failed_count})', fontsize=8, fontweight='bold')
+            ax_fail.set_xlim(-5, 105)
+            ax_fail.set_ylim(y_min, y_max)
+            ax_fail.set_xticks([0, 25, 50, 75, 100])
+            ax_fail.set_xticklabels(['0%', '25%', '50%', '75%', '100%'], fontsize=7)
+            ax_fail.grid(True, alpha=0.3)
+            ax_fail.tick_params(axis='y', labelsize=7)
+            
+            # Only add x-label to bottom row
+            if feat_idx == n_features - 1:
+                ax_fail.set_xlabel(x_label, fontsize=8)
         
         # Add degree conversion on right y-axis for angular variables
         if var_name.endswith('_rad'):
@@ -437,18 +460,28 @@ def create_task_combined_plot(
             ax2_pass.set_ylabel('deg', fontsize=7)
             ax2_pass.tick_params(axis='y', labelsize=7)
             
-            ax2_fail = ax_fail.twinx()
-            ax2_fail.set_ylim(value_conversion(y_min), value_conversion(y_max))
-            ax2_fail.set_ylabel('deg', fontsize=7)
-            ax2_fail.tick_params(axis='y', labelsize=7)
+            # Only add fail axis degree conversion in validation mode
+            if not comparison_mode and ax_fail is not None:
+                ax2_fail = ax_fail.twinx()
+                ax2_fail.set_ylim(value_conversion(y_min), value_conversion(y_max))
+                ax2_fail.set_ylabel('deg', fontsize=7)
+                ax2_fail.tick_params(axis='y', labelsize=7)
     
     plt.tight_layout(rect=[0, 0.02, 1, 0.96])
     
     # Save the plot
-    if dataset_name:
-        output_path = Path(output_dir) / f"{dataset_name}_{task_name}_all_features_validation.png"
+    if comparison_mode:
+        # Comparison plots use simpler naming: dataset_task.png
+        if dataset_name:
+            output_path = Path(output_dir) / f"{dataset_name}_{task_name}.png"
+        else:
+            output_path = Path(output_dir) / f"{task_name}_comparison.png"
     else:
-        output_path = Path(output_dir) / f"{task_name}_all_features_validation.png"
+        # Validation plots keep original naming
+        if dataset_name:
+            output_path = Path(output_dir) / f"{dataset_name}_{task_name}_all_features_validation.png"
+        else:
+            output_path = Path(output_dir) / f"{task_name}_all_features_validation.png"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.close()

@@ -461,6 +461,12 @@ Examples:
         help="Promote dataset to main page (requires complete documentation with no TODOs)"
     )
     
+    parser.add_argument(
+        "--no-comparison",
+        action="store_true",
+        help="Skip comparison plot generation (only generate validation plots)"
+    )
+    
     args = parser.parse_args()
     
     # Expand glob patterns and validate input files
@@ -598,6 +604,7 @@ Examples:
                 doc_path = report_generator.update_dataset_documentation(
                     str(dataset_path), 
                     generate_plots=True,
+                    generate_comparison=not args.no_comparison,
                     short_code=args.short_code
                 )
                 
