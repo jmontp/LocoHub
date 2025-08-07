@@ -94,7 +94,7 @@ MATLAB tools designed for biomechanical researchers with familiar syntax and int
 ✓ MATLAB plotting integration  
 ✓ Compatible with existing workflows  
 
-[**:material-book-open-variant: View Tutorials**](tutorials/matlab/biomechanics_visualization_guide/){ .md-button }
+[**:material-book-open-variant: View Tutorials**](tutorials/matlab/){ .md-button }
 [**:material-package-variant: API Reference**](api/matlab-api/){ .md-button .md-button--primary }
 
 </div>
