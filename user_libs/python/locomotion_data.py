@@ -274,7 +274,8 @@ class LocomotionData:
         """Identify available biomechanical features in the dataset."""
         exclude_cols = {self.subject_col, self.task_col, self.phase_col, 
                        'time', 'time_s', 'step_number', 'is_reconstructed_r', 
-                       'is_reconstructed_l', 'task_info', 'activity_number', 'cycle', 'step'}
+                       'is_reconstructed_l', 'task_info', 'task_id', 'activity_number', 
+                       'cycle', 'step', 'leading_leg_step'}
         
         # Identify biomechanical features - only standard naming accepted
         self.features = [col for col in self.df.columns 
@@ -421,6 +422,271 @@ class LocomotionData:
         """Get list of unique tasks."""
         return sorted(self.df[self.task_col].unique())
     
+    def filter(self, subject=None, task=None, subjects=None, tasks=None, **kwargs):
+        """
+        General purpose filter returning new LocomotionData instance.
+        
+        Parameters
+        ----------
+        subject : str or list, optional
+            Single subject or list of subjects to filter
+        task : str or list, optional
+            Single task or list of tasks to filter
+        subjects : list, optional
+            Alternative to subject for multiple subjects
+        tasks : list, optional
+            Alternative to task for multiple tasks
+        **kwargs : dict
+            Additional filters (not implemented yet)
+        
+        Returns
+        -------
+        LocomotionData
+            New instance with filtered data
+        
+        Examples
+        --------
+        >>> filtered = data.filter(subject='SUB01', task='level_walking')
+        >>> filtered = data.filter(subjects=['SUB01', 'SUB02'], task='level_walking')
+        """
+        filtered_df = self.df.copy()
+        
+        # Handle subject filtering
+        subject_filter = subjects if subjects is not None else subject
+        if subject_filter is not None:
+            if isinstance(subject_filter, str):
+                filtered_df = filtered_df[filtered_df[self.subject_col] == subject_filter]
+            else:  # list
+                filtered_df = filtered_df[filtered_df[self.subject_col].isin(subject_filter)]
+        
+        # Handle task filtering
+        task_filter = tasks if tasks is not None else task
+        if task_filter is not None:
+            if isinstance(task_filter, str):
+                filtered_df = filtered_df[filtered_df[self.task_col] == task_filter]
+            else:  # list
+                filtered_df = filtered_df[filtered_df[self.task_col].isin(task_filter)]
+        
+        # Create new instance with filtered data
+        new_instance = LocomotionData.__new__(LocomotionData)
+        new_instance.df = filtered_df
+        new_instance.subject_col = self.subject_col
+        new_instance.task_col = self.task_col
+        new_instance.phase_col = self.phase_col
+        new_instance.features = self.features
+        new_instance.feature_mappings = self.feature_mappings if hasattr(self, 'feature_mappings') else {}
+        new_instance.subjects = sorted(filtered_df[self.subject_col].unique())
+        new_instance.tasks = sorted(filtered_df[self.task_col].unique())
+        new_instance.validation_report = None  # Reset validation
+        new_instance._cache = {}  # Initialize cache for new instance
+        new_instance.data_path = self.data_path if hasattr(self, 'data_path') else None
+        
+        return new_instance
+    
+    def filter_task(self, task):
+        """
+        Convenience method for task filtering.
+        
+        Parameters
+        ----------
+        task : str or list
+            Task(s) to filter
+        
+        Returns
+        -------
+        LocomotionData
+            New instance with filtered data
+        """
+        return self.filter(task=task)
+    
+    def filter_tasks(self, tasks):
+        """
+        Convenience method for filtering multiple tasks.
+        
+        Parameters
+        ----------
+        tasks : list
+            List of tasks to filter
+        
+        Returns
+        -------
+        LocomotionData
+            New instance with filtered data
+        """
+        return self.filter(tasks=tasks)
+    
+    def filter_subject(self, subject):
+        """
+        Convenience method for subject filtering.
+        
+        Parameters
+        ----------
+        subject : str or list
+            Subject(s) to filter
+        
+        Returns
+        -------
+        LocomotionData
+            New instance with filtered data
+        """
+        return self.filter(subject=subject)
+    
+    def filter_subjects(self, subjects):
+        """
+        Convenience method for filtering multiple subjects.
+        
+        Parameters
+        ----------
+        subjects : list
+            List of subjects to filter
+        
+        Returns
+        -------
+        LocomotionData
+            New instance with filtered data
+        """
+        return self.filter(subjects=subjects)
+    
+    @property
+    def shape(self):
+        """Return shape of underlying dataframe."""
+        return self.df.shape
+    
+    def memory_usage(self):
+        """Return memory usage of underlying dataframe in bytes."""
+        return self.df.memory_usage(deep=True).sum()
+    
+    def get_variables(self):
+        """Get list of biomechanical variables (features)."""
+        return self.features
+    
+    def head(self, n=5):
+        """Return first n rows of dataframe."""
+        return self.df.head(n)
+    
+    @property
+    def dtypes(self):
+        """Return data types of dataframe columns."""
+        return self.df.dtypes
+    
+    @property
+    def columns(self):
+        """Return columns of dataframe."""
+        return self.df.columns
+    
+    def __len__(self):
+        """Return number of rows in dataset."""
+        return len(self.df)
+    
+    def parse_task_info(self, task_info_str: str) -> Dict[str, Union[str, float, bool, int]]:
+        """
+        Parse task_info string into a dictionary.
+        
+        Parameters
+        ----------
+        task_info_str : str
+            Task info string in format "key:value,key:value"
+            e.g., "incline_deg:10,speed_m_s:1.2,treadmill:true"
+        
+        Returns
+        -------
+        dict
+            Dictionary with parsed key-value pairs, with automatic type conversion
+        
+        Examples
+        --------
+        >>> data.parse_task_info("incline_deg:10,speed_m_s:1.2,treadmill:true")
+        {'incline_deg': 10, 'speed_m_s': 1.2, 'treadmill': True}
+        """
+        if pd.isna(task_info_str) or task_info_str == '':
+            return {}
+        
+        result = {}
+        pairs = task_info_str.split(',')
+        
+        for pair in pairs:
+            if ':' not in pair:
+                continue
+            
+            key, value = pair.split(':', 1)
+            key = key.strip()
+            value = value.strip()
+            
+            # Try to convert to appropriate type
+            if value.lower() == 'true':
+                result[key] = True
+            elif value.lower() == 'false':
+                result[key] = False
+            else:
+                try:
+                    # Try integer first
+                    if '.' not in value:
+                        result[key] = int(value)
+                    else:
+                        result[key] = float(value)
+                except ValueError:
+                    # Keep as string if not numeric
+                    result[key] = value
+        
+        return result
+    
+    def filter_by_task_id(self, task_id: str) -> pd.DataFrame:
+        """
+        Filter dataset by task_id.
+        
+        Parameters
+        ----------
+        task_id : str
+            Task ID to filter by (e.g., "incline_10deg", "stair_ascent")
+        
+        Returns
+        -------
+        pd.DataFrame
+            Filtered dataframe containing only rows with specified task_id
+        """
+        if 'task_id' not in self.df.columns:
+            raise ValueError("Dataset does not contain 'task_id' column")
+        
+        return self.df[self.df['task_id'] == task_id].copy()
+    
+    def get_task_metadata(self, subject: str, task: str, metadata_key: str) -> Union[str, float, bool, int, None]:
+        """
+        Extract specific metadata value for a subject-task combination.
+        
+        Parameters
+        ----------
+        subject : str
+            Subject identifier
+        task : str
+            Task name
+        metadata_key : str
+            Key to extract from task_info (e.g., "incline_deg", "speed_m_s")
+        
+        Returns
+        -------
+        value
+            Metadata value, or None if not found
+        
+        Examples
+        --------
+        >>> data.get_task_metadata("SUB01", "incline_walking", "incline_deg")
+        10
+        """
+        if 'task_info' not in self.df.columns:
+            return None
+        
+        subset = self.df[(self.df[self.subject_col] == subject) & 
+                        (self.df[self.task_col] == task)]
+        
+        if subset.empty:
+            return None
+        
+        # Get first task_info value (should be consistent within subject-task)
+        task_info_str = subset['task_info'].iloc[0]
+        metadata = self.parse_task_info(task_info_str)
+        
+        return metadata.get(metadata_key)
+    
     def get_cycles(self, subject: Optional[str], task: str, 
                    features: Optional[List[str]] = None) -> Tuple[np.ndarray, List[str]]:
         """
@@ -500,25 +766,36 @@ class LocomotionData:
         return data_3d, valid_features
     
     def get_mean_patterns(self, subject: str, task: str,
-                         features: Optional[List[str]] = None) -> Dict[str, np.ndarray]:
+                         features: Optional[List[str]] = None) -> Dict[str, Dict[str, pd.Series]]:
         """
-        Get mean patterns for each feature.
+        Get mean and std patterns for each feature.
         
         Returns
         -------
         dict
-            Dictionary mapping feature names to mean patterns (150 points)
+            Dictionary mapping feature names to dict with 'mean' and 'std' Series (150 points)
         """
         data_3d, feature_names = self.get_cycles(subject, task, features)
         
         if data_3d is None:
             return {}
         
-        # Calculate means
+        # Calculate means and stds
         mean_patterns = np.mean(data_3d, axis=0)  # (150, n_features)
+        std_patterns = np.std(data_3d, axis=0)    # (150, n_features)
         
-        # Return as dictionary
-        return {feat: mean_patterns[:, i] for i, feat in enumerate(feature_names)}
+        # Create phase index
+        phase_index = np.linspace(0, 100, 150, endpoint=False)
+        
+        # Return as nested dictionary with pandas Series
+        result = {}
+        for i, feat in enumerate(feature_names):
+            result[feat] = {
+                'mean': pd.Series(mean_patterns[:, i], index=phase_index),
+                'std': pd.Series(std_patterns[:, i], index=phase_index)
+            }
+        
+        return result
     
     def get_std_patterns(self, subject: str, task: str,
                         features: Optional[List[str]] = None) -> Dict[str, np.ndarray]:
@@ -951,7 +1228,7 @@ class LocomotionData:
             for j, task in enumerate(tasks):
                 mean_patterns = self.get_mean_patterns(subject, task, [feature])
                 if feature in mean_patterns:
-                    ax.plot(phase_x, mean_patterns[feature], 
+                    ax.plot(phase_x, mean_patterns[feature]['mean'], 
                            color=colors[j], linewidth=2, label=task)
             
             ax.set_xlabel('Gait Cycle (%)')
