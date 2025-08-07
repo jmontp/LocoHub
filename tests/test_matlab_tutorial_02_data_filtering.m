@@ -139,13 +139,24 @@ function test_cycle_filtering()
     
     loco = LocomotionData('mock_data/mock_dataset_phase.parquet');
     
-    % Filter specific cycle numbers
-    cycles1to3 = loco.filterCycles([1, 2, 3]);
+    % Get actual cycle IDs from the data
+    allCycles = unique(loco.data.cycle_id);
     
-    % Verify cycle filtering
-    uniqueCycles = unique(cycles1to3.data.cycle_id);
-    assert(all(ismember(uniqueCycles, [1, 2, 3])), ...
-        'Should only have cycles 1-3');
+    % If we have at least 3 cycles, use the first 3
+    if length(allCycles) >= 3
+        testCycles = allCycles(1:3);
+        filteredCycles = loco.filterCycles(testCycles);
+        
+        % Verify cycle filtering
+        uniqueCycles = unique(filteredCycles.data.cycle_id);
+        assert(all(ismember(uniqueCycles, testCycles)), ...
+            'Should only have selected cycles');
+    else
+        % Just test that we can filter by whatever cycles exist
+        testCycles = allCycles(1);
+        filteredCycles = loco.filterCycles(testCycles);
+        assert(height(filteredCycles.data) > 0, 'Should have some data');
+    end
     
     % Test first N cycles method (simplified to avoid string/text issues)
     first2Cycles = loco.getFirstNCycles(2);

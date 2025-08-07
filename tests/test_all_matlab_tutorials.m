@@ -21,6 +21,8 @@ function test_all_matlab_tutorials()
         'test_matlab_tutorial_02_data_filtering'
         'test_matlab_tutorial_03_visualization'
         'test_matlab_tutorial_04_cycle_analysis'
+        'test_matlab_tutorial_05_group_analysis'
+        'test_matlab_tutorial_06_publication_outputs'
         'test_matlab_dual_version_tutorial_03'
     };
     
