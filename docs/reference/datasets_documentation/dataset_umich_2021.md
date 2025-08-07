@@ -1,4 +1,6 @@
-# University of Michigan 2021 Treadmill Dataset
+# UMich 2021 Dataset
+
+## **The Effect of Walking Incline and Speed on Human Leg Kinematics, Kinetics, and EMG**
 
 ## Overview
 **Brief Description**: Comprehensive treadmill-based locomotion dataset including walking at various speeds and inclines, running, and transitions between activities.
@@ -91,12 +93,16 @@ data = LocomotionData('converted_datasets/umich_2021_phase.parquet')
 cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 ```
 
-
 ## Data Validation
 
 <div class="validation-summary" markdown>
 
 ### 📊 Validation Status
+
+**Validation Configuration:**
+- **Ranges File**: `default_ranges.yaml`
+- **SHA256**: `137767ae...` (first 8 chars)
+- **Archived Copy**: [`umich_2021_phase_2025-08-07_175552_ranges.yaml`](validation_archives/umich_2021_phase_2025-08-07_175552_ranges.yaml)
 
 | Metric | Value | Status |
 |--------|-------|--------|
@@ -122,6 +128,7 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 
 </div>
 
-**Last Validated**: 2025-08-07 11:19:39
+**Last Validated**: 2025-08-07 17:55:52
+
 ---
 *Last Updated: January 2025*

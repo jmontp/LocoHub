@@ -1,4 +1,6 @@
-# Georgia Tech 2023 Multi-Activity Dataset
+# Gtech 2023 Dataset
+
+## **A human lower-limb biomechanics and wearable sensors dataset during cyclic and non-cyclic activities**
 
 ## Overview
 **Brief Description**: Comprehensive motion capture dataset featuring diverse locomotion and daily activities including walking, running, stairs, sports movements, and functional tasks. This dataset captures both cyclic and non-cyclic activities crucial for developing adaptive prosthetics and exoskeletons.
@@ -123,12 +125,16 @@ data = LocomotionData('converted_datasets/gtech_2023_phase.parquet')
 cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 ```
 
-
 ## Data Validation
 
 <div class="validation-summary" markdown>
 
 ### 📊 Validation Status
+
+**Validation Configuration:**
+- **Ranges File**: `default_ranges.yaml`
+- **SHA256**: `137767ae...` (first 8 chars)
+- **Archived Copy**: [`gtech_2023_phase_2025-08-07_175717_ranges.yaml`](validation_archives/gtech_2023_phase_2025-08-07_175717_ranges.yaml)
 
 | Metric | Value | Status |
 |--------|-------|--------|
@@ -162,6 +168,7 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 
 </div>
 
-**Last Validated**: 2025-08-07 11:21:17
+**Last Validated**: 2025-08-07 17:57:17
+
 ---
 *Last Updated: January 2025*

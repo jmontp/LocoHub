@@ -8,7 +8,9 @@ Separated from core validation logic for better modularity.
 
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Tuple
+import hashlib
+import shutil
 
 import sys
 import numpy as np
@@ -53,6 +55,10 @@ class ValidationReportGenerator:
         self.plots_dir = self.docs_dir / "validation_plots"
         self.plots_dir.mkdir(exist_ok=True)
         
+        # Validation archives for ranges files
+        self.archives_dir = self.docs_dir / "validation_archives"
+        self.archives_dir.mkdir(exist_ok=True)
+        
         # Keep old output_dir for backwards compatibility
         self.output_dir = project_root / "docs" / "reference" / "datasets_documentation" / "validation_reports"
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -60,17 +66,69 @@ class ValidationReportGenerator:
         # Import here to avoid circular dependency
         from internal.validation_engine.validator import Validator
         
-        # Initialize validator with specific ranges file if provided
+        # Store which ranges file is being used
         if ranges_file:
+            self.ranges_file_path = Path(ranges_file)
             # Create validator with empty config manager
             self.validator = Validator()
             # Load the specific ranges file
-            self.validator.config_manager.load(Path(ranges_file))
+            self.validator.config_manager.load(self.ranges_file_path)
         else:
+            # Use default ranges file
+            self.ranges_file_path = project_root / "contributor_tools" / "validation_ranges" / "default_ranges.yaml"
             self.validator = Validator()
         
         self.step_classifier = StepClassifier()
         
+        # Will store archive info after archiving
+        self.ranges_archive_path = None
+        self.ranges_hash = None
+        
+    def _calculate_file_hash(self, file_path: Path) -> str:
+        """
+        Calculate SHA256 hash of file contents.
+        
+        Args:
+            file_path: Path to file to hash
+            
+        Returns:
+            Hexadecimal string of SHA256 hash
+        """
+        sha256_hash = hashlib.sha256()
+        with open(file_path, "rb") as f:
+            for byte_block in iter(lambda: f.read(4096), b""):
+                sha256_hash.update(byte_block)
+        return sha256_hash.hexdigest()
+    
+    def _archive_ranges_file(self, dataset_name: str, timestamp_str: str) -> Tuple[Path, str]:
+        """
+        Archive the validation ranges file with timestamp.
+        
+        Args:
+            dataset_name: Name of dataset being validated
+            timestamp_str: Timestamp string for archive naming
+            
+        Returns:
+            Tuple of (archive_path, hash_string)
+        """
+        # Calculate hash of original file
+        file_hash = self._calculate_file_hash(self.ranges_file_path)
+        
+        # Create archive filename
+        timestamp_clean = timestamp_str.replace(" ", "_").replace(":", "")
+        archive_name = f"{dataset_name}_{timestamp_clean}_ranges.yaml"
+        archive_path = self.archives_dir / archive_name
+        
+        # Copy ranges file to archive
+        shutil.copy2(self.ranges_file_path, archive_path)
+        
+        # Save hash to companion file
+        hash_file = self.archives_dir / f"{dataset_name}_{timestamp_clean}_ranges.sha256"
+        with open(hash_file, 'w') as f:
+            f.write(f"{file_hash}  {archive_name}\n")
+        
+        return archive_path, file_hash
+    
     def generate_report(self, dataset_path: str, generate_plots: bool = True) -> str:
         """
         Generate complete validation report with optional plots.
@@ -84,6 +142,9 @@ class ValidationReportGenerator:
         """
         dataset_name = Path(dataset_path).stem
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Archive the ranges file
+        self.ranges_archive_path, self.ranges_hash = self._archive_ranges_file(dataset_name, timestamp)
         
         # Run validation
         validation_result = self.validator.validate(dataset_path)
@@ -317,6 +378,9 @@ class ValidationReportGenerator:
         dataset_name = Path(dataset_path).stem
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
+        # Archive the ranges file
+        self.ranges_archive_path, self.ranges_hash = self._archive_ranges_file(dataset_name, timestamp)
+        
         # Run validation
         validation_result = self.validator.validate(dataset_path)
         
@@ -346,13 +410,31 @@ class ValidationReportGenerator:
         with open(doc_path, 'r') as f:
             content = f.read()
         
-        # Find and replace validation section or append if not found
+        # Remove ALL existing validation sections (there might be duplicates)
         validation_marker = "## Data Validation"
         if validation_marker in content:
-            # Find the section and everything after it until the next ## or end
             import re
-            pattern = r'## Data Validation.*?(?=\n##|\n---|\Z)'
-            new_content = re.sub(pattern, validation_section.rstrip(), content, flags=re.DOTALL)
+            
+            # Split content at first validation section and keep everything before it
+            validation_start = content.find(validation_marker)
+            if validation_start != -1:
+                # Keep everything before the first validation section
+                content_before = content[:validation_start].rstrip()
+                
+                # Look for the footer (--- separator) after validation sections
+                footer_pattern = r'\n---\n\*Last Updated:.*'
+                footer_match = re.search(footer_pattern, content, re.DOTALL)
+                
+                if footer_match:
+                    # Keep the footer
+                    footer_content = footer_match.group(0)
+                    new_content = content_before + '\n\n' + validation_section + '\n' + footer_content
+                else:
+                    # No footer found, just append validation section
+                    new_content = content_before + '\n\n' + validation_section
+            else:
+                # Validation marker not found (shouldn't happen), just append
+                new_content = content.rstrip() + '\n\n' + validation_section
         else:
             # Append before the final separator or at the end
             if '\n---\n*Last Updated:' in content:
@@ -378,6 +460,14 @@ class ValidationReportGenerator:
         lines.append('<div class="validation-summary" markdown>')
         lines.append("")
         lines.append("### 📊 Validation Status")
+        lines.append("")
+        lines.append("**Validation Configuration:**")
+        lines.append(f"- **Ranges File**: `{self.ranges_file_path.name}`")
+        if self.ranges_hash:
+            lines.append(f"- **SHA256**: `{self.ranges_hash[:8]}...` (first 8 chars)")
+        if self.ranges_archive_path:
+            archive_rel_path = f"validation_archives/{self.ranges_archive_path.name}"
+            lines.append(f"- **Archived Copy**: [`{self.ranges_archive_path.name}`]({archive_rel_path})")
         lines.append("")
         
         # Create status table

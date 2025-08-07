@@ -26,8 +26,9 @@ Usage:
 import sys
 import argparse
 import re
+import glob
 from pathlib import Path
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
 
 # Add parent directories to path for imports
 current_dir = Path(__file__).parent
@@ -70,6 +71,167 @@ def get_existing_short_codes() -> Dict[str, str]:
             continue
     
     return codes
+
+
+def check_documentation_complete(doc_path: Path) -> Tuple[bool, List[str]]:
+    """
+    Check if documentation has any TODO placeholders.
+    
+    Args:
+        doc_path: Path to documentation file
+        
+    Returns:
+        Tuple of (is_complete, list_of_todo_lines)
+    """
+    if not doc_path.exists():
+        return False, ["Documentation file does not exist"]
+    
+    todos = []
+    with open(doc_path, 'r') as f:
+        for i, line in enumerate(f, 1):
+            if '[TODO:' in line:
+                todos.append(f"Line {i}: {line.strip()}")
+    
+    return len(todos) == 0, todos
+
+
+def update_mkdocs_navigation(dataset_name: str, doc_filename: str) -> bool:
+    """
+    Add dataset to mkdocs.yml navigation if not already present.
+    
+    Args:
+        dataset_name: Display name for the dataset (e.g., "GTech 2021")
+        doc_filename: Documentation filename without extension (e.g., "dataset_gtech_2021")
+        
+    Returns:
+        True if navigation was updated, False if already exists
+    """
+    mkdocs_path = Path(__file__).parent.parent / "mkdocs.yml"
+    
+    if not mkdocs_path.exists():
+        print(f"❌ Error: mkdocs.yml not found at {mkdocs_path}")
+        return False
+    
+    with open(mkdocs_path, 'r') as f:
+        lines = f.readlines()
+    
+    # Check if dataset already exists in navigation
+    doc_ref = f"reference/datasets_documentation/{doc_filename}.md"
+    for line in lines:
+        if doc_ref in line:
+            print(f"✅ Dataset already in navigation: {dataset_name}")
+            return False
+    
+    # Find the Available Datasets section
+    datasets_section_idx = None
+    indent_level = None
+    for i, line in enumerate(lines):
+        if "Available Datasets:" in line:
+            datasets_section_idx = i
+            # Count spaces before "Available Datasets:"
+            indent_level = len(line) - len(line.lstrip())
+            break
+    
+    if datasets_section_idx is None:
+        print("❌ Error: Could not find 'Available Datasets:' section in mkdocs.yml")
+        return False
+    
+    # Find all existing datasets and their positions
+    datasets = {}
+    i = datasets_section_idx + 1
+    while i < len(lines):
+        line = lines[i]
+        # Check if we're still in the datasets section (same or greater indent)
+        current_indent = len(line) - len(line.lstrip())
+        if current_indent <= indent_level and line.strip() and not line.strip().startswith('-'):
+            break
+        
+        # Extract dataset info if it's a dataset line
+        if 'reference/datasets_documentation/dataset_' in line:
+            # Parse the line to get the display name
+            match = re.search(r'- ([^:]+):', line)
+            if match:
+                display_name = match.group(1).strip()
+                datasets[display_name] = i
+        i += 1
+    
+    # Add new dataset in alphabetical order
+    new_entry = f"{' ' * (indent_level + 2)}- {dataset_name}: {doc_ref}\n"
+    
+    # Find insertion point
+    insert_idx = datasets_section_idx + 1
+    for name, idx in sorted(datasets.items()):
+        if dataset_name < name:
+            insert_idx = idx
+            break
+        insert_idx = idx + 1
+    
+    # Insert the new entry
+    lines.insert(insert_idx, new_entry)
+    
+    # Write back the updated content
+    with open(mkdocs_path, 'w') as f:
+        f.writelines(lines)
+    
+    print(f"✅ Added {dataset_name} to mkdocs.yml navigation")
+    return True
+
+
+def add_to_main_page(dataset_name: str, doc_path: Path, validation_status: str) -> None:
+    """
+    Add dataset card to main index.md page.
+    
+    Args:
+        dataset_name: Display name for the dataset
+        doc_path: Path to dataset documentation
+        validation_status: Validation status string (e.g., "94.7% Valid")
+    """
+    index_path = Path(__file__).parent.parent / "docs" / "index.md"
+    
+    if not index_path.exists():
+        print(f"❌ Error: Main index.md not found at {index_path}")
+        return
+    
+    with open(index_path, 'r') as f:
+        content = f.read()
+    
+    # Check if dataset already on main page
+    if dataset_name in content:
+        print(f"✅ {dataset_name} already on main page")
+        return
+    
+    # Find the datasets section or create it
+    datasets_marker = "## Available Datasets"
+    if datasets_marker not in content:
+        # Add datasets section before the first ## or at the end
+        insert_pos = content.find("\n##")
+        if insert_pos == -1:
+            content += f"\n\n{datasets_marker}\n\n"
+        else:
+            content = content[:insert_pos] + f"\n\n{datasets_marker}\n\n" + content[insert_pos:]
+    
+    # Create dataset card
+    doc_rel_path = doc_path.relative_to(Path(__file__).parent.parent / "docs")
+    card = f"""\n### {dataset_name}
+- **Status**: {validation_status}
+- [View Documentation]({doc_rel_path})
+"""
+    
+    # Insert after datasets marker
+    marker_pos = content.find(datasets_marker)
+    insert_pos = content.find("\n", marker_pos) + 1
+    
+    # Find next section or end
+    next_section = content.find("\n##", insert_pos)
+    if next_section == -1:
+        content = content[:insert_pos] + card + content[insert_pos:]
+    else:
+        content = content[:next_section] + card + content[next_section:]
+    
+    with open(index_path, 'w') as f:
+        f.write(content)
+    
+    print(f"✅ Added {dataset_name} to main page")
 
 
 def extract_status_from_report(report_path: Path) -> Tuple[str, str]:
@@ -251,22 +413,29 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  Basic validation with merge into documentation (default):
-    python create_dataset_validation_report.py --dataset converted_datasets/umich_2021_phase.parquet
+  Single dataset validation:
+    python create_dataset_validation_report.py --datasets converted_datasets/umich_2021_phase.parquet
+    
+  Multiple datasets validation:
+    python create_dataset_validation_report.py --datasets umich_2021_phase.parquet gtech_2021_phase.parquet
+    
+  All phase datasets with glob pattern:
+    python create_dataset_validation_report.py --datasets "converted_datasets/*_phase.parquet"
     
   With custom validation ranges file:
-    python create_dataset_validation_report.py --dataset my_data.parquet --ranges-file custom_ranges.yaml
+    python create_dataset_validation_report.py --datasets my_data.parquet --ranges-file custom_ranges.yaml
     
   Generate standalone report (old behavior):
-    python create_dataset_validation_report.py --dataset my_data.parquet --no-merge
+    python create_dataset_validation_report.py --datasets my_data.parquet --no-merge
         """
     )
     
     # Required arguments
     parser.add_argument(
-        "--dataset", 
-        required=True, 
-        help="Path to phase-indexed dataset parquet file"
+        "--datasets", 
+        required=True,
+        nargs='+',
+        help="Path(s) to phase-indexed dataset parquet file(s). Supports glob patterns."
     )
     
     # Optional arguments
@@ -283,101 +452,251 @@ Examples:
     
     parser.add_argument(
         "--short-code",
-        help="Short code for dataset (e.g., UM21 for UMich 2021, GT23 for Georgia Tech 2023)"
+        help="Short code for dataset (e.g., UM21 for UMich 2021, GT23 for Georgia Tech 2023). Required for new datasets."
+    )
+    
+    parser.add_argument(
+        "--promote-to-main",
+        action="store_true",
+        help="Promote dataset to main page (requires complete documentation with no TODOs)"
     )
     
     args = parser.parse_args()
     
-    # Validate input file
-    dataset_path = Path(args.dataset)
-    if not dataset_path.exists():
-        print(f"❌ Error: Dataset file not found: {dataset_path}")
+    # Expand glob patterns and validate input files
+    dataset_paths = []
+    for pattern in args.datasets:
+        # Check if it's a glob pattern or direct path
+        matches = glob.glob(pattern)
+        if matches:
+            dataset_paths.extend([Path(p) for p in matches])
+        else:
+            # Try as direct path
+            p = Path(pattern)
+            if p.exists():
+                dataset_paths.append(p)
+            else:
+                print(f"❌ Error: No files found matching: {pattern}")
+                return 1
+    
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_paths = []
+    for p in dataset_paths:
+        if p not in seen:
+            seen.add(p)
+            unique_paths.append(p)
+    dataset_paths = unique_paths
+    
+    if not dataset_paths:
+        print(f"❌ Error: No valid dataset files found")
         return 1
     
-    # Extract dataset name for display
-    dataset_name = dataset_path.stem.replace("_phase", "").replace("_time", "")
-    dataset_display_name = dataset_name.replace("_", " ").title()
+    # Determine if batch mode (multiple datasets)
+    batch_mode = len(dataset_paths) > 1
     
-    print(f"🚀 Dataset Validation Report Generator")
-    print(f"📂 Dataset: {dataset_path}")
-    print(f"📝 Report Name: {dataset_display_name}")
+    if batch_mode:
+        print(f"🚀 Dataset Validation Report Generator (Batch Mode)")
+        print(f"📂 Processing {len(dataset_paths)} datasets")
+    else:
+        print(f"🚀 Dataset Validation Report Generator")
     
-    # Check for short code collisions if provided
-    if args.short_code:
-        existing_codes = get_existing_short_codes()
-        if args.short_code in existing_codes:
-            print(f"\n❌ Error: Short code '{args.short_code}' is already used by {existing_codes[args.short_code]}")
-            print(f"📋 Existing short codes: {', '.join(sorted(existing_codes.keys()))}")
+    # Process configuration once for all datasets
+    # Determine which validation ranges file to use
+    if args.ranges_file:
+        ranges_file = Path(args.ranges_file)
+        if not ranges_file.exists():
+            print(f"❌ Error: Validation ranges file not found: {ranges_file}")
             return 1
-        print(f"✅ Short code '{args.short_code}' is available")
+        print(f"⚙️  Using custom validation ranges: {ranges_file}")
+    else:
+        # Use default ranges file
+        project_root = Path(__file__).parent.parent
+        ranges_file = project_root / "contributor_tools" / "validation_ranges" / "default_ranges.yaml"
+        if not ranges_file.exists():
+            print(f"❌ Error: Default validation ranges file not found: {ranges_file}")
+            return 1
+        print(f"⚙️  Using default validation ranges: {ranges_file}")
     
-    try:
-        # Determine which validation ranges file to use
-        if args.ranges_file:
-            ranges_file = Path(args.ranges_file)
-            if not ranges_file.exists():
-                print(f"❌ Error: Validation ranges file not found: {ranges_file}")
+    # Initialize report generator once
+    print(f"\n🔍 Initializing report generator...")
+    report_generator = ValidationReportGenerator(ranges_file=str(ranges_file))
+    
+    # Store results for summary
+    batch_results = []
+    
+    # Process each dataset
+    for idx, dataset_path in enumerate(dataset_paths, 1):
+        # Show progress for batch mode
+        if batch_mode:
+            print(f"\n[{idx}/{len(dataset_paths)}] Processing: {dataset_path.name}")
+            print("="*60)
+        
+        # Extract dataset name for display
+        dataset_name = dataset_path.stem.replace("_phase", "").replace("_time", "")
+        dataset_display_name = dataset_name.replace("_", " ").title()
+        
+        if not batch_mode:
+            print(f"📂 Dataset: {dataset_path}")
+        print(f"📝 Report Name: {dataset_display_name}")
+        
+        # Check if dataset documentation exists
+        doc_name = dataset_name
+        doc_path = Path(__file__).parent.parent / "docs" / "reference" / "datasets_documentation" / f"dataset_{doc_name}.md"
+        doc_exists = doc_path.exists()
+    
+        # Check for short code requirements and collisions
+        existing_codes = get_existing_short_codes()
+        
+        if not doc_exists and not args.short_code:
+            print(f"\n❌ Error: Dataset documentation does not exist at {doc_path}")
+            print(f"   A short code is required to create new dataset documentation.")
+            print(f"   Please provide --short-code (e.g., --short-code GT21)")
+            print(f"\n📋 Existing short codes: {', '.join(sorted(existing_codes.keys()))}")
+            if batch_mode:
+                print(f"⚠️  Skipping {dataset_path.name}")
+                continue
+            return 1
+        
+        if args.short_code:
+            if args.short_code in existing_codes:
+                print(f"\n❌ Error: Short code '{args.short_code}' is already used by {existing_codes[args.short_code]}")
+                print(f"📋 Existing short codes: {', '.join(sorted(existing_codes.keys()))}")
+                if batch_mode:
+                    print(f"⚠️  Skipping {dataset_path.name}")
+                    continue
                 return 1
-            print(f"⚙️  Using custom validation ranges: {ranges_file}")
-        else:
-            # Use default ranges file
-            project_root = Path(__file__).parent.parent
-            ranges_file = project_root / "contributor_tools" / "validation_ranges" / "default_ranges.yaml"
-            if not ranges_file.exists():
-                print(f"❌ Error: Default validation ranges file not found: {ranges_file}")
+            print(f"✅ Short code '{args.short_code}' is available")
+        
+        try:
+        
+            if args.no_merge:
+                # Generate standalone validation report (old behavior)
+                print(f"🔍 Running validation (standalone mode)...")
+                report_path = report_generator.generate_report(str(dataset_path), generate_plots=True)
+                
+                print(f"✅ Validation complete!")
+                print(f"📄 Report saved: {report_path}")
+                
+                # Update index.md for standalone reports
+                report_file = Path(report_path)
+                mkdocs_dir = report_file.parent
+                
+                print(f"📝 Updating documentation index...")
+                update_index_file(
+                    report_file.name,
+                    dataset_display_name,
+                    mkdocs_dir
+                )
+                
+                if not batch_mode:
+                    print(f"\n🎉 SUCCESS! Standalone report created!")
+                    print(f"🌐 View in MkDocs at: /reference/datasets_documentation/validation_reports/")
+            else:
+                # Merge validation into dataset documentation (new default behavior)
+                print(f"🔍 Running validation (merge mode)...")
+                doc_path = report_generator.update_dataset_documentation(
+                    str(dataset_path), 
+                    generate_plots=True,
+                    short_code=args.short_code
+                )
+                
+                # Extract validation results for batch summary
+                with open(doc_path, 'r') as f:
+                    doc_content = f.read()
+                
+                # Extract validation percentage
+                import re
+                match = re.search(r'\*\*Overall Status\*\*[^\|]*\|\s*([\d.]+)%\s*Valid', doc_content)
+                if match:
+                    pass_rate = float(match.group(1))
+                    if pass_rate >= 95:
+                        status = "✅ PASSED"
+                    elif pass_rate >= 80:
+                        status = "⚠️ PARTIAL"
+                    else:
+                        status = "❌ FAILED"
+                else:
+                    pass_rate = 0.0
+                    status = "❓ UNKNOWN"
+                
+                batch_results.append({
+                    'name': dataset_display_name,
+                    'file': dataset_path.name,
+                    'pass_rate': pass_rate,
+                    'status': status
+                })
+                
+                print(f"✅ Validation complete! ({pass_rate:.1f}% pass rate)")
+                print(f"📄 Documentation updated: {doc_path}")
+                
+                # Update mkdocs.yml navigation
+                doc_filename = f"dataset_{doc_name}"
+                update_mkdocs_navigation(dataset_display_name, doc_filename)
+                
+                # Handle promotion to main page if requested
+                if args.promote_to_main:
+                    print(f"\n🔍 Checking documentation completeness for main page promotion...")
+                    doc_path_obj = Path(doc_path)
+                    is_complete, todos = check_documentation_complete(doc_path_obj)
+                    
+                    if not is_complete:
+                        print(f"\n❌ Cannot promote to main page - documentation has {len(todos)} TODO placeholders:")
+                        for i, todo in enumerate(todos[:10], 1):  # Show first 10
+                            print(f"   {i}. {todo}")
+                        if len(todos) > 10:
+                            print(f"   ... and {len(todos) - 10} more")
+                        print(f"\nPlease complete all TODO items before promoting to main page.")
+                        if not batch_mode:
+                            return 1
+                    else:
+                        add_to_main_page(dataset_display_name, doc_path_obj, f"{pass_rate:.1f}% Valid")
+                        print(f"🎉 SUCCESS! {dataset_display_name} promoted to main page!")
+                
+                if not batch_mode:
+                    print(f"\n🎉 SUCCESS! Dataset documentation updated with validation!")
+                    print(f"🌐 View in MkDocs at: /reference/datasets_documentation/")
+        
+        except KeyboardInterrupt:
+            print(f"\n🛑 Report generation interrupted by user")
+            return 1
+        except Exception as e:
+            print(f"\n❌ Report generation failed for {dataset_path.name}: {e}")
+            if batch_mode:
+                batch_results.append({
+                    'name': dataset_display_name,
+                    'file': dataset_path.name,
+                    'pass_rate': 0.0,
+                    'status': '❌ ERROR'
+                })
+                continue
+            else:
+                import traceback
+                traceback.print_exc()
                 return 1
-            print(f"⚙️  Using default validation ranges: {ranges_file}")
+    
+    # Show batch summary if multiple datasets
+    if batch_mode and batch_results:
+        print("\n" + "="*60)
+        print("📊 BATCH SUMMARY:")
+        print("╔" + "═"*30 + "╦" + "═"*12 + "╦" + "═"*12 + "╗")
+        print("║ {:28} ║ {:10} ║ {:10} ║".format("Dataset", "Pass Rate", "Status"))
+        print("╠" + "═"*30 + "╬" + "═"*12 + "╬" + "═"*12 + "╣")
         
-        # Initialize report generator with ranges file
-        print(f"\n🔍 Initializing report generator...")
-        report_generator = ValidationReportGenerator(ranges_file=str(ranges_file))
+        for result in batch_results:
+            print("║ {:28} ║ {:9.1f}% ║ {:10} ║".format(
+                result['name'][:28], 
+                result['pass_rate'],
+                result['status'].split()[1] if ' ' in result['status'] else result['status']
+            ))
         
-        if args.no_merge:
-            # Generate standalone validation report (old behavior)
-            print(f"🔍 Running validation (standalone mode)...")
-            report_path = report_generator.generate_report(str(dataset_path), generate_plots=True)
-            
-            print(f"\n✅ Validation complete!")
-            print(f"📄 Report saved: {report_path}")
-            
-            # Update index.md for standalone reports
-            report_file = Path(report_path)
-            mkdocs_dir = report_file.parent
-            
-            print(f"\n📝 Updating documentation index...")
-            update_index_file(
-                report_file.name,
-                dataset_display_name,
-                mkdocs_dir
-            )
-            
-            print(f"\n🎉 SUCCESS! Standalone report created!")
-            print(f"🌐 View in MkDocs at: /reference/datasets_documentation/validation_reports/")
-        else:
-            # Merge validation into dataset documentation (new default behavior)
-            print(f"🔍 Running validation (merge mode)...")
-            doc_path = report_generator.update_dataset_documentation(
-                str(dataset_path), 
-                generate_plots=True,
-                short_code=args.short_code
-            )
-            
-            print(f"\n✅ Validation complete!")
-            print(f"📄 Documentation updated: {doc_path}")
-            
-            print(f"\n🎉 SUCCESS! Dataset documentation updated with validation!")
-            print(f"🌐 View in MkDocs at: /reference/datasets_documentation/")
+        print("╚" + "═"*30 + "╩" + "═"*12 + "╩" + "═"*12 + "╝")
         
-        return 0
-        
-    except KeyboardInterrupt:
-        print(f"\n🛑 Report generation interrupted by user")
-        return 1
-    except Exception as e:
-        print(f"\n❌ Report generation failed: {e}")
-        import traceback
-        traceback.print_exc()
-        return 1
+        success_count = sum(1 for r in batch_results if r['status'] != '❌ ERROR')
+        print(f"\n🎉 SUCCESS! Validated {success_count}/{len(dataset_paths)} datasets")
+        print(f"🌐 View in MkDocs at: /reference/datasets_documentation/")
+    
+    return 0
 
 
 if __name__ == "__main__":
