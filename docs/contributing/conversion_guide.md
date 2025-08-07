@@ -234,9 +234,9 @@ python contributor_tools/create_dataset_validation_report.py \
     --dataset converted_datasets/your_dataset_phase.parquet
 
 # Check the report for:
-# - Pass rate (should be ≥90%)
-# - Specific violations
-# - Suggestions for fixes
+# - Specific violations and their patterns
+# - Whether issues are systematic or isolated
+# - Suggestions for addressing problems
 ```
 
 ## Common Conversion Patterns

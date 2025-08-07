@@ -1,6 +1,6 @@
 # Validation Reference
 
-Understanding how dataset validation works and how to achieve a passing validation.
+Understanding how dataset validation works and how to ensure data quality.
 
 ## Setting Up Validation Ranges
 
@@ -10,7 +10,7 @@ Before you can validate your dataset, you need validation ranges that define acc
 
 The project includes default validation ranges for healthy adult populations:
 ```
-contributor_tools/validation_ranges/validation_ranges.yaml
+contributor_tools/validation_ranges/default_ranges.yaml
 ```
 
 These ranges were generated from the UMich 2021 dataset and cover standard locomotion tasks.
@@ -32,20 +32,16 @@ Use the automated fine-tuning tool to generate ranges statistically from your da
 
 ```bash
 # Generate ranges using 95th percentile method (recommended)
-python contributor_tools/automated_fine_tuning.py \
-    --dataset your_dataset_phase.parquet \
-    --method percentile_95
+# Currently, generate ranges manually or use interactive tuner
+python contributor_tools/interactive_validation_tuner.py
+# Then adjust ranges visually and save
 
-# Other statistical methods available:
-# --method mean_3std        # Mean ± 3 standard deviations
-# --method iqr_expansion    # IQR-based outlier detection
-# --method percentile_90    # 90th percentile (more conservative)
-# --method conservative     # Min/max with 5% buffer
+# The interactive tuner provides visual feedback for setting ranges
+# based on your actual data distribution
 ```
 
-This creates YAML files in `contributor_tools/validation_ranges/`:
-- `kinematic_ranges.yaml` for angles and velocities
-- `kinetic_ranges.yaml` for forces and moments
+This creates a YAML file in `contributor_tools/validation_ranges/` with
+all your tuned validation ranges for the dataset.
 
 #### Method 2: Modify Existing Ranges
 
@@ -53,7 +49,7 @@ For populations similar to healthy adults:
 
 1. Copy the default ranges:
    ```bash
-   cp contributor_tools/validation_ranges/validation_ranges.yaml \
+   cp contributor_tools/validation_ranges/default_ranges.yaml \
       contributor_tools/validation_ranges/my_population_ranges.yaml
    ```
 
@@ -72,7 +68,7 @@ For populations similar to healthy adults:
    ```bash
    python contributor_tools/create_dataset_validation_report.py \
        --dataset your_dataset.parquet \
-       --config-dir path/to/your/ranges/
+       --ranges-file contributor_tools/validation_ranges/my_population_ranges.yaml
    ```
 
 #### Method 3: Manual Creation
@@ -131,10 +127,10 @@ Once you've created your custom ranges:
 # Validate using custom ranges
 python contributor_tools/create_dataset_validation_report.py \
     --dataset your_dataset_phase.parquet \
-    --config-dir contributor_tools/validation_ranges/
+    --ranges-file contributor_tools/validation_ranges/your_custom_ranges.yaml
 ```
 
-The validator will automatically find and use your YAML files.
+The validator will use your specified YAML file for validation.
 
 ## What Gets Validated?
 
@@ -181,14 +177,14 @@ python contributor_tools/create_dataset_validation_report.py \
 ### Pass Rate Calculation
 
 ```
-Pass Rate = (Total Checks - Violations) / Total Checks
+Validation Score = (Passing Checks / Total Checks) × 100
 
 Where:
-- Total Checks = num_steps × num_variables × num_phases
-- Violations = Out-of-range values detected
+- Total Checks = num_strides × num_variables × num_phases
+- Passing Checks = Values within acceptable ranges
 ```
 
-**Target**: ≥90% pass rate for acceptance
+**Goal**: Identify and understand any systematic issues in your data
 
 ### Reading the Report
 
@@ -198,9 +194,9 @@ Example validation report structure:
 # Validation Report: your_dataset_phase
 
 ## Summary
-- Overall Status: PASSED ✓ (92.5%)
 - Phase Structure: Valid (150 points per cycle)
 - Tasks Validated: 8/8
+- Data Quality: Good (minimal violations)
 
 ## Violations by Task
 
@@ -340,32 +336,32 @@ If your dataset has special characteristics (e.g., pathological gait):
 
 ## Interpreting Results
 
-### Good Validation (>90%)
+### Minimal Violations
 
 ```
-✓ Pass Rate: 94.2%
-✓ Minor violations in expected areas
+✓ Few scattered outliers
 ✓ Consistent patterns across subjects
+✓ Biologically plausible values
 → Ready for contribution!
 ```
 
-### Borderline Validation (85-90%)
+### Systematic Issues
 
 ```
-⚠ Pass Rate: 87.5%
-⚠ Several systematic violations
-→ Review and fix systematic issues
-→ May need custom ranges for special populations
+⚠ Consistent violations at specific phases
+⚠ Possible unit conversion issues
+→ Review the specific variables flagged
+→ Consider if custom ranges needed for your population
 ```
 
-### Failed Validation (<85%)
+### Major Problems
 
 ```
-❌ Pass Rate: 72.1%
-❌ Major structural or naming issues
-→ Return to conversion step
-→ Check unit conversions
+❌ Widespread violations across variables
+❌ Values outside biological limits
+→ Check unit conversions (degrees vs radians)
 → Verify variable mappings
+→ Review data processing pipeline
 ```
 
 ## Getting Help with Validation

@@ -23,12 +23,6 @@ hide:
 
 </div>
 
-<div class="trust-indicators" markdown>
-
-:material-check-circle:{ .success-icon } **3 Languages** • :material-check-circle:{ .success-icon } **Validated Data** • :material-check-circle:{ .success-icon } **150 Points/Cycle** • :material-check-circle:{ .success-icon } **Research-Ready**
-
-</div>
-
 <div class="main-sections-grid" markdown>
 
 <div class="dashboard-tile" markdown>
