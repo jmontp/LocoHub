@@ -56,33 +56,6 @@ This research was supported by:
 - **File**: `converted_datasets/umich_2021_phase.parquet`
 - **Units**: All angles in radians, moments normalized by body weight (Nm/kg)
 
-## Validation Ranges
-
-The following plots show the expected biomechanical ranges used for data validation:
-
-### Level Walking
-
-![Kinematic](validation_ranges/level_walking_kinematic_filters_by_phase_with_data.png)
-![Kinetic](validation_ranges/level_walking_kinetic_filters_by_phase_with_data.png)
-![Segment](validation_ranges/level_walking_segment_filters_by_phase_with_data.png)
-
-### Incline Walking
-
-![Kinematic](validation_ranges/incline_walking_kinematic_filters_by_phase_with_data.png)
-![Kinetic](validation_ranges/incline_walking_kinetic_filters_by_phase_with_data.png)
-![Segment](validation_ranges/incline_walking_segment_filters_by_phase_with_data.png)
-
-### Decline Walking
-
-![Kinematic](validation_ranges/decline_walking_kinematic_filters_by_phase_with_data.png)
-![Kinetic](validation_ranges/decline_walking_kinetic_filters_by_phase_with_data.png)
-![Segment](validation_ranges/decline_walking_segment_filters_by_phase_with_data.png)
-
-## Data Validation
-
-For detailed validation results with actual data:
-- [Full Validation Report](validation_reports/umich_2021_phase_validation_report.md)
-
 ## Contact Information
 - **Dataset Curator**: Robert D. Gregg IV, Ph.D.
 - **Lab Website**: https://gregg.engin.umich.edu/
@@ -118,5 +91,37 @@ data = LocomotionData('converted_datasets/umich_2021_phase.parquet')
 cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 ```
 
+
+## Data Validation
+
+<div class="validation-summary" markdown>
+
+### 📊 Validation Status
+
+| Metric | Value | Status |
+|--------|-------|--------|
+| **Overall Status** | 99.7% Valid | ✅ PASSED |
+| **Phase Structure** | 150 points/cycle | ✅ Valid |
+| **Tasks Validated** | 3 tasks | ✅ Complete |
+| **Total Checks** | 396,096 | - |
+| **Violations** | 1,261 | ⚠️ Present |
+
+### 📈 Task-Specific Validation
+
+#### Decline Walking
+![Decline Walking](validation_plots/umich_2021_phase_decline_walking_all_features_validation.png)
+*19 sagittal features validated*
+
+#### Incline Walking
+![Incline Walking](validation_plots/umich_2021_phase_incline_walking_all_features_validation.png)
+*19 sagittal features validated*
+
+#### Level Walking
+![Level Walking](validation_plots/umich_2021_phase_level_walking_all_features_validation.png)
+*19 sagittal features validated*
+
+</div>
+
+**Last Validated**: 2025-08-07 11:19:39
 ---
 *Last Updated: January 2025*

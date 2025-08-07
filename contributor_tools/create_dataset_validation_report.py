@@ -2,29 +2,32 @@
 """
 Create Dataset Validation Report
 
-Generates comprehensive validation reports for locomotion datasets with automatic
-documentation integration.
+Generates comprehensive validation reports for locomotion datasets and merges them
+into dataset documentation for a unified view.
 
 Features:
 - Validates phase-indexed datasets against YAML configuration
-- Generates minimal, focused validation reports
-- Creates plots with embedded dataset name and timestamp
-- Automatically updates MkDocs index for seamless documentation
-- Outputs directly to documentation directory
+- Merges validation results into dataset documentation
+- Creates visually appealing validation tables and plots
+- Automatically updates dataset documentation files
+- Supports both merged and standalone report modes
 
 Usage:
-    # Basic validation report generation (uses default_ranges.yaml)
+    # Basic validation with merge into documentation (default)
     python create_dataset_validation_report.py --dataset converted_datasets/umich_2021_phase.parquet
     
     # With custom validation ranges file
-    python create_dataset_validation_report.py --dataset my_data.parquet --ranges-file contributor_tools/validation_ranges/custom_ranges.yaml
+    python create_dataset_validation_report.py --dataset my_data.parquet --ranges-file custom_ranges.yaml
+    
+    # Generate standalone report (old behavior)
+    python create_dataset_validation_report.py --dataset my_data.parquet --no-merge
 """
 
 import sys
 import argparse
 import re
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Dict
 
 # Add parent directories to path for imports
 current_dir = Path(__file__).parent
@@ -38,6 +41,35 @@ except ImportError as e:
     print(f"❌ Error importing validation modules: {e}")
     print("Make sure you're running from the repository root directory")
     sys.exit(1)
+
+
+def get_existing_short_codes() -> Dict[str, str]:
+    """
+    Extract all existing short codes from dataset documentation.
+    
+    Returns:
+        Dictionary mapping short codes to dataset names
+    """
+    codes = {}
+    docs_dir = Path(__file__).parent.parent / "docs" / "reference" / "datasets_documentation"
+    
+    if not docs_dir.exists():
+        return codes
+    
+    for doc_file in docs_dir.glob("dataset_*.md"):
+        try:
+            with open(doc_file, 'r') as f:
+                content = f.read()
+                # Look for pattern like "Subject ID Format**: `XX##_" or "Subject ID Format**: `XX##_AB"
+                match = re.search(r'Subject ID Format[^`]*`([A-Z0-9]+)_', content)
+                if match:
+                    code = match.group(1)
+                    dataset_name = doc_file.stem.replace('dataset_', '')
+                    codes[code] = dataset_name
+        except Exception:
+            continue
+    
+    return codes
 
 
 def extract_status_from_report(report_path: Path) -> Tuple[str, str]:
@@ -219,11 +251,14 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  Basic validation report (uses default_ranges.yaml):
+  Basic validation with merge into documentation (default):
     python create_dataset_validation_report.py --dataset converted_datasets/umich_2021_phase.parquet
     
   With custom validation ranges file:
-    python create_dataset_validation_report.py --dataset my_data.parquet --ranges-file contributor_tools/validation_ranges/custom_ranges.yaml
+    python create_dataset_validation_report.py --dataset my_data.parquet --ranges-file custom_ranges.yaml
+    
+  Generate standalone report (old behavior):
+    python create_dataset_validation_report.py --dataset my_data.parquet --no-merge
         """
     )
     
@@ -238,6 +273,17 @@ Examples:
     parser.add_argument(
         "--ranges-file",
         help="Path to validation ranges YAML file (default: contributor_tools/validation_ranges/default_ranges.yaml)"
+    )
+    
+    parser.add_argument(
+        "--no-merge",
+        action="store_true",
+        help="Generate standalone report instead of merging into dataset documentation"
+    )
+    
+    parser.add_argument(
+        "--short-code",
+        help="Short code for dataset (e.g., UM21 for UMich 2021, GT23 for Georgia Tech 2023)"
     )
     
     args = parser.parse_args()
@@ -255,6 +301,15 @@ Examples:
     print(f"🚀 Dataset Validation Report Generator")
     print(f"📂 Dataset: {dataset_path}")
     print(f"📝 Report Name: {dataset_display_name}")
+    
+    # Check for short code collisions if provided
+    if args.short_code:
+        existing_codes = get_existing_short_codes()
+        if args.short_code in existing_codes:
+            print(f"\n❌ Error: Short code '{args.short_code}' is already used by {existing_codes[args.short_code]}")
+            print(f"📋 Existing short codes: {', '.join(sorted(existing_codes.keys()))}")
+            return 1
+        print(f"✅ Short code '{args.short_code}' is available")
     
     try:
         # Determine which validation ranges file to use
@@ -277,26 +332,41 @@ Examples:
         print(f"\n🔍 Initializing report generator...")
         report_generator = ValidationReportGenerator(ranges_file=str(ranges_file))
         
-        # Generate validation report
-        print(f"🔍 Running validation...")
-        report_path = report_generator.generate_report(str(dataset_path), generate_plots=True)
-        
-        print(f"\n✅ Validation complete!")
-        print(f"📄 Report saved: {report_path}")
-        
-        # Always update index.md
-        report_file = Path(report_path)
-        mkdocs_dir = report_file.parent
-        
-        print(f"\n📝 Updating documentation index...")
-        update_index_file(
-            report_file.name,
-            dataset_display_name,
-            mkdocs_dir
-        )
-        
-        print(f"\n🎉 SUCCESS! Report created and documentation updated!")
-        print(f"🌐 View in MkDocs at: /reference/datasets_documentation/validation_reports/")
+        if args.no_merge:
+            # Generate standalone validation report (old behavior)
+            print(f"🔍 Running validation (standalone mode)...")
+            report_path = report_generator.generate_report(str(dataset_path), generate_plots=True)
+            
+            print(f"\n✅ Validation complete!")
+            print(f"📄 Report saved: {report_path}")
+            
+            # Update index.md for standalone reports
+            report_file = Path(report_path)
+            mkdocs_dir = report_file.parent
+            
+            print(f"\n📝 Updating documentation index...")
+            update_index_file(
+                report_file.name,
+                dataset_display_name,
+                mkdocs_dir
+            )
+            
+            print(f"\n🎉 SUCCESS! Standalone report created!")
+            print(f"🌐 View in MkDocs at: /reference/datasets_documentation/validation_reports/")
+        else:
+            # Merge validation into dataset documentation (new default behavior)
+            print(f"🔍 Running validation (merge mode)...")
+            doc_path = report_generator.update_dataset_documentation(
+                str(dataset_path), 
+                generate_plots=True,
+                short_code=args.short_code
+            )
+            
+            print(f"\n✅ Validation complete!")
+            print(f"📄 Documentation updated: {doc_path}")
+            
+            print(f"\n🎉 SUCCESS! Dataset documentation updated with validation!")
+            print(f"🌐 View in MkDocs at: /reference/datasets_documentation/")
         
         return 0
         

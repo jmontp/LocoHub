@@ -46,10 +46,16 @@ class ValidationReportGenerator:
         """
         # Use fixed output directory
         project_root = Path(__file__).parent.parent.parent
+        self.docs_dir = project_root / "docs" / "reference" / "datasets_documentation"
+        self.docs_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Validation plots go in a subdirectory
+        self.plots_dir = self.docs_dir / "validation_plots"
+        self.plots_dir.mkdir(exist_ok=True)
+        
+        # Keep old output_dir for backwards compatibility
         self.output_dir = project_root / "docs" / "reference" / "datasets_documentation" / "validation_reports"
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.plots_dir = self.output_dir / "plots" 
-        self.plots_dir.mkdir(exist_ok=True)
         
         # Import here to avoid circular dependency
         from internal.validation_engine.validator import Validator
@@ -295,5 +301,320 @@ class ValidationReportGenerator:
             f.write('\n'.join(lines))
         
         return report_path
+    
+    def update_dataset_documentation(self, dataset_path: str, generate_plots: bool = True, short_code: Optional[str] = None) -> str:
+        """
+        Update dataset documentation with validation results.
+        
+        Args:
+            dataset_path: Path to dataset to validate
+            generate_plots: Whether to generate validation plots
+            short_code: Optional short code for the dataset (e.g., 'UM21', 'GT23')
+            
+        Returns:
+            Path to updated documentation file
+        """
+        dataset_name = Path(dataset_path).stem
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Run validation
+        validation_result = self.validator.validate(dataset_path)
+        
+        # Generate plots if requested
+        plot_paths = {}
+        if generate_plots:
+            plot_paths = self._generate_plots(dataset_path, validation_result, timestamp)
+        
+        # Find the corresponding dataset documentation file
+        doc_name = dataset_name.replace('_phase', '').replace('_time', '')
+        doc_path = self.docs_dir / f"dataset_{doc_name}.md"
+        
+        if not doc_path.exists():
+            print(f"Warning: Dataset documentation not found at {doc_path}")
+            print(f"Creating new documentation file...")
+            self._create_new_documentation(doc_path, doc_name, dataset_path, short_code)
+        
+        # Generate validation section content
+        validation_section = self._generate_validation_section(
+            dataset_name, 
+            validation_result, 
+            plot_paths, 
+            timestamp
+        )
+        
+        # Read existing documentation
+        with open(doc_path, 'r') as f:
+            content = f.read()
+        
+        # Find and replace validation section or append if not found
+        validation_marker = "## Data Validation"
+        if validation_marker in content:
+            # Find the section and everything after it until the next ## or end
+            import re
+            pattern = r'## Data Validation.*?(?=\n##|\n---|\Z)'
+            new_content = re.sub(pattern, validation_section.rstrip(), content, flags=re.DOTALL)
+        else:
+            # Append before the final separator or at the end
+            if '\n---\n*Last Updated:' in content:
+                # Insert before the footer
+                parts = content.rsplit('\n---\n*Last Updated:', 1)
+                new_content = parts[0] + '\n\n' + validation_section + '\n---\n*Last Updated:' + parts[1]
+            else:
+                # Just append at the end
+                new_content = content.rstrip() + '\n\n' + validation_section
+        
+        # Write updated documentation
+        with open(doc_path, 'w') as f:
+            f.write(new_content)
+        
+        return str(doc_path)
+    
+    def _generate_validation_section(self, dataset_name: str, validation_result: Dict,
+                                    plot_paths: Dict, timestamp: str) -> str:
+        """Generate validation section for dataset documentation."""
+        lines = []
+        lines.append("## Data Validation")
+        lines.append("")
+        lines.append('<div class="validation-summary" markdown>')
+        lines.append("")
+        lines.append("### 📊 Validation Status")
+        lines.append("")
+        
+        # Create status table
+        lines.append("| Metric | Value | Status |")
+        lines.append("|--------|-------|--------|")
+        
+        # Overall status
+        pass_rate = validation_result['stats']['pass_rate']
+        if pass_rate >= 0.95:
+            status_icon = "✅"
+            status_text = "PASSED"
+        elif pass_rate >= 0.80:
+            status_icon = "⚠️"
+            status_text = "PARTIAL"
+        else:
+            status_icon = "❌"
+            status_text = "FAILED"
+        
+        lines.append(f"| **Overall Status** | {pass_rate:.1%} Valid | {status_icon} {status_text} |")
+        
+        # Phase structure
+        phase_status = "✅ Valid" if validation_result['phase_valid'] else "❌ Invalid"
+        lines.append(f"| **Phase Structure** | 150 points/cycle | {phase_status} |")
+        
+        # Tasks validated
+        num_tasks = validation_result['stats']['num_tasks']
+        lines.append(f"| **Tasks Validated** | {num_tasks} tasks | ✅ Complete |")
+        
+        # Total checks
+        lines.append(f"| **Total Checks** | {validation_result['stats']['total_checks']:,} | - |")
+        
+        # Violations
+        violations = validation_result['stats']['total_violations']
+        if violations == 0:
+            viol_status = "✅ None"
+        elif violations < 1000:
+            viol_status = "⚠️ Minor"
+        else:
+            viol_status = "⚠️ Present"
+        lines.append(f"| **Violations** | {violations:,} | {viol_status} |")
+        
+        lines.append("")
+        
+        # Task-specific validation plots
+        if plot_paths:
+            lines.append("### 📈 Task-Specific Validation")
+            lines.append("")
+            
+            # Get sagittal features to count validated features
+            sagittal_features = get_sagittal_features()
+            num_features = len(sagittal_features)
+            
+            for task in sorted(plot_paths.keys()):
+                # Format task name
+                task_display = task.replace('_', ' ').title()
+                
+                lines.append(f"#### {task_display}")
+                
+                # Use relative path from docs directory
+                plot_file = Path(plot_paths[task]).name
+                rel_path = f"validation_plots/{plot_file}"
+                
+                lines.append(f"![{task_display}]({rel_path})")
+                
+                # Add task-specific pass rate if available
+                if 'task_stats' in validation_result and task in validation_result['task_stats']:
+                    task_pass_rate = validation_result['task_stats'][task]['pass_rate']
+                    lines.append(f"*{num_features} sagittal features validated • {task_pass_rate:.1%} pass rate*")
+                else:
+                    lines.append(f"*{num_features} sagittal features validated*")
+                lines.append("")
+        
+        lines.append("</div>")
+        lines.append("")
+        lines.append(f"**Last Validated**: {timestamp}")
+        
+        return '\n'.join(lines)
+    
+    def _create_new_documentation(self, doc_path: Path, doc_name: str, dataset_path: str, short_code: Optional[str] = None):
+        """
+        Create a comprehensive documentation template with auto-filled data.
+        
+        Args:
+            doc_path: Path where documentation will be created
+            doc_name: Name of the dataset (extracted from filename)
+            dataset_path: Path to the actual dataset file
+            short_code: Optional short code for the dataset
+        """
+        # Load dataset to extract information
+        try:
+            import pandas as pd
+            df = pd.read_parquet(dataset_path)
+            
+            # Extract subject information
+            subjects = sorted(df['subject'].unique())
+            num_subjects = len(subjects)
+            
+            # Determine population type from subject IDs
+            population_codes = set()
+            for subject in subjects:
+                # Extract population code (AB, TF, TT, etc.)
+                parts = subject.split('_')
+                if len(parts) >= 3:
+                    pop_code = parts[-1][:2]  # First 2 chars of last part (e.g., 'AB' from 'AB01')
+                    population_codes.add(pop_code)
+            
+            # Map population codes to descriptions
+            pop_map = {
+                'AB': 'Able-bodied',
+                'TF': 'Transfemoral amputee',
+                'TT': 'Transtibial amputee'
+            }
+            populations = [pop_map.get(code, code) for code in sorted(population_codes)]
+            population_str = ', '.join(populations)
+            
+            # Extract tasks
+            tasks = sorted(df['task'].unique())
+            
+            # Get data shape info
+            num_rows = len(df)
+            num_cols = len(df.columns)
+            
+            # Determine subject ID format
+            if short_code:
+                # Use the population code from actual data
+                pop_code = sorted(population_codes)[0] if population_codes else "XX"
+                subject_id_format = f"`{short_code}_{pop_code}##`"
+                subject_list_str = f"{short_code}_{pop_code}01 - {short_code}_{pop_code}{num_subjects:02d}"
+            else:
+                # Extract pattern from first subject
+                first_subject = subjects[0] if subjects else "Unknown"
+                # Try to extract the base pattern
+                subject_base = '_'.join(first_subject.split('_')[:-1]) if '_' in first_subject else first_subject
+                subject_id_format = f"`{subject_base}_XX##`"
+                subject_list_str = ', '.join(subjects[:3]) + (f' ... ({num_subjects} total)' if num_subjects > 3 else '')
+            
+        except Exception as e:
+            print(f"Warning: Could not extract all information from dataset: {e}")
+            # Fallback values
+            num_subjects = "[TODO: Count subjects]"
+            subject_list_str = "[TODO: List subject IDs]"
+            subject_id_format = f"`{short_code or '[TODO: Add short code]'}_XX##`"
+            population_str = "[TODO: Specify population type]"
+            tasks = []
+            num_rows = "[TODO: Add row count]"
+            num_cols = "[TODO: Add column count]"
+        
+        # Generate content
+        content = f"""# {doc_name.replace('_', ' ').title()} Dataset
+
+## Overview
+
+**Brief Description**: [TODO: Add comprehensive description of dataset purpose and scope]
+
+**Collection Year**: [TODO: Add year(s) of data collection]
+
+**Institution**: [TODO: Add institution name and department]
+
+**Principal Investigators**: [TODO: Add PI names and labs]
+
+## Citation Information
+
+### Primary Citation
+```
+[TODO: Add primary citation in standard format]
+```
+
+### Associated Publications
+[TODO: Add related publications if any]
+
+### Acknowledgments
+[TODO: Add funding sources and acknowledgments]
+
+## Dataset Contents
+
+### Subjects
+- **Total Subjects**: {num_subjects} ({subject_list_str})
+- **Subject ID Format**: {subject_id_format} (Dataset: {doc_name.replace('_', ' ').title()}, Population: {population_str})
+- **Demographics**:
+  - Age Range: [TODO: Add age range]
+  - Sex Distribution: [TODO: Add M/F distribution]
+  - Height Range: [TODO: Add height range in mm]
+  - Weight Range: [TODO: Add weight range in kg]
+  - Mean Age: [TODO: Add mean age]
+  - Mean Weight: [TODO: Add mean weight]
+  - Mean Height: [TODO: Add mean height]
+- **Population**: {population_str}
+
+### Tasks Included
+| Task ID | Task Description | Duration/Cycles | Conditions | Notes |
+|---------|------------------|-----------------|------------|-------|"""
+        
+        # Add tasks if available
+        if tasks:
+            for task in tasks:
+                task_display = task.replace('_', ' ').title()
+                content += f"\n| {task} | {task_display} | Continuous | [TODO: Add conditions] | [TODO: Add notes] |"
+        else:
+            content += "\n| [TODO: Add tasks] | [TODO: Add descriptions] | [TODO: Add duration] | [TODO: Add conditions] | [TODO: Add notes] |"
+        
+        content += f"""
+
+### Data Columns (Standardized Format)
+- **Variables**: {num_cols} columns including biomechanical features
+- **Format**: Phase-indexed (150 points per gait cycle)
+- **File**: `converted_datasets/{doc_name}_phase.parquet`
+- **Units**: All angles in radians, moments normalized by body weight (Nm/kg)
+
+## Contact Information
+- **Dataset Curator**: [TODO: Add curator name and title]
+- **Lab Website**: [TODO: Add lab website URL]
+- **Lab Email**: [TODO: Add contact email]
+- **Technical Support**: [TODO: Add support contact]
+
+## Usage
+
+```python
+from user_libs.python.locomotion_data import LocomotionData
+
+# Load the dataset
+data = LocomotionData('converted_datasets/{doc_name}_phase.parquet')
+
+# Get data for analysis
+cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
+```
+
+---
+*Last Updated: {datetime.now().strftime("%B %Y")}*
+"""
+        
+        with open(doc_path, 'w') as f:
+            f.write(content)
+        
+        # Count TODOs
+        todo_count = content.count('[TODO:')
+        if todo_count > 0:
+            print(f"📝 Created documentation template with {todo_count} items to complete")
+            print(f"   Use your preferred editor or Claude Code to fill in the [TODO:] sections")
 
 

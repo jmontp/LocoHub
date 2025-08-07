@@ -123,5 +123,45 @@ data = LocomotionData('converted_datasets/gtech_2023_phase.parquet')
 cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 ```
 
+
+## Data Validation
+
+<div class="validation-summary" markdown>
+
+### 📊 Validation Status
+
+| Metric | Value | Status |
+|--------|-------|--------|
+| **Overall Status** | 94.5% Valid | ⚠️ PARTIAL |
+| **Phase Structure** | 150 points/cycle | ✅ Valid |
+| **Tasks Validated** | 5 tasks | ✅ Complete |
+| **Total Checks** | 32,928 | - |
+| **Violations** | 1,821 | ⚠️ Present |
+
+### 📈 Task-Specific Validation
+
+#### Decline Walking
+![Decline Walking](validation_plots/gtech_2023_phase_decline_walking_all_features_validation.png)
+*19 sagittal features validated*
+
+#### Incline Walking
+![Incline Walking](validation_plots/gtech_2023_phase_incline_walking_all_features_validation.png)
+*19 sagittal features validated*
+
+#### Level Walking
+![Level Walking](validation_plots/gtech_2023_phase_level_walking_all_features_validation.png)
+*19 sagittal features validated*
+
+#### Stair Ascent
+![Stair Ascent](validation_plots/gtech_2023_phase_stair_ascent_all_features_validation.png)
+*19 sagittal features validated*
+
+#### Stair Descent
+![Stair Descent](validation_plots/gtech_2023_phase_stair_descent_all_features_validation.png)
+*19 sagittal features validated*
+
+</div>
+
+**Last Validated**: 2025-08-07 11:21:17
 ---
 *Last Updated: January 2025*
