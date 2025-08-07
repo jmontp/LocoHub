@@ -31,7 +31,8 @@ This research was supported by:
 ## Dataset Contents
 
 ### Subjects
-- **Total Subjects**: 10 (AB01-AB10)
+- **Total Subjects**: 10 (UM21_AB01 - UM21_AB10)
+- **Subject ID Format**: `UM21_AB##` (Dataset: UMich 2021, Population: Able-bodied)
 - **Demographics**:
   - Age Range: 20-60 years
   - Sex Distribution: 5F/5M
@@ -40,6 +41,7 @@ This research was supported by:
   - Mean Age: 30.4 years
   - Mean Weight: 74.63 kg
   - Mean Height: 1727.8 mm
+- **Population**: All able-bodied (AB) healthy adults
 
 ### Tasks Included
 | Task ID | Task Description | Duration/Cycles | Conditions | Notes |

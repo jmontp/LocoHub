@@ -28,7 +28,8 @@ Every standardized dataset must have:
 ```python
 # Required columns
 required_columns = [
-    'subject_id',      # Unique subject identifier
+    'subject_id',      # Subject ID with dataset prefix (e.g., 'UM21_AB01')
+    'subject_metadata', # Optional demographics (e.g., 'age:25,sex:M')
     'task',            # Task name (e.g., 'level_walking', 'up_stairs')
     'phase_percent',   # 0-100 for phase data, or time in seconds
 ]
@@ -78,7 +79,14 @@ def convert_to_standard_format(input_path, output_path):
     # 1. Load your data
     data = load_your_data(input_path)
     
-    # 2. Map variable names
+    # 2. Add dataset prefix to subject IDs
+    # Replace 'UM21' with your dataset code
+    data['subject_id'] = 'UM21_' + data['subject_id'].astype(str)
+    
+    # 3. Add subject metadata if available (optional)
+    # Example: data['subject_metadata'] = 'age:25,sex:M,height_m:1.75'
+    
+    # 4. Map variable names
     variable_mapping = {
         # Your variable name: Standard name
         'knee_angle_left': 'knee_flexion_angle_ipsi_rad',
@@ -87,15 +95,15 @@ def convert_to_standard_format(input_path, output_path):
         # Add all your mappings
     }
     
-    # 3. Rename columns
+    # 5. Rename columns
     data = data.rename(columns=variable_mapping)
     
-    # 4. Convert units if needed
+    # 6. Convert units if needed
     if 'knee_flexion_angle_ipsi_rad' in data.columns:
         # If your data is in degrees, convert to radians
         data['knee_flexion_angle_ipsi_rad'] = np.deg2rad(data['knee_flexion_angle_ipsi_rad'])
     
-    # 5. Standardize task names
+    # 7. Standardize task names
     task_mapping = {
         'walking': 'level_walking',
         'stairs_up': 'up_stairs',
@@ -104,12 +112,12 @@ def convert_to_standard_format(input_path, output_path):
     }
     data['task'] = data['task'].map(task_mapping)
     
-    # 6. Ensure required columns exist
+    # 8. Ensure required columns exist
     assert 'subject_id' in data.columns
     assert 'task' in data.columns
     assert 'phase_percent' in data.columns or 'time' in data.columns
     
-    # 7. Save as parquet
+    # 9. Save as parquet
     data.to_parquet(output_path, index=False)
     print(f"Converted dataset saved to {output_path}")
     
@@ -244,7 +252,7 @@ python contributor_tools/create_dataset_validation_report.py \
 ### Pattern 1: Multiple Files to Single Dataset
 
 ```python
-def combine_multiple_files(file_pattern):
+def combine_multiple_files(file_pattern, dataset_code='UM21'):
     """
     Combine multiple subject files into single dataset.
     """
@@ -252,7 +260,22 @@ def combine_multiple_files(file_pattern):
     
     all_data = []
     for file_path in Path(".").glob(file_pattern):
-        subject_id = file_path.stem  # Extract subject ID from filename
+        # Extract subject ID from filename
+        raw_subject_id = file_path.stem  
+        
+        # Determine population code based on subject naming or metadata
+        # Example: if 'AB' in raw_subject_id -> able-bodied
+        if 'AB' in raw_subject_id:
+            population_code = 'AB'
+            subject_num = raw_subject_id.replace('AB', '')
+        else:
+            # Default to AB if not specified
+            population_code = 'AB'
+            subject_num = raw_subject_id
+            
+        # Create properly formatted subject ID
+        subject_id = f"{dataset_code}_{population_code}{subject_num.zfill(2)}"
+        
         data = pd.read_csv(file_path)
         data['subject_id'] = subject_id
         all_data.append(data)

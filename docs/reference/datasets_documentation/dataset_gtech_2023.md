@@ -36,7 +36,8 @@ This research was supported by:
 ## Dataset Contents
 
 ### Subjects
-- **Total Subjects**: 12 (AB01, AB02, AB03, AB05, AB06, AB07, AB08, AB09, AB10, AB11, AB12, AB13)
+- **Total Subjects**: 12 (GT23_AB01, GT23_AB02, GT23_AB03, GT23_AB05, GT23_AB06, GT23_AB07, GT23_AB08, GT23_AB09, GT23_AB10, GT23_AB11, GT23_AB12, GT23_AB13)
+- **Subject ID Format**: `GT23_AB##` (Dataset: Georgia Tech 2023, Population: Able-bodied)
 - **Demographics**:
   - Age Range: 18-35 years (healthy young adults)
   - Sex Distribution: Balanced male/female representation
@@ -44,7 +45,8 @@ This research was supported by:
   - Weight Range: 62.3-113.5 kg
   - Mean Weight: 76.95 kg
   - Inclusion Criteria: Healthy adults with no musculoskeletal or neurological impairments
-  - Note: Subject AB04 excluded from dataset
+  - Population: All able-bodied (AB) healthy adults
+  - Note: Subject GT23_AB04 excluded from dataset
 
 ### Tasks Included
 | Task ID | Task Description | Duration/Cycles | Conditions | Notes |
