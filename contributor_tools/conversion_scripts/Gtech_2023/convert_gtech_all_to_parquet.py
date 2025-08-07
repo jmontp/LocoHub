@@ -322,7 +322,11 @@ def convert_dataset_to_pandas():
 
         # Add the activity and subject columns
         df['task_info'] = activity
-        df['subject'] = 'Gtech_2023_' + subject
+        # Following naming convention: DATASET_POPULATION+NUMBER
+        # GT23 = Georgia Tech 2023, AB = Able-bodied
+        # Extract subject number (e.g., '01' from 'AB01')
+        subject_num = subject[2:] if subject.startswith('AB') else subject
+        df['subject'] = 'GT23_AB' + subject_num.zfill(2)
 
         # Add the activity short name
         for short_activity_name in short_activity_names:
@@ -345,7 +349,34 @@ def convert_dataset_to_pandas():
     #testing for float/string bugs
     #df_total[cols_to_flip_signs] = df_total[cols_to_flip_signs] * -1
 
-
+    # (4b) Convert joint angles and velocities from degrees to radians
+    # Joint angle columns that need conversion (not segment/link angles)
+    joint_angle_cols = [
+        'hip_flexion_angle_r_rad', 'hip_adduction_angle_r_rad', 'hip_rotation_angle_r_rad',
+        'knee_flexion_angle_r_rad', 'ankle_dorsiflexion_angle_r_rad', 'ankle_eversion_angle_r_rad',
+        'hip_flexion_angle_l_rad', 'hip_adduction_angle_l_rad', 'hip_rotation_angle_l_rad',
+        'knee_flexion_angle_l_rad', 'ankle_dorsiflexion_angle_l_rad', 'ankle_eversion_angle_l_rad'
+    ]
+    
+    # Joint velocity columns that need conversion (not segment/link velocities)
+    joint_velocity_cols = [
+        'hip_flexion_velocity_r_rad_s', 'hip_adduction_velocity_r_rad_s', 'hip_rotation_velocity_r_rad_s',
+        'knee_flexion_velocity_r_rad_s', 'ankle_dorsiflexion_velocity_r_rad_s', 'ankle_eversion_velocity_r_rad_s',
+        'hip_flexion_velocity_l_rad_s', 'hip_adduction_velocity_l_rad_s', 'hip_rotation_velocity_l_rad_s',
+        'knee_flexion_velocity_l_rad_s', 'ankle_dorsiflexion_velocity_l_rad_s', 'ankle_eversion_velocity_l_rad_s'
+    ]
+    
+    # Convert degrees to radians for joint angles
+    for col in joint_angle_cols:
+        if col in df_total.columns:
+            df_total[col] = df_total[col] * np.pi / 180.0
+            print(f"Converted {col} from degrees to radians")
+    
+    # Convert deg/s to rad/s for joint velocities
+    for col in joint_velocity_cols:
+        if col in df_total.columns:
+            df_total[col] = df_total[col] * np.pi / 180.0
+            print(f"Converted {col} from deg/s to rad/s")
     
     # (5) Save the dataframe
     print(df_total.columns)

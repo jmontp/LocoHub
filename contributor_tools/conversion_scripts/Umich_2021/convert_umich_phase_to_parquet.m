@@ -23,7 +23,10 @@ for subject_idx = 1:length(subjects)
     subject_data = dataset.(subject);
 
     % Create a string for the subject that will be used in the table
-    subject_str = strcat('Umich_2021_', subject);
+    % Following naming convention: DATASET_POPULATION+NUMBER
+    % UM21 = UMich 2021 dataset, AB = Able-bodied
+    subject_num = subject(end-1:end);  % Extract last 2 chars (e.g., '01' from 'AB01')
+    subject_str = strcat('UM21_AB', subject_num);
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -76,15 +79,24 @@ for subject_idx = 1:length(subjects)
             trial_table.subject = repmat({subject_str}, size(trial_table, 1), 1);
 
             % Add the task to the table following standard spec
+            % Map speed codes to actual speeds in m/s
+            speed_map = containers.Map(...
+                {'s0x8', 's1', 's1x2', 'a0x2', 'a0x5', 'd0x2', 'd0x5'}, ...
+                {0.8, 1.0, 1.2, 0.2, 0.5, 0.2, 0.5});
+            speed_value = speed_map(speed);
+            
             if incline_value < 0
                 trial_table.task = repmat({'decline_walking'}, size(trial_table, 1), 1);
-                trial_table.task_id = repmat({[subject_str '_decline_' speed]}, size(trial_table, 1), 1);
+                trial_table.task_id = repmat({sprintf('decline_%ddeg', abs(incline_value))}, size(trial_table, 1), 1);
+                trial_table.task_info = repmat({sprintf('incline_deg:%d,speed_m_s:%.1f,treadmill:true', incline_value, speed_value)}, size(trial_table, 1), 1);
             elseif incline_value > 0
                 trial_table.task = repmat({'incline_walking'}, size(trial_table, 1), 1);
-                trial_table.task_id = repmat({[subject_str '_incline_' speed]}, size(trial_table, 1), 1);
+                trial_table.task_id = repmat({sprintf('incline_%ddeg', incline_value)}, size(trial_table, 1), 1);
+                trial_table.task_info = repmat({sprintf('incline_deg:%d,speed_m_s:%.1f,treadmill:true', incline_value, speed_value)}, size(trial_table, 1), 1);
             else
                 trial_table.task = repmat({'level_walking'}, size(trial_table, 1), 1);
-                trial_table.task_id = repmat({[subject_str '_level_' speed]}, size(trial_table, 1), 1);
+                trial_table.task_id = repmat({'level'}, size(trial_table, 1), 1);
+                trial_table.task_info = repmat({sprintf('incline_deg:0,speed_m_s:%.1f,treadmill:true', speed_value)}, size(trial_table, 1), 1);
             end
 
             % Add the data to the total table
@@ -121,8 +133,15 @@ for subject_idx = 1:length(subjects)
         trial_table.subject = repmat({subject_str}, size(trial_table, 1), 1);
 
         % Add the task to the table following standard spec
+        % Map run speed codes to actual speeds in m/s
+        run_speed_map = containers.Map(...
+            {'s2', 's2x5', 's3', 's3x5', 's4'}, ...
+            {2.0, 2.5, 3.0, 3.5, 4.0});
+        run_speed_value = run_speed_map(run_speed_name{speed_idx});
+        
         trial_table.task = repmat({'run'}, size(trial_table, 1), 1);
-        trial_table.task_id = repmat({[subject_str '_run_' run_speed_name{speed_idx}]}, size(trial_table, 1), 1);
+        trial_table.task_id = repmat({'run'}, size(trial_table, 1), 1);
+        trial_table.task_info = repmat({sprintf('speed_m_s:%.1f,treadmill:true', run_speed_value)}, size(trial_table, 1), 1);
 
         % Add the data to the total table
         total_data = [total_data; trial_table];

@@ -1,5 +1,10 @@
 % This file is meant to convert raw Gtech 2023 data based on heel strikes
 % from _parsing.mat files into a standardized phase-aligned parquet file.
+%
+% IMPORTANT: Before running this script, you must generate Link_Angle.csv files:
+%   1. Navigate to utilities/ folder
+%   2. Run convert_gtech_rotm_to_eul_csv.m to generate Link_Angle.csv and Link_Velocities.csv
+%   3. These files contain segment angles in DEGREES (not radians)
 
 % --- Step 1: Initialization & Setup ---
 clear all;
@@ -24,15 +29,16 @@ one_step_activity_count = 0; % Initialize counter for single-step activities
 
 % Expected raw file types and their time column name
 % Used for iterating through required raw files
+% NOTE: Link_Angle files must be generated first using utilities/convert_gtech_rotm_to_eul_csv.m
 raw_file_info = struct(...
     'Joint_Angle', 'time', ...
     'Joint_Velocities', 'time', ...
     'Joint_Moments', 'time', ...
-    'Link_Angle', 'time', ...
+    'Link_Angle', 'time', ...  % Segment angles from convert_gtech_rotm_to_eul_csv.m
     'Link_Velocities', 'time', ...
-    'GroundFrame_GRFs', 'time', ...
-    'Transforms_Euler', 'Header' ... % Special case for global angles file
+    'GroundFrame_GRFs', 'time' ...
 );
+% Note: Not using Transforms_Euler folder - contains radians, not degrees
 raw_filenames = fieldnames(raw_file_info);
 
 % --- Start Main Processing ---
@@ -56,7 +62,15 @@ end
 for subject_idx = 1:length(subjects)
 % for subject_idx = 1:2
     subject = subjects(subject_idx).name;
-    subject_save_name = strcat("Gtech_2023_", subject);
+    % Following naming convention: DATASET_POPULATION+NUMBER
+    % GT23 = Georgia Tech 2023, AB = Able-bodied
+    % Extract subject number (e.g., '01' from 'AB01')
+    if startsWith(subject, 'AB')
+        subject_num = subject(3:end);
+    else
+        subject_num = subject;
+    end
+    subject_save_name = strcat("GT23_AB", sprintf('%02s', subject_num));
     subject_segmentation_dir = fullfile(segmentation_dir, subject);
     subject_raw_data_dir = fullfile(data_dir_root, 'RawData', subject);
 
@@ -239,7 +253,8 @@ for subject_idx = 1:length(subjects)
                              warning('Time column "%s" not found in %s. Skipping file.', time_col, file_path);
                          end
                          raw_data.(fname) = []; % Mark as missing
-                         if ~ismember(fname, {'Transforms_Euler', 'Link_Angle', 'Link_Velocities'}) % Mark if essential is missing
+                         % Link_Angle and Link_Velocities are not marked as essential because we check them separately
+                         if ~ismember(fname, {'Link_Angle', 'Link_Velocities'})
                             essential_raw_missing = true;
                         end
                     else
@@ -257,7 +272,7 @@ for subject_idx = 1:length(subjects)
                         warning('Raw data file not found: %s. Will use NaNs.', file_path);
                     end
                     raw_data.(fname) = []; % Mark as missing
-                    if ~ismember(fname, {'Transforms_Euler', 'Link_Angle', 'Link_Velocities'}) % Mark if essential is missing
+                    if ~ismember(fname, {'Link_Angle', 'Link_Velocities'})
                         essential_raw_missing = true;
                     end
                 end
@@ -266,7 +281,7 @@ for subject_idx = 1:length(subjects)
                     warning(ME.identifier, 'Error loading raw data file %s: %s. Will use NaNs.', file_path, ME.message);
                 end
                 raw_data.(fname) = [];
-                 if ~ismember(fname, {'Transforms_Euler', 'Link_Angle', 'Link_Velocities'})
+                 if ~ismember(fname, {'Link_Angle', 'Link_Velocities'})
                     essential_raw_missing = true;
                             end
                         end
@@ -598,26 +613,10 @@ for subject_idx = 1:length(subjects)
             
             % --- Foot angle already interpolated, no velocity calculation needed ---
             
-            % --- Interpolate Global Angles ---
-             if isfield(raw_data, 'Transforms_Euler') && ~isempty(raw_data.Transforms_Euler)
-                raw_global_table = raw_data.Transforms_Euler;
-                raw_global_time = raw_time_vectors.Transforms_Euler;
-                idx_global = (raw_global_time >= step_start & raw_global_time <= step_end);
-                raw_global_time_slice = raw_global_time(idx_global);
-                global_cols = raw_global_table.Properties.VariableNames;
-
-                for c = 1:length(global_cols)
-                    col_name = global_cols{c};
-                    if ~strcmp(col_name, raw_file_info.Transforms_Euler) % Skip time column
-                         raw_vals = raw_global_table.(col_name)(idx_global);
-                         step_data_single.(col_name) = interpolate_signal(raw_global_time_slice, raw_vals, time_interp, interp_method);
-                                    end
-                                end
-             else
-                 % Add NaNs for expected global columns if file was missing
-                 expected_global_cols = {'foot_l_X', 'foot_l_Y', 'foot_l_Z', 'foot_r_X', 'foot_r_Y', 'foot_r_Z'}; % Example
-                 for c = 1:length(expected_global_cols); step_data_single.(expected_global_cols{c}) = nan(num_points_per_step, 1); end
-             end
+            % --- Not using Transforms_Euler - segment angles come from Link_Angle.csv ---
+            % Transforms_Euler folder contains angles in radians, while Link_Angle.csv
+            % (generated by convert_gtech_rotm_to_eul_csv.m) contains angles in degrees
+            % which matches what the rest of the script expects
 
             % --- Interpolate GRF & Transform COP ---
             grf_cols_base = {'ForceX', 'ForceY_Vertical', 'ForceZ', 'COPX', 'COPY_Vertical', 'COPZ'};
