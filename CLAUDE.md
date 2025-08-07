@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for working with the locomotion data standardization project.
+Guidance for working with the LocoHub project.
 
 ## Project Vision
 

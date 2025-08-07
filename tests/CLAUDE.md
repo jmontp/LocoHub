@@ -1,6 +1,6 @@
 # CLAUDE.md - Tests Directory
 
-Testing and validation framework for the locomotion data standardization project.
+Testing and validation framework for the LocoHub project.
 
 **File Creation Requirement**: Ask user permission before creating ANY new test file.
 

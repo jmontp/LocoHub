@@ -1,4 +1,4 @@
-# Locomotion Data Standard - Technical Specification
+# LocoHub Standard - Technical Specification
 
 Core technical specification for parquet file structure and data organization.
 

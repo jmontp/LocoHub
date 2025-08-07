@@ -1,6 +1,6 @@
 # Biomechanical Data Standard
 
-**Complete Technical Reference for Locomotion Data Standardization**
+**Complete Technical Reference for LocoHub**
 
 ---
 

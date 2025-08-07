@@ -1,4 +1,4 @@
-# Locomotion Data Quick Reference
+# LocoHub Quick Reference
 
 **Print-friendly cheat sheet for daily use**
 

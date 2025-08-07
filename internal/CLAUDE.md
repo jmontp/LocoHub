@@ -2,7 +2,7 @@
 
 ## Overview
 
-Internal implementation modules for the locomotion data standardization framework. These modules handle validation, visualization, and configuration management behind the scenes.
+Internal implementation modules for the LocoHub framework. These modules handle validation, visualization, and configuration management behind the scenes.
 
 ## Purpose
 

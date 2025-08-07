@@ -1,4 +1,4 @@
-# Locomotion Data Standardization
+# LocoHub
 
 Easy-to-use, cleaned up and tested biomechanical datasets that enable reproducible results across studies.
 

@@ -7,7 +7,7 @@ hide:
 
 <div class="hero-section" markdown>
 
-# :material-run: Locomotion Data Standardization
+# :material-run: LocoHub
 
 ## Transform biomechanical datasets into unified, quality-assured formats that accelerate reproducible research
 
