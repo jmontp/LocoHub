@@ -31,6 +31,12 @@ theme:
     - search.highlight
     - content.code.copy
 
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/extra.js
+
 plugins:
   - search
   - mermaid2
@@ -42,7 +48,12 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid_custom
-  - pymdownx.tabbed
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
   - admonition
   - pymdownx.details
   - pymdownx.snippets
@@ -60,13 +71,25 @@ nav:
   
   # For Users - Researchers analyzing data
   - For Users:
-    - Overview: user_guide/docs/index.md
-    - Getting Started: user_guide/docs/getting_started/index.md
-    - Examples: user_guide/docs/examples/index.md
+    - Overview: users/index.md
     - Tutorials:
-      - Python: user_guide/docs/tutorials/python/getting_started_python.md
-      - MATLAB: user_guide/docs/tutorials/matlab/getting_started_matlab.md
-      - R Templates: users/tutorials/r/index.md
+      - Python:
+        - Overview: users/tutorials/python/index.md
+        - 1. Loading Data: users/tutorials/python/01_loading_data.md
+        - 2. Data Filtering: users/tutorials/python/02_data_filtering.md
+        - 3. Visualization: users/tutorials/python/03_visualization.md
+      - MATLAB:
+        - Using Libraries: users/tutorials/matlab/biomechanics_visualization_guide.md
+        - Using Raw Data: users/tutorials/matlab/raw_data_guide.md
+      - R:
+        - Using Libraries: users/tutorials/r/index.md
+        - Using Raw Data: users/tutorials/r/raw_data_guide.md
+    - API Reference:
+      - Overview: users/api/api-index.md
+      - Python API: users/api/locomotion-data-api.md
+      - MATLAB API: users/api/matlab-api.md
+      - R API: users/api/r-api.md
+      - Validation API: users/api/validation-api.md
   
   # For Contributors - Adding new datasets
   - For Contributors:

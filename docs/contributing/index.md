@@ -2,6 +2,52 @@
 
 Convert your biomechanical data to the standardized format and contribute to the research community.
 
+## The Standardization Challenge
+
+Every biomechanics lab collects data differently - different marker sets, joint conventions, coordinate systems, and file formats. This fragmentation prevents:
+
+- **Meta-analyses** across multiple studies and populations
+- **Validation** of findings across different labs and cohorts  
+- **Machine learning** models that generalize beyond single datasets
+- **Clinical translation** of research findings into practice
+
+Your contribution helps solve this fundamental challenge in biomechanics research.
+
+## Join the Validated Data Ecosystem
+
+When you standardize your dataset, you're not just converting files - you're:
+
+- **Joining a growing collection** of validated biomechanical data that researchers worldwide can access
+- **Enabling reproducibility** - other researchers can directly reproduce and extend your findings
+- **Contributing to population norms** - your data helps establish reference ranges across diverse populations
+- **Building clinical evidence** - standardized multi-study data accelerates translation to clinical practice
+- **Future-proofing your research** - your data remains valuable and usable as analysis methods evolve
+
+## Overview of the Process
+
+The conversion workflow below guides you through transforming your raw biomechanical data into the standardized format. Most contributors spend their time on variable mapping (Step 2) and iterative validation (Step 3). The process is designed to preserve your data's scientific value while ensuring compatibility with the ecosystem's analysis tools. Each step provides clear feedback to help you succeed.
+
+## What Makes a Good Dataset Contribution
+
+**Quality Criteria**:
+- Clear gait cycles or movement phases that can be identified
+- Consistent data collection across subjects and trials
+- Documented collection protocols and equipment specifications
+- Sufficient sample size for meaningful analysis
+
+**Documentation Requirements**:
+- Data source and collection context (study purpose, year, institution)
+- Subject demographics and inclusion/exclusion criteria  
+- Equipment and software used for collection and processing
+- Any preprocessing or filtering already applied
+- Known limitations or special considerations
+
+**Validation Philosophy**:
+- Validation identifies potential issues, not pass/fail judgments
+- Custom ranges can be created for special populations (elderly, pathological gait, prosthetics)
+- The goal is biomechanical consistency, not forcing all data into narrow ranges
+- Outliers may represent real variation, not errors
+
 ## Dataset Conversion Workflow
 
 Follow this flowchart to convert and validate your dataset:
@@ -54,16 +100,16 @@ flowchart TD
          --dataset your_dataset_phase.parquet
     "/]
     
-    ValidateCmd --> CheckValid{Validation<br/>Pass Rate ≥90%?}
+    ValidateCmd --> CheckValid{Validation<br/>Issues to Address?}
     
-    CheckValid -->|Yes| Success([✓ Success!<br/>Dataset Ready])
+    CheckValid -->|No Issues| Success([✓ Success!<br/>Dataset Ready])
     Success --> SuccessSteps[/"
     • Add to converted_datasets/
     • Update documentation
     • Share with community
     "/]
     
-    CheckValid -->|No| Review[Review Validation Report]
+    CheckValid -->|Has Issues| Review[Review Validation Report]
     Review --> FixIssues[/"
     • Check error messages
     • Fix variable mapping
@@ -132,8 +178,10 @@ python conversion_generate_phase_dataset.py converted_datasets/your_dataset_time
 python contributor_tools/create_dataset_validation_report.py \
     --dataset converted_datasets/your_dataset_phase.parquet
 
-# Check the generated report
-# Look for pass rate ≥90%
+# Check the generated report for:
+# - Biomechanical consistency across variables
+# - Identification of potential outliers
+# - Suggestions for improvement
 ```
 
 ## Common Issues and Solutions
