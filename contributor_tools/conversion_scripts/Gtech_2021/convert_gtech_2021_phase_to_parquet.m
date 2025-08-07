@@ -18,11 +18,11 @@
 %    - Applied uniformly to all stair ascent strides
 %
 % 4. Segment angles: Calculated from kinematic chain
-%    - pelvis_angle = pelvis_tilt (from data)
-%    - trunk_angle = pelvis_angle + lumbar_extension  
-%    - thigh_angle = pelvis_angle - hip_flexion
-%    - shank_angle = thigh_angle - knee_flexion
-%    - foot_angle = shank_angle - ankle_dorsiflexion
+%    - pelvis_tilt_angle = pelvis_tilt (from data)
+%    - trunk_flexion_angle = pelvis_tilt_angle + lumbar_extension  
+%    - thigh_flexion_angle = pelvis_tilt_angle - hip_flexion
+%    - shank_flexion_angle = thigh_flexion_angle - knee_flexion
+%    - foot_flexion_angle = shank_flexion_angle - ankle_dorsiflexion
 
 clear all;
 close all;
@@ -34,7 +34,17 @@ addpath('utilities');
 NUM_POINTS = 150;  % Points per gait cycle
 DATA_ROOT = 'CAMARGO_ET_AL_J_BIOMECH_DATASET';
 OUTPUT_DIR = fullfile('..', '..', '..', 'converted_datasets');
-OUTPUT_FILE = 'gtech_2021_phase.parquet';
+
+% TEST MODE Configuration
+TEST_MODE = true;  % Set to true for testing with limited subjects
+TEST_SUBJECTS = {'AB06'};  % Subjects to use in test mode
+
+% Set output filename based on mode
+if TEST_MODE
+    OUTPUT_FILE = 'gtech_2021_phase_test.parquet';
+else
+    OUTPUT_FILE = 'gtech_2021_phase.parquet';
+end
 
 % Create output directory if needed
 if ~exist(OUTPUT_DIR, 'dir')
@@ -47,16 +57,26 @@ subjectInfo = load(fullfile(DATA_ROOT, 'SubjectInfo.mat'));
 subjectInfo = subjectInfo.data;
 
 %% Define subjects to process
-% Exclude problematic subjects based on prior knowledge
-subjects_to_process = {};
-for i = 6:30
-    if i == 22 || i == 26 || i == 27 || i == 29 || i == 100
-        continue;  % Skip problematic subjects
+% TEST_MODE and TEST_SUBJECTS are defined in Configuration section above
+
+if TEST_MODE
+    % Use test subjects only
+    subjects_to_process = TEST_SUBJECTS;
+    fprintf('TEST MODE: Processing only specified subjects\n');
+else
+    % Process all valid subjects
+    % Exclude problematic subjects based on prior knowledge
+    subjects_to_process = {};
+    for i = 6:30
+        if i == 22 || i == 26 || i == 27 || i == 29 || i == 100
+            continue;  % Skip problematic subjects
+        end
+        subjects_to_process{end+1} = sprintf('AB%02d', i);
     end
-    subjects_to_process{end+1} = sprintf('AB%02d', i);
+    fprintf('FULL MODE: Processing all valid subjects\n');
 end
 
-fprintf('Will process %d subjects\n', length(subjects_to_process));
+fprintf('Will process %d subjects: %s\n', length(subjects_to_process), strjoin(subjects_to_process, ', '));
 
 %% Initialize output table
 output_table = table();
@@ -660,33 +680,33 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         end
         
         % Calculate segment angles from kinematic chain
-        % Pelvis angle (from pelvis tilt)
+        % Pelvis tilt angle (from pelvis tilt)
         if any(strcmp(trial_data.ik.Properties.VariableNames, 'pelvis_tilt'))
             angle_data = trial_data.ik.pelvis_tilt(ik_mask);
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
-            stride_data.pelvis_angle_ipsi_rad = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            stride_data.pelvis_tilt_angle_ipsi_rad = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
         else
-            stride_data.pelvis_angle_ipsi_rad = zeros(NUM_POINTS, 1);
+            stride_data.pelvis_tilt_angle_ipsi_rad = zeros(NUM_POINTS, 1);
         end
         
-        % Trunk angle (pelvis + lumbar extension)
+        % Trunk flexion angle (pelvis + lumbar extension)
         if any(strcmp(trial_data.ik.Properties.VariableNames, 'lumbar_extension'))
             lumbar_data = trial_data.ik.lumbar_extension(ik_mask);
             lumbar_at_stride_time = interp1(ik_time, lumbar_data, valid_stride_time, 'linear', 'extrap');
             lumbar_interp = interp1(valid_stride_pct, lumbar_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
-            stride_data.trunk_angle_ipsi_rad = stride_data.pelvis_angle_ipsi_rad + lumbar_interp;
+            stride_data.trunk_flexion_angle_ipsi_rad = stride_data.pelvis_tilt_angle_ipsi_rad + lumbar_interp;
         else
-            stride_data.trunk_angle_ipsi_rad = stride_data.pelvis_angle_ipsi_rad;  % Same as pelvis if no lumbar
+            stride_data.trunk_flexion_angle_ipsi_rad = stride_data.pelvis_tilt_angle_ipsi_rad;  % Same as pelvis if no lumbar
         end
         
-        % Thigh angle (pelvis - hip flexion)
-        stride_data.thigh_angle_ipsi_rad = stride_data.pelvis_angle_ipsi_rad - stride_data.hip_flexion_angle_ipsi_rad;
+        % Thigh flexion angle (pelvis - hip flexion)
+        stride_data.thigh_flexion_angle_ipsi_rad = stride_data.pelvis_tilt_angle_ipsi_rad - stride_data.hip_flexion_angle_ipsi_rad;
         
-        % Shank angle (thigh - knee flexion)
-        stride_data.shank_angle_ipsi_rad = stride_data.thigh_angle_ipsi_rad - stride_data.knee_flexion_angle_ipsi_rad;
+        % Shank flexion angle (thigh - knee flexion)
+        stride_data.shank_flexion_angle_ipsi_rad = stride_data.thigh_flexion_angle_ipsi_rad - stride_data.knee_flexion_angle_ipsi_rad;
         
-        % Foot angle (shank - ankle dorsiflexion)
-        stride_data.foot_angle_ipsi_rad = stride_data.shank_angle_ipsi_rad - stride_data.ankle_dorsiflexion_angle_ipsi_rad;
+        % Foot flexion angle (shank - ankle dorsiflexion)
+        stride_data.foot_flexion_angle_ipsi_rad = stride_data.shank_flexion_angle_ipsi_rad - stride_data.ankle_dorsiflexion_angle_ipsi_rad;
         
         % Process kinetics (moments, normalize by body mass)
         id_time = trial_data.id.Header(id_mask);
@@ -741,11 +761,11 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         row.knee_flexion_moment_ipsi_Nm = {stride_data.knee_flexion_moment_ipsi_Nm};
         row.hip_flexion_moment_ipsi_Nm = {stride_data.hip_flexion_moment_ipsi_Nm};
         % Add segment angles
-        row.pelvis_angle_ipsi_rad = {stride_data.pelvis_angle_ipsi_rad};
-        row.trunk_angle_ipsi_rad = {stride_data.trunk_angle_ipsi_rad};
-        row.thigh_angle_ipsi_rad = {stride_data.thigh_angle_ipsi_rad};
-        row.shank_angle_ipsi_rad = {stride_data.shank_angle_ipsi_rad};
-        row.foot_angle_ipsi_rad = {stride_data.foot_angle_ipsi_rad};
+        row.pelvis_tilt_angle_ipsi_rad = {stride_data.pelvis_tilt_angle_ipsi_rad};
+        row.trunk_flexion_angle_ipsi_rad = {stride_data.trunk_flexion_angle_ipsi_rad};
+        row.thigh_flexion_angle_ipsi_rad = {stride_data.thigh_flexion_angle_ipsi_rad};
+        row.shank_flexion_angle_ipsi_rad = {stride_data.shank_flexion_angle_ipsi_rad};
+        row.foot_flexion_angle_ipsi_rad = {stride_data.foot_flexion_angle_ipsi_rad};
         
         % Append this single row
         if isempty(rows)
@@ -809,11 +829,11 @@ function expanded = expand_table_for_parquet(compact_table)
     knee_flexion_moment_ipsi_Nm = zeros(total_rows, 1);
     hip_flexion_moment_ipsi_Nm = zeros(total_rows, 1);
     % Segment angles
-    pelvis_angle_ipsi_rad = zeros(total_rows, 1);
-    trunk_angle_ipsi_rad = zeros(total_rows, 1);
-    thigh_angle_ipsi_rad = zeros(total_rows, 1);
-    shank_angle_ipsi_rad = zeros(total_rows, 1);
-    foot_angle_ipsi_rad = zeros(total_rows, 1);
+    pelvis_tilt_angle_ipsi_rad = zeros(total_rows, 1);
+    trunk_flexion_angle_ipsi_rad = zeros(total_rows, 1);
+    thigh_flexion_angle_ipsi_rad = zeros(total_rows, 1);
+    shank_flexion_angle_ipsi_rad = zeros(total_rows, 1);
+    foot_flexion_angle_ipsi_rad = zeros(total_rows, 1);
     
     % Process each stride
     row_idx = 1;
@@ -842,11 +862,11 @@ function expanded = expand_table_for_parquet(compact_table)
             knee_flexion_moment_ipsi_Nm(row_idx) = stride.knee_flexion_moment_ipsi_Nm{1}(p);
             hip_flexion_moment_ipsi_Nm(row_idx) = stride.hip_flexion_moment_ipsi_Nm{1}(p);
             % Extract segment angles
-            pelvis_angle_ipsi_rad(row_idx) = stride.pelvis_angle_ipsi_rad{1}(p);
-            trunk_angle_ipsi_rad(row_idx) = stride.trunk_angle_ipsi_rad{1}(p);
-            thigh_angle_ipsi_rad(row_idx) = stride.thigh_angle_ipsi_rad{1}(p);
-            shank_angle_ipsi_rad(row_idx) = stride.shank_angle_ipsi_rad{1}(p);
-            foot_angle_ipsi_rad(row_idx) = stride.foot_angle_ipsi_rad{1}(p);
+            pelvis_tilt_angle_ipsi_rad(row_idx) = stride.pelvis_tilt_angle_ipsi_rad{1}(p);
+            trunk_flexion_angle_ipsi_rad(row_idx) = stride.trunk_flexion_angle_ipsi_rad{1}(p);
+            thigh_flexion_angle_ipsi_rad(row_idx) = stride.thigh_flexion_angle_ipsi_rad{1}(p);
+            shank_flexion_angle_ipsi_rad(row_idx) = stride.shank_flexion_angle_ipsi_rad{1}(p);
+            foot_flexion_angle_ipsi_rad(row_idx) = stride.foot_flexion_angle_ipsi_rad{1}(p);
             
             row_idx = row_idx + 1;
         end
@@ -858,6 +878,6 @@ function expanded = expand_table_for_parquet(compact_table)
         ankle_dorsiflexion_angle_ipsi_rad, knee_flexion_angle_ipsi_rad, ...
         hip_flexion_angle_ipsi_rad, ankle_dorsiflexion_moment_ipsi_Nm, ...
         knee_flexion_moment_ipsi_Nm, hip_flexion_moment_ipsi_Nm, ...
-        pelvis_angle_ipsi_rad, trunk_angle_ipsi_rad, thigh_angle_ipsi_rad, ...
-        shank_angle_ipsi_rad, foot_angle_ipsi_rad);
+        pelvis_tilt_angle_ipsi_rad, trunk_flexion_angle_ipsi_rad, thigh_flexion_angle_ipsi_rad, ...
+        shank_flexion_angle_ipsi_rad, foot_flexion_angle_ipsi_rad);
 end
