@@ -19,7 +19,6 @@ import os
 from pathlib import Path
 from typing import List, Optional, Dict
 import argparse
-import yaml
 from datetime import datetime
 import sys
 
@@ -67,11 +66,6 @@ class UnifiedValidationGenerator:
         print(f"   📁 Config file: {self.config_path.name}")
         print(f"   📁 Output dir: {self.docs_dir}")
         print(f"   📁 Plots dir: {self.plots_dir}")
-    
-    def load_config(self) -> Dict:
-        """Load validation config from YAML."""
-        with open(self.config_path, 'r') as f:
-            return yaml.safe_load(f)
     
     def load_validation_data(self) -> dict:
         """Load validation expectations from YAML config."""
@@ -197,10 +191,9 @@ class UnifiedValidationGenerator:
         print("\n📊 Generating Filters by Phase Validation Plots...")
         
         validation_data = self.load_validation_data()
-        config = self.load_config()
         
-        # Get metadata
-        metadata = {k: v for k, v in config.items() if k != 'tasks'}
+        # Get metadata from config manager
+        metadata = self.config_manager.get_metadata()
         dataset_name = metadata.get('source_dataset', 'Unknown')
         
         # Use current timestamp for all plots
@@ -246,11 +239,9 @@ class UnifiedValidationGenerator:
     
     def generate_validation_ranges_md(self):
         """Generate clean validation_ranges.md with only plots."""
-        config = self.load_config()
-        
-        # Extract metadata
-        metadata = {k: v for k, v in config.items() if k != 'tasks'}
-        tasks = config.get('tasks', {})
+        # Get metadata from config manager
+        metadata = self.config_manager.get_metadata()
+        tasks = self.config_manager.get_tasks()
         
         lines = []
         lines.append("# Validation Ranges")
@@ -522,8 +513,7 @@ class UnifiedValidationGenerator:
         self.generate_dataset_overview()
         
         # Generate individual dataset pages
-        config = self.load_config()
-        tasks = list(config.get('tasks', {}).keys())
+        tasks = self.config_manager.get_tasks()
         
         self.generate_dataset_page("UMich 2021", tasks)
         self.generate_dataset_page("GTech 2023", [])

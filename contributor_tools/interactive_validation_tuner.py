@@ -523,7 +523,9 @@ class InteractiveValidationTuner:
     
     def __init__(self):
         """Initialize the interactive validation tuner."""
-        self.validation_data = {}
+        self.validation_data = {}  # For GUI display (ipsi only)
+        self.full_validation_data = {}  # For validation (ipsi + contra)
+        self.config_manager = None  # Will be initialized when loading ranges
         self.dataset_path = None
         self.locomotion_data = None
         self.current_task = None
@@ -679,19 +681,24 @@ class InteractiveValidationTuner:
         default_ranges_path = project_root / "contributor_tools" / "validation_ranges" / "default_ranges.yaml"
         if default_ranges_path.exists():
             try:
-                # Load YAML directly
-                with open(default_ranges_path, 'r') as f:
-                    config = yaml.safe_load(f)
+                # Use ValidationConfigManager for consistency
+                self.config_manager = ValidationConfigManager(default_ranges_path)
                 
                 # Extract validation data
-                self.validation_data = {}
-                if 'tasks' in config:
-                    for task_name, task_data in config['tasks'].items():
-                        self.validation_data[task_name] = {}
-                        if 'phases' in task_data:
-                            for phase_str, variables in task_data['phases'].items():
-                                phase = int(phase_str)
-                                self.validation_data[task_name][phase] = variables
+                self.validation_data = {}  # For display (ipsi only)
+                self.full_validation_data = {}  # For validation (ipsi + contra)
+                
+                for task_name in self.config_manager.get_tasks():
+                    # Get full data with generated contra features
+                    full_task_data = self.config_manager.get_task_data(task_name)
+                    self.full_validation_data[task_name] = full_task_data
+                    
+                    # Filter to ipsi-only for GUI display
+                    self.validation_data[task_name] = {}
+                    for phase, variables in full_task_data.items():
+                        ipsi_vars = {k: v for k, v in variables.items() if '_contra' not in k}
+                        if ipsi_vars:  # Only add phase if it has ipsi variables
+                            self.validation_data[task_name][phase] = ipsi_vars
                 
                 # Update task dropdown
                 tasks = list(self.validation_data.keys())
@@ -927,27 +934,24 @@ class InteractiveValidationTuner:
             return
         
         try:
-            # Load YAML with support for numpy types
-            with open(file_path, 'r') as f:
-                # Try safe_load first
-                try:
-                    config = yaml.safe_load(f)
-                except yaml.YAMLError:
-                    # If safe_load fails, try with unsafe load but convert numpy to Python types
-                    f.seek(0)  # Reset file pointer
-                    config = yaml.unsafe_load(f)
-                    # Convert any numpy types to Python types
-                    config = self._convert_numpy_to_python(config)
+            # Use ValidationConfigManager for consistency
+            self.config_manager = ValidationConfigManager(Path(file_path))
             
             # Extract validation data
-            self.validation_data = {}
-            if 'tasks' in config:
-                for task_name, task_data in config['tasks'].items():
-                    self.validation_data[task_name] = {}
-                    if 'phases' in task_data:
-                        for phase_str, variables in task_data['phases'].items():
-                            phase = int(phase_str)
-                            self.validation_data[task_name][phase] = variables
+            self.validation_data = {}  # For display (ipsi only)
+            self.full_validation_data = {}  # For validation (ipsi + contra)
+            
+            for task_name in self.config_manager.get_tasks():
+                # Get full data with generated contra features
+                full_task_data = self.config_manager.get_task_data(task_name)
+                self.full_validation_data[task_name] = full_task_data
+                
+                # Filter to ipsi-only for GUI display
+                self.validation_data[task_name] = {}
+                for phase, variables in full_task_data.items():
+                    ipsi_vars = {k: v for k, v in variables.items() if '_contra' not in k}
+                    if ipsi_vars:  # Only add phase if it has ipsi variables
+                        self.validation_data[task_name][phase] = ipsi_vars
             
             # Update task dropdown
             tasks = list(self.validation_data.keys())
@@ -1414,9 +1418,13 @@ class InteractiveValidationTuner:
         if not self.locomotion_data or not self.current_task:
             return failing_strides
         
-        task_data = self.validation_data.get(self.current_task, {})
+        # Use full validation data (with contra) for validation
+        task_data = self.full_validation_data.get(self.current_task, {})
         if not task_data:
-            return failing_strides
+            # Fallback to display data if full data not available (shouldn't happen)
+            task_data = self.validation_data.get(self.current_task, {})
+            if not task_data:
+                return failing_strides
         
         # Get all data for this task
         try:
@@ -1847,6 +1855,15 @@ class InteractiveValidationTuner:
                 'max': max_val
             }
             
+            # Also update full validation data (for validation consistency)
+            if self.current_task in self.full_validation_data:
+                if box.phase not in self.full_validation_data[self.current_task]:
+                    self.full_validation_data[self.current_task][box.phase] = {}
+                self.full_validation_data[self.current_task][box.phase][box.var_name] = {
+                    'min': min_val,
+                    'max': max_val
+                }
+            
             # Synchronize paired box if it exists
             if hasattr(box, 'paired_box') and box.paired_box:
                 box.paired_box.phase = box.phase
@@ -1901,6 +1918,22 @@ class InteractiveValidationTuner:
             if combined_ranges:
                 # Update our validation data with combined ranges
                 self.validation_data[self.current_task] = combined_ranges
+                
+                # Also update full validation data for consistency
+                # ConfigManager will generate contralateral features when we reload
+                if self.config_manager:
+                    # Update the config manager with new data
+                    for phase, variables in combined_ranges.items():
+                        for var_name, var_range in variables.items():
+                            self.config_manager.set_range(
+                                self.current_task, phase, var_name,
+                                var_range['min'], var_range['max']
+                            )
+                    # Regenerate full data with contra features
+                    self.full_validation_data[self.current_task] = self.config_manager.get_task_data(self.current_task)
+                else:
+                    # If no config manager, just copy the ipsi data
+                    self.full_validation_data[self.current_task] = combined_ranges
                 
                 # Update the plot
                 self.update_plot()
