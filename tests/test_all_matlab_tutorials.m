@@ -6,6 +6,9 @@ function test_all_matlab_tutorials()
     %
     % This will run all MATLAB tutorial test files and report results
     
+    % Add MATLAB library to path
+    addpath(fullfile('..', 'user_libs', 'matlab'));
+    
     fprintf('\n');
     fprintf('======================================================================\n');
     fprintf('MATLAB TUTORIAL TEST REPORT\n');
@@ -16,6 +19,8 @@ function test_all_matlab_tutorials()
     testFiles = {
         'test_matlab_tutorial_01_loading_data'
         'test_matlab_tutorial_02_data_filtering'
+        'test_matlab_tutorial_03_visualization'
+        'test_matlab_tutorial_04_cycle_analysis'
     };
     
     totalTests = length(testFiles);

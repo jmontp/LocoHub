@@ -639,7 +639,7 @@ classdef LocomotionData < handle
             end
         end
         
-        function plotPhasePatterns(obj, subject, task, features, varargin)
+        function fig = plotPhasePatterns(obj, subject, task, features, varargin)
             % Plot phase-normalized patterns
             %
             % Inputs:
@@ -653,6 +653,7 @@ classdef LocomotionData < handle
             p = inputParser;
             addParameter(p, 'PlotType', 'both', @ischar);
             addParameter(p, 'SavePath', '', @ischar);
+            addParameter(p, 'Units', 'radians', @ischar);
             parse(p, varargin{:});
             
             plotType = p.Results.PlotType;
@@ -729,9 +730,11 @@ classdef LocomotionData < handle
                 saveas(gcf, savePath);
                 fprintf('Plot saved to %s\n', savePath);
             end
+            
+            fig = gcf;  % Return current figure handle
         end
         
-        function plotTaskComparison(obj, subject, tasks, features, varargin)
+        function fig = plotTaskComparison(obj, subject, tasks, features, varargin)
             % Plot comparison of mean patterns across tasks
             %
             % Inputs:
@@ -786,6 +789,8 @@ classdef LocomotionData < handle
                 saveas(gcf, savePath);
                 fprintf('Plot saved to %s\n', savePath);
             end
+            
+            fig = gcf;  % Return current figure handle
         end
         
         function fig = plotPhasePatterns_v2(obj, subject, task, features, varargin)
@@ -1201,7 +1206,20 @@ classdef LocomotionData < handle
         
         function filteredObj = filterCycles(obj, cycles)
             % Filter data to specific cycle numbers
-            mask = ismember(obj.data.cycle_id, cycles);
+            % Handle type mismatch between cycle_id and cycles
+            if isnumeric(cycles) && (isstring(obj.data.cycle_id) || iscellstr(obj.data.cycle_id))
+                % Convert numeric cycles to string for comparison
+                cycles = string(cycles);
+                mask = ismember(obj.data.cycle_id, cycles);
+            elseif (isstring(cycles) || iscellstr(cycles)) && isnumeric(obj.data.cycle_id)
+                % Convert string cycles to numeric for comparison
+                cycles = double(cycles);
+                mask = ismember(obj.data.cycle_id, cycles);
+            else
+                % Types match or compatible
+                mask = ismember(obj.data.cycle_id, cycles);
+            end
+            
             filteredObj = LocomotionData();
             filteredObj.data = obj.data(mask, :);
             filteredObj.identifyMetadata();
@@ -1543,6 +1561,382 @@ classdef LocomotionData < handle
         function exportCSV(obj, filepath)
             % Export data to CSV file
             writetable(obj.data, filepath);
+        end
+        
+        function fig = plotSpaghettiPlot(obj, subject, task, features, varargin)
+            % Create spaghetti plot showing all individual cycles
+            %
+            % Inputs:
+            %   subject  - Subject identifier
+            %   task     - Task name
+            %   features - Cell array of feature names to plot
+            %   varargin - Optional name-value pairs:
+            %     'ShowMean' - Show mean pattern overlay (default: true)
+            %     'ShowStd'  - Show standard deviation band (default: false)
+            %     'Alpha'    - Transparency for individual cycles (default: 0.3)
+            %     'Color'    - Color for cycles (default: auto)
+            %     'Units'    - 'radians' or 'degrees' (default: 'degrees')
+            
+            p = inputParser;
+            addRequired(p, 'subject', @ischar);
+            addRequired(p, 'task', @ischar);
+            addRequired(p, 'features', @iscell);
+            addParameter(p, 'ShowMean', true, @islogical);
+            addParameter(p, 'ShowStd', false, @islogical);
+            addParameter(p, 'Alpha', 0.3, @isnumeric);
+            addParameter(p, 'Color', [], @(x) isnumeric(x) || ischar(x));
+            addParameter(p, 'Units', 'degrees', @ischar);
+            parse(p, subject, task, features, varargin{:});
+            
+            % Get 3D data
+            [data3D, featureNames] = obj.getCycles(subject, task, features);
+            
+            % Create figure
+            fig = figure('Position', [100, 100, 800, 600]);
+            nFeatures = length(featureNames);
+            nCols = min(3, nFeatures);
+            nRows = ceil(nFeatures / nCols);
+            
+            % Phase vector
+            phase = 0:100/(obj.POINTS_PER_CYCLE-1):100;
+            
+            for i = 1:nFeatures
+                subplot(nRows, nCols, i);
+                
+                featureData = squeeze(data3D(:, :, i));
+                nCycles = size(featureData, 1);
+                
+                % Convert units if needed
+                if contains(featureNames{i}, 'angle') && strcmp(p.Results.Units, 'degrees')
+                    featureData = rad2deg(featureData);
+                    unitLabel = '(deg)';
+                else
+                    unitLabel = obj.getUnitLabel(featureNames{i});
+                end
+                
+                % Set color
+                if isempty(p.Results.Color)
+                    color = [0.2, 0.4, 0.8];
+                else
+                    color = p.Results.Color;
+                end
+                
+                % Plot all cycles with transparency
+                hold on;
+                for cycle = 1:nCycles
+                    if ~any(isnan(featureData(cycle, :)))
+                        plot(phase, featureData(cycle, :), 'Color', [color, p.Results.Alpha], 'LineWidth', 0.5);
+                    end
+                end
+                
+                % Overlay mean if requested
+                if p.Results.ShowMean
+                    meanPattern = mean(featureData, 1, 'omitnan');
+                    plot(phase, meanPattern, 'Color', color, 'LineWidth', 2);
+                end
+                
+                % Overlay std band if requested
+                if p.Results.ShowStd
+                    meanPattern = mean(featureData, 1, 'omitnan');
+                    stdPattern = std(featureData, 0, 1, 'omitnan');
+                    fill([phase, fliplr(phase)], ...
+                         [meanPattern + stdPattern, fliplr(meanPattern - stdPattern)], ...
+                         color, 'FaceAlpha', 0.2, 'EdgeColor', 'none');
+                end
+                
+                % Format plot
+                xlabel('Gait Cycle (%)');
+                ylabel([obj.getFeatureDisplayName(featureNames{i}), ' ', unitLabel]);
+                title([strrep(featureNames{i}, '_', ' ')]);
+                grid on;
+                xlim([0, 100]);
+                
+                % Add cycle count to title
+                validCycles = sum(~any(isnan(featureData), 2));
+                title(sprintf('%s (n=%d)', strrep(featureNames{i}, '_', ' '), validCycles));
+            end
+            
+            sgtitle(sprintf('Spaghetti Plot: %s - %s', subject, strrep(task, '_', ' ')));
+        end
+        
+        function setPublicationStyle(obj, style)
+            % Set publication-ready plotting style
+            %
+            % Inputs:
+            %   style - Style name: 'biomechanics', 'nature', 'ieee', 'default'
+            
+            switch lower(style)
+                case 'biomechanics'
+                    % Journal of Biomechanics style
+                    set(groot, 'DefaultAxesFontSize', 12);
+                    set(groot, 'DefaultAxesFontName', 'Arial');
+                    set(groot, 'DefaultTextFontSize', 12);
+                    set(groot, 'DefaultTextFontName', 'Arial');
+                    set(groot, 'DefaultLineLineWidth', 1.5);
+                    set(groot, 'DefaultAxesBox', 'off');
+                    set(groot, 'DefaultAxesTickLength', [0.02, 0.02]);
+                    
+                case 'nature'
+                    % Nature style
+                    set(groot, 'DefaultAxesFontSize', 8);
+                    set(groot, 'DefaultAxesFontName', 'Arial');
+                    set(groot, 'DefaultTextFontSize', 8);
+                    set(groot, 'DefaultTextFontName', 'Arial');
+                    set(groot, 'DefaultLineLineWidth', 1);
+                    set(groot, 'DefaultAxesBox', 'off');
+                    
+                case 'ieee'
+                    % IEEE style
+                    set(groot, 'DefaultAxesFontSize', 10);
+                    set(groot, 'DefaultAxesFontName', 'Times');
+                    set(groot, 'DefaultTextFontSize', 10);
+                    set(groot, 'DefaultTextFontName', 'Times');
+                    set(groot, 'DefaultLineLineWidth', 1.2);
+                    
+                case 'default'
+                    % Reset to MATLAB defaults - use individual property resets for compatibility
+                    try
+                        set(groot, 'DefaultAxesFontSize', get(groot, 'FactoryAxesFontSize'));
+                        set(groot, 'DefaultAxesFontName', get(groot, 'FactoryAxesFontName'));
+                        set(groot, 'DefaultTextFontSize', get(groot, 'FactoryTextFontSize'));
+                        set(groot, 'DefaultTextFontName', get(groot, 'FactoryTextFontName'));
+                        set(groot, 'DefaultLineLineWidth', get(groot, 'FactoryLineLineWidth'));
+                        set(groot, 'DefaultAxesBox', get(groot, 'FactoryAxesBox'));
+                        set(groot, 'DefaultAxesTickLength', get(groot, 'FactoryAxesTickLength'));
+                    catch
+                        % If factory access fails, use typical MATLAB defaults
+                        set(groot, 'DefaultAxesFontSize', 10);
+                        set(groot, 'DefaultAxesFontName', 'Helvetica');
+                        set(groot, 'DefaultTextFontSize', 10);
+                        set(groot, 'DefaultTextFontName', 'Helvetica');
+                        set(groot, 'DefaultLineLineWidth', 0.5);
+                        set(groot, 'DefaultAxesBox', 'on');
+                        set(groot, 'DefaultAxesTickLength', [0.01, 0.025]);
+                    end
+                    
+                otherwise
+                    warning('Unknown style "%s". Available styles: biomechanics, nature, ieee, default', style);
+            end
+        end
+        
+        function unitLabel = getUnitLabel(obj, featureName)
+            % Get appropriate unit label for feature
+            if contains(featureName, 'angle')
+                unitLabel = '(rad)';
+            elseif contains(featureName, 'velocity')
+                unitLabel = '(rad/s)';
+            elseif contains(featureName, 'moment')
+                unitLabel = '(Nm)';
+            elseif contains(featureName, 'force') || contains(featureName, '_N')
+                unitLabel = '(N)';
+            else
+                unitLabel = '';
+            end
+        end
+        
+        function displayName = getFeatureDisplayName(obj, featureName)
+            % Get human-readable display name for feature
+            displayName = strrep(featureName, '_', ' ');
+            displayName = strrep(displayName, 'ipsi', 'Ipsi');
+            displayName = strrep(displayName, 'contra', 'Contra');
+            displayName = strrep(displayName, 'angle', 'Angle');
+            displayName = strrep(displayName, 'moment', 'Moment');
+            displayName = strrep(displayName, 'force', 'Force');
+            displayName = strrep(displayName, 'velocity', 'Velocity');
+        end
+        
+        function features = extractCycleFeatures(obj, subject, task, varargin)
+            % Extract cycle-by-cycle features for statistical analysis
+            %
+            % Inputs:
+            %   subject  - Subject identifier
+            %   task     - Task name
+            %   varargin - Optional name-value pairs:
+            %     'Features' - Cell array of feature names (default: all)
+            %     'Metrics'  - Cell array of metrics to compute (default: {'rom', 'peak', 'mean'})
+            %
+            % Outputs:
+            %   features - Table with cycle-by-cycle feature metrics
+            
+            p = inputParser;
+            addRequired(p, 'subject', @ischar);
+            addRequired(p, 'task', @ischar);
+            addParameter(p, 'Features', {}, @iscell);
+            addParameter(p, 'Metrics', {'rom', 'peak', 'mean'}, @iscell);
+            parse(p, subject, task, varargin{:});
+            
+            % Get features to analyze
+            if isempty(p.Results.Features)
+                featureNames = obj.features;
+            else
+                featureNames = p.Results.Features;
+            end
+            
+            % Get 3D data
+            [data3D, actualFeatures] = obj.getCycles(subject, task, featureNames);
+            [nCycles, nPoints, nFeatures] = size(data3D);
+            
+            % Initialize results table
+            cycleIds = (1:nCycles)';
+            features = table(cycleIds, 'VariableNames', {'cycle_id'});
+            
+            % Compute requested metrics for each feature
+            for f = 1:nFeatures
+                featureName = actualFeatures{f};
+                featureData = squeeze(data3D(:, :, f));
+                
+                for m = 1:length(p.Results.Metrics)
+                    metric = p.Results.Metrics{m};
+                    colName = sprintf('%s_%s', featureName, metric);
+                    
+                    switch lower(metric)
+                        case 'rom'
+                            % Range of motion (max - min)
+                            values = max(featureData, [], 2) - min(featureData, [], 2);
+                        case 'peak'
+                            % Peak value (maximum absolute value)
+                            values = max(abs(featureData), [], 2);
+                        case 'mean'
+                            % Mean value over cycle
+                            values = mean(featureData, 2, 'omitnan');
+                        case 'std'
+                            % Standard deviation over cycle
+                            values = std(featureData, 0, 2, 'omitnan');
+                        case 'peak_time'
+                            % Time of peak value (as percentage)
+                            [~, peakIdx] = max(abs(featureData), [], 2);
+                            values = (peakIdx - 1) / (nPoints - 1) * 100;
+                        otherwise
+                            warning('Unknown metric: %s', metric);
+                            continue;
+                    end
+                    
+                    features.(colName) = values;
+                end
+            end
+        end
+        
+        function [peakValues, peakTimes] = detectPeakTiming(obj, subject, task, features)
+            % Detect peak timing and values for biomechanical features
+            %
+            % Inputs:
+            %   subject  - Subject identifier  
+            %   task     - Task name
+            %   features - Cell array of feature names
+            %
+            % Outputs:
+            %   peakValues - Structure with peak values for each feature
+            %   peakTimes  - Structure with peak times (% gait cycle) for each feature
+            
+            [data3D, featureNames] = obj.getCycles(subject, task, features);
+            [nCycles, nPoints, nFeatures] = size(data3D);
+            
+            peakValues = struct();
+            peakTimes = struct();
+            
+            for f = 1:nFeatures
+                featureName = featureNames{f};
+                featureData = squeeze(data3D(:, :, f));
+                
+                % Find peaks for each cycle
+                cycleMaxValues = zeros(nCycles, 1);
+                cycleMaxTimes = zeros(nCycles, 1);
+                cycleMinValues = zeros(nCycles, 1);
+                cycleMinTimes = zeros(nCycles, 1);
+                
+                for c = 1:nCycles
+                    if ~any(isnan(featureData(c, :)))
+                        [maxVal, maxIdx] = max(featureData(c, :));
+                        [minVal, minIdx] = min(featureData(c, :));
+                        
+                        cycleMaxValues(c) = maxVal;
+                        cycleMaxTimes(c) = (maxIdx - 1) / (nPoints - 1) * 100;
+                        cycleMinValues(c) = minVal;
+                        cycleMinTimes(c) = (minIdx - 1) / (nPoints - 1) * 100;
+                    else
+                        cycleMaxValues(c) = NaN;
+                        cycleMaxTimes(c) = NaN;
+                        cycleMinValues(c) = NaN;
+                        cycleMinTimes(c) = NaN;
+                    end
+                end
+                
+                peakValues.(featureName) = struct(...
+                    'max_values', cycleMaxValues, ...
+                    'min_values', cycleMinValues);
+                peakTimes.(featureName) = struct(...
+                    'max_times', cycleMaxTimes, ...
+                    'min_times', cycleMinTimes);
+            end
+        end
+        
+        function comparison = bilateralComparison(obj, subject, task, features)
+            % Compare ipsilateral vs contralateral features
+            %
+            % Inputs:
+            %   subject  - Subject identifier
+            %   task     - Task name  
+            %   features - Cell array of feature names (should include both ipsi/contra)
+            %
+            % Outputs:
+            %   comparison - Structure with bilateral comparison metrics
+            
+            comparison = struct();
+            
+            % Separate ipsi and contra features
+            ipsiFeatures = {};
+            contraFeatures = {};
+            
+            for i = 1:length(features)
+                if contains(features{i}, 'ipsi')
+                    ipsiFeatures{end+1} = features{i};
+                    % Find corresponding contra feature
+                    contraName = strrep(features{i}, 'ipsi', 'contra');
+                    if any(strcmp(obj.features, contraName))
+                        contraFeatures{end+1} = contraName;
+                    end
+                end
+            end
+            
+            if length(ipsiFeatures) ~= length(contraFeatures)
+                warning('Unequal number of ipsilateral and contralateral features');
+                return;
+            end
+            
+            % Get data for both sides
+            ipsiData3D = obj.getCycles(subject, task, ipsiFeatures);
+            contraData3D = obj.getCycles(subject, task, contraFeatures);
+            
+            % Compute bilateral metrics
+            for i = 1:length(ipsiFeatures)
+                baseName = strrep(ipsiFeatures{i}, '_ipsi', '');
+                
+                ipsiCycles = squeeze(ipsiData3D(:, :, i));
+                contraCycles = squeeze(contraData3D(:, :, i));
+                
+                % Symmetry index: (ipsi - contra) / (ipsi + contra) * 100
+                ipsiMean = mean(ipsiCycles, 2, 'omitnan');
+                contraMean = mean(contraCycles, 2, 'omitnan');
+                
+                symmetryIndex = (ipsiMean - contraMean) ./ (ipsiMean + contraMean) * 100;
+                
+                % Correlation between sides
+                correlation = zeros(size(ipsiCycles, 1), 1);
+                for c = 1:size(ipsiCycles, 1)
+                    if ~any(isnan(ipsiCycles(c, :))) && ~any(isnan(contraCycles(c, :)))
+                        corrMatrix = corrcoef(ipsiCycles(c, :), contraCycles(c, :));
+                        correlation(c) = corrMatrix(1, 2);
+                    else
+                        correlation(c) = NaN;
+                    end
+                end
+                
+                comparison.(baseName) = struct(...
+                    'symmetry_index', symmetryIndex, ...
+                    'correlation', correlation, ...
+                    'ipsi_mean', ipsiMean, ...
+                    'contra_mean', contraMean);
+            end
         end
     end
     
