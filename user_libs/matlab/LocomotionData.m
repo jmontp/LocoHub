@@ -46,6 +46,10 @@ classdef LocomotionData < handle
         subjects        % Unique subjects
         tasks           % Unique tasks
         features        % Available biomechanical features
+        pointsPerCycle  % Points per cycle (150 for phase data)
+        dataType        % 'phase' or 'time' indexed data
+        samplingFrequency % Sampling frequency for time data
+        hasTimeColumn   % Whether time column exists
     end
     
     properties (Access = private)
@@ -57,18 +61,41 @@ classdef LocomotionData < handle
             % Constructor - Load locomotion data from parquet file
             %
             % Inputs:
-            %   dataPath - Path to parquet file
+            %   dataPath - Path to parquet file (optional if empty constructor)
             %   Optional name-value pairs:
             %     'SubjectCol' - Column name for subjects (default: 'subject')
             %     'TaskCol' - Column name for tasks (default: 'task')
             %     'PhaseCol' - Column name for phase (default: 'phase')
+            %     'Columns' - Cell array of column names to load
+            %     'VariableGroup' - Load specific variable group ('kinematics', 'kinetics')
+            %     'Joints' - Cell array of joints to load
+            
+            % Handle empty constructor for filter methods
+            if nargin == 0
+                obj.data = table();
+                obj.cache = containers.Map();
+                obj.subjects = {};
+                obj.tasks = {};
+                obj.features = {};
+                obj.subjectCol = 'subject';
+                obj.taskCol = 'task';
+                obj.phaseCol = 'phase_percent';
+                obj.dataType = 'phase';
+                obj.pointsPerCycle = 150;
+                obj.samplingFrequency = [];
+                obj.hasTimeColumn = false;
+                return;
+            end
             
             % Parse inputs
             p = inputParser;
-            addRequired(p, 'dataPath', @ischar);
+            addRequired(p, 'dataPath', @(x) ischar(x) || isstring(x));
             addParameter(p, 'SubjectCol', 'subject', @ischar);
             addParameter(p, 'TaskCol', 'task', @ischar);
             addParameter(p, 'PhaseCol', 'phase', @ischar);
+            addParameter(p, 'Columns', {}, @iscell);
+            addParameter(p, 'VariableGroup', '', @ischar);
+            addParameter(p, 'Joints', {}, @iscell);
             parse(p, dataPath, varargin{:});
             
             obj.dataPath = p.Results.dataPath;
@@ -78,7 +105,101 @@ classdef LocomotionData < handle
             
             % Load data
             fprintf('Loading data from %s...\n', obj.dataPath);
-            obj.data = parquetread(obj.dataPath);
+            
+            if ~isempty(p.Results.Columns)
+                % Load specific columns
+                obj.data = parquetread(obj.dataPath);
+                allCols = obj.data.Properties.VariableNames;
+                
+                % Ensure columns is a cell array
+                if ~iscell(p.Results.Columns)
+                    requestedCols = {p.Results.Columns};
+                else
+                    requestedCols = p.Results.Columns;
+                end
+                
+                % Find valid columns
+                keepCols = {};
+                for i = 1:length(requestedCols)
+                    if any(strcmp(allCols, requestedCols{i}))
+                        keepCols{end+1} = requestedCols{i};
+                    end
+                end
+                
+                % Always include phase columns if they exist
+                if any(strcmp(allCols, 'phase_ipsi')) && ~any(strcmp(keepCols, 'phase_ipsi'))
+                    keepCols{end+1} = 'phase_ipsi';
+                end
+                if any(strcmp(allCols, 'phase_contra')) && ~any(strcmp(keepCols, 'phase_contra'))
+                    keepCols{end+1} = 'phase_contra';
+                end
+                
+                % Ensure we have columns to keep
+                if isempty(keepCols)
+                    error('No valid columns found to load');
+                end
+                
+                obj.data = obj.data(:, keepCols);
+                
+            elseif ~isempty(p.Results.VariableGroup)
+                % Load by variable group
+                obj.data = parquetread(obj.dataPath);
+                allCols = obj.data.Properties.VariableNames;
+                keepCols = {'subject', 'task', 'cycle_id', 'phase_percent'};
+                
+                if strcmp(p.Results.VariableGroup, 'kinematics')
+                    for i = 1:length(allCols)
+                        if contains(allCols{i}, 'angle')
+                            keepCols{end+1} = allCols{i};
+                        end
+                    end
+                elseif strcmp(p.Results.VariableGroup, 'kinetics')
+                    for i = 1:length(allCols)
+                        if contains(allCols{i}, 'moment') || contains(allCols{i}, 'force')
+                            keepCols{end+1} = allCols{i};
+                        end
+                    end
+                end
+                
+                % Always include phase columns if they exist
+                if any(strcmp(allCols, 'phase_ipsi'))
+                    keepCols{end+1} = 'phase_ipsi';
+                end
+                if any(strcmp(allCols, 'phase_contra'))
+                    keepCols{end+1} = 'phase_contra';
+                end
+                
+                obj.data = obj.data(:, unique(keepCols, 'stable'));
+                
+            elseif ~isempty(p.Results.Joints)
+                % Load by joints
+                obj.data = parquetread(obj.dataPath);
+                allCols = obj.data.Properties.VariableNames;
+                keepCols = {'subject', 'task', 'cycle_id', 'phase_percent'};
+                
+                for i = 1:length(allCols)
+                    for j = 1:length(p.Results.Joints)
+                        if contains(allCols{i}, p.Results.Joints{j})
+                            keepCols{end+1} = allCols{i};
+                            break;
+                        end
+                    end
+                end
+                
+                % Always include phase columns if they exist
+                if any(strcmp(allCols, 'phase_ipsi'))
+                    keepCols{end+1} = 'phase_ipsi';
+                end
+                if any(strcmp(allCols, 'phase_contra'))
+                    keepCols{end+1} = 'phase_contra';
+                end
+                
+                obj.data = obj.data(:, unique(keepCols, 'stable'));
+                
+            else
+                % Load all data
+                obj.data = parquetread(obj.dataPath);
+            end
             
             % Initialize cache
             obj.cache = containers.Map();
@@ -843,14 +964,631 @@ classdef LocomotionData < handle
             % Use the enhanced export system
             exportFigure(fig, savePath, varargin{:});
         end
+        
+        % =================== FILTERING METHODS ===================
+        
+        function filteredObj = filter(obj, varargin)
+            % Filter data by subject and/or task
+            %
+            % Usage:
+            %   filtered = loco.filter('Subject', 'SUB01');
+            %   filtered = loco.filter('Task', 'level_walking');
+            %   filtered = loco.filter('Subject', 'SUB01', 'Task', 'level_walking');
+            %   filtered = loco.filter('Subjects', {'SUB01', 'SUB02'});
+            %   filtered = loco.filter('Tasks', {'level_walking', 'incline_walking'});
+            
+            p = inputParser;
+            addParameter(p, 'Subject', [], @(x) ischar(x) || iscell(x));
+            addParameter(p, 'Subjects', [], @iscell);
+            addParameter(p, 'Task', [], @(x) ischar(x) || iscell(x));
+            addParameter(p, 'Tasks', [], @iscell);
+            parse(p, varargin{:});
+            
+            % Start with all data
+            filteredData = obj.data;
+            
+            % Filter by subject(s)
+            subjectFilter = p.Results.Subjects;
+            if isempty(subjectFilter)
+                subjectFilter = p.Results.Subject;
+            end
+            
+            if ~isempty(subjectFilter)
+                if ischar(subjectFilter)
+                    mask = strcmp(filteredData.(obj.subjectCol), subjectFilter);
+                else % cell array
+                    mask = ismember(filteredData.(obj.subjectCol), subjectFilter);
+                end
+                filteredData = filteredData(mask, :);
+            end
+            
+            % Filter by task(s)
+            taskFilter = p.Results.Tasks;
+            if isempty(taskFilter)
+                taskFilter = p.Results.Task;
+            end
+            
+            if ~isempty(taskFilter)
+                if ischar(taskFilter)
+                    mask = strcmp(filteredData.(obj.taskCol), taskFilter);
+                else % cell array
+                    mask = ismember(filteredData.(obj.taskCol), taskFilter);
+                end
+                filteredData = filteredData(mask, :);
+            end
+            
+            % Create new LocomotionData object with filtered data
+            filteredObj = LocomotionData.empty();
+            filteredObj(1).data = filteredData;
+            filteredObj.dataPath = obj.dataPath;
+            filteredObj.subjectCol = obj.subjectCol;
+            filteredObj.taskCol = obj.taskCol;
+            filteredObj.phaseCol = obj.phaseCol;
+            filteredObj.cache = containers.Map();
+            
+            % Re-identify metadata for filtered data
+            filteredObj.identifyMetadata();
+        end
+        
+        function filteredObj = filterTask(obj, task)
+            % Convenience method for filtering by task
+            filteredObj = obj.filter('Task', task);
+        end
+        
+        function filteredObj = filterTasks(obj, tasks)
+            % Convenience method for filtering by multiple tasks
+            filteredObj = obj.filter('Tasks', tasks);
+        end
+        
+        function filteredObj = filterSubject(obj, subject)
+            % Convenience method for filtering by subject
+            filteredObj = obj.filter('Subject', subject);
+        end
+        
+        function filteredObj = filterSubjects(obj, subjects)
+            % Convenience method for filtering by multiple subjects
+            filteredObj = obj.filter('Subjects', subjects);
+        end
+        
+        % =================== UTILITY METHODS ===================
+        
+        function [rows, cols] = getShape(obj)
+            % Return shape of data table
+            if nargout == 1
+                rows = size(obj.data);
+            else
+                [rows, cols] = size(obj.data);
+            end
+        end
+        
+        function bytes = getMemoryUsage(obj)
+            % Estimate memory usage of data table
+            info = whos('obj');
+            bytes = info.bytes;
+        end
+        
+        function vars = getVariables(obj)
+            % Return list of biomechanical variables (features)
+            vars = obj.features;
+        end
+        
+        function h = head(obj, n)
+            % Return first n rows of data
+            if nargin < 2
+                n = 5;
+            end
+            h = obj.data(1:min(n, height(obj.data)), :);
+        end
+        
+        function t = getDataTypes(obj)
+            % Return data types of all columns
+            varNames = obj.data.Properties.VariableNames;
+            t = table();
+            for i = 1:length(varNames)
+                t.(varNames{i}) = class(obj.data.(varNames{i}));
+            end
+        end
+        
+        function n = length(obj)
+            % Return number of rows in dataset
+            n = height(obj.data);
+        end
+        
+        % =================== DATA EXPLORATION METHODS ===================
+        
+        function subjects = getSubjects(obj)
+            % Return list of unique subjects
+            subjects = obj.subjects;
+        end
+        
+        function tasks = getTasks(obj)
+            % Return list of unique tasks
+            tasks = obj.tasks;
+        end
+        
+        function n = countCycles(obj, varargin)
+            % Count cycles, optionally filtered by task
+            p = inputParser;
+            addParameter(p, 'Task', [], @(x) ischar(x) || isstring(x));
+            parse(p, varargin{:});
+            
+            if isempty(p.Results.Task)
+                % Count all unique cycles
+                n = length(unique(obj.data.cycle_id));
+            else
+                % Count cycles for specific task
+                taskData = obj.data(strcmp(obj.data.task, p.Results.Task), :);
+                n = length(unique(taskData.cycle_id));
+            end
+        end
+        
+        function info = getVariableInfo(obj)
+            % Return structure with variable type information
+            info = struct();
+            
+            % Count kinematic variables (angles)
+            angleVars = cellfun(@(x) contains(x, 'angle'), obj.features);
+            info.kinematics.count = sum(angleVars);
+            info.kinematics.variables = obj.features(angleVars);
+            
+            % Count kinetic variables (moments and forces)
+            momentVars = cellfun(@(x) contains(x, 'moment'), obj.features);
+            forceVars = cellfun(@(x) contains(x, 'force'), obj.features);
+            
+            info.kinetics.moments.count = sum(momentVars);
+            info.kinetics.moments.variables = obj.features(momentVars);
+            info.kinetics.forces.count = sum(forceVars);
+            info.kinetics.forces.variables = obj.features(forceVars);
+        end
+        
+        function desc = getVariableDescription(obj, varName)
+            % Return human-readable description of a variable
+            if ~any(strcmp(obj.features, varName))
+                desc = 'Variable not found';
+                return;
+            end
+            
+            % Parse variable name
+            parts = strsplit(varName, '_');
+            
+            % Build description
+            if contains(varName, 'angle')
+                joint = parts{1};
+                motion = parts{2};
+                side = parts{contains(parts, {'ipsi', 'contra'})};
+                unit = parts{end};
+                
+                if strcmp(side, 'ipsi')
+                    sideStr = 'Ipsilateral';
+                else
+                    sideStr = 'Contralateral';
+                end
+                
+                desc = sprintf('%s %s %s angle in %s', ...
+                    sideStr, joint, motion, unit);
+                    
+            elseif contains(varName, 'moment')
+                joint = parts{1};
+                side = parts{contains(parts, {'ipsi', 'contra'})};
+                unit = parts{end};
+                
+                if strcmp(side, 'ipsi')
+                    sideStr = 'Ipsilateral';
+                else
+                    sideStr = 'Contralateral';
+                end
+                
+                desc = sprintf('%s %s moment in %s', ...
+                    sideStr, joint, unit);
+                    
+            elseif contains(varName, 'force')
+                desc = sprintf('Ground reaction force: %s', varName);
+            else
+                desc = varName;
+            end
+        end
+        
+        function describeVariables(obj)
+            % Print descriptions of all variables
+            fprintf('\nVariable Descriptions:\n');
+            fprintf('======================\n');
+            
+            for i = 1:length(obj.features)
+                desc = obj.getVariableDescription(obj.features{i});
+                fprintf('%s:\n  %s\n', obj.features{i}, desc);
+            end
+        end
+        
+        function filteredObj = filterCycles(obj, cycles)
+            % Filter data to specific cycle numbers
+            mask = ismember(obj.data.cycle_id, cycles);
+            filteredObj = LocomotionData();
+            filteredObj.data = obj.data(mask, :);
+            filteredObj.identifyMetadata();
+        end
+        
+        function filteredObj = getFirstNCycles(obj, n)
+            % Get first n cycles for each subject-task combination
+            filteredData = table();
+            
+            uniqueCombos = unique(obj.data(:, {'subject', 'task'}));
+            for i = 1:height(uniqueCombos)
+                % Get subject and task for this combination
+                if iscell(uniqueCombos.subject)
+                    subj = uniqueCombos.subject{i};
+                else
+                    subj = uniqueCombos.subject(i);
+                    if ~ischar(subj) && ~isstring(subj)
+                        subj = char(subj);
+                    end
+                end
+                
+                if iscell(uniqueCombos.task)
+                    task = uniqueCombos.task{i};
+                else
+                    task = uniqueCombos.task(i);
+                    if ~ischar(task) && ~isstring(task)
+                        task = char(task);
+                    end
+                end
+                
+                subset = obj.data(strcmp(obj.data.subject, subj) & ...
+                                 strcmp(obj.data.task, task), :);
+                uniqueCycles = unique(subset.cycle_id);
+                keepCycles = uniqueCycles(1:min(n, length(uniqueCycles)));
+                
+                cycleData = subset(ismember(subset.cycle_id, keepCycles), :);
+                filteredData = [filteredData; cycleData];
+            end
+            
+            filteredObj = LocomotionData();
+            filteredObj.data = filteredData;
+            filteredObj.identifyMetadata();
+        end
+        
+        function filteredObj = removeIncompleteCycles(obj, varargin)
+            % Remove cycles with missing data
+            p = inputParser;
+            addParameter(p, 'CheckColumns', {}, @(x) iscell(x));
+            parse(p, varargin{:});
+            
+            checkCols = p.Results.CheckColumns;
+            if isempty(checkCols)
+                checkCols = obj.features;
+            end
+            
+            completeCycles = table();
+            groups = findgroups(obj.data.subject, obj.data.task, obj.data.cycle_id);
+            uniqueGroups = unique(groups);
+            
+            for g = uniqueGroups'
+                groupData = obj.data(groups == g, :);
+                
+                hasComplete = true;
+                for col = checkCols
+                    if any(ismissing(groupData.(col{1})))
+                        hasComplete = false;
+                        break;
+                    end
+                end
+                
+                if hasComplete
+                    completeCycles = [completeCycles; groupData];
+                end
+            end
+            
+            filteredObj = LocomotionData();
+            filteredObj.data = completeCycles;
+            filteredObj.identifyMetadata();
+        end
+        
+        function stats = getCycleQualityStats(obj)
+            % Return statistics about cycle quality
+            stats = struct();
+            
+            totalCycles = length(unique(obj.data.cycle_id));
+            completeCycles = 0;
+            
+            groups = findgroups(obj.data.subject, obj.data.task, obj.data.cycle_id);
+            uniqueGroups = unique(groups);
+            
+            for g = uniqueGroups'
+                groupData = obj.data(groups == g, :);
+                
+                hasComplete = true;
+                for i = 1:length(obj.features)
+                    if any(ismissing(groupData.(obj.features{i})))
+                        hasComplete = false;
+                        break;
+                    end
+                end
+                
+                if hasComplete
+                    completeCycles = completeCycles + 1;
+                end
+            end
+            
+            stats.totalCycles = totalCycles;
+            stats.completeCycles = completeCycles;
+            stats.percentComplete = 100 * completeCycles / totalCycles;
+        end
+        
+        function filteredObj = selectVariableGroup(obj, group, varargin)
+            % Select variables by group (e.g., 'kinematics', 'kinetics')
+            p = inputParser;
+            addParameter(p, 'Side', [], @(x) ischar(x) || isstring(x));
+            parse(p, varargin{:});
+            
+            keepVars = {'subject', 'task', 'cycle_id', 'phase_percent'};
+            
+            if strcmp(group, 'kinematics')
+                for i = 1:length(obj.features)
+                    if contains(obj.features{i}, 'angle')
+                        if isempty(p.Results.Side) || contains(obj.features{i}, p.Results.Side)
+                            keepVars{end+1} = obj.features{i};
+                        end
+                    end
+                end
+            elseif strcmp(group, 'kinetics')
+                for i = 1:length(obj.features)
+                    if contains(obj.features{i}, 'moment') || contains(obj.features{i}, 'force')
+                        if isempty(p.Results.Side) || contains(obj.features{i}, p.Results.Side)
+                            keepVars{end+1} = obj.features{i};
+                        end
+                    end
+                end
+            end
+            
+            % Add phase columns if they exist
+            if any(strcmp(obj.data.Properties.VariableNames, 'phase_ipsi'))
+                keepVars{end+1} = 'phase_ipsi';
+            end
+            if any(strcmp(obj.data.Properties.VariableNames, 'phase_contra'))
+                keepVars{end+1} = 'phase_contra';
+            end
+            
+            % Ensure keepVars is a cell array and has valid columns
+            keepVars = unique(keepVars, 'stable');
+            validCols = intersect(keepVars, obj.data.Properties.VariableNames, 'stable');
+            
+            % Ensure validCols is not empty
+            if isempty(validCols)
+                error('No valid columns found for selection');
+            end
+            
+            % Ensure validCols is a cell array
+            if ~iscell(validCols)
+                validCols = {validCols};
+            end
+            
+            filteredObj = LocomotionData();
+            filteredObj.data = obj.data(:, validCols);
+            filteredObj.identifyMetadata();
+        end
+        
+        function filteredObj = selectVariables(obj, varargin)
+            % Select multiple variable groups
+            p = inputParser;
+            addParameter(p, 'Groups', {}, @(x) iscell(x));
+            addParameter(p, 'Side', [], @(x) ischar(x) || isstring(x));
+            parse(p, varargin{:});
+            
+            keepVars = {'subject', 'task', 'cycle_id', 'phase_percent'};
+            
+            for g = 1:length(p.Results.Groups)
+                group = p.Results.Groups{g};
+                
+                if strcmp(group, 'kinematics')
+                    for i = 1:length(obj.features)
+                        if contains(obj.features{i}, 'angle')
+                            if isempty(p.Results.Side) || contains(obj.features{i}, p.Results.Side)
+                                keepVars{end+1} = obj.features{i};
+                            end
+                        end
+                    end
+                elseif strcmp(group, 'kinetics')
+                    for i = 1:length(obj.features)
+                        if contains(obj.features{i}, 'moment') || contains(obj.features{i}, 'force')
+                            if isempty(p.Results.Side) || contains(obj.features{i}, p.Results.Side)
+                                keepVars{end+1} = obj.features{i};
+                            end
+                        end
+                    end
+                end
+            end
+            
+            % Add phase columns if they exist
+            if any(strcmp(obj.data.Properties.VariableNames, 'phase_ipsi'))
+                keepVars{end+1} = 'phase_ipsi';
+            end
+            if any(strcmp(obj.data.Properties.VariableNames, 'phase_contra'))
+                keepVars{end+1} = 'phase_contra';
+            end
+            
+            % Ensure keepVars is a cell array and has valid columns
+            keepVars = unique(keepVars, 'stable');
+            validCols = intersect(keepVars, obj.data.Properties.VariableNames, 'stable');
+            
+            % Ensure validCols is not empty
+            if isempty(validCols)
+                error('No valid columns found for selection');
+            end
+            
+            % Ensure validCols is a cell array
+            if ~iscell(validCols)
+                validCols = {validCols};
+            end
+            
+            filteredObj = LocomotionData();
+            filteredObj.data = obj.data(:, validCols);
+            filteredObj.identifyMetadata();
+        end
+        
+        function filteredObj = getSideData(obj, side)
+            % Get data for specific side (ipsi or contra)
+            keepVars = {'subject', 'task', 'cycle_id', 'phase_percent'};
+            
+            for i = 1:length(obj.features)
+                if contains(obj.features{i}, side)
+                    keepVars{end+1} = obj.features{i};
+                end
+            end
+            
+            % Add phase columns if they exist
+            if strcmp(side, 'ipsi') && any(strcmp(obj.data.Properties.VariableNames, 'phase_ipsi'))
+                keepVars{end+1} = 'phase_ipsi';
+            end
+            if strcmp(side, 'contra') && any(strcmp(obj.data.Properties.VariableNames, 'phase_contra'))
+                keepVars{end+1} = 'phase_contra';
+            end
+            
+            filteredObj = LocomotionData();
+            filteredObj.data = obj.data(:, unique(keepVars, 'stable'));
+            filteredObj.identifyMetadata();
+        end
+        
+        function filteredObj = getBodyRegion(obj, region)
+            % Get data for specific body region
+            keepVars = {'subject', 'task', 'cycle_id', 'phase_percent'};
+            
+            if strcmp(region, 'lower')
+                keywords = {'hip', 'knee', 'ankle', 'grf'};
+            elseif strcmp(region, 'upper')
+                keywords = {'shoulder', 'elbow', 'wrist'};
+            else
+                keywords = {};
+            end
+            
+            for i = 1:length(obj.features)
+                for j = 1:length(keywords)
+                    if contains(obj.features{i}, keywords{j})
+                        keepVars{end+1} = obj.features{i};
+                        break;
+                    end
+                end
+            end
+            
+            % Add phase columns if they exist
+            if any(strcmp(obj.data.Properties.VariableNames, 'phase_ipsi'))
+                keepVars{end+1} = 'phase_ipsi';
+            end
+            if any(strcmp(obj.data.Properties.VariableNames, 'phase_contra'))
+                keepVars{end+1} = 'phase_contra';
+            end
+            
+            % Ensure keepVars is a cell array and has valid columns
+            keepVars = unique(keepVars, 'stable');
+            validCols = intersect(keepVars, obj.data.Properties.VariableNames, 'stable');
+            
+            % Ensure validCols is not empty
+            if isempty(validCols)
+                error('No valid columns found for selection');
+            end
+            
+            % Ensure validCols is a cell array
+            if ~iscell(validCols)
+                validCols = {validCols};
+            end
+            
+            filteredObj = LocomotionData();
+            filteredObj.data = obj.data(:, validCols);
+            filteredObj.identifyMetadata();
+        end
+        
+        function filteredObj = selectJoints(obj, joints)
+            % Select data for specific joints
+            keepVars = {'subject', 'task', 'cycle_id', 'phase_percent'};
+            
+            for i = 1:length(obj.features)
+                for j = 1:length(joints)
+                    if contains(obj.features{i}, joints{j})
+                        keepVars{end+1} = obj.features{i};
+                        break;
+                    end
+                end
+            end
+            
+            % Add phase columns if they exist
+            if any(strcmp(obj.data.Properties.VariableNames, 'phase_ipsi'))
+                keepVars{end+1} = 'phase_ipsi';
+            end
+            if any(strcmp(obj.data.Properties.VariableNames, 'phase_contra'))
+                keepVars{end+1} = 'phase_contra';
+            end
+            
+            % Ensure keepVars is a cell array and has valid columns
+            keepVars = unique(keepVars, 'stable');
+            validCols = intersect(keepVars, obj.data.Properties.VariableNames, 'stable');
+            
+            % Ensure validCols is not empty
+            if isempty(validCols)
+                error('No valid columns found for selection');
+            end
+            
+            % Ensure validCols is a cell array
+            if ~iscell(validCols)
+                validCols = {validCols};
+            end
+            
+            filteredObj = LocomotionData();
+            filteredObj.data = obj.data(:, validCols);
+            filteredObj.identifyMetadata();
+        end
+        
+        function save(obj, filepath)
+            % Save data to parquet file
+            parquetwrite(filepath, obj.data);
+        end
+        
+        function exportCSV(obj, filepath)
+            % Export data to CSV file
+            writetable(obj.data, filepath);
+        end
     end
     
     methods (Access = private)
         function identifyMetadata(obj)
             % Identify subjects, tasks, and features
             
-            obj.subjects = unique(obj.data.(obj.subjectCol));
-            obj.tasks = unique(obj.data.(obj.taskCol));
+            % Handle empty data
+            if isempty(obj.data) || height(obj.data) == 0
+                obj.subjects = {};
+                obj.tasks = {};
+                obj.features = {};
+                return;
+            end
+            
+            % Check if required columns exist
+            colNames = obj.data.Properties.VariableNames;
+            if ~any(strcmp(colNames, obj.subjectCol)) || ~any(strcmp(colNames, obj.taskCol))
+                obj.subjects = {};
+                obj.tasks = {};
+                obj.features = {};
+                return;
+            end
+            
+            % Ensure subjects and tasks are cell arrays
+            subjs = unique(obj.data.(obj.subjectCol));
+            if ~iscell(subjs)
+                if isstring(subjs)
+                    obj.subjects = cellstr(subjs);
+                else
+                    obj.subjects = {subjs};
+                end
+            else
+                obj.subjects = subjs;
+            end
+            
+            tsks = unique(obj.data.(obj.taskCol));
+            if ~iscell(tsks)
+                if isstring(tsks)
+                    obj.tasks = cellstr(tsks);
+                else
+                    obj.tasks = {tsks};
+                end
+            else
+                obj.tasks = tsks;
+            end
             
             % Identify biomechanical features
             excludeCols = {obj.subjectCol, obj.taskCol, obj.phaseCol, ...
@@ -864,9 +1602,27 @@ classdef LocomotionData < handle
                 col = allCols{i};
                 if ~any(strcmp(col, excludeCols)) && ...
                    (contains(col, 'angle') || contains(col, 'velocity') || ...
-                    contains(col, 'moment'))
+                    contains(col, 'moment') || contains(col, 'force'))
                     obj.features{end+1} = col;
                 end
+            end
+            
+            % Determine data type and properties
+            if any(strcmp(allCols, 'phase_percent'))
+                obj.dataType = 'phase';
+                obj.pointsPerCycle = 150;
+                obj.samplingFrequency = [];
+                obj.hasTimeColumn = false;
+            elseif any(strcmp(allCols, 'time'))
+                obj.dataType = 'time';
+                obj.pointsPerCycle = [];
+                obj.samplingFrequency = 100; % Default, should be determined from data
+                obj.hasTimeColumn = true;
+            else
+                obj.dataType = 'unknown';
+                obj.pointsPerCycle = [];
+                obj.samplingFrequency = [];
+                obj.hasTimeColumn = false;
             end
         end
     end

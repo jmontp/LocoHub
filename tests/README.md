@@ -9,6 +9,8 @@ tests/
 ├── mock_data/
 │   └── mock_dataset_phase.parquet    # Small test dataset (1.1 MB)
 ├── generate_mock_dataset.py          # Creates the mock dataset
+│
+├── Python Tests/
 ├── test_tutorial_01_loading_data.py  # Tutorial 1 tests
 ├── test_tutorial_02_data_filtering.py # Tutorial 2 tests
 ├── test_tutorial_03_visualization.py # Tutorial 3 tests
@@ -16,19 +18,40 @@ tests/
 ├── test_tutorial_05_group_analysis.py # Tutorial 5 tests
 ├── test_tutorial_06_publication_outputs.py # Tutorial 6 tests
 ├── test_all_tutorials.py            # Master test runner
-└── test_utils.py                     # Common test utilities
+├── test_utils.py                     # Common test utilities
+│
+├── MATLAB Tests/
+├── test_matlab_tutorial_01_loading_data.m  # MATLAB Tutorial 1 tests
+├── test_matlab_tutorial_02_data_filtering.m # MATLAB Tutorial 2 tests
+└── test_all_matlab_tutorials.m      # MATLAB master test runner
 ```
 
 ## Running Tests
 
-### Run All Tutorial Tests
+### Python Tests
+
+#### Run All Python Tutorial Tests
 ```bash
 python tests/test_all_tutorials.py
 ```
 
-### Run Individual Tutorial Test
+#### Run Individual Python Tutorial Test
 ```bash
 python tests/test_tutorial_01_loading_data.py
+```
+
+### MATLAB Tests
+
+#### Run All MATLAB Tutorial Tests
+```matlab
+cd tests
+test_all_matlab_tutorials
+```
+
+#### Run Individual MATLAB Tutorial Test
+```matlab
+cd tests
+test_matlab_tutorial_01_loading_data
 ```
 
 ### Regenerate Mock Dataset
