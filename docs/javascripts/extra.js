@@ -60,19 +60,6 @@ document.addEventListener('DOMContentLoaded', function() {
             color: #000 !important;
         }
 
-        /* Add sync indicator */
-        .tabbed-set::before {
-            content: "🔄 Tabs synchronized across page";
-            display: block;
-            font-size: 11px;
-            color: #999;
-            margin-bottom: 8px;
-            font-style: italic;
-        }
-
-        [data-md-color-scheme="slate"] .tabbed-set::before {
-            color: #666;
-        }
     `;
     document.head.appendChild(style);
 
