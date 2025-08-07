@@ -38,6 +38,13 @@ python tests/generate_mock_dataset.py
 
 ## Mock Dataset
 
+**Note**: The mock dataset file (`mock_dataset_phase.parquet`) is not committed to git due to `.gitignore` rules.
+You must generate it first by running:
+
+```bash
+python tests/generate_mock_dataset.py
+```
+
 The mock dataset contains:
 - 3 subjects (SUB01, SUB02, SUB03)
 - 3 tasks (level_walking, incline_walking, decline_walking)
