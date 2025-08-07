@@ -15,126 +15,277 @@ Learn how to load biomechanical datasets efficiently in MATLAB, understanding me
 
 ### Basic Loading
 
-```matlab
-% Add library to path
-addpath('user_libs/matlab');
+=== "Using Library"
+    ```matlab
+    % Add library to path
+    addpath('user_libs/matlab');
+    
+    % Load a complete phase-indexed dataset
+    loco = LocomotionData('converted_datasets/umich_2021_phase.parquet');
+    
+    % Check dataset size
+    [rows, cols] = loco.getShape();
+    fprintf('Dataset shape: %d rows x %d columns\n', rows, cols);
+    fprintf('Memory usage: %.2f MB\n', loco.getMemoryUsage() / 1024^2);
+    ```
 
-% Load a complete phase-indexed dataset
-loco = LocomotionData('converted_datasets/umich_2021_phase.parquet');
-
-% Check dataset size
-[rows, cols] = loco.getShape();
-fprintf('Dataset shape: %d rows x %d columns\n', rows, cols);
-fprintf('Memory usage: %.2f MB\n', loco.getMemoryUsage() / 1024^2);
-```
+=== "Using Raw Data"
+    ```matlab
+    % Add helper functions to path
+    addpath('user_libs/matlab');
+    
+    % Load data using parquetread
+    data = parquetread('converted_datasets/umich_2021_phase.parquet');
+    
+    % Check dataset size
+    [nRows, nCols] = size(data);
+    fprintf('Dataset shape: %d rows x %d columns\n', nRows, nCols);
+    
+    % Estimate memory usage
+    s = whos('data');
+    fprintf('Memory usage: %.2f MB\n', s.bytes / 1024^2);
+    ```
 
 ### Understanding the Structure
 
-```matlab
-% View column names
-fprintf('Available columns:\n');
-variables = loco.getVariables();
-disp(variables);
+=== "Using Library"
+    ```matlab
+    % View column names
+    fprintf('Available columns:\n');
+    variables = loco.getVariables();
+    disp(variables);
+    
+    % Check data types
+    fprintf('\nData types:\n');
+    dataTypes = loco.getDataTypes();
+    disp(dataTypes);
+    
+    % Preview first few rows
+    fprintf('\nFirst 5 rows:\n');
+    headData = loco.head(5);
+    disp(headData);
+    ```
 
-% Check data types
-fprintf('\nData types:\n');
-dataTypes = loco.getDataTypes();
-disp(dataTypes);
-
-% Preview first few rows
-fprintf('\nFirst 5 rows:\n');
-headData = loco.head(5);
-disp(headData);
-```
+=== "Using Raw Data"
+    ```matlab
+    % View column names
+    fprintf('Available columns:\n');
+    variables = data.Properties.VariableNames;
+    disp(variables');
+    
+    % Check data types
+    fprintf('\nData types:\n');
+    varTypes = varfun(@class, data(1,:), 'OutputFormat', 'cell');
+    for i = 1:length(variables)
+        fprintf('  %s: %s\n', variables{i}, varTypes{i});
+    end
+    
+    % Preview first few rows
+    fprintf('\nFirst 5 rows:\n');
+    disp(data(1:5, :));
+    ```
 
 ## Memory-Efficient Loading
 
 ### Column Selection
 
-```matlab
-% Load only specific biomechanical variables
-selectedColumns = {
-    'subject', 
-    'task', 
-    'cycle_id',
-    'phase_percent',
-    'knee_flexion_angle_ipsi_rad',
-    'hip_flexion_angle_ipsi_rad'
-};
+=== "Using Library"
+    ```matlab
+    % Load only specific biomechanical variables
+    selectedColumns = {
+        'subject', 
+        'task', 
+        'cycle_id',
+        'phase_percent',
+        'knee_flexion_angle_ipsi_rad',
+        'hip_flexion_angle_ipsi_rad'
+    };
+    
+    % Load with column selection
+    locoEfficient = LocomotionData( ...
+        'converted_datasets/umich_2021_phase.parquet', ...
+        'Columns', selectedColumns);
+    
+    % Compare memory usage
+    fprintf('Full dataset: %.2f MB\n', loco.getMemoryUsage() / 1024^2);
+    fprintf('Selected columns: %.2f MB\n', locoEfficient.getMemoryUsage() / 1024^2);
+    ```
 
-% Load with column selection
-locoEfficient = LocomotionData( ...
-    'converted_datasets/umich_2021_phase.parquet', ...
-    'Columns', selectedColumns);
-
-% Compare memory usage
-fprintf('Full dataset: %.2f MB\n', loco.getMemoryUsage() / 1024^2);
-fprintf('Selected columns: %.2f MB\n', locoEfficient.getMemoryUsage() / 1024^2);
-```
+=== "Using Raw Data"
+    ```matlab
+    % Load only specific columns using parquetread
+    selectedColumns = {
+        'subject', 
+        'task', 
+        'cycle_id',
+        'phase_percent',
+        'knee_flexion_angle_ipsi_rad',
+        'hip_flexion_angle_ipsi_rad'
+    };
+    
+    % Load with column selection
+    dataEfficient = parquetread( ...
+        'converted_datasets/umich_2021_phase.parquet', ...
+        'SelectedVariableNames', selectedColumns);
+    
+    % Compare memory usage
+    s1 = whos('data');
+    s2 = whos('dataEfficient');
+    fprintf('Full dataset: %.2f MB\n', s1.bytes / 1024^2);
+    fprintf('Selected columns: %.2f MB\n', s2.bytes / 1024^2);
+    ```
 
 ### Loading Variable Groups
 
-```matlab
-% Load only kinematic variables
-locoKinematics = LocomotionData( ...
-    'converted_datasets/umich_2021_phase.parquet', ...
-    'VariableGroup', 'kinematics');
+=== "Using Library"
+    ```matlab
+    % Load only kinematic variables
+    locoKinematics = LocomotionData( ...
+        'converted_datasets/umich_2021_phase.parquet', ...
+        'VariableGroup', 'kinematics');
+    
+    % Load only kinetic variables
+    locoKinetics = LocomotionData( ...
+        'converted_datasets/umich_2021_phase.parquet', ...
+        'VariableGroup', 'kinetics');
+    
+    % Load multiple joints
+    locoLower = LocomotionData( ...
+        'converted_datasets/umich_2021_phase.parquet', ...
+        'Joints', {'hip', 'knee', 'ankle'});
+    ```
 
-% Load only kinetic variables
-locoKinetics = LocomotionData( ...
-    'converted_datasets/umich_2021_phase.parquet', ...
-    'VariableGroup', 'kinetics');
-
-% Load multiple joints
-locoLower = LocomotionData( ...
-    'converted_datasets/umich_2021_phase.parquet', ...
-    'Joints', {'hip', 'knee', 'ankle'});
-```
+=== "Using Raw Data"
+    ```matlab
+    % Get all variable names
+    allData = parquetread('converted_datasets/umich_2021_phase.parquet');
+    allVars = allData.Properties.VariableNames;
+    
+    % Identify kinematic variables (angles and velocities)
+    kinematicVars = allVars(contains(allVars, '_angle_') | ...
+                            contains(allVars, '_velocity_'));
+    metaVars = {'subject', 'task', 'cycle_id', 'phase_percent'};
+    kinematicCols = [metaVars, kinematicVars];
+    
+    % Load only kinematics
+    dataKinematics = parquetread( ...
+        'converted_datasets/umich_2021_phase.parquet', ...
+        'SelectedVariableNames', kinematicCols);
+    
+    % Identify kinetic variables (moments, powers, forces)
+    kineticVars = allVars(contains(allVars, '_moment_') | ...
+                          contains(allVars, '_power_') | ...
+                          contains(allVars, '_force_') | ...
+                          contains(allVars, '_grf_'));
+    kineticCols = [metaVars, kineticVars];
+    
+    % Load only kinetics
+    dataKinetics = parquetread( ...
+        'converted_datasets/umich_2021_phase.parquet', ...
+        'SelectedVariableNames', kineticCols);
+    ```
 
 ## Exploring Available Data
 
 ### List Subjects and Tasks
 
-```matlab
-% Get unique subjects
-subjects = loco.getSubjects();
-fprintf('Number of subjects: %d\n', length(subjects));
-fprintf('Subject IDs: ');
-disp(subjects(1:min(5, length(subjects))));  % Show first 5
+=== "Using Library"
+    ```matlab
+    % Get unique subjects
+    subjects = loco.getSubjects();
+    fprintf('Number of subjects: %d\n', length(subjects));
+    fprintf('Subject IDs: ');
+    disp(subjects(1:min(5, length(subjects))));  % Show first 5
+    
+    % Get unique tasks
+    tasks = loco.getTasks();
+    fprintf('Available tasks: ');
+    disp(tasks);
+    
+    % Count cycles per task
+    for i = 1:length(tasks)
+        nCycles = loco.countCycles('Task', tasks{i});
+        fprintf('%s: %d cycles\n', tasks{i}, nCycles);
+    end
+    ```
 
-% Get unique tasks
-tasks = loco.getTasks();
-fprintf('Available tasks: ');
-disp(tasks);
-
-% Count cycles per task
-for i = 1:length(tasks)
-    nCycles = loco.countCycles('Task', tasks{i});
-    fprintf('%s: %d cycles\n', tasks{i}, nCycles);
-end
-```
+=== "Using Raw Data"
+    ```matlab
+    % Get unique subjects
+    subjects = unique(data.subject);
+    fprintf('Number of subjects: %d\n', length(subjects));
+    fprintf('Subject IDs: ');
+    disp(subjects(1:min(5, length(subjects))));  % Show first 5
+    
+    % Get unique tasks
+    tasks = unique(data.task);
+    fprintf('Available tasks: ');
+    disp(tasks);
+    
+    % Count cycles per task
+    for i = 1:length(tasks)
+        taskData = data(strcmp(data.task, tasks{i}), :);
+        cycles = unique(taskData.cycle_id);
+        fprintf('%s: %d cycles\n', tasks{i}, length(cycles));
+    end
+    ```
 
 ### Understanding Variable Naming
 
-```matlab
-% Identify variable types
-variableInfo = loco.getVariableInfo();
+=== "Using Library"
+    ```matlab
+    % Identify variable types
+    variableInfo = loco.getVariableInfo();
+    
+    fprintf('Joint angles: %d variables\n', variableInfo.kinematics.count);
+    fprintf('Joint moments: %d variables\n', variableInfo.kinetics.moments.count);
+    fprintf('Ground reaction forces: %d variables\n', variableInfo.kinetics.forces.count);
+    
+    % Get detailed variable descriptions
+    loco.describeVariables();
+    
+    % Understanding naming convention
+    fprintf('\nNaming convention examples:\n');
+    variables = loco.getVariables();
+    for i = 1:min(3, length(variables))
+        description = loco.getVariableDescription(variables{i});
+        fprintf('- %s: %s\n', variables{i}, description);
+    end
+    ```
 
-fprintf('Joint angles: %d variables\n', variableInfo.kinematics.count);
-fprintf('Joint moments: %d variables\n', variableInfo.kinetics.moments.count);
-fprintf('Ground reaction forces: %d variables\n', variableInfo.kinetics.forces.count);
-
-% Get detailed variable descriptions
-loco.describeVariables();
-
-% Understanding naming convention
-fprintf('\nNaming convention examples:\n');
-variables = loco.getVariables();
-for i = 1:min(3, length(variables))
-    description = loco.getVariableDescription(variables{i});
-    fprintf('- %s: %s\n', variables{i}, description);
-end
-```
+=== "Using Raw Data"
+    ```matlab
+    % Get biomechanical variables (exclude metadata)
+    allVars = data.Properties.VariableNames;
+    metaVars = {'subject', 'task', 'cycle_id', 'phase_percent'};
+    bioVars = setdiff(allVars, metaVars, 'stable');
+    
+    % Count variable types
+    angleVars = bioVars(contains(bioVars, '_angle_'));
+    momentVars = bioVars(contains(bioVars, '_moment_'));
+    grfVars = bioVars(contains(bioVars, '_grf_'));
+    
+    fprintf('Joint angles: %d variables\n', length(angleVars));
+    fprintf('Joint moments: %d variables\n', length(momentVars));
+    fprintf('Ground reaction forces: %d variables\n', length(grfVars));
+    
+    % Understanding naming convention
+    fprintf('\nNaming convention examples:\n');
+    for i = 1:min(3, length(bioVars))
+        var = bioVars{i};
+        % Parse variable name
+        parts = strsplit(var, '_');
+        if length(parts) >= 4
+            joint = parts{1};
+            measure = parts{2};
+            type = parts{3};
+            side = parts{4};
+            unit = parts{end};
+            fprintf('- %s: %s %s %s (%s side, %s)\n', ...
+                var, joint, measure, type, side, unit);
+        end
+    end
+    ```
 
 ## Time-Indexed vs Phase-Indexed Data
 
@@ -156,22 +307,40 @@ fprintf('Time column available: %d\n', locoTime.hasTimeColumn);
 
 ### Direct Table Access
 
-```matlab
-% Access the underlying table data
-rawData = loco.data;
+=== "Using Library"
+    ```matlab
+    % Access the underlying table data
+    rawData = loco.data;
+    
+    % MATLAB table operations
+    subjects = unique(rawData.subject);
+    tasks = unique(rawData.task);
+    
+    % Filter using table operations
+    levelWalking = rawData(strcmp(rawData.task, 'level_walking'), :);
+    fprintf('Level walking data: %d rows\n', height(levelWalking));
+    
+    % Get specific columns
+    kneeData = rawData.knee_flexion_angle_ipsi_rad;
+    fprintf('Knee flexion data points: %d\n', length(kneeData));
+    ```
 
-% MATLAB table operations
-subjects = unique(rawData.subject);
-tasks = unique(rawData.task);
-
-% Filter using table operations
-levelWalking = rawData(strcmp(rawData.task, 'level_walking'), :);
-fprintf('Level walking data: %d rows\n', height(levelWalking));
-
-% Get specific columns
-kneeData = rawData.knee_flexion_angle_ipsi_rad;
-fprintf('Knee flexion data points: %d\n', length(kneeData));
-```
+=== "Using Raw Data"
+    ```matlab
+    % Already working with raw table data
+    subjects = unique(data.subject);
+    tasks = unique(data.task);
+    
+    % Filter using table operations
+    levelWalking = data(strcmp(data.task, 'level_walking'), :);
+    fprintf('Level walking data: %d rows\n', height(levelWalking));
+    
+    % Get specific columns
+    if ismember('knee_flexion_angle_ipsi_rad', data.Properties.VariableNames)
+        kneeData = data.knee_flexion_angle_ipsi_rad;
+        fprintf('Knee flexion data points: %d\n', length(kneeData));
+    end
+    ```
 
 ## Practice Exercises
 

@@ -15,58 +15,116 @@ After loading data, filtering is the most critical skill. Learn to extract speci
 
 ### Filter by Task
 
-```matlab
-% Load the dataset
-loco = LocomotionData('converted_datasets/umich_2021_phase.parquet');
+=== "Using Library"
+    ```matlab
+    % Load the dataset
+    loco = LocomotionData('converted_datasets/umich_2021_phase.parquet');
+    
+    % Filter for level walking only
+    levelWalking = loco.filterTask('level_walking');
+    fprintf('Original data: %d rows\n', loco.length());
+    fprintf('Level walking only: %d rows\n', levelWalking.length());
+    
+    % Filter for multiple tasks
+    walkingTasks = {'level_walking', 'incline_walking', 'decline_walking'};
+    allWalking = loco.filterTasks(walkingTasks);
+    fprintf('All walking tasks: %d rows\n', allWalking.length());
+    ```
 
-% Filter for level walking only
-levelWalking = loco.filterTask('level_walking');
-fprintf('Original data: %d rows\n', loco.length());
-fprintf('Level walking only: %d rows\n', levelWalking.length());
-
-% Filter for multiple tasks
-walkingTasks = {'level_walking', 'incline_walking', 'decline_walking'};
-allWalking = loco.filterTasks(walkingTasks);
-fprintf('All walking tasks: %d rows\n', allWalking.length());
-```
+=== "Using Raw Data"
+    ```matlab
+    % Load the dataset
+    addpath('user_libs/matlab');  % For helper functions
+    data = parquetread('converted_datasets/umich_2021_phase.parquet');
+    
+    % Filter for level walking only
+    levelWalking = filterByTask(data, 'level_walking');
+    fprintf('Original data: %d rows\n', height(data));
+    fprintf('Level walking only: %d rows\n', height(levelWalking));
+    
+    % Filter for multiple tasks
+    walkingTasks = {'level_walking', 'incline_walking', 'decline_walking'};
+    allWalking = filterByTask(data, walkingTasks);
+    fprintf('All walking tasks: %d rows\n', height(allWalking));
+    ```
 
 ### Filter by Subject
 
-```matlab
-% Single subject
-subject01 = loco.filterSubject('SUB01');
-fprintf('SUB01 data: %d rows\n', subject01.length());
+=== "Using Library"
+    ```matlab
+    % Single subject
+    subject01 = loco.filterSubject('SUB01');
+    fprintf('SUB01 data: %d rows\n', subject01.length());
+    
+    % Multiple subjects
+    subjectsOfInterest = {'SUB01', 'SUB02', 'SUB03'};
+    selectedSubjects = loco.filterSubjects(subjectsOfInterest);
+    fprintf('Selected subjects: %d rows\n', selectedSubjects.length());
+    
+    % Exclude specific subjects
+    excluded = {'SUB10', 'SUB11'};  % e.g., outliers or incomplete data
+    allSubjects = loco.getSubjects();
+    keepSubjects = setdiff(allSubjects, excluded);
+    filteredData = loco.filterSubjects(keepSubjects);
+    fprintf('After exclusion: %d rows\n', filteredData.length());
+    ```
 
-% Multiple subjects
-subjectsOfInterest = {'SUB01', 'SUB02', 'SUB03'};
-selectedSubjects = loco.filterSubjects(subjectsOfInterest);
-fprintf('Selected subjects: %d rows\n', selectedSubjects.length());
-
-% Exclude specific subjects
-excluded = {'SUB10', 'SUB11'};  % e.g., outliers or incomplete data
-allSubjects = loco.getSubjects();
-keepSubjects = setdiff(allSubjects, excluded);
-filteredData = loco.filterSubjects(keepSubjects);
-fprintf('After exclusion: %d rows\n', filteredData.length());
-```
+=== "Using Raw Data"
+    ```matlab
+    % Single subject
+    subject01 = filterBySubject(data, 'SUB01');
+    fprintf('SUB01 data: %d rows\n', height(subject01));
+    
+    % Multiple subjects
+    subjectsOfInterest = {'SUB01', 'SUB02', 'SUB03'};
+    selectedSubjects = filterBySubject(data, subjectsOfInterest);
+    fprintf('Selected subjects: %d rows\n', height(selectedSubjects));
+    
+    % Exclude specific subjects
+    excluded = {'SUB10', 'SUB11'};  % e.g., outliers or incomplete data
+    allSubjects = unique(data.subject);
+    keepSubjects = setdiff(allSubjects, excluded);
+    filteredData = filterBySubject(data, keepSubjects);
+    fprintf('After exclusion: %d rows\n', height(filteredData));
+    ```
 
 ## Combining Filter Conditions
 
 ### Multiple Criteria
 
-```matlab
-% Level walking for specific subjects
-levelWalkingSubset = loco.filter( ...
-    'Task', 'level_walking', ...
-    'Subjects', {'SUB01', 'SUB02', 'SUB03'});
+=== "Using Library"
+    ```matlab
+    % Level walking for specific subjects
+    levelWalkingSubset = loco.filter( ...
+        'Task', 'level_walking', ...
+        'Subjects', {'SUB01', 'SUB02', 'SUB03'});
+    
+    % All walking tasks except decline for healthy subjects
+    healthySubjects = {'SUB01', 'SUB02', 'SUB03', 'SUB04', 'SUB05'};
+    walkingHealthy = loco.filter( ...
+        'Subjects', healthySubjects, ...
+        'ExcludeTasks', {'decline_walking'}, ...
+        'TaskContains', 'walking');
+    ```
 
-% All walking tasks except decline for healthy subjects
-healthySubjects = {'SUB01', 'SUB02', 'SUB03', 'SUB04', 'SUB05'};
-walkingHealthy = loco.filter( ...
-    'Subjects', healthySubjects, ...
-    'ExcludeTasks', {'decline_walking'}, ...
-    'TaskContains', 'walking');
-```
+=== "Using Raw Data"
+    ```matlab
+    % Level walking for specific subjects using helper
+    levelWalkingSubset = filterMultipleCriteria(data, ...
+        'Task', 'level_walking', ...
+        'Subject', {'SUB01', 'SUB02', 'SUB03'});
+    
+    % All walking tasks except decline for healthy subjects
+    healthySubjects = {'SUB01', 'SUB02', 'SUB03', 'SUB04', 'SUB05'};
+    
+    % First filter by subjects
+    healthyData = filterBySubject(data, healthySubjects);
+    
+    % Then get walking tasks except decline
+    walkingHealthy = healthyData( ...
+        contains(healthyData.task, 'walking') & ...
+        ~strcmp(healthyData.task, 'decline_walking'), :);
+    ```
 
 ### Using Table Operations
 
@@ -91,35 +149,40 @@ walkingHealthy = rawData( ...
 
 ### Select Specific Cycles
 
-```matlab
-% First 5 cycles per subject-task combination
-first5Cycles = loco.getFirstNCycles(5);
-
-% Or specific cycle numbers
-cycles1to3 = loco.filterCycles([1, 2, 3]);
-
-% Using table operations
-function firstNCycles = getFirstNCycles(data, n)
-    % Get first n cycles for each subject-task combination
-    uniqueCombos = unique(data(:, {'subject', 'task'}));
-    firstNCycles = table();
+=== "Using Library"
+    ```matlab
+    % First 5 cycles per subject-task combination
+    first5Cycles = loco.getFirstNCycles(5);
     
-    for i = 1:height(uniqueCombos)
-        subj = uniqueCombos.subject{i};
-        task = uniqueCombos.task{i};
-        
-        subset = data(strcmp(data.subject, subj) & ...
-                     strcmp(data.task, task), :);
-        uniqueCycles = unique(subset.cycle_id);
-        keepCycles = uniqueCycles(1:min(n, length(uniqueCycles)));
-        
-        cycleData = subset(ismember(subset.cycle_id, keepCycles), :);
-        firstNCycles = [firstNCycles; cycleData]; %#ok<AGROW>
-    end
-end
+    % Or specific cycle numbers
+    cycles1to3 = loco.filterCycles([1, 2, 3]);
+    
+    % Get cycle statistics
+    cycleStats = loco.getCycleStats();
+    fprintf('Total cycles: %d\n', cycleStats.totalCycles);
+    fprintf('Average cycles per subject: %.1f\n', cycleStats.avgPerSubject);
+    ```
 
-first5Cycles = getFirstNCycles(loco.data, 5);
-```
+=== "Using Raw Data"
+    ```matlab
+    % First 5 cycles per subject-task combination
+    first5Cycles = getFirstNCycles(data, 5, 'PerTask', true);
+    
+    % Or specific cycle numbers (get actual cycle IDs first)
+    allCycles = unique(data.cycle_id);
+    if length(allCycles) >= 3
+        selectedCycles = allCycles(1:3);
+        cycles1to3 = filterByCycles(data, selectedCycles);
+    end
+    
+    % Get cycle statistics
+    subjects = unique(data.subject);
+    totalCycles = length(unique(data.cycle_id));
+    avgPerSubject = totalCycles / length(subjects);
+    
+    fprintf('Total cycles: %d\n', totalCycles);
+    fprintf('Average cycles per subject: %.1f\n', avgPerSubject);
+    ```
 
 ### Filter by Cycle Quality
 
