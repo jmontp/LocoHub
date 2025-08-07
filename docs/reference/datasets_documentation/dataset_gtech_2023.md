@@ -15,8 +15,10 @@
 ```
 Scherpereel, K., Molinaro, D., Inan, O., Shepherd, M., & Young, A. (2023). 
 A human lower-limb biomechanics and wearable sensors dataset during cyclic and non-cyclic activities. 
-Scientific Data, 10, 917. https://doi.org/10.1038/s41597-023-02341-6
+Scientific Data, 10, 924. https://doi.org/10.1038/s41597-023-02840-6
 ```
+
+**Dataset Repository**: Available at SMARTech with DOI: https://doi.org/10.35090/gatech/70296
 
 ### Associated Publications
 1. Young, A. et al. (2024). "Task-Agnostic Exoskeleton Control via Biological Joint Moment Estimation." 
@@ -26,8 +28,10 @@ Scientific Data, 10, 917. https://doi.org/10.1038/s41597-023-02341-6
 ### Acknowledgments
 This research was supported by:
 - NSF National Robotics Initiative (NRI) grants for machine learning in exoskeleton control
+- National Science Foundation Graduate Research Fellowship under Grant No. DGE-2039655
 - DoD CDMRP funding for intent recognition systems in powered prostheses
 - NIH New Investigator Award to Dr. Aaron Young
+- X, The Moonshot Factory for funding this open-source project (Kathryn Zealand helped conceptualize and fund the study)
 
 ## Dataset Contents
 
@@ -68,10 +72,18 @@ This research was supported by:
 - **Camera Count**: 12-16 cameras for full capture volume
 
 ### CAREN System
-- **Facility**: Motek Computer-Aided Rehabilitation Environment (CAREN)
-- **Components**: 10-camera Vicon system, 16-channel Delsys EMG, instrumented treadmill on 6-DOF Stewart platform
-- **Display**: 180° projection screen for immersive environments
-- **Software**: Motek D-Flow for real-time data integration
+- **Facility**: Motek Computer-Aided Rehabilitation Environment (CAREN) - a self-contained biomechanics lab
+- **Motion Capture**: 10-camera Vicon T-160 system (16 megapixels, 120fps)
+- **EMG System**: 16-channel Delsys wireless EMG system
+- **Platform**: Instrumented treadmill embedded in 6 degree-of-freedom Stewart platform for perturbation studies
+- **Display**: 180° projection screen for immersive virtual reality environments
+- **Software**: Motek D-Flow for real-time data integration and virtual reality control
+
+### Additional Motion Capture Facilities
+- **Main Research Space**: 36-camera Vicon motion analysis system
+- **Gait Lab**: 32-camera Vicon motion capture system covering terrain park, level walking force plates, and force treadmill
+- **Force Plates**: Multiple AMTI force plates for ground reaction force measurement
+- **Configurable Space**: Equipment can be arranged to simulate various real-world conditions including ramps, stairs, and level ground
 
 ## Contact Information
 - **Dataset Curator**: Aaron Young, Ph.D.
@@ -90,6 +102,12 @@ The Exoskeleton and Prosthetic Intelligent Controls (EPIC) Lab at Georgia Tech i
 improvement of powered orthotic and prosthetic control systems. The lab combines machine learning, robotics, 
 human biomechanics, and control systems to design wearable robots that improve community mobility for 
 individuals with walking disability.
+
+The EPIC Lab facility includes two full Vicon systems and represents one of the most advanced biomechanics research 
+spaces in the country. Using the CAREN system, researchers can rapidly move the locomotion platform in 6 degrees-of-freedom, 
+allowing for the application of sudden perturbations to study non-steady state locomotion and develop better wearable 
+robotic devices. The dataset represents an effort to expand the applicability of exoskeletons, prostheses, wearable 
+sensing, and activity classification to real-life tasks that are often sporadic, highly variable, and asymmetric.
 
 ## Usage
 

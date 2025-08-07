@@ -93,6 +93,17 @@ This dataset was collected with support from:
 - NIH R01 Grant for agile powered prosthetic legs (R01HD094772)
 - Burroughs Wellcome Fund Career Award at the Scientific Interface ($500,000)
 
+## Lab Description
+The Locomotor Control Systems Laboratory is a highly interdisciplinary environment dedicated to scientific innovation, 
+clinical translation, and individual career development. The lab develops high-performance control systems for robotic 
+prostheses and orthoses to enable mobility and improve quality of life for persons with disabilities. The research 
+approaches this needs-driven work from the perspective of dynamical systems and control theory, investigating and 
+translating concepts from legged robotics into transformative solutions for physical rehabilitation.
+
+Dr. Gregg's research interests include actuator design and control, nonlinear control theory, and biomechanics of 
+human locomotion. He is most known for his works on bipedal locomotion control and wearable robotics, with research 
+focusing on integrating human biomechanics insights into robot control algorithms to improve natural movement efficiency.
+
 ## Usage
 
 ```python
