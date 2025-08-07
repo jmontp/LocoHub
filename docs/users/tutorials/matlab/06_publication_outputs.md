@@ -14,16 +14,31 @@ Learn to create publication-ready figures, tables, and reproducible analysis rep
 
 ## Setup
 
-```matlab
-% Add library to path
-addpath('user_libs/matlab');
+=== "Using Library"
+    ```matlab
+    % Add library to path
+    addpath('user_libs/matlab');
+    
+    % Load data
+    loco = LocomotionData('converted_datasets/umich_2021_phase.parquet');
+    
+    % Set publication style
+    loco.setPublicationStyle('biomechanics');
+    ```
 
-% Load data
-loco = LocomotionData('converted_datasets/umich_2021_phase.parquet');
-
-% Set publication style
-loco.setPublicationStyle('biomechanics');
-```
+=== "Using Raw Data"
+    ```matlab
+    % Add helper functions to path
+    addpath('user_libs/matlab');
+    
+    % Load data
+    data = parquetread('converted_datasets/umich_2021_phase.parquet');
+    
+    % Set publication style manually
+    set(groot, 'DefaultAxesFontSize', 12);
+    set(groot, 'DefaultAxesFontName', 'Arial');
+    set(groot, 'DefaultLineLineWidth', 1.5);
+    ```
 
 ## Multi-Panel Figures
 

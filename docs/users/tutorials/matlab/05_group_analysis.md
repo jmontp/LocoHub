@@ -14,66 +14,128 @@ Learn to aggregate biomechanical data across multiple subjects, compute group st
 
 ## Setup
 
-```matlab
-% Add library to path
-addpath('user_libs/matlab');
+=== "Using Library"
+    ```matlab
+    % Add library to path
+    addpath('user_libs/matlab');
+    
+    % Load data
+    loco = LocomotionData('converted_datasets/umich_2021_phase.parquet');
+    
+    % Get all subjects
+    allSubjects = loco.getSubjects();
+    fprintf('Total subjects: %d\n', length(allSubjects));
+    ```
 
-% Load data
-loco = LocomotionData('converted_datasets/umich_2021_phase.parquet');
-
-% Get all subjects
-allSubjects = loco.getSubjects();
-fprintf('Total subjects: %d\n', length(allSubjects));
-```
+=== "Using Raw Data"
+    ```matlab
+    % Add helper functions to path
+    addpath('user_libs/matlab');
+    
+    % Load data
+    data = parquetread('converted_datasets/umich_2021_phase.parquet');
+    
+    % Get all subjects
+    allSubjects = unique(data.subject);
+    fprintf('Total subjects: %d\n', length(allSubjects));
+    ```
 
 ## Multi-Subject Aggregation
 
 ### Computing Group Means
 
-```matlab
-% Aggregate data across all subjects for level walking
-task = 'level_walking';
-features = {'knee_flexion_angle_ipsi_rad', 'hip_flexion_angle_ipsi_rad'};
-
-% Initialize storage for all subjects
-allSubjectMeans = [];
-allSubjectStds = [];
-subjectCount = 0;
-
-for i = 1:length(allSubjects)
-    subject = allSubjects{i};
+=== "Using Library"
+    ```matlab
+    % Aggregate data across all subjects for level walking
+    task = 'level_walking';
+    features = {'knee_flexion_angle_ipsi_rad', 'hip_flexion_angle_ipsi_rad'};
     
-    % Filter data for this subject and task
-    subjectData = loco.filterSubject(subject).filterTask(task);
+    % Initialize storage for all subjects
+    allSubjectMeans = [];
+    allSubjectStds = [];
+    subjectCount = 0;
     
-    if subjectData.length() > 0
-        % Get mean patterns for this subject
-        meanPatterns = subjectData.getMeanPatterns(subject, task);
-        stdPatterns = subjectData.getStdPatterns(subject, task);
+    for i = 1:length(allSubjects)
+        subject = allSubjects{i};
         
-        % Store subject data
-        if subjectCount == 0
-            % Initialize arrays
-            nFeatures = length(features);
-            nPoints = 150;
-            allSubjectMeans = NaN(length(allSubjects), nPoints, nFeatures);
-            allSubjectStds = NaN(length(allSubjects), nPoints, nFeatures);
-        end
+        % Filter data for this subject and task
+        subjectData = loco.filterSubject(subject).filterTask(task);
         
-        subjectCount = subjectCount + 1;
-        
-        for f = 1:length(features)
-            feature = features{f};
-            if isfield(meanPatterns, feature)
-                allSubjectMeans(subjectCount, :, f) = meanPatterns.(feature);
-                allSubjectStds(subjectCount, :, f) = stdPatterns.(feature);
+        if subjectData.length() > 0
+            % Get mean patterns for this subject
+            meanPatterns = subjectData.getMeanPatterns(subject, task);
+            stdPatterns = subjectData.getStdPatterns(subject, task);
+            
+            % Store subject data
+            if subjectCount == 0
+                % Initialize arrays
+                nFeatures = length(features);
+                nPoints = 150;
+                allSubjectMeans = NaN(length(allSubjects), nPoints, nFeatures);
+                allSubjectStds = NaN(length(allSubjects), nPoints, nFeatures);
+            end
+            
+            subjectCount = subjectCount + 1;
+            
+            for f = 1:length(features)
+                feature = features{f};
+                if isfield(meanPatterns, feature)
+                    allSubjectMeans(subjectCount, :, f) = meanPatterns.(feature);
+                    allSubjectStds(subjectCount, :, f) = stdPatterns.(feature);
+                end
             end
         end
     end
-end
+    
+    fprintf('Successfully processed %d subjects\n', subjectCount);
+    ```
 
-fprintf('Successfully processed %d subjects\n', subjectCount);
-```
+=== "Using Raw Data"
+    ```matlab
+    % Using aggregateSubjects helper function
+    task = 'level_walking';
+    features = {'knee_flexion_angle_ipsi_rad', 'hip_flexion_angle_ipsi_rad'};
+    
+    % Aggregate knee flexion data
+    kneeAgg = aggregateSubjects(data, allSubjects, task, features{1});
+    
+    % Or manually aggregate
+    allSubjectMeans = [];
+    allSubjectStds = [];
+    subjectCount = 0;
+    
+    for i = 1:length(allSubjects)
+        subject = allSubjects{i};
+        
+        % Filter data for this subject and task
+        subjectData = data(strcmp(data.subject, subject) & ...
+                          strcmp(data.task, task), :);
+        
+        if height(subjectData) > 0
+            % Store subject data
+            if subjectCount == 0
+                % Initialize arrays
+                nFeatures = length(features);
+                nPoints = 150;
+                allSubjectMeans = NaN(length(allSubjects), nPoints, nFeatures);
+                allSubjectStds = NaN(length(allSubjects), nPoints, nFeatures);
+            end
+            
+            subjectCount = subjectCount + 1;
+            
+            for f = 1:length(features)
+                feature = features{f};
+                if ismember(feature, subjectData.Properties.VariableNames)
+                    [meanCurve, stdCurve] = computePhaseAverage(subjectData, feature);
+                    allSubjectMeans(subjectCount, :, f) = meanCurve;
+                    allSubjectStds(subjectCount, :, f) = stdCurve;
+                end
+            end
+        end
+    end
+    
+    fprintf('Successfully processed %d subjects\n', subjectCount);
+    ```
 
 ### Ensemble Averages
 
