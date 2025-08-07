@@ -3,6 +3,26 @@
 %
 % This script processes the CAMARGO dataset directly without intermediate files,
 % leveraging knowledge from existing implementations but with a cleaner approach.
+%
+% SIGN CONVENTION FIXES APPLIED:
+% 1. Knee flexion angle: Per-stride detection and flip if min < -0.3 rad (~-17 deg)
+%    - OpenSim convention can be opposite to standard biomechanics
+%    - Detected dynamically per stride to handle mixed conventions
+%
+% 2. Ankle dorsiflexion angle: Remove offset if |phase_0| > 2 rad
+%    - Some data has ~4 radian offset at heel strike
+%    - Corrected by subtracting the phase 0 value from entire stride
+%
+% 3. Knee flexion moment: Always flipped for stair_ascent task
+%    - Stair ascent consistently has inverted moment convention
+%    - Applied uniformly to all stair ascent strides
+%
+% 4. Segment angles: Calculated from kinematic chain
+%    - pelvis_angle = pelvis_tilt (from data)
+%    - trunk_angle = pelvis_angle + lumbar_extension  
+%    - thigh_angle = pelvis_angle - hip_flexion
+%    - shank_angle = thigh_angle - knee_flexion
+%    - foot_angle = shank_angle - ankle_dorsiflexion
 
 clear all;
 close all;
@@ -590,7 +610,7 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         valid_stride_pct = stride_pct(valid_pct_idx:end);
         valid_stride_time = stride_time(valid_pct_idx:end);
         
-        % Ankle dorsiflexion angle (note: may need sign flip depending on convention)
+        % Ankle dorsiflexion angle with smart offset correction
         if any(strcmp(trial_data.ik.Properties.VariableNames, 'ankle_angle_r'))
             angle_data = trial_data.ik.ankle_angle_r(ik_mask);
             ik_time = trial_data.ik.Header(ik_mask);
@@ -598,16 +618,34 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
             % Then interpolate from percentage to normalized 150 points
             % Note: negating to match dorsiflexion convention (positive = toe up)
-            stride_data.ankle_dorsiflexion_angle_ipsi_rad = -interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            ankle_data = -interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            
+            % Check for large offset at phase 0 and correct if needed
+            if abs(ankle_data(1)) > 2.0  % More than 2 radians offset at heel strike
+                ankle_offset = ankle_data(1);
+                ankle_data = ankle_data - ankle_offset;  % Remove offset
+                fprintf('      Corrected ankle offset of %.2f rad at phase 0\n', ankle_offset);
+            end
+            
+            stride_data.ankle_dorsiflexion_angle_ipsi_rad = ankle_data;
         else
             stride_data.ankle_dorsiflexion_angle_ipsi_rad = zeros(NUM_POINTS, 1);
         end
         
-        % Knee angle
+        % Knee angle with per-stride sign detection
         if any(strcmp(trial_data.ik.Properties.VariableNames, 'knee_angle_r'))
             angle_data = trial_data.ik.knee_angle_r(ik_mask);
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
-            stride_data.knee_flexion_angle_ipsi_rad = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            knee_data = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            
+            % Check if knee angle needs flipping (min should not be very negative)
+            min_knee = min(knee_data);
+            if min_knee < -0.3  % Less than -0.3 rad (~-17 degrees) indicates flipped sign
+                knee_data = -knee_data;  % Flip sign
+                fprintf('      Flipped knee angle sign (min was %.2f rad)\n', min_knee);
+            end
+            
+            stride_data.knee_flexion_angle_ipsi_rad = knee_data;
         else
             stride_data.knee_flexion_angle_ipsi_rad = zeros(NUM_POINTS, 1);
         end
@@ -621,6 +659,35 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
             stride_data.hip_flexion_angle_ipsi_rad = zeros(NUM_POINTS, 1);
         end
         
+        % Calculate segment angles from kinematic chain
+        % Pelvis angle (from pelvis tilt)
+        if any(strcmp(trial_data.ik.Properties.VariableNames, 'pelvis_tilt'))
+            angle_data = trial_data.ik.pelvis_tilt(ik_mask);
+            angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
+            stride_data.pelvis_angle_ipsi_rad = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+        else
+            stride_data.pelvis_angle_ipsi_rad = zeros(NUM_POINTS, 1);
+        end
+        
+        % Trunk angle (pelvis + lumbar extension)
+        if any(strcmp(trial_data.ik.Properties.VariableNames, 'lumbar_extension'))
+            lumbar_data = trial_data.ik.lumbar_extension(ik_mask);
+            lumbar_at_stride_time = interp1(ik_time, lumbar_data, valid_stride_time, 'linear', 'extrap');
+            lumbar_interp = interp1(valid_stride_pct, lumbar_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            stride_data.trunk_angle_ipsi_rad = stride_data.pelvis_angle_ipsi_rad + lumbar_interp;
+        else
+            stride_data.trunk_angle_ipsi_rad = stride_data.pelvis_angle_ipsi_rad;  % Same as pelvis if no lumbar
+        end
+        
+        % Thigh angle (pelvis - hip flexion)
+        stride_data.thigh_angle_ipsi_rad = stride_data.pelvis_angle_ipsi_rad - stride_data.hip_flexion_angle_ipsi_rad;
+        
+        % Shank angle (thigh - knee flexion)
+        stride_data.shank_angle_ipsi_rad = stride_data.thigh_angle_ipsi_rad - stride_data.knee_flexion_angle_ipsi_rad;
+        
+        % Foot angle (shank - ankle dorsiflexion)
+        stride_data.foot_angle_ipsi_rad = stride_data.shank_angle_ipsi_rad - stride_data.ankle_dorsiflexion_angle_ipsi_rad;
+        
         % Process kinetics (moments, normalize by body mass)
         id_time = trial_data.id.Header(id_mask);
         
@@ -633,11 +700,19 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
             stride_data.ankle_dorsiflexion_moment_ipsi_Nm = zeros(NUM_POINTS, 1);
         end
         
-        % Knee flexion moment
+        % Knee flexion moment with stair ascent fix
         if any(strcmp(trial_data.id.Properties.VariableNames, 'knee_angle_r_moment'))
             moment_data = trial_data.id.knee_angle_r_moment(id_mask) / subject_mass;
             moment_at_stride_time = interp1(id_time, moment_data, valid_stride_time, 'linear', 'extrap');
-            stride_data.knee_flexion_moment_ipsi_Nm = interp1(valid_stride_pct, moment_at_stride_time, target_pct, 'linear', 'extrap');
+            knee_moment = interp1(valid_stride_pct, moment_at_stride_time, target_pct, 'linear', 'extrap');
+            
+            % Always flip knee moment for stair ascent task
+            if strcmp(task, 'stair_ascent')
+                knee_moment = -knee_moment;
+                % fprintf('      Flipped knee moment for stair ascent\n');
+            end
+            
+            stride_data.knee_flexion_moment_ipsi_Nm = knee_moment;
         else
             stride_data.knee_flexion_moment_ipsi_Nm = zeros(NUM_POINTS, 1);
         end
@@ -665,6 +740,12 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         row.ankle_dorsiflexion_moment_ipsi_Nm = {stride_data.ankle_dorsiflexion_moment_ipsi_Nm};
         row.knee_flexion_moment_ipsi_Nm = {stride_data.knee_flexion_moment_ipsi_Nm};
         row.hip_flexion_moment_ipsi_Nm = {stride_data.hip_flexion_moment_ipsi_Nm};
+        % Add segment angles
+        row.pelvis_angle_ipsi_rad = {stride_data.pelvis_angle_ipsi_rad};
+        row.trunk_angle_ipsi_rad = {stride_data.trunk_angle_ipsi_rad};
+        row.thigh_angle_ipsi_rad = {stride_data.thigh_angle_ipsi_rad};
+        row.shank_angle_ipsi_rad = {stride_data.shank_angle_ipsi_rad};
+        row.foot_angle_ipsi_rad = {stride_data.foot_angle_ipsi_rad};
         
         % Append this single row
         if isempty(rows)
@@ -727,6 +808,12 @@ function expanded = expand_table_for_parquet(compact_table)
     ankle_dorsiflexion_moment_ipsi_Nm = zeros(total_rows, 1);
     knee_flexion_moment_ipsi_Nm = zeros(total_rows, 1);
     hip_flexion_moment_ipsi_Nm = zeros(total_rows, 1);
+    % Segment angles
+    pelvis_angle_ipsi_rad = zeros(total_rows, 1);
+    trunk_angle_ipsi_rad = zeros(total_rows, 1);
+    thigh_angle_ipsi_rad = zeros(total_rows, 1);
+    shank_angle_ipsi_rad = zeros(total_rows, 1);
+    foot_angle_ipsi_rad = zeros(total_rows, 1);
     
     % Process each stride
     row_idx = 1;
@@ -754,6 +841,12 @@ function expanded = expand_table_for_parquet(compact_table)
             ankle_dorsiflexion_moment_ipsi_Nm(row_idx) = stride.ankle_dorsiflexion_moment_ipsi_Nm{1}(p);
             knee_flexion_moment_ipsi_Nm(row_idx) = stride.knee_flexion_moment_ipsi_Nm{1}(p);
             hip_flexion_moment_ipsi_Nm(row_idx) = stride.hip_flexion_moment_ipsi_Nm{1}(p);
+            % Extract segment angles
+            pelvis_angle_ipsi_rad(row_idx) = stride.pelvis_angle_ipsi_rad{1}(p);
+            trunk_angle_ipsi_rad(row_idx) = stride.trunk_angle_ipsi_rad{1}(p);
+            thigh_angle_ipsi_rad(row_idx) = stride.thigh_angle_ipsi_rad{1}(p);
+            shank_angle_ipsi_rad(row_idx) = stride.shank_angle_ipsi_rad{1}(p);
+            foot_angle_ipsi_rad(row_idx) = stride.foot_angle_ipsi_rad{1}(p);
             
             row_idx = row_idx + 1;
         end
@@ -764,5 +857,7 @@ function expanded = expand_table_for_parquet(compact_table)
     expanded = table(subject, task, task_id, task_info, step, phase_ipsi, ...
         ankle_dorsiflexion_angle_ipsi_rad, knee_flexion_angle_ipsi_rad, ...
         hip_flexion_angle_ipsi_rad, ankle_dorsiflexion_moment_ipsi_Nm, ...
-        knee_flexion_moment_ipsi_Nm, hip_flexion_moment_ipsi_Nm);
+        knee_flexion_moment_ipsi_Nm, hip_flexion_moment_ipsi_Nm, ...
+        pelvis_angle_ipsi_rad, trunk_angle_ipsi_rad, thigh_angle_ipsi_rad, ...
+        shank_angle_ipsi_rad, foot_angle_ipsi_rad);
 end
