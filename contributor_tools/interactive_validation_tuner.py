@@ -728,6 +728,9 @@ class InteractiveValidationTuner:
                 # Clear data cache
                 self.data_cache = {}
                 
+                # Update task dropdown with tasks from dataset
+                self.update_task_dropdown_from_dataset()
+                
                 self.status_bar.config(text=f"Loaded defaults: {default_ranges_path.name} and {default_dataset_path.name}")
                 
                 # Initialize complete validation display (GUI setup + validation)
@@ -989,10 +992,10 @@ class InteractiveValidationTuner:
                 self.locomotion_data = LocomotionData(str(self.dataset_path))
             except ValueError as e:
                 if "Missing required columns: ['phase']" in str(e):
-                    # Try with 'phase_percent' column
+                    # Try with 'phase_ipsi' column
                     self.locomotion_data = LocomotionData(
                         str(self.dataset_path),
-                        phase_col='phase_percent'
+                        phase_col='phase_ipsi'
                     )
                 else:
                     raise e
@@ -1000,16 +1003,51 @@ class InteractiveValidationTuner:
             # Clear data cache
             self.data_cache = {}
             
+            # Update task dropdown to include all dataset tasks
+            self.update_task_dropdown_from_dataset()
+            
             self.status_bar.config(text=f"Loaded dataset: {self.dataset_path.name}")
             
-            # Update plot if validation ranges are loaded
-            if self.validation_data and self.current_task:
+            # Update plot if we have a current task (even without validation ranges)
+            if self.current_task:
                 # Run validation with 4-step process for proper display
                 self.run_validation_update()
             
         except Exception as e:
             print(f"ERROR: Failed to load dataset: {str(e)}")
             messagebox.showerror("Error", f"Failed to load dataset:\n{str(e)}")
+    
+    def update_task_dropdown_from_dataset(self):
+        """Update task dropdown based on tasks available in the dataset."""
+        if not self.locomotion_data:
+            return
+        
+        try:
+            # Get tasks from dataset
+            dataset_tasks = self.locomotion_data.get_tasks()
+            
+            # Combine with tasks from validation data (if any)
+            # This allows users to see both dataset tasks and any pre-defined validation tasks
+            all_tasks = list(set(dataset_tasks) | set(self.validation_data.keys()))
+            all_tasks.sort()
+            
+            # Update dropdown
+            self.task_dropdown['values'] = all_tasks
+            
+            # Set selection
+            if self.current_task in all_tasks:
+                self.task_dropdown.set(self.current_task)
+            elif all_tasks:
+                self.task_dropdown.set(all_tasks[0])
+                self.current_task = all_tasks[0]
+            
+            # Update status
+            dataset_only_tasks = set(dataset_tasks) - set(self.validation_data.keys())
+            if dataset_only_tasks:
+                print(f"Found {len(dataset_only_tasks)} tasks in dataset without validation ranges: {', '.join(sorted(dataset_only_tasks))}")
+            
+        except Exception as e:
+            print(f"Warning: Could not get tasks from dataset: {e}")
     
     def on_task_changed(self, event=None):
         """Handle task selection change."""
@@ -1075,32 +1113,32 @@ class InteractiveValidationTuner:
             return ''  # No unit or unknown
     
     def get_all_features(self):
-        """Get all features to display (kinematic + kinetic + segment)."""
-        # Kinematic features
+        """Get all features to display (kinematic + kinetic + segment) from standard spec - ipsilateral only."""
+        # Primary joint angles (sagittal plane) - from standard_spec.md - IPSI ONLY
         kinematic_vars = [
             'hip_flexion_angle_ipsi_rad',
             'knee_flexion_angle_ipsi_rad',
             'ankle_dorsiflexion_angle_ipsi_rad'
         ]
         kinematic_labels = [
-            'Hip Flexion Angle',
-            'Knee Flexion Angle',
-            'Ankle Dorsiflexion Angle'
+            'Hip Flexion Angle (Ipsi)',
+            'Knee Flexion Angle (Ipsi)',
+            'Ankle Dorsiflexion Angle (Ipsi)'
         ]
         
-        # Kinetic features
+        # Joint moments (sagittal plane) - from standard_spec.md - IPSI ONLY
         kinetic_vars = [
             'hip_flexion_moment_ipsi_Nm',
             'knee_flexion_moment_ipsi_Nm',
             'ankle_dorsiflexion_moment_ipsi_Nm'
         ]
         kinetic_labels = [
-            'Hip Flexion Moment',
-            'Knee Flexion Moment',
-            'Ankle Dorsiflexion Moment'
+            'Hip Flexion Moment (Ipsi)',
+            'Knee Flexion Moment (Ipsi)',
+            'Ankle Dorsiflexion Moment (Ipsi)'
         ]
         
-        # Segment angle features - only sagittal plane for now
+        # Segment angles (sagittal plane) - from standard_spec.md - IPSI ONLY (plus bilateral segments)
         segment_vars = [
             'pelvis_sagittal_angle_rad',
             'trunk_sagittal_angle_rad',
@@ -1111,14 +1149,54 @@ class InteractiveValidationTuner:
         segment_labels = [
             'Pelvis Sagittal Angle',
             'Trunk Sagittal Angle',
-            'Thigh Sagittal Angle',
-            'Shank Sagittal Angle',
-            'Foot Sagittal Angle'
+            'Thigh Sagittal Angle (Ipsi)',
+            'Shank Sagittal Angle (Ipsi)',
+            'Foot Sagittal Angle (Ipsi)'
         ]
         
-        # Combine all
+        # Additional kinematic features (frontal and transverse planes) - optional
+        additional_kinematic_vars = [
+            'hip_adduction_angle_ipsi_rad',
+            'hip_rotation_angle_ipsi_rad',
+            'knee_adduction_angle_ipsi_rad',
+            'ankle_eversion_angle_ipsi_rad',
+            'pelvis_frontal_angle_rad',
+            'pelvis_transverse_angle_rad',
+            'trunk_frontal_angle_rad',
+            'trunk_transverse_angle_rad'
+        ]
+        additional_kinematic_labels = [
+            'Hip Adduction Angle (Ipsi)',
+            'Hip Rotation Angle (Ipsi)',
+            'Knee Adduction Angle (Ipsi)',
+            'Ankle Eversion Angle (Ipsi)',
+            'Pelvis Frontal Angle',
+            'Pelvis Transverse Angle',
+            'Trunk Frontal Angle',
+            'Trunk Transverse Angle'
+        ]
+        
+        # Joint angular velocities - from standard_spec.md - IPSI ONLY
+        velocity_vars = [
+            'hip_flexion_velocity_ipsi_rad_s',
+            'knee_flexion_velocity_ipsi_rad_s',
+            'ankle_dorsiflexion_velocity_ipsi_rad_s'
+        ]
+        velocity_labels = [
+            'Hip Flexion Velocity (Ipsi)',
+            'Knee Flexion Velocity (Ipsi)',
+            'Ankle Dorsiflexion Velocity (Ipsi)'
+        ]
+        
+        # Combine primary features (most commonly available)
+        # Start with sagittal plane kinematics and kinetics
         all_vars = kinematic_vars + kinetic_vars + segment_vars
         all_labels = kinematic_labels + kinetic_labels + segment_labels
+        
+        # Optionally add velocities and additional planes if needed
+        # Uncomment to include:
+        # all_vars += velocity_vars + additional_kinematic_vars
+        # all_labels += velocity_labels + additional_kinematic_labels
         
         return all_vars, all_labels
     
@@ -1621,7 +1699,7 @@ class InteractiveValidationTuner:
         
         # Plot data if available using LineCollection for speed
         if len(all_data) > 0:
-            phase_percent = np.linspace(0, 100, 150)
+            phase_ipsi = np.linspace(0, 100, 150)
             
             # Get global passing strides if available
             global_passing = getattr(self, 'global_passing_strides', set())
@@ -1638,11 +1716,11 @@ class InteractiveValidationTuner:
                     
                     if stride_idx in global_passing:
                         # Globally passing (green)
-                        global_lines.append(list(zip(phase_percent, display_stride)))
+                        global_lines.append(list(zip(phase_ipsi, display_stride)))
                         count += 1
                     elif show_local_passing and stride_idx not in failed_stride_indices:
                         # Locally passing but not globally (yellow)
-                        local_lines.append(list(zip(phase_percent, display_stride)))
+                        local_lines.append(list(zip(phase_ipsi, display_stride)))
                         local_count += 1
                 
                 # Plot globally passing strides in green
@@ -1660,7 +1738,7 @@ class InteractiveValidationTuner:
                     global_pass_strides = [all_data[i] for i in range(len(all_data)) if i in global_passing]
                     mean_pattern = np.mean(global_pass_strides, axis=0)
                     display_mean = self.convert_to_display_units(mean_pattern, var_name)
-                    ax.plot(phase_percent, display_mean, color='darkgreen', linewidth=2, zorder=5)
+                    ax.plot(phase_ipsi, display_mean, color='darkgreen', linewidth=2, zorder=5)
                 
                 if local_lines:
                     local_pass_indices = [i for i in range(len(all_data)) 
@@ -1668,7 +1746,7 @@ class InteractiveValidationTuner:
                     local_pass_strides = [all_data[i] for i in local_pass_indices]
                     mean_pattern = np.mean(local_pass_strides, axis=0)
                     display_mean = self.convert_to_display_units(mean_pattern, var_name)
-                    ax.plot(phase_percent, display_mean, color='darkorange', linewidth=2, zorder=6)
+                    ax.plot(phase_ipsi, display_mean, color='darkorange', linewidth=2, zorder=6)
             else:
                 # For fail column: show strides that fail this specific feature
                 lines = []
@@ -1676,7 +1754,7 @@ class InteractiveValidationTuner:
                     if stride_idx in failed_stride_indices:
                         # Convert to display units if needed
                         display_stride = self.convert_to_display_units(stride, var_name)
-                        lines.append(list(zip(phase_percent, display_stride)))
+                        lines.append(list(zip(phase_ipsi, display_stride)))
                         count += 1
                 
                 # Use LineCollection for fast batch plotting
@@ -1690,7 +1768,7 @@ class InteractiveValidationTuner:
                     if fail_strides:
                         mean_pattern = np.mean(fail_strides, axis=0)
                         display_mean = self.convert_to_display_units(mean_pattern, var_name)
-                        ax.plot(phase_percent, display_mean, color='darkred', linewidth=2, zorder=5)
+                        ax.plot(phase_ipsi, display_mean, color='darkred', linewidth=2, zorder=5)
         
         # Return both counts for title updates
         if show_pass and show_local_passing:
@@ -1735,13 +1813,13 @@ class InteractiveValidationTuner:
         
         # Plot data if available
         if len(all_data) > 0:
-            phase_percent = np.linspace(0, 100, 150)
+            phase_ipsi = np.linspace(0, 100, 150)
             for stride in all_data:
-                ax.plot(phase_percent, stride, color='gray', alpha=0.1, linewidth=0.5, zorder=1)
+                ax.plot(phase_ipsi, stride, color='gray', alpha=0.1, linewidth=0.5, zorder=1)
             
             # Plot mean
             mean_pattern = np.mean(all_data, axis=0)
-            ax.plot(phase_percent, mean_pattern, color='black', linewidth=2, zorder=5)
+            ax.plot(phase_ipsi, mean_pattern, color='black', linewidth=2, zorder=5)
     
     def on_box_changed(self, box):
         """Handle changes to a draggable box."""
