@@ -26,6 +26,7 @@ Select a task to see all available datasets:
             <option value="stair_descent">Stair Descent</option>
         </select>
     </label>
+    <button class="reset-order-btn" onclick="resetDatasetOrder()" style="display: none; margin-left: 10px;" id="resetOrderBtn">Reset Order</button>
 </div>
 
 <div id="allDatasetsGrid" class="comparison-grid" style="display: flex; overflow-x: auto; gap: 20px; margin: 20px 0; padding-bottom: 10px;">
@@ -107,6 +108,57 @@ Compare two datasets directly:
     flex: 0 0 auto;
     width: 400px; /* Fixed width for horizontal scrolling */
     min-width: 400px;
+    position: relative;
+}
+
+.move-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 123, 255, 0.7);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 30px;
+    height: 60px;
+    cursor: pointer;
+    font-size: 18px;
+    z-index: 10;
+    transition: all 0.3s ease;
+    opacity: 0.6;
+}
+
+.move-btn:hover {
+    opacity: 1;
+    background: rgba(0, 123, 255, 0.9);
+}
+
+.move-btn:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
+
+.move-left {
+    left: 5px;
+}
+
+.move-right {
+    right: 5px;
+}
+
+.reset-order-btn {
+    margin: 10px 0;
+    padding: 8px 16px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.reset-order-btn:hover {
+    background: #5a6268;
 }
 
 .dataset-card h4 {
@@ -119,7 +171,7 @@ Compare two datasets directly:
     width: 100%;
     height: auto;
     border-radius: 4px;
-    max-height: 600px; /* Prevent images from being too tall */
+    /* max-height removed to allow full plot display */
     object-fit: contain;
 }
 
@@ -169,33 +221,95 @@ function formatName(dataset) {
     return names[dataset] || dataset.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 }
 
+// Store current dataset order
+let currentDatasetOrder = [];
+
 function showAllDatasets() {
     const task = document.getElementById('taskSelect').value;
     const grid = document.getElementById('allDatasetsGrid');
+    const resetBtn = document.getElementById('resetOrderBtn');
     
     if (!task) {
         grid.innerHTML = '<p style="color: #666; padding: 20px;">Please select a task to view datasets.</p>';
+        currentDatasetOrder = [];
+        resetBtn.style.display = 'none';
         return;
     }
     
     // Find datasets with this task
-    const datasets = Object.keys(AVAILABLE_PLOTS)
+    let datasets = Object.keys(AVAILABLE_PLOTS)
         .filter(d => AVAILABLE_PLOTS[d].includes(task));
     
     if (datasets.length === 0) {
         grid.innerHTML = '<p style="color: #666; padding: 20px;">No datasets available for this task.</p>';
+        currentDatasetOrder = [];
+        resetBtn.style.display = 'none';
         return;
     }
     
-    // Display all matching datasets
-    grid.innerHTML = datasets.map(dataset => `
-        <div class="dataset-card">
+    // Check if we have a saved order for this task
+    const savedOrder = localStorage.getItem(`datasetOrder_${task}`);
+    if (savedOrder) {
+        const saved = JSON.parse(savedOrder);
+        // Filter to only include datasets that are still available
+        const ordered = saved.filter(d => datasets.includes(d));
+        // Add any new datasets that weren't in the saved order
+        const newDatasets = datasets.filter(d => !ordered.includes(d));
+        datasets = [...ordered, ...newDatasets];
+        // Show reset button if we have a custom order
+        resetBtn.style.display = 'inline-block';
+    } else {
+        resetBtn.style.display = 'none';
+    }
+    
+    currentDatasetOrder = datasets;
+    
+    // Display all matching datasets with move buttons
+    grid.innerHTML = datasets.map((dataset, index) => `
+        <div class="dataset-card" data-dataset="${dataset}">
+            <button class="move-btn move-left" 
+                    onclick="moveCard(${index}, -1)" 
+                    ${index === 0 ? 'disabled' : ''}>
+                ◀
+            </button>
             <h4>${formatName(dataset)}</h4>
             <img src="../comparison_plots/${dataset}_${task}.png" 
                  alt="${formatName(dataset)} - ${task.replace(/_/g, ' ')}"
                  onerror="this.onerror=null; this.style.display='none'; var err=document.createElement('div'); err.className='error-message'; err.innerHTML='Plot not yet generated.<br>Run validation to create.'; this.parentElement.appendChild(err);">
+            <button class="move-btn move-right" 
+                    onclick="moveCard(${index}, 1)" 
+                    ${index === datasets.length - 1 ? 'disabled' : ''}>
+                ▶
+            </button>
         </div>
     `).join('');
+}
+
+function moveCard(index, direction) {
+    const newIndex = index + direction;
+    
+    // Check bounds
+    if (newIndex < 0 || newIndex >= currentDatasetOrder.length) {
+        return;
+    }
+    
+    // Swap elements in the array
+    const temp = currentDatasetOrder[index];
+    currentDatasetOrder[index] = currentDatasetOrder[newIndex];
+    currentDatasetOrder[newIndex] = temp;
+    
+    // Save the new order
+    const task = document.getElementById('taskSelect').value;
+    localStorage.setItem(`datasetOrder_${task}`, JSON.stringify(currentDatasetOrder));
+    
+    // Refresh the display
+    showAllDatasets();
+}
+
+function resetDatasetOrder() {
+    const task = document.getElementById('taskSelect').value;
+    localStorage.removeItem(`datasetOrder_${task}`);
+    showAllDatasets();
 }
 
 function showPairwise() {
