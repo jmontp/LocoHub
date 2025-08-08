@@ -3,9 +3,11 @@
 ## **The Effect of Walking Incline and Speed on Human Leg Kinematics, Kinetics, and EMG**
 
 ## Overview
-**Brief Description**: Comprehensive treadmill-based locomotion dataset including walking at various speeds and inclines, running, and transitions between activities.
+**Brief Description**: Comprehensive treadmill-based locomotion dataset including walking at various speeds and inclines, with synchronized kinematics, kinetics, and EMG data. This dataset focuses on continuous parameterization of human gait across different walking conditions.
 
-**Collection Year**: 2018-2021
+**Collection Year**: 2018-2021  
+**Dataset Size**: ~1.2 GB (parquet format)  
+**License**: Open Access (IEEE DataPort)
 
 **Institution**: University of Michigan, Department of Robotics, Mechanical Engineering, and Electrical and Computer Engineering
 
@@ -15,14 +17,27 @@
 
 ### Primary Citation
 ```
-Locomotor Control Systems Laboratory. (2021). University of Michigan Treadmill Locomotion Dataset. 
-University of Michigan, Ann Arbor. [Contact lab for access]
+@misc{embry2018walking,
+  title={The effect of walking incline and speed on human leg kinematics, kinetics, and EMG},
+  author={Embry, K. and Villarreal, D. and Macaluso, R. and Gregg, R.D.},
+  year={2018},
+  publisher={IEEE DataPort},
+  doi={10.21227/gk32-e868}
+}
 ```
 
 ### Associated Publications
-1. Gregg, R.D. et al. "The Effect of Walking Incline and Speed on Human Leg Kinematics, Kinetics, and EMG" 
-   IEEE DataPort (2018). https://ieee-dataport.org/open-access/effect-walking-incline-and-speed-human-leg-kinematics-kinetics-and-emg
-2. Related publications available at: https://scholar.google.com/citations?user=hEypYOEAAAAJ&hl=en
+1. Embry, K., Villarreal, D., Macaluso, R., & Gregg, R.D. (2018). "The Effect of Walking Incline and Speed on Human Leg Kinematics, Kinetics, and EMG"  
+   IEEE DataPort. DOI: 10.21227/gk32-e868
+
+2. Macaluso, R., Embry, K., Villarreal, D., & Gregg, R.D. (2020). "Human Leg Kinematics, Kinetics, and EMG During Phase-Shifting Perturbations at Varying Inclines"  
+   IEEE DataPort. DOI: 10.21227/12hp-e249
+
+3. Elery, T., Rezazadeh, S., Reznick, E., Gray, L., & Gregg, R.D. (2020). "Effects of a Powered Knee-Ankle Prosthesis on Amputee Hip Compensations: A Case Series"  
+   IEEE DataPort. DOI: 10.21227/sngq-4x29
+
+4. Best, T.K., Embry, K.R., Rouse, E.J., & Gregg, R.D. (2023). "Phase-Variable Control of a Powered Knee-Ankle Prosthesis over Continuously Varying Speeds and Inclines"  
+   IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)
 
 ### Acknowledgments
 This research was supported by:
@@ -48,15 +63,55 @@ This research was supported by:
 ### Tasks Included
 | Task ID | Task Description | Duration/Cycles | Conditions | Notes |
 |---------|------------------|-----------------|------------|-------|
-| level_walking | Level walking | Continuous | 0° (level) | Treadmill |
-| incline_walking | Incline walking | Continuous | 5° incline | Treadmill |
-| decline_walking | Decline walking | Continuous | -10° decline | Treadmill |
+| level_walking | Level walking | 60 sec trials | 0° at 0.8, 1.0, 1.2 m/s | Bertec treadmill |
+| incline_walking | Incline walking | 60 sec trials | +5°, +10° at multiple speeds | Bertec treadmill |
+| decline_walking | Decline walking | 60 sec trials | -5°, -10° at multiple speeds | Bertec treadmill |
+| running | Running (if included) | 60 sec trials | 1.8-2.4 m/s | Level only |
+| transitions | Speed/incline transitions | Variable | Continuous changes | Phase-shifting |
 
 ### Data Columns (Standardized Format)
-- **Variables**: 45 biomechanical features (kinematics, kinetics, segment angles)
+- **Variables**: 45+ biomechanical features
+  - Kinematics: Hip, knee, ankle angles (sagittal, frontal, transverse)
+  - Kinetics: Joint moments and powers
+  - EMG: 7 channels (gluteus medius, rectus femoris, vastus lateralis, biceps femoris, tibialis anterior, gastrocnemius medialis, soleus)
+  - Ground reaction forces: Vertical and horizontal components
 - **Format**: Phase-indexed (150 points per gait cycle)
 - **File**: `converted_datasets/umich_2021_phase.parquet`
-- **Units**: All angles in radians, moments normalized by body weight (Nm/kg)
+- **Units**: 
+  - Angles: radians
+  - Moments: Nm/kg (normalized)
+  - Powers: W/kg (normalized)
+  - EMG: Normalized to maximum voluntary contraction
+  - Forces: N/kg (normalized)
+
+## Data Collection Methods
+
+### Equipment Specifications
+- **Treadmill**: Bertec split-belt instrumented treadmill
+  - Force plates: Dual 6-DOF force platforms (1000 Hz)
+  - Speed range: 0-3.0 m/s
+  - Incline range: -15° to +15°
+- **Motion Capture**: Vicon system with 12 cameras (200 Hz)
+- **EMG System**: Delsys Trigno wireless (2000 Hz)
+- **Marker Set**: Modified Helen Hayes with additional tracking markers
+
+### Processing Pipeline
+- **Inverse Kinematics**: Visual3D software
+- **Filtering**: 4th order zero-lag Butterworth
+  - Kinematics: 6 Hz cutoff
+  - Kinetics: 25 Hz cutoff
+  - EMG: 20-450 Hz bandpass, RMS envelope
+- **Cycle Detection**: Heel strike from vertical GRF
+- **Phase Variable**: Monotonic progression through gait cycle
+- **Normalization**: Time-normalized to 150 points using cubic spline
+
+## Research Focus
+
+### Phase-Variable Control
+The Locomotor Control Systems Lab pioneered phase-variable control for powered prostheses, using a continuous phase variable that robustly represents gait cycle timing across different walking conditions. This approach enables smooth transitions between different speeds and inclines without discrete mode switching.
+
+### Clinical Translation
+The lab's research has led to successful clinical trials of powered knee-ankle prostheses, demonstrating improved metabolic efficiency and biomechanical symmetry compared to passive devices.
 
 ## Contact Information
 - **Dataset Curator**: Robert D. Gregg IV, Ph.D.

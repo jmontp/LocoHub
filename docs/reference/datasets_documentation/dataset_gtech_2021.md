@@ -6,7 +6,9 @@
 
 **Brief Description**: Comprehensive open-source dataset of lower limb biomechanics in multiple conditions of stairs, ramps, and level-ground ambulation and transitions. Contains 3-dimensional biomechanical and wearable sensor data from 22 able-bodied adults with joint-level kinematics, moments, and powers processed using OpenSim inverse dynamics.
 
-**Collection Year**: 2018-2019
+**Collection Year**: 2018-2019  
+**Dataset Size**: ~2.5 GB (parquet format)  
+**License**: Creative Commons Attribution 4.0 (CC-BY 4.0)
 
 **Institution**: Georgia Institute of Technology, George W. Woodruff School of Mechanical Engineering and Institute of Robotics and Intelligent Machines
 
@@ -32,7 +34,10 @@
 ### Associated Publications
 - Published online: February 20, 2021
 - DOI: https://doi.org/10.1016/j.jbiomech.2021.110320
-- Dataset hosted on Mendeley Data (3 parts due to size)
+- Dataset hosted on Mendeley Data (3 parts due to size):
+  - Part 1: https://doi.org/10.17632/x78gzbp7n4.3
+  - Part 2: https://doi.org/10.17632/gwtkr3hv7r.3
+  - Part 3: https://doi.org/10.17632/svzfpxr3fy.3
 
 ### Acknowledgments
 This comprehensive dataset offers a source of locomotion information for applications in locomotion recognition, developments in robotic assistive devices, and improvement of biomimetic controllers that better adapt to terrain conditions.
@@ -40,7 +45,7 @@ This comprehensive dataset offers a source of locomotion information for applica
 ## Dataset Contents
 
 ### Subjects
-- **Total Subjects**: 21 (Gtech_2021_AB06, Gtech_2021_AB07, Gtech_2021_AB08 ... (21 total))
+- **Total Subjects**: 22 (Gtech_2021_AB06 through Gtech_2021_AB29, excluding AB16)
 - **Subject ID Format**: `Gtech_2021_XX##` (Dataset: Gtech 2021, Population: Able-bodied)
 - **Demographics**:
   - Age Range: 19.0 - 33.0 years
@@ -62,10 +67,44 @@ This comprehensive dataset offers a source of locomotion information for applica
 | stair_descent | Stair Descent | Continuous | 4 step heights: 10.16 cm (4"), 12.70 cm (5"), 15.24 cm (6"), 17.78 cm (7") | Based on ADA guidelines |
 
 ### Data Columns (Standardized Format)
-- **Variables**: 17 columns including biomechanical features
+- **Variables**: 17 primary biomechanical features (expandable to 45+ with all planes)
 - **Format**: Phase-indexed (150 points per gait cycle)
 - **File**: `converted_datasets/gtech_2021_phase.parquet`
-- **Units**: All angles in radians, moments normalized by body weight (Nm/kg)
+- **Units**: 
+  - Angles: radians
+  - Moments: Nm/kg (normalized by body weight)
+  - Powers: W/kg (normalized by body weight)
+  - Coordinate System: Right-hand rule, Z-up
+
+## Data Collection Methods
+
+### Motion Capture System
+- **System**: Vicon Motion Capture (16 T40-S cameras)
+- **Sampling Rate**: 200 Hz
+- **Marker Protocol**: Modified Plug-in Gait with additional tracking markers
+- **Force Plates**: Bertec split-belt instrumented treadmill (1000 Hz)
+
+### Wearable Sensors
+- **IMUs**: 7 Delsys Trigno sensors (lower limb segments)
+- **EMG**: 7 channels (major lower limb muscles)
+- **Goniometers**: Knee and ankle joint angle sensors
+- **Sampling Rate**: 2000 Hz (EMG), 150 Hz (IMU)
+
+### Processing Pipeline
+- **Inverse Dynamics**: OpenSim 4.0 with gait2392 model
+- **Filtering**: 4th order Butterworth (6 Hz cutoff for kinematics, 25 Hz for kinetics)
+- **Cycle Detection**: Heel strike events from force plates
+- **Phase Normalization**: Cubic spline interpolation to 150 points
+
+## Laboratory Facilities
+
+### EPIC Lab Terrain Park
+- Unique configurable terrain environment
+- Multiple stair heights (4"-7" rise)
+- Adjustable ramp (0-18° incline/decline)
+- Level ground walking circuit
+- Force plate instrumentation throughout
+- Full motion capture coverage
 
 ## Contact Information
 - **Dataset Curator**: Jonathan Camargo, PhD Candidate (at time of publication)

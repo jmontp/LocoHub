@@ -3,21 +3,33 @@
 ## **A human lower-limb biomechanics and wearable sensors dataset during cyclic and non-cyclic activities**
 
 ## Overview
-**Brief Description**: Comprehensive motion capture dataset featuring diverse locomotion and daily activities including walking, running, stairs, sports movements, and functional tasks. This dataset captures both cyclic and non-cyclic activities crucial for developing adaptive prosthetics and exoskeletons.
+**Brief Description**: Comprehensive motion capture dataset featuring diverse locomotion and daily activities including walking, running, stairs, sports movements, and functional tasks. This dataset captures both cyclic (11 activities) and non-cyclic (20 activities) movements crucial for developing adaptive prosthetics and exoskeletons.
 
-**Collection Year**: 2023
+**Collection Year**: 2023  
+**Dataset Size**: ~1.8 GB (parquet format)  
+**License**: Creative Commons Attribution 4.0 (CC-BY 4.0)  
+**Publication Date**: December 21, 2023
 
 **Institution**: Georgia Institute of Technology, Woodruff School of Mechanical Engineering and Institute of Robotics and Intelligent Machines
 
-**Principal Investigators**: Aaron Young, Ph.D. (EPIC Lab - Exoskeleton and Prosthetic Intelligent Controls Laboratory)
+**Principal Investigators**: Aaron Young, Ph.D. (EPIC Lab - Exoskeleton and Prosthetic Intelligent Controls Laboratory)  
+**Co-Authors**: Keaton Scherpereel, Dean Molinaro, Omer Inan, Max Shepherd
 
 ## Citation Information
 
 ### Primary Citation
 ```
-Scherpereel, K., Molinaro, D., Inan, O., Shepherd, M., & Young, A. (2023). 
-A human lower-limb biomechanics and wearable sensors dataset during cyclic and non-cyclic activities. 
-Scientific Data, 10, 924. https://doi.org/10.1038/s41597-023-02840-6
+@article{scherpereel2023human,
+  title={A human lower-limb biomechanics and wearable sensors dataset during cyclic and non-cyclic activities},
+  author={Scherpereel, Keaton and Molinaro, Dean and Inan, Omer and Shepherd, Max and Young, Aaron},
+  journal={Scientific Data},
+  volume={10},
+  number={1},
+  pages={924},
+  year={2023},
+  publisher={Nature Publishing Group},
+  doi={10.1038/s41597-023-02840-6}
+}
 ```
 
 **Dataset Repository**: Available at SMARTech with DOI: https://doi.org/10.35090/gatech/70296
@@ -31,8 +43,8 @@ Scientific Data, 10, 924. https://doi.org/10.1038/s41597-023-02840-6
 This research was supported by:
 - NSF National Robotics Initiative (NRI) grants for machine learning in exoskeleton control
 - National Science Foundation Graduate Research Fellowship under Grant No. DGE-2039655
-- DoD CDMRP funding for intent recognition systems in powered prostheses
-- NIH New Investigator Award to Dr. Aaron Young
+- DoD Congressionally Directed Medical Research Programs (CDMRP) for powered prosthesis intent recognition
+- NIH Director's New Innovator Award to Dr. Aaron Young
 - X, The Moonshot Factory for funding this open-source project (Kathryn Zealand helped conceptualize and fund the study)
 
 ## Dataset Contents
@@ -51,21 +63,43 @@ This research was supported by:
   - Note: Subject GT23_AB04 excluded from dataset
 
 ### Tasks Included
-| Task ID | Task Description | Duration/Cycles | Conditions | Notes |
-|---------|------------------|-----------------|------------|-------|
-| level_walking | Level ground walking | Multiple trials | Various speeds | Treadmill |
-| incline_walking | Incline walking | Multiple trials | 5° and 10° inclines | Up/down |
-| stairs | Stair climbing | Multiple cycles | Standard stairs | Up/down |
-| squats | Squatting | Multiple reps | With/without weight | Static |
-| sit_to_stand | Sit-to-stand transitions | Multiple cycles | Chair height | Functional |
-| curb_up | Stepping up curb | Multiple cycles | Street curb height | Overground |
-| curb_down | Stepping down curb | Multiple cycles | Street curb height | Overground |
+
+#### Cyclic Activities (11 total)
+| Task ID | Task Description | Duration/Cycles | Conditions |
+|---------|------------------|-----------------|------------|
+| level_walking | Level ground walking | Multiple speeds | 0.8-1.6 m/s |
+| incline_walking | Incline walking | 5° and 10° slopes | Treadmill |
+| decline_walking | Decline walking | -5° and -10° slopes | Treadmill |
+| stair_ascent | Stair climbing up | 4-step staircase | 17.8 cm rise |
+| stair_descent | Stair climbing down | 4-step staircase | 17.8 cm rise |
+| running | Running | Multiple speeds | 2.0-3.0 m/s |
+
+#### Non-Cyclic Activities (20 total)
+| Task ID | Task Description | Type | Notes |
+|---------|------------------|------|-------|
+| sit_to_stand | Sit-to-stand transitions | Functional | Standard chair |
+| stand_to_sit | Stand-to-sit transitions | Functional | Standard chair |
+| squats | Bodyweight squats | Exercise | Multiple depths |
+| lunges | Forward lunges | Exercise | Alternating legs |
+| jumping | Vertical jumps | Athletic | Max effort |
+| cutting | Lateral cutting maneuvers | Athletic | 45° and 90° |
+| step_up | Step up onto platform | Functional | ~20 cm height |
+| step_down | Step down from platform | Functional | ~20 cm height |
 
 ### Data Columns (Standardized Format)
-- **Variables**: Comprehensive biomechanical features (kinematics, kinetics, segment angles)
+- **Variables**: Comprehensive biomechanical features
+  - Kinematics: Joint angles (hip, knee, ankle) in 3 planes
+  - Kinetics: Joint moments and powers
+  - Segment angles: Thigh, shank, foot orientations
+  - EMG: 16 muscle channels (when available)
 - **Format**: Phase-indexed (150 points per gait cycle) for cyclic tasks
 - **File**: `converted_datasets/gtech_2023_phase.parquet`
-- **Units**: All angles in radians, moments in Nm, forces in N
+- **Units**: 
+  - Angles: radians
+  - Moments: Nm/kg (normalized)
+  - Powers: W/kg (normalized)
+  - EMG: Normalized to MVC
+  - Coordinate System: ISB standards
 
 ## Data Collection Methods
 
@@ -75,13 +109,18 @@ This research was supported by:
 - **Sampling Rate**: 200 Hz (native)
 - **Camera Count**: 12-16 cameras for full capture volume
 
-### CAREN System
-- **Facility**: Motek Computer-Aided Rehabilitation Environment (CAREN) - a self-contained biomechanics lab
-- **Motion Capture**: 10-camera Vicon T-160 system (16 megapixels, 120fps)
-- **EMG System**: 16-channel Delsys wireless EMG system
-- **Platform**: Instrumented treadmill embedded in 6 degree-of-freedom Stewart platform for perturbation studies
-- **Display**: 180° projection screen for immersive virtual reality environments
+### CAREN System (Computer-Aided Rehabilitation Environment)
+- **Manufacturer**: Motek Medical (now part of DIH Technologies)
+- **Motion Capture**: 10-camera Vicon T-160 system (16 megapixels, 120 fps)
+- **EMG System**: 16-channel Delsys Trigno wireless EMG system (2000 Hz)
+- **Platform**: Dual-belt instrumented treadmill on 6-DOF Stewart platform
+  - Max velocity: 5 m/s
+  - Max incline: ±20°
+  - Perturbation capabilities: All 6 degrees of freedom
+- **Force Measurement**: Embedded force plates (1000 Hz)
+- **Display**: 180° cylindrical projection screen for immersive VR
 - **Software**: Motek D-Flow for real-time data integration and virtual reality control
+- **Unique Capabilities**: Can simulate uneven terrain, sudden perturbations, and complex walking scenarios
 
 ### Additional Motion Capture Facilities
 - **Main Research Space**: 36-camera Vicon motion analysis system
