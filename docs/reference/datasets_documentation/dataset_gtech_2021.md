@@ -72,8 +72,10 @@ This comprehensive dataset offers a source of locomotion information for applica
 | stair_descent | Stair Descent | Continuous | 4 step heights: 10.16 cm (4"), 12.70 cm (5"), 15.24 cm (6"), 17.78 cm (7") | Based on ADA guidelines |
 
 ### Data Columns (Standardized Format)
-- **Variables**: 17 primary biomechanical features (expandable to 45+ with all planes)
-- **Format**: Phase-indexed (150 points per gait cycle)
+- **Variables**: 19 sagittal biomechanical features (including ipsilateral and contralateral)
+  - Ipsilateral (right leg): Joint angles, moments, and segment angles
+  - Contralateral (left leg): Joint angles, moments, and segment angles
+- **Format**: Phase-indexed (150 points per gait cycle, aligned to right heel strike)
 - **File**: `converted_datasets/gtech_2021_phase.parquet`
 - **Units**: 
   - Angles: radians
@@ -139,15 +141,34 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 **Validation Configuration:**
 - **Ranges File**: `default_ranges.yaml`
 - **SHA256**: `76ab6a11...` (first 8 chars)
-- **Archived Copy**: [`gtech_2021_phase_2025-08-07_232409_ranges.yaml`](validation_archives/gtech_2021_phase_2025-08-07_232409_ranges.yaml)
+- **Archived Copy**: [`gtech_2021_phase_2025-08-08_022200_ranges.yaml`](validation_archives/gtech_2021_phase_2025-08-08_022200_ranges.yaml)
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| **Overall Status** | 99.7% Valid | ✅ PASSED |
+| **Overall Status** | 99.4% Valid | ✅ PASSED |
 | **Phase Structure** | 150 points/cycle | ✅ Valid |
 | **Tasks Validated** | 5 tasks | ✅ Complete |
 | **Total Checks** | 530,016 | - |
-| **Violations** | 1,554 | ⚠️ Present |
+| **Violations** | 3,336 | ⚠️ Present |
+
+### 🔄 Velocity Consistency Validation
+
+Validates that velocities match angles using the chain rule: `dθ/dt = (dθ/dφ) × (dφ/dt)`
+
+| Velocity Variable | Status | Mean Error (rad/s) | Max Error (rad/s) | Strides Checked |
+|-------------------|--------|-------------------|-------------------|-----------------|
+| ankle dorsiflexion velocity contra (rad/s) | ❌ Fail | 0.773 | 1.284 | 18/18 |
+| ankle dorsiflexion velocity ipsi (rad/s) | ❌ Fail | 0.735 | 1.117 | 18/18 |
+| hip flexion velocity contra (rad/s) | ❌ Fail | 0.576 | 0.872 | 18/18 |
+| hip flexion velocity ipsi (rad/s) | ✅ Pass | 0.469 | 0.709 | 18/18 |
+| knee flexion velocity contra (rad/s) | ❌ Fail | 1.205 | 1.702 | 18/18 |
+| knee flexion velocity ipsi (rad/s) | ❌ Fail | 1.129 | 1.535 | 18/18 |
+
+**Legend**:
+- ✅ **Pass**: Mean error < 0.5 rad/s between stored and calculated velocities
+- ❌ **Fail**: Mean error ≥ 0.5 rad/s (velocities inconsistent with angles)
+- 🔄 **Calculated**: No stored velocities; values computed from angles
+- ⚠️ **N/A**: Corresponding angle data not available
 
 ### 📈 Task-Specific Validation
 
@@ -188,7 +209,4 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 
 </div>
 
-**Last Validated**: 2025-08-07 23:24:09
-
----
-*Last Updated: August 2025*
+**Last Validated**: 2025-08-08 02:22:00
