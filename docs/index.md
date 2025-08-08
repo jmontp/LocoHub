@@ -1,13 +1,13 @@
 ---
-title: Home
 hide:
   - navigation
   - toc
+  - title
 ---
 
 <div class="hero-section" markdown>
 
-# :material-run: LocoHub
+<img src="assets/locohub_logo.png" alt="LocoHub Logo" style="width: 400px; height: auto; margin: 0 0 20px 0; display: block;">
 
 ## Transform biomechanical datasets into unified, quality-assured formats that accelerate reproducible research
 

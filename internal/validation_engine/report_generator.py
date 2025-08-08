@@ -21,6 +21,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 from internal.plot_generation.filters_by_phase_plots import (
     create_single_feature_plot, 
     create_task_combined_plot,
+    create_subject_failure_histogram,
     get_sagittal_features,
     get_task_classification,
     create_filters_by_phase_plot  # Keep for backward compatibility
@@ -209,6 +210,18 @@ class ValidationReportGenerator:
                     timestamp=timestamp
                 )
                 plot_paths[task] = plot_path
+                
+                # Generate subject failure histogram if there are failures
+                if failing_features:
+                    histogram_path = create_subject_failure_histogram(
+                        locomotion_data=locomotion_data,
+                        task_name=task,
+                        failing_features=failing_features,
+                        output_dir=str(self.plots_dir),
+                        dataset_name=Path(dataset_path).stem,
+                        timestamp=timestamp
+                    )
+                    plot_paths[f"{task}_histogram"] = histogram_path
         
         return plot_paths
     
@@ -396,7 +409,15 @@ class ValidationReportGenerator:
             sagittal_features = get_sagittal_features()
             
             # Process each task with its combined plot
-            for task in sorted(plot_paths.keys()):
+            tasks_processed = set()
+            for key in sorted(plot_paths.keys()):
+                # Skip histogram keys for now
+                if key.endswith('_histogram'):
+                    continue
+                    
+                task = key
+                tasks_processed.add(task)
+                
                 # Task header
                 lines.append(f"### {task.replace('_', ' ').title()}")
                 lines.append("")
@@ -406,9 +427,21 @@ class ValidationReportGenerator:
                 lines.append("")
                 
                 # Add the combined plot
-                rel_path = Path(plot_paths[task]).relative_to(self.output_dir)
+                # Calculate relative path from validation_reports to validation_plots
+                plot_file = Path(plot_paths[task]).name
+                rel_path = f"../validation_plots/{plot_file}"
                 lines.append(f"![{task.replace('_', ' ').title()} Validation]({rel_path})")
                 lines.append("")
+                
+                # Add histogram if it exists
+                histogram_key = f"{task}_histogram"
+                if histogram_key in plot_paths:
+                    lines.append("#### Subject Failure Distribution")
+                    lines.append("")
+                    histogram_file = Path(plot_paths[histogram_key]).name
+                    histogram_rel_path = f"../validation_plots/{histogram_file}"
+                    lines.append(f"![{task.replace('_', ' ').title()} Subject Failures]({histogram_rel_path})")
+                    lines.append("")
         
         
         # Write report
@@ -579,16 +612,24 @@ class ValidationReportGenerator:
             sagittal_features = get_sagittal_features()
             num_features = len(sagittal_features)
             
-            for task in sorted(plot_paths.keys()):
+            # Process tasks (skip histogram keys)
+            tasks_processed = set()
+            for key in sorted(plot_paths.keys()):
+                # Skip histogram keys for now
+                if key.endswith('_histogram'):
+                    continue
+                    
+                task = key
+                tasks_processed.add(task)
+                
                 # Format task name
                 task_display = task.replace('_', ' ').title()
                 
                 lines.append(f"#### {task_display}")
                 
-                # Use relative path from docs directory
+                # Add validation plot
                 plot_file = Path(plot_paths[task]).name
                 rel_path = f"validation_plots/{plot_file}"
-                
                 lines.append(f"![{task_display}]({rel_path})")
                 
                 # Add task-specific pass rate if available
@@ -598,6 +639,15 @@ class ValidationReportGenerator:
                 else:
                     lines.append(f"*{num_features} sagittal features validated*")
                 lines.append("")
+                
+                # Add histogram if it exists
+                histogram_key = f"{task}_histogram"
+                if histogram_key in plot_paths:
+                    lines.append(f"**Subject Failure Distribution:**")
+                    histogram_file = Path(plot_paths[histogram_key]).name
+                    histogram_rel_path = f"validation_plots/{histogram_file}"
+                    lines.append(f"![{task_display} Subject Failures]({histogram_rel_path})")
+                    lines.append("")
         
         lines.append("</div>")
         lines.append("")

@@ -94,16 +94,16 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 
 **Validation Configuration:**
 - **Ranges File**: `default_ranges.yaml`
-- **SHA256**: `137767ae...` (first 8 chars)
-- **Archived Copy**: [`gtech_2021_phase_2025-08-07_180255_ranges.yaml`](validation_archives/gtech_2021_phase_2025-08-07_180255_ranges.yaml)
+- **SHA256**: `76ab6a11...` (first 8 chars)
+- **Archived Copy**: [`gtech_2021_phase_2025-08-07_220959_ranges.yaml`](validation_archives/gtech_2021_phase_2025-08-07_220959_ranges.yaml)
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| **Overall Status** | 94.7% Valid | ⚠️ PARTIAL |
+| **Overall Status** | 99.7% Valid | ✅ PASSED |
 | **Phase Structure** | 150 points/cycle | ✅ Valid |
 | **Tasks Validated** | 5 tasks | ✅ Complete |
 | **Total Checks** | 530,016 | - |
-| **Violations** | 28,174 | ⚠️ Present |
+| **Violations** | 1,554 | ⚠️ Present |
 
 ### 📈 Task-Specific Validation
 
@@ -111,25 +111,40 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 ![Decline Walking](validation_plots/gtech_2021_phase_decline_walking_all_features_validation.png)
 *19 sagittal features validated*
 
+**Subject Failure Distribution:**
+![Decline Walking Subject Failures](validation_plots/gtech_2021_phase_decline_walking_subject_failures.png)
+
 #### Incline Walking
 ![Incline Walking](validation_plots/gtech_2021_phase_incline_walking_all_features_validation.png)
 *19 sagittal features validated*
+
+**Subject Failure Distribution:**
+![Incline Walking Subject Failures](validation_plots/gtech_2021_phase_incline_walking_subject_failures.png)
 
 #### Level Walking
 ![Level Walking](validation_plots/gtech_2021_phase_level_walking_all_features_validation.png)
 *19 sagittal features validated*
 
+**Subject Failure Distribution:**
+![Level Walking Subject Failures](validation_plots/gtech_2021_phase_level_walking_subject_failures.png)
+
 #### Stair Ascent
 ![Stair Ascent](validation_plots/gtech_2021_phase_stair_ascent_all_features_validation.png)
 *19 sagittal features validated*
+
+**Subject Failure Distribution:**
+![Stair Ascent Subject Failures](validation_plots/gtech_2021_phase_stair_ascent_subject_failures.png)
 
 #### Stair Descent
 ![Stair Descent](validation_plots/gtech_2021_phase_stair_descent_all_features_validation.png)
 *19 sagittal features validated*
 
+**Subject Failure Distribution:**
+![Stair Descent Subject Failures](validation_plots/gtech_2021_phase_stair_descent_subject_failures.png)
+
 </div>
 
-**Last Validated**: 2025-08-07 18:02:55
+**Last Validated**: 2025-08-07 22:09:59
 
 ---
 *Last Updated: August 2025*

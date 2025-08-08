@@ -101,16 +101,16 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 
 **Validation Configuration:**
 - **Ranges File**: `default_ranges.yaml`
-- **SHA256**: `137767ae...` (first 8 chars)
-- **Archived Copy**: [`umich_2021_phase_2025-08-07_175552_ranges.yaml`](validation_archives/umich_2021_phase_2025-08-07_175552_ranges.yaml)
+- **SHA256**: `76ab6a11...` (first 8 chars)
+- **Archived Copy**: [`umich_2021_phase_2025-08-07_221225_ranges.yaml`](validation_archives/umich_2021_phase_2025-08-07_221225_ranges.yaml)
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| **Overall Status** | 99.7% Valid | ✅ PASSED |
+| **Overall Status** | 99.8% Valid | ✅ PASSED |
 | **Phase Structure** | 150 points/cycle | ✅ Valid |
 | **Tasks Validated** | 3 tasks | ✅ Complete |
 | **Total Checks** | 396,096 | - |
-| **Violations** | 1,261 | ⚠️ Present |
+| **Violations** | 979 | ⚠️ Minor |
 
 ### 📈 Task-Specific Validation
 
@@ -118,17 +118,26 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 ![Decline Walking](validation_plots/umich_2021_phase_decline_walking_all_features_validation.png)
 *19 sagittal features validated*
 
+**Subject Failure Distribution:**
+![Decline Walking Subject Failures](validation_plots/umich_2021_phase_decline_walking_subject_failures.png)
+
 #### Incline Walking
 ![Incline Walking](validation_plots/umich_2021_phase_incline_walking_all_features_validation.png)
 *19 sagittal features validated*
+
+**Subject Failure Distribution:**
+![Incline Walking Subject Failures](validation_plots/umich_2021_phase_incline_walking_subject_failures.png)
 
 #### Level Walking
 ![Level Walking](validation_plots/umich_2021_phase_level_walking_all_features_validation.png)
 *19 sagittal features validated*
 
+**Subject Failure Distribution:**
+![Level Walking Subject Failures](validation_plots/umich_2021_phase_level_walking_subject_failures.png)
+
 </div>
 
-**Last Validated**: 2025-08-07 17:55:52
+**Last Validated**: 2025-08-07 22:12:25
 
 ---
 *Last Updated: January 2025*

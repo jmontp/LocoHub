@@ -254,21 +254,19 @@ def create_task_combined_plot(
     Returns:
         Path to the generated plot
     """
-    # Get sagittal features and their labels
+    # ALWAYS use all sagittal features for consistent layout
     sagittal_features = get_sagittal_features()
     feature_labels = {f[0]: f[1] for f in sagittal_features}
     
-    # Filter to only features that exist in the data
-    if feature_names:
-        available_features = [(name, feature_labels[name]) for name, _ in sagittal_features 
-                             if name in feature_names]
-    else:
-        available_features = sagittal_features
+    # Track which features have data available
+    available_feature_names = set(feature_names) if feature_names else set()
     
-    n_features = len(available_features)
+    # Always use all 17 features for consistent plot height
+    n_features = len(sagittal_features)
     
-    # Create figure with layout based on mode
-    fig_height = max(20, n_features * 1.5)
+    # Fixed dimensions for consistency across all plots
+    row_height = 2.0  # inches per feature row
+    fig_height = n_features * row_height  # Total height = 17 * 2.0 = 34 inches
     
     if comparison_mode:
         # Single column layout for comparison plots
@@ -279,13 +277,27 @@ def create_task_combined_plot(
         else:
             axes = axes.reshape(n_features, 1)
     else:
-        # Original 2-column layout for validation plots
+        # Original 2-column layout for validation plots - fixed 14" width
         fig, axes = plt.subplots(n_features, 2, figsize=(14, fig_height))
         # Ensure axes is always 2D
         if n_features == 1:
             axes = axes.reshape(1, -1)
     
-    # Build title
+    # Calculate statistics for enhanced title
+    total_strides = data_3d.shape[0] if data_3d is not None and data_3d.size > 0 else 0
+    n_features_validated = len(available_feature_names)
+    n_features_total = len(sagittal_features)
+    
+    # Count passing strides
+    passing_strides = 0
+    if total_strides > 0:
+        for stride_idx in range(total_strides):
+            if stride_idx not in failing_features:
+                passing_strides += 1
+    
+    pass_rate = (passing_strides / total_strides * 100) if total_strides > 0 else 0
+    
+    # Build enhanced title with statistics
     task_type = get_task_classification(task_name)
     task_type_label = "Gait-Based Task" if task_type == 'gait' else "Bilateral Symmetric Task"
     
@@ -299,7 +311,11 @@ def create_task_combined_plot(
     if timestamp:
         title += f' | Generated: {timestamp}'
     
-    fig.suptitle(title, fontsize=14, fontweight='bold')
+    # Add statistics line
+    if not comparison_mode:
+        title += f'\n{total_strides} strides | {n_features_validated}/{n_features_total} features validated | {passing_strides} passing ({pass_rate:.1f}%)'
+    
+    fig.suptitle(title, fontsize=12, fontweight='bold')
     
     # Handle failing features
     if failing_features is None:
@@ -319,8 +335,8 @@ def create_task_combined_plot(
         phases.append(100)
         validation_data[100] = validation_data[0].copy()
     
-    # Process each feature
-    for feat_idx, (var_name, var_label) in enumerate(available_features):
+    # Process ALL sagittal features (always 17 rows)
+    for feat_idx, (var_name, var_label) in enumerate(sagittal_features):
         if comparison_mode:
             # Single column - only pass axis
             ax_pass = axes[feat_idx, 0]
@@ -330,8 +346,11 @@ def create_task_combined_plot(
             ax_pass = axes[feat_idx, 0]
             ax_fail = axes[feat_idx, 1]
         
+        # Check if this feature has data available
+        has_data = var_name in available_feature_names
+        
         # Get the index of this feature in the data array
-        if feature_names and var_name in feature_names:
+        if has_data and feature_names and var_name in feature_names:
             var_idx = feature_names.index(var_name)
         else:
             var_idx = None
@@ -393,7 +412,7 @@ def create_task_combined_plot(
         
         # Plot PASSED strides (left column)
         passed_count = 0
-        if data_3d is not None and data_3d.size > 0 and var_idx is not None:
+        if has_data and data_3d is not None and data_3d.size > 0 and var_idx is not None:
             phase_ipsi = np.linspace(0, 100, 150)
             
             for stride_idx in range(data_3d.shape[0]):
@@ -405,7 +424,7 @@ def create_task_combined_plot(
         # Plot validation ranges on pass axis
         _plot_validation_ranges(ax_pass, var_ranges, phases, 'lightgreen', value_conversion, unit_suffix)
         
-        if data_3d is None or data_3d.size == 0 or var_idx is None:
+        if not has_data or data_3d is None or data_3d.size == 0 or var_idx is None:
             ax_pass.text(50, (y_min + y_max) / 2, 'Data Not Available', 
                         ha='center', va='center', fontsize=10, color='gray', alpha=0.7)
         
@@ -419,15 +438,15 @@ def create_task_combined_plot(
         ax_pass.grid(True, alpha=0.3)
         ax_pass.tick_params(axis='y', labelsize=7)
         
-        # Only add x-label to bottom row
-        if feat_idx == n_features - 1:
+        # Only add x-label to bottom row (always row 16, since we have 17 features)
+        if feat_idx == len(sagittal_features) - 1:
             x_label = 'Gait Phase' if task_type == 'gait' else 'Movement Phase'
             ax_pass.set_xlabel(x_label, fontsize=8)
         
         # Plot FAILED strides (right column) - only in validation mode
         if not comparison_mode and ax_fail is not None:
             failed_count = 0
-            if data_3d is not None and data_3d.size > 0 and var_idx is not None:
+            if has_data and data_3d is not None and data_3d.size > 0 and var_idx is not None:
                 for stride_idx in range(data_3d.shape[0]):
                     if stride_idx in variable_failed_strides:
                         stride_data = data_3d[stride_idx, :, var_idx]
@@ -437,7 +456,7 @@ def create_task_combined_plot(
             # Plot validation ranges on fail axis
             _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix)
             
-            if data_3d is None or data_3d.size == 0 or var_idx is None:
+            if not has_data or data_3d is None or data_3d.size == 0 or var_idx is None:
                 ax_fail.text(50, (y_min + y_max) / 2, 'Data Not Available', 
                             ha='center', va='center', fontsize=10, color='gray', alpha=0.7)
             
@@ -449,8 +468,8 @@ def create_task_combined_plot(
             ax_fail.grid(True, alpha=0.3)
             ax_fail.tick_params(axis='y', labelsize=7)
             
-            # Only add x-label to bottom row
-            if feat_idx == n_features - 1:
+            # Only add x-label to bottom row (always row 16)
+            if feat_idx == len(sagittal_features) - 1:
                 ax_fail.set_xlabel(x_label, fontsize=8)
         
         # Add degree conversion on right y-axis for angular variables
@@ -482,6 +501,151 @@ def create_task_combined_plot(
             output_path = Path(output_dir) / f"{dataset_name}_{task_name}_all_features_validation.png"
         else:
             output_path = Path(output_dir) / f"{task_name}_all_features_validation.png"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.close()
+    
+    return str(output_path)
+
+
+def create_subject_failure_histogram(
+    locomotion_data,
+    task_name: str,
+    failing_features: Dict[int, List[str]],
+    output_dir: str,
+    dataset_name: Optional[str] = None,
+    timestamp: Optional[str] = None
+) -> str:
+    """
+    Create a histogram showing the distribution of failed strides per subject.
+    
+    Args:
+        locomotion_data: LocomotionData object with the dataset
+        task_name: Name of the task being analyzed
+        failing_features: Dict mapping stride indices to lists of failed variable names
+        output_dir: Directory to save the plot
+        dataset_name: Optional dataset name for the filename
+        timestamp: Optional timestamp to display
+        
+    Returns:
+        Path to the generated histogram
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from collections import defaultdict
+    
+    # Get all subjects for this task
+    subjects = locomotion_data.get_subjects()
+    
+    # Build mapping of stride indices to subjects
+    stride_to_subject = {}
+    current_stride_idx = 0
+    
+    for subject in subjects:
+        # Get data for this subject and task
+        subject_data = locomotion_data.df[
+            (locomotion_data.df['subject'] == subject) & 
+            (locomotion_data.df['task'] == task_name)
+        ]
+        
+        if len(subject_data) == 0:
+            continue
+            
+        # Count unique steps (strides) for this subject
+        n_strides = len(subject_data['step'].unique())
+        
+        # Map stride indices to this subject
+        for i in range(n_strides):
+            stride_to_subject[current_stride_idx] = subject
+            current_stride_idx += 1
+    
+    # Count failures per subject
+    subject_failures = defaultdict(int)
+    subject_totals = defaultdict(int)
+    
+    # Count total strides per subject
+    for stride_idx, subject in stride_to_subject.items():
+        subject_totals[subject] += 1
+        # Check if this stride failed
+        if stride_idx in failing_features and failing_features[stride_idx]:
+            subject_failures[subject] += 1
+    
+    # Sort subjects for consistent ordering
+    sorted_subjects = sorted(subject_totals.keys())
+    
+    # Prepare data for plotting
+    subjects_list = []
+    failures_list = []
+    totals_list = []
+    colors_list = []
+    
+    for subject in sorted_subjects:
+        subjects_list.append(subject)
+        failures = subject_failures[subject]
+        total = subject_totals[subject]
+        failures_list.append(failures)
+        totals_list.append(total)
+        
+        # Color based on failure rate
+        fail_rate = failures / total if total > 0 else 0
+        if fail_rate < 0.1:
+            colors_list.append('green')
+        elif fail_rate < 0.3:
+            colors_list.append('orange')
+        else:
+            colors_list.append('red')
+    
+    # Create the histogram
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Create bars
+    x_pos = np.arange(len(subjects_list))
+    bars = ax.bar(x_pos, failures_list, color=colors_list, alpha=0.7)
+    
+    # Add value labels on top of bars
+    for i, (failures, total) in enumerate(zip(failures_list, totals_list)):
+        if total > 0:
+            ax.text(i, failures + 0.5, f'{failures}/{total}', 
+                   ha='center', va='bottom', fontsize=8)
+    
+    # Customize the plot
+    ax.set_xlabel('Subject', fontsize=10)
+    ax.set_ylabel('Number of Failed Strides', fontsize=10)
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(subjects_list, rotation=45, ha='right')
+    ax.grid(True, alpha=0.3, axis='y')
+    
+    # Build title
+    title = f'{task_name.replace("_", " ").title()} - Failed Strides by Subject'
+    if dataset_name:
+        title += f'\nDataset: {dataset_name}'
+    if timestamp:
+        title += f' | Generated: {timestamp}'
+    
+    # Add summary statistics
+    total_failures = sum(failures_list)
+    total_strides = sum(totals_list)
+    overall_rate = (total_failures / total_strides * 100) if total_strides > 0 else 0
+    title += f'\nTotal: {total_failures}/{total_strides} failed ({overall_rate:.1f}%)'
+    
+    ax.set_title(title, fontsize=11, fontweight='bold')
+    
+    # Add legend
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor='green', alpha=0.7, label='<10% failure'),
+        Patch(facecolor='orange', alpha=0.7, label='10-30% failure'),
+        Patch(facecolor='red', alpha=0.7, label='>30% failure')
+    ]
+    ax.legend(handles=legend_elements, loc='upper right')
+    
+    plt.tight_layout()
+    
+    # Save the plot
+    if dataset_name:
+        output_path = Path(output_dir) / f"{dataset_name}_{task_name}_subject_failures.png"
+    else:
+        output_path = Path(output_dir) / f"{task_name}_subject_failures.png"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
     plt.close()
