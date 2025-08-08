@@ -36,7 +36,7 @@ DATA_ROOT = 'CAMARGO_ET_AL_J_BIOMECH_DATASET';
 OUTPUT_DIR = fullfile('..', '..', '..', 'converted_datasets');
 
 % TEST MODE Configuration
-TEST_MODE = true;  % Set to true for testing with limited subjects
+TEST_MODE = false;  % Set to true for testing with limited subjects
 TEST_SUBJECTS = {'AB06'};  % Subjects to use in test mode
 
 % Set output filename based on mode
@@ -720,16 +720,16 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
             stride_data.ankle_dorsiflexion_moment_ipsi_Nm = zeros(NUM_POINTS, 1);
         end
         
-        % Knee flexion moment with stair ascent fix
+        % Knee flexion moment with stair ascent and decline walking fixes
         if any(strcmp(trial_data.id.Properties.VariableNames, 'knee_angle_r_moment'))
             moment_data = trial_data.id.knee_angle_r_moment(id_mask) / subject_mass;
             moment_at_stride_time = interp1(id_time, moment_data, valid_stride_time, 'linear', 'extrap');
             knee_moment = interp1(valid_stride_pct, moment_at_stride_time, target_pct, 'linear', 'extrap');
             
-            % Always flip knee moment for stair ascent task
-            if strcmp(task, 'stair_ascent')
+            % Always flip knee moment for stair ascent and decline walking tasks
+            if strcmp(task, 'stair_ascent') || strcmp(task, 'decline_walking')
                 knee_moment = -knee_moment;
-                % fprintf('      Flipped knee moment for stair ascent\n');
+                % fprintf('      Flipped knee moment for %s\n', task);
             end
             
             stride_data.knee_flexion_moment_ipsi_Nm = knee_moment;

@@ -2,6 +2,11 @@
 
 Maintaining the locomotion data standardization system's core functionality.
 
+## Quick References
+
+- 🚀 **[Scripts Cheat Sheet](scripts_cheatsheet.md)** - Quick reference for all essential scripts
+- 📚 **[Developer Guide](developer_guide.md)** - Detailed development workflows
+
 ## Core System Components
 
 ### 1. 🔄 **Dataset Conversion**

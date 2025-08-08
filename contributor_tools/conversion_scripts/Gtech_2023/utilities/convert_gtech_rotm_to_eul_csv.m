@@ -35,7 +35,7 @@ rotm_sequence = 'YZX'; % Z should correspond to saggital plane angles
 % Define the base folder and the destination sub folder
 % Structure of the files in the RawData folder is as follows:
 % base_folder/SubjectName/Transforms/TaskName.mat
-base_folder = 'rawdata';
+base_folder = '../rawdata';
 
 % Setting to true will make the script not save any of the euler angle 
 % csv files and just plot the x, y, and z angles. This is good way to 
