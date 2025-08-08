@@ -295,6 +295,113 @@ class ValidationReportGenerator:
         
         return violations[task]
     
+    def validate_velocity_consistency(self, df: pd.DataFrame) -> Dict[str, Dict]:
+        """
+        Validate that velocities match angles using chain rule: dθ/dt = (dθ/dφ) × (dφ/dt)
+        
+        Args:
+            df: DataFrame with phase-indexed data including phase_ipsi_dot
+            
+        Returns:
+            Dictionary with consistency results for each velocity variable
+        """
+        import numpy as np
+        from user_libs.python.feature_constants import (
+            ANGLE_FEATURES, VELOCITY_FEATURES,
+            SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES
+        )
+        
+        results = {}
+        
+        # Check if phase_ipsi_dot exists
+        if 'phase_ipsi_dot' not in df.columns:
+            return {'error': 'phase_ipsi_dot column not found - velocity validation requires phase rate information'}
+        
+        # Map angles to velocities
+        angle_velocity_pairs = []
+        
+        # Map joint angles to joint velocities
+        for angle in ANGLE_FEATURES:
+            # Convert angle name to velocity name
+            velocity = angle.replace('_angle_', '_velocity_').replace('_rad', '_rad_s')
+            if velocity in VELOCITY_FEATURES:
+                angle_velocity_pairs.append((angle, velocity))
+        
+        # Map segment angles to segment velocities
+        for angle in SEGMENT_ANGLE_FEATURES:
+            # Convert angle name to velocity name
+            velocity = angle.replace('_angle_', '_velocity_').replace('_rad', '_rad_s')
+            if velocity in SEGMENT_VELOCITY_FEATURES:
+                angle_velocity_pairs.append((angle, velocity))
+        
+        # Process each velocity variable
+        for angle_col, velocity_col in angle_velocity_pairs:
+            if angle_col not in df.columns:
+                results[velocity_col] = {'status': 'angle_missing', 'message': f'Angle column {angle_col} not found'}
+                continue
+            
+            errors = []
+            stride_count = 0
+            
+            # Process each stride
+            for (subject, task, step), stride_df in df.groupby(['subject', 'task', 'step']):
+                if len(stride_df) != 150:
+                    continue
+                
+                stride_count += 1
+                phase_dot = stride_df['phase_ipsi_dot'].iloc[0]  # Constant for stride
+                
+                # Calculate expected velocity from angle using chain rule
+                angle_data = stride_df[angle_col].values
+                
+                # Skip if all NaN
+                if np.all(np.isnan(angle_data)):
+                    continue
+                
+                # Calculate gradient with respect to index
+                dangle_dindex = np.gradient(angle_data)
+                
+                # Convert to per-phase-percent (150 points = 100%)
+                dangle_dphase = dangle_dindex * (100 / 150)
+                
+                # Apply chain rule: dθ/dt = (dθ/dφ) × (dφ/dt)
+                expected_velocity = dangle_dphase * phase_dot
+                
+                # Check if stored velocity exists
+                if velocity_col in stride_df.columns:
+                    stored_velocity = stride_df[velocity_col].values
+                    
+                    # Skip if stored velocity is all NaN
+                    if not np.all(np.isnan(stored_velocity)):
+                        # Calculate mean absolute error
+                        valid_mask = ~(np.isnan(expected_velocity) | np.isnan(stored_velocity))
+                        if np.any(valid_mask):
+                            mae = np.mean(np.abs(expected_velocity[valid_mask] - stored_velocity[valid_mask]))
+                            errors.append(mae)
+            
+            # Determine pass/fail (threshold: 0.5 rad/s mean error)
+            if errors:
+                mean_error = np.mean(errors)
+                max_error = np.max(errors)
+                std_error = np.std(errors)
+                
+                results[velocity_col] = {
+                    'status': 'pass' if mean_error < 0.5 else 'fail',
+                    'mean_error': mean_error,
+                    'max_error': max_error,
+                    'std_error': std_error,
+                    'num_strides': len(errors),
+                    'total_strides': stride_count
+                }
+            else:
+                results[velocity_col] = {
+                    'status': 'calculated_only',
+                    'message': 'No stored velocities to compare',
+                    'total_strides': stride_count
+                }
+        
+        return results
+    
     def _map_step_violations_to_cycles(self, step_violations: Dict[str, List[int]], 
                                       data: pd.DataFrame, task: str) -> Dict[str, List[int]]:
         """
@@ -495,7 +602,8 @@ class ValidationReportGenerator:
             dataset_name, 
             validation_result, 
             plot_paths, 
-            timestamp
+            timestamp,
+            dataset_path
         )
         
         # Read existing documentation
@@ -544,7 +652,7 @@ class ValidationReportGenerator:
         return str(doc_path)
     
     def _generate_validation_section(self, dataset_name: str, validation_result: Dict,
-                                    plot_paths: Dict, timestamp: str) -> str:
+                                    plot_paths: Dict, timestamp: str, dataset_path: str) -> str:
         """Generate validation section for dataset documentation."""
         lines = []
         lines.append("## Data Validation")
@@ -602,6 +710,63 @@ class ValidationReportGenerator:
         lines.append(f"| **Violations** | {violations:,} | {viol_status} |")
         
         lines.append("")
+        
+        # Velocity consistency validation
+        lines.append("### 🔄 Velocity Consistency Validation")
+        lines.append("")
+        
+        # Load dataset for velocity validation
+        import pandas as pd
+        df = pd.read_parquet(dataset_path)
+        velocity_results = self.validate_velocity_consistency(df)
+        
+        if 'error' in velocity_results:
+            lines.append(f"⚠️ **Velocity validation skipped**: {velocity_results['error']}")
+            lines.append("")
+        else:
+            lines.append("Validates that velocities match angles using the chain rule: `dθ/dt = (dθ/dφ) × (dφ/dt)`")
+            lines.append("")
+            lines.append("| Velocity Variable | Status | Mean Error (rad/s) | Max Error (rad/s) | Strides Checked |")
+            lines.append("|-------------------|--------|-------------------|-------------------|-----------------|")
+            
+            # Sort results by variable name
+            for vel_var in sorted(velocity_results.keys()):
+                result = velocity_results[vel_var]
+                
+                # Determine status icon and text
+                if result['status'] == 'pass':
+                    status = "✅ Pass"
+                elif result['status'] == 'fail':
+                    status = "❌ Fail"
+                elif result['status'] == 'calculated_only':
+                    status = "🔄 Calculated"
+                elif result['status'] == 'angle_missing':
+                    status = "⚠️ N/A"
+                else:
+                    status = "❓ Unknown"
+                
+                # Format error values
+                if 'mean_error' in result:
+                    mean_err = f"{result['mean_error']:.3f}"
+                    max_err = f"{result['max_error']:.3f}"
+                    num_strides = f"{result['num_strides']}/{result['total_strides']}"
+                else:
+                    mean_err = "-"
+                    max_err = "-"
+                    num_strides = result.get('message', '-')
+                
+                # Format variable name for display
+                vel_var_display = vel_var.replace('_', ' ').replace(' rad s', ' (rad/s)')
+                
+                lines.append(f"| {vel_var_display} | {status} | {mean_err} | {max_err} | {num_strides} |")
+            
+            lines.append("")
+            lines.append("**Legend**:")
+            lines.append("- ✅ **Pass**: Mean error < 0.5 rad/s between stored and calculated velocities")
+            lines.append("- ❌ **Fail**: Mean error ≥ 0.5 rad/s (velocities inconsistent with angles)")
+            lines.append("- 🔄 **Calculated**: No stored velocities; values computed from angles")
+            lines.append("- ⚠️ **N/A**: Corresponding angle data not available")
+            lines.append("")
         
         # Task-specific validation plots
         if plot_paths:

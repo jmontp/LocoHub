@@ -178,7 +178,7 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 **Validation Configuration:**
 - **Ranges File**: `default_ranges.yaml`
 - **SHA256**: `76ab6a11...` (first 8 chars)
-- **Archived Copy**: [`gtech_2023_phase_2025-08-07_234514_ranges.yaml`](validation_archives/gtech_2023_phase_2025-08-07_234514_ranges.yaml)
+- **Archived Copy**: [`gtech_2023_phase_2025-08-08_032213_ranges.yaml`](validation_archives/gtech_2023_phase_2025-08-08_032213_ranges.yaml)
 
 | Metric | Value | Status |
 |--------|-------|--------|
@@ -188,43 +188,60 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 | **Total Checks** | 32,928 | - |
 | **Violations** | 1,395 | ⚠️ Present |
 
+### 🔄 Velocity Consistency Validation
+
+⚠️ **Velocity validation skipped**: phase_ipsi_dot column not found - velocity validation requires phase rate information
+
 ### 📈 Task-Specific Validation
 
 #### Decline Walking
 ![Decline Walking](validation_plots/gtech_2023_phase_decline_walking_all_features_validation.png)
-*19 sagittal features validated*
+*34 sagittal features validated*
 
 **Subject Failure Distribution:**
 ![Decline Walking Subject Failures](validation_plots/gtech_2023_phase_decline_walking_subject_failures.png)
 
 #### Incline Walking
 ![Incline Walking](validation_plots/gtech_2023_phase_incline_walking_all_features_validation.png)
-*19 sagittal features validated*
+*34 sagittal features validated*
 
 **Subject Failure Distribution:**
 ![Incline Walking Subject Failures](validation_plots/gtech_2023_phase_incline_walking_subject_failures.png)
 
 #### Level Walking
 ![Level Walking](validation_plots/gtech_2023_phase_level_walking_all_features_validation.png)
-*19 sagittal features validated*
+*34 sagittal features validated*
 
 **Subject Failure Distribution:**
 ![Level Walking Subject Failures](validation_plots/gtech_2023_phase_level_walking_subject_failures.png)
 
 #### Stair Ascent
 ![Stair Ascent](validation_plots/gtech_2023_phase_stair_ascent_all_features_validation.png)
-*19 sagittal features validated*
+*34 sagittal features validated*
 
 **Subject Failure Distribution:**
 ![Stair Ascent Subject Failures](validation_plots/gtech_2023_phase_stair_ascent_subject_failures.png)
 
 #### Stair Descent
 ![Stair Descent](validation_plots/gtech_2023_phase_stair_descent_all_features_validation.png)
-*19 sagittal features validated*
+*34 sagittal features validated*
 
 **Subject Failure Distribution:**
 ![Stair Descent Subject Failures](validation_plots/gtech_2023_phase_stair_descent_subject_failures.png)
 
 </div>
 
-**Last Validated**: 2025-08-07 23:45:14
+**Last Validated**: 2025-08-08 03:22:13
+
+## Known Issues
+
+### Missing Contralateral Moment Data
+The GTech 2023 dataset has incomplete contralateral moment measurements for certain tasks:
+
+- **Decline Walking**: 100% missing for all contralateral moments (hip, knee, ankle)
+- **Incline Walking**: 100% missing for all contralateral moments
+- **Level Walking**: 85% missing for contralateral moments (7 of 12 subjects affected)
+- **Stair Ascent**: 13% missing for contralateral moments
+- **Stair Descent**: 15.6% missing for contralateral moments
+
+This appears to be a data collection or processing limitation where contralateral force plate data was not available for certain trials, particularly for inclined treadmill walking tasks.

@@ -330,33 +330,18 @@ function stride_table = process_strides_single_leg(trial_data, ...
         stride_duration_s = stride_duration_frames / Hz;
         phase_ipsi_dot = 100 / stride_duration_s;  % %/second
         
-        % Find corresponding contralateral stride
-        % Find contra HS that occurs closest to 50% through the ipsi stride
-        mid_frame = ipsi_start_frame + round(stride_duration_frames/2);
-        [~, nearest_contra_idx] = min(abs(contra_HS - mid_frame));
-        
-        % Get contralateral stride boundaries
-        if nearest_contra_idx > 0 && nearest_contra_idx < length(contra_HS)
-            contra_start_frame = contra_HS(nearest_contra_idx);
-            if nearest_contra_idx < length(contra_HS)
-                contra_end_frame = contra_HS(nearest_contra_idx + 1);
-            else
-                % Use same duration as ipsi stride if no next contra HS
-                contra_end_frame = contra_start_frame + stride_duration_frames;
-            end
-        else
-            % Skip this stride if we can't find matching contra stride
-            continue;
-        end
+        % Use same time window for both legs to preserve natural phase offset
+        % The left and right legs are naturally ~50% out of phase during walking
+        % By using the same time indices, we capture this natural phase relationship
         
         % Map frame indices based on which leg is ipsilateral
-        % This simplifies data extraction by using ipsi/contra frames directly
+        % Both legs use the SAME time window
         if strcmp(leg_side, 'right')
             % Right is ipsilateral
             r_start_frame = ipsi_start_frame;
             r_end_frame = ipsi_end_frame;
-            l_start_frame = contra_start_frame;
-            l_end_frame = contra_end_frame;
+            l_start_frame = ipsi_start_frame;  % SAME time window
+            l_end_frame = ipsi_end_frame;      % SAME time window
             
             % Create frame index structs for cleaner code
             ipsi_frames = r_start_frame:r_end_frame;
@@ -367,8 +352,8 @@ function stride_table = process_strides_single_leg(trial_data, ...
             % Left is ipsilateral  
             l_start_frame = ipsi_start_frame;
             l_end_frame = ipsi_end_frame;
-            r_start_frame = contra_start_frame;
-            r_end_frame = contra_end_frame;
+            r_start_frame = ipsi_start_frame;  % SAME time window
+            r_end_frame = ipsi_end_frame;      % SAME time window
             
             % Create frame index structs for cleaner code
             ipsi_frames = l_start_frame:l_end_frame;
@@ -419,11 +404,11 @@ function stride_table = process_strides_single_leg(trial_data, ...
                     contra_hip_data(contra_frames, transverse_plane), NUM_POINTS) * deg2rad;
             end
             
-            % Knee angles (note: ALWAYS negate both R and L for convention)
+            % Knee angles
             if isfield(angles, 'RKneeAngles') && isfield(angles, 'LKneeAngles')
                 % Process right knee
                 r_knee_flex = interpolate_signal(...
-                    -angles.RKneeAngles(r_start_frame:r_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
+                    angles.RKneeAngles(r_start_frame:r_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
                 r_knee_add = interpolate_signal(...
                     angles.RKneeAngles(r_start_frame:r_end_frame, frontal_plane), NUM_POINTS) * deg2rad;
                 r_knee_rot = interpolate_signal(...
@@ -431,7 +416,7 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 
                 % Process left knee
                 l_knee_flex = interpolate_signal(...
-                    -angles.LKneeAngles(l_start_frame:l_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
+                    angles.LKneeAngles(l_start_frame:l_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
                 l_knee_add = interpolate_signal(...
                     angles.LKneeAngles(l_start_frame:l_end_frame, frontal_plane), NUM_POINTS) * deg2rad;
                 l_knee_rot = interpolate_signal(...
@@ -455,11 +440,11 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 end
             end
             
-            % Ankle angles (note: ALWAYS negate both R and L for dorsiflexion convention)
+            % Ankle angles
             if isfield(angles, 'RAnkleAngles') && isfield(angles, 'LAnkleAngles')
                 % Process right ankle
                 r_ankle_flex = interpolate_signal(...
-                    -angles.RAnkleAngles(r_start_frame:r_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
+                    angles.RAnkleAngles(r_start_frame:r_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
                 r_ankle_add = interpolate_signal(...
                     angles.RAnkleAngles(r_start_frame:r_end_frame, frontal_plane), NUM_POINTS) * deg2rad;
                 r_ankle_rot = interpolate_signal(...
@@ -467,7 +452,7 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 
                 % Process left ankle
                 l_ankle_flex = interpolate_signal(...
-                    -angles.LAnkleAngles(l_start_frame:l_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
+                    angles.LAnkleAngles(l_start_frame:l_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
                 l_ankle_add = interpolate_signal(...
                     angles.LAnkleAngles(l_start_frame:l_end_frame, frontal_plane), NUM_POINTS) * deg2rad;
                 l_ankle_rot = interpolate_signal(...

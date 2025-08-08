@@ -141,7 +141,7 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 **Validation Configuration:**
 - **Ranges File**: `default_ranges.yaml`
 - **SHA256**: `76ab6a11...` (first 8 chars)
-- **Archived Copy**: [`gtech_2021_phase_2025-08-08_022200_ranges.yaml`](validation_archives/gtech_2021_phase_2025-08-08_022200_ranges.yaml)
+- **Archived Copy**: [`gtech_2021_phase_2025-08-08_024823_ranges.yaml`](validation_archives/gtech_2021_phase_2025-08-08_024823_ranges.yaml)
 
 | Metric | Value | Status |
 |--------|-------|--------|
@@ -159,10 +159,22 @@ Validates that velocities match angles using the chain rule: `dθ/dt = (dθ/dφ)
 |-------------------|--------|-------------------|-------------------|-----------------|
 | ankle dorsiflexion velocity contra (rad/s) | ❌ Fail | 0.773 | 1.284 | 18/18 |
 | ankle dorsiflexion velocity ipsi (rad/s) | ❌ Fail | 0.735 | 1.117 | 18/18 |
+| foot sagittal velocity contra (rad/s) | ❌ Fail | 0.961 | 1.717 | 18/18 |
+| foot sagittal velocity ipsi (rad/s) | ❌ Fail | 0.970 | 1.808 | 18/18 |
 | hip flexion velocity contra (rad/s) | ❌ Fail | 0.576 | 0.872 | 18/18 |
 | hip flexion velocity ipsi (rad/s) | ✅ Pass | 0.469 | 0.709 | 18/18 |
 | knee flexion velocity contra (rad/s) | ❌ Fail | 1.205 | 1.702 | 18/18 |
 | knee flexion velocity ipsi (rad/s) | ❌ Fail | 1.129 | 1.535 | 18/18 |
+| pelvis frontal velocity (rad/s) | ⚠️ N/A | - | - | Angle column pelvis_frontal_angle_rad not found |
+| pelvis sagittal velocity (rad/s) | ✅ Pass | 0.223 | 0.294 | 18/18 |
+| pelvis transverse velocity (rad/s) | ⚠️ N/A | - | - | Angle column pelvis_transverse_angle_rad not found |
+| shank sagittal velocity contra (rad/s) | ❌ Fail | 1.190 | 1.697 | 18/18 |
+| shank sagittal velocity ipsi (rad/s) | ❌ Fail | 1.073 | 1.733 | 18/18 |
+| thigh sagittal velocity contra (rad/s) | ❌ Fail | 0.637 | 0.910 | 18/18 |
+| thigh sagittal velocity ipsi (rad/s) | ❌ Fail | 0.503 | 0.695 | 18/18 |
+| trunk frontal velocity (rad/s) | ⚠️ N/A | - | - | Angle column trunk_frontal_angle_rad not found |
+| trunk sagittal velocity (rad/s) | ✅ Pass | 0.223 | 0.294 | 18/18 |
+| trunk transverse velocity (rad/s) | ⚠️ N/A | - | - | Angle column trunk_transverse_angle_rad not found |
 
 **Legend**:
 - ✅ **Pass**: Mean error < 0.5 rad/s between stored and calculated velocities
@@ -174,39 +186,39 @@ Validates that velocities match angles using the chain rule: `dθ/dt = (dθ/dφ)
 
 #### Decline Walking
 ![Decline Walking](validation_plots/gtech_2021_phase_decline_walking_all_features_validation.png)
-*19 sagittal features validated*
+*34 sagittal features validated*
 
 **Subject Failure Distribution:**
 ![Decline Walking Subject Failures](validation_plots/gtech_2021_phase_decline_walking_subject_failures.png)
 
 #### Incline Walking
 ![Incline Walking](validation_plots/gtech_2021_phase_incline_walking_all_features_validation.png)
-*19 sagittal features validated*
+*34 sagittal features validated*
 
 **Subject Failure Distribution:**
 ![Incline Walking Subject Failures](validation_plots/gtech_2021_phase_incline_walking_subject_failures.png)
 
 #### Level Walking
 ![Level Walking](validation_plots/gtech_2021_phase_level_walking_all_features_validation.png)
-*19 sagittal features validated*
+*34 sagittal features validated*
 
 **Subject Failure Distribution:**
 ![Level Walking Subject Failures](validation_plots/gtech_2021_phase_level_walking_subject_failures.png)
 
 #### Stair Ascent
 ![Stair Ascent](validation_plots/gtech_2021_phase_stair_ascent_all_features_validation.png)
-*19 sagittal features validated*
+*34 sagittal features validated*
 
 **Subject Failure Distribution:**
 ![Stair Ascent Subject Failures](validation_plots/gtech_2021_phase_stair_ascent_subject_failures.png)
 
 #### Stair Descent
 ![Stair Descent](validation_plots/gtech_2021_phase_stair_descent_all_features_validation.png)
-*19 sagittal features validated*
+*34 sagittal features validated*
 
 **Subject Failure Distribution:**
 ![Stair Descent Subject Failures](validation_plots/gtech_2021_phase_stair_descent_subject_failures.png)
 
 </div>
 
-**Last Validated**: 2025-08-08 02:22:00
+**Last Validated**: 2025-08-08 02:48:23

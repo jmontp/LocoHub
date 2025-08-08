@@ -69,10 +69,10 @@ import os
 
 # Import feature constants from same library
 try:
-    from .feature_constants import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES, SEGMENT_ANGLE_FEATURES
+    from .feature_constants import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES, SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES
 except ImportError:
     # Fallback for standalone scripts
-    from feature_constants import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES, SEGMENT_ANGLE_FEATURES
+    from feature_constants import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES, SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES
 
 # Optional imports for visualization
 try:
@@ -326,7 +326,8 @@ class LocomotionData:
         if (variable_name in ANGLE_FEATURES or 
             variable_name in VELOCITY_FEATURES or 
             variable_name in MOMENT_FEATURES or
-            variable_name in SEGMENT_ANGLE_FEATURES):
+            variable_name in SEGMENT_ANGLE_FEATURES or
+            variable_name in SEGMENT_VELOCITY_FEATURES):
             return True
         
         # Otherwise, check against standard naming convention

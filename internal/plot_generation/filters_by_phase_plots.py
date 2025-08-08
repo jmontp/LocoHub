@@ -123,11 +123,13 @@ def create_single_feature_plot(
     # Include actual data range if available
     if data is not None and data.size > 0 and var_idx is not None:
         data_values = data[:, :, var_idx]
-        data_min = np.nanmin(data_values)
-        data_max = np.nanmax(data_values)
-        if not (np.isinf(data_min) or np.isinf(data_max) or np.isnan(data_min) or np.isnan(data_max)):
-            all_mins.append(data_min)
-            all_maxs.append(data_max)
+        # Check if data slice is not all NaN before computing min/max
+        if not np.isnan(data_values).all():
+            data_min = np.nanmin(data_values)
+            data_max = np.nanmax(data_values)
+            if not (np.isinf(data_min) or np.isinf(data_max) or np.isnan(data_min) or np.isnan(data_max)):
+                all_mins.append(data_min)
+                all_maxs.append(data_max)
     
     if all_mins and all_maxs:
         y_min = min(all_mins) - 0.1 * (max(all_maxs) - min(all_mins))
@@ -384,11 +386,13 @@ def create_task_combined_plot(
         # Include actual data range if available
         if data_3d is not None and data_3d.size > 0 and var_idx is not None:
             data_values = data_3d[:, :, var_idx]
-            data_min = np.nanmin(data_values)
-            data_max = np.nanmax(data_values)
-            if not (np.isinf(data_min) or np.isinf(data_max) or np.isnan(data_min) or np.isnan(data_max)):
-                all_mins.append(data_min)
-                all_maxs.append(data_max)
+            # Check if data slice is not all NaN before computing min/max
+            if not np.isnan(data_values).all():
+                data_min = np.nanmin(data_values)
+                data_max = np.nanmax(data_values)
+                if not (np.isinf(data_min) or np.isinf(data_max) or np.isnan(data_min) or np.isnan(data_max)):
+                    all_mins.append(data_min)
+                    all_maxs.append(data_max)
         
         if all_mins and all_maxs:
             y_min = min(all_mins) - 0.1 * (max(all_maxs) - min(all_mins))
@@ -834,11 +838,13 @@ def create_filters_by_phase_plot(
         # Include actual data range if available
         if data is not None and data.size > 0 and var_idx < data.shape[2]:
             data_values = data[:, :, var_idx]
-            data_min = np.nanmin(data_values)
-            data_max = np.nanmax(data_values)
-            if not (np.isinf(data_min) or np.isinf(data_max) or np.isnan(data_min) or np.isnan(data_max)):
-                all_mins.append(data_min)
-                all_maxs.append(data_max)
+            # Check if data slice is not all NaN before computing min/max
+            if not np.isnan(data_values).all():
+                data_min = np.nanmin(data_values)
+                data_max = np.nanmax(data_values)
+                if not (np.isinf(data_min) or np.isinf(data_max) or np.isnan(data_min) or np.isnan(data_max)):
+                    all_mins.append(data_min)
+                    all_maxs.append(data_max)
         
         if all_mins and all_maxs:
             y_min = min(all_mins) - 0.1 * (max(all_maxs) - min(all_mins))

@@ -227,34 +227,51 @@ def get_sagittal_features() -> list:
     Get list of sagittal plane features for validation and plotting.
     
     Returns list of (variable_name, display_label) tuples for all sagittal plane features
-    including kinematic, kinetic, and segment angle variables.
+    including kinematic, kinetic, velocity, and segment angle variables.
     
     Returns:
         List of tuples containing (feature_name, display_label)
     """
     return [
-        # Kinematic features
+        # Joint angles
         ('hip_flexion_angle_ipsi_rad', 'Hip Flexion Angle (Ipsi)'),
         ('hip_flexion_angle_contra_rad', 'Hip Flexion Angle (Contra)'),
         ('knee_flexion_angle_ipsi_rad', 'Knee Flexion Angle (Ipsi)'),
         ('knee_flexion_angle_contra_rad', 'Knee Flexion Angle (Contra)'),
         ('ankle_dorsiflexion_angle_ipsi_rad', 'Ankle Dorsiflexion Angle (Ipsi)'),
         ('ankle_dorsiflexion_angle_contra_rad', 'Ankle Dorsiflexion Angle (Contra)'),
-        # Kinetic features
+        # Joint moments
         ('hip_flexion_moment_ipsi_Nm', 'Hip Flexion Moment (Ipsi)'),
         ('hip_flexion_moment_contra_Nm', 'Hip Flexion Moment (Contra)'),
         ('knee_flexion_moment_ipsi_Nm', 'Knee Flexion Moment (Ipsi)'),
         ('knee_flexion_moment_contra_Nm', 'Knee Flexion Moment (Contra)'),
         ('ankle_dorsiflexion_moment_ipsi_Nm', 'Ankle Dorsiflexion Moment (Ipsi)'),
         ('ankle_dorsiflexion_moment_contra_Nm', 'Ankle Dorsiflexion Moment (Contra)'),
+        # Joint angular velocities
+        ('hip_flexion_velocity_ipsi_rad_s', 'Hip Flexion Velocity (Ipsi)'),
+        ('hip_flexion_velocity_contra_rad_s', 'Hip Flexion Velocity (Contra)'),
+        ('knee_flexion_velocity_ipsi_rad_s', 'Knee Flexion Velocity (Ipsi)'),
+        ('knee_flexion_velocity_contra_rad_s', 'Knee Flexion Velocity (Contra)'),
+        ('ankle_dorsiflexion_velocity_ipsi_rad_s', 'Ankle Dorsiflexion Velocity (Ipsi)'),
+        ('ankle_dorsiflexion_velocity_contra_rad_s', 'Ankle Dorsiflexion Velocity (Contra)'),
         # Segment angles
         ('pelvis_sagittal_angle_rad', 'Pelvis Sagittal Angle'),
+        ('trunk_sagittal_angle_rad', 'Trunk Sagittal Angle'),
         ('thigh_sagittal_angle_ipsi_rad', 'Thigh Sagittal Angle (Ipsi)'),
         ('thigh_sagittal_angle_contra_rad', 'Thigh Sagittal Angle (Contra)'),
         ('shank_sagittal_angle_ipsi_rad', 'Shank Sagittal Angle (Ipsi)'),
         ('shank_sagittal_angle_contra_rad', 'Shank Sagittal Angle (Contra)'),
         ('foot_sagittal_angle_ipsi_rad', 'Foot Sagittal Angle (Ipsi)'),
-        ('foot_sagittal_angle_contra_rad', 'Foot Sagittal Angle (Contra)')
+        ('foot_sagittal_angle_contra_rad', 'Foot Sagittal Angle (Contra)'),
+        # Segment angular velocities
+        ('pelvis_sagittal_velocity_rad_s', 'Pelvis Sagittal Velocity'),
+        ('trunk_sagittal_velocity_rad_s', 'Trunk Sagittal Velocity'),
+        ('thigh_sagittal_velocity_ipsi_rad_s', 'Thigh Sagittal Velocity (Ipsi)'),
+        ('thigh_sagittal_velocity_contra_rad_s', 'Thigh Sagittal Velocity (Contra)'),
+        ('shank_sagittal_velocity_ipsi_rad_s', 'Shank Sagittal Velocity (Ipsi)'),
+        ('shank_sagittal_velocity_contra_rad_s', 'Shank Sagittal Velocity (Contra)'),
+        ('foot_sagittal_velocity_ipsi_rad_s', 'Foot Sagittal Velocity (Ipsi)'),
+        ('foot_sagittal_velocity_contra_rad_s', 'Foot Sagittal Velocity (Contra)')
     ]
 
 
