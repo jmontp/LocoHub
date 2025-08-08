@@ -4,8 +4,7 @@ View standardized biomechanical datasets side-by-side for easy comparison.
 
 ## How to Use
 
-1. **All Datasets View**: Select a task from the dropdown to see all available datasets that include that task
-2. **Pairwise Comparison**: Select two specific datasets and a task to compare them side-by-side
+Select a task from the dropdown to see all available datasets that include that task. You can rearrange the dataset cards using the arrow buttons to compare specific datasets side-by-side.
 
 The plots show clean data (passing validation only) with mean patterns and standard deviation bands for each dataset.
 
@@ -33,48 +32,6 @@ Select a task to see all available datasets:
     <p style="color: #666; padding: 20px;">Please select a task to view datasets.</p>
 </div>
 
----
-
-## 🔍 Pairwise Comparison
-
-Compare two datasets directly:
-
-<div class="pairwise-controls" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-    <label style="display: inline-block; margin: 5px;">Dataset 1:
-        <select id="dataset1Select" style="padding: 8px 12px; margin: 5px; border: 1px solid #ddd; border-radius: 4px;">
-            <option value="">Select dataset...</option>
-            <option value="umich_2021">UMich 2021</option>
-            <option value="gtech_2021">GTech 2021</option>
-            <option value="gtech_2023">GTech 2023</option>
-        </select>
-    </label>
-    
-    <label style="display: inline-block; margin: 5px;">Dataset 2:
-        <select id="dataset2Select" style="padding: 8px 12px; margin: 5px; border: 1px solid #ddd; border-radius: 4px;">
-            <option value="">Select dataset...</option>
-            <option value="umich_2021">UMich 2021</option>
-            <option value="gtech_2021">GTech 2021</option>
-            <option value="gtech_2023">GTech 2023</option>
-        </select>
-    </label>
-    
-    <label style="display: inline-block; margin: 5px;">Task:
-        <select id="pairwiseTaskSelect" style="padding: 8px 12px; margin: 5px; border: 1px solid #ddd; border-radius: 4px;">
-            <option value="">Select task...</option>
-            <option value="level_walking">Level Walking</option>
-            <option value="incline_walking">Incline Walking</option>
-            <option value="decline_walking">Decline Walking</option>
-            <option value="stair_ascent">Stair Ascent</option>
-            <option value="stair_descent">Stair Descent</option>
-        </select>
-    </label>
-    
-    <button onclick="showPairwise()" style="padding: 8px 16px; margin: 5px; border: 1px solid #007bff; background: #007bff; color: white; border-radius: 4px; cursor: pointer;">Compare</button>
-</div>
-
-<div id="pairwiseResult" class="pairwise-result" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
-    <p style="color: #666; padding: 20px; grid-column: 1 / -1;">Select two datasets and a task to compare.</p>
-</div>
 
 <style>
 .comparison-grid {
@@ -185,20 +142,6 @@ Compare two datasets directly:
     .dataset-card {
         width: 300px; /* Smaller width on mobile */
         min-width: 300px;
-    }
-    
-    .pairwise-result {
-        grid-template-columns: 1fr !important;
-    }
-    
-    .pairwise-controls label {
-        display: block !important;
-        margin: 10px 0 !important;
-    }
-    
-    .pairwise-controls select,
-    .pairwise-controls button {
-        width: 100%;
     }
 }
 </style>
@@ -312,53 +255,6 @@ function resetDatasetOrder() {
     showAllDatasets();
 }
 
-function showPairwise() {
-    const dataset1 = document.getElementById('dataset1Select').value;
-    const dataset2 = document.getElementById('dataset2Select').value;
-    const task = document.getElementById('pairwiseTaskSelect').value;
-    const result = document.getElementById('pairwiseResult');
-    
-    if (!dataset1 || !dataset2 || !task) {
-        result.innerHTML = '<p style="color: #666; padding: 20px; grid-column: 1 / -1;">Please select both datasets and a task.</p>';
-        return;
-    }
-    
-    if (dataset1 === dataset2) {
-        result.innerHTML = '<p style="color: #666; padding: 20px; grid-column: 1 / -1;">Please select two different datasets to compare.</p>';
-        return;
-    }
-    
-    // Check availability
-    const d1HasTask = AVAILABLE_PLOTS[dataset1]?.includes(task);
-    const d2HasTask = AVAILABLE_PLOTS[dataset2]?.includes(task);
-    
-    if (!d1HasTask && !d2HasTask) {
-        result.innerHTML = '<p style="color: #666; padding: 20px; grid-column: 1 / -1;">Selected task not available for either dataset.</p>';
-        return;
-    }
-    
-    // Display side-by-side
-    result.innerHTML = `
-        <div class="dataset-card">
-            <h4>${formatName(dataset1)}</h4>
-            ${d1HasTask ? 
-                `<img src="../comparison_plots/${dataset1}_${task}.png" 
-                      alt="${formatName(dataset1)} - ${task.replace(/_/g, ' ')}"
-                      onerror="this.onerror=null; this.style.display='none'; var err=document.createElement('div'); err.className='error-message'; err.innerHTML='Plot not yet generated.<br>Run validation to create.'; this.parentElement.appendChild(err);">` :
-                '<div class="error-message">Task not available for this dataset.</div>'
-            }
-        </div>
-        <div class="dataset-card">
-            <h4>${formatName(dataset2)}</h4>
-            ${d2HasTask ? 
-                `<img src="../comparison_plots/${dataset2}_${task}.png" 
-                      alt="${formatName(dataset2)} - ${task.replace(/_/g, ' ')}"
-                      onerror="this.onerror=null; this.style.display='none'; var err=document.createElement('div'); err.className='error-message'; err.innerHTML='Plot not yet generated.<br>Run validation to create.'; this.parentElement.appendChild(err);">` :
-                '<div class="error-message">Task not available for this dataset.</div>'
-            }
-        </div>
-    `;
-}
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
