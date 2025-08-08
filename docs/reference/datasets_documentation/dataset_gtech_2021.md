@@ -10,9 +10,9 @@
 **Dataset Size**: ~2.5 GB (parquet format)  
 **License**: Creative Commons Attribution 4.0 (CC-BY 4.0)
 
-**Institution**: Georgia Institute of Technology, George W. Woodruff School of Mechanical Engineering and Institute of Robotics and Intelligent Machines
+**Institution**: [Georgia Institute of Technology](https://www.gatech.edu/), [George W. Woodruff School of Mechanical Engineering](https://www.me.gatech.edu/) and [Institute of Robotics and Intelligent Machines](https://research.gatech.edu/robotics)
 
-**Principal Investigators**: Jonathan Camargo, Aditya Ramanathan, Will Flanagan, Aaron Young (EPIC Lab - Exoskeleton and Prosthetic Intelligent Controls Lab)
+**Principal Investigators**: Jonathan Camargo, Aditya Ramanathan, Will Flanagan, [Aaron Young](https://www.me.gatech.edu/faculty/young) ([EPIC Lab](https://www.epic.gatech.edu/) - Exoskeleton and Prosthetic Intelligent Controls Lab)
 
 ## Citation Information
 
@@ -33,14 +33,19 @@
 
 ### Associated Publications
 - Published online: February 20, 2021
-- DOI: https://doi.org/10.1016/j.jbiomech.2021.110320
+- DOI: [https://doi.org/10.1016/j.jbiomech.2021.110320](https://doi.org/10.1016/j.jbiomech.2021.110320)
 - Dataset hosted on Mendeley Data (3 parts due to size):
-  - Part 1: https://doi.org/10.17632/x78gzbp7n4.3
-  - Part 2: https://doi.org/10.17632/gwtkr3hv7r.3
-  - Part 3: https://doi.org/10.17632/svzfpxr3fy.3
+  - [Part 1: https://doi.org/10.17632/x78gzbp7n4.3](https://doi.org/10.17632/x78gzbp7n4.3)
+  - [Part 2: https://doi.org/10.17632/gwtkr3hv7r.3](https://doi.org/10.17632/gwtkr3hv7r.3)
+  - [Part 3: https://doi.org/10.17632/svzfpxr3fy.3](https://doi.org/10.17632/svzfpxr3fy.3)
 
 ### Acknowledgments
 This comprehensive dataset offers a source of locomotion information for applications in locomotion recognition, developments in robotic assistive devices, and improvement of biomimetic controllers that better adapt to terrain conditions.
+
+**Related Resources**:
+- [EPIC Lab Publications](https://www.epic.gatech.edu/publications/)
+- [Georgia Tech Biomechanics](https://www.bme.gatech.edu/bme/research/biomechanics-mechanobiology)
+- [Journal of Biomechanics](https://www.journals.elsevier.com/journal-of-biomechanics)
 
 ## Dataset Contents
 
@@ -91,7 +96,7 @@ This comprehensive dataset offers a source of locomotion information for applica
 - **Sampling Rate**: 2000 Hz (EMG), 150 Hz (IMU)
 
 ### Processing Pipeline
-- **Inverse Dynamics**: OpenSim 4.0 with gait2392 model
+- **Inverse Dynamics**: [OpenSim 4.0](https://opensim.stanford.edu/) with gait2392 model
 - **Filtering**: 4th order Butterworth (6 Hz cutoff for kinematics, 25 Hz for kinetics)
 - **Cycle Detection**: Heel strike events from force plates
 - **Phase Normalization**: Cubic spline interpolation to 150 points
@@ -107,11 +112,11 @@ This comprehensive dataset offers a source of locomotion information for applica
 - Full motion capture coverage
 
 ## Contact Information
-- **Dataset Curator**: Jonathan Camargo, PhD Candidate (at time of publication)
-- **Lab Website**: https://www.epic.gatech.edu/
-- **Lab Email**: Contact through lab website
+- **Dataset Curator**: [Jonathan Camargo](https://blog.jcamargo.co/), PhD Candidate (at time of publication)
+- **Lab Website**: [https://www.epic.gatech.edu/](https://www.epic.gatech.edu/)
+- **Lab Email**: Contact through [lab website](https://www.epic.gatech.edu/contact/)
 - **Technical Support**: EPIC Lab at Georgia Tech
-- **Data Access**: https://www.epic.gatech.edu/opensource-biomechanics-camargo-et-al/
+- **Data Access**: [https://www.epic.gatech.edu/opensource-biomechanics-camargo-et-al/](https://www.epic.gatech.edu/opensource-biomechanics-camargo-et-al/)
 
 ## Usage
 
@@ -134,7 +139,7 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 **Validation Configuration:**
 - **Ranges File**: `default_ranges.yaml`
 - **SHA256**: `76ab6a11...` (first 8 chars)
-- **Archived Copy**: [`gtech_2021_phase_2025-08-07_220959_ranges.yaml`](validation_archives/gtech_2021_phase_2025-08-07_220959_ranges.yaml)
+- **Archived Copy**: [`gtech_2021_phase_2025-08-07_232409_ranges.yaml`](validation_archives/gtech_2021_phase_2025-08-07_232409_ranges.yaml)
 
 | Metric | Value | Status |
 |--------|-------|--------|
@@ -183,7 +188,7 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 
 </div>
 
-**Last Validated**: 2025-08-07 22:09:59
+**Last Validated**: 2025-08-07 23:24:09
 
 ---
 *Last Updated: August 2025*

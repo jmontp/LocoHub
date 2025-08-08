@@ -7,11 +7,11 @@
 
 **Collection Year**: 2018-2021  
 **Dataset Size**: ~1.2 GB (parquet format)  
-**License**: Open Access (IEEE DataPort)
+**License**: Open Access ([IEEE DataPort](https://ieee-dataport.org/))
 
-**Institution**: University of Michigan, Department of Robotics, Mechanical Engineering, and Electrical and Computer Engineering
+**Institution**: [University of Michigan](https://umich.edu/), [Department of Robotics](https://robotics.umich.edu/), [Mechanical Engineering](https://me.engin.umich.edu/), and [Electrical and Computer Engineering](https://ece.engin.umich.edu/)
 
-**Principal Investigators**: Robert D. Gregg IV, Ph.D. (Locomotor Control Systems Laboratory)
+**Principal Investigators**: [Robert D. Gregg IV, Ph.D.](https://gregg.engin.umich.edu/) ([Locomotor Control Systems Laboratory](https://locolab.robotics.umich.edu/))
 
 ## Citation Information
 
@@ -28,22 +28,26 @@
 
 ### Associated Publications
 1. Embry, K., Villarreal, D., Macaluso, R., & Gregg, R.D. (2018). "The Effect of Walking Incline and Speed on Human Leg Kinematics, Kinetics, and EMG"  
-   IEEE DataPort. DOI: 10.21227/gk32-e868
+   IEEE DataPort. DOI: [10.21227/gk32-e868](https://doi.org/10.21227/gk32-e868)
 
 2. Macaluso, R., Embry, K., Villarreal, D., & Gregg, R.D. (2020). "Human Leg Kinematics, Kinetics, and EMG During Phase-Shifting Perturbations at Varying Inclines"  
-   IEEE DataPort. DOI: 10.21227/12hp-e249
+   IEEE DataPort. DOI: [10.21227/12hp-e249](https://doi.org/10.21227/12hp-e249)
 
 3. Elery, T., Rezazadeh, S., Reznick, E., Gray, L., & Gregg, R.D. (2020). "Effects of a Powered Knee-Ankle Prosthesis on Amputee Hip Compensations: A Case Series"  
-   IEEE DataPort. DOI: 10.21227/sngq-4x29
+   IEEE DataPort. DOI: [10.21227/sngq-4x29](https://doi.org/10.21227/sngq-4x29)
 
 4. Best, T.K., Embry, K.R., Rouse, E.J., & Gregg, R.D. (2023). "Phase-Variable Control of a Powered Knee-Ankle Prosthesis over Continuously Varying Speeds and Inclines"  
-   IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)
+   [IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)](https://ieeexplore.ieee.org/document/10341439)
 
 ### Acknowledgments
 This research was supported by:
-- NIH Director's New Innovator Award (2013) - $2.3 million over 5 years for phase-based control research
+- [NIH Director's New Innovator Award](https://commonfund.nih.gov/newinnovator) (2013) - $2.3 million over 5 years for phase-based control research
 - NIH R01 Grant (2018) - $2.2 million for investigation of agile powered prosthetic leg control
 - NIH R01 Grant (2021) - $1.7 million for design and control of modular powered orthoses
+
+**Grant Details**:
+- [NIH RePORTER - DP2HD080349](https://reporter.nih.gov/search/sZqnRvZlG0S0kCIDMwTCWA/project-details/8951475)
+- [NIH RePORTER - R01HD094772](https://reporter.nih.gov/search/Mh5_kLNMBkSBpBR1vKtSkg/project-details/9603148)
 
 ## Dataset Contents
 
@@ -87,16 +91,16 @@ This research was supported by:
 ## Data Collection Methods
 
 ### Equipment Specifications
-- **Treadmill**: Bertec split-belt instrumented treadmill
+- **Treadmill**: [Bertec](https://www.bertec.com/) split-belt instrumented treadmill
   - Force plates: Dual 6-DOF force platforms (1000 Hz)
   - Speed range: 0-3.0 m/s
   - Incline range: -15° to +15°
-- **Motion Capture**: Vicon system with 12 cameras (200 Hz)
-- **EMG System**: Delsys Trigno wireless (2000 Hz)
+- **Motion Capture**: [Vicon](https://www.vicon.com/) system with 12 cameras (200 Hz)
+- **EMG System**: [Delsys Trigno](https://delsys.com/trigno/) wireless (2000 Hz)
 - **Marker Set**: Modified Helen Hayes with additional tracking markers
 
 ### Processing Pipeline
-- **Inverse Kinematics**: Visual3D software
+- **Inverse Kinematics**: [Visual3D software](https://www.c-motion.com/products/visual3d/)
 - **Filtering**: 4th order zero-lag Butterworth
   - Kinematics: 6 Hz cutoff
   - Kinetics: 25 Hz cutoff
@@ -114,27 +118,34 @@ The Locomotor Control Systems Lab pioneered phase-variable control for powered p
 The lab's research has led to successful clinical trials of powered knee-ankle prostheses, demonstrating improved metabolic efficiency and biomechanical symmetry compared to passive devices.
 
 ## Contact Information
-- **Dataset Curator**: Robert D. Gregg IV, Ph.D.
-- **Lab Website**: https://gregg.engin.umich.edu/
-- **Lab Email**: locolab@umich.edu
-- **Technical Support**: Contact via lab email
+- **Dataset Curator**: [Robert D. Gregg IV, Ph.D.](https://gregg.engin.umich.edu/)
+- **Lab Website**: [https://locolab.robotics.umich.edu/](https://locolab.robotics.umich.edu/)
+- **Lab Email**: [locolab@umich.edu](mailto:locolab@umich.edu)
+- **Technical Support**: Contact via [lab email](mailto:locolab@umich.edu)
+- **IEEE DataPort**: [Browse Datasets](https://ieee-dataport.org/authors/robert-gregg)
 
 ## Funding Acknowledgment
 This dataset was collected with support from:
-- NIH Director's New Innovator Award (DP2HD080349)
+- [NIH Director's New Innovator Award](https://commonfund.nih.gov/newinnovator) (DP2HD080349)
 - NIH R01 Grant for agile powered prosthetic legs (R01HD094772)
-- Burroughs Wellcome Fund Career Award at the Scientific Interface ($500,000)
+- [Burroughs Wellcome Fund](https://www.bwfund.org/) Career Award at the Scientific Interface ($500,000)
+
+**Additional Resources**:
+- [University of Michigan Robotics](https://robotics.umich.edu/)
+- [Michigan Engineering News](https://news.engin.umich.edu/)
 
 ## Lab Description
-The Locomotor Control Systems Laboratory is a highly interdisciplinary environment dedicated to scientific innovation, 
+The [Locomotor Control Systems Laboratory](https://locolab.robotics.umich.edu/) is a highly interdisciplinary environment dedicated to scientific innovation, 
 clinical translation, and individual career development. The lab develops high-performance control systems for robotic 
 prostheses and orthoses to enable mobility and improve quality of life for persons with disabilities. The research 
 approaches this needs-driven work from the perspective of dynamical systems and control theory, investigating and 
 translating concepts from legged robotics into transformative solutions for physical rehabilitation.
 
-Dr. Gregg's research interests include actuator design and control, nonlinear control theory, and biomechanics of 
+[Dr. Gregg's](https://scholar.google.com/citations?user=hEypYOEAAAAJ) research interests include actuator design and control, nonlinear control theory, and biomechanics of 
 human locomotion. He is most known for his works on bipedal locomotion control and wearable robotics, with research 
 focusing on integrating human biomechanics insights into robot control algorithms to improve natural movement efficiency.
+
+**Lab Publications**: [Google Scholar](https://scholar.google.com/citations?user=hEypYOEAAAAJ&hl=en) | [ResearchGate](https://www.researchgate.net/profile/Robert-Gregg-5)
 
 ## Usage
 

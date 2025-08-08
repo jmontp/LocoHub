@@ -10,10 +10,10 @@
 **License**: Creative Commons Attribution 4.0 (CC-BY 4.0)  
 **Publication Date**: December 21, 2023
 
-**Institution**: Georgia Institute of Technology, Woodruff School of Mechanical Engineering and Institute of Robotics and Intelligent Machines
+**Institution**: [Georgia Institute of Technology](https://www.gatech.edu/), [Woodruff School of Mechanical Engineering](https://www.me.gatech.edu/) and [Institute of Robotics and Intelligent Machines](https://research.gatech.edu/robotics)
 
-**Principal Investigators**: Aaron Young, Ph.D. (EPIC Lab - Exoskeleton and Prosthetic Intelligent Controls Laboratory)  
-**Co-Authors**: Keaton Scherpereel, Dean Molinaro, Omer Inan, Max Shepherd
+**Principal Investigators**: [Aaron Young, Ph.D.](https://www.me.gatech.edu/faculty/young) ([EPIC Lab](https://www.epic.gatech.edu/) - Exoskeleton and Prosthetic Intelligent Controls Laboratory)  
+**Co-Authors**: Keaton Scherpereel, Dean Molinaro, [Omer Inan](https://www.ece.gatech.edu/faculty-staff-directory/omer-inan), [Max Shepherd](https://coe.northeastern.edu/people/shepherd-max/)
 
 ## Citation Information
 
@@ -32,20 +32,20 @@
 }
 ```
 
-**Dataset Repository**: Available at SMARTech with DOI: https://doi.org/10.35090/gatech/70296
+**Dataset Repository**: Available at SMARTech with DOI: [https://doi.org/10.35090/gatech/70296](https://doi.org/10.35090/gatech/70296)
 
 ### Associated Publications
 1. Young, A. et al. (2024). "Task-Agnostic Exoskeleton Control via Biological Joint Moment Estimation." 
-   Nature, 635, 337-344.
-2. EPIC Lab Open-Source Data & Models: https://www.epic.gatech.edu/open-source-data-models/
+   [Nature, 635, 337-344](https://www.nature.com/articles/s41586-024-08157-7).
+2. EPIC Lab Open-Source Data & Models: [https://www.epic.gatech.edu/open-source-data-models/](https://www.epic.gatech.edu/open-source-data-models/)
 
 ### Acknowledgments
 This research was supported by:
-- NSF National Robotics Initiative (NRI) grants for machine learning in exoskeleton control
+- [NSF National Robotics Initiative (NRI)](https://www.nsf.gov/funding/pgm_summ.jsp?pims_id=503641) grants for machine learning in exoskeleton control
 - National Science Foundation Graduate Research Fellowship under Grant No. DGE-2039655
-- DoD Congressionally Directed Medical Research Programs (CDMRP) for powered prosthesis intent recognition
-- NIH Director's New Innovator Award to Dr. Aaron Young
-- X, The Moonshot Factory for funding this open-source project (Kathryn Zealand helped conceptualize and fund the study)
+- [DoD Congressionally Directed Medical Research Programs (CDMRP)](https://cdmrp.health.mil/) for powered prosthesis intent recognition
+- [NIH Director's New Innovator Award](https://commonfund.nih.gov/newinnovator) to Dr. Aaron Young
+- [X, The Moonshot Factory](https://x.company/) for funding this open-source project (Kathryn Zealand helped conceptualize and fund the study)
 
 ## Dataset Contents
 
@@ -104,15 +104,15 @@ This research was supported by:
 ## Data Collection Methods
 
 ### Motion Capture System
-- **System**: Vicon Motion Capture System
+- **System**: [Vicon Motion Capture System](https://www.vicon.com/)
 - **Marker Set**: Full-body marker set (modified Plug-in Gait)
 - **Sampling Rate**: 200 Hz (native)
 - **Camera Count**: 12-16 cameras for full capture volume
 
 ### CAREN System (Computer-Aided Rehabilitation Environment)
-- **Manufacturer**: Motek Medical (now part of DIH Technologies)
-- **Motion Capture**: 10-camera Vicon T-160 system (16 megapixels, 120 fps)
-- **EMG System**: 16-channel Delsys Trigno wireless EMG system (2000 Hz)
+- **Manufacturer**: [Motek Medical](https://www.motekmedical.com/) (now part of [DIH Technologies](https://dih.com/))
+- **Motion Capture**: 10-camera [Vicon T-160 system](https://www.vicon.com/) (16 megapixels, 120 fps)
+- **EMG System**: 16-channel [Delsys Trigno](https://delsys.com/trigno/) wireless EMG system (2000 Hz)
 - **Platform**: Dual-belt instrumented treadmill on 6-DOF Stewart platform
   - Max velocity: 5 m/s
   - Max incline: ±20°
@@ -129,16 +129,21 @@ This research was supported by:
 - **Configurable Space**: Equipment can be arranged to simulate various real-world conditions including ramps, stairs, and level ground
 
 ## Contact Information
-- **Dataset Curator**: Aaron Young, Ph.D.
-- **Lab Website**: https://www.epic.gatech.edu/
-- **Lab Email**: epic-lab@gatech.edu
-- **Technical Support**: Contact via lab email
+- **Dataset Curator**: [Aaron Young, Ph.D.](https://www.me.gatech.edu/faculty/young)
+- **Lab Website**: [https://www.epic.gatech.edu/](https://www.epic.gatech.edu/)
+- **Lab Email**: [epic-lab@gatech.edu](mailto:epic-lab@gatech.edu)
+- **Technical Support**: Contact via [lab email](mailto:epic-lab@gatech.edu)
+- **Dataset Access**: [SMARTech Repository](https://smartech.gatech.edu/)
 
 ## Funding Acknowledgment
 This dataset was collected with support from:
-- NSF National Robotics Initiative (NRI) for machine learning in robotic exoskeletons
-- DoD Congressionally Directed Medical Research Programs (CDMRP) for powered prosthesis intent recognition
-- NIH New Investigator Award to Dr. Aaron Young
+- [NSF National Robotics Initiative (NRI)](https://www.nsf.gov/funding/pgm_summ.jsp?pims_id=503641) for machine learning in robotic exoskeletons
+- [DoD Congressionally Directed Medical Research Programs (CDMRP)](https://cdmrp.health.mil/) for powered prosthesis intent recognition
+- [NIH New Investigator Award](https://commonfund.nih.gov/newinnovator) to Dr. Aaron Young
+
+**Related Funding Resources**:
+- [NSF Award Search](https://www.nsf.gov/awardsearch/)
+- [NIH RePORTER](https://reporter.nih.gov/)
 
 ## Lab Description
 The Exoskeleton and Prosthetic Intelligent Controls (EPIC) Lab at Georgia Tech is devoted to the design and 
