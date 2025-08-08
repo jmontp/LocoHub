@@ -442,17 +442,17 @@ function stride_table = process_strides_single_leg(trial_data, ...
             
             % Ankle angles
             if isfield(angles, 'RAnkleAngles') && isfield(angles, 'LAnkleAngles')
-                % Process right ankle
+                % Process right ankle (negate for dorsiflexion convention)
                 r_ankle_flex = interpolate_signal(...
-                    angles.RAnkleAngles(r_start_frame:r_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
+                    -angles.RAnkleAngles(r_start_frame:r_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
                 r_ankle_add = interpolate_signal(...
                     angles.RAnkleAngles(r_start_frame:r_end_frame, frontal_plane), NUM_POINTS) * deg2rad;
                 r_ankle_rot = interpolate_signal(...
                     angles.RAnkleAngles(r_start_frame:r_end_frame, transverse_plane), NUM_POINTS) * deg2rad;
                 
-                % Process left ankle
+                % Process left ankle (negate for dorsiflexion convention)
                 l_ankle_flex = interpolate_signal(...
-                    angles.LAnkleAngles(l_start_frame:l_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
+                    -angles.LAnkleAngles(l_start_frame:l_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
                 l_ankle_add = interpolate_signal(...
                     angles.LAnkleAngles(l_start_frame:l_end_frame, frontal_plane), NUM_POINTS) * deg2rad;
                 l_ankle_rot = interpolate_signal(...
@@ -488,15 +488,15 @@ function stride_table = process_strides_single_leg(trial_data, ...
             
             % Foot angles
             if isfield(angles, 'RFootProgressAngles') && isfield(angles, 'LFootProgressAngles')
-                % Process right foot with -90 degree offset and negate
+                % Process foot angles (negate to match phase script convention)
                 r_foot_raw = interpolate_signal(...
-                    (-angles.RFootProgressAngles(r_start_frame:r_end_frame, sagittal_plane) - 90), NUM_POINTS);
+                    -angles.RFootProgressAngles(r_start_frame:r_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
                 l_foot_raw = interpolate_signal(...
-                    (-angles.LFootProgressAngles(l_start_frame:l_end_frame, sagittal_plane) - 90), NUM_POINTS);
+                    -angles.LFootProgressAngles(l_start_frame:l_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
                 
-                % Apply foot angle corrections
-                r_foot_corrected = apply_foot_angle_correction(r_foot_raw, deg2rad);
-                l_foot_corrected = apply_foot_angle_correction(l_foot_raw, deg2rad);
+                % Apply foot angle corrections (data already in radians)
+                r_foot_corrected = apply_foot_angle_correction(r_foot_raw, 1);
+                l_foot_corrected = apply_foot_angle_correction(l_foot_raw, 1);
                 
                 % Assign based on which leg is ipsilateral
                 if strcmp(leg_side, 'right')

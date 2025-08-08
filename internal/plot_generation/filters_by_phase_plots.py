@@ -138,7 +138,11 @@ def create_single_feature_plot(
         y_min, y_max = -1, 1
     
     # Determine unit and conversion
-    if var_name.endswith('_rad'):
+    if var_name.endswith('_rad_s'):
+        units = 'rad/s'
+        value_conversion = np.degrees  # Convert rad/s to deg/s
+        unit_suffix = '°/s'
+    elif var_name.endswith('_rad'):
         units = 'rad'
         value_conversion = np.degrees
         unit_suffix = '°'
@@ -204,7 +208,15 @@ def create_single_feature_plot(
     ax_fail.set_xlabel(x_label, fontsize=10)
     
     # Add degree conversion on right y-axis for angular variables
-    if var_name.endswith('_rad'):
+    if var_name.endswith('_rad_s'):
+        ax2_pass = ax_pass.twinx()
+        ax2_pass.set_ylim(value_conversion(y_min), value_conversion(y_max))
+        ax2_pass.set_ylabel('deg/s', fontsize=9)
+        
+        ax2_fail = ax_fail.twinx()
+        ax2_fail.set_ylim(value_conversion(y_min), value_conversion(y_max))
+        ax2_fail.set_ylabel('deg/s', fontsize=9)
+    elif var_name.endswith('_rad'):
         ax2_pass = ax_pass.twinx()
         ax2_pass.set_ylim(value_conversion(y_min), value_conversion(y_max))
         ax2_pass.set_ylabel('degrees', fontsize=9)
@@ -401,7 +413,11 @@ def create_task_combined_plot(
             y_min, y_max = -1, 1
         
         # Determine unit and conversion
-        if var_name.endswith('_rad'):
+        if var_name.endswith('_rad_s'):
+            units = 'rad/s'
+            value_conversion = np.degrees  # Convert rad/s to deg/s
+            unit_suffix = '°/s'
+        elif var_name.endswith('_rad'):
             units = 'rad'
             value_conversion = np.degrees
             unit_suffix = '°'
@@ -477,7 +493,19 @@ def create_task_combined_plot(
                 ax_fail.set_xlabel(x_label, fontsize=8)
         
         # Add degree conversion on right y-axis for angular variables
-        if var_name.endswith('_rad'):
+        if var_name.endswith('_rad_s'):
+            ax2_pass = ax_pass.twinx()
+            ax2_pass.set_ylim(value_conversion(y_min), value_conversion(y_max))
+            ax2_pass.set_ylabel('deg/s', fontsize=7)
+            ax2_pass.tick_params(axis='y', labelsize=7)
+            
+            # Only add fail axis degree conversion in validation mode
+            if not comparison_mode and ax_fail is not None:
+                ax2_fail = ax_fail.twinx()
+                ax2_fail.set_ylim(value_conversion(y_min), value_conversion(y_max))
+                ax2_fail.set_ylabel('deg/s', fontsize=7)
+                ax2_fail.tick_params(axis='y', labelsize=7)
+        elif var_name.endswith('_rad'):
             ax2_pass = ax_pass.twinx()
             ax2_pass.set_ylim(value_conversion(y_min), value_conversion(y_max))
             ax2_pass.set_ylabel('deg', fontsize=7)
