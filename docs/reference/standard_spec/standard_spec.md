@@ -74,13 +74,13 @@ All subjects must follow a strict naming convention to ensure global uniqueness 
 
 ## Required Columns
 
-**Metadata** (required for all datasets):
-- `subject` - Subject identifier following naming convention above
-- `subject_metadata` - (Optional) Demographics in key:value format (e.g., "age:45,sex:F,height_m:1.68")
-- `task` - Biomechanical category (e.g., level_walking, incline_walking)
-- `task_id` - Task variant with primary parameter (e.g., incline_10deg, stair_ascent)
-- `task_info` - Metadata in key:value format (e.g., "incline_deg:10,speed_m_s:1.2")
-- `step` - Step/cycle number
+**Metadata columns**:
+- `subject` - **(Required)** Subject identifier following naming convention above
+- `subject_metadata` - **(Optional)** Demographics in key:value format (e.g., "age:45,sex:F,height_m:1.68")
+- `task` - **(Required)** Biomechanical category (e.g., level_walking, incline_walking)
+- `task_id` - **(Required)** Task variant with primary parameter (e.g., incline_10deg, stair_ascent)
+- `task_info` - **(Required)** Metadata in key:value format (e.g., "incline_deg:10,speed_m_s:1.2")
+- `step` - **(Required)** Step/cycle number
 
 **Phase Data** (required for phase-indexed):
 - `phase_ipsi` - Gait cycle phase (0-100%) aligned to ipsilateral heel strike

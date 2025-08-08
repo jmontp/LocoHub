@@ -173,7 +173,7 @@ data.plot_phase_patterns(
 | Negative knee angles | OpenSim: 0° = full extension |
 | Wrong phase alignment | 0% = heel strike, not toe-off |
 | Unit errors | Use radians, not degrees |
-| Missing contra | Generate from ipsi + 50% phase |
+| Missing contra data | Generate from ipsi + 50% phase offset |
 
 ---
 

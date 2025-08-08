@@ -22,6 +22,11 @@ This system enables:
 - Quick selection of specific conditions (`task_id`)
 - Access to detailed experimental parameters (`task_info`)
 
+**Design Note**: The primary parameter (e.g., incline angle) appears in both `task_id` and `task_info`. This intentional redundancy serves different purposes:
+- `task_id` enables fast filtering and grouping without parsing
+- `task_info` provides complete metadata in a consistent parseable format
+- This allows queries like "all 10° inclines" using task_id OR "all inclines between 5-15°" by parsing task_info
+
 ## Data Storage Format
 
 ### Column Requirements
@@ -84,10 +89,11 @@ Complete documentation for each standardized task type.
 |-----|------|-------------|----------------|
 | `speed_m_s` | float | Walking speed in m/s | 0.8 - 1.8 |
 | `treadmill` | boolean | Treadmill vs overground | true/false |
-| `overground` | boolean | Overground vs treadmill | true/false |
 | `self_selected` | boolean | Self-selected pace | true/false |
 
 **Example**: `"speed_m_s:1.2,treadmill:true"`
+
+*Note: When `treadmill:false`, overground walking is implied.*
 
 ---
 
