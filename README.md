@@ -1,8 +1,19 @@
 # LocoHub
 
-Easy-to-use, cleaned up and tested biomechanical datasets that enable reproducible results across studies.
+**Standardized biomechanical datasets for reproducible locomotion research**
 
-**Quick Links:** [Datasets](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) • [Standard Spec](docs/standard_spec/standard_spec.md) • [Python Tutorial](docs/tutorials/python/getting_started_python.md)
+## 📚 Full Documentation
+
+**Visit our documentation site: [https://jmontp.github.io/LocoHub/](https://jmontp.github.io/LocoHub/)**
+
+The documentation includes:
+- Complete API reference
+- Interactive tutorials  
+- Dataset comparison gallery
+- Validation reports
+- Contributing guides
+
+**Quick Links:** [Getting Started](https://jmontp.github.io/LocoHub/users/) • [Datasets](https://jmontp.github.io/LocoHub/reference/datasets_documentation/) • [API Docs](https://jmontp.github.io/LocoHub/users/api/api-index/)
 
 ## Project Structure
 
