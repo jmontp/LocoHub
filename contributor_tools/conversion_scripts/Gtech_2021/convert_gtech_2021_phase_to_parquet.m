@@ -607,6 +607,10 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         stride_start_time = stride_time(1);
         stride_end_time = stride_time(end);
         
+        % Calculate stride duration and phase rate (phase time derivative)
+        stride_duration_s = stride_end_time - stride_start_time;
+        phase_ipsi_dot_value = 100 / stride_duration_s;  % %/second
+        
         % Get indices for this stride in IK and ID data
         ik_mask = (trial_data.ik.Header >= stride_start_time) & (trial_data.ik.Header <= stride_end_time);
         id_mask = (trial_data.id.Header >= stride_start_time) & (trial_data.id.Header <= stride_end_time);
@@ -621,6 +625,7 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         % Initialize data arrays for this stride
         stride_data = struct();
         stride_data.phase_ipsi = target_pct;
+        stride_data.phase_ipsi_dot = repmat(phase_ipsi_dot_value, NUM_POINTS, 1);  % Constant for all 150 points
         
         % Process kinematics (angles in degrees, convert to radians)
         deg2rad = pi/180;
@@ -630,88 +635,243 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         valid_stride_pct = stride_pct(valid_pct_idx:end);
         valid_stride_time = stride_time(valid_pct_idx:end);
         
-        % Ankle dorsiflexion angle with smart offset correction
+        % Ankle dorsiflexion angle with smart offset correction - IPSILATERAL (right)
         if any(strcmp(trial_data.ik.Properties.VariableNames, 'ankle_angle_r'))
             angle_data = trial_data.ik.ankle_angle_r(ik_mask);
             ik_time = trial_data.ik.Header(ik_mask);
+            
+            % Calculate velocity in time domain (convert to radians first for consistent units)
+            % Note: negating angle to match dorsiflexion convention before taking derivative
+            angle_rad = -angle_data * deg2rad;
+            velocity_data = gradient(angle_rad) ./ gradient(ik_time);
+            
             % First interpolate angle data to stride time points
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
             % Then interpolate from percentage to normalized 150 points
             % Note: negating to match dorsiflexion convention (positive = toe up)
             ankle_data = -interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
             
+            % Interpolate velocity data similarly
+            velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
+            ankle_velocity = interp1(valid_stride_pct, velocity_at_stride_time, target_pct, 'linear', 'extrap');
+            
             % Check for large offset at phase 0 and correct if needed
             if abs(ankle_data(1)) > 2.0  % More than 2 radians offset at heel strike
                 ankle_offset = ankle_data(1);
                 ankle_data = ankle_data - ankle_offset;  % Remove offset
-                fprintf('      Corrected ankle offset of %.2f rad at phase 0\n', ankle_offset);
+                fprintf('      Corrected ipsi ankle offset of %.2f rad at phase 0\n', ankle_offset);
             end
             
             stride_data.ankle_dorsiflexion_angle_ipsi_rad = ankle_data;
+            stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = ankle_velocity;
         else
             stride_data.ankle_dorsiflexion_angle_ipsi_rad = zeros(NUM_POINTS, 1);
+            stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = zeros(NUM_POINTS, 1);
         end
         
-        % Knee angle with per-stride sign detection
+        % Ankle dorsiflexion angle - CONTRALATERAL (left)
+        if any(strcmp(trial_data.ik.Properties.VariableNames, 'ankle_angle_l'))
+            angle_data = trial_data.ik.ankle_angle_l(ik_mask);
+            
+            % Calculate velocity in time domain
+            angle_rad = -angle_data * deg2rad;
+            velocity_data = gradient(angle_rad) ./ gradient(ik_time);
+            
+            % Interpolate angle
+            angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
+            ankle_data_contra = -interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            
+            % Interpolate velocity
+            velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
+            ankle_velocity_contra = interp1(valid_stride_pct, velocity_at_stride_time, target_pct, 'linear', 'extrap');
+            
+            % Check for large offset at phase 0 and correct if needed
+            if abs(ankle_data_contra(1)) > 2.0
+                ankle_offset_contra = ankle_data_contra(1);
+                ankle_data_contra = ankle_data_contra - ankle_offset_contra;
+                fprintf('      Corrected contra ankle offset of %.2f rad at phase 0\n', ankle_offset_contra);
+            end
+            
+            stride_data.ankle_dorsiflexion_angle_contra_rad = ankle_data_contra;
+            stride_data.ankle_dorsiflexion_velocity_contra_rad_s = ankle_velocity_contra;
+        else
+            stride_data.ankle_dorsiflexion_angle_contra_rad = zeros(NUM_POINTS, 1);
+            stride_data.ankle_dorsiflexion_velocity_contra_rad_s = zeros(NUM_POINTS, 1);
+        end
+        
+        % Knee angle with per-stride sign detection - IPSILATERAL (right)
         if any(strcmp(trial_data.ik.Properties.VariableNames, 'knee_angle_r'))
             angle_data = trial_data.ik.knee_angle_r(ik_mask);
+            
+            % Calculate velocity in time domain (before any sign flipping)
+            angle_rad = angle_data * deg2rad;
+            velocity_data = gradient(angle_rad) ./ gradient(ik_time);
+            
+            % Interpolate angle
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
             knee_data = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            
+            % Interpolate velocity
+            velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
+            knee_velocity = interp1(valid_stride_pct, velocity_at_stride_time, target_pct, 'linear', 'extrap');
             
             % Check if knee angle needs flipping (min should not be very negative)
             min_knee = min(knee_data);
             if min_knee < -0.3  % Less than -0.3 rad (~-17 degrees) indicates flipped sign
                 knee_data = -knee_data;  % Flip sign
-                fprintf('      Flipped knee angle sign (min was %.2f rad)\n', min_knee);
+                knee_velocity = -knee_velocity;  % Also flip velocity
+                fprintf('      Flipped ipsi knee angle sign (min was %.2f rad)\n', min_knee);
             end
             
             stride_data.knee_flexion_angle_ipsi_rad = knee_data;
+            stride_data.knee_flexion_velocity_ipsi_rad_s = knee_velocity;
         else
             stride_data.knee_flexion_angle_ipsi_rad = zeros(NUM_POINTS, 1);
+            stride_data.knee_flexion_velocity_ipsi_rad_s = zeros(NUM_POINTS, 1);
         end
         
-        % Hip angle
+        % Knee angle - CONTRALATERAL (left)
+        if any(strcmp(trial_data.ik.Properties.VariableNames, 'knee_angle_l'))
+            angle_data = trial_data.ik.knee_angle_l(ik_mask);
+            
+            % Calculate velocity in time domain
+            angle_rad = angle_data * deg2rad;
+            velocity_data = gradient(angle_rad) ./ gradient(ik_time);
+            
+            % Interpolate angle
+            angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
+            knee_data_contra = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            
+            % Interpolate velocity
+            velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
+            knee_velocity_contra = interp1(valid_stride_pct, velocity_at_stride_time, target_pct, 'linear', 'extrap');
+            
+            % Check if knee angle needs flipping
+            min_knee_contra = min(knee_data_contra);
+            if min_knee_contra < -0.3
+                knee_data_contra = -knee_data_contra;
+                knee_velocity_contra = -knee_velocity_contra;
+                fprintf('      Flipped contra knee angle sign (min was %.2f rad)\n', min_knee_contra);
+            end
+            
+            stride_data.knee_flexion_angle_contra_rad = knee_data_contra;
+            stride_data.knee_flexion_velocity_contra_rad_s = knee_velocity_contra;
+        else
+            stride_data.knee_flexion_angle_contra_rad = zeros(NUM_POINTS, 1);
+            stride_data.knee_flexion_velocity_contra_rad_s = zeros(NUM_POINTS, 1);
+        end
+        
+        % Hip angle - IPSILATERAL (right)
         if any(strcmp(trial_data.ik.Properties.VariableNames, 'hip_flexion_r'))
             angle_data = trial_data.ik.hip_flexion_r(ik_mask);
+            
+            % Calculate velocity in time domain
+            angle_rad = angle_data * deg2rad;
+            velocity_data = gradient(angle_rad) ./ gradient(ik_time);
+            
+            % Interpolate angle
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
             stride_data.hip_flexion_angle_ipsi_rad = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            
+            % Interpolate velocity
+            velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
+            stride_data.hip_flexion_velocity_ipsi_rad_s = interp1(valid_stride_pct, velocity_at_stride_time, target_pct, 'linear', 'extrap');
         else
             stride_data.hip_flexion_angle_ipsi_rad = zeros(NUM_POINTS, 1);
+            stride_data.hip_flexion_velocity_ipsi_rad_s = zeros(NUM_POINTS, 1);
+        end
+        
+        % Hip angle - CONTRALATERAL (left)
+        if any(strcmp(trial_data.ik.Properties.VariableNames, 'hip_flexion_l'))
+            angle_data = trial_data.ik.hip_flexion_l(ik_mask);
+            
+            % Calculate velocity in time domain
+            angle_rad = angle_data * deg2rad;
+            velocity_data = gradient(angle_rad) ./ gradient(ik_time);
+            
+            % Interpolate angle
+            angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
+            stride_data.hip_flexion_angle_contra_rad = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            
+            % Interpolate velocity
+            velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
+            stride_data.hip_flexion_velocity_contra_rad_s = interp1(valid_stride_pct, velocity_at_stride_time, target_pct, 'linear', 'extrap');
+        else
+            stride_data.hip_flexion_angle_contra_rad = zeros(NUM_POINTS, 1);
+            stride_data.hip_flexion_velocity_contra_rad_s = zeros(NUM_POINTS, 1);
         end
         
         % Calculate segment angles from kinematic chain
         % Pelvis sagittal angle (from pelvis tilt)
         if any(strcmp(trial_data.ik.Properties.VariableNames, 'pelvis_tilt'))
             angle_data = trial_data.ik.pelvis_tilt(ik_mask);
+            
+            % Calculate velocity in time domain
+            angle_rad = angle_data * deg2rad;
+            velocity_data = gradient(angle_rad) ./ gradient(ik_time);
+            
+            % Interpolate angle
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
             stride_data.pelvis_sagittal_angle_rad = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            
+            % Interpolate velocity
+            velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
+            stride_data.pelvis_sagittal_velocity_rad_s = interp1(valid_stride_pct, velocity_at_stride_time, target_pct, 'linear', 'extrap');
         else
             stride_data.pelvis_sagittal_angle_rad = zeros(NUM_POINTS, 1);
+            stride_data.pelvis_sagittal_velocity_rad_s = zeros(NUM_POINTS, 1);
         end
         
         % Trunk sagittal angle (pelvis + lumbar extension)
         if any(strcmp(trial_data.ik.Properties.VariableNames, 'lumbar_extension'))
             lumbar_data = trial_data.ik.lumbar_extension(ik_mask);
+            
+            % Calculate lumbar velocity
+            lumbar_rad = lumbar_data * deg2rad;
+            lumbar_velocity_data = gradient(lumbar_rad) ./ gradient(ik_time);
+            
+            % Interpolate lumbar angle
             lumbar_at_stride_time = interp1(ik_time, lumbar_data, valid_stride_time, 'linear', 'extrap');
             lumbar_interp = interp1(valid_stride_pct, lumbar_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
             stride_data.trunk_sagittal_angle_rad = stride_data.pelvis_sagittal_angle_rad + lumbar_interp;
+            
+            % Interpolate lumbar velocity and add to pelvis velocity for trunk velocity
+            lumbar_velocity_at_stride_time = interp1(ik_time, lumbar_velocity_data, valid_stride_time, 'linear', 'extrap');
+            lumbar_velocity_interp = interp1(valid_stride_pct, lumbar_velocity_at_stride_time, target_pct, 'linear', 'extrap');
+            stride_data.trunk_sagittal_velocity_rad_s = stride_data.pelvis_sagittal_velocity_rad_s + lumbar_velocity_interp;
         else
             stride_data.trunk_sagittal_angle_rad = stride_data.pelvis_sagittal_angle_rad;  % Same as pelvis if no lumbar
+            stride_data.trunk_sagittal_velocity_rad_s = stride_data.pelvis_sagittal_velocity_rad_s;
         end
         
-        % Thigh sagittal angle (pelvis + hip flexion) - SIGN FLIPPED
+        % Thigh sagittal angle - IPSILATERAL (pelvis + hip flexion)
         stride_data.thigh_sagittal_angle_ipsi_rad = stride_data.pelvis_sagittal_angle_rad + stride_data.hip_flexion_angle_ipsi_rad;
+        stride_data.thigh_sagittal_velocity_ipsi_rad_s = stride_data.pelvis_sagittal_velocity_rad_s + stride_data.hip_flexion_velocity_ipsi_rad_s;
         
-        % Shank sagittal angle (thigh - knee flexion) - ORIGINAL SIGN
+        % Thigh sagittal angle - CONTRALATERAL
+        stride_data.thigh_sagittal_angle_contra_rad = stride_data.pelvis_sagittal_angle_rad + stride_data.hip_flexion_angle_contra_rad;
+        stride_data.thigh_sagittal_velocity_contra_rad_s = stride_data.pelvis_sagittal_velocity_rad_s + stride_data.hip_flexion_velocity_contra_rad_s;
+        
+        % Shank sagittal angle - IPSILATERAL (thigh - knee flexion)
         stride_data.shank_sagittal_angle_ipsi_rad = stride_data.thigh_sagittal_angle_ipsi_rad - stride_data.knee_flexion_angle_ipsi_rad;
+        stride_data.shank_sagittal_velocity_ipsi_rad_s = stride_data.thigh_sagittal_velocity_ipsi_rad_s - stride_data.knee_flexion_velocity_ipsi_rad_s;
         
-        % Foot sagittal angle (shank - ankle dorsiflexion)
+        % Shank sagittal angle - CONTRALATERAL
+        stride_data.shank_sagittal_angle_contra_rad = stride_data.thigh_sagittal_angle_contra_rad - stride_data.knee_flexion_angle_contra_rad;
+        stride_data.shank_sagittal_velocity_contra_rad_s = stride_data.thigh_sagittal_velocity_contra_rad_s - stride_data.knee_flexion_velocity_contra_rad_s;
+        
+        % Foot sagittal angle - IPSILATERAL (shank - ankle dorsiflexion)
         stride_data.foot_sagittal_angle_ipsi_rad = stride_data.shank_sagittal_angle_ipsi_rad - stride_data.ankle_dorsiflexion_angle_ipsi_rad;
+        stride_data.foot_sagittal_velocity_ipsi_rad_s = stride_data.shank_sagittal_velocity_ipsi_rad_s - stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s;
+        
+        % Foot sagittal angle - CONTRALATERAL
+        stride_data.foot_sagittal_angle_contra_rad = stride_data.shank_sagittal_angle_contra_rad - stride_data.ankle_dorsiflexion_angle_contra_rad;
+        stride_data.foot_sagittal_velocity_contra_rad_s = stride_data.shank_sagittal_velocity_contra_rad_s - stride_data.ankle_dorsiflexion_velocity_contra_rad_s;
         
         % Process kinetics (moments, normalize by body mass)
         id_time = trial_data.id.Header(id_mask);
         
-        % Ankle dorsiflexion moment
+        % Ankle dorsiflexion moment - IPSILATERAL (right)
         if any(strcmp(trial_data.id.Properties.VariableNames, 'ankle_angle_r_moment'))
             moment_data = trial_data.id.ankle_angle_r_moment(id_mask) / subject_mass;
             moment_at_stride_time = interp1(id_time, moment_data, valid_stride_time, 'linear', 'extrap');
@@ -720,7 +880,16 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
             stride_data.ankle_dorsiflexion_moment_ipsi_Nm = zeros(NUM_POINTS, 1);
         end
         
-        % Knee flexion moment with stair ascent and decline walking fixes
+        % Ankle dorsiflexion moment - CONTRALATERAL (left)
+        if any(strcmp(trial_data.id.Properties.VariableNames, 'ankle_angle_l_moment'))
+            moment_data = trial_data.id.ankle_angle_l_moment(id_mask) / subject_mass;
+            moment_at_stride_time = interp1(id_time, moment_data, valid_stride_time, 'linear', 'extrap');
+            stride_data.ankle_dorsiflexion_moment_contra_Nm = interp1(valid_stride_pct, moment_at_stride_time, target_pct, 'linear', 'extrap');
+        else
+            stride_data.ankle_dorsiflexion_moment_contra_Nm = zeros(NUM_POINTS, 1);
+        end
+        
+        % Knee flexion moment with stair ascent and decline walking fixes - IPSILATERAL (right)
         if any(strcmp(trial_data.id.Properties.VariableNames, 'knee_angle_r_moment'))
             moment_data = trial_data.id.knee_angle_r_moment(id_mask) / subject_mass;
             moment_at_stride_time = interp1(id_time, moment_data, valid_stride_time, 'linear', 'extrap');
@@ -729,7 +898,7 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
             % Always flip knee moment for stair ascent and decline walking tasks
             if strcmp(task, 'stair_ascent') || strcmp(task, 'decline_walking')
                 knee_moment = -knee_moment;
-                % fprintf('      Flipped knee moment for %s\n', task);
+                % fprintf('      Flipped ipsi knee moment for %s\n', task);
             end
             
             stride_data.knee_flexion_moment_ipsi_Nm = knee_moment;
@@ -737,13 +906,38 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
             stride_data.knee_flexion_moment_ipsi_Nm = zeros(NUM_POINTS, 1);
         end
         
-        % Hip flexion moment
+        % Knee flexion moment - CONTRALATERAL (left)
+        if any(strcmp(trial_data.id.Properties.VariableNames, 'knee_angle_l_moment'))
+            moment_data = trial_data.id.knee_angle_l_moment(id_mask) / subject_mass;
+            moment_at_stride_time = interp1(id_time, moment_data, valid_stride_time, 'linear', 'extrap');
+            knee_moment_contra = interp1(valid_stride_pct, moment_at_stride_time, target_pct, 'linear', 'extrap');
+            
+            % Apply same task-specific fixes to contralateral
+            if strcmp(task, 'stair_ascent') || strcmp(task, 'decline_walking')
+                knee_moment_contra = -knee_moment_contra;
+            end
+            
+            stride_data.knee_flexion_moment_contra_Nm = knee_moment_contra;
+        else
+            stride_data.knee_flexion_moment_contra_Nm = zeros(NUM_POINTS, 1);
+        end
+        
+        % Hip flexion moment - IPSILATERAL (right)
         if any(strcmp(trial_data.id.Properties.VariableNames, 'hip_flexion_r_moment'))
             moment_data = trial_data.id.hip_flexion_r_moment(id_mask) / subject_mass;
             moment_at_stride_time = interp1(id_time, moment_data, valid_stride_time, 'linear', 'extrap');
             stride_data.hip_flexion_moment_ipsi_Nm = interp1(valid_stride_pct, moment_at_stride_time, target_pct, 'linear', 'extrap');
         else
             stride_data.hip_flexion_moment_ipsi_Nm = zeros(NUM_POINTS, 1);
+        end
+        
+        % Hip flexion moment - CONTRALATERAL (left)
+        if any(strcmp(trial_data.id.Properties.VariableNames, 'hip_flexion_l_moment'))
+            moment_data = trial_data.id.hip_flexion_l_moment(id_mask) / subject_mass;
+            moment_at_stride_time = interp1(id_time, moment_data, valid_stride_time, 'linear', 'extrap');
+            stride_data.hip_flexion_moment_contra_Nm = interp1(valid_stride_pct, moment_at_stride_time, target_pct, 'linear', 'extrap');
+        else
+            stride_data.hip_flexion_moment_contra_Nm = zeros(NUM_POINTS, 1);
         end
         
         % Create single row with arrays for this stride
@@ -754,18 +948,65 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         row.task_info = {task_info};
         row.step = s;
         row.phase_ipsi = {stride_data.phase_ipsi};  % Store as cell array
+        row.phase_ipsi_dot = {stride_data.phase_ipsi_dot};  % Store phase rate as cell array
+        
+        % Ipsilateral kinematics
         row.ankle_dorsiflexion_angle_ipsi_rad = {stride_data.ankle_dorsiflexion_angle_ipsi_rad};
         row.knee_flexion_angle_ipsi_rad = {stride_data.knee_flexion_angle_ipsi_rad};
         row.hip_flexion_angle_ipsi_rad = {stride_data.hip_flexion_angle_ipsi_rad};
+        
+        % Ipsilateral velocities
+        row.ankle_dorsiflexion_velocity_ipsi_rad_s = {stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s};
+        row.knee_flexion_velocity_ipsi_rad_s = {stride_data.knee_flexion_velocity_ipsi_rad_s};
+        row.hip_flexion_velocity_ipsi_rad_s = {stride_data.hip_flexion_velocity_ipsi_rad_s};
+        
+        % Contralateral kinematics
+        row.ankle_dorsiflexion_angle_contra_rad = {stride_data.ankle_dorsiflexion_angle_contra_rad};
+        row.knee_flexion_angle_contra_rad = {stride_data.knee_flexion_angle_contra_rad};
+        row.hip_flexion_angle_contra_rad = {stride_data.hip_flexion_angle_contra_rad};
+        
+        % Contralateral velocities
+        row.ankle_dorsiflexion_velocity_contra_rad_s = {stride_data.ankle_dorsiflexion_velocity_contra_rad_s};
+        row.knee_flexion_velocity_contra_rad_s = {stride_data.knee_flexion_velocity_contra_rad_s};
+        row.hip_flexion_velocity_contra_rad_s = {stride_data.hip_flexion_velocity_contra_rad_s};
+        
+        % Ipsilateral kinetics
         row.ankle_dorsiflexion_moment_ipsi_Nm = {stride_data.ankle_dorsiflexion_moment_ipsi_Nm};
         row.knee_flexion_moment_ipsi_Nm = {stride_data.knee_flexion_moment_ipsi_Nm};
         row.hip_flexion_moment_ipsi_Nm = {stride_data.hip_flexion_moment_ipsi_Nm};
-        % Add segment angles
+        
+        % Contralateral kinetics
+        row.ankle_dorsiflexion_moment_contra_Nm = {stride_data.ankle_dorsiflexion_moment_contra_Nm};
+        row.knee_flexion_moment_contra_Nm = {stride_data.knee_flexion_moment_contra_Nm};
+        row.hip_flexion_moment_contra_Nm = {stride_data.hip_flexion_moment_contra_Nm};
+        
+        % Segment angles (pelvis and trunk are shared)
         row.pelvis_sagittal_angle_rad = {stride_data.pelvis_sagittal_angle_rad};
         row.trunk_sagittal_angle_rad = {stride_data.trunk_sagittal_angle_rad};
+        
+        % Segment velocities (pelvis and trunk are shared)
+        row.pelvis_sagittal_velocity_rad_s = {stride_data.pelvis_sagittal_velocity_rad_s};
+        row.trunk_sagittal_velocity_rad_s = {stride_data.trunk_sagittal_velocity_rad_s};
+        
+        % Ipsilateral segment angles
         row.thigh_sagittal_angle_ipsi_rad = {stride_data.thigh_sagittal_angle_ipsi_rad};
         row.shank_sagittal_angle_ipsi_rad = {stride_data.shank_sagittal_angle_ipsi_rad};
         row.foot_sagittal_angle_ipsi_rad = {stride_data.foot_sagittal_angle_ipsi_rad};
+        
+        % Ipsilateral segment velocities
+        row.thigh_sagittal_velocity_ipsi_rad_s = {stride_data.thigh_sagittal_velocity_ipsi_rad_s};
+        row.shank_sagittal_velocity_ipsi_rad_s = {stride_data.shank_sagittal_velocity_ipsi_rad_s};
+        row.foot_sagittal_velocity_ipsi_rad_s = {stride_data.foot_sagittal_velocity_ipsi_rad_s};
+        
+        % Contralateral segment angles
+        row.thigh_sagittal_angle_contra_rad = {stride_data.thigh_sagittal_angle_contra_rad};
+        row.shank_sagittal_angle_contra_rad = {stride_data.shank_sagittal_angle_contra_rad};
+        row.foot_sagittal_angle_contra_rad = {stride_data.foot_sagittal_angle_contra_rad};
+        
+        % Contralateral segment velocities
+        row.thigh_sagittal_velocity_contra_rad_s = {stride_data.thigh_sagittal_velocity_contra_rad_s};
+        row.shank_sagittal_velocity_contra_rad_s = {stride_data.shank_sagittal_velocity_contra_rad_s};
+        row.foot_sagittal_velocity_contra_rad_s = {stride_data.foot_sagittal_velocity_contra_rad_s};
         
         % Append this single row
         if isempty(rows)
@@ -822,18 +1063,65 @@ function expanded = expand_table_for_parquet(compact_table)
     task_info = cell(total_rows, 1);
     step = zeros(total_rows, 1);
     phase_ipsi = zeros(total_rows, 1);
+    phase_ipsi_dot = zeros(total_rows, 1);  % Add phase rate array
+    
+    % Ipsilateral kinematics
     ankle_dorsiflexion_angle_ipsi_rad = zeros(total_rows, 1);
     knee_flexion_angle_ipsi_rad = zeros(total_rows, 1);
     hip_flexion_angle_ipsi_rad = zeros(total_rows, 1);
+    
+    % Ipsilateral velocities
+    ankle_dorsiflexion_velocity_ipsi_rad_s = zeros(total_rows, 1);
+    knee_flexion_velocity_ipsi_rad_s = zeros(total_rows, 1);
+    hip_flexion_velocity_ipsi_rad_s = zeros(total_rows, 1);
+    
+    % Contralateral kinematics
+    ankle_dorsiflexion_angle_contra_rad = zeros(total_rows, 1);
+    knee_flexion_angle_contra_rad = zeros(total_rows, 1);
+    hip_flexion_angle_contra_rad = zeros(total_rows, 1);
+    
+    % Contralateral velocities
+    ankle_dorsiflexion_velocity_contra_rad_s = zeros(total_rows, 1);
+    knee_flexion_velocity_contra_rad_s = zeros(total_rows, 1);
+    hip_flexion_velocity_contra_rad_s = zeros(total_rows, 1);
+    
+    % Ipsilateral kinetics
     ankle_dorsiflexion_moment_ipsi_Nm = zeros(total_rows, 1);
     knee_flexion_moment_ipsi_Nm = zeros(total_rows, 1);
     hip_flexion_moment_ipsi_Nm = zeros(total_rows, 1);
-    % Segment angles
+    
+    % Contralateral kinetics
+    ankle_dorsiflexion_moment_contra_Nm = zeros(total_rows, 1);
+    knee_flexion_moment_contra_Nm = zeros(total_rows, 1);
+    hip_flexion_moment_contra_Nm = zeros(total_rows, 1);
+    
+    % Segment angles (shared)
     pelvis_sagittal_angle_rad = zeros(total_rows, 1);
     trunk_sagittal_angle_rad = zeros(total_rows, 1);
+    
+    % Segment velocities (shared)
+    pelvis_sagittal_velocity_rad_s = zeros(total_rows, 1);
+    trunk_sagittal_velocity_rad_s = zeros(total_rows, 1);
+    
+    % Ipsilateral segment angles
     thigh_sagittal_angle_ipsi_rad = zeros(total_rows, 1);
     shank_sagittal_angle_ipsi_rad = zeros(total_rows, 1);
     foot_sagittal_angle_ipsi_rad = zeros(total_rows, 1);
+    
+    % Ipsilateral segment velocities
+    thigh_sagittal_velocity_ipsi_rad_s = zeros(total_rows, 1);
+    shank_sagittal_velocity_ipsi_rad_s = zeros(total_rows, 1);
+    foot_sagittal_velocity_ipsi_rad_s = zeros(total_rows, 1);
+    
+    % Contralateral segment angles
+    thigh_sagittal_angle_contra_rad = zeros(total_rows, 1);
+    shank_sagittal_angle_contra_rad = zeros(total_rows, 1);
+    foot_sagittal_angle_contra_rad = zeros(total_rows, 1);
+    
+    % Contralateral segment velocities
+    thigh_sagittal_velocity_contra_rad_s = zeros(total_rows, 1);
+    shank_sagittal_velocity_contra_rad_s = zeros(total_rows, 1);
+    foot_sagittal_velocity_contra_rad_s = zeros(total_rows, 1);
     
     % Process each stride
     row_idx = 1;
@@ -855,18 +1143,65 @@ function expanded = expand_table_for_parquet(compact_table)
             
             % Extract point data from arrays
             phase_ipsi(row_idx) = stride.phase_ipsi{1}(p);
+            phase_ipsi_dot(row_idx) = stride.phase_ipsi_dot{1}(p);  % Extract phase rate
+            
+            % Ipsilateral kinematics
             ankle_dorsiflexion_angle_ipsi_rad(row_idx) = stride.ankle_dorsiflexion_angle_ipsi_rad{1}(p);
             knee_flexion_angle_ipsi_rad(row_idx) = stride.knee_flexion_angle_ipsi_rad{1}(p);
             hip_flexion_angle_ipsi_rad(row_idx) = stride.hip_flexion_angle_ipsi_rad{1}(p);
+            
+            % Ipsilateral velocities
+            ankle_dorsiflexion_velocity_ipsi_rad_s(row_idx) = stride.ankle_dorsiflexion_velocity_ipsi_rad_s{1}(p);
+            knee_flexion_velocity_ipsi_rad_s(row_idx) = stride.knee_flexion_velocity_ipsi_rad_s{1}(p);
+            hip_flexion_velocity_ipsi_rad_s(row_idx) = stride.hip_flexion_velocity_ipsi_rad_s{1}(p);
+            
+            % Contralateral kinematics
+            ankle_dorsiflexion_angle_contra_rad(row_idx) = stride.ankle_dorsiflexion_angle_contra_rad{1}(p);
+            knee_flexion_angle_contra_rad(row_idx) = stride.knee_flexion_angle_contra_rad{1}(p);
+            hip_flexion_angle_contra_rad(row_idx) = stride.hip_flexion_angle_contra_rad{1}(p);
+            
+            % Contralateral velocities
+            ankle_dorsiflexion_velocity_contra_rad_s(row_idx) = stride.ankle_dorsiflexion_velocity_contra_rad_s{1}(p);
+            knee_flexion_velocity_contra_rad_s(row_idx) = stride.knee_flexion_velocity_contra_rad_s{1}(p);
+            hip_flexion_velocity_contra_rad_s(row_idx) = stride.hip_flexion_velocity_contra_rad_s{1}(p);
+            
+            % Ipsilateral kinetics
             ankle_dorsiflexion_moment_ipsi_Nm(row_idx) = stride.ankle_dorsiflexion_moment_ipsi_Nm{1}(p);
             knee_flexion_moment_ipsi_Nm(row_idx) = stride.knee_flexion_moment_ipsi_Nm{1}(p);
             hip_flexion_moment_ipsi_Nm(row_idx) = stride.hip_flexion_moment_ipsi_Nm{1}(p);
-            % Extract segment angles
+            
+            % Contralateral kinetics
+            ankle_dorsiflexion_moment_contra_Nm(row_idx) = stride.ankle_dorsiflexion_moment_contra_Nm{1}(p);
+            knee_flexion_moment_contra_Nm(row_idx) = stride.knee_flexion_moment_contra_Nm{1}(p);
+            hip_flexion_moment_contra_Nm(row_idx) = stride.hip_flexion_moment_contra_Nm{1}(p);
+            
+            % Shared segment angles
             pelvis_sagittal_angle_rad(row_idx) = stride.pelvis_sagittal_angle_rad{1}(p);
             trunk_sagittal_angle_rad(row_idx) = stride.trunk_sagittal_angle_rad{1}(p);
+            
+            % Shared segment velocities
+            pelvis_sagittal_velocity_rad_s(row_idx) = stride.pelvis_sagittal_velocity_rad_s{1}(p);
+            trunk_sagittal_velocity_rad_s(row_idx) = stride.trunk_sagittal_velocity_rad_s{1}(p);
+            
+            % Ipsilateral segment angles
             thigh_sagittal_angle_ipsi_rad(row_idx) = stride.thigh_sagittal_angle_ipsi_rad{1}(p);
             shank_sagittal_angle_ipsi_rad(row_idx) = stride.shank_sagittal_angle_ipsi_rad{1}(p);
             foot_sagittal_angle_ipsi_rad(row_idx) = stride.foot_sagittal_angle_ipsi_rad{1}(p);
+            
+            % Ipsilateral segment velocities
+            thigh_sagittal_velocity_ipsi_rad_s(row_idx) = stride.thigh_sagittal_velocity_ipsi_rad_s{1}(p);
+            shank_sagittal_velocity_ipsi_rad_s(row_idx) = stride.shank_sagittal_velocity_ipsi_rad_s{1}(p);
+            foot_sagittal_velocity_ipsi_rad_s(row_idx) = stride.foot_sagittal_velocity_ipsi_rad_s{1}(p);
+            
+            % Contralateral segment angles
+            thigh_sagittal_angle_contra_rad(row_idx) = stride.thigh_sagittal_angle_contra_rad{1}(p);
+            shank_sagittal_angle_contra_rad(row_idx) = stride.shank_sagittal_angle_contra_rad{1}(p);
+            foot_sagittal_angle_contra_rad(row_idx) = stride.foot_sagittal_angle_contra_rad{1}(p);
+            
+            % Contralateral segment velocities
+            thigh_sagittal_velocity_contra_rad_s(row_idx) = stride.thigh_sagittal_velocity_contra_rad_s{1}(p);
+            shank_sagittal_velocity_contra_rad_s(row_idx) = stride.shank_sagittal_velocity_contra_rad_s{1}(p);
+            foot_sagittal_velocity_contra_rad_s(row_idx) = stride.foot_sagittal_velocity_contra_rad_s{1}(p);
             
             row_idx = row_idx + 1;
         end
@@ -874,10 +1209,17 @@ function expanded = expand_table_for_parquet(compact_table)
     
     % Create output table from arrays
     fprintf('  Creating expanded table...\n');
-    expanded = table(subject, task, task_id, task_info, step, phase_ipsi, ...
-        ankle_dorsiflexion_angle_ipsi_rad, knee_flexion_angle_ipsi_rad, ...
-        hip_flexion_angle_ipsi_rad, ankle_dorsiflexion_moment_ipsi_Nm, ...
-        knee_flexion_moment_ipsi_Nm, hip_flexion_moment_ipsi_Nm, ...
-        pelvis_sagittal_angle_rad, trunk_sagittal_angle_rad, thigh_sagittal_angle_ipsi_rad, ...
-        shank_sagittal_angle_ipsi_rad, foot_sagittal_angle_ipsi_rad);
+    expanded = table(subject, task, task_id, task_info, step, phase_ipsi, phase_ipsi_dot, ...
+        ankle_dorsiflexion_angle_ipsi_rad, knee_flexion_angle_ipsi_rad, hip_flexion_angle_ipsi_rad, ...
+        ankle_dorsiflexion_velocity_ipsi_rad_s, knee_flexion_velocity_ipsi_rad_s, hip_flexion_velocity_ipsi_rad_s, ...
+        ankle_dorsiflexion_angle_contra_rad, knee_flexion_angle_contra_rad, hip_flexion_angle_contra_rad, ...
+        ankle_dorsiflexion_velocity_contra_rad_s, knee_flexion_velocity_contra_rad_s, hip_flexion_velocity_contra_rad_s, ...
+        ankle_dorsiflexion_moment_ipsi_Nm, knee_flexion_moment_ipsi_Nm, hip_flexion_moment_ipsi_Nm, ...
+        ankle_dorsiflexion_moment_contra_Nm, knee_flexion_moment_contra_Nm, hip_flexion_moment_contra_Nm, ...
+        pelvis_sagittal_angle_rad, trunk_sagittal_angle_rad, ...
+        pelvis_sagittal_velocity_rad_s, trunk_sagittal_velocity_rad_s, ...
+        thigh_sagittal_angle_ipsi_rad, shank_sagittal_angle_ipsi_rad, foot_sagittal_angle_ipsi_rad, ...
+        thigh_sagittal_velocity_ipsi_rad_s, shank_sagittal_velocity_ipsi_rad_s, foot_sagittal_velocity_ipsi_rad_s, ...
+        thigh_sagittal_angle_contra_rad, shank_sagittal_angle_contra_rad, foot_sagittal_angle_contra_rad, ...
+        thigh_sagittal_velocity_contra_rad_s, shank_sagittal_velocity_contra_rad_s, foot_sagittal_velocity_contra_rad_s);
 end
