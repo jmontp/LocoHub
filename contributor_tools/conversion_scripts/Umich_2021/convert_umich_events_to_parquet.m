@@ -419,46 +419,76 @@ function stride_table = process_strides_single_leg(trial_data, ...
                     contra_hip_data(contra_frames, transverse_plane), NUM_POINTS) * deg2rad;
             end
             
-            % Knee angles (note: negate sagittal for convention)
+            % Knee angles (note: ALWAYS negate both R and L for convention)
             if isfield(angles, 'RKneeAngles') && isfield(angles, 'LKneeAngles')
-                ipsi_knee_data = angles.([ipsi_prefix 'KneeAngles']);
-                contra_knee_data = angles.([contra_prefix 'KneeAngles']);
+                % Process right knee
+                r_knee_flex = interpolate_signal(...
+                    -angles.RKneeAngles(r_start_frame:r_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
+                r_knee_add = interpolate_signal(...
+                    angles.RKneeAngles(r_start_frame:r_end_frame, frontal_plane), NUM_POINTS) * deg2rad;
+                r_knee_rot = interpolate_signal(...
+                    angles.RKneeAngles(r_start_frame:r_end_frame, transverse_plane), NUM_POINTS) * deg2rad;
                 
-                stride_data.knee_flexion_angle_ipsi_rad = interpolate_signal(...
-                    -ipsi_knee_data(ipsi_frames, sagittal_plane), NUM_POINTS) * deg2rad;
-                stride_data.knee_flexion_angle_contra_rad = interpolate_signal(...
-                    -contra_knee_data(contra_frames, sagittal_plane), NUM_POINTS) * deg2rad;
+                % Process left knee
+                l_knee_flex = interpolate_signal(...
+                    -angles.LKneeAngles(l_start_frame:l_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
+                l_knee_add = interpolate_signal(...
+                    angles.LKneeAngles(l_start_frame:l_end_frame, frontal_plane), NUM_POINTS) * deg2rad;
+                l_knee_rot = interpolate_signal(...
+                    angles.LKneeAngles(l_start_frame:l_end_frame, transverse_plane), NUM_POINTS) * deg2rad;
                 
-                stride_data.knee_adduction_angle_ipsi_rad = interpolate_signal(...
-                    ipsi_knee_data(ipsi_frames, frontal_plane), NUM_POINTS) * deg2rad;
-                stride_data.knee_adduction_angle_contra_rad = interpolate_signal(...
-                    contra_knee_data(contra_frames, frontal_plane), NUM_POINTS) * deg2rad;
-                
-                stride_data.knee_rotation_angle_ipsi_rad = interpolate_signal(...
-                    ipsi_knee_data(ipsi_frames, transverse_plane), NUM_POINTS) * deg2rad;
-                stride_data.knee_rotation_angle_contra_rad = interpolate_signal(...
-                    contra_knee_data(contra_frames, transverse_plane), NUM_POINTS) * deg2rad;
+                % Assign based on which leg is ipsilateral
+                if strcmp(leg_side, 'right')
+                    stride_data.knee_flexion_angle_ipsi_rad = r_knee_flex;
+                    stride_data.knee_flexion_angle_contra_rad = l_knee_flex;
+                    stride_data.knee_adduction_angle_ipsi_rad = r_knee_add;
+                    stride_data.knee_adduction_angle_contra_rad = l_knee_add;
+                    stride_data.knee_rotation_angle_ipsi_rad = r_knee_rot;
+                    stride_data.knee_rotation_angle_contra_rad = l_knee_rot;
+                else
+                    stride_data.knee_flexion_angle_ipsi_rad = l_knee_flex;
+                    stride_data.knee_flexion_angle_contra_rad = r_knee_flex;
+                    stride_data.knee_adduction_angle_ipsi_rad = l_knee_add;
+                    stride_data.knee_adduction_angle_contra_rad = r_knee_add;
+                    stride_data.knee_rotation_angle_ipsi_rad = l_knee_rot;
+                    stride_data.knee_rotation_angle_contra_rad = r_knee_rot;
+                end
             end
             
-            % Ankle angles (note: negate sagittal for dorsiflexion convention)
+            % Ankle angles (note: ALWAYS negate both R and L for dorsiflexion convention)
             if isfield(angles, 'RAnkleAngles') && isfield(angles, 'LAnkleAngles')
-                ipsi_ankle_data = angles.([ipsi_prefix 'AnkleAngles']);
-                contra_ankle_data = angles.([contra_prefix 'AnkleAngles']);
+                % Process right ankle
+                r_ankle_flex = interpolate_signal(...
+                    -angles.RAnkleAngles(r_start_frame:r_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
+                r_ankle_add = interpolate_signal(...
+                    angles.RAnkleAngles(r_start_frame:r_end_frame, frontal_plane), NUM_POINTS) * deg2rad;
+                r_ankle_rot = interpolate_signal(...
+                    angles.RAnkleAngles(r_start_frame:r_end_frame, transverse_plane), NUM_POINTS) * deg2rad;
                 
-                stride_data.ankle_dorsiflexion_angle_ipsi_rad = interpolate_signal(...
-                    -ipsi_ankle_data(ipsi_frames, sagittal_plane), NUM_POINTS) * deg2rad;
-                stride_data.ankle_dorsiflexion_angle_contra_rad = interpolate_signal(...
-                    -contra_ankle_data(contra_frames, sagittal_plane), NUM_POINTS) * deg2rad;
+                % Process left ankle
+                l_ankle_flex = interpolate_signal(...
+                    -angles.LAnkleAngles(l_start_frame:l_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
+                l_ankle_add = interpolate_signal(...
+                    angles.LAnkleAngles(l_start_frame:l_end_frame, frontal_plane), NUM_POINTS) * deg2rad;
+                l_ankle_rot = interpolate_signal(...
+                    angles.LAnkleAngles(l_start_frame:l_end_frame, transverse_plane), NUM_POINTS) * deg2rad;
                 
-                stride_data.ankle_adduction_angle_ipsi_rad = interpolate_signal(...
-                    ipsi_ankle_data(ipsi_frames, frontal_plane), NUM_POINTS) * deg2rad;
-                stride_data.ankle_adduction_angle_contra_rad = interpolate_signal(...
-                    contra_ankle_data(contra_frames, frontal_plane), NUM_POINTS) * deg2rad;
-                
-                stride_data.ankle_rotation_angle_ipsi_rad = interpolate_signal(...
-                    ipsi_ankle_data(ipsi_frames, transverse_plane), NUM_POINTS) * deg2rad;
-                stride_data.ankle_rotation_angle_contra_rad = interpolate_signal(...
-                    contra_ankle_data(contra_frames, transverse_plane), NUM_POINTS) * deg2rad;
+                % Assign based on which leg is ipsilateral
+                if strcmp(leg_side, 'right')
+                    stride_data.ankle_dorsiflexion_angle_ipsi_rad = r_ankle_flex;
+                    stride_data.ankle_dorsiflexion_angle_contra_rad = l_ankle_flex;
+                    stride_data.ankle_adduction_angle_ipsi_rad = r_ankle_add;
+                    stride_data.ankle_adduction_angle_contra_rad = l_ankle_add;
+                    stride_data.ankle_rotation_angle_ipsi_rad = r_ankle_rot;
+                    stride_data.ankle_rotation_angle_contra_rad = l_ankle_rot;
+                else
+                    stride_data.ankle_dorsiflexion_angle_ipsi_rad = l_ankle_flex;
+                    stride_data.ankle_dorsiflexion_angle_contra_rad = r_ankle_flex;
+                    stride_data.ankle_adduction_angle_ipsi_rad = l_ankle_add;
+                    stride_data.ankle_adduction_angle_contra_rad = r_ankle_add;
+                    stride_data.ankle_rotation_angle_ipsi_rad = l_ankle_rot;
+                    stride_data.ankle_rotation_angle_contra_rad = r_ankle_rot;
+                end
             end
             
             % Pelvis angles (same for both legs)
@@ -473,21 +503,100 @@ function stride_table = process_strides_single_leg(trial_data, ...
             
             % Foot angles
             if isfield(angles, 'RFootProgressAngles') && isfield(angles, 'LFootProgressAngles')
-                ipsi_foot_data = angles.([ipsi_prefix 'FootProgressAngles']);
-                contra_foot_data = angles.([contra_prefix 'FootProgressAngles']);
-                
-                % Extract foot angles with -90 degree offset and negate
-                foot_ipsi_raw = interpolate_signal(...
-                    (-ipsi_foot_data(ipsi_frames, sagittal_plane) - 90), NUM_POINTS);
-                foot_contra_raw = interpolate_signal(...
-                    (-contra_foot_data(contra_frames, sagittal_plane) - 90), NUM_POINTS);
+                % Process right foot with -90 degree offset and negate
+                r_foot_raw = interpolate_signal(...
+                    (-angles.RFootProgressAngles(r_start_frame:r_end_frame, sagittal_plane) - 90), NUM_POINTS);
+                l_foot_raw = interpolate_signal(...
+                    (-angles.LFootProgressAngles(l_start_frame:l_end_frame, sagittal_plane) - 90), NUM_POINTS);
                 
                 % Apply foot angle corrections
-                foot_ipsi_corrected = apply_foot_angle_correction(foot_ipsi_raw, deg2rad);
-                foot_contra_corrected = apply_foot_angle_correction(foot_contra_raw, deg2rad);
+                r_foot_corrected = apply_foot_angle_correction(r_foot_raw, deg2rad);
+                l_foot_corrected = apply_foot_angle_correction(l_foot_raw, deg2rad);
                 
-                stride_data.foot_sagittal_angle_ipsi_rad = foot_ipsi_corrected;
-                stride_data.foot_sagittal_angle_contra_rad = foot_contra_corrected;
+                % Assign based on which leg is ipsilateral
+                if strcmp(leg_side, 'right')
+                    stride_data.foot_sagittal_angle_ipsi_rad = r_foot_corrected;
+                    stride_data.foot_sagittal_angle_contra_rad = l_foot_corrected;
+                else
+                    stride_data.foot_sagittal_angle_ipsi_rad = l_foot_corrected;
+                    stride_data.foot_sagittal_angle_contra_rad = r_foot_corrected;
+                end
+                
+                % Calculate foot velocities from the interpolated foot angles
+                foot_ipsi_velocity = gradient(stride_data.foot_sagittal_angle_ipsi_rad) * Hz * NUM_POINTS / stride_duration_frames;
+                foot_contra_velocity = gradient(stride_data.foot_sagittal_angle_contra_rad) * Hz * NUM_POINTS / stride_duration_frames;
+                
+                stride_data.foot_sagittal_velocity_ipsi_rad_s = foot_ipsi_velocity;
+                stride_data.foot_sagittal_velocity_contra_rad_s = foot_contra_velocity;
+            end
+            
+            % Calculate joint angular velocities (rad/s) from angles using time derivative
+            % First, calculate velocities in the original time domain, then interpolate
+            
+            % Hip velocities
+            if isfield(angles, 'RHipAngles') && isfield(angles, 'LHipAngles')
+                % Calculate time derivatives for right hip (rad/s)
+                r_hip_angles_rad = angles.RHipAngles(r_start_frame:r_end_frame, sagittal_plane) * deg2rad;
+                r_hip_velocity = gradient(r_hip_angles_rad) * Hz;  % Hz = sampling frequency
+                
+                % Calculate time derivatives for left hip (rad/s)
+                l_hip_angles_rad = angles.LHipAngles(l_start_frame:l_end_frame, sagittal_plane) * deg2rad;
+                l_hip_velocity = gradient(l_hip_angles_rad) * Hz;
+                
+                % Interpolate to 150 points
+                r_hip_vel_interp = interpolate_signal(r_hip_velocity, NUM_POINTS);
+                l_hip_vel_interp = interpolate_signal(l_hip_velocity, NUM_POINTS);
+                
+                % Assign based on which leg is ipsilateral
+                if strcmp(leg_side, 'right')
+                    stride_data.hip_flexion_velocity_ipsi_rad_s = r_hip_vel_interp;
+                    stride_data.hip_flexion_velocity_contra_rad_s = l_hip_vel_interp;
+                else
+                    stride_data.hip_flexion_velocity_ipsi_rad_s = l_hip_vel_interp;
+                    stride_data.hip_flexion_velocity_contra_rad_s = r_hip_vel_interp;
+                end
+            end
+            
+            % Knee velocities
+            if isfield(angles, 'RKneeAngles') && isfield(angles, 'LKneeAngles')
+                % Note: negate to match flexion convention
+                r_knee_angles_rad = -angles.RKneeAngles(r_start_frame:r_end_frame, sagittal_plane) * deg2rad;
+                r_knee_velocity = gradient(r_knee_angles_rad) * Hz;
+                
+                l_knee_angles_rad = -angles.LKneeAngles(l_start_frame:l_end_frame, sagittal_plane) * deg2rad;
+                l_knee_velocity = gradient(l_knee_angles_rad) * Hz;
+                
+                r_knee_vel_interp = interpolate_signal(r_knee_velocity, NUM_POINTS);
+                l_knee_vel_interp = interpolate_signal(l_knee_velocity, NUM_POINTS);
+                
+                if strcmp(leg_side, 'right')
+                    stride_data.knee_flexion_velocity_ipsi_rad_s = r_knee_vel_interp;
+                    stride_data.knee_flexion_velocity_contra_rad_s = l_knee_vel_interp;
+                else
+                    stride_data.knee_flexion_velocity_ipsi_rad_s = l_knee_vel_interp;
+                    stride_data.knee_flexion_velocity_contra_rad_s = r_knee_vel_interp;
+                end
+            end
+            
+            % Ankle velocities
+            if isfield(angles, 'RAnkleAngles') && isfield(angles, 'LAnkleAngles')
+                % Note: negate to match dorsiflexion convention
+                r_ankle_angles_rad = -angles.RAnkleAngles(r_start_frame:r_end_frame, sagittal_plane) * deg2rad;
+                r_ankle_velocity = gradient(r_ankle_angles_rad) * Hz;
+                
+                l_ankle_angles_rad = -angles.LAnkleAngles(l_start_frame:l_end_frame, sagittal_plane) * deg2rad;
+                l_ankle_velocity = gradient(l_ankle_angles_rad) * Hz;
+                
+                r_ankle_vel_interp = interpolate_signal(r_ankle_velocity, NUM_POINTS);
+                l_ankle_vel_interp = interpolate_signal(l_ankle_velocity, NUM_POINTS);
+                
+                if strcmp(leg_side, 'right')
+                    stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = r_ankle_vel_interp;
+                    stride_data.ankle_dorsiflexion_velocity_contra_rad_s = l_ankle_vel_interp;
+                else
+                    stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = l_ankle_vel_interp;
+                    stride_data.ankle_dorsiflexion_velocity_contra_rad_s = r_ankle_vel_interp;
+                end
             end
         end
         
@@ -516,25 +625,40 @@ function stride_table = process_strides_single_leg(trial_data, ...
                     contra_hip_moment(contra_frames, transverse_plane), NUM_POINTS);
             end
             
-            % Knee moments (note: negate sagittal for convention)
+            % Knee moments (note: ALWAYS negate both R and L sagittal for convention)
             if isfield(moments, 'RKneeMoment') && isfield(moments, 'LKneeMoment')
-                ipsi_knee_moment = moments.([ipsi_prefix 'KneeMoment']);
-                contra_knee_moment = moments.([contra_prefix 'KneeMoment']);
+                % Process right knee moments
+                r_knee_mom_flex = interpolate_signal(...
+                    -moments.RKneeMoment(r_start_frame:r_end_frame, sagittal_plane), NUM_POINTS);
+                r_knee_mom_add = interpolate_signal(...
+                    moments.RKneeMoment(r_start_frame:r_end_frame, frontal_plane), NUM_POINTS);
+                r_knee_mom_rot = interpolate_signal(...
+                    moments.RKneeMoment(r_start_frame:r_end_frame, transverse_plane), NUM_POINTS);
                 
-                stride_data.knee_flexion_moment_ipsi_Nm = interpolate_signal(...
-                    -ipsi_knee_moment(ipsi_frames, sagittal_plane), NUM_POINTS);
-                stride_data.knee_flexion_moment_contra_Nm = interpolate_signal(...
-                    -contra_knee_moment(contra_frames, sagittal_plane), NUM_POINTS);
+                % Process left knee moments
+                l_knee_mom_flex = interpolate_signal(...
+                    -moments.LKneeMoment(l_start_frame:l_end_frame, sagittal_plane), NUM_POINTS);
+                l_knee_mom_add = interpolate_signal(...
+                    moments.LKneeMoment(l_start_frame:l_end_frame, frontal_plane), NUM_POINTS);
+                l_knee_mom_rot = interpolate_signal(...
+                    moments.LKneeMoment(l_start_frame:l_end_frame, transverse_plane), NUM_POINTS);
                 
-                stride_data.knee_adduction_moment_ipsi_Nm = interpolate_signal(...
-                    ipsi_knee_moment(ipsi_frames, frontal_plane), NUM_POINTS);
-                stride_data.knee_adduction_moment_contra_Nm = interpolate_signal(...
-                    contra_knee_moment(contra_frames, frontal_plane), NUM_POINTS);
-                
-                stride_data.knee_rotation_moment_ipsi_Nm = interpolate_signal(...
-                    ipsi_knee_moment(ipsi_frames, transverse_plane), NUM_POINTS);
-                stride_data.knee_rotation_moment_contra_Nm = interpolate_signal(...
-                    contra_knee_moment(contra_frames, transverse_plane), NUM_POINTS);
+                % Assign based on which leg is ipsilateral
+                if strcmp(leg_side, 'right')
+                    stride_data.knee_flexion_moment_ipsi_Nm = r_knee_mom_flex;
+                    stride_data.knee_flexion_moment_contra_Nm = l_knee_mom_flex;
+                    stride_data.knee_adduction_moment_ipsi_Nm = r_knee_mom_add;
+                    stride_data.knee_adduction_moment_contra_Nm = l_knee_mom_add;
+                    stride_data.knee_rotation_moment_ipsi_Nm = r_knee_mom_rot;
+                    stride_data.knee_rotation_moment_contra_Nm = l_knee_mom_rot;
+                else
+                    stride_data.knee_flexion_moment_ipsi_Nm = l_knee_mom_flex;
+                    stride_data.knee_flexion_moment_contra_Nm = r_knee_mom_flex;
+                    stride_data.knee_adduction_moment_ipsi_Nm = l_knee_mom_add;
+                    stride_data.knee_adduction_moment_contra_Nm = r_knee_mom_add;
+                    stride_data.knee_rotation_moment_ipsi_Nm = l_knee_mom_rot;
+                    stride_data.knee_rotation_moment_contra_Nm = r_knee_mom_rot;
+                end
             end
             
             % Ankle moments
@@ -581,6 +705,21 @@ function stride_table = process_strides_single_leg(trial_data, ...
             % Calculate shank angles: shank_angle = thigh_angle - knee_flexion
             stride_data.shank_sagittal_angle_ipsi_rad = stride_data.thigh_sagittal_angle_ipsi_rad - knee_flexion_ipsi;
             stride_data.shank_sagittal_angle_contra_rad = stride_data.thigh_sagittal_angle_contra_rad - knee_flexion_contra;
+            
+            % Calculate segment velocities now that we have the angles
+            % Thigh velocities
+            thigh_ipsi_velocity = gradient(stride_data.thigh_sagittal_angle_ipsi_rad) * Hz * NUM_POINTS / stride_duration_frames;
+            thigh_contra_velocity = gradient(stride_data.thigh_sagittal_angle_contra_rad) * Hz * NUM_POINTS / stride_duration_frames;
+            
+            stride_data.thigh_sagittal_velocity_ipsi_rad_s = thigh_ipsi_velocity;
+            stride_data.thigh_sagittal_velocity_contra_rad_s = thigh_contra_velocity;
+            
+            % Shank velocities
+            shank_ipsi_velocity = gradient(stride_data.shank_sagittal_angle_ipsi_rad) * Hz * NUM_POINTS / stride_duration_frames;
+            shank_contra_velocity = gradient(stride_data.shank_sagittal_angle_contra_rad) * Hz * NUM_POINTS / stride_duration_frames;
+            
+            stride_data.shank_sagittal_velocity_ipsi_rad_s = shank_ipsi_velocity;
+            stride_data.shank_sagittal_velocity_contra_rad_s = shank_contra_velocity;
         end
         
         % Process ground reaction forces (if available)
