@@ -1,112 +1,19 @@
 # LocoHub
 
-**Standardized biomechanical datasets for reproducible locomotion research**
-
-## 📚 Full Documentation
-
-**Visit our documentation site: [https://jmontp.github.io/LocoHub/](https://jmontp.github.io/LocoHub/)**
-
-The documentation includes:
-- Complete API reference
-- Interactive tutorials  
-- Dataset comparison gallery
-- Validation reports
-- Contributing guides
-
-**Quick Links:** [Getting Started](https://jmontp.github.io/LocoHub/users/) • [Datasets](https://jmontp.github.io/LocoHub/reference/datasets_documentation/) • [API Docs](https://jmontp.github.io/LocoHub/users/api/api-index/)
-
-## Project Structure
-
-- **`user_libs/`** - Analysis libraries (Python, MATLAB, R)
-- **`contributor_tools/`** - Dataset conversion and validation tools  
-- **`maintainer_tools/`** - Release and benchmark management
-- **`internal/`** - Core infrastructure (validation engine, plotting)
-- **`converted_datasets/`** - Standardized parquet files
-- **`docs/`** - Documentation and tutorials
-
-## Use Cases
-
----
-
-### 1. Standard Specification Reference
-*Download the tables and manage them yourself*
-
-Use the standardized variable names and data format in your own work:
-- **Variable naming**: `knee_flexion_angle_ipsi_rad`, `hip_moment_contra_Nm`  
-- **Time indexing**: Original sampling rate preserved
-- **Phase indexing**: 150 points per normalized gait cycle
-- **Reference**: [Data Format Spec](docs/standard_spec/standard_spec.md)
-
----
-
-### 2. Data Analysis Library
-*Use library code to help manage the tables*
-
-Load and analyze standardized datasets with optimized 3D array operations:
-
-**Python:**
-```python
-from user_libs.python.locomotion_data import LocomotionData
-
-# Load and analyze data
-data = LocomotionData('dataset.parquet')
-data_3d = data.to_3d_array(['knee_flexion_angle_ipsi_rad'])
-```
-
-**MATLAB:**
-```matlab
-addpath('user_libs/matlab')
-data = LocomotionData('dataset.parquet');
-knee_angles = data.get_variable('knee_flexion_angle_ipsi_rad');
-```
-
-**Tutorials**: [Python](docs/tutorials/python/getting_started_python.md) • [MATLAB](docs/tutorials/matlab/getting_started_matlab.md)
-
----
-
-### 3. Dataset Development
-*Contribute new datasets to the standard*
-
-Convert new datasets or contribute to the project:
-
-1. **Create conversion scripts** following existing patterns
-2. **Fill out dataset documentation** using [Dataset Template](docs/standard_spec/dataset_template.md)
-3. **Submit validation report** with `python contributor_tools/create_dataset_validation_report.py --dataset your_dataset_phase.parquet`
-4. **Follow pull request guidelines** in [Contributing Guide](CONTRIBUTING.md)
-
-**Reference**: [Contributing Guide](CONTRIBUTING.md)
+<div align="center">
+  <img src="docs/assets/locohub_logo.png" alt="LocoHub Logo" width="400">
+  
+  [![Documentation](https://github.com/jmontp/LocoHub/actions/workflows/deploy-docs.yml/badge.svg)](https://github.com/jmontp/LocoHub/actions/workflows/deploy-docs.yml)
+</div>
 
 ## Available Datasets
 
-- **AddBiomechanics**: Multiple subjects, full 3D biomechanics
-- **GTech 2023**: 13 subjects, 19 activities + EMG/IMU  
-- **UMich 2021**: 10 subjects, incline walking
-
-[Download Datasets](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0)
-
-## Documentation
-
-- [Data Format Spec](docs/standard_spec/standard_spec.md)
-- [Python Tutorial](docs/tutorials/python/getting_started_python.md)
-- [MATLAB Tutorial](docs/tutorials/matlab/getting_started_matlab.md)
-
-## Contribution Process
-
-To contribute a new dataset:
-
-1. **Create conversion scripts** following existing patterns in `contributor_tools/conversion_scripts/`
-2. **Fill out dataset documentation** using [Dataset Template](docs/standard_spec/dataset_template.md)  
-3. **Submit validation report** with `python contributor_tools/create_dataset_validation_report.py --dataset your_dataset_phase.parquet`
-4. **Follow pull request guidelines** in [Contributing Guide](CONTRIBUTING.md)
-
-## Future
-
-Release standardized datasets with train/test benchmarks to accelerate biomechanics research and enable reproducible ML-based control algorithms for prosthetics and exoskeletons.
+| Dataset | Tasks | Quality | Documentation | Download |
+|---------|-------|---------|---------------|----------|
+| **Georgia Tech 2023** | Walking, stairs, inclines | ✅ **Validated** | [📄 Docs](https://jmontp.github.io/LocoHub/reference/datasets_documentation/dataset_gtech_2023/) | [⬇️ Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
+| **University of Michigan 2021** | Level, incline, decline walking | ✅ **Validated** | [📄 Docs](https://jmontp.github.io/LocoHub/reference/datasets_documentation/dataset_umich_2021/) | [⬇️ Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
+| **AddBiomechanics** | Walking, running, jumping, stairs | 🕐 **Coming Soon** | [📄 Docs](https://jmontp.github.io/LocoHub/reference/datasets_documentation/dataset_addbiomechanics/) | Coming Soon |
 
 ---
 
-<div align="center">
-Made with ❤️ for the biomechanics community<br>
-<br>
-<a href="https://github.com/jmontp/locomotion-data-standardization/actions/workflows/test.yml"><img src="https://github.com/jmontp/locomotion-data-standardization/actions/workflows/test.yml/badge.svg" alt="Tests"></a>
-</div>
+**📚 Full Documentation: [https://jmontp.github.io/LocoHub/](https://jmontp.github.io/LocoHub/)**
