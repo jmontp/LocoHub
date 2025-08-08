@@ -2,8 +2,16 @@
 hide:
   - navigation
   - toc
-  - title
 ---
+
+<style>
+  /* Hide the auto-generated page title on this page only */
+  .md-typeset h1 {
+    display: none !important;
+  }
+</style>
+
+# 
 
 <div class="hero-section" markdown>
 
