@@ -1,0 +1,307 @@
+# Impaired Population Validation Ranges Template
+# 
+# This file provides validation range templates for common impaired population tasks.
+# These ranges are typically wider than able-bodied norms to accommodate:
+# - Compensatory movement patterns
+# - Asymmetries between affected and unaffected sides
+# - Greater inter-subject variability
+# - Device-specific adaptations (prosthetics, orthotics, assistive devices)
+#
+# Usage:
+# 1. Copy relevant sections for your population
+# 2. Adjust ranges based on your specific cohort
+# 3. Consider population-specific characteristics
+# 4. Document any modifications in your dataset documentation
+
+# Configuration flags
+only_sagittal_ipsi: false  # Set to true if only ipsilateral sagittal data available
+
+# =============================================================================
+# STROKE (CVA) TASKS
+# =============================================================================
+level_walking_stroke:
+  # Note: Stroke gait often shows significant asymmetry
+  # Consider different ranges for affected vs unaffected side
+  '0':  # Heel strike
+    hip_flexion_angle_ipsi_rad:
+      min: -0.5  # Increased extension compensation
+      max: 0.8   # Increased flexion for clearance
+    knee_flexion_angle_ipsi_rad:
+      min: -0.2  # Potential hyperextension
+      max: 0.5   # Reduced flexion at initial contact
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.6  # Drop foot common
+      max: 0.3
+  '25':  # Mid-stance
+    hip_flexion_angle_ipsi_rad:
+      min: -0.4
+      max: 0.5
+    knee_flexion_angle_ipsi_rad:
+      min: -0.2  # Hyperextension for stability
+      max: 0.6
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.5
+      max: 0.4
+  '50':  # Toe-off
+    hip_flexion_angle_ipsi_rad:
+      min: -0.6  # Increased extension
+      max: 0.4
+    knee_flexion_angle_ipsi_rad:
+      min: 0.0
+      max: 0.8   # Reduced push-off flexion
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.7  # Limited push-off
+      max: 0.2
+  '75':  # Mid-swing
+    hip_flexion_angle_ipsi_rad:
+      min: 0.1
+      max: 1.0   # Circumduction compensation
+    knee_flexion_angle_ipsi_rad:
+      min: 0.2   # Stiff-knee gait
+      max: 1.3
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.4  # Drop foot
+      max: 0.4
+
+# =============================================================================
+# TRANSFEMORAL AMPUTEE (TFA) TASKS
+# =============================================================================
+level_walking_tfa:
+  # Note: Prosthetic side shows different mechanics than intact side
+  '0':  # Heel strike
+    hip_flexion_angle_ipsi_rad:
+      min: -0.3
+      max: 0.7   # Increased for prosthetic clearance
+    knee_flexion_angle_ipsi_rad:
+      min: -0.1  # Depends on prosthetic knee
+      max: 0.3   # Limited by prosthetic control
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.3  # Prosthetic foot dependent
+      max: 0.2
+  '25':  # Mid-stance
+    hip_flexion_angle_ipsi_rad:
+      min: -0.4
+      max: 0.4
+    knee_flexion_angle_ipsi_rad:
+      min: -0.1  # Full extension for stability
+      max: 0.4   # Limited stance flexion
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.2
+      max: 0.3
+  '50':  # Toe-off
+    hip_flexion_angle_ipsi_rad:
+      min: -0.5
+      max: 0.3
+    knee_flexion_angle_ipsi_rad:
+      min: 0.0
+      max: 0.6   # Reduced compared to intact
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.4  # Limited prosthetic push-off
+      max: 0.1
+  '75':  # Mid-swing
+    hip_flexion_angle_ipsi_rad:
+      min: 0.2
+      max: 0.9
+    knee_flexion_angle_ipsi_rad:
+      min: 0.3   # Prosthetic knee dependent
+      max: 1.2   # May be limited by prosthetic
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.2
+      max: 0.2
+
+# =============================================================================
+# TRANSTIBIAL AMPUTEE (TTA) TASKS
+# =============================================================================
+level_walking_tta:
+  # Note: Better preserved mechanics than TFA but still altered at ankle
+  '0':  # Heel strike
+    hip_flexion_angle_ipsi_rad:
+      min: -0.35
+      max: 0.6
+    knee_flexion_angle_ipsi_rad:
+      min: -0.1
+      max: 0.4
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.3  # Prosthetic foot stiffness
+      max: 0.2
+  '25':  # Mid-stance
+    hip_flexion_angle_ipsi_rad:
+      min: -0.3
+      max: 0.3
+    knee_flexion_angle_ipsi_rad:
+      min: -0.05
+      max: 0.5
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.2  # Limited prosthetic ROM
+      max: 0.3
+  '50':  # Toe-off
+    hip_flexion_angle_ipsi_rad:
+      min: -0.4
+      max: 0.2
+    knee_flexion_angle_ipsi_rad:
+      min: 0.1
+      max: 0.9
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.5  # Reduced push-off
+      max: 0.1
+  '75':  # Mid-swing
+    hip_flexion_angle_ipsi_rad:
+      min: 0.25
+      max: 0.8
+    knee_flexion_angle_ipsi_rad:
+      min: 0.6
+      max: 1.3
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.3
+      max: 0.2
+
+# =============================================================================
+# PARKINSON'S DISEASE (PD) TASKS
+# =============================================================================
+level_walking_pd:
+  # Note: Reduced ROM, shuffling gait, freezing episodes
+  '0':  # Heel strike
+    hip_flexion_angle_ipsi_rad:
+      min: -0.2  # Reduced extension
+      max: 0.5   # Flexed posture
+    knee_flexion_angle_ipsi_rad:
+      min: -0.05
+      max: 0.4   # Reduced heel strike flexion
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.3
+      max: 0.2   # Reduced dorsiflexion
+  '25':  # Mid-stance
+    hip_flexion_angle_ipsi_rad:
+      min: -0.1  # Limited extension
+      max: 0.4
+    knee_flexion_angle_ipsi_rad:
+      min: 0.0
+      max: 0.5
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.2
+      max: 0.3
+  '50':  # Toe-off
+    hip_flexion_angle_ipsi_rad:
+      min: -0.2  # Reduced extension
+      max: 0.3
+    knee_flexion_angle_ipsi_rad:
+      min: 0.2
+      max: 0.8   # Reduced push-off
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.4  # Reduced plantarflexion
+      max: 0.1
+  '75':  # Mid-swing
+    hip_flexion_angle_ipsi_rad:
+      min: 0.2
+      max: 0.7   # Reduced swing flexion
+    knee_flexion_angle_ipsi_rad:
+      min: 0.4   # Reduced knee flexion
+      max: 1.0   # Shuffling gait
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.2
+      max: 0.3
+
+# =============================================================================
+# SPINAL CORD INJURY (SCI) - INCOMPLETE
+# =============================================================================
+level_walking_sci:
+  # Note: Highly variable depending on injury level and completeness
+  # These ranges are for ambulatory incomplete SCI
+  '0':  # Heel strike
+    hip_flexion_angle_ipsi_rad:
+      min: -0.4
+      max: 0.8   # May use hip flexion for foot clearance
+    knee_flexion_angle_ipsi_rad:
+      min: -0.2  # Potential instability
+      max: 0.6
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.5  # Weakness/spasticity
+      max: 0.3
+  '25':  # Mid-stance
+    hip_flexion_angle_ipsi_rad:
+      min: -0.3
+      max: 0.5
+    knee_flexion_angle_ipsi_rad:
+      min: -0.2  # Hyperextension for stability
+      max: 0.7
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.4
+      max: 0.4
+  '50':  # Toe-off
+    hip_flexion_angle_ipsi_rad:
+      min: -0.5
+      max: 0.4
+    knee_flexion_angle_ipsi_rad:
+      min: 0.0
+      max: 1.0
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.6
+      max: 0.2
+  '75':  # Mid-swing
+    hip_flexion_angle_ipsi_rad:
+      min: 0.1
+      max: 1.0
+    knee_flexion_angle_ipsi_rad:
+      min: 0.2   # May have reduced flexion
+      max: 1.4
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.4
+      max: 0.4
+
+# =============================================================================
+# CEREBRAL PALSY (CP) TASKS
+# =============================================================================
+level_walking_cp:
+  # Note: Ranges depend heavily on GMFCS level and CP type
+  # These are for GMFCS I-III ambulatory CP
+  '0':  # Heel strike
+    hip_flexion_angle_ipsi_rad:
+      min: -0.2  # Crouch gait common
+      max: 1.0   # Excessive flexion
+    knee_flexion_angle_ipsi_rad:
+      min: 0.0   # Crouch gait
+      max: 0.8   # Excessive flexion
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.6  # Equinus common
+      max: 0.4
+  '25':  # Mid-stance
+    hip_flexion_angle_ipsi_rad:
+      min: -0.1
+      max: 0.8   # Persistent flexion
+    knee_flexion_angle_ipsi_rad:
+      min: 0.1   # Crouch pattern
+      max: 0.9
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.5  # Equinus
+      max: 0.5
+  '50':  # Toe-off
+    hip_flexion_angle_ipsi_rad:
+      min: -0.3
+      max: 0.6
+    knee_flexion_angle_ipsi_rad:
+      min: 0.2
+      max: 1.1
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.7  # Limited push-off
+      max: 0.3
+  '75':  # Mid-swing
+    hip_flexion_angle_ipsi_rad:
+      min: 0.3
+      max: 1.2   # Excessive flexion
+    knee_flexion_angle_ipsi_rad:
+      min: 0.3   # Stiff-knee or crouch
+      max: 1.5   # Variable patterns
+    ankle_dorsiflexion_angle_ipsi_rad:
+      min: -0.5  # Equinus
+      max: 0.5
+
+# =============================================================================
+# USAGE NOTES
+# =============================================================================
+# 1. These are template ranges - adjust based on your specific population
+# 2. Consider medication state for PD (ON/OFF)
+# 3. Consider assistive devices (canes, walkers, orthotics)
+# 4. Document any population-specific adaptations
+# 5. Wider ranges accommodate pathological variability
+# 6. Consider creating separate ranges for affected/unaffected sides
+# 7. Validate with clinical expertise for your specific cohort

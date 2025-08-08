@@ -404,7 +404,106 @@ index = int(phase_percent * 1.49)
 
 ---
 
-## 10. References
+## 10. Clinical Population Considerations
+
+### Overview
+
+Biomechanical patterns in clinical populations often differ significantly from able-bodied norms. This section provides guidance for working with impaired population data within the LocoHub standard.
+
+### Expected Biomechanical Differences
+
+#### Stroke (CVA)
+- **Asymmetry**: Marked differences between affected and unaffected sides
+- **Compensations**: Hip hiking, circumduction, trunk lean
+- **Key Features**: Drop foot, stiff-knee gait, reduced push-off
+- **Validation**: Consider separate ranges for affected/unaffected sides
+
+#### Amputation (TFA/TTA)
+- **Prosthetic Mechanics**: Different joint mechanics on prosthetic side
+- **Energy Cost**: Increased metabolic demand, altered efficiency
+- **Adaptations**: Vaulting, hip hiking, lateral trunk bend
+- **Device-Specific**: Ranges depend on prosthetic type and settings
+
+#### Parkinson's Disease
+- **Reduced ROM**: Decreased joint excursions, especially hip extension
+- **Gait Features**: Shuffling, festination, freezing episodes
+- **Variability**: ON/OFF medication states show different patterns
+- **Progression**: Patterns change with disease severity (H&Y stage)
+
+#### Spinal Cord Injury
+- **Level-Dependent**: Patterns vary greatly with injury level
+- **Spasticity**: May cause abnormal joint patterns
+- **Compensation**: Hip flexion for foot clearance, trunk involvement
+- **Assistive Devices**: Orthoses affect joint kinematics
+
+#### Cerebral Palsy
+- **GMFCS-Dependent**: Patterns vary with functional level
+- **Common Patterns**: Crouch gait, equinus, scissoring
+- **Asymmetry**: Often present even in hemiplegic CP
+- **Growth Effects**: Patterns change with development
+
+### Validation Strategies
+
+1. **Population-Specific Ranges**: Use wider ranges to accommodate pathological variability
+2. **Asymmetry Allowance**: Don't assume bilateral symmetry
+3. **Task Modifications**: Account for adapted movement strategies
+4. **Device Effects**: Consider prosthetics, orthotics, assistive devices
+5. **Clinical Scores**: Include functional assessments in metadata
+
+### Data Collection Recommendations
+
+#### Metadata Requirements
+Always include relevant clinical information:
+- Diagnosis and severity scores
+- Time since onset/injury
+- Assistive devices used
+- Medication state (if applicable)
+- Functional assessment scores
+
+#### Task Adaptations
+Document any modifications:
+- Self-selected vs imposed speed
+- Use of handrails or support
+- Step-to-step vs step-over-step patterns
+- Rest breaks or fatigue effects
+
+### Analysis Considerations
+
+1. **Within-Population Norms**: Compare to population-specific references
+2. **Affected vs Unaffected**: Analyze sides separately when appropriate
+3. **Temporal Changes**: Track progression or intervention effects
+4. **Compensatory Patterns**: Identify and quantify adaptations
+5. **Functional Relevance**: Link biomechanics to clinical outcomes
+
+### Example Implementation
+
+```python
+# Loading impaired population data
+from user_libs.python.locomotion_data import LocomotionData
+
+data = LocomotionData('stroke_gait_study.parquet')
+
+# Filter for stroke patients
+stroke_data = data.df[data.df['task'] == 'level_walking_stroke']
+
+# Separate affected and unaffected sides
+affected_side = stroke_data[stroke_data['task_info'].str.contains('affected_side:left')]
+
+# Apply population-specific validation
+from internal.validation_engine.validator import Validator
+validator = Validator(ranges_file='impaired_ranges.yaml')
+results = validator.validate(stroke_data, task='level_walking_stroke')
+```
+
+### Resources
+
+- **Validation Templates**: See `contributor_tools/validation_ranges/impaired_ranges.yaml`
+- **Population Codes**: See [Population Codes Reference](population_codes.md)
+- **Task Naming**: See [Task Definitions - Impaired Populations](standard_spec/task_definitions.md#impaired-population-task-naming)
+
+---
+
+## 11. References
 
 1. **OpenSim Documentation**: [Coordinate Systems and Joint Definitions](https://simtk-confluence.stanford.edu/display/OpenSim/Coordinate+Systems)
 2. **Winter, D.A.** (2009). Biomechanics and Motor Control of Human Movement (4th ed.)

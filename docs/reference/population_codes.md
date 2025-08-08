@@ -183,6 +183,86 @@ metadata += ",H_Y_stage:2,medication_state:ON,UPDRS_motor:24"
 - Expected: `PROS_TFA01`, `PROS_TTA01`, `PROS_AB01` (control)
 - Mixed population with controls
 
+## Task Naming for Impaired Populations
+
+### Overview
+
+When working with impaired populations, task naming can follow two approaches:
+
+1. **Standard task names** - When the population code in the subject ID provides sufficient context
+2. **Population-specific task names** - When explicit population identification in the task name is beneficial
+
+### Task Naming Guidelines
+
+#### Standard Approach (Recommended for most cases)
+```python
+# Population is identified through subject ID
+{"subject": "STUDY_CVA01", "task": "level_walking", ...}  # CVA = stroke
+{"subject": "STUDY_TFA02", "task": "incline_walking", ...}  # TFA = transfemoral amputee
+```
+
+#### Population-Specific Approach (When needed)
+```python
+# Population is explicit in both subject ID and task name
+{"subject": "STUDY_CVA01", "task": "level_walking_stroke", ...}
+{"subject": "STUDY_TFA02", "task": "incline_walking_amputee", ...}
+```
+
+### When to Use Population-Specific Task Names
+
+**Use population-specific names when:**
+- Different validation ranges are needed per population
+- Research focuses on within-population variations
+- Clinical protocols require explicit task differentiation
+- Datasets combine multiple impaired populations
+
+**Use standard names when:**
+- Subject ID provides sufficient population context
+- Analysis compares with able-bodied controls
+- Population follows typical biomechanical patterns
+- Simplicity and consistency are priorities
+
+### Population Suffix Mapping
+
+| Population Code | Task Suffix Options | Example |
+|----------------|-------------------|---------|
+| CVA | `_stroke` or `_cva` | `level_walking_stroke` |
+| TFA | `_amputee` or `_tfa` | `level_walking_tfa` |
+| TTA | `_amputee` or `_tta` | `level_walking_tta` |
+| SCI | `_sci` | `level_walking_sci` |
+| PD | `_pd` or `_parkinsons` | `level_walking_pd` |
+| CP | `_cp` | `level_walking_cp` |
+| MS | `_ms` | `level_walking_ms` |
+| OA | `_oa` | `level_walking_oa` |
+
+### Filtering Strategies
+
+```python
+from user_libs.python.locomotion_data import LocomotionData
+
+data = LocomotionData('dataset.parquet')
+
+# Strategy 1: Filter by subject population code
+stroke_data = data.df[data.df['subject'].str.contains('_CVA')]
+
+# Strategy 2: Filter by task name (if using population-specific naming)
+stroke_tasks = data.df[data.df['task'].str.contains('_stroke')]
+
+# Strategy 3: Combined filtering
+stroke_walking = data.df[
+    (data.df['subject'].str.contains('_CVA')) & 
+    (data.df['task'].str.contains('walking'))
+]
+```
+
+### Best Practices
+
+1. **Be consistent** within a dataset - choose one approach and stick to it
+2. **Document your choice** in dataset documentation
+3. **Consider your audience** - clinical researchers may prefer explicit task names
+4. **Think about scalability** - will you add more populations later?
+5. **Preserve information** - ensure population context is never lost
+
 ---
 
 *This reference ensures consistent population identification across all datasets in the locomotion data standard.*

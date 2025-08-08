@@ -283,14 +283,32 @@ def get_task_classification(task_name: str) -> str:
     - 'gait': Walking, running, stairs tasks with alternating leg patterns
     - 'bilateral': Symmetric tasks like squats, jumps, sit-to-stand
     
+    Note: This function handles both standard and impaired population task names.
+    For example, both 'level_walking' and 'level_walking_stroke' are classified as 'gait'.
+    
     Args:
-        task_name: Name of the task to classify
+        task_name: Name of the task to classify (e.g., 'level_walking', 'level_walking_stroke')
         
     Returns:
         'gait' for walking/running/stairs tasks, 'bilateral' for others
     """
-    gait_keywords = ['walk', 'run', 'stairs', 'gait', 'stair']
+    # Remove population suffixes before classification
+    # Common suffixes: _stroke, _amputee, _tfa, _tta, _pd, _sci, _cp, _ms, _oa, _cva
+    population_suffixes = [
+        '_stroke', '_amputee', '_tfa', '_tta', '_pd', '_sci', 
+        '_cp', '_ms', '_oa', '_cva', '_parkinsons'
+    ]
+    
     task_lower = task_name.lower()
+    
+    # Remove population suffix if present
+    for suffix in population_suffixes:
+        if task_lower.endswith(suffix):
+            task_lower = task_lower[:-len(suffix)]
+            break
+    
+    # Check for gait-related keywords
+    gait_keywords = ['walk', 'run', 'stairs', 'gait', 'stair']
     
     for keyword in gait_keywords:
         if keyword in task_lower:

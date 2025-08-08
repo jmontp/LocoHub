@@ -187,6 +187,48 @@ data.plot_phase_patterns(
 
 ---
 
+## 👥 Impaired Population Tasks
+
+### Task Naming Quick Reference
+
+| **Population** | **Suffix** | **Example** |
+|---------------|-----------|------------|
+| Stroke | `_stroke` | `level_walking_stroke` |
+| Amputee (TFA) | `_tfa` | `incline_walking_tfa` |
+| Amputee (TTA) | `_tta` | `decline_walking_tta` |
+| Parkinson's | `_pd` | `stair_ascent_pd` |
+| SCI | `_sci` | `level_walking_sci` |
+| Cerebral Palsy | `_cp` | `level_walking_cp` |
+
+### Common Task Combinations
+
+```python
+# Standard tasks (when subject ID has population code)
+"level_walking"      # STUDY_CVA01 implies stroke
+"incline_walking"    # STUDY_TFA02 implies amputee
+
+# Explicit population tasks (when needed)
+"level_walking_stroke"
+"incline_walking_amputee"
+"stair_ascent_pd"
+"level_walking_sci"
+```
+
+### Population Metadata Examples
+
+```python
+# Stroke
+"affected_side:left,FAC_score:5,assistive_device:cane"
+
+# Amputee
+"prosthetic_type:C-leg,K_level:3,amputation_side:right"
+
+# Parkinson's
+"medication_state:ON,H_Y_stage:2,UPDRS_motor:24"
+```
+
+---
+
 ## 📚 Key References
 
 - **Coordinate System**: X=Anterior, Y=Superior, Z=Right

@@ -251,6 +251,93 @@ Complete documentation for each standardized task type.
 
 **Example**: `"repetitions:10,depth:parallel,load_kg:0,tempo:normal"`
 
+## Impaired Population Task Naming
+
+### Overview
+
+Tasks performed by impaired populations can be named using population-specific suffixes to distinguish them from standard able-bodied tasks. This is particularly important when:
+- Validation ranges differ significantly from able-bodied norms
+- Research focuses on population-specific adaptations
+- Clinical relevance requires explicit population identification
+
+### Naming Convention
+
+**Format**: `<base_task>_<population_suffix>`
+
+The population suffix indicates the primary impairment affecting locomotion:
+
+| Population | Suffix | Example Task | Description |
+|------------|--------|--------------|-------------|
+| Stroke | `_stroke` | `level_walking_stroke` | Level walking for stroke survivors |
+| Transfemoral Amputee | `_amputee` or `_tfa` | `level_walking_amputee` | Level walking with above-knee prosthesis |
+| Transtibial Amputee | `_amputee` or `_tta` | `incline_walking_tta` | Incline walking with below-knee prosthesis |
+| Parkinson's | `_pd` | `stair_ascent_pd` | Stair climbing for Parkinson's patients |
+| Spinal Cord Injury | `_sci` | `level_walking_sci` | Walking with incomplete SCI |
+| Cerebral Palsy | `_cp` | `level_walking_cp` | Walking for individuals with CP |
+| Multiple Sclerosis | `_ms` | `level_walking_ms` | Walking for MS patients |
+
+### Task ID and Task Info
+
+- **Task ID** remains consistent with standard tasks (e.g., `level`, `incline_10deg`)
+- **Task Info** can include population-specific metadata:
+
+**Stroke-specific metadata**:
+```
+"speed_m_s:0.8,affected_side:left,FAC_score:5,assistive_device:cane"
+```
+
+**Amputee-specific metadata**:
+```
+"speed_m_s:1.0,prosthetic_type:C-leg,amputation_side:right,K_level:3"
+```
+
+**Parkinson's-specific metadata**:
+```
+"speed_m_s:0.9,medication_state:ON,H_Y_stage:2,freezing_episodes:0"
+```
+
+### When to Use Impaired Task Names
+
+**Use impaired task names when**:
+1. Biomechanical patterns differ substantially from able-bodied norms
+2. Population-specific validation ranges are needed
+3. Research explicitly compares within-population variations
+4. Clinical protocols require population-specific analysis
+
+**Use standard task names when**:
+1. The impaired population follows typical biomechanical patterns
+2. Mixed population analysis is the goal
+3. The subject ID already provides sufficient population context
+4. Comparison with able-bodied controls is primary
+
+### Examples
+
+```python
+# Dataset with mixed populations
+data = [
+    # Able-bodied control
+    {"subject": "STUDY_AB01", "task": "level_walking", "task_id": "level"},
+    
+    # Stroke patient with explicit task naming
+    {"subject": "STUDY_CVA01", "task": "level_walking_stroke", "task_id": "level",
+     "task_info": "speed_m_s:0.6,affected_side:right,FAC_score:4"},
+    
+    # Amputee with explicit task naming
+    {"subject": "STUDY_TFA01", "task": "level_walking_amputee", "task_id": "level",
+     "task_info": "speed_m_s:1.1,prosthetic_type:Genium,K_level:3"}
+]
+```
+
+### Validation Considerations
+
+Impaired population tasks may require:
+- **Asymmetric validation ranges** for affected vs unaffected sides
+- **Wider acceptable ranges** to accommodate compensatory patterns
+- **Population-specific normative data** for meaningful comparisons
+- **Task-specific adaptations** (e.g., step-to-step vs step-over-step stair climbing)
+
+See `contributor_tools/validation_ranges/impaired_ranges.yaml` for population-specific validation templates.
+
 ## Usage Examples
 
 ### Python Implementation
