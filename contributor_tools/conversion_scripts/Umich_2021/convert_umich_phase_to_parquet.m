@@ -315,8 +315,11 @@ function trial_table = process_trial(trial_struct, task_type, subject_str, incli
     % Segment angles - extract from motion capture data and calculate derived angles
     segment_angles = trial_struct.jointAngles;
     
-    % Pelvis angles - extract directly from PelvisAngles data
-    pelvis_tilt = reshape(segment_angles.PelvisAngles(:, sagittal_plane, :), [], 1) * deg2rad_factor;
+    % Calculate pelvis angles using foot-up approach for sagittal plane
+    % pelvis_tilt = thigh_angle - hip_flexion (derived from foot-up chain)
+    pelvis_tilt = thigh_angle_ipsi - hip_flexion_ipsi;
+    
+    % For frontal and transverse planes, still use motion capture (not part of foot-up chain)
     pelvis_obliquity = reshape(segment_angles.PelvisAngles(:, frontal_plane, :), [], 1) * deg2rad_factor;
     pelvis_rotation = reshape(segment_angles.PelvisAngles(:, transverse_plane, :), [], 1) * deg2rad_factor;
     
@@ -367,15 +370,15 @@ function trial_table = process_trial(trial_struct, task_type, subject_str, incli
     trial_table.foot_sagittal_angle_ipsi_rad = foot_progression_ipsi;
     trial_table.foot_sagittal_angle_contra_rad = circshift(foot_progression_ipsi, shift);
     
-    % Calculate derived segment angles using biomechanical relationships
-    % thigh_angle = pelvis_tilt + hip_flexion
-    thigh_angle_ipsi = (pelvis_tilt + hip_flexion_ipsi);
-    trial_table.thigh_sagittal_angle_ipsi_rad = thigh_angle_ipsi;
-    trial_table.thigh_sagittal_angle_contra_rad = circshift(thigh_angle_ipsi, shift);
-    
-    % shank_angle = thigh_angle - knee_flexion (note: using original thigh_angle calculation for consistency)
-    shank_angle_ipsi = ((pelvis_tilt + hip_flexion_ipsi) - knee_flexion_ipsi);
+    % Calculate segment angles using FOOT-UP approach for better biomechanical accuracy
+    % shank_angle = foot_angle + ankle_dorsiflexion
+    shank_angle_ipsi = foot_progression_ipsi + ankle_dorsiflexion_ipsi;
     trial_table.shank_sagittal_angle_ipsi_rad = shank_angle_ipsi;
     trial_table.shank_sagittal_angle_contra_rad = circshift(shank_angle_ipsi, shift);
+    
+    % thigh_angle = shank_angle + knee_flexion
+    thigh_angle_ipsi = shank_angle_ipsi + knee_flexion_ipsi;
+    trial_table.thigh_sagittal_angle_ipsi_rad = thigh_angle_ipsi;
+    trial_table.thigh_sagittal_angle_contra_rad = circshift(thigh_angle_ipsi, shift);
 
 end

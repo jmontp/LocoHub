@@ -22,7 +22,7 @@
 %    - trunk_sagittal_angle = pelvis_sagittal_angle + lumbar_extension  
 %    - thigh_sagittal_angle_ipsi = pelvis_sagittal_angle + hip_flexion (sign flipped)
 %    - shank_sagittal_angle_ipsi = thigh_sagittal_angle_ipsi - knee_flexion (original)
-%    - foot_sagittal_angle_ipsi = shank_sagittal_angle_ipsi - ankle_dorsiflexion
+%    - foot_sagittal_angle_ipsi = shank_sagittal_angle_ipsi + ankle_angle
 
 clear all;
 close all;
@@ -313,9 +313,9 @@ function rows = process_levelground(date_path, subject_str, subject_mass)
         end
         
         % If no valid label segment, use entire trial
-        if isempty(time_start) && isfield(trial_data, 'ik') && istable(trial_data.ik)
-            time_start = trial_data.ik.Header(1);
-            time_end = trial_data.ik.Header(end);
+        if isempty(time_start) && isfield(trial_data, 'ik_offset') && istable(trial_data.ik_offset)
+            time_start = trial_data.ik_offset.Header(1);
+            time_end = trial_data.ik_offset.Header(end);
         end
         
         if ~isempty(time_start)
@@ -513,13 +513,13 @@ function trial_data = load_trial_data(mode_path, trial_name)
         end
         
         % Load IK (inverse kinematics)
-        ik_file = fullfile(mode_path, 'ik', trial_name);
+        ik_file = fullfile(mode_path, 'ik_offset', trial_name);
         if exist(ik_file, 'file')
             temp = load(ik_file);
             if isfield(temp, 'data') && istable(temp.data)
-                trial_data.ik = temp.data;
+                trial_data.ik_offset = temp.data;
             else
-                trial_data.ik = temp;
+                trial_data.ik_offset = temp;
             end
         end
         
@@ -560,7 +560,7 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
     
     % Check we have minimum required data
     if ~isfield(trial_data, 'gcRight') || ~istable(trial_data.gcRight) || ...
-       ~isfield(trial_data, 'ik') || ~istable(trial_data.ik) || ...
+       ~isfield(trial_data, 'ik_offset') || ~istable(trial_data.ik_offset) || ...
        ~isfield(trial_data, 'id') || ~istable(trial_data.id)
         rows = table();
         return;
@@ -612,7 +612,7 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         phase_ipsi_dot_value = 100 / stride_duration_s;  % %/second
         
         % Get indices for this stride in IK and ID data
-        ik_mask = (trial_data.ik.Header >= stride_start_time) & (trial_data.ik.Header <= stride_end_time);
+        ik_mask = (trial_data.ik_offset.Header >= stride_start_time) & (trial_data.ik_offset.Header <= stride_end_time);
         id_mask = (trial_data.id.Header >= stride_start_time) & (trial_data.id.Header <= stride_end_time);
         
         if sum(ik_mask) < 10 || sum(id_mask) < 10
@@ -636,20 +636,18 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         valid_stride_time = stride_time(valid_pct_idx:end);
         
         % Ankle dorsiflexion angle with smart offset correction - IPSILATERAL (right)
-        if any(strcmp(trial_data.ik.Properties.VariableNames, 'ankle_angle_r'))
-            angle_data = trial_data.ik.ankle_angle_r(ik_mask);
-            ik_time = trial_data.ik.Header(ik_mask);
+        if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'ankle_angle_r'))
+            angle_data = trial_data.ik_offset.ankle_angle_r(ik_mask);
+            ik_time = trial_data.ik_offset.Header(ik_mask);
             
             % Calculate velocity in time domain (convert to radians first for consistent units)
-            % Note: negating angle to match dorsiflexion convention before taking derivative
-            angle_rad = -angle_data * deg2rad;
+            angle_rad = angle_data * deg2rad;
             velocity_data = gradient(angle_rad) ./ gradient(ik_time);
             
             % First interpolate angle data to stride time points
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
             % Then interpolate from percentage to normalized 150 points
-            % Note: negating to match dorsiflexion convention (positive = toe up)
-            ankle_data = -interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            ankle_data = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
             
             % Interpolate velocity data similarly
             velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
@@ -670,16 +668,16 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         end
         
         % Ankle dorsiflexion angle - CONTRALATERAL (left)
-        if any(strcmp(trial_data.ik.Properties.VariableNames, 'ankle_angle_l'))
-            angle_data = trial_data.ik.ankle_angle_l(ik_mask);
+        if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'ankle_angle_l'))
+            angle_data = trial_data.ik_offset.ankle_angle_l(ik_mask);
             
             % Calculate velocity in time domain
-            angle_rad = -angle_data * deg2rad;
+            angle_rad = angle_data * deg2rad;
             velocity_data = gradient(angle_rad) ./ gradient(ik_time);
             
             % Interpolate angle
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
-            ankle_data_contra = -interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            ankle_data_contra = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
             
             % Interpolate velocity
             velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
@@ -700,8 +698,8 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         end
         
         % Knee angle with per-stride sign detection - IPSILATERAL (right)
-        if any(strcmp(trial_data.ik.Properties.VariableNames, 'knee_angle_r'))
-            angle_data = trial_data.ik.knee_angle_r(ik_mask);
+        if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'knee_angle_r'))
+            angle_data = trial_data.ik_offset.knee_angle_r(ik_mask);
             
             % Calculate velocity in time domain (before any sign flipping)
             angle_rad = angle_data * deg2rad;
@@ -731,8 +729,8 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         end
         
         % Knee angle - CONTRALATERAL (left)
-        if any(strcmp(trial_data.ik.Properties.VariableNames, 'knee_angle_l'))
-            angle_data = trial_data.ik.knee_angle_l(ik_mask);
+        if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'knee_angle_l'))
+            angle_data = trial_data.ik_offset.knee_angle_l(ik_mask);
             
             % Calculate velocity in time domain
             angle_rad = angle_data * deg2rad;
@@ -762,8 +760,8 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         end
         
         % Hip angle - IPSILATERAL (right)
-        if any(strcmp(trial_data.ik.Properties.VariableNames, 'hip_flexion_r'))
-            angle_data = trial_data.ik.hip_flexion_r(ik_mask);
+        if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'hip_flexion_r'))
+            angle_data = trial_data.ik_offset.hip_flexion_r(ik_mask);
             
             % Calculate velocity in time domain
             angle_rad = angle_data * deg2rad;
@@ -782,8 +780,8 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         end
         
         % Hip angle - CONTRALATERAL (left)
-        if any(strcmp(trial_data.ik.Properties.VariableNames, 'hip_flexion_l'))
-            angle_data = trial_data.ik.hip_flexion_l(ik_mask);
+        if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'hip_flexion_l'))
+            angle_data = trial_data.ik_offset.hip_flexion_l(ik_mask);
             
             % Calculate velocity in time domain
             angle_rad = angle_data * deg2rad;
@@ -803,8 +801,8 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         
         % Calculate segment angles from kinematic chain
         % Pelvis sagittal angle (from pelvis tilt)
-        if any(strcmp(trial_data.ik.Properties.VariableNames, 'pelvis_tilt'))
-            angle_data = trial_data.ik.pelvis_tilt(ik_mask);
+        if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'pelvis_tilt'))
+            angle_data = trial_data.ik_offset.pelvis_tilt(ik_mask);
             
             % Calculate velocity in time domain
             angle_rad = angle_data * deg2rad;
@@ -823,8 +821,8 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         end
         
         % Trunk sagittal angle (pelvis + lumbar extension)
-        if any(strcmp(trial_data.ik.Properties.VariableNames, 'lumbar_extension'))
-            lumbar_data = trial_data.ik.lumbar_extension(ik_mask);
+        if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'lumbar_extension'))
+            lumbar_data = trial_data.ik_offset.lumbar_extension(ik_mask);
             
             % Calculate lumbar velocity
             lumbar_rad = lumbar_data * deg2rad;
@@ -860,13 +858,13 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         stride_data.shank_sagittal_angle_contra_rad = stride_data.thigh_sagittal_angle_contra_rad - stride_data.knee_flexion_angle_contra_rad;
         stride_data.shank_sagittal_velocity_contra_rad_s = stride_data.thigh_sagittal_velocity_contra_rad_s - stride_data.knee_flexion_velocity_contra_rad_s;
         
-        % Foot sagittal angle - IPSILATERAL (shank - ankle dorsiflexion)
-        stride_data.foot_sagittal_angle_ipsi_rad = stride_data.shank_sagittal_angle_ipsi_rad - stride_data.ankle_dorsiflexion_angle_ipsi_rad;
-        stride_data.foot_sagittal_velocity_ipsi_rad_s = stride_data.shank_sagittal_velocity_ipsi_rad_s - stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s;
+        % Foot sagittal angle - IPSILATERAL (shank + ankle angle)
+        stride_data.foot_sagittal_angle_ipsi_rad = stride_data.shank_sagittal_angle_ipsi_rad + stride_data.ankle_dorsiflexion_angle_ipsi_rad;
+        stride_data.foot_sagittal_velocity_ipsi_rad_s = stride_data.shank_sagittal_velocity_ipsi_rad_s + stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s;
         
         % Foot sagittal angle - CONTRALATERAL
-        stride_data.foot_sagittal_angle_contra_rad = stride_data.shank_sagittal_angle_contra_rad - stride_data.ankle_dorsiflexion_angle_contra_rad;
-        stride_data.foot_sagittal_velocity_contra_rad_s = stride_data.shank_sagittal_velocity_contra_rad_s - stride_data.ankle_dorsiflexion_velocity_contra_rad_s;
+        stride_data.foot_sagittal_angle_contra_rad = stride_data.shank_sagittal_angle_contra_rad + stride_data.ankle_dorsiflexion_angle_contra_rad;
+        stride_data.foot_sagittal_velocity_contra_rad_s = stride_data.shank_sagittal_velocity_contra_rad_s + stride_data.ankle_dorsiflexion_velocity_contra_rad_s;
         
         % Process kinetics (moments, normalize by body mass)
         id_time = trial_data.id.Header(id_mask);
