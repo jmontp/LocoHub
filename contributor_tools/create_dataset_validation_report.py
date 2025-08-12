@@ -706,6 +706,74 @@ Examples:
     return 0
 
 
+class TeeOutput:
+    """Tee output to both console and file."""
+    def __init__(self, *files):
+        self.files = files
+    
+    def write(self, obj):
+        for f in self.files:
+            f.write(obj)
+            f.flush()
+    
+    def flush(self):
+        for f in self.files:
+            f.flush()
+
 if __name__ == "__main__":
-    exit_code = main()
+    from datetime import datetime
+    import os
+    
+    # Create log file with timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file_path = f"validation_report_log_{timestamp}.txt"
+    
+    print(f"📋 Logging all output to: {log_file_path}")
+    
+    # Open log file and set up tee output
+    with open(log_file_path, 'w', encoding='utf-8') as log_file:
+        # Write header
+        log_file.write(f"# Validation Report Generation Log\n")
+        log_file.write(f"# Started: {datetime.now()}\n")
+        log_file.write(f"# Command: {' '.join(sys.argv)}\n")
+        log_file.write(f"# Working Directory: {os.getcwd()}\n")
+        log_file.write(f"{'='*60}\n\n")
+        log_file.flush()
+        
+        # Set up tee output to both console and file
+        tee = TeeOutput(sys.stdout, log_file)
+        original_stdout = sys.stdout
+        original_stderr = sys.stderr
+        
+        try:
+            sys.stdout = tee
+            sys.stderr = tee
+            
+            print(f"🚀 Starting validation report generation at {datetime.now()}")
+            print(f"📋 All output will be logged to: {log_file_path}")
+            print("="*60)
+            
+            exit_code = main()
+            
+            print("="*60)
+            print(f"✅ Report generation completed with exit code: {exit_code}")
+            print(f"📋 Full log available at: {log_file_path}")
+            
+        except Exception as e:
+            print(f"💥 FATAL ERROR: {e}")
+            import traceback
+            traceback.print_exc()
+            exit_code = 1
+            
+        finally:
+            # Restore original outputs
+            sys.stdout = original_stdout  
+            sys.stderr = original_stderr
+            
+            # Write footer to log
+            log_file.write(f"\n{'='*60}\n")
+            log_file.write(f"# Finished: {datetime.now()}\n")
+            log_file.write(f"# Exit Code: {exit_code}\n")
+    
+    print(f"📋 Complete log saved to: {log_file_path}")
     sys.exit(exit_code)

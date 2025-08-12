@@ -246,7 +246,7 @@ def create_task_combined_plot(
     output_dir: str,
     data_3d: Optional[np.ndarray] = None,
     feature_names: Optional[List[str]] = None,
-    failing_features: Optional[Dict[int, List[str]]] = None,
+    failing_features: Optional[Dict] = None,  # Can be legacy or merged format
     dataset_name: Optional[str] = None,
     timestamp: Optional[str] = None,
     comparison_mode: bool = False
@@ -325,21 +325,59 @@ def create_task_combined_plot(
     if timestamp:
         title += f' | Generated: {timestamp}'
     
-    # Add statistics line
-    if not comparison_mode:
-        title += f'\n{total_strides} strides | {n_features_validated}/{n_features_total} features validated | {passing_strides} passing ({pass_rate:.1f}%)'
-    
-    fig.suptitle(title, fontsize=12, fontweight='bold')
-    
-    # Handle failing features
+    # Handle failing features and detect format first
     if failing_features is None:
         failing_features = {}
     
-    # Build global set of failed stride indices for ANY variable
-    global_failed_strides = set()
-    for stride_idx, failed_vars in failing_features.items():
-        if failed_vars:  # If any variable failed
-            global_failed_strides.add(stride_idx)
+    # Detect format: merged or legacy
+    is_merged_format = False
+    if failing_features:
+        sample_value = next(iter(failing_features.values()))
+        if isinstance(sample_value, dict) and 'biomechanical' in sample_value and 'velocity' in sample_value:
+            is_merged_format = True
+    
+    # Build stride classification sets for three-color system
+    if is_merged_format:
+        # New three-color system
+        biomechanical_failed_strides = set()
+        velocity_only_failed_strides = set()
+        global_failed_strides = set()
+        
+        for stride_idx, failure_types in failing_features.items():
+            biomech_failures = failure_types.get('biomechanical', [])
+            velocity_failures = failure_types.get('velocity', [])
+            
+            if biomech_failures:
+                biomechanical_failed_strides.add(stride_idx)
+                global_failed_strides.add(stride_idx)
+            elif velocity_failures:
+                velocity_only_failed_strides.add(stride_idx)
+                global_failed_strides.add(stride_idx)
+    else:
+        # Legacy format - all failures are red
+        global_failed_strides = set()
+        biomechanical_failed_strides = set()
+        velocity_only_failed_strides = set()
+        
+        for stride_idx, failed_vars in failing_features.items():
+            if failed_vars:  # If any variable failed
+                global_failed_strides.add(stride_idx)
+                biomechanical_failed_strides.add(stride_idx)  # Treat all as biomechanical in legacy mode
+    
+    # Add statistics line
+    if not comparison_mode:
+        title += f'\n{total_strides} strides | {n_features_validated}/{n_features_total} features validated | {passing_strides} passing ({pass_rate:.1f}%)'
+        
+        # Add three-color legend in merged format
+        if is_merged_format and (len(biomechanical_failed_strides) > 0 or len(velocity_only_failed_strides) > 0):
+            legend_parts = ['Green: Pass']
+            if len(biomechanical_failed_strides) > 0:
+                legend_parts.append(f'Red: Biomech Fail ({len(biomechanical_failed_strides)})')
+            if len(velocity_only_failed_strides) > 0:
+                legend_parts.append(f'Blue: Velocity Fail ({len(velocity_only_failed_strides)})')
+            title += f'\nLegend: {" | ".join(legend_parts)}'
+    
+    fig.suptitle(title, fontsize=12, fontweight='bold')
     
     # Extract phases from validation data
     phases = sorted([int(p) for p in validation_data.keys() if str(p).isdigit()])
@@ -369,11 +407,32 @@ def create_task_combined_plot(
         else:
             var_idx = None
         
-        # Build variable-specific failed strides
-        variable_failed_strides = set()
-        for stride_idx, failed_vars in failing_features.items():
-            if var_name in failed_vars:
-                variable_failed_strides.add(stride_idx)
+        # Build variable-specific failed strides for three-color system
+        if is_merged_format:
+            variable_biomech_failed_strides = set()
+            variable_velocity_failed_strides = set()
+            
+            for stride_idx, failure_types in failing_features.items():
+                biomech_failures = failure_types.get('biomechanical', [])
+                velocity_failures = failure_types.get('velocity', [])
+                
+                if var_name in biomech_failures:
+                    variable_biomech_failed_strides.add(stride_idx)
+                elif var_name in velocity_failures:
+                    variable_velocity_failed_strides.add(stride_idx)
+            
+            # For backward compatibility, also create combined set
+            variable_failed_strides = variable_biomech_failed_strides | variable_velocity_failed_strides
+        else:
+            # Legacy format
+            variable_failed_strides = set()
+            variable_biomech_failed_strides = set()
+            variable_velocity_failed_strides = set()
+            
+            for stride_idx, failed_vars in failing_features.items():
+                if var_name in failed_vars:
+                    variable_failed_strides.add(stride_idx)
+                    variable_biomech_failed_strides.add(stride_idx)  # Treat all as biomechanical
         
         # Get validation ranges for this variable
         var_ranges = {}
@@ -466,11 +525,23 @@ def create_task_combined_plot(
         # Plot FAILED strides (right column) - only in validation mode
         if not comparison_mode and ax_fail is not None:
             failed_count = 0
+            biomech_failed_count = 0
+            velocity_failed_count = 0
+            
             if has_data and data_3d is not None and data_3d.size > 0 and var_idx is not None:
                 for stride_idx in range(data_3d.shape[0]):
-                    if stride_idx in variable_failed_strides:
-                        stride_data = data_3d[stride_idx, :, var_idx]
+                    stride_data = data_3d[stride_idx, :, var_idx]
+                    
+                    # Three-color system based on failure type
+                    if stride_idx in variable_biomech_failed_strides:
+                        # Red for biomechanical failures
                         ax_fail.plot(phase_ipsi, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
+                        biomech_failed_count += 1
+                        failed_count += 1
+                    elif stride_idx in variable_velocity_failed_strides:
+                        # Blue for velocity-only failures  
+                        ax_fail.plot(phase_ipsi, stride_data, color='blue', alpha=0.4, linewidth=0.5, zorder=1)
+                        velocity_failed_count += 1
                         failed_count += 1
             
             # Plot validation ranges on fail axis
@@ -480,7 +551,17 @@ def create_task_combined_plot(
                 ax_fail.text(50, (y_min + y_max) / 2, 'Data Not Available', 
                             ha='center', va='center', fontsize=10, color='gray', alpha=0.7)
             
-            ax_fail.set_title(f'{var_label} ✗ ({failed_count})', fontsize=8, fontweight='bold')
+            # Enhanced title showing breakdown in three-color mode
+            if is_merged_format and (biomech_failed_count > 0 or velocity_failed_count > 0):
+                title_parts = []
+                if biomech_failed_count > 0:
+                    title_parts.append(f'R{biomech_failed_count}')
+                if velocity_failed_count > 0:
+                    title_parts.append(f'B{velocity_failed_count}')
+                breakdown = ' '.join(title_parts)
+                ax_fail.set_title(f'{var_label} ✗ ({breakdown})', fontsize=8, fontweight='bold')
+            else:
+                ax_fail.set_title(f'{var_label} ✗ ({failed_count})', fontsize=8, fontweight='bold')
             ax_fail.set_xlim(-5, 105)
             ax_fail.set_ylim(y_min, y_max)
             ax_fail.set_xticks([0, 25, 50, 75, 100])

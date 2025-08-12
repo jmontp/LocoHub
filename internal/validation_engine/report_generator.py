@@ -17,6 +17,13 @@ import numpy as np
 import pandas as pd
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+    print("⚠️  psutil not available - memory monitoring disabled")
+
 # Avoid circular import - import only what's needed
 from internal.plot_generation.filters_by_phase_plots import (
     create_single_feature_plot, 
@@ -81,10 +88,322 @@ class ValidationReportGenerator:
         
         self.step_classifier = StepClassifier()
         
+        # Memory monitoring setup
+        self.memory_log_file = None
+        self.peak_memory_usage = 0
+        self._setup_memory_monitoring()
+        
+        # Cache for required columns to avoid repeated column introspection
+        self._required_columns_cache = None
+        
         # Will store archive info after archiving
         self.ranges_archive_path = None
         self.ranges_hash = None
         
+    def _setup_memory_monitoring(self):
+        """Setup memory monitoring and logging."""
+        if PSUTIL_AVAILABLE:
+            # Create memory log file with timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            self.memory_log_file = self.docs_dir / f"memory_usage_report_{timestamp}.log"
+            
+            # Initialize log file
+            with open(self.memory_log_file, 'w') as f:
+                f.write(f"# Memory Usage Report - {datetime.now()}\n")
+                f.write(f"# Format: timestamp, operation, memory_used_mb, memory_percent, available_mb\n")
+            
+            # Log initial memory state
+            self._log_memory("initialization", "ValidationReportGenerator created")
+            
+            print(f"📊 Memory monitoring enabled - logging to: {self.memory_log_file.name}")
+        else:
+            print("📊 Memory monitoring disabled (psutil not available)")
+    
+    def _log_memory(self, operation: str, details: str = ""):
+        """Log current memory usage to file and check circuit breaker."""
+        if not PSUTIL_AVAILABLE or not self.memory_log_file:
+            return
+            
+        try:
+            # Get memory info
+            memory = psutil.virtual_memory()
+            process = psutil.Process()
+            process_memory = process.memory_info()
+            
+            # Convert to MB
+            used_mb = memory.used / 1024 / 1024
+            available_mb = memory.available / 1024 / 1024
+            process_mb = process_memory.rss / 1024 / 1024
+            
+            # Track peak usage
+            if process_mb > self.peak_memory_usage:
+                self.peak_memory_usage = process_mb
+            
+            # Format timestamp
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            
+            # Log to file
+            with open(self.memory_log_file, 'a') as f:
+                f.write(f"{timestamp},{operation},{used_mb:.1f},{memory.percent:.1f},{available_mb:.1f},{process_mb:.1f},{details}\n")
+            
+            # Memory circuit breaker - abort if memory exceeds 95%
+            if memory.percent > 95:
+                error_msg = f"💥 MEMORY CIRCUIT BREAKER TRIGGERED: {memory.percent:.1f}% memory usage exceeded 95% limit"
+                print(error_msg)
+                with open(self.memory_log_file, 'a') as f:
+                    f.write(f"{timestamp},CIRCUIT_BREAKER,{used_mb:.1f},{memory.percent:.1f},{available_mb:.1f},{process_mb:.1f},CRITICAL: Processing aborted to prevent crash\n")
+                raise MemoryError(error_msg)
+            
+            # Print warning if memory usage is high
+            elif memory.percent > 80:
+                print(f"⚠️  High memory usage: {memory.percent:.1f}% ({used_mb:.0f} MB used)")
+                
+        except MemoryError:
+            # Re-raise MemoryError from circuit breaker
+            raise
+        except Exception as e:
+            print(f"⚠️  Memory logging error: {e}")
+    
+    def _check_memory_threshold(self, operation: str = "operation") -> bool:
+        """
+        Check if memory usage is safe to continue processing.
+        
+        Args:
+            operation: Name of operation being checked
+            
+        Returns:
+            True if safe to continue, False if should abort
+            
+        Raises:
+            MemoryError: If memory usage exceeds 95%
+        """
+        if not PSUTIL_AVAILABLE:
+            return True  # Can't check, assume safe
+            
+        try:
+            memory = psutil.virtual_memory()
+            if memory.percent > 95:
+                error_msg = f"💥 MEMORY THRESHOLD EXCEEDED: {memory.percent:.1f}% during {operation}"
+                print(error_msg)
+                raise MemoryError(error_msg)
+            
+            return memory.percent < 90  # Return False if approaching limit (90%+)
+            
+        except MemoryError:
+            raise
+        except Exception:
+            return True  # Error checking, assume safe
+    
+    def _get_memory_summary(self) -> str:
+        """Get current memory usage summary string."""
+        if not PSUTIL_AVAILABLE:
+            return "Memory monitoring disabled"
+            
+        try:
+            memory = psutil.virtual_memory()
+            process = psutil.Process()
+            process_mb = process.memory_info().rss / 1024 / 1024
+            
+            return f"System: {memory.percent:.1f}% ({memory.used/1024/1024:.0f}MB), Process: {process_mb:.1f}MB, Peak: {self.peak_memory_usage:.1f}MB"
+        except:
+            return "Memory info unavailable"
+    
+    def _get_required_columns(self, dataset_path: str) -> List[str]:
+        """
+        Get list of columns required for validation to minimize memory usage.
+        Only includes columns that actually exist in the dataset.
+        
+        Args:
+            dataset_path: Path to dataset parquet file
+            
+        Returns:
+            List of column names needed for validation (only existing columns)
+        """
+        if self._required_columns_cache is not None:
+            return self._required_columns_cache
+            
+        print("📊 Analyzing dataset columns for optimal loading...")
+        
+        try:
+            # Get all available columns from the dataset (read schema only)
+            import pyarrow.parquet as pq
+            parquet_file = pq.ParquetFile(dataset_path)
+            available_columns = set(parquet_file.schema.names)
+            total_columns = len(available_columns)
+            
+            # Always required columns (must exist)
+            required_cols = []
+            for col in ['subject', 'task', 'step', 'phase_ipsi']:
+                if col in available_columns:
+                    required_cols.append(col)
+                else:
+                    print(f"⚠️  Required column '{col}' not found in dataset")
+            
+            # Optional phase_ipsi_dot for velocity validation
+            if 'phase_ipsi_dot' in available_columns:
+                required_cols.append('phase_ipsi_dot')
+            
+            # Add sagittal features that exist
+            from internal.plot_generation.filters_by_phase_plots import get_sagittal_features
+            sagittal_features = get_sagittal_features()
+            feature_names = [f[0] for f in sagittal_features]
+            
+            sagittal_found = 0
+            for feature in feature_names:
+                if feature in available_columns:
+                    required_cols.append(feature)
+                    sagittal_found += 1
+            
+            print(f"📊 Found {sagittal_found}/{len(feature_names)} sagittal features in dataset")
+            
+            # Add velocity features for velocity validation (only if they exist)
+            from user_libs.python.feature_constants import (
+                ANGLE_FEATURES, VELOCITY_FEATURES, 
+                SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES
+            )
+            
+            # Build angle-velocity pairs and check existence
+            angle_velocity_pairs = []
+            for angle in ANGLE_FEATURES:
+                velocity = angle.replace('_angle_', '_velocity_').replace('_rad', '_rad_s')
+                if velocity in VELOCITY_FEATURES:
+                    angle_velocity_pairs.append((angle, velocity))
+            
+            for angle in SEGMENT_ANGLE_FEATURES:
+                velocity = angle.replace('_angle_', '_velocity_').replace('_rad', '_rad_s')
+                if velocity in SEGMENT_VELOCITY_FEATURES:
+                    angle_velocity_pairs.append((angle, velocity))
+            
+            velocity_found = 0
+            for angle, velocity in angle_velocity_pairs:
+                if angle in available_columns:
+                    required_cols.append(angle)
+                if velocity in available_columns:
+                    required_cols.append(velocity)
+                    velocity_found += 1
+            
+            print(f"📊 Found {velocity_found}/{len(angle_velocity_pairs)} velocity pairs in dataset")
+            
+            # Remove duplicates and cache result
+            self._required_columns_cache = list(set(required_cols))
+            
+            reduction_percent = (1 - len(self._required_columns_cache) / total_columns) * 100
+            print(f"📊 Optimized loading: {len(self._required_columns_cache)}/{total_columns} columns ({reduction_percent:.1f}% reduction)")
+            
+            return self._required_columns_cache
+            
+        except Exception as e:
+            print(f"⚠️  Column analysis failed: {e}")
+            print("📊 Falling back to full dataset loading")
+            # Return None to trigger full dataset loading
+            return None
+    
+    def _load_dataset_optimized(self, dataset_path: str, phase_col: str = 'phase_ipsi') -> 'LocomotionData':
+        """
+        Load dataset with memory optimization by selecting only required columns.
+        
+        Args:
+            dataset_path: Path to dataset file
+            phase_col: Phase column name
+            
+        Returns:
+            LocomotionData instance with minimal memory footprint
+        """
+        self._log_memory("optimized_load_start", "Starting optimized dataset loading")
+        
+        # Get required columns (returns None if analysis fails)
+        required_cols = self._get_required_columns(dataset_path)
+        
+        # Load data - use column optimization if available
+        if required_cols is not None:
+            try:
+                df_subset = pd.read_parquet(dataset_path, columns=required_cols)
+                self._log_memory("optimized_load_columns", f"Loaded {len(required_cols)} columns, shape: {df_subset.shape}")
+                print(f"✅ Column optimization successful")
+            except Exception as e:
+                print(f"⚠️  Column loading failed ({e}), falling back to full load")
+                self._log_memory("optimized_load_fallback", f"Column loading failed: {e}")
+                df_subset = pd.read_parquet(dataset_path)
+        else:
+            print("📊 Loading full dataset (column optimization unavailable)")
+            self._log_memory("full_load", "Loading full dataset")
+            df_subset = pd.read_parquet(dataset_path)
+        
+        # Create a minimal LocomotionData instance by temporarily replacing the DataFrame
+        from user_libs.python.locomotion_data import LocomotionData
+        
+        # Create instance with minimal loading
+        loco_data = LocomotionData.__new__(LocomotionData)
+        loco_data.data_path = Path(dataset_path)
+        loco_data.subject_col = 'subject'
+        loco_data.task_col = 'task'
+        loco_data.phase_col = phase_col
+        loco_data.df = df_subset
+        loco_data._cache = {}
+        
+        # Initialize features list
+        loco_data.features = [col for col in df_subset.columns 
+                             if col not in ['subject', 'task', 'step', 'phase_ipsi', 'phase_ipsi_dot']]
+        
+        # Add required methods
+        def get_tasks():
+            return sorted(df_subset['task'].unique())
+        
+        def get_cycles(subject=None, task=None, features=None):
+            # Enhanced version that handles concatenated cycles
+            data_filtered = df_subset.copy()
+            if subject:
+                data_filtered = data_filtered[data_filtered['subject'] == subject]
+            if task:
+                data_filtered = data_filtered[data_filtered['task'] == task]
+                
+            if features is None:
+                features = loco_data.features
+            
+            # Group by subject/task/step and reshape to 3D array
+            groups = data_filtered.groupby(['subject', 'task', 'step'])
+            cycles_list = []
+            total_groups = len(groups)
+            valid_groups = 0
+            total_cycles_extracted = 0
+            
+            for (subj, tsk, step), group in groups:
+                group_len = len(group)
+                if group_len % 150 == 0 and group_len >= 150:  # Valid cycle(s)
+                    valid_groups += 1
+                    n_cycles = group_len // 150
+                    
+                    # Extract feature data and reshape to cycles
+                    group_data = group[features].values
+                    try:
+                        # Reshape to separate individual cycles
+                        cycles_data = group_data.reshape(n_cycles, 150, len(features))
+                        
+                        # Add each cycle individually
+                        for cycle_idx in range(n_cycles):
+                            cycles_list.append(cycles_data[cycle_idx])
+                            total_cycles_extracted += 1
+                            
+                    except ValueError as e:
+                        # Log reshape errors for debugging
+                        print(f"⚠️  Reshape error for {subj}-{tsk}-{step}: {group_len} points, {len(features)} features - {e}")
+            
+            # Log extraction statistics
+            print(f"    Cycle extraction: {valid_groups}/{total_groups} valid groups, {total_cycles_extracted} total cycles")
+            
+            if cycles_list:
+                cycles_3d = np.stack(cycles_list, axis=0)
+                return cycles_3d, features
+            else:
+                return np.array([]).reshape(0, 150, len(features)), features
+        
+        loco_data.get_tasks = get_tasks
+        loco_data.get_cycles = get_cycles
+        
+        self._log_memory("optimized_load_complete", f"Optimized LocomotionData created")
+        
+        return loco_data
+    
     def _calculate_file_hash(self, file_path: Path) -> str:
         """
         Calculate SHA256 hash of file contents.
@@ -132,7 +451,7 @@ class ValidationReportGenerator:
     
     def generate_report(self, dataset_path: str, generate_plots: bool = True) -> str:
         """
-        Generate complete validation report with optional plots.
+        Generate complete validation report with optional plots and memory protection.
         
         Args:
             dataset_path: Path to dataset to validate
@@ -140,90 +459,375 @@ class ValidationReportGenerator:
             
         Returns:
             Path to generated report
+            
+        Raises:
+            MemoryError: If memory usage exceeds safe limits during processing
         """
         dataset_name = Path(dataset_path).stem
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # Archive the ranges file
-        self.ranges_archive_path, self.ranges_hash = self._archive_ranges_file(dataset_name, timestamp)
-        
-        # Run validation
-        validation_result = self.validator.validate(dataset_path)
-        
-        # Generate plots if requested
-        plot_paths = {}
-        if generate_plots:
-            plot_paths = self._generate_plots(dataset_path, validation_result, timestamp)
-        
-        # Generate markdown report
-        report_path = self._generate_markdown_report(
-            dataset_name, 
-            validation_result, 
-            plot_paths, 
-            timestamp,
-            dataset_path
-        )
-        
-        return str(report_path)
+        try:
+            self._log_memory("report_start", f"Starting report generation for {dataset_name}")
+            print(f"📊 Initial memory: {self._get_memory_summary()}")
+            
+            # Archive the ranges file
+            self.ranges_archive_path, self.ranges_hash = self._archive_ranges_file(dataset_name, timestamp)
+            self._log_memory("archive_complete", "Validation ranges archived")
+            
+            # Run validation
+            validation_result = self.validator.validate(dataset_path)
+            self._log_memory("validation_complete", f"Dataset validation completed")
+            print(f"📊 Post-validation memory: {self._get_memory_summary()}")
+            
+            # Generate plots if requested (this also runs velocity validation)
+            plot_paths = {}
+            velocity_results = {}
+            if generate_plots:
+                try:
+                    plot_paths, velocity_results = self._generate_plots(dataset_path, validation_result, timestamp)
+                    self._log_memory("plots_complete", f"Generated {len(plot_paths)} plots")
+                    print(f"📊 Post-plots memory: {self._get_memory_summary()}")
+                except MemoryError as e:
+                    print(f"⚠️  Plot generation aborted due to memory limits: {e}")
+                    print("🔄 Continuing with report generation without plots...")
+                    # Continue with empty plots and velocity results
+            
+            # Generate markdown report (reuse velocity results instead of re-running validation)
+            report_path = self._generate_markdown_report(
+                dataset_name, 
+                validation_result, 
+                plot_paths, 
+                timestamp,
+                dataset_path,
+                velocity_results  # Pass velocity results to avoid duplicate validation
+            )
+            
+            self._log_memory("report_complete", f"Report generation finished")
+            print(f"📊 Final memory: {self._get_memory_summary()}")
+            
+            return str(report_path)
+            
+        except MemoryError as e:
+            # Log the memory error and re-raise with context
+            self._log_memory("memory_error", f"Report generation failed: {str(e)}")
+            print(f"💥 Report generation failed due to memory constraints")
+            print(f"📊 Memory state at failure: {self._get_memory_summary()}")
+            raise MemoryError(f"Report generation for {dataset_name} exceeded memory limits: {str(e)}")
     
     def _generate_plots(self, dataset_path: str, validation_result: Dict, 
-                       timestamp: str) -> Dict[str, str]:
-        """Generate validation plots for the dataset."""
+                       timestamp: str) -> Tuple[Dict[str, str], Dict[str, Dict]]:
+        """Generate validation plots for the dataset with memory optimization."""
+        import gc
+        import matplotlib.pyplot as plt
+        
         plot_paths = {}
         
-        # Load dataset for plotting with proper phase column name
-        locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
-        data = locomotion_data.df
-        tasks = locomotion_data.get_tasks()
+        # Load dataset with optimized column selection (minimal memory footprint)
+        print(f"Loading dataset with memory optimization...")
+        locomotion_data = self._load_dataset_optimized(dataset_path, phase_col='phase_ipsi')
+        tasks = locomotion_data.get_tasks() if hasattr(locomotion_data, 'get_tasks') else sorted(locomotion_data.df['task'].unique())
+        print(f"Found {len(tasks)} tasks: {', '.join(tasks)}")
+        self._log_memory("metadata_loaded", f"Loaded {len(tasks)} tasks")
         
-        # Note: violations conversion removed as we now use failing_features directly
+        # Run velocity validation once but release data immediately after
+        print("Running velocity validation...")
+        data = locomotion_data.df
+        self._log_memory("velocity_start", f"Starting velocity validation on {data.shape}")
+        velocity_results = self.validate_velocity_consistency(data)
+        
+        # Explicit memory cleanup
+        del data
+        gc.collect()
+        self._log_memory("velocity_complete", f"Velocity validation complete, data released")
         
         # Get sagittal plane features only
         sagittal_features = get_sagittal_features()
         feature_names = [f[0] for f in sagittal_features]
-        feature_labels = {f[0]: f[1] for f in sagittal_features}
         
-        # Generate combined plot for each task
-        for task in tasks:
-            # Filter to only features that exist in the dataset
-            available_features = [f for f in feature_names if f in locomotion_data.features]
+        # Process one task at a time to minimize memory usage
+        for i, task in enumerate(tasks, 1):
+            print(f"Processing task {i}/{len(tasks)}: {task}")
             
-            if available_features:
-                # Single unified data load for all available features
-                all_data_3d, all_feature_names = locomotion_data.get_cycles(subject=None, task=task, features=available_features)
+            # Check memory before processing each task
+            try:
+                self._log_memory("task_start", f"Starting task {task}")
+            except MemoryError as e:
+                print(f"💥 Task processing aborted due to memory limit: {e}")
+                break
+            
+            try:
+                # Reload dataset with optimized loading for this task only
+                task_locomotion_data = self._load_dataset_optimized(dataset_path, phase_col='phase_ipsi')
                 
-                # Get failing features for this task (unified validation)
-                failing_features = self.validator._validate_task_with_failing_features(locomotion_data, task)
+                # Filter to only features that exist in the dataset
+                available_features = [f for f in feature_names if f in task_locomotion_data.features]
                 
-                # Get task data with generated contra features
+                if available_features:
+                    # Process features in smaller batches to minimize memory usage
+                    plot_path = self._generate_task_plot_memory_optimized(
+                        task_locomotion_data=task_locomotion_data,
+                        task=task,
+                        available_features=available_features,
+                        velocity_results=velocity_results,
+                        dataset_path=dataset_path,
+                        timestamp=timestamp
+                    )
+                    
+                    if plot_path:
+                        plot_paths[task] = plot_path
+                        print(f"  ✅ Validation plot saved: {Path(plot_path).name}")
+                    
+                    # Generate subject failure histogram (uses minimal memory)
+                    biomechanical_failing_features = self.validator._validate_task_with_failing_features(task_locomotion_data, task)
+                    velocity_failing_features = self._get_velocity_failures_for_task(task_locomotion_data, task, velocity_results)
+                    merged_failures = self._merge_failure_types(biomechanical_failing_features, velocity_failing_features)
+                    
+                    if merged_failures:
+                        print(f"  Generating failure histogram...")
+                        legacy_failures = self._convert_merged_failures_to_legacy_format(merged_failures)
+                        histogram_path = create_subject_failure_histogram(
+                            locomotion_data=task_locomotion_data,
+                            task_name=task,
+                            failing_features=legacy_failures,
+                            output_dir=str(self.plots_dir),
+                            dataset_name=Path(dataset_path).stem,
+                            timestamp=timestamp
+                        )
+                        plot_paths[f"{task}_histogram"] = histogram_path
+                        print(f"  ✅ Histogram saved: {Path(histogram_path).name}")
+                    
+                    # Explicit memory cleanup after each task
+                    del task_locomotion_data, biomechanical_failing_features
+                    del velocity_failing_features, merged_failures
+                    plt.close('all')  # Close any matplotlib figures
+                    gc.collect()
+                    self._log_memory("task_cleanup", f"Task {task} memory cleaned up")
+                    print(f"  Memory cleaned up")
+                else:
+                    print(f"  ⚠️  No available features for task {task}")
+                    
+            except Exception as e:
+                print(f"  ❌ Error processing task {task}: {e}")
+                # Clean up on error
+                plt.close('all')
+                gc.collect()
+                self._log_memory("task_error", f"Task {task} failed, memory cleaned up")
+                continue
+        
+        # Final cleanup - but keep velocity_results for return
+        velocity_results_copy = velocity_results.copy()  # Make a copy before deletion
+        del velocity_results
+        gc.collect()
+        self._log_memory("plots_final_cleanup", "Final plot generation cleanup")
+        print(f"Plot generation completed: {len(plot_paths)} plots generated")
+        
+        return plot_paths, velocity_results_copy
+    
+    def _generate_task_plot_memory_optimized(self, task_locomotion_data, task: str, available_features: List[str], 
+                                           velocity_results: Dict, dataset_path: str, timestamp: str) -> Optional[str]:
+        """
+        Generate task plot with memory optimization by processing features in smaller batches.
+        
+        Args:
+            task_locomotion_data: LocomotionData instance for this task
+            task: Task name
+            available_features: List of available feature names
+            velocity_results: Velocity validation results
+            dataset_path: Path to dataset
+            timestamp: Timestamp for plot
+            
+        Returns:
+            Path to generated plot or None if failed
+        """
+        import gc
+        import matplotlib.pyplot as plt
+        
+        try:
+            # Process features in batches of 8 to minimize memory usage
+            batch_size = 8
+            feature_batches = [available_features[i:i + batch_size] 
+                             for i in range(0, len(available_features), batch_size)]
+            
+            print(f"    Processing {len(available_features)} features in {len(feature_batches)} batches")
+            self._log_memory("plot_batch_start", f"Starting {len(feature_batches)} feature batches")
+            
+            # Load all batches and combine (still more memory efficient than before)
+            all_data_batches = []
+            all_feature_names = []
+            
+            for batch_idx, feature_batch in enumerate(feature_batches, 1):
+                print(f"    Loading batch {batch_idx}/{len(feature_batches)}: {len(feature_batch)} features")
+                
+                # Check memory before each batch
+                try:
+                    self._log_memory("plot_batch_load", f"Loading feature batch {batch_idx}")
+                except MemoryError as e:
+                    print(f"💥 Plot generation aborted at batch {batch_idx} due to memory limit: {e}")
+                    return None
+                
+                # Load data for this feature batch only
+                batch_data_3d, batch_feature_names = task_locomotion_data.get_cycles(
+                    subject=None, task=task, features=feature_batch
+                )
+                
+                all_data_batches.append(batch_data_3d)
+                all_feature_names.extend(batch_feature_names)
+                
+                self._log_memory("plot_batch_loaded", f"Batch {batch_idx} loaded: {batch_data_3d.shape}")
+                
+                # Quick memory cleanup
+                gc.collect()
+            
+            # Combine all batches into final array
+            print(f"    Combining {len(all_data_batches)} batches...")
+            self._log_memory("plot_combine_start", "Combining feature batches")
+            
+            if all_data_batches:
+                # Concatenate along the feature axis (axis=2)
+                all_data_3d = np.concatenate(all_data_batches, axis=2)
+                self._log_memory("plot_combine_complete", f"Combined data shape: {all_data_3d.shape}")
+                
+                # Clean up intermediate batches
+                del all_data_batches
+                gc.collect()
+                self._log_memory("plot_batches_cleanup", "Intermediate batches cleaned up")
+                
+                # Get validation information
+                biomechanical_failing_features = self.validator._validate_task_with_failing_features(task_locomotion_data, task)
+                velocity_failing_features = self._get_velocity_failures_for_task(task_locomotion_data, task, velocity_results)
+                merged_failures = self._merge_failure_types(biomechanical_failing_features, velocity_failing_features)
+                
+                print(f"    Found {len(merged_failures)} failing strides")
+                
+                # Get task validation data
                 task_validation_data = self.validator.config_manager.get_task_data(task) if self.validator.config_manager.has_task(task) else {}
                 
-                # Generate combined plot for all features
+                # Generate the plot with lower DPI for memory efficiency
+                print(f"    Generating validation plot...")
+                self._log_memory("plot_generation_start", "Starting plot generation")
+                
                 plot_path = create_task_combined_plot(
                     validation_data=task_validation_data,
                     task_name=task,
                     output_dir=str(self.plots_dir),
                     data_3d=all_data_3d,
                     feature_names=all_feature_names,
-                    failing_features=failing_features,
+                    failing_features=merged_failures,
                     dataset_name=Path(dataset_path).stem,
                     timestamp=timestamp
                 )
-                plot_paths[task] = plot_path
                 
-                # Generate subject failure histogram if there are failures
-                if failing_features:
-                    histogram_path = create_subject_failure_histogram(
-                        locomotion_data=locomotion_data,
-                        task_name=task,
-                        failing_features=failing_features,
-                        output_dir=str(self.plots_dir),
-                        dataset_name=Path(dataset_path).stem,
-                        timestamp=timestamp
-                    )
-                    plot_paths[f"{task}_histogram"] = histogram_path
+                self._log_memory("plot_generation_complete", "Plot generation complete")
+                
+                # Immediate cleanup of large arrays
+                del all_data_3d, biomechanical_failing_features, velocity_failing_features
+                del merged_failures, task_validation_data
+                plt.close('all')
+                gc.collect()
+                self._log_memory("plot_arrays_cleanup", "Large arrays cleaned up")
+                
+                return plot_path
+            else:
+                print(f"    ⚠️  No data loaded for task {task}")
+                return None
+                
+        except Exception as e:
+            print(f"    ❌ Memory-optimized plot generation failed: {e}")
+            self._log_memory("plot_error", f"Plot generation failed: {e}")
+            plt.close('all')
+            gc.collect()
+            return None
+    
+    def _get_velocity_failures_for_task(self, locomotion_data: LocomotionData, task: str, velocity_results: Dict) -> Dict[int, List[str]]:
+        """
+        Extract velocity failing features for a specific task.
         
-        return plot_paths
+        Args:
+            locomotion_data: LocomotionData instance
+            task: Task name to filter for
+            velocity_results: Results from validate_velocity_consistency
+            
+        Returns:
+            Dictionary mapping stride indices to list of failed velocity variables
+        """
+        velocity_failing_features = {}
+        
+        # Filter for task data to build stride mapping
+        task_data = locomotion_data.df[locomotion_data.df['task'] == task]
+        
+        # Build mapping from global stride index to task-local stride index
+        stride_idx = 0
+        for subject in sorted(task_data['subject'].unique()):
+            subject_data = task_data[task_data['subject'] == subject]
+            for step in sorted(subject_data['step'].unique()):
+                step_data = subject_data[subject_data['step'] == step]
+                n_cycles = len(step_data) // 150  # 150 points per cycle
+                
+                # Each step can have multiple cycles
+                for cycle in range(n_cycles):
+                    # Check if this stride failed any velocity variables
+                    failed_velocities = []
+                    
+                    for vel_var, result in velocity_results.items():
+                        if 'failing_strides' in result:
+                            if stride_idx in result['failing_strides']:
+                                failed_velocities.append(vel_var)
+                    
+                    if failed_velocities:
+                        velocity_failing_features[stride_idx] = failed_velocities
+                    
+                    stride_idx += 1
+        
+        return velocity_failing_features
+    
+    def _merge_failure_types(self, biomechanical_failures: Dict[int, List[str]], 
+                           velocity_failures: Dict[int, List[str]]) -> Dict[int, Dict[str, List[str]]]:
+        """
+        Merge biomechanical and velocity failures while preserving failure type information.
+        
+        Args:
+            biomechanical_failures: Dict mapping stride indices to failed biomechanical variables
+            velocity_failures: Dict mapping stride indices to failed velocity variables
+            
+        Returns:
+            Dictionary with structure: {stride_idx: {'biomechanical': [...], 'velocity': [...]}}
+        """
+        merged_failures = {}
+        
+        # Get all stride indices that failed either type of validation
+        all_failed_strides = set(biomechanical_failures.keys()) | set(velocity_failures.keys())
+        
+        for stride_idx in all_failed_strides:
+            merged_failures[stride_idx] = {
+                'biomechanical': biomechanical_failures.get(stride_idx, []),
+                'velocity': velocity_failures.get(stride_idx, [])
+            }
+        
+        return merged_failures
+    
+    def _convert_merged_failures_to_legacy_format(self, merged_failures: Dict[int, Dict[str, List[str]]]) -> Dict[int, List[str]]:
+        """
+        Convert merged failure structure back to legacy format for backward compatibility.
+        
+        Args:
+            merged_failures: Dict with structure {stride_idx: {'biomechanical': [...], 'velocity': [...]}}
+            
+        Returns:
+            Dict with structure {stride_idx: [all_failed_variables]} (legacy format)
+        """
+        legacy_failures = {}
+        
+        for stride_idx, failure_types in merged_failures.items():
+            all_failed_variables = []
+            
+            # Combine biomechanical and velocity failures
+            all_failed_variables.extend(failure_types.get('biomechanical', []))
+            all_failed_variables.extend(failure_types.get('velocity', []))
+            
+            if all_failed_variables:
+                legacy_failures[stride_idx] = all_failed_variables
+        
+        return legacy_failures
     
     def _generate_comparison_plots(self, dataset_path: str, timestamp: str) -> None:
         """
@@ -239,8 +843,12 @@ class ValidationReportGenerator:
         
         # Load dataset
         locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
+        data = locomotion_data.df
         tasks = locomotion_data.get_tasks()
         dataset_name = Path(dataset_path).stem.replace('_phase', '').replace('_time', '')
+        
+        # Run velocity validation once for all tasks
+        velocity_results = self.validate_velocity_consistency(data)
         
         # Get sagittal features
         sagittal_features = get_sagittal_features()
@@ -257,10 +865,10 @@ class ValidationReportGenerator:
                     subject=None, task=task, features=available_features
                 )
                 
-                # Get failing features for filtering
-                failing_features = self.validator._validate_task_with_failing_features(
-                    locomotion_data, task
-                )
+                # Get failing features for filtering (integrated validation)
+                biomechanical_failing_features = self.validator._validate_task_with_failing_features(locomotion_data, task)
+                velocity_failing_features = self._get_velocity_failures_for_task(locomotion_data, task, velocity_results)
+                merged_failures = self._merge_failure_types(biomechanical_failing_features, velocity_failing_features)
                 
                 # Get task validation data
                 task_validation_data = self.validator.config_manager.get_task_data(task) \
@@ -273,7 +881,7 @@ class ValidationReportGenerator:
                     output_dir=str(comparison_plots_dir),
                     data_3d=all_data_3d,
                     feature_names=all_feature_names,
-                    failing_features=failing_features,
+                    failing_features=merged_failures,  # Pass merged structure for three-color support
                     dataset_name=dataset_name,
                     timestamp=timestamp,
                     comparison_mode=True  # KEY: Single column layout
@@ -298,6 +906,7 @@ class ValidationReportGenerator:
     def validate_velocity_consistency(self, df: pd.DataFrame) -> Dict[str, Dict]:
         """
         Validate that velocities match angles using chain rule: dθ/dt = (dθ/dφ) × (dφ/dt)
+        Memory optimized version that processes velocity variables one at a time.
         
         Args:
             df: DataFrame with phase-indexed data including phase_ipsi_dot
@@ -306,6 +915,7 @@ class ValidationReportGenerator:
             Dictionary with consistency results for each velocity variable
         """
         import numpy as np
+        import gc
         from user_libs.python.feature_constants import (
             ANGLE_FEATURES, VELOCITY_FEATURES,
             SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES
@@ -334,17 +944,30 @@ class ValidationReportGenerator:
             if velocity in SEGMENT_VELOCITY_FEATURES:
                 angle_velocity_pairs.append((angle, velocity))
         
-        # Process each velocity variable
-        for angle_col, velocity_col in angle_velocity_pairs:
+        print(f"Validating {len(angle_velocity_pairs)} velocity variables...")
+        
+        # Process each velocity variable with progress tracking
+        for i, (angle_col, velocity_col) in enumerate(angle_velocity_pairs, 1):
+            print(f"  Processing {i}/{len(angle_velocity_pairs)}: {velocity_col}")
+            
+            # Check memory before processing each variable
+            try:
+                self._log_memory("velocity_variable", f"Processing {velocity_col}")
+            except MemoryError as e:
+                print(f"💥 Velocity validation aborted due to memory limit: {e}")
+                results[velocity_col] = {'status': 'memory_limit_exceeded', 'message': str(e)}
+                break
+                
             if angle_col not in df.columns:
                 results[velocity_col] = {'status': 'angle_missing', 'message': f'Angle column {angle_col} not found'}
                 continue
             
             errors = []
             stride_count = 0
+            failing_stride_indices = []  # Track which strides failed velocity validation
             
             # Process each stride
-            for (subject, task, step), stride_df in df.groupby(['subject', 'task', 'step']):
+            for stride_idx, ((subject, task, step), stride_df) in enumerate(df.groupby(['subject', 'task', 'step'])):
                 if len(stride_df) != 150:
                     continue
                 
@@ -378,28 +1001,43 @@ class ValidationReportGenerator:
                         if np.any(valid_mask):
                             mae = np.mean(np.abs(expected_velocity[valid_mask] - stored_velocity[valid_mask]))
                             errors.append(mae)
+                            
+                            # Check if this stride fails velocity validation
+                            if mae >= 0.5:  # Using same threshold as before
+                                failing_stride_indices.append(stride_idx)
             
             # Determine pass/fail (threshold: 0.5 rad/s mean error)
             if errors:
                 mean_error = np.mean(errors)
                 max_error = np.max(errors)
                 std_error = np.std(errors)
+                var_error = np.var(errors)  # Add variance calculation
                 
                 results[velocity_col] = {
                     'status': 'pass' if mean_error < 0.5 else 'fail',
                     'mean_error': mean_error,
                     'max_error': max_error,
                     'std_error': std_error,
+                    'var_error': var_error,  # Include variance
                     'num_strides': len(errors),
-                    'total_strides': stride_count
+                    'total_strides': stride_count,
+                    'failing_strides': failing_stride_indices  # Track failing stride indices
                 }
+                status_symbol = "✅" if mean_error < 0.5 else "❌"
+                print(f"    {status_symbol} {results[velocity_col]['status'].upper()}: {len(failing_stride_indices)} failing strides")
             else:
                 results[velocity_col] = {
                     'status': 'calculated_only',
                     'message': 'No stored velocities to compare',
-                    'total_strides': stride_count
+                    'total_strides': stride_count,
+                    'failing_strides': []  # Empty list for consistency
                 }
+                print(f"    ⚠️  CALCULATED_ONLY: No stored velocities to compare")
+            
+            # Memory cleanup after each variable
+            gc.collect()
         
+        print(f"Velocity validation completed: {len(results)} variables processed")
         return results
     
     def _map_step_violations_to_cycles(self, step_violations: Dict[str, List[int]], 
@@ -483,7 +1121,8 @@ class ValidationReportGenerator:
         return violation_array
     
     def _generate_markdown_report(self, dataset_name: str, validation_result: Dict,
-                                 plot_paths: Dict, timestamp: str, dataset_path: str) -> Path:
+                                 plot_paths: Dict, timestamp: str, dataset_path: str, 
+                                 velocity_results: Optional[Dict[str, Dict]] = None) -> Path:
         """Generate markdown validation report."""
         report_name = f"{dataset_name}_validation_report.md"
         report_path = self.output_dir / report_name
@@ -507,9 +1146,77 @@ class ValidationReportGenerator:
         lines.append(f"- **Violations**: {validation_result['stats']['total_violations']:,}")
         lines.append("")
         
+        # Velocity validation summary
+        if velocity_results:
+            lines.append("## Velocity Validation")
+            lines.append("")
+            
+            # Count velocity validation results
+            velocity_passed = 0
+            velocity_failed = 0
+            velocity_calculated_only = 0
+            velocity_errors = 0
+            
+            for var_name, result in velocity_results.items():
+                status = result.get('status', 'unknown')
+                if status == 'passed':
+                    velocity_passed += 1
+                elif status == 'failed':
+                    velocity_failed += 1
+                elif status == 'calculated_only':
+                    velocity_calculated_only += 1
+                else:
+                    velocity_errors += 1
+            
+            total_velocity_vars = len(velocity_results)
+            
+            lines.append(f"- **Variables Tested**: {total_velocity_vars}")
+            lines.append(f"- **✅ Passed**: {velocity_passed}")
+            lines.append(f"- **❌ Failed**: {velocity_failed}")
+            lines.append(f"- **⚠️ Calculated Only**: {velocity_calculated_only}")
+            if velocity_errors > 0:
+                lines.append(f"- **🚫 Errors**: {velocity_errors}")
+            lines.append("")
+            
+            # Add detailed results for failed variables
+            if velocity_failed > 0:
+                lines.append("### Failed Velocity Variables")
+                lines.append("")
+                lines.append("Variables where calculated velocities (dθ/dt = dθ/dφ × dφ/dt) significantly differ from stored velocities:")
+                lines.append("")
+                
+                for var_name, result in velocity_results.items():
+                    if result.get('status') == 'failed':
+                        failed_strides = result.get('failing_stride_count', 0)
+                        mean_error = result.get('mean_error', 0)
+                        var_error = result.get('variance_error', 0)
+                        max_error = result.get('max_error', 0)
+                        
+                        lines.append(f"**{var_name}**:")
+                        lines.append(f"- Failed strides: {failed_strides}")
+                        lines.append(f"- Mean error: {mean_error:.4f} rad/s")
+                        lines.append(f"- Variance: {var_error:.6f} (rad/s)²")
+                        lines.append(f"- Max error: {max_error:.4f} rad/s")
+                        lines.append("")
+            
+            # Add note about calculated-only variables
+            if velocity_calculated_only > 0:
+                lines.append("### Calculated-Only Variables")
+                lines.append("")
+                lines.append("Variables without stored velocity data (validation shows calculated velocities only):")
+                lines.append("")
+                
+                calc_only_vars = [var for var, result in velocity_results.items() 
+                                if result.get('status') == 'calculated_only']
+                for var in calc_only_vars:
+                    lines.append(f"- `{var}`")
+                lines.append("")
+        
         # Plots section
         if plot_paths:
             lines.append("## Validation Plots")
+            lines.append("")
+            lines.append("**Legend**: 🟢 Green = Passing strides, 🔴 Red = Biomechanical failures, 🔵 Blue = Velocity-only failures")
             lines.append("")
             
             # Get sagittal features to count validated features
@@ -581,8 +1288,9 @@ class ValidationReportGenerator:
         
         # Generate plots if requested
         plot_paths = {}
+        velocity_results = None
         if generate_plots:
-            plot_paths = self._generate_plots(dataset_path, validation_result, timestamp)
+            plot_paths, velocity_results = self._generate_plots(dataset_path, validation_result, timestamp)
         
         # Generate comparison plots if requested
         if generate_comparison:
@@ -597,13 +1305,21 @@ class ValidationReportGenerator:
             print(f"Creating new documentation file...")
             self._create_new_documentation(doc_path, doc_name, dataset_path, short_code)
         
+        # Get velocity results for documentation
+        if velocity_results is None:
+            # Load and validate velocity consistency if not done yet
+            import pandas as pd
+            dataset = pd.read_parquet(dataset_path)
+            velocity_results = self.validate_velocity_consistency(dataset)
+        
         # Generate validation section content
         validation_section = self._generate_validation_section(
             dataset_name, 
             validation_result, 
             plot_paths, 
             timestamp,
-            dataset_path
+            dataset_path,
+            velocity_results
         )
         
         # Read existing documentation
@@ -652,7 +1368,8 @@ class ValidationReportGenerator:
         return str(doc_path)
     
     def _generate_validation_section(self, dataset_name: str, validation_result: Dict,
-                                    plot_paths: Dict, timestamp: str, dataset_path: str) -> str:
+                                    plot_paths: Dict, timestamp: str, dataset_path: str, 
+                                    velocity_results: Optional[Dict[str, Dict]] = None) -> str:
         """Generate validation section for dataset documentation."""
         lines = []
         lines.append("## Data Validation")
@@ -715,12 +1432,17 @@ class ValidationReportGenerator:
         lines.append("### 🔄 Velocity Consistency Validation")
         lines.append("")
         
-        # Load dataset for velocity validation
-        import pandas as pd
-        df = pd.read_parquet(dataset_path)
-        velocity_results = self.validate_velocity_consistency(df)
+        # Use velocity results from plot generation (avoid duplicate validation)
+        if velocity_results is None or len(velocity_results) == 0:
+            # Fallback: load dataset and run velocity validation if not provided
+            print("⚠️  Running fallback velocity validation (should not happen)")
+            import pandas as pd
+            df = pd.read_parquet(dataset_path)
+            velocity_results = self.validate_velocity_consistency(df)
+            self._log_memory("velocity_fallback", "Fallback velocity validation completed")
         
-        if 'error' in velocity_results:
+        # Handle case where velocity_results might be empty due to memory limits
+        if not velocity_results or 'error' in velocity_results:
             lines.append(f"⚠️ **Velocity validation skipped**: {velocity_results['error']}")
             lines.append("")
         else:
