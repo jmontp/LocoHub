@@ -206,7 +206,7 @@ for subject_idx = 1:length(subjects)
 end
 
 % Save the phase-indexed data
-output_path = fullfile('..', '..', '..', 'converted_datasets', 'gtech_2021_phase.parquet');
+output_path = fullfile('..', '..', '..', 'converted_datasets', 'umich_2021_phase.parquet');
 fprintf('\n========================================\n');
 fprintf('Saving to: %s\n', output_path);
 fprintf('Total subjects: %d\n', length(unique(total_data.subject)));
@@ -587,10 +587,9 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 l_knee_mom_rot = interpolate_signal(...
                     moments.LKneeMoment(l_start_frame:l_end_frame, transverse_plane), NUM_POINTS);
                 
-                % Task-specific correction for decline walking knee moments
-                % DATA FIX: Flip sign of knee moments for decline walking
-                if ENABLE_DATA_FIXES && strcmp(task_type, 'decline_walking')
-                    r_knee_mom_flex = -r_knee_mom_flex;  % Flip sign for decline
+                % DATA FIX: Always flip sign of knee moments for consistent convention
+                if ENABLE_DATA_FIXES
+                    r_knee_mom_flex = -r_knee_mom_flex;  % Flip sign for consistency
                     l_knee_mom_flex = -l_knee_mom_flex;
                 end
                 

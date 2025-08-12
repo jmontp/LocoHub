@@ -141,15 +141,15 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 **Validation Configuration:**
 - **Ranges File**: `default_ranges.yaml`
 - **SHA256**: `bbf1f9c7...` (first 8 chars)
-- **Archived Copy**: [`gtech_2021_phase_2025-08-12_130459_ranges.yaml`](validation_archives/gtech_2021_phase_2025-08-12_130459_ranges.yaml)
+- **Archived Copy**: [`gtech_2021_phase_2025-08-12_155207_ranges.yaml`](validation_archives/gtech_2021_phase_2025-08-12_155207_ranges.yaml)
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| **Overall Status** | 99.6% Valid | ✅ PASSED |
+| **Overall Status** | 99.4% Valid | ✅ PASSED |
 | **Phase Structure** | 150 points/cycle | ✅ Valid |
-| **Tasks Validated** | 4 tasks | ✅ Complete |
-| **Total Checks** | 541,824 | - |
-| **Violations** | 2,116 | ⚠️ Present |
+| **Tasks Validated** | 5 tasks | ✅ Complete |
+| **Total Checks** | 748,080 | - |
+| **Violations** | 4,259 | ⚠️ Present |
 
 ### 🔄 Velocity Consistency Validation
 
@@ -157,23 +157,23 @@ Validates that velocities match angles using the chain rule: `dθ/dt = (dθ/dφ)
 
 | Velocity Variable | Status | Mean Error (rad/s) | Max Error (rad/s) | Strides Checked |
 |-------------------|--------|-------------------|-------------------|-----------------|
-| ankle dorsiflexion velocity contra (rad/s) | ❌ Fail | 0.846 | 1.747 | 22/22 |
-| ankle dorsiflexion velocity ipsi (rad/s) | ❌ Fail | 0.864 | 1.831 | 22/22 |
-| foot sagittal velocity contra (rad/s) | ❌ Fail | 1.945 | 3.116 | 22/22 |
-| foot sagittal velocity ipsi (rad/s) | ❌ Fail | 1.941 | 3.012 | 22/22 |
-| hip flexion velocity contra (rad/s) | ❌ Fail | 1.005 | 1.627 | 22/22 |
-| hip flexion velocity ipsi (rad/s) | ❌ Fail | 0.971 | 1.627 | 22/22 |
-| knee flexion velocity contra (rad/s) | ❌ Fail | 1.770 | 2.879 | 22/22 |
-| knee flexion velocity ipsi (rad/s) | ❌ Fail | 1.752 | 2.777 | 22/22 |
-| pelvis frontal velocity (rad/s) | 🔄 Calculated | - | - | No stored velocities to compare |
-| pelvis sagittal velocity (rad/s) | 🔄 Calculated | - | - | No stored velocities to compare |
-| pelvis transverse velocity (rad/s) | 🔄 Calculated | - | - | No stored velocities to compare |
-| shank sagittal velocity contra (rad/s) | ❌ Fail | 1.847 | 3.927 | 22/22 |
-| shank sagittal velocity ipsi (rad/s) | ❌ Fail | 1.562 | 2.412 | 22/22 |
-| thigh sagittal velocity contra (rad/s) | ❌ Fail | 1.804 | 5.303 | 22/22 |
-| thigh sagittal velocity ipsi (rad/s) | ❌ Fail | 1.009 | 1.635 | 22/22 |
+| ankle dorsiflexion velocity contra (rad/s) | ❌ Fail | 0.759 | 1.374 | 25/25 |
+| ankle dorsiflexion velocity ipsi (rad/s) | ❌ Fail | 0.801 | 1.229 | 25/25 |
+| foot sagittal velocity contra (rad/s) | ❌ Fail | 1.010 | 2.148 | 25/25 |
+| foot sagittal velocity ipsi (rad/s) | ❌ Fail | 0.989 | 1.804 | 25/25 |
+| hip flexion velocity contra (rad/s) | ❌ Fail | 0.583 | 1.246 | 25/25 |
+| hip flexion velocity ipsi (rad/s) | ❌ Fail | 0.547 | 1.144 | 25/25 |
+| knee flexion velocity contra (rad/s) | ❌ Fail | 1.168 | 1.681 | 25/25 |
+| knee flexion velocity ipsi (rad/s) | ❌ Fail | 1.194 | 1.957 | 25/25 |
+| pelvis frontal velocity (rad/s) | ⚠️ N/A | - | - | Angle column pelvis_frontal_angle_rad not found |
+| pelvis sagittal velocity (rad/s) | ✅ Pass | 0.230 | 0.440 | 25/25 |
+| pelvis transverse velocity (rad/s) | ⚠️ N/A | - | - | Angle column pelvis_transverse_angle_rad not found |
+| shank sagittal velocity contra (rad/s) | ❌ Fail | 1.090 | 1.771 | 25/25 |
+| shank sagittal velocity ipsi (rad/s) | ❌ Fail | 1.131 | 1.764 | 25/25 |
+| thigh sagittal velocity contra (rad/s) | ❌ Fail | 0.623 | 1.149 | 25/25 |
+| thigh sagittal velocity ipsi (rad/s) | ❌ Fail | 0.615 | 1.407 | 25/25 |
 | trunk frontal velocity (rad/s) | ⚠️ N/A | - | - | Angle column trunk_frontal_angle_rad not found |
-| trunk sagittal velocity (rad/s) | ⚠️ N/A | - | - | Angle column trunk_sagittal_angle_rad not found |
+| trunk sagittal velocity (rad/s) | ✅ Pass | 0.230 | 0.440 | 25/25 |
 | trunk transverse velocity (rad/s) | ⚠️ N/A | - | - | Angle column trunk_transverse_angle_rad not found |
 
 **Legend**:
@@ -198,20 +198,20 @@ Validates that velocities match angles using the chain rule: `dθ/dt = (dθ/dφ)
 **Subject Failure Distribution:**
 ![Incline Walking Subject Failures](validation_plots/gtech_2021_phase_incline_walking_subject_failures.png)
 
-#### Level Walking
-![Level Walking](validation_plots/gtech_2021_phase_level_walking_all_features_validation.png)
+#### Stair Ascent
+![Stair Ascent](validation_plots/gtech_2021_phase_stair_ascent_all_features_validation.png)
 *34 sagittal features validated*
 
 **Subject Failure Distribution:**
-![Level Walking Subject Failures](validation_plots/gtech_2021_phase_level_walking_subject_failures.png)
+![Stair Ascent Subject Failures](validation_plots/gtech_2021_phase_stair_ascent_subject_failures.png)
 
-#### Run
-![Run](validation_plots/gtech_2021_phase_run_all_features_validation.png)
+#### Stair Descent
+![Stair Descent](validation_plots/gtech_2021_phase_stair_descent_all_features_validation.png)
 *34 sagittal features validated*
 
 **Subject Failure Distribution:**
-![Run Subject Failures](validation_plots/gtech_2021_phase_run_subject_failures.png)
+![Stair Descent Subject Failures](validation_plots/gtech_2021_phase_stair_descent_subject_failures.png)
 
 </div>
 
-**Last Validated**: 2025-08-12 13:04:59
+**Last Validated**: 2025-08-12 15:52:07
