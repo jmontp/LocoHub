@@ -7,6 +7,7 @@ Process University of Michigan 2021 treadmill walking data (10 subjects, incline
 **MATLAB Conversion**:
 - `convert_umich_time_to_parquet.m` - Time-indexed conversion
 - `convert_umich_phase_to_parquet.m` - Phase-indexed conversion (150 points/cycle)
+- `convert_umich_events_to_parquet.m` - **METHOD 2**: Events-based conversion with velocities calculated AFTER interpolation for exoskeleton control consistency
 
 **Documentation**:
 - `umich_2021_mat_structure.md` - MATLAB data structure details

@@ -23,6 +23,8 @@
 %    - thigh_sagittal_angle_ipsi = pelvis_sagittal_angle + hip_flexion (sign flipped)
 %    - shank_sagittal_angle_ipsi = thigh_sagittal_angle_ipsi - knee_flexion (original)
 %    - foot_sagittal_angle_ipsi = shank_sagittal_angle_ipsi + ankle_angle
+%
+% 5. METHOD 2: Calculates velocities AFTER interpolation for exoskeleton control consistency
 
 clear all;
 close all;
@@ -640,18 +642,10 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
             angle_data = trial_data.ik_offset.ankle_angle_r(ik_mask);
             ik_time = trial_data.ik_offset.Header(ik_mask);
             
-            % Calculate velocity in time domain (convert to radians first for consistent units)
-            angle_rad = angle_data * deg2rad;
-            velocity_data = gradient(angle_rad) ./ gradient(ik_time);
-            
             % First interpolate angle data to stride time points
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
             % Then interpolate from percentage to normalized 150 points
             ankle_data = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
-            
-            % Interpolate velocity data similarly
-            velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
-            ankle_velocity = interp1(valid_stride_pct, velocity_at_stride_time, target_pct, 'linear', 'extrap');
             
             % Check for large offset at phase 0 and correct if needed
             if abs(ankle_data(1)) > 2.0  % More than 2 radians offset at heel strike
@@ -659,6 +653,10 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
                 ankle_data = ankle_data - ankle_offset;  % Remove offset
                 fprintf('      Corrected ipsi ankle offset of %.2f rad at phase 0\n', ankle_offset);
             end
+            
+            % METHOD 2: Calculate velocity from interpolated angle using phase rate
+            phase_rate = 100 / stride_duration_s;  % %/s
+            ankle_velocity = gradient(ankle_data) ./ gradient(target_pct) * phase_rate;
             
             stride_data.ankle_dorsiflexion_angle_ipsi_rad = ankle_data;
             stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = ankle_velocity;
@@ -671,17 +669,9 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'ankle_angle_l'))
             angle_data = trial_data.ik_offset.ankle_angle_l(ik_mask);
             
-            % Calculate velocity in time domain
-            angle_rad = angle_data * deg2rad;
-            velocity_data = gradient(angle_rad) ./ gradient(ik_time);
-            
             % Interpolate angle
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
             ankle_data_contra = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
-            
-            % Interpolate velocity
-            velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
-            ankle_velocity_contra = interp1(valid_stride_pct, velocity_at_stride_time, target_pct, 'linear', 'extrap');
             
             % Check for large offset at phase 0 and correct if needed
             if abs(ankle_data_contra(1)) > 2.0
@@ -689,6 +679,9 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
                 ankle_data_contra = ankle_data_contra - ankle_offset_contra;
                 fprintf('      Corrected contra ankle offset of %.2f rad at phase 0\n', ankle_offset_contra);
             end
+            
+            % METHOD 2: Calculate velocity from interpolated angle
+            ankle_velocity_contra = gradient(ankle_data_contra) ./ gradient(target_pct) * phase_rate;
             
             stride_data.ankle_dorsiflexion_angle_contra_rad = ankle_data_contra;
             stride_data.ankle_dorsiflexion_velocity_contra_rad_s = ankle_velocity_contra;
@@ -701,25 +694,19 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'knee_angle_r'))
             angle_data = trial_data.ik_offset.knee_angle_r(ik_mask);
             
-            % Calculate velocity in time domain (before any sign flipping)
-            angle_rad = angle_data * deg2rad;
-            velocity_data = gradient(angle_rad) ./ gradient(ik_time);
-            
             % Interpolate angle
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
             knee_data = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
-            
-            % Interpolate velocity
-            velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
-            knee_velocity = interp1(valid_stride_pct, velocity_at_stride_time, target_pct, 'linear', 'extrap');
             
             % Check if knee angle needs flipping (min should not be very negative)
             min_knee = min(knee_data);
             if min_knee < -0.3  % Less than -0.3 rad (~-17 degrees) indicates flipped sign
                 knee_data = -knee_data;  % Flip sign
-                knee_velocity = -knee_velocity;  % Also flip velocity
                 fprintf('      Flipped ipsi knee angle sign (min was %.2f rad)\n', min_knee);
             end
+            
+            % METHOD 2: Calculate velocity from interpolated (and potentially corrected) angle
+            knee_velocity = gradient(knee_data) ./ gradient(target_pct) * phase_rate;
             
             stride_data.knee_flexion_angle_ipsi_rad = knee_data;
             stride_data.knee_flexion_velocity_ipsi_rad_s = knee_velocity;
@@ -732,25 +719,19 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'knee_angle_l'))
             angle_data = trial_data.ik_offset.knee_angle_l(ik_mask);
             
-            % Calculate velocity in time domain
-            angle_rad = angle_data * deg2rad;
-            velocity_data = gradient(angle_rad) ./ gradient(ik_time);
-            
             % Interpolate angle
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
             knee_data_contra = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
-            
-            % Interpolate velocity
-            velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
-            knee_velocity_contra = interp1(valid_stride_pct, velocity_at_stride_time, target_pct, 'linear', 'extrap');
             
             % Check if knee angle needs flipping
             min_knee_contra = min(knee_data_contra);
             if min_knee_contra < -0.3
                 knee_data_contra = -knee_data_contra;
-                knee_velocity_contra = -knee_velocity_contra;
                 fprintf('      Flipped contra knee angle sign (min was %.2f rad)\n', min_knee_contra);
             end
+            
+            % METHOD 2: Calculate velocity from interpolated (and potentially corrected) angle
+            knee_velocity_contra = gradient(knee_data_contra) ./ gradient(target_pct) * phase_rate;
             
             stride_data.knee_flexion_angle_contra_rad = knee_data_contra;
             stride_data.knee_flexion_velocity_contra_rad_s = knee_velocity_contra;
@@ -763,17 +744,12 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'hip_flexion_r'))
             angle_data = trial_data.ik_offset.hip_flexion_r(ik_mask);
             
-            % Calculate velocity in time domain
-            angle_rad = angle_data * deg2rad;
-            velocity_data = gradient(angle_rad) ./ gradient(ik_time);
-            
             % Interpolate angle
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
             stride_data.hip_flexion_angle_ipsi_rad = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
             
-            % Interpolate velocity
-            velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
-            stride_data.hip_flexion_velocity_ipsi_rad_s = interp1(valid_stride_pct, velocity_at_stride_time, target_pct, 'linear', 'extrap');
+            % METHOD 2: Calculate velocity from interpolated angle
+            stride_data.hip_flexion_velocity_ipsi_rad_s = gradient(stride_data.hip_flexion_angle_ipsi_rad) ./ gradient(target_pct) * phase_rate;
         else
             stride_data.hip_flexion_angle_ipsi_rad = zeros(NUM_POINTS, 1);
             stride_data.hip_flexion_velocity_ipsi_rad_s = zeros(NUM_POINTS, 1);
@@ -783,17 +759,12 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'hip_flexion_l'))
             angle_data = trial_data.ik_offset.hip_flexion_l(ik_mask);
             
-            % Calculate velocity in time domain
-            angle_rad = angle_data * deg2rad;
-            velocity_data = gradient(angle_rad) ./ gradient(ik_time);
-            
             % Interpolate angle
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
             stride_data.hip_flexion_angle_contra_rad = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
             
-            % Interpolate velocity
-            velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
-            stride_data.hip_flexion_velocity_contra_rad_s = interp1(valid_stride_pct, velocity_at_stride_time, target_pct, 'linear', 'extrap');
+            % METHOD 2: Calculate velocity from interpolated angle
+            stride_data.hip_flexion_velocity_contra_rad_s = gradient(stride_data.hip_flexion_angle_contra_rad) ./ gradient(target_pct) * phase_rate;
         else
             stride_data.hip_flexion_angle_contra_rad = zeros(NUM_POINTS, 1);
             stride_data.hip_flexion_velocity_contra_rad_s = zeros(NUM_POINTS, 1);
@@ -804,17 +775,12 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'pelvis_tilt'))
             angle_data = trial_data.ik_offset.pelvis_tilt(ik_mask);
             
-            % Calculate velocity in time domain
-            angle_rad = angle_data * deg2rad;
-            velocity_data = gradient(angle_rad) ./ gradient(ik_time);
-            
             % Interpolate angle
             angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
             stride_data.pelvis_sagittal_angle_rad = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
             
-            % Interpolate velocity
-            velocity_at_stride_time = interp1(ik_time, velocity_data, valid_stride_time, 'linear', 'extrap');
-            stride_data.pelvis_sagittal_velocity_rad_s = interp1(valid_stride_pct, velocity_at_stride_time, target_pct, 'linear', 'extrap');
+            % METHOD 2: Calculate velocity from interpolated angle
+            stride_data.pelvis_sagittal_velocity_rad_s = gradient(stride_data.pelvis_sagittal_angle_rad) ./ gradient(target_pct) * phase_rate;
         else
             stride_data.pelvis_sagittal_angle_rad = zeros(NUM_POINTS, 1);
             stride_data.pelvis_sagittal_velocity_rad_s = zeros(NUM_POINTS, 1);
@@ -824,19 +790,13 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
         if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'lumbar_extension'))
             lumbar_data = trial_data.ik_offset.lumbar_extension(ik_mask);
             
-            % Calculate lumbar velocity
-            lumbar_rad = lumbar_data * deg2rad;
-            lumbar_velocity_data = gradient(lumbar_rad) ./ gradient(ik_time);
-            
             % Interpolate lumbar angle
             lumbar_at_stride_time = interp1(ik_time, lumbar_data, valid_stride_time, 'linear', 'extrap');
             lumbar_interp = interp1(valid_stride_pct, lumbar_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
             stride_data.trunk_sagittal_angle_rad = stride_data.pelvis_sagittal_angle_rad + lumbar_interp;
             
-            % Interpolate lumbar velocity and add to pelvis velocity for trunk velocity
-            lumbar_velocity_at_stride_time = interp1(ik_time, lumbar_velocity_data, valid_stride_time, 'linear', 'extrap');
-            lumbar_velocity_interp = interp1(valid_stride_pct, lumbar_velocity_at_stride_time, target_pct, 'linear', 'extrap');
-            stride_data.trunk_sagittal_velocity_rad_s = stride_data.pelvis_sagittal_velocity_rad_s + lumbar_velocity_interp;
+            % METHOD 2: Calculate trunk velocity from interpolated trunk angle
+            stride_data.trunk_sagittal_velocity_rad_s = gradient(stride_data.trunk_sagittal_angle_rad) ./ gradient(target_pct) * phase_rate;
         else
             stride_data.trunk_sagittal_angle_rad = stride_data.pelvis_sagittal_angle_rad;  % Same as pelvis if no lumbar
             stride_data.trunk_sagittal_velocity_rad_s = stride_data.pelvis_sagittal_velocity_rad_s;

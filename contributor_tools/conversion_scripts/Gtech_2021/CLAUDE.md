@@ -12,7 +12,7 @@ Process Georgia Tech 2021 dataset (Camargo et al. J Biomech) with 22 subjects pe
 ## Key Scripts
 
 **Main Conversion**:
-- `convert_gtech_2021_phase_to_parquet.m` - Basic phase-indexed conversion
+- `convert_gtech_2021_phase_to_parquet.m` - **METHOD 2**: Phase-indexed conversion with velocities calculated AFTER interpolation for exoskeleton control consistency
 - `convert_gtech_2021_phase_advanced.m` - Advanced version using EpicToolbox
 
 **Utilities**:

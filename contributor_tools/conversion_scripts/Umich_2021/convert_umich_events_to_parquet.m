@@ -8,6 +8,7 @@
 % 3. Properly aligns ipsi/contra based on actual gait events
 % 4. Includes phase_ipsi_dot for velocity validation
 % 5. Preserves time axis for each stride
+% 6. METHOD 2: Calculates velocities AFTER interpolation for exoskeleton control consistency
 
 clearvars
 
@@ -500,71 +501,45 @@ function stride_table = process_strides_single_leg(trial_data, ...
             
             % Foot angles - will be assigned in segment section below
             
-            % Calculate joint angular velocities (rad/s) from angles using time derivative
-            % First, calculate velocities in the original time domain, then interpolate
+            % Calculate joint angular velocities (rad/s) from interpolated angles 
+            % METHOD 2: Calculate velocities AFTER interpolation for control consistency
             
-            % Hip velocities
+            % Hip velocities - calculate from already interpolated angles
             if isfield(angles, 'RHipAngles') && isfield(angles, 'LHipAngles')
-                % Calculate time derivatives for right hip (rad/s)
-                r_hip_angles_rad = angles.RHipAngles(r_start_frame:r_end_frame, sagittal_plane) * deg2rad;
-                r_hip_velocity = gradient(r_hip_angles_rad) * Hz;  % Hz = sampling frequency
+                % Calculate effective sampling rate for interpolated data
+                effective_Hz = NUM_POINTS / stride_duration_s;
                 
-                % Calculate time derivatives for left hip (rad/s)
-                l_hip_angles_rad = angles.LHipAngles(l_start_frame:l_end_frame, sagittal_plane) * deg2rad;
-                l_hip_velocity = gradient(l_hip_angles_rad) * Hz;
-                
-                % Interpolate to 150 points
-                r_hip_vel_interp = interpolate_signal(r_hip_velocity, NUM_POINTS);
-                l_hip_vel_interp = interpolate_signal(l_hip_velocity, NUM_POINTS);
-                
-                % Assign based on which leg is ipsilateral
+                % Calculate velocities from interpolated angles (already in stride_data)
                 if strcmp(leg_side, 'right')
-                    stride_data.hip_flexion_velocity_ipsi_rad_s = r_hip_vel_interp;
-                    stride_data.hip_flexion_velocity_contra_rad_s = l_hip_vel_interp;
+                    stride_data.hip_flexion_velocity_ipsi_rad_s = gradient(stride_data.hip_flexion_angle_ipsi_rad) * effective_Hz;
+                    stride_data.hip_flexion_velocity_contra_rad_s = gradient(stride_data.hip_flexion_angle_contra_rad) * effective_Hz;
                 else
-                    stride_data.hip_flexion_velocity_ipsi_rad_s = l_hip_vel_interp;
-                    stride_data.hip_flexion_velocity_contra_rad_s = r_hip_vel_interp;
+                    stride_data.hip_flexion_velocity_ipsi_rad_s = gradient(stride_data.hip_flexion_angle_ipsi_rad) * effective_Hz;
+                    stride_data.hip_flexion_velocity_contra_rad_s = gradient(stride_data.hip_flexion_angle_contra_rad) * effective_Hz;
                 end
             end
             
-            % Knee velocities
+            % Knee velocities - calculate from interpolated angles
             if isfield(angles, 'RKneeAngles') && isfield(angles, 'LKneeAngles')
-                % Note: negate to match flexion convention
-                r_knee_angles_rad = -angles.RKneeAngles(r_start_frame:r_end_frame, sagittal_plane) * deg2rad;
-                r_knee_velocity = gradient(r_knee_angles_rad) * Hz;
-                
-                l_knee_angles_rad = -angles.LKneeAngles(l_start_frame:l_end_frame, sagittal_plane) * deg2rad;
-                l_knee_velocity = gradient(l_knee_angles_rad) * Hz;
-                
-                r_knee_vel_interp = interpolate_signal(r_knee_velocity, NUM_POINTS);
-                l_knee_vel_interp = interpolate_signal(l_knee_velocity, NUM_POINTS);
-                
+                % Calculate velocities from already interpolated knee angles
                 if strcmp(leg_side, 'right')
-                    stride_data.knee_flexion_velocity_ipsi_rad_s = r_knee_vel_interp;
-                    stride_data.knee_flexion_velocity_contra_rad_s = l_knee_vel_interp;
+                    stride_data.knee_flexion_velocity_ipsi_rad_s = gradient(stride_data.knee_flexion_angle_ipsi_rad) * effective_Hz;
+                    stride_data.knee_flexion_velocity_contra_rad_s = gradient(stride_data.knee_flexion_angle_contra_rad) * effective_Hz;
                 else
-                    stride_data.knee_flexion_velocity_ipsi_rad_s = l_knee_vel_interp;
-                    stride_data.knee_flexion_velocity_contra_rad_s = r_knee_vel_interp;
+                    stride_data.knee_flexion_velocity_ipsi_rad_s = gradient(stride_data.knee_flexion_angle_ipsi_rad) * effective_Hz;
+                    stride_data.knee_flexion_velocity_contra_rad_s = gradient(stride_data.knee_flexion_angle_contra_rad) * effective_Hz;
                 end
             end
             
-            % Ankle velocities
+            % Ankle velocities - calculate from interpolated angles  
             if isfield(angles, 'RAnkleAngles') && isfield(angles, 'LAnkleAngles')
-                r_ankle_angles_rad = angles.RAnkleAngles(r_start_frame:r_end_frame, sagittal_plane) * deg2rad;
-                r_ankle_velocity = gradient(r_ankle_angles_rad) * Hz;
-                
-                l_ankle_angles_rad = angles.LAnkleAngles(l_start_frame:l_end_frame, sagittal_plane) * deg2rad;
-                l_ankle_velocity = gradient(l_ankle_angles_rad) * Hz;
-                
-                r_ankle_vel_interp = interpolate_signal(r_ankle_velocity, NUM_POINTS);
-                l_ankle_vel_interp = interpolate_signal(l_ankle_velocity, NUM_POINTS);
-                
+                % Calculate velocities from already interpolated ankle angles
                 if strcmp(leg_side, 'right')
-                    stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = r_ankle_vel_interp;
-                    stride_data.ankle_dorsiflexion_velocity_contra_rad_s = l_ankle_vel_interp;
+                    stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = gradient(stride_data.ankle_dorsiflexion_angle_ipsi_rad) * effective_Hz;
+                    stride_data.ankle_dorsiflexion_velocity_contra_rad_s = gradient(stride_data.ankle_dorsiflexion_angle_contra_rad) * effective_Hz;
                 else
-                    stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = l_ankle_vel_interp;
-                    stride_data.ankle_dorsiflexion_velocity_contra_rad_s = r_ankle_vel_interp;
+                    stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = gradient(stride_data.ankle_dorsiflexion_angle_ipsi_rad) * effective_Hz;
+                    stride_data.ankle_dorsiflexion_velocity_contra_rad_s = gradient(stride_data.ankle_dorsiflexion_angle_contra_rad) * effective_Hz;
                 end
             end
         end
