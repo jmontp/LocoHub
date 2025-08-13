@@ -638,11 +638,13 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         stride_pct = heel_strike_pct(stride_start_idx:stride_end_idx);
         stride_time = gc_time(stride_start_idx:stride_end_idx);
         
-        % Skip if we don't have good percentage data
-        valid_pct_idx = find(stride_pct > 0, 1, 'first');
-        if isempty(valid_pct_idx) || length(stride_pct) < 10
+        % Skip if stride is too short or doesn't progress properly
+        if length(stride_pct) < 10 || max(stride_pct) < 50
             continue;
         end
+        
+        % Use the full stride including 0% heel strike point
+        valid_pct_idx = 1;  % Start from beginning (includes 0%)
         
         % Get time bounds for this stride
         stride_start_time = stride_time(1);
@@ -690,28 +692,10 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
             angle_data = trial_data.ik_offset.(ipsi_ankle_var)(ik_mask);
             ik_time = trial_data.ik_offset.Header(ik_mask);
             
-            % First interpolate angle data to stride time points
-            angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
-            % Then interpolate from percentage to normalized 150 points
-            ankle_data = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
-            
-            % Check for large offset at phase 0 and correct if needed
-            if abs(ankle_data(1)) > 2.0  % More than 2 radians offset at heel strike
-                ankle_offset = ankle_data(1);
-                ankle_data = ankle_data - ankle_offset;  % Remove offset
-                fprintf('      Corrected %s ankle offset of %.2f rad at phase 0\n', leg_side, ankle_offset);
-            end
-            
-            % METHOD 2: Calculate velocity using Savitzky-Golay smooth differentiation
-            % Apply Savitzky-Golay filter for simultaneous smoothing and differentiation
-            % This eliminates artifacts while preserving biomechanical features
-            try
-                % Use 3rd order polynomial, 7-point window, 1st derivative
-                ankle_velocity = sgolayfilt(ankle_data, 3, 7, 1) * (100 / stride_duration_s);
-            catch
-                % Fallback to improved gradient method with periodic boundaries
-                ankle_velocity = improved_gradient(ankle_data) * (100 / stride_duration_s);
-            end
+            % NAIVE APPROACH: Direct time interpolation + simple gradient
+            target_times = linspace(stride_start_time, stride_end_time, NUM_POINTS);
+            ankle_data = interp1(ik_time, angle_data, target_times, 'linear') * deg2rad;
+            ankle_velocity = gradient(ankle_data) * 150 / stride_duration_s;
             
             stride_data.ankle_dorsiflexion_angle_ipsi_rad = ankle_data;
             stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = ankle_velocity;
@@ -724,23 +708,9 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         if any(strcmp(trial_data.ik_offset.Properties.VariableNames, contra_ankle_var))
             angle_data = trial_data.ik_offset.(contra_ankle_var)(ik_mask);
             
-            % Interpolate angle
-            angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
-            ankle_data_contra = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
-            
-            % Check for large offset at phase 0 and correct if needed
-            if abs(ankle_data_contra(1)) > 2.0
-                ankle_offset_contra = ankle_data_contra(1);
-                ankle_data_contra = ankle_data_contra - ankle_offset_contra;
-                fprintf('      Corrected contra ankle offset of %.2f rad at phase 0\n', ankle_offset_contra);
-            end
-            
-            % METHOD 2: Calculate velocity using Savitzky-Golay smooth differentiation
-            try
-                ankle_velocity_contra = sgolayfilt(ankle_data_contra, 3, 7, 1) * (100 / stride_duration_s);
-            catch
-                ankle_velocity_contra = improved_gradient(ankle_data_contra) * (100 / stride_duration_s);
-            end
+            % NAIVE APPROACH: Direct time interpolation + simple gradient
+            ankle_data_contra = interp1(ik_time, angle_data, target_times, 'linear') * deg2rad;
+            ankle_velocity_contra = gradient(ankle_data_contra) * 150 / stride_duration_s;
             
             stride_data.ankle_dorsiflexion_angle_contra_rad = ankle_data_contra;
             stride_data.ankle_dorsiflexion_velocity_contra_rad_s = ankle_velocity_contra;
@@ -762,23 +732,13 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         if any(strcmp(trial_data.ik_offset.Properties.VariableNames, ipsi_knee_var))
             angle_data = trial_data.ik_offset.(ipsi_knee_var)(ik_mask);
             
-            % Interpolate angle
-            angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
-            knee_data = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            % NAIVE APPROACH: Direct time interpolation + simple gradient
+            knee_data = interp1(ik_time, angle_data, target_times, 'linear') * deg2rad;
             
-            % Check if knee angle needs flipping (min should not be very negative)
-            min_knee = min(knee_data);
-            if min_knee < -0.3  % Less than -0.3 rad (~-17 degrees) indicates flipped sign
-                knee_data = -knee_data;  % Flip sign
-                fprintf('      Flipped %s knee angle sign (min was %.2f rad)\n', leg_side, min_knee);
-            end
+            % FIX: Flip knee angle if needed (Gtech dataset has inverted knee flexion)
+            knee_data = -knee_data;
             
-            % METHOD 2: Calculate velocity using Savitzky-Golay smooth differentiation
-            try
-                knee_velocity = sgolayfilt(knee_data, 3, 7, 1) * (100 / stride_duration_s);
-            catch
-                knee_velocity = improved_gradient(knee_data) * (100 / stride_duration_s);
-            end
+            knee_velocity = gradient(knee_data) * 150 / stride_duration_s;
             
             stride_data.knee_flexion_angle_ipsi_rad = knee_data;
             stride_data.knee_flexion_velocity_ipsi_rad_s = knee_velocity;
@@ -791,23 +751,13 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         if any(strcmp(trial_data.ik_offset.Properties.VariableNames, contra_knee_var))
             angle_data = trial_data.ik_offset.(contra_knee_var)(ik_mask);
             
-            % Interpolate angle
-            angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
-            knee_data_contra = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            % NAIVE APPROACH: Direct time interpolation + simple gradient
+            knee_data_contra = interp1(ik_time, angle_data, target_times, 'linear') * deg2rad;
             
-            % Check if knee angle needs flipping
-            min_knee_contra = min(knee_data_contra);
-            if min_knee_contra < -0.3
-                knee_data_contra = -knee_data_contra;
-                fprintf('      Flipped contra knee angle sign (min was %.2f rad)\n', min_knee_contra);
-            end
+            % FIX: Flip knee angle if needed (Gtech dataset has inverted knee flexion)
+            knee_data_contra = -knee_data_contra;
             
-            % METHOD 2: Calculate velocity using Savitzky-Golay smooth differentiation
-            try
-                knee_velocity_contra = sgolayfilt(knee_data_contra, 3, 7, 1) * (100 / stride_duration_s);
-            catch
-                knee_velocity_contra = improved_gradient(knee_data_contra) * (100 / stride_duration_s);
-            end
+            knee_velocity_contra = gradient(knee_data_contra) * 150 / stride_duration_s;
             
             stride_data.knee_flexion_angle_contra_rad = knee_data_contra;
             stride_data.knee_flexion_velocity_contra_rad_s = knee_velocity_contra;
@@ -829,16 +779,9 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         if any(strcmp(trial_data.ik_offset.Properties.VariableNames, ipsi_hip_var))
             angle_data = trial_data.ik_offset.(ipsi_hip_var)(ik_mask);
             
-            % Interpolate angle
-            angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
-            stride_data.hip_flexion_angle_ipsi_rad = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
-            
-            % METHOD 2: Calculate velocity using Savitzky-Golay smooth differentiation
-            try
-                stride_data.hip_flexion_velocity_ipsi_rad_s = sgolayfilt(stride_data.hip_flexion_angle_ipsi_rad, 3, 7, 1) * (100 / stride_duration_s);
-            catch
-                stride_data.hip_flexion_velocity_ipsi_rad_s = improved_gradient(stride_data.hip_flexion_angle_ipsi_rad) * (100 / stride_duration_s);
-            end
+            % NAIVE APPROACH: Direct time interpolation + simple gradient
+            stride_data.hip_flexion_angle_ipsi_rad = interp1(ik_time, angle_data, target_times, 'linear') * deg2rad;
+            stride_data.hip_flexion_velocity_ipsi_rad_s = gradient(stride_data.hip_flexion_angle_ipsi_rad) * 150 / stride_duration_s;
         else
             stride_data.hip_flexion_angle_ipsi_rad = zeros(NUM_POINTS, 1);
             stride_data.hip_flexion_velocity_ipsi_rad_s = zeros(NUM_POINTS, 1);
@@ -848,16 +791,9 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         if any(strcmp(trial_data.ik_offset.Properties.VariableNames, contra_hip_var))
             angle_data = trial_data.ik_offset.(contra_hip_var)(ik_mask);
             
-            % Interpolate angle
-            angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
-            stride_data.hip_flexion_angle_contra_rad = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
-            
-            % METHOD 2: Calculate velocity using Savitzky-Golay smooth differentiation
-            try
-                stride_data.hip_flexion_velocity_contra_rad_s = sgolayfilt(stride_data.hip_flexion_angle_contra_rad, 3, 7, 1) * (100 / stride_duration_s);
-            catch
-                stride_data.hip_flexion_velocity_contra_rad_s = improved_gradient(stride_data.hip_flexion_angle_contra_rad) * (100 / stride_duration_s);
-            end
+            % NAIVE APPROACH: Direct time interpolation + simple gradient
+            stride_data.hip_flexion_angle_contra_rad = interp1(ik_time, angle_data, target_times, 'linear') * deg2rad;
+            stride_data.hip_flexion_velocity_contra_rad_s = gradient(stride_data.hip_flexion_angle_contra_rad) * 150 / stride_duration_s;
         else
             stride_data.hip_flexion_angle_contra_rad = zeros(NUM_POINTS, 1);
             stride_data.hip_flexion_velocity_contra_rad_s = zeros(NUM_POINTS, 1);
@@ -868,16 +804,9 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'pelvis_tilt'))
             angle_data = trial_data.ik_offset.pelvis_tilt(ik_mask);
             
-            % Interpolate angle
-            angle_at_stride_time = interp1(ik_time, angle_data, valid_stride_time, 'linear', 'extrap');
-            stride_data.pelvis_sagittal_angle_rad = interp1(valid_stride_pct, angle_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
-            
-            % METHOD 2: Calculate velocity using Savitzky-Golay smooth differentiation
-            try
-                stride_data.pelvis_sagittal_velocity_rad_s = sgolayfilt(stride_data.pelvis_sagittal_angle_rad, 3, 7, 1) * (100 / stride_duration_s);
-            catch
-                stride_data.pelvis_sagittal_velocity_rad_s = improved_gradient(stride_data.pelvis_sagittal_angle_rad) * (100 / stride_duration_s);
-            end
+            % NAIVE APPROACH: Direct time interpolation + simple gradient
+            stride_data.pelvis_sagittal_angle_rad = interp1(ik_time, angle_data, target_times, 'linear') * deg2rad;
+            stride_data.pelvis_sagittal_velocity_rad_s = gradient(stride_data.pelvis_sagittal_angle_rad) * 150 / stride_duration_s;
         else
             stride_data.pelvis_sagittal_angle_rad = zeros(NUM_POINTS, 1);
             stride_data.pelvis_sagittal_velocity_rad_s = zeros(NUM_POINTS, 1);
@@ -887,21 +816,10 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         if any(strcmp(trial_data.ik_offset.Properties.VariableNames, 'lumbar_extension'))
             lumbar_data = trial_data.ik_offset.lumbar_extension(ik_mask);
             
-            % Interpolate lumbar angle
-            lumbar_at_stride_time = interp1(ik_time, lumbar_data, valid_stride_time, 'linear', 'extrap');
-            lumbar_interp = interp1(valid_stride_pct, lumbar_at_stride_time, target_pct, 'linear', 'extrap') * deg2rad;
+            % NAIVE APPROACH: Direct time interpolation + simple gradient
+            lumbar_interp = interp1(ik_time, lumbar_data, target_times, 'linear') * deg2rad;
             stride_data.trunk_sagittal_angle_rad = stride_data.pelvis_sagittal_angle_rad + lumbar_interp;
-            
-            % METHOD 2: Calculate trunk velocity using Savitzky-Golay filtering with fallback
-            try
-                % Use Savitzky-Golay filter for smooth differentiation
-                trunk_velocity = sgolayfilt(stride_data.trunk_sagittal_angle_rad, 3, 7, 1) * (100 / stride_duration_s);
-                stride_data.trunk_sagittal_velocity_rad_s = trunk_velocity;
-            catch
-                % Fallback to improved gradient method if Savitzky-Golay not available
-                trunk_velocity = improved_gradient(stride_data.trunk_sagittal_angle_rad) * (100 / stride_duration_s);
-                stride_data.trunk_sagittal_velocity_rad_s = trunk_velocity;
-            end
+            stride_data.trunk_sagittal_velocity_rad_s = gradient(stride_data.trunk_sagittal_angle_rad) * 150 / stride_duration_s;
         else
             stride_data.trunk_sagittal_angle_rad = stride_data.pelvis_sagittal_angle_rad;  % Same as pelvis if no lumbar
             stride_data.trunk_sagittal_velocity_rad_s = stride_data.pelvis_sagittal_velocity_rad_s;
@@ -1311,17 +1229,17 @@ end
 
 %% Helper Functions
 
-% Helper function for improved gradient calculation with periodic boundaries
+% Helper function for improved gradient calculation with proper boundary conditions
 function velocity = improved_gradient(angle_data)
-    % Calculate gradient with periodic boundary conditions for gait data
+    % Calculate gradient with forward/backward differences at boundaries
     n = length(angle_data);
     velocity = zeros(n, 1);
     
-    % First point: use periodic boundary (connect to end)
-    velocity(1) = (angle_data(2) - angle_data(n)) / 2;
+    % First point: forward difference (no periodic assumption)
+    velocity(1) = angle_data(2) - angle_data(1);
     
-    % Last point: use periodic boundary (connect to start)  
-    velocity(n) = (angle_data(1) - angle_data(n-1)) / 2;
+    % Last point: backward difference (no periodic assumption)
+    velocity(n) = angle_data(n) - angle_data(n-1);
     
     % Middle points: standard central difference
     for i = 2:n-1

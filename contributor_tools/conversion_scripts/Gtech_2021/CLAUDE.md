@@ -12,7 +12,7 @@ Process Georgia Tech 2021 dataset (Camargo et al. J Biomech) with 22 subjects pe
 ## Key Scripts
 
 **Main Conversion**:
-- `convert_gtech_2021_phase_to_parquet.m` - **METHOD 2**: Phase-indexed conversion with velocities calculated AFTER interpolation for exoskeleton control consistency
+- `convert_gtech_2021_phase_to_parquet.m` - **METHOD 2 + BILATERAL**: Phase-indexed conversion with velocities calculated AFTER interpolation for exoskeleton control consistency. **NEW**: Bilateral processing treats both legs as ipsilateral, doubling the training data available
 - `convert_gtech_2021_phase_advanced.m` - Advanced version using EpicToolbox
 
 **Utilities**:
@@ -50,15 +50,21 @@ CAMARGO_ET_AL_J_BIOMECH_DATASET/
 
 ## Processing Pipeline
 
-### Basic Workflow
+### Bilateral Processing Workflow
 1. Load subject mass data from SubjectInfo.mat
 2. Iterate through subjects and ambulation modes
-3. Load trial data from subdirectories (ik, id, gcRight, etc.)
-4. Segment by heel strikes (gcRight/gcLeft data)
-5. Interpolate to 150 points per cycle
-6. Normalize moments by body mass
+3. Load trial data from subdirectories (ik, id, gcRight, gcLeft, etc.)
+4. **NEW**: Process both legs as ipsilateral:
+   - Right-leg-initiated strides (using gcRight heel strikes)  
+   - Left-leg-initiated strides (using gcLeft heel strikes)
+5. For each leg orientation:
+   - Segment by heel strikes from appropriate leg
+   - Interpolate to 150 points per cycle
+   - Apply bilateral variable assignment (ipsi/contra swap based on leg)
+   - Normalize moments by body mass
+6. Combine bilateral stride data with step identifiers (001_R, 001_L)
 7. Map task names to standard convention
-8. Export to parquet format
+8. Export to parquet format with doubled stride count
 
 ### Advanced Workflow (using EpicToolbox)
 1. Initialize FileManager for efficient file handling
@@ -68,7 +74,25 @@ CAMARGO_ET_AL_J_BIOMECH_DATASET/
 5. Use Topics functions for normalization and interpolation
 6. Filter transitions and invalid strides
 
+## Data Volume with Bilateral Processing
+
+**Previous (Right-leg only)**:
+- ~21 subjects × ~5 tasks × ~15-30 strides = ~8,000 strides
+- Total rows: ~1.2M (8,000 strides × 150 points)
+
+**Current (Bilateral processing)**:  
+- ~21 subjects × ~5 tasks × ~30-60 strides = ~16,000 strides
+- **Doubled training data**: Each original stride now generates both right-initiated and left-initiated versions
+- Total rows: ~2.4M (16,000 strides × 150 points)
+- Step naming: `001_R`, `001_L`, `002_R`, `002_L`, etc.
+
 ## Key Features
+
+**Bilateral Processing**:
+- Processes both legs as ipsilateral for maximum training data
+- Maintains proper ipsi/contra relationships regardless of leg orientation
+- Explicit error checking for missing left gait cycle data
+- Step identifiers include leg information (_R/_L suffix)
 
 **Data Processing**:
 - Complex trial classification (stand-walk transitions, turns, etc.)
