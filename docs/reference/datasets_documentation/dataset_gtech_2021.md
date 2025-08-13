@@ -141,7 +141,7 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 **Validation Configuration:**
 - **Ranges File**: `default_ranges.yaml`
 - **SHA256**: `bbf1f9c7...` (first 8 chars)
-- **Archived Copy**: [`gtech_2021_phase_2025-08-12_155207_ranges.yaml`](validation_archives/gtech_2021_phase_2025-08-12_155207_ranges.yaml)
+- **Archived Copy**: [`gtech_2021_phase_2025-08-12_162042_ranges.yaml`](validation_archives/gtech_2021_phase_2025-08-12_162042_ranges.yaml)
 
 | Metric | Value | Status |
 |--------|-------|--------|
@@ -149,7 +149,7 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 | **Phase Structure** | 150 points/cycle | ✅ Valid |
 | **Tasks Validated** | 5 tasks | ✅ Complete |
 | **Total Checks** | 748,080 | - |
-| **Violations** | 4,259 | ⚠️ Present |
+| **Violations** | 4,646 | ⚠️ Present |
 
 ### 🔄 Velocity Consistency Validation
 
@@ -157,23 +157,23 @@ Validates that velocities match angles using the chain rule: `dθ/dt = (dθ/dφ)
 
 | Velocity Variable | Status | Mean Error (rad/s) | Max Error (rad/s) | Strides Checked |
 |-------------------|--------|-------------------|-------------------|-----------------|
-| ankle dorsiflexion velocity contra (rad/s) | ❌ Fail | 0.759 | 1.374 | 25/25 |
-| ankle dorsiflexion velocity ipsi (rad/s) | ❌ Fail | 0.801 | 1.229 | 25/25 |
-| foot sagittal velocity contra (rad/s) | ❌ Fail | 1.010 | 2.148 | 25/25 |
-| foot sagittal velocity ipsi (rad/s) | ❌ Fail | 0.989 | 1.804 | 25/25 |
-| hip flexion velocity contra (rad/s) | ❌ Fail | 0.583 | 1.246 | 25/25 |
-| hip flexion velocity ipsi (rad/s) | ❌ Fail | 0.547 | 1.144 | 25/25 |
-| knee flexion velocity contra (rad/s) | ❌ Fail | 1.168 | 1.681 | 25/25 |
-| knee flexion velocity ipsi (rad/s) | ❌ Fail | 1.194 | 1.957 | 25/25 |
+| ankle dorsiflexion velocity contra (rad/s) | ❌ Fail | 0.768 | 1.391 | 25/25 |
+| ankle dorsiflexion velocity ipsi (rad/s) | ❌ Fail | 0.811 | 1.244 | 25/25 |
+| foot sagittal velocity contra (rad/s) | ❌ Fail | 1.022 | 2.174 | 25/25 |
+| foot sagittal velocity ipsi (rad/s) | ❌ Fail | 1.001 | 1.826 | 25/25 |
+| hip flexion velocity contra (rad/s) | ❌ Fail | 0.590 | 1.261 | 25/25 |
+| hip flexion velocity ipsi (rad/s) | ❌ Fail | 0.554 | 1.158 | 25/25 |
+| knee flexion velocity contra (rad/s) | ❌ Fail | 1.182 | 1.701 | 25/25 |
+| knee flexion velocity ipsi (rad/s) | ❌ Fail | 1.208 | 1.981 | 25/25 |
 | pelvis frontal velocity (rad/s) | ⚠️ N/A | - | - | Angle column pelvis_frontal_angle_rad not found |
-| pelvis sagittal velocity (rad/s) | ✅ Pass | 0.230 | 0.440 | 25/25 |
+| pelvis sagittal velocity (rad/s) | ✅ Pass | 0.232 | 0.446 | 25/25 |
 | pelvis transverse velocity (rad/s) | ⚠️ N/A | - | - | Angle column pelvis_transverse_angle_rad not found |
-| shank sagittal velocity contra (rad/s) | ❌ Fail | 1.090 | 1.771 | 25/25 |
-| shank sagittal velocity ipsi (rad/s) | ❌ Fail | 1.131 | 1.764 | 25/25 |
-| thigh sagittal velocity contra (rad/s) | ❌ Fail | 0.623 | 1.149 | 25/25 |
-| thigh sagittal velocity ipsi (rad/s) | ❌ Fail | 0.615 | 1.407 | 25/25 |
+| shank sagittal velocity contra (rad/s) | ❌ Fail | 1.104 | 1.793 | 25/25 |
+| shank sagittal velocity ipsi (rad/s) | ❌ Fail | 1.145 | 1.785 | 25/25 |
+| thigh sagittal velocity contra (rad/s) | ❌ Fail | 0.631 | 1.163 | 25/25 |
+| thigh sagittal velocity ipsi (rad/s) | ❌ Fail | 0.622 | 1.424 | 25/25 |
 | trunk frontal velocity (rad/s) | ⚠️ N/A | - | - | Angle column trunk_frontal_angle_rad not found |
-| trunk sagittal velocity (rad/s) | ✅ Pass | 0.230 | 0.440 | 25/25 |
+| trunk sagittal velocity (rad/s) | ✅ Pass | 0.232 | 0.446 | 25/25 |
 | trunk transverse velocity (rad/s) | ⚠️ N/A | - | - | Angle column trunk_transverse_angle_rad not found |
 
 **Legend**:
@@ -214,4 +214,4 @@ Validates that velocities match angles using the chain rule: `dθ/dt = (dθ/dφ)
 
 </div>
 
-**Last Validated**: 2025-08-12 15:52:07
+**Last Validated**: 2025-08-12 16:20:42

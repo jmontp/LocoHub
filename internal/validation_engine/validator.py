@@ -77,6 +77,8 @@ class Validator:
         violations = {}
         total_checks = 0
         total_violations = 0
+        total_strides = 0
+        total_failing_strides = 0
         
         for task in tasks:
             task_violations = self._validate_task(locomotion_data, task)
@@ -88,24 +90,35 @@ class Validator:
             # Count number of cycles for this task
             task_data = locomotion_data.df[locomotion_data.df['task'] == task]
             n_cycles = len(task_data) // 150  # Each cycle is 150 points
+            total_strides += n_cycles
+            
+            # Count failing strides for this task (stride-level pass rate)
+            failing_features = self._validate_task_with_failing_features(locomotion_data, task)
+            total_failing_strides += len(failing_features)
             
             # Get number of variables and phases being checked from config
             n_variables = 12  # 6 kinematic + 6 kinetic variables
             n_phases = 4  # Default 4 phases (0%, 25%, 50%, 75%)
             total_checks += n_cycles * n_variables * n_phases
         
-        # Calculate pass rate
-        pass_rate = 1.0 - (total_violations / total_checks if total_checks > 0 else 0)
+        # Calculate stride-level pass rate (green strides / total strides)
+        stride_pass_rate = 1.0 - (total_failing_strides / total_strides if total_strides > 0 else 0)
+        
+        # Keep old variable-level calculation for detailed statistics
+        variable_pass_rate = 1.0 - (total_violations / total_checks if total_checks > 0 else 0)
         
         return {
-            'passed': phase_valid and pass_rate >= 0.9,
+            'passed': phase_valid and stride_pass_rate >= 0.9,
             'phase_valid': phase_valid,
             'phase_message': phase_msg,
             'violations': violations,
             'stats': {
                 'total_checks': total_checks,
                 'total_violations': total_violations,
-                'pass_rate': pass_rate,
+                'total_strides': total_strides,
+                'total_failing_strides': total_failing_strides,
+                'pass_rate': stride_pass_rate,  # Now stride-level pass rate (main metric)
+                'variable_pass_rate': variable_pass_rate,  # Old variable-level for reference
                 'num_tasks': len(tasks),
                 'dataset': Path(dataset_path).stem
             }
