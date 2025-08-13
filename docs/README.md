@@ -1,14 +1,14 @@
 # Documentation Structure
 
-This directory contains two separate documentation sites for the Locomotion Data Standardization project.
+This directory contains documentation for the Locomotion Data Standardization project built with MkDocs.
 
-## Documentation Sites
+## Documentation Site
 
-### 🎯 User Guide (`user_guide/`)
+### 🎯 Main Documentation
 
-**Purpose**: User-focused documentation for researchers, contributors, and tool developers  
-**Audience**: Dataset consumers, dataset contributors, and developers building on our tools  
-**URL**: [User Guide Site](user_guide/site/index.html)
+**Purpose**: Comprehensive documentation for researchers, contributors, and developers  
+**Audience**: Dataset users, contributors, and maintainers  
+**URL**: Built site available via GitHub Pages
 
 **Content includes**:
 - Getting started guides and tutorials
@@ -19,46 +19,21 @@ This directory contains two separate documentation sites for the Locomotion Data
 
 **Build**:
 ```bash
-cd user_guide/
-python -m mkdocs serve  # Development server
-python -m mkdocs build  # Production build
-```
-
-### 🏗️ Software Engineering (`software_engineering/`)
-
-**Purpose**: Technical documentation for engineering teams and project stakeholders  
-**Audience**: Developers, architects, project managers, and technical stakeholders  
-**URL**: [Engineering Docs Site](software_engineering/site/index.html)
-
-**Content includes**:
-- System architecture and design decisions
-- Technical requirements and specifications
-- Development workflows and processes
-- Testing strategies and implementation guides
-- Project management and roadmap documentation
-
-**Build**:
-```bash
-cd software_engineering/
-python -m mkdocs serve  # Development server
-python -m mkdocs build  # Production build
+mkdocs serve  # Development server
+mkdocs build  # Production build
 ```
 
 ## Documentation Philosophy
 
-### Clear Separation of Concerns
+### Documentation Focus
 
-**User Guide focuses on**:
+**Content organized around**:
 - Task-oriented documentation ("How do I...")
 - Progressive disclosure (basic → advanced)
 - Practical examples and real-world usage
 - Clear troubleshooting and support paths
-
-**Engineering Docs focus on**:
-- Technical implementation details
+- Technical implementation details for contributors
 - Architecture decisions and rationale
-- Development processes and standards
-- System design and component interactions
 
 ### Design Principles
 

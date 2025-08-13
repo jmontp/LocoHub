@@ -6,14 +6,17 @@ Standardized biomechanical datasets ready for analysis.
 
 ## Available Datasets
 
+**GTech 2021** - Georgia Tech 2021 study:
+- `gtech_2021_phase.parquet` - Phase-indexed dataset (150 points/cycle) 
+- **Documentation:** [dataset_gtech_2021.md](../docs/reference/datasets_documentation/dataset_gtech_2021.md)
+
 **GTech 2023** - Georgia Tech 2023 study:
-- `gtech_2023_time.parquet` - Combined all subjects, time-indexed
-- `gtech_2023_time_AB*.parquet` - Individual subjects (AB01-AB13)
-- **Documentation:** [dataset_gtech_2023.md](../docs/datasets_documentation/dataset_gtech_2023.md)
+- `gtech_2023_phase.parquet` - Phase-indexed dataset (150 points/cycle)
+- **Documentation:** [dataset_gtech_2023.md](../docs/reference/datasets_documentation/dataset_gtech_2023.md)
 
 **UMich 2021** - University of Michigan treadmill study:
 - `umich_2021_phase.parquet` - Phase-indexed dataset (150 points/cycle)
-- **Documentation:** [dataset_umich_2021.md](../docs/datasets_documentation/dataset_umich_2021.md)
+- **Documentation:** [dataset_umich_2021.md](../docs/reference/datasets_documentation/dataset_umich_2021.md)
 
 ---
 
@@ -33,12 +36,12 @@ Standardized biomechanical datasets ready for analysis.
 **Python:**
 ```python
 import pandas as pd
-data = pd.read_parquet('gtech_2023_time.parquet')
+data = pd.read_parquet('gtech_2021_phase.parquet')
 ```
 
 **MATLAB:**
 ```matlab
-data = readtable('gtech_2023_time.parquet');
+data = readtable('gtech_2021_phase.parquet');
 ```
 
 ---
