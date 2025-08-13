@@ -238,11 +238,10 @@ contributor_tools/validation_ranges/
 
 **Option 3: Generate from Your Data**
 ```bash
-# Let the data define its own normal ranges
-python contributor_tools/automated_fine_tuning.py \
-    --dataset special_population_phase.parquet \
-    --method percentile_95 \
-    --output special_population_ranges.yaml
+# Use interactive tuner to define ranges based on your data
+python contributor_tools/interactive_validation_tuner.py
+# Load your dataset and visually adjust ranges
+# Save as special_population_ranges.yaml
 ```
 
 ### Understanding Phase-Based Validation

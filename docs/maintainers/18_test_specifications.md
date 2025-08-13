@@ -1111,116 +1111,8 @@ def test_complete_spec_management_workflow():
     assert "knee_flexion_angle_ipsi_rad" in documentation
 ```
 
-### AutomatedFineTuner Tests (UC-V05) ⭐ IMPORTANT
 
-#### Unit Tests - Priority 1
 
-**Test: tune_ranges_with_percentile_method**
-```python
-def test_tune_ranges_percentile_method():
-    """Test range tuning using percentile statistical method"""
-    # Given: Multiple datasets for analysis
-    datasets = [
-        create_test_dataset_with_known_stats("dataset1.parquet", mean=0.5, std=0.2),
-        create_test_dataset_with_known_stats("dataset2.parquet", mean=0.6, std=0.15),
-        create_test_dataset_with_known_stats("dataset3.parquet", mean=0.4, std=0.25)
-    ]
-    
-    # When: Tuning ranges using percentile method
-    tuner = AutomatedFineTuner(spec_manager)
-    result = tuner.tune_ranges(datasets, method='percentile', confidence=0.95)
-    
-    # Then: Optimized ranges are calculated
-    assert len(result.optimized_ranges) > 0
-    assert 'walking' in result.optimized_ranges
-    assert result.method == 'percentile'
-    assert result.confidence == 0.95
-    
-    # And: Comparison with current ranges provided
-    assert 'comparison' in result
-    assert len(result.comparison) > 0
-```
-
-**Test: tune_ranges_with_iqr_method**
-```python
-def test_tune_ranges_iqr_method():
-    """Test range tuning using IQR statistical method"""
-    # Given: Datasets with known outliers
-    datasets = create_datasets_with_outliers()
-    
-    # When: Tuning ranges using IQR method
-    result = tuner.tune_ranges(datasets, method='iqr')
-    
-    # Then: IQR-based ranges are more robust to outliers
-    assert result.method == 'iqr'
-    
-    # And: Outliers are handled appropriately
-    for task, task_ranges in result.optimized_ranges.items():
-        for variable, ranges in task_ranges.items():
-            assert 'min' in ranges
-            assert 'max' in ranges
-            assert ranges['max'] > ranges['min']
-```
-
-**Test: analyze_tuning_impact**
-```python
-def test_analyze_tuning_impact():
-    """Test analysis of impact from proposed range changes"""
-    # Given: Tuning results and test datasets
-    tuning_result = create_sample_tuning_result()
-    test_datasets = ["test_data/validation_set1.parquet", "test_data/validation_set2.parquet"]
-    
-    # When: Analyzing tuning impact
-    impact_result = tuner.analyze_tuning_impact(tuning_result, test_datasets)
-    
-    # Then: Impact analysis is comprehensive
-    assert 'current_failures' in impact_result
-    assert 'projected_failures' in impact_result
-    assert 'datasets_improved' in impact_result
-    assert 'datasets_degraded' in impact_result
-    
-    # And: Net impact calculation provided
-    assert 'net_improvement' in impact_result
-    assert isinstance(impact_result.net_improvement, bool)
-```
-
-**Test: apply_tuned_ranges**
-```python
-def test_apply_tuned_ranges_with_backup():
-    """Test application of tuned ranges with backup"""
-    # Given: Tuning results and backup requirement
-    tuning_result = create_valid_tuning_result()
-    
-    # When: Applying tuned ranges with backup
-    tuner.apply_tuned_ranges(tuning_result, backup=True)
-    
-    # Then: Backup is created before applying changes
-    backup_files = glob.glob("**/spec_backup_*", recursive=True)
-    assert len(backup_files) > 0
-    
-    # And: New ranges are applied to specifications
-    updated_ranges = spec_manager.get_task_ranges("walking")
-    assert updated_ranges != original_ranges  # Should be different
-```
-
-#### Performance Tests - Priority 2
-
-**Test: tune_ranges_large_dataset_collection**
-```python
-def test_tune_ranges_with_large_dataset_collection():
-    """Test range tuning performance with large dataset collection"""
-    # Given: Large collection of datasets
-    datasets = [f"large_dataset_{i}.parquet" for i in range(50)]
-    
-    # When: Tuning ranges on large collection
-    start_time = time.time()
-    result = tuner.tune_ranges(datasets, method='percentile')
-    end_time = time.time()
-    
-    # Then: Tuning completes within reasonable time
-    assert end_time - start_time < 300  # Should complete within 5 minutes
-    assert result.datasets_analyzed == 50
-```
 
 ---
 
@@ -1282,9 +1174,8 @@ def test_specification_update_and_revalidation_workflow():
     existing_datasets = ["dataset1.parquet", "dataset2.parquet", "dataset3.parquet"]
     
     # When: Running specification update workflow
-    # Step 1: Analyze current datasets for range optimization
-    tuner = AutomatedFineTuner(spec_manager)
-    tuning_result = tuner.tune_ranges(existing_datasets)
+    # Step 1: Use interactive tuner for range optimization
+    # (Interactive GUI-based workflow)
     
     # Step 2: Review and apply specification changes
     spec_manager = ValidationSpecManager(config_manager)
@@ -1388,7 +1279,6 @@ pytest tests/
 pytest tests/test_dataset_converter.py
 pytest tests/test_phase_validator.py
 pytest tests/test_validation_spec_manager.py
-pytest tests/test_automated_fine_tuner.py
 ```
 
 **Integration test execution:**

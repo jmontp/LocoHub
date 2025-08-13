@@ -9,7 +9,6 @@ Features:
 - Direct manipulation of validation range boxes
 - Load/save YAML validation ranges
 - Load parquet datasets for visualization
-- Auto-tuning integration
 - Real-time plot updates
 
 Usage:
@@ -28,7 +27,7 @@ Usage:
        - Drag bottom edge to adjust min value
        - Drag middle to move entire box
     
-    5. Use Auto-Tune button to automatically set ranges using statistical methods
+    5. Adjust validation ranges by dragging the colored boxes on the plot
     
     6. Save modified ranges (File -> Save Validation Ranges)
 
@@ -98,7 +97,6 @@ from user_libs.python.locomotion_data import LocomotionData
 from user_libs.python.feature_constants import get_feature_list
 from internal.config_management.config_manager import ValidationConfigManager
 from internal.plot_generation.filters_by_phase_plots import get_task_classification
-from contributor_tools.automated_fine_tuning import AutomatedFineTuner
 
 
 class DraggableBox:
@@ -638,7 +636,6 @@ class InteractiveValidationTuner:
         self.info_label.pack(side=tk.LEFT, padx=20)
         
         # Buttons
-        ttk.Button(toolbar_frame, text="Auto-Tune", command=self.auto_tune).pack(side=tk.LEFT, padx=20)
         
         # Validate button (disabled by default)
         self.validate_button = ttk.Button(toolbar_frame, text="Validate", command=self.run_validation_update, state='disabled')
@@ -676,7 +673,7 @@ class InteractiveValidationTuner:
         self.create_empty_plot()
     
     def auto_load_defaults(self):
-        """Auto-load default validation ranges and dataset."""
+        """Auto-load default validation ranges only. No dataset auto-loading."""
         # Load default validation ranges
         default_ranges_path = project_root / "contributor_tools" / "validation_ranges" / "default_ranges.yaml"
         if default_ranges_path.exists():
@@ -707,47 +704,13 @@ class InteractiveValidationTuner:
                     self.task_dropdown.set(tasks[0])
                     self.current_task = tasks[0]
                 
-                self.status_bar.config(text=f"Loaded default validation ranges")
+                self.status_bar.config(text=f"Loaded default validation ranges. Load dataset via File menu.")
                 self.modified = False
             except Exception as e:
                 print(f"Could not load default ranges: {e}")
-        
-        # Load default dataset
-        default_dataset_path = project_root / "converted_datasets" / "umich_2021_phase.parquet"
-        if default_dataset_path.exists():
-            try:
-                self.dataset_path = default_dataset_path
-                
-                # Try loading with different phase column names
-                try:
-                    # Try with 'phase' column first
-                    self.locomotion_data = LocomotionData(str(self.dataset_path))
-                except ValueError as e:
-                    if "Missing required columns: ['phase']" in str(e):
-                        # Try with 'phase_percent' column
-                        self.locomotion_data = LocomotionData(
-                            str(self.dataset_path),
-                            phase_col='phase_percent'
-                        )
-                    else:
-                        raise e
-                
-                # Clear data cache
-                self.data_cache = {}
-                
-                # Update task dropdown with tasks from dataset
-                self.update_task_dropdown_from_dataset()
-                
-                self.status_bar.config(text=f"Loaded defaults: {default_ranges_path.name} and {default_dataset_path.name}")
-                
-                # Initialize complete validation display (GUI setup + validation)
-                if self.validation_data and self.current_task:
-                    # Use hybrid approach: GUI infrastructure + proven 4-step algorithm
-                    self.initialize_validation_display()
-            except Exception as e:
-                print(f"Could not load default dataset: {e}")
-                import traceback
-                traceback.print_exc()  # Show full error traceback for debugging
+                self.status_bar.config(text="Ready. Load validation ranges and dataset to begin.")
+        else:
+            self.status_bar.config(text="Ready. Load validation ranges and dataset to begin.")
     
     def create_scrollable_plot_area(self):
         """Create a scrollable area for the plots."""
@@ -1881,75 +1844,6 @@ class InteractiveValidationTuner:
             if hasattr(self, 'validate_button'):
                 self.validate_button.config(state='normal')
     
-    def auto_tune(self):
-        """Run auto-tuning for current task."""
-        if not self.dataset_path:
-            messagebox.showwarning("Warning", "Please load a dataset first.")
-            return
-        
-        if not self.current_task:
-            messagebox.showwarning("Warning", "Please select a task.")
-            return
-        
-        try:
-            # Create auto-tuner - we'll run for all modes and combine results
-            self.status_bar.config(text="Running auto-tuning for all features...")
-            self.root.update()
-            
-            # Run auto-tuning for all three modes and combine results
-            combined_ranges = {}
-            
-            for mode in ['kinematic', 'kinetic', 'segment']:
-                tuner = AutomatedFineTuner(str(self.dataset_path), mode=mode)
-                results = tuner.run_statistical_tuning(
-                    method='percentile_95',
-                    save_ranges=False,
-                    save_report=False
-                )
-                
-                if results['success'] and self.current_task in results['validation_ranges']:
-                    task_ranges = results['validation_ranges'][self.current_task]
-                    # Merge phase data
-                    for phase, variables in task_ranges.items():
-                        if phase not in combined_ranges:
-                            combined_ranges[phase] = {}
-                        combined_ranges[phase].update(variables)
-            
-            if combined_ranges:
-                # Update our validation data with combined ranges
-                self.validation_data[self.current_task] = combined_ranges
-                
-                # Also update full validation data for consistency
-                # ConfigManager will generate contralateral features when we reload
-                if self.config_manager:
-                    # Update the config manager with new data
-                    for phase, variables in combined_ranges.items():
-                        for var_name, var_range in variables.items():
-                            self.config_manager.set_range(
-                                self.current_task, phase, var_name,
-                                var_range['min'], var_range['max']
-                            )
-                    # Regenerate full data with contra features
-                    self.full_validation_data[self.current_task] = self.config_manager.get_task_data(self.current_task)
-                else:
-                    # If no config manager, just copy the ipsi data
-                    self.full_validation_data[self.current_task] = combined_ranges
-                
-                # Update the plot
-                self.update_plot()
-                
-                # Run validation with new ranges
-                self.run_validation_update()
-                
-                self.modified = True
-                self.status_bar.config(text="Auto-tuning complete for all features.")
-            else:
-                messagebox.showinfo("Info", f"No data available for task: {self.current_task}")
-                
-        except Exception as e:
-            print(f"ERROR: Auto-tuning failed: {str(e)}")
-            messagebox.showerror("Error", f"Auto-tuning failed:\n{str(e)}")
-            self.status_bar.config(text="Auto-tuning failed.")
     
     
     def on_plot_click(self, event):
@@ -2643,8 +2537,7 @@ def main():
             print("  1. Install an X server on Windows (e.g., VcXsrv, X410, or WSLg)")
             print("  2. Set DISPLAY environment variable: export DISPLAY=:0")
             print("  3. Or use Windows Terminal with WSLg (Windows 11)")
-        print("\nAlternatively, you can use the command-line tools:")
-        print("  - automated_fine_tuning.py for statistical auto-tuning")
+        print("\nAlternatively, you can use the command-line tool:")
         print("  - create_validation_range_plots.py for static plots")
         return 1
     

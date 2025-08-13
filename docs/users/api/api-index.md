@@ -82,14 +82,16 @@ DatasetValidator(dataset_path, output_dir=None, generate_plots=True)
 **Methods**:
 - [`parse_validation_file(file_path)`](#parse_validation_file) - Parse markdown specs
 
-### AutomatedFineTuning
-*Optimize validation ranges*
+### Interactive Validation Tuning
+*Visual optimization of validation ranges*
 
-**Location**: `lib.validation.automated_fine_tuning.AutomatedFineTuning`
+**Tool**: `contributor_tools/interactive_validation_tuner.py`
 
-**Methods**:
-- [`tune_validation_ranges(dataset_path, validation_type, percentile_range)`](#tune_validation_ranges) - Optimize ranges
-- [`apply_tuned_ranges(optimized_ranges, validation_type)`](#apply_tuned_ranges) - Apply ranges
+**Features**:
+- Visual comparison of passing vs failing strides
+- Real-time range adjustment with drag interface
+- Multi-variable failure analysis
+- YAML export for range configurations
 
 ## Methods
 
@@ -318,24 +320,6 @@ Parse validation expectations from markdown file.
 
 **Returns**: Parsed validation ranges
 
-### tune_validation_ranges
-**Class**: AutomatedFineTuning  
-**Signature**: `tune_validation_ranges(dataset_path: str, validation_type: str, percentile_range: Tuple[float, float]) -> Dict`
-
-Generate optimized validation ranges from dataset.
-
-**Parameters**:
-- `dataset_path`: Reference dataset path
-- `validation_type`: 'kinematic' or 'kinetic'
-- `percentile_range`: Percentile bounds (e.g., (5, 95))
-
-**Returns**: Optimized validation ranges
-
-### apply_tuned_ranges
-**Class**: AutomatedFineTuning  
-**Signature**: `apply_tuned_ranges(optimized_ranges: Dict, validation_type: str)`
-
-Apply optimized ranges to specifications.
 
 ## Functions
 

@@ -117,7 +117,7 @@ flowchart TD
     CheckRanges -->|No, or Special Population| CreateRanges[Create Validation Ranges]
     CreateRanges --> RangeOptions[/"
     Choose Method:
-    • Generate from your data (automated_fine_tuning.py)
+    • Generate from your data (interactive_validation_tuner.py)
     • Copy and modify existing ranges
     • Create manually for special needs
     "/]

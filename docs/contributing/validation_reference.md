@@ -28,11 +28,10 @@ You'll need custom validation ranges for:
 
 #### Method 1: Generate from Your Data (Recommended)
 
-Use the automated fine-tuning tool to generate ranges statistically from your dataset:
+Use the interactive validation tuner to generate ranges based on your dataset:
 
 ```bash
-# Generate ranges using 95th percentile method (recommended)
-# Currently, generate ranges manually or use interactive tuner
+# Interactive visual tuning with real-time feedback
 python contributor_tools/interactive_validation_tuner.py
 # Then adjust ranges visually and save
 

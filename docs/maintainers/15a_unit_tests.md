@@ -257,32 +257,6 @@ def test_range_updates():
     assert updated_range.variable_ranges["knee_flexion_angle_ipsi_rad"].min_value == -10
 ```
 
-## AutomatedFineTuner Unit Tests
-
-### Range Optimization Tests
-```python
-def test_optimal_range_calculation():
-    """Test calculation of optimal ranges using different methods"""
-    data = create_normal_distribution_data()
-    
-    # Percentile method
-    ranges = tuner.calculate_optimal_ranges(data, method="percentile")
-    assert ranges["knee_flexion_angle_ipsi_rad"]["min"] < ranges["knee_flexion_angle_ipsi_rad"]["max"]
-    
-    # Statistical method
-    ranges = tuner.calculate_optimal_ranges(data, method="statistical")
-    assert ranges["knee_flexion_angle_ipsi_rad"]["confidence"] > 0.9
-
-def test_range_change_preview():
-    """Test preview of proposed range changes"""
-    current_ranges = get_current_validation_ranges()
-    proposed_ranges = get_statistically_optimized_ranges()
-    
-    preview = tuner.preview_range_changes(current_ranges, proposed_ranges)
-    assert preview.datasets_affected > 0
-    assert "validation_rate_changes" in preview.__dict__
-    assert preview.overall_impact_score >= 0
-```
 
 ## Supporting Infrastructure Unit Tests
 

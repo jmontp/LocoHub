@@ -181,42 +181,27 @@ knee_range = walking_ranges['knee_flexion_angle_contra_rad']
 print(f"Knee flexion range at phase 0: {knee_range['phase_0']}")
 ```
 
-### AutomatedFineTuning
+### Interactive Validation Tuning
 
-Automatically optimize validation ranges based on dataset statistics.
+Use the interactive validation tuner for visual range optimization.
 
-```python
-from lib.validation.automated_fine_tuning import AutomatedFineTuning
-
-tuner = AutomatedFineTuning()
+```bash
+# Interactive visual tuning
+python contributor_tools/interactive_validation_tuner.py
 ```
 
-##### `tune_validation_ranges(dataset_path, validation_type, percentile_range)`
+The interactive tuner provides:
+- **Visual feedback**: See passing vs failing strides
+- **Real-time adjustment**: Drag validation boxes to modify ranges  
+- **Multi-variable view**: Compare failures across different features
+- **YAML export**: Save tuned ranges in standard format
 
-Generate optimized validation ranges from dataset.
-
-**Parameters:**
-- `dataset_path` (str): Path to reference dataset
-- `validation_type` (str): 'kinematic' or 'kinetic'  
-- `percentile_range` (Tuple[float, float]): Percentile range for bounds (e.g., (5, 95))
-
-**Returns:**
-- `Dict`: Optimized validation ranges
-
-**Example:**
-```python
-tuner = AutomatedFineTuning()
-
-# Generate ranges from high-quality reference dataset
-optimized_ranges = tuner.tune_validation_ranges(
-    dataset_path='reference_dataset_phase.parquet',
-    validation_type='kinematic',
-    percentile_range=(2.5, 97.5)  # Conservative bounds
-)
-
-# Apply to existing specifications
-tuner.apply_tuned_ranges(optimized_ranges, 'kinematic')
-```
+**Workflow:**
+1. Load your dataset in the interactive tuner
+2. Visually inspect stride patterns and validation failures
+3. Adjust validation boxes by dragging min/max bounds
+4. Save optimized ranges to YAML file
+5. Use saved ranges for validation
 
 ## Advanced Validation Patterns
 

@@ -87,26 +87,22 @@ def test_specification_tuning_workflow():
     current_specs = spec_manager.load_specifications("current_specs.md")
     assert current_specs.success == True
     
-    # 2. Tune ranges based on datasets
-    tuner = AutomatedFineTuner(spec_manager)
-    datasets = ["dataset1.parquet", "dataset2.parquet", "dataset3.parquet"]
-    tuning_result = tuner.auto_tune_ranges(datasets, method="percentile")
+    # 2. Use interactive tuner for range optimization
+    # Note: This is now a manual GUI-based workflow
+    # python contributor_tools/interactive_validation_tuner.py
     
-    # 3. Preview changes
-    preview = tuner.preview_range_changes(
-        current_specs.variable_ranges, 
-        tuning_result.optimized_ranges
+    # 3. Load tuned ranges from YAML file
+    tuned_ranges_path = "contributor_tools/validation_ranges/tuned_ranges.yaml"
+    with open(tuned_ranges_path, 'r') as f:
+        tuned_ranges = yaml.safe_load(f)
+    
+    # 4. Apply changes to specifications
+    update_result = spec_manager.update_validation_ranges(
+        "walking", 
+        "knee_flexion_angle_ipsi_rad", 
+        tuned_ranges["walking"]["knee_flexion_angle_ipsi_rad"]
     )
-    assert preview.datasets_affected > 0
-    
-    # 4. Apply changes if beneficial
-    if preview.overall_impact_score > 0.7:
-        update_result = spec_manager.update_validation_ranges(
-            "walking", 
-            "knee_flexion_angle_ipsi_rad", 
-            tuning_result.optimized_ranges["walking"]["knee_flexion_angle_ipsi_rad"]
-        )
-        assert update_result.success == True
+    assert update_result.success == True
     
     # 5. Validate updated specifications
     test_result = phase_validator.validate_dataset("test_dataset.parquet")
