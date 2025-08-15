@@ -1064,6 +1064,12 @@ class InteractiveValidationTuner:
         # Check suffixes
         if var_name.endswith('_rad'):
             return 'deg' if self.show_degrees_var.get() else 'rad'
+        elif var_name.endswith('_Nm_kg'):
+            return 'Nm/kg'
+        elif var_name.endswith('_BW'):
+            return 'BW'
+        elif var_name.endswith('_BW'):
+            return 'N/kg'
         elif var_name.endswith('_Nm'):
             return 'Nm'
         elif var_name.endswith('_N'):
@@ -1073,7 +1079,9 @@ class InteractiveValidationTuner:
         elif var_name.endswith('_deg'):
             return 'deg'
         elif 'moment' in var_name.lower():
-            return 'Nm'  # Fallback for moments
+            return 'Nm/kg'  # Fallback for moments (now weight-normalized)
+        elif 'grf' in var_name.lower():
+            return 'N/kg'  # Fallback for GRF (now weight-normalized)
         elif 'angle' in var_name.lower():
             return 'rad'  # Fallback for angles
         else:
@@ -1093,16 +1101,28 @@ class InteractiveValidationTuner:
             'Ankle Dorsiflexion Angle (Ipsi)'
         ]
         
-        # Joint moments (sagittal plane) - from standard_spec.md - IPSI ONLY
+        # Joint moments (sagittal plane) - from standard_spec.md - IPSI ONLY - Weight normalized
         kinetic_vars = [
-            'hip_flexion_moment_ipsi_Nm',
-            'knee_flexion_moment_ipsi_Nm',
-            'ankle_dorsiflexion_moment_ipsi_Nm'
+            'hip_flexion_moment_ipsi_Nm_kg',
+            'knee_flexion_moment_ipsi_Nm_kg',
+            'ankle_dorsiflexion_moment_ipsi_Nm_kg'
         ]
         kinetic_labels = [
             'Hip Flexion Moment (Ipsi)',
             'Knee Flexion Moment (Ipsi)',
             'Ankle Dorsiflexion Moment (Ipsi)'
+        ]
+        
+        # Ground Reaction Forces - from standard_spec.md - IPSI ONLY - Weight normalized
+        grf_vars = [
+            'vertical_grf_ipsi_BW',
+            'anterior_grf_ipsi_BW', 
+            'lateral_grf_ipsi_BW'
+        ]
+        grf_labels = [
+            'Vertical GRF (BW, Ipsi)',
+            'Anterior GRF (BW, Ipsi)', 
+            'Lateral GRF (BW, Ipsi)'
         ]
         
         # Segment angles (sagittal plane) - from standard_spec.md - IPSI ONLY (plus bilateral segments)
@@ -1156,9 +1176,9 @@ class InteractiveValidationTuner:
         ]
         
         # Combine primary features (most commonly available)
-        # Start with sagittal plane kinematics and kinetics
-        all_vars = kinematic_vars + kinetic_vars + segment_vars
-        all_labels = kinematic_labels + kinetic_labels + segment_labels
+        # Start with sagittal plane kinematics, kinetics, GRF, and segments
+        all_vars = kinematic_vars + kinetic_vars + grf_vars + segment_vars
+        all_labels = kinematic_labels + kinetic_labels + grf_labels + segment_labels
         
         # Optionally add velocities and additional planes if needed
         # Uncomment to include:
