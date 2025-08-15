@@ -52,6 +52,29 @@ for subject_idx = 1:length(subjects)
     subject_num = subject(end-1:end);  % Extract last 2 chars (e.g., '01' from 'AB01')
     subject_str = strcat('UM21_AB', subject_num);
     
+    % Extract subject metadata from ParticipantDetails
+    if isfield(subject_data, 'ParticipantDetails')
+        details = subject_data.ParticipantDetails;
+        
+        % Find metadata fields
+        age_idx = find(strcmp(details(:,1), 'Age'));
+        mass_idx = find(strcmp(details(:,1), 'Bodymass'));
+        height_idx = find(strcmp(details(:,1), 'Height'));
+        
+        % Extract values with defaults
+        age = 0; body_mass = 70; height_m = 1.75; % defaults
+        if ~isempty(age_idx), age = details{age_idx, 2}; end
+        if ~isempty(mass_idx), body_mass = details{mass_idx, 2}; end
+        if ~isempty(height_idx), height_m = details{height_idx, 2} / 1000; end % convert mm to m
+        
+        % Format subject metadata string
+        subject_metadata = sprintf('age:%d,height_m:%.2f,weight_kg:%.1f', age, height_m, body_mass);
+    else
+        % Default values if no ParticipantDetails
+        body_mass = 70; % kg (default for normalization)
+        subject_metadata = 'age:0,height_m:1.75,weight_kg:70.0';
+    end
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Process Walking data (Tread in Streaming.mat)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -141,7 +164,7 @@ for subject_idx = 1:length(subjects)
                 % Process strides using events for this segment
                 stride_table = process_strides_with_segment_events(...
                     incline_data, events, segment_start, segment_end, ...
-                    subject_str, task_type, task_id, task_info);
+                    subject_str, subject_metadata, body_mass, task_type, task_id, task_info);
                 
                 % Add to total data
                 if ~isempty(stride_table)
@@ -194,7 +217,7 @@ for subject_idx = 1:length(subjects)
             
             % Process strides using events
             stride_table = process_strides_with_events(...
-                trial_data, events, subject_str, task_type, task_id, task_info);
+                trial_data, events, subject_str, subject_metadata, body_mass, task_type, task_id, task_info);
             
             % Add to total data
             if ~isempty(stride_table)
@@ -221,7 +244,7 @@ fprintf('Conversion complete!\n');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function stride_table = process_strides_with_segment_events(trial_data, events, ...
-    segment_start, segment_end, subject_str, task_type, task_id, task_info)
+    segment_start, segment_end, subject_str, subject_metadata, body_mass, task_type, task_id, task_info)
     
     % Initialize output table
     stride_table = table;
@@ -263,7 +286,7 @@ function stride_table = process_strides_with_segment_events(trial_data, events, 
     
     % Call the main processing function with filtered events
     stride_table = process_strides_with_events_internal(trial_data, ...
-        RHS, LHS, RStrideTime, subject_str, task_type, task_id, task_info);
+        RHS, LHS, RStrideTime, subject_str, subject_metadata, body_mass, task_type, task_id, task_info);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -271,7 +294,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function stride_table = process_strides_with_events(trial_data, events, ...
-    subject_str, task_type, task_id, task_info)
+    subject_str, subject_metadata, body_mass, task_type, task_id, task_info)
     
     % Get heel strike events (in frames at 100 Hz)
     RHS = events.RHS;  % Right heel strikes
@@ -287,7 +310,7 @@ function stride_table = process_strides_with_events(trial_data, events, ...
     
     % Call the main processing function
     stride_table = process_strides_with_events_internal(trial_data, ...
-        RHS, LHS, RStrideTime, subject_str, task_type, task_id, task_info);
+        RHS, LHS, RStrideTime, subject_str, subject_metadata, body_mass, task_type, task_id, task_info);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -295,23 +318,23 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function stride_table = process_strides_with_events_internal(trial_data, ...
-    RHS, LHS, RStrideTime, subject_str, task_type, task_id, task_info)
+    RHS, LHS, RStrideTime, subject_str, subject_metadata, body_mass, task_type, task_id, task_info)
     
     % Process both right-initiated and left-initiated strides
     right_strides = process_strides_single_leg(trial_data, RHS, LHS, RStrideTime, ...
-        subject_str, task_type, task_id, task_info, 'right');
+        subject_str, subject_metadata, body_mass, task_type, task_id, task_info, 'right');
     
     % Calculate LStrideTime from LHS
     LStrideTime = diff(LHS);
     left_strides = process_strides_single_leg(trial_data, LHS, RHS, LStrideTime, ...
-        subject_str, task_type, task_id, task_info, 'left');
+        subject_str, subject_metadata, body_mass, task_type, task_id, task_info, 'left');
     
     % Combine both tables
     stride_table = [right_strides; left_strides];
 end
 
 function stride_table = process_strides_single_leg(trial_data, ...
-    ipsi_HS, contra_HS, ipsi_StrideTime, subject_str, task_type, task_id, task_info, leg_side)
+    ipsi_HS, contra_HS, ipsi_StrideTime, subject_str, subject_metadata, body_mass, task_type, task_id, task_info, leg_side)
     
     % Global flag for data fixes
     global ENABLE_DATA_FIXES;
@@ -384,6 +407,7 @@ function stride_table = process_strides_single_leg(trial_data, ...
         % Initialize stride data structure
         stride_data = struct();
         stride_data.subject = repmat({subject_str}, NUM_POINTS, 1);
+        stride_data.subject_metadata = repmat({subject_metadata}, NUM_POINTS, 1);
         stride_data.task = repmat({task_type}, NUM_POINTS, 1);
         stride_data.task_id = repmat({task_id}, NUM_POINTS, 1);
         stride_data.task_info = repmat({task_info}, NUM_POINTS, 1);
@@ -553,19 +577,19 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 ipsi_hip_moment = moments.([ipsi_prefix 'HipMoment']);
                 contra_hip_moment = moments.([contra_prefix 'HipMoment']);
                 
-                stride_data.hip_flexion_moment_ipsi_Nm = interpolate_signal(...
+                stride_data.hip_flexion_moment_ipsi_Nm_kg = interpolate_signal(...
                     ipsi_hip_moment(ipsi_frames, sagittal_plane), NUM_POINTS);
-                stride_data.hip_flexion_moment_contra_Nm = interpolate_signal(...
+                stride_data.hip_flexion_moment_contra_Nm_kg = interpolate_signal(...
                     contra_hip_moment(contra_frames, sagittal_plane), NUM_POINTS);
                 
-                stride_data.hip_adduction_moment_ipsi_Nm = interpolate_signal(...
+                stride_data.hip_adduction_moment_ipsi_Nm_kg = interpolate_signal(...
                     ipsi_hip_moment(ipsi_frames, frontal_plane), NUM_POINTS);
-                stride_data.hip_adduction_moment_contra_Nm = interpolate_signal(...
+                stride_data.hip_adduction_moment_contra_Nm_kg = interpolate_signal(...
                     contra_hip_moment(contra_frames, frontal_plane), NUM_POINTS);
                 
-                stride_data.hip_rotation_moment_ipsi_Nm = interpolate_signal(...
+                stride_data.hip_rotation_moment_ipsi_Nm_kg = interpolate_signal(...
                     ipsi_hip_moment(ipsi_frames, transverse_plane), NUM_POINTS);
-                stride_data.hip_rotation_moment_contra_Nm = interpolate_signal(...
+                stride_data.hip_rotation_moment_contra_Nm_kg = interpolate_signal(...
                     contra_hip_moment(contra_frames, transverse_plane), NUM_POINTS);
             end
             
@@ -595,19 +619,19 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 
                 % Assign based on which leg is ipsilateral
                 if strcmp(leg_side, 'right')
-                    stride_data.knee_flexion_moment_ipsi_Nm = r_knee_mom_flex;
-                    stride_data.knee_flexion_moment_contra_Nm = l_knee_mom_flex;
-                    stride_data.knee_adduction_moment_ipsi_Nm = r_knee_mom_add;
-                    stride_data.knee_adduction_moment_contra_Nm = l_knee_mom_add;
-                    stride_data.knee_rotation_moment_ipsi_Nm = r_knee_mom_rot;
-                    stride_data.knee_rotation_moment_contra_Nm = l_knee_mom_rot;
+                    stride_data.knee_flexion_moment_ipsi_Nm_kg = r_knee_mom_flex;
+                    stride_data.knee_flexion_moment_contra_Nm_kg = l_knee_mom_flex;
+                    stride_data.knee_adduction_moment_ipsi_Nm_kg = r_knee_mom_add;
+                    stride_data.knee_adduction_moment_contra_Nm_kg = l_knee_mom_add;
+                    stride_data.knee_rotation_moment_ipsi_Nm_kg = r_knee_mom_rot;
+                    stride_data.knee_rotation_moment_contra_Nm_kg = l_knee_mom_rot;
                 else
-                    stride_data.knee_flexion_moment_ipsi_Nm = l_knee_mom_flex;
-                    stride_data.knee_flexion_moment_contra_Nm = r_knee_mom_flex;
-                    stride_data.knee_adduction_moment_ipsi_Nm = l_knee_mom_add;
-                    stride_data.knee_adduction_moment_contra_Nm = r_knee_mom_add;
-                    stride_data.knee_rotation_moment_ipsi_Nm = l_knee_mom_rot;
-                    stride_data.knee_rotation_moment_contra_Nm = r_knee_mom_rot;
+                    stride_data.knee_flexion_moment_ipsi_Nm_kg = l_knee_mom_flex;
+                    stride_data.knee_flexion_moment_contra_Nm_kg = r_knee_mom_flex;
+                    stride_data.knee_adduction_moment_ipsi_Nm_kg = l_knee_mom_add;
+                    stride_data.knee_adduction_moment_contra_Nm_kg = r_knee_mom_add;
+                    stride_data.knee_rotation_moment_ipsi_Nm_kg = l_knee_mom_rot;
+                    stride_data.knee_rotation_moment_contra_Nm_kg = r_knee_mom_rot;
                 end
             end
             
@@ -616,19 +640,19 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 ipsi_ankle_moment = moments.([ipsi_prefix 'AnkleMoment']);
                 contra_ankle_moment = moments.([contra_prefix 'AnkleMoment']);
                 
-                stride_data.ankle_dorsiflexion_moment_ipsi_Nm = interpolate_signal(...
+                stride_data.ankle_dorsiflexion_moment_ipsi_Nm_kg = interpolate_signal(...
                     ipsi_ankle_moment(ipsi_frames, sagittal_plane), NUM_POINTS);
-                stride_data.ankle_dorsiflexion_moment_contra_Nm = interpolate_signal(...
+                stride_data.ankle_dorsiflexion_moment_contra_Nm_kg = interpolate_signal(...
                     contra_ankle_moment(contra_frames, sagittal_plane), NUM_POINTS);
                 
-                stride_data.ankle_adduction_moment_ipsi_Nm = interpolate_signal(...
+                stride_data.ankle_adduction_moment_ipsi_Nm_kg = interpolate_signal(...
                     ipsi_ankle_moment(ipsi_frames, frontal_plane), NUM_POINTS);
-                stride_data.ankle_adduction_moment_contra_Nm = interpolate_signal(...
+                stride_data.ankle_adduction_moment_contra_Nm_kg = interpolate_signal(...
                     contra_ankle_moment(contra_frames, frontal_plane), NUM_POINTS);
                 
-                stride_data.ankle_rotation_moment_ipsi_Nm = interpolate_signal(...
+                stride_data.ankle_rotation_moment_ipsi_Nm_kg = interpolate_signal(...
                     ipsi_ankle_moment(ipsi_frames, transverse_plane), NUM_POINTS);
-                stride_data.ankle_rotation_moment_contra_Nm = interpolate_signal(...
+                stride_data.ankle_rotation_moment_contra_Nm_kg = interpolate_signal(...
                     contra_ankle_moment(contra_frames, transverse_plane), NUM_POINTS);
             end
         end
@@ -746,9 +770,9 @@ function stride_table = process_strides_single_leg(trial_data, ...
             forces = trial_data.forceplates;
             
             % Force directions (adjust for coordinate system)
-            x = 1;  % AP
+            x = 2;  % AP (swapped from z)
             y = 3;  % Vertical (will negate)
-            z = 2;  % ML
+            z = 1;  % ML (swapped from x)
             
             if isfield(forces, 'RForce') && isfield(forces, 'LForce')
                 % Note: Forces sampled at 1000 Hz, so downsample
@@ -767,21 +791,40 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 l_force_indices = l_force_indices(l_force_indices <= size(forces.LForce, 1));
                 
                 if ~isempty(r_force_indices) && ~isempty(l_force_indices)
-                    % Interpolate forces separately then combine
-                    % AP forces
-                    r_force_ap = interpolate_signal(forces.RForce(r_force_indices, x), NUM_POINTS);
-                    l_force_ap = interpolate_signal(forces.LForce(l_force_indices, x), NUM_POINTS);
-                    stride_data.ap_grf_N = r_force_ap + l_force_ap;
+                    % Interpolate forces separately, then assign as ipsi/contra and normalize by weight
+                    
+                    % Anterior forces (previously AP) - flip sign for correct braking/propulsion convention
+                    r_force_anterior = interpolate_signal(-forces.RForce(r_force_indices, x), NUM_POINTS);
+                    l_force_anterior = interpolate_signal(-forces.LForce(l_force_indices, x), NUM_POINTS);
                     
                     % Vertical forces (negate for up positive)
                     r_force_vert = interpolate_signal(-forces.RForce(r_force_indices, y), NUM_POINTS);
                     l_force_vert = interpolate_signal(-forces.LForce(l_force_indices, y), NUM_POINTS);
-                    stride_data.vertical_grf_N = r_force_vert + l_force_vert;
                     
-                    % ML forces
-                    r_force_ml = interpolate_signal(forces.RForce(r_force_indices, z), NUM_POINTS);
-                    l_force_ml = interpolate_signal(forces.LForce(l_force_indices, z), NUM_POINTS);
-                    stride_data.ml_grf_N = r_force_ml + l_force_ml;
+                    % Lateral forces (previously ML) - flip sign for left leg to maintain convention
+                    r_force_lateral = interpolate_signal(forces.RForce(r_force_indices, z), NUM_POINTS);
+                    l_force_lateral = interpolate_signal(-forces.LForce(l_force_indices, z), NUM_POINTS);
+                    
+                    % Assign forces based on which leg is ipsilateral and normalize by body weight to get BW
+                    body_weight_N = body_mass * 9.81;  % Convert mass to weight for normalization
+                    
+                    if strcmp(leg_side, 'right')
+                        % Right leg is ipsilateral
+                        stride_data.anterior_grf_ipsi_BW = r_force_anterior / body_weight_N;
+                        stride_data.anterior_grf_contra_BW = l_force_anterior / body_weight_N;
+                        stride_data.vertical_grf_ipsi_BW = r_force_vert / body_weight_N;
+                        stride_data.vertical_grf_contra_BW = l_force_vert / body_weight_N;
+                        stride_data.lateral_grf_ipsi_BW = r_force_lateral / body_weight_N;
+                        stride_data.lateral_grf_contra_BW = l_force_lateral / body_weight_N;
+                    else
+                        % Left leg is ipsilateral
+                        stride_data.anterior_grf_ipsi_BW = l_force_anterior / body_weight_N;
+                        stride_data.anterior_grf_contra_BW = r_force_anterior / body_weight_N;
+                        stride_data.vertical_grf_ipsi_BW = l_force_vert / body_weight_N;
+                        stride_data.vertical_grf_contra_BW = r_force_vert / body_weight_N;
+                        stride_data.lateral_grf_ipsi_BW = l_force_lateral / body_weight_N;
+                        stride_data.lateral_grf_contra_BW = r_force_lateral / body_weight_N;
+                    end
                 end
             end
             
