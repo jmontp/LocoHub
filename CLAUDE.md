@@ -46,8 +46,9 @@ contributor_tools/  # Dataset conversion & validation
 │   ├── Umich_2021/
 │   ├── Gtech_2023/
 │   └── AddBiomechanics/
-├── create_dataset_validation_report.py
-└── interactive_validation_tuner.py  # GUI for tuning validation ranges
+├── create_dataset_validation_report.py  # Full validation with plots
+├── interactive_validation_tuner.py      # GUI for tuning validation ranges
+└── quick_validation_check.py            # Lightweight text-only validation
 
 converted_datasets/ # Standardized parquet files
 tests/             # Comprehensive test suite
@@ -93,7 +94,12 @@ mean_patterns = data.get_mean_patterns('SUB01', 'level_walking')
 cd contributor_tools/conversion_scripts/YourDataset/
 python convert_to_parquet.py
 
-# Validate your dataset (uses default_ranges.yaml)
+# Quick validation check (text-only, no plots)
+python contributor_tools/quick_validation_check.py \
+    converted_datasets/your_dataset_phase.parquet
+# Shows pass/fail statistics by task and feature type
+
+# Full validation report with plots (uses default_ranges.yaml)
 python contributor_tools/create_dataset_validation_report.py \
     --dataset converted_datasets/your_dataset_phase.parquet
     
@@ -166,7 +172,8 @@ python contributor_tools/create_dataset_validation_report.py \
 - `user_libs/python/locomotion_data.py` - Main analysis class
 - `user_libs/python/feature_constants.py` - Valid tasks and variables
 - `internal/validation_engine/validator.py` - Unified validation logic
-- `contributor_tools/create_dataset_validation_report.py` - Report generator
+- `contributor_tools/create_dataset_validation_report.py` - Full validation report generator
+- `contributor_tools/quick_validation_check.py` - Fast text-only validation
 - `contributor_tools/interactive_validation_tuner.py` - Interactive GUI for validation tuning
 - `contributor_tools/validation_ranges/default_ranges.yaml` - Default validation ranges
 - `tests/test_locomotion_data_library.py` - Usage examples

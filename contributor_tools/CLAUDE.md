@@ -19,7 +19,8 @@ contributor_tools/
 ├── validation_ranges/          # YAML validation specifications
 │   ├── default_ranges.yaml    # Standard validation ranges
 │   └── custom_ranges.yaml     # Dataset-specific overrides
-├── create_dataset_validation_report.py  # Generate validation reports
+├── create_dataset_validation_report.py  # Full validation reports with plots
+├── quick_validation_check.py            # Fast text-only validation
 └── interactive_validation_tuner.py      # GUI for tuning validation ranges
 ```
 
@@ -37,6 +38,31 @@ contributor_tools/
   - Automatic documentation index update
 - **Options**:
   - `--ranges-file`: Use custom validation ranges YAML
+
+### quick_validation_check.py
+- **Purpose**: Fast, lightweight validation without plot generation
+- **Features**:
+  - Text-only output for rapid feedback
+  - Pass/fail statistics by task and feature type
+  - Categorized failures (kinematics, kinetics, GRF, segments)
+  - Verbose mode for detailed feature analysis
+  - Exit code indicates validation success (0) or failure (1)
+- **Usage**:
+  ```bash
+  # Basic validation check
+  python quick_validation_check.py converted_datasets/gtech_2021_phase.parquet
+  
+  # With custom validation ranges
+  python quick_validation_check.py dataset.parquet --ranges custom_ranges.yaml
+  
+  # Verbose mode with detailed analysis
+  python quick_validation_check.py dataset.parquet --verbose
+  ```
+- **Output**: Console-only summary showing:
+  - Overall pass rate (stride-level)
+  - Task-by-task breakdown
+  - Feature failures grouped by type
+  - Summary statistics
 
 ### interactive_validation_tuner.py
 - **Purpose**: Visual GUI for tuning validation ranges
@@ -149,8 +175,8 @@ df.to_parquet('output_phase.parquet', engine='pyarrow')
 ## Validation Best Practices
 
 ### Initial Validation
-1. Run basic report with default ranges
-2. Review failing strides visually
+1. Run quick check for immediate feedback (`quick_validation_check.py`)
+2. Generate full report with plots for visual review
 3. Check for systematic biases
 
 ### Range Refinement
@@ -178,6 +204,10 @@ df.to_parquet('output_phase.parquet', engine='pyarrow')
 
 3. **Validate Dataset**
    ```bash
+   # Quick check first
+   python quick_validation_check.py your_dataset_phase.parquet
+   
+   # Then full report if needed
    python create_dataset_validation_report.py --dataset your_dataset_phase.parquet
    ```
 

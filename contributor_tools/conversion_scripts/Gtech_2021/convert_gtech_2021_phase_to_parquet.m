@@ -1,30 +1,24 @@
 % Convert Gtech 2021 (CAMARGO_ET_AL_J_BIOMECH_DATASET) to standardized parquet format
 % Direct conversion from raw data to phase-indexed (150 points per cycle) parquet
 %
-% This script processes the CAMARGO dataset directly without intermediate files,
-% leveraging knowledge from existing implementations but with a cleaner approach.
-%
-% SIGN CONVENTION FIXES APPLIED:
-% 1. Knee flexion angle: Per-stride detection and flip if min < -0.3 rad (~-17 deg)
-%    - OpenSim convention can be opposite to standard biomechanics
-%    - Detected dynamically per stride to handle mixed conventions
-%
-% 2. Ankle dorsiflexion angle: Remove offset if |phase_0| > 2 rad
-%    - Some data has ~4 radian offset at heel strike
-%    - Corrected by subtracting the phase 0 value from entire stride
-%
-% 3. Knee flexion moment: Always flipped for stair_ascent task
-%    - Stair ascent consistently has inverted moment convention
-%    - Applied uniformly to all stair ascent strides
-%
-% 4. Segment angles: Calculated from kinematic chain
+% Conventions (reflecting current implementation):
+% 1) Knee flexion angle: Unconditionally negated (ipsi and contra) so flexion is positive.
+% 2) Ankle dorsiflexion angle: No phase-0 offset removal; direct time interpolation, then velocity via gradient.
+% 3) Knee flexion moment: Unconditionally negated (ipsi and contra) across all tasks; normalized by body mass.
+% 4) Segment angles (sagittal plane):
 %    - pelvis_sagittal_angle = pelvis_tilt (from data)
-%    - trunk_sagittal_angle = pelvis_sagittal_angle + lumbar_extension  
-%    - thigh_sagittal_angle_ipsi = pelvis_sagittal_angle + hip_flexion (sign flipped)
-%    - shank_sagittal_angle_ipsi = thigh_sagittal_angle_ipsi - knee_flexion (original)
-%    - foot_sagittal_angle_ipsi = shank_sagittal_angle_ipsi + ankle_angle
+%    - trunk_sagittal_angle  = pelvis_sagittal_angle + lumbar_extension
+%    - thigh_sagittal_angle_[ipsi|contra] = pelvis_sagittal_angle + hip_flexion
+%    - shank_sagittal_angle_[ipsi|contra] = thigh_sagittal_angle_[ipsi|contra] - knee_flexion
+%    - foot_sagittal_angle_[ipsi|contra]  = shank_sagittal_angle_[ipsi|contra] + ankle_angle
+% 5) Velocities: Computed after interpolation (150 samples) using finite differences.
 %
-% 5. METHOD 2: Calculates velocities AFTER interpolation for exoskeleton control consistency
+% Notes:
+% - Ipsilateral leg is the first heel-striking leg within the segment; only that leg's strides are output (no duplicates).
+% - GRF: Treadmill channels treat *_vy as vertical and *_vz as anterior–posterior; overground GRF is skipped; for stairs/ramps, per‑stride force-plate
+assignment uses early/late peak windows.
+%
+% TEST MODE: Set TEST_MODE=true to process only subjects in TEST_SUBJECTS.
 
 clear all;
 close all;
@@ -439,20 +433,31 @@ function rows = process_stair(date_path, subject_str, subject_mass)
             
             labels = trial_data.conditions.Label;
             
-            % EXPANDED LABEL DETECTION: Include all ascent-related labels
+            % ROBUST LABEL DETECTION: Case-insensitive contains matching for stair ascent
             if iscell(labels)
-                % Ascent-related labels (including transitions)
-                ascent_mask = strcmp(labels, 'stairascent') | ...
-                              strcmp(labels, 'walk-stairascent') | ...
-                              strcmp(labels, 'stairascent-walk');
+                % Pure stair ascent labels only (case-insensitive, no walk transitions)
+                ascent_mask = false(size(labels));
+                for i = 1:length(labels)
+                    label_lower = lower(labels{i});
+                    % Match if contains both 'stair' and 'ascent' (case-insensitive)
+                    if contains(label_lower, 'stair') && contains(label_lower, 'ascent') && ...
+                       ~contains(label_lower, 'walk')  % Exclude walk transitions
+                        ascent_mask(i) = true;
+                    end
+                end
             else
                 ascent_mask = false(size(labels));
             end
             
             if sum(ascent_mask) > 50
                 ascent_indices = find(ascent_mask);
-                time_start = trial_data.conditions.Header(ascent_indices(1));
-                time_end = trial_data.conditions.Header(ascent_indices(end));
+                time_start_raw = trial_data.conditions.Header(ascent_indices(1));
+                time_end_raw = trial_data.conditions.Header(ascent_indices(end));
+                
+                % Trim edges by 0.3s to avoid transitions
+                edge_trim_s = 0.3;
+                time_start = time_start_raw + edge_trim_s;
+                time_end = time_end_raw - edge_trim_s;
                 
                 stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
                     subject_str, 'stair_ascent', 'stair_ascent', ...
@@ -460,24 +465,35 @@ function rows = process_stair(date_path, subject_str, subject_mass)
                 
                 if ~isempty(stride_rows)
                     rows = [rows; stride_rows];
-                    fprintf('  Added %d stair ascent strides (including transitions)\n', height(stride_rows));
+                    fprintf('  Added %d stair ascent strides (pure stair, edge-trimmed)\n', height(stride_rows));
                 end
             end
             
-            % EXPANDED LABEL DETECTION: Include all descent-related labels
+            % ROBUST LABEL DETECTION: Case-insensitive contains matching for stair descent
             if iscell(labels)
-                % Descent-related labels (including transitions)
-                descent_mask = strcmp(labels, 'stairdescent') | ...
-                               strcmp(labels, 'walk-stairdescent') | ...
-                               strcmp(labels, 'stairdescent-walk');
+                % Pure stair descent labels only (case-insensitive, no walk transitions)
+                descent_mask = false(size(labels));
+                for i = 1:length(labels)
+                    label_lower = lower(labels{i});
+                    % Match if contains both 'stair' and 'descent' (case-insensitive)
+                    if contains(label_lower, 'stair') && contains(label_lower, 'descent') && ...
+                       ~contains(label_lower, 'walk')  % Exclude walk transitions
+                        descent_mask(i) = true;
+                    end
+                end
             else
                 descent_mask = false(size(labels));
             end
             
             if sum(descent_mask) > 50
                 descent_indices = find(descent_mask);
-                time_start = trial_data.conditions.Header(descent_indices(1));
-                time_end = trial_data.conditions.Header(descent_indices(end));
+                time_start_raw = trial_data.conditions.Header(descent_indices(1));
+                time_end_raw = trial_data.conditions.Header(descent_indices(end));
+                
+                % Trim edges by 0.3s to avoid transitions
+                edge_trim_s = 0.3;
+                time_start = time_start_raw + edge_trim_s;
+                time_end = time_end_raw - edge_trim_s;
                 
                 stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
                     subject_str, 'stair_descent', 'stair_descent', ...
@@ -485,7 +501,7 @@ function rows = process_stair(date_path, subject_str, subject_mass)
                 
                 if ~isempty(stride_rows)
                     rows = [rows; stride_rows];
-                    fprintf('  Added %d stair descent strides (including transitions)\n', height(stride_rows));
+                    fprintf('  Added %d stair descent strides (pure stair, edge-trimmed)\n', height(stride_rows));
                 end
             end
         else
@@ -625,18 +641,24 @@ end
 
 function rows = extract_and_process_strides(trial_data, time_start, time_end, ...
     subject_str, task, task_id, task_info, subject_mass)
-    % Bilateral processing: extract strides from both legs as ipsilateral
+    % NEW APPROACH: Single-leg processing based on first heel strike
+    % The leg that heel strikes first becomes ipsilateral for entire trial
     
-    % Process right leg as ipsilateral
-    right_rows = extract_and_process_strides_single_leg(trial_data, time_start, time_end, ...
-        subject_str, task, task_id, task_info, subject_mass, 'right');
+    % Determine which leg heel strikes first in this trial segment
+    [first_leg, first_hs_time] = determine_first_heel_strike(trial_data, time_start, time_end);
     
-    % Process left leg as ipsilateral  
-    left_rows = extract_and_process_strides_single_leg(trial_data, time_start, time_end, ...
-        subject_str, task, task_id, task_info, subject_mass, 'left');
+    if isempty(first_leg)
+        fprintf('  No heel strikes found in time window %.3f-%.3f sec\n', time_start, time_end);
+        rows = table();
+        return;
+    end
     
-    % Combine both tables
-    rows = [right_rows; left_rows];
+    fprintf('  First heel strike: %s leg at %.3f sec\n', first_leg, first_hs_time);
+    
+    % Process ONLY with the first heel-striking leg as ipsilateral
+    % This eliminates duplicate strides and provides consistent force plate assignment
+    rows = extract_and_process_strides_single_leg(trial_data, time_start, time_end, ...
+        subject_str, task, task_id, task_info, subject_mass, first_leg);
 end
 
 function rows = extract_and_process_strides_single_leg(trial_data, time_start, time_end, ...
@@ -685,8 +707,11 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
     
     % Process each stride (heel strike to heel strike)
     for s = 1:(length(hs_indices)-1)
-        stride_start_idx = hs_indices(s);
-        stride_end_idx = hs_indices(s+1) - 1;  % End just before next heel strike
+        % Fix off-by-one error: include the actual heel strike sample
+        % hs_indices contains the index where HeelStrike becomes 0, 
+        % but we want the index where HeelStrike is still 1 (actual heel strike)
+        stride_start_idx = max(1, hs_indices(s) - 1);  % Include HS sample, clamp to bounds
+        stride_end_idx = max(1, hs_indices(s+1) - 2);  % End just before next HS sample
         
         % Get the gait cycle percentages for this stride
         stride_pct = heel_strike_pct(stride_start_idx:stride_end_idx);
@@ -1049,12 +1074,11 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 fp_end_idx = find(fp_time <= stride_end_time, 1, 'last');
                 
                 if ~isempty(fp_start_idx) && ~isempty(fp_end_idx) && fp_end_idx > fp_start_idx
-                    % Check each force plate for significant force during stride
+                    % DETERMINISTIC STEP-THROUGH ASSIGNMENT
                     fprintf('  DEBUG [Stair GRF]: Checking stride %.3f-%.3f sec\n', stride_start_time, stride_end_time);
                     
-                    % NEW LOGIC: Check force at 12.5% phase for clearer assignment
-                    phase_check_point = 0.125;  % 12.5% of gait cycle
-                    
+                    % Step 1: Identify active force plates (any contact > minimal threshold)
+                    active_plates = {};
                     for fp = fp_names
                         vy_var = [fp{1} '_vy'];
                         fp_forces = trial_data.fp.(vy_var);
@@ -1066,37 +1090,113 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                         
                         fprintf('  DEBUG [Stair GRF]: %s - Max: %.1f N, Avg: %.1f N\n', fp{1}, max_force_in_stride, avg_force_in_stride);
                         
-                        % If this force plate has significant force, it could be active
-                        if max_force_in_stride > 200  % Higher threshold for realistic stair forces
+                        % Robust threshold to detect contact and reduce noise
+                        if max_force_in_stride > 200  % Increased back to 200N for better noise rejection
+                            active_plates{end+1} = fp{1};
                             stride_has_force = true;
+                        end
+                    end
+                    
+                    % Step 2: Dynamic assignment based on early/late stride windows
+                    if ~isempty(active_plates)
+                        fprintf('  DEBUG [Stair GRF]: Active plates: %s\n', strjoin(active_plates, ', '));
+                        
+                        % Calculate stride time windows for dynamic assignment
+                        stride_duration = stride_end_time - stride_start_time;
+                        early_end_time = stride_start_time + 0.6 * stride_duration;  % 0-60% window
+                        late_start_time = stride_start_time + 0.4 * stride_duration; % 40-100% window
+                        
+                        % Find indices for early and late windows
+                        early_start_idx = fp_start_idx;
+                        early_end_idx = find(fp_time <= early_end_time, 1, 'last');
+                        late_start_idx = find(fp_time >= late_start_time, 1, 'first');
+                        late_end_idx = fp_end_idx;
+                        
+                        % Find plate with highest peak force in each window
+                        max_early_force = 0;
+                        max_late_force = 0;
+                        best_early_plate = '';
+                        best_late_plate = '';
+                        
+                        for fp = active_plates
+                            vy_var = [fp{1} '_vy'];
+                            fp_forces = trial_data.fp.(vy_var);
                             
-                            % Check force at 12.5% phase point for better assignment
-                            check_idx = round(phase_check_point * length(stride_forces));
-                            if check_idx > 0 && check_idx <= length(stride_forces)
-                                force_at_check = abs(stride_forces(check_idx));
-                                
-                                fprintf('  DEBUG [Stair GRF]: %s - Force at 12.5%% phase: %.1f N\n', fp{1}, force_at_check);
-                                
-                                % High force at 12.5% = ipsilateral (foot that struck at 0%)
-                                % Low/zero force at 12.5% = contralateral (will strike later)
-                                if force_at_check > 500  % Threshold for "loaded" at 12.5%
-                                    % This is the ipsilateral foot
-                                    if force_at_check > max_force_ipsi
-                                        best_fp_ipsi = fp{1};
-                                        max_force_ipsi = force_at_check;
-                                        fprintf('  DEBUG [Stair GRF]: %s assigned to IPSI (high force at 12.5%%, %.1f N)\n', fp{1}, force_at_check);
+                            % Check early window (0-60% - ipsilateral contact)
+                            if ~isempty(early_end_idx) && early_end_idx > early_start_idx
+                                early_forces = fp_forces(early_start_idx:early_end_idx);
+                                early_peak = max(abs(early_forces));
+                                if early_peak > max_early_force
+                                    max_early_force = early_peak;
+                                    best_early_plate = fp{1};
+                                end
+                            end
+                            
+                            % Check late window (40-100% - contralateral contact)
+                            if ~isempty(late_start_idx) && late_end_idx > late_start_idx
+                                late_forces = fp_forces(late_start_idx:late_end_idx);
+                                late_peak = max(abs(late_forces));
+                                if late_peak > max_late_force
+                                    max_late_force = late_peak;
+                                    best_late_plate = fp{1};
+                                end
+                            end
+                        end
+                        
+                        % Assign plates based on window analysis
+                        if ~isempty(best_early_plate)
+                            best_fp_ipsi = best_early_plate;
+                            max_force_ipsi = max_early_force;
+                            fprintf('  DEBUG [Stair GRF]: %s assigned to IPSI (early window peak: %.1f N)\n', best_early_plate, max_early_force);
+                        end
+                        
+                        if ~isempty(best_late_plate)
+                            best_fp_contra = best_late_plate;
+                            max_force_contra = max_late_force;
+                            fprintf('  DEBUG [Stair GRF]: %s assigned to CONTRA (late window peak: %.1f N)\n', best_late_plate, max_late_force);
+                        end
+                        
+                        % Handle case where same plate is best for both windows
+                        if strcmp(best_fp_ipsi, best_fp_contra) && ~isempty(active_plates) && length(active_plates) > 1
+                            fprintf('  DEBUG [Stair GRF]: Same plate for both windows, assigning second best\n');
+                            % Find second best plate for the window with lower peak
+                            if max_early_force >= max_late_force
+                                % Keep early assignment, find second best for late
+                                second_max_late = 0;
+                                for fp = active_plates
+                                    if ~strcmp(fp{1}, best_early_plate)
+                                        vy_var = [fp{1} '_vy'];
+                                        fp_forces = trial_data.fp.(vy_var);
+                                        late_forces = fp_forces(late_start_idx:late_end_idx);
+                                        late_peak = max(abs(late_forces));
+                                        if late_peak > second_max_late
+                                            second_max_late = late_peak;
+                                            best_fp_contra = fp{1};
+                                            max_force_contra = late_peak;
+                                        end
                                     end
-                                elseif max(abs(stride_forces(check_idx:end))) > 200
-                                    % This plate will be loaded later (contralateral)
-                                    late_max_force = max(abs(stride_forces(check_idx:end)));
-                                    if late_max_force > max_force_contra
-                                        best_fp_contra = fp{1};
-                                        max_force_contra = late_max_force;
-                                        fprintf('  DEBUG [Stair GRF]: %s assigned to CONTRA (low at 12.5%%, high later: %.1f N)\n', fp{1}, late_max_force);
+                                end
+                            else
+                                % Keep late assignment, find second best for early  
+                                second_max_early = 0;
+                                for fp = active_plates
+                                    if ~strcmp(fp{1}, best_late_plate)
+                                        vy_var = [fp{1} '_vy'];
+                                        fp_forces = trial_data.fp.(vy_var);
+                                        early_forces = fp_forces(early_start_idx:early_end_idx);
+                                        early_peak = max(abs(early_forces));
+                                        if early_peak > second_max_early
+                                            second_max_early = early_peak;
+                                            best_fp_ipsi = fp{1};
+                                            max_force_ipsi = early_peak;
+                                        end
                                     end
                                 end
                             end
                         end
+                        
+                    else
+                        fprintf('  DEBUG [Stair GRF]: No active plates found (transition/air time)\n');
                     end
                 end
                 
@@ -1191,8 +1291,9 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 % CRITICAL FIX: Use direct time interpolation (same as kinematics)
                 grf_interpolated = interp1(fp_time, vx_data, target_times, 'linear', 'extrap');
                 
-                % SIGN FIX: Flip lateral GRF for left leg as ipsilateral
-                if strcmp(leg_side, 'left')
+                % SIGN FIX: Apply corrections based on task and leg
+                if contains(task, 'stair_descent')
+                    % Flip sign for stair descent lateral GRF
                     grf_interpolated = -grf_interpolated;
                 end
                 
@@ -1228,9 +1329,9 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 % CRITICAL FIX: Use direct time interpolation (same as kinematics)
                 grf_interpolated = interp1(fp_time, vx_data, target_times, 'linear', 'extrap');
                 
-                % SIGN FIX: Flip lateral GRF for left leg as ipsilateral
-                % Note: Contralateral gets same correction as ipsilateral to maintain consistency
-                if strcmp(leg_side, 'left')
+                % SIGN FIX: Apply corrections based on task and leg (same as ipsilateral)
+                if contains(task, 'stair_descent')
+                    % Flip sign for stair descent lateral GRF
                     grf_interpolated = -grf_interpolated;
                 end
                 
@@ -1254,12 +1355,8 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         row.task = {task};
         row.task_id = {task_id};
         row.task_info = {task_info};
-        % Include leg side in step identifier for bilateral processing
-        if strcmp(leg_side, 'right')
-            row.step = sprintf('%03d_R', s);
-        else
-            row.step = sprintf('%03d_L', s);
-        end
+        % Simple step numbering (no leg suffix since we're not duplicating)
+        row.step = sprintf('%03d', s);
         row.phase_ipsi = {stride_data.phase_ipsi};  % Store as cell array
         row.phase_ipsi_dot = {stride_data.phase_ipsi_dot};  % Store phase rate as cell array
         
@@ -1570,6 +1667,62 @@ function expanded = expand_table_for_parquet(compact_table)
 end
 
 %% Helper Functions
+
+function [first_leg, first_hs_time] = determine_first_heel_strike(trial_data, time_start, time_end)
+    % Determine which leg heel strikes first in a trial segment
+    % Returns 'right', 'left', or empty string if no heel strikes found
+    
+    first_leg = '';
+    first_hs_time = [];
+    
+    % Check we have both gait cycle data
+    if ~isfield(trial_data, 'gcRight') || ~istable(trial_data.gcRight) || ...
+       ~isfield(trial_data, 'gcLeft') || ~istable(trial_data.gcLeft)
+        return;
+    end
+    
+    % Get heel strike indices for right leg
+    right_gc_time = trial_data.gcRight.Header;
+    right_window_indices = find(right_gc_time >= time_start & right_gc_time <= time_end);
+    
+    if ~isempty(right_window_indices)
+        right_heel_strike_pct = trial_data.gcRight.HeelStrike;
+        right_hs_indices = findFallingEdges_onlyInSection(right_heel_strike_pct == 0, right_window_indices);
+        if ~isempty(right_hs_indices)
+            right_first_hs_time = right_gc_time(right_hs_indices(1));
+        else
+            right_first_hs_time = inf;  % No heel strikes found
+        end
+    else
+        right_first_hs_time = inf;
+    end
+    
+    % Get heel strike indices for left leg
+    left_gc_time = trial_data.gcLeft.Header;
+    left_window_indices = find(left_gc_time >= time_start & left_gc_time <= time_end);
+    
+    if ~isempty(left_window_indices)
+        left_heel_strike_pct = trial_data.gcLeft.HeelStrike;
+        left_hs_indices = findFallingEdges_onlyInSection(left_heel_strike_pct == 0, left_window_indices);
+        if ~isempty(left_hs_indices)
+            left_first_hs_time = left_gc_time(left_hs_indices(1));
+        else
+            left_first_hs_time = inf;  % No heel strikes found
+        end
+    else
+        left_first_hs_time = inf;
+    end
+    
+    % Determine which leg strikes first
+    if right_first_hs_time < left_first_hs_time
+        first_leg = 'right';
+        first_hs_time = right_first_hs_time;
+    elseif left_first_hs_time < right_first_hs_time
+        first_leg = 'left';
+        first_hs_time = left_first_hs_time;
+    end
+    % If both are inf (no heel strikes), first_leg remains empty
+end
 
 % Helper function for improved gradient calculation with proper boundary conditions
 function velocity = improved_gradient(angle_data)
