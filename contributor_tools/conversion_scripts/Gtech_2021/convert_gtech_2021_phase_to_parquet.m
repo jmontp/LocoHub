@@ -1052,6 +1052,9 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                     % Check each force plate for significant force during stride
                     fprintf('  DEBUG [Stair GRF]: Checking stride %.3f-%.3f sec\n', stride_start_time, stride_end_time);
                     
+                    % NEW LOGIC: Check force at 12.5% phase for clearer assignment
+                    phase_check_point = 0.125;  % 12.5% of gait cycle
+                    
                     for fp = fp_names
                         vy_var = [fp{1} '_vy'];
                         fp_forces = trial_data.fp.(vy_var);
@@ -1067,23 +1070,30 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                         if max_force_in_stride > 200  % Higher threshold for realistic stair forces
                             stride_has_force = true;
                             
-                            % For stairs, assign based on temporal sequencing
-                            % Earlier contact = ipsilateral, later contact = contralateral
-                            % Find when force starts and peaks
-                            force_starts = find(abs(stride_forces) > 100, 1, 'first');
-                            if ~isempty(force_starts)
-                                contact_time_in_stride = force_starts / length(stride_forces);  % 0-1 position in stride
+                            % Check force at 12.5% phase point for better assignment
+                            check_idx = round(phase_check_point * length(stride_forces));
+                            if check_idx > 0 && check_idx <= length(stride_forces)
+                                force_at_check = abs(stride_forces(check_idx));
                                 
-                                if contact_time_in_stride < 0.5 && max_force_in_stride > max_force_ipsi
-                                    % Early contact = ipsilateral
-                                    best_fp_ipsi = fp{1};
-                                    max_force_ipsi = max_force_in_stride;
-                                    fprintf('  DEBUG [Stair GRF]: %s assigned to IPSI (early contact, max: %.1f N)\n', fp{1}, max_force_in_stride);
-                                elseif contact_time_in_stride >= 0.5 && max_force_in_stride > max_force_contra
-                                    % Late contact = contralateral
-                                    best_fp_contra = fp{1};
-                                    max_force_contra = max_force_in_stride;
-                                    fprintf('  DEBUG [Stair GRF]: %s assigned to CONTRA (late contact, max: %.1f N)\n', fp{1}, max_force_in_stride);
+                                fprintf('  DEBUG [Stair GRF]: %s - Force at 12.5%% phase: %.1f N\n', fp{1}, force_at_check);
+                                
+                                % High force at 12.5% = ipsilateral (foot that struck at 0%)
+                                % Low/zero force at 12.5% = contralateral (will strike later)
+                                if force_at_check > 500  % Threshold for "loaded" at 12.5%
+                                    % This is the ipsilateral foot
+                                    if force_at_check > max_force_ipsi
+                                        best_fp_ipsi = fp{1};
+                                        max_force_ipsi = force_at_check;
+                                        fprintf('  DEBUG [Stair GRF]: %s assigned to IPSI (high force at 12.5%%, %.1f N)\n', fp{1}, force_at_check);
+                                    end
+                                elseif max(abs(stride_forces(check_idx:end))) > 200
+                                    % This plate will be loaded later (contralateral)
+                                    late_max_force = max(abs(stride_forces(check_idx:end)));
+                                    if late_max_force > max_force_contra
+                                        best_fp_contra = fp{1};
+                                        max_force_contra = late_max_force;
+                                        fprintf('  DEBUG [Stair GRF]: %s assigned to CONTRA (low at 12.5%%, high later: %.1f N)\n', fp{1}, late_max_force);
+                                    end
                                 end
                             end
                         end
@@ -1180,6 +1190,12 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 vx_data = trial_data.fp.(ipsi_vx_var);
                 % CRITICAL FIX: Use direct time interpolation (same as kinematics)
                 grf_interpolated = interp1(fp_time, vx_data, target_times, 'linear', 'extrap');
+                
+                % SIGN FIX: Flip lateral GRF for left leg as ipsilateral
+                if strcmp(leg_side, 'left')
+                    grf_interpolated = -grf_interpolated;
+                end
+                
                 stride_data.lateral_grf_ipsi_BW = grf_interpolated / (subject_mass * 9.81);
             else
                 stride_data.lateral_grf_ipsi_BW = zeros(NUM_POINTS, 1);
@@ -1211,6 +1227,13 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 vx_data = trial_data.fp.(contra_vx_var);
                 % CRITICAL FIX: Use direct time interpolation (same as kinematics)
                 grf_interpolated = interp1(fp_time, vx_data, target_times, 'linear', 'extrap');
+                
+                % SIGN FIX: Flip lateral GRF for left leg as ipsilateral
+                % Note: Contralateral gets same correction as ipsilateral to maintain consistency
+                if strcmp(leg_side, 'left')
+                    grf_interpolated = -grf_interpolated;
+                end
+                
                 stride_data.lateral_grf_contra_BW = grf_interpolated / (subject_mass * 9.81);
             else
                 stride_data.lateral_grf_contra_BW = zeros(NUM_POINTS, 1);
