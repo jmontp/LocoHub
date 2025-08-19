@@ -50,12 +50,13 @@ class Validator:
             # If it's a directory or None, use default behavior
             self.config_manager = ValidationConfigManager()
         
-    def validate(self, dataset_path: str) -> Dict[str, Any]:
+    def validate(self, dataset_path: str, ignore_features: List[str] = None) -> Dict[str, Any]:
         """
         Validate a dataset against specifications.
         
         Args:
             dataset_path: Path to phase-indexed parquet file
+            ignore_features: Optional list of feature names to ignore during validation
             
         Returns:
             Dictionary with validation results:
@@ -81,7 +82,7 @@ class Validator:
         total_failing_strides = 0
         
         for task in tasks:
-            task_violations = self._validate_task(locomotion_data, task)
+            task_violations = self._validate_task(locomotion_data, task, ignore_features)
             
             if task_violations:
                 violations[task] = task_violations
@@ -93,7 +94,7 @@ class Validator:
             total_strides += n_cycles
             
             # Count failing strides for this task (stride-level pass rate)
-            failing_features = self._validate_task_with_failing_features(locomotion_data, task)
+            failing_features = self._validate_task_with_failing_features(locomotion_data, task, ignore_features)
             total_failing_strides += len(failing_features)
             
             # Get number of variables and phases being checked from config
@@ -177,14 +178,14 @@ class Validator:
         
         return phase_indices
     
-    def _validate_task(self, locomotion_data: LocomotionData, task_name: str) -> Dict[str, List[int]]:
+    def _validate_task(self, locomotion_data: LocomotionData, task_name: str, ignore_features: List[str] = None) -> Dict[str, List[int]]:
         """
         Validate task data against specifications.
         
         Returns dict of violations: {variable_name: [stride_indices]}
         """
         # Get failing features per stride
-        failing_features = self._validate_task_with_failing_features(locomotion_data, task_name)
+        failing_features = self._validate_task_with_failing_features(locomotion_data, task_name, ignore_features)
         
         # Convert to variable-centric format
         violations = {}
@@ -196,10 +197,15 @@ class Validator:
         
         return violations
     
-    def _validate_task_with_failing_features(self, locomotion_data: LocomotionData, task_name: str) -> Dict[int, List[str]]:
+    def _validate_task_with_failing_features(self, locomotion_data: LocomotionData, task_name: str, ignore_features: List[str] = None) -> Dict[int, List[str]]:
         """
         Validate task data and return failing features per stride.
         
+        Args:
+            locomotion_data: The locomotion data object
+            task_name: Name of the task to validate
+            ignore_features: Optional list of feature names to ignore during validation
+            
         Returns dict: {stride_idx: [list_of_failed_variable_names]}
         Strides not in the dict passed all checks.
         """
@@ -219,6 +225,10 @@ class Validator:
         all_variables_to_check = set()
         for phase_ranges in task_ranges.values():
             all_variables_to_check.update(phase_ranges.keys())
+        
+        # Filter out ignored features if specified
+        if ignore_features:
+            all_variables_to_check = all_variables_to_check - set(ignore_features)
         
         # Filter to only variables that exist in the dataset
         all_features = locomotion_data.features
