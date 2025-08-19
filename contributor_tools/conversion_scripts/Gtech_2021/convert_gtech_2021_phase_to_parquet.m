@@ -15,8 +15,17 @@
 %
 % Notes:
 % - Ipsilateral leg is the first heel-striking leg within the segment; only that leg's strides are output (no duplicates).
-% - GRF: Treadmill channels treat *_vy as vertical and *_vz as anterior–posterior; overground GRF is skipped; for stairs/ramps, per‑stride force-plate
-assignment uses early/late peak windows.
+% - GRF: Treadmill channels treat *_vy as vertical and *_vz as anterior–posterior; overground GRF is skipped; for stairs/ramps, per‑stride force-plate assignment uses early/late peak windows.
+%
+% KNOWN ISSUES:
+% 1. Step Numbering: Step IDs are reused across different tasks (e.g., '001' appears in 
+%    level_walking, stair_descent, etc.). This causes multiple strides to share the same ID.
+%    Proper fix requires considering multiple subjects and inter-task relationships.
+%
+% 2. Stair Descent GRF Discontinuity: Vertical GRF for stair descent shows ~0.46 BW at 
+%    stride start instead of near-zero. Likely due to force plate assignment or phase 
+%    alignment issues. Requires deeper investigation of force plate timing and step-through
+%    gait mechanics.
 %
 % TEST MODE: Set TEST_MODE=true to process only subjects in TEST_SUBJECTS.
 
@@ -33,14 +42,14 @@ DATA_ROOT = 'CAMARGO_ET_AL_J_BIOMECH_DATASET';
 OUTPUT_DIR = fullfile('..', '..', '..', 'converted_datasets');
 
 % TEST MODE Configuration
-TEST_MODE = true;  % Set to true for testing with limited subjects
+TEST_MODE = false;  % Set to true for testing with limited subjects
 TEST_SUBJECTS = {'AB06'};  % Subjects to use in test mode
 
 % Set output filename based on mode
 if TEST_MODE
     OUTPUT_FILE = 'gtech_2021_phase_test.parquet';
 else
-    OUTPUT_FILE = 'gtech_2021_phase.parquet';
+    OUTPUT_FILE = 'gtech_2021_phase_raw.parquet';
 end
 
 % Create output directory if needed

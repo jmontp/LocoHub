@@ -226,10 +226,170 @@ for subject_idx = 1:length(subjects)
             end
         end
     end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Process Walk-to-Run transition data (Wrt)
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    if isfield(subject_data, 'Wtr')
+        fprintf('  Processing walk-to-run transition trials...\n');
+        wtr_data = subject_data.Wtr;
+        
+        % Process each walk-to-run trial
+        wtr_fields = fieldnames(wtr_data);
+        for wtr_idx = 1:length(wtr_fields)
+            trial_name = wtr_fields{wtr_idx};
+            trial_data = wtr_data.(trial_name);
+            
+            % Check if events exist
+            if ~isfield(trial_data, 'events')
+                fprintf('    Warning: No events for %s, skipping\n', trial_name);
+                continue;
+            end
+            
+            fprintf('    Processing walk-to-run transition: %s\n', trial_name);
+            
+            events = trial_data.events;
+            task_type = 'level_walking';
+            task_id = 'level';
+            
+            % Extract transition metadata if available from trial name or data
+            % Default values for walk-to-run transition
+            initial_speed = 1.2;  % Typical walking speed
+            final_speed = 2.5;    % Typical running speed
+            
+            task_info = sprintf('gait_transition:true,transition_type:walk_to_run,initial_speed_m_s:%.1f,final_speed_m_s:%.1f,treadmill:true', ...
+                initial_speed, final_speed);
+            
+            % Process strides using events
+            stride_table = process_strides_with_events(...
+                trial_data, events, subject_str, subject_metadata, body_mass, task_type, task_id, task_info);
+            
+            % Add to total data
+            if ~isempty(stride_table)
+                total_data = [total_data; stride_table];
+                fprintf('      Added %d strides\n', height(stride_table)/150);
+            end
+        end
+    end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Process Sit-to-Stand transition data (Sts) using Normalized.mat CutPoints
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    if isfield(subject_data, 'Sts')
+        fprintf('  Processing sit-to-stand trials...\n');
+        sts_data = subject_data.Sts;
+        
+        % Try to load Normalized.mat for CutPoints
+        normalized_data = [];
+        if exist('Normalized.mat', 'file')
+            temp_norm = load('Normalized.mat');
+            if isfield(temp_norm, 'Normalized') && isfield(temp_norm.Normalized, subject)
+                normalized_data = temp_norm.Normalized.(subject);
+                fprintf('    Found Normalized.mat data for %s\n', subject);
+            end
+        end
+        
+        if isempty(normalized_data) || ~isfield(normalized_data, 'SitStand')
+            fprintf('    Warning: No Normalized.mat SitStand data found, skipping Sts trials\n');
+        else
+            % Process using CutPoints from Normalized.mat
+            stride_table = process_sts_cycles_with_normalized(...
+                sts_data, normalized_data.SitStand, subject_str, subject_metadata, body_mass);
+            
+            % Add to total data
+            if ~isempty(stride_table)
+                total_data = [total_data; stride_table];
+                fprintf('      Added %d sit-to-stand cycles and %d stand-to-sit cycles\n', ...
+                    sum(strcmp(stride_table.task, 'sit_to_stand'))/150, ...
+                    sum(strcmp(stride_table.task, 'stand_to_sit'))/150);
+            end
+        end
+    end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Process Stair data
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    if isfield(subject_data, 'Stair')
+        fprintf('  Processing stair trials...\n');
+        stair_data = subject_data.Stair;
+        
+        % Map stair inclines to riser heights (mm)
+        stair_height_map = containers.Map(...
+            {'s20dg', 's25dg', 's30dg', 's35dg'}, ...
+            {97, 120, 146, 162});
+        
+        % Map stair inclines to incline degrees
+        stair_incline_map = containers.Map(...
+            {'s20dg', 's25dg', 's30dg', 's35dg'}, ...
+            {20, 25, 30, 35});
+        
+        % Process each stair trial
+        stair_fields = fieldnames(stair_data);
+        for stair_idx = 1:length(stair_fields)
+            trial_name = stair_fields{stair_idx};
+            trial_data = stair_data.(trial_name);
+            
+            % Check if events exist
+            if ~isfield(trial_data, 'events')
+                fprintf('    Warning: No events for %s, skipping\n', trial_name);
+                continue;
+            end
+            
+            % Extract incline and trial number from trial name (e.g., 's20dg_01')
+            underscore_idx = strfind(trial_name, '_');
+            if isempty(underscore_idx)
+                fprintf('    Warning: Invalid trial name format %s, skipping\n', trial_name);
+                continue;
+            end
+            
+            incline_str = trial_name(1:underscore_idx-1);  % e.g., 's20dg'
+            trial_num_str = trial_name(underscore_idx+1:end);  % e.g., '01'
+            trial_num = str2double(trial_num_str);
+            
+            % Check if incline is supported
+            if ~isKey(stair_height_map, incline_str)
+                fprintf('    Warning: Unsupported incline %s for %s, skipping\n', incline_str, trial_name);
+                continue;
+            end
+            
+            % Determine task type based on trial number (odd = ascent, even = descent)
+            if mod(trial_num, 2) == 1
+                task_type = 'stair_ascent';
+                task_id = 'stair_ascent';
+            else
+                task_type = 'stair_descent';
+                task_id = 'stair_descent';
+            end
+            
+            % Get metadata
+            height_mm = stair_height_map(incline_str);
+            incline_deg = stair_incline_map(incline_str);
+            height_m = height_mm / 1000.0;  % Convert mm to meters
+            
+            task_info = sprintf('height_m:%.3f,incline_deg:%d,steps:1', height_m, incline_deg);
+            
+            fprintf('    Processing %s: %s (%.0fmm riser, %d°)\n', trial_name, task_type, height_mm, incline_deg);
+            
+            events = trial_data.events;
+            
+            % Process strides using events
+            stride_table = process_strides_with_events(...
+                trial_data, events, subject_str, subject_metadata, body_mass, task_type, task_id, task_info);
+            
+            % Add to total data
+            if ~isempty(stride_table)
+                total_data = [total_data; stride_table];
+                fprintf('      Added %d strides\n', height(stride_table)/150);
+            end
+        end
+    end
 end
 
 % Save the phase-indexed data
-output_path = fullfile('..', '..', '..', 'converted_datasets', 'umich_2021_phase.parquet');
+output_path = fullfile('..', '..', '..', 'converted_datasets', 'umich_2021_phase_raw.parquet');
 fprintf('\n========================================\n');
 fprintf('Saving to: %s\n', output_path);
 fprintf('Total subjects: %d\n', length(unique(total_data.subject)));
@@ -655,6 +815,33 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 stride_data.ankle_rotation_moment_contra_Nm_kg = interpolate_signal(...
                     contra_ankle_moment(contra_frames, transverse_plane), NUM_POINTS);
             end
+        else
+            % Fill kinetics with NaN when jointMoments field doesn't exist (e.g., Stair data)
+            nan_vector = NaN(NUM_POINTS, 1);
+            
+            % Hip moments
+            stride_data.hip_flexion_moment_ipsi_Nm_kg = nan_vector;
+            stride_data.hip_flexion_moment_contra_Nm_kg = nan_vector;
+            stride_data.hip_adduction_moment_ipsi_Nm_kg = nan_vector;
+            stride_data.hip_adduction_moment_contra_Nm_kg = nan_vector;
+            stride_data.hip_rotation_moment_ipsi_Nm_kg = nan_vector;
+            stride_data.hip_rotation_moment_contra_Nm_kg = nan_vector;
+            
+            % Knee moments
+            stride_data.knee_flexion_moment_ipsi_Nm_kg = nan_vector;
+            stride_data.knee_flexion_moment_contra_Nm_kg = nan_vector;
+            stride_data.knee_adduction_moment_ipsi_Nm_kg = nan_vector;
+            stride_data.knee_adduction_moment_contra_Nm_kg = nan_vector;
+            stride_data.knee_rotation_moment_ipsi_Nm_kg = nan_vector;
+            stride_data.knee_rotation_moment_contra_Nm_kg = nan_vector;
+            
+            % Ankle moments
+            stride_data.ankle_dorsiflexion_moment_ipsi_Nm_kg = nan_vector;
+            stride_data.ankle_dorsiflexion_moment_contra_Nm_kg = nan_vector;
+            stride_data.ankle_adduction_moment_ipsi_Nm_kg = nan_vector;
+            stride_data.ankle_adduction_moment_contra_Nm_kg = nan_vector;
+            stride_data.ankle_rotation_moment_ipsi_Nm_kg = nan_vector;
+            stride_data.ankle_rotation_moment_contra_Nm_kg = nan_vector;
         end
         
         % Calculate segment angles using FOOT-UP approach with corrected foot angles
@@ -828,24 +1015,59 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 end
             end
             
-            % Center of pressure
+            % Center of pressure - split into ipsi/contra
             if isfield(forces, 'RCoP') && isfield(forces, 'LCoP') && exist('r_force_indices', 'var') && exist('l_force_indices', 'var')
                 if ~isempty(r_force_indices) && ~isempty(l_force_indices)
-                    % Interpolate CoP separately then average
-                    % Note: Simplified - could be improved with proper force weighting
-                    r_cop_x = interpolate_signal(forces.RCoP(r_force_indices, x), NUM_POINTS);
-                    l_cop_x = interpolate_signal(forces.LCoP(l_force_indices, x), NUM_POINTS);
-                    stride_data.cop_x_m = (r_cop_x + l_cop_x)/2;
+                    % Interpolate CoP for each foot
+                    % Apply coordinate transformations to match standard convention
+                    r_cop_anterior = interpolate_signal(-forces.RCoP(r_force_indices, x), NUM_POINTS);  % Negate X for anterior positive
+                    l_cop_anterior = interpolate_signal(-forces.LCoP(l_force_indices, x), NUM_POINTS);
                     
-                    r_cop_y = interpolate_signal(forces.RCoP(r_force_indices, y), NUM_POINTS);
-                    l_cop_y = interpolate_signal(forces.LCoP(l_force_indices, y), NUM_POINTS);
-                    stride_data.cop_y_m = (r_cop_y + l_cop_y)/2;
+                    r_cop_lateral = interpolate_signal(forces.RCoP(r_force_indices, z), NUM_POINTS);   % Z is lateral
+                    l_cop_lateral = interpolate_signal(-forces.LCoP(l_force_indices, z), NUM_POINTS);  % Negate left for consistency
                     
-                    r_cop_z = interpolate_signal(forces.RCoP(r_force_indices, z), NUM_POINTS);
-                    l_cop_z = interpolate_signal(forces.LCoP(l_force_indices, z), NUM_POINTS);
-                    stride_data.cop_z_m = (r_cop_z + l_cop_z)/2;
+                    r_cop_vertical = interpolate_signal(-forces.RCoP(r_force_indices, y), NUM_POINTS); % Y is vertical
+                    l_cop_vertical = interpolate_signal(-forces.LCoP(l_force_indices, y), NUM_POINTS);
+                    
+                    % Assign based on which leg is ipsilateral
+                    if strcmp(leg_side, 'right')
+                        % Right leg is ipsilateral
+                        stride_data.cop_anterior_ipsi_m = r_cop_anterior;
+                        stride_data.cop_anterior_contra_m = l_cop_anterior;
+                        stride_data.cop_lateral_ipsi_m = r_cop_lateral;
+                        stride_data.cop_lateral_contra_m = l_cop_lateral;
+                        stride_data.cop_vertical_ipsi_m = r_cop_vertical;
+                        stride_data.cop_vertical_contra_m = l_cop_vertical;
+                    else
+                        % Left leg is ipsilateral
+                        stride_data.cop_anterior_ipsi_m = l_cop_anterior;
+                        stride_data.cop_anterior_contra_m = r_cop_anterior;
+                        stride_data.cop_lateral_ipsi_m = l_cop_lateral;
+                        stride_data.cop_lateral_contra_m = r_cop_lateral;
+                        stride_data.cop_vertical_ipsi_m = l_cop_vertical;
+                        stride_data.cop_vertical_contra_m = r_cop_vertical;
+                    end
                 end
             end
+        else
+            % Fill GRF and COP with NaN when forceplates field doesn't exist (e.g., Stair data)
+            nan_vector = NaN(NUM_POINTS, 1);
+            
+            % Ground reaction forces
+            stride_data.anterior_grf_ipsi_BW = nan_vector;
+            stride_data.anterior_grf_contra_BW = nan_vector;
+            stride_data.vertical_grf_ipsi_BW = nan_vector;
+            stride_data.vertical_grf_contra_BW = nan_vector;
+            stride_data.lateral_grf_ipsi_BW = nan_vector;
+            stride_data.lateral_grf_contra_BW = nan_vector;
+            
+            % Center of pressure
+            stride_data.cop_anterior_ipsi_m = nan_vector;
+            stride_data.cop_anterior_contra_m = nan_vector;
+            stride_data.cop_lateral_ipsi_m = nan_vector;
+            stride_data.cop_lateral_contra_m = nan_vector;
+            stride_data.cop_vertical_ipsi_m = nan_vector;
+            stride_data.cop_vertical_contra_m = nan_vector;
         end
         
         % Convert struct to table and append
@@ -930,5 +1152,300 @@ function corrected = apply_90_degree_correction(angle_rad)
     end
     
     corrected = angle_rad;
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Helper function to process Sts cycles using CutPoints from Normalized.mat
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function stride_table = process_sts_cycles_with_normalized(sts_data, sitstand_data, subject_str, subject_metadata, body_mass)
+    
+    % Initialize output table
+    stride_table = table;
+    
+    % Check for required SitStand structure
+    if ~isfield(sitstand_data, 'ss') || ~isfield(sitstand_data.ss, 'sit2stand')
+        fprintf('        Warning: Missing sit2stand data in Normalized.mat\n');
+        return;
+    end
+    
+    % Get CutPoints from sit2stand data
+    if ~isfield(sitstand_data.ss.sit2stand, 'CutPoints')
+        fprintf('        Warning: Missing CutPoints in sit2stand data\n');
+        return;
+    end
+    
+    cutpoints = sitstand_data.ss.sit2stand.CutPoints;
+    fprintf('        Found %d cycles with CutPoints\n', size(cutpoints, 1));
+    
+    % Process each cycle (2 cycles per Sts trial, 14 total cycles for 7 trials)
+    sts_fields = fieldnames(sts_data);
+    cycle_idx = 1;
+    
+    for trial_idx = 1:length(sts_fields)
+        trial_name = sts_fields{trial_idx};
+        trial_data = sts_data.(trial_name);
+        
+        % Each trial should have 2 cycles
+        cycles_per_trial = 2;
+        for cycle_in_trial = 1:cycles_per_trial
+            if cycle_idx > size(cutpoints, 1)
+                fprintf('        Warning: More expected cycles than CutPoints available\n');
+                break;
+            end
+            
+            cp = cutpoints(cycle_idx, :);
+            fprintf('        Processing %s cycle %d: CutPoints [%d %d %d %d]\n', ...
+                trial_name, cycle_in_trial, cp(1), cp(2), cp(3), cp(4));
+            
+            % Process sit_to_stand (indices 1 to 2)
+            sit2stand_table = process_single_sts_cycle(trial_data, cp(1), cp(2), ...
+                'sit_to_stand', subject_str, subject_metadata, body_mass, trial_name, cycle_in_trial);
+            
+            % Process stand_to_sit (indices 3 to 4)
+            stand2sit_table = process_single_sts_cycle(trial_data, cp(3), cp(4), ...
+                'stand_to_sit', subject_str, subject_metadata, body_mass, trial_name, cycle_in_trial);
+            
+            % Add both cycles to output
+            if ~isempty(sit2stand_table)
+                stride_table = [stride_table; sit2stand_table];
+            end
+            if ~isempty(stand2sit_table)
+                stride_table = [stride_table; stand2sit_table];
+            end
+            
+            cycle_idx = cycle_idx + 1;
+        end
+    end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Helper function to process a single sit-to-stand or stand-to-sit cycle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, task_type, subject_str, subject_metadata, body_mass, trial_name, cycle_num)
+    
+    % Constants
+    NUM_POINTS = 150;
+    nan_vector = NaN(NUM_POINTS, 1);   % Define NaN vector for unmeasured kinetic variables
+    zero_vector = zeros(NUM_POINTS, 1); % Define zero vector for unused kinematic variables
+    
+    % Initialize output
+    cycle_table = table;
+    
+    % Check data availability
+    if ~isfield(trial_data, 'jointAngles')
+        fprintf('          Warning: No jointAngles data for %s\n', trial_name);
+        return;
+    end
+    
+    % Get cycle length
+    cycle_length = end_idx - start_idx + 1;
+    if cycle_length < 5
+        fprintf('          Warning: Cycle too short (%d points) for %s\n', cycle_length, task_type);
+        return;
+    end
+    
+    % Create step identifier (use numeric cycle counter like walking data)
+    step_id = cycle_num;  % Keep as numeric for consistency with walking data
+    
+    % Default metadata
+    chair_height = 0.45;  % Standard chair height in meters
+    task_info = sprintf('chair_height_m:%.2f,arms_used:false,speed:normal', chair_height);
+    
+    % Initialize stride data structure
+    stride_data = struct();
+    stride_data.subject = repmat({subject_str}, NUM_POINTS, 1);
+    stride_data.task = repmat({task_type}, NUM_POINTS, 1);
+    stride_data.task_id = repmat({task_type}, NUM_POINTS, 1);
+    stride_data.task_info = repmat({task_info}, NUM_POINTS, 1);
+    stride_data.step = repmat(step_id, NUM_POINTS, 1);  % Numeric array, not cell array
+    stride_data.subject_metadata = repmat({subject_metadata}, NUM_POINTS, 1);
+    
+    % Time and phase information
+    cycle_duration_s = (end_idx - start_idx) / 100;  % Assuming 100 Hz sampling
+    stride_data.time_s = linspace(0, cycle_duration_s, NUM_POINTS)';
+    stride_data.phase_ipsi = (0:(NUM_POINTS-1))' / (NUM_POINTS-1) * 100;
+    stride_data.phase_ipsi_dot = repmat(100 / cycle_duration_s, NUM_POINTS, 1);  % %/second
+    
+    % Process joint angles
+    angles = trial_data.jointAngles;
+    
+    % Hip angles (convert degrees to radians)
+    if isfield(angles, 'LHipAngles') && isfield(angles, 'RHipAngles')
+        % Sagittal plane (flexion)
+        l_hip_flex = interpolate_signal(deg2rad(angles.LHipAngles(start_idx:end_idx, 1)), NUM_POINTS);
+        r_hip_flex = interpolate_signal(deg2rad(angles.RHipAngles(start_idx:end_idx, 1)), NUM_POINTS);
+        
+        % Frontal plane (adduction) if available
+        if size(angles.LHipAngles, 2) >= 2
+            l_hip_add = interpolate_signal(deg2rad(angles.LHipAngles(start_idx:end_idx, 2)), NUM_POINTS);
+            r_hip_add = interpolate_signal(deg2rad(angles.RHipAngles(start_idx:end_idx, 2)), NUM_POINTS);
+        else
+            l_hip_add = zeros(NUM_POINTS, 1);
+            r_hip_add = zeros(NUM_POINTS, 1);
+        end
+        
+        % Transverse plane (rotation) if available
+        if size(angles.LHipAngles, 2) >= 3
+            l_hip_rot = interpolate_signal(deg2rad(angles.LHipAngles(start_idx:end_idx, 3)), NUM_POINTS);
+            r_hip_rot = interpolate_signal(deg2rad(angles.RHipAngles(start_idx:end_idx, 3)), NUM_POINTS);
+        else
+            l_hip_rot = zeros(NUM_POINTS, 1);
+            r_hip_rot = zeros(NUM_POINTS, 1);
+        end
+        
+        % For bilateral task, use left as ipsi, right as contra
+        stride_data.hip_flexion_angle_ipsi_rad = l_hip_flex;
+        stride_data.hip_flexion_angle_contra_rad = r_hip_flex;
+        stride_data.hip_adduction_angle_ipsi_rad = l_hip_add;
+        stride_data.hip_adduction_angle_contra_rad = r_hip_add;
+        stride_data.hip_rotation_angle_ipsi_rad = l_hip_rot;
+        stride_data.hip_rotation_angle_contra_rad = r_hip_rot;
+    end
+    
+    % Knee angles
+    if isfield(angles, 'LKneeAngles') && isfield(angles, 'RKneeAngles')
+        % Sagittal plane (flexion)
+        l_knee_flex = interpolate_signal(deg2rad(angles.LKneeAngles(start_idx:end_idx, 1)), NUM_POINTS);
+        r_knee_flex = interpolate_signal(deg2rad(angles.RKneeAngles(start_idx:end_idx, 1)), NUM_POINTS);
+        
+        % Frontal and transverse planes (set to zero - not typically meaningful for STS)
+        l_knee_add = zeros(NUM_POINTS, 1);
+        r_knee_add = zeros(NUM_POINTS, 1);
+        l_knee_rot = zeros(NUM_POINTS, 1);
+        r_knee_rot = zeros(NUM_POINTS, 1);
+        
+        stride_data.knee_flexion_angle_ipsi_rad = l_knee_flex;
+        stride_data.knee_flexion_angle_contra_rad = r_knee_flex;
+        stride_data.knee_adduction_angle_ipsi_rad = l_knee_add;
+        stride_data.knee_adduction_angle_contra_rad = r_knee_add;
+        stride_data.knee_rotation_angle_ipsi_rad = l_knee_rot;
+        stride_data.knee_rotation_angle_contra_rad = r_knee_rot;
+    end
+    
+    % Ankle angles
+    if isfield(angles, 'LAnkleAngles') && isfield(angles, 'RAnkleAngles')
+        % Sagittal plane (dorsiflexion)
+        l_ankle_flex = interpolate_signal(deg2rad(angles.LAnkleAngles(start_idx:end_idx, 1)), NUM_POINTS);
+        r_ankle_flex = interpolate_signal(deg2rad(angles.RAnkleAngles(start_idx:end_idx, 1)), NUM_POINTS);
+        
+        % Frontal and transverse planes (set to zero)
+        l_ankle_add = zeros(NUM_POINTS, 1);
+        r_ankle_add = zeros(NUM_POINTS, 1);
+        l_ankle_rot = zeros(NUM_POINTS, 1);
+        r_ankle_rot = zeros(NUM_POINTS, 1);
+        
+        stride_data.ankle_dorsiflexion_angle_ipsi_rad = l_ankle_flex;
+        stride_data.ankle_dorsiflexion_angle_contra_rad = r_ankle_flex;
+        stride_data.ankle_adduction_angle_ipsi_rad = l_ankle_add;
+        stride_data.ankle_adduction_angle_contra_rad = r_ankle_add;
+        stride_data.ankle_rotation_angle_ipsi_rad = l_ankle_rot;
+        stride_data.ankle_rotation_angle_contra_rad = r_ankle_rot;
+    end
+    
+    % Pelvis angles (if available)
+    if isfield(angles, 'LPelvisAngles')
+        % Use left pelvis as representative
+        pelvis_sag = interpolate_signal(deg2rad(angles.LPelvisAngles(start_idx:end_idx, 1)), NUM_POINTS);
+        if size(angles.LPelvisAngles, 2) >= 2
+            pelvis_front = interpolate_signal(deg2rad(angles.LPelvisAngles(start_idx:end_idx, 2)), NUM_POINTS);
+        else
+            pelvis_front = zeros(NUM_POINTS, 1);
+        end
+        if size(angles.LPelvisAngles, 2) >= 3
+            pelvis_trans = interpolate_signal(deg2rad(angles.LPelvisAngles(start_idx:end_idx, 3)), NUM_POINTS);
+        else
+            pelvis_trans = zeros(NUM_POINTS, 1);
+        end
+        
+        stride_data.pelvis_sagittal_angle_rad = pelvis_sag;
+        stride_data.pelvis_frontal_angle_rad = pelvis_front;
+        stride_data.pelvis_transverse_angle_rad = pelvis_trans;
+    end
+    
+    % Calculate joint angular velocities from angles
+    effective_Hz = NUM_POINTS / cycle_duration_s;
+    
+    % Hip velocities
+    if isfield(angles, 'LHipAngles') && isfield(angles, 'RHipAngles')
+        stride_data.hip_flexion_velocity_ipsi_rad_s = gradient(stride_data.hip_flexion_angle_ipsi_rad) * effective_Hz;
+        stride_data.hip_flexion_velocity_contra_rad_s = gradient(stride_data.hip_flexion_angle_contra_rad) * effective_Hz;
+    else
+        stride_data.hip_flexion_velocity_ipsi_rad_s = zero_vector;
+        stride_data.hip_flexion_velocity_contra_rad_s = zero_vector;
+    end
+    
+    % Knee velocities
+    if isfield(angles, 'LKneeAngles') && isfield(angles, 'RKneeAngles')
+        stride_data.knee_flexion_velocity_ipsi_rad_s = gradient(stride_data.knee_flexion_angle_ipsi_rad) * effective_Hz;
+        stride_data.knee_flexion_velocity_contra_rad_s = gradient(stride_data.knee_flexion_angle_contra_rad) * effective_Hz;
+    else
+        stride_data.knee_flexion_velocity_ipsi_rad_s = zero_vector;
+        stride_data.knee_flexion_velocity_contra_rad_s = zero_vector;
+    end
+    
+    % Ankle velocities
+    if isfield(angles, 'LAnkleAngles') && isfield(angles, 'RAnkleAngles')
+        stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = gradient(stride_data.ankle_dorsiflexion_angle_ipsi_rad) * effective_Hz;
+        stride_data.ankle_dorsiflexion_velocity_contra_rad_s = gradient(stride_data.ankle_dorsiflexion_angle_contra_rad) * effective_Hz;
+    else
+        stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = zero_vector;
+        stride_data.ankle_dorsiflexion_velocity_contra_rad_s = zero_vector;
+    end
+    
+    % Segment angles (simplified for STS - no complex foot calculations)
+    stride_data.foot_sagittal_angle_ipsi_rad = zero_vector;
+    stride_data.foot_sagittal_angle_contra_rad = zero_vector;
+    stride_data.foot_sagittal_velocity_ipsi_rad_s = zero_vector;
+    stride_data.foot_sagittal_velocity_contra_rad_s = zero_vector;
+    stride_data.shank_sagittal_angle_ipsi_rad = zero_vector;
+    stride_data.shank_sagittal_angle_contra_rad = zero_vector;
+    stride_data.shank_sagittal_velocity_ipsi_rad_s = zero_vector;
+    stride_data.shank_sagittal_velocity_contra_rad_s = zero_vector;
+    stride_data.thigh_sagittal_angle_ipsi_rad = zero_vector;
+    stride_data.thigh_sagittal_angle_contra_rad = zero_vector;
+    stride_data.thigh_sagittal_velocity_ipsi_rad_s = zero_vector;
+    stride_data.thigh_sagittal_velocity_contra_rad_s = zero_vector;
+    
+    % Initialize other required columns with NaN for unmeasured kinetic data
+    % Joint moments (not measured in sit-to-stand)
+    stride_data.hip_flexion_moment_ipsi_Nm_kg = nan_vector;
+    stride_data.hip_flexion_moment_contra_Nm_kg = nan_vector;
+    stride_data.hip_adduction_moment_ipsi_Nm_kg = nan_vector;
+    stride_data.hip_adduction_moment_contra_Nm_kg = nan_vector;
+    stride_data.hip_rotation_moment_ipsi_Nm_kg = nan_vector;
+    stride_data.hip_rotation_moment_contra_Nm_kg = nan_vector;
+    stride_data.knee_flexion_moment_ipsi_Nm_kg = nan_vector;
+    stride_data.knee_flexion_moment_contra_Nm_kg = nan_vector;
+    stride_data.knee_adduction_moment_ipsi_Nm_kg = nan_vector;
+    stride_data.knee_adduction_moment_contra_Nm_kg = nan_vector;
+    stride_data.knee_rotation_moment_ipsi_Nm_kg = nan_vector;
+    stride_data.knee_rotation_moment_contra_Nm_kg = nan_vector;
+    stride_data.ankle_dorsiflexion_moment_ipsi_Nm_kg = nan_vector;
+    stride_data.ankle_dorsiflexion_moment_contra_Nm_kg = nan_vector;
+    stride_data.ankle_adduction_moment_ipsi_Nm_kg = nan_vector;
+    stride_data.ankle_adduction_moment_contra_Nm_kg = nan_vector;
+    stride_data.ankle_rotation_moment_ipsi_Nm_kg = nan_vector;
+    stride_data.ankle_rotation_moment_contra_Nm_kg = nan_vector;
+    
+    % Ground reaction forces (not measured)
+    stride_data.vertical_grf_ipsi_BW = nan_vector;
+    stride_data.vertical_grf_contra_BW = nan_vector;
+    stride_data.anterior_grf_ipsi_BW = nan_vector;
+    stride_data.anterior_grf_contra_BW = nan_vector;
+    stride_data.lateral_grf_ipsi_BW = nan_vector;
+    stride_data.lateral_grf_contra_BW = nan_vector;
+    
+    % Center of pressure (not measured)
+    stride_data.cop_anterior_ipsi_m = nan_vector;
+    stride_data.cop_anterior_contra_m = nan_vector;
+    stride_data.cop_lateral_ipsi_m = nan_vector;
+    stride_data.cop_lateral_contra_m = nan_vector;
+    stride_data.cop_vertical_ipsi_m = nan_vector;
+    stride_data.cop_vertical_contra_m = nan_vector;
+    
+    % Convert struct to table
+    cycle_table = struct2table(stride_data);
 end
 

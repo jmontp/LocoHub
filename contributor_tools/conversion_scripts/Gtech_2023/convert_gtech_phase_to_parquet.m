@@ -430,77 +430,15 @@ for subject_idx = 1:length(subjects)
             % Add Metadata
             step_data_single.subject = repmat(subject_save_name, num_points_per_step, 1);
             
-            % Map activity names to standard task names and task_ids
-            % Convert activity_name to standard task and task_id
-            if strcmp(activity_name, 'stairs')
-                % Determine ascent/descent from sub_activity_name
-                if contains(sub_activity_name, 'up', 'IgnoreCase', true) || contains(sub_activity_name, 'ascent', 'IgnoreCase', true)
-                    task_name = 'stair_ascent';
-                    task_id = 'stair_ascent';
-                    task_info_str = sprintf('steps:4,overground:true');
-                elseif contains(sub_activity_name, 'down', 'IgnoreCase', true) || contains(sub_activity_name, 'descent', 'IgnoreCase', true)
-                    task_name = 'stair_descent';
-                    task_id = 'stair_descent';
-                    task_info_str = sprintf('steps:4,overground:true');
-                else
-                    % Default to ascent if unclear
-                    task_name = 'stair_ascent';
-                    task_id = 'stair_ascent';
-                    task_info_str = sprintf('steps:4,overground:true,direction:unknown');
-                end
-            elseif strcmp(activity_name, 'normal_walk')
-                task_name = 'level_walking';
-                task_id = 'level';
-                task_info_str = sprintf('speed_m_s:self_selected,overground:true');
-            elseif strcmp(activity_name, 'incline_walk')
-                % Check sub_activity_name for incline/decline direction
-                if contains(sub_activity_name, 'down', 'IgnoreCase', true) || contains(sub_activity_name, 'decline', 'IgnoreCase', true)
-                    task_name = 'decline_walking';
-                    task_id = 'decline_10deg'; % Assuming 10 degree
-                    task_info_str = sprintf('incline_deg:-10,overground:true');
-                else
-                    % Default to incline (uphill)
-                    task_name = 'incline_walking';
-                    task_id = 'incline_10deg'; % Assuming 10 degree
-                    task_info_str = sprintf('incline_deg:10,overground:true');
-                end
-            elseif contains(activity_name, 'walk', 'IgnoreCase', true)
-                task_name = 'level_walking';
-                task_id = 'level';
-                task_info_str = sprintf('speed_m_s:self_selected,overground:true');
-            elseif contains(activity_name, 'ramp', 'IgnoreCase', true)
-                if contains(activity_name, 'up', 'IgnoreCase', true)
-                    task_name = 'incline_walking';
-                    task_id = 'incline_10deg'; % Assuming 10 degree ramp
-                    task_info_str = sprintf('incline_deg:10,overground:true');
-                else
-                    task_name = 'decline_walking';
-                    task_id = 'decline_10deg';
-                    task_info_str = sprintf('incline_deg:-10,overground:true');
-                end
-            elseif contains(activity_name, 'run', 'IgnoreCase', true)
-                task_name = 'run';
-                task_id = 'run';
-                task_info_str = sprintf('speed_m_s:self_selected,overground:true');
-            elseif contains(activity_name, 'jump', 'IgnoreCase', true)
-                task_name = 'jump';
-                task_id = 'jump';
-                task_info_str = sprintf('type:vertical,overground:true');
-            elseif strcmp(activity_name, 'sit_to_stand') || contains(activity_name, 'sts', 'IgnoreCase', true) || contains(activity_name, 'sit', 'IgnoreCase', true)
-                task_name = 'sit_to_stand';
-                task_id = 'sit_to_stand';
-                task_info_str = sprintf('repetitions:1');
-            else
-                % Default fallback
-                task_name = lower(activity_name);
-                task_id = lower(activity_name);
-                task_info_str = sprintf('activity:%s', sub_activity_name);
-            end
+            % Use standardized task mapping function
+            [task_name, task_id, task_info_str] = parse_gtech_activity_matlab(activity_name, sub_activity_name);
             
             step_data_single.task = repmat({task_name}, num_points_per_step, 1);
             step_data_single.task_id = repmat({task_id}, num_points_per_step, 1);
             step_data_single.task_info = repmat({task_info_str}, num_points_per_step, 1);
-            step_data_single.activity_number = repmat(activity_number, num_points_per_step, 1);
+            
+            % Add subject_metadata column (empty for now)
+            step_data_single.subject_metadata = repmat({''}, num_points_per_step, 1);
             step_data_single.leading_leg_step = repmat({leading_leg}, num_points_per_step, 1); % Add leading leg marker
             step_data_single.step = repmat(step_idx, num_points_per_step, 1);
 
@@ -619,8 +557,10 @@ for subject_idx = 1:length(subjects)
             % which matches what the rest of the script expects
 
             % --- Interpolate GRF & Transform COP ---
+            % Using standardized directional naming with ipsi/contra mapping
             grf_cols_base = {'ForceX', 'ForceY_Vertical', 'ForceZ', 'COPX', 'COPY_Vertical', 'COPZ'};
-            grf_cols_final_base = {'grf_x', 'grf_y', 'grf_z', 'cop_x', 'cop_y', 'cop_z'};
+            % Map to standardized names: anterior (X), vertical (Y), lateral (Z)
+            grf_cols_standardized = {'anterior_grf', 'vertical_grf', 'lateral_grf', 'cop_anterior', 'cop_vertical', 'cop_lateral'};
             if isfield(raw_data, 'GroundFrame_GRFs') && ~isempty(raw_data.GroundFrame_GRFs)
                 raw_grf_table = raw_data.GroundFrame_GRFs;
                 raw_grf_time = raw_time_vectors.GroundFrame_GRFs;
@@ -645,10 +585,24 @@ for subject_idx = 1:length(subjects)
                             end
                             
                 for leg_char = ['l', 'r']
+                    % Determine ipsi/contra suffix based on leading leg
+                    if strcmp(leading_leg, leg_char)
+                        ipsi_contra_suffix = '_ipsi';
+                    else
+                        ipsi_contra_suffix = '_contra';
+                    end
+                    
                     for v = 1:length(grf_cols_base)
                         var_base_raw = grf_cols_base{v};
                         col_raw = [upper(leg_char) var_base_raw]; % e.g., LForceX, RCOPZ
-                        col_final = [grf_cols_final_base{v} '_' leg_char]; % e.g., grf_x_l, cop_z_r
+                        
+                        % Create standardized column name with ipsi/contra and units
+                        standardized_base = grf_cols_standardized{v};
+                        if contains(standardized_base, 'grf')
+                            col_final = [standardized_base ipsi_contra_suffix '_N']; % e.g., anterior_grf_ipsi_N
+                        else % COP variables
+                            col_final = [standardized_base ipsi_contra_suffix '_m']; % e.g., cop_anterior_ipsi_m
+                        end
 
                         if ismember(col_raw, raw_grf_table.Properties.VariableNames)
                             raw_vals = raw_grf_table_slice.(col_raw);
@@ -691,16 +645,18 @@ for subject_idx = 1:length(subjects)
                                             end
                                         end
                                     end
-                                         step_data_single.(['cop_x_' leg_char]) = interpolate_signal(raw_grf_time_slice, cop_local_x, time_interp, interp_method);
-                                         step_data_single.(['cop_z_' leg_char]) = interpolate_signal(raw_grf_time_slice, cop_local_z, time_interp, interp_method);
-                                         step_data_single.(['cop_y_' leg_char]) = zeros(num_points_per_step, 1); % Assume zero vertical COP in local frame
+                                         % Use standardized column names with ipsi/contra
+                                         step_data_single.(['cop_anterior' ipsi_contra_suffix '_m']) = interpolate_signal(raw_grf_time_slice, cop_local_x, time_interp, interp_method);
+                                         step_data_single.(['cop_lateral' ipsi_contra_suffix '_m']) = interpolate_signal(raw_grf_time_slice, cop_local_z, time_interp, interp_method);
+                                         step_data_single.(['cop_vertical' ipsi_contra_suffix '_m']) = zeros(num_points_per_step, 1); % Assume zero vertical COP in local frame
                                      else % Not enough transform data or length mismatch
                                          if ismember(activity_name, critical_activities)
                                              warning('Transform data issue for step %d. Cannot transform COP.', step_idx);
                                          end
-                                         step_data_single.(['cop_x_' leg_char]) = nan(num_points_per_step, 1);
-                                         step_data_single.(['cop_z_' leg_char]) = nan(num_points_per_step, 1);
-                                         step_data_single.(['cop_y_' leg_char]) = nan(num_points_per_step, 1);
+                                         % Use standardized column names with ipsi/contra for NaN case
+                                         step_data_single.(['cop_anterior' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
+                                         step_data_single.(['cop_lateral' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
+                                         step_data_single.(['cop_vertical' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
                                      end
 
                                 elseif strcmp(var_base_raw, 'COPY_Vertical') || strcmp(var_base_raw, 'COPZ')
@@ -710,9 +666,10 @@ for subject_idx = 1:length(subjects)
                                 end
 
                             elseif contains(var_base_raw, 'COP') % No transforms available or loaded
-                                  step_data_single.(['cop_x_' leg_char]) = nan(num_points_per_step, 1);
-                                  step_data_single.(['cop_z_' leg_char]) = nan(num_points_per_step, 1);
-                                  step_data_single.(['cop_y_' leg_char]) = nan(num_points_per_step, 1);
+                                  % Use standardized column names for COP when no transforms available
+                                  step_data_single.(['cop_anterior' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
+                                  step_data_single.(['cop_lateral' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
+                                  step_data_single.(['cop_vertical' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
                             else % Interpolate non-COP GRF directly
                                 step_data_single.(col_final) = interpolate_signal(raw_grf_time_slice, raw_vals, time_interp, interp_method);
                             end
@@ -720,21 +677,30 @@ for subject_idx = 1:length(subjects)
                             % Add NaN column if raw GRF column missing
                             step_data_single.(col_final) = nan(num_points_per_step, 1);
                              if contains(var_base_raw, 'COP') % Ensure all related COP NaNs are added if one raw col is missing
-                                 step_data_single.(['cop_x_' leg_char]) = nan(num_points_per_step, 1);
-                                 step_data_single.(['cop_y_' leg_char]) = nan(num_points_per_step, 1);
-                                 step_data_single.(['cop_z_' leg_char]) = nan(num_points_per_step, 1);
+                                 % Use standardized column names for missing COP data
+                                 step_data_single.(['cop_anterior' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
+                                 step_data_single.(['cop_vertical' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
+                                 step_data_single.(['cop_lateral' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
                     end
                 end
                         end
                     end
             else % Add NaN columns if raw GRF data file missing
                  for leg_char = ['l', 'r']
-                    step_data_single.(['grf_x_' leg_char]) = nan(num_points_per_step, 1);
-                    step_data_single.(['grf_y_' leg_char]) = nan(num_points_per_step, 1);
-                    step_data_single.(['grf_z_' leg_char]) = nan(num_points_per_step, 1);
-                    step_data_single.(['cop_x_' leg_char]) = nan(num_points_per_step, 1);
-                    step_data_single.(['cop_y_' leg_char]) = nan(num_points_per_step, 1);
-                    step_data_single.(['cop_z_' leg_char]) = nan(num_points_per_step, 1);
+                    % Determine ipsi/contra suffix for this leg
+                    if strcmp(leading_leg, leg_char)
+                        ipsi_contra_suffix = '_ipsi';
+                    else
+                        ipsi_contra_suffix = '_contra';
+                    end
+                    
+                    % Use standardized column names for missing GRF/COP data
+                    step_data_single.(['anterior_grf' ipsi_contra_suffix '_N']) = nan(num_points_per_step, 1);
+                    step_data_single.(['vertical_grf' ipsi_contra_suffix '_N']) = nan(num_points_per_step, 1);
+                    step_data_single.(['lateral_grf' ipsi_contra_suffix '_N']) = nan(num_points_per_step, 1);
+                    step_data_single.(['cop_anterior' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
+                    step_data_single.(['cop_vertical' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
+                    step_data_single.(['cop_lateral' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
                         end
                     end
                     
@@ -1271,7 +1237,7 @@ else % 'lr'
 end
 
 % Write the data to a parquet file
-file_name = fullfile(output_dir, 'gtech_2023_phase.parquet'); % New filename indicating source
+file_name = fullfile(output_dir, 'gtech_2023_phase_raw.parquet'); % New filename indicating source
 try
     parquetwrite(file_name, combined_data);
     fprintf('Processing complete. Output saved to: %s\n', file_name);
