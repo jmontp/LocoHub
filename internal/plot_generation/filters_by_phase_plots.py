@@ -12,6 +12,13 @@ from pathlib import Path
 import warnings
 import sys
 
+# Import for memory monitoring
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+
 # Add parent directories to path for imports
 current_dir = Path(__file__).parent
 repo_root = current_dir.parent.parent
@@ -21,6 +28,68 @@ sys.path.insert(0, str(repo_root))
 from user_libs.python.feature_constants import get_sagittal_features, get_task_classification
 
 # Removed: validate_task_completeness (no longer needed in unified system)
+
+
+def _get_memory_aware_plot_params(n_features: int, base_width: float = 14.0, base_height_per_feature: float = 2.0) -> Tuple[Tuple[float, float], float, float]:
+    """
+    Get memory-aware plot parameters based on current memory usage.
+    
+    Adjusts figure size, DPI, and line parameters to reduce memory consumption
+    when approaching the 95% memory circuit breaker limit.
+    
+    Args:
+        n_features: Number of features to plot (affects base figure height)
+        base_width: Base figure width in inches
+        base_height_per_feature: Base height per feature in inches
+        
+    Returns:
+        Tuple of (figsize, dpi, linewidth) where:
+        - figsize: (width, height) in inches
+        - dpi: Dots per inch for matplotlib
+        - linewidth: Line thickness for plot lines
+    """
+    # Default high-quality parameters
+    default_dpi = 100
+    default_linewidth = 0.5
+    base_figsize = (base_width, max(6, n_features * base_height_per_feature))
+    
+    if not PSUTIL_AVAILABLE:
+        return base_figsize, default_dpi, default_linewidth
+    
+    try:
+        memory = psutil.virtual_memory()
+        memory_percent = memory.percent
+        
+        # Aggressive memory reduction as we approach circuit breaker
+        if memory_percent > 90:
+            # Critical memory pressure - use minimal quality settings
+            scale_factor = 0.6
+            dpi = 60
+            linewidth = 0.3
+        elif memory_percent > 85:
+            # High memory pressure - reduce quality moderately  
+            scale_factor = 0.7
+            dpi = 70
+            linewidth = 0.35
+        elif memory_percent > 80:
+            # Moderate memory pressure - slight reduction
+            scale_factor = 0.85
+            dpi = 85
+            linewidth = 0.4
+        else:
+            # Normal memory usage - full quality
+            scale_factor = 1.0
+            dpi = default_dpi
+            linewidth = default_linewidth
+            
+        # Scale figure size
+        scaled_figsize = (base_figsize[0] * scale_factor, base_figsize[1] * scale_factor)
+        
+        return scaled_figsize, dpi, linewidth
+        
+    except Exception:
+        # Fall back to defaults if memory monitoring fails
+        return base_figsize, default_dpi, default_linewidth
 
 
 def create_single_feature_plot(
@@ -66,8 +135,9 @@ def create_single_feature_plot(
     
     task_type = get_task_classification(task_name)
     
-    # Create figure with 1 row, 2 columns (pass/fail)
-    fig, (ax_pass, ax_fail) = plt.subplots(1, 2, figsize=(14, 3))
+    # Create figure with 1 row, 2 columns (pass/fail) - with memory-aware parameters
+    figsize, dpi, linewidth = _get_memory_aware_plot_params(1, base_width=14.0, base_height_per_feature=3.0)
+    fig, (ax_pass, ax_fail) = plt.subplots(1, 2, figsize=figsize, dpi=dpi)
     
     # Build title
     task_type_label = "Gait-Based Task" if task_type == 'gait' else "Bilateral Symmetric Task"
@@ -163,7 +233,7 @@ def create_single_feature_plot(
         for stride_idx in range(data.shape[0]):
             if stride_idx not in global_failed_strides:
                 stride_data = data[stride_idx, :, var_idx]
-                ax_pass.plot(phase_ipsi, stride_data, color='green', alpha=0.3, linewidth=0.5, zorder=1)
+                ax_pass.plot(phase_ipsi, stride_data, color='green', alpha=0.3, linewidth=linewidth, zorder=1)
                 passed_count += 1
     
     # Plot validation ranges on pass axis
@@ -189,7 +259,7 @@ def create_single_feature_plot(
         for stride_idx in range(data.shape[0]):
             if stride_idx in variable_failed_strides:
                 stride_data = data[stride_idx, :, var_idx]
-                ax_fail.plot(phase_ipsi, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
+                ax_fail.plot(phase_ipsi, stride_data, color='red', alpha=0.4, linewidth=linewidth, zorder=1)
                 failed_count += 1
     
     # Plot validation ranges on fail axis
@@ -249,7 +319,10 @@ def create_task_combined_plot(
     failing_features: Optional[Dict] = None,  # Can be legacy or merged format
     dataset_name: Optional[str] = None,
     timestamp: Optional[str] = None,
-    comparison_mode: bool = False
+    comparison_mode: bool = False,
+    show_interactive: bool = False,
+    show_local_passing: bool = False,
+    use_column_names: bool = False
 ) -> str:
     """
     Create a combined validation plot with all features for a single task.
@@ -264,9 +337,12 @@ def create_task_combined_plot(
         dataset_name: Optional dataset name to display
         timestamp: Optional timestamp to display
         comparison_mode: If True, generate single-column comparison plot (passing strides only)
+        show_interactive: If True, show plot interactively instead of saving to file
+        show_local_passing: If True, show locally passing strides in yellow/gold (pass current feature but fail others)
+        use_column_names: If True, use actual column names instead of pretty labels
         
     Returns:
-        Path to the generated plot
+        Path to the generated plot (or empty string if shown interactively)
     """
     # ALWAYS use all sagittal features for consistent layout
     sagittal_features = get_sagittal_features()
@@ -278,21 +354,31 @@ def create_task_combined_plot(
     # Always use all 17 features for consistent plot height
     n_features = len(sagittal_features)
     
-    # Fixed dimensions for consistency across all plots
-    row_height = 2.0  # inches per feature row
-    fig_height = n_features * row_height  # Total height = 17 * 2.0 = 34 inches
+    # Memory-aware dimensions for consistency across all plots
+    row_height = 2.0  # inches per feature row (base value)
     
     if comparison_mode:
         # Single column layout for comparison plots
-        fig, axes = plt.subplots(n_features, 1, figsize=(7, fig_height))
+        figsize, dpi, linewidth = _get_memory_aware_plot_params(n_features, base_width=7.0, base_height_per_feature=row_height)
+        fig, axes = plt.subplots(n_features, 1, figsize=figsize, dpi=dpi)
         # Ensure axes is always 2D for consistent indexing
         if n_features == 1:
             axes = axes.reshape(1, 1)
         else:
             axes = axes.reshape(n_features, 1)
     else:
-        # Original 2-column layout for validation plots - fixed 14" width
-        fig, axes = plt.subplots(n_features, 2, figsize=(14, fig_height))
+        # Original 2-column layout for validation plots
+        if show_interactive:
+            # For interactive display, ensure each row gets proper height
+            # Don't limit the height - let matplotlib handle scrolling
+            height_per_row = 2.5  # inches per feature row for good visibility
+            total_height = n_features * height_per_row
+            figsize = (14.0, total_height)  # Full height, no limiting
+            dpi = 80  # Screen DPI
+            linewidth = 0.5
+        else:
+            figsize, dpi, linewidth = _get_memory_aware_plot_params(n_features, base_width=14.0, base_height_per_feature=row_height)
+        fig, axes = plt.subplots(n_features, 2, figsize=figsize, dpi=dpi)
         # Ensure axes is always 2D
         if n_features == 1:
             axes = axes.reshape(1, -1)
@@ -389,6 +475,9 @@ def create_task_combined_plot(
     
     # Process ALL sagittal features (always 17 rows)
     for feat_idx, (var_name, var_label) in enumerate(sagittal_features):
+        # Choose which label to display based on use_column_names flag
+        display_label = var_name if use_column_names else var_label
+        
         if comparison_mode:
             # Single column - only pass axis
             ax_pass = axes[feat_idx, 0]
@@ -489,16 +578,55 @@ def create_task_combined_plot(
             value_conversion = lambda x: x
             unit_suffix = ''
         
-        # Plot PASSED strides (left column)
+        # Plot PASSED strides (left column) - OPTIMIZED BATCH PLOTTING
         passed_count = 0
+        local_passed_count = 0
         if has_data and data_3d is not None and data_3d.size > 0 and var_idx is not None:
             phase_ipsi = np.linspace(0, 100, 150)
             
-            for stride_idx in range(data_3d.shape[0]):
-                if stride_idx not in global_failed_strides:
-                    stride_data = data_3d[stride_idx, :, var_idx]
-                    ax_pass.plot(phase_ipsi, stride_data, color='green', alpha=0.3, linewidth=0.5, zorder=1)
-                    passed_count += 1
+            if show_local_passing:
+                # Build variable-specific failed strides
+                variable_failed_strides = set()
+                if is_merged_format:
+                    for stride_idx, failure_types in failing_features.items():
+                        biomech_failures = failure_types.get('biomechanical', [])
+                        velocity_failures = failure_types.get('velocity', [])
+                        if var_name in biomech_failures or var_name in velocity_failures:
+                            variable_failed_strides.add(stride_idx)
+                else:
+                    for stride_idx, failed_vars in failing_features.items():
+                        if var_name in failed_vars:
+                            variable_failed_strides.add(stride_idx)
+                
+                # Separate globally passing from locally passing
+                global_passing_indices = [stride_idx for stride_idx in range(data_3d.shape[0]) 
+                                        if stride_idx not in global_failed_strides]
+                local_passing_indices = [stride_idx for stride_idx in range(data_3d.shape[0])
+                                       if stride_idx not in variable_failed_strides and stride_idx in global_failed_strides]
+                
+                # Plot globally passing strides in green
+                if global_passing_indices:
+                    global_passing_data = data_3d[global_passing_indices, :, var_idx]
+                    passed_count = len(global_passing_indices)
+                    ax_pass.plot(phase_ipsi, global_passing_data.T, color='green', alpha=0.3, linewidth=linewidth, zorder=1)
+                
+                # Plot locally passing strides in gold/yellow
+                if local_passing_indices:
+                    local_passing_data = data_3d[local_passing_indices, :, var_idx]
+                    local_passed_count = len(local_passing_indices)
+                    ax_pass.plot(phase_ipsi, local_passing_data.T, color='gold', alpha=0.3, linewidth=linewidth, zorder=2)
+            else:
+                # Original logic - all non-globally-failed strides in green
+                passing_indices = [stride_idx for stride_idx in range(data_3d.shape[0]) 
+                                 if stride_idx not in global_failed_strides]
+                
+                if passing_indices:
+                    # Extract all passing stride data at once - shape: (n_passing, 150)
+                    passing_data = data_3d[passing_indices, :, var_idx]
+                    passed_count = len(passing_indices)
+                    
+                    # Single plot call for all passing strides (instead of thousands of individual calls)
+                    ax_pass.plot(phase_ipsi, passing_data.T, color='green', alpha=0.3, linewidth=linewidth, zorder=1)
         
         # Plot validation ranges on pass axis
         _plot_validation_ranges(ax_pass, var_ranges, phases, 'lightgreen', value_conversion, unit_suffix)
@@ -508,7 +636,10 @@ def create_task_combined_plot(
                         ha='center', va='center', fontsize=10, color='gray', alpha=0.7)
         
         # Compact title for subplot
-        ax_pass.set_title(f'{var_label} ✓ ({passed_count})', fontsize=8, fontweight='bold')
+        if show_local_passing and local_passed_count > 0:
+            ax_pass.set_title(f'{display_label} ✓ ({passed_count} green, {local_passed_count} yellow)', fontsize=8, fontweight='bold')
+        else:
+            ax_pass.set_title(f'{display_label} ✓ ({passed_count})', fontsize=8, fontweight='bold')
         ax_pass.set_xlim(-5, 105)
         ax_pass.set_ylim(y_min, y_max)
         ax_pass.set_xticks([0, 25, 50, 75, 100])
@@ -529,20 +660,25 @@ def create_task_combined_plot(
             velocity_failed_count = 0
             
             if has_data and data_3d is not None and data_3d.size > 0 and var_idx is not None:
-                for stride_idx in range(data_3d.shape[0]):
-                    stride_data = data_3d[stride_idx, :, var_idx]
-                    
-                    # Three-color system based on failure type
-                    if stride_idx in variable_biomech_failed_strides:
-                        # Red for biomechanical failures
-                        ax_fail.plot(phase_ipsi, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
-                        biomech_failed_count += 1
-                        failed_count += 1
-                    elif stride_idx in variable_velocity_failed_strides:
-                        # Blue for velocity-only failures  
-                        ax_fail.plot(phase_ipsi, stride_data, color='blue', alpha=0.4, linewidth=0.5, zorder=1)
-                        velocity_failed_count += 1
-                        failed_count += 1
+                # OPTIMIZED BATCH PLOTTING for failed strides
+                
+                # Collect indices for each failure type
+                biomech_indices = [idx for idx in variable_biomech_failed_strides]
+                velocity_indices = [idx for idx in variable_velocity_failed_strides]
+                
+                # Plot biomechanical failures in red (batch)
+                if biomech_indices:
+                    biomech_data = data_3d[biomech_indices, :, var_idx]
+                    biomech_failed_count = len(biomech_indices)
+                    ax_fail.plot(phase_ipsi, biomech_data.T, color='red', alpha=0.4, linewidth=linewidth, zorder=1)
+                
+                # Plot velocity failures in blue (batch)
+                if velocity_indices:
+                    velocity_data = data_3d[velocity_indices, :, var_idx]
+                    velocity_failed_count = len(velocity_indices)
+                    ax_fail.plot(phase_ipsi, velocity_data.T, color='blue', alpha=0.4, linewidth=linewidth, zorder=1)
+                
+                failed_count = biomech_failed_count + velocity_failed_count
             
             # Plot validation ranges on fail axis
             _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix)
@@ -559,9 +695,9 @@ def create_task_combined_plot(
                 if velocity_failed_count > 0:
                     title_parts.append(f'B{velocity_failed_count}')
                 breakdown = ' '.join(title_parts)
-                ax_fail.set_title(f'{var_label} ✗ ({breakdown})', fontsize=8, fontweight='bold')
+                ax_fail.set_title(f'{display_label} ✗ ({breakdown})', fontsize=8, fontweight='bold')
             else:
-                ax_fail.set_title(f'{var_label} ✗ ({failed_count})', fontsize=8, fontweight='bold')
+                ax_fail.set_title(f'{display_label} ✗ ({failed_count})', fontsize=8, fontweight='bold')
             ax_fail.set_xlim(-5, 105)
             ax_fail.set_ylim(y_min, y_max)
             ax_fail.set_xticks([0, 25, 50, 75, 100])
@@ -598,11 +734,29 @@ def create_task_combined_plot(
                 ax2_fail.set_ylim(value_conversion(y_min), value_conversion(y_max))
                 ax2_fail.set_ylabel('deg', fontsize=7)
                 ax2_fail.tick_params(axis='y', labelsize=7)
+        
+        # AGGRESSIVE CLEANUP after each feature to prevent memory accumulation
+        import gc
+        # Clean up temporary data arrays that may have been created
+        locals_to_delete = ['passing_data', 'biomech_data', 'velocity_data', 'passing_indices', 
+                          'biomech_indices', 'velocity_indices', 'stride_data']
+        for var_name_to_del in locals_to_delete:
+            if var_name_to_del in locals():
+                del locals()[var_name_to_del]
+        
+        # Force garbage collection after every few features to prevent accumulation
+        if feat_idx % 5 == 0:  # Every 5 features
+            gc.collect()
     
-    plt.tight_layout(rect=[0, 0.02, 1, 0.96])
+    # Only apply tight_layout for file saving, not interactive display
+    if not show_interactive:
+        plt.tight_layout(rect=[0, 0.02, 1, 0.96])
     
-    # Save the plot
-    if comparison_mode:
+    # Save the plot (only if output_dir is provided)
+    if show_interactive:
+        # Skip path creation for interactive mode
+        output_path = None
+    elif comparison_mode:
         # Comparison plots use simpler naming: dataset_task.png
         if dataset_name:
             output_path = Path(output_dir) / f"{dataset_name}_{task_name}.png"
@@ -614,11 +768,24 @@ def create_task_combined_plot(
             output_path = Path(output_dir) / f"{dataset_name}_{task_name}_all_features_validation.png"
         else:
             output_path = Path(output_dir) / f"{task_name}_all_features_validation.png"
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
     
-    return str(output_path)
+    if show_interactive:
+        # Configure for interactive display
+        fig = plt.gcf()
+        
+        # The figure is already sized properly with each row having 2.5 inches
+        # Just adjust the layout for better spacing
+        plt.subplots_adjust(left=0.08, right=0.95, top=0.97, bottom=0.03, hspace=0.3, wspace=0.15)
+        
+        # Note: Don't call plt.show() here - let the caller handle it
+        # This allows multiple plots to be accumulated before showing
+        return ""  # No file path when showing interactively
+    else:
+        # Save to file as usual
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(output_path, dpi=150, bbox_inches='tight')
+        plt.close()
+        return str(output_path)
 
 
 def create_subject_failure_histogram(
@@ -708,8 +875,9 @@ def create_subject_failure_histogram(
         else:
             colors_list.append('red')
     
-    # Create the histogram
-    fig, ax = plt.subplots(figsize=(10, 6))
+    # Create the histogram with memory-aware parameters
+    figsize, dpi, linewidth = _get_memory_aware_plot_params(1, base_width=10.0, base_height_per_feature=6.0)
+    fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
     
     # Create bars
     x_pos = np.arange(len(subjects_list))
@@ -862,14 +1030,16 @@ def create_filters_by_phase_plot(
     else:
         raise ValueError(f"Unknown mode: {mode}")
     
-    # Create figure with appropriate layout based on number of variables
+    # Create figure with appropriate layout based on number of variables - memory-aware
     n_vars = len(variables)
     if mode == 'segment':
         # For segment angles, use 12x2 layout (12 variables x pass/fail)
-        fig, axes = plt.subplots(12, 2, figsize=(14, 24))
+        figsize, dpi, linewidth = _get_memory_aware_plot_params(12, base_width=14.0, base_height_per_feature=2.0)
+        fig, axes = plt.subplots(12, 2, figsize=figsize, dpi=dpi)
     else:
         # For kinematic/kinetic, use 6x2 layout (6 variables x pass/fail)
-        fig, axes = plt.subplots(6, 2, figsize=(14, 20))
+        figsize, dpi, linewidth = _get_memory_aware_plot_params(6, base_width=14.0, base_height_per_feature=3.33)
+        fig, axes = plt.subplots(6, 2, figsize=figsize, dpi=dpi)
     
     # Build title
     if mode == 'kinematic':
@@ -972,7 +1142,7 @@ def create_filters_by_phase_plot(
             for stride_idx in range(data.shape[0]):
                 if stride_idx not in global_failed_strides:
                     stride_data = data[stride_idx, :, var_idx]
-                    ax_pass.plot(phase_ipsi, stride_data, color='green', alpha=0.3, linewidth=0.5, zorder=1)
+                    ax_pass.plot(phase_ipsi, stride_data, color='green', alpha=0.3, linewidth=linewidth, zorder=1)
                     passed_count += 1
         
         # Plot validation ranges on TOP of data (higher z-order)
@@ -1006,7 +1176,7 @@ def create_filters_by_phase_plot(
             for stride_idx in range(data.shape[0]):
                 if stride_idx in variable_failed_strides:
                     stride_data = data[stride_idx, :, var_idx]
-                    ax_fail.plot(phase_ipsi, stride_data, color='red', alpha=0.4, linewidth=0.5, zorder=1)
+                    ax_fail.plot(phase_ipsi, stride_data, color='red', alpha=0.4, linewidth=linewidth, zorder=1)
                     failed_count += 1
         
         # Plot validation ranges on TOP of data (higher z-order)

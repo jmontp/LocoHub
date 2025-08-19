@@ -1,59 +1,132 @@
 #!/usr/bin/env python3
 """
-Quick Validation Check - Lightweight Text-Only Validation
+Quick Validation Check - Fast Validation with Optional Plotting
 
-A fast, text-only validation tool that shows pass/fail statistics without generating plots.
-Useful for rapid validation checks during dataset conversion.
+A fast validation tool that shows pass/fail statistics with optional plot generation.
+Useful for rapid validation checks during dataset conversion and debugging.
 
 Usage:
+    # Text-only validation (default)
     python quick_validation_check.py converted_datasets/gtech_2021_phase.parquet
+    
+    # With custom ranges
     python quick_validation_check.py dataset.parquet --ranges custom_ranges.yaml
+    
+    # Generate plots for all tasks (shows interactively)
+    python quick_validation_check.py dataset.parquet --plot
+    
+    # Generate plot for specific task (shows interactively)
+    python quick_validation_check.py dataset.parquet --plot --task level_walking
+    
+    # Save plots to directory instead of showing
+    python quick_validation_check.py dataset.parquet --plot --output-dir ./my_plots
 """
 
 import sys
 import argparse
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Optional
+from datetime import datetime
 import pandas as pd
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from internal.validation_engine.validator import Validator
+from user_libs.python.locomotion_data import LocomotionData
 
 
-def categorize_features(features: List[str]) -> Dict[str, List[str]]:
+def generate_plots(dataset_path: str, validator: Validator, task_filter: Optional[str] = None, 
+                  output_dir: Optional[str] = None, use_column_names: bool = False,
+                  show_local_passing: bool = False) -> None:
     """
-    Categorize features by type (kinematics, kinetics, GRF, segments).
+    Generate validation plots using the same plotting functions as report generator.
     
     Args:
-        features: List of feature names
-        
-    Returns:
-        Dictionary with categories as keys and feature lists as values
+        dataset_path: Path to dataset
+        validator: Initialized validator
+        task_filter: Optional single task to plot (if None, plot all)
+        output_dir: Where to save plots (if None, show interactively)
+        use_column_names: If True, use actual column names instead of pretty labels
+        show_local_passing: If True, show locally passing strides in yellow
     """
-    categories = {
-        'kinematics': [],
-        'kinetics': [],
-        'grf': [],
-        'segments': [],
-        'other': []
-    }
+    from internal.plot_generation.filters_by_phase_plots import create_task_combined_plot
+    import matplotlib.pyplot as plt
     
-    for feature in features:
-        if 'angle' in feature or 'angular_velocity' in feature:
-            categories['kinematics'].append(feature)
-        elif 'moment' in feature or 'power' in feature:
-            categories['kinetics'].append(feature)
-        elif 'grf' in feature:
-            categories['grf'].append(feature)
-        elif 'segment' in feature:
-            categories['segments'].append(feature)
-        else:
-            categories['other'].append(feature)
+    locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
+    dataset_name = Path(dataset_path).stem
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
     
-    # Remove empty categories
-    return {k: v for k, v in categories.items() if v}
+    # Determine which tasks to plot
+    all_tasks = locomotion_data.get_tasks()
+    if task_filter:
+        if task_filter not in all_tasks:
+            print(f"❌ Task '{task_filter}' not found in dataset")
+            print(f"Available tasks: {', '.join(sorted(all_tasks))}")
+            return
+        tasks = [task_filter]
+    else:
+        tasks = all_tasks
+    
+    # Set output directory only if explicitly specified
+    if output_dir:
+        output_dir = Path(output_dir)
+        output_dir.mkdir(exist_ok=True, parents=True)
+        print(f"\n📁 Output directory: {output_dir}")
+        show = False  # If output_dir is specified, save files instead of showing
+    else:
+        show = True  # Default to showing plots if no output_dir specified
+    
+    # Generate plots for each task
+    print(f"\n🎨 Generating plots for {len(tasks)} task(s)...")
+    
+    for task in sorted(tasks):
+        print(f"\n📍 Processing {task}...")
+        
+        try:
+            # Get validation failures for this task
+            failures = validator._validate_task_with_failing_features(locomotion_data, task)
+            
+            # Get task data
+            data_3d, features = locomotion_data.get_cycles(subject=None, task=task)
+            
+            if data_3d.size == 0:
+                print(f"  ⚠️  No data available for {task}")
+                continue
+            
+            # Get validation config for this task
+            task_config = validator.config_manager.get_task_data(task)
+            
+            # Generate plot using the same function as report generator
+            plot_path = create_task_combined_plot(
+                validation_data=task_config,
+                task_name=task,
+                output_dir=str(output_dir) if output_dir else None,
+                data_3d=data_3d,
+                feature_names=features,
+                failing_features=failures,
+                dataset_name=dataset_name,
+                timestamp=timestamp,
+                show_interactive=show,
+                use_column_names=use_column_names,
+                show_local_passing=show_local_passing
+            )
+            
+            if plot_path and not show:
+                print(f"  ✅ Plot saved: {Path(plot_path).name}")
+            elif show:
+                print(f"  ✅ Plot displayed")
+                
+        except Exception as e:
+            print(f"  ❌ Error generating plot for {task}: {e}")
+            continue
+    
+    if show:
+        # Just use matplotlib's normal display
+        plt.show()
+    elif output_dir:
+        print(f"\n✅ All plots saved to: {output_dir}")
+
 
 
 def print_validation_summary(result: Dict) -> None:
@@ -78,81 +151,40 @@ def print_validation_summary(result: Dict) -> None:
     
     # Phase structure
     phase_icon = "✅" if result['phase_valid'] else "❌"
-    print(f"\nPhase Structure: {phase_icon} {result['phase_message']}")
+    print(f"Phase Structure: {phase_icon} {result['phase_message']}")
     
-    # Task breakdown
+    # Task summary
     print(f"\nTasks Validated: {stats['num_tasks']}")
     
     if result['violations']:
         print("\n" + "-"*70)
-        print("TASK-BY-TASK BREAKDOWN")
+        print("TASK SUMMARY")
         print("-"*70)
         
         for task, violations in sorted(result['violations'].items()):
-            # Calculate task-specific pass rate
-            task_total = sum(len(v) for v in violations.values())
+            # Count total failures for this task
+            total_failures = sum(len(v) for v in violations.values())
             
-            print(f"\n📍 {task.upper()}")
-            
-            if violations:
-                # Categorize failures
-                categorized = categorize_features(list(violations.keys()))
-                
-                for category, features in categorized.items():
-                    if features:
-                        print(f"\n  {category.title()}:")
-                        for feature in sorted(features):
-                            if feature in violations:
-                                n_failures = len(violations[feature])
-                                print(f"    • {feature}: {n_failures} stride failures")
+            if total_failures > 0:
+                # Count unique features that failed
+                failed_features = len(violations)
+                print(f"\n📍 {task}: {total_failures} stride failures across {failed_features} features")
             else:
-                print("  ✅ All features passed")
+                print(f"\n📍 {task}: ✅ All features passed")
     else:
         print("\n✅ All validations passed!")
     
     # Summary statistics
     print("\n" + "-"*70)
-    print("SUMMARY STATISTICS")
+    print("SUMMARY")
     print("-"*70)
     print(f"Total Strides: {stats['total_strides']:,}")
-    print(f"Failing Strides: {stats['total_failing_strides']:,}")
     print(f"Pass Rate: {stats['pass_rate']:.1%}")
-    print(f"Total Variable Checks: {stats['total_checks']:,}")
-    print(f"Total Variable Violations: {stats['total_violations']:,}")
     print(f"Variable Pass Rate: {stats['variable_pass_rate']:.1%}")
     
     print("\n" + "="*70)
 
 
-def get_failing_features_summary(validator: Validator, dataset_path: str) -> Dict[str, Set[str]]:
-    """
-    Get a summary of which features are failing across all tasks.
-    
-    Args:
-        validator: Initialized validator instance
-        dataset_path: Path to dataset
-        
-    Returns:
-        Dictionary mapping feature names to set of tasks where they fail
-    """
-    from user_libs.python.locomotion_data import LocomotionData
-    
-    locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
-    tasks = locomotion_data.get_tasks()
-    
-    feature_failures = {}
-    
-    for task in tasks:
-        failing_features = validator._validate_task_with_failing_features(locomotion_data, task)
-        
-        # Aggregate by feature
-        for stride_idx, failed_vars in failing_features.items():
-            for var_name in failed_vars:
-                if var_name not in feature_failures:
-                    feature_failures[var_name] = set()
-                feature_failures[var_name].add(task)
-    
-    return feature_failures
 
 
 def main():
@@ -173,9 +205,31 @@ def main():
     )
     
     parser.add_argument(
-        "--verbose",
+        "--plot",
         action="store_true",
-        help="Show detailed feature-by-feature breakdown"
+        help="Generate validation plots"
+    )
+    
+    parser.add_argument(
+        "--task",
+        help="Generate plot for specific task only (e.g., level_walking)"
+    )
+    
+    parser.add_argument(
+        "--output-dir",
+        help="Directory to save plots (if not specified, plots are shown interactively)"
+    )
+    
+    parser.add_argument(
+        "--use-column-names",
+        action="store_true",
+        help="Use actual column names instead of pretty labels in plots"
+    )
+    
+    parser.add_argument(
+        "--show-local-passing",
+        action="store_true",
+        help="Show locally passing strides in yellow (pass current feature but fail others)"
     )
     
     args = parser.parse_args()
@@ -206,28 +260,25 @@ def main():
         # Run validation
         result = validator.validate(str(dataset_path))
         
-        # Print summary
+        # Always print summary
         print_validation_summary(result)
         
-        # Optional verbose output
-        if args.verbose:
-            print("\n" + "="*70)
-            print("DETAILED FEATURE ANALYSIS")
-            print("="*70)
+        # Optional plot generation
+        if args.plot:
+            # Check for conflicting options
+            if args.task and not args.plot:
+                print("\n⚠️  Warning: --task requires --plot to be specified")
             
-            feature_summary = get_failing_features_summary(validator, str(dataset_path))
-            
-            if feature_summary:
-                categorized = categorize_features(list(feature_summary.keys()))
-                
-                for category, features in categorized.items():
-                    if features:
-                        print(f"\n{category.upper()} FAILURES:")
-                        for feature in sorted(features):
-                            tasks = feature_summary[feature]
-                            print(f"  • {feature}: fails in {', '.join(sorted(tasks))}")
-            else:
-                print("\n✅ No feature failures detected")
+            generate_plots(
+                dataset_path=str(dataset_path),
+                validator=validator,
+                task_filter=args.task,
+                output_dir=args.output_dir,
+                use_column_names=args.use_column_names,
+                show_local_passing=args.show_local_passing
+            )
+        elif args.task or args.output_dir:
+            print("\n⚠️  Note: --task and --output-dir require --plot to be specified")
         
         # Return exit code based on validation result
         return 0 if result['passed'] else 1
