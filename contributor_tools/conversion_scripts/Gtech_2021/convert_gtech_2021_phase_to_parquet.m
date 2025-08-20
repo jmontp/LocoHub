@@ -102,6 +102,9 @@ for subj_idx = 1:length(subjects_to_process)
         fprintf('  WARNING: No mass data for %s, skipping\n', subject_code);
         continue;
     end
+    
+    % Initialize trial counters for validation
+    trial_counts = struct('treadmill_speeds', 0, 'levelground', 0, 'stair', 0, 'ramp', 0);
     fprintf('  Subject mass: %.2f kg\n', subject_mass);
     
     % Find subject's date folder
@@ -128,31 +131,35 @@ for subj_idx = 1:length(subjects_to_process)
     subject_rows = [];
     
     % 1. Process treadmill data
-    treadmill_rows = process_treadmill(date_path, subject_str, subject_mass);
+    [treadmill_rows, treadmill_speeds] = process_treadmill(date_path, subject_str, subject_mass);
     if ~isempty(treadmill_rows)
         subject_rows = [subject_rows; treadmill_rows];
         fprintf('  Added %d treadmill strides\n', height(treadmill_rows));
+        trial_counts.treadmill_speeds = treadmill_speeds;
     end
     
     % 2. Process level ground data
-    levelground_rows = process_levelground(date_path, subject_str, subject_mass);
+    [levelground_rows, lg_trials] = process_levelground(date_path, subject_str, subject_mass);
     if ~isempty(levelground_rows)
         subject_rows = [subject_rows; levelground_rows];
         fprintf('  Added %d level ground strides\n', height(levelground_rows));
+        trial_counts.levelground = lg_trials;
     end
     
     % 3. Process ramp data
-    ramp_rows = process_ramp(date_path, subject_str, subject_mass);
+    [ramp_rows, ramp_trials] = process_ramp(date_path, subject_str, subject_mass);
     if ~isempty(ramp_rows)
         subject_rows = [subject_rows; ramp_rows];
         fprintf('  Added %d ramp strides\n', height(ramp_rows));
+        trial_counts.ramp = ramp_trials;
     end
     
     % 4. Process stair data
-    stair_rows = process_stair(date_path, subject_str, subject_mass);
+    [stair_rows, stair_trials] = process_stair(date_path, subject_str, subject_mass);
     if ~isempty(stair_rows)
         subject_rows = [subject_rows; stair_rows];
         fprintf('  Added %d stair strides\n', height(stair_rows));
+        trial_counts.stair = stair_trials;
     end
     
     % Add subject data to main table
@@ -161,6 +168,27 @@ for subj_idx = 1:length(subjects_to_process)
         fprintf('  Total strides for %s: %d\n', subject_code, height(subject_rows));
     else
         fprintf('  WARNING: No valid strides found for %s\n', subject_code);
+    end
+    
+    % Report trial count validation
+    fprintf('\n  === Trial Count Validation for %s ===\n', subject_code);
+    fprintf('  Treadmill: %d unique speeds detected (expected: 28)\n', trial_counts.treadmill_speeds);
+    fprintf('  Level-ground: %d trials (expected: 30)\n', trial_counts.levelground);
+    fprintf('  Stair: %d trials (expected: 40)\n', trial_counts.stair);
+    fprintf('  Ramp: %d trials (expected: 60)\n', trial_counts.ramp);
+    
+    % Warnings for missing trials
+    if trial_counts.treadmill_speeds < 28
+        fprintf('  ⚠ Missing %d treadmill speeds\n', 28 - trial_counts.treadmill_speeds);
+    end
+    if trial_counts.levelground < 30
+        fprintf('  ⚠ Missing %d level-ground trials\n', 30 - trial_counts.levelground);
+    end
+    if trial_counts.stair < 40
+        fprintf('  ⚠ Missing %d stair trials\n', 40 - trial_counts.stair);
+    end
+    if trial_counts.ramp < 60
+        fprintf('  ⚠ Missing %d ramp trials\n', 60 - trial_counts.ramp);
     end
 end
 
@@ -186,9 +214,11 @@ end
 
 %% Helper Functions
 
-function rows = process_treadmill(date_path, subject_str, subject_mass)
+function [rows, unique_speeds] = process_treadmill(date_path, subject_str, subject_mass)
     % Process treadmill walking data
     rows = table();
+    unique_speeds = 0;
+    detected_speeds = [];
     mode_path = fullfile(date_path, 'treadmill');
     
     if ~exist(mode_path, 'dir')
@@ -216,8 +246,10 @@ function rows = process_treadmill(date_path, subject_str, subject_mass)
         time_vec = trial_data.conditions.Header;
         
         % Find steady-state speeds using improved threshold-based detection
-        target_speeds = [0.5, 0.9, 1.3, 1.7];  % Expected treadmill speeds
-        tolerance = 0.02;  % Allow ±0.02 m/s variation
+        % Paper reports 28 speeds from 0.5 to 1.85 m/s in 0.05 m/s increments
+        % Data actually contains up to 2.0 m/s, so we'll process all available
+        target_speeds = 0.50:0.05:2.00;  % All speeds from 0.5 to 2.0 m/s
+        tolerance = 0.025;  % Allow ±0.025 m/s (half increment) variation
         
         % Process each target speed
         for speed_val = target_speeds
@@ -245,6 +277,9 @@ function rows = process_treadmill(date_path, subject_str, subject_mass)
                 % Calculate actual mean speed in this region
                 actual_speed = mean(speed_vec(region_starts(r):region_ends(r)));
                 
+                % Track unique speeds
+                detected_speeds = [detected_speeds, actual_speed];
+                
                 % Extract strides for this segment
                 task_info = sprintf('speed_m_s:%.2f,treadmill:true', actual_speed);
                 stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
@@ -258,11 +293,15 @@ function rows = process_treadmill(date_path, subject_str, subject_mass)
             end
         end
     end
+    
+    % Count unique speeds
+    unique_speeds = length(unique(round(detected_speeds, 2)));
 end
 
-function rows = process_levelground(date_path, subject_str, subject_mass)
+function [rows, trial_count] = process_levelground(date_path, subject_str, subject_mass)
     % Process level ground walking data
     rows = table();
+    trial_count = 0;
     mode_path = fullfile(date_path, 'levelground');
     
     if ~exist(mode_path, 'dir')
@@ -271,6 +310,7 @@ function rows = process_levelground(date_path, subject_str, subject_mass)
     
     % Get all trial files
     trial_files = dir(fullfile(mode_path, 'conditions', '*.mat'));
+    trial_count = length(trial_files);  % Count all trial files
     
     for t = 1:length(trial_files)
         trial_name = trial_files(t).name;
@@ -281,13 +321,13 @@ function rows = process_levelground(date_path, subject_str, subject_mass)
             continue;
         end
         
-        % Determine speed from filename
+        % Determine speed from filename (using paper-reported values)
         if contains(trial_name, 'slow')
-            speed_val = 0.8;
+            speed_val = 0.88;  % Paper: 0.88 ± 0.19 m/s
         elseif contains(trial_name, 'fast')
-            speed_val = 1.2;
+            speed_val = 1.45;  % Paper: 1.45 ± 0.27 m/s
         else
-            speed_val = 1.0;  % normal or unspecified
+            speed_val = 1.17;  % normal - Paper: 1.17 ± 0.21 m/s
         end
         
         % Check for labels to segment walking portions
@@ -331,9 +371,10 @@ function rows = process_levelground(date_path, subject_str, subject_mass)
     end
 end
 
-function rows = process_ramp(date_path, subject_str, subject_mass)
+function [rows, trial_count] = process_ramp(date_path, subject_str, subject_mass)
     % Process ramp ascent/descent data
     rows = table();
+    trial_count = 0;
     mode_path = fullfile(date_path, 'ramp');
     
     if ~exist(mode_path, 'dir')
@@ -342,6 +383,7 @@ function rows = process_ramp(date_path, subject_str, subject_mass)
     
     % Get all trial files
     trial_files = dir(fullfile(mode_path, 'conditions', '*.mat'));
+    trial_count = length(trial_files);  % Count all trial files
     
     for t = 1:length(trial_files)
         trial_name = trial_files(t).name;
@@ -415,9 +457,10 @@ function rows = process_ramp(date_path, subject_str, subject_mass)
     end
 end
 
-function rows = process_stair(date_path, subject_str, subject_mass)
+function [rows, trial_count] = process_stair(date_path, subject_str, subject_mass)
     % Process stair ascent/descent data
     rows = table();
+    trial_count = 0;
     mode_path = fullfile(date_path, 'stair');
     
     if ~exist(mode_path, 'dir')
@@ -426,6 +469,7 @@ function rows = process_stair(date_path, subject_str, subject_mass)
     
     % Get all trial files
     trial_files = dir(fullfile(mode_path, 'conditions', '*.mat'));
+    trial_count = length(trial_files);  % Count all trial files
     
     for t = 1:length(trial_files)
         trial_name = trial_files(t).name;
@@ -434,6 +478,13 @@ function rows = process_stair(date_path, subject_str, subject_mass)
         trial_data = load_trial_data(mode_path, trial_name);
         if isempty(trial_data)
             continue;
+        end
+        
+        % Extract stair height from data (stored in inches, convert to mm)
+        stair_height_mm = 102;  % Default to 4 inches
+        if isfield(trial_data, 'stairHeight')
+            stair_height_in = trial_data.stairHeight;
+            stair_height_mm = round(stair_height_in * 25.4);  % Convert inches to mm
         end
         
         % Process ascent and descent separately using labels
@@ -470,7 +521,7 @@ function rows = process_stair(date_path, subject_str, subject_mass)
                 
                 stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
                     subject_str, 'stair_ascent', 'stair_ascent', ...
-                    'speed_m_s:0.5,overground:true', subject_mass);
+                    sprintf('stair_height_mm:%d,speed_m_s:0.5,overground:true', stair_height_mm), subject_mass);
                 
                 if ~isempty(stride_rows)
                     rows = [rows; stride_rows];
@@ -506,7 +557,7 @@ function rows = process_stair(date_path, subject_str, subject_mass)
                 
                 stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
                     subject_str, 'stair_descent', 'stair_descent', ...
-                    'speed_m_s:0.5,overground:true', subject_mass);
+                    sprintf('stair_height_mm:%d,speed_m_s:0.5,overground:true', stair_height_mm), subject_mass);
                 
                 if ~isempty(stride_rows)
                     rows = [rows; stride_rows];
@@ -533,7 +584,7 @@ function rows = process_stair(date_path, subject_str, subject_mass)
                         % First numbered trial or explicit ascent - treat as ascent
                         stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
                             subject_str, 'stair_ascent', 'stair_ascent', ...
-                            'speed_m_s:0.5,overground:true,fallback:true', subject_mass);
+                            sprintf('stair_height_mm:%d,speed_m_s:0.5,overground:true,fallback:true', stair_height_mm), subject_mass);
                         
                         if ~isempty(stride_rows)
                             rows = [rows; stride_rows];
@@ -543,7 +594,7 @@ function rows = process_stair(date_path, subject_str, subject_mass)
                         % Second numbered trial or explicit descent - treat as descent
                         stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
                             subject_str, 'stair_descent', 'stair_descent', ...
-                            'speed_m_s:0.5,overground:true,fallback:true', subject_mass);
+                            sprintf('stair_height_mm:%d,speed_m_s:0.5,overground:true,fallback:true', stair_height_mm), subject_mass);
                         
                         if ~isempty(stride_rows)
                             rows = [rows; stride_rows];
