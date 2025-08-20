@@ -1056,10 +1056,9 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                     contra_vz_var = 'Treadmill_R_vz';  % Anterior-posterior GRF
                 end
             elseif stair_ramp_task
-                % For stairs and ramps: use individual force plates
-                % FIXED: Check if stride has significant force data before processing
+                % NEW ALGORITHM: Heel strike + 200ms for force plate assignment
+                % Works for stairs, ramps, and could be extended to all tasks
                 stride_start_time = valid_stride_time(1);  % Heel strike time
-                stride_end_time = valid_stride_time(end);
                 
                 % Find available force plates
                 available_fps = {};
@@ -1071,180 +1070,68 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 end
                 fp_names = available_fps;
                 
-                % Check if ANY force plate has significant force during this stride
-                stride_has_force = false;
+                % HEEL STRIKE + 200ms/800ms ALGORITHM
+                % Check force plates 200ms after ipsilateral heel strike for ipsi
+                % Contralateral GRF will be left as NaN for now
+                hs_check_time = stride_start_time + 0.2;  % 200ms after heel strike
+                
+                % Find indices in force plate data for check time
+                check_idx = find(fp_time >= hs_check_time, 1, 'first');
+                
+                % Variables for force plate assignment
                 best_fp_ipsi = '';
-                best_fp_contra = '';
-                max_force_ipsi = 0;
-                max_force_contra = 0;
+                max_force_at_check = 0;
                 
-                % Get indices for stride time window in force plate data
-                fp_start_idx = find(fp_time >= stride_start_time, 1, 'first');
-                fp_end_idx = find(fp_time <= stride_end_time, 1, 'last');
-                
-                if ~isempty(fp_start_idx) && ~isempty(fp_end_idx) && fp_end_idx > fp_start_idx
-                    % DETERMINISTIC STEP-THROUGH ASSIGNMENT
-                    fprintf('  DEBUG [Stair GRF]: Checking stride %.3f-%.3f sec\n', stride_start_time, stride_end_time);
+                if ~isempty(check_idx)
+                    % Find force plate with maximum force at heel strike + 200ms
+                    fprintf('  DEBUG [HS+200ms]: Checking at time %.3f (HS at %.3f)\n', hs_check_time, stride_start_time);
                     
-                    % Step 1: Identify active force plates (any contact > minimal threshold)
-                    active_plates = {};
+                    % Check each force plate at the check time
                     for fp = fp_names
                         vy_var = [fp{1} '_vy'];
-                        fp_forces = trial_data.fp.(vy_var);
                         
-                        % Get forces during this stride
-                        stride_forces = fp_forces(fp_start_idx:fp_end_idx);
-                        max_force_in_stride = max(abs(stride_forces));
-                        avg_force_in_stride = mean(abs(stride_forces));
+                        % Get force at check time (heel strike + 200ms)
+                        force_at_check = abs(trial_data.fp.(vy_var)(check_idx));
                         
-                        fprintf('  DEBUG [Stair GRF]: %s - Max: %.1f N, Avg: %.1f N\n', fp{1}, max_force_in_stride, avg_force_in_stride);
+                        fprintf('  DEBUG [HS+200ms]: %s - Force at check: %.1f N\n', fp{1}, force_at_check);
                         
-                        % Robust threshold to detect contact and reduce noise
-                        if max_force_in_stride > 200  % Increased back to 200N for better noise rejection
-                            active_plates{end+1} = fp{1};
-                            stride_has_force = true;
+                        % Find plate with maximum force
+                        if force_at_check > max_force_at_check
+                            max_force_at_check = force_at_check;
+                            best_fp_ipsi = fp{1};
                         end
                     end
                     
-                    % Step 2: Dynamic assignment based on early/late stride windows
-                    if ~isempty(active_plates)
-                        fprintf('  DEBUG [Stair GRF]: Active plates: %s\n', strjoin(active_plates, ', '));
+                    % Assign ipsilateral force plate if significant force found
+                    if max_force_at_check > 200  % 200N threshold
+                        fprintf('  DEBUG [HS+200ms]: Assigned %s to IPSI (force: %.1f N)\n', best_fp_ipsi, max_force_at_check);
                         
-                        % Calculate stride time windows for dynamic assignment
-                        stride_duration = stride_end_time - stride_start_time;
-                        early_end_time = stride_start_time + 0.6 * stride_duration;  % 0-60% window
-                        late_start_time = stride_start_time + 0.4 * stride_duration; % 40-100% window
+                        % Set ipsilateral force plate variables
+                        ipsi_vx_var = [best_fp_ipsi '_vx'];
+                        ipsi_vy_var = [best_fp_ipsi '_vy'];
+                        ipsi_vz_var = [best_fp_ipsi '_vz'];
                         
-                        % Find indices for early and late windows
-                        early_start_idx = fp_start_idx;
-                        early_end_idx = find(fp_time <= early_end_time, 1, 'last');
-                        late_start_idx = find(fp_time >= late_start_time, 1, 'first');
-                        late_end_idx = fp_end_idx;
-                        
-                        % Find plate with highest peak force in each window
-                        max_early_force = 0;
-                        max_late_force = 0;
-                        best_early_plate = '';
-                        best_late_plate = '';
-                        
-                        for fp = active_plates
-                            vy_var = [fp{1} '_vy'];
-                            fp_forces = trial_data.fp.(vy_var);
-                            
-                            % Check early window (0-60% - ipsilateral contact)
-                            if ~isempty(early_end_idx) && early_end_idx > early_start_idx
-                                early_forces = fp_forces(early_start_idx:early_end_idx);
-                                early_peak = max(abs(early_forces));
-                                if early_peak > max_early_force
-                                    max_early_force = early_peak;
-                                    best_early_plate = fp{1};
-                                end
-                            end
-                            
-                            % Check late window (40-100% - contralateral contact)
-                            if ~isempty(late_start_idx) && late_end_idx > late_start_idx
-                                late_forces = fp_forces(late_start_idx:late_end_idx);
-                                late_peak = max(abs(late_forces));
-                                if late_peak > max_late_force
-                                    max_late_force = late_peak;
-                                    best_late_plate = fp{1};
-                                end
-                            end
-                        end
-                        
-                        % Assign plates based on window analysis
-                        if ~isempty(best_early_plate)
-                            best_fp_ipsi = best_early_plate;
-                            max_force_ipsi = max_early_force;
-                            fprintf('  DEBUG [Stair GRF]: %s assigned to IPSI (early window peak: %.1f N)\n', best_early_plate, max_early_force);
-                        end
-                        
-                        if ~isempty(best_late_plate)
-                            best_fp_contra = best_late_plate;
-                            max_force_contra = max_late_force;
-                            fprintf('  DEBUG [Stair GRF]: %s assigned to CONTRA (late window peak: %.1f N)\n', best_late_plate, max_late_force);
-                        end
-                        
-                        % Handle case where same plate is best for both windows
-                        if strcmp(best_fp_ipsi, best_fp_contra) && ~isempty(active_plates) && length(active_plates) > 1
-                            fprintf('  DEBUG [Stair GRF]: Same plate for both windows, assigning second best\n');
-                            % Find second best plate for the window with lower peak
-                            if max_early_force >= max_late_force
-                                % Keep early assignment, find second best for late
-                                second_max_late = 0;
-                                for fp = active_plates
-                                    if ~strcmp(fp{1}, best_early_plate)
-                                        vy_var = [fp{1} '_vy'];
-                                        fp_forces = trial_data.fp.(vy_var);
-                                        late_forces = fp_forces(late_start_idx:late_end_idx);
-                                        late_peak = max(abs(late_forces));
-                                        if late_peak > second_max_late
-                                            second_max_late = late_peak;
-                                            best_fp_contra = fp{1};
-                                            max_force_contra = late_peak;
-                                        end
-                                    end
-                                end
-                            else
-                                % Keep late assignment, find second best for early  
-                                second_max_early = 0;
-                                for fp = active_plates
-                                    if ~strcmp(fp{1}, best_late_plate)
-                                        vy_var = [fp{1} '_vy'];
-                                        fp_forces = trial_data.fp.(vy_var);
-                                        early_forces = fp_forces(early_start_idx:early_end_idx);
-                                        early_peak = max(abs(early_forces));
-                                        if early_peak > second_max_early
-                                            second_max_early = early_peak;
-                                            best_fp_ipsi = fp{1};
-                                            max_force_ipsi = early_peak;
-                                        end
-                                    end
-                                end
-                            end
-                        end
+                        % Leave contralateral GRF as NaN for now
+                        contra_vx_var = '';
+                        contra_vy_var = '';
+                        contra_vz_var = '';
                         
                     else
-                        fprintf('  DEBUG [Stair GRF]: No active plates found (transition/air time)\n');
+                        fprintf('  DEBUG [HS+200ms]: No significant force at check time (max: %.1f N)\n', max_force_at_check);
+                        % Set all GRF to NaN for this stride
+                        ipsi_vx_var = '';
+                        ipsi_vy_var = '';
+                        ipsi_vz_var = '';
+                        contra_vx_var = '';
+                        contra_vy_var = '';
+                        contra_vz_var = '';
                     end
-                end
-                
-                % If no significant force found, skip GRF for this stride
-                if ~stride_has_force
-                    fprintf('  DEBUG [Stair GRF]: No significant force found for stride, skipping GRF\n');
-                    % Set empty force plate variables to skip GRF processing
+                else
+                    fprintf('  DEBUG [HS+200ms]: No force plate data at check time\n');
+                    % Set all GRF to NaN for this stride
                     ipsi_vx_var = '';
                     ipsi_vy_var = '';
                     ipsi_vz_var = '';
-                    contra_vx_var = '';
-                    contra_vy_var = '';
-                    contra_vz_var = '';
-                else
-                    fprintf('  DEBUG [Stair GRF]: Final assignment - Ipsi: %s (%.1f N), Contra: %s (%.1f N)\n', ...
-                        best_fp_ipsi, max_force_ipsi, best_fp_contra, max_force_contra);
-                end
-                
-                % Assign force plate variables based on new stride-specific logic
-                if ~isempty(best_fp_ipsi)
-                    ipsi_vx_var = [best_fp_ipsi '_vx'];
-                    ipsi_vy_var = [best_fp_ipsi '_vy'];
-                    ipsi_vz_var = [best_fp_ipsi '_vz'];
-                    fprintf('  DEBUG [Stair GRF]: Using %s for ipsilateral GRF\n', best_fp_ipsi);
-                else
-                    % No significant force found - skip GRF for this stride
-                    fprintf('  DEBUG [Stair GRF]: No ipsilateral force found - skipping GRF\n');
-                    ipsi_vx_var = '';
-                    ipsi_vy_var = '';
-                    ipsi_vz_var = '';
-                end
-                
-                if ~isempty(best_fp_contra)
-                    contra_vx_var = [best_fp_contra '_vx'];
-                    contra_vy_var = [best_fp_contra '_vy'];
-                    contra_vz_var = [best_fp_contra '_vz'];
-                    fprintf('  DEBUG [Stair GRF]: Using %s for contralateral GRF\n', best_fp_contra);
-                else
-                    % No significant force found - skip GRF for this stride
                     contra_vx_var = '';
                     contra_vy_var = '';
                     contra_vz_var = '';
@@ -1267,7 +1154,8 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 
                 % CRITICAL FIX: Use direct time interpolation (same as kinematics)
                 % Replace double interpolation with single direct interpolation
-                grf_interpolated = interp1(fp_time, vy_data, target_times, 'linear', 'extrap');
+                % Use NaN instead of extrapolation to avoid false GRF in swing phase
+                grf_interpolated = interp1(fp_time, vy_data, target_times, 'linear', NaN);
                 
                 % DEBUG: Print GRF statistics for stair tasks
                 if stair_ramp_task
@@ -1281,24 +1169,26 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 % Normalize by weight (divide by mass * 9.81)
                 stride_data.vertical_grf_ipsi_BW = grf_interpolated / (subject_mass * 9.81);
             else
-                stride_data.vertical_grf_ipsi_BW = zeros(NUM_POINTS, 1);
+                stride_data.vertical_grf_ipsi_BW = NaN(NUM_POINTS, 1);
             end
             
             if ~isempty(ipsi_vz_var) && any(strcmp(trial_data.fp.Properties.VariableNames, ipsi_vz_var))
                 % Anterior-posterior GRF (ipsilateral) - FIXED: use vz_var which has anterior-like data
                 vz_data = trial_data.fp.(ipsi_vz_var);
                 % CRITICAL FIX: Use direct time interpolation (same as kinematics)
-                grf_interpolated = interp1(fp_time, vz_data, target_times, 'linear', 'extrap');
+                % Use NaN instead of extrapolation to avoid false GRF in swing phase
+                grf_interpolated = interp1(fp_time, vz_data, target_times, 'linear', NaN);
                 stride_data.anterior_grf_ipsi_BW = grf_interpolated / (subject_mass * 9.81);
             else
-                stride_data.anterior_grf_ipsi_BW = zeros(NUM_POINTS, 1);
+                stride_data.anterior_grf_ipsi_BW = NaN(NUM_POINTS, 1);
             end
             
             if ~isempty(ipsi_vx_var) && any(strcmp(trial_data.fp.Properties.VariableNames, ipsi_vx_var))
                 % Medial-lateral GRF (ipsilateral)
                 vx_data = trial_data.fp.(ipsi_vx_var);
                 % CRITICAL FIX: Use direct time interpolation (same as kinematics)
-                grf_interpolated = interp1(fp_time, vx_data, target_times, 'linear', 'extrap');
+                % Use NaN instead of extrapolation to avoid false GRF in swing phase
+                grf_interpolated = interp1(fp_time, vx_data, target_times, 'linear', NaN);
                 
                 % SIGN FIX: Apply corrections based on task and leg
                 if contains(task, 'stair_descent')
@@ -1308,7 +1198,7 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 
                 stride_data.lateral_grf_ipsi_BW = grf_interpolated / (subject_mass * 9.81);
             else
-                stride_data.lateral_grf_ipsi_BW = zeros(NUM_POINTS, 1);
+                stride_data.lateral_grf_ipsi_BW = NaN(NUM_POINTS, 1);
             end
             
             % Process contralateral GRF - FIXED: Direct time interpolation like kinematics
@@ -1316,27 +1206,30 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 % Vertical GRF (contralateral) - FIXED: use vy_var which has vertical-like data
                 vy_data = trial_data.fp.(contra_vy_var);
                 % CRITICAL FIX: Use direct time interpolation (same as kinematics)
-                grf_interpolated = interp1(fp_time, vy_data, target_times, 'linear', 'extrap');
+                % Use NaN instead of extrapolation to avoid false GRF in swing phase
+                grf_interpolated = interp1(fp_time, vy_data, target_times, 'linear', NaN);
                 stride_data.vertical_grf_contra_BW = grf_interpolated / (subject_mass * 9.81);
             else
-                stride_data.vertical_grf_contra_BW = zeros(NUM_POINTS, 1);
+                stride_data.vertical_grf_contra_BW = NaN(NUM_POINTS, 1);
             end
             
             if ~isempty(contra_vz_var) && any(strcmp(trial_data.fp.Properties.VariableNames, contra_vz_var))
                 % Anterior-posterior GRF (contralateral) - FIXED: use vz_var which has anterior-like data
                 vz_data = trial_data.fp.(contra_vz_var);
                 % CRITICAL FIX: Use direct time interpolation (same as kinematics)
-                grf_interpolated = interp1(fp_time, vz_data, target_times, 'linear', 'extrap');
+                % Use NaN instead of extrapolation to avoid false GRF in swing phase
+                grf_interpolated = interp1(fp_time, vz_data, target_times, 'linear', NaN);
                 stride_data.anterior_grf_contra_BW = grf_interpolated / (subject_mass * 9.81);
             else
-                stride_data.anterior_grf_contra_BW = zeros(NUM_POINTS, 1);
+                stride_data.anterior_grf_contra_BW = NaN(NUM_POINTS, 1);
             end
             
             if ~isempty(contra_vx_var) && any(strcmp(trial_data.fp.Properties.VariableNames, contra_vx_var))
                 % Medial-lateral GRF (contralateral)
                 vx_data = trial_data.fp.(contra_vx_var);
                 % CRITICAL FIX: Use direct time interpolation (same as kinematics)
-                grf_interpolated = interp1(fp_time, vx_data, target_times, 'linear', 'extrap');
+                % Use NaN instead of extrapolation to avoid false GRF in swing phase
+                grf_interpolated = interp1(fp_time, vx_data, target_times, 'linear', NaN);
                 
                 % SIGN FIX: Apply corrections based on task and leg (same as ipsilateral)
                 if contains(task, 'stair_descent')
@@ -1346,16 +1239,67 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 
                 stride_data.lateral_grf_contra_BW = grf_interpolated / (subject_mass * 9.81);
             else
-                stride_data.lateral_grf_contra_BW = zeros(NUM_POINTS, 1);
+                stride_data.lateral_grf_contra_BW = NaN(NUM_POINTS, 1);
             end
         else
-            % No force plate data available - fill with zeros
-            stride_data.vertical_grf_ipsi_BW = zeros(NUM_POINTS, 1);
-            stride_data.anterior_grf_ipsi_BW = zeros(NUM_POINTS, 1);
-            stride_data.lateral_grf_ipsi_BW = zeros(NUM_POINTS, 1);
-            stride_data.vertical_grf_contra_BW = zeros(NUM_POINTS, 1);
-            stride_data.anterior_grf_contra_BW = zeros(NUM_POINTS, 1);
-            stride_data.lateral_grf_contra_BW = zeros(NUM_POINTS, 1);
+            % No force plate data available - fill with NaN
+            stride_data.vertical_grf_ipsi_BW = NaN(NUM_POINTS, 1);
+            stride_data.anterior_grf_ipsi_BW = NaN(NUM_POINTS, 1);
+            stride_data.lateral_grf_ipsi_BW = NaN(NUM_POINTS, 1);
+            stride_data.vertical_grf_contra_BW = NaN(NUM_POINTS, 1);
+            stride_data.anterior_grf_contra_BW = NaN(NUM_POINTS, 1);
+            stride_data.lateral_grf_contra_BW = NaN(NUM_POINTS, 1);
+        end
+        
+        % CHECK FOR SWAPPED GRF ASSIGNMENT
+        % Detect if ipsi/contra GRF are swapped based on physiological impossibility
+        % Ipsilateral foot should have near-zero GRF during swing phase (60-100%)
+        if ~all(isnan(stride_data.vertical_grf_ipsi_BW)) && ~all(isnan(stride_data.vertical_grf_contra_BW))
+            % Define phase windows for checking
+            early_stance_idx = (stride_data.phase_ipsi >= 10) & (stride_data.phase_ipsi <= 40);
+            late_swing_idx = (stride_data.phase_ipsi >= 70) & (stride_data.phase_ipsi <= 95);
+            
+            % Calculate mean GRF in each window for ipsilateral
+            early_ipsi_grf = mean(stride_data.vertical_grf_ipsi_BW(early_stance_idx), 'omitnan');
+            late_ipsi_grf = mean(stride_data.vertical_grf_ipsi_BW(late_swing_idx), 'omitnan');
+            
+            % Calculate mean GRF in each window for contralateral
+            early_contra_grf = mean(stride_data.vertical_grf_contra_BW(early_stance_idx), 'omitnan');
+            late_contra_grf = mean(stride_data.vertical_grf_contra_BW(late_swing_idx), 'omitnan');
+            
+            % Check if pattern suggests swapped assignment
+            % Ipsi should be HIGH in early stance, ZERO in late swing
+            % Contra should be LOW in early stance, HIGH in late swing
+            swap_detected = false;
+            
+            % Detection criteria:
+            % 1. Late ipsi GRF > 0.3 BW (should be near zero)  
+            % 2. Late ipsi GRF > 0.5 * early ipsi GRF (should be much lower)
+            % Simplified: just check if ipsi has significant force during swing
+            if late_ipsi_grf > 0.3 && ...
+               late_ipsi_grf > 0.5 * early_ipsi_grf
+                swap_detected = true;
+                fprintf('  WARNING: Swapped GRF detected for %s stride %d (task: %s)\n', ...
+                    subject_str, s, task);
+                fprintf('    Early ipsi: %.2f BW, Late ipsi: %.2f BW (should be ~0)\n', ...
+                    early_ipsi_grf, late_ipsi_grf);
+                fprintf('    Early contra: %.2f BW, Late contra: %.2f BW\n', ...
+                    early_contra_grf, late_contra_grf);
+                fprintf('    -> Swapping ipsi/contra GRF assignments\n');
+                
+                % Swap all GRF components
+                temp_vert = stride_data.vertical_grf_ipsi_BW;
+                stride_data.vertical_grf_ipsi_BW = stride_data.vertical_grf_contra_BW;
+                stride_data.vertical_grf_contra_BW = temp_vert;
+                
+                temp_ant = stride_data.anterior_grf_ipsi_BW;
+                stride_data.anterior_grf_ipsi_BW = stride_data.anterior_grf_contra_BW;
+                stride_data.anterior_grf_contra_BW = temp_ant;
+                
+                temp_lat = stride_data.lateral_grf_ipsi_BW;
+                stride_data.lateral_grf_ipsi_BW = stride_data.lateral_grf_contra_BW;
+                stride_data.lateral_grf_contra_BW = temp_lat;
+            end
         end
         
         % Create single row with arrays for this stride
