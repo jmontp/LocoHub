@@ -69,3 +69,28 @@
   border: 1px solid #e0e0e0;
   border-radius: 8px;
 }
+
+/* Code mode buttons on tutorials */
+.code-mode-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.5rem 0 1rem 0;
+}
+.code-mode-button {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+.code-mode-button.active {
+  background: var(--md-primary-fg-color);
+  color: var(--md-primary-bg-color);
+  border-color: var(--md-primary-fg-color);
+}
+
+/* Per-language code visibility controlled by data attribute on <html> */
+:root[data-code-lang="python"] .code-lang-matlab { display: none; }
+:root[data-code-lang="matlab"] .code-lang-python { display: none; }
