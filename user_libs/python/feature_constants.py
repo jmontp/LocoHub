@@ -85,14 +85,25 @@ MOMENT_FEATURES_NORMALIZED = [
     'ankle_rotation_moment_ipsi_Nm_kg', 'ankle_rotation_moment_contra_Nm_kg'
 ]
 
-# Ground reaction force features
+# Ground reaction force features (raw)
 GRF_FEATURES = [
-    'vertical_grf_N', 'ap_grf_N', 'ml_grf_N'
+    'vertical_grf_ipsi_N', 'vertical_grf_contra_N',
+    'anterior_grf_ipsi_N', 'anterior_grf_contra_N',  
+    'lateral_grf_ipsi_N', 'lateral_grf_contra_N'
+]
+
+# Ground reaction force features (weight-normalized)
+GRF_FEATURES_NORMALIZED = [
+    'vertical_grf_ipsi_BW', 'vertical_grf_contra_BW',
+    'anterior_grf_ipsi_BW', 'anterior_grf_contra_BW',
+    'lateral_grf_ipsi_BW', 'lateral_grf_contra_BW'
 ]
 
 # Center of pressure features  
 COP_FEATURES = [
-    'cop_x_m', 'cop_y_m', 'cop_z_m'
+    'cop_anterior_ipsi_m', 'cop_anterior_contra_m',
+    'cop_lateral_ipsi_m', 'cop_lateral_contra_m',
+    'cop_vertical_ipsi_m', 'cop_vertical_contra_m'
 ]
 
 # Segment angle features (link/segment orientations in space)
@@ -109,7 +120,7 @@ SEGMENT_ANGLE_FEATURES = [
 ]
 
 # All kinetic features combined
-ALL_KINETIC_FEATURES = MOMENT_FEATURES + GRF_FEATURES + COP_FEATURES
+ALL_KINETIC_FEATURES = MOMENT_FEATURES + MOMENT_FEATURES_NORMALIZED + GRF_FEATURES + GRF_FEATURES_NORMALIZED + COP_FEATURES
 
 # All kinematic features combined (angles + segments + velocities)
 ALL_KINEMATIC_FEATURES = ANGLE_FEATURES + SEGMENT_ANGLE_FEATURES + VELOCITY_FEATURES + SEGMENT_VELOCITY_FEATURES
@@ -240,13 +251,27 @@ def get_sagittal_features() -> list:
         ('knee_flexion_angle_contra_rad', 'Knee Flexion Angle (Contra)'),
         ('ankle_dorsiflexion_angle_ipsi_rad', 'Ankle Dorsiflexion Angle (Ipsi)'),
         ('ankle_dorsiflexion_angle_contra_rad', 'Ankle Dorsiflexion Angle (Contra)'),
-        # Joint moments
-        ('hip_flexion_moment_ipsi_Nm', 'Hip Flexion Moment (Ipsi)'),
-        ('hip_flexion_moment_contra_Nm', 'Hip Flexion Moment (Contra)'),
-        ('knee_flexion_moment_ipsi_Nm', 'Knee Flexion Moment (Ipsi)'),
-        ('knee_flexion_moment_contra_Nm', 'Knee Flexion Moment (Contra)'),
-        ('ankle_dorsiflexion_moment_ipsi_Nm', 'Ankle Dorsiflexion Moment (Ipsi)'),
-        ('ankle_dorsiflexion_moment_contra_Nm', 'Ankle Dorsiflexion Moment (Contra)'),
+        # Joint moments (weight-normalized)
+        ('hip_flexion_moment_ipsi_Nm_kg', 'Hip Flexion Moment (Ipsi)'),
+        ('hip_flexion_moment_contra_Nm_kg', 'Hip Flexion Moment (Contra)'),
+        ('knee_flexion_moment_ipsi_Nm_kg', 'Knee Flexion Moment (Ipsi)'),
+        ('knee_flexion_moment_contra_Nm_kg', 'Knee Flexion Moment (Contra)'),
+        ('ankle_dorsiflexion_moment_ipsi_Nm_kg', 'Ankle Dorsiflexion Moment (Ipsi)'),
+        ('ankle_dorsiflexion_moment_contra_Nm_kg', 'Ankle Dorsiflexion Moment (Contra)'),
+        # Ground reaction forces (weight-normalized)
+        ('vertical_grf_ipsi_BW', 'Vertical GRF (Ipsi)'),
+        ('vertical_grf_contra_BW', 'Vertical GRF (Contra)'),
+        ('anterior_grf_ipsi_BW', 'Anterior GRF (Ipsi)'),
+        ('anterior_grf_contra_BW', 'Anterior GRF (Contra)'),
+        ('lateral_grf_ipsi_BW', 'Lateral GRF (Ipsi)'),
+        ('lateral_grf_contra_BW', 'Lateral GRF (Contra)'),
+        # Center of pressure
+        ('cop_anterior_ipsi_m', 'COP Anterior (Ipsi)'),
+        ('cop_anterior_contra_m', 'COP Anterior (Contra)'),
+        ('cop_lateral_ipsi_m', 'COP Lateral (Ipsi)'),
+        ('cop_lateral_contra_m', 'COP Lateral (Contra)'),
+        ('cop_vertical_ipsi_m', 'COP Vertical (Ipsi)'),
+        ('cop_vertical_contra_m', 'COP Vertical (Contra)'),
         # Joint angular velocities
         ('hip_flexion_velocity_ipsi_rad_s', 'Hip Flexion Velocity (Ipsi)'),
         ('hip_flexion_velocity_contra_rad_s', 'Hip Flexion Velocity (Contra)'),

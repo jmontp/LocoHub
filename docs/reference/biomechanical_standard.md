@@ -88,6 +88,14 @@
 | `knee_flexion_moment_ipsi_Nm` | Knee flexion/extension moment | Nm | -60 to 40 | (+) flexor moment |
 | `ankle_dorsiflexion_moment_ipsi_Nm` | Ankle dorsi/plantar moment | Nm | -120 to 20 | (+) dorsiflexor moment |
 
+#### Joint Moments (Weight-Normalized)
+
+| Variable | Description | Unit | Typical Range | Sign Convention |
+|----------|-------------|------|---------------|-----------------|
+| `hip_flexion_moment_ipsi_Nm_kg` | Hip flexion/extension moment | Nm/kg | -1.0 to 1.0 | (+) flexor moment |
+| `knee_flexion_moment_ipsi_Nm_kg` | Knee flexion/extension moment | Nm/kg | -0.8 to 0.5 | (+) flexor moment |
+| `ankle_dorsiflexion_moment_ipsi_Nm_kg` | Ankle dorsi/plantar moment | Nm/kg | -1.5 to 0.25 | (+) dorsiflexor moment |
+
 #### Segment Angles (Absolute Orientations)
 
 | Variable | Description | Unit | Typical Range | Sign Convention |
@@ -115,6 +123,14 @@
 | `vertical_grf_ipsi_N` | Vertical GRF | N | 0 to 1500 | (+) upward |
 | `anterior_grf_ipsi_N` | Anterior-posterior GRF | N | -200 to 200 | (+) forward/propulsive |
 | `lateral_grf_ipsi_N` | Medial-lateral GRF | N | -100 to 100 | (+) lateral/rightward |
+
+#### Ground Reaction Forces (Weight-Normalized)
+
+| Variable | Description | Unit | Typical Range | Sign Convention |
+|----------|-------------|------|---------------|-----------------|
+| `vertical_grf_ipsi_BW` | Vertical GRF (weight-normalized) | BW | 0 to 1.5 | (+) upward |
+| `anterior_grf_ipsi_BW` | Anterior-posterior GRF (normalized) | BW | -0.2 to 0.2 | (+) forward/propulsive |
+| `lateral_grf_ipsi_BW` | Medial-lateral GRF (normalized) | BW | -0.1 to 0.1 | (+) lateral/rightward |
 
 ---
 
@@ -231,6 +247,30 @@ Foot Segment
 - Hip: 0.8-1.1 Nm/kg
 - Knee: 0.4-0.6 Nm/kg
 - Ankle: 1.2-1.6 Nm/kg
+
+#### Center of Pressure (COP)
+
+**Definition**: Point where the net ground reaction force vector intersects the force platform surface.
+
+**Coordinate Convention**: Matches GRF coordinate system
+- **Anterior-Posterior (X)**: Positive forward (toward toes)
+- **Medial-Lateral (Z)**: Positive rightward 
+- **Vertical (Y)**: Typically at force platform surface level
+
+**Variable Naming**:
+- `cop_anterior_ipsi_m`, `cop_anterior_contra_m` - A-P position
+- `cop_lateral_ipsi_m`, `cop_lateral_contra_m` - M-L position  
+- `cop_vertical_ipsi_m`, `cop_vertical_contra_m` - Vertical position (if tracked)
+
+**Typical Ranges (Walking)**:
+- **Anterior-Posterior**: -0.15 to +0.10 m (heel to toe progression)
+- **Medial-Lateral**: ±0.05 m (side-to-side sway)
+- **Phase Patterns**: COP progresses from heel (-0.15m) to toe (+0.10m) during stance
+
+**Clinical Significance**: 
+- Reflects balance control and weight distribution
+- Used in stability analysis and fall risk assessment
+- Important for prosthetic and orthotic design
 
 ---
 

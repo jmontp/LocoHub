@@ -69,10 +69,14 @@ import os
 
 # Import feature constants from same library
 try:
-    from .feature_constants import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES, SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES
+    from .feature_constants import (ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES, 
+                                   SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES,
+                                   GRF_FEATURES, GRF_FEATURES_NORMALIZED)
 except ImportError:
     # Fallback for standalone scripts
-    from feature_constants import ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES, SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES
+    from feature_constants import (ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES, 
+                                  SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES,
+                                  GRF_FEATURES, GRF_FEATURES_NORMALIZED)
 
 # Optional imports for visualization
 try:
@@ -280,7 +284,7 @@ class LocomotionData:
         # Identify biomechanical features - only standard naming accepted
         self.features = [col for col in self.df.columns 
                         if col not in exclude_cols and 
-                        any(x in col for x in ['angle', 'velocity', 'moment', 'power'])]
+                        any(x in col for x in ['angle', 'velocity', 'moment', 'power', 'grf'])]
         
         # Create identity mapping for standard features
         self.feature_mappings = {feature: feature for feature in self.features}
@@ -327,7 +331,9 @@ class LocomotionData:
             variable_name in VELOCITY_FEATURES or 
             variable_name in MOMENT_FEATURES or
             variable_name in SEGMENT_ANGLE_FEATURES or
-            variable_name in SEGMENT_VELOCITY_FEATURES):
+            variable_name in SEGMENT_VELOCITY_FEATURES or
+            variable_name in GRF_FEATURES or
+            variable_name in GRF_FEATURES_NORMALIZED):
             return True
         
         # Otherwise, check against standard naming convention

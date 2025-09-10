@@ -300,14 +300,16 @@ Example ranges for knee flexion during level walking:
 
 ### Kinetic Variables (Forces & Moments)
 
-Example ranges for hip moment during level walking:
+Typical ranges for hip moment during level walking:
 
-| Phase | Variable | Min (Nm) | Max (Nm) |
-|-------|----------|----------|----------|
-| 0%    | hip_moment_ipsi | -50 | 100 |
-| 25%   | hip_moment_ipsi | -75 | 125 |
-| 50%   | hip_moment_ipsi | -100 | 80 |
-| 75%   | hip_moment_ipsi | -60 | 120 |
+| Phase | Event | Min (Nm/kg) | Max (Nm/kg) | Notes |
+|-------|-------|-------------|-------------|--------|
+| 0%    | Heel Strike | -0.8 | 1.5 | Extension moment for stability |
+| 25%   | Loading | -1.2 | 2.0 | Peak extension moment |
+| 50%   | Push-off | -1.5 | 1.2 | Transition to flexion |
+| 75%   | Swing | -0.9 | 1.8 | Flexion for leg advancement |
+
+**Note**: Moments are often normalized by body mass (Nm/kg)
 
 ## Advanced Validation Options
 

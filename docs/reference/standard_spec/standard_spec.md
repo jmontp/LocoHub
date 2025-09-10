@@ -127,19 +127,19 @@ See [Biomechanical Standard - Coordinate System & Conventions](../biomechanical_
 
 **Time-indexed**:
 ```
-subject,subject_metadata,task,task_id,task_info,step,time_s,knee_flexion_angle_ipsi_rad,hip_moment_contra_Nm
-UM21_AB01,"age:25,sex:M,height_m:1.75,weight_kg:70",level_walking,level,"speed_m_s:1.2,treadmill:true",0,0.00,0.123,-0.456
-UM21_AB01,"age:25,sex:M,height_m:1.75,weight_kg:70",level_walking,level,"speed_m_s:1.2,treadmill:true",0,0.01,0.126,-0.445
-UM21_AB01,"age:25,sex:M,height_m:1.75,weight_kg:70",level_walking,level,"speed_m_s:1.2,treadmill:true",1,1.20,0.120,-0.460
+subject,subject_metadata,task,task_id,task_info,step,time_s,knee_flexion_angle_ipsi_rad,hip_moment_contra_Nm,cop_anterior_ipsi_m
+UM21_AB01,"age:25,sex:M,height_m:1.75,weight_kg:70",level_walking,level,"speed_m_s:1.2,treadmill:true",0,0.00,0.123,-0.456,-0.12
+UM21_AB01,"age:25,sex:M,height_m:1.75,weight_kg:70",level_walking,level,"speed_m_s:1.2,treadmill:true",0,0.01,0.126,-0.445,-0.10
+UM21_AB01,"age:25,sex:M,height_m:1.75,weight_kg:70",level_walking,level,"speed_m_s:1.2,treadmill:true",1,1.20,0.120,-0.460,-0.11
 ```
 
 **Phase-indexed**:
 ```
-subject,subject_metadata,task,task_id,task_info,step,phase_ipsi,knee_flexion_angle_ipsi_rad,hip_moment_contra_Nm
-GT23_AB03,"age:28,sex:F,height_m:1.68,weight_kg:65",incline_walking,incline_10deg,"incline_deg:10,speed_m_s:1.0,treadmill:true",0,0.0,0.123,-0.456
-GT23_AB03,"age:28,sex:F,height_m:1.68,weight_kg:65",incline_walking,incline_10deg,"incline_deg:10,speed_m_s:1.0,treadmill:true",0,0.7,0.126,-0.445
-GT23_AB03,"age:28,sex:F,height_m:1.68,weight_kg:65",incline_walking,incline_10deg,"incline_deg:10,speed_m_s:1.0,treadmill:true",0,100.0,0.120,-0.460
-GT23_AB03,"age:28,sex:F,height_m:1.68,weight_kg:65",incline_walking,incline_10deg,"incline_deg:10,speed_m_s:1.0,treadmill:true",1,0.0,0.125,-0.458
+subject,subject_metadata,task,task_id,task_info,step,phase_ipsi,knee_flexion_angle_ipsi_rad,hip_moment_contra_Nm,cop_anterior_ipsi_m
+GT23_AB03,"age:28,sex:F,height_m:1.68,weight_kg:65",incline_walking,incline_10deg,"incline_deg:10,speed_m_s:1.0,treadmill:true",0,0.0,0.123,-0.456,-0.12
+GT23_AB03,"age:28,sex:F,height_m:1.68,weight_kg:65",incline_walking,incline_10deg,"incline_deg:10,speed_m_s:1.0,treadmill:true",0,0.7,0.126,-0.445,-0.08
+GT23_AB03,"age:28,sex:F,height_m:1.68,weight_kg:65",incline_walking,incline_10deg,"incline_deg:10,speed_m_s:1.0,treadmill:true",0,100.0,0.120,-0.460,-0.12
+GT23_AB03,"age:28,sex:F,height_m:1.68,weight_kg:65",incline_walking,incline_10deg,"incline_deg:10,speed_m_s:1.0,treadmill:true",1,0.0,0.125,-0.458,-0.13
 ```
 
 ## Validation Requirements

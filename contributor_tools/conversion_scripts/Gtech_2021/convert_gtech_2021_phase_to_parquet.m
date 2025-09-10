@@ -485,6 +485,9 @@ function [rows, trial_count] = process_stair(date_path, subject_str, subject_mas
         if isfield(trial_data, 'stairHeight')
             stair_height_in = trial_data.stairHeight;
             stair_height_mm = round(stair_height_in * 25.4);  % Convert inches to mm
+            fprintf('  Processing stair trial: height=%dmm (%d inches)\n', stair_height_mm, stair_height_in);
+        else
+            fprintf('  WARNING: No stair height found, using default 102mm (4 inches)\n');
         end
         
         % Process ascent and descent separately using labels
@@ -520,7 +523,7 @@ function [rows, trial_count] = process_stair(date_path, subject_str, subject_mas
                 time_end = time_end_raw - edge_trim_s;
                 
                 stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                    subject_str, 'stair_ascent', 'stair_ascent', ...
+                    subject_str, 'stair_ascent', sprintf('stair_ascent_%dmm', stair_height_mm), ...
                     sprintf('stair_height_mm:%d,speed_m_s:0.5,overground:true', stair_height_mm), subject_mass);
                 
                 if ~isempty(stride_rows)
@@ -556,7 +559,7 @@ function [rows, trial_count] = process_stair(date_path, subject_str, subject_mas
                 time_end = time_end_raw - edge_trim_s;
                 
                 stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                    subject_str, 'stair_descent', 'stair_descent', ...
+                    subject_str, 'stair_descent', sprintf('stair_descent_%dmm', stair_height_mm), ...
                     sprintf('stair_height_mm:%d,speed_m_s:0.5,overground:true', stair_height_mm), subject_mass);
                 
                 if ~isempty(stride_rows)
@@ -583,7 +586,7 @@ function [rows, trial_count] = process_stair(date_path, subject_str, subject_mas
                     if contains(current_trial_name, '_1_') || contains(current_trial_name, 'ascent')
                         % First numbered trial or explicit ascent - treat as ascent
                         stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                            subject_str, 'stair_ascent', 'stair_ascent', ...
+                            subject_str, 'stair_ascent', sprintf('stair_ascent_%dmm', stair_height_mm), ...
                             sprintf('stair_height_mm:%d,speed_m_s:0.5,overground:true,fallback:true', stair_height_mm), subject_mass);
                         
                         if ~isempty(stride_rows)
@@ -593,7 +596,7 @@ function [rows, trial_count] = process_stair(date_path, subject_str, subject_mas
                     elseif contains(current_trial_name, '_2_') || contains(current_trial_name, 'descent')
                         % Second numbered trial or explicit descent - treat as descent
                         stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                            subject_str, 'stair_descent', 'stair_descent', ...
+                            subject_str, 'stair_descent', sprintf('stair_descent_%dmm', stair_height_mm), ...
                             sprintf('stair_height_mm:%d,speed_m_s:0.5,overground:true,fallback:true', stair_height_mm), subject_mass);
                         
                         if ~isempty(stride_rows)
@@ -631,6 +634,11 @@ function trial_data = load_trial_data(mode_path, trial_name)
             else
                 % Keep as struct if not a standard format
                 trial_data.conditions = temp;
+            end
+            
+            % Also copy stairHeight field if it exists (for stair trials)
+            if isfield(temp, 'stairHeight')
+                trial_data.stairHeight = temp.stairHeight;
             end
         end
         

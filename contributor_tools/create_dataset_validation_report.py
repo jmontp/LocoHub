@@ -467,6 +467,18 @@ Examples:
         help="Skip comparison plot generation (only generate validation plots)"
     )
     
+    parser.add_argument(
+        "--show-plots",
+        action="store_true", 
+        help="Show matplotlib plots interactively instead of generating markdown report"
+    )
+    
+    parser.add_argument(
+        "--show-local-passing",
+        action="store_true",
+        help="Show locally passing strides in yellow/gold (strides that pass current feature but fail others)"
+    )
+    
     args = parser.parse_args()
     
     # Expand glob patterns and validate input files
@@ -575,8 +587,26 @@ Examples:
             print(f"✅ Short code '{args.short_code}' is available")
         
         try:
-        
-            if args.no_merge:
+            
+            if args.show_plots:
+                # Show matplotlib plots interactively using existing plot generation
+                print(f"🔍 Running validation (interactive plots mode)...")
+                
+                # Run validation to get results
+                validation_result = report_generator.validator.validate(str(dataset_path))
+                
+                # Generate plots interactively (don't save to files)
+                plot_paths, velocity_results = report_generator._generate_plots(
+                    str(dataset_path), 
+                    validation_result, 
+                    timestamp="interactive",
+                    show_interactive=True,
+                    show_local_passing=args.show_local_passing
+                )
+                
+                print(f"✅ Interactive plot display complete! Showed plots for {len(plot_paths)} tasks.")
+                
+            elif args.no_merge:
                 # Generate standalone validation report (old behavior)
                 print(f"🔍 Running validation (standalone mode)...")
                 report_path = report_generator.generate_report(str(dataset_path), generate_plots=True)

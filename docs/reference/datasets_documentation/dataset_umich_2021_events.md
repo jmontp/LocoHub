@@ -78,16 +78,16 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 
 **Validation Configuration:**
 - **Ranges File**: `default_ranges.yaml`
-- **SHA256**: `76ab6a11...` (first 8 chars)
-- **Archived Copy**: [`umich_2021_events_phase_2025-08-08_035002_ranges.yaml`](validation_archives/umich_2021_events_phase_2025-08-08_035002_ranges.yaml)
+- **SHA256**: `bbf1f9c7...` (first 8 chars)
+- **Archived Copy**: [`umich_2021_events_phase_2025-08-12_095347_ranges.yaml`](validation_archives/umich_2021_events_phase_2025-08-12_095347_ranges.yaml)
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| **Overall Status** | 95.6% Valid | ✅ PASSED |
+| **Overall Status** | 99.6% Valid | ✅ PASSED |
 | **Phase Structure** | 150 points/cycle | ✅ Valid |
 | **Tasks Validated** | 4 tasks | ✅ Complete |
 | **Total Checks** | 541,824 | - |
-| **Violations** | 23,881 | ⚠️ Present |
+| **Violations** | 2,116 | ⚠️ Present |
 
 ### 🔄 Velocity Consistency Validation
 
@@ -95,8 +95,8 @@ Validates that velocities match angles using the chain rule: `dθ/dt = (dθ/dφ)
 
 | Velocity Variable | Status | Mean Error (rad/s) | Max Error (rad/s) | Strides Checked |
 |-------------------|--------|-------------------|-------------------|-----------------|
-| ankle dorsiflexion velocity contra (rad/s) | ❌ Fail | 2.185 | 4.515 | 22/22 |
-| ankle dorsiflexion velocity ipsi (rad/s) | ❌ Fail | 2.231 | 4.725 | 22/22 |
+| ankle dorsiflexion velocity contra (rad/s) | ❌ Fail | 0.831 | 1.719 | 22/22 |
+| ankle dorsiflexion velocity ipsi (rad/s) | ❌ Fail | 0.848 | 1.795 | 22/22 |
 | foot sagittal velocity contra (rad/s) | ❌ Fail | 1.945 | 3.116 | 22/22 |
 | foot sagittal velocity ipsi (rad/s) | ❌ Fail | 1.941 | 3.012 | 22/22 |
 | hip flexion velocity contra (rad/s) | ❌ Fail | 0.991 | 1.603 | 22/22 |
@@ -106,10 +106,10 @@ Validates that velocities match angles using the chain rule: `dθ/dt = (dθ/dφ)
 | pelvis frontal velocity (rad/s) | 🔄 Calculated | - | - | No stored velocities to compare |
 | pelvis sagittal velocity (rad/s) | 🔄 Calculated | - | - | No stored velocities to compare |
 | pelvis transverse velocity (rad/s) | 🔄 Calculated | - | - | No stored velocities to compare |
-| shank sagittal velocity contra (rad/s) | ❌ Fail | 1.797 | 3.092 | 22/22 |
-| shank sagittal velocity ipsi (rad/s) | ❌ Fail | 1.735 | 2.955 | 22/22 |
-| thigh sagittal velocity contra (rad/s) | ❌ Fail | 1.011 | 1.607 | 22/22 |
-| thigh sagittal velocity ipsi (rad/s) | ❌ Fail | 0.954 | 1.599 | 22/22 |
+| shank sagittal velocity contra (rad/s) | ❌ Fail | 1.847 | 3.927 | 22/22 |
+| shank sagittal velocity ipsi (rad/s) | ❌ Fail | 1.562 | 2.412 | 22/22 |
+| thigh sagittal velocity contra (rad/s) | ❌ Fail | 1.804 | 5.303 | 22/22 |
+| thigh sagittal velocity ipsi (rad/s) | ❌ Fail | 1.009 | 1.635 | 22/22 |
 | trunk frontal velocity (rad/s) | ⚠️ N/A | - | - | Angle column trunk_frontal_angle_rad not found |
 | trunk sagittal velocity (rad/s) | ⚠️ N/A | - | - | Angle column trunk_sagittal_angle_rad not found |
 | trunk transverse velocity (rad/s) | ⚠️ N/A | - | - | Angle column trunk_transverse_angle_rad not found |
@@ -147,9 +147,12 @@ Validates that velocities match angles using the chain rule: `dθ/dt = (dθ/dφ)
 ![Run](validation_plots/umich_2021_events_phase_run_all_features_validation.png)
 *34 sagittal features validated*
 
+**Subject Failure Distribution:**
+![Run Subject Failures](validation_plots/umich_2021_events_phase_run_subject_failures.png)
+
 </div>
 
-**Last Validated**: 2025-08-08 03:50:02
+**Last Validated**: 2025-08-12 09:53:47
 
 ---
 *Last Updated: August 2025*

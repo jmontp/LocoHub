@@ -1,6 +1,6 @@
 # Dataset Conversion Guide
 
-Step-by-step guide for converting biomechanical datasets to the standardized format.
+Practical guide for converting your biomechanical data to the standardized format. Expect this process to take 1-2 weeks for your first dataset.
 
 ## Prerequisites
 
@@ -8,16 +8,21 @@ Before starting conversion:
 
 1. **Python environment** with required packages:
    ```bash
-   pip install pandas numpy pyarrow tqdm
+   pip install pandas numpy pyarrow tqdm matplotlib pyyaml
    ```
 
-2. **Your dataset** in a structured format (CSV, MAT, HDF5, etc.)
+2. **Your dataset** in any structured format (CSV, MAT, HDF5, C3D, etc.)
 
 3. **Understanding of your data**:
-   - Sampling frequency (for time-indexed data)
-   - Variable names and units
-   - Task/condition labels
-   - Subject identifiers
+   - Sampling frequency (typically 100-1000 Hz)
+   - Variable names and their units (degrees vs radians)
+   - Task/condition labels (what activities were performed)
+   - Subject identifiers (how subjects are coded)
+
+4. **Time commitment**: Plan for 1-2 weeks for your first conversion:
+   - Days 1-3: Understanding the format and requirements
+   - Days 4-7: Writing and debugging your conversion script  
+   - Week 2: Validation, troubleshooting, and refinement
 
 ## Step 1: Understand the Target Format
 
@@ -46,16 +51,18 @@ biomech_variables = [
 
 ### Standard Task Names
 
-Use these exact task names:
+Use these exact task names (case-sensitive):
 
 - `level_walking` - Walking on level ground
-- `incline_walking` - Walking uphill
-- `decline_walking` - Walking downhill
-- `up_stairs` - Ascending stairs
-- `down_stairs` - Descending stairs
-- `run` - Running
+- `incline_walking` - Walking uphill (typically 5-10°)
+- `decline_walking` - Walking downhill (typically 5-10°)
+- `stair_ascent` - Going up stairs
+- `stair_descent` - Going down stairs
+- `run` - Running at any speed
 - `sit_to_stand` - Sit-to-stand transition
 - `squats` - Squatting motion
+
+**Note**: If your data has different inclines or speeds, keep the standard task name and document specifics in metadata.
 
 ## Step 2: Create Your Conversion Script
 
@@ -189,62 +196,70 @@ def process_phase_indexed_data(data):
 
 ## Step 4: Convert Time to Phase (if needed)
 
-For time-indexed data without phase information:
+!!! warning "Phase Converter Coming Soon"
+    The automatic phase conversion tool is currently under development.
+    For now, implement phase normalization in your conversion script.
+    See the UMich example for a working implementation.
 
-```bash
-# Use the provided conversion tool
-python conversion_generate_phase_dataset.py converted_datasets/your_dataset_time.parquet
+To normalize to phase in your script:
 
-# This automatically:
-# - Detects gait cycles
-# - Normalizes to 150 points per cycle
-# - Creates phase_percent column (0-100)
+```python
+def normalize_to_phase(time_data, n_points=150):
+    """
+    Normalize time-series data to phase (0-100% of gait cycle).
+    """
+    # Detect gait cycles (e.g., using peak detection)
+    # Interpolate each cycle to exactly 150 points
+    # Add phase_percent column: np.linspace(0, 100, 150)
+    pass  # See examples for full implementation
 ```
 
 ## Step 5: Validate Your Conversion
 
-### Quick Validation Check
-
-```python
-def validate_converted_data(data_path):
-    """
-    Quick validation of converted dataset.
-    """
-    data = pd.read_parquet(data_path)
-    
-    # Check required columns
-    required = ['subject_id', 'task', 'phase_percent']
-    missing = [col for col in required if col not in data.columns]
-    if missing:
-        print(f"❌ Missing required columns: {missing}")
-        return False
-    
-    # Check phase structure
-    phase_counts = data.groupby(['subject_id', 'task']).size()
-    if not all(count % 150 == 0 for count in phase_counts):
-        print("❌ Not all cycles have 150 points")
-        return False
-    
-    # Check value ranges
-    if data['phase_percent'].min() < 0 or data['phase_percent'].max() > 100:
-        print("❌ Phase percent outside 0-100 range")
-        return False
-    
-    print("✓ Basic validation passed")
-    return True
-```
-
-### Full Validation
+### Quick Validation Check (Recommended First Step)
 
 ```bash
-# Run comprehensive validation
-python contributor_tools/create_dataset_validation_report.py \
-    --dataset converted_datasets/your_dataset_phase.parquet
+# Use the quick validation tool for immediate feedback
+python contributor_tools/quick_validation_check.py \
+    converted_datasets/your_dataset_phase.parquet
 
-# Check the report for:
-# - Specific violations and their patterns
-# - Whether issues are systematic or isolated
-# - Suggestions for addressing problems
+# Expected output:
+# ✓ level_walking: 95% pass (380/400 strides)
+# ✓ incline_walking: 92% pass (368/400 strides)  
+# ⚠ stair_ascent: 73% pass (292/400 strides)
+
+# Add --plot flag to see visual validation
+python contributor_tools/quick_validation_check.py \
+    converted_datasets/your_dataset_phase.parquet --plot
+```
+
+This gives you immediate feedback on whether your conversion is on track.
+
+### Filter Out Invalid Strides
+
+If validation shows some failures, you can create a filtered dataset:
+
+```bash
+# Remove strides that fail validation
+python contributor_tools/create_filtered_dataset.py \
+    converted_datasets/your_dataset_phase.parquet
+
+# Creates: your_dataset_phase_filtered.parquet
+# Only includes strides passing all biomechanical checks
+```
+
+### Full Validation Report
+
+```bash
+# Generate detailed validation report with plots
+python contributor_tools/create_dataset_validation_report.py \
+    --dataset converted_datasets/your_dataset_phase.parquet \
+    --generate-plots
+
+# The report shows:
+# - Which variables are failing at which phases
+# - Whether failures are systematic (check your conversion)
+# - Visual plots comparing your data to expected ranges
 ```
 
 ## Common Conversion Patterns
@@ -334,7 +349,27 @@ def convert_units(data):
     return data
 ```
 
-## Troubleshooting
+## Troubleshooting Common Issues
+
+### Issue: Wrong units (degrees vs radians)
+
+**Symptom**: Validation shows values like 45.0 for angles (likely degrees)
+
+```python
+# Solution: Convert to radians
+import numpy as np
+data['knee_flexion_angle_ipsi_rad'] = np.deg2rad(data['knee_angle_degrees'])
+```
+
+### Issue: Sign conventions (flexion/extension)
+
+**Symptom**: Negative values where positive expected or vice versa
+
+```python  
+# Solution: Check and flip signs if needed
+# Plot your data first to understand the convention
+data['hip_flexion_angle_ipsi_rad'] = -data['hip_angle']  # Flip sign
+```
 
 ### Issue: Memory errors with large datasets
 
@@ -377,15 +412,33 @@ def resample_data(data, target_freq=100):
     return pd.concat(resampled)
 ```
 
+## Practical Tips
+
+1. **Start small**: Convert one subject first, validate, then scale up
+2. **Check units early**: Most validation failures are unit issues (degrees/radians)
+3. **Visualize your data**: Plot before validating to spot obvious problems
+4. **Use the quick validator**: Get immediate feedback during development
+5. **Don't aim for 100% validation**: 90%+ is typical for real data
+
 ## Next Steps
 
 After successful conversion:
 
-1. **Validate thoroughly** using the validation tool
-2. **Document your dataset** with a README
-3. **Test with analysis tools** to ensure compatibility
-4. **Share your code** so others can reproduce the conversion
+1. **Run quick validation** to get immediate pass/fail statistics
+2. **Create filtered dataset** if you have some invalid strides
+3. **Generate full report** for detailed analysis and plots
+4. **Document your conversion** with a README explaining your choices
+5. **Test with analysis tools** to ensure compatibility:
+   ```python
+   from user_libs.python.locomotion_data import LocomotionData
+   loco = LocomotionData('your_dataset_phase.parquet')
+   # Try basic operations
+   ```
 
 ---
 
-**Need help?** Check the working examples in `contributor_tools/conversion_scripts/` or open an issue on GitHub.
+**Need help?** 
+- Check working examples: `contributor_tools/conversion_scripts/`
+- Quick questions: GitHub Discussions
+- Bug reports: GitHub Issues
+- Response time: Usually within 24 hours

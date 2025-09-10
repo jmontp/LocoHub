@@ -515,7 +515,7 @@ class ValidationReportGenerator:
             raise MemoryError(f"Report generation for {dataset_name} exceeded memory limits: {str(e)}")
     
     def _generate_plots(self, dataset_path: str, validation_result: Dict, 
-                       timestamp: str) -> Tuple[Dict[str, str], Dict[str, Dict]]:
+                       timestamp: str, show_interactive: bool = False, show_local_passing: bool = False) -> Tuple[Dict[str, str], Dict[str, Dict]]:
         """Generate validation plots for the dataset with memory optimization."""
         import gc
         import matplotlib.pyplot as plt
@@ -570,7 +570,9 @@ class ValidationReportGenerator:
                         available_features=available_features,
                         velocity_results=velocity_results,
                         dataset_path=dataset_path,
-                        timestamp=timestamp
+                        timestamp=timestamp,
+                        show_interactive=show_interactive,
+                        show_local_passing=show_local_passing
                     )
                     
                     if plot_path:
@@ -624,7 +626,7 @@ class ValidationReportGenerator:
         return plot_paths, velocity_results_copy
     
     def _generate_task_plot_memory_optimized(self, task_locomotion_data, task: str, available_features: List[str], 
-                                           velocity_results: Dict, dataset_path: str, timestamp: str) -> Optional[str]:
+                                           velocity_results: Dict, dataset_path: str, timestamp: str, show_interactive: bool = False, show_local_passing: bool = False) -> Optional[str]:
         """
         Generate task plot with memory optimization by processing features in smaller batches.
         
@@ -714,7 +716,9 @@ class ValidationReportGenerator:
                     feature_names=all_feature_names,
                     failing_features=merged_failures,
                     dataset_name=Path(dataset_path).stem,
-                    timestamp=timestamp
+                    timestamp=timestamp,
+                    show_interactive=show_interactive,
+                    show_local_passing=show_local_passing
                 )
                 
                 self._log_memory("plot_generation_complete", "Plot generation complete")
@@ -884,7 +888,8 @@ class ValidationReportGenerator:
                     failing_features=merged_failures,  # Pass merged structure for three-color support
                     dataset_name=dataset_name,
                     timestamp=timestamp,
-                    comparison_mode=True  # KEY: Single column layout
+                    comparison_mode=True,  # KEY: Single column layout
+                    show_local_passing=False  # Comparison plots don't show local passing
                 )
     
     def _get_task_violations_by_variable(self, violations: Dict, task: str) -> Dict[str, List[int]]:

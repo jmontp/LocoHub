@@ -285,6 +285,11 @@ class DraggableBox:
         if event.inaxes != self.ax or event.xdata is None or event.ydata is None:
             return
         
+        # Only handle left-clicks (button 1) for dragging - allow right-clicks to pass through
+        if event.button != 1:
+            print(f"DEBUG: DraggableBox {self.var_name} at phase {self.phase} ignoring button {event.button}")
+            return
+        
         # Check if click is within the box x-range (hover zone)
         if abs(event.xdata - self.phase) > self.box_width/2:
             return
@@ -1125,6 +1130,18 @@ class InteractiveValidationTuner:
             'Lateral GRF (BW, Ipsi)'
         ]
         
+        # Center of Pressure - from standard_spec.md - IPSI ONLY
+        cop_vars = [
+            'cop_anterior_ipsi_m',
+            'cop_lateral_ipsi_m',
+            'cop_vertical_ipsi_m'
+        ]
+        cop_labels = [
+            'COP Anterior (Ipsi)',
+            'COP Lateral (Ipsi)',
+            'COP Vertical (Ipsi)'
+        ]
+        
         # Segment angles (sagittal plane) - from standard_spec.md - IPSI ONLY (plus bilateral segments)
         segment_vars = [
             'pelvis_sagittal_angle_rad',
@@ -1176,9 +1193,9 @@ class InteractiveValidationTuner:
         ]
         
         # Combine primary features (most commonly available)
-        # Start with sagittal plane kinematics, kinetics, GRF, and segments
-        all_vars = kinematic_vars + kinetic_vars + grf_vars + segment_vars
-        all_labels = kinematic_labels + kinetic_labels + grf_labels + segment_labels
+        # Start with sagittal plane kinematics, kinetics, GRF, COP, and segments
+        all_vars = kinematic_vars + kinetic_vars + grf_vars + cop_vars + segment_vars
+        all_labels = kinematic_labels + kinetic_labels + grf_labels + cop_labels + segment_labels
         
         # Optionally add velocities and additional planes if needed
         # Uncomment to include:
@@ -1868,7 +1885,9 @@ class InteractiveValidationTuner:
     
     def on_plot_click(self, event):
         """Handle right-click events for adding/deleting boxes."""
+        print(f"DEBUG: on_plot_click called - button={event.button}, inaxes={event.inaxes is not None}")
         if event.button == 3 and event.inaxes:  # Right-click
+            print(f"DEBUG: Processing right-click at ({event.xdata:.1f}, {event.ydata:.1f})")
             # Check if we clicked on a box
             clicked_box = None
             for box in self.draggable_boxes:
@@ -2376,7 +2395,8 @@ class InteractiveValidationTuner:
                                 callback=self.on_box_changed,
                                 color='lightcoral',  # Light red fill for fail column
                                 edgecolor='black',  # Black outline
-                                allow_x_drag=True
+                                allow_x_drag=True,
+                                parent=self
                             )
                             self.draggable_boxes.append(box_fail)
                             
@@ -2402,6 +2422,12 @@ class InteractiveValidationTuner:
         
         # Update canvas to show boxes
         self.canvas.draw()
+        
+        # Reconnect right-click handler AFTER draggable boxes to ensure it processes events last
+        if hasattr(self, 'cid_plot_click'):
+            self.fig.canvas.mpl_disconnect(self.cid_plot_click)
+        self.cid_plot_click = self.fig.canvas.mpl_connect('button_press_event', self.on_plot_click)
+        print(f"DEBUG: Reconnected right-click handler after creating {len(self.draggable_boxes)} boxes")
         
         # Verify that boxes are using clean trace backgrounds (no re-caching needed!)
         print(f"Added {len(self.draggable_boxes)} interactive boxes using clean trace backgrounds")
@@ -2461,7 +2487,7 @@ class InteractiveValidationTuner:
                           fontsize=11, fontweight='bold', y=0.99)
         
         # Connect right-click event for context menu
-        self.fig.canvas.mpl_connect('button_press_event', self.on_plot_click)
+        self.cid_plot_click = self.fig.canvas.mpl_connect('button_press_event', self.on_plot_click)
         
         # Update scroll region (essential for proper scrolling)
         self.plot_frame.update_idletasks()

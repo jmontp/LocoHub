@@ -90,8 +90,17 @@ Complete documentation for each standardized task type.
 | `speed_m_s` | float | Walking speed in m/s | 0.8 - 1.8 |
 | `treadmill` | boolean | Treadmill vs overground | true/false |
 | `self_selected` | boolean | Self-selected pace | true/false |
+| `steady_state` | boolean | Constant speed vs changing | true/false |
+| `acceleration_phase` | string | Speed change direction | "accelerating", "decelerating" |
+| `initial_speed_m_s` | float | Starting speed (non-steady) | 0.5 - 2.0 |
+| `final_speed_m_s` | float | Ending speed (non-steady) | 0.5 - 2.0 |
+| `gait_transition` | boolean | Contains gait transitions | true/false |
+| `transition_type` | string | Type of transition | "walk_to_run", "run_to_walk" |
 
-**Example**: `"speed_m_s:1.2,treadmill:true"`
+**Examples**: 
+- Standard: `"speed_m_s:1.2,treadmill:true"`
+- Acceleration: `"steady_state:false,acceleration_phase:accelerating,initial_speed_m_s:1.0,final_speed_m_s:1.8"`
+- Walk-to-run: `"gait_transition:true,transition_type:walk_to_run,initial_speed_m_s:1.5,final_speed_m_s:2.5"`
 
 *Note: When `treadmill:false`, overground walking is implied.*
 
@@ -147,13 +156,18 @@ Complete documentation for each standardized task type.
 | Key | Type | Description | Typical Values |
 |-----|------|-------------|----------------|
 | `steps` | int | Number of steps | 4, 8, 12 |
-| `height_m` | float | Step height in meters | 0.15 - 0.20 |
-| `depth_m` | float | Step depth in meters | 0.25 - 0.30 |
+| `height_m` | float | Step height in meters | 0.10 - 0.25 |
+| `depth_m` | float | Step depth in meters | 0.25 - 0.35 |
 | `speed_m_s` | float | Ascent speed if measured | 0.4 - 0.8 |
 | `handrail` | boolean | Handrail availability/use | true/false |
 | `step_over_step` | boolean | Reciprocal gait pattern | true/false |
+| `step_count_per_cycle` | int | Steps included in one gait cycle | 1, 2 |
 
-**Example**: `"steps:8,height_m:0.17,handrail:false,step_over_step:true"`
+**Examples**: 
+- Standard stairs: `"steps:8,height_m:0.17,handrail:false,step_over_step:true"`
+- Variable height: `"steps:4,height_m:0.20,depth_m:0.30,step_count_per_cycle:1"`
+
+*Note: `height_m` supports variable step heights to accommodate different stair configurations in research settings.*
 
 ---
 
@@ -169,13 +183,18 @@ Complete documentation for each standardized task type.
 | Key | Type | Description | Typical Values |
 |-----|------|-------------|----------------|
 | `steps` | int | Number of steps | 4, 8, 12 |
-| `height_m` | float | Step height in meters | 0.15 - 0.20 |
-| `depth_m` | float | Step depth in meters | 0.25 - 0.30 |
+| `height_m` | float | Step height in meters | 0.10 - 0.25 |
+| `depth_m` | float | Step depth in meters | 0.25 - 0.35 |
 | `speed_m_s` | float | Descent speed if measured | 0.3 - 0.7 |
 | `handrail` | boolean | Handrail availability/use | true/false |
 | `step_over_step` | boolean | Reciprocal gait pattern | true/false |
+| `step_count_per_cycle` | int | Steps included in one gait cycle | 1, 2 |
 
-**Example**: `"steps:8,height_m:0.17,handrail:true,step_over_step:true"`
+**Examples**: 
+- Standard stairs: `"steps:8,height_m:0.17,handrail:true,step_over_step:true"`
+- Variable height: `"steps:4,height_m:0.20,depth_m:0.30,step_count_per_cycle:1"`
+
+*Note: `height_m` supports variable step heights to accommodate different stair configurations in research settings.*
 
 ---
 
@@ -221,16 +240,44 @@ Complete documentation for each standardized task type.
 
 ### Sit to Stand
 
-**Description**: Rising from seated position
+**Description**: Rising from seated to standing position
 
 **Task**: `sit_to_stand`  
 **Task ID**: `sit_to_stand`
+
+**Cycle Definition**: Unidirectional movement from sitting → standing (0% → 100%)
+- **0%**: Fully seated position
+- **100%**: Fully standing position
 
 **Common Metadata**:
 
 | Key | Type | Description | Typical Values |
 |-----|------|-------------|----------------|
-| `repetitions` | int | Number of repetitions | 1, 5, 10 |
+| `repetitions` | int | Number of rise repetitions | 1, 5, 10 |
+| `chair_height_m` | float | Seat height in meters | 0.40 - 0.50 |
+| `arms_used` | boolean | Whether arms were used | true/false |
+| `speed` | string | Movement speed | "normal", "fast", "slow" |
+
+**Example**: `"repetitions:5,chair_height_m:0.45,arms_used:false,speed:normal"`
+
+---
+
+### Stand to Sit
+
+**Description**: Lowering from standing to seated position
+
+**Task**: `stand_to_sit`  
+**Task ID**: `stand_to_sit`
+
+**Cycle Definition**: Unidirectional movement from standing → sitting (0% → 100%)
+- **0%**: Fully standing position
+- **100%**: Fully seated position
+
+**Common Metadata**:
+
+| Key | Type | Description | Typical Values |
+|-----|------|-------------|----------------|
+| `repetitions` | int | Number of lower repetitions | 1, 5, 10 |
 | `chair_height_m` | float | Seat height in meters | 0.40 - 0.50 |
 | `arms_used` | boolean | Whether arms were used | true/false |
 | `speed` | string | Movement speed | "normal", "fast", "slow" |

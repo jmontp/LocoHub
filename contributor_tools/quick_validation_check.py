@@ -28,12 +28,186 @@ from pathlib import Path
 from typing import Dict, List, Set, Optional
 from datetime import datetime
 import pandas as pd
+import threading
+import time
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from internal.validation_engine.validator import Validator
 from user_libs.python.locomotion_data import LocomotionData
+
+# Import Tkinter components for scrollable display
+try:
+    import tkinter as tk
+    from tkinter import ttk
+    import matplotlib
+    matplotlib.use('TkAgg')  # Ensure TkAgg backend for embedding
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    TKINTER_AVAILABLE = True
+except ImportError:
+    TKINTER_AVAILABLE = False
+
+
+def animated_loading(stop_event):
+    """
+    Display animated loading text while plots are being embedded.
+    
+    Args:
+        stop_event: Threading event to signal when to stop the animation
+    """
+    states = [
+        "⏳ Loading plots   ",
+        "⏳ Loading plots .  ",
+        "⏳ Loading plots .. ",
+        "⏳ Loading plots ..."
+    ]
+    i = 0
+    while not stop_event.is_set():
+        print(f"\r{states[i]}", end='', flush=True)
+        i = (i + 1) % len(states)
+        time.sleep(0.3)
+    # Clear the loading line
+    print("\r" + " " * 25 + "\r", end='', flush=True)
+
+
+def show_scrollable_plot():
+    """
+    Display matplotlib plots in a scrollable Tkinter window.
+    This is needed for large plots that exceed screen height.
+    """
+    if not TKINTER_AVAILABLE:
+        # Fallback to standard matplotlib display if Tkinter is not available
+        import matplotlib.pyplot as plt
+        plt.show()
+        return
+    
+    import matplotlib.pyplot as plt
+    
+    # Get all current figures
+    figures = [plt.figure(num) for num in plt.get_fignums()]
+    if not figures:
+        return
+    
+    # Start loading animation before the slow embedding process
+    print("")  # New line before animation
+    stop_loading = threading.Event()
+    loading_thread = threading.Thread(target=animated_loading, args=(stop_loading,))
+    loading_thread.daemon = True
+    loading_thread.start()
+    
+    # Create Tkinter window
+    root = tk.Tk()
+    root.title("Validation Plots - Quick Check")
+    
+    # Define close handler
+    def on_closing():
+        """Properly close the window and terminate the program."""
+        try:
+            root.quit()  # Quit the mainloop
+            root.destroy()  # Destroy the window
+        except:
+            pass  # Ignore any errors during cleanup
+    
+    # Bind the close event
+    root.protocol("WM_DELETE_WINDOW", on_closing)
+    
+    # Get screen dimensions
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    
+    # Set window size based on plot dimensions
+    # Plots are typically 14 inches wide at 80-100 DPI = ~1120-1400 pixels
+    # Add some padding for scrollbars and window chrome
+    window_width = min(1450, int(screen_width * 0.8))  # Cap at 1450px or 80% of screen
+    window_height = int(screen_height * 0.9)  # Keep height at 90% for scrolling
+    
+    # Center the window
+    x = (screen_width - window_width) // 2
+    y = (screen_height - window_height) // 2
+    root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+    
+    # Create notebook for multiple figures if needed
+    if len(figures) > 1:
+        notebook = ttk.Notebook(root)
+        notebook.pack(fill=tk.BOTH, expand=True)
+        
+        for i, fig in enumerate(figures):
+            # Create frame for this figure
+            frame = ttk.Frame(notebook)
+            notebook.add(frame, text=f"Task {i+1}")
+            
+            # Create scrollable canvas for the figure
+            create_scrollable_figure(frame, fig)
+    else:
+        # Single figure - create scrollable canvas directly
+        create_scrollable_figure(root, figures[0])
+    
+    # Stop the loading animation after embedding is complete
+    stop_loading.set()
+    loading_thread.join(timeout=0.5)  # Wait for animation to finish
+    print("✅ Plots loaded successfully!")
+    
+    try:
+        # Start the Tkinter event loop
+        root.mainloop()
+    except:
+        pass  # Ignore any errors during mainloop
+    finally:
+        # Ensure cleanup happens
+        try:
+            root.destroy()
+        except:
+            pass
+        # Close all figures after window is closed
+        plt.close('all')
+
+
+def create_scrollable_figure(parent, fig):
+    """
+    Create a scrollable canvas with the matplotlib figure embedded.
+    
+    Args:
+        parent: The parent Tkinter widget
+        fig: The matplotlib figure to embed
+    """
+    # Create frame to hold canvas and scrollbars
+    frame = ttk.Frame(parent)
+    frame.pack(fill=tk.BOTH, expand=True)
+    
+    # Create canvas for the plot
+    canvas_frame = tk.Canvas(frame, highlightthickness=0)
+    canvas_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    
+    # Create scrollbars
+    v_scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=canvas_frame.yview)
+    v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    
+    h_scrollbar = ttk.Scrollbar(parent, orient=tk.HORIZONTAL, command=canvas_frame.xview)
+    h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+    
+    # Configure canvas scrolling
+    canvas_frame.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
+    
+    # Create frame inside canvas to hold the matplotlib figure
+    plot_frame = ttk.Frame(canvas_frame)
+    
+    # Embed the matplotlib figure
+    figure_canvas = FigureCanvasTkAgg(fig, master=plot_frame)
+    figure_canvas.draw()
+    figure_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+    
+    # Add the plot frame to the canvas
+    canvas_frame.create_window((0, 0), window=plot_frame, anchor='nw')
+    
+    # Update scroll region after the frame is drawn
+    def configure_scroll_region(event=None):
+        canvas_frame.configure(scrollregion=canvas_frame.bbox('all'))
+    
+    plot_frame.bind('<Configure>', configure_scroll_region)
+    
+    # Initial configuration
+    canvas_frame.after(100, configure_scroll_region)
 
 
 def generate_plots(dataset_path: str, validator: Validator, task_filter: Optional[str] = None, 
@@ -122,8 +296,8 @@ def generate_plots(dataset_path: str, validator: Validator, task_filter: Optiona
             continue
     
     if show:
-        # Just use matplotlib's normal display
-        plt.show()
+        # Use scrollable display for better handling of large plots
+        show_scrollable_plot()
     elif output_dir:
         print(f"\n✅ All plots saved to: {output_dir}")
 

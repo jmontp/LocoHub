@@ -128,9 +128,9 @@ Following the **OpenSim right-hand rule**:
 - **Running GRF ranges**: 2.0-2.9 BW (20-28 N/kg) for vertical, higher horizontal forces
 
 **Typical values by direction**:
-- **vertical_grf_N_kg**: 8-15 N/kg walking, 20-28 N/kg running
-- **ap_grf_N_kg**: -3 to +3 N/kg walking, -8 to +12 N/kg running
-- **ml_grf_N_kg**: ±1 N/kg walking, ±2.5 N/kg running
+- **vertical_grf_BW**: 0.8-1.5 BW walking, 2.0-2.8 BW running
+- **anterior_grf_BW**: -0.3 to +0.3 BW walking, -0.8 to +1.2 BW running
+- **lateral_grf_BW**: ±0.1 BW walking, ±0.25 BW running
 
 ### Joint Moment Ranges (Peak Values)
 

@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from matplotlib.collections import LineCollection
 from pathlib import Path
 import warnings
 import sys
@@ -90,6 +91,30 @@ def _get_memory_aware_plot_params(n_features: int, base_width: float = 14.0, bas
     except Exception:
         # Fall back to defaults if memory monitoring fails
         return base_figsize, default_dpi, default_linewidth
+
+
+def _create_line_collection(phase_data, stride_data, color, alpha, linewidth, rasterized=True):
+    """
+    Create a LineCollection from stride data for memory-efficient plotting.
+    
+    Args:
+        phase_data: Array of phase values (x-axis)
+        stride_data: 2D array where each row is a stride (shape: n_strides x n_points)
+        color: Line color
+        alpha: Line transparency
+        linewidth: Line width
+        rasterized: Whether to rasterize the collection
+        
+    Returns:
+        LineCollection object ready to be added to an axis
+    """
+    segments = []
+    for stride in stride_data:
+        points = np.column_stack([phase_data, stride])
+        segments.append(points)
+    
+    lc = LineCollection(segments, colors=color, alpha=alpha, linewidths=linewidth, rasterized=rasterized)
+    return lc
 
 
 def create_single_feature_plot(
@@ -230,11 +255,18 @@ def create_single_feature_plot(
     if data is not None and data.size > 0 and var_idx is not None:
         phase_ipsi = np.linspace(0, 100, 150)
         
+        # Collect all passing strides
+        passing_strides = []
         for stride_idx in range(data.shape[0]):
             if stride_idx not in global_failed_strides:
-                stride_data = data[stride_idx, :, var_idx]
-                ax_pass.plot(phase_ipsi, stride_data, color='green', alpha=0.3, linewidth=linewidth, zorder=1)
+                passing_strides.append(data[stride_idx, :, var_idx])
                 passed_count += 1
+        
+        # Plot all passing strides at once using LineCollection
+        if passing_strides:
+            passing_array = np.array(passing_strides)
+            lc = _create_line_collection(phase_ipsi, passing_array, 'green', 0.3, linewidth, rasterized=True)
+            ax_pass.add_collection(lc)
     
     # Plot validation ranges on pass axis
     _plot_validation_ranges(ax_pass, var_ranges, phases, 'lightgreen', value_conversion, unit_suffix)
@@ -256,11 +288,18 @@ def create_single_feature_plot(
     # Plot FAILED strides (right column)
     failed_count = 0
     if data is not None and data.size > 0 and var_idx is not None:
+        # Collect all failed strides
+        failed_strides = []
         for stride_idx in range(data.shape[0]):
             if stride_idx in variable_failed_strides:
-                stride_data = data[stride_idx, :, var_idx]
-                ax_fail.plot(phase_ipsi, stride_data, color='red', alpha=0.4, linewidth=linewidth, zorder=1)
+                failed_strides.append(data[stride_idx, :, var_idx])
                 failed_count += 1
+        
+        # Plot all failed strides at once using LineCollection
+        if failed_strides:
+            failed_array = np.array(failed_strides)
+            lc = _create_line_collection(phase_ipsi, failed_array, 'red', 0.4, linewidth, rasterized=True)
+            ax_fail.add_collection(lc)
     
     # Plot validation ranges on fail axis
     _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix)
@@ -608,13 +647,16 @@ def create_task_combined_plot(
                 if global_passing_indices:
                     global_passing_data = data_3d[global_passing_indices, :, var_idx]
                     passed_count = len(global_passing_indices)
-                    ax_pass.plot(phase_ipsi, global_passing_data.T, color='green', alpha=0.3, linewidth=linewidth, zorder=1)
+                    lc = _create_line_collection(phase_ipsi, global_passing_data, 'green', 0.3, linewidth, rasterized=True)
+                    ax_pass.add_collection(lc)
                 
                 # Plot locally passing strides in gold/yellow
                 if local_passing_indices:
                     local_passing_data = data_3d[local_passing_indices, :, var_idx]
                     local_passed_count = len(local_passing_indices)
-                    ax_pass.plot(phase_ipsi, local_passing_data.T, color='gold', alpha=0.3, linewidth=linewidth, zorder=2)
+                    lc = _create_line_collection(phase_ipsi, local_passing_data, 'gold', 0.3, linewidth, rasterized=True)
+                    lc.set_zorder(2)
+                    ax_pass.add_collection(lc)
             else:
                 # Original logic - all non-globally-failed strides in green
                 passing_indices = [stride_idx for stride_idx in range(data_3d.shape[0]) 
@@ -625,8 +667,9 @@ def create_task_combined_plot(
                     passing_data = data_3d[passing_indices, :, var_idx]
                     passed_count = len(passing_indices)
                     
-                    # Single plot call for all passing strides (instead of thousands of individual calls)
-                    ax_pass.plot(phase_ipsi, passing_data.T, color='green', alpha=0.3, linewidth=linewidth, zorder=1)
+                    # Use LineCollection for all passing strides (memory efficient)
+                    lc = _create_line_collection(phase_ipsi, passing_data, 'green', 0.3, linewidth, rasterized=True)
+                    ax_pass.add_collection(lc)
         
         # Plot validation ranges on pass axis
         _plot_validation_ranges(ax_pass, var_ranges, phases, 'lightgreen', value_conversion, unit_suffix)
@@ -670,13 +713,15 @@ def create_task_combined_plot(
                 if biomech_indices:
                     biomech_data = data_3d[biomech_indices, :, var_idx]
                     biomech_failed_count = len(biomech_indices)
-                    ax_fail.plot(phase_ipsi, biomech_data.T, color='red', alpha=0.4, linewidth=linewidth, zorder=1)
+                    lc = _create_line_collection(phase_ipsi, biomech_data, 'red', 0.4, linewidth, rasterized=True)
+                    ax_fail.add_collection(lc)
                 
                 # Plot velocity failures in blue (batch)
                 if velocity_indices:
                     velocity_data = data_3d[velocity_indices, :, var_idx]
                     velocity_failed_count = len(velocity_indices)
-                    ax_fail.plot(phase_ipsi, velocity_data.T, color='blue', alpha=0.4, linewidth=linewidth, zorder=1)
+                    lc = _create_line_collection(phase_ipsi, velocity_data, 'blue', 0.4, linewidth, rasterized=True)
+                    ax_fail.add_collection(lc)
                 
                 failed_count = biomech_failed_count + velocity_failed_count
             
@@ -1139,11 +1184,18 @@ def create_filters_by_phase_plot(
         if data is not None and data.size > 0 and var_idx < data.shape[2]:
             phase_ipsi = np.linspace(0, 100, 150)
             
+            # Collect all passing strides
+            passing_strides = []
             for stride_idx in range(data.shape[0]):
                 if stride_idx not in global_failed_strides:
-                    stride_data = data[stride_idx, :, var_idx]
-                    ax_pass.plot(phase_ipsi, stride_data, color='green', alpha=0.3, linewidth=linewidth, zorder=1)
+                    passing_strides.append(data[stride_idx, :, var_idx])
                     passed_count += 1
+            
+            # Plot all passing strides at once using LineCollection
+            if passing_strides:
+                passing_array = np.array(passing_strides)
+                lc = _create_line_collection(phase_ipsi, passing_array, 'green', 0.3, linewidth, rasterized=True)
+                ax_pass.add_collection(lc)
         
         # Plot validation ranges on TOP of data (higher z-order)
         _plot_validation_ranges(ax_pass, var_ranges, phases, 'lightgreen', value_conversion, unit_suffix)
@@ -1173,11 +1225,18 @@ def create_filters_by_phase_plot(
         
         # Plot data FIRST (behind validation ranges)
         if data is not None and data.size > 0 and var_idx < data.shape[2]:
+            # Collect all failed strides
+            failed_strides = []
             for stride_idx in range(data.shape[0]):
                 if stride_idx in variable_failed_strides:
-                    stride_data = data[stride_idx, :, var_idx]
-                    ax_fail.plot(phase_ipsi, stride_data, color='red', alpha=0.4, linewidth=linewidth, zorder=1)
+                    failed_strides.append(data[stride_idx, :, var_idx])
                     failed_count += 1
+            
+            # Plot all failed strides at once using LineCollection
+            if failed_strides:
+                failed_array = np.array(failed_strides)
+                lc = _create_line_collection(phase_ipsi, failed_array, 'red', 0.4, linewidth, rasterized=True)
+                ax_fail.add_collection(lc)
         
         # Plot validation ranges on TOP of data (higher z-order)
         _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix)

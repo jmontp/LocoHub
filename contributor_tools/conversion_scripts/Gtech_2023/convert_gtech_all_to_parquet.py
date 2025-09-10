@@ -8,6 +8,7 @@ import os
 import sys
 import gc
 from tqdm import tqdm
+from task_mapping import parse_gtech_activity_name, get_subject_metadata
 ###############################################################################
 # User configuration section
 
@@ -162,37 +163,37 @@ standard_column_names = {
     'toes_l_vel_Z':'toes_vel_s_l',
     'toes_l_vel_X':'toes_vel_t_l',
 
-    #GRF
-    # From z*x=y coordinate to x*y=z
-    
-    "RForceX": "force_x_r",
-    "RForceY_Vertical": "force_z_r",
-    "RForceZ": "force_y_r",
-    "RCOPX": "COP_x_r",
-    "RCOPY_Vertical": "COP_z_r",
-    "RCOPZ": "COP_y_r",
-    "LForceX": "force_x_l",
-    "LForceY_Vertical": "force_z_l",
-    "LForceZ": "forc_y_l",
-    "LCOPX": "COP_x_l",
-    "LCOPY_Vertical": "COP_z_l",
-    "LCOPZ": "COP_y_l",
+    #GRF - Ground Reaction Forces (keeping left/right for time-indexed data)
+    # From z*x=y coordinate to x*y=z coordinate system
+    # Using standardized directional naming: anterior/lateral/vertical
+    "RForceX": "anterior_grf_r_N",
+    "RForceY_Vertical": "vertical_grf_r_N", 
+    "RForceZ": "lateral_grf_r_N",
+    "RCOPX": "cop_anterior_r_m",
+    "RCOPY_Vertical": "cop_vertical_r_m",
+    "RCOPZ": "cop_lateral_r_m",
+    "LForceX": "anterior_grf_l_N",
+    "LForceY_Vertical": "vertical_grf_l_N",
+    "LForceZ": "lateral_grf_l_N",
+    "LCOPX": "cop_anterior_l_m",
+    "LCOPY_Vertical": "cop_vertical_l_m",
+    "LCOPZ": "cop_lateral_l_m",
 }
 
 
 # Create a function that will fix joint angle conventions. In the dataset the 
 cols_to_flip_signs = [ 
-     # Flip knee torques
+     # Flip knee torques if needed
     # 'knee_flexion_moment_r_Nm','knee_flexion_moment_l_Nm',
-    # From z*x=y coordinate to x*y=z
-    "COP_x_r", 
-    "COP_x_l",
-    "COP_z_r",
-    "COP_z_l",
-    "force_x_r",
-    "force_x_l",
-    "force_z_r",
-    "force_z_l"
+    # From z*x=y coordinate to x*y=z - update for standardized naming
+    "cop_anterior_r_m", 
+    "cop_anterior_l_m",
+    "cop_lateral_r_m",
+    "cop_lateral_l_m",
+    "anterior_grf_r_N",
+    "anterior_grf_l_N",
+    "lateral_grf_r_N",
+    "lateral_grf_l_N"
 ]
 import re
 def convert_dataset_to_pandas():
@@ -320,19 +321,27 @@ def convert_dataset_to_pandas():
         for data_type,sub_df in dataframes[key][1:]:
             df = pd.merge(df, sub_df, on='time')
 
-        # Add the activity and subject columns
-        df['task_info'] = activity
+        # Rename time column to follow standard
+        df.rename(columns={'time': 'time_s'}, inplace=True)
+
         # Following naming convention: DATASET_POPULATION+NUMBER
         # GT23 = Georgia Tech 2023, AB = Able-bodied
         # Extract subject number (e.g., '01' from 'AB01')
         subject_num = subject[2:] if subject.startswith('AB') else subject
-        df['subject'] = 'GT23_AB' + subject_num.zfill(2)
+        subject_id = 'GT23_AB' + subject_num.zfill(2)
+        df['subject'] = subject_id
 
-        # Add the activity short name
-        for short_activity_name in short_activity_names:
-            if short_activity_name in activity:
-                df['task'] = short_activity_name
-                break
+        # Parse activity name using task mapping utility
+        task, task_id, task_info = parse_gtech_activity_name(activity)
+        df['task'] = task
+        df['task_id'] = task_id
+        df['task_info'] = task_info
+
+        # Add subject metadata (empty for now, could be populated from metadata files)
+        df['subject_metadata'] = get_subject_metadata(subject_id)
+
+        # Add step column (initialize to 0 for time-indexed data)
+        df['step'] = 0
 
         # Concatenate the different subject/activities with the rest of the 
         # dataset

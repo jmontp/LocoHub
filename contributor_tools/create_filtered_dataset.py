@@ -217,6 +217,44 @@ Examples:
         print(f"🚫 Excluding columns: {', '.join(exclude_cols)}")
     print()
     
+    # Load dataset to validate exclude columns
+    print("Loading dataset to validate columns...")
+    try:
+        temp_locomotion_data = LocomotionData(str(input_path))
+    except Exception as e:
+        print(f"❌ Error loading dataset: {e}")
+        return 1
+    
+    # Validate exclude columns exist in dataset
+    if exclude_cols:
+        available_columns = temp_locomotion_data.df.columns.tolist()
+        invalid_cols = [col for col in exclude_cols if col not in available_columns]
+        
+        if invalid_cols:
+            print(f"\n❌ Error: The following columns do not exist in the dataset:")
+            for col in invalid_cols:
+                print(f"    - {col}")
+            
+            # Get biomechanical features (most likely candidates for exclusion)
+            biomech_features = temp_locomotion_data.features
+            
+            print(f"\n📊 Available biomechanical features ({len(biomech_features)}):")
+            for feature in sorted(biomech_features):
+                print(f"    {feature}")
+            
+            # Also show metadata columns
+            metadata_cols = [col for col in available_columns 
+                           if col not in biomech_features]
+            print(f"\n📋 Available metadata columns ({len(metadata_cols)}):")
+            for col in sorted(metadata_cols)[:10]:  # Show first 10
+                print(f"    {col}")
+            if len(metadata_cols) > 10:
+                print(f"    ... and {len(metadata_cols) - 10} more")
+            
+            return 1
+    
+    print()  # Add blank line for clarity
+    
     # Check if output already exists
     if output_path.exists():
         response = input(f"⚠️  Output file exists: {output_path.name}\n   Overwrite? (y/N): ")
