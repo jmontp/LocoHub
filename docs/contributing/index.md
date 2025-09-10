@@ -183,6 +183,14 @@ compatibility with existing datasets, and a growing research community.
 
 ---
 
+## Additional Resources
+
+- [Data Table Schema](contributing_skeleton.md)
+- [Community](community.md)
+- [Project CONTRIBUTING](CONTRIBUTING.md)
+
+---
+
 ## Ready to Start?
 
 The conversion process is straightforward once you understand the basics. We've built tools to handle the tedious parts and a community to help when you get stuck.

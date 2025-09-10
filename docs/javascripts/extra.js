@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!isTutorialPage) return;
 
     // Get saved preference or default to 'library'
-    let currentMode = localStorage.getItem('codeMode') || 'library';
+    let currentMode = localStorage.getItem('codeMode') || 'raw';
 
     // Add CSS for better tab styling
     const style = document.createElement('style');

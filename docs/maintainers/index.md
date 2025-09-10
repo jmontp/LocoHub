@@ -132,3 +132,7 @@ The `create_dataset_validation_report.py` tool is primarily for maintainers who 
 - [Setup Guide](setup.md) - Environment setup
 - [Common Tasks](tasks.md) - Detailed maintenance procedures
 - [Testing](testing.md) - Test suite information
+- Detailed Testing:
+  - [Unit Tests](15a_unit_tests.md)
+  - [Integration Tests](15b_integration_tests.md)
+  - [Test Specifications](18_test_specifications.md)

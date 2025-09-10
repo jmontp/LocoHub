@@ -166,5 +166,4 @@ The main data structure is a MATLAB table with columns:
 ## See Also
 
 - [Python API Reference](locomotion-data-api.md)
-- [R API Reference](r-api.md)
 - [Data Format Specification](../../reference/standard_spec/standard_spec.md)

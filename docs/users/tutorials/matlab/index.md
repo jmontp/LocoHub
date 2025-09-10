@@ -70,6 +70,10 @@ Learn to analyze standardized biomechanical data using MATLAB with our comprehen
 
 **Time: 30 minutes** | **Level: Advanced**
 
+## Advanced Guides
+
+- [Biomechanics Visualization Guide](biomechanics_visualization_guide.md)
+
 ## Prerequisites
 
 ### Required Knowledge

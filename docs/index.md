@@ -1,101 +1,99 @@
----
-hide:
-  - navigation
-  - toc
----
+<!-- removed homepage title hiding and hero styles -->
 
-<style>
-  /* Hide the auto-generated page title on this page only */
-  .md-typeset h1 {
-    display: none !important;
-  }
-</style>
+# LocoHub
 
-# 
+Standardized biomechanical datasets and simple tools to load, filter, and analyze them in Python, MATLAB, and R.
 
-<div class="hero-section" markdown>
+## What the data looks like
 
-<img src="assets/locohub_logo.png" alt="LocoHub Logo" style="width: 400px; height: auto; margin: 0 0 20px 0; display: block;">
+Each row is one point in a percent‑normalized gait cycle (typically 150 samples from 0–100%). Columns include subject/task metadata and standardized biomechanical variables.
 
-## Transform biomechanical datasets into unified, quality-assured formats that accelerate reproducible research
+| subject_id | subject_metadata            | task           | task_id               | task_info                       | step | phase_percent | knee_flexion_angle_ipsi_rad | hip_moment_ipsi_Nm |
+|------------|-----------------------------|----------------|-----------------------|----------------------------------|------|---------------|-----------------------------|--------------------|
+| UM21_AB01  | age:25,sex:M,height_m:1.75 | level_walking  | level_walking_normal  | speed_m_s:1.2,incline_deg:0     | 1    | 0.0           | 0.524                       | 0.85               |
+| UM21_AB01  | age:25,sex:M,height_m:1.75 | level_walking  | level_walking_normal  | speed_m_s:1.2,incline_deg:0     | 1    | 0.67          | 0.541                       | 0.82               |
+| GT23_AB05  | age:28,sex:F,height_m:1.68 | incline_walking| incline_10deg         | speed_m_s:1.0,incline_deg:10    | 3    | 0.0           | 0.698                       | 0.90               |
+| PROS_TFA03 | age:41,sex:M,prosthesis:TFA | stair_ascent   | stair_ascent_17cm     | step_height_m:0.17,step_w_m:0.28| 2    | 0.0           | 0.873                       | 1.10               |
+| …          | …                           | …              | …                     | …                                | …    | …             | …                           | …                  |
 
-**Stop wrestling with inconsistent data formats.** Start analyzing standardized, validated biomechanical datasets from world-class research labs in minutes, not months.
+- Metadata columns: `subject_id`, optional `subject_metadata`, `task`, `task_id`, `task_info`, `step`, and `phase_percent`.
+- Variable columns follow the naming convention `joint_motion_side_unit` (e.g., `knee_flexion_angle_ipsi_rad`, `hip_moment_ipsi_Nm`).
 
-<div class="hero-actions" markdown>
+### More details and definitions
 
-[**:material-rocket-launch: Try It Now**](users/){ .md-button .md-button--primary .hero-button }
-[**:material-book-open-variant: View Tutorials**](users/tutorials/python/){ .md-button .hero-button }
-[**:material-download: Get Data**](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0){ .md-button .hero-button }
+- [Technical Specification](reference/standard_spec/standard_spec.md)
+- [Task Definitions](reference/standard_spec/task_definitions.md)
+- [Biomechanical Standard](reference/biomechanical_standard.md)
+- [Population Codes](reference/population_codes.md)
+- [Validation Ranges](reference/standard_spec/validation_ranges.md)
+- [Data Table Schema](contributing/contributing_skeleton.md)
 
-</div>
+## Quickstart
 
-</div>
+=== "Using Raw Data"
 
-<div class="trust-indicators" markdown>
+    === "Python"
+    ```python
+    import pandas as pd
 
-:material-check-circle:{ .success-icon } **3 Research Labs** • :material-check-circle:{ .success-icon } **2,000+ Gait Cycles** • :material-check-circle:{ .success-icon } **100% Validated** • :material-check-circle:{ .success-icon } **Python & MATLAB**
+    # Load phase-indexed parquet directly
+    df = pd.read_parquet('umich_2021_phase.parquet')
 
-</div>
+    # Filter to a subject + task of interest
+    subset = df[(df['task'] == 'level_walking') & (df['subject_id'] == 'UM21_AB01')]
 
-<div class="main-sections-grid" markdown>
+    # Access normalized phase and a variable
+    phase = subset['phase_percent'].to_numpy()
+    knee = subset['knee_flexion_angle_ipsi_rad'].to_numpy()
+    ```
 
-<div class="main-section" markdown>
+    === "MATLAB"
+    ```matlab
+    % Load phase-indexed parquet directly (R2021b+)
+    T = parquetread('umich_2021_phase.parquet');
 
-### :material-download: **Download Datasets**
+    % Filter to a subject + task of interest
+    subset = T(T.task == "level_walking" & T.subject_id == "UM21_AB01", :);
+
+    % Access normalized phase and a variable
+    phase = subset.phase_percent;
+    knee  = subset.knee_flexion_angle_ipsi_rad;
+    ```
+
+=== "Using Library"
+
+    === "Python"
+    ```python
+    from user_libs.python.locomotion_data import LocomotionData
+
+    data = LocomotionData('umich_2021_phase.parquet')
+    subset = data.filter(task='level_walking', subjects=['UM21_AB01'])
+    cycles, features = subset.get_cycles('UM21_AB01', 'level_walking')
+    ```
+
+    === "MATLAB"
+    ```matlab
+    addpath('user_libs/matlab');
+    loco = LocomotionData('umich_2021_phase.parquet');
+    level = loco.filterTask('level_walking').filterSubject('UM21_AB01');
+    [cycles, features] = level.getCycles('UM21_AB01', 'level_walking');
+    ```
+
+<!-- Removed trust indicators for a simpler, utilitarian homepage -->
+
+## Download Datasets
 
 | Dataset | Tasks | Quality | Documentation | Download |
 |---------|-------|---------|---------------|----------|
-| **[Georgia Tech 2023](reference/datasets_documentation/dataset_gtech_2023/)** | Walking, stairs, inclines | :material-check-circle:{ .success } **Validated** | [:material-file-document: Docs](reference/datasets_documentation/dataset_gtech_2023/){ .md-button } | [:material-download: Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0){ .md-button } |
-| **[Georgia Tech 2021](reference/datasets_documentation/dataset_gtech_2021/)** | Walking, stairs, inclines | :material-check-circle:{ .success } **Validated** | [:material-file-document: Docs](reference/datasets_documentation/dataset_gtech_2021/){ .md-button } | [:material-download: Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0){ .md-button } |
-| **[University of Michigan 2021](reference/datasets_documentation/dataset_umich_2021/)** | Level, incline, decline walking | :material-check-circle:{ .success } **Validated** | [:material-file-document: Docs](reference/datasets_documentation/dataset_umich_2021/){ .md-button } | [:material-download: Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0){ .md-button } |
-| **[AddBiomechanics](reference/datasets_documentation/dataset_addbiomechanics/)** | Walking, running, jumping, stairs | :material-progress-clock:{ .warning } **Coming Soon** | [:material-file-document: Docs](reference/datasets_documentation/dataset_addbiomechanics/){ .md-button } | Coming Soon |
+| Georgia Tech 2023 | Walking, stairs, inclines | ✓ Validated | [Docs](reference/datasets_documentation/dataset_gtech_2023.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
+| Georgia Tech 2021 | Walking, stairs, inclines | ✓ Validated | [Docs](reference/datasets_documentation/dataset_gtech_2021.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
+| University of Michigan 2021 | Level, incline, decline walking | ✓ Validated | [Docs](reference/datasets_documentation/dataset_umich_2021.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
+| AddBiomechanics | Walking, running, jumping, stairs | Coming Soon | [Docs](reference/datasets_documentation/dataset_addbiomechanics.md) | Coming Soon |
 
-</div>
+More details and validation reports: [Datasets Reference](reference/datasets_documentation/).
 
-<div class="dashboard-tile" markdown>
+## Learn and Contribute
 
-### :material-book: **Datasets Reference**
-
-**Comprehensive documentation for all standardized datasets**
-
-✓ Dataset specifications and formats  
-✓ Validation reports and quality metrics  
-✓ Variable definitions and conventions  
-✓ Known issues and usage notes  
-
-[**:material-arrow-right: View Datasets Reference**](reference/datasets_documentation/){ .md-button .md-button--primary }
-
-</div>
-
-<div class="dashboard-tile" markdown>
-
-### :material-code-braces: **User Libraries**
-
-**Analysis tools in Python, MATLAB, and R**
-
-```python
-from user_libs.python.locomotion_data import LocomotionData
-data = LocomotionData('umich_2021_phase.parquet')
-cycles, features = data.get_cycles('SUB01', 'level_walking')
-```
-
-[**:material-language-python: Python API**](users/api/locomotion-data-api/){ .md-button } [**:material-language-r: R Package**](users/tutorials/r/){ .md-button } [**MATLAB Tools**](users/tutorials/matlab/){ .md-button }
-
-</div>
-
-<div class="dashboard-tile" markdown>
-
-### :material-upload: **Want to Contribute?**
-
-**Share your lab's datasets with the research community**
-
-✓ Convert your data to standardized format  
-✓ Automated quality validation  
-✓ Increase research impact and citations  
-✓ Join the standardization movement  
-
-[**:material-arrow-right: Start Contributing**](contributing/){ .md-button .md-button--primary }
-
-</div>
-
-</div>
+- Tutorials: [Python](users/tutorials/python/), [MATLAB](users/tutorials/matlab/)
+- API: [Overview](users/api/api-index.md)
+- Contribute data: [Guide](contributing/conversion_guide.md) • [Data Table Schema](contributing/contributing_skeleton.md)

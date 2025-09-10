@@ -144,8 +144,7 @@ All tutorials include:
 | Compare multiple studies | [Multi-Dataset Analysis](advanced/multi_dataset/) | 30 min |
 | Automate my analysis | [Automation Scripts](advanced/automation/) | 40 min |
 | Add my own data | [Adding New Datasets](development/new_datasets/) | 60 min |
-| **Create research reports in R** | [**R Analysis Templates**](r/) | **45 min** |
-| **Interactive data dashboards** | [**R Interactive Dashboard**](r/interactive_dashboard_template.Rmd) | **30 min** |
+|  |  |  |
 
 ### **Platform Specific?**
 
@@ -163,12 +162,7 @@ All tutorials include:
     - Our `LocomotionData` class
     - Compatible with existing toolboxes
 
-=== "R Users"
-    Complete R ecosystem for biomechanical analysis:
-    - [**R Tutorial Index**](r/) - Research templates and tutorials
-    - `LocomotionData` R package for data analysis
-    - Interactive dashboards with plotly integration  
-    - Publication-ready R Markdown templates
+
 
 ## :material-help-circle: Getting Help
 
