@@ -113,6 +113,11 @@ Or use the full parquet datasets linked on the homepage.
     <div class="code-lang code-lang-python">
     
     ```python
+    import pandas as pd
+    
+    # Load dataset
+    df = pd.read_parquet('umich_2021_phase.parquet')
+
     # Filter by subject + task + columns
     cols = ['subject_id','task','phase_percent','knee_flexion_angle_ipsi_rad']
     subset = df.loc[(df.task=='level_walking') & (df.subject_id=='UM21_AB01'), cols]
@@ -130,6 +135,9 @@ Or use the full parquet datasets linked on the homepage.
     <div class="code-lang code-lang-matlab">
     
     ```matlab
+    % Load dataset
+    T = parquetread('umich_2021_phase.parquet');
+
     % Filter by subject + task + columns
     cols = {'subject_id','task','phase_percent','knee_flexion_angle_ipsi_rad'};
     mask = T.task=="level_walking" & T.subject_id=="UM21_AB01";
@@ -150,6 +158,9 @@ Or use the full parquet datasets linked on the homepage.
     <div class="code-lang code-lang-python">
     
     ```python
+    from user_libs.python.locomotion_data import LocomotionData
+    data = LocomotionData('umich_2021_phase.parquet')
+
     # Filter by subject + task + features
     subset = data.filter(task='level_walking', subjects=['UM21_AB01'],
                          features=['knee_flexion_angle_ipsi_rad'])
@@ -165,6 +176,10 @@ Or use the full parquet datasets linked on the homepage.
     <div class="code-lang code-lang-matlab">
     
     ```matlab
+    addpath('user_libs/matlab');
+    loco = LocomotionData('umich_2021_phase.parquet');
+    level = loco.filterTask('level_walking').filterSubject('UM21_AB01');
+
     % Filter by subject + task + features
     subset = level.selectFeatures({'knee_flexion_angle_ipsi_rad'});
     
@@ -462,6 +477,71 @@ Or use the full parquet datasets linked on the homepage.
     ```
     
     </div>
+
+## 7) Save Filtered Subset
+
+=== "Raw"
+    <div class="code-lang code-lang-python">
+    
+    ```python
+    import pandas as pd
+    
+    df = pd.read_parquet('umich_2021_phase.parquet')
+    filt = df[(df['task']=='level_walking') & (df['subject_id']=='UM21_AB01')]
+    
+    # Save CSV (portable)
+    filt.to_csv('filtered_level_walking_UM21_AB01.csv', index=False)
+    
+    # Save Parquet (compact; requires pyarrow)
+    # pip install pyarrow
+    filt.to_parquet('filtered_level_walking_UM21_AB01.parquet', index=False)
+    ```
+    
+    </div>
+    <div class="code-lang code-lang-matlab">
+    
+    ```matlab
+    T = parquetread('umich_2021_phase.parquet');
+    filt = T(T.task=="level_walking" & T.subject_id=="UM21_AB01", :);
+    
+    % Save CSV
+    writetable(filt, 'filtered_level_walking_UM21_AB01.csv');
+    
+    % Save Parquet (R2022a+)
+    parquetwrite('filtered_level_walking_UM21_AB01.parquet', filt);
+    ```
+    
+    </div>
+
+=== "Library"
+    <div class="code-lang code-lang-python">
+    
+    ```python
+    from user_libs.python.locomotion_data import LocomotionData
+    data = LocomotionData('umich_2021_phase.parquet')
+    subset = data.filter(task='level_walking', subjects=['UM21_AB01'])
+    
+    # Access underlying DataFrame then save
+    df = subset.df
+    df.to_csv('filtered_level_walking_UM21_AB01.csv', index=False)
+    df.to_parquet('filtered_level_walking_UM21_AB01.parquet', index=False)
+    ```
+    
+    </div>
+    <div class="code-lang code-lang-matlab">
+    
+    ```matlab
+    addpath('user_libs/matlab');
+    loco = LocomotionData('umich_2021_phase.parquet');
+    level = loco.filterTask('level_walking').filterSubject('UM21_AB01');
+    
+    % If the library exposes a table, save it; otherwise use the raw approach above.
+    % tbl = level.asTable(); writetable(tbl, 'filtered_level_walking_UM21_AB01.csv');
+    ```
+    
+    </div>
+
+ 
 
 ## References
 
