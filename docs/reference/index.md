@@ -28,7 +28,14 @@ Concise, complete description of what’s in the standardized data.
 
 ## Task Names, IDs, and Metadata
 
-- Task names (`task`): `level_walking`, `incline_walking`, `decline_walking`, `stair_ascent`, `stair_descent`, `run`, `jump`, `sit_to_stand`.
+- Task names (`task`): base activities plus optional population/pathology suffixes.
+  - Base: `level_walking`, `incline_walking`, `decline_walking`, `stair_ascent`, `stair_descent`, `run`, `jump`, `sit_to_stand`.
+  - Pathology/population suffixes (optional): append `_<suffix>` to denote a special population for the whole task. Examples:
+    - `level_walking_stroke`, `level_walking_pd`, `level_walking_sci`
+    - `level_walking_tfa`, `level_walking_tta` (transfemoral/transtibial amputee)
+    - `stair_ascent_tfa`, `incline_walking_cva`
+  - Recommended suffix tokens: `stroke` (or `cva`), `pd`, `sci`, `tfa`, `tta`. Keep lower‑case snake_case.
+  - Notes: continue to use `task_info` for per‑trial parameters (speed, incline, assistance), and keep the subject’s population code in `subject` (see Subject Naming).
 - Task IDs (`task_id`): short variant labels, e.g., `level`, `incline_5deg`, `incline_10deg`, `decline_5deg`, `stair_ascent`, `stair_descent`.
 - Task metadata (`task_info`): comma‑separated key:value pairs.
 
@@ -49,14 +56,23 @@ Format: `<DATASET_CODE>_<POPULATION_CODE><SUBJECT_NUMBER>` → `UM21_AB01`, `GT2
 
 Population codes
 
-| Code | Population |
-|------|------------|
-| AB | Able‑bodied |
-| TFA | Transfemoral amputee |
-| TTA | Transtibial amputee |
-| CVA | Stroke |
-| PD | Parkinson’s |
-| SCI | Spinal cord injury |
+| Code | Population | Recommended task suffix |
+|------|------------|-------------------------|
+| AB | Able‑bodied | (omit) |
+| TFA | Transfemoral amputee | `tfa` |
+| TTA | Transtibial amputee | `tta` |
+| CVA | Stroke | `stroke` or `cva` |
+| PD | Parkinson’s | `pd` |
+| SCI | Spinal cord injury | `sci` |
+| CP | Cerebral palsy | `cp` |
+| TKA | Total knee arthroplasty | `tka` |
+| THA | Total hip arthroplasty | `tha` |
+| MS | Multiple sclerosis | `ms` |
+
+Notes
+
+- Codes apply to `subject` naming (e.g., `UM21_AB01`). The “Recommended task suffix” is optional and can be appended to `task` when an entire task is performed by a special population (e.g., `level_walking_stroke`).
+- Prefer lowercase snake_case for suffix tokens; use short, widely recognized abbreviations (`stroke`/`cva`, `pd`, `sci`, `tfa`, `tta`, `cp`, `tka`, `tha`, `ms`).
 
 ## Subject Metadata
 
@@ -82,8 +98,8 @@ Naming pattern: `<joint/segment>_<motion>_<measurement>_<side>_<unit>`
 Key categories
 
 - Kinematics (angles): `*_angle_*_rad`
-- Kinetics (moments/forces): `*_moment_*_Nm`, `*_moment_*_Nm_kg`
-- Ground reaction forces (GRF): `*_grf_*_N`, `*_grf_*_BW`
+- Kinetics (moments/forces): `*_moment_*_Nm_kg` (mass-normalized)
+- Ground reaction forces (GRF): `*_grf_*_BW` (body-weight-normalized)
 - Segment orientations: `pelvis_*_angle_rad`, `trunk_*_angle_rad`, `thigh_*_angle_*_rad`, `shank_*_angle_*_rad`, `foot_*_angle_*_rad`
 
 Sides
@@ -94,8 +110,58 @@ Sides
 Units
 
 - Angles in radians (`*_rad`)
-- Moments in Newton‑meters (`*_Nm`) or mass‑normalized (`*_Nm_kg`)
-- GRFs in Newtons (`*_N`) or body‑weight‑normalized (`*_BW`)
+- Moments are mass‑normalized (`*_Nm_kg`)
+- GRFs are body‑weight‑normalized (`*_BW`)
+
+## Column Catalog
+
+Complete list of standard column names used in the conversion scripts and examples. Columns are grouped by category; sides are `ipsi` and `contra` unless noted.
+
+- Required schema: `subject`, `subject_metadata`, `task`, `task_id`, `task_info`, `step`, `phase_ipsi` (phase‑indexed) or `time_s` (time‑indexed)
+- Optional schema: `phase_contra`, `dataset`, `collection_date`, `processing_date`
+
+Kinematics — joint angles (radians)
+
+- `hip_flexion_angle_{ipsi,contra}_rad`
+- `hip_adduction_angle_{ipsi,contra}_rad`
+- `knee_flexion_angle_{ipsi,contra}_rad`
+- `ankle_dorsiflexion_angle_{ipsi,contra}_rad`
+
+Kinetics — joint moments (Nm/kg)
+
+- `hip_flexion_moment_{ipsi,contra}_Nm_kg`
+- `knee_flexion_moment_{ipsi,contra}_Nm_kg`
+- `ankle_dorsiflexion_moment_{ipsi,contra}_Nm_kg`
+
+Segment/link orientations (radians)
+
+- Pelvis: `pelvis_sagittal_angle_rad`, `pelvis_frontal_angle_rad`, `pelvis_transverse_angle_rad`
+- Trunk: `trunk_sagittal_angle_rad`, `trunk_frontal_angle_rad`, `trunk_transverse_angle_rad`
+- Thigh: `thigh_sagittal_angle_{ipsi,contra}_rad`
+- Shank: `shank_sagittal_angle_{ipsi,contra}_rad`
+- Foot: `foot_sagittal_angle_{ipsi,contra}_rad`
+
+Angular velocities (radians/second)
+
+- `hip_flexion_angular_velocity_{ipsi,contra}_rad_s`
+- `knee_flexion_angular_velocity_{ipsi,contra}_rad_s`
+- `ankle_dorsiflexion_angular_velocity_{ipsi,contra}_rad_s`
+
+Ground reaction forces (BW)
+
+- Vertical: `vertical_grf_{ipsi,contra}_BW`
+- Anterior–posterior: `anterior_grf_{ipsi,contra}_BW`
+- Medio–lateral: `lateral_grf_{ipsi,contra}_BW`
+
+Center of pressure (meters)
+
+- `cop_anterior_{ipsi,contra}_m`
+- `cop_lateral_{ipsi,contra}_m`
+
+Notes
+
+- The catalog reflects variables present in the shipped conversion scripts (UMich 2021, GTech 2021/2023, AddBiomechanics) and the tutorial/example data. Additional variables following the same naming pattern are valid.
+- Prefer normalized moments (`*_Nm_kg`) and provide GRFs in BW.
 
 ## Coordinate & Sign Conventions
 
@@ -113,13 +179,13 @@ OpenSim right‑handed frames. Positive rotations follow right‑hand rule.
 
 ## GRF & CoP Variables
 
-- GRF components: `vertical_grf_*`, `anterior_grf_*`, `lateral_grf_*` with suffix `_N` or `_BW`.
+- GRF components: `vertical_grf_*`, `anterior_grf_*`, `lateral_grf_*` with suffix `_BW`.
 - Center of pressure: `cop_anterior_*_m`, `cop_lateral_*_m` (meters), side‑specific where applicable.
 
 ## Naming Rules
 
 - Lowercase snake_case; tokens separated by single underscores.
-- Use exact unit suffix tokens: `rad`, `Nm`, `Nm_kg`, `N`, `BW`, `m`, `s`.
+- Use exact unit suffix tokens: `rad`, `Nm_kg`, `BW`, `m`, `s`.
 - Segment/global (no side): e.g., `pelvis_*_angle_rad`, `trunk_*_angle_rad`.
 - Side tokens: `ipsi` or `contra` only.
 

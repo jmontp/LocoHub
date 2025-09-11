@@ -41,7 +41,7 @@ Examples: `knee_flexion_angle_contra_rad`, `hip_flexion_moment_ipsi_Nm_kg`
 def convert_to_parquet(input_path, output_path):
     # 1. Load raw data
     # 2. Map to standard names: joint_motion_measurement_side_unit
-    # 3. Convert units (angles→rad, forces→N)
+    # 3. Convert units (angles→rad, moments→Nm/kg, forces→BW)
     # 4. Add metadata: subject, task, phase/time_s
     # 5. Validate with LocomotionData library
     # 6. Save as parquet
