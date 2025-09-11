@@ -137,5 +137,5 @@ Note: Validation procedures, ranges, and reports are documented in the Datasets 
 ## Related
 
 - Datasets overview: reference/datasets_documentation/
-- Task and range specifics: reference/standard_spec/
+- Task and range specifics: reference/standard_spec/standard_spec.md
 - Maintainers: maintainers/

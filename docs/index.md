@@ -21,10 +21,9 @@ Each row is one point in a percent‑normalized gait cycle (typically 150 sample
 
 ### More details and definitions
 
+- [Reference](reference/index.md)
 - [Technical Specification](reference/standard_spec/standard_spec.md)
 - [Task Definitions](reference/standard_spec/task_definitions.md)
-- [Biomechanical Standard](reference/biomechanical_standard.md)
-- [Population Codes](reference/population_codes.md)
 - [Validation Ranges](reference/standard_spec/validation_ranges.md)
 - [Data Table Schema](contributing/contributing_skeleton.md)
 
@@ -94,6 +93,6 @@ More details and validation reports: [Datasets Reference](reference/datasets_doc
 
 ## Learn and Contribute
 
-- Tutorials: [Python](users/tutorials/python/), [MATLAB](users/tutorials/matlab/)
-- API: [Overview](users/api/api-index.md)
+- Tutorials: [Start here](tutorials/index.md)
+- API: [Overview](api/api-index.md)
 - Contribute data: [Guide](contributing/conversion_guide.md) • [Data Table Schema](contributing/contributing_skeleton.md)

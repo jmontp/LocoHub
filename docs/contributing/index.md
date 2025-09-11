@@ -24,7 +24,7 @@ Constraints:
 
 - 150 points/cycle; `phase_ipsi` in [0..100] (phase‑normalized)
 - Angles in radians; joint moments mass‑normalized (Nm/kg); GRFs body‑weight normalized (BW)
-- Sign conventions follow the [Biomechanical Standard](reference/biomechanical_standard.md) (e.g., flexion positive)
+- Sign conventions follow the [Reference](../reference/index.md) (e.g., flexion positive)
 - Column names follow the standard naming: `joint_motion_measurement_side_unit`
 
 Common conversion patterns
@@ -320,7 +320,7 @@ Interpret results:
 ## References
 
 - [Data Table Schema](contributing_skeleton.md)
-- [Biomechanical Standard](../reference/biomechanical_standard.md)
+- [Standard Reference](../reference/index.md)
 - [Task Definitions](../reference/standard_spec/task_definitions.md)
 - [Validation Ranges](../reference/standard_spec/validation_ranges.md)
 - [Tools Reference](tools_reference.md)
