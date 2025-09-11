@@ -27,7 +27,7 @@ Constraints:
 - Sign conventions follow the [Reference](../reference/index.md) (e.g., flexion positive)
 - Column names follow the standard naming: `joint_motion_measurement_side_unit`
 
-Example dataset (CSV, 1000 rows): [Download](locohub_example_data.csv)
+Example dataset (CSV, 1000 rows): [Download](../tutorials/assets/locohub_example_data.csv)
 
 Common conversion patterns
 

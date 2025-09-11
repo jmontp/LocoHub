@@ -18,7 +18,7 @@ Select your language:
 
 Use this small sample to try the tutorials quickly:
 
-[Download Example CSV (1000 rows)](../../contributing/locohub_example_data.csv){ .md-button .md-button--primary download="locohub_example_data.csv" }
+[Download Example CSV (1000 rows)](assets/locohub_example_data.csv){ .md-button .md-button--primary download="locohub_example_data.csv" }
 
 Prefer this CSV for all examples below so the tutorial is self-contained.
 You can also use the full parquet datasets linked on the homepage.
@@ -58,7 +58,7 @@ You can also use the full parquet datasets linked on the homepage.
     import numpy as np
     
     # Load the provided CSV (phase-indexed; 150 samples per cycle)
-    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
+    df = pd.read_csv('locohub_example_data.csv')
     # Or load a full parquet dataset: df = pd.read_parquet('umich_2021_phase.parquet')
     print(df.shape)
     
@@ -79,7 +79,7 @@ You can also use the full parquet datasets linked on the homepage.
     
     ```matlab
     % Load the provided CSV (phase-indexed; 150 samples per cycle)
-    T = readtable('docs/contributing/locohub_example_data.csv');
+    T = readtable('locohub_example_data.csv');
     % Or load a full parquet dataset: T = parquetread('umich_2021_phase.parquet');
     size(T)  % rows x columns
     
@@ -148,7 +148,7 @@ You can also use the full parquet datasets linked on the homepage.
     import pandas as pd
     
     # Load dataset (CSV provided in repo)
-    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
+    df = pd.read_csv('locohub_example_data.csv')
 
     # Filter by subject + task + columns
     cols = ['subject','task','phase_ipsi','knee_flexion_angle_ipsi_rad']
@@ -168,7 +168,7 @@ You can also use the full parquet datasets linked on the homepage.
     
     ```matlab
     % Load dataset (CSV provided in repo)
-    T = readtable('docs/contributing/locohub_example_data.csv');
+    T = readtable('locohub_example_data.csv');
 
     % Filter by subject + task + columns
     cols = {'subject','task','phase_ipsi','knee_flexion_angle_ipsi_rad'};
@@ -235,7 +235,7 @@ You can also use the full parquet datasets linked on the homepage.
     import matplotlib.pyplot as plt
     
     # Load + filter (CSV provided in repo)
-    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
+    df = pd.read_csv('locohub_example_data.csv')
     subset = df[(df['task'] == 'level_walking') & (df['subject'] == 'UM21_AB01')]
     
     # Mean ± SD band over phase
@@ -254,7 +254,7 @@ You can also use the full parquet datasets linked on the homepage.
     
     ```matlab
     % Load + filter (CSV provided in repo)
-    T = readtable('docs/contributing/locohub_example_data.csv');
+    T = readtable('locohub_example_data.csv');
     subset = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
     
     % Mean ± SD band over phase
@@ -304,7 +304,7 @@ You can also use the full parquet datasets linked on the homepage.
 
 ## 4) Plotting Results with Expected Outputs
 
-Use the sample CSV: `docs/contributing/locohub_example_data.csv`.
+Use the sample CSV: `locohub_example_data.csv`.
 
 
 
@@ -317,7 +317,7 @@ Use the sample CSV: `docs/contributing/locohub_example_data.csv`.
     import pandas as pd
     import matplotlib.pyplot as plt
 
-    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
+    df = pd.read_csv('locohub_example_data.csv')
     agg = df.groupby('phase_ipsi')['knee_flexion_angle_ipsi_rad'].agg(['mean','std']).reset_index()
 
     plt.figure(figsize=(6,3.6))
@@ -330,7 +330,7 @@ Use the sample CSV: `docs/contributing/locohub_example_data.csv`.
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    T = readtable('docs/contributing/locohub_example_data.csv');
+    T = readtable('locohub_example_data.csv');
     [g,~,idx] = unique(T.phase_ipsi);
     mean_knee = splitapply(@mean, T.knee_flexion_angle_ipsi_rad, idx);
     std_knee  = splitapply(@std,  T.knee_flexion_angle_ipsi_rad, idx);
@@ -341,9 +341,6 @@ Use the sample CSV: `docs/contributing/locohub_example_data.csv`.
     xlabel('Gait Cycle (%)'); ylabel('Knee Flexion (rad)'); grid on; box on; hold off
     ```
     
-    Expected output (MATLAB):
-    
-    ![Knee Flexion Mean ± SD](assets/expected_knee_flexion_mean_sd_matlab.png)
     
     </div>
 
@@ -367,9 +364,6 @@ Use the sample CSV: `docs/contributing/locohub_example_data.csv`.
     level.plotPhasePatterns('UM21_AB01','level_walking',{'knee_flexion_angle_ipsi_rad'});
     ```
     
-    Expected output (MATLAB):
-    
-    ![Knee Flexion Mean ± SD](assets/expected_knee_flexion_mean_sd_matlab.png)
     
     </div>
 
@@ -399,7 +393,7 @@ Expected outputs:
     ```python
     import pandas as pd
     
-    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
+    df = pd.read_csv('locohub_example_data.csv')
     
     def parse_task_info_row(s: str) -> dict:
         if pd.isna(s) or not isinstance(s, str) or not s:
@@ -426,7 +420,7 @@ Expected outputs:
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    T = readtable('docs/contributing/locohub_example_data.csv');
+    T = readtable('locohub_example_data.csv');
     speed_m_s = nan(height(T),1);
     incline_deg = nan(height(T),1);
     for i = 1:height(T)
@@ -587,7 +581,7 @@ Expected outputs:
     import pandas as pd
     import numpy as np
     
-    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
+    df = pd.read_csv('locohub_example_data.csv')
     sub = df[(df['task']=='level_walking') & (df['subject']=='UM21_AB01')]
     phase = sub['phase_ipsi'].to_numpy()
     knee  = sub['knee_flexion_angle_ipsi_rad'].to_numpy()
@@ -606,7 +600,7 @@ Expected outputs:
     
     ```matlab
     % Load + filter
-    T = readtable('docs/contributing/locohub_example_data.csv');
+    T = readtable('locohub_example_data.csv');
     sub = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
     phase = sub.phase_ipsi; knee = sub.knee_flexion_angle_ipsi_rad;
     
@@ -662,7 +656,7 @@ Expected outputs:
     import pandas as pd
     import numpy as np
     
-    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
+    df = pd.read_csv('locohub_example_data.csv')
     subset = df[(df['task']=='level_walking') & (df['subject']=='UM21_AB01')]
     
     # Group mean across all cycles of the subset
@@ -674,7 +668,7 @@ Expected outputs:
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    T = readtable('docs/contributing/locohub_example_data.csv');
+    T = readtable('locohub_example_data.csv');
     subset = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
     
     % Group mean across all cycles of the subset
@@ -721,7 +715,7 @@ Expected outputs:
     import pandas as pd
     import matplotlib.pyplot as plt
     
-    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
+    df = pd.read_csv('docs/tutorials/assets/locohub_example_data.csv')
     sub = df[(df['task']=='level_walking') & (df['subject']=='UM21_AB01')]
     phase = sub['phase_ipsi']; knee = sub['knee_flexion_angle_ipsi_rad']
     
@@ -739,7 +733,7 @@ Expected outputs:
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    T = readtable('docs/contributing/locohub_example_data.csv');
+    T = readtable('docs/tutorials/assets/locohub_example_data.csv');
     sub = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
     phase = sub.phase_ipsi; knee = sub.knee_flexion_angle_ipsi_rad;
     set(gcf,'Position',[100,100,520,360]);
@@ -794,7 +788,7 @@ Expected outputs:
     ```python
     import pandas as pd
     
-    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
+    df = pd.read_csv('locohub_example_data.csv')
     filt = df[(df['task']=='level_walking') & (df['subject']=='UM21_AB01')]
     
     # Save CSV (portable)
@@ -809,7 +803,7 @@ Expected outputs:
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    T = readtable('docs/contributing/locohub_example_data.csv');
+    T = readtable('locohub_example_data.csv');
     filt = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
     
     % Save CSV
