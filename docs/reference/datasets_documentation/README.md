@@ -15,7 +15,7 @@ Snapshot of available standardized datasets. Links go to docs, validation, and d
 | Georgia Tech 2021 | Walking, stairs, inclines | [GTech 2021](dataset_gtech_2021.md) | [Report](validation_reports/gtech_2021_phase_validation_report.md) | [Link](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) | Variant: [Filtered](dataset_gtech_2021_filtered.md) |
 | AddBiomechanics | Walking, running, jumping, stairs | [Docs](dataset_addbiomechanics.md) | — | — | Coming soon |
 
-More: [Comparison Plots](comparison_plots/) • [Validation Reports](validation_reports/index.md)
+More: [Dataset Comparison](dataset_comparison.md) • [Validation Reports](validation_reports/index.md)
 
 ## Format
 

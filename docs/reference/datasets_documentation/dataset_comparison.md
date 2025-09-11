@@ -26,7 +26,7 @@ Select a task to see all available datasets:
         </select>
     </label>
     <button class="reset-order-btn" onclick="resetDatasetOrder()" style="display: none; margin-left: 10px;" id="resetOrderBtn">Reset Order</button>
-</div>
+ </div>
 
 <div id="allDatasetsGrid" class="comparison-grid" style="display: flex; overflow-x: auto; gap: 20px; margin: 20px 0; padding-bottom: 10px;">
     <p style="color: #666; padding: 20px;">Please select a task to view datasets.</p>
@@ -209,23 +209,7 @@ function showAllDatasets() {
     
     // Display all matching datasets with move buttons
     grid.innerHTML = datasets.map((dataset, index) => `
-        <div class="dataset-card" data-dataset="${dataset}">
-            <button class="move-btn move-left" 
-                    onclick="moveCard(${index}, -1)" 
-                    ${index === 0 ? 'disabled' : ''}>
-                ◀
-            </button>
-            <h4>${formatName(dataset)}</h4>
-            <img src="../comparison_plots/${dataset}_${task}.png" 
-                 alt="${formatName(dataset)} - ${task.replace(/_/g, ' ')}"
-                 onerror="this.onerror=null; this.style.display='none'; var err=document.createElement('div'); err.className='error-message'; err.innerHTML='Plot not yet generated.<br>Run validation to create.'; this.parentElement.appendChild(err);">
-            <button class="move-btn move-right" 
-                    onclick="moveCard(${index}, 1)" 
-                    ${index === datasets.length - 1 ? 'disabled' : ''}>
-                ▶
-            </button>
-        </div>
-    `).join('');
+        <div class=\"dataset-card\" data-dataset=\"${dataset}\">\n            <button class=\"move-btn move-left\" \n                    onclick=\"moveCard(${index}, -1)\" \n                    ${index === 0 ? 'disabled' : ''}>\n                ◀\n            </button>\n            <h4>${formatName(dataset)}</h4>\n            <img src=\"../comparison_plots/${dataset}_${task}.png\" \n                 alt=\"${formatName(dataset)} - ${task.replace(/_/g, ' ')}\"\n                 onerror=\"this.onerror=null; this.style.display='none'; var err=document.createElement('div'); err.className='error-message'; err.innerHTML='Plot not yet generated.<br>Run validation to create.'; this.parentElement.appendChild(err);\">\n            <button class=\"move-btn move-right\" \n                    onclick=\"moveCard(${index}, 1)\" \n                    ${index === datasets.length - 1 ? 'disabled' : ''}>\n                ▶\n            </button>\n        </div>\n    `).join('');
 }
 
 function moveCard(index, direction) {
@@ -280,3 +264,4 @@ The plots show:
 - **All sagittal features**: Hip, knee, and ankle angles and moments
 
 To regenerate or update comparison plots, simply re-run the validation report for the dataset.
+
