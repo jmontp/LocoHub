@@ -25,7 +25,7 @@ pip install -r contributor_tools/conversion_scripts/AddBiomechanics/requirements
 ## Standards
 
 **Variable Naming:** `<joint>_<motion>_<measurement>_<side>_<unit>`  
-Examples: `knee_flexion_angle_contra_rad`, `hip_moment_ipsi_Nm`
+Examples: `knee_flexion_angle_contra_rad`, `hip_flexion_moment_ipsi_Nm_kg`
 
 **Code Style:**
 - Python: PEP 8, 100 char lines, type hints

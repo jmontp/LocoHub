@@ -183,8 +183,8 @@ cd software_engineering && python -m mkdocs build --strict
 ### Contact Information
 
 - **Content Issues**: [docs@locomotion-standardization.org](mailto:docs@locomotion-standardization.org)
-- **Technical Issues**: [GitHub Issues](https://github.com/your-org/locomotion-data-standardization/issues)
-- **User Feedback**: [GitHub Discussions](https://github.com/your-org/locomotion-data-standardization/discussions)
+- **Technical Issues**: [GitHub Issues](https://github.com/jmontp/LocoHub/issues)
+- **User Feedback**: [GitHub Discussions](https://github.com/jmontp/LocoHub/discussions)
 
 ---
 

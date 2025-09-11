@@ -123,7 +123,7 @@ def process_subject_chunked(b3d_file, subject_id):
             kinematics = process_kinematics_chunked(trial_data['kinematics'])
             
             # Add metadata
-            kinematics['subject_id'] = subject_id
+            kinematics['subject'] = subject_id
             kinematics['task'] = task
             kinematics['trial_id'] = trial_name
             
@@ -248,7 +248,7 @@ import dask.dataframe as dd
 ddf = dd.read_parquet('gtech_2023_time.parquet')
 
 # Process in parallel
-result = ddf.groupby(['subject_id', 'task']).apply(
+result = ddf.groupby(['subject', 'task']).apply(
     process_function, meta=output_schema
 )
 

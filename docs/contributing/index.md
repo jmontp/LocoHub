@@ -18,7 +18,7 @@ Required columns (minimal schema):
 
 - `subject`, `task`, `task_id`, `task_info`, `step`, `phase_ipsi`
 - Biomech variables follow: `joint_motion_measurement_side_unit`
-  - Examples: `knee_flexion_angle_ipsi_rad`, `hip_flexion_moment_ipsi_Nm`
+  - Examples: `knee_flexion_angle_ipsi_rad`, `hip_flexion_moment_ipsi_Nm_kg`
 
 Constraints:
 
@@ -26,6 +26,8 @@ Constraints:
 - Angles in radians; joint moments mass‑normalized (Nm/kg); GRFs body‑weight normalized (BW)
 - Sign conventions follow the [Reference](../reference/index.md) (e.g., flexion positive)
 - Column names follow the standard naming: `joint_motion_measurement_side_unit`
+
+Example dataset (CSV, 1000 rows): [Download](locohub_example_data.csv)
 
 Common conversion patterns
 
@@ -57,7 +59,7 @@ Pattern A — Folder-based tables (e.g., per-trial CSVs in nested folders)
     def standardize_cols(df: pd.DataFrame) -> pd.DataFrame:
         mapping = {
             'KneeFlexion_rad': 'knee_flexion_angle_ipsi_rad',
-            'HipMoment_Nm': 'hip_flexion_moment_ipsi_Nm',
+            'HipMoment_Nm_kg': 'hip_flexion_moment_ipsi_Nm_kg',
             # ... add your mappings here
         }
         return df.rename(columns=mapping)
@@ -319,9 +321,6 @@ Interpret results:
 
 ## References
 
-- [Data Table Schema](contributing_skeleton.md)
-- [Standard Reference](../reference/index.md)
-- [Task Definitions](../reference/index.md)
-- [Validation Ranges](../reference/index.md)
+- [Reference](../reference/index.md)
 - [Tools Reference](tools_reference.md)
 - Examples: [UMich (MATLAB)](examples/umich_2021_example.md), [GTech (Python)](examples/gtech_2023_example.md)

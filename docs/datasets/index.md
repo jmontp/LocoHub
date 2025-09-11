@@ -21,4 +21,4 @@ More: [Dataset Comparison](dataset_comparison.md) • [Validation Reports](valid
 
 - Phase-indexed (150 samples per cycle), with subject/task metadata columns.
 - Naming pattern: `joint_motion_measurement_side_unit` (e.g., `knee_flexion_angle_ipsi_rad`).
-- Spec and ranges: [Standard Spec](../standard_spec/standard_spec.md) • [Validation Ranges](validation_ranges.md)
+- Spec and ranges: [Reference](../reference/index.md) • [Validation Ranges](validation_ranges.md)

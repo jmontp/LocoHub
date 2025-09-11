@@ -137,7 +137,7 @@ The validation system checks three main aspects of your dataset:
 
 ### 1. Structure Validation
 - **Phase indexing**: Exactly 150 points per gait cycle
-- **Required columns**: `subject_id`, `task`, `phase_percent`
+- **Required columns**: `subject`, `task`, `phase_ipsi`
 - **Data completeness**: No missing cycles or incomplete data
 
 ### 2. Variable Naming

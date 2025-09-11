@@ -136,6 +136,6 @@ Note: Validation procedures, ranges, and reports are documented in the Datasets 
 
 ## Related
 
-- Datasets overview: datasets/
-- Task and range specifics: reference/index.md
-- Maintainers: maintainers/
+- Datasets overview: ../datasets/
+- Validation ranges: ../datasets/validation_ranges.md
+- Maintainers: ../maintainers/

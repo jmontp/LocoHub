@@ -66,7 +66,7 @@ Start by downloading and exploring an existing dataset to understand the structu
         print(f"Shape: {data.shape}")
         print(f"Columns: {data.columns.tolist()}")
         print(f"Tasks: {data['task'].unique()}")
-        print(f"Subjects: {data['subject_id'].unique()}")
+        print(f"Subjects: {data['subject'].unique()}")
         
         # Look at some data
         print(data.head())
@@ -81,7 +81,7 @@ Start by downloading and exploring an existing dataset to understand the structu
         fprintf('Shape: %d rows, %d columns\n', height(data), width(data));
         fprintf('Columns: %s\n', strjoin(data.Properties.VariableNames, ', '));
         fprintf('Tasks: %s\n', strjoin(unique(data.task), ', '));
-        fprintf('Subjects: %s\n', strjoin(unique(data.subject_id), ', '));
+        fprintf('Subjects: %s\n', strjoin(unique(data.subject), ', '));
         
         % Look at some data
         head(data)
@@ -97,7 +97,7 @@ First, get the tools and then try them on a known-good dataset:
 !!! example "Install the Tools"
     ```bash
     # Clone the repository
-    git clone https://github.com/your-repo/locomotion-data-standardization.git
+    git clone https://github.com/jmontp/LocoHub.git
     cd locomotion-data-standardization
     
     # Install Python dependencies
@@ -219,13 +219,13 @@ The validation system checks if your data falls within expected biomechanical ra
 
 Once you understand the basics:
 
-1. **[Review the Technical Guide](conversion_guide.md)** - Detailed conversion workflow
+1. **[Review the Technical Guide](index.md)** - Detailed conversion workflow
 2. **[Explore Tools](tools_reference.md)** - Documentation for all helper scripts
 3. **[Understand Validation](validation_reference.md)** - How quality checks work
 
 !!! tip "Getting Help"
-    - **Quick questions**: [GitHub Discussions](https://github.com/your-repo/discussions)
-    - **Bug reports**: [GitHub Issues](https://github.com/your-repo/issues)
+    - **Quick questions**: [GitHub Discussions](https://github.com/jmontp/LocoHub/discussions)
+    - **Bug reports**: [GitHub Issues](https://github.com/jmontp/LocoHub/issues)
     - **Examples**: Browse `contributor_tools/conversion_scripts/`
     
     Response time is typically within 24 hours.
@@ -264,6 +264,6 @@ Once you understand the basics:
 <div class="next-steps" markdown>
 **Ready to dive deeper?**
 
-[**View Technical Guide**](conversion_guide.md){ .md-button .md-button--primary }
+[**View Technical Guide**](index.md){ .md-button .md-button--primary }
 [**Browse Examples**](examples/umich_2021_example.md){ .md-button }
 </div>

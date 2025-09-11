@@ -9,10 +9,10 @@ Join a growing community of biomechanics researchers working together to make da
 ### Where to Ask Questions
 
 !!! info "Support Channels"
-    **[GitHub Discussions](https://github.com/your-repo/discussions)**  
+    **[GitHub Discussions](https://github.com/jmontp/LocoHub/discussions)**  
     For general questions, conversion help, and community discussion
     
-    **[GitHub Issues](https://github.com/your-repo/issues)**  
+    **[GitHub Issues](https://github.com/jmontp/LocoHub/issues)**  
     For bug reports and feature requests
     
     **Response Time**: Usually within 24 hours
@@ -94,7 +94,7 @@ Help improve the documentation:
 Found a bug? Let us know:
 
 !!! bug "Report a Bug"
-    1. Check if already reported in [Issues](https://github.com/your-repo/issues)
+    1. Check if already reported in [Issues](https://github.com/jmontp/LocoHub/issues)
     2. Create a new issue with:
        - Clear title
        - Steps to reproduce
@@ -129,7 +129,7 @@ Found a bug? Let us know:
 
 - Example Paper 1 (2024) - *Journal of Biomechanics*
 - Example Paper 2 (2024) - *Gait & Posture*
-- [Add your publication](https://github.com/your-repo/discussions)
+- [Add your publication](https://github.com/jmontp/LocoHub/discussions)
 
 ---
 
@@ -143,7 +143,7 @@ If you use the standardized datasets or tools in your research:
       title = {Locomotion Data Standardization Framework},
       author = {LocoHub Contributors},
       year = {2024},
-      url = {https://github.com/your-repo}
+      url = {https://github.com/jmontp/LocoHub}
     }
     ```
 
@@ -165,7 +165,7 @@ Also cite the original data sources:
 === "Improve Tools"
     Help develop better conversion and validation tools
     
-    [View on GitHub](https://github.com/your-repo){ .md-button }
+    [View on GitHub](https://github.com/jmontp/LocoHub){ .md-button }
 
 === "Spread the Word"
     Share with colleagues who might benefit
@@ -174,7 +174,7 @@ Also cite the original data sources:
 
 ### Stay Updated
 
-- **Watch** the [GitHub repository](https://github.com/your-repo) for updates
+- **Watch** the [GitHub repository](https://github.com/jmontp/LocoHub) for updates
 - **Join** discussions for announcements
 - **Follow** contributors on social media
 
@@ -190,7 +190,7 @@ We're committed to providing a welcoming and inclusive environment.
     - **Be patient** with questions - we were all beginners once
     - **Be generous** in sharing knowledge and credit
     
-    Full [Code of Conduct](https://github.com/your-repo/blob/main/CODE_OF_CONDUCT.md)
+    Full [Code of Conduct](https://github.com/jmontp/LocoHub/blob/main/CODE_OF_CONDUCT.md)
 
 ---
 
@@ -198,5 +198,5 @@ We're committed to providing a welcoming and inclusive environment.
 **Ready to contribute?**
 
 [**Start Converting**](getting_started.md){ .md-button .md-button--primary }
-[**Ask a Question**](https://github.com/your-repo/discussions){ .md-button }
+[**Ask a Question**](https://github.com/jmontp/LocoHub/discussions){ .md-button }
 </div>

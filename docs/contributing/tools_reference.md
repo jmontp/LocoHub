@@ -278,7 +278,7 @@ python contributor_tools/create_dataset_validation_report.py \
    
    ### stair_ascent  
    - Pass rate: 73% (292/400 strides)
-   - Systematic violations at phase 25% for hip_moment_ipsi_Nm
+   - Systematic violations at phase 25% for hip_flexion_moment_ipsi_Nm_kg
    - Consider: Custom ranges for stair tasks
    ```
 

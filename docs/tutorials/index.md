@@ -64,10 +64,10 @@ Or use the full parquet datasets linked on the homepage.
     print(df.dtypes.head())
     
     # Filter to one subject + task
-    subset = df[(df['task'] == 'level_walking') & (df['subject_id'] == 'UM21_AB01')]
+    subset = df[(df['task'] == 'level_walking') & (df['subject'] == 'UM21_AB01')]
     
     # Extract arrays for analysis/plotting
-    phase = subset['phase_percent'].to_numpy()
+    phase = subset['phase_ipsi'].to_numpy()
     knee  = subset['knee_flexion_angle_ipsi_rad'].to_numpy()
     ```
     
@@ -84,10 +84,10 @@ Or use the full parquet datasets linked on the homepage.
     varfun(@class, T(1,:), 'OutputFormat','table')
     
     % Filter to one subject + task
-    subset = T(T.task == "level_walking" & T.subject_id == "UM21_AB01", :);
+    subset = T(T.task == "level_walking" & T.subject == "UM21_AB01", :);
     
     % Extract arrays for analysis/plotting
-    phase = subset.phase_percent;
+    phase = subset.phase_ipsi;
     knee  = subset.knee_flexion_angle_ipsi_rad;
     ```
     
@@ -143,8 +143,8 @@ Or use the full parquet datasets linked on the homepage.
     df = pd.read_parquet('umich_2021_phase.parquet')
 
     # Filter by subject + task + columns
-    cols = ['subject_id','task','phase_percent','knee_flexion_angle_ipsi_rad']
-    subset = df.loc[(df.task=='level_walking') & (df.subject_id=='UM21_AB01'), cols]
+    cols = ['subject','task','phase_ipsi','knee_flexion_angle_ipsi_rad']
+    subset = df.loc[(df.task=='level_walking') & (df.subject=='UM21_AB01'), cols]
     
     # Multiple tasks
     walking = df[df['task'].isin(['level_walking','incline_walking','decline_walking'])]
@@ -152,7 +152,7 @@ Or use the full parquet datasets linked on the homepage.
     # First N cycles per subject-task
     def first_n_cycles(x, n=5):
         return x[x['cycle_id'].isin(x['cycle_id'].unique()[:n])]
-    first5 = df.groupby(['subject_id','task'], group_keys=False).apply(first_n_cycles, n=5)
+    first5 = df.groupby(['subject','task'], group_keys=False).apply(first_n_cycles, n=5)
     ```
     
     </div>
@@ -163,8 +163,8 @@ Or use the full parquet datasets linked on the homepage.
     T = parquetread('umich_2021_phase.parquet');
 
     % Filter by subject + task + columns
-    cols = {'subject_id','task','phase_percent','knee_flexion_angle_ipsi_rad'};
-    mask = T.task=="level_walking" & T.subject_id=="UM21_AB01";
+    cols = {'subject','task','phase_ipsi','knee_flexion_angle_ipsi_rad'};
+    mask = T.task=="level_walking" & T.subject=="UM21_AB01";
     subset = T(mask, cols);
     
     % Multiple tasks
@@ -228,12 +228,12 @@ Or use the full parquet datasets linked on the homepage.
     
     # Load + filter
     df = pd.read_parquet('umich_2021_phase.parquet')
-    subset = df[(df['task'] == 'level_walking') & (df['subject_id'] == 'UM21_AB01')]
+    subset = df[(df['task'] == 'level_walking') & (df['subject'] == 'UM21_AB01')]
     
     # Mean ± SD band over phase
-    mean_knee = subset.groupby('phase_percent')['knee_flexion_angle_ipsi_rad'].mean().to_numpy()
-    std_knee  = subset.groupby('phase_percent')['knee_flexion_angle_ipsi_rad'].std().to_numpy()
-    phase100  = subset['phase_percent'].unique()
+    mean_knee = subset.groupby('phase_ipsi')['knee_flexion_angle_ipsi_rad'].mean().to_numpy()
+    std_knee  = subset.groupby('phase_ipsi')['knee_flexion_angle_ipsi_rad'].std().to_numpy()
+    phase100  = subset['phase_ipsi'].unique()
     
     plt.figure(figsize=(6,4))
     plt.fill_between(phase100, mean_knee-std_knee, mean_knee+std_knee, alpha=0.2)
@@ -247,10 +247,10 @@ Or use the full parquet datasets linked on the homepage.
     ```matlab
     % Load + filter
     T = parquetread('umich_2021_phase.parquet');
-    subset = T(T.task=="level_walking" & T.subject_id=="UM21_AB01", :);
+    subset = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
     
     % Mean ± SD band over phase
-    [g,~,idx] = unique(subset.phase_percent);
+    [g,~,idx] = unique(subset.phase_ipsi);
     mean_knee = splitapply(@mean, subset.knee_flexion_angle_ipsi_rad, idx);
     std_knee  = splitapply(@std,  subset.knee_flexion_angle_ipsi_rad, idx);
     
@@ -580,8 +580,8 @@ Expected outputs:
     import numpy as np
     
     df = pd.read_parquet('umich_2021_phase.parquet')
-    sub = df[(df['task']=='level_walking') & (df['subject_id']=='UM21_AB01')]
-    phase = sub['phase_percent'].to_numpy()
+    sub = df[(df['task']=='level_walking') & (df['subject']=='UM21_AB01')]
+    phase = sub['phase_ipsi'].to_numpy()
     knee  = sub['knee_flexion_angle_ipsi_rad'].to_numpy()
     
     # ROM for a single stride sequence (example)
@@ -590,7 +590,7 @@ Expected outputs:
     # Peak timing in the cycle
     peak_idx = int(np.nanargmax(knee))
     peak_phase = float(phase[peak_idx])
-    print({'rom': rom, 'peak_phase_percent': peak_phase})
+    print({'rom': rom, 'peak_phase_ipsi': peak_phase})
     ```
     
     </div>
@@ -599,8 +599,8 @@ Expected outputs:
     ```matlab
     % Load + filter
     T = parquetread('umich_2021_phase.parquet');
-    sub = T(T.task=="level_walking" & T.subject_id=="UM21_AB01", :);
-    phase = sub.phase_percent; knee = sub.knee_flexion_angle_ipsi_rad;
+    sub = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
+    phase = sub.phase_ipsi; knee = sub.knee_flexion_angle_ipsi_rad;
     
     % ROM and peak timing
     rom = max(knee) - min(knee);
@@ -655,11 +655,11 @@ Expected outputs:
     import numpy as np
     
     df = pd.read_parquet('umich_2021_phase.parquet')
-    subset = df[(df['task']=='level_walking') & (df['subject_id']=='UM21_AB01')]
+    subset = df[(df['task']=='level_walking') & (df['subject']=='UM21_AB01')]
     
     # Group mean across all cycles of the subset
-    mean_knee = subset.groupby('phase_percent')['knee_flexion_angle_ipsi_rad'].mean().to_numpy()
-    std_knee  = subset.groupby('phase_percent')['knee_flexion_angle_ipsi_rad'].std().to_numpy()
+    mean_knee = subset.groupby('phase_ipsi')['knee_flexion_angle_ipsi_rad'].mean().to_numpy()
+    std_knee  = subset.groupby('phase_ipsi')['knee_flexion_angle_ipsi_rad'].std().to_numpy()
     ```
     
     </div>
@@ -667,10 +667,10 @@ Expected outputs:
     
     ```matlab
     T = parquetread('umich_2021_phase.parquet');
-    subset = T(T.task=="level_walking" & T.subject_id=="UM21_AB01", :);
+    subset = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
     
     % Group mean across all cycles of the subset
-    [g,~,idx] = unique(subset.phase_percent);
+    [g,~,idx] = unique(subset.phase_ipsi);
     mean_knee = splitapply(@mean, subset.knee_flexion_angle_ipsi_rad, idx);
     std_knee  = splitapply(@std,  subset.knee_flexion_angle_ipsi_rad, idx);
     ```
@@ -714,8 +714,8 @@ Expected outputs:
     import matplotlib.pyplot as plt
     
     df = pd.read_parquet('umich_2021_phase.parquet')
-    sub = df[(df['task']=='level_walking') & (df['subject_id']=='UM21_AB01')]
-    phase = sub['phase_percent']; knee = sub['knee_flexion_angle_ipsi_rad']
+    sub = df[(df['task']=='level_walking') & (df['subject']=='UM21_AB01')]
+    phase = sub['phase_ipsi']; knee = sub['knee_flexion_angle_ipsi_rad']
     
     fig, ax = plt.subplots(figsize=(5,3.5))
     ax.plot(phase, knee, lw=1.8)
@@ -723,7 +723,7 @@ Expected outputs:
     fig.tight_layout(); fig.savefig('figure.png', dpi=300)
     
     # Export summary table
-    summary = sub.groupby('phase_percent')['knee_flexion_angle_ipsi_rad'].agg(['mean','std']).reset_index()
+    summary = sub.groupby('phase_ipsi')['knee_flexion_angle_ipsi_rad'].agg(['mean','std']).reset_index()
     summary.to_csv('summary_knee.csv', index=False)
     ```
     
@@ -732,18 +732,18 @@ Expected outputs:
     
     ```matlab
     T = parquetread('umich_2021_phase.parquet');
-    sub = T(T.task=="level_walking" & T.subject_id=="UM21_AB01", :);
-    phase = sub.phase_percent; knee = sub.knee_flexion_angle_ipsi_rad;
+    sub = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
+    phase = sub.phase_ipsi; knee = sub.knee_flexion_angle_ipsi_rad;
     set(gcf,'Position',[100,100,520,360]);
     plot(phase, knee, 'LineWidth',1.8);
     xlabel('Gait Cycle (%)'); ylabel('Knee Flexion (rad)'); grid on;
     print('-dpng','-r300','figure.png');
     
     % Export summary table
-    [g,~,idx] = unique(sub.phase_percent);
+    [g,~,idx] = unique(sub.phase_ipsi);
     mean_knee = splitapply(@mean, sub.knee_flexion_angle_ipsi_rad, idx);
     std_knee  = splitapply(@std,  sub.knee_flexion_angle_ipsi_rad, idx);
-    summary = table(g, mean_knee, std_knee, 'VariableNames',{'phase_percent','mean','std'});
+    summary = table(g, mean_knee, std_knee, 'VariableNames',{'phase_ipsi','mean','std'});
     writetable(summary, 'summary_knee.csv');
     ```
     
@@ -787,7 +787,7 @@ Expected outputs:
     import pandas as pd
     
     df = pd.read_parquet('umich_2021_phase.parquet')
-    filt = df[(df['task']=='level_walking') & (df['subject_id']=='UM21_AB01')]
+    filt = df[(df['task']=='level_walking') & (df['subject']=='UM21_AB01')]
     
     # Save CSV (portable)
     filt.to_csv('filtered_level_walking_UM21_AB01.csv', index=False)
@@ -802,7 +802,7 @@ Expected outputs:
     
     ```matlab
     T = parquetread('umich_2021_phase.parquet');
-    filt = T(T.task=="level_walking" & T.subject_id=="UM21_AB01", :);
+    filt = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
     
     % Save CSV
     writetable(filt, 'filtered_level_walking_UM21_AB01.csv');
