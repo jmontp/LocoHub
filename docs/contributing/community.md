@@ -55,7 +55,7 @@ Help us help you by providing:
     - `knee_flexion_angle_left_rad` / `knee_flexion_angle_right_rad`
 
 ??? question "What coordinate system should I use?"
-    Follow ISB recommendations where possible. See our [biomechanical standard](../reference/biomechanical_standard/) for details.
+    Follow ISB recommendations where possible. See [Reference → Coordinate & Sign Conventions](../reference/index.md#coordinate--sign-conventions).
 
 ---
 

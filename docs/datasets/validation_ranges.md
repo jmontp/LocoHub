@@ -10,13 +10,6 @@
 
 ## Task: Decline Walking
 
-### Forward Kinematics Visualizations
-
-Joint angle ranges visualized at key gait phases:
-
-| Phase 0% | Phase 50% |
-|---|---|
-| ![Phase 0%](validation_ranges/decline_walking_forward_kinematics_phase_00_range.png) | ![Phase 50%](validation_ranges/decline_walking_forward_kinematics_phase_50_range.png) |
 
 ### Phase-Based Visualizations
 
@@ -33,13 +26,6 @@ Validation ranges across the full gait cycle (0-100% phase):
 
 ## Task: Incline Walking
 
-### Forward Kinematics Visualizations
-
-Joint angle ranges visualized at key gait phases:
-
-| Phase 0% | Phase 50% |
-|---|---|
-| ![Phase 0%](validation_ranges/incline_walking_forward_kinematics_phase_00_range.png) | ![Phase 50%](validation_ranges/incline_walking_forward_kinematics_phase_50_range.png) |
 
 ### Phase-Based Visualizations
 
@@ -56,13 +42,6 @@ Validation ranges across the full gait cycle (0-100% phase):
 
 ## Task: Level Walking
 
-### Forward Kinematics Visualizations
-
-Joint angle ranges visualized at key gait phases:
-
-| Phase 0% | Phase 50% |
-|---|---|
-| ![Phase 0%](validation_ranges/level_walking_forward_kinematics_phase_00_range.png) | ![Phase 50%](validation_ranges/level_walking_forward_kinematics_phase_50_range.png) |
 
 ### Phase-Based Visualizations
 

@@ -343,7 +343,7 @@ Use the sample CSV: `docs/contributing/locohub_example_data.csv`.
     
     Expected output (MATLAB):
     
-    ![Knee Flexion Mean ± SD](assets/expected_knee_flexion_mean_sd.png)
+    ![Knee Flexion Mean ± SD](assets/expected_knee_flexion_mean_sd_matlab.png)
     
     </div>
 
@@ -369,7 +369,7 @@ Use the sample CSV: `docs/contributing/locohub_example_data.csv`.
     
     Expected output (MATLAB):
     
-    ![Knee Flexion Mean ± SD](assets/expected_knee_flexion_mean_sd.png)
+    ![Knee Flexion Mean ± SD](assets/expected_knee_flexion_mean_sd_matlab.png)
     
     </div>
 
