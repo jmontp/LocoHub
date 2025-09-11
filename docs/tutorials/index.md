@@ -20,7 +20,8 @@ Use this small sample to try the tutorials quickly:
 
 [Download Example CSV (1000 rows)](../../contributing/locohub_example_data.csv){ .md-button .md-button--primary download="locohub_example_data.csv" }
 
-Or use the full parquet datasets linked on the homepage.
+Prefer this CSV for all examples below so the tutorial is self-contained.
+You can also use the full parquet datasets linked on the homepage.
 
 ## Environment
 
@@ -32,7 +33,7 @@ Or use the full parquet datasets linked on the homepage.
   - `pandas >= 1.5`
   - `numpy >= 1.23`
   - `matplotlib >= 3.6`
-  - `pyarrow >= 12`
+  - `pyarrow >= 12` (optional; for parquet)
 
 </div>
 
@@ -41,7 +42,8 @@ Or use the full parquet datasets linked on the homepage.
 - Version: R2021b+ (tested R2023b)
 - Functions used:
   
-  - `parquetread`
+- `readtable`
+- `parquetread` (optional; for full parquet datasets)
   - `exportgraphics` (optional)
 
 </div>
@@ -55,8 +57,9 @@ Or use the full parquet datasets linked on the homepage.
     import pandas as pd
     import numpy as np
     
-    # Load phase-indexed dataset (150 samples per cycle)
-    df = pd.read_parquet('umich_2021_phase.parquet')
+    # Load the provided CSV (phase-indexed; 150 samples per cycle)
+    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
+    # Or load a full parquet dataset: df = pd.read_parquet('umich_2021_phase.parquet')
     print(df.shape)
     
     # Inspect structure
@@ -75,8 +78,9 @@ Or use the full parquet datasets linked on the homepage.
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    % Load phase-indexed dataset (150 samples per cycle)
-    T = parquetread('umich_2021_phase.parquet');
+    % Load the provided CSV (phase-indexed; 150 samples per cycle)
+    T = readtable('docs/contributing/locohub_example_data.csv');
+    % Or load a full parquet dataset: T = parquetread('umich_2021_phase.parquet');
     size(T)  % rows x columns
     
     % Inspect structure
@@ -99,6 +103,8 @@ Or use the full parquet datasets linked on the homepage.
     ```python
     from user_libs.python.locomotion_data import LocomotionData
     
+    # Note: LocomotionData works with parquet files.
+    # For a self-contained tutorial, use the CSV examples above.
     data = LocomotionData('umich_2021_phase.parquet')
     print(data.shape)            # rows, columns
     print(data.get_variables()[:10])
@@ -117,6 +123,8 @@ Or use the full parquet datasets linked on the homepage.
     
     ```matlab
     addpath('user_libs/matlab');
+    % Note: LocomotionData works with parquet files.
+    % For a self-contained tutorial, use the CSV examples above.
     loco  = LocomotionData('umich_2021_phase.parquet');
     [rows, cols] = loco.getShape()
     
@@ -139,8 +147,8 @@ Or use the full parquet datasets linked on the homepage.
     ```python
     import pandas as pd
     
-    # Load dataset
-    df = pd.read_parquet('umich_2021_phase.parquet')
+    # Load dataset (CSV provided in repo)
+    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
 
     # Filter by subject + task + columns
     cols = ['subject','task','phase_ipsi','knee_flexion_angle_ipsi_rad']
@@ -159,8 +167,8 @@ Or use the full parquet datasets linked on the homepage.
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    % Load dataset
-    T = parquetread('umich_2021_phase.parquet');
+    % Load dataset (CSV provided in repo)
+    T = readtable('docs/contributing/locohub_example_data.csv');
 
     % Filter by subject + task + columns
     cols = {'subject','task','phase_ipsi','knee_flexion_angle_ipsi_rad'};
@@ -226,8 +234,8 @@ Or use the full parquet datasets linked on the homepage.
     import numpy as np
     import matplotlib.pyplot as plt
     
-    # Load + filter
-    df = pd.read_parquet('umich_2021_phase.parquet')
+    # Load + filter (CSV provided in repo)
+    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
     subset = df[(df['task'] == 'level_walking') & (df['subject'] == 'UM21_AB01')]
     
     # Mean ± SD band over phase
@@ -245,8 +253,8 @@ Or use the full parquet datasets linked on the homepage.
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    % Load + filter
-    T = parquetread('umich_2021_phase.parquet');
+    % Load + filter (CSV provided in repo)
+    T = readtable('docs/contributing/locohub_example_data.csv');
     subset = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
     
     % Mean ± SD band over phase
@@ -579,7 +587,7 @@ Expected outputs:
     import pandas as pd
     import numpy as np
     
-    df = pd.read_parquet('umich_2021_phase.parquet')
+    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
     sub = df[(df['task']=='level_walking') & (df['subject']=='UM21_AB01')]
     phase = sub['phase_ipsi'].to_numpy()
     knee  = sub['knee_flexion_angle_ipsi_rad'].to_numpy()
@@ -598,7 +606,7 @@ Expected outputs:
     
     ```matlab
     % Load + filter
-    T = parquetread('umich_2021_phase.parquet');
+    T = readtable('docs/contributing/locohub_example_data.csv');
     sub = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
     phase = sub.phase_ipsi; knee = sub.knee_flexion_angle_ipsi_rad;
     
@@ -654,7 +662,7 @@ Expected outputs:
     import pandas as pd
     import numpy as np
     
-    df = pd.read_parquet('umich_2021_phase.parquet')
+    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
     subset = df[(df['task']=='level_walking') & (df['subject']=='UM21_AB01')]
     
     # Group mean across all cycles of the subset
@@ -666,7 +674,7 @@ Expected outputs:
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    T = parquetread('umich_2021_phase.parquet');
+    T = readtable('docs/contributing/locohub_example_data.csv');
     subset = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
     
     % Group mean across all cycles of the subset
@@ -713,7 +721,7 @@ Expected outputs:
     import pandas as pd
     import matplotlib.pyplot as plt
     
-    df = pd.read_parquet('umich_2021_phase.parquet')
+    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
     sub = df[(df['task']=='level_walking') & (df['subject']=='UM21_AB01')]
     phase = sub['phase_ipsi']; knee = sub['knee_flexion_angle_ipsi_rad']
     
@@ -731,7 +739,7 @@ Expected outputs:
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    T = parquetread('umich_2021_phase.parquet');
+    T = readtable('docs/contributing/locohub_example_data.csv');
     sub = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
     phase = sub.phase_ipsi; knee = sub.knee_flexion_angle_ipsi_rad;
     set(gcf,'Position',[100,100,520,360]);
@@ -786,7 +794,7 @@ Expected outputs:
     ```python
     import pandas as pd
     
-    df = pd.read_parquet('umich_2021_phase.parquet')
+    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
     filt = df[(df['task']=='level_walking') & (df['subject']=='UM21_AB01')]
     
     # Save CSV (portable)
@@ -801,7 +809,7 @@ Expected outputs:
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    T = parquetread('umich_2021_phase.parquet');
+    T = readtable('docs/contributing/locohub_example_data.csv');
     filt = T(T.task=="level_walking" & T.subject=="UM21_AB01", :);
     
     % Save CSV
