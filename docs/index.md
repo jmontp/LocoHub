@@ -22,9 +22,9 @@ Each row is one point in a percent‑normalized gait cycle (typically 150 sample
 ### More details and definitions
 
 - [Reference](reference/index.md)
-- [Technical Specification](reference/standard_spec/standard_spec.md)
-- [Task Definitions](reference/standard_spec/task_definitions.md)
-- [Validation Ranges](reference/standard_spec/validation_ranges.md)
+- [Technical Specification](reference/index.md)
+- [Task Definitions](reference/index.md)
+- [Validation Ranges](reference/index.md)
 - [Data Table Schema](contributing/contributing_skeleton.md)
 
 ## Quickstart
@@ -84,12 +84,12 @@ Each row is one point in a percent‑normalized gait cycle (typically 150 sample
 
 | Dataset | Tasks | Quality | Documentation | Download |
 |---------|-------|---------|---------------|----------|
-| Georgia Tech 2023 | Walking, stairs, inclines | ✓ Validated | [Docs](reference/datasets_documentation/dataset_gtech_2023.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
-| Georgia Tech 2021 | Walking, stairs, inclines | ✓ Validated | [Docs](reference/datasets_documentation/dataset_gtech_2021.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
-| University of Michigan 2021 | Level, incline, decline walking | ✓ Validated | [Docs](reference/datasets_documentation/dataset_umich_2021.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
-| AddBiomechanics | Walking, running, jumping, stairs | Coming Soon | [Docs](reference/datasets_documentation/dataset_addbiomechanics.md) | Coming Soon |
+| Georgia Tech 2023 | Walking, stairs, inclines | ✓ Validated | [Docs](datasets/dataset_gtech_2023.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
+| Georgia Tech 2021 | Walking, stairs, inclines | ✓ Validated | [Docs](datasets/dataset_gtech_2021.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
+| University of Michigan 2021 | Level, incline, decline walking | ✓ Validated | [Docs](datasets/dataset_umich_2021.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
+| AddBiomechanics | Walking, running, jumping, stairs | Coming Soon | [Docs](datasets/dataset_addbiomechanics.md) | Coming Soon |
 
-More details and validation reports: [Datasets Reference](reference/datasets_documentation/).
+More details and validation reports: [Datasets Reference](datasets/).
 
 ## Learn and Contribute
 

@@ -110,8 +110,8 @@ docs/
 ### Content Moved to User Guide
 
 - `docs/tutorials/` → `user_guide/docs/tutorials/`
-- `docs/standard_spec/` → `reference/standard_spec/`
-- `docs/datasets_documentation/` → `user_guide/docs/reference/datasets_documentation/`
+- `docs/standard_spec/` → `reference/index.md`
+- `docs/datasets_documentation/` → `user_guide/docs/datasets/`
 
 ### Content Retained in Engineering Docs
 

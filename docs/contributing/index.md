@@ -321,7 +321,7 @@ Interpret results:
 
 - [Data Table Schema](contributing_skeleton.md)
 - [Standard Reference](../reference/index.md)
-- [Task Definitions](../reference/standard_spec/task_definitions.md)
-- [Validation Ranges](../reference/standard_spec/validation_ranges.md)
+- [Task Definitions](../reference/index.md)
+- [Validation Ranges](../reference/index.md)
 - [Tools Reference](tools_reference.md)
 - Examples: [UMich (MATLAB)](examples/umich_2021_example.md), [GTech (Python)](examples/gtech_2023_example.md)

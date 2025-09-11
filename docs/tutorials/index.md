@@ -846,4 +846,4 @@ Expected outputs:
 ## References
 
 - Data schema: [What the data looks like](../index.md#what-the-data-looks-like)
-- Specs: [Technical Specification](../../reference/standard_spec/standard_spec.md)
+- Specs: [Technical Specification](../../reference/index.md)
