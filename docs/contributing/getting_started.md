@@ -87,22 +87,6 @@ Start by downloading and exploring an existing dataset to understand the structu
         head(data)
         ```
     
-    === "R"
-        ```r
-        library(arrow)
-        
-        # Download umich_2021_phase.parquet from the link
-        data <- read_parquet('umich_2021_phase.parquet')
-        
-        # Explore the structure
-        cat(sprintf("Shape: %d rows, %d columns\n", nrow(data), ncol(data)))
-        cat("Columns:", paste(names(data), collapse=", "), "\n")
-        cat("Tasks:", paste(unique(data$task), collapse=", "), "\n")
-        cat("Subjects:", paste(unique(data$subject_id), collapse=", "), "\n")
-        
-        # Look at some data
-        head(data)
-        ```
     
     [Download umich_2021_phase.parquet](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0)
 

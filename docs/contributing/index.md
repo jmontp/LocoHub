@@ -43,12 +43,6 @@ compatibility with existing datasets, and a growing research community.
         % 25+ subjects, 5 locomotion tasks
         ```
 
-    === "R"
-        ```r
-        # Join studies together
-        all_data <- rbind(umich_2021, gtech_2021, your_data)
-        # 25+ subjects, 5 locomotion tasks
-        ```
 
     Once standardized, datasets combine without format conversion or variable mapping.
 
@@ -74,7 +68,7 @@ compatibility with existing datasets, and a growing research community.
 === "Benefits"
     - Compatibility with all community datasets
     - Validation tools for quality assurance
-    - Analysis libraries in Python, MATLAB, and R
+    - Analysis libraries in Python and MATLAB
     - Citations when others use your data
 
 === "Support"

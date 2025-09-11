@@ -2,7 +2,7 @@
 
 # LocoHub
 
-Standardized biomechanical datasets and simple tools to load, filter, and analyze them in Python, MATLAB, and R.
+Standardized biomechanical datasets and simple tools to load, filter, and analyze them in Python and MATLAB.
 
 ## What the data looks like
 

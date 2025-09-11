@@ -104,7 +104,7 @@ STANDARD_VARIABLES = [
 
 ### Why Parquet?
 - **Efficient**: Columnar storage, fast reads
-- **Portable**: Works with Python, MATLAB, R
+- **Portable**: Works with Python and MATLAB
 - **Compressed**: 10x smaller than CSV
 - **Schema**: Self-documenting structure
 

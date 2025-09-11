@@ -97,7 +97,6 @@ git commit -m "Add XYZ dataset converter
 ```
 user_libs/python/        # Core Python libraries
 user_libs/matlab/        # MATLAB libraries
-user_libs/r/            # R libraries
 contributor_tools/      # Dataset converters and validation
 maintainer_tools/       # Release and benchmark management
 internal/               # Core infrastructure

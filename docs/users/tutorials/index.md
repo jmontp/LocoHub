@@ -22,6 +22,30 @@ Use this small sample to try the tutorials quickly:
 
 Or use the full parquet datasets linked on the homepage.
 
+## Environment
+
+<div class="code-lang code-lang-python" markdown>
+
+- Version: 3.9–3.12 (tested 3.11)
+- Packages:
+  
+  - `pandas >= 1.5`
+  - `numpy >= 1.23`
+  - `matplotlib >= 3.6`
+  - `pyarrow >= 12`
+
+</div>
+
+<div class="code-lang code-lang-matlab" markdown>
+
+- Version: R2021b+ (tested R2023b)
+- Functions used:
+  
+  - `parquetread`
+  - `exportgraphics` (optional)
+
+</div>
+
 ## 1) Load Data
 
 === "Raw"
@@ -270,7 +294,283 @@ Or use the full parquet datasets linked on the homepage.
     
     </div>
 
-## 4) Cycle Analysis
+## 4) Plotting Results with Expected Outputs
+
+Use the sample CSV: `docs/contributing/locohub_example_data.csv`.
+
+
+
+ 
+
+=== "Raw"
+    <div class="code-lang code-lang-python">
+    
+    ```python
+    import pandas as pd
+    import matplotlib.pyplot as plt
+
+    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
+    agg = df.groupby('phase_ipsi')['knee_flexion_angle_ipsi_rad'].agg(['mean','std']).reset_index()
+
+    plt.figure(figsize=(6,3.6))
+    plt.fill_between(agg['phase_ipsi'], agg['mean']-agg['std'], agg['mean']+agg['std'], alpha=0.2)
+    plt.plot(agg['phase_ipsi'], agg['mean'], lw=2)
+    plt.xlabel('Gait Cycle (%)'); plt.ylabel('Knee Flexion (rad)'); plt.tight_layout(); plt.show()
+    ```
+    
+    </div>
+    <div class="code-lang code-lang-matlab">
+    
+    ```matlab
+    T = readtable('docs/contributing/locohub_example_data.csv');
+    [g,~,idx] = unique(T.phase_ipsi);
+    mean_knee = splitapply(@mean, T.knee_flexion_angle_ipsi_rad, idx);
+    std_knee  = splitapply(@std,  T.knee_flexion_angle_ipsi_rad, idx);
+    
+    figure('Position',[100,100,600,360]); hold on
+    fill([g; flipud(g)], [mean_knee-std_knee; flipud(mean_knee+std_knee)], [0 0.45 0.9], 'FaceAlpha',0.2,'EdgeColor','none');
+    plot(g, mean_knee, 'Color',[0 0.45 0.9], 'LineWidth',1.8)
+    xlabel('Gait Cycle (%)'); ylabel('Knee Flexion (rad)'); grid on; box on; hold off
+    ```
+    
+    Expected output (MATLAB):
+    
+    ![Knee Flexion Mean ± SD](assets/expected_knee_flexion_mean_sd.png)
+    
+    </div>
+
+=== "Library"
+    <div class="code-lang code-lang-python">
+    
+    ```python
+    from user_libs.python.locomotion_data import LocomotionData
+    data = LocomotionData('converted_datasets/umich_2021_phase.parquet')
+    subset = data.filter(task='level_walking', subjects=['UM21_AB01'])
+    subset.plot_phase_patterns('UM21_AB01','level_walking',['knee_flexion_angle_ipsi_rad'])
+    ```
+    
+    </div>
+    <div class="code-lang code-lang-matlab">
+    
+    ```matlab
+    addpath('user_libs/matlab');
+    loco = LocomotionData('converted_datasets/umich_2021_phase.parquet');
+    level = loco.filterTask('level_walking').filterSubject('UM21_AB01');
+    level.plotPhasePatterns('UM21_AB01','level_walking',{'knee_flexion_angle_ipsi_rad'});
+    ```
+    
+    Expected output (MATLAB):
+    
+    ![Knee Flexion Mean ± SD](assets/expected_knee_flexion_mean_sd.png)
+    
+    </div>
+
+Expected outputs:
+
+<div class="code-lang code-lang-python" markdown>
+
+![Knee Flexion Mean ± SD](assets/expected_knee_flexion_mean_sd_python.png)
+
+![Vertical GRF Mean ± SD](assets/expected_vertical_grf_mean_sd_python.png)
+
+</div>
+
+<div class="code-lang code-lang-matlab" markdown>
+
+![Knee Flexion Mean ± SD](assets/expected_knee_flexion_mean_sd_matlab.png)
+
+![Vertical GRF Mean ± SD](assets/expected_vertical_grf_mean_sd_matlab.png)
+
+</div>
+
+## 5) Parse `task_info` into Columns
+
+=== "Raw"
+    <div class="code-lang code-lang-python">
+    
+    ```python
+    import pandas as pd
+    
+    df = pd.read_csv('docs/contributing/locohub_example_data.csv')
+    
+    def parse_task_info_row(s: str) -> dict:
+        if pd.isna(s) or not isinstance(s, str) or not s:
+            return {}
+        parts = [p.strip() for p in s.split(',') if p.strip()]
+        out = {}
+        for p in parts:
+            if ':' in p:
+                k, v = p.split(':', 1)
+                k = k.strip(); v = v.strip()
+                try:
+                    out[k] = float(v)
+                except ValueError:
+                    out[k] = v
+        return out
+    
+    parsed = df['task_info'].apply(parse_task_info_row)
+    parsed_df = pd.json_normalize(parsed)
+    df_out = pd.concat([df.drop(columns=['task_info']), parsed_df], axis=1)
+    print(df_out[['subject','task','speed_m_s','incline_deg']].head())
+    ```
+    
+    </div>
+    <div class="code-lang code-lang-matlab">
+    
+    ```matlab
+    T = readtable('docs/contributing/locohub_example_data.csv');
+    speed_m_s = nan(height(T),1);
+    incline_deg = nan(height(T),1);
+    for i = 1:height(T)
+        s = string(T.task_info{i});
+        if strlength(s) == 0, continue; end
+        parts = split(s, ',');
+        for p = parts'
+            kv = split(strip(p), ':');
+            if numel(kv) ~= 2, continue; end
+            key = strtrim(kv(1)); val = strtrim(kv(2));
+            switch key
+                case "speed_m_s", speed_m_s(i) = str2double(val);
+                case "incline_deg", incline_deg(i) = str2double(val);
+            end
+        end
+    end
+    T.speed_m_s = speed_m_s; T.incline_deg = incline_deg;
+    head(T(:, {'subject','task','speed_m_s','incline_deg'}))
+    ```
+    
+    </div>
+
+=== "Library"
+    <div class="code-lang code-lang-python">
+    
+    ```python
+    from user_libs.python.locomotion_data import LocomotionData
+    import pandas as pd
+    
+    data = LocomotionData('converted_datasets/umich_2021_phase.parquet')
+    df = data.df  # Access underlying DataFrame
+    
+    def parse_task_info_row(s: str) -> dict:
+        if pd.isna(s) or not isinstance(s, str) or not s:
+            return {}
+        parts = [p.strip() for p in s.split(',') if p.strip()]
+        out = {}
+        for p in parts:
+            if ':' in p:
+                k, v = p.split(':', 1)
+                k = k.strip(); v = v.strip()
+                try:
+                    out[k] = float(v)
+                except ValueError:
+                    out[k] = v
+        return out
+    parsed = df['task_info'].apply(parse_task_info_row)
+    df_out = pd.concat([df.drop(columns=['task_info']), pd.json_normalize(parsed)], axis=1)
+    ```
+    
+    </div>
+    <div class="code-lang code-lang-matlab">
+    
+    ```matlab
+    addpath('user_libs/matlab');
+    loco = LocomotionData('converted_datasets/umich_2021_phase.parquet');
+    % If library exposes a table, use it; otherwise, use the Raw approach
+    if ismethod(loco, 'asTable')
+        T = loco.asTable();
+    else
+        % Fallback: read raw parquet
+        T = parquetread('converted_datasets/umich_2021_phase.parquet');
+    end
+    % Reuse parsing loop from Raw example to derive columns
+    % ... (same as above)
+    ```
+    
+    </div>
+
+## 6) Merge Datasets
+
+=== "Raw"
+    <div class="code-lang code-lang-python">
+    
+    ```python
+    import pandas as pd
+    
+    umich = pd.read_parquet('converted_datasets/umich_2021_phase.parquet')
+    gtech = pd.read_parquet('converted_datasets/gtech_2021_phase.parquet')
+    
+    # Harmonize key columns if needed
+    common = ['subject','task','phase_ipsi']
+    keepU = [c for c in umich.columns if ('knee_flexion' in c) or (c in common)]
+    keepG = [c for c in gtech.columns if ('knee_flexion' in c) or (c in common)]
+    umich = umich[keepU]
+    gtech = gtech[keepG]
+    
+    merged = pd.concat([umich, gtech], ignore_index=True, sort=False)
+    print(merged.shape)
+    ```
+    
+    </div>
+    <div class="code-lang code-lang-matlab">
+    
+    ```matlab
+    U = parquetread('converted_datasets/umich_2021_phase.parquet');
+    G = parquetread('converted_datasets/gtech_2021_phase.parquet');
+    
+    common = {'subject','task','phase_ipsi'};
+    colsU = [common, U.Properties.VariableNames(contains(U.Properties.VariableNames,'knee_flexion'))];
+    colsG = [common, G.Properties.VariableNames(contains(G.Properties.VariableNames,'knee_flexion'))];
+    U = U(:, intersect(colsU, U.Properties.VariableNames));
+    G = G(:, intersect(colsG, G.Properties.VariableNames));
+    
+    M = [U; G];
+    size(M)
+    ```
+    
+    </div>
+
+=== "Library"
+    <div class="code-lang code-lang-python">
+    
+    ```python
+    from user_libs.python.locomotion_data import LocomotionData
+    import pandas as pd
+    
+    umich = LocomotionData('converted_datasets/umich_2021_phase.parquet').df
+    gtech = LocomotionData('converted_datasets/gtech_2021_phase.parquet').df
+    common = ['subject','task','phase_ipsi']
+    keepU = [c for c in umich.columns if ('knee_flexion' in c) or (c in common)]
+    keepG = [c for c in gtech.columns if ('knee_flexion' in c) or (c in common)]
+    merged = pd.concat([umich[keepU], gtech[keepG]], ignore_index=True, sort=False)
+    print(merged.shape)
+    ```
+    
+    </div>
+    <div class="code-lang code-lang-matlab">
+    
+    ```matlab
+    addpath('user_libs/matlab');
+    U = LocomotionData('converted_datasets/umich_2021_phase.parquet');
+    G = LocomotionData('converted_datasets/gtech_2021_phase.parquet');
+    if ismethod(U,'asTable') && ismethod(G,'asTable')
+        Tu = U.asTable();
+        Tg = G.asTable();
+    else
+        Tu = parquetread('converted_datasets/umich_2021_phase.parquet');
+        Tg = parquetread('converted_datasets/gtech_2021_phase.parquet');
+    end
+    common = {'subject','task','phase_ipsi'};
+    colsU = [common, Tu.Properties.VariableNames(contains(Tu.Properties.VariableNames,'knee_flexion'))];
+    colsG = [common, Tg.Properties.VariableNames(contains(Tg.Properties.VariableNames,'knee_flexion'))];
+    Tu = Tu(:, intersect(colsU, Tu.Properties.VariableNames));
+    Tg = Tg(:, intersect(colsG, Tg.Properties.VariableNames));
+    M = [Tu; Tg];
+    size(M)
+    ```
+    
+    </div>
+
+## 7) Cycle Analysis
 
 === "Raw"
     <div class="code-lang code-lang-python">
@@ -345,7 +645,7 @@ Or use the full parquet datasets linked on the homepage.
     
     </div>
 
-## 5) Group Analysis
+## 8) Group Analysis
 
 === "Raw"
     <div class="code-lang code-lang-python">
@@ -404,7 +704,7 @@ Or use the full parquet datasets linked on the homepage.
     
     </div>
 
-## 6) Export Figures and Tables
+## 9) Export Figures and Tables
 
 === "Raw"
     <div class="code-lang code-lang-python">
@@ -478,7 +778,7 @@ Or use the full parquet datasets linked on the homepage.
     
     </div>
 
-## 7) Save Filtered Subset
+## 10) Save Filtered Subset
 
 === "Raw"
     <div class="code-lang code-lang-python">
