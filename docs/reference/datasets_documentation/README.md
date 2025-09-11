@@ -1,38 +1,24 @@
-# Dataset Documentation
+---
+title: Datasets
+---
 
-## Overview
+# Datasets
 
-This section contains documentation for all standardized biomechanical datasets in the repository.
+Snapshot of available standardized datasets. Links go to docs, validation, and downloads.
 
-## Available Datasets
+## At a Glance
 
-### UMich 2021
-- Docs: [dataset_umich_2021.md](dataset_umich_2021.md)
-- Validation report: [validation_reports/umich_2021_phase_validation_report.md](validation_reports/umich_2021_phase_validation_report.md)
-- Variants: [Filtered](dataset_umich_2021_filtered.md), [Events](dataset_umich_2021_events.md)
-- Tasks: Level walking, incline walking, decline walking
-- Subjects: 10
-- Format: Phase-indexed (150 points per cycle)
+| Dataset | Tasks | Docs | Validation | Download | Notes |
+|---------|-------|------|------------|----------|-------|
+| University of Michigan 2021 | Level, incline, decline walking | [UMich 2021](dataset_umich_2021.md) | [Report](validation_reports/umich_2021_phase_validation_report.md) | [Link](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) | Variants: [Filtered](dataset_umich_2021_filtered.md), [Events](dataset_umich_2021_events.md) |
+| Georgia Tech 2023 | Walking, stairs, inclines | [GTech 2023](dataset_gtech_2023.md) | [Report](validation_reports/gtech_2023_phase_validation_report.md) | [Link](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) | Validated |
+| Georgia Tech 2021 | Walking, stairs, inclines | [GTech 2021](dataset_gtech_2021.md) | [Report](validation_reports/gtech_2021_phase_validation_report.md) | [Link](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) | Variant: [Filtered](dataset_gtech_2021_filtered.md) |
+| AddBiomechanics | Walking, running, jumping, stairs | [Docs](dataset_addbiomechanics.md) | — | — | Coming soon |
 
-### GTech 2023
-- Docs: [dataset_gtech_2023.md](dataset_gtech_2023.md)
-- Validation report: [validation_reports/gtech_2023_phase_validation_report.md](validation_reports/gtech_2023_phase_validation_report.md)
-- Status: In development
+More: [Comparison Plots](comparison_plots/) • [Validation Reports](validation_reports/index.md)
 
-### GTech 2021
-- Docs: [dataset_gtech_2021.md](dataset_gtech_2021.md)
-- Variant: [Filtered](dataset_gtech_2021_filtered.md)
-- Comparison: [Dataset Comparison](dataset_comparison.md)
+## Format
 
-### AddBiomechanics
-- Docs: [dataset_addbiomechanics.md](dataset_addbiomechanics.md)
-- Status: In development
-
-## Dataset Standards
-
-All datasets follow the standardized format defined in:
-- [Data Standard Specification](../standard_spec/standard_spec.md)
-- [Validation Ranges](validation_ranges.md)
-
-See also:
-- [All validation reports](validation_reports/index.md)
+- Phase-indexed (150 samples per cycle), with subject/task metadata columns.
+- Naming pattern: `joint_motion_measurement_side_unit` (e.g., `knee_flexion_angle_ipsi_rad`).
+- Spec and ranges: [Standard Spec](../standard_spec/standard_spec.md) • [Validation Ranges](validation_ranges.md)
