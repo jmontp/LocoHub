@@ -35,7 +35,6 @@ Concise, complete description of what’s in the standardized data.
     - `level_walking_tfa`, `level_walking_tta` (transfemoral/transtibial amputee)
     - `stair_ascent_tfa`, `incline_walking_cva`
   - Recommended suffix tokens: `stroke` (or `cva`), `pd`, `sci`, `tfa`, `tta`. Keep lower‑case snake_case.
-  - Notes: continue to use `task_info` for per‑trial parameters (speed, incline, assistance), and keep the subject’s population code in `subject` (see Subject Naming).
 - Task IDs (`task_id`): short variant labels, e.g., `level`, `incline_5deg`, `incline_10deg`, `decline_5deg`, `stair_ascent`, `stair_descent`.
 - Task metadata (`task_info`): comma‑separated key:value pairs.
 
@@ -69,10 +68,6 @@ Population codes
 | THA | Total hip arthroplasty | `tha` |
 | MS | Multiple sclerosis | `ms` |
 
-Notes
-
-- Codes apply to `subject` naming (e.g., `UM21_AB01`). The “Recommended task suffix” is optional and can be appended to `task` when an entire task is performed by a special population (e.g., `level_walking_stroke`).
-- Prefer lowercase snake_case for suffix tokens; use short, widely recognized abbreviations (`stroke`/`cva`, `pd`, `sci`, `tfa`, `tta`, `cp`, `tka`, `tha`, `ms`).
 
 ## Subject Metadata
 
@@ -158,10 +153,6 @@ Center of pressure (meters)
 - `cop_anterior_{ipsi,contra}_m`
 - `cop_lateral_{ipsi,contra}_m`
 
-Notes
-
-- The catalog reflects variables present in the shipped conversion scripts (UMich 2021, GTech 2021/2023, AddBiomechanics) and the tutorial/example data. Additional variables following the same naming pattern are valid.
-- Prefer normalized moments (`*_Nm_kg`) and provide GRFs in BW.
 
 ## Coordinate & Sign Conventions
 
@@ -198,7 +189,6 @@ OpenSim right‑handed frames. Positive rotations follow right‑hand rule.
 
 Canonical phase column is `phase_ipsi`.
 
-Note: Validation procedures, ranges, and reports are documented in the Datasets section; this page focuses on the standard itself.
 
 ## Related
 
