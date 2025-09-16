@@ -27,6 +27,7 @@ Essential commands and paths for day‑to‑day maintenance.
 - New dataset: add converter → export `<name>_phase.parquet` → quick validate → full report.
 - Update ranges: edit YAML → regenerate reports → spot‑check datasets.
 - Add variable: update `feature_constants.py` → update converters → update ranges.
+- Website updates: run the maintainer CLI (see the [Website Management Flow](website_management_flow.md)) instead of editing registries by hand.
 
 ## Environment
 

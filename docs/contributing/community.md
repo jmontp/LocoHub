@@ -55,7 +55,7 @@ Help us help you by providing:
     - `knee_flexion_angle_left_rad` / `knee_flexion_angle_right_rad`
 
 ??? question "What coordinate system should I use?"
-    Follow ISB recommendations where possible. See [Reference → Coordinate & Sign Conventions](../reference/index.md#coordinate--sign-conventions).
+    Follow ISB recommendations where possible. See [Reference → Coordinate & Sign Conventions](../reference/index.md#coordinate-sign-conventions).
 
 ---
 
@@ -160,7 +160,7 @@ Also cite the original data sources:
 === "Contribute Data"
     Share your standardized datasets to help the community grow
     
-    [Start Converting](getting_started.md){ .md-button }
+    [Start Converting](standard_operating_procedures.md){ .md-button }
 
 === "Improve Tools"
     Help develop better conversion and validation tools
@@ -197,6 +197,6 @@ We're committed to providing a welcoming and inclusive environment.
 <div class="next-steps" markdown>
 **Ready to contribute?**
 
-[**Start Converting**](getting_started.md){ .md-button .md-button--primary }
+[**Start Converting**](standard_operating_procedures.md){ .md-button .md-button--primary }
 [**Ask a Question**](https://github.com/jmontp/LocoHub/discussions){ .md-button }
 </div>

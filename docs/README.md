@@ -87,7 +87,7 @@ docs/
 │   ├── mkdocs.yml              # User guide configuration
 │   ├── docs/                   # User guide content
 │   │   ├── index.md            # User-focused landing page
-│   │   ├── getting_started/    # Installation and quick start
+│   │   ├── standard_operating_procedures/    # Contributor SOP and flowcharts
 │   │   ├── user_guide/         # Working with data, validation
 │   │   ├── contributor_guide/  # Dataset contribution guides
 │   │   ├── tutorials/          # Python/MATLAB tutorials

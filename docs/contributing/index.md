@@ -6,7 +6,7 @@ title: Contribute Your Dataset
 
 Standardize your biomechanics dataset in two steps: 1) convert to a table, 2) validate sign/phase/ranges.
 
-This page gives language-agnostic guidance to convert any dataset into the standard table, with two common patterns and example snippets in pseudocode, Python, and MATLAB. Validation runs via Python/command line for everyone.
+This page gives language-agnostic guidance to convert any dataset into the standard table, with two common patterns and example snippets in pseudocode, Python, and MATLAB. Validation runs via Python/command line for everyone. If you already have a dataset in the standard shape and want a walkthrough of each helper script, see the [Contributor Tool Tutorials](tool_tutorials.md).
 
 ---
 
@@ -31,7 +31,7 @@ Example dataset (CSV, 1000 rows): [Download](../tutorials/assets/locohub_example
 
 Common conversion patterns
 
-Pattern A — Folder-based tables (e.g., per-trial CSVs in nested folders)
+#### Pattern A — Folder-based tables (e.g., per-trial CSVs in nested folders) {#pattern-a-folder-based}
 
 === "Pseudocode"
     ```text
@@ -145,7 +145,7 @@ Pattern A — Folder-based tables (e.g., per-trial CSVs in nested folders)
     parquetwrite('your_dataset_phase.parquet', rows);
     ```
 
-Pattern B — Hierarchical structure (e.g., MATLAB struct: subject → task → task_info → data)
+#### Pattern B — Hierarchical structure (e.g., MATLAB struct: subject → task → task_info → data) {#pattern-b-hierarchical}
 
 === "Pseudocode"
     ```text
@@ -304,11 +304,27 @@ Interpret results:
 
 ## Ready to Submit
 
-- Provide: `your_dataset_phase.parquet` (and optionally `your_dataset_phase_filtered.parquet`)
-- Include a brief README (dataset summary, units, any deviations)
-- Filenames: `datasetcode_year_phase.parquet` (e.g., `gtech_2021_phase.parquet`)
-- Hard requirements: naming and sign conventions compliant; phase‑normalized (`phase_ipsi`, 150 points); minimal schema present.
-- Suggested acceptance guidance: ≥90% validation pass per major task; `task_info` populated where applicable.
+### Submission checklist
+
+- `subject`, `task`, `task_id`, `task_info`, `step`, `phase_ipsi` columns exist and follow the canonical spelling.
+- Every cycle is phase-normalized to 150 samples with `phase_ipsi` spanning 0–100.
+- Joint angles are in radians, joint moments mass-normalized (Nm/kg), ground reaction forces in body-weight units.
+- Sign conventions follow the [reference spec](../reference/index.md); ipsilateral/contralateral labels match the data.
+- Validation results show ≥90% pass rate per major task, or you have written justification for lower values.
+- `task_info` strings capture experimental context (e.g., `speed_m_s:1.25,incline_deg:5`).
+
+### Package to share
+
+- Include at minimum `datasetcode_year_phase.parquet`; attach `*_filtered.parquet` if you created a filtered version.
+- Add a short README describing the collection protocol, sensors, subject demographics, and any deviations from the spec.
+- Export the latest validation report bundle using `create_dataset_validation_report.py --no-plots` (for text) and with plots when available; include the generated Markdown and assets.
+- List any custom validation range YAMLs or tooling modifications and check them into the pull request.
+
+### Handoff to maintainers
+
+- Compress scripts, README, validation outputs, and parquet files into a single archive (or reference a stable download link).
+- Open an issue or pull request summarizing the dataset, validation status, and any assistance needed for publication.
+- Stay available for quick follow-up about metadata, ranges, or packaging adjustments during review.
 
 ## Common Pitfalls
 

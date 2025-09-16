@@ -2,7 +2,7 @@
 
 # LocoHub
 
-Standardized biomechanical datasets and simple tools to load, filter, and analyze them in Python and MATLAB.
+Researchers collect locomotion datasets with different sampling schemes, variable names, and metadata conventions, which makes cross-study analysis slow and error-prone. Manually processing each dataset typically takes hours per person and often requires extra post-processing to repair data issues and align conventions, and folks without a biomechanics background often lack the knowledge to even start that cleanup. LocoHub standardizes these independent datasets into a shared schema, percent-normalized gait cycles, and validated metadata so you can compare studies, reproduce analyses, and build new models without reformatting everything from scratch. Standardized biomechanical datasets and simple tools to load, filter, and analyze them in Python and MATLAB.
 
 ## What the data looks like
 
@@ -87,10 +87,14 @@ Each row is one point in a percent‑normalized gait cycle (typically 150 sample
 | University of Michigan 2021 | Level, incline, decline walking | ✓ Validated | [Docs](datasets/dataset_umich_2021.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
 | AddBiomechanics | Walking, running, jumping, stairs | Coming Soon | [Docs](datasets/dataset_addbiomechanics.md) | Coming Soon |
 
-More details and validation reports: [Datasets Reference](datasets/).
+More details and validation reports: [Datasets Reference](datasets/index.md).
 
 ## Learn and Contribute
 
 - Tutorials: [Start here](tutorials/index.md)
 - API: [Overview](api/api-index.md)
-- Contribute data: [Guide](contributing/)
+- Contribute data: [Guide](contributing/index.md)
+
+## Funding
+
+This work was supported by the National Institute of Biomedical Imaging and Bioengineering of the NIH under Award Number R01EB031166. The content is solely the responsibility of the authors and does not necessarily represent the official views of the NIH.
