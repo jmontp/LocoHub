@@ -4,18 +4,20 @@ title: Datasets
 
 # Datasets
 
-Snapshot of available standardized datasets. Links go to docs, validation, and downloads.
+Snapshot of available standardized datasets. Documentation is being rebuilt with
+`prepare_dataset_submission.py`; the previous Markdown pages now live under
+`_legacy/` for reference while the regenerated docs land here.
 
 ## At a Glance
 
 | Dataset | Tasks | Docs | Validation | Download | Notes |
 |---------|-------|------|------------|----------|-------|
-| University of Michigan 2021 | Level, incline, decline walking | [UMich 2021](dataset_umich_2021.md) | [Report](validation_reports/umich_2021_phase_validation_report.md) | [Link](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) | Variants: [Filtered](dataset_umich_2021_filtered.md), [Events](dataset_umich_2021_events.md) |
-| Georgia Tech 2023 | Walking, stairs, inclines | [GTech 2023](dataset_gtech_2023.md) | [Report](validation_reports/gtech_2023_phase_validation_report.md) | [Link](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) | Validated |
-| Georgia Tech 2021 | Walking, stairs, inclines | [GTech 2021](dataset_gtech_2021.md) | — (refresh pending) | [Link](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) | Variant: [Filtered](dataset_gtech_2021_filtered.md) |
-| AddBiomechanics | Walking, running, jumping, stairs | [Docs](dataset_addbiomechanics.md) | — | — | Coming soon |
+| University of Michigan 2021 | Level, incline, decline walking | Legacy: [UMich 2021](_legacy/dataset_umich_2021.md) | [Report](validation_reports/umich_2021_phase_validation_report.md) | [Link](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) | Variants: [Filtered](_legacy/dataset_umich_2021_filtered.md), [Events](_legacy/dataset_umich_2021_events.md) |
+| Georgia Tech 2023 | Walking, stairs, inclines | Legacy: [GTech 2023](_legacy/dataset_gtech_2023.md) | [Report](validation_reports/gtech_2023_phase_validation_report.md) | [Link](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) | Validated |
+| Georgia Tech 2021 | Walking, stairs, inclines | Legacy: [GTech 2021](_legacy/dataset_gtech_2021.md) | — (refresh pending) | [Link](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) | Variant: [Filtered](_legacy/dataset_gtech_2021_filtered.md) |
+| AddBiomechanics | Walking, running, jumping, stairs | Legacy: [Docs](_legacy/dataset_addbiomechanics.md) | — | — | Coming soon |
 
-More: [Dataset Comparison](dataset_comparison.md) • [Validation Reports](validation_reports/index.md)
+More: Legacy [Dataset Comparison](_legacy/dataset_comparison.md) • [Validation Reports](validation_reports/index.md)
 
 ## Format
 

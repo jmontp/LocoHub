@@ -22,7 +22,7 @@ graph LR
 
 The high-level view shows the four major stages of contribution. Each stage uses a distinct color palette: blue for intake, orange-cream for standardization, green for validation, and sage for community sharing.
 
-## Detailed Contribution Workflow
+## Detailed Contribution Workflow {#contribution-workflow}
 
 The flowchart below shows your complete journey from raw data to published dataset. Click any box to jump directly to detailed instructions for that step.
 
@@ -156,6 +156,9 @@ When your data is organized as per-trial CSVs in nested folders, use this patter
         if kinx is not None:
             keys = [c for c in ['cycle_id','phase_ipsi','step'] if c in kin.columns and c in kinx.columns]
             merged = pd.merge(kin, kinx, on=keys, how='outer')
+
+        # If your raw tables do not expose a unique cycle identifier, merge on
+        # ['phase_ipsi','step'] plus whatever per-cycle metadata your files provide.
 
         # Attach metadata (example: infer from folder names or a JSON file)
         subject = os.path.basename(os.path.dirname(trial_dir))
@@ -786,24 +789,33 @@ import numpy as np
 import yaml
 
 df = pd.read_parquet('your_dataset_phase.parquet')
-ranges = {}
 
-for task in df['task'].unique():
-    task_data = df[df['task'] == task]
+# Identify biomechanical value columns (everything beyond the minimal schema).
+schema_cols = {'subject', 'task', 'task_id', 'task_info', 'step', 'phase_ipsi'}
+value_cols = [c for c in df.columns if c not in schema_cols]
+
+# Create a convenience phase index that maps 0..100 → 0..149.
+df = df.assign(phase_index=(df['phase_ipsi'] / 100 * 149).round().astype(int))
+
+ranges = {}
+for task, task_data in df.groupby('task'):
     ranges[task] = {'phases': {}}
-    
-    for phase in [0, 25, 50, 75]:
-        phase_idx = int(phase * 1.5)  # 0-149 index
-        phase_data = task_data[task_data['phase_index'] == phase_idx]
-        
-        for var in biomech_variables:
-            if var in phase_data.columns:
-                mean = phase_data[var].mean()
-                std = phase_data[var].std()
-                ranges[task]['phases'][str(phase)][var] = {
-                    'min': float(mean - 2.5 * std),
-                    'max': float(mean + 2.5 * std)
-                }
+
+    for phase in (0, 25, 50, 75):
+        phase_idx = int(round(phase / 100 * 149))  # 0-149 index
+        phase_slice = task_data[task_data['phase_index'] == phase_idx]
+        if phase_slice.empty:
+            continue
+
+        for var in value_cols:
+            if var not in phase_slice.columns:
+                continue
+            mean = phase_slice[var].mean()
+            std = phase_slice[var].std()
+            ranges[task]['phases'].setdefault(str(phase), {})[var] = {
+                'min': float(mean - 2.5 * std),
+                'max': float(mean + 2.5 * std),
+            }
 
 with open('custom_ranges.yaml', 'w') as f:
     yaml.dump(ranges, f)

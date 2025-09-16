@@ -81,7 +81,7 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 **Validation Configuration:**
 - **Ranges File**: `default_ranges.yaml`
 - **SHA256**: `c232030c...` (first 8 chars)
-- **Archived Copy**: [`gtech_2021_phase_filtered_2025-08-20_093801_ranges.yaml`](validation_archives/gtech_2021_phase_filtered_2025-08-20_093801_ranges.yaml)
+- **Archived Copy**: [`gtech_2021_phase_filtered_2025-08-20_093801_ranges.yaml`](../validation_archives/gtech_2021_phase_filtered_2025-08-20_093801_ranges.yaml)
 
 | Metric | Value | Status |
 |--------|-------|--------|
@@ -125,39 +125,39 @@ Validates that velocities match angles using the chain rule: `dθ/dt = (dθ/dφ)
 ### 📈 Task-Specific Validation
 
 #### Decline Walking
-![Decline Walking](validation_plots/gtech_2021_phase_filtered_decline_walking_all_features_validation.png)
+![Decline Walking](../validation_plots/gtech_2021_phase_filtered_decline_walking_all_features_validation.png)
 *46 sagittal features validated*
 
 **Subject Failure Distribution:**
-![Decline Walking Subject Failures](validation_plots/gtech_2021_phase_filtered_decline_walking_subject_failures.png)
+![Decline Walking Subject Failures](../validation_plots/gtech_2021_phase_filtered_decline_walking_subject_failures.png)
 
 #### Incline Walking
-![Incline Walking](validation_plots/gtech_2021_phase_filtered_incline_walking_all_features_validation.png)
+![Incline Walking](../validation_plots/gtech_2021_phase_filtered_incline_walking_all_features_validation.png)
 *46 sagittal features validated*
 
 **Subject Failure Distribution:**
-![Incline Walking Subject Failures](validation_plots/gtech_2021_phase_filtered_incline_walking_subject_failures.png)
+![Incline Walking Subject Failures](../validation_plots/gtech_2021_phase_filtered_incline_walking_subject_failures.png)
 
 #### Level Walking
-![Level Walking](validation_plots/gtech_2021_phase_filtered_level_walking_all_features_validation.png)
+![Level Walking](../validation_plots/gtech_2021_phase_filtered_level_walking_all_features_validation.png)
 *46 sagittal features validated*
 
 **Subject Failure Distribution:**
-![Level Walking Subject Failures](validation_plots/gtech_2021_phase_filtered_level_walking_subject_failures.png)
+![Level Walking Subject Failures](../validation_plots/gtech_2021_phase_filtered_level_walking_subject_failures.png)
 
 #### Stair Ascent
-![Stair Ascent](validation_plots/gtech_2021_phase_filtered_stair_ascent_all_features_validation.png)
+![Stair Ascent](../validation_plots/gtech_2021_phase_filtered_stair_ascent_all_features_validation.png)
 *46 sagittal features validated*
 
 **Subject Failure Distribution:**
-![Stair Ascent Subject Failures](validation_plots/gtech_2021_phase_filtered_stair_ascent_subject_failures.png)
+![Stair Ascent Subject Failures](../validation_plots/gtech_2021_phase_filtered_stair_ascent_subject_failures.png)
 
 #### Stair Descent
-![Stair Descent](validation_plots/gtech_2021_phase_filtered_stair_descent_all_features_validation.png)
+![Stair Descent](../validation_plots/gtech_2021_phase_filtered_stair_descent_all_features_validation.png)
 *46 sagittal features validated*
 
 **Subject Failure Distribution:**
-![Stair Descent Subject Failures](validation_plots/gtech_2021_phase_filtered_stair_descent_subject_failures.png)
+![Stair Descent Subject Failures](../validation_plots/gtech_2021_phase_filtered_stair_descent_subject_failures.png)
 
 </div>
 
