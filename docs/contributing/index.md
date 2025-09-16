@@ -4,15 +4,68 @@ title: Contribute Your Dataset
 
 # Contribute Your Dataset
 
-Standardize your biomechanics dataset in two steps: 1) convert to a table, 2) validate sign/phase/ranges.
+Transform your biomechanics data into a standardized, validated community resource. This visual guide walks you through each decision point in the contribution process.
 
-This page gives language-agnostic guidance to convert any dataset into the standard table, with two common patterns and example snippets in pseudocode, Python, and MATLAB. Validation runs via Python/command line for everyone. If you already have a dataset in the standard shape and want a walkthrough of each helper script, see the [Contributor Tool Tutorials](tool_tutorials.md).
+## Contribution Workflow
+
+The flowchart below shows your complete journey from raw data to published dataset. Click any box to jump directly to detailed instructions for that step.
+
+```mermaid
+graph TD
+    A["Start:<br/>Decide to contribute"] --> B{"Do you control<br/>data sharing rights?"}
+    B -->|No| Z["Pause:<br/>Resolve access or licensing"]
+    Z --> B
+    B -->|Yes| C["Clone repo<br/>and install tools"]
+    C --> D["Review reference dataset<br/>and task_info fields"]
+    D --> E["Build conversion script<br/>from template"]
+    E --> F{"Does conversion<br/>run cleanly?"}
+    F -->|No| E
+    F -->|Yes| G["Export standardized<br/>parquet dataset"]
+    G --> H["Run validation suite<br/>(quick check + tuner)"]
+    H --> I{"Are validation results<br/>acceptable?"}
+    I -->|No| J["Adjust conversion logic<br/>or validation ranges"]
+    J --> H
+    I -->|Yes| K["Fill contributor checklist<br/>(task_info, metadata, citation)"]
+    K --> L["Bundle dataset, metadata,<br/>and scripts for review"]
+    L --> M["Submit PR or share bundle<br/>with maintainers"]
+    M --> N["End"]
+
+    classDef intake fill:#e3f2fd,stroke:#1e88e5,color:#0d47a1
+    classDef standard fill:#fff3e0,stroke:#fb8c00,color:#e65100
+    classDef qa fill:#e8f5e9,stroke:#43a047,color:#1b5e20
+    classDef share fill:#c8e6c9,stroke:#2e7d32,color:#1b5e20
+
+    class A,B,Z intake
+    class C,D,E,F,G standard
+    class H,I,J qa
+    class K,L,M,N share
+
+    click C "https://github.com/jmontp/LocoHub" "Open the LocoHub repository" _blank
+    click D "#step-1-convert-to-a-table" "Conversion quickstart"
+    click E "#pattern-a-folder-based" "Conversion patterns"
+    click G "#step-2-validate-pythoncli" "Validation workflow"
+    click H "tool_tutorials/#quick_validation_checkpy-fast-quality-scan" "Run the quick validation check"
+    click J "tool_tutorials/#interactive_validation_tunerpy-visual-range-editing" "Tune validation ranges visually"
+    click K "#submission-checklist" "Contribution checklist"
+    click L "#package-to-share" "Packaging guidance"
+    click M "https://github.com/jmontp/LocoHub/pulls" "Open pull requests on GitHub" _blank
+```
 
 ---
 
-## 2-Step Quickstart
+## Quick Reference
 
-### Step 1 — Convert to a Table
+**Need specific guidance?** Jump directly to your situation:
+
+- 📁 [**I have folder-based CSVs**](#pattern-a-folder-based) → Pattern A conversion
+- 🗂️ [**I have hierarchical MATLAB structs**](#pattern-b-hierarchical) → Pattern B conversion
+- ⏱️ [**My data is time-indexed**](#pre-processing-if-time-indexed) → Phase normalization guide
+- ✅ [**I'm ready to validate**](#step-2-validate-pythoncli) → Validation tools
+- 📦 [**I'm ready to submit**](#ready-to-submit) → Submission checklist
+
+---
+
+## Step 1 — Convert to a Table
 
 Required columns (minimal schema):
 
@@ -31,7 +84,11 @@ Example dataset (CSV, 1000 rows): [Download](../tutorials/assets/locohub_example
 
 Common conversion patterns
 
-#### Pattern A — Folder-based tables (e.g., per-trial CSVs in nested folders) {#pattern-a-folder-based}
+### Pattern A — Folder-based tables {#pattern-a-folder-based}
+
+When your data is organized as per-trial CSVs in nested folders, use this pattern.
+
+[↑ Back to workflow](#contribution-workflow)
 
 === "Pseudocode"
     ```text
@@ -145,7 +202,11 @@ Common conversion patterns
     parquetwrite('your_dataset_phase.parquet', rows);
     ```
 
-#### Pattern B — Hierarchical structure (e.g., MATLAB struct: subject → task → task_info → data) {#pattern-b-hierarchical}
+### Pattern B — Hierarchical structure {#pattern-b-hierarchical}
+
+For MATLAB structs or other hierarchical data formats (subject → task → task_info → data).
+
+[↑ Back to workflow](#contribution-workflow)
 
 === "Pseudocode"
     ```text
@@ -227,7 +288,9 @@ Common conversion patterns
     parquetwrite('your_dataset_phase.parquet', rows);
     ```
 
-### Pre‑processing (if time‑indexed)
+### Pre‑processing (if time‑indexed) {#pre-processing-if-time-indexed}
+
+[↑ Back to workflow](#contribution-workflow)
 
 If your data are time‑indexed (no `phase_ipsi`), add a phase‑normalization pass before building the final table.
 
@@ -280,7 +343,9 @@ If your data are time‑indexed (no `phase_ipsi`), add a phase‑normalization p
 
 Tips: pick a consistent HS detector (e.g., vertical GRF threshold crossing), de‑spike signals before event detection, and verify a few cycles visually.
 
-### Step 2 — Validate (Python/CLI)
+## Step 2 — Validate (Python/CLI) {#step-2-validate-pythoncli}
+
+[↑ Back to workflow](#contribution-workflow)
 
 Run the quick validator for pass/fail stats (optional plots):
 
@@ -302,7 +367,9 @@ Interpret results:
 
 ---
 
-## Ready to Submit
+## Ready to Submit {#ready-to-submit}
+
+[↑ Back to workflow](#contribution-workflow)
 
 ### Submission checklist
 
