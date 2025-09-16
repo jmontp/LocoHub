@@ -8,11 +8,33 @@ Essential commands and paths for day‑to‑day maintenance.
 
 ## Do This
 
-- Convert: `contributor_tools/conversion_scripts/<dataset>/`
-- Quick validate: `python contributor_tools/quick_validation_check.py <dataset_phase.parquet>`
-- Filter valid strides: `python contributor_tools/create_filtered_dataset.py <dataset_phase_raw.parquet>`
-- Full report (docs): `python contributor_tools/create_dataset_validation_report.py --dataset <dataset_phase.parquet>`
-- Serve docs: `mkdocs serve`
+### Review Dataset Submissions
+Contributors now submit complete packages with documentation. Your role:
+
+1. **Review PR contents**:
+   - ✅ Dataset parquet file in `converted_datasets/`
+   - ✅ Documentation in `docs/datasets/`
+   - ✅ Conversion script in `contributor_tools/conversion_scripts/`
+
+2. **Check validation results**:
+   - Review validation pass rates in documentation
+   - Ensure ≥80% pass rate or justified exceptions
+   - Check for appropriate task coverage
+
+3. **Verify metadata**:
+   - Short code is unique
+   - Institution and citation provided
+   - Subject count and tasks documented
+
+4. **Merge if complete**:
+   - All files present
+   - Validation acceptable
+   - Documentation complete
+
+### Quick Validation Tools
+- Test dataset: `python contributor_tools/quick_validation_check.py <dataset_phase.parquet>`
+- Filter strides: `python contributor_tools/create_filtered_dataset.py <dataset_phase.parquet>`
+- Serve docs locally: `mkdocs serve`
 
 ## Where Things Are
 
@@ -24,10 +46,18 @@ Essential commands and paths for day‑to‑day maintenance.
 
 ## Workflows
 
-- New dataset: add converter → export `<name>_phase.parquet` → quick validate → full report.
-- Update ranges: edit YAML → regenerate reports → spot‑check datasets.
-- Add variable: update `feature_constants.py` → update converters → update ranges.
-- Website updates: run the maintainer CLI (see the [Website Management Flow](website_management_flow.md)) instead of editing registries by hand.
+### Standard PR Review Flow
+1. **Contributor submits PR** with dataset + documentation
+2. **Review submission** - Check files, validation, metadata
+3. **Request changes** if needed (missing info, low validation)  
+4. **Merge when ready** - Documentation is already complete!
+
+### Maintenance Tasks
+- **Update validation ranges**: Edit YAML → have contributors re-run validation
+- **Add new variables**: Update `feature_constants.py` → update converters
+- **Fix documentation**: Direct edits to `docs/datasets/*.md` files
+- **Archive datasets**: Move old docs to `archived/` subdirectory
+
 
 ## Environment
 

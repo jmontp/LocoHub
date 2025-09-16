@@ -6,29 +6,45 @@ title: Contribute Your Dataset
 
 Transform your biomechanics data into a standardized, validated community resource. This visual guide walks you through each decision point in the contribution process.
 
-## Contribution Workflow
+## High-Level Workflow
+
+```mermaid
+graph LR
+    A[Your Data] --> B[Standardized Format]
+    B --> C[Validated Dataset]
+    C --> D[Community Resource]
+
+    style A fill:#e3f2fd,stroke:#1e88e5,color:#0d47a1
+    style B fill:#fff3e0,stroke:#fb8c00,color:#e65100
+    style C fill:#e8f5e9,stroke:#43a047,color:#1b5e20
+    style D fill:#c8e6c9,stroke:#2e7d32,color:#1b5e20
+```
+
+The high-level view shows the four major stages of contribution. Each stage uses a distinct color palette: blue for intake, orange-cream for standardization, green for validation, and sage for community sharing.
+
+## Detailed Contribution Workflow
 
 The flowchart below shows your complete journey from raw data to published dataset. Click any box to jump directly to detailed instructions for that step.
 
 ```mermaid
 graph TD
-    A["Start:<br/>Decide to contribute"] --> B{"Do you control<br/>data sharing rights?"}
-    B -->|No| Z["Pause:<br/>Resolve access or licensing"]
+    A[Start: Decide to contribute] --> B{Do you control data sharing rights?}
+    B -->|No| Z[Pause: Resolve access or licensing]
     Z --> B
-    B -->|Yes| C["Clone repo<br/>and install tools"]
-    C --> D["Review reference dataset<br/>and task_info fields"]
-    D --> E["Build conversion script<br/>from template"]
-    E --> F{"Does conversion<br/>run cleanly?"}
+    B -->|Yes| C[Clone repo and install tools]
+    C --> D[Review reference dataset and task_info fields]
+    D --> E[Build conversion script from template]
+    E --> F{Does conversion run cleanly?}
     F -->|No| E
-    F -->|Yes| G["Export standardized<br/>parquet dataset"]
-    G --> H["Run validation suite<br/>(quick check + tuner)"]
-    H --> I{"Are validation results<br/>acceptable?"}
-    I -->|No| J["Adjust conversion logic<br/>or validation ranges"]
+    F -->|Yes| G[Export standardized parquet dataset]
+    G --> H[Run validation suite - quick check]
+    H --> I{Are validation results acceptable - over 80%?}
+    I -->|No| J[Adjust conversion logic or validation ranges]
     J --> H
-    I -->|Yes| K["Fill contributor checklist<br/>(task_info, metadata, citation)"]
-    K --> L["Bundle dataset, metadata,<br/>and scripts for review"]
-    L --> M["Submit PR or share bundle<br/>with maintainers"]
-    M --> N["End"]
+    I -->|Yes| K[Generate documentation - prepare_dataset_submission]
+    K --> L[Review generated docs and checklist]
+    L --> M[Create PR with dataset and documentation]
+    M --> N[End]
 
     classDef intake fill:#e3f2fd,stroke:#1e88e5,color:#0d47a1
     classDef standard fill:#fff3e0,stroke:#fb8c00,color:#e65100
@@ -44,10 +60,10 @@ graph TD
     click D "#step-1-convert-to-a-table" "Conversion quickstart"
     click E "#pattern-a-folder-based" "Conversion patterns"
     click G "#step-2-validate-pythoncli" "Validation workflow"
-    click H "tool_tutorials/#quick_validation_checkpy-fast-quality-scan" "Run the quick validation check"
-    click J "tool_tutorials/#interactive_validation_tunerpy-visual-range-editing" "Tune validation ranges visually"
-    click K "#submission-checklist" "Contribution checklist"
-    click L "#package-to-share" "Packaging guidance"
+    click H "#quick-validation-check" "Run the quick validation check"
+    click J "#interactive-tuner" "Tune validation ranges visually"
+    click K "#step-3-generate-documentation" "Generate documentation"
+    click L "#ready-to-submit" "Review submission checklist"
     click M "https://github.com/jmontp/LocoHub/pulls" "Open pull requests on GitHub" _blank
 ```
 
@@ -367,31 +383,211 @@ Interpret results:
 
 ---
 
+## Step 3 — Generate Documentation {#step-3-generate-documentation}
+
+[↑ Back to workflow](#contribution-workflow)
+
+After your dataset passes validation, generate the complete submission package:
+
+```bash
+python contributor_tools/prepare_dataset_submission.py generate \
+    --dataset converted_datasets/your_dataset_phase.parquet
+```
+
+This tool will:
+1. **Prompt for metadata** - Short code, description, institution, etc.
+2. **Run validation** - Automatically validate and show results
+3. **Generate documentation** - Create standardized dataset documentation
+4. **Create submission checklist** - List all files needed for your PR
+
+Follow the interactive prompts to provide:
+- Display name and short code (e.g., UM21)
+- Dataset description and collection year
+- Institution/lab information
+- Number of subjects and tasks
+- Optional: download URL and citation
+
+The tool creates:
+- `docs/datasets/your_dataset.md` - Complete documentation
+- `docs/datasets/validation_plots/your_dataset/` - Plot directory
+- `submission_checklist_your_dataset.txt` - PR checklist
+
+### Dataset Documentation Management Workflow
+
+After initial submission, you may need to update your dataset documentation:
+
+```mermaid
+graph TD
+    A[Start: Need to update dataset docs] --> B{What is the goal?}
+    B -->|Add new dataset| C1[Run prepare_dataset_submission generate]
+    C1 --> C2[Fill prompts for metadata]
+    C2 --> C3[Review generated documentation]
+    C3 --> C3a[Preview with mkdocs serve]
+    C3a --> C4{Validation ready?}
+    C4 -->|Yes| C5[Commit docs for PR]
+    C4 -->|No| C6[Fix conversion or ranges]
+    C6 --> C1
+
+    B -->|Refresh validation| E1[Run prepare_dataset_submission refresh-validation]
+    E1 --> E2[Generate validation report with plots]
+    E2 --> E3[Inspect results and plots]
+    E3 --> E3a[Preview with mkdocs serve]
+    E3a --> E4{Ranges need tuning?}
+    E4 -->|Yes| E5[Use interactive_validation_tuner]
+    E5 --> E6[Update custom ranges YAML]
+    E6 --> E1
+    E4 -->|No| E7[Commit updated docs]
+
+    B -->|Edit metadata| D1[Run prepare_dataset_submission edit-metadata]
+    D1 --> D2[Update fields interactively]
+    D2 --> D2a[Preview with mkdocs serve]
+    D2a --> D3{Need validation refresh?}
+    D3 -->|Yes| E1
+    D3 -->|No| D5[Commit changes]
+
+    D5 --> G[End]
+    C5 --> G
+    E7 --> G
+
+    classDef plan fill:#e3f2fd,stroke:#1e88e5,color:#0d47a1
+    classDef action fill:#fff3e0,stroke:#fb8c00,color:#e65100
+    classDef check fill:#e8f5e9,stroke:#43a047,color:#1b5e20
+    classDef final fill:#c8e6c9,stroke:#2e7d32,color:#1b5e20
+
+    class A,B plan
+    class C1,C2,C6,D1,D2,E1,E2,E5,E6 action
+    class C3,C3a,D2a,E3,E3a check
+    class C4,D3,E4 check
+    class C5,D5,E7,G final
+```
+
+Use these commands to maintain your dataset documentation over time.
+
+### Previewing Your Documentation
+
+After generating or updating documentation, always preview it locally:
+
+```bash
+# Serve the documentation website locally
+mkdocs serve
+
+# Then open http://localhost:8000 in your browser
+```
+
+**What to check:**
+- Your dataset page renders correctly at `http://localhost:8000/datasets/your_dataset/`
+- Validation results display properly
+- Metadata fields are filled in
+- Mermaid flowcharts render without errors
+- Navigation links work
+
+If you see any issues, fix them before submitting your PR. Common fixes:
+- Markdown formatting errors → Check for unclosed code blocks or tables
+- Missing metadata → Re-run `prepare_dataset_submission.py generate`
+- Broken links → Use relative paths like `../reference/index.md`
+
 ## Ready to Submit {#ready-to-submit}
 
 [↑ Back to workflow](#contribution-workflow)
 
-### Submission checklist
+### Pre-submission checklist
 
-- `subject`, `task`, `task_id`, `task_info`, `step`, `phase_ipsi` columns exist and follow the canonical spelling.
-- Every cycle is phase-normalized to 150 samples with `phase_ipsi` spanning 0–100.
-- Joint angles are in radians, joint moments mass-normalized (Nm/kg), ground reaction forces in body-weight units.
-- Sign conventions follow the [reference spec](../reference/index.md); ipsilateral/contralateral labels match the data.
-- Validation results show ≥90% pass rate per major task, or you have written justification for lower values.
-- `task_info` strings capture experimental context (e.g., `speed_m_s:1.25,incline_deg:5`).
+✅ **Data Quality**
+- Phase-normalized to 150 points per cycle
+- Correct units (radians, Nm/kg, BW)
+- Proper sign conventions
+- ≥80% validation pass rate
 
-### Package to share
+✅ **Required Files**
+- `converted_datasets/your_dataset_phase.parquet` - Dataset file
+- `docs/datasets/your_dataset.md` - Generated documentation
+- `contributor_tools/conversion_scripts/your_dataset/` - Your conversion script
 
-- Include at minimum `datasetcode_year_phase.parquet`; attach `*_filtered.parquet` if you created a filtered version.
-- Add a short README describing the collection protocol, sensors, subject demographics, and any deviations from the spec.
-- Export the latest validation report bundle using `create_dataset_validation_report.py --no-plots` (for text) and with plots when available; include the generated Markdown and assets.
-- List any custom validation range YAMLs or tooling modifications and check them into the pull request.
+✅ **Documentation Complete**
+- All metadata fields filled
+- Validation results included
+- Citation information provided
+- Collection notes documented
 
-### Handoff to maintainers
+### Creating your Pull Request
 
-- Compress scripts, README, validation outputs, and parquet files into a single archive (or reference a stable download link).
-- Open an issue or pull request summarizing the dataset, validation status, and any assistance needed for publication.
-- Stay available for quick follow-up about metadata, ranges, or packaging adjustments during review.
+1. **Create a new branch**:
+   ```bash
+   git checkout -b add-dataset-yourname
+   ```
+
+2. **Add all required files**:
+   ```bash
+   git add converted_datasets/your_dataset_phase.parquet
+   git add docs/datasets/your_dataset.md
+   git add contributor_tools/conversion_scripts/your_dataset/
+   ```
+
+3. **Commit with clear message**:
+   ```bash
+   git commit -m "Add YourDataset 2024 phase-normalized dataset
+
+   - N subjects, M tasks
+   - Validation: XX% pass rate
+   - Includes level walking, stair tasks, etc."
+   ```
+
+4. **Push and create PR**:
+   ```bash
+   git push origin add-dataset-yourname
+   ```
+
+5. **In your PR description**, include:
+   - Brief dataset summary
+   - Validation results (copy from tool output)
+   - Any special considerations
+   - Tag maintainers for review
+
+### What maintainers will check
+
+- Documentation completeness
+- Validation pass rates
+- Data format compliance
+- Conversion script reproducibility
+
+## PR Review Process
+
+After you submit your PR, here's what happens:
+
+```mermaid
+graph TD
+    A[You submit PR with dataset + docs] --> B{Maintainer reviews PR contents}
+    B -->|Missing files| C[Maintainer requests: List missing items]
+    C --> D[You add missing files]
+    D --> B
+
+    B -->|All files present| E{Validation check}
+    E -->|Less than 80% pass rate| F{Is it justified?}
+    F -->|Not justified| G[Maintainer requests: Fix validation issues]
+    G --> H[You fix conversion or document reasons]
+    H --> B
+    F -->|Justified - special population| I{Metadata review}
+
+    E -->|80% or higher pass rate| I
+    I -->|Incomplete| J[Maintainer requests: Complete metadata]
+    J --> K[You update docs]
+    K --> B
+
+    I -->|Complete| L[PR approved!]
+    L --> M[Merged: Dataset published!]
+
+    classDef contributor fill:#e3f2fd,stroke:#1e88e5,color:#0d47a1
+    classDef maintainer fill:#fff3e0,stroke:#fb8c00,color:#e65100
+    classDef success fill:#e8f5e9,stroke:#43a047,color:#1b5e20
+    classDef final fill:#c8e6c9,stroke:#2e7d32,color:#1b5e20
+
+    class A,D,H,K contributor
+    class B,C,E,F,G,I,J maintainer
+    class L success
+    class M final
+```
+
+**Timeline**: Most reviews complete within 3-5 business days. The maintainers will tag you if changes are needed.
 
 ## Common Pitfalls
 
@@ -420,7 +616,7 @@ Before you begin:
 | **quick_validation_check.py** | Fast pass/fail validation statistics | First check after conversion |
 | **create_filtered_dataset.py** | Remove invalid strides from dataset | When you need clean data |
 | **interactive_validation_tuner.py** | GUI for tuning validation ranges | For special populations |
-| **create_dataset_validation_report.py** | Full validation report with plots | Final documentation |
+| **prepare_dataset_submission.py** | Generate documentation and submission package | Ready to submit dataset |
 
 ### quick_validation_check.py — Fast Quality Scan {#quick-validation-check}
 
@@ -465,28 +661,33 @@ python3 contributor_tools/create_filtered_dataset.py converted_datasets/your_dat
 - It prompts before overwriting an existing file
 - Use `--exclude-columns "col_a,col_b"` to ignore auxiliary signals
 
-### create_dataset_validation_report.py — Publication-Ready Reports {#validation-report}
+### prepare_dataset_submission.py — Generate Documentation & Submission Package {#prepare-submission}
 
-When you're ready to document results, generate the full Markdown report and plot bundle.
+When your dataset is ready to submit, use this tool to generate complete documentation.
 
 **Usage:**
 ```bash
-# Run a standalone report while iterating
-python3 contributor_tools/create_dataset_validation_report.py \
-    --datasets converted_datasets/your_dataset_phase.parquet \
-    --no-merge --no-comparison
-
-# Final report that merges into documentation
-python3 contributor_tools/create_dataset_validation_report.py \
-    --datasets converted_datasets/your_dataset_phase.parquet
+python3 contributor_tools/prepare_dataset_submission.py generate \
+    --dataset converted_datasets/your_dataset_phase.parquet
 ```
 
-![validation report screenshot](../assets/create_dataset_validation_report_terminal.png)
+**Interactive Process:**
+1. Tool prompts for metadata (name, short code, institution, etc.)
+2. Automatically runs validation and shows results
+3. Generates standardized documentation in `docs/datasets/`
+4. Creates submission checklist with all required files
+5. Saves checklist for your PR description
+
+**What it creates:**
+- `docs/datasets/your_dataset.md` - Complete documentation with validation results
+- `docs/datasets/validation_plots/your_dataset/` - Directory for plots
+- `submission_checklist_your_dataset.txt` - PR checklist and template
 
 **Tips:**
-- Accepts multiple datasets or glob patterns (e.g., `--datasets converted_datasets/*_phase.parquet`)
-- Use `--show-local-passing` while generating plots to highlight strides that only fail the current feature
-- Provide `--short-code` (e.g., `UM21`) the first time you merge a new dataset
+- Have your dataset information ready (subjects, tasks, institution)
+- Short codes are 2 letters + 2 digits (e.g., UM21, GT23)
+- Tool checks for short code conflicts automatically
+- Follow the generated checklist for your PR
 
 ### interactive_validation_tuner.py — Visual Range Editing {#interactive-tuner}
 
@@ -606,20 +807,6 @@ for task in df['task'].unique():
 
 with open('custom_ranges.yaml', 'w') as f:
     yaml.dump(ranges, f)
-```
-
-### Validation Workflow Integration
-
-```mermaid
-graph LR
-    A[Convert Data] --> B[Quick Validation]
-    B --> C{Pass Rate?}
-    C -->|>90%| D[Create Report]
-    C -->|70-90%| E[Filter Dataset]
-    C -->|<70%| F[Interactive Tuner]
-    E --> D
-    F --> G[Custom Ranges]
-    G --> B
 ```
 
 ### Common Validation Issues
