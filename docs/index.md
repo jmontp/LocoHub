@@ -83,8 +83,8 @@ Each row is one point in a percent‑normalized gait cycle (typically 150 sample
 | Dataset | Tasks | Quality | Documentation | Download |
 |---------|-------|---------|---------------|----------|
 | Georgia Tech 2023 | Walking, stairs, inclines | ✓ Validated | Legacy [Docs](datasets/_legacy/dataset_gtech_2023.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
-| Georgia Tech 2021 | Walking, stairs, inclines | ✓ Validated | Legacy [Docs](datasets/_legacy/dataset_gtech_2021.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
-| University of Michigan 2021 | Level, incline, decline walking | ✓ Validated | Legacy [Docs](datasets/_legacy/dataset_umich_2021.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
+| Georgia Tech 2021 | Walking, stairs, inclines | ⚠️ Partial | [Docs](datasets/gtech_2021_raw.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
+| University of Michigan 2021 | Level, incline, decline walking | ✓ Validated | [Docs](datasets/umich_2021_raw.md) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
 | AddBiomechanics | Walking, running, jumping, stairs | Coming Soon | Legacy [Docs](datasets/_legacy/dataset_addbiomechanics.md) | Coming Soon |
 
 More details and validation reports: [Datasets Reference](datasets/index.md).
