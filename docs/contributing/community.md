@@ -160,7 +160,7 @@ Also cite the original data sources:
 === "Contribute Data"
     Share your standardized datasets to help the community grow
     
-    [Start Converting](standard_operating_procedures.md){ .md-button }
+    [Start Converting](index.md#contribution-workflow){ .md-button }
 
 === "Improve Tools"
     Help develop better conversion and validation tools
@@ -197,6 +197,6 @@ We're committed to providing a welcoming and inclusive environment.
 <div class="next-steps" markdown>
 **Ready to contribute?**
 
-[**Start Converting**](standard_operating_procedures.md){ .md-button .md-button--primary }
+[**Start Converting**](index.md#contribution-workflow){ .md-button .md-button--primary }
 [**Ask a Question**](https://github.com/jmontp/LocoHub/discussions){ .md-button }
 </div>

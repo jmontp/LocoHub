@@ -402,8 +402,237 @@ Interpret results:
 - Missing `task_info` (e.g., `speed_m_s`, `incline_deg`)
 - Time-indexed data not normalized to phase (150 points)
 
+## Contributor Tools Guide {#contributor-tools}
+
+[↑ Back to workflow](#contribution-workflow)
+
+This section walks through every helper tool available in `contributor_tools/`. Each tool serves a specific purpose in the contribution workflow.
+
+Before you begin:
+- Activate the repository's Python environment
+- Keep your phase-normalized dataset in `converted_datasets/` (or provide an absolute path)
+- Run commands from the repository root so relative paths resolve correctly
+
+### Tool Overview
+
+| Tool | Purpose | When to Use |
+|------|---------|------------|
+| **quick_validation_check.py** | Fast pass/fail validation statistics | First check after conversion |
+| **create_filtered_dataset.py** | Remove invalid strides from dataset | When you need clean data |
+| **interactive_validation_tuner.py** | GUI for tuning validation ranges | For special populations |
+| **create_dataset_validation_report.py** | Full validation report with plots | Final documentation |
+
+### quick_validation_check.py — Fast Quality Scan {#quick-validation-check}
+
+Use this first after you export a phase-normalized parquet file. It verifies naming conventions, basic structure, and stride-level validation statistics.
+
+**Usage:**
+```bash
+python3 contributor_tools/quick_validation_check.py converted_datasets/your_dataset_phase.parquet
+
+# With visual plots showing pass/fail distributions
+python3 contributor_tools/quick_validation_check.py converted_datasets/your_dataset_phase.parquet --plot
+
+# Check specific task and show plot
+python3 contributor_tools/quick_validation_check.py converted_datasets/your_dataset_phase.parquet \
+    --task level_walking --plot
+```
+
+![quick validation screenshot](../assets/quick_validation_check_terminal.png)
+
+**Tips:**
+- Only one `--task` can be supplied, and it must be paired with `--plot`
+- The script prints the variable naming audit up front—if it fails there, fix your column names
+- Exit code is non-zero if any task fails validation
+
+### create_filtered_dataset.py — Keep Only Passing Strides {#create-filtered-dataset}
+
+After the quick check highlights problems, run the filter to drop the failing strides and produce a clean file for sharing.
+
+**Usage:**
+```bash
+python3 contributor_tools/create_filtered_dataset.py converted_datasets/your_dataset_phase.parquet
+
+# Use custom validation ranges for special populations
+python3 contributor_tools/create_filtered_dataset.py converted_datasets/your_dataset_phase.parquet \
+    --ranges contributor_tools/validation_ranges/elderly_ranges.yaml
+```
+
+![filtered dataset screenshot](../assets/create_filtered_dataset_terminal.png)
+
+**Tips:**
+- The tool automatically saves to `*_filtered.parquet` alongside the input
+- It prompts before overwriting an existing file
+- Use `--exclude-columns "col_a,col_b"` to ignore auxiliary signals
+
+### create_dataset_validation_report.py — Publication-Ready Reports {#validation-report}
+
+When you're ready to document results, generate the full Markdown report and plot bundle.
+
+**Usage:**
+```bash
+# Run a standalone report while iterating
+python3 contributor_tools/create_dataset_validation_report.py \
+    --datasets converted_datasets/your_dataset_phase.parquet \
+    --no-merge --no-comparison
+
+# Final report that merges into documentation
+python3 contributor_tools/create_dataset_validation_report.py \
+    --datasets converted_datasets/your_dataset_phase.parquet
+```
+
+![validation report screenshot](../assets/create_dataset_validation_report_terminal.png)
+
+**Tips:**
+- Accepts multiple datasets or glob patterns (e.g., `--datasets converted_datasets/*_phase.parquet`)
+- Use `--show-local-passing` while generating plots to highlight strides that only fail the current feature
+- Provide `--short-code` (e.g., `UM21`) the first time you merge a new dataset
+
+### interactive_validation_tuner.py — Visual Range Editing {#interactive-tuner}
+
+Launch this GUI to understand why a feature fails and to author new validation envelopes interactively.
+
+**Usage:**
+```bash
+python3 contributor_tools/interactive_validation_tuner.py
+```
+
+The GUI will prompt for:
+1. Dataset file selection
+2. Validation ranges file selection
+3. Task and variable to visualize
+
+![interactive tuner mock screenshot](../assets/interactive_validation_tuner_mock.png)
+
+**Interface Features:**
+- **Drag validation boxes**: Click and drag edges to adjust min/max ranges
+- **Real-time feedback**: See pass/fail counts update immediately
+- **Show Locally Passing**: Yellow highlights strides passing current variable only
+- **Show in Degrees**: Convert radians to degrees for angular variables
+- **Save Ranges**: Export tuned ranges to new timestamped YAML
+
+**Tips:**
+- Start with kinematics (joint angles are most intuitive)
+- Use degree view for easier interpretation (e.g., 60° vs 1.047 rad)
+- Check all phases—some populations differ more at specific phases
+- Pair with validation report to iterate: tune → save → regenerate plots → repeat
+
+### generate_validation_documentation.py — Refresh the Spec Package {#validation-docs}
+
+This utility rebuilds the validation range reference pages and forward kinematics diagrams from a YAML config.
+
+**Usage:**
+```bash
+# Preview plot generation for a single task
+python3 contributor_tools/generate_validation_documentation.py \
+    --plots-only --tasks level_walking
+
+# Generate full documentation for custom ranges
+python3 contributor_tools/generate_validation_documentation.py \
+    --config contributor_tools/validation_ranges/elderly_ranges.yaml
+```
+
+![validation documentation screenshot](../assets/generate_validation_documentation_terminal.png)
+
+**Tips:**
+- Point `--config` at an alternate YAML to document population-specific envelopes
+- All renders land in `docs/reference/datasets_documentation/validation_ranges/`
+
+## Validation Reference {#validation-reference}
+
+[↑ Back to workflow](#contribution-workflow)
+
+### Understanding Validation
+
+Validation ensures your dataset meets biomechanical expectations and follows the standard format. The system checks:
+
+1. **Structure**: 150 points per cycle, required columns present
+2. **Naming**: Variables follow `joint_motion_measurement_side_unit` convention
+3. **Ranges**: Values fall within expected biomechanical limits at each phase
+4. **Signs**: Flexion positive, extension negative, etc.
+
+### Default vs Custom Ranges
+
+**Default ranges** (`contributor_tools/validation_ranges/default_ranges.yaml`):
+- Generated from healthy adult populations
+- Cover standard locomotion tasks
+- Work for most typical datasets
+
+**Custom ranges needed for**:
+- Special populations (elderly, children, clinical)
+- Pathological gait (neurological conditions, amputees)
+- Novel activities (sports, rehabilitation)
+- Equipment constraints (exoskeletons, prosthetics)
+
+### Creating Custom Validation Ranges
+
+#### Method 1: Interactive Tuning (Recommended)
+
+Use the visual tuner to adjust ranges based on your data:
+
+```bash
+python3 contributor_tools/interactive_validation_tuner.py
+# Visually adjust ranges and save
+```
+
+#### Method 2: Statistical Generation
+
+Generate ranges from your dataset's statistics:
+
+```python
+import pandas as pd
+import numpy as np
+import yaml
+
+df = pd.read_parquet('your_dataset_phase.parquet')
+ranges = {}
+
+for task in df['task'].unique():
+    task_data = df[df['task'] == task]
+    ranges[task] = {'phases': {}}
+    
+    for phase in [0, 25, 50, 75]:
+        phase_idx = int(phase * 1.5)  # 0-149 index
+        phase_data = task_data[task_data['phase_index'] == phase_idx]
+        
+        for var in biomech_variables:
+            if var in phase_data.columns:
+                mean = phase_data[var].mean()
+                std = phase_data[var].std()
+                ranges[task]['phases'][str(phase)][var] = {
+                    'min': float(mean - 2.5 * std),
+                    'max': float(mean + 2.5 * std)
+                }
+
+with open('custom_ranges.yaml', 'w') as f:
+    yaml.dump(ranges, f)
+```
+
+### Validation Workflow Integration
+
+```mermaid
+graph LR
+    A[Convert Data] --> B[Quick Validation]
+    B --> C{Pass Rate?}
+    C -->|>90%| D[Create Report]
+    C -->|70-90%| E[Filter Dataset]
+    C -->|<70%| F[Interactive Tuner]
+    E --> D
+    F --> G[Custom Ranges]
+    G --> B
+```
+
+### Common Validation Issues
+
+| Issue | Likely Cause | Solution |
+|-------|-------------|----------|
+| Low pass rate (<70%) | Wrong sign conventions | Check flexion/extension signs |
+| Phase 0% failures | Phase offset | Check heel strike detection |
+| Systematic high/low values | Unit conversion | Verify radians vs degrees |
+| Single variable failing | Population difference | Use custom ranges |
+| Random failures | Noisy data | Filter or clean dataset |
+
 ## References
 
 - [Reference](../reference/index.md)
-- [Tools Reference](tools_reference.md)
 - Examples: [UMich (MATLAB)](examples/umich_2021_example.md), [GTech (Python)](examples/gtech_2023_example.md)
