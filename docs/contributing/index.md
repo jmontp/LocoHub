@@ -453,16 +453,16 @@ graph TD
     C5 --> G
     E7 --> G
 
-    classDef plan fill:#e3f2fd,stroke:#1e88e5,color:#0d47a1
-    classDef action fill:#fff3e0,stroke:#fb8c00,color:#e65100
-    classDef check fill:#e8f5e9,stroke:#43a047,color:#1b5e20
-    classDef final fill:#c8e6c9,stroke:#2e7d32,color:#1b5e20
+    classDef intake fill:#e3f2fd,stroke:#1e88e5,color:#0d47a1
+    classDef standard fill:#fff3e0,stroke:#fb8c00,color:#e65100
+    classDef qa fill:#e8f5e9,stroke:#43a047,color:#1b5e20
+    classDef share fill:#c8e6c9,stroke:#2e7d32,color:#1b5e20
 
-    class A,B plan
-    class C1,C2,C6,D1,D2,E1,E2,E5,E6 action
-    class C3,C3a,D2a,E3,E3a check
-    class C4,D3,E4 check
-    class C5,D5,E7,G final
+    class A,B intake
+    class C1,C2,C6,D1,D2,E1,E2,E5,E6 standard
+    class C3,C3a,D2a,E3,E3a qa
+    class C4,D3,E4 qa
+    class C5,D5,E7,G share
 ```
 
 Use these commands to maintain your dataset documentation over time.
