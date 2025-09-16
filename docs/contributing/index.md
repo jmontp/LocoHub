@@ -24,7 +24,7 @@ The high-level view shows the four major stages of contribution. Each stage uses
 
 ## Detailed Contribution Workflow {#contribution-workflow}
 
-The flowchart below shows your complete journey from raw data to published dataset. Click any box to jump directly to detailed instructions for that step.
+The flowchart below shows your complete journey from raw data to published dataset. Click any box with an underline to jump directly to detailed instructions for that step.
 
 ```mermaid
 graph TD
@@ -398,6 +398,7 @@ python contributor_tools/prepare_dataset_submission.py generate \
 ```
 
 This tool will:
+
 1. **Prompt for metadata** - Short code, description, institution, etc.
 2. **Run validation** - Automatically validate and show results
 3. **Generate documentation** - Create standardized dataset documentation
