@@ -10,10 +10,12 @@ ensuring it's ready for maintainer review.
 
 Usage:
     python contributor_tools/prepare_dataset_submission.py generate \
-        --dataset converted_datasets/your_dataset_phase.parquet
-        
+        --dataset converted_datasets/your_dataset_phase.parquet \
+        [--metadata-file docs/datasets/_metadata/your_dataset.yaml] \
+        [--overwrite]
+
 The tool will:
-1. Prompt for dataset metadata interactively
+1. Collect dataset metadata (interactively or from --metadata-file)
 2. Run validation and generate reports
 3. Create standardized documentation
 4. Package everything for PR submission
@@ -23,6 +25,7 @@ The tool will:
 import sys
 import argparse
 import yaml
+import json
 import re
 from pathlib import Path
 from datetime import datetime
@@ -76,6 +79,46 @@ def _relative_path(path: Path) -> str:
         return path.name
 
 
+def load_metadata_file(path: Path) -> Dict:
+    """Load metadata from a YAML or JSON file."""
+
+    try:
+        with open(path, "r") as f:
+            if path.suffix.lower() in {".yml", ".yaml"}:
+                data = yaml.safe_load(f)
+            elif path.suffix.lower() == ".json":
+                data = json.load(f)
+            else:
+                # Try YAML first, then JSON as fallback
+                try:
+                    data = yaml.safe_load(f)
+                except yaml.YAMLError:
+                    f.seek(0)
+                    data = json.load(f)
+    except Exception as exc:
+        raise ValueError(f"Unable to load metadata file '{path}': {exc}") from exc
+
+    if not isinstance(data, dict):
+        raise ValueError("Metadata file must contain a mapping of keys to values")
+
+    return data
+
+
+def _normalize_tasks(value) -> List[str]:
+    """Normalize tasks input to a list of strings."""
+
+    if not value:
+        return []
+
+    if isinstance(value, str):
+        return [task.strip() for task in value.split(",") if task.strip()]
+
+    if isinstance(value, (list, tuple)):
+        return [str(task).strip() for task in value if str(task).strip()]
+
+    return []
+
+
 def generate_documentation(dataset_path: Path, metadata: Dict) -> Path:
     """
     Generate dataset documentation from template.
@@ -89,11 +132,12 @@ def generate_documentation(dataset_path: Path, metadata: Dict) -> Path:
     """
     # Create documentation content
     dataset_rel = _relative_path(dataset_path)
+    date_added = metadata.get('date_added') or datetime.now().strftime('%Y-%m-%d')
 
     doc_content = f"""---
 title: {metadata['display_name']}
 short_code: {metadata['short_code']}
-date_added: {datetime.now().strftime('%Y-%m-%d')}
+date_added: {date_added}
 ---
 
 # {metadata['display_name']}
@@ -294,11 +338,13 @@ Need help? Check the contributor guide or ask in discussions!
 def handle_generate(args):
     """Handle the generate command."""
     dataset_path = Path(args.dataset)
-    
+
     # Validate dataset file
     if not dataset_path.exists():
         print(f"❌ Dataset file not found: {dataset_path}")
         return 1
+
+    dataset_path = dataset_path.resolve()
     
     if not dataset_path.suffix == '.parquet':
         print(f"❌ Dataset must be a parquet file, got: {dataset_path.suffix}")
@@ -313,74 +359,132 @@ def handle_generate(args):
     
     # Check for existing documentation
     doc_path = repo_root / "docs" / "datasets" / f"{dataset_name}.md"
+    metadata_source: Optional[Dict] = None
+    if getattr(args, 'metadata_file', None):
+        metadata_path = Path(args.metadata_file)
+        if not metadata_path.exists():
+            print(f"❌ Metadata file not found: {metadata_path}")
+            return 1
+
+        try:
+            metadata_source = load_metadata_file(metadata_path)
+        except ValueError as exc:
+            print(f"❌ {exc}")
+            return 1
+
     if doc_path.exists():
-        print(f"⚠️  Documentation already exists: {doc_path}")
-        overwrite = input("Overwrite? [y/N]: ").strip().lower()
-        if overwrite != 'y':
-            print("🛑 Cancelled")
-            return 0
-    
+        if args.overwrite:
+            print(f"⚠️  Documentation already exists: {doc_path} (will overwrite)")
+        else:
+            if metadata_source:
+                print("❌ Documentation already exists. Re-run with --overwrite to replace it.")
+                return 1
+            print(f"⚠️  Documentation already exists: {doc_path}")
+            overwrite = input("Overwrite? [y/N]: ").strip().lower()
+            if overwrite != 'y':
+                print("🛑 Cancelled")
+                return 0
+
+    non_interactive = metadata_source is not None
+
     print(f"\n📝 Dataset Metadata")
-    print(f"{'='*40}")
-    print("Please provide information about your dataset:\n")
-    
-    # Interactive metadata collection
-    try:
-        # Basic metadata
-        display_name = input(f"Display name [{display_name}]: ").strip() or display_name
-        
-        # Short code validation
+    if non_interactive:
+        print("(loaded from metadata file)")
+    else:
+        print(f"{'='*40}")
+        print("Please provide information about your dataset:\n")
+
+    # Collect metadata (either from file or interactively)
+    date_added = None
+    if non_interactive:
         existing_codes = check_existing_short_codes()
-        while True:
-            suggested_code = f"{display_name[:2].upper()}{str(datetime.now().year)[2:]}"
-            short_code = input(f"Short code (2 letters + 2 digits) [{suggested_code}]: ").strip().upper()
-            short_code = short_code or suggested_code
-            
-            if not re.match(r'^[A-Z]{2}\d{2}$', short_code):
-                print("❌ Short code must be 2 letters + 2 digits (e.g., UM21)")
-                continue
-                
-            if short_code in existing_codes:
-                print(f"❌ Short code '{short_code}' already used by {existing_codes[short_code]}")
-                continue
-                
-            print(f"✅ Short code '{short_code}' accepted")
-            break
-        
-        # Dataset details
-        print("\nDataset Details:")
-        description = input("Brief description (1-2 sentences): ").strip()
-        if not description:
-            description = f"Biomechanical dataset from {display_name}"
-        
-        year = input(f"Collection year [{datetime.now().year}]: ").strip()
-        year = year or str(datetime.now().year)
-        
-        institution = input("Institution/Lab name: ").strip()
-        if not institution:
-            institution = "[Please add institution name]"
-        
-        subjects = input("Number of subjects: ").strip()
-        if not subjects or not subjects.isdigit():
-            subjects = "[Please add subject count]"
-        
-        # Task selection
-        print("\nTasks included (comma-separated):")
-        print("  Common: level_walking, incline_walking, stair_ascent, stair_descent")
-        tasks_input = input("Tasks: ").strip()
-        tasks = [t.strip() for t in tasks_input.split(",")] if tasks_input else ["[Please list tasks]"]
-        
-        # Optional information
-        print("\nOptional Information (press Enter to skip):")
-        download_url = input("Download URL: ").strip()
-        citation = input("Citation: ").strip()
-        protocol = input("Collection protocol notes: ").strip()
-        notes = input("Additional notes: ").strip()
-        
-    except KeyboardInterrupt:
-        print("\n\n🛑 Submission preparation cancelled")
-        return 1
-    
+        display_name = metadata_source.get('display_name', display_name)
+        short_code = metadata_source.get('short_code')
+        if not short_code:
+            print("❌ Metadata file must include 'short_code'")
+            return 1
+        short_code = short_code.upper()
+
+        if not re.match(r'^[A-Z]{2}\d{2}[A-Z]?$', short_code):
+            print("❌ Short code must be 2 letters + 2 digits (optional trailing letter, e.g., UM21 or UM21F)")
+            return 1
+
+        if short_code in existing_codes and existing_codes[short_code] != dataset_name:
+            print(f"❌ Short code '{short_code}' already used by {existing_codes[short_code]}")
+            return 1
+
+        description = metadata_source.get('description', f"Biomechanical dataset from {display_name}")
+        year = str(metadata_source.get('year', datetime.now().year))
+        institution = metadata_source.get('institution', "[Please add institution name]")
+        subjects = str(metadata_source.get('subjects', "[Please add subject count]"))
+        tasks = _normalize_tasks(metadata_source.get('tasks'))
+        if not tasks:
+            tasks = ["[Please list tasks]"]
+
+        download_url = metadata_source.get('download_url')
+        citation = metadata_source.get('citation')
+        protocol = metadata_source.get('protocol')
+        notes = metadata_source.get('notes')
+        date_added = metadata_source.get('date_added')
+    else:
+        try:
+            # Basic metadata
+            display_name = input(f"Display name [{display_name}]: ").strip() or display_name
+
+            # Short code validation
+            existing_codes = check_existing_short_codes()
+            while True:
+                suggested_code = f"{display_name[:2].upper()}{str(datetime.now().year)[2:]}"
+                short_code = input(f"Short code (AA00 or AA00F) [{suggested_code}]: ").strip().upper()
+                short_code = short_code or suggested_code
+
+                if not re.match(r'^[A-Z]{2}\d{2}[A-Z]?$', short_code):
+                    print("❌ Short code must be 2 letters + 2 digits (optional trailing letter, e.g., UM21 or UM21F)")
+                    continue
+
+                if short_code in existing_codes:
+                    print(f"❌ Short code '{short_code}' already used by {existing_codes[short_code]}")
+                    continue
+
+                print(f"✅ Short code '{short_code}' accepted")
+                break
+
+            # Dataset details
+            print("\nDataset Details:")
+            description = input("Brief description (1-2 sentences): ").strip()
+            if not description:
+                description = f"Biomechanical dataset from {display_name}"
+
+            year = input(f"Collection year [{datetime.now().year}]: ").strip()
+            year = year or str(datetime.now().year)
+
+            institution = input("Institution/Lab name: ").strip()
+            if not institution:
+                institution = "[Please add institution name]"
+
+            subjects = input("Number of subjects: ").strip()
+            if not subjects or not subjects.isdigit():
+                subjects = "[Please add subject count]"
+
+            # Task selection
+            print("\nTasks included (comma-separated):")
+            print("  Common: level_walking, incline_walking, stair_ascent, stair_descent")
+            tasks_input = input("Tasks: ").strip()
+            tasks = [t.strip() for t in tasks_input.split(",")] if tasks_input else ["[Please list tasks]"]
+
+            # Optional information
+            print("\nOptional Information (press Enter to skip):")
+            download_url = input("Download URL: ").strip()
+            citation = input("Citation: ").strip()
+            protocol = input("Collection protocol notes: ").strip()
+            notes = input("Additional notes: ").strip()
+
+            date_added = datetime.now().strftime('%Y-%m-%d')
+
+        except KeyboardInterrupt:
+            print("\n\n🛑 Submission preparation cancelled")
+            return 1
+
     # Prepare metadata dictionary
     metadata = {
         'dataset_name': dataset_name,
@@ -389,12 +493,13 @@ def handle_generate(args):
         'description': description,
         'year': year,
         'institution': institution,
-        'subjects': subjects,
+        'subjects': str(subjects),
         'tasks': tasks,
         'download_url': download_url if download_url else None,
         'citation': citation if citation else None,
         'protocol': protocol if protocol else None,
         'notes': notes if notes else None,
+        'date_added': date_added or datetime.now().strftime('%Y-%m-%d'),
     }
     
     # Run validation
@@ -468,8 +573,8 @@ Example workflow:
   
   4. Follow the generated checklist to complete your PR
   
-The tool will:
-  - Prompt for dataset metadata interactively
+  The tool will:
+  - Collect metadata interactively or via --metadata-file
   - Run validation and show results  
   - Generate standardized documentation
   - Create submission checklist
@@ -489,6 +594,15 @@ The tool will:
         '--dataset',
         required=True,
         help='Path to phase-normalized dataset parquet file'
+    )
+    generate_parser.add_argument(
+        '--metadata-file',
+        help='Optional YAML/JSON metadata file to run non-interactively'
+    )
+    generate_parser.add_argument(
+        '--overwrite',
+        action='store_true',
+        help='Overwrite existing documentation without prompting'
     )
     
     args = parser.parse_args()

@@ -403,6 +403,20 @@ If the tool cannot summarize validation on its own, paste the output from
 `python contributor_tools/quick_validation_check.py …` into the generated
 markdown before you submit.
 
+Need a fully scripted run? Supply a metadata file (YAML/JSON) and skip the
+prompts entirely:
+
+```bash
+python contributor_tools/prepare_dataset_submission.py generate \
+    --dataset converted_datasets/your_dataset_phase.parquet \
+    --metadata-file docs/datasets/_metadata/your_dataset.yaml \
+    --overwrite
+```
+
+Metadata files expect keys like `display_name`, `short_code`, `description`,
+`year`, `institution`, `subjects`, `tasks`, and optionally `download_url`,
+`citation`, `protocol`, `notes`, or `date_added`.
+
 This tool will:
 
 1. **Prompt for metadata** - Short code, description, institution, etc.
