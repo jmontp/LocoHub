@@ -27,15 +27,28 @@ import argparse
 import yaml
 import json
 import re
+import subprocess
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Optional, Tuple, List
 import os
+from collections import OrderedDict
 
 # Add parent directories to path for imports
 current_dir = Path(__file__).parent
 repo_root = current_dir.parent
 sys.path.insert(0, str(repo_root))
+
+from user_libs.python.locomotion_data import LocomotionData
+
+SITE_DATASET_BASE_URL = "https://jmontp.github.io/LocoHub/datasets"
+DATASET_TABLE_FILES = [
+    repo_root / "README.md",
+    repo_root / "docs" / "index.md",
+    repo_root / "docs" / "datasets" / "index.md",
+]
+TABLE_MARKER_START = "<!-- DATASET_TABLE_START -->"
+TABLE_MARKER_END = "<!-- DATASET_TABLE_END -->"
 
 # Import validation modules
 try:
@@ -119,6 +132,140 @@ def _normalize_tasks(value) -> List[str]:
     return []
 
 
+def _format_task_name(task: str) -> str:
+    return task.replace("_", " ").title()
+
+
+def write_metadata_file(metadata: Dict) -> None:
+    dataset_name = metadata['dataset_name']
+    meta_dir = repo_root / "docs" / "datasets" / "_metadata"
+    meta_dir.mkdir(parents=True, exist_ok=True)
+    meta_path = meta_dir / f"{dataset_name}.yaml"
+
+    fields = OrderedDict()
+    fields['display_name'] = metadata['display_name']
+    fields['short_code'] = metadata['short_code']
+    fields['description'] = metadata['description']
+    fields['year'] = str(metadata['year'])
+    fields['institution'] = metadata['institution']
+    fields['subjects'] = str(metadata['subjects'])
+    fields['tasks'] = metadata['tasks']
+    if metadata.get('download_url'):
+        fields['download_url'] = metadata['download_url']
+    if metadata.get('citation'):
+        fields['citation'] = metadata['citation']
+    if metadata.get('protocol'):
+        fields['protocol'] = metadata['protocol']
+    if metadata.get('notes'):
+        fields['notes'] = metadata['notes']
+    fields['date_added'] = metadata.get('date_added')
+    fields['validation_status'] = metadata.get('validation_status')
+    if metadata.get('validation_pass_rate') is not None:
+        fields['validation_pass_rate'] = round(float(metadata['validation_pass_rate']), 1)
+    fields['total_strides'] = metadata.get('validation_total_strides')
+    fields['passing_strides'] = metadata.get('validation_passing_strides')
+    fields['quality_display'] = metadata.get('quality_display')
+    fields['doc_url'] = metadata.get('doc_url')
+    fields['doc_path'] = metadata.get('doc_path')
+    fields['validation_summary'] = metadata.get('validation_summary')
+
+    with open(meta_path, 'w') as fh:
+        yaml.safe_dump(dict(fields), fh, sort_keys=False)
+
+
+def replace_between_markers(path: Path, content: str) -> None:
+    text = path.read_text()
+    if TABLE_MARKER_START not in text or TABLE_MARKER_END not in text:
+        return
+    new_text = re.sub(
+        rf"{re.escape(TABLE_MARKER_START)}.*?{re.escape(TABLE_MARKER_END)}",
+        f"{TABLE_MARKER_START}\n{content}\n{TABLE_MARKER_END}",
+        text,
+        flags=re.DOTALL,
+    )
+    path.write_text(new_text)
+
+
+def update_dataset_tables() -> None:
+    meta_dir = repo_root / "docs" / "datasets" / "_metadata"
+    if not meta_dir.exists():
+        return
+
+    metadata_entries = []
+    for meta_file in sorted(meta_dir.glob('*.yaml')):
+        data = load_metadata_file(meta_file)
+        data['dataset_name'] = meta_file.stem
+        metadata_entries.append(data)
+
+    if not metadata_entries:
+        return
+
+    rows = []
+    header = "| Dataset | Tasks | Quality | Documentation | Download |"
+    separator = "|---------|-------|---------|---------------|----------|"
+
+    for data in sorted(metadata_entries, key=lambda d: d.get('display_name', '').lower()):
+        doc_url = data.get('doc_url') or f"{SITE_DATASET_BASE_URL}/{data['dataset_name']}/"
+        display_name = data.get('display_name') or data['dataset_name']
+        dataset_cell = f"[{display_name}]({doc_url})"
+        tasks_list = data.get('tasks', []) or []
+        tasks_cell = ', '.join(_format_task_name(task) for task in tasks_list) if tasks_list else '—'
+        quality = data.get('quality_display') or data.get('validation_status') or '—'
+        doc_cell = f"[Docs]({doc_url})"
+        download_url = data.get('download_url')
+        download_cell = f"[Download]({download_url})" if download_url else 'Coming Soon'
+        rows.append(f"| {dataset_cell} | {tasks_cell} | {quality} | {doc_cell} | {download_cell} |")
+
+    table = "\n".join([header, separator] + rows)
+
+    for table_file in DATASET_TABLE_FILES:
+        if table_file.exists():
+            replace_between_markers(table_file, table)
+
+
+def _generate_validation_plots(dataset_path: Path, output_dir: Path) -> None:
+    script_path = repo_root / 'contributor_tools' / 'quick_validation_check.py'
+    if not script_path.exists():
+        return
+    cmd = [
+        sys.executable,
+        str(script_path),
+        str(dataset_path),
+        '--plot',
+        '--output-dir',
+        str(output_dir)
+    ]
+    subprocess.run(cmd, check=True, cwd=repo_root)
+
+
+def update_validation_gallery(doc_path: Path, dataset_name: str) -> None:
+    plots_dir = repo_root / 'docs' / 'datasets' / 'validation_plots' / dataset_name
+    if not plots_dir.exists():
+        return
+    images = sorted(plots_dir.glob('*.png'))
+    if not images:
+        return
+
+    gallery_lines = []
+    for image_path in images:
+        name = image_path.stem
+        task_segment = name
+        if '_phase_' in name and '_all_features' in name:
+            task_segment = name.split('_phase_')[1].split('_all_features')[0]
+        task_segment = task_segment.replace('filtered_', '').replace('raw_', '')
+        task_title = _format_task_name(task_segment)
+        rel_path = Path('validation_plots') / dataset_name / image_path.name
+        gallery_lines.append(f"![{task_title}](./{rel_path.as_posix()})")
+        gallery_lines.append("")
+
+    gallery = "\n".join(gallery_lines).strip() or "(Generate plots with quick_validation_check.py --plot)"
+    content = doc_path.read_text()
+    if '<!-- VALIDATION_GALLERY -->' in content:
+        content = content.replace('<!-- VALIDATION_GALLERY -->', f"{gallery}\n")
+    else:
+        content = content + "\n" + gallery + "\n"
+    doc_path.write_text(content)
+
 def generate_documentation(dataset_path: Path, metadata: Dict) -> Path:
     """
     Generate dataset documentation from template.
@@ -133,6 +280,8 @@ def generate_documentation(dataset_path: Path, metadata: Dict) -> Path:
     # Create documentation content
     dataset_rel = _relative_path(dataset_path)
     date_added = metadata.get('date_added') or datetime.now().strftime('%Y-%m-%d')
+
+    tasks_display = ', '.join(_format_task_name(task) for task in metadata['tasks'])
 
     doc_content = f"""---
 title: {metadata['display_name']}
@@ -154,7 +303,7 @@ date_added: {date_added}
 
 ### Subjects and Tasks
 - **Number of Subjects**: {metadata['subjects']}
-- **Tasks Included**: {', '.join(metadata['tasks'])}
+- **Tasks Included**: {tasks_display}
 
 ### Data Structure
 - **Format**: Phase-normalized (150 points per gait cycle)
@@ -187,6 +336,10 @@ date_added: {date_added}
 - [Validation plots](./validation_plots/{metadata['dataset_name']}/index.md) - Directory for plots
 - Conversion script in `contributor_tools/conversion_scripts/{metadata['dataset_name']}/`
 
+## Validation Plots
+
+<!-- VALIDATION_GALLERY -->
+
 ---
 
 *Generated by Dataset Submission Tool on {datetime.now().strftime('%Y-%m-%d %H:%M')}*
@@ -204,7 +357,7 @@ date_added: {date_added}
     return doc_path
 
 
-def run_validation(dataset_path: Path) -> Tuple[Dict, str]:
+def run_validation(dataset_path: Path) -> Tuple[Dict, str, Optional[Dict]]:
     """
     Run validation on the dataset.
     
@@ -219,30 +372,62 @@ def run_validation(dataset_path: Path) -> Tuple[Dict, str]:
     ranges_file = repo_root / "contributor_tools" / "validation_ranges" / "default_ranges.yaml"
     if not ranges_file.exists():
         print(f"⚠️  Default validation ranges not found, skipping validation")
-        return {}, "Validation not run (ranges file missing)"
+        return {}, "Validation not run (ranges file missing)", None
     
     try:
         report_generator = ValidationReportGenerator(ranges_file=str(ranges_file))
         validation_result = report_generator.validator.validate(str(dataset_path))
 
         summary_data = validation_result.get('summary') or {}
-        if not summary_data:
+        stats_block = validation_result.get('stats') or {}
+
+        if not summary_data and stats_block:
+            total = stats_block.get('total_strides', 0)
+            failing = stats_block.get('total_failing_strides', 0)
+            passed = total - failing
+        elif summary_data:
+            total = summary_data.get('total_strides', 0)
+            passed = summary_data.get('passing_strides', 0)
+        else:
             dataset_hint = _relative_path(dataset_path)
             fallback = (
                 "⚠️ Validation summary unavailable from automated run.\n"
                 f"Run `python contributor_tools/quick_validation_check.py {dataset_hint}` "
                 "and paste the results here."
             )
-            return validation_result, fallback
+            return validation_result, fallback, None
 
         # Calculate pass rate
-        total = summary_data.get('total_strides', 0)
-        passed = summary_data.get('passing_strides', 0)
         pass_rate = (passed / total * 100) if total > 0 else 0
         
         # Generate summary text
         status = "✅ PASSED" if pass_rate >= 95 else "⚠️ PARTIAL" if pass_rate >= 80 else "❌ NEEDS REVIEW"
         
+        # Compute per-task stride pass rates using validator helper
+        validator = report_generator.validator
+        locomotion_data = LocomotionData(str(dataset_path), phase_col='phase_ipsi')
+        task_stats = {}
+        summary_rows = []
+        for task in locomotion_data.get_tasks():
+            task_data = locomotion_data.df[locomotion_data.df['task'] == task]
+            total_cycles = len(task_data) // 150 if len(task_data) else 0
+            failing = validator._validate_task_with_failing_features(locomotion_data, task, None)
+            failing_strides = len(failing)
+            task_pass_rate = 100.0 * (1 - failing_strides / total_cycles) if total_cycles else 0.0
+            if task_pass_rate >= 90:
+                task_status = "✅"
+            elif task_pass_rate >= 70:
+                task_status = "⚠️"
+            else:
+                task_status = "❌"
+            task_stats[task] = {
+                'pass_rate': task_pass_rate,
+                'status': task_status,
+                'total_strides': total_cycles,
+                'failing_strides': failing_strides,
+            }
+            summary_rows.append(f"| {_format_task_name(task)} | {task_pass_rate:.1f}% | {task_status} |")
+
         summary = f"""### Summary
 
 **Status**: {status} ({pass_rate:.1f}% valid)  
@@ -253,22 +438,25 @@ def run_validation(dataset_path: Path) -> Tuple[Dict, str]:
 
 | Task | Pass Rate | Status |
 |------|-----------|--------|
-"""
-        
-        for task, task_result in validation_result.get('tasks', {}).items():
-            task_pass = task_result.get('pass_percentage', 0)
-            task_status = "✅" if task_pass >= 90 else "⚠️" if task_pass >= 70 else "❌"
-            summary += f"| {task} | {task_pass:.1f}% | {task_status} |\n"
-        
+""" + "\n".join(summary_rows) + "\n"
+
         if pass_rate < 80:
             summary += "\n⚠️ **Note**: Low pass rates may indicate special populations or non-standard protocols. "
             summary += "Consider documenting these differences or creating custom validation ranges.\n"
-        
-        return validation_result, summary
-        
+
+        stats = {
+            'total_strides': total,
+            'passing_strides': passed,
+            'pass_rate': pass_rate,
+            'status': status,
+            'tasks': task_stats,
+        }
+
+        return validation_result, summary, stats
+
     except Exception as e:
         print(f"⚠️  Validation failed: {e}")
-        return {}, f"⚠️ Validation could not be completed: {str(e)}"
+        return {}, f"⚠️ Validation could not be completed: {str(e)}", None
 
 
 def generate_submission_checklist(dataset_name: str, doc_path: Path) -> str:
@@ -504,8 +692,32 @@ def handle_generate(args):
     
     # Run validation
     print(f"\n🔍 Validating dataset...")
-    validation_result, validation_summary = run_validation(dataset_path)
+    validation_result, validation_summary, validation_stats = run_validation(dataset_path)
     metadata['validation_summary'] = validation_summary
+    metadata['doc_url'] = f"{SITE_DATASET_BASE_URL}/{dataset_name}/"
+    metadata['doc_path'] = f"docs/datasets/{dataset_name}.md"
+
+    if validation_stats:
+        metadata['validation_status'] = validation_stats.get('status')
+        metadata['validation_pass_rate'] = validation_stats.get('pass_rate')
+        metadata['validation_total_strides'] = validation_stats.get('total_strides')
+        metadata['validation_passing_strides'] = validation_stats.get('passing_strides')
+        status_text = validation_stats.get('status', '')
+        pass_rate = validation_stats.get('pass_rate') or 0
+        if 'PASSED' in status_text:
+            metadata['quality_display'] = '✅ Validated'
+        elif 'PARTIAL' in status_text:
+            metadata['quality_display'] = f"⚠️ Partial ({pass_rate:.1f}%)"
+        elif 'NEEDS REVIEW' in status_text:
+            metadata['quality_display'] = f"❌ Needs Review ({pass_rate:.1f}%)"
+        else:
+            metadata['quality_display'] = status_text or '—'
+    else:
+        metadata['validation_status'] = 'UNKNOWN'
+        metadata['validation_pass_rate'] = None
+        metadata['validation_total_strides'] = None
+        metadata['validation_passing_strides'] = None
+        metadata['quality_display'] = '⚠️ Validation Pending'
     
     # Show validation results
     print(f"\n📊 Validation Results:")
@@ -537,6 +749,18 @@ def handle_generate(args):
             "```\n\n"
             "When plots are saved in this folder they will be embedded below automatically.\n"
         )
+
+    # Generate fresh validation plots for the dataset
+    try:
+        _generate_validation_plots(dataset_path, plots_dir)
+    except subprocess.CalledProcessError as exc:
+        print(f"⚠️  Plot generation failed: {exc}")
+
+    update_validation_gallery(doc_path, dataset_name)
+
+    # Persist metadata and refresh global tables
+    write_metadata_file(metadata)
+    update_dataset_tables()
 
     
     # Show submission checklist
