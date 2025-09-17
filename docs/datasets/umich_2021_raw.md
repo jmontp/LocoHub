@@ -63,7 +63,7 @@ Raw dataset includes every stride; see filtered version for validation-pass subs
 ## Files Included
 
 - `converted_datasets/umich_2021_phase_raw.parquet` - Phase-normalized dataset
-- Validation plots in `docs/datasets/validation_plots/umich_2021_raw/`
+- [Validation plots](./validation_plots/umich_2021_raw/index.md) - Directory for plots
 - Conversion script in `contributor_tools/conversion_scripts/umich_2021_raw/`
 
 ---

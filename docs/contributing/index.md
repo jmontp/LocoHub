@@ -397,6 +397,12 @@ python contributor_tools/prepare_dataset_submission.py generate \
     --dataset converted_datasets/your_dataset_phase.parquet
 ```
 
+The generator runs interactively—press Enter to accept the suggested defaults
+or pipe answers from a file/shell script if you want to automate the prompts.
+If the tool cannot summarize validation on its own, paste the output from
+`python contributor_tools/quick_validation_check.py …` into the generated
+markdown before you submit.
+
 This tool will:
 
 1. **Prompt for metadata** - Short code, description, institution, etc.

@@ -68,6 +68,14 @@ def check_existing_short_codes() -> Dict[str, str]:
     return codes
 
 
+def _relative_path(path: Path) -> str:
+    """Return repo-relative path if possible, else name."""
+    try:
+        return str(path.relative_to(repo_root))
+    except ValueError:
+        return path.name
+
+
 def generate_documentation(dataset_path: Path, metadata: Dict) -> Path:
     """
     Generate dataset documentation from template.
@@ -80,6 +88,8 @@ def generate_documentation(dataset_path: Path, metadata: Dict) -> Path:
         Path to generated documentation file
     """
     # Create documentation content
+    dataset_rel = _relative_path(dataset_path)
+
     doc_content = f"""---
 title: {metadata['display_name']}
 short_code: {metadata['short_code']}
@@ -129,8 +139,8 @@ date_added: {datetime.now().strftime('%Y-%m-%d')}
 
 ## Files Included
 
-- `{dataset_path.name}` - Phase-normalized dataset
-- Validation plots in `docs/datasets/validation_plots/{metadata['dataset_name']}/`
+- `{dataset_rel}` - Phase-normalized dataset
+- [Validation plots](./validation_plots/{metadata['dataset_name']}/index.md) - Directory for plots
 - Conversion script in `contributor_tools/conversion_scripts/{metadata['dataset_name']}/`
 
 ---
@@ -170,10 +180,20 @@ def run_validation(dataset_path: Path) -> Tuple[Dict, str]:
     try:
         report_generator = ValidationReportGenerator(ranges_file=str(ranges_file))
         validation_result = report_generator.validator.validate(str(dataset_path))
-        
+
+        summary_data = validation_result.get('summary') or {}
+        if not summary_data:
+            dataset_hint = _relative_path(dataset_path)
+            fallback = (
+                "⚠️ Validation summary unavailable from automated run.\n"
+                f"Run `python contributor_tools/quick_validation_check.py {dataset_hint}` "
+                "and paste the results here."
+            )
+            return validation_result, fallback
+
         # Calculate pass rate
-        total = validation_result['summary']['total_strides']
-        passed = validation_result['summary']['passing_strides']
+        total = summary_data.get('total_strides', 0)
+        passed = summary_data.get('passing_strides', 0)
         pass_rate = (passed / total * 100) if total > 0 else 0
         
         # Generate summary text
@@ -395,6 +415,24 @@ def handle_generate(args):
     plots_dir = repo_root / "docs" / "datasets" / "validation_plots" / dataset_name
     plots_dir.mkdir(parents=True, exist_ok=True)
     print(f"✅ Plot directory created: {plots_dir.relative_to(repo_root)}/")
+
+    plots_index = plots_dir / "index.md"
+    if not plots_index.exists():
+        plots_rel = _relative_path(plots_dir)
+        dataset_hint = _relative_path(dataset_path)
+        plots_index.write_text(
+            "---\n"
+            f"title: {metadata['display_name']} Validation Plots\n"
+            "---\n\n"
+            f"# Validation Plots — {metadata['display_name']}\n\n"
+            "Generate visual validation outputs with:\n\n"
+            "```bash\n"
+            "python contributor_tools/quick_validation_check.py "
+            f"{dataset_hint} --plot --output-dir {plots_rel}\n"
+            "```\n\n"
+            "When plots are saved in this folder they will be embedded below automatically.\n"
+        )
+
     
     # Show submission checklist
     checklist = generate_submission_checklist(dataset_name, doc_path)

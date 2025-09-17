@@ -62,7 +62,7 @@ Filtered dataset retains only validation-pass strides for phase-normalized analy
 ## Files Included
 
 - `converted_datasets/gtech_2021_phase_filtered.parquet` - Phase-normalized dataset
-- Validation plots in `docs/datasets/validation_plots/gtech_2021_filtered/`
+- [Validation plots](./validation_plots/gtech_2021_filtered/index.md) - Directory for plots
 - Conversion script in `contributor_tools/conversion_scripts/gtech_2021_filtered/`
 
 ---

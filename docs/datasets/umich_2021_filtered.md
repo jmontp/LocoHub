@@ -63,7 +63,7 @@ Filtered dataset retains only validation-pass strides across all tasks.
 ## Files Included
 
 - `converted_datasets/umich_2021_phase_filtered.parquet` - Phase-normalized dataset
-- Validation plots in `docs/datasets/validation_plots/umich_2021_filtered/`
+- [Validation plots](./validation_plots/umich_2021_filtered/index.md) - Directory for plots
 - Conversion script in `contributor_tools/conversion_scripts/umich_2021_filtered/`
 
 ---
