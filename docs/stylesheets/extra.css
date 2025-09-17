@@ -95,13 +95,15 @@
 :root[data-code-lang="python"] .code-lang-matlab { display: none; }
 :root[data-code-lang="matlab"] .code-lang-python { display: none; }
 
-/* Hide left navigation sidebar */
-.md-sidebar--primary {
-  display: none;
-}
+@media screen and (min-width: 76em) {
+  /* Hide left navigation sidebar on wide screens only */
+  .md-sidebar--primary {
+    display: none;
+  }
 
-/* Adjust content width to use full space */
-.md-content {
-  max-width: 100%;
-  margin-left: 0;
+  /* Allow main content to expand when sidebar is hidden */
+  .md-content {
+    max-width: 100%;
+    margin-left: 0;
+  }
 }
