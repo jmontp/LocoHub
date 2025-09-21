@@ -9,7 +9,7 @@ This tool generates all necessary documentation for your dataset submission,
 ensuring it's ready for maintainer review.
 
 Usage:
-    python contributor_tools/prepare_dataset_submission.py generate \
+    python contributor_tools/prepare_dataset_submission.py add-dataset \
         --dataset converted_datasets/your_dataset_phase.parquet \
         [--metadata-file docs/datasets/_metadata/your_dataset.yaml] \
         [--overwrite]
@@ -523,8 +523,8 @@ Need help? Check the contributor guide or ask in discussions!
     return checklist
 
 
-def handle_generate(args):
-    """Handle the generate command."""
+def handle_add_dataset(args):
+    """Handle the add-dataset command."""
     dataset_path = Path(args.dataset)
 
     # Validate dataset file
@@ -790,9 +790,9 @@ This tool helps contributors prepare complete dataset submissions.
 Example workflow:
   1. Convert your data to phase-normalized parquet format
   2. Run quick validation to check data quality
-  3. Use this tool to generate documentation:
+  3. Use this tool to add the dataset package:
      
-     python contributor_tools/prepare_dataset_submission.py generate \\
+     python contributor_tools/prepare_dataset_submission.py add-dataset \\
          --dataset converted_datasets/your_dataset_phase.parquet
   
   4. Follow the generated checklist to complete your PR
@@ -809,21 +809,21 @@ Example workflow:
     # Create subcommand
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
-    # Generate command (the only command for contributors)
-    generate_parser = subparsers.add_parser(
-        'generate',
-        help='Generate documentation and prepare submission'
+    # Add-dataset command (primary contributor workflow)
+    add_parser = subparsers.add_parser(
+        'add-dataset',
+        help='Add or refresh documentation and submission assets for a dataset'
     )
-    generate_parser.add_argument(
+    add_parser.add_argument(
         '--dataset',
         required=True,
         help='Path to phase-normalized dataset parquet file'
     )
-    generate_parser.add_argument(
+    add_parser.add_argument(
         '--metadata-file',
         help='Optional YAML/JSON metadata file to run non-interactively'
     )
-    generate_parser.add_argument(
+    add_parser.add_argument(
         '--overwrite',
         action='store_true',
         help='Overwrite existing documentation without prompting'
@@ -838,8 +838,8 @@ Example workflow:
     print(f"🚀 Dataset Submission Preparation Tool")
     print(f"{'='*60}")
     
-    if args.command == 'generate':
-        return handle_generate(args)
+    if args.command == 'add-dataset':
+        return handle_add_dataset(args)
     else:
         print(f"❌ Unknown command: {args.command}")
         return 1
