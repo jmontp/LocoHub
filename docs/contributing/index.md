@@ -8,6 +8,9 @@ Transform your biomechanics data into a standardized, validated community resour
 
 ## High-Level Workflow
 
+<details>
+<summary>Expand diagram</summary>
+
 ```mermaid
 graph LR
     A[Your Data] --> B[Standardized Format]
@@ -20,11 +23,16 @@ graph LR
     style D fill:#c8e6c9,stroke:#2e7d32,color:#1b5e20
 ```
 
+</details>
+
 The high-level view shows the four major stages of contribution. Each stage uses a distinct color palette: blue for intake, orange-cream for standardization, green for validation, and sage for community sharing.
 
 ## Detailed Contribution Workflow {#contribution-workflow}
 
 The flowchart below shows your complete journey from raw data to published dataset. Click any box with an underline to jump directly to detailed instructions for that step.
+
+<details>
+<summary>Expand detailed workflow</summary>
 
 ```mermaid
 graph TD
@@ -66,6 +74,8 @@ graph TD
     click L "#ready-to-submit" "Review submission checklist"
     click M "https://github.com/jmontp/LocoHub/pulls" "Open pull requests on GitHub" _blank
 ```
+
+</details>
 
 ---
 
@@ -440,6 +450,9 @@ The tool creates:
 
 After initial submission, you may need to update your dataset documentation:
 
+<details>
+<summary>Workflow overview (expand for flowchart)</summary>
+
 ```mermaid
 graph TD
     A[Start: Need to update dataset docs] --> B{What is the goal?}
@@ -484,6 +497,8 @@ graph TD
     class C4,D3,E4 qa
     class C5,D5,E7,G share
 ```
+
+</details>
 
 Use these commands to maintain your dataset documentation over time.
 
@@ -578,6 +593,9 @@ If you see any issues, fix them before submitting your PR. Common fixes:
 
 After you submit your PR, here's what happens:
 
+<details>
+<summary>Expand PR review flow</summary>
+
 ```mermaid
 graph TD
     A[You submit PR with dataset + docs] --> B{Maintainer reviews PR contents}
@@ -610,6 +628,8 @@ graph TD
     class L success
     class M final
 ```
+
+</details>
 
 **Timeline**: Most reviews complete within 3-5 business days. The maintainers will tag you if changes are needed.
 
