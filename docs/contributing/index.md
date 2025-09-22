@@ -8,9 +8,6 @@ Transform your biomechanics data into a standardized, validated community resour
 
 ## High-Level Workflow
 
-<details>
-<summary>Expand diagram</summary>
-
 ```mermaid
 graph LR
     A[Your Data] --> B[Standardized Format]
@@ -22,8 +19,6 @@ graph LR
     style C fill:#e8f5e9,stroke:#43a047,color:#1b5e20
     style D fill:#c8e6c9,stroke:#2e7d32,color:#1b5e20
 ```
-
-</details>
 
 The high-level view shows the four major stages of contribution. Each stage uses a distinct color palette: blue for intake, orange-cream for standardization, green for validation, and sage for community sharing.
 
