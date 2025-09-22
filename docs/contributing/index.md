@@ -367,9 +367,13 @@ If your data are time‑indexed (no `phase_ipsi`), add a phase‑normalization p
 
 Tips: pick a consistent HS detector (e.g., vertical GRF threshold crossing), de‑spike signals before event detection, and verify a few cycles visually.
 
+---
+
 ## Step 2 — Validate (Python/CLI) {#step-2-validate-pythoncli}
 
 [↑ Back to workflow](#contribution-workflow)
+
+Quickly prove the dataset is well-formed before investing in docs.
 
 Run the quick validator for pass/fail stats (optional plots):
 
@@ -398,7 +402,7 @@ Interpret results:
 After your dataset passes validation, generate the complete submission package:
 
 ```bash
-python contributor_tools/prepare_dataset_submission.py init-dataset \
+python contributor_tools/prepare_dataset_submission.py add-dataset \
     --dataset converted_datasets/your_dataset_phase.parquet
 ```
 
@@ -412,7 +416,7 @@ Need a fully scripted run? Supply a metadata file (YAML/JSON) and skip the
 prompts entirely:
 
 ```bash
-python contributor_tools/prepare_dataset_submission.py init-dataset \
+python contributor_tools/prepare_dataset_submission.py add-dataset \
     --dataset converted_datasets/your_dataset_phase.parquet \
     --metadata-file docs/datasets/_metadata/your_dataset.yaml \
     --overwrite
@@ -451,7 +455,7 @@ After initial submission, you may need to update your dataset documentation:
 ```mermaid
 graph TD
     A[Start: Need to update dataset docs] --> B{What is the goal?}
-    B -->|Add new dataset| C1[Run prepare_dataset_submission init-dataset]
+    B -->|Add new dataset| C1[Run prepare_dataset_submission add-dataset]
     C1 --> C2[Fill prompts for metadata]
     C2 --> C3[Review generated documentation]
     C3 --> C3a[Preview with mkdocs serve]
@@ -460,7 +464,7 @@ graph TD
     C4 -->|No| C6[Fix conversion or ranges]
     C6 --> C1
 
-    B -->|Refresh validation| E1[Run prepare_dataset_submission update-plots]
+    B -->|Refresh validation| E1[Run prepare_dataset_submission refresh-validation]
     E1 --> E2[Generate validation report with plots]
     E2 --> E3[Inspect results and plots]
     E3 --> E3a[Preview with mkdocs serve]
@@ -470,7 +474,7 @@ graph TD
     E6 --> E1
     E4 -->|No| E7[Commit updated docs]
 
-    B -->|Edit metadata| D1[Run prepare_dataset_submission update-metadata]
+    B -->|Edit metadata| D1[Run prepare_dataset_submission edit-metadata]
     D1 --> D2[Update fields interactively]
     D2 --> D2a[Preview with mkdocs serve]
     D2a --> D3{Need validation refresh?}
@@ -517,7 +521,7 @@ mkdocs serve
 
 If you see any issues, fix them before submitting your PR. Common fixes:
 - Markdown formatting errors → Check for unclosed code blocks or tables
-- Missing metadata → Re-run `prepare_dataset_submission.py init-dataset`
+- Missing metadata → Re-run `prepare_dataset_submission.py add-dataset`
 - Broken links → Use relative paths like `../reference/index.md`
 
 ## Ready to Submit {#ready-to-submit}
