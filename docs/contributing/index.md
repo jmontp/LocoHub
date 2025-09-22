@@ -403,7 +403,7 @@ Interpret results:
 After your dataset passes validation, generate the complete submission package:
 
 ```bash
-python contributor_tools/prepare_dataset_submission.py add-dataset \
+python contributor_tools/prepare_dataset_submission.py init-dataset \
     --dataset converted_datasets/your_dataset_phase.parquet
 ```
 
@@ -417,7 +417,7 @@ Need a fully scripted run? Supply a metadata file (YAML/JSON) and skip the
 prompts entirely:
 
 ```bash
-python contributor_tools/prepare_dataset_submission.py add-dataset \
+python contributor_tools/prepare_dataset_submission.py init-dataset \
     --dataset converted_datasets/your_dataset_phase.parquet \
     --metadata-file docs/datasets/_metadata/your_dataset.yaml \
     --overwrite
@@ -456,7 +456,7 @@ After initial submission, you may need to update your dataset documentation:
 ```mermaid
 graph TD
     A[Start: Need to update dataset docs] --> B{What is the goal?}
-    B -->|Add new dataset| C1[Run prepare_dataset_submission add-dataset]
+    B -->|Add new dataset| C1[Run prepare_dataset_submission init-dataset]
     C1 --> C2[Fill prompts for metadata]
     C2 --> C3[Review generated documentation]
     C3 --> C3a[Preview with mkdocs serve]
@@ -465,7 +465,7 @@ graph TD
     C4 -->|No| C6[Fix conversion or ranges]
     C6 --> C1
 
-    B -->|Refresh validation| E1[Run prepare_dataset_submission refresh-validation]
+    B -->|Refresh validation| E1[Run prepare_dataset_submission update-plots]
     E1 --> E2[Generate validation report with plots]
     E2 --> E3[Inspect results and plots]
     E3 --> E3a[Preview with mkdocs serve]
@@ -475,7 +475,7 @@ graph TD
     E6 --> E1
     E4 -->|No| E7[Commit updated docs]
 
-    B -->|Edit metadata| D1[Run prepare_dataset_submission edit-metadata]
+    B -->|Edit metadata| D1[Run prepare_dataset_submission update-metadata]
     D1 --> D2[Update fields interactively]
     D2 --> D2a[Preview with mkdocs serve]
     D2a --> D3{Need validation refresh?}
@@ -522,7 +522,7 @@ mkdocs serve
 
 If you see any issues, fix them before submitting your PR. Common fixes:
 - Markdown formatting errors → Check for unclosed code blocks or tables
-- Missing metadata → Re-run `prepare_dataset_submission.py add-dataset`
+- Missing metadata → Re-run `prepare_dataset_submission.py init-dataset`
 - Broken links → Use relative paths like `../reference/index.md`
 
 ## Ready to Submit {#ready-to-submit}
@@ -552,7 +552,7 @@ If you see any issues, fix them before submitting your PR. Common fixes:
 
 1. **Create a new branch**:
    ```bash
-   git checkout -b add-dataset-yourname
+   git checkout -b init-dataset-yourname
    ```
 
 2. **Add all required files**:
@@ -573,7 +573,7 @@ If you see any issues, fix them before submitting your PR. Common fixes:
 
 4. **Push and create PR**:
    ```bash
-   git push origin add-dataset-yourname
+   git push origin init-dataset-yourname
    ```
 
 5. **In your PR description**, include:
@@ -711,7 +711,7 @@ When your dataset is ready to submit, use this tool to generate complete documen
 
 **Usage:**
 ```bash
-python3 contributor_tools/prepare_dataset_submission.py add-dataset \
+python3 contributor_tools/prepare_dataset_submission.py init-dataset \
     --dataset converted_datasets/your_dataset_phase.parquet
 ```
 

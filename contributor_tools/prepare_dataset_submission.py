@@ -9,7 +9,7 @@ This tool generates all necessary documentation for your dataset submission,
 ensuring it's ready for maintainer review.
 
 Usage:
-    python contributor_tools/prepare_dataset_submission.py add-dataset \
+    python contributor_tools/prepare_dataset_submission.py init-dataset \
         --dataset converted_datasets/your_dataset_phase.parquet \
         [--metadata-file docs/datasets/_metadata/your_dataset.yaml] \
         [--overwrite]
@@ -523,8 +523,8 @@ Need help? Check the contributor guide or ask in discussions!
     return checklist
 
 
-def handle_add_dataset(args):
-    """Handle the add-dataset command."""
+def handle_init_dataset(args):
+    """Handle the init-dataset command."""
     dataset_path = Path(args.dataset)
 
     # Validate dataset file
@@ -792,7 +792,7 @@ Example workflow:
   2. Run quick validation to check data quality
   3. Use this tool to add the dataset package:
      
-     python contributor_tools/prepare_dataset_submission.py add-dataset \\
+     python contributor_tools/prepare_dataset_submission.py init-dataset \\
          --dataset converted_datasets/your_dataset_phase.parquet
   
   4. Follow the generated checklist to complete your PR
@@ -810,20 +810,20 @@ Example workflow:
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
     # Add-dataset command (primary contributor workflow)
-    add_parser = subparsers.add_parser(
-        'add-dataset',
+    init_parser = subparsers.add_parser(
+        'init-dataset',
         help='Add or refresh documentation and submission assets for a dataset'
     )
-    add_parser.add_argument(
+    init_parser.add_argument(
         '--dataset',
         required=True,
         help='Path to phase-normalized dataset parquet file'
     )
-    add_parser.add_argument(
+    init_parser.add_argument(
         '--metadata-file',
         help='Optional YAML/JSON metadata file to run non-interactively'
     )
-    add_parser.add_argument(
+    init_parser.add_argument(
         '--overwrite',
         action='store_true',
         help='Overwrite existing documentation without prompting'
@@ -838,8 +838,8 @@ Example workflow:
     print(f"🚀 Dataset Submission Preparation Tool")
     print(f"{'='*60}")
     
-    if args.command == 'add-dataset':
-        return handle_add_dataset(args)
+    if args.command == 'init-dataset':
+        return handle_init_dataset(args)
     else:
         print(f"❌ Unknown command: {args.command}")
         return 1

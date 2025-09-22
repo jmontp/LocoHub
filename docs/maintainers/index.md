@@ -93,7 +93,7 @@ flowchart TD
 Generates or refreshes everything a contributor needs for a dataset page. The script derives a dataset slug from the parquet file name, stores metadata in `docs/datasets/_metadata/`, writes the Markdown page, and rebuilds the dataset tables that live between the `<!-- DATASET_TABLE_START -->` / `<!-- DATASET_TABLE_END -->` markers in `README.md`, `docs/index.md`, and `docs/datasets/index.md`. Those tables are regenerated from the metadata directory so the public landing pages always list the newest datasets with consistent links.
 
 <details>
-<summary>`add-dataset` subcommand</summary>
+<summary>`init-dataset` subcommand</summary>
 
 Primary entry point today. Collects metadata (prompts or file), runs validation, writes dataset docs, persists metadata YAML, regenerates tables, and outputs the submission checklist.
 
@@ -120,7 +120,7 @@ flowchart TD
 </details>
 
 <details>
-<summary>`refresh-validation` subcommand</summary>
+<summary>`update-plots` subcommand</summary>
 
 Planned follow-up flow for when contributors need to rerun validation after adjusting converters or ranges. Would skip metadata prompts, rebuild plots, update summaries, and refresh tables using the existing metadata.
 
@@ -137,7 +137,7 @@ flowchart TD
 </details>
 
 <details>
-<summary>`edit-metadata` subcommand</summary>
+<summary>`update-metadata` subcommand</summary>
 
 Intended fast path for metadata-only tweaks. Loads the existing YAML, lets contributors edit fields, saves updates, and offers to chain directly into a validation refresh if data quality changed.
 
@@ -148,7 +148,7 @@ flowchart TD
     C --> D[Write updated metadata and Markdown]
     D --> E[Refresh dataset tables between markers]
     E --> F{Run validation refresh now?}
-    F -- Yes --> G[Chain to refresh-validation]
+    F -- Yes --> G[Chain to update-plots]
     F -- No --> H[Exit with status]
 ```
 
@@ -159,7 +159,7 @@ flowchart TD
 <details>
 <summary>`interactive_validation_tuner.py` — GUI tool for hands-on validation range tuning.</summary>
 
-Helps contributors diagnose failing variables and author custom range YAMLs. Requires tkinter/display support; useful when datasets target special populations and need bespoke envelopes before re-running `add-dataset`.
+Helps contributors diagnose failing variables and author custom range YAMLs. Requires tkinter/display support; useful when datasets target special populations and need bespoke envelopes before re-running `init-dataset`.
 
 ```mermaid
 flowchart TD
