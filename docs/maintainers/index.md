@@ -90,7 +90,7 @@ flowchart TD
 <details>
 <summary>`prepare_dataset_submission.py` — Unified contributor workflow for validation, plots, and documentation.</summary>
 
-Generates or refreshes everything a contributor needs for a dataset page. The script derives a dataset slug from the parquet file name, stores metadata in `docs/datasets/_metadata/`, writes the Markdown page, and rebuilds the dataset tables that live between the `<!-- DATASET_TABLE_START -->` / `<!-- DATASET_TABLE_END -->` markers in `README.md`, `docs/index.md`, and `docs/datasets/index.md`. Those tables are regenerated from the metadata directory so the public landing pages always list the newest datasets with consistent links.
+Generates or refreshes everything a contributor needs for a dataset page. The script derives a dataset slug from the parquet file name, stores metadata in `docs/datasets/_metadata/`, writes both the overview (`<slug>.md`) and validation (`<slug>_validation.md`) pages, and rebuilds the dataset tables that live between the `<!-- DATASET_TABLE_START -->` / `<!-- DATASET_TABLE_END -->` markers in `README.md`, `docs/index.md`, and `docs/datasets/index.md`. Those tables are regenerated from the metadata directory so the public landing pages always list the newest datasets with consistent links.
 
 <details>
 <summary>`add-dataset` subcommand</summary>
@@ -111,7 +111,7 @@ flowchart TD
     H -- Yes --> J[Store pass statistics]
     I --> K
     J --> K[Embed validation summary]
-    K --> L[Render dataset Markdown + plots]
+    K --> L[Render overview & validation markdown]
     L --> M[Write metadata YAML and checklist]
     M --> N[Regenerate dataset tables via markers]
     N --> O[Exit with status]
@@ -208,9 +208,9 @@ Everything on the public site is generated from a small collection of source fol
 docs/
 ├── datasets/
 │   ├── _metadata/             # YAML snapshots driving tables & cards
-│   ├── validation_plots/      # Exported plot directories (images + index.md)
-│   ├── validation_archives/   # Historical copies of ranges/plots (timestamped)
-│   └── <dataset>.md           # Dataset landing pages (generated)
+│   ├── validation_plots/      # Latest validation images + index.md per dataset
+│   ├── <dataset>.md           # Dataset overview (metadata & usage)
+│   └── <dataset>_validation.md# Validation summary + ranges + plots
 ├── maintainers/               # Maintainer handbook (this page)
 ├── reference/                 # Data standard spec and units
 ├── contributing/              # Contributor step-by-step guide
@@ -222,9 +222,10 @@ Key mechanics to remember:
 - `prepare_dataset_submission.py add-dataset` is the authoritative writer. It:
   1. Loads or prompts for metadata and writes `docs/datasets/_metadata/<slug>.yaml`.
   2. Runs validation, storing summary text and stats in the metadata dict.
-  3. Renders `docs/datasets/<slug>.md`, referencing any generated plots.
+  3. Renders `docs/datasets/<slug>.md` (overview) and `docs/datasets/<slug>_validation.md` (latest validation report with inline ranges).
   4. Regenerates the dataset tables inside the marker pairs (`<!-- DATASET_TABLE_START -->` / `<!-- DATASET_TABLE_END -->`) in `README.md`, `docs/index.md`, and `docs/datasets/index.md`.
-  5. Writes `docs/datasets/validation_plots/<slug>/` (images plus `index.md`) and archives validation YAML when requested.
+  5. Writes `docs/datasets/validation_plots/<slug>/` (images plus `index.md`). Only the most recent plots are kept; git history provides older versions.
+- The dataset tables now surface both links: the dataset name points to the overview page, and the `Validation` column links to the corresponding validation report.
 - Running `mkdocs serve` or `mkdocs build` does not invoke regeneration—it only renders the already-generated Markdown.
 - If you hand-edit generated Markdown, mirror the change in the metadata or template; the next `add-dataset` run will otherwise overwrite it.
 
@@ -242,10 +243,10 @@ Algorithm sketch:
 
 3. **Clear derived content**
    - Replace the text between each marker pair with `_Dataset table will be regenerated on next add-dataset run._`.
-   - Optional flags: `--wipe-plots` to delete `docs/datasets/validation_plots/*` and `--wipe-archives` for `docs/datasets/validation_archives/*`.
+   - Optional flag: `--wipe-plots` to delete `docs/datasets/validation_plots/*`.
 
 4. **Next steps prompt**
-   - Echo the exact `prepare_dataset_submission.py add-dataset --metadata-file ... --overwrite` command needed to rebuild.
+   - Echo the exact `prepare_dataset_submission.py add-dataset --metadata-file ... --overwrite` command needed to rebuild the overview, validation report, and plots.
    - Remind maintainers to inspect or delete the backup files.
 
 5. **Exit codes**

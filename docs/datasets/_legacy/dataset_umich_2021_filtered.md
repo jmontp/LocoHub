@@ -82,7 +82,6 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
 **Validation Configuration:**
 - **Ranges File**: `default_ranges.yaml`
 - **SHA256**: `c232030c...` (first 8 chars)
-- **Archived Copy**: [`umich_2021_phase_filtered_2025-08-20_094307_ranges.yaml`](../validation_archives/umich_2021_phase_filtered_2025-08-20_094307_ranges.yaml)
 
 | Metric | Value | Status |
 |--------|-------|--------|

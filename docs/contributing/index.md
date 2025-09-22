@@ -430,7 +430,7 @@ This tool will:
 
 1. **Prompt for metadata** - Short code, description, institution, etc.
 2. **Run validation** - Automatically validate and show results
-3. **Generate documentation** - Create standardized dataset documentation
+3. **Generate documentation** - Create the dataset overview and validation report
 4. **Create submission checklist** - List all files needed for your PR
 
 Follow the interactive prompts to provide:
@@ -441,8 +441,9 @@ Follow the interactive prompts to provide:
 - Optional: download URL and citation
 
 The tool creates:
-- `docs/datasets/your_dataset.md` - Complete documentation
-- `docs/datasets/validation_plots/your_dataset/` - Plot directory
+- `docs/datasets/your_dataset.md` - Dataset overview and metadata
+- `docs/datasets/your_dataset_validation.md` - Validation report (ranges + summaries)
+- `docs/datasets/validation_plots/your_dataset/` - Plot directory (latest pass/fail images)
 - `submission_checklist_your_dataset.txt` - PR checklist
 
 ### Dataset Documentation Management Workflow
@@ -539,6 +540,7 @@ If you see any issues, fix them before submitting your PR. Common fixes:
 ✅ **Required Files**
 - `converted_datasets/your_dataset_phase.parquet` - Dataset file
 - `docs/datasets/your_dataset.md` - Generated documentation
+- `docs/datasets/your_dataset_validation.md` - Validation report
 - `contributor_tools/conversion_scripts/your_dataset/` - Your conversion script
 
 ✅ **Documentation Complete**
@@ -551,15 +553,16 @@ If you see any issues, fix them before submitting your PR. Common fixes:
 
 1. **Create a new branch**:
    ```bash
-   git checkout -b init-dataset-yourname
+   git checkout -b add-dataset-yourname
    ```
 
 2. **Add all required files**:
    ```bash
    git add converted_datasets/your_dataset_phase.parquet
    git add docs/datasets/your_dataset.md
-   git add contributor_tools/conversion_scripts/your_dataset/
-   ```
+    git add docs/datasets/your_dataset_validation.md
+    git add contributor_tools/conversion_scripts/your_dataset/
+    ```
 
 3. **Commit with clear message**:
    ```bash
@@ -572,7 +575,7 @@ If you see any issues, fix them before submitting your PR. Common fixes:
 
 4. **Push and create PR**:
    ```bash
-   git push origin init-dataset-yourname
+   git push origin add-dataset-yourname
    ```
 
 5. **In your PR description**, include:
@@ -710,7 +713,7 @@ When your dataset is ready to submit, use this tool to generate complete documen
 
 **Usage:**
 ```bash
-python3 contributor_tools/prepare_dataset_submission.py init-dataset \
+python3 contributor_tools/prepare_dataset_submission.py add-dataset \
     --dataset converted_datasets/your_dataset_phase.parquet
 ```
 

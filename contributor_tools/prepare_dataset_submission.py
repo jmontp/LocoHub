@@ -9,7 +9,7 @@ This tool generates all necessary documentation for your dataset submission,
 ensuring it's ready for maintainer review.
 
 Usage:
-    python contributor_tools/prepare_dataset_submission.py init-dataset \
+    python contributor_tools/prepare_dataset_submission.py add-dataset \
         --dataset converted_datasets/your_dataset_phase.parquet \
         [--metadata-file docs/datasets/_metadata/your_dataset.yaml] \
         [--overwrite]
@@ -52,7 +52,7 @@ TABLE_MARKER_END = "<!-- DATASET_TABLE_END -->"
 
 # Import validation modules
 try:
-    from internal.validation_engine.report_generator import ValidationReportGenerator
+    from internal.validation_engine.validator import Validator
 except ImportError as e:
     print(f"❌ Error importing validation modules: {e}")
     print("Make sure you're running from the repository root directory")
@@ -167,6 +167,10 @@ def write_metadata_file(metadata: Dict) -> None:
     fields['quality_display'] = metadata.get('quality_display')
     fields['doc_url'] = metadata.get('doc_url')
     fields['doc_path'] = metadata.get('doc_path')
+    if metadata.get('validation_doc_url'):
+        fields['validation_doc_url'] = metadata.get('validation_doc_url')
+    if metadata.get('validation_doc_path'):
+        fields['validation_doc_path'] = metadata.get('validation_doc_path')
     fields['validation_summary'] = metadata.get('validation_summary')
 
     with open(meta_path, 'w') as fh:
@@ -201,20 +205,21 @@ def update_dataset_tables() -> None:
         return
 
     rows = []
-    header = "| Dataset | Tasks | Quality | Documentation | Download |"
-    separator = "|---------|-------|---------|---------------|----------|"
+    header = "| Dataset | Tasks | Quality | Validation | Download |"
+    separator = "|---------|-------|---------|------------|----------|"
 
     for data in sorted(metadata_entries, key=lambda d: d.get('display_name', '').lower()):
         doc_url = data.get('doc_url') or f"{SITE_DATASET_BASE_URL}/{data['dataset_name']}/"
+        validation_url = data.get('validation_doc_url') or f"{SITE_DATASET_BASE_URL}/{data['dataset_name']}_validation/"
         display_name = data.get('display_name') or data['dataset_name']
         dataset_cell = f"[{display_name}]({doc_url})"
         tasks_list = data.get('tasks', []) or []
         tasks_cell = ', '.join(_format_task_name(task) for task in tasks_list) if tasks_list else '—'
         quality = data.get('quality_display') or data.get('validation_status') or '—'
-        doc_cell = f"[Docs]({doc_url})"
+        validation_cell = f"[Report]({validation_url})" if validation_url else '—'
         download_url = data.get('download_url')
         download_cell = f"[Download]({download_url})" if download_url else 'Coming Soon'
-        rows.append(f"| {dataset_cell} | {tasks_cell} | {quality} | {doc_cell} | {download_cell} |")
+        rows.append(f"| {dataset_cell} | {tasks_cell} | {quality} | {validation_cell} | {download_cell} |")
 
     table = "\n".join([header, separator] + rows)
 
@@ -266,22 +271,17 @@ def update_validation_gallery(doc_path: Path, dataset_name: str) -> None:
         content = content + "\n" + gallery + "\n"
     doc_path.write_text(content)
 
-def generate_documentation(dataset_path: Path, metadata: Dict) -> Path:
-    """
-    Generate dataset documentation from template.
-    
-    Args:
-        dataset_path: Path to the dataset parquet file
-        metadata: Dataset metadata dictionary
-        
-    Returns:
-        Path to generated documentation file
-    """
-    # Create documentation content
+def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_filename: str) -> Path:
+    """Generate the dataset overview markdown page."""
     dataset_rel = _relative_path(dataset_path)
     date_added = metadata.get('date_added') or datetime.now().strftime('%Y-%m-%d')
-
     tasks_display = ', '.join(_format_task_name(task) for task in metadata['tasks'])
+
+    status_label = metadata.get('quality_display') or metadata.get('validation_status') or 'Validation pending'
+    pass_rate = metadata.get('validation_pass_rate')
+    pass_display = f"{float(pass_rate):.1f}%" if pass_rate is not None else '—'
+
+    validation_link = f"./{validation_doc_filename}"
 
     doc_content = f"""---
 title: {metadata['display_name']}
@@ -310,6 +310,12 @@ date_added: {date_added}
 - **Sampling**: Phase-indexed from 0-100%
 - **Variables**: Standard biomechanical naming convention
 
+## Validation Snapshot
+
+- **Status**: {status_label}
+- **Stride Pass Rate**: {pass_display}
+- **Detailed Report**: [View validation report]({validation_link})
+
 ## Data Access
 
 ### Download
@@ -317,10 +323,6 @@ date_added: {date_added}
 
 ### Citation
 {metadata.get('citation', 'Please cite appropriately when using this dataset.')}
-
-## Validation Results
-
-{metadata.get('validation_summary', '*Validation results will be added here*')}
 
 ## Collection Details
 
@@ -332,9 +334,80 @@ date_added: {date_added}
 
 ## Files Included
 
-- `{dataset_rel}` - Phase-normalized dataset
-- [Validation plots](./validation_plots/{metadata['dataset_name']}/index.md) - Directory for plots
+- `{dataset_rel}` — Phase-normalized dataset
+- [Validation report]({validation_link})
+- [Validation plots](./validation_plots/{metadata['dataset_name']}/index.md)
 - Conversion script in `contributor_tools/conversion_scripts/{metadata['dataset_name']}/`
+
+---
+
+*Generated by Dataset Submission Tool on {datetime.now().strftime('%Y-%m-%d %H:%M')}*
+"""
+
+    doc_dir = repo_root / "docs" / "datasets"
+    doc_dir.mkdir(parents=True, exist_ok=True)
+    doc_path = doc_dir / f"{metadata['dataset_name']}.md"
+    doc_path.write_text(doc_content)
+    return doc_path
+
+
+def generate_validation_page(
+    dataset_path: Path,
+    metadata: Dict,
+    validation_summary: str,
+    validation_stats: Optional[Dict],
+    validation_ranges: Dict[str, Dict[int, Dict[str, Dict[str, float]]]],
+    validation_doc_path: Path,
+) -> Path:
+    """Generate the per-dataset validation markdown page."""
+
+    ranges_payload = {}
+    for task in sorted(validation_ranges.keys()):
+        phase_payload = {}
+        for phase in sorted(validation_ranges[task].keys()):
+            phase_payload[int(phase)] = validation_ranges[task][phase]
+        if phase_payload:
+            ranges_payload[task] = phase_payload
+
+    if ranges_payload:
+        ranges_yaml = yaml.safe_dump({'tasks': ranges_payload}, sort_keys=False, width=120)
+    else:
+        ranges_yaml = 'tasks: {}'
+
+    pass_rate = metadata.get('validation_pass_rate')
+    pass_display = f"{float(pass_rate):.1f}%" if pass_rate is not None else '—'
+    total_strides = metadata.get('validation_total_strides') or '—'
+    passing_strides = metadata.get('validation_passing_strides') or '—'
+
+    stats_lines = [
+        "| Metric | Value |",
+        "|--------|-------|",
+        f"| Stride Pass Rate | {pass_display} |",
+        f"| Total Strides | {total_strides} |",
+        f"| Passing Strides | {passing_strides} |",
+    ]
+
+    validation_doc_path.parent.mkdir(parents=True, exist_ok=True)
+    stats_table = "\n".join(stats_lines)
+    validation_content = f"""---
+title: {metadata['display_name']} Validation Report
+short_code: {metadata['short_code']}
+generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+---
+
+# Validation Report — {metadata['display_name']}
+
+## Status Summary
+
+{stats_table}
+
+{validation_summary}
+
+## Validation Ranges
+
+```yaml
+{ranges_yaml.strip()}
+```
 
 ## Validation Plots
 
@@ -342,22 +415,16 @@ date_added: {date_added}
 
 ---
 
-*Generated by Dataset Submission Tool on {datetime.now().strftime('%Y-%m-%d %H:%M')}*
+*Generated from `{_relative_path(dataset_path)}` on {datetime.now().strftime('%Y-%m-%d %H:%M')}*
 """
-    
-    # Save documentation
-    dataset_name = metadata['dataset_name']
-    doc_dir = repo_root / "docs" / "datasets"
-    doc_dir.mkdir(parents=True, exist_ok=True)
-    
-    doc_path = doc_dir / f"{dataset_name}.md"
-    with open(doc_path, 'w') as f:
-        f.write(doc_content)
-    
-    return doc_path
+
+    validation_doc_path.write_text(validation_content)
+
+    return validation_doc_path
 
 
-def run_validation(dataset_path: Path) -> Tuple[Dict, str, Optional[Dict]]:
+
+def run_validation(dataset_path: Path) -> Tuple[Dict, str, Optional[Dict], Dict[str, Dict[int, Dict[str, Dict[str, float]]]]]:
     """
     Run validation on the dataset.
     
@@ -365,18 +432,18 @@ def run_validation(dataset_path: Path) -> Tuple[Dict, str, Optional[Dict]]:
         dataset_path: Path to the dataset parquet file
         
     Returns:
-        Tuple of (validation_result, summary_text)
+        Tuple of (validation_result, summary_text, stats_dict, ranges_dict)
     """
     print(f"🔍 Running validation...")
     
     ranges_file = repo_root / "contributor_tools" / "validation_ranges" / "default_ranges.yaml"
     if not ranges_file.exists():
         print(f"⚠️  Default validation ranges not found, skipping validation")
-        return {}, "Validation not run (ranges file missing)", None
+        return {}, "Validation not run (ranges file missing)", None, {}
     
     try:
-        report_generator = ValidationReportGenerator(ranges_file=str(ranges_file))
-        validation_result = report_generator.validator.validate(str(dataset_path))
+        validator = Validator(config_path=ranges_file)
+        validation_result = validator.validate(str(dataset_path))
 
         summary_data = validation_result.get('summary') or {}
         stats_block = validation_result.get('stats') or {}
@@ -395,7 +462,7 @@ def run_validation(dataset_path: Path) -> Tuple[Dict, str, Optional[Dict]]:
                 f"Run `python contributor_tools/quick_validation_check.py {dataset_hint}` "
                 "and paste the results here."
             )
-            return validation_result, fallback, None
+            return validation_result, fallback, None, {}
 
         # Calculate pass rate
         pass_rate = (passed / total * 100) if total > 0 else 0
@@ -404,7 +471,6 @@ def run_validation(dataset_path: Path) -> Tuple[Dict, str, Optional[Dict]]:
         status = "✅ PASSED" if pass_rate >= 95 else "⚠️ PARTIAL" if pass_rate >= 80 else "❌ NEEDS REVIEW"
         
         # Compute per-task stride pass rates using validator helper
-        validator = report_generator.validator
         locomotion_data = LocomotionData(str(dataset_path), phase_col='phase_ipsi')
         task_stats = {}
         summary_rows = []
@@ -452,20 +518,42 @@ def run_validation(dataset_path: Path) -> Tuple[Dict, str, Optional[Dict]]:
             'tasks': task_stats,
         }
 
-        return validation_result, summary, stats
+        # Capture validation ranges for tasks present in the dataset
+        ranges_snapshot: Dict[str, Dict[int, Dict[str, Dict[str, float]]]] = {}
+        for task in locomotion_data.get_tasks():
+            task_ranges = validator.config_manager.get_task_data(task)
+            if not task_ranges:
+                continue
+            organized: Dict[int, Dict[str, Dict[str, float]]] = {}
+            for phase in sorted(task_ranges.keys()):
+                phase_ranges = {}
+                for var_name, bounds in task_ranges[phase].items():
+                    if not isinstance(bounds, dict):
+                        continue
+                    phase_ranges[var_name] = {
+                        'min': float(bounds.get('min')) if bounds.get('min') is not None else None,
+                        'max': float(bounds.get('max')) if bounds.get('max') is not None else None,
+                    }
+                if phase_ranges:
+                    organized[int(phase)] = phase_ranges
+            if organized:
+                ranges_snapshot[task] = organized
+
+        return validation_result, summary, stats, ranges_snapshot
 
     except Exception as e:
         print(f"⚠️  Validation failed: {e}")
-        return {}, f"⚠️ Validation could not be completed: {str(e)}", None
+        return {}, f"⚠️ Validation could not be completed: {str(e)}", None, {}
 
 
-def generate_submission_checklist(dataset_name: str, doc_path: Path) -> str:
+def generate_submission_checklist(dataset_name: str, doc_path: Path, validation_doc_path: Path) -> str:
     """
     Generate a checklist for the PR submission.
     
     Args:
         dataset_name: Name of the dataset
         doc_path: Path to documentation file
+        validation_doc_path: Path to validation report file
         
     Returns:
         Formatted checklist string
@@ -479,6 +567,7 @@ Your dataset submission is ready! Please include the following in your PR:
 REQUIRED FILES:
 □ Dataset file: converted_datasets/{dataset_name}_phase.parquet
 □ Documentation: {doc_path.relative_to(repo_root)}
+□ Validation report: {validation_doc_path.relative_to(repo_root)}
 □ Conversion script: contributor_tools/conversion_scripts/{dataset_name}/
 
 OPTIONAL FILES:
@@ -523,8 +612,8 @@ Need help? Check the contributor guide or ask in discussions!
     return checklist
 
 
-def handle_init_dataset(args):
-    """Handle the init-dataset command."""
+def handle_add_dataset(args):
+    """Handle the add-dataset command."""
     dataset_path = Path(args.dataset)
 
     # Validate dataset file
@@ -692,10 +781,13 @@ def handle_init_dataset(args):
     
     # Run validation
     print(f"\n🔍 Validating dataset...")
-    validation_result, validation_summary, validation_stats = run_validation(dataset_path)
+    _, validation_summary, validation_stats, validation_ranges = run_validation(dataset_path)
     metadata['validation_summary'] = validation_summary
     metadata['doc_url'] = f"{SITE_DATASET_BASE_URL}/{dataset_name}/"
     metadata['doc_path'] = f"docs/datasets/{dataset_name}.md"
+    validation_doc_filename = f"{dataset_name}_validation.md"
+    metadata['validation_doc_url'] = f"{SITE_DATASET_BASE_URL}/{dataset_name}_validation/"
+    metadata['validation_doc_path'] = f"docs/datasets/{validation_doc_filename}"
 
     if validation_stats:
         metadata['validation_status'] = validation_stats.get('status')
@@ -725,8 +817,18 @@ def handle_init_dataset(args):
     
     # Generate documentation
     print(f"\n📄 Generating documentation...")
-    doc_path = generate_documentation(dataset_path, metadata)
-    print(f"✅ Documentation created: {doc_path.relative_to(repo_root)}")
+    validation_doc_path = (repo_root / "docs" / "datasets" / validation_doc_filename)
+    doc_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)
+    validation_doc_path = generate_validation_page(
+        dataset_path,
+        metadata,
+        validation_summary,
+        validation_stats,
+        validation_ranges,
+        validation_doc_path,
+    )
+    print(f"✅ Overview created: {doc_path.relative_to(repo_root)}")
+    print(f"✅ Validation report created: {validation_doc_path.relative_to(repo_root)}")
     
     # Generate plots directory structure
     plots_dir = repo_root / "docs" / "datasets" / "validation_plots" / dataset_name
@@ -756,7 +858,7 @@ def handle_init_dataset(args):
     except subprocess.CalledProcessError as exc:
         print(f"⚠️  Plot generation failed: {exc}")
 
-    update_validation_gallery(doc_path, dataset_name)
+    update_validation_gallery(validation_doc_path, dataset_name)
 
     # Persist metadata and refresh global tables
     write_metadata_file(metadata)
@@ -764,7 +866,7 @@ def handle_init_dataset(args):
 
     
     # Show submission checklist
-    checklist = generate_submission_checklist(dataset_name, doc_path)
+    checklist = generate_submission_checklist(dataset_name, doc_path, validation_doc_path)
     print(checklist)
     
     # Save checklist to file
@@ -792,7 +894,7 @@ Example workflow:
   2. Run quick validation to check data quality
   3. Use this tool to add the dataset package:
      
-     python contributor_tools/prepare_dataset_submission.py init-dataset \\
+     python contributor_tools/prepare_dataset_submission.py add-dataset \\
          --dataset converted_datasets/your_dataset_phase.parquet
   
   4. Follow the generated checklist to complete your PR
@@ -810,20 +912,20 @@ Example workflow:
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
     # Add-dataset command (primary contributor workflow)
-    init_parser = subparsers.add_parser(
-        'init-dataset',
+    add_parser = subparsers.add_parser(
+        'add-dataset',
         help='Add or refresh documentation and submission assets for a dataset'
     )
-    init_parser.add_argument(
+    add_parser.add_argument(
         '--dataset',
         required=True,
         help='Path to phase-normalized dataset parquet file'
     )
-    init_parser.add_argument(
+    add_parser.add_argument(
         '--metadata-file',
         help='Optional YAML/JSON metadata file to run non-interactively'
     )
-    init_parser.add_argument(
+    add_parser.add_argument(
         '--overwrite',
         action='store_true',
         help='Overwrite existing documentation without prompting'
@@ -838,8 +940,8 @@ Example workflow:
     print(f"🚀 Dataset Submission Preparation Tool")
     print(f"{'='*60}")
     
-    if args.command == 'init-dataset':
-        return handle_init_dataset(args)
+    if args.command == 'add-dataset':
+        return handle_add_dataset(args)
     else:
         print(f"❌ Unknown command: {args.command}")
         return 1
