@@ -44,7 +44,7 @@ graph TD
     H --> I{Are validation results acceptable - over 80%?}
     I -->|No| J[Adjust conversion logic or validation ranges]
     J --> H
-    I -->|Yes| K[Generate documentation - prepare_dataset_submission]
+    I -->|Yes| K[Generate documentation - manage_dataset_documentation]
     K --> L[Review generated docs and checklist]
     L --> M[Create PR with dataset and documentation]
     M --> N[End]
@@ -402,7 +402,7 @@ Interpret results:
 After your dataset passes validation, generate the complete submission package:
 
 ```bash
-python contributor_tools/prepare_dataset_submission.py add-dataset \
+python contributor_tools/manage_dataset_documentation.py add-dataset \
     --dataset converted_datasets/your_dataset_phase.parquet
 ```
 
@@ -416,7 +416,7 @@ Need a fully scripted run? Supply a metadata file (YAML/JSON) and skip the
 prompts entirely:
 
 ```bash
-python contributor_tools/prepare_dataset_submission.py add-dataset \
+python contributor_tools/manage_dataset_documentation.py add-dataset \
     --dataset converted_datasets/your_dataset_phase.parquet \
     --metadata-file docs/datasets/_metadata/your_dataset.yaml \
     --overwrite
@@ -446,6 +446,8 @@ The tool creates:
 - `docs/datasets/validation_plots/your_dataset/` - Plot directory (latest pass/fail images)
 - `submission_checklist_your_dataset.txt` - PR checklist
 
+> Need to rebuild generated docs from scratch? Run `python contributor_tools/manage_dataset_documentation.py reset-dataset-list your_dataset_slug --confirm-phrase "reset dataset your_dataset_slug"` first, then rerun the `add-dataset` workflow.
+
 ### Dataset Documentation Management Workflow
 
 After initial submission, you may need to update your dataset documentation:
@@ -456,7 +458,7 @@ After initial submission, you may need to update your dataset documentation:
 ```mermaid
 graph TD
     A[Start: Need to update dataset docs] --> B{What is the goal?}
-    B -->|Add new dataset| C1[Run prepare_dataset_submission add-dataset]
+    B -->|Add new dataset| C1[Run manage_dataset_documentation add-dataset]
     C1 --> C2[Fill prompts for metadata]
     C2 --> C3[Review generated documentation]
     C3 --> C3a[Preview with mkdocs serve]
@@ -465,8 +467,8 @@ graph TD
     C4 -->|No| C6[Fix conversion or ranges]
     C6 --> C1
 
-    B -->|Refresh validation| E1[Run prepare_dataset_submission refresh-validation]
-    E1 --> E2[Generate validation report with plots]
+    B -->|Rebuild existing dataset| E1[Run manage_dataset_documentation reset-dataset-list]
+    E1 --> E2[Run manage_dataset_documentation add-dataset --metadata-file ...]
     E2 --> E3[Inspect results and plots]
     E3 --> E3a[Preview with mkdocs serve]
     E3a --> E4{Ranges need tuning?}
@@ -475,7 +477,7 @@ graph TD
     E6 --> E1
     E4 -->|No| E7[Commit updated docs]
 
-    B -->|Edit metadata| D1[Run prepare_dataset_submission edit-metadata]
+    B -->|Edit metadata| D1[Run manage_dataset_documentation edit-metadata]
     D1 --> D2[Update fields interactively]
     D2 --> D2a[Preview with mkdocs serve]
     D2a --> D3{Need validation refresh?}
@@ -522,7 +524,7 @@ mkdocs serve
 
 If you see any issues, fix them before submitting your PR. Common fixes:
 - Markdown formatting errors → Check for unclosed code blocks or tables
-- Missing metadata → Re-run `prepare_dataset_submission.py add-dataset`
+- Missing metadata → Re-run `manage_dataset_documentation.py add-dataset`
 - Broken links → Use relative paths like `../reference/index.md`
 
 ## Ready to Submit {#ready-to-submit}
@@ -662,7 +664,7 @@ Before you begin:
 | **quick_validation_check.py** | Fast pass/fail validation statistics | First check after conversion |
 | **create_filtered_dataset.py** | Remove invalid strides from dataset | When you need clean data |
 | **interactive_validation_tuner.py** | GUI for tuning validation ranges | For special populations |
-| **prepare_dataset_submission.py** | Generate documentation and submission package | Ready to submit dataset |
+| **manage_dataset_documentation.py** | Generate documentation and submission package | Ready to submit dataset |
 
 ### quick_validation_check.py — Fast Quality Scan {#quick-validation-check}
 
@@ -707,13 +709,13 @@ python3 contributor_tools/create_filtered_dataset.py converted_datasets/your_dat
 - It prompts before overwriting an existing file
 - Use `--exclude-columns "col_a,col_b"` to ignore auxiliary signals
 
-### prepare_dataset_submission.py — Generate Documentation & Submission Package {#prepare-submission}
+### manage_dataset_documentation.py — Generate Documentation & Submission Package {#prepare-submission}
 
 When your dataset is ready to submit, use this tool to generate complete documentation.
 
 **Usage:**
 ```bash
-python3 contributor_tools/prepare_dataset_submission.py add-dataset \
+python3 contributor_tools/manage_dataset_documentation.py add-dataset \
     --dataset converted_datasets/your_dataset_phase.parquet
 ```
 
@@ -734,6 +736,17 @@ python3 contributor_tools/prepare_dataset_submission.py add-dataset \
 - Short codes are 2 letters + 2 digits (e.g., UM21, GT23)
 - Tool checks for short code conflicts automatically
 - Follow the generated checklist for your PR
+
+#### Resetting Generated Docs
+
+If you need to wipe the generated documentation before rebuilding, run:
+
+```bash
+python3 contributor_tools/manage_dataset_documentation.py reset-dataset-list \
+    your_dataset_slug --confirm-phrase "reset dataset your_dataset_slug"
+```
+
+Then rerun the `add-dataset` command (optionally with `--metadata-file`) to regenerate the overview, validation report, plots, and checklist.
 
 ### interactive_validation_tuner.py — Visual Range Editing {#interactive-tuner}
 

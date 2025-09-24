@@ -88,7 +88,7 @@ flowchart TD
 </details>
 
 <details>
-<summary>`prepare_dataset_submission.py` — Unified contributor workflow for validation, plots, and documentation.</summary>
+<summary>`manage_dataset_documentation.py` — Unified contributor workflow for validation, plots, and documentation.</summary>
 
 Generates or refreshes everything a contributor needs for a dataset page. The script derives a dataset slug from the parquet file name, stores metadata in `docs/datasets/_metadata/`, writes both the overview (`<slug>.md`) and validation (`<slug>_validation.md`) pages, and rebuilds the dataset tables that live between the `<!-- DATASET_TABLE_START -->` / `<!-- DATASET_TABLE_END -->` markers in `README.md`, `docs/index.md`, and `docs/datasets/index.md`. Those tables are regenerated from the metadata directory so the public landing pages always list the newest datasets with consistent links.
 
@@ -151,6 +151,38 @@ flowchart TD
     F -- Yes --> G[Chain to refresh-validation]
     F -- No --> H[Exit with status]
 ```
+
+</details>
+
+<details>
+<summary>`reset-dataset-list` subcommand</summary>
+
+Destructive maintainer-only reset. Removes generated documentation (`<slug>.md` and `<slug>_validation.md`), metadata YAML, validation plots (folder + loose PNGs), and PR checklist so the dataset can be rebuilt cleanly. Optional flag also deletes the converted parquet file if a converter rerun is required.
+
+Confirmation workflow:
+
+```mermaid
+flowchart TD
+    start([Start CLI]) --> confirm{--confirm-phrase matches?}
+    confirm -- "No" --> abort[Abort with instructions]
+    confirm -- "Yes" --> removeDocs[Remove docs + metadata]
+    removeDocs --> removePlots[Delete validation plots + checklist]
+    removePlots --> removeParquet{--remove-parquet?}
+    removeParquet -- "No" --> refreshTables[Refresh dataset tables]
+    removeParquet -- "Yes" --> deleteParquet[Delete converted parquet files]
+    deleteParquet --> refreshTables
+    refreshTables --> report[Print removed paths]
+    report --> done([Exit])
+```
+
+**Command:**
+
+```bash
+python contributor_tools/manage_dataset_documentation.py reset-dataset-list \
+    umich_2021_raw --confirm-phrase "reset dataset umich_2021_raw"
+```
+
+Add `--remove-parquet` only when you need to regenerate the underlying dataset file via the converter.
 
 </details>
 
@@ -219,7 +251,7 @@ docs/
 
 Key mechanics to remember:
 - MkDocs reads `mkdocs.yml`, which pulls in `docs/` and enables the `mermaid2` plugin for diagrams.
-- `prepare_dataset_submission.py add-dataset` is the authoritative writer. It:
+- `manage_dataset_documentation.py add-dataset` is the authoritative writer. It:
   1. Loads or prompts for metadata and writes `docs/datasets/_metadata/<slug>.yaml`.
   2. Runs validation, storing summary text and stats in the metadata dict.
   3. Renders `docs/datasets/<slug>.md` (overview) and `docs/datasets/<slug>_validation.md` (latest validation report with inline ranges).
@@ -228,32 +260,6 @@ Key mechanics to remember:
 - The dataset tables now surface both links: the dataset name points to the overview page, and the `Validation` column links to the corresponding validation report.
 - Running `mkdocs serve` or `mkdocs build` does not invoke regeneration—it only renders the already-generated Markdown.
 - If you hand-edit generated Markdown, mirror the change in the metadata or template; the next `add-dataset` run will otherwise overwrite it.
-
-## Planned `reset_dataset_docs.py`
-
-Purpose: provide a controlled “nuke” for derived documentation so maintainers can test regeneration end-to-end.
-
-Algorithm sketch:
-1. **Safety checks**
-   - Confirm the current directory is the repo root.
-   - Abort if `git status --porcelain` shows staged changes unless `--force` is supplied.
-
-2. **Backup (optional)**
-   - For each target Markdown file (`README.md`, `docs/index.md`, `docs/datasets/index.md`), capture the block between the table markers and write it to `docs/datasets/_backups/<filename>.<timestamp>.md` when `--backup` is passed.
-
-3. **Clear derived content**
-   - Replace the text between each marker pair with `_Dataset table will be regenerated on next add-dataset run._`.
-   - Optional flag: `--wipe-plots` to delete `docs/datasets/validation_plots/*`.
-
-4. **Next steps prompt**
-   - Echo the exact `prepare_dataset_submission.py add-dataset --metadata-file ... --overwrite` command needed to rebuild the overview, validation report, and plots.
-   - Remind maintainers to inspect or delete the backup files.
-
-5. **Exit codes**
-   - Return `0` on success.
-   - Non-zero when markers are missing, backups fail, or safety checks trip.
-
-Until the script exists, perform the same steps manually: remove the table blocks, run `add-dataset` with an existing metadata file, and confirm the tables repopulate from YAML.
 
 ## Environment
 

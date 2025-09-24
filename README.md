@@ -13,10 +13,7 @@
 <!-- DATASET_TABLE_START -->
 | Dataset | Tasks | Quality | Validation | Download |
 |---------|-------|---------|------------|----------|
-| [Georgia Tech 2021](https://jmontp.github.io/LocoHub/datasets/gtech_2021_raw/) | Level Walking, Incline Walking, Decline Walking, Stair Ascent, Stair Descent | ⚠️ Partial (89.2%) | [Report](https://jmontp.github.io/LocoHub/datasets/gtech_2021_raw_validation/) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
-| [Georgia Tech 2021 (Filtered)](https://jmontp.github.io/LocoHub/datasets/gtech_2021_filtered/) | Level Walking, Incline Walking, Decline Walking, Stair Ascent, Stair Descent | ✅ Validated | [Report](https://jmontp.github.io/LocoHub/datasets/gtech_2021_filtered_validation/) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
-| [University of Michigan 2021](https://jmontp.github.io/LocoHub/datasets/umich_2021_raw/) | Level Walking, Incline Walking, Decline Walking, Run, Sit To Stand, Stand To Sit | ⚠️ Partial (92.7%) | [Report](https://jmontp.github.io/LocoHub/datasets/umich_2021_raw_validation/) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
-| [University of Michigan 2021 (Filtered)](https://jmontp.github.io/LocoHub/datasets/umich_2021_filtered/) | Level Walking, Incline Walking, Decline Walking, Run, Sit To Stand, Stand To Sit | ✅ Validated | [Report](https://jmontp.github.io/LocoHub/datasets/umich_2021_filtered_validation/) | [Download](https://www.dropbox.com/scl/fo/mhkiv4d3zvnbtdlujvgje/ACPxjnoj6XxL60QZCuK1WCw?rlkey=nm5a22pktlcemud4gzod3ow09&dl=0) |
+| _Pending_ | — | — | — | — |
 <!-- DATASET_TABLE_END -->
 
 ---
