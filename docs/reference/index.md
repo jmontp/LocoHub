@@ -49,6 +49,80 @@ Common task_info keys
 - `footwear:<string>` (e.g., barefoot, shoe)
 - `assistance:<string>` (e.g., none, handrail)
 
+## Task Definitions
+
+The table below supplements the naming rules with high-level guidance for each standard task. All phase-indexed datasets use 150 samples per cycle. Unless otherwise noted, `phase_ipsi` is 0% at ipsilateral heel strike and 100% at the next ipsilateral heel strike.
+
+### level_walking
+
+- **Activity Summary**: Comfortable-speed overground/treadmill walking on level surface.
+- **Phase Definition**: 0% ipsilateral heel strike, 50% contralateral heel strike, 100% next ipsilateral heel strike.
+- **Key Events**: HS (0%), Contralateral HS (50%), Toe-offs near 60%/10%.
+- **Typical `task_id`**: `level`, `level_fast`, `level_slow`.
+- **Common `task_info` keys**: `speed_m_s`, `treadmill`, `surface`.
+- **Validation Notes**: Expect symmetric sagittal kinematics; large pelvis/trunk offsets usually indicate coordinate issues.
+
+### incline_walking
+
+- **Activity Summary**: Uphill walking on ramps or treadmills at constant grade.
+- **Phase Definition**: Same as level walking (HS-to-HS).
+- **Key Events**: Ipsilateral HS (0%), contralateral HS (≈50%), toe-off events shifted earlier due to incline.
+- **Typical `task_id`**: `incline_5deg`, `incline_10deg`.
+- **Common `task_info` keys**: `incline_deg` (positive), `speed_m_s`, `assistance` (e.g., handrail).
+- **Validation Notes**: Expect increased hip/knee flexion and ankle dorsiflexion; check for forward trunk lean consistency.
+
+### decline_walking
+
+- **Activity Summary**: Downhill walking on ramps or treadmills at constant grade.
+- **Phase Definition**: HS-to-HS as above.
+- **Key Events**: Ipsilateral HS (0%), contralateral HS (≈50%), toe-off events often delayed relative to level.
+- **Typical `task_id`**: `decline_5deg`, `decline_10deg` (negative grade).
+- **Common `task_info` keys**: `incline_deg` (negative value), `speed_m_s`.
+- **Validation Notes**: Expect increased knee flexion moments eccentrically; vertical GRF peaks may exceed level walking.
+
+### stair_ascent
+
+- **Activity Summary**: Ascending standard stairs at self-selected speed.
+- **Phase Definition**: 0% ipsilateral foot initial contact on a step; 100% next ipsilateral contact on subsequent step.
+- **Key Events**: Initial contact (0%), contralateral contact (≈50%), ipsilateral push-off (≈60%).
+- **Typical `task_id`**: `stair_ascent`, `stair_ascent_depth20cm`.
+- **Common `task_info` keys**: `step_height_m`, `step_width_m`, `handrail`.
+- **Validation Notes**: Monitor hip/knee flexion angles (>90° typical); GRF may include handrail load if captured.
+
+### stair_descent
+
+- **Activity Summary**: Descending stairs at controlled speed.
+- **Phase Definition**: Same as stair ascent: ipsilateral contacts define 0%/100%.
+- **Key Events**: Initial contact on upper step (0%), contralateral contact (≈50%), ipsilateral loading on lower step (≈60%).
+- **Typical `task_id`**: `stair_descent`, `stair_descent_depth20cm`.
+- **Common `task_info` keys**: `step_height_m`, `handrail`.
+- **Validation Notes**: Expect larger eccentric quadriceps moments; verify trunk remains upright around mid-step.
+
+### run
+
+- **Activity Summary**: Running/jogging at targeted speed on level surface.
+- **Phase Definition**: 0% ipsilateral foot contact, 100% next ipsilateral contact (includes aerial phases).
+- **Key Events**: Initial contact (0%), mid-stance (~25%), toe-off (~40%), contralateral contact (~50%), flight periods near mid-cycle.
+- **Typical `task_id`**: `run_2_5_m_s`, `run_3_0_m_s`.
+- **Common `task_info` keys**: `speed_m_s`, `treadmill`, `surface`, `footwear`.
+- **Validation Notes**: Two vertical GRF peaks and zero-load intervals (flight) should appear; check for extreme pelvis rotations.
+
+### sit_to_stand (cyclic)
+
+- **Activity Summary**: Sit-to-stand-to-sit sequence captured as one 150-point cycle for consistency with phase indexing.
+- **Phase Definition**:
+  - 0%: Seated start, trunk flexion initiated.
+  - 25%: Seat-off (center of mass leaving chair).
+  - 50%: Full standing (hips/knees extended).
+  - 75%: Controlled descent.
+  - 100%: Reseated (back to initial posture).
+- **Key Events**: Seat-off (~25%), peak extension (~50%), seat-contact (~90-100%).
+- **Typical `task_id`**: `sit_to_stand_to_sit`.
+- **Common `task_info` keys**: `seat_height_m`, `arm_support` (none, hands_on_thighs, handrails).
+- **Validation Notes**: Expect asymmetrical GRFs if arm support used. Clarify in documentation that the dataset encodes both directions in a single cycle to maintain cyclicity.
+
+> **Note:** If a study requires separate segments (e.g., standalone stand-to-sit trials), store them as independent tasks with explicit phase definitions, but the standard dataset format assumes the combined cycle above.
+
 ## Subject Naming
 
 Format: `<DATASET_CODE>_<POPULATION_CODE><SUBJECT_NUMBER>` → `UM21_AB01`, `GT23_AB05`, `PROS_TFA03`.
