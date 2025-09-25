@@ -639,12 +639,8 @@ class InteractiveValidationTuner:
         self.task_dropdown.pack(side=tk.LEFT, padx=5)
         self.task_dropdown.bind('<<ComboboxSelected>>', self.on_task_changed)
         
-        # Display info label
-        self.info_label = ttk.Label(toolbar_frame, text="Displaying all features (kinematic + kinetic + segment angles)")
-        self.info_label.pack(side=tk.LEFT, padx=20)
-        
         # Buttons
-        
+
         # Validate button (disabled by default)
         self.validate_button = ttk.Button(toolbar_frame, text="Validate", command=self.run_validation_update, state='disabled')
         self.validate_button.pack(side=tk.LEFT, padx=5)
@@ -656,6 +652,14 @@ class InteractiveValidationTuner:
             command=self.on_reset_all_clicked
         )
         self.reset_all_button.pack(side=tk.LEFT, padx=5)
+
+        # Help button to show quick usage instructions
+        self.help_button = ttk.Button(
+            toolbar_frame,
+            text="Help",
+            command=self.show_help_dialog
+        )
+        self.help_button.pack(side=tk.LEFT, padx=5)
 
         # Checkbox to show locally passing strides
         self.show_local_passing_var = tk.BooleanVar(value=False)
@@ -822,7 +826,7 @@ class InteractiveValidationTuner:
         """Re-cache clean backgrounds after window resize."""
         if not hasattr(self, 'canvas'):
             return
-        
+
         print("Re-caching backgrounds after window resize...")
         
         # Hide all boxes temporarily
@@ -853,9 +857,43 @@ class InteractiveValidationTuner:
         
         # Final draw to show boxes again
         self.canvas.draw_idle()
-        
+
         print(f"Re-cached backgrounds for {len(self.draggable_boxes)} boxes")
-    
+
+    def _get_usage_sections(self) -> Dict[str, str]:
+        """Return structured usage information sections."""
+        return {
+            "goal": (
+                "Fine-tune validation ranges so the exported YAML captures your trusted data "
+                "before you submit the dataset."
+            ),
+            "steps": (
+                "1. Load validation ranges via File → Load Validation Ranges.\n"
+                "2. Load a dataset via File → Load Dataset.\n"
+                "3. Pick a task from the toolbar dropdown.\n"
+                "4. Drag the green/red boxes so acceptable strides stay inside the ranges.\n"
+                "5. Press Validate to check pass/fail plots and iterate.\n"
+                "6. Export the YAML once ranges are dialed in and include it with your submission."
+            ),
+            "tips": [
+                "Click the Help button anytime to bring these instructions back.",
+                "Use right-click menus or Reset All whenever you need to revert ranges.",
+                "Work feature-by-feature to isolate issues and spot trends.",
+                "Keep a backup of the original YAML so you can compare changes."
+            ],
+        }
+
+    def _get_usage_instructions_text(self) -> str:
+        """Return formatted usage instructions for display in dialogs."""
+        sections = self._get_usage_sections()
+        tips_text = "\n".join(f"• {tip}" for tip in sections['tips'])
+        return (
+            "Interactive Validation Range Tuner\n\n"
+            f"Goal: {sections['goal']}\n\n"
+            f"Steps:\n{sections['steps']}\n\n"
+            f"Tips:\n{tips_text}"
+        )
+
     def create_empty_plot(self):
         """Create an empty matplotlib figure."""
         from matplotlib.figure import Figure
@@ -874,12 +912,22 @@ class InteractiveValidationTuner:
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         
-        # Create initial empty axes
+        # Create initial empty axes with usage instructions
         self.ax = self.fig.add_subplot(111)
-        self.ax.text(0.5, 0.5, 'Loading default files...', 
-                    ha='center', va='center', fontsize=16, color='gray')
         self.ax.set_xlim(0, 1)
         self.ax.set_ylim(0, 1)
+        self.ax.axis('off')
+
+        self.ax.text(
+            0.5,
+            0.5,
+            self._get_usage_instructions_text(),
+            ha='center',
+            va='center',
+            fontsize=11,
+            color='dimgray',
+            wrap=True
+        )
         self.canvas.draw()
         
         # Update scroll region
@@ -1093,7 +1141,14 @@ class InteractiveValidationTuner:
             return
 
         self.reset_current_task_to_original()
-    
+
+    def show_help_dialog(self):
+        """Display usage instructions in a dialog window."""
+        messagebox.showinfo(
+            title="Interactive Validation Range Tuner Help",
+            message=self._get_usage_instructions_text()
+        )
+
     def convert_to_display_units(self, value, var_name):
         """Convert value to display units based on checkbox state."""
         if value is None or var_name is None:
