@@ -648,7 +648,15 @@ class InteractiveValidationTuner:
         # Validate button (disabled by default)
         self.validate_button = ttk.Button(toolbar_frame, text="Validate", command=self.run_validation_update, state='disabled')
         self.validate_button.pack(side=tk.LEFT, padx=5)
-        
+
+        # Reset all button with warning prompt
+        self.reset_all_button = ttk.Button(
+            toolbar_frame,
+            text="Reset All",
+            command=self.on_reset_all_clicked
+        )
+        self.reset_all_button.pack(side=tk.LEFT, padx=5)
+
         # Checkbox to show locally passing strides
         self.show_local_passing_var = tk.BooleanVar(value=False)
         self.show_local_checkbox = ttk.Checkbutton(
@@ -1055,6 +1063,36 @@ class InteractiveValidationTuner:
         if self.locomotion_data and self.current_task:
             # Need to redraw everything with new units
             self.run_validation_update()
+
+    def on_reset_all_clicked(self):
+        """Prompt user and reset the current task to YAML defaults."""
+        if not self.current_task:
+            messagebox.showinfo("Reset All", "Select a task before resetting validation ranges.")
+            return
+
+        if self.current_task not in self.original_validation_data:
+            messagebox.showwarning(
+                "Reset All",
+                "No YAML defaults are available for the selected task."
+            )
+            return
+
+        warning_text = (
+            "This will discard all unsaved edits for the current task and "
+            "restore the validation ranges from the loaded YAML file.\n\n"
+            "Do you want to continue?"
+        )
+
+        confirm = messagebox.askyesno(
+            title="Reset All Validation Ranges",
+            message=warning_text,
+            icon='warning'
+        )
+
+        if not confirm:
+            return
+
+        self.reset_current_task_to_original()
     
     def convert_to_display_units(self, value, var_name):
         """Convert value to display units based on checkbox state."""
@@ -2088,6 +2126,51 @@ class InteractiveValidationTuner:
                 if range_spec.get('min') is not None and range_spec.get('max') is not None:
                     return True
         return False
+
+    def reset_current_task_to_original(self):
+        """Reset every variable in the current task to the YAML defaults."""
+        if not self.current_task:
+            return
+
+        original_task_data = self.original_validation_data.get(self.current_task)
+        if not original_task_data:
+            if hasattr(self, 'status_bar'):
+                self.status_bar.config(text="No YAML defaults available to reset this task.")
+            return
+
+        # Restore GUI-facing validation data
+        self.validation_data[self.current_task] = copy.deepcopy(original_task_data)
+
+        # Restore full validation data if available, otherwise remove custom overrides
+        if self.current_task in self.original_full_validation_data:
+            self.full_validation_data[self.current_task] = copy.deepcopy(
+                self.original_full_validation_data[self.current_task]
+            )
+        elif self.current_task in self.full_validation_data:
+            del self.full_validation_data[self.current_task]
+
+        # Clear existing draggable boxes to prevent stale visuals when dataset is absent
+        for box in self.draggable_boxes:
+            try:
+                box.remove()
+            except Exception:
+                pass
+        self.draggable_boxes = []
+
+        # Refresh plots if dataset is loaded; otherwise, trigger a light redraw
+        if self.locomotion_data:
+            self.run_validation_update()
+        elif hasattr(self, 'canvas'):
+            self.canvas.draw_idle()
+
+        # Mark state and notify user
+        self.modified = True
+        if hasattr(self, 'validate_button'):
+            self.validate_button.config(state='disabled')
+        if hasattr(self, 'status_bar'):
+            self.status_bar.config(
+                text=f"Reset all validation ranges for {self.current_task} to YAML defaults."
+            )
 
     def reset_variable_to_original(self, var_name: str):
         """Reset all validation ranges for a variable to the loaded YAML defaults."""
