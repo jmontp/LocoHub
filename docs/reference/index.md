@@ -13,6 +13,8 @@ Concise, complete description of what’s in the standardized data.
 | Phase‑Indexed | `*_phase.parquet` | 150 samples, 0–100% | Cross‑subject comparisons, averaging |
 | Time‑Indexed | `*_time.parquet` | Seconds | Event detection, raw analysis |
 
+Phase-aligned exports apply to cyclic gait data. Event-driven or non-cyclic activities should favor the time-indexed format, optionally providing per-repetition segments through the `step` column.
+
 ## Required Columns
 
 | Column | Required | Meaning |
@@ -28,104 +30,66 @@ Concise, complete description of what’s in the standardized data.
 
 ## Task Names, IDs, and Metadata
 
-- Task names (`task`): base activities plus optional population/pathology suffixes.
-  - Base: `level_walking`, `incline_walking`, `decline_walking`, `stair_ascent`, `stair_descent`, `run`, `jump`, `sit_to_stand`.
-  - Pathology/population suffixes (optional): append `_<suffix>` to denote a special population for the whole task. Examples:
-    - `level_walking_stroke`, `level_walking_pd`, `level_walking_sci`
-    - `level_walking_tfa`, `level_walking_tta` (transfemoral/transtibial amputee)
-    - `stair_ascent_tfa`, `incline_walking_cva`
-  - Recommended suffix tokens: `stroke` (or `cva`), `pd`, `sci`, `tfa`, `tta`. Keep lower‑case snake_case.
-- Task IDs (`task_id`): short variant labels, e.g., `level`, `incline_5deg`, `incline_10deg`, `decline_5deg`, `stair_ascent`, `stair_descent`.
-- Task metadata (`task_info`): comma‑separated key:value pairs.
+- Task names (`task`) capture the high-level motion family. Use neutral categories that apply across datasets, such as `level_walking`, `incline_walking`, `decline_walking`, `stair_ascent`, `stair_descent`, `run`, `backward_walking`, `sit_to_stand`, `stand_to_sit`, `step_up`, `step_down`, `jump`, `squats`, and the catch-all `functional_task` for non-cyclic or miscellaneous movements. Append population/pathology suffixes only when the entire recording targets that cohort (e.g., `level_walking_stroke`). Keep suffix tokens lowercase snake_case (`stroke`, `pd`, `sci`, `tfa`, `tta`, etc.).
+- Task IDs (`task_id`) describe the specific variant within the family, e.g., `level`, `incline_5deg`, `decline_10deg`, `stair_ascent`, `stair_descent`, `sit_to_stand_short`, `jump_vertical`. The exact vocabulary can differ by dataset, but it must remain stable inside a release.
+- Task metadata (`task_info`) is a comma-separated key:value string carrying numeric parameters and variant tags. Values should prefer SI units and be machine-readable.
 
 Common task_info keys
 
 - `speed_m_s:<float>`
 - `treadmill:<true|false>`
-- `incline_deg:<int>` (positive uphill, negative downhill)
+- `incline_deg:<float>` (positive uphill, negative downhill)
 - `step_height_m:<float>` (stairs)
 - `step_width_m:<float>` (stairs)
 - `surface:<string>` (e.g., overground, treadmill)
 - `footwear:<string>` (e.g., barefoot, shoe)
 - `assistance:<string>` (e.g., none, handrail)
+- `transition_from:<task>` / `transition_to:<task>` (for mode switches)
+- `turn_direction:<left|right|cw|ccw>` (for turning strides)
+- `variant:<string>` (label specific instructions when no numeric parameter exists)
 
 ## Task Definitions
 
-The table below supplements the naming rules with high-level guidance for each standard task. All phase-indexed datasets use 150 samples per cycle. Unless otherwise noted, `phase_ipsi` is 0% at ipsilateral heel strike and 100% at the next ipsilateral heel strike.
+Task families fall into two groups. **Phase-friendly** tasks can be normalized to 150-sample strides when consistent events exist (and may also be exported in time if desired). **Time-indexed** tasks lack repeatable kinematic cycles or are best analyzed as continuous episodes. The tables below summarize each group; detailed notes follow.
 
-### level_walking
+### Phase-Friendly Families
 
-- **Activity Summary**: Comfortable-speed overground/treadmill walking on level surface.
-- **Phase Definition**: 0% ipsilateral heel strike, 50% contralateral heel strike, 100% next ipsilateral heel strike.
-- **Key Events**: HS (0%), Contralateral HS (50%), Toe-offs near 60%/10%.
-- **Typical `task_id`**: `level`, `level_fast`, `level_slow`.
-- **Common `task_info` keys**: `speed_m_s`, `treadmill`, `surface`.
-- **Validation Notes**: Expect symmetric sagittal kinematics; large pelvis/trunk offsets usually indicate coordinate issues.
+When segmented, these tasks are normalized to 150 samples per stride with `phase_ipsi` running 0–100%. Phase output is preferred because it enables stride averaging and template validation; however, a time-indexed export is acceptable when segmentation is unavailable.
 
-### incline_walking
+| Task | Typical behaviors | Example `task_id` values | Phase definition | Core metadata | Notes |
+|------|-------------------|--------------------------|-----------------|----------------|-------|
+| `level_walking` | Overground/treadmill at steady speed | `level`, `level_fast`, `level_slow` | 0% ipsilateral heel strike, 50% contralateral heel strike, 100% next ipsilateral heel strike | `speed_m_s`, `treadmill`, `surface` | Expect near-symmetric sagittal kinematics; large pelvis/trunk offsets flag coordinate issues. |
+| `incline_walking` | Uphill ramps/treadmills | `incline_5deg`, `incline_10deg` | Same as level walking (HS-to-HS) | `incline_deg`, `treadmill`, `assistance` | Record grade and surface; uphill cycles show increased hip/knee flexion and trunk lean. |
+| `decline_walking` | Downhill ramps/treadmills | `decline_5deg`, `decline_10deg` | Same as level walking with downhill HS events | `incline_deg` (negative), `treadmill` | Negative grades with delayed toe-off; expect larger eccentric knee moments. |
+| `stair_ascent` | Ascending standard stairs | `stair_ascent`, numbered passes | 0% ipsilateral contact on current step, 100% ipsilateral contact on next step | `step_height_m`, `step_number`, `assistance` | Document geometry and handrail use; monitor hip/knee angles >90°. |
+| `stair_descent` | Descending stairs | `stair_descent`, numbered passes | 0% upper-step contact, 100% lower-step contact for ipsilateral foot | `step_height_m`, `step_number`, `assistance` | Same metadata as ascent; eccentric control dominates mid-step. |
+| `run` | Jogging/running with flight phases | `run_2_5_m_s`, `run_3_0_m_s` | 0% ipsilateral foot contact, 100% next ipsilateral contact including flight | `speed_m_s`, `treadmill`, `surface`, `footwear` | Two GRF peaks with flight intervals; watch pelvis rotation extremes. |
+| `transition` | Gait-to-gait transitions | `walk_to_run`, `stair_to_walk`, `turn` | 0% key event of departing gait (e.g., heel strike), 100% first event of target gait | `transition_from`, `transition_to`, `gait_transition` | A single stride may cover two behaviors; store context keys and treat directions separately. |
+| `sit_to_stand` / `stand_to_sit` | Chair or box transfers | `sit_to_stand`, `stand_to_sit` | Sit→stand: 0% seated start, 100% stabilized upright. Stand→sit: 0% descent onset, 100% seated contact | `chair_height`, `armrests`, `variant` | Segment seat-off/seat-on events for ascent/descent cycles when possible. |
+| `squats` | Loaded or bodyweight squats | `squats`, `squat_down`, `squat_up` | 0% upright start, 50% lowest depth, 100% return to upright | `weight_kg`, `variant`, `cadence` | Split descent/ascent for phase use; keep full set in time if reps are irregular. |
+| `step_up` / `step_down` | Stair-box repetitions, curbs | `step_up`, `step_down` | Step-up: 0% initial foot contact on box, 100% full weight on box. Step-down mirrors with lower surface contact. | `height_m`, `lead_leg`, `step_number` | Treat like short stair runs; ensure cadence is repeatable before phase export. |
+| `jump` | Hops, vertical/lateral jumps | `jump_vertical`, `jump_lateral`, `hop_single` | 0% preparatory contact, 50% takeoff, 100% landing contact of same foot | `jump_type`, `variant`, `lead_leg` | Use takeoff→landing cycles for repetitive sets; single attempts may stay time-indexed. |
+| `weighted_walk`, `dynamic_walk`, `walk_backward` | Walking variants with perturbations | `level`, `variant:<string>` | Same as level walking (HS-to-HS) when heel strikes are present | `speed_m_s`, `treadmill`, `variant` | Prefer phase when heel strikes exist; otherwise document perturbation under `variant`. |
 
-- **Activity Summary**: Uphill walking on ramps or treadmills at constant grade.
-- **Phase Definition**: Same as level walking (HS-to-HS).
-- **Key Events**: Ipsilateral HS (0%), contralateral HS (≈50%), toe-off events shifted earlier due to incline.
-- **Typical `task_id`**: `incline_5deg`, `incline_10deg`.
-- **Common `task_info` keys**: `incline_deg` (positive), `speed_m_s`, `assistance` (e.g., handrail).
-- **Validation Notes**: Expect increased hip/knee flexion and ankle dorsiflexion; check for forward trunk lean consistency.
+### Time-Indexed (Non-Cyclic) Families
 
-### decline_walking
+Export these tasks as time-indexed episodes. They lack consistent heel-strike structure, involve perturbations that break cyclic assumptions, or represent single-shot activities. If future datasets introduce segmentation for any of these behaviors, they can graduate to the phase-friendly group.
 
-- **Activity Summary**: Downhill walking on ramps or treadmills at constant grade.
-- **Phase Definition**: HS-to-HS as above.
-- **Key Events**: Ipsilateral HS (0%), contralateral HS (≈50%), toe-off events often delayed relative to level.
-- **Typical `task_id`**: `decline_5deg`, `decline_10deg` (negative grade).
-- **Common `task_info` keys**: `incline_deg` (negative value), `speed_m_s`.
-- **Validation Notes**: Expect increased knee flexion moments eccentrically; vertical GRF peaks may exceed level walking.
+| Task | Typical behaviors | Example activities / `task_id` | Required metadata | Notes |
+|------|-------------------|-----------------------------|-------------------|-------|
+| `agility_drill` | Multi-directional or cadence-driven drills without steady gait cycles | `side_shuffle`, `tire_run`, `dynamic_walk_high_knees`, `turn_and_step_left` | `variant`, `direction`, `cadence_hz`, `surface` | Capture cueing or treadmill settings; use when strides vary too much for phase export. |
+| `cutting` | Athletic cuts with large heading changes | `cutting_left_fast`, `cutting_right_slow` | `direction`, `approach_speed_m_s`, `turn_angle_deg`, `surface` | Keep entire maneuver in time to preserve path-dependent kinetics. |
+| `free_walk_episode` | Episodic or exploratory walking sequences | `meander`, `start_stop`, `obstacle_walk` | `surface`, `segment_start_s`, `segment_end_s`, `treadmill` | Use for trials with frequent pauses/obstacles where heel-strike segmentation is unreliable. |
+| `load_handling` | Asymmetric lifts, carries, or object exchanges | `lift_weight_25lbs_l_c`, `ball_toss_center` | `load_kg`, `hand`, `pickup_height`, `dropoff_height`, `direction` | Document object mass and interaction side so bias/torque effects are traceable. |
+| `perturbation` | External pushes/pulls or cooperative force tasks | `push_forward`, `tug_of_war`, `twister` | `direction`, `magnitude`, `support`, `implements` | Distinguish voluntary vs. reactive responses via metadata (e.g., `initiated_by:experimenter`). |
+| `balance_pose` | Static or quasi-static holds | `poses_single_leg`, `poses_wide_stance`, `squat_hold` | `variant`, `duration_s`, `support` | Useful for calibration and balance assessments; ensure durations cover full hold. |
+| `functional_task` | Miscellaneous non-cyclic behaviors not covered above | `variant:<string>` | `variant`, contextual keys as needed | Use sparingly; prefer one of the specific families when possible. |
 
-### stair_ascent
-
-- **Activity Summary**: Ascending standard stairs at self-selected speed.
-- **Phase Definition**: 0% ipsilateral foot initial contact on a step; 100% next ipsilateral contact on subsequent step.
-- **Key Events**: Initial contact (0%), contralateral contact (≈50%), ipsilateral push-off (≈60%).
-- **Typical `task_id`**: `stair_ascent`, `stair_ascent_depth20cm`.
-- **Common `task_info` keys**: `step_height_m`, `step_width_m`, `handrail`.
-- **Validation Notes**: Monitor hip/knee flexion angles (>90° typical); GRF may include handrail load if captured.
-
-### stair_descent
-
-- **Activity Summary**: Descending stairs at controlled speed.
-- **Phase Definition**: Same as stair ascent: ipsilateral contacts define 0%/100%.
-- **Key Events**: Initial contact on upper step (0%), contralateral contact (≈50%), ipsilateral loading on lower step (≈60%).
-- **Typical `task_id`**: `stair_descent`, `stair_descent_depth20cm`.
-- **Common `task_info` keys**: `step_height_m`, `handrail`.
-- **Validation Notes**: Expect larger eccentric quadriceps moments; verify trunk remains upright around mid-step.
-
-### run
-
-- **Activity Summary**: Running/jogging at targeted speed on level surface.
-- **Phase Definition**: 0% ipsilateral foot contact, 100% next ipsilateral contact (includes aerial phases).
-- **Key Events**: Initial contact (0%), mid-stance (~25%), toe-off (~40%), contralateral contact (~50%), flight periods near mid-cycle.
-- **Typical `task_id`**: `run_2_5_m_s`, `run_3_0_m_s`.
-- **Common `task_info` keys**: `speed_m_s`, `treadmill`, `surface`, `footwear`.
-- **Validation Notes**: Two vertical GRF peaks and zero-load intervals (flight) should appear; check for extreme pelvis rotations.
-
-### sit_to_stand (cyclic)
-
-- **Activity Summary**: Sit-to-stand-to-sit sequence captured as one 150-point cycle for consistency with phase indexing.
-- **Phase Definition**:
-  - 0%: Seated start, trunk flexion initiated.
-  - 25%: Seat-off (center of mass leaving chair).
-  - 50%: Full standing (hips/knees extended).
-  - 75%: Controlled descent.
-  - 100%: Reseated (back to initial posture).
-- **Key Events**: Seat-off (~25%), peak extension (~50%), seat-contact (~90-100%).
-- **Typical `task_id`**: `sit_to_stand_to_sit`.
-- **Common `task_info` keys**: `seat_height_m`, `arm_support` (none, hands_on_thighs, handrails).
-- **Validation Notes**: Expect asymmetrical GRFs if arm support used. Clarify in documentation that the dataset encodes both directions in a single cycle to maintain cyclicity.
-
-> **Note:** If a study requires separate segments (e.g., standalone stand-to-sit trials), store them as independent tasks with explicit phase definitions, but the standard dataset format assumes the combined cycle above.
+When new datasets introduce additional behaviors, extend the table with the task family, expected metadata, and note whether improved segmentation would allow promotion to the phase-friendly bucket.
 
 ## Subject Naming
 
-Format: `<DATASET_CODE>_<POPULATION_CODE><SUBJECT_NUMBER>` → `UM21_AB01`, `GT23_AB05`, `PROS_TFA03`.
+Format: `<DATASET_CODE>_<POPULATION_CODE><SUBJECT_NUMBER>` → e.g., `DS23_AB05`, `DS21_TFA03`. Keep subject numbers zero-padded to two digits where possible to aid sorting.
 
 Population codes
 
