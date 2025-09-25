@@ -47,6 +47,7 @@ Installation:
 """
 
 import sys
+import copy
 import numpy as np
 import pandas as pd
 import yaml
@@ -528,6 +529,8 @@ class InteractiveValidationTuner:
         """Initialize the interactive validation tuner."""
         self.validation_data = {}  # For GUI display (ipsi only)
         self.full_validation_data = {}  # For validation (ipsi + contra)
+        self.original_validation_data = {}  # Immutable copy of loaded YAML (ipsi only)
+        self.original_full_validation_data = {}  # Immutable copy including contra values
         self.config_manager = None  # Will be initialized when loading ranges
         self.dataset_path = None
         self.locomotion_data = None
@@ -689,6 +692,8 @@ class InteractiveValidationTuner:
                 # Extract validation data
                 self.validation_data = {}  # For display (ipsi only)
                 self.full_validation_data = {}  # For validation (ipsi + contra)
+                self.original_validation_data = {}
+                self.original_full_validation_data = {}
                 
                 for task_name in self.config_manager.get_tasks():
                     # Get full data with generated contra features
@@ -701,6 +706,10 @@ class InteractiveValidationTuner:
                         ipsi_vars = {k: v for k, v in variables.items() if '_contra' not in k}
                         if ipsi_vars:  # Only add phase if it has ipsi variables
                             self.validation_data[task_name][phase] = ipsi_vars
+
+                    # Capture immutable originals for future resets
+                    self.original_full_validation_data[task_name] = copy.deepcopy(full_task_data)
+                    self.original_validation_data[task_name] = copy.deepcopy(self.validation_data[task_name])
                 
                 # Update task dropdown
                 tasks = list(self.validation_data.keys())
@@ -904,10 +913,12 @@ class InteractiveValidationTuner:
         try:
             # Use ValidationConfigManager for consistency
             self.config_manager = ValidationConfigManager(Path(file_path))
-            
+
             # Extract validation data
             self.validation_data = {}  # For display (ipsi only)
             self.full_validation_data = {}  # For validation (ipsi + contra)
+            self.original_validation_data = {}
+            self.original_full_validation_data = {}
             
             for task_name in self.config_manager.get_tasks():
                 # Get full data with generated contra features
@@ -920,6 +931,10 @@ class InteractiveValidationTuner:
                     ipsi_vars = {k: v for k, v in variables.items() if '_contra' not in k}
                     if ipsi_vars:  # Only add phase if it has ipsi variables
                         self.validation_data[task_name][phase] = ipsi_vars
+
+                # Capture immutable originals for future resets
+                self.original_full_validation_data[task_name] = copy.deepcopy(full_task_data)
+                self.original_validation_data[task_name] = copy.deepcopy(self.validation_data[task_name])
             
             # Update task dropdown
             tasks = list(self.validation_data.keys())
@@ -1901,26 +1916,43 @@ class InteractiveValidationTuner:
             # Create context menu
             menu = tk.Menu(self.root, tearoff=0)
             
+            target_var = None
+
             if clicked_box:
                 # Right-clicked on a box - show delete option
-                menu.add_command(label=f"Delete box at {clicked_box.phase}%", 
-                               command=lambda: self.delete_box(clicked_box))
+                target_var = clicked_box.var_name
+                menu.add_command(
+                    label=f"Delete box at {clicked_box.phase}%",
+                    command=lambda: self.delete_box(clicked_box)
+                )
             else:
                 # Right-clicked on empty space - show add option
                 phase = int(round(event.xdata))
                 phase = max(0, min(100, phase))  # Constrain to 0-100
-                
+
                 # Find which variable this axis corresponds to
                 var_idx = None
                 for i, (ax_pass, ax_fail) in enumerate(zip(self.axes_pass, self.axes_fail)):
                     if event.inaxes == ax_pass or event.inaxes == ax_fail:
                         var_idx = i
                         break
-                
+
                 if var_idx is not None and var_idx < len(self.current_variables):
                     var_name = self.current_variables[var_idx]
-                    menu.add_command(label=f"Add box at {phase}% for {var_name}", 
-                                   command=lambda: self.add_box(phase, var_name, event.ydata))
+                    target_var = var_name
+                    click_value = event.ydata
+                    menu.add_command(
+                        label=f"Add box at {phase}% for {var_name}",
+                        command=lambda p=phase, v=var_name, y=click_value: self.add_box(p, v, y)
+                    )
+
+            if target_var and self._has_yaml_defaults(target_var):
+                if menu.index('end') is not None:
+                    menu.add_separator()
+                menu.add_command(
+                    label=f"Reset {target_var} to YAML defaults",
+                    command=lambda var=target_var: self.reset_variable_to_original(var)
+                )
             
             # Show menu at cursor position
             try:
@@ -1934,7 +1966,7 @@ class InteractiveValidationTuner:
     def delete_box(self, box):
         """Delete a validation box and its paired box."""
         print(f"Deleting box at phase {box.phase} for {box.var_name}")
-        
+
         # Remove from validation data
         if (self.current_task in self.validation_data and 
             box.phase in self.validation_data[self.current_task] and
@@ -2041,7 +2073,167 @@ class InteractiveValidationTuner:
         self.modified = True
         self.validate_button.config(state='normal')
         self.status_bar.config(text=f"Deleted validation box at {box.phase}% for {box.var_name}")
-    
+
+    def _has_yaml_defaults(self, var_name: str) -> bool:
+        """Return True if the original YAML contains ranges for the variable."""
+        if not self.current_task or not var_name:
+            return False
+
+        task_data = self.original_validation_data.get(self.current_task, {})
+        for variables in task_data.values():
+            if not isinstance(variables, dict):
+                continue
+            if var_name in variables and isinstance(variables[var_name], dict):
+                range_spec = variables[var_name]
+                if range_spec.get('min') is not None and range_spec.get('max') is not None:
+                    return True
+        return False
+
+    def reset_variable_to_original(self, var_name: str):
+        """Reset all validation ranges for a variable to the loaded YAML defaults."""
+        if not self.current_task or not var_name:
+            return
+
+        original_task_data = self.original_validation_data.get(self.current_task, {})
+        if not original_task_data:
+            if hasattr(self, 'status_bar'):
+                self.status_bar.config(text="No original YAML ranges available for reset.")
+            return
+
+        # Collect the original ranges for this variable across all phases
+        original_entries = []
+        for phase, variables in original_task_data.items():
+            if not isinstance(variables, dict):
+                continue
+            if var_name in variables and isinstance(variables[var_name], dict):
+                min_val = variables[var_name].get('min')
+                max_val = variables[var_name].get('max')
+                if min_val is None or max_val is None:
+                    continue
+                original_entries.append((phase, copy.deepcopy(variables[var_name])))
+
+        if not original_entries:
+            if hasattr(self, 'status_bar'):
+                self.status_bar.config(text=f"No YAML defaults found for {var_name}.")
+            return
+
+        def _normalize_phase_value(value):
+            """Convert phase keys to numeric values for plotting."""
+            if isinstance(value, (int, float)):
+                return int(round(value)) if isinstance(value, float) else value
+            if isinstance(value, str):
+                try:
+                    return int(value)
+                except ValueError:
+                    try:
+                        return int(float(value))
+                    except ValueError:
+                        return None
+            return None
+
+        # Reset GUI-facing validation data
+        task_data = self.validation_data.setdefault(self.current_task, {})
+        for phase in list(task_data.keys()):
+            if isinstance(task_data[phase], dict) and var_name in task_data[phase]:
+                del task_data[phase][var_name]
+                if not task_data[phase]:
+                    del task_data[phase]
+
+        for phase, range_spec in original_entries:
+            if phase not in task_data:
+                task_data[phase] = {}
+            task_data[phase][var_name] = copy.deepcopy(range_spec)
+
+        # Reset full validation data if available
+        full_original = self.original_full_validation_data.get(self.current_task, {})
+        full_task_data = self.full_validation_data.setdefault(self.current_task, {})
+        for phase in list(full_task_data.keys()):
+            if isinstance(full_task_data[phase], dict) and var_name in full_task_data[phase]:
+                del full_task_data[phase][var_name]
+                if not full_task_data[phase]:
+                    del full_task_data[phase]
+
+        for phase, variables in full_original.items():
+            if not isinstance(variables, dict):
+                continue
+            if var_name in variables and isinstance(variables[var_name], dict):
+                if phase not in full_task_data:
+                    full_task_data[phase] = {}
+                full_task_data[phase][var_name] = copy.deepcopy(variables[var_name])
+
+        # Remove existing draggable boxes for this variable
+        boxes_to_remove = [box for box in self.draggable_boxes if box.var_name == var_name]
+        for box in boxes_to_remove:
+            paired_box = getattr(box, 'paired_box', None)
+            if paired_box is not None:
+                paired_box.paired_box = None
+            box.paired_box = None
+            box.remove()
+            if box in self.draggable_boxes:
+                self.draggable_boxes.remove(box)
+
+        # Recreate draggable boxes if the variable is currently displayed
+        if hasattr(self, 'current_variables') and var_name in getattr(self, 'current_variables', []):
+            try:
+                var_idx = self.current_variables.index(var_name)
+                ax_pass = self.axes_pass[var_idx]
+                ax_fail = self.axes_fail[var_idx]
+
+                for phase, range_spec in original_entries:
+                    min_val = range_spec.get('min')
+                    max_val = range_spec.get('max')
+                    if min_val is None or max_val is None:
+                        continue
+
+                    normalized_phase = _normalize_phase_value(phase)
+                    if normalized_phase is None:
+                        continue
+
+                    box_pass = DraggableBox(
+                        ax_pass, normalized_phase,
+                        var_name, min_val, max_val,
+                        callback=self.on_box_changed,
+                        color='lightgreen',
+                        edgecolor='black',
+                        allow_x_drag=True,
+                        parent=self
+                    )
+                    box_fail = DraggableBox(
+                        ax_fail, normalized_phase,
+                        var_name, min_val, max_val,
+                        callback=self.on_box_changed,
+                        color='lightcoral',
+                        edgecolor='black',
+                        allow_x_drag=True,
+                        parent=self
+                    )
+
+                    box_pass.paired_box = box_fail
+                    box_fail.paired_box = box_pass
+
+                    if hasattr(self, 'trace_backgrounds'):
+                        pass_bg = self.trace_backgrounds.get(f'pass_{var_idx}')
+                        fail_bg = self.trace_backgrounds.get(f'fail_{var_idx}')
+                        if pass_bg is not None and fail_bg is not None:
+                            box_pass.background = pass_bg
+                            box_pass.background_invalid = False
+                            box_fail.background = fail_bg
+                            box_fail.background_invalid = False
+
+                    self.draggable_boxes.extend([box_pass, box_fail])
+
+                if hasattr(self, 'canvas'):
+                    self.canvas.draw_idle()
+            except (ValueError, IndexError):
+                # Variable not currently plotted; data already reset
+                pass
+
+        self.modified = True
+        if hasattr(self, 'validate_button'):
+            self.validate_button.config(state='normal')
+        if hasattr(self, 'status_bar'):
+            self.status_bar.config(text=f"Reset {var_name} to YAML defaults for {self.current_task}.")
+
     def add_box(self, phase, var_name, click_value):
         """Add a new validation box at the specified phase."""
         # Create default range around click position
