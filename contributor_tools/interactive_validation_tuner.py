@@ -86,6 +86,7 @@ except ImportError as e:
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.widgets import Button, RadioButtons, TextBox
+from matplotlib.ticker import FuncFormatter, FixedLocator
 from matplotlib.collections import LineCollection
 import matplotlib.animation as animation
 
@@ -244,9 +245,7 @@ class DraggableBox:
         self.selected = False
     
     def _get_display_value(self, value):
-        """Convert value to display units if parent has conversion method."""
-        if self.parent and hasattr(self.parent, 'convert_to_display_units'):
-            return self.parent.convert_to_display_units(value, self.var_name)
+        """Return value for labeling; values stored internally in radians."""
         return value
     
     def _update_conversion_cache(self):
@@ -671,16 +670,6 @@ class InteractiveValidationTuner:
         )
         self.show_local_checkbox.pack(side=tk.LEFT, padx=10)
         
-        # Checkbox to toggle between radians and degrees
-        self.show_degrees_var = tk.BooleanVar(value=False)
-        self.show_degrees_checkbox = ttk.Checkbutton(
-            toolbar_frame,
-            text="Show in Degrees",
-            variable=self.show_degrees_var,
-            command=self.on_degrees_toggle
-        )
-        self.show_degrees_checkbox.pack(side=tk.LEFT, padx=10)
-        
         # Create scrollable matplotlib figure frame
         self.create_scrollable_plot_area()
         
@@ -894,6 +883,37 @@ class InteractiveValidationTuner:
             f"Tips:\n{tips_text}"
         )
 
+    def _add_secondary_angle_axis(self, ax, y_min, y_max):
+        """Add a degree-scaled twin axis for angular variables."""
+        twin_ax = ax.twinx()
+        twin_ax.set_ylim(y_min, y_max)
+        twin_ax.grid(False)
+        twin_ax.set_ylabel('deg', fontsize=8, color='gray')
+        twin_ax.tick_params(axis='y', labelcolor='gray', labelsize=7)
+
+        formatter = FuncFormatter(lambda val, _: f"{np.rad2deg(val):.1f}")
+        twin_ax.yaxis.set_major_formatter(formatter)
+
+        def _sync_ticks():
+            ticks = ax.get_yticks()
+            twin_ax.set_ylim(ax.get_ylim())
+            twin_ax.yaxis.set_major_locator(FixedLocator(ticks))
+
+        _sync_ticks()
+
+        canvas = ax.figure.canvas
+
+        def _on_draw(event):
+            if event.canvas is canvas:
+                _sync_ticks()
+
+        canvas.mpl_connect('draw_event', _on_draw)
+
+        # Subtle styling to distinguish the secondary spine
+        if 'right' in twin_ax.spines:
+            twin_ax.spines['right'].set_color('gray')
+        return twin_ax
+
     def create_empty_plot(self):
         """Create an empty matplotlib figure."""
         from matplotlib.figure import Figure
@@ -1106,12 +1126,6 @@ class InteractiveValidationTuner:
             # Use the 4-step algorithm to ensure proper background caching
             self.run_validation_update()
     
-    def on_degrees_toggle(self):
-        """Handle toggling between radians and degrees display."""
-        if self.locomotion_data and self.current_task:
-            # Need to redraw everything with new units
-            self.run_validation_update()
-
     def on_reset_all_clicked(self):
         """Prompt user and reset the current task to YAML defaults."""
         if not self.current_task:
@@ -1149,26 +1163,6 @@ class InteractiveValidationTuner:
             message=self._get_usage_instructions_text()
         )
 
-    def convert_to_display_units(self, value, var_name):
-        """Convert value to display units based on checkbox state."""
-        if value is None or var_name is None:
-            return value
-        
-        # Only convert radians to degrees if checkbox is checked and variable is in radians
-        if self.show_degrees_var.get() and var_name.endswith('_rad'):
-            return value * 180 / np.pi
-        return value
-    
-    def convert_from_display_units(self, value, var_name):
-        """Convert value from display units back to storage units."""
-        if value is None or var_name is None:
-            return value
-        
-        # Only convert degrees to radians if checkbox is checked and variable is in radians
-        if self.show_degrees_var.get() and var_name.endswith('_rad'):
-            return value * np.pi / 180
-        return value
-    
     def get_variable_unit(self, var_name):
         """Determine the unit of a variable from its name suffix."""
         if var_name is None:
@@ -1176,7 +1170,7 @@ class InteractiveValidationTuner:
         
         # Check suffixes
         if var_name.endswith('_rad'):
-            return 'deg' if self.show_degrees_var.get() else 'rad'
+            return 'rad'
         elif var_name.endswith('_Nm_kg'):
             return 'Nm/kg'
         elif var_name.endswith('_BW'):
@@ -1730,11 +1724,6 @@ class InteractiveValidationTuner:
         if np.isnan(y_min) or np.isnan(y_max) or np.isinf(y_min) or np.isinf(y_max):
             y_min, y_max = -1, 1  # Safe fallback
         
-        # Convert to display units if showing degrees
-        if self.show_degrees_var.get() and var_name.endswith('_rad'):
-            y_min = self.convert_to_display_units(y_min, var_name)
-            y_max = self.convert_to_display_units(y_max, var_name)
-        
         return y_min, y_max
     
     def load_variable_data(self, var_name):
@@ -1827,16 +1816,13 @@ class InteractiveValidationTuner:
                 local_lines = []
                 
                 for stride_idx, stride in enumerate(all_data):
-                    # Convert to display units if needed
-                    display_stride = self.convert_to_display_units(stride, var_name)
-                    
                     if stride_idx in global_passing:
                         # Globally passing (green)
-                        global_lines.append(list(zip(phase_ipsi, display_stride)))
+                        global_lines.append(list(zip(phase_ipsi, stride)))
                         count += 1
                     elif show_local_passing and stride_idx not in failed_stride_indices:
                         # Locally passing but not globally (yellow)
-                        local_lines.append(list(zip(phase_ipsi, display_stride)))
+                        local_lines.append(list(zip(phase_ipsi, stride)))
                         local_count += 1
                 
                 # Plot globally passing strides in green
@@ -1853,38 +1839,33 @@ class InteractiveValidationTuner:
                 if global_lines:
                     global_pass_strides = [all_data[i] for i in range(len(all_data)) if i in global_passing]
                     mean_pattern = np.mean(global_pass_strides, axis=0)
-                    display_mean = self.convert_to_display_units(mean_pattern, var_name)
-                    ax.plot(phase_ipsi, display_mean, color='darkgreen', linewidth=2, zorder=5)
-                
+                    ax.plot(phase_ipsi, mean_pattern, color='darkgreen', linewidth=2, zorder=5)
+
                 if local_lines:
                     local_pass_indices = [i for i in range(len(all_data)) 
                                          if i not in global_passing and i not in failed_stride_indices]
                     local_pass_strides = [all_data[i] for i in local_pass_indices]
                     mean_pattern = np.mean(local_pass_strides, axis=0)
-                    display_mean = self.convert_to_display_units(mean_pattern, var_name)
-                    ax.plot(phase_ipsi, display_mean, color='darkorange', linewidth=2, zorder=6)
+                    ax.plot(phase_ipsi, mean_pattern, color='darkorange', linewidth=2, zorder=6)
             else:
                 # For fail column: show strides that fail this specific feature
                 lines = []
                 for stride_idx, stride in enumerate(all_data):
                     if stride_idx in failed_stride_indices:
-                        # Convert to display units if needed
-                        display_stride = self.convert_to_display_units(stride, var_name)
-                        lines.append(list(zip(phase_ipsi, display_stride)))
+                        lines.append(list(zip(phase_ipsi, stride)))
                         count += 1
-                
+
                 # Use LineCollection for fast batch plotting
                 if lines:
                     lc = LineCollection(lines, colors='red', alpha=0.3, linewidths=0.5, zorder=1)
                     ax.add_collection(lc)
-                
+
                 # Plot mean of the displayed strides
                 if count > 0:
                     fail_strides = [all_data[i] for i in range(len(all_data)) if i in failed_stride_indices]
                     if fail_strides:
                         mean_pattern = np.mean(fail_strides, axis=0)
-                        display_mean = self.convert_to_display_units(mean_pattern, var_name)
-                        ax.plot(phase_ipsi, display_mean, color='darkred', linewidth=2, zorder=5)
+                        ax.plot(phase_ipsi, mean_pattern, color='darkred', linewidth=2, zorder=5)
         
         # Return both counts for title updates
         if show_pass and show_local_passing:
@@ -2641,7 +2622,11 @@ class InteractiveValidationTuner:
                     unit = self.get_variable_unit(var_name)
                     if unit:
                         ax.set_ylabel(unit, fontsize=8)
-        
+
+            if var_name and 'angle' in var_name.lower():
+                self._add_secondary_angle_axis(ax_pass, y_min, y_max)
+                self._add_secondary_angle_axis(ax_fail, y_min, y_max)
+
         # Add comprehensive title with stats
         self.fig.suptitle(self._get_summary_title(), 
                           fontsize=11, fontweight='bold', y=0.99)
