@@ -36,6 +36,32 @@ Contributors now submit complete packages with documentation. Your role:
 - Filter strides: `python contributor_tools/create_filtered_dataset.py <dataset_phase.parquet>`
 - Serve docs locally: `mkdocs serve`
 
+## Validation Checks
+
+### Phase-Indexed Data
+
+Maintainers expect every 150-sample stride to satisfy the phase-based validator:
+
+- **Envelope Match**: Each feature must stay inside the normative range YAML (mean ± tolerance) across the full 0–100% phase. Outliers mark stride/feature failures.
+- **Event Alignment**: Heel-strike / toe-off event timestamps should align with the standard template (within ±5% phase). Large shifts imply bad segmentation or mislabeled leading limb.
+- **Cycle Sanity**: Basic stats (peak knee flexion, ankle dorsiflexion timing, stride duration) are cross-checked against dataset metadata. Values outside physiological windows flag either unit errors or incorrect phase normalization.
+- **Symmetry Spot-Checks**: For bilateral features, ipsi/contra differences beyond configured thresholds highlight swapped limbs or sign inversions before envelope comparisons even run.
+
+Use the validator report (and `interactive_validation_tuner.py` when needed) to adjust ranges or request converter fixes.
+
+### Time-Indexed Data
+
+Episodes that remain in time space (non-cyclic tasks) run a lightweight structural suite aimed at catching systemic issues:
+
+- **Baseline Offset Audit**: Identify quasi-static frames (e.g., first 0.5 s) and require velocities/accelerations to average ~0, vertical acceleration near 1 g. Flags zeroing and bias problems.
+- **Derivative/Product Consistency**: Integrate angular velocity back to the recorded angle (after high-pass filtering) and verify `power ≈ moment × angular_velocity`. Divergence indicates sign flips or scaling errors.
+- **Cross-Limb Correlation**: Normalize episode duration to [0,1] and cross-correlate ipsi vs. contra channels; the peak must appear within a small lag window. Large shifts expose segmentation offsets or swapped sides.
+- **Physiologic Guardrails**: Enforce simple min/max bounds per joint, moment, and GRF so inverted channels fail quickly (e.g., knee flexion −20° to 160°, ankle moment ±3 Nm/kg).
+
+Failing these checks should prompt maintainers to request converter fixes before accepting a time-indexed dataset.
+
+Time-series thresholds live in `contributor_tools/validation_ranges/time_structural.yaml`. Maintainers can tune tolerances (baseline window, correlation targets, guardrail ranges) without touching code. The quick validation CLI now reports whether a dataset was validated in phase or time mode and summarises structural issues per task. Plot generation remains phase-only; time datasets surface textual diagnostics instead.
+
 ## Where Things Are
 
 - Converters: `contributor_tools/conversion_scripts/`
