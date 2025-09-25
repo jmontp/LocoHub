@@ -33,6 +33,8 @@ Usage:
 
 from typing import Dict
 
+from internal.config_management import task_registry as _task_registry
+
 # Standard feature groups - ordered to match plotting function expectations
 # Order: [hip_ipsi, hip_contra, knee_ipsi, knee_contra, ankle_ipsi, ankle_contra]
 
@@ -208,6 +210,18 @@ def get_feature_list(mode: str) -> list:
         return VELOCITY_FEATURES.copy()
     else:
         raise ValueError(f"Unsupported mode: {mode}. Use 'kinematic', 'kinetic', or 'velocity'")
+
+
+def get_valid_tasks(category: str = None) -> list:
+    """Expose canonical task names via the user library API."""
+
+    return _task_registry.get_valid_tasks(category)
+
+
+def is_valid_task(task_name: str) -> bool:
+    """Return True if *task_name* is part of the canonical registry."""
+
+    return _task_registry.is_valid_task(task_name)
 
 
 def get_feature_map(mode: str) -> Dict[str, int]:

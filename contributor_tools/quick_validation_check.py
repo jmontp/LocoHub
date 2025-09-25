@@ -35,6 +35,7 @@ import time
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from internal.validation_engine.validator import Validator
+from internal.config_management import task_registry
 from user_libs.python.locomotion_data import LocomotionData
 
 # Import Tkinter components for scrollable display
@@ -311,52 +312,119 @@ def print_validation_summary(result: Dict) -> None:
         result: Validation result dictionary from Validator
     """
     stats = result['stats']
-    
-    # Header
+    mode = result.get('mode', 'phase')
+
     print("\n" + "="*70)
     print("QUICK VALIDATION CHECK")
     print("="*70)
-    
-    # Overall status
+
     status = "✅ PASSED" if result['passed'] else "❌ FAILED"
     print(f"\nDataset: {stats['dataset']}")
     print(f"Status: {status}")
-    print(f"Overall Pass Rate: {stats['pass_rate']:.1%} ({stats['total_strides'] - stats['total_failing_strides']}/{stats['total_strides']} strides)")
+    print(f"Mode: {'Time-Indexed' if mode == 'time' else 'Phase-Indexed'}")
     
-    # Phase structure
+    if mode == 'phase':
+        total_strides = stats['total_strides']
+        passing_strides = total_strides - stats['total_failing_strides']
+        print(f"Overall Pass Rate: {stats['pass_rate']:.1%} ({passing_strides}/{total_strides} strides)")
+    else:
+        print(f"Overall Pass Rate: {stats['pass_rate']:.1%} (structural checks)")
+
     phase_icon = "✅" if result['phase_valid'] else "❌"
     print(f"Phase Structure: {phase_icon} {result['phase_message']}")
-    
-    # Task summary
-    print(f"\nTasks Validated: {stats['num_tasks']}")
-    
+
+    print(f"\nTasks Evaluated: {stats.get('num_tasks', 0)}")
+
     if result['violations']:
         print("\n" + "-"*70)
         print("TASK SUMMARY")
         print("-"*70)
-        
+
         for task, violations in sorted(result['violations'].items()):
-            # Count total failures for this task
             total_failures = sum(len(v) for v in violations.values())
-            
             if total_failures > 0:
-                # Count unique features that failed
                 failed_features = len(violations)
-                print(f"\n📍 {task}: {total_failures} stride failures across {failed_features} features")
+                summary_label = "issues" if mode == 'time' else "stride failures"
+                print(f"\n📍 {task}: {total_failures} {summary_label} across {failed_features} checks")
+                if mode == 'time':
+                    for check_name, records in violations.items():
+                        print(f"    - {check_name}: {len(records)} flagged segments")
             else:
-                print(f"\n📍 {task}: ✅ All features passed")
+                print(f"\n📍 {task}: ✅ All checks passed")
     else:
         print("\n✅ All validations passed!")
-    
-    # Summary statistics
+
     print("\n" + "-"*70)
     print("SUMMARY")
     print("-"*70)
-    print(f"Total Strides: {stats['total_strides']:,}")
-    print(f"Pass Rate: {stats['pass_rate']:.1%}")
-    print(f"Variable Pass Rate: {stats['variable_pass_rate']:.1%}")
-    
+    if mode == 'phase':
+        print(f"Total Strides: {stats['total_strides']:,}")
+        print(f"Pass Rate: {stats['pass_rate']:.1%}")
+        print(f"Variable Pass Rate: {stats['variable_pass_rate']:.1%}")
+    else:
+        print(f"Total Checks: {stats['total_checks']:,}")
+        print(f"Violations: {stats['total_violations']:,}")
+        print(f"Episodes: {stats.get('num_episodes', 0)}")
+
     print("\n" + "="*70)
+
+
+POPULATION_SUFFIXES = [
+    '_stroke', '_amputee', '_tfa', '_tta', '_pd', '_sci', '_cp',
+    '_ms', '_oa', '_cva', '_parkinsons'
+]
+
+
+def _base_task_name(task: str) -> str:
+    """Remove population suffixes for registry comparisons."""
+
+    if not task:
+        return ''
+
+    task_lower = task.lower()
+    for suffix in POPULATION_SUFFIXES:
+        if task_lower.endswith(suffix):
+            return task_lower[:-len(suffix)]
+    return task_lower
+
+
+def _collect_dataset_tasks(dataset_path: Path) -> List[str]:
+    """Return unique task names present in the dataset parquet."""
+
+    try:
+        df = pd.read_parquet(dataset_path, columns=['task'])
+    except Exception:
+        df = pd.read_parquet(dataset_path)
+    if 'task' not in df.columns:
+        return []
+    return sorted(x for x in df['task'].dropna().unique())
+
+
+def _report_task_registry_mismatches(dataset_tasks: List[str], range_tasks: List[str]) -> bool:
+    """Warn about tasks missing from the canonical registry or ranges."""
+
+    registry_ok = True
+
+    unknown_dataset = [t for t in dataset_tasks if not task_registry.is_valid_task(_base_task_name(t))]
+    unknown_ranges = [t for t in range_tasks if not task_registry.is_valid_task(_base_task_name(t))]
+
+    if unknown_dataset:
+        print("\n⚠️  Dataset includes tasks not in task_registry: " + ", ".join(sorted(unknown_dataset)))
+        registry_ok = False
+    if unknown_ranges:
+        print("\n⚠️  Validation ranges include tasks not in task_registry: " + ", ".join(sorted(unknown_ranges)))
+        registry_ok = False
+
+    missing_ranges = [t for t in dataset_tasks if t not in range_tasks]
+    if missing_ranges:
+        print("\n⚠️  Dataset tasks without validation ranges: " + ", ".join(sorted(missing_ranges)))
+
+    if registry_ok:
+        print("\n✅ Task registry check passed (all tasks recognised).")
+    else:
+        print("\n⚠️  Update internal/config_management/task_registry.py if these tasks are expected.")
+
+    return registry_ok
 
 
 
@@ -370,7 +438,7 @@ def main():
     
     parser.add_argument(
         "dataset",
-        help="Path to phase-indexed dataset parquet file"
+        help="Path to standardized dataset parquet file (phase- or time-indexed)"
     )
     
     parser.add_argument(
@@ -428,34 +496,43 @@ def main():
     print(f"📋 Using ranges: {ranges_file.name}")
     
     try:
+        dataset_tasks: List[str] = []
+        try:
+            dataset_tasks = _collect_dataset_tasks(dataset_path)
+        except Exception as exc:
+            print(f"\n⚠️  Could not inspect dataset tasks: {exc}")
+
         # Initialize validator
         validator = Validator(config_path=ranges_file)
-        
+        range_tasks = list(validator.config_manager.get_tasks())
+
+        registry_ok = _report_task_registry_mismatches(dataset_tasks, range_tasks)
+
         # Run validation
         result = validator.validate(str(dataset_path))
-        
+        mode = result.get('mode', 'phase')
+
         # Always print summary
         print_validation_summary(result)
-        
+
         # Optional plot generation
         if args.plot:
-            # Check for conflicting options
-            if args.task and not args.plot:
-                print("\n⚠️  Warning: --task requires --plot to be specified")
-            
-            generate_plots(
-                dataset_path=str(dataset_path),
-                validator=validator,
-                task_filter=args.task,
-                output_dir=args.output_dir,
-                use_column_names=args.use_column_names,
-                show_local_passing=args.show_local_passing
-            )
+            if mode == 'time':
+                print("\n⚠️  Plots are only available for phase-indexed datasets. Skipping plot generation.")
+            else:
+                generate_plots(
+                    dataset_path=str(dataset_path),
+                    validator=validator,
+                    task_filter=args.task,
+                    output_dir=args.output_dir,
+                    use_column_names=args.use_column_names,
+                    show_local_passing=args.show_local_passing
+                )
         elif args.task or args.output_dir:
             print("\n⚠️  Note: --task and --output-dir require --plot to be specified")
         
         # Return exit code based on validation result
-        return 0 if result['passed'] else 1
+        return 0 if (result['passed'] and registry_ok) else 1
         
     except Exception as e:
         print(f"\n❌ Error during validation: {e}")

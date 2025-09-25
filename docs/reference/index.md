@@ -30,7 +30,11 @@ Phase-aligned exports apply to cyclic gait data. Event-driven or non-cyclic acti
 
 ## Task Names, IDs, and Metadata
 
-- Task names (`task`) capture the high-level motion family. Use neutral categories that apply across datasets, such as `level_walking`, `incline_walking`, `decline_walking`, `stair_ascent`, `stair_descent`, `run`, `backward_walking`, `sit_to_stand`, `stand_to_sit`, `step_up`, `step_down`, `jump`, `squats`, and the catch-all `functional_task` for non-cyclic or miscellaneous movements. Append population/pathology suffixes only when the entire recording targets that cohort (e.g., `level_walking_stroke`). Keep suffix tokens lowercase snake_case (`stroke`, `pd`, `sci`, `tfa`, `tta`, etc.).
+> The canonical list of task families lives in `internal/config_management/task_registry.py`.
+> Update that module **and** this section whenever new tasks are introduced so that all
+> tooling shares a single source of truth.
+
+- Task names (`task`) capture the high-level motion family. Use neutral categories that apply across datasets, such as `level_walking`, `incline_walking`, `decline_walking`, `stair_ascent`, `stair_descent`, `run`, `walk_backward`, `sit_to_stand`, `stand_to_sit`, `step_up`, `step_down`, `jump`, `squats`, and the catch-all `functional_task` for non-cyclic or miscellaneous movements. Append population/pathology suffixes only when the entire recording targets that cohort (e.g., `level_walking_stroke`). Keep suffix tokens lowercase snake_case (`stroke`, `pd`, `sci`, `tfa`, `tta`, etc.).
 - Task IDs (`task_id`) describe the specific variant within the family, e.g., `level`, `incline_5deg`, `decline_10deg`, `stair_ascent`, `stair_descent`, `sit_to_stand_short`, `jump_vertical`. The exact vocabulary can differ by dataset, but it must remain stable inside a release.
 - Task metadata (`task_info`) is a comma-separated key:value string carrying numeric parameters and variant tags. Values should prefer SI units and be machine-readable.
 

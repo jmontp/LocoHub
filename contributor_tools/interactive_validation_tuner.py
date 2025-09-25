@@ -98,6 +98,7 @@ sys.path.insert(0, str(project_root))
 from user_libs.python.locomotion_data import LocomotionData
 from user_libs.python.feature_constants import get_feature_list
 from internal.config_management.config_manager import ValidationConfigManager
+from internal.config_management import task_registry
 from internal.plot_generation.filters_by_phase_plots import get_task_classification
 
 
@@ -537,7 +538,8 @@ class InteractiveValidationTuner:
         self.draggable_boxes = []
         self.data_cache = {}
         self.modified = False
-        
+        self.unknown_tasks = set()
+
         # PERFORMANCE: Shared background cache for all draggable boxes
         self._shared_background = None
         self._shared_background_invalid = True
@@ -718,7 +720,9 @@ class InteractiveValidationTuner:
                 if tasks:
                     self.task_dropdown.set(tasks[0])
                     self.current_task = tasks[0]
-                
+
+                self._note_unknown_tasks(tasks, source="validation ranges")
+
                 self.status_bar.config(text=f"Loaded default validation ranges. Load dataset via File menu.")
                 self.modified = False
             except Exception as e:
@@ -914,6 +918,143 @@ class InteractiveValidationTuner:
             twin_ax.spines['right'].set_color('gray')
         return twin_ax
 
+    @staticmethod
+    def _base_task_name(task_name: str) -> str:
+        """Strip population suffixes before registry lookup."""
+
+        if not task_name:
+            return ''
+
+        task_lower = task_name.lower()
+        population_suffixes = [
+            '_stroke', '_amputee', '_tfa', '_tta', '_pd', '_sci', '_cp',
+            '_ms', '_oa', '_cva', '_parkinsons'
+        ]
+        for suffix in population_suffixes:
+            if task_lower.endswith(suffix):
+                return task_lower[:-len(suffix)]
+        return task_lower
+
+    def _note_unknown_tasks(self, tasks, source: str):
+        """Track and warn about tasks missing from the canonical registry."""
+
+        unknown = sorted({
+            task for task in tasks
+            if task and not task_registry.is_valid_task(self._base_task_name(task))
+        })
+
+        if not unknown:
+            return
+
+        self.unknown_tasks.update(unknown)
+        warning = (
+            f"Warning: {source} contains tasks not in task_registry: "
+            f"{', '.join(unknown)}"
+        )
+        print(f"WARNING: {warning}")
+        if hasattr(self, 'status_bar'):
+            self.status_bar.config(text=warning)
+
+    def _initialize_task_from_dataset(self, task_name: str) -> bool:
+        """Generate placeholder validation ranges for a dataset-only task."""
+
+        if not self.locomotion_data or not task_name:
+            return False
+
+        if task_name in self.validation_data:
+            return False
+
+        try:
+            subjects = self.locomotion_data.get_subjects()
+        except Exception:
+            return False
+
+        all_data = []
+        feature_names = None
+
+        for subject in subjects:
+            try:
+                cycles_data, feature_names = self.locomotion_data.get_cycles(
+                    subject=subject,
+                    task=task_name,
+                    features=None
+                )
+            except Exception:
+                continue
+
+            if cycles_data.size == 0:
+                continue
+
+            all_data.append(cycles_data)
+
+        if not all_data or feature_names is None:
+            return False
+
+        combined = np.concatenate(all_data, axis=0)
+        if combined.size == 0:
+            return False
+
+        num_samples = combined.shape[1]
+        if num_samples <= 1:
+            return False
+
+        phases = [0, 25, 50, 75]
+        phase_ranges = {}
+        for phase in phases:
+            phase_idx = int(round(phase / 100 * (num_samples - 1)))
+            phase_idx = max(0, min(num_samples - 1, phase_idx))
+            feature_ranges = {}
+            for feat_idx, feature in enumerate(feature_names):
+                values = combined[:, phase_idx, feat_idx]
+                values = values[np.isfinite(values)]
+                if values.size == 0:
+                    continue
+                lower, upper = np.quantile(values, [0.025, 0.975])
+                if not np.isfinite(lower) or not np.isfinite(upper):
+                    continue
+                if lower == upper:
+                    epsilon = max(1e-4, abs(lower) * 0.05)
+                    lower -= epsilon
+                    upper += epsilon
+                feature_ranges[feature] = {
+                    'min': float(lower),
+                    'max': float(upper)
+                }
+            if feature_ranges:
+                phase_ranges[phase] = feature_ranges
+
+        if not phase_ranges:
+            return False
+
+        # Store full ranges (including contra features)
+        self.full_validation_data[task_name] = {phase: vars.copy() for phase, vars in phase_ranges.items()}
+
+        # Filter to ipsilateral features for GUI display
+        ipsi_only = {}
+        for phase, variables in phase_ranges.items():
+            filtered = {k: v for k, v in variables.items() if '_contra' not in k}
+            if filtered:
+                ipsi_only[phase] = filtered
+
+        if not ipsi_only:
+            return False
+
+        self.validation_data[task_name] = ipsi_only
+        self.original_validation_data[task_name] = copy.deepcopy(ipsi_only)
+        self.original_full_validation_data[task_name] = copy.deepcopy(self.full_validation_data[task_name])
+
+        if self.config_manager is not None:
+            config_snapshot = copy.deepcopy(self.config_manager.get_data())
+            config_snapshot[task_name] = {
+                'metadata': {'contralateral_offset': True},
+                'phases': ipsi_only
+            }
+            self.config_manager.set_data(config_snapshot)
+
+        self.modified = True
+        print(f"Initialized placeholder validation ranges for task '{task_name}' using dataset quantiles.")
+        return True
+
     def create_empty_plot(self):
         """Create an empty matplotlib figure."""
         from matplotlib.figure import Figure
@@ -1018,7 +1159,9 @@ class InteractiveValidationTuner:
             if tasks:
                 self.task_dropdown.set(tasks[0])
                 self.current_task = tasks[0]
-            
+
+            self._note_unknown_tasks(tasks, source="validation ranges")
+
             self.status_bar.config(text=f"Loaded validation ranges from: {Path(file_path).name}")
             self.modified = False
             
@@ -1088,12 +1231,23 @@ class InteractiveValidationTuner:
         try:
             # Get tasks from dataset
             dataset_tasks = self.locomotion_data.get_tasks()
-            
+
+            added_any = False
+            for task in dataset_tasks:
+                if task not in self.validation_data:
+                    added_any = self._initialize_task_from_dataset(task) or added_any
+
+            if added_any:
+                print("Generated placeholder validation ranges for dataset-only tasks.")
+
             # Combine with tasks from validation data (if any)
             # This allows users to see both dataset tasks and any pre-defined validation tasks
             all_tasks = list(set(dataset_tasks) | set(self.validation_data.keys()))
             all_tasks.sort()
-            
+
+            self._note_unknown_tasks(dataset_tasks, source="dataset")
+            self._note_unknown_tasks(all_tasks, source="dataset/validation union")
+
             # Update dropdown
             self.task_dropdown['values'] = all_tasks
             
