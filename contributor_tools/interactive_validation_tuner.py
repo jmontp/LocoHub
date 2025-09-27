@@ -48,12 +48,14 @@ Installation:
 
 import sys
 import copy
+from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Any
+
 import numpy as np
 import pandas as pd
 import yaml
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
-from datetime import datetime
 
 # Try to import tkinter and set up matplotlib backend
 TKINTER_AVAILABLE = False
@@ -235,13 +237,7 @@ class DraggableBox:
         
         # Blitting background storage
         self.background = None
-        
-        # Connect events (PERFORMANCE: Remove separate hover handler)
-        self.cidpress = self.ax.figure.canvas.mpl_connect('button_press_event', self.on_press)
-        self.cidrelease = self.ax.figure.canvas.mpl_connect('button_release_event', self.on_release)
-        self.cidmotion = self.ax.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
-        # NOTE: on_hover removed for performance - circles now always visible
-        
+
         # Track if this box is selected
         self.selected = False
     
@@ -283,12 +279,17 @@ class DraggableBox:
     
     def on_press(self, event):
         """Handle mouse press event with generous Y-range resize zones."""
-        if event.inaxes != self.ax or event.xdata is None or event.ydata is None:
+        if event.xdata is None or event.ydata is None:
             return
-        
+
+        if self.parent is not None:
+            if self.parent._normalize_axis(event.inaxes) != self.parent._normalize_axis(self.ax):
+                return
+        elif event.inaxes != self.ax:
+            return
+
         # Only handle left-clicks (button 1) for dragging - allow right-clicks to pass through
         if event.button != 1:
-            print(f"DEBUG: DraggableBox {self.var_name} at phase {self.phase} ignoring button {event.button}")
             return
         
         # Check if click is within the box x-range (hover zone)
@@ -335,16 +336,70 @@ class DraggableBox:
     def invalidate_background(self):
         """Mark background cache as invalid, forcing redraw on next use."""
         self.background_invalid = True
-        
+
+    def contains_event(self, event) -> bool:
+        """Return True when the pointer event targets this box."""
+        if event.x is None or event.y is None:
+            return False
+
+        if self.rect.contains_point((event.x, event.y)):
+            return True
+
+        # Allow clicks on resize handles
+        if (self.top_handle.contains_point((event.x, event.y)) or
+                self.bottom_handle.contains_point((event.x, event.y))):
+            return True
+
+        return self.hover_zone.contains_point((event.x, event.y))
+
+    def _draw_self(self):
+        """Draw this box and associated UI elements."""
+        self.ax.draw_artist(self.rect)
+        self.ax.draw_artist(self.min_text)
+        self.ax.draw_artist(self.max_text)
+        self.ax.draw_artist(self.phase_text)
+        self.ax.draw_artist(self.top_handle)
+        self.ax.draw_artist(self.bottom_handle)
+        if self.drag_phase_text.get_visible():
+            self.ax.draw_artist(self.drag_phase_text)
+
+    def _draw_box(self):
+        """Redraw this axis using the cached background if available."""
+        if self.background is not None and not self.background_invalid:
+            canvas = self.ax.figure.canvas
+            canvas.restore_region(self.background)
+
+            boxes_to_draw = [self]
+            if self.parent is not None:
+                axis_key = self.parent._normalize_axis(self.ax)
+                boxes_to_draw = self.parent._boxes_by_axis.get(axis_key, [self])
+
+            for box in boxes_to_draw:
+                box._draw_self()
+
+            canvas.blit(self.ax.bbox)
+        else:
+            self.ax.figure.canvas.draw_idle()
+
+    def redraw(self):
+        """Public helper to trigger a redraw from the parent application."""
+        self._draw_box()
+
     # PERFORMANCE OPTIMIZATION: on_hover method completely removed
     # Circles are now always visible for better performance
     # This eliminates expensive pixel-to-data conversions and draw calls on every mouse move
     
     def on_motion(self, event):
         """Handle mouse motion event with performance optimizations."""
-        if self.dragging is None or event.inaxes != self.ax:
+        if self.dragging is None:
             return
-        
+
+        if self.parent is not None:
+            if self.parent._normalize_axis(event.inaxes) != self.parent._normalize_axis(self.ax):
+                return
+        elif event.inaxes != self.ax:
+            return
+
         dy = event.ydata - self.drag_start_y
         dx = event.xdata - self.drag_start_x if self.allow_x_drag else 0
         
@@ -398,35 +453,18 @@ class DraggableBox:
         # Top handle: positioned above the validation box with offset
         self.top_handle.set_x(self.phase - handle_width/2)
         self.top_handle.set_y(self.max_val + handle_offset)
-        
+
         # Bottom handle: positioned below the validation box with offset
-        self.bottom_handle.set_x(self.phase - handle_width/2) 
+        self.bottom_handle.set_x(self.phase - handle_width/2)
         self.bottom_handle.set_y(self.min_val - handle_height - handle_offset)
-        
+
         # Update hover zone position (using cached values)
         self.hover_zone.set_x(self.phase - self.box_width/2)
         self.hover_zone.set_y(self.min_val - self._hover_extend_data)
         self.hover_zone.set_height((self.max_val - self.min_val) + 2 * self._hover_extend_data)
-        
-        # Use blitting for fast updates only if background is valid
-        if self.background is not None and not self.background_invalid:
-            canvas = self.ax.figure.canvas
-            # Restore the background
-            canvas.restore_region(self.background)
-            # Redraw the animated artists
-            self.ax.draw_artist(self.rect)
-            self.ax.draw_artist(self.min_text)
-            self.ax.draw_artist(self.max_text)
-            self.ax.draw_artist(self.phase_text)
-            # PERFORMANCE: Always draw handles since they're always visible
-            self.ax.draw_artist(self.top_handle)
-            self.ax.draw_artist(self.bottom_handle)
-            if self.drag_phase_text.get_visible():
-                self.ax.draw_artist(self.drag_phase_text)
-            # Blit the changes
-            canvas.blit(self.ax.bbox)
-        else:
-            self.ax.figure.canvas.draw_idle()
+
+        # Redraw using cached background (falls back to full draw if needed)
+        self.redraw()
     
     def on_release(self, event):
         """Handle mouse release event."""
@@ -435,8 +473,8 @@ class DraggableBox:
             self.rect.set_edgecolor(self.edgecolor)
             # Hide phase indicator
             self.drag_phase_text.set_visible(False)
-            # PERFORMANCE: Handles remain visible (no more hide/show)
-            self.ax.figure.canvas.draw_idle()
+            # PERFORMANCE: Redraw only the affected axes using cached background
+            self.redraw()
             
             # Call callback if provided
             if self.callback:
@@ -488,6 +526,9 @@ class DraggableBox:
         hover_extend_data = self._hover_extend_data
         self.hover_zone.set_y(self.min_val - hover_extend_data)
         self.hover_zone.set_height((self.max_val - self.min_val) + 2 * hover_extend_data)
+
+        # Redraw with updated values
+        self.redraw()
     
     def remove(self):
         """Remove the box from the plot."""
@@ -510,14 +551,7 @@ class DraggableBox:
         except:
             pass  # Ignore if already removed
         
-        # Disconnect events
-        try:
-            self.ax.figure.canvas.mpl_disconnect(self.cidpress)
-            self.ax.figure.canvas.mpl_disconnect(self.cidrelease)
-            self.ax.figure.canvas.mpl_disconnect(self.cidmotion)
-            # NOTE: cidhover removed for performance optimization
-        except:
-            pass
+        # Event callbacks are centrally managed; nothing to disconnect here
 
 
 class InteractiveValidationTuner:
@@ -536,6 +570,8 @@ class InteractiveValidationTuner:
         self.locomotion_data = None
         self.current_task = None
         self.draggable_boxes = []
+        self._boxes_by_axis = defaultdict(list)
+        self._axis_aliases = {}
         self.data_cache = {}
         self.modified = False
         self.unknown_tasks = set()
@@ -543,6 +579,11 @@ class InteractiveValidationTuner:
         # PERFORMANCE: Shared background cache for all draggable boxes
         self._shared_background = None
         self._shared_background_invalid = True
+
+        # Centralized canvas event state
+        self._canvas_event_cids = []
+        self._active_box = None
+        self.debug = False
         
         # Setup the GUI
         self.setup_gui()
@@ -907,6 +948,9 @@ class InteractiveValidationTuner:
         # Subtle styling to distinguish the secondary spine
         if 'right' in twin_ax.spines:
             twin_ax.spines['right'].set_color('gray')
+
+        # Map the secondary axis back to its primary axis for event handling
+        self._axis_aliases[twin_ax] = ax
         return twin_ax
 
     @staticmethod
@@ -1075,11 +1119,103 @@ class InteractiveValidationTuner:
             wrap=True
         )
         self.canvas.draw()
-        
+
+        # Ensure canvas events are connected once the widget exists
+        self._bind_canvas_events()
+
         # Update scroll region
         self.plot_frame.update_idletasks()
         self.on_plot_frame_configure()
-    
+
+    def _bind_canvas_events(self):
+        """Attach centralized press/move/release handlers to the canvas."""
+        if not hasattr(self, 'canvas') or self.canvas is None:
+            return
+
+        # Detach any existing bindings before wiring new ones
+        if self._canvas_event_cids:
+            for bound_canvas, cid in self._canvas_event_cids:
+                try:
+                    bound_canvas.mpl_disconnect(cid)
+                except Exception:
+                    pass
+            self._canvas_event_cids = []
+
+        canvas = self.canvas
+        self._canvas_event_cids = [
+            (canvas, canvas.mpl_connect('button_press_event', self._on_canvas_press)),
+            (canvas, canvas.mpl_connect('motion_notify_event', self._on_canvas_motion)),
+            (canvas, canvas.mpl_connect('button_release_event', self._on_canvas_release)),
+        ]
+
+    def _normalize_axis(self, axis):
+        """Map twinned axes back to their primary axis for hit-testing."""
+        return self._axis_aliases.get(axis, axis)
+
+    def _register_box(self, box: DraggableBox):
+        """Track a draggable box for hit-testing and redraw management."""
+        self.draggable_boxes.append(box)
+        axis_key = self._normalize_axis(box.ax)
+        self._boxes_by_axis[axis_key].append(box)
+
+    def _unregister_box(self, box: DraggableBox):
+        """Remove a draggable box from tracking structures."""
+        if box in self.draggable_boxes:
+            self.draggable_boxes.remove(box)
+
+        axis_key = self._normalize_axis(box.ax)
+        axis_boxes = self._boxes_by_axis.get(axis_key)
+        if axis_boxes and box in axis_boxes:
+            axis_boxes.remove(box)
+            if not axis_boxes:
+                del self._boxes_by_axis[axis_key]
+
+    def _find_box_for_event(self, event) -> Optional[DraggableBox]:
+        """Return the top-most draggable box that should respond to the event."""
+        if not event:
+            return None
+
+        axis_key = self._normalize_axis(event.inaxes)
+        axis_boxes = self._boxes_by_axis.get(axis_key)
+        if not axis_boxes:
+            return None
+
+        for box in reversed(axis_boxes):
+            if box.contains_event(event):
+                return box
+        return None
+
+    def _on_canvas_press(self, event):
+        """Route mouse press events to the active draggable box or context menu."""
+        self._active_box = None
+
+        if event is None:
+            return
+
+        if event.button == 3:
+            # Delegate right-clicks to the context menu handler
+            self.on_plot_click(event)
+            return
+
+        if event.button != 1:
+            return
+
+        box = self._find_box_for_event(event)
+        if box:
+            self._active_box = box
+            box.on_press(event)
+
+    def _on_canvas_motion(self, event):
+        """Forward motion events to the currently active box."""
+        if self._active_box is not None:
+            self._active_box.on_motion(event)
+
+    def _on_canvas_release(self, event):
+        """Release the active box and finalize edits."""
+        if self._active_box is not None:
+            self._active_box.on_release(event)
+            self._active_box = None
+
     def _convert_numpy_to_python(self, obj):
         """Recursively convert numpy types to Python native types."""
         import numpy as np
@@ -1434,22 +1570,23 @@ class InteractiveValidationTuner:
         # all_vars += velocity_vars + additional_kinematic_vars
         # all_labels += velocity_labels + additional_kinematic_labels
 
-        contra_vars = []
-        contra_labels = []
+        ordered_vars = []
+        ordered_labels = []
         for var_name, label in zip(all_vars, all_labels):
-            if '_ipsi' not in var_name:
-                continue
+            ordered_vars.append(var_name)
+            ordered_labels.append(label)
 
-            contra_var = var_name.replace('_ipsi', '_contra')
-            if '(Ipsi)' in label:
-                contra_label = label.replace('(Ipsi)', '(Contra)')
-            else:
-                contra_label = f"{label} (Contra)"
+            if '_ipsi' in var_name:
+                contra_var = var_name.replace('_ipsi', '_contra')
+                if '(Ipsi)' in label:
+                    contra_label = label.replace('(Ipsi)', '(Contra)')
+                else:
+                    contra_label = f"{label} (Contra)"
 
-            contra_vars.append(contra_var)
-            contra_labels.append(contra_label)
+                ordered_vars.append(contra_var)
+                ordered_labels.append(contra_label)
 
-        return all_vars + contra_vars, all_labels + contra_labels
+        return ordered_vars, ordered_labels
     
     def update_plot(self, force_redraw=False):
         """Update the plot with current task and mode using two-column layout."""
@@ -1465,11 +1602,13 @@ class InteractiveValidationTuner:
             # PERFORMANCE: Invalidate shared background cache when plot is redrawn
             self._shared_background_invalid = True
             self._shared_background = None
-            
+            self._axis_aliases.clear()
+
             # Remove existing draggable boxes
             for box in self.draggable_boxes:
                 box.remove()
             self.draggable_boxes = []
+            self._boxes_by_axis.clear()
         else:
             # Just clear the line collections from existing axes
             for ax_pass, ax_fail in zip(self.axes_pass, self.axes_fail):
@@ -1502,15 +1641,15 @@ class InteractiveValidationTuner:
         fig_width = (window_width - 100) / dpi
         
         # Height per subplot row (in inches)
-        row_height = 2.5  # Increased for better dragging space
-        fig_height = n_vars * row_height + 1  # Add space for title
-        
+        row_height = 1.9  # Compact spacing while preserving drag room
+        fig_height = max(n_vars * row_height + 0.5, 3.8)
+
         # Create new figure with dynamic size
         from matplotlib.figure import Figure
         self.fig = Figure(figsize=(fig_width, fig_height), dpi=dpi)
         
-        # Use tight layout to minimize whitespace
-        self.fig.subplots_adjust(left=0.06, right=0.98, top=0.96, bottom=0.02, hspace=0.25, wspace=0.15)
+        # Use tighter spacing to reduce whitespace
+        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.965, bottom=0.06, hspace=0.12, wspace=0.12)
         
         # Create subplots with 2 columns (pass/fail) only if needed
         if needs_redraw:
@@ -1585,7 +1724,7 @@ class InteractiveValidationTuner:
                                 allow_x_drag=True,
                                 parent=self
                             )
-                            self.draggable_boxes.append(box_pass)
+                            self._register_box(box_pass)
                             
                             # Create draggable box on fail axis (also interactive)
                             box_fail = DraggableBox(
@@ -1596,7 +1735,7 @@ class InteractiveValidationTuner:
                                 allow_x_drag=True,  # Allow dragging on fail side as well
                                 parent=self
                             )
-                            self.draggable_boxes.append(box_fail)
+                            self._register_box(box_fail)
                             
                             # Store bidirectional references for synchronization
                             box_pass.paired_box = box_fail
@@ -1630,19 +1769,19 @@ class InteractiveValidationTuner:
         
         # Add title
         self.fig.suptitle(f'{self.current_task.replace("_", " ").title()} - All Validation Ranges',
-                         fontsize=12, fontweight='bold', y=0.99)
+                         fontsize=12, fontweight='bold', y=0.982)
         
         # Create/update canvas
         from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
         if hasattr(self, 'canvas'):
             self.canvas.get_tk_widget().destroy()
-        
+
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         self.canvas.draw()
-        
-        # Connect right-click event for context menu
-        self.fig.canvas.mpl_connect('button_press_event', self.on_plot_click)
+
+        # Ensure the centralized event handlers stay attached when the canvas is rebuilt
+        self._bind_canvas_events()
         
         # Update scroll region
         self.plot_frame.update_idletasks()
@@ -2107,7 +2246,12 @@ class InteractiveValidationTuner:
                 box.paired_box.phase_text.set_text(f'{box.phase}%')
                 box.paired_box.phase_text.set_position((box.phase, box.paired_box.ax.get_ylim()[1]))
                 # Don't call draw_idle() here - paired box updates happen through blitting
-            
+
+            # Redraw the updated boxes without triggering a full canvas refresh
+            box.redraw()
+            if hasattr(box, 'paired_box') and box.paired_box:
+                box.paired_box.redraw()
+
             self.modified = True
             self.status_bar.config(text=f"Modified: {box.var_name} at phase {box.phase}% - Press Validate to update")
             
@@ -2119,18 +2263,15 @@ class InteractiveValidationTuner:
     
     def on_plot_click(self, event):
         """Handle right-click events for adding/deleting boxes."""
-        print(f"DEBUG: on_plot_click called - button={event.button}, inaxes={event.inaxes is not None}")
         if event.button == 3 and event.inaxes:  # Right-click
-            print(f"DEBUG: Processing right-click at ({event.xdata:.1f}, {event.ydata:.1f})")
             # Check if we clicked on a box
             clicked_box = None
-            for box in self.draggable_boxes:
-                if box.ax == event.inaxes:
-                    # Use matplotlib's contains method for more reliable hit detection
-                    contains, _ = box.rect.contains(event)
-                    if contains:
-                        clicked_box = box
-                        break
+            axis_key = self._normalize_axis(event.inaxes)
+            axis_boxes = self._boxes_by_axis.get(axis_key, [])
+            for box in axis_boxes:
+                if box.contains_event(event):
+                    clicked_box = box
+                    break
             
             # Create context menu
             menu = tk.Menu(self.root, tearoff=0)
@@ -2151,8 +2292,9 @@ class InteractiveValidationTuner:
 
                 # Find which variable this axis corresponds to
                 var_idx = None
+                axis_key = self._normalize_axis(event.inaxes)
                 for i, (ax_pass, ax_fail) in enumerate(zip(self.axes_pass, self.axes_fail)):
-                    if event.inaxes == ax_pass or event.inaxes == ax_fail:
+                    if axis_key in (self._normalize_axis(ax_pass), self._normalize_axis(ax_fail)):
                         var_idx = i
                         break
 
@@ -2230,11 +2372,10 @@ class InteractiveValidationTuner:
         if paired_box:
             paired_box.paired_box = None
         
-        if box in self.draggable_boxes:
-            self.draggable_boxes.remove(box)
-        
-        if paired_box and paired_box in self.draggable_boxes:
-            self.draggable_boxes.remove(paired_box)
+        self._unregister_box(box)
+
+        if paired_box:
+            self._unregister_box(paired_box)
         
         # Step 2: Call remove() on both to disconnect events and remove from plot
         box.remove()
@@ -2363,6 +2504,8 @@ class InteractiveValidationTuner:
             except Exception:
                 pass
         self.draggable_boxes = []
+        self._boxes_by_axis.clear()
+        self._axis_aliases.clear()
 
         # Refresh plots if dataset is loaded; otherwise, trigger a light redraw
         if self.locomotion_data:
@@ -2609,7 +2752,7 @@ class InteractiveValidationTuner:
             allow_x_drag=True,
             parent=self
         )
-        self.draggable_boxes.append(box_pass)
+        self._register_box(box_pass)
         
         box_fail = DraggableBox(
             ax_fail, phase, var_name, min_val, max_val,
@@ -2619,7 +2762,7 @@ class InteractiveValidationTuner:
             allow_x_drag=True,
             parent=self
         )
-        self.draggable_boxes.append(box_fail)
+        self._register_box(box_fail)
         
         # Pair the boxes
         box_pass.paired_box = box_fail
@@ -2749,7 +2892,9 @@ class InteractiveValidationTuner:
         for box in self.draggable_boxes:
             box.remove()
         self.draggable_boxes = []
-        
+        self._boxes_by_axis.clear()
+        self._axis_aliases.clear()
+
         # Get all features to display
         variables, variable_labels = self.get_all_features()
         n_vars = len(variables)
@@ -2761,15 +2906,15 @@ class InteractiveValidationTuner:
         window_width = self.root.winfo_width() if self.root.winfo_width() > 1 else 1400
         dpi = 100
         fig_width = (window_width - 100) / dpi
-        row_height = 2.5
-        fig_height = n_vars * row_height + 1
+        row_height = 1.9
+        fig_height = max(n_vars * row_height + 0.5, 3.8)
         
         # Reuse existing figure to maintain canvas connection, just resize and clear
         self.fig.set_size_inches(fig_width, fig_height)
         self.fig.clear()  # Clear all existing content but keep figure connected to canvas
         # Ensure constrained_layout is off so subplots_adjust works properly
         self.fig.set_constrained_layout(False)
-        self.fig.subplots_adjust(left=0.06, right=0.98, top=0.94, bottom=0.02, hspace=0.25, wspace=0.15)
+        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.965, bottom=0.06, hspace=0.12, wspace=0.12)
         
         # Recreate canvas to match new figure size
         from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -2853,10 +2998,13 @@ class InteractiveValidationTuner:
 
         # Add comprehensive title with stats
         self.fig.suptitle(self._get_summary_title(), 
-                          fontsize=11, fontweight='bold', y=0.99)
+                          fontsize=11, fontweight='bold', y=0.982)
         
         # Update canvas to show traces
         self.canvas.draw()
+
+        # Ensure centralized event hooks are refreshed with the new canvas
+        self._bind_canvas_events()
     
     def _cache_trace_backgrounds(self):
         """Step 3: Cache clean trace backgrounds for each axis."""
@@ -2890,7 +3038,9 @@ class InteractiveValidationTuner:
         for box in self.draggable_boxes:
             box.remove()
         self.draggable_boxes = []
-        
+        self._boxes_by_axis.clear()
+        self._active_box = None
+
         # Add draggable boxes for each variable
         variables = self.current_variables
         
@@ -2926,7 +3076,7 @@ class InteractiveValidationTuner:
                                 allow_x_drag=True,
                                 parent=self
                             )
-                            self.draggable_boxes.append(box_pass)
+                            self._register_box(box_pass)
                             
                             # Create draggable box on fail axis (light red rectangle)
                             box_fail = DraggableBox(
@@ -2937,7 +3087,7 @@ class InteractiveValidationTuner:
                                 allow_x_drag=True,
                                 parent=self
                             )
-                            self.draggable_boxes.append(box_fail)
+                            self._register_box(box_fail)
                             
                             # Store bidirectional references for synchronization
                             box_pass.paired_box = box_fail
@@ -2959,15 +3109,10 @@ class InteractiveValidationTuner:
                             else:
                                 print("WARNING: No trace_backgrounds attribute found")
         
-        # Update canvas to show boxes
+        # Update canvas to show boxes and refresh event bindings
         self.canvas.draw()
-        
-        # Reconnect right-click handler AFTER draggable boxes to ensure it processes events last
-        if hasattr(self, 'cid_plot_click'):
-            self.fig.canvas.mpl_disconnect(self.cid_plot_click)
-        self.cid_plot_click = self.fig.canvas.mpl_connect('button_press_event', self.on_plot_click)
-        print(f"DEBUG: Reconnected right-click handler after creating {len(self.draggable_boxes)} boxes")
-        
+        self._bind_canvas_events()
+
         # Verify that boxes are using clean trace backgrounds (no re-caching needed!)
         print(f"Added {len(self.draggable_boxes)} interactive boxes using clean trace backgrounds")
     
@@ -2988,20 +3133,22 @@ class InteractiveValidationTuner:
             for box in self.draggable_boxes:
                 box.remove()
             self.draggable_boxes = []
-        
+            self._boxes_by_axis.clear()
+        self._axis_aliases.clear()
+
         # Calculate dynamic figure height based on number of variables
         window_width = self.root.winfo_width() if self.root.winfo_width() > 1 else 1400
         dpi = 100
         fig_width = (window_width - 100) / dpi
         
         # Height per subplot row (in inches)
-        row_height = 2.5  # Increased for better dragging space
-        fig_height = n_vars * row_height + 1  # Add space for title
-        
+        row_height = 1.9
+        fig_height = max(n_vars * row_height + 0.5, 3.8)
+
         # Create new figure with dynamic size (like original update_plot())
         from matplotlib.figure import Figure
         self.fig = Figure(figsize=(fig_width, fig_height), dpi=dpi)
-        self.fig.subplots_adjust(left=0.06, right=0.98, top=0.94, bottom=0.02, hspace=0.25, wspace=0.15)
+        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.965, bottom=0.06, hspace=0.12, wspace=0.12)
         
         # Create subplots (pass/fail columns)
         self.axes_pass = []
@@ -3017,21 +3164,21 @@ class InteractiveValidationTuner:
         from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
         if hasattr(self, 'canvas'):
             self.canvas.get_tk_widget().destroy()
-        
+
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        
+
         # Add initial title (will be updated with stats after validation)
         self.fig.suptitle(self._get_summary_title(),
-                          fontsize=11, fontweight='bold', y=0.99)
-        
-        # Connect right-click event for context menu
-        self.cid_plot_click = self.fig.canvas.mpl_connect('button_press_event', self.on_plot_click)
-        
+                          fontsize=11, fontweight='bold', y=0.982)
+
+        # Ensure centralized canvas event handlers are connected
+        self._bind_canvas_events()
+
         # Update scroll region (essential for proper scrolling)
         self.plot_frame.update_idletasks()
         self.on_plot_frame_configure()
-        
+
         print(f"Setup plot infrastructure: {n_vars} variables, {len(self.axes_pass)} axis pairs")
     
     def initialize_validation_display(self):
