@@ -1641,15 +1641,15 @@ class InteractiveValidationTuner:
         fig_width = (window_width - 100) / dpi
         
         # Height per subplot row (in inches)
-        row_height = 1.9  # Compact spacing while preserving drag room
-        fig_height = max(n_vars * row_height + 0.5, 3.8)
+        row_height = 2.1  # Provide extra vertical space for axis labels
+        fig_height = max(n_vars * row_height + 0.6, 4.2)
 
         # Create new figure with dynamic size
         from matplotlib.figure import Figure
         self.fig = Figure(figsize=(fig_width, fig_height), dpi=dpi)
         
-        # Use tighter spacing to reduce whitespace
-        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.965, bottom=0.06, hspace=0.12, wspace=0.12)
+        # Balanced spacing: minimal top whitespace, room for x-labels
+        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.96, bottom=0.07, hspace=0.18, wspace=0.12)
         
         # Create subplots with 2 columns (pass/fail) only if needed
         if needs_redraw:
@@ -1769,7 +1769,7 @@ class InteractiveValidationTuner:
         
         # Add title
         self.fig.suptitle(f'{self.current_task.replace("_", " ").title()} - All Validation Ranges',
-                         fontsize=12, fontweight='bold', y=0.982)
+                         fontsize=12, fontweight='bold', y=0.97)
         
         # Create/update canvas
         from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -2308,28 +2308,36 @@ class InteractiveValidationTuner:
                     )
 
             if target_var:
-                has_copy_option = ('_ipsi' in target_var) or ('_contra' in target_var)
-                has_reset_option = self._has_yaml_defaults(target_var)
-
-                if (has_copy_option or has_reset_option) and menu.index('end') is not None:
+                if menu.index('end') is not None:
                     menu.add_separator()
+                has_reset_option = self._has_yaml_defaults(target_var)
+                copy_commands_added = False
 
-                added_copy_option = False
                 if '_ipsi' in target_var:
+                    other_side = 'contralateral'
                     menu.add_command(
-                        label="Copy to contralateral side",
-                        command=lambda var=target_var: self.copy_variable_to_counterpart(var, to_contra=True)
+                        label=f"Overwrite {other_side} with 50% phase offset",
+                        command=lambda var=target_var: self.copy_variable_to_counterpart(var, to_contra=True, phase_offset=50)
                     )
-                    added_copy_option = True
+                    menu.add_command(
+                        label=f"Overwrite {other_side} with no offset",
+                        command=lambda var=target_var: self.copy_variable_to_counterpart(var, to_contra=True, phase_offset=0)
+                    )
+                    copy_commands_added = True
                 elif '_contra' in target_var:
+                    other_side = 'ipsilateral'
                     menu.add_command(
-                        label="Copy to ipsilateral side",
-                        command=lambda var=target_var: self.copy_variable_to_counterpart(var, to_contra=False)
+                        label=f"Overwrite {other_side} with 50% phase offset",
+                        command=lambda var=target_var: self.copy_variable_to_counterpart(var, to_contra=False, phase_offset=50)
                     )
-                    added_copy_option = True
+                    menu.add_command(
+                        label=f"Overwrite {other_side} with no offset",
+                        command=lambda var=target_var: self.copy_variable_to_counterpart(var, to_contra=False, phase_offset=0)
+                    )
+                    copy_commands_added = True
 
                 if has_reset_option:
-                    if added_copy_option:
+                    if copy_commands_added:
                         menu.add_separator()
                     menu.add_command(
                         label=f"Reset {target_var} to YAML defaults",
@@ -2667,53 +2675,94 @@ class InteractiveValidationTuner:
         if hasattr(self, 'status_bar'):
             self.status_bar.config(text=f"Reset {var_name} to YAML defaults for {self.current_task}.")
 
-    def copy_variable_to_counterpart(self, var_name: str, to_contra: bool) -> None:
-        """Copy validation ranges between ipsilateral and contralateral versions of a variable."""
+    def copy_variable_to_counterpart(self, var_name: str, to_contra: bool, phase_offset: int = 0) -> None:
+        """Copy validation ranges between ipsilateral and contralateral versions of a variable.
+
+        Args:
+            var_name: Source variable to copy from (ipsi or contra).
+            to_contra: When True copy to contralateral; otherwise copy to ipsilateral side.
+            phase_offset: Phase shift to apply (mod 100) when copying ranges.
+        """
         if not self.current_task or not var_name:
             return
 
         task_data = self.validation_data.setdefault(self.current_task, {})
+        full_task_data = self.full_validation_data.setdefault(self.current_task, {})
 
         if to_contra:
-            if '_ipsi' in var_name:
-                source_name = var_name
-            else:
-                source_name = var_name.replace('_contra', '_ipsi')
+            source_name = var_name if '_ipsi' in var_name else var_name.replace('_contra', '_ipsi')
             target_name = source_name.replace('_ipsi', '_contra')
+            target_side = 'contralateral'
         else:
-            if '_contra' in var_name:
-                source_name = var_name
-            else:
-                source_name = var_name.replace('_ipsi', '_contra')
+            source_name = var_name if '_contra' in var_name else var_name.replace('_ipsi', '_contra')
             target_name = source_name.replace('_contra', '_ipsi')
+            target_side = 'ipsilateral'
 
         if source_name == target_name:
             return
 
-        phases_to_remove = []
-        for phase, variables in task_data.items():
+        offset = phase_offset % 100
+
+        def _phase_key_to_int(phase_key):
+            try:
+                return int(phase_key)
+            except (TypeError, ValueError):
+                try:
+                    return int(float(phase_key))
+                except (TypeError, ValueError):
+                    return 0
+
+        # Collect source ranges from display data, fall back to full data if needed
+        source_entries = []
+        for phase_key, variables in task_data.items():
             if source_name in variables:
-                variables[target_name] = copy.deepcopy(variables[source_name])
-            elif target_name in variables:
-                del variables[target_name]
+                phase_int = _phase_key_to_int(phase_key)
+                source_entries.append((phase_int, copy.deepcopy(variables[source_name])))
+
+        if not source_entries:
+            for phase_key, variables in full_task_data.items():
+                if source_name in variables:
+                    phase_int = _phase_key_to_int(phase_key)
+                    source_entries.append((phase_int, copy.deepcopy(variables[source_name])))
+
+        if not source_entries:
+            if hasattr(self, 'status_bar'):
+                self.status_bar.config(text=f"No source ranges found for {source_name}; copy skipped.")
+            return
+
+        # Remove existing target entries before copying
+        for data_dict in (task_data, full_task_data):
+            phases_to_remove = []
+            for phase_key, variables in data_dict.items():
+                if target_name in variables:
+                    del variables[target_name]
                 if not variables:
-                    phases_to_remove.append(phase)
+                    phases_to_remove.append(phase_key)
+            for phase_key in phases_to_remove:
+                del data_dict[phase_key]
 
-        for phase in phases_to_remove:
-            del task_data[phase]
+        # Apply copied ranges with optional phase offset
+        for phase_int, range_spec in source_entries:
+            new_phase = (phase_int + offset) % 100
+            task_data.setdefault(new_phase, {})[target_name] = copy.deepcopy(range_spec)
+            full_task_data.setdefault(new_phase, {})[target_name] = copy.deepcopy(range_spec)
 
-        self.full_validation_data[self.current_task] = copy.deepcopy(task_data)
         self.modified = True
 
         if hasattr(self, 'validate_button'):
             self.validate_button.config(state='normal')
 
-        target_side = 'contralateral' if to_contra else 'ipsilateral'
         if hasattr(self, 'status_bar'):
             pretty_source = source_name.replace('_ipsi', ' (ipsi)').replace('_contra', ' (contra)')
-            self.status_bar.config(
-                text=f"Copied {pretty_source} ranges to {target_side} side for {self.current_task}."
-            )
+            if offset:
+                self.status_bar.config(
+                    text=(f"Copied {pretty_source} ranges to {target_side} side with "
+                          f"{offset}% phase offset for {self.current_task}.")
+                )
+            else:
+                self.status_bar.config(
+                    text=f"Copied {pretty_source} ranges to {target_side} side for {self.current_task}."
+                )
 
         if self.locomotion_data:
             self.run_validation_update()
@@ -2906,15 +2955,15 @@ class InteractiveValidationTuner:
         window_width = self.root.winfo_width() if self.root.winfo_width() > 1 else 1400
         dpi = 100
         fig_width = (window_width - 100) / dpi
-        row_height = 1.9
-        fig_height = max(n_vars * row_height + 0.5, 3.8)
+        row_height = 2.1
+        fig_height = max(n_vars * row_height + 0.6, 4.2)
         
         # Reuse existing figure to maintain canvas connection, just resize and clear
         self.fig.set_size_inches(fig_width, fig_height)
         self.fig.clear()  # Clear all existing content but keep figure connected to canvas
         # Ensure constrained_layout is off so subplots_adjust works properly
         self.fig.set_constrained_layout(False)
-        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.965, bottom=0.06, hspace=0.12, wspace=0.12)
+        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.96, bottom=0.07, hspace=0.18, wspace=0.12)
         
         # Recreate canvas to match new figure size
         from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -3142,13 +3191,13 @@ class InteractiveValidationTuner:
         fig_width = (window_width - 100) / dpi
         
         # Height per subplot row (in inches)
-        row_height = 1.9
-        fig_height = max(n_vars * row_height + 0.5, 3.8)
+        row_height = 2.1
+        fig_height = max(n_vars * row_height + 0.6, 4.2)
 
         # Create new figure with dynamic size (like original update_plot())
         from matplotlib.figure import Figure
         self.fig = Figure(figsize=(fig_width, fig_height), dpi=dpi)
-        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.965, bottom=0.06, hspace=0.12, wspace=0.12)
+        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.96, bottom=0.07, hspace=0.18, wspace=0.12)
         
         # Create subplots (pass/fail columns)
         self.axes_pass = []
@@ -3170,7 +3219,7 @@ class InteractiveValidationTuner:
 
         # Add initial title (will be updated with stats after validation)
         self.fig.suptitle(self._get_summary_title(),
-                          fontsize=11, fontweight='bold', y=0.982)
+                          fontsize=11, fontweight='bold', y=0.97)
 
         # Ensure centralized canvas event handlers are connected
         self._bind_canvas_events()
