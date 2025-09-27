@@ -28,6 +28,14 @@ if exist('Streaming', 'var')==0
     load('Streaming.mat');
 end
 
+normalized_dataset = struct();
+if exist('Normalized.mat', 'file')
+    temp_norm = load('Normalized.mat');
+    if isfield(temp_norm, 'Normalized')
+        normalized_dataset = temp_norm.Normalized;
+    end
+end
+
 dataset = Streaming;
 
 % List all subjects
@@ -145,22 +153,43 @@ for subject_idx = 1:length(subjects)
                 
                 fprintf('    Processing %s at %s (%.1f m/s, %d deg)\n', ...
                     speed_name, incline_name, speed_value, incline_value);
-                
-                % Determine task type
-                if incline_value < 0
-                    task_type = 'decline_walking';
-                    task_id = sprintf('decline_%ddeg', abs(incline_value));
-                elseif incline_value > 0
-                    task_type = 'incline_walking';
-                    task_id = sprintf('incline_%ddeg', incline_value);
+
+                is_transition_segment = startsWith(speed_name, 'a') || startsWith(speed_name, 'd');
+
+                if is_transition_segment
+                    transition_magnitude = speed_value;
+                    % Treat accelerations/decelerations as transitions
+                    if startsWith(speed_name, 'a')
+                        task_type = 'transition';
+                        task_id = 'walk_transition_accel';
+                        transition_phase = 'acceleration';
+                    else
+                        task_type = 'transition';
+                        task_id = 'walk_transition_decel';
+                        transition_phase = 'deceleration';
+                    end
+
+                    task_info = sprintf(['gait_transition:true,transition_from:level_walking,' ...
+                        'transition_to:level_walking,transition_phase:%s,acceleration_m_s2:%.1f,' ...
+                        'incline_deg:%d,treadmill:true,surface:treadmill'], ...
+                        transition_phase, transition_magnitude, incline_value);
                 else
-                    task_type = 'level_walking';
-                    task_id = 'level';
+                    % Steady-state walking at fixed incline/speed
+                    if incline_value < 0
+                        task_type = 'decline_walking';
+                        task_id = sprintf('decline_%ddeg', abs(incline_value));
+                    elseif incline_value > 0
+                        task_type = 'incline_walking';
+                        task_id = sprintf('incline_%ddeg', incline_value);
+                    else
+                        task_type = 'level_walking';
+                        task_id = 'level';
+                    end
+
+                    task_info = sprintf(['incline_deg:%d,speed_m_s:%.1f,' ...
+                        'treadmill:true,surface:treadmill'], incline_value, speed_value);
                 end
-                
-                task_info = sprintf('incline_deg:%d,speed_m_s:%.1f,treadmill:true', ...
-                    incline_value, speed_value);
-                
+
                 % Process strides using events for this segment
                 stride_table = process_strides_with_segment_events(...
                     incline_data, events, segment_start, segment_end, ...
@@ -168,7 +197,7 @@ for subject_idx = 1:length(subjects)
                 
                 % Add to total data
                 if ~isempty(stride_table)
-                    total_data = [total_data; stride_table];
+                    total_data = append_stride_data(total_data, stride_table);
                     fprintf('      Added %d strides\n', height(stride_table)/150);
                 end
             end
@@ -212,8 +241,9 @@ for subject_idx = 1:length(subjects)
             
             events = trial_data.events;
             task_type = 'run';
-            task_id = 'run';
-            task_info = sprintf('speed_m_s:%.1f,treadmill:true', speed_value);
+            speed_label = strrep(sprintf('%.1f', speed_value), '.', '_');
+            task_id = sprintf('run_%s_m_s', speed_label);
+            task_info = sprintf('speed_m_s:%.1f,treadmill:false,surface:overground', speed_value);
             
             % Process strides using events
             stride_table = process_strides_with_events(...
@@ -221,7 +251,7 @@ for subject_idx = 1:length(subjects)
             
             % Add to total data
             if ~isempty(stride_table)
-                total_data = [total_data; stride_table];
+                total_data = append_stride_data(total_data, stride_table);
                 fprintf('      Added %d strides\n', height(stride_table)/150);
             end
         end
@@ -250,16 +280,17 @@ for subject_idx = 1:length(subjects)
             fprintf('    Processing walk-to-run transition: %s\n', trial_name);
             
             events = trial_data.events;
-            task_type = 'level_walking';
-            task_id = 'level';
-            
+            task_type = 'transition';
+            task_id = 'walk_to_run';
+
             % Extract transition metadata if available from trial name or data
             % Default values for walk-to-run transition
             initial_speed = 1.2;  % Typical walking speed
             final_speed = 2.5;    % Typical running speed
-            
-            task_info = sprintf('gait_transition:true,transition_type:walk_to_run,initial_speed_m_s:%.1f,final_speed_m_s:%.1f,treadmill:true', ...
-                initial_speed, final_speed);
+
+            task_info = sprintf(['gait_transition:true,transition_from:level_walking,' ...
+                'transition_to:run,initial_speed_m_s:%.1f,final_speed_m_s:%.1f,' ...
+                'treadmill:true,surface:treadmill'], initial_speed, final_speed);
             
             % Process strides using events
             stride_table = process_strides_with_events(...
@@ -267,7 +298,7 @@ for subject_idx = 1:length(subjects)
             
             % Add to total data
             if ~isempty(stride_table)
-                total_data = [total_data; stride_table];
+                total_data = append_stride_data(total_data, stride_table);
                 fprintf('      Added %d strides\n', height(stride_table)/150);
             end
         end
@@ -280,31 +311,22 @@ for subject_idx = 1:length(subjects)
     if isfield(subject_data, 'Sts')
         fprintf('  Processing sit-to-stand trials...\n');
         sts_data = subject_data.Sts;
-        
-        % Try to load Normalized.mat for CutPoints
-        normalized_data = [];
-        if exist('Normalized.mat', 'file')
-            temp_norm = load('Normalized.mat');
-            if isfield(temp_norm, 'Normalized') && isfield(temp_norm.Normalized, subject)
-                normalized_data = temp_norm.Normalized.(subject);
-                fprintf('    Found Normalized.mat data for %s\n', subject);
-            end
+
+        normalized_subject = [];
+        if isfield(normalized_dataset, subject)
+            normalized_subject = normalized_dataset.(subject);
         end
-        
-        if isempty(normalized_data) || ~isfield(normalized_data, 'SitStand')
-            fprintf('    Warning: No Normalized.mat SitStand data found, skipping Sts trials\n');
+
+        stride_table = process_sts_cycles_with_normalized( ...
+            sts_data, normalized_subject, subject_str, subject_metadata, body_mass);
+
+        if ~isempty(stride_table)
+            total_data = append_stride_data(total_data, stride_table);
+            fprintf('      Added %d sit-to-stand cycles and %d stand-to-sit cycles\n', ...
+                sum(strcmp(stride_table.task, 'sit_to_stand'))/150, ...
+                sum(strcmp(stride_table.task, 'stand_to_sit'))/150);
         else
-            % Process using CutPoints from Normalized.mat
-            stride_table = process_sts_cycles_with_normalized(...
-                sts_data, normalized_data.SitStand, subject_str, subject_metadata, body_mass);
-            
-            % Add to total data
-            if ~isempty(stride_table)
-                total_data = [total_data; stride_table];
-                fprintf('      Added %d sit-to-stand cycles and %d stand-to-sit cycles\n', ...
-                    sum(strcmp(stride_table.task, 'sit_to_stand'))/150, ...
-                    sum(strcmp(stride_table.task, 'stand_to_sit'))/150);
-            end
+            fprintf('    Warning: No sit-to-stand cycles exported for %s\n', subject);
         end
     end
     
@@ -320,7 +342,12 @@ for subject_idx = 1:length(subjects)
         stair_height_map = containers.Map(...
             {'s20dg', 's25dg', 's30dg', 's35dg'}, ...
             {97, 120, 146, 162});
-        
+
+        % Map stair inclines to tread depths (mm)
+        stair_depth_map = containers.Map(...
+            {'s20dg', 's25dg', 's30dg', 's35dg'}, ...
+            {315, 305, 295, 285});
+
         % Map stair inclines to incline degrees
         stair_incline_map = containers.Map(...
             {'s20dg', 's25dg', 's30dg', 's35dg'}, ...
@@ -367,9 +394,12 @@ for subject_idx = 1:length(subjects)
             % Get metadata
             height_mm = stair_height_map(incline_str);
             incline_deg = stair_incline_map(incline_str);
+            depth_mm = stair_depth_map(incline_str);
             height_m = height_mm / 1000.0;  % Convert mm to meters
-            
-            task_info = sprintf('height_m:%.3f,incline_deg:%d,steps:1', height_m, incline_deg);
+            depth_m = depth_mm / 1000.0;
+
+            task_info = sprintf('step_height_m:%.3f,step_width_m:%.3f,incline_deg:%d', ...
+                height_m, depth_m, incline_deg);
             
             fprintf('    Processing %s: %s (%.0fmm riser, %d°)\n', trial_name, task_type, height_mm, incline_deg);
             
@@ -381,7 +411,7 @@ for subject_idx = 1:length(subjects)
             
             % Add to total data
             if ~isempty(stride_table)
-                total_data = [total_data; stride_table];
+                total_data = append_stride_data(total_data, stride_table);
                 fprintf('      Added %d strides\n', height(stride_table)/150);
             end
         end
@@ -398,6 +428,62 @@ fprintf('========================================\n');
 
 parquetwrite(output_path, total_data);
 fprintf('Conversion complete!\n');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Helper to align stride tables before concatenation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function total_data = append_stride_data(total_data, stride_table)
+    if isempty(stride_table)
+        return;
+    end
+
+    if isempty(total_data)
+        total_data = stride_table;
+        return;
+    end
+
+    total_vars = total_data.Properties.VariableNames;
+    stride_vars = stride_table.Properties.VariableNames;
+
+    % Ensure stride table has all existing columns
+    missing_in_stride = setdiff(total_vars, stride_vars);
+    for idx = 1:length(missing_in_stride)
+        var_name = missing_in_stride{idx};
+        reference_col = total_data.(var_name);
+        stride_table.(var_name) = create_default_column_like(reference_col, height(stride_table));
+    end
+
+    % Add any new columns introduced by this stride to the accumulated table
+    new_in_stride = setdiff(stride_vars, total_vars);
+    for idx = 1:length(new_in_stride)
+        var_name = new_in_stride{idx};
+        reference_col = stride_table.(var_name);
+        total_data.(var_name) = create_default_column_like(reference_col, height(total_data));
+    end
+
+    % Reorder stride table columns to match accumulated table schema
+    total_vars = total_data.Properties.VariableNames;
+    stride_table = stride_table(:, total_vars);
+
+    total_data = [total_data; stride_table];
+end
+
+function default_col = create_default_column_like(example_col, num_rows)
+    if isnumeric(example_col)
+        default_col = NaN(num_rows, size(example_col, 2));
+    elseif iscell(example_col)
+        default_col = repmat({''}, num_rows, size(example_col, 2));
+    elseif isstring(example_col)
+        default_col = strings(num_rows, size(example_col, 2));
+    elseif islogical(example_col)
+        default_col = false(num_rows, size(example_col, 2));
+    else
+        % Fallback: replicate the first element to preserve type
+        template = example_col(1,:);
+        default_col = repmat(template, num_rows, 1);
+    end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Helper function to process strides within a specific segment
@@ -845,7 +931,9 @@ function stride_table = process_strides_single_leg(trial_data, ...
         end
         
         % Calculate segment angles using FOOT-UP approach with corrected foot angles
-        if isfield(angles, 'RFootProgressAngles') && isfield(angles, 'RAnkleAngles') && isfield(angles, 'RKneeAngles')
+        if isfield(angles, 'RFootProgressAngles') && isfield(angles, 'LFootProgressAngles') && ...
+                isfield(angles, 'RAnkleAngles') && isfield(angles, 'LAnkleAngles') && ...
+                isfield(angles, 'RKneeAngles') && isfield(angles, 'LKneeAngles')
             % Get foot angles in time domain and apply corrections FIRST
             r_foot_raw = interpolate_signal(...
                 -angles.RFootProgressAngles(r_start_frame:r_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
@@ -950,6 +1038,23 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 stride_data.shank_sagittal_velocity_ipsi_rad_s = l_shank_velocity;
                 stride_data.shank_sagittal_velocity_contra_rad_s = r_shank_velocity;
             end
+        else
+            nan_vector = NaN(NUM_POINTS, 1);
+            stride_data.pelvis_sagittal_angle_rad = nan_vector;
+            stride_data.pelvis_frontal_angle_rad = nan_vector;
+            stride_data.pelvis_transverse_angle_rad = nan_vector;
+            stride_data.foot_sagittal_angle_ipsi_rad = nan_vector;
+            stride_data.foot_sagittal_angle_contra_rad = nan_vector;
+            stride_data.foot_sagittal_velocity_ipsi_rad_s = nan_vector;
+            stride_data.foot_sagittal_velocity_contra_rad_s = nan_vector;
+            stride_data.thigh_sagittal_angle_ipsi_rad = nan_vector;
+            stride_data.thigh_sagittal_angle_contra_rad = nan_vector;
+            stride_data.shank_sagittal_angle_ipsi_rad = nan_vector;
+            stride_data.shank_sagittal_angle_contra_rad = nan_vector;
+            stride_data.thigh_sagittal_velocity_ipsi_rad_s = nan_vector;
+            stride_data.thigh_sagittal_velocity_contra_rad_s = nan_vector;
+            stride_data.shank_sagittal_velocity_ipsi_rad_s = nan_vector;
+            stride_data.shank_sagittal_velocity_contra_rad_s = nan_vector;
         end
         
         % Process ground reaction forces (if available)
@@ -1158,64 +1263,264 @@ end
 % Helper function to process Sts cycles using CutPoints from Normalized.mat
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function stride_table = process_sts_cycles_with_normalized(sts_data, sitstand_data, subject_str, subject_metadata, body_mass)
-    
-    % Initialize output table
+function stride_table = process_sts_cycles_with_normalized(sts_streaming, normalized_subject, subject_str, subject_metadata, body_mass)
+
     stride_table = table;
-    
-    % Check for required SitStand structure
-    if ~isfield(sitstand_data, 'ss') || ~isfield(sitstand_data.ss, 'sit2stand')
-        fprintf('        Warning: Missing sit2stand data in Normalized.mat\n');
+
+    if isempty(sts_streaming)
         return;
     end
-    
-    % Get CutPoints from sit2stand data
-    if ~isfield(sitstand_data.ss.sit2stand, 'CutPoints')
-        fprintf('        Warning: Missing CutPoints in sit2stand data\n');
+
+    [dur_sit_to_stand, dur_stand_to_sit] = collect_sts_durations(sts_streaming);
+
+    if isempty(normalized_subject) || ~isfield(normalized_subject, 'SitStand') || ...
+            ~isfield(normalized_subject.SitStand, 'ss')
+        fprintf('    Warning: No Normalized.mat SitStand data found, skipping Sts trials\n');
         return;
     end
-    
-    cutpoints = sitstand_data.ss.sit2stand.CutPoints;
-    fprintf('        Found %d cycles with CutPoints\n', size(cutpoints, 1));
-    
-    % Process each cycle (2 cycles per Sts trial, 14 total cycles for 7 trials)
-    sts_fields = fieldnames(sts_data);
-    cycle_idx = 1;
-    
-    for trial_idx = 1:length(sts_fields)
-        trial_name = sts_fields{trial_idx};
-        trial_data = sts_data.(trial_name);
-        
-        % Each trial should have 2 cycles
-        cycles_per_trial = 2;
-        for cycle_in_trial = 1:cycles_per_trial
-            if cycle_idx > size(cutpoints, 1)
-                fprintf('        Warning: More expected cycles than CutPoints available\n');
-                break;
+
+    ss_data = normalized_subject.SitStand.ss;
+
+    sit_cycle = 0;
+    if isfield(ss_data, 'sit2stand') && isfield(ss_data.sit2stand, 'jointAngles')
+        num_cycles = size(ss_data.sit2stand.jointAngles.HipAngles, 3);
+        for cycle_idx = 1:num_cycles
+            sit_cycle = sit_cycle + 1;
+            duration = get_sts_duration(dur_sit_to_stand, sit_cycle);
+            trial_data_norm = build_normalized_trial_struct(ss_data.sit2stand, cycle_idx);
+            trial_data_norm.cycle_duration_override = duration;
+            trial_name = sprintf('sit2stand_cycle_%02d', cycle_idx);
+            cycle_table = process_single_sts_cycle(trial_data_norm, 1, size(trial_data_norm.jointAngles.LHipAngles, 1), ...
+                'sit_to_stand', subject_str, subject_metadata, body_mass, trial_name, cycle_idx);
+
+            if ~isempty(cycle_table)
+                stride_table = [stride_table; cycle_table]; %#ok<AGROW>
             end
-            
-            cp = cutpoints(cycle_idx, :);
-            fprintf('        Processing %s cycle %d: CutPoints [%d %d %d %d]\n', ...
-                trial_name, cycle_in_trial, cp(1), cp(2), cp(3), cp(4));
-            
-            % Process sit_to_stand (indices 1 to 2)
-            sit2stand_table = process_single_sts_cycle(trial_data, cp(1), cp(2), ...
-                'sit_to_stand', subject_str, subject_metadata, body_mass, trial_name, cycle_in_trial);
-            
-            % Process stand_to_sit (indices 3 to 4)
-            stand2sit_table = process_single_sts_cycle(trial_data, cp(3), cp(4), ...
-                'stand_to_sit', subject_str, subject_metadata, body_mass, trial_name, cycle_in_trial);
-            
-            % Add both cycles to output
-            if ~isempty(sit2stand_table)
-                stride_table = [stride_table; sit2stand_table];
-            end
-            if ~isempty(stand2sit_table)
-                stride_table = [stride_table; stand2sit_table];
-            end
-            
-            cycle_idx = cycle_idx + 1;
         end
+    end
+
+    stand_cycle = 0;
+    if isfield(ss_data, 'stand2sit') && isfield(ss_data.stand2sit, 'jointAngles')
+        num_cycles = size(ss_data.stand2sit.jointAngles.HipAngles, 3);
+        for cycle_idx = 1:num_cycles
+            stand_cycle = stand_cycle + 1;
+            duration = get_sts_duration(dur_stand_to_sit, stand_cycle);
+            trial_data_norm = build_normalized_trial_struct(ss_data.stand2sit, cycle_idx);
+            trial_data_norm.cycle_duration_override = duration;
+            trial_name = sprintf('stand2sit_cycle_%02d', cycle_idx);
+            cycle_table = process_single_sts_cycle(trial_data_norm, 1, size(trial_data_norm.jointAngles.LHipAngles, 1), ...
+                'stand_to_sit', subject_str, subject_metadata, body_mass, trial_name, cycle_idx);
+
+            if ~isempty(cycle_table)
+                stride_table = [stride_table; cycle_table]; %#ok<AGROW>
+            end
+        end
+    end
+end
+
+function [sit_to_stand_durations, stand_to_sit_durations] = collect_sts_durations(sts_streaming)
+
+    sit_to_stand_durations = [];
+    stand_to_sit_durations = [];
+
+    if isempty(sts_streaming)
+        return;
+    end
+
+    trial_names = fieldnames(sts_streaming);
+
+    for trial_idx = 1:length(trial_names)
+        trial_name = trial_names{trial_idx};
+        trial_data = sts_streaming.(trial_name);
+
+        segments = detect_sts_segments(trial_data, trial_name);
+
+        for seg_idx = 1:length(segments)
+            segment = segments(seg_idx);
+            duration = max((segment.end_idx - segment.start_idx) / 100, 0.01);
+
+            if strcmp(segment.task_type, 'sit_to_stand')
+                sit_to_stand_durations = [sit_to_stand_durations; duration]; %#ok<AGROW>
+            elseif strcmp(segment.task_type, 'stand_to_sit')
+                stand_to_sit_durations = [stand_to_sit_durations; duration]; %#ok<AGROW>
+            end
+        end
+    end
+end
+
+function duration = get_sts_duration(duration_array, index)
+    if isempty(duration_array)
+        duration = 1.5;
+        return;
+    end
+
+    if index <= length(duration_array)
+        duration = duration_array(index);
+    else
+        duration = duration_array(end);
+    end
+
+    if duration <= 0
+        duration = 1.5;
+    end
+end
+
+function trial_data = build_normalized_trial_struct(norm_struct, cycle_idx)
+
+    trial_data = struct();
+    jointAngles = struct();
+
+    if isfield(norm_struct, 'jointAngles')
+        jointAnglesStruct = norm_struct.jointAngles;
+
+        if isfield(jointAnglesStruct, 'HipAngles')
+            hip_cycle = squeeze(jointAnglesStruct.HipAngles(:, :, cycle_idx));
+            jointAngles.LHipAngles = hip_cycle;
+            jointAngles.RHipAngles = hip_cycle;
+        end
+
+        if isfield(jointAnglesStruct, 'KneeAngles')
+            knee_cycle = squeeze(jointAnglesStruct.KneeAngles(:, :, cycle_idx));
+            jointAngles.LKneeAngles = knee_cycle;
+            jointAngles.RKneeAngles = knee_cycle;
+        end
+
+        if isfield(jointAnglesStruct, 'AnkleAngles')
+            ankle_cycle = squeeze(jointAnglesStruct.AnkleAngles(:, :, cycle_idx));
+            jointAngles.LAnkleAngles = ankle_cycle;
+            jointAngles.RAnkleAngles = ankle_cycle;
+        end
+
+        if isfield(jointAnglesStruct, 'PelvisAngles')
+            pelvis_cycle = squeeze(jointAnglesStruct.PelvisAngles(:, :, cycle_idx));
+            jointAngles.LPelvisAngles = pelvis_cycle;
+        end
+
+        if isfield(jointAnglesStruct, 'FootProgressAngles')
+            foot_cycle = squeeze(jointAnglesStruct.FootProgressAngles(:, :, cycle_idx));
+            jointAngles.LFootProgressAngles = foot_cycle;
+            jointAngles.RFootProgressAngles = foot_cycle;
+        end
+    end
+
+    trial_data.jointAngles = jointAngles;
+    trial_data.forceplates = struct();
+    trial_data.trial_name = sprintf('normalized_cycle_%02d', cycle_idx);
+end
+
+function segments = detect_sts_segments(trial_data, trial_name)
+
+    segments = struct('start_idx', {}, 'end_idx', {}, 'task_type', {});
+
+    if ~isfield(trial_data, 'jointAngles')
+        fprintf('    Warning: No jointAngles data for %s\n', trial_name);
+        return;
+    end
+
+    angles = trial_data.jointAngles;
+    if isfield(angles, 'LHipAngles')
+        hip_left = angles.LHipAngles(:, 1);
+    else
+        hip_left = [];
+    end
+    if isfield(angles, 'RHipAngles')
+        hip_right = angles.RHipAngles(:, 1);
+    else
+        hip_right = [];
+    end
+
+    if isempty(hip_left) && isempty(hip_right)
+        fprintf('    Warning: Missing hip angles for %s\n', trial_name);
+        return;
+    end
+
+    if isempty(hip_left)
+        hip_mean = hip_right;
+    elseif isempty(hip_right)
+        hip_mean = hip_left;
+    else
+        hip_mean = (hip_left + hip_right) / 2;
+    end
+
+    hip_mean = double(hip_mean);
+
+    hip_smooth = smoothdata(hip_mean, 'movmean', 5);
+    hip_vel = [diff(hip_smooth); 0];
+
+    velocity_threshold = 0.8;
+    min_segment_samples = 25;
+    gap_tolerance = 8;
+    pad_samples = 6;
+
+    motion_idx = find(abs(hip_vel) > velocity_threshold);
+    if isempty(motion_idx)
+        return;
+    end
+
+    segments_idx = [];
+    seg_start = motion_idx(1);
+    seg_end = seg_start;
+
+    for k = 2:length(motion_idx)
+        current_idx = motion_idx(k);
+        if current_idx - seg_end > gap_tolerance
+            if seg_end - seg_start + 1 >= min_segment_samples
+                segments_idx = [segments_idx; seg_start, seg_end]; %#ok<AGROW>
+            end
+            seg_start = current_idx;
+        end
+        seg_end = current_idx;
+    end
+
+    if seg_end - seg_start + 1 >= min_segment_samples
+        segments_idx = [segments_idx; seg_start, seg_end]; %#ok<AGROW>
+    end
+
+    if isempty(segments_idx)
+        return;
+    end
+
+    merged_segments = [];
+    for idx = 1:size(segments_idx, 1)
+        start_idx = segments_idx(idx, 1);
+        end_idx = segments_idx(idx, 2);
+
+        if isempty(merged_segments)
+            merged_segments = [start_idx, end_idx];
+        else
+            last_start = merged_segments(end, 1);
+            last_end = merged_segments(end, 2);
+            if start_idx - last_end <= gap_tolerance
+                merged_segments(end, 2) = max(last_end, end_idx);
+            else
+                merged_segments = [merged_segments; start_idx, end_idx]; %#ok<AGROW>
+            end
+        end
+    end
+
+    num_samples = length(hip_smooth);
+    for idx = 1:size(merged_segments, 1)
+        start_idx = max(1, merged_segments(idx, 1) - pad_samples);
+        end_idx = min(num_samples, merged_segments(idx, 2) + pad_samples);
+
+        start_angle = hip_smooth(start_idx);
+        end_angle = hip_smooth(end_idx);
+
+        if start_angle > end_angle
+            task_type = 'sit_to_stand';
+        else
+            task_type = 'stand_to_sit';
+        end
+
+        segments(end + 1) = struct(...
+            'start_idx', start_idx, ...
+            'end_idx', end_idx, ...
+            'task_type', task_type); %#ok<AGROW>
+    end
+
+    if ~isempty(segments)
+        [~, order] = sort([segments.start_idx]);
+        segments = segments(order);
     end
 end
 
@@ -1251,7 +1556,7 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     
     % Default metadata
     chair_height = 0.45;  % Standard chair height in meters
-    task_info = sprintf('chair_height_m:%.2f,arms_used:false,speed:normal', chair_height);
+    task_info = sprintf('chair_height:%.2f,arm_support:false', chair_height);
     
     % Initialize stride data structure
     stride_data = struct();
@@ -1264,9 +1569,29 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     
     % Time and phase information
     cycle_duration_s = (end_idx - start_idx) / 100;  % Assuming 100 Hz sampling
+    if isfield(trial_data, 'cycle_duration_override')
+        cycle_duration_s = trial_data.cycle_duration_override;
+    end
     stride_data.time_s = linspace(0, cycle_duration_s, NUM_POINTS)';
-    stride_data.phase_ipsi = (0:(NUM_POINTS-1))' / (NUM_POINTS-1) * 100;
-    stride_data.phase_ipsi_dot = repmat(100 / cycle_duration_s, NUM_POINTS, 1);  % %/second
+
+    % Map sit-to-stand and stand-to-sit so standing corresponds to 50% phase
+    phase_start = 0;
+    phase_range = 100;
+    if strcmp(task_type, 'sit_to_stand')
+        phase_start = 0;
+        phase_range = 50;
+    elseif strcmp(task_type, 'stand_to_sit')
+        phase_start = 50;
+        phase_range = 50;
+    end
+    phase_end = phase_start + phase_range;
+    stride_data.phase_ipsi = linspace(phase_start, phase_end, NUM_POINTS)';
+
+    if cycle_duration_s > 0
+        stride_data.phase_ipsi_dot = repmat(phase_range / cycle_duration_s, NUM_POINTS, 1);
+    else
+        stride_data.phase_ipsi_dot = zeros(NUM_POINTS, 1);
+    end
     
     % Process joint angles
     angles = trial_data.jointAngles;
@@ -1394,19 +1719,40 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
         stride_data.ankle_dorsiflexion_velocity_contra_rad_s = zero_vector;
     end
     
-    % Segment angles (simplified for STS - no complex foot calculations)
-    stride_data.foot_sagittal_angle_ipsi_rad = zero_vector;
-    stride_data.foot_sagittal_angle_contra_rad = zero_vector;
-    stride_data.foot_sagittal_velocity_ipsi_rad_s = zero_vector;
-    stride_data.foot_sagittal_velocity_contra_rad_s = zero_vector;
-    stride_data.shank_sagittal_angle_ipsi_rad = zero_vector;
-    stride_data.shank_sagittal_angle_contra_rad = zero_vector;
-    stride_data.shank_sagittal_velocity_ipsi_rad_s = zero_vector;
-    stride_data.shank_sagittal_velocity_contra_rad_s = zero_vector;
-    stride_data.thigh_sagittal_angle_ipsi_rad = zero_vector;
-    stride_data.thigh_sagittal_angle_contra_rad = zero_vector;
-    stride_data.thigh_sagittal_velocity_ipsi_rad_s = zero_vector;
-    stride_data.thigh_sagittal_velocity_contra_rad_s = zero_vector;
+    % Segment angles - derive from pelvis orientation and relative joint angles
+    if isfield(stride_data, 'pelvis_sagittal_angle_rad')
+        pelvis_sag = stride_data.pelvis_sagittal_angle_rad;
+    else
+        pelvis_sag = zero_vector;
+        stride_data.pelvis_sagittal_angle_rad = pelvis_sag;
+        stride_data.pelvis_frontal_angle_rad = zero_vector;
+        stride_data.pelvis_transverse_angle_rad = zero_vector;
+    end
+
+    % Use simple kinematic chain (pelvis -> thigh -> shank -> foot)
+    thigh_ipsi = pelvis_sag + stride_data.hip_flexion_angle_ipsi_rad;
+    thigh_contra = pelvis_sag + stride_data.hip_flexion_angle_contra_rad;
+
+    shank_ipsi = thigh_ipsi - stride_data.knee_flexion_angle_ipsi_rad;
+    shank_contra = thigh_contra - stride_data.knee_flexion_angle_contra_rad;
+
+    foot_ipsi = shank_ipsi - stride_data.ankle_dorsiflexion_angle_ipsi_rad;
+    foot_contra = shank_contra - stride_data.ankle_dorsiflexion_angle_contra_rad;
+
+    stride_data.thigh_sagittal_angle_ipsi_rad = thigh_ipsi;
+    stride_data.thigh_sagittal_angle_contra_rad = thigh_contra;
+    stride_data.shank_sagittal_angle_ipsi_rad = shank_ipsi;
+    stride_data.shank_sagittal_angle_contra_rad = shank_contra;
+    stride_data.foot_sagittal_angle_ipsi_rad = foot_ipsi;
+    stride_data.foot_sagittal_angle_contra_rad = foot_contra;
+
+    % Angular velocities for segments
+    stride_data.thigh_sagittal_velocity_ipsi_rad_s = gradient(thigh_ipsi) * effective_Hz;
+    stride_data.thigh_sagittal_velocity_contra_rad_s = gradient(thigh_contra) * effective_Hz;
+    stride_data.shank_sagittal_velocity_ipsi_rad_s = gradient(shank_ipsi) * effective_Hz;
+    stride_data.shank_sagittal_velocity_contra_rad_s = gradient(shank_contra) * effective_Hz;
+    stride_data.foot_sagittal_velocity_ipsi_rad_s = gradient(foot_ipsi) * effective_Hz;
+    stride_data.foot_sagittal_velocity_contra_rad_s = gradient(foot_contra) * effective_Hz;
     
     % Initialize other required columns with NaN for unmeasured kinetic data
     % Joint moments (not measured in sit-to-stand)
@@ -1448,4 +1794,3 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     % Convert struct to table
     cycle_table = struct2table(stride_data);
 end
-

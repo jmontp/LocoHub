@@ -30,17 +30,24 @@ def parse_gtech_activity_name(activity_name: str) -> Tuple[str, str, str]:
         'stand_to_sit': 'stand_to_sit',
         'curb_up': 'step_up',
         'curb_down': 'step_down',
-        'ball_toss': 'functional_task',
-        'cutting': 'functional_task',
-        'dynamic_walk': 'level_walking',  # Dynamic variations of walking
-        'lift_weight': 'functional_task',
-        'lunges': 'functional_task',
-        'side_shuffle': 'functional_task',
+        'ball_toss': 'load_handling',
+        'cutting': 'cutting',
+        'dynamic_walk': 'agility_drill',
+        'lift_weight': 'load_handling',
+        'lunges': 'agility_drill',
+        'side_shuffle': 'agility_drill',
         'step_ups': 'step_up',
-        'tire_run': 'functional_task',
-        'turn_and_step': 'functional_task',
+        'tire_run': 'agility_drill',
+        'turn_and_step': 'agility_drill',
         'walk_backward': 'backward_walking',
-        'weighted_walk': 'level_walking'
+        'weighted_walk': 'level_walking',
+        'meander': 'free_walk_episode',
+        'obstacle_walk': 'free_walk_episode',
+        'start_stop': 'free_walk_episode',
+        'push': 'perturbation',
+        'tug_of_war': 'perturbation',
+        'twister': 'perturbation',
+        'poses': 'balance_pose'
     }
     
     # Parse activity name components
@@ -140,7 +147,19 @@ def parse_gtech_activity_name(activity_name: str) -> Tuple[str, str, str]:
                 task_info_dict['armrests'] = True
             elif 'noarm' in sub_activity:
                 task_info_dict['armrests'] = False
-    
+
+    elif base_activity == 'stand_to_sit':
+        task_id = 'stand_to_sit'
+        if sub_activity:
+            if 'short' in sub_activity:
+                task_info_dict['chair_height'] = 'low'
+            elif 'tall' in sub_activity:
+                task_info_dict['chair_height'] = 'standard'
+            if 'arm' in sub_activity:
+                task_info_dict['armrests'] = True
+            elif 'noarm' in sub_activity:
+                task_info_dict['armrests'] = False
+
     elif base_activity == 'squats':
         task_id = 'squats'
         if sub_activity:
@@ -165,13 +184,14 @@ def parse_gtech_activity_name(activity_name: str) -> Tuple[str, str, str]:
                 task_info_dict['jump_type'] = 'turn_180'
     
     elif base_activity == 'dynamic_walk':
-        # Special walking variants
-        task = 'level_walking'
-        task_id = 'level'
+        task = 'agility_drill'
+        task_id = 'dynamic_walk'
         if sub_activity:
             task_info_dict['variant'] = sub_activity
             task_info_dict['treadmill'] = True
-    
+        else:
+            task_info_dict['treadmill'] = True
+
     elif base_activity == 'weighted_walk':
         task = 'level_walking'
         task_id = 'level'
@@ -181,7 +201,7 @@ def parse_gtech_activity_name(activity_name: str) -> Tuple[str, str, str]:
                 weight_lbs = int(weight_match.group(1))
                 task_info_dict['weight_kg'] = round(weight_lbs * 0.453592, 1)
         task_info_dict['treadmill'] = True
-    
+
     elif base_activity == 'walk_backward':
         task = 'backward_walking'
         task_id = 'backward'
@@ -191,7 +211,91 @@ def parse_gtech_activity_name(activity_name: str) -> Tuple[str, str, str]:
                 speed = float(f"{speed_match.group(1)}.{speed_match.group(2)}")
                 task_info_dict['speed_m_s'] = speed
         task_info_dict['treadmill'] = True
-    
+
+    elif base_activity == 'ball_toss':
+        task = 'load_handling'
+        task_id = 'ball_toss'
+        task_info_dict['load_kg'] = 6.8  # 15 lbs
+        if sub_activity:
+            task_info_dict['variant'] = sub_activity
+
+    elif base_activity == 'lift_weight':
+        task = 'load_handling'
+        task_id = 'lift_weight'
+        if sub_activity:
+            weight_match = re.search(r'(\d+)lbs', sub_activity)
+            if weight_match:
+                weight_lbs = int(weight_match.group(1))
+                task_info_dict['load_kg'] = round(weight_lbs * 0.453592, 1)
+            hand_match = re.search(r'-([lr])-([clr])', sub_activity)
+            if hand_match:
+                task_info_dict['hand'] = 'left' if hand_match.group(1) == 'l' else 'right'
+                pos_map = {'c': 'center', 'l': 'left', 'r': 'right'}
+                task_info_dict['position'] = pos_map.get(hand_match.group(2), hand_match.group(2))
+            task_info_dict['variant'] = sub_activity
+        else:
+            task_info_dict['load_kg'] = 0.0
+
+    elif base_activity == 'cutting':
+        task = 'cutting'
+        task_id = 'cutting'
+        if sub_activity:
+            if 'left' in sub_activity:
+                task_info_dict['direction'] = 'left'
+            elif 'right' in sub_activity:
+                task_info_dict['direction'] = 'right'
+            if 'fast' in sub_activity:
+                task_info_dict['speed'] = 'fast'
+            elif 'slow' in sub_activity:
+                task_info_dict['speed'] = 'slow'
+            task_info_dict['variant'] = sub_activity
+
+    elif base_activity == 'lunges':
+        task = 'agility_drill'
+        task_id = 'lunges'
+        if sub_activity:
+            task_info_dict['variant'] = sub_activity
+
+    elif base_activity == 'side_shuffle':
+        task = 'agility_drill'
+        task_id = 'side_shuffle'
+        if sub_activity:
+            task_info_dict['variant'] = sub_activity
+
+    elif base_activity == 'tire_run':
+        task = 'agility_drill'
+        task_id = 'tire_run'
+        if sub_activity:
+            task_info_dict['variant'] = sub_activity
+
+    elif base_activity == 'turn_and_step':
+        task = 'agility_drill'
+        task_id = 'turn_and_step'
+        if sub_activity:
+            task_info_dict['variant'] = sub_activity
+            if 'left' in sub_activity:
+                task_info_dict['direction'] = 'left'
+            elif 'right' in sub_activity:
+                task_info_dict['direction'] = 'right'
+
+    elif base_activity in {'meander', 'obstacle_walk', 'start_stop'}:
+        task = 'free_walk_episode'
+        task_id = base_activity
+        if sub_activity:
+            task_info_dict['variant'] = sub_activity
+
+    elif base_activity in {'push', 'tug_of_war', 'twister'}:
+        task = 'perturbation'
+        task_id = base_activity
+        if sub_activity:
+            task_info_dict['variant'] = sub_activity
+
+    elif base_activity == 'poses':
+        task = 'balance_pose'
+        task_id = 'poses'
+        if sub_activity:
+            task_info_dict['variant'] = sub_activity
+
     else:
         # Generic functional task
         task_id = base_activity

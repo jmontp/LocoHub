@@ -14,7 +14,9 @@ num_points_per_step = 150;
 naming_convention = 'ipsicontra'; % Options: 'lr', 'ipsicontra'
 data_dir_root = '.'; % Assumes RawData and Segmentation are subdirs of CWD
 output_dir = fullfile('..', '..', '..', 'converted_datasets'); % Output to project root
-critical_activities = {'stairs', 'incline_walk', 'normal_walk', 'sit_to_stand'}; % Define critical tasks
+critical_activities = {'stairs', 'incline_walk', 'normal_walk', 'sit_to_stand', ...
+    'stand_to_sit', 'squats', 'jump', 'step_ups', 'curb_up', 'curb_down', ...
+    'walk_backward', 'weighted_walk'}; % Define tasks to convert into phase dataset
 
 % Initialize a single table to hold all processed data
 total_data = table();
@@ -136,16 +138,13 @@ for subject_idx = 1:length(subjects)
             left_invalid = ~isfield(parsing_data, 'left') || isempty(parsing_data.left);
             right_invalid = ~isfield(parsing_data, 'right') || isempty(parsing_data.right);
             if left_invalid && right_invalid
-                 % Only warn if critical, using the preliminary name check
-                 if ismember(activity_name, critical_activities) 
+                 if is_potentially_critical
                     warning('Parsing file %s found, but missing/empty heel strike data for BOTH legs. Skipping.', activity_file_name);
                  end
                 raw_data_load_successful = false;
             end
         catch ME
-             % Warn if loading the *existing* file failed (corruption, permissions, etc.)
-             % Use preliminary name for check as activity_name is not defined yet
-             if ismember(activity_name, critical_activities)
+             if is_potentially_critical
                  warning(ME.identifier, 'Error loading existing parsing file %s: %s. Skipping.', activity_file_name, ME.message);
              end
             raw_data_load_successful = false;
@@ -909,13 +908,13 @@ if strcmpi(naming_convention, 'ipsicontra')
         'tibia_r_Y', 'shank_transverse_angle_contra', '_rad';
         'calcn_l_Y', 'foot_transverse_angle_ipsi', '_rad';
         'calcn_r_Y', 'foot_transverse_angle_contra', '_rad';
-        % GRF and COP
-        'cop_x', 'cop_x', '';
-        'cop_y', 'cop_y', '';
-        'cop_z', 'cop_z', '';
-        'grf_x', 'grf_x', '';
-        'grf_y', 'grf_y', '';
-        'grf_z', 'grf_z', ''
+        % GRF and COP (rename to standardized anterior/lateral/vertical)
+        'cop_x', 'cop_anterior', '_m';
+        'cop_y', 'cop_vertical', '_m';
+        'cop_z', 'cop_lateral', '_m';
+        'grf_x', 'anterior_grf', '_N';
+        'grf_y', 'vertical_grf', '_N';
+        'grf_z', 'lateral_grf', '_N'
     };
     
     % Process each lateralized variable
@@ -1010,8 +1009,10 @@ else
         'foot_sagittal_angle_l_rad', 'foot_sagittal_angle_r_rad', ...
         'hip_flexion_angle_l_rad', 'hip_flexion_angle_r_rad', 'hip_flexion_velocity_l_rad_s', 'hip_flexion_velocity_r_rad_s', 'hip_flexion_moment_l_Nm', 'hip_flexion_moment_r_Nm', ...
         'task', ...
-        'cop_x_l', 'cop_y_l', 'cop_z_l', 'cop_x_r', 'cop_y_r', 'cop_z_r', ...
-        'grf_x_l', 'grf_y_l', 'grf_z_l', 'grf_x_r', 'grf_y_r', 'grf_z_r', ...
+        'cop_anterior_l_m', 'cop_vertical_l_m', 'cop_lateral_l_m', ...
+        'cop_anterior_r_m', 'cop_vertical_r_m', 'cop_lateral_r_m', ...
+        'anterior_grf_l_N', 'vertical_grf_l_N', 'lateral_grf_l_N', ...
+        'anterior_grf_r_N', 'vertical_grf_r_N', 'lateral_grf_r_N', ...
         'phase_l', 'phase_r', 'step'
     };
     

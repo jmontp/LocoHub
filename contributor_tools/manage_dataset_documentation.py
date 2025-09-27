@@ -31,6 +31,7 @@ from datetime import datetime
 from typing import Dict, Optional, Tuple, List
 import os
 from collections import OrderedDict
+from pandas import isna
 
 # Add parent directories to path for imports
 current_dir = Path(__file__).parent
@@ -134,6 +135,74 @@ def _format_task_name(task: str) -> str:
     return task.replace("_", " ").title()
 
 
+def _slugify_short_code(short_code: str) -> str:
+    return short_code.lower()
+
+
+def _canonical_cell_value(value) -> str:
+    """Return a stripped string representation, preserving blanks for hierarchy."""
+
+    if isna(value):
+        return ''
+    return str(value).strip()
+
+
+def _extract_task_catalog(locomotion_data: LocomotionData) -> Tuple[List[str], List[Tuple[str, str, str]]]:
+    """Return sorted task list and hierarchical rows (task, task_id, task_info)."""
+
+    detected_tasks = [task for task in locomotion_data.get_tasks() if task]
+    required_cols = {'task', 'task_id', 'task_info'}
+    if not required_cols.issubset(locomotion_data.df.columns):
+        return detected_tasks, []
+
+    subset = locomotion_data.df[['task', 'task_id', 'task_info']].drop_duplicates().copy()
+    for column in ['task', 'task_id', 'task_info']:
+        subset[column] = subset[column].apply(_canonical_cell_value)
+
+    subset = subset.sort_values(['task', 'task_id', 'task_info'])
+    rows = list(subset[['task', 'task_id', 'task_info']].itertuples(index=False, name=None))
+    return detected_tasks, rows
+
+
+def _build_task_table(rows: List[Tuple[str, str, str]]) -> str:
+    """Build hierarchical markdown table from task rows."""
+
+    if not rows:
+        return ''
+
+    lines = [
+        "| Task | Task ID | Task Info |",
+        "|------|---------|-----------|",
+    ]
+    prev_task: Optional[str] = None
+    prev_task_id: Optional[str] = None
+
+    for task, task_id, task_info in rows:
+        task_value = task if task else '—'
+        task_id_value = task_id if task_id else '—'
+        task_info_value = task_info if task_info else '—'
+
+        if prev_task is not None and task == prev_task:
+            task_cell = ' '
+        else:
+            task_cell = task_value
+
+        if task != prev_task:
+            prev_task_id = None
+
+        if prev_task_id is not None and task_id == prev_task_id and task == prev_task:
+            task_id_cell = ' '
+        else:
+            task_id_cell = task_id_value
+
+        lines.append(f"| {task_cell} | {task_id_cell} | {task_info_value} |")
+
+        prev_task = task
+        prev_task_id = task_id
+
+    return "\n".join(lines)
+
+
 def write_metadata_file(metadata: Dict) -> None:
     dataset_name = metadata['dataset_name']
     meta_dir = repo_root / "docs" / "datasets" / "_metadata"
@@ -175,6 +244,59 @@ def write_metadata_file(metadata: Dict) -> None:
         yaml.safe_dump(dict(fields), fh, sort_keys=False)
 
 
+def _relative_doc_path(path_value: Optional[str]) -> Optional[str]:
+    if not path_value:
+        return None
+    rel_path = Path(path_value)
+    if rel_path.suffix:
+        rel_path = rel_path.with_suffix('')
+    try:
+        rel_path = rel_path.relative_to('docs')
+    except ValueError:
+        pass
+    rel_str = rel_path.as_posix()
+    if not rel_str:
+        return None
+    return f"./{rel_str}/"
+
+
+def _resolve_dataset_link(data: Dict, absolute: bool) -> str:
+    if absolute:
+        return data.get('doc_url') or f"{SITE_DATASET_BASE_URL}/{data['dataset_name']}/"
+    relative = _relative_doc_path(data.get('doc_path'))
+    return relative or f"./datasets/{data['dataset_name']}/"
+
+
+def _resolve_validation_link(data: Dict, absolute: bool) -> Optional[str]:
+    if absolute:
+        return data.get('validation_doc_url') or f"{SITE_DATASET_BASE_URL}/{data['dataset_name']}_validation/"
+    relative = _relative_doc_path(data.get('validation_doc_path'))
+    if relative:
+        return relative
+    return None
+
+
+def _build_dataset_table(metadata_entries: List[Dict], absolute_links: bool) -> str:
+    rows = []
+    header = "| Dataset | Tasks | Quality | Validation | Download |"
+    separator = "|---------|-------|---------|------------|----------|"
+
+    for data in sorted(metadata_entries, key=lambda d: d.get('display_name', '').lower()):
+        doc_url = _resolve_dataset_link(data, absolute_links)
+        validation_url = _resolve_validation_link(data, absolute_links)
+        display_name = data.get('display_name') or data['dataset_name']
+        dataset_cell = f"[{display_name}]({doc_url})"
+        tasks_list = data.get('tasks', []) or []
+        tasks_cell = ', '.join(_format_task_name(task) for task in tasks_list) if tasks_list else '—'
+        quality = data.get('quality_display') or data.get('validation_status') or '—'
+        validation_cell = f"[Report]({validation_url})" if validation_url else '—'
+        download_url = data.get('download_url')
+        download_cell = f"[Download]({download_url})" if download_url else 'Coming Soon'
+        rows.append(f"| {dataset_cell} | {tasks_cell} | {quality} | {validation_cell} | {download_cell} |")
+
+    return "\n".join([header, separator] + rows)
+
+
 def replace_between_markers(path: Path, content: str) -> None:
     text = path.read_text()
     if TABLE_MARKER_START not in text or TABLE_MARKER_END not in text:
@@ -202,27 +324,10 @@ def update_dataset_tables() -> None:
     if not metadata_entries:
         return
 
-    rows = []
-    header = "| Dataset | Tasks | Quality | Validation | Download |"
-    separator = "|---------|-------|---------|------------|----------|"
-
-    for data in sorted(metadata_entries, key=lambda d: d.get('display_name', '').lower()):
-        doc_url = data.get('doc_url') or f"{SITE_DATASET_BASE_URL}/{data['dataset_name']}/"
-        validation_url = data.get('validation_doc_url') or f"{SITE_DATASET_BASE_URL}/{data['dataset_name']}_validation/"
-        display_name = data.get('display_name') or data['dataset_name']
-        dataset_cell = f"[{display_name}]({doc_url})"
-        tasks_list = data.get('tasks', []) or []
-        tasks_cell = ', '.join(_format_task_name(task) for task in tasks_list) if tasks_list else '—'
-        quality = data.get('quality_display') or data.get('validation_status') or '—'
-        validation_cell = f"[Report]({validation_url})" if validation_url else '—'
-        download_url = data.get('download_url')
-        download_cell = f"[Download]({download_url})" if download_url else 'Coming Soon'
-        rows.append(f"| {dataset_cell} | {tasks_cell} | {quality} | {validation_cell} | {download_cell} |")
-
-    table = "\n".join([header, separator] + rows)
-
     for table_file in DATASET_TABLE_FILES:
         if table_file.exists():
+            use_absolute = table_file.name.lower() == 'readme.md'
+            table = _build_dataset_table(metadata_entries, use_absolute)
             replace_between_markers(table_file, table)
 
 
@@ -320,6 +425,10 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
     dataset_rel = _relative_path(dataset_path)
     date_added = metadata.get('date_added') or datetime.now().strftime('%Y-%m-%d')
     tasks_display = ', '.join(_format_task_name(task) for task in metadata['tasks'])
+    task_catalog_section = ''
+    task_table = metadata.get('task_table')
+    if task_table:
+        task_catalog_section = f"#### Task Catalog\n\n{task_table}\n\n"
 
     status_label = metadata.get('quality_display') or metadata.get('validation_status') or 'Validation pending'
     pass_rate = metadata.get('validation_pass_rate')
@@ -349,7 +458,7 @@ date_added: {date_added}
 - **Number of Subjects**: {metadata['subjects']}
 - **Tasks Included**: {tasks_display}
 
-### Data Structure
+{task_catalog_section}### Data Structure
 - **Format**: Phase-normalized (150 points per gait cycle)
 - **Sampling**: Phase-indexed from 0-100%
 - **Variables**: Standard biomechanical naming convention
@@ -590,18 +699,23 @@ def run_validation(dataset_path: Path) -> Tuple[Dict, str, Optional[Dict], Dict[
         return {}, f"⚠️ Validation could not be completed: {str(e)}", None, {}
 
 
-def generate_submission_checklist(dataset_name: str, doc_path: Path, validation_doc_path: Path) -> str:
+def generate_submission_checklist(dataset_slug: str, dataset_file: Path, doc_path: Path, validation_doc_path: Path) -> str:
     """
     Generate a checklist for the PR submission.
     
     Args:
-        dataset_name: Name of the dataset
+        dataset_slug: Slugified dataset identifier
+        dataset_file: Path to dataset parquet file
         doc_path: Path to documentation file
         validation_doc_path: Path to validation report file
         
     Returns:
         Formatted checklist string
     """
+    dataset_file_rel = _relative_path(dataset_file)
+    conversion_hint = f"contributor_tools/conversion_scripts/{dataset_slug}/"
+    plots_hint = f"docs/datasets/validation_plots/{dataset_slug}/"
+
     checklist = f"""
 📋 SUBMISSION CHECKLIST
 {'='*60}
@@ -609,19 +723,19 @@ def generate_submission_checklist(dataset_name: str, doc_path: Path, validation_
 Your dataset submission is ready! Please include the following in your PR:
 
 REQUIRED FILES:
-□ Dataset file: converted_datasets/{dataset_name}_phase.parquet
+□ Dataset file: {dataset_file_rel}
 □ Documentation: {doc_path.relative_to(repo_root)}
 □ Validation report: {validation_doc_path.relative_to(repo_root)}
-□ Conversion script: contributor_tools/conversion_scripts/{dataset_name}/
+□ Conversion script: {conversion_hint}
 
 OPTIONAL FILES:
-□ Validation plots: docs/datasets/validation_plots/{dataset_name}/
+□ Validation plots: {plots_hint}
 □ Custom validation ranges (if applicable)
 □ README with additional details
 
 PR DESCRIPTION TEMPLATE:
 ------------------------
-## New Dataset: {dataset_name}
+## New Dataset: {dataset_slug}
 
 ### Summary
 [Brief description of the dataset]
@@ -671,15 +785,13 @@ def handle_add_dataset(args):
         print(f"❌ Dataset must be a parquet file, got: {dataset_path.suffix}")
         return 1
     
-    # Extract dataset name
-    dataset_name = dataset_path.stem.replace("_phase", "").replace("_time", "")
-    display_name = dataset_name.replace("_", " ").title()
-    
+    # Derive a fallback name from the parquet filename
+    dataset_filename_stem = dataset_path.stem.replace("_phase", "").replace("_time", "")
+    display_name = dataset_filename_stem.replace("_", " ").title()
+
     print(f"📦 Preparing submission for: {display_name}")
     print(f"{'='*60}")
-    
-    # Check for existing documentation
-    doc_path = repo_root / "docs" / "datasets" / f"{dataset_name}.md"
+
     metadata_source: Optional[Dict] = None
     if getattr(args, 'metadata_file', None):
         metadata_path = Path(args.metadata_file)
@@ -693,18 +805,16 @@ def handle_add_dataset(args):
             print(f"❌ {exc}")
             return 1
 
-    if doc_path.exists():
-        if args.overwrite:
-            print(f"⚠️  Documentation already exists: {doc_path} (will overwrite)")
-        else:
-            if metadata_source:
-                print("❌ Documentation already exists. Re-run with --overwrite to replace it.")
-                return 1
-            print(f"⚠️  Documentation already exists: {doc_path}")
-            overwrite = input("Overwrite? [y/N]: ").strip().lower()
-            if overwrite != 'y':
-                print("🛑 Cancelled")
-                return 0
+    try:
+        locomotion_data = LocomotionData(str(dataset_path), phase_col='phase_ipsi')
+    except Exception as exc:
+        print(f"❌ Unable to load dataset for task extraction: {exc}")
+        return 1
+
+    detected_tasks, task_rows = _extract_task_catalog(locomotion_data)
+    task_table = _build_task_table(task_rows)
+    subject_count = len(locomotion_data.get_subjects())
+    subjects_value = str(subject_count)
 
     non_interactive = metadata_source is not None
 
@@ -717,6 +827,9 @@ def handle_add_dataset(args):
 
     # Collect metadata (either from file or interactively)
     date_added = None
+    short_code: Optional[str] = None
+    dataset_slug: Optional[str] = None
+    tasks: List[str] = detected_tasks.copy()
     if non_interactive:
         existing_codes = check_existing_short_codes()
         display_name = metadata_source.get('display_name', display_name)
@@ -730,15 +843,24 @@ def handle_add_dataset(args):
             print("❌ Short code must be 2 letters + 2 digits (optional trailing letter, e.g., UM21 or UM21F)")
             return 1
 
-        if short_code in existing_codes and existing_codes[short_code] != dataset_name:
+        candidate_slug = _slugify_short_code(short_code)
+        if short_code in existing_codes and existing_codes[short_code] != candidate_slug:
             print(f"❌ Short code '{short_code}' already used by {existing_codes[short_code]}")
             return 1
+        dataset_slug = candidate_slug
 
         description = metadata_source.get('description', f"Biomechanical dataset from {display_name}")
         year = str(metadata_source.get('year', datetime.now().year))
         institution = metadata_source.get('institution', "[Please add institution name]")
-        subjects = str(metadata_source.get('subjects', "[Please add subject count]"))
-        tasks = _normalize_tasks(metadata_source.get('tasks'))
+        metadata_subjects = metadata_source.get('subjects')
+        if metadata_subjects and str(metadata_subjects).strip() != subjects_value:
+            print("ℹ️ Detected subject count differs from metadata file; using dataset-derived count.")
+        metadata_tasks = _normalize_tasks(metadata_source.get('tasks'))
+        if tasks:
+            if metadata_tasks and metadata_tasks != tasks:
+                print("ℹ️ Detected dataset tasks differ from metadata file; using dataset-derived list.")
+        else:
+            tasks = metadata_tasks
         if not tasks:
             tasks = ["[Please list tasks]"]
 
@@ -763,11 +885,13 @@ def handle_add_dataset(args):
                     print("❌ Short code must be 2 letters + 2 digits (optional trailing letter, e.g., UM21 or UM21F)")
                     continue
 
-                if short_code in existing_codes:
+                candidate_slug = _slugify_short_code(short_code)
+                if short_code in existing_codes and existing_codes[short_code] != candidate_slug:
                     print(f"❌ Short code '{short_code}' already used by {existing_codes[short_code]}")
                     continue
 
                 print(f"✅ Short code '{short_code}' accepted")
+                dataset_slug = candidate_slug
                 break
 
             # Dataset details
@@ -783,15 +907,24 @@ def handle_add_dataset(args):
             if not institution:
                 institution = "[Please add institution name]"
 
-            subjects = input("Number of subjects: ").strip()
-            if not subjects or not subjects.isdigit():
-                subjects = "[Please add subject count]"
+            print(f"\nDetected {subject_count} unique subjects in the dataset.")
 
-            # Task selection
-            print("\nTasks included (comma-separated):")
-            print("  Common: level_walking, incline_walking, stair_ascent, stair_descent")
-            tasks_input = input("Tasks: ").strip()
-            tasks = [t.strip() for t in tasks_input.split(",")] if tasks_input else ["[Please list tasks]"]
+            if tasks:
+                print("\nDetected tasks from dataset:")
+                for task_name in tasks:
+                    print(f"  - {task_name}")
+                if task_table:
+                    print("\nDetected task catalog:")
+                    print(task_table)
+                override = input("Override tasks (comma-separated) [press Enter to keep detected]: ").strip()
+                if override:
+                    override_tasks = [t.strip() for t in override.split(",") if t.strip()]
+                    tasks = override_tasks or tasks
+            else:
+                print("\nTasks included (comma-separated):")
+                print("  Common: level_walking, incline_walking, stair_ascent, stair_descent")
+                tasks_input = input("Tasks: ").strip()
+                tasks = [t.strip() for t in tasks_input.split(",")] if tasks_input else ["[Please list tasks]"]
 
             # Optional information
             print("\nOptional Information (press Enter to skip):")
@@ -806,7 +939,34 @@ def handle_add_dataset(args):
             print("\n\n🛑 Submission preparation cancelled")
             return 1
 
+    if not short_code:
+        print("❌ Short code was not provided")
+        return 1
+
+    if not dataset_slug:
+        dataset_slug = _slugify_short_code(short_code)
+
+    tasks = [task for task in tasks if task] or ["[Please list tasks]"]
+
     # Prepare metadata dictionary
+    dataset_name = dataset_slug
+
+    doc_path = repo_root / "docs" / "datasets" / f"{dataset_name}.md"
+    validation_doc_filename = f"{dataset_name}_validation.md"
+
+    if doc_path.exists():
+        if args.overwrite:
+            print(f"⚠️  Documentation already exists: {doc_path} (will overwrite)")
+        else:
+            if metadata_source:
+                print("❌ Documentation already exists. Re-run with --overwrite to replace it.")
+                return 1
+            print(f"⚠️  Documentation already exists: {doc_path}")
+            overwrite = input("Overwrite? [y/N]: ").strip().lower()
+            if overwrite != 'y':
+                print("🛑 Cancelled")
+                return 0
+
     metadata = {
         'dataset_name': dataset_name,
         'display_name': display_name,
@@ -814,13 +974,14 @@ def handle_add_dataset(args):
         'description': description,
         'year': year,
         'institution': institution,
-        'subjects': str(subjects),
+        'subjects': subjects_value,
         'tasks': tasks,
         'download_url': download_url if download_url else None,
         'citation': citation if citation else None,
         'protocol': protocol if protocol else None,
         'notes': notes if notes else None,
         'date_added': date_added or datetime.now().strftime('%Y-%m-%d'),
+        'task_table': task_table,
     }
     
     # Run validation
@@ -829,7 +990,6 @@ def handle_add_dataset(args):
     metadata['validation_summary'] = validation_summary
     metadata['doc_url'] = f"{SITE_DATASET_BASE_URL}/{dataset_name}/"
     metadata['doc_path'] = f"docs/datasets/{dataset_name}.md"
-    validation_doc_filename = f"{dataset_name}_validation.md"
     metadata['validation_doc_url'] = f"{SITE_DATASET_BASE_URL}/{dataset_name}_validation/"
     metadata['validation_doc_path'] = f"docs/datasets/{validation_doc_filename}"
 
@@ -910,7 +1070,7 @@ def handle_add_dataset(args):
 
     
     # Show submission checklist
-    checklist = generate_submission_checklist(dataset_name, doc_path, validation_doc_path)
+    checklist = generate_submission_checklist(dataset_name, dataset_path, doc_path, validation_doc_path)
     print(checklist)
     
     # Save checklist to file

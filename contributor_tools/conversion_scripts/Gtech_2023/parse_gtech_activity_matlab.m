@@ -133,6 +133,33 @@ function [task_name, task_id, task_info_str] = parse_gtech_activity_matlab(activ
             end
         end
         
+    elseif strcmp(activity_name, 'stand_to_sit')
+        task_name = 'stand_to_sit';
+        task_id = 'stand_to_sit';
+        if ~isempty(sub_activity_name)
+            if contains(sub_activity_name, 'short', 'IgnoreCase', true)
+                task_info_str = 'chair_height:low';
+            elseif contains(sub_activity_name, 'tall', 'IgnoreCase', true)
+                task_info_str = 'chair_height:standard';
+            else
+                task_info_str = '';
+            end
+
+            if contains(sub_activity_name, 'arm', 'IgnoreCase', true) && ~contains(sub_activity_name, 'noarm', 'IgnoreCase', true)
+                if ~isempty(task_info_str)
+                    task_info_str = [task_info_str ',armrests:true'];
+                else
+                    task_info_str = 'armrests:true';
+                end
+            elseif contains(sub_activity_name, 'noarm', 'IgnoreCase', true)
+                if ~isempty(task_info_str)
+                    task_info_str = [task_info_str ',armrests:false'];
+                else
+                    task_info_str = 'armrests:false';
+                end
+            end
+        end
+
     elseif strcmp(activity_name, 'squats')
         task_name = 'squats';
         task_id = 'squats';
@@ -166,8 +193,8 @@ function [task_name, task_id, task_info_str] = parse_gtech_activity_matlab(activ
         end
         
     elseif strcmp(activity_name, 'dynamic_walk')
-        task_name = 'level_walking';
-        task_id = 'level';
+        task_name = 'agility_drill';
+        task_id = 'dynamic_walk';
         if ~isempty(sub_activity_name)
             task_info_str = sprintf('variant:%s,treadmill:true', sub_activity_name);
         else
@@ -222,6 +249,120 @@ function [task_name, task_id, task_info_str] = parse_gtech_activity_matlab(activ
         task_id = 'step_up';
         task_info_str = 'height_m:0.20';
         
+    elseif strcmp(activity_name, 'ball_toss')
+        task_name = 'load_handling';
+        task_id = 'ball_toss';
+        load_kg = 6.8; % 15 lbs
+        info_parts = {sprintf('load_kg:%.1f', load_kg)};
+        if ~isempty(sub_activity_name)
+            info_parts{end+1} = sprintf('variant:%s', sub_activity_name);
+        end
+        task_info_str = strjoin(info_parts, ',');
+        
+    elseif strcmp(activity_name, 'lift_weight')
+        task_name = 'load_handling';
+        task_id = 'lift_weight';
+        info_parts = {};
+        if ~isempty(sub_activity_name)
+            weight_match = regexp(sub_activity_name, '(\d+)lbs', 'tokens');
+            if ~isempty(weight_match)
+                weight_lbs = str2double(weight_match{1}{1});
+                weight_kg = round(weight_lbs * 0.453592, 1);
+                info_parts{end+1} = sprintf('load_kg:%.1f', weight_kg);
+            end
+            hand_match = regexp(sub_activity_name, '([lr])-([clr])', 'tokens');
+            if ~isempty(hand_match)
+                hand = hand_match{1}{1};
+                position = hand_match{1}{2};
+                info_parts{end+1} = sprintf('hand:%s', hand);
+                info_parts{end+1} = sprintf('position:%s', position);
+            end
+            info_parts{end+1} = sprintf('variant:%s', sub_activity_name);
+        end
+        if isempty(info_parts)
+            task_info_str = 'load_kg:0';
+        else
+            task_info_str = strjoin(info_parts, ',');
+        end
+        
+    elseif strcmp(activity_name, 'cutting')
+        task_name = 'cutting';
+        task_id = 'cutting';
+        info_parts = {};
+        if ~isempty(sub_activity_name)
+            if contains(sub_activity_name, 'left')
+                info_parts{end+1} = 'direction:left';
+            elseif contains(sub_activity_name, 'right')
+                info_parts{end+1} = 'direction:right';
+            end
+            if contains(sub_activity_name, 'fast')
+                info_parts{end+1} = 'speed:fast';
+            elseif contains(sub_activity_name, 'slow')
+                info_parts{end+1} = 'speed:slow';
+            end
+            info_parts{end+1} = sprintf('variant:%s', sub_activity_name);
+        end
+        if isempty(info_parts)
+            task_info_str = '';
+        else
+            task_info_str = strjoin(info_parts, ',');
+        end
+        
+    elseif strcmp(activity_name, 'lunges')
+        task_name = 'agility_drill';
+        task_id = 'lunges';
+        if ~isempty(sub_activity_name)
+            task_info_str = sprintf('variant:%s', sub_activity_name);
+        end
+        
+    elseif strcmp(activity_name, 'side_shuffle')
+        task_name = 'agility_drill';
+        task_id = 'side_shuffle';
+        if ~isempty(sub_activity_name)
+            task_info_str = sprintf('variant:%s', sub_activity_name);
+        end
+        
+    elseif strcmp(activity_name, 'tire_run')
+        task_name = 'agility_drill';
+        task_id = 'tire_run';
+        if ~isempty(sub_activity_name)
+            task_info_str = sprintf('variant:%s', sub_activity_name);
+        end
+        
+    elseif strcmp(activity_name, 'turn_and_step')
+        task_name = 'agility_drill';
+        task_id = 'turn_and_step';
+        if ~isempty(sub_activity_name)
+            info_parts = {sprintf('variant:%s', sub_activity_name)};
+            if contains(sub_activity_name, 'left')
+                info_parts{end+1} = 'direction:left';
+            elseif contains(sub_activity_name, 'right')
+                info_parts{end+1} = 'direction:right';
+            end
+            task_info_str = strjoin(info_parts, ',');
+        end
+        
+    elseif strcmp(activity_name, 'meander') || strcmp(activity_name, 'obstacle_walk') || strcmp(activity_name, 'start_stop')
+        task_name = 'free_walk_episode';
+        task_id = activity_name;
+        if ~isempty(sub_activity_name)
+            task_info_str = sprintf('variant:%s', sub_activity_name);
+        end
+        
+    elseif strcmp(activity_name, 'push') || strcmp(activity_name, 'tug_of_war') || strcmp(activity_name, 'twister')
+        task_name = 'perturbation';
+        task_id = activity_name;
+        if ~isempty(sub_activity_name)
+            task_info_str = sprintf('variant:%s', sub_activity_name);
+        end
+        
+    elseif strcmp(activity_name, 'poses')
+        task_name = 'balance_pose';
+        task_id = 'poses';
+        if ~isempty(sub_activity_name)
+            task_info_str = sprintf('variant:%s', sub_activity_name);
+        end
+
     else
         % Generic functional task for unrecognized activities
         task_name = 'functional_task';

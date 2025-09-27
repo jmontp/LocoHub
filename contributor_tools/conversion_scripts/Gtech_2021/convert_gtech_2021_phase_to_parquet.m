@@ -90,7 +90,7 @@ output_table = table();
 %% Process each subject
 for subj_idx = 1:length(subjects_to_process)
     subject_code = subjects_to_process{subj_idx};
-    subject_str = sprintf('Gtech_2021_%s', subject_code);
+    subject_str = sprintf('GT21_%s', subject_code);
     
     fprintf('\n========================================\n');
     fprintf('Processing %s (%d/%d)\n', subject_code, subj_idx, length(subjects_to_process));
@@ -281,7 +281,7 @@ function [rows, unique_speeds] = process_treadmill(date_path, subject_str, subje
                 detected_speeds = [detected_speeds, actual_speed];
                 
                 % Extract strides for this segment
-                task_info = sprintf('speed_m_s:%.2f,treadmill:true', actual_speed);
+                task_info = sprintf('speed_m_s:%.2f,treadmill:true,surface:treadmill', actual_speed);
                 stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
                     subject_str, 'level_walking', 'level', task_info, subject_mass);
                 
@@ -299,28 +299,27 @@ function [rows, unique_speeds] = process_treadmill(date_path, subject_str, subje
 end
 
 function [rows, trial_count] = process_levelground(date_path, subject_str, subject_mass)
-    % Process level ground walking data
+    % Process level ground walking data and labeled transitions
     rows = table();
     trial_count = 0;
     mode_path = fullfile(date_path, 'levelground');
-    
+
     if ~exist(mode_path, 'dir')
         return;
     end
-    
-    % Get all trial files
+
     trial_files = dir(fullfile(mode_path, 'conditions', '*.mat'));
     trial_count = length(trial_files);  % Count all trial files
-    
+
     for t = 1:length(trial_files)
         trial_name = trial_files(t).name;
-        
+
         % Load all data for this trial
         trial_data = load_trial_data(mode_path, trial_name);
         if isempty(trial_data)
             continue;
         end
-        
+
         % Determine speed from filename (using paper-reported values)
         if contains(trial_name, 'slow')
             speed_val = 0.88;  % Paper: 0.88 ± 0.19 m/s
@@ -329,126 +328,149 @@ function [rows, trial_count] = process_levelground(date_path, subject_str, subje
         else
             speed_val = 1.17;  % normal - Paper: 1.17 ± 0.21 m/s
         end
-        
-        % Check for labels to segment walking portions
-        time_start = [];
-        time_end = [];
-        
+
+        processed = false;
         if isfield(trial_data, 'conditions') && istable(trial_data.conditions) && ...
            any(strcmp(trial_data.conditions.Properties.VariableNames, 'Label'))
-            % Has labels - use walk segments only
             labels = trial_data.conditions.Label;
-            if iscell(labels)
-                walk_mask = strcmp(labels, 'walk');
-            else
-                walk_mask = false(size(labels));
-            end
-            
-            if sum(walk_mask) > 50
-                walk_indices = find(walk_mask);
-                time_start = trial_data.conditions.Header(walk_indices(1));
-                time_end = trial_data.conditions.Header(walk_indices(end));
+            header = trial_data.conditions.Header;
+            target_labels = {'walk', 'turnccw', 'turncw', 'stand-walk', 'walk-stand'};
+
+            for lbl_idx = 1:length(target_labels)
+                label_name = target_labels{lbl_idx};
+                segments = get_label_segments(labels, header, label_name, 50);
+                if isempty(segments)
+                    continue;
+                end
+
+                for seg_idx = 1:size(segments, 1)
+                    time_start = segments(seg_idx, 1);
+                    time_end = segments(seg_idx, 2);
+                    [task, task_id, task_info] = map_levelground_label(label_name, speed_val);
+                    if isempty(task)
+                        continue;
+                    end
+
+                    stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
+                        subject_str, task, task_id, task_info, subject_mass);
+
+                    if ~isempty(stride_rows)
+                        rows = [rows; stride_rows];
+                        processed = true;
+                    end
+                end
             end
         end
-        
-        % If no valid label segment, use entire trial
-        if isempty(time_start) && isfield(trial_data, 'ik_offset') && istable(trial_data.ik_offset)
+
+        % Fallback: treat entire trial as level walking if no labeled segments were processed
+        if ~processed && isfield(trial_data, 'ik_offset') && istable(trial_data.ik_offset)
             time_start = trial_data.ik_offset.Header(1);
             time_end = trial_data.ik_offset.Header(end);
-        end
-        
-        if ~isempty(time_start)
-            % Extract strides
+            task_info = sprintf('speed_m_s:%.2f,surface:overground,labels_missing:true', speed_val);
             stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                subject_str, 'level_walking', 'level', ...
-                sprintf('speed_m_s:%.1f,overground:true', speed_val), ...
-                subject_mass);
-            
+                subject_str, 'level_walking', 'level', task_info, subject_mass);
+
             if ~isempty(stride_rows)
                 rows = [rows; stride_rows];
             end
         end
     end
 end
-
 function [rows, trial_count] = process_ramp(date_path, subject_str, subject_mass)
-    % Process ramp ascent/descent data
+    % Process ramp ascent/descent data, including transitions
     rows = table();
     trial_count = 0;
     mode_path = fullfile(date_path, 'ramp');
-    
+
     if ~exist(mode_path, 'dir')
         return;
     end
-    
+
     % Get all trial files
     trial_files = dir(fullfile(mode_path, 'conditions', '*.mat'));
     trial_count = length(trial_files);  % Count all trial files
-    
+
     for t = 1:length(trial_files)
         trial_name = trial_files(t).name;
-        
+
         % Load all data for this trial
         trial_data = load_trial_data(mode_path, trial_name);
         if isempty(trial_data)
             continue;
         end
-        
-        % Default ramp angle
-        ramp_angle = 5;  % degrees
-        
-        % Check for ramp incline in conditions
-        if isfield(trial_data, 'conditions') && istable(trial_data.conditions)
-            if any(strcmp(trial_data.conditions.Properties.VariableNames, 'rampIncline'))
-                ramp_angle = trial_data.conditions.rampIncline(1);
-            end
+
+        % Default ramp angle (degrees)
+        ramp_angle = NaN;
+        if isfield(trial_data, 'conditions') && istable(trial_data.conditions) && ...
+           any(strcmp(trial_data.conditions.Properties.VariableNames, 'rampIncline'))
+            ramp_angle = trial_data.conditions.rampIncline(1);
         end
-        
-        % Process ascent and descent separately using labels
+
+        processed = false;
         if isfield(trial_data, 'conditions') && istable(trial_data.conditions) && ...
            any(strcmp(trial_data.conditions.Properties.VariableNames, 'Label'))
-            
+
             labels = trial_data.conditions.Label;
-            
-            % Process ascent
-            if iscell(labels)
-                ascent_mask = strcmp(labels, 'rampascent');
-            else
-                ascent_mask = false(size(labels));
-            end
-            
-            if sum(ascent_mask) > 50
-                ascent_indices = find(ascent_mask);
-                time_start = trial_data.conditions.Header(ascent_indices(1));
-                time_end = trial_data.conditions.Header(ascent_indices(end));
-                
-                stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                    subject_str, 'incline_walking', sprintf('incline_%ddeg', abs(ramp_angle)), ...
-                    sprintf('incline_deg:%d,speed_m_s:1.0,overground:true', abs(ramp_angle)), ...
-                    subject_mass);
-                
-                if ~isempty(stride_rows)
-                    rows = [rows; stride_rows];
+            header = trial_data.conditions.Header;
+            target_labels = {'rampascent', 'walk-rampascent', 'rampascent-walk', ...
+                             'rampdescent', 'walk-rampdescent', 'rampdescent-walk'};
+
+            for lbl_idx = 1:length(target_labels)
+                label_name = target_labels{lbl_idx};
+                segments = get_label_segments(labels, header, label_name, 50);
+                if isempty(segments)
+                    continue;
+                end
+
+                for seg_idx = 1:size(segments, 1)
+                    time_start = segments(seg_idx, 1);
+                    time_end = segments(seg_idx, 2);
+                    [task, task_id, task_info] = map_ramp_label(label_name, ramp_angle);
+                    if isempty(task)
+                        continue;
+                    end
+
+                    stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
+                        subject_str, task, task_id, task_info, subject_mass);
+
+                    if ~isempty(stride_rows)
+                        rows = [rows; stride_rows];
+                        processed = true;
+                    end
                 end
             end
-            
-            % Process descent
-            if iscell(labels)
-                descent_mask = strcmp(labels, 'rampdescent');
-            else
-                descent_mask = false(size(labels));
+        end
+
+        if ~processed
+            % FALLBACK PROCESSING: No labels found or insufficient labeled segments
+            if isnan(ramp_angle)
+                fprintf('  WARNING: No ramp incline available for %s, skipping fallback\n', trial_name);
+                continue;
             end
-            
-            if sum(descent_mask) > 50
-                descent_indices = find(descent_mask);
-                time_start = trial_data.conditions.Header(descent_indices(1));
-                time_end = trial_data.conditions.Header(descent_indices(end));
-                
+
+            if isfield(trial_data, 'ik_offset') && istable(trial_data.ik_offset)
+                time_start = trial_data.ik_offset.Header(1);
+                time_end = trial_data.ik_offset.Header(end);
+                angle_label = round(ramp_angle, 1);
+
+                if contains(lower(trial_name), 'ascent') || contains(lower(trial_name), 'walk-rampascent')
+                    task = 'incline_walking';
+                    task_id = sprintf('incline_%.1fdeg', angle_label);
+                    task_info = sprintf('incline_deg:%.1f,surface:overground,fallback:true', angle_label);
+                elseif contains(lower(trial_name), 'descent') || contains(lower(trial_name), 'walk-rampdescent')
+                    task = 'decline_walking';
+                    task_id = sprintf('decline_%.1fdeg', -angle_label);
+                    task_info = sprintf('incline_deg:%.1f,surface:overground,fallback:true', -angle_label);
+                else
+                    % Unknown direction, assume ascent by default
+                    task = 'incline_walking';
+                    task_id = sprintf('incline_%.1fdeg', angle_label);
+                    task_info = sprintf('incline_deg:%.1f,surface:overground,fallback:true', angle_label);
+                end
+
                 stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                    subject_str, 'decline_walking', sprintf('decline_%ddeg', abs(ramp_angle)), ...
-                    sprintf('incline_deg:-%d,speed_m_s:1.0,overground:true', abs(ramp_angle)), ...
-                    subject_mass);
-                
+                    subject_str, task, task_id, task_info, subject_mass);
+
                 if ~isempty(stride_rows)
                     rows = [rows; stride_rows];
                 end
@@ -456,160 +478,253 @@ function [rows, trial_count] = process_ramp(date_path, subject_str, subject_mass
         end
     end
 end
-
 function [rows, trial_count] = process_stair(date_path, subject_str, subject_mass)
-    % Process stair ascent/descent data
+    % Process stair ascent/descent data and transitions
     rows = table();
     trial_count = 0;
     mode_path = fullfile(date_path, 'stair');
-    
+
     if ~exist(mode_path, 'dir')
         return;
     end
-    
+
     % Get all trial files
     trial_files = dir(fullfile(mode_path, 'conditions', '*.mat'));
     trial_count = length(trial_files);  % Count all trial files
-    
+
     for t = 1:length(trial_files)
         trial_name = trial_files(t).name;
-        
+
         % Load all data for this trial
         trial_data = load_trial_data(mode_path, trial_name);
         if isempty(trial_data)
             continue;
         end
-        
-        % Extract stair height from data (stored in inches, convert to mm)
-        stair_height_mm = 102;  % Default to 4 inches
+
+        % Extract stair height (stored in inches, convert to meters)
+        stair_height_m = NaN;
         if isfield(trial_data, 'stairHeight')
             stair_height_in = trial_data.stairHeight;
-            stair_height_mm = round(stair_height_in * 25.4);  % Convert inches to mm
-            fprintf('  Processing stair trial: height=%dmm (%d inches)\n', stair_height_mm, stair_height_in);
+            stair_height_m = round((stair_height_in * 0.0254), 3);
+            fprintf('  Processing stair trial: height=%.3fm (%.0f inches)\n', stair_height_m, stair_height_in);
         else
-            fprintf('  WARNING: No stair height found, using default 102mm (4 inches)\n');
+            fprintf('  WARNING: No stair height found, using default 0.102 m (4 inches)\n');
+            stair_height_m = 0.102;
         end
-        
-        % Process ascent and descent separately using labels
+
+        processed = false;
         if isfield(trial_data, 'conditions') && istable(trial_data.conditions) && ...
            any(strcmp(trial_data.conditions.Properties.VariableNames, 'Label'))
-            
+
             labels = trial_data.conditions.Label;
-            
-            % ROBUST LABEL DETECTION: Case-insensitive contains matching for stair ascent
-            if iscell(labels)
-                % Pure stair ascent labels only (case-insensitive, no walk transitions)
-                ascent_mask = false(size(labels));
-                for i = 1:length(labels)
-                    label_lower = lower(labels{i});
-                    % Match if contains both 'stair' and 'ascent' (case-insensitive)
-                    if contains(label_lower, 'stair') && contains(label_lower, 'ascent') && ...
-                       ~contains(label_lower, 'walk')  % Exclude walk transitions
-                        ascent_mask(i) = true;
+            header = trial_data.conditions.Header;
+            target_labels = {'stairascent', 'walk-stairascent', 'stairascent-walk', ...
+                             'stairdescent', 'walk-stairdescent', 'stairdescent-walk'};
+
+            for lbl_idx = 1:length(target_labels)
+                label_name = target_labels{lbl_idx};
+                segments = get_label_segments(labels, header, label_name, 50);
+                if isempty(segments)
+                    continue;
+                end
+
+                for seg_idx = 1:size(segments, 1)
+                    time_start = segments(seg_idx, 1);
+                    time_end = segments(seg_idx, 2);
+                    [task, task_id, task_info] = map_stair_label(label_name, stair_height_m);
+                    if isempty(task)
+                        continue;
                     end
-                end
-            else
-                ascent_mask = false(size(labels));
-            end
-            
-            if sum(ascent_mask) > 50
-                ascent_indices = find(ascent_mask);
-                time_start_raw = trial_data.conditions.Header(ascent_indices(1));
-                time_end_raw = trial_data.conditions.Header(ascent_indices(end));
-                
-                % Trim edges by 0.3s to avoid transitions
-                edge_trim_s = 0.3;
-                time_start = time_start_raw + edge_trim_s;
-                time_end = time_end_raw - edge_trim_s;
-                
-                stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                    subject_str, 'stair_ascent', sprintf('stair_ascent_%dmm', stair_height_mm), ...
-                    sprintf('stair_height_mm:%d,speed_m_s:0.5,overground:true', stair_height_mm), subject_mass);
-                
-                if ~isempty(stride_rows)
-                    rows = [rows; stride_rows];
-                    fprintf('  Added %d stair ascent strides (pure stair, edge-trimmed)\n', height(stride_rows));
-                end
-            end
-            
-            % ROBUST LABEL DETECTION: Case-insensitive contains matching for stair descent
-            if iscell(labels)
-                % Pure stair descent labels only (case-insensitive, no walk transitions)
-                descent_mask = false(size(labels));
-                for i = 1:length(labels)
-                    label_lower = lower(labels{i});
-                    % Match if contains both 'stair' and 'descent' (case-insensitive)
-                    if contains(label_lower, 'stair') && contains(label_lower, 'descent') && ...
-                       ~contains(label_lower, 'walk')  % Exclude walk transitions
-                        descent_mask(i) = true;
-                    end
-                end
-            else
-                descent_mask = false(size(labels));
-            end
-            
-            if sum(descent_mask) > 50
-                descent_indices = find(descent_mask);
-                time_start_raw = trial_data.conditions.Header(descent_indices(1));
-                time_end_raw = trial_data.conditions.Header(descent_indices(end));
-                
-                % Trim edges by 0.3s to avoid transitions
-                edge_trim_s = 0.3;
-                time_start = time_start_raw + edge_trim_s;
-                time_end = time_end_raw - edge_trim_s;
-                
-                stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                    subject_str, 'stair_descent', sprintf('stair_descent_%dmm', stair_height_mm), ...
-                    sprintf('stair_height_mm:%d,speed_m_s:0.5,overground:true', stair_height_mm), subject_mass);
-                
-                if ~isempty(stride_rows)
-                    rows = [rows; stride_rows];
-                    fprintf('  Added %d stair descent strides (pure stair, edge-trimmed)\n', height(stride_rows));
-                end
-            end
-        else
-            % FALLBACK PROCESSING: No labels found or no Label column
-            % Try to infer stair type from filename and process entire trial
-            fprintf('  No stair labels found, attempting fallback processing...\n');
-            
-            % Get available trial files to check naming pattern
-            trial_files_list = dir(fullfile(mode_path, 'conditions', '*.mat'));
-            current_trial_name = trial_name;  % From the calling loop
-            
-            if contains(current_trial_name, 'stair')
-                % Check for time data bounds
-                if isfield(trial_data, 'ik_offset') && istable(trial_data.ik_offset)
-                    time_start = trial_data.ik_offset.Header(1);
-                    time_end = trial_data.ik_offset.Header(end);
-                    
-                    % Determine task based on filename patterns
-                    if contains(current_trial_name, '_1_') || contains(current_trial_name, 'ascent')
-                        % First numbered trial or explicit ascent - treat as ascent
-                        stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                            subject_str, 'stair_ascent', sprintf('stair_ascent_%dmm', stair_height_mm), ...
-                            sprintf('stair_height_mm:%d,speed_m_s:0.5,overground:true,fallback:true', stair_height_mm), subject_mass);
-                        
-                        if ~isempty(stride_rows)
-                            rows = [rows; stride_rows];
-                            fprintf('  Added %d stair ascent strides (fallback processing)\n', height(stride_rows));
-                        end
-                    elseif contains(current_trial_name, '_2_') || contains(current_trial_name, 'descent')
-                        % Second numbered trial or explicit descent - treat as descent
-                        stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                            subject_str, 'stair_descent', sprintf('stair_descent_%dmm', stair_height_mm), ...
-                            sprintf('stair_height_mm:%d,speed_m_s:0.5,overground:true,fallback:true', stair_height_mm), subject_mass);
-                        
-                        if ~isempty(stride_rows)
-                            rows = [rows; stride_rows];
-                            fprintf('  Added %d stair descent strides (fallback processing)\n', height(stride_rows));
-                        end
-                    else
-                        % Unknown pattern - skip with warning
-                        fprintf('  WARNING: Stair file with unknown pattern, skipping: %s\n', current_trial_name);
+
+                    stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
+                        subject_str, task, task_id, task_info, subject_mass);
+
+                    if ~isempty(stride_rows)
+                        rows = [rows; stride_rows];
+                        processed = true;
                     end
                 end
             end
         end
+
+        if ~processed
+            % FALLBACK PROCESSING: No labels found or insufficient segments
+            if isfield(trial_data, 'ik_offset') && istable(trial_data.ik_offset)
+                time_start = trial_data.ik_offset.Header(1);
+                time_end = trial_data.ik_offset.Header(end);
+
+                if contains(lower(trial_name), 'ascent')
+                    task = 'stair_ascent';
+                    task_id = 'stair_ascent';
+                    task_info = sprintf('step_height_m:%.3f,surface:stairs,fallback:true', stair_height_m);
+                elseif contains(lower(trial_name), 'descent')
+                    task = 'stair_descent';
+                    task_id = 'stair_descent';
+                    task_info = sprintf('step_height_m:%.3f,surface:stairs,fallback:true', stair_height_m);
+                else
+                    fprintf('  WARNING: Stair file with unknown pattern, skipping fallback: %s\n', trial_name);
+                    continue;
+                end
+
+                stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
+                    subject_str, task, task_id, task_info, subject_mass);
+
+                if ~isempty(stride_rows)
+                    rows = [rows; stride_rows];
+                end
+            end
+        end
+    end
+end
+function segments = get_label_segments(labels, header, target_label, min_samples)
+    % Utility to find contiguous label regions
+    if nargin < 4
+        min_samples = 1;
+    end
+
+    segments = [];
+    if isempty(labels) || isempty(header)
+        return;
+    end
+
+    if ~iscell(labels)
+        labels = cellstr(string(labels));
+    end
+
+    mask = strcmp(labels, target_label);
+    if sum(mask) < min_samples
+        return;
+    end
+
+    mask = mask(:);
+    header = header(:);
+
+    transitions = diff([false; mask; false]);
+    starts = find(transitions == 1);
+    ends = find(transitions == -1) - 1;
+
+    if isempty(starts)
+        return;
+    end
+
+    segments = [header(starts), header(ends)];
+    durations = segments(:, 2) - segments(:, 1);
+    segments = segments(durations > 0.05, :);  % minimum meaningful duration
+end
+
+function [task, task_id, task_info] = map_levelground_label(label_name, speed_val)
+    % Map level ground labels to standardized task metadata
+    task = '';
+    task_id = '';
+    task_info = '';
+
+    base_info = sprintf('speed_m_s:%.2f,surface:overground', speed_val);
+
+    switch label_name
+        case 'walk'
+            task = 'level_walking';
+            task_id = 'level';
+            task_info = base_info;
+        case 'turnccw'
+            task = 'transition';
+            task_id = 'turn_left';
+            task_info = sprintf('%s,gait_transition:true,transition_from:level_walking,transition_to:level_walking,turn_direction:left', base_info);
+        case 'turncw'
+            task = 'transition';
+            task_id = 'turn_right';
+            task_info = sprintf('%s,gait_transition:true,transition_from:level_walking,transition_to:level_walking,turn_direction:right', base_info);
+        case 'stand-walk'
+            task = 'transition';
+            task_id = 'stand_to_walk';
+            task_info = sprintf('%s,gait_transition:true,transition_from:stand,transition_to:level_walking', base_info);
+        case 'walk-stand'
+            task = 'transition';
+            task_id = 'walk_to_stand';
+            task_info = sprintf('%s,gait_transition:true,transition_from:level_walking,transition_to:stand', base_info);
+    end
+end
+
+function [task, task_id, task_info] = map_ramp_label(label_name, ramp_angle)
+    % Map ramp labels to standardized task metadata
+    task = '';
+    task_id = '';
+    task_info = '';
+
+    if isnan(ramp_angle)
+        return;
+    end
+
+    angle_up = round(ramp_angle, 1);
+    angle_down = -angle_up;
+    ascent_info = sprintf('incline_deg:%.1f,surface:overground', angle_up);
+    descent_info = sprintf('incline_deg:%.1f,surface:overground', angle_down);
+
+    switch label_name
+        case 'rampascent'
+            task = 'incline_walking';
+            task_id = sprintf('incline_%.1fdeg', angle_up);
+            task_info = ascent_info;
+        case 'walk-rampascent'
+            task = 'transition';
+            task_id = 'walk_to_ramp_ascent';
+            task_info = sprintf('%s,gait_transition:true,transition_from:level_walking,transition_to:incline_walking', ascent_info);
+        case 'rampascent-walk'
+            task = 'transition';
+            task_id = 'ramp_ascent_to_walk';
+            task_info = sprintf('%s,gait_transition:true,transition_from:incline_walking,transition_to:level_walking', ascent_info);
+        case 'rampdescent'
+            task = 'decline_walking';
+            task_id = sprintf('decline_%.1fdeg', angle_down);
+            task_info = descent_info;
+        case 'walk-rampdescent'
+            task = 'transition';
+            task_id = 'walk_to_ramp_descent';
+            task_info = sprintf('%s,gait_transition:true,transition_from:level_walking,transition_to:decline_walking', descent_info);
+        case 'rampdescent-walk'
+            task = 'transition';
+            task_id = 'ramp_descent_to_walk';
+            task_info = sprintf('%s,gait_transition:true,transition_from:decline_walking,transition_to:level_walking', descent_info);
+    end
+end
+
+function [task, task_id, task_info] = map_stair_label(label_name, stair_height_m)
+    % Map stair labels to standardized task metadata
+    task = '';
+    task_id = '';
+    task_info = '';
+
+    if isnan(stair_height_m)
+        stair_height_m = 0.102;  % default four-inch step
+    end
+
+    height_val = round(stair_height_m, 3);
+    base_info = sprintf('step_height_m:%.3f,surface:stairs', height_val);
+
+    switch label_name
+        case 'stairascent'
+            task = 'stair_ascent';
+            task_id = 'stair_ascent';
+            task_info = base_info;
+        case 'walk-stairascent'
+            task = 'transition';
+            task_id = 'walk_to_stair_ascent';
+            task_info = sprintf('%s,gait_transition:true,transition_from:level_walking,transition_to:stair_ascent', base_info);
+        case 'stairascent-walk'
+            task = 'transition';
+            task_id = 'stair_ascent_to_walk';
+            task_info = sprintf('%s,gait_transition:true,transition_from:stair_ascent,transition_to:level_walking', base_info);
+        case 'stairdescent'
+            task = 'stair_descent';
+            task_id = 'stair_descent';
+            task_info = base_info;
+        case 'walk-stairdescent'
+            task = 'transition';
+            task_id = 'walk_to_stair_descent';
+            task_info = sprintf('%s,gait_transition:true,transition_from:level_walking,transition_to:stair_descent', base_info);
+        case 'stairdescent-walk'
+            task = 'transition';
+            task_id = 'stair_descent_to_walk';
+            task_info = sprintf('%s,gait_transition:true,transition_from:stair_descent,transition_to:level_walking', base_info);
     end
 end
 
