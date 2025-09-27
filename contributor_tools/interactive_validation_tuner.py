@@ -527,10 +527,10 @@ class InteractiveValidationTuner:
     
     def __init__(self):
         """Initialize the interactive validation tuner."""
-        self.validation_data = {}  # For GUI display (ipsi only)
-        self.full_validation_data = {}  # For validation (ipsi + contra)
-        self.original_validation_data = {}  # Immutable copy of loaded YAML (ipsi only)
-        self.original_full_validation_data = {}  # Immutable copy including contra values
+        self.validation_data = {}  # Active validation ranges (ipsi + contra)
+        self.full_validation_data = {}  # Mirror of validation_data for validation routines
+        self.original_validation_data = {}  # Immutable copy of loaded YAML
+        self.original_full_validation_data = {}  # Immutable copy for backward compatibility
         self.config_manager = None  # Will be initialized when loading ranges
         self.dataset_path = None
         self.locomotion_data = None
@@ -692,27 +692,18 @@ class InteractiveValidationTuner:
                 # Use ValidationConfigManager for consistency
                 self.config_manager = ValidationConfigManager(default_ranges_path)
                 
-                # Extract validation data
-                self.validation_data = {}  # For display (ipsi only)
-                self.full_validation_data = {}  # For validation (ipsi + contra)
+                # Extract validation data (explicit ipsi + contra)
+                self.validation_data = {}
+                self.full_validation_data = {}
                 self.original_validation_data = {}
                 self.original_full_validation_data = {}
                 
                 for task_name in self.config_manager.get_tasks():
-                    # Get full data with generated contra features
                     full_task_data = self.config_manager.get_task_data(task_name)
-                    self.full_validation_data[task_name] = full_task_data
-                    
-                    # Filter to ipsi-only for GUI display
-                    self.validation_data[task_name] = {}
-                    for phase, variables in full_task_data.items():
-                        ipsi_vars = {k: v for k, v in variables.items() if '_contra' not in k}
-                        if ipsi_vars:  # Only add phase if it has ipsi variables
-                            self.validation_data[task_name][phase] = ipsi_vars
-
-                    # Capture immutable originals for future resets
+                    self.validation_data[task_name] = copy.deepcopy(full_task_data)
+                    self.full_validation_data[task_name] = copy.deepcopy(full_task_data)
+                    self.original_validation_data[task_name] = copy.deepcopy(full_task_data)
                     self.original_full_validation_data[task_name] = copy.deepcopy(full_task_data)
-                    self.original_validation_data[task_name] = copy.deepcopy(self.validation_data[task_name])
                 
                 # Update task dropdown
                 tasks = list(self.validation_data.keys())
@@ -1026,28 +1017,22 @@ class InteractiveValidationTuner:
         if not phase_ranges:
             return False
 
-        # Store full ranges (including contra features)
-        self.full_validation_data[task_name] = {phase: vars.copy() for phase, vars in phase_ranges.items()}
-
-        # Filter to ipsilateral features for GUI display
-        ipsi_only = {}
-        for phase, variables in phase_ranges.items():
-            filtered = {k: v for k, v in variables.items() if '_contra' not in k}
-            if filtered:
-                ipsi_only[phase] = filtered
-
-        if not ipsi_only:
+        if not phase_ranges:
             return False
 
-        self.validation_data[task_name] = ipsi_only
-        self.original_validation_data[task_name] = copy.deepcopy(ipsi_only)
-        self.original_full_validation_data[task_name] = copy.deepcopy(self.full_validation_data[task_name])
+        self.validation_data[task_name] = {
+            phase: {var: copy.deepcopy(rng) for var, rng in variables.items()}
+            for phase, variables in phase_ranges.items()
+        }
+        self.full_validation_data[task_name] = copy.deepcopy(self.validation_data[task_name])
+        self.original_validation_data[task_name] = copy.deepcopy(self.validation_data[task_name])
+        self.original_full_validation_data[task_name] = copy.deepcopy(self.validation_data[task_name])
 
         if self.config_manager is not None:
             config_snapshot = copy.deepcopy(self.config_manager.get_data())
             config_snapshot[task_name] = {
-                'metadata': {'contralateral_offset': True},
-                'phases': ipsi_only
+                'metadata': {},
+                'phases': copy.deepcopy(self.validation_data[task_name])
             }
             self.config_manager.set_data(config_snapshot)
 
@@ -1131,27 +1116,18 @@ class InteractiveValidationTuner:
             # Use ValidationConfigManager for consistency
             self.config_manager = ValidationConfigManager(Path(file_path))
 
-            # Extract validation data
-            self.validation_data = {}  # For display (ipsi only)
-            self.full_validation_data = {}  # For validation (ipsi + contra)
+            # Extract validation data (ipsi + contra stored explicitly)
+            self.validation_data = {}
+            self.full_validation_data = {}
             self.original_validation_data = {}
             self.original_full_validation_data = {}
             
             for task_name in self.config_manager.get_tasks():
-                # Get full data with generated contra features
                 full_task_data = self.config_manager.get_task_data(task_name)
-                self.full_validation_data[task_name] = full_task_data
-                
-                # Filter to ipsi-only for GUI display
-                self.validation_data[task_name] = {}
-                for phase, variables in full_task_data.items():
-                    ipsi_vars = {k: v for k, v in variables.items() if '_contra' not in k}
-                    if ipsi_vars:  # Only add phase if it has ipsi variables
-                        self.validation_data[task_name][phase] = ipsi_vars
-
-                # Capture immutable originals for future resets
+                self.validation_data[task_name] = copy.deepcopy(full_task_data)
+                self.full_validation_data[task_name] = copy.deepcopy(full_task_data)
+                self.original_validation_data[task_name] = copy.deepcopy(full_task_data)
                 self.original_full_validation_data[task_name] = copy.deepcopy(full_task_data)
-                self.original_validation_data[task_name] = copy.deepcopy(self.validation_data[task_name])
             
             # Update task dropdown
             tasks = list(self.validation_data.keys())
@@ -1457,8 +1433,23 @@ class InteractiveValidationTuner:
         # Uncomment to include:
         # all_vars += velocity_vars + additional_kinematic_vars
         # all_labels += velocity_labels + additional_kinematic_labels
-        
-        return all_vars, all_labels
+
+        contra_vars = []
+        contra_labels = []
+        for var_name, label in zip(all_vars, all_labels):
+            if '_ipsi' not in var_name:
+                continue
+
+            contra_var = var_name.replace('_ipsi', '_contra')
+            if '(Ipsi)' in label:
+                contra_label = label.replace('(Ipsi)', '(Contra)')
+            else:
+                contra_label = f"{label} (Contra)"
+
+            contra_vars.append(contra_var)
+            contra_labels.append(contra_label)
+
+        return all_vars + contra_vars, all_labels + contra_labels
     
     def update_plot(self, force_redraw=False):
         """Update the plot with current task and mode using two-column layout."""
@@ -2174,13 +2165,34 @@ class InteractiveValidationTuner:
                         command=lambda p=phase, v=var_name, y=click_value: self.add_box(p, v, y)
                     )
 
-            if target_var and self._has_yaml_defaults(target_var):
-                if menu.index('end') is not None:
+            if target_var:
+                has_copy_option = ('_ipsi' in target_var) or ('_contra' in target_var)
+                has_reset_option = self._has_yaml_defaults(target_var)
+
+                if (has_copy_option or has_reset_option) and menu.index('end') is not None:
                     menu.add_separator()
-                menu.add_command(
-                    label=f"Reset {target_var} to YAML defaults",
-                    command=lambda var=target_var: self.reset_variable_to_original(var)
-                )
+
+                added_copy_option = False
+                if '_ipsi' in target_var:
+                    menu.add_command(
+                        label="Copy to contralateral side",
+                        command=lambda var=target_var: self.copy_variable_to_counterpart(var, to_contra=True)
+                    )
+                    added_copy_option = True
+                elif '_contra' in target_var:
+                    menu.add_command(
+                        label="Copy to ipsilateral side",
+                        command=lambda var=target_var: self.copy_variable_to_counterpart(var, to_contra=False)
+                    )
+                    added_copy_option = True
+
+                if has_reset_option:
+                    if added_copy_option:
+                        menu.add_separator()
+                    menu.add_command(
+                        label=f"Reset {target_var} to YAML defaults",
+                        command=lambda var=target_var: self.reset_variable_to_original(var)
+                    )
             
             # Show menu at cursor position
             try:
@@ -2301,6 +2313,11 @@ class InteractiveValidationTuner:
         self.modified = True
         self.validate_button.config(state='normal')
         self.status_bar.config(text=f"Deleted validation box at {box.phase}% for {box.var_name}")
+
+        # Keep validation structures synchronized
+        self.full_validation_data[self.current_task] = copy.deepcopy(
+            self.validation_data.get(self.current_task, {})
+        )
 
     def _has_yaml_defaults(self, var_name: str) -> bool:
         """Return True if the original YAML contains ranges for the variable."""
@@ -2506,6 +2523,59 @@ class InteractiveValidationTuner:
             self.validate_button.config(state='normal')
         if hasattr(self, 'status_bar'):
             self.status_bar.config(text=f"Reset {var_name} to YAML defaults for {self.current_task}.")
+
+    def copy_variable_to_counterpart(self, var_name: str, to_contra: bool) -> None:
+        """Copy validation ranges between ipsilateral and contralateral versions of a variable."""
+        if not self.current_task or not var_name:
+            return
+
+        task_data = self.validation_data.setdefault(self.current_task, {})
+
+        if to_contra:
+            if '_ipsi' in var_name:
+                source_name = var_name
+            else:
+                source_name = var_name.replace('_contra', '_ipsi')
+            target_name = source_name.replace('_ipsi', '_contra')
+        else:
+            if '_contra' in var_name:
+                source_name = var_name
+            else:
+                source_name = var_name.replace('_ipsi', '_contra')
+            target_name = source_name.replace('_contra', '_ipsi')
+
+        if source_name == target_name:
+            return
+
+        phases_to_remove = []
+        for phase, variables in task_data.items():
+            if source_name in variables:
+                variables[target_name] = copy.deepcopy(variables[source_name])
+            elif target_name in variables:
+                del variables[target_name]
+                if not variables:
+                    phases_to_remove.append(phase)
+
+        for phase in phases_to_remove:
+            del task_data[phase]
+
+        self.full_validation_data[self.current_task] = copy.deepcopy(task_data)
+        self.modified = True
+
+        if hasattr(self, 'validate_button'):
+            self.validate_button.config(state='normal')
+
+        target_side = 'contralateral' if to_contra else 'ipsilateral'
+        if hasattr(self, 'status_bar'):
+            pretty_source = source_name.replace('_ipsi', ' (ipsi)').replace('_contra', ' (contra)')
+            self.status_bar.config(
+                text=f"Copied {pretty_source} ranges to {target_side} side for {self.current_task}."
+            )
+
+        if self.locomotion_data:
+            self.run_validation_update()
+        else:
+            self.update_plot(force_redraw=True)
 
     def add_box(self, phase, var_name, click_value):
         """Add a new validation box at the specified phase."""

@@ -38,6 +38,40 @@ Contributors now submit complete packages with documentation. Your role:
 
 ## Validation Checks
 
+### Validation Range Schema
+
+All phase-indexed validators consume YAML files that mirror this structure:
+
+```yaml
+version: "2.0"
+generated: "YYYY-MM-DD HH:MM:SS"
+description: Optional free-form text
+tasks:
+  task_name:
+    metadata: {}               # optional, reserved for future keys
+    phases:
+      0:                       # phase percentage as integer 0–100
+        hip_flexion_angle_ipsi_rad:
+          min: -0.25
+          max: 1.05
+        hip_flexion_angle_contra_rad:
+          min: -0.30
+          max: 0.95
+      50:
+        vertical_grf_ipsi_BW:
+          min: 0.0
+          max: 1.4
+```
+
+Key points:
+
+- **Phase Keys** are integers; loaders coerce numeric strings but reject anything outside 0–100.
+- **Variables** are stored exactly as used downstream (both `_ipsi` and `_contra` entries are explicit).
+- **Ranges** are simple `min`/`max` floats; missing values should be omitted entirely instead of set to `null`.
+- `metadata` is optional and currently unused, but preserved verbatim so future per-task flags can be added without code changes.
+
+`ValidationConfigManager` simply deep-copies this schema—there is no automatic contralateral generation anymore. Update both limbs directly whenever ranges need to diverge.
+
 ### Phase-Indexed Data
 
 Maintainers expect every 150-sample stride to satisfy the phase-based validator:

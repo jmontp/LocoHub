@@ -30,6 +30,7 @@ from datetime import datetime
 import pandas as pd
 import threading
 import time
+import numpy as np
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -304,12 +305,13 @@ def generate_plots(dataset_path: str, validator: Validator, task_filter: Optiona
 
 
 
-def print_validation_summary(result: Dict) -> None:
+def print_validation_summary(result: Dict, task_details: Optional[Dict[str, Dict[str, object]]] = None) -> None:
     """
     Print a concise validation summary.
-    
+
     Args:
         result: Validation result dictionary from Validator
+        task_details: Optional per-task statistics for additional reporting
     """
     stats = result['stats']
     mode = result.get('mode', 'phase')
@@ -322,7 +324,7 @@ def print_validation_summary(result: Dict) -> None:
     print(f"\nDataset: {stats['dataset']}")
     print(f"Status: {status}")
     print(f"Mode: {'Time-Indexed' if mode == 'time' else 'Phase-Indexed'}")
-    
+
     if mode == 'phase':
         total_strides = stats['total_strides']
         passing_strides = total_strides - stats['total_failing_strides']
@@ -335,22 +337,60 @@ def print_validation_summary(result: Dict) -> None:
 
     print(f"\nTasks Evaluated: {stats.get('num_tasks', 0)}")
 
-    if result['violations']:
+    task_details_available = task_details is not None
+    task_summary_needed = bool(result.get('violations')) or (task_details_available and mode == 'phase')
+    if task_summary_needed:
         print("\n" + "-"*70)
         print("TASK SUMMARY")
         print("-"*70)
 
-        for task, violations in sorted(result['violations'].items()):
-            total_failures = sum(len(v) for v in violations.values())
-            if total_failures > 0:
-                failed_features = len(violations)
-                summary_label = "issues" if mode == 'time' else "stride failures"
-                print(f"\n📍 {task}: {total_failures} {summary_label} across {failed_features} checks")
-                if mode == 'time':
-                    for check_name, records in violations.items():
-                        print(f"    - {check_name}: {len(records)} flagged segments")
-            else:
-                print(f"\n📍 {task}: ✅ All checks passed")
+        if mode == 'phase' and task_details_available:
+            for task in sorted(task_details.keys()):
+                details = task_details[task]
+                total = details.get('total_strides', 0) or 0
+                failing = details.get('failing_strides', 0) or 0
+                passing = total - failing if total else 0
+
+                if total:
+                    pass_pct = details.get('pass_rate', 1.0) * 100
+                    print(f"\n📍 {task}: {pass_pct:.1f}% pass ({passing}/{total} strides)")
+                else:
+                    print(f"\n📍 {task}: ⚠️ No strides found")
+
+                feature_failures = details.get('feature_failures', [])
+                if feature_failures:
+                    print("    Failing features:")
+                    for feature_info in feature_failures:
+                        feature = feature_info['feature']
+                        failed_count = feature_info['failed_strides']
+                        failed_pct = feature_info['failed_percentage'] * 100
+                        print(f"      - {feature}: {failed_count} strides ({failed_pct:.1f}%)")
+                        phase_breakdown = feature_info.get('phase_breakdown', [])
+                        for phase_info in phase_breakdown:
+                            total_phase_failures = phase_info['below'] + phase_info['above']
+                            if total_phase_failures == 0:
+                                continue
+                            parts = []
+                            if phase_info['below']:
+                                parts.append(f"{phase_info['below']} below")
+                            if phase_info['above']:
+                                parts.append(f"{phase_info['above']} above")
+                            phase_desc = ', '.join(parts) if parts else 'out of range'
+                            print(f"        • phase {phase_info['phase']}%: {total_phase_failures} strides ({phase_desc})")
+                else:
+                    print("    ✅ All features within range")
+        else:
+            for task, violations in sorted(result.get('violations', {}).items()):
+                total_failures = sum(len(v) for v in violations.values())
+                if total_failures > 0:
+                    failed_features = len(violations)
+                    summary_label = "issues" if mode == 'time' else "stride failures"
+                    print(f"\n📍 {task}: {total_failures} {summary_label} across {failed_features} checks")
+                    if mode == 'time':
+                        for check_name, records in violations.items():
+                            print(f"    - {check_name}: {len(records)} flagged segments")
+                else:
+                    print(f"\n📍 {task}: ✅ All checks passed")
     else:
         print("\n✅ All validations passed!")
 
@@ -367,7 +407,6 @@ def print_validation_summary(result: Dict) -> None:
         print(f"Episodes: {stats.get('num_episodes', 0)}")
 
     print("\n" + "="*70)
-
 
 POPULATION_SUFFIXES = [
     '_stroke', '_amputee', '_tfa', '_tta', '_pd', '_sci', '_cp',
@@ -398,6 +437,120 @@ def _collect_dataset_tasks(dataset_path: Path) -> List[str]:
     if 'task' not in df.columns:
         return []
     return sorted(x for x in df['task'].dropna().unique())
+
+
+def _compute_task_statistics(dataset_path: Path, validator: Validator, result: Dict) -> Dict[str, Dict[str, object]]:
+    """Collect per-task stride and feature statistics for reporting."""
+    task_details: Dict[str, Dict[str, object]] = {}
+
+    if result.get('mode', 'phase') != 'phase':
+        return task_details
+
+    locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
+    dataset_tasks = list(locomotion_data.get_tasks())
+    violation_tasks = list(result.get('violations', {}).keys())
+    all_tasks = sorted(set(dataset_tasks) | set(violation_tasks))
+
+    for task in all_tasks:
+        total_strides = 0
+        if task in dataset_tasks:
+            task_df = locomotion_data.df[locomotion_data.df['task'] == task]
+            if locomotion_data.POINTS_PER_CYCLE:
+                total_strides = len(task_df) // locomotion_data.POINTS_PER_CYCLE
+
+        violations = result.get('violations', {}).get(task, {})
+
+        failing_stride_indices: Set[int] = set()
+        for indices in violations.values():
+            failing_stride_indices.update(indices)
+
+        failing_strides = len(failing_stride_indices)
+        pass_rate = 1.0
+        if total_strides > 0:
+            pass_rate = max(0.0, 1.0 - (failing_strides / total_strides))
+
+        # Analyse failures by phase (below / above limits)
+        feature_phase_stats: Dict[str, Dict[int, Dict[str, int]]] = {}
+        task_config = validator.config_manager.get_task_data(task)
+
+        if task_config and total_strides > 0:
+            config_features = sorted({
+                feature_name
+                for phase_data in task_config.values()
+                for feature_name in phase_data.keys()
+            })
+
+            if config_features:
+                data_3d, feature_names = locomotion_data.get_cycles(
+                    subject=None,
+                    task=task,
+                    features=config_features
+                )
+
+                if data_3d is not None and data_3d.size:
+                    feature_index = {name: idx for idx, name in enumerate(feature_names)}
+                    points_per_cycle = locomotion_data.POINTS_PER_CYCLE or data_3d.shape[1]
+
+                    for phase_pct, phase_variables in task_config.items():
+                        phase_idx = int(round((phase_pct / 100.0) * (points_per_cycle - 1)))
+                        phase_idx = max(0, min(points_per_cycle - 1, phase_idx))
+
+                        for feature_name, limits in phase_variables.items():
+                            idx = feature_index.get(feature_name)
+                            if idx is None:
+                                continue
+
+                            values = data_3d[:, phase_idx, idx]
+                            values = values[np.isfinite(values)]
+                            if values.size == 0:
+                                continue
+
+                            min_val = limits.get('min')
+                            max_val = limits.get('max')
+                            if min_val is None and max_val is None:
+                                continue
+
+                            below = int(np.sum(values < min_val)) if min_val is not None else 0
+                            above = int(np.sum(values > max_val)) if max_val is not None else 0
+
+                            if below or above:
+                                phase_stats = feature_phase_stats.setdefault(feature_name, {})
+                                stats_entry = phase_stats.setdefault(phase_pct, {'below': 0, 'above': 0})
+                                stats_entry['below'] += below
+                                stats_entry['above'] += above
+
+        feature_failures = []
+        for feature, indices in violations.items():
+            unique_indices = len(set(indices))
+            failed_percentage = (unique_indices / total_strides) if total_strides else 0.0
+
+            phase_breakdown = []
+            for phase_pct, counts in feature_phase_stats.get(feature, {}).items():
+                phase_breakdown.append({
+                    'phase': phase_pct,
+                    'below': counts.get('below', 0),
+                    'above': counts.get('above', 0)
+                })
+
+            phase_breakdown.sort(key=lambda item: item['below'] + item['above'], reverse=True)
+
+            feature_failures.append({
+                'feature': feature,
+                'failed_strides': unique_indices,
+                'failed_percentage': failed_percentage,
+                'phase_breakdown': phase_breakdown
+            })
+
+        feature_failures.sort(key=lambda item: item['failed_strides'], reverse=True)
+
+        task_details[task] = {
+            'total_strides': total_strides,
+            'failing_strides': failing_strides,
+            'pass_rate': pass_rate,
+            'feature_failures': feature_failures
+        }
+
+    return task_details
 
 
 def _report_task_registry_mismatches(dataset_tasks: List[str], range_tasks: List[str]) -> bool:
@@ -512,8 +665,15 @@ def main():
         result = validator.validate(str(dataset_path))
         mode = result.get('mode', 'phase')
 
+        task_details = None
+        if mode == 'phase':
+            try:
+                task_details = _compute_task_statistics(dataset_path, validator, result)
+            except Exception as exc:
+                print(f"\n⚠️  Could not compute per-task statistics: {exc}")
+
         # Always print summary
-        print_validation_summary(result)
+        print_validation_summary(result, task_details=task_details)
 
         # Optional plot generation
         if args.plot:

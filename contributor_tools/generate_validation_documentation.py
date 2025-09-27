@@ -45,10 +45,10 @@ class UnifiedValidationGenerator:
         # Configuration
         if config_path:
             self.config_path = config_path
-            self.config_manager = ValidationConfigManager(config_path.parent)
+            self.config_manager = ValidationConfigManager(config_path)
         else:
             self.config_path = self.project_root / "contributor_tools" / "validation_ranges" / "default_ranges.yaml"
-            self.config_manager = ValidationConfigManager()
+            self.config_manager = ValidationConfigManager(self.config_path)
         
         # Output directories
         self.docs_dir = self.project_root / "docs" / "reference" / "datasets_documentation"
@@ -72,11 +72,11 @@ class UnifiedValidationGenerator:
         print(f"📊 Loading validation data from {self.config_path.name}")
         
         try:
-            # Load from config manager (contralateral features are generated automatically)
-            self.config_manager.load()
+            # Load from config manager (ipsi/contra stored explicitly)
+            self.config_manager.load(self.config_path)
             processed_data = {}
             for task_name in self.config_manager.get_tasks():
-                # get_task_data returns data with generated contra features
+                # get_task_data returns stored ipsi/contra ranges
                 processed_data[task_name] = self.config_manager.get_task_data(task_name)
             
             print(f"✅ Loaded validation data for {len(processed_data)} tasks: {list(processed_data.keys())}")
@@ -111,48 +111,50 @@ class UnifiedValidationGenerator:
             print(f"  📐 Generating forward kinematics plots for: {task_name}")
             
             try:
-                # Build ranges for forward kinematics with proper phase handling
-                # Forward kinematics needs both ipsi and contra data at the SAME phase for bilateral pose
+                # Build ranges for forward kinematics
                 cleaned_ranges = {}
-                
-                # Get all available phases (they are already integers from config manager)
-                all_phases = sorted(validation_data[task_name].keys())
-                
+
+                task_ranges = validation_data[task_name]
+                all_phases = sorted(task_ranges.keys())
+
                 for phase in all_phases:
-                    # For forward kinematics, we need ipsi data at this phase
-                    # and contra data from the offset phase (phase + 50) % 100
-                    contra_phase = (phase + 50) % 100
-                    
-                    # Check if we have data for both phases needed
-                    if phase not in validation_data[task_name]:
+                    phase_data = task_ranges.get(phase, {})
+                    if not phase_data:
                         continue
-                    if contra_phase not in validation_data[task_name]:
-                        print(f"    ⚠️ Skipping phase {phase}: no data at contra phase {contra_phase}")
-                        continue
-                    
+
                     phase_ranges = {}
-                    
-                    # Get ipsi angles from current phase
-                    for var_name, var_range in validation_data[task_name][phase].items():
+
+                    for var_name, var_range in phase_data.items():
                         if 'angle' in var_name and 'ipsi' in var_name:
                             clean_name = var_name.replace('_rad', '')
-                            # Map ankle_dorsiflexion to ankle_flexion for forward kinematics
                             clean_name = clean_name.replace('ankle_dorsiflexion_angle', 'ankle_flexion_angle')
                             phase_ranges[clean_name] = var_range
-                    
-                    # Get contra angles from offset phase
-                    for var_name, var_range in validation_data[task_name][contra_phase].items():
-                        if 'angle' in var_name and 'ipsi' in var_name:
-                            # Convert ipsi variable from offset phase to contra variable at current phase
-                            clean_name = var_name.replace('_ipsi', '_contra').replace('_rad', '')
-                            clean_name = clean_name.replace('ankle_dorsiflexion_angle', 'ankle_flexion_angle')
-                            phase_ranges[clean_name] = var_range
-                    
-                    # Check if we have all required angles for forward kinematics
+
+                    # Attempt to pair contralateral data from same phase first
+                    for ipsi_name, var_range in phase_data.items():
+                        if '_ipsi' not in ipsi_name or 'angle' not in ipsi_name:
+                            continue
+
+                        contra_name = ipsi_name.replace('_ipsi', '_contra')
+                        contra_range = phase_data.get(contra_name)
+
+                        if contra_range is None:
+                            # Fallback: look at 50% offset phase
+                            fallback_phase = (phase + 50) % 100
+                            contra_range = task_ranges.get(fallback_phase, {}).get(contra_name)
+
+                        if contra_range is None:
+                            continue
+
+                        clean_contra = contra_name.replace('_rad', '')
+                        clean_contra = clean_contra.replace('ankle_dorsiflexion_angle', 'ankle_flexion_angle')
+                        phase_ranges[clean_contra] = contra_range
+
                     required_angles = [
                         'hip_flexion_angle_ipsi', 'knee_flexion_angle_ipsi', 'ankle_flexion_angle_ipsi',
                         'hip_flexion_angle_contra', 'knee_flexion_angle_contra', 'ankle_flexion_angle_contra'
                     ]
+
                     if all(angle in phase_ranges for angle in required_angles):
                         cleaned_ranges[phase] = phase_ranges
                     else:

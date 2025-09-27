@@ -1,40 +1,20 @@
 #!/usr/bin/env python3
-"""
-Validation Config Manager
+"""Validation Config Manager
 
 Manages validation range configurations with internal data storage.
 Provides a stable API that hides the underlying data structure.
-Automatically handles contralateral feature generation.
+Stores ipsilateral and contralateral ranges exactly as defined in YAML.
 """
 
+import copy
 import yaml
-import warnings
 from pathlib import Path
 from typing import Dict, Optional, Any, Tuple, List
 from datetime import datetime
 
 
 class ValidationConfigManager:
-    """
-    Manages validation range configurations with internal state.
-    
-    The internal data structure matches YAML format:
-    {
-        'task_name': {
-            'metadata': {
-                'contralateral_offset': bool  # Whether to apply 50% phase offset
-            },
-            'phases': {
-                phase_int: {
-                    'variable_name': {'min': float, 'max': float}
-                }
-            }
-        }
-    }
-    
-    Only ipsilateral features are stored. Contralateral features are
-    generated automatically based on the metadata flag.
-    """
+    """Manage validation configurations with explicit ipsilateral/contralateral data."""
     
     def __init__(self, config_path: Optional[Path] = None):
         """
@@ -95,55 +75,63 @@ class ValidationConfigManager:
             if key != 'tasks':
                 self._metadata[key] = value
         
-        # Extract validation ranges with new nested structure
-        if 'tasks' in config:
-            for task_name, task_data in config['tasks'].items():
-                self._data[task_name] = {}
-                
-                # Handle both old (flat) and new (nested) formats
-                if 'phases' in task_data:
-                    # New format with metadata
-                    self._data[task_name]['metadata'] = task_data.get('metadata', {
-                        'contralateral_offset': True  # Default for backward compatibility
-                    })
-                    phases_data = task_data['phases']
-                else:
-                    # Old format - assume it's all phase data
-                    self._data[task_name]['metadata'] = {
-                        'contralateral_offset': True  # Default for backward compatibility
-                    }
-                    phases_data = task_data
-                
-                # Process phases
-                self._data[task_name]['phases'] = {}
-                for phase, variables in phases_data.items():
-                    # Handle both string and integer phases
-                    if isinstance(phase, str):
-                        try:
-                            phase = int(phase)
-                        except ValueError:
-                            raise ValueError(f"Invalid phase '{phase}' in task {task_name}. Phase must be a number.")
-                    
-                    # Validate phase is between 0-100
-                    if not 0 <= phase <= 100:
-                        raise ValueError(f"Phase {phase} in task {task_name} is out of range. Must be 0-100.")
-                    
-                    # Filter out any contra features (shouldn't be in YAML)
-                    filtered_vars = {}
-                    for var_name, var_range in variables.items():
-                        if '_contra' in var_name:
-                            warnings.warn(f"Ignoring contralateral feature '{var_name}' in config. "
-                                        f"Contralateral features are generated automatically.")
-                            continue
-                        filtered_vars[var_name] = var_range
-                    
-                    self._data[task_name]['phases'][phase] = filtered_vars
-    
+        tasks_block = config.get('tasks', {}) or {}
+
+        for task_name, task_section in tasks_block.items():
+            if not isinstance(task_section, dict):
+                raise ValueError(f"Task '{task_name}' must be a mapping with 'phases'.")
+
+            metadata = copy.deepcopy(task_section.get('metadata', {}) or {})
+            phases_src = task_section.get('phases', {}) or {}
+
+            normalized = self._normalize_phases(task_name, phases_src)
+
+            self._data[task_name] = {
+                'metadata': metadata,
+                'phases': normalized
+            }
+
+    def _normalize_phases(
+        self,
+        task_name: str,
+        phases: Dict[Any, Dict[str, Dict[str, float]]]
+    ) -> Dict[int, Dict[str, Dict[str, float]]]:
+        """Normalize phase keys to integers and deep-copy variable ranges."""
+        normalized: Dict[int, Dict[str, Dict[str, float]]] = {}
+
+        for phase_key, variables in (phases or {}).items():
+            if isinstance(phase_key, str):
+                try:
+                    phase = int(float(phase_key))
+                except ValueError as exc:
+                    raise ValueError(
+                        f"Invalid phase '{phase_key}' in task {task_name}. Phase must be numeric."
+                    ) from exc
+            else:
+                phase = int(phase_key)
+
+            if not 0 <= phase <= 100:
+                raise ValueError(
+                    f"Phase {phase} in task {task_name} is out of range. Must be 0-100."
+                )
+
+            normalized[phase] = {}
+            for var_name, var_range in (variables or {}).items():
+                if not isinstance(var_range, dict):
+                    raise ValueError(
+                        f"Variable '{var_name}' at phase {phase} in task {task_name} must be a dict with min/max."
+                    )
+                normalized[phase][var_name] = {
+                    'min': var_range.get('min'),
+                    'max': var_range.get('max')
+                }
+
+        return normalized
+
     def save(self, config_path: Optional[Path] = None) -> None:
         """
         Save internal validation ranges to YAML file.
-        Only saves ipsilateral features; contralateral are generated.
-        
+
         Args:
             config_path: Path to save to. If None, uses default.
         """
@@ -161,20 +149,22 @@ class ValidationConfigManager:
         # Add validation data - direct serialization of nested structure
         config['tasks'] = {}
         for task_name, task_data in self._data.items():
-            config['tasks'][task_name] = {
-                'metadata': task_data.get('metadata', {}),
-                'phases': {}
-            }
-            
-            # Only save ipsilateral features
-            for phase, variables in task_data.get('phases', {}).items():
-                filtered_vars = {}
-                for var_name, var_range in variables.items():
-                    if '_contra' not in var_name:  # Skip any contra that snuck in
-                        filtered_vars[var_name] = var_range
-                
-                if filtered_vars:  # Only add phase if it has variables
-                    config['tasks'][task_name]['phases'][phase] = filtered_vars
+            metadata = task_data.get('metadata', {}) or {}
+            phases = task_data.get('phases', {}) or {}
+
+            task_entry: Dict[str, Any] = {}
+            if metadata:
+                task_entry['metadata'] = copy.deepcopy(metadata)
+
+            serialized_phases = {}
+            for phase, variables in sorted(phases.items()):
+                serialized_phases[int(phase)] = {
+                    var_name: copy.deepcopy(var_range)
+                    for var_name, var_range in variables.items()
+                }
+
+            task_entry['phases'] = serialized_phases
+            config['tasks'][task_name] = task_entry
         
         # Write to file with nice formatting
         with open(config_path, 'w') as f:
@@ -189,7 +179,7 @@ class ValidationConfigManager:
     def get_range(self, task: str, phase: int, variable: str) -> Optional[Tuple[float, float]]:
         """
         Get min/max range for a specific variable.
-        Works for both ipsi and contra variables (contra are generated).
+        Works for both ipsi and contra variables.
         
         Args:
             task: Task name
@@ -199,15 +189,12 @@ class ValidationConfigManager:
         Returns:
             Tuple of (min, max) or None if not found
         """
-        try:
-            # Get task data with generated contra features
-            task_data = self.get_task_data(task)
-            if phase in task_data and variable in task_data[phase]:
-                range_data = task_data[phase][variable]
-                return (range_data['min'], range_data['max'])
+        task_data = self.get_task_data(task)
+        phase_data = task_data.get(int(phase), {})
+        range_data = phase_data.get(variable)
+        if not range_data:
             return None
-        except (KeyError, TypeError):
-            return None
+        return (range_data.get('min'), range_data.get('max'))
     
     def set_range(self,
                   task: str,
@@ -217,10 +204,7 @@ class ValidationConfigManager:
                   max_val: float) -> None:
         """
         Set min/max range for a specific variable.
-        
-        If a contralateral variable is provided, it's converted to ipsilateral
-        with a warning.
-        
+
         Args:
             task: Task name
             phase: Phase percentage (0-100)
@@ -231,14 +215,6 @@ class ValidationConfigManager:
         Raises:
             ValueError: If phase is out of range
         """
-        # Check for contralateral variable
-        if '_contra' in variable:
-            ipsi_var = variable.replace('_contra', '_ipsi')
-            warnings.warn(f"Cannot set contralateral feature '{variable}'. "
-                         f"Setting ipsilateral equivalent '{ipsi_var}' instead. "
-                         f"Contralateral features are generated automatically.")
-            variable = ipsi_var
-        
         # Ensure phase is an integer
         phase = int(phase) if not isinstance(phase, int) else phase
         
@@ -246,22 +222,14 @@ class ValidationConfigManager:
         if not 0 <= phase <= 100:
             raise ValueError(f"Phase {phase} is out of range. Must be 0-100.")
         
-        # Ensure nested structure exists
         if task not in self._data:
-            self._data[task] = {
-                'metadata': {'contralateral_offset': True},  # Default
-                'phases': {}
-            }
-        if 'phases' not in self._data[task]:
-            self._data[task]['phases'] = {}
-        if phase not in self._data[task]['phases']:
-            self._data[task]['phases'][phase] = {}
-        if variable not in self._data[task]['phases'][phase]:
-            self._data[task]['phases'][phase][variable] = {}
-        
-        # Set values
-        self._data[task]['phases'][phase][variable]['min'] = min_val
-        self._data[task]['phases'][phase][variable]['max'] = max_val
+            self._data[task] = {'metadata': {}, 'phases': {}}
+
+        phases = self._data[task].setdefault('phases', {})
+        phase_entry = phases.setdefault(phase, {})
+        range_entry = phase_entry.setdefault(variable, {})
+        range_entry['min'] = min_val
+        range_entry['max'] = max_val
     
     def get_tasks(self) -> List[str]:
         """
@@ -273,74 +241,18 @@ class ValidationConfigManager:
         return list(self._data.keys())
     
     def get_task_data(self, task: str) -> Dict[int, Dict[str, Dict[str, float]]]:
-        """
-        Get validation data for a specific task with contralateral features generated.
-        
-        This returns the phase-indexed validation ranges for a single task,
-        with contralateral features automatically generated based on the
-        task's metadata settings.
-        
-        Args:
-            task: Task name
-            
-        Returns:
-            Dictionary with structure: {phase: {variable: {min, max}}}
-            Includes both ipsi and generated contra features.
-        """
-        if task not in self._data:
+        """Return a deep copy of the stored validation ranges for a task."""
+        task_info = self._data.get(task)
+        if not task_info:
             return {}
-        
-        task_info = self._data[task]
-        phases_data = task_info.get('phases', {})
-        metadata = task_info.get('metadata', {})
-        
-        # Check if we should apply contralateral offset
-        apply_offset = metadata.get('contralateral_offset', True)
-        
-        # Generate contralateral features
-        return self._generate_contralateral_features(phases_data, apply_offset)
-    
-    def _generate_contralateral_features(self, 
-                                        phases_data: Dict[int, Dict[str, Dict[str, float]]],
-                                        apply_offset: bool) -> Dict[int, Dict[str, Dict[str, float]]]:
-        """
-        Generate contralateral features from ipsilateral data.
-        
-        Args:
-            phases_data: Dictionary of phases with ipsilateral features
-            apply_offset: Whether to apply 50% phase offset for contralateral
-            
-        Returns:
-            Dictionary with both ipsi and generated contra features
-        """
-        result = {}
-        
-        # First, copy all ipsi data as-is
-        for phase in phases_data:
-            result[phase] = phases_data[phase].copy()
-        
-        # Then, generate contra features at appropriate phases
-        for phase in phases_data:
-            # Calculate target phase for contralateral features
-            if apply_offset:
-                # Apply 50% offset for gait tasks
-                # If ipsi is at phase 20, contra should be at phase 70
-                contra_phase = (phase + 50) % 100
-            else:
-                # No offset for bilateral tasks (squat, jump, etc.)
-                contra_phase = phase
-            
-            # Ensure the target phase exists in result
-            if contra_phase not in result:
-                result[contra_phase] = {}
-            
-            # Copy ipsi features from current phase to contra at target phase
-            for var_name, var_range in phases_data[phase].items():
-                if '_ipsi' in var_name:
-                    contra_name = var_name.replace('_ipsi', '_contra')
-                    result[contra_phase][contra_name] = var_range
-        
-        return result
+
+        return {
+            phase: {
+                var_name: copy.deepcopy(var_range)
+                for var_name, var_range in variables.items()
+            }
+            for phase, variables in task_info.get('phases', {}).items()
+        }
     
     def get_phases(self, task: str) -> List[int]:
         """
@@ -363,21 +275,18 @@ class ValidationConfigManager:
         Args:
             task: Task name
             phase: Phase percentage
-            include_contra: Whether to include generated contralateral features
+            include_contra: Whether to include contralateral features
             
         Returns:
             List of variable names
         """
+        task_data = self.get_task_data(task)
+        variables = list(task_data.get(int(phase), {}).keys())
+
         if include_contra:
-            # Get data with generated contra features
-            task_data = self.get_task_data(task)
-            return list(task_data.get(phase, {}).keys())
-        else:
-            # Only return stored ipsi features
-            try:
-                return list(self._data[task]['phases'][phase].keys())
-            except KeyError:
-                return []
+            return variables
+
+        return [name for name in variables if '_contra' not in name]
     
     def clear(self) -> None:
         """Clear all validation data (but keep metadata)."""
@@ -413,7 +322,7 @@ class ValidationConfigManager:
         
         Args:
             task: Task name
-            key: Metadata key (e.g., 'contralateral_offset')
+            key: Metadata key
             value: Metadata value
         """
         if task not in self._data:
@@ -439,40 +348,30 @@ class ValidationConfigManager:
         return metadata.get(key)
     
     def set_data(self, data: Dict[str, Any]) -> None:
-        """
-        Replace entire internal data structure.
-        Handles both old flat format and new nested format.
-        
-        Args:
-            data: Complete validation data dictionary
-        """
+        """Replace the internal data structure with the provided dictionary."""
         self._data.clear()
-        
-        for task_name, task_data in data.items():
-            # Check if it's new nested format or old flat format
-            if isinstance(task_data, dict) and 'phases' in task_data:
-                # New format - use as is
-                self._data[task_name] = task_data
+
+        for task_name, task_block in data.items():
+            if isinstance(task_block, dict) and 'phases' in task_block:
+                metadata = copy.deepcopy(task_block.get('metadata', {}) or {})
+                phases_src = task_block.get('phases', {}) or {}
             else:
-                # Old flat format - wrap in new structure
-                self._data[task_name] = {
-                    'metadata': {'contralateral_offset': True},
-                    'phases': {}
+                metadata = {}
+                phases_src = task_block or {}
+
+            normalized = self._normalize_phases(task_name, phases_src)
+            explicit = {
+                phase: {
+                    var_name: copy.deepcopy(var_range)
+                    for var_name, var_range in variables.items()
                 }
-                
-                # Convert phases
-                for phase, variables in task_data.items():
-                    phase = int(phase) if not isinstance(phase, int) else phase
-                    if not 0 <= phase <= 100:
-                        raise ValueError(f"Phase {phase} in task {task_name} is out of range.")
-                    
-                    # Filter out contra features
-                    filtered_vars = {}
-                    for var_name, var_range in variables.items():
-                        if '_contra' not in var_name:
-                            filtered_vars[var_name] = var_range
-                    
-                    self._data[task_name]['phases'][phase] = filtered_vars
+                for phase, variables in normalized.items()
+            }
+
+            self._data[task_name] = {
+                'metadata': metadata,
+                'phases': explicit
+            }
     
     def get_data(self) -> Dict[str, Dict[str, Any]]:
         """
@@ -480,9 +379,9 @@ class ValidationConfigManager:
         For debugging purposes only.
         
         Returns:
-            Copy of the internal validation data (without generated contra features)
+            Deep copy of internal validation data.
         """
-        return self._data.copy()
+        return copy.deepcopy(self._data)
     
     def has_task(self, task: str) -> bool:
         """Check if a task exists in the configuration."""
@@ -490,8 +389,7 @@ class ValidationConfigManager:
     
     def has_variable(self, task: str, phase: int, variable: str) -> bool:
         """
-        Check if a specific variable exists.
-        Works for both ipsi (stored) and contra (generated) variables.
+        Check if a specific variable exists for a task/phase.
         """
-        task_data = self.get_task_data(task)  # Gets data with generated contra
+        task_data = self.get_task_data(task)
         return phase in task_data and variable in task_data[phase]
