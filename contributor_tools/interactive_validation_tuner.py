@@ -573,6 +573,8 @@ class InteractiveValidationTuner:
         self._boxes_by_axis = defaultdict(list)
         self._axis_aliases = {}
         self.data_cache = {}
+        self.phase_template = np.linspace(0, 100, 150)
+        self.max_traces_per_axis = 350
         self.modified = False
         self.unknown_tasks = set()
 
@@ -1151,6 +1153,24 @@ class InteractiveValidationTuner:
     def _normalize_axis(self, axis):
         """Map twinned axes back to their primary axis for hit-testing."""
         return self._axis_aliases.get(axis, axis)
+
+    @staticmethod
+    def _downsample_indices(indices, max_samples):
+        indices = np.asarray(indices, dtype=int)
+        if not indices.size or len(indices) <= max_samples:
+            return indices
+        positions = np.linspace(0, len(indices) - 1, max_samples).astype(int)
+        return indices[positions]
+
+    def _build_segments(self, stride_array):
+        if stride_array.size == 0:
+            return None
+        phase = self.phase_template
+        if stride_array.shape[1] != phase.shape[0]:
+            phase = np.linspace(0, 100, stride_array.shape[1])
+        phase_tiles = np.tile(phase, (stride_array.shape[0], 1))
+        segments = np.stack((phase_tiles, stride_array), axis=2)
+        return segments
 
     def _register_box(self, box: DraggableBox):
         """Track a draggable box for hit-testing and redraw management."""
@@ -2051,13 +2071,12 @@ class InteractiveValidationTuner:
         """
         count = 0
         local_count = 0
-        
+
         # Check cache first
         cache_key = f"{self.current_task}_{var_name}"
         if cache_key in self.data_cache:
             all_data = self.data_cache[cache_key]
         else:
-            # Load data from all subjects
             all_data = []
             try:
                 subjects = self.locomotion_data.get_subjects()
@@ -2068,92 +2087,79 @@ class InteractiveValidationTuner:
                             task=self.current_task,
                             features=None
                         )
-                        
+
                         if cycles_data.size == 0:
                             continue
-                        
-                        # Find variable index
+
                         if var_name in feature_names:
                             var_idx = feature_names.index(var_name)
                             all_data.append(cycles_data[:, :, var_idx])
-                    except:
+                    except Exception:
                         continue
-                
-                # Cache the data
+
                 if all_data:
                     all_data = np.vstack(all_data)
                     self.data_cache[cache_key] = all_data
-            except:
-                pass
-        
-        # Plot data if available using LineCollection for speed
-        if len(all_data) > 0:
-            phase_ipsi = np.linspace(0, 100, 150)
-            
-            # Get global passing strides if available
-            global_passing = getattr(self, 'global_passing_strides', set())
-            
-            # Collect lines for batch plotting
-            if show_pass:
-                # For pass column: separate globally passing and locally passing
-                global_lines = []
-                local_lines = []
-                
-                for stride_idx, stride in enumerate(all_data):
-                    if stride_idx in global_passing:
-                        # Globally passing (green)
-                        global_lines.append(list(zip(phase_ipsi, stride)))
-                        count += 1
-                    elif show_local_passing and stride_idx not in failed_stride_indices:
-                        # Locally passing but not globally (yellow)
-                        local_lines.append(list(zip(phase_ipsi, stride)))
-                        local_count += 1
-                
-                # Plot globally passing strides in green
-                if global_lines:
-                    lc = LineCollection(global_lines, colors='green', alpha=0.2, linewidths=0.5, zorder=1)
-                    ax.add_collection(lc)
-                
-                # Plot locally passing strides in yellow (if enabled)
-                if local_lines:
-                    lc = LineCollection(local_lines, colors='gold', alpha=0.3, linewidths=0.5, zorder=2)
-                    ax.add_collection(lc)
-                
-                # Plot means
-                if global_lines:
-                    global_pass_strides = [all_data[i] for i in range(len(all_data)) if i in global_passing]
-                    mean_pattern = np.mean(global_pass_strides, axis=0)
-                    ax.plot(phase_ipsi, mean_pattern, color='darkgreen', linewidth=2, zorder=5)
+            except Exception:
+                all_data = np.empty((0, len(self.phase_template)))
 
-                if local_lines:
-                    local_pass_indices = [i for i in range(len(all_data)) 
-                                         if i not in global_passing and i not in failed_stride_indices]
-                    local_pass_strides = [all_data[i] for i in local_pass_indices]
-                    mean_pattern = np.mean(local_pass_strides, axis=0)
-                    ax.plot(phase_ipsi, mean_pattern, color='darkorange', linewidth=2, zorder=6)
+        if all_data.size == 0:
+            return (0, 0) if show_pass and show_local_passing else 0
+
+        total_strides = all_data.shape[0]
+        global_passing = np.array(sorted(i for i in getattr(self, 'global_passing_strides', set())
+                                         if 0 <= i < total_strides), dtype=int)
+        failed_stride_indices = np.array(sorted(i for i in failed_stride_indices if 0 <= i < total_strides), dtype=int)
+
+        if show_pass:
+            count = len(global_passing)
+
+            if show_local_passing:
+                fail_mask = np.zeros(total_strides, dtype=bool)
+                fail_mask[failed_stride_indices] = True
+                global_mask = np.zeros(total_strides, dtype=bool)
+                global_mask[global_passing] = True
+                local_indices = np.where(~global_mask & ~fail_mask)[0]
             else:
-                # For fail column: show strides that fail this specific feature
-                lines = []
-                for stride_idx, stride in enumerate(all_data):
-                    if stride_idx in failed_stride_indices:
-                        lines.append(list(zip(phase_ipsi, stride)))
-                        count += 1
+                local_indices = np.array([], dtype=int)
 
-                # Use LineCollection for fast batch plotting
-                if lines:
-                    lc = LineCollection(lines, colors='red', alpha=0.3, linewidths=0.5, zorder=1)
+            local_count = len(local_indices)
+
+            # Draw globally passing strides
+            if count:
+                draw_indices = self._downsample_indices(global_passing, self.max_traces_per_axis)
+                segments = self._build_segments(all_data[draw_indices])
+                if segments is not None:
+                    lc = LineCollection(segments, colors='green', alpha=0.2, linewidths=0.5, zorder=1)
                     ax.add_collection(lc)
+                mean_pattern = np.mean(all_data[global_passing], axis=0)
+                ax.plot(self.phase_template[:mean_pattern.size], mean_pattern, color='darkgreen', linewidth=2, zorder=5)
 
-                # Plot mean of the displayed strides
-                if count > 0:
-                    fail_strides = [all_data[i] for i in range(len(all_data)) if i in failed_stride_indices]
-                    if fail_strides:
-                        mean_pattern = np.mean(fail_strides, axis=0)
-                        ax.plot(phase_ipsi, mean_pattern, color='darkred', linewidth=2, zorder=5)
-        
-        # Return both counts for title updates
-        if show_pass and show_local_passing:
-            return count, local_count
+            # Draw locally passing strides if requested
+            if show_local_passing and local_count:
+                draw_local = self._downsample_indices(local_indices, self.max_traces_per_axis)
+                segments = self._build_segments(all_data[draw_local])
+                if segments is not None:
+                    lc = LineCollection(segments, colors='gold', alpha=0.3, linewidths=0.5, zorder=2)
+                    ax.add_collection(lc)
+                mean_pattern = np.mean(all_data[local_indices], axis=0)
+                ax.plot(self.phase_template[:mean_pattern.size], mean_pattern, color='darkorange', linewidth=2, zorder=6)
+
+            if show_pass and show_local_passing:
+                return count, local_count
+            return count
+
+        # Fail column rendering
+        count = len(failed_stride_indices)
+        if count:
+            draw_fail = self._downsample_indices(failed_stride_indices, self.max_traces_per_axis)
+            segments = self._build_segments(all_data[draw_fail])
+            if segments is not None:
+                lc = LineCollection(segments, colors='red', alpha=0.3, linewidths=0.5, zorder=1)
+                ax.add_collection(lc)
+            mean_pattern = np.mean(all_data[failed_stride_indices], axis=0)
+            ax.plot(self.phase_template[:mean_pattern.size], mean_pattern, color='darkred', linewidth=2, zorder=5)
+
         return count
     
     def plot_variable_data(self, ax, var_name):
