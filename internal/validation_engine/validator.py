@@ -8,7 +8,8 @@ Focuses solely on checking if biomechanical data meets specifications.
 
 import numpy as np
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any
+from dataclasses import dataclass
+from typing import Dict, List, Tuple, Optional, Any, Set
 
 # Import configuration manager
 import sys
@@ -20,6 +21,18 @@ from user_libs.python.locomotion_data import LocomotionData
 # ============================================================================
 # SIMPLIFIED VALIDATOR
 # ============================================================================
+
+@dataclass
+class TaskValidationDetails:
+    """Rich validation information for a single task."""
+
+    failing_features: Dict[int, List[str]]
+    per_variable_failures: Dict[str, List[int]]
+    total_strides: int
+    validated_variables: List[str]
+    global_passing_strides: Set[int]
+    phase_indices: Dict[int, int]
+
 
 class Validator:
     """
@@ -67,63 +80,109 @@ class Validator:
         """
         # Load dataset with proper phase column name
         locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
-        
-        # Validate phase structure
+
+        result = self.validate_dataset(
+            locomotion_data=locomotion_data,
+            ignore_features=ignore_features
+        )
+
+        # Ensure dataset name is populated for compatibility
+        result['stats']['dataset'] = Path(dataset_path).stem
+        return result
+
+    def validate_dataset(
+        self,
+        locomotion_data: LocomotionData,
+        ignore_features: Optional[List[str]] = None,
+        task_filter: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Validate a pre-loaded locomotion dataset against current ranges."""
+
         phase_valid, phase_msg = self._validate_phase_structure(locomotion_data)
-        
-        # Get task information
-        tasks = locomotion_data.get_tasks()
-        
-        # Validate against specifications
-        violations = {}
+
+        tasks_in_data = locomotion_data.get_tasks()
+        config_tasks = set(self.config_manager.get_tasks())
+        tasks = [t for t in tasks_in_data if t in config_tasks]
+        if task_filter:
+            tasks = [t for t in tasks if t in task_filter]
+
+        violations: Dict[str, Dict[str, List[int]]] = {}
+        task_results: Dict[str, Dict[str, Any]] = {}
+
         total_checks = 0
         total_violations = 0
         total_strides = 0
         total_failing_strides = 0
-        
+
         for task in tasks:
-            task_violations = self._validate_task(locomotion_data, task, ignore_features)
-            
-            if task_violations:
-                violations[task] = task_violations
-                total_violations += sum(len(v) for v in task_violations.values())
-            
-            # Count number of cycles for this task
-            task_data = locomotion_data.df[locomotion_data.df['task'] == task]
-            n_cycles = len(task_data) // 150  # Each cycle is 150 points
-            total_strides += n_cycles
-            
-            # Count failing strides for this task (stride-level pass rate)
-            failing_features = self._validate_task_with_failing_features(locomotion_data, task, ignore_features)
-            total_failing_strides += len(failing_features)
-            
-            # Get number of variables and phases being checked from config
-            n_variables = 12  # 6 kinematic + 6 kinetic variables
-            n_phases = 4  # Default 4 phases (0%, 25%, 50%, 75%)
-            total_checks += n_cycles * n_variables * n_phases
-        
-        # Calculate stride-level pass rate (green strides / total strides)
-        stride_pass_rate = 1.0 - (total_failing_strides / total_strides if total_strides > 0 else 0)
-        
-        # Keep old variable-level calculation for detailed statistics
-        variable_pass_rate = 1.0 - (total_violations / total_checks if total_checks > 0 else 0)
-        
-        return {
+            details = self._validate_task_details(
+                locomotion_data,
+                task,
+                ignore_features=ignore_features
+            )
+
+            task_results[task] = {
+                'failing_strides_by_variable': {
+                    var: set(indices)
+                    for var, indices in details.per_variable_failures.items()
+                },
+                'failing_strides_map': details.failing_features,
+                'global_passing_strides': set(details.global_passing_strides),
+                'total_strides': details.total_strides,
+                'validated_variables': details.validated_variables,
+                'phase_indices': details.phase_indices,
+            }
+
+            if details.per_variable_failures:
+                violations[task] = {
+                    var: sorted(indices)
+                    for var, indices in details.per_variable_failures.items()
+                    if indices
+                }
+
+            total_strides += details.total_strides
+            total_failing_strides += details.total_strides - len(details.global_passing_strides)
+            total_violations += sum(len(indices) for indices in details.per_variable_failures.values())
+
+            # Determine how many variable/phase checks were executed for this task
+            task_ranges = self.config_manager.get_task_data(task)
+            phase_variable_checks = 0
+            if details.validated_variables:
+                for phase_ranges in task_ranges.values():
+                    for var_name in details.validated_variables:
+                        if var_name in phase_ranges:
+                            phase_variable_checks += 1
+            total_checks += details.total_strides * phase_variable_checks
+
+        stride_pass_rate = (
+            1.0 - (total_failing_strides / total_strides)
+            if total_strides > 0 else 0.0
+        )
+        variable_pass_rate = (
+            1.0 - (total_violations / total_checks)
+            if total_checks > 0 else 0.0
+        )
+
+        result = {
             'passed': phase_valid and stride_pass_rate >= 0.9,
             'phase_valid': phase_valid,
             'phase_message': phase_msg,
             'violations': violations,
+            'tasks': task_results,
             'stats': {
                 'total_checks': total_checks,
                 'total_violations': total_violations,
                 'total_strides': total_strides,
                 'total_failing_strides': total_failing_strides,
-                'pass_rate': stride_pass_rate,  # Now stride-level pass rate (main metric)
-                'variable_pass_rate': variable_pass_rate,  # Old variable-level for reference
+                'pass_rate': stride_pass_rate,
+                'variable_pass_rate': variable_pass_rate,
                 'num_tasks': len(tasks),
-                'dataset': Path(dataset_path).stem
-            }
+                'dataset': getattr(locomotion_data, 'data_path', Path('unknown')).stem,
+            },
+            'mode': 'phase'
         }
+
+        return result
     
     def _validate_phase_structure(self, locomotion_data: LocomotionData) -> Tuple[bool, str]:
         """Check if all cycles have exactly 150 points."""
@@ -152,6 +211,14 @@ class Validator:
         
         return True, "Phase structure valid (150 points per cycle)"
     
+    @staticmethod
+    def _normalize_phase_key(phase_key: Any) -> Optional[int]:
+        """Normalize a phase key from the config to an integer percentage."""
+        try:
+            return int(round(float(phase_key)))
+        except (TypeError, ValueError):
+            return None
+
     def _get_phase_indices(self, task_ranges: Dict) -> Dict[int, int]:
         """
         Dynamically calculate phase indices from configuration.
@@ -166,8 +233,13 @@ class Validator:
             Dictionary mapping phase percentage to array index
         """
         # Extract phase percentages from config
-        phases = sorted([int(p) for p in task_ranges.keys()])
-        
+        phases = []
+        for raw_phase in task_ranges.keys():
+            normalized = self._normalize_phase_key(raw_phase)
+            if normalized is not None:
+                phases.append(normalized)
+        phases.sort()
+
         phase_indices = {}
         for phase in phases:
             # Map phase percentage to index (0-149)
@@ -185,19 +257,26 @@ class Validator:
         Returns dict of violations: {variable_name: [stride_indices]}
         """
         # Get failing features per stride
-        failing_features = self._validate_task_with_failing_features(locomotion_data, task_name, ignore_features)
-        
-        # Convert to variable-centric format
-        violations = {}
-        for stride_idx, failed_vars in failing_features.items():
-            for var_name in failed_vars:
-                if var_name not in violations:
-                    violations[var_name] = []
-                violations[var_name].append(stride_idx)
-        
+        details = self._validate_task_details(
+            locomotion_data,
+            task_name,
+            ignore_features=ignore_features
+        )
+
+        violations = {
+            var_name: sorted(indices)
+            for var_name, indices in details.per_variable_failures.items()
+            if indices
+        }
+
         return violations
     
-    def _validate_task_with_failing_features(self, locomotion_data: LocomotionData, task_name: str, ignore_features: List[str] = None) -> Dict[int, List[str]]:
+    def _validate_task_with_failing_features(
+        self,
+        locomotion_data: LocomotionData,
+        task_name: str,
+        ignore_features: List[str] = None
+    ) -> Dict[int, List[str]]:
         """
         Validate task data and return failing features per stride.
         
@@ -209,80 +288,111 @@ class Validator:
         Returns dict: {stride_idx: [list_of_failed_variable_names]}
         Strides not in the dict passed all checks.
         """
-        failing_features = {}
-        
-        # Check if task exists in configuration
+        return self._validate_task_details(
+            locomotion_data,
+            task_name,
+            ignore_features=ignore_features
+        ).failing_features
+
+    def _validate_task_details(
+        self,
+        locomotion_data: LocomotionData,
+        task_name: str,
+        ignore_features: Optional[List[str]] = None
+    ) -> TaskValidationDetails:
+        """Return rich validation details for a specific task."""
+
+        empty_details = TaskValidationDetails(
+            failing_features={},
+            per_variable_failures={},
+            total_strides=0,
+            validated_variables=[],
+            global_passing_strides=set(),
+            phase_indices={}
+        )
+
         if not self.config_manager.has_task(task_name):
-            return failing_features
-            
-        # Get validation ranges for this specific task (includes generated contra features)
+            return empty_details
+
         task_ranges = self.config_manager.get_task_data(task_name)
-        
-        # Get phase indices dynamically from configuration
         phase_indices = self._get_phase_indices(task_ranges)
-        
-        # Collect all variables we need to check
+
         all_variables_to_check = set()
         for phase_ranges in task_ranges.values():
             all_variables_to_check.update(phase_ranges.keys())
-        
-        # Filter out ignored features if specified
+
         if ignore_features:
-            all_variables_to_check = all_variables_to_check - set(ignore_features)
-        
-        # Filter to only variables that exist in the dataset
-        all_features = locomotion_data.features
-        valid_variables = [v for v in all_variables_to_check if v in all_features]
-        
-        if not valid_variables:
-            return failing_features
-        
-        # Get 3D array for this task with all subjects (single unified load)
-        data_3d, feature_names = locomotion_data.get_cycles(None, task_name, list(valid_variables))
-        
-        if data_3d is None:
-            return failing_features
-        
-        # Check each stride
-        n_strides = data_3d.shape[0]
-        for stride_idx in range(n_strides):
-            stride_failures = []
-            
-            # Check each phase
+            all_variables_to_check -= set(ignore_features)
+
+        dataset_features = set(locomotion_data.features or [])
+        validated_variables = [
+            var for var in sorted(all_variables_to_check)
+            if var in dataset_features
+        ]
+
+        if not validated_variables:
+            return empty_details
+
+        data_3d, feature_names = locomotion_data.get_cycles(
+            subject=None,
+            task=task_name,
+            features=list(validated_variables)
+        )
+
+        if data_3d is None or data_3d.size == 0:
+            return empty_details
+
+        feature_index = {name: idx for idx, name in enumerate(feature_names)}
+        total_strides = data_3d.shape[0]
+
+        failing_features: Dict[int, List[str]] = {}
+        per_variable_failures: Dict[str, List[int]] = {var: [] for var in validated_variables}
+        failing_stride_set: Set[int] = set()
+
+        for stride_idx in range(total_strides):
+            stride_failures: List[str] = []
             for phase_pct, phase_idx in phase_indices.items():
-                if phase_pct not in task_ranges:
-                    continue
-                
-                phase_ranges = task_ranges[phase_pct]
-                
-                # Check each variable
+                phase_ranges = task_ranges.get(phase_pct, {})
                 for var_name, var_range in phase_ranges.items():
-                    if var_name not in feature_names:
+                    if var_name not in feature_index:
                         continue
-                    
-                    # Get variable index in the feature array
-                    var_idx = feature_names.index(var_name)
-                    
-                    # Get value at this stride, phase, and variable
+
+                    var_idx = feature_index[var_name]
                     value = data_3d[stride_idx, phase_idx, var_idx]
-                    
-                    # Check if within range
+
                     min_val = var_range.get('min')
                     max_val = var_range.get('max')
-                    
-                    # Skip if ranges are None (missing data placeholders)
+
                     if min_val is None or max_val is None:
                         continue
-                    
+                    if min_val > max_val:
+                        min_val, max_val = max_val, min_val
+                    if not np.isfinite(value):
+                        continue
+
                     if value < min_val or value > max_val:
                         if var_name not in stride_failures:
                             stride_failures.append(var_name)
-            
-            # Only add to failing_features if this stride had failures
+                        failing_stride_set.add(stride_idx)
+                        per_variable_failures.setdefault(var_name, []).append(stride_idx)
+
             if stride_failures:
                 failing_features[stride_idx] = stride_failures
-        
-        return failing_features
+
+        global_passing = set(range(total_strides)) - failing_stride_set
+
+        # Ensure variables with no failures still appear with empty lists
+        for var_name in validated_variables:
+            per_variable_failures.setdefault(var_name, [])
+
+        return TaskValidationDetails(
+            failing_features=failing_features,
+            per_variable_failures=per_variable_failures,
+            total_strides=total_strides,
+            validated_variables=validated_variables,
+            global_passing_strides=global_passing,
+            phase_indices=phase_indices,
+        )
     
     def _check_variable_3d(self, data_3d: np.ndarray, phase_idx: int, 
                           var_idx: int, var_range: Dict) -> List[int]:

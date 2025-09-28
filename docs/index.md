@@ -83,7 +83,7 @@ Each row is one point in a percent‑normalized gait cycle (typically 150 sample
 <!-- DATASET_TABLE_START -->
 | Dataset | Tasks | Quality | Validation | Download |
 |---------|-------|---------|------------|----------|
-| [Umich 2021 Raw](https://jmontp.github.io/LocoHub/datasets/umich_2021_raw/) | Decline Walking, Incline Walking, Level Walking, Run, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit, Transition | ❌ Needs Review (79.0%) | [Report](https://jmontp.github.io/LocoHub/datasets/umich_2021_raw_validation/) | Coming Soon |
+| [Umich 2021 Raw](datasets/um21.md) | Decline Walking, Incline Walking, Level Walking, Run, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit, Transition | ⚠️ Validation Pending | [Report](datasets/um21_validation.md) | Coming Soon |
 <!-- DATASET_TABLE_END -->
 
 More details and validation reports: [Datasets Reference](datasets/index.md).

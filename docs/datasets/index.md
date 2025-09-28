@@ -14,7 +14,7 @@ live under `_legacy/` for reference while the regenerated docs land here.
 <!-- DATASET_TABLE_START -->
 | Dataset | Tasks | Quality | Validation | Download |
 |---------|-------|---------|------------|----------|
-| [Umich 2021 Raw](https://jmontp.github.io/LocoHub/datasets/umich_2021_raw/) | Decline Walking, Incline Walking, Level Walking, Run, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit, Transition | ❌ Needs Review (79.0%) | [Report](https://jmontp.github.io/LocoHub/datasets/umich_2021_raw_validation/) | Coming Soon |
+| [Umich 2021 Raw](um21.md) | Decline Walking, Incline Walking, Level Walking, Run, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit, Transition | ⚠️ Validation Pending | [Report](um21_validation.md) | Coming Soon |
 <!-- DATASET_TABLE_END -->
 
 More: Legacy [Dataset Comparison](_legacy/dataset_comparison.md) • [Validation Reports](validation_reports/index.md)

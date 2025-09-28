@@ -102,6 +102,10 @@ Time-series thresholds live in `contributor_tools/validation_ranges/time_structu
 - Outputs: `converted_datasets/`
 - Validation engine: `internal/validation_engine/validator.py`
 - Validation ranges: `contributor_tools/validation_ranges/`
+- Maintainer note: all tooling (`interactive_validation_tuner.py`,
+  `quick_validation_check.py`, and `manage_dataset_documentation.py`) now calls the
+  shared `Validator` backend. Adjust validation rules or range loading logic in one
+  place and every workflow (GUI, CLI, doc generation) stays in sync.
 - Python API: `user_libs/python/locomotion_data.py`
 
 ## Workflows

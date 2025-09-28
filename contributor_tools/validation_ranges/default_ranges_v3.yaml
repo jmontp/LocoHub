@@ -1,7 +1,7 @@
-version: '3.0'
-generated: '2025-09-27 02:51:57'
-source: Automated retune via Codex agent
-description: Retuned validation ranges with explicit contra coverage for Umich 2021
+version: '2.0'
+generated: '2025-09-28 10:10:52'
+source: Interactive Validation Tuner
+description: Interactively tuned validation ranges for all features
 tasks:
   level_walking:
     phases:
@@ -462,6 +462,10 @@ tasks:
         hip_flexion_moment_contra_Nm_kg:
           min: -0.6854746836735479
           max: 1.8105942360881224
+      2:
+        anterior_grf_contra_BW:
+          min: 0.03743005793005527
+          max: 0.43743005793005524
       4:
         ankle_dorsiflexion_moment_contra_Nm_kg:
           min: -2.430094803569806
@@ -557,20 +561,20 @@ tasks:
         hip_flexion_moment_contra_Nm_kg:
           min: -0.5826896026709931
           max: 0.40914657188430037
+      31:
+        lateral_grf_contra_BW:
+          min: -0.04767547131823041
+          max: 0.04658451100465638
       32:
         knee_flexion_moment_contra_Nm_kg:
           min: -0.753188702855941
           max: 0.4741807892414876
         vertical_grf_contra_BW:
-          min: -0.2718033453965674
-          max: 0.3899920085326201
+          min: -0.2881649726564504
+          max: 0.22637573593371912
         anterior_grf_contra_BW:
           min: -0.03243744685470845
-          max: 0.08955434289092318
-      33:
-        lateral_grf_contra_BW:
-          min: -0.02501714361265589
-          max: 0.0692428387102309
+          max: 0.0272833086878837
       36:
         knee_flexion_moment_ipsi_Nm_kg:
           min: -0.8859927956119449
@@ -657,6 +661,10 @@ tasks:
         thigh_sagittal_angle_contra_rad:
           min: -0.14642082179240412
           max: 2.283502803474135
+      52:
+        anterior_grf_ipsi_BW:
+          min: 0.03743005793005527
+          max: 0.43743005793005524
       54:
         ankle_dorsiflexion_moment_ipsi_Nm_kg:
           min: -2.430094803569806
@@ -759,13 +767,10 @@ tasks:
         vertical_grf_ipsi_BW:
           min: -0.2718033453965674
           max: 0.3899920085326201
-        anterior_grf_ipsi_BW:
-          min: -0.03243744685470845
-          max: 0.08955434289092318
       83:
         lateral_grf_ipsi_BW:
           min: -0.02501714361265589
-          max: 0.0692428387102309
+          max: 0.020340292441696495
       86:
         ankle_dorsiflexion_angle_ipsi_rad:
           min: -0.4488730998533522
@@ -773,6 +778,10 @@ tasks:
         knee_flexion_moment_contra_Nm_kg:
           min: -0.8859927956119449
           max: 0.9465390817537311
+      87:
+        anterior_grf_ipsi_BW:
+          min: -0.08250227228676082
+          max: 0.039489517458870804
       90:
         hip_flexion_angle_ipsi_rad:
           min: -0.01449722175504542
@@ -1484,9 +1493,6 @@ tasks:
         shank_sagittal_angle_contra_rad:
           min: -1.647
           max: 1.212
-        foot_sagittal_angle_contra_rad:
-          min: -1.023
-          max: 0.857
       76:
         hip_flexion_moment_ipsi_Nm_kg:
           min: -0.06571695327599225
@@ -1526,8 +1532,11 @@ tasks:
           min: -0.5594147222752148
           max: 0.5234494091367778
         foot_sagittal_angle_ipsi_rad:
-          min: -2.326
+          min: -0.6290796159159977
           max: 0.868
+        foot_sagittal_angle_contra_rad:
+          min: -0.9273746152044107
+          max: 0.47449846081765723
   run:
     phases:
       0:
@@ -1777,7 +1786,7 @@ tasks:
           max: 0.731
         ankle_dorsiflexion_moment_ipsi_Nm_kg:
           min: -5.156
-          max: 0.246
+          max: -0.8428045177101731
         ankle_adduction_moment_ipsi_Nm_kg:
           min: -0.76
           max: 0.67
@@ -1885,16 +1894,16 @@ tasks:
           max: 0.779
         foot_sagittal_angle_contra_rad:
           min: -1.52
-          max: 0.524
+          max: 0.21954899167943775
         foot_sagittal_velocity_contra_rad_s:
           min: -10.033
           max: 11.916
         thigh_sagittal_angle_contra_rad:
           min: -1.106
-          max: 3.715
+          max: 2.1507654334396697
         shank_sagittal_angle_contra_rad:
           min: -1.731
-          max: 2.144
+          max: 0.5828486038252496
         thigh_sagittal_velocity_contra_rad_s:
           min: -20.226
           max: 9.519
@@ -1985,7 +1994,7 @@ tasks:
           max: 0.277
         foot_sagittal_angle_ipsi_rad:
           min: -1.649
-          max: 0.079
+          max: -0.7429597444068363
         foot_sagittal_velocity_ipsi_rad_s:
           min: -11.434
           max: 4.954
@@ -2075,16 +2084,16 @@ tasks:
           max: 0.179
         foot_sagittal_angle_contra_rad:
           min: -2.287
-          max: 2.218
+          max: -0.6235427443252313
         foot_sagittal_velocity_contra_rad_s:
           min: -10.633
           max: 5.436
         thigh_sagittal_angle_contra_rad:
           min: -2.587
-          max: 2.188
+          max: -0.08725027863319434
         shank_sagittal_angle_contra_rad:
           min: -2.68
-          max: 1.911
+          max: -0.1519500592309213
         thigh_sagittal_velocity_contra_rad_s:
           min: -20.692
           max: 11.204
@@ -2175,7 +2184,7 @@ tasks:
           max: 0.281
         foot_sagittal_angle_ipsi_rad:
           min: -1.74
-          max: 0.083
+          max: -0.4954161164344432
         foot_sagittal_velocity_ipsi_rad_s:
           min: -8.786
           max: 11.919
@@ -2256,7 +2265,7 @@ tasks:
           max: 1.318
         ankle_dorsiflexion_moment_contra_Nm_kg:
           min: -5.161
-          max: 3.738
+          max: -0.7592482598268471
         ankle_adduction_moment_contra_Nm_kg:
           min: -0.819
           max: 0.643
@@ -2265,16 +2274,16 @@ tasks:
           max: 1.354
         foot_sagittal_angle_contra_rad:
           min: -2.047
-          max: 1.642
+          max: -0.33693155408364417
         foot_sagittal_velocity_contra_rad_s:
           min: -6.224
           max: 5.224
         thigh_sagittal_angle_contra_rad:
           min: -2.245
-          max: 2.139
+          max: -0.34955499225506115
         shank_sagittal_angle_contra_rad:
           min: -2.305
-          max: 1.584
+          max: -0.3116838382122
         thigh_sagittal_velocity_contra_rad_s:
           min: -8.983
           max: 6.673
@@ -3313,9 +3322,6 @@ tasks:
         pelvis_transverse_angle_rad:
           min: -0.374
           max: 3.361
-        foot_sagittal_angle_ipsi_rad:
-          min: -0.733
-          max: 0.644
         foot_sagittal_velocity_ipsi_rad_s:
           min: -6.749
           max: 5.545
@@ -3403,9 +3409,6 @@ tasks:
         ankle_rotation_moment_contra_Nm_kg:
           min: -0.573
           max: 0.928
-        foot_sagittal_angle_contra_rad:
-          min: -0.685
-          max: 0.332
         foot_sagittal_velocity_contra_rad_s:
           min: -5.518
           max: 2.201
@@ -3424,12 +3427,22 @@ tasks:
         anterior_grf_contra_BW:
           min: -0.203
           max: 0.426
-        vertical_grf_contra_BW:
-          min: -0.086
-          max: 1.246
         lateral_grf_contra_BW:
           min: -0.169
           max: 0.176
+        vertical_grf_contra_BW:
+          min: -0.12329914573887141
+          max: 1.242
+        foot_sagittal_angle_contra_rad:
+          min: -0.685
+          max: 0.332
+        foot_sagittal_angle_ipsi_rad:
+          min: -0.9056962044819943
+          max: 1.1235857333845365
+      19:
+        foot_sagittal_angle_contra_rad:
+          min: -1.4949578926157647
+          max: 0.30032165681320233
       25:
         hip_flexion_angle_ipsi_rad:
           min: -0.38
@@ -3503,9 +3516,6 @@ tasks:
         pelvis_transverse_angle_rad:
           min: -0.351
           max: 3.376
-        foot_sagittal_angle_ipsi_rad:
-          min: -1.649
-          max: 0.824
         foot_sagittal_velocity_ipsi_rad_s:
           min: -6.904
           max: 6.284
@@ -3522,7 +3532,7 @@ tasks:
           min: -3.176
           max: 6.853
         anterior_grf_ipsi_BW:
-          min: -0.201
+          min: -0.43224414192632515
           max: 0.337
         vertical_grf_ipsi_BW:
           min: -0.064
@@ -3593,9 +3603,6 @@ tasks:
         ankle_rotation_moment_contra_Nm_kg:
           min: -0.387
           max: 0.451
-        foot_sagittal_angle_contra_rad:
-          min: -1.649
-          max: 1.649
         foot_sagittal_velocity_contra_rad_s:
           min: -9.3
           max: 7.667
@@ -3614,12 +3621,15 @@ tasks:
         anterior_grf_contra_BW:
           min: -0.131
           max: 0.246
-        vertical_grf_contra_BW:
-          min: -0.072
-          max: 1.07
         lateral_grf_contra_BW:
           min: -0.147
           max: 0.145
+        vertical_grf_contra_BW:
+          min: -0.20303134005736662
+          max: 0.2590797653372625
+        foot_sagittal_angle_ipsi_rad:
+          min: -1.1936409689332619
+          max: 0.6884200267383496
       50:
         hip_flexion_angle_ipsi_rad:
           min: -0.423
@@ -3693,9 +3703,6 @@ tasks:
         pelvis_transverse_angle_rad:
           min: -0.368
           max: 3.446
-        foot_sagittal_angle_ipsi_rad:
-          min: -1.649
-          max: 0.472
         foot_sagittal_velocity_ipsi_rad_s:
           min: -6.95
           max: 5.193
@@ -3712,10 +3719,10 @@ tasks:
           min: -4.239
           max: 6.326
         anterior_grf_ipsi_BW:
-          min: -0.185
+          min: -0.4644200048276423
           max: 0.401
         vertical_grf_ipsi_BW:
-          min: -0.068
+          min: -0.12329914573887141
           max: 1.242
         lateral_grf_ipsi_BW:
           min: -0.163
@@ -3783,9 +3790,6 @@ tasks:
         ankle_rotation_moment_contra_Nm_kg:
           min: -0.571
           max: 0.553
-        foot_sagittal_angle_contra_rad:
-          min: -1.291
-          max: 1.649
         foot_sagittal_velocity_contra_rad_s:
           min: -6.374
           max: 6.63
@@ -3804,12 +3808,22 @@ tasks:
         anterior_grf_contra_BW:
           min: -0.198
           max: 0.387
-        vertical_grf_contra_BW:
-          min: -0.093
-          max: 1.141
         lateral_grf_contra_BW:
           min: -0.146
           max: 0.153
+        vertical_grf_contra_BW:
+          min: -0.066
+          max: 1.016
+        foot_sagittal_angle_contra_rad:
+          min: -0.9056962044819943
+          max: 1.1235857333845365
+        foot_sagittal_angle_ipsi_rad:
+          min: -0.685
+          max: 0.332
+      69:
+        foot_sagittal_angle_ipsi_rad:
+          min: -1.4949578926157647
+          max: 0.30032165681320233
       75:
         hip_flexion_angle_ipsi_rad:
           min: -0.312
@@ -3883,9 +3897,6 @@ tasks:
         pelvis_transverse_angle_rad:
           min: -0.393
           max: 3.379
-        foot_sagittal_angle_ipsi_rad:
-          min: -1.801
-          max: 0.657
         foot_sagittal_velocity_ipsi_rad_s:
           min: -9.571
           max: 62.059
@@ -3905,11 +3916,11 @@ tasks:
           min: -0.098
           max: 0.253
         vertical_grf_ipsi_BW:
-          min: -0.074
-          max: 1.107
+          min: -0.20303134005736662
+          max: 0.2590797653372625
         lateral_grf_ipsi_BW:
-          min: -0.162
-          max: 0.147
+          min: -0.05299418429820077
+          max: 0.05918975957355396
         hip_flexion_angle_contra_rad:
           min: -0.281
           max: 0.963
@@ -3973,9 +3984,6 @@ tasks:
         ankle_rotation_moment_contra_Nm_kg:
           min: -0.381
           max: 0.559
-        foot_sagittal_angle_contra_rad:
-          min: -1.649
-          max: 1.424
         foot_sagittal_velocity_contra_rad_s:
           min: -62.467
           max: 9.055
@@ -3994,9 +4002,12 @@ tasks:
         anterior_grf_contra_BW:
           min: -0.179
           max: 0.424
-        vertical_grf_contra_BW:
-          min: -0.073
-          max: 1.35
         lateral_grf_contra_BW:
           min: -0.191
           max: 0.176
+        vertical_grf_contra_BW:
+          min: -0.064
+          max: 1.189
+        foot_sagittal_angle_contra_rad:
+          min: -1.1936409689332619
+          max: 0.6884200267383496

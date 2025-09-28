@@ -1085,9 +1085,9 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 if ~isempty(r_force_indices) && ~isempty(l_force_indices)
                     % Interpolate forces separately, then assign as ipsi/contra and normalize by weight
                     
-                    % Anterior forces (previously AP) - flip sign for correct braking/propulsion convention
-                    r_force_anterior = interpolate_signal(-forces.RForce(r_force_indices, x), NUM_POINTS);
-                    l_force_anterior = interpolate_signal(-forces.LForce(l_force_indices, x), NUM_POINTS);
+                    % Anterior forces (previously AP)
+                    r_force_anterior = interpolate_signal(forces.RForce(r_force_indices, x), NUM_POINTS);
+                    l_force_anterior = interpolate_signal(forces.LForce(l_force_indices, x), NUM_POINTS);
                     
                     % Vertical forces (negate for up positive)
                     r_force_vert = interpolate_signal(-forces.RForce(r_force_indices, y), NUM_POINTS);
@@ -1097,25 +1097,48 @@ function stride_table = process_strides_single_leg(trial_data, ...
                     r_force_lateral = interpolate_signal(forces.RForce(r_force_indices, z), NUM_POINTS);
                     l_force_lateral = interpolate_signal(-forces.LForce(l_force_indices, z), NUM_POINTS);
                     
-                    % Assign forces based on which leg is ipsilateral and normalize by body weight to get BW
+                    % Normalize forces by body weight to get BW units
                     body_weight_N = body_mass * 9.81;  % Convert mass to weight for normalization
-                    
+                    r_force_vert_BW = r_force_vert / body_weight_N;
+                    r_force_anterior_BW = r_force_anterior / body_weight_N;
+                    r_force_lateral_BW = r_force_lateral / body_weight_N;
+                    l_force_vert_BW = l_force_vert / body_weight_N;
+                    l_force_anterior_BW = l_force_anterior / body_weight_N;
+                    l_force_lateral_BW = l_force_lateral / body_weight_N;
+
+                    if ENABLE_DATA_FIXES
+                        ipsi_context = struct('task_type', task_type, 'force_role', 'ipsilateral', 'leg_side', leg_side);
+                        contra_context = struct('task_type', task_type, 'force_role', 'contralateral', 'leg_side', leg_side);
+
+                        if strcmp(leg_side, 'right')
+                            [r_force_anterior_BW, ~] = ensure_grf_orientation(r_force_anterior_BW, r_force_vert_BW, 'anterior', ipsi_context);
+                            [l_force_anterior_BW, ~] = ensure_grf_orientation(l_force_anterior_BW, l_force_vert_BW, 'anterior', contra_context);
+                            [r_force_lateral_BW, ~] = ensure_grf_orientation(r_force_lateral_BW, r_force_vert_BW, 'lateral', ipsi_context);
+                            [l_force_lateral_BW, ~] = ensure_grf_orientation(l_force_lateral_BW, l_force_vert_BW, 'lateral', contra_context);
+                        else
+                            [l_force_anterior_BW, ~] = ensure_grf_orientation(l_force_anterior_BW, l_force_vert_BW, 'anterior', ipsi_context);
+                            [r_force_anterior_BW, ~] = ensure_grf_orientation(r_force_anterior_BW, r_force_vert_BW, 'anterior', contra_context);
+                            [l_force_lateral_BW, ~] = ensure_grf_orientation(l_force_lateral_BW, l_force_vert_BW, 'lateral', ipsi_context);
+                            [r_force_lateral_BW, ~] = ensure_grf_orientation(r_force_lateral_BW, r_force_vert_BW, 'lateral', contra_context);
+                        end
+                    end
+
                     if strcmp(leg_side, 'right')
                         % Right leg is ipsilateral
-                        stride_data.anterior_grf_ipsi_BW = r_force_anterior / body_weight_N;
-                        stride_data.anterior_grf_contra_BW = l_force_anterior / body_weight_N;
-                        stride_data.vertical_grf_ipsi_BW = r_force_vert / body_weight_N;
-                        stride_data.vertical_grf_contra_BW = l_force_vert / body_weight_N;
-                        stride_data.lateral_grf_ipsi_BW = r_force_lateral / body_weight_N;
-                        stride_data.lateral_grf_contra_BW = l_force_lateral / body_weight_N;
+                        stride_data.anterior_grf_ipsi_BW = r_force_anterior_BW;
+                        stride_data.anterior_grf_contra_BW = l_force_anterior_BW;
+                        stride_data.vertical_grf_ipsi_BW = r_force_vert_BW;
+                        stride_data.vertical_grf_contra_BW = l_force_vert_BW;
+                        stride_data.lateral_grf_ipsi_BW = r_force_lateral_BW;
+                        stride_data.lateral_grf_contra_BW = l_force_lateral_BW;
                     else
                         % Left leg is ipsilateral
-                        stride_data.anterior_grf_ipsi_BW = l_force_anterior / body_weight_N;
-                        stride_data.anterior_grf_contra_BW = r_force_anterior / body_weight_N;
-                        stride_data.vertical_grf_ipsi_BW = l_force_vert / body_weight_N;
-                        stride_data.vertical_grf_contra_BW = r_force_vert / body_weight_N;
-                        stride_data.lateral_grf_ipsi_BW = l_force_lateral / body_weight_N;
-                        stride_data.lateral_grf_contra_BW = r_force_lateral / body_weight_N;
+                        stride_data.anterior_grf_ipsi_BW = l_force_anterior_BW;
+                        stride_data.anterior_grf_contra_BW = r_force_anterior_BW;
+                        stride_data.vertical_grf_ipsi_BW = l_force_vert_BW;
+                        stride_data.vertical_grf_contra_BW = r_force_vert_BW;
+                        stride_data.lateral_grf_ipsi_BW = l_force_lateral_BW;
+                        stride_data.lateral_grf_contra_BW = r_force_lateral_BW;
                     end
                 end
             end
@@ -1202,6 +1225,312 @@ function interpolated = interpolate_signal(signal, num_points)
     
     % Interpolate
     interpolated = interp1(original_indices, signal, target_indices, 'linear', 'extrap')';
+end
+
+% Helper function to enforce consistent GRF orientation using stance characteristics
+function [corrected_signal, flipped] = ensure_grf_orientation(signal_BW, vertical_BW, axis_label, orientation_context)
+    % Default outputs
+    corrected_signal = signal_BW;
+    flipped = false;
+
+    if nargin < 4 || isempty(orientation_context)
+        orientation_context = struct();
+    end
+
+    if isempty(signal_BW)
+        return;
+    end
+
+    % Ensure column vectors for consistent indexing
+    signal_BW = signal_BW(:);
+    if nargin < 2 || isempty(vertical_BW)
+        vertical_BW = NaN(size(signal_BW));
+    else
+        vertical_BW = vertical_BW(:);
+    end
+
+    if nargin < 3 || isempty(axis_label)
+        axis_label = 'anterior';
+    end
+
+    % Extract context information
+    task_type = '';
+    if isfield(orientation_context, 'task_type') && ~isempty(orientation_context.task_type)
+        task_type = orientation_context.task_type;
+    end
+
+    task_type_lower = lower(task_type);
+    is_incline = contains(task_type_lower, 'incline');
+    is_decline = contains(task_type_lower, 'decline');
+    is_transition = contains(task_type_lower, 'transition');
+
+    % Identify stance region using vertical GRF when available
+    contact_threshold = 0.05;  % BW
+    if all(isnan(vertical_BW))
+        contact_indices_full = (1:length(signal_BW))';
+    else
+        contact_indices_full = find(vertical_BW > contact_threshold);
+        if numel(contact_indices_full) < 10
+            % Fall back to full signal when stance detection fails
+            contact_indices_full = (1:length(signal_BW))';
+        end
+    end
+
+    if isempty(contact_indices_full)
+        return;
+    end
+
+    primary_contact_indices = select_primary_contact_segment(contact_indices_full);
+    if isempty(primary_contact_indices)
+        return;
+    end
+
+    values_in_contact = signal_BW(primary_contact_indices);
+    if all(isnan(values_in_contact))
+        return;
+    end
+
+    % Require meaningful amplitudes before attempting to flip
+    if strcmp(axis_label, 'anterior')
+        amplitude_threshold = 0.01;
+    else
+        amplitude_threshold = 0.015;
+    end
+
+    if max(abs(values_in_contact)) < amplitude_threshold
+        return;
+    end
+
+    % Evaluate both orientations and pick the one with the strongest physiological score
+    [score_current, stats_current] = compute_orientation_score(signal_BW);
+    [score_flipped, stats_flipped] = compute_orientation_score(-signal_BW);
+
+    score_margin = 0.05;
+    if score_flipped > score_current + score_margin
+        corrected_signal = -signal_BW;
+        flipped = true;
+        stats_selected = stats_flipped;
+    elseif score_current > score_flipped + score_margin
+        stats_selected = stats_current;
+    else
+        % Fall back to legacy heuristics when scores are similar
+        [should_flip_legacy, stats_selected] = apply_legacy_heuristics(signal_BW, stats_current, stats_flipped);
+        if should_flip_legacy
+            corrected_signal = -signal_BW;
+            flipped = true;
+            stats_selected = stats_flipped;
+        end
+    end
+
+    % Additional guard for lateral GRF to prefer outward loading in mid stance
+    if strcmp(axis_label, 'lateral')
+        if (~flipped && stats_flipped.mid_mean > stats_current.mid_mean + 0.001)
+            corrected_signal = -signal_BW;
+            flipped = true;
+            stats_selected = stats_flipped;
+        end
+    end
+
+    % Enforce early braking for anterior components as a final safeguard
+    if strcmp(axis_label, 'anterior') && ~is_incline && stats_selected.early_mean > 0
+        corrected_signal = -corrected_signal;
+        flipped = ~flipped;
+        if flipped
+            stats_selected = stats_flipped;
+        else
+            stats_selected = stats_current;
+        end
+    end
+
+    function primary_idx = select_primary_contact_segment(idx_array)
+        if isempty(idx_array)
+            primary_idx = idx_array;
+            return;
+        end
+        gaps = find(diff(idx_array) > 1);
+        if isempty(gaps)
+            primary_idx = idx_array;
+            return;
+        end
+        segment_starts = [1; gaps + 1];
+        segment_ends = [gaps; numel(idx_array)];
+        segment_lengths = segment_ends - segment_starts + 1;
+        [~, max_idx] = max(segment_lengths);
+        primary_idx = idx_array(segment_starts(max_idx):segment_ends(max_idx));
+    end
+
+    function [score, stats] = compute_orientation_score(signal_vals)
+        contact_vals = signal_vals(primary_contact_indices);
+        stance_count = numel(contact_vals);
+
+        stats = struct('early_mean', 0, 'mid_mean', 0, 'late_mean', 0, ...
+            'mid_pos_fraction', 0, 'mid_neg_fraction', 0, ...
+            'late_pos_fraction', 0, 'late_neg_fraction', 0, ...
+            'max_value', 0, 'min_value', 0, ...
+            'max_rel', 0.5, 'min_rel', 0.5);
+
+        if stance_count < 5
+            score = 0;
+            return;
+        end
+
+        early_count = min(stance_count, max(5, round(0.3 * stance_count)));
+        mid_start_frac = 0.45;
+        mid_end_frac = 0.7;
+        late_start_frac = 0.8;
+
+        if strcmp(axis_label, 'anterior')
+            if is_incline
+                mid_start_frac = 0.55;
+                mid_end_frac = 0.95;
+                late_start_frac = 0.85;
+            elseif is_decline
+                mid_start_frac = 0.35;
+                mid_end_frac = 0.65;
+                late_start_frac = 0.7;
+            end
+        end
+
+        mid_start = max(1, round(mid_start_frac * stance_count));
+        mid_start = min(mid_start, stance_count);
+        mid_end = min(stance_count, round(mid_end_frac * stance_count));
+        if mid_end <= mid_start
+            mid_end = min(stance_count, mid_start + max(5, round(0.1 * stance_count)));
+        end
+
+        late_start = max(1, round(late_start_frac * stance_count));
+        if late_start > stance_count
+            late_start = stance_count;
+        end
+
+        early_vals = contact_vals(1:early_count);
+        mid_vals = contact_vals(mid_start:mid_end);
+        late_vals = contact_vals(late_start:end);
+
+        stats.early_mean = safe_zero(mean(early_vals, 'omitnan'));
+        stats.mid_mean = safe_zero(mean(mid_vals, 'omitnan'));
+        stats.late_mean = safe_zero(mean(late_vals, 'omitnan'));
+        stats.mid_pos_fraction = safe_zero(mean(double(mid_vals > 0), 'omitnan'));
+        stats.mid_neg_fraction = safe_zero(mean(double(mid_vals < 0), 'omitnan'));
+        stats.late_pos_fraction = safe_zero(mean(double(late_vals > 0), 'omitnan'));
+        stats.late_neg_fraction = safe_zero(mean(double(late_vals < 0), 'omitnan'));
+
+        [stats.max_value, idx_max] = max(contact_vals);
+        [stats.min_value, idx_min] = min(contact_vals);
+        stats.max_rel = idx_max / stance_count;
+        stats.min_rel = idx_min / stance_count;
+
+        mean_threshold = amplitude_threshold;
+        if strcmp(axis_label, 'lateral')
+            mean_threshold = 0.01;
+        end
+
+        if strcmp(axis_label, 'lateral')
+            early_metric = tanh(-stats.early_mean / mean_threshold);
+            mid_metric = tanh(stats.mid_mean / mean_threshold);
+            late_metric = tanh(stats.late_mean / mean_threshold);
+            balance_metric = 0.5 * (stats.mid_pos_fraction - stats.mid_neg_fraction);
+
+            score = 0.8 * early_metric + 1.1 * mid_metric + 0.6 * late_metric + balance_metric;
+            return;
+        end
+
+        expected_early_sign = -1;
+        expected_mid_sign = 1;
+        expected_late_sign = 1;
+
+        if is_decline
+            expected_mid_sign = -1;
+            expected_late_sign = -1;
+        elseif is_transition
+            expected_mid_sign = 1;
+            expected_late_sign = 1;
+        end
+
+        early_metric = tanh((expected_early_sign * stats.early_mean) / mean_threshold);
+        mid_metric = tanh((expected_mid_sign * stats.mid_mean) / mean_threshold);
+        late_metric = tanh((expected_late_sign * stats.late_mean) / mean_threshold);
+
+        push_metric = tanh((expected_late_sign * stats.max_value) / (mean_threshold * 1.2));
+        brake_metric = tanh((expected_early_sign * stats.min_value) / (mean_threshold * 1.2));
+
+        timing_metric = 0;
+        if is_incline
+            timing_metric = tanh((stats.max_rel - 0.55) * 5);
+        elseif is_decline
+            timing_metric = tanh((0.35 - stats.min_rel) * 5);
+        end
+
+        if is_incline
+            score = 0.4 * early_metric + 0.9 * mid_metric + 1.3 * late_metric + 0.9 * push_metric + 0.6 * timing_metric + 0.3 * brake_metric;
+        elseif is_decline
+            score = 1.4 * early_metric + 1.1 * mid_metric + 0.7 * late_metric + 0.6 * brake_metric + 0.6 * timing_metric - 0.2 * push_metric;
+        else
+            score = 0.9 * early_metric + 1.0 * mid_metric + 1.0 * late_metric + 0.5 * push_metric + 0.4 * brake_metric;
+        end
+
+        if is_incline
+            if stats.early_mean > -0.005
+                score = score - 2.0;
+            end
+            if stats.late_mean < 0.02
+                score = score - 0.5;
+            end
+        end
+    end
+
+    function value = safe_zero(value)
+        if isnan(value)
+            value = 0;
+        end
+    end
+
+    function [should_flip, stats_out] = apply_legacy_heuristics(signal_vals, stats_current_local, stats_flipped_local)
+        should_flip = false;
+        stats_out = stats_current_local;
+
+        contact_vals = signal_vals(primary_contact_indices);
+        [~, idx_max_local] = max(contact_vals);
+        [~, idx_min_local] = min(contact_vals);
+        separation_threshold = 5;
+        if idx_min_local > idx_max_local && (idx_min_local - idx_max_local) >= separation_threshold
+            should_flip = true;
+            stats_out = stats_flipped_local;
+            return;
+        end
+
+        stance_count_local = numel(contact_vals);
+        early_count_local = max(10, round(0.35 * stance_count_local));
+        late_start_local = max(1, round(0.55 * stance_count_local));
+
+        early_values = contact_vals(1:early_count_local);
+        late_values = contact_vals(late_start_local:end);
+        early_neg_fraction = mean(double(early_values < 0), 'omitnan');
+        late_pos_fraction = mean(double(late_values > 0), 'omitnan');
+        early_mean_local = mean(early_values, 'omitnan');
+        late_mean_local = mean(late_values, 'omitnan');
+
+        if strcmp(axis_label, 'anterior')
+            if is_decline
+                if (early_mean_local > -0.005) || (late_mean_local > -0.005)
+                    should_flip = true;
+                    stats_out = stats_flipped_local;
+                end
+            else
+                if ((early_neg_fraction < 0.2 || isnan(early_neg_fraction)) && (late_pos_fraction < 0.35 || isnan(late_pos_fraction))) || ...
+                        ((early_mean_local >= late_mean_local) && (early_neg_fraction < 0.35 || isnan(early_neg_fraction)))
+                    should_flip = true;
+                    stats_out = stats_flipped_local;
+                end
+            end
+        else
+            if ((early_neg_fraction < 0.35 || isnan(early_neg_fraction)) && (late_pos_fraction < 0.35 || isnan(late_pos_fraction))) || ...
+                    (early_mean_local > 0 && late_mean_local < 0)
+                should_flip = true;
+                stats_out = stats_flipped_local;
+            end
+        end
+    end
 end
 
 % Helper function to apply foot angle corrections (matching phase script)

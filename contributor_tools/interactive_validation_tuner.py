@@ -100,6 +100,7 @@ sys.path.insert(0, str(project_root))
 from user_libs.python.locomotion_data import LocomotionData
 from user_libs.python.feature_constants import get_feature_list
 from internal.config_management.config_manager import ValidationConfigManager
+from internal.validation_engine.validator import Validator
 from internal.config_management import task_registry
 from internal.plot_generation.filters_by_phase_plots import get_task_classification
 
@@ -572,6 +573,7 @@ class InteractiveValidationTuner:
         self.draggable_boxes = []
         self._boxes_by_axis = defaultdict(list)
         self._axis_aliases = {}
+        self.validator = Validator()
         self.data_cache = {}
         self.phase_template = np.linspace(0, 100, 150)
         self.max_traces_per_axis = 350
@@ -1926,161 +1928,63 @@ class InteractiveValidationTuner:
         
         Returns failing_strides dict and sets self.global_passing_strides
         """
-        failing_strides = {}
-        all_stride_indices = set()
-        features_validated = set()
-        
+        failing_strides = {var: set() for var in variables}
+
         if not self.locomotion_data or not self.current_task:
+            self.validation_stats = {
+                'total_strides': 0,
+                'passing_strides': 0,
+                'features_validated': 0,
+                'features_displayed': len(variables)
+            }
+            self.global_passing_strides = set()
             return failing_strides
-        
-        # Use full validation data (with contra) for validation
-        task_data = self.full_validation_data.get(self.current_task, {})
-        if not task_data:
-            # Fallback to display data if full data not available (shouldn't happen)
-            task_data = self.validation_data.get(self.current_task, {})
-            if not task_data:
-                return failing_strides
-        
-        # Get all data for this task
-        try:
-            subjects = self.locomotion_data.get_subjects()
-            
-            # Get dataset features once
-            sample_features = None
-            for subject in subjects:
-                try:
-                    _, sample_features = self.locomotion_data.get_cycles(
-                        subject=subject,
-                        task=self.current_task,
-                        features=None
-                    )
-                    if sample_features:
-                        break
-                except:
-                    continue
-            
-            if not sample_features:
-                return failing_strides
-            
-            # Only validate displayed features that exist in dataset
-            validated_features = []
-            for var_name in variables:
-                if var_name in sample_features:
-                    # Check if this feature has any validation ranges
-                    has_ranges = False
-                    for phase_data in task_data.values():
-                        if isinstance(phase_data, dict) and var_name in phase_data:
-                            has_ranges = True
-                            break
-                    if has_ranges:
-                        validated_features.append(var_name)
-                        features_validated.add(var_name)
-            
-            print(f"\nValidation Summary:")
-            print(f"  Total displayed features: {len(variables)}")
-            print(f"  Features in dataset: {len([v for v in variables if v in sample_features])}")
-            print(f"  Features being validated: {len(validated_features)}")
-            if len(validated_features) < len(variables):
-                missing = [v for v in variables if v not in sample_features]
-                if missing:
-                    print(f"  Missing from dataset: {', '.join(missing[:3])}{'...' if len(missing) > 3 else ''}")
-            
-            # Track stride index globally across subjects
-            global_stride_idx = 0
-            
-            for subject in subjects:
-                try:
-                    cycles_data, feature_names = self.locomotion_data.get_cycles(
-                        subject=subject,
-                        task=self.current_task,
-                        features=None
-                    )
-                    
-                    if cycles_data.size == 0:
-                        continue
-                    
-                    # Check each stride
-                    for stride in range(cycles_data.shape[0]):
-                        all_stride_indices.add(global_stride_idx)
-                        
-                        # Only check features we're actually validating
-                        for var_name in validated_features:
-                            if var_name not in feature_names:
-                                continue
-                                
-                            if var_name not in failing_strides:
-                                failing_strides[var_name] = set()
-                            
-                            var_idx = feature_names.index(var_name)
-                            stride_data = cycles_data[stride, :, var_idx]
-                            
-                            # Check each phase
-                            for phase_key in task_data.keys():
-                                phase_str = str(phase_key)
-                                if not phase_str.replace('.', '', 1).isdigit():
-                                    continue
 
-                                phase = int(round(float(phase_str)))
+        # Sync validator config with current in-memory ranges
+        self.validator.config_manager.set_data(copy.deepcopy(self.full_validation_data))
 
-                                phase_ranges = task_data.get(phase_key, task_data.get(phase))
-                                if not isinstance(phase_ranges, dict) or var_name not in phase_ranges:
-                                    continue
+        validation_result = self.validator.validate_dataset(
+            locomotion_data=self.locomotion_data,
+            task_filter=[self.current_task]
+        )
 
-                                range_data = phase_ranges[var_name]
-                                min_val = range_data.get('min')
-                                max_val = range_data.get('max')
+        task_info = validation_result['tasks'].get(self.current_task, {})
 
-                                if min_val is None or max_val is None:
-                                    continue
+        failing_map = task_info.get('failing_strides_by_variable', {})
+        for var_name, stride_set in failing_map.items():
+            failing_strides[var_name] = set(stride_set)
 
-                                if min_val > max_val:
-                                    min_val, max_val = max_val, min_val
+        self.global_passing_strides = set(task_info.get('global_passing_strides', set()))
 
-                                num_samples = stride_data.shape[0]
-                                if num_samples == 0:
-                                    continue
-
-                                phase_idx = int(round((phase / 100.0) * (num_samples - 1)))
-                                phase_idx = max(0, min(num_samples - 1, phase_idx))
-
-                                value = stride_data[phase_idx]
-                                if not np.isfinite(value):
-                                    continue
-
-                                if value < min_val or value > max_val:
-                                    failing_strides[var_name].add(global_stride_idx)
-                                    break  # This stride fails for this variable
-                        
-                        global_stride_idx += 1
-                        
-                except:
-                    continue
-        except:
-            pass
-        
-        # Calculate global passing strides (those that pass ALL validated features)
-        global_failing_strides = set()
-        for var_failures in failing_strides.values():
-            global_failing_strides.update(var_failures)
-        
-        # Store the global passing strides
-        self.global_passing_strides = all_stride_indices - global_failing_strides
-        
-        # Store validation stats
         self.validation_stats = {
-            'total_strides': len(all_stride_indices),
+            'total_strides': task_info.get('total_strides', 0),
             'passing_strides': len(self.global_passing_strides),
-            'features_validated': len(features_validated),
+            'features_validated': len(task_info.get('validated_variables', [])),
             'features_displayed': len(variables)
         }
-        
-        # Print summary
-        print(f"  Total strides: {len(all_stride_indices)}")
-        if len(all_stride_indices) > 0:
-            print(f"  Passing all features: {len(self.global_passing_strides)} ({len(self.global_passing_strides)/len(all_stride_indices)*100:.1f}%)")
+
+        print("\nValidation Summary:")
+        print(f"  Total displayed features: {len(variables)}")
+        validated_vars = task_info.get('validated_variables', [])
+        in_dataset_count = len([v for v in variables if v in validated_vars])
+        print(f"  Features in dataset: {in_dataset_count}")
+        print(f"  Features being validated: {len(validated_vars)}")
+        missing_vars = [v for v in variables if v not in validated_vars]
+        if missing_vars:
+            preview = ', '.join(missing_vars[:3])
+            if len(missing_vars) > 3:
+                preview += ', ...'
+            print(f"  Missing from dataset or ranges: {preview}")
+        print(f"  Total strides: {self.validation_stats['total_strides']}")
+        if self.validation_stats['total_strides'] > 0:
+            pass_pct = (
+                self.validation_stats['passing_strides'] /
+                self.validation_stats['total_strides'] * 100
+            )
+            print(f"  Passing all features: {self.validation_stats['passing_strides']} ({pass_pct:.1f}%)")
         else:
-            print(f"  Passing all features: 0 (0.0%)")
-        
+            print("  Passing all features: 0 (0.0%)")
+
         return failing_strides
     
     def get_expanded_y_range(self, var_name):
