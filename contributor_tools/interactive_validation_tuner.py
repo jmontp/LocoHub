@@ -1186,9 +1186,118 @@ class InteractiveValidationTuner:
         axis_key = self._normalize_axis(box.ax)
         axis_boxes = self._boxes_by_axis.get(axis_key)
         if axis_boxes and box in axis_boxes:
-            axis_boxes.remove(box)
-            if not axis_boxes:
-                del self._boxes_by_axis[axis_key]
+                axis_boxes.remove(box)
+                if not axis_boxes:
+                    del self._boxes_by_axis[axis_key]
+
+    def _refresh_variable_boxes(self, var_name: str):
+        """Rebuild draggable boxes for a specific variable without full redraw."""
+        if not self.current_task or not hasattr(self, 'current_variables'):
+            return
+        if var_name not in self.current_variables:
+            return
+
+        var_idx = self.current_variables.index(var_name)
+
+        axes = []
+        if hasattr(self, 'axes_pass') and var_idx < len(self.axes_pass):
+            axes.append(self.axes_pass[var_idx])
+        if hasattr(self, 'axes_fail') and var_idx < len(self.axes_fail):
+            axes.append(self.axes_fail[var_idx])
+
+        if not axes:
+            return
+
+        # Remove existing boxes tied to this variable
+        for ax in axes:
+            axis_key = self._normalize_axis(ax)
+            boxes = list(self._boxes_by_axis.get(axis_key, []))
+            for box in boxes:
+                if box.var_name == var_name:
+                    self._unregister_box(box)
+                    box.remove()
+
+        task_data = self.validation_data.get(self.current_task, {})
+        if not task_data:
+            self.canvas.draw_idle()
+            return
+
+        # Prepare phase entries sorted numerically while retaining original keys
+        phase_entries = []
+        for phase_key, variables in task_data.items():
+            if not isinstance(variables, dict) or var_name not in variables:
+                continue
+            try:
+                phase_val = float(phase_key)
+            except (TypeError, ValueError):
+                try:
+                    phase_val = float(int(phase_key))
+                except (TypeError, ValueError):
+                    continue
+            phase_entries.append((phase_val, phase_key))
+
+        phase_entries.sort(key=lambda x: x[0])
+
+        for phase_val, phase_key in phase_entries:
+            range_data = task_data[phase_key][var_name]
+            min_val = range_data.get('min')
+            max_val = range_data.get('max')
+            if min_val is None or max_val is None:
+                continue
+
+            display_phase = int(round(phase_val))
+
+            ax_pass = self.axes_pass[var_idx] if var_idx < len(self.axes_pass) else None
+            ax_fail = self.axes_fail[var_idx] if var_idx < len(self.axes_fail) else None
+
+            if ax_pass:
+                box_pass = DraggableBox(
+                    ax_pass, display_phase, var_name, min_val, max_val,
+                    callback=self.on_box_changed,
+                    color='lightgreen',
+                    edgecolor='black',
+                    allow_x_drag=True,
+                    parent=self
+                )
+                self._register_box(box_pass)
+            else:
+                box_pass = None
+
+            if ax_fail:
+                box_fail = DraggableBox(
+                    ax_fail, display_phase, var_name, min_val, max_val,
+                    callback=self.on_box_changed,
+                    color='lightcoral',
+                    edgecolor='black',
+                    allow_x_drag=True,
+                    parent=self
+                )
+                self._register_box(box_fail)
+            else:
+                box_fail = None
+
+            if box_pass and box_fail:
+                box_pass.paired_box = box_fail
+                box_fail.paired_box = box_pass
+
+            # Attach cached backgrounds if available for instant blitting
+            if hasattr(self, 'trace_backgrounds'):
+                pass_bg = self.trace_backgrounds.get(f'pass_{var_idx}') if ax_pass else None
+                fail_bg = self.trace_backgrounds.get(f'fail_{var_idx}') if ax_fail else None
+
+                if box_pass and pass_bg is not None:
+                    box_pass.background = pass_bg
+                    box_pass.background_invalid = False
+                if box_fail and fail_bg is not None:
+                    box_fail.background = fail_bg
+                    box_fail.background_invalid = False
+
+            if box_pass:
+                box_pass.redraw()
+            if box_fail:
+                box_fail.redraw()
+
+        self.canvas.draw_idle()
 
     def _find_box_for_event(self, event) -> Optional[DraggableBox]:
         """Return the top-most draggable box that should respond to the event."""
@@ -1661,15 +1770,15 @@ class InteractiveValidationTuner:
         fig_width = (window_width - 100) / dpi
         
         # Height per subplot row (in inches)
-        row_height = 2.1  # Provide extra vertical space for axis labels
-        fig_height = max(n_vars * row_height + 0.6, 4.2)
+        row_height = 2.3  # Provide extra vertical space for axis labels
+        fig_height = max(n_vars * row_height + 0.8, 4.6)
 
         # Create new figure with dynamic size
         from matplotlib.figure import Figure
         self.fig = Figure(figsize=(fig_width, fig_height), dpi=dpi)
         
         # Balanced spacing: minimal top whitespace, room for x-labels
-        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.96, bottom=0.07, hspace=0.18, wspace=0.12)
+        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.96, bottom=0.08, hspace=0.22, wspace=0.12)
         
         # Create subplots with 2 columns (pass/fail) only if needed
         if needs_redraw:
@@ -1906,27 +2015,41 @@ class InteractiveValidationTuner:
                             stride_data = cycles_data[stride, :, var_idx]
                             
                             # Check each phase
-                            for phase_str in task_data.keys():
-                                if not str(phase_str).isdigit():
+                            for phase_key in task_data.keys():
+                                phase_str = str(phase_key)
+                                if not phase_str.replace('.', '', 1).isdigit():
                                     continue
-                                phase = int(phase_str)
-                                
-                                if var_name in task_data[phase]:
-                                    range_data = task_data[phase][var_name]
-                                    if 'min' in range_data and 'max' in range_data:
-                                        min_val = range_data['min']
-                                        max_val = range_data['max']
-                                        
-                                        if min_val is None or max_val is None:
-                                            continue
-                                        
-                                        # Map phase to index (0-149)
-                                        phase_idx = int(phase * 1.49)  # 0->0, 100->149
-                                        
-                                        # Check if value is outside range
-                                        if stride_data[phase_idx] < min_val or stride_data[phase_idx] > max_val:
-                                            failing_strides[var_name].add(global_stride_idx)
-                                            break  # This stride fails for this variable
+
+                                phase = int(round(float(phase_str)))
+
+                                phase_ranges = task_data.get(phase_key, task_data.get(phase))
+                                if not isinstance(phase_ranges, dict) or var_name not in phase_ranges:
+                                    continue
+
+                                range_data = phase_ranges[var_name]
+                                min_val = range_data.get('min')
+                                max_val = range_data.get('max')
+
+                                if min_val is None or max_val is None:
+                                    continue
+
+                                if min_val > max_val:
+                                    min_val, max_val = max_val, min_val
+
+                                num_samples = stride_data.shape[0]
+                                if num_samples == 0:
+                                    continue
+
+                                phase_idx = int(round((phase / 100.0) * (num_samples - 1)))
+                                phase_idx = max(0, min(num_samples - 1, phase_idx))
+
+                                value = stride_data[phase_idx]
+                                if not np.isfinite(value):
+                                    continue
+
+                                if value < min_val or value > max_val:
+                                    failing_strides[var_name].add(global_stride_idx)
+                                    break  # This stride fails for this variable
                         
                         global_stride_idx += 1
                         
@@ -2077,7 +2200,7 @@ class InteractiveValidationTuner:
         if cache_key in self.data_cache:
             all_data = self.data_cache[cache_key]
         else:
-            all_data = []
+            collected = []
             try:
                 subjects = self.locomotion_data.get_subjects()
                 for subject in subjects:
@@ -2088,20 +2211,22 @@ class InteractiveValidationTuner:
                             features=None
                         )
 
-                        if cycles_data.size == 0:
+                        if not hasattr(cycles_data, 'size') or cycles_data.size == 0:
                             continue
 
                         if var_name in feature_names:
                             var_idx = feature_names.index(var_name)
-                            all_data.append(cycles_data[:, :, var_idx])
+                            collected.append(cycles_data[:, :, var_idx])
                     except Exception:
                         continue
 
-                if all_data:
-                    all_data = np.vstack(all_data)
-                    self.data_cache[cache_key] = all_data
+                if collected:
+                    all_data = np.vstack(collected)
+                else:
+                    all_data = np.empty((0, self.phase_template.size))
+                self.data_cache[cache_key] = all_data
             except Exception:
-                all_data = np.empty((0, len(self.phase_template)))
+                all_data = np.empty((0, self.phase_template.size))
 
         if all_data.size == 0:
             return (0, 0) if show_pass and show_local_passing else 0
@@ -2661,13 +2786,17 @@ class InteractiveValidationTuner:
                     if hasattr(self, 'trace_backgrounds'):
                         pass_bg = self.trace_backgrounds.get(f'pass_{var_idx}')
                         fail_bg = self.trace_backgrounds.get(f'fail_{var_idx}')
-                        if pass_bg is not None and fail_bg is not None:
+                        if pass_bg is not None:
                             box_pass.background = pass_bg
                             box_pass.background_invalid = False
+                        if fail_bg is not None:
                             box_fail.background = fail_bg
                             box_fail.background_invalid = False
 
-                    self.draggable_boxes.extend([box_pass, box_fail])
+                    self._register_box(box_pass)
+                    self._register_box(box_fail)
+                    box_pass.redraw()
+                    box_fail.redraw()
 
                 if hasattr(self, 'canvas'):
                     self.canvas.draw_idle()
@@ -2770,10 +2899,10 @@ class InteractiveValidationTuner:
                     text=f"Copied {pretty_source} ranges to {target_side} side for {self.current_task}."
                 )
 
-        if self.locomotion_data:
-            self.run_validation_update()
-        else:
-            self.update_plot(force_redraw=True)
+        # Refresh visible boxes for the updated counterpart without a full validation pass.
+        self._refresh_variable_boxes(target_name)
+
+        # Defer full validation until the user explicitly requests it.
 
     def add_box(self, phase, var_name, click_value):
         """Add a new validation box at the specified phase."""
@@ -2961,15 +3090,15 @@ class InteractiveValidationTuner:
         window_width = self.root.winfo_width() if self.root.winfo_width() > 1 else 1400
         dpi = 100
         fig_width = (window_width - 100) / dpi
-        row_height = 2.1
-        fig_height = max(n_vars * row_height + 0.6, 4.2)
+        row_height = 2.3
+        fig_height = max(n_vars * row_height + 0.8, 4.6)
         
         # Reuse existing figure to maintain canvas connection, just resize and clear
         self.fig.set_size_inches(fig_width, fig_height)
         self.fig.clear()  # Clear all existing content but keep figure connected to canvas
         # Ensure constrained_layout is off so subplots_adjust works properly
         self.fig.set_constrained_layout(False)
-        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.96, bottom=0.07, hspace=0.18, wspace=0.12)
+        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.96, bottom=0.08, hspace=0.22, wspace=0.12)
         
         # Recreate canvas to match new figure size
         from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -3197,13 +3326,13 @@ class InteractiveValidationTuner:
         fig_width = (window_width - 100) / dpi
         
         # Height per subplot row (in inches)
-        row_height = 2.1
-        fig_height = max(n_vars * row_height + 0.6, 4.2)
+        row_height = 2.3
+        fig_height = max(n_vars * row_height + 0.8, 4.6)
 
         # Create new figure with dynamic size (like original update_plot())
         from matplotlib.figure import Figure
         self.fig = Figure(figsize=(fig_width, fig_height), dpi=dpi)
-        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.96, bottom=0.07, hspace=0.18, wspace=0.12)
+        self.fig.subplots_adjust(left=0.07, right=0.985, top=0.96, bottom=0.08, hspace=0.22, wspace=0.12)
         
         # Create subplots (pass/fail columns)
         self.axes_pass = []
