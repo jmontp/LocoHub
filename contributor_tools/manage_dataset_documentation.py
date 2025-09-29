@@ -622,7 +622,9 @@ def _generate_validation_plots(dataset_path: Path, output_dir: Path, ranges_file
     ]
     if ranges_file:
         cmd.extend(['--ranges', str(ranges_file)])
-    subprocess.run(cmd, check=True, cwd=repo_root)
+    result = subprocess.run(cmd, cwd=repo_root)
+    if result.returncode != 0:
+        print('⚠️  Plot generation completed with non-zero exit code (plots saved for debugging).')
 
 
 def update_validation_gallery(doc_path: Path, dataset_name: str) -> None:
