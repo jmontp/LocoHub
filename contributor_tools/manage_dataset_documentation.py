@@ -51,9 +51,10 @@ DATASET_TABLE_FILES = [
 TABLE_MARKER_START = "<!-- DATASET_TABLE_START -->"
 TABLE_MARKER_END = "<!-- DATASET_TABLE_END -->"
 
+VALIDATION_RANGES_DIR = repo_root / "contributor_tools" / "validation_ranges"
 DEFAULT_RANGES_CANDIDATES = [
-    repo_root / "contributor_tools" / "validation_ranges" / "default_ranges_v3.yaml",
-    repo_root / "contributor_tools" / "validation_ranges" / "default_ranges.yaml",
+    VALIDATION_RANGES_DIR / "default_ranges_v3.yaml",
+    VALIDATION_RANGES_DIR / "default_ranges.yaml",
 ]
 
 
@@ -63,6 +64,28 @@ def _resolve_default_ranges_file() -> Path:
             return candidate
     # Return first candidate even if missing to preserve prior behaviour
     return DEFAULT_RANGES_CANDIDATES[0]
+
+
+def _resolve_ranges_argument(value: str) -> Path:
+    """Resolve a user-supplied ranges argument to an absolute path."""
+
+    candidate = Path(value)
+    if candidate.is_absolute():
+        return candidate
+
+    search_roots = [
+        repo_root,
+        VALIDATION_RANGES_DIR,
+        Path.cwd(),
+    ]
+
+    for root in search_roots:
+        resolved = (root / candidate).resolve()
+        if resolved.exists():
+            return resolved
+
+    # Fall back to treating it as relative to repo root (for error message consistency)
+    return (repo_root / candidate).resolve()
 
 # Import validation modules
 try:
@@ -264,6 +287,10 @@ def write_metadata_file(metadata: Dict) -> None:
     fields['validation_summary'] = metadata.get('validation_summary')
     if metadata.get('validation_ranges_file'):
         fields['validation_ranges_file'] = metadata.get('validation_ranges_file')
+    if metadata.get('validation_ranges_download'):
+        fields['validation_ranges_download'] = metadata.get('validation_ranges_download')
+    if metadata.get('validation_ranges_source'):
+        fields['validation_ranges_source'] = metadata.get('validation_ranges_source')
 
     with open(meta_path, 'w') as fh:
         yaml.safe_dump(dict(fields), fh, sort_keys=False)
@@ -451,7 +478,7 @@ def update_validation_gallery(doc_path: Path, dataset_name: str) -> None:
     if not images:
         return
 
-    gallery_lines = []
+    tabs_lines = []
     for image_path in images:
         name = image_path.stem
         task_segment = name
@@ -460,10 +487,11 @@ def update_validation_gallery(doc_path: Path, dataset_name: str) -> None:
         task_segment = task_segment.replace('filtered_', '').replace('raw_', '')
         task_title = _format_task_name(task_segment)
         rel_path = Path('validation_plots') / dataset_name / image_path.name
-        gallery_lines.append(f"![{task_title}](./{rel_path.as_posix()})")
-        gallery_lines.append("")
+        tabs_lines.append(f"=== \"{task_title}\"")
+        tabs_lines.append(f"    ![{task_title}](./{rel_path.as_posix()})")
+        tabs_lines.append("")
 
-    gallery = "\n".join(gallery_lines).strip() or "(Generate plots with quick_validation_check.py --plot)"
+    gallery = "\n".join(tabs_lines).strip() or "(Generate plots with quick_validation_check.py --plot)"
     content = doc_path.read_text()
     if '<!-- VALIDATION_GALLERY -->' in content:
         content = content.replace('<!-- VALIDATION_GALLERY -->', f"{gallery}\n")
@@ -486,6 +514,10 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
     pass_display = f"{float(pass_rate):.1f}%" if pass_rate is not None else '—'
 
     validation_link = f"./{validation_doc_filename}"
+    ranges_entry = metadata.get('validation_ranges_file', '—')
+    ranges_source = metadata.get('validation_ranges_source')
+    if ranges_source and ranges_entry != '—':
+        ranges_entry = f"{ranges_entry} (source: {ranges_source})"
 
     doc_content = f"""---
 title: {metadata['display_name']}
@@ -516,9 +548,9 @@ date_added: {date_added}
 
 ## Validation Snapshot
 
-- **Status**: {status_label}
-- **Stride Pass Rate**: {pass_display}
-- **Validation Ranges**: {metadata.get('validation_ranges_file', '—')}
+    - **Status**: {status_label}
+    - **Stride Pass Rate**: {pass_display}
+    - **Validation Ranges**: {ranges_entry}
 - **Detailed Report**: [View validation report]({validation_link})
 
 ## Data Access
@@ -539,10 +571,9 @@ date_added: {date_added}
 
 ## Files Included
 
-- `{dataset_rel}` — Phase-normalized dataset
-- [Validation report]({validation_link})
-- [Validation plots](./validation_plots/{metadata['dataset_name']}/index.md)
-- Conversion script in `contributor_tools/conversion_scripts/{metadata['dataset_name']}/`
+    - `{dataset_rel}` — Phase-normalized dataset
+    - [Validation report]({validation_link})
+    - Conversion script in `contributor_tools/conversion_scripts/{metadata['dataset_name']}/`
 
 ---
 
@@ -563,21 +594,10 @@ def generate_validation_page(
     validation_stats: Optional[Dict],
     validation_ranges: Dict[str, Dict[int, Dict[str, Dict[str, float]]]],
     validation_doc_path: Path,
+    ranges_download_filename: Optional[str] = None,
+    ranges_source_display: Optional[str] = None,
 ) -> Path:
     """Generate the per-dataset validation markdown page."""
-
-    ranges_payload = {}
-    for task in sorted(validation_ranges.keys()):
-        phase_payload = {}
-        for phase in sorted(validation_ranges[task].keys()):
-            phase_payload[int(phase)] = validation_ranges[task][phase]
-        if phase_payload:
-            ranges_payload[task] = phase_payload
-
-    if ranges_payload:
-        ranges_yaml = yaml.safe_dump({'tasks': ranges_payload}, sort_keys=False, width=120)
-    else:
-        ranges_yaml = 'tasks: {}'
 
     pass_rate = metadata.get('validation_pass_rate')
     pass_display = f"{float(pass_rate):.1f}%" if pass_rate is not None else '—'
@@ -590,11 +610,22 @@ def generate_validation_page(
         f"| Stride Pass Rate | {pass_display} |",
         f"| Total Strides | {total_strides} |",
         f"| Passing Strides | {passing_strides} |",
-        f"| Ranges File | {metadata.get('validation_ranges_file', '—')} |",
     ]
 
     validation_doc_path.parent.mkdir(parents=True, exist_ok=True)
     stats_table = "\n".join(stats_lines)
+
+    if ranges_download_filename:
+        ranges_section = (
+            "Download the YAML snapshot used for this validation: "
+            f"[Download](./{ranges_download_filename})"
+        )
+    else:
+        ranges_section = "Validation ranges snapshot not available."
+
+    if ranges_source_display:
+        ranges_section += f"\n\n_Source ranges file: {ranges_source_display}_"
+
     validation_content = f"""---
 title: {metadata['display_name']} Validation Report
 short_code: {metadata['short_code']}
@@ -609,11 +640,9 @@ generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}
 
 {validation_summary}
 
-## Validation Ranges
+## Validation Ranges Snapshot
 
-```yaml
-{ranges_yaml.strip()}
-```
+{ranges_section}
 
 ## Validation Plots
 
@@ -851,9 +880,10 @@ def handle_add_dataset(args):
 
     custom_ranges_path: Optional[Path] = None
     if getattr(args, 'ranges_file', None):
-        custom_ranges_path = Path(args.ranges_file)
-        if not custom_ranges_path.is_absolute():
-            custom_ranges_path = (repo_root / custom_ranges_path).resolve()
+        custom_ranges_path = _resolve_ranges_argument(args.ranges_file)
+        if not custom_ranges_path.exists():
+            print(f"❌ Validation ranges file not found: {custom_ranges_path}")
+            return 1
     
     if not dataset_path.suffix == '.parquet':
         print(f"❌ Dataset must be a parquet file, got: {dataset_path.suffix}")
@@ -1140,13 +1170,41 @@ def handle_add_dataset(args):
     if plot_ranges_path is None:
         plot_ranges_path = _resolve_default_ranges_file()
 
+    ranges_source_path = Path(plot_ranges_path)
+    if not ranges_source_path.is_absolute():
+        ranges_source_path = (repo_root / ranges_source_path).resolve()
+    ranges_source_display = _display_path(ranges_source_path)
+    metadata['validation_ranges_source'] = ranges_source_display
+
+    validation_doc_path = (repo_root / "docs" / "datasets" / validation_doc_filename)
+
+    ranges_download_filename: Optional[str] = None
+    ranges_copy_path: Optional[Path] = None
+    if ranges_source_path.exists():
+        suffix = ranges_source_path.suffix or '.yaml'
+        ranges_copy_path = validation_doc_path.parent / f"{dataset_name}_validation_ranges{suffix}"
+        try:
+            ranges_copy_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ranges_source_path, ranges_copy_path)
+            ranges_download_filename = ranges_copy_path.name
+            metadata['validation_ranges_download'] = str(ranges_copy_path.relative_to(repo_root))
+            download_md = f"[Download validation ranges](./{ranges_download_filename})"
+            if ranges_display in validation_summary:
+                validation_summary = validation_summary.replace(ranges_display, download_md)
+            metadata['validation_ranges_file'] = download_md
+        except Exception as exc:
+            print(f"⚠️  Unable to snapshot validation ranges: {exc}")
+    else:
+        print(f"⚠️  Validation ranges source not found: {ranges_source_path}")
+
+    metadata['validation_summary'] = validation_summary
+
     # Show validation results
     print(f"\n📊 Validation Results:")
     print(validation_summary)
     
     # Generate documentation
     print(f"\n📄 Generating documentation...")
-    validation_doc_path = (repo_root / "docs" / "datasets" / validation_doc_filename)
     doc_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)
     validation_doc_path = generate_validation_page(
         dataset_path,
@@ -1155,6 +1213,8 @@ def handle_add_dataset(args):
         validation_stats,
         validation_ranges,
         validation_doc_path,
+        ranges_download_filename,
+        ranges_source_display,
     )
     print(f"✅ Overview created: {doc_path.relative_to(repo_root)}")
     print(f"✅ Validation report created: {validation_doc_path.relative_to(repo_root)}")
@@ -1162,24 +1222,7 @@ def handle_add_dataset(args):
     # Generate plots directory structure
     plots_dir = repo_root / "docs" / "datasets" / "validation_plots" / dataset_name
     plots_dir.mkdir(parents=True, exist_ok=True)
-    print(f"✅ Plot directory created: {plots_dir.relative_to(repo_root)}/")
-
-    plots_index = plots_dir / "index.md"
-    if not plots_index.exists():
-        plots_rel = _relative_path(plots_dir)
-        dataset_hint = _relative_path(dataset_path)
-        plots_index.write_text(
-            "---\n"
-            f"title: {metadata['display_name']} Validation Plots\n"
-            "---\n\n"
-            f"# Validation Plots — {metadata['display_name']}\n\n"
-            "Generate visual validation outputs with:\n\n"
-            "```bash\n"
-            "python contributor_tools/quick_validation_check.py "
-            f"{dataset_hint} --plot --output-dir {plots_rel}\n"
-            "```\n\n"
-            "When plots are saved in this folder they will be embedded below automatically.\n"
-        )
+    print(f"✅ Plot directory prepared: {plots_dir.relative_to(repo_root)}/")
 
     # Generate fresh validation plots for the dataset
     try:

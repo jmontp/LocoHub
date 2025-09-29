@@ -14,7 +14,7 @@ live under `_legacy/` for reference while the regenerated docs land here.
 <!-- DATASET_TABLE_START -->
 | Dataset | Tasks | Quality | Validation | Download |
 |---------|-------|---------|------------|----------|
-| [Umich 2021 Raw](um21.md) | Decline Walking, Incline Walking, Level Walking, Run, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit, Transition | ⚠️ Validation Pending | [Report](um21_validation.md) | Coming Soon |
+| [Umich 2021 Raw](um21.md) | Decline Walking, Incline Walking, Level Walking, Run, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit, Transition | ⚠️ Partial (85.3%) | [Report](um21_validation.md) | Coming Soon |
 <!-- DATASET_TABLE_END -->
 
 More: Legacy [Dataset Comparison](_legacy/dataset_comparison.md) • [Validation Reports](validation_reports/index.md)
