@@ -10,15 +10,22 @@ Usage:
         --dataset converted_datasets/your_dataset_phase.parquet \
         [--metadata-file docs/datasets/_metadata/your_dataset.yaml] \
         [--ranges-file contributor_tools/validation_ranges/custom.yaml] \
-        [--replace-existing] \
-        [--overwrite]
+        [--short-code UM21]
+    python contributor_tools/manage_dataset_documentation.py update-documentation \
+        --short-code UM21 [--dataset converted_datasets/your_dataset_phase.parquet] \
+        [--metadata-file docs/datasets/_metadata/your_dataset.yaml]
+    python contributor_tools/manage_dataset_documentation.py update-validation \
+        --short-code UM21 [--dataset converted_datasets/your_dataset_phase.parquet] \
+        [--ranges-file contributor_tools/validation_ranges/custom.yaml]
+    python contributor_tools/manage_dataset_documentation.py remove-dataset \
+        --short-code UM21 [--remove-parquet]
 
 The tool will:
 1. Collect dataset metadata (interactively or from --metadata-file)
-2. Run validation and generate reports
-3. Create standardized documentation
-4. Package everything for PR submission
-5. Show a checklist of files to include
+2. Run validation and generate reports when requested
+3. Create or refresh standardized documentation
+4. Snapshot validation ranges for reproducibility
+5. Package everything for PR submission
 """
 
 import sys
@@ -86,6 +93,73 @@ def _resolve_ranges_argument(value: str) -> Path:
 
     # Fall back to treating it as relative to repo root (for error message consistency)
     return (repo_root / candidate).resolve()
+
+
+def _load_locomotion_data(dataset_path: Path, reason: str) -> LocomotionData:
+    """Load dataset with a helpful progress message."""
+
+    dataset_display = _relative_path(dataset_path)
+    print(f"⏳ Loading {dataset_display} ({reason})...")
+    return LocomotionData(str(dataset_path), phase_col='phase_ipsi')
+
+
+def _metadata_path_for_slug(slug: str) -> Path:
+    return repo_root / "docs" / "datasets" / "_metadata" / f"{slug}.yaml"
+
+
+def _load_metadata_for_slug(slug: str) -> Dict:
+    metadata_path = _metadata_path_for_slug(slug)
+    if not metadata_path.exists():
+        raise FileNotFoundError(
+            f"Metadata file not found for slug '{slug}'. Run add-dataset first."
+        )
+    metadata = load_metadata_file(metadata_path)
+    metadata['dataset_name'] = slug
+    metadata['short_code'] = metadata.get('short_code', slug).upper()
+    return metadata
+
+
+def _resolve_dataset_path(dataset_arg: Optional[str], metadata: Optional[Dict] = None) -> Path:
+    if dataset_arg:
+        candidate = Path(dataset_arg)
+        if not candidate.is_absolute():
+            candidate = (repo_root / candidate).resolve()
+    elif metadata and metadata.get('last_dataset_path'):
+        candidate = (repo_root / metadata['last_dataset_path']).resolve()
+    else:
+        raise ValueError("Dataset path is required; pass --dataset or add last_dataset_path to metadata.")
+
+    if not candidate.exists():
+        raise FileNotFoundError(f"Dataset file not found: {candidate}")
+
+    return candidate
+
+
+def _prompt_metadata_updates(metadata: Dict) -> None:
+    """Interactively prompt to update key metadata fields."""
+
+    print("\n✏️ Update dataset details (press Enter to keep current values):")
+    prompts = [
+        ('display_name', 'Display name'),
+        ('description', 'Dataset description'),
+        ('institution', 'Institution or Lab'),
+        ('year', 'Collection year'),
+        ('download_clean_url', 'Clean dataset download URL (validated subset)'),
+        ('download_dirty_url', 'Full dataset download URL (complete/dirty set)'),
+        ('citation', 'Citation (DOI, BibTeX, or short reference)'),
+        ('protocol', 'Collection protocol notes'),
+        ('notes', 'Additional notes'),
+    ]
+
+    for key, label in prompts:
+        current = metadata.get(key) or ''
+        prompt = f"{label} [{current}]: " if current else f"{label}: "
+        response = input(prompt).strip()
+        if response:
+            metadata[key] = response if key != 'year' else str(response)
+
+    if not metadata.get('description'):
+        metadata['description'] = 'Dataset description pending update.'
 
 # Import validation modules
 try:
@@ -265,6 +339,10 @@ def write_metadata_file(metadata: Dict) -> None:
     fields['tasks'] = metadata['tasks']
     if metadata.get('download_url'):
         fields['download_url'] = metadata['download_url']
+    if metadata.get('download_clean_url'):
+        fields['download_clean_url'] = metadata['download_clean_url']
+    if metadata.get('download_dirty_url'):
+        fields['download_dirty_url'] = metadata['download_dirty_url']
     if metadata.get('citation'):
         fields['citation'] = metadata['citation']
     if metadata.get('protocol'):
@@ -291,6 +369,8 @@ def write_metadata_file(metadata: Dict) -> None:
         fields['validation_ranges_download'] = metadata.get('validation_ranges_download')
     if metadata.get('validation_ranges_source'):
         fields['validation_ranges_source'] = metadata.get('validation_ranges_source')
+    if metadata.get('last_dataset_path'):
+        fields['last_dataset_path'] = metadata.get('last_dataset_path')
 
     with open(meta_path, 'w') as fh:
         yaml.safe_dump(dict(fields), fh, sort_keys=False)
@@ -421,6 +501,7 @@ def reset_dataset_assets(dataset_slug: str, include_parquet: bool = False) -> Li
 
     _remove_path(docs_dir / f"{dataset_slug}.md", removed)
     _remove_path(docs_dir / f"{dataset_slug}_validation.md", removed)
+    _remove_path(docs_dir / f"{dataset_slug}_validation_ranges.yaml", removed)
     _remove_path(metadata_dir / f"{dataset_slug}.yaml", removed)
     _remove_path(plots_dir / dataset_slug, removed)
 
@@ -499,6 +580,43 @@ def update_validation_gallery(doc_path: Path, dataset_name: str) -> None:
         content = content + "\n" + gallery + "\n"
     doc_path.write_text(content)
 
+
+def _snapshot_validation_ranges(
+    dataset_name: str,
+    validation_doc_dir: Path,
+    ranges_source_path: Path,
+    ranges_display: str,
+    validation_summary: str,
+    metadata: Dict,
+) -> Tuple[Optional[str], str]:
+    validation_doc_dir.mkdir(parents=True, exist_ok=True)
+    metadata['validation_ranges_source'] = _display_path(ranges_source_path)
+
+    if not ranges_source_path.exists():
+        print(f"⚠️  Validation ranges source not found: {ranges_source_path}")
+        metadata.pop('validation_ranges_download', None)
+        return None, validation_summary
+
+    suffix = ranges_source_path.suffix or '.yaml'
+    snapshot_path = validation_doc_dir / f"{dataset_name}_validation_ranges{suffix}"
+    try:
+        shutil.copyfile(ranges_source_path, snapshot_path)
+    except Exception as exc:
+        print(f"⚠️  Unable to snapshot validation ranges: {exc}")
+        metadata.pop('validation_ranges_download', None)
+        return None, validation_summary
+
+    download_filename = snapshot_path.name
+    metadata['validation_ranges_download'] = str(snapshot_path.relative_to(repo_root))
+    download_md = f"[Download validation ranges](./{download_filename})"
+    metadata['validation_ranges_file'] = download_md
+
+    if ranges_display and ranges_display in validation_summary:
+        validation_summary = validation_summary.replace(ranges_display, download_md)
+
+    return download_filename, validation_summary
+
+
 def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_filename: str) -> Path:
     """Generate the dataset overview markdown page."""
     dataset_rel = _relative_path(dataset_path)
@@ -519,6 +637,44 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
     if ranges_source and ranges_entry != '—':
         ranges_entry = f"{ranges_entry} (source: {ranges_source})"
 
+    clean_url = (metadata.get('download_clean_url') or metadata.get('download_url') or '').strip()
+    dirty_url = (metadata.get('download_dirty_url') or '').strip()
+
+    download_buttons: List[str] = []
+    if clean_url:
+        download_buttons.append(
+            f'<a class="download-button available" href="{clean_url}" target="_blank" rel="noopener">Download Clean Dataset</a>'
+        )
+    else:
+        download_buttons.append(
+            '<span class="download-button unavailable" title="Clean dataset download not yet available">Clean Dataset (coming soon)</span>'
+        )
+    if dirty_url:
+        download_buttons.append(
+            f'<a class="download-button available" href="{dirty_url}" target="_blank" rel="noopener">Download Full Dataset (Dirty)</a>'
+        )
+    else:
+        download_buttons.append(
+            '<span class="download-button unavailable" title="Full dataset download not yet available">Full Dataset (coming soon)</span>'
+        )
+
+    buttons_html = "\n  ".join(download_buttons)
+    download_note = ''
+    if not clean_url and not dirty_url:
+        download_note = '\n*Downloads coming soon. Contact the authors for data access.*\n'
+
+    download_section = (
+        "<style>\n"
+        ".download-grid { display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem; }\n"
+        ".download-button { display:inline-block; padding:0.65rem 1.4rem; border-radius:0.5rem; font-weight:600; text-decoration:none; }\n"
+        ".download-button.available { background:#1f78d1; color:#fff; }\n"
+        ".download-button.available:hover { background:#1663ad; }\n"
+        ".download-button.unavailable { background:#d1d5db; color:#6b7280; cursor:not-allowed; }\n"
+        "</style>\n"
+        f"<div class=\"download-grid\">\n  {buttons_html}\n</div>"
+        f"{download_note}"
+    )
+
     doc_content = f"""---
 title: {metadata['display_name']}
 short_code: {metadata['short_code']}
@@ -529,11 +685,12 @@ date_added: {date_added}
 
 ## Overview
 
-**Short Code**: {metadata['short_code']}  
-**Year**: {metadata['year']}  
-**Institution**: {metadata['institution']}  
-
+**Short Code**: {metadata['short_code']}  \n**Year**: {metadata['year']}  \n**Institution**: {metadata['institution']}  \n
 {metadata['description']}
+
+## Downloads
+
+{download_section}
 
 ## Dataset Information
 
@@ -548,17 +705,12 @@ date_added: {date_added}
 
 ## Validation Snapshot
 
-    - **Status**: {status_label}
-    - **Stride Pass Rate**: {pass_display}
-    - **Validation Ranges**: {ranges_entry}
+- **Status**: {status_label}
+- **Stride Pass Rate**: {pass_display}
+- **Validation Ranges**: {ranges_entry}
 - **Detailed Report**: [View validation report]({validation_link})
 
-## Data Access
-
-### Download
-{metadata.get('download_url', 'Contact the authors for data access.')}
-
-### Citation
+## Citation
 {metadata.get('citation', 'Please cite appropriately when using this dataset.')}
 
 ## Collection Details
@@ -571,15 +723,14 @@ date_added: {date_added}
 
 ## Files Included
 
-    - `{dataset_rel}` — Phase-normalized dataset
-    - [Validation report]({validation_link})
-    - Conversion script in `contributor_tools/conversion_scripts/{metadata['dataset_name']}/`
+- `{dataset_rel}` — Phase-normalized dataset
+- [Validation report]({validation_link})
+- Conversion script in `contributor_tools/conversion_scripts/{metadata['dataset_name']}/`
 
 ---
 
 *Generated by Dataset Submission Tool on {datetime.now().strftime('%Y-%m-%d %H:%M')}*
 """
-
     doc_dir = repo_root / "docs" / "datasets"
     doc_dir.mkdir(parents=True, exist_ok=True)
     doc_path = doc_dir / f"{metadata['dataset_name']}.md"
@@ -717,7 +868,7 @@ def run_validation(dataset_path: Path, ranges_path: Optional[Path] = None) -> Tu
         status = "✅ PASSED" if pass_rate >= 95 else "⚠️ PARTIAL" if pass_rate >= 80 else "❌ NEEDS REVIEW"
         
         # Compute per-task stride pass rates using validator helper
-        locomotion_data = LocomotionData(str(dataset_path), phase_col='phase_ipsi')
+        locomotion_data = _load_locomotion_data(dataset_path, "gathering per-task validation stats")
         task_stats = {}
         summary_rows = []
         for task in locomotion_data.get_tasks():
@@ -752,7 +903,7 @@ def run_validation(dataset_path: Path, ranges_path: Optional[Path] = None) -> Tu
 |------|-----------|--------|
 """ + "\n".join(summary_rows) + "\n"
 
-        summary += f"\n_Validation ranges file: {ranges_display}_\n"
+        summary += "\n_Validation ranges snapshot embedded below._\n"
 
         if pass_rate < 80:
             summary += "\n⚠️ **Note**: Low pass rates may indicate special populations or non-standard protocols. "
@@ -910,7 +1061,7 @@ def handle_add_dataset(args):
             return 1
 
     try:
-        locomotion_data = LocomotionData(str(dataset_path), phase_col='phase_ipsi')
+        locomotion_data = _load_locomotion_data(dataset_path, "extracting tasks and subjects")
     except Exception as exc:
         print(f"❌ Unable to load dataset for task extraction: {exc}")
         return 1
@@ -921,6 +1072,7 @@ def handle_add_dataset(args):
     subjects_value = str(subject_count)
 
     non_interactive = metadata_source is not None
+    preset_short_code = (getattr(args, 'short_code', None) or '').strip().upper() or None
 
     print(f"\n📝 Dataset Metadata")
     if non_interactive:
@@ -934,12 +1086,23 @@ def handle_add_dataset(args):
     short_code: Optional[str] = None
     dataset_slug: Optional[str] = None
     tasks: List[str] = detected_tasks.copy()
+    download_clean_url = ''
+    download_dirty_url = ''
+    download_url = ''
+    citation = None
+    protocol = None
+    notes = None
+
     if non_interactive:
         existing_codes = check_existing_short_codes()
         display_name = metadata_source.get('display_name', display_name)
-        short_code = metadata_source.get('short_code')
+        metadata_short_code = metadata_source.get('short_code')
+        if metadata_short_code and preset_short_code and metadata_short_code.upper() != preset_short_code:
+            print("❌ Metadata file short_code does not match --short-code value")
+            return 1
+        short_code = (metadata_short_code or preset_short_code)
         if not short_code:
-            print("❌ Metadata file must include 'short_code'")
+            print("❌ Provide a short code via metadata file or --short-code")
             return 1
         short_code = short_code.upper()
 
@@ -949,21 +1112,12 @@ def handle_add_dataset(args):
 
         candidate_slug = _slugify_short_code(short_code)
         existing_slug = existing_codes.get(short_code)
-        if existing_slug:
-            if existing_slug != candidate_slug:
-                if getattr(args, 'replace_existing', False):
-                    _remove_dataset_for_slug(existing_slug)
-                    existing_codes.pop(short_code, None)
-                else:
-                    print(f"❌ Short code '{short_code}' already used by {existing_slug}. Re-run with --replace-existing to remove it, or choose a different code.")
-                    return 1
-            else:
-                if getattr(args, 'overwrite', False) or getattr(args, 'replace_existing', False):
-                    _remove_dataset_for_slug(existing_slug)
-                    existing_codes.pop(short_code, None)
-                else:
-                    print(f"❌ Short code '{short_code}' already exists for dataset '{existing_slug}'. Use --overwrite or --replace-existing to regenerate it.")
-                    return 1
+        if existing_slug and existing_slug != candidate_slug:
+            print(f"❌ Short code '{short_code}' already used by dataset '{existing_slug}'. Run remove-dataset --short-code {short_code} first.")
+            return 1
+        if existing_slug == candidate_slug:
+            print(f"❌ Dataset '{candidate_slug}' already exists. Use update commands or remove it before re-adding.")
+            return 1
         dataset_slug = candidate_slug
 
         description = metadata_source.get('description', f"Biomechanical dataset from {display_name}")
@@ -981,7 +1135,9 @@ def handle_add_dataset(args):
         if not tasks:
             tasks = ["[Please list tasks]"]
 
-        download_url = metadata_source.get('download_url')
+        download_clean_url = metadata_source.get('download_clean_url') or metadata_source.get('download_url') or ''
+        download_dirty_url = metadata_source.get('download_dirty_url') or ''
+        download_url = metadata_source.get('download_url') or ''
         citation = metadata_source.get('citation')
         protocol = metadata_source.get('protocol')
         notes = metadata_source.get('notes')
@@ -993,8 +1149,13 @@ def handle_add_dataset(args):
             default_stub = (display_name[:2].upper() or dataset_filename_stem[:2].upper() or "DS")
             while True:
                 suggested_code = f"{default_stub}{str(datetime.now().year)[2:]}"
-                short_code_input = input(f"Short code (AA00 or AA00F) [{suggested_code}]: ").strip().upper()
-                short_code = short_code_input or suggested_code
+                if preset_short_code:
+                    short_code = preset_short_code
+                    preset_short_code = None
+                    print(f"ℹ️ Using provided short code '{short_code}'")
+                else:
+                    short_code_input = input(f"Short code (AA00 or AA00F) [{suggested_code}]: ").strip().upper()
+                    short_code = short_code_input or suggested_code
 
                 if not re.match(r'^[A-Z]{2}\d{2}[A-Z]?$', short_code):
                     print("❌ Short code must be 2 letters + 2 digits (optional trailing letter, e.g., UM21 or UM21F)")
@@ -1002,32 +1163,12 @@ def handle_add_dataset(args):
 
                 candidate_slug = _slugify_short_code(short_code)
                 existing_slug = existing_codes.get(short_code)
-                if existing_slug:
-                    auto_replace = getattr(args, 'replace_existing', False)
-                    allow_same = getattr(args, 'overwrite', False) or auto_replace
-                    if existing_slug != candidate_slug:
-                        if auto_replace:
-                            _remove_dataset_for_slug(existing_slug)
-                            existing_codes.pop(short_code, None)
-                        else:
-                            response = input(f"⚠️ Short code '{short_code}' is already used by dataset '{existing_slug}'. Remove it? [y/N]: ").strip().lower()
-                            if response == 'y':
-                                _remove_dataset_for_slug(existing_slug)
-                                existing_codes.pop(short_code, None)
-                            else:
-                                print("➡️ Choose a different short code.")
-                                continue
-                    else:
-                        if allow_same:
-                            _remove_dataset_for_slug(existing_slug)
-                            existing_codes.pop(short_code, None)
-                        else:
-                            response = input(f"⚠️ Dataset '{existing_slug}' already uses this short code. Regenerate it? [y/N]: ").strip().lower()
-                            if response == 'y':
-                                _remove_dataset_for_slug(existing_slug)
-                                existing_codes.pop(short_code, None)
-                            else:
-                                continue
+                if existing_slug and existing_slug != candidate_slug:
+                    print(f"❌ Short code '{short_code}' is already assigned to dataset '{existing_slug}'. Run remove-dataset --short-code {short_code} first or choose another code.")
+                    continue
+                if existing_slug == candidate_slug:
+                    print(f"❌ Dataset '{candidate_slug}' already exists. Use update-documentation/update-validation or remove it before re-adding.")
+                    continue
 
                 print(f"✅ Short code '{short_code}' accepted")
                 dataset_slug = candidate_slug
@@ -1066,8 +1207,10 @@ def handle_add_dataset(args):
 
             # Optional information
             print("\nOptional Information (press Enter to skip):")
-            download_url = input("Download URL: ").strip()
-            citation = input("Citation: ").strip()
+            download_clean_url = input("Clean dataset download URL (validated subset): ").strip()
+            download_dirty_url = input("Full dataset download URL (complete/dirty set): ").strip()
+            download_url = input("Legacy single download URL (optional fallback): ").strip()
+            citation = input("Citation (DOI, BibTeX, or short reference): ").strip()
             protocol = input("Collection protocol notes: ").strip()
             notes = input("Additional notes: ").strip()
 
@@ -1092,20 +1235,17 @@ def handle_add_dataset(args):
     doc_path = repo_root / "docs" / "datasets" / f"{dataset_name}.md"
     validation_doc_filename = f"{dataset_name}_validation.md"
 
-    if doc_path.exists():
-        if args.overwrite:
-            print(f"⚠️  Documentation already exists: {doc_path} (will overwrite)")
-            _remove_dataset_for_slug(dataset_slug)
-        else:
-            if metadata_source:
-                print("❌ Documentation already exists. Re-run with --overwrite to replace it.")
-                return 1
-            print(f"⚠️  Documentation already exists: {doc_path}")
-            overwrite = input("Overwrite? [y/N]: ").strip().lower()
-            if overwrite != 'y':
-                print("🛑 Cancelled")
-                return 0
-            _remove_dataset_for_slug(dataset_slug)
+    validation_doc_path = repo_root / "docs" / "datasets" / f"{dataset_name}_validation.md"
+    metadata_path = _metadata_path_for_slug(dataset_slug)
+    ranges_snapshot_path = repo_root / "docs" / "datasets" / f"{dataset_name}_validation_ranges.yaml"
+
+    if doc_path.exists() or validation_doc_path.exists() or metadata_path.exists() or ranges_snapshot_path.exists():
+        print(
+            f"❌ Dataset assets already exist for '{dataset_slug}'. "
+            "Use update-documentation/update-validation or run remove-dataset "
+            f"--short-code {short_code} before re-adding."
+        )
+        return 1
 
     metadata = {
         'dataset_name': dataset_name,
@@ -1116,12 +1256,15 @@ def handle_add_dataset(args):
         'institution': institution,
         'subjects': subjects_value,
         'tasks': tasks,
-        'download_url': download_url if download_url else None,
+        'download_url': download_clean_url or download_url or None,
+        'download_clean_url': download_clean_url if download_clean_url else None,
+        'download_dirty_url': download_dirty_url if download_dirty_url else None,
         'citation': citation if citation else None,
         'protocol': protocol if protocol else None,
         'notes': notes if notes else None,
         'date_added': date_added or datetime.now().strftime('%Y-%m-%d'),
         'task_table': task_table,
+        'last_dataset_path': _relative_path(dataset_path),
     }
     
     # Run validation
@@ -1173,31 +1316,19 @@ def handle_add_dataset(args):
     ranges_source_path = Path(plot_ranges_path)
     if not ranges_source_path.is_absolute():
         ranges_source_path = (repo_root / ranges_source_path).resolve()
-    ranges_source_display = _display_path(ranges_source_path)
-    metadata['validation_ranges_source'] = ranges_source_display
 
     validation_doc_path = (repo_root / "docs" / "datasets" / validation_doc_filename)
 
-    ranges_download_filename: Optional[str] = None
-    ranges_copy_path: Optional[Path] = None
-    if ranges_source_path.exists():
-        suffix = ranges_source_path.suffix or '.yaml'
-        ranges_copy_path = validation_doc_path.parent / f"{dataset_name}_validation_ranges{suffix}"
-        try:
-            ranges_copy_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(ranges_source_path, ranges_copy_path)
-            ranges_download_filename = ranges_copy_path.name
-            metadata['validation_ranges_download'] = str(ranges_copy_path.relative_to(repo_root))
-            download_md = f"[Download validation ranges](./{ranges_download_filename})"
-            if ranges_display in validation_summary:
-                validation_summary = validation_summary.replace(ranges_display, download_md)
-            metadata['validation_ranges_file'] = download_md
-        except Exception as exc:
-            print(f"⚠️  Unable to snapshot validation ranges: {exc}")
-    else:
-        print(f"⚠️  Validation ranges source not found: {ranges_source_path}")
-
+    ranges_download_filename, validation_summary = _snapshot_validation_ranges(
+        dataset_name,
+        validation_doc_path.parent,
+        ranges_source_path,
+        ranges_display,
+        validation_summary,
+        metadata,
+    )
     metadata['validation_summary'] = validation_summary
+    ranges_source_display = metadata.get('validation_ranges_source')
 
     # Show validation results
     print(f"\n📊 Validation Results:")
@@ -1256,33 +1387,243 @@ def handle_add_dataset(args):
     return 0
 
 
-def handle_reset_dataset_list(args):
-    """Remove generated documentation so a dataset can be rebuilt."""
 
-    dataset_slug = args.dataset
-    expected_phrase = f"reset dataset {dataset_slug}"
-    provided_phrase = (args.confirm_phrase or "").strip().lower()
 
-    if provided_phrase != expected_phrase:
-        print("🛑 Destructive command requires explicit confirmation.")
-        print(f"Re-run with --confirm-phrase '{expected_phrase}' to proceed.")
+
+def handle_update_documentation(args):
+    """Regenerate the dataset overview page and metadata."""
+    short_code = args.short_code.upper()
+    if not re.match(r'^[A-Z]{2}\d{2}[A-Z]?$', short_code):
+        print("❌ Short code must be 2 letters + 2 digits (optional trailing letter)")
         return 1
 
-    removed_paths = reset_dataset_assets(dataset_slug, include_parquet=args.remove_parquet)
+    dataset_slug = _slugify_short_code(short_code)
+    try:
+        metadata = _load_metadata_for_slug(dataset_slug)
+    except FileNotFoundError as exc:
+        print(f"❌ {exc}")
+        return 1
 
-    if removed_paths:
-        print("🧨 Removed generated assets:")
-        for path in removed_paths:
-            print(f"  - {path}")
+    dataset_arg = getattr(args, 'dataset', None)
+    try:
+        dataset_path = _resolve_dataset_path(dataset_arg, metadata)
+    except (ValueError, FileNotFoundError) as exc:
+        print(f"❌ {exc}")
+        return 1
+
+    metadata['short_code'] = short_code
+    metadata['dataset_name'] = dataset_slug
+    metadata['doc_url'] = metadata.get('doc_url') or f"{SITE_DATASET_BASE_URL}/{dataset_slug}/"
+    metadata['doc_path'] = metadata.get('doc_path') or f"docs/datasets/{dataset_slug}.md"
+    metadata['validation_doc_url'] = metadata.get('validation_doc_url') or f"{SITE_DATASET_BASE_URL}/{dataset_slug}_validation/"
+    metadata['validation_doc_path'] = metadata.get('validation_doc_path') or f"docs/datasets/{dataset_slug}_validation.md"
+    metadata['last_dataset_path'] = _relative_path(dataset_path)
+
+    override_path = getattr(args, 'metadata_file', None)
+    if override_path:
+        override_path = Path(override_path)
+        if not override_path.exists():
+            print(f"❌ Metadata file not found: {override_path}")
+            return 1
+        try:
+            overrides = load_metadata_file(override_path)
+        except ValueError as exc:
+            print(f"❌ {exc}")
+            return 1
+        override_code = overrides.get('short_code')
+        if override_code and override_code.upper() != short_code:
+            print("❌ Metadata file short_code does not match --short-code")
+            return 1
+        metadata.update({k: v for k, v in overrides.items() if v is not None})
+        metadata['short_code'] = short_code
+        metadata['dataset_name'] = dataset_slug
+
+    try:
+        locomotion_data = _load_locomotion_data(dataset_path, "refreshing tasks and subjects")
+    except Exception as exc:
+        print(f"❌ Unable to load dataset: {exc}")
+        return 1
+
+    detected_tasks, task_rows = _extract_task_catalog(locomotion_data)
+    if detected_tasks:
+        metadata['tasks'] = detected_tasks
     else:
-        print(f"ℹ️ No generated assets found for '{dataset_slug}'.")
+        metadata['tasks'] = metadata.get('tasks', [])
+    metadata['subjects'] = str(len(locomotion_data.get_subjects()))
+    metadata['task_table'] = _build_task_table(task_rows)
 
-    if args.remove_parquet:
-        print("⚠️ Converted parquet files were deleted. Re-run your conversion script before `add-dataset`.")
+    if not override_path:
+        _prompt_metadata_updates(metadata)
 
-    print("Done. Re-run `add-dataset` to regenerate documentation and metadata.")
+    validation_doc_filename = f"{dataset_slug}_validation.md"
+    doc_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)
+    write_metadata_file(metadata)
+    update_dataset_tables()
+
+    print(f"✅ Documentation refreshed: {doc_path.relative_to(repo_root)}")
     return 0
 
+
+def handle_update_validation(args):
+    """Re-run validation and refresh the validation report."""
+    short_code = args.short_code.upper()
+    if not re.match(r'^[A-Z]{2}\d{2}[A-Z]?$', short_code):
+        print("❌ Short code must be 2 letters + 2 digits (optional trailing letter)")
+        return 1
+
+    dataset_slug = _slugify_short_code(short_code)
+    try:
+        metadata = _load_metadata_for_slug(dataset_slug)
+    except FileNotFoundError as exc:
+        print(f"❌ {exc}")
+        return 1
+
+    dataset_arg = getattr(args, 'dataset', None)
+    try:
+        dataset_path = _resolve_dataset_path(dataset_arg, metadata)
+    except (ValueError, FileNotFoundError) as exc:
+        print(f"❌ {exc}")
+        return 1
+
+    custom_ranges_path: Optional[Path] = None
+    if getattr(args, 'ranges_file', None):
+        custom_ranges_path = _resolve_ranges_argument(args.ranges_file)
+        if not custom_ranges_path.exists():
+            print(f"❌ Validation ranges file not found: {custom_ranges_path}")
+            return 1
+
+    metadata['short_code'] = short_code
+    metadata['dataset_name'] = dataset_slug
+    metadata['doc_url'] = metadata.get('doc_url') or f"{SITE_DATASET_BASE_URL}/{dataset_slug}/"
+    metadata['doc_path'] = metadata.get('doc_path') or f"docs/datasets/{dataset_slug}.md"
+    metadata['validation_doc_url'] = metadata.get('validation_doc_url') or f"{SITE_DATASET_BASE_URL}/{dataset_slug}_validation/"
+    metadata['validation_doc_path'] = metadata.get('validation_doc_path') or f"docs/datasets/{dataset_slug}_validation.md"
+    metadata['last_dataset_path'] = _relative_path(dataset_path)
+
+
+    try:
+        locomotion_data = _load_locomotion_data(dataset_path, "updating tasks and subjects")
+    except Exception as exc:
+        print(f"❌ Unable to load dataset: {exc}")
+        return 1
+
+    detected_tasks, task_rows = _extract_task_catalog(locomotion_data)
+    if detected_tasks:
+        metadata['tasks'] = detected_tasks
+    else:
+        metadata['tasks'] = metadata.get('tasks', [])
+    metadata['subjects'] = str(len(locomotion_data.get_subjects()))
+    metadata['task_table'] = _build_task_table(task_rows)
+
+    print(f"🔍 Updating validation for {dataset_slug}...")
+    _, validation_summary, validation_stats, validation_ranges = run_validation(dataset_path, custom_ranges_path)
+    metadata['validation_summary'] = validation_summary
+
+    ranges_display = _display_path(custom_ranges_path) if custom_ranges_path else _display_path(_resolve_default_ranges_file())
+    plot_ranges_path: Optional[Path] = custom_ranges_path
+
+    if validation_stats:
+        metadata['validation_status'] = validation_stats.get('status')
+        metadata['validation_pass_rate'] = validation_stats.get('pass_rate')
+        metadata['validation_total_strides'] = validation_stats.get('total_strides')
+        metadata['validation_passing_strides'] = validation_stats.get('passing_strides')
+        if validation_stats.get('ranges_display'):
+            ranges_display = validation_stats['ranges_display']
+        ranges_path_str = validation_stats.get('ranges_path')
+        if ranges_path_str:
+            resolved = Path(ranges_path_str)
+            if not resolved.is_absolute():
+                resolved = (repo_root / resolved).resolve()
+            plot_ranges_path = resolved
+        status_text = validation_stats.get('status', '')
+        pass_rate = validation_stats.get('pass_rate') or 0
+        if 'PASSED' in status_text:
+            metadata['quality_display'] = '✅ Validated'
+        elif 'PARTIAL' in status_text:
+            metadata['quality_display'] = f"⚠️ Partial ({pass_rate:.1f}%)"
+        elif 'NEEDS REVIEW' in status_text:
+            metadata['quality_display'] = f"❌ Needs Review ({pass_rate:.1f}%)"
+        else:
+            metadata['quality_display'] = status_text or '—'
+    else:
+        metadata['validation_status'] = 'UNKNOWN'
+        metadata['validation_pass_rate'] = None
+        metadata['validation_total_strides'] = None
+        metadata['validation_passing_strides'] = None
+        metadata['quality_display'] = '⚠️ Validation Pending'
+    metadata['validation_ranges_file'] = ranges_display
+
+    if plot_ranges_path is None:
+        plot_ranges_path = _resolve_default_ranges_file()
+
+    ranges_source_path = Path(plot_ranges_path)
+    if not ranges_source_path.is_absolute():
+        ranges_source_path = (repo_root / ranges_source_path).resolve()
+
+    validation_doc_filename = f"{dataset_slug}_validation.md"
+    validation_doc_path = repo_root / "docs" / "datasets" / validation_doc_filename
+
+    ranges_download_filename, validation_summary = _snapshot_validation_ranges(
+        dataset_slug,
+        validation_doc_path.parent,
+        ranges_source_path,
+        ranges_display,
+        validation_summary,
+        metadata,
+    )
+    metadata['validation_summary'] = validation_summary
+    ranges_source_display = metadata.get('validation_ranges_source')
+    metadata['tasks'] = metadata.get('tasks', [])
+    metadata['task_table'] = metadata.get('task_table', '')
+
+    print(f"\n📊 Validation Results:")
+    print(validation_summary)
+
+    print(f"\n📄 Updating documentation...")
+    doc_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)
+    validation_doc_path = generate_validation_page(
+        dataset_path,
+        metadata,
+        validation_summary,
+        validation_stats,
+        validation_ranges,
+        validation_doc_path,
+        ranges_download_filename,
+        ranges_source_display,
+    )
+    print(f"✅ Overview updated: {doc_path.relative_to(repo_root)}")
+    print(f"✅ Validation report updated: {validation_doc_path.relative_to(repo_root)}")
+
+    plots_dir = repo_root / "docs" / "datasets" / "validation_plots" / dataset_slug
+    plots_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        plot_ranges_for_cmd = ranges_source_path if ranges_source_path.exists() else None
+        _generate_validation_plots(dataset_path, plots_dir, plot_ranges_for_cmd)
+    except subprocess.CalledProcessError as exc:
+        print(f"⚠️  Plot generation failed: {exc}")
+
+    update_validation_gallery(validation_doc_path, dataset_slug)
+
+    write_metadata_file(metadata)
+    update_dataset_tables()
+
+    print("✅ Validation assets refreshed")
+    return 0
+
+
+def handle_remove_dataset(args):
+    """Remove generated assets for a dataset."""
+    short_code = args.short_code.upper()
+    if not re.match(r'^[A-Z]{2}\d{2}[A-Z]?$', short_code):
+        print("❌ Short code must be 2 letters + 2 digits (optional trailing letter)")
+        return 1
+
+    dataset_slug = _slugify_short_code(short_code)
+    removed_paths = _remove_dataset_for_slug(dataset_slug, include_parquet=args.remove_parquet)
+    if args.remove_parquet and removed_paths:
+        print("⚠️ Converted parquet files were deleted. Re-run your conversion script before add-dataset.")
+    return 0
 
 def main():
     """Main CLI entry point."""
@@ -1302,13 +1643,21 @@ Example workflow:
   
   4. Follow the generated checklist to complete your PR
   
-  Need to rebuild generated docs? Run:
-      python contributor_tools/manage_dataset_documentation.py reset-dataset-list \\
-          your_dataset_slug --confirm-phrase "reset dataset your_dataset_slug"
+  Need to refresh the overview page after editing metadata? Run:
+      python contributor_tools/manage_dataset_documentation.py update-documentation \\
+          --short-code YOUR_CODE [--dataset converted_datasets/your_dataset_phase.parquet]
+  
+  Need to refresh validation results or plots? Run:
+      python contributor_tools/manage_dataset_documentation.py update-validation \\
+          --short-code YOUR_CODE [--dataset converted_datasets/your_dataset_phase.parquet]
+  
+  Need to clean everything up? Run:
+      python contributor_tools/manage_dataset_documentation.py remove-dataset \\
+          --short-code YOUR_CODE [--remove-parquet]
   
   The tool will:
   - Collect metadata interactively or via --metadata-file
-  - Run validation and show results  
+  - Run validation and show results when requested  
   - Generate standardized documentation
   - Create submission checklist
   - Prepare everything for PR submission
@@ -1337,29 +1686,56 @@ Example workflow:
         help='Optional validation ranges YAML to override defaults'
     )
     add_parser.add_argument(
-        '--overwrite',
-        action='store_true',
-        help='Overwrite existing documentation without prompting'
-    )
-    add_parser.add_argument(
-        '--replace-existing',
-        action='store_true',
-        help='Remove any existing dataset that uses the selected short code'
+        '--short-code',
+        help='Optional explicit short code (otherwise derived during prompts)'
     )
 
-    reset_parser = subparsers.add_parser(
-        'reset-dataset-list',
+    update_doc_parser = subparsers.add_parser(
+        'update-documentation',
+        help='Refresh dataset overview markdown and metadata for an existing short code'
+    )
+    update_doc_parser.add_argument(
+        '--short-code',
+        required=True,
+        help='Dataset short code (e.g., UM21)'
+    )
+    update_doc_parser.add_argument(
+        '--dataset',
+        help='Path to dataset parquet; defaults to last_dataset_path from metadata'
+    )
+    update_doc_parser.add_argument(
+        '--metadata-file',
+        help='Optional metadata overrides to merge before regenerating the page'
+    )
+
+    update_val_parser = subparsers.add_parser(
+        'update-validation',
+        help='Re-run validation, plots, and snapshot ranges for an existing short code'
+    )
+    update_val_parser.add_argument(
+        '--short-code',
+        required=True,
+        help='Dataset short code (e.g., UM21)'
+    )
+    update_val_parser.add_argument(
+        '--dataset',
+        help='Path to dataset parquet; defaults to last_dataset_path from metadata'
+    )
+    update_val_parser.add_argument(
+        '--ranges-file',
+        help='Optional validation ranges YAML to override defaults'
+    )
+
+    remove_parser = subparsers.add_parser(
+        'remove-dataset',
         help='Delete generated docs/metadata/plots so a dataset can be rebuilt'
     )
-    reset_parser.add_argument(
-        'dataset',
-        help='Dataset slug to reset (e.g., umich_2021_filtered)'
+    remove_parser.add_argument(
+        '--short-code',
+        required=True,
+        help='Dataset short code to remove'
     )
-    reset_parser.add_argument(
-        '--confirm-phrase',
-        help="Type 'reset dataset <slug>' to confirm this destructive action"
-    )
-    reset_parser.add_argument(
+    remove_parser.add_argument(
         '--remove-parquet',
         action='store_true',
         help='Also delete converted_datasets/*.parquet files for the slug'
@@ -1376,11 +1752,14 @@ Example workflow:
     
     if args.command == 'add-dataset':
         return handle_add_dataset(args)
-    if args.command == 'reset-dataset-list':
-        return handle_reset_dataset_list(args)
-    else:
-        print(f"❌ Unknown command: {args.command}")
-        return 1
+    if args.command == 'update-documentation':
+        return handle_update_documentation(args)
+    if args.command == 'update-validation':
+        return handle_update_validation(args)
+    if args.command == 'remove-dataset':
+        return handle_remove_dataset(args)
+    print(f"❌ Unknown command: {args.command}")
+    return 1
 
 
 if __name__ == "__main__":

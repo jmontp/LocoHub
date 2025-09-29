@@ -1,7 +1,7 @@
 ---
 title: Umich 2021 Raw Validation Report
 short_code: UM21
-generated: 2025-09-28 20:25
+generated: 2025-09-29 11:01
 ---
 
 # Validation Report — Umich 2021 Raw
@@ -34,7 +34,7 @@ generated: 2025-09-28 20:25
 | Stand To Sit | 100.0% | ✅ |
 | Transition | 52.3% | ❌ |
 
-_Validation ranges file: [Download validation ranges](./um21_validation_ranges.yaml)_
+_Validation ranges snapshot embedded below._
 
 
 ## Validation Ranges Snapshot
@@ -45,8 +45,34 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges_v3.yaml_
 
 ## Validation Plots
 
-<!-- VALIDATION_GALLERY -->
+=== "Decline Walking"
+    ![Decline Walking](./validation_plots/um21/umich_2021_phase_raw_decline_walking_all_features_validation.png)
+
+=== "Incline Walking"
+    ![Incline Walking](./validation_plots/um21/umich_2021_phase_raw_incline_walking_all_features_validation.png)
+
+=== "Level Walking"
+    ![Level Walking](./validation_plots/um21/umich_2021_phase_raw_level_walking_all_features_validation.png)
+
+=== "Run"
+    ![Run](./validation_plots/um21/umich_2021_phase_raw_run_all_features_validation.png)
+
+=== "Sit To Stand"
+    ![Sit To Stand](./validation_plots/um21/umich_2021_phase_raw_sit_to_stand_all_features_validation.png)
+
+=== "Stair Ascent"
+    ![Stair Ascent](./validation_plots/um21/umich_2021_phase_raw_stair_ascent_all_features_validation.png)
+
+=== "Stair Descent"
+    ![Stair Descent](./validation_plots/um21/umich_2021_phase_raw_stair_descent_all_features_validation.png)
+
+=== "Stand To Sit"
+    ![Stand To Sit](./validation_plots/um21/umich_2021_phase_raw_stand_to_sit_all_features_validation.png)
+
+=== "Transition"
+    ![Transition](./validation_plots/um21/umich_2021_phase_raw_transition_all_features_validation.png)
+
 
 ---
 
-*Generated from `converted_datasets/umich_2021_phase_raw.parquet` on 2025-09-28 20:25*
+*Generated from `converted_datasets/umich_2021_phase_raw.parquet` on 2025-09-29 11:01*

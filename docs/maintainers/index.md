@@ -201,40 +201,71 @@ flowchart TD
 </details>
 
 <details>
-<summary>`edit-metadata` subcommand</summary>
+<summary>`update-documentation` subcommand</summary>
 
-Intended fast path for metadata-only tweaks. Loads the existing YAML, lets contributors edit fields, saves updates, and offers to chain directly into a validation refresh if data quality changed.
+Fast path to refresh the overview markdown and metadata from the latest parquet without rerunning validation. Loads the stored YAML (or an override), re-extracts tasks/subjects, prompts you with the current values (press Enter to keep), rewrites `docs/datasets/<slug>.md`, and updates the global dataset tables.
 
 ```mermaid
 flowchart TD
-    A[Start CLI] --> B[Load existing metadata YAML]
-    B --> C[Prompt contributor to edit fields]
-    C --> D[Write updated metadata and Markdown]
-    D --> E[Refresh dataset tables between markers]
-    E --> F{Run validation refresh now?}
-    F -- Yes --> G[Chain to refresh-validation]
-    F -- No --> H[Exit with status]
+    A[Start CLI] --> B[Resolve short code]
+    B --> C[Load existing metadata YAML]
+    C --> D[Resolve dataset path (flag or last_dataset_path)]
+    D --> E[Extract tasks & subjects]
+    E --> F[Regenerate overview markdown]
+    F --> G[Write metadata YAML]
+    G --> H[Refresh dataset tables]
+    H --> I[[Done]]
+```
+
+**Command:**
+
+```bash
+python contributor_tools/manage_dataset_documentation.py update-documentation \
+    --short-code UM21 [--dataset converted_datasets/umich_2021_phase_raw.parquet]
 ```
 
 </details>
 
 <details>
-<summary>`reset-dataset-list` subcommand</summary>
+<summary>`update-validation` subcommand</summary>
 
-Destructive maintainer-only reset. Removes generated documentation (`<slug>.md` and `<slug>_validation.md`), metadata YAML, validation plots (folder + loose PNGs), and PR checklist so the dataset can be rebuilt cleanly. Optional flag also deletes the converted parquet file if a converter rerun is required.
-
-Confirmation workflow:
+Runs validation again, snapshots the active ranges into the dataset folder, rebuilds the validation report, and refreshes plots. Also rewrites the overview page so pass-rate badges stay current.
 
 ```mermaid
 flowchart TD
-    start([Start CLI]) --> confirm{--confirm-phrase matches?}
-    confirm -- "No" --> abort[Abort with instructions]
-    confirm -- "Yes" --> removeDocs[Remove docs + metadata]
-    removeDocs --> removePlots[Delete validation plots + checklist]
-    removePlots --> removeParquet{--remove-parquet?}
-    removeParquet -- "No" --> refreshTables[Refresh dataset tables]
-    removeParquet -- "Yes" --> deleteParquet[Delete converted parquet files]
-    deleteParquet --> refreshTables
+    A[Start CLI] --> B[Resolve short code]
+    B --> C[Load metadata]
+    C --> D[Resolve dataset + ranges]
+    D --> E[Run validator]
+    E --> F[Snapshot ranges YAML]
+    F --> G[Regenerate validation report]
+    G --> H[Regenerate overview + tables]
+    H --> I[Refresh plots gallery]
+    I --> J[[Done]]
+```
+
+**Command:**
+
+```bash
+python contributor_tools/manage_dataset_documentation.py update-validation \
+    --short-code UM21 [--dataset converted_datasets/umich_2021_phase_raw.parquet]
+```
+
+</details>
+
+<details>
+<summary>`remove-dataset` subcommand</summary>
+
+Destructive cleanup. Deletes overview + validation markdown, metadata YAML, validation plots, the ranges snapshot, and the submission checklist so the dataset can be rebuilt from scratch. Optional flag also removes converted parquet files.
+
+```mermaid
+flowchart TD
+    start([Start CLI]) --> resolve[Resolve short code]
+    resolve --> purgeDocs[Delete docs/metadata/ranges]
+    purgeDocs --> purgePlots[Delete validation plots + checklist]
+    purgePlots --> deleteParquet{--remove-parquet?}
+    deleteParquet -- No --> refreshTables[Refresh dataset tables]
+    deleteParquet -- Yes --> rmParquet[Delete converted parquet]\n    rmParquet --> refreshTables
     refreshTables --> report[Print removed paths]
     report --> done([Exit])
 ```
@@ -242,11 +273,9 @@ flowchart TD
 **Command:**
 
 ```bash
-python contributor_tools/manage_dataset_documentation.py reset-dataset-list \
-    umich_2021_raw --confirm-phrase "reset dataset umich_2021_raw"
+python contributor_tools/manage_dataset_documentation.py remove-dataset \
+    --short-code UM21 [--remove-parquet]
 ```
-
-Add `--remove-parquet` only when you need to regenerate the underlying dataset file via the converter.
 
 </details>
 

@@ -446,63 +446,20 @@ The tool creates:
 - `docs/datasets/validation_plots/your_dataset/` - Plot directory (latest pass/fail images)
 - `submission_checklist_your_dataset.txt` - PR checklist
 
-> Need to rebuild generated docs from scratch? Run `python contributor_tools/manage_dataset_documentation.py reset-dataset-list your_dataset_slug --confirm-phrase "reset dataset your_dataset_slug"` first, then rerun the `add-dataset` workflow.
+Need to tweak things later?
+- Refresh metadata/overview: `python contributor_tools/manage_dataset_documentation.py update-documentation --short-code UM21`
+- Re-run validation and plots: `python contributor_tools/manage_dataset_documentation.py update-validation --short-code UM21`
+- Start clean: `python contributor_tools/manage_dataset_documentation.py remove-dataset --short-code UM21`
 
 ### Dataset Documentation Management Workflow
 
-After initial submission, you may need to update your dataset documentation:
+Once your dataset is listed, stick to these three commands:
 
-<details>
-<summary>Workflow overview (expand for flowchart)</summary>
+- `update-documentation` — refresh the overview page and metadata; you’ll be prompted with existing values so you can press Enter to keep them.
+- `update-validation` — rerun validation, regenerate plots, and snapshot the active ranges YAML after data tweaks.
+- `remove-dataset` — wipe generated assets if you need to rebuild from scratch (re-run your converter before adding again).
 
-```mermaid
-graph TD
-    A[Start: Need to update dataset docs] --> B{What is the goal?}
-    B -->|Add new dataset| C1[Run manage_dataset_documentation add-dataset]
-    C1 --> C2[Fill prompts for metadata]
-    C2 --> C3[Review generated documentation]
-    C3 --> C3a[Preview with mkdocs serve]
-    C3a --> C4{Validation ready?}
-    C4 -->|Yes| C5[Commit docs for PR]
-    C4 -->|No| C6[Fix conversion or ranges]
-    C6 --> C1
-
-    B -->|Rebuild existing dataset| E1[Run manage_dataset_documentation reset-dataset-list]
-    E1 --> E2[Run manage_dataset_documentation add-dataset --metadata-file ...]
-    E2 --> E3[Inspect results and plots]
-    E3 --> E3a[Preview with mkdocs serve]
-    E3a --> E4{Ranges need tuning?}
-    E4 -->|Yes| E5[Use interactive_validation_tuner]
-    E5 --> E6[Update custom ranges YAML]
-    E6 --> E1
-    E4 -->|No| E7[Commit updated docs]
-
-    B -->|Edit metadata| D1[Run manage_dataset_documentation edit-metadata]
-    D1 --> D2[Update fields interactively]
-    D2 --> D2a[Preview with mkdocs serve]
-    D2a --> D3{Need validation refresh?}
-    D3 -->|Yes| E1
-    D3 -->|No| D5[Commit changes]
-
-    D5 --> G[End]
-    C5 --> G
-    E7 --> G
-
-    classDef intake fill:#e3f2fd,stroke:#1e88e5,color:#0d47a1
-    classDef standard fill:#fff3e0,stroke:#fb8c00,color:#e65100
-    classDef qa fill:#e8f5e9,stroke:#43a047,color:#1b5e20
-    classDef share fill:#c8e6c9,stroke:#2e7d32,color:#1b5e20
-
-    class A,B intake
-    class C1,C2,C6,D1,D2,E1,E2,E5,E6 standard
-    class C3,C3a,D2a,E3,E3a qa
-    class C4,D3,E4 qa
-    class C5,D5,E7,G share
-```
-
-</details>
-
-Use these commands to maintain your dataset documentation over time.
+Each command accepts `--dataset` to point at a new parquet (otherwise the tool uses the last path stored in metadata). Always preview with `mkdocs serve` before committing.
 
 ### Previewing Your Documentation
 
@@ -739,14 +696,14 @@ python3 contributor_tools/manage_dataset_documentation.py add-dataset \
 
 #### Resetting Generated Docs
 
-If you need to wipe the generated documentation before rebuilding, run:
+Need to start over? Use the `remove-dataset` helper:
 
 ```bash
-python3 contributor_tools/manage_dataset_documentation.py reset-dataset-list \
-    your_dataset_slug --confirm-phrase "reset dataset your_dataset_slug"
+python3 contributor_tools/manage_dataset_documentation.py remove-dataset \
+    --short-code YOUR_CODE [--remove-parquet]
 ```
 
-Then rerun the `add-dataset` command (optionally with `--metadata-file`) to regenerate the overview, validation report, plots, and checklist.
+After the cleanup, rerun `add-dataset` (optionally with `--metadata-file`) to regenerate the overview, validation report, plots, and checklist.
 
 ### interactive_validation_tuner.py — Visual Range Editing {#interactive-tuner}
 
