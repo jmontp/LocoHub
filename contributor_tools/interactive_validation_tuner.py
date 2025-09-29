@@ -110,7 +110,11 @@ class DraggableBox:
     A draggable validation range box that can be interactively adjusted.
     Optimized with blitting for fast dragging performance.
     """
-    
+    HANDLE_WIDTH_DATA = 3  # Width stays in phase space units
+    HANDLE_HEIGHT_PIXELS = 18  # Consistent on-screen handle height
+    HANDLE_OFFSET_PIXELS = 6   # Gap between box edge and handle
+    LABEL_BUFFER_PIXELS = 4    # Space for numeric labels
+
     def __init__(self, ax, phase: int, var_name: str, min_val: float, max_val: float, 
                  callback=None, color='lightgreen', edgecolor='black', allow_x_drag=True, parent=None):
         """
@@ -140,9 +144,10 @@ class DraggableBox:
         self.color = color
         self.edgecolor = edgecolor
         self.box_width = 8
+        self.handle_width = self.HANDLE_WIDTH_DATA
         self.allow_x_drag = allow_x_drag
         self.parent = parent  # Store parent reference for unit conversion
-        
+
         # Current values
         self.min_val = min_val
         self.max_val = max_val
@@ -153,13 +158,19 @@ class DraggableBox:
         self._last_ylim = None
         self._last_figure_size = None
         self._last_axes_position = None
-        
+
         # Initialize conversion cache before using it
         self._update_conversion_cache()
-        
+
+        # Pixel->data conversions for handle geometry
+        self._handle_height = 0.0
+        self._handle_offset = 0.0
+        self._label_buffer = 0.0
+        self._update_handle_metrics()
+
         # PERFORMANCE: Smart background caching to avoid expensive redraws on click
         self.background_invalid = True
-        
+
         # Create rectangle
         self.rect = patches.Rectangle(
             (phase - self.box_width/2, min_val), 
@@ -173,25 +184,21 @@ class DraggableBox:
             zorder=10
         )
         self.ax.add_patch(self.rect)
-        
-        # Define handle dimensions and offsets first
-        handle_width = 3  # Fixed width in data units (narrow rectangle)
-        handle_height = 0.15  # Fixed height in data units (vertically long)
-        handle_offset = 0.03  # Small gap between handle and box for visual separation
-        label_buffer = 0.02  # Additional buffer for readability
-        
+
         # Add text labels positioned outside grab handle areas
         # Convert to display units if needed
         display_min = self._get_display_value(min_val)
         display_max = self._get_display_value(max_val)
-        
-        self.min_text = self.ax.text(phase, min_val - handle_height - handle_offset - label_buffer, f'{display_min:.3f}',
+
+        self.min_text = self.ax.text(phase, min_val - self._handle_height - self._handle_offset - self._label_buffer,
+                                     f'{display_min:.3f}',
                                      ha='center', va='top', fontsize=7, 
                                      fontweight='bold', zorder=11)
-        self.max_text = self.ax.text(phase, max_val + handle_offset + handle_height + label_buffer, f'{display_max:.3f}',
+        self.max_text = self.ax.text(phase, max_val + self._handle_offset + self._handle_height + self._label_buffer,
+                                     f'{display_max:.3f}',
                                      ha='center', va='bottom', fontsize=7,
                                      fontweight='bold', zorder=11)
-        
+
         # Add phase label
         self.phase_text = self.ax.text(phase, self.ax.get_ylim()[1], f'{phase}%',
                                        ha='center', va='bottom', fontsize=8,
@@ -203,15 +210,19 @@ class DraggableBox:
                                            fontweight='bold', color='black', 
                                            bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.8),
                                            visible=False, zorder=20)
-        
+
         # Create vertical rectangular resize handles with slight offset from box edges (ALWAYS VISIBLE for better performance)
         self.top_handle = patches.Rectangle(
-            (phase - handle_width/2, max_val + handle_offset), handle_width, handle_height,
+            (phase - self.handle_width/2, max_val + self._handle_offset),
+            self.handle_width,
+            self._handle_height,
             facecolor='lightgrey', edgecolor='black', linewidth=2,
             visible=True, zorder=20  # Always visible for performance
         )
         self.bottom_handle = patches.Rectangle(
-            (phase - handle_width/2, min_val - handle_height - handle_offset), handle_width, handle_height,
+            (phase - self.handle_width/2, min_val - self._handle_height - self._handle_offset),
+            self.handle_width,
+            self._handle_height,
             facecolor='lightgrey', edgecolor='black', linewidth=2,
             visible=True, zorder=20  # Always visible for performance
         )
@@ -245,7 +256,48 @@ class DraggableBox:
     def _get_display_value(self, value):
         """Return value for labeling; values stored internally in radians."""
         return value
-    
+
+    def _pixels_to_data(self, pixels: float) -> float:
+        """Convert a fixed pixel distance to data units for consistent handle sizing."""
+        self._update_conversion_cache()
+        if not self._pixels_per_data_unit:
+            return 0.0
+        return pixels / self._pixels_per_data_unit
+
+    def _update_handle_metrics(self):
+        """Refresh cached handle offsets based on the latest axis scaling."""
+        self._handle_height = self._pixels_to_data(self.HANDLE_HEIGHT_PIXELS)
+        self._handle_offset = self._pixels_to_data(self.HANDLE_OFFSET_PIXELS)
+        self._label_buffer = self._pixels_to_data(self.LABEL_BUFFER_PIXELS)
+
+    def _update_handle_artists(self):
+        """Update handle sizes, positions, and label locations using cached metrics."""
+        self._update_handle_metrics()
+
+        display_min = self._get_display_value(self.min_val)
+        display_max = self._get_display_value(self.max_val)
+
+        min_y = self.min_val - self._handle_height - self._handle_offset - self._label_buffer
+        max_y = self.max_val + self._handle_offset + self._handle_height + self._label_buffer
+
+        self.min_text.set_text(f'{display_min:.3f}')
+        self.min_text.set_position((self.phase, min_y))
+
+        self.max_text.set_text(f'{display_max:.3f}')
+        self.max_text.set_position((self.phase, max_y))
+
+        handle_x = self.phase - self.handle_width / 2
+
+        self.top_handle.set_x(handle_x)
+        self.top_handle.set_y(self.max_val + self._handle_offset)
+        self.top_handle.set_width(self.handle_width)
+        self.top_handle.set_height(self._handle_height)
+
+        self.bottom_handle.set_x(handle_x)
+        self.bottom_handle.set_y(self.min_val - self._handle_height - self._handle_offset)
+        self.bottom_handle.set_width(self.handle_width)
+        self.bottom_handle.set_height(self._handle_height)
+
     def _update_conversion_cache(self):
         """
         Update cached pixel-to-data conversion factors only when needed.
@@ -438,26 +490,9 @@ class DraggableBox:
         # Update rectangle y position and height
         self.rect.set_y(self.min_val)
         self.rect.set_height(self.max_val - self.min_val)
-        
-        # Update text labels positioned outside grab handle areas
-        handle_width = 3  # Same width as used in initialization
-        handle_height = 0.15  # Same height as used in initialization
-        handle_offset = 0.03  # Match handle offset
-        label_buffer = 0.02  # Additional buffer for readability
-        
-        self.min_text.set_text(f'{self.min_val:.3f}')
-        self.min_text.set_position((self.phase, self.min_val - handle_height - handle_offset - label_buffer))
-        self.max_text.set_text(f'{self.max_val:.3f}')
-        self.max_text.set_position((self.phase, self.max_val + handle_offset + handle_height + label_buffer))
-        
-        # Update handle positions with slight offset from box edges
-        # Top handle: positioned above the validation box with offset
-        self.top_handle.set_x(self.phase - handle_width/2)
-        self.top_handle.set_y(self.max_val + handle_offset)
 
-        # Bottom handle: positioned below the validation box with offset
-        self.bottom_handle.set_x(self.phase - handle_width/2)
-        self.bottom_handle.set_y(self.min_val - handle_height - handle_offset)
+        # Update handle sizing and label positions using pixel-consistent metrics
+        self._update_handle_artists()
 
         # Update hover zone position (using cached values)
         self.hover_zone.set_x(self.phase - self.box_width/2)
@@ -493,35 +528,14 @@ class DraggableBox:
         """Set new min/max range."""
         self.min_val = min_val
         self.max_val = max_val
-        
+
         # Update rectangle
         self.rect.set_y(self.min_val)
         self.rect.set_height(self.max_val - self.min_val)
-        
-        # Update text labels positioned outside grab handle areas
-        handle_width = 3  # Same width as used in initialization
-        handle_height = 0.15  # Same height as used in initialization
-        handle_offset = 0.03  # Match handle offset
-        label_buffer = 0.02  # Additional buffer for readability
-        
-        # Convert to display units if needed
-        display_min = self._get_display_value(self.min_val)
-        display_max = self._get_display_value(self.max_val)
-        
-        self.min_text.set_text(f'{display_min:.3f}')
-        self.min_text.set_position((self.phase, self.min_val - handle_height - handle_offset - label_buffer))
-        self.max_text.set_text(f'{display_max:.3f}')
-        self.max_text.set_position((self.phase, self.max_val + handle_offset + handle_height + label_buffer))
-        
-        # Update rectangular handle positions with slight offset from box edges
-        # Top handle: positioned above the validation box with offset
-        self.top_handle.set_x(self.phase - handle_width/2)
-        self.top_handle.set_y(self.max_val + handle_offset)
-        
-        # Bottom handle: positioned below the validation box with offset
-        self.bottom_handle.set_x(self.phase - handle_width/2) 
-        self.bottom_handle.set_y(self.min_val - handle_height - handle_offset)
-        
+
+        # Update handle sizing and label positions using pixel-consistent metrics
+        self._update_handle_artists()
+
         # Update hover zone position
         self._update_conversion_cache()  # Ensure cache is current
         hover_extend_data = self._hover_extend_data
@@ -579,6 +593,9 @@ class InteractiveValidationTuner:
         self.max_traces_per_axis = 350
         self.modified = False
         self.unknown_tasks = set()
+        self.dataset_tasks = set()  # Track which tasks exist in the loaded dataset
+        self._missing_task_notice = None  # Message shown when YAML task lacks dataset support
+        self.available_tasks = []  # Cached list of tasks displayed in the dropdown
 
         # PERFORMANCE: Shared background cache for all draggable boxes
         self._shared_background = None
@@ -601,10 +618,55 @@ class InteractiveValidationTuner:
         self._shared_background = None
         for box in self.draggable_boxes:
             box.invalidate_background()
-    
+
+    def _set_status(self, message: str):
+        """Safely update the status bar if it exists."""
+        if hasattr(self, 'status_bar'):
+            self.status_bar.config(text=message)
+
+    def _dataset_has_task(self, task: Optional[str]) -> bool:
+        """Return True when the loaded dataset contains the requested task."""
+        return bool(self.locomotion_data) and bool(task) and task in self.dataset_tasks
+
+    def _compute_available_tasks(self) -> List[str]:
+        """Determine which tasks should appear in the dropdown."""
+        if self.dataset_tasks:
+            return sorted(self.dataset_tasks)
+        return sorted(self.validation_data.keys())
+
+    def _refresh_task_dropdown(self, preserve_selection: bool = True):
+        """Populate the dropdown with the appropriate task list and select a default."""
+        tasks = self._compute_available_tasks()
+        self.available_tasks = tasks
+
+        previous = self.current_task if preserve_selection else None
+        if previous not in tasks:
+            previous = None
+
+        selected = previous if previous else (tasks[0] if tasks else None)
+
+        self.task_dropdown['values'] = tasks
+
+        if selected:
+            self.task_dropdown.set(selected)
+            self.task_var.set(selected)
+            self.current_task = selected
+        else:
+            self.task_dropdown.set('')
+            self.task_var.set('')
+            self.current_task = None
+
+        if self.dataset_tasks:
+            hidden_yaml_tasks = sorted(set(self.validation_data.keys()) - self.dataset_tasks)
+            if hidden_yaml_tasks:
+                preview = ', '.join(hidden_yaml_tasks[:4])
+                if len(hidden_yaml_tasks) > 4:
+                    preview += ', ...'
+                print(f"INFO: Hiding YAML-only tasks not present in dataset: {preview}")
+
     def prepare_all_backgrounds(self):
         """PERFORMANCE: Eagerly prepare all draggable box backgrounds after plot updates.
-        
+
         This moves the expensive canvas.draw() operation from click time (jarring)
         to plot update time (expected). Eliminates 500ms drag/resize initiation delay.
         """
@@ -749,15 +811,10 @@ class InteractiveValidationTuner:
                     self.full_validation_data[task_name] = copy.deepcopy(full_task_data)
                     self.original_validation_data[task_name] = copy.deepcopy(full_task_data)
                     self.original_full_validation_data[task_name] = copy.deepcopy(full_task_data)
-                
-                # Update task dropdown
-                tasks = list(self.validation_data.keys())
-                self.task_dropdown['values'] = tasks
-                if tasks:
-                    self.task_dropdown.set(tasks[0])
-                    self.current_task = tasks[0]
 
-                self._note_unknown_tasks(tasks, source="validation ranges")
+                yaml_tasks = list(self.validation_data.keys())
+                self._note_unknown_tasks(yaml_tasks, source="validation ranges")
+                self._refresh_task_dropdown(preserve_selection=False)
 
                 self.status_bar.config(text=f"Loaded default validation ranges. Load dataset via File menu.")
                 self.modified = False
@@ -874,7 +931,8 @@ class InteractiveValidationTuner:
         for box in self.draggable_boxes:
             box.background = self.canvas.copy_from_bbox(box.ax.bbox)
             box.background_invalid = False
-        
+            box._update_handle_artists()
+
         # Restore visibility
         for box in self.draggable_boxes:
             box.rect.set_visible(True)
@@ -1396,14 +1454,9 @@ class InteractiveValidationTuner:
                 self.original_validation_data[task_name] = copy.deepcopy(full_task_data)
                 self.original_full_validation_data[task_name] = copy.deepcopy(full_task_data)
             
-            # Update task dropdown
-            tasks = list(self.validation_data.keys())
-            self.task_dropdown['values'] = tasks
-            if tasks:
-                self.task_dropdown.set(tasks[0])
-                self.current_task = tasks[0]
-
-            self._note_unknown_tasks(tasks, source="validation ranges")
+            yaml_tasks = list(self.validation_data.keys())
+            self._note_unknown_tasks(yaml_tasks, source="validation ranges")
+            self._refresh_task_dropdown()
 
             self.status_bar.config(text=f"Loaded validation ranges from: {Path(file_path).name}")
             self.modified = False
@@ -1451,6 +1504,7 @@ class InteractiveValidationTuner:
             
             # Clear data cache
             self.data_cache = {}
+            self._missing_task_notice = None
             
             # Update task dropdown to include all dataset tasks
             self.update_task_dropdown_from_dataset()
@@ -1473,7 +1527,8 @@ class InteractiveValidationTuner:
         
         try:
             # Get tasks from dataset
-            dataset_tasks = self.locomotion_data.get_tasks()
+            dataset_tasks = list(self.locomotion_data.get_tasks())
+            self.dataset_tasks = set(dataset_tasks)
 
             added_any = False
             for task in dataset_tasks:
@@ -1483,29 +1538,15 @@ class InteractiveValidationTuner:
             if added_any:
                 print("Generated placeholder validation ranges for dataset-only tasks.")
 
-            # Combine with tasks from validation data (if any)
-            # This allows users to see both dataset tasks and any pre-defined validation tasks
-            all_tasks = list(set(dataset_tasks) | set(self.validation_data.keys()))
-            all_tasks.sort()
-
             self._note_unknown_tasks(dataset_tasks, source="dataset")
-            self._note_unknown_tasks(all_tasks, source="dataset/validation union")
 
-            # Update dropdown
-            self.task_dropdown['values'] = all_tasks
-            
-            # Set selection
-            if self.current_task in all_tasks:
-                self.task_dropdown.set(self.current_task)
-            elif all_tasks:
-                self.task_dropdown.set(all_tasks[0])
-                self.current_task = all_tasks[0]
-            
-            # Update status
-            dataset_only_tasks = set(dataset_tasks) - set(self.validation_data.keys())
+            dataset_only_tasks = self.dataset_tasks - set(self.validation_data.keys())
             if dataset_only_tasks:
-                print(f"Found {len(dataset_only_tasks)} tasks in dataset without validation ranges: {', '.join(sorted(dataset_only_tasks))}")
-            
+                friendly_list = ', '.join(sorted(dataset_only_tasks))
+                print(f"INFO: Dataset tasks without YAML ranges will use placeholders: {friendly_list}")
+
+            self._refresh_task_dropdown()
+
         except Exception as e:
             print(f"Warning: Could not get tasks from dataset: {e}")
     
@@ -1920,15 +1961,16 @@ class InteractiveValidationTuner:
     
     def run_validation(self, variables):
         """Run validation to determine which strides fail for each variable.
-        
+
         Only validates features that:
         1. Are in the displayed variables list
         2. Actually exist in the dataset
         3. Have validation ranges defined
-        
+
         Returns failing_strides dict and sets self.global_passing_strides
         """
         failing_strides = {var: set() for var in variables}
+        self._missing_task_notice = None
 
         if not self.locomotion_data or not self.current_task:
             self.validation_stats = {
@@ -1938,6 +1980,22 @@ class InteractiveValidationTuner:
                 'features_displayed': len(variables)
             }
             self.global_passing_strides = set()
+            return failing_strides
+
+        if not self._dataset_has_task(self.current_task):
+            dataset_label = self.dataset_path.name if self.dataset_path else 'loaded dataset'
+            message = (f"Dataset '{dataset_label}' does not contain task '{self.current_task}'. "
+                       "Showing YAML ranges without stride data.")
+            print(f"INFO: {message}")
+            self._missing_task_notice = message
+            self.validation_stats = {
+                'total_strides': 0,
+                'passing_strides': 0,
+                'features_validated': 0,
+                'features_displayed': len(variables)
+            }
+            self.global_passing_strides = set()
+            self._set_status(message)
             return failing_strides
 
         # Sync validator config with current in-memory ranges
@@ -1994,56 +2052,59 @@ class InteractiveValidationTuner:
         if not self.current_task or var_name is None:
             return y_min, y_max
         
-        # First, try to get actual data range
+        # Collect display ranges driven by both data and validation boxes
+        ranges: List[Tuple[float, float]] = []
+
         cache_key = f"{self.current_task}_{var_name}"
-        data_min, data_max = None, None
-        
-        if cache_key in self.data_cache and len(self.data_cache[cache_key]) > 0:
-            data = self.data_cache[cache_key]
-            data_min = np.min(data)
-            data_max = np.max(data)
-        else:
-            # Try to load the data if not in cache
-            self.load_variable_data(var_name)
+        dataset_has_task = self._dataset_has_task(self.current_task)
+
+        # Include data-driven range when available
+        if dataset_has_task:
+            data = None
             if cache_key in self.data_cache and len(self.data_cache[cache_key]) > 0:
                 data = self.data_cache[cache_key]
-                data_min = np.min(data)
-                data_max = np.max(data)
-        
-        # If we have actual data, use it as the primary range
-        if data_min is not None and data_max is not None and not np.isnan(data_min) and not np.isnan(data_max):
-            # Expand range by 50% for more dragging space
-            margin = (data_max - data_min) * 0.5
-            y_min = data_min - margin
-            y_max = data_max + margin
-        else:
-            # Fall back to validation ranges if no data available
-            task_data = self.validation_data.get(self.current_task, {})
-            all_mins = []
-            all_maxs = []
-            
-            for phase in task_data.keys():
-                if not str(phase).isdigit():
-                    continue
-                phase = int(phase)
-                
-                if var_name in task_data[phase]:
-                    range_data = task_data[phase][var_name]
-                    if 'min' in range_data and 'max' in range_data:
-                        min_val = range_data['min']
-                        max_val = range_data['max']
-                        
-                        if min_val is not None and max_val is not None:
-                            all_mins.append(min_val)
-                            all_maxs.append(max_val)
-            
-            if all_mins and all_maxs:
-                val_min = min(all_mins)
-                val_max = max(all_maxs)
-                # Expand range by 30% for validation ranges
-                margin = (val_max - val_min) * 0.3
-                y_min = val_min - margin
-                y_max = val_max + margin
+            else:
+                self.load_variable_data(var_name)
+                if cache_key in self.data_cache and len(self.data_cache[cache_key]) > 0:
+                    data = self.data_cache[cache_key]
+
+            if data is not None:
+                data_min = np.nanmin(data)
+                data_max = np.nanmax(data)
+                if np.isfinite(data_min) and np.isfinite(data_max):
+                    span = max(data_max - data_min, 1e-6)
+                    margin = max(span * 0.5, 0.5)
+                    ranges.append((data_min - margin, data_max + margin))
+
+        # Always include the validation box envelope so handles remain visible
+        task_data = self.validation_data.get(self.current_task, {})
+        all_mins = []
+        all_maxs = []
+
+        for phase in task_data.keys():
+            if not str(phase).isdigit():
+                continue
+            phase = int(phase)
+
+            if var_name in task_data[phase]:
+                range_data = task_data[phase][var_name]
+                min_val = range_data.get('min') if isinstance(range_data, dict) else None
+                max_val = range_data.get('max') if isinstance(range_data, dict) else None
+
+                if min_val is not None and max_val is not None:
+                    all_mins.append(min_val)
+                    all_maxs.append(max_val)
+
+        if all_mins and all_maxs:
+            val_min = min(all_mins)
+            val_max = max(all_maxs)
+            span = max(val_max - val_min, 1e-6)
+            margin = max(span * 0.3, 0.5)
+            ranges.append((val_min - margin, val_max + margin))
+
+        if ranges:
+            y_min = min(r[0] for r in ranges)
+            y_max = max(r[1] for r in ranges)
         
         # Ensure minimum range for usability
         if (y_max - y_min) < 0.1:
@@ -2065,7 +2126,12 @@ class InteractiveValidationTuner:
         cache_key = f"{self.current_task}_{var_name}"
         if cache_key in self.data_cache:
             return  # Already cached
-        
+
+        if not self._dataset_has_task(self.current_task):
+            if cache_key not in self.data_cache:
+                self.data_cache[cache_key] = np.empty((0, self.phase_template.size))
+            return
+
         all_data = []
         try:
             subjects = self.locomotion_data.get_subjects()
@@ -2101,6 +2167,12 @@ class InteractiveValidationTuner:
 
         # Check cache first
         cache_key = f"{self.current_task}_{var_name}"
+        if not self._dataset_has_task(self.current_task):
+            self.data_cache.setdefault(cache_key, np.empty((0, self.phase_template.size)))
+            if show_pass and show_local_passing:
+                return (0, 0)
+            return 0
+
         if cache_key in self.data_cache:
             all_data = self.data_cache[cache_key]
         else:
@@ -2195,6 +2267,10 @@ class InteractiveValidationTuner:
         """Plot actual data for a variable if available."""
         # Check cache first
         cache_key = f"{self.current_task}_{var_name}"
+        if not self._dataset_has_task(self.current_task):
+            self.data_cache.setdefault(cache_key, np.empty((0, self.phase_template.size)))
+            return
+
         if cache_key in self.data_cache:
             all_data = self.data_cache[cache_key]
         else:
@@ -2885,7 +2961,9 @@ class InteractiveValidationTuner:
         dataset_name = self.dataset_path.name if hasattr(self, 'dataset_path') else "No Dataset"
         
         # Stats line (if validation has been run)
-        if hasattr(self, 'validation_stats'):
+        if self._missing_task_notice:
+            stats_line = f"\n{self._missing_task_notice}"
+        elif hasattr(self, 'validation_stats'):
             stats = self.validation_stats
             pass_pct = stats['passing_strides']/stats['total_strides']*100 if stats['total_strides'] > 0 else 0
             stats_line = (f"\n{stats['total_strides']} strides | "
@@ -2953,7 +3031,9 @@ class InteractiveValidationTuner:
         self.validate_button.config(state='disabled')
         
         # Update status bar with validation stats
-        if hasattr(self, 'validation_stats'):
+        if self._missing_task_notice:
+            self._set_status(self._missing_task_notice)
+        elif hasattr(self, 'validation_stats'):
             stats = self.validation_stats
             if stats['total_strides'] > 0:
                 pass_pct = stats['passing_strides']/stats['total_strides']*100
