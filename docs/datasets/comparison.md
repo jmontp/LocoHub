@@ -37,8 +37,7 @@ Compare validation outcomes across datasets. Pick a task, choose the datasets yo
       <span class="dataset-quality"></span>
     </div>
     <p class="task-status"></p>
-    <div class="card-buttons"></div>
-    <div class="card-plots"></div>
+  <div class="card-plots"></div>
   </div>
 </template>
 
@@ -140,33 +139,14 @@ Compare validation outcomes across datasets. Pick a task, choose the datasets yo
       const passRate = typeof taskEntry.pass_rate === 'number' ? `${taskEntry.pass_rate.toFixed(1)}% valid` : 'Pass rate unavailable';
       cardNode.querySelector('.task-status').textContent = `${statusText} ${selectedTask}: ${passRate}`;
 
-      const buttonsContainer = cardNode.querySelector('.card-buttons');
-      const addButton = (label, url, extraClasses = '') => {
-        if (url) {
-          const link = document.createElement('a');
-          link.href = url;
-          link.target = '_blank';
-          link.rel = 'noopener';
-          link.className = `card-button available ${extraClasses}`;
-          link.textContent = label;
-          buttonsContainer.appendChild(link);
-        } else {
-          const span = document.createElement('span');
-          span.className = `card-button unavailable ${extraClasses}`;
-          span.textContent = label;
-          buttonsContainer.appendChild(span);
-        }
-      };
-
-      addButton('Clean Dataset', dataset.clean_url);
-      addButton('Full Dataset', dataset.dirty_url);
-      addButton('Validation Report', dataset.validation_report);
-
       const plotsContainer = cardNode.querySelector('.card-plots');
       if (taskEntry.plots && taskEntry.plots.length) {
         taskEntry.plots.forEach((plotPath) => {
+          const normalizedPath = plotPath.startsWith('/')
+            ? plotPath
+            : `/datasets/${plotPath.replace(/^\/?/, '')}`;
           const img = document.createElement('img');
-          img.src = `./${plotPath}`;
+          img.src = normalizedPath;
           img.alt = `${dataset.display_name} ${selectedTask} validation plot`;
           img.loading = 'lazy';
           plotsContainer.appendChild(img);
@@ -278,35 +258,6 @@ Compare validation outcomes across datasets. Pick a task, choose the datasets yo
 .task-status {
   margin: 0;
   font-weight: 500;
-}
-
-.card-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.card-button {
-  display: inline-block;
-  padding: 0.5rem 1.0rem;
-  border-radius: 999px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  text-decoration: none;
-}
-
-.card-button.available {
-  background: #1f78d1;
-  color: #fff;
-}
-
-.card-button.available:hover {
-  background: #1663ad;
-}
-
-.card-button.unavailable {
-  background: #e5e7eb;
-  color: #9ca3af;
 }
 
 .card-plots {
