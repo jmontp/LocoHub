@@ -795,7 +795,7 @@ def create_task_combined_plot(
     
     # Only apply tight_layout for file saving, not interactive display
     if not show_interactive:
-        plt.tight_layout(rect=[0, 0.02, 1, 0.985])
+        fig.subplots_adjust(left=0.08, right=0.95, top=0.94, bottom=0.04, hspace=0.5, wspace=0.25)
     
     # Save the plot (only if output_dir is provided)
     if show_interactive:
