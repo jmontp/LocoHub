@@ -17,7 +17,9 @@ live under `_legacy/` for reference while the regenerated docs land here.
 | [Umich 2021 Raw](um21.md) | Decline Walking, Incline Walking, Level Walking, Run, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit, Transition | ⚠️ Partial (85.3%) | [Report](um21_validation.md) | Coming Soon |
 <!-- DATASET_TABLE_END -->
 
-More: Legacy [Dataset Comparison](_legacy/dataset_comparison.md) • [Validation Reports](validation_reports/index.md)
+<div style="border: 1px solid #1f78d1; background: #e7f2ff; padding: 1rem 1.25rem; border-radius: 0.75rem; margin: 1.5rem 0;">
+  <strong>🧭 Coming Soon:</strong> Interactive Dataset Comparison. Select a task and line up validation plots, pass rates, and download links across datasets in one place.
+</div>
 
 ## Format
 
