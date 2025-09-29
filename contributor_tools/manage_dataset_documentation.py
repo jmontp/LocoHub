@@ -138,6 +138,11 @@ def _resolve_dataset_path(dataset_arg: Optional[str], metadata: Optional[Dict] =
 def _prompt_metadata_updates(metadata: Dict) -> None:
     """Interactively prompt to update key metadata fields."""
 
+    if metadata.get('download_clean_url') is None and metadata.get('download_url'):
+        metadata['download_clean_url'] = metadata.get('download_url')
+    metadata.setdefault('download_clean_url', '')
+    metadata.setdefault('download_dirty_url', '')
+
     print("\n✏️ Update dataset details (press Enter to keep current values):")
     prompts = [
         ('display_name', 'Display name'),
@@ -160,6 +165,73 @@ def _prompt_metadata_updates(metadata: Dict) -> None:
 
     if not metadata.get('description'):
         metadata['description'] = 'Dataset description pending update.'
+
+
+def _normalize_docs_link(path_value: Optional[str], slug: str, fallback_suffix: str) -> str:
+    if not path_value:
+        return f"./{slug}{fallback_suffix}"
+    value = str(path_value)
+    prefix = "docs/datasets/"
+    if value.startswith(prefix):
+        return "./" + value[len(prefix):]
+    return value
+
+
+def generate_comparison_snapshot() -> None:
+    """Create a JSON snapshot for the comparison tool."""
+
+    meta_dir = repo_root / "docs" / "datasets" / "_metadata"
+    if not meta_dir.exists():
+        return
+
+    datasets_payload: List[Dict] = []
+
+    for meta_file in sorted(meta_dir.glob('*.yaml')):
+        data = load_metadata_file(meta_file)
+        slug = meta_file.stem
+
+        comparison_tasks = data.get('comparison_tasks') or {}
+        if isinstance(comparison_tasks, list):
+            comparison_tasks = {entry.get('task'): entry for entry in comparison_tasks if isinstance(entry, dict) and entry.get('task')}
+
+        plots_dir = repo_root / "docs" / "datasets" / "validation_plots" / slug
+
+        task_entries: List[Dict] = []
+        for task_name, task_info in sorted(comparison_tasks.items()):
+            if not task_name:
+                continue
+            plots: List[str] = []
+            if plots_dir.exists():
+                for img_path in sorted(plots_dir.glob(f"*{task_name}*.png")):
+                    rel_path = Path('validation_plots') / slug / img_path.name
+                    plots.append(rel_path.as_posix())
+
+            task_entries.append({
+                'task': task_name,
+                'display_name': _format_task_name(task_name),
+                'pass_rate': task_info.get('pass_rate'),
+                'status': task_info.get('status'),
+                'total_strides': task_info.get('total_strides'),
+                'failing_strides': task_info.get('failing_strides'),
+                'plots': plots,
+            })
+
+        dataset_entry = {
+            'slug': slug,
+            'display_name': data.get('display_name', slug),
+            'short_code': data.get('short_code', slug.upper()),
+            'quality': data.get('quality_display') or data.get('validation_status') or '—',
+            'dataset_doc': _normalize_docs_link(data.get('doc_path'), slug, '.md'),
+            'validation_report': _normalize_docs_link(data.get('validation_doc_path'), slug, '_validation.md'),
+            'clean_url': data.get('download_clean_url') or data.get('download_url'),
+            'dirty_url': data.get('download_dirty_url'),
+            'tasks': task_entries,
+        }
+
+        datasets_payload.append(dataset_entry)
+
+    snapshot_path = repo_root / "docs" / "datasets" / "comparison_data.json"
+    snapshot_path.write_text(json.dumps({'datasets': datasets_payload}, indent=2))
 
 # Import validation modules
 try:
@@ -369,6 +441,8 @@ def write_metadata_file(metadata: Dict) -> None:
         fields['validation_ranges_download'] = metadata.get('validation_ranges_download')
     if metadata.get('validation_ranges_source'):
         fields['validation_ranges_source'] = metadata.get('validation_ranges_source')
+    if metadata.get('comparison_tasks'):
+        fields['comparison_tasks'] = metadata.get('comparison_tasks')
     if metadata.get('last_dataset_path'):
         fields['last_dataset_path'] = metadata.get('last_dataset_path')
 
@@ -1302,12 +1376,14 @@ def handle_add_dataset(args):
             metadata['quality_display'] = f"❌ Needs Review ({pass_rate:.1f}%)"
         else:
             metadata['quality_display'] = status_text or '—'
+        metadata['comparison_tasks'] = validation_stats.get('tasks')
     else:
         metadata['validation_status'] = 'UNKNOWN'
         metadata['validation_pass_rate'] = None
         metadata['validation_total_strides'] = None
         metadata['validation_passing_strides'] = None
         metadata['quality_display'] = '⚠️ Validation Pending'
+        metadata['comparison_tasks'] = metadata.get('comparison_tasks') or {}
     metadata['validation_ranges_file'] = ranges_display
 
     if plot_ranges_path is None:
@@ -1369,6 +1445,7 @@ def handle_add_dataset(args):
     # Persist metadata and refresh global tables
     write_metadata_file(metadata)
     update_dataset_tables()
+    generate_comparison_snapshot()
 
     
     # Show submission checklist
@@ -1459,6 +1536,7 @@ def handle_update_documentation(args):
     doc_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)
     write_metadata_file(metadata)
     update_dataset_tables()
+    generate_comparison_snapshot()
 
     print(f"✅ Documentation refreshed: {doc_path.relative_to(repo_root)}")
     return 0
@@ -1545,12 +1623,14 @@ def handle_update_validation(args):
             metadata['quality_display'] = f"❌ Needs Review ({pass_rate:.1f}%)"
         else:
             metadata['quality_display'] = status_text or '—'
+        metadata['comparison_tasks'] = validation_stats.get('tasks')
     else:
         metadata['validation_status'] = 'UNKNOWN'
         metadata['validation_pass_rate'] = None
         metadata['validation_total_strides'] = None
         metadata['validation_passing_strides'] = None
         metadata['quality_display'] = '⚠️ Validation Pending'
+        metadata['comparison_tasks'] = metadata.get('comparison_tasks') or {}
     metadata['validation_ranges_file'] = ranges_display
 
     if plot_ranges_path is None:
@@ -1607,6 +1687,7 @@ def handle_update_validation(args):
 
     write_metadata_file(metadata)
     update_dataset_tables()
+    generate_comparison_snapshot()
 
     print("✅ Validation assets refreshed")
     return 0
