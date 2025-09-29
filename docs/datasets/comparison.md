@@ -51,12 +51,27 @@ Compare validation outcomes across datasets. Pick a task, choose the datasets yo
   const cardTemplate = document.getElementById('comparison-card-template');
 
   let comparisonData = { datasets: [] };
-  try {
-    const response = await fetch('./comparison_data.json');
-    if (!response.ok) throw new Error('Failed to load comparison data');
-    comparisonData = await response.json();
-  } catch (error) {
-    resultsContainer.innerHTML = `<div class="comparison-error">⚠️ ${error.message}</div>`;
+  const candidateUrls = [
+    './comparison_data.json',
+    '../comparison_data.json',
+    '/datasets/comparison_data.json'
+  ];
+
+  let loaded = false;
+  for (const url of candidateUrls) {
+    try {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) continue;
+      comparisonData = await response.json();
+      loaded = true;
+      break;
+    } catch (error) {
+      // try the next candidate
+    }
+  }
+
+  if (!loaded) {
+    resultsContainer.innerHTML = '<div class="comparison-error">⚠️ Failed to load comparison data.</div>';
     return;
   }
 
