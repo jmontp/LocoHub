@@ -12,9 +12,10 @@ live under `_legacy/` for reference while the regenerated docs land here.
 ## At a Glance
 
 <!-- DATASET_TABLE_START -->
-| Dataset | Tasks | Quality | Validation | Download |
-|---------|-------|---------|------------|----------|
-| [Umich 2021 Raw](um21.md) | Decline Walking, Incline Walking, Level Walking, Run, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit, Transition | ⚠️ Partial (85.3%) | [Report](um21_validation.md) | Coming Soon |
+| Dataset | Tasks | Quality | Documentation | Clean Dataset | Full Dataset |
+|---------|-------|---------|---------------|---------------|---------------|
+| Gtech 2021 Raw | Decline Walking, Incline Walking, Level Walking, Stair Ascent, Stair Descent, Transition | ⚠️ Partial (81.3%) | [Open](gt21.md) | Coming soon | Coming soon |
+| Umich 2021 Raw | Decline Walking, Incline Walking, Level Walking, Run, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit, Transition | ⚠️ Partial (85.4%) | [Open](um21.md) | Coming soon | Coming soon |
 <!-- DATASET_TABLE_END -->
 
 <div style="border: 1px solid #1f78d1; background: #e7f2ff; padding: 1rem 1.25rem; border-radius: 0.75rem; margin: 1.5rem 0; display:flex; flex-wrap:wrap; align-items:center; gap:1rem;">

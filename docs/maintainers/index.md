@@ -154,7 +154,7 @@ flowchart TD
 <details>
 <summary>`manage_dataset_documentation.py` — Unified contributor workflow for validation, plots, and documentation.</summary>
 
-Generates or refreshes everything a contributor needs for a dataset page. The script derives a dataset slug from the parquet file name, stores metadata in `docs/datasets/_metadata/`, writes both the overview (`<slug>.md`) and validation (`<slug>_validation.md`) pages, and rebuilds the dataset tables that live between the `<!-- DATASET_TABLE_START -->` / `<!-- DATASET_TABLE_END -->` markers in `README.md`, `docs/index.md`, and `docs/datasets/index.md`. Those tables are regenerated from the metadata directory so the public landing pages always list the newest datasets with consistent links.
+Generates or refreshes everything a contributor needs for a dataset page. The script derives a dataset slug from the parquet file name, stores metadata in `docs/datasets/_metadata/`, writes the tab wrapper (`<slug>.md`) plus the underlying snippets (`_generated/<slug>_documentation.md` and `_generated/<slug>_validation.md`), and rebuilds the dataset tables that live between the `<!-- DATASET_TABLE_START -->` / `<!-- DATASET_TABLE_END -->` markers in `README.md`, `docs/index.md`, and `docs/datasets/index.md`. Those tables are regenerated from the metadata directory so the public landing pages always list the newest datasets with consistent links.
 
 <details>
 <summary>`add-dataset` subcommand</summary>
@@ -332,10 +332,10 @@ Everything on the public site is generated from a small collection of source fol
 ```
 docs/
 ├── datasets/
+│   ├── _generated/            # Snippet bodies for docs + validation tabs
 │   ├── _metadata/             # YAML snapshots driving tables & cards
 │   ├── validation_plots/      # Latest validation images + index.md per dataset
-│   ├── <dataset>.md           # Dataset overview (metadata & usage)
-│   └── <dataset>_validation.md# Validation summary + ranges + plots
+│   └── <dataset>.md           # Tab wrapper embedding documentation & validation snippets
 ├── maintainers/               # Maintainer handbook (this page)
 ├── reference/                 # Data standard spec and units
 ├── contributing/              # Contributor step-by-step guide
@@ -347,10 +347,10 @@ Key mechanics to remember:
 - `manage_dataset_documentation.py add-dataset` is the authoritative writer. It:
   1. Loads or prompts for metadata and writes `docs/datasets/_metadata/<slug>.yaml`.
   2. Runs validation, storing summary text and stats in the metadata dict.
-  3. Renders `docs/datasets/<slug>.md` (overview) and `docs/datasets/<slug>_validation.md` (latest validation report with inline ranges).
+  3. Renders `docs/datasets/<slug>.md` (tab wrapper) plus `_generated/<slug>_documentation.md` and `_generated/<slug>_validation.md` (snippet bodies consumed by the wrapper tabs).
   4. Regenerates the dataset tables inside the marker pairs (`<!-- DATASET_TABLE_START -->` / `<!-- DATASET_TABLE_END -->`) in `README.md`, `docs/index.md`, and `docs/datasets/index.md`.
   5. Writes `docs/datasets/validation_plots/<slug>/` (images plus `index.md`). Only the most recent plots are kept; git history provides older versions.
-- The dataset tables now surface both links: the dataset name points to the overview page, and the `Validation` column links to the corresponding validation report.
+- The dataset tables now expose a single documentation link (covering both tabs) alongside clean/full dataset download links.
 - Running `mkdocs serve` or `mkdocs build` does not invoke regeneration—it only renders the already-generated Markdown.
 - If you hand-edit generated Markdown, mirror the change in the metadata or template; the next `add-dataset` run will otherwise overwrite it.
 

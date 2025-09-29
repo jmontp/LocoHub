@@ -64,6 +64,9 @@ DEFAULT_RANGES_CANDIDATES = [
     VALIDATION_RANGES_DIR / "default_ranges.yaml",
 ]
 
+DOCS_DATASETS_DIR = repo_root / "docs" / "datasets"
+DOCS_DATASETS_GENERATED_DIR = DOCS_DATASETS_DIR / ".generated"
+
 
 def _resolve_default_ranges_file() -> Path:
     for candidate in DEFAULT_RANGES_CANDIDATES:
@@ -430,10 +433,14 @@ def write_metadata_file(metadata: Dict) -> None:
     fields['quality_display'] = metadata.get('quality_display')
     fields['doc_url'] = metadata.get('doc_url')
     fields['doc_path'] = metadata.get('doc_path')
+    if metadata.get('doc_body_path'):
+        fields['doc_body_path'] = metadata.get('doc_body_path')
     if metadata.get('validation_doc_url'):
         fields['validation_doc_url'] = metadata.get('validation_doc_url')
     if metadata.get('validation_doc_path'):
         fields['validation_doc_path'] = metadata.get('validation_doc_path')
+    if metadata.get('validation_body_path'):
+        fields['validation_body_path'] = metadata.get('validation_body_path')
     fields['validation_summary'] = metadata.get('validation_summary')
     if metadata.get('validation_ranges_file'):
         fields['validation_ranges_file'] = metadata.get('validation_ranges_file')
@@ -453,7 +460,16 @@ def write_metadata_file(metadata: Dict) -> None:
 def _relative_link(path_value: Optional[str], table_file: Path) -> Optional[str]:
     if not path_value:
         return None
-    target = Path(path_value)
+    anchor = ''
+    target_str = str(path_value)
+    if '#' in target_str:
+        target_str, anchor = target_str.split('#', 1)
+        anchor = f"#{anchor}" if anchor else ''
+
+    if not target_str:
+        return anchor or None
+
+    target = Path(target_str)
     if not target.is_absolute():
         target = (repo_root / target).resolve()
     if target.suffix != '.md':
@@ -462,14 +478,14 @@ def _relative_link(path_value: Optional[str], table_file: Path) -> Optional[str]
         docs_root = repo_root / "docs"
         target_rel = target.relative_to(docs_root)
     except ValueError:
-        # Path outside docs; return as-is
-        return target.as_posix()
+        # Path outside docs; return as-is (with anchor if present)
+        return target.as_posix() + anchor
 
     table_rel = table_file.relative_to(docs_root)
     rel_path = PurePosixPath(
         os.path.relpath(target_rel.as_posix(), start=table_rel.parent.as_posix())
     )
-    return rel_path.as_posix()
+    return rel_path.as_posix() + anchor
 
 
 def _resolve_dataset_link(data: Dict, table_file: Path, absolute: bool) -> str:
@@ -494,22 +510,42 @@ def _resolve_validation_link(data: Dict, table_file: Path, absolute: bool) -> Op
 
 
 def _build_dataset_table(metadata_entries: List[Dict], table_file: Path, absolute_links: bool) -> str:
-    rows = []
-    header = "| Dataset | Tasks | Quality | Validation | Download |"
-    separator = "|---------|-------|---------|------------|----------|"
+    header = "| Dataset | Tasks | Quality | Documentation | Clean Dataset | Full Dataset |"
+    separator = "|---------|-------|---------|---------------|---------------|---------------|"
 
+    rows: List[str] = []
     for data in sorted(metadata_entries, key=lambda d: d.get('display_name', '').lower()):
         doc_url = _resolve_dataset_link(data, table_file, absolute_links)
-        validation_url = _resolve_validation_link(data, table_file, absolute_links)
         display_name = data.get('display_name') or data['dataset_name']
-        dataset_cell = f"[{display_name}]({doc_url})"
+        dataset_cell = display_name
+        doc_cell = f"[Open]({doc_url})" if doc_url else '—'
+
         tasks_list = data.get('tasks', []) or []
         tasks_cell = ', '.join(_format_task_name(task) for task in tasks_list) if tasks_list else '—'
-        quality = data.get('quality_display') or data.get('validation_status') or '—'
-        validation_cell = f"[Report]({validation_url})" if validation_url else '—'
-        download_url = data.get('download_url')
-        download_cell = f"[Download]({download_url})" if download_url else 'Coming Soon'
-        rows.append(f"| {dataset_cell} | {tasks_cell} | {quality} | {validation_cell} | {download_cell} |")
+
+        quality_cell = data.get('quality_display') or data.get('validation_status') or '—'
+
+        clean_url = data.get('download_clean_url') or data.get('download_url')
+        dirty_url = data.get('download_dirty_url')
+        clean_cell = f"[Clean]({clean_url})" if clean_url else 'Coming soon'
+        full_cell = f"[Full]({dirty_url})" if dirty_url else 'Coming soon'
+
+        rows.append(
+            "| "
+            + " | ".join([
+                dataset_cell,
+                tasks_cell,
+                quality_cell,
+                doc_cell,
+                clean_cell,
+                full_cell,
+            ])
+            + " |"
+        )
+
+    if not rows:
+        empty_cells = ['_No datasets available_'] + [''] * 5
+        return header + "\n" + separator + "\n| " + " | ".join(empty_cells) + " |"
 
     return "\n".join([header, separator] + rows)
 
@@ -693,21 +729,25 @@ def _snapshot_validation_ranges(
     return download_filename, validation_summary
 
 
-def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_filename: str) -> Path:
-    """Generate the dataset overview markdown page."""
+def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_filename: str) -> Tuple[Path, Path]:
+    """Generate the dataset overview wrapper and documentation body."""
+
+    dataset_slug = metadata['dataset_name']
     dataset_rel = _relative_path(dataset_path)
     date_added = metadata.get('date_added') or datetime.now().strftime('%Y-%m-%d')
+    generated_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
     tasks_display = ', '.join(_format_task_name(task) for task in metadata['tasks'])
+
     task_catalog_section = ''
     task_table = metadata.get('task_table')
     if task_table:
-        task_catalog_section = f"#### Task Catalog\n\n{task_table}\n\n"
+        task_catalog_section = f"#### Task Catalog\n\n{task_table}\n"
 
     status_label = metadata.get('quality_display') or metadata.get('validation_status') or 'Validation pending'
     pass_rate = metadata.get('validation_pass_rate')
     pass_display = f"{float(pass_rate):.1f}%" if pass_rate is not None else '—'
 
-    validation_link = f"./{validation_doc_filename}"
+    validation_link = "#validation"
     ranges_entry = metadata.get('validation_ranges_file', '—')
     ranges_source = metadata.get('validation_ranges_source')
     if ranges_source and ranges_entry != '—':
@@ -715,6 +755,8 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
 
     clean_url = (metadata.get('download_clean_url') or metadata.get('download_url') or '').strip()
     dirty_url = (metadata.get('download_dirty_url') or '').strip()
+
+    description_text = metadata.get('description') or 'Dataset description pending update.'
 
     download_buttons: List[str] = []
     if clean_url:
@@ -737,7 +779,7 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
     buttons_html = "\n  ".join(download_buttons)
     download_note = ''
     if not clean_url and not dirty_url:
-        download_note = '\n*Downloads coming soon. Contact the authors for data access.*\n'
+        download_note = '\n*Downloads coming soon. Contact the authors for data access.*'
 
     download_section = (
         "<style>\n"
@@ -751,67 +793,96 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
         f"{download_note}"
     )
 
-    doc_content = f"""---
-title: {metadata['display_name']}
-short_code: {metadata['short_code']}
-date_added: {date_added}
----
+    doc_body_lines: List[str] = [
+        "## Overview",
+        "",
+        f"- **Short Code**: {metadata['short_code']}",
+        f"- **Year**: {metadata['year']}",
+        f"- **Institution**: {metadata['institution']}",
+        "",
+        description_text,
+        "",
+        "## Downloads",
+        "",
+        download_section,
+        "",
+        "## Dataset Information",
+        "",
+        "### Subjects and Tasks",
+        f"- **Number of Subjects**: {metadata['subjects']}",
+        f"- **Tasks Included**: {tasks_display}",
+        "",
+    ]
 
-# {metadata['display_name']}
+    if task_catalog_section:
+        doc_body_lines.append(task_catalog_section.rstrip())
+        doc_body_lines.append("")
 
-## Overview
+    doc_body_lines.extend([
+        "### Data Structure",
+        "- **Format**: Phase-normalized (150 points per gait cycle)",
+        "- **Sampling**: Phase-indexed from 0-100%",
+        "- **Variables**: Standard biomechanical naming convention",
+        "",
+        "## Validation Snapshot",
+        "",
+        f"- **Status**: {status_label}",
+        f"- **Stride Pass Rate**: {pass_display}",
+        f"- **Validation Ranges**: {ranges_entry}",
+        f"- **Detailed Report**: [View validation report]({validation_link})",
+        "",
+        "## Citation",
+        metadata.get('citation', 'Please cite appropriately when using this dataset.'),
+        "",
+        "## Collection Details",
+        "",
+        "### Protocol",
+        metadata.get('protocol', 'Standard motion capture protocol was used.'),
+        "",
+        "### Processing Notes",
+        metadata.get('notes', 'No additional notes.'),
+        "",
+        "## Files Included",
+        "",
+        f"- `{dataset_rel}` — Phase-normalized dataset",
+        f"- [Validation report]({validation_link})",
+        f"- Conversion script in `contributor_tools/conversion_scripts/{dataset_slug}/`",
+        "",
+        "---",
+        "",
+        f"*Generated by Dataset Submission Tool on {generated_timestamp}*",
+    ])
 
-**Short Code**: {metadata['short_code']}  \n**Year**: {metadata['year']}  \n**Institution**: {metadata['institution']}  \n
-{metadata['description']}
+    doc_body_content = "\n".join(line for line in doc_body_lines if line is not None) + "\n"
 
-## Downloads
+    DOCS_DATASETS_GENERATED_DIR.mkdir(parents=True, exist_ok=True)
+    doc_body_path = DOCS_DATASETS_GENERATED_DIR / f"{dataset_slug}_documentation.md"
+    doc_body_path.write_text(doc_body_content)
 
-{download_section}
+    doc_snippet_target = (PurePosixPath('datasets') / doc_body_path.relative_to(DOCS_DATASETS_DIR)).as_posix()
+    validation_snippet_target = (PurePosixPath('datasets') / Path(validation_doc_filename)).as_posix()
 
-## Dataset Information
+    wrapper_content = (
+        f"---\n"
+        f"title: {metadata['display_name']}\n"
+        f"short_code: {metadata['short_code']}\n"
+        f"date_added: {date_added}\n"
+        f"---\n\n"
+        f"# {metadata['display_name']}\n\n"
+        "=== \"Documentation\"\n\n"
+        f"    --8<-- \"{doc_snippet_target}\"\n\n"
+        "=== \"Validation\"\n\n"
+        f"    --8<-- \"{validation_snippet_target}\"\n"
+    )
 
-### Subjects and Tasks
-- **Number of Subjects**: {metadata['subjects']}
-- **Tasks Included**: {tasks_display}
+    DOCS_DATASETS_DIR.mkdir(parents=True, exist_ok=True)
+    wrapper_path = DOCS_DATASETS_DIR / f"{dataset_slug}.md"
+    wrapper_path.write_text(wrapper_content)
 
-{task_catalog_section}### Data Structure
-- **Format**: Phase-normalized (150 points per gait cycle)
-- **Sampling**: Phase-indexed from 0-100%
-- **Variables**: Standard biomechanical naming convention
+    metadata['doc_body_path'] = str(doc_body_path.relative_to(repo_root))
 
-## Validation Snapshot
+    return wrapper_path, doc_body_path
 
-- **Status**: {status_label}
-- **Stride Pass Rate**: {pass_display}
-- **Validation Ranges**: {ranges_entry}
-- **Detailed Report**: [View validation report]({validation_link})
-
-## Citation
-{metadata.get('citation', 'Please cite appropriately when using this dataset.')}
-
-## Collection Details
-
-### Protocol
-{metadata.get('protocol', 'Standard motion capture protocol was used.')}
-
-### Processing Notes
-{metadata.get('notes', 'No additional notes.')}
-
-## Files Included
-
-- `{dataset_rel}` — Phase-normalized dataset
-- [Validation report]({validation_link})
-- Conversion script in `contributor_tools/conversion_scripts/{metadata['dataset_name']}/`
-
----
-
-*Generated by Dataset Submission Tool on {datetime.now().strftime('%Y-%m-%d %H:%M')}*
-"""
-    doc_dir = repo_root / "docs" / "datasets"
-    doc_dir.mkdir(parents=True, exist_ok=True)
-    doc_path = doc_dir / f"{metadata['dataset_name']}.md"
-    doc_path.write_text(doc_content)
-    return doc_path
 
 
 def generate_validation_page(
@@ -824,12 +895,21 @@ def generate_validation_page(
     ranges_download_filename: Optional[str] = None,
     ranges_source_display: Optional[str] = None,
 ) -> Path:
-    """Generate the per-dataset validation markdown page."""
+    """Generate the per-dataset validation markdown body for tabbed layout."""
 
+    generated_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
     pass_rate = metadata.get('validation_pass_rate')
     pass_display = f"{float(pass_rate):.1f}%" if pass_rate is not None else '—'
-    total_strides = metadata.get('validation_total_strides') or '—'
-    passing_strides = metadata.get('validation_passing_strides') or '—'
+    total_strides = (
+        metadata.get('validation_total_strides')
+        or metadata.get('total_strides')
+        or '—'
+    )
+    passing_strides = (
+        metadata.get('validation_passing_strides')
+        or metadata.get('passing_strides')
+        or '—'
+    )
 
     stats_lines = [
         "| Metric | Value |",
@@ -838,8 +918,6 @@ def generate_validation_page(
         f"| Total Strides | {total_strides} |",
         f"| Passing Strides | {passing_strides} |",
     ]
-
-    validation_doc_path.parent.mkdir(parents=True, exist_ok=True)
     stats_table = "\n".join(stats_lines)
 
     if ranges_download_filename:
@@ -853,34 +931,34 @@ def generate_validation_page(
     if ranges_source_display:
         ranges_section += f"\n\n_Source ranges file: {ranges_source_display}_"
 
-    validation_content = f"""---
-title: {metadata['display_name']} Validation Report
-short_code: {metadata['short_code']}
-generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}
----
+    validation_doc_path.parent.mkdir(parents=True, exist_ok=True)
 
-# Validation Report — {metadata['display_name']}
+    body_lines = [
+        f"**Report generated:** {generated_timestamp}",
+        "",
+        "## Status Summary",
+        "",
+        stats_table,
+        "",
+        validation_summary.strip(),
+        "",
+        "## Validation Ranges Snapshot",
+        "",
+        ranges_section,
+        "",
+        "## Validation Plots",
+        "",
+        "<!-- VALIDATION_GALLERY -->",
+        "",
+        "---",
+        "",
+        f"*Generated from `{_relative_path(dataset_path)}` on {generated_timestamp}*",
+    ]
 
-## Status Summary
-
-{stats_table}
-
-{validation_summary}
-
-## Validation Ranges Snapshot
-
-{ranges_section}
-
-## Validation Plots
-
-<!-- VALIDATION_GALLERY -->
-
----
-
-*Generated from `{_relative_path(dataset_path)}` on {datetime.now().strftime('%Y-%m-%d %H:%M')}*
-"""
-
+    validation_content = "\n".join(body_lines) + "\n"
     validation_doc_path.write_text(validation_content)
+
+    metadata['validation_body_path'] = str(validation_doc_path.relative_to(repo_root))
 
     return validation_doc_path
 
@@ -1023,16 +1101,22 @@ def run_validation(dataset_path: Path, ranges_path: Optional[Path] = None) -> Tu
         return {}, f"⚠️ Validation could not be completed: {str(e)}", None, {}
 
 
-def generate_submission_checklist(dataset_slug: str, dataset_file: Path, doc_path: Path, validation_doc_path: Path) -> str:
-    """
-    Generate a checklist for the PR submission.
-    
+def generate_submission_checklist(
+    dataset_slug: str,
+    dataset_file: Path,
+    doc_wrapper_path: Path,
+    doc_body_path: Path,
+    validation_doc_path: Path,
+) -> str:
+    """Generate a checklist for the PR submission.
+
     Args:
         dataset_slug: Slugified dataset identifier
         dataset_file: Path to dataset parquet file
-        doc_path: Path to documentation file
-        validation_doc_path: Path to validation report file
-        
+        doc_wrapper_path: Path to the tabbed documentation wrapper
+        doc_body_path: Path to the documentation body snippet
+        validation_doc_path: Path to the validation body snippet
+
     Returns:
         Formatted checklist string
     """
@@ -1048,8 +1132,9 @@ Your dataset submission is ready! Please include the following in your PR:
 
 REQUIRED FILES:
 □ Dataset file: {dataset_file_rel}
-□ Documentation: {doc_path.relative_to(repo_root)}
-□ Validation report: {validation_doc_path.relative_to(repo_root)}
+□ Documentation wrapper: {doc_wrapper_path.relative_to(repo_root)}
+□ Documentation body: {doc_body_path.relative_to(repo_root)}
+□ Validation body: {validation_doc_path.relative_to(repo_root)}
 □ Conversion script: {conversion_hint}
 
 OPTIONAL FILES:
@@ -1308,10 +1393,10 @@ def handle_add_dataset(args):
     # Prepare metadata dictionary
     dataset_name = dataset_slug
 
-    doc_path = repo_root / "docs" / "datasets" / f"{dataset_name}.md"
-    validation_doc_filename = f"{dataset_name}_validation.md"
+    doc_path = DOCS_DATASETS_DIR / f"{dataset_name}.md"
+    validation_doc_filename = f".generated/{dataset_name}_validation.md"
 
-    validation_doc_path = repo_root / "docs" / "datasets" / f"{dataset_name}_validation.md"
+    validation_doc_path = DOCS_DATASETS_DIR / validation_doc_filename
     metadata_path = _metadata_path_for_slug(dataset_slug)
     ranges_snapshot_path = repo_root / "docs" / "datasets" / f"{dataset_name}_validation_ranges.yaml"
 
@@ -1349,8 +1434,8 @@ def handle_add_dataset(args):
     metadata['validation_summary'] = validation_summary
     metadata['doc_url'] = f"{SITE_DATASET_BASE_URL}/{dataset_name}/"
     metadata['doc_path'] = f"docs/datasets/{dataset_name}.md"
-    metadata['validation_doc_url'] = f"{SITE_DATASET_BASE_URL}/{dataset_name}_validation/"
-    metadata['validation_doc_path'] = f"docs/datasets/{validation_doc_filename}"
+    metadata['validation_doc_url'] = f"{SITE_DATASET_BASE_URL}/{dataset_name}/#validation"
+    metadata['validation_doc_path'] = f"docs/datasets/{dataset_name}.md#validation"
 
     ranges_display = _display_path(custom_ranges_path) if custom_ranges_path else _display_path(_resolve_default_ranges_file())
     plot_ranges_path: Optional[Path] = custom_ranges_path
@@ -1395,11 +1480,11 @@ def handle_add_dataset(args):
     if not ranges_source_path.is_absolute():
         ranges_source_path = (repo_root / ranges_source_path).resolve()
 
-    validation_doc_path = (repo_root / "docs" / "datasets" / validation_doc_filename)
+    validation_doc_path = DOCS_DATASETS_DIR / validation_doc_filename
 
     ranges_download_filename, validation_summary = _snapshot_validation_ranges(
         dataset_name,
-        validation_doc_path.parent,
+        DOCS_DATASETS_DIR,
         ranges_source_path,
         ranges_display,
         validation_summary,
@@ -1414,8 +1499,8 @@ def handle_add_dataset(args):
     
     # Generate documentation
     print(f"\n📄 Generating documentation...")
-    doc_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)
-    validation_doc_path = generate_validation_page(
+    doc_wrapper_path, doc_body_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)
+    validation_body_path = generate_validation_page(
         dataset_path,
         metadata,
         validation_summary,
@@ -1425,8 +1510,9 @@ def handle_add_dataset(args):
         ranges_download_filename,
         ranges_source_display,
     )
-    print(f"✅ Overview created: {doc_path.relative_to(repo_root)}")
-    print(f"✅ Validation report created: {validation_doc_path.relative_to(repo_root)}")
+    print(f"✅ Tab wrapper created: {doc_wrapper_path.relative_to(repo_root)}")
+    print(f"✅ Documentation body created: {doc_body_path.relative_to(repo_root)}")
+    print(f"✅ Validation body created: {validation_body_path.relative_to(repo_root)}")
     
     # Generate plots directory structure
     plots_dir = repo_root / "docs" / "datasets" / "validation_plots" / dataset_name
@@ -1442,7 +1528,7 @@ def handle_add_dataset(args):
     except subprocess.CalledProcessError as exc:
         print(f"⚠️  Plot generation failed: {exc}")
 
-    update_validation_gallery(validation_doc_path, dataset_name)
+    update_validation_gallery(validation_body_path, dataset_name)
 
     # Persist metadata and refresh global tables
     write_metadata_file(metadata)
@@ -1451,7 +1537,13 @@ def handle_add_dataset(args):
 
     
     # Show submission checklist
-    checklist = generate_submission_checklist(dataset_name, dataset_path, doc_path, validation_doc_path)
+    checklist = generate_submission_checklist(
+        dataset_name,
+        dataset_path,
+        doc_wrapper_path,
+        doc_body_path,
+        validation_body_path,
+    )
     print(checklist)
     
     # Save checklist to file
@@ -1494,8 +1586,12 @@ def handle_update_documentation(args):
     metadata['dataset_name'] = dataset_slug
     metadata['doc_url'] = metadata.get('doc_url') or f"{SITE_DATASET_BASE_URL}/{dataset_slug}/"
     metadata['doc_path'] = metadata.get('doc_path') or f"docs/datasets/{dataset_slug}.md"
-    metadata['validation_doc_url'] = metadata.get('validation_doc_url') or f"{SITE_DATASET_BASE_URL}/{dataset_slug}_validation/"
-    metadata['validation_doc_path'] = metadata.get('validation_doc_path') or f"docs/datasets/{dataset_slug}_validation.md"
+    metadata['validation_doc_url'] = metadata.get('validation_doc_url') or f"{SITE_DATASET_BASE_URL}/{dataset_slug}/#validation"
+    metadata['validation_doc_path'] = metadata.get('validation_doc_path') or f"docs/datasets/{dataset_slug}.md#validation"
+    if metadata.get('validation_doc_path', '').endswith('_validation.md'):
+        metadata['validation_doc_path'] = f"docs/datasets/{dataset_slug}.md#validation"
+    if metadata.get('validation_doc_url', '').endswith('_validation/'):
+        metadata['validation_doc_url'] = f"{SITE_DATASET_BASE_URL}/{dataset_slug}/#validation"
     metadata['last_dataset_path'] = _relative_path(dataset_path)
 
     override_path = getattr(args, 'metadata_file', None)
@@ -1534,13 +1630,14 @@ def handle_update_documentation(args):
     if not override_path:
         _prompt_metadata_updates(metadata)
 
-    validation_doc_filename = f"{dataset_slug}_validation.md"
-    doc_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)
+    validation_doc_filename = f".generated/{dataset_slug}_validation.md"
+    doc_path, doc_body_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)
     write_metadata_file(metadata)
     update_dataset_tables()
     generate_comparison_snapshot()
 
-    print(f"✅ Documentation refreshed: {doc_path.relative_to(repo_root)}")
+    print(f"✅ Tab wrapper refreshed: {doc_path.relative_to(repo_root)}")
+    print(f"✅ Documentation body refreshed: {doc_body_path.relative_to(repo_root)}")
     return 0
 
 
@@ -1576,9 +1673,13 @@ def handle_update_validation(args):
     metadata['dataset_name'] = dataset_slug
     metadata['doc_url'] = metadata.get('doc_url') or f"{SITE_DATASET_BASE_URL}/{dataset_slug}/"
     metadata['doc_path'] = metadata.get('doc_path') or f"docs/datasets/{dataset_slug}.md"
-    metadata['validation_doc_url'] = metadata.get('validation_doc_url') or f"{SITE_DATASET_BASE_URL}/{dataset_slug}_validation/"
-    metadata['validation_doc_path'] = metadata.get('validation_doc_path') or f"docs/datasets/{dataset_slug}_validation.md"
+    metadata['validation_doc_url'] = metadata.get('validation_doc_url') or f"{SITE_DATASET_BASE_URL}/{dataset_slug}/#validation"
+    metadata['validation_doc_path'] = metadata.get('validation_doc_path') or f"docs/datasets/{dataset_slug}.md#validation"
     metadata['last_dataset_path'] = _relative_path(dataset_path)
+    if metadata.get('validation_doc_path', '').endswith('_validation.md'):
+        metadata['validation_doc_path'] = f"docs/datasets/{dataset_slug}.md#validation"
+    if metadata.get('validation_doc_url', '').endswith('_validation/'):
+        metadata['validation_doc_url'] = f"{SITE_DATASET_BASE_URL}/{dataset_slug}/#validation"
 
 
     try:
@@ -1642,12 +1743,12 @@ def handle_update_validation(args):
     if not ranges_source_path.is_absolute():
         ranges_source_path = (repo_root / ranges_source_path).resolve()
 
-    validation_doc_filename = f"{dataset_slug}_validation.md"
-    validation_doc_path = repo_root / "docs" / "datasets" / validation_doc_filename
+    validation_doc_filename = f".generated/{dataset_slug}_validation.md"
+    validation_doc_path = DOCS_DATASETS_DIR / validation_doc_filename
 
     ranges_download_filename, validation_summary = _snapshot_validation_ranges(
         dataset_slug,
-        validation_doc_path.parent,
+        DOCS_DATASETS_DIR,
         ranges_source_path,
         ranges_display,
         validation_summary,
@@ -1662,8 +1763,8 @@ def handle_update_validation(args):
     print(validation_summary)
 
     print(f"\n📄 Updating documentation...")
-    doc_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)
-    validation_doc_path = generate_validation_page(
+    doc_path, doc_body_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)
+    validation_body_path = generate_validation_page(
         dataset_path,
         metadata,
         validation_summary,
@@ -1673,8 +1774,9 @@ def handle_update_validation(args):
         ranges_download_filename,
         ranges_source_display,
     )
-    print(f"✅ Overview updated: {doc_path.relative_to(repo_root)}")
-    print(f"✅ Validation report updated: {validation_doc_path.relative_to(repo_root)}")
+    print(f"✅ Tab wrapper updated: {doc_path.relative_to(repo_root)}")
+    print(f"✅ Documentation body updated: {doc_body_path.relative_to(repo_root)}")
+    print(f"✅ Validation body updated: {validation_body_path.relative_to(repo_root)}")
 
     plots_dir = repo_root / "docs" / "datasets" / "validation_plots" / dataset_slug
     plots_dir.mkdir(parents=True, exist_ok=True)
@@ -1685,7 +1787,7 @@ def handle_update_validation(args):
     except subprocess.CalledProcessError as exc:
         print(f"⚠️  Plot generation failed: {exc}")
 
-    update_validation_gallery(validation_doc_path, dataset_slug)
+    update_validation_gallery(validation_body_path, dataset_slug)
 
     write_metadata_file(metadata)
     update_dataset_tables()

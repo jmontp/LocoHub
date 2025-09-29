@@ -1,0 +1,115 @@
+## Overview
+
+- **Short Code**: UM21
+- **Year**: 2021
+- **Institution**: Locolab
+
+Biomechanical dataset from Umich 2021 Raw
+
+## Downloads
+
+<style>
+.download-grid { display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem; }
+.download-button { display:inline-block; padding:0.65rem 1.4rem; border-radius:0.5rem; font-weight:600; text-decoration:none; }
+.download-button.available { background:#1f78d1; color:#fff; }
+.download-button.available:hover { background:#1663ad; }
+.download-button.unavailable { background:#d1d5db; color:#6b7280; cursor:not-allowed; }
+</style>
+<div class="download-grid">
+  <span class="download-button unavailable" title="Clean dataset download not yet available">Clean Dataset (coming soon)</span>
+  <span class="download-button unavailable" title="Full dataset download not yet available">Full Dataset (coming soon)</span>
+</div>
+*Downloads coming soon. Contact the authors for data access.*
+
+## Dataset Information
+
+### Subjects and Tasks
+- **Number of Subjects**: 10
+- **Tasks Included**: Decline Walking, Incline Walking, Level Walking, Run, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit, Transition
+
+#### Task Catalog
+
+| Task | Task ID | Task Info |
+|------|---------|-----------|
+| decline_walking | decline_10deg | incline_deg:-10,speed_m_s:0.8,treadmill:true,surface:treadmill |
+|   |   | incline_deg:-10,speed_m_s:1.0,treadmill:true,surface:treadmill |
+|   |   | incline_deg:-10,speed_m_s:1.2,treadmill:true,surface:treadmill |
+|   | decline_5deg | incline_deg:-5,speed_m_s:0.8,treadmill:true,surface:treadmill |
+|   |   | incline_deg:-5,speed_m_s:1.0,treadmill:true,surface:treadmill |
+|   |   | incline_deg:-5,speed_m_s:1.2,treadmill:true,surface:treadmill |
+| incline_walking | incline_10deg | incline_deg:10,speed_m_s:0.8,treadmill:true,surface:treadmill |
+|   |   | incline_deg:10,speed_m_s:1.0,treadmill:true,surface:treadmill |
+|   |   | incline_deg:10,speed_m_s:1.2,treadmill:true,surface:treadmill |
+|   | incline_5deg | incline_deg:5,speed_m_s:0.8,treadmill:true,surface:treadmill |
+|   |   | incline_deg:5,speed_m_s:1.0,treadmill:true,surface:treadmill |
+|   |   | incline_deg:5,speed_m_s:1.2,treadmill:true,surface:treadmill |
+| level_walking | level | incline_deg:0,speed_m_s:0.8,treadmill:true,surface:treadmill |
+|   |   | incline_deg:0,speed_m_s:1.0,treadmill:true,surface:treadmill |
+|   |   | incline_deg:0,speed_m_s:1.2,treadmill:true,surface:treadmill |
+| run | run_1_8_m_s | speed_m_s:1.8,treadmill:false,surface:overground |
+|   | run_2_0_m_s | speed_m_s:2.0,treadmill:false,surface:overground |
+|   | run_2_2_m_s | speed_m_s:2.2,treadmill:false,surface:overground |
+|   | run_2_4_m_s | speed_m_s:2.4,treadmill:false,surface:overground |
+| sit_to_stand | sit_to_stand | chair_height:0.45,arm_support:false |
+| stair_ascent | stair_ascent | step_height_m:0.097,step_width_m:0.315,incline_deg:20 |
+|   |   | step_height_m:0.120,step_width_m:0.305,incline_deg:25 |
+|   |   | step_height_m:0.146,step_width_m:0.295,incline_deg:30 |
+|   |   | step_height_m:0.162,step_width_m:0.285,incline_deg:35 |
+| stair_descent | stair_descent | step_height_m:0.097,step_width_m:0.315,incline_deg:20 |
+|   |   | step_height_m:0.120,step_width_m:0.305,incline_deg:25 |
+|   |   | step_height_m:0.146,step_width_m:0.295,incline_deg:30 |
+|   |   | step_height_m:0.162,step_width_m:0.285,incline_deg:35 |
+| stand_to_sit | stand_to_sit | chair_height:0.45,arm_support:false |
+| transition | walk_transition_accel | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:acceleration,acceleration_m_s2:0.2,incline_deg:-10,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:acceleration,acceleration_m_s2:0.2,incline_deg:-5,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:acceleration,acceleration_m_s2:0.2,incline_deg:0,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:acceleration,acceleration_m_s2:0.2,incline_deg:10,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:acceleration,acceleration_m_s2:0.2,incline_deg:5,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:acceleration,acceleration_m_s2:0.5,incline_deg:-10,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:acceleration,acceleration_m_s2:0.5,incline_deg:-5,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:acceleration,acceleration_m_s2:0.5,incline_deg:0,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:acceleration,acceleration_m_s2:0.5,incline_deg:10,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:acceleration,acceleration_m_s2:0.5,incline_deg:5,treadmill:true,surface:treadmill |
+|   | walk_transition_decel | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:deceleration,acceleration_m_s2:0.2,incline_deg:-10,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:deceleration,acceleration_m_s2:0.2,incline_deg:-5,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:deceleration,acceleration_m_s2:0.2,incline_deg:0,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:deceleration,acceleration_m_s2:0.2,incline_deg:10,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:deceleration,acceleration_m_s2:0.2,incline_deg:5,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:deceleration,acceleration_m_s2:0.5,incline_deg:-10,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:deceleration,acceleration_m_s2:0.5,incline_deg:-5,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:deceleration,acceleration_m_s2:0.5,incline_deg:0,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:deceleration,acceleration_m_s2:0.5,incline_deg:10,treadmill:true,surface:treadmill |
+|   |   | gait_transition:true,transition_from:level_walking,transition_to:level_walking,transition_phase:deceleration,acceleration_m_s2:0.5,incline_deg:5,treadmill:true,surface:treadmill |
+
+### Data Structure
+- **Format**: Phase-normalized (150 points per gait cycle)
+- **Sampling**: Phase-indexed from 0-100%
+- **Variables**: Standard biomechanical naming convention
+
+## Validation Snapshot
+
+- **Status**: ⚠️ Partial (85.4%)
+- **Stride Pass Rate**: 85.4%
+- **Validation Ranges**: [Download validation ranges](./um21_validation_ranges.yaml) (source: contributor_tools/validation_ranges/default_ranges_v3.yaml)
+- **Detailed Report**: [View validation report](#validation)
+
+## Citation
+https://www.nature.com/articles/s41597-021-01057-9
+
+## Collection Details
+
+### Protocol
+Standard motion capture protocol was used.
+
+### Processing Notes
+No additional notes.
+
+## Files Included
+
+- `converted_datasets/umich_2021_phase_raw.parquet` — Phase-normalized dataset
+- [Validation report](#validation)
+- Conversion script in `contributor_tools/conversion_scripts/um21/`
+
+---
+
+*Generated by Dataset Submission Tool on 2025-09-29 15:50*

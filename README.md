@@ -11,9 +11,10 @@
 ## Available Datasets
 
 <!-- DATASET_TABLE_START -->
-| Dataset | Tasks | Quality | Validation | Download |
-|---------|-------|---------|------------|----------|
-| [Umich 2021 Raw](https://jmontp.github.io/LocoHub/datasets/um21/) | Decline Walking, Incline Walking, Level Walking, Run, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit, Transition | ⚠️ Partial (85.3%) | [Report](https://jmontp.github.io/LocoHub/datasets/um21_validation/) | Coming Soon |
+| Dataset | Tasks | Quality | Documentation | Clean Dataset | Full Dataset |
+|---------|-------|---------|---------------|---------------|---------------|
+| Gtech 2021 Raw | Decline Walking, Incline Walking, Level Walking, Stair Ascent, Stair Descent, Transition | ⚠️ Partial (81.3%) | [Open](https://jmontp.github.io/LocoHub/datasets/gt21/) | Coming soon | Coming soon |
+| Umich 2021 Raw | Decline Walking, Incline Walking, Level Walking, Run, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit, Transition | ⚠️ Partial (85.4%) | [Open](https://jmontp.github.io/LocoHub/datasets/um21/) | Coming soon | Coming soon |
 <!-- DATASET_TABLE_END -->
 
 ---
