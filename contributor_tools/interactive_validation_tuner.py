@@ -48,6 +48,7 @@ Installation:
 
 import sys
 import copy
+import re
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -147,6 +148,9 @@ class DraggableBox:
         self.handle_width = self.HANDLE_WIDTH_DATA
         self.allow_x_drag = allow_x_drag
         self.parent = parent  # Store parent reference for unit conversion
+        self.display_unit = ''
+        if self.parent is not None:
+            self.display_unit = self.parent.get_display_unit(var_name)
 
         # Current values
         self.min_val = min_val
@@ -191,11 +195,11 @@ class DraggableBox:
         display_max = self._get_display_value(max_val)
 
         self.min_text = self.ax.text(phase, min_val - self._handle_height - self._handle_offset - self._label_buffer,
-                                     f'{display_min:.3f}',
+                                     self._format_display_value(display_min),
                                      ha='center', va='top', fontsize=7, 
                                      fontweight='bold', zorder=11)
         self.max_text = self.ax.text(phase, max_val + self._handle_offset + self._handle_height + self._label_buffer,
-                                     f'{display_max:.3f}',
+                                     self._format_display_value(display_max),
                                      ha='center', va='bottom', fontsize=7,
                                      fontweight='bold', zorder=11)
 
@@ -254,8 +258,28 @@ class DraggableBox:
         self.selected = False
     
     def _get_display_value(self, value):
-        """Return value for labeling; values stored internally in radians."""
-        return value
+        """Return value ready for labeling; values stored internally in base units."""
+        if self.parent is None:
+            return value
+        return self.parent.convert_value_for_display(self.var_name, value)
+
+    def _format_display_value(self, value):
+        """Format display value with an appropriate unit suffix."""
+        if value is None:
+            formatted = 'N/A'
+        else:
+            try:
+                numeric_value = float(value)
+                if np.isnan(numeric_value):
+                    formatted = 'N/A'
+                else:
+                    formatted = f'{numeric_value:.3f}'
+            except (TypeError, ValueError):
+                formatted = str(value)
+
+        if self.display_unit:
+            return f"{formatted} {self.display_unit}"
+        return formatted
 
     def _pixels_to_data(self, pixels: float) -> float:
         """Convert a fixed pixel distance to data units for consistent handle sizing."""
@@ -280,10 +304,10 @@ class DraggableBox:
         min_y = self.min_val - self._handle_height - self._handle_offset - self._label_buffer
         max_y = self.max_val + self._handle_offset + self._handle_height + self._label_buffer
 
-        self.min_text.set_text(f'{display_min:.3f}')
+        self.min_text.set_text(self._format_display_value(display_min))
         self.min_text.set_position((self.phase, min_y))
 
-        self.max_text.set_text(f'{display_max:.3f}')
+        self.max_text.set_text(self._format_display_value(display_max))
         self.max_text.set_position((self.phase, max_y))
 
         handle_x = self.phase - self.handle_width / 2
@@ -1602,10 +1626,10 @@ class InteractiveValidationTuner:
         )
 
     def get_variable_unit(self, var_name):
-        """Determine the unit of a variable from its name suffix."""
+        """Determine the base unit of a variable from its name suffix."""
         if var_name is None:
             return ""
-        
+
         # Check suffixes
         if var_name.endswith('_rad'):
             return 'rad'
@@ -1613,8 +1637,8 @@ class InteractiveValidationTuner:
             return 'Nm/kg'
         elif var_name.endswith('_BW'):
             return 'BW'
-        elif var_name.endswith('_BW'):
-            return 'N/kg'
+        elif var_name.endswith('_rad_s'):
+            return 'rad/s'
         elif var_name.endswith('_Nm'):
             return 'Nm'
         elif var_name.endswith('_N'):
@@ -1631,6 +1655,37 @@ class InteractiveValidationTuner:
             return 'rad'  # Fallback for angles
         else:
             return ''  # No unit or unknown
+
+    def get_display_unit(self, var_name):
+        """Return the unit shown to the user for the given variable."""
+        base_unit = self.get_variable_unit(var_name)
+
+        if not var_name:
+            return base_unit
+
+        if var_name.endswith('_rad_s'):
+            return 'deg/s'
+        if var_name.endswith('_rad'):
+            return 'deg'
+
+        return base_unit
+
+    def convert_value_for_display(self, var_name, value):
+        """Convert stored values to the unit presented to the user."""
+        if value is None or var_name is None:
+            return value
+
+        try:
+            arr = np.asarray(value, dtype=float)
+        except Exception:
+            return value
+
+        if var_name.endswith('_rad_s') or var_name.endswith('_rad'):
+            arr = np.rad2deg(arr)
+
+        if arr.shape == ():
+            return float(arr)
+        return arr
     
     def get_all_features(self):
         """Get all features to display (kinematic + kinetic + segment) from standard spec - ipsilateral only."""
@@ -1724,23 +1779,46 @@ class InteractiveValidationTuner:
         velocity_vars = [
             'hip_flexion_velocity_ipsi_rad_s',
             'knee_flexion_velocity_ipsi_rad_s',
-            'ankle_dorsiflexion_velocity_ipsi_rad_s'
+            'ankle_dorsiflexion_velocity_ipsi_rad_s',
+            'thigh_sagittal_velocity_ipsi_rad_s',
+            'shank_sagittal_velocity_ipsi_rad_s',
+            'foot_sagittal_velocity_ipsi_rad_s'
         ]
         velocity_labels = [
             'Hip Flexion Velocity (Ipsi)',
             'Knee Flexion Velocity (Ipsi)',
-            'Ankle Dorsiflexion Velocity (Ipsi)'
+            'Ankle Dorsiflexion Velocity (Ipsi)',
+            'Thigh Sagittal Velocity (Ipsi)',
+            'Shank Sagittal Velocity (Ipsi)',
+            'Foot Sagittal Velocity (Ipsi)'
         ]
         
-        # Combine primary features (most commonly available)
-        # Start with sagittal plane kinematics, kinetics, GRF, COP, and segments
-        all_vars = kinematic_vars + kinetic_vars + grf_vars + cop_vars + segment_vars
-        all_labels = kinematic_labels + kinetic_labels + grf_labels + cop_labels + segment_labels
-        
-        # Optionally add velocities and additional planes if needed
-        # Uncomment to include:
-        # all_vars += velocity_vars + additional_kinematic_vars
-        # all_labels += velocity_labels + additional_kinematic_labels
+        dataset_mode = self.locomotion_data is not None
+
+        if dataset_mode:
+            dataset_features = list(self.locomotion_data.features)
+            ordered_dataset_features = self._order_dataset_features(dataset_features)
+            ordered_dataset_labels = [self._format_feature_label(var) for var in ordered_dataset_features]
+            return ordered_dataset_features, ordered_dataset_labels
+        else:
+            # Combine primary features (most commonly available)
+            # Start with sagittal plane kinematics, velocities, kinetics, GRF, COP, and segments
+            all_vars = (
+                kinematic_vars
+                + velocity_vars
+                + kinetic_vars
+                + grf_vars
+                + cop_vars
+                + segment_vars
+            )
+            all_labels = (
+                kinematic_labels
+                + velocity_labels
+                + kinetic_labels
+                + grf_labels
+                + cop_labels
+                + segment_labels
+            )
 
         ordered_vars = []
         ordered_labels = []
@@ -1748,7 +1826,7 @@ class InteractiveValidationTuner:
             ordered_vars.append(var_name)
             ordered_labels.append(label)
 
-            if '_ipsi' in var_name:
+            if (not dataset_mode) and '_ipsi' in var_name:
                 contra_var = var_name.replace('_ipsi', '_contra')
                 if '(Ipsi)' in label:
                     contra_label = label.replace('(Ipsi)', '(Contra)')
@@ -1759,6 +1837,63 @@ class InteractiveValidationTuner:
                 ordered_labels.append(contra_label)
 
         return ordered_vars, ordered_labels
+
+    @staticmethod
+    def _format_feature_label(var_name: str) -> str:
+        """Create a readable label from a dataset feature name."""
+        if not var_name:
+            return ''
+
+        parts = var_name.split('_')
+        # Highlight unit separately if present
+        if len(parts) > 1 and parts[-1] in {'rad', 'deg', 'Nm', 'BW', 'm', 'N'}:
+            core = ' '.join(parts[:-1]).title()
+            return f"{core} ({parts[-1]})"
+        elif len(parts) > 2 and f"{parts[-2]}_{parts[-1]}" in {'rad_s', 'deg_s', 'Nm_kg', 'W_kg'}:
+            core = ' '.join(parts[:-2]).title()
+            return f"{core} ({parts[-2]}_{parts[-1]})"
+
+        return var_name.replace('_', ' ').title()
+
+    @staticmethod
+    def _order_dataset_features(features):
+        """Ensure ipsi variants precede contra variants while preserving base order."""
+        base_order = []
+        grouped = {}
+
+        for feature in features:
+            side = None
+            if '_ipsi_' in feature:
+                side = 'ipsi'
+            elif '_contra_' in feature:
+                side = 'contra'
+
+            if side:
+                base = re.sub(r'_(ipsi|contra)(?=_)', '', feature)
+            else:
+                base = feature
+
+            if base not in grouped:
+                grouped[base] = {'ipsi': None, 'contra': None, 'other': []}
+                base_order.append(base)
+
+            if side == 'ipsi':
+                grouped[base]['ipsi'] = feature
+            elif side == 'contra':
+                grouped[base]['contra'] = feature
+            else:
+                grouped[base]['other'].append(feature)
+
+        ordered = []
+        for base in base_order:
+            entry = grouped[base]
+            if entry['ipsi']:
+                ordered.append(entry['ipsi'])
+            if entry['contra']:
+                ordered.append(entry['contra'])
+            ordered.extend(entry['other'])
+
+        return ordered
     
     def update_plot(self, force_redraw=False):
         """Update the plot with current task and mode using two-column layout."""
