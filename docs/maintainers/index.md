@@ -161,6 +161,8 @@ Generates or refreshes everything a contributor needs for a dataset page. The sc
 
 Primary entry point today. Collects metadata (prompts or file), runs validation, writes dataset docs, persists metadata YAML, regenerates tables, and outputs the submission checklist.
 
+Use `python contributor_tools/manage_tasks.py` when a contributor proposes a brand-new base family. Pathology suffixes (e.g., `_stroke`, `_pd`) rely on naming convention instead—have them clone the base ranges in the interactive tuner, save a cohort-specific YAML, and remind them that validators never fall back to the able-bodied envelopes.
+
 ```mermaid
 flowchart TD
     A[Start CLI] --> B[Parse dataset and options]
@@ -169,7 +171,8 @@ flowchart TD
     C -- No --> E[Prompt contributor for fields]
     D --> F
     E --> F[Assemble metadata payload]
-    F --> G[Run validator on parquet]
+    F --> F1[Ensure base families exist in registry (manage_tasks.py)]
+    F1 --> G[Run validator on parquet]
     G --> H{Validation passed?}
     H -- No --> I[Capture issues but continue]
     H -- Yes --> J[Store pass statistics]

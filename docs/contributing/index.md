@@ -36,7 +36,8 @@ graph TD
     Z --> B
     B -->|Yes| C[Clone repo and install tools]
     C --> D[Review reference dataset and task_info fields]
-    D --> E[Build conversion script from template]
+    D --> D1[Register new base families if needed (manage_tasks.py)]
+    D1 --> E[Build conversion script from template]
     E --> F{Does conversion run cleanly?}
     F -->|No| E
     F -->|Yes| G[Export standardized parquet dataset]
@@ -55,12 +56,13 @@ graph TD
     classDef share fill:#c8e6c9,stroke:#2e7d32,color:#1b5e20
 
     class A,B,Z intake
-    class C,D,E,F,G standard
+    class C,D,D1,E,F,G standard
     class H,I,J qa
     class K,L,M,N share
 
     click C "https://github.com/jmontp/LocoHub" "Open the LocoHub repository" _blank
     click D "#step-1-convert-to-a-table" "Conversion quickstart"
+    click D1 "#manage-task-registry" "Task registry helper"
     click E "#pattern-a-folder-based" "Conversion patterns"
     click G "#step-2-validate-pythoncli" "Validation workflow"
     click H "#quick-validation-check" "Run the quick validation check"
@@ -82,11 +84,23 @@ graph TD
 - 🗂️ [**I have hierarchical MATLAB structs**](#pattern-b-hierarchical) → Pattern B conversion
 - ⏱️ [**My data is time-indexed**](#pre-processing-if-time-indexed) → Phase normalization guide
 - ✅ [**I'm ready to validate**](#step-2-validate-pythoncli) → Validation tools
+- 🧭 [**I need to add a new task family**](#manage-task-registry) → Task registry CLI
 - 📦 [**I'm ready to submit**](#ready-to-submit) → Submission checklist
 
 ---
 
 ## Step 1 — Convert to a Table
+
+### Manage the task registry (manage_tasks.py) {#manage-task-registry}
+
+- Use the helper when you need a brand-new base family (e.g., adding `lateral_walk`). Existing families and their pathology suffixes remain valid without registry edits.
+- Pathology cohorts follow `task_family_<pathology>` (e.g., `level_walking_stroke`, `run_pd`). Keep suffixes lowercase snake_case and create explicit validation ranges for each cohort.
+- Common commands:
+  - `python contributor_tools/manage_tasks.py list --category phase`
+  - `python contributor_tools/manage_tasks.py add lateral_walk --category phase --description "Side-step gait cycles" --example-id lateral --notes "Segment heel strikes using lateral contact."`
+  - `python contributor_tools/manage_tasks.py delete demo_task`
+
+The CLI rewrites `internal/config_management/task_registry.py` for you. For cohort suffixes, copy the base ranges in `interactive_validation_tuner.py` as a starting point and retune them—validators will not fall back to the able-bodied defaults.
 
 Required columns (minimal schema):
 
@@ -729,6 +743,7 @@ The GUI will prompt for:
 - **Save Ranges**: Export tuned ranges to new timestamped YAML
 
 **Tips:**
+- For cohort suffixes (e.g., `level_walking_stroke`), load the able-bodied family as the initializer, save under a new filename, and retune—validators will only use the ranges you define for that suffix.
 - Start with kinematics (joint angles are most intuitive)
 - Use degree view for easier interpretation (e.g., 60° vs 1.047 rad)
 - Check all phases—some populations differ more at specific phases

@@ -34,9 +34,19 @@ Phase-aligned exports apply to cyclic gait data. Event-driven or non-cyclic acti
 > Update that module **and** this section whenever new tasks are introduced so that all
 > tooling shares a single source of truth.
 
-- Task names (`task`) capture the high-level motion family. Use neutral categories that apply across datasets, such as `level_walking`, `incline_walking`, `decline_walking`, `stair_ascent`, `stair_descent`, `run`, `walk_backward`, `sit_to_stand`, `stand_to_sit`, `step_up`, `step_down`, `jump`, `squats`, and the catch-all `functional_task` for non-cyclic or miscellaneous movements. Append population/pathology suffixes only when the entire recording targets that cohort (e.g., `level_walking_stroke`). Keep suffix tokens lowercase snake_case (`stroke`, `pd`, `sci`, `tfa`, `tta`, etc.).
+- Task names (`task`) capture the high-level motion family. Use neutral categories that apply across datasets, such as `level_walking`, `incline_walking`, `decline_walking`, `stair_ascent`, `stair_descent`, `run`, `walk_backward`, `sit_to_stand`, `stand_to_sit`, `step_up`, `step_down`, `jump`, `squats`, and the catch-all `functional_task` for non-cyclic or miscellaneous movements. Append population/pathology suffixes only when the entire recording targets that cohort. Use the convention `task_family_<pathology>` (e.g., `level_walking_stroke`, `run_pd`, `stair_descent_sci`). Keep suffix tokens lowercase snake_case (`stroke`, `pd`, `sci`, `tfa`, `tta`, etc.).
 - Task IDs (`task_id`) describe the specific variant within the family, e.g., `level`, `incline_5deg`, `decline_10deg`, `stair_ascent`, `stair_descent`, `sit_to_stand_short`, `jump_vertical`. The exact vocabulary can differ by dataset, but it must remain stable inside a release.
 - Task metadata (`task_info`) is a comma-separated key:value string carrying numeric parameters and variant tags. Values should prefer SI units and be machine-readable.
+
+### Managing Task Families with the CLI
+
+Use `python contributor_tools/manage_tasks.py` to add, delete, or list canonical task families without editing Python files by hand. Reach for the CLI when you introduce **new base families** that do not already exist in the registry. Examples:
+
+- `python contributor_tools/manage_tasks.py list --category phase`
+- `python contributor_tools/manage_tasks.py add lateral_walk --category phase --description "Side-step gait cycles" --example-id lateral --notes "Segment heel strikes the same way as level_walking."`
+- `python contributor_tools/manage_tasks.py delete demo_task`
+
+Pathology or cohort variants follow the `task_family_<pathology>` convention but do **not** require separate registry entries. Instead, create dedicated validation ranges for each suffix (e.g., `level_walking_stroke`) so tooling can read the cohort-specific tolerances. Validators never fall back to the able-bodied family values; use the interactive tuner to seed a new ranges file with the base family as an initializer before adjusting to the cohort norms.
 
 Common task_info keys
 
