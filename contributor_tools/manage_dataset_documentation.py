@@ -388,7 +388,7 @@ def generate_comparison_snapshot() -> None:
         datasets_payload.append(dataset_entry)
 
     snapshot_path = repo_root / "docs" / "datasets" / "comparison_data.json"
-    snapshot_path.write_text(json.dumps({'datasets': datasets_payload}, indent=2))
+    snapshot_path.write_text(json.dumps({'datasets': datasets_payload}, indent=2), encoding='utf-8')
 
 # Import validation modules
 try:
@@ -730,7 +730,7 @@ def _build_dataset_table(metadata_entries: List[Dict], table_file: Path, absolut
 
 
 def replace_between_markers(path: Path, content: str) -> None:
-    text = path.read_text()
+    text = path.read_text(encoding='utf-8')
     if TABLE_MARKER_START not in text or TABLE_MARKER_END not in text:
         return
     new_text = re.sub(
@@ -739,7 +739,7 @@ def replace_between_markers(path: Path, content: str) -> None:
         text,
         flags=re.DOTALL,
     )
-    path.write_text(new_text)
+    path.write_text(new_text, encoding='utf-8')
 
 
 def update_dataset_tables() -> None:
@@ -749,7 +749,11 @@ def update_dataset_tables() -> None:
 
     metadata_entries = []
     for meta_file in sorted(meta_dir.glob('*.yaml')):
-        data = load_metadata_file(meta_file)
+        try:
+            data = load_metadata_file(meta_file)
+        except Exception as exc:
+            print(f"⚠️ Skipping metadata file {meta_file.name}: {exc}")
+            continue
         data['dataset_name'] = meta_file.stem
         metadata_entries.append(data)
 
@@ -811,7 +815,10 @@ def reset_dataset_assets(dataset_slug: str, include_parquet: bool = False) -> Li
         for parquet_path in repo_root.glob(f"converted_datasets/{dataset_slug}*.parquet"):
             _remove_path(parquet_path, removed)
 
-    update_dataset_tables()
+    try:
+        update_dataset_tables()
+    except Exception as exc:
+        removed.append(f"FAILED:dataset_tables ({exc})")
 
     return removed
 
@@ -819,7 +826,11 @@ def reset_dataset_assets(dataset_slug: str, include_parquet: bool = False) -> Li
 def _remove_dataset_for_slug(dataset_slug: str, include_parquet: bool = False) -> List[str]:
     """Wrapper to remove dataset assets and display summary."""
 
-    removed_paths = reset_dataset_assets(dataset_slug, include_parquet=include_parquet)
+    try:
+        removed_paths = reset_dataset_assets(dataset_slug, include_parquet=include_parquet)
+    except Exception as exc:
+        print(f"❌ Failed to remove dataset assets: {exc}")
+        return []
     if removed_paths:
         print(f"♻️ Removed existing dataset assets for '{dataset_slug}':")
         for path in removed_paths:
@@ -935,12 +946,12 @@ def update_validation_gallery(doc_path: Path, dataset_name: str) -> None:
         tabs_lines.append("")
 
     gallery = "\n".join(tabs_lines).strip() or "(Generate plots with quick_validation_check.py --plot)"
-    content = doc_path.read_text()
+    content = doc_path.read_text(encoding='utf-8')
     if '<!-- VALIDATION_GALLERY -->' in content:
         content = content.replace('<!-- VALIDATION_GALLERY -->', f"{gallery}\n")
     else:
         content = content + "\n" + gallery + "\n"
-    doc_path.write_text(content)
+    doc_path.write_text(content, encoding='utf-8')
 
 
 def _snapshot_validation_ranges(
@@ -1163,7 +1174,7 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
 
     DOCS_DATASETS_GENERATED_DIR.mkdir(parents=True, exist_ok=True)
     doc_body_path = DOCS_DATASETS_GENERATED_DIR / f"{dataset_slug}_documentation.md"
-    doc_body_path.write_text(doc_body_content)
+    doc_body_path.write_text(doc_body_content, encoding='utf-8')
 
     doc_snippet_target = (PurePosixPath('datasets') / doc_body_path.relative_to(DOCS_DATASETS_DIR)).as_posix()
     validation_snippet_target = (PurePosixPath('datasets') / Path(validation_doc_filename)).as_posix()
@@ -1183,7 +1194,7 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
 
     DOCS_DATASETS_DIR.mkdir(parents=True, exist_ok=True)
     wrapper_path = DOCS_DATASETS_DIR / f"{dataset_slug}.md"
-    wrapper_path.write_text(wrapper_content)
+    wrapper_path.write_text(wrapper_content, encoding='utf-8')
 
     metadata['doc_body_path'] = str(doc_body_path.relative_to(repo_root))
 
@@ -1262,7 +1273,7 @@ def generate_validation_page(
     ]
 
     validation_content = "\n".join(body_lines) + "\n"
-    validation_doc_path.write_text(validation_content)
+    validation_doc_path.write_text(validation_content, encoding='utf-8')
 
     metadata['validation_body_path'] = str(validation_doc_path.relative_to(repo_root))
 
