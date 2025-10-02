@@ -16,33 +16,20 @@ We introduce a novel dataset containing 3-dimensional biomechanical and wearable
 .download-button.unavailable { background:#d1d5db; color:#6b7280; cursor:not-allowed; }
 </style>
 <div class="download-grid">
-  <span class="download-button unavailable" title="Clean dataset download not yet available">Clean Dataset (coming soon)</span>
-  <span class="download-button unavailable" title="Full dataset download not yet available">Full Dataset (coming soon)</span>
+  <a class="download-button available" href="https://www.dropbox.com/scl/fi/h2aitlo77ujndhcqzhswo/gtech_2021_phase_clean.parquet?rlkey=zitswlvbc7g8bgt2f3jx3zyfx&st=26wq9hpi&raw=1" target="_blank" rel="noopener">Download Clean Dataset</a>
+  <a class="download-button available" href="https://www.dropbox.com/scl/fi/fvv83iipnhtapkaa1z70g/gtech_2021_phase_dirty.parquet?rlkey=fp7q7a3b0t8t6bivc9lynu5uj&st=idfk1sk4&raw=1" target="_blank" rel="noopener">Download Full Dataset (Dirty)</a>
 </div>
-*Downloads coming soon. Contact the authors for data access.*
 
 ## Dataset Information
 
 ### Subjects and Tasks
 - **Number of Subjects**: 15
-- **Tasks Included**: Decline Walking, Incline Walking, Level Walking, Stair Ascent, Stair Descent, Transition
+- **Tasks Included**: Level Walking, Stair Ascent, Stair Descent, Transition
 
 #### Task Catalog
 
 | Task | Task ID | Task Info |
 |------|---------|-----------|
-| decline_walking | decline_-11.0deg | incline_deg:-11.0,surface:overground |
-|   | decline_-12.4deg | incline_deg:-12.4,surface:overground |
-|   | decline_-18.0deg | incline_deg:-18.0,surface:overground |
-|   | decline_-5.2deg | incline_deg:-5.2,surface:overground |
-|   | decline_-7.8deg | incline_deg:-7.8,surface:overground |
-|   | decline_-9.2deg | incline_deg:-9.2,surface:overground |
-| incline_walking | incline_11.0deg | incline_deg:11.0,surface:overground |
-|   | incline_12.4deg | incline_deg:12.4,surface:overground |
-|   | incline_18.0deg | incline_deg:18.0,surface:overground |
-|   | incline_5.2deg | incline_deg:5.2,surface:overground |
-|   | incline_7.8deg | incline_deg:7.8,surface:overground |
-|   | incline_9.2deg | incline_deg:9.2,surface:overground |
 | level_walking | level | speed_m_s:0.50,treadmill:true,surface:treadmill |
 |   |   | speed_m_s:0.55,treadmill:true,surface:treadmill |
 |   |   | speed_m_s:0.60,treadmill:true,surface:treadmill |
@@ -85,19 +72,7 @@ We introduce a novel dataset containing 3-dimensional biomechanical and wearable
 |   |   | step_height_m:0.127,surface:stairs |
 |   |   | step_height_m:0.152,surface:stairs |
 |   |   | step_height_m:0.178,surface:stairs |
-| transition | ramp_ascent_to_walk | incline_deg:11.0,surface:overground,gait_transition:true,transition_from:incline_walking,transition_to:level_walking |
-|   |   | incline_deg:12.4,surface:overground,gait_transition:true,transition_from:incline_walking,transition_to:level_walking |
-|   |   | incline_deg:18.0,surface:overground,gait_transition:true,transition_from:incline_walking,transition_to:level_walking |
-|   |   | incline_deg:5.2,surface:overground,gait_transition:true,transition_from:incline_walking,transition_to:level_walking |
-|   |   | incline_deg:7.8,surface:overground,gait_transition:true,transition_from:incline_walking,transition_to:level_walking |
-|   |   | incline_deg:9.2,surface:overground,gait_transition:true,transition_from:incline_walking,transition_to:level_walking |
-|   | ramp_descent_to_walk | incline_deg:-11.0,surface:overground,gait_transition:true,transition_from:decline_walking,transition_to:level_walking |
-|   |   | incline_deg:-12.4,surface:overground,gait_transition:true,transition_from:decline_walking,transition_to:level_walking |
-|   |   | incline_deg:-18.0,surface:overground,gait_transition:true,transition_from:decline_walking,transition_to:level_walking |
-|   |   | incline_deg:-5.2,surface:overground,gait_transition:true,transition_from:decline_walking,transition_to:level_walking |
-|   |   | incline_deg:-7.8,surface:overground,gait_transition:true,transition_from:decline_walking,transition_to:level_walking |
-|   |   | incline_deg:-9.2,surface:overground,gait_transition:true,transition_from:decline_walking,transition_to:level_walking |
-|   | stair_ascent_to_walk | step_height_m:0.102,surface:stairs,gait_transition:true,transition_from:stair_ascent,transition_to:level_walking |
+| transition | stair_ascent_to_walk | step_height_m:0.102,surface:stairs,gait_transition:true,transition_from:stair_ascent,transition_to:level_walking |
 |   |   | step_height_m:0.127,surface:stairs,gait_transition:true,transition_from:stair_ascent,transition_to:level_walking |
 |   |   | step_height_m:0.152,surface:stairs,gait_transition:true,transition_from:stair_ascent,transition_to:level_walking |
 |   |   | step_height_m:0.178,surface:stairs,gait_transition:true,transition_from:stair_ascent,transition_to:level_walking |
@@ -105,25 +80,8 @@ We introduce a novel dataset containing 3-dimensional biomechanical and wearable
 |   |   | step_height_m:0.127,surface:stairs,gait_transition:true,transition_from:stair_descent,transition_to:level_walking |
 |   |   | step_height_m:0.152,surface:stairs,gait_transition:true,transition_from:stair_descent,transition_to:level_walking |
 |   |   | step_height_m:0.178,surface:stairs,gait_transition:true,transition_from:stair_descent,transition_to:level_walking |
-|   | stand_to_walk | speed_m_s:0.88,surface:overground,gait_transition:true,transition_from:stand,transition_to:level_walking |
-|   |   | speed_m_s:1.17,surface:overground,gait_transition:true,transition_from:stand,transition_to:level_walking |
-|   |   | speed_m_s:1.45,surface:overground,gait_transition:true,transition_from:stand,transition_to:level_walking |
-|   | walk_to_ramp_ascent | incline_deg:11.0,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:incline_walking |
-|   |   | incline_deg:12.4,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:incline_walking |
-|   |   | incline_deg:18.0,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:incline_walking |
-|   |   | incline_deg:5.2,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:incline_walking |
-|   |   | incline_deg:7.8,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:incline_walking |
-|   |   | incline_deg:9.2,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:incline_walking |
-|   | walk_to_ramp_descent | incline_deg:-11.0,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:decline_walking |
-|   |   | incline_deg:-12.4,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:decline_walking |
-|   |   | incline_deg:-18.0,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:decline_walking |
-|   |   | incline_deg:-5.2,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:decline_walking |
-|   |   | incline_deg:-7.8,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:decline_walking |
-|   |   | incline_deg:-9.2,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:decline_walking |
+|   | stand_to_walk | speed_m_s:1.17,surface:overground,gait_transition:true,transition_from:stand,transition_to:level_walking |
 |   | walk_to_stair_ascent | step_height_m:0.102,surface:stairs,gait_transition:true,transition_from:level_walking,transition_to:stair_ascent |
-|   |   | step_height_m:0.127,surface:stairs,gait_transition:true,transition_from:level_walking,transition_to:stair_ascent |
-|   |   | step_height_m:0.152,surface:stairs,gait_transition:true,transition_from:level_walking,transition_to:stair_ascent |
-|   |   | step_height_m:0.178,surface:stairs,gait_transition:true,transition_from:level_walking,transition_to:stair_ascent |
 |   | walk_to_stair_descent | step_height_m:0.102,surface:stairs,gait_transition:true,transition_from:level_walking,transition_to:stair_descent |
 |   |   | step_height_m:0.127,surface:stairs,gait_transition:true,transition_from:level_walking,transition_to:stair_descent |
 |   |   | step_height_m:0.152,surface:stairs,gait_transition:true,transition_from:level_walking,transition_to:stair_descent |
@@ -132,6 +90,80 @@ We introduce a novel dataset containing 3-dimensional biomechanical and wearable
 |   |   | speed_m_s:1.17,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:stand |
 |   |   | speed_m_s:1.45,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:stand |
 
+### Feature Availability by Task
+<style>
+.feature-chip {display:inline-flex;align-items:center;justify-content:center;min-width:1.6rem;padding:0.1rem 0.55rem;border-radius:999px;font-weight:600;font-size:0.85rem;line-height:1;color:#ffffff;}
+.feature-chip.feature-complete {background:#16a34a;}
+.feature-chip.feature-partial {background:#facc15;color:#1f2937;}
+.feature-chip.feature-missing {background:#ef4444;}
+.feature-legend {margin-bottom:0.5rem;display:flex;gap:0.75rem;flex-wrap:wrap;}
+.feature-legend .legend-item {display:flex;align-items:center;gap:0.35rem;font-size:0.9rem;}
+.feature-source {font-size:0.85rem;color:#4b5563;margin:0.25rem 0 0.75rem 0;}
+</style>
+
+<div class="feature-legend"><span class="legend-item"><span class="feature-chip feature-complete">✔</span>Complete</span><span class="legend-item"><span class="feature-chip feature-partial">≈</span>Partial</span><span class="legend-item"><span class="feature-chip feature-missing">✖</span>Missing</span></div>
+<p class="feature-source">Coverage computed from `converted_datasets/gtech_2021_phase_clean.parquet`.</p>
+
+#### Ground Reaction Forces
+
+| Feature | Level Walking | Stair Ascent | Stair Descent | Transition |
+|---|---|---|---|---|
+| `anterior_grf_contra_BW` | <span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span> | <span class="feature-chip feature-missing" title="0.0% available">✖</span> | <span class="feature-chip feature-missing" title="0.0% available">✖</span> | <span class="feature-chip feature-missing" title="0.0% available">✖</span> |
+| `anterior_grf_ipsi_BW` | <span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span> | <span class="feature-chip feature-partial" title="96.4% available">≈ 96.40</span> | <span class="feature-chip feature-partial" title="49.9% available">≈ 49.90</span> | <span class="feature-chip feature-missing" title="0.0% available">✖</span> |
+| `lateral_grf_contra_BW` | <span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span> | <span class="feature-chip feature-missing" title="0.0% available">✖</span> | <span class="feature-chip feature-missing" title="0.0% available">✖</span> | <span class="feature-chip feature-missing" title="0.0% available">✖</span> |
+| `lateral_grf_ipsi_BW` | <span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span> | <span class="feature-chip feature-partial" title="96.4% available">≈ 96.40</span> | <span class="feature-chip feature-partial" title="49.9% available">≈ 49.90</span> | <span class="feature-chip feature-missing" title="0.0% available">✖</span> |
+| `vertical_grf_contra_BW` | <span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span> | <span class="feature-chip feature-missing" title="0.0% available">✖</span> | <span class="feature-chip feature-missing" title="0.0% available">✖</span> | <span class="feature-chip feature-missing" title="0.0% available">✖</span> |
+| `vertical_grf_ipsi_BW` | <span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span> | <span class="feature-chip feature-partial" title="96.4% available">≈ 96.40</span> | <span class="feature-chip feature-partial" title="49.9% available">≈ 49.90</span> | <span class="feature-chip feature-missing" title="0.0% available">✖</span> |
+
+#### Joint Angles
+
+| Feature | Level Walking | Stair Ascent | Stair Descent | Transition |
+|---|---|---|---|---|
+| `ankle_dorsiflexion_angle_contra_rad` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `ankle_dorsiflexion_angle_ipsi_rad` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `foot_sagittal_angle_contra_rad` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `foot_sagittal_angle_ipsi_rad` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `hip_flexion_angle_contra_rad` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `hip_flexion_angle_ipsi_rad` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `knee_flexion_angle_contra_rad` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `knee_flexion_angle_ipsi_rad` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `pelvis_sagittal_angle_rad` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `shank_sagittal_angle_contra_rad` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `shank_sagittal_angle_ipsi_rad` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `thigh_sagittal_angle_contra_rad` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `thigh_sagittal_angle_ipsi_rad` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `trunk_sagittal_angle_rad` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+
+#### Joint Moments
+
+| Feature | Level Walking | Stair Ascent | Stair Descent | Transition |
+|---|---|---|---|---|
+| `ankle_dorsiflexion_moment_contra_Nm_kg` | <span class="feature-chip feature-partial" title="92.9% available">≈ 92.90</span> | <span class="feature-chip feature-partial" title="40.8% available">≈ 40.80</span> | <span class="feature-chip feature-partial" title="70.8% available">≈ 70.80</span> | <span class="feature-chip feature-partial" title="68.2% available">≈ 68.20</span> |
+| `ankle_dorsiflexion_moment_ipsi_Nm_kg` | <span class="feature-chip feature-partial" title="93.3% available">≈ 93.30</span> | <span class="feature-chip feature-partial" title="98.2% available">≈ 98.20</span> | <span class="feature-chip feature-partial" title="72.7% available">≈ 72.70</span> | <span class="feature-chip feature-partial" title="94.8% available">≈ 94.80</span> |
+| `hip_flexion_moment_contra_Nm_kg` | <span class="feature-chip feature-partial" title="92.9% available">≈ 92.90</span> | <span class="feature-chip feature-partial" title="40.8% available">≈ 40.80</span> | <span class="feature-chip feature-partial" title="70.8% available">≈ 70.80</span> | <span class="feature-chip feature-partial" title="68.2% available">≈ 68.20</span> |
+| `hip_flexion_moment_ipsi_Nm_kg` | <span class="feature-chip feature-partial" title="93.3% available">≈ 93.30</span> | <span class="feature-chip feature-partial" title="98.2% available">≈ 98.20</span> | <span class="feature-chip feature-partial" title="72.7% available">≈ 72.70</span> | <span class="feature-chip feature-partial" title="94.8% available">≈ 94.80</span> |
+| `knee_flexion_moment_contra_Nm_kg` | <span class="feature-chip feature-partial" title="92.9% available">≈ 92.90</span> | <span class="feature-chip feature-partial" title="40.8% available">≈ 40.80</span> | <span class="feature-chip feature-partial" title="70.8% available">≈ 70.80</span> | <span class="feature-chip feature-partial" title="68.2% available">≈ 68.20</span> |
+| `knee_flexion_moment_ipsi_Nm_kg` | <span class="feature-chip feature-partial" title="93.3% available">≈ 93.30</span> | <span class="feature-chip feature-partial" title="98.2% available">≈ 98.20</span> | <span class="feature-chip feature-partial" title="72.7% available">≈ 72.70</span> | <span class="feature-chip feature-partial" title="94.8% available">≈ 94.80</span> |
+
+#### Joint Velocities
+
+| Feature | Level Walking | Stair Ascent | Stair Descent | Transition |
+|---|---|---|---|---|
+| `ankle_dorsiflexion_velocity_contra_rad_s` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `ankle_dorsiflexion_velocity_ipsi_rad_s` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `foot_sagittal_velocity_contra_rad_s` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `foot_sagittal_velocity_ipsi_rad_s` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `hip_flexion_velocity_contra_rad_s` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `hip_flexion_velocity_ipsi_rad_s` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `knee_flexion_velocity_contra_rad_s` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `knee_flexion_velocity_ipsi_rad_s` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `pelvis_sagittal_velocity_rad_s` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `shank_sagittal_velocity_contra_rad_s` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `shank_sagittal_velocity_ipsi_rad_s` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `thigh_sagittal_velocity_contra_rad_s` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `thigh_sagittal_velocity_ipsi_rad_s` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+| `trunk_sagittal_velocity_rad_s` | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> | <span class="feature-chip feature-complete" title="100.0% available">✔</span> |
+
 ### Data Structure
 - **Format**: Phase-normalized (150 points per gait cycle)
 - **Sampling**: Phase-indexed from 0-100%
@@ -139,13 +171,13 @@ We introduce a novel dataset containing 3-dimensional biomechanical and wearable
 
 ## Validation Snapshot
 
-- **Status**: ⚠️ Partial (81.3%)
-- **Stride Pass Rate**: 81.3%
+- **Status**: ⚠️ Partial (89.0%)
+- **Stride Pass Rate**: 89.0%
 - **Validation Ranges**: [Download validation ranges](./gt21_validation_ranges.yaml) (source: contributor_tools/validation_ranges/default_ranges_v3.yaml)
 - **Detailed Report**: [View validation report](#validation)
 
 ## Citation
-Please cite appropriately when using this dataset.
+https://doi.org/10.1016/j.jbiomech.2021.110320
 
 ## Collection Details
 
@@ -157,10 +189,10 @@ No additional notes.
 
 ## Files Included
 
-- `converted_datasets/gtech_2021_phase_raw.parquet` — Phase-normalized dataset
+- `converted_datasets/gtech_2021_phase_dirty.parquet` — Phase-normalized dataset
 - [Validation report](#validation)
 - Conversion script in `contributor_tools/conversion_scripts/gt21/`
 
 ---
 
-*Generated by Dataset Submission Tool on 2025-09-29 15:47*
+*Generated by Dataset Submission Tool on 2025-10-02 08:57*

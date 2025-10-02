@@ -1,29 +1,27 @@
-**Report generated:** 2025-09-29 15:47
+**Report generated:** 2025-10-01 15:39
 
 ## Status Summary
 
 | Metric | Value |
 |--------|-------|
-| Stride Pass Rate | 81.3% |
-| Total Strides | 32859 |
-| Passing Strides | 26698 |
+| Stride Pass Rate | 89.0% |
+| Total Strides | 16045 |
+| Passing Strides | 14275 |
 
 ### Summary
 
-**Status**: ⚠️ PARTIAL (81.3% valid)  
-**Total Strides**: 32859  
-**Passing Strides**: 26698  
+**Status**: ⚠️ PARTIAL (89.0% valid)  
+**Total Strides**: 16045  
+**Passing Strides**: 14275  
 
 ### Task Breakdown
 
 | Task | Pass Rate | Status |
 |------|-----------|--------|
-| Decline Walking | 96.3% | ✅ |
-| Incline Walking | 92.0% | ✅ |
-| Level Walking | 90.7% | ✅ |
-| Stair Ascent | 78.7% | ⚠️ |
+| Level Walking | 90.8% | ✅ |
+| Stair Ascent | 78.8% | ⚠️ |
 | Stair Descent | 97.1% | ✅ |
-| Transition | 55.2% | ❌ |
+| Transition | 5.5% | ❌ |
 
 _Validation ranges snapshot embedded below._
 
@@ -34,6 +32,18 @@ Download the YAML snapshot used for this validation: [Download](./gt21_validatio
 _Source ranges file: contributor_tools/validation_ranges/default_ranges_v3.yaml_
 
 ## Validation Plots
+
+=== "Dirty Level Walking"
+    ![Dirty Level Walking](./validation_plots/gt21/gtech_2021_phase_dirty_level_walking_all_features_validation.png)
+
+=== "Dirty Stair Ascent"
+    ![Dirty Stair Ascent](./validation_plots/gt21/gtech_2021_phase_dirty_stair_ascent_all_features_validation.png)
+
+=== "Dirty Stair Descent"
+    ![Dirty Stair Descent](./validation_plots/gt21/gtech_2021_phase_dirty_stair_descent_all_features_validation.png)
+
+=== "Dirty Transition"
+    ![Dirty Transition](./validation_plots/gt21/gtech_2021_phase_dirty_transition_all_features_validation.png)
 
 === "Decline Walking"
     ![Decline Walking](./validation_plots/gt21/gtech_2021_phase_raw_decline_walking_all_features_validation.png)
@@ -56,4 +66,4 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges_v3.yaml_
 
 ---
 
-*Generated from `converted_datasets/gtech_2021_phase_raw.parquet` on 2025-09-29 15:47*
+*Generated from `converted_datasets/gtech_2021_phase_dirty.parquet` on 2025-10-01 15:39*

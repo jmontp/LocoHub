@@ -1139,9 +1139,19 @@ class ValidationReportGenerator:
         lines.append(f"**Generated**: {timestamp}  ")
         
         # Status summary
-        status = "✅ PASSED" if validation_result['passed'] else "❌ FAILED"
-        lines.append(f"**Status**: {status} ({validation_result['stats']['pass_rate']:.1%} valid)  ")
-        lines.append(f"")
+        schema_status = "✅ Schema compliant" if validation_result.get('schema_passed', validation_result['passed']) else "❌ Schema issues"
+        lines.append(f"**Schema**: {schema_status}  ")
+
+        quality_gate = validation_result.get('quality_gate_passed')
+        threshold = validation_result.get('quality_gate_threshold')
+        if quality_gate is not None:
+            icon = "✅" if quality_gate else "⚠️"
+            threshold_pct = f"{threshold * 100:.0f}%" if isinstance(threshold, (int, float)) and threshold else "n/a"
+            lines.append(f"**Quality Gate ({threshold_pct} stride pass)**: {icon} {validation_result['stats']['pass_rate']:.1%}  ")
+        else:
+            lines.append(f"**Pass Rate**: {validation_result['stats']['pass_rate']:.1%}  ")
+
+        lines.append("")
         
         # Validation summary
         lines.append("## Summary")

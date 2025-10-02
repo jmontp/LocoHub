@@ -37,9 +37,10 @@ import shutil
 import subprocess
 from pathlib import Path, PurePosixPath
 from datetime import datetime
-from typing import Dict, Optional, Tuple, List
+from typing import Dict, Optional, Tuple, List, Any
 import os
-from collections import OrderedDict
+import math
+from collections import OrderedDict, defaultdict
 from pandas import isna
 
 # Add parent directories to path for imports
@@ -66,6 +67,37 @@ DEFAULT_RANGES_CANDIDATES = [
 
 DOCS_DATASETS_DIR = repo_root / "docs" / "datasets"
 DOCS_DATASETS_GENERATED_DIR = DOCS_DATASETS_DIR / ".generated"
+
+
+FEATURE_AVAILABILITY_STYLE = """
+<style>
+.feature-chip {display:inline-flex;align-items:center;justify-content:center;min-width:1.6rem;padding:0.1rem 0.55rem;border-radius:999px;font-weight:600;font-size:0.85rem;line-height:1;color:#ffffff;}
+.feature-chip.feature-complete {background:#16a34a;}
+.feature-chip.feature-partial {background:#facc15;color:#1f2937;}
+.feature-chip.feature-missing {background:#ef4444;}
+.feature-legend {margin-bottom:0.5rem;display:flex;gap:0.75rem;flex-wrap:wrap;}
+.feature-legend .legend-item {display:flex;align-items:center;gap:0.35rem;font-size:0.9rem;}
+.feature-source {font-size:0.85rem;color:#4b5563;margin:0.25rem 0 0.75rem 0;}
+</style>
+"""
+
+FEATURE_STATUS_ICONS = {
+    'complete': '✔',
+    'partial': '≈',
+    'missing': '✖',
+}
+
+
+def _render_feature_chip(status: str, coverage_pct: float) -> str:
+    icon = FEATURE_STATUS_ICONS.get(status, '–')
+    try:
+        pct_value = float(coverage_pct)
+    except (TypeError, ValueError):
+        pct_value = 0.0
+    title = f"{pct_value:.1f}% available"
+    pct_display = f"{pct_value:05.2f}" if status == 'partial' else ''
+    label = f"{icon} {pct_display.strip()}" if pct_display else icon
+    return f'<span class="feature-chip feature-{status}" title="{title}">{label}</span>'
 
 
 def _resolve_default_ranges_file() -> Path:
@@ -98,6 +130,128 @@ def _resolve_ranges_argument(value: str) -> Path:
     return (repo_root / candidate).resolve()
 
 
+def _infer_clean_dataset_path(dataset_path: Path) -> Tuple[Path, bool]:
+    """Return the path to the clean dataset, falling back to the original."""
+
+    stem = dataset_path.stem
+    suffix = dataset_path.suffix
+
+    # Already clean
+    if stem.endswith('_clean'):
+        return dataset_path, True
+
+    candidates: List[Path] = []
+    if stem.endswith('_dirty'):
+        candidates.append(dataset_path.with_name(stem[:-6] + '_clean' + suffix))
+    if stem.endswith('_raw'):
+        candidates.append(dataset_path.with_name(stem[:-4] + '_clean' + suffix))
+
+    candidates.append(dataset_path.with_name(stem + '_clean' + suffix))
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate, True
+
+    return dataset_path, False
+
+
+def _feature_group_for(feature_name: str) -> str:
+    """Group feature names into broad categories for documentation tables."""
+
+    lower = feature_name.lower()
+    if 'grf' in lower:
+        return 'Ground Reaction Forces'
+    if 'power' in lower:
+        return 'Joint Powers'
+    if 'moment' in lower:
+        return 'Joint Moments'
+    if 'velocity' in lower:
+        return 'Joint Velocities'
+    if 'angle' in lower:
+        return 'Joint Angles'
+    return 'Other Features'
+
+
+def _coverage_status(value: float) -> str:
+    if value >= 0.99:
+        return 'complete'
+    if value <= 0.001:
+        return 'missing'
+    return 'partial'
+
+
+def _compute_feature_task_groups(
+    dataset_path: Path,
+    tasks: List[str],
+) -> Tuple[Optional[List[Dict[str, Any]]], Optional[List[str]], Optional[Path]]:
+    """Compute feature coverage per task using the clean dataset when available."""
+
+    coverage_path, using_clean = _infer_clean_dataset_path(dataset_path)
+
+    try:
+        coverage_data = LocomotionData(str(coverage_path), phase_col='phase_ipsi')
+    except Exception as exc:
+        print(f"⚠️  Unable to compute feature availability ({exc})")
+        return None, None, None
+
+    feature_columns = coverage_data.features or []
+    if not feature_columns:
+        return None, None, None
+
+    df = coverage_data.df
+    if 'task' not in df.columns:
+        return None, None, None
+
+    # Restrict to columns that actually exist in the DataFrame
+    feature_columns = [col for col in feature_columns if col in df.columns]
+    if not feature_columns:
+        return None, None, None
+
+    grouped = df.groupby('task')
+    try:
+        coverage = grouped[feature_columns].agg(lambda col: float(col.notna().mean()))
+    except Exception as exc:
+        print(f"⚠️  Unable to compute feature availability ({exc})")
+        return None, None, None
+
+    ordered_tasks: List[str] = []
+    seen = set()
+    for candidate in list(tasks) + list(coverage.index.astype(str)):
+        if candidate not in seen:
+            ordered_tasks.append(candidate)
+            seen.add(candidate)
+
+    grouped_features: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+
+    for feature in feature_columns:
+        group_name = _feature_group_for(feature)
+        task_entries: Dict[str, Any] = {}
+        for task_name in ordered_tasks:
+            value = 0.0
+            if task_name in coverage.index and feature in coverage.columns:
+                value = float(coverage.loc[task_name, feature])
+                if math.isnan(value):
+                    value = 0.0
+            status = _coverage_status(value)
+            task_entries[task_name] = {
+                'status': status,
+                'coverage': round(value * 100, 1),
+            }
+        grouped_features[group_name].append({
+            'name': feature,
+            'tasks': task_entries,
+        })
+
+    groups_output: List[Dict[str, Any]] = []
+    for group_name in sorted(grouped_features.keys()):
+        features_output = sorted(grouped_features[group_name], key=lambda item: item['name'])
+        groups_output.append({
+            'group': group_name,
+            'features': features_output,
+        })
+
+    relative_path = coverage_path
+    return groups_output, ordered_tasks, relative_path if using_clean else dataset_path
 def _load_locomotion_data(dataset_path: Path, reason: str) -> LocomotionData:
     """Load dataset with a helpful progress message."""
 
@@ -450,6 +604,12 @@ def write_metadata_file(metadata: Dict) -> None:
         fields['validation_ranges_source'] = metadata.get('validation_ranges_source')
     if metadata.get('comparison_tasks'):
         fields['comparison_tasks'] = metadata.get('comparison_tasks')
+    if metadata.get('feature_task_groups'):
+        fields['feature_task_groups'] = metadata.get('feature_task_groups')
+    if metadata.get('feature_task_order'):
+        fields['feature_task_order'] = metadata.get('feature_task_order')
+    if metadata.get('feature_task_source'):
+        fields['feature_task_source'] = metadata.get('feature_task_source')
     if metadata.get('last_dataset_path'):
         fields['last_dataset_path'] = metadata.get('last_dataset_path')
 
@@ -817,6 +977,62 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
     if task_catalog_section:
         doc_body_lines.append(task_catalog_section.rstrip())
         doc_body_lines.append("")
+
+    feature_groups_meta = metadata.get('feature_task_groups') or []
+    if feature_groups_meta:
+        task_order = metadata.get('feature_task_order') or metadata.get('tasks', [])
+        if not task_order:
+            gathered_tasks: List[str] = []
+            for group_entry in feature_groups_meta:
+                for feature_entry in group_entry.get('features', []):
+                    gathered_tasks.extend(feature_entry.get('tasks', {}).keys())
+            seen_tasks: set = set()
+            task_order = []
+            for task_name in gathered_tasks:
+                if task_name not in seen_tasks:
+                    task_order.append(task_name)
+                    seen_tasks.add(task_name)
+
+        formatted_tasks = [(task, _format_task_name(task)) for task in task_order]
+
+        doc_body_lines.extend([
+            "### Feature Availability by Task",
+            FEATURE_AVAILABILITY_STYLE.strip(),
+            "",
+            '<div class="feature-legend">'
+            '<span class="legend-item"><span class="feature-chip feature-complete">✔</span>Complete</span>'
+            '<span class="legend-item"><span class="feature-chip feature-partial">≈</span>Partial</span>'
+            '<span class="legend-item"><span class="feature-chip feature-missing">✖</span>Missing</span>'
+            '</div>',
+        ])
+
+        source_dataset = metadata.get('feature_task_source') or _relative_path(dataset_path)
+        doc_body_lines.append(f'<p class="feature-source">Coverage computed from `{source_dataset}`.</p>')
+        doc_body_lines.append("")
+
+        for group_entry in feature_groups_meta:
+            group_name = group_entry.get('group', 'Features')
+            doc_body_lines.append(f"#### {group_name}")
+            doc_body_lines.append("")
+
+            header_cells = ["Feature"] + [display for _, display in formatted_tasks]
+            header_line = "| " + " | ".join(header_cells) + " |"
+            separator_line = "|" + "---|" * len(header_cells)
+            doc_body_lines.append(header_line)
+            doc_body_lines.append(separator_line)
+
+            for feature_entry in group_entry.get('features', []):
+                feature_name = feature_entry.get('name', '')
+                task_statuses = feature_entry.get('tasks', {})
+                row_cells = [f"`{feature_name}`"]
+                for task_key, _ in formatted_tasks:
+                    status_entry = task_statuses.get(task_key, {})
+                    status = status_entry.get('status', 'missing')
+                    coverage_pct = status_entry.get('coverage', 0.0)
+                    row_cells.append(_render_feature_chip(status, coverage_pct))
+                doc_body_lines.append("| " + " | ".join(row_cells) + " |")
+
+            doc_body_lines.append("")
 
     doc_body_lines.extend([
         "### Data Structure",
@@ -1390,6 +1606,18 @@ def handle_add_dataset(args):
 
     tasks = [task for task in tasks if task] or ["[Please list tasks]"]
 
+    feature_task_groups: Optional[List[Dict[str, Any]]] = None
+    feature_task_order: Optional[List[str]] = None
+    feature_task_source: Optional[str] = None
+
+    coverage_groups, coverage_tasks, coverage_source_path = _compute_feature_task_groups(dataset_path, tasks)
+    if coverage_groups:
+        feature_task_groups = coverage_groups
+        if coverage_tasks:
+            feature_task_order = coverage_tasks
+        if coverage_source_path:
+            feature_task_source = _relative_path(coverage_source_path)
+
     # Prepare metadata dictionary
     dataset_name = dataset_slug
 
@@ -1427,6 +1655,13 @@ def handle_add_dataset(args):
         'task_table': task_table,
         'last_dataset_path': _relative_path(dataset_path),
     }
+
+    if feature_task_groups:
+        metadata['feature_task_groups'] = feature_task_groups
+    if feature_task_order:
+        metadata['feature_task_order'] = feature_task_order
+    if feature_task_source:
+        metadata['feature_task_source'] = feature_task_source
     
     # Run validation
     print(f"\n🔍 Validating dataset...")
@@ -1627,6 +1862,14 @@ def handle_update_documentation(args):
     metadata['subjects'] = str(len(locomotion_data.get_subjects()))
     metadata['task_table'] = _build_task_table(task_rows)
 
+    coverage_groups, coverage_tasks, coverage_source_path = _compute_feature_task_groups(dataset_path, metadata['tasks'])
+    if coverage_groups:
+        metadata['feature_task_groups'] = coverage_groups
+        if coverage_tasks:
+            metadata['feature_task_order'] = coverage_tasks
+        if coverage_source_path:
+            metadata['feature_task_source'] = _relative_path(coverage_source_path)
+
     if not override_path:
         _prompt_metadata_updates(metadata)
 
@@ -1680,6 +1923,14 @@ def handle_update_validation(args):
         metadata['validation_doc_path'] = f"docs/datasets/{dataset_slug}.md#validation"
     if metadata.get('validation_doc_url', '').endswith('_validation/'):
         metadata['validation_doc_url'] = f"{SITE_DATASET_BASE_URL}/{dataset_slug}/#validation"
+
+    coverage_groups, coverage_tasks, coverage_source_path = _compute_feature_task_groups(dataset_path, metadata.get('tasks', []))
+    if coverage_groups:
+        metadata['feature_task_groups'] = coverage_groups
+        if coverage_tasks:
+            metadata['feature_task_order'] = coverage_tasks
+        if coverage_source_path:
+            metadata['feature_task_source'] = _relative_path(coverage_source_path)
 
 
     try:

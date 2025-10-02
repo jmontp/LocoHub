@@ -5,6 +5,8 @@ Quick Validation Check - Fast Validation with Optional Plotting
 A fast validation tool that shows pass/fail statistics with optional plot generation.
 Useful for rapid validation checks during dataset conversion and debugging.
 
+Schema compliance drives the command's exit code; quality gates and pass rates are informational so you can decide what to tighten before documentation.
+
 Usage:
     # Text-only validation (default)
     python quick_validation_check.py converted_datasets/gtech_2021_phase.parquet
@@ -20,13 +22,18 @@ Usage:
     
     # Save plots to directory instead of showing
     python quick_validation_check.py dataset.parquet --plot --output-dir ./my_plots
+
+    # Compare against a previous run and save the latest summary
+    python quick_validation_check.py dataset.parquet --compare prev_summary.json --save-summary latest_summary.json
 """
 
 import sys
 import argparse
+import json
+import math
 from pathlib import Path
 from typing import Dict, List, Set, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import pandas as pd
 import threading
 import time
@@ -320,9 +327,12 @@ def print_validation_summary(result: Dict, task_details: Optional[Dict[str, Dict
     print("QUICK VALIDATION CHECK")
     print("="*70)
 
-    status = "✅ PASSED" if result['passed'] else "❌ FAILED"
+    schema_passed = result.get('schema_passed', result['passed'])
+    schema_icon = "✅" if schema_passed else "❌"
+    schema_text = "Schema compliant" if schema_passed else "Schema issues detected"
+
     print(f"\nDataset: {stats['dataset']}")
-    print(f"Status: {status}")
+    print(f"Schema Status: {schema_icon} {schema_text}")
     print(f"Mode: {'Time-Indexed' if mode == 'time' else 'Phase-Indexed'}")
 
     if mode == 'phase':
@@ -331,6 +341,16 @@ def print_validation_summary(result: Dict, task_details: Optional[Dict[str, Dict
         print(f"Overall Pass Rate: {stats['pass_rate']:.1%} ({passing_strides}/{total_strides} strides)")
     else:
         print(f"Overall Pass Rate: {stats['pass_rate']:.1%} (structural checks)")
+
+    quality_gate = result.get('quality_gate_passed')
+    threshold = result.get('quality_gate_threshold')
+    if quality_gate is not None:
+        icon = "✅" if quality_gate else "⚠️"
+        if isinstance(threshold, (int, float)) and threshold:
+            threshold_pct = f"{threshold * 100:.0f}%"
+        else:
+            threshold_pct = "n/a"
+        print(f"Quality Gate ({threshold_pct} threshold): {icon}")
 
     phase_icon = "✅" if result['phase_valid'] else "❌"
     print(f"Phase Structure: {phase_icon} {result['phase_message']}")
@@ -407,6 +427,239 @@ def print_validation_summary(result: Dict, task_details: Optional[Dict[str, Dict
         print(f"Episodes: {stats.get('num_episodes', 0)}")
 
     print("\n" + "="*70)
+
+
+def _safe_float(value: Optional[float]) -> Optional[float]:
+    if value is None:
+        return None
+    try:
+        candidate = float(value)
+    except (TypeError, ValueError):
+        return None
+    if math.isnan(candidate) or math.isinf(candidate):
+        return None
+    return candidate
+
+
+def _safe_int(value: Optional[float]) -> Optional[int]:
+    if value is None:
+        return None
+    try:
+        candidate = int(value)
+    except (TypeError, ValueError):
+        try:
+            candidate = int(float(value))
+        except (TypeError, ValueError):
+            return None
+    return candidate
+
+
+def _format_percent(value: Optional[float]) -> str:
+    if value is None:
+        return "n/a"
+    return f"{value * 100:.1f}%"
+
+
+def _build_summary_payload(
+    result: Dict,
+    task_details: Optional[Dict[str, Dict[str, object]]],
+    dataset_path: Path,
+    ranges_file: Path,
+) -> Dict:
+    """Create a JSON-serializable snapshot of validation results."""
+
+    stats = result.get('stats', {})
+    mode = result.get('mode', 'phase')
+
+    timestamp = datetime.now(timezone.utc).replace(microsecond=0)
+
+    payload: Dict[str, object] = {
+        'generated_at': timestamp.isoformat().replace('+00:00', 'Z'),
+        'dataset': str(dataset_path),
+        'ranges': str(ranges_file),
+        'mode': mode,
+        'passed': bool(result.get('passed')),
+        'schema_passed': bool(result.get('schema_passed', result.get('passed'))),
+        'quality_gate_passed': result.get('quality_gate_passed'),
+        'quality_gate_threshold': result.get('quality_gate_threshold'),
+        'phase_valid': result.get('phase_valid'),
+        'phase_message': result.get('phase_message'),
+        'stats': {
+            'pass_rate': _safe_float(stats.get('pass_rate')),
+            'total_strides': _safe_int(stats.get('total_strides')),
+            'total_failing_strides': _safe_int(stats.get('total_failing_strides')),
+            'num_tasks': _safe_int(stats.get('num_tasks')),
+            'total_checks': _safe_int(stats.get('total_checks')),
+            'total_violations': _safe_int(stats.get('total_violations')),
+        },
+        'tasks': {}
+    }
+
+    task_snapshot: Dict[str, Dict[str, object]] = {}
+    if task_details:
+        for task, details in task_details.items():
+            total_strides = _safe_int(details.get('total_strides'))
+            failing_strides = _safe_int(details.get('failing_strides'))
+            pass_rate = _safe_float(details.get('pass_rate'))
+
+            failing_features: Dict[str, int] = {}
+            for feature_info in details.get('feature_failures', []):
+                feature_name = feature_info.get('feature')
+                failed_count = _safe_int(feature_info.get('failed_strides'))
+                if feature_name and failed_count:
+                    failing_features[feature_name] = failed_count
+
+            task_snapshot[task] = {
+                'total_strides': total_strides,
+                'failing_strides': failing_strides,
+                'pass_rate': pass_rate,
+                'failing_features': failing_features,
+            }
+
+    payload['tasks'] = task_snapshot
+    return payload
+
+
+def _write_summary(path: str, payload: Dict) -> None:
+    summary_path = Path(path)
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    with summary_path.open('w', encoding='utf-8') as handle:
+        json.dump(payload, handle, indent=2, sort_keys=True)
+        handle.write('\n')
+    print(f"📝 Summary saved to {summary_path}")
+
+
+def _load_summary(path: str) -> Optional[Dict]:
+    summary_path = Path(path)
+    if not summary_path.exists():
+        print(f"\n⚠️  Previous summary not found: {summary_path}")
+        return None
+    try:
+        with summary_path.open('r', encoding='utf-8') as handle:
+            return json.load(handle)
+    except Exception as exc:  # pragma: no cover - defensive
+        print(f"\n⚠️  Could not read summary {summary_path}: {exc}")
+        return None
+
+
+PASS_RATE_DELTA_THRESHOLD = 0.005  # 0.5 percentage points
+
+
+def _compare_summaries(current: Dict, previous: Dict) -> List[str]:
+    """Return human-readable notes describing differences between two summaries."""
+
+    notes: List[str] = []
+
+    if current.get('dataset') != previous.get('dataset'):
+        notes.append(
+            f"ℹ️  Comparing different datasets: now {current.get('dataset')} vs {previous.get('dataset')}"
+        )
+
+    current_stats = current.get('stats', {}) or {}
+    previous_stats = previous.get('stats', {}) or {}
+
+    current_pass = _safe_float(current_stats.get('pass_rate'))
+    previous_pass = _safe_float(previous_stats.get('pass_rate'))
+    if current_pass is not None and previous_pass is not None:
+        delta = current_pass - previous_pass
+        if abs(delta) >= PASS_RATE_DELTA_THRESHOLD:
+            arrow = '⬆️' if delta > 0 else '⬇️'
+            notes.append(
+                f"{arrow} Overall pass rate changed from {_format_percent(previous_pass)} to {_format_percent(current_pass)} ({delta:+.1%})."
+            )
+
+    if previous.get('passed') and not current.get('passed'):
+        notes.append("⚠️  Overall status regressed: previously passing, now failing.")
+    elif current.get('passed') and not previous.get('passed'):
+        notes.append("✅ Overall status improved: previously failing, now passing.")
+
+    current_quality = current.get('quality_gate_passed')
+    previous_quality = previous.get('quality_gate_passed')
+    if current_quality is not None and previous_quality is not None and current_quality != previous_quality:
+        if current_quality:
+            notes.append("✅ Quality gate now satisfied (previously unmet).")
+        else:
+            notes.append("⚠️  Quality gate no longer satisfied (previously met).")
+
+    current_tasks = current.get('tasks') or {}
+    previous_tasks = previous.get('tasks') or {}
+    all_tasks = sorted(set(current_tasks) | set(previous_tasks))
+
+    for task in all_tasks:
+        current_task = current_tasks.get(task)
+        previous_task = previous_tasks.get(task)
+
+        current_failing = _safe_int((current_task or {}).get('failing_strides')) or 0
+        previous_failing = _safe_int((previous_task or {}).get('failing_strides')) or 0
+        current_pass_rate = _safe_float((current_task or {}).get('pass_rate'))
+        previous_pass_rate = _safe_float((previous_task or {}).get('pass_rate'))
+
+        if current_task and not previous_task:
+            if current_failing:
+                notes.append(
+                    f"⚠️  New task {task} introduced with {current_failing} failing strides ({_format_percent(current_pass_rate)} pass rate)."
+                )
+            else:
+                total = _safe_int(current_task.get('total_strides'))
+                notes.append(
+                    f"✅ New task {task} added; all {total or 0} strides pass."
+                )
+            continue
+
+        if previous_task and not current_task:
+            notes.append(f"ℹ️  Task {task} no longer present in the dataset.")
+            continue
+
+        # Both present
+        if current_failing and not previous_failing:
+            notes.append(
+                f"⚠️  Task {task} now has {current_failing} failing strides ({_format_percent(current_pass_rate)} pass rate)."
+            )
+        elif previous_failing and not current_failing:
+            notes.append(
+                f"✅ Task {task} now passes all strides (previously {previous_failing} failures)."
+            )
+        elif current_failing and previous_failing:
+            if current_pass_rate is not None and previous_pass_rate is not None:
+                delta = current_pass_rate - previous_pass_rate
+                if delta >= PASS_RATE_DELTA_THRESHOLD:
+                    notes.append(
+                        f"⬆️  Task {task} pass rate improved from {_format_percent(previous_pass_rate)} to {_format_percent(current_pass_rate)}."
+                    )
+                elif delta <= -PASS_RATE_DELTA_THRESHOLD:
+                    notes.append(
+                        f"⬇️  Task {task} pass rate dropped from {_format_percent(previous_pass_rate)} to {_format_percent(current_pass_rate)}."
+                    )
+
+        current_features = (current_task or {}).get('failing_features') or {}
+        previous_features = (previous_task or {}).get('failing_features') or {}
+
+        new_features = sorted(set(current_features) - set(previous_features))
+        resolved_features = sorted(set(previous_features) - set(current_features))
+
+        if new_features:
+            notes.append(
+                f"⚠️  Task {task}: new failing features detected ({', '.join(new_features)})."
+            )
+        if resolved_features:
+            notes.append(
+                f"✅ Task {task}: resolved failing features ({', '.join(resolved_features)})."
+            )
+
+    return notes
+
+
+def _print_comparison(current: Dict, previous: Dict) -> None:
+    notes = _compare_summaries(current, previous)
+    print("\n" + "="*70)
+    print("COMPARISON VS PREVIOUS RUN")
+    print("="*70)
+    if not notes:
+        print("\nNo differences detected between the two summaries.")
+    else:
+        for note in notes:
+            print(f"\n{note}")
+
 
 POPULATION_SUFFIXES = [
     '_stroke', '_amputee', '_tfa', '_tta', '_pd', '_sci', '_cp',
@@ -585,7 +838,7 @@ def _report_task_registry_mismatches(dataset_tasks: List[str], range_tasks: List
 def main():
     """Main entry point for quick validation check."""
     parser = argparse.ArgumentParser(
-        description="Quick validation check - text-only, no plots",
+        description="Quick validation check - schema status plus quality metrics",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     
@@ -625,6 +878,16 @@ def main():
         "--show-local-passing",
         action="store_true",
         help="Show locally passing strides in yellow (pass current feature but fail others)"
+    )
+
+    parser.add_argument(
+        "--save-summary",
+        help="Write validation summary JSON to the given path"
+    )
+
+    parser.add_argument(
+        "--compare",
+        help="Compare results to a previous summary JSON file"
     )
     
     args = parser.parse_args()
@@ -674,6 +937,21 @@ def main():
 
         # Always print summary
         print_validation_summary(result, task_details=task_details)
+
+        summary_payload = _build_summary_payload(
+            result=result,
+            task_details=task_details,
+            dataset_path=dataset_path,
+            ranges_file=ranges_file,
+        )
+
+        if args.compare:
+            previous_summary = _load_summary(args.compare)
+            if previous_summary:
+                _print_comparison(summary_payload, previous_summary)
+
+        if args.save_summary:
+            _write_summary(args.save_summary, summary_payload)
 
         # Optional plot generation
         if args.plot:

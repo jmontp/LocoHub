@@ -163,8 +163,16 @@ class Validator:
             if total_checks > 0 else 0.0
         )
 
+        pass_rate_threshold = 0.9 if total_strides > 0 else 0.0
+        quality_gate_passed = stride_pass_rate >= pass_rate_threshold if total_strides > 0 else True
+
         result = {
-            'passed': phase_valid and stride_pass_rate >= 0.9,
+            # Schema compliance (phase structure + schema validation) determines overall pass/fail
+            'passed': phase_valid,
+            'schema_passed': phase_valid,
+            # Quality gate keeps legacy pass-rate threshold for visibility but no longer fails the run
+            'quality_gate_passed': phase_valid and quality_gate_passed,
+            'quality_gate_threshold': pass_rate_threshold,
             'phase_valid': phase_valid,
             'phase_message': phase_msg,
             'violations': violations,
@@ -178,6 +186,7 @@ class Validator:
                 'variable_pass_rate': variable_pass_rate,
                 'num_tasks': len(tasks),
                 'dataset': getattr(locomotion_data, 'data_path', Path('unknown')).stem,
+                'pass_rate_threshold': pass_rate_threshold,
             },
             'mode': 'phase'
         }

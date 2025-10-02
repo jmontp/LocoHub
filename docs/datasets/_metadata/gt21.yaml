@@ -1,4 +1,4 @@
-display_name: Gtech 2021 Raw
+display_name: Gtech 2021
 short_code: GT21
 description: We introduce a novel dataset containing 3-dimensional biomechanical and
   wearable sensor data from 22 able-bodied adults for multiple locomotion modes (level-ground/treadmill
@@ -16,63 +16,628 @@ year: '2021'
 institution: Epic Lab
 subjects: '15'
 tasks:
-- decline_walking
-- incline_walking
 - level_walking
 - stair_ascent
 - stair_descent
 - transition
+download_clean_url: https://www.dropbox.com/scl/fi/h2aitlo77ujndhcqzhswo/gtech_2021_phase_clean.parquet?rlkey=zitswlvbc7g8bgt2f3jx3zyfx&st=26wq9hpi&raw=1
+download_dirty_url: https://www.dropbox.com/scl/fi/fvv83iipnhtapkaa1z70g/gtech_2021_phase_dirty.parquet?rlkey=fp7q7a3b0t8t6bivc9lynu5uj&st=idfk1sk4&raw=1
+citation: https://doi.org/10.1016/j.jbiomech.2021.110320
 date_added: '2025-09-29'
 validation_status: "\u26A0\uFE0F PARTIAL"
-validation_pass_rate: 81.3
-total_strides: 32859
-passing_strides: 26698
-quality_display: "\u26A0\uFE0F Partial (81.3%)"
+validation_pass_rate: 89.0
+total_strides: null
+passing_strides: null
+quality_display: "\u26A0\uFE0F Partial (89.0%)"
 doc_url: https://jmontp.github.io/LocoHub/datasets/gt21/
 doc_path: docs/datasets/gt21.md
 doc_body_path: docs/datasets/.generated/gt21_documentation.md
 validation_doc_url: https://jmontp.github.io/LocoHub/datasets/gt21/#validation
 validation_doc_path: docs/datasets/gt21.md#validation
 validation_body_path: docs/datasets/.generated/gt21_validation.md
-validation_summary: "### Summary\n\n**Status**: \u26A0\uFE0F PARTIAL (81.3% valid)\
-  \  \n**Total Strides**: 32859  \n**Passing Strides**: 26698  \n\n### Task Breakdown\n\
-  \n| Task | Pass Rate | Status |\n|------|-----------|--------|\n| Decline Walking\
-  \ | 96.3% | \u2705 |\n| Incline Walking | 92.0% | \u2705 |\n| Level Walking | 90.7%\
-  \ | \u2705 |\n| Stair Ascent | 78.7% | \u26A0\uFE0F |\n| Stair Descent | 97.1% |\
-  \ \u2705 |\n| Transition | 55.2% | \u274C |\n\n_Validation ranges snapshot embedded\
-  \ below._\n"
+validation_summary: "### Summary\n\n**Status**: \u26A0\uFE0F PARTIAL (89.0% valid)\
+  \  \n**Total Strides**: 16045  \n**Passing Strides**: 14275  \n\n### Task Breakdown\n\
+  \n| Task | Pass Rate | Status |\n|------|-----------|--------|\n| Level Walking\
+  \ | 90.8% | \u2705 |\n| Stair Ascent | 78.8% | \u26A0\uFE0F |\n| Stair Descent |\
+  \ 97.1% | \u2705 |\n| Transition | 5.5% | \u274C |\n\n_Validation ranges snapshot\
+  \ embedded below._\n"
 validation_ranges_file: '[Download validation ranges](./gt21_validation_ranges.yaml)'
 validation_ranges_download: docs/datasets/gt21_validation_ranges.yaml
 validation_ranges_source: contributor_tools/validation_ranges/default_ranges_v3.yaml
 comparison_tasks:
-  decline_walking:
-    pass_rate: 96.30446773303916
-    status: "\u2705"
-    total_strides: 3626
-    failing_strides: 134
-  incline_walking:
-    pass_rate: 92.01154956689123
-    status: "\u2705"
-    total_strides: 3117
-    failing_strides: 249
   level_walking:
-    pass_rate: 90.7490439140182
+    pass_rate: 90.82148079223714
     status: "\u2705"
-    total_strides: 15166
-    failing_strides: 1403
+    total_strides: 15046
+    failing_strides: 1381
   stair_ascent:
-    pass_rate: 78.67902665121669
+    pass_rate: 78.81619937694704
     status: "\u26A0\uFE0F"
-    total_strides: 863
-    failing_strides: 184
+    total_strides: 321
+    failing_strides: 68
   stair_descent:
-    pass_rate: 97.08121827411168
+    pass_rate: 97.134670487106
     status: "\u2705"
-    total_strides: 788
-    failing_strides: 23
+    total_strides: 349
+    failing_strides: 10
   transition:
-    pass_rate: 55.17797612646521
+    pass_rate: 5.4711246200607855
     status: "\u274C"
-    total_strides: 9299
-    failing_strides: 4168
-last_dataset_path: converted_datasets/gtech_2021_phase_raw.parquet
+    total_strides: 329
+    failing_strides: 311
+feature_task_groups:
+- group: Ground Reaction Forces
+  features:
+  - name: anterior_grf_contra_BW
+    tasks:
+      level_walking:
+        status: partial
+        coverage: 86.7
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      transition:
+        status: missing
+        coverage: 0.0
+  - name: anterior_grf_ipsi_BW
+    tasks:
+      level_walking:
+        status: partial
+        coverage: 86.7
+      stair_ascent:
+        status: partial
+        coverage: 96.4
+      stair_descent:
+        status: partial
+        coverage: 49.9
+      transition:
+        status: missing
+        coverage: 0.0
+  - name: lateral_grf_contra_BW
+    tasks:
+      level_walking:
+        status: partial
+        coverage: 86.7
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      transition:
+        status: missing
+        coverage: 0.0
+  - name: lateral_grf_ipsi_BW
+    tasks:
+      level_walking:
+        status: partial
+        coverage: 86.7
+      stair_ascent:
+        status: partial
+        coverage: 96.4
+      stair_descent:
+        status: partial
+        coverage: 49.9
+      transition:
+        status: missing
+        coverage: 0.0
+  - name: vertical_grf_contra_BW
+    tasks:
+      level_walking:
+        status: partial
+        coverage: 86.7
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      transition:
+        status: missing
+        coverage: 0.0
+  - name: vertical_grf_ipsi_BW
+    tasks:
+      level_walking:
+        status: partial
+        coverage: 86.7
+      stair_ascent:
+        status: partial
+        coverage: 96.4
+      stair_descent:
+        status: partial
+        coverage: 49.9
+      transition:
+        status: missing
+        coverage: 0.0
+- group: Joint Angles
+  features:
+  - name: ankle_dorsiflexion_angle_contra_rad
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: ankle_dorsiflexion_angle_ipsi_rad
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: foot_sagittal_angle_contra_rad
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: foot_sagittal_angle_ipsi_rad
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_angle_contra_rad
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_angle_ipsi_rad
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_angle_contra_rad
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_angle_ipsi_rad
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: pelvis_sagittal_angle_rad
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: shank_sagittal_angle_contra_rad
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: shank_sagittal_angle_ipsi_rad
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: thigh_sagittal_angle_contra_rad
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: thigh_sagittal_angle_ipsi_rad
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: trunk_sagittal_angle_rad
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+- group: Joint Moments
+  features:
+  - name: ankle_dorsiflexion_moment_contra_Nm_kg
+    tasks:
+      level_walking:
+        status: partial
+        coverage: 92.9
+      stair_ascent:
+        status: partial
+        coverage: 40.8
+      stair_descent:
+        status: partial
+        coverage: 70.8
+      transition:
+        status: partial
+        coverage: 68.2
+  - name: ankle_dorsiflexion_moment_ipsi_Nm_kg
+    tasks:
+      level_walking:
+        status: partial
+        coverage: 93.3
+      stair_ascent:
+        status: partial
+        coverage: 98.2
+      stair_descent:
+        status: partial
+        coverage: 72.7
+      transition:
+        status: partial
+        coverage: 94.8
+  - name: hip_flexion_moment_contra_Nm_kg
+    tasks:
+      level_walking:
+        status: partial
+        coverage: 92.9
+      stair_ascent:
+        status: partial
+        coverage: 40.8
+      stair_descent:
+        status: partial
+        coverage: 70.8
+      transition:
+        status: partial
+        coverage: 68.2
+  - name: hip_flexion_moment_ipsi_Nm_kg
+    tasks:
+      level_walking:
+        status: partial
+        coverage: 93.3
+      stair_ascent:
+        status: partial
+        coverage: 98.2
+      stair_descent:
+        status: partial
+        coverage: 72.7
+      transition:
+        status: partial
+        coverage: 94.8
+  - name: knee_flexion_moment_contra_Nm_kg
+    tasks:
+      level_walking:
+        status: partial
+        coverage: 92.9
+      stair_ascent:
+        status: partial
+        coverage: 40.8
+      stair_descent:
+        status: partial
+        coverage: 70.8
+      transition:
+        status: partial
+        coverage: 68.2
+  - name: knee_flexion_moment_ipsi_Nm_kg
+    tasks:
+      level_walking:
+        status: partial
+        coverage: 93.3
+      stair_ascent:
+        status: partial
+        coverage: 98.2
+      stair_descent:
+        status: partial
+        coverage: 72.7
+      transition:
+        status: partial
+        coverage: 94.8
+- group: Joint Velocities
+  features:
+  - name: ankle_dorsiflexion_velocity_contra_rad_s
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: ankle_dorsiflexion_velocity_ipsi_rad_s
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: foot_sagittal_velocity_contra_rad_s
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: foot_sagittal_velocity_ipsi_rad_s
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_velocity_contra_rad_s
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_velocity_ipsi_rad_s
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_velocity_contra_rad_s
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_velocity_ipsi_rad_s
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: pelvis_sagittal_velocity_rad_s
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: shank_sagittal_velocity_contra_rad_s
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: shank_sagittal_velocity_ipsi_rad_s
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: thigh_sagittal_velocity_contra_rad_s
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: thigh_sagittal_velocity_ipsi_rad_s
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+  - name: trunk_sagittal_velocity_rad_s
+    tasks:
+      level_walking:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      transition:
+        status: complete
+        coverage: 100.0
+feature_task_order:
+- level_walking
+- stair_ascent
+- stair_descent
+- transition
+feature_task_source: converted_datasets/gtech_2021_phase_clean.parquet
+last_dataset_path: converted_datasets/gtech_2021_phase_dirty.parquet

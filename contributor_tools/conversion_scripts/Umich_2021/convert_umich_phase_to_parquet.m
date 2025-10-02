@@ -419,7 +419,7 @@ for subject_idx = 1:length(subjects)
 end
 
 % Save the phase-indexed data
-output_path = fullfile('..', '..', '..', 'converted_datasets', 'umich_2021_phase_raw.parquet');
+output_path = fullfile('..', '..', '..', 'converted_datasets', 'umich_2021_phase_dirty.parquet');
 fprintf('\n========================================\n');
 fprintf('Saving to: %s\n', output_path);
 fprintf('Total subjects: %d\n', length(unique(total_data.subject)));

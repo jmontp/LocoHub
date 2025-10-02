@@ -17,8 +17,8 @@ Contributors now submit complete packages with documentation. Your role:
    - ✅ Conversion script in `contributor_tools/conversion_scripts/`
 
 2. **Check validation results**:
-   - Review validation pass rates in documentation
-   - Ensure ≥80% pass rate or justified exceptions
+   - Review validation pass rates in documentation and call out large drops between raw vs. clean strides
+   - Confirm contributors explain persistent violations or intentional exclusions
    - Check for appropriate task coverage
 
 3. **Verify metadata**:
@@ -33,7 +33,7 @@ Contributors now submit complete packages with documentation. Your role:
 
 ### Quick Validation Tools
 - Test dataset: `python contributor_tools/quick_validation_check.py <dataset_phase.parquet>`
-- Filter strides: `python contributor_tools/create_filtered_dataset.py <dataset_phase.parquet>`
+- Filter strides: `python contributor_tools/create_clean_dataset.py <dataset_phase.parquet>`
 - Serve docs locally: `mkdocs serve`
 
 ## Validation Checks
@@ -128,7 +128,7 @@ Time-series thresholds live in `contributor_tools/validation_ranges/time_structu
 Quick references for the contributor-facing scripts maintainers should recognize, including the unified submission workflow.
 
 <details>
-<summary>`create_filtered_dataset.py` — Filters stride data using the validation engine and writes a cleaned parquet copy.</summary>
+<summary>`create_clean_dataset.py` — Filters stride data using the validation engine and writes a cleaned parquet copy.</summary>
 
 ```mermaid
 flowchart TD
@@ -171,7 +171,7 @@ flowchart TD
     C -- No --> E[Prompt contributor for fields]
     D --> F
     E --> F[Assemble metadata payload]
-    F --> F1[Ensure base families exist in registry (manage_tasks.py)]
+    F --> F1["Ensure base families exist in registry (manage_tasks.py)"]
     F1 --> G[Run validator on parquet]
     G --> H{Validation passed?}
     H -- No --> I[Capture issues but continue]
@@ -187,23 +187,6 @@ flowchart TD
 </details>
 
 <details>
-<summary>`refresh-validation` subcommand</summary>
-
-Planned follow-up flow for when contributors need to rerun validation after adjusting converters or ranges. Would skip metadata prompts, rebuild plots, update summaries, and refresh tables using the existing metadata.
-
-```mermaid
-flowchart TD
-    A[Start CLI] --> B[Parse dataset and ranges options]
-    B --> C[Run validator and regenerate plots]
-    C --> D[Update dataset Markdown with new summary]
-    D --> E[Persist metadata stats]
-    E --> F[Refresh dataset tables between markers]
-    F --> G[Exit with status]
-```
-
-</details>
-
-<details>
 <summary>`update-documentation` subcommand</summary>
 
 Fast path to refresh the overview markdown and metadata from the latest parquet without rerunning validation. Loads the stored YAML (or an override), re-extracts tasks/subjects, prompts you with the current values (press Enter to keep), rewrites `docs/datasets/<slug>.md`, and updates the global dataset tables.
@@ -212,7 +195,7 @@ Fast path to refresh the overview markdown and metadata from the latest parquet 
 flowchart TD
     A[Start CLI] --> B[Resolve short code]
     B --> C[Load existing metadata YAML]
-    C --> D[Resolve dataset path (flag or last_dataset_path)]
+    C --> D["Resolve dataset path (flag or last_dataset_path)"]
     D --> E[Extract tasks & subjects]
     E --> F[Regenerate overview markdown]
     F --> G[Write metadata YAML]
@@ -224,7 +207,7 @@ flowchart TD
 
 ```bash
 python contributor_tools/manage_dataset_documentation.py update-documentation \
-    --short-code UM21 [--dataset converted_datasets/umich_2021_phase_raw.parquet]
+    --short-code UM21 [--dataset converted_datasets/umich_2021_phase_dirty.parquet]
 ```
 
 </details>
@@ -251,7 +234,7 @@ flowchart TD
 
 ```bash
 python contributor_tools/manage_dataset_documentation.py update-validation \
-    --short-code UM21 [--dataset converted_datasets/umich_2021_phase_raw.parquet]
+    --short-code UM21 [--dataset converted_datasets/umich_2021_phase_dirty.parquet]
 ```
 
 </details>
@@ -268,7 +251,8 @@ flowchart TD
     purgeDocs --> purgePlots[Delete validation plots + checklist]
     purgePlots --> deleteParquet{--remove-parquet?}
     deleteParquet -- No --> refreshTables[Refresh dataset tables]
-    deleteParquet -- Yes --> rmParquet[Delete converted parquet]\n    rmParquet --> refreshTables
+    deleteParquet -- Yes --> rmParquet[Delete converted parquet]
+    rmParquet --> refreshTables
     refreshTables --> report[Print removed paths]
     report --> done([Exit])
 ```
@@ -327,6 +311,34 @@ flowchart TD
 
 </details>
 
+
+## Dataset Documentation Pipeline
+
+Maintainers never hand-edit the generated dataset pages. Everything flows from a small set of source files that the CLI assembles into the published Markdown and assets.
+
+```mermaid
+flowchart TD
+    parquet[converted_datasets/&lt;dataset_name&gt;_phase.parquet<br/>or &lt;dataset_name&gt;_time.parquet] --> tool[manage_dataset_documentation.py add-dataset/update-*]
+    metadata_src[docs/datasets/_metadata/&lt;short_code&gt;.yaml<br/>existing snapshot or CLI prompts] --> tool
+    shortcode[--short-code &lt;short_code&gt;<br/>CLI flag or inferred slug] --> tool
+    ranges[contributor_tools/validation_ranges/*.yaml] --> tool
+    tool --> metadata_out[docs/datasets/_metadata/&lt;short_code&gt;.yaml<br/>authoritative snapshot]
+    tool --> wrapper[docs/datasets/&lt;short_code&gt;.md<br/>tab wrapper]
+    tool --> docbody[docs/datasets/.generated/&lt;short_code&gt;_documentation.md]
+    tool --> valbody[docs/datasets/.generated/&lt;short_code&gt;_validation.md]
+    tool --> plots[docs/datasets/validation_plots/&lt;short_code&gt;/*]
+    metadata_out --> tables[Dataset tables regenerated in README.md,<br/>docs/index.md, docs/datasets/index.md]
+```
+
+Key touch points:
+
+- Dataset content comes from the parquet the CLI reads. Point `--dataset` at the clean phase file when possible; the tool falls back to `_clean`, `_raw`, or `_dirty` variants when needed.
+- `docs/datasets/_metadata/<short_code>.yaml` is the single source of truth for display text, validation stats, download links, and range references. Edit this file (or pass `--metadata-file`) rather than changing the generated Markdown.
+- The `_generated` Markdown files are regenerated on every run. To change wording, update the metadata values or adjust the rendering helpers inside the CLI.
+- `docs/datasets/<short_code>.md` only embeds the generated snippets. If it diverges from the template it will be rewritten the next time the CLI runs.
+- `update-documentation` refreshes metadata-driven text without re-running validation; `update-validation` triggers validation, snapshots ranges, and overwrites plots under `docs/datasets/validation_plots/<short_code>/`.
+- Use `remove-dataset` when you need to wipe the generated files before re-adding a dataset; this leaves the parquet in place unless `--remove-parquet` is supplied.
+- The `--short-code` flag feeds the `<short_code>` placeholders; when omitted, the CLI infers it from the parquet stem or existing metadata snapshot.
 
 ## Documentation Website Architecture
 

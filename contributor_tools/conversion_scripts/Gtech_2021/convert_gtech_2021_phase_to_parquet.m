@@ -49,7 +49,7 @@ TEST_SUBJECTS = {'AB06'};  % Subjects to use in test mode
 if TEST_MODE
     OUTPUT_FILE = 'gtech_2021_phase_test.parquet';
 else
-    OUTPUT_FILE = 'gtech_2021_phase_raw.parquet';
+    OUTPUT_FILE = 'gtech_2021_phase_dirty.parquet';
 end
 
 % Create output directory if needed

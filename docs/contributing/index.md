@@ -36,16 +36,16 @@ graph TD
     Z --> B
     B -->|Yes| C[Clone repo and install tools]
     C --> D[Review reference dataset and task_info fields]
-    D --> D1[Register new base families if needed (manage_tasks.py)]
+    D --> D1["Register new base families if needed (manage_tasks.py)"]
     D1 --> E[Build conversion script from template]
     E --> F{Does conversion run cleanly?}
     F -->|No| E
     F -->|Yes| G[Export standardized parquet dataset]
     G --> H[Run validation suite - quick check]
-    H --> I{Are validation results acceptable - over 80%?}
-    I -->|No| J[Adjust conversion logic or validation ranges]
+    H --> I{Do validation reports show blocking issues?}
+    I -->|Yes| J[Adjust conversion logic or validation ranges]
     J --> H
-    I -->|Yes| K[Generate documentation - manage_dataset_documentation]
+    I -->|No| K[Generate documentation - manage_dataset_documentation]
     K --> L[Review generated docs and checklist]
     L --> M[Create PR with dataset and documentation]
     M --> N[End]
@@ -73,6 +73,16 @@ graph TD
 ```
 
 </details>
+
+### How to judge validation results
+
+Treat the validator output as a quality gate rather than a fixed percentage. Move to documentation only when:
+
+- Overall and per-task pass rates look healthy enough that the cleaned parquet still represents the dataset; call out any large stride drops between dirty and clean outputs.
+- High-severity errors (missing required columns, NaN bursts, impossible units) are resolved or explicitly documented.
+- Any intentional exclusions are backed by updated ranges or notes in the submission checklist.
+
+If any of the checks fail, loop back through conversion, metadata, or range tuning until the report looks solid.
 
 ---
 
@@ -377,7 +387,7 @@ If your data are time‑indexed (no `phase_ipsi`), add a phase‑normalization p
 - Events → Phase: if time-indexed, detect HS/TO (e.g., GRF threshold) and resample cycles to 150 points (`phase_ipsi` 0–100).
 - Normalization: convert joint moments to `*_Nm_kg`; GRFs to `*_BW`.
 - Table build: add required columns (`subject`, `task`, `task_id`, `task_info`, `step`, `phase_ipsi`) and save parquet.
-- Validate: run quick validator; iterate on mapping/signs/phase until pass rates are acceptable.
+- Validate: run quick validator; iterate on mapping/signs/phase until remaining failures are understood or justified.
 
 Tips: pick a consistent HS detector (e.g., vertical GRF threshold crossing), de‑spike signals before event detection, and verify a few cycles visually.
 
@@ -399,7 +409,7 @@ python contributor_tools/quick_validation_check.py your_dataset_phase.parquet --
 Optionally produce a filtered dataset of valid strides:
 
 ```bash
-python contributor_tools/create_filtered_dataset.py your_dataset_phase.parquet
+python contributor_tools/create_clean_dataset.py your_dataset_phase.parquet
 ```
 
 Interpret results:
@@ -508,7 +518,7 @@ If you see any issues, fix them before submitting your PR. Common fixes:
 - Phase-normalized to 150 points per cycle
 - Correct units (radians, Nm/kg, BW)
 - Proper sign conventions
-- ≥80% validation pass rate
+- Validation report reviewed; pass-rate drops explained
 
 ✅ **Required Files**
 - `converted_datasets/your_dataset_phase.parquet` - Dataset file
@@ -542,7 +552,7 @@ If you see any issues, fix them before submitting your PR. Common fixes:
    git commit -m "Add YourDataset 2024 phase-normalized dataset
 
    - N subjects, M tasks
-   - Validation: XX% pass rate
+   - Validation: pass rates + key findings
    - Includes level walking, stair tasks, etc."
    ```
 
@@ -560,7 +570,7 @@ If you see any issues, fix them before submitting your PR. Common fixes:
 ### What maintainers will check
 
 - Documentation completeness
-- Validation pass rates
+- Validation results narrative (pass rates + explanations)
 - Data format compliance
 - Conversion script reproducibility
 
@@ -579,13 +589,13 @@ graph TD
     D --> B
 
     B -->|All files present| E{Validation check}
-    E -->|Less than 80% pass rate| F{Is it justified?}
-    F -->|Not justified| G[Maintainer requests: Fix validation issues]
+    E -->|Quality concerns (large violations)| F{Documented and acceptable?}
+    F -->|Not yet| G[Maintainer requests: Fix validation issues]
     G --> H[You fix conversion or document reasons]
     H --> B
-    F -->|Justified - special population| I{Metadata review}
+    F -->|Yes - documented| I{Metadata review}
 
-    E -->|80% or higher pass rate| I
+    E -->|No major concerns| I
     I -->|Incomplete| J[Maintainer requests: Complete metadata]
     J --> K[You update docs]
     K --> B
@@ -633,7 +643,7 @@ Before you begin:
 | Tool | Purpose | When to Use |
 |------|---------|------------|
 | **quick_validation_check.py** | Fast pass/fail validation statistics | First check after conversion |
-| **create_filtered_dataset.py** | Remove invalid strides from dataset | When you need clean data |
+| **create_clean_dataset.py** | Remove invalid strides from dataset | When you need clean data |
 | **interactive_validation_tuner.py** | GUI for tuning validation ranges | For special populations |
 | **manage_dataset_documentation.py** | Generate documentation and submission package | Ready to submit dataset |
 
@@ -660,23 +670,23 @@ python3 contributor_tools/quick_validation_check.py converted_datasets/your_data
 - The script prints the variable naming audit up front—if it fails there, fix your column names
 - Exit code is non-zero if any task fails validation
 
-### create_filtered_dataset.py — Keep Only Passing Strides {#create-filtered-dataset}
+### create_clean_dataset.py — Keep Only Passing Strides {#create-clean-dataset}
 
 After the quick check highlights problems, run the filter to drop the failing strides and produce a clean file for sharing.
 
 **Usage:**
 ```bash
-python3 contributor_tools/create_filtered_dataset.py converted_datasets/your_dataset_phase.parquet
+python3 contributor_tools/create_clean_dataset.py converted_datasets/your_dataset_phase.parquet
 
 # Use custom validation ranges for special populations
-python3 contributor_tools/create_filtered_dataset.py converted_datasets/your_dataset_phase.parquet \
+python3 contributor_tools/create_clean_dataset.py converted_datasets/your_dataset_phase.parquet \
     --ranges contributor_tools/validation_ranges/elderly_ranges.yaml
 ```
 
-![filtered dataset screenshot](../assets/create_filtered_dataset_terminal.png)
+![clean dataset screenshot](../assets/create_filtered_dataset_terminal.png)
 
 **Tips:**
-- The tool automatically saves to `*_filtered.parquet` alongside the input
+- The tool automatically saves to `*_clean.parquet` alongside the input
 - It prompts before overwriting an existing file
 - Use `--exclude-columns "col_a,col_b"` to ignore auxiliary signals
 
@@ -853,7 +863,7 @@ with open('custom_ranges.yaml', 'w') as f:
 
 | Issue | Likely Cause | Solution |
 |-------|-------------|----------|
-| Low pass rate (<70%) | Wrong sign conventions | Check flexion/extension signs |
+| Many strides failing | Wrong sign conventions | Check flexion/extension signs |
 | Phase 0% failures | Phase offset | Check heel strike detection |
 | Systematic high/low values | Unit conversion | Verify radians vs degrees |
 | Single variable failing | Population difference | Use custom ranges |
