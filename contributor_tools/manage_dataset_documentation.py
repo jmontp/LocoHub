@@ -827,19 +827,84 @@ def update_validation_gallery(doc_path: Path, dataset_name: str) -> None:
     plots_dir = repo_root / 'docs' / 'datasets' / 'validation_plots' / dataset_name
     if not plots_dir.exists():
         return
+
     images = sorted(plots_dir.glob('*.png'))
     if not images:
         return
 
-    tabs_lines = []
+    variant_priority = {
+        'clean': 4,
+        'dirty': 3,
+        'filtered': 2,
+        '': 1,
+        'raw': 0,
+    }
+
+    best_images: Dict[str, Dict[str, Any]] = {}
+    allowed_tasks: Optional[set] = None
+
     for image_path in images:
         name = image_path.stem
-        task_segment = name
-        if '_phase_' in name and '_all_features' in name:
-            task_segment = name.split('_phase_')[1].split('_all_features')[0]
+        if '_phase_' not in name or '_all_features' not in name:
+            continue
+        segment = name.split('_phase_')[1].split('_all_features')[0]
+        variant = ''
+        task_segment = segment
+        if '_' in segment:
+            candidate, remainder = segment.split('_', 1)
+            if candidate in variant_priority:
+                variant = candidate
+                task_segment = remainder
         task_segment = task_segment.replace('filtered_', '').replace('raw_', '')
-        task_title = _format_task_name(task_segment)
-        rel_path = Path('validation_plots') / dataset_name / image_path.name
+        task_key = task_segment
+        if allowed_tasks is not None and task_key not in allowed_tasks:
+            continue
+        priority = variant_priority.get(variant, 1)
+
+        existing = best_images.get(task_key)
+        if existing is None or priority > existing['priority']:
+            best_images[task_key] = {
+                'path': image_path,
+                'priority': priority,
+            }
+
+    if not best_images:
+        return
+
+    meta_path = repo_root / 'docs' / 'datasets' / '_metadata' / f'{dataset_name}.yaml'
+    ordered_tasks: List[str] = []
+    if meta_path.exists():
+        try:
+            meta_data = load_metadata_file(meta_path)
+            ordered_tasks = meta_data.get('tasks') or []
+        except Exception:
+            ordered_tasks = []
+
+    allowed_tasks = set(ordered_tasks) if ordered_tasks else None
+    if allowed_tasks is not None:
+        best_images = {task: info for task, info in best_images.items() if task in allowed_tasks}
+        if not best_images:
+            return
+
+    tabs_lines: List[str] = []
+
+    seen = set()
+    for task_name in ordered_tasks:
+        if task_name in best_images:
+            entry = best_images[task_name]
+            rel_path = Path('validation_plots') / dataset_name / entry['path'].name
+            task_title = _format_task_name(task_name)
+            tabs_lines.append(f"=== \"{task_title}\"")
+            tabs_lines.append(f"    ![{task_title}](./{rel_path.as_posix()})")
+            tabs_lines.append("")
+            seen.add(task_name)
+
+    for task_name in sorted(best_images.keys()):
+        if task_name in seen:
+            continue
+        entry = best_images[task_name]
+        rel_path = Path('validation_plots') / dataset_name / entry['path'].name
+        task_title = _format_task_name(task_name)
         tabs_lines.append(f"=== \"{task_title}\"")
         tabs_lines.append(f"    ![{task_title}](./{rel_path.as_posix()})")
         tabs_lines.append("")

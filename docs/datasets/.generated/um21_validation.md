@@ -1,4 +1,4 @@
-**Report generated:** 2025-10-01 15:41
+**Report generated:** 2025-10-02 09:54
 
 ## Status Summary
 
@@ -38,8 +38,34 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges_v3.yaml_
 
 ## Validation Plots
 
-<!-- VALIDATION_GALLERY -->
+=== "Decline Walking"
+    ![Decline Walking](./validation_plots/um21/umich_2021_phase_dirty_decline_walking_all_features_validation.png)
+
+=== "Incline Walking"
+    ![Incline Walking](./validation_plots/um21/umich_2021_phase_dirty_incline_walking_all_features_validation.png)
+
+=== "Level Walking"
+    ![Level Walking](./validation_plots/um21/umich_2021_phase_dirty_level_walking_all_features_validation.png)
+
+=== "Run"
+    ![Run](./validation_plots/um21/umich_2021_phase_dirty_run_all_features_validation.png)
+
+=== "Sit To Stand"
+    ![Sit To Stand](./validation_plots/um21/umich_2021_phase_dirty_sit_to_stand_all_features_validation.png)
+
+=== "Stair Ascent"
+    ![Stair Ascent](./validation_plots/um21/umich_2021_phase_dirty_stair_ascent_all_features_validation.png)
+
+=== "Stair Descent"
+    ![Stair Descent](./validation_plots/um21/umich_2021_phase_dirty_stair_descent_all_features_validation.png)
+
+=== "Stand To Sit"
+    ![Stand To Sit](./validation_plots/um21/umich_2021_phase_dirty_stand_to_sit_all_features_validation.png)
+
+=== "Transition"
+    ![Transition](./validation_plots/um21/umich_2021_phase_dirty_transition_all_features_validation.png)
+
 
 ---
 
-*Generated from `converted_datasets/umich_2021_phase_dirty.parquet` on 2025-10-01 15:41*
+*Generated from `converted_datasets/umich_2021_phase_dirty.parquet` on 2025-10-02 09:54*
