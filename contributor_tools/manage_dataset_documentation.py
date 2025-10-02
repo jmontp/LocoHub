@@ -692,13 +692,13 @@ def _build_dataset_table(metadata_entries: List[Dict], table_file: Path, absolut
 
         clean_url = data.get('download_clean_url') or data.get('download_url')
         if clean_url:
-            clean_cell = f'<a class="{button_class}" href="{clean_url}">Clean</a>'
+            clean_cell = f'<a class="{button_class}" href="{clean_url}">Download</a>'
         else:
             clean_cell = '<span class="md-button md-button--disabled">Coming soon</span>'
 
         dirty_url = data.get('download_dirty_url')
         if dirty_url:
-            full_cell = f'<a class="{button_class}" href="{dirty_url}">Full</a>'
+            full_cell = f'<a class="{button_class}" href="{dirty_url}">Download</a>'
         else:
             full_cell = '<span class="md-button md-button--disabled">Coming soon</span>'
 
