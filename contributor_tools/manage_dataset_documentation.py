@@ -670,32 +670,43 @@ def _resolve_validation_link(data: Dict, table_file: Path, absolute: bool) -> Op
 
 
 def _build_dataset_table(metadata_entries: List[Dict], table_file: Path, absolute_links: bool) -> str:
-    header = "| Dataset | Tasks | Quality | Documentation | Clean Dataset | Full Dataset |"
-    separator = "|---------|-------|---------|---------------|---------------|---------------|"
+    header = "| Dataset | Tasks | Documentation | Clean Dataset | Full Dataset |"
+    separator = "|---------|-------|---------------|---------------|---------------|"
 
     rows: List[str] = []
     for data in sorted(metadata_entries, key=lambda d: d.get('display_name', '').lower()):
         doc_url = _resolve_dataset_link(data, table_file, absolute_links)
         display_name = data.get('display_name') or data['dataset_name']
         dataset_cell = display_name
-        doc_cell = f"[Open]({doc_url})" if doc_url else '—'
 
         tasks_list = data.get('tasks', []) or []
         tasks_cell = ', '.join(_format_task_name(task) for task in tasks_list) if tasks_list else '—'
 
-        quality_cell = data.get('quality_display') or data.get('validation_status') or '—'
+        button_class_primary = 'md-button md-button--primary'
+        button_class = 'md-button'
+
+        if doc_url:
+            doc_cell = f'<a class="{button_class_primary}" href="{doc_url}">Docs</a>'
+        else:
+            doc_cell = '<span class="md-button md-button--disabled">Docs</span>'
 
         clean_url = data.get('download_clean_url') or data.get('download_url')
+        if clean_url:
+            clean_cell = f'<a class="{button_class}" href="{clean_url}">Clean</a>'
+        else:
+            clean_cell = '<span class="md-button md-button--disabled">Coming soon</span>'
+
         dirty_url = data.get('download_dirty_url')
-        clean_cell = f"[Clean]({clean_url})" if clean_url else 'Coming soon'
-        full_cell = f"[Full]({dirty_url})" if dirty_url else 'Coming soon'
+        if dirty_url:
+            full_cell = f'<a class="{button_class}" href="{dirty_url}">Full</a>'
+        else:
+            full_cell = '<span class="md-button md-button--disabled">Coming soon</span>'
 
         rows.append(
             "| "
             + " | ".join([
                 dataset_cell,
                 tasks_cell,
-                quality_cell,
                 doc_cell,
                 clean_cell,
                 full_cell,
@@ -704,7 +715,7 @@ def _build_dataset_table(metadata_entries: List[Dict], table_file: Path, absolut
         )
 
     if not rows:
-        empty_cells = ['_No datasets available_'] + [''] * 5
+        empty_cells = ['_No datasets available_'] + [''] * 4
         return header + "\n" + separator + "\n| " + " | ".join(empty_cells) + " |"
 
     return "\n".join([header, separator] + rows)
@@ -742,6 +753,12 @@ def update_dataset_tables() -> None:
             use_absolute = table_file.name.lower() == 'readme.md'
             table = _build_dataset_table(metadata_entries, table_file, use_absolute)
             replace_between_markers(table_file, table)
+
+
+def handle_refresh_tables(args: argparse.Namespace) -> int:
+    update_dataset_tables()
+    print("✅ Dataset tables refreshed.")
+    return 0
 
 
 def _remove_path(path: Path, removed: List[str]) -> None:
@@ -2241,6 +2258,11 @@ Example workflow:
         action='store_true',
         help='Also delete converted_datasets/*.parquet files for the slug'
     )
+
+    refresh_parser = subparsers.add_parser(
+        'refresh-tables',
+        help='Regenerate dataset tables in README and docs without touching metadata'
+    )
     
     args = parser.parse_args()
     
@@ -2259,6 +2281,8 @@ Example workflow:
         return handle_update_validation(args)
     if args.command == 'remove-dataset':
         return handle_remove_dataset(args)
+    if args.command == 'refresh-tables':
+        return handle_refresh_tables(args)
     print(f"❌ Unknown command: {args.command}")
     return 1
 
