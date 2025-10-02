@@ -733,12 +733,12 @@ def replace_between_markers(path: Path, content: str) -> None:
     text = path.read_text(encoding='utf-8')
     if TABLE_MARKER_START not in text or TABLE_MARKER_END not in text:
         return
-    new_text = re.sub(
+    pattern = re.compile(
         rf"{re.escape(TABLE_MARKER_START)}.*?{re.escape(TABLE_MARKER_END)}",
-        f"{TABLE_MARKER_START}\n{content}\n{TABLE_MARKER_END}",
-        text,
         flags=re.DOTALL,
     )
+    replacement = f"{TABLE_MARKER_START}\n{content}\n{TABLE_MARKER_END}"
+    new_text = pattern.sub(lambda _: replacement, text, count=1)
     path.write_text(new_text, encoding='utf-8')
 
 

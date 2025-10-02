@@ -4,7 +4,7 @@ title: Contribute Your Dataset
 
 # Contribute Your Dataset
 
-Transform your biomechanics data into a standardized, validated community resource. This visual guide walks you through each decision point in the contribution process.
+You already have great data—the goal here is to turn it into a shareable, validated resource without guessing what to do next. Use this guide to understand the few decisions that matter and jump straight to the tools that help you make them.
 
 ## High-Level Workflow
 
@@ -20,11 +20,11 @@ graph LR
     style D fill:#c8e6c9,stroke:#2e7d32,color:#1b5e20
 ```
 
-The high-level view shows the four major stages of contribution. Each stage uses a distinct color palette: blue for intake, orange-cream for standardization, green for validation, and sage for community sharing.
+Think of the flow above as four conversations with the project: (1) confirm you can share the data, (2) turn it into the common table schema, (3) prove it passes validation, and (4) publish the package back to the community.
 
 ## Detailed Contribution Workflow {#contribution-workflow}
 
-The flowchart below shows your complete journey from raw data to published dataset. Click any box with an underline to jump directly to detailed instructions for that step.
+The expanded flow spells out the same journey with the actual buttons you will click. Follow it top to bottom, or just open the section that matches where you are stuck—the links mirror the headings further down this page.
 
 <details>
 <summary>Expand detailed workflow</summary>
@@ -74,28 +74,28 @@ graph TD
 
 </details>
 
-### How to judge validation results
+### When the validator says “go”
 
-Treat the validator output as a quality gate rather than a fixed percentage. Move to documentation only when:
+Treat the report like a final pre-flight check:
 
-- Overall and per-task pass rates look healthy enough that the cleaned parquet still represents the dataset; call out any large stride drops between dirty and clean outputs.
-- High-severity errors (missing required columns, NaN bursts, impossible units) are resolved or explicitly documented.
-- Any intentional exclusions are backed by updated ranges or notes in the submission checklist.
+- Stride pass rates should look believable for every task; if dirty → clean drops are huge, explain why.
+- No blocking errors remain—missing columns, NaN bursts, or unit mismatches must be fixed or intentionally documented.
+- Any data you intentionally exclude has matching validation ranges or a note in the checklist.
 
-If any of the checks fail, loop back through conversion, metadata, or range tuning until the report looks solid.
+If something fails, back up one box in the workflow and address it before rerunning the tool.
 
 ---
 
 ## Quick Reference
 
-**Need specific guidance?** Jump directly to your situation:
+**Need a fast answer?** Pick the scenario that matches your next move:
 
-- 📁 [**I have folder-based CSVs**](#pattern-a-folder-based) → Pattern A conversion
-- 🗂️ [**I have hierarchical MATLAB structs**](#pattern-b-hierarchical) → Pattern B conversion
-- ⏱️ [**My data is time-indexed**](#pre-processing-if-time-indexed) → Phase normalization guide
-- ✅ [**I'm ready to validate**](#step-2-validate-pythoncli) → Validation tools
-- 🧭 [**I need to add a new task family**](#manage-task-registry) → Task registry CLI
-- 📦 [**I'm ready to submit**](#ready-to-submit) → Submission checklist
+- 📁 [Folder full of CSV trials](#pattern-a-folder-based) → stitch tables into the schema
+- 🗂️ [MATLAB structs](#pattern-b-hierarchical) → flatten from structs to rows
+- ⏱️ [Time-series only](#pre-processing-if-time-indexed) → normalize to phase before exporting
+- ✅ [Already have a parquet](#step-2-validate-pythoncli) → run validation + plots
+- 🧭 [New task name](#manage-task-registry) → update the shared registry
+- 📦 [Everything looks good](#ready-to-submit) → final checklist before opening a PR
 
 ---
 
