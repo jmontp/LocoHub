@@ -2,32 +2,34 @@
 
 Standardized biomechanical datasets ready for analysis.
 
-**Documentation:** [Dataset Documentation](../docs/datasets_documentation/) • [Format Specification](../docs/standard_spec/standard_spec.md) • [Tutorials](../docs/tutorials/)
+**Documentation:** [Datasets](../docs/datasets/index.md) • [Schema Reference](../docs/reference/index.md) • [Tutorials](../docs/tutorials/)
 
 ## Available Datasets
 
-**GTech 2021** - Georgia Tech 2021 study:
-- `gtech_2021_phase.parquet` - Phase-indexed dataset (150 points/cycle) 
-- **Documentation:** [dataset_gtech_2021.md](../docs/reference/datasets_documentation/dataset_gtech_2021.md)
+**GTech 2021** (Georgia Tech locomotion study)
+- `gtech_2021_phase_clean.parquet` – Phase-indexed dataset with failing strides removed
+- `gtech_2021_phase_dirty.parquet` – Full export prior to validation filtering
+- **Documentation:** [docs/datasets/gt21.md](../docs/datasets/gt21.md)
 
-**GTech 2023** - Georgia Tech 2023 study:
-- `gtech_2023_phase.parquet` - Phase-indexed dataset (150 points/cycle)
-- **Documentation:** [dataset_gtech_2023.md](../docs/reference/datasets_documentation/dataset_gtech_2023.md)
+**GTech 2023** (AddBiomechanics export)
+- `gtech_2023_phase_raw.parquet` – Raw phase export (no validation envelope yet)
+- **Documentation:** [docs/datasets/_legacy/dataset_gtech_2023.md](../docs/datasets/_legacy/dataset_gtech_2023.md)
 
-**UMich 2021** - University of Michigan treadmill study:
-- `umich_2021_phase.parquet` - Phase-indexed dataset (150 points/cycle)
-- **Documentation:** [dataset_umich_2021.md](../docs/reference/datasets_documentation/dataset_umich_2021.md)
+**UMich 2021** (University of Michigan treadmill study)
+- `umich_2021_phase_clean.parquet`
+- `umich_2021_phase_dirty.parquet`
+- **Documentation:** [docs/datasets/um21.md](../docs/datasets/um21.md)
 
 ---
 
 ## Data Format
 
 **Variable Naming:** `<joint>_<motion>_<measurement>_<side>_<unit>`
-- Examples: `knee_flexion_angle_ipsi_rad`, `hip_moment_contra_Nm`
+- Examples: `knee_flexion_angle_ipsi_rad`, `hip_flexion_moment_contra_Nm_kg`
 
 **Data Types:**
-- **Time-indexed:** Original sampling frequency with `time_s` column
-- **Phase-indexed:** 150 points per gait cycle with `phase_percent` column
+- **Phase-indexed:** 150 samples per gait cycle with `phase_ipsi` column
+- **Time-indexed:** Stored separately when available; see dataset docs for details
 
 ---
 
@@ -49,9 +51,9 @@ data = readtable('gtech_2021_phase.parquet');
 ## Documentation
 
 For detailed information on each dataset:
-- **Dataset Documentation:** [docs/datasets_documentation/](../docs/datasets_documentation/)
+- **Dataset Documentation:** [docs/datasets/](../docs/datasets/)
 - **Usage Tutorials:** [docs/tutorials/](../docs/tutorials/)
-- **Format Specification:** [docs/standard_spec/](../docs/standard_spec/)
+- **Schema Reference:** [docs/reference/index.md](../docs/reference/index.md)
 
 ---
 

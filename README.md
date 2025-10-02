@@ -21,6 +21,38 @@
 
 **📚 Full Documentation: [https://jmontp.github.io/LocoHub/](https://jmontp.github.io/LocoHub/)**
 
+## Quickstart
+
+### Install dependencies
+
+```bash
+python -m venv .venv
+. .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements-container.txt
+```
+
+### Load a standardized dataset
+
+```python
+from user_libs.python.locomotion_data import LocomotionData
+
+data = LocomotionData('converted_datasets/umich_2021_phase_clean.parquet')
+cycles, features = data.get_cycles('UM21_AB01', 'level_walking')
+```
+
+### Explore the docs locally
+
+```bash
+mkdocs serve
+```
+
+## Contributor Toolkit
+
+- Conversion templates and utilities live in `contributor_tools/`
+- `python contributor_tools/manage_dataset_documentation.py add-dataset` creates docs + validation summaries
+- `python contributor_tools/quick_validation_check.py <dataset.parquet>` runs the fast validator pass
+- Validation ranges are stored under `contributor_tools/validation_ranges/`
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

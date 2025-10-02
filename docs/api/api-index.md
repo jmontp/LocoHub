@@ -11,11 +11,17 @@ Searchable index of all public methods, classes, and functions in the locomotion
 ### LocomotionData
 *Main class for locomotion data analysis*
 
-**Location**: `lib.core.locomotion_analysis.LocomotionData`
+**Location**: `user_libs.python.locomotion_data.LocomotionData`
 
 **Constructor**:
 ```python
-LocomotionData(data_path, subject_col='subject', task_col='task', phase_col='phase', file_type='auto')
+LocomotionData(
+    data_path,
+    subject_col: str = 'subject',
+    task_col: str = 'task',
+    phase_col: str = 'phase_ipsi',
+    file_type: str = 'auto',
+)
 ```
 
 **Properties**:
@@ -48,39 +54,22 @@ LocomotionData(data_path, subject_col='subject', task_col='task', phase_col='pha
 **Data Methods**:
 - [`merge_with_task_data(task_data, join_keys=None, how='outer')`](#merge_with_task_data) - Merge data
 
-### DatasetValidator
-*Main class for dataset validation*
+### Validator
+*Dataset validation engine*
 
-**Location**: `lib.validation.dataset_validator_phase.DatasetValidator`
+**Location**: `internal.validation_engine.validator.Validator`
 
 **Constructor**:
 ```python
-DatasetValidator(dataset_path, output_dir=None, generate_plots=True)
+Validator(config_path: Optional[pathlib.Path] = None)
 ```
 
-**Methods**:
-- [`run_validation()`](#run_validation) - Complete validation pipeline
-- [`load_dataset()`](#load_dataset) - Load and validate dataset structure
-- [`validate_dataset(locomotion_data)`](#validate_dataset) - Validate against expectations
-- [`generate_validation_report(validation_results, task_plots=None)`](#generate_validation_report) - Generate report
+**Core Methods**:
+- [`validate(dataset_path, ignore_features=None)`](#validate) – Load a parquet file and return validation results
+- [`validate_dataset(locomotion_data, ignore_features=None, task_filter=None)`](#validate_dataset) – Validate an existing `LocomotionData` object
 
-### StepClassifier  
-*Low-level validation engine*
-
-**Location**: `lib.validation.step_classifier.StepClassifier`
-
-**Methods**:
-- [`validate_data_against_specs(data_array, task, step_task_mapping, validation_type)`](#validate_data_against_specs) - Validate steps
-- [`load_validation_ranges_from_specs(validation_type)`](#load_validation_ranges_from_specs) - Load ranges
-- [`get_step_summary_classification(failures, step_task_mapping)`](#get_step_summary_classification) - Step colors
-
-### ValidationExpectationsParser
-*Parse validation specifications*
-
-**Location**: `lib.validation.validation_expectations_parser.ValidationExpectationsParser`
-
-**Methods**:
-- [`parse_validation_file(file_path)`](#parse_validation_file) - Parse markdown specs
+**Related Types**:
+- `TaskValidationDetails` – dataclass capturing per-task statistics, exposed in the `tasks` key of the validator output
 
 ### Interactive Validation Tuning
 *Visual optimization of validation ranges*
@@ -237,94 +226,46 @@ Merge locomotion data with task information.
 - `join_keys`: Keys to join on (None = [subject_col, task_col])
 - `how`: Type of join ('inner', 'outer', 'left', 'right')
 
-### run_validation
-**Class**: DatasetValidator  
-**Signature**: `run_validation() -> str`
+### validate
+**Class**: Validator  
+**Signature**: `validate(dataset_path: str, ignore_features: Optional[List[str]] = None) -> Dict[str, Any]`
 
-Main method to run complete dataset validation.
+Validate a phase-indexed parquet file against the active YAML ranges.
 
-**Returns**: Path to generated validation report
+**Parameters**:
+- `dataset_path`: Path to the dataset file
+- `ignore_features`: Optional list of variable names to skip during validation
+
+**Returns**: Dictionary with schema status, per-task failures, and aggregate statistics
 
 **Example**:
 ```python
-validator = DatasetValidator('dataset_phase.parquet')
-report_path = validator.run_validation()
+from internal.validation_engine.validator import Validator
+
+validator = Validator()
+results = validator.validate('converted_datasets/umich_2021_phase_clean.parquet')
+print(results['stats']['pass_rate'])
 ```
 
-### load_dataset
-**Class**: DatasetValidator  
-**Signature**: `load_dataset() -> LocomotionData`
-
-Load and validate dataset structure using LocomotionData library.
-
-**Returns**: LocomotionData object
-**Raises**: ValueError if format invalid
-
 ### validate_dataset
-**Class**: DatasetValidator  
-**Signature**: `validate_dataset(locomotion_data: LocomotionData) -> Dict[str, any]`
+**Class**: Validator  
+**Signature**: `validate_dataset(locomotion_data: LocomotionData, ignore_features: Optional[List[str]] = None, task_filter: Optional[List[str]] = None) -> Dict[str, Any]`
 
-Validate entire dataset against kinematic and kinetic expectations.
-
-**Returns**: Dictionary with validation results
-
-### generate_validation_report
-**Class**: DatasetValidator  
-**Signature**: `generate_validation_report(validation_results: Dict, task_plots: Dict[str, Dict[str, str]] = None) -> str`
-
-Generate comprehensive validation report.
-
-**Returns**: Path to generated report file
-
-### validate_data_against_specs
-**Class**: StepClassifier  
-**Signature**: `validate_data_against_specs(data_array: np.ndarray, task: str, step_task_mapping: Dict, validation_type: str) -> List[Dict]`
-
-Validate step data against specification ranges.
+Validate an in-memory `LocomotionData` object (for advanced workflows that re-use
+loaded data).
 
 **Parameters**:
-- `data_array`: 3D array (n_steps, 150, n_features)
-- `task`: Task name
-- `step_task_mapping`: Step index to task mapping
-- `validation_type`: 'kinematic' or 'kinetic'
+- `locomotion_data`: Preloaded dataset
+- `ignore_features`: Optional list of column names to skip
+- `task_filter`: Optional list restricting validation to specific tasks
 
-**Returns**: List of validation failure dictionaries
-
-### load_validation_ranges_from_specs
-**Class**: StepClassifier  
-**Signature**: `load_validation_ranges_from_specs(validation_type: str) -> Dict`
-
-Load validation ranges from specification files.
-
-**Parameters**:
-- `validation_type`: 'kinematic' or 'kinetic'
-
-**Returns**: Validation ranges by task and variable
-
-### get_step_summary_classification
-**Class**: StepClassifier  
-**Signature**: `get_step_summary_classification(failures: List[Dict], step_task_mapping: Dict[str, str]) -> np.ndarray`
-
-Generate step color classifications for plotting.
-
-**Returns**: Array of step colors
-
-### parse_validation_file
-**Class**: ValidationExpectationsParser  
-**Signature**: `parse_validation_file(file_path: str) -> Dict`
-
-Parse validation expectations from markdown file.
-
-**Parameters**:
-- `file_path`: Path to validation specification file
-
-**Returns**: Parsed validation ranges
+**Returns**: Validation results using the same schema as `validate`
 
 
 ## Functions
 
 ### efficient_reshape_3d
-**Location**: `lib.core.locomotion_analysis.efficient_reshape_3d`  
+**Location**: `user_libs.python.locomotion_data.efficient_reshape_3d`  
 **Signature**: `efficient_reshape_3d(df: pd.DataFrame, subject: str, task: str, features: List[str], subject_col: str = 'subject', task_col: str = 'task', points_per_cycle: int = 150) -> Tuple[np.ndarray, List[str]]`
 
 Standalone function for efficient 3D reshaping.
@@ -343,7 +284,7 @@ Standalone function for efficient 3D reshaping.
 - `valid_features`: List of extracted features
 
 ### get_feature_list
-**Location**: `lib.core.feature_constants.get_feature_list`  
+**Location**: `user_libs.python.feature_constants.get_feature_list`  
 **Signature**: `get_feature_list(mode: str) -> list`
 
 Get ordered feature list for specified mode.
@@ -360,7 +301,7 @@ kinetic_vars = get_feature_list('kinetic')
 ```
 
 ### get_feature_map
-**Location**: `lib.core.feature_constants.get_feature_map`  
+**Location**: `user_libs.python.feature_constants.get_feature_map`  
 **Signature**: `get_feature_map(mode: str) -> Dict[str, int]`
 
 Get feature index mapping for specified mode.
@@ -373,7 +314,7 @@ Get feature index mapping for specified mode.
 ## Constants
 
 ### ANGLE_FEATURES
-**Location**: `lib.core.feature_constants.ANGLE_FEATURES`  
+**Location**: `user_libs.python.feature_constants.ANGLE_FEATURES`  
 **Type**: `List[str]`
 
 Standard joint angle variables in canonical order:
@@ -386,19 +327,19 @@ Standard joint angle variables in canonical order:
 ```
 
 ### VELOCITY_FEATURES  
-**Location**: `lib.core.feature_constants.VELOCITY_FEATURES`  
+**Location**: `user_libs.python.feature_constants.VELOCITY_FEATURES`  
 **Type**: `List[str]`
 
 Standard joint angular velocity variables.
 
 ### MOMENT_FEATURES
-**Location**: `lib.core.feature_constants.MOMENT_FEATURES`  
+**Location**: `user_libs.python.feature_constants.MOMENT_FEATURES`  
 **Type**: `List[str]`
 
 Standard joint moment variables including flexion, adduction, and rotation for all joints.
 
 ### ALL_KINETIC_FEATURES
-**Location**: `lib.core.feature_constants.ALL_KINETIC_FEATURES`  
+**Location**: `user_libs.python.feature_constants.ALL_KINETIC_FEATURES`  
 **Type**: `List[str]`
 
 Combined kinetic features including moments, ground reaction forces, and center of pressure.
@@ -408,7 +349,7 @@ Combined kinetic features including moments, ground reaction forces, and center 
 ### Basic Analysis Workflow
 
 ```python
-from lib.core.locomotion_analysis import LocomotionData
+from user_libs.python.locomotion_data import LocomotionData
 
 # 1. Load data
 loco = LocomotionData('dataset_phase.parquet')
@@ -428,22 +369,22 @@ outliers = loco.find_outlier_cycles('SUB01', 'level_walking')
 ### Validation Workflow
 
 ```python
-from lib.validation.dataset_validator_phase import DatasetValidator
+from internal.validation_engine.validator import Validator
 
 # 1. Create validator
-validator = DatasetValidator('dataset_phase.parquet')
+validator = Validator()
 
 # 2. Run validation
-report_path = validator.run_validation()
+results = validator.validate('converted_datasets/umich_2021_phase_clean.parquet')
 
 # 3. Check results
-print(f"Validation report: {report_path}")
+print(f"Stride pass rate: {results['stats']['pass_rate']:.2%}")
 ```
 
 ### Feature Constants Usage
 
 ```python
-from lib.core.feature_constants import get_feature_list, ANGLE_FEATURES
+from user_libs.python.feature_constants import get_feature_list, ANGLE_FEATURES
 
 # Get standard features
 kinematic_vars = get_feature_list('kinematic')
@@ -483,6 +424,6 @@ except Exception as e:
 ## See Also
 
 - **[LocomotionData](#locomotiondata)** - Detailed API overview
-- **[DatasetValidator](#datasetvalidator)** - Validation system overview  
+- **[Validator](#validator)** - Validation system overview  
 - **[Tutorials](../tutorials/index.md)** - End-to-end examples
 - **[Maintainers](../maintainers/index.md)** - Release and governance
