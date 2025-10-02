@@ -653,10 +653,18 @@ def _resolve_dataset_link(data: Dict, table_file: Path, absolute: bool) -> str:
         return data.get('doc_url') or f"{SITE_DATASET_BASE_URL}/{data['dataset_name']}/"
     relative = _relative_link(data.get('doc_path'), table_file)
     if relative:
+        if relative.endswith('.md'):
+            relative = relative[:-3]
+            if not relative.endswith('/'):
+                relative += '/'
         return relative
     fallback = repo_root / "docs" / "datasets" / f"{data['dataset_name']}.md"
     rel_path = _relative_link(str(fallback), table_file)
-    return rel_path or f"{data['dataset_name']}.md"
+    if rel_path and rel_path.endswith('.md'):
+        rel_path = rel_path[:-3]
+        if not rel_path.endswith('/'):
+            rel_path += '/'
+    return rel_path or f"{data['dataset_name']}/"
 
 
 def _resolve_validation_link(data: Dict, table_file: Path, absolute: bool) -> Optional[str]:
