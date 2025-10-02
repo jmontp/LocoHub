@@ -1130,7 +1130,8 @@ class InteractiveValidationTuner:
                 values = values[np.isfinite(values)]
                 if values.size == 0:
                     continue
-                lower, upper = np.quantile(values, [0.025, 0.975])
+                lower = float(np.min(values))
+                upper = float(np.max(values))
                 if not np.isfinite(lower) or not np.isfinite(upper):
                     continue
                 if lower == upper:
@@ -1138,8 +1139,8 @@ class InteractiveValidationTuner:
                     lower -= epsilon
                     upper += epsilon
                 feature_ranges[feature] = {
-                    'min': float(lower),
-                    'max': float(upper)
+                    'min': lower,
+                    'max': upper
                 }
             if feature_ranges:
                 phase_ranges[phase] = feature_ranges
@@ -1167,7 +1168,7 @@ class InteractiveValidationTuner:
             self.config_manager.set_data(config_snapshot)
 
         self.modified = True
-        print(f"Initialized placeholder validation ranges for task '{task_name}' using dataset quantiles.")
+        print(f"Initialized placeholder validation ranges for task '{task_name}' using full data range.")
         return True
 
     def create_empty_plot(self):
