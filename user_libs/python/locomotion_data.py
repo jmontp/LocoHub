@@ -69,14 +69,14 @@ import os
 
 # Import feature constants from same library
 try:
-    from .feature_constants import (ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES, 
+    from .feature_constants import (ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES,
                                    SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES,
-                                   GRF_FEATURES, GRF_FEATURES_NORMALIZED)
+                                   GRF_FEATURES, GRF_FEATURES_NORMALIZED, COP_FEATURES)
 except ImportError:
     # Fallback for standalone scripts
-    from feature_constants import (ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES, 
+    from feature_constants import (ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES,
                                   SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES,
-                                  GRF_FEATURES, GRF_FEATURES_NORMALIZED)
+                                  GRF_FEATURES, GRF_FEATURES_NORMALIZED, COP_FEATURES)
 
 # Optional imports for visualization
 try:
@@ -281,10 +281,12 @@ class LocomotionData:
                        'is_reconstructed_l', 'task_info', 'task_id', 'activity_number', 
                        'cycle', 'step', 'leading_leg_step'}
         
-        # Identify biomechanical features - only standard naming accepted
-        self.features = [col for col in self.df.columns 
-                        if col not in exclude_cols and 
-                        any(x in col for x in ['angle', 'velocity', 'moment', 'power', 'grf'])]
+        biomechanics_keywords = ['angle', 'velocity', 'moment', 'power', 'grf', 'cop']
+        self.features = [
+            col for col in self.df.columns
+            if col not in exclude_cols
+            and any(keyword in col for keyword in biomechanics_keywords)
+        ]
         
         # Create identity mapping for standard features
         self.feature_mappings = {feature: feature for feature in self.features}
@@ -333,7 +335,8 @@ class LocomotionData:
             variable_name in SEGMENT_ANGLE_FEATURES or
             variable_name in SEGMENT_VELOCITY_FEATURES or
             variable_name in GRF_FEATURES or
-            variable_name in GRF_FEATURES_NORMALIZED):
+            variable_name in GRF_FEATURES_NORMALIZED or
+            variable_name in COP_FEATURES):
             return True
         
         # Otherwise, check against standard naming convention
