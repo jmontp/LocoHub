@@ -34,7 +34,7 @@ from internal.plot_generation.filters_by_phase_plots import (
     create_filters_by_phase_plot  # Keep for backward compatibility
 )
 from internal.plot_generation.step_classifier import StepClassifier
-from user_libs.python.locomotion_data import LocomotionData
+from locohub import LocomotionData
 
 
 class ValidationReportGenerator:
@@ -257,7 +257,7 @@ class ValidationReportGenerator:
             print(f"📊 Found {sagittal_found}/{len(feature_names)} sagittal features in dataset")
             
             # Add velocity features for velocity validation (only if they exist)
-            from user_libs.python.feature_constants import (
+            from locohub.feature_constants import (
                 ANGLE_FEATURES, VELOCITY_FEATURES, 
                 SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES
             )
@@ -330,7 +330,7 @@ class ValidationReportGenerator:
             df_subset = pd.read_parquet(dataset_path)
         
         # Create a minimal LocomotionData instance by temporarily replacing the DataFrame
-        from user_libs.python.locomotion_data import LocomotionData
+        from locohub import LocomotionData
         
         # Create instance with minimal loading
         loco_data = LocomotionData.__new__(LocomotionData)
@@ -921,7 +921,7 @@ class ValidationReportGenerator:
         """
         import numpy as np
         import gc
-        from user_libs.python.feature_constants import (
+        from locohub.feature_constants import (
             ANGLE_FEATURES, VELOCITY_FEATURES,
             SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES
         )
@@ -1696,7 +1696,7 @@ class ValidationReportGenerator:
 ## Usage
 
 ```python
-from user_libs.python.locomotion_data import LocomotionData
+from locohub import LocomotionData
 
 # Load the dataset
 data = LocomotionData('converted_datasets/{doc_name}_phase.parquet')

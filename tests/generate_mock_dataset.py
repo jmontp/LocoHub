@@ -23,7 +23,7 @@ import sys
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
-from user_libs.python.feature_constants import (
+from locohub.feature_constants import (
     ANGLE_FEATURES,
     MOMENT_FEATURES,
     SEGMENT_ANGLE_FEATURES

@@ -101,7 +101,7 @@ You can also use the full parquet datasets linked on the homepage.
     <div class="code-lang code-lang-python">
     
     ```python
-    from user_libs.python.locomotion_data import LocomotionData
+    from locohub import LocomotionData
     
     # Note: LocomotionData works with parquet files.
     # For a self-contained tutorial, use the CSV examples above.
@@ -190,7 +190,7 @@ You can also use the full parquet datasets linked on the homepage.
     <div class="code-lang code-lang-python">
     
     ```python
-    from user_libs.python.locomotion_data import LocomotionData
+    from locohub import LocomotionData
     data = LocomotionData('umich_2021_phase.parquet')
 
     # Filter by subject + task + features
@@ -274,7 +274,7 @@ You can also use the full parquet datasets linked on the homepage.
     <div class="code-lang code-lang-python">
     
     ```python
-    from user_libs.python.locomotion_data import LocomotionData
+    from locohub import LocomotionData
     data = LocomotionData('umich_2021_phase.parquet')
     subset = data.filter(task='level_walking', subjects=['UM21_AB01'])
 
@@ -348,7 +348,7 @@ Use the sample CSV: `locohub_example_data.csv`.
     <div class="code-lang code-lang-python">
     
     ```python
-    from user_libs.python.locomotion_data import LocomotionData
+    from locohub import LocomotionData
     data = LocomotionData('converted_datasets/umich_2021_phase.parquet')
     subset = data.filter(task='level_walking', subjects=['UM21_AB01'])
     subset.plot_phase_patterns('UM21_AB01','level_walking',['knee_flexion_angle_ipsi_rad'])
@@ -447,7 +447,7 @@ Expected outputs:
     <div class="code-lang code-lang-python">
     
     ```python
-    from user_libs.python.locomotion_data import LocomotionData
+    from locohub import LocomotionData
     import pandas as pd
     
     data = LocomotionData('converted_datasets/umich_2021_phase.parquet')
@@ -535,7 +535,7 @@ Expected outputs:
     <div class="code-lang code-lang-python">
     
     ```python
-    from user_libs.python.locomotion_data import LocomotionData
+    from locohub import LocomotionData
     import pandas as pd
     
     umich = LocomotionData('converted_datasets/umich_2021_phase.parquet').df
@@ -617,7 +617,7 @@ Expected outputs:
     <div class="code-lang code-lang-python">
     
     ```python
-    from user_libs.python.locomotion_data import LocomotionData
+    from locohub import LocomotionData
     data = LocomotionData('umich_2021_phase.parquet')
     subset = data.filter(task='level_walking', subjects=['UM21_AB01'])
     
@@ -683,7 +683,7 @@ Expected outputs:
     <div class="code-lang code-lang-python">
     
     ```python
-    from user_libs.python.locomotion_data import LocomotionData
+    from locohub import LocomotionData
     data = LocomotionData('umich_2021_phase.parquet')
     subset = data.filter(task='level_walking', subjects=['UM21_AB01'])
     
@@ -756,7 +756,7 @@ Expected outputs:
     
     ```python
     # Library plotting exists, but fine-grained figure control is often easier with raw plotting.
-    from user_libs.python.locomotion_data import LocomotionData
+    from locohub import LocomotionData
     data = LocomotionData('umich_2021_phase.parquet')
     subset = data.filter(task='level_walking', subjects=['UM21_AB01'])
     stats = subset.get_summary_statistics('UM21_AB01','level_walking')
@@ -819,7 +819,7 @@ Expected outputs:
     <div class="code-lang code-lang-python">
     
     ```python
-    from user_libs.python.locomotion_data import LocomotionData
+    from locohub import LocomotionData
     data = LocomotionData('umich_2021_phase.parquet')
     subset = data.filter(task='level_walking', subjects=['UM21_AB01'])
     

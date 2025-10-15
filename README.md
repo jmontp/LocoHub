@@ -34,10 +34,18 @@ pip install -r requirements-container.txt
 ### Load a standardized dataset
 
 ```python
-from user_libs.python.locomotion_data import LocomotionData
+from locohub import LocomotionData
 
 data = LocomotionData('converted_datasets/umich_2021_phase_clean.parquet')
 cycles, features = data.get_cycles('UM21_AB01', 'level_walking')
+```
+
+### Install from source
+
+```bash
+pip install .
+# or for development
+pip install -e .
 ```
 
 ### Explore the docs locally

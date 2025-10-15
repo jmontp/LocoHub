@@ -11,7 +11,7 @@ The AddBiomechanics dataset provides comprehensive biomechanical data from multi
 ## Usage
 
 ```python
-from user_libs.python.locomotion_data import LocomotionData
+from locohub import LocomotionData
 
 # Load the dataset
 data = LocomotionData('converted_datasets/addbiomechanics_phase.parquet')

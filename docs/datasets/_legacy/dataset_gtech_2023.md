@@ -160,7 +160,7 @@ sensing, and activity classification to real-life tasks that are often sporadic,
 ## Usage
 
 ```python
-from user_libs.python.locomotion_data import LocomotionData
+from locohub import LocomotionData
 
 # Load the dataset
 data = LocomotionData('converted_datasets/gtech_2023_phase.parquet')

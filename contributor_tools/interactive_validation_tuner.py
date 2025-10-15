@@ -98,8 +98,8 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 # Import existing modules
-from user_libs.python.locomotion_data import LocomotionData
-from user_libs.python.feature_constants import get_feature_list
+from locohub import LocomotionData
+from locohub.feature_constants import get_feature_list
 from internal.config_management.config_manager import ValidationConfigManager
 from internal.validation_engine.validator import Validator
 from internal.config_management import task_registry

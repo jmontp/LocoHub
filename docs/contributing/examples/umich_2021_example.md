@@ -226,7 +226,7 @@ Minor violations (< 5%) in extreme ranges - acceptable.
 ## Using the Converted Dataset
 
 ```python
-from user_libs.python.locomotion_data import LocomotionData
+from locohub import LocomotionData
 
 # Load the converted dataset
 loco = LocomotionData('converted_datasets/umich_2021_phase.parquet')

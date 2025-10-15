@@ -11,7 +11,7 @@ Searchable index of all public methods, classes, and functions in the locomotion
 ### LocomotionData
 *Main class for locomotion data analysis*
 
-**Location**: `user_libs.python.locomotion_data.LocomotionData`
+**Location**: `locohub.locomotion_data.LocomotionData`
 
 **Constructor**:
 ```python
@@ -265,7 +265,7 @@ loaded data).
 ## Functions
 
 ### efficient_reshape_3d
-**Location**: `user_libs.python.locomotion_data.efficient_reshape_3d`  
+**Location**: `locohub.locomotion_data.efficient_reshape_3d`  
 **Signature**: `efficient_reshape_3d(df: pd.DataFrame, subject: str, task: str, features: List[str], subject_col: str = 'subject', task_col: str = 'task', points_per_cycle: int = 150) -> Tuple[np.ndarray, List[str]]`
 
 Standalone function for efficient 3D reshaping.
@@ -284,7 +284,7 @@ Standalone function for efficient 3D reshaping.
 - `valid_features`: List of extracted features
 
 ### get_feature_list
-**Location**: `user_libs.python.feature_constants.get_feature_list`  
+**Location**: `locohub.feature_constants.get_feature_list`  
 **Signature**: `get_feature_list(mode: str) -> list`
 
 Get ordered feature list for specified mode.
@@ -301,7 +301,7 @@ kinetic_vars = get_feature_list('kinetic')
 ```
 
 ### get_feature_map
-**Location**: `user_libs.python.feature_constants.get_feature_map`  
+**Location**: `locohub.feature_constants.get_feature_map`  
 **Signature**: `get_feature_map(mode: str) -> Dict[str, int]`
 
 Get feature index mapping for specified mode.
@@ -314,7 +314,7 @@ Get feature index mapping for specified mode.
 ## Constants
 
 ### ANGLE_FEATURES
-**Location**: `user_libs.python.feature_constants.ANGLE_FEATURES`  
+**Location**: `locohub.feature_constants.ANGLE_FEATURES`  
 **Type**: `List[str]`
 
 Standard joint angle variables in canonical order:
@@ -327,19 +327,19 @@ Standard joint angle variables in canonical order:
 ```
 
 ### VELOCITY_FEATURES  
-**Location**: `user_libs.python.feature_constants.VELOCITY_FEATURES`  
+**Location**: `locohub.feature_constants.VELOCITY_FEATURES`  
 **Type**: `List[str]`
 
 Standard joint angular velocity variables.
 
 ### MOMENT_FEATURES
-**Location**: `user_libs.python.feature_constants.MOMENT_FEATURES`  
+**Location**: `locohub.feature_constants.MOMENT_FEATURES`  
 **Type**: `List[str]`
 
 Standard joint moment variables including flexion, adduction, and rotation for all joints.
 
 ### ALL_KINETIC_FEATURES
-**Location**: `user_libs.python.feature_constants.ALL_KINETIC_FEATURES`  
+**Location**: `locohub.feature_constants.ALL_KINETIC_FEATURES`  
 **Type**: `List[str]`
 
 Combined kinetic features including moments, ground reaction forces, and center of pressure.
@@ -349,7 +349,7 @@ Combined kinetic features including moments, ground reaction forces, and center 
 ### Basic Analysis Workflow
 
 ```python
-from user_libs.python.locomotion_data import LocomotionData
+from locohub import LocomotionData
 
 # 1. Load data
 loco = LocomotionData('dataset_phase.parquet')
@@ -384,7 +384,7 @@ print(f"Stride pass rate: {results['stats']['pass_rate']:.2%}")
 ### Feature Constants Usage
 
 ```python
-from user_libs.python.feature_constants import get_feature_list, ANGLE_FEATURES
+from locohub.feature_constants import get_feature_list, ANGLE_FEATURES
 
 # Get standard features
 kinematic_vars = get_feature_list('kinematic')

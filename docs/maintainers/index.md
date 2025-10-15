@@ -106,7 +106,7 @@ Time-series thresholds live in `contributor_tools/validation_ranges/time_structu
   `quick_validation_check.py`, and `manage_dataset_documentation.py`) now calls the
   shared `Validator` backend. Adjust validation rules or range loading logic in one
   place and every workflow (GUI, CLI, doc generation) stays in sync.
-- Python API: `user_libs/python/locomotion_data.py`
+- Python API: `src/locohub/locomotion_data.py`
 
 ## Workflows
 
@@ -121,6 +121,31 @@ Time-series thresholds live in `contributor_tools/validation_ranges/time_structu
 - **Add new variables**: Update `feature_constants.py` → update converters
 - **Fix documentation**: Direct edits to `docs/datasets/*.md` files
 - **Archive datasets**: Move old docs to `archived/` subdirectory
+
+
+### PyPI Release Checklist
+1. **Bump version** in both `pyproject.toml` and `src/locohub/__init__.py`.
+2. **Update changelog/notes** (e.g., `docs/maintainers/index.md` or release draft).
+3. **Clean previous builds**: `rm -rf dist src/locohub.egg-info`.
+4. **Build artifacts**:
+   - `python -m build` (make sure `wheel` is installed; add `--no-isolation` if you already have the build dependencies locally).
+5. **Verify metadata**: `python -m twine check dist/*`.
+6. **Smoke test** in a fresh environment:
+   ```bash
+   python -m venv .venv-release
+   . .venv-release/bin/activate
+   pip install --upgrade pip
+   pip install dist/locohub-<version>.whl
+   python -c "import locohub; print(locohub.__version__)"
+   deactivate
+   ```
+7. **TestPyPI dry run**:
+   ```bash
+   python -m twine upload --repository testpypi dist/*
+   pip install --index-url https://test.pypi.org/simple/ locohub==<version>
+   ```
+8. **Publish to PyPI** once the smoke test passes: `python -m twine upload dist/*`.
+9. **Tag and announce**: push the git tag, update documentation (`README.md`, release notes), and notify contributors.
 
 
 ## Contributor Tools at a Glance

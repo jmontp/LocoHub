@@ -26,7 +26,7 @@ repo_root = current_dir.parent.parent
 sys.path.insert(0, str(repo_root))
 
 # Import feature definitions from user library
-from user_libs.python.feature_constants import get_sagittal_features, get_task_classification
+from locohub.feature_constants import get_sagittal_features, get_task_classification
 
 # Removed: validate_task_completeness (no longer needed in unified system)
 
