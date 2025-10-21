@@ -48,7 +48,7 @@ current_dir = Path(__file__).parent
 repo_root = current_dir.parent
 sys.path.insert(0, str(repo_root))
 
-from user_libs.python.locomotion_data import LocomotionData
+from locohub import LocomotionData
 
 SITE_DATASET_BASE_URL = "https://jmontp.github.io/LocoHub/datasets"
 DATASET_TABLE_FILES = [
@@ -252,6 +252,85 @@ def _compute_feature_task_groups(
 
     relative_path = coverage_path
     return groups_output, ordered_tasks, relative_path if using_clean else dataset_path
+
+
+def _parse_subject_metadata_string(meta_str: str) -> Dict[str, str]:
+    """Parse a subject_metadata comma-separated key:value string into a dict."""
+    result: Dict[str, str] = {}
+    if not meta_str:
+        return result
+    try:
+        parts = [p.strip() for p in str(meta_str).split(',') if p and str(p).strip()]
+        for p in parts:
+            if ':' in p:
+                k, v = p.split(':', 1)
+                k = k.strip()
+                v = v.strip()
+                if k:
+                    result[k] = v
+    except Exception:
+        # Best-effort parsing; ignore malformed segments
+        pass
+    return result
+
+
+def _build_subject_metadata_table(locomotion_data: LocomotionData) -> Optional[str]:
+    """Build a markdown table summarizing per-subject metadata if available.
+
+    Returns a markdown string or None if the dataset has no subject_metadata column.
+    """
+    df = locomotion_data.df
+    if 'subject_metadata' not in df.columns:
+        return None
+
+    # Collect first metadata string per subject
+    subjects = sorted(locomotion_data.get_subjects())
+    rows: List[Tuple[str, Dict[str, str]]] = []
+    all_keys: List[str] = []
+    seen_keys: set = set()
+
+    preferred_order = [
+        'age', 'sex', 'height_m', 'weight_kg',
+        'leg_dominance', 'impairment', 'prosthesis_type', 'prosthesis_side', 'clinical_scores', 'notes'
+    ]
+
+    for subj in subjects:
+        meta_series = df.loc[df['subject'] == subj, 'subject_metadata']
+        meta_value = None
+        if not meta_series.empty:
+            # Take first non-null string
+            for val in meta_series:
+                if isinstance(val, str) and val.strip():
+                    meta_value = val
+                    break
+        parsed = _parse_subject_metadata_string(meta_value or '')
+        for k in parsed.keys():
+            if k not in seen_keys:
+                all_keys.append(k)
+                seen_keys.add(k)
+        rows.append((subj, parsed))
+
+    if not seen_keys:
+        return None
+
+    # Order columns using preferred order, then any extras
+    extra_keys = [k for k in all_keys if k not in preferred_order]
+    ordered_keys = [k for k in preferred_order if k in seen_keys] + sorted(extra_keys)
+
+    # Build markdown table
+    header = ['Subject'] + [k for k in ordered_keys]
+    lines = [
+        '| ' + ' | '.join(header) + ' |',
+        '|' + '|'.join(['---'] * len(header)) + '|',
+    ]
+    for subj, meta_dict in rows:
+        cells = [subj]
+        for k in ordered_keys:
+            v = meta_dict.get(k, '')
+            cells.append(str(v) if v is not None else '')
+        lines.append('| ' + ' | '.join(cells) + ' |')
+
+    return "\n".join(lines)
 def _load_locomotion_data(dataset_path: Path, reason: str) -> LocomotionData:
     """Load dataset with a helpful progress message."""
 
@@ -566,6 +645,8 @@ def write_metadata_file(metadata: Dict) -> None:
     fields['institution'] = metadata['institution']
     fields['subjects'] = str(metadata['subjects'])
     fields['tasks'] = metadata['tasks']
+    if metadata.get('subject_metadata_table'):
+        fields['subject_metadata_table'] = metadata.get('subject_metadata_table')
     if metadata.get('download_url'):
         fields['download_url'] = metadata['download_url']
     if metadata.get('download_clean_url'):
@@ -1075,6 +1156,16 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
         "",
     ]
 
+    # Insert subject metadata table when available
+    subj_meta_table = metadata.get('subject_metadata_table')
+    if subj_meta_table:
+        doc_body_lines.extend([
+            "### Subject Metadata",
+            "The table below summarizes the `subject_metadata` key:value pairs per subject.",
+            subj_meta_table,
+            "",
+        ])
+
     if task_catalog_section:
         doc_body_lines.append(task_catalog_section.rstrip())
         doc_body_lines.append("")
@@ -1548,6 +1639,11 @@ def handle_add_dataset(args):
     task_table = _build_task_table(task_rows)
     subject_count = len(locomotion_data.get_subjects())
     subjects_value = str(subject_count)
+    # Build subject metadata table if available
+    try:
+        subject_metadata_table = _build_subject_metadata_table(locomotion_data)
+    except Exception:
+        subject_metadata_table = None
 
     non_interactive = metadata_source is not None
     preset_short_code = (getattr(args, 'short_code', None) or '').strip().upper() or None
@@ -1962,6 +2058,24 @@ def handle_update_documentation(args):
         metadata['tasks'] = metadata.get('tasks', [])
     metadata['subjects'] = str(len(locomotion_data.get_subjects()))
     metadata['task_table'] = _build_task_table(task_rows)
+    # Subject metadata table
+    try:
+        subject_metadata_table = _build_subject_metadata_table(locomotion_data)
+        if subject_metadata_table:
+            metadata['subject_metadata_table'] = subject_metadata_table
+        else:
+            metadata.pop('subject_metadata_table', None)
+    except Exception:
+        metadata.pop('subject_metadata_table', None)
+    # Subject metadata table
+    try:
+        subject_metadata_table = _build_subject_metadata_table(locomotion_data)
+        if subject_metadata_table:
+            metadata['subject_metadata_table'] = subject_metadata_table
+        else:
+            metadata.pop('subject_metadata_table', None)
+    except Exception:
+        metadata.pop('subject_metadata_table', None)
 
     coverage_groups, coverage_tasks, coverage_source_path = _compute_feature_task_groups(dataset_path, metadata['tasks'])
     if coverage_groups:
@@ -1973,6 +2087,10 @@ def handle_update_documentation(args):
 
     if not override_path:
         _prompt_metadata_updates(metadata)
+
+    # Persist subject metadata table in metadata for rendering
+    if subject_metadata_table:
+        metadata['subject_metadata_table'] = subject_metadata_table
 
     validation_doc_filename = f".generated/{dataset_slug}_validation.md"
     doc_path, doc_body_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)

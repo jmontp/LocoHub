@@ -15,7 +15,7 @@ from typing import Dict, List, Tuple, Optional, Any, Set
 import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
 from internal.config_management.config_manager import ValidationConfigManager
-from user_libs.python.locomotion_data import LocomotionData
+from locohub import LocomotionData
 
 
 # ============================================================================

@@ -44,7 +44,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from internal.validation_engine.validator import Validator
 from internal.config_management import task_registry
-from user_libs.python.locomotion_data import LocomotionData
+from locohub import LocomotionData
 
 # Import Tkinter components for scrollable display
 try:

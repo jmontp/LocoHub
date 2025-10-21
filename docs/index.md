@@ -61,7 +61,7 @@ Each row is one point in a percent‑normalized gait cycle (typically 150 sample
 
     === "Python"
     ```python
-    from user_libs.python.locomotion_data import LocomotionData
+    from locohub import LocomotionData
 
     data = LocomotionData('umich_2021_phase.parquet')
     subset = data.filter(task='level_walking', subjects=['UM21_AB01'])

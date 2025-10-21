@@ -26,7 +26,7 @@ except ImportError as exc:
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from internal.validation_engine.validator import Validator
-from user_libs.python.locomotion_data import LocomotionData
+from locohub import LocomotionData
 
 
 class DatasetCleaner:

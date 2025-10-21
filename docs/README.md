@@ -22,7 +22,7 @@ and dataset metadata.
 - `contributing/` – Contributor workflow, tooling docs, and SOPs
 - `maintainers/` – Reviewer checklists and validator guidance
 - `reference/` – Schema reference, task registry notes, and variable catalog
-- `api/` – Hand-authored API reference for `user_libs/python`
+- `api/` – Hand-authored API reference for `src/locohub`
 - `assets/`, `stylesheets/`, `javascripts/` – Shared static assets and theme tweaks
 
 ## Writing guidelines
@@ -40,7 +40,7 @@ and dataset metadata.
 - Re-run `python contributor_tools/manage_dataset_documentation.py update-documentation`
   after adding or refreshing a dataset so tables in `index.md`, `README.md`, and
   `datasets/index.md` stay in sync
-- Keep the API reference aligned with `user_libs/python/` and
+- Keep the API reference aligned with `src/locohub/` and
   `internal/validation_engine/`
 - Update screenshots or diagrams when the UI of contributor tools changes
 - Use `mkdocs build --strict` before publishing to catch broken links or code blocks

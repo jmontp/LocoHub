@@ -25,13 +25,14 @@ import matplotlib.pyplot as plt
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
-from user_libs.python.locomotion_data import LocomotionData
+from locohub import LocomotionData
 
 # Path to mock dataset
 MOCK_DATASET = Path(__file__).parent / 'mock_data' / 'mock_dataset_phase.parquet'
 
 # Output directory for test plots
 PLOT_DIR = Path(__file__).parent / 'test_plots'
+PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def setup_plotting():

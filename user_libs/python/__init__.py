@@ -1,32 +1,12 @@
 """
-Python user library for locomotion data analysis.
+Compatibility shim for legacy imports.
 
-Core classes and functions for biomechanical data processing.
+The Python library now lives under the `locohub` package. Prefer
+`import locohub` directly and update code accordingly. This module
+will be removed in a future release.
 """
 
-from .locomotion_data import LocomotionData, efficient_reshape_3d
-from .feature_constants import (
-    ANGLE_FEATURES,
-    VELOCITY_FEATURES, 
-    MOMENT_FEATURES,
-    GRF_FEATURES,
-    COP_FEATURES,
-    ALL_KINETIC_FEATURES,
-    get_feature_list,
-    get_kinematic_feature_map,
-    get_kinetic_feature_map
-)
+from locohub import *  # noqa: F401,F403
+from locohub import __all__ as _locohub_all  # type: ignore
 
-__all__ = [
-    'LocomotionData',
-    'efficient_reshape_3d',
-    'ANGLE_FEATURES',
-    'VELOCITY_FEATURES',
-    'MOMENT_FEATURES',
-    'GRF_FEATURES',
-    'COP_FEATURES',
-    'ALL_KINETIC_FEATURES',
-    'get_feature_list',
-    'get_kinematic_feature_map',
-    'get_kinetic_feature_map'
-]
+__all__ = list(_locohub_all)

@@ -65,22 +65,35 @@ for subject_idx = 1:length(subjects)
         details = subject_data.ParticipantDetails;
         
         % Find metadata fields
+        sex_idx = find(strcmp(details(:,1), 'Sex'));
         age_idx = find(strcmp(details(:,1), 'Age'));
         mass_idx = find(strcmp(details(:,1), 'Bodymass'));
         height_idx = find(strcmp(details(:,1), 'Height'));
         
         % Extract values with defaults
         age = 0; body_mass = 70; height_m = 1.75; % defaults
+        sex_code = NaN; sex_char = 'Other';
+        if ~isempty(sex_idx)
+            sex_code = details{sex_idx, 2};
+            % Dataset uses 1=female, 2=male (see umich_2021_mat_structure.md)
+            if isequal(sex_code, 1)
+                sex_char = 'F';
+            elseif isequal(sex_code, 2)
+                sex_char = 'M';
+            else
+                sex_char = 'Other';
+            end
+        end
         if ~isempty(age_idx), age = details{age_idx, 2}; end
         if ~isempty(mass_idx), body_mass = details{mass_idx, 2}; end
         if ~isempty(height_idx), height_m = details{height_idx, 2} / 1000; end % convert mm to m
         
         % Format subject metadata string
-        subject_metadata = sprintf('age:%d,height_m:%.2f,weight_kg:%.1f', age, height_m, body_mass);
+        subject_metadata = sprintf('age:%d,sex:%s,height_m:%.2f,weight_kg:%.1f', age, sex_char, height_m, body_mass);
     else
         % Default values if no ParticipantDetails
         body_mass = 70; % kg (default for normalization)
-        subject_metadata = 'age:0,height_m:1.75,weight_kg:70.0';
+        subject_metadata = 'age:0,sex:Other,height_m:1.75,weight_kg:70.0';
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1093,8 +1106,12 @@ function stride_table = process_strides_single_leg(trial_data, ...
                     r_force_vert = interpolate_signal(-forces.RForce(r_force_indices, y), NUM_POINTS);
                     l_force_vert = interpolate_signal(-forces.LForce(l_force_indices, y), NUM_POINTS);
                     
-                    % Lateral forces (previously ML) - flip sign for left leg to maintain convention
-                    r_force_lateral = interpolate_signal(forces.RForce(r_force_indices, z), NUM_POINTS);
+                    % Lateral forces (previously ML)
+                    % IMPORTANT: Raw dataset uses ML axis with leftward positive. To
+                    % comply with the project convention (OpenSim XYZ: Right+), we
+                    % negate BOTH right and left channels. Do NOT flip based on which
+                    % limb is ipsilateral — the sign must be global (subject Right+).
+                    r_force_lateral = interpolate_signal(-forces.RForce(r_force_indices, z), NUM_POINTS);
                     l_force_lateral = interpolate_signal(-forces.LForce(l_force_indices, z), NUM_POINTS);
                     
                     % Normalize forces by body weight to get BW units
@@ -1113,13 +1130,19 @@ function stride_table = process_strides_single_leg(trial_data, ...
                         if strcmp(leg_side, 'right')
                             [r_force_anterior_BW, ~] = ensure_grf_orientation(r_force_anterior_BW, r_force_vert_BW, 'anterior', ipsi_context);
                             [l_force_anterior_BW, ~] = ensure_grf_orientation(l_force_anterior_BW, l_force_vert_BW, 'anterior', contra_context);
-                            [r_force_lateral_BW, ~] = ensure_grf_orientation(r_force_lateral_BW, r_force_vert_BW, 'lateral', ipsi_context);
-                            [l_force_lateral_BW, ~] = ensure_grf_orientation(l_force_lateral_BW, l_force_vert_BW, 'lateral', contra_context);
+                            % Lateral GRF already mapped to Right+. Do not apply
+                            % heuristic sign flipping here to avoid leg-dependent
+                            % inversions.
+                            % r_force_lateral_BW = ensure_grf_orientation(... 'lateral', ...)
+                            % l_force_lateral_BW = ensure_grf_orientation(... 'lateral', ...)
                         else
                             [l_force_anterior_BW, ~] = ensure_grf_orientation(l_force_anterior_BW, l_force_vert_BW, 'anterior', ipsi_context);
                             [r_force_anterior_BW, ~] = ensure_grf_orientation(r_force_anterior_BW, r_force_vert_BW, 'anterior', contra_context);
-                            [l_force_lateral_BW, ~] = ensure_grf_orientation(l_force_lateral_BW, l_force_vert_BW, 'lateral', ipsi_context);
-                            [r_force_lateral_BW, ~] = ensure_grf_orientation(r_force_lateral_BW, r_force_vert_BW, 'lateral', contra_context);
+                            % Lateral GRF already mapped to Right+. Do not apply
+                            % heuristic sign flipping here to avoid leg-dependent
+                            % inversions.
+                            % l_force_lateral_BW = ensure_grf_orientation(... 'lateral', ...)
+                            % r_force_lateral_BW = ensure_grf_orientation(... 'lateral', ...)
                         end
                     end
 
@@ -1151,8 +1174,9 @@ function stride_table = process_strides_single_leg(trial_data, ...
                     r_cop_anterior = interpolate_signal(-forces.RCoP(r_force_indices, x), NUM_POINTS);  % Negate X for anterior positive
                     l_cop_anterior = interpolate_signal(-forces.LCoP(l_force_indices, x), NUM_POINTS);
                     
-                    r_cop_lateral = interpolate_signal(forces.RCoP(r_force_indices, z), NUM_POINTS);   % Z is lateral
-                    l_cop_lateral = interpolate_signal(-forces.LCoP(l_force_indices, z), NUM_POINTS);  % Negate left for consistency
+                    % CoP lateral: raw ML is leftward positive — negate BOTH to get Right+
+                    r_cop_lateral = interpolate_signal(-forces.RCoP(r_force_indices, z), NUM_POINTS);  % Z is lateral
+                    l_cop_lateral = interpolate_signal(-forces.LCoP(l_force_indices, z), NUM_POINTS);
                     
                     r_cop_vertical = interpolate_signal(-forces.RCoP(r_force_indices, y), NUM_POINTS); % Y is vertical
                     l_cop_vertical = interpolate_signal(-forces.LCoP(l_force_indices, y), NUM_POINTS);

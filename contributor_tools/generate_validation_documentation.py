@@ -451,7 +451,7 @@ class UnifiedValidationGenerator:
         lines.append("## Usage")
         lines.append("")
         lines.append("```python")
-        lines.append("from user_libs.python.locomotion_data import LocomotionData")
+        lines.append("from locohub import LocomotionData")
         lines.append("")
         lines.append(f"# Load the dataset")
         lines.append(f"data = LocomotionData('converted_datasets/{dataset_name.lower().replace(' ', '_')}_phase.parquet')")

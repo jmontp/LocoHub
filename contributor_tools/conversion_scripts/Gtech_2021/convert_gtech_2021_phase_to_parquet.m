@@ -1364,11 +1364,8 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 % Use NaN instead of extrapolation to avoid false GRF in swing phase
                 grf_interpolated = interp1(fp_time, vx_data, target_times, 'linear', NaN);
                 
-                % SIGN FIX: Apply corrections based on task and leg
-                if contains(task, 'stair_descent')
-                    % Flip sign for stair descent lateral GRF
-                    grf_interpolated = -grf_interpolated;
-                end
+                % Lateral GRF sign: keep global Right+ convention across all tasks.
+                % Do not flip sign based on task or leg.
                 
                 stride_data.lateral_grf_ipsi_BW = grf_interpolated / (subject_mass * 9.81);
             else
@@ -1405,11 +1402,8 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 % Use NaN instead of extrapolation to avoid false GRF in swing phase
                 grf_interpolated = interp1(fp_time, vx_data, target_times, 'linear', NaN);
                 
-                % SIGN FIX: Apply corrections based on task and leg (same as ipsilateral)
-                if contains(task, 'stair_descent')
-                    % Flip sign for stair descent lateral GRF
-                    grf_interpolated = -grf_interpolated;
-                end
+                % Lateral GRF sign: keep global Right+ convention across all tasks.
+                % Do not flip sign based on task or leg.
                 
                 stride_data.lateral_grf_contra_BW = grf_interpolated / (subject_mass * 9.81);
             else
