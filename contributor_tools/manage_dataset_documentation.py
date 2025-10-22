@@ -47,6 +47,7 @@ from pandas import isna
 current_dir = Path(__file__).parent
 repo_root = current_dir.parent
 sys.path.insert(0, str(repo_root))
+sys.path.insert(0, str(repo_root / "src"))
 
 from locohub import LocomotionData
 

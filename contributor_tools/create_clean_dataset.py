@@ -24,6 +24,7 @@ except ImportError as exc:
     raise ImportError("pyarrow is required to write parquet files. Install pyarrow before running this script.") from exc
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from internal.validation_engine.validator import Validator
 from locohub import LocomotionData

@@ -1,6 +1,6 @@
 clear;close;clc;
 
-T = table('Size', [0 51], ...
+T = table('Size', [0 48], ...
           'VariableTypes', {'string','string','string','string','double', ...
                             'double','double','double','double','double', ...
                             'double','double','double','double','double', ...
@@ -10,8 +10,7 @@ T = table('Size', [0 51], ...
                             'double','double','double','double','double', ...
                             'double','double','double','double','double', ...
                             'double','double','double','double','double', ...
-                            'double','double','double','double','double', ...
-                            'double'}, ...
+                            'double','double','double'}, ...
           'VariableNames', {'subject','task','task_id','task_info','step', ...
                             'phase_ipsi','hip_flexion_angle_ipsi_rad', ...
                             'hip_adduction_angle_ipsi_rad','knee_flexion_angle_ipsi_rad', ...
@@ -36,14 +35,10 @@ T = table('Size', [0 51], ...
                             'anterior_grf_contra_BW','lateral_grf_ipsi_BW', ...
                             'lateral_grf_contra_BW','cop_anterior_ipsi_m', ...
                             'cop_anterior_contra_m','cop_lateral_ipsi_m', ...
-                            'cop_lateral_contra_m','hip_adduction_angle_contra_rad' ...
-                            'hip_flexion_moment_ipsi_Nm_kg_AB', ...
-                            'knee_flexion_moment_ipsi_Nm_kg_AB' ...
-                            'ankle_dorsiflexion_moment_ipsi_Nm_kg_AB'});
+                            'cop_lateral_contra_m','hip_adduction_angle_contra_rad'});
 
 Original = load('.\MAT_normalizedData_PostStrokeAdults_v27-02-23');
 subj_info = readtable('.\subj_info.xlsx');
-template = load('..\AB\AB_LW_pool.mat').template;
 
 Npoints = 150;
 
@@ -165,49 +160,10 @@ for i_subj = 1:1:length(subjs)
         end
 
         % speed
-        anterior_ANK_ipsi_m_ = Original.Sub(i_subj).PsideSegm_PsideData.ANK.x(:,i_stride) / 1000;
-        anterior_TOE_ipsi_m_ = Original.Sub(i_subj).PsideSegm_PsideData.TOE.x(:,i_stride) / 1000;
-        anterior_HEE_ipsi_m_ = Original.Sub(i_subj).PsideSegm_PsideData.HEE.x(:,i_stride) / 1000;
-        if ~any(isnan(anterior_ANK_ipsi_m_)) && time_stride > 0
-            speed = (max(anterior_ANK_ipsi_m_) - min(anterior_ANK_ipsi_m_))/time_stride;
-        elseif ~any(isnan(anterior_HEE_ipsi_m_)) && time_stride > 0
-            speed = (max(anterior_HEE_ipsi_m_) - min(anterior_HEE_ipsi_m_))/time_stride;
-        elseif ~any(isnan(anterior_TOE_ipsi_m_)) && time_stride > 0
-            speed = (max(anterior_TOE_ipsi_m_) - min(anterior_TOE_ipsi_m_))/time_stride;
-        else
-            speed = subj_info.P_side_speed(strcmp(subj_info.Subj_name,subj));
-        end
+        speed = subj_info.P_side_speed(strcmp(subj_info.Subj_name,subj));
         task_info = strcat('speed_m_s:',num2str(speed),',overground:true',',side:paretic');
-        [nearest_two, weights] = findNearestTwo(template,speed);
-        hip_torq_template = zeros(Npoints,1);
-        knee_torq_template = zeros(Npoints,1);
-        ankle_torq_template = zeros(Npoints,1);
-        TO_AB = 0;
-        for i_speed = 1:1:length(nearest_two)
-            speed_fieldname = speed_key_from_value(nearest_two(i_speed),2);
-            hip_torq_template = hip_torq_template + weights(i_speed) * template.(speed_fieldname).avg_hip_moment;
-            knee_torq_template = knee_torq_template + weights(i_speed) * template.(speed_fieldname).avg_knee_moment;
-            ankle_torq_template = ankle_torq_template + weights(i_speed) * template.(speed_fieldname).avg_ankle_moment;
-            TO_AB = TO_AB + weights(i_speed) * template.(speed_fieldname).avg_TO;
-        end
-
-        % speed matching torques
-        if TO_ipsi < 1000 && TO_ipsi > 100
-            hip_flexion_moment_ipsi_Nm_kg_AB = my_synchronize(TO_ipsi/1000, TO_AB, hip_torq_template * 9.81, Npoints);
-            knee_flexion_moment_ipsi_Nm_kg_AB = my_synchronize(TO_ipsi/1000, TO_AB, knee_torq_template * 9.81, Npoints);
-            ankle_dorsiflexion_moment_ipsi_Nm_kg_AB = my_synchronize(TO_ipsi/1000, TO_AB, ankle_torq_template * 9.81, Npoints);
-            if strides_flag_P(i_stride) == 1
-                hip_flexion_moment_ipsi_Nm_kg_AB = hip_flexion_moment_ipsi_Nm_kg_AB / max(hip_flexion_moment_ipsi_Nm_kg_AB) * max(hip_flexion_moment_ipsi_Nm_kg_);
-                knee_flexion_moment_ipsi_Nm_kg_AB = knee_flexion_moment_ipsi_Nm_kg_AB / max(knee_flexion_moment_ipsi_Nm_kg_AB) * max(knee_flexion_moment_ipsi_Nm_kg_);
-                ankle_dorsiflexion_moment_ipsi_Nm_kg_AB = ankle_dorsiflexion_moment_ipsi_Nm_kg_AB / abs(min(ankle_dorsiflexion_moment_ipsi_Nm_kg_AB)) * abs(min(ankle_dorsiflexion_moment_ipsi_Nm_kg_));
-            end
-        else
-            hip_flexion_moment_ipsi_Nm_kg_AB = nan(Npoints,1);
-            knee_flexion_moment_ipsi_Nm_kg_AB = nan(Npoints,1);
-            ankle_dorsiflexion_moment_ipsi_Nm_kg_AB = nan(Npoints,1);
-        end
-
-        T_i = table('Size', [Npoints 51], ...
+        
+        T_i = table('Size', [Npoints 48], ...
                     'VariableTypes', {'string','string','string','string','double', ...
                                       'double','double','double','double','double', ...
                                       'double','double','double','double','double', ...
@@ -217,8 +173,7 @@ for i_subj = 1:1:length(subjs)
                                       'double','double','double','double','double', ...
                                       'double','double','double','double','double', ...
                                       'double','double','double','double','double', ...
-                                      'double','double','double','double','double', ...
-                                      'double'}, ...
+                                      'double','double','double'}, ...
                     'VariableNames', {'subject','task','task_id','task_info','step', ...
                                       'phase_ipsi','hip_flexion_angle_ipsi_rad', ...
                                       'hip_adduction_angle_ipsi_rad','knee_flexion_angle_ipsi_rad', ...
@@ -243,10 +198,7 @@ for i_subj = 1:1:length(subjs)
                                       'anterior_grf_contra_BW','lateral_grf_ipsi_BW', ...
                                       'lateral_grf_contra_BW','cop_anterior_ipsi_m', ...
                                       'cop_anterior_contra_m','cop_lateral_ipsi_m', ...
-                                      'cop_lateral_contra_m','hip_adduction_angle_contra_rad', ...
-                                      'hip_flexion_moment_ipsi_Nm_kg_AB', ...
-                                      'knee_flexion_moment_ipsi_Nm_kg_AB' ...
-                                      'ankle_dorsiflexion_moment_ipsi_Nm_kg_AB'});         
+                                      'cop_lateral_contra_m','hip_adduction_angle_contra_rad'});         
         T_i.subject(:) = subject;
         T_i.task(:) = task;
         T_i.task_id(:) = task_id;
@@ -320,9 +272,6 @@ for i_subj = 1:1:length(subjs)
             T_i.cop_lateral_ipsi_m = nan(Npoints,1);
             T_i.cop_lateral_contra_m = nan(Npoints,1);
         end
-        T_i.hip_flexion_moment_ipsi_Nm_kg_AB = hip_flexion_moment_ipsi_Nm_kg_AB;
-        T_i.knee_flexion_moment_ipsi_Nm_kg_AB = knee_flexion_moment_ipsi_Nm_kg_AB;
-        T_i.ankle_dorsiflexion_moment_ipsi_Nm_kg_AB = ankle_dorsiflexion_moment_ipsi_Nm_kg_AB;
 
         T = [T; T_i];
     end
@@ -401,7 +350,7 @@ for i_subj = 1:1:length(subjs)
             ankle_dorsiflexion_velocity_ipsi_rad_s_ = nan(1001,1);
             hip_flexion_velocity_contra_rad_s_ = nan(1001,1);
             knee_flexion_velocity_contra_rad_s_ = nan(1001,1);
-            ankle_dorsiflexion_velocity_contra_rad_s_nan(1001,1);
+            ankle_dorsiflexion_velocity_contra_rad_s_ = nan(1001,1);
         end
         % COP
         if strides_flag_N(i_stride) == 1
@@ -431,49 +380,10 @@ for i_subj = 1:1:length(subjs)
         end
 
         % speed
-        anterior_ANK_ipsi_m_ = Original.Sub(i_subj).NsideSegm_NsideData.ANK.x(:,i_stride) / 1000;
-        anterior_TOE_ipsi_m_ = Original.Sub(i_subj).NsideSegm_NsideData.TOE.x(:,i_stride) / 1000;
-        anterior_HEE_ipsi_m_ = Original.Sub(i_subj).NsideSegm_NsideData.HEE.x(:,i_stride) / 1000;
-        if ~any(isnan(anterior_ANK_ipsi_m_)) && time_stride > 0
-            speed = (max(anterior_ANK_ipsi_m_) - min(anterior_ANK_ipsi_m_))/time_stride;
-        elseif ~any(isnan(anterior_HEE_ipsi_m_)) && time_stride > 0
-            speed = (max(anterior_HEE_ipsi_m_) - min(anterior_HEE_ipsi_m_))/time_stride;
-        elseif ~any(isnan(anterior_TOE_ipsi_m_)) && time_stride > 0
-            speed = (max(anterior_TOE_ipsi_m_) - min(anterior_TOE_ipsi_m_))/time_stride;
-        else
-            speed = subj_info.N_side_speed(strcmp(subj_info.Subj_name,subj));
-        end
+        speed = subj_info.N_side_speed(strcmp(subj_info.Subj_name,subj));
         task_info = strcat('speed_m_s:',num2str(speed),',overground:true',',side:non-paretic');
-        [nearest_two, weights] = findNearestTwo(template,speed);
-        hip_torq_template = zeros(Npoints,1);
-        knee_torq_template = zeros(Npoints,1);
-        ankle_torq_template = zeros(Npoints,1);
-        TO_AB = 0;
-        for i_speed = 1:1:length(nearest_two)
-            speed_fieldname = speed_key_from_value(nearest_two(i_speed),2);
-            hip_torq_template = hip_torq_template + weights(i_speed) * template.(speed_fieldname).avg_hip_moment;
-            knee_torq_template = knee_torq_template + weights(i_speed) * template.(speed_fieldname).avg_knee_moment;
-            ankle_torq_template = ankle_torq_template + weights(i_speed) * template.(speed_fieldname).avg_ankle_moment;
-            TO_AB = TO_AB + weights(i_speed) * template.(speed_fieldname).avg_TO;
-        end
 
-        % speed matching torques
-        if TO_ipsi < 1000 && TO_ipsi > 100
-            hip_flexion_moment_ipsi_Nm_kg_AB = my_synchronize(TO_ipsi/1000, TO_AB, hip_torq_template * 9.81, Npoints);
-            knee_flexion_moment_ipsi_Nm_kg_AB = my_synchronize(TO_ipsi/1000, TO_AB, knee_torq_template * 9.81, Npoints);
-            ankle_dorsiflexion_moment_ipsi_Nm_kg_AB = my_synchronize(TO_ipsi/1000, TO_AB, ankle_torq_template * 9.81, Npoints);
-            if strides_flag_N(i_stride) == 1
-                hip_flexion_moment_ipsi_Nm_kg_AB = hip_flexion_moment_ipsi_Nm_kg_AB / max(hip_flexion_moment_ipsi_Nm_kg_AB) * max(hip_flexion_moment_ipsi_Nm_kg_);
-                knee_flexion_moment_ipsi_Nm_kg_AB = knee_flexion_moment_ipsi_Nm_kg_AB / max(knee_flexion_moment_ipsi_Nm_kg_AB) * max(knee_flexion_moment_ipsi_Nm_kg_);
-                ankle_dorsiflexion_moment_ipsi_Nm_kg_AB = ankle_dorsiflexion_moment_ipsi_Nm_kg_AB / abs(min(ankle_dorsiflexion_moment_ipsi_Nm_kg_AB)) * abs(min(ankle_dorsiflexion_moment_ipsi_Nm_kg_));
-            end
-        else
-            hip_flexion_moment_ipsi_Nm_kg_AB = nan(Npoints,1);
-            knee_flexion_moment_ipsi_Nm_kg_AB = nan(Npoints,1);
-            ankle_dorsiflexion_moment_ipsi_Nm_kg_AB = nan(Npoints,1);
-        end
-
-        T_i = table('Size', [Npoints 51], ...
+        T_i = table('Size', [Npoints 48], ...
                     'VariableTypes', {'string','string','string','string','double', ...
                                       'double','double','double','double','double', ...
                                       'double','double','double','double','double', ...
@@ -483,8 +393,7 @@ for i_subj = 1:1:length(subjs)
                                       'double','double','double','double','double', ...
                                       'double','double','double','double','double', ...
                                       'double','double','double','double','double', ...
-                                      'double','double','double','double','double', ...
-                                      'double'}, ...
+                                      'double','double','double'}, ...
                     'VariableNames', {'subject','task','task_id','task_info','step', ...
                                       'phase_ipsi','hip_flexion_angle_ipsi_rad', ...
                                       'hip_adduction_angle_ipsi_rad','knee_flexion_angle_ipsi_rad', ...
@@ -509,10 +418,7 @@ for i_subj = 1:1:length(subjs)
                                       'anterior_grf_contra_BW','lateral_grf_ipsi_BW', ...
                                       'lateral_grf_contra_BW','cop_anterior_ipsi_m', ...
                                       'cop_anterior_contra_m','cop_lateral_ipsi_m', ...
-                                      'cop_lateral_contra_m','hip_adduction_angle_contra_rad', ...
-                                      'hip_flexion_moment_ipsi_Nm_kg_AB', ...
-                                      'knee_flexion_moment_ipsi_Nm_kg_AB' ...
-                                      'ankle_dorsiflexion_moment_ipsi_Nm_kg_AB'});         
+                                      'cop_lateral_contra_m','hip_adduction_angle_contra_rad'});         
         T_i.subject(:) = subject;
         T_i.task(:) = task;
         T_i.task_id(:) = task_id;
@@ -586,20 +492,11 @@ for i_subj = 1:1:length(subjs)
             T_i.cop_lateral_ipsi_m = nan(Npoints,1);
             T_i.cop_lateral_contra_m = nan(Npoints,1);
         end
-        T_i.hip_flexion_moment_ipsi_Nm_kg_AB = hip_flexion_moment_ipsi_Nm_kg_AB;
-        T_i.knee_flexion_moment_ipsi_Nm_kg_AB = knee_flexion_moment_ipsi_Nm_kg_AB;
-        T_i.ankle_dorsiflexion_moment_ipsi_Nm_kg_AB = ankle_dorsiflexion_moment_ipsi_Nm_kg_AB;
 
         T = [T; T_i];
     end
 end
 
-parquet_name = strcat('.\',prefix,'stroke_dataset_matched_with_AB.parquet');
-parquetwrite(parquet_name, T);
-
-T = removevars(T, {'hip_flexion_moment_ipsi_Nm_kg_AB', ...
-                   'knee_flexion_moment_ipsi_Nm_kg_AB', ...
-                   'ankle_dorsiflexion_moment_ipsi_Nm_kg_AB'});
 parquet_name = strcat('.\',prefix,'stroke_dataset.parquet');
 parquetwrite(parquet_name, T);
 

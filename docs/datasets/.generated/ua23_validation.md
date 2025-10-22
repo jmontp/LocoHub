@@ -1,34 +1,32 @@
-**Report generated:** 2025-10-08 00:43
+**Report generated:** 2025-10-21 21:29
 
 ## Status Summary
 
 | Metric | Value |
 |--------|-------|
-| Stride Pass Rate | 0.0% |
-| Total Strides | — |
-| Passing Strides | — |
+| Stride Pass Rate | 90.4% |
+| Total Strides | 831 |
+| Passing Strides | 751 |
 
 ### Summary
 
-**Status**: ❌ NEEDS REVIEW (0.0% valid)  
-**Total Strides**: 0  
-**Passing Strides**: 0  
+**Status**: ⚠️ PARTIAL (90.4% valid)  
+**Total Strides**: 831  
+**Passing Strides**: 751  
 
 ### Task Breakdown
 
 | Task | Pass Rate | Status |
 |------|-----------|--------|
-| Level Walking Stroke | 100.0% | ✅ |
+| Level Walking Stroke | 90.4% | ✅ |
 
 _Validation ranges snapshot embedded below._
-
-⚠️ **Note**: Low pass rates may indicate special populations or non-standard protocols. Consider documenting these differences or creating custom validation ranges.
 
 ## Validation Ranges Snapshot
 
 Download the YAML snapshot used for this validation: [Download](./ua23_validation_ranges.yaml)
 
-_Source ranges file: contributor_tools\validation_ranges\default_ranges_v3.yaml_
+_Source ranges file: contributor_tools\validation_ranges\ua23_validation_ranges.yaml_
 
 ## Validation Plots
 
@@ -36,4 +34,4 @@ _Source ranges file: contributor_tools\validation_ranges\default_ranges_v3.yaml_
 
 ---
 
-*Generated from `converted_datasets\UA23_stroke_dataset.parquet` on 2025-10-08 00:43*
+*Generated from `converted_datasets\UA23_stroke_dataset.parquet` on 2025-10-21 21:29*
