@@ -14,6 +14,7 @@ from typing import Dict, List, Tuple, Optional, Any, Set
 # Import configuration manager
 import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
+sys.path.append(str(Path(__file__).parent.parent.parent / "src"))
 from internal.config_management.config_manager import ValidationConfigManager
 from locohub import LocomotionData
 

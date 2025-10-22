@@ -320,8 +320,12 @@ def print_validation_summary(result: Dict, task_details: Optional[Dict[str, Dict
         result: Validation result dictionary from Validator
         task_details: Optional per-task statistics for additional reporting
     """
-    stats = result['stats']
     mode = result.get('mode', 'phase')
+    stats = _derive_summary_stats(
+        result.get('stats', {}),
+        task_details=task_details,
+        mode=mode
+    )
 
     print("\n" + "="*70)
     print("QUICK VALIDATION CHECK")
@@ -460,6 +464,64 @@ def _format_percent(value: Optional[float]) -> str:
     return f"{value * 100:.1f}%"
 
 
+def _derive_summary_stats(
+    stats: Optional[Dict[str, object]],
+    task_details: Optional[Dict[str, Dict[str, object]]],
+    mode: str,
+) -> Dict[str, object]:
+    """Merge validator statistics with task-level details when needed."""
+
+    summary: Dict[str, object] = dict(stats or {})
+
+    if mode == 'phase' and task_details:
+        computed_task_count = len(task_details)
+
+        recorded_total = _safe_int(summary.get('total_strides')) or 0
+        recorded_failures = _safe_int(summary.get('total_failing_strides')) or 0
+
+        if computed_task_count and not summary.get('num_tasks'):
+            summary['num_tasks'] = computed_task_count
+
+        if recorded_total == 0:
+            computed_total = sum(
+                _safe_int((details or {}).get('total_strides')) or 0
+                for details in task_details.values()
+            )
+            computed_failures = sum(
+                _safe_int((details or {}).get('failing_strides')) or 0
+                for details in task_details.values()
+            )
+
+            if computed_total:
+                recorded_total = computed_total
+                recorded_failures = computed_failures
+                summary['total_strides'] = computed_total
+                summary['total_failing_strides'] = computed_failures
+
+        if recorded_total:
+            stride_pass_rate = max(
+                0.0,
+                1.0 - (recorded_failures / recorded_total)
+            )
+            summary['pass_rate'] = stride_pass_rate
+
+            total_checks = _safe_int(summary.get('total_checks')) or 0
+            if total_checks == 0:
+                if recorded_failures == 0:
+                    summary['variable_pass_rate'] = 1.0
+                else:
+                    summary['variable_pass_rate'] = stride_pass_rate
+        else:
+            summary.setdefault('total_strides', 0)
+            summary.setdefault('total_failing_strides', 0)
+            summary.setdefault('pass_rate', 0.0)
+            summary.setdefault('variable_pass_rate', 0.0)
+    else:
+        summary.setdefault('variable_pass_rate', stats.get('variable_pass_rate', 0.0) if stats else 0.0)
+
+    return summary
+
+
 def _build_summary_payload(
     result: Dict,
     task_details: Optional[Dict[str, Dict[str, object]]],
@@ -468,7 +530,11 @@ def _build_summary_payload(
 ) -> Dict:
     """Create a JSON-serializable snapshot of validation results."""
 
-    stats = result.get('stats', {})
+    stats = _derive_summary_stats(
+        result.get('stats', {}),
+        task_details=task_details,
+        mode=result.get('mode', 'phase')
+    )
     mode = result.get('mode', 'phase')
 
     timestamp = datetime.now(timezone.utc).replace(microsecond=0)
@@ -491,6 +557,7 @@ def _build_summary_payload(
             'num_tasks': _safe_int(stats.get('num_tasks')),
             'total_checks': _safe_int(stats.get('total_checks')),
             'total_violations': _safe_int(stats.get('total_violations')),
+            'variable_pass_rate': _safe_float(stats.get('variable_pass_rate')),
         },
         'tasks': {}
     }

@@ -47,6 +47,7 @@ from pandas import isna
 current_dir = Path(__file__).parent
 repo_root = current_dir.parent
 sys.path.insert(0, str(repo_root))
+sys.path.insert(0, str(repo_root / "src"))
 
 from locohub import LocomotionData
 
@@ -694,7 +695,7 @@ def write_metadata_file(metadata: Dict) -> None:
     if metadata.get('last_dataset_path'):
         fields['last_dataset_path'] = metadata.get('last_dataset_path')
 
-    with open(meta_path, 'w') as fh:
+    with open(meta_path, 'w', encoding='utf-8') as fh:
         yaml.safe_dump(dict(fields), fh, sort_keys=False)
 
 
@@ -1980,7 +1981,7 @@ def handle_add_dataset(args):
     
     # Save checklist to file
     checklist_path = repo_root / f"submission_checklist_{dataset_name}.txt"
-    with open(checklist_path, 'w') as f:
+    with open(checklist_path, 'w', encoding='utf-8') as f:
         f.write(checklist)
     print(f"💾 Checklist saved to: {checklist_path.name}")
     
