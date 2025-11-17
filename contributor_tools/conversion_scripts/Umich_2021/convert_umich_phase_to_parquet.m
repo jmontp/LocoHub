@@ -432,7 +432,7 @@ for subject_idx = 1:length(subjects)
 end
 
 % Save the phase-indexed data
-output_path = fullfile('..', '..', '..', 'converted_datasets', 'umich_2021_phase_dirty.parquet');
+output_path = fullfile('..', '..', '..', 'converted_datasets', 'umich_2021_phase_raw.parquet');
 fprintf('\n========================================\n');
 fprintf('Saving to: %s\n', output_path);
 fprintf('Total subjects: %d\n', length(unique(total_data.subject)));
@@ -674,6 +674,13 @@ function stride_table = process_strides_single_leg(trial_data, ...
         stride_data.time_s = time_array;
         stride_data.phase_ipsi = phase_array;
         stride_data.phase_ipsi_dot = phase_dot_array;
+        % Predeclare CoP columns to guarantee presence even if CoP data is missing
+        stride_data.cop_anterior_ipsi_m = NaN(NUM_POINTS, 1);
+        stride_data.cop_anterior_contra_m = NaN(NUM_POINTS, 1);
+        stride_data.cop_lateral_ipsi_m = NaN(NUM_POINTS, 1);
+        stride_data.cop_lateral_contra_m = NaN(NUM_POINTS, 1);
+        stride_data.cop_vertical_ipsi_m = NaN(NUM_POINTS, 1);
+        stride_data.cop_vertical_contra_m = NaN(NUM_POINTS, 1);
         
         % Process kinematics - interpolate to 150 points
         if isfield(trial_data, 'jointAngles')
@@ -1169,21 +1176,43 @@ function stride_table = process_strides_single_leg(trial_data, ...
             % Center of pressure - split into ipsi/contra
             if isfield(forces, 'RCoP') && isfield(forces, 'LCoP') && exist('r_force_indices', 'var') && exist('l_force_indices', 'var')
                 if ~isempty(r_force_indices) && ~isempty(l_force_indices)
-                    % Interpolate CoP for each foot
-                    % Apply coordinate transformations to match standard convention
-                    r_cop_anterior = interpolate_signal(-forces.RCoP(r_force_indices, x), NUM_POINTS);  % Negate X for anterior positive
+                    % Interpolate CoP for each foot (lab frame -> anterior/up/right convention)
+                    % CoP is in m, convert them to meters
+                    r_cop_anterior = interpolate_signal(-forces.RCoP(r_force_indices, x), NUM_POINTS);
                     l_cop_anterior = interpolate_signal(-forces.LCoP(l_force_indices, x), NUM_POINTS);
-                    
-                    % CoP lateral: raw ML is leftward positive — negate BOTH to get Right+
-                    r_cop_lateral = interpolate_signal(-forces.RCoP(r_force_indices, z), NUM_POINTS);  % Z is lateral
-                    l_cop_lateral = interpolate_signal(-forces.LCoP(l_force_indices, z), NUM_POINTS);
-                    
-                    r_cop_vertical = interpolate_signal(-forces.RCoP(r_force_indices, y), NUM_POINTS); % Y is vertical
+
+                    r_cop_lateral  = interpolate_signal(-forces.RCoP(r_force_indices, z), NUM_POINTS);
+                    l_cop_lateral  = interpolate_signal(-forces.LCoP(l_force_indices, z), NUM_POINTS);
+
+                    r_cop_vertical = interpolate_signal(-forces.RCoP(r_force_indices, y), NUM_POINTS);
                     l_cop_vertical = interpolate_signal(-forces.LCoP(l_force_indices, y), NUM_POINTS);
-                    
+
+                    % If marker ankles are available, express CoP in ankle frame (translate by ankle position)
+                    if isfield(trial_data, 'markers') && isfield(trial_data.markers, 'RANK') && isfield(trial_data.markers, 'LANK')
+                        markers_local = trial_data.markers;
+
+                        % Map markers to anterior/up/right convention and interpolate
+                        % Markers are in meters
+                        r_ankle_anterior = interpolate_signal(-(markers_local.RANK(r_start_frame:r_end_frame, x)), NUM_POINTS);
+                        l_ankle_anterior = interpolate_signal(-(markers_local.LANK(l_start_frame:l_end_frame, x)), NUM_POINTS);
+
+                        r_ankle_lateral  = interpolate_signal(-(markers_local.RANK(r_start_frame:r_end_frame, z)), NUM_POINTS);
+                        l_ankle_lateral  = interpolate_signal(-(markers_local.LANK(l_start_frame:l_end_frame, z)), NUM_POINTS);
+
+                        r_ankle_vertical = interpolate_signal(-(markers_local.RANK(r_start_frame:r_end_frame, y)), NUM_POINTS);
+                        l_ankle_vertical = interpolate_signal(-(markers_local.LANK(l_start_frame:l_end_frame, y)), NUM_POINTS);
+
+                        % Translate CoP by ankle origin: p_local = p_cop - p_ankle
+                        r_cop_anterior = (r_cop_anterior - r_ankle_anterior)/1000;  % Convert from mm to m
+                        l_cop_anterior = (l_cop_anterior - l_ankle_anterior)/1000;
+                        r_cop_lateral  = (r_cop_lateral  - r_ankle_lateral)/1000;
+                        l_cop_lateral  = (l_cop_lateral  - l_ankle_lateral)/1000;
+                        r_cop_vertical = (r_cop_vertical - r_ankle_vertical)/1000;
+                        l_cop_vertical = (l_cop_vertical - l_ankle_vertical)/1000;
+                    end
+
                     % Assign based on which leg is ipsilateral
                     if strcmp(leg_side, 'right')
-                        % Right leg is ipsilateral
                         stride_data.cop_anterior_ipsi_m = r_cop_anterior;
                         stride_data.cop_anterior_contra_m = l_cop_anterior;
                         stride_data.cop_lateral_ipsi_m = r_cop_lateral;
@@ -1191,7 +1220,6 @@ function stride_table = process_strides_single_leg(trial_data, ...
                         stride_data.cop_vertical_ipsi_m = r_cop_vertical;
                         stride_data.cop_vertical_contra_m = l_cop_vertical;
                     else
-                        % Left leg is ipsilateral
                         stride_data.cop_anterior_ipsi_m = l_cop_anterior;
                         stride_data.cop_anterior_contra_m = r_cop_anterior;
                         stride_data.cop_lateral_ipsi_m = l_cop_lateral;
