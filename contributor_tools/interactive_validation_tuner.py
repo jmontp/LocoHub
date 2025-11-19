@@ -93,9 +93,13 @@ from matplotlib.ticker import FuncFormatter, FixedLocator
 from matplotlib.collections import LineCollection
 import matplotlib.animation as animation
 
-# Add project root to path
+# Ensure repository root and src/ are importable so `import locohub` works
 project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
+src_dir = project_root / "src"
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+if src_dir.exists() and str(src_dir) not in sys.path:
+    sys.path.insert(0, str(src_dir))
 
 # Import existing modules
 from locohub import LocomotionData
@@ -1233,6 +1237,7 @@ class InteractiveValidationTuner:
             (canvas, canvas.mpl_connect('button_press_event', self._on_canvas_press)),
             (canvas, canvas.mpl_connect('motion_notify_event', self._on_canvas_motion)),
             (canvas, canvas.mpl_connect('button_release_event', self._on_canvas_release)),
+            (canvas, canvas.mpl_connect('scroll_event', self._on_canvas_scroll)),
         ]
 
     def _normalize_axis(self, axis):
@@ -1429,6 +1434,93 @@ class InteractiveValidationTuner:
         if self._active_box is not None:
             self._active_box.on_release(event)
             self._active_box = None
+
+    def _on_canvas_scroll(self, event):
+        """
+        Handle scroll wheel events to zoom the y-axis for a single row.
+
+        When the user scrolls while hovering over either the Pass or Fail
+        column for a variable, this zooms the y-limits for that variable's
+        row only (both axes in the pair). Other rows remain unchanged.
+        """
+        if event is None or event.inaxes is None:
+            return
+
+        # Ensure we have a full validation display with axis pairs
+        if not hasattr(self, 'axes_pass') or not hasattr(self, 'axes_fail'):
+            return
+
+        # Map twinned axes back to their primary axis for hit-testing
+        axis_key = self._normalize_axis(event.inaxes)
+        if axis_key is None:
+            return
+
+        # Identify the row index for this axis
+        row_index = None
+        if axis_key in getattr(self, 'axes_pass', []):
+            row_index = self.axes_pass.index(axis_key)
+        elif axis_key in getattr(self, 'axes_fail', []):
+            row_index = self.axes_fail.index(axis_key)
+
+        if row_index is None:
+            return
+
+        # Obtain the axis pair for this row
+        try:
+            ax_pass = self.axes_pass[row_index]
+            ax_fail = self.axes_fail[row_index]
+        except (AttributeError, IndexError):
+            return
+
+        # Current limits and zoom center
+        y_min, y_max = ax_pass.get_ylim()
+        if not np.isfinite(y_min) or not np.isfinite(y_max):
+            return
+
+        span = y_max - y_min
+        if span <= 0:
+            return
+
+        # Use cursor position as zoom center when available
+        center = event.ydata if event.ydata is not None else (y_min + y_max) / 2.0
+
+        # Scroll up to zoom in, down to zoom out
+        # event.step is typically +1 for up, -1 for down
+        step = getattr(event, 'step', 0) or 0
+        if step == 0:
+            # Fallback based on button label if step is unavailable
+            if getattr(event, 'button', None) == 'up':
+                step = 1
+            elif getattr(event, 'button', None) == 'down':
+                step = -1
+            else:
+                return
+
+        # Choose a gentle zoom factor per scroll notch
+        zoom_in_factor = 0.8
+        zoom_out_factor = 1.25
+        factor = zoom_in_factor if step > 0 else zoom_out_factor
+
+        new_half_span = (span * factor) / 2.0
+
+        # Prevent over-zooming to a nearly flat line
+        min_span = 1e-3
+        if new_half_span * 2.0 < min_span:
+            new_half_span = min_span / 2.0
+
+        new_y_min = center - new_half_span
+        new_y_max = center + new_half_span
+
+        # Apply the same limits to both axes in this row
+        ax_pass.set_ylim(new_y_min, new_y_max)
+        ax_fail.set_ylim(new_y_min, new_y_max)
+
+        # Invalidate cached backgrounds so draggable boxes update correctly
+        self.invalidate_all_backgrounds()
+
+        # Redraw the canvas with updated limits
+        if hasattr(self, 'canvas'):
+            self.canvas.draw_idle()
 
     def _convert_numpy_to_python(self, obj):
         """Recursively convert numpy types to Python native types."""
@@ -1689,7 +1781,7 @@ class InteractiveValidationTuner:
         return arr
     
     def get_all_features(self):
-        """Get all features to display (kinematic + kinetic + segment) from standard spec - ipsilateral only."""
+        """Get all features to display (spec-driven, with dataset-aware ordering)."""
         # Primary joint angles (sagittal plane) - from standard_spec.md - IPSI ONLY
         kinematic_vars = [
             'hip_flexion_angle_ipsi_rad',
@@ -1794,48 +1886,57 @@ class InteractiveValidationTuner:
             'Foot Sagittal Velocity (Ipsi)'
         ]
         
-        dataset_mode = self.locomotion_data is not None
+        # Combine primary features (most commonly available)
+        # Start with sagittal plane kinematics, velocities, kinetics, GRF, COP, and segments
+        all_vars = (
+            kinematic_vars
+            + velocity_vars
+            + kinetic_vars
+            + grf_vars
+            + cop_vars
+            + segment_vars
+        )
+        all_labels = (
+            kinematic_labels
+            + velocity_labels
+            + kinetic_labels
+            + grf_labels
+            + cop_labels
+            + segment_labels
+        )
 
-        if dataset_mode:
-            dataset_features = list(self.locomotion_data.features)
-            ordered_dataset_features = self._order_dataset_features(dataset_features)
-            ordered_dataset_labels = [self._format_feature_label(var) for var in ordered_dataset_features]
-            return ordered_dataset_features, ordered_dataset_labels
-        else:
-            # Combine primary features (most commonly available)
-            # Start with sagittal plane kinematics, velocities, kinetics, GRF, COP, and segments
-            all_vars = (
-                kinematic_vars
-                + velocity_vars
-                + kinetic_vars
-                + grf_vars
-                + cop_vars
-                + segment_vars
-            )
-            all_labels = (
-                kinematic_labels
-                + velocity_labels
-                + kinetic_labels
-                + grf_labels
-                + cop_labels
-                + segment_labels
-            )
+        dataset_mode = self.locomotion_data is not None
 
         ordered_vars = []
         ordered_labels = []
-        for var_name, label in zip(all_vars, all_labels):
-            ordered_vars.append(var_name)
-            ordered_labels.append(label)
 
+        def _add_feature(var_name, label):
+            if var_name not in ordered_vars:
+                ordered_vars.append(var_name)
+                ordered_labels.append(label)
+
+        # Always start from the spec-driven ordering so rows appear even when
+        # the dataset is missing some variables.
+        for var_name, label in zip(all_vars, all_labels):
+            _add_feature(var_name, label)
+
+            # In spec-only mode, also expose contralateral counterparts to aid tuning.
             if (not dataset_mode) and '_ipsi' in var_name:
                 contra_var = var_name.replace('_ipsi', '_contra')
                 if '(Ipsi)' in label:
                     contra_label = label.replace('(Ipsi)', '(Contra)')
                 else:
                     contra_label = f"{label} (Contra)"
+                _add_feature(contra_var, contra_label)
 
-                ordered_vars.append(contra_var)
-                ordered_labels.append(contra_label)
+        # When a dataset is loaded, also surface any additional dataset features
+        # (e.g., non-standard variables) after the canonical list.
+        if dataset_mode:
+            dataset_features = list(self.locomotion_data.features)
+            ordered_dataset_features = self._order_dataset_features(dataset_features)
+            for var in ordered_dataset_features:
+                if var not in ordered_vars:
+                    _add_feature(var, self._format_feature_label(var))
 
         return ordered_vars, ordered_labels
 
