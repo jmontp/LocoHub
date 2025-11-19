@@ -623,7 +623,8 @@ def generate_reference_figure(output_path: str) -> None:
     )
 
     # Explanatory text below the legend describing how joint angles are
-    # related to link (segment) angles in this schematic.
+    # related to link (segment) angles in this schematic, and how this
+    # illustration relates to the full dataset.
     definitions_text = (
         r"Definitions (schematic):" "\n"
         r"$\phi_*$: global link angles (ipsilateral leg)" "\n"
@@ -638,6 +639,22 @@ def generate_reference_figure(output_path: str) -> None:
         transform=ax.transAxes,
         fontsize=7,
         va="top",
+    )
+
+    schematic_note = (
+        "Illustrative only: dataset stores φ_* and θ_* for both ipsi and contra legs. "
+        "Ipsilateral leg (blue) is defined by phase_ipsi = 0 at heel strike."
+    )
+    # Place this note just below the main x-axis to keep it visually
+    # associated with the overall coordinate frame rather than the legend.
+    ax.text(
+        0.5,
+        -0.12,
+        schematic_note,
+        transform=ax.transAxes,
+        fontsize=7,
+        va="top",
+        ha="center",
     )
 
     # Remove tick labels for a cleaner diagram, keep axes labels
