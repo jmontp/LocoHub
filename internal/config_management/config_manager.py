@@ -30,6 +30,8 @@ class ValidationConfigManager:
             'version': '2.0',
             'generated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
+        # Track legacy GRF variable names seen during load for user warnings
+        self._legacy_grf_seen: set[str] = set()
         
         # Default config directory
         project_root = Path(__file__).parent.parent.parent
@@ -69,6 +71,7 @@ class ValidationConfigManager:
         # Clear existing data
         self._data.clear()
         self._metadata.clear()
+        self._legacy_grf_seen.clear()
         
         # Extract metadata (everything except 'tasks')
         for key, value in config.items():
@@ -90,6 +93,33 @@ class ValidationConfigManager:
                 'metadata': metadata,
                 'phases': normalized
             }
+
+        if self._legacy_grf_seen:
+            vars_list = ", ".join(sorted(self._legacy_grf_seen))
+            print(
+                "⚠️  Detected legacy GRF variable names in validation config; "
+                "they were normalized to grf_<axis>_<side>_<unit>: "
+                f"{vars_list}"
+            )
+
+    # Legacy GRF naming aliases (old -> new). Duplicated from src/locohub/feature_constants
+    # to avoid internal modules depending on user-facing code.
+    _LEGACY_GRF_ALIASES: Dict[str, str] = {
+        # Raw GRF (N)
+        'vertical_grf_ipsi_N': 'grf_vertical_ipsi_N',
+        'vertical_grf_contra_N': 'grf_vertical_contra_N',
+        'anterior_grf_ipsi_N': 'grf_anterior_ipsi_N',
+        'anterior_grf_contra_N': 'grf_anterior_contra_N',
+        'lateral_grf_ipsi_N': 'grf_lateral_ipsi_N',
+        'lateral_grf_contra_N': 'grf_lateral_contra_N',
+        # Normalized GRF (BW)
+        'vertical_grf_ipsi_BW': 'grf_vertical_ipsi_BW',
+        'vertical_grf_contra_BW': 'grf_vertical_contra_BW',
+        'anterior_grf_ipsi_BW': 'grf_anterior_ipsi_BW',
+        'anterior_grf_contra_BW': 'grf_anterior_contra_BW',
+        'lateral_grf_ipsi_BW': 'grf_lateral_ipsi_BW',
+        'lateral_grf_contra_BW': 'grf_lateral_contra_BW',
+    }
 
     def _normalize_phases(
         self,
@@ -117,11 +147,15 @@ class ValidationConfigManager:
 
             normalized[phase] = {}
             for var_name, var_range in (variables or {}).items():
+                # Normalize legacy GRF variable names to the new schema
+                canonical_name = self._LEGACY_GRF_ALIASES.get(var_name, var_name)
+                if canonical_name != var_name:
+                    self._legacy_grf_seen.add(var_name)
                 if not isinstance(var_range, dict):
                     raise ValueError(
-                        f"Variable '{var_name}' at phase {phase} in task {task_name} must be a dict with min/max."
+                        f"Variable '{canonical_name}' at phase {phase} in task {task_name} must be a dict with min/max."
                     )
-                normalized[phase][var_name] = {
+                normalized[phase][canonical_name] = {
                     'min': var_range.get('min'),
                     'max': var_range.get('max')
                 }

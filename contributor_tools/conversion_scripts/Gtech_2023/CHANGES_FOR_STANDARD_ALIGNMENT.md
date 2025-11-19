@@ -35,14 +35,14 @@ Updated Gtech_2023 conversion scripts to align with the current standard specifi
   - Added `step` column (initialized to 0 for time-indexed data)
 - **GRF/COP Naming**: Updated to follow standardized directional naming:
   - **Python (time-indexed)**: Uses left/right with directional names
-    - `RForceX` → `anterior_grf_r_N` (anterior-posterior force)
-    - `RForceY_Vertical` → `vertical_grf_r_N` (vertical force)
-    - `RForceZ` → `lateral_grf_r_N` (medial-lateral force)
+    - `RForceX` → `grf_anterior_r_N` (anterior-posterior force)
+    - `RForceY_Vertical` → `grf_vertical_r_N` (vertical force)
+    - `RForceZ` → `grf_lateral_r_N` (medial-lateral force)
     - `RCOPX` → `cop_anterior_r_m` (anterior-posterior COP)
     - Similar for left side
   - **MATLAB (phase-indexed)**: Uses ipsi/contra with directional names
     - Maps left/right to ipsi/contra based on leading leg
-    - `anterior_grf_ipsi_N`, `vertical_grf_ipsi_N`, `lateral_grf_ipsi_N`
+    - `grf_anterior_ipsi_N`, `grf_vertical_ipsi_N`, `grf_lateral_ipsi_N`
     - `cop_anterior_ipsi_m`, `cop_vertical_ipsi_m`, `cop_lateral_ipsi_m`
     - Similar for contra side
 - **Subject Naming**: Already followed GT23_AB## pattern correctly ✓
@@ -111,14 +111,14 @@ Now follows three-level system:
 
 ### Time-indexed Example:
 ```
-subject,subject_metadata,task,task_id,task_info,step,time_s,knee_flexion_angle_r_rad,anterior_grf_r_N,cop_anterior_r_m
+subject,subject_metadata,task,task_id,task_info,step,time_s,knee_flexion_angle_r_rad,grf_anterior_r_N,cop_anterior_r_m
 GT23_AB01,"",level_walking,level,"speed_m_s:1.2,treadmill:true",0,0.00,0.123,856.2,-0.12
 GT23_AB01,"",level_walking,level,"speed_m_s:1.2,treadmill:true",0,0.01,0.126,842.7,-0.10
 ```
 
 ### Phase-indexed Example:
 ```
-subject,subject_metadata,task,task_id,task_info,step,phase_ipsi,knee_flexion_angle_ipsi_rad,anterior_grf_ipsi_N,cop_anterior_ipsi_m
+subject,subject_metadata,task,task_id,task_info,step,phase_ipsi,knee_flexion_angle_ipsi_rad,grf_anterior_ipsi_N,cop_anterior_ipsi_m
 GT23_AB01,"",incline_walking,incline_10deg,"incline_deg:10,treadmill:true",0,0.0,0.123,856.2,-0.12
 GT23_AB01,"",incline_walking,incline_10deg,"incline_deg:10,treadmill:true",0,0.7,0.126,842.7,-0.08
 ```

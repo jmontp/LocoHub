@@ -1155,20 +1155,20 @@ function stride_table = process_strides_single_leg(trial_data, ...
 
                     if strcmp(leg_side, 'right')
                         % Right leg is ipsilateral
-                        stride_data.anterior_grf_ipsi_BW = r_force_anterior_BW;
-                        stride_data.anterior_grf_contra_BW = l_force_anterior_BW;
-                        stride_data.vertical_grf_ipsi_BW = r_force_vert_BW;
-                        stride_data.vertical_grf_contra_BW = l_force_vert_BW;
-                        stride_data.lateral_grf_ipsi_BW = r_force_lateral_BW;
-                        stride_data.lateral_grf_contra_BW = l_force_lateral_BW;
+                        stride_data.grf_anterior_ipsi_BW = r_force_anterior_BW;
+                        stride_data.grf_anterior_contra_BW = l_force_anterior_BW;
+                        stride_data.grf_vertical_ipsi_BW = r_force_vert_BW;
+                        stride_data.grf_vertical_contra_BW = l_force_vert_BW;
+                        stride_data.grf_lateral_ipsi_BW = r_force_lateral_BW;
+                        stride_data.grf_lateral_contra_BW = l_force_lateral_BW;
                     else
                         % Left leg is ipsilateral
-                        stride_data.anterior_grf_ipsi_BW = l_force_anterior_BW;
-                        stride_data.anterior_grf_contra_BW = r_force_anterior_BW;
-                        stride_data.vertical_grf_ipsi_BW = l_force_vert_BW;
-                        stride_data.vertical_grf_contra_BW = r_force_vert_BW;
-                        stride_data.lateral_grf_ipsi_BW = l_force_lateral_BW;
-                        stride_data.lateral_grf_contra_BW = r_force_lateral_BW;
+                        stride_data.grf_anterior_ipsi_BW = l_force_anterior_BW;
+                        stride_data.grf_anterior_contra_BW = r_force_anterior_BW;
+                        stride_data.grf_vertical_ipsi_BW = l_force_vert_BW;
+                        stride_data.grf_vertical_contra_BW = r_force_vert_BW;
+                        stride_data.grf_lateral_ipsi_BW = l_force_lateral_BW;
+                        stride_data.grf_lateral_contra_BW = r_force_lateral_BW;
                     end
                 end
             end
@@ -1234,12 +1234,12 @@ function stride_table = process_strides_single_leg(trial_data, ...
             nan_vector = NaN(NUM_POINTS, 1);
             
             % Ground reaction forces
-            stride_data.anterior_grf_ipsi_BW = nan_vector;
-            stride_data.anterior_grf_contra_BW = nan_vector;
-            stride_data.vertical_grf_ipsi_BW = nan_vector;
-            stride_data.vertical_grf_contra_BW = nan_vector;
-            stride_data.lateral_grf_ipsi_BW = nan_vector;
-            stride_data.lateral_grf_contra_BW = nan_vector;
+            stride_data.grf_anterior_ipsi_BW = nan_vector;
+            stride_data.grf_anterior_contra_BW = nan_vector;
+            stride_data.grf_vertical_ipsi_BW = nan_vector;
+            stride_data.grf_vertical_contra_BW = nan_vector;
+            stride_data.grf_lateral_ipsi_BW = nan_vector;
+            stride_data.grf_lateral_contra_BW = nan_vector;
             
             % Center of pressure
             stride_data.cop_anterior_ipsi_m = nan_vector;
@@ -2157,12 +2157,12 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     stride_data.ankle_rotation_moment_contra_Nm_kg = nan_vector;
     
     % Ground reaction forces (not measured)
-    stride_data.vertical_grf_ipsi_BW = nan_vector;
-    stride_data.vertical_grf_contra_BW = nan_vector;
-    stride_data.anterior_grf_ipsi_BW = nan_vector;
-    stride_data.anterior_grf_contra_BW = nan_vector;
-    stride_data.lateral_grf_ipsi_BW = nan_vector;
-    stride_data.lateral_grf_contra_BW = nan_vector;
+    stride_data.grf_vertical_ipsi_BW = nan_vector;
+    stride_data.grf_vertical_contra_BW = nan_vector;
+    stride_data.grf_anterior_ipsi_BW = nan_vector;
+    stride_data.grf_anterior_contra_BW = nan_vector;
+    stride_data.grf_lateral_ipsi_BW = nan_vector;
+    stride_data.grf_lateral_contra_BW = nan_vector;
     
     % Center of pressure (not measured)
     stride_data.cop_anterior_ipsi_m = nan_vector;

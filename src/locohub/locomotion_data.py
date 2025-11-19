@@ -50,13 +50,18 @@ This includes:
 
 Variable Naming:
 ---------------
-Standard convention: <joint>_<motion>_<measurement>_<side>_<unit>
-Examples:
-- knee_flexion_angle_contra_rad
-- hip_flexion_moment_ipsi_Nm
-- ankle_flexion_velocity_contra_rad_s
+- Joint/segment variables: <joint>_<motion>_<measurement>_<side>_<unit>
+  Examples:
+    - knee_flexion_angle_contra_rad
+    - hip_flexion_moment_ipsi_Nm
+    - ankle_flexion_velocity_contra_rad_s
+- GRF / CoP variables: <signal_type>_<axis>_<side>_<unit>
+  Examples:
+    - grf_vertical_ipsi_BW
+    - grf_anterior_contra_N
+    - cop_anterior_contra_m
 
-All variable names must follow the standard convention. Non-compliant names will raise an error.
+All variable names must follow these standard conventions. Non-compliant names will raise an error.
 """
 
 import numpy as np
@@ -69,14 +74,30 @@ import os
 
 # Import feature constants from same library
 try:
-    from .feature_constants import (ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES, 
-                                   SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES,
-                                   GRF_FEATURES, GRF_FEATURES_NORMALIZED)
+    from .feature_constants import (
+        ANGLE_FEATURES,
+        VELOCITY_FEATURES,
+        MOMENT_FEATURES,
+        SEGMENT_ANGLE_FEATURES,
+        SEGMENT_VELOCITY_FEATURES,
+        GRF_FEATURES,
+        GRF_FEATURES_NORMALIZED,
+        COP_FEATURES,
+        LEGACY_GRF_ALIASES,
+    )
 except ImportError:
     # Fallback for standalone scripts
-    from feature_constants import (ANGLE_FEATURES, VELOCITY_FEATURES, MOMENT_FEATURES, 
-                                  SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES,
-                                  GRF_FEATURES, GRF_FEATURES_NORMALIZED)
+    from feature_constants import (
+        ANGLE_FEATURES,
+        VELOCITY_FEATURES,
+        MOMENT_FEATURES,
+        SEGMENT_ANGLE_FEATURES,
+        SEGMENT_VELOCITY_FEATURES,
+        GRF_FEATURES,
+        GRF_FEATURES_NORMALIZED,
+        COP_FEATURES,
+        LEGACY_GRF_ALIASES,
+    )
 
 # Optional imports for visualization
 try:
@@ -156,6 +177,9 @@ class LocomotionData:
             self.df = self._load_data_with_validation(file_type)
         except Exception as e:
             raise ValueError(f"Failed to load data from {self.data_path}: {str(e)}")
+
+        # Apply legacy GRF naming aliases so older datasets continue to load
+        self._apply_legacy_naming_aliases()
         
         # Validate required columns
         self._validate_required_columns()
@@ -171,6 +195,24 @@ class LocomotionData:
         
         # Validate variable names
         self._validate_variable_names()
+
+    def _apply_legacy_naming_aliases(self) -> None:
+        """
+        Rename legacy GRF columns (vertical_grf_*, anterior_grf_*, lateral_grf_*)
+        to the new <signal_type>_<axis>_<side>_<unit> schema in-place.
+        """
+        renamed = {}
+        for old, new in LEGACY_GRF_ALIASES.items():
+            if old in self.df.columns and new not in self.df.columns:
+                renamed[old] = new
+        if renamed:
+            warnings.warn(
+                "Detected legacy GRF column names; they were renamed to the new "
+                "grf_<axis>_<side>_<unit> schema in-memory. "
+                + "; ".join(f"{o}→{n}" for o, n in renamed.items()),
+                UserWarning,
+            )
+            self.df = self.df.rename(columns=renamed)
     
     def _load_data_with_validation(self, file_type: str) -> pd.DataFrame:
         """Load data with format detection and validation."""
@@ -282,9 +324,10 @@ class LocomotionData:
                        'cycle', 'step', 'leading_leg_step'}
         
         # Identify biomechanical features - only standard naming accepted
+        # Include CoP columns as biomechanical features
         self.features = [col for col in self.df.columns 
                         if col not in exclude_cols and 
-                        any(x in col for x in ['angle', 'velocity', 'moment', 'power', 'grf'])]
+                        any(x in col for x in ['angle', 'velocity', 'moment', 'power', 'grf', 'cop'])]
         
         # Create identity mapping for standard features
         self.feature_mappings = {feature: feature for feature in self.features}
@@ -333,7 +376,8 @@ class LocomotionData:
             variable_name in SEGMENT_ANGLE_FEATURES or
             variable_name in SEGMENT_VELOCITY_FEATURES or
             variable_name in GRF_FEATURES or
-            variable_name in GRF_FEATURES_NORMALIZED):
+            variable_name in GRF_FEATURES_NORMALIZED or
+            variable_name in COP_FEATURES):
             return True
         
         # Otherwise, check against standard naming convention

@@ -1808,9 +1808,9 @@ class InteractiveValidationTuner:
         
         # Ground Reaction Forces - from standard_spec.md - IPSI ONLY - Weight normalized
         grf_vars = [
-            'vertical_grf_ipsi_BW',
-            'anterior_grf_ipsi_BW', 
-            'lateral_grf_ipsi_BW'
+            'grf_vertical_ipsi_BW',
+            'grf_anterior_ipsi_BW',
+            'grf_lateral_ipsi_BW'
         ]
         grf_labels = [
             'Vertical GRF (BW, Ipsi)',

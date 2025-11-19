@@ -816,6 +816,17 @@ function trial_data = load_trial_data(mode_path, trial_name)
             end
         end
         
+        % Load marker data if available
+        markers_file = fullfile(mode_path, 'markers', trial_name);
+        if exist(markers_file, 'file')
+            temp = load(markers_file);
+            if isfield(temp, 'data') && istable(temp.data)
+                trial_data.markers = temp.data;
+            else
+                trial_data.markers = temp;
+            end
+        end
+        
     catch ME
         warning('Failed to load trial %s: %s', trial_name, ME.message);
         trial_data = [];
@@ -931,6 +942,14 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         stride_data = struct();
         stride_data.phase_ipsi = target_pct;
         stride_data.phase_ipsi_dot = repmat(phase_ipsi_dot_value, NUM_POINTS, 1);  % Constant for all 150 points
+        
+        nan_vector = NaN(NUM_POINTS, 1);
+        stride_data.cop_anterior_ipsi_m = nan_vector;
+        stride_data.cop_anterior_contra_m = nan_vector;
+        stride_data.cop_lateral_ipsi_m = nan_vector;
+        stride_data.cop_lateral_contra_m = nan_vector;
+        stride_data.cop_vertical_ipsi_m = nan_vector;
+        stride_data.cop_vertical_contra_m = nan_vector;
         
         % Process kinematics (angles in degrees, convert to radians)
         deg2rad = pi/180;
@@ -1208,6 +1227,57 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
             treadmill_task = contains(task_info, 'treadmill:true');
             stair_ramp_task = contains(task, 'stair') || contains(task, 'incline') || contains(task, 'decline');
             
+            has_markers = isfield(trial_data, 'markers') && istable(trial_data.markers) && ...
+                any(strcmp(trial_data.markers.Properties.VariableNames, 'Header'));
+            ankle_lateral_ipsi_m = nan_vector;
+            ankle_vertical_ipsi_m = nan_vector;
+            ankle_anterior_ipsi_m = nan_vector;
+            ankle_lateral_contra_m = nan_vector;
+            ankle_vertical_contra_m = nan_vector;
+            ankle_anterior_contra_m = nan_vector;
+            if has_markers
+                marker_time = trial_data.markers.Header;
+                marker_mask = (marker_time >= stride_start_time) & (marker_time <= stride_end_time);
+                if sum(marker_mask) >= 2
+                    marker_time_window = marker_time(marker_mask);
+                    marker_target_times = linspace(stride_start_time, stride_end_time, NUM_POINTS);
+                    if strcmp(leg_side, 'right')
+                        ipsi_ankle_x_col = 'R_Ankle_Lat_x';
+                        ipsi_ankle_y_col = 'R_Ankle_Lat_y';
+                        ipsi_ankle_z_col = 'R_Ankle_Lat_z';
+                        contra_ankle_x_col = 'L_Ankle_Lat_x';
+                        contra_ankle_y_col = 'L_Ankle_Lat_y';
+                        contra_ankle_z_col = 'L_Ankle_Lat_z';
+                    else
+                        ipsi_ankle_x_col = 'L_Ankle_Lat_x';
+                        ipsi_ankle_y_col = 'L_Ankle_Lat_y';
+                        ipsi_ankle_z_col = 'L_Ankle_Lat_z';
+                        contra_ankle_x_col = 'R_Ankle_Lat_x';
+                        contra_ankle_y_col = 'R_Ankle_Lat_y';
+                        contra_ankle_z_col = 'R_Ankle_Lat_z';
+                    end
+                    
+                    marker_vars = trial_data.markers.Properties.VariableNames;
+                    if any(strcmp(marker_vars, ipsi_ankle_x_col)) && any(strcmp(marker_vars, ipsi_ankle_y_col)) && any(strcmp(marker_vars, ipsi_ankle_z_col))
+                        ankle_x = trial_data.markers.(ipsi_ankle_x_col)(marker_mask);
+                        ankle_y = trial_data.markers.(ipsi_ankle_y_col)(marker_mask);
+                        ankle_z = trial_data.markers.(ipsi_ankle_z_col)(marker_mask);
+                        ankle_lateral_ipsi_m = interp1(marker_time_window, ankle_x, marker_target_times, 'linear', 'extrap')'/1000;
+                        ankle_vertical_ipsi_m = interp1(marker_time_window, ankle_y, marker_target_times, 'linear', 'extrap')'/1000;
+                        ankle_anterior_ipsi_m = interp1(marker_time_window, ankle_z, marker_target_times, 'linear', 'extrap')'/1000;
+                    end
+                    
+                    if any(strcmp(marker_vars, contra_ankle_x_col)) && any(strcmp(marker_vars, contra_ankle_y_col)) && any(strcmp(marker_vars, contra_ankle_z_col))
+                        ankle_x = trial_data.markers.(contra_ankle_x_col)(marker_mask);
+                        ankle_y = trial_data.markers.(contra_ankle_y_col)(marker_mask);
+                        ankle_z = trial_data.markers.(contra_ankle_z_col)(marker_mask);
+                        ankle_lateral_contra_m = interp1(marker_time_window, ankle_x, marker_target_times, 'linear', 'extrap')'/1000;
+                        ankle_vertical_contra_m = interp1(marker_time_window, ankle_y, marker_target_times, 'linear', 'extrap')'/1000;
+                        ankle_anterior_contra_m = interp1(marker_time_window, ankle_z, marker_target_times, 'linear', 'extrap')'/1000;
+                    end
+                end
+            end
+            
             if treadmill_task
                 % For treadmill: use dedicated left/right channels
                 % CORRECTED coordinate mapping based on data analysis
@@ -1409,6 +1479,75 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
             else
                 stride_data.lateral_grf_contra_BW = NaN(NUM_POINTS, 1);
             end
+            
+            % Center of pressure in ankle frame (meters)
+            if treadmill_task && has_markers
+                if strcmp(leg_side, 'right')
+                    ipsi_prefix = 'Treadmill_R';
+                    contra_prefix = 'Treadmill_L';
+                else
+                    ipsi_prefix = 'Treadmill_L';
+                    contra_prefix = 'Treadmill_R';
+                end
+                
+                ipsi_px = [ipsi_prefix '_px'];
+                ipsi_py = [ipsi_prefix '_py'];
+                ipsi_pz = [ipsi_prefix '_pz'];
+                contra_px = [contra_prefix '_px'];
+                contra_py = [contra_prefix '_py'];
+                contra_pz = [contra_prefix '_pz'];
+                
+                if any(strcmp(trial_data.fp.Properties.VariableNames, ipsi_px)) && ...
+                   any(strcmp(trial_data.fp.Properties.VariableNames, ipsi_py)) && ...
+                   any(strcmp(trial_data.fp.Properties.VariableNames, ipsi_pz))
+                    cop_lat = interp1(fp_time, trial_data.fp.(ipsi_px), target_times, 'linear', NaN);
+                    cop_vert = interp1(fp_time, trial_data.fp.(ipsi_py), target_times, 'linear', NaN);
+                    cop_ant = interp1(fp_time, trial_data.fp.(ipsi_pz), target_times, 'linear', NaN);
+                    stride_data.cop_lateral_ipsi_m = cop_lat - ankle_lateral_ipsi_m;
+                    stride_data.cop_vertical_ipsi_m = cop_vert - ankle_vertical_ipsi_m;
+                    stride_data.cop_anterior_ipsi_m = cop_ant - ankle_anterior_ipsi_m;
+                end
+                
+                if any(strcmp(trial_data.fp.Properties.VariableNames, contra_px)) && ...
+                   any(strcmp(trial_data.fp.Properties.VariableNames, contra_py)) && ...
+                   any(strcmp(trial_data.fp.Properties.VariableNames, contra_pz))
+                    cop_lat = interp1(fp_time, trial_data.fp.(contra_px), target_times, 'linear', NaN);
+                    cop_vert = interp1(fp_time, trial_data.fp.(contra_py), target_times, 'linear', NaN);
+                    cop_ant = interp1(fp_time, trial_data.fp.(contra_pz), target_times, 'linear', NaN);
+                    stride_data.cop_lateral_contra_m = cop_lat - ankle_lateral_contra_m;
+                    stride_data.cop_vertical_contra_m = cop_vert - ankle_vertical_contra_m;
+                    stride_data.cop_anterior_contra_m = cop_ant - ankle_anterior_contra_m;
+                end
+            elseif stair_ramp_task && has_markers && exist('best_fp_ipsi', 'var') && ~isempty(best_fp_ipsi)
+                ipsi_px = [best_fp_ipsi '_px'];
+                ipsi_py = [best_fp_ipsi '_py'];
+                ipsi_pz = [best_fp_ipsi '_pz'];
+                if any(strcmp(trial_data.fp.Properties.VariableNames, ipsi_px)) && ...
+                   any(strcmp(trial_data.fp.Properties.VariableNames, ipsi_py)) && ...
+                   any(strcmp(trial_data.fp.Properties.VariableNames, ipsi_pz))
+                    cop_lat = interp1(fp_time, trial_data.fp.(ipsi_px), target_times, 'linear', NaN);
+                    cop_vert = interp1(fp_time, trial_data.fp.(ipsi_py), target_times, 'linear', NaN);
+                    cop_ant = interp1(fp_time, trial_data.fp.(ipsi_pz), target_times, 'linear', NaN);
+                    stride_data.cop_lateral_ipsi_m = cop_lat - ankle_lateral_ipsi_m;
+                    stride_data.cop_vertical_ipsi_m = cop_vert - ankle_vertical_ipsi_m;
+                    stride_data.cop_anterior_ipsi_m = cop_ant - ankle_anterior_ipsi_m;
+                end
+            end
+            
+            % Zero COP when GRF is below contact threshold
+            contact_threshold_BW = 0.2;
+            if ~all(isnan(stride_data.vertical_grf_ipsi_BW))
+                low_force_mask = stride_data.vertical_grf_ipsi_BW < contact_threshold_BW;
+                stride_data.cop_anterior_ipsi_m(low_force_mask) = 0;
+                stride_data.cop_lateral_ipsi_m(low_force_mask) = 0;
+                stride_data.cop_vertical_ipsi_m(low_force_mask) = 0;
+            end
+            if ~all(isnan(stride_data.vertical_grf_contra_BW))
+                low_force_mask = stride_data.vertical_grf_contra_BW < contact_threshold_BW;
+                stride_data.cop_anterior_contra_m(low_force_mask) = 0;
+                stride_data.cop_lateral_contra_m(low_force_mask) = 0;
+                stride_data.cop_vertical_contra_m(low_force_mask) = 0;
+            end
         else
             % No force plate data available - fill with NaN
             stride_data.vertical_grf_ipsi_BW = NaN(NUM_POINTS, 1);
@@ -1467,6 +1606,18 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 temp_lat = stride_data.lateral_grf_ipsi_BW;
                 stride_data.lateral_grf_ipsi_BW = stride_data.lateral_grf_contra_BW;
                 stride_data.lateral_grf_contra_BW = temp_lat;
+                
+                temp_cop_ant = stride_data.cop_anterior_ipsi_m;
+                stride_data.cop_anterior_ipsi_m = stride_data.cop_anterior_contra_m;
+                stride_data.cop_anterior_contra_m = temp_cop_ant;
+                
+                temp_cop_lat = stride_data.cop_lateral_ipsi_m;
+                stride_data.cop_lateral_ipsi_m = stride_data.cop_lateral_contra_m;
+                stride_data.cop_lateral_contra_m = temp_cop_lat;
+                
+                temp_cop_vert = stride_data.cop_vertical_ipsi_m;
+                stride_data.cop_vertical_ipsi_m = stride_data.cop_vertical_contra_m;
+                stride_data.cop_vertical_contra_m = temp_cop_vert;
             end
         end
         
@@ -1512,14 +1663,22 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         row.hip_flexion_moment_contra_Nm_kg = {stride_data.hip_flexion_moment_contra_Nm_kg};
         
         % Ipsilateral Ground Reaction Forces
-        row.vertical_grf_ipsi_BW = {stride_data.vertical_grf_ipsi_BW};
-        row.anterior_grf_ipsi_BW = {stride_data.anterior_grf_ipsi_BW};
-        row.lateral_grf_ipsi_BW = {stride_data.lateral_grf_ipsi_BW};
+        row.grf_vertical_ipsi_BW = {stride_data.vertical_grf_ipsi_BW};
+        row.grf_anterior_ipsi_BW = {stride_data.anterior_grf_ipsi_BW};
+        row.grf_lateral_ipsi_BW = {stride_data.lateral_grf_ipsi_BW};
         
         % Contralateral Ground Reaction Forces
-        row.vertical_grf_contra_BW = {stride_data.vertical_grf_contra_BW};
-        row.anterior_grf_contra_BW = {stride_data.anterior_grf_contra_BW};
-        row.lateral_grf_contra_BW = {stride_data.lateral_grf_contra_BW};
+        row.grf_vertical_contra_BW = {stride_data.vertical_grf_contra_BW};
+        row.grf_anterior_contra_BW = {stride_data.anterior_grf_contra_BW};
+        row.grf_lateral_contra_BW = {stride_data.lateral_grf_contra_BW};
+        
+        % Center of pressure (ankle frame, meters)
+        row.cop_anterior_ipsi_m = {stride_data.cop_anterior_ipsi_m};
+        row.cop_anterior_contra_m = {stride_data.cop_anterior_contra_m};
+        row.cop_lateral_ipsi_m = {stride_data.cop_lateral_ipsi_m};
+        row.cop_lateral_contra_m = {stride_data.cop_lateral_contra_m};
+        row.cop_vertical_ipsi_m = {stride_data.cop_vertical_ipsi_m};
+        row.cop_vertical_contra_m = {stride_data.cop_vertical_contra_m};
         
         % Segment angles (pelvis and trunk are shared)
         row.pelvis_sagittal_angle_rad = {stride_data.pelvis_sagittal_angle_rad};
@@ -1637,14 +1796,22 @@ function expanded = expand_table_for_parquet(compact_table)
     hip_flexion_moment_contra_Nm_kg = zeros(total_rows, 1);
     
     % Ipsilateral Ground Reaction Forces
-    vertical_grf_ipsi_BW = zeros(total_rows, 1);
-    anterior_grf_ipsi_BW = zeros(total_rows, 1);
-    lateral_grf_ipsi_BW = zeros(total_rows, 1);
+    grf_vertical_ipsi_BW = zeros(total_rows, 1);
+    grf_anterior_ipsi_BW = zeros(total_rows, 1);
+    grf_lateral_ipsi_BW = zeros(total_rows, 1);
     
     % Contralateral Ground Reaction Forces
-    vertical_grf_contra_BW = zeros(total_rows, 1);
-    anterior_grf_contra_BW = zeros(total_rows, 1);
-    lateral_grf_contra_BW = zeros(total_rows, 1);
+    grf_vertical_contra_BW = zeros(total_rows, 1);
+    grf_anterior_contra_BW = zeros(total_rows, 1);
+    grf_lateral_contra_BW = zeros(total_rows, 1);
+    
+    % Center of pressure (ankle frame, meters)
+    cop_anterior_ipsi_m = zeros(total_rows, 1);
+    cop_lateral_ipsi_m = zeros(total_rows, 1);
+    cop_vertical_ipsi_m = zeros(total_rows, 1);
+    cop_anterior_contra_m = zeros(total_rows, 1);
+    cop_lateral_contra_m = zeros(total_rows, 1);
+    cop_vertical_contra_m = zeros(total_rows, 1);
     
     % Segment angles (shared)
     pelvis_sagittal_angle_rad = zeros(total_rows, 1);
@@ -1727,14 +1894,22 @@ function expanded = expand_table_for_parquet(compact_table)
             hip_flexion_moment_contra_Nm_kg(row_idx) = stride.hip_flexion_moment_contra_Nm_kg{1}(p);
             
             % Ipsilateral Ground Reaction Forces
-            vertical_grf_ipsi_BW(row_idx) = stride.vertical_grf_ipsi_BW{1}(p);
-            anterior_grf_ipsi_BW(row_idx) = stride.anterior_grf_ipsi_BW{1}(p);
-            lateral_grf_ipsi_BW(row_idx) = stride.lateral_grf_ipsi_BW{1}(p);
+            grf_vertical_ipsi_BW(row_idx) = stride.grf_vertical_ipsi_BW{1}(p);
+            grf_anterior_ipsi_BW(row_idx) = stride.grf_anterior_ipsi_BW{1}(p);
+            grf_lateral_ipsi_BW(row_idx) = stride.grf_lateral_ipsi_BW{1}(p);
             
             % Contralateral Ground Reaction Forces
-            vertical_grf_contra_BW(row_idx) = stride.vertical_grf_contra_BW{1}(p);
-            anterior_grf_contra_BW(row_idx) = stride.anterior_grf_contra_BW{1}(p);
-            lateral_grf_contra_BW(row_idx) = stride.lateral_grf_contra_BW{1}(p);
+            grf_vertical_contra_BW(row_idx) = stride.grf_vertical_contra_BW{1}(p);
+            grf_anterior_contra_BW(row_idx) = stride.grf_anterior_contra_BW{1}(p);
+            grf_lateral_contra_BW(row_idx) = stride.grf_lateral_contra_BW{1}(p);
+            
+            % Center of pressure (ankle frame, meters)
+            cop_anterior_ipsi_m(row_idx) = stride.cop_anterior_ipsi_m{1}(p);
+            cop_lateral_ipsi_m(row_idx) = stride.cop_lateral_ipsi_m{1}(p);
+            cop_vertical_ipsi_m(row_idx) = stride.cop_vertical_ipsi_m{1}(p);
+            cop_anterior_contra_m(row_idx) = stride.cop_anterior_contra_m{1}(p);
+            cop_lateral_contra_m(row_idx) = stride.cop_lateral_contra_m{1}(p);
+            cop_vertical_contra_m(row_idx) = stride.cop_vertical_contra_m{1}(p);
             
             % Shared segment angles
             pelvis_sagittal_angle_rad(row_idx) = stride.pelvis_sagittal_angle_rad{1}(p);
@@ -1777,8 +1952,10 @@ function expanded = expand_table_for_parquet(compact_table)
         ankle_dorsiflexion_velocity_contra_rad_s, knee_flexion_velocity_contra_rad_s, hip_flexion_velocity_contra_rad_s, ...
         ankle_dorsiflexion_moment_ipsi_Nm_kg, knee_flexion_moment_ipsi_Nm_kg, hip_flexion_moment_ipsi_Nm_kg, ...
         ankle_dorsiflexion_moment_contra_Nm_kg, knee_flexion_moment_contra_Nm_kg, hip_flexion_moment_contra_Nm_kg, ...
-        vertical_grf_ipsi_BW, anterior_grf_ipsi_BW, lateral_grf_ipsi_BW, ...
-        vertical_grf_contra_BW, anterior_grf_contra_BW, lateral_grf_contra_BW, ...
+        grf_vertical_ipsi_BW, grf_anterior_ipsi_BW, grf_lateral_ipsi_BW, ...
+        grf_vertical_contra_BW, grf_anterior_contra_BW, grf_lateral_contra_BW, ...
+        cop_anterior_ipsi_m, cop_lateral_ipsi_m, cop_vertical_ipsi_m, ...
+        cop_anterior_contra_m, cop_lateral_contra_m, cop_vertical_contra_m, ...
         pelvis_sagittal_angle_rad, trunk_sagittal_angle_rad, ...
         pelvis_sagittal_velocity_rad_s, trunk_sagittal_velocity_rad_s, ...
         thigh_sagittal_angle_ipsi_rad, shank_sagittal_angle_ipsi_rad, foot_sagittal_angle_ipsi_rad, ...

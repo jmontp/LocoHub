@@ -33,25 +33,27 @@ download_clean_url: https://www.dropbox.com/scl/fi/typd1b24lfks6unjdiagf/umich_2
 download_dirty_url: https://www.dropbox.com/scl/fi/21mbjl4g148idosnl5li1/umich_2021_phase_dirty.parquet?rlkey=jbcy3l53wgapuyc2e3k2pgbn6&st=tuctu1y2&raw=1
 citation: https://www.nature.com/articles/s41597-021-01057-9
 date_added: '2025-09-28'
-validation_status: "\u26A0\uFE0F PARTIAL"
-validation_pass_rate: 85.4
+validation_status: "\u274C NEEDS REVIEW"
+validation_pass_rate: 72.4
 total_strides: 14240
-passing_strides: 12158
-quality_display: "\u26A0\uFE0F Partial (85.4%)"
+passing_strides: 10306
+quality_display: "\u274C Needs Review (72.4%)"
 doc_url: https://jmontp.github.io/LocoHub/datasets/um21/
 doc_path: docs/datasets/um21.md
 doc_body_path: docs/datasets/.generated/um21_documentation.md
 validation_doc_url: https://jmontp.github.io/LocoHub/datasets/um21/#validation
 validation_doc_path: docs/datasets/um21.md#validation
 validation_body_path: docs/datasets/.generated/um21_validation.md
-validation_summary: "### Summary\n\n**Status**: \u26A0\uFE0F PARTIAL (85.4% valid)\
-  \  \n**Total Strides**: 14240  \n**Passing Strides**: 12158  \n\n### Task Breakdown\n\
+validation_summary: "### Summary\n\n**Status**: \u274C NEEDS REVIEW (72.4% valid)\
+  \  \n**Total Strides**: 14240  \n**Passing Strides**: 10306  \n\n### Task Breakdown\n\
   \n| Task | Pass Rate | Status |\n|------|-----------|--------|\n| Decline Walking\
   \ | 96.8% | \u2705 |\n| Incline Walking | 88.5% | \u26A0\uFE0F |\n| Level Walking\
-  \ | 86.1% | \u26A0\uFE0F |\n| Run | 69.6% | \u274C |\n| Sit To Stand | 100.0% |\
-  \ \u2705 |\n| Stair Ascent | 93.5% | \u2705 |\n| Stair Descent | 93.1% | \u2705\
-  \ |\n| Stand To Sit | 100.0% | \u2705 |\n| Transition | 52.5% | \u274C |\n\n_Validation\
-  \ ranges snapshot embedded below._\n"
+  \ | 86.1% | \u26A0\uFE0F |\n| Run | 0.6% | \u274C |\n| Sit To Stand | 100.0% | \u2705\
+  \ |\n| Stair Ascent | 93.5% | \u2705 |\n| Stair Descent | 93.1% | \u2705 |\n| Stand\
+  \ To Sit | 100.0% | \u2705 |\n| Transition | 52.5% | \u274C |\n\n_Validation ranges\
+  \ snapshot embedded below._\n\n\u26A0\uFE0F **Note**: Low pass rates may indicate\
+  \ special populations or non-standard protocols. Consider documenting these differences\
+  \ or creating custom validation ranges.\n"
 validation_ranges_file: '[Download validation ranges](./um21_validation_ranges.yaml)'
 validation_ranges_download: docs/datasets/um21_validation_ranges.yaml
 validation_ranges_source: contributor_tools/validation_ranges/default_ranges_v3.yaml
@@ -72,10 +74,10 @@ comparison_tasks:
     total_strides: 1496
     failing_strides: 208
   run:
-    pass_rate: 69.63819470346886
+    pass_rate: 0.5594927265945571
     status: "\u274C"
     total_strides: 2681
-    failing_strides: 814
+    failing_strides: 2666
   sit_to_stand:
     pass_rate: 100.0
     status: "\u2705"
@@ -104,7 +106,7 @@ comparison_tasks:
 feature_task_groups:
 - group: Ground Reaction Forces
   features:
-  - name: anterior_grf_contra_BW
+  - name: grf_anterior_contra_BW
     tasks:
       decline_walking:
         status: complete
@@ -133,7 +135,7 @@ feature_task_groups:
       transition:
         status: complete
         coverage: 100.0
-  - name: anterior_grf_ipsi_BW
+  - name: grf_anterior_ipsi_BW
     tasks:
       decline_walking:
         status: complete
@@ -162,7 +164,7 @@ feature_task_groups:
       transition:
         status: complete
         coverage: 100.0
-  - name: lateral_grf_contra_BW
+  - name: grf_lateral_contra_BW
     tasks:
       decline_walking:
         status: complete
@@ -191,7 +193,7 @@ feature_task_groups:
       transition:
         status: complete
         coverage: 100.0
-  - name: lateral_grf_ipsi_BW
+  - name: grf_lateral_ipsi_BW
     tasks:
       decline_walking:
         status: complete
@@ -220,7 +222,7 @@ feature_task_groups:
       transition:
         status: complete
         coverage: 100.0
-  - name: vertical_grf_contra_BW
+  - name: grf_vertical_contra_BW
     tasks:
       decline_walking:
         status: complete
@@ -249,7 +251,7 @@ feature_task_groups:
       transition:
         status: complete
         coverage: 100.0
-  - name: vertical_grf_ipsi_BW
+  - name: grf_vertical_ipsi_BW
     tasks:
       decline_walking:
         status: complete
@@ -1948,4 +1950,4 @@ feature_task_order:
 - stand_to_sit
 - transition
 feature_task_source: converted_datasets/umich_2021_phase_clean.parquet
-last_dataset_path: converted_datasets/umich_2021_phase_dirty.parquet
+last_dataset_path: converted_datasets/umich_2021_phase_raw.parquet

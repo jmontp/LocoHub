@@ -58,7 +58,7 @@ tasks:
           min: -0.30
           max: 0.95
       50:
-        vertical_grf_ipsi_BW:
+        grf_vertical_ipsi_BW:
           min: 0.0
           max: 1.4
 ```

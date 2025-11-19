@@ -142,7 +142,9 @@ Common keys
 
 ## Variables (What Columns Mean)
 
-Naming pattern: `<joint/segment>_<motion>_<measurement>_<side>_<unit>`
+Naming pattern:
+- Joint/segment variables: `<joint/segment>_<motion>_<measurement>_<side>_<unit>`
+- GRF / CoP variables: `<signal_type>_<axis>_<side>_<unit>` (e.g., `grf_vertical_ipsi_BW`, `cop_anterior_contra_m`)
 
 Key categories
 
@@ -198,9 +200,9 @@ Angular velocities (radians/second)
 
 Ground reaction forces (BW)
 
-- Vertical: `vertical_grf_{ipsi,contra}_BW`
-- Anterior–posterior: `anterior_grf_{ipsi,contra}_BW`
-- Medio–lateral: `lateral_grf_{ipsi,contra}_BW`
+- Vertical: `grf_vertical_{ipsi,contra}_BW`
+- Anterior–posterior: `grf_anterior_{ipsi,contra}_BW`
+- Medio–lateral: `grf_lateral_{ipsi,contra}_BW`
 
 Center of pressure (meters)
 
@@ -224,8 +226,8 @@ OpenSim right‑handed frames. Positive rotations follow right‑hand rule.
 
 ## GRF & CoP Variables
 
-- GRF components: `vertical_grf_*`, `anterior_grf_*`, `lateral_grf_*` with suffix `_BW`.
-- Center of pressure: `cop_anterior_*_m`, `cop_lateral_*_m` (meters), side‑specific where applicable.
+- GRF components: `grf_vertical_*`, `grf_anterior_*`, `grf_lateral_*` with suffix `_BW` or `_N`.
+- Center of pressure: `cop_anterior_*_m`, `cop_lateral_*_m`, `cop_vertical_*_m` (meters), side‑specific where applicable.
 
 ## Naming Rules
 

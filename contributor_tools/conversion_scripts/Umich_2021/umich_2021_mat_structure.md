@@ -166,7 +166,7 @@ Assumed Positive Directions in Raw MAT files (consistent with OpenSim for direct
 - Index 2: Vertical direction. Assumed positive for Downward. Conversion scripts negate this for Upward positive (OpenSim Y+).
 - Index 3: Medial-Lateral (ML) direction. Assumed positive for Leftward. Conversion scripts negate this for Rightward positive (OpenSim Z+).
 
-The conversion scripts map these raw components to the standard's column names (`ap_grf_r_N`, `vertical_grf_r_N`, `ml_grf_r_N`) and apply necessary sign flips to ensure the final Parquet files adhere to an Anterior+, Up+, Right+ (OpenSim XYZ) convention.
+The conversion scripts map these raw components to the standard's column names (`grf_anterior_r_N`, `grf_vertical_r_N`, `grf_lateral_r_N`) and apply necessary sign flips to ensure the final Parquet files adhere to an Anterior+, Up+, Right+ (OpenSim XYZ) convention.
 
 ## Participant Statistics
 

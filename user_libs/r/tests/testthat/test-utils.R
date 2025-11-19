@@ -77,8 +77,8 @@ test_that("Feature summary creation works", {
     "ankle_flexion_velocity_ipsi_rad_s",
     "hip_flexion_moment_ipsi_Nm",
     "knee_adduction_moment_contra_Nm",
-    "vertical_grf_N",
-    "cop_x_m"
+    "grf_vertical_ipsi_N",
+    "cop_anterior_ipsi_m"
   )
   
   summary_df <- createFeatureSummary(features)
@@ -112,6 +112,6 @@ test_that("Feature name formatting works", {
                "Ankle Flexion Velocity Ipsi rad S")
   
   # Test abbreviation handling
-  expect_true(grepl("GRF", formatFeatureName("vertical_grf_N")))
-  expect_true(grepl("COP", formatFeatureName("cop_x_m")))
+  expect_true(grepl("GRF", formatFeatureName("grf_vertical_ipsi_N")))
+  expect_true(grepl("COP", formatFeatureName("cop_anterior_ipsi_m")))
 }

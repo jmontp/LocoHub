@@ -163,18 +163,18 @@ standard_column_names = {
     'toes_l_vel_Z':'toes_vel_s_l',
     'toes_l_vel_X':'toes_vel_t_l',
 
-    #GRF - Ground Reaction Forces (keeping left/right for time-indexed data)
+    # GRF - Ground Reaction Forces (keeping left/right for time-indexed data)
     # From z*x=y coordinate to x*y=z coordinate system
-    # Using standardized directional naming: anterior/lateral/vertical
-    "RForceX": "anterior_grf_r_N",
-    "RForceY_Vertical": "vertical_grf_r_N", 
-    "RForceZ": "lateral_grf_r_N",
+    # Using standardized naming: grf_<axis>_<side>_<unit>
+    "RForceX": "grf_anterior_r_N",
+    "RForceY_Vertical": "grf_vertical_r_N",
+    "RForceZ": "grf_lateral_r_N",
     "RCOPX": "cop_anterior_r_m",
     "RCOPY_Vertical": "cop_vertical_r_m",
     "RCOPZ": "cop_lateral_r_m",
-    "LForceX": "anterior_grf_l_N",
-    "LForceY_Vertical": "vertical_grf_l_N",
-    "LForceZ": "lateral_grf_l_N",
+    "LForceX": "grf_anterior_l_N",
+    "LForceY_Vertical": "grf_vertical_l_N",
+    "LForceZ": "grf_lateral_l_N",
     "LCOPX": "cop_anterior_l_m",
     "LCOPY_Vertical": "cop_vertical_l_m",
     "LCOPZ": "cop_lateral_l_m",
@@ -190,10 +190,10 @@ cols_to_flip_signs = [
     "cop_anterior_l_m",
     "cop_lateral_r_m",
     "cop_lateral_l_m",
-    "anterior_grf_r_N",
-    "anterior_grf_l_N",
-    "lateral_grf_r_N",
-    "lateral_grf_l_N"
+    "grf_anterior_r_N",
+    "grf_anterior_l_N",
+    "grf_lateral_r_N",
+    "grf_lateral_l_N"
 ]
 import re
 def convert_dataset_to_pandas():

@@ -61,6 +61,19 @@ mkdocs serve
 - `python contributor_tools/quick_validation_check.py <dataset.parquet>` runs the fast validator pass
 - Validation ranges are stored under `contributor_tools/validation_ranges/`
 
+## GRF/COP Naming Migration
+
+Ground reaction force and center-of-pressure columns now follow the schema
+`<signal_type>_<axis>_<side>_<unit>` (for example `grf_vertical_ipsi_BW`,
+`cop_anterior_contra_m`). Older datasets that used `vertical_grf_*`,
+`anterior_grf_*`, and `lateral_grf_*` still load through `LocomotionData`
+and the validation engine via internal aliases, but code that accesses
+columns directly should migrate. To rewrite Parquet files on disk, use:
+
+```bash
+python contributor_tools/migrate_grf_cop_naming.py converted_datasets/*.parquet
+```
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

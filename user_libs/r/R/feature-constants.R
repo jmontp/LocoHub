@@ -68,14 +68,18 @@ MOMENT_FEATURES_NORMALIZED <- c(
 #' @description Standard ground reaction force measurements
 #' @export
 GRF_FEATURES <- c(
-  'vertical_grf_N', 'ap_grf_N', 'ml_grf_N'
+  'grf_vertical_ipsi_N', 'grf_vertical_contra_N',
+  'grf_anterior_ipsi_N', 'grf_anterior_contra_N',
+  'grf_lateral_ipsi_N', 'grf_lateral_contra_N'
 )
 
 #' @title Center of Pressure Features
 #' @description Standard center of pressure measurements
 #' @export
 COP_FEATURES <- c(
-  'cop_x_m', 'cop_y_m', 'cop_z_m'
+  'cop_anterior_ipsi_m', 'cop_anterior_contra_m',
+  'cop_lateral_ipsi_m', 'cop_lateral_contra_m',
+  'cop_vertical_ipsi_m', 'cop_vertical_contra_m'
 )
 
 #' @title All Kinetic Features

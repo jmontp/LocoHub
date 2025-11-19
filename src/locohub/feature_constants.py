@@ -88,20 +88,24 @@ MOMENT_FEATURES_NORMALIZED = [
 ]
 
 # Ground reaction force features (raw)
+# Naming: <signal_type>_<axis>_<leg_side>_<unit>
+# Example: grf_vertical_ipsi_N
 GRF_FEATURES = [
-    'vertical_grf_ipsi_N', 'vertical_grf_contra_N',
-    'anterior_grf_ipsi_N', 'anterior_grf_contra_N',  
-    'lateral_grf_ipsi_N', 'lateral_grf_contra_N'
+    'grf_vertical_ipsi_N', 'grf_vertical_contra_N',
+    'grf_anterior_ipsi_N', 'grf_anterior_contra_N',
+    'grf_lateral_ipsi_N', 'grf_lateral_contra_N'
 ]
 
 # Ground reaction force features (weight-normalized)
+# Example: grf_vertical_ipsi_BW
 GRF_FEATURES_NORMALIZED = [
-    'vertical_grf_ipsi_BW', 'vertical_grf_contra_BW',
-    'anterior_grf_ipsi_BW', 'anterior_grf_contra_BW',
-    'lateral_grf_ipsi_BW', 'lateral_grf_contra_BW'
+    'grf_vertical_ipsi_BW', 'grf_vertical_contra_BW',
+    'grf_anterior_ipsi_BW', 'grf_anterior_contra_BW',
+    'grf_lateral_ipsi_BW', 'grf_lateral_contra_BW'
 ]
 
-# Center of pressure features  
+# Center of pressure features
+# Naming already follows: <signal_type>_<axis>_<leg_side>_<unit>
 COP_FEATURES = [
     'cop_anterior_ipsi_m', 'cop_anterior_contra_m',
     'cop_lateral_ipsi_m', 'cop_lateral_contra_m',
@@ -212,6 +216,25 @@ def get_feature_list(mode: str) -> list:
         raise ValueError(f"Unsupported mode: {mode}. Use 'kinematic', 'kinetic', or 'velocity'")
 
 
+# Legacy GRF naming aliases (old -> new) for backward compatibility
+LEGACY_GRF_ALIASES: Dict[str, str] = {
+    # Raw GRF (N)
+    'vertical_grf_ipsi_N': 'grf_vertical_ipsi_N',
+    'vertical_grf_contra_N': 'grf_vertical_contra_N',
+    'anterior_grf_ipsi_N': 'grf_anterior_ipsi_N',
+    'anterior_grf_contra_N': 'grf_anterior_contra_N',
+    'lateral_grf_ipsi_N': 'grf_lateral_ipsi_N',
+    'lateral_grf_contra_N': 'grf_lateral_contra_N',
+    # Normalized GRF (BW)
+    'vertical_grf_ipsi_BW': 'grf_vertical_ipsi_BW',
+    'vertical_grf_contra_BW': 'grf_vertical_contra_BW',
+    'anterior_grf_ipsi_BW': 'grf_anterior_ipsi_BW',
+    'anterior_grf_contra_BW': 'grf_anterior_contra_BW',
+    'lateral_grf_ipsi_BW': 'grf_lateral_ipsi_BW',
+    'lateral_grf_contra_BW': 'grf_lateral_contra_BW',
+}
+
+
 def get_valid_tasks(category: str = None) -> list:
     """Expose canonical task names via the user library API."""
 
@@ -273,12 +296,12 @@ def get_sagittal_features() -> list:
         ('ankle_dorsiflexion_moment_ipsi_Nm_kg', 'Ankle Dorsiflexion Moment (Ipsi)'),
         ('ankle_dorsiflexion_moment_contra_Nm_kg', 'Ankle Dorsiflexion Moment (Contra)'),
         # Ground reaction forces (weight-normalized)
-        ('vertical_grf_ipsi_BW', 'Vertical GRF (Ipsi)'),
-        ('vertical_grf_contra_BW', 'Vertical GRF (Contra)'),
-        ('anterior_grf_ipsi_BW', 'Anterior GRF (Ipsi)'),
-        ('anterior_grf_contra_BW', 'Anterior GRF (Contra)'),
-        ('lateral_grf_ipsi_BW', 'Lateral GRF (Ipsi)'),
-        ('lateral_grf_contra_BW', 'Lateral GRF (Contra)'),
+        ('grf_vertical_ipsi_BW', 'Vertical GRF (Ipsi)'),
+        ('grf_vertical_contra_BW', 'Vertical GRF (Contra)'),
+        ('grf_anterior_ipsi_BW', 'Anterior GRF (Ipsi)'),
+        ('grf_anterior_contra_BW', 'Anterior GRF (Contra)'),
+        ('grf_lateral_ipsi_BW', 'Lateral GRF (Ipsi)'),
+        ('grf_lateral_contra_BW', 'Lateral GRF (Contra)'),
         # Center of pressure
         ('cop_anterior_ipsi_m', 'COP Anterior (Ipsi)'),
         ('cop_anterior_contra_m', 'COP Anterior (Contra)'),
