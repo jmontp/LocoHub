@@ -345,10 +345,22 @@ def generate_reference_figure(output_path: str) -> None:
         color="tab:orange",
     )
 
-    # Global vertical reference lines at contralateral joints
+    # Global reference lines at contralateral joints
+    # Hip and knee use vertical (global y) references.
     _draw_vertical_reference(ax, hip_contra, length=0.6)
     _draw_vertical_reference(ax, knee_contra, length=0.6)
-    _draw_vertical_reference(ax, ankle_contra, length=0.6)
+    # For the foot global angle, use a horizontal dashed line (global +x)
+    # extending to the right of the ankle so that the reference for φ_foot
+    # is rotated 90° from vertical and clearly visible.
+    foot_ref_len = 0.4
+    ax.plot(
+        [ankle_contra[0], ankle_contra[0] + foot_ref_len],
+        [ankle_contra[1], ankle_contra[1]],
+        linestyle="--",
+        color="gray",
+        linewidth=1.0,
+        alpha=0.9,
+    )
 
     # Angle arcs for ipsilateral joint definitions (θ_*) and global angles (φ_*).
     vertical_down = np.array([0.0, -1.0])
@@ -435,9 +447,14 @@ def generate_reference_figure(output_path: str) -> None:
     # Ankle joint angle θ_ankle: between shank-based reference (previous link + 90°)
     # and the foot segment.
     shank_from_ankle_ipsi = knee_ipsi - ankle_ipsi  # ankle -> knee
-    # Rotate shank vector by +90° and then flip 180° so the dashed reference
-    # lies on the opposite side of the joint from the current orientation.
-    shank_ref = -np.array([-shank_from_ankle_ipsi[1], shank_from_ankle_ipsi[0]])
+    # Rotate shank vector by -90° so the dashed ankle-reference line is
+    # shifted by 90° relative to the shank direction for the foot angle.
+    shank_ref = np.array(
+        [
+            shank_from_ankle_ipsi[1],
+            -shank_from_ankle_ipsi[0],
+        ]
+    )
     foot_vec_ipsi = foot_ipsi - ankle_ipsi
     _draw_segment_reference(
         ax,
@@ -455,6 +472,42 @@ def generate_reference_figure(output_path: str) -> None:
         color="tab:blue",
     )
     _angle_annotation(ax, ankle_ipsi, r"$\theta_{\mathrm{ankle}}$", (0.40, -0.30))
+
+    # Center of pressure (CoP) marker on ipsilateral foot (red cross),
+    # positioned slightly proximal toward the ankle.
+    cop_alpha = 0.7  # 0 = at ankle, 1 = at foot tip
+    cop_pos = ankle_ipsi + cop_alpha * (foot_ipsi - ankle_ipsi)
+    cop_size = 0.06
+    ax.plot(
+        [cop_pos[0] - cop_size, cop_pos[0] + cop_size],
+        [cop_pos[1] - cop_size, cop_pos[1] + cop_size],
+        color="red",
+        linewidth=1.5,
+    )
+    ax.plot(
+        [cop_pos[0] - cop_size, cop_pos[0] + cop_size],
+        [cop_pos[1] + cop_size, cop_pos[1] - cop_size],
+        color="red",
+        linewidth=1.5,
+    )
+
+    # Ground reaction force (GRF) vector shown as a purple arrow originating
+    # at the CoP and pointing mostly toward the hip (combined vertical + shear).
+    grf_dir = hip_ipsi - cop_pos
+    grf_norm = np.linalg.norm(grf_dir) + 1e-9
+    grf_dir = grf_dir / grf_norm
+    grf_length = 0.8
+    ax.arrow(
+        cop_pos[0],
+        cop_pos[1],
+        grf_length * grf_dir[0],
+        grf_length * grf_dir[1],
+        head_width=0.06,
+        head_length=0.10,
+        length_includes_head=True,
+        color="purple",
+        linewidth=2.0,
+    )
 
     # Global-angle arcs (φ_*) on contralateral leg versus vertical.
     # Thigh global angle at hip: vertical down vs thigh vector.
@@ -490,7 +543,8 @@ def generate_reference_figure(output_path: str) -> None:
     _draw_angle_arc(
         ax,
         center=ankle_contra,
-        start_vec=vertical_down,
+        # Start from global +x (aligned with the horizontal dashed reference)
+        start_vec=np.array([1.0, 0.0]),
         end_vec=foot_vec_contra,
         radius=0.22,
         color="tab:orange",
@@ -545,6 +599,22 @@ def generate_reference_figure(output_path: str) -> None:
             color="tab:orange",
             linewidth=1.5,
             label=r"segment / torso angles $\phi_*$ (global)",
+        ),
+        plt.Line2D(
+            [0],
+            [0],
+            color="red",
+            linewidth=1.5,
+            marker="x",
+            markersize=6,
+            label="center of pressure (CoP, ankle frame)",
+        ),
+        plt.Line2D(
+            [0],
+            [0],
+            color="purple",
+            linewidth=2.0,
+            label="ground reaction force (GRF, global frame)",
         ),
     ]
     ax.legend(
