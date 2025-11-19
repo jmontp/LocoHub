@@ -74,6 +74,14 @@ def _draw_axes(
         va="top",
     )
 
+    # Indicate z-axis (out of the page) at the world origin using the standard
+    # circle-with-dot notation.
+    z_circle_radius = 0.08
+    z_circle = plt.Circle((x0, y0), z_circle_radius, fill=False, color="black", linewidth=1.2)
+    ax.add_patch(z_circle)
+    ax.scatter([x0], [y0], color="black", s=10, zorder=6)
+    ax.text(x0 + 0.12, y0 - 0.10, "z", fontsize=11, va="center", ha="left")
+
 
 def _draw_leg(
     ax: plt.Axes,
@@ -266,15 +274,17 @@ def generate_reference_figure(output_path: str) -> None:
     foot_len = 0.5
 
     # Nominal pose (degrees) for illustration
-    base_hip_angle_deg = 20.0
-    # Ipsilateral leg tilted forward, contralateral tilted backward
-    hip_angle_ipsi_deg = base_hip_angle_deg
-    hip_angle_contra_deg = -base_hip_angle_deg
-    knee_angle_deg = 40.0
-    # Use a larger dorsiflexion angle for the ipsilateral foot so that
-    # the ankle joint angle θ_ankle is visually apparent.
+    # Ipsilateral leg: more hip flexion than knee flexion so that the shank
+    # has a positive global angle (leans forward).
+    hip_angle_ipsi_deg = 40.0
+    # Contralateral leg: larger hip extension so that the joint angle at the
+    # hip is more apparent relative to the torso reference.
+    hip_angle_contra_deg = -35.0
+    knee_angle_deg = 20.0
+    # Dorsiflexion at ipsilateral ankle; stronger plantarflexion at
+    # contralateral ankle so the joint angle is more apparent.
     ankle_angle_ipsi_deg = 30.0
-    ankle_angle_contra_deg = -5.0
+    ankle_angle_contra_deg = -25.0
 
     # Both hips are attached to the same torso base point for clarity.
     # Shifted upward slightly so the feet do not clip the bottom.
@@ -308,8 +318,8 @@ def generate_reference_figure(output_path: str) -> None:
 
     # Torso segment (green) above ipsilateral hip with slight forward tilt
     torso_length = 1.5
-    # Increase torso tilt so the global torso angle is more apparent
-    torso_angle_deg = 25.0
+    # Moderate torso tilt so the global torso angle is visible but not extreme
+    torso_angle_deg = 15.0
     torso_theta = np.deg2rad(torso_angle_deg)
     torso_vec = np.array(
         [
@@ -335,7 +345,7 @@ def generate_reference_figure(output_path: str) -> None:
         color="tab:blue",
     )
 
-    # Contralateral leg (orange) with global-angle arcs
+    # Contralateral leg (orange) with joint-angle arcs
     _draw_leg(
         ax,
         hip=hip_contra,
@@ -345,26 +355,17 @@ def generate_reference_figure(output_path: str) -> None:
         color="tab:orange",
     )
 
-    # Global reference lines at contralateral joints
-    # Hip and knee use vertical (global y) references.
-    _draw_vertical_reference(ax, hip_contra, length=0.6)
-    _draw_vertical_reference(ax, knee_contra, length=0.6)
-    # For the foot global angle, use a horizontal dashed line (global +x)
-    # extending to the right of the ankle so that the reference for φ_foot
-    # is rotated 90° from vertical and clearly visible.
-    foot_ref_len = 0.4
-    ax.plot(
-        [ankle_contra[0], ankle_contra[0] + foot_ref_len],
-        [ankle_contra[1], ankle_contra[1]],
-        linestyle="--",
-        color="gray",
-        linewidth=1.0,
-        alpha=0.9,
-    )
+    # No global vertical reference lines on contralateral joints; joint angles
+    # are defined relative to local dashed references instead.
 
-    # Angle arcs for ipsilateral joint definitions (θ_*) and global angles (φ_*).
+    # Angle arcs for ipsilateral global angles (φ_*) and contralateral joint
+    # angles (θ_*).
     vertical_down = np.array([0.0, -1.0])
     vertical_up = np.array([0.0, 1.0])
+
+    # Global reference lines at ipsilateral hip and knee for φ_thigh and φ_shank
+    _draw_vertical_reference(ax, hip_ipsi, length=0.6)
+    _draw_vertical_reference(ax, knee_ipsi, length=0.6)
 
     # Torso global angle φ_torso at hip: between vertical up and torso segment.
     torso_vec = torso_top - hip_ipsi
@@ -399,84 +400,62 @@ def generate_reference_figure(output_path: str) -> None:
         linewidth=1.0,
         alpha=0.9,
     )
-    _angle_annotation(ax, hip_ipsi, r"$\phi_{\mathrm{torso}}$", (0.38, 0.32))
+    _angle_annotation(ax, hip_ipsi, r"$-\phi_{\mathrm{torso}}$", (0.38, 0.32))
 
-    # Hip joint angle θ_hip: between torso (previous link) and ipsilateral thigh.
-    # Use a torso reference pointing downwards from the hip to keep the dashed
-    # line on the same side as the legs.
-    torso_ref = -torso_vec
+    # Global segment angles φ_* on ipsilateral leg (blue)
     thigh_vec_ipsi = knee_ipsi - hip_ipsi
-    # Torso reference line in green to match the torso segment
-    _draw_segment_reference(ax, hip_ipsi, torso_ref, length=0.5, color="tab:green")
-    # Use a slightly smaller radius for θ_hip so its arc does not intersect
-    # with the larger global thigh/torso arcs on the contralateral side.
+    shank_vec_ipsi = ankle_ipsi - knee_ipsi
+    foot_vec_ipsi = foot_ipsi - ankle_ipsi
+
+    # φ_thigh at hip: vertical vs ipsi thigh
     _draw_angle_arc(
         ax,
         center=hip_ipsi,
-        start_vec=torso_ref,
+        start_vec=vertical_down,
         end_vec=thigh_vec_ipsi,
         radius=0.22,
         color="tab:blue",
+        draw_refs=False,
     )
-    # Place θ labels on the left side of the ipsilateral leg to avoid overlap
-    # Place ipsilateral joint labels to the right, near their arcs
-    _angle_annotation(ax, hip_ipsi, r"$\theta_{\mathrm{hip}}$", (0.35, 0.18))
+    _angle_annotation(ax, hip_ipsi, r"$+\phi_{\mathrm{thigh}}$", (0.18, 0.12))
 
-    # Knee joint angle θ_knee: between thigh (knee→hip, previous link) and shank.
-    thigh_from_knee_ipsi = hip_ipsi - knee_ipsi  # knee -> hip (used for angle)
-    shank_vec_ipsi = ankle_ipsi - knee_ipsi      # knee -> ankle (solid shank)
-    # Dashed reference along the thigh but extended away from the hip (down the leg)
-    thigh_ref_down = knee_ipsi - hip_ipsi
-    _draw_segment_reference(
-        ax,
-        knee_ipsi,
-        thigh_ref_down,
-        length=0.45,
-        color="tab:blue",
-    )
+    # φ_shank at knee: vertical vs ipsi shank
     _draw_angle_arc(
         ax,
         center=knee_ipsi,
-        start_vec=thigh_ref_down,
+        start_vec=vertical_down,
         end_vec=shank_vec_ipsi,
-        radius=0.24,
+        radius=0.20,
         color="tab:blue",
+        draw_refs=False,
     )
-    _angle_annotation(ax, knee_ipsi, r"$\theta_{\mathrm{knee}}$", (0.35, -0.05))
+    _angle_annotation(ax, knee_ipsi, r"$+\phi_{\mathrm{shank}}$", (0.20, -0.02))
 
-    # Ankle joint angle θ_ankle: between shank-based reference (previous link + 90°)
-    # and the foot segment.
-    shank_from_ankle_ipsi = knee_ipsi - ankle_ipsi  # ankle -> knee
-    # Rotate shank vector by -90° so the dashed ankle-reference line is
-    # shifted by 90° relative to the shank direction for the foot angle.
-    shank_ref = np.array(
-        [
-            shank_from_ankle_ipsi[1],
-            -shank_from_ankle_ipsi[0],
-        ]
-    )
-    foot_vec_ipsi = foot_ipsi - ankle_ipsi
-    _draw_segment_reference(
-        ax,
-        ankle_ipsi,
-        shank_ref,
-        length=0.45,
-        color="tab:blue",
+    # Horizontal global reference for φ_foot at ipsilateral ankle (global +x)
+    foot_ref_len_ipsi = 0.4
+    ax.plot(
+        [ankle_ipsi[0], ankle_ipsi[0] + foot_ref_len_ipsi],
+        [ankle_ipsi[1], ankle_ipsi[1]],
+        linestyle="--",
+        color="gray",
+        linewidth=1.0,
+        alpha=0.9,
     )
     _draw_angle_arc(
         ax,
         center=ankle_ipsi,
-        start_vec=shank_ref,
+        start_vec=np.array([1.0, 0.0]),
         end_vec=foot_vec_ipsi,
-        radius=0.28,
+        radius=0.20,
         color="tab:blue",
+        draw_refs=False,
     )
-    _angle_annotation(ax, ankle_ipsi, r"$\theta_{\mathrm{ankle}}$", (0.40, -0.30))
+    _angle_annotation(ax, ankle_ipsi, r"$+\phi_{\mathrm{foot}}$", (0.22, -0.20))
 
-    # Center of pressure (CoP) marker on ipsilateral foot (red cross),
+    # Center of pressure (CoP) marker on contralateral foot (red cross),
     # positioned slightly proximal toward the ankle.
     cop_alpha = 0.7  # 0 = at ankle, 1 = at foot tip
-    cop_pos = ankle_ipsi + cop_alpha * (foot_ipsi - ankle_ipsi)
+    cop_pos = ankle_contra + cop_alpha * (foot_contra - ankle_contra)
     cop_size = 0.06
     ax.plot(
         [cop_pos[0] - cop_size, cop_pos[0] + cop_size],
@@ -492,8 +471,9 @@ def generate_reference_figure(output_path: str) -> None:
     )
 
     # Ground reaction force (GRF) vector shown as a purple arrow originating
-    # at the CoP and pointing mostly toward the hip (combined vertical + shear).
-    grf_dir = hip_ipsi - cop_pos
+    # at the CoP and pointing mostly toward the contralateral hip (combined
+    # vertical + shear in the global frame).
+    grf_dir = hip_contra - cop_pos
     grf_norm = np.linalg.norm(grf_dir) + 1e-9
     grf_dir = grf_dir / grf_norm
     grf_length = 0.8
@@ -509,49 +489,67 @@ def generate_reference_figure(output_path: str) -> None:
         linewidth=2.0,
     )
 
-    # Global-angle arcs (φ_*) on contralateral leg versus vertical.
-    # Thigh global angle at hip: vertical down vs thigh vector.
+    # Joint angles θ_* on contralateral leg (orange)
+    # Hip joint angle θ_hip: between torso reference direction and
+    # contralateral thigh. We reuse the torso_down_dir direction so that the
+    # arc visually terminates on the same torso dashed line orientation.
     thigh_vec_contra = knee_contra - hip_contra
-    # Keep φ_thigh at a larger radius so it is visually separated from θ_hip.
     _draw_angle_arc(
         ax,
         center=hip_contra,
-        start_vec=vertical_down,
+        start_vec=torso_down_dir,
         end_vec=thigh_vec_contra,
-        radius=0.30,
+        radius=0.26,
         color="tab:orange",
-        draw_refs=False,
     )
-    # Place contralateral global thigh/shank/foot labels to the left of that leg
-    _angle_annotation(ax, hip_contra, r"$\phi_{\mathrm{thigh}}$", (-0.40, 0.15))
+    _angle_annotation(ax, hip_contra, r"$-\theta_{\mathrm{hip}}$", (-0.38, 0.12))
 
-    # Shank global angle at knee: vertical down vs shank.
+    # Knee joint angle θ_knee: between contralateral thigh and shank
+    thigh_from_knee_contra = hip_contra - knee_contra
     shank_vec_contra = ankle_contra - knee_contra
+    thigh_ref_down_contra = knee_contra - hip_contra
+    _draw_segment_reference(
+        ax,
+        knee_contra,
+        thigh_ref_down_contra,
+        length=0.45,
+        color="tab:orange",
+    )
     _draw_angle_arc(
         ax,
         center=knee_contra,
-        start_vec=vertical_down,
+        start_vec=thigh_ref_down_contra,
         end_vec=shank_vec_contra,
-        radius=0.24,
+        radius=0.22,
         color="tab:orange",
-        draw_refs=False,
     )
-    _angle_annotation(ax, knee_contra, r"$\phi_{\mathrm{shank}}$", (-0.40, 0.00))
+    _angle_annotation(ax, knee_contra, r"$+\theta_{\mathrm{knee}}$", (-0.40, -0.02))
 
-    # Foot global angle at ankle: vertical down vs foot.
+    # Ankle joint angle θ_ankle: between shank-based reference and foot
+    shank_from_ankle_contra = knee_contra - ankle_contra
+    shank_ref_contra = np.array(
+        [
+            shank_from_ankle_contra[1],
+            -shank_from_ankle_contra[0],
+        ]
+    )
     foot_vec_contra = foot_contra - ankle_contra
+    _draw_segment_reference(
+        ax,
+        ankle_contra,
+        shank_ref_contra,
+        length=0.45,
+        color="tab:orange",
+    )
     _draw_angle_arc(
         ax,
         center=ankle_contra,
-        # Start from global +x (aligned with the horizontal dashed reference)
-        start_vec=np.array([1.0, 0.0]),
+        start_vec=shank_ref_contra,
         end_vec=foot_vec_contra,
-        radius=0.22,
+        radius=0.24,
         color="tab:orange",
-        draw_refs=False,
     )
-    # Place the foot global-angle label closer to its arc
-    _angle_annotation(ax, ankle_contra, r"$\phi_{\mathrm{foot}}$", (-0.30, -0.20))
+    _angle_annotation(ax, ankle_contra, r"$-\theta_{\mathrm{ankle}}$", (-0.40, -0.26))
 
     ax.set_aspect("equal", adjustable="box")
     ax.set_xlabel("x (forward)")
@@ -563,7 +561,7 @@ def generate_reference_figure(output_path: str) -> None:
 
     ax.set_title(
         "Planar Forward Kinematic Chain\n"
-        "Joint (ipsilateral, blue) and global (contralateral, orange) angles"
+        "Global (ipsilateral, blue) and joint (contralateral, orange) angles"
     )
 
     # Legend block describing the main visual elements
@@ -584,21 +582,21 @@ def generate_reference_figure(output_path: str) -> None:
             color="gray",
             linewidth=1.5,
             linestyle="--",
-            label="vertical reference (global)",
+            label="global reference lines",
         ),
         plt.Line2D(
             [0],
             [0],
             color="tab:blue",
             linewidth=1.5,
-            label=r"joint angles $\theta_*$ (ipsi)",
+            label=r"segment / torso angles $\phi_*$ (global, ipsi)",
         ),
         plt.Line2D(
             [0],
             [0],
             color="tab:orange",
             linewidth=1.5,
-            label=r"segment / torso angles $\phi_*$ (global)",
+            label=r"joint angles $\theta_*$ (contra)",
         ),
         plt.Line2D(
             [0],
