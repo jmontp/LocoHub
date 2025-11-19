@@ -622,6 +622,24 @@ def generate_reference_figure(output_path: str) -> None:
         framealpha=0.9,
     )
 
+    # Explanatory text below the legend describing how joint angles are
+    # related to link (segment) angles in this schematic.
+    definitions_text = (
+        r"Definitions (schematic):" "\n"
+        r"$\phi_*$: global link angles (ipsilateral leg)" "\n"
+        r"$\theta_{\mathrm{hip}} = \phi_{\mathrm{thigh}} - \phi_{\mathrm{torso}}$" "\n"
+        r"$\theta_{\mathrm{knee}} = \phi_{\mathrm{shank}} - \phi_{\mathrm{thigh}}$" "\n"
+        r"$\theta_{\mathrm{ankle}} = \phi_{\mathrm{foot}} - (\phi_{\mathrm{shank}} - 90^\circ)$"
+    )
+    ax.text(
+        0.02,
+        0.72,
+        definitions_text,
+        transform=ax.transAxes,
+        fontsize=7,
+        va="top",
+    )
+
     # Remove tick labels for a cleaner diagram, keep axes labels
     ax.set_xticks([])
     ax.set_yticks([])
