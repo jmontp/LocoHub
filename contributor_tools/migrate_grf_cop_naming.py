@@ -43,7 +43,12 @@ except Exception:
     }
 
 
-def migrate_file(input_path: Path, output_path: Path | None, dry_run: bool) -> None:
+def migrate_file(
+    input_path: Path,
+    output_path: Path | None,
+    dry_run: bool,
+    flip_cop_anterior: bool,
+) -> None:
     df = pd.read_parquet(input_path)
 
     mapping: Dict[str, str] = {
@@ -52,11 +57,22 @@ def migrate_file(input_path: Path, output_path: Path | None, dry_run: bool) -> N
 
     if not mapping:
         print(f"{input_path}: no legacy GRF columns found; skipping")
-        return
+    else:
+        print(f"{input_path}: renaming columns:")
+        for old, new in sorted(mapping.items()):
+            print(f"  {old} -> {new}")
 
-    print(f"{input_path}: renaming columns:")
-    for old, new in sorted(mapping.items()):
-        print(f"  {old} -> {new}")
+    if flip_cop_anterior:
+        cop_cols = [
+            c for c in df.columns
+            if c.startswith("cop_anterior_") and c.endswith("_m")
+        ]
+        if cop_cols:
+            print(f"  flipping sign for COP anterior columns: {', '.join(cop_cols)}")
+            if not dry_run:
+                df[cop_cols] = -df[cop_cols]
+        else:
+            print("  no cop_anterior_* columns found to flip")
 
     if dry_run:
         return
@@ -80,6 +96,11 @@ def main() -> None:
         "--dry-run",
         action="store_true",
         help="Only report files and columns that would be changed.",
+    )
+    parser.add_argument(
+        "--flip-cop-anterior",
+        action="store_true",
+        help="Also flip the sign of any cop_anterior_*_m columns (anterior-positive).",
     )
     parser.add_argument(
         "--suffix",
@@ -110,9 +131,13 @@ def main() -> None:
             dst = src.with_name(src.stem + args.suffix + src.suffix)
         else:
             dst = None
-        migrate_file(src, dst, dry_run=args.dry_run)
+        migrate_file(
+            src,
+            dst,
+            dry_run=args.dry_run,
+            flip_cop_anterior=args.flip_cop_anterior,
+        )
 
 
 if __name__ == "__main__":
     main()
-

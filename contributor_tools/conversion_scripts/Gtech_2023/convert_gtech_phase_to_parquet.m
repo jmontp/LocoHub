@@ -1023,6 +1023,12 @@ else
         present_new_names = new_col_names_lr(idx_map);
         fprintf('Renaming %d columns...\n', length(present_old_cols));
         combined_data = renamevars(combined_data, present_old_cols, present_new_names);
+
+        % Flip COP anterior to align with anterior-positive convention
+        cop_flip_cols = intersect({'cop_anterior_l_m', 'cop_anterior_r_m'}, combined_data.Properties.VariableNames);
+        for i = 1:numel(cop_flip_cols)
+            combined_data.(cop_flip_cols{i}) = -combined_data.(cop_flip_cols{i});
+        end
     end
 end
 

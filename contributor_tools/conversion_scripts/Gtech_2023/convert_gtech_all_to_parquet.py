@@ -355,6 +355,12 @@ def convert_dataset_to_pandas():
     print(df_total.columns)
     df_total.rename(columns=standard_column_names, inplace=True)
     print(df_total.columns)
+
+    # Flip COP anterior direction to align with anterior-positive convention
+    for cop_col in ("cop_anterior_r_m", "cop_anterior_l_m"):
+        if cop_col in df_total.columns:
+            df_total[cop_col] = -df_total[cop_col]
+            print(f"Flipped sign for {cop_col}")
     #testing for float/string bugs
     #df_total[cols_to_flip_signs] = df_total[cols_to_flip_signs] * -1
 
