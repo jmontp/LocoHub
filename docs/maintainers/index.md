@@ -88,7 +88,7 @@ Use the validator report (and `interactive_validation_tuner.py` when needed) to 
 Episodes that remain in time space (non-cyclic tasks) run a lightweight structural suite aimed at catching systemic issues:
 
 - **Baseline Offset Audit**: Identify quasi-static frames (e.g., first 0.5 s) and require velocities/accelerations to average ~0, vertical acceleration near 1 g. Flags zeroing and bias problems.
-- **Derivative/Product Consistency**: Integrate angular velocity back to the recorded angle (after high-pass filtering) and verify `power ≈ moment × angular_velocity`. Divergence indicates sign flips or scaling errors.
+- **Derivative/Product Consistency**: Integrate joint velocity back to the recorded angle (after high-pass filtering) and verify `power ≈ moment × velocity`. Divergence indicates sign flips or scaling errors.
 - **Cross-Limb Correlation**: Normalize episode duration to [0,1] and cross-correlate ipsi vs. contra channels; the peak must appear within a small lag window. Large shifts expose segmentation offsets or swapped sides.
 - **Physiologic Guardrails**: Enforce simple min/max bounds per joint, moment, and GRF so inverted channels fail quickly (e.g., knee flexion −20° to 160°, ankle moment ±3 Nm/kg).
 

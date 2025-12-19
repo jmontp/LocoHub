@@ -175,6 +175,8 @@ Units
 
 ## Column Catalog
 
+Canonical Python lists live in `src/locohub/feature_constants.py` (`PHASE_CANONICAL_COLUMNS`, `TIME_CANONICAL_COLUMNS`, and `CANONICAL_COLUMN_GROUPS`) to keep converters, validators, and docs aligned.
+
 Complete list of standard column names used in the conversion scripts and examples. Columns are grouped by category; sides are `ipsi` and `contra` unless noted.
 
 - Required schema: `subject`, `subject_metadata`, `task`, `task_id`, `task_info`, `step`, `phase_ipsi` (phase‑indexed) or `time_s` (time‑indexed)
@@ -203,9 +205,15 @@ Segment/link orientations (radians)
 
 Angular velocities (radians/second)
 
-- `hip_flexion_angular_velocity_{ipsi,contra}_rad_s`
-- `knee_flexion_angular_velocity_{ipsi,contra}_rad_s`
-- `ankle_dorsiflexion_angular_velocity_{ipsi,contra}_rad_s`
+- `hip_flexion_velocity_{ipsi,contra}_rad_s`
+- `knee_flexion_velocity_{ipsi,contra}_rad_s`
+- `ankle_dorsiflexion_velocity_{ipsi,contra}_rad_s`
+
+Angular accelerations (radians/second^2)
+
+- `hip_flexion_acceleration_{ipsi,contra}_rad_s2`
+- `knee_flexion_acceleration_{ipsi,contra}_rad_s2`
+- `ankle_dorsiflexion_acceleration_{ipsi,contra}_rad_s2`
 
 Ground reaction forces (BW)
 

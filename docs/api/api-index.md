@@ -330,7 +330,7 @@ Standard joint angle variables in canonical order:
 **Location**: `locohub.feature_constants.VELOCITY_FEATURES`  
 **Type**: `List[str]`
 
-Standard joint angular velocity variables.
+Standard joint velocity variables (rad/s) matching the canonical phase exports.
 
 ### MOMENT_FEATURES
 **Location**: `locohub.feature_constants.MOMENT_FEATURES`  
