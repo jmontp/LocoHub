@@ -43,7 +43,7 @@ function [segments, n_sit_to_stand, n_stand_to_sit] = segment_sit_stand_transiti
     addParameter(p, 'VelocityFile', '', @ischar);
     addParameter(p, 'StandingThreshold', 600, @isnumeric);
     addParameter(p, 'SittingThreshold', 400, @isnumeric);
-    addParameter(p, 'VelocityThreshold', 15, @isnumeric);  % deg/s
+    addParameter(p, 'VelocityThreshold', 25, @isnumeric);  % deg/s - threshold for motion onset/offset
     addParameter(p, 'MinStableDuration', 0.3, @isnumeric);
     addParameter(p, 'SmoothWindow', 0.3, @isnumeric);
     addParameter(p, 'MarginBefore', 0.1, @isnumeric);

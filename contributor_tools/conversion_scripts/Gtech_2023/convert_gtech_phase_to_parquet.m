@@ -467,10 +467,8 @@ for subject_idx = 1:length(subjects)
             processed_grf_folders{end+1} = raw_activity_name;
 
             % Call the segmentation function
-            % Trim 12% from start to exclude quiet sitting phase before motion onset
-            % (based on analysis showing knee moment starts changing at ~12% phase)
-            [grf_segments, n_sts, n_s2s] = segment_sit_stand_transitions(grf_file_path, ...
-                'TrimStartPercent', 12);
+            % Uses velocity threshold of 25 deg/s to detect motion onset/offset
+            [grf_segments, n_sts, n_s2s] = segment_sit_stand_transitions(grf_file_path);
 
             if isempty(grf_segments)
                 warning('No transitions found in GRF data for %s. Skipping activity.', activity_file_name);
