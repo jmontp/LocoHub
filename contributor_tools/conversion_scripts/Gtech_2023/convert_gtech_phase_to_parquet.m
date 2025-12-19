@@ -10,6 +10,9 @@
 clear all;
 close all;
 
+% Add utilities folder to path for helper functions
+addpath(fullfile(fileparts(mfilename('fullpath')), 'utilities'));
+
 num_points_per_step = 150;
 naming_convention = 'ipsicontra'; % Options: 'lr', 'ipsicontra'
 data_dir_root = '.'; % Assumes RawData and Segmentation are subdirs of CWD
@@ -20,6 +23,18 @@ critical_activities = {'stairs', 'incline_walk', 'normal_walk', 'sit_to_stand', 
 
 % Initialize a single table to hold all processed data
 total_data = table();
+
+% Load subject mass data from Subject_masses.csv
+subject_mass_file = fullfile(data_dir_root, 'RawData', 'Subject_masses.csv');
+if exist(subject_mass_file, 'file')
+    mass_opts = detectImportOptions(subject_mass_file, 'CommentStyle', '#');
+    subject_mass_table = readtable(subject_mass_file, mass_opts);
+    fprintf('Loaded subject mass data from: %s\n', subject_mass_file);
+    fprintf('  Found %d subjects with mass data\n', height(subject_mass_table));
+else
+    warning('Subject_masses.csv not found at %s. Mass normalization will use default value.', subject_mass_file);
+    subject_mass_table = table();
+end
 
 % Initialize per-activity counters
 critical_activity_counts = struct();
@@ -64,6 +79,11 @@ end
 for subject_idx = 1:length(subjects)
 % for subject_idx = 1:2
     subject = subjects(subject_idx).name;
+
+    % Track processed raw folders for GRF-based segmentation to avoid duplicates
+    % (Multiple parsing files may point to the same raw data folder)
+    processed_grf_folders = {};
+
     % Following naming convention: DATASET_POPULATION+NUMBER
     % GT23 = Georgia Tech 2023, AB = Able-bodied
     % Extract subject number (e.g., '01' from 'AB01')
@@ -75,6 +95,19 @@ for subject_idx = 1:length(subjects)
     subject_save_name = strcat("GT23_AB", sprintf('%02s', subject_num));
     subject_segmentation_dir = fullfile(segmentation_dir, subject);
     subject_raw_data_dir = fullfile(data_dir_root, 'RawData', subject);
+
+    % Look up subject mass for normalization
+    subject_mass_kg = 76.9;  % Default: aggregate mean from paper
+    if ~isempty(subject_mass_table) && ismember('subject_id', subject_mass_table.Properties.VariableNames)
+        mass_idx = strcmp(subject_mass_table.subject_id, subject);
+        if any(mass_idx)
+            subject_mass_kg = subject_mass_table.mass_kg(mass_idx);
+            fprintf('  Subject %s mass: %.2f kg\n', subject, subject_mass_kg);
+        else
+            warning('Mass not found for %s, using default %.2f kg', subject, subject_mass_kg);
+        end
+    end
+    subject_weight_N = subject_mass_kg * 9.81;  % Body weight in Newtons
 
     % Check if corresponding RawData directory exists
     if ~exist(subject_raw_data_dir, 'dir')
@@ -131,6 +164,7 @@ for subject_idx = 1:length(subjects)
         end
 
         % Try loading the existing parsing file
+        use_grf_segmentation = false;  % Flag to use GRF-based segmentation for sit/stand
         try
             parsing_data = load(parsing_file_path);
             % Check required fields after successful load
@@ -138,10 +172,18 @@ for subject_idx = 1:length(subjects)
             left_invalid = ~isfield(parsing_data, 'left') || isempty(parsing_data.left);
             right_invalid = ~isfield(parsing_data, 'right') || isempty(parsing_data.right);
             if left_invalid && right_invalid
-                 if is_potentially_critical
-                    warning('Parsing file %s found, but missing/empty heel strike data for BOTH legs. Skipping.', activity_file_name);
+                 % Check if this is a sit-to-stand or stand-to-sit activity
+                 % These activities don't have heel strikes, so we use GRF-based segmentation
+                 if contains(activity_file_name, 'sit_to_stand', 'IgnoreCase', true) || ...
+                    contains(activity_file_name, 'stand_to_sit', 'IgnoreCase', true)
+                    fprintf('  Activity %s has no heel strike data - will use GRF-based segmentation\n', activity_file_name);
+                    use_grf_segmentation = true;
+                 else
+                    if is_potentially_critical
+                        warning('Parsing file %s found, but missing/empty heel strike data for BOTH legs. Skipping.', activity_file_name);
+                    end
+                    raw_data_load_successful = false;
                  end
-                raw_data_load_successful = false;
             end
         catch ME
              if is_potentially_critical
@@ -151,7 +193,7 @@ for subject_idx = 1:length(subjects)
             left_invalid = true; % Assume invalid if load fails
             right_invalid = true;
         end
-        if ~raw_data_load_successful, continue; end % Skip if parsing failed
+        if ~raw_data_load_successful && ~use_grf_segmentation, continue; end % Skip if parsing failed and not sit/stand
 
         % Determine activity base name for raw files
         [~, activity_base_name] = fileparts(activity_file_name);
@@ -352,8 +394,14 @@ for subject_idx = 1:length(subjects)
 
         % --- Step 2 (Cont.): Determine Leading Leg ---
         % Use flags set during parsing data check (left_invalid, right_invalid)
-
-        if ~left_invalid && right_invalid
+        % For GRF-based segmentation (sit-to-stand), skip this and set defaults later
+        if use_grf_segmentation
+            % Defaults will be set in Step 3 when GRF segmentation is performed
+            left_invalid = true;  % Treat as invalid since we're not using heel strikes
+            right_invalid = true;
+            leading_leg = 'r';  % Default, will be confirmed in Step 3
+            leading_hs_times = [];  % Empty for GRF segmentation
+        elseif ~left_invalid && right_invalid
             % Only left data is valid
             leading_leg = 'l';
             leading_hs_times = parsing_data.left;
@@ -398,19 +446,67 @@ for subject_idx = 1:length(subjects)
         end
 
         % --- Step 3: Define Step Intervals ---
-        % Check if any step intervals exist (each row is [start, end])
-        if isempty(leading_hs_times) 
-            % It becomes TRUE if N=0 (i.e., no steps found)
-            if ismember(activity_name, critical_activities)
-                warning('No step intervals found for leading leg in %s. Skipping activity.', activity_file_name);
+        % Check if we're using GRF-based segmentation for sit-to-stand
+        if use_grf_segmentation
+            % Check if this raw folder has already been processed (avoid duplicates)
+            % Multiple parsing files may point to the same raw data folder
+            if ismember(raw_activity_name, processed_grf_folders)
+                fprintf('    Skipping %s - raw folder %s already processed for GRF segmentation\n', ...
+                    activity_file_name, raw_activity_name);
+                continue;
             end
-            continue;
+
+            % Use GRF-based segmentation for sit-to-stand activities
+            grf_file_path = fullfile(subject_raw_data_dir, 'CSV_data', raw_activity_name, 'GroundFrame_GRFs.csv');
+            if ~exist(grf_file_path, 'file')
+                warning('GRF file not found for sit-to-stand segmentation: %s. Skipping activity.', grf_file_path);
+                continue;
+            end
+
+            % Mark this folder as processed
+            processed_grf_folders{end+1} = raw_activity_name;
+
+            % Call the segmentation function
+            % Trim 12% from start to exclude quiet sitting phase before motion onset
+            % (based on analysis showing knee moment starts changing at ~12% phase)
+            [grf_segments, n_sts, n_s2s] = segment_sit_stand_transitions(grf_file_path, ...
+                'TrimStartPercent', 12);
+
+            if isempty(grf_segments)
+                warning('No transitions found in GRF data for %s. Skipping activity.', activity_file_name);
+                continue;
+            end
+
+            % Convert segments struct to step intervals array format [start_time, end_time]
+            step_intervals = zeros(length(grf_segments), 2);
+            segment_types = cell(length(grf_segments), 1);
+            for seg_idx = 1:length(grf_segments)
+                step_intervals(seg_idx, 1) = grf_segments(seg_idx).start_time;
+                step_intervals(seg_idx, 2) = grf_segments(seg_idx).end_time;
+                segment_types{seg_idx} = grf_segments(seg_idx).type;
+            end
+            num_steps = size(step_intervals, 1);
+            fprintf('    Found %d GRF-based transitions (%d sit-to-stand, %d stand-to-sit).\n', num_steps, n_sts, n_s2s);
+
+            % For sit-to-stand, we don't have a clear leading leg, so default to right
+            leading_leg = 'r';
+            fprintf('    Using default leading leg: %s for sit-to-stand activity\n', leading_leg);
+        else
+            % Check if any step intervals exist (each row is [start, end])
+            if isempty(leading_hs_times)
+                % It becomes TRUE if N=0 (i.e., no steps found)
+                if ismember(activity_name, critical_activities)
+                    warning('No step intervals found for leading leg in %s. Skipping activity.', activity_file_name);
+                end
+                continue;
+            end
+            % If code reaches here, N must be >= 1
+            % Each row is assumed to be [start_time, end_time]
+            step_intervals = leading_hs_times;
+            num_steps = size(step_intervals, 1);
+            segment_types = {};  % Empty for non-sit-stand activities
+            fprintf('    Found %d step intervals directly from parsing data.\n', num_steps);
         end
-        % If code reaches here, N must be >= 1
-        % Each row is assumed to be [start_time, end_time]
-        step_intervals = leading_hs_times;
-        num_steps = size(step_intervals, 1);
-        fprintf('    Found %d step intervals directly from parsing data.\n', num_steps);
 
         activity_step_data = table(); % Accumulate steps for this activity
 
@@ -428,16 +524,37 @@ for subject_idx = 1:length(subjects)
 
             % Add Metadata
             step_data_single.subject = repmat(subject_save_name, num_points_per_step, 1);
-            
+
             % Use standardized task mapping function
-            [task_name, task_id, task_info_str] = parse_gtech_activity_matlab(activity_name, sub_activity_name);
-            
+            % For GRF-segmented activities, override task name based on segment type
+            if use_grf_segmentation && ~isempty(segment_types) && step_idx <= length(segment_types)
+                current_segment_type = segment_types{step_idx};
+                if strcmp(current_segment_type, 'sit_to_stand')
+                    task_name = 'sit_to_stand';
+                    task_id = 'sit_to_stand';
+                    task_info_str = 'segmentation:grf_based';
+                elseif strcmp(current_segment_type, 'stand_to_sit')
+                    task_name = 'stand_to_sit';
+                    task_id = 'stand_to_sit';
+                    task_info_str = 'segmentation:grf_based';
+                else
+                    [task_name, task_id, task_info_str] = parse_gtech_activity_matlab(activity_name, sub_activity_name);
+                end
+            else
+                [task_name, task_id, task_info_str] = parse_gtech_activity_matlab(activity_name, sub_activity_name);
+            end
+
             step_data_single.task = repmat({task_name}, num_points_per_step, 1);
             step_data_single.task_id = repmat({task_id}, num_points_per_step, 1);
             step_data_single.task_info = repmat({task_info_str}, num_points_per_step, 1);
             
-            % Add subject_metadata column (empty for now)
-            step_data_single.subject_metadata = repmat({''}, num_points_per_step, 1);
+            % Add subject_metadata column with mass info
+            subject_metadata_str = sprintf('weight_kg:%.2f', subject_mass_kg);
+            step_data_single.subject_metadata = repmat({subject_metadata_str}, num_points_per_step, 1);
+
+            % Store mass/weight for normalization (will be removed after normalization)
+            step_data_single.temp_mass_kg = repmat(subject_mass_kg, num_points_per_step, 1);
+            step_data_single.temp_weight_N = repmat(subject_weight_N, num_points_per_step, 1);
             step_data_single.leading_leg_step = repmat({leading_leg}, num_points_per_step, 1); % Add leading leg marker
             step_data_single.step = repmat(step_idx, num_points_per_step, 1);
 
@@ -557,9 +674,10 @@ for subject_idx = 1:length(subjects)
 
             % --- Interpolate GRF & Transform COP ---
             % Using standardized directional naming with ipsi/contra mapping
+            % Reference naming: grf_<direction>_<side>_<unit>, cop_<direction>_<side>_<unit>
             grf_cols_base = {'ForceX', 'ForceY_Vertical', 'ForceZ', 'COPX', 'COPY_Vertical', 'COPZ'};
-            % Map to standardized names: anterior (X), vertical (Y), lateral (Z)
-            grf_cols_standardized = {'anterior_grf', 'vertical_grf', 'lateral_grf', 'cop_anterior', 'cop_vertical', 'cop_lateral'};
+            % Map to standardized names: grf_anterior, grf_vertical, grf_lateral (matching feature_constants.py)
+            grf_cols_standardized = {'grf_anterior', 'grf_vertical', 'grf_lateral', 'cop_anterior', 'cop_vertical', 'cop_lateral'};
             if isfield(raw_data, 'GroundFrame_GRFs') && ~isempty(raw_data.GroundFrame_GRFs)
                 raw_grf_table = raw_data.GroundFrame_GRFs;
                 raw_grf_time = raw_time_vectors.GroundFrame_GRFs;
@@ -694,9 +812,9 @@ for subject_idx = 1:length(subjects)
                     end
                     
                     % Use standardized column names for missing GRF/COP data
-                    step_data_single.(['anterior_grf' ipsi_contra_suffix '_N']) = nan(num_points_per_step, 1);
-                    step_data_single.(['vertical_grf' ipsi_contra_suffix '_N']) = nan(num_points_per_step, 1);
-                    step_data_single.(['lateral_grf' ipsi_contra_suffix '_N']) = nan(num_points_per_step, 1);
+                    step_data_single.(['grf_anterior' ipsi_contra_suffix '_N']) = nan(num_points_per_step, 1);
+                    step_data_single.(['grf_vertical' ipsi_contra_suffix '_N']) = nan(num_points_per_step, 1);
+                    step_data_single.(['grf_lateral' ipsi_contra_suffix '_N']) = nan(num_points_per_step, 1);
                     step_data_single.(['cop_anterior' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
                     step_data_single.(['cop_vertical' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
                     step_data_single.(['cop_lateral' ipsi_contra_suffix '_m']) = nan(num_points_per_step, 1);
@@ -908,13 +1026,13 @@ if strcmpi(naming_convention, 'ipsicontra')
         'tibia_r_Y', 'shank_transverse_angle_contra', '_rad';
         'calcn_l_Y', 'foot_transverse_angle_ipsi', '_rad';
         'calcn_r_Y', 'foot_transverse_angle_contra', '_rad';
-        % GRF and COP (rename to standardized anterior/lateral/vertical)
+        % GRF and COP (rename to standardized grf_<direction>/cop_<direction>)
         'cop_x', 'cop_anterior', '_m';
         'cop_y', 'cop_vertical', '_m';
         'cop_z', 'cop_lateral', '_m';
-        'grf_x', 'anterior_grf', '_N';
-        'grf_y', 'vertical_grf', '_N';
-        'grf_z', 'lateral_grf', '_N'
+        'grf_x', 'grf_anterior', '_N';
+        'grf_y', 'grf_vertical', '_N';
+        'grf_z', 'grf_lateral', '_N'
     };
     
     % Process each lateralized variable
@@ -1121,6 +1239,72 @@ for i = 1:length(segment_angle_cols)
     end
 end
 
+% --- Rename moment columns and normalize GRF by body weight ---
+% NOTE: Moments from OpenSim are already mass-normalized (Nm/kg), just need renaming
+fprintf('\n--- Renaming moment columns and normalizing GRF by body weight ---\n');
+
+% Check if temp columns exist for GRF normalization
+if ismember('temp_mass_kg', combined_data.Properties.VariableNames) && ...
+   ismember('temp_weight_N', combined_data.Properties.VariableNames)
+
+    weight_N = combined_data.temp_weight_N;
+
+    % Define moment columns to rename (already in Nm/kg from OpenSim, just rename)
+    if strcmpi(naming_convention, 'ipsicontra')
+        moment_cols_to_rename = {
+            'hip_flexion_moment_ipsi_Nm', 'hip_flexion_moment_contra_Nm', ...
+            'knee_flexion_moment_ipsi_Nm', 'knee_flexion_moment_contra_Nm', ...
+            'ankle_dorsiflexion_moment_ipsi_Nm', 'ankle_dorsiflexion_moment_contra_Nm'
+        };
+        grf_cols_to_normalize = {
+            'grf_vertical_ipsi_N', 'grf_vertical_contra_N', ...
+            'grf_anterior_ipsi_N', 'grf_anterior_contra_N', ...
+            'grf_lateral_ipsi_N', 'grf_lateral_contra_N'
+        };
+    else
+        moment_cols_to_rename = {
+            'hip_flexion_moment_l_Nm', 'hip_flexion_moment_r_Nm', ...
+            'knee_flexion_moment_l_Nm', 'knee_flexion_moment_r_Nm', ...
+            'ankle_dorsiflexion_moment_l_Nm', 'ankle_dorsiflexion_moment_r_Nm'
+        };
+        grf_cols_to_normalize = {
+            'grf_vertical_l_N', 'grf_vertical_r_N', ...
+            'grf_anterior_l_N', 'grf_anterior_r_N', ...
+            'grf_lateral_l_N', 'grf_lateral_r_N'
+        };
+    end
+
+    % Rename moment columns (already mass-normalized from OpenSim)
+    for i = 1:length(moment_cols_to_rename)
+        old_col = moment_cols_to_rename{i};
+        if ismember(old_col, combined_data.Properties.VariableNames)
+            % Rename column from _Nm to _Nm_kg (data already normalized)
+            new_col = strrep(old_col, '_Nm', '_Nm_kg');
+            combined_data = renamevars(combined_data, old_col, new_col);
+            fprintf('  Renamed %s -> %s (already mass-normalized)\n', old_col, new_col);
+        end
+    end
+
+    % Normalize GRF by body weight (N -> BW)
+    for i = 1:length(grf_cols_to_normalize)
+        old_col = grf_cols_to_normalize{i};
+        if ismember(old_col, combined_data.Properties.VariableNames)
+            % Normalize by body weight
+            combined_data.(old_col) = combined_data.(old_col) ./ weight_N;
+            % Rename column from _N to _BW
+            new_col = strrep(old_col, '_N', '_BW');
+            combined_data = renamevars(combined_data, old_col, new_col);
+            fprintf('  Normalized %s -> %s\n', old_col, new_col);
+        end
+    end
+
+    % Remove temporary columns
+    combined_data = removevars(combined_data, {'temp_mass_kg', 'temp_weight_N'});
+    fprintf('  Removed temporary mass/weight columns\n');
+else
+    warning('Temporary mass/weight columns not found. Skipping normalization.');
+end
+
 % --- Post-Processing: Apply Standard Corrections ---
 fprintf('\n--- Applying post-processing corrections ---\n');
 
@@ -1135,7 +1319,7 @@ if strcmpi(naming_convention, 'ipsicontra')
         'knee_flexion_velocity_ipsi_rad_s', 'knee_flexion_velocity_contra_rad_s'
     };
     knee_moment_cols_to_flip = {
-        'knee_flexion_moment_ipsi_Nm', 'knee_flexion_moment_contra_Nm'
+        'knee_flexion_moment_ipsi_Nm_kg', 'knee_flexion_moment_contra_Nm_kg'
     };
     % Ankle angles also need flipping (positive = dorsiflexion)
     ankle_angle_cols_to_flip = {
@@ -1153,7 +1337,7 @@ else
         'knee_flexion_velocity_l_rad_s', 'knee_flexion_velocity_r_rad_s'
     };
     knee_moment_cols_to_flip = {
-        'knee_flexion_moment_l_Nm', 'knee_flexion_moment_r_Nm'
+        'knee_flexion_moment_l_Nm_kg', 'knee_flexion_moment_r_Nm_kg'
     };
     ankle_angle_cols_to_flip = {
         'ankle_dorsiflexion_angle_l_rad', 'ankle_dorsiflexion_angle_r_rad'

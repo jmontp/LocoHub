@@ -219,8 +219,8 @@ function [task_name, task_id, task_info_str] = parse_gtech_activity_matlab(activ
         end
         
     elseif strcmp(activity_name, 'walk_backward')
-        task_name = 'backward_walking';
-        task_id = 'backward';
+        task_name = 'walk_backward';
+        task_id = 'walk_backward';
         
         if ~isempty(sub_activity_name)
             speed_match = regexp(sub_activity_name, '(\d+)-(\d+)', 'tokens');
