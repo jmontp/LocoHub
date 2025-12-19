@@ -24,8 +24,8 @@ ANGLE_FEATURES <- c(
   'ankle_flexion_angle_ipsi_rad', 'ankle_flexion_angle_contra_rad'
 )
 
-#' @title Kinematic Velocities (Joint Angular Velocities)
-#' @description Standard ordered list of joint angular velocity features
+#' @title Kinematic Velocities (Joint Velocities)
+#' @description Standard ordered list of joint velocity features
 #' @export
 VELOCITY_FEATURES <- c(
   'hip_flexion_velocity_ipsi_rad_s', 'hip_flexion_velocity_contra_rad_s',

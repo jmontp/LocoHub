@@ -35,6 +35,18 @@ from typing import Dict
 
 from internal.config_management import task_registry as _task_registry
 
+# Metadata and time/phase columns
+METADATA_COLUMNS = [
+    'subject',
+    'subject_metadata',
+    'task',
+    'task_id',
+    'task_info',
+    'step',
+]
+PHASE_COLUMNS = ['phase_ipsi', 'phase_contra', 'phase_ipsi_dot']
+TIME_COLUMNS = ['time_s']
+
 # Standard feature groups - ordered to match plotting function expectations
 # Order: [hip_ipsi, hip_contra, knee_ipsi, knee_contra, ankle_ipsi, ankle_contra]
 
@@ -45,11 +57,18 @@ ANGLE_FEATURES = [
     'ankle_dorsiflexion_angle_ipsi_rad', 'ankle_dorsiflexion_angle_contra_rad'
 ]
 
-# Kinematic velocities (joint angular velocities)
+# Kinematic velocities (joint velocities)
 VELOCITY_FEATURES = [
     'hip_flexion_velocity_ipsi_rad_s', 'hip_flexion_velocity_contra_rad_s',
     'knee_flexion_velocity_ipsi_rad_s', 'knee_flexion_velocity_contra_rad_s',
     'ankle_dorsiflexion_velocity_ipsi_rad_s', 'ankle_dorsiflexion_velocity_contra_rad_s'
+]
+
+# Kinematic accelerations (joint accelerations)
+ACCELERATION_FEATURES = [
+    'hip_flexion_acceleration_ipsi_rad_s2', 'hip_flexion_acceleration_contra_rad_s2',
+    'knee_flexion_acceleration_ipsi_rad_s2', 'knee_flexion_acceleration_contra_rad_s2',
+    'ankle_dorsiflexion_acceleration_ipsi_rad_s2', 'ankle_dorsiflexion_acceleration_contra_rad_s2'
 ]
 
 # Segment angular velocities
@@ -128,8 +147,58 @@ SEGMENT_ANGLE_FEATURES = [
 # All kinetic features combined
 ALL_KINETIC_FEATURES = MOMENT_FEATURES + MOMENT_FEATURES_NORMALIZED + GRF_FEATURES + GRF_FEATURES_NORMALIZED + COP_FEATURES
 
-# All kinematic features combined (angles + segments + velocities)
-ALL_KINEMATIC_FEATURES = ANGLE_FEATURES + SEGMENT_ANGLE_FEATURES + VELOCITY_FEATURES + SEGMENT_VELOCITY_FEATURES
+# All kinematic features combined (angles + segments + velocities + accelerations)
+ALL_KINEMATIC_FEATURES = (
+    ANGLE_FEATURES
+    + SEGMENT_ANGLE_FEATURES
+    + VELOCITY_FEATURES
+    + ACCELERATION_FEATURES
+    + SEGMENT_VELOCITY_FEATURES
+)
+
+# Canonical column groupings for quick schema reference
+CANONICAL_COLUMN_GROUPS = {
+    'metadata': METADATA_COLUMNS,
+    'phase': PHASE_COLUMNS,
+    'time': TIME_COLUMNS,
+    'joint_angles': ANGLE_FEATURES,
+    'joint_velocities': VELOCITY_FEATURES,
+    'joint_accelerations': ACCELERATION_FEATURES,
+    'segment_angles': SEGMENT_ANGLE_FEATURES,
+    'segment_velocities': SEGMENT_VELOCITY_FEATURES,
+    'moments': MOMENT_FEATURES,
+    'moments_normalized': MOMENT_FEATURES_NORMALIZED,
+    'grf': GRF_FEATURES,
+    'grf_normalized': GRF_FEATURES_NORMALIZED,
+    'cop': COP_FEATURES,
+}
+
+# Phase- and time-indexed canonical column orders (phase-specific columns are optional)
+PHASE_CANONICAL_COLUMNS = (
+    METADATA_COLUMNS
+    + PHASE_COLUMNS
+    + ANGLE_FEATURES
+    + SEGMENT_ANGLE_FEATURES
+    + VELOCITY_FEATURES
+    + ACCELERATION_FEATURES
+    + SEGMENT_VELOCITY_FEATURES
+    + MOMENT_FEATURES_NORMALIZED
+    + GRF_FEATURES_NORMALIZED
+    + COP_FEATURES
+)
+
+TIME_CANONICAL_COLUMNS = (
+    METADATA_COLUMNS
+    + TIME_COLUMNS
+    + ANGLE_FEATURES
+    + SEGMENT_ANGLE_FEATURES
+    + VELOCITY_FEATURES
+    + ACCELERATION_FEATURES
+    + SEGMENT_VELOCITY_FEATURES
+    + MOMENT_FEATURES_NORMALIZED
+    + GRF_FEATURES_NORMALIZED
+    + COP_FEATURES
+)
 
 
 def get_kinematic_feature_map() -> Dict[str, int]:
