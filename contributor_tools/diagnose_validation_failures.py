@@ -496,7 +496,7 @@ def main():
     )
 
     parser.add_argument("dataset", help="Path to parquet dataset")
-    parser.add_argument("--ranges", default="validation_ranges/default_ranges_v3.yaml",
+    parser.add_argument("--ranges", default="validation_ranges/default_ranges.yaml",
                        help="Validation ranges YAML file")
     parser.add_argument("--task", help="Filter to specific task")
     parser.add_argument("--top", type=int, help="Show only top N failing features per task")

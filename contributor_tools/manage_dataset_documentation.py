@@ -69,7 +69,6 @@ TABLE_MARKER_END = "<!-- DATASET_TABLE_END -->"
 
 VALIDATION_RANGES_DIR = repo_root / "contributor_tools" / "validation_ranges"
 DEFAULT_RANGES_CANDIDATES = [
-    VALIDATION_RANGES_DIR / "default_ranges_v3.yaml",
     VALIDATION_RANGES_DIR / "default_ranges.yaml",
 ]
 
