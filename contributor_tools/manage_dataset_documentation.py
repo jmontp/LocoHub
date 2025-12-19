@@ -43,10 +43,18 @@ import math
 from collections import OrderedDict, defaultdict
 from pandas import isna
 
-# Add parent directories to path for imports
+# Add repository paths to sys.path so the package works without installation
 current_dir = Path(__file__).parent
 repo_root = current_dir.parent
-sys.path.insert(0, str(repo_root))
+
+# Ensure repo root is importable (for internal/* modules)
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
+
+# Ensure src/ is importable so `import locohub` works without a venv
+src_dir = repo_root / "src"
+if src_dir.exists() and str(src_dir) not in sys.path:
+    sys.path.insert(0, str(src_dir))
 
 from locohub import LocomotionData
 
@@ -356,19 +364,55 @@ def _load_metadata_for_slug(slug: str) -> Dict:
 
 
 def _resolve_dataset_path(dataset_arg: Optional[str], metadata: Optional[Dict] = None) -> Path:
+    """Resolve dataset path robustly.
+
+    Strategy:
+    - If an absolute path is provided and exists, use it.
+    - For relative paths, try current working directory first, then repo root.
+    - If still not found, try matching by filename in converted_datasets/ under repo root.
+    - On failure, raise with a helpful message listing attempted locations.
+    """
+
+    # Build candidate strings from either argument or metadata
+    raw_value: Optional[str] = None
     if dataset_arg:
-        candidate = Path(dataset_arg)
-        if not candidate.is_absolute():
-            candidate = (repo_root / candidate).resolve()
+        raw_value = str(dataset_arg)
     elif metadata and metadata.get('last_dataset_path'):
-        candidate = (repo_root / metadata['last_dataset_path']).resolve()
+        raw_value = str(metadata['last_dataset_path'])
     else:
         raise ValueError("Dataset path is required; pass --dataset or add last_dataset_path to metadata.")
 
-    if not candidate.exists():
-        raise FileNotFoundError(f"Dataset file not found: {candidate}")
+    provided = Path(raw_value)
+    attempted: List[Path] = []
 
-    return candidate
+    # Absolute path case
+    if provided.is_absolute():
+        attempted.append(provided)
+        if provided.exists():
+            return provided.resolve()
+    else:
+        # Try relative to CWD first (user expectation), then repo root
+        cwd_candidate = (Path.cwd() / provided).resolve()
+        attempted.append(cwd_candidate)
+        if cwd_candidate.exists():
+            return cwd_candidate
+
+        repo_candidate = (repo_root / provided).resolve()
+        attempted.append(repo_candidate)
+        if repo_candidate.exists():
+            return repo_candidate
+
+        # If user provided just a filename, look under repo converted_datasets/
+        if provided.name:
+            cd_candidate = (repo_root / 'converted_datasets' / provided.name).resolve()
+            attempted.append(cd_candidate)
+            if cd_candidate.exists():
+                return cd_candidate
+
+    attempted_str = "\n  - ".join(str(p) for p in attempted)
+    raise FileNotFoundError(
+        "Dataset file not found. Tried:\n  - " + attempted_str
+    )
 
 
 def _prompt_metadata_updates(metadata: Dict) -> None:

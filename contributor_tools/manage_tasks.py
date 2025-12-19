@@ -17,12 +17,15 @@ from pathlib import Path
 from typing import Dict, Iterable, List
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = PROJECT_ROOT / "src"
 REGISTRY_PATH = PROJECT_ROOT / "internal" / "config_management" / "task_registry.py"
 REFERENCE_DOC = PROJECT_ROOT / "docs" / "reference" / "index.md"
 
 # Ensure imports resolve when the script is launched from arbitrary directories.
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+if SRC_DIR.exists() and str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 
 def load_tasks() -> Dict[str, "TaskRecord"]:

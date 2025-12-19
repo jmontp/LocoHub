@@ -39,8 +39,13 @@ import threading
 import time
 import numpy as np
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Ensure repository root and src/ are importable so `import locohub` works
+project_root = Path(__file__).parent.parent
+src_dir = project_root / "src"
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+if src_dir.exists() and str(src_dir) not in sys.path:
+    sys.path.insert(0, str(src_dir))
 
 from internal.validation_engine.validator import Validator
 from internal.config_management import task_registry

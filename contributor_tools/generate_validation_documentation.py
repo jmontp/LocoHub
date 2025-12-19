@@ -22,9 +22,13 @@ import argparse
 from datetime import datetime
 import sys
 
-# Add parent directory to path for imports
+# Ensure repository root and src/ are importable so `import locohub` works
 repo_root = Path(__file__).parent.parent
-sys.path.insert(0, str(repo_root))
+src_dir = repo_root / "src"
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
+if src_dir.exists() and str(src_dir) not in sys.path:
+    sys.path.insert(0, str(src_dir))
 
 # Import validation modules
 from internal.config_management.config_manager import ValidationConfigManager
