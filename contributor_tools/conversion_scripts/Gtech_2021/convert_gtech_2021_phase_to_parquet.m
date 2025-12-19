@@ -102,6 +102,15 @@ for subj_idx = 1:length(subjects_to_process)
         fprintf('  WARNING: No mass data for %s, skipping\n', subject_code);
         continue;
     end
+
+    % Estimate segment lengths from static markers (per subject)
+    seg_lengths = gtech_estimate_segment_lengths(DATA_ROOT, subject_code);
+    subject_metadata = sprintf( ...
+        'weight_kg:%.1f,thigh_length_m:%.3f,shank_length_m:%.3f,foot_length_m:%.3f', ...
+        subject_mass, ...
+        seg_lengths.thigh_length_m, ...
+        seg_lengths.shank_length_m, ...
+        seg_lengths.foot_length_m);
     
     % Initialize trial counters for validation
     trial_counts = struct('treadmill_speeds', 0, 'levelground', 0, 'stair', 0, 'ramp', 0);
@@ -131,7 +140,7 @@ for subj_idx = 1:length(subjects_to_process)
     subject_rows = [];
     
     % 1. Process treadmill data
-    [treadmill_rows, treadmill_speeds] = process_treadmill(date_path, subject_str, subject_mass);
+    [treadmill_rows, treadmill_speeds] = process_treadmill(date_path, subject_str, subject_mass, subject_metadata);
     if ~isempty(treadmill_rows)
         subject_rows = [subject_rows; treadmill_rows];
         fprintf('  Added %d treadmill strides\n', height(treadmill_rows));
@@ -139,7 +148,7 @@ for subj_idx = 1:length(subjects_to_process)
     end
     
     % 2. Process level ground data
-    [levelground_rows, lg_trials] = process_levelground(date_path, subject_str, subject_mass);
+    [levelground_rows, lg_trials] = process_levelground(date_path, subject_str, subject_mass, subject_metadata);
     if ~isempty(levelground_rows)
         subject_rows = [subject_rows; levelground_rows];
         fprintf('  Added %d level ground strides\n', height(levelground_rows));
@@ -147,7 +156,7 @@ for subj_idx = 1:length(subjects_to_process)
     end
     
     % 3. Process ramp data
-    [ramp_rows, ramp_trials] = process_ramp(date_path, subject_str, subject_mass);
+    [ramp_rows, ramp_trials] = process_ramp(date_path, subject_str, subject_mass, subject_metadata);
     if ~isempty(ramp_rows)
         subject_rows = [subject_rows; ramp_rows];
         fprintf('  Added %d ramp strides\n', height(ramp_rows));
@@ -155,7 +164,7 @@ for subj_idx = 1:length(subjects_to_process)
     end
     
     % 4. Process stair data
-    [stair_rows, stair_trials] = process_stair(date_path, subject_str, subject_mass);
+    [stair_rows, stair_trials] = process_stair(date_path, subject_str, subject_mass, subject_metadata);
     if ~isempty(stair_rows)
         subject_rows = [subject_rows; stair_rows];
         fprintf('  Added %d stair strides\n', height(stair_rows));
@@ -214,7 +223,7 @@ end
 
 %% Helper Functions
 
-function [rows, unique_speeds] = process_treadmill(date_path, subject_str, subject_mass)
+function [rows, unique_speeds] = process_treadmill(date_path, subject_str, subject_mass, subject_metadata)
     % Process treadmill walking data
     rows = table();
     unique_speeds = 0;
@@ -283,7 +292,7 @@ function [rows, unique_speeds] = process_treadmill(date_path, subject_str, subje
                 % Extract strides for this segment
                 task_info = sprintf('speed_m_s:%.2f,treadmill:true,surface:treadmill', actual_speed);
                 stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                    subject_str, 'level_walking', 'level', task_info, subject_mass);
+                    subject_str, subject_metadata, 'level_walking', 'level', task_info, subject_mass, 'treadmill');
                 
                 if ~isempty(stride_rows)
                     rows = [rows; stride_rows];
@@ -298,7 +307,7 @@ function [rows, unique_speeds] = process_treadmill(date_path, subject_str, subje
     unique_speeds = length(unique(round(detected_speeds, 2)));
 end
 
-function [rows, trial_count] = process_levelground(date_path, subject_str, subject_mass)
+function [rows, trial_count] = process_levelground(date_path, subject_str, subject_mass, subject_metadata)
     % Process level ground walking data and labeled transitions
     rows = table();
     trial_count = 0;
@@ -352,7 +361,7 @@ function [rows, trial_count] = process_levelground(date_path, subject_str, subje
                     end
 
                     stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                        subject_str, task, task_id, task_info, subject_mass);
+                        subject_str, subject_metadata, task, task_id, task_info, subject_mass, 'levelground');
 
                     if ~isempty(stride_rows)
                         rows = [rows; stride_rows];
@@ -368,7 +377,7 @@ function [rows, trial_count] = process_levelground(date_path, subject_str, subje
             time_end = trial_data.ik_offset.Header(end);
             task_info = sprintf('speed_m_s:%.2f,surface:overground,labels_missing:true', speed_val);
             stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                subject_str, 'level_walking', 'level', task_info, subject_mass);
+                subject_str, subject_metadata, 'level_walking', 'level', task_info, subject_mass, 'levelground');
 
             if ~isempty(stride_rows)
                 rows = [rows; stride_rows];
@@ -376,7 +385,8 @@ function [rows, trial_count] = process_levelground(date_path, subject_str, subje
         end
     end
 end
-function [rows, trial_count] = process_ramp(date_path, subject_str, subject_mass)
+
+function [rows, trial_count] = process_ramp(date_path, subject_str, subject_mass, subject_metadata)
     % Process ramp ascent/descent data, including transitions
     rows = table();
     trial_count = 0;
@@ -405,6 +415,10 @@ function [rows, trial_count] = process_ramp(date_path, subject_str, subject_mass
            any(strcmp(trial_data.conditions.Properties.VariableNames, 'rampIncline'))
             ramp_angle = trial_data.conditions.rampIncline(1);
         end
+        % Fallback: use scalar rampIncline copied from conditions struct
+        if isnan(ramp_angle) && isfield(trial_data, 'rampIncline')
+            ramp_angle = trial_data.rampIncline;
+        end
 
         processed = false;
         if isfield(trial_data, 'conditions') && istable(trial_data.conditions) && ...
@@ -431,7 +445,7 @@ function [rows, trial_count] = process_ramp(date_path, subject_str, subject_mass
                     end
 
                     stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                        subject_str, task, task_id, task_info, subject_mass);
+                        subject_str, subject_metadata, task, task_id, task_info, subject_mass, 'ramp');
 
                     if ~isempty(stride_rows)
                         rows = [rows; stride_rows];
@@ -468,8 +482,8 @@ function [rows, trial_count] = process_ramp(date_path, subject_str, subject_mass
                     task_info = sprintf('incline_deg:%.1f,surface:overground,fallback:true', angle_label);
                 end
 
-                stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                    subject_str, task, task_id, task_info, subject_mass);
+            stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
+                subject_str, subject_metadata, task, task_id, task_info, subject_mass, 'ramp');
 
                 if ~isempty(stride_rows)
                     rows = [rows; stride_rows];
@@ -478,7 +492,8 @@ function [rows, trial_count] = process_ramp(date_path, subject_str, subject_mass
         end
     end
 end
-function [rows, trial_count] = process_stair(date_path, subject_str, subject_mass)
+
+function [rows, trial_count] = process_stair(date_path, subject_str, subject_mass, subject_metadata)
     % Process stair ascent/descent data and transitions
     rows = table();
     trial_count = 0;
@@ -537,7 +552,7 @@ function [rows, trial_count] = process_stair(date_path, subject_str, subject_mas
                     end
 
                     stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                        subject_str, task, task_id, task_info, subject_mass);
+                        subject_str, subject_metadata, task, task_id, task_info, subject_mass, 'stair');
 
                     if ~isempty(stride_rows)
                         rows = [rows; stride_rows];
@@ -566,8 +581,8 @@ function [rows, trial_count] = process_stair(date_path, subject_str, subject_mas
                     continue;
                 end
 
-                stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-                    subject_str, task, task_id, task_info, subject_mass);
+            stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
+                subject_str, subject_metadata, task, task_id, task_info, subject_mass, 'stair');
 
                 if ~isempty(stride_rows)
                     rows = [rows; stride_rows];
@@ -755,6 +770,10 @@ function trial_data = load_trial_data(mode_path, trial_name)
             if isfield(temp, 'stairHeight')
                 trial_data.stairHeight = temp.stairHeight;
             end
+            % Also copy rampIncline field if it exists (for ramp trials)
+            if isfield(temp, 'rampIncline')
+                trial_data.rampIncline = temp.rampIncline;
+            end
         end
         
         % Load IK (inverse kinematics)
@@ -834,12 +853,12 @@ function trial_data = load_trial_data(mode_path, trial_name)
 end
 
 function rows = extract_and_process_strides(trial_data, time_start, time_end, ...
-    subject_str, task, task_id, task_info, subject_mass)
+    subject_str, subject_metadata, task, task_id, task_info, subject_mass, mode)
     % NEW APPROACH: Single-leg processing based on first heel strike
     % The leg that heel strikes first becomes ipsilateral for entire trial
     
     % Determine which leg heel strikes first in this trial segment
-    [first_leg, first_hs_time] = determine_first_heel_strike(trial_data, time_start, time_end);
+    [first_leg, first_hs_time] = gtech_determine_first_heel_strike(trial_data, time_start, time_end);
     
     if isempty(first_leg)
         fprintf('  No heel strikes found in time window %.3f-%.3f sec\n', time_start, time_end);
@@ -852,11 +871,11 @@ function rows = extract_and_process_strides(trial_data, time_start, time_end, ..
     % Process ONLY with the first heel-striking leg as ipsilateral
     % This eliminates duplicate strides and provides consistent force plate assignment
     rows = extract_and_process_strides_single_leg(trial_data, time_start, time_end, ...
-        subject_str, task, task_id, task_info, subject_mass, first_leg);
+        subject_str, subject_metadata, task, task_id, task_info, subject_mass, first_leg, mode);
 end
 
 function rows = extract_and_process_strides_single_leg(trial_data, time_start, time_end, ...
-    subject_str, task, task_id, task_info, subject_mass, leg_side)
+    subject_str, subject_metadata, task, task_id, task_info, subject_mass, leg_side, mode)
     % Extract strides from time window and process to standard format for single leg
     
     rows = [];  % Will collect complete stride rows
@@ -940,6 +959,8 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         
         % Initialize data arrays for this stride
         stride_data = struct();
+        stride_data.subject = repmat({subject_str}, NUM_POINTS, 1);
+        stride_data.subject_metadata = repmat({subject_metadata}, NUM_POINTS, 1);
         stride_data.phase_ipsi = target_pct;
         stride_data.phase_ipsi_dot = repmat(phase_ipsi_dot_value, NUM_POINTS, 1);  % Constant for all 150 points
         
@@ -977,12 +998,15 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
             target_times = linspace(stride_start_time, stride_end_time, NUM_POINTS);
             ankle_data = interp1(ik_time, angle_data, target_times, 'linear') * deg2rad;
             ankle_velocity = gradient(ankle_data) * 150 / stride_duration_s;
+            ankle_acceleration = gradient(ankle_velocity) * 150 / stride_duration_s;
             
             stride_data.ankle_dorsiflexion_angle_ipsi_rad = ankle_data;
             stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = ankle_velocity;
+            stride_data.ankle_dorsiflexion_acceleration_ipsi_rad_s2 = ankle_acceleration;
         else
             stride_data.ankle_dorsiflexion_angle_ipsi_rad = zeros(NUM_POINTS, 1);
             stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = zeros(NUM_POINTS, 1);
+            stride_data.ankle_dorsiflexion_acceleration_ipsi_rad_s2 = zeros(NUM_POINTS, 1);
         end
         
         % Ankle dorsiflexion angle - CONTRALATERAL
@@ -992,12 +1016,15 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
             % NAIVE APPROACH: Direct time interpolation + simple gradient
             ankle_data_contra = interp1(ik_time, angle_data, target_times, 'linear') * deg2rad;
             ankle_velocity_contra = gradient(ankle_data_contra) * 150 / stride_duration_s;
+            ankle_acceleration_contra = gradient(ankle_velocity_contra) * 150 / stride_duration_s;
             
             stride_data.ankle_dorsiflexion_angle_contra_rad = ankle_data_contra;
             stride_data.ankle_dorsiflexion_velocity_contra_rad_s = ankle_velocity_contra;
+            stride_data.ankle_dorsiflexion_acceleration_contra_rad_s2 = ankle_acceleration_contra;
         else
             stride_data.ankle_dorsiflexion_angle_contra_rad = zeros(NUM_POINTS, 1);
             stride_data.ankle_dorsiflexion_velocity_contra_rad_s = zeros(NUM_POINTS, 1);
+            stride_data.ankle_dorsiflexion_acceleration_contra_rad_s2 = zeros(NUM_POINTS, 1);
         end
         
         % Determine knee variable names based on leg_side
@@ -1020,12 +1047,15 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
             knee_data = -knee_data;
             
             knee_velocity = gradient(knee_data) * 150 / stride_duration_s;
+            knee_acceleration = gradient(knee_velocity) * 150 / stride_duration_s;
             
             stride_data.knee_flexion_angle_ipsi_rad = knee_data;
             stride_data.knee_flexion_velocity_ipsi_rad_s = knee_velocity;
+            stride_data.knee_flexion_acceleration_ipsi_rad_s2 = knee_acceleration;
         else
             stride_data.knee_flexion_angle_ipsi_rad = zeros(NUM_POINTS, 1);
             stride_data.knee_flexion_velocity_ipsi_rad_s = zeros(NUM_POINTS, 1);
+            stride_data.knee_flexion_acceleration_ipsi_rad_s2 = zeros(NUM_POINTS, 1);
         end
         
         % Knee angle - CONTRALATERAL
@@ -1039,12 +1069,15 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
             knee_data_contra = -knee_data_contra;
             
             knee_velocity_contra = gradient(knee_data_contra) * 150 / stride_duration_s;
+            knee_acceleration_contra = gradient(knee_velocity_contra) * 150 / stride_duration_s;
             
             stride_data.knee_flexion_angle_contra_rad = knee_data_contra;
             stride_data.knee_flexion_velocity_contra_rad_s = knee_velocity_contra;
+            stride_data.knee_flexion_acceleration_contra_rad_s2 = knee_acceleration_contra;
         else
             stride_data.knee_flexion_angle_contra_rad = zeros(NUM_POINTS, 1);
             stride_data.knee_flexion_velocity_contra_rad_s = zeros(NUM_POINTS, 1);
+            stride_data.knee_flexion_acceleration_contra_rad_s2 = zeros(NUM_POINTS, 1);
         end
         
         % Determine hip variable names based on leg_side
@@ -1063,9 +1096,11 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
             % NAIVE APPROACH: Direct time interpolation + simple gradient
             stride_data.hip_flexion_angle_ipsi_rad = interp1(ik_time, angle_data, target_times, 'linear') * deg2rad;
             stride_data.hip_flexion_velocity_ipsi_rad_s = gradient(stride_data.hip_flexion_angle_ipsi_rad) * 150 / stride_duration_s;
+            stride_data.hip_flexion_acceleration_ipsi_rad_s2 = gradient(stride_data.hip_flexion_velocity_ipsi_rad_s) * 150 / stride_duration_s;
         else
             stride_data.hip_flexion_angle_ipsi_rad = zeros(NUM_POINTS, 1);
             stride_data.hip_flexion_velocity_ipsi_rad_s = zeros(NUM_POINTS, 1);
+            stride_data.hip_flexion_acceleration_ipsi_rad_s2 = zeros(NUM_POINTS, 1);
         end
         
         % Hip angle - CONTRALATERAL
@@ -1075,9 +1110,11 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
             % NAIVE APPROACH: Direct time interpolation + simple gradient
             stride_data.hip_flexion_angle_contra_rad = interp1(ik_time, angle_data, target_times, 'linear') * deg2rad;
             stride_data.hip_flexion_velocity_contra_rad_s = gradient(stride_data.hip_flexion_angle_contra_rad) * 150 / stride_duration_s;
+            stride_data.hip_flexion_acceleration_contra_rad_s2 = gradient(stride_data.hip_flexion_velocity_contra_rad_s) * 150 / stride_duration_s;
         else
             stride_data.hip_flexion_angle_contra_rad = zeros(NUM_POINTS, 1);
             stride_data.hip_flexion_velocity_contra_rad_s = zeros(NUM_POINTS, 1);
+            stride_data.hip_flexion_acceleration_contra_rad_s2 = zeros(NUM_POINTS, 1);
         end
         
         % Calculate segment angles from kinematic chain
@@ -1480,6 +1517,39 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 stride_data.lateral_grf_contra_BW = NaN(NUM_POINTS, 1);
             end
             
+            % Adjust GRF sign conventions
+            % 1) Flip anterior GRF so that positive corresponds to expected forward direction
+            if ~all(isnan(stride_data.anterior_grf_ipsi_BW))
+                % For treadmill (dedicated channels), flip anterior; other tasks tuned later
+                if treadmill_task
+                    stride_data.anterior_grf_ipsi_BW = -stride_data.anterior_grf_ipsi_BW;
+                end
+            end
+            if ~all(isnan(stride_data.anterior_grf_contra_BW))
+                stride_data.anterior_grf_contra_BW = -stride_data.anterior_grf_contra_BW;
+            end
+            
+            % 2) Enforce lateral GRF mean > 0 for ipsi and < 0 for contra during stance
+            contact_threshold_BW_lateral = 0.2;
+            if ~all(isnan(stride_data.vertical_grf_ipsi_BW)) && ~all(isnan(stride_data.lateral_grf_ipsi_BW))
+                stance_mask = stride_data.vertical_grf_ipsi_BW > contact_threshold_BW_lateral;
+                if any(stance_mask)
+                    mean_lat = mean(stride_data.lateral_grf_ipsi_BW(stance_mask), 'omitnan');
+                    if mean_lat < 0
+                        stride_data.lateral_grf_ipsi_BW = -stride_data.lateral_grf_ipsi_BW;
+                    end
+                end
+            end
+            if ~all(isnan(stride_data.vertical_grf_contra_BW)) && ~all(isnan(stride_data.lateral_grf_contra_BW))
+                stance_mask = stride_data.vertical_grf_contra_BW > contact_threshold_BW_lateral;
+                if any(stance_mask)
+                    mean_lat = mean(stride_data.lateral_grf_contra_BW(stance_mask), 'omitnan');
+                    if mean_lat > 0
+                        stride_data.lateral_grf_contra_BW = -stride_data.lateral_grf_contra_BW;
+                    end
+                end
+            end
+            
             % Center of pressure in ankle frame (meters)
             if treadmill_task && has_markers
                 if strcmp(leg_side, 'right')
@@ -1505,7 +1575,8 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                     cop_ant = interp1(fp_time, trial_data.fp.(ipsi_pz), target_times, 'linear', NaN);
                     stride_data.cop_lateral_ipsi_m = cop_lat - ankle_lateral_ipsi_m;
                     stride_data.cop_vertical_ipsi_m = cop_vert - ankle_vertical_ipsi_m;
-                    stride_data.cop_anterior_ipsi_m = cop_ant - ankle_anterior_ipsi_m;
+                    % Flip anterior COP to match forward-positive convention
+                    stride_data.cop_anterior_ipsi_m = -(cop_ant - ankle_anterior_ipsi_m);
                 end
                 
                 if any(strcmp(trial_data.fp.Properties.VariableNames, contra_px)) && ...
@@ -1530,7 +1601,8 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                     cop_ant = interp1(fp_time, trial_data.fp.(ipsi_pz), target_times, 'linear', NaN);
                     stride_data.cop_lateral_ipsi_m = cop_lat - ankle_lateral_ipsi_m;
                     stride_data.cop_vertical_ipsi_m = cop_vert - ankle_vertical_ipsi_m;
-                    stride_data.cop_anterior_ipsi_m = cop_ant - ankle_anterior_ipsi_m;
+                    % Flip anterior COP to match forward-positive convention
+                    stride_data.cop_anterior_ipsi_m = -(cop_ant - ankle_anterior_ipsi_m);
                 end
             end
             
@@ -1558,72 +1630,121 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
             stride_data.lateral_grf_contra_BW = NaN(NUM_POINTS, 1);
         end
         
-        % CHECK FOR SWAPPED GRF ASSIGNMENT
-        % Detect if ipsi/contra GRF are swapped based on physiological impossibility
-        % Ipsilateral foot should have near-zero GRF during swing phase (60-100%)
-        if ~all(isnan(stride_data.vertical_grf_ipsi_BW)) && ~all(isnan(stride_data.vertical_grf_contra_BW))
-            % Define phase windows for checking
-            early_stance_idx = (stride_data.phase_ipsi >= 10) & (stride_data.phase_ipsi <= 40);
-            late_swing_idx = (stride_data.phase_ipsi >= 70) & (stride_data.phase_ipsi <= 95);
+        % CHECK FOR SWAPPED GRF ASSIGNMENT (skip for treadmill where channels are fixed)
+        if ~treadmill_task
+            % Detect if ipsi/contra GRF are swapped based on physiological impossibility
+            % Ipsilateral foot should have near-zero GRF during swing phase (60-100%)
+            if ~all(isnan(stride_data.vertical_grf_ipsi_BW)) && ~all(isnan(stride_data.vertical_grf_contra_BW))
+                % Define phase windows for checking
+                early_stance_idx = (stride_data.phase_ipsi >= 10) & (stride_data.phase_ipsi <= 40);
+                late_swing_idx = (stride_data.phase_ipsi >= 70) & (stride_data.phase_ipsi <= 95);
+                
+                % Calculate mean GRF in each window for ipsilateral
+                early_ipsi_grf = mean(stride_data.vertical_grf_ipsi_BW(early_stance_idx), 'omitnan');
+                late_ipsi_grf = mean(stride_data.vertical_grf_ipsi_BW(late_swing_idx), 'omitnan');
+                
+                % Calculate mean GRF in each window for contralateral
+                early_contra_grf = mean(stride_data.vertical_grf_contra_BW(early_stance_idx), 'omitnan');
+                late_contra_grf = mean(stride_data.vertical_grf_contra_BW(late_swing_idx), 'omitnan');
+                
+                % Check if pattern suggests swapped assignment
+                % Ipsi should be HIGH in early stance, ZERO in late swing
+                % Contra should be LOW in early stance, HIGH in late swing
+                swap_detected = false;
+                
+                % Detection criteria:
+                % 1. Late ipsi GRF > 0.3 BW (should be near zero)  
+                % 2. Late ipsi GRF > 0.5 * early ipsi GRF (should be much lower)
+                % Simplified: just check if ipsi has significant force during swing
+                if late_ipsi_grf > 0.3 && ...
+                   late_ipsi_grf > 0.5 * early_ipsi_grf
+                    swap_detected = true;
+                    fprintf('  WARNING: Swapped GRF detected for %s stride %d (task: %s)\n', ...
+                        subject_str, s, task);
+                    fprintf('    Early ipsi: %.2f BW, Late ipsi: %.2f BW (should be ~0)\n', ...
+                        early_ipsi_grf, late_ipsi_grf);
+                    fprintf('    Early contra: %.2f BW, Late contra: %.2f BW\n', ...
+                        early_contra_grf, late_contra_grf);
+                    fprintf('    -> Swapping ipsi/contra GRF assignments\n');
+                    
+                    % Swap all GRF components
+                    temp_vert = stride_data.vertical_grf_ipsi_BW;
+                    stride_data.vertical_grf_ipsi_BW = stride_data.vertical_grf_contra_BW;
+                    stride_data.vertical_grf_contra_BW = temp_vert;
+                    
+                    temp_ant = stride_data.anterior_grf_ipsi_BW;
+                    stride_data.anterior_grf_ipsi_BW = stride_data.anterior_grf_contra_BW;
+                    stride_data.anterior_grf_contra_BW = temp_ant;
+                    
+                    temp_lat = stride_data.lateral_grf_ipsi_BW;
+                    stride_data.lateral_grf_ipsi_BW = stride_data.lateral_grf_contra_BW;
+                    stride_data.lateral_grf_contra_BW = temp_lat;
+                    
+                    temp_cop_ant = stride_data.cop_anterior_ipsi_m;
+                    stride_data.cop_anterior_ipsi_m = stride_data.cop_anterior_contra_m;
+                    stride_data.cop_anterior_contra_m = temp_cop_ant;
+                    
+                    temp_cop_lat = stride_data.cop_lateral_ipsi_m;
+                    stride_data.cop_lateral_ipsi_m = stride_data.cop_lateral_contra_m;
+                    stride_data.cop_lateral_contra_m = temp_cop_lat;
+                    
+                    temp_cop_vert = stride_data.cop_vertical_ipsi_m;
+                    stride_data.cop_vertical_ipsi_m = stride_data.cop_vertical_contra_m;
+                    stride_data.cop_vertical_contra_m = temp_cop_vert;
+                end
+            end
+        end
+        
+        % FINAL SIGN TUNING (ipsi): choose COP anterior and shear GRF signs that best match ID ankle moment
+        if isfield(stride_data, 'ankle_dorsiflexion_moment_ipsi_Nm_kg')
+            cop_ant = stride_data.cop_anterior_ipsi_m;
+            cop_vert = stride_data.cop_vertical_ipsi_m;
+            vgrf = stride_data.vertical_grf_ipsi_BW;
+            sgrf = stride_data.anterior_grf_ipsi_BW;
+            measured = stride_data.ankle_dorsiflexion_moment_ipsi_Nm_kg;
             
-            % Calculate mean GRF in each window for ipsilateral
-            early_ipsi_grf = mean(stride_data.vertical_grf_ipsi_BW(early_stance_idx), 'omitnan');
-            late_ipsi_grf = mean(stride_data.vertical_grf_ipsi_BW(late_swing_idx), 'omitnan');
-            
-            % Calculate mean GRF in each window for contralateral
-            early_contra_grf = mean(stride_data.vertical_grf_contra_BW(early_stance_idx), 'omitnan');
-            late_contra_grf = mean(stride_data.vertical_grf_contra_BW(late_swing_idx), 'omitnan');
-            
-            % Check if pattern suggests swapped assignment
-            % Ipsi should be HIGH in early stance, ZERO in late swing
-            % Contra should be LOW in early stance, HIGH in late swing
-            swap_detected = false;
-            
-            % Detection criteria:
-            % 1. Late ipsi GRF > 0.3 BW (should be near zero)  
-            % 2. Late ipsi GRF > 0.5 * early ipsi GRF (should be much lower)
-            % Simplified: just check if ipsi has significant force during swing
-            if late_ipsi_grf > 0.3 && ...
-               late_ipsi_grf > 0.5 * early_ipsi_grf
-                swap_detected = true;
-                fprintf('  WARNING: Swapped GRF detected for %s stride %d (task: %s)\n', ...
-                    subject_str, s, task);
-                fprintf('    Early ipsi: %.2f BW, Late ipsi: %.2f BW (should be ~0)\n', ...
-                    early_ipsi_grf, late_ipsi_grf);
-                fprintf('    Early contra: %.2f BW, Late contra: %.2f BW\n', ...
-                    early_contra_grf, late_contra_grf);
-                fprintf('    -> Swapping ipsi/contra GRF assignments\n');
-                
-                % Swap all GRF components
-                temp_vert = stride_data.vertical_grf_ipsi_BW;
-                stride_data.vertical_grf_ipsi_BW = stride_data.vertical_grf_contra_BW;
-                stride_data.vertical_grf_contra_BW = temp_vert;
-                
-                temp_ant = stride_data.anterior_grf_ipsi_BW;
-                stride_data.anterior_grf_ipsi_BW = stride_data.anterior_grf_contra_BW;
-                stride_data.anterior_grf_contra_BW = temp_ant;
-                
-                temp_lat = stride_data.lateral_grf_ipsi_BW;
-                stride_data.lateral_grf_ipsi_BW = stride_data.lateral_grf_contra_BW;
-                stride_data.lateral_grf_contra_BW = temp_lat;
-                
-                temp_cop_ant = stride_data.cop_anterior_ipsi_m;
-                stride_data.cop_anterior_ipsi_m = stride_data.cop_anterior_contra_m;
-                stride_data.cop_anterior_contra_m = temp_cop_ant;
-                
-                temp_cop_lat = stride_data.cop_lateral_ipsi_m;
-                stride_data.cop_lateral_ipsi_m = stride_data.cop_lateral_contra_m;
-                stride_data.cop_lateral_contra_m = temp_cop_lat;
-                
-                temp_cop_vert = stride_data.cop_vertical_ipsi_m;
-                stride_data.cop_vertical_ipsi_m = stride_data.cop_vertical_contra_m;
-                stride_data.cop_vertical_contra_m = temp_cop_vert;
+            if ~all(isnan(cop_ant(:))) && ~all(isnan(vgrf(:))) && ~all(isnan(sgrf(:))) && ~all(isnan(measured(:)))
+                flip_opts = [1, -1];
+                best_rmse = inf;
+                best_sa = 1;  % COP anterior sign
+                best_sg = 1;  % shear GRF sign
+                for sa = flip_opts
+                    for sg = flip_opts
+                        est = (-(sa * cop_ant) .* vgrf + cop_vert .* (sg * sgrf)) * 9.81;  % Nm/kg (mass cancels)
+                        rmse = sqrt(mean((est - measured).^2, 'omitnan'));
+                        if rmse < best_rmse
+                            best_rmse = rmse;
+                            best_sa = sa;
+                            best_sg = sg;
+                        end
+                    end
+                end
+                stride_data.cop_anterior_ipsi_m = best_sa * cop_ant;
+                stride_data.anterior_grf_ipsi_BW = best_sg * sgrf;
+            end
+        end
+
+        % Override ipsilateral GRF/COP/ankle moment with canonical helper
+        % for treadmill and ramp/stair strides to match
+        % debug_ankle_torque_from_fp pipeline.
+        if strcmpi(mode, 'treadmill') || strcmpi(mode, 'ramp') || strcmpi(mode, 'stair')
+            canonical_sd = gtech_compute_grf_cop_stride( ...
+                trial_data, stride_time, stride_pct, leg_side, subject_mass, NUM_POINTS, mode);
+            if ~isempty(canonical_sd)
+                stride_data.vertical_grf_ipsi_BW = canonical_sd.vertical_grf_BW;
+                stride_data.anterior_grf_ipsi_BW = canonical_sd.anterior_grf_BW;
+                stride_data.lateral_grf_ipsi_BW = canonical_sd.lateral_grf_BW;
+                stride_data.cop_anterior_ipsi_m = canonical_sd.cop_ant_m;
+                stride_data.cop_vertical_ipsi_m = canonical_sd.cop_vert_m;
+                stride_data.cop_lateral_ipsi_m = canonical_sd.cop_lat_m;
+                stride_data.ankle_dorsiflexion_moment_ipsi_Nm_kg = canonical_sd.ankle_moment_Nm_kg;
             end
         end
         
         % Create single row with arrays for this stride
         row = table();
         row.subject = {subject_str};
+        row.subject_metadata = {subject_metadata};
         row.task = {task};
         row.task_id = {task_id};
         row.task_info = {task_info};
@@ -1641,6 +1762,9 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         row.ankle_dorsiflexion_velocity_ipsi_rad_s = {stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s};
         row.knee_flexion_velocity_ipsi_rad_s = {stride_data.knee_flexion_velocity_ipsi_rad_s};
         row.hip_flexion_velocity_ipsi_rad_s = {stride_data.hip_flexion_velocity_ipsi_rad_s};
+        row.ankle_dorsiflexion_acceleration_ipsi_rad_s2 = {stride_data.ankle_dorsiflexion_acceleration_ipsi_rad_s2};
+        row.knee_flexion_acceleration_ipsi_rad_s2 = {stride_data.knee_flexion_acceleration_ipsi_rad_s2};
+        row.hip_flexion_acceleration_ipsi_rad_s2 = {stride_data.hip_flexion_acceleration_ipsi_rad_s2};
         
         % Contralateral kinematics
         row.ankle_dorsiflexion_angle_contra_rad = {stride_data.ankle_dorsiflexion_angle_contra_rad};
@@ -1651,6 +1775,9 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         row.ankle_dorsiflexion_velocity_contra_rad_s = {stride_data.ankle_dorsiflexion_velocity_contra_rad_s};
         row.knee_flexion_velocity_contra_rad_s = {stride_data.knee_flexion_velocity_contra_rad_s};
         row.hip_flexion_velocity_contra_rad_s = {stride_data.hip_flexion_velocity_contra_rad_s};
+        row.ankle_dorsiflexion_acceleration_contra_rad_s2 = {stride_data.ankle_dorsiflexion_acceleration_contra_rad_s2};
+        row.knee_flexion_acceleration_contra_rad_s2 = {stride_data.knee_flexion_acceleration_contra_rad_s2};
+        row.hip_flexion_acceleration_contra_rad_s2 = {stride_data.hip_flexion_acceleration_contra_rad_s2};
         
         % Ipsilateral kinetics
         row.ankle_dorsiflexion_moment_ipsi_Nm_kg = {stride_data.ankle_dorsiflexion_moment_ipsi_Nm_kg};
@@ -1758,6 +1885,7 @@ function expanded = expand_table_for_parquet(compact_table)
     
     % Pre-allocate arrays for efficiency
     subject = cell(total_rows, 1);
+    subject_metadata = cell(total_rows, 1);
     task = cell(total_rows, 1);
     task_id = cell(total_rows, 1);
     task_info = cell(total_rows, 1);
@@ -1775,6 +1903,11 @@ function expanded = expand_table_for_parquet(compact_table)
     knee_flexion_velocity_ipsi_rad_s = zeros(total_rows, 1);
     hip_flexion_velocity_ipsi_rad_s = zeros(total_rows, 1);
     
+    % Ipsilateral accelerations
+    ankle_dorsiflexion_acceleration_ipsi_rad_s2 = zeros(total_rows, 1);
+    knee_flexion_acceleration_ipsi_rad_s2 = zeros(total_rows, 1);
+    hip_flexion_acceleration_ipsi_rad_s2 = zeros(total_rows, 1);
+    
     % Contralateral kinematics
     ankle_dorsiflexion_angle_contra_rad = zeros(total_rows, 1);
     knee_flexion_angle_contra_rad = zeros(total_rows, 1);
@@ -1784,6 +1917,11 @@ function expanded = expand_table_for_parquet(compact_table)
     ankle_dorsiflexion_velocity_contra_rad_s = zeros(total_rows, 1);
     knee_flexion_velocity_contra_rad_s = zeros(total_rows, 1);
     hip_flexion_velocity_contra_rad_s = zeros(total_rows, 1);
+    
+    % Contralateral accelerations
+    ankle_dorsiflexion_acceleration_contra_rad_s2 = zeros(total_rows, 1);
+    knee_flexion_acceleration_contra_rad_s2 = zeros(total_rows, 1);
+    hip_flexion_acceleration_contra_rad_s2 = zeros(total_rows, 1);
     
     % Ipsilateral kinetics
     ankle_dorsiflexion_moment_ipsi_Nm_kg = zeros(total_rows, 1);
@@ -1844,7 +1982,7 @@ function expanded = expand_table_for_parquet(compact_table)
     % Process each stride
     row_idx = 1;
     for stride_idx = 1:num_strides
-        if mod(stride_idx, 1000) == 0
+        if mod(stride_idx, 500) == 0
             fprintf('    Processing stride %d/%d\n', stride_idx, num_strides);
         end
         
@@ -1854,6 +1992,7 @@ function expanded = expand_table_for_parquet(compact_table)
         for p = 1:num_points
             % Copy metadata (same for all points in stride)
             subject{row_idx} = stride.subject{1};
+            subject_metadata{row_idx} = stride.subject_metadata{1};
             task{row_idx} = stride.task{1};
             task_id{row_idx} = stride.task_id{1};
             task_info{row_idx} = stride.task_info{1};
@@ -1873,6 +2012,11 @@ function expanded = expand_table_for_parquet(compact_table)
             knee_flexion_velocity_ipsi_rad_s(row_idx) = stride.knee_flexion_velocity_ipsi_rad_s{1}(p);
             hip_flexion_velocity_ipsi_rad_s(row_idx) = stride.hip_flexion_velocity_ipsi_rad_s{1}(p);
             
+            % Ipsilateral accelerations
+            ankle_dorsiflexion_acceleration_ipsi_rad_s2(row_idx) = stride.ankle_dorsiflexion_acceleration_ipsi_rad_s2{1}(p);
+            knee_flexion_acceleration_ipsi_rad_s2(row_idx) = stride.knee_flexion_acceleration_ipsi_rad_s2{1}(p);
+            hip_flexion_acceleration_ipsi_rad_s2(row_idx) = stride.hip_flexion_acceleration_ipsi_rad_s2{1}(p);
+            
             % Contralateral kinematics
             ankle_dorsiflexion_angle_contra_rad(row_idx) = stride.ankle_dorsiflexion_angle_contra_rad{1}(p);
             knee_flexion_angle_contra_rad(row_idx) = stride.knee_flexion_angle_contra_rad{1}(p);
@@ -1882,6 +2026,11 @@ function expanded = expand_table_for_parquet(compact_table)
             ankle_dorsiflexion_velocity_contra_rad_s(row_idx) = stride.ankle_dorsiflexion_velocity_contra_rad_s{1}(p);
             knee_flexion_velocity_contra_rad_s(row_idx) = stride.knee_flexion_velocity_contra_rad_s{1}(p);
             hip_flexion_velocity_contra_rad_s(row_idx) = stride.hip_flexion_velocity_contra_rad_s{1}(p);
+            
+            % Contralateral accelerations
+            ankle_dorsiflexion_acceleration_contra_rad_s2(row_idx) = stride.ankle_dorsiflexion_acceleration_contra_rad_s2{1}(p);
+            knee_flexion_acceleration_contra_rad_s2(row_idx) = stride.knee_flexion_acceleration_contra_rad_s2{1}(p);
+            hip_flexion_acceleration_contra_rad_s2(row_idx) = stride.hip_flexion_acceleration_contra_rad_s2{1}(p);
             
             % Ipsilateral kinetics
             ankle_dorsiflexion_moment_ipsi_Nm_kg(row_idx) = stride.ankle_dorsiflexion_moment_ipsi_Nm_kg{1}(p);
@@ -1945,11 +2094,13 @@ function expanded = expand_table_for_parquet(compact_table)
     
     % Create output table from arrays
     fprintf('  Creating expanded table...\n');
-    expanded = table(subject, task, task_id, task_info, step, phase_ipsi, phase_ipsi_dot, ...
+    expanded = table(subject, subject_metadata, task, task_id, task_info, step, phase_ipsi, phase_ipsi_dot, ...
         ankle_dorsiflexion_angle_ipsi_rad, knee_flexion_angle_ipsi_rad, hip_flexion_angle_ipsi_rad, ...
         ankle_dorsiflexion_velocity_ipsi_rad_s, knee_flexion_velocity_ipsi_rad_s, hip_flexion_velocity_ipsi_rad_s, ...
+        ankle_dorsiflexion_acceleration_ipsi_rad_s2, knee_flexion_acceleration_ipsi_rad_s2, hip_flexion_acceleration_ipsi_rad_s2, ...
         ankle_dorsiflexion_angle_contra_rad, knee_flexion_angle_contra_rad, hip_flexion_angle_contra_rad, ...
         ankle_dorsiflexion_velocity_contra_rad_s, knee_flexion_velocity_contra_rad_s, hip_flexion_velocity_contra_rad_s, ...
+        ankle_dorsiflexion_acceleration_contra_rad_s2, knee_flexion_acceleration_contra_rad_s2, hip_flexion_acceleration_contra_rad_s2, ...
         ankle_dorsiflexion_moment_ipsi_Nm_kg, knee_flexion_moment_ipsi_Nm_kg, hip_flexion_moment_ipsi_Nm_kg, ...
         ankle_dorsiflexion_moment_contra_Nm_kg, knee_flexion_moment_contra_Nm_kg, hip_flexion_moment_contra_Nm_kg, ...
         grf_vertical_ipsi_BW, grf_anterior_ipsi_BW, grf_lateral_ipsi_BW, ...
@@ -1965,62 +2116,6 @@ function expanded = expand_table_for_parquet(compact_table)
 end
 
 %% Helper Functions
-
-function [first_leg, first_hs_time] = determine_first_heel_strike(trial_data, time_start, time_end)
-    % Determine which leg heel strikes first in a trial segment
-    % Returns 'right', 'left', or empty string if no heel strikes found
-    
-    first_leg = '';
-    first_hs_time = [];
-    
-    % Check we have both gait cycle data
-    if ~isfield(trial_data, 'gcRight') || ~istable(trial_data.gcRight) || ...
-       ~isfield(trial_data, 'gcLeft') || ~istable(trial_data.gcLeft)
-        return;
-    end
-    
-    % Get heel strike indices for right leg
-    right_gc_time = trial_data.gcRight.Header;
-    right_window_indices = find(right_gc_time >= time_start & right_gc_time <= time_end);
-    
-    if ~isempty(right_window_indices)
-        right_heel_strike_pct = trial_data.gcRight.HeelStrike;
-        right_hs_indices = findFallingEdges_onlyInSection(right_heel_strike_pct == 0, right_window_indices);
-        if ~isempty(right_hs_indices)
-            right_first_hs_time = right_gc_time(right_hs_indices(1));
-        else
-            right_first_hs_time = inf;  % No heel strikes found
-        end
-    else
-        right_first_hs_time = inf;
-    end
-    
-    % Get heel strike indices for left leg
-    left_gc_time = trial_data.gcLeft.Header;
-    left_window_indices = find(left_gc_time >= time_start & left_gc_time <= time_end);
-    
-    if ~isempty(left_window_indices)
-        left_heel_strike_pct = trial_data.gcLeft.HeelStrike;
-        left_hs_indices = findFallingEdges_onlyInSection(left_heel_strike_pct == 0, left_window_indices);
-        if ~isempty(left_hs_indices)
-            left_first_hs_time = left_gc_time(left_hs_indices(1));
-        else
-            left_first_hs_time = inf;  % No heel strikes found
-        end
-    else
-        left_first_hs_time = inf;
-    end
-    
-    % Determine which leg strikes first
-    if right_first_hs_time < left_first_hs_time
-        first_leg = 'right';
-        first_hs_time = right_first_hs_time;
-    elseif left_first_hs_time < right_first_hs_time
-        first_leg = 'left';
-        first_hs_time = left_first_hs_time;
-    end
-    % If both are inf (no heel strikes), first_leg remains empty
-end
 
 % Helper function for improved gradient calculation with proper boundary conditions
 function velocity = improved_gradient(angle_data)
