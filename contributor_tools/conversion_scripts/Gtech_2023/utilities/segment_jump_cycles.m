@@ -1,8 +1,12 @@
 function [segments, n_jumps] = segment_jump_cycles(grf_file, varargin)
-% SEGMENT_JUMP_CYCLES Segment cyclic jump activities (hops) using GRF-based flight detection.
+% SEGMENT_JUMP_CYCLES Segment jump activities using standing-to-standing detection.
 %
-% This function detects jump cycles by identifying flight phases (both feet off ground)
-% and segmenting from landing to landing.
+% This function detects jump cycles by identifying stable standing phases and
+% flight phases, then segmenting from stable standing through jump back to
+% stable standing. This captures the full jump including countermovement
+% preparation and landing recovery.
+%
+% Cycle definition: stable standing -> countermovement -> takeoff -> flight -> landing -> stable standing
 %
 % Usage:
 %   segments = segment_jump_cycles(grf_file)
@@ -12,13 +16,18 @@ function [segments, n_jumps] = segment_jump_cycles(grf_file, varargin)
 %   grf_file: Path to GroundFrame_GRFs.csv file
 %
 % Optional Parameters:
+%   'VelocityFile': Path to Joint_Velocities.csv (default: derived from grf_file path)
 %   'FlightThreshold': GRF (N) below which subject is in flight (default: 50)
-%   'MinFlightDuration': Minimum flight duration (s) to be a real jump (default: 0.1)
-%   'MinGroundDuration': Minimum ground contact duration (s) (default: 0.1)
-%   'SmoothWindow': Smoothing window in seconds (default: 0.02)
-%   'MinDuration': Minimum cycle duration (s) (default: 0.3)
-%   'MaxDuration': Maximum cycle duration (s) (default: 3.0)
+%   'StandingThreshold': GRF (N) above which subject is standing (default: 600)
+%   'VelocityThreshold': Joint velocity (deg/s) below which motion is stable (default: 25)
+%   'MinFlightDuration': Minimum flight duration (s) to be a real jump (default: 0.05)
+%   'MinStableDuration': Minimum stable standing duration (s) (default: 0.2)
+%   'SmoothWindow': Smoothing window in seconds (default: 0.05)
+%   'MinDuration': Minimum cycle duration (s) (default: 0.5)
+%   'MaxDuration': Maximum cycle duration (s) (default: 4.0)
 %   'UseIQRFiltering': Use IQR-based outlier removal (default: true)
+%   'MarginBefore': Extra time (s) before detected motion onset (default: 0.05)
+%   'MarginAfter': Extra time (s) after detected motion offset (default: 0.05)
 %
 % Returns:
 %   segments: Struct array with fields:
@@ -32,22 +41,32 @@ function [segments, n_jumps] = segment_jump_cycles(grf_file, varargin)
     % Parse optional arguments
     p = inputParser;
     addRequired(p, 'grf_file', @ischar);
+    addParameter(p, 'VelocityFile', '', @ischar);
     addParameter(p, 'FlightThreshold', 50, @isnumeric);      % N - below this = flight
-    addParameter(p, 'MinFlightDuration', 0.1, @isnumeric);   % seconds
-    addParameter(p, 'MinGroundDuration', 0.1, @isnumeric);   % seconds
-    addParameter(p, 'SmoothWindow', 0.02, @isnumeric);       % seconds
-    addParameter(p, 'MinDuration', 0.3, @isnumeric);         % seconds
-    addParameter(p, 'MaxDuration', 3.0, @isnumeric);         % seconds
+    addParameter(p, 'StandingThreshold', 600, @isnumeric);   % N - above this = standing
+    addParameter(p, 'VelocityThreshold', 25, @isnumeric);    % deg/s - below this = stable
+    addParameter(p, 'MinFlightDuration', 0.05, @isnumeric);  % seconds
+    addParameter(p, 'MinStableDuration', 0.2, @isnumeric);   % seconds
+    addParameter(p, 'SmoothWindow', 0.05, @isnumeric);       % seconds
+    addParameter(p, 'MinDuration', 0.5, @isnumeric);         % seconds
+    addParameter(p, 'MaxDuration', 4.0, @isnumeric);         % seconds
     addParameter(p, 'UseIQRFiltering', true, @islogical);
+    addParameter(p, 'MarginBefore', 0.05, @isnumeric);       % seconds
+    addParameter(p, 'MarginAfter', 0.05, @isnumeric);        % seconds
     parse(p, grf_file, varargin{:});
 
     flight_thresh = p.Results.FlightThreshold;
+    standing_thresh = p.Results.StandingThreshold;
+    velocity_thresh = p.Results.VelocityThreshold;
     min_flight_dur = p.Results.MinFlightDuration;
-    min_ground_dur = p.Results.MinGroundDuration;
+    min_stable_dur = p.Results.MinStableDuration;
     smooth_window = p.Results.SmoothWindow;
     min_duration = p.Results.MinDuration;
     max_duration = p.Results.MaxDuration;
     use_iqr_filtering = p.Results.UseIQRFiltering;
+    velocity_file = p.Results.VelocityFile;
+    margin_before = p.Results.MarginBefore;
+    margin_after = p.Results.MarginAfter;
 
     % Initialize outputs
     segments = struct('type', {}, 'start_idx', {}, 'end_idx', {}, ...
@@ -59,6 +78,11 @@ function [segments, n_jumps] = segment_jump_cycles(grf_file, varargin)
     if ~exist(grf_file, 'file')
         warning('GRF file not found: %s', grf_file);
         return;
+    end
+
+    % Derive velocity file path if not provided
+    if isempty(velocity_file)
+        velocity_file = strrep(grf_file, 'GroundFrame_GRFs.csv', 'Joint_Velocities.csv');
     end
 
     % Load GRF data
@@ -88,6 +112,50 @@ function [segments, n_jumps] = segment_jump_cycles(grf_file, varargin)
     % Smooth GRF
     smooth_samples = max(1, round(sample_rate * smooth_window));
     smooth_vert = movmean(total_vert, smooth_samples);
+
+    % Load joint velocity data for kinematic-based segmentation
+    max_joint_vel = [];
+    vel_time = [];
+    use_kinematic_bounds = false;
+
+    if exist(velocity_file, 'file')
+        try
+            vel_data = readtable(velocity_file);
+            vel_time = vel_data.time;
+
+            % Get relevant joint velocities (hip, knee, ankle for both legs)
+            vel_cols = {};
+            possible_cols = {'hip_flexion_velocity_l', 'hip_flexion_velocity_r', ...
+                            'knee_velocity_l', 'knee_velocity_r', ...
+                            'ankle_velocity_l', 'ankle_velocity_r'};
+            for c = 1:length(possible_cols)
+                if ismember(possible_cols{c}, vel_data.Properties.VariableNames)
+                    vel_cols{end+1} = possible_cols{c};
+                end
+            end
+
+            if ~isempty(vel_cols)
+                % Compute max absolute velocity across all joints at each time point
+                vel_matrix = zeros(height(vel_data), length(vel_cols));
+                for c = 1:length(vel_cols)
+                    vel_matrix(:, c) = abs(vel_data.(vel_cols{c}));
+                end
+                max_joint_vel = max(vel_matrix, [], 2);
+
+                % Smooth the velocity signal
+                max_joint_vel = movmean(max_joint_vel, smooth_samples);
+
+                use_kinematic_bounds = true;
+                fprintf('    Using kinematic velocity bounds for jump segmentation\n');
+            else
+                warning('No joint velocity columns found in %s', velocity_file);
+            end
+        catch ME
+            warning('Failed to read velocity file: %s', ME.message);
+        end
+    else
+        fprintf('    Velocity file not found, using GRF-only segmentation\n');
+    end
 
     % Detect flight phases (GRF below threshold)
     in_flight = smooth_vert < flight_thresh;
@@ -123,31 +191,153 @@ function [segments, n_jumps] = segment_jump_cycles(grf_file, varargin)
 
     fprintf('    Detected %d valid flight phases\n', size(valid_flights, 1));
 
-    % Create segments from landing to landing
-    % Each jump cycle: landing_i -> ground contact -> takeoff -> flight -> landing_(i+1)
-    landing_times = time(valid_flights(:, 2));
+    % For each flight phase, find stable standing before and after
+    min_stable_samples = round(min_stable_dur * sample_rate);
+    margin_samples_before = round(margin_before * sample_rate);
+    margin_samples_after = round(margin_after * sample_rate);
 
-    min_ground_samples = round(min_ground_dur * sample_rate);
+    for i = 1:size(valid_flights, 1)
+        flight_start = valid_flights(i, 1);
+        flight_end = valid_flights(i, 2);
+        flight_dur = time(flight_end) - time(flight_start);
 
-    for i = 1:(size(valid_flights, 1) - 1)
-        % Segment from this landing to next landing
-        seg_start_idx = valid_flights(i, 2);      % This landing
-        seg_end_idx = valid_flights(i+1, 2);      % Next landing
-
-        % Check for minimum ground contact between flights
-        ground_samples = valid_flights(i+1, 1) - valid_flights(i, 2);
-        if ground_samples < min_ground_samples
-            continue;  % Skip if ground contact too short
+        % Define search boundaries: don't go past adjacent flights
+        if i > 1
+            search_start_limit = valid_flights(i-1, 2);  % After previous landing
+        else
+            search_start_limit = 1;
         end
+        if i < size(valid_flights, 1)
+            search_end_limit = valid_flights(i+1, 1);    % Before next takeoff
+        else
+            search_end_limit = n_samples;
+        end
+
+        % Find stable standing BEFORE this jump
+        % Search backward from takeoff for stable standing (high GRF, low velocity)
+        seg_start_idx = flight_start;
+
+        if use_kinematic_bounds
+            % Use velocity-based detection
+            for j = flight_start:-1:max(1, search_start_limit)
+                % Check if standing (high GRF)
+                if smooth_vert(j) < standing_thresh
+                    continue;  % Not standing yet
+                end
+
+                % Find corresponding velocity index
+                [~, vel_idx] = min(abs(vel_time - time(j)));
+                if vel_idx >= 1 && vel_idx <= length(max_joint_vel)
+                    if max_joint_vel(vel_idx) < velocity_thresh
+                        % Found a stable point, check if sustained
+                        stable_count = 0;
+                        for k = vel_idx:-1:max(1, vel_idx - min_stable_samples)
+                            if k <= length(max_joint_vel) && max_joint_vel(k) < velocity_thresh
+                                % Also check GRF is high
+                                [~, grf_idx] = min(abs(time - vel_time(k)));
+                                if grf_idx >= 1 && grf_idx <= n_samples && smooth_vert(grf_idx) > standing_thresh
+                                    stable_count = stable_count + 1;
+                                end
+                            else
+                                break;
+                            end
+                        end
+                        if stable_count >= min_stable_samples / 2
+                            seg_start_idx = j;
+                            break;
+                        end
+                    end
+                end
+            end
+        else
+            % GRF-only: find where GRF first crosses standing threshold before takeoff
+            for j = flight_start:-1:max(1, search_start_limit)
+                if smooth_vert(j) > standing_thresh
+                    % Check if stable
+                    stable_count = 0;
+                    for k = j:-1:max(1, j - min_stable_samples)
+                        if smooth_vert(k) > standing_thresh
+                            stable_count = stable_count + 1;
+                        else
+                            break;
+                        end
+                    end
+                    if stable_count >= min_stable_samples / 2
+                        seg_start_idx = j;
+                        break;
+                    end
+                end
+            end
+        end
+
+        % Find stable standing AFTER this jump
+        % Search forward from landing for stable standing (high GRF, low velocity)
+        seg_end_idx = flight_end;
+
+        if use_kinematic_bounds
+            % Use velocity-based detection
+            for j = flight_end:min(n_samples, search_end_limit)
+                % Check if standing (high GRF)
+                if smooth_vert(j) < standing_thresh
+                    continue;  % Not standing yet
+                end
+
+                % Find corresponding velocity index
+                [~, vel_idx] = min(abs(vel_time - time(j)));
+                if vel_idx >= 1 && vel_idx <= length(max_joint_vel)
+                    if max_joint_vel(vel_idx) < velocity_thresh
+                        % Found a stable point, check if sustained
+                        stable_count = 0;
+                        for k = vel_idx:min(length(max_joint_vel), vel_idx + min_stable_samples)
+                            if max_joint_vel(k) < velocity_thresh
+                                % Also check GRF is high
+                                [~, grf_idx] = min(abs(time - vel_time(k)));
+                                if grf_idx >= 1 && grf_idx <= n_samples && smooth_vert(grf_idx) > standing_thresh
+                                    stable_count = stable_count + 1;
+                                end
+                            else
+                                break;
+                            end
+                        end
+                        if stable_count >= min_stable_samples / 2
+                            seg_end_idx = j;
+                            break;
+                        end
+                    end
+                end
+            end
+        else
+            % GRF-only: find where GRF stabilizes above standing threshold after landing
+            for j = flight_end:min(n_samples, search_end_limit)
+                if smooth_vert(j) > standing_thresh
+                    % Check if stable
+                    stable_count = 0;
+                    for k = j:min(n_samples, j + min_stable_samples)
+                        if smooth_vert(k) > standing_thresh
+                            stable_count = stable_count + 1;
+                        else
+                            break;
+                        end
+                    end
+                    if stable_count >= min_stable_samples / 2
+                        seg_end_idx = j;
+                        break;
+                    end
+                end
+            end
+        end
+
+        % Add small margins
+        seg_start_idx = max(1, seg_start_idx - margin_samples_before);
+        seg_end_idx = min(n_samples, seg_end_idx + margin_samples_after);
+
+        % Ensure we don't overlap with adjacent jumps
+        seg_start_idx = max(seg_start_idx, search_start_limit);
+        seg_end_idx = min(seg_end_idx, search_end_limit);
 
         seg_start_time = time(seg_start_idx);
         seg_end_time = time(seg_end_idx);
         seg_duration = seg_end_time - seg_start_time;
-
-        % Calculate flight duration within this cycle
-        flight_start = valid_flights(i+1, 1);
-        flight_end = valid_flights(i+1, 2);
-        flight_dur = time(flight_end) - time(flight_start);
 
         % Basic duration check
         if seg_duration >= min_duration && seg_duration <= max_duration
@@ -191,5 +381,5 @@ function [segments, n_jumps] = segment_jump_cycles(grf_file, varargin)
         end
     end
 
-    fprintf('    Total: %d jump cycles detected\n', n_jumps);
+    fprintf('    Total: %d jump cycles detected (standing -> jump -> standing)\n', n_jumps);
 end
