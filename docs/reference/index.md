@@ -77,7 +77,7 @@ Task families fall into two groups. **Phase-friendly** tasks can be normalized t
 
 ### Phase-Friendly Families
 
-When segmented, these tasks are normalized to 150 samples per stride with `phase_ipsi` running 0–100%. Phase output is preferred because it enables stride averaging and template validation; however, a time-indexed export is acceptable when segmentation is unavailable. See [Gait Tasks](gait_tasks.md) for detailed heel-strike detection algorithms and expected biomechanical patterns.
+When segmented, these tasks are normalized to 150 samples per stride with `phase_ipsi` running 0–100%. Phase output is preferred because it enables stride averaging and template validation; however, a time-indexed export is acceptable when segmentation is unavailable.
 
 | Task | Typical behaviors | Example `task_id` values | Phase definition | Core metadata | Notes |
 |------|-------------------|--------------------------|-----------------|----------------|-------|
@@ -88,13 +88,85 @@ When segmented, these tasks are normalized to 150 samples per stride with `phase
 | `stair_descent` | Descending stairs | `stair_descent`, numbered passes | 0% upper-step contact, 100% lower-step contact for ipsilateral foot | `step_height_m`, `step_number`, `assistance` | Same metadata as ascent; eccentric control dominates mid-step. |
 | `run` | Jogging/running with flight phases | `run_2_5_m_s`, `run_3_0_m_s` | 0% ipsilateral foot contact, 100% next ipsilateral contact including flight | `speed_m_s`, `treadmill`, `surface`, `footwear` | Two GRF peaks with flight intervals; watch pelvis rotation extremes. |
 | `transition` | Gait-to-gait transitions | `walk_to_run`, `stair_to_walk`, `turn` | 0% key event of departing gait (e.g., heel strike), 100% first event of target gait | `transition_from`, `transition_to`, `gait_transition` | A single stride may cover two behaviors; store context keys and treat directions separately. |
-| `sit_to_stand` / `stand_to_sit` | Chair or box transfers | `sit_to_stand`, `stand_to_sit` | 0% motion onset (joint velocity > 25 deg/s), 100% stable end state. Uses GRF thresholds: sitting < 400N, standing > 600N. | `chair_height`, `armrests`, `variant` | See [Non-Gait Tasks](non_gait_tasks.md) for detailed segmentation. |
-| `squat` | Loaded or bodyweight squats | `squat`, `squat_bodyweight`, `squat_25lbs` | 0% stable standing, ~50% lowest depth, 100% stable standing. Uses standing→action→standing archetype. | `weight_lbs`, `variant` | See [Non-Gait Tasks](non_gait_tasks.md) for detailed segmentation. |
+| `sit_to_stand` / `stand_to_sit` | Chair or box transfers | `sit_to_stand`, `stand_to_sit` | 0% motion onset (velocity > 25 deg/s), 100% stable end state. GRF: sitting < 400N, standing > 600N. | `chair_height`, `armrests`, `variant` | See Sitting ↔ Standing archetype below. |
+| `squat` | Loaded or bodyweight squats | `squat`, `squat_bodyweight`, `squat_25lbs` | 0% stable standing, ~50% lowest depth, 100% stable standing. | `weight_lbs`, `variant` | See Standing → Action → Standing archetype below. |
 | `step_up` / `step_down` | Stair-box repetitions, curbs | `step_up`, `step_down` | Step-up: 0% initial foot contact on box, 100% full weight on box. Step-down mirrors with lower surface contact. | `height_m`, `lead_leg`, `step_number` | Treat like short stair runs; ensure cadence is repeatable before phase export. |
-| `jump` | Hops, vertical/lateral jumps | `jump_vertical`, `jump_lateral`, `jump_hop` | 0% stable standing, ~50% flight phase (GRF < 50N), 100% stable standing. Uses standing→action→standing archetype. | `jump_type`, `variant`, `lead_leg` | See [Non-Gait Tasks](non_gait_tasks.md) for detailed segmentation. |
+| `jump` | Hops, vertical/lateral jumps | `jump_vertical`, `jump_lateral`, `jump_hop` | 0% stable standing, ~50% flight phase (GRF < 50N), 100% stable standing. | `jump_type`, `variant`, `lead_leg` | See Standing → Action → Standing archetype below. |
 | `weighted_walk`, `dynamic_walk`, `walk_backward` | Walking variants with perturbations | `level`, `variant:<string>` | Same as level walking (HS-to-HS) when heel strikes are present | `speed_m_s`, `treadmill`, `variant` | Prefer phase when heel strikes exist; otherwise document perturbation under `variant`. |
 
-**Non-gait cyclic tasks** (`jump`, `squat`, `sit_to_stand`, `stand_to_sit`) use kinematic velocity bounds (25 deg/s threshold) to detect motion onset and offset, combined with GRF-based state detection. This ensures segment boundaries match actual motion rather than arbitrary time windows. See [Non-Gait Cyclic Tasks](non_gait_tasks.md) for detailed segmentation algorithms and expected biomechanical patterns.
+### Segmentation Archetypes
+
+Phase-friendly tasks use one of three segmentation archetypes:
+
+#### Heel Strike to Heel Strike (Gait)
+
+Gait tasks are segmented using ipsilateral heel strikes as cycle boundaries:
+
+```
+Ipsi Heel Strike → Ipsi Stance → Ipsi Toe Off → Ipsi Swing → Ipsi Heel Strike
+       0%              0-60%          ~60%         60-100%         100%
+```
+
+| Phase (%) | Event |
+|-----------|-------|
+| 0% | Ipsilateral heel strike (initial contact) |
+| ~10% | Foot flat (loading response complete) |
+| ~30% | Midstance (single-limb support) |
+| ~50% | Contralateral heel strike |
+| ~60% | Ipsilateral toe off (swing begins) |
+| 100% | Next ipsilateral heel strike |
+
+**Heel strike detection** uses GRF threshold crossings (typically 20-50N). When GRF is unavailable, use foot velocity minima or shank angle.
+
+**Applies to**: `level_walking`, `incline_walking`, `decline_walking`, `stair_ascent`, `stair_descent`, `run`, `walk_backward`
+
+#### Standing → Action → Standing
+
+Tasks that begin and end in stable standing, with a discrete action in between. Stable standing requires GRF > 600N AND joint velocity < 25 deg/s.
+
+**Jump** (`jump`):
+```
+Stable Standing → Countermovement → Takeoff → Flight → Landing → Stable Standing
+       0%            ~20-40%        ~40-50%   ~50-60%   ~60-80%       100%
+```
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| FlightThreshold | 50 N | GRF below which subject is in flight |
+| StandingThreshold | 600 N | GRF above which subject is standing |
+| VelocityThreshold | 25 deg/s | Joint velocity below which motion is stable |
+
+**Squat** (`squat`):
+```
+Stable Standing → Descent → Lowest Depth → Ascent → Stable Standing
+       0%          ~25%         ~50%        ~75%        100%
+```
+
+Same detection parameters as jump, but no flight phase. Segment boundaries at stable standing states.
+
+#### Sitting ↔ Standing Transfers
+
+Tasks that transition between seated and standing states using GRF-based state detection combined with joint velocity thresholds.
+
+**Sit-to-stand** (`sit_to_stand`):
+```
+Stable Sitting → Motion Onset → Rising → Motion Offset → Stable Standing
+                      0%                                      100%
+```
+
+**Stand-to-sit** (`stand_to_sit`):
+```
+Stable Standing → Motion Onset → Lowering → Motion Offset → Stable Sitting
+                       0%                                        100%
+```
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| SittingThreshold | 400 N | GRF below which subject is sitting |
+| StandingThreshold | 600 N | GRF above which subject is standing |
+| VelocityThreshold | 25 deg/s | Joint velocity threshold for motion onset/offset |
+
+Motion onset is detected when joint velocity exceeds 25 deg/s; motion offset when it drops below.
 
 ### Time-Indexed (Non-Cyclic) Families
 
@@ -265,8 +337,6 @@ Canonical phase column is `phase_ipsi`.
 
 ## Related
 
-- [Gait Tasks](gait_tasks.md): Detailed segmentation conventions for heel-strike-based gait (walking, running, stairs)
-- [Non-Gait Cyclic Tasks](non_gait_tasks.md): Detailed segmentation conventions for jump, sit-to-stand, stand-to-sit, and squat
 - Datasets overview: ../datasets/
 - Validation ranges: ../datasets/validation_ranges.md
 - Maintainers: ../maintainers/
