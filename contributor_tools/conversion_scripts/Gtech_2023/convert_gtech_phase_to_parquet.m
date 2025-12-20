@@ -165,6 +165,7 @@ for subject_idx = 1:length(subjects)
 
         % Try loading the existing parsing file
         use_grf_segmentation = false;  % Flag to use GRF-based segmentation for sit/stand
+        use_jump_segmentation = false; % Flag to use GRF-based segmentation for jumps
         try
             parsing_data = load(parsing_file_path);
             % Check required fields after successful load
@@ -178,6 +179,9 @@ for subject_idx = 1:length(subjects)
                     contains(activity_file_name, 'stand_to_sit', 'IgnoreCase', true)
                     fprintf('  Activity %s has no heel strike data - will use GRF-based segmentation\n', activity_file_name);
                     use_grf_segmentation = true;
+                 elseif contains(activity_file_name, 'jump', 'IgnoreCase', true)
+                    fprintf('  Activity %s has no heel strike data - will use jump cycle segmentation\n', activity_file_name);
+                    use_jump_segmentation = true;
                  else
                     if is_potentially_critical
                         warning('Parsing file %s found, but missing/empty heel strike data for BOTH legs. Skipping.', activity_file_name);
@@ -193,7 +197,7 @@ for subject_idx = 1:length(subjects)
             left_invalid = true; % Assume invalid if load fails
             right_invalid = true;
         end
-        if ~raw_data_load_successful && ~use_grf_segmentation, continue; end % Skip if parsing failed and not sit/stand
+        if ~raw_data_load_successful && ~use_grf_segmentation && ~use_jump_segmentation, continue; end % Skip if parsing failed and not sit/stand or jump
 
         % Determine activity base name for raw files
         [~, activity_base_name] = fileparts(activity_file_name);
@@ -394,8 +398,8 @@ for subject_idx = 1:length(subjects)
 
         % --- Step 2 (Cont.): Determine Leading Leg ---
         % Use flags set during parsing data check (left_invalid, right_invalid)
-        % For GRF-based segmentation (sit-to-stand), skip this and set defaults later
-        if use_grf_segmentation
+        % For GRF-based segmentation (sit-to-stand, jump), skip this and set defaults later
+        if use_grf_segmentation || use_jump_segmentation
             % Defaults will be set in Step 3 when GRF segmentation is performed
             left_invalid = true;  % Treat as invalid since we're not using heel strikes
             right_invalid = true;
@@ -489,6 +493,47 @@ for subject_idx = 1:length(subjects)
             % For sit-to-stand, we don't have a clear leading leg, so default to right
             leading_leg = 'r';
             fprintf('    Using default leading leg: %s for sit-to-stand activity\n', leading_leg);
+        elseif use_jump_segmentation
+            % Check if this raw folder has already been processed (avoid duplicates)
+            if ismember(raw_activity_name, processed_grf_folders)
+                fprintf('    Skipping %s - raw folder %s already processed for jump segmentation\n', ...
+                    activity_file_name, raw_activity_name);
+                continue;
+            end
+
+            % Use GRF-based segmentation for jump activities (landing-to-landing cycles)
+            grf_file_path = fullfile(subject_raw_data_dir, 'CSV_data', raw_activity_name, 'GroundFrame_GRFs.csv');
+            if ~exist(grf_file_path, 'file')
+                warning('GRF file not found for jump segmentation: %s. Skipping activity.', grf_file_path);
+                continue;
+            end
+
+            % Mark this folder as processed
+            processed_grf_folders{end+1} = raw_activity_name;
+
+            % Call the jump segmentation function
+            % Segments from landing to landing using flight phase detection
+            [jump_segments, n_jumps] = segment_jump_cycles(grf_file_path);
+
+            if isempty(jump_segments)
+                warning('No jump cycles found in GRF data for %s. Skipping activity.', activity_file_name);
+                continue;
+            end
+
+            % Convert segments struct to step intervals array format [start_time, end_time]
+            step_intervals = zeros(length(jump_segments), 2);
+            segment_types = cell(length(jump_segments), 1);
+            for seg_idx = 1:length(jump_segments)
+                step_intervals(seg_idx, 1) = jump_segments(seg_idx).start_time;
+                step_intervals(seg_idx, 2) = jump_segments(seg_idx).end_time;
+                segment_types{seg_idx} = jump_segments(seg_idx).type;
+            end
+            num_steps = size(step_intervals, 1);
+            fprintf('    Found %d jump cycles (landing-to-landing).\n', num_steps);
+
+            % For jumps, we don't have a clear leading leg, so default to right
+            leading_leg = 'r';
+            fprintf('    Using default leading leg: %s for jump activity\n', leading_leg);
         else
             % Check if any step intervals exist (each row is [start, end])
             if isempty(leading_hs_times)
