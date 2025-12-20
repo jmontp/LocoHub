@@ -77,7 +77,7 @@ Task families fall into two groups. **Phase-friendly** tasks can be normalized t
 
 ### Phase-Friendly Families
 
-When segmented, these tasks are normalized to 150 samples per stride with `phase_ipsi` running 0–100%. Phase output is preferred because it enables stride averaging and template validation; however, a time-indexed export is acceptable when segmentation is unavailable.
+When segmented, these tasks are normalized to 150 samples per stride with `phase_ipsi` running 0–100%. Phase output is preferred because it enables stride averaging and template validation; however, a time-indexed export is acceptable when segmentation is unavailable. See [Gait Tasks](gait_tasks.md) for detailed heel-strike detection algorithms and expected biomechanical patterns.
 
 | Task | Typical behaviors | Example `task_id` values | Phase definition | Core metadata | Notes |
 |------|-------------------|--------------------------|-----------------|----------------|-------|
@@ -265,6 +265,7 @@ Canonical phase column is `phase_ipsi`.
 
 ## Related
 
+- [Gait Tasks](gait_tasks.md): Detailed segmentation conventions for heel-strike-based gait (walking, running, stairs)
 - [Non-Gait Cyclic Tasks](non_gait_tasks.md): Detailed segmentation conventions for jump, sit-to-stand, stand-to-sit, and squat
 - Datasets overview: ../datasets/
 - Validation ranges: ../datasets/validation_ranges.md
