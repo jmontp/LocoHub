@@ -51,16 +51,39 @@ from internal.validation_engine.validator import Validator
 from internal.config_management import task_registry
 from locohub import LocomotionData
 
-# Import Tkinter components for scrollable display
-try:
-    import tkinter as tk
-    from tkinter import ttk
+# Detect if we're in a headless environment (no display available)
+import os
+DISPLAY_AVAILABLE = bool(os.environ.get('DISPLAY')) or os.name == 'nt'  # Windows always has display
+
+# Tkinter availability checked lazily when needed for interactive display
+TKINTER_AVAILABLE = False
+_tkinter_checked = False
+
+def _check_tkinter_available():
+    """Lazily check if Tkinter is available for interactive display."""
+    global TKINTER_AVAILABLE, _tkinter_checked
+    if _tkinter_checked:
+        return TKINTER_AVAILABLE
+    _tkinter_checked = True
+    if not DISPLAY_AVAILABLE:
+        TKINTER_AVAILABLE = False
+        return False
+    try:
+        import tkinter as tk
+        from tkinter import ttk
+        import matplotlib
+        matplotlib.use('TkAgg')  # Only set TkAgg when we know we need interactive display
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        TKINTER_AVAILABLE = True
+    except (ImportError, Exception):
+        TKINTER_AVAILABLE = False
+    return TKINTER_AVAILABLE
+
+
+def _setup_headless_backend():
+    """Setup matplotlib for headless (file-saving) mode."""
     import matplotlib
-    matplotlib.use('TkAgg')  # Ensure TkAgg backend for embedding
-    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-    TKINTER_AVAILABLE = True
-except ImportError:
-    TKINTER_AVAILABLE = False
+    matplotlib.use('Agg')  # Non-interactive backend for saving files
 
 
 def animated_loading(stop_event):
@@ -90,26 +113,30 @@ def show_scrollable_plot():
     Display matplotlib plots in a scrollable Tkinter window.
     This is needed for large plots that exceed screen height.
     """
-    if not TKINTER_AVAILABLE:
+    if not _check_tkinter_available():
         # Fallback to standard matplotlib display if Tkinter is not available
         import matplotlib.pyplot as plt
         plt.show()
         return
-    
+
+    # Import Tkinter components (available since _check_tkinter_available passed)
+    import tkinter as tk
+    from tkinter import ttk
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
     import matplotlib.pyplot as plt
-    
+
     # Get all current figures
     figures = [plt.figure(num) for num in plt.get_fignums()]
     if not figures:
         return
-    
+
     # Start loading animation before the slow embedding process
     print("")  # New line before animation
     stop_loading = threading.Event()
     loading_thread = threading.Thread(target=animated_loading, args=(stop_loading,))
     loading_thread.daemon = True
     loading_thread.start()
-    
+
     # Create Tkinter window
     root = tk.Tk()
     root.title("Validation Plots - Quick Check")
@@ -224,12 +251,12 @@ def create_scrollable_figure(parent, fig):
     canvas_frame.after(100, configure_scroll_region)
 
 
-def generate_plots(dataset_path: str, validator: Validator, task_filter: Optional[str] = None, 
+def generate_plots(dataset_path: str, validator: Validator, task_filter: Optional[str] = None,
                   output_dir: Optional[str] = None, use_column_names: bool = False,
                   show_local_passing: bool = False) -> None:
     """
     Generate validation plots using the same plotting functions as report generator.
-    
+
     Args:
         dataset_path: Path to dataset
         validator: Initialized validator
@@ -238,9 +265,19 @@ def generate_plots(dataset_path: str, validator: Validator, task_filter: Optiona
         use_column_names: If True, use actual column names instead of pretty labels
         show_local_passing: If True, show locally passing strides in yellow
     """
+    # Setup matplotlib backend BEFORE importing pyplot
+    # Use Agg (non-interactive) for file saving, TkAgg for interactive display
+    if output_dir:
+        _setup_headless_backend()
+    else:
+        # For interactive display, check if Tkinter is available
+        if not _check_tkinter_available():
+            print("  ⚠️  No display available. Use --output-dir to save plots to files.")
+            return
+
     from internal.plot_generation.filters_by_phase_plots import create_task_combined_plot
     import matplotlib.pyplot as plt
-    
+
     locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
     dataset_name = Path(dataset_path).stem
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
