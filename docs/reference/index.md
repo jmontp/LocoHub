@@ -88,13 +88,13 @@ When segmented, these tasks are normalized to 150 samples per stride with `phase
 | `stair_descent` | Descending stairs | `stair_descent`, numbered passes | 0% upper-step contact, 100% lower-step contact for ipsilateral foot | `step_height_m`, `step_number`, `assistance` | Same metadata as ascent; eccentric control dominates mid-step. |
 | `run` | Jogging/running with flight phases | `run_2_5_m_s`, `run_3_0_m_s` | 0% ipsilateral foot contact, 100% next ipsilateral contact including flight | `speed_m_s`, `treadmill`, `surface`, `footwear` | Two GRF peaks with flight intervals; watch pelvis rotation extremes. |
 | `transition` | Gait-to-gait transitions | `walk_to_run`, `stair_to_walk`, `turn` | 0% key event of departing gait (e.g., heel strike), 100% first event of target gait | `transition_from`, `transition_to`, `gait_transition` | A single stride may cover two behaviors; store context keys and treat directions separately. |
-| `sit_to_stand` / `stand_to_sit` | Chair or box transfers | `sit_to_stand`, `stand_to_sit` | Sit→stand exported 0–50% from seated start to stable upright; phase 50% represents standing. Stand→sit exported 50–100% from upright start back to seated contact, sharing the 50% standing convention. | `chair_height`, `armrests`, `variant` | Segment seat-off/seat-on events for ascent/descent cycles when possible. |
-| `squats` | Loaded or bodyweight squats | `squats`, `squat_down`, `squat_up` | 0% upright start, 50% lowest depth, 100% return to upright | `weight_kg`, `variant`, `cadence` | Split descent/ascent for phase use; keep full set in time if reps are irregular. |
+| `sit_to_stand` / `stand_to_sit` | Chair or box transfers | `sit_to_stand`, `stand_to_sit` | 0% motion onset (joint velocity > 25 deg/s), 100% stable end state. Uses GRF thresholds: sitting < 400N, standing > 600N. | `chair_height`, `armrests`, `variant` | See [Non-Gait Tasks](non_gait_tasks.md) for detailed segmentation. |
+| `squat` | Loaded or bodyweight squats | `squat`, `squat_bodyweight`, `squat_25lbs` | 0% stable standing, ~50% lowest depth, 100% stable standing. Uses standing→action→standing archetype. | `weight_lbs`, `variant` | See [Non-Gait Tasks](non_gait_tasks.md) for detailed segmentation. |
 | `step_up` / `step_down` | Stair-box repetitions, curbs | `step_up`, `step_down` | Step-up: 0% initial foot contact on box, 100% full weight on box. Step-down mirrors with lower surface contact. | `height_m`, `lead_leg`, `step_number` | Treat like short stair runs; ensure cadence is repeatable before phase export. |
-| `jump` | Hops, vertical/lateral jumps | `jump_vertical`, `jump_lateral`, `hop_single` | 0% preparatory contact, 50% takeoff, 100% landing contact of same foot | `jump_type`, `variant`, `lead_leg` | Use takeoff→landing cycles for repetitive sets; single attempts may stay time-indexed. |
+| `jump` | Hops, vertical/lateral jumps | `jump_vertical`, `jump_lateral`, `jump_hop` | 0% stable standing, ~50% flight phase (GRF < 50N), 100% stable standing. Uses standing→action→standing archetype. | `jump_type`, `variant`, `lead_leg` | See [Non-Gait Tasks](non_gait_tasks.md) for detailed segmentation. |
 | `weighted_walk`, `dynamic_walk`, `walk_backward` | Walking variants with perturbations | `level`, `variant:<string>` | Same as level walking (HS-to-HS) when heel strikes are present | `speed_m_s`, `treadmill`, `variant` | Prefer phase when heel strikes exist; otherwise document perturbation under `variant`. |
 
-Transfers (`sit_to_stand`, `stand_to_sit`) intentionally share a 50% phase landmark that corresponds to an upright, standing posture. Sit-to-stand cycles occupy 0–50% phase and end in standing, while stand-to-sit cycles begin from that same standing posture at 50% and end seated at 100%. Use this convention when deriving new datasets so comparative analyses treat the standing posture consistently across ascent and descent.
+**Non-gait cyclic tasks** (`jump`, `squat`, `sit_to_stand`, `stand_to_sit`) use kinematic velocity bounds (25 deg/s threshold) to detect motion onset and offset, combined with GRF-based state detection. This ensures segment boundaries match actual motion rather than arbitrary time windows. See [Non-Gait Cyclic Tasks](non_gait_tasks.md) for detailed segmentation algorithms and expected biomechanical patterns.
 
 ### Time-Indexed (Non-Cyclic) Families
 
@@ -265,6 +265,7 @@ Canonical phase column is `phase_ipsi`.
 
 ## Related
 
+- [Non-Gait Cyclic Tasks](non_gait_tasks.md): Detailed segmentation conventions for jump, sit-to-stand, stand-to-sit, and squat
 - Datasets overview: ../datasets/
 - Validation ranges: ../datasets/validation_ranges.md
 - Maintainers: ../maintainers/
