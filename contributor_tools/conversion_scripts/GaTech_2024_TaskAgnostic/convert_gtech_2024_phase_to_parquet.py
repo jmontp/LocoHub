@@ -386,7 +386,7 @@ def load_trial_data(trial_path: Path, subject_id: str) -> Optional[Dict[str, pd.
 
     # Required files
     required_files = ['angle_filt', 'moment_filt', 'grf', 'velocity']
-    optional_files = ['moment_filt_bio', 'power', 'power_bio']
+    optional_files = ['moment_filt_bio', 'power', 'power_bio']  # imu_sim not used
 
     for file_type in required_files + optional_files:
         file_path = trial_path / f"{prefix}{file_type}.csv"
@@ -541,18 +541,23 @@ def process_stride(
     grf_ant_contra = interpolate_to_phase(
         grf_df[f'fp_{contra}_force_z'].values[start_idx:end_idx] / body_weight_N
     )
+    # GRF lateral: Apply sign correction so ipsi is positive (medial force)
+    # Right leg data has opposite sign in global coords, so negate for right leg strides
+    lat_sign = -1.0 if leg_side == 'r' else 1.0
     grf_lat_ipsi = interpolate_to_phase(
-        grf_df[f'fp_{ipsi}_force_x'].values[start_idx:end_idx] / body_weight_N
+        lat_sign * grf_df[f'fp_{ipsi}_force_x'].values[start_idx:end_idx] / body_weight_N
     )
     grf_lat_contra = interpolate_to_phase(
-        grf_df[f'fp_{contra}_force_x'].values[start_idx:end_idx] / body_weight_N
+        lat_sign * grf_df[f'fp_{contra}_force_x'].values[start_idx:end_idx] / body_weight_N
     )
 
     # COP (already in meters)
-    cop_ant_ipsi = interpolate_to_phase(grf_df[f'fp_{ipsi}_cop_z'].values[start_idx:end_idx])
-    cop_ant_contra = interpolate_to_phase(grf_df[f'fp_{contra}_cop_z'].values[start_idx:end_idx])
-    cop_lat_ipsi = interpolate_to_phase(grf_df[f'fp_{ipsi}_cop_x'].values[start_idx:end_idx])
-    cop_lat_contra = interpolate_to_phase(grf_df[f'fp_{contra}_cop_x'].values[start_idx:end_idx])
+    # Negate anterior COP so positive = forward (toe-off direction)
+    cop_ant_ipsi = interpolate_to_phase(-grf_df[f'fp_{ipsi}_cop_z'].values[start_idx:end_idx])
+    cop_ant_contra = interpolate_to_phase(-grf_df[f'fp_{contra}_cop_z'].values[start_idx:end_idx])
+    # Apply same lateral sign correction for COP
+    cop_lat_ipsi = interpolate_to_phase(lat_sign * grf_df[f'fp_{ipsi}_cop_x'].values[start_idx:end_idx])
+    cop_lat_contra = interpolate_to_phase(lat_sign * grf_df[f'fp_{contra}_cop_x'].values[start_idx:end_idx])
     cop_vert_ipsi = interpolate_to_phase(grf_df[f'fp_{ipsi}_cop_y'].values[start_idx:end_idx])
     cop_vert_contra = interpolate_to_phase(grf_df[f'fp_{contra}_cop_y'].values[start_idx:end_idx])
 
@@ -625,6 +630,10 @@ def process_stride(
         'cop_lateral_contra_m': cop_lat_contra,
         'cop_vertical_ipsi_m': cop_vert_ipsi,
         'cop_vertical_contra_m': cop_vert_contra,
+
+        # Note: Segment angles (pelvis, trunk, thigh, shank, foot) not included
+        # because this dataset only has simulated IMU data which gives relative
+        # angles (starting at 0 at heel strike), not absolute segment angles.
     })
 
     return stride_df
