@@ -1,18 +1,18 @@
-**Report generated:** 2025-12-21 20:41
+**Report generated:** 2025-12-21 20:52
 
 ## Status Summary
 
 | Metric | Value |
 |--------|-------|
-| Stride Pass Rate | 67.3% |
+| Stride Pass Rate | 59.9% |
 | Total Strides | 4930 |
-| Passing Strides | 3318 |
+| Passing Strides | 2953 |
 
 ### Summary
 
-**Status**: ❌ NEEDS REVIEW (67.3% valid)  
+**Status**: ❌ NEEDS REVIEW (59.9% valid)  
 **Total Strides**: 4930  
-**Passing Strides**: 3318  
+**Passing Strides**: 2953  
 
 ### Task Breakdown
 
@@ -20,10 +20,10 @@
 |------|-----------|--------|
 | Backward Walking | 100.0% | ✅ |
 | Cutting | 100.0% | ✅ |
-| Decline Walking | 97.4% | ✅ |
-| Incline Walking | 97.0% | ✅ |
+| Decline Walking | 84.0% | ⚠️ |
+| Incline Walking | 79.6% | ⚠️ |
 | Jump | 100.0% | ✅ |
-| Level Walking | 89.1% | ⚠️ |
+| Level Walking | 83.0% | ⚠️ |
 | Lunge | 100.0% | ✅ |
 | Run | 7.2% | ❌ |
 | Sit To Stand | 0.0% | ❌ |
@@ -78,4 +78,4 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml_
 
 ---
 
-*Generated from `converted_datasets/gtech_2024_phase.parquet` on 2025-12-21 20:41*
+*Generated from `converted_datasets/gtech_2024_phase.parquet` on 2025-12-21 20:52*
