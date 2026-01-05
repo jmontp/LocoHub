@@ -114,8 +114,10 @@ def compute_clean_statistics(
     # First pass: identify passing strides (pass ALL checks)
     passing_mask = np.ones(n_strides, dtype=bool)
 
-    for phase_idx, phase_ranges in task_ranges.items():
-        phase_idx = int(phase_idx)
+    for phase_pct, phase_ranges in task_ranges.items():
+        phase_pct = int(phase_pct)
+        # Convert percentage (0-100) to data index (0 to n_phases-1)
+        phase_idx = round(phase_pct / 100 * (n_phases - 1))
         for var_name, var_range in phase_ranges.items():
             if var_name not in feature_to_idx:
                 continue
@@ -145,8 +147,10 @@ def compute_clean_statistics(
 
     stats: Dict[str, Dict[int, PhaseStats]] = {}
 
-    for phase_idx, phase_ranges in task_ranges.items():
-        phase_idx = int(phase_idx)
+    for phase_pct, phase_ranges in task_ranges.items():
+        phase_pct = int(phase_pct)
+        # Convert percentage (0-100) to data index (0 to n_phases-1)
+        phase_idx = round(phase_pct / 100 * (n_phases - 1))
         for var_name, var_range in phase_ranges.items():
             if var_name not in feature_to_idx:
                 continue
@@ -163,14 +167,15 @@ def compute_clean_statistics(
                 # Fallback: compute per-feature clean strides
                 # A stride is "clean for this feature" if it passes all checks for this feature
                 feature_passing_mask = np.ones(n_strides, dtype=bool)
-                for check_phase, check_ranges in task_ranges.items():
-                    check_phase = int(check_phase)
+                for check_phase_pct, check_ranges in task_ranges.items():
+                    check_phase_pct = int(check_phase_pct)
+                    check_phase_idx = round(check_phase_pct / 100 * (n_phases - 1))
                     if var_name in check_ranges:
                         check_range = check_ranges[var_name]
                         check_min = check_range.get('min')
                         check_max = check_range.get('max')
                         if check_min is not None and check_max is not None:
-                            check_vals = data_3d[:, check_phase, var_idx]
+                            check_vals = data_3d[:, check_phase_idx, var_idx]
                             check_valid = np.isfinite(check_vals)
                             check_fails = check_valid & ((check_vals < check_min) | (check_vals > check_max))
                             feature_passing_mask &= ~check_fails
@@ -191,8 +196,8 @@ def compute_clean_statistics(
             if var_name not in stats:
                 stats[var_name] = {}
 
-            stats[var_name][phase_idx] = PhaseStats(
-                phase=phase_idx,
+            stats[var_name][phase_pct] = PhaseStats(
+                phase=phase_pct,
                 mean=float(np.mean(valid_values)),
                 std=float(np.std(valid_values)),
                 n_samples=len(valid_values),
@@ -253,13 +258,15 @@ def identify_marginal_failures(
     # Track suggestions by feature/phase
     suggestions: Dict[str, Dict[int, Dict[str, List]]] = {}  # feature -> phase -> direction -> [values, zscores, indices]
 
-    for phase_idx, phase_ranges in task_ranges.items():
-        phase_idx = int(phase_idx)
+    for phase_pct, phase_ranges in task_ranges.items():
+        phase_pct = int(phase_pct)
+        # Convert percentage (0-100) to data index (0 to n_phases-1)
+        phase_idx = round(phase_pct / 100 * (n_phases - 1))
 
         for var_name, var_range in phase_ranges.items():
             if var_name not in feature_to_idx:
                 continue
-            if var_name not in clean_stats or phase_idx not in clean_stats[var_name]:
+            if var_name not in clean_stats or phase_pct not in clean_stats[var_name]:
                 continue
 
             var_idx = feature_to_idx[var_name]
@@ -268,7 +275,7 @@ def identify_marginal_failures(
             if min_val is None or max_val is None:
                 continue
 
-            phase_stat = clean_stats[var_name][phase_idx]
+            phase_stat = clean_stats[var_name][phase_pct]
             values = data_3d[:, phase_idx, var_idx]
 
             for stride_idx in range(n_strides):
@@ -287,7 +294,7 @@ def identify_marginal_failures(
                     zscore = abs(val - phase_stat.mean) / effective_std
 
                     violation = MarginalViolation(
-                        phase=phase_idx,
+                        phase=phase_pct,
                         direction='under',
                         actual_value=val,
                         bound=min_val,
@@ -299,12 +306,12 @@ def identify_marginal_failures(
                     # Track for suggestion
                     if var_name not in suggestions:
                         suggestions[var_name] = {}
-                    if phase_idx not in suggestions[var_name]:
-                        suggestions[var_name][phase_idx] = {'min': {'values': [], 'zscores': [], 'indices': []},
+                    if phase_pct not in suggestions[var_name]:
+                        suggestions[var_name][phase_pct] = {'min': {'values': [], 'zscores': [], 'indices': []},
                                                             'max': {'values': [], 'zscores': [], 'indices': []}}
-                    suggestions[var_name][phase_idx]['min']['values'].append(val)
-                    suggestions[var_name][phase_idx]['min']['zscores'].append(zscore)
-                    suggestions[var_name][phase_idx]['min']['indices'].append(stride_idx)
+                    suggestions[var_name][phase_pct]['min']['values'].append(val)
+                    suggestions[var_name][phase_pct]['min']['zscores'].append(zscore)
+                    suggestions[var_name][phase_pct]['min']['indices'].append(stride_idx)
 
                 elif val > max_val:
                     excess = val - max_val
@@ -315,7 +322,7 @@ def identify_marginal_failures(
                     zscore = abs(val - phase_stat.mean) / effective_std
 
                     violation = MarginalViolation(
-                        phase=phase_idx,
+                        phase=phase_pct,
                         direction='over',
                         actual_value=val,
                         bound=max_val,
@@ -326,12 +333,12 @@ def identify_marginal_failures(
 
                     if var_name not in suggestions:
                         suggestions[var_name] = {}
-                    if phase_idx not in suggestions[var_name]:
-                        suggestions[var_name][phase_idx] = {'min': {'values': [], 'zscores': [], 'indices': []},
+                    if phase_pct not in suggestions[var_name]:
+                        suggestions[var_name][phase_pct] = {'min': {'values': [], 'zscores': [], 'indices': []},
                                                             'max': {'values': [], 'zscores': [], 'indices': []}}
-                    suggestions[var_name][phase_idx]['max']['values'].append(val)
-                    suggestions[var_name][phase_idx]['max']['zscores'].append(zscore)
-                    suggestions[var_name][phase_idx]['max']['indices'].append(stride_idx)
+                    suggestions[var_name][phase_pct]['max']['values'].append(val)
+                    suggestions[var_name][phase_pct]['max']['zscores'].append(zscore)
+                    suggestions[var_name][phase_pct]['max']['indices'].append(stride_idx)
 
     # Filter to marginal failures
     marginal_failures = []

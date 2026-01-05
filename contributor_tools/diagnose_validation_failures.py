@@ -89,8 +89,10 @@ def analyze_failures(
         data_3d = task_df[features].values.reshape(n_strides, 150, len(features))
         feature_to_idx = {f: i for i, f in enumerate(features)}
 
-        for phase_idx, phase_ranges in task_ranges.items():
-            phase_idx = int(phase_idx)
+        for phase_pct, phase_ranges in task_ranges.items():
+            phase_pct = int(phase_pct)
+            # Convert percentage (0-100) to data index (0-149)
+            phase_idx = round(phase_pct / 100 * 149)
 
             for var_name, var_range in phase_ranges.items():
                 if var_name not in feature_to_idx:
@@ -146,7 +148,7 @@ def analyze_failures(
                             'task': task,
                             'feature': var_name,
                             'phase': phase_idx,
-                            'phase_pct': round(phase_idx / 149 * 100, 1),
+                            'phase_pct': phase_pct,
                             'stride_idx': int(idx),
                             'subject': subject,
                             'step': step,
@@ -165,7 +167,7 @@ def analyze_failures(
                             'task': task,
                             'feature': var_name,
                             'phase': phase_idx,
-                            'phase_pct': round(phase_idx / 149 * 100, 1),
+                            'phase_pct': phase_pct,
                             'stride_idx': int(idx),
                             'subject': subject,
                             'step': step,
@@ -206,7 +208,7 @@ def analyze_failures(
                         'excess': float(np.max(over_values) - max_val)
                     }
 
-                task_results['features'][var_name]['phases'][phase_idx] = phase_info
+                task_results['features'][var_name]['phases'][phase_pct] = phase_info
                 task_results['features'][var_name]['total_under'] += n_under
                 task_results['features'][var_name]['total_over'] += n_over
 
