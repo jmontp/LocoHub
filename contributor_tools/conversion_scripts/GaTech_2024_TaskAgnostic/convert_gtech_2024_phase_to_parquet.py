@@ -528,38 +528,119 @@ def process_stride(
     body_weight_N = subject_mass * 9.81
 
     # GRF columns: fp_<side>_force_<xyz>, fp_<side>_cop_<xyz>
-    # y is vertical, x is mediolateral, z is anterior-posterior
+    # OpenSim global frame: y is vertical, x is mediolateral, z is anterior-posterior
+    # Sign conventions for standardized output:
+    #   - Vertical: positive = upward (supporting body weight)
+    #   - Anterior: positive = propulsion (forward force on body)
+    #   - Lateral: ipsi negative (medial force on body), contra positive
     grf_vert_ipsi = interpolate_to_phase(
         grf_df[f'fp_{ipsi}_force_y'].values[start_idx:end_idx] / body_weight_N
     )
     grf_vert_contra = interpolate_to_phase(
         grf_df[f'fp_{contra}_force_y'].values[start_idx:end_idx] / body_weight_N
     )
-    grf_ant_ipsi = interpolate_to_phase(
-        grf_df[f'fp_{ipsi}_force_z'].values[start_idx:end_idx] / body_weight_N
-    )
-    grf_ant_contra = interpolate_to_phase(
-        grf_df[f'fp_{contra}_force_z'].values[start_idx:end_idx] / body_weight_N
-    )
-    # GRF lateral: Apply sign correction so ipsi is positive (medial force)
-    # Right leg data has opposite sign in global coords, so negate for right leg strides
-    lat_sign = -1.0 if leg_side == 'r' else 1.0
-    grf_lat_ipsi = interpolate_to_phase(
-        lat_sign * grf_df[f'fp_{ipsi}_force_x'].values[start_idx:end_idx] / body_weight_N
-    )
-    grf_lat_contra = interpolate_to_phase(
-        lat_sign * grf_df[f'fp_{contra}_force_x'].values[start_idx:end_idx] / body_weight_N
-    )
+    # Negate z to make positive = propulsion (forward force)
+    # Raw data has +z = braking at heel strike, -z = propulsion at push-off
+    grf_ant_ipsi_raw = -grf_df[f'fp_{ipsi}_force_z'].values[start_idx:end_idx] / body_weight_N
+    grf_ant_contra_raw = -grf_df[f'fp_{contra}_force_z'].values[start_idx:end_idx] / body_weight_N
 
-    # COP (already in meters)
-    # Negate anterior COP so positive = forward (toe-off direction)
-    cop_ant_ipsi = interpolate_to_phase(-grf_df[f'fp_{ipsi}_cop_z'].values[start_idx:end_idx])
-    cop_ant_contra = interpolate_to_phase(-grf_df[f'fp_{contra}_cop_z'].values[start_idx:end_idx])
-    # Apply same lateral sign correction for COP
-    cop_lat_ipsi = interpolate_to_phase(lat_sign * grf_df[f'fp_{ipsi}_cop_x'].values[start_idx:end_idx])
-    cop_lat_contra = interpolate_to_phase(lat_sign * grf_df[f'fp_{contra}_cop_x'].values[start_idx:end_idx])
-    cop_vert_ipsi = interpolate_to_phase(grf_df[f'fp_{ipsi}_cop_y'].values[start_idx:end_idx])
-    cop_vert_contra = interpolate_to_phase(grf_df[f'fp_{contra}_cop_y'].values[start_idx:end_idx])
+    # Flip sign if walking in negative Z direction (decline walking)
+    # At ~50% of stride (push-off), GRF anterior should be positive (propulsion)
+    check_idx_grf = len(grf_ant_ipsi_raw) // 2
+    if check_idx_grf > 0:
+        # Check mean around push-off phase (40-60% of stride)
+        start_check = int(len(grf_ant_ipsi_raw) * 0.4)
+        end_check = int(len(grf_ant_ipsi_raw) * 0.6)
+        mean_pushoff = np.nanmean(grf_ant_ipsi_raw[start_check:end_check])
+        if mean_pushoff < 0:
+            grf_ant_ipsi_raw = -grf_ant_ipsi_raw
+            grf_ant_contra_raw = -grf_ant_contra_raw
+
+    grf_ant_ipsi = interpolate_to_phase(grf_ant_ipsi_raw)
+    grf_ant_contra = interpolate_to_phase(grf_ant_contra_raw)
+    # GRF lateral: Apply sign correction based on actual data
+    # Convention: ipsi should be largely negative (medial force pushing body toward midline)
+    #             contra should be positive (from ipsi's reference frame)
+    # Check the mean over stance phase and flip if needed
+    grf_lat_ipsi_raw = grf_df[f'fp_{ipsi}_force_x'].values[start_idx:end_idx] / body_weight_N
+    grf_lat_contra_raw = grf_df[f'fp_{contra}_force_x'].values[start_idx:end_idx] / body_weight_N
+
+    # Check mean lateral GRF for ipsi during stance (0-60% of stride)
+    # Ipsi mean should be negative
+    end_stance = int(len(grf_lat_ipsi_raw) * 0.6)
+    if end_stance > 0:
+        mean_lat_ipsi = np.nanmean(grf_lat_ipsi_raw[:end_stance])
+        if mean_lat_ipsi > 0:
+            # Flip sign so ipsi is negative
+            grf_lat_ipsi_raw = -grf_lat_ipsi_raw
+            grf_lat_contra_raw = -grf_lat_contra_raw
+
+    grf_lat_ipsi = interpolate_to_phase(grf_lat_ipsi_raw)
+    grf_lat_contra = interpolate_to_phase(grf_lat_contra_raw)
+
+    # COP (convert from global to stride-relative coordinates)
+    # Raw data is in global meters; we make it relative to heel strike position
+    # Sign conventions for standardized output:
+    #   - Anterior: positive = forward from heel strike (progresses heel→toe)
+    #   - Lateral: positive = medial for ipsi leg
+    #   - Vertical: ground level (approximately constant)
+    # Extract raw global COP and make relative to heel strike
+    cop_ant_raw_ipsi = grf_df[f'fp_{ipsi}_cop_z'].values[start_idx:end_idx]
+    cop_ant_raw_contra = grf_df[f'fp_{contra}_cop_z'].values[start_idx:end_idx]
+    # Zero at heel strike to get progression from heel to toe
+    # Use absolute progression to ensure COP is always positive (heel→toe)
+    # regardless of walking direction (incline vs decline)
+    cop_ant_ipsi_rel = cop_ant_raw_ipsi - cop_ant_raw_ipsi[0]
+    cop_ant_contra_rel = cop_ant_raw_contra - cop_ant_raw_contra[0]
+    # Flip sign if COP is moving in negative direction (decline walking)
+    # Check the COP at 50% of stride (just before toe-off) - should be positive
+    # This is more reliable than max/min which can be affected by swing phase noise
+    check_idx = len(cop_ant_ipsi_rel) // 2  # 50% of raw samples
+    if check_idx > 0 and not np.isnan(cop_ant_ipsi_rel[check_idx]):
+        if cop_ant_ipsi_rel[check_idx] < 0:
+            cop_ant_ipsi_rel = -cop_ant_ipsi_rel
+    # For contra: check at 75% of stride (mid-contra stance) - should be positive
+    check_idx_contra = int(len(cop_ant_contra_rel) * 0.75)
+    if check_idx_contra > 0 and check_idx_contra < len(cop_ant_contra_rel):
+        val = cop_ant_contra_rel[check_idx_contra]
+        if not np.isnan(val) and val < 0:
+            cop_ant_contra_rel = -cop_ant_contra_rel
+    cop_ant_ipsi = interpolate_to_phase(cop_ant_ipsi_rel)
+    cop_ant_contra = interpolate_to_phase(cop_ant_contra_rel)
+    # Lateral COP: relative to heel strike position
+    # Sign should be consistent with GRF lateral (ipsi negative = medial)
+    cop_lat_raw_ipsi = grf_df[f'fp_{ipsi}_cop_x'].values[start_idx:end_idx]
+    cop_lat_raw_contra = grf_df[f'fp_{contra}_cop_x'].values[start_idx:end_idx]
+    cop_lat_ipsi_rel = cop_lat_raw_ipsi - cop_lat_raw_ipsi[0]
+    cop_lat_contra_rel = cop_lat_raw_contra - cop_lat_raw_contra[0]
+    # Apply same sign correction as GRF lateral if needed (based on mean ipsi GRF lateral)
+    if end_stance > 0 and mean_lat_ipsi > 0:
+        # We flipped GRF, so flip COP too for consistency
+        cop_lat_ipsi_rel = -cop_lat_ipsi_rel
+        cop_lat_contra_rel = -cop_lat_contra_rel
+    cop_lat_ipsi = interpolate_to_phase(cop_lat_ipsi_rel)
+    cop_lat_contra = interpolate_to_phase(cop_lat_contra_rel)
+    # Vertical COP: In a proper ankle-relative frame, COP vertical should be ~0 (ground level)
+    # The raw data is in global coords which shows non-zero values on inclined surfaces,
+    # but this is not meaningful - COP is inherently 2D (point on ground surface)
+    cop_vert_ipsi = np.zeros(NUM_POINTS)
+    cop_vert_contra = np.zeros(NUM_POINTS)
+
+    # Zero out COP when GRF is below threshold (COP is undefined during swing phase)
+    # Use 0.05 BW (5% body weight) as the threshold - below this, foot is effectively off ground
+    COP_GRF_THRESHOLD = 0.05  # BW
+    swing_mask_ipsi = grf_vert_ipsi < COP_GRF_THRESHOLD
+    swing_mask_contra = grf_vert_contra < COP_GRF_THRESHOLD
+
+    # Zero out COP during swing phase for ipsi leg
+    cop_ant_ipsi[swing_mask_ipsi] = 0.0
+    cop_lat_ipsi[swing_mask_ipsi] = 0.0
+    cop_vert_ipsi[swing_mask_ipsi] = 0.0
+
+    # Zero out COP during swing phase for contra leg
+    cop_ant_contra[swing_mask_contra] = 0.0
+    cop_lat_contra[swing_mask_contra] = 0.0
+    cop_vert_contra[swing_mask_contra] = 0.0
 
     # Build task_info string
     info_parts = [f"leg:{leg_side}"]
