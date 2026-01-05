@@ -1089,11 +1089,28 @@ def update_validation_gallery(doc_path: Path, dataset_name: str) -> None:
         tabs_lines.append("")
 
     gallery = "\n".join(tabs_lines).strip() or "(Generate plots with quick_validation_check.py --plot)"
+
+    # Wrap gallery with start/end markers for idempotent updates
+    wrapped_gallery = f"<!-- VALIDATION_GALLERY_START -->\n{gallery}\n<!-- VALIDATION_GALLERY_END -->"
+
     content = doc_path.read_text(encoding='utf-8')
-    if '<!-- VALIDATION_GALLERY -->' in content:
-        content = content.replace('<!-- VALIDATION_GALLERY -->', f"{gallery}\n")
+
+    # Check for existing gallery markers (idempotent replacement)
+    gallery_pattern = re.compile(
+        r'<!-- VALIDATION_GALLERY_START -->.*?<!-- VALIDATION_GALLERY_END -->',
+        re.DOTALL
+    )
+
+    if gallery_pattern.search(content):
+        # Replace existing gallery
+        content = gallery_pattern.sub(wrapped_gallery, content)
+    elif '<!-- VALIDATION_GALLERY -->' in content:
+        # Replace legacy single marker
+        content = content.replace('<!-- VALIDATION_GALLERY -->', wrapped_gallery)
     else:
-        content = content + "\n" + gallery + "\n"
+        # No marker found - don't append (gallery should only exist where intended)
+        pass
+
     doc_path.write_text(content, encoding='utf-8')
 
 
