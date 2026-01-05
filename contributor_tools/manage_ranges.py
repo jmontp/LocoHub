@@ -35,7 +35,8 @@ DEFAULT_RANGES_PATH = PROJECT_ROOT / "contributor_tools" / "validation_ranges" /
 
 # Phase checkpoints as percentages (0-100) for YAML output
 # The data uses normalized phase_ipsi values (0.0 to ~1.0)
-PHASE_CHECKPOINTS = [0, 25, 50, 75]  # Percentage values for YAML keys
+# 0%: heel strike, 15%: braking peak (GRF), 50%: propulsion peak / contra HS, 75%: late swing
+PHASE_CHECKPOINTS = [0, 15, 50, 75]  # Percentage values for YAML keys
 
 # Features to generate ranges for
 DEFAULT_FEATURES = [
@@ -58,6 +59,14 @@ DEFAULT_FEATURES = [
     'grf_vertical_contra_BW',
     'grf_anterior_ipsi_BW',
     'grf_anterior_contra_BW',
+    'grf_lateral_ipsi_BW',
+    'grf_lateral_contra_BW',
+    'cop_anterior_ipsi_m',
+    'cop_anterior_contra_m',
+    'cop_lateral_ipsi_m',
+    'cop_lateral_contra_m',
+    'cop_vertical_ipsi_m',
+    'cop_vertical_contra_m',
     'thigh_sagittal_angle_ipsi_rad',
     'thigh_sagittal_angle_contra_rad',
     'shank_sagittal_angle_ipsi_rad',
@@ -270,7 +279,19 @@ def cmd_generate(args):
 
         existing = load_ranges(ranges_path)
         for task, task_ranges in all_ranges.items():
-            existing['tasks'][task] = task_ranges
+            if task not in existing['tasks']:
+                # New task - add entirely
+                existing['tasks'][task] = task_ranges
+            else:
+                # Existing task - merge features at each phase
+                existing_task = existing['tasks'][task]
+                if 'phases' not in existing_task:
+                    existing_task['phases'] = {}
+                for phase, phase_ranges in task_ranges.get('phases', {}).items():
+                    if phase not in existing_task['phases']:
+                        existing_task['phases'][phase] = {}
+                    # Merge features (new values override existing)
+                    existing_task['phases'][phase].update(phase_ranges)
             print(f"  Updated: {task}")
 
         save_ranges(existing, ranges_path)

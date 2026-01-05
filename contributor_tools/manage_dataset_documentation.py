@@ -35,6 +35,7 @@ import json
 import re
 import shutil
 import subprocess
+import gc
 from pathlib import Path, PurePosixPath
 from datetime import datetime
 from typing import Dict, Optional, Tuple, List, Any
@@ -115,6 +116,13 @@ def _resolve_default_ranges_file() -> Path:
     return DEFAULT_RANGES_CANDIDATES[0]
 
 
+def _free_memory(message: str = "") -> None:
+    """Explicitly free memory and run garbage collection."""
+    gc.collect()
+    if message:
+        print(f"🧹 {message}")
+
+
 def _resolve_ranges_argument(value: str) -> Path:
     """Resolve a user-supplied ranges argument to an absolute path."""
 
@@ -190,13 +198,24 @@ def _coverage_status(value: float) -> str:
 def _compute_feature_task_groups(
     dataset_path: Path,
     tasks: List[str],
+    locomotion_data: Optional[LocomotionData] = None,
 ) -> Tuple[Optional[List[Dict[str, Any]]], Optional[List[str]], Optional[Path]]:
-    """Compute feature coverage per task using the clean dataset when available."""
+    """Compute feature coverage per task using the clean dataset when available.
+
+    Args:
+        dataset_path: Path to the dataset file
+        tasks: List of task names
+        locomotion_data: Optional pre-loaded LocomotionData to reuse (avoids reload)
+    """
 
     coverage_path, using_clean = _infer_clean_dataset_path(dataset_path)
 
     try:
-        coverage_data = LocomotionData(str(coverage_path), phase_col='phase_ipsi')
+        # Reuse pre-loaded data if provided and path matches
+        if locomotion_data is not None and str(coverage_path) == str(dataset_path):
+            coverage_data = locomotion_data
+        else:
+            coverage_data = LocomotionData(str(coverage_path), phase_col='phase_ipsi')
     except Exception as exc:
         print(f"⚠️  Unable to compute feature availability ({exc})")
         return None, None, None
@@ -1415,18 +1434,20 @@ def generate_validation_page(
 
 
 
-def run_validation(dataset_path: Path, ranges_path: Optional[Path] = None) -> Tuple[Dict, str, Optional[Dict], Dict[str, Dict[int, Dict[str, Dict[str, float]]]]]:
+def run_validation(dataset_path: Path, ranges_path: Optional[Path] = None, locomotion_data: Optional[LocomotionData] = None) -> Tuple[Dict, str, Optional[Dict], Dict[str, Dict[int, Dict[str, Dict[str, float]]]]]:
     """
     Run validation on the dataset.
-    
+
     Args:
         dataset_path: Path to the dataset parquet file
-        
+        ranges_path: Optional path to validation ranges file
+        locomotion_data: Optional pre-loaded LocomotionData to reuse (avoids reload)
+
     Returns:
         Tuple of (validation_result, summary_text, stats_dict, ranges_dict)
     """
     print(f"🔍 Running validation...")
-    
+
     if ranges_path is not None:
         ranges_file = Path(ranges_path)
         if not ranges_file.is_absolute():
@@ -1468,12 +1489,13 @@ def run_validation(dataset_path: Path, ranges_path: Optional[Path] = None) -> Tu
 
         # Calculate pass rate
         pass_rate = (passed / total * 100) if total > 0 else 0
-        
+
         # Generate summary text
         status = "✅ PASSED" if pass_rate >= 95 else "⚠️ PARTIAL" if pass_rate >= 80 else "❌ NEEDS REVIEW"
-        
-        # Compute per-task stride pass rates using validator helper
-        locomotion_data = _load_locomotion_data(dataset_path, "gathering per-task validation stats")
+
+        # Reuse pre-loaded data or load fresh
+        if locomotion_data is None:
+            locomotion_data = _load_locomotion_data(dataset_path, "gathering per-task validation stats")
         task_stats = {}
         summary_rows = []
         for task in locomotion_data.get_tasks():
@@ -1511,8 +1533,9 @@ def run_validation(dataset_path: Path, ranges_path: Optional[Path] = None) -> Tu
         summary += "\n_Validation ranges snapshot embedded below._\n"
 
         if pass_rate < 80:
-            summary += "\n⚠️ **Note**: Low pass rates may indicate special populations or non-standard protocols. "
-            summary += "Consider documenting these differences or creating custom validation ranges.\n"
+            summary += "\n⚠️ **Note**: Validation ranges represent established biomechanical norms from literature. "
+            summary += "Pass rates indicate conformance to these norms—lower rates may reflect special populations, "
+            summary += "non-standard protocols, or task-specific differences. See the [validation interpretation guide](../../contributor_tools/CLAUDE.md#interpreting-pass-rates) for details.\n"
 
         stats = {
             'total_strides': total,
@@ -1647,11 +1670,11 @@ def handle_add_dataset(args):
         if not custom_ranges_path.exists():
             print(f"❌ Validation ranges file not found: {custom_ranges_path}")
             return 1
-    
+
     if not dataset_path.suffix == '.parquet':
         print(f"❌ Dataset must be a parquet file, got: {dataset_path.suffix}")
         return 1
-    
+
     # Derive a fallback name from the parquet filename
     dataset_filename_stem = dataset_path.stem.replace("_phase", "").replace("_time", "")
     display_name = dataset_filename_stem.replace("_", " ").title()
@@ -1672,6 +1695,7 @@ def handle_add_dataset(args):
             print(f"❌ {exc}")
             return 1
 
+    # Load data ONCE and reuse throughout the function
     try:
         locomotion_data = _load_locomotion_data(dataset_path, "extracting tasks and subjects")
     except Exception as exc:
@@ -1850,13 +1874,17 @@ def handle_add_dataset(args):
     feature_task_order: Optional[List[str]] = None
     feature_task_source: Optional[str] = None
 
-    coverage_groups, coverage_tasks, coverage_source_path = _compute_feature_task_groups(dataset_path, tasks)
+    # Compute feature coverage (reuse loaded data to save memory)
+    coverage_groups, coverage_tasks, coverage_source_path = _compute_feature_task_groups(
+        dataset_path, tasks, locomotion_data=locomotion_data
+    )
     if coverage_groups:
         feature_task_groups = coverage_groups
         if coverage_tasks:
             feature_task_order = coverage_tasks
         if coverage_source_path:
             feature_task_source = _relative_path(coverage_source_path)
+    _free_memory()  # Clean up after feature coverage computation
 
     # Prepare metadata dictionary
     dataset_name = dataset_slug
@@ -1902,10 +1930,13 @@ def handle_add_dataset(args):
         metadata['feature_task_order'] = feature_task_order
     if feature_task_source:
         metadata['feature_task_source'] = feature_task_source
-    
-    # Run validation
+
+    # Run validation (reuse loaded data to save memory)
     print(f"\n🔍 Validating dataset...")
-    _, validation_summary, validation_stats, validation_ranges = run_validation(dataset_path, custom_ranges_path)
+    _, validation_summary, validation_stats, validation_ranges = run_validation(
+        dataset_path, custom_ranges_path, locomotion_data=locomotion_data
+    )
+    _free_memory()  # Clean up after validation
     metadata['validation_summary'] = validation_summary
     metadata['doc_url'] = f"{SITE_DATASET_BASE_URL}/{dataset_name}/"
     metadata['doc_path'] = f"docs/datasets/{dataset_name}.md"
@@ -1988,11 +2019,15 @@ def handle_add_dataset(args):
     print(f"✅ Tab wrapper created: {doc_wrapper_path.relative_to(repo_root)}")
     print(f"✅ Documentation body created: {doc_body_path.relative_to(repo_root)}")
     print(f"✅ Validation body created: {validation_body_path.relative_to(repo_root)}")
-    
+
     # Generate plots directory structure
     plots_dir = repo_root / "docs" / "datasets" / "validation_plots" / dataset_name
     plots_dir.mkdir(parents=True, exist_ok=True)
     print(f"✅ Plot directory prepared: {plots_dir.relative_to(repo_root)}/")
+
+    # Free memory before spawning plot subprocess (it will load data again)
+    del locomotion_data
+    _free_memory("Freeing memory before plot generation...")
 
     # Generate fresh validation plots for the dataset
     try:
@@ -2186,15 +2221,7 @@ def handle_update_validation(args):
     if metadata.get('validation_doc_url', '').endswith('_validation/'):
         metadata['validation_doc_url'] = f"{SITE_DATASET_BASE_URL}/{dataset_slug}/#validation"
 
-    coverage_groups, coverage_tasks, coverage_source_path = _compute_feature_task_groups(dataset_path, metadata.get('tasks', []))
-    if coverage_groups:
-        metadata['feature_task_groups'] = coverage_groups
-        if coverage_tasks:
-            metadata['feature_task_order'] = coverage_tasks
-        if coverage_source_path:
-            metadata['feature_task_source'] = _relative_path(coverage_source_path)
-
-
+    # Load data ONCE and reuse throughout
     try:
         locomotion_data = _load_locomotion_data(dataset_path, "updating tasks and subjects")
     except Exception as exc:
@@ -2209,8 +2236,24 @@ def handle_update_validation(args):
     metadata['subjects'] = str(len(locomotion_data.get_subjects()))
     metadata['task_table'] = _build_task_table(task_rows)
 
+    # Compute feature coverage (reuse loaded data)
+    coverage_groups, coverage_tasks, coverage_source_path = _compute_feature_task_groups(
+        dataset_path, metadata.get('tasks', []), locomotion_data=locomotion_data
+    )
+    if coverage_groups:
+        metadata['feature_task_groups'] = coverage_groups
+        if coverage_tasks:
+            metadata['feature_task_order'] = coverage_tasks
+        if coverage_source_path:
+            metadata['feature_task_source'] = _relative_path(coverage_source_path)
+    _free_memory()  # Clean up after feature coverage
+
+    # Run validation (reuse loaded data)
     print(f"🔍 Updating validation for {dataset_slug}...")
-    _, validation_summary, validation_stats, validation_ranges = run_validation(dataset_path, custom_ranges_path)
+    _, validation_summary, validation_stats, validation_ranges = run_validation(
+        dataset_path, custom_ranges_path, locomotion_data=locomotion_data
+    )
+    _free_memory()  # Clean up after validation
     metadata['validation_summary'] = validation_summary
 
     ranges_display = _display_path(custom_ranges_path) if custom_ranges_path else _display_path(_resolve_default_ranges_file())
@@ -2293,6 +2336,10 @@ def handle_update_validation(args):
 
     plots_dir = repo_root / "docs" / "datasets" / "validation_plots" / dataset_slug
     plots_dir.mkdir(parents=True, exist_ok=True)
+
+    # Free memory before spawning plot subprocess
+    del locomotion_data
+    _free_memory("Freeing memory before plot generation...")
 
     try:
         plot_ranges_for_cmd = ranges_source_path if ranges_source_path.exists() else None

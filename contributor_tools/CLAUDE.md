@@ -47,7 +47,12 @@ python contributor_tools/diagnose_validation_failures.py <dataset>.parquet --top
 
 ### 3. Tune Validation Ranges (if needed)
 
-Interactive GUI for adjusting validation ranges:
+**Generate ranges from data (CLI):**
+```bash
+python contributor_tools/manage_ranges.py generate <dataset>.parquet --tasks sit_to_stand --update
+```
+
+**Interactive GUI for adjusting validation ranges:**
 ```bash
 python contributor_tools/interactive_validation_tuner.py
 ```
@@ -81,6 +86,7 @@ python contributor_tools/manage_dataset_documentation.py add-dataset \
 | `quick_validation_check.py` | Fast pass/fail validation with optional plotting |
 | `diagnose_validation_failures.py` | Identify which features fail and why (under/over bounds) |
 | `interactive_validation_tuner.py` | GUI for adjusting validation range boxes |
+| `manage_ranges.py` | CLI for generating validation ranges from data |
 | `create_clean_dataset.py` | Remove failing strides from dirty parquet |
 | `generate_validation_documentation.py` | Generate plots and markdown docs |
 | `manage_dataset_documentation.py` | Add/update/remove dataset documentation pages |
@@ -89,9 +95,72 @@ python contributor_tools/manage_dataset_documentation.py add-dataset \
 ## Validation Ranges
 
 Located in `validation_ranges/`:
-- `default_ranges_v3.yaml` - Current default ranges for able-bodied data
+- `default_ranges.yaml` - Current default ranges for able-bodied data
 - `impaired_ranges.yaml` - Ranges for impaired population data
 - `example_custom_ranges.yaml` - Template for custom ranges
+
+### Interpreting Pass Rates
+
+**The goal of validation is NOT to achieve 100% pass rates.** The validation ranges represent established biomechanical norms derived from literature and reference datasets. Pass rates indicate how well a dataset conforms to these norms:
+
+- **High pass rates (>80%)**: Data closely matches expected biomechanical patterns
+- **Moderate pass rates (40-80%)**: Data has characteristics worth investigating - could be valid variations or quality issues
+- **Low pass rates (<40%)**: Data significantly deviates from norms - requires documentation or investigation
+
+**What failing strides indicate:**
+
+1. **Data quality issues** - Sensor noise, processing artifacts, or conversion errors that should be fixed
+2. **Special populations** - Pathological gait, elderly subjects, or other populations with different movement patterns
+3. **Non-standard protocols** - Unusual speeds, surfaces, or task variations
+4. **Task-specific differences** - Non-gait tasks (sit-to-stand, cutting) that require task-specific validation criteria
+
+**Do NOT automatically widen ranges to increase pass rates.** Instead:
+
+- Investigate failures to understand their cause
+- Document known deviations in the dataset metadata
+- Create population-specific or task-specific range files if needed
+- Use the "clean" dataset (failing strides removed) for applications requiring high data quality
+
+### Near-Miss Analysis (Planned Feature)
+
+For cases where strides fail by a small margin, a near-miss analysis workflow helps identify candidates for range review:
+
+**Concept:** Distinguish "barely outside bounds" from "way outside bounds" using:
+- **Z-score from clean data**: How many standard deviations from the mean of passing strides?
+- **Number of phases failed**: Strides failing at 1-2 phases are more likely minor outliers than strides failing everywhere
+
+**Criteria for "marginal failure":**
+- Few phases violated (e.g., ≤2 of 4 checkpoints)
+- Small z-score at each violation (e.g., z < 2.5σ from clean mean)
+
+**Workflow:**
+
+1. **Flag marginal failures and export candidate ranges:**
+   ```bash
+   python contributor_tools/diagnose_validation_failures.py <dataset>.parquet \
+       --flag-marginal --export-review
+   ```
+   Outputs: `review_<dataset>_candidate_ranges.yaml` with suggested bounds already applied.
+
+2. **Test the candidate ranges:**
+   ```bash
+   python contributor_tools/quick_validation_check.py <dataset>.parquet \
+       --ranges review_<dataset>_candidate_ranges.yaml
+   ```
+   Compare pass rates to see the impact of accepting the suggestions.
+
+3. **Accept or reject:**
+   - If satisfied, copy to `validation_ranges/default_ranges.yaml`
+   - If not, adjust thresholds (`--max-zscore`, `--max-phases`) and regenerate
+
+**Tuning thresholds:**
+- `--max-zscore 2.5` (default): Only strides within 2.5σ of clean mean qualify as marginal
+- `--max-phases 2` (default): Only strides failing at ≤2 phase checkpoints qualify
+- Lower values = more conservative suggestions; higher values = more aggressive
+
+**Key principle:** Human review required - no automatic range expansion. The exported file lets you see the impact before committing.
+
+**Shared library:** The near-miss detection logic lives in `contributor_tools/common/near_miss_analysis.py` for use by both `diagnose_validation_failures.py` and other tools.
 
 ## Conversion Script Structure
 
