@@ -1,47 +1,46 @@
-**Report generated:** 2026-01-05 12:32
+**Report generated:** 2026-01-05 14:56
 
 ## Status Summary
 
 | Metric | Value |
 |--------|-------|
-| Stride Pass Rate | 52.9% |
+| Stride Pass Rate | 84.9% |
 | Total Strides | 9197 |
-| Passing Strides | 4863 |
+| Passing Strides | 7804 |
 
 ### Summary
 
-**Status**: ❌ NEEDS REVIEW (52.9% valid)  
+**Status**: ⚠️ PARTIAL (84.9% valid)  
 **Total Strides**: 9197  
-**Passing Strides**: 4863  
+**Passing Strides**: 7804  
 
 ### Task Breakdown
 
 | Task | Pass Rate | Status |
 |------|-----------|--------|
-| Backward Walking | 68.0% | ❌ |
-| Cutting | 47.9% | ❌ |
-| Decline Walking | 54.6% | ❌ |
-| Incline Walking | 41.3% | ❌ |
-| Jump | 75.0% | ⚠️ |
-| Level Walking | 54.0% | ❌ |
-| Lunge | 67.0% | ❌ |
-| Run | 8.3% | ❌ |
+| Backward Walking | 93.3% | ✅ |
+| Cutting | 98.6% | ✅ |
+| Decline Walking | 86.8% | ⚠️ |
+| Incline Walking | 80.5% | ⚠️ |
+| Jump | 92.5% | ✅ |
+| Level Walking | 85.8% | ⚠️ |
+| Lunge | 77.5% | ⚠️ |
+| Run | 78.5% | ⚠️ |
 | Sit To Stand | 2.3% | ❌ |
-| Stair Ascent | 29.9% | ❌ |
-| Stair Descent | 63.8% | ❌ |
+| Stair Ascent | 61.1% | ❌ |
+| Stair Descent | 98.4% | ✅ |
 
 _Validation ranges snapshot embedded below._
-
-⚠️ **Note**: Validation ranges represent established biomechanical norms from literature. Pass rates indicate conformance to these norms—lower rates may reflect special populations, non-standard protocols, or task-specific differences. See the [validation interpretation guide](../../contributor_tools/CLAUDE.md#interpreting-pass-rates) for details.
 
 ## Validation Ranges Snapshot
 
 Download the YAML snapshot used for this validation: [Download](./gt24_validation_ranges.yaml)
 
-_Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml_
+_Source ranges file: review_gtech_2024_phase_candidate_ranges.yaml_
 
 ## Validation Plots
 
+<!-- VALIDATION_GALLERY_START -->
 === "Backward Walking"
     ![Backward Walking](./validation_plots/gt24/gtech_2024_phase_backward_walking_all_features_validation.png)
 
@@ -74,41 +73,8 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml_
 
 === "Stair Descent"
     ![Stair Descent](./validation_plots/gt24/gtech_2024_phase_stair_descent_all_features_validation.png)
-
+<!-- VALIDATION_GALLERY_END -->
 
 ---
 
-*Generated from `converted_datasets/gtech_2024_phase.parquet` on 2026-01-05 12:32*
-
-=== "Backward Walking"
-    ![Backward Walking](./validation_plots/gt24/gtech_2024_phase_backward_walking_all_features_validation.png)
-
-=== "Cutting"
-    ![Cutting](./validation_plots/gt24/gtech_2024_phase_cutting_all_features_validation.png)
-
-=== "Decline Walking"
-    ![Decline Walking](./validation_plots/gt24/gtech_2024_phase_decline_walking_all_features_validation.png)
-
-=== "Incline Walking"
-    ![Incline Walking](./validation_plots/gt24/gtech_2024_phase_incline_walking_all_features_validation.png)
-
-=== "Jump"
-    ![Jump](./validation_plots/gt24/gtech_2024_phase_jump_all_features_validation.png)
-
-=== "Level Walking"
-    ![Level Walking](./validation_plots/gt24/gtech_2024_phase_level_walking_all_features_validation.png)
-
-=== "Lunge"
-    ![Lunge](./validation_plots/gt24/gtech_2024_phase_lunge_all_features_validation.png)
-
-=== "Run"
-    ![Run](./validation_plots/gt24/gtech_2024_phase_run_all_features_validation.png)
-
-=== "Sit To Stand"
-    ![Sit To Stand](./validation_plots/gt24/gtech_2024_phase_sit_to_stand_all_features_validation.png)
-
-=== "Stair Ascent"
-    ![Stair Ascent](./validation_plots/gt24/gtech_2024_phase_stair_ascent_all_features_validation.png)
-
-=== "Stair Descent"
-    ![Stair Descent](./validation_plots/gt24/gtech_2024_phase_stair_descent_all_features_validation.png)
+*Generated from `converted_datasets/gtech_2024_phase.parquet` on 2026-01-05 14:56*
