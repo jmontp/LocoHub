@@ -227,8 +227,12 @@ def create_single_feature_plot(
                 all_maxs.append(data_max)
     
     if all_mins and all_maxs:
-        y_min = min(all_mins) - 0.1 * (max(all_maxs) - min(all_mins))
-        y_max = max(all_maxs) + 0.1 * (max(all_maxs) - min(all_mins))
+        data_range = max(all_maxs) - min(all_mins)
+        # Handle case where all values are identical (e.g., all zeros)
+        if data_range == 0:
+            data_range = max(abs(max(all_maxs)), abs(min(all_mins)), 1.0) * 0.2
+        y_min = min(all_mins) - 0.1 * data_range
+        y_max = max(all_maxs) + 0.1 * data_range
     else:
         y_min, y_max = -1, 1
     
@@ -269,12 +273,12 @@ def create_single_feature_plot(
             ax_pass.add_collection(lc)
     
     # Plot validation ranges on pass axis
-    _plot_validation_ranges(ax_pass, var_ranges, phases, 'lightgreen', value_conversion, unit_suffix)
-    
+    _plot_validation_ranges(ax_pass, var_ranges, phases, 'lightgreen', value_conversion, unit_suffix, y_limits=(y_min, y_max))
+
     if data is None or data.size == 0:
-        ax_pass.text(50, (y_min + y_max) / 2, 'Data Not Available', 
+        ax_pass.text(50, (y_min + y_max) / 2, 'Data Not Available',
                     ha='center', va='center', fontsize=12, color='gray', alpha=0.7)
-    
+
     ax_pass.set_title(f'{var_label} - ✓ Passed ({passed_count} strides)', fontsize=10, fontweight='bold')
     ax_pass.set_xlim(-5, 105)
     ax_pass.set_ylim(y_min, y_max)
@@ -284,7 +288,7 @@ def create_single_feature_plot(
     ax_pass.grid(True, alpha=0.3)
     x_label = 'Gait Phase' if task_type == 'gait' else 'Movement Phase'
     ax_pass.set_xlabel(x_label, fontsize=10)
-    
+
     # Plot FAILED strides (right column)
     failed_count = 0
     if data is not None and data.size > 0 and var_idx is not None:
@@ -294,15 +298,15 @@ def create_single_feature_plot(
             if stride_idx in variable_failed_strides:
                 failed_strides.append(data[stride_idx, :, var_idx])
                 failed_count += 1
-        
+
         # Plot all failed strides at once using LineCollection
         if failed_strides:
             failed_array = np.array(failed_strides)
             lc = _create_line_collection(phase_ipsi, failed_array, 'red', 0.4, linewidth, rasterized=True)
             ax_fail.add_collection(lc)
-    
+
     # Plot validation ranges on fail axis
-    _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix)
+    _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix, y_limits=(y_min, y_max))
     
     if data is None or data.size == 0:
         ax_fail.text(50, (y_min + y_max) / 2, 'Data Not Available', 
@@ -383,14 +387,20 @@ def create_task_combined_plot(
     Returns:
         Path to the generated plot (or empty string if shown interactively)
     """
-    # ALWAYS use all sagittal features for consistent layout
-    sagittal_features = get_sagittal_features()
-    feature_labels = {f[0]: f[1] for f in sagittal_features}
-    
+    # Get all sagittal features and filter to only those with data
+    all_sagittal_features = get_sagittal_features()
+    feature_labels = {f[0]: f[1] for f in all_sagittal_features}
+
     # Track which features have data available
     available_feature_names = set(feature_names) if feature_names else set()
-    
-    # Always use all 17 features for consistent plot height
+
+    # Filter to only features that exist in the data
+    sagittal_features = [f for f in all_sagittal_features if f[0] in available_feature_names]
+
+    # If no features have data, fall back to all features (will show "Data Not Available")
+    if not sagittal_features:
+        sagittal_features = all_sagittal_features
+
     n_features = len(sagittal_features)
     
     # Memory-aware dimensions for consistency across all plots
@@ -672,8 +682,8 @@ def create_task_combined_plot(
                     ax_pass.add_collection(lc)
         
         # Plot validation ranges on pass axis
-        _plot_validation_ranges(ax_pass, var_ranges, phases, 'lightgreen', value_conversion, unit_suffix)
-        
+        _plot_validation_ranges(ax_pass, var_ranges, phases, 'lightgreen', value_conversion, unit_suffix, y_limits=(y_min, y_max))
+
         if not has_data or data_3d is None or data_3d.size == 0 or var_idx is None:
             ax_pass.text(50, (y_min + y_max) / 2, 'Data Not Available', 
                         ha='center', va='center', fontsize=10, color='gray', alpha=0.7)
@@ -726,8 +736,8 @@ def create_task_combined_plot(
                 failed_count = biomech_failed_count + velocity_failed_count
             
             # Plot validation ranges on fail axis
-            _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix)
-            
+            _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix, y_limits=(y_min, y_max))
+
             if not has_data or data_3d is None or data_3d.size == 0 or var_idx is None:
                 ax_fail.text(50, (y_min + y_max) / 2, 'Data Not Available', 
                             ha='center', va='center', fontsize=10, color='gray', alpha=0.7)
@@ -1171,8 +1181,12 @@ def create_filters_by_phase_plot(
                     all_maxs.append(data_max)
         
         if all_mins and all_maxs:
-            y_min = min(all_mins) - 0.1 * (max(all_maxs) - min(all_mins))
-            y_max = max(all_maxs) + 0.1 * (max(all_maxs) - min(all_mins))
+            data_range = max(all_maxs) - min(all_mins)
+            # Handle case where all values are identical (e.g., all zeros)
+            if data_range == 0:
+                data_range = max(abs(max(all_maxs)), abs(min(all_mins)), 1.0) * 0.2
+            y_min = min(all_mins) - 0.1 * data_range
+            y_max = max(all_maxs) + 0.1 * data_range
         else:
             y_min, y_max = -1, 1  # Default range if no valid ranges found
         
@@ -1198,13 +1212,13 @@ def create_filters_by_phase_plot(
                 ax_pass.add_collection(lc)
         
         # Plot validation ranges on TOP of data (higher z-order)
-        _plot_validation_ranges(ax_pass, var_ranges, phases, 'lightgreen', value_conversion, unit_suffix)
-        
+        _plot_validation_ranges(ax_pass, var_ranges, phases, 'lightgreen', value_conversion, unit_suffix, y_limits=(y_min, y_max))
+
         # Add message if no data available
         if data is None or data.size == 0:
-            ax_pass.text(50, (y_min + y_max) / 2, 'Data Not Available', 
+            ax_pass.text(50, (y_min + y_max) / 2, 'Data Not Available',
                         ha='center', va='center', fontsize=12, color='gray', alpha=0.7)
-        
+
         ax_pass.set_title(f'{var_label} - ✓ Passed ({passed_count} strides)', fontsize=10, fontweight='bold')
         ax_pass.set_xlim(-5, 105)
         ax_pass.set_ylim(y_min, y_max)
@@ -1212,17 +1226,17 @@ def create_filters_by_phase_plot(
         ax_pass.set_xticklabels(['0%', '25%', '50%', '75%', '100%'])
         ax_pass.set_ylabel(f'{units}', fontsize=9)
         ax_pass.grid(True, alpha=0.3)
-        
+
         # Only add x-label to bottom row
         last_row_idx = 11 if mode == 'segment' else 5  # 12th variable is at index 11
         if var_idx == last_row_idx:
             x_label = 'Gait Phase' if task_type == 'gait' else 'Movement Phase'
             ax_pass.set_xlabel(x_label, fontsize=10)
-        
+
         # Plot FAILED strides (right column)
         ax_fail = axes[var_idx, 1]
         failed_count = 0
-        
+
         # Plot data FIRST (behind validation ranges)
         if data is not None and data.size > 0 and var_idx < data.shape[2]:
             # Collect all failed strides
@@ -1231,15 +1245,15 @@ def create_filters_by_phase_plot(
                 if stride_idx in variable_failed_strides:
                     failed_strides.append(data[stride_idx, :, var_idx])
                     failed_count += 1
-            
+
             # Plot all failed strides at once using LineCollection
             if failed_strides:
                 failed_array = np.array(failed_strides)
                 lc = _create_line_collection(phase_ipsi, failed_array, 'red', 0.4, linewidth, rasterized=True)
                 ax_fail.add_collection(lc)
-        
+
         # Plot validation ranges on TOP of data (higher z-order)
-        _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix)
+        _plot_validation_ranges(ax_fail, var_ranges, phases, 'lightcoral', value_conversion, unit_suffix, y_limits=(y_min, y_max))
         
         # Add message if no data available
         if data is None or data.size == 0:
@@ -1281,8 +1295,13 @@ def create_filters_by_phase_plot(
     return str(output_path)
 
 
-def _plot_validation_ranges(ax, var_ranges, phases, color, value_conversion, unit_suffix):
-    """Helper function to plot validation range boxes."""
+def _plot_validation_ranges(ax, var_ranges, phases, color, value_conversion, unit_suffix, y_limits=None):
+    """Helper function to plot validation range boxes.
+
+    Args:
+        y_limits: Optional tuple of (y_min, y_max) for computing text offsets.
+                  If None, uses ax.get_ylim() which may not be accurate before set_ylim.
+    """
     box_width = 8
     
     # Collect min/max values for each phase (excluding 100% which duplicates 0%)
@@ -1328,10 +1347,17 @@ def _plot_validation_ranges(ax, var_ranges, phases, color, value_conversion, uni
         else:  # Kinetic
             min_label = f'{min_val:.1f}'
             max_label = f'{max_val:.1f}'
-        
-        ax.text(phase, min_val - 0.02, min_label, 
+
+        # Calculate text offset relative to axis range (2% of range)
+        if y_limits is not None:
+            ylim = y_limits
+        else:
+            ylim = ax.get_ylim()
+        text_offset = (ylim[1] - ylim[0]) * 0.02
+
+        ax.text(phase, min_val - text_offset, min_label,
                ha='center', va='top', fontsize=7, fontweight='bold', zorder=11)
-        ax.text(phase, max_val + 0.02, max_label, 
+        ax.text(phase, max_val + text_offset, max_label,
                ha='center', va='bottom', fontsize=7, fontweight='bold', zorder=11)
     
     # NO connecting lines between boxes - removed the line plotting code
