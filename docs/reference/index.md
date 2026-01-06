@@ -91,7 +91,9 @@ When segmented, these tasks are normalized to 150 samples per stride with `phase
 | `sit_to_stand` / `stand_to_sit` | Chair or box transfers | `sit_to_stand`, `stand_to_sit` | 0% motion onset (velocity > 25 deg/s), 100% stable end state. GRF: sitting < 400N, standing > 600N. | `chair_height`, `armrests`, `variant` | See Sitting ↔ Standing archetype below. |
 | `squat` | Loaded or bodyweight squats | `squat`, `squat_bodyweight`, `squat_25lbs` | 0% stable standing, ~50% lowest depth, 100% stable standing. | `weight_lbs`, `variant` | See Standing → Action → Standing archetype below. |
 | `step_up` / `step_down` | Stair-box repetitions, curbs | `step_up`, `step_down` | Step-up: 0% initial foot contact on box, 100% full weight on box. Step-down mirrors with lower surface contact. | `height_m`, `lead_leg`, `step_number` | Treat like short stair runs; ensure cadence is repeatable before phase export. |
-| `jump` | Hops, vertical/lateral jumps | `jump_vertical`, `jump_lateral`, `jump_hop` | 0% stable standing, ~50% flight phase (GRF < 50N), 100% stable standing. | `jump_type`, `variant`, `lead_leg` | See Standing → Action → Standing archetype below. |
+| `jump` | Bilateral vertical/lateral jumps | `jump_vertical`, `jump_lateral` | 0% stable standing, ~50% flight phase (GRF < 50N), 100% stable standing. | `jump_type`, `variant` | See Standing → Action → Standing archetype below. |
+| `hop` | Unilateral (single-leg) repeated hops | `hop_single`, `hop_forward`, `hop_lateral` | 0% ipsilateral contact, 100% next ipsilateral contact. | `lead_leg`, `variant`, `direction` | Cyclic single-leg movement; segment contact-to-contact on same leg. |
+| `lunge` | Forward or lateral lunges | `lunge_forward`, `lunge_lateral`, `lunge_walking` | 0% stable standing, ~50% lowest depth, 100% return to standing. | `direction`, `variant`, `load_kg` | See Standing → Action → Standing archetype below. |
 | `weighted_walk`, `dynamic_walk`, `walk_backward` | Walking variants with perturbations | `level`, `variant:<string>` | Same as level walking (HS-to-HS) when heel strikes are present | `speed_m_s`, `treadmill`, `variant` | Prefer phase when heel strikes exist; otherwise document perturbation under `variant`. |
 
 ### Segmentation Archetypes
@@ -118,7 +120,7 @@ Ipsi Heel Strike → Ipsi Stance → Ipsi Toe Off → Ipsi Swing → Ipsi Heel S
 
 **Heel strike detection** uses GRF threshold crossings (typically 20-50N). When GRF is unavailable, use foot velocity minima or shank angle.
 
-**Applies to**: `level_walking`, `incline_walking`, `decline_walking`, `stair_ascent`, `stair_descent`, `run`, `walk_backward`
+**Applies to**: `level_walking`, `incline_walking`, `decline_walking`, `stair_ascent`, `stair_descent`, `run`, `walk_backward`, `hop`
 
 #### Standing → Action → Standing
 
@@ -143,6 +145,14 @@ Stable Standing → Descent → Lowest Depth → Ascent → Stable Standing
 ```
 
 Same detection parameters as jump, but no flight phase. Segment boundaries at stable standing states.
+
+**Lunge** (`lunge`):
+```
+Stable Standing → Forward Step → Lowest Depth → Return Step → Stable Standing
+       0%            ~25%           ~50%           ~75%           100%
+```
+
+Same detection parameters as squat. Forward lunges involve asymmetric loading; record `lead_leg` and `direction` metadata. Walking lunges may use stride-based segmentation instead.
 
 #### Sitting ↔ Standing Transfers
 
@@ -317,6 +327,81 @@ OpenSim right‑handed frames. Positive rotations follow right‑hand rule.
 
 - GRF components: `grf_vertical_*`, `grf_anterior_*`, `grf_lateral_*` with suffix `_BW` or `_N`.
 - Center of pressure: `cop_anterior_*_m`, `cop_lateral_*_m`, `cop_vertical_*_m` (meters), side‑specific where applicable.
+
+### Expected GRF Patterns During Gait
+
+Ground reaction forces follow characteristic patterns during the gait cycle. Understanding these patterns helps verify data quality and sign conventions.
+
+**Vertical GRF** (`grf_vertical_*_BW`): Classic "M" shape during stance phase.
+
+| Phase (%) | Pattern | Description |
+|-----------|---------|-------------|
+| 0% | ~0.5 BW | Initial contact (heel strike) |
+| 10-15% | ~1.1-1.2 BW | First peak (loading response) |
+| 30% | ~0.8 BW | Valley (midstance, body vaulting over limb) |
+| 45-50% | ~1.1-1.2 BW | Second peak (terminal stance) |
+| 60% | ~0 BW | Toe off (swing begins) |
+
+**Anterior GRF** (`grf_anterior_*_BW`): Biphasic braking-propulsion pattern.
+
+| Phase (%) | Sign | Description |
+|-----------|------|-------------|
+| 0-25% | Negative | Braking phase: force opposes forward motion (decelerates body) |
+| 25-30% | ~0 | Crossover point |
+| 30-60% | Positive | Propulsion phase: force accelerates body forward |
+
+Sign convention: **Positive = propulsion** (forward force on body), **Negative = braking**.
+
+**Lateral GRF** (`grf_lateral_*_BW`): "C" shape pattern directing force toward body midline.
+
+| Phase (%) | Pattern | Description |
+|-----------|---------|-------------|
+| 0-15% | Rising medial | Loading response |
+| 15-30% | Peak medial | Single-limb support, lateral stabilization |
+| 30-60% | Declining | Transition through push-off |
+
+Sign convention: **Positive = medial** (toward body midline for ipsilateral limb).
+
+### Expected COP Patterns During Gait
+
+Center of pressure tracks the progression of force application through the foot during stance. Values are **stride-relative** (zeroed at heel strike position).
+
+**Anterior COP** (`cop_anterior_*_m`): Heel-to-toe progression.
+
+| Phase (%) | Pattern | Description |
+|-----------|---------|-------------|
+| 0% | ~0 m | Heel strike (reference point) |
+| 0-15% | Slight negative | Initial contact may be slightly posterior to reference |
+| 15-60% | Progressive increase | COP advances from heel toward toe |
+| 50-60% | +0.2 to +0.3 m | Forefoot/toe region at push-off |
+
+Sign convention: **Positive = forward** (toe direction), values increase from heel (~0) to toe (~0.25m) through stance.
+
+**Lateral COP** (`cop_lateral_*_m`): Medial-lateral progression.
+
+| Phase (%) | Pattern | Description |
+|-----------|---------|-------------|
+| 0-15% | Near zero | Heel contact, lateral heel position |
+| 15-40% | Slight medial shift | Weight transfer toward midline |
+| 40-60% | Return toward neutral | Push-off through medial forefoot |
+
+Sign convention: **Positive = medial** (toward body midline for ipsilateral limb).
+
+**Vertical COP** (`cop_vertical_*_m`): Approximately constant.
+
+- Represents ground level beneath the foot (~0.02-0.05m depending on instrumentation)
+- Should remain relatively constant throughout stance since it reflects ankle-to-ground distance
+- Large variations may indicate force plate artifacts or coordinate system issues
+
+### COP Coordinate Reference
+
+COP values in the standardized format are **stride-relative**, meaning:
+
+1. At heel strike (phase 0%), COP anterior is zeroed to the heel strike position
+2. As the gait cycle progresses, COP anterior increases as force moves toward the toe
+3. This allows direct comparison across subjects and trials regardless of absolute position
+
+If COP values are in global coordinates (e.g., treadmill belt position), they must be transformed to stride-relative values during conversion.
 
 ## Naming Rules
 

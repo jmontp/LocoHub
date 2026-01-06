@@ -88,12 +88,12 @@ _TASKS: Dict[str, TaskRecord] = {
         example_ids=["stand_to_sit"],
         notes="0% descent onset, 100% seated contact; capture chair metadata when available.",
     ),
-    "squats": TaskRecord(
-        name="squats",
+    "squat": TaskRecord(
+        name="squat",
         category="phase",
         description="Loaded or bodyweight squats",
-        example_ids=["squats", "squat_down", "squat_up"],
-        notes="0% upright, 50% lowest depth, 100% back to upright; include load metadata.",
+        example_ids=["squat", "squat_bodyweight", "squat_25lbs"],
+        notes="0% stable standing, ~50% lowest depth, 100% stable standing. Uses Standing → Action → Standing archetype.",
     ),
     "step_up": TaskRecord(
         name="step_up",
@@ -112,9 +112,23 @@ _TASKS: Dict[str, TaskRecord] = {
     "jump": TaskRecord(
         name="jump",
         category="phase",
-        description="Hops or jumps with identifiable take-off/landing",
-        example_ids=["jump_vertical", "jump_lateral", "hop_single"],
-        notes="0% preparatory contact, 50% takeoff, 100% same-foot landing.",
+        description="Bilateral jumps with identifiable take-off/landing",
+        example_ids=["jump_vertical", "jump_lateral"],
+        notes="0% stable standing, ~50% flight phase (GRF < 50N), 100% stable standing. Uses Standing → Action → Standing archetype.",
+    ),
+    "hop": TaskRecord(
+        name="hop",
+        category="phase",
+        description="Unilateral (single-leg) repeated hops",
+        example_ids=["hop_single", "hop_forward", "hop_lateral"],
+        notes="0% ipsilateral contact, 100% next ipsilateral contact. Cyclic single-leg movement; segment contact-to-contact on same leg.",
+    ),
+    "lunge": TaskRecord(
+        name="lunge",
+        category="phase",
+        description="Forward or lateral lunges with return to standing",
+        example_ids=["lunge_forward", "lunge_lateral", "lunge_walking"],
+        notes="0% stable standing, ~50% lowest depth (max knee flexion), 100% return to standing. Uses Standing → Action → Standing archetype.",
     ),
     "weighted_walk": TaskRecord(
         name="weighted_walk",

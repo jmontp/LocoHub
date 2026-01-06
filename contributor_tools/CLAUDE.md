@@ -12,10 +12,47 @@ contributor_tools/
 │   ├── GaTech_2024_TaskAgnostic/  # Georgia Tech 2024 exoskeleton
 │   ├── Umich_2021/        # University of Michigan 2021
 │   └── AddBiomechanics/   # AddBiomechanics dataset
-├── common/                 # Shared utilities (phase_detection.py)
+├── common/                 # Shared Python libraries for segmentation and analysis
+│   ├── stride_segmentation.py  # Unified stride/cycle segmentation
+│   ├── phase_detection.py      # GRF-based gait event detection
+│   └── near_miss_analysis.py   # Marginal failure analysis
 ├── validation_ranges/      # YAML files defining valid data ranges per task
 └── validation_plots/       # Generated validation plot outputs
 ```
+
+## Common Libraries (`common/`)
+
+Shared Python utilities for conversion scripts. See `common/CLAUDE.md` for detailed API documentation.
+
+### Stride Segmentation (`stride_segmentation.py`)
+
+Unified library for segmenting biomechanical data into cycles/strides. Supports three archetypes:
+
+| Archetype | Tasks | Detection Method |
+|-----------|-------|------------------|
+| **Gait** | level_walking, incline_walking, decline_walking, stair_ascent, stair_descent, run, backward_walking, hop | Heel strike to heel strike (GRF threshold crossing) |
+| **Standing Action** | jump, squat, lunge | Stable standing → action → stable standing (GRF + velocity) |
+| **Sit-Stand Transfer** | sit_to_stand, stand_to_sit | GRF state machine + velocity-based motion onset/offset |
+
+**Usage in conversion scripts:**
+```python
+from common.stride_segmentation import segment_by_task, GaitSegmentationConfig
+
+# Auto-route to correct archetype
+segments = segment_by_task(df, task="level_walking")
+
+# Or use specific functions with custom config
+from common.stride_segmentation import segment_gait_cycles, segment_sit_stand_transfers
+segments = segment_gait_cycles(df, GaitSegmentationConfig(grf_threshold_N=30.0))
+```
+
+### Phase Detection (`phase_detection.py`)
+
+Lower-level GRF event detection (heel strikes, toe-offs).
+
+### Near-Miss Analysis (`near_miss_analysis.py`)
+
+Identifies marginal validation failures using z-scores and phase violation counts.
 
 ## Conversion Workflow
 
