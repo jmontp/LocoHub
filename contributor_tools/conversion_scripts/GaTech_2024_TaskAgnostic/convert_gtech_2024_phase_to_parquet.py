@@ -19,12 +19,29 @@ Output: Phase-normalized parquet file with 150 points per gait cycle.
 
 import os
 import re
+import sys
 import numpy as np
 import pandas as pd
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 from scipy.interpolate import interp1d
 from tqdm import tqdm
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from common.stride_segmentation import (
+    SegmentationArchetype,
+    SegmentBoundary,
+    GaitSegmentationConfig,
+    StandingActionConfig,
+    SitStandConfig,
+    TASK_ARCHETYPE_MAP,
+    segment_gait_cycles,
+    segment_standing_action_cycles,
+    segment_sit_stand_transfers,
+    filter_segments_by_duration_iqr,
+    remove_transition_segments,
+)
 
 # Configuration
 NUM_POINTS = 150  # Points per gait cycle
@@ -161,120 +178,6 @@ def get_subject_mass(subject_id: str, data_source: str) -> float:
     return 75.0
 
 
-def detect_heel_strikes(grf_vertical: np.ndarray, threshold: float = GRF_THRESHOLD_N) -> List[int]:
-    """
-    Detect heel strikes from vertical GRF using threshold crossing.
-
-    Heel strike is detected when GRF crosses upward through threshold.
-
-    Args:
-        grf_vertical: Vertical ground reaction force array (N)
-        threshold: Force threshold for detection (N)
-
-    Returns:
-        List of indices where heel strikes occur
-    """
-    # Find upward crossings through threshold
-    above_threshold = grf_vertical > threshold
-    crossings = np.diff(above_threshold.astype(int))
-    heel_strikes = np.where(crossings == 1)[0] + 1  # +1 because diff reduces length by 1
-
-    return heel_strikes.tolist()
-
-
-def detect_toe_offs(grf_vertical: np.ndarray, threshold: float = GRF_THRESHOLD_N) -> List[int]:
-    """
-    Detect toe-offs from vertical GRF using threshold crossing.
-
-    Toe-off is detected when GRF crosses downward through threshold.
-
-    Args:
-        grf_vertical: Vertical ground reaction force array (N)
-        threshold: Force threshold for detection (N)
-
-    Returns:
-        List of indices where toe-offs occur
-    """
-    above_threshold = grf_vertical > threshold
-    crossings = np.diff(above_threshold.astype(int))
-    toe_offs = np.where(crossings == -1)[0] + 1
-
-    return toe_offs.tolist()
-
-
-def filter_strides_by_duration_iqr(
-    heel_strikes: List[int],
-    sampling_rate: float = SAMPLING_RATE,
-    iqr_multiplier: float = IQR_MULTIPLIER
-) -> List[int]:
-    """
-    Filter heel strikes to remove strides with outlier durations.
-
-    Uses IQR method: keep strides where Q1 - iqr_multiplier*IQR < duration < Q3 + iqr_multiplier*IQR
-
-    Args:
-        heel_strikes: List of heel strike indices
-        sampling_rate: Sampling rate in Hz
-        iqr_multiplier: Multiplier for IQR bounds (default 1.5)
-
-    Returns:
-        Filtered list of heel strikes
-    """
-    if len(heel_strikes) < 4:  # Need enough strides to compute quartiles
-        return heel_strikes
-
-    # Compute stride durations in seconds
-    durations = np.diff(heel_strikes) / sampling_rate
-
-    # Compute IQR bounds
-    q1, q3 = np.percentile(durations, [25, 75])
-    iqr = q3 - q1
-    lower_bound = q1 - iqr_multiplier * iqr
-    upper_bound = q3 + iqr_multiplier * iqr
-
-    # Keep heel strikes that form valid-duration strides
-    valid_mask = (durations >= lower_bound) & (durations <= upper_bound)
-
-    # Build filtered list: keep HS[i] if stride from HS[i] to HS[i+1] is valid
-    filtered = []
-    for i, is_valid in enumerate(valid_mask):
-        if is_valid:
-            if not filtered:
-                filtered.append(heel_strikes[i])  # Include start of valid stride
-            filtered.append(heel_strikes[i + 1])  # Include end of valid stride
-
-    return filtered
-
-
-def remove_transition_strides(
-    heel_strikes: List[int],
-    skip_first: int = SKIP_FIRST_STRIDES,
-    skip_last: int = SKIP_LAST_STRIDES
-) -> List[int]:
-    """
-    Remove transition strides at the beginning and end of a trial.
-
-    Args:
-        heel_strikes: List of heel strike indices
-        skip_first: Number of strides to skip at beginning (default 2)
-        skip_last: Number of strides to skip at end (default 1)
-
-    Returns:
-        Filtered list of heel strikes
-    """
-    # Need at least skip_first + skip_last + 2 heel strikes for 1 valid stride
-    min_required = skip_first + skip_last + 2
-    if len(heel_strikes) < min_required:
-        return []
-
-    # Skip first N strides means start from heel_strike[skip_first]
-    # Skip last N strides means end at heel_strike[-(skip_last+1)] to get end of last valid stride
-    start_idx = skip_first
-    end_idx = len(heel_strikes) - skip_last
-
-    return heel_strikes[start_idx:end_idx]
-
-
 def interpolate_to_phase(data: np.ndarray, num_points: int = NUM_POINTS) -> np.ndarray:
     """
     Interpolate time-series data to fixed number of phase points (0-100%).
@@ -385,7 +288,7 @@ def load_trial_data(trial_path: Path, subject_id: str) -> Optional[Dict[str, pd.
     data = {}
 
     # Required files
-    required_files = ['angle_filt', 'moment_filt', 'grf', 'velocity']
+    required_files = ['angle_filt', 'moment_filt', 'grf', 'velocity', 'insole_sim']
     optional_files = ['moment_filt_bio', 'power', 'power_bio']  # imu_sim not used
 
     for file_type in required_files + optional_files:
@@ -578,69 +481,17 @@ def process_stride(
     grf_lat_ipsi = interpolate_to_phase(grf_lat_ipsi_raw)
     grf_lat_contra = interpolate_to_phase(grf_lat_contra_raw)
 
-    # COP (convert from global to stride-relative coordinates)
-    # Raw data is in global meters; we make it relative to heel strike position
-    # Sign conventions for standardized output:
-    #   - Anterior: positive = forward from heel strike (progresses heel→toe)
-    #   - Lateral: positive = medial for ipsi leg
-    #   - Vertical: ground level (approximately constant)
-    # Extract raw global COP and make relative to heel strike
-    cop_ant_raw_ipsi = grf_df[f'fp_{ipsi}_cop_z'].values[start_idx:end_idx]
-    cop_ant_raw_contra = grf_df[f'fp_{contra}_cop_z'].values[start_idx:end_idx]
-    # Zero at heel strike to get progression from heel to toe
-    # Use absolute progression to ensure COP is always positive (heel→toe)
-    # regardless of walking direction (incline vs decline)
-    cop_ant_ipsi_rel = cop_ant_raw_ipsi - cop_ant_raw_ipsi[0]
-    cop_ant_contra_rel = cop_ant_raw_contra - cop_ant_raw_contra[0]
-    # Flip sign if COP is moving in negative direction (decline walking)
-    # Check the COP at 50% of stride (just before toe-off) - should be positive
-    # This is more reliable than max/min which can be affected by swing phase noise
-    check_idx = len(cop_ant_ipsi_rel) // 2  # 50% of raw samples
-    if check_idx > 0 and not np.isnan(cop_ant_ipsi_rel[check_idx]):
-        if cop_ant_ipsi_rel[check_idx] < 0:
-            cop_ant_ipsi_rel = -cop_ant_ipsi_rel
-    # For contra: check at 75% of stride (mid-contra stance) - should be positive
-    check_idx_contra = int(len(cop_ant_contra_rel) * 0.75)
-    if check_idx_contra > 0 and check_idx_contra < len(cop_ant_contra_rel):
-        val = cop_ant_contra_rel[check_idx_contra]
-        if not np.isnan(val) and val < 0:
-            cop_ant_contra_rel = -cop_ant_contra_rel
-    cop_ant_ipsi = interpolate_to_phase(cop_ant_ipsi_rel)
-    cop_ant_contra = interpolate_to_phase(cop_ant_contra_rel)
-    # Lateral COP: relative to heel strike position
-    # Sign should be consistent with GRF lateral (ipsi negative = medial)
-    cop_lat_raw_ipsi = grf_df[f'fp_{ipsi}_cop_x'].values[start_idx:end_idx]
-    cop_lat_raw_contra = grf_df[f'fp_{contra}_cop_x'].values[start_idx:end_idx]
-    cop_lat_ipsi_rel = cop_lat_raw_ipsi - cop_lat_raw_ipsi[0]
-    cop_lat_contra_rel = cop_lat_raw_contra - cop_lat_raw_contra[0]
-    # Apply same sign correction as GRF lateral if needed (based on mean ipsi GRF lateral)
-    if end_stance > 0 and mean_lat_ipsi > 0:
-        # We flipped GRF, so flip COP too for consistency
-        cop_lat_ipsi_rel = -cop_lat_ipsi_rel
-        cop_lat_contra_rel = -cop_lat_contra_rel
-    cop_lat_ipsi = interpolate_to_phase(cop_lat_ipsi_rel)
-    cop_lat_contra = interpolate_to_phase(cop_lat_contra_rel)
-    # Vertical COP: In a proper ankle-relative frame, COP vertical should be ~0 (ground level)
-    # The raw data is in global coords which shows non-zero values on inclined surfaces,
-    # but this is not meaningful - COP is inherently 2D (point on ground surface)
+    # COP (Center of Pressure) - from insole_sim (foot-relative coordinates)
+    # insole_sim provides COP in OpenSim foot frame (already foot-relative)
+    # Columns: insole_<side>_cop_x (anterior), insole_<side>_cop_z (lateral)
+    insole_df = data['insole_sim']
+    cop_ant_ipsi = interpolate_to_phase(insole_df[f'insole_{ipsi}_cop_x'].values[start_idx:end_idx])
+    cop_ant_contra = interpolate_to_phase(insole_df[f'insole_{contra}_cop_x'].values[start_idx:end_idx])
+    cop_lat_ipsi = interpolate_to_phase(insole_df[f'insole_{ipsi}_cop_z'].values[start_idx:end_idx])
+    cop_lat_contra = interpolate_to_phase(insole_df[f'insole_{contra}_cop_z'].values[start_idx:end_idx])
+    # No vertical COP in insole_sim (COP is on 2D foot surface)
     cop_vert_ipsi = np.zeros(NUM_POINTS)
     cop_vert_contra = np.zeros(NUM_POINTS)
-
-    # Zero out COP when GRF is below threshold (COP is undefined during swing phase)
-    # Use 0.05 BW (5% body weight) as the threshold - below this, foot is effectively off ground
-    COP_GRF_THRESHOLD = 0.05  # BW
-    swing_mask_ipsi = grf_vert_ipsi < COP_GRF_THRESHOLD
-    swing_mask_contra = grf_vert_contra < COP_GRF_THRESHOLD
-
-    # Zero out COP during swing phase for ipsi leg
-    cop_ant_ipsi[swing_mask_ipsi] = 0.0
-    cop_lat_ipsi[swing_mask_ipsi] = 0.0
-    cop_vert_ipsi[swing_mask_ipsi] = 0.0
-
-    # Zero out COP during swing phase for contra leg
-    cop_ant_contra[swing_mask_contra] = 0.0
-    cop_lat_contra[swing_mask_contra] = 0.0
-    cop_vert_contra[swing_mask_contra] = 0.0
 
     # Build task_info string
     info_parts = [f"leg:{leg_side}"]
@@ -720,6 +571,164 @@ def process_stride(
     return stride_df
 
 
+def prepare_segmentation_df(
+    data: Dict[str, pd.DataFrame],
+    leg_side: str
+) -> pd.DataFrame:
+    """
+    Prepare a DataFrame with standardized column names for segmentation.
+
+    Args:
+        data: Dictionary of raw DataFrames
+        leg_side: 'l' or 'r' for ipsilateral leg
+
+    Returns:
+        DataFrame ready for stride_segmentation functions
+    """
+    grf_df = data['grf']
+    angle_df = data['angle_filt']
+
+    ipsi = leg_side
+    contra = 'r' if leg_side == 'l' else 'l'
+
+    n_samples = len(grf_df)
+
+    # Time column (from angle_filt or grf)
+    if 'time' in angle_df.columns:
+        time_s = angle_df['time'].values
+    elif 'time' in grf_df.columns:
+        time_s = grf_df['time'].values
+    else:
+        time_s = np.arange(n_samples) / SAMPLING_RATE
+
+    # GRF in Newtons (the segmentation library can handle N or BW)
+    grf_ipsi = grf_df[f'fp_{ipsi}_force_y'].values if f'fp_{ipsi}_force_y' in grf_df.columns else np.zeros(n_samples)
+    grf_contra = grf_df[f'fp_{contra}_force_y'].values if f'fp_{contra}_force_y' in grf_df.columns else np.zeros(n_samples)
+
+    # Velocity columns (if available)
+    vel_df = data.get('velocity', pd.DataFrame())
+    deg2rad = np.pi / 180.0
+
+    # Build velocity arrays (convert deg/s to rad/s if needed)
+    hip_vel_ipsi = np.zeros(n_samples)
+    hip_vel_contra = np.zeros(n_samples)
+    knee_vel_ipsi = np.zeros(n_samples)
+    knee_vel_contra = np.zeros(n_samples)
+
+    if not vel_df.empty and len(vel_df) == n_samples:
+        if f'hip_flexion_{ipsi}_velocity' in vel_df.columns:
+            hip_vel_ipsi = vel_df[f'hip_flexion_{ipsi}_velocity'].values * deg2rad
+        if f'hip_flexion_{contra}_velocity' in vel_df.columns:
+            hip_vel_contra = vel_df[f'hip_flexion_{contra}_velocity'].values * deg2rad
+        if f'knee_angle_{ipsi}_velocity' in vel_df.columns:
+            knee_vel_ipsi = vel_df[f'knee_angle_{ipsi}_velocity'].values * deg2rad
+        if f'knee_angle_{contra}_velocity' in vel_df.columns:
+            knee_vel_contra = vel_df[f'knee_angle_{contra}_velocity'].values * deg2rad
+
+    return pd.DataFrame({
+        'time_s': time_s,
+        'grf_vertical_ipsi_N': grf_ipsi,
+        'grf_vertical_contra_N': grf_contra,
+        'hip_flexion_velocity_ipsi_rad_s': hip_vel_ipsi,
+        'hip_flexion_velocity_contra_rad_s': hip_vel_contra,
+        'knee_flexion_velocity_ipsi_rad_s': knee_vel_ipsi,
+        'knee_flexion_velocity_contra_rad_s': knee_vel_contra,
+    })
+
+
+def segment_trial_gait(
+    seg_df: pd.DataFrame,
+    leg_side: str
+) -> List[SegmentBoundary]:
+    """Segment gait cycles using heel strike detection."""
+    config = GaitSegmentationConfig(
+        grf_vertical_col='grf_vertical_ipsi_N',
+        time_col='time_s',
+        grf_threshold_N=GRF_THRESHOLD_N,
+        min_stride_duration_s=MIN_STRIDE_SAMPLES / SAMPLING_RATE,
+        max_stride_duration_s=MAX_STRIDE_SAMPLES / SAMPLING_RATE,
+        skip_first_segments=SKIP_FIRST_STRIDES,
+        skip_last_segments=SKIP_LAST_STRIDES,
+        use_iqr_filtering=True,
+        iqr_multiplier=IQR_MULTIPLIER,
+    )
+    return segment_gait_cycles(seg_df, config, leg_side=leg_side)
+
+
+def segment_trial_sit_stand(
+    seg_df: pd.DataFrame,
+    transfer_type: str = "sit_to_stand"
+) -> List[SegmentBoundary]:
+    """Segment sit-to-stand or stand-to-sit transfers using GRF state machine."""
+    config = SitStandConfig(
+        grf_vertical_ipsi_col='grf_vertical_ipsi_N',
+        grf_vertical_contra_col='grf_vertical_contra_N',
+        time_col='time_s',
+        velocity_cols=(
+            'hip_flexion_velocity_ipsi_rad_s',
+            'hip_flexion_velocity_contra_rad_s',
+            'knee_flexion_velocity_ipsi_rad_s',
+            'knee_flexion_velocity_contra_rad_s',
+        ),
+        # Thresholds in Newtons (data is in N, not BW)
+        sitting_grf_threshold_N=400.0,
+        standing_grf_threshold_N=600.0,
+        velocity_threshold_rad_s=0.436,  # 25 deg/s
+        use_iqr_filtering=True,
+        iqr_multiplier=IQR_MULTIPLIER,
+    )
+    return segment_sit_stand_transfers(seg_df, config, transfer_type=transfer_type)
+
+
+def segment_trial_jump(
+    seg_df: pd.DataFrame
+) -> List[SegmentBoundary]:
+    """Segment jump cycles using flight phase detection."""
+    config = StandingActionConfig(
+        grf_vertical_ipsi_col='grf_vertical_ipsi_N',
+        grf_vertical_contra_col='grf_vertical_contra_N',
+        time_col='time_s',
+        velocity_cols=(
+            'hip_flexion_velocity_ipsi_rad_s',
+            'hip_flexion_velocity_contra_rad_s',
+            'knee_flexion_velocity_ipsi_rad_s',
+            'knee_flexion_velocity_contra_rad_s',
+        ),
+        # Thresholds in Newtons
+        standing_grf_threshold_N=600.0,
+        flight_grf_threshold_N=50.0,
+        velocity_threshold_rad_s=0.436,  # 25 deg/s
+        require_flight_phase=True,
+        use_iqr_filtering=True,
+        iqr_multiplier=IQR_MULTIPLIER,
+    )
+    return segment_standing_action_cycles(seg_df, config, action_type="jump")
+
+
+def segment_trial_standing_action(
+    seg_df: pd.DataFrame,
+    action_type: str = "squat"
+) -> List[SegmentBoundary]:
+    """Segment squat/lunge cycles using velocity-based detection."""
+    config = StandingActionConfig(
+        grf_vertical_ipsi_col='grf_vertical_ipsi_N',
+        grf_vertical_contra_col='grf_vertical_contra_N',
+        time_col='time_s',
+        velocity_cols=(
+            'hip_flexion_velocity_ipsi_rad_s',
+            'hip_flexion_velocity_contra_rad_s',
+            'knee_flexion_velocity_ipsi_rad_s',
+            'knee_flexion_velocity_contra_rad_s',
+        ),
+        standing_grf_threshold_N=600.0,
+        velocity_threshold_rad_s=0.436,
+        require_flight_phase=False,
+        use_iqr_filtering=True,
+        iqr_multiplier=IQR_MULTIPLIER,
+    )
+    return segment_standing_action_cycles(seg_df, config, action_type=action_type)
+
+
 def process_trial(
     trial_path: Path,
     subject_id: str,
@@ -755,52 +764,94 @@ def process_trial(
     if data is None:
         return []
 
-    # Detect heel strikes for both legs
-    grf_df = data['grf']
+    # Determine segmentation archetype
+    archetype = TASK_ARCHETYPE_MAP.get(task, SegmentationArchetype.GAIT)
 
     strides = []
     step_num = 0
 
-    for leg_side in ['l', 'r']:
-        grf_col = f'fp_{leg_side}_force_y'
-        if grf_col not in grf_df.columns:
-            continue
+    # For sit-stand and standing-action tasks, process both legs together
+    # since these are bilateral movements
+    if archetype == SegmentationArchetype.SIT_STAND_TRANSFER:
+        # Use left leg as reference (ipsi), right as contra
+        seg_df = prepare_segmentation_df(data, 'l')
+        # Extract BOTH transfer types from sit-stand trials
+        # The trial contains alternating sit_to_stand and stand_to_sit movements
+        segments = segment_trial_sit_stand(seg_df, transfer_type="both")
 
-        grf_vertical = grf_df[grf_col].values
-        heel_strikes = detect_heel_strikes(grf_vertical)
-
-        # Apply transition stride removal (skip first 2, last 1 strides per trial)
-        heel_strikes = remove_transition_strides(heel_strikes)
-
-        # Apply IQR-based duration filtering to remove outlier strides
-        heel_strikes = filter_strides_by_duration_iqr(heel_strikes)
-
-        if len(heel_strikes) < 2:
-            continue
-
-        # Process each stride (heel strike to heel strike)
-        for i in range(len(heel_strikes) - 1):
-            start_idx = heel_strikes[i]
-            end_idx = heel_strikes[i + 1]
+        for seg in segments:
+            # Use the actual segment type (sit_to_stand or stand_to_sit)
+            actual_task = seg.segment_type  # "sit_to_stand" or "stand_to_sit"
+            actual_task_id = actual_task
 
             stride_df = process_stride(
                 data=data,
-                start_idx=start_idx,
-                end_idx=end_idx,
+                start_idx=seg.start_idx,
+                end_idx=seg.end_idx,
+                subject_id=subject_id,
+                subject_mass=subject_mass,
+                task=actual_task,
+                task_id=actual_task_id,
+                task_info=task_info,
+                step_num=step_num,
+                leg_side='l',
+                collection_phase=collection_phase,
+                exo_state=exo_state
+            )
+            if stride_df is not None:
+                strides.append(stride_df)
+                step_num += 1
+
+    elif archetype == SegmentationArchetype.STANDING_ACTION:
+        seg_df = prepare_segmentation_df(data, 'l')
+        if task == 'jump':
+            segments = segment_trial_jump(seg_df)
+        else:
+            segments = segment_trial_standing_action(seg_df, action_type=task)
+
+        for seg in segments:
+            stride_df = process_stride(
+                data=data,
+                start_idx=seg.start_idx,
+                end_idx=seg.end_idx,
                 subject_id=subject_id,
                 subject_mass=subject_mass,
                 task=task,
                 task_id=task_id,
                 task_info=task_info,
                 step_num=step_num,
-                leg_side=leg_side,
+                leg_side='l',
                 collection_phase=collection_phase,
                 exo_state=exo_state
             )
-
             if stride_df is not None:
                 strides.append(stride_df)
                 step_num += 1
+
+    else:
+        # Gait tasks: process each leg independently
+        for leg_side in ['l', 'r']:
+            seg_df = prepare_segmentation_df(data, leg_side)
+            segments = segment_trial_gait(seg_df, leg_side)
+
+            for seg in segments:
+                stride_df = process_stride(
+                    data=data,
+                    start_idx=seg.start_idx,
+                    end_idx=seg.end_idx,
+                    subject_id=subject_id,
+                    subject_mass=subject_mass,
+                    task=task,
+                    task_id=task_id,
+                    task_info=task_info,
+                    step_num=step_num,
+                    leg_side=leg_side,
+                    collection_phase=collection_phase,
+                    exo_state=exo_state
+                )
+                if stride_df is not None:
+                    strides.append(stride_df)
+                    step_num += 1
 
     return strides
 
