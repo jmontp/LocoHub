@@ -20,8 +20,10 @@ tasks:
 - lunge
 - run
 - sit_to_stand
+- squat
 - stair_ascent
 - stair_descent
+- stand_to_sit
 citation: 'Slade, P., Kochenderfer, M.J., Delp, S.L. et al. Task-agnostic exoskeleton
   control via biological joint moment estimation. Nature (2024). https://doi.org/10.1038/s41586-024-08157-7
 
@@ -43,84 +45,95 @@ notes: 'Gait cycles detected using vertical GRF threshold crossing (20 N). First
   '
 date_added: '2025-12-19'
 validation_status: "\u26A0\uFE0F PARTIAL"
-validation_pass_rate: 84.9
-total_strides: 9197
-passing_strides: 7804
-quality_display: "\u26A0\uFE0F Partial (84.9%)"
+validation_pass_rate: 87.4
+total_strides: 8957
+passing_strides: 7828
+quality_display: "\u26A0\uFE0F Partial (87.4%)"
 doc_url: https://jmontp.github.io/LocoHub/datasets/gt24/
 doc_path: docs/datasets/gt24.md
 doc_body_path: docs/datasets/.generated/gt24_documentation.md
 validation_doc_url: https://jmontp.github.io/LocoHub/datasets/gt24/#validation
 validation_doc_path: docs/datasets/gt24.md#validation
 validation_body_path: docs/datasets/.generated/gt24_validation.md
-validation_summary: "### Summary\n\n**Status**: \u26A0\uFE0F PARTIAL (84.9% valid)\
-  \  \n**Total Strides**: 9197  \n**Passing Strides**: 7804  \n\n### Task Breakdown\n\
+validation_summary: "### Summary\n\n**Status**: \u26A0\uFE0F PARTIAL (87.4% valid)\
+  \  \n**Total Strides**: 8957  \n**Passing Strides**: 7828  \n\n### Task Breakdown\n\
   \n| Task | Pass Rate | Status |\n|------|-----------|--------|\n| Backward Walking\
-  \ | 93.3% | \u2705 |\n| Cutting | 98.6% | \u2705 |\n| Decline Walking | 86.8% |\
-  \ \u26A0\uFE0F |\n| Incline Walking | 80.5% | \u26A0\uFE0F |\n| Jump | 92.5% | \u2705\
-  \ |\n| Level Walking | 85.8% | \u26A0\uFE0F |\n| Lunge | 77.5% | \u26A0\uFE0F |\n\
-  | Run | 78.5% | \u26A0\uFE0F |\n| Sit To Stand | 2.3% | \u274C |\n| Stair Ascent\
-  \ | 61.1% | \u274C |\n| Stair Descent | 98.4% | \u2705 |\n\n_Validation ranges snapshot\
-  \ embedded below._\n"
+  \ | 79.8% | \u26A0\uFE0F |\n| Cutting | 69.4% | \u274C |\n| Decline Walking | 95.8%\
+  \ | \u2705 |\n| Incline Walking | 97.0% | \u2705 |\n| Jump | 75.0% | \u26A0\uFE0F\
+  \ |\n| Level Walking | 98.3% | \u2705 |\n| Lunge | 89.9% | \u26A0\uFE0F |\n| Run\
+  \ | 89.0% | \u26A0\uFE0F |\n| Sit To Stand | 77.6% | \u26A0\uFE0F |\n| Squat | 95.7%\
+  \ | \u2705 |\n| Stair Ascent | 58.3% | \u274C |\n| Stair Descent | 58.6% | \u274C\
+  \ |\n| Stand To Sit | 81.3% | \u26A0\uFE0F |\n\n_Validation ranges snapshot embedded\
+  \ below._\n"
 validation_ranges_file: '[Download validation ranges](./gt24_validation_ranges.yaml)'
 validation_ranges_download: docs/datasets/gt24_validation_ranges.yaml
-validation_ranges_source: review_gtech_2024_phase_candidate_ranges.yaml
+validation_ranges_source: contributor_tools/validation_ranges/gtech_2024_ranges.yaml
 comparison_tasks:
   backward_walking:
-    pass_rate: 93.28
-    status: "\u2705"
-    total_strides: 1250
-    failing_strides: 84
+    pass_rate: 79.77707006369427
+    status: "\u26A0\uFE0F"
+    total_strides: 1256
+    failing_strides: 254
   cutting:
-    pass_rate: 98.59154929577466
-    status: "\u2705"
-    total_strides: 213
-    failing_strides: 3
+    pass_rate: 69.40298507462687
+    status: "\u274C"
+    total_strides: 134
+    failing_strides: 41
   decline_walking:
-    pass_rate: 86.76470588235294
-    status: "\u26A0\uFE0F"
-    total_strides: 952
-    failing_strides: 126
+    pass_rate: 95.81151832460732
+    status: "\u2705"
+    total_strides: 955
+    failing_strides: 40
   incline_walking:
-    pass_rate: 80.54054054054053
-    status: "\u26A0\uFE0F"
+    pass_rate: 96.97297297297297
+    status: "\u2705"
     total_strides: 925
-    failing_strides: 180
+    failing_strides: 28
   jump:
-    pass_rate: 92.5335988053758
-    status: "\u2705"
-    total_strides: 2009
-    failing_strides: 150
+    pass_rate: 75.0
+    status: "\u26A0\uFE0F"
+    total_strides: 644
+    failing_strides: 161
   level_walking:
-    pass_rate: 85.79409417398244
-    status: "\u26A0\uFE0F"
-    total_strides: 1253
-    failing_strides: 178
-  lunge:
-    pass_rate: 77.48427672955975
-    status: "\u26A0\uFE0F"
-    total_strides: 795
-    failing_strides: 179
-  run:
-    pass_rate: 78.47165160230074
-    status: "\u26A0\uFE0F"
-    total_strides: 1217
-    failing_strides: 262
-  sit_to_stand:
-    pass_rate: 2.2727272727272707
-    status: "\u274C"
-    total_strides: 88
-    failing_strides: 86
-  stair_ascent:
-    pass_rate: 61.141304347826086
-    status: "\u274C"
-    total_strides: 368
-    failing_strides: 143
-  stair_descent:
-    pass_rate: 98.4251968503937
+    pass_rate: 98.25119236883943
     status: "\u2705"
-    total_strides: 127
-    failing_strides: 2
+    total_strides: 1258
+    failing_strides: 22
+  lunge:
+    pass_rate: 89.94350282485875
+    status: "\u26A0\uFE0F"
+    total_strides: 885
+    failing_strides: 89
+  run:
+    pass_rate: 89.03544929925803
+    status: "\u26A0\uFE0F"
+    total_strides: 1213
+    failing_strides: 133
+  sit_to_stand:
+    pass_rate: 77.59197324414716
+    status: "\u26A0\uFE0F"
+    total_strides: 598
+    failing_strides: 134
+  squat:
+    pass_rate: 95.65217391304348
+    status: "\u2705"
+    total_strides: 299
+    failing_strides: 13
+  stair_ascent:
+    pass_rate: 58.256880733944946
+    status: "\u274C"
+    total_strides: 218
+    failing_strides: 91
+  stair_descent:
+    pass_rate: 58.57142857142856
+    status: "\u274C"
+    total_strides: 70
+    failing_strides: 29
+  stand_to_sit:
+    pass_rate: 81.27490039840637
+    status: "\u26A0\uFE0F"
+    total_strides: 502
+    failing_strides: 94
 feature_task_groups:
 - group: Ground Reaction Forces
   features:
@@ -153,10 +166,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: grf_anterior_ipsi_BW
@@ -188,10 +207,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: grf_lateral_contra_BW
@@ -223,10 +248,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: grf_lateral_ipsi_BW
@@ -258,10 +289,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: grf_vertical_contra_BW
@@ -293,10 +330,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: grf_vertical_ipsi_BW
@@ -328,10 +371,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
 - group: Joint Angles
@@ -365,10 +414,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: ankle_dorsiflexion_angle_ipsi_rad
@@ -400,10 +455,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: hip_flexion_angle_contra_rad
@@ -435,10 +496,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: hip_flexion_angle_ipsi_rad
@@ -470,10 +537,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: knee_flexion_angle_contra_rad
@@ -505,10 +578,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: knee_flexion_angle_ipsi_rad
@@ -540,10 +619,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
 - group: Joint Moments
@@ -577,10 +662,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: ankle_dorsiflexion_moment_ipsi_Nm_kg
@@ -612,10 +703,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: hip_flexion_moment_contra_Nm_kg
@@ -647,10 +744,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: hip_flexion_moment_ipsi_Nm_kg
@@ -682,10 +785,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: knee_flexion_moment_contra_Nm_kg
@@ -717,10 +826,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: knee_flexion_moment_ipsi_Nm_kg
@@ -752,10 +867,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
 - group: Joint Velocities
@@ -789,10 +910,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: ankle_dorsiflexion_velocity_ipsi_rad_s
@@ -824,10 +951,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: hip_flexion_velocity_contra_rad_s
@@ -859,10 +992,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: hip_flexion_velocity_ipsi_rad_s
@@ -894,10 +1033,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: knee_flexion_velocity_contra_rad_s
@@ -929,10 +1074,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: knee_flexion_velocity_ipsi_rad_s
@@ -964,10 +1115,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
 - group: Other Features
@@ -978,8 +1135,8 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       cutting:
-        status: partial
-        coverage: 91.9
+        status: complete
+        coverage: 100.0
       decline_walking:
         status: complete
         coverage: 100.0
@@ -1001,12 +1158,18 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
-        status: partial
-        coverage: 79.9
+        status: complete
+        coverage: 100.0
       stair_descent:
-        status: partial
-        coverage: 57.0
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
   - name: cop_anterior_ipsi_m
     tasks:
       backward_walking:
@@ -1036,10 +1199,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: cop_lateral_contra_m
@@ -1048,8 +1217,8 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       cutting:
-        status: partial
-        coverage: 91.9
+        status: complete
+        coverage: 100.0
       decline_walking:
         status: complete
         coverage: 100.0
@@ -1071,12 +1240,18 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
-        status: partial
-        coverage: 79.9
+        status: complete
+        coverage: 100.0
       stair_descent:
-        status: partial
-        coverage: 57.0
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
   - name: cop_lateral_ipsi_m
     tasks:
       backward_walking:
@@ -1106,10 +1281,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: cop_vertical_contra_m
@@ -1141,10 +1322,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
   - name: cop_vertical_ipsi_m
@@ -1176,10 +1363,16 @@ feature_task_groups:
       sit_to_stand:
         status: complete
         coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
       stair_ascent:
         status: complete
         coverage: 100.0
       stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
         status: complete
         coverage: 100.0
 feature_task_order:
@@ -1192,7 +1385,9 @@ feature_task_order:
 - lunge
 - run
 - sit_to_stand
+- squat
 - stair_ascent
 - stair_descent
+- stand_to_sit
 feature_task_source: converted_datasets/gtech_2024_phase.parquet
 last_dataset_path: converted_datasets/gtech_2024_phase.parquet

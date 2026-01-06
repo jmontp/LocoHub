@@ -269,7 +269,7 @@ class UnifiedValidationGenerator:
         lines.append("")
         
         # Process each task
-        for task_name in sorted(tasks.keys()):
+        for task_name in sorted(tasks):
             lines.append(f"## Task: {task_name.replace('_', ' ').title()}")
             lines.append("")
             

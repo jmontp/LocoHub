@@ -1,34 +1,36 @@
-**Report generated:** 2026-01-05 14:56
+**Report generated:** 2026-01-06 11:44
 
 ## Status Summary
 
 | Metric | Value |
 |--------|-------|
-| Stride Pass Rate | 84.9% |
-| Total Strides | 9197 |
-| Passing Strides | 7804 |
+| Stride Pass Rate | 87.4% |
+| Total Strides | 8957 |
+| Passing Strides | 7828 |
 
 ### Summary
 
-**Status**: ⚠️ PARTIAL (84.9% valid)  
-**Total Strides**: 9197  
-**Passing Strides**: 7804  
+**Status**: ⚠️ PARTIAL (87.4% valid)  
+**Total Strides**: 8957  
+**Passing Strides**: 7828  
 
 ### Task Breakdown
 
 | Task | Pass Rate | Status |
 |------|-----------|--------|
-| Backward Walking | 93.3% | ✅ |
-| Cutting | 98.6% | ✅ |
-| Decline Walking | 86.8% | ⚠️ |
-| Incline Walking | 80.5% | ⚠️ |
-| Jump | 92.5% | ✅ |
-| Level Walking | 85.8% | ⚠️ |
-| Lunge | 77.5% | ⚠️ |
-| Run | 78.5% | ⚠️ |
-| Sit To Stand | 2.3% | ❌ |
-| Stair Ascent | 61.1% | ❌ |
-| Stair Descent | 98.4% | ✅ |
+| Backward Walking | 79.8% | ⚠️ |
+| Cutting | 69.4% | ❌ |
+| Decline Walking | 95.8% | ✅ |
+| Incline Walking | 97.0% | ✅ |
+| Jump | 75.0% | ⚠️ |
+| Level Walking | 98.3% | ✅ |
+| Lunge | 89.9% | ⚠️ |
+| Run | 89.0% | ⚠️ |
+| Sit To Stand | 77.6% | ⚠️ |
+| Squat | 95.7% | ✅ |
+| Stair Ascent | 58.3% | ❌ |
+| Stair Descent | 58.6% | ❌ |
+| Stand To Sit | 81.3% | ⚠️ |
 
 _Validation ranges snapshot embedded below._
 
@@ -36,7 +38,7 @@ _Validation ranges snapshot embedded below._
 
 Download the YAML snapshot used for this validation: [Download](./gt24_validation_ranges.yaml)
 
-_Source ranges file: review_gtech_2024_phase_candidate_ranges.yaml_
+_Source ranges file: contributor_tools/validation_ranges/gtech_2024_ranges.yaml_
 
 ## Validation Plots
 
@@ -68,13 +70,19 @@ _Source ranges file: review_gtech_2024_phase_candidate_ranges.yaml_
 === "Sit To Stand"
     ![Sit To Stand](./validation_plots/gt24/gtech_2024_phase_sit_to_stand_all_features_validation.png)
 
+=== "Squat"
+    ![Squat](./validation_plots/gt24/gtech_2024_phase_squat_all_features_validation.png)
+
 === "Stair Ascent"
     ![Stair Ascent](./validation_plots/gt24/gtech_2024_phase_stair_ascent_all_features_validation.png)
 
 === "Stair Descent"
     ![Stair Descent](./validation_plots/gt24/gtech_2024_phase_stair_descent_all_features_validation.png)
+
+=== "Stand To Sit"
+    ![Stand To Sit](./validation_plots/gt24/gtech_2024_phase_stand_to_sit_all_features_validation.png)
 <!-- VALIDATION_GALLERY_END -->
 
 ---
 
-*Generated from `converted_datasets/gtech_2024_phase.parquet` on 2026-01-05 14:56*
+*Generated from `converted_datasets/gtech_2024_phase.parquet` on 2026-01-06 11:44*
