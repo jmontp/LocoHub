@@ -1,89 +1,87 @@
 # AddBiomechanics Dataset Converter
 
-This directory contains conversion scripts for the AddBiomechanics dataset format.
+Convert AddBiomechanics B3D files to LocoHub standardized parquet format.
 
-## Dataset Citation
+## Quick Start
 
-**AddBiomechanics Dataset**
-- Source: Stanford Neuromuscular Biomechanics Lab
-- Format: B3D (Biomechanics 3D) files
-- Website: https://addbiomechanics.org/
+```bash
+# Convert a specific sub-dataset
+python convert_addbiomechanics_to_parquet.py \
+    --dataset Moore2015 \
+    --input /path/to/Moore2015/b3d/files \
+    --output-dir ../../../converted_datasets
+```
 
-## Detailed Documentation
+## Supported Datasets (12)
 
-For comprehensive dataset information including structure, variables, and usage examples, see:
-- 📖 [**AddBiomechanics Dataset Documentation**](../../../docs/datasets_documentation/dataset_addbiomechanics.md)
+| Dataset | Task Types | Notes |
+|---------|------------|-------|
+| Moore2015 | Level walking | Treadmill at 0.8, 1.2, 1.6 m/s |
+| Fregly2012 | Dynamic walking | Various gait modifications |
+| Hamner2013 | Running | 2-5 m/s speeds |
+| Santos2017 | Balance pose | Static standing poses |
+| Tan2021 | Running | Modified running variants |
+| Tan2022 | Dynamic walking | Modified walking variants |
+| vanderZee2022 | Level walking | Treadmill trials |
+| Wang2023 | Multiple | Walking, running, jumps, lunges, squats |
+| Falisse2016 | Walking, running | Muscle redundancy study |
+| Han2023 | Multiple | 19 motion types (yoga, dance, sports) |
+| Tiziana2019 | Walking, stairs | Ages 6-72, toe/heel walking |
+| Carter2023 | Running | Treadmill at various speeds/gradients |
 
-## Downloading the Data
+**Excluded**: Camargo2021 (available separately as GT21/Gtech_2021 with original data)
 
-1. Visit the AddBiomechanics website: https://addbiomechanics.org/
-2. Create an account and browse available datasets
-3. Download B3D files for the subjects/trials you need
-4. Extract the downloaded files to the expected directory structure below
+## Output Files
 
-## Expected File Structure
+The converter produces two output files per dataset:
 
-Before running the conversion scripts, organize your data as follows:
+- `{dataset}_time.parquet` - Time-indexed data (one row per frame)
+- `{dataset}_phase.parquet` - Phase-normalized data (150 rows per stride)
+
+## CLI Arguments
+
+```
+--dataset, -d    Dataset name (required)
+--input, -i      Input directory containing B3D files (required)
+--output-dir, -o Output directory (default: converted_datasets/)
+```
+
+## File Structure
 
 ```
 AddBiomechanics/
-├── raw_data/               # Place downloaded B3D files here
-│   ├── subject_01/
-│   │   ├── trial_01.b3d
-│   │   ├── trial_02.b3d
-│   │   └── ...
-│   ├── subject_02/
-│   │   └── ...
-│   └── ...
-├── convert_addbiomechanics_to_parquet.py
-├── add_phase_info.py
-├── add_task_info.py
-├── b3d_to_parquet.py
-└── requirements.txt
+├── convert_addbiomechanics_to_parquet.py  # Main conversion script
+├── dataset_configs.py                      # Per-dataset configurations
+├── metadata.yaml                           # Dataset metadata
+├── README.md                               # This file
+└── requirements.txt                        # Python dependencies
 ```
-
-## Entry Points for Conversion
-
-### 1. Time-Indexed Dataset Generation
-
-```bash
-# Main entry point - converts B3D files to time-indexed parquet
-python convert_addbiomechanics_to_parquet.py --input_dir raw_data --output_dir ../../../converted_datasets
-
-# This will create:
-# - converted_datasets/addbiomechanics_time.parquet
-```
-
-### 2. Phase-Indexed Dataset Generation
-
-```bash
-# After generating time-indexed data, create phase-normalized version
-python add_phase_info.py --input ../../../converted_datasets/addbiomechanics_time.parquet
-
-# This will create:
-# - converted_datasets/addbiomechanics_phase.parquet
-```
-
-### 3. Optional: Add Task Metadata
-
-```bash
-# Add detailed task information if available
-python add_task_info.py --input ../../../converted_datasets/addbiomechanics_time.parquet
-
-# Updates the existing parquet files with task metadata
-```
-
-## Scripts Overview
-
-- `b3d_to_parquet.py` - Core B3D file parser and converter
-- `convert_addbiomechanics_to_parquet.py` - Main conversion pipeline
-- `add_phase_info.py` - Adds gait cycle phase normalization
-- `add_task_info.py` - Adds task metadata and labels
 
 ## Requirements
 
-See `requirements.txt` for dependencies. Key packages:
-- nimblephysics
-- torch
-- pandas
-- pyarrow
+```bash
+pip install nimblephysics numpy pandas scipy tqdm pyarrow
+```
+
+Key dependencies:
+- `nimblephysics` - B3D file parsing
+- `pandas` / `pyarrow` - Parquet I/O
+- `scipy` - Interpolation
+
+## Data Source
+
+- Website: https://addbiomechanics.org/
+- Format: B3D (Biomechanics 3D) files
+- Institution: Stanford University
+
+## Citation
+
+```bibtex
+@misc{addbiomechanics2024,
+  title = {AddBiomechanics Dataset},
+  year = {2024},
+  url = {https://addbiomechanics.org/}
+}
+```
+
+Individual sub-dataset citations are available in the metadata.yaml file.

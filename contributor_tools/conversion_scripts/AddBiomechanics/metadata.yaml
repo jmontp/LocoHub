@@ -1,0 +1,71 @@
+display_name: AddBiomechanics Dataset Collection
+short_code: AB
+year: '2024'
+institution: Stanford University
+description: |
+  Collection of 12 biomechanics datasets from AddBiomechanics.org, processed through
+  the AddBiomechanics pipeline for standardized musculoskeletal modeling. Includes
+  treadmill walking, running, stair climbing, ramp walking, and dynamic gait patterns.
+
+  Sub-datasets included:
+  - Moore2015: Treadmill walking at 0.8, 1.2, 1.6 m/s
+  - Fregly2012: Normal and dynamic walking patterns
+  - Hamner2013: Running at 2-5 m/s
+  - Santos2017: Static standing poses
+  - Tan2021: Running variants
+  - Tan2022: Dynamic walking variants
+  - vanderZee2022: Treadmill walking trials
+  - Wang2023: Walking, running, jumps, squats, functional tasks
+  - Falisse2016: Walking and running (muscle redundancy study)
+  - Han2023 (GroundLink): 19 motion types (yoga, dance, sports, locomotion)
+  - Tiziana2019 (Lencioni): Walking, toe/heel walking, stairs (ages 6-72)
+  - Carter2023: Treadmill running at various speeds and gradients
+
+  Note: Camargo2021 excluded (available separately as GT21/Gtech_2021 with original data)
+
+subjects: '400+'
+tasks:
+  - level_walking
+  - incline_walking
+  - decline_walking
+  - stair_ascent
+  - stair_descent
+  - run
+  - dynamic_walk
+  - balance_pose
+  - functional_task
+  - jump
+  - hop
+  - lunge
+  - squat
+
+citation: |
+  AddBiomechanics Dataset (2024). Available at: https://addbiomechanics.org/
+
+  Individual sub-dataset citations:
+  - Moore et al. (2015) PeerJ. DOI: 10.7717/peerj.918
+  - Camargo et al. (2021) J Biomech. DOI: 10.1016/j.jbiomech.2020.110320
+  - Hamner et al. (2013) J Biomech. DOI: 10.1016/j.jbiomech.2012.08.014
+  - Santos et al. (2017) Scientific Data. DOI: 10.1038/sdata.2017.174
+  - van der Zee et al. (2022) Scientific Data. DOI: 10.1038/s41597-022-01817-1
+  - Falisse et al. (2016) Ann Biomed Eng. DOI: 10.1007/s10439-016-1591-9
+  - Han et al. (2023) GroundLink dataset
+  - Lencioni et al. (2019) Nature Scientific Data. DOI: 10.1038/s41597-019-0323-z
+  - Carter et al. (2023) Treadmill running dataset
+
+protocol: |
+  Data collected from multiple laboratories and processed through the AddBiomechanics
+  automated pipeline. Original motion capture data retargeted to standardized OpenSim
+  musculoskeletal models with inverse dynamics computed.
+
+notes: |
+  - Source format: B3D files (nimblephysics format)
+  - Conversion uses nimblephysics library for B3D parsing
+  - Right leg mapped to ipsi, left leg to contra
+  - Moments are mass-normalized (Nm/kg)
+  - GRF is body-weight normalized (BW)
+  - Phase normalization uses 50N GRF threshold for heel strike detection
+  - 12 sub-datasets converted (Camargo2021 excluded - available separately as GT21/Gtech_2021)
+  - Skipped datasets: Li2021, Uhlrich2023 (no task handlers configured)
+
+date_added: '2025-12-20'
