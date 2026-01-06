@@ -240,7 +240,7 @@ Validate a phase-indexed parquet file against the active YAML ranges.
 
 **Example**:
 ```python
-from internal.validation_engine.validator import Validator
+from contributor_tools.common.validation import Validator
 
 validator = Validator()
 results = validator.validate('converted_datasets/umich_2021_phase_clean.parquet')
@@ -369,7 +369,7 @@ outliers = loco.find_outlier_cycles('SUB01', 'level_walking')
 ### Validation Workflow
 
 ```python
-from internal.validation_engine.validator import Validator
+from contributor_tools.common.validation import Validator
 
 # 1. Create validator
 validator = Validator()

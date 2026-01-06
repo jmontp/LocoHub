@@ -31,9 +31,9 @@ if src_dir.exists() and str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
 # Import validation modules
-from internal.config_management.config_manager import ValidationConfigManager
-from internal.plot_generation.forward_kinematics_plots import KinematicPoseGenerator
-from internal.plot_generation.filters_by_phase_plots import create_filters_by_phase_plot
+from contributor_tools.common.config_manager import ValidationConfigManager
+from contributor_tools.common.plotting.forward_kinematics_plots import KinematicPoseGenerator
+from contributor_tools.common.plotting import create_filters_by_phase_plot
 
 
 class UnifiedValidationGenerator:

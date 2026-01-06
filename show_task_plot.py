@@ -7,9 +7,8 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from internal.validation_engine.validator import Validator
-from internal.validation_engine.report_generator import ValidationReportGenerator
-from internal.plot_generation.filters_by_phase_plots import create_task_combined_plot
+from contributor_tools.common.validation import Validator, ValidationReportGenerator
+from contributor_tools.common.plotting import create_task_combined_plot
 from locohub import LocomotionData
 import matplotlib.pyplot as plt
 

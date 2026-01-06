@@ -533,7 +533,7 @@ def generate_comparison_snapshot() -> None:
 
 # Import validation modules
 try:
-    from internal.validation_engine.validator import Validator
+    from contributor_tools.common.validation import Validator
 except ImportError as e:
     print(f"❌ Error importing validation modules: {e}")
     print("Make sure you're running from the repository root directory")

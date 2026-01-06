@@ -31,7 +31,7 @@ if str(project_root) not in sys.path:
 if src_dir.exists() and str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
-from internal.validation_engine.validator import Validator
+from contributor_tools.common.validation import Validator
 from locohub import LocomotionData
 
 

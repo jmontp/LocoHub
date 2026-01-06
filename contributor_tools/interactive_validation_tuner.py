@@ -104,10 +104,10 @@ if src_dir.exists() and str(src_dir) not in sys.path:
 # Import existing modules
 from locohub import LocomotionData
 from locohub.feature_constants import get_feature_list
-from internal.config_management.config_manager import ValidationConfigManager
-from internal.validation_engine.validator import Validator
-from internal.config_management import task_registry
-from internal.plot_generation.filters_by_phase_plots import get_task_classification
+from contributor_tools.common.config_manager import ValidationConfigManager
+from contributor_tools.common.validation import Validator
+from locohub import task_registry
+from contributor_tools.common.plotting import get_task_classification
 
 
 class DraggableBox:

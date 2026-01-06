@@ -33,7 +33,7 @@ if str(project_root) not in sys.path:
 if src_dir.exists() and str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
-from internal.config_management.config_manager import ValidationConfigManager as ConfigManager
+from contributor_tools.common.config_manager import ValidationConfigManager as ConfigManager
 from locohub import LocomotionData
 from contributor_tools.common.near_miss_analysis import (
     compute_clean_statistics,

@@ -15,7 +15,7 @@ import shutil
 import sys
 import numpy as np
 import pandas as pd
-sys.path.append(str(Path(__file__).parent.parent.parent))
+sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
 try:
     import psutil
@@ -25,15 +25,15 @@ except ImportError:
     print("⚠️  psutil not available - memory monitoring disabled")
 
 # Avoid circular import - import only what's needed
-from internal.plot_generation.filters_by_phase_plots import (
-    create_single_feature_plot, 
+from contributor_tools.common.plotting.filters_by_phase_plots import (
+    create_single_feature_plot,
     create_task_combined_plot,
     create_subject_failure_histogram,
     get_sagittal_features,
     get_task_classification,
     create_filters_by_phase_plot  # Keep for backward compatibility
 )
-from internal.plot_generation.step_classifier import StepClassifier
+from contributor_tools.common.plotting.step_classifier import StepClassifier
 from locohub import LocomotionData
 
 
@@ -55,7 +55,7 @@ class ValidationReportGenerator:
             ranges_file: Optional path to specific validation ranges YAML file
         """
         # Use fixed output directory
-        project_root = Path(__file__).parent.parent.parent
+        project_root = Path(__file__).parent.parent.parent.parent
         self.docs_dir = project_root / "docs" / "reference" / "datasets_documentation"
         self.docs_dir.mkdir(parents=True, exist_ok=True)
         
@@ -72,7 +72,7 @@ class ValidationReportGenerator:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         # Import here to avoid circular dependency
-        from internal.validation_engine.validator import Validator
+        from .validator import Validator
         
         # Store which ranges file is being used
         if ranges_file:
@@ -243,8 +243,7 @@ class ValidationReportGenerator:
             if 'phase_ipsi_dot' in available_columns:
                 required_cols.append('phase_ipsi_dot')
             
-            # Add sagittal features that exist
-            from internal.plot_generation.filters_by_phase_plots import get_sagittal_features
+            # Add sagittal features that exist (get_sagittal_features imported at module level)
             sagittal_features = get_sagittal_features()
             feature_names = [f[0] for f in sagittal_features]
             

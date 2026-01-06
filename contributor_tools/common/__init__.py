@@ -1,4 +1,10 @@
-"""Common utilities for contributor tools."""
+"""Common utilities for contributor tools.
+
+This package contains shared libraries for:
+- Data conversion (segmentation, phase detection)
+- Validation (validator, config management)
+- Plotting (validation plots, forward kinematics)
+"""
 
 from .phase_detection import (
     VerticalGRFConfig,
@@ -29,6 +35,12 @@ from .stride_segmentation import (
     remove_transition_segments,
 )
 
+from .config_manager import ValidationConfigManager
+
+# Submodules available as contributor_tools.common.validation and contributor_tools.common.plotting
+from . import validation
+from . import plotting
+
 __all__ = [
     # phase_detection
     "VerticalGRFConfig",
@@ -50,4 +62,9 @@ __all__ = [
     "filter_segments_by_duration",
     "filter_segments_by_duration_iqr",
     "remove_transition_segments",
+    # config_manager
+    "ValidationConfigManager",
+    # submodules
+    "validation",
+    "plotting",
 ]

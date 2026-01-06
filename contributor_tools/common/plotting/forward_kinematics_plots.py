@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
 # Import config manager for loading validation ranges
-from internal.config_management.config_manager import ValidationConfigManager
+from contributor_tools.common.config_manager import ValidationConfigManager
 
 class KinematicPoseGenerator:
     """Generator for static kinematic poses for validation visualization"""

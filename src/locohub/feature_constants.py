@@ -33,7 +33,7 @@ Usage:
 
 from typing import Dict
 
-from internal.config_management import task_registry as _task_registry
+from locohub import task_registry as _task_registry
 
 # Metadata and time/phase columns
 METADATA_COLUMNS = [

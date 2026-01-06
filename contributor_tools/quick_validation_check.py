@@ -47,8 +47,8 @@ if str(project_root) not in sys.path:
 if src_dir.exists() and str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
-from internal.validation_engine.validator import Validator
-from internal.config_management import task_registry
+from contributor_tools.common.validation import Validator
+from locohub import task_registry
 from locohub import LocomotionData
 
 # Detect if we're in a headless environment (no display available)
@@ -275,7 +275,7 @@ def generate_plots(dataset_path: str, validator: Validator, task_filter: Optiona
             print("  ⚠️  No display available. Use --output-dir to save plots to files.")
             return
 
-    from internal.plot_generation.filters_by_phase_plots import create_task_combined_plot
+    from contributor_tools.common.plotting import create_task_combined_plot
     import matplotlib.pyplot as plt
 
     locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')

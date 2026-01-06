@@ -12,13 +12,24 @@ contributor_tools/
 │   ├── GaTech_2024_TaskAgnostic/  # Georgia Tech 2024 exoskeleton
 │   ├── Umich_2021/        # University of Michigan 2021
 │   └── AddBiomechanics/   # AddBiomechanics dataset
-├── common/                 # Shared Python libraries for segmentation and analysis
+├── common/                 # Shared Python libraries (see common/CLAUDE.md)
 │   ├── stride_segmentation.py  # Unified stride/cycle segmentation
 │   ├── phase_detection.py      # GRF-based gait event detection
-│   └── near_miss_analysis.py   # Marginal failure analysis
+│   ├── near_miss_analysis.py   # Marginal failure analysis
+│   ├── config_manager.py       # Validation YAML config loading/saving
+│   ├── validation/             # Validation engine
+│   │   ├── validator.py        # Core validation logic
+│   │   └── report_generator.py # Markdown report generation
+│   └── plotting/               # Validation plot generation
+│       ├── filters_by_phase_plots.py  # Main validation plots
+│       ├── step_classifier.py         # Pass/fail color coding
+│       └── forward_kinematics_plots.py # FK visualizations
 ├── validation_ranges/      # YAML files defining valid data ranges per task
-└── validation_plots/       # Generated validation plot outputs
+└── validation_plots/       # Generated validation plot outputs (gitignored)
 ```
+
+Note: `internal/` has been consolidated into `contributor_tools/common/`.
+Task registry is now in `src/locohub/task_registry.py` (shared source of truth).
 
 ## Common Libraries (`common/`)
 
