@@ -122,7 +122,7 @@ You can also use the full parquet datasets linked on the homepage.
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    addpath('user_libs/matlab');
+    addpath('libs/matlab');
     % Note: LocomotionData works with parquet files.
     % For a self-contained tutorial, use the CSV examples above.
     loco  = LocomotionData('umich_2021_phase.parquet');
@@ -208,7 +208,7 @@ You can also use the full parquet datasets linked on the homepage.
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    addpath('user_libs/matlab');
+    addpath('libs/matlab');
     loco = LocomotionData('umich_2021_phase.parquet');
     level = loco.filterTask('level_walking').filterSubject('UM21_AB01');
 
@@ -289,7 +289,7 @@ You can also use the full parquet datasets linked on the homepage.
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    addpath('user_libs/matlab');
+    addpath('libs/matlab');
     loco = LocomotionData('umich_2021_phase.parquet');
     level = loco.filterTask('level_walking').filterSubject('UM21_AB01');
     
@@ -358,7 +358,7 @@ Use the sample CSV: `locohub_example_data.csv`.
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    addpath('user_libs/matlab');
+    addpath('libs/matlab');
     loco = LocomotionData('converted_datasets/umich_2021_phase.parquet');
     level = loco.filterTask('level_walking').filterSubject('UM21_AB01');
     level.plotPhasePatterns('UM21_AB01','level_walking',{'knee_flexion_angle_ipsi_rad'});
@@ -475,7 +475,7 @@ Expected outputs:
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    addpath('user_libs/matlab');
+    addpath('libs/matlab');
     loco = LocomotionData('converted_datasets/umich_2021_phase.parquet');
     % If library exposes a table, use it; otherwise, use the Raw approach
     if ismethod(loco, 'asTable')
@@ -551,7 +551,7 @@ Expected outputs:
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    addpath('user_libs/matlab');
+    addpath('libs/matlab');
     U = LocomotionData('converted_datasets/umich_2021_phase.parquet');
     G = LocomotionData('converted_datasets/gtech_2021_phase.parquet');
     if ismethod(U,'asTable') && ismethod(G,'asTable')
@@ -633,7 +633,7 @@ Expected outputs:
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    addpath('user_libs/matlab');
+    addpath('libs/matlab');
     loco = LocomotionData('umich_2021_phase.parquet');
     level = loco.filterTask('level_walking').filterSubject('UM21_AB01');
     
@@ -696,7 +696,7 @@ Expected outputs:
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    addpath('user_libs/matlab');
+    addpath('libs/matlab');
     loco = LocomotionData('umich_2021_phase.parquet');
     level = loco.filterTask('level_walking').filterSubject('UM21_AB01');
     patterns = level.getMeanPatterns('UM21_AB01','level_walking');
@@ -771,7 +771,7 @@ Expected outputs:
     
     ```matlab
     % Use library for quick stats export
-    addpath('user_libs/matlab');
+    addpath('libs/matlab');
     loco = LocomotionData('umich_2021_phase.parquet');
     level = loco.filterTask('level_walking').filterSubject('UM21_AB01');
     stats = level.getSummaryStatistics('UM21_AB01','level_walking');
@@ -833,7 +833,7 @@ Expected outputs:
     <div class="code-lang code-lang-matlab">
     
     ```matlab
-    addpath('user_libs/matlab');
+    addpath('libs/matlab');
     loco = LocomotionData('umich_2021_phase.parquet');
     level = loco.filterTask('level_walking').filterSubject('UM21_AB01');
     

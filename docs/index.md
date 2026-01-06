@@ -70,7 +70,7 @@ Each row is one point in a percent‑normalized gait cycle (typically 150 sample
 
     === "MATLAB"
     ```matlab
-    addpath('user_libs/matlab');
+    addpath('libs/matlab');
     loco = LocomotionData('umich_2021_phase.parquet');
     level = loco.filterTask('level_walking').filterSubject('UM21_AB01');
     [cycles, features] = level.getCycles('UM21_AB01', 'level_walking');

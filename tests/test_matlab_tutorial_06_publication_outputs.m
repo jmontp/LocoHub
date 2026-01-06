@@ -5,7 +5,7 @@ function test_matlab_tutorial_06_publication_outputs()
     fprintf('\n=== Testing MATLAB Tutorial 06: Publication Outputs ===\n');
     
     % Add paths
-    addpath(fullfile('..', 'user_libs', 'matlab'));
+    addpath(fullfile('..', 'libs', 'matlab'));
     
     % Check if mock dataset exists
     mockDataset = 'mock_data/mock_dataset_phase.parquet';

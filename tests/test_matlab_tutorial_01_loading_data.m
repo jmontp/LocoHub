@@ -5,7 +5,7 @@ function test_matlab_tutorial_01_loading_data()
     fprintf('\n=== Testing MATLAB Tutorial 01: Loading Data ===\n');
     
     % Add paths
-    addpath(fullfile('..', 'user_libs', 'matlab'));
+    addpath(fullfile('..', 'libs', 'matlab'));
     
     % Check if mock dataset exists
     mockDataset = 'mock_data/mock_dataset_phase.parquet';

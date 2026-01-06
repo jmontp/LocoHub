@@ -5,7 +5,7 @@ function test_matlab_tutorial_02_data_filtering()
     fprintf('\n=== Testing MATLAB Tutorial 02: Data Filtering ===\n');
     
     % Add paths
-    addpath(fullfile('..', 'user_libs', 'matlab'));
+    addpath(fullfile('..', 'libs', 'matlab'));
     
     % Check if mock dataset exists
     mockDataset = 'mock_data/mock_dataset_phase.parquet';

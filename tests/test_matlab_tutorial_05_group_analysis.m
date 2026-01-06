@@ -5,7 +5,7 @@ function test_matlab_tutorial_05_group_analysis()
     fprintf('\n=== Testing MATLAB Tutorial 05: Group Analysis ===\n');
     
     % Add paths
-    addpath(fullfile('..', 'user_libs', 'matlab'));
+    addpath(fullfile('..', 'libs', 'matlab'));
     
     % Check if mock dataset exists
     mockDataset = 'mock_data/mock_dataset_phase.parquet';

@@ -5,7 +5,7 @@ function test_matlab_dual_version_tutorial_03()
     fprintf('\n=== Testing Tutorial 03: Dual Version Validation ===\n');
     
     % Add paths
-    addpath(fullfile('..', 'user_libs', 'matlab'));
+    addpath(fullfile('..', 'libs', 'matlab'));
     
     % Check if mock dataset exists
     mockDataset = 'mock_data/mock_dataset_phase.parquet';
@@ -157,7 +157,7 @@ function test_multi_variable_equivalence()
         end
         
         % Raw method using helper function
-        addpath(fullfile('..', 'user_libs', 'matlab'));
+        addpath(fullfile('..', 'libs', 'matlab'));
         [meanRaw, ~] = computePhaseAverage(levelWalkingRaw, feature);
         
         % Compare

@@ -40,28 +40,26 @@ Standardized biomechanical datasets with consistent naming and validation.
 
 ### Core Implementation
 ```
-user_libs/
-├── python/          # Main Python library
-│   ├── locomotion_data.py    # Core LocomotionData class
-│   └── feature_constants.py  # Task and variable definitions
-├── matlab/          # MATLAB analysis tools
-└── r/              # R package implementation
+src/locohub/       # Main Python library (pip-installable)
+├── locomotion_data.py    # Core LocomotionData class
+├── feature_constants.py  # Task and variable definitions
+└── task_registry.py      # Canonical task definitions
 
-internal/           # Backend modules (not user-facing)
-├── validation_engine/
-│   ├── validator.py          # DatasetValidator class
-│   └── report_generator.py   # Validation reports
-├── plot_generation/          # Visualization tools
-└── config_management/        # Config and specs
+libs/              # Non-Python libraries
+├── matlab/        # MATLAB analysis tools
+└── r/             # R package implementation
 
-contributor_tools/  # Dataset conversion & validation
-├── conversion_scripts/       # Dataset-specific converters
+contributor_tools/ # Dataset conversion & validation
+├── common/        # Shared Python utilities
+│   ├── validation/       # Validation engine
+│   ├── plotting/         # Plot generation
+│   └── config_manager.py # Config management
+├── conversion_scripts/   # Dataset-specific converters
 │   ├── Umich_2021/
 │   ├── Gtech_2023/
 │   └── AddBiomechanics/
-├── create_dataset_validation_report.py  # Full validation with plots
-├── interactive_validation_tuner.py      # GUI for tuning validation ranges
-└── quick_validation_check.py            # Lightweight text-only validation
+├── interactive_validation_tuner.py  # GUI for tuning validation ranges
+└── quick_validation_check.py        # Lightweight text-only validation
 
 converted_datasets/ # Standardized parquet files
 tests/             # Comprehensive test suite
@@ -88,9 +86,9 @@ docs/
 
 ## Working with this Project
 
-**For Users**: 
+**For Users**:
 ```python
-# Import from user_libs
+# Import the locohub library
 from locohub import LocomotionData
 
 # Load and analyze data
