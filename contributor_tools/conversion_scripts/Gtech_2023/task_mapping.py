@@ -161,7 +161,7 @@ def parse_gtech_activity_name(activity_name: str) -> Tuple[str, str, str]:
                 task_info_dict['armrests'] = False
 
     elif base_activity == 'squats':
-        task_id = 'squats'
+        task_id = 'squat'  # Canonical name is singular
         if sub_activity:
             # Extract weight info (e.g., "25lbs", "0lbs")
             weight_match = re.search(r'(\d+)lbs', sub_activity)

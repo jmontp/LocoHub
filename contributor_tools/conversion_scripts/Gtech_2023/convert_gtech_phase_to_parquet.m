@@ -19,7 +19,8 @@ data_dir_root = '.'; % Assumes RawData and Segmentation are subdirs of CWD
 output_dir = fullfile('..', '..', '..', 'converted_datasets'); % Output to project root
 critical_activities = {'stairs', 'incline_walk', 'normal_walk', 'sit_to_stand', ...
     'stand_to_sit', 'squats', 'jump', 'step_ups', 'curb_up', 'curb_down', ...
-    'walk_backward', 'weighted_walk'}; % Define tasks to convert into phase dataset
+    'walk_backward', 'weighted_walk', 'lunges', 'dynamic_walk', 'side_shuffle', ...
+    'cutting'}; % Define tasks to convert into phase dataset
 
 % Initialize a single table to hold all processed data
 total_data = table();
@@ -172,6 +173,34 @@ for subject_idx = 1:length(subjects)
             % Skip ONLY if BOTH left and right data are missing/empty
             left_invalid = ~isfield(parsing_data, 'left') || isempty(parsing_data.left);
             right_invalid = ~isfield(parsing_data, 'right') || isempty(parsing_data.right);
+
+            % Handle alternative field naming patterns (side_shuffle, lunges)
+            if left_invalid && right_invalid
+                % Try side_shuffle pattern: left_left/right_left -> left, left_right/right_right -> right
+                if isfield(parsing_data, 'left_left') && ~isempty(parsing_data.left_left)
+                    parsing_data.left = parsing_data.left_left;
+                    left_invalid = false;
+                    fprintf('  Using alternative field name: left_left -> left\n');
+                end
+                if isfield(parsing_data, 'left_right') && ~isempty(parsing_data.left_right)
+                    parsing_data.right = parsing_data.left_right;
+                    right_invalid = false;
+                    fprintf('  Using alternative field name: left_right -> right\n');
+                end
+
+                % Try lunges pattern: left_forward_left -> left, left_forward_right -> right
+                if left_invalid && isfield(parsing_data, 'left_forward_left') && ~isempty(parsing_data.left_forward_left)
+                    parsing_data.left = parsing_data.left_forward_left;
+                    left_invalid = false;
+                    fprintf('  Using alternative field name: left_forward_left -> left\n');
+                end
+                if right_invalid && isfield(parsing_data, 'left_forward_right') && ~isempty(parsing_data.left_forward_right)
+                    parsing_data.right = parsing_data.left_forward_right;
+                    right_invalid = false;
+                    fprintf('  Using alternative field name: left_forward_right -> right\n');
+                end
+            end
+
             if left_invalid && right_invalid
                  % Check if this is a sit-to-stand or stand-to-sit activity
                  % These activities don't have heel strikes, so we use GRF-based segmentation
@@ -1438,9 +1467,18 @@ end
 
 % Note: Ankle moments should NOT be flipped - only angles and velocities
 
+% Apply +pi/2 offset to pelvis_transverse_angle_rad to align coordinate frame
+% The raw data has pelvis facing -90° from expected "forward" direction
+if ismember('pelvis_transverse_angle_rad', combined_data.Properties.VariableNames)
+    combined_data.pelvis_transverse_angle_rad = combined_data.pelvis_transverse_angle_rad + pi/2;
+    fprintf('  Applied +pi/2 offset to pelvis_transverse_angle_rad (coordinate frame alignment)\n');
+end
+
 % 2. Check for and remove duplicate rows
+% Use task_id (not task) to distinguish activities within the same category
+% e.g., 'side_shuffle' vs 'dynamic_walk' both have task='agility_drill'
 initial_rows = height(combined_data);
-[~, unique_idx] = unique(combined_data(:, {'subject', 'task', 'step', 'phase_ipsi'}), 'rows', 'stable');
+[~, unique_idx] = unique(combined_data(:, {'subject', 'task_id', 'step', 'phase_ipsi'}), 'rows', 'stable');
 if length(unique_idx) < initial_rows
     combined_data = combined_data(unique_idx, :);
     fprintf('  Removed %d duplicate rows\n', initial_rows - length(unique_idx));

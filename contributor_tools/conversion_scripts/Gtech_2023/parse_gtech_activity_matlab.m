@@ -161,8 +161,8 @@ function [task_name, task_id, task_info_str] = parse_gtech_activity_matlab(activ
         end
 
     elseif strcmp(activity_name, 'squats')
-        task_name = 'squats';
-        task_id = 'squats';
+        task_name = 'squat';  % Canonical name is singular
+        task_id = 'squat';
         
         if ~isempty(sub_activity_name)
             % Extract weight (e.g., "25lbs" -> 11.3 kg)
