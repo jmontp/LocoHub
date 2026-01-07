@@ -71,6 +71,13 @@ Common task_info keys
 - `turn_direction:<left|right|cw|ccw>` (for turning strides)
 - `variant:<string>` (label specific instructions when no numeric parameter exists)
 
+Exoskeleton/assistive device keys
+
+- `exo_state:<powered|worn_unpowered|no_exo>` (exoskeleton condition)
+- `exo_controller:<string>` (e.g., hilo, proportional, impedance)
+- `exo_assistance_level:<float>` (percentage of bio moment, if applicable)
+- `exo_joints:<hip|knee|hip_knee|ankle|...>` (which joints are actuated)
+
 ## Task Definitions
 
 Task families fall into two groups. **Phase-friendly** tasks can be normalized to 150-sample strides when consistent events exist (and may also be exported in time if desired). **Time-indexed** tasks lack repeatable kinematic cycles or are best analyzed as continuous episodes. The tables below summarize each group; detailed notes follow.
@@ -271,11 +278,21 @@ Kinematics — joint angles (radians)
 - `knee_flexion_angle_{ipsi,contra}_rad`
 - `ankle_dorsiflexion_angle_{ipsi,contra}_rad`
 
-Kinetics — joint moments (Nm/kg)
+Kinetics — biological joint moments (Nm/kg)
+
+These represent the moment produced by the human's muscles. For exoskeleton data, this is the net moment minus the exoskeleton contribution. Total joint moment = biological moment + assistance moment.
 
 - `hip_flexion_moment_{ipsi,contra}_Nm_kg`
 - `knee_flexion_moment_{ipsi,contra}_Nm_kg`
 - `ankle_dorsiflexion_moment_{ipsi,contra}_Nm_kg`
+
+Kinetics — assistance moments (Nm/kg)
+
+External assistance torque provided by an exoskeleton or other assistive device. When `assistance_active` is true, these values represent torques actually applied to the joint. When false, these are simulated/estimated values (e.g., from a model running in the background but not commanding the actuators).
+
+- `hip_flexion_assistance_moment_{ipsi,contra}_Nm_kg`
+- `knee_flexion_assistance_moment_{ipsi,contra}_Nm_kg`
+- `ankle_dorsiflexion_assistance_moment_{ipsi,contra}_Nm_kg`
 
 Segment/link orientations (radians)
 
@@ -416,6 +433,10 @@ If COP values are in global coordinates (e.g., treadmill belt position), they mu
 - `cycle_id`: optional alias of `step`.
 - `dataset`: dataset identifier; `collection_date`, `processing_date` (ISO strings) if available.
 - Quality flags (boolean): e.g., `is_reconstructed_<side>` for interpolated values.
+
+Assistance/exoskeleton flags:
+
+- `assistance_active` (boolean): True if assistance torques were actually applied to the joints during data collection. False if assistance values are simulated/estimated but not physically applied (e.g., unpowered exo trials with a model running in the background).
 
 Canonical phase column is `phase_ipsi`.
 
