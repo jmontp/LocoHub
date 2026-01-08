@@ -314,13 +314,10 @@ def map_task_name(task_folder: str) -> Tuple[Optional[str], Optional[str], Dict]
     """
     task_info = {}
 
-    # Check if exoskeleton is powered
-    if '_on' in task_folder:
-        task_info['exo_powered'] = True
-    elif '_off' in task_folder:
-        task_info['exo_powered'] = False
-    else:
-        task_info['exo_powered'] = None
+    # Exo state and controller are set later in process_stride based on get_exo_state()
+    # Extract exo controller type if present
+    if '_hilo' in task_folder:
+        task_info['exo_controller'] = 'hilo'
 
     # Extract speed if present (e.g., '1-2' -> 1.2 m/s)
     speed_match = re.search(r'(\d)-(\d)', task_folder)
@@ -604,17 +601,26 @@ def process_stride(
     cop_vert_ipsi = np.zeros(NUM_POINTS)
     cop_vert_contra = np.zeros(NUM_POINTS)
 
-    # Build task_info string
+    # Build task_info string with exoskeleton metadata per standard
     info_parts = [f"leg:{leg_side}"]
+
+    # Add exo_state to task_info (standard key)
+    info_parts.append(f"exo_state:{exo_state}")
+
+    # Add exo_joints when exoskeleton is worn (this exo has hip and knee actuators)
+    if exo_state in ('powered', 'worn_unpowered'):
+        info_parts.append("exo_joints:hip_knee")
+
     for k, v in task_info.items():
         if v is not None:
             info_parts.append(f"{k}:{v}")
     task_info_str = ",".join(info_parts)
 
     # Build subject metadata
-    # Format: weight_kg:<mass>,phase:<1|2|3>,exo:<powered|worn_unpowered|no_exo|unknown>,day:<1|2>
+    # Format: weight_kg:<mass>,phase:<1|2|3>,day:<1|2>
+    # Note: exo_state moved to task_info per standard (exo state is task-level, not subject-level)
     day_str = "2" if is_day2 else "1"
-    subject_metadata = f"weight_kg:{subject_mass:.1f},phase:{collection_phase},exo:{exo_state},day:{day_str}"
+    subject_metadata = f"weight_kg:{subject_mass:.1f},phase:{collection_phase},day:{day_str}"
 
     # Create output DataFrame
     stride_df = pd.DataFrame({
@@ -1182,8 +1188,8 @@ def main():
         print(f"Unique subjects: {combined_df['subject'].nunique()}")
         print(f"Tasks: {combined_df['task'].unique().tolist()}")
 
-        # Show exo state distribution
-        exo_states = combined_df['subject_metadata'].str.extract(r'exo:(\w+)')[0].value_counts()
+        # Show exo state distribution (now in task_info per standard)
+        exo_states = combined_df['task_info'].str.extract(r'exo_state:(\w+)')[0].value_counts()
         print(f"\nExo states (strides):")
         for state, count in exo_states.items():
             print(f"  {state}: {count // NUM_POINTS}")
