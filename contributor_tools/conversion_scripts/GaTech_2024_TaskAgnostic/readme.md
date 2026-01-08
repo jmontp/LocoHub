@@ -66,10 +66,22 @@ Phase-normalized to 150 points per gait cycle with columns:
 - `ankle_dorsiflexion_angle_{ipsi,contra}_rad`
 - Corresponding velocities (_rad_s) and accelerations (_rad_s2)
 
-### Kinetics
+### Kinetics - Biological Moments
+Human-produced joint moments (net moment minus exoskeleton contribution):
 - `hip_flexion_moment_{ipsi,contra}_Nm_kg`
 - `knee_flexion_moment_{ipsi,contra}_Nm_kg`
 - `ankle_dorsiflexion_moment_{ipsi,contra}_Nm_kg`
+
+### Kinetics - Assistance Moments
+Exoskeleton interaction torques (from `exo.csv` torque_interaction):
+- `hip_flexion_assistance_moment_{ipsi,contra}_Nm_kg`
+- `knee_flexion_assistance_moment_{ipsi,contra}_Nm_kg`
+- `ankle_dorsiflexion_assistance_moment_{ipsi,contra}_Nm_kg` (always 0, no ankle actuator)
+
+### Assistance Flag
+- `assistance_active`: True if exo was powered (torques applied), False if worn unpowered
+
+**Relationship**: `total_moment = biological_moment + assistance_moment`
 
 ### Ground Reaction Forces
 - `grf_vertical_{ipsi,contra}_BW`

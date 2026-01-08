@@ -29,6 +29,8 @@ from tqdm import tqdm
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# Also add src directory for locohub imports (required by common/validation)
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'src'))
 from common.stride_segmentation import (
     SegmentationArchetype,
     SegmentBoundary,
@@ -94,7 +96,8 @@ TASK_MAPPING = {
 }
 
 # Subject mass data (kg) from readme
-# Phase1And2 masses (w/o exo | w/ exo - we use w/ exo since all data collected with exo worn)
+# Phase1And2 masses - using w/ exo mass since all data collected with exo worn
+# Format: subject_id -> mass_kg
 SUBJECT_MASS_PHASE12 = {
     'BT01': 87.02, 'BT02': 79.09, 'BT03': 101.52, 'BT04': 106.04,
     'BT06': 85.78, 'BT07': 70.61, 'BT08': 75.67, 'BT09': 88.97,
@@ -102,17 +105,36 @@ SUBJECT_MASS_PHASE12 = {
     'BT14': 74.35, 'BT15': 65.87, 'BT16': 72.03, 'BT17': 67.36,
 }
 
-# Phase3 masses (w/ exo)
+# Phase3 masses - includes day1 (with exo) and day2 (with and without exo) for some subjects
+# Format: subject_id -> {'with_exo': mass, 'without_exo': mass, 'day2_with_exo': mass, 'day2_without_exo': mass}
+# Note: 5 subjects (BT02, BT13, BT18, BT23, BT24) have day 2 no-exo data
 SUBJECT_MASS_PHASE3 = {
-    'BT01': 84.28, 'BT02': 79.10, 'BT13': 96.03,
-    'BT18': 74.96, 'BT19': 76.84, 'BT20': 62.50,
-    'BT21': 65.86, 'BT22': 84.27, 'BT23': 74.24, 'BT24': 84.84,
+    'BT01': {'with_exo': 84.28, 'without_exo': 77.29},
+    'BT02': {'with_exo': 79.10, 'without_exo': 72.33,
+             'day2_with_exo': 76.74, 'day2_without_exo': 69.83},
+    'BT13': {'with_exo': 96.03, 'without_exo': 88.99,
+             'day2_with_exo': 93.80, 'day2_without_exo': 86.91},
+    'BT18': {'with_exo': 74.96, 'without_exo': 67.96,
+             'day2_with_exo': 75.23, 'day2_without_exo': 68.37},
+    'BT19': {'with_exo': 76.84, 'without_exo': 69.95},
+    'BT20': {'with_exo': 62.50, 'without_exo': 55.44},
+    'BT21': {'with_exo': 65.86, 'without_exo': 58.85},
+    'BT22': {'with_exo': 84.27, 'without_exo': 76.79},
+    'BT23': {'with_exo': 74.24, 'without_exo': 67.23,
+             'day2_with_exo': 73.93, 'day2_without_exo': 67.16},
+    'BT24': {'with_exo': 84.84, 'without_exo': 77.79,
+             'day2_with_exo': 87.15, 'day2_without_exo': 79.56},
 }
 
+# Subjects with day 2 no-exo data available
+SUBJECTS_WITH_NOEXO_DATA = ['BT02', 'BT13', 'BT18', 'BT23', 'BT24']
+
 # Collection phase info:
-# Phase 1 (BT01-BT12): Unpowered data + some heuristic controller trials
-# Phase 2 (BT13-BT17): Preliminary neural network model, all powered
-# Phase 3 (BT01,BT02,BT13,BT18-BT24): Final model validation, all powered
+# Phase 1 (BT01-BT12): Data collected with exo worn - both powered (_on) and unpowered (_off) trials
+# Phase 2 (BT13-BT17): Preliminary neural network model, all powered (_on)
+# Phase 3 (BT01,BT02,BT13,BT18-BT24): Final model validation
+#   - Day 1: All subjects, all powered (_on)
+#   - Day 2: 5 subjects (BT02, BT13, BT18, BT23, BT24) have no-exo data (_noexo)
 PHASE1_SUBJECTS = ['BT01', 'BT02', 'BT03', 'BT04', 'BT06', 'BT07', 'BT08', 'BT09', 'BT10', 'BT11', 'BT12']
 PHASE2_SUBJECTS = ['BT13', 'BT14', 'BT15', 'BT16', 'BT17']
 PHASE3_SUBJECTS = ['BT01', 'BT02', 'BT13', 'BT18', 'BT19', 'BT20', 'BT21', 'BT22', 'BT23', 'BT24']
@@ -150,11 +172,19 @@ def get_exo_state(task_folder: str, collection_phase: int) -> str:
     Returns human-readable exo state:
     - 'powered': Exoskeleton worn and providing active assistance
     - 'worn_unpowered': Exoskeleton worn but not providing assistance
+    - 'no_exo': No exoskeleton worn (bare/natural walking) - Phase 3 day 2 only
     - 'unknown': Cannot determine state
 
-    Note: All subjects wore the clothing-integrated exoskeleton during data collection.
+    Task naming conventions:
+    - '_on': Exoskeleton powered
+    - '_off': Exoskeleton worn but unpowered
+    - '_hilo': Human In the Loop Optimization - exo powered with optimized controller
+    - '_noexo' or '_bare': No exoskeleton (Phase 3 day 2 testing)
     """
-    if '_on' in task_folder:
+    # Check for no-exo condition first (Phase 3 day 2 testing)
+    if '_noexo' in task_folder or '_bare' in task_folder:
+        return 'no_exo'
+    elif '_on' in task_folder or '_hilo' in task_folder:
         return 'powered'
     elif '_off' in task_folder:
         return 'worn_unpowered'
@@ -165,12 +195,48 @@ def get_exo_state(task_folder: str, collection_phase: int) -> str:
         return 'unknown'
 
 
-def get_subject_mass(subject_id: str, data_source: str) -> float:
-    """Get subject mass based on ID and data source."""
+def is_day2_trial(task_folder: str) -> bool:
+    """
+    Determine if a trial is from day 2 testing.
+
+    Day 2 trials for Phase 3 subjects include no-exo data.
+    The naming convention for day 2 trials may include '_noexo', '_bare',
+    or a day identifier in the folder name.
+    """
+    return '_noexo' in task_folder or '_bare' in task_folder
+
+
+def get_subject_mass(subject_id: str, data_source: str, exo_state: str = 'powered',
+                     is_day2: bool = False) -> float:
+    """
+    Get subject mass based on ID, data source, and exo state.
+
+    Args:
+        subject_id: Subject identifier (e.g., 'BT24')
+        data_source: Data source folder name (e.g., 'Parsed', 'Phase3')
+        exo_state: Exoskeleton state ('powered', 'worn_unpowered', 'no_exo')
+        is_day2: Whether this is day 2 data (relevant for Phase 3 subjects)
+
+    Returns:
+        Subject mass in kg
+    """
+    # Phase 3 subjects have detailed mass info
     if 'Phase3' in data_source or subject_id in PHASE3_SUBJECTS:
         if subject_id in SUBJECT_MASS_PHASE3:
-            return SUBJECT_MASS_PHASE3[subject_id]
+            mass_data = SUBJECT_MASS_PHASE3[subject_id]
 
+            # For no-exo trials (day 2), use without_exo mass
+            if exo_state == 'no_exo':
+                if is_day2 and 'day2_without_exo' in mass_data:
+                    return mass_data['day2_without_exo']
+                return mass_data.get('without_exo', mass_data.get('with_exo', 75.0))
+
+            # For exo trials, use with_exo mass
+            if is_day2 and 'day2_with_exo' in mass_data:
+                return mass_data['day2_with_exo']
+            return mass_data.get('with_exo', 75.0)
+
+    # Phase 1 and 2 subjects have single mass value (with exo)
     if subject_id in SUBJECT_MASS_PHASE12:
         return SUBJECT_MASS_PHASE12[subject_id]
 
@@ -271,13 +337,15 @@ def map_task_name(task_folder: str) -> Tuple[Optional[str], Optional[str], Dict]
     return None, None, task_info
 
 
-def load_trial_data(trial_path: Path, subject_id: str) -> Optional[Dict[str, pd.DataFrame]]:
+def load_trial_data(trial_path: Path, subject_id: str,
+                    exo_state: str = 'powered') -> Optional[Dict[str, pd.DataFrame]]:
     """
     Load all CSV files for a trial.
 
     Args:
         trial_path: Path to trial folder
         subject_id: Subject identifier (e.g., 'BT24')
+        exo_state: Exoskeleton state - affects which files are required
 
     Returns:
         Dictionary with DataFrames for each data type
@@ -287,9 +355,15 @@ def load_trial_data(trial_path: Path, subject_id: str) -> Optional[Dict[str, pd.
 
     data = {}
 
-    # Required files
+    # Required files for all trials
     required_files = ['angle_filt', 'moment_filt', 'grf', 'velocity', 'insole_sim']
-    optional_files = ['moment_filt_bio', 'power', 'power_bio']  # imu_sim not used
+
+    # For no-exo trials, moment_filt_bio doesn't exist (no exo torque to subtract)
+    # and exo.csv won't have real sensor data
+    if exo_state == 'no_exo':
+        optional_files = ['power', 'power_bio', 'exo', 'exo_sim']
+    else:
+        optional_files = ['moment_filt_bio', 'power', 'power_bio', 'exo', 'exo_sim']
 
     for file_type in required_files + optional_files:
         file_path = trial_path / f"{prefix}{file_type}.csv"
@@ -319,7 +393,8 @@ def process_stride(
     step_num: int,
     leg_side: str,
     collection_phase: int,
-    exo_state: str
+    exo_state: str,
+    is_day2: bool = False
 ) -> Optional[pd.DataFrame]:
     """
     Process a single stride from heel strike to heel strike.
@@ -336,7 +411,8 @@ def process_stride(
         step_num: Step number for this trial
         leg_side: 'l' or 'r' for left/right leg
         collection_phase: Data collection phase (1, 2, or 3)
-        exo_state: Exoskeleton state ('powered', 'worn_unpowered', 'unknown')
+        exo_state: Exoskeleton state ('powered', 'worn_unpowered', 'no_exo', 'unknown')
+        is_day2: Whether this is day 2 data (Phase 3 only)
 
     Returns:
         DataFrame with 150 rows (one per phase point) or None if invalid
@@ -426,6 +502,41 @@ def process_stride(
         moment_df[f'ankle_angle_{contra}_moment'].values[start_idx:end_idx]
     )
 
+    # Extract assistance moments from exo data (interaction torque)
+    # Exo sign convention: extension positive, flexion negative
+    # Our convention: flexion positive - so negate hip and knee
+    # Note: This exo only has hip and knee actuators, no ankle
+    # Torque units in exo.csv are Nm (absolute), divide by mass for Nm/kg
+    if 'exo' in data:
+        exo_df = data['exo']
+        # Hip assistance (negate: exo extension+ -> our flexion+)
+        hip_assist_ipsi = interpolate_to_phase(
+            -exo_df[f'hip_angle_{ipsi}_torque_interaction'].values[start_idx:end_idx] / subject_mass
+        )
+        hip_assist_contra = interpolate_to_phase(
+            -exo_df[f'hip_angle_{contra}_torque_interaction'].values[start_idx:end_idx] / subject_mass
+        )
+        # Knee assistance (negate: exo extension+ -> our flexion+)
+        knee_assist_ipsi = interpolate_to_phase(
+            -exo_df[f'knee_angle_{ipsi}_torque_interaction'].values[start_idx:end_idx] / subject_mass
+        )
+        knee_assist_contra = interpolate_to_phase(
+            -exo_df[f'knee_angle_{contra}_torque_interaction'].values[start_idx:end_idx] / subject_mass
+        )
+    else:
+        # No exo data available - fill with zeros
+        hip_assist_ipsi = np.zeros(NUM_POINTS)
+        hip_assist_contra = np.zeros(NUM_POINTS)
+        knee_assist_ipsi = np.zeros(NUM_POINTS)
+        knee_assist_contra = np.zeros(NUM_POINTS)
+
+    # Ankle has no exo actuator
+    ankle_assist_ipsi = np.zeros(NUM_POINTS)
+    ankle_assist_contra = np.zeros(NUM_POINTS)
+
+    # Determine if assistance was actively applied
+    assistance_active = (exo_state == 'powered')
+
     # Extract and interpolate GRF (normalize by body weight)
     grf_df = data['grf']
     body_weight_N = subject_mass * 9.81
@@ -501,8 +612,9 @@ def process_stride(
     task_info_str = ",".join(info_parts)
 
     # Build subject metadata
-    # Format: weight_kg:<mass>,phase:<1|2|3>,exo:<powered|worn_unpowered|unknown>
-    subject_metadata = f"weight_kg:{subject_mass:.1f},phase:{collection_phase},exo:{exo_state}"
+    # Format: weight_kg:<mass>,phase:<1|2|3>,exo:<powered|worn_unpowered|no_exo|unknown>,day:<1|2>
+    day_str = "2" if is_day2 else "1"
+    subject_metadata = f"weight_kg:{subject_mass:.1f},phase:{collection_phase},exo:{exo_state},day:{day_str}"
 
     # Create output DataFrame
     stride_df = pd.DataFrame({
@@ -539,13 +651,24 @@ def process_stride(
         'ankle_dorsiflexion_acceleration_ipsi_rad_s2': ankle_acc_ipsi,
         'ankle_dorsiflexion_acceleration_contra_rad_s2': ankle_acc_contra,
 
-        # Joint moments (Nm/kg)
+        # Joint moments - biological (Nm/kg)
         'hip_flexion_moment_ipsi_Nm_kg': hip_mom_ipsi,
         'hip_flexion_moment_contra_Nm_kg': hip_mom_contra,
         'knee_flexion_moment_ipsi_Nm_kg': knee_mom_ipsi,
         'knee_flexion_moment_contra_Nm_kg': knee_mom_contra,
         'ankle_dorsiflexion_moment_ipsi_Nm_kg': ankle_mom_ipsi,
         'ankle_dorsiflexion_moment_contra_Nm_kg': ankle_mom_contra,
+
+        # Joint moments - assistance (Nm/kg)
+        'hip_flexion_assistance_moment_ipsi_Nm_kg': hip_assist_ipsi,
+        'hip_flexion_assistance_moment_contra_Nm_kg': hip_assist_contra,
+        'knee_flexion_assistance_moment_ipsi_Nm_kg': knee_assist_ipsi,
+        'knee_flexion_assistance_moment_contra_Nm_kg': knee_assist_contra,
+        'ankle_dorsiflexion_assistance_moment_ipsi_Nm_kg': ankle_assist_ipsi,
+        'ankle_dorsiflexion_assistance_moment_contra_Nm_kg': ankle_assist_contra,
+
+        # Assistance flag
+        'assistance_active': assistance_active,
 
         # Ground reaction forces (BW)
         'grf_vertical_ipsi_BW': grf_vert_ipsi,
@@ -732,8 +855,8 @@ def segment_trial_standing_action(
 def process_trial(
     trial_path: Path,
     subject_id: str,
-    subject_mass: float,
-    data_source: str
+    data_source: str,
+    exo_filter: str = 'all'
 ) -> List[pd.DataFrame]:
     """
     Process all strides in a trial.
@@ -741,8 +864,8 @@ def process_trial(
     Args:
         trial_path: Path to trial folder
         subject_id: Subject identifier
-        subject_mass: Subject mass in kg
         data_source: Data source folder name (e.g., 'Parsed', 'Phase3')
+        exo_filter: Filter by exo state ('all', 'exo', 'noexo')
 
     Returns:
         List of stride DataFrames
@@ -755,12 +878,22 @@ def process_trial(
         # Skip unmapped tasks for now
         return []
 
-    # Determine collection phase and exo state
+    # Determine collection phase, exo state, and day
     collection_phase = get_collection_phase(subject_id, data_source)
     exo_state = get_exo_state(task_folder, collection_phase)
+    is_day2 = is_day2_trial(task_folder)
+
+    # Apply exo filter
+    if exo_filter == 'exo' and exo_state == 'no_exo':
+        return []  # Skip no-exo trials when filtering for exo only
+    if exo_filter == 'noexo' and exo_state != 'no_exo':
+        return []  # Skip exo trials when filtering for no-exo only
+
+    # Get subject mass based on exo state and day
+    subject_mass = get_subject_mass(subject_id, data_source, exo_state, is_day2)
 
     # Load data
-    data = load_trial_data(trial_path, subject_id)
+    data = load_trial_data(trial_path, subject_id, exo_state)
     if data is None:
         return []
 
@@ -796,7 +929,8 @@ def process_trial(
                 step_num=step_num,
                 leg_side='l',
                 collection_phase=collection_phase,
-                exo_state=exo_state
+                exo_state=exo_state,
+                is_day2=is_day2
             )
             if stride_df is not None:
                 strides.append(stride_df)
@@ -822,7 +956,8 @@ def process_trial(
                 step_num=step_num,
                 leg_side='l',
                 collection_phase=collection_phase,
-                exo_state=exo_state
+                exo_state=exo_state,
+                is_day2=is_day2
             )
             if stride_df is not None:
                 strides.append(stride_df)
@@ -847,7 +982,8 @@ def process_trial(
                     step_num=step_num,
                     leg_side=leg_side,
                     collection_phase=collection_phase,
-                    exo_state=exo_state
+                    exo_state=exo_state,
+                    is_day2=is_day2
                 )
                 if stride_df is not None:
                     strides.append(stride_df)
@@ -856,7 +992,8 @@ def process_trial(
     return strides
 
 
-def process_subject(subject_path: Path, subject_id: str, data_source: str) -> pd.DataFrame:
+def process_subject(subject_path: Path, subject_id: str, data_source: str,
+                    exo_filter: str = 'all') -> pd.DataFrame:
     """
     Process all trials for a subject.
 
@@ -864,14 +1001,17 @@ def process_subject(subject_path: Path, subject_id: str, data_source: str) -> pd
         subject_path: Path to subject folder
         subject_id: Subject identifier
         data_source: Data source folder name (e.g., 'Parsed', 'Phase3')
+        exo_filter: Filter by exo state ('all', 'exo', 'noexo')
 
     Returns:
         Combined DataFrame of all strides
     """
-    subject_mass = get_subject_mass(subject_id, data_source)
     collection_phase = get_collection_phase(subject_id, data_source)
+    has_noexo = subject_id in SUBJECTS_WITH_NOEXO_DATA
 
-    print(f"  Mass: {subject_mass:.1f} kg, Phase: {collection_phase}")
+    # Get default mass for display (actual mass is computed per-trial based on exo state)
+    default_mass = get_subject_mass(subject_id, data_source)
+    print(f"  Default mass: {default_mass:.1f} kg, Phase: {collection_phase}, Has no-exo data: {has_noexo}")
 
     all_strides = []
 
@@ -879,7 +1019,7 @@ def process_subject(subject_path: Path, subject_id: str, data_source: str) -> pd
     trial_folders = [f for f in subject_path.iterdir() if f.is_dir()]
 
     for trial_path in tqdm(trial_folders, desc=f"  {subject_id} trials", leave=False):
-        strides = process_trial(trial_path, subject_id, subject_mass, data_source)
+        strides = process_trial(trial_path, subject_id, data_source, exo_filter)
         all_strides.extend(strides)
 
     if all_strides:
@@ -893,8 +1033,10 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description='Convert GaTech 2024 TaskAgnostic to parquet')
-    parser.add_argument('--input', '-i', type=str, default='Parsed',
-                       help='Path to Parsed data folder')
+    parser.add_argument('--input', '-i', type=str, default=None,
+                       help='Path to data folder (or use --base-path for Phase1And2 + Phase3)')
+    parser.add_argument('--base-path', type=str, default=None,
+                       help='Base path containing Phase1And2 and Phase3 subfolders')
     parser.add_argument('--output', '-o', type=str, default='gtech_2024_phase.parquet',
                        help='Output parquet filename')
     parser.add_argument('--output-dir', type=str, default='../../../converted_datasets',
@@ -904,37 +1046,124 @@ def main():
     parser.add_argument('--test', action='store_true',
                        help='Test mode: process only first subject')
 
+    # No-exo data flags (for Phase 3 day 2 testing - BT02, BT13, BT18, BT23, BT24)
+    parser.add_argument('--include-noexo', action='store_true',
+                       help='Include no-exo trials (day 2 testing for BT02, BT13, BT18, BT23, BT24)')
+    parser.add_argument('--noexo-only', action='store_true',
+                       help='Only process no-exo trials (excludes exo trials)')
+    parser.add_argument('--exo-filter', type=str, choices=['all', 'exo', 'noexo'],
+                       default='all',
+                       help='Filter by exo state: all (default), exo (only exo trials), noexo (only no-exo trials)')
+
     args = parser.parse_args()
 
+    # Handle noexo flag interactions
+    if args.noexo_only:
+        args.exo_filter = 'noexo'
+    elif not args.include_noexo and args.exo_filter == 'all':
+        # By default, include all available data
+        args.exo_filter = 'all'
+
     # Setup paths
-    input_path = Path(args.input)
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    if not input_path.exists():
-        print(f"Error: Input path not found: {input_path}")
-        return
+    # Collect input paths - support both single input and base-path with Phase1And2/Phase3
+    input_paths = []
 
-    # Find subjects
-    subject_folders = sorted([f for f in input_path.iterdir() if f.is_dir()])
+    def find_subjects_path(phase_path: Path) -> Optional[Path]:
+        """Find the path containing subject folders (BT01, BT02, etc.)."""
+        # Check if subjects are directly in the path
+        direct_subjects = [f for f in phase_path.iterdir() if f.is_dir() and f.name.startswith('BT')]
+        if direct_subjects:
+            return phase_path
+        # Check for nested 'Parsed' folder
+        parsed_path = phase_path / 'Parsed'
+        if parsed_path.exists():
+            nested_subjects = [f for f in parsed_path.iterdir() if f.is_dir() and f.name.startswith('BT')]
+            if nested_subjects:
+                return parsed_path
+        return None
+
+    if args.base_path:
+        base = Path(args.base_path)
+        # Try both naming conventions: Phase1And2 or Phase1And2_Parsed
+        for phase12_name in ['Phase1And2', 'Phase1And2_Parsed']:
+            phase12_path = base / phase12_name
+            if phase12_path.exists():
+                subjects_path = find_subjects_path(phase12_path)
+                if subjects_path:
+                    input_paths.append(('Phase1And2', subjects_path))
+                    print(f"Found Phase1And2 subjects at: {subjects_path}")
+                    break
+        for phase3_name in ['Phase3', 'Phase3_Parsed']:
+            phase3_path = base / phase3_name
+            if phase3_path.exists():
+                subjects_path = find_subjects_path(phase3_path)
+                if subjects_path:
+                    input_paths.append(('Phase3', subjects_path))
+                    print(f"Found Phase3 subjects at: {subjects_path}")
+                    break
+        if not input_paths:
+            print(f"Error: No Phase1And2 or Phase3 folders found in {base}")
+            return
+    elif args.input:
+        input_path = Path(args.input)
+        if not input_path.exists():
+            print(f"Error: Input path not found: {input_path}")
+            return
+        input_paths.append((input_path.name, input_path))
+    else:
+        # Default: try to find Phase1And2 and Phase3 in common location
+        default_base = Path('/mnt/s/locomotion_data/GaTech_2024_TaskAgnostic')
+        if default_base.exists():
+            for phase12_name in ['Phase1And2', 'Phase1And2_Parsed']:
+                phase12_path = default_base / phase12_name
+                if phase12_path.exists():
+                    subjects_path = find_subjects_path(phase12_path)
+                    if subjects_path:
+                        input_paths.append(('Phase1And2', subjects_path))
+                        print(f"Found Phase1And2 subjects at: {subjects_path}")
+                        break
+            for phase3_name in ['Phase3', 'Phase3_Parsed']:
+                phase3_path = default_base / phase3_name
+                if phase3_path.exists():
+                    subjects_path = find_subjects_path(phase3_path)
+                    if subjects_path:
+                        input_paths.append(('Phase3', subjects_path))
+                        print(f"Found Phase3 subjects at: {subjects_path}")
+                        break
+        if not input_paths:
+            print("Error: No input specified. Use --input, --base-path, or ensure data exists at default location")
+            return
+
+    # Collect all subject folders from all input paths
+    subject_folders = []
+    for data_source, input_path in input_paths:
+        folders = sorted([f for f in input_path.iterdir() if f.is_dir()])
+        for f in folders:
+            subject_folders.append((data_source, f))
 
     if args.subjects:
-        subject_folders = [f for f in subject_folders if f.name in args.subjects]
+        subject_folders = [(ds, f) for ds, f in subject_folders if f.name in args.subjects]
 
     if args.test:
         subject_folders = subject_folders[:1]
-        print(f"Test mode: processing only {subject_folders[0].name}")
+        print(f"Test mode: processing only {subject_folders[0][1].name}")
 
-    print(f"Found {len(subject_folders)} subjects to process")
+    # Count unique subjects (same subject may appear in multiple phases)
+    unique_subjects = set(f.name for _, f in subject_folders)
+    print(f"Found {len(subject_folders)} subject-phase combinations ({len(unique_subjects)} unique subjects)")
+    print(f"Exo filter: {args.exo_filter}")
 
     # Process each subject
     all_data = []
 
-    for subject_path in tqdm(subject_folders, desc="Processing subjects"):
+    for data_source, subject_path in tqdm(subject_folders, desc="Processing subjects"):
         subject_id = subject_path.name
-        print(f"\nProcessing {subject_id}...")
+        print(f"\nProcessing {subject_id} from {data_source}...")
 
-        subject_data = process_subject(subject_path, subject_id, args.input)
+        subject_data = process_subject(subject_path, subject_id, data_source, args.exo_filter)
 
         if not subject_data.empty:
             all_data.append(subject_data)
@@ -952,6 +1181,12 @@ def main():
         print(f"Total strides: {len(combined_df) // NUM_POINTS}")
         print(f"Unique subjects: {combined_df['subject'].nunique()}")
         print(f"Tasks: {combined_df['task'].unique().tolist()}")
+
+        # Show exo state distribution
+        exo_states = combined_df['subject_metadata'].str.extract(r'exo:(\w+)')[0].value_counts()
+        print(f"\nExo states (strides):")
+        for state, count in exo_states.items():
+            print(f"  {state}: {count // NUM_POINTS}")
 
         combined_df.to_parquet(output_path, index=False)
         print("Done!")

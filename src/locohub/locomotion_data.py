@@ -78,6 +78,7 @@ try:
         ANGLE_FEATURES,
         VELOCITY_FEATURES,
         MOMENT_FEATURES,
+        ASSISTANCE_MOMENT_FEATURES,
         SEGMENT_ANGLE_FEATURES,
         SEGMENT_VELOCITY_FEATURES,
         GRF_FEATURES,
@@ -91,6 +92,7 @@ except ImportError:
         ANGLE_FEATURES,
         VELOCITY_FEATURES,
         MOMENT_FEATURES,
+        ASSISTANCE_MOMENT_FEATURES,
         SEGMENT_ANGLE_FEATURES,
         SEGMENT_VELOCITY_FEATURES,
         GRF_FEATURES,
@@ -370,9 +372,10 @@ class LocomotionData:
     def _is_standard_compliant(self, variable_name: str) -> bool:
         """Check if variable name follows standard convention: <joint>_<motion>_<measurement>_<side>_<unit>"""
         # First, check if it's in one of our known feature lists
-        if (variable_name in ANGLE_FEATURES or 
-            variable_name in VELOCITY_FEATURES or 
+        if (variable_name in ANGLE_FEATURES or
+            variable_name in VELOCITY_FEATURES or
             variable_name in MOMENT_FEATURES or
+            variable_name in ASSISTANCE_MOMENT_FEATURES or
             variable_name in SEGMENT_ANGLE_FEATURES or
             variable_name in SEGMENT_VELOCITY_FEATURES or
             variable_name in GRF_FEATURES or

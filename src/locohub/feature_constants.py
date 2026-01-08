@@ -43,6 +43,7 @@ METADATA_COLUMNS = [
     'task_id',
     'task_info',
     'step',
+    'assistance_active',  # Boolean: True if exo was powered (torques applied)
 ]
 PHASE_COLUMNS = ['phase_ipsi', 'phase_contra', 'phase_ipsi_dot']
 TIME_COLUMNS = ['time_s']
@@ -106,6 +107,14 @@ MOMENT_FEATURES_NORMALIZED = [
     'ankle_rotation_moment_ipsi_Nm_kg', 'ankle_rotation_moment_contra_Nm_kg'
 ]
 
+# Assistance moment features (exoskeleton interaction torques, normalized by body weight)
+# Note: compound measurement type "assistance_moment" uses underscore-connected naming
+ASSISTANCE_MOMENT_FEATURES = [
+    'hip_flexion_assistance_moment_ipsi_Nm_kg', 'hip_flexion_assistance_moment_contra_Nm_kg',
+    'knee_flexion_assistance_moment_ipsi_Nm_kg', 'knee_flexion_assistance_moment_contra_Nm_kg',
+    'ankle_dorsiflexion_assistance_moment_ipsi_Nm_kg', 'ankle_dorsiflexion_assistance_moment_contra_Nm_kg',
+]
+
 # Ground reaction force features (raw)
 # Naming: <signal_type>_<axis>_<leg_side>_<unit>
 # Example: grf_vertical_ipsi_N
@@ -145,7 +154,7 @@ SEGMENT_ANGLE_FEATURES = [
 ]
 
 # All kinetic features combined
-ALL_KINETIC_FEATURES = MOMENT_FEATURES + MOMENT_FEATURES_NORMALIZED + GRF_FEATURES + GRF_FEATURES_NORMALIZED + COP_FEATURES
+ALL_KINETIC_FEATURES = MOMENT_FEATURES + MOMENT_FEATURES_NORMALIZED + ASSISTANCE_MOMENT_FEATURES + GRF_FEATURES + GRF_FEATURES_NORMALIZED + COP_FEATURES
 
 # All kinematic features combined (angles + segments + velocities + accelerations)
 ALL_KINEMATIC_FEATURES = (
@@ -168,6 +177,7 @@ CANONICAL_COLUMN_GROUPS = {
     'segment_velocities': SEGMENT_VELOCITY_FEATURES,
     'moments': MOMENT_FEATURES,
     'moments_normalized': MOMENT_FEATURES_NORMALIZED,
+    'assistance_moments': ASSISTANCE_MOMENT_FEATURES,
     'grf': GRF_FEATURES,
     'grf_normalized': GRF_FEATURES_NORMALIZED,
     'cop': COP_FEATURES,
