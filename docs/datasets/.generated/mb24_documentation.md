@@ -17,8 +17,8 @@ Biomechanical data from the MBLUE (Modular Bi-Lateral Lower-limb Unloading Exosk
 .download-button.unavailable { background:#d1d5db; color:#6b7280; cursor:not-allowed; }
 </style>
 <div class="download-grid">
-  <a class="download-button available" href="https://www.dropbox.com/scl/fi/6xr64078wfvsxee4xfz7v/mblue_ankle_phase.parquet?rlkey=owrklzpaonrkgdhly74u2thr6&dl=1" target="_blank" rel="noopener">Download Clean Dataset</a>
-  <span class="download-button unavailable" title="Full dataset download not yet available">Full Dataset (coming soon)</span>
+  <a class="download-button available" href="https://www.dropbox.com/scl/fi/i1q5vcoq85ot958993fv5/mblue_ankle_phase_clean.parquet?rlkey=olktfihwldiu87fuamcko788q&dl=1" target="_blank" rel="noopener">Download Clean Dataset</a>
+  <a class="download-button available" href="https://www.dropbox.com/scl/fi/6xr64078wfvsxee4xfz7v/mblue_ankle_phase.parquet?rlkey=owrklzpaonrkgdhly74u2thr6&dl=1" target="_blank" rel="noopener">Download Full Dataset (Dirty)</a>
 </div>
 
 ## Dataset Information
@@ -122,7 +122,7 @@ The table below summarizes the `subject_metadata` key:value pairs per subject.
 </style>
 
 <div class="feature-legend"><span class="legend-item"><span class="feature-chip feature-complete">✔</span>Complete</span><span class="legend-item"><span class="feature-chip feature-partial">≈</span>Partial</span><span class="legend-item"><span class="feature-chip feature-missing">✖</span>Missing</span></div>
-<p class="feature-source">Coverage computed from `mblue_ankle_phase.parquet`.</p>
+<p class="feature-source">Coverage computed from `mblue_ankle_phase_clean.parquet`.</p>
 
 #### Ground Reaction Forces
 
@@ -168,10 +168,10 @@ The table below summarizes the `subject_metadata` key:value pairs per subject.
 
 | Feature | Decline Walking | Incline Walking | Level Walking | Sit To Stand | Squat | Stair Ascent | Stair Descent | Stand To Sit |
 |---|---|---|---|---|---|---|---|---|
-| `cop_anterior_contra_m` | <span class="feature-chip feature-partial" title="64.2% available">≈ 64.20</span> | <span class="feature-chip feature-partial" title="65.1% available">≈ 65.10</span> | <span class="feature-chip feature-partial" title="64.9% available">≈ 64.90</span> | <span class="feature-chip feature-partial" title="90.1% available">≈ 90.10</span> | <span class="feature-chip feature-partial" title="93.7% available">≈ 93.70</span> | <span class="feature-chip feature-partial" title="58.6% available">≈ 58.60</span> | <span class="feature-chip feature-partial" title="55.9% available">≈ 55.90</span> | <span class="feature-chip feature-partial" title="90.1% available">≈ 90.10</span> |
-| `cop_anterior_ipsi_m` | <span class="feature-chip feature-partial" title="64.2% available">≈ 64.20</span> | <span class="feature-chip feature-partial" title="65.1% available">≈ 65.10</span> | <span class="feature-chip feature-partial" title="64.9% available">≈ 64.90</span> | <span class="feature-chip feature-partial" title="90.1% available">≈ 90.10</span> | <span class="feature-chip feature-partial" title="95.5% available">≈ 95.50</span> | <span class="feature-chip feature-partial" title="58.6% available">≈ 58.60</span> | <span class="feature-chip feature-partial" title="55.9% available">≈ 55.90</span> | <span class="feature-chip feature-partial" title="90.1% available">≈ 90.10</span> |
-| `cop_lateral_contra_m` | <span class="feature-chip feature-partial" title="64.2% available">≈ 64.20</span> | <span class="feature-chip feature-partial" title="65.1% available">≈ 65.10</span> | <span class="feature-chip feature-partial" title="64.9% available">≈ 64.90</span> | <span class="feature-chip feature-partial" title="90.1% available">≈ 90.10</span> | <span class="feature-chip feature-partial" title="93.7% available">≈ 93.70</span> | <span class="feature-chip feature-partial" title="58.6% available">≈ 58.60</span> | <span class="feature-chip feature-partial" title="55.9% available">≈ 55.90</span> | <span class="feature-chip feature-partial" title="90.1% available">≈ 90.10</span> |
-| `cop_lateral_ipsi_m` | <span class="feature-chip feature-partial" title="64.2% available">≈ 64.20</span> | <span class="feature-chip feature-partial" title="65.1% available">≈ 65.10</span> | <span class="feature-chip feature-partial" title="64.9% available">≈ 64.90</span> | <span class="feature-chip feature-partial" title="90.1% available">≈ 90.10</span> | <span class="feature-chip feature-partial" title="95.5% available">≈ 95.50</span> | <span class="feature-chip feature-partial" title="58.6% available">≈ 58.60</span> | <span class="feature-chip feature-partial" title="55.9% available">≈ 55.90</span> | <span class="feature-chip feature-partial" title="90.1% available">≈ 90.10</span> |
+| `cop_anterior_contra_m` | <span class="feature-chip feature-partial" title="64.2% available">≈ 64.20</span> | <span class="feature-chip feature-partial" title="65.1% available">≈ 65.10</span> | <span class="feature-chip feature-partial" title="64.9% available">≈ 64.90</span> | <span class="feature-chip feature-partial" title="90.0% available">≈ 90.00</span> | <span class="feature-chip feature-partial" title="92.8% available">≈ 92.80</span> | <span class="feature-chip feature-partial" title="56.3% available">≈ 56.30</span> | <span class="feature-chip feature-partial" title="54.3% available">≈ 54.30</span> | <span class="feature-chip feature-partial" title="88.4% available">≈ 88.40</span> |
+| `cop_anterior_ipsi_m` | <span class="feature-chip feature-partial" title="64.2% available">≈ 64.20</span> | <span class="feature-chip feature-partial" title="65.1% available">≈ 65.10</span> | <span class="feature-chip feature-partial" title="64.9% available">≈ 64.90</span> | <span class="feature-chip feature-partial" title="90.0% available">≈ 90.00</span> | <span class="feature-chip feature-partial" title="94.7% available">≈ 94.70</span> | <span class="feature-chip feature-partial" title="60.8% available">≈ 60.80</span> | <span class="feature-chip feature-partial" title="59.4% available">≈ 59.40</span> | <span class="feature-chip feature-partial" title="88.4% available">≈ 88.40</span> |
+| `cop_lateral_contra_m` | <span class="feature-chip feature-partial" title="64.2% available">≈ 64.20</span> | <span class="feature-chip feature-partial" title="65.1% available">≈ 65.10</span> | <span class="feature-chip feature-partial" title="64.9% available">≈ 64.90</span> | <span class="feature-chip feature-partial" title="90.0% available">≈ 90.00</span> | <span class="feature-chip feature-partial" title="92.8% available">≈ 92.80</span> | <span class="feature-chip feature-partial" title="56.3% available">≈ 56.30</span> | <span class="feature-chip feature-partial" title="54.3% available">≈ 54.30</span> | <span class="feature-chip feature-partial" title="88.4% available">≈ 88.40</span> |
+| `cop_lateral_ipsi_m` | <span class="feature-chip feature-partial" title="64.2% available">≈ 64.20</span> | <span class="feature-chip feature-partial" title="65.1% available">≈ 65.10</span> | <span class="feature-chip feature-partial" title="64.9% available">≈ 64.90</span> | <span class="feature-chip feature-partial" title="90.0% available">≈ 90.00</span> | <span class="feature-chip feature-partial" title="94.7% available">≈ 94.70</span> | <span class="feature-chip feature-partial" title="60.8% available">≈ 60.80</span> | <span class="feature-chip feature-partial" title="59.4% available">≈ 59.40</span> | <span class="feature-chip feature-partial" title="88.4% available">≈ 88.40</span> |
 
 ### Data Structure
 - **Format**: Phase-normalized (150 points per gait cycle)
@@ -207,4 +207,4 @@ Data is phase-normalized (101 points in source, interpolated to 150 points for s
 
 ---
 
-*Generated by Dataset Submission Tool on 2026-01-09 07:58*
+*Generated by Dataset Submission Tool on 2026-01-09 09:28*
