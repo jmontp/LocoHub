@@ -754,6 +754,9 @@ def generate_comparison_snapshot() -> None:
 
     for meta_file in sorted(meta_dir.glob('*.yaml')):
         data = load_metadata_file(meta_file)
+        # Skip hidden datasets
+        if data.get('hidden', False):
+            continue
         slug = meta_file.stem
 
         comparison_tasks = data.get('comparison_tasks') or {}
@@ -1174,6 +1177,9 @@ def update_dataset_tables() -> None:
             data = load_metadata_file(meta_file)
         except Exception as exc:
             print(f"⚠️ Skipping metadata file {meta_file.name}: {exc}")
+            continue
+        # Skip hidden datasets (e.g., AddBiomechanics datasets not yet ready for public)
+        if data.get('hidden', False):
             continue
         data['dataset_name'] = meta_file.stem
         metadata_entries.append(data)
