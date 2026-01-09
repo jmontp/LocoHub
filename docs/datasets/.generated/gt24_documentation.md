@@ -18,7 +18,7 @@ Dataset from "Task-agnostic exoskeleton control via biological joint moment esti
 </style>
 <div class="download-grid">
   <a class="download-button available" href="https://www.dropbox.com/scl/fi/addnrep8tyxbdycij746z/gtech_2024_phase_clean.parquet?rlkey=37mauhfmexyvcx9rgovqg3bow&dl=1" target="_blank" rel="noopener">Download Clean Dataset</a>
-  <span class="download-button unavailable" title="Full dataset download not yet available">Full Dataset (coming soon)</span>
+  <a class="download-button available" href="https://www.dropbox.com/scl/fi/rq9ljak2fmzxhqx68iw2u/gtech_2024_phase.parquet?rlkey=b08njvj2cga8iyo7u48s493uy&dl=1" target="_blank" rel="noopener">Download Full Dataset (Dirty)</a>
 </div>
 
 ## Dataset Information
@@ -30,115 +30,115 @@ Dataset from "Task-agnostic exoskeleton control via biological joint moment esti
 ### Subject Metadata
 The table below summarizes the `subject_metadata` key:value pairs per subject.
 
-| Subject | weight_kg | day | exo | phase |
-|---|---|---|---|---|
-| GT24_BT01 | 84.3 | 1 | worn_unpowered | 1 |
-| GT24_BT02 | 79.1 | 1 | powered | 1 |
-| GT24_BT03 | 101.5 | 1 | powered | 1 |
-| GT24_BT06 | 85.8 | 1 | powered | 1 |
-| GT24_BT07 | 70.6 | 1 | powered | 1 |
-| GT24_BT08 | 75.7 | 1 | powered | 1 |
-| GT24_BT09 | 89.0 | 1 | powered | 1 |
-| GT24_BT10 | 100.1 | 1 | powered | 1 |
-| GT24_BT11 | 57.0 | 1 | powered | 1 |
-| GT24_BT12 | 84.6 | 1 | powered | 1 |
-| GT24_BT13 | 96.0 | 1 | powered | 2 |
-| GT24_BT14 | 74.3 | 1 | powered | 2 |
-| GT24_BT15 | 65.9 | 1 | powered | 2 |
-| GT24_BT16 | 72.0 | 1 | powered | 2 |
-| GT24_BT17 | 67.4 | 1 | powered | 2 |
-| GT24_BT18 | 75.0 | 1 | powered | 3 |
-| GT24_BT19 | 76.8 | 1 | powered | 3 |
-| GT24_BT20 | 62.5 | 1 | powered | 3 |
-| GT24_BT21 | 65.9 | 1 | powered | 3 |
-| GT24_BT22 | 84.3 | 1 | powered | 3 |
-| GT24_BT23 | 74.2 | 1 | powered | 3 |
-| GT24_BT24 | 84.8 | 1 | powered | 3 |
+| Subject | weight_kg | day | phase |
+|---|---|---|---|
+| GT24_BT01 | 84.3 | 1 | 1 |
+| GT24_BT02 | 79.1 | 1 | 1 |
+| GT24_BT03 | 101.5 | 1 | 1 |
+| GT24_BT06 | 85.8 | 1 | 1 |
+| GT24_BT07 | 70.6 | 1 | 1 |
+| GT24_BT08 | 75.7 | 1 | 1 |
+| GT24_BT09 | 89.0 | 1 | 1 |
+| GT24_BT10 | 100.1 | 1 | 1 |
+| GT24_BT11 | 57.0 | 1 | 1 |
+| GT24_BT12 | 84.6 | 1 | 1 |
+| GT24_BT13 | 96.0 | 1 | 2 |
+| GT24_BT14 | 74.3 | 1 | 2 |
+| GT24_BT15 | 65.9 | 1 | 2 |
+| GT24_BT16 | 72.0 | 1 | 2 |
+| GT24_BT17 | 67.4 | 1 | 2 |
+| GT24_BT18 | 75.0 | 1 | 3 |
+| GT24_BT19 | 76.8 | 1 | 3 |
+| GT24_BT20 | 62.5 | 1 | 3 |
+| GT24_BT21 | 65.9 | 1 | 3 |
+| GT24_BT22 | 84.3 | 1 | 3 |
+| GT24_BT23 | 74.2 | 1 | 3 |
+| GT24_BT24 | 84.8 | 1 | 3 |
 
 #### Task Catalog
 
 | Task | Task ID | Task Info |
 |------|---------|-----------|
-| backward_walking | backward_walking | leg:l,exo_powered:False,speed_m_s:0.6 |
-|   |   | leg:l,exo_powered:False,speed_m_s:0.8 |
-|   |   | leg:l,exo_powered:False,speed_m_s:1.0 |
-|   |   | leg:l,exo_powered:True,speed_m_s:0.6 |
-|   |   | leg:l,exo_powered:True,speed_m_s:0.8 |
-|   |   | leg:l,exo_powered:True,speed_m_s:1.0 |
-|   |   | leg:r,exo_powered:False,speed_m_s:0.6 |
-|   |   | leg:r,exo_powered:False,speed_m_s:0.8 |
-|   |   | leg:r,exo_powered:False,speed_m_s:1.0 |
-|   |   | leg:r,exo_powered:True,speed_m_s:0.6 |
-|   |   | leg:r,exo_powered:True,speed_m_s:0.8 |
-|   |   | leg:r,exo_powered:True,speed_m_s:1.0 |
-| cutting | cutting | leg:l,exo_powered:False |
-|   |   | leg:l,exo_powered:True |
-|   |   | leg:r,exo_powered:False |
-|   |   | leg:r,exo_powered:True |
-| decline_walking | decline_10deg | leg:l,exo_powered:False |
-|   |   | leg:l,exo_powered:True |
-|   |   | leg:r,exo_powered:False |
-|   |   | leg:r,exo_powered:True |
-|   | decline_5deg | leg:l,exo_powered:False |
-|   |   | leg:l,exo_powered:True |
-|   |   | leg:r,exo_powered:False |
-|   |   | leg:r,exo_powered:True |
-| incline_walking | incline_10deg | leg:l |
-|   |   | leg:l,exo_powered:False |
-|   |   | leg:l,exo_powered:True |
-|   |   | leg:r |
-|   |   | leg:r,exo_powered:False |
-|   |   | leg:r,exo_powered:True |
-|   | incline_5deg | leg:l |
-|   |   | leg:l,exo_powered:False |
-|   |   | leg:l,exo_powered:True |
-|   |   | leg:r |
-|   |   | leg:r,exo_powered:False |
-|   |   | leg:r,exo_powered:True |
-| jump | jump | leg:l,exo_powered:False |
-|   |   | leg:l,exo_powered:True |
-| level_walking | level_0.6ms | leg:l,exo_powered:False,speed_m_s:0.6 |
-|   |   | leg:l,exo_powered:True,speed_m_s:0.6 |
-|   |   | leg:r,exo_powered:False,speed_m_s:0.6 |
-|   |   | leg:r,exo_powered:True,speed_m_s:0.6 |
-|   | level_1.2ms | leg:l,exo_powered:False,speed_m_s:1.2 |
-|   |   | leg:l,exo_powered:True,speed_m_s:1.2 |
-|   |   | leg:l,speed_m_s:1.2 |
-|   |   | leg:r,exo_powered:False,speed_m_s:1.2 |
-|   |   | leg:r,exo_powered:True,speed_m_s:1.2 |
-|   |   | leg:r,speed_m_s:1.2 |
-|   | level_1.8ms | leg:l,exo_powered:False,speed_m_s:1.8 |
-|   |   | leg:l,exo_powered:True,speed_m_s:1.8 |
-|   |   | leg:r,exo_powered:False,speed_m_s:1.8 |
-|   |   | leg:r,exo_powered:True,speed_m_s:1.8 |
-| lunge | lunge | leg:l,exo_powered:False |
-|   |   | leg:l,exo_powered:True |
-| run | run_2.0ms | leg:l,exo_powered:False,speed_m_s:2.0 |
-|   |   | leg:l,exo_powered:True,speed_m_s:2.0 |
-|   |   | leg:r,exo_powered:False,speed_m_s:2.0 |
-|   |   | leg:r,exo_powered:True,speed_m_s:2.0 |
-|   | run_2.5ms | leg:l,exo_powered:False,speed_m_s:2.5 |
-|   |   | leg:l,exo_powered:True,speed_m_s:2.5 |
-|   |   | leg:r,exo_powered:False,speed_m_s:2.5 |
-|   |   | leg:r,exo_powered:True,speed_m_s:2.5 |
-| sit_to_stand | sit_to_stand | leg:l,exo_powered:False |
-|   |   | leg:l,exo_powered:True |
-| squat | squat | leg:l,exo_powered:False |
-|   |   | leg:l,exo_powered:True |
-| stair_ascent | curb_up | leg:l,exo_powered:False |
-|   |   | leg:l,exo_powered:True |
-|   |   | leg:r,exo_powered:False |
-|   |   | leg:r,exo_powered:True |
-|   | step_up | leg:l,exo_powered:False |
-|   |   | leg:l,exo_powered:True |
-|   |   | leg:r,exo_powered:False |
-|   |   | leg:r,exo_powered:True |
-| stair_descent | curb_down | leg:l,exo_powered:False |
-|   |   | leg:l,exo_powered:True |
-|   |   | leg:r,exo_powered:False |
-|   |   | leg:r,exo_powered:True |
-| stand_to_sit | stand_to_sit | leg:l,exo_powered:False |
-|   |   | leg:l,exo_powered:True |
+| backward_walking | backward_walking | leg:l,exo_state:powered,exo_joints:hip_knee,speed_m_s:0.6 |
+|   |   | leg:l,exo_state:powered,exo_joints:hip_knee,speed_m_s:0.8 |
+|   |   | leg:l,exo_state:powered,exo_joints:hip_knee,speed_m_s:1.0 |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:0.6 |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:0.8 |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:1.0 |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee,speed_m_s:0.6 |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee,speed_m_s:0.8 |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee,speed_m_s:1.0 |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:0.6 |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:0.8 |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:1.0 |
+| cutting | cutting | leg:l,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee |
+| decline_walking | decline_10deg | leg:l,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee |
+|   | decline_5deg | leg:l,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee |
+| incline_walking | incline_10deg | leg:l,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:l,exo_state:powered,exo_joints:hip_knee,exo_controller:hilo |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee,exo_controller:hilo |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee |
+|   | incline_5deg | leg:l,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:l,exo_state:powered,exo_joints:hip_knee,exo_controller:hilo |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee,exo_controller:hilo |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee |
+| jump | jump | leg:l,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee |
+| level_walking | level_0.6ms | leg:l,exo_state:powered,exo_joints:hip_knee,speed_m_s:0.6 |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:0.6 |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee,speed_m_s:0.6 |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:0.6 |
+|   | level_1.2ms | leg:l,exo_state:powered,exo_joints:hip_knee,exo_controller:hilo,speed_m_s:1.2 |
+|   |   | leg:l,exo_state:powered,exo_joints:hip_knee,speed_m_s:1.2 |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:1.2 |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee,exo_controller:hilo,speed_m_s:1.2 |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee,speed_m_s:1.2 |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:1.2 |
+|   | level_1.8ms | leg:l,exo_state:powered,exo_joints:hip_knee,speed_m_s:1.8 |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:1.8 |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee,speed_m_s:1.8 |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:1.8 |
+| lunge | lunge | leg:l,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee |
+| run | run_2.0ms | leg:l,exo_state:powered,exo_joints:hip_knee,speed_m_s:2.0 |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:2.0 |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee,speed_m_s:2.0 |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:2.0 |
+|   | run_2.5ms | leg:l,exo_state:powered,exo_joints:hip_knee,speed_m_s:2.5 |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:2.5 |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee,speed_m_s:2.5 |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee,speed_m_s:2.5 |
+| sit_to_stand | sit_to_stand | leg:l,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee |
+| squat | squat | leg:l,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee |
+| stair_ascent | curb_up | leg:l,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee |
+|   | step_up | leg:l,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee |
+| stair_descent | curb_down | leg:l,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:r,exo_state:worn_unpowered,exo_joints:hip_knee |
+| stand_to_sit | stand_to_sit | leg:l,exo_state:powered,exo_joints:hip_knee |
+|   |   | leg:l,exo_state:worn_unpowered,exo_joints:hip_knee |
 
 ### Feature Availability by Task
 <style>
@@ -243,4 +243,4 @@ Gait cycles detected using vertical GRF threshold crossing (20 N). First 2 and l
 
 ---
 
-*Generated by Dataset Submission Tool on 2026-01-09 07:58*
+*Generated by Dataset Submission Tool on 2026-01-09 09:51*
