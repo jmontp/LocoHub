@@ -20,3 +20,5 @@ python3 contributor_tools/conversion_scripts/GaTech_2024_TaskAgnostic/convert_gt
 ```
 
 Output goes to `converted_datasets/gtech_2024_phase.parquet` by default.
+
+**Tip**: For Dropbox integration, copy the output to `$LOCOHUB_DROPBOX_FOLDER` for automatic syncing and share link generation. See the [Dropbox Integration](../../CLAUDE.md#dropbox-integration) section in the main contributor tools docs.

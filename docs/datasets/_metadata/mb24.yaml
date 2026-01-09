@@ -1,0 +1,747 @@
+display_name: MBLUE Ankle Exoskeleton Study
+short_code: MB24
+description: 'Biomechanical data from the MBLUE (Modular Bi-Lateral Lower-limb Unloading
+  Exoskeleton) ankle exoskeleton study. Includes 10 able-bodied subjects performing
+  various locomotion tasks with and without an ankle exoskeleton, processed through
+  OpenSim for inverse kinematics and inverse dynamics analysis.
+
+  '
+year: '2024'
+institution: University of Michigan
+subjects: '10'
+tasks:
+- decline_walking
+- incline_walking
+- level_walking
+- sit_to_stand
+- squat
+- stair_ascent
+- stair_descent
+- stand_to_sit
+citation: 'Walters, K. MBLUE Ankle Exoskeleton Study, University of Michigan, 2024.
+
+  '
+protocol: 'Subjects performed locomotion tasks on a treadmill (level walking at 0.75,
+  1.0, 1.25 m/s; incline/decline at 5 and 10 degrees) and overground (stairs, sit-to-stand,
+  crouch). Data collected with Vicon motion capture and processed through OpenSim
+  for inverse kinematics and dynamics. Both bare (no exoskeleton) and exo (with ankle
+  exoskeleton) conditions were recorded.
+
+  '
+notes: 'Data is phase-normalized (101 points in source, interpolated to 150 points
+  for standard format). Joint angles converted from degrees to radians. Knee angle
+  sign convention flipped to flexion-positive. Moments normalized by body mass (Nm/kg).
+  GRF normalized by body weight (BW). Only vertical GRF available in the processed
+  data.
+
+  '
+date_added: '2026-01-07'
+validation_status: ⚠️ PARTIAL
+validation_pass_rate: 89.2
+total_strides: 15825
+passing_strides: 14111
+quality_display: ⚠️ Partial (89.2%)
+doc_url: https://jmontp.github.io/LocoHub/datasets/mb24/
+doc_path: docs/datasets/mb24.md
+doc_body_path: docs/datasets/.generated/mb24_documentation.md
+validation_doc_url: https://jmontp.github.io/LocoHub/datasets/mb24/#validation
+validation_doc_path: docs/datasets/mb24.md#validation
+validation_body_path: docs/datasets/.generated/mb24_validation.md
+validation_summary: "### Summary\n\n**Status**: ⚠️ PARTIAL (89.2% valid)  \n**Total\
+  \ Strides**: 15825  \n**Passing Strides**: 14111  \n\n### Task Breakdown\n\n| Task\
+  \ | Pass Rate | Status |\n|------|-----------|--------|\n| Decline Walking | 87.2%\
+  \ | ⚠️ |\n| Incline Walking | 95.3% | ✅ |\n| Level Walking | 99.0% | ✅ |\n| Sit\
+  \ To Stand | 99.0% | ✅ |\n| Squat | 84.1% | ⚠️ |\n| Stair Ascent | 46.8% | ❌ |\n\
+  | Stair Descent | 41.1% | ❌ |\n| Stand To Sit | 85.6% | ⚠️ |\n\n_Validation ranges\
+  \ snapshot embedded below._\n"
+validation_ranges_file: '[Download validation ranges](./mb24_validation_ranges.yaml)'
+validation_ranges_download: docs/datasets/mb24_validation_ranges.yaml
+validation_ranges_source: contributor_tools/validation_ranges/default_ranges.yaml
+comparison_tasks:
+  decline_walking:
+    pass_rate: 87.1818818585104
+    status: ⚠️
+    total_strides: 4283
+    failing_strides: 549
+  incline_walking:
+    pass_rate: 95.32119372787051
+    status: ✅
+    total_strides: 3954
+    failing_strides: 185
+  level_walking:
+    pass_rate: 98.97567221510883
+    status: ✅
+    total_strides: 5467
+    failing_strides: 56
+  sit_to_stand:
+    pass_rate: 99.00990099009901
+    status: ✅
+    total_strides: 202
+    failing_strides: 2
+  squat:
+    pass_rate: 84.12698412698413
+    status: ⚠️
+    total_strides: 189
+    failing_strides: 30
+  stair_ascent:
+    pass_rate: 46.779141104294474
+    status: ❌
+    total_strides: 652
+    failing_strides: 347
+  stair_descent:
+    pass_rate: 41.0958904109589
+    status: ❌
+    total_strides: 876
+    failing_strides: 516
+  stand_to_sit:
+    pass_rate: 85.64356435643565
+    status: ⚠️
+    total_strides: 202
+    failing_strides: 29
+feature_task_groups:
+- group: Ground Reaction Forces
+  features:
+  - name: grf_vertical_contra_BW
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: grf_vertical_ipsi_BW
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+- group: Joint Angles
+  features:
+  - name: ankle_dorsiflexion_angle_contra_rad
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: ankle_dorsiflexion_angle_ipsi_rad
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_angle_contra_rad
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_angle_ipsi_rad
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_angle_contra_rad
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_angle_ipsi_rad
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+- group: Joint Moments
+  features:
+  - name: ankle_dorsiflexion_moment_contra_Nm_kg
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: ankle_dorsiflexion_moment_ipsi_Nm_kg
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_moment_contra_Nm_kg
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_moment_ipsi_Nm_kg
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_moment_contra_Nm_kg
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_moment_ipsi_Nm_kg
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+- group: Joint Velocities
+  features:
+  - name: ankle_dorsiflexion_velocity_contra_rad_s
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: ankle_dorsiflexion_velocity_ipsi_rad_s
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_velocity_contra_rad_s
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_velocity_ipsi_rad_s
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_velocity_contra_rad_s
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_velocity_ipsi_rad_s
+    tasks:
+      decline_walking:
+        status: complete
+        coverage: 100.0
+      incline_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      squat:
+        status: complete
+        coverage: 100.0
+      stair_ascent:
+        status: complete
+        coverage: 100.0
+      stair_descent:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+- group: Other Features
+  features:
+  - name: cop_anterior_contra_m
+    tasks:
+      decline_walking:
+        status: partial
+        coverage: 64.2
+      incline_walking:
+        status: partial
+        coverage: 65.1
+      level_walking:
+        status: partial
+        coverage: 64.9
+      sit_to_stand:
+        status: partial
+        coverage: 90.1
+      squat:
+        status: partial
+        coverage: 93.7
+      stair_ascent:
+        status: partial
+        coverage: 58.6
+      stair_descent:
+        status: partial
+        coverage: 55.9
+      stand_to_sit:
+        status: partial
+        coverage: 90.1
+  - name: cop_anterior_ipsi_m
+    tasks:
+      decline_walking:
+        status: partial
+        coverage: 64.2
+      incline_walking:
+        status: partial
+        coverage: 65.1
+      level_walking:
+        status: partial
+        coverage: 64.9
+      sit_to_stand:
+        status: partial
+        coverage: 90.1
+      squat:
+        status: partial
+        coverage: 95.5
+      stair_ascent:
+        status: partial
+        coverage: 58.6
+      stair_descent:
+        status: partial
+        coverage: 55.9
+      stand_to_sit:
+        status: partial
+        coverage: 90.1
+  - name: cop_lateral_contra_m
+    tasks:
+      decline_walking:
+        status: partial
+        coverage: 64.2
+      incline_walking:
+        status: partial
+        coverage: 65.1
+      level_walking:
+        status: partial
+        coverage: 64.9
+      sit_to_stand:
+        status: partial
+        coverage: 90.1
+      squat:
+        status: partial
+        coverage: 93.7
+      stair_ascent:
+        status: partial
+        coverage: 58.6
+      stair_descent:
+        status: partial
+        coverage: 55.9
+      stand_to_sit:
+        status: partial
+        coverage: 90.1
+  - name: cop_lateral_ipsi_m
+    tasks:
+      decline_walking:
+        status: partial
+        coverage: 64.2
+      incline_walking:
+        status: partial
+        coverage: 65.1
+      level_walking:
+        status: partial
+        coverage: 64.9
+      sit_to_stand:
+        status: partial
+        coverage: 90.1
+      squat:
+        status: partial
+        coverage: 95.5
+      stair_ascent:
+        status: partial
+        coverage: 58.6
+      stair_descent:
+        status: partial
+        coverage: 55.9
+      stand_to_sit:
+        status: partial
+        coverage: 90.1
+feature_task_order:
+- decline_walking
+- incline_walking
+- level_walking
+- sit_to_stand
+- squat
+- stair_ascent
+- stair_descent
+- stand_to_sit
+feature_task_source: converted_datasets/mblue_ankle_phase.parquet
+last_dataset_path: converted_datasets/mblue_ankle_phase.parquet
+download_clean_url: https://www.dropbox.com/scl/fi/6xr64078wfvsxee4xfz7v/mblue_ankle_phase.parquet?rlkey=owrklzpaonrkgdhly74u2thr6&dl=0

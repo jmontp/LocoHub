@@ -59,6 +59,18 @@ if src_dir.exists() and str(src_dir) not in sys.path:
 
 from locohub import LocomotionData
 
+# Optional Dropbox SDK for share link generation
+try:
+    import dropbox
+    from dropbox.sharing import SharedLinkSettings
+    DROPBOX_SDK_AVAILABLE = True
+except ImportError:
+    DROPBOX_SDK_AVAILABLE = False
+
+# Dropbox configuration environment variables
+DROPBOX_FOLDER_ENV_VAR = "LOCOHUB_DROPBOX_FOLDER"
+DROPBOX_TOKEN_ENV_VAR = "DROPBOX_ACCESS_TOKEN"
+
 SITE_DATASET_BASE_URL = "https://jmontp.github.io/LocoHub/datasets"
 DATASET_TABLE_FILES = [
     repo_root / "README.md",
@@ -121,6 +133,253 @@ def _free_memory(message: str = "") -> None:
     gc.collect()
     if message:
         print(f"🧹 {message}")
+
+
+# =============================================================================
+# Dropbox Integration Helpers
+# =============================================================================
+
+def _get_dropbox_folder(args) -> Optional[Path]:
+    """Resolve Dropbox folder from command-line args or environment variable.
+
+    Priority: --dropbox-folder arg > LOCOHUB_DROPBOX_FOLDER env var
+    """
+    folder_path = getattr(args, 'dropbox_folder', None)
+    if not folder_path:
+        folder_path = os.environ.get(DROPBOX_FOLDER_ENV_VAR)
+
+    if not folder_path:
+        print(f"⚠️  Dropbox folder not specified. Set {DROPBOX_FOLDER_ENV_VAR} or use --dropbox-folder")
+        return None
+
+    folder = Path(folder_path)
+    if not folder.exists():
+        print(f"⚠️  Dropbox folder does not exist: {folder}")
+        print("   Creating folder...")
+        try:
+            folder.mkdir(parents=True, exist_ok=True)
+        except Exception as exc:
+            print(f"❌ Failed to create Dropbox folder: {exc}")
+            return None
+
+    return folder
+
+
+def _is_path_in_dropbox(path: Path, dropbox_folder: Path) -> bool:
+    """Check if a path is already within the Dropbox folder."""
+    try:
+        path.resolve().relative_to(dropbox_folder.resolve())
+        return True
+    except ValueError:
+        return False
+
+
+def _copy_to_dropbox(source_path: Path, dropbox_folder: Path, short_code: str) -> Optional[Path]:
+    """Copy a dataset file to the Dropbox folder.
+
+    Files are organized as: {dropbox_folder}/{short_code}/{filename}
+    If the file is already in Dropbox, returns its path without copying.
+    """
+    if not source_path.exists():
+        print(f"⚠️  Source file not found: {source_path}")
+        return None
+
+    # Check if file is already in the Dropbox folder
+    if _is_path_in_dropbox(source_path, dropbox_folder):
+        print(f"   (already in Dropbox, skipping copy)")
+        return source_path.resolve()
+
+    dest_dir = dropbox_folder / short_code.lower()
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    dest_path = dest_dir / source_path.name
+
+    # Check if destination already exists and is the same file
+    if dest_path.exists():
+        if dest_path.stat().st_size == source_path.stat().st_size:
+            print(f"   (already exists in Dropbox, skipping copy)")
+            return dest_path
+
+    try:
+        shutil.copy2(source_path, dest_path)
+        return dest_path
+    except Exception as exc:
+        print(f"❌ Failed to copy to Dropbox: {exc}")
+        return None
+
+
+def _get_dropbox_api_path(local_dropbox_path: Path, dropbox_folder: Path) -> str:
+    """Convert a local Dropbox path to the API path format.
+
+    The API expects paths relative to the Dropbox root, starting with '/'.
+    We need to figure out the Dropbox-relative path from the local filesystem path.
+    """
+    try:
+        # Get the relative path from the dropbox folder
+        rel_path = local_dropbox_path.relative_to(dropbox_folder)
+        # Dropbox API paths start with / and use forward slashes
+        api_path = "/" + rel_path.as_posix()
+        return api_path
+    except ValueError:
+        # Path is not relative to dropbox_folder, return as-is
+        return "/" + local_dropbox_path.name
+
+
+def _generate_dropbox_share_link(
+    dropbox_api_path: str,
+    access_token: str,
+    domain_restriction: Optional[str] = None
+) -> Optional[str]:
+    """Generate a Dropbox share link using the API.
+
+    Args:
+        dropbox_api_path: Path relative to Dropbox root (e.g., '/LocoHub/datasets/um21/file.parquet')
+        access_token: Dropbox OAuth access token
+        domain_restriction: Optional domain to restrict access (requires Business account)
+
+    Returns:
+        Share link URL or None if failed
+    """
+    if not DROPBOX_SDK_AVAILABLE:
+        print("⚠️  Dropbox SDK not installed. Run: pip install dropbox")
+        return None
+
+    try:
+        dbx = dropbox.Dropbox(access_token)
+
+        # Configure sharing settings
+        settings = None
+        if domain_restriction:
+            # Note: Domain-restricted sharing requires Dropbox Business
+            # For personal accounts, this will be ignored or may fail
+            try:
+                settings = SharedLinkSettings(
+                    requested_visibility=dropbox.sharing.RequestedVisibility.team_only
+                )
+                print(f"   Attempting team-only sharing (domain: {domain_restriction})")
+            except Exception:
+                print(f"⚠️  Domain restriction requires Dropbox Business account")
+                settings = None
+
+        # Try to create a new shared link
+        try:
+            if settings:
+                link_metadata = dbx.sharing_create_shared_link_with_settings(
+                    dropbox_api_path, settings=settings
+                )
+            else:
+                link_metadata = dbx.sharing_create_shared_link_with_settings(dropbox_api_path)
+            return link_metadata.url
+        except dropbox.exceptions.ApiError as e:
+            # Check if link already exists
+            if hasattr(e.error, 'is_shared_link_already_exists') and e.error.is_shared_link_already_exists():
+                # Get the existing link
+                links = dbx.sharing_list_shared_links(path=dropbox_api_path, direct_only=True)
+                if links.links:
+                    return links.links[0].url
+            raise
+
+    except dropbox.exceptions.AuthError as e:
+        print(f"❌ Dropbox authentication failed: {e}")
+        print(f"   Check your {DROPBOX_TOKEN_ENV_VAR} environment variable")
+        return None
+    except dropbox.exceptions.ApiError as e:
+        print(f"❌ Dropbox API error: {e}")
+        return None
+    except Exception as e:
+        print(f"❌ Unexpected error generating share link: {e}")
+        return None
+
+
+def _handle_dropbox_upload(
+    dataset_path: Path,
+    short_code: str,
+    args,
+    metadata: Dict,
+) -> None:
+    """Handle Dropbox upload and share link generation for a dataset.
+
+    This function:
+    1. Copies clean and/or dirty dataset files to Dropbox
+    2. Optionally generates share links via the API
+    3. Updates metadata with download URLs
+    """
+    if not getattr(args, 'dropbox_upload', False):
+        return
+
+    dropbox_folder = _get_dropbox_folder(args)
+    if not dropbox_folder:
+        return
+
+    generate_links = getattr(args, 'dropbox_share', False)
+    access_token = os.environ.get(DROPBOX_TOKEN_ENV_VAR) if generate_links else None
+    domain_restriction = getattr(args, 'dropbox_domain', None)
+
+    if generate_links and not access_token:
+        print(f"⚠️  Share link generation requested but {DROPBOX_TOKEN_ENV_VAR} not set")
+        print("   Files will be copied but links won't be generated")
+        generate_links = False
+
+    if generate_links and not DROPBOX_SDK_AVAILABLE:
+        print("⚠️  Dropbox SDK not installed. Run: pip install dropbox")
+        print("   Files will be copied but links won't be generated")
+        generate_links = False
+
+    print(f"\n📦 Uploading to Dropbox...")
+
+    # Handle clean dataset
+    clean_path, is_clean = _infer_clean_dataset_path(dataset_path)
+    if clean_path.exists():
+        print(f"   Copying clean dataset: {clean_path.name}")
+        dropbox_clean_dest = _copy_to_dropbox(clean_path, dropbox_folder, short_code)
+        if dropbox_clean_dest:
+            print(f"   ✅ Copied to: {dropbox_clean_dest}")
+
+            if generate_links and access_token:
+                api_path = _get_dropbox_api_path(dropbox_clean_dest, dropbox_folder)
+                print(f"   Generating share link for: {api_path}")
+                link = _generate_dropbox_share_link(api_path, access_token, domain_restriction)
+                if link:
+                    # Convert to direct download link (dl=1 instead of dl=0)
+                    if '?dl=0' in link:
+                        link = link.replace('?dl=0', '?dl=1')
+                    elif '?' not in link:
+                        link = link + '?dl=1'
+                    metadata['download_clean_url'] = link
+                    print(f"   ✅ Share link: {link}")
+
+    # Handle dirty dataset (if different from clean and exists)
+    if '_dirty' in dataset_path.name or (not is_clean and dataset_path != clean_path):
+        dirty_path = dataset_path if '_dirty' in dataset_path.name else None
+        if not dirty_path:
+            # Try to find dirty variant
+            stem = dataset_path.stem
+            if not stem.endswith('_dirty'):
+                candidate = dataset_path.with_name(stem + '_dirty' + dataset_path.suffix)
+                if candidate.exists():
+                    dirty_path = candidate
+
+        if dirty_path and dirty_path.exists() and dirty_path != clean_path:
+            print(f"   Copying full/dirty dataset: {dirty_path.name}")
+            dropbox_dirty_dest = _copy_to_dropbox(dirty_path, dropbox_folder, short_code)
+            if dropbox_dirty_dest:
+                print(f"   ✅ Copied to: {dropbox_dirty_dest}")
+
+                if generate_links and access_token:
+                    api_path = _get_dropbox_api_path(dropbox_dirty_dest, dropbox_folder)
+                    print(f"   Generating share link for: {api_path}")
+                    link = _generate_dropbox_share_link(api_path, access_token, domain_restriction)
+                    if link:
+                        if '?dl=0' in link:
+                            link = link.replace('?dl=0', '?dl=1')
+                        elif '?' not in link:
+                            link = link + '?dl=1'
+                        metadata['download_dirty_url'] = link
+                        print(f"   ✅ Share link: {link}")
+
+
+# =============================================================================
+# End Dropbox Integration Helpers
+# =============================================================================
 
 
 def _resolve_ranges_argument(value: str) -> Path:
@@ -387,7 +646,7 @@ def _resolve_dataset_path(dataset_arg: Optional[str], metadata: Optional[Dict] =
     Strategy:
     - If an absolute path is provided and exists, use it.
     - For relative paths, try current working directory first, then repo root.
-    - If still not found, try matching by filename in converted_datasets/ under repo root.
+    - If just a filename, try Dropbox folder first (if configured), then converted_datasets/.
     - On failure, raise with a helpful message listing attempted locations.
     """
 
@@ -420,8 +679,17 @@ def _resolve_dataset_path(dataset_arg: Optional[str], metadata: Optional[Dict] =
         if repo_candidate.exists():
             return repo_candidate
 
-        # If user provided just a filename, look under repo converted_datasets/
+        # If user provided just a filename, try Dropbox first, then converted_datasets/
         if provided.name:
+            # Try Dropbox folder first (if configured)
+            dropbox_folder = os.environ.get(DROPBOX_FOLDER_ENV_VAR)
+            if dropbox_folder:
+                dropbox_candidate = (Path(dropbox_folder) / provided.name).resolve()
+                attempted.append(dropbox_candidate)
+                if dropbox_candidate.exists():
+                    return dropbox_candidate
+
+            # Fall back to local converted_datasets/
             cd_candidate = (repo_root / 'converted_datasets' / provided.name).resolve()
             attempted.append(cd_candidate)
             if cd_candidate.exists():
@@ -821,8 +1089,8 @@ def _resolve_validation_link(data: Dict, table_file: Path, absolute: bool) -> Op
 
 
 def _build_dataset_table(metadata_entries: List[Dict], table_file: Path, absolute_links: bool) -> str:
-    header = "| Dataset | Tasks | Documentation | Clean Dataset | Full Dataset |"
-    separator = "|---------|-------|---------------|---------------|---------------|"
+    header = "| Dataset | Tasks | Documentation | Phase (Clean) | Phase | Time |"
+    separator = "|---------|-------|---------------|---------------|-------|------|"
 
     rows: List[str] = []
     for data in sorted(metadata_entries, key=lambda d: d.get('display_name', '').lower()):
@@ -841,17 +1109,26 @@ def _build_dataset_table(metadata_entries: List[Dict], table_file: Path, absolut
         else:
             doc_cell = '<span class="md-button md-button--disabled">Docs</span>'
 
+        # Phase (Clean) - validated/filtered dataset
         clean_url = data.get('download_clean_url') or data.get('download_url')
         if clean_url:
-            clean_cell = f'<a class="{button_class}" href="{clean_url}">Download</a>'
+            phase_clean_cell = f'<a class="{button_class}" href="{clean_url}">Download</a>'
         else:
-            clean_cell = '<span class="md-button md-button--disabled">Coming soon</span>'
+            phase_clean_cell = '<span class="md-button md-button--disabled">—</span>'
 
+        # Phase - full/dirty dataset
         dirty_url = data.get('download_dirty_url')
         if dirty_url:
-            full_cell = f'<a class="{button_class}" href="{dirty_url}">Download</a>'
+            phase_cell = f'<a class="{button_class}" href="{dirty_url}">Download</a>'
         else:
-            full_cell = '<span class="md-button md-button--disabled">Coming soon</span>'
+            phase_cell = '<span class="md-button md-button--disabled">—</span>'
+
+        # Time data
+        time_url = data.get('download_time_url')
+        if time_url:
+            time_cell = f'<a class="{button_class}" href="{time_url}">Download</a>'
+        else:
+            time_cell = '<span class="md-button md-button--disabled">—</span>'
 
         rows.append(
             "| "
@@ -859,14 +1136,15 @@ def _build_dataset_table(metadata_entries: List[Dict], table_file: Path, absolut
                 dataset_cell,
                 tasks_cell,
                 doc_cell,
-                clean_cell,
-                full_cell,
+                phase_clean_cell,
+                phase_cell,
+                time_cell,
             ])
             + " |"
         )
 
     if not rows:
-        empty_cells = ['_No datasets available_'] + [''] * 4
+        empty_cells = ['_No datasets available_'] + [''] * 5
         return header + "\n" + separator + "\n| " + " | ".join(empty_cells) + " |"
 
     return "\n".join([header, separator] + rows)
@@ -2019,7 +2297,10 @@ def handle_add_dataset(args):
     # Show validation results
     print(f"\n📊 Validation Results:")
     print(validation_summary)
-    
+
+    # Handle Dropbox upload (before generating docs so URLs are included)
+    _handle_dropbox_upload(dataset_path, short_code, args, metadata)
+
     # Generate documentation
     print(f"\n📄 Generating documentation...")
     doc_wrapper_path, doc_body_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)
@@ -2187,6 +2468,9 @@ def handle_update_documentation(args):
     if subject_metadata_table:
         metadata['subject_metadata_table'] = subject_metadata_table
 
+    # Handle Dropbox upload (before generating docs so URLs are included)
+    _handle_dropbox_upload(dataset_path, short_code, args, metadata)
+
     validation_doc_filename = f".generated/{dataset_slug}_validation.md"
     doc_path, doc_body_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)
     write_metadata_file(metadata)
@@ -2335,6 +2619,9 @@ def handle_update_validation(args):
     print(f"\n📊 Validation Results:")
     print(validation_summary)
 
+    # Handle Dropbox upload (before generating docs so URLs are included)
+    _handle_dropbox_upload(dataset_path, short_code, args, metadata)
+
     print(f"\n📄 Updating documentation...")
     doc_path, doc_body_path = generate_dataset_page(dataset_path, metadata, validation_doc_filename)
     validation_body_path = generate_validation_page(
@@ -2451,6 +2738,25 @@ Example workflow:
         '--short-code',
         help='Optional explicit short code (otherwise derived during prompts)'
     )
+    # Dropbox integration arguments
+    add_parser.add_argument(
+        '--dropbox-upload',
+        action='store_true',
+        help='Copy dataset files to Dropbox folder'
+    )
+    add_parser.add_argument(
+        '--dropbox-folder',
+        help=f'Dropbox folder path (or set {DROPBOX_FOLDER_ENV_VAR} env var)'
+    )
+    add_parser.add_argument(
+        '--dropbox-share',
+        action='store_true',
+        help=f'Generate share links via Dropbox API (requires {DROPBOX_TOKEN_ENV_VAR} env var)'
+    )
+    add_parser.add_argument(
+        '--dropbox-domain',
+        help='Restrict share links to domain (e.g., umich.edu) - requires Dropbox Business'
+    )
 
     update_doc_parser = subparsers.add_parser(
         'update-documentation',
@@ -2469,6 +2775,25 @@ Example workflow:
         '--metadata-file',
         help='Optional metadata overrides to merge before regenerating the page'
     )
+    # Dropbox integration arguments
+    update_doc_parser.add_argument(
+        '--dropbox-upload',
+        action='store_true',
+        help='Copy dataset files to Dropbox folder'
+    )
+    update_doc_parser.add_argument(
+        '--dropbox-folder',
+        help=f'Dropbox folder path (or set {DROPBOX_FOLDER_ENV_VAR} env var)'
+    )
+    update_doc_parser.add_argument(
+        '--dropbox-share',
+        action='store_true',
+        help=f'Generate share links via Dropbox API (requires {DROPBOX_TOKEN_ENV_VAR} env var)'
+    )
+    update_doc_parser.add_argument(
+        '--dropbox-domain',
+        help='Restrict share links to domain (e.g., umich.edu) - requires Dropbox Business'
+    )
 
     update_val_parser = subparsers.add_parser(
         'update-validation',
@@ -2486,6 +2811,25 @@ Example workflow:
     update_val_parser.add_argument(
         '--ranges-file',
         help='Optional validation ranges YAML to override defaults'
+    )
+    # Dropbox integration arguments
+    update_val_parser.add_argument(
+        '--dropbox-upload',
+        action='store_true',
+        help='Copy dataset files to Dropbox folder'
+    )
+    update_val_parser.add_argument(
+        '--dropbox-folder',
+        help=f'Dropbox folder path (or set {DROPBOX_FOLDER_ENV_VAR} env var)'
+    )
+    update_val_parser.add_argument(
+        '--dropbox-share',
+        action='store_true',
+        help=f'Generate share links via Dropbox API (requires {DROPBOX_TOKEN_ENV_VAR} env var)'
+    )
+    update_val_parser.add_argument(
+        '--dropbox-domain',
+        help='Restrict share links to domain (e.g., umich.edu) - requires Dropbox Business'
     )
 
     remove_parser = subparsers.add_parser(

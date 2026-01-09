@@ -140,6 +140,90 @@ python contributor_tools/manage_dataset_documentation.py add-dataset \
 | `manage_dataset_documentation.py` | Add/update/remove dataset documentation pages |
 | `manage_tasks.py` | CLI for managing canonical task definitions |
 
+## Dropbox Integration
+
+Datasets are stored in Dropbox for easy sharing and synchronization. The `manage_dataset_documentation.py` tool automatically finds datasets in Dropbox and can generate share links.
+
+### Default Behavior
+
+When `LOCOHUB_DROPBOX_FOLDER` is configured:
+- **Dataset lookup**: Dropbox folder is checked **first**, then falls back to `converted_datasets/`
+- **No duplication**: Files already in Dropbox are not copied again
+- **Just use filenames**: You can reference datasets by filename only (e.g., `Carter2023_phase.parquet`)
+
+When not configured:
+- Falls back to `converted_datasets/` (legacy behavior)
+
+### Setup
+
+1. **Install Dropbox desktop app** and sync your folder
+2. **Install the Python SDK**: `pip install dropbox`
+3. **Add to your `~/.bashrc`**:
+   ```bash
+   # Dropbox dataset storage (primary location for converted datasets)
+   export LOCOHUB_DROPBOX_FOLDER="/mnt/c/Users/yourname/University of Michigan Dropbox/Your Name/Apps/Locomotion Dataset Standardization"
+
+   # Dropbox API token (required for generating share links)
+   export DROPBOX_ACCESS_TOKEN="your-token"
+   ```
+
+### Getting a Dropbox Access Token
+
+1. Go to https://www.dropbox.com/developers/apps
+2. Create a new app (choose "Scoped access" and "Full Dropbox")
+3. Under "Permissions", enable `sharing.write` and `files.content.write`
+4. Generate an access token under "OAuth 2"
+
+### Usage
+
+**Reference datasets by filename** (automatically found in Dropbox):
+```bash
+python contributor_tools/manage_dataset_documentation.py add-dataset \
+    --dataset Carter2023_phase.parquet \
+    --short-code CA23
+```
+
+**Generate share links for download URLs:**
+```bash
+python contributor_tools/manage_dataset_documentation.py add-dataset \
+    --dataset Carter2023_phase.parquet \
+    --short-code CA23 \
+    --dropbox-upload \
+    --dropbox-share
+```
+
+**Upload from local folder to Dropbox:**
+```bash
+python contributor_tools/manage_dataset_documentation.py add-dataset \
+    --dataset converted_datasets/new_dataset_phase.parquet \
+    --short-code XX21 \
+    --dropbox-upload \
+    --dropbox-share
+```
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `--dropbox-upload` | Copy dataset files to Dropbox folder (skips if already there) |
+| `--dropbox-folder PATH` | Override `LOCOHUB_DROPBOX_FOLDER` env var |
+| `--dropbox-share` | Generate share links via Dropbox API |
+| `--dropbox-domain DOMAIN` | Restrict links to domain (requires Dropbox Business) |
+
+### File Organization
+
+Datasets in Dropbox are organized as:
+```
+$LOCOHUB_DROPBOX_FOLDER/
+├── Carter2023_phase.parquet
+├── Carter2023_time.parquet
+├── gtech_2021_phase_clean.parquet
+├── gtech_2021_phase_dirty.parquet
+└── ...
+```
+
+When using `--dropbox-upload`, files are copied to `{dropbox_folder}/{short_code}/` subdirectories.
+
 ## Validation Ranges
 
 Located in `validation_ranges/`:
