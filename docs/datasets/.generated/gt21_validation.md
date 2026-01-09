@@ -1,33 +1,31 @@
-**Report generated:** 2026-01-08 23:05
+**Report generated:** 2026-01-09 09:59
 
 ## Status Summary
 
 | Metric | Value |
 |--------|-------|
-| Stride Pass Rate | 18.5% |
+| Stride Pass Rate | 89.2% |
 | Total Strides | 19519 |
-| Passing Strides | 3610 |
+| Passing Strides | 17418 |
 
 ### Summary
 
-**Status**: ❌ NEEDS REVIEW (18.5% valid)  
+**Status**: ⚠️ PARTIAL (89.2% valid)  
 **Total Strides**: 19519  
-**Passing Strides**: 3610  
+**Passing Strides**: 17418  
 
 ### Task Breakdown
 
 | Task | Pass Rate | Status |
 |------|-----------|--------|
-| Decline Walking | 42.5% | ❌ |
-| Incline Walking | 59.1% | ❌ |
-| Level Walking | 12.2% | ❌ |
-| Stair Ascent | 2.2% | ❌ |
-| Stair Descent | 0.0% | ❌ |
+| Decline Walking | 68.5% | ❌ |
+| Incline Walking | 65.3% | ❌ |
+| Level Walking | 96.1% | ✅ |
+| Stair Ascent | 86.6% | ⚠️ |
+| Stair Descent | 96.0% | ✅ |
 | Transition | 19.7% | ❌ |
 
 _Validation ranges snapshot embedded below._
-
-⚠️ **Note**: Validation ranges represent established biomechanical norms from literature. Pass rates indicate conformance to these norms—lower rates may reflect special populations, non-standard protocols, or task-specific differences. See the [validation interpretation guide](../../contributor_tools/CLAUDE.md#interpreting-pass-rates) for details.
 
 ## Validation Ranges Snapshot
 
@@ -59,4 +57,4 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml_
 
 ---
 
-*Generated from `gtech_2021_phase_dirty.parquet` on 2026-01-08 23:05*
+*Generated from `gtech_2021_phase_dirty.parquet` on 2026-01-09 09:59*

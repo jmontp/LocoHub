@@ -1,18 +1,18 @@
-**Report generated:** 2026-01-08 23:17
+**Report generated:** 2026-01-09 10:12
 
 ## Status Summary
 
 | Metric | Value |
 |--------|-------|
-| Stride Pass Rate | 20.0% |
+| Stride Pass Rate | 20.6% |
 | Total Strides | 14240 |
-| Passing Strides | 2846 |
+| Passing Strides | 2928 |
 
 ### Summary
 
-**Status**: ❌ NEEDS REVIEW (20.0% valid)  
+**Status**: ❌ NEEDS REVIEW (20.6% valid)  
 **Total Strides**: 14240  
-**Passing Strides**: 2846  
+**Passing Strides**: 2928  
 
 ### Task Breakdown
 
@@ -23,8 +23,8 @@
 | Level Walking | 0.0% | ❌ |
 | Run | 0.0% | ❌ |
 | Sit To Stand | 0.0% | ❌ |
-| Stair Ascent | 95.5% | ✅ |
-| Stair Descent | 68.0% | ❌ |
+| Stair Ascent | 95.7% | ✅ |
+| Stair Descent | 73.7% | ⚠️ |
 | Stand To Sit | 0.0% | ❌ |
 | Transition | 71.0% | ⚠️ |
 
@@ -71,4 +71,4 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml_
 
 ---
 
-*Generated from `umich_2021_phase_raw.parquet` on 2026-01-08 23:17*
+*Generated from `umich_2021_phase_raw.parquet` on 2026-01-09 10:12*
