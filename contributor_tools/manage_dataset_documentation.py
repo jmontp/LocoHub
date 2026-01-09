@@ -1092,8 +1092,8 @@ def _resolve_validation_link(data: Dict, table_file: Path, absolute: bool) -> Op
 
 
 def _build_dataset_table(metadata_entries: List[Dict], table_file: Path, absolute_links: bool) -> str:
-    header = "| Dataset | Tasks | Documentation | Phase (Clean) | Phase | Time |"
-    separator = "|---------|-------|---------------|---------------|-------|------|"
+    header = "| Dataset | Tasks | Strides | Documentation | Phase (Clean) | Phase | Time |"
+    separator = "|---------|-------|---------|---------------|---------------|-------|------|"
 
     rows: List[str] = []
     for data in sorted(metadata_entries, key=lambda d: d.get('display_name', '').lower()):
@@ -1103,6 +1103,14 @@ def _build_dataset_table(metadata_entries: List[Dict], table_file: Path, absolut
 
         tasks_list = data.get('tasks', []) or []
         tasks_cell = ', '.join(_format_task_name(task) for task in tasks_list) if tasks_list else '—'
+
+        # Compute total strides from comparison_tasks
+        comparison_tasks = data.get('comparison_tasks', {}) or {}
+        total_strides = sum(
+            task_data.get('total_strides', 0) or 0
+            for task_data in comparison_tasks.values()
+        )
+        strides_cell = f"{total_strides:,}" if total_strides > 0 else '—'
 
         button_class_primary = 'md-button md-button--primary'
         button_class = 'md-button'
@@ -1138,6 +1146,7 @@ def _build_dataset_table(metadata_entries: List[Dict], table_file: Path, absolut
             + " | ".join([
                 dataset_cell,
                 tasks_cell,
+                strides_cell,
                 doc_cell,
                 phase_clean_cell,
                 phase_cell,
@@ -1147,7 +1156,7 @@ def _build_dataset_table(metadata_entries: List[Dict], table_file: Path, absolut
         )
 
     if not rows:
-        empty_cells = ['_No datasets available_'] + [''] * 5
+        empty_cells = ['_No datasets available_'] + [''] * 6
         return header + "\n" + separator + "\n| " + " | ".join(empty_cells) + " |"
 
     return "\n".join([header, separator] + rows)
