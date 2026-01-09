@@ -1525,6 +1525,7 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
         doc_body_lines.extend([
             "### Subject Metadata",
             "The table below summarizes the `subject_metadata` key:value pairs per subject.",
+            "",
             subj_meta_table,
             "",
         ])
