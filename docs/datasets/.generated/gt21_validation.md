@@ -1,37 +1,48 @@
-**Report generated:** 2025-10-02 11:41
+**Report generated:** 2026-01-08 23:05
 
 ## Status Summary
 
 | Metric | Value |
 |--------|-------|
-| Stride Pass Rate | 90.8% |
-| Total Strides | 16045 |
-| Passing Strides | 14569 |
+| Stride Pass Rate | 18.5% |
+| Total Strides | 19519 |
+| Passing Strides | 3610 |
 
 ### Summary
 
-**Status**: ⚠️ PARTIAL (90.8% valid)  
-**Total Strides**: 16045  
-**Passing Strides**: 14569  
+**Status**: ❌ NEEDS REVIEW (18.5% valid)  
+**Total Strides**: 19519  
+**Passing Strides**: 3610  
 
 ### Task Breakdown
 
 | Task | Pass Rate | Status |
 |------|-----------|--------|
-| Level Walking | 90.8% | ✅ |
-| Stair Ascent | 78.8% | ⚠️ |
-| Stair Descent | 97.1% | ✅ |
-| Transition | 94.8% | ✅ |
+| Decline Walking | 42.5% | ❌ |
+| Incline Walking | 59.1% | ❌ |
+| Level Walking | 12.2% | ❌ |
+| Stair Ascent | 2.2% | ❌ |
+| Stair Descent | 0.0% | ❌ |
+| Transition | 19.7% | ❌ |
 
 _Validation ranges snapshot embedded below._
+
+⚠️ **Note**: Validation ranges represent established biomechanical norms from literature. Pass rates indicate conformance to these norms—lower rates may reflect special populations, non-standard protocols, or task-specific differences. See the [validation interpretation guide](../../contributor_tools/CLAUDE.md#interpreting-pass-rates) for details.
 
 ## Validation Ranges Snapshot
 
 Download the YAML snapshot used for this validation: [Download](./gt21_validation_ranges.yaml)
 
-_Source ranges file: contributor_tools/validation_ranges/default_ranges_v3.yaml_
+_Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml_
 
 ## Validation Plots
+
+<!-- VALIDATION_GALLERY_START -->
+=== "Decline Walking"
+    ![Decline Walking](./validation_plots/gt21/gtech_2021_phase_dirty_decline_walking_all_features_validation.png)
+
+=== "Incline Walking"
+    ![Incline Walking](./validation_plots/gt21/gtech_2021_phase_dirty_incline_walking_all_features_validation.png)
 
 === "Level Walking"
     ![Level Walking](./validation_plots/gt21/gtech_2021_phase_dirty_level_walking_all_features_validation.png)
@@ -44,8 +55,8 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges_v3.yaml_
 
 === "Transition"
     ![Transition](./validation_plots/gt21/gtech_2021_phase_dirty_transition_all_features_validation.png)
-
+<!-- VALIDATION_GALLERY_END -->
 
 ---
 
-*Generated from `converted_datasets/gtech_2021_phase_dirty.parquet` on 2025-10-02 11:41*
+*Generated from `gtech_2021_phase_dirty.parquet` on 2026-01-08 23:05*

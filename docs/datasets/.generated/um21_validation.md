@@ -1,45 +1,46 @@
-**Report generated:** 2025-11-13 14:45
+**Report generated:** 2026-01-08 23:17
 
 ## Status Summary
 
 | Metric | Value |
 |--------|-------|
-| Stride Pass Rate | 72.4% |
+| Stride Pass Rate | 20.0% |
 | Total Strides | 14240 |
-| Passing Strides | 10306 |
+| Passing Strides | 2846 |
 
 ### Summary
 
-**Status**: ❌ NEEDS REVIEW (72.4% valid)  
+**Status**: ❌ NEEDS REVIEW (20.0% valid)  
 **Total Strides**: 14240  
-**Passing Strides**: 10306  
+**Passing Strides**: 2846  
 
 ### Task Breakdown
 
 | Task | Pass Rate | Status |
 |------|-----------|--------|
-| Decline Walking | 96.8% | ✅ |
-| Incline Walking | 88.5% | ⚠️ |
-| Level Walking | 86.1% | ⚠️ |
-| Run | 0.6% | ❌ |
-| Sit To Stand | 100.0% | ✅ |
-| Stair Ascent | 93.5% | ✅ |
-| Stair Descent | 93.1% | ✅ |
-| Stand To Sit | 100.0% | ✅ |
-| Transition | 52.5% | ❌ |
+| Decline Walking | 0.0% | ❌ |
+| Incline Walking | 0.0% | ❌ |
+| Level Walking | 0.0% | ❌ |
+| Run | 0.0% | ❌ |
+| Sit To Stand | 0.0% | ❌ |
+| Stair Ascent | 95.5% | ✅ |
+| Stair Descent | 68.0% | ❌ |
+| Stand To Sit | 0.0% | ❌ |
+| Transition | 71.0% | ⚠️ |
 
 _Validation ranges snapshot embedded below._
 
-⚠️ **Note**: Low pass rates may indicate special populations or non-standard protocols. Consider documenting these differences or creating custom validation ranges.
+⚠️ **Note**: Validation ranges represent established biomechanical norms from literature. Pass rates indicate conformance to these norms—lower rates may reflect special populations, non-standard protocols, or task-specific differences. See the [validation interpretation guide](../../contributor_tools/CLAUDE.md#interpreting-pass-rates) for details.
 
 ## Validation Ranges Snapshot
 
 Download the YAML snapshot used for this validation: [Download](./um21_validation_ranges.yaml)
 
-_Source ranges file: contributor_tools/validation_ranges/default_ranges_v3.yaml_
+_Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml_
 
 ## Validation Plots
 
+<!-- VALIDATION_GALLERY_START -->
 === "Decline Walking"
     ![Decline Walking](./validation_plots/um21/umich_2021_phase_dirty_decline_walking_all_features_validation.png)
 
@@ -66,8 +67,8 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges_v3.yaml_
 
 === "Transition"
     ![Transition](./validation_plots/um21/umich_2021_phase_dirty_transition_all_features_validation.png)
-
+<!-- VALIDATION_GALLERY_END -->
 
 ---
 
-*Generated from `converted_datasets/umich_2021_phase_raw.parquet` on 2025-11-13 14:45*
+*Generated from `umich_2021_phase_raw.parquet` on 2026-01-08 23:17*

@@ -1,26 +1,26 @@
-**Report generated:** 2025-12-20 16:52
+**Report generated:** 2026-01-08 23:20
 
 ## Status Summary
 
 | Metric | Value |
 |--------|-------|
-| Stride Pass Rate | 100.0% |
-| Total Strides | 50 |
-| Passing Strides | 50 |
+| Stride Pass Rate | 90.0% |
+| Total Strides | 60 |
+| Passing Strides | 54 |
 
 ### Summary
 
-**Status**: ✅ PASSED (100.0% valid)  
-**Total Strides**: 50  
-**Passing Strides**: 50  
+**Status**: ⚠️ PARTIAL (90.0% valid)  
+**Total Strides**: 60  
+**Passing Strides**: 54  
 
 ### Task Breakdown
 
 | Task | Pass Rate | Status |
 |------|-----------|--------|
-| Decline Walking | 100.0% | ✅ |
-| Incline Walking | 100.0% | ✅ |
-| Level Walking | 100.0% | ✅ |
+| Decline Walking | 90.0% | ✅ |
+| Incline Walking | 60.0% | ❌ |
+| Level Walking | 90.0% | ✅ |
 | Squat | 100.0% | ✅ |
 | Stair Ascent | 100.0% | ✅ |
 | Stair Descent | 100.0% | ✅ |
@@ -35,6 +35,7 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml_
 
 ## Validation Plots
 
+<!-- VALIDATION_GALLERY_START -->
 === "Decline Walking"
     ![Decline Walking](./validation_plots/um24k/umich_2024_knee_exo_phase_decline_walking_all_features_validation.png)
 
@@ -52,8 +53,8 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml_
 
 === "Stair Descent"
     ![Stair Descent](./validation_plots/um24k/umich_2024_knee_exo_phase_stair_descent_all_features_validation.png)
-
+<!-- VALIDATION_GALLERY_END -->
 
 ---
 
-*Generated from `converted_datasets/umich_2024_knee_exo_phase.parquet` on 2025-12-20 16:52*
+*Generated from `umich_2024_knee_exo_phase.parquet` on 2026-01-08 23:20*

@@ -1,18 +1,18 @@
-**Report generated:** 2026-01-07 19:20
+**Report generated:** 2026-01-08 23:11
 
 ## Status Summary
 
 | Metric | Value |
 |--------|-------|
-| Stride Pass Rate | 83.1% |
+| Stride Pass Rate | 83.2% |
 | Total Strides | 19849 |
-| Passing Strides | 16486 |
+| Passing Strides | 16519 |
 
 ### Summary
 
-**Status**: ⚠️ PARTIAL (83.1% valid)  
+**Status**: ⚠️ PARTIAL (83.2% valid)  
 **Total Strides**: 19849  
-**Passing Strides**: 16486  
+**Passing Strides**: 16519  
 
 ### Task Breakdown
 
@@ -20,17 +20,17 @@
 |------|-----------|--------|
 | Backward Walking | 63.7% | ❌ |
 | Cutting | 61.3% | ❌ |
-| Decline Walking | 97.4% | ✅ |
-| Incline Walking | 94.5% | ✅ |
+| Decline Walking | 97.6% | ✅ |
+| Incline Walking | 95.0% | ✅ |
 | Jump | 71.8% | ⚠️ |
-| Level Walking | 93.3% | ✅ |
+| Level Walking | 93.2% | ✅ |
 | Lunge | 80.8% | ⚠️ |
 | Run | 84.3% | ⚠️ |
 | Sit To Stand | 87.1% | ⚠️ |
-| Squat | 96.2% | ✅ |
-| Stair Ascent | 64.4% | ❌ |
-| Stair Descent | 46.4% | ❌ |
-| Stand To Sit | 77.0% | ⚠️ |
+| Squat | 96.3% | ✅ |
+| Stair Ascent | 63.9% | ❌ |
+| Stair Descent | 48.2% | ❌ |
+| Stand To Sit | 78.9% | ⚠️ |
 
 _Validation ranges snapshot embedded below._
 
@@ -85,4 +85,4 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml_
 
 ---
 
-*Generated from `converted_datasets/gtech_2024_phase.parquet` on 2026-01-07 19:20*
+*Generated from `gtech_2024_phase.parquet` on 2026-01-08 23:11*
