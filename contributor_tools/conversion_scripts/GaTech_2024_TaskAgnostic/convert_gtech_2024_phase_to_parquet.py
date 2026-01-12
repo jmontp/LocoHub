@@ -358,7 +358,8 @@ def compute_segment_angles_from_imu_with_accel_init(
     imu_df: pd.DataFrame,
     side: str,
     dt: float,
-    init_samples: int = 20
+    init_samples: int = 20,
+    transfer_type: str = 'sit_to_stand'
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Compute segment angles using accelerometer initialization + gyro integration.
@@ -367,10 +368,15 @@ def compute_segment_angles_from_imu_with_accel_init(
     use accelerometer at the start of the segment to get initial orientation,
     then integrate gyroscope for the trajectory.
 
+    Standing pose correction: After computing raw angles, apply an offset so that
+    the standing phase is centered at 0 radians (vertical). This is analogous to
+    the midstance correction used for gait tasks.
+
     Algorithm:
     1. Average accelerometer at start (first N samples) to get initial angles
     2. Integrate gyroscopes for trajectory (relative changes)
     3. Add initial angles to integrated values
+    4. Apply standing pose correction (offset so standing phase = 0)
 
     Note: Gyroscope data is in deg/s, so we convert to rad/s before integration.
 
@@ -379,6 +385,7 @@ def compute_segment_angles_from_imu_with_accel_init(
         side: 'l' or 'r' for left or right leg
         dt: Time step between samples in seconds
         init_samples: Number of samples to average for initial angle (default 20 = 100ms at 200Hz)
+        transfer_type: 'sit_to_stand' or 'stand_to_sit' - determines where standing phase is
 
     Returns:
         (thigh_angle, shank_angle, foot_angle) in radians
@@ -414,6 +421,27 @@ def compute_segment_angles_from_imu_with_accel_init(
     thigh_angle = thigh_init + thigh_delta
     shank_angle = shank_init + shank_delta
     foot_angle = foot_init + foot_delta
+
+    # Apply standing pose correction: offset so standing phase = 0 radians
+    # Standing phase location depends on transfer type:
+    # - sit_to_stand: standing is at the END (last N samples)
+    # - stand_to_sit: standing is at the BEGINNING (first N samples)
+    standing_samples = min(init_samples, len(thigh_angle))
+    if transfer_type == 'sit_to_stand':
+        # Standing is at the end
+        thigh_offset = np.mean(thigh_angle[-standing_samples:])
+        shank_offset = np.mean(shank_angle[-standing_samples:])
+        foot_offset = np.mean(foot_angle[-standing_samples:])
+    else:  # stand_to_sit
+        # Standing is at the beginning
+        thigh_offset = np.mean(thigh_angle[:standing_samples])
+        shank_offset = np.mean(shank_angle[:standing_samples])
+        foot_offset = np.mean(foot_angle[:standing_samples])
+
+    # Apply offset (standing = 0)
+    thigh_angle = thigh_angle - thigh_offset
+    shank_angle = shank_angle - shank_offset
+    foot_angle = foot_angle - foot_offset
 
     return thigh_angle, shank_angle, foot_angle
 
@@ -769,11 +797,12 @@ def process_stride(
 
         if use_accel_init:
             # Use accelerometer initialization for sit-stand tasks (no midstance phase)
+            # Pass task to apply standing pose correction at correct end
             thigh_seg_ipsi_raw, shank_seg_ipsi_raw, foot_seg_ipsi_raw = compute_segment_angles_from_imu_with_accel_init(
-                stride_imu, ipsi, imu_dt
+                stride_imu, ipsi, imu_dt, transfer_type=task
             )
             thigh_seg_contra_raw, shank_seg_contra_raw, foot_seg_contra_raw = compute_segment_angles_from_imu_with_accel_init(
-                stride_imu, contra, imu_dt
+                stride_imu, contra, imu_dt, transfer_type=task
             )
         else:
             # Use gyro integration with midstance correction (gait tasks)
