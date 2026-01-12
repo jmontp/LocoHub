@@ -57,42 +57,43 @@ SKIP_FIRST_STRIDES = 2  # Transition strides to skip at trial start
 SKIP_LAST_STRIDES = 1   # Transition strides to skip at trial end
 IQR_MULTIPLIER = 1.5    # IQR multiplier for stride duration outlier detection
 
-# Task mapping: source task name patterns -> (standard_task, task_id_template)
+# Task mapping: source task name patterns -> (standard_task, task_id_template, metadata)
+# Metadata includes incline_deg for ground slope (used for segment angle correction)
 TASK_MAPPING = {
     # Level walking at different speeds (walking = no flight phase)
-    r'normal_walk.*_0-6': ('level_walking', 'level_0.6ms'),
-    r'normal_walk.*_1-2': ('level_walking', 'level_1.2ms'),
-    r'normal_walk.*_1-8': ('level_walking', 'level_1.8ms'),
+    r'normal_walk.*_0-6': ('level_walking', 'level_0.6ms', {'incline_deg': 0.0}),
+    r'normal_walk.*_1-2': ('level_walking', 'level_1.2ms', {'incline_deg': 0.0}),
+    r'normal_walk.*_1-8': ('level_walking', 'level_1.8ms', {'incline_deg': 0.0}),
     # Fast speeds have flight phase (17-22% of gait cycle) -> classify as run
-    r'normal_walk.*_2-0': ('run', 'run_2.0ms'),
-    r'normal_walk.*_2-5': ('run', 'run_2.5ms'),
+    r'normal_walk.*_2-0': ('run', 'run_2.0ms', {'incline_deg': 0.0}),
+    r'normal_walk.*_2-5': ('run', 'run_2.5ms', {'incline_deg': 0.0}),
     # Shuffle and skip have non-standard gait - exclude from level_walking
-    r'normal_walk.*_shuffle': (None, 'shuffle'),  # Exclude: lateral shuffling
-    r'normal_walk.*_skip': (None, 'skip'),  # Exclude: skipping gait
+    r'normal_walk.*_shuffle': (None, 'shuffle', {}),  # Exclude: lateral shuffling
+    r'normal_walk.*_skip': (None, 'skip', {}),  # Exclude: skipping gait
 
-    # Incline/decline walking
-    r'incline_walk.*_up5': ('incline_walking', 'incline_5deg'),
-    r'incline_walk.*_up10': ('incline_walking', 'incline_10deg'),
-    r'incline_walk.*_down5': ('decline_walking', 'decline_5deg'),
-    r'incline_walk.*_down10': ('decline_walking', 'decline_10deg'),
+    # Incline/decline walking - actual slope from folder name
+    r'incline_walk.*_up5': ('incline_walking', 'incline_5deg', {'incline_deg': 5.0}),
+    r'incline_walk.*_up10': ('incline_walking', 'incline_10deg', {'incline_deg': 10.0}),
+    r'incline_walk.*_down5': ('decline_walking', 'decline_5deg', {'incline_deg': -5.0}),
+    r'incline_walk.*_down10': ('decline_walking', 'decline_10deg', {'incline_deg': -10.0}),
 
-    # Stairs
-    r'stairs.*_up': ('stair_ascent', 'stair_ascent'),
-    r'stairs.*_down': ('stair_descent', 'stair_descent'),
+    # Stairs - foot lands flat on step surface
+    r'stairs.*_up': ('stair_ascent', 'stair_ascent', {'incline_deg': 0.0}),
+    r'stairs.*_down': ('stair_descent', 'stair_descent', {'incline_deg': 0.0}),
 
     # Other activities
-    r'sit_to_stand': ('sit_to_stand', 'sit_to_stand'),
-    r'squats': ('squat', 'squat'),
-    r'walk_backward': ('backward_walking', 'backward_walking'),
-    r'meander': (None, 'meander'),  # Exclude: non-straight path walking
-    r'curb_up': ('stair_ascent', 'curb_up'),
-    r'curb_down': ('stair_descent', 'curb_down'),
-    r'step_ups': ('stair_ascent', 'step_up'),
+    r'sit_to_stand': ('sit_to_stand', 'sit_to_stand', {'incline_deg': 0.0}),
+    r'squats': ('squat', 'squat', {'incline_deg': 0.0}),
+    r'walk_backward': ('backward_walking', 'backward_walking', {'incline_deg': 0.0}),
+    r'meander': (None, 'meander', {}),  # Exclude: non-straight path walking
+    r'curb_up': ('stair_ascent', 'curb_up', {'incline_deg': 0.0}),
+    r'curb_down': ('stair_descent', 'curb_down', {'incline_deg': 0.0}),
+    r'step_ups': ('stair_ascent', 'step_up', {'incline_deg': 0.0}),
 
     # Dynamic activities (may not have clear gait cycles)
-    r'jump': ('jump', 'jump'),
-    r'lunges': ('lunge', 'lunge'),
-    r'cutting': ('cutting', 'cutting'),
+    r'jump': ('jump', 'jump', {'incline_deg': 0.0}),
+    r'lunges': ('lunge', 'lunge', {'incline_deg': 0.0}),
+    r'cutting': ('cutting', 'cutting', {'incline_deg': 0.0}),
 }
 
 # Subject mass data (kg) from readme
@@ -302,6 +303,263 @@ def compute_acceleration_from_velocity(velocity_rad_s: np.ndarray, stride_durati
     return acceleration
 
 
+def compute_segment_angles_from_imu(
+    imu_df: pd.DataFrame,
+    side: str,
+    dt: float,
+    offset: float = 0.0
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Compute segment angles using foot gyro integration + forward kinematics.
+
+    Algorithm:
+    1. Integrate foot gyroscope to get foot angle trajectory
+    2. Apply pre-calculated offset (from midstance correction)
+    3. Forward kinematics from foot up: shank = foot + ankle, thigh = shank + knee
+
+    The offset should be calculated once per subject/task by averaging the
+    midstance foot angle across all strides and comparing to the expected
+    ground slope (see calculate_foot_angle_offset()).
+
+    Note: Gyroscope data is in deg/s, so we convert to rad/s before integration.
+
+    Args:
+        imu_df: DataFrame with IMU gyroscope data
+        side: 'l' or 'r' for left or right leg
+        dt: Time step between samples in seconds
+        offset: Pre-calculated foot angle offset (radians)
+
+    Returns:
+        (thigh_angle, shank_angle, foot_angle) in radians
+    """
+    deg2rad = np.pi / 180.0
+
+    # Get gyroscope data (sagittal plane rotation = gyro_z, convert from deg/s to rad/s)
+    foot_gz = imu_df[f'foot_imu_{side}_gyro_z'].values * deg2rad
+    shank_gz = imu_df[f'shank_imu_{side}_gyro_z'].values * deg2rad
+    thigh_gz = imu_df[f'thigh_imu_{side}_gyro_z'].values * deg2rad
+
+    # Integrate foot gyro to get foot angle + apply offset
+    foot_angle = np.cumsum(foot_gz) * dt + offset
+
+    # Forward kinematics from foot up
+    # Joint angles from gyro differences (validated 0.999+ correlation with FK ground truth)
+    ankle_angle = np.cumsum(shank_gz - foot_gz) * dt
+    knee_angle = np.cumsum(thigh_gz - shank_gz) * dt
+
+    # Segment angles via kinematic chain
+    shank_angle = foot_angle + ankle_angle
+    thigh_angle = shank_angle + knee_angle
+
+    return thigh_angle, shank_angle, foot_angle
+
+
+def compute_segment_angles_from_imu_with_accel_init(
+    imu_df: pd.DataFrame,
+    side: str,
+    dt: float,
+    init_samples: int = 20
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Compute segment angles using accelerometer initialization + gyro integration.
+
+    For tasks without a flat-foot midstance phase (sit_to_stand, stand_to_sit),
+    use accelerometer at the start of the segment to get initial orientation,
+    then integrate gyroscope for the trajectory.
+
+    Algorithm:
+    1. Average accelerometer at start (first N samples) to get initial angles
+    2. Integrate gyroscopes for trajectory (relative changes)
+    3. Add initial angles to integrated values
+
+    Note: Gyroscope data is in deg/s, so we convert to rad/s before integration.
+
+    Args:
+        imu_df: DataFrame with IMU data (accelerometer + gyroscope)
+        side: 'l' or 'r' for left or right leg
+        dt: Time step between samples in seconds
+        init_samples: Number of samples to average for initial angle (default 20 = 100ms at 200Hz)
+
+    Returns:
+        (thigh_angle, shank_angle, foot_angle) in radians
+    """
+    deg2rad = np.pi / 180.0
+
+    # Get accelerometer data for initial orientation
+    thigh_ax = imu_df[f'thigh_imu_{side}_accel_x'].values
+    thigh_ay = imu_df[f'thigh_imu_{side}_accel_y'].values
+    shank_ax = imu_df[f'shank_imu_{side}_accel_x'].values
+    shank_ay = imu_df[f'shank_imu_{side}_accel_y'].values
+    foot_ax = imu_df[f'foot_imu_{side}_accel_x'].values
+    foot_ay = imu_df[f'foot_imu_{side}_accel_y'].values
+
+    # Get gyroscope data for trajectory (in deg/s, convert to rad/s)
+    thigh_gz = imu_df[f'thigh_imu_{side}_gyro_z'].values * deg2rad
+    shank_gz = imu_df[f'shank_imu_{side}_gyro_z'].values * deg2rad
+    foot_gz = imu_df[f'foot_imu_{side}_gyro_z'].values * deg2rad
+
+    # Compute initial angles from accelerometer (average first N samples)
+    # atan2(accel_x, accel_y) gives angle from vertical in sagittal plane
+    n = min(init_samples, len(thigh_ax))
+    thigh_init = np.arctan2(np.mean(thigh_ax[:n]), np.mean(thigh_ay[:n]))
+    shank_init = np.arctan2(np.mean(shank_ax[:n]), np.mean(shank_ay[:n]))
+    foot_init = np.arctan2(np.mean(foot_ax[:n]), np.mean(foot_ay[:n]))
+
+    # Integrate gyroscopes for trajectory (relative change from start)
+    thigh_delta = np.cumsum(thigh_gz) * dt
+    shank_delta = np.cumsum(shank_gz) * dt
+    foot_delta = np.cumsum(foot_gz) * dt
+
+    # Combine: initial angle + trajectory
+    thigh_angle = thigh_init + thigh_delta
+    shank_angle = shank_init + shank_delta
+    foot_angle = foot_init + foot_delta
+
+    return thigh_angle, shank_angle, foot_angle
+
+
+def calculate_foot_angle_offset(
+    stride_imu_list: List[pd.DataFrame],
+    side: str,
+    dt: float,
+    ground_slope_rad: float
+) -> float:
+    """
+    Calculate single foot angle offset by averaging midstance across all strides.
+
+    During midstance (15-35% of gait cycle), the foot is flat on the ground.
+    The foot angle should equal the ground slope. We average this across all
+    strides to get a robust offset that's applied consistently.
+
+    Note: Gyroscope data is in deg/s, so we convert to rad/s before integration.
+
+    Args:
+        stride_imu_list: List of IMU DataFrames, one per stride
+        side: 'l' or 'r' for left or right leg
+        dt: Time step between samples in seconds
+        ground_slope_rad: Expected foot angle at midstance (ground slope in radians)
+
+    Returns:
+        Offset to add to integrated foot angle (radians)
+    """
+    deg2rad = np.pi / 180.0
+    midstance_values = []
+
+    for stride_imu in stride_imu_list:
+        if stride_imu.empty:
+            continue
+
+        foot_gz_col = f'foot_imu_{side}_gyro_z'
+        if foot_gz_col not in stride_imu.columns:
+            continue
+
+        # Convert from deg/s to rad/s
+        foot_gz = stride_imu[foot_gz_col].values * deg2rad
+        foot_angle_raw = np.cumsum(foot_gz) * dt
+
+        # Midstance region (15-35% of stride)
+        n = len(foot_angle_raw)
+        ms_start = int(0.15 * n)
+        ms_end = int(0.35 * n)
+
+        if ms_end > ms_start:
+            midstance_values.append(np.mean(foot_angle_raw[ms_start:ms_end]))
+
+    if not midstance_values:
+        return 0.0
+
+    # Single offset = expected ground slope - average measured midstance angle
+    avg_midstance = np.mean(midstance_values)
+    return ground_slope_rad - avg_midstance
+
+
+def get_expected_foot_angle_for_task(task: str, task_info: Dict) -> float:
+    """
+    Get the expected foot angle during mid-stance based on task type.
+
+    During mid-stance (15-35% of gait), the foot is flat on the ground.
+    For level walking, the foot angle should be 0.
+    For incline/decline, the foot angle matches the slope.
+
+    Args:
+        task: Task name (e.g., 'level_walking', 'incline_walking')
+        task_info: Dictionary with task metadata (may contain slope info)
+
+    Returns:
+        Expected foot angle in radians (positive = foot tilted up/dorsiflexed)
+    """
+    deg2rad = np.pi / 180.0
+
+    # Extract slope from task_info if available
+    slope_deg = task_info.get('slope_deg', 0.0)
+
+    if task == 'level_walking':
+        return 0.0
+    elif task == 'incline_walking':
+        # Foot tilted up on incline (positive angle)
+        return slope_deg * deg2rad if slope_deg else 10.0 * deg2rad  # Default 10 deg
+    elif task == 'decline_walking':
+        # Foot tilted down on decline (negative angle)
+        return -slope_deg * deg2rad if slope_deg else -10.0 * deg2rad  # Default -10 deg
+    elif task in ['stair_ascent', 'stair_descent']:
+        # Stairs have varying foot angles, use 0 as reference
+        return 0.0
+    elif task == 'run':
+        # Running on level ground
+        return 0.0
+    else:
+        # Default: assume level ground
+        return 0.0
+
+
+def apply_midstance_bias_correction(
+    thigh_angle: np.ndarray,
+    shank_angle: np.ndarray,
+    foot_angle: np.ndarray,
+    expected_foot_angle: float = 0.0,
+    midstance_start_pct: float = 0.15,
+    midstance_end_pct: float = 0.35,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Apply bias correction to segment angles using mid-stance foot angle.
+
+    During mid-stance, the foot is flat on the ground. We calculate the average
+    foot angle during this phase and subtract the bias from ALL segment angles.
+    This preserves joint angles (differences between segments) while correcting
+    the global reference.
+
+    Args:
+        thigh_angle: Phase-normalized thigh angle (N_PHASE_POINTS values)
+        shank_angle: Phase-normalized shank angle
+        foot_angle: Phase-normalized foot angle
+        expected_foot_angle: Expected foot angle at mid-stance (rad)
+        midstance_start_pct: Start of mid-stance as fraction (0.15 = 15%)
+        midstance_end_pct: End of mid-stance as fraction (0.35 = 35%)
+
+    Returns:
+        Bias-corrected (thigh_angle, shank_angle, foot_angle)
+    """
+    n_points = len(foot_angle)
+
+    # Calculate indices for mid-stance phase
+    start_idx = int(midstance_start_pct * n_points)
+    end_idx = int(midstance_end_pct * n_points)
+
+    # Calculate average foot angle during mid-stance
+    midstance_foot_avg = np.mean(foot_angle[start_idx:end_idx])
+
+    # Calculate bias (difference from expected)
+    bias = midstance_foot_avg - expected_foot_angle
+
+    # Apply same bias correction to all segments
+    # This preserves joint angles (thigh-shank, shank-foot differences)
+    thigh_corrected = thigh_angle - bias
+    shank_corrected = shank_angle - bias
+    foot_corrected = foot_angle - bias
+
+    return thigh_corrected, shank_corrected, foot_corrected
+
+
 def map_task_name(task_folder: str) -> Tuple[Optional[str], Optional[str], Dict]:
     """
     Map source task folder name to standardized task name and ID.
@@ -326,8 +584,10 @@ def map_task_name(task_folder: str) -> Tuple[Optional[str], Optional[str], Dict]
         task_info['speed_m_s'] = speed
 
     # Find matching task pattern
-    for pattern, (task_name, task_id) in TASK_MAPPING.items():
+    for pattern, (task_name, task_id, task_metadata) in TASK_MAPPING.items():
         if re.search(pattern, task_folder):
+            # Merge task metadata (incline_deg, etc.) into task_info
+            task_info.update(task_metadata)
             return task_name, task_id, task_info
 
     # Default: use folder name as task
@@ -391,7 +651,13 @@ def process_stride(
     leg_side: str,
     collection_phase: int,
     exo_state: str,
-    is_day2: bool = False
+    is_day2: bool = False,
+    imu_df: Optional[pd.DataFrame] = None,
+    imu_dt: float = 0.005,
+    segment_angle_offset_ipsi: float = 0.0,
+    segment_angle_offset_contra: float = 0.0,
+    use_accel_init: bool = False,
+    skip_segment_angles: bool = False
 ) -> Optional[pd.DataFrame]:
     """
     Process a single stride from heel strike to heel strike.
@@ -410,6 +676,12 @@ def process_stride(
         collection_phase: Data collection phase (1, 2, or 3)
         exo_state: Exoskeleton state ('powered', 'worn_unpowered', 'no_exo', 'unknown')
         is_day2: Whether this is day 2 data (Phase 3 only)
+        imu_df: Optional IMU DataFrame with gyroscope data for segment angles
+        imu_dt: Time step for IMU data in seconds (default 0.005 = 200Hz)
+        segment_angle_offset_ipsi: Pre-calculated foot angle offset for ipsilateral leg (rad)
+        segment_angle_offset_contra: Pre-calculated foot angle offset for contralateral leg (rad)
+        use_accel_init: If True, use accelerometer for initial orientation (for sit-stand tasks)
+        skip_segment_angles: If True, set all segment angles to NaN (for tasks like run)
 
     Returns:
         DataFrame with 150 rows (one per phase point) or None if invalid
@@ -474,6 +746,73 @@ def process_stride(
     knee_acc_contra = compute_acceleration_from_velocity(knee_vel_contra, stride_duration_s)
     ankle_acc_ipsi = compute_acceleration_from_velocity(ankle_vel_ipsi, stride_duration_s)
     ankle_acc_contra = compute_acceleration_from_velocity(ankle_vel_contra, stride_duration_s)
+
+    # Compute segment angles from IMU gyroscope integration + forward kinematics
+    # Offset is calculated once per subject/task and passed in (two-pass approach)
+    if skip_segment_angles:
+        # Skip segment angles for this task (e.g., run) - fill with NaN
+        thigh_seg_ipsi = np.full(NUM_POINTS, np.nan)
+        thigh_seg_contra = np.full(NUM_POINTS, np.nan)
+        shank_seg_ipsi = np.full(NUM_POINTS, np.nan)
+        shank_seg_contra = np.full(NUM_POINTS, np.nan)
+        foot_seg_ipsi = np.full(NUM_POINTS, np.nan)
+        foot_seg_contra = np.full(NUM_POINTS, np.nan)
+        thigh_seg_vel_ipsi = np.full(NUM_POINTS, np.nan)
+        thigh_seg_vel_contra = np.full(NUM_POINTS, np.nan)
+        shank_seg_vel_ipsi = np.full(NUM_POINTS, np.nan)
+        shank_seg_vel_contra = np.full(NUM_POINTS, np.nan)
+        foot_seg_vel_ipsi = np.full(NUM_POINTS, np.nan)
+        foot_seg_vel_contra = np.full(NUM_POINTS, np.nan)
+    elif imu_df is not None and len(imu_df) > end_idx:
+        # Extract stride-specific IMU data
+        stride_imu = imu_df.iloc[start_idx:end_idx].reset_index(drop=True)
+
+        if use_accel_init:
+            # Use accelerometer initialization for sit-stand tasks (no midstance phase)
+            thigh_seg_ipsi_raw, shank_seg_ipsi_raw, foot_seg_ipsi_raw = compute_segment_angles_from_imu_with_accel_init(
+                stride_imu, ipsi, imu_dt
+            )
+            thigh_seg_contra_raw, shank_seg_contra_raw, foot_seg_contra_raw = compute_segment_angles_from_imu_with_accel_init(
+                stride_imu, contra, imu_dt
+            )
+        else:
+            # Use gyro integration with midstance correction (gait tasks)
+            thigh_seg_ipsi_raw, shank_seg_ipsi_raw, foot_seg_ipsi_raw = compute_segment_angles_from_imu(
+                stride_imu, ipsi, imu_dt, offset=segment_angle_offset_ipsi
+            )
+            thigh_seg_contra_raw, shank_seg_contra_raw, foot_seg_contra_raw = compute_segment_angles_from_imu(
+                stride_imu, contra, imu_dt, offset=segment_angle_offset_contra
+            )
+
+        # Interpolate to phase-normalized points
+        thigh_seg_ipsi = interpolate_to_phase(thigh_seg_ipsi_raw)
+        thigh_seg_contra = interpolate_to_phase(thigh_seg_contra_raw)
+        shank_seg_ipsi = interpolate_to_phase(shank_seg_ipsi_raw)
+        shank_seg_contra = interpolate_to_phase(shank_seg_contra_raw)
+        foot_seg_ipsi = interpolate_to_phase(foot_seg_ipsi_raw)
+        foot_seg_contra = interpolate_to_phase(foot_seg_contra_raw)
+
+        # Compute segment velocities
+        thigh_seg_vel_ipsi = compute_velocity_from_angle(thigh_seg_ipsi, stride_duration_s)
+        thigh_seg_vel_contra = compute_velocity_from_angle(thigh_seg_contra, stride_duration_s)
+        shank_seg_vel_ipsi = compute_velocity_from_angle(shank_seg_ipsi, stride_duration_s)
+        shank_seg_vel_contra = compute_velocity_from_angle(shank_seg_contra, stride_duration_s)
+        foot_seg_vel_ipsi = compute_velocity_from_angle(foot_seg_ipsi, stride_duration_s)
+        foot_seg_vel_contra = compute_velocity_from_angle(foot_seg_contra, stride_duration_s)
+    else:
+        # No IMU data available - fill with NaN
+        thigh_seg_ipsi = np.full(NUM_POINTS, np.nan)
+        thigh_seg_contra = np.full(NUM_POINTS, np.nan)
+        shank_seg_ipsi = np.full(NUM_POINTS, np.nan)
+        shank_seg_contra = np.full(NUM_POINTS, np.nan)
+        foot_seg_ipsi = np.full(NUM_POINTS, np.nan)
+        foot_seg_contra = np.full(NUM_POINTS, np.nan)
+        thigh_seg_vel_ipsi = np.full(NUM_POINTS, np.nan)
+        thigh_seg_vel_contra = np.full(NUM_POINTS, np.nan)
+        shank_seg_vel_ipsi = np.full(NUM_POINTS, np.nan)
+        shank_seg_vel_contra = np.full(NUM_POINTS, np.nan)
+        foot_seg_vel_ipsi = np.full(NUM_POINTS, np.nan)
+        foot_seg_vel_contra = np.full(NUM_POINTS, np.nan)
 
     # Extract and interpolate kinetics (moments already in Nm/kg)
     # Use biological moments if available, otherwise filtered moments
@@ -692,9 +1031,21 @@ def process_stride(
         'cop_vertical_ipsi_m': cop_vert_ipsi,
         'cop_vertical_contra_m': cop_vert_contra,
 
-        # Note: Segment angles (pelvis, trunk, thigh, shank, foot) not included
-        # because this dataset only has simulated IMU data which gives relative
-        # angles (starting at 0 at heel strike), not absolute segment angles.
+        # Segment angles (rad) - computed from IMU gyroscope integration
+        'thigh_sagittal_angle_ipsi_rad': thigh_seg_ipsi,
+        'thigh_sagittal_angle_contra_rad': thigh_seg_contra,
+        'shank_sagittal_angle_ipsi_rad': shank_seg_ipsi,
+        'shank_sagittal_angle_contra_rad': shank_seg_contra,
+        'foot_sagittal_angle_ipsi_rad': foot_seg_ipsi,
+        'foot_sagittal_angle_contra_rad': foot_seg_contra,
+
+        # Segment velocities (rad/s) - computed from segment angles
+        'thigh_sagittal_velocity_ipsi_rad_s': thigh_seg_vel_ipsi,
+        'thigh_sagittal_velocity_contra_rad_s': thigh_seg_vel_contra,
+        'shank_sagittal_velocity_ipsi_rad_s': shank_seg_vel_ipsi,
+        'shank_sagittal_velocity_contra_rad_s': shank_seg_vel_contra,
+        'foot_sagittal_velocity_ipsi_rad_s': foot_seg_vel_ipsi,
+        'foot_sagittal_velocity_contra_rad_s': foot_seg_vel_contra,
     })
 
     return stride_df
@@ -903,6 +1254,31 @@ def process_trial(
     if data is None:
         return []
 
+    # Load IMU data for segment angle computation
+    # Try Parsed format first (*_imu_sim.csv), then Complete format (Virtual_IMUs.csv)
+    imu_df = None
+    imu_dt = 1.0 / SAMPLING_RATE  # Default: 200Hz = 0.005s
+
+    # Parsed format: {subject}_{trial}_imu_sim.csv (no header rows to skip)
+    trial_name = trial_path.name
+    prefix = f"{subject_id}_{trial_name}_"
+    imu_path_parsed = trial_path / f"{prefix}imu_sim.csv"
+
+    # Complete format: Virtual_IMUs.csv (2 header rows to skip)
+    imu_path_complete = trial_path / "Virtual_IMUs.csv"
+
+    try:
+        if imu_path_parsed.exists():
+            imu_df = pd.read_csv(imu_path_parsed)  # No header rows to skip
+        elif imu_path_complete.exists():
+            imu_df = pd.read_csv(imu_path_complete, skiprows=2)  # OpenSim format
+
+        if imu_df is not None and 'time' in imu_df.columns and len(imu_df) > 1:
+            imu_dt = np.mean(np.diff(imu_df['time'].values))
+    except Exception as e:
+        print(f"  Warning: Could not load IMU data: {e}")
+        imu_df = None
+
     # Determine segmentation archetype
     archetype = TASK_ARCHETYPE_MAP.get(task, SegmentationArchetype.GAIT)
 
@@ -911,6 +1287,8 @@ def process_trial(
 
     # For sit-stand and standing-action tasks, process both legs together
     # since these are bilateral movements
+    # Note: For non-gait tasks, we still use offset=0 (no midstance correction)
+    # since they don't have a flat-foot midstance phase
     if archetype == SegmentationArchetype.SIT_STAND_TRANSFER:
         # Use left leg as reference (ipsi), right as contra
         seg_df = prepare_segmentation_df(data, 'l')
@@ -936,7 +1314,10 @@ def process_trial(
                 leg_side='l',
                 collection_phase=collection_phase,
                 exo_state=exo_state,
-                is_day2=is_day2
+                is_day2=is_day2,
+                imu_df=imu_df,
+                imu_dt=imu_dt,
+                use_accel_init=True  # Use accelerometer for initial orientation (no midstance phase)
             )
             if stride_df is not None:
                 strides.append(stride_df)
@@ -948,6 +1329,10 @@ def process_trial(
             segments = segment_trial_jump(seg_df)
         else:
             segments = segment_trial_standing_action(seg_df, action_type=task)
+
+        # Non-gait tasks: use 0 offset (no midstance flat-foot correction)
+        offset_ipsi = 0.0
+        offset_contra = 0.0
 
         for seg in segments:
             stride_df = process_stride(
@@ -963,18 +1348,47 @@ def process_trial(
                 leg_side='l',
                 collection_phase=collection_phase,
                 exo_state=exo_state,
-                is_day2=is_day2
+                is_day2=is_day2,
+                imu_df=imu_df,
+                imu_dt=imu_dt,
+                segment_angle_offset_ipsi=offset_ipsi,
+                segment_angle_offset_contra=offset_contra
             )
             if stride_df is not None:
                 strides.append(stride_df)
                 step_num += 1
 
     else:
-        # Gait tasks: process each leg independently
+        # Gait tasks: process each leg independently with two-pass segment angle calculation
+        # Get ground slope from task metadata for midstance correction
+        ground_slope_deg = task_info.get('incline_deg', 0.0)
+        ground_slope_rad = np.radians(ground_slope_deg)
+
+        # Skip segment angles for run task (midstance correction doesn't apply)
+        skip_seg_angles = (task == 'run')
+
         for leg_side in ['l', 'r']:
             seg_df = prepare_segmentation_df(data, leg_side)
             segments = segment_trial_gait(seg_df, leg_side)
 
+            # Two-pass approach for segment angles (skip if run task)
+            # Pass 1: Collect stride IMU data and calculate offset
+            stride_imu_list = []
+            offset_ipsi = 0.0
+            offset_contra = 0.0
+
+            if not skip_seg_angles and imu_df is not None:
+                for seg in segments:
+                    if len(imu_df) > seg.end_idx:
+                        stride_imu = imu_df.iloc[seg.start_idx:seg.end_idx].reset_index(drop=True)
+                        stride_imu_list.append(stride_imu)
+
+                # Calculate offset once for this leg/task combination
+                offset_ipsi = calculate_foot_angle_offset(stride_imu_list, leg_side, imu_dt, ground_slope_rad)
+                contra_side = 'r' if leg_side == 'l' else 'l'
+                offset_contra = calculate_foot_angle_offset(stride_imu_list, contra_side, imu_dt, ground_slope_rad)
+
+            # Pass 2: Process each stride with the calculated offset
             for seg in segments:
                 stride_df = process_stride(
                     data=data,
@@ -989,7 +1403,12 @@ def process_trial(
                     leg_side=leg_side,
                     collection_phase=collection_phase,
                     exo_state=exo_state,
-                    is_day2=is_day2
+                    is_day2=is_day2,
+                    imu_df=imu_df,
+                    imu_dt=imu_dt,
+                    segment_angle_offset_ipsi=offset_ipsi,
+                    segment_angle_offset_contra=offset_contra,
+                    skip_segment_angles=skip_seg_angles
                 )
                 if stride_df is not None:
                     strides.append(stride_df)
