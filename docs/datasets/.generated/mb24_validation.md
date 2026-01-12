@@ -1,18 +1,18 @@
-**Report generated:** 2026-01-09 10:09
+**Report generated:** 2026-01-12 15:57
 
 ## Status Summary
 
 | Metric | Value |
 |--------|-------|
-| Stride Pass Rate | 89.5% |
+| Stride Pass Rate | 87.4% |
 | Total Strides | 15825 |
-| Passing Strides | 14165 |
+| Passing Strides | 13828 |
 
 ### Summary
 
-**Status**: ⚠️ PARTIAL (89.5% valid)  
+**Status**: ⚠️ PARTIAL (87.4% valid)  
 **Total Strides**: 15825  
-**Passing Strides**: 14165  
+**Passing Strides**: 13828  
 
 ### Task Breakdown
 
@@ -21,11 +21,11 @@
 | Decline Walking | 87.7% | ⚠️ |
 | Incline Walking | 95.2% | ✅ |
 | Level Walking | 99.2% | ✅ |
-| Sit To Stand | 99.0% | ✅ |
+| Sit To Stand | 5.0% | ❌ |
 | Squat | 84.1% | ⚠️ |
 | Stair Ascent | 47.1% | ❌ |
 | Stair Descent | 43.3% | ❌ |
-| Stand To Sit | 85.6% | ⚠️ |
+| Stand To Sit | 12.9% | ❌ |
 
 _Validation ranges snapshot embedded below._
 
@@ -65,4 +65,4 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml_
 
 ---
 
-*Generated from `mblue_ankle_phase.parquet` on 2026-01-09 10:09*
+*Generated from `converted_datasets/mblue_ankle_phase.parquet` on 2026-01-12 15:57*
