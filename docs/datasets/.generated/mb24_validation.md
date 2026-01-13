@@ -1,4 +1,4 @@
-**Report generated:** 2026-01-12 15:57
+**Report generated:** 2026-01-12 20:08
 
 ## Status Summary
 
@@ -31,9 +31,9 @@ _Validation ranges snapshot embedded below._
 
 ## Validation Ranges Snapshot
 
-Download the YAML snapshot used for this validation: [Download](./mb24_validation_ranges.yaml)
+Validation ranges snapshot not available.
 
-_Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml_
+_Source ranges file: docs/datasets/mb24_validation_ranges.yaml_
 
 ## Validation Plots
 
@@ -65,4 +65,4 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml_
 
 ---
 
-*Generated from `converted_datasets/mblue_ankle_phase.parquet` on 2026-01-12 15:57*
+*Generated from `converted_datasets/mblue_ankle_phase.parquet` on 2026-01-12 20:08*
