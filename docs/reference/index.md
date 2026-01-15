@@ -278,9 +278,11 @@ Kinematics — joint angles (radians)
 - `knee_flexion_angle_{ipsi,contra}_rad`
 - `ankle_dorsiflexion_angle_{ipsi,contra}_rad`
 
-Kinetics — biological joint moments (Nm/kg)
+Kinetics — joint moments (Nm/kg)
 
-These represent the moment produced by the human's muscles. For exoskeleton data, this is the net moment minus the exoskeleton contribution. Total joint moment = biological moment + assistance moment.
+These represent the **total net joint moment** from inverse dynamics. This is the sum of biological (human muscle) and assistance (exoskeleton/device) contributions. For datasets without assistive devices, total moment equals biological moment.
+
+**Relationship**: `total moment = biological moment + assistance moment`
 
 - `hip_flexion_moment_{ipsi,contra}_Nm_kg`
 - `knee_flexion_moment_{ipsi,contra}_Nm_kg`
@@ -293,6 +295,14 @@ External assistance torque provided by an exoskeleton or other assistive device.
 - `hip_flexion_assistance_moment_{ipsi,contra}_Nm_kg`
 - `knee_flexion_assistance_moment_{ipsi,contra}_Nm_kg`
 - `ankle_dorsiflexion_assistance_moment_{ipsi,contra}_Nm_kg`
+
+Kinetics — biological moments (Nm/kg)
+
+The moment produced by human muscles only. For exoskeleton data, this is the total moment minus the assistance contribution. Only present when assistance data is available to compute it.
+
+- `hip_flexion_biological_moment_{ipsi,contra}_Nm_kg`
+- `knee_flexion_biological_moment_{ipsi,contra}_Nm_kg`
+- `ankle_dorsiflexion_biological_moment_{ipsi,contra}_Nm_kg`
 
 Segment/link orientations (radians)
 

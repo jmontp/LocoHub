@@ -94,7 +94,10 @@ MOMENT_FEATURES = [
     'ankle_rotation_moment_ipsi_Nm', 'ankle_rotation_moment_contra_Nm'
 ]
 
-# Alternative kinetic features (normalized by body weight)
+# Total joint moments (normalized by body weight)
+# These represent the TOTAL net joint moment from inverse dynamics (biological + assistance)
+# For datasets without assistive devices, total moment equals biological moment
+# Relationship: total = biological + assistance
 MOMENT_FEATURES_NORMALIZED = [
     'hip_flexion_moment_ipsi_Nm_kg', 'hip_flexion_moment_contra_Nm_kg',
     'hip_adduction_moment_ipsi_Nm_kg', 'hip_adduction_moment_contra_Nm_kg',
@@ -108,11 +111,21 @@ MOMENT_FEATURES_NORMALIZED = [
 ]
 
 # Assistance moment features (exoskeleton interaction torques, normalized by body weight)
+# External assistance torque provided by exoskeleton or other assistive device
 # Note: compound measurement type "assistance_moment" uses underscore-connected naming
 ASSISTANCE_MOMENT_FEATURES = [
     'hip_flexion_assistance_moment_ipsi_Nm_kg', 'hip_flexion_assistance_moment_contra_Nm_kg',
     'knee_flexion_assistance_moment_ipsi_Nm_kg', 'knee_flexion_assistance_moment_contra_Nm_kg',
     'ankle_dorsiflexion_assistance_moment_ipsi_Nm_kg', 'ankle_dorsiflexion_assistance_moment_contra_Nm_kg',
+]
+
+# Biological moment features (human muscle contribution only, normalized by body weight)
+# The moment produced by human muscles only. For exoskeleton data, this is total - assistance.
+# Only present when assistance data is available to compute it.
+BIOLOGICAL_MOMENT_FEATURES = [
+    'hip_flexion_biological_moment_ipsi_Nm_kg', 'hip_flexion_biological_moment_contra_Nm_kg',
+    'knee_flexion_biological_moment_ipsi_Nm_kg', 'knee_flexion_biological_moment_contra_Nm_kg',
+    'ankle_dorsiflexion_biological_moment_ipsi_Nm_kg', 'ankle_dorsiflexion_biological_moment_contra_Nm_kg',
 ]
 
 # Ground reaction force features (raw)
@@ -154,7 +167,7 @@ SEGMENT_ANGLE_FEATURES = [
 ]
 
 # All kinetic features combined
-ALL_KINETIC_FEATURES = MOMENT_FEATURES + MOMENT_FEATURES_NORMALIZED + ASSISTANCE_MOMENT_FEATURES + GRF_FEATURES + GRF_FEATURES_NORMALIZED + COP_FEATURES
+ALL_KINETIC_FEATURES = MOMENT_FEATURES + MOMENT_FEATURES_NORMALIZED + ASSISTANCE_MOMENT_FEATURES + BIOLOGICAL_MOMENT_FEATURES + GRF_FEATURES + GRF_FEATURES_NORMALIZED + COP_FEATURES
 
 # All kinematic features combined (angles + segments + velocities + accelerations)
 ALL_KINEMATIC_FEATURES = (
@@ -176,8 +189,9 @@ CANONICAL_COLUMN_GROUPS = {
     'segment_angles': SEGMENT_ANGLE_FEATURES,
     'segment_velocities': SEGMENT_VELOCITY_FEATURES,
     'moments': MOMENT_FEATURES,
-    'moments_normalized': MOMENT_FEATURES_NORMALIZED,
+    'moments_normalized': MOMENT_FEATURES_NORMALIZED,  # Total moments (bio + assistance)
     'assistance_moments': ASSISTANCE_MOMENT_FEATURES,
+    'biological_moments': BIOLOGICAL_MOMENT_FEATURES,
     'grf': GRF_FEATURES,
     'grf_normalized': GRF_FEATURES_NORMALIZED,
     'cop': COP_FEATURES,

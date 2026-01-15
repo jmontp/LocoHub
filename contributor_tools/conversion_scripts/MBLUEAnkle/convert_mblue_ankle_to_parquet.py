@@ -956,7 +956,7 @@ def process_gait_task(
                 'ankle_dorsiflexion_acceleration_ipsi_rad_s2': ankle_acc_ipsi,
                 'ankle_dorsiflexion_acceleration_contra_rad_s2': ankle_acc_contra,
 
-                # Joint moments (Nm/kg)
+                # Joint moments - total (Nm/kg) - from inverse dynamics (bio + exo for exo condition)
                 'hip_flexion_moment_ipsi_Nm_kg': hip_mom_ipsi,
                 'hip_flexion_moment_contra_Nm_kg': hip_mom_contra,
                 'knee_flexion_moment_ipsi_Nm_kg': knee_mom_ipsi,
@@ -1251,6 +1251,7 @@ def process_bilateral_task(
             'ankle_dorsiflexion_acceleration_ipsi_rad_s2': ankle_acc_ipsi,
             'ankle_dorsiflexion_acceleration_contra_rad_s2': ankle_acc_contra,
 
+            # Joint moments - total (Nm/kg) - from inverse dynamics (bio + exo for exo condition)
             'hip_flexion_moment_ipsi_Nm_kg': hip_mom_ipsi,
             'hip_flexion_moment_contra_Nm_kg': hip_mom_contra,
             'knee_flexion_moment_ipsi_Nm_kg': knee_mom_ipsi,

@@ -844,9 +844,8 @@ def process_stride(
         foot_seg_vel_contra = np.full(NUM_POINTS, np.nan)
 
     # Extract and interpolate kinetics (moments already in Nm/kg)
-    # Use biological moments if available, otherwise filtered moments
-    moment_key = 'moment_filt_bio' if 'moment_filt_bio' in data else 'moment_filt'
-    moment_df = data[moment_key]
+    # Use moment_filt for TOTAL moments (bio + exo), which is the standard output
+    moment_df = data['moment_filt']
 
     hip_mom_ipsi = interpolate_to_phase(
         moment_df[f'hip_flexion_{ipsi}_moment'].values[start_idx:end_idx]
@@ -866,6 +865,37 @@ def process_stride(
     ankle_mom_contra = interpolate_to_phase(
         moment_df[f'ankle_angle_{contra}_moment'].values[start_idx:end_idx]
     )
+
+    # Extract BIOLOGICAL moments if available (total - exo contribution)
+    # Only present in datasets where exo torque was subtracted from inverse dynamics
+    if 'moment_filt_bio' in data:
+        bio_moment_df = data['moment_filt_bio']
+        hip_bio_mom_ipsi = interpolate_to_phase(
+            bio_moment_df[f'hip_flexion_{ipsi}_moment'].values[start_idx:end_idx]
+        )
+        hip_bio_mom_contra = interpolate_to_phase(
+            bio_moment_df[f'hip_flexion_{contra}_moment'].values[start_idx:end_idx]
+        )
+        knee_bio_mom_ipsi = interpolate_to_phase(
+            -bio_moment_df[f'knee_angle_{ipsi}_moment'].values[start_idx:end_idx]
+        )
+        knee_bio_mom_contra = interpolate_to_phase(
+            -bio_moment_df[f'knee_angle_{contra}_moment'].values[start_idx:end_idx]
+        )
+        ankle_bio_mom_ipsi = interpolate_to_phase(
+            bio_moment_df[f'ankle_angle_{ipsi}_moment'].values[start_idx:end_idx]
+        )
+        ankle_bio_mom_contra = interpolate_to_phase(
+            bio_moment_df[f'ankle_angle_{contra}_moment'].values[start_idx:end_idx]
+        )
+    else:
+        # No biological moments available - fill with NaN
+        hip_bio_mom_ipsi = np.full(NUM_POINTS, np.nan)
+        hip_bio_mom_contra = np.full(NUM_POINTS, np.nan)
+        knee_bio_mom_ipsi = np.full(NUM_POINTS, np.nan)
+        knee_bio_mom_contra = np.full(NUM_POINTS, np.nan)
+        ankle_bio_mom_ipsi = np.full(NUM_POINTS, np.nan)
+        ankle_bio_mom_contra = np.full(NUM_POINTS, np.nan)
 
     # Extract assistance moments from exo data (interaction torque)
     # Exo sign convention: extension positive, flexion negative
@@ -1025,7 +1055,7 @@ def process_stride(
         'ankle_dorsiflexion_acceleration_ipsi_rad_s2': ankle_acc_ipsi,
         'ankle_dorsiflexion_acceleration_contra_rad_s2': ankle_acc_contra,
 
-        # Joint moments - biological (Nm/kg)
+        # Joint moments - total (Nm/kg) - this is bio + assistance
         'hip_flexion_moment_ipsi_Nm_kg': hip_mom_ipsi,
         'hip_flexion_moment_contra_Nm_kg': hip_mom_contra,
         'knee_flexion_moment_ipsi_Nm_kg': knee_mom_ipsi,
@@ -1040,6 +1070,14 @@ def process_stride(
         'knee_flexion_assistance_moment_contra_Nm_kg': knee_assist_contra,
         'ankle_dorsiflexion_assistance_moment_ipsi_Nm_kg': ankle_assist_ipsi,
         'ankle_dorsiflexion_assistance_moment_contra_Nm_kg': ankle_assist_contra,
+
+        # Joint moments - biological (Nm/kg) - human muscle contribution only
+        'hip_flexion_biological_moment_ipsi_Nm_kg': hip_bio_mom_ipsi,
+        'hip_flexion_biological_moment_contra_Nm_kg': hip_bio_mom_contra,
+        'knee_flexion_biological_moment_ipsi_Nm_kg': knee_bio_mom_ipsi,
+        'knee_flexion_biological_moment_contra_Nm_kg': knee_bio_mom_contra,
+        'ankle_dorsiflexion_biological_moment_ipsi_Nm_kg': ankle_bio_mom_ipsi,
+        'ankle_dorsiflexion_biological_moment_contra_Nm_kg': ankle_bio_mom_contra,
 
         # Assistance flag
         'assistance_active': assistance_active,
