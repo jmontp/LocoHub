@@ -71,6 +71,12 @@ Common task_info keys
 - `turn_direction:<left|right|cw|ccw>` (for turning strides)
 - `variant:<string>` (label specific instructions when no numeric parameter exists)
 
+EMG-related keys
+
+- `emg_normalization:<mvc|peak|raw>` (how EMG was normalized)
+- `mvc_trial:<string>` (identifier of MVC trial used for normalization)
+- `emg_muscles:<string>` (comma-separated list of recorded muscles, e.g., `ta,gas,sol`)
+
 Exoskeleton/assistive device keys
 
 - `exo_state:<powered|worn_unpowered|no_exo>` (exoskeleton condition)
@@ -250,6 +256,7 @@ Key categories
 - Kinetics (moments/forces): `*_moment_*_Nm_kg` (mass-normalized)
 - Ground reaction forces (GRF): `*_grf_*_BW` (body-weight-normalized)
 - Segment orientations: `pelvis_*_angle_rad`, `trunk_*_angle_rad`, `thigh_*_angle_*_rad`, `shank_*_angle_*_rad`, `foot_*_angle_*_rad`
+- Electromyography (EMG): `emg_*_pMVC` (MVC-normalized) or `emg_*_pMax` (peak-normalized)
 
 Sides
 
@@ -261,6 +268,7 @@ Units
 - Angles in radians (`*_rad`)
 - Moments are mass‑normalized (`*_Nm_kg`)
 - GRFs are body‑weight‑normalized (`*_BW`)
+- EMG is normalized (`*_pMVC` for % of MVC, `*_pMax` for % of trial max)
 
 ## Column Catalog
 
@@ -334,6 +342,41 @@ Center of pressure (meters)
 
 - `cop_anterior_{ipsi,contra}_m`
 - `cop_lateral_{ipsi,contra}_m`
+
+Electromyography — EMG (normalized)
+
+Surface EMG signals from lower limb muscles. Values are normalized to facilitate cross-subject comparison:
+
+- **MVC-normalized** (`_pMVC`): Percentage of Maximum Voluntary Contraction (0-100+%)
+- **Peak-normalized** (`_pMax`): Percentage of maximum value during trial (0-100%)
+
+Muscle naming convention: `emg_<muscle>_{ipsi,contra}_<normalization>`
+
+Core lower limb muscles:
+
+- Tibialis anterior: `emg_tibialis_anterior_{ipsi,contra}_pMVC`
+- Gastrocnemius medial: `emg_gastrocnemius_medial_{ipsi,contra}_pMVC`
+- Gastrocnemius lateral: `emg_gastrocnemius_lateral_{ipsi,contra}_pMVC`
+- Soleus: `emg_soleus_{ipsi,contra}_pMVC`
+- Rectus femoris: `emg_rectus_femoris_{ipsi,contra}_pMVC`
+- Vastus lateralis: `emg_vastus_lateralis_{ipsi,contra}_pMVC`
+- Vastus medialis: `emg_vastus_medialis_{ipsi,contra}_pMVC`
+- Biceps femoris: `emg_biceps_femoris_{ipsi,contra}_pMVC`
+- Semitendinosus: `emg_semitendinosus_{ipsi,contra}_pMVC`
+- Gluteus maximus: `emg_gluteus_maximus_{ipsi,contra}_pMVC`
+- Gluteus medius: `emg_gluteus_medius_{ipsi,contra}_pMVC`
+
+Optional processing variants:
+
+- Raw filtered: `emg_<muscle>_{side}_filtered_mV` (bandpass filtered, in millivolts)
+- Linear envelope: `emg_<muscle>_{side}_envelope_mV` (rectified + low-pass filtered)
+
+Notes:
+
+- EMG data should be linear envelope (rectified and low-pass filtered) unless otherwise specified
+- MVC normalization is preferred when available as it enables cross-subject comparison
+- When MVC is unavailable, peak normalization within-trial is acceptable
+- Unilateral EMG (e.g., right leg only) should use `ipsi` when right leg is ipsilateral, otherwise leave as NaN for contra
 
 
 ## Coordinate & Sign Conventions

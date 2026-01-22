@@ -160,11 +160,47 @@ COP_FEATURES = [
 # - Transverse plane: rotation movements (axial rotation for long bones)
 SEGMENT_ANGLE_FEATURES = [
     'pelvis_sagittal_angle_rad', 'pelvis_frontal_angle_rad', 'pelvis_transverse_angle_rad',
-    'trunk_sagittal_angle_rad', 'trunk_frontal_angle_rad', 'trunk_transverse_angle_rad', 
+    'trunk_sagittal_angle_rad', 'trunk_frontal_angle_rad', 'trunk_transverse_angle_rad',
     'thigh_sagittal_angle_ipsi_rad', 'thigh_sagittal_angle_contra_rad',
     'shank_sagittal_angle_ipsi_rad', 'shank_sagittal_angle_contra_rad',
     'foot_sagittal_angle_ipsi_rad', 'foot_sagittal_angle_contra_rad'
 ]
+
+# Electromyography (EMG) features - MVC-normalized (% of Maximum Voluntary Contraction)
+# Naming: emg_<muscle>_{ipsi,contra}_pMVC
+# Core lower limb muscles for gait analysis
+EMG_FEATURES_MVC = [
+    'emg_tibialis_anterior_ipsi_pMVC', 'emg_tibialis_anterior_contra_pMVC',
+    'emg_gastrocnemius_medial_ipsi_pMVC', 'emg_gastrocnemius_medial_contra_pMVC',
+    'emg_gastrocnemius_lateral_ipsi_pMVC', 'emg_gastrocnemius_lateral_contra_pMVC',
+    'emg_soleus_ipsi_pMVC', 'emg_soleus_contra_pMVC',
+    'emg_rectus_femoris_ipsi_pMVC', 'emg_rectus_femoris_contra_pMVC',
+    'emg_vastus_lateralis_ipsi_pMVC', 'emg_vastus_lateralis_contra_pMVC',
+    'emg_vastus_medialis_ipsi_pMVC', 'emg_vastus_medialis_contra_pMVC',
+    'emg_biceps_femoris_ipsi_pMVC', 'emg_biceps_femoris_contra_pMVC',
+    'emg_semitendinosus_ipsi_pMVC', 'emg_semitendinosus_contra_pMVC',
+    'emg_gluteus_maximus_ipsi_pMVC', 'emg_gluteus_maximus_contra_pMVC',
+    'emg_gluteus_medius_ipsi_pMVC', 'emg_gluteus_medius_contra_pMVC',
+]
+
+# EMG features - Peak-normalized (% of max during trial)
+# Use when MVC normalization is not available
+EMG_FEATURES_PEAK = [
+    'emg_tibialis_anterior_ipsi_pMax', 'emg_tibialis_anterior_contra_pMax',
+    'emg_gastrocnemius_medial_ipsi_pMax', 'emg_gastrocnemius_medial_contra_pMax',
+    'emg_gastrocnemius_lateral_ipsi_pMax', 'emg_gastrocnemius_lateral_contra_pMax',
+    'emg_soleus_ipsi_pMax', 'emg_soleus_contra_pMax',
+    'emg_rectus_femoris_ipsi_pMax', 'emg_rectus_femoris_contra_pMax',
+    'emg_vastus_lateralis_ipsi_pMax', 'emg_vastus_lateralis_contra_pMax',
+    'emg_vastus_medialis_ipsi_pMax', 'emg_vastus_medialis_contra_pMax',
+    'emg_biceps_femoris_ipsi_pMax', 'emg_biceps_femoris_contra_pMax',
+    'emg_semitendinosus_ipsi_pMax', 'emg_semitendinosus_contra_pMax',
+    'emg_gluteus_maximus_ipsi_pMax', 'emg_gluteus_maximus_contra_pMax',
+    'emg_gluteus_medius_ipsi_pMax', 'emg_gluteus_medius_contra_pMax',
+]
+
+# All EMG features combined
+ALL_EMG_FEATURES = EMG_FEATURES_MVC + EMG_FEATURES_PEAK
 
 # All kinetic features combined
 ALL_KINETIC_FEATURES = MOMENT_FEATURES + MOMENT_FEATURES_NORMALIZED + ASSISTANCE_MOMENT_FEATURES + BIOLOGICAL_MOMENT_FEATURES + GRF_FEATURES + GRF_FEATURES_NORMALIZED + COP_FEATURES
@@ -195,6 +231,8 @@ CANONICAL_COLUMN_GROUPS = {
     'grf': GRF_FEATURES,
     'grf_normalized': GRF_FEATURES_NORMALIZED,
     'cop': COP_FEATURES,
+    'emg_mvc': EMG_FEATURES_MVC,
+    'emg_peak': EMG_FEATURES_PEAK,
 }
 
 # Phase- and time-indexed canonical column orders (phase-specific columns are optional)
@@ -273,29 +311,82 @@ def get_kinetic_feature_map() -> Dict[str, int]:
 def get_velocity_feature_map() -> Dict[str, int]:
     """
     Get feature index mapping for velocity variables.
-    
+
     Returns:
         Dictionary mapping variable names to array indices (0-5)
     """
     feature_map = {}
-    
+
     # Standard naming convention
     for i, feature in enumerate(VELOCITY_FEATURES):
         feature_map[feature] = i
-    
+
     return feature_map
+
+
+def get_emg_feature_map(normalization: str = 'mvc') -> Dict[str, int]:
+    """
+    Get feature index mapping for EMG variables.
+
+    Args:
+        normalization: 'mvc' for MVC-normalized, 'peak' for peak-normalized
+
+    Returns:
+        Dictionary mapping variable names to array indices
+    """
+    feature_map = {}
+
+    features = EMG_FEATURES_MVC if normalization == 'mvc' else EMG_FEATURES_PEAK
+
+    for i, feature in enumerate(features):
+        feature_map[feature] = i
+
+    return feature_map
+
+
+# Standard EMG muscle names (short codes for task_info emg_muscles field)
+EMG_MUSCLE_CODES = {
+    'ta': 'tibialis_anterior',
+    'gm': 'gastrocnemius_medial',
+    'gl': 'gastrocnemius_lateral',
+    'sol': 'soleus',
+    'rf': 'rectus_femoris',
+    'vl': 'vastus_lateralis',
+    'vm': 'vastus_medialis',
+    'bf': 'biceps_femoris',
+    'st': 'semitendinosus',
+    'gmax': 'gluteus_maximus',
+    'gmed': 'gluteus_medius',
+}
+
+
+def get_emg_column_name(muscle: str, side: str = 'ipsi', normalization: str = 'pMVC') -> str:
+    """
+    Generate EMG column name from muscle name, side, and normalization.
+
+    Args:
+        muscle: Muscle name (short code like 'ta' or full name like 'tibialis_anterior')
+        side: 'ipsi' or 'contra'
+        normalization: 'pMVC' or 'pMax'
+
+    Returns:
+        Column name like 'emg_tibialis_anterior_ipsi_pMVC'
+    """
+    # Convert short code to full name if needed
+    muscle_full = EMG_MUSCLE_CODES.get(muscle.lower(), muscle.lower())
+    return f'emg_{muscle_full}_{side}_{normalization}'
 
 
 def get_feature_list(mode: str) -> list:
     """
     Get the ordered feature list for the specified mode.
-    
+
     Args:
-        mode: 'kinematic', 'kinetic', or 'velocity'
-        
+        mode: 'kinematic', 'kinetic', 'velocity', 'emg', or 'emg_mvc'/'emg_peak'
+
     Returns:
         List of feature names in canonical order
-        
+
     Raises:
         ValueError: If mode is not supported
     """
@@ -305,8 +396,12 @@ def get_feature_list(mode: str) -> list:
         return ALL_KINETIC_FEATURES.copy()
     elif mode == 'velocity':
         return VELOCITY_FEATURES.copy()
+    elif mode == 'emg' or mode == 'emg_mvc':
+        return EMG_FEATURES_MVC.copy()
+    elif mode == 'emg_peak':
+        return EMG_FEATURES_PEAK.copy()
     else:
-        raise ValueError(f"Unsupported mode: {mode}. Use 'kinematic', 'kinetic', or 'velocity'")
+        raise ValueError(f"Unsupported mode: {mode}. Use 'kinematic', 'kinetic', 'velocity', 'emg', 'emg_mvc', or 'emg_peak'")
 
 
 # Legacy GRF naming aliases (old -> new) for backward compatibility
@@ -343,13 +438,13 @@ def is_valid_task(task_name: str) -> bool:
 def get_feature_map(mode: str) -> Dict[str, int]:
     """
     Get feature index mapping for the specified mode.
-    
+
     Args:
-        mode: 'kinematic', 'kinetic', or 'velocity'
-        
+        mode: 'kinematic', 'kinetic', 'velocity', 'emg', or 'emg_mvc'/'emg_peak'
+
     Returns:
         Dictionary mapping variable names to array indices
-        
+
     Raises:
         ValueError: If mode is not supported
     """
@@ -359,8 +454,12 @@ def get_feature_map(mode: str) -> Dict[str, int]:
         return get_kinetic_feature_map()
     elif mode == 'velocity':
         return get_velocity_feature_map()
+    elif mode == 'emg' or mode == 'emg_mvc':
+        return get_emg_feature_map('mvc')
+    elif mode == 'emg_peak':
+        return get_emg_feature_map('peak')
     else:
-        raise ValueError(f"Unsupported mode: {mode}. Use 'kinematic', 'kinetic', or 'velocity'")
+        raise ValueError(f"Unsupported mode: {mode}. Use 'kinematic', 'kinetic', 'velocity', 'emg', 'emg_mvc', or 'emg_peak'")
 
 
 def get_sagittal_features() -> list:
