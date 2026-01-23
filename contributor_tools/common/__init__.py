@@ -37,6 +37,22 @@ from .stride_segmentation import (
 
 from .config_manager import ValidationConfigManager
 
+from .derivatives import (
+    find_discontinuity_index,
+    interpolate_discontinuity,
+    smooth_velocity_spikes,
+    compute_velocity_from_shifted_angle,
+    compute_acceleration_from_velocity,
+)
+
+from .force_plate import (
+    ForcePlateConfig,
+    ForcePlateData,
+    assign_force_plates_to_legs,
+    process_force_plate_data,
+    resample_to_phase,
+)
+
 # Submodules available as contributor_tools.common.validation and contributor_tools.common.plotting
 from . import validation
 from . import plotting
@@ -64,6 +80,18 @@ __all__ = [
     "remove_transition_segments",
     # config_manager
     "ValidationConfigManager",
+    # derivatives
+    "find_discontinuity_index",
+    "interpolate_discontinuity",
+    "smooth_velocity_spikes",
+    "compute_velocity_from_shifted_angle",
+    "compute_acceleration_from_velocity",
+    # force_plate
+    "ForcePlateConfig",
+    "ForcePlateData",
+    "assign_force_plates_to_legs",
+    "process_force_plate_data",
+    "resample_to_phase",
     # submodules
     "validation",
     "plotting",

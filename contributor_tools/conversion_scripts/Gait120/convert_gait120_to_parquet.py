@@ -49,6 +49,17 @@ from typing import Dict, List, Tuple, Optional, Any
 from scipy.interpolate import interp1d
 from tqdm import tqdm
 
+# Add path for common utilities
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from common.derivatives import (
+    compute_velocity_from_shifted_angle,
+    compute_acceleration_from_velocity,
+)
+from common.force_plate import (
+    ForcePlateConfig,
+    process_force_plate_data,
+)
+
 # Configuration
 NUM_POINTS = 150  # Target points per gait cycle (standard format)
 DEG2RAD = np.pi / 180.0
@@ -168,31 +179,244 @@ def interpolate_to_phase(data: np.ndarray, num_points: int = NUM_POINTS) -> np.n
         return np.full(num_points, np.nan)
 
 
-def compute_velocity_from_angle(angle_rad: np.ndarray, stride_duration_s: float) -> np.ndarray:
+# NOTE: compute_velocity_from_shifted_angle and compute_acceleration_from_velocity
+# are now imported from common.derivatives to handle discontinuities from phase shifts
+
+
+def get_grf_mot_path(kinematics_mot_path: Path) -> Optional[Path]:
     """
-    Compute angular velocity from angle data using gradient.
+    Get the corresponding GRF MOT file path for a kinematics MOT file.
+
+    Maps from JointAngle path to MotionCapture/MOT path.
 
     Args:
-        angle_rad: Angle data in radians (150 points)
-        stride_duration_s: Duration of stride in seconds
+        kinematics_mot_path: Path to the kinematics .mot file
 
     Returns:
-        Angular velocity in rad/s
+        Path to corresponding GRF MOT file, or None if not found
     """
-    if len(angle_rad) < 2 or stride_duration_s <= 0:
-        return np.full_like(angle_rad, np.nan)
-    dt = stride_duration_s / (len(angle_rad) - 1)
-    velocity = np.gradient(angle_rad) / dt
-    return velocity
+    # Example kinematics path: .../S011/JointAngle/LevelWalking/Trial01/Step01.mot
+    # Corresponding GRF path: .../S011/MotionCapture/LevelWalking/MOT/Trial01/Step01.mot
+
+    path_str = str(kinematics_mot_path)
+
+    # Replace JointAngle with MotionCapture and add MOT folder
+    if 'JointAngle' in path_str:
+        # Get parts of the path
+        parts = path_str.split('JointAngle')
+        if len(parts) != 2:
+            return None
+
+        base_path = parts[0]  # .../S011/
+        rest_path = parts[1]  # /LevelWalking/Trial01/Step01.mot
+
+        # Split rest_path to insert MOT folder
+        rest_parts = rest_path.split('/')
+        # rest_parts: ['', 'LevelWalking', 'Trial01', 'Step01.mot']
+
+        if len(rest_parts) >= 3:
+            task_folder = rest_parts[1]  # LevelWalking
+            remaining = '/'.join(rest_parts[2:])  # Trial01/Step01.mot
+
+            grf_path = Path(f"{base_path}MotionCapture/{task_folder}/MOT/{remaining}")
+
+            if grf_path.exists():
+                return grf_path
+
+    return None
 
 
-def compute_acceleration_from_velocity(velocity_rad_s: np.ndarray, stride_duration_s: float) -> np.ndarray:
-    """Compute angular acceleration from velocity data using gradient."""
-    if len(velocity_rad_s) < 2 or stride_duration_s <= 0:
-        return np.full_like(velocity_rad_s, np.nan)
-    dt = stride_duration_s / (len(velocity_rad_s) - 1)
-    acceleration = np.gradient(velocity_rad_s) / dt
-    return acceleration
+def get_trc_path(kinematics_mot_path: Path) -> Optional[Path]:
+    """
+    Get the corresponding TRC marker file path for a kinematics MOT file.
+
+    Maps from JointAngle path to MotionCapture/TRC path.
+
+    Args:
+        kinematics_mot_path: Path to the kinematics .mot file
+
+    Returns:
+        Path to corresponding TRC file, or None if not found
+    """
+    # Example kinematics path: .../S011/JointAngle/LevelWalking/Trial01/Step01.mot
+    # Corresponding TRC path: .../S011/MotionCapture/LevelWalking/TRC/Trial01/Step01.trc
+
+    path_str = str(kinematics_mot_path)
+
+    if 'JointAngle' in path_str:
+        parts = path_str.split('JointAngle')
+        if len(parts) != 2:
+            return None
+
+        base_path = parts[0]
+        rest_path = parts[1]
+
+        rest_parts = rest_path.split('/')
+        if len(rest_parts) >= 3:
+            task_folder = rest_parts[1]
+            remaining = '/'.join(rest_parts[2:])
+            # Change extension from .mot to .trc
+            remaining = remaining.replace('.mot', '.trc')
+
+            trc_path = Path(f"{base_path}MotionCapture/{task_folder}/TRC/{remaining}")
+
+            if trc_path.exists():
+                return trc_path
+
+    return None
+
+
+def load_trc_file(trc_path: Path) -> Optional[pd.DataFrame]:
+    """
+    Load a TRC (marker trajectory) file.
+
+    Args:
+        trc_path: Path to the .trc file
+
+    Returns:
+        DataFrame with marker data, or None if loading fails
+    """
+    try:
+        # TRC files have a header section we need to skip
+        # Header format:
+        # Line 1: PathFileType ...
+        # Line 2: DataRate CameraRate NumFrames NumMarkers Units ...
+        # Line 3: values for line 2
+        # Line 4: Frame# Time MarkerName1 ... (with X Y Z subcolumns)
+        # Line 5: X1 Y1 Z1 X2 Y2 Z2 ...
+        # Line 6+: data
+
+        # Read header to get marker names
+        with open(trc_path, 'r') as f:
+            lines = [f.readline() for _ in range(5)]
+
+        # Line 4 has marker names (after Frame# and Time)
+        marker_line = lines[3].strip().split('\t')
+        # marker_line: ['Frame#', 'Time', 'LFHD', '', '', 'RFHD', '', '', ...]
+        # Each marker has 3 columns (X, Y, Z) but only first has the name
+
+        # Build column names
+        columns = ['Frame', 'Time']
+        current_marker = None
+        for i, name in enumerate(marker_line[2:], start=2):
+            if name:  # Non-empty means new marker
+                current_marker = name
+            if current_marker:
+                coord = ['X', 'Y', 'Z'][(i - 2) % 3]
+                columns.append(f"{current_marker}_{coord}")
+
+        # Read data (skip 5 header lines)
+        df = pd.read_csv(trc_path, sep='\t', skiprows=5, header=None)
+
+        # Trim to actual column count (TRC files often have trailing tabs)
+        df = df.iloc[:, :len(columns)]
+        df.columns = columns
+
+        return df
+    except Exception as e:
+        return None
+
+
+def get_ankle_positions(
+    trc_df: pd.DataFrame,
+    grf_df: pd.DataFrame,
+    ipsi_side: str,
+    num_points: int = 150
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Extract and resample ankle marker positions from TRC data.
+
+    TRC data is in mm, GRF COP is in m. This function converts TRC to meters.
+
+    Coordinate systems in Gait120:
+    - TRC: X=lateral, Y=vertical, Z=walking direction (but -Z is forward/anterior)
+    - GRF: px=lateral, py=vertical, pz=walking direction (but -Z is forward/anterior)
+
+    The subject walks in the -Z direction, so:
+    - Anterior (forward) = -Z
+    - Posterior (backward) = +Z
+
+    Args:
+        trc_df: DataFrame from TRC file with marker columns
+        grf_df: DataFrame from GRF MOT file with time column
+        ipsi_side: 'L' or 'R' for ipsilateral leg
+        num_points: Number of output phase points
+
+    Returns:
+        Tuple of (ipsi_ankle_anterior, ipsi_ankle_lateral,
+                  contra_ankle_anterior, contra_ankle_lateral) in meters
+        Note: anterior values are negated Z values so that +anterior = forward
+    """
+    # Marker names in TRC: LANK (left ankle), RANK (right ankle)
+    # Columns: LANK_X, LANK_Y, LANK_Z, RANK_X, RANK_Y, RANK_Z
+    # Note: ipsi_side can be 'l', 'L', 'r', or 'R' - handle case insensitively
+    ipsi_upper = ipsi_side.upper()
+    ipsi_marker = f"{'L' if ipsi_upper == 'L' else 'R'}ANK"
+    contra_marker = f"{'R' if ipsi_upper == 'L' else 'L'}ANK"
+
+    # Get time arrays
+    if 'Time' not in trc_df.columns or 'time' not in grf_df.columns:
+        return (np.full(num_points, np.nan),) * 4
+
+    trc_time = trc_df['Time'].values
+    grf_time = grf_df['time'].values
+
+    # Calculate phase from GRF time
+    t_start = grf_time.min()
+    t_end = grf_time.max()
+    cycle_duration = t_end - t_start
+    if cycle_duration <= 0:
+        return (np.full(num_points, np.nan),) * 4
+
+    # Get TRC columns (in mm)
+    def get_marker_column(marker: str, axis: str) -> Optional[np.ndarray]:
+        col_name = f"{marker}_{axis}"
+        if col_name in trc_df.columns:
+            return trc_df[col_name].values / 1000.0  # Convert mm to m
+        return None
+
+    # TRC Z = walking direction (-Z is forward)
+    # TRC X = lateral (left/right)
+    # We negate Z so that +anterior = forward direction
+    ipsi_z = get_marker_column(ipsi_marker, 'Z')
+    ipsi_x = get_marker_column(ipsi_marker, 'X')
+    contra_z = get_marker_column(contra_marker, 'Z')
+    contra_x = get_marker_column(contra_marker, 'X')
+
+    if any(x is None for x in [ipsi_z, ipsi_x, contra_z, contra_x]):
+        return (np.full(num_points, np.nan),) * 4
+
+    # Negate Z to convert to anterior-positive coordinate
+    ipsi_ant = -ipsi_z
+    ipsi_lat = ipsi_x
+    contra_ant = -contra_z
+    contra_lat = contra_x
+
+    # Interpolate TRC data to GRF time points, then resample to phase
+    phase_target = np.linspace(0, 100, num_points)
+
+    def resample_marker(marker_data: np.ndarray) -> np.ndarray:
+        try:
+            # First interpolate TRC to GRF time points
+            interp_to_grf = interp1d(trc_time, marker_data, kind='linear',
+                                     bounds_error=False, fill_value='extrapolate')
+            marker_at_grf_time = interp_to_grf(grf_time)
+
+            # Then resample to phase
+            phase_original = 100 * (grf_time - t_start) / cycle_duration
+            interp_to_phase = interp1d(phase_original, marker_at_grf_time,
+                                       kind='linear', bounds_error=False,
+                                       fill_value='extrapolate')
+            return interp_to_phase(phase_target)
+        except Exception:
+            return np.full(num_points, np.nan)
+
+    return (
+        resample_marker(ipsi_ant),
+        resample_marker(ipsi_lat),
+        resample_marker(contra_ant),
+        resample_marker(contra_lat),
+    )
 
 
 def circular_phase_shift(data: np.ndarray, shift_percent: float = 50.0) -> np.ndarray:
@@ -319,12 +543,15 @@ def process_step_file(
     col_map = get_column_mapping(df)
 
     # Check for required columns
-    ipsi = leg_side
-    contra = 'l' if leg_side == 'r' else 'r'
+    # NOTE: Source files are segmented by contralateral heel strike (not ipsilateral)
+    # So we need to SWAP which leg maps to ipsi vs contra in the output
+    # When processing a "right leg" step file, the LEFT leg is actually ipsilateral
+    source_ipsi = 'l' if leg_side == 'r' else 'r'  # Swapped!
+    source_contra = leg_side  # Swapped!
 
     # Gait120 uses knee_angle and ankle_angle (not knee_flexion, ankle_dorsiflexion)
-    required_ipsi = [f'hip_flexion_{ipsi}', f'knee_angle_{ipsi}', f'ankle_angle_{ipsi}']
-    required_contra = [f'hip_flexion_{contra}', f'knee_angle_{contra}', f'ankle_angle_{contra}']
+    required_ipsi = [f'hip_flexion_{source_ipsi}', f'knee_angle_{source_ipsi}', f'ankle_angle_{source_ipsi}']
+    required_contra = [f'hip_flexion_{source_contra}', f'knee_angle_{source_contra}', f'ankle_angle_{source_contra}']
 
     has_ipsi = all(c in col_map for c in required_ipsi)
     has_contra = all(c in col_map for c in required_contra)
@@ -334,6 +561,9 @@ def process_step_file(
 
     # Estimate stride duration
     stride_duration_s = estimate_stride_duration_from_mot(df)
+
+    # Calculate body weight in Newtons for GRF normalization
+    body_weight_N = subject_mass_kg * 9.81
 
     # Extract kinematics for ipsilateral leg (convert degrees to radians)
     # Source sign convention: hip flexion +, knee EXTENSION +, ankle dorsiflexion +
@@ -347,36 +577,49 @@ def process_step_file(
         return np.zeros(len(df))
 
     # Hip flexion (no sign change needed)
-    hip_ipsi_deg = get_col(f'hip_flexion_{ipsi}')
-    hip_contra_deg = get_col(f'hip_flexion_{contra}') if has_contra else np.full_like(hip_ipsi_deg, np.nan)
+    # Use source_ipsi/source_contra to get data from correct source columns
+    hip_ipsi_deg = get_col(f'hip_flexion_{source_ipsi}')
+    hip_contra_deg = get_col(f'hip_flexion_{source_contra}') if has_contra else np.full_like(hip_ipsi_deg, np.nan)
     hip_ipsi_rad = interpolate_to_phase(hip_ipsi_deg * DEG2RAD)
     hip_contra_rad = interpolate_to_phase(hip_contra_deg * DEG2RAD)
 
     # Knee angle (NEGATE: source extension+ -> standard flexion+)
     # Gait120 uses 'knee_angle_r' and 'knee_angle_l'
-    knee_ipsi_deg = get_col(f'knee_angle_{ipsi}')
-    knee_contra_deg = get_col(f'knee_angle_{contra}') if has_contra else np.full_like(knee_ipsi_deg, np.nan)
+    knee_ipsi_deg = get_col(f'knee_angle_{source_ipsi}')
+    knee_contra_deg = get_col(f'knee_angle_{source_contra}') if has_contra else np.full_like(knee_ipsi_deg, np.nan)
     knee_ipsi_rad = interpolate_to_phase(-knee_ipsi_deg * DEG2RAD)  # Negate for flexion+
     knee_contra_rad = interpolate_to_phase(-knee_contra_deg * DEG2RAD)  # Negate for flexion+
 
     # Ankle dorsiflexion (no sign change needed)
     # Gait120 uses 'ankle_angle_r' and 'ankle_angle_l'
-    ankle_ipsi_deg = get_col(f'ankle_angle_{ipsi}')
-    ankle_contra_deg = get_col(f'ankle_angle_{contra}') if has_contra else np.full_like(ankle_ipsi_deg, np.nan)
+    ankle_ipsi_deg = get_col(f'ankle_angle_{source_ipsi}')
+    ankle_contra_deg = get_col(f'ankle_angle_{source_contra}') if has_contra else np.full_like(ankle_ipsi_deg, np.nan)
     ankle_ipsi_rad = interpolate_to_phase(ankle_ipsi_deg * DEG2RAD)
     ankle_contra_rad = interpolate_to_phase(ankle_contra_deg * DEG2RAD)
 
-    # For gait tasks, apply 50% phase shift to contralateral data
-    # For bilateral tasks (sit-stand), no phase shift
+    # Phase alignment correction for Gait120 data
+    # The source .mot files are segmented starting at ~50% phase (around toe-off)
+    # We need to shift by 50% to align with heel strike at 0%
     is_bilateral = task in ['sit_to_stand', 'stand_to_sit', 'squat']
-    if not is_bilateral and has_contra:
-        hip_contra_rad = circular_phase_shift(hip_contra_rad)
-        knee_contra_rad = circular_phase_shift(knee_contra_rad)
-        ankle_contra_rad = circular_phase_shift(ankle_contra_rad)
+    if not is_bilateral:
+        # Shift ipsilateral data by 50% to align heel strike with phase 0%
+        hip_ipsi_rad = circular_phase_shift(hip_ipsi_rad, 50.0)
+        knee_ipsi_rad = circular_phase_shift(knee_ipsi_rad, 50.0)
+        ankle_ipsi_rad = circular_phase_shift(ankle_ipsi_rad, 50.0)
+
+        # Shift contralateral data by 50% as well (maintains ~50% offset from ipsi)
+        if has_contra:
+            hip_contra_rad = circular_phase_shift(hip_contra_rad, 50.0)
+            knee_contra_rad = circular_phase_shift(knee_contra_rad, 50.0)
+            ankle_contra_rad = circular_phase_shift(ankle_contra_rad, 50.0)
 
     # Pelvis tilt (global reference)
     pelvis_tilt_deg = get_col('pelvis_tilt')
     pelvis_tilt_rad = interpolate_to_phase(pelvis_tilt_deg * DEG2RAD) if 'pelvis_tilt' in col_map else np.zeros(NUM_POINTS)
+
+    # Apply same phase shift to pelvis for gait tasks
+    if not is_bilateral:
+        pelvis_tilt_rad = circular_phase_shift(pelvis_tilt_rad, 50.0)
 
     # Compute segment angles from kinematic chain
     # thigh_angle = pelvis_tilt + hip_flexion
@@ -390,36 +633,143 @@ def process_step_file(
     foot_contra_rad = shank_contra_rad + ankle_contra_rad
 
     # Compute velocities
-    hip_vel_ipsi = compute_velocity_from_angle(hip_ipsi_rad, stride_duration_s)
-    hip_vel_contra = compute_velocity_from_angle(hip_contra_rad, stride_duration_s)
-    knee_vel_ipsi = compute_velocity_from_angle(knee_ipsi_rad, stride_duration_s)
-    knee_vel_contra = compute_velocity_from_angle(knee_contra_rad, stride_duration_s)
-    ankle_vel_ipsi = compute_velocity_from_angle(ankle_ipsi_rad, stride_duration_s)
-    ankle_vel_contra = compute_velocity_from_angle(ankle_contra_rad, stride_duration_s)
+    # For shifted data (gait tasks), use explicit discontinuity index at 50% phase (index 75)
+    # For non-shifted data (sit-stand), use standard gradient
+    is_shifted = not is_bilateral
+    disc_idx = NUM_POINTS // 2 if is_shifted else None  # 75 for 150 points
+
+    hip_vel_ipsi = compute_velocity_from_shifted_angle(hip_ipsi_rad, stride_duration_s, discontinuity_idx=disc_idx)
+    hip_vel_contra = compute_velocity_from_shifted_angle(hip_contra_rad, stride_duration_s, discontinuity_idx=disc_idx)
+    knee_vel_ipsi = compute_velocity_from_shifted_angle(knee_ipsi_rad, stride_duration_s, discontinuity_idx=disc_idx)
+    knee_vel_contra = compute_velocity_from_shifted_angle(knee_contra_rad, stride_duration_s, discontinuity_idx=disc_idx)
+    ankle_vel_ipsi = compute_velocity_from_shifted_angle(ankle_ipsi_rad, stride_duration_s, discontinuity_idx=disc_idx)
+    ankle_vel_contra = compute_velocity_from_shifted_angle(ankle_contra_rad, stride_duration_s, discontinuity_idx=disc_idx)
 
     # Segment velocities
-    pelvis_vel = compute_velocity_from_angle(pelvis_tilt_rad, stride_duration_s)
-    thigh_vel_ipsi = compute_velocity_from_angle(thigh_ipsi_rad, stride_duration_s)
-    thigh_vel_contra = compute_velocity_from_angle(thigh_contra_rad, stride_duration_s)
-    shank_vel_ipsi = compute_velocity_from_angle(shank_ipsi_rad, stride_duration_s)
-    shank_vel_contra = compute_velocity_from_angle(shank_contra_rad, stride_duration_s)
-    foot_vel_ipsi = compute_velocity_from_angle(foot_ipsi_rad, stride_duration_s)
-    foot_vel_contra = compute_velocity_from_angle(foot_contra_rad, stride_duration_s)
+    pelvis_vel = compute_velocity_from_shifted_angle(pelvis_tilt_rad, stride_duration_s, discontinuity_idx=disc_idx)
+    thigh_vel_ipsi = compute_velocity_from_shifted_angle(thigh_ipsi_rad, stride_duration_s, discontinuity_idx=disc_idx)
+    thigh_vel_contra = compute_velocity_from_shifted_angle(thigh_contra_rad, stride_duration_s, discontinuity_idx=disc_idx)
+    shank_vel_ipsi = compute_velocity_from_shifted_angle(shank_ipsi_rad, stride_duration_s, discontinuity_idx=disc_idx)
+    shank_vel_contra = compute_velocity_from_shifted_angle(shank_contra_rad, stride_duration_s, discontinuity_idx=disc_idx)
+    foot_vel_ipsi = compute_velocity_from_shifted_angle(foot_ipsi_rad, stride_duration_s, discontinuity_idx=disc_idx)
+    foot_vel_contra = compute_velocity_from_shifted_angle(foot_contra_rad, stride_duration_s, discontinuity_idx=disc_idx)
 
     # Compute accelerations
-    hip_acc_ipsi = compute_acceleration_from_velocity(hip_vel_ipsi, stride_duration_s)
-    hip_acc_contra = compute_acceleration_from_velocity(hip_vel_contra, stride_duration_s)
-    knee_acc_ipsi = compute_acceleration_from_velocity(knee_vel_ipsi, stride_duration_s)
-    knee_acc_contra = compute_acceleration_from_velocity(knee_vel_contra, stride_duration_s)
-    ankle_acc_ipsi = compute_acceleration_from_velocity(ankle_vel_ipsi, stride_duration_s)
-    ankle_acc_contra = compute_acceleration_from_velocity(ankle_vel_contra, stride_duration_s)
+    hip_acc_ipsi = compute_acceleration_from_velocity(hip_vel_ipsi, stride_duration_s, discontinuity_idx=disc_idx)
+    hip_acc_contra = compute_acceleration_from_velocity(hip_vel_contra, stride_duration_s, discontinuity_idx=disc_idx)
+    knee_acc_ipsi = compute_acceleration_from_velocity(knee_vel_ipsi, stride_duration_s, discontinuity_idx=disc_idx)
+    knee_acc_contra = compute_acceleration_from_velocity(knee_vel_contra, stride_duration_s, discontinuity_idx=disc_idx)
+    ankle_acc_ipsi = compute_acceleration_from_velocity(ankle_vel_ipsi, stride_duration_s, discontinuity_idx=disc_idx)
+    ankle_acc_contra = compute_acceleration_from_velocity(ankle_vel_contra, stride_duration_s, discontinuity_idx=disc_idx)
+
+    # Load GRF/COP data if available
+    # COP in Gait120 is in lab coordinates, so we need to subtract ankle position
+    # to get ankle-relative (foot-relative) COP
+    grf_data = None
+    grf_df = None
+    grf_mot_path = get_grf_mot_path(mot_path)
+    if grf_mot_path is not None:
+        grf_df = load_mot_file(grf_mot_path)
+        if grf_df is not None and len(grf_df) > 10:
+            grf_data = process_force_plate_data(grf_df, num_points=NUM_POINTS)
+
+    # Initialize GRF/COP arrays (NaN if not available)
+    if grf_data is not None:
+        grf_vertical_ipsi = grf_data.grf_vertical_ipsi_N
+        grf_vertical_contra = grf_data.grf_vertical_contra_N
+        grf_anterior_ipsi = grf_data.grf_anterior_ipsi_N
+        grf_anterior_contra = grf_data.grf_anterior_contra_N
+        grf_lateral_ipsi = grf_data.grf_lateral_ipsi_N
+        grf_lateral_contra = grf_data.grf_lateral_contra_N
+
+        # Get lab-frame COP
+        cop_anterior_ipsi_lab = grf_data.cop_anterior_ipsi_m
+        cop_lateral_ipsi_lab = grf_data.cop_lateral_ipsi_m
+        cop_anterior_contra_lab = grf_data.cop_anterior_contra_m
+        cop_lateral_contra_lab = grf_data.cop_lateral_contra_m
+
+        # Transform COP from lab frame to ankle-relative frame
+        trc_path = get_trc_path(mot_path)
+        if trc_path is not None:
+            trc_df = load_trc_file(trc_path)
+            if trc_df is not None and grf_df is not None:
+                # Get ankle marker positions (resampled to phase)
+                # Coordinate mapping: TRC Z = anterior, TRC X = lateral
+                ankle_ant_ipsi, ankle_lat_ipsi, ankle_ant_contra, ankle_lat_contra = \
+                    get_ankle_positions(trc_df, grf_df, source_ipsi, NUM_POINTS)
+
+                # Subtract ankle position to get ankle-relative COP
+                # Only transform during stance (when GRF > threshold), set NaN during swing
+                grf_threshold = 20.0  # N
+                ipsi_stance = grf_vertical_ipsi > grf_threshold
+                contra_stance = grf_vertical_contra > grf_threshold
+
+                cop_anterior_ipsi = np.where(
+                    ipsi_stance,
+                    cop_anterior_ipsi_lab - ankle_ant_ipsi,
+                    np.nan
+                )
+                cop_lateral_ipsi = np.where(
+                    ipsi_stance,
+                    cop_lateral_ipsi_lab - ankle_lat_ipsi,
+                    np.nan
+                )
+                cop_anterior_contra = np.where(
+                    contra_stance,
+                    cop_anterior_contra_lab - ankle_ant_contra,
+                    np.nan
+                )
+                cop_lateral_contra = np.where(
+                    contra_stance,
+                    cop_lateral_contra_lab - ankle_lat_contra,
+                    np.nan
+                )
+            else:
+                # TRC not available - keep lab frame COP
+                cop_anterior_ipsi = cop_anterior_ipsi_lab
+                cop_lateral_ipsi = cop_lateral_ipsi_lab
+                cop_anterior_contra = cop_anterior_contra_lab
+                cop_lateral_contra = cop_lateral_contra_lab
+        else:
+            # TRC not available - keep lab frame COP
+            cop_anterior_ipsi = cop_anterior_ipsi_lab
+            cop_lateral_ipsi = cop_lateral_ipsi_lab
+            cop_anterior_contra = cop_anterior_contra_lab
+            cop_lateral_contra = cop_lateral_contra_lab
+    else:
+        # No GRF data available - fill with NaN
+        grf_vertical_ipsi = np.full(NUM_POINTS, np.nan)
+        grf_vertical_contra = np.full(NUM_POINTS, np.nan)
+        grf_anterior_ipsi = np.full(NUM_POINTS, np.nan)
+        grf_anterior_contra = np.full(NUM_POINTS, np.nan)
+        grf_lateral_ipsi = np.full(NUM_POINTS, np.nan)
+        grf_lateral_contra = np.full(NUM_POINTS, np.nan)
+        cop_anterior_ipsi = np.full(NUM_POINTS, np.nan)
+        cop_lateral_ipsi = np.full(NUM_POINTS, np.nan)
+        cop_anterior_contra = np.full(NUM_POINTS, np.nan)
+        cop_lateral_contra = np.full(NUM_POINTS, np.nan)
+
+    # Apply phase shift to GRF and COP data (same as kinematics)
+    # The source data is segmented at ~50% phase, we shift to align with heel strike at 0%
+    if not is_bilateral:
+        grf_vertical_ipsi = circular_phase_shift(grf_vertical_ipsi, 50.0)
+        grf_vertical_contra = circular_phase_shift(grf_vertical_contra, 50.0)
+        grf_anterior_ipsi = circular_phase_shift(grf_anterior_ipsi, 50.0)
+        grf_anterior_contra = circular_phase_shift(grf_anterior_contra, 50.0)
+        grf_lateral_ipsi = circular_phase_shift(grf_lateral_ipsi, 50.0)
+        grf_lateral_contra = circular_phase_shift(grf_lateral_contra, 50.0)
+        cop_anterior_ipsi = circular_phase_shift(cop_anterior_ipsi, 50.0)
+        cop_lateral_ipsi = circular_phase_shift(cop_lateral_ipsi, 50.0)
+        cop_anterior_contra = circular_phase_shift(cop_anterior_contra, 50.0)
+        cop_lateral_contra = circular_phase_shift(cop_lateral_contra, 50.0)
 
     # Phase values
     phase = np.linspace(0, 100, NUM_POINTS)
     phase_dot = np.full(NUM_POINTS, 100.0 / stride_duration_s)
 
     # Build task_info string
-    task_info_parts = [f"leg:{leg_side}", "exo_state:no_exo"]
+    # Note: source_ipsi is the actual ipsilateral leg in our output (after swap)
+    task_info_parts = [f"leg:{source_ipsi}", "exo_state:no_exo"]
     task_info_str = ",".join(task_info_parts)
 
     # Build subject metadata
@@ -477,6 +827,28 @@ def process_step_file(
         'shank_sagittal_velocity_contra_rad_s': shank_vel_contra,
         'foot_sagittal_velocity_ipsi_rad_s': foot_vel_ipsi,
         'foot_sagittal_velocity_contra_rad_s': foot_vel_contra,
+
+        # Ground reaction forces (N)
+        'grf_vertical_ipsi_N': grf_vertical_ipsi,
+        'grf_vertical_contra_N': grf_vertical_contra,
+        'grf_anterior_ipsi_N': grf_anterior_ipsi,
+        'grf_anterior_contra_N': grf_anterior_contra,
+        'grf_lateral_ipsi_N': grf_lateral_ipsi,
+        'grf_lateral_contra_N': grf_lateral_contra,
+
+        # Ground reaction forces (body weight normalized)
+        'grf_vertical_ipsi_BW': grf_vertical_ipsi / body_weight_N,
+        'grf_vertical_contra_BW': grf_vertical_contra / body_weight_N,
+        'grf_anterior_ipsi_BW': grf_anterior_ipsi / body_weight_N,
+        'grf_anterior_contra_BW': grf_anterior_contra / body_weight_N,
+        'grf_lateral_ipsi_BW': grf_lateral_ipsi / body_weight_N,
+        'grf_lateral_contra_BW': grf_lateral_contra / body_weight_N,
+
+        # Center of pressure (m)
+        'cop_anterior_ipsi_m': cop_anterior_ipsi,
+        'cop_lateral_ipsi_m': cop_lateral_ipsi,
+        'cop_anterior_contra_m': cop_anterior_contra,
+        'cop_lateral_contra_m': cop_lateral_contra,
     })
 
     return stride_df
@@ -528,21 +900,21 @@ def process_task(
                 mot_files = sorted(trial_folder.glob('*.mot'))
 
         for mot_file in mot_files:
-            # Process for both legs (ipsi = right, then ipsi = left)
-            for leg_side in ['r', 'l']:
-                stride_df = process_step_file(
-                    mot_path=mot_file,
-                    subject_id=subject_id,
-                    task=task,
-                    task_id=task_id,
-                    step_num=step_num,
-                    leg_side=leg_side,
-                    subject_mass_kg=subject_mass_kg
-                )
+            # Process once per file - source files contain bilateral data for one stride
+            # Using leg_side='r' with the ipsi/contra swap gives correct phase alignment
+            stride_df = process_step_file(
+                mot_path=mot_file,
+                subject_id=subject_id,
+                task=task,
+                task_id=task_id,
+                step_num=step_num,
+                leg_side='r',  # Fixed: don't loop over both legs
+                subject_mass_kg=subject_mass_kg
+            )
 
-                if stride_df is not None:
-                    strides.append(stride_df)
-                    step_num += 1
+            if stride_df is not None:
+                strides.append(stride_df)
+                step_num += 1
 
     return strides, step_num
 

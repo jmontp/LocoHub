@@ -1,30 +1,30 @@
-**Report generated:** 2026-01-22 13:59
+**Report generated:** 2026-01-23 12:51
 
 ## Status Summary
 
 | Metric | Value |
 |--------|-------|
-| Stride Pass Rate | 17.1% |
-| Total Strides | 1178 |
-| Passing Strides | 202 |
+| Stride Pass Rate | 74.5% |
+| Total Strides | 6882 |
+| Passing Strides | 5129 |
 
 ### Summary
 
-**Status**: ❌ NEEDS REVIEW (17.1% valid)  
-**Total Strides**: 1178  
-**Passing Strides**: 202  
+**Status**: ❌ NEEDS REVIEW (74.5% valid)  
+**Total Strides**: 6882  
+**Passing Strides**: 5129  
 
 ### Task Breakdown
 
 | Task | Pass Rate | Status |
 |------|-----------|--------|
-| Decline Walking | 1.5% | ❌ |
-| Incline Walking | 0.0% | ❌ |
-| Level Walking | 0.0% | ❌ |
-| Sit To Stand | 38.8% | ❌ |
-| Stair Ascent | 48.5% | ❌ |
-| Stair Descent | 1.0% | ❌ |
-| Stand To Sit | 63.3% | ❌ |
+| Decline Walking | 97.7% | ✅ |
+| Incline Walking | 98.3% | ✅ |
+| Level Walking | 42.3% | ❌ |
+| Sit To Stand | 30.8% | ❌ |
+| Stair Ascent | 99.8% | ✅ |
+| Stair Descent | 66.9% | ❌ |
+| Stand To Sit | 44.8% | ❌ |
 
 _Validation ranges snapshot embedded below._
 
@@ -63,4 +63,4 @@ _Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml_
 
 ---
 
-*Generated from `converted_datasets/gait120_phase.parquet` on 2026-01-22 13:59*
+*Generated from `converted_datasets/gait120_phase.parquet` on 2026-01-23 12:51*
