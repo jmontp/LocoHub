@@ -1,0 +1,857 @@
+display_name: GaTech 2025 (Domain Adaptation)
+short_code: GT25D
+description: 'Dataset from "Deep Domain Adaptation Eliminates Costly Data Required
+  for Task-Agnostic Wearable Robotic Control" (Science Robotics 2025). Contains biomechanical
+  data from 8 able-bodied adults performing 6 activity categories while wearing a
+  hip-knee exoskeleton with 3 domain adaptation model variants (baseline, 4t4s, 0task).
+  Includes joint kinematics, kinetics, ground reaction forces, exoskeleton torques,
+  and IMU-derived segment angles at 200 Hz.
+
+  '
+year: '2025'
+institution: EPIC Lab (Georgia Tech)
+subjects: '8'
+tasks:
+- backward_walking
+- level_walking
+- sit_to_stand
+- stand_to_sit
+citation: 'Scherpereel, K.L. et al. Deep domain adaptation eliminates costly data
+  required for task-agnostic wearable robotic control. Science Robotics (2025). https://doi.org/10.1126/scirobotics.ado6509
+
+  '
+protocol: 'Data collected from 8 able-bodied adults wearing a clothing-integrated
+  hip-knee exoskeleton. Subjects performed 6 activity categories: level walking (0.6,
+  1.2, 1.8 m/s on treadmill), backward walking (0.6, 0.8, 1.0 m/s), stair ascent/descent,
+  sit-to-stand transfers, ball tossing, and cutting maneuvers. Three domain adaptation
+  model variants were tested per subject: baseline (semisupervised), 4t4s (semisupervised
+  with domain adaptation), and 0task (unsupervised). Model variant is stored in task_info
+  as model:<variant>. Despite overlapping subject ID labels (BT01-BT08), these are
+  different participants from the GaTech 2024 TaskAgnostic dataset.
+
+  '
+notes: 'Gait cycles detected using vertical GRF threshold crossing (20 N). First 2
+  and last 1 strides per trial excluded as transitions. IQR-based filtering removes
+  outlier stride durations. Sit-to-stand and stand-to-sit transfers segmented using
+  GRF state machine. Data phase-normalized to 150 points per cycle. Stair ascent/descent
+  trials were too short for stride extraction with current filtering. All data collected
+  with powered exoskeleton. Source data from Georgia Tech Digital Repository.
+
+  '
+download_dirty_url: https://www.dropbox.com/scl/fi/jye5hdd9z6ftjf6yogtm8/gtech_2025_da_phase_dirty.parquet?rlkey=edfildc8cwk4sipp4dkccy761&dl=1
+date_added: '2026-02-05'
+validation_status: "\u26A0\uFE0F PARTIAL"
+validation_pass_rate: 90.5
+total_strides: 5470
+passing_strides: 4948
+quality_display: "\u26A0\uFE0F Partial (90.5%)"
+doc_url: https://jmontp.github.io/LocoHub/datasets/gt25d/
+doc_path: docs/datasets/gt25d.md
+doc_body_path: docs/datasets/.generated/gt25d_documentation.md
+validation_doc_url: https://jmontp.github.io/LocoHub/datasets/gt25d/#validation
+validation_doc_path: docs/datasets/gt25d.md#validation
+validation_body_path: docs/datasets/.generated/gt25d_validation.md
+validation_summary: "### Summary\n\n**Status**: \u26A0\uFE0F PARTIAL (90.5% valid)\
+  \  \n**Total Strides**: 5470  \n**Passing Strides**: 4948  \n\n### Task Breakdown\n\
+  \n| Task | Pass Rate | Status |\n|------|-----------|--------|\n| Backward Walking\
+  \ | 85.7% | \u26A0\uFE0F |\n| Level Walking | 97.6% | \u2705 |\n| Sit To Stand |\
+  \ 89.0% | \u26A0\uFE0F |\n| Stand To Sit | 85.5% | \u26A0\uFE0F |\n\n_Validation\
+  \ ranges snapshot embedded below._\n"
+validation_ranges_file: '[Download validation ranges](./gt25d_validation_ranges.yaml)'
+validation_ranges_download: docs/datasets/gt25d_validation_ranges.yaml
+validation_ranges_source: contributor_tools/validation_ranges/default_ranges.yaml
+comparison_tasks:
+  backward_walking:
+    pass_rate: 85.74549426542872
+    status: "\u26A0\uFE0F"
+    total_strides: 1831
+    failing_strides: 261
+  level_walking:
+    pass_rate: 97.61904761904762
+    status: "\u2705"
+    total_strides: 1932
+    failing_strides: 46
+  sit_to_stand:
+    pass_rate: 88.95966029723992
+    status: "\u26A0\uFE0F"
+    total_strides: 942
+    failing_strides: 104
+  stand_to_sit:
+    pass_rate: 85.49019607843137
+    status: "\u26A0\uFE0F"
+    total_strides: 765
+    failing_strides: 111
+feature_task_groups:
+- group: Ground Reaction Forces
+  features:
+  - name: grf_anterior_contra_BW
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: grf_anterior_ipsi_BW
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: grf_lateral_contra_BW
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: grf_lateral_ipsi_BW
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: grf_vertical_contra_BW
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: grf_vertical_ipsi_BW
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+- group: Joint Angles
+  features:
+  - name: ankle_dorsiflexion_angle_contra_rad
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: ankle_dorsiflexion_angle_ipsi_rad
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: foot_sagittal_angle_contra_rad
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: foot_sagittal_angle_ipsi_rad
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_angle_contra_rad
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_angle_ipsi_rad
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_angle_contra_rad
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_angle_ipsi_rad
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: shank_sagittal_angle_contra_rad
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: shank_sagittal_angle_ipsi_rad
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: thigh_sagittal_angle_contra_rad
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: thigh_sagittal_angle_ipsi_rad
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+- group: Joint Moments
+  features:
+  - name: ankle_dorsiflexion_assistance_moment_contra_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: ankle_dorsiflexion_assistance_moment_ipsi_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: ankle_dorsiflexion_biological_moment_contra_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: ankle_dorsiflexion_biological_moment_ipsi_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: ankle_dorsiflexion_moment_contra_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: ankle_dorsiflexion_moment_ipsi_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_assistance_moment_contra_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_assistance_moment_ipsi_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_biological_moment_contra_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_biological_moment_ipsi_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_moment_contra_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_moment_ipsi_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_assistance_moment_contra_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_assistance_moment_ipsi_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_biological_moment_contra_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_biological_moment_ipsi_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_moment_contra_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_moment_ipsi_Nm_kg
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+- group: Joint Velocities
+  features:
+  - name: ankle_dorsiflexion_velocity_contra_rad_s
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: ankle_dorsiflexion_velocity_ipsi_rad_s
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: foot_sagittal_velocity_contra_rad_s
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: foot_sagittal_velocity_ipsi_rad_s
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_velocity_contra_rad_s
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: hip_flexion_velocity_ipsi_rad_s
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_velocity_contra_rad_s
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: knee_flexion_velocity_ipsi_rad_s
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: shank_sagittal_velocity_contra_rad_s
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: shank_sagittal_velocity_ipsi_rad_s
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: thigh_sagittal_velocity_contra_rad_s
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: thigh_sagittal_velocity_ipsi_rad_s
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+- group: Other Features
+  features:
+  - name: cop_anterior_contra_m
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: cop_anterior_ipsi_m
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: cop_lateral_contra_m
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: cop_lateral_ipsi_m
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: cop_vertical_contra_m
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+  - name: cop_vertical_ipsi_m
+    tasks:
+      backward_walking:
+        status: complete
+        coverage: 100.0
+      level_walking:
+        status: complete
+        coverage: 100.0
+      sit_to_stand:
+        status: complete
+        coverage: 100.0
+      stand_to_sit:
+        status: complete
+        coverage: 100.0
+feature_task_order:
+- backward_walking
+- level_walking
+- sit_to_stand
+- stand_to_sit
+feature_task_source: converted_datasets/gtech_2025_da_phase_dirty.parquet
+last_dataset_path: converted_datasets/gtech_2025_da_phase_dirty.parquet
