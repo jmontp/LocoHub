@@ -17,8 +17,8 @@ Dataset from "Deep Domain Adaptation Eliminates Costly Data Required for Task-Ag
 .download-button.unavailable { background:#d1d5db; color:#6b7280; cursor:not-allowed; }
 </style>
 <div class="download-grid">
-  <span class="download-button unavailable" title="Clean dataset download not yet available">Clean Dataset (coming soon)</span>
-  <a class="download-button available" href="https://www.dropbox.com/scl/fi/jye5hdd9z6ftjf6yogtm8/gtech_2025_da_phase_dirty.parquet?rlkey=edfildc8cwk4sipp4dkccy761&dl=1">Full Dataset (dirty)</a>
+  <a class="download-button available" href="https://www.dropbox.com/scl/fi/ni7qgftpoq2klndsrwkz1/gtech_2025_da_phase_clean.parquet?rlkey=j5ssc03k2sprw09vfzr370nh1&dl=1">Clean Dataset (4,948 strides)</a>
+  <a class="download-button available" href="https://www.dropbox.com/scl/fi/jye5hdd9z6ftjf6yogtm8/gtech_2025_da_phase_dirty.parquet?rlkey=edfildc8cwk4sipp4dkccy761&dl=1">Full Dataset (5,470 strides)</a>
 </div>
 
 ## Dataset Information
