@@ -139,6 +139,84 @@ def _free_memory(message: str = "") -> None:
 # Dropbox Integration Helpers
 # =============================================================================
 
+def _to_direct_download_link(url: str) -> str:
+    """Convert a Dropbox share link to a direct-download link (dl=1).
+
+    Handles both '?dl=0' and '&dl=0' variants that Dropbox may return.
+    """
+    if 'dl=0' in url:
+        return url.replace('dl=0', 'dl=1')
+    if '?' not in url:
+        return url + '?dl=1'
+    if 'dl=' not in url:
+        return url + '&dl=1'
+    return url
+
+
+def _upload_to_dropbox_api(
+    local_path: Path,
+    dropbox_api_dest: str,
+    access_token: str,
+) -> bool:
+    """Upload a file to Dropbox via the API (does not require desktop sync).
+
+    Args:
+        local_path: Local file to upload.
+        dropbox_api_dest: Destination path in Dropbox (e.g., '/gt25d/file.parquet').
+        access_token: Dropbox OAuth access token.
+
+    Returns:
+        True on success, False on failure.
+    """
+    if not DROPBOX_SDK_AVAILABLE:
+        print("⚠️  Dropbox SDK not installed. Run: pip install dropbox")
+        return False
+
+    try:
+        dbx = dropbox.Dropbox(access_token)
+        file_size = local_path.stat().st_size
+
+        # Use upload sessions for files > 150 MB
+        CHUNK_SIZE = 150 * 1024 * 1024
+        with open(local_path, 'rb') as f:
+            if file_size <= CHUNK_SIZE:
+                dbx.files_upload(
+                    f.read(),
+                    dropbox_api_dest,
+                    mode=dropbox.files.WriteMode.overwrite,
+                )
+            else:
+                session = dbx.files_upload_session_start(f.read(CHUNK_SIZE))
+                cursor = dropbox.files.UploadSessionCursor(
+                    session_id=session.session_id, offset=f.tell()
+                )
+                commit = dropbox.files.CommitInfo(
+                    path=dropbox_api_dest,
+                    mode=dropbox.files.WriteMode.overwrite,
+                )
+                while f.tell() < file_size:
+                    remaining = file_size - f.tell()
+                    if remaining <= CHUNK_SIZE:
+                        dbx.files_upload_session_finish(
+                            f.read(remaining), cursor, commit
+                        )
+                    else:
+                        dbx.files_upload_session_append_v2(
+                            f.read(CHUNK_SIZE), cursor
+                        )
+                        cursor.offset = f.tell()
+        return True
+    except dropbox.exceptions.AuthError as e:
+        print(f"❌ Dropbox auth error during upload: {e}")
+        return False
+    except dropbox.exceptions.ApiError as e:
+        print(f"❌ Dropbox API error during upload: {e}")
+        return False
+    except Exception as e:
+        print(f"❌ Unexpected error uploading to Dropbox: {e}")
+        return False
+
+
 def _get_dropbox_folder(args) -> Optional[Path]:
     """Resolve Dropbox folder from command-line args or environment variable.
 
@@ -290,6 +368,52 @@ def _generate_dropbox_share_link(
         return None
 
 
+def _upload_and_share(
+    local_path: Path,
+    dropbox_folder: Path,
+    short_code: str,
+    access_token: Optional[str],
+    domain_restriction: Optional[str],
+    generate_links: bool,
+) -> Optional[str]:
+    """Copy a file to Dropbox (local + API) and optionally return a direct-download share link.
+
+    1. Copies to the local Dropbox folder for desktop-app sync.
+    2. If share links are requested, uploads via API (ensures cloud availability
+       even before desktop sync completes) then generates the share link.
+
+    Returns:
+        A direct-download URL (dl=1) on success, or None.
+    """
+    # Step 1: local copy (for desktop-app sync / local access)
+    dropbox_dest = _copy_to_dropbox(local_path, dropbox_folder, short_code)
+    if dropbox_dest:
+        print(f"   ✅ Local copy: {dropbox_dest}")
+
+    if not (generate_links and access_token):
+        return None
+
+    # Compute the Dropbox API path
+    api_path = "/" + short_code.lower() + "/" + local_path.name
+
+    # Step 2: upload via API so the file is immediately available in the cloud
+    print(f"   Uploading via API: {api_path}")
+    if _upload_to_dropbox_api(local_path, api_path, access_token):
+        print(f"   ✅ API upload complete")
+    else:
+        print(f"   ⚠️  API upload failed; share link may fail if desktop sync hasn't finished")
+
+    # Step 3: generate share link
+    print(f"   Generating share link for: {api_path}")
+    link = _generate_dropbox_share_link(api_path, access_token, domain_restriction)
+    if link:
+        link = _to_direct_download_link(link)
+        print(f"   ✅ Share link: {link}")
+        return link
+
+    return None
+
+
 def _handle_dropbox_upload(
     dataset_path: Path,
     short_code: str,
@@ -299,7 +423,7 @@ def _handle_dropbox_upload(
     """Handle Dropbox upload and share link generation for a dataset.
 
     This function:
-    1. Copies clean and/or dirty dataset files to Dropbox
+    1. Copies clean and/or dirty dataset files to Dropbox (local + API)
     2. Optionally generates share links via the API
     3. Updates metadata with download URLs
     """
@@ -329,23 +453,13 @@ def _handle_dropbox_upload(
     # Handle clean dataset
     clean_path, is_clean = _infer_clean_dataset_path(dataset_path)
     if clean_path.exists():
-        print(f"   Copying clean dataset: {clean_path.name}")
-        dropbox_clean_dest = _copy_to_dropbox(clean_path, dropbox_folder, short_code)
-        if dropbox_clean_dest:
-            print(f"   ✅ Copied to: {dropbox_clean_dest}")
-
-            if generate_links and access_token:
-                api_path = _get_dropbox_api_path(dropbox_clean_dest, dropbox_folder)
-                print(f"   Generating share link for: {api_path}")
-                link = _generate_dropbox_share_link(api_path, access_token, domain_restriction)
-                if link:
-                    # Convert to direct download link (dl=1 instead of dl=0)
-                    if '?dl=0' in link:
-                        link = link.replace('?dl=0', '?dl=1')
-                    elif '?' not in link:
-                        link = link + '?dl=1'
-                    metadata['download_clean_url'] = link
-                    print(f"   ✅ Share link: {link}")
+        print(f"   Uploading clean dataset: {clean_path.name}")
+        link = _upload_and_share(
+            clean_path, dropbox_folder, short_code,
+            access_token, domain_restriction, generate_links,
+        )
+        if link:
+            metadata['download_clean_url'] = link
 
     # Handle dirty dataset (if different from clean and exists)
     if '_dirty' in dataset_path.name or (not is_clean and dataset_path != clean_path):
@@ -359,22 +473,13 @@ def _handle_dropbox_upload(
                     dirty_path = candidate
 
         if dirty_path and dirty_path.exists() and dirty_path != clean_path:
-            print(f"   Copying full/dirty dataset: {dirty_path.name}")
-            dropbox_dirty_dest = _copy_to_dropbox(dirty_path, dropbox_folder, short_code)
-            if dropbox_dirty_dest:
-                print(f"   ✅ Copied to: {dropbox_dirty_dest}")
-
-                if generate_links and access_token:
-                    api_path = _get_dropbox_api_path(dropbox_dirty_dest, dropbox_folder)
-                    print(f"   Generating share link for: {api_path}")
-                    link = _generate_dropbox_share_link(api_path, access_token, domain_restriction)
-                    if link:
-                        if '?dl=0' in link:
-                            link = link.replace('?dl=0', '?dl=1')
-                        elif '?' not in link:
-                            link = link + '?dl=1'
-                        metadata['download_dirty_url'] = link
-                        print(f"   ✅ Share link: {link}")
+            print(f"   Uploading full/dirty dataset: {dirty_path.name}")
+            link = _upload_and_share(
+                dirty_path, dropbox_folder, short_code,
+                access_token, domain_restriction, generate_links,
+            )
+            if link:
+                metadata['download_dirty_url'] = link
 
 
 # =============================================================================
@@ -2477,7 +2582,8 @@ def handle_update_documentation(args):
         if coverage_source_path:
             metadata['feature_task_source'] = _relative_path(coverage_source_path)
 
-    if not override_path:
+    no_prompt = getattr(args, 'no_prompt', False)
+    if not override_path and not no_prompt:
         _prompt_metadata_updates(metadata)
 
     # Persist subject metadata table in metadata for rendering
@@ -2790,6 +2896,11 @@ Example workflow:
     update_doc_parser.add_argument(
         '--metadata-file',
         help='Optional metadata overrides to merge before regenerating the page'
+    )
+    update_doc_parser.add_argument(
+        '--no-prompt',
+        action='store_true',
+        help='Skip interactive metadata prompts (use existing metadata as-is)'
     )
     # Dropbox integration arguments
     update_doc_parser.add_argument(
