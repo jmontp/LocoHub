@@ -503,6 +503,23 @@ function rows = extract_and_process_time_window(trial_data, time_start, time_end
             cop_vertical_contra = interp_optional(trial_data.fp, sprintf('Treadmill_%s_py', contra_tread), fp_time, target_time) - ankle_vert_contra;
             cop_anterior_contra = interp_optional(trial_data.fp, sprintf('Treadmill_%s_pz', contra_tread), fp_time, target_time) - ankle_ant_contra;
         end
+
+        if strcmpi(mode, 'levelground')
+            % For overground windows, shear GRF and CoP during unloaded samples
+            % are undefined rather than true zeros.
+            contact_mask_ipsi = grf_vertical_ipsi < 0.2;
+            contact_mask_contra = grf_vertical_contra < 0.2;
+            grf_anterior_ipsi(contact_mask_ipsi) = NaN;
+            grf_lateral_ipsi(contact_mask_ipsi) = NaN;
+            grf_anterior_contra(contact_mask_contra) = NaN;
+            grf_lateral_contra(contact_mask_contra) = NaN;
+            cop_anterior_ipsi(contact_mask_ipsi) = NaN;
+            cop_lateral_ipsi(contact_mask_ipsi) = NaN;
+            cop_vertical_ipsi(contact_mask_ipsi) = NaN;
+            cop_anterior_contra(contact_mask_contra) = NaN;
+            cop_lateral_contra(contact_mask_contra) = NaN;
+            cop_vertical_contra(contact_mask_contra) = NaN;
+        end
     elseif ismember(lower(mode), {'stair', 'ramp'}) && isfield(trial_data, 'fp') && istable(trial_data.fp)
         fp_time = trial_data.fp.Header(:);
         best_fp_ipsi = select_best_force_plate(trial_data.fp, time_start, time_end, first_hs_time);
