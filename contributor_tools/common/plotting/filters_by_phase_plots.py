@@ -117,6 +117,31 @@ def _create_line_collection(phase_data, stride_data, color, alpha, linewidth, ra
     return lc
 
 
+def _get_units_and_conversion(var_name: str):
+    """Infer display units and optional secondary-axis conversion from variable name."""
+    if var_name.endswith('_rad_s2'):
+        return 'rad/s²', np.degrees, '°/s²', 'deg/s²'
+    if var_name.endswith('_rad_s'):
+        return 'rad/s', np.degrees, '°/s', 'deg/s'
+    if var_name.endswith('_rad'):
+        return 'rad', np.degrees, '°', 'deg'
+    if var_name.endswith('_Nm_kg'):
+        return 'Nm/kg', (lambda x: x), '', None
+    if var_name.endswith('_Nm'):
+        return 'Nm', (lambda x: x), '', None
+    if var_name.endswith('_N'):
+        return 'N', (lambda x: x), '', None
+    if var_name.endswith('_BW'):
+        return 'BW', (lambda x: x), '', None
+    if var_name.endswith('_m_s2'):
+        return 'm/s²', (lambda x: x), '', None
+    if var_name.endswith('_m_s'):
+        return 'm/s', (lambda x: x), '', None
+    if var_name.endswith('_m'):
+        return 'm', (lambda x: x), '', None
+    return '', (lambda x: x), '', None
+
+
 def create_single_feature_plot(
     validation_data: Dict,
     task_name: str,
@@ -236,23 +261,7 @@ def create_single_feature_plot(
     else:
         y_min, y_max = -1, 1
     
-    # Determine unit and conversion
-    if var_name.endswith('_rad_s'):
-        units = 'rad/s'
-        value_conversion = np.degrees  # Convert rad/s to deg/s
-        unit_suffix = '°/s'
-    elif var_name.endswith('_rad'):
-        units = 'rad'
-        value_conversion = np.degrees
-        unit_suffix = '°'
-    elif var_name.endswith('_Nm'):
-        units = 'Nm'
-        value_conversion = lambda x: x
-        unit_suffix = ''
-    else:
-        units = ''
-        value_conversion = lambda x: x
-        unit_suffix = ''
+    units, value_conversion, unit_suffix, secondary_unit = _get_units_and_conversion(var_name)
     
     # Plot PASSED strides (left column)
     passed_count = 0
@@ -321,22 +330,14 @@ def create_single_feature_plot(
     ax_fail.set_xlabel(x_label, fontsize=10)
     
     # Add degree conversion on right y-axis for angular variables
-    if var_name.endswith('_rad_s'):
+    if secondary_unit is not None:
         ax2_pass = ax_pass.twinx()
         ax2_pass.set_ylim(value_conversion(y_min), value_conversion(y_max))
-        ax2_pass.set_ylabel('deg/s', fontsize=9)
+        ax2_pass.set_ylabel(secondary_unit, fontsize=9)
         
         ax2_fail = ax_fail.twinx()
         ax2_fail.set_ylim(value_conversion(y_min), value_conversion(y_max))
-        ax2_fail.set_ylabel('deg/s', fontsize=9)
-    elif var_name.endswith('_rad'):
-        ax2_pass = ax_pass.twinx()
-        ax2_pass.set_ylim(value_conversion(y_min), value_conversion(y_max))
-        ax2_pass.set_ylabel('degrees', fontsize=9)
-        
-        ax2_fail = ax_fail.twinx()
-        ax2_fail.set_ylim(value_conversion(y_min), value_conversion(y_max))
-        ax2_fail.set_ylabel('degrees', fontsize=9)
+        ax2_fail.set_ylabel(secondary_unit, fontsize=9)
     
     plt.tight_layout(rect=[0, 0.03, 1, 0.93])
     
@@ -609,23 +610,7 @@ def create_task_combined_plot(
         else:
             y_min, y_max = -1, 1
         
-        # Determine unit and conversion
-        if var_name.endswith('_rad_s'):
-            units = 'rad/s'
-            value_conversion = np.degrees  # Convert rad/s to deg/s
-            unit_suffix = '°/s'
-        elif var_name.endswith('_rad'):
-            units = 'rad'
-            value_conversion = np.degrees
-            unit_suffix = '°'
-        elif var_name.endswith('_Nm'):
-            units = 'Nm'
-            value_conversion = lambda x: x
-            unit_suffix = ''
-        else:
-            units = ''
-            value_conversion = lambda x: x
-            unit_suffix = ''
+        units, value_conversion, unit_suffix, secondary_unit = _get_units_and_conversion(var_name)
         
         # Plot PASSED strides (left column) - OPTIMIZED BATCH PLOTTING
         passed_count = 0
@@ -765,29 +750,17 @@ def create_task_combined_plot(
                 ax_fail.set_xlabel(x_label, fontsize=8)
         
         # Add degree conversion on right y-axis for angular variables
-        if var_name.endswith('_rad_s'):
+        if secondary_unit is not None:
             ax2_pass = ax_pass.twinx()
             ax2_pass.set_ylim(value_conversion(y_min), value_conversion(y_max))
-            ax2_pass.set_ylabel('deg/s', fontsize=7)
+            ax2_pass.set_ylabel(secondary_unit, fontsize=7)
             ax2_pass.tick_params(axis='y', labelsize=7)
             
             # Only add fail axis degree conversion in validation mode
             if not comparison_mode and ax_fail is not None:
                 ax2_fail = ax_fail.twinx()
                 ax2_fail.set_ylim(value_conversion(y_min), value_conversion(y_max))
-                ax2_fail.set_ylabel('deg/s', fontsize=7)
-                ax2_fail.tick_params(axis='y', labelsize=7)
-        elif var_name.endswith('_rad'):
-            ax2_pass = ax_pass.twinx()
-            ax2_pass.set_ylim(value_conversion(y_min), value_conversion(y_max))
-            ax2_pass.set_ylabel('deg', fontsize=7)
-            ax2_pass.tick_params(axis='y', labelsize=7)
-            
-            # Only add fail axis degree conversion in validation mode
-            if not comparison_mode and ax_fail is not None:
-                ax2_fail = ax_fail.twinx()
-                ax2_fail.set_ylim(value_conversion(y_min), value_conversion(y_max))
-                ax2_fail.set_ylabel('deg', fontsize=7)
+                ax2_fail.set_ylabel(secondary_unit, fontsize=7)
                 ax2_fail.tick_params(axis='y', labelsize=7)
         
         # AGGRESSIVE CLEANUP after each feature to prevent memory accumulation

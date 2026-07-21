@@ -71,6 +71,25 @@ convert_umich_time_to_parquet
 convert_umich_phase_to_parquet
 ```
 
+### Bounded-memory conversion
+
+Both converters write temporary Parquet shards and stream them into the final
+file with bounded 65,536-row groups. If loading the original multi-gigabyte MAT
+structures is too expensive, perform the one-time split and point future runs at
+the per-subject files:
+
+```matlab
+split_umich_mat_by_subject
+setenv('UMICH_STREAMING_SUBJECT_DIR', fullfile(pwd, 'subject_mat', 'Streaming'))
+setenv('UMICH_NORMALIZED_SUBJECT_DIR', fullfile(pwd, 'subject_mat', 'Normalized'))
+setenv('LOCOHUB_PYTHON', 'python') % Python environment containing pyarrow
+convert_umich_time_to_parquet
+convert_umich_phase_to_parquet
+```
+
+The final merge is atomic. If merging fails, the converter reports the shard
+directory and leaves those shards recoverable instead of discarding them.
+
 ## Dataset Overview
 
 ## 3. Task Descriptions & Kinetics Availability

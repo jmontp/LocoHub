@@ -17,8 +17,8 @@ The geometry and conventions match the visualization logic in
 
 Usage (from repository root):
 
-    python3 -m internal.plot_generation.generate_forward_kinematics_reference \\
-        --output forward_kinematics_reference.png
+    python3 contributor_tools/common/plotting/generate_forward_kinematics_reference.py \\
+        --output docs/assets/forward_kinematics_reference.png
 """
 
 from __future__ import annotations
@@ -316,7 +316,9 @@ def generate_reference_figure(output_path: str) -> None:
     # World axes in bottom-left corner, away from the hips.
     _draw_axes(ax, origin=(-1.8, -1.7), length=0.8)
 
-    # Torso segment (green) above ipsilateral hip with slight forward tilt
+    # Pelvis/trunk superior axis (green) above the hip with slight forward tilt.
+    # This provides a visible proximal reference for the hip; the standardized
+    # hip angle is defined relative to the pelvis, not the trunk segment.
     torso_length = 1.5
     # Moderate torso tilt so the global torso angle is visible but not extreme
     torso_angle_deg = 15.0
@@ -367,7 +369,7 @@ def generate_reference_figure(output_path: str) -> None:
     _draw_vertical_reference(ax, hip_ipsi, length=0.6)
     _draw_vertical_reference(ax, knee_ipsi, length=0.6)
 
-    # Torso global angle φ_torso at hip: between vertical up and torso segment.
+    # Pelvis global angle φ_pelvis at hip: between vertical up and its superior axis.
     torso_vec = torso_top - hip_ipsi
     _draw_angle_arc(
         ax,
@@ -400,7 +402,7 @@ def generate_reference_figure(output_path: str) -> None:
         linewidth=1.0,
         alpha=0.9,
     )
-    _angle_annotation(ax, hip_ipsi, r"$-\phi_{\mathrm{torso}}$", (0.38, 0.32))
+    _angle_annotation(ax, hip_ipsi, r"$-\phi_{\mathrm{pelvis}}$", (0.38, 0.32))
 
     # Global segment angles φ_* on ipsilateral leg (blue)
     thigh_vec_ipsi = knee_ipsi - hip_ipsi
@@ -431,7 +433,9 @@ def generate_reference_figure(output_path: str) -> None:
     )
     _angle_annotation(ax, knee_ipsi, r"$+\phi_{\mathrm{shank}}$", (0.20, -0.02))
 
-    # Horizontal global reference for φ_foot at ipsilateral ankle (global +x)
+    # Stored φ_foot uses the forward horizontal as zero. Thigh and shank use
+    # vertical-down; this 90-degree zero-reference difference cancels the
+    # anatomical ankle neutral offset in the stored ankle-angle equation.
     foot_ref_len_ipsi = 0.4
     ax.plot(
         [ankle_ipsi[0], ankle_ipsi[0] + foot_ref_len_ipsi],
@@ -567,7 +571,7 @@ def generate_reference_figure(output_path: str) -> None:
     # Legend block describing the main visual elements
     legend_lines = [
         plt.Line2D([0], [0], color="black", linewidth=2, label="world axes"),
-        plt.Line2D([0], [0], color="tab:green", linewidth=3, label="torso segment"),
+        plt.Line2D([0], [0], color="tab:green", linewidth=3, label="pelvis / trunk axis"),
         plt.Line2D([0], [0], color="tab:blue", linewidth=3, label="ipsilateral leg"),
         plt.Line2D(
             [0],
@@ -589,7 +593,7 @@ def generate_reference_figure(output_path: str) -> None:
             [0],
             color="tab:blue",
             linewidth=1.5,
-            label=r"segment / torso angles $\phi_*$ (global, ipsi)",
+            label=r"stored link angles $\phi_*$ (mixed zeros, ipsi)",
         ),
         plt.Line2D(
             [0],
@@ -605,7 +609,7 @@ def generate_reference_figure(output_path: str) -> None:
             linewidth=1.5,
             marker="x",
             markersize=6,
-            label="center of pressure (CoP, ankle frame)",
+            label="center of pressure (CoP, contact-relative)",
         ),
         plt.Line2D(
             [0],
@@ -627,10 +631,13 @@ def generate_reference_figure(output_path: str) -> None:
     # illustration relates to the full dataset.
     definitions_text = (
         r"Definitions (schematic):" "\n"
-        r"$\phi_*$: global link angles (ipsilateral leg)" "\n"
-        r"$\theta_{\mathrm{hip}} = \phi_{\mathrm{thigh}} - \phi_{\mathrm{torso}}$" "\n"
-        r"$\theta_{\mathrm{knee}} = \phi_{\mathrm{shank}} - \phi_{\mathrm{thigh}}$" "\n"
-        r"$\theta_{\mathrm{ankle}} = \phi_{\mathrm{foot}} - (\phi_{\mathrm{shank}} - 90^\circ)$"
+        r"$\phi_{thigh},\phi_{shank}$: vertical-down zero" "\n"
+        r"$\phi_{foot}$: forward-horizontal zero" "\n"
+        r"$\theta_{\mathrm{hip}} = \phi_{\mathrm{thigh}} - \phi_{\mathrm{pelvis}}$" "\n"
+        r"$\theta_{\mathrm{knee}} = \phi_{\mathrm{thigh}} - \phi_{\mathrm{shank}}$" "\n"
+        r"$\theta_{\mathrm{ankle}} = \phi_{\mathrm{foot}} - \phi_{\mathrm{shank}}$" "\n"
+        r"Differing link zeros cancel the ankle's anatomical $90^\circ$ offset." "\n"
+        r"Knee flexion +: clockwise shank rotation relative to thigh (this view)."
     )
     ax.text(
         0.02,

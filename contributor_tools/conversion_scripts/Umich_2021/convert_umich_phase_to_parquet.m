@@ -22,27 +22,41 @@ ENABLE_DATA_FIXES = true;  % Set to false to disable all data corrections
 % 3. 90-degree offset correction for incline walking ankle angles  
 % 4. Sign flip for decline walking knee moments
 
-% Load Streaming data (contains both kinematics and events)
-fprintf('Loading Streaming.mat...\n');
-if exist('Streaming', 'var')==0
-    load('Streaming.mat');
+% Prefer per-subject files to keep the large nested MAT structure out of RAM.
+% Set UMICH_STREAMING_SUBJECT_DIR to a directory containing AB01.mat, etc.
+subject_source_dir = getenv('UMICH_STREAMING_SUBJECT_DIR');
+use_subject_files = ~isempty(subject_source_dir) && isfolder(subject_source_dir);
+if ~use_subject_files
+    fprintf('Loading Streaming.mat...\n');
+    if exist('Streaming', 'var')==0
+        load('Streaming.mat');
+    end
 end
 
+normalized_source_dir = getenv('UMICH_NORMALIZED_SUBJECT_DIR');
+use_normalized_subject_files = ~isempty(normalized_source_dir) && isfolder(normalized_source_dir);
 normalized_dataset = struct();
-if exist('Normalized.mat', 'file')
+if ~use_normalized_subject_files && exist('Normalized.mat', 'file')
     temp_norm = load('Normalized.mat');
     if isfield(temp_norm, 'Normalized')
         normalized_dataset = temp_norm.Normalized;
     end
 end
 
-dataset = Streaming;
+if use_subject_files
+    subject_files = dir(fullfile(subject_source_dir, 'AB*.mat'));
+    subjects = erase({subject_files.name}, '.mat')';
+else
+    dataset = Streaming;
+    subjects = fieldnames(dataset);
+end
 
-% List all subjects
-subjects = fieldnames(dataset);
-
-% Create table to store all data
-total_data = table;
+output_path = fullfile('..', '..', '..', 'converted_datasets', 'umich_2021_phase_raw.parquet');
+shard_dir = tempname(fileparts(output_path));
+mkdir(shard_dir);
+shard_counter = 0;
+total_rows = 0;
+next_step = 1;
 
 % Process each subject
 for subject_idx = 1:length(subjects)
@@ -53,8 +67,21 @@ for subject_idx = 1:length(subjects)
     fprintf('Processing %s (%d/%d)\n', subject, subject_idx, length(subjects));
     fprintf('========================================\n');
     
-    % Get subject data
-    subject_data = dataset.(subject);
+    if use_subject_files
+        loaded_subject = load(fullfile(subject_source_dir, [subject '.mat']));
+        if isfield(loaded_subject, subject)
+            subject_data = loaded_subject.(subject);
+        elseif isfield(loaded_subject, 'subject_data')
+            subject_data = loaded_subject.subject_data;
+        elseif isfield(loaded_subject, 'Streaming') && isfield(loaded_subject.Streaming, subject)
+            subject_data = loaded_subject.Streaming.(subject);
+        else
+            error('Subject file %s does not contain %s.', subject, subject);
+        end
+    else
+        subject_data = dataset.(subject);
+    end
+    subject_table = table;
     
     % Create standardized subject name
     subject_num = subject(end-1:end);  % Extract last 2 chars (e.g., '01' from 'AB01')
@@ -210,7 +237,7 @@ for subject_idx = 1:length(subjects)
                 
                 % Add to total data
                 if ~isempty(stride_table)
-                    total_data = append_stride_data(total_data, stride_table);
+                    subject_table = append_stride_data(subject_table, stride_table);
                     fprintf('      Added %d strides\n', height(stride_table)/150);
                 end
             end
@@ -264,7 +291,7 @@ for subject_idx = 1:length(subjects)
             
             % Add to total data
             if ~isempty(stride_table)
-                total_data = append_stride_data(total_data, stride_table);
+                subject_table = append_stride_data(subject_table, stride_table);
                 fprintf('      Added %d strides\n', height(stride_table)/150);
             end
         end
@@ -311,7 +338,7 @@ for subject_idx = 1:length(subjects)
             
             % Add to total data
             if ~isempty(stride_table)
-                total_data = append_stride_data(total_data, stride_table);
+                subject_table = append_stride_data(subject_table, stride_table);
                 fprintf('      Added %d strides\n', height(stride_table)/150);
             end
         end
@@ -326,7 +353,16 @@ for subject_idx = 1:length(subjects)
         sts_data = subject_data.Sts;
 
         normalized_subject = [];
-        if isfield(normalized_dataset, subject)
+        if use_normalized_subject_files && exist(fullfile(normalized_source_dir, [subject '.mat']), 'file')
+            loaded_normalized = load(fullfile(normalized_source_dir, [subject '.mat']));
+            if isfield(loaded_normalized, subject)
+                normalized_subject = loaded_normalized.(subject);
+            elseif isfield(loaded_normalized, 'normalized_subject')
+                normalized_subject = loaded_normalized.normalized_subject;
+            elseif isfield(loaded_normalized, 'Normalized') && isfield(loaded_normalized.Normalized, subject)
+                normalized_subject = loaded_normalized.Normalized.(subject);
+            end
+        elseif isfield(normalized_dataset, subject)
             normalized_subject = normalized_dataset.(subject);
         end
 
@@ -334,7 +370,7 @@ for subject_idx = 1:length(subjects)
             sts_data, normalized_subject, subject_str, subject_metadata, body_mass);
 
         if ~isempty(stride_table)
-            total_data = append_stride_data(total_data, stride_table);
+            subject_table = append_stride_data(subject_table, stride_table);
             fprintf('      Added %d sit-to-stand cycles and %d stand-to-sit cycles\n', ...
                 sum(strcmp(stride_table.task, 'sit_to_stand'))/150, ...
                 sum(strcmp(stride_table.task, 'stand_to_sit'))/150);
@@ -424,22 +460,35 @@ for subject_idx = 1:length(subjects)
             
             % Add to total data
             if ~isempty(stride_table)
-                total_data = append_stride_data(total_data, stride_table);
+                subject_table = append_stride_data(subject_table, stride_table);
                 fprintf('      Added %d strides\n', height(stride_table)/150);
             end
         end
     end
+
+    if ~isempty(subject_table)
+        subject_table = mask_structural_outliers(subject_table);
+        if mod(height(subject_table), 150) ~= 0
+            error('Subject %s output has %d rows, not divisible by 150.', subject, height(subject_table));
+        end
+        subject_cycles = height(subject_table) / 150;
+        subject_table.step = repelem((next_step:next_step + subject_cycles - 1)', 150);
+        next_step = next_step + subject_cycles;
+        shard_counter = shard_counter + 1;
+        parquetwrite(fullfile(shard_dir, sprintf('%05d.parquet', shard_counter)), subject_table);
+        total_rows = total_rows + height(subject_table);
+    end
+    clear subject_table subject_data loaded_subject loaded_normalized normalized_subject
 end
 
-% Save the phase-indexed data
-output_path = fullfile('..', '..', '..', 'converted_datasets', 'umich_2021_phase_raw.parquet');
 fprintf('\n========================================\n');
 fprintf('Saving to: %s\n', output_path);
-fprintf('Total subjects: %d\n', length(unique(total_data.subject)));
-fprintf('Total rows: %d\n', height(total_data));
+fprintf('Total subjects: %d\n', length(subjects));
+fprintf('Total rows: %d\n', total_rows);
 fprintf('========================================\n');
 
-parquetwrite(output_path, total_data);
+merge_parquet_shards(shard_dir, output_path);
+rmdir(shard_dir, 's');
 fprintf('Conversion complete!\n');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -480,6 +529,51 @@ function total_data = append_stride_data(total_data, stride_table)
     stride_table = stride_table(:, total_vars);
 
     total_data = [total_data; stride_table];
+end
+
+function merge_parquet_shards(shard_dir, output_path)
+    python_executable = getenv('LOCOHUB_PYTHON');
+    if isempty(python_executable)
+        if ispc
+            python_executable = 'wsl.exe python3';
+        else
+            python_executable = 'python3';
+        end
+    end
+    merger = fullfile('..', '..', 'common', 'merge_parquet_shards.py');
+    if startsWith(python_executable, 'wsl.exe')
+        merger = strrep(merger, '\', '/');
+        shard_dir = strrep(shard_dir, '\', '/');
+        output_path = strrep(output_path, '\', '/');
+    end
+    command = sprintf('%s "%s" "%s" "%s" --row-group-size 65536', ...
+        python_executable, merger, shard_dir, output_path);
+    status = system(command);
+    if status ~= 0
+        error('Shard merge failed. Recoverable shards remain in %s.', shard_dir);
+    end
+end
+
+
+function data = mask_structural_outliers(data)
+    % Acquisition glitches beyond the standard's absolute physical guards
+    % are unavailable measurements, not valid extreme biomechanics.
+    names = data.Properties.VariableNames;
+    for name_idx = 1:length(names)
+        name = names{name_idx};
+        limit = [];
+        if startsWith(name, 'cop_') && endsWith(name, '_m')
+            limit = 5;
+        elseif contains(name, '_acceleration_') && endsWith(name, '_rad_s2')
+            limit = 10000;
+        elseif contains(name, '_velocity_') && endsWith(name, '_rad_s')
+            limit = 100;
+        end
+        if ~isempty(limit) && isnumeric(data.(name))
+            invalid = ~isfinite(data.(name)) | abs(data.(name)) > limit;
+            data.(name)(invalid) = NaN;
+        end
+    end
 end
 
 function default_col = create_default_column_like(example_col, num_rows)
@@ -657,6 +751,13 @@ function stride_table = process_strides_single_leg(trial_data, ...
             ipsi_prefix = 'L';
             contra_prefix = 'R';
         end
+
+        if isfield(trial_data, 'jointAngles') && ...
+                ~stride_angles_are_valid(trial_data.jointAngles, ipsi_start_frame, ipsi_end_frame)
+            fprintf('      Warning: skipping corrupt stride angles at frames %d:%d\n', ...
+                ipsi_start_frame, ipsi_end_frame);
+            continue;
+        end
         
         % Create time and phase arrays
         time_array = linspace(0, stride_duration_s, NUM_POINTS)';
@@ -797,7 +898,7 @@ function stride_table = process_strides_single_leg(trial_data, ...
             % Hip velocities - calculate from already interpolated angles
             if isfield(angles, 'RHipAngles') && isfield(angles, 'LHipAngles')
                 % Calculate effective sampling rate for interpolated data
-                effective_Hz = NUM_POINTS / stride_duration_s;
+                effective_Hz = (NUM_POINTS - 1) / stride_duration_s;
                 
                 % Calculate velocities from interpolated angles (already in stride_data)
                 if strcmp(leg_side, 'right')
@@ -1019,16 +1120,24 @@ function stride_table = process_strides_single_leg(trial_data, ...
             stride_data.pelvis_transverse_angle_rad = interpolate_signal(...
                 angles.RPelvisAngles(r_start_frame:r_end_frame, transverse_plane), NUM_POINTS) * deg2rad;
             
+            % Derive both limb chains from the single measured pelvis. This
+            % enforces hip = thigh - pelvis, knee = thigh - shank, and
+            % ankle = foot - shank for both ipsi and contra channels.
+            r_thigh_angles_150pt = stride_data.pelvis_sagittal_angle_rad + r_hip_interp;
+            l_thigh_angles_150pt = stride_data.pelvis_sagittal_angle_rad + l_hip_interp;
+            r_shank_angles_150pt = r_thigh_angles_150pt - r_knee_segment_interp;
+            l_shank_angles_150pt = l_thigh_angles_150pt - l_knee_segment_interp;
+            r_foot_corrected = r_shank_angles_150pt + r_ankle_interp;
+            l_foot_corrected = l_shank_angles_150pt + l_ankle_interp;
+
             % Calculate velocities from interpolated angles using effective sampling rate
-            effective_Hz = NUM_POINTS / stride_duration_s;  % Effective sampling rate for 150 points
+            effective_Hz = (NUM_POINTS - 1) / stride_duration_s;  % 149 intervals across 150 points
             r_thigh_velocity = gradient(r_thigh_angles_150pt) * effective_Hz;
             r_shank_velocity = gradient(r_shank_angles_150pt) * effective_Hz;
             l_thigh_velocity = gradient(l_thigh_angles_150pt) * effective_Hz;
             l_shank_velocity = gradient(l_shank_angles_150pt) * effective_Hz;
             r_foot_velocity = gradient(r_foot_corrected) * effective_Hz;
             l_foot_velocity = gradient(l_foot_corrected) * effective_Hz;
-            
-            % No corrections needed with foot-up approach - angles should be biomechanically correct
             
             % Assign segment angles and velocities based on which leg is ipsilateral
             if strcmp(leg_side, 'right')
@@ -1176,40 +1285,28 @@ function stride_table = process_strides_single_leg(trial_data, ...
             % Center of pressure - split into ipsi/contra
             if isfield(forces, 'RCoP') && isfield(forces, 'LCoP') && exist('r_force_indices', 'var') && exist('l_force_indices', 'var')
                 if ~isempty(r_force_indices) && ~isempty(l_force_indices)
-                    % Interpolate CoP for each foot (lab frame -> anterior/up/right convention)
-                    % CoP is in m, convert them to meters
-                    r_cop_anterior = interpolate_signal(-forces.RCoP(r_force_indices, x), NUM_POINTS);
-                    l_cop_anterior = interpolate_signal(-forces.LCoP(l_force_indices, x), NUM_POINTS);
+                    % Raw CoP is millimetres. The force-plate AP position
+                    % axis decreases heel-to-toe, so negate it for Anterior+.
+                    r_cop_anterior = interpolate_signal(-forces.RCoP(r_force_indices, x) ./ 1000, NUM_POINTS);
+                    l_cop_anterior = interpolate_signal(-forces.LCoP(l_force_indices, x) ./ 1000, NUM_POINTS);
 
-                    r_cop_lateral  = interpolate_signal(-forces.RCoP(r_force_indices, z), NUM_POINTS);
-                    l_cop_lateral  = interpolate_signal(-forces.LCoP(l_force_indices, z), NUM_POINTS);
+                    r_cop_lateral  = interpolate_signal(-forces.RCoP(r_force_indices, z) ./ 1000, NUM_POINTS);
+                    l_cop_lateral  = interpolate_signal(-forces.LCoP(l_force_indices, z) ./ 1000, NUM_POINTS);
 
-                    r_cop_vertical = interpolate_signal(-forces.RCoP(r_force_indices, y), NUM_POINTS);
-                    l_cop_vertical = interpolate_signal(-forces.LCoP(l_force_indices, y), NUM_POINTS);
+                    r_cop_vertical = interpolate_signal(forces.RCoP(r_force_indices, y) ./ 1000, NUM_POINTS);
+                    l_cop_vertical = interpolate_signal(forces.LCoP(l_force_indices, y) ./ 1000, NUM_POINTS);
 
-                    % If marker ankles are available, express CoP in ankle frame (translate by ankle position)
-                    if isfield(trial_data, 'markers') && isfield(trial_data.markers, 'RANK') && isfield(trial_data.markers, 'LANK')
-                        markers_local = trial_data.markers;
-
-                        % Map markers to anterior/up/right convention and interpolate
-                        % Markers are in meters
-                        r_ankle_anterior = interpolate_signal(-(markers_local.RANK(r_start_frame:r_end_frame, x)), NUM_POINTS);
-                        l_ankle_anterior = interpolate_signal(-(markers_local.LANK(l_start_frame:l_end_frame, x)), NUM_POINTS);
-
-                        r_ankle_lateral  = interpolate_signal(-(markers_local.RANK(r_start_frame:r_end_frame, z)), NUM_POINTS);
-                        l_ankle_lateral  = interpolate_signal(-(markers_local.LANK(l_start_frame:l_end_frame, z)), NUM_POINTS);
-
-                        r_ankle_vertical = interpolate_signal(-(markers_local.RANK(r_start_frame:r_end_frame, y)), NUM_POINTS);
-                        l_ankle_vertical = interpolate_signal(-(markers_local.LANK(l_start_frame:l_end_frame, y)), NUM_POINTS);
-
-                        % Translate CoP by ankle origin: p_local = p_cop - p_ankle
-                        r_cop_anterior = (r_cop_anterior - r_ankle_anterior)/1000;  % Convert from mm to m
-                        l_cop_anterior = (l_cop_anterior - l_ankle_anterior)/1000;
-                        r_cop_lateral  = (r_cop_lateral  - r_ankle_lateral)/1000;
-                        l_cop_lateral  = (l_cop_lateral  - l_ankle_lateral)/1000;
-                        r_cop_vertical = (r_cop_vertical - r_ankle_vertical)/1000;
-                        l_cop_vertical = (l_cop_vertical - l_ankle_vertical)/1000;
-                    end
+                    % Raw CoP is in the global treadmill frame. Zero each
+                    % stance episode at initial contact to obtain the standard
+                    % stride/contact-relative CoP convention.
+                    contact_threshold_BW = 20 / body_weight_N;
+                    right_is_ipsi = strcmp(leg_side, 'right');
+                    [r_cop_anterior, r_cop_lateral, r_cop_vertical] = ...
+                        zero_cop_by_contact(r_cop_anterior, r_cop_lateral, r_cop_vertical, ...
+                        r_force_vert_BW, contact_threshold_BW, right_is_ipsi);
+                    [l_cop_anterior, l_cop_lateral, l_cop_vertical] = ...
+                        zero_cop_by_contact(l_cop_anterior, l_cop_lateral, l_cop_vertical, ...
+                        l_force_vert_BW, contact_threshold_BW, ~right_is_ipsi);
 
                     % Assign based on which leg is ipsilateral
                     if strcmp(leg_side, 'right')
@@ -1253,7 +1350,7 @@ function stride_table = process_strides_single_leg(trial_data, ...
         % Convert struct to table and append
         stride_table_temp = struct2table(stride_data);
         
-        if stride_idx == 1
+        if isempty(all_stride_data)
             all_stride_data = stride_table_temp;
         else
             all_stride_data = [all_stride_data; stride_table_temp];
@@ -1261,6 +1358,23 @@ function stride_table = process_strides_single_leg(trial_data, ...
     end
     
     stride_table = all_stride_data;
+end
+
+function is_valid = stride_angles_are_valid(angles, start_frame, end_frame)
+    fields = {'RHipAngles', 'LHipAngles', 'RKneeAngles', 'LKneeAngles', ...
+        'RAnkleAngles', 'LAnkleAngles'};
+    all_angles = [];
+    for field_idx = 1:length(fields)
+        field_name = fields{field_idx};
+        if ~isfield(angles, field_name) || size(angles.(field_name), 1) < end_frame
+            is_valid = false;
+            return;
+        end
+        all_angles = [all_angles, angles.(field_name)(start_frame:end_frame, :)]; %#ok<AGROW>
+    end
+    is_valid = all(isfinite(all_angles), 'all') && ...
+        ~any(abs(all_angles) > 180, 'all') && ...
+        ~(size(all_angles, 1) > 1 && any(abs(diff(all_angles, 1, 1)) > 120, 'all'));
 end
 
 % Helper function to interpolate signal to fixed number of points
@@ -1955,16 +2069,9 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     end
     stride_data.time_s = linspace(0, cycle_duration_s, NUM_POINTS)';
 
-    % Map sit-to-stand and stand-to-sit so standing corresponds to 50% phase
+    % Every phase-indexed action spans the canonical 0-100% interval.
     phase_start = 0;
     phase_range = 100;
-    if strcmp(task_type, 'sit_to_stand')
-        phase_start = 0;
-        phase_range = 50;
-    elseif strcmp(task_type, 'stand_to_sit')
-        phase_start = 50;
-        phase_range = 50;
-    end
     phase_end = phase_start + phase_range;
     stride_data.phase_ipsi = linspace(phase_start, phase_end, NUM_POINTS)';
 
@@ -2071,7 +2178,7 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     end
     
     % Calculate joint angular velocities from angles
-    effective_Hz = NUM_POINTS / cycle_duration_s;
+    effective_Hz = (NUM_POINTS - 1) / cycle_duration_s;
     
     % Hip velocities
     if isfield(angles, 'LHipAngles') && isfield(angles, 'RHipAngles')
@@ -2117,8 +2224,8 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     shank_ipsi = thigh_ipsi - stride_data.knee_flexion_angle_ipsi_rad;
     shank_contra = thigh_contra - stride_data.knee_flexion_angle_contra_rad;
 
-    foot_ipsi = shank_ipsi - stride_data.ankle_dorsiflexion_angle_ipsi_rad;
-    foot_contra = shank_contra - stride_data.ankle_dorsiflexion_angle_contra_rad;
+    foot_ipsi = shank_ipsi + stride_data.ankle_dorsiflexion_angle_ipsi_rad;
+    foot_contra = shank_contra + stride_data.ankle_dorsiflexion_angle_contra_rad;
 
     stride_data.thigh_sagittal_angle_ipsi_rad = thigh_ipsi;
     stride_data.thigh_sagittal_angle_contra_rad = thigh_contra;
@@ -2174,4 +2281,45 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     
     % Convert struct to table
     cycle_table = struct2table(stride_data);
+end
+
+
+function [anterior, lateral, vertical] = zero_cop_by_contact( ...
+        anterior, lateral, vertical, vertical_force_BW, contact_threshold_BW, allow_initial_contact)
+    % Express each contiguous stance episode relative to its initial CoP.
+    anterior = anterior(:);
+    lateral = lateral(:);
+    vertical = vertical(:);
+    vertical_force_BW = vertical_force_BW(:);
+
+    contact = isfinite(vertical_force_BW) & ...
+        vertical_force_BW > contact_threshold_BW & ...
+        isfinite(anterior) & isfinite(lateral) & isfinite(vertical);
+    if ~allow_initial_contact && ~isempty(contact) && contact(1)
+        first_end = find(~contact, 1, 'first');
+        if isempty(first_end)
+            contact(:) = false;
+        else
+            contact(1:first_end - 1) = false;
+        end
+    end
+    contact_starts = find(contact & [true; ~contact(1:end-1)]);
+    contact_ends = find(contact & [~contact(2:end); true]);
+
+    for episode_idx = 1:min(numel(contact_starts), numel(contact_ends))
+        episode = contact_starts(episode_idx):contact_ends(episode_idx);
+        anterior(episode) = anterior(episode) - anterior(episode(1));
+        lateral(episode) = lateral(episode) - lateral(episode(1));
+        vertical(episode) = vertical(episode) - vertical(episode(1));
+        edge_count = max(1, floor(numel(episode) * 0.2));
+        early_progression = median(anterior(episode(1:edge_count)), 'omitnan');
+        late_progression = median(anterior(episode(end-edge_count+1:end)), 'omitnan');
+        if late_progression < early_progression
+            anterior(episode) = -anterior(episode);
+        end
+    end
+
+    anterior(~contact) = NaN;
+    lateral(~contact) = NaN;
+    vertical(~contact) = NaN;
 end

@@ -156,17 +156,17 @@ This section describes the conventions for data as present in the raw `.mat` fil
 - Index 2 (e.g., `HipAngles(:,2)`): Frontal plane motion (Adduction/Abduction, Varus/Valgus, Inversion/Eversion)
 - Index 3 (e.g., `HipAngles(:,3)`): Transverse plane motion (Internal/External Rotation)
 
-Assumed Positive Directions in Raw MAT files (consistent with OpenSim for direct use or after script's negation):
-- Sagittal plane angles/moments: Positive for Flexion (e.g., hip flexion, ankle dorsiflexion). Knee flexion angle raw data is an exception, assumed positive for extension, and is negated by conversion scripts.
+Assumed Positive Directions in Raw MAT files (consistent with OpenSim for direct use or after the script's documented axis mapping):
+- Sagittal plane angles/moments: Positive for flexion (including the raw knee channel) and ankle dorsiflexion. The converters preserve the knee-angle sign.
 - Frontal plane angles/moments: Positive for Adduction (hip), Valgus (knee), Inversion (ankle).
 - Transverse plane angles/moments: Positive for External Rotation.
 
 ### GRF & CoP Dimensions (Indices in MAT files `forceplates.Force` and `forceplates.CoP`)
-- Index 1: Anterior-Posterior (AP) direction. Assumed positive for Anterior.
-- Index 2: Vertical direction. Assumed positive for Downward. Conversion scripts negate this for Upward positive (OpenSim Y+).
-- Index 3: Medial-Lateral (ML) direction. Assumed positive for Leftward. Conversion scripts negate this for Rightward positive (OpenSim Z+).
+- Index 1: Medial-lateral (ML); the force channel is leftward-positive.
+- Index 2: Anterior-posterior (AP).
+- Index 3: Vertical; the force channel is downward-positive.
 
-The conversion scripts map these raw components to the standard's column names (`grf_anterior_r_N`, `grf_vertical_r_N`, `grf_lateral_r_N`) and apply necessary sign flips to ensure the final Parquet files adhere to an Anterior+, Up+, Right+ (OpenSim XYZ) convention.
+The converters map these components explicitly to Anterior+, Up+, Right+ output: force columns 2, 3, and 1 become anterior, vertical (negated), and lateral (negated), respectively. Raw CoP is in millimetres and a global treadmill frame; each contact is zeroed at initial contact and its AP axis is oriented so observed heel-to-toe progression is positive. This handles the opposite treadmill direction used by decline trials. Marker positions are already in metres.
 
 ## Participant Statistics
 

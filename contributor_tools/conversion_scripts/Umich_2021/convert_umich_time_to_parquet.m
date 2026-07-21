@@ -3,18 +3,42 @@ clearvars -except Streaming
 INPUT_SAMPLING_RATE_HZ = 100;
 OUTPUT_SAMPLING_RATE_HZ = 200;
 
-if exist('Streaming', 'var') == 0
-    load('Streaming.mat');
+subject_source_dir = getenv('UMICH_STREAMING_SUBJECT_DIR');
+use_subject_files = ~isempty(subject_source_dir) && isfolder(subject_source_dir);
+if use_subject_files
+    subject_files = dir(fullfile(subject_source_dir, 'AB*.mat'));
+    subjects = erase({subject_files.name}, '.mat')';
+else
+    if exist('Streaming', 'var') == 0
+        load('Streaming.mat');
+    end
+    dataset = Streaming;
+    subjects = fieldnames(dataset);
 end
 
-dataset = Streaming;
-subjects = fieldnames(dataset);
-total_data = table;
+output_path = fullfile('..', '..', '..', 'converted_datasets', 'umich_2021_time.parquet');
+shard_dir = tempname(fileparts(output_path));
+mkdir(shard_dir);
+shard_counter = 0;
+total_rows = 0;
 step_counter = 1;
 
 for subject_idx = 1:length(subjects)
     subject = subjects{subject_idx};
-    subject_data = dataset.(subject);
+    if use_subject_files
+        loaded_subject = load(fullfile(subject_source_dir, [subject '.mat']));
+        if isfield(loaded_subject, subject)
+            subject_data = loaded_subject.(subject);
+        elseif isfield(loaded_subject, 'subject_data')
+            subject_data = loaded_subject.subject_data;
+        elseif isfield(loaded_subject, 'Streaming') && isfield(loaded_subject.Streaming, subject)
+            subject_data = loaded_subject.Streaming.(subject);
+        else
+            error('Subject file %s does not contain %s.', subject, subject);
+        end
+    else
+        subject_data = dataset.(subject);
+    end
 
     [subject_str, subject_metadata, body_mass] = get_subject_metadata(subject, subject_data);
 
@@ -26,36 +50,76 @@ for subject_idx = 1:length(subjects)
         fprintf('  Processing treadmill segments...\n');
         [subject_rows, step_counter] = process_treadmill_trials( ...
             subject_data.Tread, subject_str, subject_metadata, body_mass, step_counter, OUTPUT_SAMPLING_RATE_HZ);
-        total_data = [total_data; subject_rows];
+        [shard_counter, total_rows] = write_table_shard(subject_rows, shard_dir, shard_counter, total_rows);
+        clear subject_rows
     end
 
     if isfield(subject_data, 'Run')
         fprintf('  Processing running trials...\n');
         [subject_rows, step_counter] = process_run_trials( ...
             subject_data.Run, subject_str, subject_metadata, body_mass, step_counter, OUTPUT_SAMPLING_RATE_HZ);
-        total_data = [total_data; subject_rows];
+        [shard_counter, total_rows] = write_table_shard(subject_rows, shard_dir, shard_counter, total_rows);
+        clear subject_rows
     end
 
     if isfield(subject_data, 'Wtr')
         fprintf('  Processing walk-to-run transition trials...\n');
         [subject_rows, step_counter] = process_wtr_trials( ...
             subject_data.Wtr, subject_str, subject_metadata, body_mass, step_counter, OUTPUT_SAMPLING_RATE_HZ);
-        total_data = [total_data; subject_rows];
+        [shard_counter, total_rows] = write_table_shard(subject_rows, shard_dir, shard_counter, total_rows);
+        clear subject_rows
     end
 
     if isfield(subject_data, 'Stair')
         fprintf('  Processing stair trials...\n');
         [subject_rows, step_counter] = process_stair_trials( ...
             subject_data.Stair, subject_str, subject_metadata, body_mass, step_counter, OUTPUT_SAMPLING_RATE_HZ);
-        total_data = [total_data; subject_rows];
+        [shard_counter, total_rows] = write_table_shard(subject_rows, shard_dir, shard_counter, total_rows);
+        clear subject_rows
     end
+    clear subject_data loaded_subject
 end
 
-output_path = fullfile('..', '..', '..', 'converted_datasets', 'umich_2021_time.parquet');
-parquetwrite(output_path, total_data);
+merge_parquet_shards(shard_dir, output_path);
+rmdir(shard_dir, 's');
 fprintf('\nSaved time-indexed data to: %s\n', output_path);
-fprintf('Subjects: %d\n', length(unique(total_data.subject)));
-fprintf('Rows: %d\n', height(total_data));
+fprintf('Subjects: %d\n', length(subjects));
+fprintf('Rows: %d\n', total_rows);
+
+
+function [shard_counter, total_rows] = write_table_shard(rows, shard_dir, shard_counter, total_rows)
+    if isempty(rows)
+        return;
+    end
+    shard_counter = shard_counter + 1;
+    shard_path = fullfile(shard_dir, sprintf('%05d.parquet', shard_counter));
+    parquetwrite(shard_path, rows);
+    total_rows = total_rows + height(rows);
+end
+
+
+function merge_parquet_shards(shard_dir, output_path)
+    python_executable = getenv('LOCOHUB_PYTHON');
+    if isempty(python_executable)
+        if ispc
+            python_executable = 'wsl.exe python3';
+        else
+            python_executable = 'python3';
+        end
+    end
+    merger = fullfile('..', '..', 'common', 'merge_parquet_shards.py');
+    if startsWith(python_executable, 'wsl.exe')
+        merger = strrep(merger, '\', '/');
+        shard_dir = strrep(shard_dir, '\', '/');
+        output_path = strrep(output_path, '\', '/');
+    end
+    command = sprintf('%s "%s" "%s" "%s" --row-group-size 65536', ...
+        python_executable, merger, shard_dir, output_path);
+    status = system(command);
+    if status ~= 0
+        error('Shard merge failed. Recoverable shards remain in %s.', shard_dir);
+    end
+end
 
 
 function [subject_str, subject_metadata, body_mass] = get_subject_metadata(subject, subject_data)
@@ -375,6 +439,15 @@ function trial_table = process_trial_time( ...
     if segment_end <= segment_start
         return;
     end
+    [segment_end, angles_are_valid, rejection_reason] = sanitize_angle_segment( ...
+        angles, segment_start, segment_end);
+    if ~angles_are_valid
+        fprintf('      Warning: skipping corrupt angle segment (%s)\n', rejection_reason);
+        return;
+    end
+    if segment_end <= segment_start
+        return;
+    end
 
     input_sampling_rate_hz = 100;
     idx = segment_start:segment_end;
@@ -396,8 +469,9 @@ function trial_table = process_trial_time( ...
     right_hip_rot = resample_signal(angles.RHipAngles(idx, transverse_plane) * deg2rad_factor, source_time_s, time_s);
     left_hip_rot = resample_signal(angles.LHipAngles(idx, transverse_plane) * deg2rad_factor, source_time_s, time_s);
 
-    right_knee_flex = resample_signal(-angles.RKneeAngles(idx, sagittal_plane) * deg2rad_factor, source_time_s, time_s);
-    left_knee_flex = resample_signal(-angles.LKneeAngles(idx, sagittal_plane) * deg2rad_factor, source_time_s, time_s);
+    % The UMich raw knee channel is already flexion-positive.
+    right_knee_flex = resample_signal(angles.RKneeAngles(idx, sagittal_plane) * deg2rad_factor, source_time_s, time_s);
+    left_knee_flex = resample_signal(angles.LKneeAngles(idx, sagittal_plane) * deg2rad_factor, source_time_s, time_s);
     right_knee_add = resample_signal(angles.RKneeAngles(idx, frontal_plane) * deg2rad_factor, source_time_s, time_s);
     left_knee_add = resample_signal(angles.LKneeAngles(idx, frontal_plane) * deg2rad_factor, source_time_s, time_s);
     right_knee_rot = resample_signal(angles.RKneeAngles(idx, transverse_plane) * deg2rad_factor, source_time_s, time_s);
@@ -448,7 +522,7 @@ function trial_table = process_trial_time( ...
 
     if ~all(isnan(right_foot_sag))
         right_shank_sag = right_foot_sag - right_ankle_flex;
-        right_thigh_sag = right_shank_sag - right_knee_flex;
+        right_thigh_sag = right_shank_sag + right_knee_flex;
         right_pelvis_from_chain = right_thigh_sag - right_hip_flex;
     else
         right_pelvis_from_chain = nan_signal;
@@ -458,7 +532,7 @@ function trial_table = process_trial_time( ...
 
     if ~all(isnan(left_foot_sag))
         left_shank_sag = left_foot_sag - left_ankle_flex;
-        left_thigh_sag = left_shank_sag - left_knee_flex;
+        left_thigh_sag = left_shank_sag + left_knee_flex;
         left_pelvis_from_chain = left_thigh_sag - left_hip_flex;
     else
         left_pelvis_from_chain = nan_signal;
@@ -466,23 +540,22 @@ function trial_table = process_trial_time( ...
         left_shank_sag = nan_signal;
     end
 
-    pelvis_sag = choose_pelvis_signal(right_pelvis_from_chain, left_pelvis_from_chain, nan_signal);
+    % A dataset has one pelvis orientation. Use the measured pelvis when it
+    % is available, then derive both limb segment chains from that shared
+    % origin so the hip, knee, and ankle identities hold simultaneously.
+    pelvis_sag = choose_pelvis_signal(right_pelvis_sag, left_pelvis_sag, nan_signal);
     if all(isnan(pelvis_sag))
-        pelvis_sag = choose_pelvis_signal(right_pelvis_sag, left_pelvis_sag, nan_signal);
+        pelvis_sag = choose_pelvis_signal(right_pelvis_from_chain, left_pelvis_from_chain, nan_signal);
     end
     pelvis_front = choose_pelvis_signal(right_pelvis_front, left_pelvis_front, nan_signal);
     pelvis_trans = choose_pelvis_signal(right_pelvis_trans, left_pelvis_trans, nan_signal);
 
-    if all(isnan(right_thigh_sag))
-        right_thigh_sag = pelvis_sag + right_hip_flex;
-        right_shank_sag = right_thigh_sag - right_knee_flex;
-        right_foot_sag = right_shank_sag + right_ankle_flex;
-    end
-    if all(isnan(left_thigh_sag))
-        left_thigh_sag = pelvis_sag + left_hip_flex;
-        left_shank_sag = left_thigh_sag - left_knee_flex;
-        left_foot_sag = left_shank_sag + left_ankle_flex;
-    end
+    right_thigh_sag = pelvis_sag + right_hip_flex;
+    right_shank_sag = right_thigh_sag - right_knee_flex;
+    right_foot_sag = right_shank_sag + right_ankle_flex;
+    left_thigh_sag = pelvis_sag + left_hip_flex;
+    left_shank_sag = left_thigh_sag - left_knee_flex;
+    left_foot_sag = left_shank_sag + left_ankle_flex;
 
     pelvis_sag_vel = gradient(pelvis_sag, dt);
     right_thigh_sag_vel = gradient(right_thigh_sag, dt);
@@ -505,27 +578,28 @@ function trial_table = process_trial_time( ...
             isfield(trial_struct.jointMoments, 'RAnkleMoment') && isfield(trial_struct.jointMoments, 'LAnkleMoment')
         moments = trial_struct.jointMoments;
 
-        right_hip_flex_mom = resample_signal(moments.RHipMoment(idx, sagittal_plane) ./ body_mass, source_time_s, time_s);
-        left_hip_flex_mom = resample_signal(moments.LHipMoment(idx, sagittal_plane) ./ body_mass, source_time_s, time_s);
-        right_hip_add_mom = resample_signal(moments.RHipMoment(idx, frontal_plane) ./ body_mass, source_time_s, time_s);
-        left_hip_add_mom = resample_signal(moments.LHipMoment(idx, frontal_plane) ./ body_mass, source_time_s, time_s);
-        right_hip_rot_mom = resample_signal(moments.RHipMoment(idx, transverse_plane) ./ body_mass, source_time_s, time_s);
-        left_hip_rot_mom = resample_signal(moments.LHipMoment(idx, transverse_plane) ./ body_mass, source_time_s, time_s);
+        % Streaming.mat moments are already normalized by body mass (Nm/kg).
+        right_hip_flex_mom = resample_signal(moments.RHipMoment(idx, sagittal_plane), source_time_s, time_s);
+        left_hip_flex_mom = resample_signal(moments.LHipMoment(idx, sagittal_plane), source_time_s, time_s);
+        right_hip_add_mom = resample_signal(moments.RHipMoment(idx, frontal_plane), source_time_s, time_s);
+        left_hip_add_mom = resample_signal(moments.LHipMoment(idx, frontal_plane), source_time_s, time_s);
+        right_hip_rot_mom = resample_signal(moments.RHipMoment(idx, transverse_plane), source_time_s, time_s);
+        left_hip_rot_mom = resample_signal(moments.LHipMoment(idx, transverse_plane), source_time_s, time_s);
 
         % Match current phase converter default behavior: keep native knee-moment sign.
-        right_knee_flex_mom = resample_signal(moments.RKneeMoment(idx, sagittal_plane) ./ body_mass, source_time_s, time_s);
-        left_knee_flex_mom = resample_signal(moments.LKneeMoment(idx, sagittal_plane) ./ body_mass, source_time_s, time_s);
-        right_knee_add_mom = resample_signal(moments.RKneeMoment(idx, frontal_plane) ./ body_mass, source_time_s, time_s);
-        left_knee_add_mom = resample_signal(moments.LKneeMoment(idx, frontal_plane) ./ body_mass, source_time_s, time_s);
-        right_knee_rot_mom = resample_signal(moments.RKneeMoment(idx, transverse_plane) ./ body_mass, source_time_s, time_s);
-        left_knee_rot_mom = resample_signal(moments.LKneeMoment(idx, transverse_plane) ./ body_mass, source_time_s, time_s);
+        right_knee_flex_mom = resample_signal(moments.RKneeMoment(idx, sagittal_plane), source_time_s, time_s);
+        left_knee_flex_mom = resample_signal(moments.LKneeMoment(idx, sagittal_plane), source_time_s, time_s);
+        right_knee_add_mom = resample_signal(moments.RKneeMoment(idx, frontal_plane), source_time_s, time_s);
+        left_knee_add_mom = resample_signal(moments.LKneeMoment(idx, frontal_plane), source_time_s, time_s);
+        right_knee_rot_mom = resample_signal(moments.RKneeMoment(idx, transverse_plane), source_time_s, time_s);
+        left_knee_rot_mom = resample_signal(moments.LKneeMoment(idx, transverse_plane), source_time_s, time_s);
 
-        right_ankle_flex_mom = resample_signal(moments.RAnkleMoment(idx, sagittal_plane) ./ body_mass, source_time_s, time_s);
-        left_ankle_flex_mom = resample_signal(moments.LAnkleMoment(idx, sagittal_plane) ./ body_mass, source_time_s, time_s);
-        right_ankle_add_mom = resample_signal(moments.RAnkleMoment(idx, frontal_plane) ./ body_mass, source_time_s, time_s);
-        left_ankle_add_mom = resample_signal(moments.LAnkleMoment(idx, frontal_plane) ./ body_mass, source_time_s, time_s);
-        right_ankle_rot_mom = resample_signal(moments.RAnkleMoment(idx, transverse_plane) ./ body_mass, source_time_s, time_s);
-        left_ankle_rot_mom = resample_signal(moments.LAnkleMoment(idx, transverse_plane) ./ body_mass, source_time_s, time_s);
+        right_ankle_flex_mom = resample_signal(moments.RAnkleMoment(idx, sagittal_plane), source_time_s, time_s);
+        left_ankle_flex_mom = resample_signal(moments.LAnkleMoment(idx, sagittal_plane), source_time_s, time_s);
+        right_ankle_add_mom = resample_signal(moments.RAnkleMoment(idx, frontal_plane), source_time_s, time_s);
+        left_ankle_add_mom = resample_signal(moments.LAnkleMoment(idx, frontal_plane), source_time_s, time_s);
+        right_ankle_rot_mom = resample_signal(moments.RAnkleMoment(idx, transverse_plane), source_time_s, time_s);
+        left_ankle_rot_mom = resample_signal(moments.LAnkleMoment(idx, transverse_plane), source_time_s, time_s);
     else
         right_hip_flex_mom = nan_signal;
         left_hip_flex_mom = nan_signal;
@@ -554,26 +628,48 @@ function trial_table = process_trial_time( ...
         force_idx_r = force_idx_start:10:force_idx_end_r;
         force_idx_l = force_idx_start:10:force_idx_end_l;
 
-        x = 1;
+        % Raw force-plate axes: column 2 AP, column 3 vertical/down, column 1 ML/left.
+        x = 2;
         y = 3;
-        z = 2;
+        z = 1;
 
         force_time_ipsi = ((0:length(force_idx_r)-1)' ./ input_sampling_rate_hz);
         force_time_contra = ((0:length(force_idx_l)-1)' ./ input_sampling_rate_hz);
 
-        grf_vertical_ipsi = resample_signal(-trial_struct.forceplates.RForce(force_idx_r, z) ./ body_weight_N, force_time_ipsi, time_s);
-        grf_vertical_contra = resample_signal(-trial_struct.forceplates.LForce(force_idx_l, z) ./ body_weight_N, force_time_contra, time_s);
-        grf_anterior_ipsi = resample_signal(-trial_struct.forceplates.RForce(force_idx_r, y) ./ body_weight_N, force_time_ipsi, time_s);
-        grf_anterior_contra = resample_signal(-trial_struct.forceplates.LForce(force_idx_l, y) ./ body_weight_N, force_time_contra, time_s);
-        grf_lateral_ipsi = resample_signal(trial_struct.forceplates.RForce(force_idx_r, x) ./ body_weight_N, force_time_ipsi, time_s);
-        grf_lateral_contra = resample_signal(trial_struct.forceplates.LForce(force_idx_l, x) ./ body_weight_N, force_time_contra, time_s);
+        grf_vertical_ipsi = resample_signal(-trial_struct.forceplates.RForce(force_idx_r, y) ./ body_weight_N, force_time_ipsi, time_s);
+        grf_vertical_contra = resample_signal(-trial_struct.forceplates.LForce(force_idx_l, y) ./ body_weight_N, force_time_contra, time_s);
+        grf_anterior_ipsi = resample_signal(trial_struct.forceplates.RForce(force_idx_r, x) ./ body_weight_N, force_time_ipsi, time_s);
+        grf_anterior_contra = resample_signal(trial_struct.forceplates.LForce(force_idx_l, x) ./ body_weight_N, force_time_contra, time_s);
+        grf_lateral_ipsi = resample_signal(-trial_struct.forceplates.RForce(force_idx_r, z) ./ body_weight_N, force_time_ipsi, time_s);
+        grf_lateral_contra = resample_signal(-trial_struct.forceplates.LForce(force_idx_l, z) ./ body_weight_N, force_time_contra, time_s);
 
-        cop_vertical_ipsi = resample_signal(-trial_struct.forceplates.RCoP(force_idx_r, z), force_time_ipsi, time_s);
-        cop_vertical_contra = resample_signal(-trial_struct.forceplates.LCoP(force_idx_l, z), force_time_contra, time_s);
-        cop_lateral_ipsi = resample_signal(trial_struct.forceplates.RCoP(force_idx_r, y), force_time_ipsi, time_s);
-        cop_lateral_contra = resample_signal(trial_struct.forceplates.LCoP(force_idx_l, y), force_time_contra, time_s);
-        cop_anterior_ipsi = resample_signal(-trial_struct.forceplates.RCoP(force_idx_r, x), force_time_ipsi, time_s);
-        cop_anterior_contra = resample_signal(-trial_struct.forceplates.LCoP(force_idx_l, x), force_time_contra, time_s);
+        % CoP columns are contact-relative metres. Raw CoP is in a global
+        % treadmill frame and millimetres, so zero every stance episode at
+        % its initial contact rather than subtracting a moving ankle marker.
+        cop_vertical_ipsi = nan_signal;
+        cop_vertical_contra = nan_signal;
+        cop_lateral_ipsi = nan_signal;
+        cop_lateral_contra = nan_signal;
+        cop_anterior_ipsi = nan_signal;
+        cop_anterior_contra = nan_signal;
+        if isfield(trial_struct.forceplates, 'RCoP') && isfield(trial_struct.forceplates, 'LCoP')
+            % The force-plate AP position axis decreases heel-to-toe, so
+            % negate it for standardized Anterior+ output.
+            r_cop_anterior = resample_signal(-trial_struct.forceplates.RCoP(force_idx_r, x) ./ 1000, force_time_ipsi, time_s);
+            l_cop_anterior = resample_signal(-trial_struct.forceplates.LCoP(force_idx_l, x) ./ 1000, force_time_contra, time_s);
+            r_cop_lateral = resample_signal(-trial_struct.forceplates.RCoP(force_idx_r, z) ./ 1000, force_time_ipsi, time_s);
+            l_cop_lateral = resample_signal(-trial_struct.forceplates.LCoP(force_idx_l, z) ./ 1000, force_time_contra, time_s);
+            r_cop_vertical = resample_signal(trial_struct.forceplates.RCoP(force_idx_r, y) ./ 1000, force_time_ipsi, time_s);
+            l_cop_vertical = resample_signal(trial_struct.forceplates.LCoP(force_idx_l, y) ./ 1000, force_time_contra, time_s);
+
+            contact_threshold_BW = 20 ./ body_weight_N;
+            [cop_anterior_ipsi, cop_lateral_ipsi, cop_vertical_ipsi] = ...
+                zero_cop_by_contact(r_cop_anterior, r_cop_lateral, r_cop_vertical, ...
+                grf_vertical_ipsi, contact_threshold_BW, false);
+            [cop_anterior_contra, cop_lateral_contra, cop_vertical_contra] = ...
+                zero_cop_by_contact(l_cop_anterior, l_cop_lateral, l_cop_vertical, ...
+                grf_vertical_contra, contact_threshold_BW, false);
+        end
     else
         grf_vertical_ipsi = nan_signal;
         grf_vertical_contra = nan_signal;
@@ -703,6 +799,29 @@ function trial_table = process_trial_time( ...
     trial_table.shank_sagittal_velocity_contra_rad_s = left_shank_sag_vel;
     trial_table.foot_sagittal_velocity_ipsi_rad_s = right_foot_sag_vel;
     trial_table.foot_sagittal_velocity_contra_rad_s = left_foot_sag_vel;
+    trial_table = mask_structural_outliers(trial_table);
+end
+
+
+function data = mask_structural_outliers(data)
+    % Acquisition glitches beyond the standard's absolute physical guards
+    % are unavailable measurements, not valid extreme biomechanics.
+    names = data.Properties.VariableNames;
+    for name_idx = 1:length(names)
+        name = names{name_idx};
+        limit = [];
+        if startsWith(name, 'cop_') && endsWith(name, '_m')
+            limit = 5;
+        elseif contains(name, '_acceleration_') && endsWith(name, '_rad_s2')
+            limit = 10000;
+        elseif contains(name, '_velocity_') && endsWith(name, '_rad_s')
+            limit = 100;
+        end
+        if ~isempty(limit) && isnumeric(data.(name))
+            invalid = ~isfinite(data.(name)) | abs(data.(name)) > limit;
+            data.(name)(invalid) = NaN;
+        end
+    end
 end
 
 
@@ -711,6 +830,73 @@ function signal = get_optional_angle(angles, field_name, idx, plane_idx, source_
     if isfield(angles, field_name) && size(angles.(field_name), 2) >= plane_idx
         signal = resample_signal(angles.(field_name)(idx, plane_idx) * deg2rad_factor, source_time_s, target_time_s);
     end
+end
+
+
+function [segment_end, is_valid, reason] = sanitize_angle_segment(angles, segment_start, segment_end)
+    % Remove only unambiguous acquisition padding, then reject gross corruption.
+    % A valid pose can contain an individual zero-valued joint, so padding is
+    % recognized only when all six sagittal channels are exactly zero for at
+    % least 10 consecutive frames at the end of the requested segment.
+    fields = {'RHipAngles', 'LHipAngles', 'RKneeAngles', 'LKneeAngles', ...
+        'RAnkleAngles', 'LAnkleAngles'};
+    sagittal = zeros(segment_end - segment_start + 1, length(fields));
+    all_angles = [];
+    for field_idx = 1:length(fields)
+        values = angles.(fields{field_idx})(segment_start:segment_end, :);
+        sagittal(:, field_idx) = values(:, 1);
+        all_angles = [all_angles, values]; %#ok<AGROW>
+    end
+
+    trailing_padding = all(sagittal == 0, 2);
+    last_nonpadding = find(~trailing_padding, 1, 'last');
+    if isempty(last_nonpadding)
+        is_valid = false;
+        reason = 'all requested joint-angle frames are zero';
+        return;
+    end
+    padding_length = size(sagittal, 1) - last_nonpadding;
+    if padding_length >= 10
+        segment_end = segment_start + last_nonpadding - 1;
+        all_angles = all_angles(1:last_nonpadding, :);
+    end
+
+    % Pelvis and foot-progress channels also feed the reconstructed segment
+    % angles and their gradients, so subject them to the same corruption guard.
+    optional_fields = {'RPelvisAngles', 'LPelvisAngles', ...
+        'RFootProgressAngles', 'LFootProgressAngles'};
+    retained_rows = size(all_angles, 1);
+    for field_idx = 1:length(optional_fields)
+        field_name = optional_fields{field_idx};
+        if isfield(angles, field_name)
+            values = angles.(field_name)(segment_start:segment_end, :);
+            if size(values, 1) ~= retained_rows
+                is_valid = false;
+                reason = sprintf('%s does not cover the retained segment', field_name);
+                return;
+            end
+            all_angles = [all_angles, values]; %#ok<AGROW>
+        end
+    end
+
+    if any(~isfinite(all_angles), 'all')
+        is_valid = false;
+        reason = 'joint angles contain NaN or Inf';
+        return;
+    end
+    if any(abs(all_angles) > 180, 'all')
+        is_valid = false;
+        reason = 'joint angle exceeds +/-180 degrees';
+        return;
+    end
+    if size(all_angles, 1) > 1 && any(abs(diff(all_angles, 1, 1)) > 120, 'all')
+        is_valid = false;
+        reason = 'joint angle jumps more than 120 degrees in one frame';
+        return;
+    end
+
+    is_valid = true;
+    reason = '';
 end
 
 
@@ -769,4 +955,47 @@ function corrected = apply_90_degree_correction(angle_rad)
     end
 
     corrected = angle_rad;
+end
+
+
+function [anterior, lateral, vertical] = zero_cop_by_contact( ...
+        anterior, lateral, vertical, vertical_force_BW, contact_threshold_BW, allow_initial_contact)
+    % Express each contiguous stance episode relative to its initial CoP.
+    anterior = anterior(:);
+    lateral = lateral(:);
+    vertical = vertical(:);
+    vertical_force_BW = vertical_force_BW(:);
+
+    contact = isfinite(vertical_force_BW) & ...
+        vertical_force_BW > contact_threshold_BW & ...
+        isfinite(anterior) & isfinite(lateral) & isfinite(vertical);
+    % A segment may start in mid-stance. Without the preceding heel strike,
+    % that partial episode has no valid stride-relative origin.
+    if ~allow_initial_contact && ~isempty(contact) && contact(1)
+        first_end = find(~contact, 1, 'first');
+        if isempty(first_end)
+            contact(:) = false;
+        else
+            contact(1:first_end - 1) = false;
+        end
+    end
+    contact_starts = find(contact & [true; ~contact(1:end-1)]);
+    contact_ends = find(contact & [~contact(2:end); true]);
+
+    for episode_idx = 1:min(numel(contact_starts), numel(contact_ends))
+        episode = contact_starts(episode_idx):contact_ends(episode_idx);
+        anterior(episode) = anterior(episode) - anterior(episode(1));
+        lateral(episode) = lateral(episode) - lateral(episode(1));
+        vertical(episode) = vertical(episode) - vertical(episode(1));
+        edge_count = max(1, floor(numel(episode) * 0.2));
+        early_progression = median(anterior(episode(1:edge_count)), 'omitnan');
+        late_progression = median(anterior(episode(end-edge_count+1:end)), 'omitnan');
+        if late_progression < early_progression
+            anterior(episode) = -anterior(episode);
+        end
+    end
+
+    anterior(~contact) = NaN;
+    lateral(~contact) = NaN;
+    vertical(~contact) = NaN;
 end

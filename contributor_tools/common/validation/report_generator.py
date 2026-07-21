@@ -652,9 +652,12 @@ class ValidationReportGenerator:
             print(f"    Processing {len(available_features)} features in {len(feature_batches)} batches")
             self._log_memory("plot_batch_start", f"Starting {len(feature_batches)} feature batches")
             
-            # Load all batches and combine (still more memory efficient than before)
-            all_data_batches = []
+            # Preallocate the final array after the first batch. Keeping every
+            # batch and then concatenating temporarily required roughly twice
+            # the final array's memory.
+            all_data_3d = None
             all_feature_names = []
+            feature_offset = 0
             
             for batch_idx, feature_batch in enumerate(feature_batches, 1):
                 print(f"    Loading batch {batch_idx}/{len(feature_batches)}: {len(feature_batch)} features")
@@ -671,27 +674,30 @@ class ValidationReportGenerator:
                     subject=None, task=task, features=feature_batch
                 )
                 
-                all_data_batches.append(batch_data_3d)
+                if all_data_3d is None:
+                    final_shape = (
+                        batch_data_3d.shape[0],
+                        batch_data_3d.shape[1],
+                        len(available_features),
+                    )
+                    all_data_3d = np.empty(final_shape, dtype=batch_data_3d.dtype)
+                elif batch_data_3d.shape[:2] != all_data_3d.shape[:2]:
+                    raise ValueError('Feature batches returned inconsistent cycle dimensions')
+
+                next_offset = feature_offset + batch_data_3d.shape[2]
+                all_data_3d[:, :, feature_offset:next_offset] = batch_data_3d
+                feature_offset = next_offset
                 all_feature_names.extend(batch_feature_names)
                 
                 self._log_memory("plot_batch_loaded", f"Batch {batch_idx} loaded: {batch_data_3d.shape}")
                 
-                # Quick memory cleanup
+                del batch_data_3d
                 gc.collect()
             
-            # Combine all batches into final array
-            print(f"    Combining {len(all_data_batches)} batches...")
-            self._log_memory("plot_combine_start", "Combining feature batches")
-            
-            if all_data_batches:
-                # Concatenate along the feature axis (axis=2)
-                all_data_3d = np.concatenate(all_data_batches, axis=2)
-                self._log_memory("plot_combine_complete", f"Combined data shape: {all_data_3d.shape}")
-                
-                # Clean up intermediate batches
-                del all_data_batches
-                gc.collect()
-                self._log_memory("plot_batches_cleanup", "Intermediate batches cleaned up")
+            if all_data_3d is not None:
+                if feature_offset != all_data_3d.shape[2]:
+                    all_data_3d = all_data_3d[:, :, :feature_offset]
+                self._log_memory("plot_batches_complete", f"Loaded data shape: {all_data_3d.shape}")
                 
                 # Get validation information
                 biomechanical_failing_features = self.validator._validate_task_with_failing_features(task_locomotion_data, task)
@@ -1716,5 +1722,3 @@ cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
         if todo_count > 0:
             print(f"📝 Created documentation template with {todo_count} items to complete")
             print(f"   Use your preferred editor or Claude Code to fill in the [TODO:] sections")
-
-

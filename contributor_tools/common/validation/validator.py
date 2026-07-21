@@ -6,7 +6,9 @@ Core validation functionality without unnecessary complexity.
 Focuses solely on checking if biomechanical data meets specifications.
 """
 
+import os
 import numpy as np
+import pandas as pd
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional, Any, Set
@@ -16,6 +18,28 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 from contributor_tools.common.config_manager import ValidationConfigManager
 from locohub import LocomotionData
+from locohub.feature_constants import CANONICAL_COLUMN_GROUPS
+
+
+# Broad structural guardrails for time-domain data. These intentionally catch
+# unit/sign explosions and acquisition corruption, not normal biomechanical
+# variability; phase-specific quality ranges remain in the YAML configuration.
+TIME_STRUCTURAL_ABS_LIMITS = {
+    'joint_angles': 2 * np.pi,
+    'segment_angles': 2 * np.pi,
+    'joint_velocities': 100.0,
+    'segment_velocities': 100.0,
+    'joint_accelerations': 10_000.0,
+    'moments': 5_000.0,
+    'moments_normalized': 20.0,
+    'assistance_moments': 20.0,
+    'biological_moments': 20.0,
+    'grf': 10_000.0,
+    'grf_normalized': 10.0,
+    'cop': 5.0,
+    'emg_mvc': 1_000.0,
+    'emg_peak': 1_000.0,
+}
 
 
 # ============================================================================
@@ -47,7 +71,12 @@ class Validator:
     Supports arbitrary phase points defined in YAML configuration.
     """
     
-    def __init__(self, config_path: Optional[Path] = None):
+    def __init__(
+        self,
+        config_path: Optional[Path] = None,
+        time_batch_size: Optional[int] = None,
+        time_column_chunk_size: Optional[int] = None,
+    ):
         """
         Initialize validator with configuration.
         
@@ -62,8 +91,24 @@ class Validator:
         else:
             # If it's a directory or None, use default behavior
             self.config_manager = ValidationConfigManager()
+
+        # Keep large time-domain checks bounded even when a parquet file has one
+        # enormous row group. Environment overrides are useful on shared hosts.
+        self.time_batch_size = time_batch_size or int(
+            os.environ.get('LOCOHUB_VALIDATION_BATCH_ROWS', '16384')
+        )
+        self.time_column_chunk_size = time_column_chunk_size or int(
+            os.environ.get('LOCOHUB_VALIDATION_COLUMN_CHUNK', '8')
+        )
+        if self.time_batch_size < 1 or self.time_column_chunk_size < 1:
+            raise ValueError('Time validation batch and column chunk sizes must be positive')
         
-    def validate(self, dataset_path: str, ignore_features: List[str] = None) -> Dict[str, Any]:
+    def validate(
+        self,
+        dataset_path: str,
+        ignore_features: List[str] = None,
+        retain_loaded_data: bool = False,
+    ) -> Dict[str, Any]:
         """
         Validate a dataset against specifications.
         
@@ -78,7 +123,11 @@ class Validator:
             - violations: Dict of violations by task and variable
             - stats: Summary statistics
         """
-        # Load dataset with proper phase column name
+        columns = self._dataset_columns(dataset_path)
+        if 'phase_ipsi' not in columns and 'time_s' in columns:
+            return self._validate_time_dataset(dataset_path)
+
+        # Load phase-indexed data with the proper phase column name.
         locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
 
         result = self.validate_dataset(
@@ -88,7 +137,235 @@ class Validator:
 
         # Ensure dataset name is populated for compatibility
         result['stats']['dataset'] = Path(dataset_path).stem
+        if retain_loaded_data:
+            # Internal handoff used by the CLI to avoid reading a phase dataset
+            # twice. The caller must remove this before serialization.
+            result['_locomotion_data'] = locomotion_data
         return result
+
+    @staticmethod
+    def _dataset_columns(dataset_path: str) -> List[str]:
+        """Read only dataset metadata when possible to dispatch by primary index."""
+        path = Path(dataset_path)
+        if path.suffix.lower() == '.parquet':
+            import pyarrow.parquet as pq
+            return pq.ParquetFile(path).schema.names
+        if path.suffix.lower() in {'.csv', '.txt'}:
+            return list(pd.read_csv(path, nrows=0).columns)
+        return list(pd.read_parquet(path).columns)
+
+    def _validate_time_dataset(self, dataset_path: str) -> Dict[str, Any]:
+        """Validate a time export with bounded Arrow/CSV batches.
+
+        Parquet data stays Arrow-native. Numeric signals are scanned in small
+        column groups, preventing a wide, single-row-group dataset from being
+        materialized as one large Pandas frame.
+        """
+        path = Path(dataset_path)
+        columns = self._dataset_columns(dataset_path)
+        required = ['subject', 'task', 'task_id', 'task_info', 'step', 'time_s']
+        missing = [column for column in required if column not in columns]
+
+        violations: Dict[str, Dict[str, List[int]]] = {}
+        total_checks = 0
+        total_violations = 0
+        total_rows = 0
+        tasks_in_data: Set[str] = set()
+
+        def add_violation(task: str, check: str, segment: int) -> None:
+            nonlocal total_violations
+            violations.setdefault(str(task), {}).setdefault(check, []).append(int(segment))
+            total_violations += 1
+
+        def add_numeric_violations(
+            task_values,
+            invalid_mask: np.ndarray,
+            check: str,
+            row_offset: int,
+        ) -> None:
+            """Count all bad values while retaining a bounded useful sample."""
+            nonlocal total_violations
+            invalid_positions = np.flatnonzero(invalid_mask)
+            total_violations += len(invalid_positions)
+            for position in invalid_positions[:20]:
+                task = str(task_values[position] if task_values[position] is not None else 'dataset')
+                records = violations.setdefault(task, {}).setdefault(check, [])
+                if len(records) < 20:
+                    records.append(int(row_offset + position))
+
+        if missing:
+            violations['dataset'] = {'missing_required_columns': list(range(len(missing)))}
+            total_violations += len(missing)
+
+        configured_limits = (
+            self.config_manager.get_metadata('time_structural_abs_limits')
+            or TIME_STRUCTURAL_ABS_LIMITS
+        )
+        numeric_limits = {
+            column: float(limit)
+            for group_name, limit in configured_limits.items()
+            for column in CANONICAL_COLUMN_GROUPS.get(group_name, [])
+            if column in columns
+        }
+        optional_index_columns = [
+            column for column in ('collection_id', 'time_reset_per') if column in columns
+        ]
+        metadata_columns = ['subject', 'task', 'task_id', 'task_info', 'step']
+        group_columns = ['subject', 'task', 'task_id', 'step']
+        if 'collection_id' in columns:
+            group_columns.insert(3, 'collection_id')
+        last_time_by_group: Dict[Any, float] = {}
+        segment_numbers: Dict[Any, int] = {}
+
+        metadata_scan_columns = list(dict.fromkeys(
+            [column for column in required if column in columns] + optional_index_columns
+        ))
+
+        def iter_batches(scan_columns):
+            if path.suffix.lower() == '.parquet':
+                import pyarrow.parquet as pq
+                yield from pq.ParquetFile(path).iter_batches(
+                    columns=scan_columns,
+                    batch_size=self.time_batch_size,
+                    use_threads=False,
+                )
+            else:
+                yield from pd.read_csv(
+                    path, usecols=scan_columns, chunksize=self.time_batch_size
+                )
+
+        def column_values(batch, column):
+            """Return a bounded Python list for metadata only."""
+            if isinstance(batch, pd.DataFrame):
+                return batch[column].tolist()
+            return batch.column(batch.schema.get_field_index(column)).to_pylist()
+
+        def numeric_values(batch, column):
+            if isinstance(batch, pd.DataFrame):
+                return pd.to_numeric(batch[column], errors='coerce').to_numpy(dtype=float)
+            import pyarrow as pa
+            import pyarrow.compute as pc
+            array = batch.column(batch.schema.get_field_index(column))
+            try:
+                cast = pc.cast(array, pa.float64(), safe=False)
+                return np.asarray(cast.to_numpy(zero_copy_only=False), dtype=float)
+            except (pa.ArrowInvalid, pa.ArrowNotImplementedError, ValueError):
+                # Preserve validation semantics for malformed numeric columns.
+                return pd.to_numeric(pd.Series(array.to_pylist()), errors='coerce').to_numpy(dtype=float)
+
+        row_offset = 0
+        for batch in iter_batches(metadata_scan_columns):
+            batch_length = len(batch)
+            total_rows += batch_length
+            task_values = (
+                column_values(batch, 'task')
+                if 'task' in metadata_scan_columns else ['dataset'] * batch_length
+            )
+            tasks_in_data.update(str(value) for value in task_values if value is not None)
+
+            if not missing:
+                for column in metadata_columns:
+                    values = column_values(batch, column)
+                    invalid = np.fromiter(
+                        (value is None or (isinstance(value, str) and not value.strip()) for value in values),
+                        dtype=bool,
+                        count=batch_length,
+                    )
+                    total_checks += batch_length
+                    add_numeric_violations(task_values, invalid, f'{column}_missing', row_offset)
+
+                time_values = numeric_values(batch, 'time_s')
+                invalid_time = ~np.isfinite(time_values) | (time_values < 0)
+                total_checks += batch_length
+                add_numeric_violations(task_values, invalid_time, 'time_s_invalid', row_offset)
+
+                group_values = [column_values(batch, column) for column in group_columns]
+                start = 0
+                while start < batch_length:
+                    key = tuple(values[start] for values in group_values)
+                    end = start + 1
+                    while end < batch_length and all(
+                        values[end] == key[index] for index, values in enumerate(group_values)
+                    ):
+                        end += 1
+                    segment_number = segment_numbers.setdefault(key, len(segment_numbers) + 1)
+                    segment_time = time_values[start:end]
+                    total_checks += 1
+                    if np.all(np.isfinite(segment_time)):
+                        previous = last_time_by_group.get(key)
+                        crosses_batch_bad = previous is not None and segment_time[0] <= previous
+                        within_batch_bad = len(segment_time) > 1 and np.any(np.diff(segment_time) <= 0)
+                        if crosses_batch_bad or within_batch_bad:
+                            add_violation(
+                                str(task_values[start]),
+                                'time_s_not_strictly_increasing',
+                                segment_number,
+                            )
+                        last_time_by_group[key] = float(segment_time[-1])
+                    start = end
+            row_offset += batch_length
+
+        # Wide numeric data is deliberately read in several narrow passes. This
+        # trades modest extra I/O for a predictable memory ceiling.
+        numeric_items = list(numeric_limits.items())
+        for chunk_start in range(0, len(numeric_items), self.time_column_chunk_size):
+            chunk = numeric_items[chunk_start:chunk_start + self.time_column_chunk_size]
+            scan_columns = (['task'] if 'task' in columns else []) + [name for name, _ in chunk]
+            row_offset = 0
+            for batch in iter_batches(scan_columns):
+                batch_length = len(batch)
+                task_values = (
+                    column_values(batch, 'task')
+                    if 'task' in scan_columns else ['dataset'] * batch_length
+                )
+                for column, limit in chunk:
+                    values = numeric_values(batch, column)
+                    total_checks += values.size
+                    add_numeric_violations(
+                        task_values, np.isinf(values), f'{column}_infinite', row_offset
+                    )
+                    add_numeric_violations(
+                        task_values,
+                        np.isfinite(values) & (np.abs(values) > limit),
+                        f'{column}_outside_structural_limit_{limit:g}',
+                        row_offset,
+                    )
+                row_offset += batch_length
+
+        schema_passed = not missing and total_violations == 0 and total_rows > 0
+        if total_rows == 0:
+            violations.setdefault('dataset', {})['empty_dataset'] = [0]
+            total_violations += 1
+
+        message = (
+            'Time structure valid (required columns present; time_s is finite, non-negative, and strictly increasing per segment)'
+            if schema_passed else
+            'Time structure invalid; see violations'
+        )
+        checks = max(total_checks, 1)
+        return {
+            'passed': schema_passed,
+            'schema_passed': schema_passed,
+            'quality_gate_passed': schema_passed,
+            'quality_gate_threshold': 1.0,
+            # Compatibility keys retained for existing summary/report consumers.
+            'phase_valid': schema_passed,
+            'phase_message': message,
+            'violations': violations,
+            'tasks': {},
+            'stats': {
+                'total_checks': checks,
+                'total_violations': total_violations,
+                'total_strides': 0,
+                'total_failing_strides': 0,
+                'pass_rate': max(0.0, 1.0 - total_violations / checks),
+                'variable_pass_rate': 1.0,
+                'num_tasks': len(tasks_in_data - {'dataset'}),
+                'dataset': path.stem,
+                'pass_rate_threshold': 1.0,
+            },
+            'mode': 'time',
+        }
 
     def validate_dataset(
         self,
@@ -476,4 +753,3 @@ def format_validation_result(result: Dict[str, Any]) -> str:
     lines.append("=" * 60)
     
     return "\n".join(lines)
-

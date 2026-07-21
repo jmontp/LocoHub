@@ -92,7 +92,7 @@ If something fails, back up one box in the workflow and address it before rerunn
 
 - 📁 [Folder full of CSV trials](#pattern-a-folder-based) → stitch tables into the schema
 - 🗂️ [MATLAB structs](#pattern-b-hierarchical) → flatten from structs to rows
-- ⏱️ [Time-series only](#pre-processing-if-time-indexed) → normalize to phase before exporting
+- ⏱️ [Time-series only](#pre-processing-if-time-indexed) → export as time or normalize to phase, depending on segmentation confidence
 - ✅ [Already have a parquet](#step-2-validate-pythoncli) → run validation + plots
 - 🧭 [New task name](#manage-task-registry) → update the shared registry
 - 📦 [Everything looks good](#ready-to-submit) → final checklist before opening a PR
@@ -114,13 +114,15 @@ The CLI rewrites `internal/config_management/task_registry.py` for you. For coho
 
 Required columns (minimal schema):
 
-- `subject`, `task`, `task_id`, `task_info`, `step`, `phase_ipsi`
+- Common metadata: `subject`, `task`, `task_id`, `task_info`, `step`
+- Index column: use `phase_ipsi` for phase exports or `time_s` for time exports
 - Biomech variables follow: `joint_motion_measurement_side_unit`
   - Examples: `knee_flexion_angle_ipsi_rad`, `hip_flexion_moment_ipsi_Nm_kg`
 
 Constraints:
 
-- 150 points/cycle; `phase_ipsi` in [0..100] (phase‑normalized)
+- Phase exports: 150 points/cycle; `phase_ipsi` in [0..100]
+- Time exports: `time_s` monotonic within each `step`; `step` may be an approximate segment if exact cycles are unavailable
 - Angles in radians; joint moments mass‑normalized (Nm/kg); GRFs body‑weight normalized (BW)
 - Sign conventions follow the [Reference](../reference/index.md) (e.g., flexion positive)
 - Column names follow the standard naming: `joint_motion_measurement_side_unit`
@@ -340,9 +342,47 @@ For MATLAB structs or other hierarchical data formats (subject → task → task
 
 [↑ Back to workflow](#contribution-workflow)
 
-If your data are time‑indexed (no `phase_ipsi`), add a phase‑normalization pass before building the final table.
+If your source data are time‑indexed, you have two valid targets:
 
-=== "Pseudocode"
+- export a standardized `*_time.parquet` when segmentation is unavailable, low-confidence, or not worth the effort
+- convert to `*_phase.parquet` when you have reliable event detection and want stride-level averaging and validation
+
+The key requirement is not perfect segmentation. The key requirement is honest metadata plus consistent sign, unit, and naming conventions.
+
+#### Minimal time-indexed export
+
+A valid rough time-series export should keep the same metadata and variable conventions as the phase format:
+
+- `subject`, `task`, `task_id`, `task_info`, `step`, `time_s`
+- optional `subject_metadata`
+- the same biomechanical column names and sign conventions you would use in a phase export
+- monotonic `time_s` within each `step`
+
+For time exports, `step` can be coarse:
+
+- one whole trial: `000`
+- rough episode buckets: `001`, `002`, ...
+- approximate repetitions when exact gait cycles are not available
+
+Do not invent exact transition or stride semantics if the source data do not support them. Put approximate context into `task_info` instead, for example: `segmentation:rough`, `reference_leg:right`, or `transition_labels:coarse`.
+
+=== "Export As Time"
+
+    ```text
+    for trial in trials:
+      sig = load_signals(trial)
+      sig = standardize_column_names(sig)
+      meta = read_metadata(trial)                  # subject, task, task_id, task_info
+      sig = attach_metadata(sig, meta)
+      sig.step = assign_coarse_segments(sig)       # optional; one trial-level step is acceptable
+      ensure_time_monotonic(sig.time_s)
+      write_rows(sig)
+    ```
+
+=== "Convert To Phase"
+
+    Use this path only when your event detection is reliable enough to justify 150-point normalization.
+
     ```text
     for trial in trials:
       sig = load_signals(trial)
@@ -353,29 +393,31 @@ If your data are time‑indexed (no `phase_ipsi`), add a phase‑normalization p
         write_rows(phase, resampled, metadata)
     ```
 
-=== "Python"
-    ```python
-    import numpy as np
+**Python example**
 
-    def resample_to_150(y, t, hs_t, next_hs_t):
-        mask = (t >= hs_t) & (t < next_hs_t)
-        t_seg, y_seg = t[mask], y[mask]
-        phase = np.linspace(0, 100, 150)
-        t_norm = (t_seg - t_seg[0]) / (t_seg[-1] - t_seg[0]) * 100
-        y150 = np.interp(phase, t_norm, y_seg)
-        return phase, y150
-    ```
+```python
+import numpy as np
 
-=== "MATLAB"
-    ```matlab
-    function [phase, y150] = resampleTo150(t, y, hs_t, next_hs_t)
-    mask = t >= hs_t & t < next_hs_t;
-    t_seg = t(mask); y_seg = y(mask);
-    phase = linspace(0,100,150);
-    t_norm = (t_seg - t_seg(1)) / (t_seg(end) - t_seg(1)) * 100;
-    y150 = interp1(t_norm, y_seg, phase, 'linear', 'extrap');
-    end
-    ```
+def resample_to_150(y, t, hs_t, next_hs_t):
+    mask = (t >= hs_t) & (t < next_hs_t)
+    t_seg, y_seg = t[mask], y[mask]
+    phase = np.linspace(0, 100, 150)
+    t_norm = (t_seg - t_seg[0]) / (t_seg[-1] - t_seg[0]) * 100
+    y150 = np.interp(phase, t_norm, y_seg)
+    return phase, y150
+```
+
+**MATLAB example**
+
+```matlab
+function [phase, y150] = resampleTo150(t, y, hs_t, next_hs_t)
+mask = t >= hs_t & t < next_hs_t;
+t_seg = t(mask); y_seg = y(mask);
+phase = linspace(0,100,150);
+t_norm = (t_seg - t_seg(1)) / (t_seg(end) - t_seg(1)) * 100;
+y150 = interp1(t_norm, y_seg, phase, 'linear', 'extrap');
+end
+```
 
 #### OpenSim pipeline (typical)
 
@@ -384,9 +426,11 @@ If your data are time‑indexed (no `phase_ipsi`), add a phase‑normalization p
 - External Loads → Inverse Dynamics (ID): apply GRFs; compute joint moments; export kinetics (`.mot/.sto`).
 - Filtering: apply consistent filters to kinematics/kinetics; record cutoffs.
 - Naming/signs: map OpenSim column names to standard `joint_motion_measurement_side_unit`; enforce sign conventions.
-- Events → Phase: if time-indexed, detect HS/TO (e.g., GRF threshold) and resample cycles to 150 points (`phase_ipsi` 0–100).
+- Decide export target:
+  - `*_time.parquet` if you want raw timing fidelity or only coarse segments
+  - `*_phase.parquet` if you trust HS/TO or repetition boundaries enough to resample
 - Normalization: convert joint moments to `*_Nm_kg`; GRFs to `*_BW`.
-- Table build: add required columns (`subject`, `task`, `task_id`, `task_info`, `step`, `phase_ipsi`) and save parquet.
+- Table build: add required metadata columns and either `time_s` or `phase_ipsi`, then save parquet.
 - Validate: run quick validator; iterate on mapping/signs/phase until remaining failures are understood or justified.
 
 Tips: pick a consistent HS detector (e.g., vertical GRF threshold crossing), de‑spike signals before event detection, and verify a few cycles visually.
@@ -399,10 +443,10 @@ Tips: pick a consistent HS detector (e.g., vertical GRF threshold crossing), de�
 
 Quickly prove the dataset is well-formed before investing in docs.
 
-Run the quick validator for pass/fail stats (optional plots):
+Run the quick validator for pass/fail stats. Phase datasets can also generate plots:
 
 ```bash
-python contributor_tools/quick_validation_check.py your_dataset_phase.parquet
+python contributor_tools/quick_validation_check.py your_dataset.parquet
 python contributor_tools/quick_validation_check.py your_dataset_phase.parquet --plot
 ```
 
@@ -625,7 +669,8 @@ graph TD
 - `phase_percent` used (should be `phase_ipsi` [0..100])
 - Wrong ipsi/contra or sign conventions (angles/moments)
 - Missing `task_info` (e.g., `speed_m_s`, `incline_deg`)
-- Time-indexed data not normalized to phase (150 points)
+- Time-indexed exports missing `time_s` or using non-monotonic time
+- Fake precision in `step` or transition labels instead of honest coarse metadata
 
 ## Contributor Tools Guide {#contributor-tools}
 
@@ -635,7 +680,7 @@ This section walks through every helper tool available in `contributor_tools/`. 
 
 Before you begin:
 - Activate the repository's Python environment
-- Keep your phase-normalized dataset in `converted_datasets/` (or provide an absolute path)
+- Keep your dataset in `converted_datasets/` (or provide an absolute path)
 - Run commands from the repository root so relative paths resolve correctly
 
 ### Tool Overview
@@ -649,7 +694,7 @@ Before you begin:
 
 ### quick_validation_check.py — Fast Quality Scan {#quick-validation-check}
 
-Use this first after you export a phase-normalized parquet file. It verifies naming conventions, basic structure, and stride-level validation statistics.
+Use this first after you export a standardized parquet file. It verifies naming conventions, basic structure, and then runs either phase or time checks depending on the dataset.
 
 **Usage:**
 ```bash
@@ -661,6 +706,11 @@ python3 contributor_tools/quick_validation_check.py converted_datasets/your_data
 # Check specific task and show plot
 python3 contributor_tools/quick_validation_check.py converted_datasets/your_dataset_phase.parquet \
     --task level_walking --plot
+
+# On Linux, protect other processes with an OS-enforced memory ceiling
+python3 contributor_tools/run_memory_limited_validation.py \
+    --memory-high-mb 3072 --memory-max-mb 4096 -- \
+    converted_datasets/your_dataset_time.parquet
 ```
 
 ![quick validation screenshot](../assets/quick_validation_check_terminal.png)

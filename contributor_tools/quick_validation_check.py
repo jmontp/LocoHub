@@ -395,7 +395,8 @@ def print_validation_summary(result: Dict, task_details: Optional[Dict[str, Dict
         print(f"Quality Gate ({threshold_pct} threshold): {icon}")
 
     phase_icon = "✅" if result['phase_valid'] else "❌"
-    print(f"Phase Structure: {phase_icon} {result['phase_message']}")
+    structure_label = "Time Structure" if mode == 'time' else "Phase Structure"
+    print(f"{structure_label}: {phase_icon} {result['phase_message']}")
 
     print(f"\nTasks Evaluated: {stats.get('num_tasks', 0)}")
 
@@ -723,25 +724,42 @@ def _base_task_name(task: str) -> str:
 
 
 def _collect_dataset_tasks(dataset_path: Path) -> List[str]:
-    """Return unique task names present in the dataset parquet."""
+    """Return task names without materializing the dataset in Pandas."""
 
-    try:
-        df = pd.read_parquet(dataset_path, columns=['task'])
-    except Exception:
-        df = pd.read_parquet(dataset_path)
-    if 'task' not in df.columns:
-        return []
-    return sorted(x for x in df['task'].dropna().unique())
+    if dataset_path.suffix.lower() == '.parquet':
+        import pyarrow.compute as pc
+        import pyarrow.parquet as pq
+
+        parquet_file = pq.ParquetFile(dataset_path)
+        if 'task' not in parquet_file.schema.names:
+            return []
+        tasks: Set[str] = set()
+        for batch in parquet_file.iter_batches(
+            columns=['task'], batch_size=16_384, use_threads=False
+        ):
+            for value in pc.unique(batch.column(0)).to_pylist():
+                if value is not None:
+                    tasks.add(str(value))
+        return sorted(tasks)
+
+    df = pd.read_csv(dataset_path, usecols=['task'])
+    return sorted(str(x) for x in df['task'].dropna().unique())
 
 
-def _compute_task_statistics(dataset_path: Path, validator: Validator, result: Dict) -> Dict[str, Dict[str, object]]:
+def _compute_task_statistics(
+    dataset_path: Path,
+    validator: Validator,
+    result: Dict,
+    locomotion_data: Optional[LocomotionData] = None,
+) -> Dict[str, Dict[str, object]]:
     """Collect per-task stride and feature statistics for reporting."""
     task_details: Dict[str, Dict[str, object]] = {}
 
     if result.get('mode', 'phase') != 'phase':
         return task_details
 
-    locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
+    if locomotion_data is None:
+        locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
     dataset_tasks = list(locomotion_data.get_tasks())
     violation_tasks = list(result.get('violations', {}).keys())
     all_tasks = sorted(set(dataset_tasks) | set(violation_tasks))
@@ -967,15 +985,20 @@ def main():
         registry_ok = _report_task_registry_mismatches(dataset_tasks, range_tasks)
 
         # Run validation
-        result = validator.validate(str(dataset_path))
+        result = validator.validate(str(dataset_path), retain_loaded_data=True)
         mode = result.get('mode', 'phase')
 
         task_details = None
         if mode == 'phase':
             try:
-                task_details = _compute_task_statistics(dataset_path, validator, result)
+                loaded_data = result.pop('_locomotion_data', None)
+                task_details = _compute_task_statistics(
+                    dataset_path, validator, result, locomotion_data=loaded_data
+                )
             except Exception as exc:
                 print(f"\n⚠️  Could not compute per-task statistics: {exc}")
+        else:
+            result.pop('_locomotion_data', None)
 
         # Always print summary
         print_validation_summary(result, task_details=task_details)

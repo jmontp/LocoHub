@@ -58,11 +58,31 @@ ANGLE_FEATURES = [
     'ankle_dorsiflexion_angle_ipsi_rad', 'ankle_dorsiflexion_angle_contra_rad'
 ]
 
+# Complete three-plane joint-angle schema. ANGLE_FEATURES remains the compact
+# sagittal plotting order used by legacy consumers.
+ALL_JOINT_ANGLE_FEATURES = ANGLE_FEATURES + [
+    'hip_adduction_angle_ipsi_rad', 'hip_adduction_angle_contra_rad',
+    'hip_rotation_angle_ipsi_rad', 'hip_rotation_angle_contra_rad',
+    'knee_adduction_angle_ipsi_rad', 'knee_adduction_angle_contra_rad',
+    'knee_rotation_angle_ipsi_rad', 'knee_rotation_angle_contra_rad',
+    'ankle_adduction_angle_ipsi_rad', 'ankle_adduction_angle_contra_rad',
+    'ankle_rotation_angle_ipsi_rad', 'ankle_rotation_angle_contra_rad',
+]
+
 # Kinematic velocities (joint velocities)
 VELOCITY_FEATURES = [
     'hip_flexion_velocity_ipsi_rad_s', 'hip_flexion_velocity_contra_rad_s',
     'knee_flexion_velocity_ipsi_rad_s', 'knee_flexion_velocity_contra_rad_s',
     'ankle_dorsiflexion_velocity_ipsi_rad_s', 'ankle_dorsiflexion_velocity_contra_rad_s'
+]
+
+ALL_JOINT_VELOCITY_FEATURES = VELOCITY_FEATURES + [
+    'hip_adduction_velocity_ipsi_rad_s', 'hip_adduction_velocity_contra_rad_s',
+    'hip_rotation_velocity_ipsi_rad_s', 'hip_rotation_velocity_contra_rad_s',
+    'knee_adduction_velocity_ipsi_rad_s', 'knee_adduction_velocity_contra_rad_s',
+    'knee_rotation_velocity_ipsi_rad_s', 'knee_rotation_velocity_contra_rad_s',
+    'ankle_adduction_velocity_ipsi_rad_s', 'ankle_adduction_velocity_contra_rad_s',
+    'ankle_rotation_velocity_ipsi_rad_s', 'ankle_rotation_velocity_contra_rad_s',
 ]
 
 # Kinematic accelerations (joint accelerations)
@@ -207,9 +227,9 @@ ALL_KINETIC_FEATURES = MOMENT_FEATURES + MOMENT_FEATURES_NORMALIZED + ASSISTANCE
 
 # All kinematic features combined (angles + segments + velocities + accelerations)
 ALL_KINEMATIC_FEATURES = (
-    ANGLE_FEATURES
+    ALL_JOINT_ANGLE_FEATURES
     + SEGMENT_ANGLE_FEATURES
-    + VELOCITY_FEATURES
+    + ALL_JOINT_VELOCITY_FEATURES
     + ACCELERATION_FEATURES
     + SEGMENT_VELOCITY_FEATURES
 )
@@ -219,8 +239,8 @@ CANONICAL_COLUMN_GROUPS = {
     'metadata': METADATA_COLUMNS,
     'phase': PHASE_COLUMNS,
     'time': TIME_COLUMNS,
-    'joint_angles': ANGLE_FEATURES,
-    'joint_velocities': VELOCITY_FEATURES,
+    'joint_angles': ALL_JOINT_ANGLE_FEATURES,
+    'joint_velocities': ALL_JOINT_VELOCITY_FEATURES,
     'joint_accelerations': ACCELERATION_FEATURES,
     'segment_angles': SEGMENT_ANGLE_FEATURES,
     'segment_velocities': SEGMENT_VELOCITY_FEATURES,
@@ -239,9 +259,9 @@ CANONICAL_COLUMN_GROUPS = {
 PHASE_CANONICAL_COLUMNS = (
     METADATA_COLUMNS
     + PHASE_COLUMNS
-    + ANGLE_FEATURES
+    + ALL_JOINT_ANGLE_FEATURES
     + SEGMENT_ANGLE_FEATURES
-    + VELOCITY_FEATURES
+    + ALL_JOINT_VELOCITY_FEATURES
     + ACCELERATION_FEATURES
     + SEGMENT_VELOCITY_FEATURES
     + MOMENT_FEATURES_NORMALIZED
@@ -252,9 +272,9 @@ PHASE_CANONICAL_COLUMNS = (
 TIME_CANONICAL_COLUMNS = (
     METADATA_COLUMNS
     + TIME_COLUMNS
-    + ANGLE_FEATURES
+    + ALL_JOINT_ANGLE_FEATURES
     + SEGMENT_ANGLE_FEATURES
-    + VELOCITY_FEATURES
+    + ALL_JOINT_VELOCITY_FEATURES
     + ACCELERATION_FEATURES
     + SEGMENT_VELOCITY_FEATURES
     + MOMENT_FEATURES_NORMALIZED
