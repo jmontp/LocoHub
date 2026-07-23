@@ -109,15 +109,26 @@ function merge_parquet_shards(shard_dir, output_path)
     end
     merger = fullfile('..', '..', 'common', 'merge_parquet_shards.py');
     if startsWith(python_executable, 'wsl.exe')
-        merger = strrep(merger, '\', '/');
-        shard_dir = strrep(shard_dir, '\', '/');
-        output_path = strrep(output_path, '\', '/');
+        % wsl.exe python3 runs inside WSL and needs POSIX paths, so translate
+        % Windows drive paths (S:\a\b or S:/a/b) to /mnt/s/a/b.
+        merger = win2wsl(merger);
+        shard_dir = win2wsl(shard_dir);
+        output_path = win2wsl(output_path);
     end
     command = sprintf('%s "%s" "%s" "%s" --row-group-size 65536', ...
         python_executable, merger, shard_dir, output_path);
     status = system(command);
     if status ~= 0
         error('Shard merge failed. Recoverable shards remain in %s.', shard_dir);
+    end
+end
+
+
+function p = win2wsl(p)
+    p = strrep(p, '\', '/');
+    if numel(p) >= 2 && p(2) == ':'
+        drive = lower(p(1));
+        p = ['/mnt/' drive p(3:end)];
     end
 end
 
@@ -662,13 +673,31 @@ function trial_table = process_trial_time( ...
             r_cop_vertical = resample_signal(trial_struct.forceplates.RCoP(force_idx_r, y) ./ 1000, force_time_ipsi, time_s);
             l_cop_vertical = resample_signal(trial_struct.forceplates.LCoP(force_idx_l, y) ./ 1000, force_time_contra, time_s);
 
-            contact_threshold_BW = 20 ./ body_weight_N;
+            % Gate stance episodes at 0.2 BW (matching the GTech 2023 CoP template) so
+            % the per-episode zero origin is a real heel-strike CoP, not a near-zero-force
+            % onset transient whose moment/Fz CoP sits far off the plate and offsets the
+            % whole stance.
+            contact_threshold_BW = 0.2;
             [cop_anterior_ipsi, cop_lateral_ipsi, cop_vertical_ipsi] = ...
                 zero_cop_by_contact(r_cop_anterior, r_cop_lateral, r_cop_vertical, ...
                 grf_vertical_ipsi, contact_threshold_BW, false);
             [cop_anterior_contra, cop_lateral_contra, cop_vertical_contra] = ...
                 zero_cop_by_contact(l_cop_anterior, l_cop_lateral, l_cop_vertical, ...
                 grf_vertical_contra, contact_threshold_BW, false);
+
+            % Physical-bound safety mask: contact-onset / off-plate transients can still
+            % leave a stance-relative CoP well beyond foot scale. Anything > 0.5 m from the
+            % contact origin is non-physical for an ankle-frame CoP -> mask to NaN
+            % (mirrors GTech 2023 convert_gtech_2023_time_to_parquet.m).
+            cop_phys_max = 0.5;
+            bad_ipsi = abs(cop_anterior_ipsi) > cop_phys_max | abs(cop_lateral_ipsi) > cop_phys_max;
+            cop_anterior_ipsi(bad_ipsi) = NaN;
+            cop_lateral_ipsi(bad_ipsi)  = NaN;
+            cop_vertical_ipsi(bad_ipsi) = NaN;
+            bad_contra = abs(cop_anterior_contra) > cop_phys_max | abs(cop_lateral_contra) > cop_phys_max;
+            cop_anterior_contra(bad_contra) = NaN;
+            cop_lateral_contra(bad_contra)  = NaN;
+            cop_vertical_contra(bad_contra) = NaN;
         end
     else
         grf_vertical_ipsi = nan_signal;

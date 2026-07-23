@@ -540,12 +540,36 @@ function rows = extract_and_process_time_window(trial_data, time_start, time_end
                 cop_anterior_ipsi = -(interp_optional(trial_data.fp, [best_fp_ipsi '_pz'], fp_time, target_time) - ankle_ant_ipsi);
             end
 
-            contact_mask = grf_vertical_ipsi < 0.2;
-            cop_anterior_ipsi(contact_mask) = 0;
-            cop_lateral_ipsi(contact_mask) = 0;
-            cop_vertical_ipsi(contact_mask) = 0;
+            % (Off-contact / non-physical CoP masking handled uniformly below.)
         end
     end
+
+    % ---- CoP finalization (ankle-relative, lab-axis; vertical projected out) ----
+    % Only the ankle lateral-malleolus marker POSITION is available (no foot/calcn
+    % orientation), so CoP is the lab-axis offset from the ankle rather than a true
+    % calcn-frame rotation. The vertical component is projected to zero (the standard
+    % requires ~0 and there is no foot Z axis here), and CoP is masked to NaN wherever
+    % the limb is unloaded (vertical GRF < 0.2 BW) or the horizontal CoP is non-physical
+    % (> 0.5 m from the ankle). For level treadmill the lab axes ~ foot anterior/lateral;
+    % for incline/decline/stairs the foot is pitched, so these remain lab-axis
+    % approximations. Mirrors the GTech 2023 calcn-frame converter's masking.
+    cop_phys_max = 0.5;
+    cop_vertical_ipsi(:)   = 0;
+    cop_vertical_contra(:) = 0;
+
+    mask_ipsi = ~(grf_vertical_ipsi >= 0.2) | ...
+        isnan(cop_anterior_ipsi) | isnan(cop_lateral_ipsi) | ...
+        abs(cop_anterior_ipsi) > cop_phys_max | abs(cop_lateral_ipsi) > cop_phys_max;
+    mask_contra = ~(grf_vertical_contra >= 0.2) | ...
+        isnan(cop_anterior_contra) | isnan(cop_lateral_contra) | ...
+        abs(cop_anterior_contra) > cop_phys_max | abs(cop_lateral_contra) > cop_phys_max;
+
+    cop_anterior_ipsi(mask_ipsi) = NaN;
+    cop_lateral_ipsi(mask_ipsi)  = NaN;
+    cop_vertical_ipsi(mask_ipsi) = NaN;
+    cop_anterior_contra(mask_contra) = NaN;
+    cop_lateral_contra(mask_contra)  = NaN;
+    cop_vertical_contra(mask_contra) = NaN;
 
     task_info = append_time_metadata(task_info, collection_id, time_reset_per_label, sampling_rate_hz, first_leg, mode);
 

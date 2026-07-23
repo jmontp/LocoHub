@@ -1393,13 +1393,12 @@ if strcmpi(naming_convention, 'ipsicontra')
     knee_moment_cols_to_flip = {
         'knee_flexion_moment_ipsi_Nm_kg', 'knee_flexion_moment_contra_Nm_kg'
     };
-    % Ankle angles also need flipping (positive = dorsiflexion)
-    ankle_angle_cols_to_flip = {
-        'ankle_dorsiflexion_angle_ipsi_rad', 'ankle_dorsiflexion_angle_contra_rad'
-    };
-    ankle_velocity_cols_to_flip = {
-        'ankle_dorsiflexion_velocity_ipsi_rad_s', 'ankle_dorsiflexion_velocity_contra_rad_s'
-    };
+    % Ankle angles are NOT flipped: the raw OpenSim ankle_angle already follows
+    % the standard (ankle_dorsiflexion = foot - shank, dorsiflexion positive).
+    % Flipping it inverted the ankle vs the segment chain; leave it as-is so the
+    % ankle angle, velocity, and (already-correct) moment stay consistent.
+    ankle_angle_cols_to_flip = {};
+    ankle_velocity_cols_to_flip = {};
     % Note: Ankle moments should NOT be flipped
 else
     knee_angle_cols_to_flip = {
@@ -1411,12 +1410,10 @@ else
     knee_moment_cols_to_flip = {
         'knee_flexion_moment_l_Nm_kg', 'knee_flexion_moment_r_Nm_kg'
     };
-    ankle_angle_cols_to_flip = {
-        'ankle_dorsiflexion_angle_l_rad', 'ankle_dorsiflexion_angle_r_rad'
-    };
-    ankle_velocity_cols_to_flip = {
-        'ankle_dorsiflexion_velocity_l_rad_s', 'ankle_dorsiflexion_velocity_r_rad_s'
-    };
+    % Ankle angles are NOT flipped (see ipsicontra branch above): raw ankle
+    % already follows ankle_dorsiflexion = foot - shank.
+    ankle_angle_cols_to_flip = {};
+    ankle_velocity_cols_to_flip = {};
     % Note: Ankle moments should NOT be flipped
 end
 
