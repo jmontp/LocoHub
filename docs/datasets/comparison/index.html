@@ -5,9 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Browse locomotion datasets, preview signals, and download files for Python or MATLAB.">
   <meta name="color-scheme" content="light dark">
-  <title>Compare dataset coverage · LocoHub</title>
+  <title>Compare phase plots · LocoHub</title>
   <link rel="stylesheet" href="../../stylesheets/site.css">
   <script src="../../javascripts/extra.js" defer></script>
+  <link rel="stylesheet" href="../../stylesheets/visual-styles.css">
+  <link rel="stylesheet" href="../../stylesheets/data-preview.css">
+  <link rel="stylesheet" href="../../stylesheets/aggregate-preview.css">
+  <link rel="stylesheet" href="../../stylesheets/phase-explorer.css">
+  <script src="../../javascripts/visual-styles.js" defer></script>
+  <script src="../../javascripts/phase-chart.js" defer></script>
+  <script src="../../javascripts/phase-comparison.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -23,21 +30,25 @@
   </header>
   <div class="page-layout wide-page">
     <main id="main" class="page-content" tabindex="-1">
-      <div class="page-kicker"><a href="../../index.html">LocoHub</a><span aria-hidden="true">/</span>Compare dataset coverage</div>
+      <div class="page-kicker"><a href="../../index.html">LocoHub</a><span aria-hidden="true">/</span>Compare phase plots</div>
       
-<h1 id="compare-dataset-coverage">Compare dataset coverage</h1>
-<p>Choose a task to compare available downloads, reported counts, and recorded plots.</p>
-<p class="dataset-note">These plots and counts come from earlier reports and may describe different file versions or checks. They cannot be compared as quality scores.</p>
-<div aria-busy="true" data-source="../comparison_data.json" id="comparison-app">
-<div class="catalog-controls" hidden="" id="comparison-controls">
+<h1 id="compare-dataset-coverage">Compare phase plots</h1>
+<p>Choose a task and signal to compare average movement patterns across datasets.</p>
+<p class="dataset-note">Each curve gives subjects equal weight. Shading shows ±1 sample standard deviation between subject averages, not a confidence interval. Speeds and conditions are pooled within each task. These local summaries may differ from the downloads and are not quality scores.</p>
+<div aria-busy="true" data-source="../comparison_data.json" data-aggregate-source="../aggregate_previews/manifest.json" id="comparison-app">
+<div class="catalog-controls phase-comparison-controls" hidden="" id="comparison-controls">
 <label for="comparison-task">Task <select id="comparison-task"></select></label>
+<label for="comparison-signal">Signal <select id="comparison-signal"></select></label>
+<label><input type="checkbox" id="comparison-sd" checked> Show standard deviation</label>
+<label><input type="checkbox" id="comparison-scale" checked> Same vertical scale</label>
+<button type="button" id="comparison-retry" hidden>Retry</button>
 <fieldset><legend>Datasets to show</legend><div id="comparison-options"></div></fieldset>
 </div>
-<p aria-live="polite" id="comparison-status" role="status">Loading catalog records…</p>
-<div class="comparison-grid" id="comparison-results"></div>
+<p aria-live="polite" id="comparison-status" role="status">Loading phase summaries…</p>
+<div class="phase-comparison-grid" id="comparison-results"></div>
 </div>
 <noscript><p>This comparison requires JavaScript. The <a href="../">dataset catalog</a> contains the same dataset documentation and download links without JavaScript.</p></noscript>
-<p>A missing task row means it is absent from the historical comparison metadata. It does not prove that the source study did not record the activity. Check each dataset’s notes for missing signals, checks that were not run, and removed cycles or curves.</p>
+<p class="dataset-note">Only matching signal columns and units are compared. Missing summaries do not mean the study did not record a task. Open a study’s phase plots to explore individual subjects; its earlier validation figures remain in the study notes.</p>
 
     </main>
     

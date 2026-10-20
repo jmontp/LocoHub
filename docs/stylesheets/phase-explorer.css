@@ -1,0 +1,30 @@
+.phase-explorer { max-width: 960px; }
+.phase-explorer .phase-source { font-size: .8rem; overflow-wrap: anywhere; }
+.phase-explorer .phase-note { color: var(--muted); font-size: .85rem; }
+.phase-explorer .aggregate-preview { max-width: 880px; }
+.phase-explorer details { border-top: 1px solid var(--line); padding: .75rem 0; }
+.phase-explorer summary, .historical-plots > summary { cursor: pointer; font-size: .85rem; font-weight: 600; }
+.phase-explorer details p { color: var(--muted); font-size: .85rem; }
+.phase-explorer .aggregate-controls { grid-template-columns: 1fr 1fr 2fr; }
+.phase-explorer .aggregate-controls label:last-child { grid-column: auto; }
+.phase-comparison-controls { margin: 1.25rem 0; }
+.phase-comparison-controls fieldset { width: 100%; }
+.phase-comparison-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1.5rem; }
+.phase-comparison-card { min-width: 0; padding: 1rem; border: 1px solid var(--line); border-radius: 4px; }
+.phase-comparison-card h2 { font-size: 1rem; margin: 0 0 .5rem; }
+.phase-comparison-card p, .phase-comparison-card summary { font-size: .8rem; }
+.phase-comparison-card details { margin-top: .75rem; }
+.phase-comparison-card summary { cursor: pointer; }
+.phase-comparison-card .comparison-links { display: flex; flex-wrap: wrap; gap: 1rem; font-size: .8rem; margin-top: .75rem; }
+.phase-comparison-card .preview-table-wrap { margin-top: .5rem; }
+.phase-comparison-card .phase-source { color: var(--muted); overflow-wrap: anywhere; }
+[data-style="soft"] .phase-comparison-card { border-radius: 12px; padding: 1.3rem; }
+[data-style="ruled"] .phase-comparison-card { border-radius: 0; }
+[data-style="compact"] .phase-comparison-card { padding: .75rem; }
+[data-style="outline"] .phase-comparison-card { border-color: var(--control); }
+@media (max-width: 760px) {
+  .phase-comparison-grid { grid-template-columns: minmax(0,1fr); }
+  .phase-explorer .aggregate-controls { grid-template-columns: minmax(0,1fr); }
+}
+.phase-comparison-grid { align-items: start; }
+.phase-comparison-controls > label:has(input[type="checkbox"]) { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.5rem; }

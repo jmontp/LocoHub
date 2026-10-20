@@ -89,6 +89,7 @@
 </table></div>
 <p>Keep validation decisions in the shared contract implementation. CLI summaries, filtering, release manifests, and documentation must consume the same result, rather than independently reconstructing counts. Contributor utilities are internal implementation, not a new public SDK.</p>
 <h2 id="update-plot-summaries">Update plot summaries</h2>
+<p>The catalog preview, study phase plots, and dataset comparator share <code>javascripts/phase-chart.js</code>, a browser SVG renderer. They read the same small numerical summaries, with no plotting server or Matplotlib needed for the live charts. Study pages retain earlier pass/fail figures in a closed historical section; those classifications are not reproduced by the new average plots.</p>
 <p>The data browser reads precomputed JSON, not whole Parquet files. To refresh the task and subject plots from the existing local files, run:</p>
 <pre><code>nice -n 19 ionice -c 3 python3 contributor_tools/build_aggregate_previews.py
 python3 docs/build.py --check</code></pre>
