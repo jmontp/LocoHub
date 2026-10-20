@@ -50,16 +50,18 @@ source plan.
 - Exactly one conversion subprocess runs at a time, at Linux nice level 19.
 - Numeric libraries and Arrow use one thread.
 - Each worker has a hard 1536 MiB virtual-address-space limit by default.
-  The standalone worker permits at most 2048 MiB; batches permit at most 1536 MiB.
-- Before each worker, the batch waits until `/proc/meminfo` reports at least
-  2 GiB available. A two-second inter-recording delay is the default.
+  An explicitly requested larger budget may be at most 10 GiB and 80% of total WSL RAM. Defaults remain 1536 MiB.
+- Before each worker, the batch waits until `/proc/meminfo` reports enough available
+  memory for its entire address-space cap plus a 2 GiB reserve. During conversion,
+  a monitor stops only its own worker process group if available memory drops
+  below 1.5 GiB, the disk floor is crossed, or the worker times out. A two-second inter-recording delay is the default.
 - A fixed, non-bypassable 5 GiB free-space guard checks the mounted output volume
   before scientific imports or output creation. Low disk capacity stops the batch;
   it does not trigger deletion or automatic retries. Under WSL, native filesystem
   free space is insufficient evidence because the virtual disk can exceed its
   Windows backing volume. The currently authorized output remains the repository's
   `converted_datasets/reconversion_v2` directory on the mounted S drive.
-- A worker rejects source inputs above 64 MiB or a conservative
+- A worker defaults to rejecting source inputs above 64 MiB (explicitly configurable up to 512 MiB) or a conservative
   `256 MiB + 16 × source bytes` working-memory estimate above its cap.
 - Workers time out after 180 seconds by default. Failures are logged individually;
   three consecutive worker/schema failures stop the queue with
@@ -255,3 +257,20 @@ a separate output directory. A queue-level `STOP_AFTER_CURRENT` prevents the nex
 dataset from starting; to stop the active dataset at its next recording boundary,
 create the same file in that dataset's output root. Failure or storage hold stops
 the queue. Existing historical files are never overwritten.
+
+
+### Expanded-budget GT24 restart
+
+After explicit approval for a larger memory budget, the restart uses one worker
+with a 9216 MiB address-space cap and a 512 MiB source-input cap, with the guards
+above. The previously rejected BT01/sit_to_stand_1_1_short-arm_on pilot completed:
+16 observations / 2,400 rows, structural checks passed, all observations unchecked;
+peak worker RSS was about 200 MiB. The 9 GiB limit is a ceiling, not preallocated RAM.
+
+UM21's 50-recording partial treadmill run is complete (1,293,900 rows) and is not
+repeated. GT24 Phase3, followed by Phase1And2, runs in new directories ending in
+`_9g_20261020`; existing outputs are preserved because the guard changes alter
+worker provenance. Current queue status/logs are at
+`converted_datasets/reconversion_v2/fixed_data_queue_9g_20261020/`.
+The same STOP_AFTER_CURRENT controls apply. Large or unsupported inputs can still
+stop the queue; raising the ceiling is not permission to bypass the remaining guards.

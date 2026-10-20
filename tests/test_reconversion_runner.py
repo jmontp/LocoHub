@@ -109,7 +109,7 @@ def test_batch_stops_after_three_consecutive_failures(tmp_path, monkeypatch):
     def failed_worker(command, **kwargs):
         launches.append(command)
         return SimpleNamespace(returncode=1)
-    monkeypatch.setattr(batch.subprocess, "run", failed_worker)
+    monkeypatch.setattr(batch, "run_guarded_worker", failed_worker)
     monkeypatch.setattr(batch.sys, "argv", [
         "batch", "--dataset", "strokepig", "--source-root", str(source),
         "--output-root", str(output), "--run",
@@ -148,3 +148,38 @@ def test_storage_rejection_precedes_import_and_output_creation(tmp_path, monkeyp
     with pytest.raises(worker.StorageHeadroomError):
         worker.convert(SimpleNamespace(output_root=output))
     assert not output.exists()
+
+
+def test_expanded_memory_budget_keeps_total_cap_and_reserve(monkeypatch):
+    gib = 1024**3
+    monkeypatch.setattr(worker, 'memory_snapshot', lambda: {'MemTotal':16*gib, 'MemAvailable':12*gib})
+    worker.ensure_memory_headroom(9216)
+    with pytest.raises(worker.MemoryHeadroomError):
+        worker.ensure_memory_headroom(11264)
+    monkeypatch.setattr(worker, 'memory_snapshot', lambda: {'MemTotal':16*gib, 'MemAvailable':10*gib})
+    with pytest.raises(worker.MemoryHeadroomError, match='reserve'):
+        worker.ensure_memory_headroom(9216)
+    monkeypatch.setattr(worker, 'memory_snapshot', lambda: {'MemTotal':8*gib, 'MemAvailable':8*gib})
+    with pytest.raises(worker.MemoryHeadroomError, match='80%'):
+        worker.ensure_memory_headroom(7168)
+
+
+def test_runtime_pressure_terminates_only_owned_worker_group(tmp_path, monkeypatch):
+    import signal
+    process = SimpleNamespace(pid=12345, returncode=None)
+    process.poll = lambda: process.returncode
+    def wait(**kwargs):
+        process.returncode = -signal.SIGTERM
+        return process.returncode
+    process.wait = wait
+    def launch(command, **kwargs):
+        assert kwargs['start_new_session'] is True
+        return process
+    killed=[]
+    monkeypatch.setattr(batch.subprocess, 'Popen', launch)
+    monkeypatch.setattr(batch, 'available_memory_bytes', lambda:1024**3)
+    monkeypatch.setattr(batch.os, 'killpg', lambda pid,sig:killed.append((pid,sig)))
+    with pytest.raises(worker.MemoryHeadroomError):
+        batch.run_guarded_worker(['fixture'],stdout=None,timeout=10,output_root=tmp_path)
+    assert killed==[(12345,signal.SIGTERM)]
+    assert process.returncode is not None

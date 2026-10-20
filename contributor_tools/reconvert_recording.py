@@ -61,6 +61,35 @@ def ensure_storage_headroom(path):
     return free
 
 
+MAX_WORKER_MEMORY_MIB = 10 * 1024
+MEMORY_RESERVE_BYTES = 2 * 1024**3
+
+
+class MemoryHeadroomError(RuntimeError):
+    pass
+
+
+def memory_snapshot():
+    values = {}
+    for line in Path('/proc/meminfo').read_text().splitlines():
+        key, *rest = line.split()
+        if key in {'MemTotal:', 'MemAvailable:'}:
+            values[key.rstrip(':')] = int(rest[0]) * 1024
+    if len(values) != 2:
+        raise MemoryHeadroomError('Cannot establish WSL memory capacity')
+    return values
+
+
+def ensure_memory_headroom(memory_mib):
+    values = memory_snapshot()
+    limit = memory_mib * 1024**2
+    if not 512 <= memory_mib <= MAX_WORKER_MEMORY_MIB or limit > values['MemTotal'] * .8:
+        raise MemoryHeadroomError('Worker limit must be 512 MiB–10 GiB and at most 80% of total RAM')
+    if values['MemAvailable'] < limit + MEMORY_RESERVE_BYTES:
+        raise MemoryHeadroomError('Not enough available RAM for the worker limit plus a 2 GiB reserve')
+    return values
+
+
 def environment_evidence():
     versions = {"python": sys.version}
     for package in ("numpy", "pandas", "scipy", "pyarrow", "ezc3d", "openpyxl"):
@@ -166,6 +195,7 @@ def load_converter(path):
 def convert(args):
     started = time.monotonic()
     ensure_storage_headroom(args.output_root)
+    ensure_memory_headroom(args.memory_mib)
     for key in THREAD_ENV:
         os.environ[key] = "1"
     os.environ["MPLBACKEND"] = "Agg"
@@ -288,8 +318,10 @@ def main():
     parser.add_argument("--max-source-mib", type=int, default=64)
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
-    if not 512 <= args.memory_mib <= 2048:
-        parser.error("--memory-mib must be between 512 and 2048")
+    if not 512 <= args.memory_mib <= MAX_WORKER_MEMORY_MIB:
+        parser.error("--memory-mib must be between 512 and 10240; runtime headroom checks also apply")
+    if not 1 <= args.max_source_mib <= 512:
+        parser.error("--max-source-mib must be between 1 and 512")
     for value in (args.subject, args.recording):
         if Path(value).name != value or value in {".", ".."}:
             parser.error("Subject and recording must be single path components")

@@ -10,13 +10,14 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import signal
 import sys
 import time
 
 try:
-    from .reconvert_recording import ROOT, STROKE_RECORDING, StorageHeadroomError, ensure_storage_headroom
+    from .reconvert_recording import ROOT, STROKE_RECORDING, StorageHeadroomError, ensure_storage_headroom, MAX_WORKER_MEMORY_MIB, MEMORY_RESERVE_BYTES, MemoryHeadroomError, memory_snapshot
 except ImportError:
-    from reconvert_recording import ROOT, STROKE_RECORDING, StorageHeadroomError, ensure_storage_headroom
+    from reconvert_recording import ROOT, STROKE_RECORDING, StorageHeadroomError, ensure_storage_headroom, MAX_WORKER_MEMORY_MIB, MEMORY_RESERVE_BYTES, MemoryHeadroomError, memory_snapshot
 
 
 def available_memory_bytes():
@@ -24,6 +25,29 @@ def available_memory_bytes():
         if line.startswith("MemAvailable:"):
             return int(line.split()[1]) * 1024
     raise RuntimeError("Cannot establish available memory; refusing to launch a worker")
+
+
+def run_guarded_worker(command, *, stdout, timeout, output_root):
+    """Monitor only this isolated worker process group; never kill unrelated jobs."""
+    process = subprocess.Popen(command, stdout=stdout, stderr=subprocess.STDOUT, start_new_session=True)
+    started = time.monotonic()
+    try:
+        while process.poll() is None:
+            if available_memory_bytes() < 1536 * 1024**2:
+                raise MemoryHeadroomError('Available memory fell below 1.5 GiB during conversion')
+            ensure_storage_headroom(output_root)
+            if time.monotonic() - started > timeout:
+                raise subprocess.TimeoutExpired(command, timeout)
+            time.sleep(.5)
+        return subprocess.CompletedProcess(command, process.returncode)
+    finally:
+        if process.poll() is None:
+            os.killpg(process.pid, signal.SIGTERM)
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.wait()
 
 
 def inventory(dataset, source_root, subjects=None):
@@ -121,8 +145,12 @@ def main():
     parser.add_argument("--max-consecutive-failures", type=int, default=3)
     parser.add_argument("--run", action="store_true", help="Without this flag only record the source inventory")
     args = parser.parse_args()
-    if not 512 <= args.memory_mib <= 1536:
-        parser.error("Batch workers must have 512–1536 MiB address-space limits")
+    if not 512 <= args.memory_mib <= MAX_WORKER_MEMORY_MIB:
+        parser.error("Batch workers must have 512–10240 MiB address-space limits")
+    if not 1 <= args.max_source_mib <= 512:
+        parser.error("--max-source-mib must be between 1 and 512")
+    if args.memory_mib * 1024**2 > .8 * memory_snapshot()["MemTotal"]:
+        parser.error("Worker memory limit exceeds 80% of total RAM")
     if args.delay_seconds < 0 or args.worker_timeout_seconds <= 0:
         parser.error("Delay must be nonnegative and timeout positive")
     if args.max_recordings is not None and args.max_recordings <= 0:
@@ -171,10 +199,11 @@ def main():
             batch_status = "stopped_storage"
             print(str(exc), flush=True)
             break
-        while available_memory_bytes() < 2 * 1024**3:
+        while available_memory_bytes() < args.memory_mib * 1024**2 + MEMORY_RESERVE_BYTES:
             if stop_file.exists():
                 break
-            print("Paused: waiting for at least 2 GiB available memory.", flush=True)
+            print(f"Paused: waiting for {args.memory_mib / 1024 + 2:.1f} GiB available memory (worker cap + reserve).", flush=True)
+            write_summary(args.output_root, results, plan, "waiting_for_memory")
             time.sleep(10)
         if stop_file.exists():
             batch_status = "stopped_by_request"
@@ -184,9 +213,9 @@ def main():
         log_path = logs / f"{record_key}.log"
         with log_path.open("a") as log:
             try:
-                completed = subprocess.run(
-                    worker_command(args, record), stdout=log, stderr=subprocess.STDOUT,
-                    timeout=args.worker_timeout_seconds, check=False,
+                completed = run_guarded_worker(
+                    worker_command(args, record), stdout=log,
+                    timeout=args.worker_timeout_seconds, output_root=args.output_root,
                 )
                 result["returncode"] = completed.returncode
                 result["status"] = "worker_failed"
@@ -197,6 +226,14 @@ def main():
                     result["peak_rss_kib"] = manifest["resources"]["peak_rss_kib"]
                     result["worker_elapsed_seconds"] = manifest["resources"]["elapsed_seconds"]
                     result["manifest"] = str(path.relative_to(args.output_root))
+            except MemoryHeadroomError as exc:
+                result["status"] = "worker_memory_stop"
+                result["reason"] = str(exc)
+                batch_status = "stopped_memory"
+            except StorageHeadroomError as exc:
+                result["status"] = "worker_storage_stop"
+                result["reason"] = str(exc)
+                batch_status = "stopped_storage"
             except subprocess.TimeoutExpired:
                 result["status"] = "worker_timed_out"
         result["finished_at"] = datetime.now(timezone.utc).isoformat()
@@ -211,6 +248,8 @@ def main():
             batch_status = "stopped_incomplete"
         write_summary(args.output_root, results, plan, batch_status)
         print(f"{index}/{len(plan['recordings'])} {record_key}: {result['status']}", flush=True)
+        if batch_status in {"stopped_memory", "stopped_storage"}:
+            break
         if batch_status == "stopped_incomplete":
             print(f"Stopped after {consecutive_failures} consecutive failures.", flush=True)
             break
