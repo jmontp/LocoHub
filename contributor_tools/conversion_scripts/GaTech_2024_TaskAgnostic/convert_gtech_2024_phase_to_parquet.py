@@ -904,32 +904,24 @@ def process_stride(
     # Our convention: flexion positive - so negate hip and knee
     # Note: This exo only has hip and knee actuators, no ankle
     # Torque units in exo.csv are Nm (absolute), divide by mass for Nm/kg
-    if 'exo' in data:
-        exo_df = data['exo']
-        # Hip assistance (negate: exo extension+ -> our flexion+)
-        hip_assist_ipsi = interpolate_to_phase(
-            -exo_df[f'hip_angle_{ipsi}_torque_interaction'].values[start_idx:end_idx + 1] / subject_mass
+    def assistance_moment(joint, side):
+        # A source-labelled no-exo condition establishes physical absence.
+        if exo_state == 'no_exo':
+            return np.zeros(NUM_POINTS)
+        column = f'{joint}_angle_{side}_torque_interaction'
+        if 'exo' not in data or column not in data['exo']:
+            return np.full(NUM_POINTS, np.nan)
+        return interpolate_to_phase(
+            -data['exo'][column].values[start_idx:end_idx + 1] / subject_mass
         )
-        hip_assist_contra = interpolate_to_phase(
-            -exo_df[f'hip_angle_{contra}_torque_interaction'].values[start_idx:end_idx + 1] / subject_mass
-        )
-        # Knee assistance (negate: exo extension+ -> our flexion+)
-        knee_assist_ipsi = interpolate_to_phase(
-            -exo_df[f'knee_angle_{ipsi}_torque_interaction'].values[start_idx:end_idx + 1] / subject_mass
-        )
-        knee_assist_contra = interpolate_to_phase(
-            -exo_df[f'knee_angle_{contra}_torque_interaction'].values[start_idx:end_idx + 1] / subject_mass
-        )
-    else:
-        # No exo data available - fill with zeros
-        hip_assist_ipsi = np.zeros(NUM_POINTS)
-        hip_assist_contra = np.zeros(NUM_POINTS)
-        knee_assist_ipsi = np.zeros(NUM_POINTS)
-        knee_assist_contra = np.zeros(NUM_POINTS)
 
-    # Ankle has no exo actuator
-    ankle_assist_ipsi = np.zeros(NUM_POINTS)
-    ankle_assist_contra = np.zeros(NUM_POINTS)
+    hip_assist_ipsi = assistance_moment('hip', ipsi)
+    hip_assist_contra = assistance_moment('hip', contra)
+    knee_assist_ipsi = assistance_moment('knee', ipsi)
+    knee_assist_contra = assistance_moment('knee', contra)
+    # No ankle torque channel is supplied; missing is not a measured zero.
+    ankle_assist_ipsi = np.zeros(NUM_POINTS) if exo_state == 'no_exo' else np.full(NUM_POINTS, np.nan)
+    ankle_assist_contra = ankle_assist_ipsi.copy()
 
     # Determine if assistance was actively applied
     assistance_active = (exo_state == 'powered')
@@ -950,44 +942,20 @@ def process_stride(
     grf_vert_contra = interpolate_to_phase(
         grf_df[f'fp_{contra}_force_y'].values[start_idx:end_idx + 1] / body_weight_N
     )
-    # Negate z to make positive = propulsion (forward force)
-    # Raw data has +z = braking at heel strike, -z = propulsion at push-off
-    grf_ant_ipsi_raw = -grf_df[f'fp_{ipsi}_force_z'].values[start_idx:end_idx + 1] / body_weight_N
-    grf_ant_contra_raw = -grf_df[f'fp_{contra}_force_z'].values[start_idx:end_idx + 1] / body_weight_N
-
-    # Flip sign if walking in negative Z direction (decline walking)
-    # At ~50% of stride (push-off), GRF anterior should be positive (propulsion)
-    check_idx_grf = len(grf_ant_ipsi_raw) // 2
-    if check_idx_grf > 0:
-        # Check mean around push-off phase (40-60% of stride)
-        start_check = int(len(grf_ant_ipsi_raw) * 0.4)
-        end_check = int(len(grf_ant_ipsi_raw) * 0.6)
-        mean_pushoff = np.nanmean(grf_ant_ipsi_raw[start_check:end_check])
-        if mean_pushoff < 0:
-            grf_ant_ipsi_raw = -grf_ant_ipsi_raw
-            grf_ant_contra_raw = -grf_ant_contra_raw
-
-    grf_ant_ipsi = interpolate_to_phase(grf_ant_ipsi_raw)
-    grf_ant_contra = interpolate_to_phase(grf_ant_contra_raw)
-    # GRF lateral: Apply sign correction based on actual data
-    # Convention: ipsi should be largely negative (medial force pushing body toward midline)
-    #             contra should be positive (from ipsi's reference frame)
-    # Check the mean over stance phase and flip if needed
-    grf_lat_ipsi_raw = grf_df[f'fp_{ipsi}_force_x'].values[start_idx:end_idx + 1] / body_weight_N
-    grf_lat_contra_raw = grf_df[f'fp_{contra}_force_x'].values[start_idx:end_idx + 1] / body_weight_N
-
-    # Check mean lateral GRF for ipsi during stance (0-60% of stride)
-    # Ipsi mean should be negative
-    end_stance = int(len(grf_lat_ipsi_raw) * 0.6)
-    if end_stance > 0:
-        mean_lat_ipsi = np.nanmean(grf_lat_ipsi_raw[:end_stance])
-        if mean_lat_ipsi > 0:
-            # Flip sign so ipsi is negative
-            grf_lat_ipsi_raw = -grf_lat_ipsi_raw
-            grf_lat_contra_raw = -grf_lat_contra_raw
-
-    grf_lat_ipsi = interpolate_to_phase(grf_lat_ipsi_raw)
-    grf_lat_contra = interpolate_to_phase(grf_lat_contra_raw)
+    # Preserve measured source axes. Trial heading and anatomical lateral
+    # direction are not established by waveform shape; never flip force signs
+    # to match an expected push-off or medial-force pattern.
+    source_horizontal_forces = {
+        f'source_grf_global_{axis}_{relative}_N': interpolate_to_phase(
+            grf_df[f'fp_{side}_force_{axis}'].values[start_idx:end_idx + 1]
+        )
+        for axis in ('x', 'z')
+        for relative, side in (('ipsi', ipsi), ('contra', contra))
+    }
+    grf_ant_ipsi = np.full(NUM_POINTS, np.nan)
+    grf_ant_contra = np.full(NUM_POINTS, np.nan)
+    grf_lat_ipsi = np.full(NUM_POINTS, np.nan)
+    grf_lat_contra = np.full(NUM_POINTS, np.nan)
 
     # COP (Center of Pressure) - from insole_sim (foot-relative coordinates)
     # insole_sim provides COP in OpenSim foot frame (already foot-relative)
@@ -998,8 +966,8 @@ def process_stride(
     cop_lat_ipsi = interpolate_to_phase(insole_df[f'insole_{ipsi}_cop_z'].values[start_idx:end_idx + 1])
     cop_lat_contra = interpolate_to_phase(insole_df[f'insole_{contra}_cop_z'].values[start_idx:end_idx + 1])
     # No vertical COP in insole_sim (COP is on 2D foot surface)
-    cop_vert_ipsi = np.zeros(NUM_POINTS)
-    cop_vert_contra = np.zeros(NUM_POINTS)
+    cop_vert_ipsi = np.full(NUM_POINTS, np.nan)
+    cop_vert_contra = np.full(NUM_POINTS, np.nan)
 
     # Keep trial identity and physical reference side across independent runs.
     if not source_recording_id:
@@ -1007,12 +975,25 @@ def process_stride(
     reference_side = {'l': 'left', 'r': 'right'}[leg_side]
     observation_id = f"{source_recording_id}:samples:{start_idx}:{end_idx}:{reference_side}"
     info = {k: v for k, v in task_info.items() if v is not None}
-    info.update(leg=leg_side, exo_state=exo_state)
+    info.update(
+        leg=leg_side, exo_state=exo_state,
+        source_grf_frame='OpenSim_global_y_vertical',
+        horizontal_grf_alignment='unresolved_trial_forward_and_anatomical_lateral_axes',
+        horizontal_grf_sign_transform='none_source_axes_preserved',
+        cop_frame='OpenSim_calcn_foot_frame',
+        cop_vertical_status='unavailable_in_source',
+        moment_semantics='source_filtered_total_joint_moment_Nm_per_source_model_kg',
+        biological_moment_semantics='source_total_minus_exo_interaction_when_available',
+        assistance_semantics=('known_absent_no_exo' if exo_state == 'no_exo'
+                              else 'source_interaction_torque_when_available'),
+        segment_angle_method='virtual_IMU_integration_with_converter_initialization',
+    )
     if exo_state in ('powered', 'worn_unpowered'):
         info['exo_joints'] = 'hip_knee'
     task_info_str = json.dumps(info, sort_keys=True)
     subject_metadata = json.dumps({
         'weight_kg': subject_mass if np.isfinite(subject_mass) else None,
+        'weight_basis': 'source_model_including_worn_exo' if exo_state != 'no_exo' else 'source_without_exo',
         'phase': collection_phase, 'day': 2 if is_day2 else 1,
     }, sort_keys=True)
 
@@ -1093,6 +1074,7 @@ def process_stride(
         'grf_anterior_contra_BW': grf_ant_contra,
         'grf_lateral_ipsi_BW': grf_lat_ipsi,
         'grf_lateral_contra_BW': grf_lat_contra,
+        **source_horizontal_forces,
 
         # Center of pressure (m)
         'cop_anterior_ipsi_m': cop_ant_ipsi,

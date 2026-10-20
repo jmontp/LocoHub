@@ -23,6 +23,30 @@ def load_converter(relative_path, monkeypatch):
     return module
 
 
+def test_stroke_metadata_does_not_invent_anthropometry(monkeypatch, tmp_path):
+    parser = load_converter("StrokePiG/metadata_parser.py", monkeypatch)
+    metadata = parser.get_subject_metadata("TVC00", tmp_path)
+    assert np.isnan(metadata["mass_kg"])
+    assert np.isnan(metadata["height_m"])
+    assert metadata["affected_side"] == "unknown"
+    parser.set_affected_side_map({"TVC00": "r"})
+    assert parser.get_subject_metadata("TVC00", tmp_path)["affected_side"] == "r"
+    with pytest.raises(ValueError):
+        parser.set_affected_side_map({"TVC00": "maybe_left"})
+
+
+def test_stroke_measured_default_sized_mass_is_preserved(monkeypatch, tmp_path):
+    parser = load_converter("StrokePiG/metadata_parser.py", monkeypatch)
+    subject = tmp_path / "TVC00"
+    subject.mkdir()
+    (subject / "TVC-0.mp").write_text("$Bodymass = 70.0\n$Height = 1700\n")
+    (subject / "TVC-1.mp").write_text("$Bodymass = 100.0\n$Height = 2000\n")
+    spreadsheet = pd.DataFrame([{"subject_id": "TVC00", "Bodymass": 90.0, "Height": 1900}])
+    metadata = parser.get_subject_metadata("TVC00", tmp_path, spreadsheet)
+    assert metadata["mass_kg"] == 70.0
+    assert metadata["height_m"] == 1.7
+
+
 @pytest.fixture
 def um24(monkeypatch):
     return load_converter("UMich_2024_KneeExo/convert_umich_2024_phase_to_parquet.py", monkeypatch)
@@ -119,6 +143,33 @@ def test_gt24_derivative_matches_included_endpoint(gt24):
 
 def test_gt24_unknown_subject_mass_is_unavailable(gt24):
     assert np.isnan(gt24.get_subject_mass("unknown_subject", "Parsed"))
+
+
+@pytest.mark.parametrize("source_sign", [-1.0, 1.0])
+def test_gt24_preserves_source_force_sign_and_marks_unresolved_channels(gt24, source_sign):
+    source = gait_source()
+    for side in ("l", "r"):
+        for axis in ("x", "z"):
+            source["grf"][f"fp_{side}_force_{axis}"] = source_sign * 100.0
+    result = gt24.process_stride(
+        source, 0, 200, "BT01", 70.0, "level_walking", "level",
+        {}, 0, "l", 1, "powered", source_recording_id="gt24:Phase1And2/BT01/fixture",
+        skip_segment_angles=True,
+    )
+    for axis in ("x", "z"):
+        for side in ("ipsi", "contra"):
+            np.testing.assert_allclose(result[f"source_grf_global_{axis}_{side}_N"], source_sign * 100.0)
+    for side in ("ipsi", "contra"):
+        assert result[f"grf_anterior_{side}_BW"].isna().all()
+        assert result[f"grf_lateral_{side}_BW"].isna().all()
+        assert result[f"cop_vertical_{side}_m"].isna().all()
+    assistance = result.filter(regex="assistance.*Nm_kg")
+    assert not assistance.empty
+    assert assistance.isna().all().all()
+    info = json.loads(result.task_info.iloc[0])
+    assert info["horizontal_grf_sign_transform"] == "none_source_axes_preserved"
+    assert info["source_grf_frame"] == "OpenSim_global_y_vertical"
+    assert json.loads(result.subject_metadata.iloc[0])["weight_basis"] == "source_model_including_worn_exo"
 
 
 @pytest.fixture

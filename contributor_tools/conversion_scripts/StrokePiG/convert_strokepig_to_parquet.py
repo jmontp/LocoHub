@@ -125,9 +125,9 @@ SAMPLE_RATE = 100  # Hz
 GRF_CONTACT_BW_THRESHOLD = 0.05
 
 # Task mapping for StrokePiG (all trials are level walking)
-# Uses population-specific task name to validate against stroke-specific ranges
+# Clinical population is carried in subject metadata.
 TASK_MAPPING = {
-    'BWA': ('level_walking_stroke', 'level_walking'),  # (task, task_id base)
+    'BWA': ('level_walking', 'level_walking'),  # (task, task_id base)
 }
 
 # Pipeline mode globals
@@ -1004,9 +1004,10 @@ def _build_stride_dataframe(
         'weight_kg': float(mass) if mass is not None and np.isfinite(mass) else None,
         'affected_side': clinical_side, 'population': 'stroke',
     }
-    if subject_metadata.get('height_m'):
-        metadata['height_m'] = subject_metadata['height_m']
-    subject_metadata_str = json.dumps(metadata, sort_keys=True)
+    height = subject_metadata.get('height_m')
+    if height is not None and np.isfinite(height):
+        metadata['height_m'] = float(height)
+    subject_metadata_str = json.dumps(metadata, sort_keys=True, allow_nan=False)
     observation_id = (
         f"{source_recording_id}:samples:{result['source_start_sample']}:"
         f"{result['source_end_sample']}:{reference_side}"

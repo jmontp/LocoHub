@@ -6,10 +6,11 @@ Metadata sources:
 - *.mp files: Vicon-generated anthropometric parameters per subject
 
 Note: Affected side information is not currently available in the dataset files.
-This must be provided externally or inferred from the data.
+This must be provided explicitly; absent clinical laterality remains unknown.
 """
 
 import re
+import math
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Any
 import pandas as pd
@@ -67,10 +68,17 @@ def find_mp_file(subject_path: Path) -> Optional[Path]:
         Path to .mp file or None if not found
     """
     # Try different naming patterns
-    mp_files = list(subject_path.glob("*.mp"))
-
-    if mp_files:
-        return mp_files[0]
+    subject_match = re.fullmatch(r"TVC0*(\d+)", subject_path.name, re.IGNORECASE)
+    if not subject_match:
+        return None
+    expected = int(subject_match.group(1))
+    matches = []
+    for path in sorted(subject_path.glob("*.mp")):
+        match = re.fullmatch(r"TVC[-_]?0*(\d+)", path.stem, re.IGNORECASE)
+        if match and int(match.group(1)) == expected:
+            matches.append(path)
+    if len(matches) == 1:
+        return matches[0]
 
     return None
 
@@ -170,11 +178,11 @@ def get_subject_metadata(
         - sex: Sex if available
     """
     metadata = {
-        'mass_kg': 70.0,  # Default
-        'height_m': 1.70,  # Default
-        'affected_side': 'unknown',  # Not available in dataset
-        'leg_length_l_m': 0.85,
-        'leg_length_r_m': 0.85,
+        'mass_kg': float('nan'),
+        'height_m': float('nan'),
+        'affected_side': get_affected_side(subject_id),
+        'leg_length_l_m': float('nan'),
+        'leg_length_r_m': float('nan'),
         'sex': 'unknown',
     }
 
@@ -204,6 +212,10 @@ def get_subject_metadata(
             leg_r = mp_params['RLegLength']
             metadata['leg_length_r_m'] = leg_r / 1000.0 if leg_r > 10 else leg_r
 
+    for key in ('mass_kg', 'height_m', 'leg_length_l_m', 'leg_length_r_m'):
+        if not math.isfinite(metadata[key]) or metadata[key] <= 0:
+            metadata[key] = float('nan')
+
     # Fall back to SubjectChar.xlsx if .mp not available or missing data
     if subject_char_df is not None:
         subject_row = subject_char_df[
@@ -213,12 +225,12 @@ def get_subject_metadata(
         if not subject_row.empty:
             row = subject_row.iloc[0]
 
-            if metadata['mass_kg'] == 70.0 and 'Bodymass' in row:
+            if not math.isfinite(metadata['mass_kg']) and 'Bodymass' in row:
                 mass = parse_numeric_value(row['Bodymass'])
                 if mass and mass > 0:
                     metadata['mass_kg'] = mass
 
-            if metadata['height_m'] == 1.70 and 'Height' in row:
+            if not math.isfinite(metadata['height_m']) and 'Height' in row:
                 height = parse_numeric_value(row['Height'])
                 if height:
                     if height > 100:  # mm
@@ -226,16 +238,19 @@ def get_subject_metadata(
                     else:
                         metadata['height_m'] = height
 
-            if 'LLegLength' in row:
+            if not math.isfinite(metadata['leg_length_l_m']) and 'LLegLength' in row:
                 leg_l = parse_numeric_value(row['LLegLength'])
                 if leg_l:
                     metadata['leg_length_l_m'] = leg_l / 1000.0 if leg_l > 10 else leg_l
 
-            if 'RLegLength' in row:
+            if not math.isfinite(metadata['leg_length_r_m']) and 'RLegLength' in row:
                 leg_r = parse_numeric_value(row['RLegLength'])
                 if leg_r:
                     metadata['leg_length_r_m'] = leg_r / 1000.0 if leg_r > 10 else leg_r
 
+    for key in ('mass_kg', 'height_m', 'leg_length_l_m', 'leg_length_r_m'):
+        if not math.isfinite(metadata[key]) or metadata[key] <= 0:
+            metadata[key] = float('nan')
     return metadata
 
 
@@ -295,4 +310,7 @@ def set_affected_side_map(mapping: Dict[str, str]):
         mapping: Dictionary mapping subject IDs to affected side ('l' or 'r')
     """
     global AFFECTED_SIDE_MAP
-    AFFECTED_SIDE_MAP = mapping
+    normalized = {subject: str(side).lower() for subject, side in mapping.items()}
+    if any(side not in {'l', 'r', 'unknown'} for side in normalized.values()):
+        raise ValueError("Affected side must be explicitly l, r, or unknown")
+    AFFECTED_SIDE_MAP = normalized

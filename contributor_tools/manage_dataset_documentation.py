@@ -20,6 +20,11 @@ Usage:
     python contributor_tools/manage_dataset_documentation.py remove-dataset \
         --short-code UM21 [--remove-parquet]
 
+This tool maintains metadata and historical Markdown evidence reports. The
+published site uses authored HTML: review and update its dataset page separately
+when changing evidence or adding a dataset. Generating a Markdown report does not
+update the published HTML or approve a release.
+
 The tool will:
 1. Collect dataset metadata (interactively or from --metadata-file)
 2. Run validation and generate reports when requested
@@ -2985,6 +2990,8 @@ Example workflow:
     
     print(f"🚀 Manage Dataset Documentation Tool")
     print(f"{'='*60}")
+    print("This tool updates metadata and Markdown evidence reports.")
+    print("Review and update the authored HTML dataset page separately before publishing.")
     
     if args.command == 'add-dataset':
         return handle_add_dataset(args)
