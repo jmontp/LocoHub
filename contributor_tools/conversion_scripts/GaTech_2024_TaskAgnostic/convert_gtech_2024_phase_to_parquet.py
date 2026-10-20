@@ -85,7 +85,7 @@ TASK_MAPPING = {
     # Other activities
     r'sit_to_stand': ('sit_to_stand', 'sit_to_stand', {'incline_deg': 0.0}),
     r'squats': ('squat', 'squat', {'incline_deg': 0.0}),
-    r'walk_backward': ('backward_walking', 'backward_walking', {'incline_deg': 0.0}),
+    r'walk_backward': ('walk_backward', 'walk_backward', {'incline_deg': 0.0}),
     r'meander': (None, 'meander', {}),  # Exclude: non-straight path walking
     r'curb_up': ('stair_ascent', 'curb_up', {'incline_deg': 0.0}),
     r'curb_down': ('stair_descent', 'curb_down', {'incline_deg': 0.0}),

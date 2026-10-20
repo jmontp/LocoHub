@@ -274,3 +274,31 @@ worker provenance. Current queue status/logs are at
 `converted_datasets/reconversion_v2/fixed_data_queue_9g_20261020/`.
 The same STOP_AFTER_CURRENT controls apply. Large or unsupported inputs can still
 stop the queue; raising the ceiling is not permission to bypass the remaining guards.
+
+### Canonical-task correction after the expanded-memory run
+
+The expanded-memory GT24 run processed 75 recordings, then correctly stopped on
+three backward-walking schema failures. The converter used `backward_walking`,
+but the canonical registry uses `walk_backward`. Both GT24 mapping tables now
+use the registry spelling; ancillary functional mappings also use existing
+canonical families. This does not reclassify backward walking as forward walking.
+
+All three rejected BT01 backward recordings were regenerated in
+`gt24_backward_fix_pilot_20261020`: 58 observations / 8,700 rows. An independent
+check compared every hip/knee sample on both sides to original angle CSVs and
+checked source frame endpoints; maximum error was below 1e-13 radians. Other
+signals and event-detection validity remain separate review items. The check is
+archived in `contributor_tools/audit_probes/2026_10_20/check_gt24_backward_source.py`.
+
+The replacement GT24 queue uses `fixed_data_queue_canonical_20261020` with output
+roots `gt24_phase3_canonical_20261020` and `gt24_phase1and2_canonical_20261020`.
+It retains the approved 9 GiB / 512 MiB limits and all runtime guards. Earlier
+outputs are preserved because changing task mapping changes conversion provenance.
+
+GT25 code now retains inclusive endpoints, resamples against actual timestamps,
+preserves gaps, avoids fallback body mass and unmeasured assistance/COP zeros,
+and does not flip force signals based on expected waveform shapes. Known-value
+fixtures exercise these changes. GT25 regeneration, identities, full task coverage,
+and source convention reconciliation are still pending. The full remaining scope
+is tracked in `contributor_tools/dataset_remediation.json`; code tests or partial
+kinematics reconstruction alone do not close dataset-level findings.

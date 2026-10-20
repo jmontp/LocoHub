@@ -1,0 +1,374 @@
+{
+  "objective": "Correct and verify all converted datasets, not only a selected task/signal subset",
+  "complete": false,
+  "completion_requirements": [
+    "Resolve each observed defect in conversion code and regenerated artifacts",
+    "Cover all source tasks, subjects, conditions and available signals; account for exclusions and unsupported sources",
+    "Preserve measured timing, anatomical identities, mass, units and signs without invented values",
+    "Check source-to-output correspondence across affected tasks and both sides",
+    "Verify full structural integrity and stable identities with bounded reads",
+    "Bind file versions, previews, reports and any filtered variants to source/output hashes and exclusion ledgers",
+    "Keep missing evidence and unverified scientific assumptions open; fixture passes alone are not completion"
+  ],
+  "datasets": [
+    "Umich 2021",
+    "Georgia Tech 2021",
+    "Georgia Tech 2023",
+    "Georgia Tech 2024",
+    "Georgia Tech 2025",
+    "MBLUE Ankle",
+    "Gait120",
+    "StrokePiG"
+  ],
+  "current_limitations": {
+    "umich": "Only treadmill hip/knee subset regenerated. Remaining signals, tasks and normalized transfers still open.",
+    "gt24": "Backward task-name fix verified on three real recordings. Noncyclic coverage, segmentation exclusions and remaining signal/source checks still open.",
+    "gt25": "Code fixes tested; regeneration and source reconciliation still pending."
+  },
+  "findings": [
+    {
+      "id": "umich-1",
+      "finding": "Observation keys collide across separate curves",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/umich_2021_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Preserve historical artifact; regenerate with recording, reference-leg and observation IDs. Never globally group clean file by subject/task/step."
+    },
+    {
+      "id": "umich-2",
+      "finding": "Hip and segment angles violate the declared convention",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/umich_2021_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Do not label clean as convention-verified. Reconcile with source and corrected conversion, then validate both sides across tasks."
+    },
+    {
+      "id": "umich-3",
+      "finding": "Stored hip velocity has a150/149 scale error",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/umich_2021_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Regenerate derivatives using actual149intervals; verify against independently sampled time and angle values."
+    },
+    {
+      "id": "umich-4",
+      "finding": "Clean file is an older, incomplete task set, not a reconciled subset of current raw",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/umich_2021_phase_clean.parquet",
+        "converted_datasets/umich_2021_phase_raw.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Record separate version/lineage and exclusion reasons; show task availability and unreviewed status prominently."
+    },
+    {
+      "id": "umich-5",
+      "finding": "Normalized transfer curve is duplicated into both anatomical channels",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/umich_2021_phase_raw.parquet",
+        "contributor_tools/conversion_scripts/Umich_2021/convert_umich_phase_to_parquet.m"
+      ],
+      "status": "open",
+      "required_followup": "Preserve source-side identity; represent unavailable opposite-side data as missing unless paired source time correspondence is established. Do not assume copied channels are bilateral measurements."
+    },
+    {
+      "id": "umich-6",
+      "finding": "Transfer timing is assigned by sequence without an established source match",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Umich_2021/convert_umich_phase_to_parquet.m"
+      ],
+      "status": "open",
+      "required_followup": "Use original source identifiers/side/cut-point mapping or leave timing and time derivatives unavailable; do not use ordinal matching as proof."
+    },
+    {
+      "id": "umich-7",
+      "finding": "Current provenance and full source reconciliation are unavailable",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/umich_2021_phase_raw.parquet",
+        "converted_datasets/umich_2021_time.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Create bounded independently reconciled source-to-output checks per task/side before release; no current-release pass claim."
+    },
+    {
+      "id": "umich-8",
+      "finding": "Time artifact coverage is limited to an initial sample",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/umich_2021_time.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Run bounded full structural assessment and source segment matching, without loading full dataset."
+    },
+    {
+      "id": "umich-9",
+      "finding": "Some transformations are heuristic rather than source-certified",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Umich_2021/convert_umich_phase_to_parquet.m"
+      ],
+      "status": "open",
+      "required_followup": "Require protocol evidence for hardcoded metadata and convention transforms; document provenance and remove dead/heuristic corrections after source reconciliation."
+    },
+    {
+      "id": "gtech-1",
+      "finding": "Distinct GT21 curves share every legacy observation key",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gtech_2021_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Reconvert with actual recording/observation identity and retain exclusion lineage; do not repair IDs by guessing source recording from row order."
+    },
+    {
+      "id": "gtech-2",
+      "finding": "GT21 stored angular velocities use 150 intervals for 150 inclusive samples",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gtech_2021_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Recompute derivatives from verified source timing during reconversion; preserve historical artifact and mark known issue. Test against analytic time ramps and verify real output samples."
+    },
+    {
+      "id": "gtech-3",
+      "finding": "Historical phase files lack source lineage and explicit observation semantics",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gtech_2021_phase_clean.parquet",
+        "converted_datasets/gtech_2024_phase.parquet",
+        "converted_datasets/gtech_2024_phase_clean.parquet",
+        "converted_datasets/gtech_2025_da_phase_clean.parquet",
+        "converted_datasets/gtech_2025_da_phase_dirty.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Keep legacy/unreviewed status; compare source-linked reconversion and account for every excluded observation before release."
+    },
+    {
+      "id": "gtech-4",
+      "finding": "GT23 phase artifact unavailable locally",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gtech_2023_phase_raw.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Retrieve exact intended phase artifact plus checksum/provenance or reconvert under coordinated resource budget; do not mark phase passed."
+    },
+    {
+      "id": "gtech-5",
+      "finding": "GT25 source endpoint omitted but labelled 100 percent",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py:371",
+        "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py:387"
+      ],
+      "status": "code_fixed_regeneration_and_source_checks_pending",
+      "required_followup": "Use inclusive source endpoints and actual source times; analytic ramp fixture; source-to-export test before regeneration.",
+      "code": "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py",
+      "tests": "tests/test_converter_scientific_provenance.py"
+    },
+    {
+      "id": "gtech-6",
+      "finding": "GT25 invents75kg for unknown subjects",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py:104"
+      ],
+      "status": "code_fixed_regeneration_and_source_checks_pending",
+      "required_followup": "Return missing mass and unavailable normalized signals or explicitly reject; test unknown subject. Do not infer all stored values are affected.",
+      "code": "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py",
+      "tests": "tests/test_converter_scientific_provenance.py"
+    },
+    {
+      "id": "gtech-7",
+      "finding": "Time exports are inventoried but not scientifically reconciled",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gtech_2021_time.parquet",
+        "converted_datasets/gtech_2021_time_oldcmp.parquet",
+        "converted_datasets/gtech_2021_time_oldcmp2.parquet",
+        "converted_datasets/gtech_2023_time.parquet",
+        "converted_datasets/gtech_2024_time.parquet",
+        "converted_datasets/gtech_2024_time_bt24.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Prioritize GT21/GT23 representative source-recording comparison for units, signs, GRF/COP axes, timing and measured mass. oldcmp files are historical comparisons, not independent proof of correctness."
+    },
+    {
+      "id": "gtech-8",
+      "finding": "GT21 force-plate mapping still needs independent source verification",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Gtech_2021/convert_gtech_2021_phase_to_parquet.m:18",
+        "contributor_tools/conversion_scripts/Gtech_2021/convert_gtech_2021_phase_to_parquet.m:25"
+      ],
+      "status": "open",
+      "required_followup": "Match source force-plate contact and anatomical leg for selected stairs/ramps; quantify discontinuities with event context, not an arbitrary phase0 zero target."
+    },
+    {
+      "id": "gtech-9",
+      "finding": "GT21 time source reconciliation requires MATLAB table reader",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gtech_2021_time.parquet",
+        "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB06/10_09_18/treadmill/ik/treadmill_01_01.mat"
+      ],
+      "status": "open",
+      "required_followup": "Coordinate MATLAB run to export only identified source window/columns to a tiny review CSV, then compare stored time angles/moments/GRF/COP. Do not infer correctness from time consistency alone."
+    },
+    {
+      "id": "remaining-1",
+      "finding": "Legacy MBLUE observation keys collide across conditions",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/mblue_ankle_phase.parquet",
+        "converted_datasets/mblue_ankle_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Assign stable source-recording/condition/reference-side observation identities and verify filtering operates on those identities. Keep mixed speed/exo conditions explicit in comparisons."
+    },
+    {
+      "id": "remaining-2",
+      "finding": "Needs investigation: extreme numeric moment anomaly",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gait120_phase.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Quarantine this legacy artifact; reconcile OpenSim external loads, inverse dynamics residuals, mass normalization and reference sides against original recordings."
+    },
+    {
+      "id": "remaining-3",
+      "finding": "Stored body mass disagrees with source spreadsheet",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gait120_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Resolve original generation inputs and regenerate affected normalizations only from verified masses."
+    },
+    {
+      "id": "remaining-4",
+      "finding": "Named full and clean files cannot form a filtered pair",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gait120_phase.parquet",
+        "converted_datasets/gait120_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Map each variant to an immutable source lineage and publish exclusions by observation identity; never present these two files as paired releases."
+    },
+    {
+      "id": "remaining-5",
+      "finding": "StrokePiG preview and historical checks refer to different files",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/strokepig_phase.parquet",
+        "contributor_tools/conversion_scripts/StrokePiG/converted_datasets/strokepig_phase.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Give each artifact a version and clear coverage; align preview and checks to same fingerprint before presenting a combined dataset verdict."
+    },
+    {
+      "id": "remaining-6",
+      "finding": "Historical artifacts lack modern lineage fields",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/gait120_opensim_phase.parquet",
+        "converted_datasets/gait120_phase.parquet",
+        "converted_datasets/gait120_phase_clean.parquet",
+        "converted_datasets/mblue_ankle_phase.parquet",
+        "converted_datasets/mblue_ankle_phase_clean.parquet",
+        "converted_datasets/strokepig_phase.parquet",
+        "converted_datasets/strokepig_test_ik.parquet",
+        "contributor_tools/conversion_scripts/StrokePiG/converted_datasets/strokepig_phase.parquet",
+        "contributor_tools/conversion_scripts/StrokePiG/contributor_tools/conversion_scripts/StrokePiG/converted_datasets/strokepig_phase.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Reconcile source recording/anatomical identity and create immutable release manifests before approving release."
+    },
+    {
+      "id": "remaining-7",
+      "finding": "Clinical laterality remains unverified in historical StrokePiG",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/strokepig_phase.parquet",
+        "converted_datasets/strokepig_test_ik.parquet",
+        "contributor_tools/conversion_scripts/StrokePiG/converted_datasets/strokepig_phase.parquet",
+        "contributor_tools/conversion_scripts/StrokePiG/contributor_tools/conversion_scripts/StrokePiG/converted_datasets/strokepig_phase.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Require clinical laterality evidence or relabel affected side unknown while preserving anatomical reference side."
+    },
+    {
+      "id": "remaining-8",
+      "finding": "MBLUE substitutes assumed timing and missing pelvis measurements",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/MBLUEAnkle/convert_mblue_ankle_to_parquet.py"
+      ],
+      "status": "open",
+      "required_followup": "Use missing values for unavailable timing/angles and add independent fixtures asserting no manufactured measurements."
+    },
+    {
+      "id": "remaining-9",
+      "finding": "MBLUE contralateral signals need temporal reconciliation",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/MBLUEAnkle/convert_mblue_ankle_to_parquet.py"
+      ],
+      "status": "open",
+      "required_followup": "Align by observed timestamps/events, preserve missing overlap, and test unequal counts and derivative behavior at the wrap seam."
+    },
+    {
+      "id": "remaining-10",
+      "finding": "Gait120 can manufacture mass, height, duration and pelvis values",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Gait120/convert_gait120_to_parquet.py"
+      ],
+      "status": "open",
+      "required_followup": "Reject/mark unknown metadata; test missing source values and propagate missing derived signals."
+    },
+    {
+      "id": "remaining-11",
+      "finding": "Gait120 phase and anatomical mapping lack independent event verification",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Gait120/convert_gait120_to_parquet.py"
+      ],
+      "status": "open",
+      "required_followup": "Compare multiple original trial events and simultaneous channels, including asymmetric/noncyclic tasks; publish measured phase origin and reference-side evidence."
+    },
+    {
+      "id": "remaining-12",
+      "finding": "StrokePiG heel-strike labeling relies on unverified ankle peaks",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/StrokePiG/convert_strokepig_to_parquet.py"
+      ],
+      "status": "open",
+      "required_followup": "Validate inferred events against C3D/force contact evidence; label inferred phase origin and account for removed observations."
+    },
+    {
+      "id": "remaining-13",
+      "finding": "MBLUE full/filtered exclusions have no verified ledger",
+      "scope": "artifact",
+      "affected_paths": [
+        "converted_datasets/mblue_ankle_phase.parquet",
+        "converted_datasets/mblue_ankle_phase_clean.parquet"
+      ],
+      "status": "open",
+      "required_followup": "Verify observation subset and unchanged retained values, log each exclusion reason and approved range applicability; separate exo/speed/task conditions in interpretations."
+    }
+  ]
+}

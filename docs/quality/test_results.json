@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T16:30:38.868622-04:00",
-  "recorded_at": "2026-10-20T20:31:09.524931+00:00",
-  "base_revision": "d0ae3eba937bf2865144b2b7fc3fb825512b0a9b",
+  "started_at": "2026-10-20T19:56:46.564719-04:00",
+  "recorded_at": "2026-10-20T23:57:17.458124+00:00",
+  "base_revision": "6931d84666c076d404942a1cfd66dfb2f2418610",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "ulimit -v 2097152; OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "0942180cc74cedeaac4e78bbf2e93573136ca131ffc85417e193e89d6a5e000e",
+  "junit_sha256": "e7a01debeeac133eadc59b97cd20c8912731aa90481759bc31db3039a956c555",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -59,7 +59,7 @@
       ]
     },
     "tests.test_converter_scientific_provenance": {
-      "passed": 13,
+      "passed": 18,
       "failed": 0,
       "skipped": 0,
       "cases": [
@@ -113,6 +113,26 @@
         },
         {
           "name": "test_stroke_missing_channel_remains_missing_and_invalid_time_is_rejected",
+          "status": "passed"
+        },
+        {
+          "name": "test_gt24_mapped_tasks_are_canonical_and_backward_remains_distinct",
+          "status": "passed"
+        },
+        {
+          "name": "test_gt25_inclusive_endpoint_and_velocity_use_actual_source_times",
+          "status": "passed"
+        },
+        {
+          "name": "test_gt25_unknown_mass_and_unmeasured_assistance_stay_missing",
+          "status": "passed"
+        },
+        {
+          "name": "test_gt25_resampling_does_not_bridge_missing_source_samples",
+          "status": "passed"
+        },
+        {
+          "name": "test_gt25_force_sign_is_not_selected_from_expected_waveform",
           "status": "passed"
         }
       ]
@@ -466,7 +486,7 @@
       ]
     },
     "tests.test_reconversion_runner": {
-      "passed": 13,
+      "passed": 15,
       "failed": 0,
       "skipped": 0,
       "cases": [
@@ -520,6 +540,14 @@
         },
         {
           "name": "test_storage_rejection_precedes_import_and_output_creation",
+          "status": "passed"
+        },
+        {
+          "name": "test_expanded_memory_budget_keeps_total_cap_and_reserve",
+          "status": "passed"
+        },
+        {
+          "name": "test_runtime_pressure_terminates_only_owned_worker_group",
           "status": "passed"
         }
       ]
@@ -784,7 +812,7 @@
     }
   },
   "totals": {
-    "passed": 161,
+    "passed": 168,
     "failed": 0,
     "skipped": 2
   }

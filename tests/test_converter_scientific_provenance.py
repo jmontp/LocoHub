@@ -203,3 +203,68 @@ def test_stroke_missing_channel_remains_missing_and_invalid_time_is_rejected(str
     assert np.isnan(result["hip_flexion_angle_ipsi_rad"]).all()
     source["time"] = 0.0
     assert stroke.process_stride(source, 0, 200, "l", 70.0, 0) is None
+
+
+def test_gt24_mapped_tasks_are_canonical_and_backward_remains_distinct(gt24, monkeypatch):
+    from contributor_tools.common.task_registry import is_valid_task
+    from contributor_tools.common.data_contract import inspect_contract
+    for task, _, _ in gt24.TASK_MAPPING.values():
+        assert task is None or is_valid_task(task), task
+    mapping = load_converter('GaTech_2024_TaskAgnostic/task_mapping.py', monkeypatch)
+    for task, _, _ in mapping.FULL_TASK_MAPPING.values():
+        assert task is None or is_valid_task(task), task
+    for speed in ['0-6', '0-8', '1-0']:
+        task, task_id, info = gt24.map_task_name(f'walk_backward_1_1_{speed}_on')
+        assert task == 'walk_backward'
+        result = gt24.process_stride(gait_source(), 0, 200, 'BT01', 70., task, task_id,
+                                    info, 0, 'l', 1, 'powered',
+                                    source_recording_id=f'gt24:Phase3/BT01/backward_{speed}',
+                                    skip_segment_angles=True)
+        assert inspect_contract(result, mode='phase').schema_passed
+
+
+@pytest.fixture
+def gt25(monkeypatch):
+    return load_converter('GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py', monkeypatch)
+
+
+def test_gt25_inclusive_endpoint_and_velocity_use_actual_source_times(gt25):
+    source = gait_source()
+    # A nonuniform clock makes index-based interpolation observably incorrect.
+    clock = np.linspace(0,1,201)**1.1
+    source['angle_filt']['time'] = clock
+    for side in ['l','r']:
+        for joint in ['hip_flexion','knee_angle','ankle_angle']:
+            source['angle_filt'][f'{joint}_{side}'] = 2*clock
+    result = gt25.process_stride(source,0,200,'BT01',70.,'level_walking','level',{},0,'l','baseline',skip_segment_angles=True)
+    np.testing.assert_allclose(result.hip_flexion_angle_ipsi_rad,np.deg2rad(2*np.linspace(0,1,150)),atol=1e-12)
+    np.testing.assert_allclose(result.hip_flexion_velocity_ipsi_rad_s,np.deg2rad(2.),atol=1e-12)
+
+
+def test_gt25_unknown_mass_and_unmeasured_assistance_stay_missing(gt25):
+    mass = gt25.get_subject_mass('unknown_subject')
+    assert np.isnan(mass)
+    result=gt25.process_stride(gait_source(),0,200,'unknown_subject',mass,'level_walking','level',{},0,'l','baseline',skip_segment_angles=True)
+    assert result.grf_vertical_ipsi_BW.isna().all()
+    assert result.hip_flexion_angle_ipsi_rad.notna().all()
+    assistance=result.filter(regex='assistance_moment_')
+    assert len(assistance.columns)>0
+    assert assistance.isna().all().all()
+
+
+def test_gt25_resampling_does_not_bridge_missing_source_samples(gt25):
+    values=np.array([0.,1.,np.nan,3.,4.])
+    result=gt25.interpolate_to_phase(values,num_points=9)
+    assert np.isnan(result[3:6]).all()
+    assert result[0]==0 and result[-1]==4
+
+
+def test_gt25_force_sign_is_not_selected_from_expected_waveform(gt25):
+    positive=gait_source();negative=gait_source()
+    negative['grf']=-negative['grf']
+    def convert(source):
+        return gt25.process_stride(source,0,200,'BT01',70.,'level_walking','level',{},0,'l','baseline',skip_segment_angles=True)
+    a,b=convert(positive),convert(negative)
+    for feature in ['grf_anterior_ipsi_BW','grf_lateral_ipsi_BW','grf_anterior_contra_BW','grf_lateral_contra_BW']:
+        np.testing.assert_allclose(a[feature],-b[feature])
+    assert a.cop_vertical_ipsi_m.isna().all()
