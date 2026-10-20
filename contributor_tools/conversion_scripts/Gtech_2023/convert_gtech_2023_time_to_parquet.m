@@ -38,6 +38,7 @@ function convert_gtech_2023_time_to_parquet()
 
     script_dir = fileparts(mfilename('fullpath'));
     addpath(script_dir);  % for parse_gtech_activity_matlab
+    addpath(fullfile(fileparts(mfilename('fullpath')), '..', 'matlab_common'));
 
     data_root = getenv('GTECH2023_DATA_ROOT');
     if isempty(data_root)
@@ -60,8 +61,8 @@ function convert_gtech_2023_time_to_parquet()
     output_path = fullfile(output_dir, 'gtech_2023_time.parquet');
     merger_script = fullfile(repo_root, 'contributor_tools', 'common', 'merge_parquet_shards.py');
 
-    % Subject mass table (falls back to paper mean if absent).
-    default_mass_kg = 76.9;
+    % Subject mass table (unknown mass leaves normalized GRF unavailable).
+    default_mass_kg = NaN;
     mass_table = load_subject_masses(fullfile(raw_root, 'Subject_masses.csv'));
 
     % Subject list.
@@ -100,7 +101,10 @@ function convert_gtech_2023_time_to_parquet()
         if ~isempty(mass_table) && isKey(mass_table, subject)
             subject_mass_kg = mass_table(subject);
         else
-            warning('Mass not found for %s; using default %.1f kg', subject, default_mass_kg);
+            warning('Mass not found for %s; normalized GRF will be unavailable.', subject);
+        end
+        if ~isscalar(subject_mass_kg) || ~isfinite(subject_mass_kg) || subject_mass_kg <= 0
+            subject_mass_kg = NaN;
         end
         weight_N = subject_mass_kg * 9.81;
         subject_id = ['GT23_' subject];
@@ -171,6 +175,12 @@ function convert_gtech_2023_time_to_parquet()
             rows.reference_leg    = repmat(string(reference_leg), n, 1);
             rows.time_scope       = repmat("continuous_trial", n, 1);
             rows.time_reset_per   = repmat("segment", n, 1);
+            source_id = sprintf('gt23:%s/%s', subject, raw_folder);
+            rows = locohub_add_provenance(rows, source_id, ...
+                sprintf('window:%.17g:%.17g', t0, t1), reference_leg, ...
+                'continuous_recording', t0, t1);
+            rows.step = rows.observation_id;
+
 
             subject_rows = append_rows(subject_rows, rows);
             step_counter = step_counter + 1;

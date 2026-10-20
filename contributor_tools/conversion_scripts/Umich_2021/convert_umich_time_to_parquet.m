@@ -1,4 +1,5 @@
 clearvars -except Streaming
+addpath(fullfile(fileparts(mfilename('fullpath')), '..', 'matlab_common'));
 
 INPUT_SAMPLING_RATE_HZ = 100;
 OUTPUT_SAMPLING_RATE_HZ = 200;
@@ -145,10 +146,10 @@ function [subject_str, subject_metadata, body_mass] = get_subject_metadata(subje
         mass_idx = find(strcmp(details(:,1), 'Bodymass'));
         height_idx = find(strcmp(details(:,1), 'Height'));
 
-        age = 0;
-        body_mass = 70;
-        height_m = 1.75;
-        sex_char = 'Other';
+        age = NaN;
+        body_mass = NaN;
+        height_m = NaN;
+        sex_char = 'unknown';
 
         if ~isempty(sex_idx)
             sex_code = details{sex_idx, 2};
@@ -161,12 +162,13 @@ function [subject_str, subject_metadata, body_mass] = get_subject_metadata(subje
         if ~isempty(age_idx), age = details{age_idx, 2}; end
         if ~isempty(mass_idx), body_mass = details{mass_idx, 2}; end
         if ~isempty(height_idx), height_m = details{height_idx, 2} / 1000; end
+        if ~isscalar(body_mass) || ~isfinite(body_mass) || body_mass <= 0, body_mass = NaN; end
 
         subject_metadata = sprintf('age:%d,sex:%s,height_m:%.2f,weight_kg:%.1f', ...
             age, sex_char, height_m, body_mass);
     else
-        body_mass = 70;
-        subject_metadata = 'age:0,sex:Other,height_m:1.75,weight_kg:70.0';
+        body_mass = NaN;
+        subject_metadata = 'age:unknown,sex:unknown,height_m:unknown,weight_kg:unknown';
     end
 end
 
@@ -190,6 +192,7 @@ function [rows, step_counter] = process_treadmill_trials(tread_data, subject_str
 
         incline_value = incline_map(incline_name);
         incline_data = tread_data.(incline_name);
+        incline_data.source_recording_id = sprintf('um21:Streaming/%s/Tread/%s', erase(subject_str, 'UM21_'), incline_name);
 
         if isfield(incline_data, 'events') && isfield(incline_data.events, 'tasks') && isfield(incline_data.events, 'cutPoints')
             tasks = incline_data.events.tasks;
@@ -303,6 +306,7 @@ function [rows, step_counter] = process_run_trials(run_data, subject_str, subjec
 
         speed_value = run_speed_map(speed_name);
         trial_struct = run_data.(speed_name);
+        trial_struct.source_recording_id = sprintf('um21:Streaming/%s/Run/%s', erase(subject_str, 'UM21_'), speed_name);
         collection_id = sprintf('Run_%s', speed_name);
         speed_label = strrep(sprintf('%.1f', speed_value), '.', '_');
 
@@ -341,6 +345,12 @@ function [rows, step_counter] = process_wtr_trials(wtr_data, subject_str, subjec
     for idx = 1:length(trial_names)
         trial_name = trial_names{idx};
         trial_struct = trial_structs{idx};
+        if isfield(wtr_data, 'jointAngles')
+            trial_struct.source_recording_id = sprintf('um21:Streaming/%s/Wtr', erase(subject_str, 'UM21_'));
+        else
+            trial_struct.source_recording_id = sprintf('um21:Streaming/%s/Wtr/%s', erase(subject_str, 'UM21_'), trial_name);
+        end
+
         collection_id = sprintf('Wtr_%s', trial_name);
         task_info = sprintf(['gait_transition:true,transition_from:level_walking,' ...
             'transition_to:run,initial_speed_m_s:1.2,final_speed_m_s:2.5,' ...
@@ -377,6 +387,7 @@ function [rows, step_counter] = process_stair_trials(stair_data, subject_str, su
     for stair_idx = 1:length(stair_fields)
         trial_name = stair_fields{stair_idx};
         trial_struct = stair_data.(trial_name);
+        trial_struct.source_recording_id = sprintf('um21:Streaming/%s/Stair/%s', erase(subject_str, 'UM21_'), trial_name);
 
         underscore_idx = strfind(trial_name, '_');
         if isempty(underscore_idx)
@@ -728,6 +739,12 @@ function trial_table = process_trial_time( ...
     trial_table.step = repmat(step_id, n_samples, 1);
     trial_table.time_s = time_s;
     trial_table.assistance_active = false(n_samples, 1);
+    trial_table = locohub_add_provenance(trial_table, trial_struct.source_recording_id, ...
+        sprintf('frames:%d:%d', segment_start, segment_end), 'right', ...
+        'continuous_recording', (segment_start - 1) / input_sampling_rate_hz, ...
+        (segment_end - 1) / input_sampling_rate_hz);
+    trial_table.step = trial_table.observation_id;
+
 
     trial_table.hip_flexion_angle_ipsi_rad = right_hip_flex;
     trial_table.hip_flexion_angle_contra_rad = left_hip_flex;

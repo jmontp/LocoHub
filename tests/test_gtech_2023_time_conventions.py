@@ -126,6 +126,7 @@ def test_grf_normalization_numerically():
     assert np.isclose(raw_vertical_N / weight_N, 1.1)
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(not CONVERTED.exists(), reason="gtech_2023_time.parquet not generated locally")
 def test_converted_time_dataset_passes_conventions():
     import pandas as pd
@@ -145,6 +146,7 @@ def test_converted_time_dataset_passes_conventions():
     assert np.all(np.abs(cop[np.isfinite(cop)]) < 1.0)
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(not CONVERTED.exists(), reason="gtech_2023_time.parquet not generated locally")
 def test_ankle_follows_standard_segment_chain():
     # ankle_dorsiflexion = foot - shank (dorsiflexion positive). The joint angle

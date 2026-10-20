@@ -9,6 +9,7 @@
 % --- Step 1: Initialization & Setup ---
 clear all;
 close all;
+addpath(fullfile(fileparts(mfilename('fullpath')), '..', 'matlab_common'));
 
 % Add utilities folder to path for helper functions
 addpath(fullfile(fileparts(mfilename('fullpath')), 'utilities'));
@@ -33,7 +34,7 @@ if exist(subject_mass_file, 'file')
     fprintf('Loaded subject mass data from: %s\n', subject_mass_file);
     fprintf('  Found %d subjects with mass data\n', height(subject_mass_table));
 else
-    warning('Subject_masses.csv not found at %s. Mass normalization will use default value.', subject_mass_file);
+    warning('Subject_masses.csv not found at %s. Body-weight normalization will be unavailable.', subject_mass_file);
     subject_mass_table = table();
 end
 
@@ -98,15 +99,18 @@ for subject_idx = 1:length(subjects)
     subject_raw_data_dir = fullfile(data_dir_root, 'RawData', subject);
 
     % Look up subject mass for normalization
-    subject_mass_kg = 76.9;  % Default: aggregate mean from paper
+    subject_mass_kg = NaN;  % Unknown mass must not become a measured cohort mean
     if ~isempty(subject_mass_table) && ismember('subject_id', subject_mass_table.Properties.VariableNames)
         mass_idx = strcmp(subject_mass_table.subject_id, subject);
         if any(mass_idx)
             subject_mass_kg = subject_mass_table.mass_kg(mass_idx);
             fprintf('  Subject %s mass: %.2f kg\n', subject, subject_mass_kg);
         else
-            warning('Mass not found for %s, using default %.2f kg', subject, subject_mass_kg);
+            warning('Mass not found for %s; normalized GRF will be unavailable.', subject);
         end
+    end
+    if ~isscalar(subject_mass_kg) || ~isfinite(subject_mass_kg) || subject_mass_kg <= 0
+        subject_mass_kg = NaN;
     end
     subject_weight_N = subject_mass_kg * 9.81;  % Body weight in Newtons
 
@@ -629,11 +633,23 @@ for subject_idx = 1:length(subjects)
             step_data_single.temp_weight_N = repmat(subject_weight_N, num_points_per_step, 1);
             step_data_single.leading_leg_step = repmat({leading_leg}, num_points_per_step, 1); % Add leading leg marker
             step_data_single.step = repmat(step_idx, num_points_per_step, 1);
+            source_recording_id = sprintf('gt23:%s/%s', subject, raw_activity_name);
+            reference_side = 'right';
+            if strcmp(leading_leg, 'l'), reference_side = 'left'; end
+            observation_type = 'individual_cycle';
+            if any(strcmp(task_name, {'sit_to_stand', 'stand_to_sit'}))
+                observation_type = 'transfer';
+            end
+            step_data_single = locohub_add_provenance(step_data_single, source_recording_id, ...
+                sprintf('time:%.17g:%.17g', step_start, step_end), reference_side, ...
+                observation_type, step_start, step_end);
+            step_data_single.step = step_data_single.observation_id;
+
 
             % Generate Time & Phase Vectors for this step
                             time_interp = linspace(step_start, step_end, num_points_per_step)';
-            base_phase_step = linspace(0, 1 - 1/num_points_per_step, num_points_per_step)';
-            offset_phase_step = mod(base_phase_step + 0.5, 1);
+            base_phase_step = linspace(0, 100, num_points_per_step)';
+            offset_phase_step = mod(base_phase_step + 50, 100);
             step_data_single.time = time_interp; % Common time column for the step
 
             % --- Interpolate signals ---
@@ -1471,16 +1487,13 @@ if ismember('pelvis_transverse_angle_rad', combined_data.Properties.VariableName
     fprintf('  Applied +pi/2 offset to pelvis_transverse_angle_rad (coordinate frame alignment)\n');
 end
 
-% 2. Check for and remove duplicate rows
-% Use task_id (not task) to distinguish activities within the same category
-% e.g., 'side_shuffle' vs 'dynamic_walk' both have task='agility_drill'
-initial_rows = height(combined_data);
-[~, unique_idx] = unique(combined_data(:, {'subject', 'task_id', 'step', 'phase_ipsi'}), 'rows', 'stable');
-if length(unique_idx) < initial_rows
-    combined_data = combined_data(unique_idx, :);
-    fprintf('  Removed %d duplicate rows\n', initial_rows - length(unique_idx));
-else
-    fprintf('  No duplicate rows found\n');
+% Reject duplicated source observations instead of dropping unrelated trials
+% that happened to receive the same local step counter.
+phase_column = 'phase_ipsi';
+if ~strcmpi(naming_convention, 'ipsicontra'), phase_column = 'phase_r'; end
+[~, unique_idx] = unique(combined_data(:, {'observation_id', phase_column}), 'rows', 'stable');
+if numel(unique_idx) ~= height(combined_data)
+    error('LocoHub:DuplicateObservation', 'Duplicate source observation samples; inspect parsing intervals.');
 end
 
 % Convert task data to string (if column exists after rename)

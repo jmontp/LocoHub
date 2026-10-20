@@ -19,6 +19,7 @@ Output: Phase-normalized parquet file with 150 points per gait cycle.
 
 import os
 import re
+import json
 import sys
 import numpy as np
 import pandas as pd
@@ -230,19 +231,19 @@ def get_subject_mass(subject_id: str, data_source: str, exo_state: str = 'powere
             if exo_state == 'no_exo':
                 if is_day2 and 'day2_without_exo' in mass_data:
                     return mass_data['day2_without_exo']
-                return mass_data.get('without_exo', mass_data.get('with_exo', 75.0))
+                return mass_data.get('without_exo', np.nan)
 
             # For exo trials, use with_exo mass
             if is_day2 and 'day2_with_exo' in mass_data:
                 return mass_data['day2_with_exo']
-            return mass_data.get('with_exo', 75.0)
+            return mass_data.get('with_exo', np.nan)
 
     # Phase 1 and 2 subjects have single mass value (with exo)
     if subject_id in SUBJECT_MASS_PHASE12:
         return SUBJECT_MASS_PHASE12[subject_id]
 
-    print(f"  Warning: No mass data for {subject_id}, using 75 kg default")
-    return 75.0
+    print(f"  Warning: No mass data for {subject_id}; mass-normalized signals are unavailable")
+    return np.nan
 
 
 def interpolate_to_phase(data: np.ndarray, num_points: int = NUM_POINTS) -> np.ndarray:
@@ -685,7 +686,8 @@ def process_stride(
     segment_angle_offset_ipsi: float = 0.0,
     segment_angle_offset_contra: float = 0.0,
     use_accel_init: bool = False,
-    skip_segment_angles: bool = False
+    skip_segment_angles: bool = False,
+    source_recording_id: Optional[str] = None,
 ) -> Optional[pd.DataFrame]:
     """
     Process a single stride from heel strike to heel strike.
@@ -723,7 +725,7 @@ def process_stride(
     time_data = data['angle_filt']['time'].values
     stride_duration_s = time_data[end_idx] - time_data[start_idx]
 
-    if stride_duration_s <= 0:
+    if not np.isfinite(stride_duration_s) or stride_duration_s <= 0:
         return None
 
     # Determine ipsilateral (striking leg) and contralateral sides
@@ -741,21 +743,21 @@ def process_stride(
     deg2rad = np.pi / 180.0
 
     # Hip flexion
-    hip_ipsi_deg = angle_df[f'hip_flexion_{ipsi}'].values[start_idx:end_idx]
-    hip_contra_deg = angle_df[f'hip_flexion_{contra}'].values[start_idx:end_idx]
+    hip_ipsi_deg = angle_df[f'hip_flexion_{ipsi}'].values[start_idx:end_idx + 1]
+    hip_contra_deg = angle_df[f'hip_flexion_{contra}'].values[start_idx:end_idx + 1]
     hip_ipsi_rad = interpolate_to_phase(hip_ipsi_deg * deg2rad)
     hip_contra_rad = interpolate_to_phase(hip_contra_deg * deg2rad)
 
     # Knee flexion (note: source data may have extension positive, need to check)
-    knee_ipsi_deg = angle_df[f'knee_angle_{ipsi}'].values[start_idx:end_idx]
-    knee_contra_deg = angle_df[f'knee_angle_{contra}'].values[start_idx:end_idx]
+    knee_ipsi_deg = angle_df[f'knee_angle_{ipsi}'].values[start_idx:end_idx + 1]
+    knee_contra_deg = angle_df[f'knee_angle_{contra}'].values[start_idx:end_idx + 1]
     # Negate to make flexion positive (consistent with other datasets)
     knee_ipsi_rad = interpolate_to_phase(-knee_ipsi_deg * deg2rad)
     knee_contra_rad = interpolate_to_phase(-knee_contra_deg * deg2rad)
 
     # Ankle dorsiflexion
-    ankle_ipsi_deg = angle_df[f'ankle_angle_{ipsi}'].values[start_idx:end_idx]
-    ankle_contra_deg = angle_df[f'ankle_angle_{contra}'].values[start_idx:end_idx]
+    ankle_ipsi_deg = angle_df[f'ankle_angle_{ipsi}'].values[start_idx:end_idx + 1]
+    ankle_contra_deg = angle_df[f'ankle_angle_{contra}'].values[start_idx:end_idx + 1]
     ankle_ipsi_rad = interpolate_to_phase(ankle_ipsi_deg * deg2rad)
     ankle_contra_rad = interpolate_to_phase(ankle_contra_deg * deg2rad)
 
@@ -793,7 +795,7 @@ def process_stride(
         foot_seg_vel_contra = np.full(NUM_POINTS, np.nan)
     elif imu_df is not None and len(imu_df) > end_idx:
         # Extract stride-specific IMU data
-        stride_imu = imu_df.iloc[start_idx:end_idx].reset_index(drop=True)
+        stride_imu = imu_df.iloc[start_idx:end_idx + 1].reset_index(drop=True)
 
         if use_accel_init:
             # Use accelerometer initialization for sit-stand tasks (no midstance phase)
@@ -848,22 +850,22 @@ def process_stride(
     moment_df = data['moment_filt']
 
     hip_mom_ipsi = interpolate_to_phase(
-        moment_df[f'hip_flexion_{ipsi}_moment'].values[start_idx:end_idx]
+        moment_df[f'hip_flexion_{ipsi}_moment'].values[start_idx:end_idx + 1]
     )
     hip_mom_contra = interpolate_to_phase(
-        moment_df[f'hip_flexion_{contra}_moment'].values[start_idx:end_idx]
+        moment_df[f'hip_flexion_{contra}_moment'].values[start_idx:end_idx + 1]
     )
     knee_mom_ipsi = interpolate_to_phase(
-        -moment_df[f'knee_angle_{ipsi}_moment'].values[start_idx:end_idx]  # Negate for flexion positive
+        -moment_df[f'knee_angle_{ipsi}_moment'].values[start_idx:end_idx + 1]  # Negate for flexion positive
     )
     knee_mom_contra = interpolate_to_phase(
-        -moment_df[f'knee_angle_{contra}_moment'].values[start_idx:end_idx]
+        -moment_df[f'knee_angle_{contra}_moment'].values[start_idx:end_idx + 1]
     )
     ankle_mom_ipsi = interpolate_to_phase(
-        moment_df[f'ankle_angle_{ipsi}_moment'].values[start_idx:end_idx]
+        moment_df[f'ankle_angle_{ipsi}_moment'].values[start_idx:end_idx + 1]
     )
     ankle_mom_contra = interpolate_to_phase(
-        moment_df[f'ankle_angle_{contra}_moment'].values[start_idx:end_idx]
+        moment_df[f'ankle_angle_{contra}_moment'].values[start_idx:end_idx + 1]
     )
 
     # Extract BIOLOGICAL moments if available (total - exo contribution)
@@ -871,22 +873,22 @@ def process_stride(
     if 'moment_filt_bio' in data:
         bio_moment_df = data['moment_filt_bio']
         hip_bio_mom_ipsi = interpolate_to_phase(
-            bio_moment_df[f'hip_flexion_{ipsi}_moment'].values[start_idx:end_idx]
+            bio_moment_df[f'hip_flexion_{ipsi}_moment'].values[start_idx:end_idx + 1]
         )
         hip_bio_mom_contra = interpolate_to_phase(
-            bio_moment_df[f'hip_flexion_{contra}_moment'].values[start_idx:end_idx]
+            bio_moment_df[f'hip_flexion_{contra}_moment'].values[start_idx:end_idx + 1]
         )
         knee_bio_mom_ipsi = interpolate_to_phase(
-            -bio_moment_df[f'knee_angle_{ipsi}_moment'].values[start_idx:end_idx]
+            -bio_moment_df[f'knee_angle_{ipsi}_moment'].values[start_idx:end_idx + 1]
         )
         knee_bio_mom_contra = interpolate_to_phase(
-            -bio_moment_df[f'knee_angle_{contra}_moment'].values[start_idx:end_idx]
+            -bio_moment_df[f'knee_angle_{contra}_moment'].values[start_idx:end_idx + 1]
         )
         ankle_bio_mom_ipsi = interpolate_to_phase(
-            bio_moment_df[f'ankle_angle_{ipsi}_moment'].values[start_idx:end_idx]
+            bio_moment_df[f'ankle_angle_{ipsi}_moment'].values[start_idx:end_idx + 1]
         )
         ankle_bio_mom_contra = interpolate_to_phase(
-            bio_moment_df[f'ankle_angle_{contra}_moment'].values[start_idx:end_idx]
+            bio_moment_df[f'ankle_angle_{contra}_moment'].values[start_idx:end_idx + 1]
         )
     else:
         # No biological moments available - fill with NaN
@@ -906,17 +908,17 @@ def process_stride(
         exo_df = data['exo']
         # Hip assistance (negate: exo extension+ -> our flexion+)
         hip_assist_ipsi = interpolate_to_phase(
-            -exo_df[f'hip_angle_{ipsi}_torque_interaction'].values[start_idx:end_idx] / subject_mass
+            -exo_df[f'hip_angle_{ipsi}_torque_interaction'].values[start_idx:end_idx + 1] / subject_mass
         )
         hip_assist_contra = interpolate_to_phase(
-            -exo_df[f'hip_angle_{contra}_torque_interaction'].values[start_idx:end_idx] / subject_mass
+            -exo_df[f'hip_angle_{contra}_torque_interaction'].values[start_idx:end_idx + 1] / subject_mass
         )
         # Knee assistance (negate: exo extension+ -> our flexion+)
         knee_assist_ipsi = interpolate_to_phase(
-            -exo_df[f'knee_angle_{ipsi}_torque_interaction'].values[start_idx:end_idx] / subject_mass
+            -exo_df[f'knee_angle_{ipsi}_torque_interaction'].values[start_idx:end_idx + 1] / subject_mass
         )
         knee_assist_contra = interpolate_to_phase(
-            -exo_df[f'knee_angle_{contra}_torque_interaction'].values[start_idx:end_idx] / subject_mass
+            -exo_df[f'knee_angle_{contra}_torque_interaction'].values[start_idx:end_idx + 1] / subject_mass
         )
     else:
         # No exo data available - fill with zeros
@@ -943,15 +945,15 @@ def process_stride(
     #   - Anterior: positive = propulsion (forward force on body)
     #   - Lateral: ipsi negative (medial force on body), contra positive
     grf_vert_ipsi = interpolate_to_phase(
-        grf_df[f'fp_{ipsi}_force_y'].values[start_idx:end_idx] / body_weight_N
+        grf_df[f'fp_{ipsi}_force_y'].values[start_idx:end_idx + 1] / body_weight_N
     )
     grf_vert_contra = interpolate_to_phase(
-        grf_df[f'fp_{contra}_force_y'].values[start_idx:end_idx] / body_weight_N
+        grf_df[f'fp_{contra}_force_y'].values[start_idx:end_idx + 1] / body_weight_N
     )
     # Negate z to make positive = propulsion (forward force)
     # Raw data has +z = braking at heel strike, -z = propulsion at push-off
-    grf_ant_ipsi_raw = -grf_df[f'fp_{ipsi}_force_z'].values[start_idx:end_idx] / body_weight_N
-    grf_ant_contra_raw = -grf_df[f'fp_{contra}_force_z'].values[start_idx:end_idx] / body_weight_N
+    grf_ant_ipsi_raw = -grf_df[f'fp_{ipsi}_force_z'].values[start_idx:end_idx + 1] / body_weight_N
+    grf_ant_contra_raw = -grf_df[f'fp_{contra}_force_z'].values[start_idx:end_idx + 1] / body_weight_N
 
     # Flip sign if walking in negative Z direction (decline walking)
     # At ~50% of stride (push-off), GRF anterior should be positive (propulsion)
@@ -971,8 +973,8 @@ def process_stride(
     # Convention: ipsi should be largely negative (medial force pushing body toward midline)
     #             contra should be positive (from ipsi's reference frame)
     # Check the mean over stance phase and flip if needed
-    grf_lat_ipsi_raw = grf_df[f'fp_{ipsi}_force_x'].values[start_idx:end_idx] / body_weight_N
-    grf_lat_contra_raw = grf_df[f'fp_{contra}_force_x'].values[start_idx:end_idx] / body_weight_N
+    grf_lat_ipsi_raw = grf_df[f'fp_{ipsi}_force_x'].values[start_idx:end_idx + 1] / body_weight_N
+    grf_lat_contra_raw = grf_df[f'fp_{contra}_force_x'].values[start_idx:end_idx + 1] / body_weight_N
 
     # Check mean lateral GRF for ipsi during stance (0-60% of stride)
     # Ipsi mean should be negative
@@ -991,34 +993,28 @@ def process_stride(
     # insole_sim provides COP in OpenSim foot frame (already foot-relative)
     # Columns: insole_<side>_cop_x (anterior), insole_<side>_cop_z (lateral)
     insole_df = data['insole_sim']
-    cop_ant_ipsi = interpolate_to_phase(insole_df[f'insole_{ipsi}_cop_x'].values[start_idx:end_idx])
-    cop_ant_contra = interpolate_to_phase(insole_df[f'insole_{contra}_cop_x'].values[start_idx:end_idx])
-    cop_lat_ipsi = interpolate_to_phase(insole_df[f'insole_{ipsi}_cop_z'].values[start_idx:end_idx])
-    cop_lat_contra = interpolate_to_phase(insole_df[f'insole_{contra}_cop_z'].values[start_idx:end_idx])
+    cop_ant_ipsi = interpolate_to_phase(insole_df[f'insole_{ipsi}_cop_x'].values[start_idx:end_idx + 1])
+    cop_ant_contra = interpolate_to_phase(insole_df[f'insole_{contra}_cop_x'].values[start_idx:end_idx + 1])
+    cop_lat_ipsi = interpolate_to_phase(insole_df[f'insole_{ipsi}_cop_z'].values[start_idx:end_idx + 1])
+    cop_lat_contra = interpolate_to_phase(insole_df[f'insole_{contra}_cop_z'].values[start_idx:end_idx + 1])
     # No vertical COP in insole_sim (COP is on 2D foot surface)
     cop_vert_ipsi = np.zeros(NUM_POINTS)
     cop_vert_contra = np.zeros(NUM_POINTS)
 
-    # Build task_info string with exoskeleton metadata per standard
-    info_parts = [f"leg:{leg_side}"]
-
-    # Add exo_state to task_info (standard key)
-    info_parts.append(f"exo_state:{exo_state}")
-
-    # Add exo_joints when exoskeleton is worn (this exo has hip and knee actuators)
+    # Keep trial identity and physical reference side across independent runs.
+    if not source_recording_id:
+        raise ValueError("source_recording_id is required; supply the actual source trial identity")
+    reference_side = {'l': 'left', 'r': 'right'}[leg_side]
+    observation_id = f"{source_recording_id}:samples:{start_idx}:{end_idx}:{reference_side}"
+    info = {k: v for k, v in task_info.items() if v is not None}
+    info.update(leg=leg_side, exo_state=exo_state)
     if exo_state in ('powered', 'worn_unpowered'):
-        info_parts.append("exo_joints:hip_knee")
-
-    for k, v in task_info.items():
-        if v is not None:
-            info_parts.append(f"{k}:{v}")
-    task_info_str = ",".join(info_parts)
-
-    # Build subject metadata
-    # Format: weight_kg:<mass>,phase:<1|2|3>,day:<1|2>
-    # Note: exo_state moved to task_info per standard (exo state is task-level, not subject-level)
-    day_str = "2" if is_day2 else "1"
-    subject_metadata = f"weight_kg:{subject_mass:.1f},phase:{collection_phase},day:{day_str}"
+        info['exo_joints'] = 'hip_knee'
+    task_info_str = json.dumps(info, sort_keys=True)
+    subject_metadata = json.dumps({
+        'weight_kg': subject_mass if np.isfinite(subject_mass) else None,
+        'phase': collection_phase, 'day': 2 if is_day2 else 1,
+    }, sort_keys=True)
 
     # Create output DataFrame
     stride_df = pd.DataFrame({
@@ -1027,7 +1023,15 @@ def process_stride(
         'task': task,
         'task_id': task_id,
         'task_info': task_info_str,
-        'step': f"{step_num:03d}",
+        'step': observation_id,
+        'source_recording_id': source_recording_id,
+        'observation_id': observation_id,
+        'observation_type': 'transfer' if task in ('sit_to_stand', 'stand_to_sit') else 'individual_cycle',
+        'reference_side': reference_side,
+        'source_start_sample': start_idx,
+        'source_end_sample': end_idx,
+        'source_start_time_s': float(time_data[start_idx]),
+        'source_end_time_s': float(time_data[end_idx]),
         'phase_ipsi': phase,
         'phase_ipsi_dot': phase_dot,
 
@@ -1296,6 +1300,7 @@ def process_trial(
     """
     # Map task name
     task_folder = trial_path.name
+    source_recording_id = f"gt24:{data_source}/{subject_id}/{task_folder}"
     task, task_id, task_info = map_task_name(task_folder)
 
     if task is None:
@@ -1370,6 +1375,7 @@ def process_trial(
 
             stride_df = process_stride(
                 data=data,
+                source_recording_id=source_recording_id,
                 start_idx=seg.start_idx,
                 end_idx=seg.end_idx,
                 subject_id=subject_id,
@@ -1404,6 +1410,7 @@ def process_trial(
         for seg in segments:
             stride_df = process_stride(
                 data=data,
+                source_recording_id=source_recording_id,
                 start_idx=seg.start_idx,
                 end_idx=seg.end_idx,
                 subject_id=subject_id,
@@ -1459,6 +1466,7 @@ def process_trial(
             for seg in segments:
                 stride_df = process_stride(
                     data=data,
+                    source_recording_id=source_recording_id,
                     start_idx=seg.start_idx,
                     end_idx=seg.end_idx,
                     subject_id=subject_id,

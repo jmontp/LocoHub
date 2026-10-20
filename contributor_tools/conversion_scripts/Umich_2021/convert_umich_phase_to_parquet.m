@@ -11,6 +11,7 @@
 % 6. METHOD 2: Calculates velocities AFTER interpolation for exoskeleton control consistency
 
 clearvars
+addpath(fullfile(fileparts(mfilename('fullpath')), '..', 'matlab_common'));
 
 % CONFIGURATION: Enable/disable data fixes
 global ENABLE_DATA_FIXES;
@@ -98,8 +99,8 @@ for subject_idx = 1:length(subjects)
         height_idx = find(strcmp(details(:,1), 'Height'));
         
         % Extract values with defaults
-        age = 0; body_mass = 70; height_m = 1.75; % defaults
-        sex_code = NaN; sex_char = 'Other';
+        age = NaN; body_mass = NaN; height_m = NaN; % unknown measurements
+        sex_code = NaN; sex_char = 'unknown';
         if ~isempty(sex_idx)
             sex_code = details{sex_idx, 2};
             % Dataset uses 1=female, 2=male (see umich_2021_mat_structure.md)
@@ -108,19 +109,20 @@ for subject_idx = 1:length(subjects)
             elseif isequal(sex_code, 2)
                 sex_char = 'M';
             else
-                sex_char = 'Other';
+                sex_char = 'unknown';
             end
         end
         if ~isempty(age_idx), age = details{age_idx, 2}; end
         if ~isempty(mass_idx), body_mass = details{mass_idx, 2}; end
-        if ~isempty(height_idx), height_m = details{height_idx, 2} / 1000; end % convert mm to m
+        if ~isempty(height_idx), height_m = details{height_idx, 2} / 1000; end
+        if ~isscalar(body_mass) || ~isfinite(body_mass) || body_mass <= 0, body_mass = NaN; end % convert mm to m
         
         % Format subject metadata string
         subject_metadata = sprintf('age:%d,sex:%s,height_m:%.2f,weight_kg:%.1f', age, sex_char, height_m, body_mass);
     else
         % Default values if no ParticipantDetails
-        body_mass = 70; % kg (default for normalization)
-        subject_metadata = 'age:0,sex:Other,height_m:1.75,weight_kg:70.0';
+        body_mass = NaN; % kg (default for normalization)
+        subject_metadata = 'age:unknown,sex:unknown,height_m:unknown,weight_kg:unknown';
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -154,6 +156,7 @@ for subject_idx = 1:length(subjects)
             
             incline_value = incline_map(incline_name);
             incline_data = tread_data.(incline_name);
+            incline_data.source_recording_id = sprintf('um21:Streaming/%s/Tread/%s', subject, incline_name);
             
             % Check if events exist
             if ~isfield(incline_data, 'events')
@@ -269,6 +272,7 @@ for subject_idx = 1:length(subjects)
             end
             
             trial_data = run_data.(speed_name);
+            trial_data.source_recording_id = sprintf('um21:Streaming/%s/Run/%s', subject, speed_name);
             speed_value = run_speed_map(speed_name);
             
             % Check if events exist
@@ -310,6 +314,7 @@ for subject_idx = 1:length(subjects)
         for wtr_idx = 1:length(wtr_fields)
             trial_name = wtr_fields{wtr_idx};
             trial_data = wtr_data.(trial_name);
+            trial_data.source_recording_id = sprintf('um21:Streaming/%s/Wtr/%s', subject, trial_name);
             
             % Check if events exist
             if ~isfield(trial_data, 'events')
@@ -407,6 +412,7 @@ for subject_idx = 1:length(subjects)
         for stair_idx = 1:length(stair_fields)
             trial_name = stair_fields{stair_idx};
             trial_data = stair_data.(trial_name);
+            trial_data.source_recording_id = sprintf('um21:Streaming/%s/Stair/%s', subject, trial_name);
             
             % Check if events exist
             if ~isfield(trial_data, 'events')
@@ -1349,6 +1355,10 @@ function stride_table = process_strides_single_leg(trial_data, ...
         
         % Convert struct to table and append
         stride_table_temp = struct2table(stride_data);
+        stride_table_temp = locohub_add_provenance(stride_table_temp, trial_data.source_recording_id, ...
+            sprintf('frames:%d:%d', ipsi_start_frame, ipsi_end_frame), leg_side, ...
+            'individual_cycle', (ipsi_start_frame - 1) / Hz, (ipsi_end_frame - 1) / Hz);
+
         
         if isempty(all_stride_data)
             all_stride_data = stride_table_temp;
@@ -1844,19 +1854,9 @@ function [sit_to_stand_durations, stand_to_sit_durations] = collect_sts_duration
 end
 
 function duration = get_sts_duration(duration_array, index)
-    if isempty(duration_array)
-        duration = 1.5;
-        return;
-    end
-
-    if index <= length(duration_array)
+    duration = NaN;
+    if index <= numel(duration_array) && isfinite(duration_array(index)) && duration_array(index) > 0
         duration = duration_array(index);
-    else
-        duration = duration_array(end);
-    end
-
-    if duration <= 0
-        duration = 1.5;
     end
 end
 
@@ -2028,7 +2028,7 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     % Constants
     NUM_POINTS = 150;
     nan_vector = NaN(NUM_POINTS, 1);   % Define NaN vector for unmeasured kinetic variables
-    zero_vector = zeros(NUM_POINTS, 1); % Define zero vector for unused kinematic variables
+    missing_vector = NaN(NUM_POINTS, 1); % Unmeasured kinematics remain unavailable
     
     % Initialize output
     cycle_table = table;
@@ -2078,7 +2078,7 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     if cycle_duration_s > 0
         stride_data.phase_ipsi_dot = repmat(phase_range / cycle_duration_s, NUM_POINTS, 1);
     else
-        stride_data.phase_ipsi_dot = zeros(NUM_POINTS, 1);
+        stride_data.phase_ipsi_dot = NaN(NUM_POINTS, 1);
     end
     
     % Process joint angles
@@ -2095,8 +2095,8 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
             l_hip_add = interpolate_signal(deg2rad(angles.LHipAngles(start_idx:end_idx, 2)), NUM_POINTS);
             r_hip_add = interpolate_signal(deg2rad(angles.RHipAngles(start_idx:end_idx, 2)), NUM_POINTS);
         else
-            l_hip_add = zeros(NUM_POINTS, 1);
-            r_hip_add = zeros(NUM_POINTS, 1);
+            l_hip_add = NaN(NUM_POINTS, 1);
+            r_hip_add = NaN(NUM_POINTS, 1);
         end
         
         % Transverse plane (rotation) if available
@@ -2104,8 +2104,8 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
             l_hip_rot = interpolate_signal(deg2rad(angles.LHipAngles(start_idx:end_idx, 3)), NUM_POINTS);
             r_hip_rot = interpolate_signal(deg2rad(angles.RHipAngles(start_idx:end_idx, 3)), NUM_POINTS);
         else
-            l_hip_rot = zeros(NUM_POINTS, 1);
-            r_hip_rot = zeros(NUM_POINTS, 1);
+            l_hip_rot = NaN(NUM_POINTS, 1);
+            r_hip_rot = NaN(NUM_POINTS, 1);
         end
         
         % For bilateral task, use left as ipsi, right as contra
@@ -2124,10 +2124,10 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
         r_knee_flex = interpolate_signal(deg2rad(angles.RKneeAngles(start_idx:end_idx, 1)), NUM_POINTS);
         
         % Frontal and transverse planes (set to zero - not typically meaningful for STS)
-        l_knee_add = zeros(NUM_POINTS, 1);
-        r_knee_add = zeros(NUM_POINTS, 1);
-        l_knee_rot = zeros(NUM_POINTS, 1);
-        r_knee_rot = zeros(NUM_POINTS, 1);
+        l_knee_add = NaN(NUM_POINTS, 1);
+        r_knee_add = NaN(NUM_POINTS, 1);
+        l_knee_rot = NaN(NUM_POINTS, 1);
+        r_knee_rot = NaN(NUM_POINTS, 1);
         
         stride_data.knee_flexion_angle_ipsi_rad = l_knee_flex;
         stride_data.knee_flexion_angle_contra_rad = r_knee_flex;
@@ -2144,10 +2144,10 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
         r_ankle_flex = interpolate_signal(deg2rad(angles.RAnkleAngles(start_idx:end_idx, 1)), NUM_POINTS);
         
         % Frontal and transverse planes (set to zero)
-        l_ankle_add = zeros(NUM_POINTS, 1);
-        r_ankle_add = zeros(NUM_POINTS, 1);
-        l_ankle_rot = zeros(NUM_POINTS, 1);
-        r_ankle_rot = zeros(NUM_POINTS, 1);
+        l_ankle_add = NaN(NUM_POINTS, 1);
+        r_ankle_add = NaN(NUM_POINTS, 1);
+        l_ankle_rot = NaN(NUM_POINTS, 1);
+        r_ankle_rot = NaN(NUM_POINTS, 1);
         
         stride_data.ankle_dorsiflexion_angle_ipsi_rad = l_ankle_flex;
         stride_data.ankle_dorsiflexion_angle_contra_rad = r_ankle_flex;
@@ -2164,12 +2164,12 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
         if size(angles.LPelvisAngles, 2) >= 2
             pelvis_front = interpolate_signal(deg2rad(angles.LPelvisAngles(start_idx:end_idx, 2)), NUM_POINTS);
         else
-            pelvis_front = zeros(NUM_POINTS, 1);
+            pelvis_front = NaN(NUM_POINTS, 1);
         end
         if size(angles.LPelvisAngles, 2) >= 3
             pelvis_trans = interpolate_signal(deg2rad(angles.LPelvisAngles(start_idx:end_idx, 3)), NUM_POINTS);
         else
-            pelvis_trans = zeros(NUM_POINTS, 1);
+            pelvis_trans = NaN(NUM_POINTS, 1);
         end
         
         stride_data.pelvis_sagittal_angle_rad = pelvis_sag;
@@ -2185,8 +2185,8 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
         stride_data.hip_flexion_velocity_ipsi_rad_s = gradient(stride_data.hip_flexion_angle_ipsi_rad) * effective_Hz;
         stride_data.hip_flexion_velocity_contra_rad_s = gradient(stride_data.hip_flexion_angle_contra_rad) * effective_Hz;
     else
-        stride_data.hip_flexion_velocity_ipsi_rad_s = zero_vector;
-        stride_data.hip_flexion_velocity_contra_rad_s = zero_vector;
+        stride_data.hip_flexion_velocity_ipsi_rad_s = missing_vector;
+        stride_data.hip_flexion_velocity_contra_rad_s = missing_vector;
     end
     
     % Knee velocities
@@ -2194,8 +2194,8 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
         stride_data.knee_flexion_velocity_ipsi_rad_s = gradient(stride_data.knee_flexion_angle_ipsi_rad) * effective_Hz;
         stride_data.knee_flexion_velocity_contra_rad_s = gradient(stride_data.knee_flexion_angle_contra_rad) * effective_Hz;
     else
-        stride_data.knee_flexion_velocity_ipsi_rad_s = zero_vector;
-        stride_data.knee_flexion_velocity_contra_rad_s = zero_vector;
+        stride_data.knee_flexion_velocity_ipsi_rad_s = missing_vector;
+        stride_data.knee_flexion_velocity_contra_rad_s = missing_vector;
     end
     
     % Ankle velocities
@@ -2203,18 +2203,18 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
         stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = gradient(stride_data.ankle_dorsiflexion_angle_ipsi_rad) * effective_Hz;
         stride_data.ankle_dorsiflexion_velocity_contra_rad_s = gradient(stride_data.ankle_dorsiflexion_angle_contra_rad) * effective_Hz;
     else
-        stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = zero_vector;
-        stride_data.ankle_dorsiflexion_velocity_contra_rad_s = zero_vector;
+        stride_data.ankle_dorsiflexion_velocity_ipsi_rad_s = missing_vector;
+        stride_data.ankle_dorsiflexion_velocity_contra_rad_s = missing_vector;
     end
     
     % Segment angles - derive from pelvis orientation and relative joint angles
     if isfield(stride_data, 'pelvis_sagittal_angle_rad')
         pelvis_sag = stride_data.pelvis_sagittal_angle_rad;
     else
-        pelvis_sag = zero_vector;
+        pelvis_sag = missing_vector;
         stride_data.pelvis_sagittal_angle_rad = pelvis_sag;
-        stride_data.pelvis_frontal_angle_rad = zero_vector;
-        stride_data.pelvis_transverse_angle_rad = zero_vector;
+        stride_data.pelvis_frontal_angle_rad = missing_vector;
+        stride_data.pelvis_transverse_angle_rad = missing_vector;
     end
 
     % Use simple kinematic chain (pelvis -> thigh -> shank -> foot)
@@ -2281,6 +2281,14 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     
     % Convert struct to table
     cycle_table = struct2table(stride_data);
+    % This normalized source array has cycle identity but no proven recording
+    % time correspondence. Do not label normalized indices as source seconds.
+    source_task = 'sit2stand';
+    if strcmp(task_type, 'stand_to_sit'), source_task = 'stand2sit'; end
+    recording_id = sprintf('um21:Normalized/%s/SitStand/ss/%s', erase(subject_str, 'UM21_'), source_task);
+    cycle_table = locohub_add_provenance(cycle_table, recording_id, ...
+        sprintf('source_cycle:%d', cycle_num), 'left', 'transfer', NaN, NaN);
+
 end
 
 
