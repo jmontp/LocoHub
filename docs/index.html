@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-style="slate">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,7 +8,11 @@
   <title>LocoHub</title>
   <link rel="stylesheet" href="stylesheets/site.css">
   <link rel="stylesheet" href="stylesheets/data-preview.css">
+  <link rel="stylesheet" href="stylesheets/aggregate-preview.css">
+  <link rel="stylesheet" href="stylesheets/visual-styles.css">
+  <script src="javascripts/visual-styles.js"></script>
   <script src="javascripts/extra.js" defer></script>
+  <script src="javascripts/aggregate-preview.js" defer></script>
   <script src="javascripts/data-preview.js" defer></script>
 </head>
 <body>
@@ -25,7 +29,21 @@
   </header>
   <div class="page-layout wide-page data-page">
     <main id="main" class="page-content" tabindex="-1">
-      <h1 id="dataset-catalog">Locomotion datasets</h1>
+      <div class="data-heading">
+        <h1 id="dataset-catalog">Locomotion datasets</h1>
+        <details class="visual-style-picker" hidden>
+          <summary>Style: <strong data-style-label>Slate</strong></summary>
+          <fieldset class="visual-style-options">
+            <legend class="visually-hidden">Visual style</legend>
+              <label class="visual-style-option" for="visual-style-slate"><input id="visual-style-slate" type="radio" name="visual-style" value="slate" checked><span class="visual-style-swatch" data-swatch="slate" aria-hidden="true"></span><span><strong>Slate</strong><small>Neutral and familiar</small></span></label>
+              <label class="visual-style-option" for="visual-style-paper"><input id="visual-style-paper" type="radio" name="visual-style" value="paper"><span class="visual-style-swatch" data-swatch="paper" aria-hidden="true"></span><span><strong>Paper</strong><small>Warm, with serif headings</small></span></label>
+              <label class="visual-style-option" for="visual-style-blueprint"><input id="visual-style-blueprint" type="radio" name="visual-style" value="blueprint"><span class="visual-style-swatch" data-swatch="blueprint" aria-hidden="true"></span><span><strong>Blueprint</strong><small>Compact, with ruled tables</small></span></label>
+              <label class="visual-style-option" for="visual-style-sage"><input id="visual-style-sage" type="radio" name="visual-style" value="sage"><span class="visual-style-swatch" data-swatch="sage" aria-hidden="true"></span><span><strong>Sage</strong><small>Soft, with more space</small></span></label>
+              <label class="visual-style-option" for="visual-style-ink"><input id="visual-style-ink" type="radio" name="visual-style" value="ink"><span class="visual-style-swatch" data-swatch="ink" aria-hidden="true"></span><span><strong>Ink</strong><small>Bold, with high contrast</small></span></label>
+          </fieldset>
+        </details>
+        <span id="visual-style-status" class="visually-hidden" role="status" aria-live="polite"></span>
+      </div>
       <p class="data-intro">Parquet files for use with Python, MATLAB, and other data tools.</p>
       <p class="catalog-note">These downloads are older conversions and have not yet been re-checked. Counts come from earlier reports.</p>
       <div class="catalog-toolbar">
@@ -106,7 +124,7 @@
         </div>
         <!-- DATASET_TABLE_END -->
       </div>
-      <section id="data-preview" data-preview-source="datasets/preview_data.json" aria-labelledby="preview-title">
+      <section id="data-preview" data-aggregate-source="datasets/aggregate_previews/manifest.json" data-preview-source="datasets/preview_data.json" aria-labelledby="preview-title">
         <h2 id="preview-title">Data preview</h2>
         <p>Select Preview beside a dataset to inspect its available sample.</p>
         <noscript><p>Enable JavaScript for the preview, or open a dataset's Details page to view its recorded plots.</p></noscript>

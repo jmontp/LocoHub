@@ -88,6 +88,14 @@
 </tbody>
 </table></div>
 <p>Keep validation decisions in the shared contract implementation. CLI summaries, filtering, release manifests, and documentation must consume the same result, rather than independently reconstructing counts. Contributor utilities are internal implementation, not a new public SDK.</p>
+<h2 id="update-plot-summaries">Update plot summaries</h2>
+<p>The data browser reads precomputed JSON, not whole Parquet files. To refresh the task and subject plots from the existing local files, run:</p>
+<pre><code>nice -n 19 ionice -c 3 python3 contributor_tools/build_aggregate_previews.py
+python3 docs/build.py --check</code></pre>
+<p>Wait for all dataset workers to finish before building or publishing the site. The exporter uses one worker at a time, a 1 GiB address-space limit, small projected column groups, and temporary SQLite storage. It does not reconvert or repair the source data. The source filenames are listed in <code>contributor_tools/build_data_previews.py</code>.</p>
+<p>Within each task, complete stored curves are averaged for each subject. The overall mean gives each available subject mean equal weight; its sample standard deviation measures variation between subject means. Choosing one subject shows variation across that subject’s stored curves instead. Missing values are excluded point by point, counts are retained, and standard deviation is absent with fewer than two contributors.</p>
+<p>Older files may already contain averaged curves. Task summaries also combine available speeds and other conditions, so these plots are descriptive previews, not controlled comparisons or evidence of scientific review. The source file name, size and modification time are recorded; the full source file is not content-hashed or verified against its online download.</p>
+<p>Each task file contains its overall summary and links to separate subject files. The site loads those subject files only when requested. Keep all generated files referenced by <code>docs/datasets/aggregate_previews/manifest.json</code> together when publishing.</p>
 <h2 id="documentation-checks">Documentation checks</h2>
 <p>The public site should let a researcher identify the population, available signals, artifact variant, limitations, and quality evidence before downloading. Preserve native Python and MATLAB examples that run on the complete synthetic fixture.</p>
 <pre><code data-language="bash">python -m pytest tests/test_data_documentation.py

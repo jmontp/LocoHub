@@ -63,7 +63,7 @@ class Page(HTMLParser):
         if tag == "details" and attrs.get("data-language"):
             language = attrs["data-language"]
             self.language_panels[language] = self.language_panels.get(language, 0) + 1
-        for attribute in ("href", "src", "action", "data-source", "data-search-source", "data-preview-source"):
+        for attribute in ("href", "src", "action", "data-source", "data-search-source", "data-preview-source", "data-aggregate-source"):
             if attrs.get(attribute):
                 self.links.append(attrs[attribute])
 
@@ -178,6 +178,29 @@ def check_site(source: Path = DOCS) -> tuple[dict[Path, Page], set[Path]]:
                         assets.add(target)
                     else:
                         errors.append(f"comparison_data.json: missing historical plot {plot}")
+    aggregate_path = source / "datasets/aggregate_previews/manifest.json"
+    if aggregate_path in assets:
+        aggregate = json.loads(aggregate_path.read_text(encoding="utf-8"))
+        for slug, dataset in aggregate["datasets"].items():
+            for task in dataset.get("tasks", []):
+                try:
+                    result = resolve_local(source, aggregate_path, task["url"])
+                    if result is None or not result[0].is_file():
+                        errors.append(f"aggregate previews: missing local task for {slug}: {task['url']}")
+                    else:
+                        task_path = result[0]
+                        assets.add(task_path)
+                        task_data = json.loads(task_path.read_text(encoding="utf-8"))
+                        for subject in task_data.get("subjects", {}).values():
+                            if "url" not in subject:
+                                continue
+                            subject_ref = resolve_local(source, task_path, subject["url"])
+                            if subject_ref is None or not subject_ref[0].is_file():
+                                errors.append(f"aggregate previews: missing subject file: {subject['url']}")
+                            else:
+                                assets.add(subject_ref[0])
+                except ValueError as error:
+                    errors.append(str(error))
     if errors:
         raise ValueError("\n".join(errors))
     return pages, assets
