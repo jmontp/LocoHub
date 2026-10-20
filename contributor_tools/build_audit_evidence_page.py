@@ -47,8 +47,9 @@ def evidence_html(directory):
             artifacts.append((slug, name, group, artifact, findings))
     order = {slug: i for i, (_, slug, _) in enumerate(FAMILIES)}
     artifacts.sort(key=lambda r: (order.get(r[0], 99), r[3]['path']))
-    text = [f'<p class="audit-scope"><strong>{len(artifacts)} local files inspected.</strong> Coverage ranges from schema inspection and small source comparisons to full identity-column scans. No whole-file numerical certification was performed. Recorded 20 October 2026.</p>',
-            '<p class="audit-status-key"><strong>Problem found:</strong> an observed inconsistency. <strong>Needs investigation:</strong> an anomaly or unresolved warning. <strong>Not cleared:</strong> limited evidence, even if a sample check passed. None means approved.</p>',
+    text = ['<details class="audit-method"><summary>Audit scope &amp; status definitions</summary>',
+            f'<p>{len(artifacts)} local files inspected on 20 October 2026. Checks range from metadata and small source samples to full identity-column scans; no whole-file numerical certification.</p>',
+            '<p><strong>Problem found:</strong> observed inconsistency. <strong>Needs investigation:</strong> unresolved anomaly. <strong>Not cleared:</strong> insufficient evidence. A sample pass does not approve a file.</p></details>',
             '<div class="table-scroll audit-table" role="region" tabindex="0" aria-label="Local file audit results"><table><caption>Local file audit — select a file for its evidence and next steps</caption><thead><tr><th scope="col">Dataset / file</th><th scope="col">File status</th><th scope="col">Main finding</th><th scope="col">Recorded findings</th></tr></thead><tbody>']
     details = []
     for slug, name, group, artifact, findings in artifacts:
@@ -62,20 +63,21 @@ def evidence_html(directory):
         location = f'<small class="audit-file-location">{ESC(Path(path).parent)}</small>' if duplicate_name else ''
         text.append(f'<tr data-audit-dataset="{slug}"><th scope="row"><span class="audit-dataset-name">{ESC(name)}</span><a href="#{identity}">{ESC(Path(path).name)}</a>{location}</th><td><span class="audit-state audit-{state}">{label}</span></td><td>{ESC(lead["title"])}</td><td>{coverage}</td></tr>')
         block = [f'<details class="audit-evidence" id="{identity}" data-audit-dataset="{slug}"><summary>{ESC(name)} · {ESC(Path(path).name)} — {label}</summary>',
+                 '<details class="audit-file-metadata"><summary>File identity and audit limits</summary>',
                  f'<p><strong>Exact local path:</strong> <code>{ESC(path)}</code></p>',
                  f'<p>{artifact["rows"]:,} rows · {artifact["cols"]} columns · {artifact["size_bytes"]:,} bytes. File modification timestamp (ns): <code>{artifact["mtime_ns"]}</code>.</p>',
-                 '<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>']
+                 '<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>']
         for finding in ranked:
             tag = {'failure':'Observed problem','warning':'Review needed','unknown':'Unresolved','passed':'Sample check passed'}.get(finding['severity'],'Unresolved')
             if finding['title'].lower().startswith('needs investigation'):
                 tag = 'Numeric anomaly — cause unverified'
-            block.extend([f'<section class="audit-finding"><h3>{ESC(tag)}: {ESC(finding["title"])}</h3>',
+            block.extend([f'<details class="audit-finding"><summary>{ESC(tag)}: {ESC(finding["title"])}</summary>',
                           f'<p>{ESC(finding["evidence"])}</p><p><strong>Checked:</strong> {ESC(finding["check_scope"])}</p>',
-                          f'<p><strong>Next step:</strong> {ESC(finding["next_step"])}</p></section>'])
+                          f'<p><strong>Next step:</strong> {ESC(finding["next_step"])}</p></details>'])
         block.append(f'<p><a href="audits/{group}.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>')
         details.append('\n'.join(block))
     text.append('</tbody></table></div>')
-    text.append('<p class="audit-limitation"><strong>Georgia Tech 2023 phase:</strong> no local phase export was available to inspect. Its time file was inspected separately. An unavailable file is not a passing file.</p>')
+    text.append('<p data-audit-dataset="gt23" class="audit-limitation"><strong>Georgia Tech 2023 phase:</strong> no local phase export was available to inspect. Its time file was inspected separately. An unavailable file is not a passing file.</p>')
     text.extend(details)
     text.append('<details class="quality-disclosure"><summary>Converter-code risks — not proof every stored file is affected</summary><p>These are paths in current conversion code that need correction or source verification. Historical files may have been produced by different code.</p>')
     for group, finding in risks:

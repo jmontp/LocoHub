@@ -33,16 +33,16 @@
   </header>
   <div class="page-layout wide-page"><main id="main" class="page-content" tabindex="-1">
 <h1>Testing &amp; data quality</h1>
-<p class="quality-task-note">Start with the exact file you plan to use. A successful software test or an average inside a range is not a dataset approval.</p>
-<p class="catalog-note"><strong>No file in this audit is cleared for a new reviewed release.</strong> Some contain observed problems; others still need source matching or checks beyond the small samples examined. The audits are automated investigations, not independent human approval.</p>
-<nav class="quality-nav" aria-label="Quality sections"><a href="#file-status">File audit</a><a href="#checks">What the checks mean</a><a href="#test-results">Software tests</a><a href="#range-explorer">Range reference</a></nav>
-<section id="file-status" aria-labelledby="file-status-heading"><h2 id="file-status-heading">What do we know about each file?</h2>
-<p>Audits cover local files, including historical variants. Their bytes have <strong>not</strong> been matched to the online downloads. A filename containing “clean” is not evidence of approval.</p>
+<p>Choose a dataset to see what needs fixing and what still needs checking.</p>
+<nav class="quality-nav" aria-label="Quality sections"><a href="#file-status">Data files</a><a href="#range-explorer">Explore ranges</a><a href="#test-results">Software tests</a><a href="#checks">About the checks</a></nav>
+<section id="file-status" aria-labelledby="file-status-heading"><h2 id="file-status-heading">Data files</h2>
+<p class="audit-limitation">Local files only; online downloads have not been matched. No file is fully verified yet.</p>
 <label for="audit-dataset-filter" hidden>Filter by dataset <select id="audit-dataset-filter"><option value="">All datasets</option></select></label>
 <p id="audit-filter-status" role="status"></p>
 <!-- AUDIT_EVIDENCE_START -->
-<p class="audit-scope"><strong>23 local files inspected.</strong> Coverage ranges from schema inspection and small source comparisons to full identity-column scans. No whole-file numerical certification was performed. Recorded 20 October 2026.</p>
-<p class="audit-status-key"><strong>Problem found:</strong> an observed inconsistency. <strong>Needs investigation:</strong> an anomaly or unresolved warning. <strong>Not cleared:</strong> limited evidence, even if a sample check passed. None means approved.</p>
+<details class="audit-method"><summary>Audit scope &amp; status definitions</summary>
+<p>23 local files inspected on 20 October 2026. Checks range from metadata and small source samples to full identity-column scans; no whole-file numerical certification.</p>
+<p><strong>Problem found:</strong> observed inconsistency. <strong>Needs investigation:</strong> unresolved anomaly. <strong>Not cleared:</strong> insufficient evidence. A sample pass does not approve a file.</p></details>
 <div class="table-scroll audit-table" role="region" tabindex="0" aria-label="Local file audit results"><table><caption>Local file audit — select a file for its evidence and next steps</caption><thead><tr><th scope="col">Dataset / file</th><th scope="col">File status</th><th scope="col">Main finding</th><th scope="col">Recorded findings</th></tr></thead><tbody>
 <tr data-audit-dataset="um21"><th scope="row"><span class="audit-dataset-name">Umich 2021</span><a href="#audit-39a5a8babd38">umich_2021_phase_clean.parquet</a></th><td><span class="audit-state audit-problem">Problem found</span></td><td>Observation keys collide across separate curves</td><td>4 findings; expand for scope</td></tr>
 <tr data-audit-dataset="um21"><th scope="row"><span class="audit-dataset-name">Umich 2021</span><a href="#audit-6bc39a3916cf">umich_2021_phase_raw.parquet</a></th><td><span class="audit-state audit-problem">Problem found</span></td><td>Normalized transfer curve is duplicated into both anatomical channels</td><td>3 findings; expand for scope</td></tr>
@@ -68,262 +68,285 @@
 <tr data-audit-dataset="sp50"><th scope="row"><span class="audit-dataset-name">StrokePiG</span><a href="#audit-90f9ce5d354a">strokepig_phase.parquet</a><small class="audit-file-location">converted_datasets</small></th><td><span class="audit-state audit-review">Needs investigation</span></td><td>StrokePiG preview and historical checks refer to different files</td><td>3 findings; expand for scope</td></tr>
 <tr data-audit-dataset="sp50"><th scope="row"><span class="audit-dataset-name">StrokePiG</span><a href="#audit-c3d9e545e745">strokepig_test_ik.parquet</a></th><td><span class="audit-state audit-review">Needs investigation</span></td><td>Clinical laterality remains unverified in historical StrokePiG</td><td>2 findings; expand for scope</td></tr>
 </tbody></table></div>
-<p class="audit-limitation"><strong>Georgia Tech 2023 phase:</strong> no local phase export was available to inspect. Its time file was inspected separately. An unavailable file is not a passing file.</p>
+<p data-audit-dataset="gt23" class="audit-limitation"><strong>Georgia Tech 2023 phase:</strong> no local phase export was available to inspect. Its time file was inspected separately. An unavailable file is not a passing file.</p>
 <details class="audit-evidence" id="audit-39a5a8babd38" data-audit-dataset="um21"><summary>Umich 2021 · umich_2021_phase_clean.parquet — Problem found</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/umich_2021_phase_clean.parquet</code></p>
 <p>439,200 rows · 78 columns · 192,508,983 bytes. File modification timestamp (ns): <code>1776452313126779400</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Observed problem: Observation keys collide across separate curves</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Observed problem: Observation keys collide across separate curves</summary>
 <p>2,928 complete contiguous curves map to129 distinct (subject,task,step) keys;125 keys reused. UM21_AB01/stair_ascent/step1 occurs40 times. Neither reference_leg nor recording_id/observation_id exists.</p><p><strong>Checked:</strong> All439,200 rows, projected subject/task/step/phase only; curves detected by key change or phase reset.</p>
-<p><strong>Next step:</strong> Preserve historical artifact; regenerate with recording, reference-leg and observation IDs. Never globally group clean file by subject/task/step.</p></section>
-<section class="audit-finding"><h3>Observed problem: Hip and segment angles violate the declared convention</h3>
+<p><strong>Next step:</strong> Preserve historical artifact; regenerate with recording, reference-leg and observation IDs. Never globally group clean file by subject/task/step.</p></details>
+<details class="audit-finding"><summary>Observed problem: Hip and segment angles violate the declared convention</summary>
 <p>Nine curves sampled (first3 in each of3task row groups): max |hip_flexion_angle_ipsi_rad-(thigh_sagittal_angle_ipsi_rad-pelvis_sagittal_angle_rad)| ranged0.5404865–0.7916868rad. First row hip0.6136595103,thigh0.3050420144,pelvis0.2919464600. Declared equation: contributor_tools/common/plotting/generate_forward_kinematics_reference.py:636; current phase converter1132 implements it.</p><p><strong>Checked:</strong> Rows0–449,184950–185399,340950–341399; ipsilateral sagittal signals only. Knee/ankle identities pass first150 rows to floating precision.</p>
-<p><strong>Next step:</strong> Do not label clean as convention-verified. Reconcile with source and corrected conversion, then validate both sides across tasks.</p></section>
-<section class="audit-finding"><h3>Observed problem: Stored hip velocity has a150/149 scale error</h3>
+<p><strong>Next step:</strong> Do not label clean as convention-verified. Reconcile with source and corrected conversion, then validate both sides across tasks.</p></details>
+<details class="audit-finding"><summary>Observed problem: Stored hip velocity has a150/149 scale error</summary>
 <p>All nine sampled curves have median stored hip velocity / np.gradient(hip_angle,time_s) =1.00671140939597=150/149 (interior samples). Current converter907 uses149intervals. First curve max absolute velocity discrepancy0.0251920156rad/s.</p><p><strong>Checked:</strong> Same9curves as chain check; no extrapolation to every velocity channel.</p>
-<p><strong>Next step:</strong> Regenerate derivatives using actual149intervals; verify against independently sampled time and angle values.</p></section>
-<section class="audit-finding"><h3>Review needed: Clean file is an older, incomplete task set, not a reconciled subset of current raw</h3>
+<p><strong>Next step:</strong> Regenerate derivatives using actual149intervals; verify against independently sampled time and angle values.</p></details>
+<details class="audit-finding"><summary>Review needed: Clean file is an older, incomplete task set, not a reconciled subset of current raw</summary>
 <p>Clean modified April17,2026; raw July21,2026. Clean has only stair_ascent184950rows,stair_descent156000,transition98250. Raw has9tasks including level/incline/decline walking,run,sit/stand. Clean can neither represent all source tasks nor be assumed a same-version filtered raw artifact.</p><p><strong>Checked:</strong> All phase identity columns counted. Local preview explicitly points to this clean file and therefore has only3tasks.</p>
-<p><strong>Next step:</strong> Record separate version/lineage and exclusion reasons; show task availability and unreviewed status prominently.</p></section>
+<p><strong>Next step:</strong> Record separate version/lineage and exclusion reasons; show task availability and unreviewed status prominently.</p></details>
 <p><a href="audits/umich.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-6bc39a3916cf" data-audit-dataset="um21"><summary>Umich 2021 · umich_2021_phase_raw.parquet — Problem found</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/umich_2021_phase_raw.parquet</code></p>
 <p>2,122,650 rows · 78 columns · 1,181,062,027 bytes. File modification timestamp (ns): <code>1784669470399165600</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Observed problem: Normalized transfer curve is duplicated into both anatomical channels</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Observed problem: Normalized transfer curve is duplicated into both anatomical channels</summary>
 <p>Raw rows164700–164849,UM21_AB01,sit_to_stand,step1099: both hip angle arrays identical (maxdifference0), first1.8110404297871505rad,last0.23272579854200015rad. Normalized.AB01.SitStand.ss.sit2stand.HipAngles cycle1 starts103.76497315degrees, matching this value. build_normalized_trial_struct1863–1897 assigns each normalized Hip/Knee/Ankle array to both L/R. Original R01 Dataset README normalized jointAngles section states dimension3 concatenates left and right legs.</p><p><strong>Checked:</strong> One actual150row transfer plus source HDF5 metadata/slice and converter inspection; not all transfers scanned.</p>
-<p><strong>Next step:</strong> Preserve source-side identity; represent unavailable opposite-side data as missing unless paired source time correspondence is established. Do not assume copied channels are bilateral measurements.</p></section>
-<section class="audit-finding"><h3>Review needed: Clean file is an older, incomplete task set, not a reconciled subset of current raw</h3>
+<p><strong>Next step:</strong> Preserve source-side identity; represent unavailable opposite-side data as missing unless paired source time correspondence is established. Do not assume copied channels are bilateral measurements.</p></details>
+<details class="audit-finding"><summary>Review needed: Clean file is an older, incomplete task set, not a reconciled subset of current raw</summary>
 <p>Clean modified April17,2026; raw July21,2026. Clean has only stair_ascent184950rows,stair_descent156000,transition98250. Raw has9tasks including level/incline/decline walking,run,sit/stand. Clean can neither represent all source tasks nor be assumed a same-version filtered raw artifact.</p><p><strong>Checked:</strong> All phase identity columns counted. Local preview explicitly points to this clean file and therefore has only3tasks.</p>
-<p><strong>Next step:</strong> Record separate version/lineage and exclusion reasons; show task availability and unreviewed status prominently.</p></section>
-<section class="audit-finding"><h3>Unresolved: Current provenance and full source reconciliation are unavailable</h3>
+<p><strong>Next step:</strong> Record separate version/lineage and exclusion reasons; show task availability and unreviewed status prominently.</p></details>
+<details class="audit-finding"><summary>Unresolved: Current provenance and full source reconciliation are unavailable</summary>
 <p>Both files predate current source_recording_id/observation_id additions and contain no immutable release manifest/checksum linking source,converter and assessment. Time file has reference_leg/collection_id but not current provenance; phase raw lacks reference_leg.</p><p><strong>Checked:</strong> All schemas/metadata inspected; no full source reconstruction or native MATLAB execution.</p>
-<p><strong>Next step:</strong> Create bounded independently reconciled source-to-output checks per task/side before release; no current-release pass claim.</p></section>
+<p><strong>Next step:</strong> Create bounded independently reconciled source-to-output checks per task/side before release; no current-release pass claim.</p></details>
 <p><a href="audits/umich.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-4c4ff88b98f1" data-audit-dataset="um21"><summary>Umich 2021 · umich_2021_time.parquet — Not cleared</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/umich_2021_time.parquet</code></p>
 <p>1,903,839 rows · 100 columns · 1,383,480,474 bytes. File modification timestamp (ns): <code>1784844791242384600</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Unresolved: Current provenance and full source reconciliation are unavailable</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Unresolved: Current provenance and full source reconciliation are unavailable</summary>
 <p>Both files predate current source_recording_id/observation_id additions and contain no immutable release manifest/checksum linking source,converter and assessment. Time file has reference_leg/collection_id but not current provenance; phase raw lacks reference_leg.</p><p><strong>Checked:</strong> All schemas/metadata inspected; no full source reconstruction or native MATLAB execution.</p>
-<p><strong>Next step:</strong> Create bounded independently reconciled source-to-output checks per task/side before release; no current-release pass claim.</p></section>
-<section class="audit-finding"><h3>Unresolved: Time artifact coverage is limited to an initial sample</h3>
+<p><strong>Next step:</strong> Create bounded independently reconciled source-to-output checks per task/side before release; no current-release pass claim.</p></details>
+<details class="audit-finding"><summary>Unresolved: Time artifact coverage is limited to an initial sample</summary>
 <p>First150rows UM21_AB01 decline_walking have0.005s spacing and consistent hip/knee/ankle chain (max~1e-16rad) and interior hip derivative (max1.33e-14rad/s). No full time monotonicity, missingness, discontinuity or source mapping audit was performed.</p><p><strong>Checked:</strong> First150rows only; schema/footer for1,903,839rows.</p>
-<p><strong>Next step:</strong> Run bounded full structural assessment and source segment matching, without loading full dataset.</p></section>
+<p><strong>Next step:</strong> Run bounded full structural assessment and source segment matching, without loading full dataset.</p></details>
 <p><a href="audits/umich.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-e63795b1dd5e" data-audit-dataset="gt21"><summary>Georgia Tech 2021 · gtech_2021_phase_clean.parquet — Problem found</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/gtech_2021_phase_clean.parquet</code></p>
 <p>2,612,700 rows · 60 columns · 1,007,621,532 bytes. File modification timestamp (ns): <code>1776452278141690100</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Observed problem: Distinct GT21 curves share every legacy observation key</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Observed problem: Distinct GT21 curves share every legacy observation key</summary>
 <p>Row group5 first600rows contain four complete curves: subject GT21_AB06, task and task_id stair_ascent, step001, task_info step_height_m:0.102,surface:stairs. Phase0 hip values respectively0.7947990023,0.7728561622,0.7965483336,0.8063806716. Neither recording nor observation identity columns exist. Grouping subject/task/step merges independent curves.</p><p><strong>Checked:</strong> First600rows in row group5; duplicate observations confirmed, not a count of all collisions.</p>
-<p><strong>Next step:</strong> Reconvert with actual recording/observation identity and retain exclusion lineage; do not repair IDs by guessing source recording from row order.</p></section>
-<section class="audit-finding"><h3>Observed problem: GT21 stored angular velocities use 150 intervals for 150 inclusive samples</h3>
+<p><strong>Next step:</strong> Reconvert with actual recording/observation identity and retain exclusion lineage; do not repair IDs by guessing source recording from row order.</p></details>
+<details class="audit-finding"><summary>Observed problem: GT21 stored angular velocities use 150 intervals for 150 inclusive samples</summary>
 <p>For all30 complete curves sampled from the first600rows of each of8rowgroups, hip velocity divided by gradient(angle)*149*phase_ipsi_dot/100 is150/149=1.006711409395973. First curve knee agrees. Current adapter lines1022,1093 uses NUM_POINTS-1, but stored file does not.</p><p><strong>Checked:</strong> 4800rows projected to8columns,30complete hip curves; six tasks and subjects AB06,AB14,AB30. This is a deterministic internal inconsistency, not a physiological range opinion.</p>
-<p><strong>Next step:</strong> Recompute derivatives from verified source timing during reconversion; preserve historical artifact and mark known issue. Test against analytic time ramps and verify real output samples.</p></section>
-<section class="audit-finding"><h3>Review needed: Historical phase files lack source lineage and explicit observation semantics</h3>
+<p><strong>Next step:</strong> Recompute derivatives from verified source timing during reconversion; preserve historical artifact and mark known issue. Test against analytic time ramps and verify real output samples.</p></details>
+<details class="audit-finding"><summary>Review needed: Historical phase files lack source lineage and explicit observation semantics</summary>
 <p>All five phase files lack source_recording_id, observation_id, reference_side and observation_type columns. GT24/25 task_info leg labels partly preserve side but cannot identify source recording. Current converter changes cannot certify these older outputs.</p><p><strong>Checked:</strong> Full schemas, first150rows per phase file; no source reconciliation.</p>
-<p><strong>Next step:</strong> Keep legacy/unreviewed status; compare source-linked reconversion and account for every excluded observation before release.</p></section>
+<p><strong>Next step:</strong> Keep legacy/unreviewed status; compare source-linked reconversion and account for every excluded observation before release.</p></details>
 <p><a href="audits/gtech.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-7106aa499e8c" data-audit-dataset="gt21"><summary>Georgia Tech 2021 · gtech_2021_time.parquet — Not cleared</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/gtech_2021_time.parquet</code></p>
 <p>6,907,452 rows · 65 columns · 2,350,234,436 bytes. File modification timestamp (ns): <code>1784847503495053900</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Unresolved: Time exports are inventoried but not scientifically reconciled</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Unresolved: Time exports are inventoried but not scientifically reconciled</summary>
 <p>Schemas/rowcounts inventoried for all time exports including oldcmp,oldcmp2 and bt24. Tiny first150rows inspected for non-oldcmp files. Some store reference_leg/collection metadata; none have new observation lineage. GT23 first AB01 weight78.85 matches local Subject_masses.csv, a limited positive cross-check.</p><p><strong>Checked:</strong> No full scan, no raw-waveform equality check, no global duplicate/time-monotonicity check, no checksums computed for multi-GiB artifacts.</p>
-<p><strong>Next step:</strong> Prioritize GT21/GT23 representative source-recording comparison for units, signs, GRF/COP axes, timing and measured mass. oldcmp files are historical comparisons, not independent proof of correctness.</p></section>
-<section class="audit-finding"><h3>Unresolved: GT21 time source reconciliation requires MATLAB table reader</h3>
+<p><strong>Next step:</strong> Prioritize GT21/GT23 representative source-recording comparison for units, signs, GRF/COP axes, timing and measured mass. oldcmp files are historical comparisons, not independent proof of correctness.</p></details>
+<details class="audit-finding"><summary>Unresolved: GT21 time source reconciliation requires MATLAB table reader</summary>
 <p>Stored collection_id treadmill_treadmill_01_01_speed_0.50_seg01 identifies existing local AB06 treadmill_01_01 MATLABv5 source files. IK file3.8MiB and conditions486KiB exist. scipy.io.whosmat on IK failed TypeError NoneType object is not iterable (opaque MATLAB table header). No native MATLAB launch authorized in bounded audit.</p><p><strong>Checked:</strong> Source paths and file format inspected; attempted only header metadata reader. No full raw tables loaded.</p>
-<p><strong>Next step:</strong> Coordinate MATLAB run to export only identified source window/columns to a tiny review CSV, then compare stored time angles/moments/GRF/COP. Do not infer correctness from time consistency alone.</p></section>
+<p><strong>Next step:</strong> Coordinate MATLAB run to export only identified source window/columns to a tiny review CSV, then compare stored time angles/moments/GRF/COP. Do not infer correctness from time consistency alone.</p></details>
 <p><a href="audits/gtech.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-75c2db1b1598" data-audit-dataset="gt21"><summary>Georgia Tech 2021 · gtech_2021_time_oldcmp.parquet — Not cleared</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/gtech_2021_time_oldcmp.parquet</code></p>
 <p>6,907,452 rows · 65 columns · 2,434,060,807 bytes. File modification timestamp (ns): <code>1775854778830717500</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Unresolved: Time exports are inventoried but not scientifically reconciled</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Unresolved: Time exports are inventoried but not scientifically reconciled</summary>
 <p>Schemas/rowcounts inventoried for all time exports including oldcmp,oldcmp2 and bt24. Tiny first150rows inspected for non-oldcmp files. Some store reference_leg/collection metadata; none have new observation lineage. GT23 first AB01 weight78.85 matches local Subject_masses.csv, a limited positive cross-check.</p><p><strong>Checked:</strong> No full scan, no raw-waveform equality check, no global duplicate/time-monotonicity check, no checksums computed for multi-GiB artifacts.</p>
-<p><strong>Next step:</strong> Prioritize GT21/GT23 representative source-recording comparison for units, signs, GRF/COP axes, timing and measured mass. oldcmp files are historical comparisons, not independent proof of correctness.</p></section>
+<p><strong>Next step:</strong> Prioritize GT21/GT23 representative source-recording comparison for units, signs, GRF/COP axes, timing and measured mass. oldcmp files are historical comparisons, not independent proof of correctness.</p></details>
 <p><a href="audits/gtech.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-b32bcdb6e8c3" data-audit-dataset="gt21"><summary>Georgia Tech 2021 · gtech_2021_time_oldcmp2.parquet — Not cleared</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/gtech_2021_time_oldcmp2.parquet</code></p>
 <p>6,907,452 rows · 65 columns · 2,366,068,208 bytes. File modification timestamp (ns): <code>1775855304748150800</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Unresolved: Time exports are inventoried but not scientifically reconciled</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Unresolved: Time exports are inventoried but not scientifically reconciled</summary>
 <p>Schemas/rowcounts inventoried for all time exports including oldcmp,oldcmp2 and bt24. Tiny first150rows inspected for non-oldcmp files. Some store reference_leg/collection metadata; none have new observation lineage. GT23 first AB01 weight78.85 matches local Subject_masses.csv, a limited positive cross-check.</p><p><strong>Checked:</strong> No full scan, no raw-waveform equality check, no global duplicate/time-monotonicity check, no checksums computed for multi-GiB artifacts.</p>
-<p><strong>Next step:</strong> Prioritize GT21/GT23 representative source-recording comparison for units, signs, GRF/COP axes, timing and measured mass. oldcmp files are historical comparisons, not independent proof of correctness.</p></section>
+<p><strong>Next step:</strong> Prioritize GT21/GT23 representative source-recording comparison for units, signs, GRF/COP axes, timing and measured mass. oldcmp files are historical comparisons, not independent proof of correctness.</p></details>
 <p><a href="audits/gtech.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-4b0f836a1d99" data-audit-dataset="gt23"><summary>Georgia Tech 2023 · gtech_2023_time.parquet — Not cleared</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/gtech_2023_time.parquet</code></p>
 <p>3,503,556 rows · 63 columns · 1,492,936,155 bytes. File modification timestamp (ns): <code>1784839448051114600</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Unresolved: Time exports are inventoried but not scientifically reconciled</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Unresolved: Time exports are inventoried but not scientifically reconciled</summary>
 <p>Schemas/rowcounts inventoried for all time exports including oldcmp,oldcmp2 and bt24. Tiny first150rows inspected for non-oldcmp files. Some store reference_leg/collection metadata; none have new observation lineage. GT23 first AB01 weight78.85 matches local Subject_masses.csv, a limited positive cross-check.</p><p><strong>Checked:</strong> No full scan, no raw-waveform equality check, no global duplicate/time-monotonicity check, no checksums computed for multi-GiB artifacts.</p>
-<p><strong>Next step:</strong> Prioritize GT21/GT23 representative source-recording comparison for units, signs, GRF/COP axes, timing and measured mass. oldcmp files are historical comparisons, not independent proof of correctness.</p></section>
-<section class="audit-finding"><h3>Sample check passed: Selected source samples match</h3>
+<p><strong>Next step:</strong> Prioritize GT21/GT23 representative source-recording comparison for units, signs, GRF/COP axes, timing and measured mass. oldcmp files are historical comparisons, not independent proof of correctness.</p></details>
+<details class="audit-finding"><summary>Sample check passed: Selected source samples match</summary>
 <p>Eight consecutive rows across nine ipsilateral signals (hip/knee/ankle angles, moments, and anterior/vertical/lateral GRF) exactly match source CSVs after documented signs, units and78.85kg normalization. Parse window22.44–34.81s. Evidence: gtech23-source-probe.json alongside this record.</p><p><strong>Checked:</strong> GT23_AB01 ball_toss center, right reference, source22.440–22.475seconds. Manually matched via stored subject/task_id/variant and unique local parsing name; no immutable recording ID. No inference about other subjects/tasks, contralateral signals, COP, or complete file.</p>
-<p><strong>Next step:</strong> Broaden to independently identified recordings and contralateral/COP checks; add immutable source identity before release.</p></section>
+<p><strong>Next step:</strong> Broaden to independently identified recordings and contralateral/COP checks; add immutable source identity before release.</p></details>
 <p><a href="audits/gtech.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-a2a7b4f300c5" data-audit-dataset="gt24"><summary>Georgia Tech 2024 · gtech_2024_phase.parquet — Needs investigation</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/gtech_2024_phase.parquet</code></p>
 <p>2,977,350 rows · 69 columns · 1,267,676,075 bytes. File modification timestamp (ns): <code>1768509299700518100</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Review needed: Historical phase files lack source lineage and explicit observation semantics</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Review needed: Historical phase files lack source lineage and explicit observation semantics</summary>
 <p>All five phase files lack source_recording_id, observation_id, reference_side and observation_type columns. GT24/25 task_info leg labels partly preserve side but cannot identify source recording. Current converter changes cannot certify these older outputs.</p><p><strong>Checked:</strong> Full schemas, first150rows per phase file; no source reconciliation.</p>
-<p><strong>Next step:</strong> Keep legacy/unreviewed status; compare source-linked reconversion and account for every excluded observation before release.</p></section>
+<p><strong>Next step:</strong> Keep legacy/unreviewed status; compare source-linked reconversion and account for every excluded observation before release.</p></details>
 <p><a href="audits/gtech.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-6c54b73b459e" data-audit-dataset="gt24"><summary>Georgia Tech 2024 · gtech_2024_phase_clean.parquet — Needs investigation</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/gtech_2024_phase_clean.parquet</code></p>
 <p>2,479,950 rows · 69 columns · 1,168,778,257 bytes. File modification timestamp (ns): <code>1768531110570325800</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Review needed: Historical phase files lack source lineage and explicit observation semantics</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Review needed: Historical phase files lack source lineage and explicit observation semantics</summary>
 <p>All five phase files lack source_recording_id, observation_id, reference_side and observation_type columns. GT24/25 task_info leg labels partly preserve side but cannot identify source recording. Current converter changes cannot certify these older outputs.</p><p><strong>Checked:</strong> Full schemas, first150rows per phase file; no source reconciliation.</p>
-<p><strong>Next step:</strong> Keep legacy/unreviewed status; compare source-linked reconversion and account for every excluded observation before release.</p></section>
+<p><strong>Next step:</strong> Keep legacy/unreviewed status; compare source-linked reconversion and account for every excluded observation before release.</p></details>
 <p><a href="audits/gtech.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-8789500284df" data-audit-dataset="gt24"><summary>Georgia Tech 2024 · gtech_2024_time.parquet — Not cleared</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/gtech_2024_time.parquet</code></p>
 <p>8,056,135 rows · 69 columns · 2,523,025,746 bytes. File modification timestamp (ns): <code>1774384970916638900</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Unresolved: Time exports are inventoried but not scientifically reconciled</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Unresolved: Time exports are inventoried but not scientifically reconciled</summary>
 <p>Schemas/rowcounts inventoried for all time exports including oldcmp,oldcmp2 and bt24. Tiny first150rows inspected for non-oldcmp files. Some store reference_leg/collection metadata; none have new observation lineage. GT23 first AB01 weight78.85 matches local Subject_masses.csv, a limited positive cross-check.</p><p><strong>Checked:</strong> No full scan, no raw-waveform equality check, no global duplicate/time-monotonicity check, no checksums computed for multi-GiB artifacts.</p>
-<p><strong>Next step:</strong> Prioritize GT21/GT23 representative source-recording comparison for units, signs, GRF/COP axes, timing and measured mass. oldcmp files are historical comparisons, not independent proof of correctness.</p></section>
+<p><strong>Next step:</strong> Prioritize GT21/GT23 representative source-recording comparison for units, signs, GRF/COP axes, timing and measured mass. oldcmp files are historical comparisons, not independent proof of correctness.</p></details>
 <p><a href="audits/gtech.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-059121c4aab7" data-audit-dataset="gt24"><summary>Georgia Tech 2024 · gtech_2024_time_bt24.parquet — Not cleared</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/gtech_2024_time_bt24.parquet</code></p>
 <p>226,675 rows · 68 columns · 81,477,406 bytes. File modification timestamp (ns): <code>1774381483246856200</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Unresolved: Time exports are inventoried but not scientifically reconciled</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Unresolved: Time exports are inventoried but not scientifically reconciled</summary>
 <p>Schemas/rowcounts inventoried for all time exports including oldcmp,oldcmp2 and bt24. Tiny first150rows inspected for non-oldcmp files. Some store reference_leg/collection metadata; none have new observation lineage. GT23 first AB01 weight78.85 matches local Subject_masses.csv, a limited positive cross-check.</p><p><strong>Checked:</strong> No full scan, no raw-waveform equality check, no global duplicate/time-monotonicity check, no checksums computed for multi-GiB artifacts.</p>
-<p><strong>Next step:</strong> Prioritize GT21/GT23 representative source-recording comparison for units, signs, GRF/COP axes, timing and measured mass. oldcmp files are historical comparisons, not independent proof of correctness.</p></section>
+<p><strong>Next step:</strong> Prioritize GT21/GT23 representative source-recording comparison for units, signs, GRF/COP axes, timing and measured mass. oldcmp files are historical comparisons, not independent proof of correctness.</p></details>
 <p><a href="audits/gtech.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-820cff24245f" data-audit-dataset="gt25d"><summary>Georgia Tech 2025 · gtech_2025_da_phase_clean.parquet — Needs investigation</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/gtech_2025_da_phase_clean.parquet</code></p>
 <p>742,200 rows · 69 columns · 376,133,307 bytes. File modification timestamp (ns): <code>1770321409838968900</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Review needed: Historical phase files lack source lineage and explicit observation semantics</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Review needed: Historical phase files lack source lineage and explicit observation semantics</summary>
 <p>All five phase files lack source_recording_id, observation_id, reference_side and observation_type columns. GT24/25 task_info leg labels partly preserve side but cannot identify source recording. Current converter changes cannot certify these older outputs.</p><p><strong>Checked:</strong> Full schemas, first150rows per phase file; no source reconciliation.</p>
-<p><strong>Next step:</strong> Keep legacy/unreviewed status; compare source-linked reconversion and account for every excluded observation before release.</p></section>
+<p><strong>Next step:</strong> Keep legacy/unreviewed status; compare source-linked reconversion and account for every excluded observation before release.</p></details>
 <p><a href="audits/gtech.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-d5f7a7decde7" data-audit-dataset="gt25d"><summary>Georgia Tech 2025 · gtech_2025_da_phase_dirty.parquet — Needs investigation</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/gtech_2025_da_phase_dirty.parquet</code></p>
 <p>820,500 rows · 69 columns · 368,198,378 bytes. File modification timestamp (ns): <code>1770320217786897100</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Review needed: Historical phase files lack source lineage and explicit observation semantics</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Review needed: Historical phase files lack source lineage and explicit observation semantics</summary>
 <p>All five phase files lack source_recording_id, observation_id, reference_side and observation_type columns. GT24/25 task_info leg labels partly preserve side but cannot identify source recording. Current converter changes cannot certify these older outputs.</p><p><strong>Checked:</strong> Full schemas, first150rows per phase file; no source reconciliation.</p>
-<p><strong>Next step:</strong> Keep legacy/unreviewed status; compare source-linked reconversion and account for every excluded observation before release.</p></section>
+<p><strong>Next step:</strong> Keep legacy/unreviewed status; compare source-linked reconversion and account for every excluded observation before release.</p></details>
 <p><a href="audits/gtech.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-4c09102b1b44" data-audit-dataset="ga26"><summary>Gait120 · gait120_opensim_phase.parquet — Not cleared</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/gait120_opensim_phase.parquet</code></p>
 <p>1,032,300 rows · 62 columns · 338,954,557 bytes. File modification timestamp (ns): <code>1770381711836316100</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Unresolved: Historical artifacts lack modern lineage fields</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Unresolved: Historical artifacts lack modern lineage fields</summary>
 <p>All nine files have Arrow/pandas metadata only and no source_recording_id, observation_id or reference_side columns. No bound release assessment or source checksum is embedded.</p><p><strong>Checked:</strong> Complete schemas/footer inspection, not proof that no external records exist.</p>
-<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></section>
+<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></details>
 <p><a href="audits/remaining.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-929620200b68" data-audit-dataset="ga26"><summary>Gait120 · gait120_phase.parquet — Problem found</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/gait120_phase.parquet</code></p>
 <p>1,500 rows · 62 columns · 654,587 bytes. File modification timestamp (ns): <code>1769706473318712000</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Observed problem: Named full and clean files cannot form a filtered pair</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Observed problem: Named full and clean files cannot form a filtered pair</summary>
 <p>phase has 1,500 rows; phase_clean has 30,300 rows. The latter is larger and first subject differs. No lineage manifest identifies its actual full parent.</p><p><strong>Checked:</strong> Complete parquet footer row counts.</p>
-<p><strong>Next step:</strong> Map each variant to an immutable source lineage and publish exclusions by observation identity; never present these two files as paired releases.</p></section>
-<section class="audit-finding"><h3>Numeric anomaly — cause unverified: Needs investigation: extreme numeric moment anomaly</h3>
+<p><strong>Next step:</strong> Map each variant to an immutable source lineage and publish exclusions by observation identity; never present these two files as paired releases.</p></details>
+<details class="audit-finding"><summary>Numeric anomaly — cause unverified: Needs investigation: extreme numeric moment anomaly</summary>
 <p>First 150 rows: contra hip max 560.524, knee 670.992, ankle 665.504 Nm/kg; ipsi hip min -19.218 and knee min -17.909 Nm/kg. This is a different file from the catalog OpenSim artifact. These numbers alone do not establish an incorrect unit or physiological cause; no source inverse-dynamics output was reconciled.</p><p><strong>Checked:</strong> First curve only; numeric values verified, physical cause not established.</p>
-<p><strong>Next step:</strong> Quarantine this legacy artifact; reconcile OpenSim external loads, inverse dynamics residuals, mass normalization and reference sides against original recordings.</p></section>
-<section class="audit-finding"><h3>Unresolved: Historical artifacts lack modern lineage fields</h3>
+<p><strong>Next step:</strong> Quarantine this legacy artifact; reconcile OpenSim external loads, inverse dynamics residuals, mass normalization and reference sides against original recordings.</p></details>
+<details class="audit-finding"><summary>Unresolved: Historical artifacts lack modern lineage fields</summary>
 <p>All nine files have Arrow/pandas metadata only and no source_recording_id, observation_id or reference_side columns. No bound release assessment or source checksum is embedded.</p><p><strong>Checked:</strong> Complete schemas/footer inspection, not proof that no external records exist.</p>
-<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></section>
+<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></details>
 <p><a href="audits/remaining.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-807cd2bfdbf7" data-audit-dataset="ga26"><summary>Gait120 · gait120_phase_clean.parquet — Problem found</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/gait120_phase_clean.parquet</code></p>
 <p>30,300 rows · 40 columns · 9,359,859 bytes. File modification timestamp (ns): <code>1769107786880284900</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Observed problem: Stored body mass disagrees with source spreadsheet</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Observed problem: Stored body mass disagrees with source spreadsheet</summary>
 <p>First curve G120_S009 says weight_kg:75.0; committed Anthropometric_Data_Participants.xlsx YG S009 has Bodymass(Kg)=76.3. Complete identity scan finds all ten subjects S001-S010 in clean file have weight_kg:75.0, not just S009; their committed YG masses range 48.2 to85kg.</p><p><strong>Checked:</strong> First curve and independent local spreadsheet lookup; no inference that every normalized channel is affected.</p>
-<p><strong>Next step:</strong> Resolve original generation inputs and regenerate affected normalizations only from verified masses.</p></section>
-<section class="audit-finding"><h3>Observed problem: Named full and clean files cannot form a filtered pair</h3>
+<p><strong>Next step:</strong> Resolve original generation inputs and regenerate affected normalizations only from verified masses.</p></details>
+<details class="audit-finding"><summary>Observed problem: Named full and clean files cannot form a filtered pair</summary>
 <p>phase has 1,500 rows; phase_clean has 30,300 rows. The latter is larger and first subject differs. No lineage manifest identifies its actual full parent.</p><p><strong>Checked:</strong> Complete parquet footer row counts.</p>
-<p><strong>Next step:</strong> Map each variant to an immutable source lineage and publish exclusions by observation identity; never present these two files as paired releases.</p></section>
-<section class="audit-finding"><h3>Unresolved: Historical artifacts lack modern lineage fields</h3>
+<p><strong>Next step:</strong> Map each variant to an immutable source lineage and publish exclusions by observation identity; never present these two files as paired releases.</p></details>
+<details class="audit-finding"><summary>Unresolved: Historical artifacts lack modern lineage fields</summary>
 <p>All nine files have Arrow/pandas metadata only and no source_recording_id, observation_id or reference_side columns. No bound release assessment or source checksum is embedded.</p><p><strong>Checked:</strong> Complete schemas/footer inspection, not proof that no external records exist.</p>
-<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></section>
+<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></details>
 <p><a href="audits/remaining.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-09efa16ebb88" data-audit-dataset="mb24"><summary>MBLUE Ankle · mblue_ankle_phase.parquet — Problem found</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/mblue_ankle_phase.parquet</code></p>
 <p>2,373,750 rows · 52 columns · 843,082,791 bytes. File modification timestamp (ns): <code>1768251391441420600</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Observed problem: Legacy MBLUE observation keys collide across conditions</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Observed problem: Legacy MBLUE observation keys collide across conditions</summary>
 <p>Complete scan: (subject,task,step) has 6,651 full-file keys with &gt;150 rows and mixed task_info, including 804 mixed task_id keys; filtered file has 5,930 such keys including 573 mixed task_id keys. This makes global grouping by legacy key unsafe. Current preview exporter deliberately segments contiguous phase-reset runs and therefore does not use that unsafe global grouping.</p><p><strong>Checked:</strong> Complete projected identity and phase scan; not numeric duplicate comparison.</p>
-<p><strong>Next step:</strong> Assign stable source-recording/condition/reference-side observation identities and verify filtering operates on those identities. Keep mixed speed/exo conditions explicit in comparisons.</p></section>
-<section class="audit-finding"><h3>Unresolved: Historical artifacts lack modern lineage fields</h3>
+<p><strong>Next step:</strong> Assign stable source-recording/condition/reference-side observation identities and verify filtering operates on those identities. Keep mixed speed/exo conditions explicit in comparisons.</p></details>
+<details class="audit-finding"><summary>Unresolved: Historical artifacts lack modern lineage fields</summary>
 <p>All nine files have Arrow/pandas metadata only and no source_recording_id, observation_id or reference_side columns. No bound release assessment or source checksum is embedded.</p><p><strong>Checked:</strong> Complete schemas/footer inspection, not proof that no external records exist.</p>
-<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></section>
-<section class="audit-finding"><h3>Unresolved: MBLUE full/filtered exclusions have no verified ledger</h3>
+<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></details>
+<details class="audit-finding"><summary>Unresolved: MBLUE full/filtered exclusions have no verified ledger</summary>
 <p>Full has 2,373,750 rows and clean 2,125,950 (difference 247,800 = 1,652 150-point curves). Counts alone do not prove subset identity, equal values, or approved population-specific filtering.</p><p><strong>Checked:</strong> Complete footer counts; signal-by-signal subset comparison not run.</p>
-<p><strong>Next step:</strong> Verify observation subset and unchanged retained values, log each exclusion reason and approved range applicability; separate exo/speed/task conditions in interpretations.</p></section>
+<p><strong>Next step:</strong> Verify observation subset and unchanged retained values, log each exclusion reason and approved range applicability; separate exo/speed/task conditions in interpretations.</p></details>
 <p><a href="audits/remaining.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-943ba6ec0791" data-audit-dataset="mb24"><summary>MBLUE Ankle · mblue_ankle_phase_clean.parquet — Problem found</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/mblue_ankle_phase_clean.parquet</code></p>
 <p>2,125,950 rows · 52 columns · 774,806,595 bytes. File modification timestamp (ns): <code>1768271616704213100</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Observed problem: Legacy MBLUE observation keys collide across conditions</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Observed problem: Legacy MBLUE observation keys collide across conditions</summary>
 <p>Complete scan: (subject,task,step) has 6,651 full-file keys with &gt;150 rows and mixed task_info, including 804 mixed task_id keys; filtered file has 5,930 such keys including 573 mixed task_id keys. This makes global grouping by legacy key unsafe. Current preview exporter deliberately segments contiguous phase-reset runs and therefore does not use that unsafe global grouping.</p><p><strong>Checked:</strong> Complete projected identity and phase scan; not numeric duplicate comparison.</p>
-<p><strong>Next step:</strong> Assign stable source-recording/condition/reference-side observation identities and verify filtering operates on those identities. Keep mixed speed/exo conditions explicit in comparisons.</p></section>
-<section class="audit-finding"><h3>Unresolved: Historical artifacts lack modern lineage fields</h3>
+<p><strong>Next step:</strong> Assign stable source-recording/condition/reference-side observation identities and verify filtering operates on those identities. Keep mixed speed/exo conditions explicit in comparisons.</p></details>
+<details class="audit-finding"><summary>Unresolved: Historical artifacts lack modern lineage fields</summary>
 <p>All nine files have Arrow/pandas metadata only and no source_recording_id, observation_id or reference_side columns. No bound release assessment or source checksum is embedded.</p><p><strong>Checked:</strong> Complete schemas/footer inspection, not proof that no external records exist.</p>
-<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></section>
-<section class="audit-finding"><h3>Unresolved: MBLUE full/filtered exclusions have no verified ledger</h3>
+<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></details>
+<details class="audit-finding"><summary>Unresolved: MBLUE full/filtered exclusions have no verified ledger</summary>
 <p>Full has 2,373,750 rows and clean 2,125,950 (difference 247,800 = 1,652 150-point curves). Counts alone do not prove subset identity, equal values, or approved population-specific filtering.</p><p><strong>Checked:</strong> Complete footer counts; signal-by-signal subset comparison not run.</p>
-<p><strong>Next step:</strong> Verify observation subset and unchanged retained values, log each exclusion reason and approved range applicability; separate exo/speed/task conditions in interpretations.</p></section>
+<p><strong>Next step:</strong> Verify observation subset and unchanged retained values, log each exclusion reason and approved range applicability; separate exo/speed/task conditions in interpretations.</p></details>
 <p><a href="audits/remaining.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-c84369875231" data-audit-dataset="sp50"><summary>StrokePiG · strokepig_phase.parquet — Needs investigation</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>contributor_tools/conversion_scripts/StrokePiG/contributor_tools/conversion_scripts/StrokePiG/converted_datasets/strokepig_phase.parquet</code></p>
 <p>450 rows · 62 columns · 198,491 bytes. File modification timestamp (ns): <code>1770412112876894100</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Review needed: Clinical laterality remains unverified in historical StrokePiG</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Review needed: Clinical laterality remains unverified in historical StrokePiG</summary>
 <p>Sampled artifacts claim affected_side:L. Current metadata_parser.py explicitly says affected side is unavailable in dataset files and requires an externally supplied map, defaulting unknown. No source map was established by this audit.</p><p><strong>Checked:</strong> First row per artifact plus current parser; not proof L is false for these people.</p>
-<p><strong>Next step:</strong> Require clinical laterality evidence or relabel affected side unknown while preserving anatomical reference side.</p></section>
-<section class="audit-finding"><h3>Unresolved: Historical artifacts lack modern lineage fields</h3>
+<p><strong>Next step:</strong> Require clinical laterality evidence or relabel affected side unknown while preserving anatomical reference side.</p></details>
+<details class="audit-finding"><summary>Unresolved: Historical artifacts lack modern lineage fields</summary>
 <p>All nine files have Arrow/pandas metadata only and no source_recording_id, observation_id or reference_side columns. No bound release assessment or source checksum is embedded.</p><p><strong>Checked:</strong> Complete schemas/footer inspection, not proof that no external records exist.</p>
-<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></section>
+<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></details>
 <p><a href="audits/remaining.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-27d32edffa51" data-audit-dataset="sp50"><summary>StrokePiG · strokepig_phase.parquet — Needs investigation</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>contributor_tools/conversion_scripts/StrokePiG/converted_datasets/strokepig_phase.parquet</code></p>
 <p>21,600 rows · 62 columns · 8,181,369 bytes. File modification timestamp (ns): <code>1770415384279008600</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Review needed: StrokePiG preview and historical checks refer to different files</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Review needed: StrokePiG preview and historical checks refer to different files</summary>
 <p>build_data_previews.py SOURCES and current aggregate previews use root converted_datasets/strokepig_phase.parquet (450 rows); docs/datasets/sp50/index.html feature-source and report footer name nested converter/converted_datasets file (21,600 rows). A second deeply nested duplicate-name artifact has 450 rows.</p><p><strong>Checked:</strong> All three footer counts and exact source references inspected.</p>
-<p><strong>Next step:</strong> Give each artifact a version and clear coverage; align preview and checks to same fingerprint before presenting a combined dataset verdict.</p></section>
-<section class="audit-finding"><h3>Review needed: Clinical laterality remains unverified in historical StrokePiG</h3>
+<p><strong>Next step:</strong> Give each artifact a version and clear coverage; align preview and checks to same fingerprint before presenting a combined dataset verdict.</p></details>
+<details class="audit-finding"><summary>Review needed: Clinical laterality remains unverified in historical StrokePiG</summary>
 <p>Sampled artifacts claim affected_side:L. Current metadata_parser.py explicitly says affected side is unavailable in dataset files and requires an externally supplied map, defaulting unknown. No source map was established by this audit.</p><p><strong>Checked:</strong> First row per artifact plus current parser; not proof L is false for these people.</p>
-<p><strong>Next step:</strong> Require clinical laterality evidence or relabel affected side unknown while preserving anatomical reference side.</p></section>
-<section class="audit-finding"><h3>Unresolved: Historical artifacts lack modern lineage fields</h3>
+<p><strong>Next step:</strong> Require clinical laterality evidence or relabel affected side unknown while preserving anatomical reference side.</p></details>
+<details class="audit-finding"><summary>Unresolved: Historical artifacts lack modern lineage fields</summary>
 <p>All nine files have Arrow/pandas metadata only and no source_recording_id, observation_id or reference_side columns. No bound release assessment or source checksum is embedded.</p><p><strong>Checked:</strong> Complete schemas/footer inspection, not proof that no external records exist.</p>
-<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></section>
+<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></details>
 <p><a href="audits/remaining.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-90f9ce5d354a" data-audit-dataset="sp50"><summary>StrokePiG · strokepig_phase.parquet — Needs investigation</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/strokepig_phase.parquet</code></p>
 <p>450 rows · 62 columns · 198,491 bytes. File modification timestamp (ns): <code>1770317385507656400</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Review needed: StrokePiG preview and historical checks refer to different files</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Review needed: StrokePiG preview and historical checks refer to different files</summary>
 <p>build_data_previews.py SOURCES and current aggregate previews use root converted_datasets/strokepig_phase.parquet (450 rows); docs/datasets/sp50/index.html feature-source and report footer name nested converter/converted_datasets file (21,600 rows). A second deeply nested duplicate-name artifact has 450 rows.</p><p><strong>Checked:</strong> All three footer counts and exact source references inspected.</p>
-<p><strong>Next step:</strong> Give each artifact a version and clear coverage; align preview and checks to same fingerprint before presenting a combined dataset verdict.</p></section>
-<section class="audit-finding"><h3>Review needed: Clinical laterality remains unverified in historical StrokePiG</h3>
+<p><strong>Next step:</strong> Give each artifact a version and clear coverage; align preview and checks to same fingerprint before presenting a combined dataset verdict.</p></details>
+<details class="audit-finding"><summary>Review needed: Clinical laterality remains unverified in historical StrokePiG</summary>
 <p>Sampled artifacts claim affected_side:L. Current metadata_parser.py explicitly says affected side is unavailable in dataset files and requires an externally supplied map, defaulting unknown. No source map was established by this audit.</p><p><strong>Checked:</strong> First row per artifact plus current parser; not proof L is false for these people.</p>
-<p><strong>Next step:</strong> Require clinical laterality evidence or relabel affected side unknown while preserving anatomical reference side.</p></section>
-<section class="audit-finding"><h3>Unresolved: Historical artifacts lack modern lineage fields</h3>
+<p><strong>Next step:</strong> Require clinical laterality evidence or relabel affected side unknown while preserving anatomical reference side.</p></details>
+<details class="audit-finding"><summary>Unresolved: Historical artifacts lack modern lineage fields</summary>
 <p>All nine files have Arrow/pandas metadata only and no source_recording_id, observation_id or reference_side columns. No bound release assessment or source checksum is embedded.</p><p><strong>Checked:</strong> Complete schemas/footer inspection, not proof that no external records exist.</p>
-<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></section>
+<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></details>
 <p><a href="audits/remaining.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="audit-evidence" id="audit-c3d9e545e745" data-audit-dataset="sp50"><summary>StrokePiG · strokepig_test_ik.parquet — Needs investigation</summary>
+<details class="audit-file-metadata"><summary>File identity and audit limits</summary>
 <p><strong>Exact local path:</strong> <code>converted_datasets/strokepig_test_ik.parquet</code></p>
 <p>450 rows · 62 columns · 215,537 bytes. File modification timestamp (ns): <code>1770320118041200500</code>.</p>
-<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p>
-<section class="audit-finding"><h3>Review needed: Clinical laterality remains unverified in historical StrokePiG</h3>
+<p class="audit-limitation">Identity is recorded by path, byte size and modification time. No full-file content hash or online-download match was established. These findings must not be transferred to a different version based on its filename.</p></details>
+<details class="audit-finding"><summary>Review needed: Clinical laterality remains unverified in historical StrokePiG</summary>
 <p>Sampled artifacts claim affected_side:L. Current metadata_parser.py explicitly says affected side is unavailable in dataset files and requires an externally supplied map, defaulting unknown. No source map was established by this audit.</p><p><strong>Checked:</strong> First row per artifact plus current parser; not proof L is false for these people.</p>
-<p><strong>Next step:</strong> Require clinical laterality evidence or relabel affected side unknown while preserving anatomical reference side.</p></section>
-<section class="audit-finding"><h3>Unresolved: Historical artifacts lack modern lineage fields</h3>
+<p><strong>Next step:</strong> Require clinical laterality evidence or relabel affected side unknown while preserving anatomical reference side.</p></details>
+<details class="audit-finding"><summary>Unresolved: Historical artifacts lack modern lineage fields</summary>
 <p>All nine files have Arrow/pandas metadata only and no source_recording_id, observation_id or reference_side columns. No bound release assessment or source checksum is embedded.</p><p><strong>Checked:</strong> Complete schemas/footer inspection, not proof that no external records exist.</p>
-<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></section>
+<p><strong>Next step:</strong> Reconcile source recording/anatomical identity and create immutable release manifests before approving release.</p></details>
 <p><a href="audits/remaining.json">Full investigation record, including positive evidence and limitations (JSON)</a></p></details>
 <details class="quality-disclosure"><summary>Converter-code risks — not proof every stored file is affected</summary><p>These are paths in current conversion code that need correction or source verification. Historical files may have been produced by different code.</p>
 <section class="audit-finding"><h3>Transfer timing is assigned by sequence without an established source match</h3><p>Lines1788–1815 assign detected Streaming durations to Normalized cycles by ordinal. Source AB01 has7Sts trials but14normalized sit2stand curves (L/R concatenation). Current get_sts_duration returnsNaN beyond duration list; historical raw sampled transfer time0–0.73s cannot be independently linked through existing output provenance. Comment2285 explicitly says no source time correspondence.</p>
@@ -359,9 +382,9 @@
 </details>
 <details class="quality-disclosure"><summary>What about the online downloads?</summary><p>No online download was retrieved and hash-matched during this local audit. Their current status is <strong>Not assessed as exact downloadable files</strong>. Local findings are useful warnings, but are not a hash-bound verdict on those bytes. Select the local file evidence above before making any inference.</p><p><a href="../datasets/index.html">Catalog and download links</a></p></details>
 <!-- AUDIT_EVIDENCE_END -->
-<p>Detailed probe results: <a href="audits/gtech23-source-probe.json">Georgia Tech 2023 source comparison</a> · <a href="audits/remaining-probes.json">Other datasets: numerical samples</a> · <a href="audits/remaining-scan.json">Other datasets: identity scans</a>.</p>
+<details class="quality-disclosure"><summary>Download detailed audit results</summary><p>Detailed probe results: <a href="audits/gtech23-source-probe.json">Georgia Tech 2023 source comparison</a> · <a href="audits/remaining-probes.json">Other datasets: numerical samples</a> · <a href="audits/remaining-scan.json">Other datasets: identity scans</a>.</p></details>
 </section>
-<h2 id="checks">What each check can tell you</h2>
+<details class="quality-disclosure" id="checks"><summary>What do the different checks mean?</summary>
 <p>These describe the checking tools. They are not a claim that every rule ran on every file. The file audit above gives the actual coverage and findings.</p><div class="table-scroll" role="region" aria-label="Types of data check" tabindex="0"><table><caption>Different checks answer different questions</caption><thead><tr><th>Check</th><th>What the check looks for</th><th>What it cannot establish</th></tr></thead><tbody>
 <tr><td>Observation identity and file structure</td><td>Missing or inconsistent recording/observation IDs, unknown tasks or reference sides, duplicate samples, malformed 150-point phase grids, and invalid time order.</td><td>Whether the original gait events or limb assignments are scientifically correct.</td></tr>
 <tr><td>Missing and invalid signals</td><td>Required versus optional channels; missing, nonfinite, failed and unchecked values stay separate.</td><td>A missing measurement cannot be recovered by passing another check.</td></tr>
@@ -374,6 +397,7 @@
 </tbody></table></div>
 <p>See the <a href="../contributing/index.html">contributor workflow</a> and <a href="../maintainers/index.html#review-a-prepared-release">release review checklist</a> for how these checks fit together.</p>
 
+</details>
 <details class="quality-disclosure" id="test-results"><summary>Software tests — checking the tools, not approving the data</summary>
 <p>These are recorded tests of small known inputs and source code. Full-data tests that were not run are listed explicitly. They are separate from the local-file audit above.</p>
 <div id="quality-test-results" data-source="test_results.json">Loading recorded software-test results…</div>
@@ -382,12 +406,13 @@
 <details class="quality-disclosure" id="summary-coverage"><summary>How the preview plots were prepared</summary>
 <p>The plot exporter reads contiguous, ordered 150-point blocks on a common phase grid before averaging. These blocks are not proof of unique source observations. Excluded blocks below are omissions from plot preparation, not biomechanical quality failures. The input file is shown so coverage is not mistaken for a result about a different download.</p>
 <div id="quality-coverage">Loading preview preparation counts…</div></details>
-<h2 id="range-explorer">Explore configured bounds — reference only</h2>
+<details class="quality-disclosure" id="range-explorer"><summary>Explore phase ranges</summary>
 <p class="quality-task-note">Choose a dataset, task, subject and signal. Dashed boxes show the configured minimum and maximum at specific phase samples. Their width is only for visibility; it is not a time window. The curve is an average, so a curve inside the boxes does not mean every observation passed.</p>
 <p class="catalog-note"><strong>Applicability not established.</strong> No population/condition match or approval has been established for this reference overlay. The datasets used to tune these limits are not documented. These are the current <strong>manually tuned default ranges</strong>, shown for inspection. They may not apply to every population or condition and are not the historical rule snapshot for each download. We do not turn this overlay into a dataset pass/fail score.</p>
 <label for="quality-dataset">Dataset <select id="quality-dataset"><option value="">Choose a dataset to explore</option></select></label>
 <section class="phase-explorer" id="quality-phase" data-aggregate-source="../datasets/aggregate_previews/manifest.json" aria-label="Inspect configured phase ranges"><p class="phase-source"></p><p class="phase-note">Choose a dataset above to inspect its averages. This is not a validation result.</p><div class="phase-controls"></div><div class="phase-plot"></div></section>
 <p id="quality-profile-source"></p><p><a href="phase_ranges.json">Download the displayed bounds and source checksum</a> · <a href="https://github.com/jmontp/LocoHub/blob/review/data-first-overhaul/contributor_tools/validation_ranges/default_ranges.yaml">Source YAML</a></p>
+</details>
 <noscript><p>Interactive charts and recorded-result tables require JavaScript. The JSON downloads above contain the same evidence.</p></noscript>
 </main></div>
   <footer class="site-footer"><p>LocoHub</p><nav aria-label="Additional links"><a href="../contributing/index.html">Contribute data</a><a href="../maintainers/index.html">Maintainers</a><a href="../reference/index.html#release-evidence">Download notes</a><a href="https://github.com/jmontp/LocoHub/issues">Report an issue</a></nav></footer>

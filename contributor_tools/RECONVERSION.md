@@ -212,3 +212,46 @@ candidate-level segmentation exclusion ledger remains outstanding. A complete
 source inventory therefore does not mean that every possible gait event was
 retained. Scientific review of event definitions, coordinate conventions, and
 profile applicability remains necessary before creating a reviewed release.
+
+## Corrected reconstruction started after the adversarial audit (20 October 2026)
+
+Current storage check: S has about 15 GiB free; C has less than 1 GiB. Outputs stay
+on S; WSL's large apparent free capacity is not additional Windows backing space.
+The 5 GiB output-volume floor still applies.
+
+`reconvert_umich_streaming.py` reads individual source windows from UM21's HDF5 MAT
+file with a 768 MiB address-space cap. It writes one Parquet per treadmill
+recording, unique source/frame/side identities, an accounted candidate ledger,
+source/output hashes, and an unreviewed summary. It uses simultaneous bilateral
+samples and the measured heel-strike interval, including both endpoints, rather
+than a supplied duration that might disagree with those endpoints. Derivatives
+span 149 intervals. Segment-chain angles are explicitly derived.
+
+This is **partial kinematics staging**, not a complete corrected replacement:
+only treadmill sagittal hip/knee signals and derived thigh/shank angles are
+standardized. Original ankle values remain in `source_ankle_sagittal_angle_*`;
+canonical ankle values are missing pending offset review. Kinetics, other tasks,
+and normalized transfers are not included. Transfer timing and anatomical pairing
+are not inferred from normalized array order. Historical MATLAB transfer handling
+and the GT21 native conversion still require follow-up before production use.
+
+Pilot: `converted_datasets/reconversion_v2/um21_tread_pilot_20261020/` contains
+183 observations / 27,450 rows from AB01/d10. All output IDs and phase endpoints
+were checked; three cycles independently match both source hip/knee channels to
+within 5.1e-14 radians, with correctly scaled central-difference velocities.
+77 consecutive source event pairs fall outside or ambiguously across labeled task
+intervals and are retained in the exclusion ledger. This is not release approval.
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 nice -n 19 ionice -c 3 \
+  python3 contributor_tools/reconvert_umich_streaming.py \
+  --output-root converted_datasets/reconversion_v2/um21_tread_corrected_20261020
+```
+
+The 50-recording UM21 treadmill run is followed serially by the existing bounded
+GT24 Phase3 and Phase1And2 conversion workers. Queue status and log are under
+`converted_datasets/reconversion_v2/fixed_data_queue_20261020/`. Each dataset has
+a separate output directory. A queue-level `STOP_AFTER_CURRENT` prevents the next
+dataset from starting; to stop the active dataset at its next recording boundary,
+create the same file in that dataset's output root. Failure or storage hold stops
+the queue. Existing historical files are never overwritten.

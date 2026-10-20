@@ -34,17 +34,20 @@
   families.forEach((name,slug)=>filter.add(new Option(name,slug)));
   filter.parentElement.hidden=false;
   filter.onchange=()=>{
-    document.querySelectorAll('[data-audit-dataset]').forEach(el=>{el.hidden=!!filter.value && el.dataset.auditDataset!==filter.value;});
-    document.getElementById('audit-filter-status').textContent=`${auditRows.filter(r=>!r.hidden).length} local files shown. No file has release approval from this audit.`;
+    document.querySelectorAll('[data-audit-dataset]').forEach(el=>{el.hidden=el.classList.contains('audit-evidence') || (!!filter.value && el.dataset.auditDataset!==filter.value);if(el.classList.contains('audit-evidence'))el.open=false;});
+    document.getElementById('audit-filter-status').textContent=`${auditRows.filter(r=>!r.hidden).length} files. Select a file to see its findings.`;
   };
   function openEvidence(){
     const detail=document.getElementById(location.hash.slice(1));
     if(detail?.classList.contains('audit-evidence')){
-      if(detail.hidden){filter.value=detail.dataset.auditDataset;filter.onchange();}
-      detail.open=true;detail.querySelector('summary').focus();
+      filter.value=detail.dataset.auditDataset;filter.onchange();
+      detail.hidden=false;detail.open=true;detail.querySelector('summary').focus();
     }
   }
+  filter.value='um21';filter.onchange();
+  document.querySelectorAll('.audit-table a').forEach(link=>link.addEventListener('click',()=>{if(link.hash===location.hash)openEvidence();}));
   window.addEventListener('hashchange',openEvidence);openEvidence();
+  document.querySelectorAll('.quality-nav a').forEach(link=>link.addEventListener('click',()=>{const target=document.querySelector(link.hash);if(target?.tagName==='DETAILS')target.open=true;}));
   const panel=document.getElementById('quality-phase'),select=document.getElementById('quality-dataset');
   let profile,manifest,change=0;
   async function mount() {
