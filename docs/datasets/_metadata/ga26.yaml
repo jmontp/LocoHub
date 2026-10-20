@@ -41,22 +41,22 @@ notes: '- Joint angles computed via OpenSim inverse kinematics
   '
 date_added: '2026-01-22'
 validation_status: "\u274C NEEDS REVIEW"
-validation_pass_rate: 74.5
+validation_pass_rate: 25.6
 total_strides: 6882
-passing_strides: 5129
-quality_display: "\u274C Needs Review (74.5%)"
+passing_strides: 1761
+quality_display: "\u274C Needs Review (25.6%)"
 doc_url: https://jmontp.github.io/LocoHub/datasets/ga26/
 doc_path: docs/datasets/ga26.md
 doc_body_path: docs/datasets/.generated/ga26_documentation.md
 validation_doc_url: https://jmontp.github.io/LocoHub/datasets/ga26/#validation
 validation_doc_path: docs/datasets/ga26.md#validation
 validation_body_path: docs/datasets/.generated/ga26_validation.md
-validation_summary: "### Summary\n\n**Status**: \u274C NEEDS REVIEW (74.5% valid)\
-  \  \n**Total Strides**: 6882  \n**Passing Strides**: 5129  \n\n### Task Breakdown\n\
+validation_summary: "### Summary\n\n**Status**: \u274C NEEDS REVIEW (25.6% valid)\
+  \  \n**Total Strides**: 6882  \n**Passing Strides**: 1761  \n\n### Task Breakdown\n\
   \n| Task | Pass Rate | Status |\n|------|-----------|--------|\n| Decline Walking\
-  \ | 97.7% | \u2705 |\n| Incline Walking | 98.3% | \u2705 |\n| Level Walking | 42.3%\
-  \ | \u274C |\n| Sit To Stand | 30.8% | \u274C |\n| Stair Ascent | 99.8% | \u2705\
-  \ |\n| Stair Descent | 66.9% | \u274C |\n| Stand To Sit | 44.8% | \u274C |\n\n_Validation\
+  \ | 0.9% | \u274C |\n| Incline Walking | 36.4% | \u274C |\n| Level Walking | 7.3%\
+  \ | \u274C |\n| Sit To Stand | 32.8% | \u274C |\n| Stair Ascent | 69.0% | \u274C\
+  \ |\n| Stair Descent | 0.8% | \u274C |\n| Stand To Sit | 41.3% | \u274C |\n\n_Validation\
   \ ranges snapshot embedded below._\n\n\u26A0\uFE0F **Note**: Validation ranges represent\
   \ established biomechanical norms from literature. Pass rates indicate conformance\
   \ to these norms\u2014lower rates may reflect special populations, non-standard\
@@ -67,41 +67,319 @@ validation_ranges_download: docs/datasets/ga26_validation_ranges.yaml
 validation_ranges_source: contributor_tools/validation_ranges/default_ranges.yaml
 comparison_tasks:
   decline_walking:
-    pass_rate: 97.65217391304348
-    status: "\u2705"
+    pass_rate: 0.8695652173912993
+    status: "\u274C"
     total_strides: 1150
-    failing_strides: 27
+    failing_strides: 1140
   incline_walking:
-    pass_rate: 98.29351535836177
-    status: "\u2705"
+    pass_rate: 36.43344709897611
+    status: "\u274C"
     total_strides: 1172
-    failing_strides: 20
+    failing_strides: 745
   level_walking:
-    pass_rate: 42.26415094339623
+    pass_rate: 7.26415094339623
     status: "\u274C"
     total_strides: 1060
-    failing_strides: 612
+    failing_strides: 983
   sit_to_stand:
-    pass_rate: 30.824372759856633
+    pass_rate: 32.795698924731184
     status: "\u274C"
     total_strides: 558
-    failing_strides: 386
+    failing_strides: 375
   stair_ascent:
-    pass_rate: 99.83150800336983
-    status: "\u2705"
+    pass_rate: 68.99747262005054
+    status: "\u274C"
     total_strides: 1187
-    failing_strides: 2
+    failing_strides: 368
   stair_descent:
-    pass_rate: 66.94772344013491
+    pass_rate: 0.8431703204047181
     status: "\u274C"
     total_strides: 1186
-    failing_strides: 392
+    failing_strides: 1176
   stand_to_sit:
-    pass_rate: 44.81546572934973
+    pass_rate: 41.30052724077329
     status: "\u274C"
     total_strides: 569
-    failing_strides: 314
+    failing_strides: 334
 feature_task_groups:
+- group: Ground Reaction Forces
+  features:
+  - name: grf_anterior_contra_BW
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 53.2
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: grf_anterior_contra_N
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 53.2
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: grf_anterior_ipsi_BW
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 90.8
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: grf_anterior_ipsi_N
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 90.8
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: grf_lateral_contra_BW
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 53.2
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: grf_lateral_contra_N
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 53.2
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: grf_lateral_ipsi_BW
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 90.8
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: grf_lateral_ipsi_N
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 90.8
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: grf_vertical_contra_BW
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 53.2
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: grf_vertical_contra_N
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 53.2
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: grf_vertical_ipsi_BW
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 90.8
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: grf_vertical_ipsi_N
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 90.8
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
 - group: Joint Angles
   features:
   - name: ankle_dorsiflexion_angle_contra_rad
@@ -110,11 +388,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -133,11 +411,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -156,11 +434,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -179,11 +457,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -202,11 +480,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -225,11 +503,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -248,11 +526,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -271,11 +549,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -294,11 +572,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -317,11 +595,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -340,11 +618,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -363,11 +641,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -386,11 +664,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -403,6 +681,146 @@ feature_task_groups:
       stand_to_sit:
         status: complete
         coverage: 100.0
+- group: Joint Moments
+  features:
+  - name: ankle_dorsiflexion_moment_contra_Nm_kg
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 90.4
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: ankle_dorsiflexion_moment_ipsi_Nm_kg
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 90.4
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: hip_flexion_moment_contra_Nm_kg
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 90.4
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: hip_flexion_moment_ipsi_Nm_kg
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 90.4
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: knee_flexion_moment_contra_Nm_kg
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 90.4
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: knee_flexion_moment_ipsi_Nm_kg
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 90.4
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
 - group: Joint Velocities
   features:
   - name: ankle_dorsiflexion_velocity_contra_rad_s
@@ -411,11 +829,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -434,11 +852,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -457,11 +875,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -480,11 +898,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -503,11 +921,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -526,11 +944,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -549,11 +967,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -572,11 +990,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -595,11 +1013,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -618,11 +1036,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -641,11 +1059,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -664,11 +1082,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -687,11 +1105,11 @@ feature_task_groups:
         status: complete
         coverage: 100.0
       incline_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       level_walking:
-        status: missing
-        coverage: 0.0
+        status: complete
+        coverage: 100.0
       sit_to_stand:
         status: complete
         coverage: 100.0
@@ -704,6 +1122,100 @@ feature_task_groups:
       stand_to_sit:
         status: complete
         coverage: 100.0
+- group: Other Features
+  features:
+  - name: cop_anterior_contra_m
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 29.8
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: cop_anterior_ipsi_m
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 29.9
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: cop_lateral_contra_m
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 29.8
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
+  - name: cop_lateral_ipsi_m
+    tasks:
+      decline_walking:
+        status: missing
+        coverage: 0.0
+      incline_walking:
+        status: missing
+        coverage: 0.0
+      level_walking:
+        status: partial
+        coverage: 29.9
+      sit_to_stand:
+        status: missing
+        coverage: 0.0
+      stair_ascent:
+        status: missing
+        coverage: 0.0
+      stair_descent:
+        status: missing
+        coverage: 0.0
+      stand_to_sit:
+        status: missing
+        coverage: 0.0
 feature_task_order:
 - decline_walking
 - incline_walking
@@ -712,5 +1224,5 @@ feature_task_order:
 - stair_ascent
 - stair_descent
 - stand_to_sit
-feature_task_source: converted_datasets/gait120_phase_clean.parquet
-last_dataset_path: converted_datasets/gait120_phase.parquet
+feature_task_source: converted_datasets/gait120_opensim_phase.parquet
+last_dataset_path: converted_datasets/gait120_opensim_phase.parquet

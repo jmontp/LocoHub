@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Locomotion data with explicit provenance, quality evidence, and native file access.">
+  <meta name="color-scheme" content="light dark">
+  <title>Dataset catalog · LocoHub</title>
+  <link rel="stylesheet" href="../stylesheets/site.css">
+  <script src="../javascripts/extra.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="../index.html" aria-label="LocoHub home"><span class="brand-mark" aria-hidden="true">L</span>LocoHub<span class="brand-caption">Locomotion data</span></a>
+      <nav class="primary-nav" aria-label="Main navigation"><a href="index.html" aria-current="page">Datasets</a>
+<a href="../tutorials/index.html">Read data</a>
+<a href="../reference/index.html">Data contract</a>
+<a href="../contributing/index.html">Contribute</a>
+<a href="../maintainers/index.html">Review</a></nav>
+      <form class="header-search" role="search" aria-label="Site search" action="../search/index.html"><label class="visually-hidden" for="header-query">Search documentation</label><input id="header-query" type="search" name="q" placeholder="Search docs" required><button type="submit">Search</button></form>
+      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+  <div class="page-layout wide-page">
+    <main id="main" class="page-content" tabindex="-1">
+      <div class="page-kicker"><a href="../index.html">LocoHub</a><span aria-hidden="true">/</span>Dataset catalog</div>
+      
+<h1 id="dataset-catalog">Dataset catalog</h1>
+<p>Find datasets by task and download availability, then inspect the study population, signals, processing, and limitations on its documentation page.</p>
+<div class="callout callout-warning" role="note">
+<p class="admonition-title">Legacy / unreviewed catalog</p>
+<p>These existing listings have not been approved under the current release contract. Counts and historical reports are retained without revalidation. A prior “clean” label or pass-rate badge does not certify the linked artifact. Read the <a href="../reference/#release-evidence">quality and release definitions</a> before choosing data.</p>
+</div>
+<p><strong>Full converted</strong> includes observations before profile filtering; it is not original source data. <strong>Profile-filtered</strong> retains observations selected by a specific rule profile. Historical filenames may contain <code>clean</code>, <code>dirty</code>, or <code>raw</code>. A <strong>—</strong> means no download is registered for that variant. The displayed stride count is historical and may describe the full input rather than the filtered download; it does not count independent participants.</p>
+<p><a class="button" href="comparison/">Compare task coverage and historical plots</a></p>
+<div class="catalog-controls" hidden="" id="catalog-controls">
+<label for="catalog-search">Dataset or task <input id="catalog-search" placeholder="Search the catalog" type="search"/></label>
+<label for="catalog-task">Task <select id="catalog-task"><option value="">All tasks</option></select></label>
+<label for="catalog-download">Download <select id="catalog-download"><option value="">Any availability</option><option value="full">Full converted phase</option><option value="filtered">Profile-filtered phase</option><option value="time">Time data</option><option value="none">No registered download</option></select></label>
+<button id="catalog-reset" type="button">Reset filters</button>
+</div>
+<p aria-live="polite" id="catalog-status" role="status"></p>
+<div data-dataset-catalog="data-dataset-catalog">
+<!-- DATASET_TABLE_START -->
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Dataset</th>
+<th>Tasks</th>
+<th>Strides</th>
+<th>Documentation</th>
+<th>Phase (profile-filtered)</th>
+<th>Phase (full converted)</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gait120</td>
+<td>Decline Walking, Incline Walking, Level Walking, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit</td>
+<td>6,882</td>
+<td><a class="button button-primary" href="ga26/">Docs</a></td>
+<td><span class="button button-disabled">—</span></td>
+<td><span class="button button-disabled">—</span></td>
+<td><span class="button button-disabled">—</span></td>
+</tr>
+<tr>
+<td>GaTech 2024 (TaskAgnostic)</td>
+<td>Backward Walking, Cutting, Decline Walking, Incline Walking, Jump, Level Walking, Lunge, Run, Sit To Stand, Squat, Stair Ascent, Stair Descent, Stand To Sit</td>
+<td>19,849</td>
+<td><a class="button button-primary" href="gt24/">Docs</a></td>
+<td><a class="button" href="https://www.dropbox.com/scl/fi/addnrep8tyxbdycij746z/gtech_2024_phase_clean.parquet?rlkey=37mauhfmexyvcx9rgovqg3bow&amp;dl=1">Download</a></td>
+<td><a class="button" href="https://www.dropbox.com/scl/fi/rq9ljak2fmzxhqx68iw2u/gtech_2024_phase.parquet?rlkey=b08njvj2cga8iyo7u48s493uy&amp;dl=1">Download</a></td>
+<td><span class="button button-disabled">—</span></td>
+</tr>
+<tr>
+<td>GaTech 2025 (Domain Adaptation)</td>
+<td>Backward Walking, Level Walking, Sit To Stand, Stand To Sit</td>
+<td>5,470</td>
+<td><a class="button button-primary" href="gt25d/">Docs</a></td>
+<td><a class="button" href="https://www.dropbox.com/scl/fi/ni7qgftpoq2klndsrwkz1/gtech_2025_da_phase_clean.parquet?rlkey=j5ssc03k2sprw09vfzr370nh1&amp;dl=1">Download</a></td>
+<td><a class="button" href="https://www.dropbox.com/scl/fi/jye5hdd9z6ftjf6yogtm8/gtech_2025_da_phase_dirty.parquet?rlkey=edfildc8cwk4sipp4dkccy761&amp;dl=1">Download</a></td>
+<td><span class="button button-disabled">—</span></td>
+</tr>
+<tr>
+<td>Gtech 2021</td>
+<td>Decline Walking, Incline Walking, Level Walking, Stair Ascent, Stair Descent, Transition</td>
+<td>19,519</td>
+<td><a class="button button-primary" href="gt21/">Docs</a></td>
+<td><a class="button" href="https://www.dropbox.com/scl/fi/bje9vy7ykyo8f7eio4l53/gtech_2021_phase_clean.parquet?rlkey=uowmh48suof9efvoknuh381lf&amp;dl=1">Download</a></td>
+<td><a class="button" href="https://www.dropbox.com/scl/fi/cjlj0s89f2x8y1fur33ad/gtech_2021_phase_dirty.parquet?rlkey=oc809b1cv8c0yqc2pa3e7d5je&amp;dl=1">Download</a></td>
+<td><span class="button button-disabled">—</span></td>
+</tr>
+<tr>
+<td>Gtech 2023</td>
+<td>Agility Drill, Cutting, Decline Walking, Incline Walking, Jump, Level Walking, Sit To Stand, Squat, Stair Ascent, Stair Descent, Stand To Sit, Step Down, Step Up, Walk Backward</td>
+<td>2,940</td>
+<td><a class="button button-primary" href="gt23/">Docs</a></td>
+<td><a class="button" href="https://www.dropbox.com/scl/fi/xey8lljbjly0pl0o00vsb/gtech_2023_phase_clean.parquet?rlkey=ax2bk96imonvj3xb57nkho4x5&amp;dl=1">Download</a></td>
+<td><a class="button" href="https://www.dropbox.com/scl/fi/vd24hcu6yo55qya0t0xmx/gtech_2023_phase_raw.parquet?rlkey=gdwjf6km2xc8mn92mvh495ubc&amp;dl=1">Download</a></td>
+<td><span class="button button-disabled">—</span></td>
+</tr>
+<tr>
+<td>MBLUE Ankle Exoskeleton Study</td>
+<td>Decline Walking, Incline Walking, Level Walking, Sit To Stand, Squat, Stair Ascent, Stair Descent, Stand To Sit</td>
+<td>15,825</td>
+<td><a class="button button-primary" href="mb24/">Docs</a></td>
+<td><span class="button button-disabled">—</span></td>
+<td><span class="button button-disabled">—</span></td>
+<td><span class="button button-disabled">—</span></td>
+</tr>
+<tr>
+<td>StrokePiG OpenSim Pipeline Dataset</td>
+<td>Level Walking Stroke</td>
+<td>144</td>
+<td><a class="button button-primary" href="sp50/">Docs</a></td>
+<td><span class="button button-disabled">—</span></td>
+<td><span class="button button-disabled">—</span></td>
+<td><span class="button button-disabled">—</span></td>
+</tr>
+<tr>
+<td>Umich 2021</td>
+<td>Decline Walking, Incline Walking, Level Walking, Run, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit, Transition</td>
+<td>14,240</td>
+<td><a class="button button-primary" href="um21/">Docs</a></td>
+<td><a class="button" href="https://www.dropbox.com/scl/fi/q37ioia7zmpkxqtw5dtw6/umich_2021_phase_clean.parquet?rlkey=j9cgoam6nz7mwtadcacqff3rn&amp;dl=1">Download</a></td>
+<td><a class="button" href="https://www.dropbox.com/scl/fi/dpk4wgtger1ktdoqrlxbr/umich_2021_phase_dirty.parquet?rlkey=rrjtx05woy1fd1du6oguai6x0&amp;dl=1">Download</a></td>
+<td><span class="button button-disabled">—</span></td>
+</tr>
+</tbody>
+</table></div>
+<!-- DATASET_TABLE_END -->
+</div>
+<h2 id="choose-a-variant">Choose a variant</h2>
+<ul>
+<li>Start with <strong>full converted data</strong> when investigating quality, applying your own inclusion criteria, or comparing the effects of filtering.</li>
+<li>Use <strong>profile-filtered data</strong> only after checking the profile's intended population and tasks, required features, and exclusion reasons.</li>
+<li>Prefer <strong>time data</strong> for timing, event detection, or activities without defensible cycle boundaries. Phase exports resample each observation to 150 points; they do not preserve every original sample.</li>
+</ul>
+<p>For new releases, download the manifest, provenance, quality results, profile, and exclusions with the data. Distinguish individual cycles from ensemble curves before counting observations or creating analysis splits. See the <a href="../tutorials/">native data tutorial</a>.</p>
+
+    </main>
+    
+  </div>
+  <footer class="site-footer"><div><strong>LocoHub</strong><p>Standardized files. Explicit evidence. Researcher judgment.</p></div><p><a href="../reference/index.html#release-evidence">Understand release evidence</a><br><a href="https://github.com/jmontp/LocoHub">Source and issue tracker</a></p></footer>
+</body>
+</html>

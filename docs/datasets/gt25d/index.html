@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Locomotion data with explicit provenance, quality evidence, and native file access.">
+  <meta name="color-scheme" content="light dark">
+  <title>GaTech 2025 (Domain Adaptation) · LocoHub</title>
+  <link rel="stylesheet" href="../../stylesheets/site.css">
+  <script src="../../javascripts/extra.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="../../index.html" aria-label="LocoHub home"><span class="brand-mark" aria-hidden="true">L</span>LocoHub<span class="brand-caption">Locomotion data</span></a>
+      <nav class="primary-nav" aria-label="Main navigation"><a href="../index.html" aria-current="page">Datasets</a>
+<a href="../../tutorials/index.html">Read data</a>
+<a href="../../reference/index.html">Data contract</a>
+<a href="../../contributing/index.html">Contribute</a>
+<a href="../../maintainers/index.html">Review</a></nav>
+      <form class="header-search" role="search" aria-label="Site search" action="../../search/index.html"><label class="visually-hidden" for="header-query">Search documentation</label><input id="header-query" type="search" name="q" placeholder="Search docs" required><button type="submit">Search</button></form>
+      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+  <div class="page-layout wide-page">
+    <main id="main" class="page-content" tabindex="-1">
+      <div class="page-kicker"><a href="../../index.html">LocoHub</a><span aria-hidden="true">/</span>GaTech 2025 (Domain Adaptation)</div>
+      
+<h1 id="gatech-2025-domain-adaptation">GaTech 2025 (Domain Adaptation)</h1>
+<div class="callout callout-warning" role="note">
+<p class="admonition-title">Legacy / unreviewed artifact</p>
+<p>This page preserves historical metadata and reports. It does not certify an approved release under the current data contract. Verify the exact file, processing, profile, and limitations before use.</p>
+</div>
+<h2 id="study-and-converted-data">Study and converted data</h2>
+<h2 id="overview">Overview</h2>
+<ul>
+<li><strong>Short Code</strong>: GT25D</li>
+<li><strong>Year</strong>: 2025</li>
+<li><strong>Institution</strong>: EPIC Lab (Georgia Tech)</li>
+</ul>
+<p>Dataset from "Deep Domain Adaptation Eliminates Costly Data Required for Task-Agnostic Wearable Robotic Control" (Science Robotics 2025). Contains biomechanical data from 8 able-bodied adults performing 6 activity categories while wearing a hip-knee exoskeleton with 3 domain adaptation model variants (baseline, 4t4s, 0task). Includes joint kinematics, kinetics, ground reaction forces, exoskeleton torques, and IMU-derived segment angles at 200 Hz.</p>
+<h2 id="downloads">Downloads</h2>
+
+<div class="download-grid">
+<a class="download-button available" href="https://www.dropbox.com/scl/fi/ni7qgftpoq2klndsrwkz1/gtech_2025_da_phase_clean.parquet?rlkey=j5ssc03k2sprw09vfzr370nh1&amp;dl=1">Clean Dataset (4,948 strides)</a>
+<a class="download-button available" href="https://www.dropbox.com/scl/fi/jye5hdd9z6ftjf6yogtm8/gtech_2025_da_phase_dirty.parquet?rlkey=edfildc8cwk4sipp4dkccy761&amp;dl=1">Full Dataset (5,470 strides)</a>
+</div>
+<h2 id="dataset-information">Dataset Information</h2>
+<h3 id="subjects-and-tasks">Subjects and Tasks</h3>
+<ul>
+<li><strong>Number of Subjects</strong>: 8</li>
+<li><strong>Tasks Included</strong>: Backward Walking, Level Walking, Sit To Stand, Stand To Sit</li>
+</ul>
+<h4 id="task-catalog">Task Catalog</h4>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Task ID</th>
+<th>Task Info</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>backward_walking</td>
+<td>backward_0.6ms</td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:0task,speed_m_s:0.6,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:4t4s,speed_m_s:0.6,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:baseline,speed_m_s:0.6,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:0task,speed_m_s:0.6,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:4t4s,speed_m_s:0.6,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:baseline,speed_m_s:0.6,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td>backward_0.8ms</td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:0task,speed_m_s:0.8,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:4t4s,speed_m_s:0.8,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:baseline,speed_m_s:0.8,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:0task,speed_m_s:0.8,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:4t4s,speed_m_s:0.8,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:baseline,speed_m_s:0.8,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td>backward_1.0ms</td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:0task,speed_m_s:1.0,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:4t4s,speed_m_s:1.0,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:baseline,speed_m_s:1.0,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:0task,speed_m_s:1.0,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:4t4s,speed_m_s:1.0,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:baseline,speed_m_s:1.0,incline_deg:0.0</td>
+</tr>
+<tr>
+<td>level_walking</td>
+<td>level_0.6ms</td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:0task,speed_m_s:0.6,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:4t4s,speed_m_s:0.6,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:baseline,speed_m_s:0.6,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:0task,speed_m_s:0.6,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:4t4s,speed_m_s:0.6,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:baseline,speed_m_s:0.6,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td>level_1.2ms</td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:0task,speed_m_s:1.2,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:4t4s,speed_m_s:1.2,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:baseline,speed_m_s:1.2,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:0task,speed_m_s:1.2,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:4t4s,speed_m_s:1.2,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:baseline,speed_m_s:1.2,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td>level_1.8ms</td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:0task,speed_m_s:1.8,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:4t4s,speed_m_s:1.8,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:baseline,speed_m_s:1.8,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:0task,speed_m_s:1.8,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:4t4s,speed_m_s:1.8,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:r,exo_state:powered,exo_joints:hip_knee,model:baseline,speed_m_s:1.8,incline_deg:0.0</td>
+</tr>
+<tr>
+<td>sit_to_stand</td>
+<td>sit_to_stand</td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:0task,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:4t4s,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:baseline,incline_deg:0.0</td>
+</tr>
+<tr>
+<td>stand_to_sit</td>
+<td>stand_to_sit</td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:0task,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:4t4s,incline_deg:0.0</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>leg:l,exo_state:powered,exo_joints:hip_knee,model:baseline,incline_deg:0.0</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="feature-availability-by-task">Feature Availability by Task</h3>
+
+<div class="feature-legend"><span class="legend-item"><span class="feature-chip feature-complete">✔</span>Complete</span><span class="legend-item"><span class="feature-chip feature-partial">≈</span>Partial</span><span class="legend-item"><span class="feature-chip feature-missing">✖</span>Missing</span></div>
+<p class="feature-source">Coverage computed from `converted_datasets/gtech_2025_da_phase_dirty.parquet`.</p>
+<h4 id="ground-reaction-forces">Ground Reaction Forces</h4>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Backward Walking</th>
+<th>Level Walking</th>
+<th>Sit To Stand</th>
+<th>Stand To Sit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grf_anterior_contra_BW</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>grf_anterior_ipsi_BW</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>grf_lateral_contra_BW</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>grf_lateral_ipsi_BW</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>grf_vertical_contra_BW</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>grf_vertical_ipsi_BW</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="joint-angles">Joint Angles</h4>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Backward Walking</th>
+<th>Level Walking</th>
+<th>Sit To Stand</th>
+<th>Stand To Sit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ankle_dorsiflexion_angle_contra_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>ankle_dorsiflexion_angle_ipsi_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>foot_sagittal_angle_contra_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>foot_sagittal_angle_ipsi_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_angle_contra_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_angle_ipsi_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_angle_contra_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_angle_ipsi_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>shank_sagittal_angle_contra_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>shank_sagittal_angle_ipsi_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>thigh_sagittal_angle_contra_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>thigh_sagittal_angle_ipsi_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="joint-moments">Joint Moments</h4>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Backward Walking</th>
+<th>Level Walking</th>
+<th>Sit To Stand</th>
+<th>Stand To Sit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ankle_dorsiflexion_assistance_moment_contra_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>ankle_dorsiflexion_assistance_moment_ipsi_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>ankle_dorsiflexion_biological_moment_contra_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>ankle_dorsiflexion_biological_moment_ipsi_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>ankle_dorsiflexion_moment_contra_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>ankle_dorsiflexion_moment_ipsi_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_assistance_moment_contra_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_assistance_moment_ipsi_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_biological_moment_contra_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_biological_moment_ipsi_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_moment_contra_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_moment_ipsi_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_assistance_moment_contra_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_assistance_moment_ipsi_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_biological_moment_contra_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_biological_moment_ipsi_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_moment_contra_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_moment_ipsi_Nm_kg</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="joint-velocities">Joint Velocities</h4>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Backward Walking</th>
+<th>Level Walking</th>
+<th>Sit To Stand</th>
+<th>Stand To Sit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ankle_dorsiflexion_velocity_contra_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>ankle_dorsiflexion_velocity_ipsi_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>foot_sagittal_velocity_contra_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>foot_sagittal_velocity_ipsi_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_velocity_contra_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_velocity_ipsi_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_velocity_contra_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_velocity_ipsi_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>shank_sagittal_velocity_contra_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>shank_sagittal_velocity_ipsi_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>thigh_sagittal_velocity_contra_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>thigh_sagittal_velocity_ipsi_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="other-features">Other Features</h4>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Backward Walking</th>
+<th>Level Walking</th>
+<th>Sit To Stand</th>
+<th>Stand To Sit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cop_anterior_contra_m</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>cop_anterior_ipsi_m</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>cop_lateral_contra_m</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>cop_lateral_ipsi_m</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>cop_vertical_contra_m</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>cop_vertical_ipsi_m</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="data-structure">Data Structure</h3>
+<ul>
+<li><strong>Format</strong>: Phase-normalized (150 points per gait cycle)</li>
+<li><strong>Sampling</strong>: Phase-indexed from 0-100%</li>
+<li><strong>Variables</strong>: Standard biomechanical naming convention</li>
+</ul>
+<h2 id="validation-snapshot">Validation Snapshot</h2>
+<ul>
+<li><strong>Status</strong>: ⚠️ Partial (90.5%)</li>
+<li><strong>Stride Pass Rate</strong>: 90.5%</li>
+<li><strong>Validation Ranges</strong>: <a href="../gt25d_validation_ranges.yaml">Download validation ranges</a> (source: contributor_tools/validation_ranges/default_ranges.yaml)</li>
+<li><strong>Detailed Report</strong>: <a href="#validation">View validation report</a></li>
+</ul>
+<h2 id="citation">Citation</h2>
+<p>Scherpereel, K.L. et al. Deep domain adaptation eliminates costly data required for task-agnostic wearable robotic control. Science Robotics (2025). https://doi.org/10.1126/scirobotics.ado6509</p>
+<h2 id="collection-details">Collection Details</h2>
+<h3 id="protocol">Protocol</h3>
+<p>Data collected from 8 able-bodied adults wearing a clothing-integrated hip-knee exoskeleton. Subjects performed 6 activity categories: level walking (0.6, 1.2, 1.8 m/s on treadmill), backward walking (0.6, 0.8, 1.0 m/s), stair ascent/descent, sit-to-stand transfers, ball tossing, and cutting maneuvers. Three domain adaptation model variants were tested per subject: baseline (semisupervised), 4t4s (semisupervised with domain adaptation), and 0task (unsupervised). Model variant is stored in task_info as model:<variant>. Despite overlapping subject ID labels (BT01-BT08), these are different participants from the GaTech 2024 TaskAgnostic dataset.</variant></p>
+<h3 id="processing-notes">Processing Notes</h3>
+<p>Gait cycles detected using vertical GRF threshold crossing (20 N). First 2 and last 1 strides per trial excluded as transitions. IQR-based filtering removes outlier stride durations. Sit-to-stand and stand-to-sit transfers segmented using GRF state machine. Data phase-normalized to 150 points per cycle. Stair ascent/descent trials were too short for stride extraction with current filtering. All data collected with powered exoskeleton. Source data from Georgia Tech Digital Repository.</p>
+<h2 id="files-included">Files Included</h2>
+<ul>
+<li><code>converted_datasets/gtech_2025_da_phase_dirty.parquet</code> — Phase-normalized dataset</li>
+<li><a href="#validation">Validation report</a></li>
+<li>Conversion script in <code>contributor_tools/conversion_scripts/gt25d/</code></li>
+</ul>
+<hr/>
+<p><em>Generated by Dataset Submission Tool on 2026-02-05 14:38</em></p>
+<h2 id="validation">Historical quality evidence</h2>
+<blockquote>
+<p><strong>Historical assessment — unreviewed release.</strong> These preserved results predate the observation contract and may contain inconsistent counts. They are not a current quality certification. Use the dataset limitations and versioned release evidence when available.</p>
+</blockquote>
+<p><strong>Report generated:</strong> 2026-02-05 14:38</p>
+<h2 id="status-summary">Status Summary</h2>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stride Pass Rate</td>
+<td>90.5%</td>
+</tr>
+<tr>
+<td>Total Strides</td>
+<td>5470</td>
+</tr>
+<tr>
+<td>Passing Strides</td>
+<td>4948</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="summary">Summary</h3>
+<p><strong>Status</strong>: ⚠️ PARTIAL (90.5% valid)<br/>
+<strong>Total Strides</strong>: 5470<br/>
+<strong>Passing Strides</strong>: 4948  </p>
+<h3 id="task-breakdown">Task Breakdown</h3>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Pass Rate</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Backward Walking</td>
+<td>85.7%</td>
+<td>⚠️</td>
+</tr>
+<tr>
+<td>Level Walking</td>
+<td>97.6%</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Sit To Stand</td>
+<td>89.0%</td>
+<td>⚠️</td>
+</tr>
+<tr>
+<td>Stand To Sit</td>
+<td>85.5%</td>
+<td>⚠️</td>
+</tr>
+</tbody>
+</table></div>
+<p><em>Validation ranges snapshot embedded below.</em></p>
+<h2 id="validation-ranges-snapshot">Validation Ranges Snapshot</h2>
+<p>Download the YAML snapshot used for this validation: <a href="../gt25d_validation_ranges.yaml">Download</a></p>
+<p><em>Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml</em></p>
+<h2 id="validation-plots">Validation Plots</h2>
+ VALIDATION_GALLERY_START 
+<div class="example-group"><details class="example-panel" open=""><summary>Backward Walking</summary><div class="example-content">
+<p><img alt="Backward Walking" loading="lazy" src="../validation_plots/gt25d/gtech_2025_da_phase_dirty_backward_walking_all_features_validation.png"/></p>
+</div></details><details class="example-panel"><summary>Level Walking</summary><div class="example-content">
+<p><img alt="Level Walking" loading="lazy" src="../validation_plots/gt25d/gtech_2025_da_phase_dirty_level_walking_all_features_validation.png"/></p>
+</div></details><details class="example-panel"><summary>Sit To Stand</summary><div class="example-content">
+<p><img alt="Sit To Stand" loading="lazy" src="../validation_plots/gt25d/gtech_2025_da_phase_dirty_sit_to_stand_all_features_validation.png"/></p>
+</div></details><details class="example-panel"><summary>Stand To Sit</summary><div class="example-content">
+<p><img alt="Stand To Sit" loading="lazy" src="../validation_plots/gt25d/gtech_2025_da_phase_dirty_stand_to_sit_all_features_validation.png"/></p>
+</div></details></div>
+ VALIDATION_GALLERY_END 
+<hr/>
+<p><em>Generated from <code>converted_datasets/gtech_2025_da_phase_dirty.parquet</code> on 2026-02-05 14:38</em></p>
+
+    </main>
+    
+  </div>
+  <footer class="site-footer"><div><strong>LocoHub</strong><p>Standardized files. Explicit evidence. Researcher judgment.</p></div><p><a href="../../reference/index.html#release-evidence">Understand release evidence</a><br><a href="https://github.com/jmontp/LocoHub">Source and issue tracker</a></p></footer>
+</body>
+</html>

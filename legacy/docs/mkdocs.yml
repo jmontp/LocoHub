@@ -1,5 +1,5 @@
 site_name: LocoHub
-site_description: LocoHub - Standardized biomechanical datasets for reproducible research
+site_description: Locomotion datasets with explicit provenance, quality evidence, and native file access
 site_url: https://jmontp.github.io/LocoHub/
 
 repo_name: jmontp/LocoHub
@@ -57,7 +57,6 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.snippets:
       base_path:
-        - docs/users/tutorials
         - docs
       check_paths: true
   - tables
@@ -71,16 +70,33 @@ markdown_extensions:
 
 nav:
   - LocoHub: index.md
-  - Datasets: datasets/index.md
-  - Tutorials: tutorials/index.md
+  - Datasets:
+      - Catalog: datasets/index.md
+      - Compare coverage: datasets/comparison.md
+  - Read Data: tutorials/index.md
   - Contribute: contributing/index.md
   - Maintain: maintainers/index.md
   - Reference: reference/index.md
-  - API: api/api-index.md
+
+# Historical pages remain in the repository; the public site uses the current
+# workflows above. Generated snippets are still consumed by dataset wrappers.
+exclude_docs: |
+  README.md
+  datasets/_legacy/
+  datasets/validation_reports/
+  reference/datasets_documentation/
+  contributing/CONTRIBUTING.md
+  contributing/community.md
+  maintainers/releases.md
+
+validation:
+  links:
+    not_found: warn
+    anchors: warn
 
 extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/jmontp/LocoHub
 
-copyright: Copyright &copy; 2024 - LocoHub Project
+copyright: LocoHub Project

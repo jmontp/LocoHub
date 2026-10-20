@@ -1,0 +1,1250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Locomotion data with explicit provenance, quality evidence, and native file access.">
+  <meta name="color-scheme" content="light dark">
+  <title>Gtech 2021 · LocoHub</title>
+  <link rel="stylesheet" href="../../stylesheets/site.css">
+  <script src="../../javascripts/extra.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="../../index.html" aria-label="LocoHub home"><span class="brand-mark" aria-hidden="true">L</span>LocoHub<span class="brand-caption">Locomotion data</span></a>
+      <nav class="primary-nav" aria-label="Main navigation"><a href="../index.html" aria-current="page">Datasets</a>
+<a href="../../tutorials/index.html">Read data</a>
+<a href="../../reference/index.html">Data contract</a>
+<a href="../../contributing/index.html">Contribute</a>
+<a href="../../maintainers/index.html">Review</a></nav>
+      <form class="header-search" role="search" aria-label="Site search" action="../../search/index.html"><label class="visually-hidden" for="header-query">Search documentation</label><input id="header-query" type="search" name="q" placeholder="Search docs" required><button type="submit">Search</button></form>
+      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+  <div class="page-layout wide-page">
+    <main id="main" class="page-content" tabindex="-1">
+      <div class="page-kicker"><a href="../../index.html">LocoHub</a><span aria-hidden="true">/</span>Gtech 2021</div>
+      
+<h1 id="gtech-2021">Gtech 2021</h1>
+<div class="callout callout-warning" role="note">
+<p class="admonition-title">Legacy / unreviewed artifact</p>
+<p>This page preserves historical metadata and reports. It does not certify an approved release under the current data contract. Verify the exact file, processing, profile, and limitations before use.</p>
+</div>
+<h2 id="study-and-converted-data">Study and converted data</h2>
+<h2 id="overview">Overview</h2>
+<ul>
+<li><strong>Short Code</strong>: GT21</li>
+<li><strong>Year</strong>: 2021</li>
+<li><strong>Institution</strong>: Epic Lab</li>
+</ul>
+<p>We introduce a novel dataset containing 3-dimensional biomechanical and wearable sensor data from 22 able-bodied adults for multiple locomotion modes (level-ground/treadmill walking, stair ascent/descent, and ramp ascent/descent) and multiple terrain conditions of each mode (walking speed, stair height, and ramp inclination). In this paper, we present the data collection methods, explain the structure of the open dataset, and report the sensor data along with the kinematic and kinetic profiles of joint biomechanics as a function of the gait phase. This dataset offers a comprehensive source of locomotion information for the same set of subjects to motivate applications in locomotion recognition, developments in robotic assistive devices, and improvement of biomimetic controllers that better adapt to terrain conditions. With such a dataset, models for these applications can be either subject-dependent or subject-independent, allowing greater flexibility for researchers to advance the field.</p>
+<h2 id="downloads">Downloads</h2>
+
+<div class="download-grid">
+<a class="download-button available" href="https://www.dropbox.com/scl/fi/bje9vy7ykyo8f7eio4l53/gtech_2021_phase_clean.parquet?rlkey=uowmh48suof9efvoknuh381lf&amp;dl=1" rel="noopener" target="_blank">Download Clean Dataset</a>
+<a class="download-button available" href="https://www.dropbox.com/scl/fi/cjlj0s89f2x8y1fur33ad/gtech_2021_phase_dirty.parquet?rlkey=oc809b1cv8c0yqc2pa3e7d5je&amp;dl=1" rel="noopener" target="_blank">Download Full Dataset (Dirty)</a>
+</div>
+<h2 id="dataset-information">Dataset Information</h2>
+<h3 id="subjects-and-tasks">Subjects and Tasks</h3>
+<ul>
+<li><strong>Number of Subjects</strong>: 15</li>
+<li><strong>Tasks Included</strong>: Decline Walking, Incline Walking, Level Walking, Stair Ascent, Stair Descent, Transition</li>
+</ul>
+<h3 id="subject-metadata">Subject Metadata</h3>
+<p>The table below summarizes the <code>subject_metadata</code> key:value pairs per subject.</p>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Subject</th>
+<th>weight_kg</th>
+<th>foot_length_m</th>
+<th>shank_length_m</th>
+<th>thigh_length_m</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GT21_AB06</td>
+<td>74.8</td>
+<td>0.219</td>
+<td>0.435</td>
+<td>0.348</td>
+</tr>
+<tr>
+<td>GT21_AB07</td>
+<td>55.3</td>
+<td>0.205</td>
+<td>0.390</td>
+<td>0.277</td>
+</tr>
+<tr>
+<td>GT21_AB08</td>
+<td>72.6</td>
+<td>0.217</td>
+<td>0.419</td>
+<td>0.340</td>
+</tr>
+<tr>
+<td>GT21_AB09</td>
+<td>63.5</td>
+<td>0.190</td>
+<td>0.364</td>
+<td>0.322</td>
+</tr>
+<tr>
+<td>GT21_AB10</td>
+<td>83.9</td>
+<td>0.212</td>
+<td>0.395</td>
+<td>0.332</td>
+</tr>
+<tr>
+<td>GT21_AB11</td>
+<td>77.1</td>
+<td>0.211</td>
+<td>0.408</td>
+<td>0.331</td>
+</tr>
+<tr>
+<td>GT21_AB13</td>
+<td>59.0</td>
+<td>0.211</td>
+<td>0.420</td>
+<td>0.299</td>
+</tr>
+<tr>
+<td>GT21_AB14</td>
+<td>58.4</td>
+<td>0.187</td>
+<td>0.364</td>
+<td>0.254</td>
+</tr>
+<tr>
+<td>GT21_AB16</td>
+<td>55.8</td>
+<td>0.204</td>
+<td>0.391</td>
+<td>0.298</td>
+</tr>
+<tr>
+<td>GT21_AB18</td>
+<td>60.1</td>
+<td>0.199</td>
+<td>0.429</td>
+<td>0.301</td>
+</tr>
+<tr>
+<td>GT21_AB20</td>
+<td>68.0</td>
+<td>0.210</td>
+<td>0.436</td>
+<td>0.281</td>
+</tr>
+<tr>
+<td>GT21_AB21</td>
+<td>58.1</td>
+<td>0.194</td>
+<td>0.390</td>
+<td>0.279</td>
+</tr>
+<tr>
+<td>GT21_AB24</td>
+<td>72.6</td>
+<td>0.205</td>
+<td>0.420</td>
+<td>0.285</td>
+</tr>
+<tr>
+<td>GT21_AB25</td>
+<td>52.2</td>
+<td>0.190</td>
+<td>0.390</td>
+<td>0.281</td>
+</tr>
+<tr>
+<td>GT21_AB30</td>
+<td>77.0</td>
+<td>0.215</td>
+<td>0.421</td>
+<td>0.277</td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="task-catalog">Task Catalog</h4>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Task ID</th>
+<th>Task Info</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>decline_walking</td>
+<td>decline_-11.0deg</td>
+<td>incline_deg:-11.0,surface:overground</td>
+</tr>
+<tr>
+<td></td>
+<td>decline_-12.4deg</td>
+<td>incline_deg:-12.4,surface:overground</td>
+</tr>
+<tr>
+<td></td>
+<td>decline_-18.0deg</td>
+<td>incline_deg:-18.0,surface:overground</td>
+</tr>
+<tr>
+<td></td>
+<td>decline_-5.2deg</td>
+<td>incline_deg:-5.2,surface:overground</td>
+</tr>
+<tr>
+<td></td>
+<td>decline_-7.8deg</td>
+<td>incline_deg:-7.8,surface:overground</td>
+</tr>
+<tr>
+<td></td>
+<td>decline_-9.2deg</td>
+<td>incline_deg:-9.2,surface:overground</td>
+</tr>
+<tr>
+<td>incline_walking</td>
+<td>incline_11.0deg</td>
+<td>incline_deg:11.0,surface:overground</td>
+</tr>
+<tr>
+<td></td>
+<td>incline_12.4deg</td>
+<td>incline_deg:12.4,surface:overground</td>
+</tr>
+<tr>
+<td></td>
+<td>incline_18.0deg</td>
+<td>incline_deg:18.0,surface:overground</td>
+</tr>
+<tr>
+<td></td>
+<td>incline_5.2deg</td>
+<td>incline_deg:5.2,surface:overground</td>
+</tr>
+<tr>
+<td></td>
+<td>incline_7.8deg</td>
+<td>incline_deg:7.8,surface:overground</td>
+</tr>
+<tr>
+<td></td>
+<td>incline_9.2deg</td>
+<td>incline_deg:9.2,surface:overground</td>
+</tr>
+<tr>
+<td>level_walking</td>
+<td>level</td>
+<td>speed_m_s:0.50,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:0.55,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:0.60,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:0.65,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:0.70,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:0.75,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:0.80,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:0.85,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:0.88,surface:overground</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:0.90,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:0.95,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.00,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.05,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.10,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.15,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.17,surface:overground</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.20,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.25,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.30,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.35,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.40,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.45,surface:overground</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.45,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.50,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.55,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.60,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.65,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.70,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.75,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.80,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.85,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.90,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.95,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:2.00,treadmill:true,surface:treadmill</td>
+</tr>
+<tr>
+<td>stair_ascent</td>
+<td>stair_ascent</td>
+<td>step_height_m:0.102,surface:stairs</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.127,surface:stairs</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.152,surface:stairs</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.178,surface:stairs</td>
+</tr>
+<tr>
+<td>stair_descent</td>
+<td>stair_descent</td>
+<td>step_height_m:0.102,surface:stairs</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.127,surface:stairs</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.152,surface:stairs</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.178,surface:stairs</td>
+</tr>
+<tr>
+<td>transition</td>
+<td>ramp_ascent_to_walk</td>
+<td>incline_deg:11.0,surface:overground,gait_transition:true,transition_from:incline_walking,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>incline_deg:12.4,surface:overground,gait_transition:true,transition_from:incline_walking,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>incline_deg:5.2,surface:overground,gait_transition:true,transition_from:incline_walking,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>incline_deg:7.8,surface:overground,gait_transition:true,transition_from:incline_walking,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td>ramp_descent_to_walk</td>
+<td>incline_deg:-11.0,surface:overground,gait_transition:true,transition_from:decline_walking,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>incline_deg:-12.4,surface:overground,gait_transition:true,transition_from:decline_walking,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>incline_deg:-18.0,surface:overground,gait_transition:true,transition_from:decline_walking,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>incline_deg:-5.2,surface:overground,gait_transition:true,transition_from:decline_walking,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>incline_deg:-7.8,surface:overground,gait_transition:true,transition_from:decline_walking,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>incline_deg:-9.2,surface:overground,gait_transition:true,transition_from:decline_walking,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td>stair_ascent_to_walk</td>
+<td>step_height_m:0.102,surface:stairs,gait_transition:true,transition_from:stair_ascent,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.127,surface:stairs,gait_transition:true,transition_from:stair_ascent,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.152,surface:stairs,gait_transition:true,transition_from:stair_ascent,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.178,surface:stairs,gait_transition:true,transition_from:stair_ascent,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td>stair_descent_to_walk</td>
+<td>step_height_m:0.102,surface:stairs,gait_transition:true,transition_from:stair_descent,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.127,surface:stairs,gait_transition:true,transition_from:stair_descent,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.152,surface:stairs,gait_transition:true,transition_from:stair_descent,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.178,surface:stairs,gait_transition:true,transition_from:stair_descent,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td>stand_to_walk</td>
+<td>speed_m_s:1.17,surface:overground,gait_transition:true,transition_from:stand,transition_to:level_walking</td>
+</tr>
+<tr>
+<td></td>
+<td>walk_to_ramp_ascent</td>
+<td>incline_deg:11.0,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:incline_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>incline_deg:12.4,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:incline_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>incline_deg:18.0,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:incline_walking</td>
+</tr>
+<tr>
+<td></td>
+<td>walk_to_ramp_descent</td>
+<td>incline_deg:-5.2,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:decline_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>incline_deg:-7.8,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:decline_walking</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>incline_deg:-9.2,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:decline_walking</td>
+</tr>
+<tr>
+<td></td>
+<td>walk_to_stair_ascent</td>
+<td>step_height_m:0.102,surface:stairs,gait_transition:true,transition_from:level_walking,transition_to:stair_ascent</td>
+</tr>
+<tr>
+<td></td>
+<td>walk_to_stair_descent</td>
+<td>step_height_m:0.102,surface:stairs,gait_transition:true,transition_from:level_walking,transition_to:stair_descent</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.127,surface:stairs,gait_transition:true,transition_from:level_walking,transition_to:stair_descent</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.152,surface:stairs,gait_transition:true,transition_from:level_walking,transition_to:stair_descent</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>step_height_m:0.178,surface:stairs,gait_transition:true,transition_from:level_walking,transition_to:stair_descent</td>
+</tr>
+<tr>
+<td></td>
+<td>walk_to_stand</td>
+<td>speed_m_s:0.88,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:stand</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.17,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:stand</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>speed_m_s:1.45,surface:overground,gait_transition:true,transition_from:level_walking,transition_to:stand</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="feature-availability-by-task">Feature Availability by Task</h3>
+
+<div class="feature-legend"><span class="legend-item"><span class="feature-chip feature-complete">✔</span>Complete</span><span class="legend-item"><span class="feature-chip feature-partial">≈</span>Partial</span><span class="legend-item"><span class="feature-chip feature-missing">✖</span>Missing</span></div>
+<p class="feature-source">Coverage computed from `gtech_2021_phase_clean.parquet`.</p>
+<h4 id="ground-reaction-forces">Ground Reaction Forces</h4>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Decline Walking</th>
+<th>Incline Walking</th>
+<th>Level Walking</th>
+<th>Stair Ascent</th>
+<th>Stair Descent</th>
+<th>Transition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grf_anterior_contra_BW</code></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+</tr>
+<tr>
+<td><code>grf_anterior_ipsi_BW</code></td>
+<td><span class="feature-chip feature-partial" title="26.0% available">≈ 26.00</span></td>
+<td><span class="feature-chip feature-partial" title="31.2% available">≈ 31.20</span></td>
+<td><span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span></td>
+<td><span class="feature-chip feature-partial" title="97.4% available">≈ 97.40</span></td>
+<td><span class="feature-chip feature-partial" title="49.9% available">≈ 49.90</span></td>
+<td><span class="feature-chip feature-partial" title="54.0% available">≈ 54.00</span></td>
+</tr>
+<tr>
+<td><code>grf_lateral_contra_BW</code></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+</tr>
+<tr>
+<td><code>grf_lateral_ipsi_BW</code></td>
+<td><span class="feature-chip feature-partial" title="26.0% available">≈ 26.00</span></td>
+<td><span class="feature-chip feature-partial" title="31.2% available">≈ 31.20</span></td>
+<td><span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span></td>
+<td><span class="feature-chip feature-partial" title="97.4% available">≈ 97.40</span></td>
+<td><span class="feature-chip feature-partial" title="49.9% available">≈ 49.90</span></td>
+<td><span class="feature-chip feature-partial" title="54.0% available">≈ 54.00</span></td>
+</tr>
+<tr>
+<td><code>grf_vertical_contra_BW</code></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+</tr>
+<tr>
+<td><code>grf_vertical_ipsi_BW</code></td>
+<td><span class="feature-chip feature-partial" title="26.0% available">≈ 26.00</span></td>
+<td><span class="feature-chip feature-partial" title="31.2% available">≈ 31.20</span></td>
+<td><span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span></td>
+<td><span class="feature-chip feature-partial" title="97.4% available">≈ 97.40</span></td>
+<td><span class="feature-chip feature-partial" title="49.9% available">≈ 49.90</span></td>
+<td><span class="feature-chip feature-partial" title="54.0% available">≈ 54.00</span></td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="joint-angles">Joint Angles</h4>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Decline Walking</th>
+<th>Incline Walking</th>
+<th>Level Walking</th>
+<th>Stair Ascent</th>
+<th>Stair Descent</th>
+<th>Transition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ankle_dorsiflexion_angle_contra_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>ankle_dorsiflexion_angle_ipsi_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>foot_sagittal_angle_contra_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>foot_sagittal_angle_ipsi_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_angle_contra_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_angle_ipsi_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_angle_contra_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_angle_ipsi_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>pelvis_sagittal_angle_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>shank_sagittal_angle_contra_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>shank_sagittal_angle_ipsi_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>thigh_sagittal_angle_contra_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>thigh_sagittal_angle_ipsi_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>trunk_sagittal_angle_rad</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="joint-moments">Joint Moments</h4>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Decline Walking</th>
+<th>Incline Walking</th>
+<th>Level Walking</th>
+<th>Stair Ascent</th>
+<th>Stair Descent</th>
+<th>Transition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ankle_dorsiflexion_moment_contra_Nm_kg</code></td>
+<td><span class="feature-chip feature-partial" title="58.2% available">≈ 58.20</span></td>
+<td><span class="feature-chip feature-partial" title="58.7% available">≈ 58.70</span></td>
+<td><span class="feature-chip feature-partial" title="92.9% available">≈ 92.90</span></td>
+<td><span class="feature-chip feature-partial" title="40.0% available">≈ 40.00</span></td>
+<td><span class="feature-chip feature-partial" title="70.8% available">≈ 70.80</span></td>
+<td><span class="feature-chip feature-partial" title="90.3% available">≈ 90.30</span></td>
+</tr>
+<tr>
+<td><code>ankle_dorsiflexion_moment_ipsi_Nm_kg</code></td>
+<td><span class="feature-chip feature-partial" title="58.8% available">≈ 58.80</span></td>
+<td><span class="feature-chip feature-partial" title="58.6% available">≈ 58.60</span></td>
+<td><span class="feature-chip feature-partial" title="93.3% available">≈ 93.30</span></td>
+<td><span class="feature-chip feature-partial" title="98.5% available">≈ 98.50</span></td>
+<td><span class="feature-chip feature-partial" title="72.7% available">≈ 72.70</span></td>
+<td><span class="feature-chip feature-partial" title="96.3% available">≈ 96.30</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_moment_contra_Nm_kg</code></td>
+<td><span class="feature-chip feature-partial" title="58.2% available">≈ 58.20</span></td>
+<td><span class="feature-chip feature-partial" title="58.7% available">≈ 58.70</span></td>
+<td><span class="feature-chip feature-partial" title="92.9% available">≈ 92.90</span></td>
+<td><span class="feature-chip feature-partial" title="40.0% available">≈ 40.00</span></td>
+<td><span class="feature-chip feature-partial" title="70.8% available">≈ 70.80</span></td>
+<td><span class="feature-chip feature-partial" title="90.3% available">≈ 90.30</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_moment_ipsi_Nm_kg</code></td>
+<td><span class="feature-chip feature-partial" title="58.8% available">≈ 58.80</span></td>
+<td><span class="feature-chip feature-partial" title="58.6% available">≈ 58.60</span></td>
+<td><span class="feature-chip feature-partial" title="93.3% available">≈ 93.30</span></td>
+<td><span class="feature-chip feature-partial" title="98.5% available">≈ 98.50</span></td>
+<td><span class="feature-chip feature-partial" title="72.7% available">≈ 72.70</span></td>
+<td><span class="feature-chip feature-partial" title="96.3% available">≈ 96.30</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_moment_contra_Nm_kg</code></td>
+<td><span class="feature-chip feature-partial" title="58.2% available">≈ 58.20</span></td>
+<td><span class="feature-chip feature-partial" title="58.7% available">≈ 58.70</span></td>
+<td><span class="feature-chip feature-partial" title="92.9% available">≈ 92.90</span></td>
+<td><span class="feature-chip feature-partial" title="40.0% available">≈ 40.00</span></td>
+<td><span class="feature-chip feature-partial" title="70.8% available">≈ 70.80</span></td>
+<td><span class="feature-chip feature-partial" title="90.3% available">≈ 90.30</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_moment_ipsi_Nm_kg</code></td>
+<td><span class="feature-chip feature-partial" title="58.8% available">≈ 58.80</span></td>
+<td><span class="feature-chip feature-partial" title="58.6% available">≈ 58.60</span></td>
+<td><span class="feature-chip feature-partial" title="93.3% available">≈ 93.30</span></td>
+<td><span class="feature-chip feature-partial" title="98.5% available">≈ 98.50</span></td>
+<td><span class="feature-chip feature-partial" title="72.7% available">≈ 72.70</span></td>
+<td><span class="feature-chip feature-partial" title="96.3% available">≈ 96.30</span></td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="joint-velocities">Joint Velocities</h4>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Decline Walking</th>
+<th>Incline Walking</th>
+<th>Level Walking</th>
+<th>Stair Ascent</th>
+<th>Stair Descent</th>
+<th>Transition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ankle_dorsiflexion_velocity_contra_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>ankle_dorsiflexion_velocity_ipsi_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>foot_sagittal_velocity_contra_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>foot_sagittal_velocity_ipsi_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_velocity_contra_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>hip_flexion_velocity_ipsi_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_velocity_contra_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>knee_flexion_velocity_ipsi_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>pelvis_sagittal_velocity_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>shank_sagittal_velocity_contra_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>shank_sagittal_velocity_ipsi_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>thigh_sagittal_velocity_contra_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>thigh_sagittal_velocity_ipsi_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+<tr>
+<td><code>trunk_sagittal_velocity_rad_s</code></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+<td><span class="feature-chip feature-complete" title="100.0% available">✔</span></td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="other-features">Other Features</h4>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Decline Walking</th>
+<th>Incline Walking</th>
+<th>Level Walking</th>
+<th>Stair Ascent</th>
+<th>Stair Descent</th>
+<th>Transition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cop_anterior_contra_m</code></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+</tr>
+<tr>
+<td><code>cop_anterior_ipsi_m</code></td>
+<td><span class="feature-chip feature-partial" title="26.0% available">≈ 26.00</span></td>
+<td><span class="feature-chip feature-partial" title="31.2% available">≈ 31.20</span></td>
+<td><span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span></td>
+<td><span class="feature-chip feature-partial" title="97.4% available">≈ 97.40</span></td>
+<td><span class="feature-chip feature-partial" title="49.9% available">≈ 49.90</span></td>
+<td><span class="feature-chip feature-partial" title="54.0% available">≈ 54.00</span></td>
+</tr>
+<tr>
+<td><code>cop_lateral_contra_m</code></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+</tr>
+<tr>
+<td><code>cop_lateral_ipsi_m</code></td>
+<td><span class="feature-chip feature-partial" title="26.0% available">≈ 26.00</span></td>
+<td><span class="feature-chip feature-partial" title="31.2% available">≈ 31.20</span></td>
+<td><span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span></td>
+<td><span class="feature-chip feature-partial" title="97.4% available">≈ 97.40</span></td>
+<td><span class="feature-chip feature-partial" title="49.9% available">≈ 49.90</span></td>
+<td><span class="feature-chip feature-partial" title="54.0% available">≈ 54.00</span></td>
+</tr>
+<tr>
+<td><code>cop_vertical_contra_m</code></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+<td><span class="feature-chip feature-missing" title="0.0% available">✖</span></td>
+</tr>
+<tr>
+<td><code>cop_vertical_ipsi_m</code></td>
+<td><span class="feature-chip feature-partial" title="26.0% available">≈ 26.00</span></td>
+<td><span class="feature-chip feature-partial" title="31.2% available">≈ 31.20</span></td>
+<td><span class="feature-chip feature-partial" title="86.7% available">≈ 86.70</span></td>
+<td><span class="feature-chip feature-partial" title="97.4% available">≈ 97.40</span></td>
+<td><span class="feature-chip feature-partial" title="49.9% available">≈ 49.90</span></td>
+<td><span class="feature-chip feature-partial" title="54.0% available">≈ 54.00</span></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="data-structure">Data Structure</h3>
+<ul>
+<li><strong>Format</strong>: Phase-normalized (150 points per gait cycle)</li>
+<li><strong>Sampling</strong>: Phase-indexed from 0-100%</li>
+<li><strong>Variables</strong>: Standard biomechanical naming convention</li>
+</ul>
+<h2 id="validation-snapshot">Validation Snapshot</h2>
+<ul>
+<li><strong>Status</strong>: ⚠️ Partial (89.2%)</li>
+<li><strong>Stride Pass Rate</strong>: 89.2%</li>
+<li><strong>Validation Ranges</strong>: <a href="../gt21_validation_ranges.yaml">Download validation ranges</a> (source: contributor_tools/validation_ranges/default_ranges.yaml)</li>
+<li><strong>Detailed Report</strong>: <a href="#validation">View validation report</a></li>
+</ul>
+<h2 id="citation">Citation</h2>
+<p>https://doi.org/10.1016/j.jbiomech.2021.110320</p>
+<h2 id="collection-details">Collection Details</h2>
+<h3 id="protocol">Protocol</h3>
+<p>Standard motion capture protocol was used.</p>
+<h3 id="processing-notes">Processing Notes</h3>
+<p>No additional notes.</p>
+<h2 id="files-included">Files Included</h2>
+<ul>
+<li><code>gtech_2021_phase_dirty.parquet</code> — Phase-normalized dataset</li>
+<li><a href="#validation">Validation report</a></li>
+<li>Conversion script in <code>contributor_tools/conversion_scripts/gt21/</code></li>
+</ul>
+<hr/>
+<p><em>Generated by Dataset Submission Tool on 2026-01-09 09:59</em></p>
+<h2 id="validation">Historical quality evidence</h2>
+<blockquote>
+<p><strong>Historical assessment — unreviewed release.</strong> These preserved results predate the observation contract and may contain inconsistent counts. They are not a current quality certification. Use the dataset limitations and versioned release evidence when available.</p>
+</blockquote>
+<p><strong>Report generated:</strong> 2026-01-09 09:59</p>
+<h2 id="status-summary">Status Summary</h2>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stride Pass Rate</td>
+<td>89.2%</td>
+</tr>
+<tr>
+<td>Total Strides</td>
+<td>19519</td>
+</tr>
+<tr>
+<td>Passing Strides</td>
+<td>17418</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="summary">Summary</h3>
+<p><strong>Status</strong>: ⚠️ PARTIAL (89.2% valid)<br/>
+<strong>Total Strides</strong>: 19519<br/>
+<strong>Passing Strides</strong>: 17418  </p>
+<h3 id="task-breakdown">Task Breakdown</h3>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Pass Rate</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Decline Walking</td>
+<td>68.5%</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Incline Walking</td>
+<td>65.3%</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Level Walking</td>
+<td>96.1%</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Stair Ascent</td>
+<td>86.6%</td>
+<td>⚠️</td>
+</tr>
+<tr>
+<td>Stair Descent</td>
+<td>96.0%</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Transition</td>
+<td>19.7%</td>
+<td>❌</td>
+</tr>
+</tbody>
+</table></div>
+<p><em>Validation ranges snapshot embedded below.</em></p>
+<h2 id="validation-ranges-snapshot">Validation Ranges Snapshot</h2>
+<p>Download the YAML snapshot used for this validation: <a href="../gt21_validation_ranges.yaml">Download</a></p>
+<p><em>Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml</em></p>
+<h2 id="validation-plots">Validation Plots</h2>
+ VALIDATION_GALLERY_START 
+<div class="example-group"><details class="example-panel" open=""><summary>Decline Walking</summary><div class="example-content">
+<p><img alt="Decline Walking" loading="lazy" src="../validation_plots/gt21/gtech_2021_phase_dirty_decline_walking_all_features_validation.png"/></p>
+</div></details><details class="example-panel"><summary>Incline Walking</summary><div class="example-content">
+<p><img alt="Incline Walking" loading="lazy" src="../validation_plots/gt21/gtech_2021_phase_dirty_incline_walking_all_features_validation.png"/></p>
+</div></details><details class="example-panel"><summary>Level Walking</summary><div class="example-content">
+<p><img alt="Level Walking" loading="lazy" src="../validation_plots/gt21/gtech_2021_phase_dirty_level_walking_all_features_validation.png"/></p>
+</div></details><details class="example-panel"><summary>Stair Ascent</summary><div class="example-content">
+<p><img alt="Stair Ascent" loading="lazy" src="../validation_plots/gt21/gtech_2021_phase_dirty_stair_ascent_all_features_validation.png"/></p>
+</div></details><details class="example-panel"><summary>Stair Descent</summary><div class="example-content">
+<p><img alt="Stair Descent" loading="lazy" src="../validation_plots/gt21/gtech_2021_phase_dirty_stair_descent_all_features_validation.png"/></p>
+</div></details><details class="example-panel"><summary>Transition</summary><div class="example-content">
+<p><img alt="Transition" loading="lazy" src="../validation_plots/gt21/gtech_2021_phase_dirty_transition_all_features_validation.png"/></p>
+</div></details></div>
+ VALIDATION_GALLERY_END 
+<hr/>
+<p><em>Generated from <code>gtech_2021_phase_dirty.parquet</code> on 2026-01-09 09:59</em></p>
+
+    </main>
+    
+  </div>
+  <footer class="site-footer"><div><strong>LocoHub</strong><p>Standardized files. Explicit evidence. Researcher judgment.</p></div><p><a href="../../reference/index.html#release-evidence">Understand release evidence</a><br><a href="https://github.com/jmontp/LocoHub">Source and issue tracker</a></p></footer>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Locomotion data with explicit provenance, quality evidence, and native file access.">
+  <meta name="color-scheme" content="light dark">
+  <title>Review and maintain releases · LocoHub</title>
+  <link rel="stylesheet" href="../stylesheets/site.css">
+  <script src="../javascripts/extra.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="../index.html" aria-label="LocoHub home"><span class="brand-mark" aria-hidden="true">L</span>LocoHub<span class="brand-caption">Locomotion data</span></a>
+      <nav class="primary-nav" aria-label="Main navigation"><a href="../datasets/index.html">Datasets</a>
+<a href="../tutorials/index.html">Read data</a>
+<a href="../reference/index.html">Data contract</a>
+<a href="../contributing/index.html">Contribute</a>
+<a href="index.html" aria-current="page">Review</a></nav>
+      <form class="header-search" role="search" aria-label="Site search" action="../search/index.html"><label class="visually-hidden" for="header-query">Search documentation</label><input id="header-query" type="search" name="q" placeholder="Search docs" required><button type="submit">Search</button></form>
+      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+  <div class="page-layout">
+    <main id="main" class="page-content" tabindex="-1">
+      <aside class="callout" role="note"><p><strong>Website source:</strong> Published pages are authored HTML under <code>docs/</code>. The legacy documentation manager updates Markdown audit files and catalog metadata; it does not update these HTML pages. Review and edit the corresponding HTML when study notes, downloads, or release evidence change.</p></aside>
+<div class="page-kicker"><a href="../index.html">LocoHub</a><span aria-hidden="true">/</span>Review and maintain releases</div>
+      
+<h1 id="review-and-maintain-releases">Review and maintain releases</h1>
+<p>LocoHub maintains data contracts, conversion tooling, quality evidence, and dataset releases. Researchers use native data readers. Former analysis libraries are preserved in <code>legacy/</code>; maintaining or publishing an analysis SDK is outside the supported workflow.</p>
+<h2 id="review-a-prepared-release">Review a prepared release</h2>
+<ol>
+<li><strong>Verify provenance.</strong> Match original study/source identifiers, local source hashes where available, converter revision, citation, data terms, and actual contributor review. Remote source declarations are not verification that the source was retrieved.</li>
+<li><strong>Check identity and representation.</strong> Recording IDs, observation IDs, reference side, and observation type must be recoverable from the source. Separate ensemble curves, transfers, continuous recordings, and individual cycles. Confirm related bilateral views remain related.</li>
+<li><strong>Review conversion decisions.</strong> Inspect a representative pilot against source traces. Check units, signs, frames, event timing, filtering, derivatives, normalizations, and force-plate/limb assignments.</li>
+<li><strong>Review quality coverage.</strong> Read structural issues, required/optional signal coverage, and passed/failed/missing/unchecked/invalid states. A high aggregate pass rate is insufficient evidence.</li>
+<li><strong>Review the profile.</strong> Confirm applicability to the population, tasks, and observation types. Require a rationale for thresholds and changes; identify empirical or provisional rules honestly.</li>
+<li><strong>Reconcile artifacts.</strong> Full converted data, profile-filtered data, quality results, exclusions, profile snapshot, hashes, and manifest counts must agree. Filter whole observations and examine exclusions by participant and task.</li>
+<li><strong>Record the decision.</strong> Document approval or unresolved limitations with the actual reviewer and exact artifact identity. A successful build records checks and contributor review; it does not create independent scientific approval.</li>
+</ol>
+<h2 id="acceptance-and-limitations">Acceptance and limitations</h2>
+<p>Structural failures and unreviewed identities block release preparation. Missing or unchecked biomechanical evidence must remain visible; it cannot be converted into a passing result. Filtering never repairs source units, event detection, or missing channels.</p>
+<p>Review scientific limitations even when the structural contract passes. Current rule checks do not prove correct coordinate transforms, force-plate assignment, event detection, or validity of the original measurements. Avoid a universal quality score and do not rank studies by incomparable rule profiles.</p>
+<p>Legacy downloads remain <strong>legacy / unreviewed</strong> until the corresponding source mapping and artifacts are reprocessed and reviewed. Preserve historical counts without presenting them as a new release validation. Changing a label or regenerating documentation is not approval.</p>
+<h2 id="immutability-and-updates">Immutability and updates</h2>
+<p>Use <code>contributor_tools/build_dataset_release.py</code> to create a new release directory. Existing output directories are rejected. Changes to source data, conversion, profile, or provenance require a new release identifier and new evidence. Keep prior releases traceable.</p>
+<p>The manifest identifies produced artifacts; verify hashes when moving or distributing a bundle. Review any change in retained subjects, tasks, and signal coverage before linking a replacement download. Keep original study citation and data license distinct from the repository's code license.</p>
+<h2 id="work-within-the-resource-budget">Work within the resource budget</h2>
+<p>Run a small representative pilot before scaling. Release admission defaults to 256 MB of estimated decoded input and 500,000 rows. Processing is bounded in-memory, not streaming; actual process memory also includes interpreter and computation overhead. Plan larger shards deliberately and avoid concurrent full-dataset reads on a shared workstation.</p>
+<p>Tests for contracts, release integrity, and public examples should use small deterministic fixtures. Full dataset conversion and review are explicit jobs, not incidental documentation or CI tasks.</p>
+<h2 id="implementation-boundaries">Implementation boundaries</h2>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dataset converters</td>
+<td><code>contributor_tools/conversion_scripts/</code></td>
+</tr>
+<tr>
+<td>Contract and quality implementation</td>
+<td><code>contributor_tools/common/data_contract.py</code></td>
+</tr>
+<tr>
+<td>Internal table/schema/task helpers</td>
+<td><code>contributor_tools/common/</code></td>
+</tr>
+<tr>
+<td>Release entrypoint</td>
+<td><code>contributor_tools/build_dataset_release.py</code></td>
+</tr>
+<tr>
+<td>Rule profiles</td>
+<td><code>contributor_tools/validation_ranges/</code></td>
+</tr>
+<tr>
+<td>Dataset metadata and legacy reports</td>
+<td><code>docs/datasets/</code></td>
+</tr>
+<tr>
+<td>Former analysis implementations</td>
+<td><code>legacy/</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Keep validation decisions in the shared contract implementation. CLI summaries, filtering, release manifests, and documentation must consume the same result, rather than independently reconstructing counts. Contributor utilities are internal implementation, not a new public SDK.</p>
+<h2 id="documentation-checks">Documentation checks</h2>
+<p>The public site should let a researcher identify the population, available signals, artifact variant, limitations, and quality evidence before downloading. Preserve native Python and MATLAB examples that run on the complete synthetic fixture.</p>
+<pre><code data-language="bash">python -m pytest tests/test_data_documentation.py
+python docs/build.py --check
+</code></pre>
+<p>Review the generated site under the <code>/LocoHub/</code> base path. Check links, download labels, keyboard interaction, mobile layout, and dark mode. Do not publish legacy reports as current evidence or describe manually tuned thresholds as literature norms without traceable support.</p>
+<p>See the <a href="../contributing/">contributor workflow</a>, <a href="../reference/">data contract</a>, and <a href="../api/api-index/">former API notice</a>.</p>
+
+    </main>
+    <aside class="page-outline" aria-label="On this page"><p>On this page</p><ol><li><a href="#review-a-prepared-release">Review a prepared release</a></li><li><a href="#acceptance-and-limitations">Acceptance and limitations</a></li><li><a href="#immutability-and-updates">Immutability and updates</a></li><li><a href="#work-within-the-resource-budget">Work within the resource budget</a></li><li><a href="#implementation-boundaries">Implementation boundaries</a></li><li><a href="#documentation-checks">Documentation checks</a></li></ol></aside>
+  </div>
+  <footer class="site-footer"><div><strong>LocoHub</strong><p>Standardized files. Explicit evidence. Researcher judgment.</p></div><p><a href="../reference/index.html#release-evidence">Understand release evidence</a><br><a href="https://github.com/jmontp/LocoHub">Source and issue tracker</a></p></footer>
+</body>
+</html>
