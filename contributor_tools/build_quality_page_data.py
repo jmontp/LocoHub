@@ -40,8 +40,12 @@ def read_results(path):
         state = 'failed' if case.find('failure') is not None or case.find('error') is not None else 'skipped' if case.find('skipped') is not None else 'passed'
         group[state] += 1
         record = {'name': case.attrib['name'], 'status': state}
-        if state == 'skipped':
-            record['reason'] = case.find('skipped').attrib.get('message', '')
+        for kind in ('failure', 'error', 'skipped'):
+            detail = case.find(kind)
+            if detail is not None:
+                record['kind'] = kind
+                record['reason'] = detail.attrib.get('message', '') or (detail.text or '').strip()
+                break
         group['cases'].append(record)
     return groups
 
@@ -49,6 +53,7 @@ def read_results(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--junit', type=Path, required=True, help='JUnit XML from an actual pytest run')
+    parser.add_argument('--command', help='Actual invocation used for the supplied JUnit run')
     args = parser.parse_args()
     output = ROOT / 'docs/quality'
     output.mkdir(exist_ok=True)
@@ -56,9 +61,10 @@ def main():
     (output / 'phase_ranges.json').write_text(json.dumps(ranges, separators=(',', ':'), allow_nan=False) + '\n')
     groups = read_results(args.junit)
     revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
-    result = {'recorded_at': datetime.fromtimestamp(args.junit.stat().st_mtime, timezone.utc).isoformat(),
+    suite = ET.parse(args.junit).find('.//testsuite')
+    result = {'started_at': suite.attrib.get('timestamp') if suite is not None else None, 'recorded_at': datetime.fromtimestamp(args.junit.stat().st_mtime, timezone.utc).isoformat(),
               'base_revision': revision, 'working_tree_changes': bool(subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no'], cwd=ROOT, text=True).strip()), 'scope': 'Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.',
-              'command': 'OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml',
+              'command': args.command,
               'junit_sha256': hashlib.sha256(args.junit.read_bytes()).hexdigest(), 'groups': groups,
               'totals': {state: sum(g[state] for g in groups.values()) for state in ['passed', 'failed', 'skipped']}}
     (output / 'test_results.json').write_text(json.dumps(result, indent=2) + '\n')

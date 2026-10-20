@@ -103,7 +103,8 @@ python3 docs/build.py --check</code></pre>
 <h2 id="refresh-quality-evidence">Refresh the quality page</h2>
 <p>The quality page separates recorded software tests, preview structural checks, and illustrative bounds. Refresh the evidence only from a real test run:</p>
 <pre><code>OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml
-python3 contributor_tools/build_quality_page_data.py --junit /tmp/locohub-quality-tests.xml
+python3 contributor_tools/build_quality_page_data.py --junit /tmp/locohub-quality-tests.xml --command &quot;the exact command used for this run&quot;
+python3 contributor_tools/build_audit_evidence_page.py
 python3 docs/build.py --check</code></pre>
 <p>The range export uses the shared configuration loader and the validator’s nearest-sample rule. It records the YAML checksum. The overlay compares displayed means, not individual curves, and must never be presented as a new dataset validation run. A changed profile requires regeneration; a new test run requires a new result snapshot.</p>
 <h2 id="documentation-checks">Documentation checks</h2>

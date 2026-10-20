@@ -1,10 +1,11 @@
 {
-  "recorded_at": "2026-10-20T19:11:48.316638+00:00",
-  "base_revision": "02c2305d2d60e7873fe7e47a54edad6b585c77ea",
+  "started_at": "2026-10-20T15:59:45.620102-04:00",
+  "recorded_at": "2026-10-20T20:00:13.784575+00:00",
+  "base_revision": "6e6cba374d6b9f1602a413c456a8dd28f2cf9e4a",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
-  "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "f29978a1ebbf92ad102b68a30a89cd7120e3066df4f67bfaf7a7d676dbc6f890",
+  "command": "ulimit -v 2097152; OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
+  "junit_sha256": "e406123ee7e963f69ceff7bfb39ead140975589a2e845e98cded9059f0825214",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -396,11 +397,13 @@
         {
           "name": "test_converted_time_dataset_passes_conventions",
           "status": "skipped",
+          "kind": "skipped",
           "reason": "Full-data/native integration checks are opt-in (--run-integration)"
         },
         {
           "name": "test_ankle_follows_standard_segment_chain",
           "status": "skipped",
+          "kind": "skipped",
           "reason": "Full-data/native integration checks are opt-in (--run-integration)"
         }
       ]
@@ -436,7 +439,7 @@
       ]
     },
     "tests.test_quality_page": {
-      "passed": 2,
+      "passed": 5,
       "failed": 0,
       "skipped": 0,
       "cases": [
@@ -446,6 +449,18 @@
         },
         {
           "name": "test_recorded_tests_do_not_turn_skips_or_errors_into_passes",
+          "status": "passed"
+        },
+        {
+          "name": "test_file_audit_never_turns_missing_evidence_or_sample_pass_into_approval",
+          "status": "passed"
+        },
+        {
+          "name": "test_converter_risks_are_not_attributed_to_artifacts",
+          "status": "passed"
+        },
+        {
+          "name": "test_failure_reasons_survive_export",
           "status": "passed"
         }
       ]
@@ -754,7 +769,7 @@
     }
   },
   "totals": {
-    "passed": 156,
+    "passed": 159,
     "failed": 0,
     "skipped": 2
   }

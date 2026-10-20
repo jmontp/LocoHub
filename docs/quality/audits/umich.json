@@ -1,0 +1,297 @@
+{
+  "dataset": "um21",
+  "assessment": "Known problems in historical clean artifact and normalized transfer handling; not scientifically release-verified",
+  "artifacts": [
+    {
+      "path": "converted_datasets/umich_2021_phase_clean.parquet",
+      "size_bytes": 192508983,
+      "mtime_ns": 1776452313126779400,
+      "rows": 439200,
+      "cols": 78,
+      "identity_note": "Size/mtime only; no full hash, local files not verified against remote downloads"
+    },
+    {
+      "path": "converted_datasets/umich_2021_phase_raw.parquet",
+      "size_bytes": 1181062027,
+      "mtime_ns": 1784669470399165600,
+      "rows": 2122650,
+      "cols": 78,
+      "identity_note": "Size/mtime only; no full hash, local files not verified against remote downloads"
+    },
+    {
+      "path": "converted_datasets/umich_2021_time.parquet",
+      "size_bytes": 1383480474,
+      "mtime_ns": 1784844791242384600,
+      "rows": 1903839,
+      "cols": 100,
+      "identity_note": "Size/mtime only; no full hash, local files not verified against remote downloads"
+    }
+  ],
+  "findings": [
+    {
+      "severity": "failure",
+      "scope": "artifact",
+      "paths": [
+        "converted_datasets/umich_2021_phase_clean.parquet"
+      ],
+      "title": "Observation keys collide across separate curves",
+      "evidence": "2,928 complete contiguous curves map to129 distinct (subject,task,step) keys;125 keys reused. UM21_AB01/stair_ascent/step1 occurs40 times. Neither reference_leg nor recording_id/observation_id exists.",
+      "check_scope": "All439,200 rows, projected subject/task/step/phase only; curves detected by key change or phase reset.",
+      "next_step": "Preserve historical artifact; regenerate with recording, reference-leg and observation IDs. Never globally group clean file by subject/task/step."
+    },
+    {
+      "severity": "failure",
+      "scope": "artifact",
+      "paths": [
+        "converted_datasets/umich_2021_phase_clean.parquet"
+      ],
+      "title": "Hip and segment angles violate the declared convention",
+      "evidence": "Nine curves sampled (first3 in each of3task row groups): max |hip_flexion_angle_ipsi_rad-(thigh_sagittal_angle_ipsi_rad-pelvis_sagittal_angle_rad)| ranged0.5404865\u20130.7916868rad. First row hip0.6136595103,thigh0.3050420144,pelvis0.2919464600. Declared equation: contributor_tools/common/plotting/generate_forward_kinematics_reference.py:636; current phase converter1132 implements it.",
+      "check_scope": "Rows0\u2013449,184950\u2013185399,340950\u2013341399; ipsilateral sagittal signals only. Knee/ankle identities pass first150 rows to floating precision.",
+      "next_step": "Do not label clean as convention-verified. Reconcile with source and corrected conversion, then validate both sides across tasks."
+    },
+    {
+      "severity": "failure",
+      "scope": "artifact",
+      "paths": [
+        "converted_datasets/umich_2021_phase_clean.parquet"
+      ],
+      "title": "Stored hip velocity has a150/149 scale error",
+      "evidence": "All nine sampled curves have median stored hip velocity / np.gradient(hip_angle,time_s) =1.00671140939597=150/149 (interior samples). Current converter907 uses149intervals. First curve max absolute velocity discrepancy0.0251920156rad/s.",
+      "check_scope": "Same9curves as chain check; no extrapolation to every velocity channel.",
+      "next_step": "Regenerate derivatives using actual149intervals; verify against independently sampled time and angle values."
+    },
+    {
+      "severity": "warning",
+      "scope": "artifact",
+      "paths": [
+        "converted_datasets/umich_2021_phase_clean.parquet",
+        "converted_datasets/umich_2021_phase_raw.parquet"
+      ],
+      "title": "Clean file is an older, incomplete task set, not a reconciled subset of current raw",
+      "evidence": "Clean modified April17,2026; raw July21,2026. Clean has only stair_ascent184950rows,stair_descent156000,transition98250. Raw has9tasks including level/incline/decline walking,run,sit/stand. Clean can neither represent all source tasks nor be assumed a same-version filtered raw artifact.",
+      "check_scope": "All phase identity columns counted. Local preview explicitly points to this clean file and therefore has only3tasks.",
+      "next_step": "Record separate version/lineage and exclusion reasons; show task availability and unreviewed status prominently."
+    },
+    {
+      "severity": "failure",
+      "scope": "artifact",
+      "paths": [
+        "converted_datasets/umich_2021_phase_raw.parquet",
+        "contributor_tools/conversion_scripts/Umich_2021/convert_umich_phase_to_parquet.m"
+      ],
+      "title": "Normalized transfer curve is duplicated into both anatomical channels",
+      "evidence": "Raw rows164700\u2013164849,UM21_AB01,sit_to_stand,step1099: both hip angle arrays identical (maxdifference0), first1.8110404297871505rad,last0.23272579854200015rad. Normalized.AB01.SitStand.ss.sit2stand.HipAngles cycle1 starts103.76497315degrees, matching this value. build_normalized_trial_struct1863\u20131897 assigns each normalized Hip/Knee/Ankle array to both L/R. Original R01 Dataset README normalized jointAngles section states dimension3 concatenates left and right legs.",
+      "check_scope": "One actual150row transfer plus source HDF5 metadata/slice and converter inspection; not all transfers scanned.",
+      "next_step": "Preserve source-side identity; represent unavailable opposite-side data as missing unless paired source time correspondence is established. Do not assume copied channels are bilateral measurements."
+    },
+    {
+      "severity": "warning",
+      "scope": "converter",
+      "paths": [
+        "contributor_tools/conversion_scripts/Umich_2021/convert_umich_phase_to_parquet.m"
+      ],
+      "title": "Transfer timing is assigned by sequence without an established source match",
+      "evidence": "Lines1788\u20131815 assign detected Streaming durations to Normalized cycles by ordinal. Source AB01 has7Sts trials but14normalized sit2stand curves (L/R concatenation). Current get_sts_duration returnsNaN beyond duration list; historical raw sampled transfer time0\u20130.73s cannot be independently linked through existing output provenance. Comment2285 explicitly says no source time correspondence.",
+      "check_scope": "Read-only source keys/dimensions and code; did not reconstruct transfer events.",
+      "next_step": "Use original source identifiers/side/cut-point mapping or leave timing and time derivatives unavailable; do not use ordinal matching as proof."
+    },
+    {
+      "severity": "unknown",
+      "scope": "artifact",
+      "paths": [
+        "converted_datasets/umich_2021_phase_raw.parquet",
+        "converted_datasets/umich_2021_time.parquet"
+      ],
+      "title": "Current provenance and full source reconciliation are unavailable",
+      "evidence": "Both files predate current source_recording_id/observation_id additions and contain no immutable release manifest/checksum linking source,converter and assessment. Time file has reference_leg/collection_id but not current provenance; phase raw lacks reference_leg.",
+      "check_scope": "All schemas/metadata inspected; no full source reconstruction or native MATLAB execution.",
+      "next_step": "Create bounded independently reconciled source-to-output checks per task/side before release; no current-release pass claim."
+    },
+    {
+      "severity": "unknown",
+      "scope": "artifact",
+      "paths": [
+        "converted_datasets/umich_2021_time.parquet"
+      ],
+      "title": "Time artifact coverage is limited to an initial sample",
+      "evidence": "First150rows UM21_AB01 decline_walking have0.005s spacing and consistent hip/knee/ankle chain (max~1e-16rad) and interior hip derivative (max1.33e-14rad/s). No full time monotonicity, missingness, discontinuity or source mapping audit was performed.",
+      "check_scope": "First150rows only; schema/footer for1,903,839rows.",
+      "next_step": "Run bounded full structural assessment and source segment matching, without loading full dataset."
+    },
+    {
+      "severity": "warning",
+      "scope": "converter",
+      "paths": [
+        "contributor_tools/conversion_scripts/Umich_2021/convert_umich_phase_to_parquet.m"
+      ],
+      "title": "Some transformations are heuristic rather than source-certified",
+      "evidence": "apply_foot_angle_correction1713\u20131745 adjusts90degree offsets and flips according to sign at fixed indices95/100, described inaccurately as70/73percent (actual63.1/66.4percent). Code overwrites segment angles later from pelvis chain1132\u20131137, so impact depends on path. Transfer task_info2039\u20132041 hardcodes chair_height0.45 and arm_support:false.",
+      "check_scope": "Code inspection only; did not independently establish effect on current artifacts or whether chair metadata matches protocol.",
+      "next_step": "Require protocol evidence for hardcoded metadata and convention transforms; document provenance and remove dead/heuristic corrections after source reconciliation."
+    }
+  ],
+  "positive_evidence": [
+    "Both phase files have complete150row runs with0/100endpoints across all examined identity rows; this scan did not check every interior phase increment.",
+    "Raw14,151curve keys are unique under subject/task/step.",
+    "Raw first decline stride rows0\u2013149 matches independently read Streaming AB01/Tread/d10 RHipAngles frames1858\u20131964, linear resampling150points, within2.22e-16rad. Source duration106frames/100Hz=1.06s agrees.",
+    "Raw first curve and time first150rows satisfy declared sagittal chain and hip derivative to numerical precision.",
+    "Source README says moments Nm/kg; current code preserves moments without second mass division. Force source small slab is hundreds of N despite README N/kg wording: source documentation must not substitute for numerical checks."
+  ],
+  "scan_results": {
+    "clean": {
+      "rows_by_task": {
+        "stair_ascent": 184950,
+        "stair_descent": 156000,
+        "transition": 98250
+      },
+      "curves": 2928,
+      "distinct_ids": 129,
+      "reused_id_count": 125,
+      "reused_examples": [
+        [
+          [
+            "UM21_AB01",
+            "stair_ascent",
+            1.0
+          ],
+          40
+        ],
+        [
+          [
+            "UM21_AB01",
+            "stair_ascent",
+            2.0
+          ],
+          40
+        ],
+        [
+          [
+            "UM21_AB01",
+            "stair_ascent",
+            3.0
+          ],
+          35
+        ],
+        [
+          [
+            "UM21_AB01",
+            "stair_ascent",
+            4.0
+          ],
+          6
+        ],
+        [
+          [
+            "UM21_AB02",
+            "stair_ascent",
+            1.0
+          ],
+          40
+        ]
+      ],
+      "bad_phase_count": 0,
+      "bad_phase_examples": [],
+      "task_start_rows": [
+        {
+          "task": "stair_ascent",
+          "row": 0,
+          "row_group": 0
+        },
+        {
+          "task": "stair_descent",
+          "row": 184950,
+          "row_group": 1
+        },
+        {
+          "task": "transition",
+          "row": 340950,
+          "row_group": 2
+        }
+      ]
+    },
+    "raw": {
+      "rows_by_task": {
+        "decline_walking": 485250,
+        "transition": 138000,
+        "level_walking": 224400,
+        "incline_walking": 436950,
+        "run": 401850,
+        "sit_to_stand": 18900,
+        "stand_to_sit": 18900,
+        "stair_ascent": 191100,
+        "stair_descent": 207300
+      },
+      "curves": 14151,
+      "distinct_ids": 14151,
+      "reused_id_count": 0,
+      "reused_examples": [],
+      "bad_phase_count": 0,
+      "bad_phase_examples": [],
+      "task_start_rows": [
+        {
+          "task": "decline_walking",
+          "row": 0,
+          "row_group": 0
+        },
+        {
+          "task": "transition",
+          "row": 24750,
+          "row_group": 0
+        },
+        {
+          "task": "level_walking",
+          "row": 51750,
+          "row_group": 0
+        },
+        {
+          "task": "incline_walking",
+          "row": 75600,
+          "row_group": 1
+        },
+        {
+          "task": "run",
+          "row": 120750,
+          "row_group": 1
+        },
+        {
+          "task": "sit_to_stand",
+          "row": 164700,
+          "row_group": 2
+        },
+        {
+          "task": "stand_to_sit",
+          "row": 166800,
+          "row_group": 2
+        },
+        {
+          "task": "stair_ascent",
+          "row": 168900,
+          "row_group": 2
+        },
+        {
+          "task": "stair_descent",
+          "row": 169950,
+          "row_group": 2
+        }
+      ]
+    }
+  },
+  "resources": "One worker, numerical threads1,nice19,ionice3,512MiB RLIMIT_AS; identity scan4.7sec; tiny projected source/sample reads; no MATLAB, conversions or artifacts modified.",
+  "reproduction": [
+    "/tmp/audit_umich_meta.py",
+    "/tmp/audit_umich_scan.py",
+    "/tmp/audit_umich_sample.py",
+    "/tmp/audit_umich_match.py",
+    "/tmp/audit_umich_source_small.py"
+  ],
+  "limitations": "No full biomechanical distribution scan, no raw-clean lineage reconciliation, no proof every source trial represented, no check of downloaded published artifact. Existing tests mostly synthetic or source-string assertions; they cannot certify historical files.",
+  "archived_probe_scripts": [
+    "contributor_tools/audit_probes/2026_10_20/audit_umich_meta.py",
+    "contributor_tools/audit_probes/2026_10_20/audit_umich_scan.py",
+    "contributor_tools/audit_probes/2026_10_20/audit_umich_sample.py",
+    "contributor_tools/audit_probes/2026_10_20/audit_umich_match.py",
+    "contributor_tools/audit_probes/2026_10_20/audit_umich_source_small.py"
+  ],
+  "reproduction_note": "Original /tmp paths record the investigation workspace. Read-only probes are archived in the repository; local source data and the recorded artifact versions are required. They are not run automatically by the website."
+}
