@@ -3,56 +3,113 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Locomotion data with explicit provenance, quality evidence, and native file access.">
+  <meta name="description" content="Browse locomotion datasets, preview signals, and download files for Python or MATLAB.">
   <meta name="color-scheme" content="light dark">
-  <title>LocoHub · LocoHub</title>
+  <title>LocoHub</title>
   <link rel="stylesheet" href="stylesheets/site.css">
+  <link rel="stylesheet" href="stylesheets/data-preview.css">
   <script src="javascripts/extra.js" defer></script>
+  <script src="javascripts/data-preview.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <div class="header-inner">
-      <a class="wordmark" href="index.html" aria-label="LocoHub home"><span class="brand-mark" aria-hidden="true">L</span>LocoHub<span class="brand-caption">Locomotion data</span></a>
-      <nav class="primary-nav" aria-label="Main navigation"><a href="datasets/index.html">Datasets</a>
-<a href="tutorials/index.html">Read data</a>
-<a href="reference/index.html">Data contract</a>
-<a href="contributing/index.html">Contribute</a>
-<a href="maintainers/index.html">Review</a></nav>
+      <a class="wordmark" href="index.html" aria-label="LocoHub home">LocoHub</a>
+      <nav class="primary-nav" aria-label="Main navigation"><a href="index.html" aria-current="page">Data</a>
+<a href="tutorials/index.html">Tutorials</a>
+<a href="reference/index.html">File format</a></nav>
       <form class="header-search" role="search" aria-label="Site search" action="search/index.html"><label class="visually-hidden" for="header-query">Search documentation</label><input id="header-query" type="search" name="q" placeholder="Search docs" required><button type="submit">Search</button></form>
-      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub <span aria-hidden="true">↗</span></a>
+      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub</a>
     </div>
   </header>
-  <div class="page-layout wide-page">
+  <div class="page-layout wide-page data-page">
     <main id="main" class="page-content" tabindex="-1">
-<div class="home-hero">
-  <div>
-    <p class="eyebrow">Locomotion data · Open research</p>
-    <h1>Find the data.<br>Understand the evidence.</h1>
-    <p class="hero-description">Explore standardized locomotion datasets, inspect how they were processed, and work directly with the files in your research environment.</p>
-    <div class="hero-actions"><a class="button button-primary" href="datasets/index.html">Explore datasets <span aria-hidden="true">&nbsp;↗</span></a><a class="button" href="tutorials/index.html">Try a small example</a></div>
+      <h1 id="dataset-catalog">LocoHub</h1>
+      <p class="data-intro">Locomotion datasets in Parquet format for use with Python, MATLAB, and other data tools.</p>
+      <div class="catalog-controls" hidden id="catalog-controls">
+        <label for="catalog-search">Search <input id="catalog-search" placeholder="Dataset or task" type="search"></label>
+        <label for="catalog-task">Task <select id="catalog-task"><option value="">All tasks</option></select></label>
+        <label for="catalog-download">Download <select id="catalog-download"><option value="">Any availability</option><option value="full">Full download</option><option value="filtered">Filtered download</option><option value="time">Time data</option><option value="none">No download yet</option></select></label>
+        <button id="catalog-reset" type="button">Reset</button>
+        <a class="compare-link" href="datasets/comparison/index.html">Compare datasets</a>
+      </div>
+      <p aria-live="polite" id="catalog-status" role="status">8 datasets</p>
+      <div data-dataset-catalog>
+        <!-- DATASET_TABLE_START -->
+        <div class="table-scroll" role="region" aria-label="Datasets and downloads" tabindex="0">
+          <table class="dataset-table">
+            <thead><tr><th scope="col">Dataset</th><th scope="col">Tasks</th><th scope="col">Reported count</th><th scope="col">Downloads</th><th scope="col">Preview</th></tr></thead>
+            <tbody>
+<tr data-dataset="ga26">
+<td><a href="datasets/ga26/index.html" data-dataset-notes>Gait120</a></td>
+<td><details class="task-list"><summary>7 tasks</summary><span data-task-list>Decline Walking, Incline Walking, Level Walking, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit</span></details></td>
+<td>6,882</td>
+<td><span aria-label="No download available">—</span></td>
+<td><button type="button" class="preview-button" data-preview-dataset="ga26" aria-label="Preview Gait120">Preview</button></td>
+</tr>
+<tr data-dataset="gt24">
+<td><a href="datasets/gt24/index.html" data-dataset-notes>GaTech 2024 (TaskAgnostic)</a></td>
+<td><details class="task-list"><summary>13 tasks</summary><span data-task-list>Backward Walking, Cutting, Decline Walking, Incline Walking, Jump, Level Walking, Lunge, Run, Sit To Stand, Squat, Stair Ascent, Stair Descent, Stand To Sit</span></details></td>
+<td>19,849</td>
+<td><div class="table-downloads"><a href="https://www.dropbox.com/scl/fi/rq9ljak2fmzxhqx68iw2u/gtech_2024_phase.parquet?rlkey=b08njvj2cga8iyo7u48s493uy&amp;dl=1" data-download="full">Full</a><a href="https://www.dropbox.com/scl/fi/addnrep8tyxbdycij746z/gtech_2024_phase_clean.parquet?rlkey=37mauhfmexyvcx9rgovqg3bow&amp;dl=1" data-download="filtered">Filtered</a></div></td>
+<td><button type="button" class="preview-button" data-preview-dataset="gt24" aria-label="Preview GaTech 2024 (TaskAgnostic)">Preview</button></td>
+</tr>
+<tr data-dataset="gt25d">
+<td><a href="datasets/gt25d/index.html" data-dataset-notes>GaTech 2025 (Domain Adaptation)</a></td>
+<td><details class="task-list"><summary>4 tasks</summary><span data-task-list>Backward Walking, Level Walking, Sit To Stand, Stand To Sit</span></details></td>
+<td>5,470</td>
+<td><div class="table-downloads"><a href="https://www.dropbox.com/scl/fi/jye5hdd9z6ftjf6yogtm8/gtech_2025_da_phase_dirty.parquet?rlkey=edfildc8cwk4sipp4dkccy761&amp;dl=1" data-download="full">Full</a><a href="https://www.dropbox.com/scl/fi/ni7qgftpoq2klndsrwkz1/gtech_2025_da_phase_clean.parquet?rlkey=j5ssc03k2sprw09vfzr370nh1&amp;dl=1" data-download="filtered">Filtered</a></div></td>
+<td><button type="button" class="preview-button" data-preview-dataset="gt25d" aria-label="Preview GaTech 2025 (Domain Adaptation)">Preview</button></td>
+</tr>
+<tr data-dataset="gt21">
+<td><a href="datasets/gt21/index.html" data-dataset-notes>Gtech 2021</a></td>
+<td><details class="task-list"><summary>6 tasks</summary><span data-task-list>Decline Walking, Incline Walking, Level Walking, Stair Ascent, Stair Descent, Transition</span></details></td>
+<td>19,519</td>
+<td><div class="table-downloads"><a href="https://www.dropbox.com/scl/fi/cjlj0s89f2x8y1fur33ad/gtech_2021_phase_dirty.parquet?rlkey=oc809b1cv8c0yqc2pa3e7d5je&amp;dl=1" data-download="full">Full</a><a href="https://www.dropbox.com/scl/fi/bje9vy7ykyo8f7eio4l53/gtech_2021_phase_clean.parquet?rlkey=uowmh48suof9efvoknuh381lf&amp;dl=1" data-download="filtered">Filtered</a></div></td>
+<td><button type="button" class="preview-button" data-preview-dataset="gt21" aria-label="Preview Gtech 2021">Preview</button></td>
+</tr>
+<tr data-dataset="gt23">
+<td><a href="datasets/gt23/index.html" data-dataset-notes>Gtech 2023</a></td>
+<td><details class="task-list"><summary>14 tasks</summary><span data-task-list>Agility Drill, Cutting, Decline Walking, Incline Walking, Jump, Level Walking, Sit To Stand, Squat, Stair Ascent, Stair Descent, Stand To Sit, Step Down, Step Up, Walk Backward</span></details></td>
+<td>2,940</td>
+<td><div class="table-downloads"><a href="https://www.dropbox.com/scl/fi/vd24hcu6yo55qya0t0xmx/gtech_2023_phase_raw.parquet?rlkey=gdwjf6km2xc8mn92mvh495ubc&amp;dl=1" data-download="full">Full</a><a href="https://www.dropbox.com/scl/fi/xey8lljbjly0pl0o00vsb/gtech_2023_phase_clean.parquet?rlkey=ax2bk96imonvj3xb57nkho4x5&amp;dl=1" data-download="filtered">Filtered</a></div></td>
+<td><button type="button" class="preview-button" data-preview-dataset="gt23" aria-label="Preview Gtech 2023">Preview</button></td>
+</tr>
+<tr data-dataset="mb24">
+<td><a href="datasets/mb24/index.html" data-dataset-notes>MBLUE Ankle Exoskeleton Study</a></td>
+<td><details class="task-list"><summary>8 tasks</summary><span data-task-list>Decline Walking, Incline Walking, Level Walking, Sit To Stand, Squat, Stair Ascent, Stair Descent, Stand To Sit</span></details></td>
+<td>15,825</td>
+<td><span aria-label="No download available">—</span></td>
+<td><button type="button" class="preview-button" data-preview-dataset="mb24" aria-label="Preview MBLUE Ankle Exoskeleton Study">Preview</button></td>
+</tr>
+<tr data-dataset="sp50">
+<td><a href="datasets/sp50/index.html" data-dataset-notes>StrokePiG OpenSim Pipeline Dataset</a></td>
+<td><details class="task-list"><summary>1 task</summary><span data-task-list>Level Walking Stroke</span></details></td>
+<td>144</td>
+<td><span aria-label="No download available">—</span></td>
+<td><button type="button" class="preview-button" data-preview-dataset="sp50" aria-label="Preview StrokePiG OpenSim Pipeline Dataset">Preview</button></td>
+</tr>
+<tr data-dataset="um21">
+<td><a href="datasets/um21/index.html" data-dataset-notes>Umich 2021</a></td>
+<td><details class="task-list"><summary>9 tasks</summary><span data-task-list>Decline Walking, Incline Walking, Level Walking, Run, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit, Transition</span></details></td>
+<td>14,240</td>
+<td><div class="table-downloads"><a href="https://www.dropbox.com/scl/fi/dpk4wgtger1ktdoqrlxbr/umich_2021_phase_dirty.parquet?rlkey=rrjtx05woy1fd1du6oguai6x0&amp;dl=1" data-download="full">Full</a><a href="https://www.dropbox.com/scl/fi/q37ioia7zmpkxqtw5dtw6/umich_2021_phase_clean.parquet?rlkey=j9cgoam6nz7mwtadcacqff3rn&amp;dl=1" data-download="filtered">Filtered</a></div></td>
+<td><button type="button" class="preview-button" data-preview-dataset="um21" aria-label="Preview Umich 2021">Preview</button></td>
+</tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- DATASET_TABLE_END -->
+      </div>
+      <p class="catalog-note">These downloads are older conversions and have not yet been re-checked. Counts come from earlier reports.</p>
+      <div id="data-preview" data-preview-source="datasets/preview_data.json" aria-live="polite">
+        <h2>Data preview</h2>
+        <p>Select Preview beside a dataset to inspect its available sample.</p>
+        <noscript><p>Enable JavaScript for the preview, or open a dataset's Details page to view its recorded plots.</p></noscript>
+      </div>
+    </main>
   </div>
-  <section class="evidence-card" aria-label="Three parts of a dataset release">
-    <p class="card-caption">What accompanies the data</p><h2>Make the evidence visible.</h2>
-    <div class="evidence-row"><span>01</span><div><strong>Full converted data</strong><p>Converted observations with source identities and explicit units.</p></div></div>
-    <div class="evidence-row"><span>02</span><div><strong>Profile-filtered data</strong><p>A declared selection rule, with every exclusion accounted for.</p></div></div>
-    <div class="evidence-row"><span>03</span><div><strong>Provenance and quality results</strong><p>What was checked, what is missing, and what remains uncertain.</p></div></div>
-  </section>
-</div>
-<aside class="callout callout-warning" role="note"><p><strong>Current catalog: legacy / unreviewed.</strong> Historical downloads remain available for inspection. A prior “clean” label or high pass rate does not certify the linked file under the current release contract. <a href="reference/index.html#release-evidence">Read the release definitions.</a></p></aside>
-<section class="home-section" aria-labelledby="start-heading"><p class="eyebrow">Choose your next step</p><h2 id="start-heading">From a research question to a usable file.</h2><div class="path-grid">
-<a class="path-card" href="datasets/index.html"><span class="path-number">01 / FIND</span><h3>Choose a dataset <span aria-hidden="true">↗</span></h3><p>Filter by task and availability, then inspect the study population, signals, and limitations.</p></a>
-<a class="path-card" href="tutorials/index.html"><span class="path-number">02 / INSPECT</span><h3>Read the data <span aria-hidden="true">↗</span></h3><p>Use a complete synthetic sample to check observation boundaries and plot signals in Python or MATLAB.</p></a>
-<a class="path-card" href="reference/index.html"><span class="path-number">03 / UNDERSTAND</span><h3>Review the evidence <span aria-hidden="true">↗</span></h3><p>Distinguish structural checks, signal coverage, and conformance to a particular rule profile.</p></a>
-</div></section>
-<section class="home-section" aria-labelledby="quality-heading"><h2 id="quality-heading">Checks have specific meanings.</h2><p>Quality evidence should describe what happened, without collapsing every question into a single score.</p><div class="table-scroll" role="region" aria-label="Quality states" tabindex="0"><table><thead><tr><th scope="col">State</th><th scope="col">What it tells you</th></tr></thead><tbody>
-<tr><td>Passed</td><td>An applicable check ran and its criterion was met.</td></tr><tr><td>Failed</td><td>An applicable check ran and its criterion was not met.</td></tr><tr><td>Missing</td><td>A signal or value was unavailable; required and optional signals are distinguished.</td></tr><tr><td>Unchecked</td><td>No applicable check ran. This is not evidence of passing.</td></tr><tr><td>Invalid</td><td>Structural or invalid signal data prevent a trustworthy result.</td></tr>
-</tbody></table></div></section>
-<section class="home-section" aria-labelledby="contribute-heading"><h2 id="contribute-heading">Bring the source and the reasoning.</h2><p>Contribute observations with traceable identities, explicit conversion decisions, and reviewable release evidence. Researchers use native Parquet readers; no LocoHub analysis SDK is required.</p><a class="button" href="contributing/index.html">Contribution workflow</a><a class="button" href="maintainers/index.html">Reviewer checklist</a><a class="button" href="api/api-index/index.html">Former API users</a></section>
-<p class="funding-note">Supported by the National Institute of Biomedical Imaging and Bioengineering of the NIH under Award Number R01EB031166. The content is solely the responsibility of the authors and does not necessarily represent the official views of the NIH.</p>
-</main>
-    
-  </div>
-  <footer class="site-footer"><div><strong>LocoHub</strong><p>Standardized files. Explicit evidence. Researcher judgment.</p></div><p><a href="reference/index.html#release-evidence">Understand release evidence</a><br><a href="https://github.com/jmontp/LocoHub">Source and issue tracker</a></p></footer>
+  <footer class="site-footer"><p>LocoHub</p><nav aria-label="Additional links"><a href="contributing/index.html">Contribute data</a><a href="maintainers/index.html">Maintainers</a><a href="reference/index.html#release-evidence">Download notes</a><a href="https://github.com/jmontp/LocoHub/issues">Report an issue</a></nav></footer>
 </body>
 </html>

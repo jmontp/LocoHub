@@ -125,6 +125,12 @@ resource and provenance review. UM21, GT21, and UM24 source data were not found 
 the inspected local source root; existing standardized outputs cannot substitute
 for their missing sources.
 
+A later read-only storage audit found possible original sources inside this
+repository: `contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/`
+and `contributor_tools/conversion_scripts/Umich_2021/{Normalized,Streaming}.mat`.
+Their contents and completeness have not been checked. Preserve these files and
+inspect them before treating GT21 or UM21 reconversion as blocked on missing data.
+
 The metadata-only inventory counted the following supported source files; archives
 and unrelated files were excluded. File presence does not establish release
 completeness.

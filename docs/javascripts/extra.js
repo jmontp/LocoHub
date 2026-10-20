@@ -14,15 +14,15 @@
       const cells = row.cells;
       const name = cells[0].textContent.trim();
       row.querySelectorAll("a").forEach((link) => {
-        const column = link.closest("td").cellIndex;
-        const variant = {3: "Documentation", 4: "Profile-filtered phase", 5: "Full converted phase", 6: "Time data"}[column];
-        link.setAttribute("aria-label", `${name}: ${variant}`);
+        const variant = link.hasAttribute("data-dataset-notes") ? "Dataset notes"
+          : {filtered: "Filtered download", full: "Full download", time: "Time data"}[link.dataset.download];
+        if (variant) link.setAttribute("aria-label", `${name}: ${variant}`);
       });
       return { row, text: row.textContent.toLowerCase(),
-        tasks: cells[1].textContent.split(",").map((value) => value.trim()),
-        filtered: Boolean(cells[4].querySelector("a")),
-        full: Boolean(cells[5].querySelector("a")),
-        time: Boolean(cells[6].querySelector("a")) };
+        tasks: (cells[1].querySelector("[data-task-list]") || cells[1]).textContent.split(",").map((value) => value.trim()),
+        filtered: Boolean(row.querySelector('[data-download="filtered"]')),
+        full: Boolean(row.querySelector('[data-download="full"]')),
+        time: Boolean(row.querySelector('[data-download="time"]')) };
     });
     Array.from(new Set(rows.flatMap((entry) => entry.tasks))).sort().forEach((name) => {
       task.add(new Option(name, name));
@@ -37,7 +37,10 @@
         entry.row.hidden = !matches;
         if (matches) visible += 1;
       });
-      status.textContent = `${visible} of ${rows.length} datasets shown. All current listings are legacy / unreviewed.`;
+      status.textContent = `${visible} of ${rows.length} datasets shown.`;
+      document.dispatchEvent(new CustomEvent("locohub:catalog-filter", {
+        detail: rows.filter((entry) => !entry.row.hidden).map((entry) => entry.row.dataset.dataset).filter(Boolean),
+      }));
     }
     search.addEventListener("input", update);
     task.addEventListener("change", update);
@@ -104,13 +107,13 @@
           if (!task) return;
           shown += 1;
           const card = textElement("article", "", "comparison-card");
-          card.append(textElement("h2", dataset.display_name), textElement("p", "Legacy / unreviewed", "release-status"));
+          card.append(textElement("h2", dataset.display_name), textElement("p", "Older conversion, not yet re-checked", "release-status"));
           const count = Number.isFinite(task.total_strides) ? task.total_strides.toLocaleString() : "not recorded";
-          card.appendChild(textElement("p", `Historical observations for this task: ${count}. This count is not the number of independent participants.`));
+          card.appendChild(textElement("p", `Previously reported count for this task: ${count}. This is not a participant count.`));
           const links = textElement("div", "", "comparison-links");
-          addLink(links, "Study documentation and limitations", new URL(`${dataset.slug}/`, datasetRoot));
-          if (dataset.dirty_url) addLink(links, "Full converted phase download", dataset.dirty_url);
-          if (dataset.clean_url) addLink(links, "Profile-filtered phase download", dataset.clean_url);
+          addLink(links, "Dataset notes", new URL(`${dataset.slug}/`, datasetRoot));
+          if (dataset.dirty_url) addLink(links, "Full download", dataset.dirty_url);
+          if (dataset.clean_url) addLink(links, "Filtered download", dataset.clean_url);
           card.appendChild(links);
           if (!dataset.dirty_url && !dataset.clean_url) card.appendChild(textElement("p", "No phase download is registered."));
           const plots = task.plots || [];
@@ -124,12 +127,12 @@
             image.addEventListener("error", () => {
               image.replaceWith(textElement("p", "Historical plot unavailable. Open the study documentation for the recorded evidence."));
             }, { once: true });
-            figure.append(image, textElement("figcaption", "Historical plot — input file and profile require verification."));
+            figure.append(image, textElement("figcaption", "Earlier quality-check plot. See the dataset notes for the file and checks used."));
             card.appendChild(figure);
           });
           results.appendChild(card);
         });
-        status.textContent = shown ? `${shown} dataset records include ${tasks.get(taskSelect.value)}. Historical evidence is not a quality ranking.`
+        status.textContent = shown ? `${shown} datasets include ${tasks.get(taskSelect.value)}. These plots were made with different checks; don't use their pass rates to rank datasets.`
           : "No selected dataset has this task in its historical metadata. Choose another task or dataset.";
       }
       taskSelect.value = tasks.has("level_walking") ? "level_walking" : taskSelect.options[0].value;

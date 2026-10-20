@@ -63,7 +63,7 @@ class Page(HTMLParser):
         if tag == "details" and attrs.get("data-language"):
             language = attrs["data-language"]
             self.language_panels[language] = self.language_panels.get(language, 0) + 1
-        for attribute in ("href", "src", "action", "data-source", "data-search-source"):
+        for attribute in ("href", "src", "action", "data-source", "data-search-source", "data-preview-source"):
             if attrs.get(attribute):
                 self.links.append(attrs[attribute])
 

@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Locomotion data with explicit provenance, quality evidence, and native file access.">
+  <meta name="description" content="Browse locomotion datasets, preview signals, and download files for Python or MATLAB.">
   <meta name="color-scheme" content="light dark">
-  <title>Data contract and quality evidence · LocoHub</title>
+  <title>File format and data checks · LocoHub</title>
   <link rel="stylesheet" href="../stylesheets/site.css">
   <script src="../javascripts/extra.js" defer></script>
 </head>
@@ -13,24 +13,22 @@
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <div class="header-inner">
-      <a class="wordmark" href="../index.html" aria-label="LocoHub home"><span class="brand-mark" aria-hidden="true">L</span>LocoHub<span class="brand-caption">Locomotion data</span></a>
-      <nav class="primary-nav" aria-label="Main navigation"><a href="../datasets/index.html">Datasets</a>
-<a href="../tutorials/index.html">Read data</a>
-<a href="index.html" aria-current="page">Data contract</a>
-<a href="../contributing/index.html">Contribute</a>
-<a href="../maintainers/index.html">Review</a></nav>
+      <a class="wordmark" href="../index.html" aria-label="LocoHub home">LocoHub</a>
+      <nav class="primary-nav" aria-label="Main navigation"><a href="../index.html">Data</a>
+<a href="../tutorials/index.html">Tutorials</a>
+<a href="index.html" aria-current="page">File format</a></nav>
       <form class="header-search" role="search" aria-label="Site search" action="../search/index.html"><label class="visually-hidden" for="header-query">Search documentation</label><input id="header-query" type="search" name="q" placeholder="Search docs" required><button type="submit">Search</button></form>
-      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub <span aria-hidden="true">↗</span></a>
+      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub</a>
     </div>
   </header>
   <div class="page-layout">
     <main id="main" class="page-content" tabindex="-1">
-      <div class="page-kicker"><a href="../index.html">LocoHub</a><span aria-hidden="true">/</span>Data contract and quality evidence</div>
+      <div class="page-kicker"><a href="../index.html">LocoHub</a><span aria-hidden="true">/</span>File format and data checks</div>
       
-<h1 id="data-contract-and-quality-evidence">Data contract and quality evidence</h1>
-<p>LocoHub releases standardize files and preserve evidence about their origin and processing. Researchers consume these files directly. The current contract is <strong>version 2.0</strong>; historical files in the catalog may follow older conventions and remain <strong>legacy / unreviewed</strong> until their identities and provenance have been established.</p>
-<h2 id="observation-identity">Observation identity</h2>
-<p>An observation is the unit whose samples must remain together during validation and filtering. Its identity is the combination of:</p>
+<h1 id="data-contract-and-quality-evidence">File format and data checks</h1>
+<p>LocoHub files use named columns with explicit units and identifiers for participants, recordings, and cycles. This page describes <strong>file format version 2.0</strong> and its checks. Current catalog downloads may use earlier conventions; consult each dataset’s notes before using these definitions.</p>
+<h2 id="observation-identity">Identifying cycles and recordings</h2>
+<p>A cycle, transfer, averaged curve, or continuous recording is called an <em>observation</em> in the file format. Its samples stay together during checks and filtering. Its identity is the combination of:</p>
 <div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
 <thead>
 <tr>
@@ -171,7 +169,7 @@
 </table></div>
 <p><code>ipsi</code> is the reference limb and <code>contra</code> is the opposite limb. Contralateral event timing must come from the recorded protocol or a documented derivation; it is not universally a 50% shift. Preserve whether moments represent total, biological, or assistance moments. Record the coordinate frame, signs, normalization mass, force-plate assignment, filtering, and derivative method in conversion provenance.</p>
 <p>Unavailable signals stay missing. Zero-filled missing features can create false evidence that a signal was measured. A column existing in a file does not establish coverage across every task or observation. Inspect finite-value coverage and required/optional signal declarations before analysis.</p>
-<h2 id="quality-states">Quality states</h2>
+<h2 id="quality-states">Check results</h2>
 <div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
 <thead>
 <tr>
@@ -205,13 +203,13 @@
 <p>Structural integrity, signal coverage, and biomechanical profile conformance are separate evidence. A profile only checks its configured features and phases or time ranges. It does not establish correct source measurements, coordinate transforms, event detection, or clinical applicability.</p>
 <p>A profile declares its intended tasks, observation types, required/optional features, thresholds, and supporting rationale. Empirical or manually tuned ranges must be described as such. Call them literature-derived only when traceable sources support the rules. Ensemble curves need a profile that explicitly includes <code>ensemble_curve</code>.</p>
 <p>Profiles can restrict applicability using recorded metadata such as population or assistance condition. Missing or mismatched applicability metadata leaves an observation unchecked. Profiles without those restrictions disclose that limitation. Whole-waveform diagnostics record missing and infinite values, constant signals, and the largest adjacent-sample change. Optional <code>waveform_ranges</code> check bounds across every sample; a configured <code>max_abs_step</code> produces a review warning, not an automatic exclusion. See the contributor contract guide in the repository for profile syntax.</p>
-<p>No applicable profile means <strong>unchecked</strong>, not passed. A dataset with unchecked observations may retain full converted data and evidence, but those observations are not eligible for the profile-filtered artifact. A low pass rate warrants investigation of both conversion and applicability; increasing thresholds is not itself a correction.</p>
-<h2 id="release-evidence">Release evidence</h2>
-<p>A prepared release directory contains these artifacts:</p>
+<p>No applicable profile means <strong>unchecked</strong>, not passed. A dataset with unchecked observations may retain full converted data and evidence, but those observations are excluded from the filtered download. A low pass rate warrants investigation of both conversion and applicability; increasing thresholds is not itself a correction.</p>
+<h2 id="release-evidence">Download contents</h2>
+<p>Newly prepared versions include the files below. Older catalog downloads may not include these records.</p>
 <div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
 <thead>
 <tr>
-<th>Artifact</th>
+<th>File</th>
 <th>Purpose</th>
 </tr>
 </thead>
@@ -234,7 +232,7 @@
 </tr>
 <tr>
 <td><code>manifest.json</code></td>
-<td>Release identity, contract version, artifact hashes, counts, and provenance references.</td>
+<td>Version identifier, file format version, file hashes, counts, and links to source and processing records.</td>
 </tr>
 <tr>
 <td><code>manifest.sha256</code></td>
@@ -254,10 +252,10 @@
 </tr>
 </tbody>
 </table></div>
-<p><strong>Full converted</strong> does not mean original raw data. <strong>Profile-filtered</strong> does not mean universally clean. Report both the selected variant and the profile used. Historical <code>clean</code>/<code>dirty</code> filenames do not substitute for this evidence.</p>
+<p><strong>Full download</strong> contains converted data, not the original source recordings. A <strong>filtered download</strong> keeps complete cycles, curves, or recordings selected by named checks. Report which download and checks you used. Older <code>clean</code>/<code>dirty</code> filenames do not establish which checks were applied.</p>
 <p>Building a bundle records checks and contributor review; it does not automatically grant independent maintainer approval. Source URIs and hashes without accessible local source files remain contributor declarations. Reconcile release artifacts with the original study and inspect limitations before publication.</p>
 <p>The interactive tuner saves draft profiles with a rationale and an audit sidecar recording hashes, changes, and decision counts. Draft profiles cannot be used to publish a release bundle; review the rules and their evidence before recording an approved profile.</p>
-<p>New release directories are immutable: changes to data, profiles, or provenance produce a new directory and identifier. Existing catalog downloads remain legacy / unreviewed unless the corresponding files are explicitly reprocessed and reviewed. This documentation update does not revalidate them.</p>
+<p>New release directories are immutable: changes to data, profiles, or provenance produce a new directory and identifier. Existing catalog downloads have not yet been re-checked. Their status changes only when the actual files are reprocessed and reviewed.</p>
 <h2 id="related-workflows">Related workflows</h2>
 <ul>
 <li><a href="../tutorials/">Load and inspect the complete example</a></li>
@@ -267,8 +265,8 @@
 </ul>
 
     </main>
-    <aside class="page-outline" aria-label="On this page"><p>On this page</p><ol><li><a href="#observation-identity">Observation identity</a></li><li><a href="#metadata">Metadata</a></li><li><a href="#sample-indices">Sample indices</a></li><li><a href="#signals-units-and-missing-values">Signals, units, and missing values</a></li><li><a href="#quality-states">Quality states</a></li><li><a href="#release-evidence">Release evidence</a></li><li><a href="#related-workflows">Related workflows</a></li></ol></aside>
+    <aside class="page-outline" aria-label="On this page"><p>On this page</p><ol><li><a href="#observation-identity">Identifying cycles and recordings</a></li><li><a href="#metadata">Metadata</a></li><li><a href="#sample-indices">Sample indices</a></li><li><a href="#signals-units-and-missing-values">Signals, units, and missing values</a></li><li><a href="#quality-states">Check results</a></li><li><a href="#release-evidence">Download contents</a></li><li><a href="#related-workflows">Related workflows</a></li></ol></aside>
   </div>
-  <footer class="site-footer"><div><strong>LocoHub</strong><p>Standardized files. Explicit evidence. Researcher judgment.</p></div><p><a href="index.html#release-evidence">Understand release evidence</a><br><a href="https://github.com/jmontp/LocoHub">Source and issue tracker</a></p></footer>
+  <footer class="site-footer"><p>LocoHub</p><nav aria-label="Additional links"><a href="../contributing/index.html">Contribute data</a><a href="../maintainers/index.html">Maintainers</a><a href="index.html#release-evidence">Download notes</a><a href="https://github.com/jmontp/LocoHub/issues">Report an issue</a></nav></footer>
 </body>
 </html>

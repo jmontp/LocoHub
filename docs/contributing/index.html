@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Locomotion data with explicit provenance, quality evidence, and native file access.">
+  <meta name="description" content="Browse locomotion datasets, preview signals, and download files for Python or MATLAB.">
   <meta name="color-scheme" content="light dark">
   <title>Contribute a dataset · LocoHub</title>
   <link rel="stylesheet" href="../stylesheets/site.css">
@@ -13,14 +13,12 @@
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <div class="header-inner">
-      <a class="wordmark" href="../index.html" aria-label="LocoHub home"><span class="brand-mark" aria-hidden="true">L</span>LocoHub<span class="brand-caption">Locomotion data</span></a>
-      <nav class="primary-nav" aria-label="Main navigation"><a href="../datasets/index.html">Datasets</a>
-<a href="../tutorials/index.html">Read data</a>
-<a href="../reference/index.html">Data contract</a>
-<a href="index.html" aria-current="page">Contribute</a>
-<a href="../maintainers/index.html">Review</a></nav>
+      <a class="wordmark" href="../index.html" aria-label="LocoHub home">LocoHub</a>
+      <nav class="primary-nav" aria-label="Main navigation"><a href="../index.html">Data</a>
+<a href="../tutorials/index.html">Tutorials</a>
+<a href="../reference/index.html">File format</a></nav>
       <form class="header-search" role="search" aria-label="Site search" action="../search/index.html"><label class="visually-hidden" for="header-query">Search documentation</label><input id="header-query" type="search" name="q" placeholder="Search docs" required><button type="submit">Search</button></form>
-      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub <span aria-hidden="true">↗</span></a>
+      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub</a>
     </div>
   </header>
   <div class="page-layout">
@@ -88,7 +86,7 @@
     --mode phase
 </code></pre>
 <p>Choose <code>--mode time</code> for continuous time observations or <code>--mode ensemble</code> for ensemble curves. Use repeatable <code>--required-feature COLUMN_NAME</code> only when explicitly defining the intended required feature set. Record that choice with the review rationale.</p>
-<p>If no profile is appropriate, omit <code>--ranges</code>. Unmatched observations remain <strong>unchecked</strong> and the profile-filtered artifact is empty; absence of checks never produces passing observations.</p>
+<p>If no profile is appropriate, omit <code>--ranges</code>. Unmatched observations remain <strong>unchecked</strong> and the filtered download is empty; absence of checks never produces passing observations.</p>
 <p>The builder writes <code>full.parquet</code>, <code>filtered.parquet</code>, <code>quality.json</code>, <code>exclusions.parquet</code>, <code>manifest.json</code>, <code>manifest.sha256</code>, <code>provenance.json</code>, and a profile snapshot when supplied. It rejects an existing output directory and structural/identity violations. See <a href="../reference/#release-evidence">release evidence</a> for each artifact's meaning. Maintainer implementation details are recorded in <code>contributor_tools/DATA_CONTRACT.md</code> in the repository.</p>
 <p>The builder admits bounded inputs before loading them in memory. Defaults are <code>--memory-budget-mb 256</code> and <code>--max-input-rows 500000</code>; this is not a streaming pipeline or a hard process-memory cap. If input exceeds these limits, prepare a smaller reviewable shard or use a separately planned resource budget. Do not casually increase limits or run simultaneous full-dataset jobs on a shared machine.</p>
 <h2 id="6-review-and-submit">6. Review and submit</h2>
@@ -112,6 +110,6 @@ python -m http.server 8000 --directory site
     </main>
     <aside class="page-outline" aria-label="On this page"><p>On this page</p><ol><li><a href="#1-establish-source-provenance-and-sharing-terms">1. Establish source provenance and sharing terms</a></li><li><a href="#2-convert-a-small-representative-pilot">2. Convert a small, representative pilot</a></li><li><a href="#3-diagnose-quality-issues-and-define-the-profile">3. Diagnose quality issues and define the profile</a></li><li><a href="#4-prepare-reviewed-provenance">4. Prepare reviewed provenance</a></li><li><a href="#5-build-a-release-bundle">5. Build a release bundle</a></li><li><a href="#6-review-and-submit">6. Review and submit</a></li><li><a href="#publishing-documentation">Publishing documentation</a></li></ol></aside>
   </div>
-  <footer class="site-footer"><div><strong>LocoHub</strong><p>Standardized files. Explicit evidence. Researcher judgment.</p></div><p><a href="../reference/index.html#release-evidence">Understand release evidence</a><br><a href="https://github.com/jmontp/LocoHub">Source and issue tracker</a></p></footer>
+  <footer class="site-footer"><p>LocoHub</p><nav aria-label="Additional links"><a href="index.html">Contribute data</a><a href="../maintainers/index.html">Maintainers</a><a href="../reference/index.html#release-evidence">Download notes</a><a href="https://github.com/jmontp/LocoHub/issues">Report an issue</a></nav></footer>
 </body>
 </html>
