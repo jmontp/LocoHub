@@ -93,7 +93,7 @@
       const signal = task.signals.find((s) => s.column === signalSelect.value), group = chosenStats();
       const stats = signal && group?.signals?.[signal.column];
       drawnWidth = plot.clientWidth;
-      plot.replaceChildren(); valueWrap.replaceChildren();
+      plot.replaceChildren(); valueWrap.replaceChildren(); rangeBody.replaceChildren();
       if (!stats) {
         status.textContent = `${task.label} · ${subjectSelect.value || 'All subjects'} · No recorded values for this signal`;
         plot.append(el('p', 'No recorded values for this signal and subject.')); caption.textContent = ''; column.textContent = '';
@@ -158,7 +158,7 @@
         if (task.signals.length) draw(); return;
       }
       subjectPending = true; signalSelect.disabled = true;
-      plot.replaceChildren(); caption.textContent = ''; valueWrap.replaceChildren(); column.textContent = '';
+      plot.replaceChildren(); caption.textContent = ''; valueWrap.replaceChildren(); rangeBody.replaceChildren(); column.textContent = '';
       status.textContent = `Loading ${subject} averages…`; widget.setAttribute('aria-busy', 'true');
       subjectRequest = new AbortController();
       try {
@@ -181,7 +181,7 @@
       const previousSubject = subjectSelect.value;
       task = dataset.tasks.find((t) => t.id === taskSelect.value);
       payload = undefined; subjectSelect.disabled = signalSelect.disabled = true;
-      plot.replaceChildren(); caption.textContent = ''; valueWrap.replaceChildren(); column.textContent = '';
+      plot.replaceChildren(); caption.textContent = ''; valueWrap.replaceChildren(); rangeBody.replaceChildren(); column.textContent = '';
       status.textContent = `Loading ${task.label.toLowerCase()} averages…`;
       widget.setAttribute('aria-busy', 'true');
       try {
