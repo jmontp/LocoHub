@@ -1,11 +1,11 @@
 /* Optional visual styles for the data browser. No data or preview state changes. */
 (function () {
   "use strict";
-  const names = {slate: "Slate", paper: "Paper", blueprint: "Blueprint", sage: "Sage", ink: "Ink"};
-  const storageKey = "locohub.visualStyle";
+  const names = {clean: "Clean", ruled: "Ruled", soft: "Soft", compact: "Compact", outline: "Outline"};
+  const storageKey = "locohub.uiStyle";
   const root = document.documentElement;
   const valid = (value) => Object.prototype.hasOwnProperty.call(names, value);
-  let current = "slate";
+  let current = "clean";
   try {
     const saved = window.localStorage.getItem(storageKey);
     if (valid(saved)) current = saved;
@@ -23,7 +23,7 @@
     const status = document.getElementById("visual-style-status");
 
     function apply(value, persist, announce) {
-      current = valid(value) ? value : "slate";
+      current = valid(value) ? value : "clean";
       root.dataset.style = current;
       label.textContent = names[current];
       choices.forEach((choice) => { choice.checked = choice.value === current; });
