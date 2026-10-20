@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browse locomotion datasets, preview signals, and download files for Python or MATLAB.">
+  <meta name="color-scheme" content="light dark">
+  <title>Testing & data quality · LocoHub</title>
+  <link rel="stylesheet" href="../stylesheets/site.css">
+  <script src="../javascripts/extra.js" defer></script>
+  <link rel="stylesheet" href="../stylesheets/visual-styles.css">
+  <link rel="stylesheet" href="../stylesheets/data-preview.css">
+  <link rel="stylesheet" href="../stylesheets/aggregate-preview.css">
+  <link rel="stylesheet" href="../stylesheets/phase-explorer.css">
+  <script src="../javascripts/visual-styles.js" defer></script>
+  <script src="../javascripts/phase-chart.js" defer></script>
+  <script src="../javascripts/aggregate-preview.js" defer></script>
+  <script src="../javascripts/quality.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="../index.html" aria-label="LocoHub home">LocoHub</a>
+      <nav class="primary-nav" aria-label="Main navigation"><a href="../index.html">Data</a>
+<a href="../tutorials/index.html">Tutorials</a>
+<a href="../reference/index.html">File format</a>
+<a href="../quality/index.html" aria-current="page">Testing &amp; data quality</a></nav>
+      <form class="header-search" role="search" aria-label="Site search" action="../search/index.html"><label class="visually-hidden" for="header-query">Search documentation</label><input id="header-query" type="search" name="q" placeholder="Search docs" required><button type="submit">Search</button></form>
+      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub</a>
+    </div>
+  </header>
+  <div class="page-layout wide-page"><main id="main" class="page-content" tabindex="-1">
+<h1>Testing &amp; data quality</h1>
+<p class="quality-task-note">See what we check, what has actually been tested, and how the phase curves compare with configured limits.</p>
+<p class="catalog-note"><strong>The downloads are still older, unreviewed conversions.</strong> Passing software tests means the checking tools behaved as expected on test cases. It does not mean every downloaded curve is correct.</p>
+<nav class="quality-nav" aria-label="Quality sections"><a href="#checks">What we check</a><a href="#test-results">Test results</a><a href="#summary-coverage">Preview coverage</a><a href="#range-explorer">Phase-range boxes</a></nav>
+<h2 id="checks">What we check</h2>
+<div class="table-scroll"><table><thead><tr><th>Check</th><th>What it catches</th><th>What it cannot establish</th></tr></thead><tbody>
+<tr><td>Observation identity and file structure</td><td>Missing or inconsistent recording/observation IDs, unknown tasks or reference sides, duplicate samples, malformed 150-point phase grids, and invalid time order.</td><td>Whether the original gait events or limb assignments are scientifically correct.</td></tr>
+<tr><td>Missing and invalid signals</td><td>Required versus optional channels; missing, nonfinite, failed and unchecked values stay separate.</td><td>A missing measurement cannot be recovered by passing another check.</td></tr>
+<tr><td>Units, signs and conversions</td><td>Small known examples check joint conventions, force normalization, derivatives and source mappings in supported converters.</td><td>Every source trial still needs review; some native MATLAB checks are separate or skipped when unavailable.</td></tr>
+<tr><td>Phase and waveform bounds</td><td>Configured limits at selected phase samples, whole-waveform limits and step-change rules where a profile provides them.</td><td>A plausible curve is not proof of a valid measurement. Sparse phase checks can miss problems between the checked points.</td></tr>
+<tr><td>Rule applicability</td><td>Task, population, condition and observation-type requirements; unmatched or unspecified coverage stays visible.</td><td>Manually tuned ranges are not universal clinical or physiological norms.</td></tr>
+<tr><td>Release files and provenance</td><td>Source hash mismatches, inconsistent counts, partial writes, changed releases, and filtering that splits observations.</td><td>A release build does not create independent scientific approval.</td></tr>
+<tr><td>Averages and browser charts</td><td>Equal subject weighting, sample SD, singleton SD, missing-value gaps, units, shared axes, and linked static data.</td><td>Summary curves hide individual variation and combine speeds and conditions within a task.</td></tr>
+<tr><td>Memory limits and documentation</td><td>Bounded reads, admission limits, small conversion pilots, example code and local links.</td><td>Successful tests are not permission to run every large dataset at once.</td></tr>
+</tbody></table></div>
+<p>See the <a href="../contributing/index.html">contributor workflow</a> and <a href="../maintainers/index.html#review-a-prepared-release">release review checklist</a> for how these checks fit together.</p>
+<h2 id="test-results">Recorded automated test run</h2>
+<p>These results come from the active Python test suite, using small fixtures and source checks. Expand a group to see every test and any skip reason. This is a saved run, not a live CI indicator.</p>
+<div id="quality-test-results" data-source="test_results.json" aria-live="polite">Loading recorded results…</div>
+<p><a href="test_results.json">Download the recorded test results</a></p>
+<h2 id="summary-coverage">What was checked for the previews</h2>
+<p>The plot exporter groups complete, ordered 150-point curves on a common phase grid before averaging. The table below reports its structural exclusions. It does not report biomechanical pass rates or verify the full source files against the online downloads.</p>
+<div id="quality-coverage">Loading preview coverage…</div>
+<h2 id="range-explorer">Inspect phase-range boxes</h2>
+<p class="quality-task-note">Choose a dataset, task, subject and signal. Dashed boxes show the configured minimum and maximum at specific phase samples. Their width is only for visibility; it is not a time window. The curve is an average, so a curve inside the boxes does not mean every observation passed.</p>
+<p class="quality-task-note">These are the current <strong>manually tuned default ranges</strong>, shown for inspection. They may not apply to every population or condition and are not the historical rule snapshot for each download. We do not turn this overlay into a dataset pass/fail score.</p>
+<label for="quality-dataset">Dataset <select id="quality-dataset"></select></label>
+<section class="phase-explorer" id="quality-phase" data-aggregate-source="../datasets/aggregate_previews/manifest.json" aria-label="Inspect configured phase ranges"><p class="phase-source"></p><p class="phase-note">Loading averages and configured bounds…</p><div class="phase-controls"></div><div class="phase-plot"></div></section>
+<p id="quality-profile-source"></p><p><a href="phase_ranges.json">Download the displayed bounds and source checksum</a> · <a href="https://github.com/jmontp/LocoHub/blob/review/data-first-overhaul/contributor_tools/validation_ranges/default_ranges.yaml">Source YAML</a></p>
+<noscript><p>Interactive charts and recorded-result tables require JavaScript. The JSON downloads above contain the same evidence.</p></noscript>
+</main></div>
+  <footer class="site-footer"><p>LocoHub</p><nav aria-label="Additional links"><a href="../contributing/index.html">Contribute data</a><a href="../maintainers/index.html">Maintainers</a><a href="../reference/index.html#release-evidence">Download notes</a><a href="https://github.com/jmontp/LocoHub/issues">Report an issue</a></nav></footer>
+</body>
+</html>

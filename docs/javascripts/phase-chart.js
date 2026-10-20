@@ -31,7 +31,7 @@
     for (let v = Math.ceil(min / step) * step; v <= max + step * 1e-9 && result.length < 20; v += step) result.push(Number(v.toPrecision(12)));
     return result;
   }
-  function makeChart(phase, stats, signal, band, width, domain) {
+  function makeChart(phase, stats, signal, band, width, domain, ranges = []) {
     const unit = displayUnit(signal.unit);
     const points = phase.map((x, i) => ({x, y: finite(stats.mean[i]) ? stats.mean[i] * unit.factor : null,
       sd: finite(stats.sd[i]) && stats.n[i] >= 2 ? stats.sd[i] * unit.factor : null}));
@@ -40,7 +40,7 @@
     const W = Math.max(320, Math.round(width || 480)), H = 270, L = 52, R = 16, T = 28, B = 44;
     const lows = valid.map((p) => p.y - (band && finite(p.sd) ? p.sd : 0));
     const highs = valid.map((p) => p.y + (band && finite(p.sd) ? p.sd : 0));
-    const lo = Math.min(...lows), hi = Math.max(...highs), pad = Math.max((hi - lo) * .1, Math.abs(hi) * .01, .000001);
+    const lo = Math.min(...lows, ...ranges.map(r => r.min * unit.factor)), hi = Math.max(...highs, ...ranges.map(r => r.max * unit.factor)), pad = Math.max((hi - lo) * .1, Math.abs(hi) * .01, .000001);
     const ymin = domain ? domain[0] : lo - pad, ymax = domain ? domain[1] : hi + pad;
     const fullPhase = phase.filter(finite);
     const xmin = Math.min(...fullPhase), xmax = Math.max(...fullPhase);
@@ -56,6 +56,12 @@
     if (ymin < 0 && ymax > 0) svg.append(svgEl('line', {x1: L, x2: W - R, y1: Y(0), y2: Y(0), class: 'preview-zero'}));
     svg.append(svgEl('text', {x: L, y: 14, class: 'preview-axis-title'}, unit.label));
     svg.append(svgEl('text', {x: L + (W - L - R) / 2, y: H - 6, 'text-anchor': 'middle'}, 'Movement (%)'));
+    ranges.forEach(range => {
+      const x = X(range.sample_phase), top = Y(range.max * unit.factor), bottom = Y(range.min * unit.factor);
+      const box = svgEl('rect', {x: x - 4, y: top, width: 8, height: Math.max(1, bottom - top), class: 'phase-range-box'});
+      box.append(svgEl('title', {}, `Configured ${range.phase}% check (sample ${fmt(range.sample_phase)}%): ${fmt(range.min * unit.factor)} to ${fmt(range.max * unit.factor)} ${unit.label}. Width is visual only.`));
+      svg.append(box);
+    });
     if (band) {
       let segment = [];
       const flush = () => {
@@ -78,5 +84,28 @@
     return svg;
   }
 
-  window.LocoHubPhaseChart = {makeChart, displayUnit};
+  // All series share axes; paths retain gaps and singleton SD handling from makeChart.
+  function makeComparisonChart(series, signal, band, width, domain) {
+    const valid = series.filter(s => s.stats.mean.some(finite));
+    if (!valid.length) return el('p', 'No recorded values for this selection.', 'aggregate-empty');
+    const svg = makeChart(valid[0].phase, valid[0].stats, signal, false, width, domain);
+    svg.querySelectorAll('.aggregate-mean, .aggregate-band').forEach(path => path.remove());
+    const bands = [], lines = [];
+    valid.forEach(series => {
+      const layer = makeChart(series.phase, series.stats, signal, band, width, domain);
+      layer.querySelectorAll('.aggregate-band, .aggregate-mean').forEach(path => {
+        path.setAttribute('data-series', series.slug);
+        if (path.classList.contains('aggregate-band')) {
+          path.style.fill = series.color; path.style.fillOpacity = '.09'; bands.push(path);
+        } else {
+          path.style.stroke = series.color; path.style.strokeDasharray = series.dash || 'none';
+          path.style.strokeWidth = '2'; path.append(svgEl('title', {}, series.label)); lines.push(path);
+        }
+      });
+    });
+    svg.append(...bands, ...lines);
+    svg.setAttribute('aria-label', `${signal.label}: subject averages for ${valid.map(s => s.label).join(', ')}. Shared axes. Exact values are in Chart values below.`);
+    return svg;
+  }
+  window.LocoHubPhaseChart = {makeChart, makeComparisonChart, displayUnit};
 })();

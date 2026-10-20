@@ -28,7 +28,9 @@ const chart = makeChart(phase,stats,signal,true,540,[0,180]);
 const line = chart.children.find(n=>n.attrs.class==='preview-line aggregate-mean');
 const other = makeChart(phase,{...stats,mean:[0,Math.PI/2,null,Math.PI,0]},signal,false,540,[0,180]);
 const otherLine = other.children.find(n=>n.attrs.class==='preview-line aggregate-mean');
-console.log(JSON.stringify({factor:displayUnit('rad').factor,path:line.attrs.d,
+const boxed = makeChart(phase,stats,signal,false,540,[0,180],[{phase:25,sample_phase:25,min:0,max:Math.PI/2}]);
+const box = boxed.children.find(n=>n.attrs.class==='phase-range-box');
+console.log(JSON.stringify({box:box.attrs,factor:displayUnit('rad').factor,path:line.attrs.d,
   otherPath:otherLine.attrs.d, bands:chart.children.filter(n=>n.attrs.class==='aggregate-band').length,
   yTicks:chart.children.filter(n=>n.tag==='text' && n.attrs['text-anchor']==='end').map(n=>n.textContent)}));
 '''
@@ -40,3 +42,7 @@ console.log(JSON.stringify({factor:displayUnit('rad').factor,path:line.attrs.d,
     assert 'L170.00,127.00' in chart['path']  # 90 degrees halfway up the shared 0..180 scale.
     assert chart['path'].split('M')[1] == chart['otherPath'].split('M')[1]
     assert '0' in chart['yTicks'] and '150' in chart['yTicks']
+
+    assert chart['box']['x'] == 166  # Box centered at the actual sample.
+    assert chart['box']['y'] == 127
+    assert chart['box']['height'] == 99  # Exact 0..90-degree bound on a 0..180 scale.

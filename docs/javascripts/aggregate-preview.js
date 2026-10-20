@@ -77,7 +77,15 @@
       const rejected = Object.entries(counts).filter(([key]) => key.endsWith('_observations') && key !== 'complete_observations').reduce((sum, [, n]) => sum + n, 0);
       method.append(el('p', `File checks: ${counts.complete_observations || 0} complete curves found; ${rejected} incomplete or invalid blocks excluded.`));
     }
-    widget.append(form, bandLabel, status, retry, column, figure, values, method);
+    const rangeToggle = el('input'); rangeToggle.type = 'checkbox'; rangeToggle.checked = true;
+    const rangeLabel = el('label', undefined, 'aggregate-band-control'); rangeLabel.append(rangeToggle, document.createTextNode('Show configured range boxes'));
+    const rangeDetails = el('details', undefined, 'range-values'); rangeDetails.append(el('summary', 'Configured bounds and mean at each check'));
+    const rangeBody = el('div'); rangeDetails.append(rangeBody);
+    widget.append(form, bandLabel);
+    if (options.rangeProfile) widget.append(rangeLabel);
+    widget.append(status, retry, column, figure, values);
+    if (options.rangeProfile) widget.append(rangeDetails);
+    widget.append(method);
     let payload, task, subjectPayload, subjectPending = false, subjectError = false, subjectNumber = 0, requestNumber = 0, drawnWidth = 0;
     function chosenStats() { return subjectSelect.value ? subjectPayload : payload.all; }
     function draw(updateValues = true) {
@@ -97,7 +105,22 @@
       const subject = subjectSelect.value;
       status.textContent = `${task.label} · ${subject || 'All subjects'} · ${countText} ${subject ? 'curves' : 'subjects'} contributing per recorded point`;
       column.replaceChildren('Column ', el('code', signal.column));
-      plot.append(makeChart(payload.phase, stats, signal, band.checked, drawnWidth));
+      const ranges = options.rangeProfile?.tasks?.[task.id]?.[signal.column] || [];
+      plot.append(makeChart(payload.phase, stats, signal, band.checked, drawnWidth, undefined, rangeToggle.checked ? ranges : []));
+      if (options.rangeProfile) {
+        rangeBody.replaceChildren();
+        rangeBody.append(el('p', ranges.length ? 'Boxes show the configured minimum and maximum at each sampled phase. Their width is visual only. Comparing an average with these limits is not an observation-level pass/fail result.' : 'No phase bounds are configured for this task and signal. This is unchecked, not a pass.'));
+        if (ranges.length) {
+          const wrap = el('div', undefined, 'preview-table-wrap'); wrap.tabIndex = 0;
+          const table = el('table'), head = el('thead'), row = el('tr');
+          ['Check (%)', 'Sample (%)', `Minimum (${unit.label})`, `Maximum (${unit.label})`, 'Displayed mean', 'Mean relative to bounds'].forEach(t => { const h = el('th', t); h.scope = 'col'; row.append(h); });
+          head.append(row); table.append(head); const body = el('tbody');
+          ranges.forEach(r => {
+            const mean = stats.mean[r.sample_index], relation = !finite(mean) ? 'Missing' : mean < r.min ? 'Below' : mean > r.max ? 'Above' : 'Within';
+            const tr = el('tr'); [fmt(r.phase), fmt(r.sample_phase), fmt(r.min * unit.factor), fmt(r.max * unit.factor), fmt(finite(mean) ? mean * unit.factor : null), relation].forEach(v => tr.append(el('td', v))); body.append(tr);
+          }); table.append(body); wrap.append(table); rangeBody.append(wrap);
+        }
+      }
       const sdAvailable = stats.sd.some((sd, i) => finite(sd) && stats.n[i] >= 2);
       caption.textContent = subject
         ? 'Line: mean of this subject’s stored curves. Shading: ±1 standard deviation across curves.'
@@ -185,7 +208,7 @@
     taskSelect.addEventListener('change', loadTask);
     retry.addEventListener('click', () => { if (payload && subjectSelect.value) loadSubject(); else loadTask(); });
     subjectSelect.addEventListener('change', loadSubject);
-    signalSelect.addEventListener('change', () => draw()); band.addEventListener('change', () => draw());
+    signalSelect.addEventListener('change', () => draw()); band.addEventListener('change', () => draw()); rangeToggle.addEventListener('change', () => draw());
     if ('ResizeObserver' in window) {
       let frame;
       observer = new ResizeObserver(() => {

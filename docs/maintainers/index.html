@@ -16,7 +16,8 @@
       <a class="wordmark" href="../index.html" aria-label="LocoHub home">LocoHub</a>
       <nav class="primary-nav" aria-label="Main navigation"><a href="../index.html">Data</a>
 <a href="../tutorials/index.html">Tutorials</a>
-<a href="../reference/index.html">File format</a></nav>
+<a href="../reference/index.html">File format</a>
+<a href="../quality/index.html">Testing &amp; data quality</a></nav>
       <form class="header-search" role="search" aria-label="Site search" action="../search/index.html"><label class="visually-hidden" for="header-query">Search documentation</label><input id="header-query" type="search" name="q" placeholder="Search docs" required><button type="submit">Search</button></form>
       <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub</a>
     </div>
@@ -97,6 +98,14 @@ python3 docs/build.py --check</code></pre>
 <p>Within each task, complete stored curves are averaged for each subject. The overall mean gives each available subject mean equal weight; its sample standard deviation measures variation between subject means. Choosing one subject shows variation across that subject’s stored curves instead. Missing values are excluded point by point, counts are retained, and standard deviation is absent with fewer than two contributors.</p>
 <p>Older files may already contain averaged curves. Task summaries also combine available speeds and other conditions, so these plots are descriptive previews, not controlled comparisons or evidence of scientific review. The source file name, size and modification time are recorded; the full source file is not content-hashed or verified against its online download.</p>
 <p>Each task file contains its overall summary and links to separate subject files. The site loads those subject files only when requested. Keep all generated files referenced by <code>docs/datasets/aggregate_previews/manifest.json</code> together when publishing.</p>
+<h2 id="comparison-design">Comparison charts</h2>
+<p>Overlay a few datasets for direct comparison, or use aligned signal rows when curves overlap. Dataset colours and dash patterns stay consistent. Axes are shared per signal across datasets and remain fixed when datasets or SD bands are hidden; different signals retain their own units. The choice follows <a href="https://service-manual.ons.gov.uk/data-visualisation/chart-types/small-multiple-charts">ONS small-multiple guidance</a>, <a href="https://service-manual.ons.gov.uk/data-visualisation/colours/using-colours-in-charts">ONS guidance on consistent colours</a>, and <a href="https://www.datawrapper.de/blog/what-to-consider-when-creating-small-multiple-line-charts">Datawrapper’s comparison guidance</a>. Exact-value tables and CSV downloads accompany the charts.</p>
+<h2 id="refresh-quality-evidence">Refresh the quality page</h2>
+<p>The quality page separates recorded software tests, preview structural checks, and illustrative bounds. Refresh the evidence only from a real test run:</p>
+<pre><code>OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml
+python3 contributor_tools/build_quality_page_data.py --junit /tmp/locohub-quality-tests.xml
+python3 docs/build.py --check</code></pre>
+<p>The range export uses the shared configuration loader and the validator’s nearest-sample rule. It records the YAML checksum. The overlay compares displayed means, not individual curves, and must never be presented as a new dataset validation run. A changed profile requires regeneration; a new test run requires a new result snapshot.</p>
 <h2 id="documentation-checks">Documentation checks</h2>
 <p>The public site should let a researcher identify the population, available signals, artifact variant, limitations, and quality evidence before downloading. Preserve native Python and MATLAB examples that run on the complete synthetic fixture.</p>
 <pre><code data-language="bash">python -m pytest tests/test_data_documentation.py
