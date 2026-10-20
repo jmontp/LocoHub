@@ -27,6 +27,9 @@
     Array.from(new Set(rows.flatMap((entry) => entry.tasks))).sort().forEach((name) => {
       task.add(new Option(name, name));
     });
+    const empty = textElement("p", "No datasets match these filters. Use Reset to show all datasets.", "catalog-empty");
+    empty.hidden = true;
+    table.closest("[data-dataset-catalog]").appendChild(empty);
     function update() {
       const query = search.value.trim().toLowerCase();
       let visible = 0;
@@ -38,6 +41,7 @@
         if (matches) visible += 1;
       });
       status.textContent = `${visible} of ${rows.length} datasets shown.`;
+      empty.hidden = visible > 0;
       document.dispatchEvent(new CustomEvent("locohub:catalog-filter", {
         detail: rows.filter((entry) => !entry.row.hidden).map((entry) => entry.row.dataset.dataset).filter(Boolean),
       }));

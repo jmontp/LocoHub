@@ -25,16 +25,20 @@
   </header>
   <div class="page-layout wide-page data-page">
     <main id="main" class="page-content" tabindex="-1">
-      <h1 id="dataset-catalog">LocoHub</h1>
-      <p class="data-intro">Locomotion datasets in Parquet format for use with Python, MATLAB, and other data tools.</p>
-      <div class="catalog-controls" hidden id="catalog-controls">
-        <label for="catalog-search">Search <input id="catalog-search" placeholder="Dataset or task" type="search"></label>
-        <label for="catalog-task">Task <select id="catalog-task"><option value="">All tasks</option></select></label>
-        <label for="catalog-download">Download <select id="catalog-download"><option value="">Any availability</option><option value="full">Full download</option><option value="filtered">Filtered download</option><option value="time">Time data</option><option value="none">No download yet</option></select></label>
-        <button id="catalog-reset" type="button">Reset</button>
+      <h1 id="dataset-catalog">Locomotion datasets</h1>
+      <p class="data-intro">Parquet files for use with Python, MATLAB, and other data tools.</p>
+      <p class="catalog-note">These downloads are older conversions and have not yet been re-checked. Counts come from earlier reports.</p>
+      <div class="catalog-toolbar">
+        <div class="catalog-controls" hidden id="catalog-controls">
+          <label for="catalog-search">Search <input id="catalog-search" placeholder="Dataset or task" type="search"></label>
+          <label for="catalog-task">Task <select id="catalog-task"><option value="">All tasks</option></select></label>
+          <label for="catalog-download">Download <select id="catalog-download"><option value="">Any availability</option><option value="full">Full download</option><option value="filtered">Filtered download</option><option value="time">Time data</option><option value="none">No download yet</option></select></label>
+          <button id="catalog-reset" type="button">Reset</button>
+        </div>
+        <p aria-live="polite" id="catalog-status" role="status">8 datasets</p>
         <a class="compare-link" href="datasets/comparison/index.html">Compare datasets</a>
       </div>
-      <p aria-live="polite" id="catalog-status" role="status">8 datasets</p>
+      <div class="catalog-layout">
       <div data-dataset-catalog>
         <!-- DATASET_TABLE_START -->
         <div class="table-scroll" role="region" aria-label="Datasets and downloads" tabindex="0">
@@ -45,7 +49,7 @@
 <td><a href="datasets/ga26/index.html" data-dataset-notes>Gait120</a></td>
 <td><details class="task-list"><summary>7 tasks</summary><span data-task-list>Decline Walking, Incline Walking, Level Walking, Sit To Stand, Stair Ascent, Stair Descent, Stand To Sit</span></details></td>
 <td>6,882</td>
-<td><span aria-label="No download available">—</span></td>
+<td><span class="no-download">none</span></td>
 <td><button type="button" class="preview-button" data-preview-dataset="ga26" aria-label="Preview Gait120">Preview</button></td>
 </tr>
 <tr data-dataset="gt24">
@@ -80,14 +84,14 @@
 <td><a href="datasets/mb24/index.html" data-dataset-notes>MBLUE Ankle Exoskeleton Study</a></td>
 <td><details class="task-list"><summary>8 tasks</summary><span data-task-list>Decline Walking, Incline Walking, Level Walking, Sit To Stand, Squat, Stair Ascent, Stair Descent, Stand To Sit</span></details></td>
 <td>15,825</td>
-<td><span aria-label="No download available">—</span></td>
+<td><span class="no-download">none</span></td>
 <td><button type="button" class="preview-button" data-preview-dataset="mb24" aria-label="Preview MBLUE Ankle Exoskeleton Study">Preview</button></td>
 </tr>
 <tr data-dataset="sp50">
 <td><a href="datasets/sp50/index.html" data-dataset-notes>StrokePiG OpenSim Pipeline Dataset</a></td>
 <td><details class="task-list"><summary>1 task</summary><span data-task-list>Level Walking Stroke</span></details></td>
 <td>144</td>
-<td><span aria-label="No download available">—</span></td>
+<td><span class="no-download">none</span></td>
 <td><button type="button" class="preview-button" data-preview-dataset="sp50" aria-label="Preview StrokePiG OpenSim Pipeline Dataset">Preview</button></td>
 </tr>
 <tr data-dataset="um21">
@@ -102,12 +106,13 @@
         </div>
         <!-- DATASET_TABLE_END -->
       </div>
-      <p class="catalog-note">These downloads are older conversions and have not yet been re-checked. Counts come from earlier reports.</p>
-      <div id="data-preview" data-preview-source="datasets/preview_data.json" aria-live="polite">
-        <h2>Data preview</h2>
+      <section id="data-preview" data-preview-source="datasets/preview_data.json" aria-labelledby="preview-title">
+        <h2 id="preview-title">Data preview</h2>
         <p>Select Preview beside a dataset to inspect its available sample.</p>
         <noscript><p>Enable JavaScript for the preview, or open a dataset's Details page to view its recorded plots.</p></noscript>
+      </section>
       </div>
+      <p aria-live="polite" class="visually-hidden" id="preview-status"></p>
     </main>
   </div>
   <footer class="site-footer"><p>LocoHub</p><nav aria-label="Additional links"><a href="contributing/index.html">Contribute data</a><a href="maintainers/index.html">Maintainers</a><a href="reference/index.html#release-evidence">Download notes</a><a href="https://github.com/jmontp/LocoHub/issues">Report an issue</a></nav></footer>
