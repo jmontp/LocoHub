@@ -1,5 +1,5 @@
 {
-  "updated_at_utc": "2026-10-21 05:35 UTC",
+  "updated_at_utc": "2026-10-21 06:32 UTC",
   "snapshot_notice": "Manually refreshed evidence snapshot, not a live monitor. No dataset has final scientific approval.",
   "organization": {
     "coordinator": "Execution, integration, memory guards and evidence reconciliation",
@@ -34,33 +34,38 @@
     },
     {
       "dataset": "UMich 2021",
-      "state": "Partial outputs; ankle audit waiting for memory",
-      "remaining": "Running planar preservation, all 479 boundary cycles, and treadmill components for 50 recordings are scheduled. Stairs and Wtr replacement jobs are being prepared."
+      "state": "Partial outputs; full restoration jobs queued",
+      "remaining": "Running preservation, 479 boundary cycles, 50 treadmill recordings, 403 stair recordings and nine Wtr subjects are scheduled. Source readback and anatomical review remain incomplete."
     },
     {
       "dataset": "GT24",
-      "state": "Normalization pilots queued; source checks pending",
-      "remaining": "Known- and unknown-mass pilots require original-archive membership checks first. Moment denominators and interaction units remain unresolved; full source coverage is incomplete."
+      "state": "Four corrected pilot audits queued; full runner reviewed",
+      "remaining": "All 2,421 Parsed and 1,358 native records remain in scope. Full reconstruction requires actual pilot results and 2,447 membership checks; 869 source-only recordings need lossless preservation. Moment denominators and interaction units remain unresolved."
     },
     {
       "dataset": "GT23",
-      "state": "Normalization and source-audit pilots queued",
-      "remaining": "Time and phase pilots cover AB01. A real AB03 pilot is still required to verify its corrected mass before full adoption; anatomical signs remain unresolved."
+      "state": "AB01 correction and AB03 native pilot queued",
+      "remaining": "AB03 must verify the publisher mass of 113.5 kg against its actual native output. Full source-window reconstruction and anatomical signs remain unverified."
     },
     {
       "dataset": "GT25",
-      "state": "Four-family corrected pilot queued",
-      "remaining": "Walking, shuffle, regular-transfer and streaming pilots must pass independent source checks before the full 676-recording plan can run. 192 recordings remain excluded or unresolved."
+      "state": "Four-family correction and source-preservation pilots queued",
+      "remaining": "Full 676-record coverage requires actual v5 pilot results. Three source-preservation pilots cover the noncyclic families; all 192 such recordings still need production and readback."
     },
     {
       "dataset": "Gait120",
-      "state": "Pilot evidence retained; full replacement being prepared",
-      "remaining": "All 6,882 source records remain in scope. The old parent queue is held; its full job is not currently scheduled to run. Source forces, OpenSim loads and anatomical conventions need review."
+      "state": "Full baseline and derivative correction queued",
+      "remaining": "Both jobs cover all 6,882 recordings. The correction must independently verify all 19 derivatives against source angles and timing. Anatomical segment interpretation remains unresolved."
     },
     {
       "dataset": "StrokePiG",
       "state": "151-source native preservation job queued",
       "remaining": "Native source preservation is scheduled. Canonical mapping, clinical metadata and phase reconstruction remain open."
+    },
+    {
+      "dataset": "UM24K",
+      "state": "Ensemble and fatigue-summary restorations queued",
+      "remaining": "All 120 participant-condition ensembles and 2,260 documented fatigue-summary values require independent MAT source readback. These averages are not individual gait cycles."
     }
   ],
   "historical_scope": {
@@ -469,7 +474,8 @@
       "evidence_paths": [
         "contributor_tools/run_gt25_batch.py",
         "converted_datasets/reconversion_v2/gt25_full_20261021/inventory.json",
-        "docs/quality/audits/gt25-bounded-reader-proposal.json"
+        "docs/quality/audits/gt25-bounded-reader-proposal.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
       ],
       "group": "dataset",
       "acceptance": [
@@ -483,8 +489,8 @@
       "prerequisites": [],
       "lane": "parallel-safe",
       "owner": "GT25 coverage agent",
-      "status": "V4 ankle and normalization corrections prepared; actual readback pending",
-      "progress_note": "Streaming BT07 pilot converted 28 transfers / 4,200 rows with 170,112 KiB peak RSS. Eleven raw-source hashes and 65 code bindings verified; independent event/value audit and all remaining oversized sources are still required."
+      "status": "V5 four-family correction and three source-companion pilots queued",
+      "progress_note": "The prior v4 low-force heuristic is not approval evidence. V5 requires actual independent source readback before full 676-record production; all 192 source-only recordings remain explicitly in scope."
     },
     {
       "id": "GT25-02",
@@ -527,7 +533,7 @@
       "lane": "parallel-safe",
       "owner": "Dataset reviewer; coordinator schedules conversion",
       "status": "Source conventions partly established; model and frames open",
-      "progress_note": "Original paper Figure 4 supports right-leg hip/ankle preservation and knee negation. Paper documents N/Nm/m units and missing force data for S001–S010. Exact model, left-side conventions, plate assignments and segment orientations remain unresolved."
+      "progress_note": "Original paper Figure 4 supports right-leg hip/ankle preservation and knee negation. Paper documents N/Nm/m units and missing force data for S001\u2013S010. Exact model, left-side conventions, plate assignments and segment orientations remain unresolved."
     },
     {
       "id": "GAIT120-02",
@@ -552,8 +558,8 @@
       ],
       "lane": "serial-heavy",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Full source-preservation rebuild queued; derivative correction prepared, not executed",
-      "progress_note": "The guarded 6,882-record rebuild checks source angles and plate channels. It does not approve derivatives or segment anatomy. Independent synthetic evidence confirms unintended discontinuity repair in 19 derivative calls. An isolated correction and extended source auditor are committed; full corrected production and independent readback remain required."
+      "status": "Full baseline and derivative correction queued; actual readback pending",
+      "progress_note": "Separate guarded jobs cover all 6,882 baseline recordings and all 19 corrected derivatives. Neither job has completed; anatomical segment estimates remain unverified."
     },
     {
       "id": "SP50-01",
@@ -582,7 +588,8 @@
       "priority": "P1",
       "title": "Complete native companion preservation and then canonical conversion",
       "evidence_paths": [
-        "converted_datasets/reconversion_v2/strokepig_native_full_20261021/batch_plan.json"
+        "converted_datasets/reconversion_v2/strokepig_native_full_20261021/batch_plan.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
       ],
       "group": "dataset",
       "acceptance": [
@@ -596,7 +603,8 @@
       ],
       "lane": "serial-heavy",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Full batch retained; stopped queue needs rescheduling"
+      "status": "151-record native preservation job queued",
+      "progress_note": "The replacement watcher is scheduled after Fukuchi first-pair work. Full native readback and later canonical conversion remain required."
     },
     {
       "id": "SCOPE-01",
@@ -606,7 +614,8 @@
       "evidence_paths": [
         "docs/datasets/_metadata",
         "docs/datasets/index.html",
-        "docs/datasets/ca23/index.html"
+        "docs/datasets/ca23/index.html",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
       ],
       "group": "dataset",
       "acceptance": [
@@ -617,8 +626,8 @@
       "prerequisites": [],
       "lane": "parallel-safe",
       "owner": "Scope and CI agent",
-      "status": "Historical labels corrected; source scope open",
-      "progress_note": "Twelve pages now show historical/unreviewed status without rebuild promises. Tan2021 wrong GT21 link removed. UM24K source inventory/rebuild remains unscheduled; other source availability remains unproven."
+      "status": "UM24K restoration queued; other historical source identities under review",
+      "progress_note": "UM24K S1 and S2 restorations are queued with source hashes and independent readback. Tan study-level evidence improved, but exact recording membership remains unresolved. Falisse task guessing is removed; historical outputs still require reconstruction."
     },
     {
       "id": "RELEASE-01",
@@ -784,7 +793,7 @@
       "group": "new_datasets",
       "title": "Review and add new datasets one at a time",
       "owner": "Dataset discovery agent",
-      "status": "Fukuchi first pilot checked; full 508-pair conversion prepared",
+      "status": "Fukuchi first-pair job queued; full 508-pair conversion pending review",
       "lane": "Paper and source review, then serial guarded pilot",
       "prerequisites": [],
       "acceptance": [
@@ -797,9 +806,10 @@
       "evidence_paths": [
         "docs/datasets/fu18/index.html",
         "docs/datasets/fu18/source_review.json",
-        "contributor_tools/conversion_scripts/Fukuchi_2018_Walking/candidate.json"
+        "contributor_tools/conversion_scripts/Fukuchi_2018_Walking/candidate.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
       ],
-      "progress_note": "One-participant/two-leg pilot and browser preview passed. Full inventory: 508 condition pairs / 51 participants. Version 2 sequential runner verifies prior completion receipts on resume. Full run has not started; left anatomical values remain source-only."
+      "progress_note": "The earlier small pilot passed its checks. The new full-plan first pair must finish and be reviewed before explicit continuation. Published source coverage is visible for all 51 participants, including 53 absent conditions."
     },
     {
       "id": "GT24-04",
@@ -809,7 +819,8 @@
       "evidence_paths": [
         "docs/quality/index.html",
         "converted_datasets/reconversion_v2/gt24_equivalence_after_gt23_20261021/status.json",
-        "converted_datasets/reconversion_v2/gt24_phase_ankle_adoption_serial_queue_20261021/queue_status.json"
+        "converted_datasets/reconversion_v2/gt24_phase_ankle_adoption_serial_queue_20261021/queue_status.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
       ],
       "external_blocker": null,
       "group": "dataset",
@@ -822,8 +833,8 @@
       "prerequisites": [],
       "lane": "source review and isolated correction; serial numerical validation",
       "owner": "GT24 reviewer; coordinator schedules conversion",
-      "status": "Participant normalization tested; Complete membership and actual correction pending",
-      "progress_note": "Overlapping Phase1And2 participants BT01/BT02/BT13 can receive Phase3 masses. Separate day-2 masses also need explicit mapping. Earlier matching audits shared the lookup and cannot establish mass correctness."
+      "status": "Known/unknown-mass pilots and four raw-source audits queued",
+      "progress_note": "The full reconstruction runner now checks current native member hashes and all producer/preservation/raw receipts. It cannot prepare a full run without four actual nonpartial pilot results. Source moment denominators and interaction units remain unresolved."
     },
     {
       "id": "GT25-03",
