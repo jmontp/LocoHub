@@ -836,3 +836,35 @@ resume and removal of generated preparation copies pass. Evidence is in
 `gt23_batch_worker_smoke_20261020`. The full software suite now reports 206 passed,
 2 skipped. These checks do not establish all-task physical conventions or approve
 any scientific release.
+
+
+### GT24 full task-coverage census and omitted-source checks
+
+A read-only census compares all locally available parsed recordings against the
+actual frozen converter's task mapping. Phase3 has 752 recordings (464 mapped,
+260 unmapped, 28 explicitly excluded). Phase1And2 has 1,669 recordings (1,088
+mapped, 536 unmapped, 45 explicitly excluded). Thus 869 of 2,421 recordings are
+omitted before segmentation. This explains many `no_accepted_observations` results;
+that status is not proof of absent or invalid source measurements.
+
+The omitted source families include ball toss, dynamic walking, weight lifting,
+obstacle walking, poses, pushes, side shuffle, start/stop, tire running, tug of war,
+turn-and-step, twister and weighted walking; meander and selected normal-walking
+variants are explicitly excluded. These omissions require a new reconstruction
+pass, including native-time preservation when phase boundaries are unavailable.
+The currently running converter and its code fingerprint were not modified.
+
+`gt24_task_coverage_review_20261020` retains every source folder and mapping decision,
+plus exact snapshots of the in-progress result logs. A separate streaming probe
+checks one representative per phase/source-family/exclusion category: 30 source
+angle files, 314,222 rows, zero nonfinite/nonincreasing clock samples and finite
+hip/knee measurements in every file. These checks demonstrate source availability,
+not valid event boundaries or full scientific conventions.
+
+A metadata probe also tests the actual task-name function without importing the
+numerical converter. An initial check mistakenly treated backward-walking speeds
+as unsupported; the source README explicitly specifies those treadmill speeds.
+The initial false flags are retained with a superseded explanation, and the
+corrected check finds no unsupported speed family in the local mapped inventory.
+Local jump labels use `90-f`/`90-s`, so a suspected numeric-set/speed collision does
+not occur in this inventory.
