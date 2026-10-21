@@ -800,3 +800,39 @@ No nonempty interval has nonfinite or reversed endpoints. Empty annotations are
 not successful conversions; explicit exclusion accounting and coverage of the
 underlying raw recordings remain required. Source hashes and field counts are
 retained per parsing file.
+
+
+### Full GT23 native reconstruction queued
+
+`run_gt23_native_batch.py` inventories every local parsing file and produces both
+time and phase artifacts serially. `gt23_full_native_batch_20261020` contains
+787 inputs (nine empty annotation pairs). The dispatcher waits for the existing
+Gait120 dispatcher and requires its batch to finish `complete_unreviewed`, then
+checks the frozen GT23 code fingerprints before launching. GT24, GT21 and Gait120
+remain ahead of GT23; the full GT23 batch has not yet started.
+
+Native operations retain the 2 GiB Windows job cap, 300-second timeout, idle
+priority, Windows memory reserves and 5 GiB S-drive floor. Python orchestration
+and streaming preparation use 768 MiB address-space limits and one numerical
+thread. Inputs above 64 MiB go through the verified exact CSV/native transform
+preparation path. Original transform MAT files above 64 MiB, or prepared windows
+still above 64 MiB, receive `deferred_input_admission`; empty annotations receive
+`no_source_intervals`. A batch containing either ends
+`complete_with_unresolved_inputs`, never a clean completion claim. Native errors
+stop the batch with retained evidence.
+
+Resume requires identical original-source, code and output hashes, including both
+Parquet artifacts for a converted window. Per-record checks use bounded reads for
+schema, phase length, identities and time ordering across batches. The runner
+rechecks original hashes after conversion, records exact prepared-input hashes and
+native readback evidence, then removes only its own reproducible preparation
+copies. It retains the original sources, converted outputs and evidence.
+
+The end-to-end worker smoke test uses the larger AB01 transfer window. Native
+preparation plus time and phase conversions complete successfully; 20,111 time
+rows (68 columns) and 7,500 phase rows/50 movements (66 columns) match the earlier
+independently source-checked pilots exactly, including Parquet hashes. Immutable
+resume and removal of generated preparation copies pass. Evidence is in
+`gt23_batch_worker_smoke_20261020`. The full software suite now reports 206 passed,
+2 skipped. These checks do not establish all-task physical conventions or approve
+any scientific release.
