@@ -628,3 +628,49 @@ def test_gt24_failed_loadcell_torques_remain_missing_for_both_reference_sides(gt
             assert result[f'{joint}_{kind}_{failed_role}_Nm_kg'].isna().all()
             assert np.isfinite(result[f'{joint}_{kind}_{healthy_role}_Nm_kg']).all()
         assert np.isfinite(result[f'{joint}_angle_{failed_role}_rad']).all()
+
+
+def pelvis_source(left, right, pelvis):
+    fields={'time_l':np.asarray(left), 'time_r':np.asarray(right), 'pelvis_tilt':np.asarray(pelvis)}
+    for side,clock in [('l',fields['time_l']),('r',fields['time_r'])]:
+        for joint in ['hip_flexion','knee_angle','ankle_angle']:
+            fields[f'{joint}_{side}']=np.zeros_like(clock)
+    result=np.empty((),dtype=[(name,object) for name in fields])
+    for name,value in fields.items():result[name][()]=value
+    return result[()]
+
+
+def test_mblue_pelvis_uses_left_clock_for_right_reference_cycle(mblue):
+    left=np.linspace(0,1,101)[:,None]
+    right=np.linspace(.5,1.5,101)[:,None]
+    source=pelvis_source(left,right,20*left)
+    frames,_=mblue.process_gait_task(source,'AB01',70.,'level_walking','level',1.,'bare')
+    frame=next(f for f in frames if f.reference_side.iloc[0]=='right')
+    target=np.linspace(.5,1.5,150)
+    expected=np.where(target<=1,20*target*np.pi/180,np.nan)
+    np.testing.assert_allclose(frame.pelvis_sagittal_angle_rad,expected,equal_nan=True)
+    np.testing.assert_allclose(frame.thigh_sagittal_angle_ipsi_rad,expected,equal_nan=True)
+    assert frame.pelvis_sagittal_velocity_rad_s.iloc[80:].isna().all()
+
+
+def test_mblue_pelvis_recovers_time_overlap_without_matching_column_index(mblue):
+    left=np.linspace(0,1,101)[:,None]
+    target=np.linspace(.2,.8,101)
+    source=pelvis_source(left,np.column_stack([left[:,0],target]),10*left)
+    actual=mblue.align_pelvis_to_stride(source,'r',1,target)
+    np.testing.assert_allclose(actual,np.linspace(2,8,150)*np.pi/180)
+
+
+def test_mblue_pelvis_preserves_explicit_shared_stair_windows(mblue):
+    clock=np.column_stack([np.linspace(0,1,101)]*2)
+    # Distinct trials can reuse their clocks; direct shared column identity wins.
+    values=np.column_stack([np.full(101,5.),np.full(101,20.)])
+    source=pelvis_source(clock,clock,values)
+    actual=mblue.align_pelvis_to_stride(source,'r',1,clock[:,1])
+    np.testing.assert_allclose(actual,20*np.pi/180)
+
+
+def test_mblue_right_pelvis_missing_clock_does_not_use_left_phase(mblue):
+    clock=np.linspace(0,1,101)[:,None]
+    source=pelvis_source(clock,clock,10*clock)
+    assert np.isnan(mblue.align_pelvis_to_stride(source,'r',0,None)).all()

@@ -345,6 +345,39 @@ def interpolate_source_clock(values, clock, num_points=NUM_POINTS):
     return np.interp(np.linspace(clock[0], clock[-1], num_points), clock, valid_values)[:, None]
 
 
+def align_pelvis_to_stride(task_data, side, index, target_clock):
+    """Global pelvis columns use time_l in the original normalization scripts.
+
+    Treadmill right-leg cycles have different windows. Stair columns instead
+    share the same left/right window; preserve that explicit column pairing.
+    """
+    missing = np.full(NUM_POINTS, np.nan)
+    if 'pelvis_tilt' not in task_data.dtype.names:
+        return missing
+    values = np.asarray(task_data['pelvis_tilt'], dtype=float)
+    if values.ndim == 1:
+        values = values[:, None]
+    if values.ndim != 2:
+        return missing
+    if side == 'l':
+        if index >= values.shape[1]:
+            return missing
+        return interpolate_source_clock(values[:, index]*(np.pi/180), target_clock).ravel()
+    if 'time_l' not in task_data.dtype.names or target_clock is None:
+        return missing
+    clocks = np.asarray(task_data['time_l'], dtype=float)
+    if clocks.ndim == 1:
+        clocks = clocks[:, None]
+    if clocks.shape != values.shape:
+        raise ValueError('Pelvis columns and left source clocks disagree')
+    target_clock = np.asarray(target_clock).reshape(-1)
+    if (index < clocks.shape[1] and len(target_clock) >= 2 and np.isfinite(target_clock).all()
+            and (np.diff(target_clock) > 0).all()
+            and np.array_equal(clocks[:, index], target_clock)):
+        return interpolate_source_clock(values[:, index]*(np.pi/180), target_clock).ravel()
+    return time_sync_contra_data(target_clock, clocks, values*(np.pi/180))
+
+
 def compute_velocity_from_angle(angle_rad: np.ndarray, stride_duration_s: float) -> np.ndarray:
     """
     Compute angular velocity from angle data using gradient.
@@ -598,14 +631,8 @@ def process_gait_task(
                 ankle_contra_data * deg2rad if ankle_contra_data is not None else None,
                 NUM_POINTS)
 
-            # Extract pelvis_tilt (global, same for both legs)
-            pelvis_tilt_rad = np.full(NUM_POINTS, np.nan)
-            if 'pelvis_tilt' in task_data.dtype.names:
-                pelvis_data = task_data['pelvis_tilt']
-                if pelvis_data.ndim == 2 and stride_idx < pelvis_data.shape[1]:
-                    pelvis_tilt_rad = interpolate_ipsilateral(pelvis_data[:, stride_idx] * deg2rad).flatten()
-                elif pelvis_data.ndim == 1:
-                    pelvis_tilt_rad = interpolate_ipsilateral(pelvis_data * deg2rad).flatten()
+            # Global spatial orientation still needs temporal alignment.
+            pelvis_tilt_rad = align_pelvis_to_stride(task_data, ipsi, stride_idx, ipsi_times)
 
             # Compute segment angles from kinematic chain
             # thigh_angle = pelvis_tilt + hip_flexion

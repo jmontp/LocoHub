@@ -24,7 +24,7 @@ def main():
     from scipy.interpolate import interp1d
     args.output.mkdir(parents=True,exist_ok=False)
     state={'status':'checking','pid':os.getpid(),'start_index':args.start_index,'records':[],'observations':0,'finite_values_checked':0,'scientific_approval':False,'probe_sha256':digest(Path(__file__)),
-        'limitations':['Checks source identities, clocks, joint angles/velocities/moments and vertical forces',
+        'limitations':['Checks source identities, clocks, joint angles/velocities/moments, vertical forces and pelvis/derived segment timing',
             'Arithmetic agreement is not approval of anatomical signs, force coordinates, event definitions or unexported source channels']}
     def save():
         p=args.output/'source_comparison.json';tmp=p.with_suffix('.tmp');tmp.write_text(json.dumps(state,indent=2)+'\n');tmp.replace(p)
@@ -60,12 +60,12 @@ def main():
                         np.testing.assert_allclose(frame.time_s,target-clock[0],atol=1e-10)
                         np.testing.assert_allclose(frame.source_start_time_s,clock[0]);np.testing.assert_allclose(frame.source_end_time_s,clock[-1])
                         assert all(json.loads(v)['weight_kg']==mass for v in frame.subject_metadata)
-                        def expected(field,leg,scale):
+                        def expected(field,leg,scale,same_window=False):
                             if field not in block.dtype.names:return np.full(150,np.nan)
                             values=block[field];times=block['time_'+leg]
                             if values.ndim==1:values=values[:,None]
                             if times.ndim==1:times=times[:,None]
-                            cols=[index] if bilateral or leg==side else range(times.shape[1])
+                            cols=[index] if bilateral or leg==side or same_window else range(times.shape[1])
                             predictions=[]
                             for col in cols:
                                 raw=np.where(np.isfinite(values[:,col]),values[:,col]*scale,np.nan)
@@ -83,14 +83,32 @@ def main():
                             except AssertionError as error:raise AssertionError(f'{subject}/{record["source_path"]} {side}:{index+1} {column}: {error}') from error
                             valid=np.isfinite(values);finite+=int(valid.sum())
                             if valid.any():max_error=max(max_error,float(np.max(abs(actual[valid]-values[valid]))))
+                        left_clocks=block['time_l']
+                        if left_clocks.ndim==1:left_clocks=left_clocks[:,None]
+                        shared=index<left_clocks.shape[1] and np.array_equal(left_clocks[:,index],clock)
+                        pelvis=expected('pelvis_tilt','l',np.pi/180,same_window=shared)
+                        compare('pelvis_sagittal_angle_rad',pelvis)
+                        pelvis_velocity=np.gradient(pelvis,(target[-1]-target[0])/149)
+                        pelvis_velocity[~np.isfinite(pelvis)]=np.nan
+                        compare('pelvis_sagittal_velocity_rad_s',pelvis_velocity,1e-7)
                         for role,leg in [('ipsi',side),('contra','r' if side=='l' else 'l')]:
+                            source_angles={}
                             for canonical,raw,sign in [('hip_flexion','hip_flexion',1),('knee_flexion','knee_angle',-1),('ankle_dorsiflexion','ankle_angle',1)]:
                                 angles=expected(raw+'_'+leg,leg,sign*np.pi/180)
+                                source_angles[canonical]=angles
                                 compare(f'{canonical}_angle_{role}_rad',angles)
                                 velocity=np.gradient(angles, (target[-1]-target[0])/149);velocity[~np.isfinite(angles)]=np.nan
                                 compare(f'{canonical}_velocity_{role}_rad_s',velocity,1e-7)
                                 compare(f'{canonical}_moment_{role}_Nm_kg',expected(raw+'_'+leg+'_moment',leg,sign/mass))
                             compare(f'grf_vertical_{role}_BW',expected('ForceN_'+leg,leg,1/(mass*9.81)))
+                            thigh=pelvis+source_angles['hip_flexion']
+                            shank=thigh-source_angles['knee_flexion']
+                            foot=shank+source_angles['ankle_dorsiflexion']
+                            for segment,values in [('thigh',thigh),('shank',shank),('foot',foot)]:
+                                compare(f'{segment}_sagittal_angle_{role}_rad',values)
+                                velocity=np.gradient(values,(target[-1]-target[0])/149)
+                                velocity[~np.isfinite(values)]=np.nan
+                                compare(f'{segment}_sagittal_velocity_{role}_rad_s',velocity,1e-7)
                 assert seen==expected_keys,'Missing source cycles'
                 entry={'subject':subject,'source_path':record['source_path'],'observations':len(seen),'finite_values_checked':finite,'maximum_error':max_error}
                 state['records'].append(entry);state['observations']+=len(seen);state['finite_values_checked']+=finite;save();print(json.dumps(entry),flush=True)
