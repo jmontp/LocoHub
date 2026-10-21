@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T23:04:31.135567-04:00",
-  "recorded_at": "2026-10-21T03:05:03.544099+00:00",
-  "base_revision": "f96c74a9bbd02ea448e8763596a2b0033f837b07",
+  "started_at": "2026-10-20T23:06:55.047112-04:00",
+  "recorded_at": "2026-10-21T03:07:26.916013+00:00",
+  "base_revision": "60546929af31466a91e153b743f1ce3a6f750aaf",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "8c00d12554d9bfbd5ba17d6f0dbdf63601b4f44f8e84fb9fe690a8a02c4a114f",
+  "junit_sha256": "2a82691daced9abfd0c53c53ce74f8d9a6846540a9a9cee76ae49e2dde426990",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -500,6 +500,37 @@
         },
         {
           "name": "test_sources_include_actual_fallback_sheet_and_optional_measurements",
+          "status": "passed"
+        }
+      ]
+    },
+    "tests.test_gt21_bilateral_recovery": {
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_added_cycles_preserve_all_original_values",
+          "status": "passed"
+        },
+        {
+          "name": "test_bad_recovery_is_rejected[value]",
+          "status": "passed"
+        },
+        {
+          "name": "test_bad_recovery_is_rejected[missing]",
+          "status": "passed"
+        },
+        {
+          "name": "test_bad_recovery_is_rejected[duplicate]",
+          "status": "passed"
+        },
+        {
+          "name": "test_bad_recovery_is_rejected[no_recovery]",
+          "status": "passed"
+        },
+        {
+          "name": "test_patch_preserves_signal_processing_body",
           "status": "passed"
         }
       ]
@@ -1241,7 +1272,7 @@
     }
   },
   "totals": {
-    "passed": 249,
+    "passed": 255,
     "failed": 0,
     "skipped": 2
   }
