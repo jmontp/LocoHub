@@ -16,7 +16,8 @@
     ],
     "mblue_fileinfo_queue": "converted_datasets/reconversion_v2/mblue_fileinfo_serial_queue_20261021",
     "mblue_pose_queue": "converted_datasets/reconversion_v2/mblue_modelpose_serial_queue_20261021",
-    "um21_boundary_scope_queue": "converted_datasets/reconversion_v2/um21_boundary_scope_serial_queue_20261021"
+    "um21_boundary_scope_queue": "converted_datasets/reconversion_v2/um21_boundary_scope_serial_queue_20261021",
+    "gt24_ankle_adoption_queue": "converted_datasets/reconversion_v2/gt24_phase_ankle_adoption_serial_queue_20261021"
   },
   "datasets": [
     {
@@ -37,7 +38,7 @@
     {
       "dataset": "GT24",
       "state": "Pilots verified; full builds queued",
-      "remaining": "Duplicate correction prepared. README-backed ankle negation proposed; bounded source pilot and 869 omitted recordings remain."
+      "remaining": "40-observation ankle correction pilot passed; full phase correction queued. Time exporter defects and869 omitted recordings remain."
     },
     {
       "dataset": "GT23",
@@ -47,7 +48,7 @@
     {
       "dataset": "GT25",
       "state": "Pilot verified; full build queued",
-      "remaining": "216 task exclusions and 47 mapped oversized recordings need resolution."
+      "remaining": "Coverage proposal leaves192 excluded records and34 oversized sit-to-stand records. Guarded pilots and bounded conversion integration remain."
     },
     {
       "dataset": "Gait120",
@@ -302,7 +303,9 @@
         "docs/quality/audits/gt24-ankle-convention.json",
         "docs/quality/audits/gt24-ankle-convention-review.json",
         "docs/quality/audits/gt24-ankle-evidence-ranking.json",
-        "docs/quality/audits/gt24-native-parsed-ankle-pilot.json"
+        "docs/quality/audits/gt24-native-parsed-ankle-pilot.json",
+        "docs/quality/audits/gt24-ankle-converter-pilot.json",
+        "converted_datasets/reconversion_v2/gt24_phase_ankle_adoption_serial_queue_20261021/plan.json"
       ],
       "external_blocker": null,
       "group": "dataset",
@@ -314,7 +317,7 @@
       "prerequisites": [],
       "lane": "parallel source/document review",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Two-recording native/Parsed source pilot passed; patched converter pilot pending",
+      "status": "40-observation converter pilot passed; full phase correction queued; time exporter correction in development",
       "progress_note": "Both dataset phases checked with exact source clocks and values; 254 interior derivative samples per leg and finite power products verified. BT01 right torque/power missingness retained and unassessed."
     },
     {
@@ -463,7 +466,8 @@
       "title": "Close task and large-file coverage gaps without raising admission cap",
       "evidence_paths": [
         "contributor_tools/run_gt25_batch.py",
-        "converted_datasets/reconversion_v2/gt25_full_20261021/inventory.json"
+        "converted_datasets/reconversion_v2/gt25_full_20261021/inventory.json",
+        "docs/quality/audits/gt25-bounded-reader-proposal.json"
       ],
       "group": "dataset",
       "acceptance": [
@@ -478,7 +482,7 @@
       "lane": "parallel-safe",
       "owner": "GT25 coverage agent",
       "status": "Three guarded pilots queued after existing conversions",
-      "progress_note": "Shuffle, recovered-admission and unchanged-recording pilots are queued serially with bound baselines and continuous Windows/Linux memory guards. Full coverage remains incomplete."
+      "progress_note": "Coverage correction leaves34 mapped oversized sit-to-stand recordings. Bounded projected source reader implemented and8 synthetic tests passed; exact streaming transfer segmentation/output integration remains in development."
     },
     {
       "id": "GT25-02",
