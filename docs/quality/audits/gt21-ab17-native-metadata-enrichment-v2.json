@@ -1,0 +1,38 @@
+{
+  "status": "review_hardened_unit_metadata_enrichment_prepared_not_run",
+  "scientific_approval": false,
+  "canonical_mass_approved": false,
+  "prior_value": "AB17 Weight literal 61.23 from the verified native export of all 22 rows; units remain unresolved.",
+  "initial_evidence_preserved": "docs/quality/audits/gt21-ab17-native-metadata-reuse.json",
+  "initial_plan_preserved": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subjectinfo_metadata_pilot_20261021/plan_v1_unlaunched.json",
+  "current_plan": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subjectinfo_metadata_pilot_20261021/plan.json",
+  "current_plan_sha256": "dc1e6fcced0f1414bf3fb7767117114127a7a600a343b885606ed56a7a11d211",
+  "improvements": [
+    "AB17 index must be an exact integer from 1 through 22; booleans, fractions, negative values and zero are rejected.",
+    "All 22 source row identities, their order and their values must match the prior CSV.",
+    "A 2 MiB limit applies before reads and hashing. Bindings must include the canonical source, prior CSV, current checker and current exporter.",
+    "Native MAT readback explicitly compares VariableUnits, VariableDescriptions, VariableNames and every column class, as well as table values.",
+    "An isolated native guard enforces a 2,048 MiB cap and 300-second limit, with 4,352 MiB Windows startup headroom and 2,048 MiB runtime reserve. Windows ownership proof, Linux pidfd/subreaper cleanup and signal-masked spawning are required. OpenSim is not needed."
+  ],
+  "bindings": {
+    "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/SubjectInfo.mat": "bc990b2c182e0cfc7b405b99fb429026585c224ce6d1ff5249734ec89cb2ce08",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subject_mass_review_20261021/subject_masses.csv": "71642b19a0faef5937a5988cc6f0b2879e4a863adfb13b62dd25a91e825e3e84",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subject_mass_review_20261021/source_comparison.json": "c18db48a8a073dc2f2d4ba543140638766222223b0a12b4cef8ded1f843d8f3f",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subject_mass_review_20261021/native_status.json": "843d6d178ad76238284cf06f5463c3bfa8cb8772a2514ced0bf5e433878763e3",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subject_mass_review_20261021/code/export_gt21_subject_info.m": "966b8ac11e96089fb0877823db0388731cd0a57492ef0d1bbfc442037f0e2e3d",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subject_mass_review_20261021/code/run_matlab_recording_guarded.ps1": "e69da33a6289cbbb5097d53c34b7eeb03a62102550218c53894d76f26e0548aa",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subject_mass_review_20261021/code/convert_gtech_2021_phase_to_parquet.m": "9d7c23ffee9711d802629f3192ad37760480698c3154b2601a90ca16414936c3",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subjectinfo_metadata_pilot_20261021/export_subjectinfo_metadata.m": "375282f8acafbf5d069c78089d0245cb2e9f62adcd54e6f7838d1d795ffa96bd",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subjectinfo_metadata_pilot_20261021/check_metadata.py": "64e936c8e495b42da72f2022239798c9032e75f121962827fa590e930572d043",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subjectinfo_metadata_pilot_20261021/options.json": "6eebc1f19103a044a4ad7889a995912f9e4cc374efd3eb0292f24102ccdf99ac",
+    "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/gt21-ab17-metadata-source-followup.json": "ad8d900d2268cb39f323463e6bff42c798d2c77710e5d16392cfbb7c4c748fbe",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subjectinfo_metadata_pilot_20261021/run.py": "39839f5bb1e70fbaa25614a84d241176f4228434ff3f7401df74c1660373155d",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subjectinfo_metadata_pilot_20261021/native_guard.ps1": "eb6adc5a7c56a2939ca88447cef51b4ba1f689e5355de6f49725a86c70b68331",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subjectinfo_metadata_pilot_20261021/native_cleanup.py": "cf99450a3933abd14e9cf6e4db8c664f1dfd3333a4e734ad10e5d2a59760e43f",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_subjectinfo_metadata_pilot_20261021/ownership.py": "032637ed21330bec2e06f30d0b7e0e66ee5c5f9b9cbf38a81c44a47b63f0d5d1"
+  },
+  "tests": "37 synthetic and mocked tests passed in 0.74 seconds under 256 MiB; no MATLAB execution.",
+  "native_execution": false,
+  "remaining": "VariableUnits may be empty. Do not infer units from the Weight name or model mass. An external serial watcher must be prepared and reviewed before launch.",
+  "initial_evidence_note": "Historical evidence retains the original unlaunched hashes separately from current bindings and explicitly identifies this successor."
+}
