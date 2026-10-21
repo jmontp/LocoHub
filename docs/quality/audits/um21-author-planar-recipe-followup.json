@@ -1,0 +1,102 @@
+{
+  "status": "new_author_planar_recipe_evidence_anatomy_unresolved",
+  "scientific_approval": false,
+  "checked_at_utc": "2026-10-21T07:31:17.148359+00:00",
+  "new_finding": {
+    "source": "https://api.figshare.com/v2/articles/13096058",
+    "file": "https://ndownloader.figshare.com/files/28998135",
+    "publisher_file_id": 28998135,
+    "bytes": 2501,
+    "paper_doi": "10.1038/s41597-021-01057-9",
+    "lines": {
+      "31": "Normalized.Walk selected",
+      "34-36": "PelvisAngles and HipAngles: author thigh estimate = hip minus pelvis",
+      "45": "Select first/sagittal component"
+    },
+    "conflicting_local_recipe": {
+      "path": "contributor_tools/reconvert_umich_streaming.py",
+      "lines": "86-92",
+      "thigh": "RPelvisAngles + side HipAngles",
+      "shank": "RPelvisAngles + side HipAngles - side KneeAngles"
+    },
+    "scope_limit": "Author plotting example establishes a published planar illustration for normalized walking; not full3D segment orientation, not proof normalized PelvisAngles equals Streaming.RPelvisAngles for either side, and not a documented shank/foot recipe.",
+    "publisher_script_license": {
+      "name": "CC0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "evidence": "Bound article_13096058.json license metadata"
+    }
+  },
+  "original_paper_methods": {
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8553836/",
+    "fulltext_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8553836/fullTextXML",
+    "sections": [
+      "Motion capture post-processing",
+      "Data processing"
+    ],
+    "findings": [
+      "Nexus processing fills marker gaps, applies Butterworth6Hz and Woltring smoothing20 before Plug-in Gait. Detected anomalies were corrected at marker level and model rerun without additional filters.",
+      "Custom MATLAB parsing and curation remove gaps, discontinuities, nonperiodicity and offset outliers; this does not justify guessing an ankle rotation for retained streaming source values."
+    ]
+  },
+  "source_inventory_gap": {
+    "collection_api": "https://api.figshare.com/v2/collections/5175254/articles?page_size=100",
+    "articles": [
+      {
+        "id": 14558181,
+        "name": "Streaming Dataset"
+      },
+      {
+        "id": 14558184,
+        "name": "Normalized Dataset"
+      },
+      {
+        "id": 14125814,
+        "name": "README"
+      },
+      {
+        "id": 13096058,
+        "name": "Example Script"
+      },
+      {
+        "id": 13100138,
+        "name": "Video of Experiments"
+      }
+    ],
+    "local_review": "Dataset adapter directory contains two original MATs, README and local adapter/debug files; no original Vicon calibration/model/settings bundle listed there. Scientific MAT contents not loaded.",
+    "limitation": "Current advertised collection and inspected local folder do not supply participant/session VSK calibration or original Nexus processing pipeline. This is not proof such evidence does not exist elsewhere."
+  },
+  "next_concrete_steps": [
+    {
+      "priority": 1,
+      "action": "Bounded source readback must map normalized pelvis/hip components to same-side Streaming pelvis/hip for retained stride identities before applying the author estimate to streaming exports. Include nonzero pelvis and both sides; do not compare shapes or infer normalized side from concatenation order.",
+      "outputs": "Separately named author planar-estimate aliases; retain earlier producer estimates and keep canonical3D segments unavailable."
+    },
+    {
+      "priority": 2,
+      "action": "For anatomy, obtain original participant/session Plug-in Gait calibration, exact Nexus/model version, progression-axis settings and static foot/tibial torsion offsets, or original segment frames with documented clocks. Validate3D reconstruction against landmarks/model at nonplanar poses.",
+      "outputs": "Actual model-frame evidence, independent of sagittal scalar arithmetic."
+    },
+    {
+      "priority": 3,
+      "action": "For AB07/i10 and AB08/i0 ankle anomalies, require original corrected marker/model output and provenance mapping to streamed channels or explicit publisher correction. No constant90/180offset or waveform wrapping is supported by this new script.",
+      "outputs": "Source-backed ankle correction or explicit unresolved source anomaly."
+    }
+  ],
+  "existing_work_preserved": "Queued planar withholding already protects unsupported canonical segments. No converter, queued plan or original data altered.",
+  "bindings": {
+    "docs/quality/audits/source_evidence/um21/exampleUseScript.m": "16f7541eff3fe683fe0a9eb1181e2611fab67f1c68673b877d6e75167014809c",
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/um21_model_source_followup/paper.xml": "1a0f5f69892889f52403781ad4b2001613808208a7ed8849c858b1ec45f25b7a",
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/um21_model_source_followup/article_13096058.json": "aa2b157f8053cfa88ebc3d58dbb051410db7ba3c99e4488dbf0675a23fe5503e",
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/um21_model_source_followup/article_14558181.json": "87aecaf0d1bcf7ac1528073e8cc77985cd4f4e6df7f90484b493c7798a9ee858",
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/um21_model_source_followup/article_14125814.json": "95f0716ff3febe7146eddea779801a7171c16ec3fd2ab0604ff3c44b25a21fa2",
+    "docs/quality/audits/um21-source-model-review.json": "1c982253e2b37fb04351c970e4498685306f5ad32bc4729d32e6a33d63a8cde3",
+    "docs/quality/audits/um21-ankle-source-review.json": "90dab38c262e7e292aa67f067c297a91801715d5ca5fd11744d2492a4c7117c8",
+    "contributor_tools/reconvert_umich_streaming.py": "87484583032660fb020816fdcc51916de07305694f5a38e2998b7756509ee42e"
+  },
+  "scientific_arrays_read": false,
+  "root_review": {
+    "bindings_verified": 8,
+    "author_expression_and_local_expression_checked": true,
+    "script_bytes_preserved": true
+  }
+}
