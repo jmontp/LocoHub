@@ -102,5 +102,49 @@
       "data_visualization.m"
     ],
     "limitation": "The code-availability section lists EMG processing and visualization scripts, not the exact modified musculoskeletal model or IK setup. This is not proof those artifacts are absent from every external location."
+  },
+  "publisher_code_review": {
+    "source_url": "https://api.figshare.com/v2/articles/27677016",
+    "article_sha256": "a497896e2da3d010bebae4d2f43d82ec35b1af40a52f4194542c2c376eb97b2a",
+    "zip_sha256": "fba7a633f65066242903129c274c4dde3cb60fb314034345fc62619c7f7b0075",
+    "publisher_md5_matched": true,
+    "files": [
+      "calculateMVC.m",
+      "dataVisualizer.m",
+      "emgProcessedDataConstruction.m",
+      "README.md",
+      "signalProcess.m"
+    ],
+    "scientific_approval": false,
+    "header_example": {
+      "path": "/mnt/s/locomotion_data/Gait120/S001/JointAngle/LevelWalking/Trial01/step01.mot",
+      "selected_columns_1_based": {
+        "8": "hip_flexion_r",
+        "9": "hip_adduction_r",
+        "10": "hip_rotation_r",
+        "11": "knee_angle_r",
+        "13": "ankle_angle_r"
+      },
+      "scope": "One source header only; no data rows loaded"
+    },
+    "publisher_knee_mapping": {
+      "script": "dataVisualizer.m",
+      "selection_line": 34,
+      "negation_line": 105,
+      "axis_label_line": 112,
+      "interpretation": "Selected knee source column is negated before labeling plot Knee Flexion; corroborates source paper right-knee convention",
+      "script_sha256": "9ccc445180d9c289f66e9ed1e86f9901ddaf87dc6d6c23480fd009f496080b3c"
+    },
+    "scope": "Bounded publisher archive inspection and one local MOT header; no numerical source values loaded",
+    "conclusion": "Publisher plotting code independently corroborates right-knee negation for flexion. Archive contains processing and visualization scripts, not the modified musculoskeletal model."
+  },
+  "protocol_metadata_proposal": {
+    "status": "isolated_metadata_proposal_not_adopted",
+    "helper": "contributor_tools/gait120_protocol_metadata.py",
+    "tests": "tests/test_gait120_protocol_metadata.py",
+    "tests_passed": 9,
+    "local_proposal": "converted_datasets/reconversion_v2/swarm_backlog_20261021/gait120_protocol_proposal/proposal_manifest.json",
+    "scope": "Adds only documented apparatus dimensions and field-specific DOI/page evidence; numerical functions unchanged; speed remains absent",
+    "remaining": "Integrate in new immutable conversion or metadata correction and verify persisted outputs before adoption"
   }
 }
