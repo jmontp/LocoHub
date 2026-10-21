@@ -599,3 +599,12 @@ def test_mblue_gait_interpolation_uses_source_clock_on_both_sides(mblue):
         for role in ['ipsi','contra']:
             np.testing.assert_allclose(frame[f'hip_flexion_angle_{role}_rad'],np.linspace(0,10,150)*np.pi/180,atol=1e-12)
             np.testing.assert_allclose(frame[f'hip_flexion_velocity_{role}_rad_s'],10*np.pi/180,atol=1e-12)
+
+
+def test_mblue_derivatives_do_not_fill_a_missing_center_sample(mblue):
+    values=np.array([0.,1.,np.nan,3.,4.])
+    velocity=mblue.compute_velocity_from_angle(values,4.)
+    acceleration=mblue.compute_acceleration_from_velocity(values,4.)
+    assert np.isnan(velocity[1:4]).all()
+    assert np.isnan(acceleration[1:4]).all()
+    np.testing.assert_allclose(velocity[[0,4]],1.)

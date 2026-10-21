@@ -360,6 +360,7 @@ def compute_velocity_from_angle(angle_rad: np.ndarray, stride_duration_s: float)
         return np.full_like(angle_rad, np.nan)
     dt = stride_duration_s / (len(angle_rad) - 1)
     velocity = np.gradient(angle_rad) / dt
+    velocity[~np.isfinite(angle_rad)] = np.nan
     return velocity
 
 
@@ -369,6 +370,7 @@ def compute_acceleration_from_velocity(velocity_rad_s: np.ndarray, stride_durati
         return np.full_like(velocity_rad_s, np.nan)
     dt = stride_duration_s / (len(velocity_rad_s) - 1)
     acceleration = np.gradient(velocity_rad_s) / dt
+    acceleration[~np.isfinite(velocity_rad_s)] = np.nan
     return acceleration
 
 
