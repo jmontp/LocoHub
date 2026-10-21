@@ -24,6 +24,31 @@ def save(path,value):
     temporary=path.with_suffix('.tmp');temporary.write_text(json.dumps(value,indent=2)+'\n');temporary.replace(path)
 
 
+def producer_alive(root, pid):
+    if not pid:
+        return False
+    try:
+        command = Path(f'/proc/{pid}/cmdline').read_bytes()
+        return b'run_gt21_native_batch.py' in command and str(root).encode() in command
+    except FileNotFoundError:
+        return False
+
+
+def wait_for_batch_inputs(root, pid, timeout=120):
+    """Wait for atomic startup manifests from a verified live producer."""
+    required = [root/'inventory.json', root/'batch_status.json']
+    deadline = time.monotonic() + timeout
+    while not all(path.is_file() for path in required):
+        if not producer_alive(root, pid):
+            # A producer may publish its last state just before exiting.
+            if all(path.is_file() for path in required):
+                return
+            raise FileNotFoundError('Producer ended before publishing batch startup manifests')
+        if time.monotonic() >= deadline:
+            raise TimeoutError('Producer did not publish startup manifests within the audit timeout')
+        time.sleep(.25)
+
+
 def check_record(folder,masses,mass_evidence):
     import numpy as np
     import pandas as pd
@@ -126,6 +151,13 @@ def main():
     assert mass_evidence['native_exact_mass_readback']
     assert digest(args.mass_evidence/'subject_masses.csv')==mass_evidence['csv_sha256']
     table=pd.read_csv(args.mass_evidence/'subject_masses.csv');masses=dict(zip(table.Subject,table.Weight))
+    save(out/'audit_status.json', {'status':'waiting_for_batch_inputs','pid':os.getpid(),'scientific_approval':False})
+    try:
+        wait_for_batch_inputs(root,args.watch_pid)
+    except Exception as error:
+        save(out/'audit_status.json', {'status':'failed','reason':str(error),'pid':os.getpid(),'scientific_approval':False})
+        if args.watch_pid:(root/'STOP_AFTER_CURRENT').touch()
+        raise
     plan=json.loads((root/'inventory.json').read_text())['recordings']
     state={'status':'checking','pid':os.getpid(),'planned_recordings':len(plan),'checked_recordings':0,
         'observations':0,'rows':0,'finite_values_checked':0,'unexported_event_pairs':0,
@@ -146,10 +178,7 @@ def main():
                 state['records'].append({'path':str(target.relative_to(out)),'sha256':digest(target)})
                 save(out/'audit_status.json',state)
                 print(json.dumps({'checked':cursor,'recording':record,'observations':result['observations']}),flush=True)
-            alive=False
-            if args.watch_pid:
-                try:command=Path(f'/proc/{args.watch_pid}/cmdline').read_bytes();alive=b'run_gt21_native_batch.py' in command and str(root).encode() in command
-                except FileNotFoundError:pass
+            alive=producer_alive(root,args.watch_pid)
             if not alive:
                 # A converter can finish while this earlier snapshot is being
                 # checked. Read its terminal manifest and drain any final files.

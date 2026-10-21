@@ -46,3 +46,33 @@ def test_final_manifest_is_read_after_record_check(tmp_path, monkeypatch, comple
     assert len(calls) == result['checked_recordings'] == completed
     assert result['status'] == expected_status
     assert result['batch_summary_sha256'] == audit.digest(batch / 'batch_status.json')
+
+
+def test_startup_waits_for_both_atomic_manifests(tmp_path, monkeypatch):
+    (tmp_path / 'inventory.json').write_text('{}')
+    monkeypatch.setattr(audit, 'producer_alive', lambda *_: True)
+    waits = []
+    def publish(delay):
+        waits.append(delay)
+        (tmp_path / 'batch_status.json').write_text('{}')
+    monkeypatch.setattr(audit.time, 'sleep', publish)
+    audit.wait_for_batch_inputs(tmp_path, 123)
+    assert len(waits) == 1
+
+
+def test_startup_rejects_missing_manifests_after_producer_exit(tmp_path, monkeypatch):
+    monkeypatch.setattr(audit, 'producer_alive', lambda *_: False)
+    with pytest.raises(FileNotFoundError, match='Producer ended'):
+        audit.wait_for_batch_inputs(tmp_path, 123)
+
+
+def test_startup_wait_is_bounded_even_if_producer_is_alive(tmp_path, monkeypatch):
+    monkeypatch.setattr(audit, 'producer_alive', lambda *_: True)
+    with pytest.raises(TimeoutError, match='startup manifests'):
+        audit.wait_for_batch_inputs(tmp_path, 123, timeout=0)
+
+
+def test_completed_manifests_do_not_require_a_live_producer(tmp_path):
+    for name in ['inventory.json', 'batch_status.json']:
+        (tmp_path / name).write_text('{}')
+    audit.wait_for_batch_inputs(tmp_path, None)
