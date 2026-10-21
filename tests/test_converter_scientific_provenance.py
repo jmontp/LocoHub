@@ -330,3 +330,47 @@ def test_gt25_retains_complete_cycles_in_short_parsed_stair_trials(gt25):
     segments=gt25.segment_trial_gait(source,'l')
     assert len(segments)==2
     assert all(np.isclose(s.duration_s,1.) for s in segments)
+
+
+def test_gt24_retains_complete_cycles_in_short_parsed_stair_trials(gt24):
+    time=np.arange(701)/200
+    force=np.zeros(701)
+    for start in [100,300,500]:force[start:start+100]=700
+    source=pd.DataFrame({'time_s':time,'grf_vertical_ipsi_N':force})
+    segments=gt24.segment_trial_gait(source,'l')
+    assert len(segments)==2
+    assert all(np.isclose(s.duration_s,1.) for s in segments)
+
+
+def test_gt24_long_transfer_is_not_rejected_as_a_long_walking_stride(gt24):
+    source=gait_source()
+    for key,frame in source.items():
+        source[key]=pd.concat([frame.iloc[:-1]]*4+[frame.iloc[-1:]],ignore_index=True)
+    source['angle_filt']['time']=np.arange(801)/200
+    for side in ['l','r']:
+        source['angle_filt'][f'hip_flexion_{side}']=np.linspace(30,0,801)
+    result=gt24.process_stride(source,0,800,'BT01',70.,'sit_to_stand','sit_to_stand',{},0,'l',3,'powered',skip_segment_angles=True,source_recording_id='gt24:Phase3/BT01/transfer')
+    assert result is not None
+    assert result.observation_type.iloc[0]=='transfer'
+    assert result.source_end_time_s.iloc[0]-result.source_start_time_s.iloc[0]==4
+    np.testing.assert_allclose(result.hip_flexion_velocity_ipsi_rad_s,np.deg2rad(-7.5))
+
+
+def test_gt24_uses_actual_nonuniform_source_timestamps(gt24):
+    source=gait_source()
+    clock=np.linspace(0,1,201)**1.1
+    source['angle_filt']['time']=clock
+    for side in ['l','r']:
+        source['angle_filt'][f'hip_flexion_{side}']=2*clock
+    result=gt24.process_stride(source,0,200,'BT01',70.,'level_walking','level',{},0,'l',3,'powered',skip_segment_angles=True,source_recording_id='gt24:Phase3/BT01/nonuniform')
+    np.testing.assert_allclose(result.hip_flexion_angle_ipsi_rad,np.deg2rad(2*np.linspace(0,1,150)),atol=1e-12)
+    np.testing.assert_allclose(result.hip_flexion_velocity_ipsi_rad_s,np.deg2rad(2),atol=1e-12)
+
+
+def test_gt24_preserves_missing_samples_and_rejects_misaligned_clocks(gt24):
+    values=gt24.interpolate_to_phase(np.array([0.,1.,np.nan,3.,4.]),num_points=9)
+    assert np.isnan(values[3:6]).all()
+    source=gait_source()
+    source['grf']['time']=source['angle_filt']['time']+0.02
+    with pytest.raises(ValueError,match='timestamps do not align'):
+        gt24.process_stride(source,0,200,'BT01',70.,'level_walking','level',{},0,'l',3,'powered',skip_segment_angles=True,source_recording_id='gt24:Phase3/BT01/misaligned')

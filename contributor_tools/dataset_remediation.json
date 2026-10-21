@@ -22,7 +22,7 @@
   ],
   "current_limitations": {
     "umich": "Only treadmill hip/knee subset regenerated. Remaining signals, tasks and normalized transfers still open.",
-    "gt24": "Backward task-name fix verified on three real recordings. Noncyclic coverage, segmentation exclusions and remaining signal/source checks still open.",
+    "gt24": "Canonical task labels, short-trial trimming, transfer duration and source-clock interpolation corrected. Three-recording timing/trim pilot: 24 observations checked against source hips/knees. New timing queue running; all-task/signal coverage, event validity, exclusions and conventions remain open.",
     "gt25": "Seven BT01 recordings regenerated: 152 observations / 22,800 rows, source-matched for checked channels. All-subject/task coverage, ankle sign, segment angles, COP frames, event validity and exclusion accounting remain open."
   },
   "findings": [
@@ -393,8 +393,21 @@
     {
       "id": "gt24-trimming",
       "finding": "GT24 drops boundary cycles although source README says Parsed transitions were removed",
-      "status": "open",
-      "required_followup": "Remove unconditional trimming, verify short real recordings, preserve rejected candidate reasons, and regenerate affected outputs with fresh provenance."
+      "status": "code_fixed_pilot_source_checked_full_regeneration_pending",
+      "required_followup": "Remove unconditional trimming, verify short real recordings, preserve rejected candidate reasons, and regenerate affected outputs with fresh provenance.",
+      "pilot_evidence": "converted_datasets/reconversion_v2/gt24_timing_trim_pilot_20261020/trim_source_check.json"
+    },
+    {
+      "id": "gt24-timestamps",
+      "finding": "GT24 interpolated by row position and bridged missing measurements",
+      "status": "code_fixed_pilot_source_checked_full_regeneration_pending",
+      "required_followup": "Complete fresh source-linked regeneration and check affected channels and candidates across subjects and tasks."
+    },
+    {
+      "id": "gt24-transfer-duration",
+      "finding": "GT24 applied walking duration limits to chair transfers",
+      "status": "code_fixed_pilot_source_checked_full_regeneration_pending",
+      "required_followup": "Complete fresh source-linked regeneration and check affected channels and candidates across subjects and tasks."
     }
   ]
 }

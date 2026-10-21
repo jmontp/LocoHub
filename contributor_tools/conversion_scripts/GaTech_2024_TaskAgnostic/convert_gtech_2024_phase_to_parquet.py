@@ -54,8 +54,8 @@ MAX_STRIDE_SAMPLES = 600  # Maximum samples for valid stride (~3s at 200Hz)
 SAMPLING_RATE = 200  # Hz
 
 # Stride filtering parameters
-SKIP_FIRST_STRIDES = 2  # Transition strides to skip at trial start
-SKIP_LAST_STRIDES = 1   # Transition strides to skip at trial end
+SKIP_FIRST_STRIDES = 0  # Parsed source already excludes transitions (source README).
+SKIP_LAST_STRIDES = 0   # Retain complete cycles in short parsed recordings.
 IQR_MULTIPLIER = 1.5    # IQR multiplier for stride duration outlier detection
 
 # Task mapping: source task name patterns -> (standard_task, task_id_template, metadata)
@@ -246,35 +246,17 @@ def get_subject_mass(subject_id: str, data_source: str, exo_state: str = 'powere
     return np.nan
 
 
-def interpolate_to_phase(data: np.ndarray, num_points: int = NUM_POINTS) -> np.ndarray:
-    """
-    Interpolate time-series data to fixed number of phase points (0-100%).
-
-    Args:
-        data: Input data array
-        num_points: Number of output points (default 150)
-
-    Returns:
-        Interpolated data array of length num_points
-    """
+def interpolate_to_phase(data: np.ndarray, num_points: int = NUM_POINTS,
+                         source_time: Optional[np.ndarray] = None) -> np.ndarray:
+    """Resample inclusive endpoints without filling missing measurements."""
+    data = np.asarray(data, dtype=float)
     if len(data) < 2:
         return np.full(num_points, np.nan)
-
-    # Create interpolation function
-    x_original = np.linspace(0, 100, len(data))
-    x_target = np.linspace(0, 100, num_points)
-
-    # Handle NaN values
-    valid_mask = ~np.isnan(data)
-    if np.sum(valid_mask) < 2:
-        return np.full(num_points, np.nan)
-
-    try:
-        interp_func = interp1d(x_original[valid_mask], data[valid_mask],
-                               kind='linear', fill_value='extrapolate')
-        return interp_func(x_target)
-    except Exception:
-        return np.full(num_points, np.nan)
+    times = np.arange(len(data), dtype=float) if source_time is None else np.asarray(source_time, dtype=float)
+    if len(times) != len(data) or not np.isfinite(times).all() or not (np.diff(times) > 0).all():
+        raise ValueError('Signal samples must match strictly increasing source timestamps')
+    return np.interp(np.linspace(times[0], times[-1], num_points), times,
+                     np.where(np.isfinite(data), data, np.nan))
 
 
 def compute_velocity_from_angle(angle_rad: np.ndarray, stride_duration_s: float) -> np.ndarray:
@@ -718,15 +700,27 @@ def process_stride(
     """
     # Validate stride length
     stride_len = end_idx - start_idx
-    if stride_len < MIN_STRIDE_SAMPLES or stride_len > MAX_STRIDE_SAMPLES:
+    if task not in {'sit_to_stand', 'stand_to_sit'} and (stride_len < MIN_STRIDE_SAMPLES or stride_len > MAX_STRIDE_SAMPLES):
         return None
 
     # Calculate stride duration
     time_data = data['angle_filt']['time'].values
-    stride_duration_s = time_data[end_idx] - time_data[start_idx]
-
-    if not np.isfinite(stride_duration_s) or stride_duration_s <= 0:
-        return None
+    if start_idx < 0 or end_idx >= len(time_data) or end_idx <= start_idx:
+        raise ValueError('Observation endpoints are outside the source recording')
+    source_time = time_data[start_idx:end_idx + 1]
+    if not np.isfinite(source_time).all() or not (np.diff(source_time) > 0).all():
+        raise ValueError('Observation timestamps must be finite and strictly increasing')
+    aligned_frames = dict(data)
+    if imu_df is not None:
+        aligned_frames['imu'] = imu_df
+    for name, frame in aligned_frames.items():
+        if len(frame) <= end_idx:
+            raise ValueError(f'{name} does not cover the observation endpoints')
+        if 'time' in frame and not np.allclose(frame['time'].values[start_idx:end_idx + 1], source_time, rtol=0, atol=1e-9):
+            raise ValueError(f'{name} timestamps do not align with the angle recording')
+    stride_duration_s = source_time[-1] - source_time[0]
+    def resample(values):
+        return interpolate_to_phase(values, source_time=source_time)
 
     # Determine ipsilateral (striking leg) and contralateral sides
     ipsi = leg_side
@@ -745,21 +739,21 @@ def process_stride(
     # Hip flexion
     hip_ipsi_deg = angle_df[f'hip_flexion_{ipsi}'].values[start_idx:end_idx + 1]
     hip_contra_deg = angle_df[f'hip_flexion_{contra}'].values[start_idx:end_idx + 1]
-    hip_ipsi_rad = interpolate_to_phase(hip_ipsi_deg * deg2rad)
-    hip_contra_rad = interpolate_to_phase(hip_contra_deg * deg2rad)
+    hip_ipsi_rad = resample(hip_ipsi_deg * deg2rad)
+    hip_contra_rad = resample(hip_contra_deg * deg2rad)
 
     # Knee flexion (note: source data may have extension positive, need to check)
     knee_ipsi_deg = angle_df[f'knee_angle_{ipsi}'].values[start_idx:end_idx + 1]
     knee_contra_deg = angle_df[f'knee_angle_{contra}'].values[start_idx:end_idx + 1]
     # Negate to make flexion positive (consistent with other datasets)
-    knee_ipsi_rad = interpolate_to_phase(-knee_ipsi_deg * deg2rad)
-    knee_contra_rad = interpolate_to_phase(-knee_contra_deg * deg2rad)
+    knee_ipsi_rad = resample(-knee_ipsi_deg * deg2rad)
+    knee_contra_rad = resample(-knee_contra_deg * deg2rad)
 
     # Ankle dorsiflexion
     ankle_ipsi_deg = angle_df[f'ankle_angle_{ipsi}'].values[start_idx:end_idx + 1]
     ankle_contra_deg = angle_df[f'ankle_angle_{contra}'].values[start_idx:end_idx + 1]
-    ankle_ipsi_rad = interpolate_to_phase(ankle_ipsi_deg * deg2rad)
-    ankle_contra_rad = interpolate_to_phase(ankle_contra_deg * deg2rad)
+    ankle_ipsi_rad = resample(ankle_ipsi_deg * deg2rad)
+    ankle_contra_rad = resample(ankle_contra_deg * deg2rad)
 
     # Compute velocities
     hip_vel_ipsi = compute_velocity_from_angle(hip_ipsi_rad, stride_duration_s)
@@ -816,12 +810,12 @@ def process_stride(
             )
 
         # Interpolate to phase-normalized points
-        thigh_seg_ipsi = interpolate_to_phase(thigh_seg_ipsi_raw)
-        thigh_seg_contra = interpolate_to_phase(thigh_seg_contra_raw)
-        shank_seg_ipsi = interpolate_to_phase(shank_seg_ipsi_raw)
-        shank_seg_contra = interpolate_to_phase(shank_seg_contra_raw)
-        foot_seg_ipsi = interpolate_to_phase(foot_seg_ipsi_raw)
-        foot_seg_contra = interpolate_to_phase(foot_seg_contra_raw)
+        thigh_seg_ipsi = resample(thigh_seg_ipsi_raw)
+        thigh_seg_contra = resample(thigh_seg_contra_raw)
+        shank_seg_ipsi = resample(shank_seg_ipsi_raw)
+        shank_seg_contra = resample(shank_seg_contra_raw)
+        foot_seg_ipsi = resample(foot_seg_ipsi_raw)
+        foot_seg_contra = resample(foot_seg_contra_raw)
 
         # Compute segment velocities
         thigh_seg_vel_ipsi = compute_velocity_from_angle(thigh_seg_ipsi, stride_duration_s)
@@ -849,22 +843,22 @@ def process_stride(
     # Use moment_filt for TOTAL moments (bio + exo), which is the standard output
     moment_df = data['moment_filt']
 
-    hip_mom_ipsi = interpolate_to_phase(
+    hip_mom_ipsi = resample(
         moment_df[f'hip_flexion_{ipsi}_moment'].values[start_idx:end_idx + 1]
     )
-    hip_mom_contra = interpolate_to_phase(
+    hip_mom_contra = resample(
         moment_df[f'hip_flexion_{contra}_moment'].values[start_idx:end_idx + 1]
     )
-    knee_mom_ipsi = interpolate_to_phase(
+    knee_mom_ipsi = resample(
         -moment_df[f'knee_angle_{ipsi}_moment'].values[start_idx:end_idx + 1]  # Negate for flexion positive
     )
-    knee_mom_contra = interpolate_to_phase(
+    knee_mom_contra = resample(
         -moment_df[f'knee_angle_{contra}_moment'].values[start_idx:end_idx + 1]
     )
-    ankle_mom_ipsi = interpolate_to_phase(
+    ankle_mom_ipsi = resample(
         moment_df[f'ankle_angle_{ipsi}_moment'].values[start_idx:end_idx + 1]
     )
-    ankle_mom_contra = interpolate_to_phase(
+    ankle_mom_contra = resample(
         moment_df[f'ankle_angle_{contra}_moment'].values[start_idx:end_idx + 1]
     )
 
@@ -872,22 +866,22 @@ def process_stride(
     # Only present in datasets where exo torque was subtracted from inverse dynamics
     if 'moment_filt_bio' in data:
         bio_moment_df = data['moment_filt_bio']
-        hip_bio_mom_ipsi = interpolate_to_phase(
+        hip_bio_mom_ipsi = resample(
             bio_moment_df[f'hip_flexion_{ipsi}_moment'].values[start_idx:end_idx + 1]
         )
-        hip_bio_mom_contra = interpolate_to_phase(
+        hip_bio_mom_contra = resample(
             bio_moment_df[f'hip_flexion_{contra}_moment'].values[start_idx:end_idx + 1]
         )
-        knee_bio_mom_ipsi = interpolate_to_phase(
+        knee_bio_mom_ipsi = resample(
             -bio_moment_df[f'knee_angle_{ipsi}_moment'].values[start_idx:end_idx + 1]
         )
-        knee_bio_mom_contra = interpolate_to_phase(
+        knee_bio_mom_contra = resample(
             -bio_moment_df[f'knee_angle_{contra}_moment'].values[start_idx:end_idx + 1]
         )
-        ankle_bio_mom_ipsi = interpolate_to_phase(
+        ankle_bio_mom_ipsi = resample(
             bio_moment_df[f'ankle_angle_{ipsi}_moment'].values[start_idx:end_idx + 1]
         )
-        ankle_bio_mom_contra = interpolate_to_phase(
+        ankle_bio_mom_contra = resample(
             bio_moment_df[f'ankle_angle_{contra}_moment'].values[start_idx:end_idx + 1]
         )
     else:
@@ -911,7 +905,7 @@ def process_stride(
         column = f'{joint}_angle_{side}_torque_interaction'
         if 'exo' not in data or column not in data['exo']:
             return np.full(NUM_POINTS, np.nan)
-        return interpolate_to_phase(
+        return resample(
             -data['exo'][column].values[start_idx:end_idx + 1] / subject_mass
         )
 
@@ -936,17 +930,17 @@ def process_stride(
     #   - Vertical: positive = upward (supporting body weight)
     #   - Anterior: positive = propulsion (forward force on body)
     #   - Lateral: ipsi negative (medial force on body), contra positive
-    grf_vert_ipsi = interpolate_to_phase(
+    grf_vert_ipsi = resample(
         grf_df[f'fp_{ipsi}_force_y'].values[start_idx:end_idx + 1] / body_weight_N
     )
-    grf_vert_contra = interpolate_to_phase(
+    grf_vert_contra = resample(
         grf_df[f'fp_{contra}_force_y'].values[start_idx:end_idx + 1] / body_weight_N
     )
     # Preserve measured source axes. Trial heading and anatomical lateral
     # direction are not established by waveform shape; never flip force signs
     # to match an expected push-off or medial-force pattern.
     source_horizontal_forces = {
-        f'source_grf_global_{axis}_{relative}_N': interpolate_to_phase(
+        f'source_grf_global_{axis}_{relative}_N': resample(
             grf_df[f'fp_{side}_force_{axis}'].values[start_idx:end_idx + 1]
         )
         for axis in ('x', 'z')
@@ -961,10 +955,10 @@ def process_stride(
     # insole_sim provides COP in OpenSim foot frame (already foot-relative)
     # Columns: insole_<side>_cop_x (anterior), insole_<side>_cop_z (lateral)
     insole_df = data['insole_sim']
-    cop_ant_ipsi = interpolate_to_phase(insole_df[f'insole_{ipsi}_cop_x'].values[start_idx:end_idx + 1])
-    cop_ant_contra = interpolate_to_phase(insole_df[f'insole_{contra}_cop_x'].values[start_idx:end_idx + 1])
-    cop_lat_ipsi = interpolate_to_phase(insole_df[f'insole_{ipsi}_cop_z'].values[start_idx:end_idx + 1])
-    cop_lat_contra = interpolate_to_phase(insole_df[f'insole_{contra}_cop_z'].values[start_idx:end_idx + 1])
+    cop_ant_ipsi = resample(insole_df[f'insole_{ipsi}_cop_x'].values[start_idx:end_idx + 1])
+    cop_ant_contra = resample(insole_df[f'insole_{contra}_cop_x'].values[start_idx:end_idx + 1])
+    cop_lat_ipsi = resample(insole_df[f'insole_{ipsi}_cop_z'].values[start_idx:end_idx + 1])
+    cop_lat_contra = resample(insole_df[f'insole_{contra}_cop_z'].values[start_idx:end_idx + 1])
     # No vertical COP in insole_sim (COP is on 2D foot surface)
     cop_vert_ipsi = np.full(NUM_POINTS, np.nan)
     cop_vert_contra = np.full(NUM_POINTS, np.nan)

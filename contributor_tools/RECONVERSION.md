@@ -331,3 +331,25 @@ subjects/tasks, candidate exclusion accounting, event validation, segment-angle
 interpretation, COP coordinates, and the source README/converter disagreement on
 ankle-angle sign. GT24 resumed from verified outputs after this serial pilot;
 its own boundary-stride trimming still needs source-specific review.
+
+
+### GT24 timing and short-recording corrections
+
+GT24's source README also states that Parsed transitions were already removed.
+Unconditional first/last-stride trimming is now disabled, and gait duration limits
+no longer discard chair transfers. Resampling now uses source timestamps, preserves
+missing measurements, and rejects misaligned channel clocks instead of pairing by
+row number. Nonuniform-clock and missing-sample fixtures cover these changes.
+
+The current `gt24_timing_trim_pilot_20261020` has 24 observations / 3,600 rows:
+three ascent, three descent and 18 chair transfers. The previous chair pilot had
+16 transfers. Every retained hip/knee sample on both sides matches source CSV
+interpolation to within 4.44e-16 radians. The archived `check_gt24_trim_source.py`
+probe binds its findings to source, output and manifest hashes. Event semantics,
+other signal conventions and complete exclusion accounting remain open.
+
+The old canonical queue was stopped at a recording boundary. Its outputs are
+preserved. The corrected queue is `fixed_data_queue_timing_20261020`, with output
+roots `gt24_phase3_timing_20261020` and `gt24_phase1and2_timing_20261020`. It retains
+one worker, the 9 GiB ceiling, 512 MiB source admission, and memory/disk guards.
+These outputs remain unreviewed staging files, not approved dataset releases.
