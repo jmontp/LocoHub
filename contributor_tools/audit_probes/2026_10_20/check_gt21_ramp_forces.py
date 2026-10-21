@@ -1,4 +1,4 @@
-"""Account for native ramp plate contacts against an existing converted recording.
+"""Account for native GT21 plate contacts against an existing converted recording.
 
 Diagnostic only. Candidate errors identify exported channels, never choose a
 physical force sign. Nearest-foot geometry is supporting contact evidence.
@@ -54,6 +54,11 @@ def main():
             for side in ('ipsi','contra'):
                 output=d[f'grf_anterior_{side}_BW'].to_numpy();valid=np.isfinite(output)&np.isfinite(shear)
                 rec['anterior_source_sign_errors_BW'][side]={label:float(np.max(abs(output[valid]-sign*shear[valid]))) if valid.any() else None for label,sign in [('positive',1),('negative',-1)]}
+            rec['lateral_source_errors_BW'] = {}
+            lateral=np.interp(t,ft,fp[plate+'_vx'])/(mass*9.81)
+            for side in ('ipsi','contra'):
+                actual=d[f'grf_lateral_{side}_BW'].to_numpy();valid=np.isfinite(actual)&np.isfinite(lateral)
+                rec['lateral_source_errors_BW'][side]=float(np.max(abs(actual[valid]-lateral[valid]))) if valid.any() else None
             rec['cop_contact_checks'] = {}
             for side in ('ipsi','contra'):
                 leg=r.reference_side if side=='ipsi' else ('right' if r.reference_side=='left' else 'left')
