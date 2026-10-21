@@ -1,3 +1,4 @@
+function convert_gtech_phase_to_parquet(options)
 % This file is meant to convert raw Gtech 2023 data based on heel strikes
 % from _parsing.mat files into a standardized phase-aligned parquet file.
 %
@@ -7,8 +8,8 @@
 %   3. These files contain segment angles in DEGREES (not radians)
 
 % --- Step 1: Initialization & Setup ---
-clear all;
-close all;
+if nargin < 1; options = struct(); end
+bounded = ~isempty(fieldnames(options));
 addpath(fullfile(fileparts(mfilename('fullpath')), '..', 'matlab_common'));
 
 % Add utilities folder to path for helper functions
@@ -18,6 +19,15 @@ num_points_per_step = 150;
 naming_convention = 'ipsicontra'; % Options: 'lr', 'ipsicontra'
 data_dir_root = '.'; % Assumes RawData and Segmentation are subdirs of CWD
 output_dir = fullfile('..', '..', '..', 'converted_datasets'); % Output to project root
+if bounded
+    assert(all(isfield(options, {'data_root', 'subject', 'recording', 'output_path'})), 'Missing recording options');
+    assert(~isfile(options.output_path), 'Output already exists');
+    assert(~isempty(regexp(options.subject, '^AB\d+$', 'once')), 'Invalid subject');
+    assert(~contains(options.recording, '/') && ~contains(options.recording, '\'), 'Expected parsing filename');
+    data_dir_root = options.data_root;
+    output_dir = fileparts(options.output_path);
+end
+
 critical_activities = {'stairs', 'incline_walk', 'normal_walk', 'sit_to_stand', ...
     'stand_to_sit', 'squats', 'jump', 'step_ups', 'curb_up', 'curb_down', ...
     'walk_backward', 'weighted_walk', 'lunges', 'dynamic_walk', 'side_shuffle', ...
@@ -72,6 +82,10 @@ end
 
 subjects = dir(segmentation_dir);
 subjects = subjects(~ismember({subjects.name},{'.','..'}) & [subjects.isdir]); % Filter . and .. and files
+if bounded
+    subjects = subjects(strcmp({subjects.name}, options.subject));
+    assert(numel(subjects) == 1, 'Subject source folder not found');
+end
 
 if isempty(subjects)
     error('No subject directories found in %s', segmentation_dir);
@@ -121,11 +135,17 @@ for subject_idx = 1:length(subjects)
     end
 
     activities = dir(fullfile(subject_segmentation_dir, '*_parsing.mat')); % Look for parsing files
+    if bounded
+        activities = activities(strcmp({activities.name}, options.recording));
+        assert(numel(activities) == 1, 'Parsing source file not found');
+    end
 
     if isempty(activities)
         warning('No *_parsing.mat files found for subject %s in %s. Skipping subject.', subject, subject_segmentation_dir);
                 continue;
             end
+
+    activities = expand_parsing_conditions(activities, subject_segmentation_dir);
 
     % fprintf('Processing Subject: %s (%d activities)\n', subject, length(activities));
     printed_subject_header = false; % Flag to print subject header only once
@@ -178,33 +198,20 @@ for subject_idx = 1:length(subjects)
             left_invalid = ~isfield(parsing_data, 'left') || isempty(parsing_data.left);
             right_invalid = ~isfield(parsing_data, 'right') || isempty(parsing_data.right);
 
-            % Handle alternative field naming patterns (side_shuffle, lunges)
-            if left_invalid && right_invalid
-                % Try side_shuffle pattern: left_left/right_left -> left, left_right/right_right -> right
-                if isfield(parsing_data, 'left_left') && ~isempty(parsing_data.left_left)
-                    parsing_data.left = parsing_data.left_left;
-                    left_invalid = false;
-                    fprintf('  Using alternative field name: left_left -> left\n');
-                end
-                if isfield(parsing_data, 'left_right') && ~isempty(parsing_data.left_right)
-                    parsing_data.right = parsing_data.left_right;
-                    right_invalid = false;
-                    fprintf('  Using alternative field name: left_right -> right\n');
-                end
-
-                % Try lunges pattern: left_forward_left -> left, left_forward_right -> right
-                if left_invalid && isfield(parsing_data, 'left_forward_left') && ~isempty(parsing_data.left_forward_left)
-                    parsing_data.left = parsing_data.left_forward_left;
-                    left_invalid = false;
-                    fprintf('  Using alternative field name: left_forward_left -> left\n');
-                end
-                if right_invalid && isfield(parsing_data, 'left_forward_right') && ~isempty(parsing_data.left_forward_right)
-                    parsing_data.right = parsing_data.left_forward_right;
-                    right_invalid = false;
-                    fprintf('  Using alternative field name: left_forward_right -> right\n');
-                end
+            % Pair anatomical fields within the same source condition. The
+            % first field token is the anatomical side; subsequent tokens name
+            % the condition (e.g. left_forward_left / right_forward_left).
+            source_condition = activities(activity_idx).source_condition;
+            if ~isempty(source_condition)
+                parsing_data.left = [];
+                parsing_data.right = [];
+                left_field = ['left_' source_condition];
+                right_field = ['right_' source_condition];
+                if isfield(parsing_data, left_field); parsing_data.left = parsing_data.(left_field); end
+                if isfield(parsing_data, right_field); parsing_data.right = parsing_data.(right_field); end
+                left_invalid = isempty(parsing_data.left);
+                right_invalid = isempty(parsing_data.right);
             end
-
             if left_invalid && right_invalid
                  % Check if this is a sit-to-stand or stand-to-sit activity
                  % These activities don't have heel strikes, so we use GRF-based segmentation
@@ -622,6 +629,9 @@ for subject_idx = 1:length(subjects)
 
             step_data_single.task = repmat({task_name}, num_points_per_step, 1);
             step_data_single.task_id = repmat({task_id}, num_points_per_step, 1);
+            if ~isempty(source_condition)
+                task_info_str = [task_info_str ',source_condition:' source_condition];
+            end
             step_data_single.task_info = repmat({task_info_str}, num_points_per_step, 1);
             
             % Add subject_metadata column with mass info
@@ -1529,7 +1539,9 @@ else % 'lr'
 end
 
 % Write the data to a parquet file
-file_name = fullfile(output_dir, 'gtech_2023_phase_raw.parquet'); % New filename indicating source
+file_name = fullfile(output_dir, 'gtech_2023_phase_raw.parquet');
+if bounded; file_name = options.output_path; end
+assert(~isfile(file_name), 'Refusing to overwrite an existing phase artifact');
 try
     parquetwrite(file_name, combined_data);
     fprintf('Processing complete. Output saved to: %s\n', file_name);
@@ -1538,6 +1550,34 @@ catch ME_write
 end
 
 % --- END MAIN PROCESSING ---
+end
+
+function expanded = expand_parsing_conditions(activities, directory)
+% Keep each source condition rather than aliasing fields from different trials.
+    expanded = activities([]);
+    for index = 1:numel(activities)
+        item = activities(index);
+        parsed = load(fullfile(directory, item.name));
+        fields = fieldnames(parsed);
+        conditions = {};
+        for j = 1:numel(fields)
+            tokens = regexp(fields{j}, '^(?:left|right)_(.+)$', 'tokens', 'once');
+            if ~isempty(tokens) && isnumeric(parsed.(fields{j})) && size(parsed.(fields{j}), 2) == 2
+                conditions{end+1} = tokens{1}; %#ok<AGROW>
+            end
+        end
+        conditions = unique(conditions, 'stable');
+        if isempty(conditions); conditions = {''}; end
+        if ~isempty(conditions) && (isfield(parsed, 'left') || isfield(parsed, 'right'))
+            conditions = unique([{''}, conditions], 'stable');
+        end
+        for j = 1:numel(conditions)
+            item.source_condition = conditions{j};
+            if isempty(expanded); expanded = item; else; expanded(end+1) = item; end %#ok<AGROW>
+        end
+    end
+end
+
 
 % --- Define Helper Function for Interpolation (Moved to End) ---
 function interp_data = interpolate_signal(raw_times, raw_values, target_times, method, nan_fill_val)

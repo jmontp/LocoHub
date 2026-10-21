@@ -28,7 +28,7 @@
     "gt21": "Native single-recording pilot verified. Resumable guarded batch inventories 2,301 recordings across 16 local subjects and is scheduled after GT24 completes. Full source-subject coverage, all-recording regeneration, force/COP semantics and exclusions remain open.",
     "gait120": "Removed invented metadata and unsupported leg swaps/half-cycle rotation. Source protocol specifies right-foot cycles. Fourteen recordings across all seven tasks (S001/S011) regenerated and all bilateral sagittal angles source-matched; source anthropometry checked. Full rebuild, independent event/contact verification, model sign/force/COP and inverse-dynamics anomalies remain open. Force/COP timing-based leg guesses removed; all available raw plate force/COP/torque axes preserved on the IK clock (36 source-channel comparisons exact across three force-bearing pilot recordings). Anatomical GRF/COP remains missing until mapping is verified. Full local inventory matches published totals: 6,882 recordings, 120 subjects, seven tasks. Guarded per-recording reconstruction is queued after GT21; only its one-recording worker smoke check has executed. Non-sagittal signal standardization is also still pending.",
     "strokepig": "Source C3D foot strikes, inclusive endpoints, actual-time interpolation and one-frame C3D/IK clock correction verified on TVC03/BWA6 (3 observations, 450 rows). Full reconstruction, clinical side, force/COP, model conventions and empty-recording exclusion accounting remain open.",
-    "gt23": "Measured three-dimensional COP and non-extrapolated transform timing corrected. Guarded native time pilot produced 2,475 rows; six COP channels match an independent source/transform calculation within 6.3e-15 m, and structure/source/code hashes pass. Phase-native execution, full reconstruction, frame/contact conventions and source coverage remain open."
+    "gt23": "Native time pilot verifies 2,475 rows/six COP channels. Native phase curb pilot verifies ten observations/1,500 rows and bilateral joint angles/moments, after fixing condition fields incorrectly aliased as anatomical sides. Full time/phase reconstruction, other task conditions, inferred transfer events and physical conventions remain open."
   },
   "findings": [
     {
@@ -460,8 +460,19 @@
         "converted_datasets/gtech_2023_time.parquet"
       ],
       "status": "code_fixed_native_time_pilot_verified_full_regeneration_pending",
-      "required_followup": "Native time pilot verifies six transformed COP channels across 2,475 rows. Execute corrected phase path, verify further tasks and original units/frame/contact masking, then regenerate full time/phase artifacts with source identities.",
+      "required_followup": "Corrected time and phase paths have both executed natively. Six COP channels independently checked in the time pilot; phase pilot verifies intervals and angle/moment routing, not full COP arithmetic. Verify further tasks and original units/frame/contact masking, then regenerate full artifacts.",
       "evidence": "converted_datasets/reconversion_v2/gt23_native_time_pilot_20261020/source_comparison.json"
+    },
+    {
+      "id": "gt23-condition-anatomy",
+      "finding": "GT23 phase converter confused source condition suffixes with anatomical side and dropped remaining conditions",
+      "scope": "converter",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_phase_to_parquet.m"
+      ],
+      "status": "code_fixed_native_phase_pilot_verified_full_regeneration_pending",
+      "required_followup": "Named source conditions now pair left_<condition> with right_<condition>. Curb-down native pilot covers all ten source reference intervals and both sides of joint angles/moments. Verify lunges/side-shuffle and other structured names, noncyclic event assumptions and all source/task coverage before release.",
+      "evidence": "converted_datasets/reconversion_v2/gt23_native_phase_pilot_20261020/source_comparison.json"
     }
   ]
 }

@@ -635,3 +635,37 @@ physical frame semantics and contact thresholds remain unverified. This is a
 source-arithmetic check, not scientific approval. GT24 was paused at a recording
 boundary during the native pilot and then resumed; both GT21 and Gait120 waiting
 dispatchers were rebound to the resumed queue.
+
+
+### GT23 phase conditions and native curb pilot
+
+The phase converter's fallback treated `left_left` and `left_right` as anatomical
+left/right fields, although the source also supplies `right_left`/`right_right`
+and separately named conditions. It could mix different condition windows and
+omit the remaining observations. The converter now expands each source condition
+and pairs `left_<condition>` with `right_<condition>`, retaining the condition in
+task metadata. Existing bare left/right intervals are retained separately.
+
+`convert_gtech_phase_to_parquet(options)` accepts one subject/parsing filename and
+an immutable output path; its no-argument mode retains the previous workflow.
+The native launcher accepts `-Mode phase` while preserving the same hard memory,
+headroom, disk and timeout guards. Existing phase outputs cannot be overwritten.
+
+`gt23_native_phase_pilot_20261020` processed AB01/curb_down_1 under a 2 GiB Windows
+job cap from 43 MiB of source input. It produced ten observations/1,500 rows: all
+five left-condition and five right-condition reference intervals. The independent
+probe checks exact original interval coverage, anatomical side, both sides of
+hip/knee/ankle angles and moments, and missing-value correspondence. Maximum
+numeric difference is 1.36e-13. Structural checks and original source/code hashes
+pass; snapshots, native status and comparison results are retained in the manifest.
+This supersedes the previous statement that the phase path had not executed.
+
+During this pilot the GT24 batch was suspended only after confirming it had no
+active recording child, then resumed in a finally block. Its queue and both waiting
+dispatchers kept their existing PIDs and progress position. `queue_pause.json`
+records the successful resume. This avoids rechecking all earlier recordings on
+every native pilot while preserving the one-bulk-worker constraint.
+
+Other task conditions, inferred transfer/jump segmentation, the optional legacy
+left/right phase convention and full reconstruction remain open. The converter
+README's GT23 authors/article number were also corrected against the source paper.
