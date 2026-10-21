@@ -1,0 +1,135 @@
+{
+  "dataset": "fu18",
+  "reviewed_at_utc": "2026-10-21T04:40:22.311600+00:00",
+  "status": "first_ensemble_pilot_queued_not_yet_run",
+  "catalog_activation": false,
+  "scientific_approval": false,
+  "frozen_files_modified": false,
+  "numerical_jobs_run_by_this_review": false,
+  "queue_snapshot": {
+    "path": "converted_datasets/reconversion_v2/fukuchi_ensemble_serial_queue_20261021/queue_status.json",
+    "sha256": "c698d2aeac5e718e53b01678408c9b68fe83332a2baf21525c39c395402c7f3d",
+    "pid": 417474,
+    "state": "waiting_for_existing_conversions",
+    "waiting_for_pid": 417045,
+    "note": "Point-in-time read-only observation, not a live progress endpoint."
+  },
+  "primary_sources": [
+    {
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5922232/",
+      "doi": "10.7717/peerj.4640",
+      "claims": [
+        "Paper cohort:42 participants (24 young,18 older).",
+        "Processed data are participant/condition mean curves on101 normalized points, distinct from individual raw cycles.",
+        "Published illustrations concern right-leg curves; this does not establish every left-leg anatomical mapping."
+      ]
+    },
+    {
+      "url": "https://api.figshare.com/v2/articles/5722711/versions/6",
+      "doi": "10.6084/m9.figshare.5722711.v6",
+      "version": 6,
+      "retrieved_metadata_sha256": "9d9fb6cd104d114e1e02847d3208fcc9f4f11bf8f345b04e92d5988406c5cab3",
+      "claims": [
+        "Pinned archive version6 describes51 participants:24 young,27 older.",
+        "Original model, pipeline and metadata are provided."
+      ],
+      "license": {
+        "value": 1,
+        "name": "CC BY 4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/"
+      }
+    },
+    {
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "claims": [
+        "Sharing and adaptation require attribution, a license link and indication of changes."
+      ]
+    }
+  ],
+  "scope_for_first_addition": {
+    "source_stem": "WBDS01walkOC",
+    "subjects": [
+      "FU18_01"
+    ],
+    "condition": "overground comfortable",
+    "observation_kind": "ensemble",
+    "observation_type": "ensemble_curve",
+    "expected_observations": 2,
+    "expected_rows": 300,
+    "reference_sides": [
+      "right",
+      "left"
+    ],
+    "grid": "Source101 points interpolated to150 inclusive0\u2013100% points; interpolation adds no new information.",
+    "canonical_channels": "Only source-supported right sagittal angles and moments; left remains source-coordinate channels.",
+    "excluded_claims": [
+      "Individual cycles",
+      "Cycle durations or count",
+      "Within-subject variability or standard deviation",
+      "Simultaneous bilateral timing",
+      "Full51-subject coverage",
+      "Validated raw gait events"
+    ]
+  },
+  "admission_gates": [
+    {
+      "gate": "source_provenance_and_license",
+      "state": "reviewed",
+      "evidence": "Frozen candidate/source evidence and pinned live API agree on source identity and license; cohort discrepancy explicitly versioned."
+    },
+    {
+      "gate": "bounded_conversion_and_independent_readback",
+      "state": "pending_serial_queue",
+      "evidence": "Requires guarded summary status ensemble_pilot_source_readback_passed_unreviewed and unchanged frozen hashes."
+    },
+    {
+      "gate": "exact_pilot_coverage",
+      "state": "pending_output",
+      "evidence": "Require subject FU18_01, comfortable overground, two side-specific ensemble IDs,300 rows and150 inclusive phase points per observation. Never report full archive coverage from the pilot."
+    },
+    {
+      "gate": "scientific_scope_review",
+      "state": "pending_output_review",
+      "evidence": "Inspect source preservation/missingness results; retain unsupported anatomical mappings as missing and all observation/timing caveats."
+    },
+    {
+      "gate": "immutable_bundle_and_attribution",
+      "state": "pending_after_pilot",
+      "evidence": "Use existing release tooling only after it is shown to preserve observation_type ensemble_curve, source-coordinate channels and exact reported scope. Include paper, versioned data DOI, license and transformation notice."
+    },
+    {
+      "gate": "researcher_preview_and_download",
+      "state": "not_enabled",
+      "evidence": "Point only to an existing immutable artifact after review; label participant-condition means prominently. Do not show stride statistics, inferred opposite-leg phase, SD or an individual-cycle count."
+    },
+    {
+      "gate": "remaining_archive_coverage",
+      "state": "separate_future_work",
+      "evidence": "Inventory each subject/condition ensemble from the pinned archive, count omissions explicitly and obtain bounded sources sequentially. The first addition can be a clearly labeled two-ensemble preview; it cannot imply a completed full dataset."
+    },
+    {
+      "gate": "raw_cycle_reconstruction",
+      "state": "deferred_separate_scope",
+      "evidence": "Needs per-recording clock/event/foot identity review. The older event archive lacks54 current walking counterparts; absence in that archive is not proof of missing embedded current C3D events."
+    }
+  ],
+  "additional_validation_recommendation": {
+    "run_now": false,
+    "reason": "The frozen serial job already performs an independent source readback with identity, metadata, exact columns and before/after hash checks. Do not duplicate it or add competing numerical work.",
+    "safe_followup_after_completion": "Read the small guarded summary, conversion manifest and readback report; verify their hashes and compare exact scope to these gates. If successful, first review the existing release builder ensemble support with synthetic fixtures before creating a review bundle."
+  },
+  "suggested_attribution": {
+    "authors": [
+      "Claudiane A. Fukuchi",
+      "Reginaldo K. Fukuchi",
+      "Marcos Duarte"
+    ],
+    "paper": "A public dataset of overground and treadmill walking kinematics and kinetics in healthy individuals. PeerJ6:e4640(2018). DOI10.7717/peerj.4640.",
+    "data": "Figshare DOI10.6084/m9.figshare.5722711.v6; CC BY4.0.",
+    "changes": "LocoHub separates left/right participant-condition means, linearly interpolates101 source points to150 inclusive phase samples, converts supported right angle units to radians and applies documented right moment sign mappings. Other source-coordinate channels are retained; missing timing and unsupported measurements are not invented."
+  },
+  "deferred_frozen_prose_cleanup": [
+    "Fix spaces in candidate.json and source_review.json after queue unfreezes; never change their hashes while waiting."
+  ],
+  "next_dataset": "Do not begin another candidate until this first candidate has a recorded pilot disposition and reviewed next step."
+}

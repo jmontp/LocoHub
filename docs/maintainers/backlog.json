@@ -1,5 +1,5 @@
 {
-  "updated_at_utc": "2026-10-21T03:58:24.512610+00:00",
+  "updated_at_utc": "2026-10-21T04:41:12.799528+00:00",
   "snapshot_notice": "Manually refreshed evidence snapshot, not a live monitor. No dataset has final scientific approval.",
   "organization": {
     "coordinator": "Execution, integration, memory guards and evidence reconciliation",
@@ -14,18 +14,20 @@
       "converted_datasets/reconversion_v2/um21_running_planar_serial_queue_20261021",
       "converted_datasets/reconversion_v2/um21_tread_stair_planar_serial_queue_20261021"
     ],
-    "mblue_fileinfo_queue": "converted_datasets/reconversion_v2/mblue_fileinfo_serial_queue_20261021"
+    "mblue_fileinfo_queue": "converted_datasets/reconversion_v2/mblue_fileinfo_serial_queue_20261021",
+    "mblue_pose_queue": "converted_datasets/reconversion_v2/mblue_modelpose_serial_queue_20261021",
+    "um21_boundary_scope_queue": "converted_datasets/reconversion_v2/um21_boundary_scope_serial_queue_20261021"
   },
   "datasets": [
     {
       "dataset": "MBLUE",
-      "state": "Source and preservation audits passed; stair selection running",
-      "remaining": "15,825 leg views checked. Preservation, stair selection, planar labeling and scientific/model review remain."
+      "state": "Source, preservation and stair selection passed",
+      "remaining": "15,061 observations retained across 335 blocks. Planar labeling, physical orientation and scientific/model review remain."
     },
     {
       "dataset": "GT21",
       "state": "51 / 2,301 recordings",
-      "remaining": "1,111 cycles rebuilt. Native worker paused during MBLUE. Bilateral and terrain fixes still need adoption."
+      "remaining": "1,111 cycles rebuilt. Native controller resumed; waiting for safe Windows memory headroom. Bilateral and terrain fixes still need adoption."
     },
     {
       "dataset": "UMich 2021",
@@ -35,7 +37,7 @@
     {
       "dataset": "GT24",
       "state": "Pilots verified; full builds queued",
-      "remaining": "Duplicate correction prepared. Ankle sign conflict and 869 omitted recordings unresolved."
+      "remaining": "Duplicate correction prepared. README-backed ankle negation proposed; bounded source pilot and 869 omitted recordings remain."
     },
     {
       "dataset": "GT23",
@@ -295,21 +297,23 @@
       "id": "GT24-01",
       "priority": "P0",
       "dataset": "gt24",
-      "title": "Resolve ankle sign contradiction",
+      "title": "Apply documented ankle convention and verify source correspondence",
       "evidence_paths": [
-        "docs/quality/audits/gt24-ankle-convention.json"
+        "docs/quality/audits/gt24-ankle-convention.json",
+        "docs/quality/audits/gt24-ankle-convention-review.json",
+        "docs/quality/audits/gt24-ankle-evidence-ranking.json"
       ],
-      "external_blocker": "Original GT24 model or author clarification requested; numerical posture/gyro correlations are not decisive.",
+      "external_blocker": null,
       "group": "dataset",
       "acceptance": [
-        "Obtain original model/processing axis definition or authoritative clarification",
+        "Use the released README anatomical coordinate definition, confirm exact field scope and stop if contradictory authoritative evidence is found",
         "Reconcile README plantarflexion-positive claim with unchanged dorsiflexion-named export",
         "Apply evidence-backed mapping and independent numerical fixture; regenerate affected channels if mapping changes"
       ],
       "prerequisites": [],
       "lane": "parallel source/document review",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Open; see prerequisites"
+      "status": "Isolated negation proposal prepared; independent source pilot in development"
     },
     {
       "id": "GT24-02",
@@ -368,7 +372,8 @@
         "converted_datasets/reconversion_v2/mblue_pelvis_corrected_full_20261021/conversion_summary.json",
         "converted_datasets/reconversion_v2/mblue_final_acceptance_20261021/plan.json",
         "docs/quality/audits/mblue-pelvis-full-readback.json",
-        "docs/quality/audits/mblue-pelvis-full-preservation.json"
+        "docs/quality/audits/mblue-pelvis-full-preservation.json",
+        "docs/quality/audits/mblue-complete-scope.json"
       ],
       "group": "dataset",
       "acceptance": [
@@ -377,13 +382,11 @@
         "Each of764 stair windows exports exactly its recovered reference view, retaining both legs; dropped views have explicit lineage",
         "Final source readback bound to final corrected hashes"
       ],
-      "prerequisites": [
-        "running mblue_priority_handoff_20261021"
-      ],
+      "prerequisites": [],
       "lane": "serial-heavy",
       "owner": "Coordinator",
-      "status": "Full source and preservation audits passed; stair selection running",
-      "progress_note": "Full reconstruction contains 15,825 leg views. Final JSON scope gate is scheduled after source, preservation and stair-selection audits; no scientific approval."
+      "status": "Complete for pelvis timing, preservation and stair-reference selection; no scientific approval",
+      "progress_note": "All 335 blocks source checked; all unrelated values preserved. Persisted stair outputs were compared exactly to selected baseline views. Final hash-bound scope accounts for 15,061 observations and 764 omitted nonreference views."
     },
     {
       "id": "MBLUE-02",
