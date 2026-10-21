@@ -72,7 +72,23 @@ def main():
         n = int(valid.sum())
         fractions = {side: float(np.mean(distances[side] < distances['R' if side == 'L' else 'L']))
                      if n else None for side in feet}
-        plates.append({'plate': prefix, 'contact_samples': int(contact.sum()), 'usable_samples': n,
+        bouts = []
+        edges = np.diff(np.r_[False, contact, False].astype(int))
+        for start, end in zip(np.flatnonzero(edges == 1), np.flatnonzero(edges == -1)):
+            selected = np.zeros(len(mt), dtype=bool)
+            selected[start:end] = True
+            selected &= valid
+            dl = np.linalg.norm(cop[selected] - feet['L'][selected], axis=1)
+            dr = np.linalg.norm(cop[selected] - feet['R'][selected], axis=1)
+            fwd = forward[selected]
+            flen = np.linalg.norm(fwd, axis=1)
+            heading_ok = np.isfinite(fwd).all(axis=1) & (flen > 0)
+            bouts.append({'start_s': float(mt[start]), 'end_s': float(mt[end-1]),
+                          'contact_samples': int(end-start), 'usable_samples': int(selected.sum()),
+                          'nearer_left_fraction': float(np.mean(dl < dr)) if len(dl) else None,
+                          'anterior_direction_xyz_median': np.median(fwd[heading_ok] / flen[heading_ok,None], axis=0).tolist()
+                          if heading_ok.any() else None})
+        plates.append({'plate': prefix, 'contact_bouts': bouts, 'contact_samples': int(contact.sum()), 'usable_samples': n,
                        'missing_geometry_samples': int((contact & ~valid).sum()),
                        'nearer_foot_fraction': fractions,
                        'distance_m_quantiles_05_50_95': {side: np.quantile(value, [.05,.5,.95]).tolist()

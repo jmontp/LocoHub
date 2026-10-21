@@ -22,6 +22,8 @@ def main():
     p.add_argument('--recording', required=True)
     p.add_argument('--output-root', type=Path, required=True)
     p.add_argument('--run', action='store_true')
+    p.add_argument('--memory-mib', type=int, choices=range(512, 2049), default=2048,
+                   metavar='512..2048', help='Native hard cap; the 2 GiB host reserve remains unchanged')
     args = p.parse_args()
     os.nice(max(0, 19 - os.nice(0)))
     out = args.output_root.resolve()
@@ -65,7 +67,10 @@ def main():
     command = ['/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe',
         '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', windows_path(guard),
         '-OptionsPath', windows_path(out / 'options.json'), '-CodeDirectory', windows_path(code_dir),
-        '-MemoryMiB', '2048', '-TimeoutSeconds', '300']
+        '-MemoryMiB', str(args.memory_mib), '-TimeoutSeconds', '300']
+    execution = {'command': command, 'guard_sha256': digest(guard),
+                 'memory_limit_mib': args.memory_mib, 'reserve_mib': 2048}
+    (out / 'execution_plan.json').write_text(json.dumps(execution, indent=2) + '\n')
     with (out / 'launcher.log').open('x') as log:
         result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
     if result.returncode:
@@ -81,6 +86,8 @@ def main():
     for item in report['tables']:
         item['sha256'] = digest(out / item['file'])
     report['inputs'] = plan
+    report['native_status'] = native
+    report['execution_plan_sha256'] = digest(out / 'execution_plan.json')
     (out / 'source_comparison.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({'status': report['status'], 'tables': len(report['tables'])}))
 
