@@ -194,7 +194,8 @@
         "docs/quality/audits/gt21-completed-force-readback.json",
         "docs/quality/audits/gt21-all-source-phases.json",
         "docs/quality/audits/gt21-participant-source-coverage.json",
-        "docs/quality/audits/gt21-ab17-recovery.json"
+        "docs/quality/audits/gt21-ab17-recovery.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
       ],
       "external_blocker": "May require missing participant source files or source frame documentation; do not infer from waveforms.",
       "group": "dataset",
@@ -207,8 +208,8 @@
       "prerequisites": [],
       "lane": "parallel bounded source/document review",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Six missing participants identified; AB17 archive recovered, not converted",
-      "progress_note": "Publisher version 1 lists 22 participants; the active source inventory contains 16. Missing: AB12, AB15, AB17, AB19, AB23 and AB28. AB17 archive hash and directory were checked, but extraction and conversion remain pending. Publisher version 1 lacks later static and ik_offset additions; source versions must remain explicit."
+      "status": "AB17 extraction and source checks queued; six-participant gap remains",
+      "progress_note": "AB17 recovery now has a guarded job covering all 133 recordings and four schema examples. Extraction has not run. Publisher-version mass and static-pose angle corrections remain prerequisites for canonical conversion; five other missing participants are not recovered. The active 16-participant inventory is missing AB12, AB15, AB17, AB19, AB23 and AB28 from the publisher’s 22-participant cohort."
     },
     {
       "id": "UM21-01",
@@ -243,7 +244,9 @@
       "title": "Establish canonical ankle/kinetic/segment conventions",
       "evidence_paths": [
         "docs/quality/audits/um21-ankle-source-review.json",
-        "converted_datasets/reconversion_v2/um21_running_full_20261020/source_comparison.json"
+        "converted_datasets/reconversion_v2/um21_running_full_20261020/source_comparison.json",
+        "docs/quality/audits/um21-author-planar-recipe-followup.json",
+        "docs/quality/audits/um21-pelvis-correspondence-pilot-review.json"
       ],
       "external_blocker": "Original model axes/processing conventions may be needed; observed curves alone cannot establish anatomical direction.",
       "group": "dataset",
@@ -255,7 +258,8 @@
       "prerequisites": [],
       "lane": "parallel bounded source/document review",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Open; see prerequisites"
+      "status": "Author planar recipe conflict documented; source correspondence pilot prepared",
+      "progress_note": "The author example uses hip minus pelvis, while the existing producer estimate uses pelvis plus hip. A four-stride, two-sided comparison is prepared but has not run; normalized-to-streaming field equivalence and full anatomical interpretation remain unverified."
     },
     {
       "id": "UM21-03",
@@ -463,7 +467,9 @@
       "evidence_paths": [
         "contributor_tools/conversion_scripts/Gtech_2023",
         "docs/quality/audits/gtech23-source-probe.json",
-        "docs/quality/audits/gt23-joint-sign-and-segment-evidence.json"
+        "docs/quality/audits/gt23-joint-sign-and-segment-evidence.json",
+        "docs/quality/audits/gt23-known-pose-preparation.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
       ],
       "group": "dataset",
       "acceptance": [
@@ -474,8 +480,8 @@
       "prerequisites": [],
       "lane": "parallel-safe",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Open; see prerequisites",
-      "progress_note": "Publisher plotting conventions support a candidate sagittal sign recipe. Raw-to-segmented correspondence and locally generated Euler-angle anatomy remain unverified; supplied velocities have conflicting publisher descriptions of their differentiation method."
+      "status": "Native model-pose diagnostic queued; raw-export anatomy and event semantics open",
+      "progress_note": "Thirteen AB01 model poses are queued to test landmark directions. This diagnostic cannot approve raw CSV coordinate ancestry, moment conventions, segment Euler angles or other participant models. All event semantics remain subject to source review. Publisher plotting conventions support only a candidate sagittal sign recipe; supplied velocities also have conflicting publisher descriptions of the differentiation method."
     },
     {
       "id": "GT25-01",
