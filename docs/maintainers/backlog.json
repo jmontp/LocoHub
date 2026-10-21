@@ -7,7 +7,8 @@
     "numerical_workers": 1,
     "rule": "Never edit files frozen into running or queued jobs; develop isolated changes and schedule a new immutable run.",
     "correction_pilot_queue": "converted_datasets/reconversion_v2/correction_pilot_serial_queue_20261021",
-    "terrain_adoption_queue": "converted_datasets/reconversion_v2/gt21_terrain_adoption_serial_queue_20261021"
+    "terrain_adoption_queue": "converted_datasets/reconversion_v2/gt21_terrain_adoption_serial_queue_20261021",
+    "mblue_planar_queue": "converted_datasets/reconversion_v2/mblue_planar_serial_queue_20261021"
   },
   "datasets": [
     {
@@ -384,7 +385,10 @@
       "evidence_paths": [
         "contributor_tools/reconvert_mblue_normalized.py",
         "docs/quality/audits/mblue-complete-source-readback.json",
-        "docs/quality/audits/mblue-source-model-review.json"
+        "docs/quality/audits/mblue-source-model-review.json",
+        "contributor_tools/preserve_mblue_planar_estimates.py",
+        "tests/test_mblue_planar_preservation.py",
+        "converted_datasets/reconversion_v2/mblue_planar_serial_queue_20261021/plan.json"
       ],
       "group": "dataset",
       "acceptance": [
@@ -395,8 +399,8 @@
       "prerequisites": [],
       "lane": "parallel-safe",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Source model reviewed; segment semantics correction in preparation",
-      "progress_note": "Scalar sums are planar estimates; source OpenSim model has multiple rotation axes. Preserve estimates explicitly, withhold unsupported canonical orientations, then pursue model-based orientation reconstruction. Force plate configuration known; per-block raw lineage and exclusions still open."
+      "status": "Planar preservation correction implemented and queued; physical orientation review remains open",
+      "progress_note": "15 synthetic tests passed, including persisted Parquet metadata/null-mask preservation and cross-shard duplicate rejection. Fresh output job waits behind terrain pilots and requires successful complete MBLUE scope evidence. This does not reconstruct physical orientations."
     },
     {
       "id": "GT23-01",
