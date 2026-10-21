@@ -425,3 +425,20 @@ are retained. The earlier pilot is preserved separately.
 This is not whole-GT21 approval. Other subjects/modes, force/COP transformations,
 source conventions and complete exclusion accounting remain open. No full native
 batch has started yet. GT24 resumed after the native pilot.
+
+
+### Gait120 missing metadata and source anthropometry
+
+Gait120 no longer substitutes 70/75 kg, 1.70 m, a one-second cycle or zero pelvis
+orientation for absent measurements. Unknown metadata remains missing; derived
+segment angles remain missing when pelvis orientation is absent. Optional OpenSim
+reconstruction rejects missing mass/height before loading or scaling a model.
+The converter imports its own named helpers explicitly, avoiding a collision
+with StrokePiG's `marker_mapping` module in a shared process.
+
+The metadata reader was checked against all 120 rows of the supplied spreadsheet;
+masses and heights match, with measured masses ranging from 48.2 to 118.0 kg.
+`gait120_anthropometry_review_20261020/source_comparison.json` records the source
+and reader hashes plus each compared record. This verifies metadata reading only.
+Affected Parquet files have not been regenerated, and phase/laterality assumptions
+and historical inverse-dynamics anomalies remain open.

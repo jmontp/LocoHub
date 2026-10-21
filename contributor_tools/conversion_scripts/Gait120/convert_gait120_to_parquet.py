@@ -50,6 +50,7 @@ Output: Phase-normalized parquet file with 150 points per gait cycle.
 """
 
 import os
+import json
 import re
 import sys
 import numpy as np
@@ -61,6 +62,7 @@ from tqdm import tqdm
 
 # Add path for common utilities
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from common.derivatives import (
     compute_velocity_from_shifted_angle,
     compute_acceleration_from_velocity,
@@ -85,13 +87,13 @@ from common.opensim_ik import IKConfig
 from common.opensim_scaling import ScalingConfig
 
 # Import local scale_model utilities for anthropometric data
-from scale_model import (
+from contributor_tools.conversion_scripts.Gait120.scale_model import (
     get_subject_anthropometrics,
     get_subject_mass,
     get_subject_height,
     load_anthropometric_data,
 )
-from marker_mapping import (
+from contributor_tools.conversion_scripts.Gait120.marker_mapping import (
     GAIT120_TO_RAJAGOPAL,
     IK_MARKER_WEIGHTS_GAIT120,
     rename_markers_in_trc,
@@ -639,14 +641,13 @@ def estimate_stride_duration_from_mot(df: pd.DataFrame) -> float:
         df: DataFrame from .mot file with 'time' column
 
     Returns:
-        Duration in seconds (default 1.0 if cannot compute)
+        Observed duration in seconds, or NaN when the source clock is unavailable/invalid
     """
     if 'time' in df.columns and len(df) > 1:
-        time_vals = df['time'].values
-        duration = time_vals[-1] - time_vals[0]
-        if duration > 0:
-            return duration
-    return 1.0  # Default estimate
+        time_vals = df['time'].to_numpy(dtype=float)
+        if np.isfinite(time_vals).all() and (np.diff(time_vals) > 0).all():
+            return float(time_vals[-1] - time_vals[0])
+    return np.nan
 
 
 def get_column_mapping(df: pd.DataFrame) -> Dict[str, str]:
@@ -710,8 +711,8 @@ def process_step_file(
     task_id: str,
     step_num: int,
     leg_side: str = 'r',
-    subject_mass_kg: float = 70.0,
-    subject_height_m: float = 1.70,
+    subject_mass_kg: float = np.nan,
+    subject_height_m: float = np.nan,
     subject_path: Optional[Path] = None,
 ) -> Optional[pd.DataFrame]:
     """
@@ -731,6 +732,14 @@ def process_step_file(
     Returns:
         DataFrame with 150 rows (one per phase point) or None if invalid
     """
+    # Unknown metadata must not silently enter model scaling or normalization.
+    if not np.isfinite(subject_mass_kg) or subject_mass_kg <= 0:
+        subject_mass_kg = np.nan
+    if not np.isfinite(subject_height_m) or subject_height_m <= 0:
+        subject_height_m = np.nan
+    if (RUN_FULL_PIPELINE or COMPUTE_INVERSE_DYNAMICS) and not (
+            np.isfinite(subject_mass_kg) and np.isfinite(subject_height_m)):
+        raise ValueError('Measured mass and height are required for OpenSim reconstruction')
     # Load .mot file
     df = load_mot_file(mot_path)
     if df is None or len(df) < 10:
@@ -812,7 +821,7 @@ def process_step_file(
 
     # Pelvis tilt (global reference)
     pelvis_tilt_deg = get_col('pelvis_tilt')
-    pelvis_tilt_rad = interpolate_to_phase(pelvis_tilt_deg * DEG2RAD) if 'pelvis_tilt' in col_map else np.zeros(NUM_POINTS)
+    pelvis_tilt_rad = interpolate_to_phase(pelvis_tilt_deg * DEG2RAD) if 'pelvis_tilt' in col_map else np.full(NUM_POINTS, np.nan)
 
     # Apply same phase shift to pelvis for gait tasks
     if not is_bilateral:
@@ -1227,7 +1236,10 @@ def process_step_file(
     task_info_str = ",".join(task_info_parts)
 
     # Build subject metadata
-    subject_metadata = f"weight_kg:{subject_mass_kg:.1f},sex:M"
+    subject_metadata = json.dumps({
+        'weight_kg': subject_mass_kg if np.isfinite(subject_mass_kg) else None,
+        'height_m': subject_height_m if np.isfinite(subject_height_m) else None,
+    }, allow_nan=False)
 
     # Create stride DataFrame
     stride_df = pd.DataFrame({
@@ -1322,8 +1334,8 @@ def process_task(
     task_name: str,
     task: str,
     task_id: str,
-    subject_mass_kg: float = 70.0,
-    subject_height_m: float = 1.70,
+    subject_mass_kg: float = np.nan,
+    subject_height_m: float = np.nan,
     subject_path: Optional[Path] = None,
     step_offset: int = 0
 ) -> Tuple[List[pd.DataFrame], int]:
@@ -1413,11 +1425,10 @@ def process_subject(
         anthro = get_subject_anthropometrics(subject_folder, gait120_path)
         subject_mass_kg = anthro['mass_kg']
         subject_height_m = anthro['height_m']
-    except (ValueError, KeyError):
-        # Fall back to defaults
-        subject_mass_kg = 75.0
-        subject_height_m = 1.70
-        print(f"  Warning: Using default mass/height for {subject_folder}")
+    except (ValueError, KeyError, FileNotFoundError):
+        subject_mass_kg = np.nan
+        subject_height_m = np.nan
+        print(f"  Warning: Measured mass/height unavailable for {subject_folder}")
 
     all_strides = []
     step_offset = 0

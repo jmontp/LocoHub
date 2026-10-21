@@ -425,3 +425,48 @@ def test_mblue_missing_source_samples_are_not_bridged(mblue):
     source=mblue_source()
     source['time_l'][50,0]=source['time_l'][49,0]
     assert np.isnan(mblue.extract_stride_duration(source,'l',0))
+
+
+@pytest.fixture
+def gait120(monkeypatch):
+    return load_converter('Gait120/convert_gait120_to_parquet.py',monkeypatch)
+
+
+def test_gait120_timing_requires_finite_increasing_source_clock(gait120):
+    for frame in [pd.DataFrame({'angle':[1,2]}),pd.DataFrame({'time':[0,0]}),pd.DataFrame({'time':[0,np.nan,1]}),pd.DataFrame({'time':[0,2,1]})]:
+        assert np.isnan(gait120.estimate_stride_duration_from_mot(frame))
+    assert gait120.estimate_stride_duration_from_mot(pd.DataFrame({'time':[10,10.3,11.2]}))==pytest.approx(1.2)
+
+
+def test_gait120_reconstruction_rejects_unknown_anthropometry(gait120,monkeypatch,tmp_path):
+    monkeypatch.setattr(gait120,'RUN_FULL_PIPELINE',True)
+    with pytest.raises(ValueError,match='Measured mass and height'):
+        gait120.process_step_file(tmp_path/'absent.mot','G120_unknown','level_walking','level',0)
+
+
+def test_gait120_anthropometry_does_not_invent_or_ambiguously_select(monkeypatch,tmp_path):
+    helper=load_converter('Gait120/scale_model.py',monkeypatch)
+    source=pd.DataFrame({'Subject':['S001'],'Height(mm)':[1750.], 'Bodymass(Kg)':[np.nan], 'Leglength(mm)':[900.]})
+    monkeypatch.setattr(helper,'load_anthropometric_data',lambda root:source)
+    result=helper.get_subject_anthropometrics('S001',tmp_path)
+    assert np.isnan(result['mass_kg']) and result['height_m']==1.75
+    with pytest.raises(ValueError,match='Expected one'):
+        helper.get_subject_anthropometrics('missing',tmp_path)
+    source=pd.concat([source,source],ignore_index=True)
+    with pytest.raises(ValueError,match='Expected one'):
+        helper.get_subject_anthropometrics('S001',tmp_path)
+
+
+def test_gait120_kinematics_keeps_missing_metadata_and_pelvis(gait120,monkeypatch,tmp_path):
+    time=np.linspace(0,1,101)
+    source=pd.DataFrame({f'{joint}_{side}':10*time for joint in ['hip_flexion','knee_angle','ankle_angle'] for side in ['l','r']})
+    source['time']=time
+    monkeypatch.setattr(gait120,'load_mot_file',lambda path:source)
+    frame=gait120.process_step_file(tmp_path/'Step01.mot','G120_unknown','level_walking','level',0)
+    assert frame is not None
+    metadata=json.loads(frame.subject_metadata.iloc[0])
+    assert metadata['weight_kg'] is None and metadata['height_m'] is None
+    assert 'sex' not in metadata
+    assert frame.pelvis_sagittal_angle_rad.isna().all()
+    assert frame.thigh_sagittal_angle_ipsi_rad.isna().all()
+    assert frame.hip_flexion_angle_ipsi_rad.notna().all()

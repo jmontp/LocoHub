@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T20:18:16.784444-04:00",
-  "recorded_at": "2026-10-21T00:18:48.080771+00:00",
-  "base_revision": "f50b8c70519b094058ca1fb0155e61521bb7e428",
+  "started_at": "2026-10-20T20:20:53.801082-04:00",
+  "recorded_at": "2026-10-21T00:21:24.294162+00:00",
+  "base_revision": "ed159bfd934d2c7e6af27eb73515e2c66e9dc5d1",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "ulimit -v 2097152; OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "5be12fb0f7262108b53cddc096f8e2a65d2dd8ab7316ab96b13be46bbfd97687",
+  "junit_sha256": "34296c8bc587bbdbe9b13c68829eaad18549a2c15b67b5254423475154716256",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -59,7 +59,7 @@
       ]
     },
     "tests.test_converter_scientific_provenance": {
-      "passed": 30,
+      "passed": 34,
       "failed": 0,
       "skipped": 0,
       "cases": [
@@ -181,6 +181,22 @@
         },
         {
           "name": "test_mblue_missing_source_samples_are_not_bridged",
+          "status": "passed"
+        },
+        {
+          "name": "test_gait120_timing_requires_finite_increasing_source_clock",
+          "status": "passed"
+        },
+        {
+          "name": "test_gait120_reconstruction_rejects_unknown_anthropometry",
+          "status": "passed"
+        },
+        {
+          "name": "test_gait120_anthropometry_does_not_invent_or_ambiguously_select",
+          "status": "passed"
+        },
+        {
+          "name": "test_gait120_kinematics_keeps_missing_metadata_and_pelvis",
           "status": "passed"
         }
       ]
@@ -875,7 +891,7 @@
     }
   },
   "totals": {
-    "passed": 182,
+    "passed": 186,
     "failed": 0,
     "skipped": 2
   }

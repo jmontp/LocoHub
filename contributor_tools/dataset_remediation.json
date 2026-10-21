@@ -25,7 +25,8 @@
     "gt24": "Canonical task labels, short-trial trimming, transfer duration and source-clock interpolation corrected. Three-recording timing/trim pilot: 24 observations checked against source hips/knees. New timing queue running; all-task/signal coverage, event validity, exclusions and conventions remain open.",
     "gt25": "Seven BT01 recordings regenerated: 152 observations / 22,800 rows, source-matched for checked channels. All-subject/task coverage, ankle sign, segment angles, COP frames, event validity and exclusion accounting remain open.",
     "mblue": "Assumed duration/pelvis and index-based opposite-leg pairing removed. 102-observation real walking pilot verifies 45,228 temporal-overlap angle values. Stable identities, full regeneration, bilateral task timing, force/COP mappings and exclusions remain open.",
-    "gt21": "Bounded native single-recording path executed under a Windows 2 GiB hard job limit. Four real levelground observations checked for source heel-strike endpoints and bilateral angles, derivatives, moments. All-recording regeneration, force/COP semantics and exclusion coverage still pending."
+    "gt21": "Bounded native single-recording path executed under a Windows 2 GiB hard job limit. Four real levelground observations checked for source heel-strike endpoints and bilateral angles, derivatives, moments. All-recording regeneration, force/COP semantics and exclusion coverage still pending.",
+    "gait120": "Missing mass/height/timing/pelvis fallbacks removed; reconstruction requires measured anthropometry. Reader matches all 120 source-sheet masses and heights. Affected exports, phase/anatomical mapping and inverse-dynamics anomalies remain unresolved."
   },
   "findings": [
     {
@@ -346,8 +347,9 @@
       "affected_paths": [
         "contributor_tools/conversion_scripts/Gait120/convert_gait120_to_parquet.py"
       ],
-      "status": "open",
-      "required_followup": "Reject/mark unknown metadata; test missing source values and propagate missing derived signals."
+      "status": "code_fixed_metadata_source_checked_regeneration_pending",
+      "required_followup": "Reject/mark unknown metadata; test missing source values and propagate missing derived signals.",
+      "evidence": "converted_datasets/reconversion_v2/gait120_anthropometry_review_20261020/source_comparison.json"
     },
     {
       "id": "remaining-11",
