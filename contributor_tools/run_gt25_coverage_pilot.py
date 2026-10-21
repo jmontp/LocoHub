@@ -10,6 +10,8 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import signal
+import time
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -83,6 +85,70 @@ def verify_manifest(path, expected_sources=None):
     return data
 
 
+def baseline_evidence(path):
+    if path is None:
+        return None
+    path = Path(path).resolve()
+    data = verify_manifest(path)
+    return {'path': str(path), 'manifest_sha256': digest(path), 'outputs': data['outputs']}
+
+
+def verify_bound_baseline(bound):
+    if bound is not None and baseline_evidence(Path(bound['path'])) != bound:
+        raise ValueError('Bound baseline changed')
+
+
+def windows_available_mib():
+    result = subprocess.run([
+        '/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe',
+        '-NoProfile', '-NonInteractive', '-Command',
+        '[math]::Floor((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1024) | ConvertTo-Json -Compress'],
+        capture_output=True, text=True, timeout=10, check=True)
+    value = json.loads(result.stdout)
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        raise ValueError('Invalid Windows memory measurement')
+    return value
+
+
+def linux_available_mib():
+    for line in Path('/proc/meminfo').read_text().splitlines():
+        if line.startswith('MemAvailable:'):
+            return int(line.split()[1]) // 1024
+    raise RuntimeError('Cannot measure Linux memory')
+
+
+def guarded_stage(command, *, stdout, output_root, storage_check, timeout=180):
+    """Monitor this pilot process group only; never touch unrelated workers."""
+    if windows_available_mib() < 3584 or linux_available_mib() < 3584:
+        raise MemoryError('Need 1.5 GiB worker cap plus 2 GiB startup reserve')
+    storage_check(output_root)
+    process = subprocess.Popen(['ionice', '-c3', *command], stdout=stdout,
+                               stderr=subprocess.STDOUT, start_new_session=True)
+    started = time.monotonic()
+    next_host_check = started
+    try:
+        while process.poll() is None:
+            if time.monotonic() - started > timeout:
+                raise subprocess.TimeoutExpired(command, timeout)
+            if linux_available_mib() < 2048:
+                raise MemoryError('Linux memory fell below 2 GiB reserve')
+            storage_check(output_root)
+            if time.monotonic() >= next_host_check:
+                if windows_available_mib() < 2048:
+                    raise MemoryError('Windows memory fell below 2 GiB reserve')
+                next_host_check = time.monotonic() + 15
+            time.sleep(.5)
+        return subprocess.CompletedProcess(command, process.returncode)
+    finally:
+        if process.poll() is None:
+            os.killpg(process.pid, signal.SIGTERM)
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.wait()
+
+
 def review_output(manifest, kind, baseline):
     # Called only as a separately bounded, guarded worker after conversion.
     import resource
@@ -90,6 +156,7 @@ def review_output(manifest, kind, baseline):
     import pyarrow.parquet as pq
     import pandas as pd
     data = verify_manifest(manifest)
+    bound = baseline_evidence(baseline) if kind == 'unchanged' else None
     other = None
     if kind == 'unchanged':
         before = verify_manifest(baseline)
@@ -113,6 +180,7 @@ def review_output(manifest, kind, baseline):
         count += len(frame)
     if count != data['rows'] or (other is not None and next(other, None) is not None):
         raise ValueError('Output/baseline row count mismatch')
+    verify_bound_baseline(bound)
     print(json.dumps({'checked_rows': count, 'kind': kind, 'scientific_approval': False}))
 
 
@@ -148,19 +216,13 @@ def main():
     out = snapshot/'converted_datasets/reconversion_v2'/('pilot_'+args.kind+'_'+args.recording)
     if out.exists():
         raise FileExistsError('Pilot exists; inspect it rather than silently resume')
-    plan = {'status': 'planned_not_run', 'sources': sources, 'snapshot_manifest_sha256': digest(args.prepared/'preparation_manifest.json'),
+    bound_baseline = baseline_evidence(args.baseline) if args.kind == 'unchanged' else None
+    plan = {'baseline': bound_baseline, 'status': 'planned_not_run', 'sources': sources, 'snapshot_manifest_sha256': digest(args.prepared/'preparation_manifest.json'),
             'audit_sha256': digest(AUDIT), 'runner_sha256': digest(Path(__file__)), 'output': str(out),
             'scientific_approval': False, 'kind': args.kind}
     if not args.run:
         print(json.dumps(plan, indent=2))
         return
-    # The existing guard monitors Linux memory/storage. Require Windows startup reserve too.
-    result = subprocess.run(['/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', '-NoProfile', '-NonInteractive',
-        '-Command', '[math]::Floor((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1024) | ConvertTo-Json -Compress'],
-        capture_output=True, text=True, timeout=30, check=True)
-    if int(json.loads(result.stdout)) < 3584:
-        raise MemoryError('Need 1.5 GiB worker cap plus 2 GiB host reserve')
-    from contributor_tools.run_reconversion_batch import run_guarded_worker
     from contributor_tools.reconvert_recording import ensure_storage_headroom
     ensure_storage_headroom(out)
     out.mkdir(parents=True)
@@ -176,12 +238,16 @@ def main():
         commands += [review, [sys.executable, str(AUDIT), '--output-root', str(out)]]
         for index, command in enumerate(commands):
             verify_snapshot(args.prepared)
+            verify_bound_baseline(bound_baseline)
+            if digest(Path(__file__)) != plan['runner_sha256']:
+                raise ValueError('Pilot runner changed')
             if digest(args.prepared/'preparation_manifest.json') != plan['snapshot_manifest_sha256']:
                 raise ValueError('Preparation manifest changed during pilot')
             if evidence(paths) != sources or digest(AUDIT) != plan['audit_sha256']:
                 raise ValueError('Source or audit changed during pilot')
             with (out/f'worker_{index}.log').open('x') as log:
-                done = run_guarded_worker(command, stdout=log, timeout=180, output_root=out)
+                done = guarded_stage(command, stdout=log, timeout=180, output_root=out, storage_check=ensure_storage_headroom)
+            verify_bound_baseline(bound_baseline)
             if done.returncode:
                 raise RuntimeError('Pilot stage failed: '+str(index))
         verify_manifest(manifest, sources)
@@ -189,6 +255,11 @@ def main():
         if len(audit['recordings']) != 1 or audit['recordings'][0]['recording'] != args.recording or audit['recordings'][0]['observations_checked'] <= 0:
             raise ValueError('Source audit did not cover requested recording')
         verify_snapshot(args.prepared)
+        verify_bound_baseline(bound_baseline)
+        if (digest(Path(__file__)) != plan['runner_sha256']
+                or digest(AUDIT) != plan['audit_sha256']
+                or digest(args.prepared/'preparation_manifest.json') != plan['snapshot_manifest_sha256']):
+            raise ValueError('Pilot execution evidence changed')
         summary.update(status='pilot_checks_passed_unreviewed', source_audit_sha256=digest(out/'source_comparison.json'),
                        conversion_manifest_sha256=digest(manifest), limitations=audit['limitations'])
     except Exception as error:

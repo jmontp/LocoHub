@@ -21,12 +21,20 @@ def require_complete_ledger(report):
         raise ValueError('Complete source-pair coverage has not passed')
 
 
+def require_unused_summary(output_root):
+    """Preserve every previous attempt, including interrupted and failed runs."""
+    summary = Path(output_root) / 'pilot_summary.json'
+    if summary.exists() or summary.is_symlink():
+        raise FileExistsError(f'Existing pilot attempt must be preserved; use a new root: {summary}')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--baseline', type=Path, required=True)
     parser.add_argument('--output-root', type=Path, required=True)
     parser.add_argument('--run', action='store_true')
     args = parser.parse_args()
+    require_unused_summary(args.output_root)
     for key in ('OPENBLAS_NUM_THREADS', 'OMP_NUM_THREADS', 'MKL_NUM_THREADS', 'NUMEXPR_NUM_THREADS'):
         os.environ[key] = '1'
     os.nice(max(0, 19-os.nice(0)))
@@ -65,7 +73,7 @@ def main():
         dependencies += [ROOT/'contributor_tools'/name for name in (
             'prepare_gt21_combined_adoption.py', 'prepare_gt21_bilateral_recovery.py',
             'prepare_gt21_terrain_fix.py', 'audit_gt21_native_batch.py',
-            'audit_gt21_adoption_ledger.py', 'gt21_adoption_coverage.py',
+            'audit_gt21_adoption_ledger.py', 'audit_gt21_treadmill_metadata.py', 'gt21_adoption_coverage.py',
             'gt21_numeric_source.py', 'reconvert_recording.py')]
         dependencies += force_dependencies
         dependencies += sorted((ROOT/'contributor_tools/common').rglob('*.py'))
@@ -103,6 +111,13 @@ def main():
         ledger = check_ledger(folder)
         native.save(out/'eligibility_readback.json', ledger)
         require_complete_ledger(ledger)
+        if record['mode'] == 'treadmill':
+            from contributor_tools.audit_gt21_treadmill_metadata import check_record as check_metadata
+            metadata = check_metadata(folder, ledger)
+            native.save(out/'treadmill_metadata_readback.json', metadata)
+            if metadata.get('status') != 'all_treadmill_metadata_source_checked_unreviewed':
+                raise ValueError('Source treadmill metadata gate has not passed')
+            summary['treadmill_metadata_sha256'] = digest(out/'treadmill_metadata_readback.json')
         mass_root = ROOT/'converted_datasets/reconversion_v2/gt21_subject_mass_review_20261021'
         evidence = json.loads((mass_root/'source_comparison.json').read_text())
         if not evidence['native_exact_mass_readback'] or digest(mass_root/'subject_masses.csv') != evidence['csv_sha256']:
