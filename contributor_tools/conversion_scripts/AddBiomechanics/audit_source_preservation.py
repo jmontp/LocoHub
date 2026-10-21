@@ -14,6 +14,8 @@ from pathlib import Path
 import struct
 import sys
 import time
+sys.path.insert(0,str(Path(__file__).parent))
+from native_reader import load_reader
 for name in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS','ARROW_NUM_THREADS','NUMEXPR_NUM_THREADS'):os.environ[name]='1'
 
 MAX_JSON=32*1024**2
@@ -171,10 +173,12 @@ def verify_metadata(subject,entry,folder,root,guard):
 
 def audit(input_root,output_root,guard=None):
     input_root=Path(input_root).resolve();root=Path(output_root).resolve();guard=guard or Guard(root);guard(startup=True,force=True)
-    import nimblephysics as nimble
+    nimble,reader_version=load_reader()
     import pyarrow as pa
     pa.set_cpu_count(1);pa.set_io_thread_count(1)
     manifest_path=root/'manifest.json';manifest_sha=digest(manifest_path,guard);manifest=read_json(manifest_path)
+    if manifest.get('reader_loader_sha256')!=digest(Path(__file__).with_name('native_reader.py')):raise ValueError('Native reader loader changed')
+    if manifest.get('reader_version')!=reader_version:raise ValueError('Installed native reader version differs from preservation')
     if manifest.get('status')!='all_source_files_preserved_unreviewed' or manifest.get('scientific_approval') is not False or manifest.get('canonical_dataset_complete') is not False:raise ValueError('Complete source-preservation manifest required')
     loss=manifest.get('loss_ledger',{})
     if loss.get('silently_dropped_frames')!=0 or loss.get('silently_dropped_public_properties')!=0 or loss.get('unsupported_source_properties')!=[]:raise ValueError('Source loss ledger is incomplete')
@@ -183,7 +187,7 @@ def audit(input_root,output_root,guard=None):
     files=sorted(input_root.rglob('*.b3d'))
     if not files:raise ValueError('No original B3D files; empty scope cannot establish source preservation')
     if [str(p.relative_to(input_root)) for p in files]!=[x['source_file'] for x in manifest['files']]:raise ValueError('Full original file inventory differs')
-    bindings={str(manifest_path):manifest_sha,str(writer):digest(writer),str(config):digest(config),str(Path(__file__).resolve()):digest(__file__)};reports=[]
+    bindings={str(Path(__file__).with_name('native_reader.py')):digest(Path(__file__).with_name('native_reader.py')),str(manifest_path):manifest_sha,str(writer):digest(writer),str(config):digest(config),str(Path(__file__).resolve()):digest(__file__)};reports=[]
     for path,entry in zip(files,manifest['files']):
         guard(force=True);sha=digest(path,guard)
         if entry.get('status')!='source_preserved_unreviewed' or entry['source_sha256']!=sha:raise ValueError('Original source file status/hash differs')
@@ -220,7 +224,7 @@ def audit(input_root,output_root,guard=None):
         reports.append({'source_file':entry['source_file'],'source_frames':total_frames,'rows':total_rows,'source_properties_checked':properties,'source_sha256':sha,'output_sha256':output_sha})
     for path,h in bindings.items():
         if digest(path,guard)!=h:raise ValueError('Bound evidence changed during audit')
-    return {'status':'all_original_B3D_frames_passes_and_properties_source_checked_unreviewed','scientific_approval':False,'canonical_dataset_complete':False,'manifest_sha256':manifest_sha,'bindings':bindings,'files':reports,'limitations':['Original properties and values preserved, not anatomical model/sign approval.','Historical task labels checked for persisted consistency; experiment/task meaning requires independent dataset review.','Frame pass count differences from trial header retained and unassessed.','Source NaN masks preserved; original NaN payload bits remain in B3D.','Unexported array-valued header APIs remain in original B3D and writer loss ledger; not claimed independently exported.']}
+    return {'status':'all_original_B3D_frames_passes_and_properties_source_checked_unreviewed','scientific_approval':False,'canonical_dataset_complete':False,'reader_version':reader_version,'manifest_sha256':manifest_sha,'bindings':bindings,'files':reports,'limitations':['Original properties and values preserved, not anatomical model/sign approval.','Historical task labels checked for persisted consistency; experiment/task meaning requires independent dataset review.','Frame pass count differences from trial header retained and unassessed.','Source NaN masks preserved; original NaN payload bits remain in B3D.','Unexported array-valued header APIs remain in original B3D and writer loss ledger; not claimed independently exported.']}
 
 
 def main():

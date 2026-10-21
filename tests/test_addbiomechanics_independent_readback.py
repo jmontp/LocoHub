@@ -16,7 +16,7 @@ review=load('adb_independent_readback',ROOT/'contributor_tools/conversion_script
 def exported(tmp_path,monkeypatch):
     source=tmp_path/'input';source.mkdir();p=source/'sample.b3d';p.write_bytes(b'synthetic-only-source')
     subject=fakes.Subject((3,2));monkeypatch.setattr(fakes.m,'make_guard',lambda output:lambda **kwargs:None)
-    monkeypatch.setitem(sys.modules,'nimblephysics',SimpleNamespace(biomechanics=SimpleNamespace(SubjectOnDisk=lambda p:subject)))
+    monkeypatch.setattr(fakes.m,'load_reader',lambda:(SimpleNamespace(biomechanics=SimpleNamespace(SubjectOnDisk=lambda p:subject)),'synthetic-reader'));monkeypatch.setattr(review,'load_reader',fakes.m.load_reader)
     output=tmp_path/'output';fakes.m.process_dataset('Falisse2016',source,output)
     return source,output,subject
 

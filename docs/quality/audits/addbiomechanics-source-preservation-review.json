@@ -73,8 +73,8 @@
     "Cross-file participant identity, historical dataset attribution, trial task mappings, source version/license and source-quality interpretation remain dataset-specific admission gates."
   ],
   "bindings": {
-    "contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_to_parquet.py": "bd54b1ad8603e5b53fa57c94fb09ed0bb7f3621a3cb5aed3b6c443c404d6ac2d",
-    "tests/test_addbiomechanics_source_preservation.py": "e68cd1bb981a59c71432f50bc0230c52a37960172e60bc4959a05adb754fb54b",
+    "contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_to_parquet.py": "aef78ed6d6bbc1899e14217499191ab41448d51e554eb931a7b659ab66c58b95",
+    "tests/test_addbiomechanics_source_preservation.py": "464d24af54a36db01abe3d2d7398248fb58532fec183a0555c25ed1eab99573c",
     "contributor_tools/conversion_scripts/AddBiomechanics/dataset_configs.py": "b20016da068b58f4d4ec82e45eb62ed29fc1a7aab1730066cf4e0a0dad57622d"
   },
   "resource_guards": {
@@ -97,8 +97,8 @@
     "imports_writer_encoding_or_extraction": false,
     "checks": "Every original file/trial/frame/pass, source property, dtype/shape/value, signed zero and missingness, clock, mass availability, metadata, model XML, persisted schema and hashes; rejects empty scope and false task-approval labels.",
     "bindings": {
-      "contributor_tools/conversion_scripts/AddBiomechanics/audit_source_preservation.py": "20fa7eb43c9e08faeccff8e112bbf2603448585dbc0da35204ab5f82c3ae2312",
-      "tests/test_addbiomechanics_independent_readback.py": "7d7ce5a0f11381b71af3b1ca3838d2b0e637ba212e83949596e7e3f2a39becdf"
+      "contributor_tools/conversion_scripts/AddBiomechanics/audit_source_preservation.py": "982a0cf1d0276f09ae2553362bb641777f2797757b4cc9154f426b7654b9be7f",
+      "tests/test_addbiomechanics_independent_readback.py": "df51c97f794e22e655150c70ac290f6a5973740569c3d2b3089f640c73a72cb7"
     }
   },
   "original_source_availability": {
@@ -129,6 +129,24 @@
     "bindings": {
       "contributor_tools/acquire_addbiomechanics_zip_member.py": "091c70c5d760c839dc54dd740a77e0f8dd8fbb2c1aef1dcb49e7b4186661dec5",
       "tests/test_addbiomechanics_member_acquisition.py": "698c96f6d35d3326dee5f7323620eaf426e0051e563889c480cc4ee3578508f9"
+    }
+  },
+  "native_reader_dependency_review": {
+    "status": "static_API_reviewed_direct_loader_implemented_real_import_not_run",
+    "installed_versions": {
+      "nimblephysics": "0.10.52.1",
+      "torch": "2.7.1+cu128",
+      "numpy": "2.2.6",
+      "pandas": "2.2.3",
+      "pyarrow": "20.0.0"
+    },
+    "change": "Top-level nimblephysics imports timestep then installed CUDA-linked torch2.7.1+cu128. New loader directly imports extension through empty nimblephysics_libs/__init__.py, rejects any Torch modules before/after, validates required APIs and records distribution version. No real native smoke import performed.",
+    "synthetic_tests_passed": 45,
+    "real_native_smoke_test_performed": false,
+    "handoff": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/swarm_backlog_20261021/adb_tiziana_dependency_readiness_20261021.json",
+    "bindings": {
+      "contributor_tools/conversion_scripts/AddBiomechanics/native_reader.py": "4ae402daab563fc00d76f9924ce263202b6297288b98fb22a61cdc48ef5ea169",
+      "tests/test_addbiomechanics_native_reader.py": "6a0b7cd5afa053b54723bf8a2c962ae07beedf91831b655a89b6acf61f13bb4e"
     }
   }
 }

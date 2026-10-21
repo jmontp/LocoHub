@@ -90,7 +90,7 @@ def test_inclusive_events_not_task_grouped():
 def test_streaming_file_manifest_preserves_models_all_frames_and_original(tmp_path,monkeypatch):
     monkeypatch.setattr(m,'make_guard',lambda output:lambda **kwargs:None)
     source=tmp_path/'input';source.mkdir();file=source/'synthetic.b3d';file.write_bytes(b'Artificial fixture only, no B3D payload')
-    subject=Subject((3,2));monkeypatch.setitem(sys.modules,'nimblephysics',SimpleNamespace(biomechanics=SimpleNamespace(SubjectOnDisk=lambda p:subject)))
+    subject=Subject((3,2));monkeypatch.setattr(m,'load_reader',lambda:(SimpleNamespace(biomechanics=SimpleNamespace(SubjectOnDisk=lambda p:subject)),'synthetic-reader'))
     sha=m.digest(file);output=tmp_path/'output';m.process_dataset('Falisse2016',source,output)
     manifest=json.loads((output/'manifest.json').read_text());assert manifest['canonical_dataset_complete'] is False
     assert manifest['status']=='all_source_files_preserved_unreviewed' and len(manifest['files'][0]['trials'])==2
@@ -108,7 +108,7 @@ def test_failed_source_retains_explicit_full_file_ledger(tmp_path,monkeypatch):
     source=tmp_path/'input';source.mkdir()
     for name in ('a.b3d','b.b3d'):(source/name).write_bytes(b'synthetic')
     subject=Subject((3,));subject.readFrames=lambda *a,**k:[]
-    monkeypatch.setitem(sys.modules,'nimblephysics',SimpleNamespace(biomechanics=SimpleNamespace(SubjectOnDisk=lambda p:subject)))
+    monkeypatch.setattr(m,'load_reader',lambda:(SimpleNamespace(biomechanics=SimpleNamespace(SubjectOnDisk=lambda p:subject)),'synthetic-reader'))
     output=tmp_path/'output'
     with pytest.raises(ValueError,match='Short'):m.process_dataset('Falisse2016',source,output)
     manifest=json.loads((output/'manifest.json').read_text());assert manifest['status']=='stopped_incomplete'
@@ -119,7 +119,7 @@ def test_variable_frame_pass_counts_are_accounted_not_assumed(tmp_path,monkeypat
     monkeypatch.setattr(m,'make_guard',lambda output:lambda **kwargs:None)
     source=tmp_path/'input';source.mkdir();(source/'a.b3d').write_bytes(b'synthetic')
     subject=Subject((3,));subject.readFrames=lambda t,start,count,**kwargs:[frame(i,t,i) for i in range(start,start+count)]
-    monkeypatch.setitem(sys.modules,'nimblephysics',SimpleNamespace(biomechanics=SimpleNamespace(SubjectOnDisk=lambda p:subject)))
+    monkeypatch.setattr(m,'load_reader',lambda:(SimpleNamespace(biomechanics=SimpleNamespace(SubjectOnDisk=lambda p:subject)),'synthetic-reader'))
     output=tmp_path/'output';m.process_dataset('Falisse2016',source,output)
     trial=json.loads((output/'manifest.json').read_text())['files'][0]['trials'][0]
     assert trial['frames_written']==3 and trial['pass_rows_written']==3
@@ -146,7 +146,7 @@ def test_runtime_guard_failure_keeps_unprocessed_inventory(tmp_path,monkeypatch)
         calls.append(kwargs)
         if len(calls)>1:raise MemoryError('synthetic host pressure')
     monkeypatch.setattr(m,'make_guard',lambda output:guard)
-    monkeypatch.setitem(sys.modules,'nimblephysics',SimpleNamespace(biomechanics=SimpleNamespace(SubjectOnDisk=lambda p:Subject())))
+    monkeypatch.setattr(m,'load_reader',lambda:(SimpleNamespace(biomechanics=SimpleNamespace(SubjectOnDisk=lambda p:Subject())),'synthetic-reader'))
     output=tmp_path/'output'
     with pytest.raises(MemoryError,match='host pressure'):m.process_dataset('Falisse2016',source,output)
     manifest=json.loads((output/'manifest.json').read_text());assert manifest['status']=='stopped_incomplete'

@@ -22,6 +22,7 @@ import numpy as np
 import pandas as pd
 sys.path.insert(0,str(Path(__file__).parent))
 from dataset_configs import get_task_info, get_supported_datasets
+from native_reader import load_reader
 
 FRAME_BATCH=32
 MAX_FRAME_PAYLOAD_BYTES=4*1024**2
@@ -137,7 +138,7 @@ def iter_trial_records(subject,trial,dataset,source_id,source_file,source_sha,ba
 def process_b3d_file(b3d_path,dataset,subject_idx=0):
     """Small-review compatibility helper; full CLI uses bounded streaming instead."""
     path=Path(b3d_path);guard=make_guard(path.parent);guard(startup=True,force=True)
-    import nimblephysics as nimble
+    nimble,reader_version=load_reader()
     subject=nimble.biomechanics.SubjectOnDisk(str(path))
     if sum(subject.getTrialLength(i) for i in range(subject.getNumTrials()))>1024:raise MemoryError('Use streaming conversion; in-memory review limited to 1024 frames')
     sha=digest(path,guard);identity=f'{dataset}:{path.name}:{sha}';rows=[]
@@ -194,14 +195,14 @@ def process_dataset(dataset,input_dir,output_dir):
     if dataset not in get_supported_datasets():raise ValueError('Unsupported dataset')
     input_dir=Path(input_dir).resolve();output_dir=Path(output_dir).resolve()
     guard=make_guard(output_dir);guard(startup=True,force=True)
-    import nimblephysics as nimble
+    nimble,reader_version=load_reader()
     import pyarrow as pa
     import pyarrow.parquet as pq
     pa.set_cpu_count(1);pa.set_io_thread_count(1)
     if output_dir.exists():raise FileExistsError('Fresh output directory required; preserve historical artifacts')
     files=sorted(input_dir.rglob('*.b3d'))
     if not files:raise ValueError('No source files')
-    output_dir.mkdir(parents=True);schema=source_schema();ledger={'status':'running_source_preservation','scientific_approval':False,'dataset':dataset,'producer_sha256':digest(__file__),'task_config_sha256':digest(Path(__file__).with_name('dataset_configs.py')),'reader_version':str(getattr(nimble,'__version__','not_exposed')),'files':[{'source_file':str(p.relative_to(input_dir)),'status':'not_started'} for p in files],'canonical_dataset_complete':False,'loss_ledger':{'silently_dropped_frames':0,'silently_dropped_public_properties':0,'unsupported_source_properties':[],'unexported_header_methods':'Original B3D retained; only explicitly listed lightweight subject/trial metadata and embedded models exported. Header APIs requiring full arrays are not implicitly loaded.'},'phase_output':'Withheld: original model/DOF signs, contact body identity, force frames and events require independent validation.'}
+    output_dir.mkdir(parents=True);schema=source_schema();ledger={'status':'running_source_preservation','scientific_approval':False,'dataset':dataset,'producer_sha256':digest(__file__),'task_config_sha256':digest(Path(__file__).with_name('dataset_configs.py')),'reader_version':reader_version,'reader_loader_sha256':digest(Path(__file__).with_name('native_reader.py')),'files':[{'source_file':str(p.relative_to(input_dir)),'status':'not_started'} for p in files],'canonical_dataset_complete':False,'loss_ledger':{'silently_dropped_frames':0,'silently_dropped_public_properties':0,'unsupported_source_properties':[],'unexported_header_methods':'Original B3D retained; only explicitly listed lightweight subject/trial metadata and embedded models exported. Header APIs requiring full arrays are not implicitly loaded.'},'phase_output':'Withheld: original model/DOF signs, contact body identity, force frames and events require independent validation.'}
     def save():
         temp=output_dir/'manifest.tmp';temp.write_text(json.dumps(ledger,indent=2,allow_nan=False)+'\n');temp.replace(output_dir/'manifest.json')
     save()
