@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T23:02:31.283110-04:00",
-  "recorded_at": "2026-10-21T03:03:04.303253+00:00",
-  "base_revision": "16a350b206733773bb79cf894acc4b9d5ebda3ac",
+  "started_at": "2026-10-20T23:04:31.135567-04:00",
+  "recorded_at": "2026-10-21T03:05:03.544099+00:00",
+  "base_revision": "f96c74a9bbd02ea448e8763596a2b0033f837b07",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "3427b92798cb09b6751834119f3cc404d6dace7713d9cb66e12eb14c62637e8b",
+  "junit_sha256": "8c00d12554d9bfbd5ba17d6f0dbdf63601b4f44f8e84fb9fe690a8a02c4a114f",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -500,6 +500,41 @@
         },
         {
           "name": "test_sources_include_actual_fallback_sheet_and_optional_measurements",
+          "status": "passed"
+        }
+      ]
+    },
+    "tests.test_gt21_event_exclusions": {
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_opposite_leg_does_not_hide_ineligible_source[5-99-counts0-source_cycle_fails_converter_sample_or_phase_rule]",
+          "status": "passed"
+        },
+        {
+          "name": "test_opposite_leg_does_not_hide_ineligible_source[100-20-counts1-source_cycle_fails_converter_sample_or_phase_rule]",
+          "status": "passed"
+        },
+        {
+          "name": "test_opposite_leg_does_not_hide_ineligible_source[100-99-counts2-insufficient_source_ik_or_id_samples]",
+          "status": "passed"
+        },
+        {
+          "name": "test_opposite_leg_does_not_hide_ineligible_source[100-99-counts3-insufficient_source_ik_or_id_samples]",
+          "status": "passed"
+        },
+        {
+          "name": "test_opposite_leg_does_not_hide_ineligible_source[100-99-counts4-opposite_reference_leg_not_exported]",
+          "status": "passed"
+        },
+        {
+          "name": "test_missing_and_ambiguous_task_windows",
+          "status": "passed"
+        },
+        {
+          "name": "test_no_export_is_not_evidence_for_a_leg_policy",
           "status": "passed"
         }
       ]
@@ -1206,7 +1241,7 @@
     }
   },
   "totals": {
-    "passed": 242,
+    "passed": 249,
     "failed": 0,
     "skipped": 2
   }

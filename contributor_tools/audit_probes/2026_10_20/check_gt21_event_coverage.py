@@ -7,10 +7,10 @@ for key in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS'):os.envir
 import argparse
 from collections import Counter
 import hashlib
+import gzip
 import json
 from pathlib import Path
 import resource
-resource.setrlimit(resource.RLIMIT_AS,(768*1024**2,768*1024**2))
 import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
@@ -23,7 +23,19 @@ def digest(path):
     return h.hexdigest()
 
 
+def cycle_exclusion(matched, side, samples, maximum_phase, signal_counts):
+    """Check source eligibility before attributing an omission to leg policy."""
+    if not matched:return 'outside_complete_eligible_task_window'
+    if len(matched)>1:return 'ambiguous_task_windows'
+    if samples<10 or maximum_phase<50:return 'source_cycle_fails_converter_sample_or_phase_rule'
+    if any(count<10 for count in signal_counts):return 'insufficient_source_ik_or_id_samples'
+    if matched[0]['exported_sides'] and side not in matched[0]['exported_sides']:
+        return 'opposite_reference_leg_not_exported'
+    return 'requires_further_reconciliation'
+
+
 def main():
+    resource.setrlimit(resource.RLIMIT_AS,(768*1024**2,768*1024**2))
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('batch',type=Path);parser.add_argument('output',type=Path);args=parser.parse_args()
     state=json.loads((args.batch/'batch_status.json').read_text());plan=json.loads((args.batch/'inventory.json').read_text())['recordings'][:state['completed']]
     args.output.mkdir(parents=True,exist_ok=False);reports=[];totals=Counter()
@@ -32,6 +44,11 @@ def main():
         folder=args.batch/record['subject']/record['date']/record['mode']/Path(record['recording']).stem
         manifest=json.loads((folder/'conversion_manifest.json').read_text())
         for item in manifest['outputs']:assert digest(folder/item['name'])==item['sha256']
+        for item in manifest['compressed_source_tables']:
+            checksum=hashlib.sha256()
+            with gzip.open(folder/item['name'],'rb') as stream:
+                for block in iter(lambda:stream.read(1024**2),b''):checksum.update(block)
+            assert checksum.hexdigest()==item['uncompressed_sha256'],'Source comparison table changed'
         field='Speed' if record['mode']=='treadmill' else 'Label'
         conditions=pd.read_csv(next(folder.glob('source_conditions_*.csv.gz')),usecols=['Header',field])
         segments=[]
@@ -59,13 +76,12 @@ def main():
                 a,b=float(events.Header.iloc[ai]),float(events.Header.iloc[bi]);key=(side,a,b)
                 matched=[s for s in segments if s['start']<=a+1e-9 and b<=s['end']+1e-9]
                 if key in exported:reason='exported';seen.add(key)
-                elif not matched:reason='outside_complete_eligible_task_window'
-                elif len(matched)>1:reason='ambiguous_task_windows'
-                elif matched[0]['exported_sides'] and side not in matched[0]['exported_sides']:reason='opposite_reference_leg_not_exported'
-                elif bi-ai+1<10 or events.HeelStrike.iloc[ai:bi+1].max()<50:reason='source_cycle_fails_converter_sample_or_phase_rule'
-                elif any(np.count_nonzero((t>=a)&(t<=b))<10 for t in clocks.values()):reason='insufficient_source_ik_or_id_samples'
-                else:reason='requires_further_reconciliation'
-                counts[reason]+=1;ledger.append({'side':side,'start_s':a,'end_s':b,'reason':reason})
+                else:reason=cycle_exclusion(matched,side,bi-ai+1,events.HeelStrike.iloc[ai:bi+1].max(),
+                    [np.count_nonzero((t>=a)&(t<=b)) for t in clocks.values()])
+                counts[reason]+=1;ledger.append({'side':side,'start_s':a,'end_s':b,'reason':reason,
+                    'source_cycle_samples':int(bi-ai+1),
+                    'source_ik_samples':int(np.count_nonzero((clocks['ik_offset']>=a)&(clocks['ik_offset']<=b))),
+                    'source_id_samples':int(np.count_nonzero((clocks['id']>=a)&(clocks['id']<=b)))})
         assert seen==exported,'Output has no matching source event pair'
         totals.update(counts);reports.append({'record':record,'counts':dict(counts),'source_pairs':ledger,'manifest_sha256':digest(folder/'conversion_manifest.json')})
     report={'recordings':reports,'totals':dict(totals),'batch_snapshot':state,'probe_sha256':digest(Path(__file__)),'scientific_approval':False,
