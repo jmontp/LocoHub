@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T23:28:12.563152-04:00",
-  "recorded_at": "2026-10-21T03:28:43.855523+00:00",
-  "base_revision": "311b06a242c5109bd31a60fa57a7ac7ad8edecef",
+  "started_at": "2026-10-20T23:36:08.367906-04:00",
+  "recorded_at": "2026-10-21T03:36:41.926778+00:00",
+  "base_revision": "2a3ce5b593ddfdddec7bd831fcb2f032159e4401",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "71dca880c3e8e0420725db3aa15971dc33fa278e5a9dd3fbf7d5dea3cfd6721e",
+  "junit_sha256": "41b72c9793c97eeded7de5cd175fa8024345ce6c176eacf45fbc6b82ac1979d5",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -574,6 +574,61 @@
         },
         {
           "name": "test_no_export_is_not_evidence_for_a_leg_policy",
+          "status": "passed"
+        }
+      ]
+    },
+    "tests.test_gt21_event_terrain_checks": {
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_monotone_source_cycle_has_two_real_resets",
+          "status": "passed"
+        },
+        {
+          "name": "test_source_event_problems_are_reported[3-20.0-source_phase_reversal]",
+          "status": "passed"
+        },
+        {
+          "name": "test_source_event_problems_are_reported[2-0.0-extra_zero_phase_samples]",
+          "status": "passed"
+        },
+        {
+          "name": "test_source_event_problems_are_reported[3-nan-nonfinite_source_phase]",
+          "status": "passed"
+        },
+        {
+          "name": "test_source_event_problems_are_reported[4-101.0-source_phase_outside_0_100]",
+          "status": "passed"
+        },
+        {
+          "name": "test_source_event_problems_are_reported[0-nan-endpoints_not_source_resets]",
+          "status": "passed"
+        },
+        {
+          "name": "test_source_event_problems_are_reported[5-10.0-endpoints_not_source_resets]",
+          "status": "passed"
+        },
+        {
+          "name": "test_terrain_transitions_are_not_assumed_steady_ascent",
+          "status": "passed"
+        },
+        {
+          "name": "test_findings_and_empty_output_reviews_are_not_reported_as_success[metadata0-records0-source_terrain_metadata_incomplete]",
+          "status": "passed"
+        },
+        {
+          "name": "test_findings_and_empty_output_reviews_are_not_reported_as_success[metadata1-records1-source_phase_issues_found]",
+          "status": "passed"
+        },
+        {
+          "name": "test_findings_and_empty_output_reviews_are_not_reported_as_success[metadata2-records2-no_completed_outputs_checked]",
+          "status": "passed"
+        },
+        {
+          "name": "test_findings_and_empty_output_reviews_are_not_reported_as_success[metadata3-records3-source_events_and_terrain_checked_unreviewed]",
           "status": "passed"
         }
       ]
@@ -1438,7 +1493,7 @@
     }
   },
   "totals": {
-    "passed": 286,
+    "passed": 298,
     "failed": 0,
     "skipped": 2
   }
