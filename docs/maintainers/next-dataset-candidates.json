@@ -64,6 +64,46 @@
     },
     {
       "priority": 2,
+      "name": "Vielemeyer et al. 2026 ramp walking",
+      "paper_doi": "10.1038/s41597-025-06535-y",
+      "paper_url": "https://www.nature.com/articles/s41597-025-06535-y",
+      "data_doi": "10.6084/m9.figshare.29300888.v1",
+      "repository_api": "https://api.figshare.com/v2/articles/29300888/versions/1",
+      "implemented": false,
+      "license_status": "Pinned publisher v1 metadata confirms CC BY 4.0. Code license must be checked separately before reuse.",
+      "reason_to_review_next": "Individual ramp trials and full-body model outputs complement ensembles; per-participant archives permit bounded admission. Research-only until walking disposition.",
+      "scope_review": {
+        "enrolled": 13,
+        "paper_retained": 11,
+        "paper_dynamic_trials": 658,
+        "inclines_degrees": [
+          0,
+          7.5,
+          10
+        ],
+        "paper_sections": "Data Records; Level0; Level2",
+        "semantics": "Kinematics normalized to gait cycle; GRF/CoP normalized to contact time. Never place these on one stride axis without reconstruction."
+      },
+      "repository_review": {
+        "files": 39,
+        "bytes": 1288693377,
+        "smallest_participant_zip_bytes": 3053476,
+        "same_named_zip_pairs": 13,
+        "file_ids_required": true,
+        "scientific_archives_downloaded": false
+      },
+      "remaining_admission_checks": [
+        "Reconcile13-participant archive-name groups with the11 compact participant archives and paper exclusions; archive content/format labels remain unverified. Never infer completeness from enrolled cohort.",
+        "Pin publisher file IDs/checksums and archive members: two archive groups reuse13 basenames; identify raw versus text membership explicitly.",
+        "Verify signal units, body-mass denominators and bilateral signs from actual headers and model; author code divides moments by1000 but this alone does not prove Nm/kg.",
+        "Review source endpoint handling: calcReadInData.py uses range(tdto[0],tdto[4]) then101-point interpolation; source event interpretation must precede inclusive150-point export.",
+        "Keep contact-normalized forces separate from cycle-normalized angles unless original timestamps support alignment."
+      ],
+      "source_code_url": "https://github.com/jvielemeyer/human-ramp-walking",
+      "review_evidence": "../quality/audits/new-dataset-discovery-followup.json"
+    },
+    {
+      "priority": 3,
       "name": "Ferber 2024 walking and running",
       "paper_doi": "10.1038/s41597-024-04011-7",
       "paper_url": "https://www.nature.com/articles/s41597-024-04011-7",
@@ -87,7 +127,7 @@
       "overlap_warning": "Repository states 601 of 1,798 participants were included in previous research publications. Track original cohort/session provenance; new DOI does not prove new participants."
     }
   ],
-  "reviewed_at_utc": "2026-10-21T05:51:48.489552+00:00",
+  "reviewed_at_utc": "2026-10-21T06:09:22.840131+00:00",
   "active_addition": {
     "name": "Fukuchi 2018 walking",
     "status": "first_pair_queued_waiting_for_predecessor_full_run_not_started",
@@ -95,7 +135,8 @@
     "source_doi": "10.6084/m9.figshare.5722711.v6",
     "scope": "508 published participant-condition angle/kinetic table pairs; 51 participants; ensemble means, not individual strides",
     "acceptance_review": "../quality/audits/fu18-full-run-readiness.json",
-    "checkpoint_review": "../quality/audits/fu18-sequential-onboarding-checkpoint.json"
+    "checkpoint_review": "../quality/audits/fu18-sequential-onboarding-checkpoint.json",
+    "next_blocker": "Existing first-pair watcher434185/start25480098 still waits for MBLUEFileInfo433720; no full-plan summary exists. No duplicate numerical worker or second dataset admission."
   },
   "evidence_receipts": {
     "fukuchi2017": {
@@ -114,5 +155,16 @@
       "bytes": 10840
     }
   },
-  "duplicate_review": "No matching running/Ferber study pages found in current docs/datasets index pages. Historical or composite datasets still need source-identity checks before a second addition; title search is not proof of independent participants."
+  "duplicate_review": "No matching running/Ferber study pages found in current docs/datasets index pages. Historical or composite datasets still need source-identity checks before a second addition; title search is not proof of independent participants.",
+  "discovery_exclusions": [
+    {
+      "name": "Moore2015 perturbation walking",
+      "decision": "Already cataloged as mo15; restoration/review rather than new onboarding.",
+      "catalog": "../datasets/mo15/index.html",
+      "paper_doi": "10.7717/peerj.918",
+      "source_url": "https://zenodo.org/records/13030",
+      "license_source": "https://github.com/csu-hmc/perturbed-data-paper#data",
+      "license_note": "Author repository explicitly states data CC0, separate from repository CC BY4.0."
+    }
+  ]
 }

@@ -4,18 +4,21 @@
 <body><header class="site-header"><div class="header-inner"><a class="wordmark" href="../../index.html">LocoHub</a></div></header>
 <main class="page-content" id="main">
 <h1>Fukuchi Walking</h1>
-<p><strong>Source reviewed. Conversion has not started.</strong> There are no LocoHub files or previews for this dataset yet.</p>
+<p><strong>A small pilot passed its source checks; the full dataset is not ready.</strong> The pilot covers one participant and one walking condition, with separate left- and right-leg averages. <a href="pilot-review.html">See the pilot results</a> or <a href="full-admission.html">the remaining full-dataset checks</a>.</p>
 <p>This study covers barefoot overground and treadmill walking at different speeds, with pelvis and leg angles, joint moments and ground reaction forces. The authors also provide raw motion-capture recordings and their Visual3D model and processing pipeline.</p>
 <table><thead><tr><th>Item</th><th>Source review</th></tr></thead><tbody>
 <tr><td>Participants</td><td>The 2018 paper describes 42 people. Source version 6 describes 51 people: 24 younger and 27 older adults. The current metadata now reconciles all 51 participants and 7,203 file names with the source archive inventories.</td></tr>
 <tr><td>Conditions</td><td>Three overground speed categories and eight treadmill condition codes. Individual speeds must come from source metadata.</td></tr>
 <tr><td>Files</td><td>C3D recordings, text tables, CSV metadata, Visual3D model and pipeline, MATLAB examples.</td></tr>
 <tr><td>License</td><td><a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, as recorded by the source repository. Credit the authors, link the license and describe changes.</td></tr>
-<tr><td>Available here</td><td>Source review only. No converted observations.</td></tr>
+<tr><td>Available here</td><td>Source review and results from a two-curve, 300-row pilot. No public dataset download. The full plan covers 508 participant-condition pairs across 51 people.</td></tr>
 </tbody></table>
-<h2>What needs checking first</h2>
+<h2>What these curves represent</h2>
 <p>The provided MATLAB example still assumes the older 42-person cohort. Its plots use 101 normalized points, and the processing pipeline exports left- and right-leg windows separately. The original paper confirms these processed curves are averages for each participant and condition, not individual strides. They must retain that distinction; raw-cycle reconstruction requires a separate event check.</p>
-<p>A bounded download has acquired one raw recording, its event-archive counterpart and matching text tables using less than 2.4 MiB in total. Full archives were not downloaded. The two C3D files have identical measurement bytes but different metadata; event correctness still needs checking. Another 54 walking recordings have no counterpart in the separate event archive. Numerical conversion remains pending.</p>
+<p>A bounded download has acquired one raw recording, its event-archive counterpart and matching text tables using less than 2.4 MiB in total. Full archives were not downloaded. The two C3D files have identical measurement bytes but different metadata; event correctness still needs checking. Another 54 walking recordings have no counterpart in the separate event archive. A separate ensemble pilot has since passed its numerical source readback. Individual-stride reconstruction and event validation remain unapproved.</p>
+<h2>What happens next</h2>
+<p>The guarded first pair of the full plan is scheduled behind existing work. Its source checks and preview must be reviewed before the remaining pairs run. The full run must then account for every published pair and missing condition. Left-leg anatomical signs remain unresolved, so those components keep their source names.</p>
+<p>The averages do not provide individual stride durations, within-person stride variability, or simultaneous timing between legs. None will be filled in from assumptions.</p>
 <h2>Original sources</h2>
 <ul><li><a href="https://peerj.com/articles/4640/">Fukuchi, Fukuchi and Duarte (2018), PeerJ — original paper</a></li>
 <li><a href="https://doi.org/10.6084/m9.figshare.5722711.v6">Original dataset, pinned version 6</a> — these are author-provided files, not LocoHub conversions.</li>

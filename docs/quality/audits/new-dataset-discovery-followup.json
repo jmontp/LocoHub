@@ -1,0 +1,105 @@
+{
+  "status": "metadata_research_and_walking_documentation_only",
+  "scientific_approval": false,
+  "catalog_activation": false,
+  "checked_at_utc": "2026-10-21T06:09:22.840131+00:00",
+  "walking": {
+    "full_plan_sha256": "ee8776499bb5cd0d66c21eedcb3cce2f24545a2757ee13edebabcde8c0ae599a",
+    "verified_bindings": 45,
+    "watcher_status": {
+      "status": "waiting_for_fileinfo",
+      "pid": 434185,
+      "scientific_approval": false,
+      "plan_sha256": "ee8776499bb5cd0d66c21eedcb3cce2f24545a2757ee13edebabcde8c0ae599a",
+      "predecessor_pid": 433720,
+      "predecessor_start": "25470430",
+      "predecessor_run_sha256": "5b4fc4424ab6e14e966bb1d3418fd341420843bc309c88bd2f62490e83ce4ef7",
+      "automatic_full_resume": false
+    },
+    "watcher_status_sha256": "a8f451179828846c359967feadcffaa7a93dfb6691ecc85ee1845b856ea3b057",
+    "full_summary_exists": false,
+    "pilot_evidence": "../../datasets/fu18/pilot-evidence.json",
+    "documentation_correction": "Walking index previously said no conversion/preview exists despite completed bounded pilot. Now distinguishes small pilot from waiting full-plan first pair and full508pair readiness.",
+    "next_admission": "Review actual scheduled first-pair readback and preview before root-controlled full resume. Complete all508pairs before walking catalog disposition; only then admit second dataset."
+  },
+  "new_candidate": {
+    "priority": 2,
+    "name": "Vielemeyer et al. 2026 ramp walking",
+    "paper_doi": "10.1038/s41597-025-06535-y",
+    "paper_url": "https://www.nature.com/articles/s41597-025-06535-y",
+    "data_doi": "10.6084/m9.figshare.29300888.v1",
+    "repository_api": "https://api.figshare.com/v2/articles/29300888/versions/1",
+    "implemented": false,
+    "license_status": "Pinned publisher v1 metadata confirms CC BY 4.0. Code license must be checked separately before reuse.",
+    "reason_to_review_next": "Individual ramp trials and full-body model outputs complement ensembles; per-participant archives permit bounded admission. Research-only until walking disposition.",
+    "scope_review": {
+      "enrolled": 13,
+      "paper_retained": 11,
+      "paper_dynamic_trials": 658,
+      "inclines_degrees": [
+        0,
+        7.5,
+        10
+      ],
+      "paper_sections": "Data Records; Level0; Level2",
+      "semantics": "Kinematics normalized to gait cycle; GRF/CoP normalized to contact time. Never place these on one stride axis without reconstruction."
+    },
+    "repository_review": {
+      "files": 39,
+      "bytes": 1288693377,
+      "smallest_participant_zip_bytes": 3053476,
+      "same_named_zip_pairs": 13,
+      "file_ids_required": true,
+      "scientific_archives_downloaded": false
+    },
+    "remaining_admission_checks": [
+      "Reconcile13-participant archive-name groups with the11 compact participant archives and paper exclusions; archive content/format labels remain unverified. Never infer completeness from enrolled cohort.",
+      "Pin publisher file IDs/checksums and archive members: two archive groups reuse13 basenames; identify raw versus text membership explicitly.",
+      "Verify signal units, body-mass denominators and bilateral signs from actual headers and model; author code divides moments by1000 but this alone does not prove Nm/kg.",
+      "Review source endpoint handling: calcReadInData.py uses range(tdto[0],tdto[4]) then101-point interpolation; source event interpretation must precede inclusive150-point export.",
+      "Keep contact-normalized forces separate from cycle-normalized angles unless original timestamps support alignment."
+    ],
+    "source_code_url": "https://github.com/jvielemeyer/human-ramp-walking",
+    "review_evidence": "../quality/audits/new-dataset-discovery-followup.json"
+  },
+  "bounded_source_requests": [
+    {
+      "url": "https://api.figshare.com/v2/articles/29300888/versions/1",
+      "path": "converted_datasets/reconversion_v2/swarm_backlog_20261021/dataset_discovery_followup_20261021/ramp_v1_metadata.json",
+      "bytes": 15170,
+      "sha256": "b7a72ee476667ef0d57c169680e13103dfb3fd8bd04430290be53b57a3e11529"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/jvielemeyer/human-ramp-walking/main/calculation/calcReadInData.py",
+      "path": "converted_datasets/reconversion_v2/swarm_backlog_20261021/dataset_discovery_followup_20261021/ramp_processing.py",
+      "bytes": 27285,
+      "sha256": "99383171902284d8d7f842b695bddc48704fb1bd1a341441eb00c7d82aa21d8d"
+    }
+  ],
+  "primary_paper_evidence": [
+    {
+      "url": "https://www.nature.com/articles/s41597-025-06535-y",
+      "sections": [
+        "Data Records / Level0",
+        "Level2",
+        "Data processing"
+      ],
+      "findings": "13enrolled,11retained,658trialfiles; gait-cycle kinematics and contact-normalized forces must remain distinct."
+    },
+    {
+      "url": "https://github.com/jvielemeyer/human-ramp-walking",
+      "section": "Calculation / Data_Level_1",
+      "findings": "Author example participant available; full source is Figshare. No source data acquired."
+    }
+  ],
+  "duplicate_exclusion": {
+    "name": "Moore2015 perturbation walking",
+    "decision": "Already cataloged as mo15; restoration/review rather than new onboarding.",
+    "catalog": "../datasets/mo15/index.html",
+    "paper_doi": "10.7717/peerj.918",
+    "source_url": "https://zenodo.org/records/13030",
+    "license_source": "https://github.com/csu-hmc/perturbed-data-paper#data",
+    "license_note": "Author repository explicitly states data CC0, separate from repository CC BY4.0."
+  },
+  "resource_scope": "Only42,455bytes publisher metadata/source text fetched; no scientific archives, sample arrays, conversions or new numerical jobs."
+}
