@@ -31,7 +31,9 @@ end
 critical_activities = {'stairs', 'incline_walk', 'normal_walk', 'sit_to_stand', ...
     'stand_to_sit', 'squats', 'jump', 'step_ups', 'curb_up', 'curb_down', ...
     'walk_backward', 'weighted_walk', 'lunges', 'dynamic_walk', 'side_shuffle', ...
-    'cutting'}; % Define tasks to convert into phase dataset
+    'cutting', 'ball_toss', 'lift_weight', 'turn_and_step', 'tire_run'};
+% Preserve source-annotated movements as well as locomotion cycles. The old
+% allowlist silently omitted 169 local parsing windows from these four tasks.
 
 % Initialize a single table to hold all processed data
 total_data = table();

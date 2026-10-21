@@ -2,6 +2,7 @@
 import resource
 resource.setrlimit(resource.RLIMIT_AS, (768*1024**2, 768*1024**2))
 import json
+import argparse
 from pathlib import Path
 import sys
 import numpy as np
@@ -15,15 +16,16 @@ from contributor_tools.reconvert_recording import digest
 from contributor_tools.common.data_contract import inspect_contract
 
 
-def main():
-    base = ROOT/'converted_datasets/reconversion_v2/gt23_native_transfer_pilot_20261020'
+def main(base, subject, recording, parsing_name):
     source = Path('/mnt/s/locomotion_data/Gtech_2023')
-    parsing = source/'Segmentation/AB03/sit_to_stand_1_2_short-arm_parsing.mat'
+    parsing = source/'Segmentation'/subject/parsing_name
     annotations = loadmat(parsing)
-    raw = pd.read_csv(source/'RawData/AB03/CSV_Data/sit_to_stand_1_2/Joint_Angle.csv')
+    raw = pd.read_csv(source/'RawData'/subject/'CSV_Data'/recording/'Joint_Angle.csv')
     frame = pd.read_parquet(base/'phase.parquet')
     assert inspect_contract(frame, mode='phase').schema_passed
-    assert set(frame.source_recording_id) == {'gt23:AB03/sit_to_stand_1_2'}
+    assert set(frame.source_recording_id) == {f'gt23:{subject}/{recording}'}
+    for condition in ['sitting', 'standing']:
+        np.testing.assert_array_equal(annotations['left_'+condition], annotations['right_'+condition])
     expected = {(condition, float(a), float(b)) for condition in ['sitting', 'standing']
                 for a, b in annotations['left_'+condition]}
     checked = set(); errors = {}; tasks = {}
@@ -33,7 +35,7 @@ def main():
         task = 'stand_to_sit' if condition == 'sitting' else 'sit_to_stand'
         assert curve.task.eq(task).all()
         assert info['segmentation'] == 'source_named_transfer_interval'
-        assert info['armrests'] is True
+        assert info['armrests'] is ('-noarm' not in parsing_name)
         a, b = float(curve.source_start_time_s.iloc[0]), float(curve.source_end_time_s.iloc[0])
         key = (condition, a, b); assert key not in checked; checked.add(key)
         tasks[task] = tasks.get(task, 0)+1
@@ -61,4 +63,10 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--base', type=Path, default=ROOT/'converted_datasets/reconversion_v2/gt23_native_transfer_pilot_20261020')
+    parser.add_argument('--subject', default='AB03')
+    parser.add_argument('--recording', default='sit_to_stand_1_2')
+    parser.add_argument('--parsing', default='sit_to_stand_1_2_short-arm_parsing.mat')
+    args = parser.parse_args()
+    main(args.base, args.subject, args.recording, args.parsing)

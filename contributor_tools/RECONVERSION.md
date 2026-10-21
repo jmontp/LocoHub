@@ -764,3 +764,39 @@ The GT24 worker was paused only between recordings for each native operation and
 resumed in a finally block. No queue restart or frozen conversion code change was
 needed. All-window preparation and reconstruction are still pending; the one
 original transform file above 64 MiB still needs a bounded admission decision.
+
+
+### GT23 larger phase window and omitted task restoration
+
+The prepared AB01 sit-to-stand window also executes through the native phase
+converter under the unchanged 2 GiB guard. It preserves all 50 annotated
+movements (25 sitting, 25 standing), yielding 7,500 rows. Independent checks verify
+original intervals, task direction, absence of armrests, recording identity,
+bilateral hip/knee/ankle angles, schema and source/code hashes. Maximum angle
+error is 1.58e-14 rad. Evidence is in
+`gt23_window_native_phase_pilot_20261020`; its frozen code predates the task-list
+change below.
+
+The old phase task allowlist silently omitted 169 of the 787 local parsing
+windows: 37 ball toss, 96 weight lifting, 24 turn-and-step and 12 tire running.
+These sources have annotated left/right intervals, including named tire-running
+conditions. All four task names are now admitted to the existing source-interval
+conversion path. They are not assigned fabricated heel strikes. The task parser
+already maps them to load handling or agility drill while retaining source IDs.
+
+A native AB01 ball-toss trial (`gt23_all_tasks_phase_pilot_20261020`) now retains
+all five original movements (750 rows). Both legs' joint angles match the
+original CSV values to 1.19e-14 rad; source intervals, task/recording identity and
+schema pass. This proves execution of one restored task, not full source coverage
+or biomechanical event/frame semantics. The other restored tasks and all-subject
+reconstruction remain required. The ongoing GT24 queue resumed after both native
+trials without a restart.
+
+The complete annotation audit (`gt23_task_coverage_review_20261020`) covers
+787 parsing files, 12 subjects and 19 source task names. All now pass the task
+allowlist. Nine files contain empty left/right (0-by-2) arrays: five AB01 stair
+descent conditions and two fast walking conditions each for AB05 and AB10.
+No nonempty interval has nonfinite or reversed endpoints. Empty annotations are
+not successful conversions; explicit exclusion accounting and coverage of the
+underlying raw recordings remain required. Source hashes and field counts are
+retained per parsing file.
