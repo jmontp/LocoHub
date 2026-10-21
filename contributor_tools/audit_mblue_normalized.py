@@ -13,14 +13,17 @@ from contributor_tools.reconvert_recording import digest
 
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('batch',type=Path);parser.add_argument('output',type=Path);parser.add_argument('--watch-pid',type=int);args=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('batch',type=Path);parser.add_argument('output',type=Path);parser.add_argument('--watch-pid',type=int)
+    parser.add_argument('--start-index',type=int,default=0,help='Check only the suffix; never reports full coverage when nonzero')
+    args=parser.parse_args()
+    if args.start_index<0:parser.error('start-index must be nonnegative')
     resource.setrlimit(resource.RLIMIT_AS,(768*1024**2,768*1024**2));os.nice(max(0,19-os.nice(0)))
     import numpy as np
     import pyarrow.parquet as pq
     from scipy.io import loadmat
     from scipy.interpolate import interp1d
     args.output.mkdir(parents=True,exist_ok=False)
-    state={'status':'checking','pid':os.getpid(),'records':[],'observations':0,'finite_values_checked':0,'scientific_approval':False,'probe_sha256':digest(Path(__file__)),
+    state={'status':'checking','pid':os.getpid(),'start_index':args.start_index,'records':[],'observations':0,'finite_values_checked':0,'scientific_approval':False,'probe_sha256':digest(Path(__file__)),
         'limitations':['Checks source identities, clocks, joint angles/velocities/moments and vertical forces',
             'Arithmetic agreement is not approval of anatomical signs, force coordinates, event definitions or unexported source channels']}
     def save():
@@ -29,7 +32,8 @@ def main():
     try:
         while True:
             summary=json.loads((args.batch/'conversion_summary.json').read_text())
-            for record in summary['records'][len(state['records']):]:
+            if args.start_index>len(summary['records']):raise ValueError('start-index exceeds completed source blocks')
+            for record in summary['records'][args.start_index+len(state['records']):]:
                 subject=record['subject'];source=Path('/mnt/s/workspace/MBLUEAnkleOpenSimProcessing/Subject_Data')/(subject+'_NormalizedStrides.mat')
                 if subject!=loaded_subject:
                     if digest(source)!=record['source_sha256']:raise ValueError('Source hash changed')
@@ -95,7 +99,12 @@ def main():
                 try:alive=b'reconvert_mblue_normalized.py' in Path(f'/proc/{args.watch_pid}/cmdline').read_bytes()
                 except FileNotFoundError:pass
             if not alive:
-                state['status']='all_normalized_blocks_source_checked_unreviewed' if len(state['records'])==summary['planned_blocks'] and summary['status']=='all_normalized_blocks_reconstructed_unreviewed' else 'checked_completed_subset_unreviewed';break
+                # The worker may have published more blocks while this snapshot
+                # was being checked. Drain its final manifest before stopping.
+                latest=json.loads((args.batch/'conversion_summary.json').read_text())
+                if len(latest['records'])>args.start_index+len(state['records']):continue
+                state['summary_sha256']=digest(args.batch/'conversion_summary.json')
+                state['status']='all_normalized_blocks_source_checked_unreviewed' if args.start_index==0 and len(state['records'])==latest['planned_blocks'] and latest['status']=='all_normalized_blocks_reconstructed_unreviewed' else 'checked_completed_subset_unreviewed';break
             state['status']='waiting_for_completed_blocks';save();time.sleep(5)
     except Exception as error:
         state.update(status='failed',reason=str(error))
