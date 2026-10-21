@@ -1,0 +1,46 @@
+{
+  "status": "source_frame_mislabel_confirmed_correction_pending",
+  "scientific_approval": false,
+  "primary_source": {
+    "doi": "10.1038/s41597-023-02840-6",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10740031/",
+    "retrieval_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10740031/fullTextXML",
+    "local_path": "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt23_paper_fulltext.xml",
+    "sha256": "5c30a9035c70bc7a1d1041373623cc2e69d4d2caba3a71d1a0ee16f0d1f72baa",
+    "sections": [
+      "Data Records, Table 3",
+      "Methods, simulated insoles",
+      "Data exploration, Figure 5"
+    ]
+  },
+  "source_definitions": {
+    "global_grf": "Global X/Z depend on participant orientation; they are not automatically anatomical anterior/lateral.",
+    "insole": "Separate virtual-insole signals are transformed into the foot frame.",
+    "cop": "Published insole AP position is relative to the back of the calcaneus; this does not establish an ankle-origin COP.",
+    "joint_plot_signs": "Figure 5 uses extension-positive hip/knee and plantarflexion-positive ankle; tracing plotting transformations to raw OpenSim columns is required before changing raw-column signs."
+  },
+  "confirmed_converter_behavior": {
+    "path": "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_2023_time_to_parquet.m",
+    "sha256": "8de9c1ae8938423be9f918720a3b0dfaab396f99bc6950fa47c18557d69fd69e",
+    "queued_hash_verified": true,
+    "lines": [
+      501,
+      503,
+      504,
+      506
+    ],
+    "behavior": "ForceX/ForceZ are normalized and directly assigned anterior/lateral labels without participant-heading rotation."
+  },
+  "required_correction": {
+    "preserve": "Keep the values and missingness under explicit source global X/Z labels, with BW units unchanged.",
+    "canonical": "Withhold anatomical horizontal channels unless the required frame transformation is independently established.",
+    "scope": "Both time and phase outputs and both reference sides; all unrelated fields must be exactly preserved.",
+    "execution": "New isolated correction only; frozen queued code unchanged."
+  },
+  "remaining": [
+    "Exact raw-to-processed joint-sign correspondence",
+    "COP frame and origin reconciliation",
+    "Per-task event/transfer/continuous coverage",
+    "Full corrected-output readback"
+  ]
+}
