@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T23:36:08.367906-04:00",
-  "recorded_at": "2026-10-21T03:36:41.926778+00:00",
-  "base_revision": "2a3ce5b593ddfdddec7bd831fcb2f032159e4401",
-  "working_tree_changes": true,
+  "started_at": "2026-10-20T23:38:11.450830-04:00",
+  "recorded_at": "2026-10-21T03:38:47.392181+00:00",
+  "base_revision": "741c17be881750f3dedf7916e39da7152092ada1",
+  "working_tree_changes": false,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "41b72c9793c97eeded7de5cd175fa8024345ce6c176eacf45fbc6b82ac1979d5",
+  "junit_sha256": "9206fb913092424fa499315d24701cfd078596ee7ceef3009151352b9c93c5eb",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -776,6 +776,25 @@
         }
       ]
     },
+    "tests.test_gt21_source_phase_census": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_raw_phase_census_counts_all_adjacent_pairs",
+          "status": "passed"
+        },
+        {
+          "name": "test_zero_plateau_is_reported_with_exact_source_interval",
+          "status": "passed"
+        },
+        {
+          "name": "test_bad_samples_outside_complete_pairs_are_not_hidden",
+          "status": "passed"
+        }
+      ]
+    },
     "tests.test_gt23_native_batch": {
       "passed": 3,
       "failed": 0,
@@ -1493,7 +1512,7 @@
     }
   },
   "totals": {
-    "passed": 298,
+    "passed": 301,
     "failed": 0,
     "skipped": 2
   }
