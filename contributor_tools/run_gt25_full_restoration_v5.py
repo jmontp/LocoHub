@@ -197,11 +197,15 @@ def cleanup(child,owned):
   current=process(identity['pid']);return current and current['start']==identity['start'] and current['state']!='Z'
  parent=owned.get(child.pid)
  if parent and same(parent):
-  os.kill(child.pid,signal.SIGSTOP);owned.update(descendants(child.pid))
+  os.kill(child.pid,signal.SIGSTOP)
+  rows=descendants(child.pid);current=process(child.pid)
+  if current:rows[child.pid]=current
+  capture_owned(child,owned,rows)
  for identity in [r for pid,r in owned.items() if pid!=child.pid]+([parent] if parent else []):
-  if same(identity):
+  current=process(identity['pid'])
+  if current and current['start']==identity['start'] and current['state']!='Z':
    try:
-    if identity['pgid']==identity['pid']:os.killpg(identity['pid'],signal.SIGKILL)
+    if current.get('pgid')==identity['pid']:os.killpg(identity['pid'],signal.SIGKILL)
     else:os.kill(identity['pid'],signal.SIGKILL)
    except ProcessLookupError:pass
  child.wait(timeout=10)
@@ -210,17 +214,44 @@ def cleanup(child,owned):
  if any(same(r) for r in owned.values()):raise RuntimeError('Owned worker cleanup unproved')
 
 
+def check_inputs_worker(output,expected):
+ output=Path(output).resolve();path=output/'plan.json'
+ if digest(path)!=expected:raise ValueError('Coordinator plan changed')
+ plan=json.loads(path.read_text());verify(plan['bindings'])
+ gates=prerequisites(plan['pilot_plan'],plan['companion_pilot_summary'])
+ verify(gates)
+ if digest(path)!=expected:raise ValueError('Coordinator plan changed during prerequisite audit')
+
+
+def closure_worker(output,expected):
+ output=Path(output).resolve();check_inputs_worker(output,expected)
+ report=final_closure(output)
+ if report['plan_sha256']!=expected or digest(output/'plan.json')!=expected:raise ValueError('Coordinator plan changed during closure')
+ with (output/'coverage.json').open('x') as stream:json.dump(report,stream,indent=2)
+
+
+def runtime_gate(output,started,timeout,resources,check_resources=False):
+ if (output/'STOP').exists() or (output/'STOP_AFTER_CURRENT').exists():raise RuntimeError('Coordinator stop requested')
+ if time.monotonic()-started>timeout:raise TimeoutError('Finite full restoration timeout')
+ if check_resources:resources()
+
+
+def capture_owned(child,owned,rows):
+ parent=owned.get(child.pid)
+ if not parent or rows.get(child.pid,{}).get('start')!=parent['start']:return
+ for pid,row in rows.items():
+  if pid not in owned or owned[pid]['start']==row['start']:owned[pid]=row
+
+
 def run(output):
  global _READ_GUARD
- output=Path(output).resolve();path=output/'plan.json';plan=json.loads(path.read_text());sha=digest(path);verify(plan['bindings'])
- gate={}
+ output=Path(output).resolve();path=output/'plan.json';plan=json.loads(path.read_text());sha=digest(path)
  if (output/'restoration_status.json').exists():raise FileExistsError('Fresh attempt required')
  from contributor_tools.preserve_mblue_planar_estimates import headroom,windows_available_mib
  def resources(startup=False):
   headroom(output);linux=int(next(x.split()[1] for x in Path('/proc/meminfo').read_text().splitlines() if x.startswith('MemAvailable:')))//1024
   if windows_available_mib()<(3584 if startup else 2048) or linux<(3584 if startup else 2048):raise MemoryError('Preserve shared host reserves')
  def verified():
-  verify(plan['bindings']);verify(gate)
   if digest(path)!=sha:raise ValueError('Restoration plan changed')
  state={'status':'running','scientific_approval':False,'canonical_dataset_approval':False,'plan_sha256':sha,'stages':[]};child=None;owned={};clean=True
  def save():
@@ -229,7 +260,7 @@ def run(output):
  signal.signal(signal.SIGTERM,terminate);signal.signal(signal.SIGINT,terminate)
  env=dict(os.environ);env.pop('PYTHONOPTIMIZE',None)
  for key in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS','ARROW_NUM_THREADS','NUMEXPR_NUM_THREADS'):env[key]='1'
- commands=[('selected',[sys.executable,str(ROOT/'contributor_tools/run_gt25_selected_v5.py'),'--output-root',str(output/'selected'),'--run']),('companions',[sys.executable,str(ROOT/'contributor_tools/run_gt25_source_companion_batch.py'),'run','--plan',str(output/'companions/plan.json'),'--plan-sha256',digest(output/'companions/plan.json')])]
+ commands=[('prerequisites',[sys.executable,str(Path(__file__).resolve()),'verify-inputs','--output',str(output),'--plan-sha256',sha]),('selected',[sys.executable,str(ROOT/'contributor_tools/run_gt25_selected_v5.py'),'--output-root',str(output/'selected'),'--run']),('companions',[sys.executable,str(ROOT/'contributor_tools/run_gt25_source_companion_batch.py'),'run','--plan',str(output/'companions/plan.json'),'--plan-sha256',digest(output/'companions/plan.json')]),('final_closure',[sys.executable,str(Path(__file__).resolve()),'final-closure','--output',str(output),'--plan-sha256',sha])]
  save();started=time.monotonic();last_hash_guard=0
  def hash_guard():
   nonlocal last_hash_guard
@@ -239,23 +270,26 @@ def run(output):
   resources();last_hash_guard=time.monotonic()
  _READ_GUARD=hash_guard
  try:
-  resources(True);gate=prerequisites(plan['pilot_plan'],plan['companion_pilot_summary'])
+  resources(True)
   for name,command in commands:
    verified();resources(True)
    with (output/(name+'.log')).open('x') as log:
     child=subprocess.Popen(['nice','-n','19','ionice','-c','3',*command],cwd=ROOT,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
     p=process(child.pid);owned={child.pid:p} if p else {};last=0
     while child.poll() is None:
-     owned.update(descendants(child.pid))
-     if (output/'STOP').exists() or (output/'STOP_AFTER_CURRENT').exists():raise RuntimeError('Coordinator stop requested')
-     if time.monotonic()-started>plan['timeout_s']:raise TimeoutError('Finite full restoration timeout')
-     if time.monotonic()-last>15:resources();last=time.monotonic()
+     rows=descendants(child.pid);current=process(child.pid)
+     if current:rows[child.pid]=current
+     capture_owned(child,owned,rows)
+     now=time.monotonic();runtime_gate(output,started,plan['timeout_s'],resources,now-last>15)
+     if now-last>15:last=now
      time.sleep(.2)
+    runtime_gate(output,started,plan['timeout_s'],resources)
     if child.returncode:raise RuntimeError('Full restoration stage failed: '+name)
     cleanup(child,owned);child=None;owned={}
    verified();state['stages'].append(name);save()
-  report=final_closure(output);verified()
-  with (output/'coverage.json').open('x') as f:json.dump(report,f,indent=2)
+  verified();runtime_gate(output,started,plan['timeout_s'],resources,True)
+  report=json.loads((output/'coverage.json').read_text())
+  if report.get('plan_sha256')!=sha or report.get('scientific_approval') is not False or report.get('canonical_dataset_approval') is not False or report.get('scientific_full_scope_complete') is not False or report.get('status')!='all676_accounted_484_selected_and192_source_companions_checked_unreviewed':raise ValueError('Final closure receipt differs from bound unapproved scope')
   state.update(status=report['status'],coverage_sha256=digest(output/'coverage.json'))
  except BaseException as error:state.update(status='stopped_incomplete',reason=str(error))
  finally:
@@ -272,8 +306,15 @@ def main():
  p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='action',required=True)
  q=sub.add_parser('prepare');q.add_argument('--output',type=Path,required=True);q.add_argument('--pilot-plan',type=Path,required=True);q.add_argument('--companion-pilot-summary',type=Path,required=True)
  q=sub.add_parser('run');q.add_argument('--output',type=Path,required=True)
+ for mode in ('verify-inputs','final-closure'):
+  q=sub.add_parser(mode);q.add_argument('--output',type=Path,required=True);q.add_argument('--plan-sha256',required=True)
  a=p.parse_args()
  if sys.flags.optimize:raise ValueError('Independent auditors require assertions')
  if a.action=='prepare':prepare(a.output,a.pilot_plan,a.companion_pilot_summary)
- else:run(a.output)
+ elif a.action=='run':run(a.output)
+ else:
+  import resource
+  resource.setrlimit(resource.RLIMIT_AS,(768*1024**2,768*1024**2))
+  if a.action=='verify-inputs':check_inputs_worker(a.output,a.plan_sha256)
+  else:closure_worker(a.output,a.plan_sha256)
 if __name__=='__main__':main()
