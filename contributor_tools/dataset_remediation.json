@@ -21,7 +21,7 @@
     "StrokePiG"
   ],
   "current_limitations": {
-    "umich": "Treadmill hip/knee subset regenerated; all 252 normalized transfer curves preserved with exact source-channel readback but unknown side/timing. MATLAB duplication and ordinal timing removed, native execution unverified. Remaining tasks, canonical signals, source pairing and full release reconciliation open. All 30 locally available Run trials are reconstructed under a 768 MiB limit: 2,681 observations/402,150 rows and 84 original 100 Hz joint-angle/force/moment/power components. Independent full readback verifies all source events and 33,780,600 finite values (maximum component difference 4.22e-11). canonical kinetics, forceplates/markers, Wtr/Stair and full release reconciliation remain open.",
+    "umich": "Treadmill hip/knee subset regenerated; all 252 normalized transfer curves preserved with exact source-channel readback but unknown side/timing. MATLAB duplication and ordinal timing removed, native execution unverified. Remaining tasks, canonical signals, source pairing and full release reconciliation open. All 30 locally available Run trials are reconstructed under a 768 MiB limit: 2,681 observations/402,150 rows and 84 original 100 Hz joint-angle/force/moment/power components. Independent full readback verifies all source events and 33,780,600 finite values (maximum component difference 4.22e-11). canonical kinetics, forceplates/markers, Wtr/Stair and full release reconciliation remain open. Stair annotation audit now covers all 403 local recordings: 2,700 explicitly sided movements and 16 explicitly empty MATLAB annotations. Ascent/descent pilot exports 14 movements/2,100 rows; independent readback verifies 63,000 original joint-angle components (maximum difference 8.53e-14), bilateral hip/knee and timing. Full stair reconstruction plus readback is queued after the existing serial queue at um21_stair_serial_queue_20261021; it has not begun. Wtr, raw transfer timing, markers, canonical conventions and release reconciliation remain open.",
     "gt24": "Canonical task labels, short-trial trimming, transfer duration and source-clock interpolation corrected. Three-recording timing/trim pilot: 24 observations checked against source hips/knees. New timing queue running; all-task/signal coverage, event validity, exclusions and conventions remain open. Full parsed-source census finds 2,421 recordings across both phases: 796 unmapped and 73 explicitly skipped before segmentation (869 total omissions). Thirty representative omitted-task files contain 314,222 rows with ordered clocks and finite joint data. The active immutable batch cannot cover these tasks; a separate corrected reconstruction pass is required. The initial Phase3 queue stopped at 484/752 after repeated schema failures: six duplicated lunge intervals across five recordings. Corrected standing segmentation merges identical non-flight intervals before IQR filtering. All five recordings regenerated: 83 unique observations/12,450 rows, exactly 900 duplicate rows removed, all other values unchanged. Full corrected batch restart remains required. Fresh Phase3 and Phase1And2 reconstruction outputs are scheduled after GT21 in corrected_serial_queue_20261021; the old partial run remains preserved.",
     "gt25": "Seven BT01 recordings regenerated: 152 observations / 22,800 rows, source-matched for checked channels. All-subject/task coverage, ankle sign, segment angles, COP frames, event validity and exclusion accounting remain open.",
     "mblue": "Assumed duration/pelvis and index-based opposite-leg pairing removed. 102-observation real walking pilot verifies 45,228 temporal-overlap angle values. Stable identities, full regeneration, bilateral task timing, force/COP mappings and exclusions remain open.",
@@ -538,6 +538,14 @@
       "scope": "converter",
       "status": "code_fixed_full_source_coverage_pending",
       "required_followup": "Fallback now requires a missing label column. Reconcile recordings with no accepted cycles separately; live source comparisons check every exported labeled interval."
+    },
+    {
+      "id": "umich-stair-coverage",
+      "finding": "Stair cycles and walking transitions were absent from corrected staging exports",
+      "scope": "source_coverage",
+      "status": "full_annotation_audit_and_pilot_verified_full_reconstruction_queued",
+      "evidence": "converted_datasets/reconversion_v2/um21_stair_annotation_review_v2_20261021/source_comparison.json",
+      "required_followup": "Complete all 403 recordings and full signal readback. Keep 16 explicitly empty annotations in the exclusion ledger; do not invent legs or time intervals. Resolve canonical ankle/segment conventions and marker coverage separately."
     }
   ]
 }
