@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T23:25:33.105133-04:00",
-  "recorded_at": "2026-10-21T03:26:04.311579+00:00",
-  "base_revision": "ef3e8867a4d6600e6efc99bf52f8720e4da572fd",
+  "started_at": "2026-10-20T23:28:12.563152-04:00",
+  "recorded_at": "2026-10-21T03:28:43.855523+00:00",
+  "base_revision": "311b06a242c5109bd31a60fa57a7ac7ad8edecef",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "0b32da513a2c69a19776515bf21303c2eecfe3f8e501349a34df119cd24949ab",
+  "junit_sha256": "71dca880c3e8e0420725db3aa15971dc33fa278e5a9dd3fbf7d5dea3cfd6721e",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -605,6 +605,37 @@
         },
         {
           "name": "test_schema_changes_are_rejected",
+          "status": "passed"
+        }
+      ]
+    },
+    "tests.test_gt21_force_plate_readback": {
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_known_left_contact_does_not_default_to_right",
+          "status": "passed"
+        },
+        {
+          "name": "test_exact_two_thirds_support_is_insufficient",
+          "status": "passed"
+        },
+        {
+          "name": "test_multiple_supported_plates_are_ambiguous",
+          "status": "passed"
+        },
+        {
+          "name": "test_missing_contact_geometry_is_not_ignored",
+          "status": "passed"
+        },
+        {
+          "name": "test_threshold_and_equal_distance_do_not_establish_contact",
+          "status": "passed"
+        },
+        {
+          "name": "test_named_treadmill_plate_requires_complete_channels",
           "status": "passed"
         }
       ]
@@ -1407,7 +1438,7 @@
     }
   },
   "totals": {
-    "passed": 280,
+    "passed": 286,
     "failed": 0,
     "skipped": 2
   }
