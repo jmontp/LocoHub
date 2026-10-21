@@ -584,3 +584,27 @@ Reconstruction uses precomputed source angles, not experimental OpenSim/ID. It
 preserves raw force-plate channels while anatomical force/COP remains unresolved.
 Non-sagittal signal standardization, event/model checks, release reconciliation
 and scientific approval remain open even after this batch finishes.
+
+
+### GT23 measured three-dimensional COP correction (native execution pending)
+
+Both GT23 MATLAB paths replaced the source `RCOPY_Vertical`/`LCOPY_Vertical`
+measurements with zero before applying calcn transforms, then separately forced
+local vertical COP to zero. The corrected paths retain the source Y coordinate
+and transform/export all three components. Missing measured coordinates remain
+missing. Transform timestamps outside their observed coverage no longer use an
+extrapolated endpoint pose. The phase converter also initializes anatomical
+routing columns with missing values instead of zeros for unassigned rows.
+
+`check_gt23_cop_source.py` examined 4,096 rows each from AB01 ball toss, walking
+and sit-to-stand. Ball toss and sit-to-stand contain measured global Y values up
+to about 0.0106 m; the sampled right walking channel is missing, which must not
+be converted into a measured zero. Source hashes and finite/missing/nonzero counts
+are in `gt23_cop_source_review_20261020/source_comparison.json`.
+
+Existing static tests previously required the zero-filled behavior. They now
+check measured-Y wiring and lack of transform extrapolation; a separate geometric
+fixture demonstrates that measured global Y changes local anterior COP in a
+rotated frame. Neither test executes MATLAB. Native converter execution, original
+transform/frame checks and affected artifact reconstruction remain pending; this
+finding is not closed by the source audit or Python tests.

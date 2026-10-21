@@ -825,7 +825,13 @@ for subject_idx = 1:length(subjects)
                                           cop_z_raw_slice = nan(size(cop_x_raw_slice)); % Use NaNs
                                      end
 
+                                     cop_y_name = [upper(leg_char) 'COPY_Vertical'];
+                                     cop_y_raw_slice = nan(size(cop_x_raw_slice));
+                                     if ismember(cop_y_name, raw_grf_table_slice.Properties.VariableNames)
+                                         cop_y_raw_slice = raw_grf_table_slice.(cop_y_name);
+                                     end
                                      cop_local_x = nan(length(raw_grf_time_slice), 1);
+                                     cop_local_y = nan(length(raw_grf_time_slice), 1);
                                      cop_local_z = nan(length(raw_grf_time_slice), 1);
 
                                      transforms_to_use = transforms_slice_r; % Default R
@@ -835,16 +841,20 @@ for subject_idx = 1:length(subjects)
                                      if length(trans_time_slice) >= 1 && length(transforms_to_use) == length(trans_time_slice)
                                           for t_idx = 1:length(raw_grf_time_slice)
                                              current_grf_time = raw_grf_time_slice(t_idx);
+                                             if current_grf_time < min(trans_time_slice) || current_grf_time > max(trans_time_slice)
+                                                 continue;
+                                             end
                                              [~, closest_trans_idx] = min(abs(trans_time_slice - current_grf_time));
                                              if closest_trans_idx <= length(transforms_to_use)
                                                  T = transforms_to_use{closest_trans_idx};
                                             if isnumeric(T) && all(size(T) == [4, 4])
                                                      translation = T(1:3, 4); rotation = T(1:3, 1:3);
-                                                     cop_global = [cop_x_raw_slice(t_idx); 0; cop_z_raw_slice(t_idx)];
-                                                if ~any(isnan(cop_global))
+                                                     cop_global = [cop_x_raw_slice(t_idx); cop_y_raw_slice(t_idx); cop_z_raw_slice(t_idx)];
+                                                if all(isfinite(cop_global))
                                                     cop_relative = cop_global - translation;
                                                     cop_local = rotation' * cop_relative;
                                                           cop_local_x(t_idx) = cop_local(1);
+                                                          cop_local_y(t_idx) = cop_local(2);
                                                           cop_local_z(t_idx) = cop_local(3);
                                                 end
                                             end
@@ -853,7 +863,7 @@ for subject_idx = 1:length(subjects)
                                          % Use standardized column names with ipsi/contra
                                          step_data_single.(['cop_anterior' ipsi_contra_suffix '_m']) = interpolate_signal(raw_grf_time_slice, cop_local_x, time_interp, interp_method);
                                          step_data_single.(['cop_lateral' ipsi_contra_suffix '_m']) = interpolate_signal(raw_grf_time_slice, cop_local_z, time_interp, interp_method);
-                                         step_data_single.(['cop_vertical' ipsi_contra_suffix '_m']) = zeros(num_points_per_step, 1); % Assume zero vertical COP in local frame
+                                         step_data_single.(['cop_vertical' ipsi_contra_suffix '_m']) = interpolate_signal(raw_grf_time_slice, cop_local_y, time_interp, interp_method);
                                      else % Not enough transform data or length mismatch
                                          if ismember(activity_name, critical_activities)
                                              warning('Transform data issue for step %d. Cannot transform COP.', step_idx);
@@ -1160,8 +1170,8 @@ if strcmpi(naming_convention, 'ipsicontra')
            ismember(col_r, combined_data.Properties.VariableNames)
             
             % Create ipsi and contra columns based on leading leg
-            combined_data.(col_ipsi) = zeros(height(combined_data), 1);
-            combined_data.(col_contra) = zeros(height(combined_data), 1);
+            combined_data.(col_ipsi) = nan(height(combined_data), 1);
+            combined_data.(col_contra) = nan(height(combined_data), 1);
             
             % When ipsi_is_left is true (left leg leading): L->ipsi, R->contra
             % When ipsi_is_left is false (right leg leading): R->ipsi, L->contra

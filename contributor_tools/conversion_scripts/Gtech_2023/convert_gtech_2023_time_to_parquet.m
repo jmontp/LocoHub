@@ -18,7 +18,7 @@ function convert_gtech_2023_time_to_parquet()
 %     normalized by body weight (mass*9.81) -> _BW.
 %   * Moments already Nm/kg from OpenSim -> rename only.
 %   * CoP transformed into the local calcn (ankle) frame per sample; anterior =
-%     local x, lateral = local z, vertical forced to 0.
+%     local x, lateral = local z, vertical = transformed local y.
 %
 % Unlike the phase export it does NOT normalize each cycle to 150 points. Each
 % labeled sub-activity (a *_parsing.mat file) becomes one continuous, native-
@@ -444,10 +444,8 @@ function rows = build_time_window(cached, t0, t1, reference_leg, weight_N)
     rows.grf_lateral_contra_BW  = grf_norm(grf, [CU 'ForceZ'], gt, tw, weight_N);
 
     % ---- CoP in local calcn (ankle) frame ----
-    [cop_a_i, cop_l_i] = cop_local(cached, grf, gt, tw, ipsi, t0, t1);
-    [cop_a_c, cop_l_c] = cop_local(cached, grf, gt, tw, contra, t0, t1);
-    cop_v_i = zeros(n, 1);
-    cop_v_c = zeros(n, 1);
+    [cop_a_i, cop_l_i, cop_v_i] = cop_local(cached, grf, gt, tw, ipsi, t0, t1);
+    [cop_a_c, cop_l_c, cop_v_c] = cop_local(cached, grf, gt, tw, contra, t0, t1);
 
     % Mask CoP as missing whenever the limb is unloaded (vertical GRF below
     % 0.2 BW) OR the transformed CoP is non-physical for the ankle frame
@@ -510,25 +508,28 @@ function out = grf_norm(grf, colname, grf_time, target_time, weight_N)
 end
 
 
-function [cop_ant, cop_lat] = cop_local(cached, grf, grf_time, target_time, leg, t0, t1)
+function [cop_ant, cop_lat, cop_vert] = cop_local(cached, grf, grf_time, target_time, leg, t0, t1)
 % Transform CoP into the local calcn frame for one leg, then interpolate onto
 % target_time. Returns NaN columns when transforms or raw CoP are unavailable.
     n = numel(target_time);
     cop_ant = nan(n, 1);
     cop_lat = nan(n, 1);
+    cop_vert = nan(n, 1);
     LU = upper(leg);
     copx_name = [LU 'COPX'];
+    copy_name = [LU 'COPY_Vertical'];
     copz_name = [LU 'COPZ'];
     if isempty(grf) || isempty(grf_time) || ~cached.has_transforms
         return;
     end
-    if ~all(ismember({copx_name, copz_name}, grf.Properties.VariableNames))
+    if ~all(ismember({copx_name, copy_name, copz_name}, grf.Properties.VariableNames))
         return;
     end
 
     gmask = grf.time >= t0 & grf.time <= t1;
     gt = grf.time(gmask);
     copx = grf.(copx_name)(gmask);
+    copy = grf.(copy_name)(gmask);
     copz = grf.(copz_name)(gmask);
     if numel(gt) < 2
         return;
@@ -541,29 +542,35 @@ function [cop_ant, cop_lat] = cop_local(cached, grf, grf_time, target_time, leg,
     end
     trans_time = cached.trans_time;
     Nt = numel(trans_time);
-    if Nt < 1
+    if Nt < 2 || any(~isfinite(trans_time)) || any(diff(trans_time) <= 0)
         return;
     end
 
-    % Nearest transform per GRF sample.
-    nn = interp1(trans_time, 1:Nt, gt, 'nearest', 'extrap');
-    nn = max(1, min(Nt, round(nn)));
-
-    cop_global = [copx.'; zeros(1, numel(copx)); copz.'];  % 3 x Ng
-    Rn = R(:, :, nn);           % 3 x 3 x Ng
-    Trn = Tr(:, nn);            % 3 x Ng
-    rel = cop_global - Trn;     % 3 x Ng
-    % local = R' * rel, per page.
-    local = pagemtimes(permute(Rn, [2 1 3]), reshape(rel, 3, 1, []));
-    local = reshape(local, 3, []);  % 3 x Ng
+    % No endpoint extrapolation: a transform outside its measured clock is
+    % unavailable, not evidence for the same pose at a different time.
+    nn = interp1(trans_time, 1:Nt, gt, 'nearest', NaN);
+    supported = isfinite(nn);
+    local = nan(3, numel(gt));
+    if any(supported)
+        selected = round(nn(supported));
+        cop_global = [copx(supported).'; copy(supported).'; copz(supported).'];
+        Rn = R(:, :, selected);
+        Trn = Tr(:, selected);
+        rel = cop_global - Trn;
+        transformed = pagemtimes(permute(Rn, [2 1 3]), reshape(rel, 3, 1, []));
+        local(:, supported) = reshape(transformed, 3, []);
+    end
 
     local_x = local(1, :).';
+    local_y = local(2, :).';
     local_z = local(3, :).';
     % Interpolate onto the kinematic target grid.
     cop_ant = interp1(gt, local_x, target_time, 'linear', NaN);
     cop_lat = interp1(gt, local_z, target_time, 'linear', NaN);
+    cop_vert = interp1(gt, local_y, target_time, 'linear', NaN);
     cop_ant = cop_ant(:);
     cop_lat = cop_lat(:);
+    cop_vert = cop_vert(:);
 end
 
 
