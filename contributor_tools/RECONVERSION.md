@@ -469,3 +469,28 @@ boundary. This preserves the one-numerical-worker rule. The native batch itself
 has not run yet; the prior single-recording native pilot remains the execution
 evidence. Batch software fixtures cover inventory, required channels, path safety
 and immutable resume behavior.
+
+
+### StrokePiG source events and clock pilot
+
+The converter now uses anatomical C3D Foot Strike annotations when available,
+keeps both annotated cycle endpoints, and interpolates using actual IK times.
+Kinematic fallback boundaries are explicitly marked unverified. Candidate events
+and rejection reasons accompany each exported observation. Missing samples remain
+missing through interpolation. The C3D clock now restores the original acquisition
+frame number from ezc3d's zero-based header index; force windows match IK timestamps
+rather than assuming identical row indices.
+
+`strokepig_events_pilot_20261020` regenerated TVC03/BWA6 under a 1.5 GiB address-space
+cap (peak RSS about 193 MiB). Its three original left-foot cycles produce 450 rows.
+The independent `check_strokepig_events.py` probe reads C3D events and raw MOT data
+without the converter: every bilateral hip/knee/ankle angle matches to at most
+4.45e-16 rad. The raw C3D binary header independently confirms the 9.34-second IK
+start. Source, output and probe hashes are saved in `source_comparison.json`.
+
+This is one recording, not a completed StrokePiG rebuild. Clinical affected side
+remains unknown; anatomical left is explicitly a default reference. Force/COP,
+model sign conventions, complete source coverage and a ledger for recordings with
+no accepted cycles remain to be verified. The GT24 queue resumed after this pilot;
+the GT21 dispatcher was rebound to the resumed queue and still waits for successful
+completion of both GT24 phases.

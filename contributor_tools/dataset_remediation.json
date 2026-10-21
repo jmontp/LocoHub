@@ -26,7 +26,8 @@
     "gt25": "Seven BT01 recordings regenerated: 152 observations / 22,800 rows, source-matched for checked channels. All-subject/task coverage, ankle sign, segment angles, COP frames, event validity and exclusion accounting remain open.",
     "mblue": "Assumed duration/pelvis and index-based opposite-leg pairing removed. 102-observation real walking pilot verifies 45,228 temporal-overlap angle values. Stable identities, full regeneration, bilateral task timing, force/COP mappings and exclusions remain open.",
     "gt21": "Native single-recording pilot verified. Resumable guarded batch inventories 2,301 recordings across 16 local subjects and is scheduled after GT24 completes. Full source-subject coverage, all-recording regeneration, force/COP semantics and exclusions remain open.",
-    "gait120": "Missing mass/height/timing/pelvis fallbacks removed; reconstruction requires measured anthropometry. Reader matches all 120 source-sheet masses and heights. Affected exports, phase/anatomical mapping and inverse-dynamics anomalies remain unresolved."
+    "gait120": "Missing mass/height/timing/pelvis fallbacks removed; reconstruction requires measured anthropometry. Reader matches all 120 source-sheet masses and heights. Affected exports, phase/anatomical mapping and inverse-dynamics anomalies remain unresolved.",
+    "strokepig": "Source C3D foot strikes, inclusive endpoints, actual-time interpolation and one-frame C3D/IK clock correction verified on TVC03/BWA6 (3 observations, 450 rows). Full reconstruction, clinical side, force/COP, model conventions and empty-recording exclusion accounting remain open."
   },
   "findings": [
     {
@@ -368,8 +369,9 @@
       "affected_paths": [
         "contributor_tools/conversion_scripts/StrokePiG/convert_strokepig_to_parquet.py"
       ],
-      "status": "open",
-      "required_followup": "Validate inferred events against C3D/force contact evidence; label inferred phase origin and account for removed observations."
+      "status": "code_fixed_limited_pilot_full_regeneration_pending",
+      "required_followup": "Original C3D foot strikes now take precedence; fallback peaks are labeled unverified. The TVC03/BWA6 pilot checks all three annotated cycles (450 rows), inclusive endpoints, the corrected C3D/IK clock and bilateral source IK angles. Reconstruct and reconcile all recordings, retain rejected-event counts including empty recordings, and verify force/COP and clinical side separately.",
+      "evidence": "converted_datasets/reconversion_v2/strokepig_events_pilot_20261020/source_comparison.json"
     },
     {
       "id": "remaining-13",

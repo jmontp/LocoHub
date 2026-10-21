@@ -86,6 +86,7 @@ from metadata_parser import (
 # Import C3D parser for GRF extraction
 from c3d_parser import (
     load_c3d_file,
+    load_c3d_events,
     extract_grf_for_stride,
     find_c3d_for_mot,
     EZC3D_AVAILABLE,
@@ -194,33 +195,16 @@ def load_mot_file(mot_path: Path) -> Optional[pd.DataFrame]:
         return None
 
 
-def interpolate_to_phase(data: np.ndarray, num_points: int = NUM_POINTS) -> np.ndarray:
-    """
-    Interpolate time-series data to fixed number of phase points (0-100%).
-
-    Args:
-        data: Input data array
-        num_points: Number of output points (default 150)
-
-    Returns:
-        Interpolated data array of length num_points
-    """
-    if len(data) < 2:
+def interpolate_to_phase(data, num_points=NUM_POINTS, source_time=None):
+    """Resample observed samples without bridging missing measurements."""
+    values = np.asarray(data, dtype=float)
+    if len(values) < 2:
         return np.full(num_points, np.nan)
-
-    x_original = np.linspace(0, 100, len(data))
-    x_target = np.linspace(0, 100, num_points)
-
-    valid_mask = ~np.isnan(data)
-    if np.sum(valid_mask) < 2:
-        return np.full(num_points, np.nan)
-
-    try:
-        interp_func = interp1d(x_original[valid_mask], data[valid_mask],
-                               kind='linear', fill_value='extrapolate')
-        return interp_func(x_target)
-    except Exception:
-        return np.full(num_points, np.nan)
+    times = np.arange(len(values)) if source_time is None else np.asarray(source_time)
+    if len(times) != len(values) or not np.isfinite(times).all() or not (np.diff(times) > 0).all():
+        raise ValueError('Signal samples must match an increasing source clock')
+    return np.interp(np.linspace(times[0], times[-1], num_points), times,
+                     np.where(np.isfinite(values), values, np.nan))
 
 
 def circular_phase_shift(data: np.ndarray, shift_percent: float = 50.0) -> np.ndarray:
@@ -333,47 +317,46 @@ def detect_heel_strikes_from_kinematics(
     return peaks.tolist()
 
 
-def segment_trial_into_strides(
-    df: pd.DataFrame,
-    affected_side: str = 'l',
-    sample_rate: float = SAMPLE_RATE
-) -> List[Tuple[int, int]]:
-    """
-    Segment a trial into individual strides based on affected leg heel strikes.
-
-    Args:
-        df: DataFrame with kinematic data
-        affected_side: 'l' or 'r' for affected (paretic) leg
-        sample_rate: Sampling rate in Hz
-
-    Returns:
-        List of (start_idx, end_idx) tuples for each stride
-    """
-    # Try to use GRF if available, otherwise use kinematics
-    # For StrokePiG, we'll use kinematic-based detection
-    heel_strikes = detect_heel_strikes_from_kinematics(df, affected_side, sample_rate)
-
-    if len(heel_strikes) < 2:
-        return []
-
-    # Create strides from consecutive heel strikes
-    strides = []
-    min_stride_samples = int(0.6 * sample_rate)  # Min 0.6s stride
-    max_stride_samples = int(4.0 * sample_rate)  # Max 4.0s stride
-
-    for i in range(len(heel_strikes) - 1):
-        start = heel_strikes[i]
-        end = heel_strikes[i + 1]
-        duration = end - start
-
-        if min_stride_samples <= duration <= max_stride_samples:
-            strides.append((start, end))
-
-    # Remove first and last strides (transition artifacts)
-    if len(strides) > 2:
-        strides = strides[1:-1]
-
+def segment_trial_into_strides(df, affected_side='l', sample_rate=SAMPLE_RATE, source_events=None):
+    """Use annotated foot strikes when available; label inferred boundaries."""
+    side = {'l':'left','r':'right'}[affected_side]
+    annotated = [e['time_s'] for e in (source_events or [])
+                 if e['label'].lower() == 'foot strike' and e['side'] == side]
+    ledger=[]
+    if annotated:
+        df.attrs['phase_boundary_method']='source_c3d_foot_strike_annotations'
+        if 'time' not in df:
+            raise ValueError('Source event alignment requires the original IK timestamps')
+        clock=df.time.to_numpy(dtype=float)
+        if not np.isfinite(clock).all() or not (np.diff(clock)>0).all():
+            raise ValueError('IK timestamps must be finite and strictly increasing')
+        events=sorted(set(annotated));strides=[]
+        for start,end in zip(events[:-1],events[1:]):
+            a=int(np.argmin(abs(clock-start)));b=int(np.argmin(abs(clock-end)))
+            accepted=abs(clock[a]-start)<=1e-4 and abs(clock[b]-end)<=1e-4 and b-a+1>=10
+            ledger.append({'start_time_s':start,'end_time_s':end,'accepted':bool(accepted),
+                           'reason':'source_annotations' if accepted else 'events_not_on_available_ik_clock'})
+            if accepted:strides.append((a,b))
+    else:
+        df.attrs['phase_boundary_method']='inferred_ankle_dorsiflexion_peaks_unverified'
+        strikes=detect_heel_strikes_from_kinematics(df,affected_side,sample_rate)
+        strides=[]
+        for a,b in zip(strikes[:-1],strikes[1:]):
+            duration=float(df.time.iloc[b]-df.time.iloc[a]) if 'time' in df else np.nan
+            accepted=np.isfinite(duration) and .6<=duration<=4.
+            ledger.append({'start_sample':int(a),'end_sample':int(b),'accepted':bool(accepted),
+                           'reason':'inferred_boundary' if accepted else 'inferred_duration_outside_0.6_to_4_seconds'})
+            if accepted:strides.append((a,b))
+    df.attrs['segmentation_candidates']=ledger
     return strides
+
+
+def c3d_index_for_time(c3d_data, time_s):
+    clock=np.asarray(c3d_data['time'])
+    index=int(np.argmin(abs(clock-time_s)))
+    if not np.isfinite(time_s) or abs(clock[index]-time_s)>1e-4:
+        raise ValueError('C3D and IK timestamps do not align')
+    return index
 
 
 def reference_side_for_subject(subject_metadata: Dict[str, Any]) -> str:
@@ -404,8 +387,12 @@ def process_stride(
     Returns:
         Dictionary with phase-normalized kinematics, or None if invalid
     """
-    # Extract stride data
-    stride_df = df.iloc[start_idx:end_idx].copy()
+    if start_idx < 0 or end_idx >= len(df) or end_idx <= start_idx:
+        return None
+    if affected_side not in {'l', 'r'}:
+        raise ValueError('Anatomical reference side must be l or r')
+    # Extract both observed boundary samples.
+    stride_df = df.iloc[start_idx:end_idx + 1].copy()
     n_samples = len(stride_df)
 
     if n_samples < 10:
@@ -415,16 +402,15 @@ def process_stride(
     ipsi = affected_side.lower()
     contra = 'r' if ipsi == 'l' else 'l'
 
-    # Calculate stride duration
-    if 'time' in stride_df.columns:
-        stride_duration_s = stride_df['time'].iloc[-1] - stride_df['time'].iloc[0]
-    else:
-        stride_duration_s = n_samples / SAMPLE_RATE
-
-    if not np.isfinite(stride_duration_s) or stride_duration_s <= 0:
+    if 'time' not in stride_df:
         return None
+    source_time = stride_df.time.to_numpy(dtype=float)
+    if not np.isfinite(source_time).all() or not (np.diff(source_time) > 0).all():
+        return None
+    stride_duration_s = source_time[-1] - source_time[0]
+    def resample(values):
+        return interpolate_to_phase(values, source_time=source_time)
 
-    # Helper to get column data
     def get_col(name: str) -> np.ndarray:
         if name in stride_df.columns:
             return stride_df[name].values
@@ -434,25 +420,25 @@ def process_stride(
     # Hip flexion (no sign change)
     hip_ipsi_deg = get_col(f'hip_flexion_{ipsi}')
     hip_contra_deg = get_col(f'hip_flexion_{contra}')
-    hip_ipsi_rad = interpolate_to_phase(hip_ipsi_deg * DEG2RAD)
-    hip_contra_rad = interpolate_to_phase(hip_contra_deg * DEG2RAD)
+    hip_ipsi_rad = resample(hip_ipsi_deg * DEG2RAD)
+    hip_contra_rad = resample(hip_contra_deg * DEG2RAD)
 
     # Knee angle (NO negation: this model uses flexion-positive convention,
     # with knee_angle range [0, 2.09] rad i.e. 0 at full extension)
     knee_ipsi_deg = get_col(f'knee_angle_{ipsi}')
     knee_contra_deg = get_col(f'knee_angle_{contra}')
-    knee_ipsi_rad = interpolate_to_phase(knee_ipsi_deg * DEG2RAD)
-    knee_contra_rad = interpolate_to_phase(knee_contra_deg * DEG2RAD)
+    knee_ipsi_rad = resample(knee_ipsi_deg * DEG2RAD)
+    knee_contra_rad = resample(knee_contra_deg * DEG2RAD)
 
     # Ankle dorsiflexion (no sign change)
     ankle_ipsi_deg = get_col(f'ankle_angle_{ipsi}')
     ankle_contra_deg = get_col(f'ankle_angle_{contra}')
-    ankle_ipsi_rad = interpolate_to_phase(ankle_ipsi_deg * DEG2RAD)
-    ankle_contra_rad = interpolate_to_phase(ankle_contra_deg * DEG2RAD)
+    ankle_ipsi_rad = resample(ankle_ipsi_deg * DEG2RAD)
+    ankle_contra_rad = resample(ankle_contra_deg * DEG2RAD)
 
     # Pelvis tilt
     pelvis_tilt_deg = get_col('pelvis_tilt')
-    pelvis_tilt_rad = interpolate_to_phase(pelvis_tilt_deg * DEG2RAD)
+    pelvis_tilt_rad = resample(pelvis_tilt_deg * DEG2RAD)
 
     # Compute segment angles from kinematic chain
     thigh_ipsi_rad = pelvis_tilt_rad + hip_ipsi_rad
@@ -527,9 +513,11 @@ def process_stride(
 
     return {
         'stride_duration_s': stride_duration_s,
+        'phase_boundary_method': df.attrs.get('phase_boundary_method', 'unverified_supplied_indices'),
+        'segmentation_candidates': df.attrs.get('segmentation_candidates', []),
         'ipsi_side': ipsi,
         'source_start_sample': start_idx,
-        'source_end_sample': end_idx - 1,  # Last included source sample
+        'source_end_sample': end_idx,
         'source_start_time_s': float(stride_df['time'].iloc[0]) if 'time' in stride_df else np.nan,
         'source_end_time_s': float(stride_df['time'].iloc[-1]) if 'time' in stride_df else np.nan,
         # Joint angles
@@ -602,7 +590,8 @@ def process_trial_with_pipeline(
     affected_side = reference_side_for_subject(subject_metadata)
 
     # Segment into strides using kinematic detection (same as default mode)
-    strides = segment_trial_into_strides(df, affected_side)
+    strides = segment_trial_into_strides(
+        df, affected_side, source_events=load_c3d_events(find_c3d_for_mot(mot_path)))
     if not strides:
         return [], step_offset
 
@@ -668,8 +657,8 @@ def process_trial_with_pipeline(
                 grf_data = extract_grf_for_stride(
                     forces_df=c3d_data['forces'],
                     markers_df=c3d_data['markers'],
-                    start_idx=start_idx,
-                    end_idx=end_idx,
+                    start_idx=c3d_index_for_time(c3d_data, result['source_start_time_s']),
+                    end_idx=c3d_index_for_time(c3d_data, result['source_end_time_s']) + 1,
                     ipsi_side=ipsi_side,
                     body_mass_kg=subject_metadata['mass_kg'],
                     num_points=NUM_POINTS,
@@ -922,8 +911,8 @@ def _process_strides_default(
                 grf_data = extract_grf_for_stride(
                     forces_df=c3d_data['forces'],
                     markers_df=c3d_data['markers'],
-                    start_idx=start_idx,
-                    end_idx=end_idx,
+                    start_idx=c3d_index_for_time(c3d_data, result['source_start_time_s']),
+                    end_idx=c3d_index_for_time(c3d_data, result['source_end_time_s']) + 1,
                     ipsi_side=ipsi_side,
                     body_mass_kg=subject_metadata['mass_kg'],
                     num_points=NUM_POINTS,
@@ -993,6 +982,8 @@ def _build_stride_dataframe(
         'reference_side': reference_side,
         'reference_side_basis': 'affected_side' if clinical_side != 'unknown' else 'anatomical_default',
         'exo_state': 'no_exo',
+        'phase_boundary_method': result.get('phase_boundary_method', 'unverified_supplied_indices'),
+        'segmentation_candidates': result.get('segmentation_candidates', []),
         'id_has_ipsi_grf': id_has_ipsi_grf,
         'id_has_contra_grf': id_has_contra_grf,
         'id_has_any_grf': id_has_any_grf,
@@ -1163,7 +1154,8 @@ def process_trial_file(
     affected_side = reference_side_for_subject(subject_metadata)
 
     # Segment into strides
-    strides = segment_trial_into_strides(df, affected_side)
+    strides = segment_trial_into_strides(
+        df, affected_side, source_events=load_c3d_events(find_c3d_for_mot(mot_path)))
 
     if not strides:
         return [], step_offset
@@ -1202,8 +1194,8 @@ def process_trial_file(
                 grf_data = extract_grf_for_stride(
                     forces_df=c3d_data['forces'],
                     markers_df=c3d_data['markers'],
-                    start_idx=start_idx,
-                    end_idx=end_idx,
+                    start_idx=c3d_index_for_time(c3d_data, result['source_start_time_s']),
+                    end_idx=c3d_index_for_time(c3d_data, result['source_end_time_s']) + 1,
                     ipsi_side=ipsi_side,
                     body_mass_kg=subject_metadata['mass_kg'],
                     num_points=NUM_POINTS,

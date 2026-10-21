@@ -194,7 +194,7 @@ def test_stroke_clinical_side_is_preserved(stroke, affected, reference):
     assert json.loads(result.task_info.iloc[0])["affected_side"] == expected
     assert json.loads(result.subject_metadata.iloc[0])["affected_side"] == expected
     assert result.source_start_sample.iloc[0] == 0
-    assert result.source_end_sample.iloc[0] == 199
+    assert result.source_end_sample.iloc[0] == 200
 
 
 def test_stroke_missing_channel_remains_missing_and_invalid_time_is_rejected(stroke):
@@ -470,3 +470,35 @@ def test_gait120_kinematics_keeps_missing_metadata_and_pelvis(gait120,monkeypatc
     assert frame.pelvis_sagittal_angle_rad.isna().all()
     assert frame.thigh_sagittal_angle_ipsi_rad.isna().all()
     assert frame.hip_flexion_angle_ipsi_rad.notna().all()
+
+
+
+def test_stroke_annotated_strikes_override_peak_heuristic(stroke,monkeypatch):
+    source=pd.DataFrame({'time':np.arange(601)/100})
+    events=[{'label':'Foot Strike','side':'left','time_s':t} for t in [.5,5.]]
+    monkeypatch.setattr(stroke,'detect_heel_strikes_from_kinematics',lambda *args:pytest.fail('Source annotations must take precedence'))
+    assert stroke.segment_trial_into_strides(source,'l',source_events=events)==[(50,500)]
+    assert source.attrs['phase_boundary_method']=='source_c3d_foot_strike_annotations'
+    assert source.attrs['segmentation_candidates'][0]['accepted']
+
+
+def test_stroke_inclusive_endpoint_and_actual_time(stroke):
+    clock=np.linspace(0,1,201)**1.1
+    source=pd.DataFrame({'time':clock,'hip_flexion_l':2*clock})
+    result=stroke.process_stride(source,0,200,'l',70.,0)
+    assert result['source_end_sample']==200 and result['source_end_time_s']==1.
+    np.testing.assert_allclose(result['hip_flexion_angle_ipsi_rad'],np.deg2rad(2*np.linspace(0,1,150)),atol=1e-12)
+    np.testing.assert_allclose(result['hip_flexion_velocity_ipsi_rad_s'],np.deg2rad(2),atol=1e-12)
+    assert np.isnan(stroke.interpolate_to_phase(np.array([0.,1.,np.nan,3.,4.]),9)[3:6]).all()
+
+
+def test_stroke_c3d_clock_restores_acquisition_frame_number(monkeypatch,tmp_path):
+    from types import SimpleNamespace
+    parser=load_converter('StrokePiG/c3d_parser.py',monkeypatch)
+    raw={'header':{'points':{'frame_rate':100.,'first_frame':933},'analogs':{'frame_rate':1000.}},'data':{'points':np.empty((4,0,2))}}
+    monkeypatch.setattr(parser,'EZC3D_AVAILABLE',True)
+    monkeypatch.setattr(parser,'ezc3d',SimpleNamespace(c3d=lambda path:raw),raising=False)
+    monkeypatch.setattr(parser,'_extract_markers',lambda raw,time:None)
+    monkeypatch.setattr(parser,'_extract_force_plates',lambda raw,time:None)
+    path=tmp_path/'source.c3d';path.write_bytes(b'fixture')
+    np.testing.assert_allclose(parser.load_c3d_file(path)['time'],[9.34,9.35])

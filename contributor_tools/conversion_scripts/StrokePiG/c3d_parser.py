@@ -66,7 +66,10 @@ def load_c3d_file(c3d_path: Path) -> Optional[Dict]:
     n_frames = c3d['data']['points'].shape[2]
 
     # Time array at marker frame rate
-    time = np.arange(n_frames) / point_rate + first_frame / point_rate
+    # ezc3d exposes zero-based frame indices; StrokePiG's IK clock uses
+    # the original one-based acquisition frame numbers (e.g. 934 -> 9.34 s).
+    # https://pyomeca.github.io/Documentation/ezc3d/classezc3d_1_1Header.html
+    time = (np.arange(n_frames) + first_frame + 1) / point_rate
 
     # Extract markers
     markers_df = _extract_markers(c3d, time)
@@ -81,6 +84,29 @@ def load_c3d_file(c3d_path: Path) -> Optional[Dict]:
         'analog_rate': analog_rate,
         'time': time,
     }
+
+
+def load_c3d_events(c3d_path):
+    """Read original event labels, anatomical contexts and absolute seconds."""
+    if c3d_path is None or not Path(c3d_path).is_file() or not EZC3D_AVAILABLE:
+        return None
+    c3d = ezc3d.c3d(str(c3d_path))
+    group = c3d['parameters'].get('EVENT', {})
+    if not group:
+        return []
+    count = int(np.asarray(group.get('USED', {}).get('value', [0])).ravel()[0])
+    if count == 0:
+        return []
+    labels = group['LABELS']['value']
+    contexts = group['CONTEXTS']['value']
+    times = np.asarray(group['TIMES']['value'], dtype=float)
+    if len(labels) < count or len(contexts) < count or times.shape != (2, count):
+        raise ValueError('Inconsistent C3D event labels, contexts or timestamps')
+    seconds = times[0] * 60 + times[1]
+    if not np.isfinite(seconds).all():
+        raise ValueError('Nonfinite C3D event timestamps')
+    return [{'label': str(labels[i]).strip(), 'side': str(contexts[i]).strip().lower(),
+             'time_s': float(seconds[i])} for i in range(count)]
 
 
 def _extract_markers(c3d, time: np.ndarray) -> pd.DataFrame:

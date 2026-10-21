@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T20:24:45.418589-04:00",
-  "recorded_at": "2026-10-21T00:25:17.425348+00:00",
-  "base_revision": "8abce59bde6ac6c676fe864b9e71be32b5f0f5e2",
+  "started_at": "2026-10-20T20:31:01.801543-04:00",
+  "recorded_at": "2026-10-21T00:31:33.340601+00:00",
+  "base_revision": "abe4dd19e17dec29c1531dfbd3fe8308ccec8085",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
-  "command": "ulimit -v 2097152; OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "bae75dcc6ace5dfd8acb2c2be205351981668668ed4fcc260e317efaff259048",
+  "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
+  "junit_sha256": "4023fe81f93ac61baf9c7085ad8796f8e1c3caa0c0c02e33e259c25bd9875538",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -59,7 +59,7 @@
       ]
     },
     "tests.test_converter_scientific_provenance": {
-      "passed": 34,
+      "passed": 37,
       "failed": 0,
       "skipped": 0,
       "cases": [
@@ -197,6 +197,18 @@
         },
         {
           "name": "test_gait120_kinematics_keeps_missing_metadata_and_pelvis",
+          "status": "passed"
+        },
+        {
+          "name": "test_stroke_annotated_strikes_override_peak_heuristic",
+          "status": "passed"
+        },
+        {
+          "name": "test_stroke_inclusive_endpoint_and_actual_time",
+          "status": "passed"
+        },
+        {
+          "name": "test_stroke_c3d_clock_restores_acquisition_frame_number",
           "status": "passed"
         }
       ]
@@ -918,7 +930,7 @@
     }
   },
   "totals": {
-    "passed": 191,
+    "passed": 194,
     "failed": 0,
     "skipped": 2
   }
