@@ -38,7 +38,7 @@ def main():
         assert digest(args.probe / table['file']) == table['sha256']
     fp = pq.ParquetFile(args.probe / 'source_fp_data.parquet').read(use_threads=False).to_pandas(use_threads=False)
     names = ['Header'] + [f'{side}_{marker}_{axis}' for side in ('L', 'R')
-                         for marker in ('Heel', 'Toe_Tip', 'ASIS', 'PSIS') for axis in 'xyz']
+                         for marker in ('Heel', 'Toe_Tip', 'ASIS', 'PSIS', 'Ankle_Lat') for axis in 'xyz']
     markers = pq.ParquetFile(args.probe / 'source_markers_data.parquet').read(columns=names,
                             use_threads=False).to_pandas(use_threads=False)
     ft, mt = fp.Header.to_numpy(), markers.Header.to_numpy()
@@ -84,7 +84,8 @@ def main():
         comparisons = []
         columns = ['observation_id', 'source_recording_id', 'reference_side', 'subject_metadata',
                    'source_start_time_s', 'source_end_time_s']
-        columns += [f'grf_{axis}_{side}_BW' for side in ('ipsi', 'contra') for axis in ('anterior', 'vertical')]
+        columns += [f'grf_{axis}_{side}_BW' for side in ('ipsi', 'contra') for axis in ('anterior', 'vertical', 'lateral')]
+        columns += [f'cop_{axis}_{side}_m' for side in ('ipsi', 'contra') for axis in ('anterior', 'vertical', 'lateral')]
         for batch in pq.ParquetFile(args.converted).iter_batches(batch_size=150, columns=columns, use_threads=False):
             frame = batch.to_pandas(use_threads=False)
             assert len(frame) == 150 and frame.observation_id.nunique() == 1
@@ -102,7 +103,7 @@ def main():
                 anatomical = row.reference_side if side == 'ipsi' else ('left' if row.reference_side == 'right' else 'right')
                 prefix = 'Treadmill_' + anatomical[0].upper()
                 record = {'observation_id': row.observation_id, 'side': side, 'anatomical_leg': anatomical}
-                for axis, suffix in [('anterior', 'vz'), ('vertical', 'vy')]:
+                for axis, suffix in [('anterior', 'vz'), ('vertical', 'vy'), ('lateral', 'vx')]:
                     raw = np.interp(times, ft, fp[prefix + '_' + suffix]) / (mass * 9.81)
                     output = frame[f'grf_{axis}_{side}_BW'].to_numpy()
                     finite = np.isfinite(raw) & np.isfinite(output)
@@ -111,6 +112,19 @@ def main():
                     record[axis] = {'finite_values': int(finite.sum()), 'max_abs_errors_BW': errors,
                                     'matching_signs_at_1e_minus_7': [label for label,error in errors.items()
                                                                   if finite.all() and error is not None and error <= 1e-7]}
+                contact = np.interp(times, ft, fp[prefix + '_vy']) / (mass * 9.81) >= .2
+                marker_side = anatomical[0].upper()
+                record['cop'] = {}
+                for axis, component, sign in [('anterior', 'z', -1), ('vertical', 'y', 1), ('lateral', 'x', 1)]:
+                    expected = sign * (np.interp(times, ft, fp[prefix + '_p' + component]) -
+                                       np.interp(times, mt, markers[f'{marker_side}_Ankle_Lat_{component}']) / 1000)
+                    output = frame[f'cop_{axis}_{side}_m'].to_numpy()
+                    finite = contact & np.isfinite(expected) & np.isfinite(output)
+                    record['cop'][axis] = {
+                        'contact_samples': int(contact.sum()), 'finite_contact_samples': int(finite.sum()),
+                        'max_contact_error_m': float(np.max(abs(output[finite] - expected[finite]))) if finite.any() else None,
+                        'max_contact_error_if_reversed_m': float(np.max(abs(output[finite] + expected[finite]))) if finite.any() else None,
+                        'reference': 'source lateral ankle marker, not estimated joint centre'}
                 comparisons.append(record)
         exported_comparison = {'path': str(args.converted), 'sha256': digest(args.converted), 'cycles': len(comparisons)//2,
                                'leg_comparisons': comparisons,

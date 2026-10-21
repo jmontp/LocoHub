@@ -1600,27 +1600,9 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 stride_data.anterior_grf_contra_BW = -stride_data.anterior_grf_contra_BW;
             end
             
-            % 2) Enforce lateral GRF mean > 0 for ipsi and < 0 for contra during stance
-            contact_threshold_BW_lateral = 0.2;
-            if ~all(isnan(stride_data.vertical_grf_ipsi_BW)) && ~all(isnan(stride_data.lateral_grf_ipsi_BW))
-                stance_mask = stride_data.vertical_grf_ipsi_BW > contact_threshold_BW_lateral;
-                if any(stance_mask)
-                    mean_lat = mean(stride_data.lateral_grf_ipsi_BW(stance_mask), 'omitnan');
-                    if mean_lat < 0
-                        stride_data.lateral_grf_ipsi_BW = -stride_data.lateral_grf_ipsi_BW;
-                    end
-                end
-            end
-            if ~all(isnan(stride_data.vertical_grf_contra_BW)) && ~all(isnan(stride_data.lateral_grf_contra_BW))
-                stance_mask = stride_data.vertical_grf_contra_BW > contact_threshold_BW_lateral;
-                if any(stance_mask)
-                    mean_lat = mean(stride_data.lateral_grf_contra_BW(stance_mask), 'omitnan');
-                    if mean_lat > 0
-                        stride_data.lateral_grf_contra_BW = -stride_data.lateral_grf_contra_BW;
-                    end
-                end
-            end
-            
+            % Lateral force retains the source global Right+ convention.
+            % Never infer a force sign from its mean or reference leg.
+
             % Center of pressure in ankle frame (meters)
             if treadmill_task && has_markers
                 if strcmp(leg_side, 'right')
@@ -1644,10 +1626,10 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                     cop_lat = interp1(fp_time, trial_data.fp.(ipsi_px), target_times, 'linear', NaN);
                     cop_vert = interp1(fp_time, trial_data.fp.(ipsi_py), target_times, 'linear', NaN);
                     cop_ant = interp1(fp_time, trial_data.fp.(ipsi_pz), target_times, 'linear', NaN);
-                    stride_data.cop_lateral_ipsi_m = cop_lat - ankle_lateral_ipsi_m;
-                    stride_data.cop_vertical_ipsi_m = cop_vert - ankle_vertical_ipsi_m;
+                    stride_data.cop_lateral_ipsi_m = (cop_lat(:) - ankle_lateral_ipsi_m(:));
+                    stride_data.cop_vertical_ipsi_m = (cop_vert(:) - ankle_vertical_ipsi_m(:));
                     % Flip anterior COP to match forward-positive convention
-                    stride_data.cop_anterior_ipsi_m = -(cop_ant - ankle_anterior_ipsi_m);
+                    stride_data.cop_anterior_ipsi_m = -(cop_ant(:) - ankle_anterior_ipsi_m(:));
                 end
                 
                 if any(strcmp(trial_data.fp.Properties.VariableNames, contra_px)) && ...
@@ -1656,9 +1638,9 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                     cop_lat = interp1(fp_time, trial_data.fp.(contra_px), target_times, 'linear', NaN);
                     cop_vert = interp1(fp_time, trial_data.fp.(contra_py), target_times, 'linear', NaN);
                     cop_ant = interp1(fp_time, trial_data.fp.(contra_pz), target_times, 'linear', NaN);
-                    stride_data.cop_lateral_contra_m = cop_lat - ankle_lateral_contra_m;
-                    stride_data.cop_vertical_contra_m = cop_vert - ankle_vertical_contra_m;
-                    stride_data.cop_anterior_contra_m = cop_ant - ankle_anterior_contra_m;
+                    stride_data.cop_lateral_contra_m = (cop_lat(:) - ankle_lateral_contra_m(:));
+                    stride_data.cop_vertical_contra_m = (cop_vert(:) - ankle_vertical_contra_m(:));
+                    stride_data.cop_anterior_contra_m = -(cop_ant(:) - ankle_anterior_contra_m(:));
                 end
             elseif stair_ramp_task && has_markers && exist('best_fp_ipsi', 'var') && ~isempty(best_fp_ipsi)
                 ipsi_px = [best_fp_ipsi '_px'];
@@ -1670,10 +1652,10 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                     cop_lat = interp1(fp_time, trial_data.fp.(ipsi_px), target_times, 'linear', NaN);
                     cop_vert = interp1(fp_time, trial_data.fp.(ipsi_py), target_times, 'linear', NaN);
                     cop_ant = interp1(fp_time, trial_data.fp.(ipsi_pz), target_times, 'linear', NaN);
-                    stride_data.cop_lateral_ipsi_m = cop_lat - ankle_lateral_ipsi_m;
-                    stride_data.cop_vertical_ipsi_m = cop_vert - ankle_vertical_ipsi_m;
+                    stride_data.cop_lateral_ipsi_m = (cop_lat(:) - ankle_lateral_ipsi_m(:));
+                    stride_data.cop_vertical_ipsi_m = (cop_vert(:) - ankle_vertical_ipsi_m(:));
                     % Flip anterior COP to match forward-positive convention
-                    stride_data.cop_anterior_ipsi_m = -(cop_ant - ankle_anterior_ipsi_m);
+                    stride_data.cop_anterior_ipsi_m = -(cop_ant(:) - ankle_anterior_ipsi_m(:));
                 end
             end
             
@@ -1767,7 +1749,7 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
         end
         
         % FINAL SIGN TUNING (ipsi): choose COP anterior and shear GRF signs that best match ID ankle moment
-        if isfield(stride_data, 'ankle_dorsiflexion_moment_ipsi_Nm_kg')
+        if ~strcmpi(mode, 'treadmill') && isfield(stride_data, 'ankle_dorsiflexion_moment_ipsi_Nm_kg')
             cop_ant = stride_data.cop_anterior_ipsi_m;
             cop_vert = stride_data.cop_vertical_ipsi_m;
             vgrf = stride_data.vertical_grf_ipsi_BW;

@@ -108,6 +108,14 @@ cop_ant(mask_low) = 0;
 cop_lat(mask_low) = 0;
 cop_vert(mask_low) = 0;
 
+% Treadmill forward is source -Z, supported by the original coordinate
+% transform and anterior/posterior pelvis markers. Use a fixed mapping.
+if strcmpi(mode, 'treadmill')
+    anterior_grf = -anterior_grf;
+    best_est = (-cop_ant .* vertical_grf + cop_vert .* anterior_grf) * 9.81;
+    best_rmse = sqrt(mean((best_est - ankle_moment).^2, 'omitnan'));
+else
+    % Historical non-treadmill mapping remains unverified pending geometry audit.
 % Sign search over anterior COP / shear GRF to best match ID ankle moment
 flip_opts = [1, -1];
 best_est = zeros(NUM_POINTS, 1);
@@ -132,6 +140,8 @@ end
 % is already sign-consistent with the ID ankle moment.
 cop_ant = best_sa * cop_ant;
 anterior_grf = best_sg * anterior_grf;
+
+end
 
 sd.phase = target_pct;
 sd.ankle_moment_Nm_kg = ankle_moment;
@@ -223,9 +233,9 @@ px_var = [best_fp '_px']; py_var = [best_fp '_py']; pz_var = [best_fp '_pz'];
 end
 
 function [lat, vert, ant] = ankle_marker(markers, stride_time, target_times, leg_side)
-lat = zeros(numel(target_times), 1);
-vert = zeros(numel(target_times), 1);
-ant = zeros(numel(target_times), 1);
+lat = nan(numel(target_times), 1);
+vert = nan(numel(target_times), 1);
+ant = nan(numel(target_times), 1);
 if isempty(markers) || ~istable(markers) || ~any(strcmp(markers.Properties.VariableNames, 'Header'))
     return;
 end
