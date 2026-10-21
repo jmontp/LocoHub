@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T21:40:36.552506-04:00",
-  "recorded_at": "2026-10-21T01:41:15.458475+00:00",
-  "base_revision": "34e1ce8bbdad86d90282a79be8e60b3674030e42",
+  "started_at": "2026-10-20T21:48:05.747634-04:00",
+  "recorded_at": "2026-10-21T01:48:39.205500+00:00",
+  "base_revision": "1dd7a403c62c8becba2d09beb8f5be78bf82e56a",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "0d64a5d394e601d0a430e55ee9fec9e589fa26804b379c8fa4e1b4c9769057e5",
+  "junit_sha256": "635690992ac96a870e9c35cb7832d30d4cf4a575ff646f7d8d6f4011bf41ae08",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -657,6 +657,21 @@
         }
       ]
     },
+    "tests.test_reconversion_host_storage_guard": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_low_host_space_requests_boundary_stop_without_killing_workers",
+          "status": "passed"
+        },
+        {
+          "name": "test_finished_queue_is_not_modified",
+          "status": "passed"
+        }
+      ]
+    },
     "tests.test_reconversion_runner": {
       "passed": 15,
       "failed": 0,
@@ -1067,7 +1082,7 @@
     }
   },
   "totals": {
-    "passed": 216,
+    "passed": 218,
     "failed": 0,
     "skipped": 2
   }
