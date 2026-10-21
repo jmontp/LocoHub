@@ -11,8 +11,8 @@
   "datasets": [
     {
       "dataset": "MBLUE",
-      "state": "Rebuilding now",
-      "remaining": "Pelvis timing and stair reference fixes passed pilots. Full rebuild and source checks running."
+      "state": "335 blocks rebuilt; source audit running",
+      "remaining": "15,825 leg views reconstructed. Full source and preservation checks, stair-reference selection and scientific review remain."
     },
     {
       "dataset": "GT21",
@@ -355,7 +355,9 @@
       "title": "Finish running pelvis rebuild and planned source/preservation audits; finish stair reference correction",
       "evidence_paths": [
         "converted_datasets/reconversion_v2/mblue_priority_handoff_20261021/run_detour.py",
-        "docs/quality/audits/mblue-stair-reference.json"
+        "docs/quality/audits/mblue-stair-reference.json",
+        "converted_datasets/reconversion_v2/mblue_pelvis_corrected_full_20261021/conversion_summary.json",
+        "converted_datasets/reconversion_v2/mblue_final_acceptance_20261021/plan.json"
       ],
       "group": "dataset",
       "acceptance": [
@@ -369,7 +371,8 @@
       ],
       "lane": "serial-heavy",
       "owner": "Coordinator",
-      "status": "Full rebuild running"
+      "status": "335 blocks rebuilt; independent source readback running",
+      "progress_note": "Full reconstruction contains 15,825 leg views. Final JSON scope gate is scheduled after source, preservation and stair-selection audits; no scientific approval."
     },
     {
       "id": "MBLUE-02",
@@ -739,6 +742,29 @@
         "https://github.com/jmontp/LocoHub/actions/runs/39541100953/job/119028785811"
       ],
       "progress_note": "Remote synthetic-data-contract and documentation build checks passed on ac1af50; deployment skipped for the PR."
+    },
+    {
+      "id": "NEW-01",
+      "priority": "P1",
+      "group": "new_datasets",
+      "title": "Review and add new datasets one at a time",
+      "owner": "Dataset discovery agent",
+      "status": "First candidate staged: Fukuchi 2018 Walking; metadata review in progress",
+      "lane": "Paper and source review, then serial guarded pilot",
+      "prerequisites": [],
+      "acceptance": [
+        "Check primary paper, source version, license and existing dataset inventory",
+        "Reconcile participant counts and actual recording semantics",
+        "Validate one bounded conversion against source before expanding",
+        "Document unsupported signals and publish no converted-data claim before output exists",
+        "Complete or record a concrete blocker for this candidate before starting another"
+      ],
+      "evidence_paths": [
+        "docs/datasets/fu18/index.html",
+        "docs/datasets/fu18/source_review.json",
+        "contributor_tools/conversion_scripts/Fukuchi_2018_Walking/candidate.json"
+      ],
+      "progress_note": "Source v6 describes 51 participants versus 42 in the paper. Only small source documentation and code acquired; no numerical conversion started."
     }
   ]
 }
