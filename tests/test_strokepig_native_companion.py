@@ -6,6 +6,7 @@ import pyarrow.parquet as pq
 import pytest
 
 from contributor_tools import reconvert_strokepig_native as native
+from contributor_tools.run_strokepig_native_batch import verify_existing
 
 
 @pytest.fixture
@@ -57,3 +58,21 @@ def test_recording_cannot_escape_source_root(source, tmp_path):
     root, _ = source
     with pytest.raises(ValueError, match='within source root'):
         native.export(root, '../outside.c3d', tmp_path / 'out')
+
+
+def test_resume_rejects_changed_data_source_and_converter(source, tmp_path):
+    root, _ = source
+    out = tmp_path / 'out'
+    report = native.export(root, 'TVC47/BWA (0).c3d', out)
+    raw = root / 'TVC47/BWA (0).c3d'
+    verify_existing(out, raw, report['converter_sha256'])
+    with pytest.raises(ValueError, match='Converter changed'):
+        verify_existing(out, raw, 'different converter')
+    raw.write_bytes(b'changed source')
+    with pytest.raises(ValueError, match='Source changed'):
+        verify_existing(out, raw, report['converter_sha256'])
+    raw.write_bytes(b'synthetic fixture, decoded by test double')
+    with (out / 'source_time.parquet').open('ab') as stream:
+        stream.write(b'changed output')
+    with pytest.raises(ValueError, match='Output changed'):
+        verify_existing(out, raw, report['converter_sha256'])
