@@ -353,3 +353,29 @@ preserved. The corrected queue is `fixed_data_queue_timing_20261020`, with outpu
 roots `gt24_phase3_timing_20261020` and `gt24_phase1and2_timing_20261020`. It retains
 one worker, the 9 GiB ceiling, 512 MiB source admission, and memory/disk guards.
 These outputs remain unreviewed staging files, not approved dataset releases.
+
+
+### UM21 normalized transfers: preserve source, avoid invented pairing
+
+`reconvert_umich_transfers.py` reads one normalized curve at a time and retains
+original joint-angle/forceplate names, plane indices and values without converting
+source axes or units. The full source-preservation run is
+`um21_normalized_transfers_20261020`: 20 subject/task arrays, 252 curves / 37,800
+rows. Every exported source channel was read back and compared exactly, including
+NaNs. The manifest records source, converter and output SHA-256 values.
+
+Anatomical reference side, source time and duration remain unknown. There are no
+invented opposite-leg channels or time derivatives. Marker arrays have different
+curve counts and are not paired by ordinal position. This staging output is not a
+canonical bilateral release; matching source anatomy and original recording times
+remains required. A sampled approximate waveform match was insufficient evidence.
+
+The MATLAB normalized-transfer path no longer copies each curve into both sides,
+assigns streaming durations by sequence, or invents chair height/arm-support
+metadata. Unpaired curves are explicitly marked unknown-side and contralateral
+measurements remain missing. The obsolete duration/event-matching helpers were
+removed. These native edits have not been executed in MATLAB; the Python export
+provides verified source preservation, not evidence of native execution.
+
+GT24 was stopped at a recording boundary for this bounded export, then resumed
+from the same immutable timing-corrected outputs.

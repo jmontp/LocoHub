@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T20:07:38.081769-04:00",
-  "recorded_at": "2026-10-21T00:08:09.490068+00:00",
-  "base_revision": "b57ad5c17191d01044f3ca0bd5a5ac6be6749ad4",
+  "started_at": "2026-10-20T20:10:39.117559-04:00",
+  "recorded_at": "2026-10-21T00:11:09.930363+00:00",
+  "base_revision": "0bff1158efca4662c4fd34aa4918174e602a2090",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "ulimit -v 2097152; OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "c393b92c71332d56fbda7cc4638e3eb8c4df052bcbf0307f24dafe7829e71b46",
+  "junit_sha256": "688e11e957b392890130430811a4baab3a1b0955111f21db3f238755079506bb",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -831,6 +831,21 @@
         }
       ]
     },
+    "tests.test_umich_transfer_source": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_transfer_keeps_source_values_without_bilateral_or_timing_claims",
+          "status": "passed"
+        },
+        {
+          "name": "test_transfer_rejects_incompatible_source_shapes",
+          "status": "passed"
+        }
+      ]
+    },
     "contributor_tools.common.tests.test_phase_detection": {
       "passed": 2,
       "failed": 0,
@@ -848,7 +863,7 @@
     }
   },
   "totals": {
-    "passed": 177,
+    "passed": 179,
     "failed": 0,
     "skipped": 2
   }

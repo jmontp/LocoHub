@@ -350,7 +350,7 @@ for subject_idx = 1:length(subjects)
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Process Sit-to-Stand transition data (Sts) using Normalized.mat CutPoints
+    % Preserve unpaired Sit-to-Stand curves from Normalized.mat without inferred timing
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     if isfield(subject_data, 'Sts')
@@ -1390,7 +1390,7 @@ end
 % Helper function to interpolate signal to fixed number of points
 function interpolated = interpolate_signal(signal, num_points)
     if isempty(signal)
-        interpolated = zeros(num_points, 1);
+        interpolated = NaN(num_points, 1);
         return;
     end
     
@@ -1765,7 +1765,7 @@ function corrected = apply_90_degree_correction(angle_rad)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Helper function to process Sts cycles using CutPoints from Normalized.mat
+% Preserve normalized Sts curves without claiming streaming correspondence
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function stride_table = process_sts_cycles_with_normalized(sts_streaming, normalized_subject, subject_str, subject_metadata, body_mass)
@@ -1776,7 +1776,8 @@ function stride_table = process_sts_cycles_with_normalized(sts_streaming, normal
         return;
     end
 
-    [dur_sit_to_stand, dur_stand_to_sit] = collect_sts_durations(sts_streaming);
+    % Normalized curves have no established streaming trial/time pairing.
+    % Never attach durations by ordinal position in independent arrays.
 
     if isempty(normalized_subject) || ~isfield(normalized_subject, 'SitStand') || ...
             ~isfield(normalized_subject.SitStand, 'ss')
@@ -1791,7 +1792,7 @@ function stride_table = process_sts_cycles_with_normalized(sts_streaming, normal
         num_cycles = size(ss_data.sit2stand.jointAngles.HipAngles, 3);
         for cycle_idx = 1:num_cycles
             sit_cycle = sit_cycle + 1;
-            duration = get_sts_duration(dur_sit_to_stand, sit_cycle);
+            duration = NaN;  % No verified source-time match.
             trial_data_norm = build_normalized_trial_struct(ss_data.sit2stand, cycle_idx);
             trial_data_norm.cycle_duration_override = duration;
             trial_name = sprintf('sit2stand_cycle_%02d', cycle_idx);
@@ -1809,7 +1810,7 @@ function stride_table = process_sts_cycles_with_normalized(sts_streaming, normal
         num_cycles = size(ss_data.stand2sit.jointAngles.HipAngles, 3);
         for cycle_idx = 1:num_cycles
             stand_cycle = stand_cycle + 1;
-            duration = get_sts_duration(dur_stand_to_sit, stand_cycle);
+            duration = NaN;  % No verified source-time match.
             trial_data_norm = build_normalized_trial_struct(ss_data.stand2sit, cycle_idx);
             trial_data_norm.cycle_duration_override = duration;
             trial_name = sprintf('stand2sit_cycle_%02d', cycle_idx);
@@ -1823,46 +1824,11 @@ function stride_table = process_sts_cycles_with_normalized(sts_streaming, normal
     end
 end
 
-function [sit_to_stand_durations, stand_to_sit_durations] = collect_sts_durations(sts_streaming)
-
-    sit_to_stand_durations = [];
-    stand_to_sit_durations = [];
-
-    if isempty(sts_streaming)
-        return;
-    end
-
-    trial_names = fieldnames(sts_streaming);
-
-    for trial_idx = 1:length(trial_names)
-        trial_name = trial_names{trial_idx};
-        trial_data = sts_streaming.(trial_name);
-
-        segments = detect_sts_segments(trial_data, trial_name);
-
-        for seg_idx = 1:length(segments)
-            segment = segments(seg_idx);
-            duration = max((segment.end_idx - segment.start_idx) / 100, 0.01);
-
-            if strcmp(segment.task_type, 'sit_to_stand')
-                sit_to_stand_durations = [sit_to_stand_durations; duration]; %#ok<AGROW>
-            elseif strcmp(segment.task_type, 'stand_to_sit')
-                stand_to_sit_durations = [stand_to_sit_durations; duration]; %#ok<AGROW>
-            end
-        end
-    end
-end
-
-function duration = get_sts_duration(duration_array, index)
-    duration = NaN;
-    if index <= numel(duration_array) && isfinite(duration_array(index)) && duration_array(index) > 0
-        duration = duration_array(index);
-    end
-end
-
 function trial_data = build_normalized_trial_struct(norm_struct, cycle_idx)
 
     trial_data = struct();
+    % L-prefixed fields below are internal slots for an unpaired source curve,
+    % not evidence that the source represents the left anatomical side.
     jointAngles = struct();
 
     if isfield(norm_struct, 'jointAngles')
@@ -1871,19 +1837,19 @@ function trial_data = build_normalized_trial_struct(norm_struct, cycle_idx)
         if isfield(jointAnglesStruct, 'HipAngles')
             hip_cycle = squeeze(jointAnglesStruct.HipAngles(:, :, cycle_idx));
             jointAngles.LHipAngles = hip_cycle;
-            jointAngles.RHipAngles = hip_cycle;
+            jointAngles.RHipAngles = NaN(size(hip_cycle)); % Opposite side not paired in source.
         end
 
         if isfield(jointAnglesStruct, 'KneeAngles')
             knee_cycle = squeeze(jointAnglesStruct.KneeAngles(:, :, cycle_idx));
             jointAngles.LKneeAngles = knee_cycle;
-            jointAngles.RKneeAngles = knee_cycle;
+            jointAngles.RKneeAngles = NaN(size(knee_cycle)); % Opposite side not paired in source.
         end
 
         if isfield(jointAnglesStruct, 'AnkleAngles')
             ankle_cycle = squeeze(jointAnglesStruct.AnkleAngles(:, :, cycle_idx));
             jointAngles.LAnkleAngles = ankle_cycle;
-            jointAngles.RAnkleAngles = ankle_cycle;
+            jointAngles.RAnkleAngles = NaN(size(ankle_cycle)); % Opposite side not paired in source.
         end
 
         if isfield(jointAnglesStruct, 'PelvisAngles')
@@ -1894,7 +1860,7 @@ function trial_data = build_normalized_trial_struct(norm_struct, cycle_idx)
         if isfield(jointAnglesStruct, 'FootProgressAngles')
             foot_cycle = squeeze(jointAnglesStruct.FootProgressAngles(:, :, cycle_idx));
             jointAngles.LFootProgressAngles = foot_cycle;
-            jointAngles.RFootProgressAngles = foot_cycle;
+            jointAngles.RFootProgressAngles = NaN(size(foot_cycle)); % Opposite side not paired in source.
         end
     end
 
@@ -1903,126 +1869,7 @@ function trial_data = build_normalized_trial_struct(norm_struct, cycle_idx)
     trial_data.trial_name = sprintf('normalized_cycle_%02d', cycle_idx);
 end
 
-function segments = detect_sts_segments(trial_data, trial_name)
-
-    segments = struct('start_idx', {}, 'end_idx', {}, 'task_type', {});
-
-    if ~isfield(trial_data, 'jointAngles')
-        fprintf('    Warning: No jointAngles data for %s\n', trial_name);
-        return;
-    end
-
-    angles = trial_data.jointAngles;
-    if isfield(angles, 'LHipAngles')
-        hip_left = angles.LHipAngles(:, 1);
-    else
-        hip_left = [];
-    end
-    if isfield(angles, 'RHipAngles')
-        hip_right = angles.RHipAngles(:, 1);
-    else
-        hip_right = [];
-    end
-
-    if isempty(hip_left) && isempty(hip_right)
-        fprintf('    Warning: Missing hip angles for %s\n', trial_name);
-        return;
-    end
-
-    if isempty(hip_left)
-        hip_mean = hip_right;
-    elseif isempty(hip_right)
-        hip_mean = hip_left;
-    else
-        hip_mean = (hip_left + hip_right) / 2;
-    end
-
-    hip_mean = double(hip_mean);
-
-    hip_smooth = smoothdata(hip_mean, 'movmean', 5);
-    hip_vel = [diff(hip_smooth); 0];
-
-    velocity_threshold = 0.8;
-    min_segment_samples = 25;
-    gap_tolerance = 8;
-    pad_samples = 6;
-
-    motion_idx = find(abs(hip_vel) > velocity_threshold);
-    if isempty(motion_idx)
-        return;
-    end
-
-    segments_idx = [];
-    seg_start = motion_idx(1);
-    seg_end = seg_start;
-
-    for k = 2:length(motion_idx)
-        current_idx = motion_idx(k);
-        if current_idx - seg_end > gap_tolerance
-            if seg_end - seg_start + 1 >= min_segment_samples
-                segments_idx = [segments_idx; seg_start, seg_end]; %#ok<AGROW>
-            end
-            seg_start = current_idx;
-        end
-        seg_end = current_idx;
-    end
-
-    if seg_end - seg_start + 1 >= min_segment_samples
-        segments_idx = [segments_idx; seg_start, seg_end]; %#ok<AGROW>
-    end
-
-    if isempty(segments_idx)
-        return;
-    end
-
-    merged_segments = [];
-    for idx = 1:size(segments_idx, 1)
-        start_idx = segments_idx(idx, 1);
-        end_idx = segments_idx(idx, 2);
-
-        if isempty(merged_segments)
-            merged_segments = [start_idx, end_idx];
-        else
-            last_start = merged_segments(end, 1);
-            last_end = merged_segments(end, 2);
-            if start_idx - last_end <= gap_tolerance
-                merged_segments(end, 2) = max(last_end, end_idx);
-            else
-                merged_segments = [merged_segments; start_idx, end_idx]; %#ok<AGROW>
-            end
-        end
-    end
-
-    num_samples = length(hip_smooth);
-    for idx = 1:size(merged_segments, 1)
-        start_idx = max(1, merged_segments(idx, 1) - pad_samples);
-        end_idx = min(num_samples, merged_segments(idx, 2) + pad_samples);
-
-        start_angle = hip_smooth(start_idx);
-        end_angle = hip_smooth(end_idx);
-
-        if start_angle > end_angle
-            task_type = 'sit_to_stand';
-        else
-            task_type = 'stand_to_sit';
-        end
-
-        segments(end + 1) = struct(...
-            'start_idx', start_idx, ...
-            'end_idx', end_idx, ...
-            'task_type', task_type); %#ok<AGROW>
-    end
-
-    if ~isempty(segments)
-        [~, order] = sort([segments.start_idx]);
-        segments = segments(order);
-    end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Helper function to process a single sit-to-stand or stand-to-sit cycle
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+% Process an unpaired normalized transfer; no streaming event inference.
 function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, task_type, subject_str, subject_metadata, body_mass, trial_name, cycle_num)
     
     % Constants
@@ -2050,8 +1897,9 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     step_id = cycle_num;  % Keep as numeric for consistency with walking data
     
     % Default metadata
-    chair_height = 0.45;  % Standard chair height in meters
-    task_info = sprintf('chair_height:%.2f,arm_support:false', chair_height);
+    task_info = jsonencode(struct('source_representation', 'unpaired_normalized_limb_curve', ...
+        'anatomical_reference_side', 'unknown', 'opposite_side', 'unavailable', ...
+        'timing_status', 'no_verified_streaming_match'));
     
     % Initialize stride data structure
     stride_data = struct();
@@ -2063,11 +1911,14 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     stride_data.subject_metadata = repmat({subject_metadata}, NUM_POINTS, 1);
     
     % Time and phase information
-    cycle_duration_s = (end_idx - start_idx) / 100;  % Assuming 100 Hz sampling
+    cycle_duration_s = NaN;  % Normalized sample indices do not establish seconds.
     if isfield(trial_data, 'cycle_duration_override')
         cycle_duration_s = trial_data.cycle_duration_override;
     end
-    stride_data.time_s = linspace(0, cycle_duration_s, NUM_POINTS)';
+    stride_data.time_s = NaN(NUM_POINTS, 1);
+    if isfinite(cycle_duration_s) && cycle_duration_s > 0
+        stride_data.time_s = linspace(0, cycle_duration_s, NUM_POINTS)';
+    end
 
     % Every phase-indexed action spans the canonical 0-100% interval.
     phase_start = 0;
@@ -2108,7 +1959,8 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
             r_hip_rot = NaN(NUM_POINTS, 1);
         end
         
-        % For bilateral task, use left as ipsi, right as contra
+        % Ipsilateral slot holds the unpaired normalized source curve.
+        % Anatomical side is unknown; contralateral measurements remain missing.
         stride_data.hip_flexion_angle_ipsi_rad = l_hip_flex;
         stride_data.hip_flexion_angle_contra_rad = r_hip_flex;
         stride_data.hip_adduction_angle_ipsi_rad = l_hip_add;
@@ -2287,7 +2139,7 @@ function cycle_table = process_single_sts_cycle(trial_data, start_idx, end_idx, 
     if strcmp(task_type, 'stand_to_sit'), source_task = 'stand2sit'; end
     recording_id = sprintf('um21:Normalized/%s/SitStand/ss/%s', erase(subject_str, 'UM21_'), source_task);
     cycle_table = locohub_add_provenance(cycle_table, recording_id, ...
-        sprintf('source_cycle:%d', cycle_num), 'left', 'transfer', NaN, NaN);
+        sprintf('source_cycle:%d', cycle_num), 'unknown', 'transfer', NaN, NaN);
 
 end
 

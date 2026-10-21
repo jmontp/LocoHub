@@ -21,7 +21,7 @@
     "StrokePiG"
   ],
   "current_limitations": {
-    "umich": "Only treadmill hip/knee subset regenerated. Remaining signals, tasks and normalized transfers still open.",
+    "umich": "Treadmill hip/knee subset regenerated; all 252 normalized transfer curves preserved with exact source-channel readback but unknown side/timing. MATLAB duplication and ordinal timing removed, native execution unverified. Remaining tasks, canonical signals, source pairing and full release reconciliation open.",
     "gt24": "Canonical task labels, short-trial trimming, transfer duration and source-clock interpolation corrected. Three-recording timing/trim pilot: 24 observations checked against source hips/knees. New timing queue running; all-task/signal coverage, event validity, exclusions and conventions remain open.",
     "gt25": "Seven BT01 recordings regenerated: 152 observations / 22,800 rows, source-matched for checked channels. All-subject/task coverage, ankle sign, segment angles, COP frames, event validity and exclusion accounting remain open."
   },
@@ -75,8 +75,10 @@
         "converted_datasets/umich_2021_phase_raw.parquet",
         "contributor_tools/conversion_scripts/Umich_2021/convert_umich_phase_to_parquet.m"
       ],
-      "status": "open",
-      "required_followup": "Preserve source-side identity; represent unavailable opposite-side data as missing unless paired source time correspondence is established. Do not assume copied channels are bilateral measurements."
+      "status": "unsafe_mapping_removed_source_preserved_anatomical_reconciliation_pending",
+      "required_followup": "Preserve source-side identity; represent unavailable opposite-side data as missing unless paired source time correspondence is established. Do not assume copied channels are bilateral measurements.",
+      "evidence": "converted_datasets/reconversion_v2/um21_normalized_transfers_20261020/conversion_manifest.json",
+      "native_validation": "MATLAB path edited but not executed; independent Python source-preservation export verified all stored joint-angle and forceplate channels."
     },
     {
       "id": "umich-6",
@@ -85,8 +87,10 @@
       "affected_paths": [
         "contributor_tools/conversion_scripts/Umich_2021/convert_umich_phase_to_parquet.m"
       ],
-      "status": "open",
-      "required_followup": "Use original source identifiers/side/cut-point mapping or leave timing and time derivatives unavailable; do not use ordinal matching as proof."
+      "status": "unsafe_mapping_removed_source_preserved_anatomical_reconciliation_pending",
+      "required_followup": "Use original source identifiers/side/cut-point mapping or leave timing and time derivatives unavailable; do not use ordinal matching as proof.",
+      "evidence": "converted_datasets/reconversion_v2/um21_normalized_transfers_20261020/conversion_manifest.json",
+      "native_validation": "MATLAB path edited but not executed; independent Python source-preservation export verified all stored joint-angle and forceplate channels."
     },
     {
       "id": "umich-7",
