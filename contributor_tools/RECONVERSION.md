@@ -550,3 +550,37 @@ probe explicitly checks that absent channels remain absent.
 
 Full reconstruction and anatomical force/COP validation remain open. Experimental
 OpenSim/ID paths are not verified by this default precomputed-angle pilot.
+
+
+### Gait120 full local inventory and pending reconstruction
+
+`run_gait120_batch.py` inventories all local JointAngle recordings, including
+unsupported paths as explicit exclusions. The local source matches the paper:
+6,882 recordings from 120 participants, comprising 1,060 walking, 1,187 stair
+ascent, 1,186 stair descent, 1,172 slope ascent, 1,150 slope descent, 558 sit-to-stand
+and 569 stand-to-sit recordings. No unsupported paths were found in this inventory.
+
+`gait120_full_batch_20261020` holds the frozen inventory/code snapshots. Each worker
+has a 1 GiB address-space cap, 64 MiB source admission, numerical threads set to
+one, and a 120-second timeout. The parent requires 2 GiB memory reserve and 5 GiB
+disk headroom; the existing live monitor stops only its own worker if available
+memory falls below 1.5 GiB. Each source file gets an immutable output directory,
+source/code/output hashes, structural validation and exact readback. Changed or
+partial evidence stops resume rather than overwriting an artifact. A root
+`STOP_AFTER_CURRENT` cancels the pending dispatcher or stops between recordings.
+
+The worker executed S011/LevelWalking/Trial01/step01 successfully. All 78 numeric
+columns exactly match the prior independent source-checked force pilot, and its
+resume fingerprint was checked. A small post-run comparison initially hit a
+512 MiB inspection cap; rerunning that inspection with one Arrow I/O thread under
+768 MiB succeeded. The conversion itself succeeded under its 1 GiB cap.
+
+`start_after_gt21.py` waits for the live GT21 dispatcher and requires its full batch
+to report `complete_unreviewed` before starting Gait120. It refuses to start after
+incomplete GT21 work. Progress will be recorded in `batch_status.json`; the
+current dispatcher status is `waiting_for_gt21`. The full batch has not run yet.
+
+Reconstruction uses precomputed source angles, not experimental OpenSim/ID. It
+preserves raw force-plate channels while anatomical force/COP remains unresolved.
+Non-sagittal signal standardization, event/model checks, release reconciliation
+and scientific approval remain open even after this batch finishes.
