@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T23:44:38.023190-04:00",
-  "recorded_at": "2026-10-21T03:45:10.357832+00:00",
-  "base_revision": "9be4d7e391765f8542100d7b27b5c88a4ae97fe8",
+  "started_at": "2026-10-20T23:51:01.343067-04:00",
+  "recorded_at": "2026-10-21T03:51:33.469600+00:00",
+  "base_revision": "580d7c73329e736289d0db5c6488b0635cfc8237",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "24e7a820941614cb53dbdfcbb484311b41f6f79b602ca9ced46741410585f8fb",
+  "junit_sha256": "23877d88dfdb17a562e062a450e2d6f2b8e8dfeb534dc8f3c941f281326631ba",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -1004,6 +1004,29 @@
         }
       ]
     },
+    "tests.test_mblue_stair_reference": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_recover_known_resized_clock_window",
+          "status": "passed"
+        },
+        {
+          "name": "test_bad_clock_geometry_is_not_rounded_into_a_match",
+          "status": "passed"
+        },
+        {
+          "name": "test_cubic_resize_preserves_constant_clock_origin_and_center",
+          "status": "passed"
+        },
+        {
+          "name": "test_force_events_follow_source_pre_crossing_sample_and_cleaning",
+          "status": "passed"
+        }
+      ]
+    },
     "tests.test_memory_safe_parquet_tools": {
       "passed": 3,
       "failed": 0,
@@ -1559,7 +1582,7 @@
     }
   },
   "totals": {
-    "passed": 311,
+    "passed": 315,
     "failed": 0,
     "skipped": 2
   }
