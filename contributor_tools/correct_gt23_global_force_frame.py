@@ -4,6 +4,7 @@ Accepts time or phase Parquet from the reviewed converter lineage. Never rotates
 forces, changes joint signs, or treats source preservation as anatomical approval.
 """
 import argparse
+import ast
 import hashlib
 import json
 import math
@@ -14,6 +15,11 @@ import struct
 ROOT=Path(__file__).resolve().parents[1]
 CONVERTER=ROOT/'contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_2023_time_to_parquet.m'
 CONVERTER_SHA256='8de9c1ae8938423be9f918720a3b0dfaab396f99bc6950fa47c18557d69fd69e'
+REVIEWED_CONVERTERS={
+    'time':(str(CONVERTER.relative_to(ROOT)),CONVERTER_SHA256),
+    'phase':('contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_phase_to_parquet.m',
+             'ec2c3015a03996d5fb9304fd17a1d56b27d40f843da824b80384ef1d529f17d6'),
+}
 PAPER_SHA256='5c30a9035c70bc7a1d1041373623cc2e69d4d2caba3a71d1a0ee16f0d1f72baa'
 ALIASES={f'grf_{direction}_{side}_BW':f'source_grf_global_{axis}_{side}_BW'
          for side in ('ipsi','contra') for direction,axis in [('anterior','x'),('lateral','z')]}
@@ -35,6 +41,27 @@ def digest(path):
     with Path(path).open('rb') as stream:
         for block in iter(lambda:stream.read(1024**2),b''):h.update(block)
     return h.hexdigest()
+
+
+def validate_lineage(lineage,manifest,driver_text):
+    """Select the producing adapter from the recorded invocation, not code presence."""
+    modes=[]
+    for node in ast.walk(ast.parse(driver_text)):
+        if isinstance(node,ast.List):
+            for index,item in enumerate(node.elts[:-1]):
+                if isinstance(item,ast.Constant) and item.value=='-Mode':
+                    next_item=node.elts[index+1]
+                    if isinstance(next_item,ast.Constant):modes.append(next_item.value)
+    mode=lineage.get('producing_mode')
+    if modes!=[mode] or mode not in REVIEWED_CONVERTERS:
+        raise ValueError('Actual producing mode not established by run driver')
+    path,expected=REVIEWED_CONVERTERS[mode]
+    if lineage.get('converter_path')!=path or lineage.get('converter_sha256')!=expected:
+        raise ValueError('Wrong actual producing converter')
+    code=manifest.get('code_sha256',manifest.get('code',{}))
+    if code.get(path)!=expected or manifest.get('output_sha256')!=lineage.get('input_sha256'):
+        raise ValueError('Run manifest does not bind producing converter and output')
+    return {'mode':mode,'path':path,'sha256':expected}
 
 
 def frame_metadata(raw):
@@ -143,7 +170,7 @@ def main():
     parser.add_argument('--input',type=Path,required=True)
     parser.add_argument('--input-sha256',required=True)
     parser.add_argument('--lineage',type=Path,required=True,
-                        help='Reviewed JSON binding input_sha256 and converter_sha256')
+                        help='Reviewed producing-mode receipt with run manifest and driver hashes')
     parser.add_argument('--lineage-sha256',required=True)
     parser.add_argument('--output',type=Path,required=True,help='Fresh local correction directory')
     args=parser.parse_args()
@@ -153,14 +180,20 @@ def main():
     out=args.output.resolve()
     if not out.is_relative_to(ROOT/'converted_datasets/reconversion_v2'):raise ValueError('Output outside local review root')
     bindings={str(args.input):args.input_sha256,str(args.lineage):args.lineage_sha256,
-              str(CONVERTER):CONVERTER_SHA256,str(Path(__file__).resolve()):digest(__file__)}
+              str(Path(__file__).resolve()):digest(__file__)}
     def verify_bindings():
         for path,expected in bindings.items():
             if digest(path)!=expected:raise ValueError('Changed bound input: '+path)
     verify_bindings()
     lineage=json.loads(args.lineage.read_text())
-    if lineage['input_sha256']!=args.input_sha256 or lineage['converter_sha256']!=CONVERTER_SHA256:
-        raise ValueError('Unreviewed converter lineage')
+    if lineage['input_sha256']!=args.input_sha256:raise ValueError('Wrong lineage output')
+    evidence=lineage['evidence_sha256']
+    if lineage['run_manifest'] not in evidence or lineage['run_driver'] not in evidence:
+        raise ValueError('Unbound run evidence')
+    bindings.update(evidence);verify_bindings()
+    producer=validate_lineage(lineage,json.loads(Path(lineage['run_manifest']).read_text()),
+                              Path(lineage['run_driver']).read_text())
+    bindings[str(ROOT/producer['path'])]=producer['sha256'];verify_bindings()
     import pyarrow as pa
     import pyarrow.parquet as pq
     pa.set_cpu_count(1);pa.set_io_thread_count(1)
@@ -175,7 +208,7 @@ def main():
     verify_bindings()
     report={'status':'global_force_labels_corrected_source_preserved_unreviewed','scientific_approval':False,
             'rows_checked':checked,'input_sha256':bindings,'output_sha256':digest(target),
-            'aliases':ALIASES,'frame':FRAME_INFO,
+            'aliases':ALIASES,'frame':FRAME_INFO,'actual_producing_converter':producer,
             'unchanged_scope':'Joint signs, vertical force, COP, timing, identities and existing missing masks outside the four withheld anatomical horizontal columns.',
             'limitations':'Input lineage is explicitly reviewer supplied. No raw source, body-weight normalization, COP origin, joint sign or anatomical rotation validation is claimed.'}
     (out/'correction_readback.json').write_text(json.dumps(report,indent=2)+'\n')

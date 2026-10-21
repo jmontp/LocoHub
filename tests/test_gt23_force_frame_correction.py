@@ -46,6 +46,23 @@ def test_zero_sign_and_missing_masks_are_preserved():
     assert FIX.same_values([float('nan')],[float('nan')])
 
 
+@pytest.mark.parametrize('mode',['time','phase'])
+def test_actual_producer_selected_from_run_invocation(mode):
+    path,sha=FIX.REVIEWED_CONVERTERS[mode]
+    lineage={'producing_mode':mode,'converter_path':path,'converter_sha256':sha,'input_sha256':'output'}
+    manifest={'output_sha256':'output','code_sha256':dict(FIX.REVIEWED_CONVERTERS.values())}
+    driver="command=['runner','-Mode',"+repr(mode)+"]"
+    assert FIX.validate_lineage(lineage,manifest,driver)['mode']==mode
+    other='phase' if mode=='time' else 'time'
+    with pytest.raises(ValueError,match='mode'):
+        FIX.validate_lineage(lineage,manifest,"command=['runner','-Mode',"+repr(other)+"]")
+    wrong=dict(lineage,converter_path=FIX.REVIEWED_CONVERTERS[other][0],converter_sha256=FIX.REVIEWED_CONVERTERS[other][1])
+    with pytest.raises(ValueError,match='producing converter'):FIX.validate_lineage(wrong,manifest,driver)
+    if mode=='phase':
+        manifest['code_sha256'].pop(path)
+        with pytest.raises(ValueError,match='manifest'):FIX.validate_lineage(lineage,manifest,driver)
+
+
 @pytest.mark.parametrize('index_column',['time_s','phase_ipsi'])
 def test_persisted_parquet_preserves_arrays_masks_and_metadata(tmp_path,index_column):
     import pyarrow as pa

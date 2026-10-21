@@ -34,10 +34,10 @@
     "readback": "Independently reread the written Parquet in 512-row batches; compare every unchanged column, all source aliases, missing masks, signed zeros and task metadata. Bind input, lineage, converter and tool hashes before and after processing. Unchanged Arrow arrays are retained directly; field and schema metadata are checked after serialization.",
     "limits": "One thread; 768 MiB address-space limit; 512-row batches admitted at 8 MiB. Coordinator must provide external process-group timeout and resource monitoring. No automatic launch."
   },
-  "lineage_requirement": "A separately reviewed JSON must bind input_sha256 and converter_sha256; its own SHA256 is required on the command line. A phase derivative needs its upstream lineage established before this receipt is supplied. This is not automatic raw-source verification.",
+  "lineage_requirement": "Per-input receipt binds actual producing mode, exact allowlisted converter path/hash, run manifest and run driver hashes. The driver must explicitly select that mode, and the manifest must bind both the selected converter and output bytes. Merely listing an unrelated time converter among code hashes cannot admit a phase input.",
   "acceptance_pending": [
-    "Select one small actual time output and its phase derivative; independently establish lineage, then run the guarded postprocessor and inspect readback.",
-    "Freeze tool and evidence hashes in a dedicated correction plan before full use."
+    "Execute the two independent hash-bound native-output correction cases in gt23_force_frame_pilot_preparation_20261021/pilot_plan_v2.json under the existing guarded_stage, then verify persisted receipts.",
+    "Freeze the revised tool and plan hashes before actual use."
   ],
   "unresolved": [
     "COP currently uses a transformed calcn frame. This correction neither relabels it nor establishes that its origin is the anatomical ankle.",
@@ -49,5 +49,26 @@
     "scope": "Six scalar fixtures plus time/phase persisted Parquet fixtures crossing batch boundaries, null vs NaN, signed zero, categorical columns, field/schema metadata and intentional metadata corruption.",
     "real_data_executed": false,
     "tool_sha256": "d93ee4e510a391bda5596e117d7f56d4f983c6185b00d856b3107754e22f6b73"
+  },
+  "phase_converter": {
+    "path": "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_phase_to_parquet.m",
+    "sha256": "ec2c3015a03996d5fb9304fd17a1d56b27d40f843da824b80384ef1d529f17d6",
+    "mapping_lines": [
+      794,
+      835
+    ],
+    "normalization_lines": [
+      1370,
+      1425
+    ],
+    "finding": "Independent direct raw converter; maps global ForceX/Z to anterior/lateral before body-weight normalization. Native phase runs are not derivatives of time Parquet."
+  },
+  "synthetic_verification": {
+    "status": "passed",
+    "tests": 10,
+    "scope": "Six scalar fixtures, two producing-converter lineage fixtures, and time/phase persisted Parquet fixtures crossing batch boundaries; null vs NaN, signed zero, categorical columns, field/schema metadata and intentional corruption.",
+    "real_data_executed": false,
+    "tool_sha256": "5070fbf5a7960a977834065c69d22d822c28cfe0788f78b772f48099db0315bc",
+    "pilot_bindings_verified": 20
   }
 }
