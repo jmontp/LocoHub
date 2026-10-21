@@ -1,0 +1,94 @@
+{
+  "status": "source_preservation_adapter_prepared_no_real_B3D_execution",
+  "scientific_approval": false,
+  "canonical_dataset_complete": false,
+  "primary_api_source": "https://nimblephysics.org/docs/working-with-addbiomechanics-data.html",
+  "primary_evidence": [
+    {
+      "section": "Contents of a B3D File; ProcessingPassType",
+      "finding": "Kinematics, low-pass filter and dynamics passes are separately retained. Position 1 is not an assured dynamics pass; trial pass availability may differ."
+    },
+    {
+      "section": "SubjectOnDisk.getTrialLength/readFrames; Frame.t/trial",
+      "finding": "Read exact trial length in bounded requests; frame t is trial-local frame index. Out-of-bounds reads may return empty arrays."
+    },
+    {
+      "section": "FramePass groundContactForceInRootFrame/groundContactCenterOfPressureInRootFrame",
+      "finding": "Vectors resolve in model root coordinates, not automatically anatomical forward/lateral or vertical. Contact-body order is obtained from source metadata, not assumed right-first."
+    },
+    {
+      "section": "Frame.missingGRFReason; FramePass.type/pos/vel/tau",
+      "finding": "Quality flags and actual pass type must accompany raw arrays. DOF indices require model-specific mapping; generalized forces are not all implicitly joint moments."
+    }
+  ],
+  "concrete_old_defects": [
+    "Invalid mass replaced with 70 kg.",
+    "Hard-coded pass slot 1 interpreted as dynamics.",
+    "Fixed DOF offsets interpreted as anatomical angles without model mapping.",
+    "Root-frame force/COP vectors assigned anatomical directions/legs.",
+    "Rotation-matrix coefficient labelled as angle in radians.",
+    "One million-frame read could be out of bounds or truncate source.",
+    "Exceptions silently dropped frames and shortened elapsed time.",
+    "Trials grouped only by task before segmentation.",
+    "Opposite-leg phase invented by 50 percent shift; phase rate lacked physical time.",
+    "Missing values interpolated across gaps; event end frame excluded; no complete exclusion accounting."
+  ],
+  "replacement_behavior": [
+    "Preserve original B3D bytes in place and bind SHA256. Export all public source-frame and per-pass properties with array dtype/shape, nested values and explicit nonfinite tokens. Unknown property types fail loudly and leave an incomplete manifest.",
+    "Write separate per-file source Parquet, one raw-frame row and every actual pass row per frame, plus every embedded global-pass model XML and source header/contact-body metadata. Local pass slot is not assumed to identify a global model.",
+    "Use exact source trial length, 32-frame reads, 4 MiB single payload and 32 MiB accumulated batch limits. Stream output; no whole-dataset concatenation.",
+    "Keep exact trial/name/split/frame/file identifiers and original timestep. Time is trial-local frame index times timestep, not reconstructed global session time.",
+    "Retain invalid/missing source mass and availability flag; do not normalize any unsupported channel.",
+    "Do not automatically generate canonical anatomical or phase outputs. Optional standalone phase helper requires reviewed external force mapping, one source recording, finite clock and inclusive endpoints.",
+    "All source files have pending/running/completed disposition. Errors retain partial artifacts and mark stopped_incomplete, not successful conversion.",
+    "Canonical task stays null for all source-only rows. Historical task predictions are retained only as explicitly unreviewed metadata, separate from original trial names."
+  ],
+  "breaking_behavior": "Fresh output directory is mandatory. Output is source-preservation Parquet plus model/metadata files rather than guessed canonical time/phase tables. It is a prerequisite for corrected canonical reconstruction, not completion of that objective. Existing historical artifacts remain unchanged.",
+  "source_json_encoding": "source_fields_json is ordinary JSON. Arrays retain dtype, shape and numeric values; NaN/Infinity use explicit source_nonfinite objects. Floating signed zero is retained. Original B3D remains the authoritative byte source; NaN payload bits are not reinterpreted as scientific values.",
+  "tests": {
+    "synthetic_only": true,
+    "passed": 13,
+    "memory_cap_mib": 768,
+    "cases": [
+      "Variable 1/3 pass counts and unexpected DOF ordering",
+      "All exposed metadata including custom channels, raw force plates, markers and missing-GRF flags",
+      "Exact 65-frame batch boundaries and separate repeated-task trial identity",
+      "Short/misindexed/unsupported frame failures without time shrinkage",
+      "Physical phase rate and unavailable opposite-leg phase",
+      "Inclusive event endpoint",
+      "Persisted Parquet counts, embedded model text, retained original file and overwrite rejection",
+      "Failure ledger includes unstarted source files",
+      "Variable per-frame pass availability explicitly compared to trial header without deleting frames",
+      "Startup WSL reserve and output-disk reserve refusal",
+      "Runtime guard breach retains incomplete source-file ledger",
+      "Historical task guesses never populate the source-only canonical task column; original trial name remains task_id."
+    ],
+    "seconds": 0.78
+  },
+  "remaining_gates": [
+    "No real B3D arrays loaded; a reviewed single-file guarded pilot must verify installed native API/property types and actual on-disk source values independently.",
+    "Expose/model-bind DOF names, axis signs, contact-body identities and participant versus fitted model mass before canonical reconstruction.",
+    "Independent persisted original-B3D readback is still required; current mock tests do not prove real dataset correctness.",
+    "Source header APIs requiring full arrays are not automatically loaded; their omission is explicit in loss ledger and original B3D is retained.",
+    "Cross-file participant identity, historical dataset attribution, trial task mappings, source version/license and source-quality interpretation remain dataset-specific admission gates."
+  ],
+  "bindings": {
+    "contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_to_parquet.py": "bd54b1ad8603e5b53fa57c94fb09ed0bb7f3621a3cb5aed3b6c443c404d6ac2d",
+    "tests/test_addbiomechanics_source_preservation.py": "e68cd1bb981a59c71432f50bc0230c52a37960172e60bc4959a05adb754fb54b",
+    "contributor_tools/conversion_scripts/AddBiomechanics/dataset_configs.py": "b20016da068b58f4d4ec82e45eb62ed29fc1a7aab1730066cf4e0a0dad57622d"
+  },
+  "resource_guards": {
+    "cli_address_space_mib": 768,
+    "windows_startup_mib": 2816,
+    "windows_runtime_mib": 2048,
+    "wsl_startup_mib": 3584,
+    "wsl_runtime_mib": 2048,
+    "output_disk_reserve_gib": 5,
+    "shared_guard_c_drive_reserve_gib": 1,
+    "poll_seconds": 15,
+    "probe_timeout_seconds": 10,
+    "thread_count": 1,
+    "priority": "nice 19, ionice idle",
+    "note": "Startup check precedes native reader import; periodic checks occur during hashing, bounded reads and writes. Actual execution still requires coordinator single-worker scheduling."
+  }
+}

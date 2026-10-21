@@ -1,564 +1,265 @@
 #!/usr/bin/env python3
+"""Preserve AddBiomechanics B3D source frames and processing passes in Parquet.
+
+This adapter deliberately does not label unknown model DOFs, contact bodies or
+root-frame axes as anatomical signals. It writes source arrays and their shapes,
+quality flags, exact trial/frame/pass identities, and embedded model XML. No
+70 kg replacement, pass-index assumption, missing-frame deletion or automatic
+phase reconstruction is allowed. Existing historical files are never overwritten.
 """
-Convert AddBiomechanics B3D files to standardized parquet format.
-
-This script converts B3D files from AddBiomechanics.org to the LocoHub
-standardized parquet format, producing both time-indexed and phase-normalized
-outputs.
-
-Supported datasets (9 total):
-- Moore2015: Treadmill walking at multiple speeds
-- Camargo2021: Level/ramp/stair walking
-- Fregly2012: Normal and modified walking patterns
-- Hamner2013: Running at multiple speeds
-- Santos2017: Standing still
-- Tan2021: Modified running
-- Tan2022: Modified walking
-- vanderZee2022: Level walking trials
-- Wang2023: Walking, running, and non-cyclic tasks
-
-Usage:
-    python convert_addbiomechanics_to_parquet.py --dataset Moore2015 --input /path/to/b3d/files
-
-Output:
-    - {dataset}_time.parquet: Time-indexed data (one row per frame)
-    - {dataset}_phase.parquet: Phase-normalized data (150 rows per stride)
-"""
-
 import argparse
+import hashlib
+import json
+import math
 import os
-import sys
+import time
+import importlib.util
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-
+import sys
+for _name in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS','ARROW_NUM_THREADS','NUMEXPR_NUM_THREADS'):
+    os.environ[_name]='1'
 import numpy as np
 import pandas as pd
-from scipy.interpolate import interp1d
-from tqdm import tqdm
+sys.path.insert(0,str(Path(__file__).parent))
+from dataset_configs import get_task_info, get_supported_datasets
 
-# Add common utilities to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'common'))
-from phase_detection import VerticalGRFConfig, detect_vertical_grf_events
-
-from dataset_configs import (
-    DATASET_SHORT_CODES,
-    get_task_info,
-    get_subject_name,
-    is_cyclic_task,
-    get_supported_datasets,
-)
-
-# Configuration
-NUM_PHASE_POINTS = 150
-GRF_THRESHOLD_N = 50.0
-MIN_STRIDE_INTERVAL_S = 0.3
-IQR_MULTIPLIER = 1.5  # For outlier stride filtering
+FRAME_BATCH=32
+MAX_FRAME_PAYLOAD_BYTES=4*1024**2
+NUM_PHASE_POINTS=150
 
 
-def osim_rotation_matrix(x: float, y: float, z: float) -> np.ndarray:
-    """
-    Generate rotation matrix from Euler angles (x, y, z) in radians.
-    Uses XYZ rotation order matching OpenSim conventions.
-    """
-    R_x = np.array([
-        [1, 0, 0],
-        [0, np.cos(x), -np.sin(x)],
-        [0, np.sin(x), np.cos(x)]
-    ])
-    R_y = np.array([
-        [np.cos(y), 0, np.sin(y)],
-        [0, 1, 0],
-        [-np.sin(y), 0, np.cos(y)]
-    ])
-    R_z = np.array([
-        [np.cos(z), -np.sin(z), 0],
-        [np.sin(z), np.cos(z), 0],
-        [0, 0, 1]
-    ])
-    return np.dot(R_z, np.dot(R_x, R_y))
+def digest(path,guard=None):
+    h=hashlib.sha256()
+    with Path(path).open('rb') as f:
+        for block in iter(lambda:f.read(1024**2),b''):
+            if guard:guard()
+            h.update(block)
+    return h.hexdigest()
 
 
-def compute_segment_angles(
-    pelvis_angles: Tuple[float, float, float],
-    hip_angles_r: Tuple[float, float, float],
-    hip_angles_l: Tuple[float, float, float],
-    knee_angle_r: float,
-    knee_angle_l: float,
-    ankle_angles_r: Tuple[float, float],
-    ankle_angles_l: Tuple[float, float],
-) -> Dict[str, float]:
-    """
-    Compute segment angles from joint angles using rotation matrices.
+class ResourceGuard:
+    def __init__(self,output):
+        path=Path(__file__).parents[1]/'Fukuchi_2018_Walking/run_ensemble_pilot.py'
+        spec=importlib.util.spec_from_file_location('adb_shared_host_guard',path);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        self.check=module.check_resources;self.output=Path(output);self.last=0
 
-    Returns dict with shank, thigh, and foot sagittal angles for both legs.
-    """
-    # Pelvis rotation
-    R_pelvis = osim_rotation_matrix(pelvis_angles[1], pelvis_angles[2], pelvis_angles[0])
-
-    # Hip rotations
-    R_hip_r = osim_rotation_matrix(hip_angles_r[1], hip_angles_r[2], hip_angles_r[0])
-    R_hip_l = osim_rotation_matrix(hip_angles_l[1], hip_angles_l[2], hip_angles_l[0])
-
-    # Knee rotations (negative for flexion convention)
-    R_knee_r = osim_rotation_matrix(0, 0, -knee_angle_r)
-    R_knee_l = osim_rotation_matrix(0, 0, -knee_angle_l)
-
-    # Ankle rotations
-    R_ankle_r = osim_rotation_matrix(0, ankle_angles_r[1], ankle_angles_r[0])
-    R_ankle_l = osim_rotation_matrix(0, ankle_angles_l[1], ankle_angles_l[0])
-
-    # Compute segment rotation matrices
-    R_thigh_r = np.dot(R_pelvis, R_hip_r)
-    R_thigh_l = np.dot(R_pelvis, R_hip_l)
-    R_shank_r = np.dot(R_thigh_r, R_knee_r)
-    R_shank_l = np.dot(R_thigh_l, R_knee_l)
-    R_foot_r = np.dot(R_shank_r, R_ankle_r)
-    R_foot_l = np.dot(R_shank_l, R_ankle_l)
-
-    return {
-        'thigh_sagittal_angle_ipsi_rad': R_thigh_r[1, 0],
-        'thigh_sagittal_angle_contra_rad': R_thigh_l[1, 0],
-        'shank_sagittal_angle_ipsi_rad': R_shank_r[1, 0],
-        'shank_sagittal_angle_contra_rad': R_shank_l[1, 0],
-        'foot_sagittal_angle_ipsi_rad': R_foot_r[1, 0],
-        'foot_sagittal_angle_contra_rad': R_foot_l[1, 0],
-    }
+    def __call__(self,startup=False,force=False):
+        if not (startup or force) and time.monotonic()-self.last<15:return
+        result=self.check(prelaunch=startup)
+        if startup and result['linux_available_mib']<3584:raise MemoryError('WSL startup requires 3584 MiB available')
+        target=self.output
+        while not target.exists():target=target.parent
+        stat=os.statvfs(target)
+        if stat.f_bavail*stat.f_frsize<5*1024**3:raise MemoryError('Preserve 5 GiB output disk reserve')
+        self.last=time.monotonic()
 
 
-def extract_frame_data(frame, timestep: float, mass_kg: float) -> Dict:
-    """
-    Extract biomechanical data from a single nimblephysics frame.
-
-    Args:
-        frame: nimblephysics frame object
-        timestep: Time interval between frames
-        mass_kg: Subject mass in kg
-
-    Returns:
-        Dictionary with extracted variables
-    """
-    ss = frame.processingPasses[1]  # Use dynamics processing pass
-
-    # Extract raw data
-    poses = ss.pos
-    vels = ss.vel
-    torques = ss.tau
-    grf = ss.groundContactForceInRootFrame
-    cop = ss.groundContactCenterOfPressureInRootFrame
-    contacted = ss.contact
-    com_pos = ss.comPos
-    com_vel = ss.comVel
-
-    # Compute segment angles
-    seg_angles = compute_segment_angles(
-        pelvis_angles=(poses[0], poses[1], poses[2]),
-        hip_angles_r=(poses[6], poses[7], poses[8]),
-        hip_angles_l=(poses[13], poses[14], poses[15]),
-        knee_angle_r=poses[9],
-        knee_angle_l=poses[16],
-        ankle_angles_r=(poses[10], poses[11]),
-        ankle_angles_l=(poses[17], poses[18]),
-    )
-
-    # Build record with standardized column names
-    # Note: In AddBiomechanics, right leg = ipsi, left leg = contra (by convention)
-    record = {
-        # Ground reaction forces (Newtons, will be normalized later)
-        'grf_vertical_ipsi_N': grf[1],  # right y
-        'grf_anterior_ipsi_N': grf[0],  # right x
-        'grf_lateral_ipsi_N': grf[2],   # right z
-        'grf_vertical_contra_N': grf[4],  # left y
-        'grf_anterior_contra_N': grf[3],  # left x
-        'grf_lateral_contra_N': grf[5],   # left z
-
-        # Center of pressure (meters)
-        'cop_anterior_ipsi_m': cop[0],
-        'cop_vertical_ipsi_m': cop[1],
-        'cop_lateral_ipsi_m': cop[2],
-        'cop_anterior_contra_m': cop[3],
-        'cop_vertical_contra_m': cop[4],
-        'cop_lateral_contra_m': cop[5],
-
-        # Contact states
-        'contact_ipsi': contacted[0],
-        'contact_contra': contacted[1],
-
-        # Pelvis angles (radians)
-        'pelvis_sagittal_angle_rad': poses[0],
-        'pelvis_frontal_angle_rad': poses[1],
-        'pelvis_transverse_angle_rad': poses[2],
-
-        # Joint angles - right leg = ipsi (radians)
-        'hip_flexion_angle_ipsi_rad': poses[6],
-        'hip_adduction_angle_ipsi_rad': poses[7],
-        'hip_rotation_angle_ipsi_rad': poses[8],
-        'knee_flexion_angle_ipsi_rad': poses[9],
-        'ankle_dorsiflexion_angle_ipsi_rad': poses[10],
-        'ankle_rotation_angle_ipsi_rad': poses[11],
-
-        # Joint angles - left leg = contra (radians)
-        'hip_flexion_angle_contra_rad': poses[13],
-        'hip_adduction_angle_contra_rad': poses[14],
-        'hip_rotation_angle_contra_rad': poses[15],
-        'knee_flexion_angle_contra_rad': poses[16],
-        'ankle_dorsiflexion_angle_contra_rad': poses[17],
-        'ankle_rotation_angle_contra_rad': poses[18],
-
-        # Pelvis velocities (rad/s)
-        'pelvis_sagittal_velocity_rad_s': vels[0],
-        'pelvis_frontal_velocity_rad_s': vels[1],
-        'pelvis_transverse_velocity_rad_s': vels[2],
-
-        # Joint velocities - ipsi (rad/s)
-        'hip_flexion_velocity_ipsi_rad_s': vels[6],
-        'hip_adduction_velocity_ipsi_rad_s': vels[7],
-        'hip_rotation_velocity_ipsi_rad_s': vels[8],
-        'knee_flexion_velocity_ipsi_rad_s': vels[9],
-        'ankle_dorsiflexion_velocity_ipsi_rad_s': vels[10],
-        'ankle_rotation_velocity_ipsi_rad_s': vels[11],
-
-        # Joint velocities - contra (rad/s)
-        'hip_flexion_velocity_contra_rad_s': vels[13],
-        'hip_adduction_velocity_contra_rad_s': vels[14],
-        'hip_rotation_velocity_contra_rad_s': vels[15],
-        'knee_flexion_velocity_contra_rad_s': vels[16],
-        'ankle_dorsiflexion_velocity_contra_rad_s': vels[17],
-        'ankle_rotation_velocity_contra_rad_s': vels[18],
-
-        # Joint moments - mass normalized (Nm/kg)
-        'hip_flexion_moment_ipsi_Nm_kg': torques[6] / mass_kg,
-        'hip_adduction_moment_ipsi_Nm_kg': torques[7] / mass_kg,
-        'hip_rotation_moment_ipsi_Nm_kg': torques[8] / mass_kg,
-        'knee_flexion_moment_ipsi_Nm_kg': torques[9] / mass_kg,
-        'ankle_dorsiflexion_moment_ipsi_Nm_kg': torques[10] / mass_kg,
-        'ankle_rotation_moment_ipsi_Nm_kg': torques[11] / mass_kg,
-
-        'hip_flexion_moment_contra_Nm_kg': torques[13] / mass_kg,
-        'hip_adduction_moment_contra_Nm_kg': torques[14] / mass_kg,
-        'hip_rotation_moment_contra_Nm_kg': torques[15] / mass_kg,
-        'knee_flexion_moment_contra_Nm_kg': torques[16] / mass_kg,
-        'ankle_dorsiflexion_moment_contra_Nm_kg': torques[17] / mass_kg,
-        'ankle_rotation_moment_contra_Nm_kg': torques[18] / mass_kg,
-
-        # COM position and velocity
-        'com_pos_x_m': com_pos[0],
-        'com_pos_y_m': com_pos[1],
-        'com_pos_z_m': com_pos[2],
-        'com_vel_x_m_s': com_vel[0],
-        'com_vel_y_m_s': com_vel[1],
-        'com_vel_z_m_s': com_vel[2],
-
-        # Segment angles from rotation matrices
-        **seg_angles,
-    }
-
-    return record
+def make_guard(output):return ResourceGuard(output)
 
 
-def process_b3d_file(
-    b3d_path: Path,
-    dataset: str,
-    subject_idx: int,
-) -> Optional[pd.DataFrame]:
-    """
-    Process a single B3D file and return time-indexed DataFrame.
-
-    Args:
-        b3d_path: Path to B3D file
-        dataset: Dataset name
-        subject_idx: Subject index for naming
-
-    Returns:
-        DataFrame with extracted data, or None if processing fails
-    """
-    try:
-        import nimblephysics as nimble
-    except ImportError:
-        raise ImportError("nimblephysics is required. Install with: pip install nimblephysics")
-
-    try:
-        subject = nimble.biomechanics.SubjectOnDisk(str(b3d_path))
-    except Exception as e:
-        print(f"Failed to load {b3d_path}: {e}")
-        return None
-
-    mass_kg = subject.getMassKg()
-    if mass_kg <= 0:
-        mass_kg = 70.0  # Default if mass not available
-
-    # Extract subject name
-    original_name = b3d_path.stem
-    if '_split' in original_name:
-        original_name = original_name.split('_split')[0]
-    subject_name = get_subject_name(dataset, original_name, subject_idx)
-
-    records = []
-    num_trials = subject.getNumTrials()
-
-    for trial_idx in range(num_trials):
-        timestep = subject.getTrialTimestep(trial_idx)
-        original_task = subject.getTrialOriginalName(trial_idx)
-        task, task_id, task_info = get_task_info(dataset, original_task)
-
-        # Read all frames
-        frames = subject.readFrames(trial_idx, 0, 1_000_000)
-        accum_time = 0.0
-
-        for frame_idx, frame in enumerate(frames):
-            try:
-                record = extract_frame_data(frame, timestep, mass_kg)
-                record['subject'] = subject_name
-                record['subject_metadata'] = f'mass_kg:{mass_kg}'
-                record['task'] = task
-                record['task_id'] = task_id
-                record['task_info'] = task_info
-                record['time_s'] = accum_time
-                record['frame_number'] = frame_idx
-                records.append(record)
-                accum_time += timestep
-            except Exception as e:
-                # Skip problematic frames
-                continue
-
-    if not records:
-        return None
-
-    df = pd.DataFrame(records)
-
-    # Normalize GRF to body weight
-    body_weight_n = mass_kg * 9.81
-    for side in ['ipsi', 'contra']:
-        for direction in ['vertical', 'anterior', 'lateral']:
-            col_n = f'grf_{direction}_{side}_N'
-            col_bw = f'grf_{direction}_{side}_BW'
-            if col_n in df.columns:
-                df[col_bw] = df[col_n] / body_weight_n
-                df.drop(columns=[col_n], inplace=True)
-
-    return df
+def encode_source(value):
+    """JSON-safe source values with array dtype/shape and explicit nonfinites."""
+    if isinstance(value,np.ndarray):
+        if value.nbytes>MAX_FRAME_PAYLOAD_BYTES:raise MemoryError('Single source array exceeds admission')
+        return {'source_type':'ndarray','dtype':value.dtype.str,'shape':list(value.shape),'values':encode_source(value.tolist())}
+    if isinstance(value,np.generic):return encode_source(value.item())
+    if value is None or isinstance(value,(str,bool,int)):return value
+    if isinstance(value,float):
+        if math.isnan(value):return {'source_nonfinite':'NaN'}
+        if math.isinf(value):return {'source_nonfinite':'+Infinity' if value>0 else '-Infinity'}
+        return value
+    if isinstance(value,(list,tuple)):return {'source_type':'tuple','values':[encode_source(v) for v in value]} if isinstance(value,tuple) else [encode_source(v) for v in value]
+    if isinstance(value,dict):
+        # Keys may be DOF indices or sensor labels: preserve type and ordering.
+        return {'source_type':'mapping','items':[[encode_source(k),encode_source(v)] for k,v in value.items()]}
+    if hasattr(value,'name') and hasattr(value,'value'):
+        return {'source_type':'enum','class':type(value).__name__,'name':str(value.name),'value':encode_source(value.value)}
+    raise TypeError('Unsupported source property type; do not silently omit: '+type(value).__name__)
 
 
-def interpolate_stride(df: pd.DataFrame, num_points: int = NUM_PHASE_POINTS) -> pd.DataFrame:
-    """
-    Interpolate a single stride to fixed number of phase points.
-    """
-    n_samples = len(df)
-    if n_samples < 2:
-        return pd.DataFrame()
-
-    x_orig = np.linspace(0, 100, n_samples)
-    x_target = np.linspace(0, 100, num_points)
-
-    result = {'phase_ipsi': x_target}
-
-    # Copy metadata from first row
-    for col in ['subject', 'subject_metadata', 'task', 'task_id', 'task_info', 'step']:
-        if col in df.columns:
-            result[col] = [df[col].iloc[0]] * num_points
-
-    # Interpolate numeric columns
-    numeric_cols = df.select_dtypes(include=[np.number]).columns
-    skip_cols = {'frame_number', 'time_s', 'contact_ipsi', 'contact_contra'}
-
-    for col in numeric_cols:
-        if col in skip_cols:
-            continue
+def public_fields(obj,exclude=()):
+    result={}
+    for name in sorted(n for n in dir(obj) if not n.startswith('_') and n not in exclude):
         try:
-            values = df[col].values
-            valid = ~np.isnan(values)
-            if np.sum(valid) >= 2:
-                interp_func = interp1d(x_orig[valid], values[valid],
-                                       kind='linear', fill_value='extrapolate')
-                result[col] = interp_func(x_target)
-            else:
-                result[col] = np.full(num_points, np.nan)
-        except Exception:
-            result[col] = np.full(num_points, np.nan)
+            value=getattr(obj,name)
+            if not callable(value):result[name]=encode_source(value)
+        except Exception as error:
+            raise TypeError('Cannot preserve source property '+type(obj).__name__+'.'+name+': '+str(error)) from error
+    return result
 
-    # Compute phase_contra (approximately 50% offset for walking)
-    result['phase_contra'] = (x_target + 50) % 100
-    result['phase_ipsi_dot'] = np.gradient(x_target)
 
+def payload(fields):
+    result=json.dumps(fields,sort_keys=True,separators=(',',':'),allow_nan=False)
+    if len(result.encode())>MAX_FRAME_PAYLOAD_BYTES:raise MemoryError('Single frame payload exceeds admission')
+    return result
+
+
+def extract_frame_data(frame,timestep,mass_kg):
+    """One raw-frame row plus every actual processing-pass row, without mapping."""
+    if not math.isfinite(timestep) or timestep<=0:raise ValueError('Finite positive source timestep required')
+    frame_index=int(frame.t);trial_index=int(frame.trial)
+    if frame_index!=frame.t or trial_index!=frame.trial or frame_index<0 or trial_index<0:raise ValueError('Invalid source frame identity')
+    common={'source_trial_index':trial_index,'source_frame_index':frame_index,'time_s':frame_index*timestep,'source_timestep_s':timestep,'source_mass_kg':float(mass_kg),'mass_available':bool(math.isfinite(mass_kg) and mass_kg>0),'canonical_mapping_status':'unassessed_source_only'}
+    rows=[{**common,'source_pass_index':-1,'source_scope':'raw_frame','source_fields_json':payload(public_fields(frame,exclude=('processingPasses',)))}]
+    for index,source_pass in enumerate(frame.processingPasses):
+        rows.append({**common,'source_pass_index':index,'source_scope':'processing_pass','source_fields_json':payload(public_fields(source_pass))})
+    return rows
+
+
+def trial_metadata(subject,trial,dataset):
+    original=subject.getTrialOriginalName(trial);task,task_id,task_info=get_task_info(dataset,original)
+    step=float(subject.getTrialTimestep(trial));length=int(subject.getTrialLength(trial))
+    if not math.isfinite(step) or step<=0 or length<0:raise ValueError('Invalid original trial clock/length')
+    return {'source_trial_index':trial,'source_trial_name':subject.getTrialName(trial),'source_original_trial_name':original,'source_trial_split_index':subject.getTrialSplitIndex(trial),'source_frames':length,'source_timestep_s':step,'source_trial_processing_pass_count':subject.getTrialNumProcessingPasses(trial),'task':task,'task_id':task_id,'task_info':task_info,'task_assessment':'unresolved' if task is None else 'historical_mapping_unreviewed'}
+
+
+def iter_trial_records(subject,trial,dataset,source_id,source_file,source_sha,batch_size=FRAME_BATCH,guard=None):
+    if not 1<=batch_size<=FRAME_BATCH:raise ValueError('Frame batch exceeds bounded admission')
+    meta=trial_metadata(subject,trial,dataset);mass=float(subject.getMassKg())
+    for start in range(0,meta['source_frames'],batch_size):
+        if guard:guard()
+        count=min(batch_size,meta['source_frames']-start)
+        frames=subject.readFrames(trial,start,count,includeSensorData=True,includeProcessingPasses=True)
+        if len(frames)!=count:raise ValueError('Short source read; complete trial cannot be claimed')
+        rows=[];payload_bytes=0
+        for offset,frame in enumerate(frames):
+            if guard:guard()
+            if int(frame.t)!=start+offset or int(frame.trial)!=trial:raise ValueError('Source frame/trial identity differs')
+            for row in extract_frame_data(frame,meta['source_timestep_s'],mass):
+                row.update(source_file=source_file,source_sha256=source_sha,source_recording_id=source_id+':trial:'+str(trial),source_subject_id=source_id,source_trial_name=meta['source_trial_name'],source_original_trial_name=meta['source_original_trial_name'],source_trial_split_index=meta['source_trial_split_index'],task=None,task_id=meta['source_original_trial_name'],task_info=payload({'historical_task':meta['task'],'historical_task_id':meta['task_id'],'historical_mapping':encode_source(meta['task_info']),'assessment':meta['task_assessment']}),observation_type='continuous_recording')
+                row['source_row_id']=row['source_recording_id']+f":frame:{row['source_frame_index']}:pass:{row['source_pass_index']}"
+                payload_bytes+=len(row['source_fields_json'].encode())
+                if payload_bytes>32*1024**2:raise MemoryError('Accumulated frame batch exceeds 32 MiB; preserve partial attempt')
+                rows.append(row)
+        yield rows
+
+
+def process_b3d_file(b3d_path,dataset,subject_idx=0):
+    """Small-review compatibility helper; full CLI uses bounded streaming instead."""
+    path=Path(b3d_path);guard=make_guard(path.parent);guard(startup=True,force=True)
+    import nimblephysics as nimble
+    subject=nimble.biomechanics.SubjectOnDisk(str(path))
+    if sum(subject.getTrialLength(i) for i in range(subject.getNumTrials()))>1024:raise MemoryError('Use streaming conversion; in-memory review limited to 1024 frames')
+    sha=digest(path,guard);identity=f'{dataset}:{path.name}:{sha}';rows=[]
+    for trial in range(subject.getNumTrials()):
+        for batch in iter_trial_records(subject,trial,dataset,identity,path.name,sha,guard=guard):
+            rows.extend(batch)
+            if sum(len(r['source_fields_json']) for r in rows)>32*1024**2:raise MemoryError('Small review payload admission exceeded')
+    return pd.DataFrame(rows)
+
+
+def interpolate_stride(df,num_points=NUM_PHASE_POINTS):
+    """Only explicitly reviewed external stride inputs; never auto-used on B3Ds."""
+    if num_points!=150:raise ValueError('Inclusive phase exports require 150 samples')
+    if len(df)<2 or 'time_s' not in df or 'source_recording_id' not in df:raise ValueError('Complete physical clock and source identity required')
+    if df['source_recording_id'].nunique(dropna=False)!=1:raise ValueError('Cannot merge source recordings')
+    time=df['time_s'].to_numpy(dtype=float)
+    if not np.isfinite(time).all() or not (np.diff(time)>0).all():raise ValueError('Strict source clock required')
+    grid=np.linspace(time[0],time[-1],150);phase=np.linspace(0,100,150)
+    result={'phase_ipsi':phase,'time_s':grid,'phase_ipsi_dot':np.full(150,100/(time[-1]-time[0])),'phase_contra':np.full(150,np.nan)}
+    for name in df:
+        if name in result:continue
+        if name in ('source_frame_index','frame_number'):continue
+        if pd.api.types.is_numeric_dtype(df[name]) and name not in ('source_trial_index','source_trial_split_index'):
+            result[name]=np.interp(grid,time,df[name].to_numpy(dtype=float))
+        elif df[name].nunique(dropna=False)==1:result[name]=[df[name].iloc[0]]*150
+        else:raise ValueError('Changing categorical source values cannot be interpolated: '+name)
     return pd.DataFrame(result)
 
 
-def segment_to_strides(
-    df: pd.DataFrame,
-    grf_col: str = 'grf_vertical_ipsi_BW',
-    time_col: str = 'time_s',
-) -> List[pd.DataFrame]:
-    """
-    Segment time-indexed data into individual strides using GRF.
-
-    Returns list of DataFrames, one per stride.
-    """
-    if grf_col not in df.columns or time_col not in df.columns:
-        return []
-
-    try:
-        config = VerticalGRFConfig(
-            ipsi_col=grf_col,
-            contra_col='grf_vertical_contra_BW',
-            time_col=time_col,
-            threshold=GRF_THRESHOLD_N / 9.81 / 70.0,  # Convert to BW for ~70kg person
-            min_interval_s=MIN_STRIDE_INTERVAL_S,
-        )
-        events = detect_vertical_grf_events(df, config)
-        heel_strikes = events.heel_strikes_ipsi
-    except Exception:
-        # Fallback: simple threshold crossing
-        grf = df[grf_col].values
-        threshold = 0.1  # BW
-        above = grf > threshold
-        crossings = np.where(np.diff(above.astype(int)) > 0)[0]
-        heel_strikes = crossings
-
-    if len(heel_strikes) < 2:
-        return []
-
-    # Filter strides by duration (IQR method)
-    time_values = df[time_col].values
-    stride_durations = np.diff(time_values[heel_strikes])
-
-    if len(stride_durations) > 3:
-        q1, q3 = np.percentile(stride_durations, [25, 75])
-        iqr = q3 - q1
-        lower = q1 - IQR_MULTIPLIER * iqr
-        upper = q3 + IQR_MULTIPLIER * iqr
-        valid_mask = (stride_durations >= lower) & (stride_durations <= upper)
-    else:
-        valid_mask = np.ones(len(stride_durations), dtype=bool)
-
-    # Extract strides
-    strides = []
-    for i, is_valid in enumerate(valid_mask):
-        if not is_valid:
-            continue
-        start_idx = heel_strikes[i]
-        end_idx = heel_strikes[i + 1]
-        stride_df = df.iloc[start_idx:end_idx].copy()
-        stride_df['step'] = f'{i + 1:03d}'
-        strides.append(stride_df)
-
+def segment_to_strides(df,grf_col='grf_vertical_ipsi_N',time_col='time_s',*,reviewed_force_mapping=False):
+    """No implicit phase export from unverified root-frame/contact-body signals."""
+    if not reviewed_force_mapping:raise ValueError('Independent force frame/side/unit review required before segmentation')
+    if df['source_recording_id'].nunique(dropna=False)!=1:raise ValueError('Cannot merge source trials')
+    time=df[time_col].to_numpy(dtype=float);force=df[grf_col].to_numpy(dtype=float)
+    if not np.isfinite(time).all() or not (np.diff(time)>0).all() or not np.isfinite(force).all():raise ValueError('Complete finite source clocks/forces required')
+    strikes=np.flatnonzero((force[:-1]<=50)&(force[1:]>50))+1
+    strides=[]
+    for start,end in zip(strikes,strikes[1:]):
+        stride=df.iloc[start:end+1].copy();identity=str(df['source_recording_id'].iloc[0])+f':frames:{start}-{end}'
+        stride['observation_id']=identity;stride['step']=identity;strides.append(stride)
     return strides
 
 
-def process_dataset(
-    dataset: str,
-    input_dir: Path,
-    output_dir: Path,
-) -> Tuple[Optional[Path], Optional[Path]]:
-    """
-    Process all B3D files for a dataset.
+def source_schema():
+    import pyarrow as pa
+    integers={'source_trial_index','source_frame_index','source_pass_index','source_trial_split_index'}
+    floats={'time_s','source_timestep_s','source_mass_kg'}
+    names=['source_trial_index','source_frame_index','time_s','source_timestep_s','source_mass_kg','mass_available','canonical_mapping_status','source_pass_index','source_scope','source_fields_json','source_file','source_sha256','source_recording_id','source_subject_id','source_trial_name','source_original_trial_name','source_trial_split_index','task','task_id','task_info','observation_type','source_row_id']
+    return pa.schema([(n,pa.int64() if n in integers else pa.float64() if n in floats else pa.bool_() if n=='mass_available' else pa.string()) for n in names])
 
-    Returns paths to output time and phase parquet files.
-    """
-    if dataset not in get_supported_datasets():
-        raise ValueError(f"Unsupported dataset: {dataset}")
 
-    # Find B3D files (recursively search subdirectories)
-    b3d_files = list(input_dir.glob('**/*.b3d'))
-    if not b3d_files:
-        print(f"No B3D files found in {input_dir}")
-        return None, None
-
-    print(f"Processing {len(b3d_files)} B3D files for {dataset}...")
-
-    all_time_dfs = []
-    all_phase_dfs = []
-
-    for subject_idx, b3d_path in enumerate(tqdm(b3d_files, desc=f'{dataset} subjects')):
-        df_time = process_b3d_file(b3d_path, dataset, subject_idx)
-        if df_time is None or df_time.empty:
-            continue
-
-        all_time_dfs.append(df_time)
-
-        # Segment into strides and phase-normalize for cyclic tasks
-        for task_name in df_time['task'].unique():
-            if not is_cyclic_task(task_name):
-                continue
-
-            task_df = df_time[df_time['task'] == task_name].copy()
-            strides = segment_to_strides(task_df)
-
-            for stride_df in strides:
-                phase_df = interpolate_stride(stride_df, NUM_PHASE_POINTS)
-                if not phase_df.empty:
-                    all_phase_dfs.append(phase_df)
-
-    # Save outputs
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    time_path = None
-    phase_path = None
-
-    if all_time_dfs:
-        combined_time = pd.concat(all_time_dfs, ignore_index=True)
-        time_path = output_dir / f'{dataset}_time.parquet'
-        combined_time.to_parquet(time_path, index=False)
-        print(f"Saved time-indexed data: {time_path} ({len(combined_time)} rows)")
-
-    if all_phase_dfs:
-        combined_phase = pd.concat(all_phase_dfs, ignore_index=True)
-        phase_path = output_dir / f'{dataset}_phase.parquet'
-        combined_phase.to_parquet(phase_path, index=False)
-        print(f"Saved phase-normalized data: {phase_path} ({len(combined_phase)} rows)")
-
-    return time_path, phase_path
+def process_dataset(dataset,input_dir,output_dir):
+    """Fresh per-file source tables, embedded models, and full accounting ledger."""
+    if dataset not in get_supported_datasets():raise ValueError('Unsupported dataset')
+    input_dir=Path(input_dir).resolve();output_dir=Path(output_dir).resolve()
+    guard=make_guard(output_dir);guard(startup=True,force=True)
+    import nimblephysics as nimble
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    pa.set_cpu_count(1);pa.set_io_thread_count(1)
+    if output_dir.exists():raise FileExistsError('Fresh output directory required; preserve historical artifacts')
+    files=sorted(input_dir.rglob('*.b3d'))
+    if not files:raise ValueError('No source files')
+    output_dir.mkdir(parents=True);schema=source_schema();ledger={'status':'running_source_preservation','scientific_approval':False,'dataset':dataset,'producer_sha256':digest(__file__),'task_config_sha256':digest(Path(__file__).with_name('dataset_configs.py')),'reader_version':str(getattr(nimble,'__version__','not_exposed')),'files':[{'source_file':str(p.relative_to(input_dir)),'status':'not_started'} for p in files],'canonical_dataset_complete':False,'loss_ledger':{'silently_dropped_frames':0,'silently_dropped_public_properties':0,'unsupported_source_properties':[],'unexported_header_methods':'Original B3D retained; only explicitly listed lightweight subject/trial metadata and embedded models exported. Header APIs requiring full arrays are not implicitly loaded.'},'phase_output':'Withheld: original model/DOF signs, contact body identity, force frames and events require independent validation.'}
+    def save():
+        temp=output_dir/'manifest.tmp';temp.write_text(json.dumps(ledger,indent=2,allow_nan=False)+'\n');temp.replace(output_dir/'manifest.json')
+    save()
+    try:
+        for index,path in enumerate(files):
+            guard(force=True)
+            entry=ledger['files'][index];entry['status']='running';save();sha=digest(path,guard);subject=nimble.biomechanics.SubjectOnDisk(str(path));folder=output_dir/f'source_{index:04d}';folder.mkdir();entry.update(source_sha256=sha,trials=[])
+            source_id=dataset+':'+entry['source_file']+':'+sha
+            models=[]
+            for p in range(subject.getNumProcessingPasses()):
+                guard()
+                xml=subject.getOpensimFileText(p)
+                if len(xml.encode())>4*1024**2:raise MemoryError('Embedded model exceeds admission')
+                model=folder/f'model_pass_{p}.osim';model.write_text(xml);models.append({'pass_index':p,'pass_type':str(subject.getProcessingPassType(p)),'model_path':str(model.relative_to(output_dir)),'sha256':digest(model)})
+            metadata={'models':models,'time_reference':'Trial-local elapsed seconds = source Frame.t times original trial timestep; original session offset unavailable.','pass_identity':'source_pass_index is the local Frame.processingPasses slot; source type retained per row. No unsupported local-slot to global model inference.','source_mass':encode_source(subject.getMassKg()),'contact_bodies':encode_source(subject.getContactBodies()),'source_identity':'File identity only; no cross-file participant merge inferred','canonical_mapping':'Unassessed; all public frame/pass properties retained under source names'}
+            metadata['subject_header']={}
+            for name in ('getAgeYears','getBiologicalSex','getHeightM','getNotes','getSubjectTags','getQuality','getNumDofs','getNumJoints'):
+                method=getattr(subject,name,None)
+                metadata['subject_header'][name]=encode_source(method()) if method is not None else {'api_status':'unavailable_in_this_source_reader'}
+            metadata_path=folder/'source_metadata.json'
+            metadata_path.write_text(json.dumps(metadata,indent=2,allow_nan=False)+'\n')
+            entry['metadata_sha256']=digest(metadata_path);entry['model_files']=models
+            target=folder/'source_frames.parquet';row_count=0
+            with pq.ParquetWriter(target,schema,compression='zstd') as writer:
+                for trial in range(subject.getNumTrials()):
+                    trial_info=trial_metadata(subject,trial,dataset);trial_info.update(frames_written=0,pass_rows_written=0,raw_rows_written=0,actual_frame_pass_count_histogram={},pass_count_assessment='pending',status='running');entry['trials'].append(trial_info);save()
+                    for records in iter_trial_records(subject,trial,dataset,source_id,entry['source_file'],sha,guard=guard):
+                        table=pa.Table.from_pylist(records,schema=schema)
+                        if table.nbytes>128*1024**2:raise MemoryError('Frame batch admission exceeded')
+                        guard();writer.write_table(table,row_group_size=512);row_count+=len(records)
+                        frame_passes={}
+                        for record in records:
+                            frame=record['source_frame_index'];frame_passes.setdefault(frame,0)
+                            if record['source_pass_index']>=0:frame_passes[frame]+=1
+                        for count in frame_passes.values():
+                            key=str(count);hist=trial_info['actual_frame_pass_count_histogram'];hist[key]=hist.get(key,0)+1
+                        n=sum(r['source_pass_index']==-1 for r in records);trial_info['frames_written']+=n;trial_info['raw_rows_written']+=n;trial_info['pass_rows_written']+=len(records)-n
+                    if trial_info['frames_written']!=trial_info['source_frames']:raise ValueError('Incomplete frame accounting')
+                    histogram=trial_info['actual_frame_pass_count_histogram']
+                    trial_info['pass_count_assessment']='matches_trial_header' if set(histogram)=={str(trial_info['source_trial_processing_pass_count'])} else 'frame_pass_count_differs_from_trial_header_unassessed'
+                    trial_info['status']='all_source_frames_preserved_unreviewed';save()
+            if digest(path,guard)!=sha:raise ValueError('Source changed during extraction')
+            entry.update(status='source_preserved_unreviewed',rows=row_count,output=str(target.relative_to(output_dir)),output_sha256=digest(target,guard));save()
+        guard(force=True);ledger['status']='all_source_files_preserved_unreviewed';save()
+    except BaseException as error:
+        ledger.update(status='stopped_incomplete',reason=str(error))
+        if isinstance(error,TypeError):ledger['loss_ledger']['unsupported_source_properties'].append(str(error))
+        save();raise
+    return output_dir,None
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Convert AddBiomechanics B3D files to standardized parquet format.',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-    python convert_addbiomechanics_to_parquet.py --dataset Moore2015 --input /data/Moore2015
-    python convert_addbiomechanics_to_parquet.py --dataset Hamner2013 --input /data/Hamner2013 --output-dir ./output
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--dataset',required=True,choices=get_supported_datasets());p.add_argument('--input',type=Path,required=True);p.add_argument('--output-dir',type=Path,required=True);a=p.parse_args()
+    import resource
+    resource.setrlimit(resource.RLIMIT_AS,(768*1024**2,768*1024**2))
+    os.nice(19)
+    import subprocess
+    subprocess.run(['ionice','-c','3','-p',str(os.getpid())],check=True)
+    process_dataset(a.dataset,a.input,a.output_dir)
 
-Supported datasets:
-    Moore2015, Camargo2021, Fregly2012, Hamner2013, Santos2017,
-    Tan2021, Tan2022, vanderZee2022, Wang2023
-        """
-    )
-    parser.add_argument(
-        '--dataset', '-d',
-        required=True,
-        choices=get_supported_datasets(),
-        help='Dataset name to process'
-    )
-    parser.add_argument(
-        '--input', '-i',
-        required=True,
-        type=Path,
-        help='Input directory containing B3D files'
-    )
-    parser.add_argument(
-        '--output-dir', '-o',
-        type=Path,
-        default=Path(__file__).parent.parent.parent.parent / 'converted_datasets',
-        help='Output directory for parquet files (default: converted_datasets/)'
-    )
-
-    args = parser.parse_args()
-
-    if not args.input.exists():
-        print(f"Error: Input directory does not exist: {args.input}")
-        sys.exit(1)
-
-    time_path, phase_path = process_dataset(
-        dataset=args.dataset,
-        input_dir=args.input,
-        output_dir=args.output_dir,
-    )
-
-    if time_path is None and phase_path is None:
-        print("No data processed. Check input directory and B3D files.")
-        sys.exit(1)
-
-    print("\nConversion complete!")
-
-
-if __name__ == '__main__':
-    main()
+if __name__=='__main__':main()
