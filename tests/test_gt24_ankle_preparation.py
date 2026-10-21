@@ -79,3 +79,31 @@ def test_unreviewed_code_shape_rejected():
     source = (ROOT/TOOL.ADAPTER).read_text().replace('ankle_ipsi_rad = resample(ankle_ipsi_deg * deg2rad)', 'ankle_ipsi_rad = changed()')
     with pytest.raises(ValueError, match='source shape changed'):
         TOOL.patch_converter(source)
+
+
+def test_derivatives_follow_corrected_angle_once_without_extra_negation():
+    tree = patched_tree()
+    for side in ('ipsi', 'contra'):
+        for name, function, dependency in [(f'ankle_vel_{side}', 'compute_velocity_from_angle', f'ankle_{side}_rad'), (f'ankle_acc_{side}', 'compute_acceleration_from_velocity', f'ankle_vel_{side}')]:
+            node = next(n for n in ast.walk(tree) if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == name for t in n.targets))
+            assert isinstance(node.value, ast.Call)
+            assert node.value.func.id == function
+            assert isinstance(node.value.args[0], ast.Name)
+            assert node.value.args[0].id == dependency
+
+
+def test_missing_biological_moments_and_structural_ankle_assistance():
+    class FakeNP:
+        nan = float('nan')
+        @staticmethod
+        def zeros(count): return [0.] * count
+        @staticmethod
+        def full(count, value): return [value] * count
+    tree = patched_tree()
+    for side in ('ipsi', 'contra'):
+        node = next(n for n in ast.walk(tree) if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == f'ankle_bio_mom_{side}' for t in n.targets) and isinstance(n.value, ast.Call) and isinstance(n.value.func, ast.Attribute) and n.value.func.attr == 'full')
+        result = eval(compile(ast.Expression(node.value), '<synthetic missing biological>', 'eval'), {'np': FakeNP, 'NUM_POINTS': 3})
+        assert all(math.isnan(x) for x in result)
+    for state in ['no_exo', 'powered', 'worn_unpowered', 'unknown']:
+        result = assignment_value(tree, 'ankle_assist_ipsi', {'np': FakeNP, 'NUM_POINTS': 3, 'exo_state': state})
+        assert result == [0.] * 3 if state == 'no_exo' else all(math.isnan(x) for x in result)

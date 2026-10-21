@@ -150,11 +150,12 @@
       "moment_filt": "Joint_Moments_Filt.csv",
       "moment_filt_bio": "Bio_Joint_Moments.csv",
       "velocity": "Joint_Velocities.csv",
-      "power": "Net_Joint_Powers.csv",
+      "power": "Net_Joint_Power.csv",
       "power_bio": "Bio_Joint_Power.csv"
     },
     "alignment_caution": "Parsed recordings have conditions split and transitions removed. Never compare the first N rows directly or assume identical trial names. Match known source trial/condition provenance and time intervals; if bounded streaming cannot locate the segment within the admission budget, report alignment deferred instead of raising limits or guessing an offset.",
-    "segment_dependency_review": "process_stride derives foot/thigh/shank segments independently from virtual IMU inputs. The helpers do not read ankle_ipsi_rad, ankle_contra_rad or the source angle_df. Their internal gyro-integrated ankle_angle variable is a different quantity. All helper ASTs are preserved; no segment flip is warranted by this coordinate correction."
+    "segment_dependency_review": "process_stride derives foot/thigh/shank segments independently from virtual IMU inputs. The helpers do not read ankle_ipsi_rad, ankle_contra_rad or the source angle_df. Their internal gyro-integrated ankle_angle variable is a different quantity. All helper ASTs are preserved; no segment flip is warranted by this coordinate correction.",
+    "native_filename_discrepancy": "README says Net_Joint_Powers.csv, but exact central-directory members in both released archives are Net_Joint_Power.csv. Use the singular member; data correspondence still requires the bounded clock/value check."
   },
   "changes_applied": "Evidence only. No converter, frozen queue binding or scientific output changed."
 }
