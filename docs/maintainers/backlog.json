@@ -45,12 +45,12 @@
     {
       "dataset": "GT23",
       "state": "AB01 correction and AB03 native pilot queued",
-      "remaining": "AB03 must verify the publisher mass of 113.5 kg against its actual native output. Full source-window reconstruction and anatomical signs remain unverified."
+      "remaining": "All 488 recordings and 787 parsing files remain in scope. Source preservation and twelve-signal kinematics checks are implemented. AB01/AB03 actual pilots, full rebuild, event validity and anatomical directions remain unverified."
     },
     {
       "dataset": "GT25",
       "state": "Four-family correction and source-preservation pilots queued",
-      "remaining": "Full 676-record coverage requires actual v5 pilot results. Three source-preservation pilots cover the noncyclic families; all 192 such recordings still need production and readback."
+      "remaining": "All 676 records remain in scope. The full coordinator requires actual v5 and source-companion pilots. Three of 69 publisher event-file candidates have been retrieved, but event values and clocks remain unchecked; 123 records have no exact event-file match."
     },
     {
       "dataset": "Gait120",
@@ -430,22 +430,26 @@
       "id": "GT23-01",
       "dataset": "GT23",
       "priority": "P1",
-      "title": "Complete full source-window reconstruction and explicit exclusions",
+      "title": "Rebuild all GT23 recordings and account for every parsing file",
       "evidence_paths": [
-        "converted_datasets/reconversion_v2/metadata_serial_queue_20261021/plan.json"
+        "docs/quality/audits/gt23-full-source-scope.json",
+        "contributor_tools/preserve_gt23_full_source_channels.py",
+        "contributor_tools/audit_gt23_raw_kinematics.py"
       ],
       "group": "dataset",
       "acceptance": [
-        "All787 planned windows have outputs or reasoned exclusions",
-        "Full time/phase output readback and unique observation IDs; restoration counts reconciled by task",
-        "Deferred oversized files stay visible; no admission-limit bypass"
+        "Preserve all ten publisher CSV channels for all 488 recordings, including 85 without parsing entries.",
+        "Account for all 787 parsing files with source-backed event counts, outputs or explicit unresolved dispositions; 787 is not a gait-cycle count.",
+        "Independently check time and phase outputs against source values, timestamps, physical sides and participant masses.",
+        "Resolve anatomical and event-validation gaps; preserved aliases and missing canonical values are not scientific completion.",
+        "Keep oversized inputs visible and use bounded processing without bypassing admission limits."
       ],
       "prerequisites": [
         "primary queue predecessors"
       ],
       "lane": "serial-heavy",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Open; see prerequisites"
+      "status": "Full runner and independent source checks tested; actual pilots pending"
     },
     {
       "id": "GT23-02",
@@ -454,7 +458,8 @@
       "title": "Establish source frame and event semantics for 19 activities",
       "evidence_paths": [
         "contributor_tools/conversion_scripts/Gtech_2023",
-        "docs/quality/audits/gtech23-source-probe.json"
+        "docs/quality/audits/gtech23-source-probe.json",
+        "docs/quality/audits/gt23-joint-sign-and-segment-evidence.json"
       ],
       "group": "dataset",
       "acceptance": [
@@ -465,7 +470,8 @@
       "prerequisites": [],
       "lane": "parallel-safe",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Open; see prerequisites"
+      "status": "Open; see prerequisites",
+      "progress_note": "Publisher plotting conventions support a candidate sagittal sign recipe. Raw-to-segmented correspondence and locally generated Euler-angle anatomy remain unverified; supplied velocities have conflicting publisher descriptions of their differentiation method."
     },
     {
       "id": "GT25-01",
@@ -499,7 +505,8 @@
       "priority": "P1",
       "title": "Run complete admitted batch and independent source audit",
       "evidence_paths": [
-        "contributor_tools/run_gt25_batch.py"
+        "contributor_tools/run_gt25_full_restoration_v5.py",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
       ],
       "group": "dataset",
       "acceptance": [
@@ -512,7 +519,8 @@
       ],
       "lane": "serial-heavy",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Open; see prerequisites"
+      "status": "Full-scope coordinator tested; actual pilot results and rebuild pending",
+      "progress_note": "The coordinator accounts for 450 regular, 34 streaming and 192 source-only recordings. It requires actual pilot results and independent source checks; no full run has started."
     },
     {
       "id": "GAIT120-01",
@@ -856,7 +864,7 @@
       "prerequisites": [],
       "lane": "source correction; serial reconstruction",
       "owner": "GT25 reviewer and coordinator",
-      "status": "Ankle correction tested; v4 source comparison and full rebuild pending",
+      "status": "V5 correction pilots queued; actual source comparison and full rebuild pending",
       "progress_note": "Converter and audit kept ankle_angle positive under dorsiflexion names, contradicting the pinned source README."
     },
     {
@@ -882,6 +890,40 @@
         "Unrelated work including StrokePiG is restored",
         "One scientific worker at a time; original resource guards retained"
       ]
+    },
+    {
+      "id": "GT25-04",
+      "dataset": "GT25",
+      "priority": "P1",
+      "title": "Validate publisher events for source-only recordings",
+      "status": "Three original event files retrieved and byte-checked; contents unparsed",
+      "group": "dataset",
+      "owner": "GT25 source reviewer; coordinator owns numerical execution",
+      "lane": "source review; serial numerical validation",
+      "prerequisites": [
+        "Safe host memory and exclusive numerical slot"
+      ],
+      "evidence_paths": [
+        "docs/quality/audits/gt25-author-event-source-review.json",
+        "docs/quality/audits/gt25-author-event-acquisition.json"
+      ],
+      "acceptance": [
+        "Validate the first three original parsing files against source clocks, preserving physical side and optional event types.",
+        "Reconcile all 69 exact publisher event-file candidates; filenames alone do not prove usable or gait-cycle events.",
+        "Retain all 123 recordings without exact event-file matches and establish defensible continuous observations without invented cycles.",
+        "Keep moment denominators, interaction units and anatomical directions explicit until independently resolved."
+      ]
     }
-  ]
+  ],
+  "recent_source_review": {
+    "checked_at_utc": "2026-10-21T07:17:38.138333+00:00",
+    "scope": [
+      "GT23-01",
+      "GT23-02",
+      "GT25-02",
+      "GT25-03",
+      "GT25-04"
+    ],
+    "notice": "Targeted source-review update; the other dataset rows retain their earlier snapshot."
+  }
 }
