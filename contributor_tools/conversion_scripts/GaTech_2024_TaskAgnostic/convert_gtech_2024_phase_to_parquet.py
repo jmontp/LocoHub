@@ -1393,7 +1393,7 @@ def process_trial(
                 subject_mass=subject_mass,
                 task=task,
                 task_id=task_id,
-                task_info=task_info,
+                task_info={**task_info, 'segmentation_candidate_count': seg.metadata.get('candidate_count', 1)},
                 step_num=step_num,
                 leg_side='l',
                 collection_phase=collection_phase,

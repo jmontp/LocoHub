@@ -60,7 +60,7 @@ def windows(events, file, incline):
             yield {'side':side,'start':int(start),'end':int(end),'task':task,'label':label,'info':info}
 
 
-def cycle_frame(trial, subject, condition, window):
+def cycle_frame(trial, subject, condition, window, mode='Tread'):
     import numpy as np
     import pandas as pd
     start,end=window['start'],window['end']
@@ -68,7 +68,7 @@ def cycle_frame(trial, subject, condition, window):
         raise ValueError('Source frame interval is invalid or exceeds 4096-sample admission limit')
     duration=(end-start)/RATE_HZ
     times=np.linspace(0,duration,150)
-    recording=f'um21:Streaming/{subject}/Tread/{condition}'
+    recording=f'um21:Streaming/{subject}/{mode}/{condition}'
     identity=f'{recording}:{window["side"]}:frames:{start}:{end}'
     fields={'subject':f'UM21_{subject}','source_recording_id':recording,'observation_id':identity,
             'reference_side':window['side'],'observation_type':'individual_cycle','task':window['task'],

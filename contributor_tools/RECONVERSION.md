@@ -868,3 +868,52 @@ The initial false flags are retained with a superseded explanation, and the
 corrected check finds no unsupported speed family in the local mapped inventory.
 Local jump labels use `90-f`/`90-s`, so a suspected numeric-set/speed collision does
 not occur in this inventory.
+
+
+### UM21 all available running trials: reconstruction started
+
+The original R01 README documents Run heel-strike indices in 100 Hz frames and
+100 Hz joint angles/forces/moments/powers, with units deg, N/kg, Nm/kg and W/kg.
+`reconvert_umich_running.py` reconstructs every available Run trial using both
+anatomical event streams, verifies source stride durations against successive heel
+strikes, and retains all 84 original components with a per-file source-column map.
+It labels protocol maximum speed, not a measured constant speed. Canonical
+hip/knee channels retain the established source mapping; source kinetic components
+are not presented as verified canonical frames/signs. Ankle canonical values
+remain withheld. Forceplates, markers and non-running tasks remain separate work.
+
+The inventory contains 30 Run trials across all ten subjects, not an assumed
+four-per-subject total. The full reconstruction is running at
+`um21_running_full_20261020`, under a 768 MiB address-space limit, one numerical
+thread, recording-boundary headroom checks and low priority. Full source readback
+has a dedicated independent probe and remains pending until reconstruction ends.
+The source helper now accepts an explicit mode for recording identity, preserving
+its existing Tread default and preventing Run/Tread identity collisions.
+
+### GT24 stopped queue and duplicate interval correction
+
+The original GT24 queue stopped at 484 of 752 Phase3 recordings after three
+consecutive schema failures. All downstream dispatchers correctly stopped without
+launching. Across all five quarantined lunge recordings, six source intervals had
+been emitted twice: each repeated observation contained 300 instead of 150 rows.
+Exact comparisons confirm that both copies contain identical values.
+
+The shared standing-action segmenter now counts identical non-flight intervals
+once before IQR filtering. Multiple velocity bursts can expand to the same stable
+standing boundaries; their candidate count is retained in segment metadata and
+GT24 task metadata. Flight events are unaffected. Regression fixtures cover both
+multiple bursts inside one interval and distinct intervals separated by stable
+standing. Original-signal replay for all five failures removes duplicates while
+preserving every unique boundary; recomputed IQR filtering changes no other
+interval in these recordings.
+
+`gt24_unique_intervals_pilot_20261020` regenerates all five affected recordings.
+All 83 unique observations (12,450 rows) pass schema checks. Exactly 900 duplicate
+rows are removed, and every retained value is identical to the quarantined output
+except the added candidate-count metadata. UM21 was paused during these five
+short workers and resumed in a finally block. The older outputs are preserved.
+
+The shared-code fix requires fresh reconstruction fingerprints and a restarted
+queue; GT21/Gait120/GT23 waiting dispatchers are terminal, not active jobs. Full
+GT24 reconstruction, the 869 task omissions and scientific boundary validation
+remain open. Software validation: 210 passed, 2 skipped.
