@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T23:15:07.216169-04:00",
-  "recorded_at": "2026-10-21T03:15:37.510185+00:00",
-  "base_revision": "e75952841a21015dff9de4c6f1169c742866e3d1",
+  "started_at": "2026-10-20T23:25:33.105133-04:00",
+  "recorded_at": "2026-10-21T03:26:04.311579+00:00",
+  "base_revision": "ef3e8867a4d6600e6efc99bf52f8720e4da572fd",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "2524e925e378a9e0a1f93715882f262b2e36db923aca5099ea05e9cc0ddbe7a1",
+  "junit_sha256": "0b32da513a2c69a19776515bf21303c2eecfe3f8e501349a34df119cd24949ab",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -651,6 +651,41 @@
         },
         {
           "name": "test_native_source_compression_roundtrips_exactly",
+          "status": "passed"
+        }
+      ]
+    },
+    "tests.test_gt21_numeric_source": {
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_known_numeric_columns_preserve_values_and_missingness",
+          "status": "passed"
+        },
+        {
+          "name": "test_unsupported_layout_is_rejected[metadata]",
+          "status": "passed"
+        },
+        {
+          "name": "test_unsupported_layout_is_rejected[names]",
+          "status": "passed"
+        },
+        {
+          "name": "test_unsupported_layout_is_rejected[dtype]",
+          "status": "passed"
+        },
+        {
+          "name": "test_unsupported_layout_is_rejected[clock]",
+          "status": "passed"
+        },
+        {
+          "name": "test_unsupported_layout_is_rejected[rows]",
+          "status": "passed"
+        },
+        {
+          "name": "test_ordinary_mat_and_oversized_inputs_are_not_admitted",
           "status": "passed"
         }
       ]
@@ -1372,7 +1407,7 @@
     }
   },
   "totals": {
-    "passed": 273,
+    "passed": 280,
     "failed": 0,
     "skipped": 2
   }
