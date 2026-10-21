@@ -1,0 +1,23 @@
+{
+  "status": "combined_force_and_COP_correction_not_yet_produced",
+  "existing_pilot_scopes": {
+    "force_pilot_v2": "Global horizontal force label correction on original native outputs; separate frozen plan.",
+    "COP_metadata_pilot_v2": "Metadata-only demonstration on the same original native outputs. Does not include the force correction and must not replace a force-corrected artifact."
+  },
+  "integration_gate": "Executable successor support is prepared in contributor_tools/chain_gt23_cop_metadata.py. Its prepare command requires an existing completed force report, actual matching corrected.parquet bytes, verified original native lineage and pinned producing tools. Its run command validates force aliases, withheld columns and force metadata before applying the pinned metadata-only COP helper.",
+  "required_completed_evidence": [
+    "An actual correction_readback.json with status global_force_labels_corrected_source_preserved_unreviewed; bind the report file SHA256.",
+    "Verify the actual corrected.parquet SHA256 equals that report's output_sha256; never fill this field from a planned path or anticipated output.",
+    "Verify every original input, producing-run manifest, driver, source converter and tool binding in the completed force report.",
+    "Re-establish the native producer through the pinned time/phase lineage validator; require agreement with actual_producing_converter in the completed force report.",
+    "Prepare a new immutable COP successor plan whose input is that verified force-corrected Parquet, whose chain receipt retains the original native output hash, and whose output is fresh."
+  ],
+  "successor_acceptance": [
+    "All force-corrected numerical arrays, source aliases, null masks, valid floating-point bits and schema metadata remain unchanged after COP metadata annotation.",
+    "Existing gt23_force_frame metadata remains unchanged and gt23_cop_frame is added without conflicts.",
+    "Final combined receipt records the verified force receipt through plan bindings, both tool versions, the original producing converter and intermediate/output hashes.",
+    "Only after this chained readback passes may the artifact be described as containing both fixes. Scientific approval of anatomical axes and joint signs remains separate."
+  ],
+  "execution": "Builder and worker are prepared, not executed on scientific data. Coordinator reran all 10 tests successfully, including the persisted Arrow composition check.",
+  "successor_tool": "contributor_tools/chain_gt23_cop_metadata.py"
+}
