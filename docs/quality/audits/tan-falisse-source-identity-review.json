@@ -220,7 +220,18 @@
       "contributor_tools/conversion_scripts/AddBiomechanics/raw_data"
     ],
     "not_a_global_absence_claim": true,
-    "provenance_loss_risk": "Historical extraction flattened B3D files then deleted nested directories. Basenames may lose original subject/source path identity; recover manifests before reacquisition."
+    "provenance_loss_risk": "Historical extraction flattened B3D files then deleted nested directories. Basenames may lose original subject/source path identity; recover manifests before reacquisition.",
+    "extraction_correction": {
+      "status": "implemented_not_run_on_original_archives",
+      "behavior": "One explicit archive per fresh output, original nested paths and metadata retained, per-member hashes and byte readback recorded. No source deletion or basename flattening. Inspection is the default; --run requires memory and disk admission.",
+      "bindings": {
+        "contributor_tools/conversion_scripts/AddBiomechanics/extract_biomechanics_dataset.sh": "28ee76f3e503468f5a2da9c632123e5eda828445967de820c6f1af408b6dd505",
+        "contributor_tools/conversion_scripts/AddBiomechanics/extract_source_archive.py": "6c360853b5e16f3577f1ab71f458e4d093a0c29bfbb52534ff99deacab863b7c"
+      },
+      "tests": "tests/test_addbiomechanics_archive_identity.py",
+      "tests_passed": 7,
+      "remaining": "Cannot recover identity already lost by historical extraction. Original archives or an independent recording crosswalk remain necessary."
+    }
   },
   "local_bindings": [
     {
@@ -246,7 +257,8 @@
     },
     {
       "path": "contributor_tools/conversion_scripts/AddBiomechanics/extract_biomechanics_dataset.sh",
-      "sha256": "cad1f1f50ef8b0744b68394439d8fbf8e2c4c3e0c157f27781929f2c57220984"
+      "sha256": "cad1f1f50ef8b0744b68394439d8fbf8e2c4c3e0c157f27781929f2c57220984",
+      "binding_scope": "Historical flatten-and-delete script at initial review; superseded by path-preserving extraction below."
     }
   ],
   "web_metadata_receipts": [
