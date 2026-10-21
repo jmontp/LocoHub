@@ -1,0 +1,46 @@
+{
+  "scientific_approval": false,
+  "coverage_report_sha256": "43a4aaf0cdcd90b83232dce4142e157bf464c29161e74dded1862c87004ce66d",
+  "recordings_checked": 36,
+  "source_pair_counts": {
+    "outside_complete_eligible_task_window": 616,
+    "opposite_reference_leg_not_exported": 798,
+    "exported": 856
+  },
+  "limitations": [
+    "Completed overground/treadmill subset only; ramps, stairs and unfinished records remain open",
+    "Explains current converter policy, not approval of excluded opposite-leg observations",
+    "Task-window eligibility uses current label/speed windows and sample thresholds; scientific validity remains unverified"
+  ],
+  "force_mapping_review": {
+    "status": "unresolved",
+    "findings": [
+      "Converter can swap non-treadmill ipsilateral/contralateral force assignments using early-stance and late-swing force thresholds",
+      "Converter and helper optimize COP/anterior force signs against inverse-dynamics ankle moment rather than deriving a fixed documented coordinate transform",
+      "Native comparison tables currently omit force-plate and marker sources, so completed readback does not verify GRF or COP"
+    ],
+    "source_processing_evidence": [
+      {
+        "path": "contributor_tools/conversion_scripts/Gtech_2021/convert_gtech_2021_phase_to_parquet.m",
+        "sha256": "a4c590076bc1eefb4d9ae8ca2ff710bf91059dc8bcc2732ac39d48f3edfd2eaf"
+      },
+      {
+        "path": "contributor_tools/conversion_scripts/Gtech_2021/utilities/gtech_compute_grf_cop_stride.m",
+        "sha256": "80b8ae8c2c7dfa2f4127af6693f8390d243bf6a84efa01605bcdd327cc3e98bc"
+      },
+      {
+        "path": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/RUN_OSIM.m",
+        "sha256": "85757146c32101f6db63fb3560b6fca0a6c205480f50be89935467cd1873bbe1"
+      },
+      {
+        "path": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/lib/RampID.m",
+        "sha256": "b57d45505964354865e0098cb7d3609ef30e67187874debb17ff0306557b4cae"
+      },
+      {
+        "path": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Osim/correlateForcePlates.m",
+        "sha256": "90f33006319b111e00ace1ef8a6b0276232e17ac81b35ee5317b44215cd22769"
+      }
+    ],
+    "next_action": "Export original force and marker tables; use source geometry and documented axes to establish contact and signs, then remove waveform-based optimization before approval."
+  }
+}
