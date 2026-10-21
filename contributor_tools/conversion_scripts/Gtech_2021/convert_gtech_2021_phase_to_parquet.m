@@ -70,7 +70,7 @@ if ~isempty(fieldnames(options))
     parquetwrite(options.output_path, expanded);
     % Export original source tables for independent bounded Python comparisons.
     evidence_dir = fileparts(options.output_path);
-    for channel = {'ik_offset','id','gcLeft','gcRight'}
+    for channel = {'conditions','ik_offset','id','gcLeft','gcRight'}
         source_file = fullfile(date_path, options.mode, channel{1}, options.recording);
         if ~isfile(source_file), continue; end
         original = load(source_file);
@@ -385,18 +385,20 @@ function [rows, trial_count] = process_levelground(date_path, subject_str, subje
             continue;
         end
 
-        % Determine speed from filename (using paper-reported values)
+        % Filename supplies a speed category, not a measured trial speed.
         if contains(trial_name, 'slow')
-            speed_val = 0.88;  % Paper: 0.88 ± 0.19 m/s
+            speed_category = 'slow';
         elseif contains(trial_name, 'fast')
-            speed_val = 1.45;  % Paper: 1.45 ± 0.27 m/s
+            speed_category = 'fast';
+        elseif contains(trial_name, 'normal')
+            speed_category = 'normal';
         else
-            speed_val = 1.17;  % normal - Paper: 1.17 ± 0.21 m/s
+            speed_category = 'unknown';
         end
 
-        processed = false;
-        if isfield(trial_data, 'conditions') && istable(trial_data.conditions) && ...
-           any(strcmp(trial_data.conditions.Properties.VariableNames, 'Label'))
+        has_labels = isfield(trial_data, 'conditions') && istable(trial_data.conditions) && ...
+            any(strcmp(trial_data.conditions.Properties.VariableNames, 'Label'));
+        if has_labels
             labels = trial_data.conditions.Label;
             header = trial_data.conditions.Header;
             target_labels = {'walk', 'turnccw', 'turncw', 'stand-walk', 'walk-stand'};
@@ -411,7 +413,7 @@ function [rows, trial_count] = process_levelground(date_path, subject_str, subje
                 for seg_idx = 1:size(segments, 1)
                     time_start = segments(seg_idx, 1);
                     time_end = segments(seg_idx, 2);
-                    [task, task_id, task_info] = map_levelground_label(label_name, speed_val);
+                    [task, task_id, task_info] = map_levelground_label(label_name, speed_category);
                     if isempty(task)
                         continue;
                     end
@@ -421,17 +423,16 @@ function [rows, trial_count] = process_levelground(date_path, subject_str, subje
 
                     if ~isempty(stride_rows)
                         rows = [rows; stride_rows];
-                        processed = true;
                     end
                 end
             end
         end
 
-        % Fallback: treat entire trial as level walking if no labeled segments were processed
-        if ~processed && isfield(trial_data, 'ik_offset') && istable(trial_data.ik_offset)
+        % Only missing label tables permit an explicitly unverified fallback.
+        if ~has_labels && isfield(trial_data, 'ik_offset') && istable(trial_data.ik_offset)
             time_start = trial_data.ik_offset.Header(1);
             time_end = trial_data.ik_offset.Header(end);
-            task_info = sprintf('speed_m_s:%.2f,surface:overground,labels_missing:true', speed_val);
+            task_info = sprintf('speed_category:%s,speed_source:filename,surface:overground,labels_missing:true', speed_category);
             stride_rows = extract_and_process_strides(trial_data, time_start, time_end, ...
                 subject_str, subject_metadata, 'level_walking', 'level', task_info, subject_mass, 'levelground');
 
@@ -691,13 +692,13 @@ function segments = get_label_segments(labels, header, target_label, min_samples
     segments = segments(durations > 0.05, :);  % minimum meaningful duration
 end
 
-function [task, task_id, task_info] = map_levelground_label(label_name, speed_val)
+function [task, task_id, task_info] = map_levelground_label(label_name, speed_category)
     % Map level ground labels to standardized task metadata
     task = '';
     task_id = '';
     task_info = '';
 
-    base_info = sprintf('speed_m_s:%.2f,surface:overground', speed_val);
+    base_info = sprintf('speed_category:%s,speed_source:filename,surface:overground', speed_category);
 
     switch label_name
         case 'walk'
