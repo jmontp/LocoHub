@@ -11,6 +11,7 @@ clear all;
 close all;
 
 addpath('utilities');
+addpath(fullfile(fileparts(mfilename('fullpath')), '..', 'matlab_common'));
 
 DATA_ROOT = 'CAMARGO_ET_AL_J_BIOMECH_DATASET';
 OUTPUT_DIR = fullfile('..', '..', '..', 'converted_datasets');
@@ -587,6 +588,11 @@ function rows = extract_and_process_time_window(trial_data, time_start, time_end
     rows.step = repmat(step_id, n_samples, 1);
     rows.time_s = time_s;
     rows.assistance_active = false(n_samples, 1);
+    rows = locohub_add_provenance(rows, trial_data.source_recording_id, ...
+        sprintf('window:%.17g:%.17g', target_time(1), target_time(end)), first_leg, ...
+        'continuous_recording', target_time(1), target_time(end));
+    rows.step = rows.observation_id;
+
 
     rows.hip_flexion_angle_ipsi_rad = hip_ipsi;
     rows.hip_flexion_angle_contra_rad = hip_contra;
@@ -867,6 +873,10 @@ end
 
 function trial_data = load_trial_data(mode_path, trial_name)
     trial_data = struct();
+    [date_path, source_mode] = fileparts(mode_path);
+    [subject_path, source_date] = fileparts(date_path);
+    [~, source_subject] = fileparts(subject_path);
+    trial_data.source_recording_id = sprintf('gt21:%s/%s/%s/%s', source_subject, source_date, source_mode, trial_name);
 
     try
         cond_file = fullfile(mode_path, 'conditions', trial_name);

@@ -1,92 +1,44 @@
-<!-- removed homepage title hiding and hero styles -->
-
 # LocoHub
 
-Researchers collect locomotion datasets with different sampling schemes, variable names, and metadata conventions, which makes cross-study analysis slow and error-prone. Manually processing each dataset typically takes hours per person and often requires extra post-processing to repair data issues and align conventions, and folks without a biomechanics background often lack the knowledge to even start that cleanup. LocoHub standardizes these independent datasets into a shared schema, percent-normalized gait cycles, and validated metadata so you can compare studies, reproduce analyses, and build new models without reformatting everything from scratch. Standardized biomechanical datasets and simple tools to load, filter, and analyze them in Python and MATLAB.
+Find locomotion data, understand how it was processed, and inspect the evidence for using it in your research. LocoHub standardizes files and records quality checks so researchers can work directly in Python, MATLAB, or another environment that reads Parquet.
 
-## What the data looks like
+[Find a dataset](datasets/index.md){ .md-button .md-button--primary }
+[Try a small example](tutorials/index.md){ .md-button }
+[Read the data contract](reference/index.md){ .md-button }
 
-Each row is one point in a percent‑normalized gait cycle (typically 150 samples from 0–100%). Columns include subject/task metadata and standardized biomechanical variables.
+## Choose data for your question
 
-| subject | subject_metadata            | task           | task_id               | task_info                        | step | phase_ipsi | knee_flexion_angle_ipsi_rad | hip_flexion_moment_ipsi_Nm_kg |
-|---------|-----------------------------|----------------|-----------------------|-----------------------------------|------|------------|-----------------------------|------------------------------|
-| UM21_AB01  | age:25,sex:M,height_m:1.75 | level_walking  | level_walking_normal  | speed_m_s:1.2,incline_deg:0      | 1    | 0.00       | 0.524                       | 0.85                         |
-| UM21_AB01  | age:25,sex:M,height_m:1.75 | level_walking  | level_walking_normal  | speed_m_s:1.2,incline_deg:0      | 1    | 0.67       | 0.531                       | 0.82                         |
-| UM21_AB01  | age:25,sex:M,height_m:1.75 | level_walking  | level_walking_normal  | speed_m_s:1.2,incline_deg:0      | 1    | 1.33       | 0.559                       | 0.81                         |
-| UM21_AB01  | age:25,sex:M,height_m:1.75 | level_walking  | level_walking_normal  | speed_m_s:1.2,incline_deg:0      | 1    | 2.00       | 0.576                       | 0.80                         |
-| …          | …                           | …              | …                     | …                                 | …    | …          | …                           | …                            |
-| UM21_AB01  | age:25,sex:M,height_m:1.75 | level_walking  | level_walking_normal  | speed_m_s:1.2,incline_deg:0      | 1    | 99.33      | 0.507                       | 0.80                         |
+1. **Match the study.** Check participants, tasks, assistance conditions, and whether the needed signals were measured or derived.
+2. **Inspect the exact artifact.** Review its release identifier, source provenance, available signals, quality results, and documented limitations.
+3. **Choose full or filtered data.** Full converted data preserves converted observations. Profile-filtered data selects observations using named rules; inspect exclusions before using it.
+4. **Load the file natively.** Use pandas `read_parquet`, MATLAB `parquetread`, or your preferred Parquet reader.
 
-- Metadata columns: `subject`, optional `subject_metadata`, `task`, `task_id`, `task_info`, `step`, and `phase_ipsi`.
-- Variable columns follow the naming convention `joint_motion_side_unit` (e.g., `knee_flexion_angle_ipsi_rad`, `hip_flexion_moment_ipsi_Nm_kg`).
+!!! warning "Existing catalog entries are legacy / unreviewed"
+    Historical downloads and reports remain available. They have not been approved under the current release contract. A legacy “clean” label or high pass rate does not establish data quality, population suitability, or compatibility between studies.
 
-### More details and definitions
+## Read quality results precisely
 
-- [Reference](reference/index.md)
+| Result | Meaning |
+|--------|---------|
+| Passed | The applicable check ran and its criterion was met. |
+| Failed | The applicable check ran and its criterion was not met. |
+| Missing | A required signal or value was unavailable. |
+| Unchecked | No applicable check was run. |
+| Invalid | Structural problems prevent a trustworthy observation or check. |
 
+Structural integrity, signal availability, and conformance to a biomechanical profile answer different questions. Rules may depend on the population and protocol. A profile pass rate describes the checks that ran; it is not a score for the scientific value of a dataset.
 
-## Quickstart
+## What is in a file?
 
-=== "Using Raw Data"
+Each row contains a sample, observation identifiers, task metadata, and available biomechanical signals. A phase observation has 150 points over 0–100%; a time export retains sampling times. Individual cycles, ensemble curves, continuous recordings, and transfers are identified explicitly.
 
-    === "Python"
-    ```python
-    import pandas as pd
+The [reference](reference/index.md) defines identity, units, observation types, and the evidence accompanying a release. The [tutorial](tutorials/index.md) uses the same small, complete fixture in Python and MATLAB.
 
-    # Load phase-indexed parquet directly
-    df = pd.read_parquet('umich_2021_phase.parquet')
+## Contribute and maintain
 
-    # Filter to a subject + task of interest
-    subset = df[(df['task'] == 'level_walking') & (df['subject'] == 'UM21_AB01')]
-
-    # Access normalized phase and a variable
-    phase = subset['phase_ipsi'].to_numpy()
-    knee = subset['knee_flexion_angle_ipsi_rad'].to_numpy()
-    ```
-
-    === "MATLAB"
-    ```matlab
-    % Load phase-indexed parquet directly (R2021b+)
-    T = parquetread('umich_2021_phase.parquet');
-
-    % Filter to a subject + task of interest
-    subset = T(T.task == "level_walking" & T.subject == "UM21_AB01", :);
-
-    % Access normalized phase and a variable
-    phase = subset.phase_ipsi;
-    knee  = subset.knee_flexion_angle_ipsi_rad;
-    ```
-
-=== "Using Library"
-
-    === "Python"
-    ```python
-    from locohub import LocomotionData
-
-    data = LocomotionData('umich_2021_phase.parquet')
-    subset = data.filter(task='level_walking', subjects=['UM21_AB01'])
-    cycles, features = subset.get_cycles('UM21_AB01', 'level_walking')
-    ```
-
-    === "MATLAB"
-    ```matlab
-    addpath('libs/matlab');
-    loco = LocomotionData('umich_2021_phase.parquet');
-    level = loco.filterTask('level_walking').filterSubject('UM21_AB01');
-    [cycles, features] = level.getCycles('UM21_AB01', 'level_walking');
-    ```
-
-<!-- Removed trust indicators for a simpler, utilitarian homepage -->
-
-## Download Datasets
-
-See the [Datasets](datasets/index.md) page for available datasets, documentation, and download links.
-
-## Learn and Contribute
-
-- Tutorials: [Start here](tutorials/index.md)
-- API: [Overview](api/api-index.md)
-- Contribute data: [Guide](contributing/index.md)
+- [Contribute a dataset](contributing/index.md): convert, diagnose, document provenance, and build a reviewable release.
+- [Review a release](maintainers/index.md): reconcile data, exclusions, profiles, and source evidence.
+- [Former API users](api/api-index.md): move analysis to native data tools.
 
 ## Funding
 

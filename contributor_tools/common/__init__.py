@@ -53,9 +53,14 @@ from .force_plate import (
     resample_to_phase,
 )
 
-# Submodules available as contributor_tools.common.validation and contributor_tools.common.plotting
-from . import validation
-from . import plotting
+def __getattr__(name):
+    if name in {"validation", "plotting"}:
+        import importlib
+        module = importlib.import_module(f"{__name__}.{name}")
+        globals()[name] = module
+        return module
+    raise AttributeError(name)
+
 
 __all__ = [
     # phase_detection

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Reading Fukuchi walking data · LocoHub</title><link rel="stylesheet" href="../../stylesheets/site.css"></head>
+<body><header class="site-header"><div class="header-inner"><a class="wordmark" href="../../index.html">LocoHub</a></div></header><main class="page-content" id="main">
+<nav><a href="index.html">Fukuchi walking</a> · <a href="coverage.html">Participant coverage</a> · <a href="full-admission.html">Remaining checks</a></nav>
+<h1>Reading the walking averages</h1>
+<p><strong>Only the small pilot has passed source checks.</strong> This guide describes the prepared full conversion; it does not announce a full dataset download.</p>
+<table><thead><tr><th>What you select</th><th>What you get</th></tr></thead><tbody>
+<tr><td>Participant + condition + leg</td><td>One average curve supplied by the authors. It is not one stride.</td></tr>
+<tr><td>Phase</td><td>150 points from 0% through 100%, linearly interpolated from 101 source points. More points do not add measured detail.</td></tr>
+<tr><td>Right leg</td><td>Original components and six named sagittal angle/moment signals, using the author's right-leg labels.</td></tr>
+<tr><td>Left leg</td><td>Original components. Named anatomical signals remain unavailable until their directions are verified.</td></tr>
+<tr><td>A missing condition</td><td>No observation. Coverage differs between participants; no missing curve is filled in.</td></tr>
+</tbody></table>
+<h2>Units and directions</h2>
+<p>Columns beginning with <code>source_</code> retain the author's component name and units. Their values are interpolated onto the export grid; the acquired source text remains the evidence for the original 101 points. X, Y and Z are source components, not automatic labels for forward, sideways or up.</p>
+<table><thead><tr><th>Quantity</th><th>Source columns</th><th>Named right-leg columns</th></tr></thead><tbody>
+<tr><td>Angles</td><td>Degrees, for example <code>source_RHipAngleZ_deg</code></td><td>Radians; hip flexion, knee flexion and ankle dorsiflexion are positive. The preview displays degrees.</td></tr>
+<tr><td>Moments</td><td>Nm/kg, for example <code>source_RKneeMomentZ_Nm_kg</code></td><td>Nm/kg; hip uses the source sign. Knee and ankle reverse the source sign to express flexion and dorsiflexion.</td></tr>
+<tr><td>Ground reaction forces</td><td>N/kg, for example <code>source_RGRFY_N_kg</code></td><td>Source components only. N/kg is not body weights; do not treat a value of 9.81 N/kg as 9.81 BW.</td></tr>
+</tbody></table>
+<h2>Comparisons these files support</h2>
+<p>Compare participant averages for the same condition, leg and signal. A standard deviation across those averages describes differences between people; it is not stride-to-stride variability within a person. The files do not supply individual stride counts, stride durations or within-person standard deviations.</p>
+<p>Left and right curves each use their own leg's cycle reference. Matching percentages do not establish simultaneous bilateral measurements. Do not subtract them as if they were synchronized samples.</p>
+<p>Overground codes OS, OC and OF mean slow, comfortable and fast. T01–T08 identify treadmill conditions; the prepared outputs do not assign numerical walking speeds. Use verified participant-specific source metadata before making a speed comparison.</p>
+<h2>Source and changes</h2>
+<p>Claudiane A. Fukuchi, Reginaldo K. Fukuchi and Marcos Duarte: <a href="https://doi.org/10.7717/peerj.4640">A public dataset of overground and treadmill walking kinematics and kinetics in healthy individuals</a> (2018). The paper describes 42 participants. The pinned <a href="https://doi.org/10.6084/m9.figshare.5722711.v6">version 6 source</a> contains 51 participants in the reviewed inventory.</p>
+<p>The dataset is <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. LocoHub's prepared changes are table conversion, separate leg-average identities, 101-to-150-point interpolation and the explicit right-leg unit/sign changes above. Source review does not imply endorsement by the authors or validation of every anatomical component.</p>
+</main></body></html>

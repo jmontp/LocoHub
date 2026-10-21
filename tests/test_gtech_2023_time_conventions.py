@@ -67,11 +67,13 @@ def test_grf_axis_map_and_bw_normalization(source):
 
 def test_cop_ankle_frame_and_contact_masking(source):
     # CoP transformed into the local calcn frame: R' * (cop_global - translation).
-    assert "local = pagemtimes(permute(Rn, [2 1 3]), reshape(rel, 3, 1, []));" in source
+    assert "transformed = pagemtimes(permute(Rn, [2 1 3]), reshape(rel, 3, 1, []));" in source
     assert "rel = cop_global - Trn;" in source
-    assert "cop_global = [copx.'; zeros(1, numel(copx)); copz.'];" in source
-    # Vertical CoP forced to zero in the local frame.
-    assert "cop_v_i = zeros(n, 1);" in source
+    # Static wiring check only; native MATLAB execution is a separate gate.
+    assert "copy_name = [LU 'COPY_Vertical'];" in source
+    assert "cop_v_i = zeros(n, 1);" not in source
+    assert "cop_vert = interp1(gt, local_y, target_time, 'linear', NaN);" in source
+    assert "nn = interp1(trans_time, 1:Nt, gt, 'nearest', NaN);" in source
     # CoP masked as missing when unloaded (vertical GRF < 0.2 BW) OR non-physical
     # for the ankle frame (> 0.5 m from the ankle).
     assert "cop_phys_max = 0.5;" in source
@@ -103,20 +105,13 @@ def test_bounded_memory_streaming(source):
     assert "p = ['/mnt/' drive p(3:end)];" in source
 
 
-def test_cop_local_transform_numerically_matches_converter():
-    # local = R' * (cop_global - translation), with vertical forced to zero on input.
+def test_cop_three_dimensional_reference_fixture():
+    # Independent geometric expectation, not execution of the MATLAB converter.
+    # A rotated ankle frame couples measured global Y into local anterior COP.
     rotation = np.array([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
     translation = np.array([0.30, 0.0, 0.10])
-    cop_x, cop_z = 0.45, 0.02
-    cop_global = np.array([cop_x, 0.0, cop_z])
-    cop_local = rotation.T @ (cop_global - translation)
-    # anterior = local x, lateral = local z (vertical set to 0 separately).
-    assert np.isclose(cop_local[0], 0.0)      # (0.02-0.10) rotated -> x component
-    anterior = cop_local[0]
-    lateral = cop_local[2]
-    assert np.isfinite(anterior) and np.isfinite(lateral)
-    # Sanity: ankle-frame CoP stays within foot-length scale for a loaded sample.
-    assert abs(anterior) < 5.0 and abs(lateral) < 5.0
+    cop_global = np.array([0.45, 0.04, 0.02])
+    np.testing.assert_allclose(rotation.T @ (cop_global - translation), [0.04, -0.15, -0.08])
 
 
 def test_grf_normalization_numerically():
@@ -126,6 +121,7 @@ def test_grf_normalization_numerically():
     assert np.isclose(raw_vertical_N / weight_N, 1.1)
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(not CONVERTED.exists(), reason="gtech_2023_time.parquet not generated locally")
 def test_converted_time_dataset_passes_conventions():
     import pandas as pd
@@ -145,6 +141,7 @@ def test_converted_time_dataset_passes_conventions():
     assert np.all(np.abs(cop[np.isfinite(cop)]) < 1.0)
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(not CONVERTED.exists(), reason="gtech_2023_time.parquet not generated locally")
 def test_ankle_follows_standard_segment_chain():
     # ankle_dorsiflexion = foot - shank (dorsiflexion positive). The joint angle

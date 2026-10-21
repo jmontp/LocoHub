@@ -1,0 +1,102 @@
+site_name: LocoHub
+site_description: Locomotion datasets with explicit provenance, quality evidence, and native file access
+site_url: https://jmontp.github.io/LocoHub/
+
+repo_name: jmontp/LocoHub
+repo_url: https://github.com/jmontp/LocoHub
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+  features:
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.top
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/extra.js
+
+plugins:
+  - search
+  - mermaid2
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:mermaid2.fence_mermaid_custom
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - admonition
+  - pymdownx.details
+  - pymdownx.snippets:
+      base_path:
+        - docs
+      check_paths: true
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+
+nav:
+  - LocoHub: index.md
+  - Datasets:
+      - Catalog: datasets/index.md
+      - Compare coverage: datasets/comparison.md
+  - Read Data: tutorials/index.md
+  - Contribute: contributing/index.md
+  - Maintain: maintainers/index.md
+  - Reference: reference/index.md
+
+# Historical pages remain in the repository; the public site uses the current
+# workflows above. Generated snippets are still consumed by dataset wrappers.
+exclude_docs: |
+  README.md
+  datasets/_legacy/
+  datasets/validation_reports/
+  reference/datasets_documentation/
+  contributing/CONTRIBUTING.md
+  contributing/community.md
+  maintainers/releases.md
+
+validation:
+  links:
+    not_found: warn
+    anchors: warn
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/jmontp/LocoHub
+
+copyright: LocoHub Project

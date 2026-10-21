@@ -1,0 +1,558 @@
+{
+  "status": "publisher_plot_sign_recipe_resolved_raw_link_and_segment_anatomy_pending",
+  "scientific_approval": false,
+  "canonical_approval": false,
+  "primary_sources": {
+    "paper": "https://doi.org/10.1038/s41597-023-02840-6",
+    "paper_xml": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10740031/fullTextXML",
+    "dataset": "https://doi.org/10.35090/gatech/70296",
+    "readme": "https://repository.gatech.edu/server/api/core/bitstreams/b51011a2-061f-419c-9bb3-88e1d6fdf8e8/content",
+    "figure5": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41597-023-02840-6/MediaObjects/41597_2023_2840_Fig5_HTML.png"
+  },
+  "evidence": {
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt23_publisher_source_review_20261021/Code.zip": {
+      "sha256": "7e23cb25f81c7c92bb0679646644fc6dae25ad6505c9d5ea4df630dbe9814839",
+      "bytes": 9338
+    },
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt23_joint_sign_review_20261021/Plot_3x3_plots.m": {
+      "sha256": "ff8da533e7c29f621d444baf33e445430d629ea9f0e7b239b57e53ee21679120",
+      "bytes": 12534
+    },
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt23_paper_fulltext.xml": {
+      "sha256": "5c30a9035c70bc7a1d1041373623cc2e69d4d2caba3a71d1a0ee16f0d1f72baa",
+      "bytes": 105477
+    },
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt23_joint_sign_review_20261021/publisher_fig5.png": {
+      "sha256": "b8b508778fdc976198323dcc656a373743136c9a76c373ad31873e87f76fb062",
+      "bytes": 593909
+    },
+    "docs/quality/audits/source_evidence/gt23/publisher-readme.txt": {
+      "sha256": "4a5c8ef0a8d96ed3b81253e7fed2d8516b884fa2aa63e4340c0ab54cf2ac4752",
+      "bytes": 14317
+    },
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt23_publisher_source_review_20261021/verified_members/AB01/Models/AB01-Scaled1.osim": {
+      "sha256": "f51a4ec3cc506a50ee64390537636c8fcd8e327c901d505bd4a7d63594389910",
+      "bytes": 375922
+    },
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt23_publisher_source_review_20261021/verified_members/AB01/Models/Statics.csv": {
+      "sha256": "d00ddfbf20c062d6113e102c0c3d03e3c9bbcd251536beb25567d99db078e273",
+      "bytes": 612
+    },
+    "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_2023_time_to_parquet.m": {
+      "sha256": "8de9c1ae8938423be9f918720a3b0dfaab396f99bc6950fa47c18557d69fd69e",
+      "bytes": 30987
+    },
+    "contributor_tools/conversion_scripts/Gtech_2023/utilities/convert_gtech_rotm_to_eul_csv.m": {
+      "sha256": "9d719eb546213b4e601c8dd1396d3ca6072b56982766dfc914c67d2acffae84a",
+      "bytes": 10503
+    },
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt23_publisher_source_review_20261021/raw_zip_directory.json": {
+      "sha256": "8b2227543a894b5caa1cd2a42b965852f4fdb113e1006f8a42549a3272243893",
+      "bytes": 1477493
+    }
+  },
+  "resolved_sign_recipe": {
+    "author_code_member": "Code.zip/Plot_3x3_plots.m",
+    "lines": {
+      "loads_segmented_angle_and_moment": [
+        51,
+        66
+      ],
+      "right_side_renaming": [
+        75,
+        86
+      ],
+      "left_side_renaming": [
+        97,
+        108
+      ],
+      "hip_ankle_negations_knee_unchanged": [
+        155,
+        160
+      ]
+    },
+    "paper_section": "Data exploration paragraph immediately before Figure5: hip/knee extension positive, ankle plantarflexion positive.",
+    "inference": "Combining explicit plot convention and code establishes segmented source hipflexionpositive/kneeextensionpositive/ankledorsiflexionpositive, for both angle and moment. Canonical flexion/DF sign recipe is +hip,-knee,+ankle. This resolves why matching paper plots does not require copying their signs.",
+    "limits": "Code reads segmented average MAT structs, not raw CSV. Units in figures Nm/kg differ from documented raw Nm. Do not import plot normalization into raw data."
+  },
+  "per_joint_feature_mapping": [
+    {
+      "joint": "hip",
+      "physical_side": "r",
+      "source_column": "hip_flexion_r",
+      "source_unit": "deg",
+      "target_feature": "hip_flexion_angle_{same_physical_side_role}_rad",
+      "proposed_source_multiplier_sign": 1,
+      "unit_scale": "pi/180",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Author plotting negation plus explicit paper positive directions establishes segmented-source sign, not yet exact rawCSV-to-segment linkage.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Bound rawCSV coordinate to publisher model/author segmented source. No waveform-shape sign inference.",
+      "existing_raw_audit_gap": true
+    },
+    {
+      "joint": "hip",
+      "physical_side": "r",
+      "source_column": "hip_flexion_velocity_r",
+      "source_unit": "deg/s",
+      "target_feature": "hip_flexion_velocity_{same_physical_side_role}_rad_s",
+      "proposed_source_multiplier_sign": 1,
+      "unit_scale": "pi/180",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Publisher segmented plotting code + paper resolves sagittal input sign for angles/moments; matching source velocity coordinate direction is a proposed consistent derivative mapping.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Source angular velocity can be retained exactly with its preprocessing method disclosed unknown; do not require rederivation to preserve imported source values.",
+      "existing_raw_audit_gap": true
+    },
+    {
+      "joint": "hip",
+      "physical_side": "r",
+      "source_column": "hip_flexion_r_moment",
+      "source_unit": "Nm",
+      "target_feature": "hip_flexion_moment_{same_physical_side_role}_Nm_kg",
+      "proposed_source_multiplier_sign": 1,
+      "unit_scale": "1/publisher_participant_mass_kg",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Author plotting negation plus explicit paper positive directions establishes segmented-source sign, not yet exact rawCSV-to-segment linkage.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Bound rawCSV coordinate to publisher model/author segmented source. No waveform-shape sign inference.",
+      "existing_raw_audit_gap": false
+    },
+    {
+      "joint": "hip",
+      "physical_side": "l",
+      "source_column": "hip_flexion_l",
+      "source_unit": "deg",
+      "target_feature": "hip_flexion_angle_{same_physical_side_role}_rad",
+      "proposed_source_multiplier_sign": 1,
+      "unit_scale": "pi/180",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Author plotting negation plus explicit paper positive directions establishes segmented-source sign, not yet exact rawCSV-to-segment linkage.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Bound rawCSV coordinate to publisher model/author segmented source. No waveform-shape sign inference.",
+      "existing_raw_audit_gap": true
+    },
+    {
+      "joint": "hip",
+      "physical_side": "l",
+      "source_column": "hip_flexion_velocity_l",
+      "source_unit": "deg/s",
+      "target_feature": "hip_flexion_velocity_{same_physical_side_role}_rad_s",
+      "proposed_source_multiplier_sign": 1,
+      "unit_scale": "pi/180",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Publisher segmented plotting code + paper resolves sagittal input sign for angles/moments; matching source velocity coordinate direction is a proposed consistent derivative mapping.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Source angular velocity can be retained exactly with its preprocessing method disclosed unknown; do not require rederivation to preserve imported source values.",
+      "existing_raw_audit_gap": true
+    },
+    {
+      "joint": "hip",
+      "physical_side": "l",
+      "source_column": "hip_flexion_l_moment",
+      "source_unit": "Nm",
+      "target_feature": "hip_flexion_moment_{same_physical_side_role}_Nm_kg",
+      "proposed_source_multiplier_sign": 1,
+      "unit_scale": "1/publisher_participant_mass_kg",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Author plotting negation plus explicit paper positive directions establishes segmented-source sign, not yet exact rawCSV-to-segment linkage.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Bound rawCSV coordinate to publisher model/author segmented source. No waveform-shape sign inference.",
+      "existing_raw_audit_gap": false
+    },
+    {
+      "joint": "knee",
+      "physical_side": "r",
+      "source_column": "knee_angle_r",
+      "source_unit": "deg",
+      "target_feature": "knee_flexion_angle_{same_physical_side_role}_rad",
+      "proposed_source_multiplier_sign": -1,
+      "unit_scale": "pi/180",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Author plotting negation plus explicit paper positive directions establishes segmented-source sign, not yet exact rawCSV-to-segment linkage.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Bound rawCSV coordinate to publisher model/author segmented source. No waveform-shape sign inference.",
+      "existing_raw_audit_gap": true
+    },
+    {
+      "joint": "knee",
+      "physical_side": "r",
+      "source_column": "knee_velocity_r",
+      "source_unit": "deg/s",
+      "target_feature": "knee_flexion_velocity_{same_physical_side_role}_rad_s",
+      "proposed_source_multiplier_sign": -1,
+      "unit_scale": "pi/180",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Publisher segmented plotting code + paper resolves sagittal input sign for angles/moments; matching source velocity coordinate direction is a proposed consistent derivative mapping.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Source angular velocity can be retained exactly with its preprocessing method disclosed unknown; do not require rederivation to preserve imported source values.",
+      "existing_raw_audit_gap": true
+    },
+    {
+      "joint": "knee",
+      "physical_side": "r",
+      "source_column": "knee_angle_r_moment",
+      "source_unit": "Nm",
+      "target_feature": "knee_flexion_moment_{same_physical_side_role}_Nm_kg",
+      "proposed_source_multiplier_sign": -1,
+      "unit_scale": "1/publisher_participant_mass_kg",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Author plotting negation plus explicit paper positive directions establishes segmented-source sign, not yet exact rawCSV-to-segment linkage.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Bound rawCSV coordinate to publisher model/author segmented source. No waveform-shape sign inference.",
+      "existing_raw_audit_gap": false
+    },
+    {
+      "joint": "knee",
+      "physical_side": "l",
+      "source_column": "knee_angle_l",
+      "source_unit": "deg",
+      "target_feature": "knee_flexion_angle_{same_physical_side_role}_rad",
+      "proposed_source_multiplier_sign": -1,
+      "unit_scale": "pi/180",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Author plotting negation plus explicit paper positive directions establishes segmented-source sign, not yet exact rawCSV-to-segment linkage.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Bound rawCSV coordinate to publisher model/author segmented source. No waveform-shape sign inference.",
+      "existing_raw_audit_gap": true
+    },
+    {
+      "joint": "knee",
+      "physical_side": "l",
+      "source_column": "knee_velocity_l",
+      "source_unit": "deg/s",
+      "target_feature": "knee_flexion_velocity_{same_physical_side_role}_rad_s",
+      "proposed_source_multiplier_sign": -1,
+      "unit_scale": "pi/180",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Publisher segmented plotting code + paper resolves sagittal input sign for angles/moments; matching source velocity coordinate direction is a proposed consistent derivative mapping.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Source angular velocity can be retained exactly with its preprocessing method disclosed unknown; do not require rederivation to preserve imported source values.",
+      "existing_raw_audit_gap": true
+    },
+    {
+      "joint": "knee",
+      "physical_side": "l",
+      "source_column": "knee_angle_l_moment",
+      "source_unit": "Nm",
+      "target_feature": "knee_flexion_moment_{same_physical_side_role}_Nm_kg",
+      "proposed_source_multiplier_sign": -1,
+      "unit_scale": "1/publisher_participant_mass_kg",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Author plotting negation plus explicit paper positive directions establishes segmented-source sign, not yet exact rawCSV-to-segment linkage.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Bound rawCSV coordinate to publisher model/author segmented source. No waveform-shape sign inference.",
+      "existing_raw_audit_gap": false
+    },
+    {
+      "joint": "ankle",
+      "physical_side": "r",
+      "source_column": "ankle_angle_r",
+      "source_unit": "deg",
+      "target_feature": "ankle_dorsiflexion_angle_{same_physical_side_role}_rad",
+      "proposed_source_multiplier_sign": 1,
+      "unit_scale": "pi/180",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Author plotting negation plus explicit paper positive directions establishes segmented-source sign, not yet exact rawCSV-to-segment linkage.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Bound rawCSV coordinate to publisher model/author segmented source. No waveform-shape sign inference.",
+      "existing_raw_audit_gap": true
+    },
+    {
+      "joint": "ankle",
+      "physical_side": "r",
+      "source_column": "ankle_velocity_r",
+      "source_unit": "deg/s",
+      "target_feature": "ankle_dorsiflexion_velocity_{same_physical_side_role}_rad_s",
+      "proposed_source_multiplier_sign": 1,
+      "unit_scale": "pi/180",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Publisher segmented plotting code + paper resolves sagittal input sign for angles/moments; matching source velocity coordinate direction is a proposed consistent derivative mapping.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Source angular velocity can be retained exactly with its preprocessing method disclosed unknown; do not require rederivation to preserve imported source values.",
+      "existing_raw_audit_gap": true
+    },
+    {
+      "joint": "ankle",
+      "physical_side": "r",
+      "source_column": "ankle_angle_r_moment",
+      "source_unit": "Nm",
+      "target_feature": "ankle_dorsiflexion_moment_{same_physical_side_role}_Nm_kg",
+      "proposed_source_multiplier_sign": 1,
+      "unit_scale": "1/publisher_participant_mass_kg",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Author plotting negation plus explicit paper positive directions establishes segmented-source sign, not yet exact rawCSV-to-segment linkage.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Bound rawCSV coordinate to publisher model/author segmented source. No waveform-shape sign inference.",
+      "existing_raw_audit_gap": false
+    },
+    {
+      "joint": "ankle",
+      "physical_side": "l",
+      "source_column": "ankle_angle_l",
+      "source_unit": "deg",
+      "target_feature": "ankle_dorsiflexion_angle_{same_physical_side_role}_rad",
+      "proposed_source_multiplier_sign": 1,
+      "unit_scale": "pi/180",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Author plotting negation plus explicit paper positive directions establishes segmented-source sign, not yet exact rawCSV-to-segment linkage.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Bound rawCSV coordinate to publisher model/author segmented source. No waveform-shape sign inference.",
+      "existing_raw_audit_gap": true
+    },
+    {
+      "joint": "ankle",
+      "physical_side": "l",
+      "source_column": "ankle_velocity_l",
+      "source_unit": "deg/s",
+      "target_feature": "ankle_dorsiflexion_velocity_{same_physical_side_role}_rad_s",
+      "proposed_source_multiplier_sign": 1,
+      "unit_scale": "pi/180",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Publisher segmented plotting code + paper resolves sagittal input sign for angles/moments; matching source velocity coordinate direction is a proposed consistent derivative mapping.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Source angular velocity can be retained exactly with its preprocessing method disclosed unknown; do not require rederivation to preserve imported source values.",
+      "existing_raw_audit_gap": true
+    },
+    {
+      "joint": "ankle",
+      "physical_side": "l",
+      "source_column": "ankle_angle_l_moment",
+      "source_unit": "Nm",
+      "target_feature": "ankle_dorsiflexion_moment_{same_physical_side_role}_Nm_kg",
+      "proposed_source_multiplier_sign": 1,
+      "unit_scale": "1/publisher_participant_mass_kg",
+      "source_value_preservation": "Bound raw CSV source clock/column/value/missingness independently; reference/contra role must preserve physical side.",
+      "anatomical_evidence": "Author plotting negation plus explicit paper positive directions establishes segmented-source sign, not yet exact rawCSV-to-segment linkage.",
+      "approval_status": "source_direction_candidate_requires_actual_raw_identity_and_value_proof",
+      "remaining_specific": "Bound rawCSV coordinate to publisher model/author segmented source. No waveform-shape sign inference.",
+      "existing_raw_audit_gap": false
+    }
+  ],
+  "per_segment_orientation_mapping": [
+    {
+      "source_derived_column": "pelvis_Z",
+      "current_plane_label": "sagittal",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "pelvis_X",
+      "current_plane_label": "frontal",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "pelvis_Y",
+      "current_plane_label": "transverse",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "femur_r_Z",
+      "current_plane_label": "sagittal",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "femur_r_X",
+      "current_plane_label": "frontal",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "femur_r_Y",
+      "current_plane_label": "transverse",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "femur_l_Z",
+      "current_plane_label": "sagittal",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "femur_l_X",
+      "current_plane_label": "frontal",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "femur_l_Y",
+      "current_plane_label": "transverse",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "tibia_r_Z",
+      "current_plane_label": "sagittal",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "tibia_r_X",
+      "current_plane_label": "frontal",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "tibia_r_Y",
+      "current_plane_label": "transverse",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "tibia_l_Z",
+      "current_plane_label": "sagittal",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "tibia_l_X",
+      "current_plane_label": "frontal",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "tibia_l_Y",
+      "current_plane_label": "transverse",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "calcn_r_Z",
+      "current_plane_label": "sagittal",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "calcn_r_X",
+      "current_plane_label": "frontal",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "calcn_r_Y",
+      "current_plane_label": "transverse",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "calcn_l_Z",
+      "current_plane_label": "sagittal",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "calcn_l_X",
+      "current_plane_label": "frontal",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    },
+    {
+      "source_derived_column": "calcn_l_Y",
+      "current_plane_label": "transverse",
+      "source_provenance": "Locally generated Link_Angle.csv, not publisher archive member",
+      "representation": "Intrinsic Euler decomposition YZX of supplied rotation block; not isolated rotation about fixed anatomical axis in general",
+      "offset": "+pi/2 only pelvis_Y in time producer; physical zero not independently established",
+      "status": "anatomical_mapping_unassessed",
+      "next_proof": "Exact source Transforms identity/direction and model bodyaxis/neutral/heading convention; synthetic known full3D rotations and actual bounded station-vector readback. Preserve original matrices/sourceEuler aliases."
+    }
+  ],
+  "source_velocity_discrepancy": {
+    "README_lines": [
+      21,
+      34
+    ],
+    "README_claim": "First-order backward finite difference of angle",
+    "paper_claim": "Filtered IK, central finite differences via MATLAB gradient",
+    "distinction": "Imported raw velocity is a source measurement product and may be preserved byte/value-faithfully with unknown preprocessing. Contradictory differentiation descriptions block claiming a verified recomputation recipe, not preservation of supplied values.",
+    "no_invented_fix": "Do not replace velocities or select difference method to match a desired waveform."
+  },
+  "publisher_vs_local_segments": {
+    "publisher_archive_entries_examined": 7038,
+    "Link_Angle_or_Link_Velocities_members": 0,
+    "local_generator_lines": [
+      33,
+      145,
+      179
+    ],
+    "generator_clock": "Fixeddt1/200 for gradient; sourceHeaderis copied but nonuniformness not verified",
+    "critical_limit": "YZX components and pelvis+pi/2 offsets are local processing conventions, not authoritative publisher anatomical definitions."
+  },
+  "model_evidence": {
+    "publisher_AB01_model_bytes_verified": true,
+    "Statics_trial_association": "ball_toss_1 and sit_to_stand_1 select static1; publisher original model is linked by byte hash, not filename inference",
+    "axis_known": "Both hip/knee source custom joints use +Z rotation coefficient+1; ankle axes mirroredX/Y with commonpositiveZ. This describes model coordinates, not proof all CSV exports retain them.",
+    "next_bounded_native_proof": "On publisher-matched AB01 static1 only: neutral and \u00b1smallcoordinate perturbations, derive proximal/distal station changes to establish flexion/DF and generalized-force work conjugacy; serialize modelSHA/stationdefinition/coordinateclock. Schedule separately, no native work run."
+  },
+  "next_bounded_raw_proof": {
+    "scope": "Extend independent raw-source readback in NEW revision to six angles and six supplied velocities across bothphysical sides, sourceclock/window/rowidentity/fulloutput/missingness and documenteddeg\u2192rad. Existingforce/momentaudit does not prove these fields.",
+    "methods": "Direct literalrawCSV projected bounded batches; compare converter outputs to independent interpolated source samples, reversing only explicitproducer sign. Separate source-preservation pass from anatomical approval.",
+    "raw_to_segment": "Use one author parsing interval and per-cycle segmented MAT values where format/recipe is documented; verify sourcecoordinate correspondence including sign, not waveform appearance. If only averages or unknown interpolation available, retain link as unresolved.",
+    "no_execution": true
+  },
+  "non_sagittal_fields": "Hip adduction/rotation and subtalar source coordinates require separate axes/sign evidence; sagittal plotting proof does not cover them.",
+  "completion_rule": "Source aliases/nulls are interim safe representation, not scientific completion. Full anatomy approval requires actual perfeature source and model proof plus bounded independent readback."
+}

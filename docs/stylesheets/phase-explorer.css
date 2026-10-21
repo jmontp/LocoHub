@@ -1,0 +1,67 @@
+.phase-explorer { max-width: 960px; }
+.phase-explorer .phase-source { font-size: .8rem; overflow-wrap: anywhere; }
+.phase-explorer .phase-note { color: var(--muted); font-size: .85rem; }
+.phase-explorer .aggregate-preview { max-width: 880px; }
+.phase-explorer details { border-top: 1px solid var(--line); padding: .75rem 0; }
+.phase-explorer summary, .historical-plots > summary { cursor: pointer; font-size: .85rem; font-weight: 600; }
+.phase-explorer details p { color: var(--muted); font-size: .85rem; }
+.phase-explorer .aggregate-controls { grid-template-columns: 1fr 1fr 2fr; }
+.phase-explorer .aggregate-controls label:last-child { grid-column: auto; }
+/* Dataset colours stay consistent; dash patterns provide a second visual cue. */
+:root { --series-0:#245c8a; --series-1:#a34c00; --series-2:#00816a; --series-3:#89558f; --series-4:#b23252; --series-5:#526273; --series-6:#736500; --series-7:#326d7f; }
+@media (prefers-color-scheme:dark) { :root { --series-0:#8bc4f0; --series-1:#ffb777; --series-2:#68d5b6; --series-3:#cda9eb; --series-4:#ff99b5; --series-5:#c0cbd5; --series-6:#d6cd78; --series-7:#84ccd9; } }
+.phase-comparison-controls { margin:1.5rem 0 1rem; font-size:.85rem; }
+.comparison-toolbar { display:flex; flex-wrap:wrap; gap:1rem 2rem; align-items:end; }
+.comparison-toolbar > label { display:grid; gap:.3rem; }
+.comparison-toolbar select, .comparison-signal-picker input[type="search"] { padding:.45rem .6rem; color:var(--ink); background:var(--surface); border:1px solid var(--control); border-radius:4px; font:inherit; max-width:100%; }
+.comparison-toolbar .comparison-band-toggle { display:flex; gap:.4rem; align-items:center; min-height:2.5rem; }
+.phase-comparison-controls fieldset { border:0; padding:0; margin:0; min-width:0; }
+.phase-comparison-controls legend { font-weight:600; margin-bottom:.45rem; }
+.comparison-view label { display:inline-flex; align-items:center; gap:.25rem; padding:.5rem .7rem .5rem 0; }
+.phase-comparison-controls .comparison-datasets { border-top:1px solid var(--line); margin-top:1rem; padding-top:.8rem; }
+.control-hint, .comparison-scale-note { font-size:.78rem; color:var(--muted); font-weight:400; }
+#comparison-options { display:flex; flex-wrap:wrap; gap:.45rem 1.3rem; }
+.dataset-toggle { display:inline-flex; gap:.4rem; align-items:center; min-height:2rem; cursor:pointer; }
+.series-key { flex:none; display:inline-block; width:30px; height:10px; vertical-align:middle; }
+.phase-comparison-controls input[type="checkbox"], .phase-comparison-controls input[type="radio"] { accent-color:var(--accent); width:1rem; height:1rem; flex:none; }
+.phase-comparison-controls button, #comparison-selected-signals button { font:inherit; color:var(--accent); background:var(--surface); border:1px solid var(--line); border-radius:4px; padding:.35rem .6rem; margin:.5rem .4rem 0 0; }
+.phase-comparison-controls button:hover, #comparison-selected-signals button:hover { border-color:var(--accent); }
+.comparison-signal-picker { margin-top:1rem; border-top:1px solid var(--line); padding-top:.7rem; }
+.comparison-signal-picker summary { cursor:pointer; font-weight:600; }
+.comparison-signal-picker > label { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; margin-top:.7rem; }
+.comparison-signal-picker fieldset { margin-top:.8rem; }
+#comparison-signals { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:.3rem 1rem; max-height:18rem; overflow:auto; padding:.25rem; }
+#comparison-signals label { display:flex; gap:.4rem; align-items:start; padding:.3rem 0; }
+#comparison-selected-signals { margin:.25rem 0 .75rem; }
+.comparison-overlays { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr)); gap:1.5rem; }
+.comparison-feature { min-width:0; padding:1rem 0; border-top:1px solid var(--line-strong); }
+.comparison-feature h2 { font-size:.95rem; margin:0 0 .8rem; }
+.comparison-feature .aggregate-chart { margin:0; }
+.comparison-feature .comparison-missing { font-size:.75rem; color:var(--muted); }
+.comparison-values { margin-top:.75rem; font-size:.8rem; }
+.comparison-values summary { cursor:pointer; }
+.comparison-values .preview-table-wrap { margin-top:.6rem; }
+.comparison-matrix { overflow:auto; max-width:100%; padding-bottom:1rem; }
+.comparison-matrix .comparison-feature { width:max-content; min-width:100%; }
+.comparison-matrix .comparison-feature > h2 { position:sticky; left:0; width:fit-content; background:var(--page); padding:.25rem .5rem .25rem 0; }
+.comparison-panel-row { display:grid; gap:1rem; }
+.comparison-panel { min-width:0; }
+.comparison-panel h3 { display:flex; align-items:center; gap:.5rem; font-size:.8rem; margin:.2rem 0 .5rem; min-height:3em; }
+.comparison-panel .comparison-missing { min-height:200px; padding:1rem; background:var(--soft); }
+.comparison-matrix .comparison-values, .comparison-matrix .comparison-feature > .comparison-missing { max-width:80vw; }
+@media(max-width:760px) {
+ .phase-explorer .aggregate-controls { grid-template-columns:minmax(0,1fr); }
+ .comparison-toolbar { gap:.75rem; }
+ .dataset-toggle { min-height:2.75rem; }
+}
+.phase-range-box { fill:var(--accent); fill-opacity:.10; stroke:var(--control); stroke-width:1.5; stroke-dasharray:3 2; }
+.quality-summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin:1.5rem 0; }
+.quality-summary > p { margin:0; padding:1rem; border:1px solid var(--line); font-size:.85rem; }
+.quality-summary strong { display:block; font-size:1.35rem; }
+.quality-task-note { max-width:85ch; }
+#quality-test-results details { padding:.65rem 0; border-top:1px solid var(--line); font-size:.85rem; }
+#quality-test-results summary { cursor:pointer; }
+#quality-test-results li, #quality-profile-source { overflow-wrap:anywhere; }
+#quality-dataset { max-width:100%; padding:.5rem; color:var(--ink); background:var(--surface); border:1px solid var(--control); }
+#quality-phase .range-values td { white-space:normal; }
+.quality-nav { display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; margin:1.5rem 0; padding:.8rem 0; border-block:1px solid var(--line); font-size:.85rem; }

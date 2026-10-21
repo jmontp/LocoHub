@@ -1,0 +1,61 @@
+{
+  "status": "static_source_semantics_review_no_numerical_change",
+  "scientific_approval": false,
+  "scope": "GT25 virtual-IMU transfer segment estimates used by the BT07 streaming pilot; walking initialization is a separate branch.",
+  "bindings": {
+    "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py": "682fe112e68a5d336d5feffa244814777fa8c6ad3d79b977550d56078e670a57",
+    "/mnt/s/locomotion_data/GaTech_2025_DomainAdaptation/readme.txt": "aabd45edb66e565a5238f86e26e5c1c1b47469764f3fd611014caf742d20ab63",
+    "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/common/feature_constants.py": "024509411d3874fccbb2ff5d5daad893362a32cb74b32c6d9513fe129981ad52",
+    "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/run_gt25_streaming_transfer_pilot.py": "6d8f2871b0768ad257d2130db8923d111000fe568dbec814ba59919352568ff4"
+  },
+  "evidence": [
+    {
+      "source": "/mnt/s/locomotion_data/GaTech_2025_DomainAdaptation/readme.txt",
+      "lines": "323-349",
+      "claim": "imu_sim signals are in OpenSim body segment frames; accelerations m/s^2 and gyroscope deg/s. No explicit conversion to global sagittal angle is specified."
+    },
+    {
+      "source": "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py",
+      "lines": "185-235",
+      "claim": "For each segment/side, compute atan2(mean first acceleration x, mean first acceleration y), add cumulative body gyro-z radians using a constant dt, then subtract mean of final 20 samples for sit-to-stand or first 20 for stand-to-sit."
+    },
+    {
+      "source": "contributor_tools/run_gt25_streaming_transfer_pilot.py",
+      "lines": "34-50",
+      "claim": "Streaming transfer worker always uses acceleration-init branch and whole-recording endpoint-derived mean dt."
+    },
+    {
+      "source": "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py",
+      "lines": "604-608",
+      "claim": "task_info identifies virtual IMU integration with converter initialization, but does not name the standing-relative per-segment reference or local-axis assumption."
+    },
+    {
+      "source": "contributor_tools/common/feature_constants.py",
+      "lines": "176-180",
+      "claim": "Canonical segment angles are described as link/segment orientations in space and anatomical sagittal forward/backward tilt. No explicit universal numerical zero is defined here."
+    }
+  ],
+  "proven_properties": [
+    "In the transfer branch, a constant accelerometer initialization cancels exactly algebraically: (a+cumulative_rotation)-mean(a+cumulative_rotation)=cumulative_rotation-mean(cumulative_rotation). It does not establish retained absolute gravity orientation.",
+    "Each segment is independently zeroed to a selected standing interval; source standing orientations and cross-segment angular offsets are removed.",
+    "Velocity is the derivative of the resampled relative scalar estimate; offset subtraction does not establish its global sagittal-axis meaning.",
+    "Independent raw readback reproduces this algorithm and cannot establish missing global-frame correspondence."
+  ],
+  "unsupported_assumptions": [
+    "Body-frame gyro-z integration is a global sagittal segment angle without a reviewed rotation/axis mapping. Exact model body axes and source virtual-IMU producer definitions have not been established in this review.",
+    "The standing interval has zero physical orientation for thigh, shank and foot independently.",
+    "A uniform whole-record mean dt is an exact orientation integration clock if timestamps are irregular; existing audit checks reproduce this approximation."
+  ],
+  "not_claimed": [
+    "No source gyro sign reversal is proven.",
+    "No exact alternative global orientation transform is proposed.",
+    "No scientific output was loaded, modified or newly withheld.",
+    "Canonical documentation does not explicitly define a universal zero angle, so source metadata omission alone is distinguished from proof of a particular numerical correction."
+  ],
+  "recommended_review_decision": {
+    "immediate": "Add explicit source body-frame, gyro-z integration, separate standing-relative neutral reference, acceleration-initialization cancellation and model-derived estimate metadata before representing these as absolute orientations.",
+    "if_canonical_orientation_requires_global_reference": "Preserve all 12 existing segment angle/velocity estimates and masks in explicitly derived/source-relative aliases, and withhold unsupported canonical orientation labels in a separate reviewed successor. Do not alter frozen v4 automatically.",
+    "needed_for_canonical_support": "Exact source producer/model axis definitions and a reviewed body-to-global orientation mapping, with a known-pose fixture. Waveform agreement is insufficient."
+  },
+  "pilot_relation": "v4 remains a bounded ankle/normalization source-readback pilot with unresolved segment semantics, not full scientific approval."
+}

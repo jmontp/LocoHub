@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from contributor_tools.common.validation import Validator, ValidationReportGenerator
 from contributor_tools.common.plotting import create_task_combined_plot
-from locohub import LocomotionData
+from contributor_tools.common.dataset_table import DatasetTable
 import matplotlib.pyplot as plt
 
 # Configure matplotlib for better scrolling
@@ -25,7 +25,7 @@ print(f"Loading dataset and generating plot for {task_to_show}...")
 
 # Initialize components
 validator = Validator(config_path=ranges_file)
-locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
+locomotion_data = DatasetTable(dataset_path, phase_col='phase_ipsi')
 
 # Get task data
 data_3d, feature_names = locomotion_data.get_cycles(None, task_to_show)

@@ -1,0 +1,37 @@
+{
+  "status": "reference_sides_recovered_correction_pilot_checked_full_correction_queued",
+  "scientific_approval": false,
+  "subject_condition_pairs": 20,
+  "source_windows": 764,
+  "current_exported_stair_views": 1528,
+  "recovered_reference_counts": {
+    "right": 426,
+    "force_event_endpoints": 652,
+    "left": 338,
+    "source_marker_endpoints": 112
+  },
+  "correction": "Retain only the source-event reference view, preserving both anatomical legs and every original value in that view.",
+  "recovery_sha256": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02",
+  "correction_script_sha256": "9e9d26bbcd9df641660e5f3e801c4bee00c2d044a7f736702da4c87b98fbcef8",
+  "queue_plan_sha256": "f77ccf62a601aa84ca33f4c8c57a3b1251f87500d62377afeb94e8335b038870",
+  "limitations": [
+    "Source event convention is a force-threshold crossing, not independent physical contact ground truth",
+    "Some final descent endpoints are marker-derived in the source parser; endpoint force-reset matches are reported separately",
+    "Existing full outputs still contain duplicate nonreference views until queued correction finishes",
+    "The source imresize grid is retained; exact source event timestamps are separate metadata",
+    "Pilot uses one AB01 stair block; full correction remains pending"
+  ],
+  "pilot_summary_sha256": "95c10b7835b6d0dd9f5362ad927013ada6254c8190778a5758a7af4a019395bb",
+  "pilot_observations_before": 10,
+  "pilot_observations_after": 5,
+  "marker_endpoint_readback": {
+    "windows_checked": 112,
+    "windows_matched": 112,
+    "report_sha256": "75d99ec569878d51b9f26978684f9dc9b416fadfb0c7ccdc9e5e8a41f66fc38a",
+    "probe_sha256": "d25d40b788fdee8351dcbd360a95e90b5f0125c5b4480c9057b703077d3c92bb",
+    "limitations": [
+      "Reproduces the source marker rule; does not independently validate physical heel contact",
+      "Uniform-clock quadratic least-squares slopes are evaluated analytically; peak detection uses scipy.signal.find_peaks"
+    ]
+  }
+}

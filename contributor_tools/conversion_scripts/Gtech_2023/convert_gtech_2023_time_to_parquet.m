@@ -1,4 +1,4 @@
-function convert_gtech_2023_time_to_parquet()
+function convert_gtech_2023_time_to_parquet(options)
 % CONVERT_GTECH_2023_TIME_TO_PARQUET  Time-indexed export for the Georgia Tech
 % 2023 dataset (s41597-023-02840-6), aligned to the LocoHub standard.
 %
@@ -18,7 +18,7 @@ function convert_gtech_2023_time_to_parquet()
 %     normalized by body weight (mass*9.81) -> _BW.
 %   * Moments already Nm/kg from OpenSim -> rename only.
 %   * CoP transformed into the local calcn (ankle) frame per sample; anterior =
-%     local x, lateral = local z, vertical forced to 0.
+%     local x, lateral = local z, vertical = transformed local y.
 %
 % Unlike the phase export it does NOT normalize each cycle to 150 points. Each
 % labeled sub-activity (a *_parsing.mat file) becomes one continuous, native-
@@ -38,6 +38,12 @@ function convert_gtech_2023_time_to_parquet()
 
     script_dir = fileparts(mfilename('fullpath'));
     addpath(script_dir);  % for parse_gtech_activity_matlab
+    addpath(fullfile(fileparts(mfilename('fullpath')), '..', 'matlab_common'));
+
+    if nargin > 0
+        convert_one_recording(options);
+        return;
+    end
 
     data_root = getenv('GTECH2023_DATA_ROOT');
     if isempty(data_root)
@@ -60,8 +66,8 @@ function convert_gtech_2023_time_to_parquet()
     output_path = fullfile(output_dir, 'gtech_2023_time.parquet');
     merger_script = fullfile(repo_root, 'contributor_tools', 'common', 'merge_parquet_shards.py');
 
-    % Subject mass table (falls back to paper mean if absent).
-    default_mass_kg = 76.9;
+    % Subject mass table (unknown mass leaves normalized GRF unavailable).
+    default_mass_kg = NaN;
     mass_table = load_subject_masses(fullfile(raw_root, 'Subject_masses.csv'));
 
     % Subject list.
@@ -100,7 +106,10 @@ function convert_gtech_2023_time_to_parquet()
         if ~isempty(mass_table) && isKey(mass_table, subject)
             subject_mass_kg = mass_table(subject);
         else
-            warning('Mass not found for %s; using default %.1f kg', subject, default_mass_kg);
+            warning('Mass not found for %s; normalized GRF will be unavailable.', subject);
+        end
+        if ~isscalar(subject_mass_kg) || ~isfinite(subject_mass_kg) || subject_mass_kg <= 0
+            subject_mass_kg = NaN;
         end
         weight_N = subject_mass_kg * 9.81;
         subject_id = ['GT23_' subject];
@@ -135,6 +144,7 @@ function convert_gtech_2023_time_to_parquet()
             end
 
             % Load (and cache) the raw CSV folder for this window.
+            raw_folder = resolve_gtech_raw_folder(fullfile(raw_dir, 'CSV_Data'), parsing_name);
             activity_dir = fullfile(raw_dir, 'CSV_Data', raw_folder);
             if ~isfolder(activity_dir)
                 warning('Raw folder not found: %s; skip %s', activity_dir, parsing_name);
@@ -171,6 +181,12 @@ function convert_gtech_2023_time_to_parquet()
             rows.reference_leg    = repmat(string(reference_leg), n, 1);
             rows.time_scope       = repmat("continuous_trial", n, 1);
             rows.time_reset_per   = repmat("segment", n, 1);
+            source_id = sprintf('gt23:%s/%s', subject, raw_folder);
+            rows = locohub_add_provenance(rows, source_id, ...
+                sprintf('window:%.17g:%.17g', t0, t1), reference_leg, ...
+                'continuous_recording', t0, t1);
+            rows.step = rows.observation_id;
+
 
             subject_rows = append_rows(subject_rows, rows);
             step_counter = step_counter + 1;
@@ -193,6 +209,62 @@ function convert_gtech_2023_time_to_parquet()
     merge_parquet_shards(merger_script, shard_dir, output_path);
     rmdir(shard_dir, 's');
     fprintf('Done: %s (%d rows)\n', output_path, total_rows);
+end
+
+
+function convert_one_recording(options)
+% Bounded native entry point: exactly one original parsing window, immutable output.
+    required = {'data_root', 'subject', 'recording', 'output_path'};
+    assert(all(isfield(options, required)), 'Missing recording options');
+    assert(~isfile(options.output_path), 'Output already exists');
+    assert(~contains(options.recording, '/') && ~contains(options.recording, '\'), 'Expected a parsing filename');
+    assert(~isempty(regexp(options.subject, '^AB\d+$', 'once')), 'Invalid subject');
+    [activity, variant, raw_folder] = derive_activity(options.recording);
+    assert(~isempty(raw_folder), 'Unsupported parsing filename');
+    parsing = fullfile(options.data_root, 'Segmentation', options.subject, options.recording);
+    [t0, t1, reference] = window_from_parsing(parsing);
+    assert(isfinite(t0) && isfinite(t1) && t1 > t0, 'Invalid source interval');
+    raw_root = fullfile(options.data_root, 'RawData');
+    raw_folder = resolve_gtech_raw_folder(fullfile(raw_root, options.subject, 'CSV_Data'), options.recording);
+    cached = load_activity_csvs(fullfile(raw_root, options.subject, 'CSV_Data', raw_folder), ...
+        fullfile(raw_root, options.subject, 'Transforms', [raw_folder '.mat']));
+    masses = load_subject_masses(fullfile(raw_root, 'Subject_masses.csv'));
+    mass = NaN;
+    if isKey(masses, options.subject); mass = masses(options.subject); end
+    if ~isscalar(mass) || ~isfinite(mass) || mass <= 0; mass = NaN; end
+    rows = build_time_window(cached, t0, t1, reference, mass * 9.81);
+    assert(~isempty(rows) && height(rows) > 1, 'No source samples in window');
+    [task, task_id, task_info] = parse_gtech_activity_matlab(activity, variant);
+    n = height(rows);
+    rows.subject = repmat(string(['GT23_' options.subject]), n, 1);
+    rows.subject_metadata = repmat(string(jsonencode(struct('weight_kg', mass))), n, 1);
+    rows.task = repmat(string(task), n, 1);
+    rows.task_id = repmat(string(task_id), n, 1);
+    rows.task_info = repmat(string(task_info), n, 1);
+    rows.reference_leg = repmat(string(reference), n, 1);
+    rows.time_scope = repmat("continuous_trial", n, 1);
+    rows.time_reset_per = repmat("segment", n, 1);
+    rows = locohub_add_provenance(rows, sprintf('gt23:%s/%s', options.subject, raw_folder), ...
+        options.recording, reference, 'continuous_recording', t0, t1);
+    rows.step = rows.observation_id;
+    parquetwrite(options.output_path, rows);
+    % Preserve native MAT table values for independent COP comparisons in Python.
+    if cached.has_transforms
+        selection = cached.trans_time >= t0-1 & cached.trans_time <= t1+1;
+        for leg = {'l', 'r'}
+            side = leg{1};
+            R = cached.(['R_' side]); Tr = cached.(['Tr_' side]);
+            evidence = table(cached.trans_time(selection), 'VariableNames', {'time'});
+            for i = 1:3
+                evidence.(sprintf('translation%d', i)) = Tr(i, selection).';
+                for j = 1:3
+                    evidence.(sprintf('r%d%d', i, j)) = reshape(R(i, j, selection), [], 1);
+                end
+            end
+            writetable(evidence, fullfile(fileparts(options.output_path), ['source_calcn_' side '.csv']));
+        end
+    end
+    fprintf('Converted bounded GT23 window: %s (%d rows)\n', options.recording, n);
 end
 
 
@@ -434,10 +506,8 @@ function rows = build_time_window(cached, t0, t1, reference_leg, weight_N)
     rows.grf_lateral_contra_BW  = grf_norm(grf, [CU 'ForceZ'], gt, tw, weight_N);
 
     % ---- CoP in local calcn (ankle) frame ----
-    [cop_a_i, cop_l_i] = cop_local(cached, grf, gt, tw, ipsi, t0, t1);
-    [cop_a_c, cop_l_c] = cop_local(cached, grf, gt, tw, contra, t0, t1);
-    cop_v_i = zeros(n, 1);
-    cop_v_c = zeros(n, 1);
+    [cop_a_i, cop_l_i, cop_v_i] = cop_local(cached, grf, gt, tw, ipsi, t0, t1);
+    [cop_a_c, cop_l_c, cop_v_c] = cop_local(cached, grf, gt, tw, contra, t0, t1);
 
     % Mask CoP as missing whenever the limb is unloaded (vertical GRF below
     % 0.2 BW) OR the transformed CoP is non-physical for the ankle frame
@@ -500,25 +570,28 @@ function out = grf_norm(grf, colname, grf_time, target_time, weight_N)
 end
 
 
-function [cop_ant, cop_lat] = cop_local(cached, grf, grf_time, target_time, leg, t0, t1)
+function [cop_ant, cop_lat, cop_vert] = cop_local(cached, grf, grf_time, target_time, leg, t0, t1)
 % Transform CoP into the local calcn frame for one leg, then interpolate onto
 % target_time. Returns NaN columns when transforms or raw CoP are unavailable.
     n = numel(target_time);
     cop_ant = nan(n, 1);
     cop_lat = nan(n, 1);
+    cop_vert = nan(n, 1);
     LU = upper(leg);
     copx_name = [LU 'COPX'];
+    copy_name = [LU 'COPY_Vertical'];
     copz_name = [LU 'COPZ'];
     if isempty(grf) || isempty(grf_time) || ~cached.has_transforms
         return;
     end
-    if ~all(ismember({copx_name, copz_name}, grf.Properties.VariableNames))
+    if ~all(ismember({copx_name, copy_name, copz_name}, grf.Properties.VariableNames))
         return;
     end
 
     gmask = grf.time >= t0 & grf.time <= t1;
     gt = grf.time(gmask);
     copx = grf.(copx_name)(gmask);
+    copy = grf.(copy_name)(gmask);
     copz = grf.(copz_name)(gmask);
     if numel(gt) < 2
         return;
@@ -531,29 +604,35 @@ function [cop_ant, cop_lat] = cop_local(cached, grf, grf_time, target_time, leg,
     end
     trans_time = cached.trans_time;
     Nt = numel(trans_time);
-    if Nt < 1
+    if Nt < 2 || any(~isfinite(trans_time)) || any(diff(trans_time) <= 0)
         return;
     end
 
-    % Nearest transform per GRF sample.
-    nn = interp1(trans_time, 1:Nt, gt, 'nearest', 'extrap');
-    nn = max(1, min(Nt, round(nn)));
-
-    cop_global = [copx.'; zeros(1, numel(copx)); copz.'];  % 3 x Ng
-    Rn = R(:, :, nn);           % 3 x 3 x Ng
-    Trn = Tr(:, nn);            % 3 x Ng
-    rel = cop_global - Trn;     % 3 x Ng
-    % local = R' * rel, per page.
-    local = pagemtimes(permute(Rn, [2 1 3]), reshape(rel, 3, 1, []));
-    local = reshape(local, 3, []);  % 3 x Ng
+    % No endpoint extrapolation: a transform outside its measured clock is
+    % unavailable, not evidence for the same pose at a different time.
+    nn = interp1(trans_time, 1:Nt, gt, 'nearest', NaN);
+    supported = isfinite(nn);
+    local = nan(3, numel(gt));
+    if any(supported)
+        selected = round(nn(supported));
+        cop_global = [copx(supported).'; copy(supported).'; copz(supported).'];
+        Rn = R(:, :, selected);
+        Trn = Tr(:, selected);
+        rel = cop_global - Trn;
+        transformed = pagemtimes(permute(Rn, [2 1 3]), reshape(rel, 3, 1, []));
+        local(:, supported) = reshape(transformed, 3, []);
+    end
 
     local_x = local(1, :).';
+    local_y = local(2, :).';
     local_z = local(3, :).';
     % Interpolate onto the kinematic target grid.
     cop_ant = interp1(gt, local_x, target_time, 'linear', NaN);
     cop_lat = interp1(gt, local_z, target_time, 'linear', NaN);
+    cop_vert = interp1(gt, local_y, target_time, 'linear', NaN);
     cop_ant = cop_ant(:);
     cop_lat = cop_lat(:);
+    cop_vert = cop_vert(:);
 end
 
 

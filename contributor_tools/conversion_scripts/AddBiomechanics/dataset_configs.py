@@ -20,7 +20,7 @@ Datasets:
 - Tan2022: Dynamic walking variants
 - vanderZee2022: Treadmill walking trials
 - Wang2023: Walking, running, jumps, squats, functional tasks
-- Falisse2016: Walking and running (muscle redundancy study)
+- Falisse2016: Historical label; source-record and task identities unresolved
 - Han2023 (GroundLink): 19 motion types (yoga, dance, sports, locomotion)
 - Tiziana2019 (Lencioni): Walking, dynamic walk, stairs (ages 6-72)
 - Carter2023: Treadmill running at various speeds and gradients
@@ -218,20 +218,15 @@ def get_task_info_wang2023(original_task: str) -> Tuple[str, str, str]:
     return ('functional_task', original_task, '')
 
 
-def get_task_info_falisse2016(original_task: str) -> Tuple[str, str, str]:
+def get_task_info_falisse2016(original_task: str) -> Tuple[Optional[str], str, str]:
     """
-    Map Falisse2016 task to standard format.
-    Dataset contains walking and running trials for muscle redundancy studies.
+    Preserve the source name without guessing an unverified canonical task.
+
+    The historical study attribution and record identities remain unresolved.
+    Neither Gait nor STS establishes terrain or transfer direction. Even an
+    apparent walking/running name cannot establish membership in this study.
     """
-    task_lower = original_task.lower()
-
-    if 'run' in task_lower:
-        return ('run', 'run', 'source:muscle_redundancy_study')
-    if 'walk' in task_lower:
-        return ('level_walking', 'level', 'source:muscle_redundancy_study')
-
-    # Default to walking if unclear
-    return ('level_walking', 'level', f'original_task:{original_task}')
+    return (None, original_task, 'task_status:unresolved_source_record_identity')
 
 
 def get_task_info_han2023(original_task: str) -> Tuple[str, str, str]:
@@ -383,7 +378,7 @@ NON_CYCLIC_TASKS = {
 }
 
 
-def get_task_info(dataset: str, original_task: str) -> Tuple[str, str, str]:
+def get_task_info(dataset: str, original_task: str) -> Tuple[Optional[str], str, str]:
     """
     Get standardized task info for a dataset and original task name.
 
@@ -392,7 +387,8 @@ def get_task_info(dataset: str, original_task: str) -> Tuple[str, str, str]:
         original_task: Original task name from the B3D file
 
     Returns:
-        Tuple of (standard_task, task_id, task_info)
+        Tuple of (standard_task, task_id, task_info). An unresolved standard_task
+        is None; its original name remains in task_id for source accounting.
     """
     if dataset not in _TASK_INFO_FUNCTIONS:
         raise ValueError(f"Unknown dataset: {dataset}. "
@@ -420,7 +416,7 @@ def get_subject_name(dataset: str, original_name: str, subject_idx: int) -> str:
     return f'{short_code}_{population}{subject_num}'
 
 
-def is_cyclic_task(task: str) -> bool:
+def is_cyclic_task(task: Optional[str]) -> bool:
     """Check if a task should be phase-normalized."""
     return task in CYCLIC_TASKS
 

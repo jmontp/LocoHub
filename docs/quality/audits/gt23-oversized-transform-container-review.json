@@ -1,0 +1,125 @@
+{
+  "status": "container_metadata_only_not_source_array_validation",
+  "scientific_approval": false,
+  "source_path": "/mnt/s/locomotion_data/Gtech_2023/RawData/AB02/Transforms/normal_walk_1.mat",
+  "source_bytes": 71742204,
+  "source_mtime_ns": 1705003525008556600,
+  "header_sha256": "191f6f38d630c9da8907d17abdf511301d1e5567fb908eb04ecba984ecfc9671",
+  "format": "MAT v5 compressed little-endian",
+  "read_bytes": 4324,
+  "maximum_decompressed_prefix_bytes": 1024,
+  "entries": [
+    {
+      "offset": 128,
+      "compressed_bytes": 84,
+      "prefix_bytes": 152,
+      "prefix_sha256": "8abf821f8594850c1ca45e9a0d3a67820937a4f0478c88b969df4fb6a8f14c42",
+      "matrix_payload_bytes": 144,
+      "matrix_class_id": 17,
+      "contains_MCOS_label_in_prefix": true,
+      "contains_Transforms_label_in_prefix": true,
+      "contains_table_label_in_prefix": true
+    },
+    {
+      "offset": 220,
+      "compressed_bytes": 71741976,
+      "prefix_bytes": 1024,
+      "prefix_sha256": "a82581e7891186aff3c9590effadd23e2e3549674915f08b4fac4af481b56758",
+      "matrix_payload_bytes": 137247856,
+      "matrix_class_id": 9,
+      "contains_MCOS_label_in_prefix": true,
+      "contains_Transforms_label_in_prefix": false,
+      "contains_table_label_in_prefix": true
+    }
+  ],
+  "source_full_hash_checked": false,
+  "scientific_arrays_loaded": false,
+  "affected_parsing_entries": [
+    {
+      "subject": "AB02",
+      "parsing": "normal_walk_1_0-6_parsing.mat",
+      "recording": "normal_walk_1",
+      "has_intervals": true,
+      "parsing_sha256": "e6e9be6ad28d512f89ebeb53494fff1f213ee6b92d04801b035668e3baf8bb3e"
+    },
+    {
+      "subject": "AB02",
+      "parsing": "normal_walk_1_1-2_parsing.mat",
+      "recording": "normal_walk_1",
+      "has_intervals": true,
+      "parsing_sha256": "23fd4c23ff876fec535d39ee3122e84d99b5c8fc36b31bc6de48e61670f64867"
+    },
+    {
+      "subject": "AB02",
+      "parsing": "normal_walk_1_1-8_parsing.mat",
+      "recording": "normal_walk_1",
+      "has_intervals": true,
+      "parsing_sha256": "ae02b2848430b6250f2673575a920173cfd4877ee780e50c98776a41e296f21d"
+    },
+    {
+      "subject": "AB02",
+      "parsing": "normal_walk_1_2-0_parsing.mat",
+      "recording": "normal_walk_1",
+      "has_intervals": true,
+      "parsing_sha256": "b50bf47a8392bd0a63cd30f84f6c6c96da1eb45a0ababcfb2a0d5cf1e5f59083"
+    },
+    {
+      "subject": "AB02",
+      "parsing": "normal_walk_1_2-5_parsing.mat",
+      "recording": "normal_walk_1",
+      "has_intervals": true,
+      "parsing_sha256": "dbc21074a66e1dc5d9bf2c4580731b681b938493d6fcd33cc6c957ffa8fcf07b"
+    },
+    {
+      "subject": "AB02",
+      "parsing": "normal_walk_1_shuffle_parsing.mat",
+      "recording": "normal_walk_1",
+      "has_intervals": true,
+      "parsing_sha256": "0bb2024280f125894ee664eaaebce2fb257ef2162b4db1755c2edd06c651c50d"
+    },
+    {
+      "subject": "AB02",
+      "parsing": "normal_walk_1_skip_parsing.mat",
+      "recording": "normal_walk_1",
+      "has_intervals": true,
+      "parsing_sha256": "2589cb88f52fe7648d9af2a99f8d10cf42d96c1a890cff458bb8b406a3df96e3"
+    }
+  ],
+  "interpretation": {
+    "projected_hdf5_read_applicable": false,
+    "reason": "MAT v5 compressed opaque MCOS table; Transforms descriptor and large unnamed backing object are separate compressed elements. Prefix labels establish container format, not array contents or complete object graph.",
+    "current_native_helper": "prepare_gt23_transforms.m loads the entire Transforms table before selecting Header/calcn_l/calcn_r and limits source files to 64 MiB.",
+    "preservation": "Original source remains present and untouched. This metadata probe did not produce or verify a new byte-preserved transform copy. CSV companions do not replace the original transform MAT.",
+    "canonical_transform_window_status": "Not extracted under current admission. Seven parsing entries remain incomplete, not passing."
+  },
+  "primary_sources": [
+    {
+      "url": "https://www.mathworks.com/help/matlab/import_export/load-parts-of-variables-from-mat-files.html",
+      "claim": "Partial loading and saving requires Version 7.3 MAT files."
+    },
+    {
+      "url": "https://www.mathworks.com/help/matlab/ref/matlab.io.matfile.html",
+      "claim": "Efficient partial loading and saving requires Version 7.3; do not assume table object indexing creates a bounded read."
+    },
+    {
+      "url": "https://www.mathworks.com/help/releases/r2023b/pdf_doc/matlab/import_export.pdf",
+      "claim": "Version 7 or earlier MatFile access temporarily loads the entire variable."
+    }
+  ],
+  "next_steps": [
+    "Keep current admission, native 2048 MiB hard guard, and seven explicit incomplete entries unchanged.",
+    "Seek an authoritative numeric-array or HDF5 export preserving original Header and both calcn matrices with exact source identity. An export still needs independent native equivalence checks before use.",
+    "If none exists, separately review a genuinely bounded extraction design with native MATLAB object semantics; do not silently substitute load-then-slice, raise admission, or invent an MCOS decoder.",
+    "Require exact original clock, bracketing rows, matrix dimensions/values/null masks and source row identities for all seven windows; native validation remains scheduled work, not achieved by these metadata fixtures."
+  ],
+  "synthetic_validation": {
+    "tests": 3,
+    "seconds": 0.42,
+    "memory_cap_mib": 768,
+    "native_or_scientific_arrays_executed": false
+  },
+  "implementation_sha256": {
+    "contributor_tools/inspect_gt23_transform_container.py": "3575722acc15df0bcd36283ab8d0fea7b1efe1cbab755070aafb85db8074e075",
+    "tests/test_gt23_transform_container.py": "c72718bab3cb9df95660af51bd5cbf4b5e897309f89ba7eeab78648c39a92c70"
+  }
+}

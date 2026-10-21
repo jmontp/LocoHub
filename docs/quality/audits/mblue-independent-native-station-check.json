@@ -1,0 +1,55 @@
+{
+  "status": "prepared_not_executed",
+  "scientific_approval": false,
+  "scope": "One existing AB01 source-time window; full target remains 335 blocks and 15061 observations.",
+  "method": {
+    "native": "Independent IK text parser, explicit XML-checked angular versus translation policy, native state assembly, and origin/+X/+Y/+Z stations for seven bodies. Does not call Storage.convertDegreesToRadians or expressVectorInGround.",
+    "independent_readback": "Separately parses original source rows; checks exact clock/23 coordinate identity and values, station bases (unit/orthogonal/right-handed), both-side model-axis displacements, pelvis heading and angle projections against frozen pilot output.",
+    "output_provenance": "Both completed guard receipts require exact options identity, PID, exit 0, 2048 MiB cap, 300 second timeout, timezone-qualified start/finish times. Pins original plan and all its inputs plus every imported repository helper. Rechecks hashes after streaming readback.",
+    "independence_limit": "Both native paths share OpenSim model/state assembly and its underlying engine. This checks a different native position API and independently parsed inputs, not an independent biomechanical model or anatomical axis validation."
+  },
+  "synthetic_tests": {
+    "count": 23,
+    "elapsed_s": 0.65,
+    "memory_cap_mib": 768,
+    "native_executed": false,
+    "coverage": [
+      "Python known-pose zero and bilateral +/-30 degrees with 90-degree yaw and arbitrary body translations",
+      "Station right-handedness, orthogonality, wrong side/sign/coordinate/clock, nonfinite stations, out-of-plane missing projections",
+      "Degrees versus metre translations, source row coverage, unexpected model coordinates",
+      "End-to-end persisted metadata/receipt, altered source or original-plan binding, missing helper, wrong paths, incomplete guard status",
+      "Isolated native guard replacement enforces current 2048 MiB Windows runtime reserve"
+    ]
+  },
+  "preparation": {
+    "plan": "converted_datasets/reconversion_v2/mblue_station_pose_check_v1_20261021/plan.json",
+    "plan_sha256": "50df9d56ef748eb743e13f765bff953a316d3e99aa989b21e70d654ccc255c7d",
+    "bound_files": 21,
+    "numerical_source_rows_read": false
+  },
+  "next_native_prerequisites": [
+    "Coordinator review and exclusive worker slot; native MATLAB/OpenSim 4.4 installed and exact bound jar/model/IK unchanged.",
+    "Frozen original body-axis pilot must complete under coordinator resource/cleanup guards. Station successor must run separately using new plan command, no concurrent native worker.",
+    "Startup Windows available >=4352 MiB; reserve >=2048 MiB at runtime, native hard cap2048 MiB, timeout300 seconds and disk reserve5 GiB. Original frozen pilot needs coordinator runtime reserve enforcement; it is not modified here.",
+    "After guard terminal status, coordinator must independently establish Windows wrapper exit/owned-worker cleanup before releasing global worker slot.",
+    "Run readback_command from new plan only after both native outputs exist. No real native known-pose test or actual source pose check has run.",
+    "To cover all observations still require completed335-block FileInfo/model/source-clock lineage and broader bare/exo/task/side native coverage before full production."
+  ],
+  "interpretation": "All fields are explicitly derived model axes with pelvis-relative heading. Unsupported canonical anatomy stays missing. No dataset approval from these fixtures.",
+  "primary_API_sources": [
+    {
+      "url": "https://github.com/opensim-org/opensim-core/blob/main/OpenSim/Analyses/PointKinematics.cpp",
+      "support": "PointKinematics position uses body.findStationLocationInGround for local station coordinates."
+    },
+    {
+      "url": "https://opensim-org.github.io/opensim-moco-site/docs/1.1.0/html_user/classOpenSim_1_1Frame.html",
+      "support": "Frame exposes station location and vector rotation APIs separately; local installed jar remains bound runtime authority."
+    }
+  ],
+  "bindings": {
+    "contributor_tools/native_probes/mblue_station_pose_check.m": "2bf438b08add54ec79d9e306c41c770f3612bb03eb8c8548f8bc23e3cb67a311",
+    "contributor_tools/check_mblue_native_stations.py": "be77888b41564372a63c812306c510bb5f6deee0016825b4e0ca34599445f335",
+    "contributor_tools/prepare_mblue_station_check.py": "1f15633bc1f0afcaf41cc4637cf921a51f1f7a062673bd3bbb77650ef6576645",
+    "tests/test_mblue_native_station_check.py": "5675ea64070e5992feb61e30679f9d57598369bb1eee856b98b0cd76619e6195"
+  }
+}

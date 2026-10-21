@@ -84,13 +84,14 @@ moment_raw = interp_named(idt, ankle_id_var, id_mask, stride_time, 'extrap') / s
 ankle_moment = interp1(stride_pct, moment_raw, target_pct, 'linear', 'extrap');
 
 % GRF / COP in ankle frame
-[vx_var, vy_var, vz_var, px_var, py_var, pz_var] = select_fp_vars(fp, stride_time, leg_side, mode);
+[vx_var, vy_var, vz_var, px_var, py_var, pz_var] = select_fp_vars(fp, markers, stride_time, leg_side, mode);
 vx = interp_named(fp, vx_var, [], target_times, NaN);
 vy = interp_named(fp, vy_var, [], target_times, NaN);
 vz = interp_named(fp, vz_var, [], target_times, NaN);
 
 vertical_grf = vy / (subject_mass * 9.81);
-anterior_grf = vz / (subject_mass * 9.81);
+forward_sign = gtech_forward_source_z_sign(markers, stride_time);
+anterior_grf = forward_sign * vz / (subject_mass * 9.81);
 lateral_grf = vx / (subject_mass * 9.81);
 
 [ankle_lat, ankle_vert, ankle_ant] = ankle_marker(markers, stride_time, target_times, leg_side);
@@ -98,40 +99,19 @@ cop_lat = interp_named(fp, px_var, [], target_times, NaN) - ankle_lat;
 cop_vert = interp_named(fp, py_var, [], target_times, NaN) - ankle_vert;
 cop_ant = interp_named(fp, pz_var, [], target_times, NaN);
 if ~all(isnan(cop_ant))
-    cop_ant = -(cop_ant - ankle_ant);
+    cop_ant = forward_sign * (cop_ant - ankle_ant);
 end
 
-% Zero COP where vertical GRF is below contact threshold
+% COP is unavailable without sufficient measured contact, never a zero location.
 contact_threshold_BW = 0.2;
-mask_low = vertical_grf < contact_threshold_BW;
-cop_ant(mask_low) = 0;
-cop_lat(mask_low) = 0;
-cop_vert(mask_low) = 0;
+mask_low = ~isfinite(vertical_grf) | vertical_grf < contact_threshold_BW;
+cop_ant(mask_low) = NaN;
+cop_lat(mask_low) = NaN;
+cop_vert(mask_low) = NaN;
 
-% Sign search over anterior COP / shear GRF to best match ID ankle moment
-flip_opts = [1, -1];
-best_est = zeros(NUM_POINTS, 1);
-best_rmse = inf;
-best_sa = 1;
-best_sg = 1;
-for sa = flip_opts
-    for sg = flip_opts
-        est_candidate = (-(sa * cop_ant) .* vertical_grf + cop_vert .* (sg * anterior_grf)) * 9.81;
-        rmse = sqrt(mean((est_candidate - ankle_moment).^2, 'omitnan'));
-        if rmse < best_rmse
-            best_rmse = rmse;
-            best_est = est_candidate;
-            best_sa = sa;
-            best_sg = sg;
-        end
-    end
-end
-
-% Apply best sign combination to COP anterior and shear GRF so that any
-% downstream torque computation using (-cop_ant .* vgrf + cop_vert .* sgrf)
-% is already sign-consistent with the ID ankle moment.
-cop_ant = best_sa * cop_ant;
-anterior_grf = best_sg * anterior_grf;
+% Torque reconstruction is diagnostic only; it never chooses signal signs.
+best_est = (-cop_ant .* vertical_grf + cop_vert .* anterior_grf) * 9.81;
+best_rmse = sqrt(mean((best_est - ankle_moment).^2, 'omitnan'));
 
 sd.phase = target_pct;
 sd.ankle_moment_Nm_kg = ankle_moment;
@@ -175,57 +155,18 @@ end
 val = interp1(src_time, src_val, target_times, method, default_val)';
 end
 
-function [vx_var, vy_var, vz_var, px_var, py_var, pz_var] = select_fp_vars(fp_tbl, stride_time, leg_side, mode)
-vx_var = ''; vy_var = ''; vz_var = '';
-px_var = ''; py_var = ''; pz_var = '';
-if isempty(fp_tbl) || ~istable(fp_tbl) || ~any(strcmp(fp_tbl.Properties.VariableNames, 'Header'))
-    return;
-end
-if strcmpi(mode, 'treadmill')
-    if strcmpi(leg_side, 'right')
-        vx_var = 'Treadmill_R_vx'; vy_var = 'Treadmill_R_vy'; vz_var = 'Treadmill_R_vz';
-        px_var = 'Treadmill_R_px'; py_var = 'Treadmill_R_py'; pz_var = 'Treadmill_R_pz';
-    else
-        vx_var = 'Treadmill_L_vx'; vy_var = 'Treadmill_L_vy'; vz_var = 'Treadmill_L_vz';
-        px_var = 'Treadmill_L_px'; py_var = 'Treadmill_L_py'; pz_var = 'Treadmill_L_pz';
-    end
-    return;
-end
-fp_time = fp_tbl.Header;
-hs_time = stride_time(1);
-check_time = hs_time + 0.2;
-check_idx = find(fp_time >= check_time, 1, 'first');
-available = {};
-for fp = fp_tbl.Properties.VariableNames
-    if endsWith(fp{1}, '_vy')
-        available{end+1} = erase(fp{1}, '_vy'); %#ok<AGROW>
-    end
-end
-best_fp = '';
-best_force = 0;
-for i = 1:numel(available)
-    vy_name = [available{i} '_vy'];
-    if ~any(strcmp(fp_tbl.Properties.VariableNames, vy_name)), continue; end
-    vy_data = fp_tbl.(vy_name);
-    if ~isempty(check_idx)
-        force_val = abs(vy_data(check_idx));
-    else
-        force_val = max(abs(vy_data));
-    end
-    if force_val > best_force
-        best_force = force_val;
-        best_fp = available{i};
-    end
-end
-if isempty(best_fp) || best_force < 50, return; end
-vx_var = [best_fp '_vx']; vy_var = [best_fp '_vy']; vz_var = [best_fp '_vz'];
-px_var = [best_fp '_px']; py_var = [best_fp '_py']; pz_var = [best_fp '_pz'];
+function [vx_var, vy_var, vz_var, px_var, py_var, pz_var] = select_fp_vars(fp_tbl, markers, stride_time, leg_side, mode)
+vx_var=''; vy_var=''; vz_var=''; px_var=''; py_var=''; pz_var='';
+plate=gtech_select_force_plate(fp_tbl,markers,stride_time,leg_side,mode);
+if isempty(plate), return; end
+vx_var=[plate '_vx']; vy_var=[plate '_vy']; vz_var=[plate '_vz'];
+px_var=[plate '_px']; py_var=[plate '_py']; pz_var=[plate '_pz'];
 end
 
 function [lat, vert, ant] = ankle_marker(markers, stride_time, target_times, leg_side)
-lat = zeros(numel(target_times), 1);
-vert = zeros(numel(target_times), 1);
-ant = zeros(numel(target_times), 1);
+lat = nan(numel(target_times), 1);
+vert = nan(numel(target_times), 1);
+ant = nan(numel(target_times), 1);
 if isempty(markers) || ~istable(markers) || ~any(strcmp(markers.Properties.VariableNames, 'Header'))
     return;
 end

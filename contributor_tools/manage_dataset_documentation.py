@@ -20,6 +20,11 @@ Usage:
     python contributor_tools/manage_dataset_documentation.py remove-dataset \
         --short-code UM21 [--remove-parquet]
 
+This tool maintains metadata and historical Markdown evidence reports. The
+published site uses authored HTML: review and update its dataset page separately
+when changing evidence or adding a dataset. Generating a Markdown report does not
+update the published HTML or approve a release.
+
 The tool will:
 1. Collect dataset metadata (interactively or from --metadata-file)
 2. Run validation and generate reports when requested
@@ -52,12 +57,12 @@ repo_root = current_dir.parent
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
-# Ensure src/ is importable so `import locohub` works without a venv
+# Ensure internal contributor tools are importable without a package installation
 src_dir = repo_root / "src"
 if src_dir.exists() and str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
-from locohub import LocomotionData
+from contributor_tools.common.dataset_table import DatasetTable
 
 # Optional Dropbox SDK for share link generation
 try:
@@ -562,14 +567,14 @@ def _coverage_status(value: float) -> str:
 def _compute_feature_task_groups(
     dataset_path: Path,
     tasks: List[str],
-    locomotion_data: Optional[LocomotionData] = None,
+    locomotion_data: Optional[DatasetTable] = None,
 ) -> Tuple[Optional[List[Dict[str, Any]]], Optional[List[str]], Optional[Path]]:
     """Compute feature coverage per task using the clean dataset when available.
 
     Args:
         dataset_path: Path to the dataset file
         tasks: List of task names
-        locomotion_data: Optional pre-loaded LocomotionData to reuse (avoids reload)
+        locomotion_data: Optional pre-loaded DatasetTable to reuse (avoids reload)
     """
 
     coverage_path, using_clean = _infer_clean_dataset_path(dataset_path)
@@ -579,7 +584,7 @@ def _compute_feature_task_groups(
         if locomotion_data is not None and str(coverage_path) == str(dataset_path):
             coverage_data = locomotion_data
         else:
-            coverage_data = LocomotionData(str(coverage_path), phase_col='phase_ipsi')
+            coverage_data = DatasetTable(str(coverage_path), phase_col='phase_ipsi')
     except Exception as exc:
         print(f"⚠️  Unable to compute feature availability ({exc})")
         return None, None, None
@@ -645,10 +650,15 @@ def _compute_feature_task_groups(
 
 
 def _parse_subject_metadata_string(meta_str: str) -> Dict[str, str]:
-    """Parse a subject_metadata comma-separated key:value string into a dict."""
+    """Read typed JSON metadata; legacy strings remain explicitly best-effort."""
     result: Dict[str, str] = {}
     if not meta_str:
         return result
+    if isinstance(meta_str, dict):
+        return meta_str
+    if str(meta_str).lstrip().startswith("{"):
+        from contributor_tools.common.data_contract import _json_object
+        return _json_object(meta_str)
     try:
         parts = [p.strip() for p in str(meta_str).split(',') if p and str(p).strip()]
         for p in parts:
@@ -664,7 +674,7 @@ def _parse_subject_metadata_string(meta_str: str) -> Dict[str, str]:
     return result
 
 
-def _build_subject_metadata_table(locomotion_data: LocomotionData) -> Optional[str]:
+def _build_subject_metadata_table(locomotion_data: DatasetTable) -> Optional[str]:
     """Build a markdown table summarizing per-subject metadata if available.
 
     Returns a markdown string or None if the dataset has no subject_metadata column.
@@ -673,7 +683,7 @@ def _build_subject_metadata_table(locomotion_data: LocomotionData) -> Optional[s
     if 'subject_metadata' not in df.columns:
         return None
 
-    # Collect first metadata string per subject
+    # Summarize all distinct recording metadata, rather than choosing a first row.
     subjects = sorted(locomotion_data.get_subjects())
     rows: List[Tuple[str, Dict[str, str]]] = []
     all_keys: List[str] = []
@@ -686,14 +696,12 @@ def _build_subject_metadata_table(locomotion_data: LocomotionData) -> Optional[s
 
     for subj in subjects:
         meta_series = df.loc[df['subject'] == subj, 'subject_metadata']
-        meta_value = None
-        if not meta_series.empty:
-            # Take first non-null string
-            for val in meta_series:
-                if isinstance(val, str) and val.strip():
-                    meta_value = val
-                    break
-        parsed = _parse_subject_metadata_string(meta_value or '')
+        records = [_parse_subject_metadata_string(value)
+                   for value in meta_series.dropna().unique() if str(value).strip()]
+        parsed = {}
+        for key in {key for record in records for key in record}:
+            values = sorted({json.dumps(record.get(key), sort_keys=True) for record in records})
+            parsed[key] = json.loads(values[0]) if len(values) == 1 else "Varies by recording: " + "; ".join(values)
         for k in parsed.keys():
             if k not in seen_keys:
                 all_keys.append(k)
@@ -717,16 +725,16 @@ def _build_subject_metadata_table(locomotion_data: LocomotionData) -> Optional[s
         cells = [subj]
         for k in ordered_keys:
             v = meta_dict.get(k, '')
-            cells.append(str(v) if v is not None else '')
+            cells.append(str(v).replace("|", "\\|").replace("\n", " ") if v is not None else '')
         lines.append('| ' + ' | '.join(cells) + ' |')
 
     return "\n".join(lines)
-def _load_locomotion_data(dataset_path: Path, reason: str) -> LocomotionData:
+def _load_locomotion_data(dataset_path: Path, reason: str) -> DatasetTable:
     """Load dataset with a helpful progress message."""
 
     dataset_display = _relative_path(dataset_path)
     print(f"⏳ Loading {dataset_display} ({reason})...")
-    return LocomotionData(str(dataset_path), phase_col='phase_ipsi')
+    return DatasetTable(str(dataset_path), phase_col='phase_ipsi')
 
 
 def _metadata_path_for_slug(slug: str) -> Path:
@@ -1013,7 +1021,7 @@ def _canonical_cell_value(value) -> str:
     return str(value).strip()
 
 
-def _extract_task_catalog(locomotion_data: LocomotionData) -> Tuple[List[str], List[Tuple[str, str, str]]]:
+def _extract_task_catalog(locomotion_data: DatasetTable) -> Tuple[List[str], List[Tuple[str, str, str]]]:
     """Return sorted task list and hierarchical rows (task, task_id, task_info)."""
 
     detected_tasks = [task for task in locomotion_data.get_tasks() if task]
@@ -1197,7 +1205,7 @@ def _resolve_validation_link(data: Dict, table_file: Path, absolute: bool) -> Op
 
 
 def _build_dataset_table(metadata_entries: List[Dict], table_file: Path, absolute_links: bool) -> str:
-    header = "| Dataset | Tasks | Strides | Documentation | Phase (Clean) | Phase | Time |"
+    header = "| Dataset | Tasks | Strides | Documentation | Phase (profile-filtered) | Phase (full converted) | Time |"
     separator = "|---------|-------|---------|---------------|---------------|-------|------|"
 
     rows: List[str] = []
@@ -1225,7 +1233,7 @@ def _build_dataset_table(metadata_entries: List[Dict], table_file: Path, absolut
         else:
             doc_cell = '<span class="md-button md-button--disabled">Docs</span>'
 
-        # Phase (Clean) - validated/filtered dataset
+        # Phase (profile-filtered) - validated/filtered dataset
         clean_url = data.get('download_clean_url') or data.get('download_url')
         if clean_url:
             phase_clean_cell = f'<a class="{button_class}" href="{clean_url}">Download</a>'
@@ -1580,7 +1588,7 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
     download_buttons: List[str] = []
     if clean_url:
         download_buttons.append(
-            f'<a class="download-button available" href="{clean_url}" target="_blank" rel="noopener">Download Clean Dataset</a>'
+            f'<a class="download-button available" href="{clean_url}" target="_blank" rel="noopener">Download Profile-filtered Data</a>'
         )
     else:
         download_buttons.append(
@@ -1588,7 +1596,7 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
         )
     if dirty_url:
         download_buttons.append(
-            f'<a class="download-button available" href="{dirty_url}" target="_blank" rel="noopener">Download Full Dataset (Dirty)</a>'
+            f'<a class="download-button available" href="{dirty_url}" target="_blank" rel="noopener">Download Full Converted Data</a>'
         )
     else:
         download_buttons.append(
@@ -1755,10 +1763,13 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
         f"date_added: {date_added}\n"
         f"---\n\n"
         f"# {metadata['display_name']}\n\n"
-        "=== \"Documentation\"\n\n"
-        f"    --8<-- \"{doc_snippet_target}\"\n\n"
-        "=== \"Validation\"\n\n"
-        f"    --8<-- \"{validation_snippet_target}\"\n"
+        "!!! warning \"Legacy / unreviewed artifact\"\n"
+        "    This page preserves conversion metadata and review output. Only a "
+        "versioned release manifest binds quality evidence to an approved artifact.\n\n"
+        "## Study and converted data\n\n"
+        f"--8<-- \"{doc_snippet_target}\"\n\n"
+        "## Historical quality evidence {#validation}\n\n"
+        f"--8<-- \"{validation_snippet_target}\"\n"
     )
 
     DOCS_DATASETS_DIR.mkdir(parents=True, exist_ok=True)
@@ -1850,14 +1861,14 @@ def generate_validation_page(
 
 
 
-def run_validation(dataset_path: Path, ranges_path: Optional[Path] = None, locomotion_data: Optional[LocomotionData] = None) -> Tuple[Dict, str, Optional[Dict], Dict[str, Dict[int, Dict[str, Dict[str, float]]]]]:
+def run_validation(dataset_path: Path, ranges_path: Optional[Path] = None, locomotion_data: Optional[DatasetTable] = None) -> Tuple[Dict, str, Optional[Dict], Dict[str, Dict[int, Dict[str, Dict[str, float]]]]]:
     """
     Run validation on the dataset.
 
     Args:
         dataset_path: Path to the dataset parquet file
         ranges_path: Optional path to validation ranges file
-        locomotion_data: Optional pre-loaded LocomotionData to reuse (avoids reload)
+        locomotion_data: Optional pre-loaded DatasetTable to reuse (avoids reload)
 
     Returns:
         Tuple of (validation_result, summary_text, stats_dict, ranges_dict)
@@ -1890,7 +1901,7 @@ def run_validation(dataset_path: Path, ranges_path: Optional[Path] = None, locom
         if not summary_data and stats_block:
             total = stats_block.get('total_strides', 0)
             failing = stats_block.get('total_failing_strides', 0)
-            passed = total - failing
+            passed = stats_block.get('total_passing_strides', 0)
         elif summary_data:
             total = summary_data.get('total_strides', 0)
             passed = summary_data.get('passing_strides', 0)
@@ -1906,52 +1917,44 @@ def run_validation(dataset_path: Path, ranges_path: Optional[Path] = None, locom
         # Calculate pass rate
         pass_rate = (passed / total * 100) if total > 0 else 0
 
-        # Generate summary text
-        status = "✅ PASSED" if pass_rate >= 95 else "⚠️ PARTIAL" if pass_rate >= 80 else "❌ NEEDS REVIEW"
-
-        # Reuse pre-loaded data or load fresh
-        if locomotion_data is None:
-            locomotion_data = _load_locomotion_data(dataset_path, "gathering per-task validation stats")
+        # Derive every displayed count from the same validation result.
+        status = "PROFILE ASSESSED" if validation_result.get('quality_gate_passed') else "REVIEW REQUIRED"
+        if not validation_result.get('schema_passed'):
+            status = "STRUCTURE INVALID"
         task_stats = {}
         summary_rows = []
-        for task in locomotion_data.get_tasks():
-            task_data = locomotion_data.df[locomotion_data.df['task'] == task]
-            total_cycles = len(task_data) // 150 if len(task_data) else 0
-            failing = validator._validate_task_with_failing_features(locomotion_data, task, None)
-            failing_strides = len(failing)
-            task_pass_rate = 100.0 * (1 - failing_strides / total_cycles) if total_cycles else 0.0
-            if task_pass_rate >= 90:
-                task_status = "✅"
-            elif task_pass_rate >= 70:
-                task_status = "⚠️"
-            else:
-                task_status = "❌"
+        for task, detail in validation_result.get('tasks', {}).items():
+            total_cycles = detail.get('total_strides', 0)
+            passing_cycles = len(detail.get('global_passing_strides', []))
+            failing_cycles = len(detail.get('failing_strides_map', {}))
+            unchecked = len(detail.get('unassessed_strides', []))
+            task_pass_rate = 100.0 * passing_cycles / total_cycles if total_cycles else 0.0
+            task_status = "Not fully assessed" if unchecked or not total_cycles else "Profile assessed"
             task_stats[task] = {
-                'pass_rate': task_pass_rate,
-                'status': task_status,
-                'total_strides': total_cycles,
-                'failing_strides': failing_strides,
+                'pass_rate': task_pass_rate, 'status': task_status,
+                'total_strides': total_cycles, 'failing_strides': failing_cycles,
+                'passing_strides': passing_cycles, 'unassessed_strides': unchecked,
             }
-            summary_rows.append(f"| {_format_task_name(task)} | {task_pass_rate:.1f}% | {task_status} |")
+            summary_rows.append(
+                f"| {_format_task_name(task)} | {passing_cycles}/{total_cycles} | {unchecked} | {task_status} |"
+            )
+        summary = f"""### Assessment summary
 
-        summary = f"""### Summary
+**Status**: {status}
+**Observations**: {total}
+**Passing the selected profile**: {passed}
+**Release provenance**: {validation_result.get('review_status', 'unreviewed')}
 
-**Status**: {status} ({pass_rate:.1f}% valid)  
-**Total Strides**: {total}  
-**Passing Strides**: {passed}  
+### Task breakdown
 
-### Task Breakdown
-
-| Task | Pass Rate | Status |
-|------|-----------|--------|
+| Task | Passing / total | Unassessed | Assessment |
+|------|-----------------|------------|------------|
 """ + "\n".join(summary_rows) + "\n"
-
-        summary += "\n_Validation ranges snapshot embedded below._\n"
-
-        if pass_rate < 80:
-            summary += "\n⚠️ **Note**: Validation ranges represent established biomechanical norms from literature. "
-            summary += "Pass rates indicate conformance to these norms—lower rates may reflect special populations, "
-            summary += "non-standard protocols, or task-specific differences. See the [validation interpretation guide](../../contributor_tools/CLAUDE.md#interpreting-pass-rates) for details.\n"
+        summary += (
+            "\nReference profiles describe their configured checks, not universal validity. "
+            "Check population applicability, signal coverage, and source provenance before use. "
+            "Only a versioned release manifest binds this assessment to a published artifact.\n"
+        )
 
         stats = {
             'total_strides': total,
@@ -2987,6 +2990,8 @@ Example workflow:
     
     print(f"🚀 Manage Dataset Documentation Tool")
     print(f"{'='*60}")
+    print("This tool updates metadata and Markdown evidence reports.")
+    print("Review and update the authored HTML dataset page separately before publishing.")
     
     if args.command == 'add-dataset':
         return handle_add_dataset(args)

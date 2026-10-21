@@ -1,3 +1,4 @@
+function convert_gtech_phase_to_parquet(options)
 % This file is meant to convert raw Gtech 2023 data based on heel strikes
 % from _parsing.mat files into a standardized phase-aligned parquet file.
 %
@@ -7,8 +8,9 @@
 %   3. These files contain segment angles in DEGREES (not radians)
 
 % --- Step 1: Initialization & Setup ---
-clear all;
-close all;
+if nargin < 1; options = struct(); end
+bounded = ~isempty(fieldnames(options));
+addpath(fullfile(fileparts(mfilename('fullpath')), '..', 'matlab_common'));
 
 % Add utilities folder to path for helper functions
 addpath(fullfile(fileparts(mfilename('fullpath')), 'utilities'));
@@ -17,10 +19,21 @@ num_points_per_step = 150;
 naming_convention = 'ipsicontra'; % Options: 'lr', 'ipsicontra'
 data_dir_root = '.'; % Assumes RawData and Segmentation are subdirs of CWD
 output_dir = fullfile('..', '..', '..', 'converted_datasets'); % Output to project root
+if bounded
+    assert(all(isfield(options, {'data_root', 'subject', 'recording', 'output_path'})), 'Missing recording options');
+    assert(~isfile(options.output_path), 'Output already exists');
+    assert(~isempty(regexp(options.subject, '^AB\d+$', 'once')), 'Invalid subject');
+    assert(~contains(options.recording, '/') && ~contains(options.recording, '\'), 'Expected parsing filename');
+    data_dir_root = options.data_root;
+    output_dir = fileparts(options.output_path);
+end
+
 critical_activities = {'stairs', 'incline_walk', 'normal_walk', 'sit_to_stand', ...
     'stand_to_sit', 'squats', 'jump', 'step_ups', 'curb_up', 'curb_down', ...
     'walk_backward', 'weighted_walk', 'lunges', 'dynamic_walk', 'side_shuffle', ...
-    'cutting'}; % Define tasks to convert into phase dataset
+    'cutting', 'ball_toss', 'lift_weight', 'turn_and_step', 'tire_run'};
+% Preserve source-annotated movements as well as locomotion cycles. The old
+% allowlist silently omitted 169 local parsing windows from these four tasks.
 
 % Initialize a single table to hold all processed data
 total_data = table();
@@ -33,7 +46,7 @@ if exist(subject_mass_file, 'file')
     fprintf('Loaded subject mass data from: %s\n', subject_mass_file);
     fprintf('  Found %d subjects with mass data\n', height(subject_mass_table));
 else
-    warning('Subject_masses.csv not found at %s. Mass normalization will use default value.', subject_mass_file);
+    warning('Subject_masses.csv not found at %s. Body-weight normalization will be unavailable.', subject_mass_file);
     subject_mass_table = table();
 end
 
@@ -71,6 +84,10 @@ end
 
 subjects = dir(segmentation_dir);
 subjects = subjects(~ismember({subjects.name},{'.','..'}) & [subjects.isdir]); % Filter . and .. and files
+if bounded
+    subjects = subjects(strcmp({subjects.name}, options.subject));
+    assert(numel(subjects) == 1, 'Subject source folder not found');
+end
 
 if isempty(subjects)
     error('No subject directories found in %s', segmentation_dir);
@@ -98,15 +115,18 @@ for subject_idx = 1:length(subjects)
     subject_raw_data_dir = fullfile(data_dir_root, 'RawData', subject);
 
     % Look up subject mass for normalization
-    subject_mass_kg = 76.9;  % Default: aggregate mean from paper
+    subject_mass_kg = NaN;  % Unknown mass must not become a measured cohort mean
     if ~isempty(subject_mass_table) && ismember('subject_id', subject_mass_table.Properties.VariableNames)
         mass_idx = strcmp(subject_mass_table.subject_id, subject);
         if any(mass_idx)
             subject_mass_kg = subject_mass_table.mass_kg(mass_idx);
             fprintf('  Subject %s mass: %.2f kg\n', subject, subject_mass_kg);
         else
-            warning('Mass not found for %s, using default %.2f kg', subject, subject_mass_kg);
+            warning('Mass not found for %s; normalized GRF will be unavailable.', subject);
         end
+    end
+    if ~isscalar(subject_mass_kg) || ~isfinite(subject_mass_kg) || subject_mass_kg <= 0
+        subject_mass_kg = NaN;
     end
     subject_weight_N = subject_mass_kg * 9.81;  % Body weight in Newtons
 
@@ -117,11 +137,17 @@ for subject_idx = 1:length(subjects)
     end
 
     activities = dir(fullfile(subject_segmentation_dir, '*_parsing.mat')); % Look for parsing files
+    if bounded
+        activities = activities(strcmp({activities.name}, options.recording));
+        assert(numel(activities) == 1, 'Parsing source file not found');
+    end
 
     if isempty(activities)
         warning('No *_parsing.mat files found for subject %s in %s. Skipping subject.', subject, subject_segmentation_dir);
                 continue;
             end
+
+    activities = expand_parsing_conditions(activities, subject_segmentation_dir);
 
     % fprintf('Processing Subject: %s (%d activities)\n', subject, length(activities));
     printed_subject_header = false; % Flag to print subject header only once
@@ -174,33 +200,20 @@ for subject_idx = 1:length(subjects)
             left_invalid = ~isfield(parsing_data, 'left') || isempty(parsing_data.left);
             right_invalid = ~isfield(parsing_data, 'right') || isempty(parsing_data.right);
 
-            % Handle alternative field naming patterns (side_shuffle, lunges)
-            if left_invalid && right_invalid
-                % Try side_shuffle pattern: left_left/right_left -> left, left_right/right_right -> right
-                if isfield(parsing_data, 'left_left') && ~isempty(parsing_data.left_left)
-                    parsing_data.left = parsing_data.left_left;
-                    left_invalid = false;
-                    fprintf('  Using alternative field name: left_left -> left\n');
-                end
-                if isfield(parsing_data, 'left_right') && ~isempty(parsing_data.left_right)
-                    parsing_data.right = parsing_data.left_right;
-                    right_invalid = false;
-                    fprintf('  Using alternative field name: left_right -> right\n');
-                end
-
-                % Try lunges pattern: left_forward_left -> left, left_forward_right -> right
-                if left_invalid && isfield(parsing_data, 'left_forward_left') && ~isempty(parsing_data.left_forward_left)
-                    parsing_data.left = parsing_data.left_forward_left;
-                    left_invalid = false;
-                    fprintf('  Using alternative field name: left_forward_left -> left\n');
-                end
-                if right_invalid && isfield(parsing_data, 'left_forward_right') && ~isempty(parsing_data.left_forward_right)
-                    parsing_data.right = parsing_data.left_forward_right;
-                    right_invalid = false;
-                    fprintf('  Using alternative field name: left_forward_right -> right\n');
-                end
+            % Pair anatomical fields within the same source condition. The
+            % first field token is the anatomical side; subsequent tokens name
+            % the condition (e.g. left_forward_left / right_forward_left).
+            source_condition = activities(activity_idx).source_condition;
+            if ~isempty(source_condition)
+                parsing_data.left = [];
+                parsing_data.right = [];
+                left_field = ['left_' source_condition];
+                right_field = ['right_' source_condition];
+                if isfield(parsing_data, left_field); parsing_data.left = parsing_data.(left_field); end
+                if isfield(parsing_data, right_field); parsing_data.right = parsing_data.(right_field); end
+                left_invalid = isempty(parsing_data.left);
+                right_invalid = isempty(parsing_data.right);
             end
-
             if left_invalid && right_invalid
                  % Check if this is a sit-to-stand or stand-to-sit activity
                  % These activities don't have heel strikes, so we use GRF-based segmentation
@@ -282,6 +295,8 @@ for subject_idx = 1:length(subjects)
              raw_activity_name = [activity_name '_' int2str(activity_number) '_' jump_num_str];
         % Add other special case overrides here if needed
         end
+
+        raw_activity_name = resolve_gtech_raw_folder(fullfile(subject_raw_data_dir, 'CSV_Data'), activity_file_name);
 
         % --- Check if activity is critical ---
         if ~ismember(activity_name, critical_activities)
@@ -616,8 +631,25 @@ for subject_idx = 1:length(subjects)
                 [task_name, task_id, task_info_str] = parse_gtech_activity_matlab(activity_name, sub_activity_name);
             end
 
+            % Named source transfer intervals describe the destination posture.
+            % Preserve chair/arm conditions from the original parsing filename.
+            if any(strcmp(activity_name, {'sit_to_stand', 'stand_to_sit'})) && ...
+                    any(strcmp(source_condition, {'sitting', 'standing'}))
+                if strcmp(source_condition, 'sitting')
+                    task_name = 'stand_to_sit';
+                else
+                    task_name = 'sit_to_stand';
+                end
+                task_info_str = [task_info_str ',source_task_id:' task_id ...
+                    ',segmentation:source_named_transfer_interval'];
+                task_id = task_name;
+            end
+
             step_data_single.task = repmat({task_name}, num_points_per_step, 1);
             step_data_single.task_id = repmat({task_id}, num_points_per_step, 1);
+            if ~isempty(source_condition)
+                task_info_str = [task_info_str ',source_condition:' source_condition];
+            end
             step_data_single.task_info = repmat({task_info_str}, num_points_per_step, 1);
             
             % Add subject_metadata column with mass info
@@ -629,11 +661,23 @@ for subject_idx = 1:length(subjects)
             step_data_single.temp_weight_N = repmat(subject_weight_N, num_points_per_step, 1);
             step_data_single.leading_leg_step = repmat({leading_leg}, num_points_per_step, 1); % Add leading leg marker
             step_data_single.step = repmat(step_idx, num_points_per_step, 1);
+            source_recording_id = sprintf('gt23:%s/%s', subject, raw_activity_name);
+            reference_side = 'right';
+            if strcmp(leading_leg, 'l'), reference_side = 'left'; end
+            observation_type = 'individual_cycle';
+            if any(strcmp(task_name, {'sit_to_stand', 'stand_to_sit'}))
+                observation_type = 'transfer';
+            end
+            step_data_single = locohub_add_provenance(step_data_single, source_recording_id, ...
+                sprintf('time:%.17g:%.17g', step_start, step_end), reference_side, ...
+                observation_type, step_start, step_end);
+            step_data_single.step = step_data_single.observation_id;
+
 
             % Generate Time & Phase Vectors for this step
                             time_interp = linspace(step_start, step_end, num_points_per_step)';
-            base_phase_step = linspace(0, 1 - 1/num_points_per_step, num_points_per_step)';
-            offset_phase_step = mod(base_phase_step + 0.5, 1);
+            base_phase_step = linspace(0, 100, num_points_per_step)';
+            offset_phase_step = mod(base_phase_step + 50, 100);
             step_data_single.time = time_interp; % Common time column for the step
 
             % --- Interpolate signals ---
@@ -809,7 +853,13 @@ for subject_idx = 1:length(subjects)
                                           cop_z_raw_slice = nan(size(cop_x_raw_slice)); % Use NaNs
                                      end
 
+                                     cop_y_name = [upper(leg_char) 'COPY_Vertical'];
+                                     cop_y_raw_slice = nan(size(cop_x_raw_slice));
+                                     if ismember(cop_y_name, raw_grf_table_slice.Properties.VariableNames)
+                                         cop_y_raw_slice = raw_grf_table_slice.(cop_y_name);
+                                     end
                                      cop_local_x = nan(length(raw_grf_time_slice), 1);
+                                     cop_local_y = nan(length(raw_grf_time_slice), 1);
                                      cop_local_z = nan(length(raw_grf_time_slice), 1);
 
                                      transforms_to_use = transforms_slice_r; % Default R
@@ -819,16 +869,20 @@ for subject_idx = 1:length(subjects)
                                      if length(trans_time_slice) >= 1 && length(transforms_to_use) == length(trans_time_slice)
                                           for t_idx = 1:length(raw_grf_time_slice)
                                              current_grf_time = raw_grf_time_slice(t_idx);
+                                             if current_grf_time < min(trans_time_slice) || current_grf_time > max(trans_time_slice)
+                                                 continue;
+                                             end
                                              [~, closest_trans_idx] = min(abs(trans_time_slice - current_grf_time));
                                              if closest_trans_idx <= length(transforms_to_use)
                                                  T = transforms_to_use{closest_trans_idx};
                                             if isnumeric(T) && all(size(T) == [4, 4])
                                                      translation = T(1:3, 4); rotation = T(1:3, 1:3);
-                                                     cop_global = [cop_x_raw_slice(t_idx); 0; cop_z_raw_slice(t_idx)];
-                                                if ~any(isnan(cop_global))
+                                                     cop_global = [cop_x_raw_slice(t_idx); cop_y_raw_slice(t_idx); cop_z_raw_slice(t_idx)];
+                                                if all(isfinite(cop_global))
                                                     cop_relative = cop_global - translation;
                                                     cop_local = rotation' * cop_relative;
                                                           cop_local_x(t_idx) = cop_local(1);
+                                                          cop_local_y(t_idx) = cop_local(2);
                                                           cop_local_z(t_idx) = cop_local(3);
                                                 end
                                             end
@@ -837,7 +891,7 @@ for subject_idx = 1:length(subjects)
                                          % Use standardized column names with ipsi/contra
                                          step_data_single.(['cop_anterior' ipsi_contra_suffix '_m']) = interpolate_signal(raw_grf_time_slice, cop_local_x, time_interp, interp_method);
                                          step_data_single.(['cop_lateral' ipsi_contra_suffix '_m']) = interpolate_signal(raw_grf_time_slice, cop_local_z, time_interp, interp_method);
-                                         step_data_single.(['cop_vertical' ipsi_contra_suffix '_m']) = zeros(num_points_per_step, 1); % Assume zero vertical COP in local frame
+                                         step_data_single.(['cop_vertical' ipsi_contra_suffix '_m']) = interpolate_signal(raw_grf_time_slice, cop_local_y, time_interp, interp_method);
                                      else % Not enough transform data or length mismatch
                                          if ismember(activity_name, critical_activities)
                                              warning('Transform data issue for step %d. Cannot transform COP.', step_idx);
@@ -1144,8 +1198,8 @@ if strcmpi(naming_convention, 'ipsicontra')
            ismember(col_r, combined_data.Properties.VariableNames)
             
             % Create ipsi and contra columns based on leading leg
-            combined_data.(col_ipsi) = zeros(height(combined_data), 1);
-            combined_data.(col_contra) = zeros(height(combined_data), 1);
+            combined_data.(col_ipsi) = nan(height(combined_data), 1);
+            combined_data.(col_contra) = nan(height(combined_data), 1);
             
             % When ipsi_is_left is true (left leg leading): L->ipsi, R->contra
             % When ipsi_is_left is false (right leg leading): R->ipsi, L->contra
@@ -1471,16 +1525,13 @@ if ismember('pelvis_transverse_angle_rad', combined_data.Properties.VariableName
     fprintf('  Applied +pi/2 offset to pelvis_transverse_angle_rad (coordinate frame alignment)\n');
 end
 
-% 2. Check for and remove duplicate rows
-% Use task_id (not task) to distinguish activities within the same category
-% e.g., 'side_shuffle' vs 'dynamic_walk' both have task='agility_drill'
-initial_rows = height(combined_data);
-[~, unique_idx] = unique(combined_data(:, {'subject', 'task_id', 'step', 'phase_ipsi'}), 'rows', 'stable');
-if length(unique_idx) < initial_rows
-    combined_data = combined_data(unique_idx, :);
-    fprintf('  Removed %d duplicate rows\n', initial_rows - length(unique_idx));
-else
-    fprintf('  No duplicate rows found\n');
+% Reject duplicated source observations instead of dropping unrelated trials
+% that happened to receive the same local step counter.
+phase_column = 'phase_ipsi';
+if ~strcmpi(naming_convention, 'ipsicontra'), phase_column = 'phase_r'; end
+[~, unique_idx] = unique(combined_data(:, {'observation_id', phase_column}), 'rows', 'stable');
+if numel(unique_idx) ~= height(combined_data)
+    error('LocoHub:DuplicateObservation', 'Duplicate source observation samples; inspect parsing intervals.');
 end
 
 % Convert task data to string (if column exists after rename)
@@ -1506,7 +1557,9 @@ else % 'lr'
 end
 
 % Write the data to a parquet file
-file_name = fullfile(output_dir, 'gtech_2023_phase_raw.parquet'); % New filename indicating source
+file_name = fullfile(output_dir, 'gtech_2023_phase_raw.parquet');
+if bounded; file_name = options.output_path; end
+assert(~isfile(file_name), 'Refusing to overwrite an existing phase artifact');
 try
     parquetwrite(file_name, combined_data);
     fprintf('Processing complete. Output saved to: %s\n', file_name);
@@ -1515,6 +1568,34 @@ catch ME_write
 end
 
 % --- END MAIN PROCESSING ---
+end
+
+function expanded = expand_parsing_conditions(activities, directory)
+% Keep each source condition rather than aliasing fields from different trials.
+    expanded = activities([]);
+    for index = 1:numel(activities)
+        item = activities(index);
+        parsed = load(fullfile(directory, item.name));
+        fields = fieldnames(parsed);
+        conditions = {};
+        for j = 1:numel(fields)
+            tokens = regexp(fields{j}, '^(?:left|right)_(.+)$', 'tokens', 'once');
+            if ~isempty(tokens) && isnumeric(parsed.(fields{j})) && size(parsed.(fields{j}), 2) == 2
+                conditions{end+1} = tokens{1}; %#ok<AGROW>
+            end
+        end
+        conditions = unique(conditions, 'stable');
+        if isempty(conditions); conditions = {''}; end
+        if ~isempty(conditions) && (isfield(parsed, 'left') || isfield(parsed, 'right'))
+            conditions = unique([{''}, conditions], 'stable');
+        end
+        for j = 1:numel(conditions)
+            item.source_condition = conditions{j};
+            if isempty(expanded); expanded = item; else; expanded(end+1) = item; end %#ok<AGROW>
+        end
+    end
+end
+
 
 % --- Define Helper Function for Interpolation (Moved to End) ---
 function interp_data = interpolate_signal(raw_times, raw_values, target_times, method, nan_fill_val)

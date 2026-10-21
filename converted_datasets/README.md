@@ -1,24 +1,26 @@
 # Converted Datasets
 
-Standardized biomechanical datasets ready for analysis.
+Local reconstruction and historical data artifacts. No dataset has completed final scientific review. See the [reconstruction backlog](../docs/maintainers/backlog.html) for current evidence and remaining work.
 
-**Documentation:** [Datasets](../docs/datasets/index.md) • [Schema Reference](../docs/reference/index.md) • [Tutorials](../docs/tutorials/)
+**Documentation:** [Datasets](../docs/datasets/index.html) • [Schema Reference](../docs/reference/index.html) • [Tutorials](../docs/tutorials/)
 
-## Available Datasets
+## Historical filenames
+
+These names describe earlier exports, not approved releases. Use the dataset pages for source information and current limitations; use the reconstruction backlog to distinguish staged corrections from historical files.
 
 **GTech 2021** (Georgia Tech locomotion study)
 - `gtech_2021_phase_clean.parquet` – Phase-indexed dataset with failing strides removed
 - `gtech_2021_phase_dirty.parquet` – Full export prior to validation filtering
-- **Documentation:** [docs/datasets/gt21.md](../docs/datasets/gt21.md)
+- **Documentation:** [Georgia Tech 2021](../docs/datasets/gt21/index.html)
 
-**GTech 2023** (AddBiomechanics export)
+**GTech 2023** (Georgia Tech locomotion study)
 - `gtech_2023_phase_raw.parquet` – Raw phase export (no validation envelope yet)
-- **Documentation:** [docs/datasets/_legacy/dataset_gtech_2023.md](../docs/datasets/_legacy/dataset_gtech_2023.md)
+- **Documentation:** [Georgia Tech 2023](../docs/datasets/gt23/index.html)
 
 **UMich 2021** (University of Michigan treadmill study)
 - `umich_2021_phase_clean.parquet`
 - `umich_2021_phase_dirty.parquet`
-- **Documentation:** [docs/datasets/um21.md](../docs/datasets/um21.md)
+- **Documentation:** [UMich 2021](../docs/datasets/um21/index.html)
 
 ---
 
@@ -43,7 +45,7 @@ data = pd.read_parquet('gtech_2021_phase.parquet')
 
 **MATLAB:**
 ```matlab
-data = readtable('gtech_2021_phase.parquet');
+data = parquetread('gtech_2021_phase.parquet');
 ```
 
 ---
@@ -53,8 +55,8 @@ data = readtable('gtech_2021_phase.parquet');
 For detailed information on each dataset:
 - **Dataset Documentation:** [docs/datasets/](../docs/datasets/)
 - **Usage Tutorials:** [docs/tutorials/](../docs/tutorials/)
-- **Schema Reference:** [docs/reference/index.md](../docs/reference/index.md)
+- **Schema Reference:** [File format](../docs/reference/index.html)
 
 ---
 
-*These datasets are cleaned, tested, and ready for reproducible biomechanical research.*
+Historical filenames such as `clean` describe prior filtering, not verified scientific correctness. Corrected outputs and independent source checks are still being produced.
