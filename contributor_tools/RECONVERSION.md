@@ -669,3 +669,43 @@ every native pilot while preserving the one-bulk-worker constraint.
 Other task conditions, inferred transfer/jump segmentation, the optional legacy
 left/right phase convention and full reconstruction remain open. The converter
 README's GT23 authors/article number were also corrected against the source paper.
+
+
+### GT23 named transfers and repeat-recording resolution
+
+The original transfer annotations provide `left_sitting`/`right_sitting` and
+`left_standing`/`right_standing` intervals. The expanded phase path now maps these
+to stand-to-sit and sit-to-stand respectively, retains original chair/arm context,
+and identifies source-annotated segmentation rather than claiming inferred GRF
+boundaries. The original source task ID remains in metadata.
+
+A whole-source audit initially found 36 direction disagreements in AB02/AB03.
+Investigation showed that the first-number filename rule (used by the old converter
+and that first probe) mapped `sit_to_stand_1_2_*` annotations to `sit_to_stand_1`
+instead of the actual repeat recording `sit_to_stand_1_2`. Both MATLAB paths now
+resolve the longest complete recording prefix actually present in the source.
+No match/ambiguity fails explicitly. The initial misresolved audit is preserved
+under `gt23_transfer_source_review_20261020_misresolved_recordings` with an
+explanation; it is not evidence of bad measured motion.
+
+The corrected audit checks all 1,199 transfer intervals (598 sitting, 601 standing)
+from 12 subjects and 26 underlying recordings. Left/right annotation intervals
+agree exactly. Every interval has the expected bilateral knee-flexion direction
+at its source endpoints, with no missing or reversed comparisons. This supports
+the source-label interpretation, not exact boundary precision. Source and probe
+hashes and all per-interval results are retained. A separate filename inventory
+resolves all 787 local parsing files across 12 subjects with zero unmatched paths.
+
+The AB03 repeat recording fits the existing input admission (41.25 MiB), so
+`gt23_native_transfer_pilot_20261020` executed the latest branches under the same
+2 GiB Windows job guard. It preserved all 30 source intervals: 15 stand-to-sit and
+15 sit-to-stand movements, totaling 4,500 rows. The independent comparison checks
+recording identity, source intervals, task labels, chair/arm context and bilateral
+hip/knee/ankle angles. Maximum angle difference is 2.29e-14 rad; structural checks
+and source/code snapshot hashes pass. The GT24 parent resumed in the finally block
+at the same process/recording position after MATLAB completed.
+
+Larger transfer recordings still need a bounded reconstruction strategy. Full
+reconstruction, boundary precision and broader convention checks remain open.
+Earlier native time and curb-phase pilots remain evidence for their own frozen
+code snapshots. The source-only audit's native-pending note predates this pilot.

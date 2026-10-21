@@ -294,6 +294,8 @@ for subject_idx = 1:length(subjects)
         % Add other special case overrides here if needed
         end
 
+        raw_activity_name = resolve_gtech_raw_folder(fullfile(subject_raw_data_dir, 'CSV_Data'), activity_file_name);
+
         % --- Check if activity is critical ---
         if ~ismember(activity_name, critical_activities)
             % fprintf('  Skipping non-critical activity: %s\n', activity_file_name);
@@ -625,6 +627,20 @@ for subject_idx = 1:length(subjects)
                 end
             else
                 [task_name, task_id, task_info_str] = parse_gtech_activity_matlab(activity_name, sub_activity_name);
+            end
+
+            % Named source transfer intervals describe the destination posture.
+            % Preserve chair/arm conditions from the original parsing filename.
+            if any(strcmp(activity_name, {'sit_to_stand', 'stand_to_sit'})) && ...
+                    any(strcmp(source_condition, {'sitting', 'standing'}))
+                if strcmp(source_condition, 'sitting')
+                    task_name = 'stand_to_sit';
+                else
+                    task_name = 'sit_to_stand';
+                end
+                task_info_str = [task_info_str ',source_task_id:' task_id ...
+                    ',segmentation:source_named_transfer_interval'];
+                task_id = task_name;
             end
 
             step_data_single.task = repmat({task_name}, num_points_per_step, 1);

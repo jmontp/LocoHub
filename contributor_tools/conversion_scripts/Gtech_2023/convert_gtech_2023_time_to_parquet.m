@@ -144,6 +144,7 @@ function convert_gtech_2023_time_to_parquet(options)
             end
 
             % Load (and cache) the raw CSV folder for this window.
+            raw_folder = resolve_gtech_raw_folder(fullfile(raw_dir, 'CSV_Data'), parsing_name);
             activity_dir = fullfile(raw_dir, 'CSV_Data', raw_folder);
             if ~isfolder(activity_dir)
                 warning('Raw folder not found: %s; skip %s', activity_dir, parsing_name);
@@ -224,6 +225,7 @@ function convert_one_recording(options)
     [t0, t1, reference] = window_from_parsing(parsing);
     assert(isfinite(t0) && isfinite(t1) && t1 > t0, 'Invalid source interval');
     raw_root = fullfile(options.data_root, 'RawData');
+    raw_folder = resolve_gtech_raw_folder(fullfile(raw_root, options.subject, 'CSV_Data'), options.recording);
     cached = load_activity_csvs(fullfile(raw_root, options.subject, 'CSV_Data', raw_folder), ...
         fullfile(raw_root, options.subject, 'Transforms', [raw_folder '.mat']));
     masses = load_subject_masses(fullfile(raw_root, 'Subject_masses.csv'));
