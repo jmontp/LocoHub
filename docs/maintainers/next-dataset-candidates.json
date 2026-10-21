@@ -13,7 +13,7 @@
       "reason_to_review_next": "Running complements the walking addition, with original processing materials available for source review.",
       "remaining_admission_checks": [
         "Reconcile v5 cohort and duplicate metadata file IDs with exact recording coverage; current repository has 39 processed files whereas the paper reports 28 people.",
-        "Determine whether processed files contain individual cycles or participant means.",
+        "Verify current version5 processed headers and absent speed columns against the paper-defined participant-average format; do not infer availability from the original145-column layout.",
         "Verify bilateral coordinate signs, units and source event timing from this dataset's own model and code.",
         "Check the active and historical catalog again for duplicates before adding files.",
         "Design one small bounded source-readback pilot after the walking review."
@@ -26,7 +26,7 @@
         "v5_repository_participants": 39,
         "processed_files": 39,
         "repository_file_count": 428,
-        "total_file_bytes": 808014065,
+        "total_file_bytes": 770762552,
         "warning": "Current archive extends the paper cohort and has unequal condition coverage. RBDS031 and RBDS033-039 have only T35 trial names; do not fabricate all three speeds.",
         "duplicate_metadata_names": [
           {
@@ -44,7 +44,22 @@
             ]
           }
         ],
-        "metadata_rule": "Pin file IDs and hashes; basename alone is ambiguous. Reconcile both metadata generations with current participant/condition coverage before importing."
+        "metadata_rule": "Pin file IDs and hashes; basename alone is ambiguous. Reconcile both metadata generations with current participant/condition coverage before importing.",
+        "processed_file_bytes": 4408738,
+        "size_correction": "Earlier total808,014,065 bytes came from an unversioned API response; explicit version5 totals770,762,552 bytes. Version-specific file sizes govern admission."
+      },
+      "processed_semantics": {
+        "paper_section": "Methods: Data processing; Results: Data files",
+        "kind": "Participant-average curves, not individual gait cycles",
+        "samples": 101,
+        "units": {
+          "angles": "degrees",
+          "moments": "Nm/kg",
+          "ground_reaction_forces": "N/kg, not BW",
+          "powers": "W/kg"
+        },
+        "paper_scope": "Original processed format101rows x145columns for three speeds and two sides; version5 later participants have unequal coverage requiring file-header review.",
+        "reference_frame": "Paper describes Z-X-Y Cardan angles and joint-coordinate-system net internal moments; exact exported bilateral sign mapping remains a separate gate."
       }
     },
     {
@@ -72,20 +87,21 @@
       "overlap_warning": "Repository states 601 of 1,798 participants were included in previous research publications. Track original cohort/session provenance; new DOI does not prove new participants."
     }
   ],
-  "reviewed_at_utc": "2026-10-21T05:15:45.259376+00:00",
+  "reviewed_at_utc": "2026-10-21T05:51:48.489552+00:00",
   "active_addition": {
     "name": "Fukuchi 2018 walking",
-    "status": "pilot_checked_full_run_prepared_not_started",
+    "status": "first_pair_queued_waiting_for_predecessor_full_run_not_started",
     "paper_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5922232/",
     "source_doi": "10.6084/m9.figshare.5722711.v6",
     "scope": "508 published participant-condition angle/kinetic table pairs; 51 participants; ensemble means, not individual strides",
-    "acceptance_review": "../quality/audits/fu18-full-run-readiness.json"
+    "acceptance_review": "../quality/audits/fu18-full-run-readiness.json",
+    "checkpoint_review": "../quality/audits/fu18-sequential-onboarding-checkpoint.json"
   },
   "evidence_receipts": {
     "fukuchi2017": {
-      "api_url": "https://api.figshare.com/v2/articles/4543435",
-      "local_sha256": "9c3cca724d3cde1a199eec27816e94449ff0090015d3375e6625cceaf821bc63",
-      "bytes": 128843
+      "api_url": "https://api.figshare.com/v2/articles/4543435/versions/5",
+      "local_sha256": "5310b0bccff588bdfb77ebc06b692bcc5d4cbcd43606c6dbb104036957360e9d",
+      "bytes": 128845
     },
     "fukuchi2018_v6": {
       "api_url": "https://api.figshare.com/v2/articles/5722711/versions/6",
@@ -93,9 +109,9 @@
       "bytes": 6203
     },
     "ferber2024": {
-      "api_url": "https://api.figshare.com/v2/articles/24255795",
-      "local_sha256": "d16a91464b87a5dfa70d2cc16de3b2de4d235bb462803c29819fd53f5dc95f15",
-      "bytes": 10838
+      "api_url": "https://api.figshare.com/v2/articles/24255795/versions/2",
+      "local_sha256": "09685658b46192a2bdab897a6638af822c2859fa3285ab17625b4ba9f4301137",
+      "bytes": 10840
     }
   },
   "duplicate_review": "No matching running/Ferber study pages found in current docs/datasets index pages. Historical or composite datasets still need source-identity checks before a second addition; title search is not proof of independent participants."
