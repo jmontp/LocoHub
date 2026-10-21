@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T20:20:53.801082-04:00",
-  "recorded_at": "2026-10-21T00:21:24.294162+00:00",
-  "base_revision": "ed159bfd934d2c7e6af27eb73515e2c66e9dc5d1",
+  "started_at": "2026-10-20T20:24:45.418589-04:00",
+  "recorded_at": "2026-10-21T00:25:17.425348+00:00",
+  "base_revision": "8abce59bde6ac6c676fe864b9e71be32b5f0f5e2",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "ulimit -v 2097152; OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "34296c8bc587bbdbe9b13c68829eaad18549a2c15b67b5254423475154716256",
+  "junit_sha256": "bae75dcc6ace5dfd8acb2c2be205351981668668ed4fcc260e317efaff259048",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -437,6 +437,33 @@
         },
         {
           "name": "test_reviewed_profile_status_is_preserved",
+          "status": "passed"
+        }
+      ]
+    },
+    "tests.test_gt21_native_batch": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_inventory_includes_all_present_subjects_and_dates",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_resume_requires_exact_outputs_and_code",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_source_admission_requires_both_event_streams",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_paths_reject_c_backed_outputs",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_source_compression_roundtrips_exactly",
           "status": "passed"
         }
       ]
@@ -891,7 +918,7 @@
     }
   },
   "totals": {
-    "passed": 186,
+    "passed": 191,
     "failed": 0,
     "skipped": 2
   }

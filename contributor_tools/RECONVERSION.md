@@ -442,3 +442,30 @@ masses and heights match, with measured masses ranging from 48.2 to 118.0 kg.
 and reader hashes plus each compared record. This verifies metadata reading only.
 Affected Parquet files have not been regenerated, and phase/laterality assumptions
 and historical inverse-dynamics anomalies remain open.
+
+
+### GT21 full local inventory and serial batch
+
+`run_gt21_native_batch.py` inventories every available subject/date/mode instead
+of using the historical hard-coded subject exclusions. The current local source
+has 2,301 recordings across 16 subjects, including AB27. This does not establish
+complete coverage of the original published dataset; missing-source reconciliation
+remains open. Default invocation inventories only; `--run` enables reconstruction.
+
+Each recording has a separate immutable directory, source/code hashes, native
+status, losslessly compressed original source-table CSVs and streaming structural
+checks. Decompressed CSV hashes are verified before removing the temporary CSVs. Resume checks
+all source, code and output hashes. Missing required channels, admission failures,
+changed code, native failures or invalid output stop the batch. Native admission
+is capped at 64 MiB of source files in addition to the Windows hard 2 GiB job limit.
+Code snapshots are retained; a batch cannot silently mix converter versions.
+
+`gt21_native_batch_20261020/start_after_gt24.py` is waiting for the live GT24 queue
+to complete both phases. It will start GT21 only after confirmed successful queue
+completion and unchanged reviewed code. Its status is `dispatch_status.json`;
+GT21 progress will be in `batch_status.json` and `batch.log`. A GT21-root
+`STOP_AFTER_CURRENT` cancels the pending dispatch or stops the batch at a recording
+boundary. This preserves the one-numerical-worker rule. The native batch itself
+has not run yet; the prior single-recording native pilot remains the execution
+evidence. Batch software fixtures cover inventory, required channels, path safety
+and immutable resume behavior.
