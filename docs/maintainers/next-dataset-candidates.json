@@ -12,7 +12,7 @@
       "evidence": "The paper describes raw C3D and text recordings, processed tables and metadata. Its Results section explicitly identifies CC BY 4.0 for the downloadable dataset.",
       "reason_to_review_next": "Running complements the walking addition, with original processing materials available for source review.",
       "remaining_admission_checks": [
-        "Reconcile v5 cohort and duplicate metadata file IDs with exact recording coverage; current repository has 39 processed files whereas the paper reports 28 people.",
+        "Use pinned metadata39452932 for39-subject scope; preserve older7841131 (28subjects). Reconcile28 C3D padding-name candidates and two unlistedT30 trials before raw completeness claims.",
         "Verify current version5 processed headers and absent speed columns against the paper-defined participant-average format; do not infer availability from the original145-column layout.",
         "Verify bilateral coordinate signs, units and source event timing from this dataset's own model and code.",
         "Check the active and historical catalog again for duplicates before adding files.",
@@ -46,7 +46,14 @@
         ],
         "metadata_rule": "Pin file IDs and hashes; basename alone is ambiguous. Reconcile both metadata generations with current participant/condition coverage before importing.",
         "processed_file_bytes": 4408738,
-        "size_correction": "Earlier total808,014,065 bytes came from an unversioned API response; explicit version5 totals770,762,552 bytes. Version-specific file sizes govern admission."
+        "size_correction": "Earlier total808,014,065 bytes came from an unversioned API response; explicit version5 totals770,762,552 bytes. Version-specific file sizes govern admission.",
+        "metadata_file_id_for_39_subject_scope": 39452932,
+        "metadata_rows": 420,
+        "unverified_c3d_padding_aliases": 28,
+        "unlisted_source_trials": [
+          "RBDS06runT30.c3d",
+          "RBDS07runT30.c3d"
+        ]
       },
       "processed_semantics": {
         "paper_section": "Methods: Data processing; Results: Data files",
@@ -60,7 +67,8 @@
         },
         "paper_scope": "Original processed format101rows x145columns for three speeds and two sides; version5 later participants have unequal coverage requiring file-header review.",
         "reference_frame": "Paper describes Z-X-Y Cardan angles and joint-coordinate-system net internal moments; exact exported bilateral sign mapping remains a separate gate."
-      }
+      },
+      "metadata_reconciliation_review": "../quality/audits/fu17-metadata-generation-review.json"
     },
     {
       "priority": 2,
@@ -127,7 +135,7 @@
       "overlap_warning": "Repository states 601 of 1,798 participants were included in previous research publications. Track original cohort/session provenance; new DOI does not prove new participants."
     }
   ],
-  "reviewed_at_utc": "2026-10-21T06:09:22.840131+00:00",
+  "reviewed_at_utc": "2026-10-21T07:05:57.411114+00:00",
   "active_addition": {
     "name": "Fukuchi 2018 walking",
     "status": "first_pair_queued_waiting_for_predecessor_full_run_not_started",
