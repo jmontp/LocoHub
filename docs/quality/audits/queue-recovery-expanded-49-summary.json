@@ -61,11 +61,37 @@
     },
     {
       "key": "metadata_serial_queue_20261021/4:gait120",
-      "disposition": "requires_fresh_independent_serial_replacement",
+      "disposition": "fresh_full_scope_serial_replacement_scheduled_not_completed",
       "scientific_approval": false,
       "original_plan_artifact": "metadata_serial_queue_20261021/plan.json",
       "original_plan_sha256": "7b7bec464dc05818309d7462a47e956ff1fdb7a27c9f084a415042c6258ce0c2",
-      "original_code_bindings_match": true
+      "original_code_bindings_match": true,
+      "replacement": {
+        "watcher_path": "converted_datasets/reconversion_v2/gait120_full_after_um21_wtr_20261021/run.py",
+        "watcher_sha256": "756e68d47d9944d60257cbe5a1e8541f12b7820887d2de9cfda7f53d1e81e5d0",
+        "pid": 440145,
+        "start": "25617792",
+        "plan_path": "converted_datasets/reconversion_v2/gait120_source_checked_full_v4_20261021/plan.json",
+        "plan_sha256": "4b53baa312c64572479963400820578bb94cea22f7a11ff3eb7c881d5bbf3c17",
+        "scope": {
+          "records": 6882,
+          "subjects": 120,
+          "tasks": 7
+        },
+        "predecessor_pid": 439510,
+        "predecessor_start": "25600692",
+        "scientific_scope": "Partial source preservation; anatomy, per-record anthropometry and derivatives remain unassessed by this scheduled version."
+      },
+      "replacement_pid": 440145,
+      "replacement_start_ticks": "25617792",
+      "replacement_watcher_artifact": "gait120_full_after_um21_wtr_20261021/run.py",
+      "replacement_watcher_sha256": "756e68d47d9944d60257cbe5a1e8541f12b7820887d2de9cfda7f53d1e81e5d0",
+      "scope": {
+        "records": 6882,
+        "subjects": 120,
+        "tasks": 7
+      },
+      "dependency": "Original full source scope and independent raw-source readback; Wtr outcome controls serial safe release only. Unsupported anatomy and anthropometry remain unassessed; original metadata parent held."
     },
     {
       "key": "metadata_serial_queue_20261021/5:gt23",
@@ -151,5 +177,17 @@
     "Process state is a point-in-time observation, not completion evidence.",
     "No original queue success fabricated; independent future work requires fresh reviewed plans."
   ],
-  "gt23_blocker": "Publisher moments Nm mislabeled Nm/kg and participant mass conflict (AB03publisher113.5 vs local82.18) under source review; old force/COP-only correction does not resolve this."
+  "gt23_blocker": "Publisher moments Nm mislabeled Nm/kg and participant mass conflict (AB03publisher113.5 vs local82.18) under source review; old force/COP-only correction does not resolve this.",
+  "um21_followup_preservation": {
+    "status": "scheduled_not_completed",
+    "pid": 440874,
+    "start_ticks": "25635254",
+    "watcher_artifact": "um21_planar_after_gait120_20261021/run.py",
+    "watcher_sha256": "f6408aeec964bc4ec00e181fd270b8a36df9309eb1ccbe2602b8972723dc1129",
+    "execution_plan_sha256": "f234b26343ed2f79389c1e7bb8535b4f9a2bb60381af78502192a48379f6559d",
+    "records": 453,
+    "observations": 11326,
+    "scientific_approval": false,
+    "dependency": "Waits for Gait120 serial release; requires actual treadmill and stairs source receipts independently. Preserves derived planar estimates and withholds unsupported canonical orientations."
+  }
 }
