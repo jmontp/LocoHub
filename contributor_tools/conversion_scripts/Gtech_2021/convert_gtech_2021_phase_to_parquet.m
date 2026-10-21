@@ -1,3 +1,5 @@
+function convert_gtech_2021_phase_to_parquet(options)
+% Optional struct selects exactly one recording for bounded staging.
 % Convert Gtech 2021 (CAMARGO_ET_AL_J_BIOMECH_DATASET) to standardized parquet format
 % Direct conversion from raw data to phase-indexed (150 points per cycle) parquet
 %
@@ -29,8 +31,7 @@
 %
 % TEST MODE: Set TEST_MODE=true to process only subjects in TEST_SUBJECTS.
 
-clear all;
-close all;
+if nargin < 1, options = struct(); end
 
 
 % Add utilities to path
@@ -41,6 +42,50 @@ addpath(fullfile(fileparts(mfilename('fullpath')), '..', 'matlab_common'));
 NUM_POINTS = 150;  % Points per gait cycle
 DATA_ROOT = 'CAMARGO_ET_AL_J_BIOMECH_DATASET';
 OUTPUT_DIR = fullfile('..', '..', '..', 'converted_datasets');
+
+% A recording request never enters the all-subject accumulation path.
+if ~isempty(fieldnames(options))
+    required = {'data_root','subject','date','mode','recording','output_path'};
+    assert(all(isfield(options, required)), 'LocoHub:RecordingOptions', 'Incomplete recording options');
+    assert(any(strcmp(options.mode, {'treadmill','levelground','ramp','stair'})), 'LocoHub:Mode', 'Unsupported mode');
+    assert(~isfile(options.output_path), 'LocoHub:ImmutableOutput', 'Output already exists');
+    subject_info = load(fullfile(options.data_root, 'SubjectInfo.mat'));
+    mass = subject_info.data.Weight(strcmp(subject_info.data.Subject, options.subject));
+    assert(isscalar(mass) && isfinite(mass) && mass > 0, 'LocoHub:Mass', 'Measured subject mass required');
+    date_path = fullfile(options.data_root, options.subject, options.date);
+    subject_str = ['GT21_' options.subject];
+    metadata = jsonencode(struct('weight_kg', mass));
+    switch options.mode
+        case 'treadmill'
+            rows = process_treadmill(date_path, subject_str, mass, metadata, options.recording);
+        case 'levelground'
+            rows = process_levelground(date_path, subject_str, mass, metadata, options.recording);
+        case 'ramp'
+            rows = process_ramp(date_path, subject_str, mass, metadata, options.recording);
+        case 'stair'
+            rows = process_stair(date_path, subject_str, mass, metadata, options.recording);
+    end
+    assert(~isempty(rows), 'LocoHub:NoObservations', 'Recording produced no observations; investigate exclusions');
+    expanded = expand_table_for_parquet(rows);
+    parquetwrite(options.output_path, expanded);
+    % Export original source tables for independent bounded Python comparisons.
+    evidence_dir = fileparts(options.output_path);
+    for channel = {'ik_offset','id','gcLeft','gcRight'}
+        source_file = fullfile(date_path, options.mode, channel{1}, options.recording);
+        if ~isfile(source_file), continue; end
+        original = load(source_file);
+        names = fieldnames(original);
+        for k = 1:numel(names)
+            if istable(original.(names{k}))
+                writetable(original.(names{k}), fullfile(evidence_dir, ...
+                    ['source_' channel{1} '_' names{k} '.csv']));
+            end
+        end
+    end
+    fprintf('Recording export: %d observations, %d rows\n', height(rows), height(expanded));
+    return;
+end
+
 
 % TEST MODE Configuration
 TEST_MODE = false;  % Set to true for testing with limited subjects
@@ -222,9 +267,11 @@ else
     error('No data was processed successfully');
 end
 
+end % Main conversion entry point
+
 %% Helper Functions
 
-function [rows, unique_speeds] = process_treadmill(date_path, subject_str, subject_mass, subject_metadata)
+function [rows, unique_speeds] = process_treadmill(date_path, subject_str, subject_mass, subject_metadata, recording_filter)
     % Process treadmill walking data
     rows = table();
     unique_speeds = 0;
@@ -237,6 +284,10 @@ function [rows, unique_speeds] = process_treadmill(date_path, subject_str, subje
     
     % Get all trial files
     trial_files = dir(fullfile(mode_path, 'conditions', '*.mat'));
+    if nargin >= 5
+        trial_files = trial_files(strcmp({trial_files.name}, recording_filter));
+        assert(numel(trial_files) == 1, 'LocoHub:Recording', 'Requested recording not found');
+    end
     
     for t = 1:length(trial_files)
         trial_name = trial_files(t).name;
@@ -308,7 +359,7 @@ function [rows, unique_speeds] = process_treadmill(date_path, subject_str, subje
     unique_speeds = length(unique(round(detected_speeds, 2)));
 end
 
-function [rows, trial_count] = process_levelground(date_path, subject_str, subject_mass, subject_metadata)
+function [rows, trial_count] = process_levelground(date_path, subject_str, subject_mass, subject_metadata, recording_filter)
     % Process level ground walking data and labeled transitions
     rows = table();
     trial_count = 0;
@@ -319,6 +370,10 @@ function [rows, trial_count] = process_levelground(date_path, subject_str, subje
     end
 
     trial_files = dir(fullfile(mode_path, 'conditions', '*.mat'));
+    if nargin >= 5
+        trial_files = trial_files(strcmp({trial_files.name}, recording_filter));
+        assert(numel(trial_files) == 1, 'LocoHub:Recording', 'Requested recording not found');
+    end
     trial_count = length(trial_files);  % Count all trial files
 
     for t = 1:length(trial_files)
@@ -387,7 +442,7 @@ function [rows, trial_count] = process_levelground(date_path, subject_str, subje
     end
 end
 
-function [rows, trial_count] = process_ramp(date_path, subject_str, subject_mass, subject_metadata)
+function [rows, trial_count] = process_ramp(date_path, subject_str, subject_mass, subject_metadata, recording_filter)
     % Process ramp ascent/descent data, including transitions
     rows = table();
     trial_count = 0;
@@ -399,6 +454,10 @@ function [rows, trial_count] = process_ramp(date_path, subject_str, subject_mass
 
     % Get all trial files
     trial_files = dir(fullfile(mode_path, 'conditions', '*.mat'));
+    if nargin >= 5
+        trial_files = trial_files(strcmp({trial_files.name}, recording_filter));
+        assert(numel(trial_files) == 1, 'LocoHub:Recording', 'Requested recording not found');
+    end
     trial_count = length(trial_files);  % Count all trial files
 
     for t = 1:length(trial_files)
@@ -494,7 +553,7 @@ function [rows, trial_count] = process_ramp(date_path, subject_str, subject_mass
     end
 end
 
-function [rows, trial_count] = process_stair(date_path, subject_str, subject_mass, subject_metadata)
+function [rows, trial_count] = process_stair(date_path, subject_str, subject_mass, subject_metadata, recording_filter)
     % Process stair ascent/descent data and transitions
     rows = table();
     trial_count = 0;
@@ -506,6 +565,10 @@ function [rows, trial_count] = process_stair(date_path, subject_str, subject_mas
 
     % Get all trial files
     trial_files = dir(fullfile(mode_path, 'conditions', '*.mat'));
+    if nargin >= 5
+        trial_files = trial_files(strcmp({trial_files.name}, recording_filter));
+        assert(numel(trial_files) == 1, 'LocoHub:Recording', 'Requested recording not found');
+    end
     trial_count = length(trial_files);  % Count all trial files
 
     for t = 1:length(trial_files)
@@ -914,10 +977,11 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
     % Find heel strikes as falling edges where percentage drops to 0
     heel_strike_pct = gc_data.HeelStrike;
     
-    % Find falling edges (where HeelStrike == 0) within our window
-    % Using the utility function from old code
-    hs_indices = findFallingEdges_onlyInSection(heel_strike_pct == 0, window_indices);
-    
+    % Source zero-percent resets identify heel strikes. Keep the actual
+    % next heel-strike sample as the inclusive endpoint, not its predecessor.
+    source_resets = find(heel_strike_pct == 0 & [false; heel_strike_pct(1:end-1) > 0]);
+    hs_indices = source_resets(ismember(source_resets, window_indices));
+
     if length(hs_indices) < 2
         rows = table();
         return;  % Need at least 2 heel strikes for one stride
@@ -925,18 +989,16 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
     
     % Process each stride (heel strike to heel strike)
     for s = 1:(length(hs_indices)-1)
-        % Fix off-by-one error: include the actual heel strike sample
-        % hs_indices contains the index where HeelStrike becomes 0, 
-        % but we want the index where HeelStrike is still 1 (actual heel strike)
-        stride_start_idx = max(1, hs_indices(s) - 1);  % Include HS sample, clamp to bounds
-        stride_end_idx = max(1, hs_indices(s+1) - 2);  % End just before next HS sample
-        
-        % Get the gait cycle percentages for this stride
-        stride_pct = heel_strike_pct(stride_start_idx:stride_end_idx);
+        stride_start_idx = hs_indices(s);
+        stride_end_idx = hs_indices(s+1);
+        source_pct = heel_strike_pct(stride_start_idx:stride_end_idx);
         stride_time = gc_time(stride_start_idx:stride_end_idx);
-        
+        assert(all(isfinite(stride_time)) && all(diff(stride_time) > 0), ...
+            'LocoHub:SourceClock', 'Gait-event timestamps must increase');
+        stride_pct = 100 * (stride_time - stride_time(1)) / (stride_time(end) - stride_time(1));
+
         % Skip if stride is too short or doesn't progress properly
-        if length(stride_pct) < 10 || max(stride_pct) < 50
+        if length(stride_pct) < 10 || max(source_pct) < 50
             continue;
         end
         

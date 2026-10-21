@@ -397,3 +397,31 @@ maximum error was 4.44e-16 radians. Source, converter and output hashes are save
 This is a provisional legacy-schema pilot, not a publishable release. Stable
 identities, all subjects/conditions, bilateral-task alignment, full force/COP
 semantics and exclusion accounting remain open. GT24 resumed after this pilot.
+
+
+### GT21 bounded native MATLAB path
+
+`convert_gtech_2021_phase_to_parquet(options)` accepts an explicit source root,
+subject, date, mode, recording and output path. This branch processes one
+recording and bypasses all-subject accumulation. Existing outputs are rejected.
+`run_matlab_recording_guarded.ps1` launches MATLAB suspended, assigns it to a
+Windows job with a hard aggregate memory limit and idle priority, then resumes
+it. Descendants remain in the job. The guard requires a 2 GiB pre-launch reserve,
+monitors a 1.5 GiB available-memory floor and 5 GiB S-space floor, and enforces a
+timeout. Temp/preferences and outputs are directed to S. WSL conversion is stopped
+at a recording boundary while a native numerical worker runs.
+
+The first native pilot revealed an additional endpoint bug: the exported cycle
+ended one sample before the next source heel-strike reset. The corrected code
+uses consecutive reset samples inclusively and elapsed-time phase for every
+channel. `gt21_inclusive_pilot_20261020` contains four AB06 levelground observations
+(600 rows). MATLAB R2023b completed with a 2 GiB hard limit. An independent Python
+probe checked every bilateral hip/knee/ankle angle, velocity and moment against
+original tables exported directly from the MAT files; maximum angle/moment error
+was 4.60e-14. Both endpoints of every cycle match consecutive source heel strikes,
+and structural checks pass. Exact source/code/output hashes and code snapshots
+are retained. The earlier pilot is preserved separately.
+
+This is not whole-GT21 approval. Other subjects/modes, force/COP transformations,
+source conventions and complete exclusion accounting remain open. No full native
+batch has started yet. GT24 resumed after the native pilot.

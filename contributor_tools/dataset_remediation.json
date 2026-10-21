@@ -24,7 +24,8 @@
     "umich": "Treadmill hip/knee subset regenerated; all 252 normalized transfer curves preserved with exact source-channel readback but unknown side/timing. MATLAB duplication and ordinal timing removed, native execution unverified. Remaining tasks, canonical signals, source pairing and full release reconciliation open.",
     "gt24": "Canonical task labels, short-trial trimming, transfer duration and source-clock interpolation corrected. Three-recording timing/trim pilot: 24 observations checked against source hips/knees. New timing queue running; all-task/signal coverage, event validity, exclusions and conventions remain open.",
     "gt25": "Seven BT01 recordings regenerated: 152 observations / 22,800 rows, source-matched for checked channels. All-subject/task coverage, ankle sign, segment angles, COP frames, event validity and exclusion accounting remain open.",
-    "mblue": "Assumed duration/pelvis and index-based opposite-leg pairing removed. 102-observation real walking pilot verifies 45,228 temporal-overlap angle values. Stable identities, full regeneration, bilateral task timing, force/COP mappings and exclusions remain open."
+    "mblue": "Assumed duration/pelvis and index-based opposite-leg pairing removed. 102-observation real walking pilot verifies 45,228 temporal-overlap angle values. Stable identities, full regeneration, bilateral task timing, force/COP mappings and exclusions remain open.",
+    "gt21": "Bounded native single-recording path executed under a Windows 2 GiB hard job limit. Four real levelground observations checked for source heel-strike endpoints and bilateral angles, derivatives, moments. All-recording regeneration, force/COP semantics and exclusion coverage still pending."
   },
   "findings": [
     {
@@ -415,6 +416,13 @@
       "finding": "GT24 applied walking duration limits to chair transfers",
       "status": "code_fixed_pilot_source_checked_full_regeneration_pending",
       "required_followup": "Complete fresh source-linked regeneration and check affected channels and candidates across subjects and tasks."
+    },
+    {
+      "id": "gt21-endpoint",
+      "finding": "GT21 ended cycles one sample before the next actual heel-strike reset",
+      "status": "code_fixed_native_pilot_source_checked_full_regeneration_pending",
+      "required_followup": "Regenerate all affected recordings; verify inclusive event boundaries across modes and account for exclusions.",
+      "evidence": "converted_datasets/reconversion_v2/gt21_inclusive_pilot_20261020/source_comparison.json"
     }
   ]
 }
