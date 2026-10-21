@@ -47,8 +47,8 @@
     },
     {
       "dataset": "GT25",
-      "state": "First oversized transfer converted; source audit pending",
-      "remaining": "BT07 produced 28 transfers / 4,200 rows at 166 MiB peak RSS. Independent event/value audit, all 34 oversized recordings and remaining coverage gaps are still open."
+      "state": "Ankle sign defect; conversion and audit held",
+      "remaining": "Pinned README defines plantarflexion positive. Converter and audit share the opposite anatomical label. Correct signs and independently recheck before full conversion; preserve the 28-transfer pilot as superseded evidence."
     },
     {
       "dataset": "Gait120",
@@ -481,7 +481,7 @@
       "prerequisites": [],
       "lane": "parallel-safe",
       "owner": "GT25 coverage agent",
-      "status": "First oversized source converted; independent audit pending",
+      "status": "Pilot preserved; ankle convention correction required before audit",
       "progress_note": "Streaming BT07 pilot converted 28 transfers / 4,200 rows with 170,112 KiB peak RSS. Eleven raw-source hashes and 65 code bindings verified; independent event/value audit and all remaining oversized sources are still required."
     },
     {
@@ -818,6 +818,28 @@
       "owner": "GT24 reviewer; coordinator schedules conversion",
       "status": "Confirmed defect; waiting jobs stopped before execution",
       "progress_note": "Overlapping Phase1And2 participants BT01/BT02/BT13 can receive Phase3 masses. Separate day-2 masses also need explicit mapping. Earlier matching audits shared the lookup and cannot establish mass correctness."
+    },
+    {
+      "id": "GT25-03",
+      "priority": "P0",
+      "dataset": "GT25",
+      "title": "Correct source ankle convention and remove shared audit assumptions",
+      "evidence_paths": [
+        "contributor_tools/audit_gt25_streaming_transfer.py",
+        "converted_datasets/reconversion_v2/gt25_serial_queue_20261021/queue_status.json"
+      ],
+      "group": "dataset",
+      "acceptance": [
+        "Bind the source README and verify plantarflexion-positive biological ankle columns independently of converter mappings.",
+        "Correct angles, derivatives and moments with explicit source-coordinate preservation; independently review assistance and power semantics.",
+        "Rebuild and compare against raw sources using independently specified signs, identity, events and mass.",
+        "Reschedule full GT25 scope and unrelated downstream jobs, including StrokePiG, without treating stopped predecessors as successful."
+      ],
+      "prerequisites": [],
+      "lane": "source correction; serial reconstruction",
+      "owner": "GT25 reviewer and coordinator",
+      "status": "Confirmed source contradiction; original queued work held",
+      "progress_note": "Converter and audit kept ankle_angle positive under dorsiflexion names, contradicting the pinned source README."
     }
   ]
 }
