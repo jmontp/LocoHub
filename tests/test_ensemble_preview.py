@@ -58,3 +58,28 @@ def test_embedded_json_cannot_close_script():
     rendered=MODULE.document(payload,'/* chart fixture */','/* controls fixture */')
     assert '<script>bad()' not in rendered and '\\u003c/script>' in rendered
     assert 'fetch(' not in rendered
+
+
+@pytest.mark.parametrize('column,label,unit', [
+    ('hip_flexion_angle_ipsi_rad','Hip flexion','rad'),
+    ('ankle_dorsiflexion_moment_ipsi_Nm_kg','Ankle dorsiflexion moment','Nm_kg'),
+    ('source_LKneeAngleZ_deg','Left knee angle · Z','deg'),
+    ('source_RGRFY_N_kg','Right ground force · Y','N_kg')])
+def test_human_labels_keep_exact_columns_and_storage_units(column,label,unit):
+    signal=MODULE.signal_definition(column)
+    assert signal['column']==column and signal['label']==label and signal['unit']==unit
+    assert signal['source_component']==column.startswith('source_')
+
+
+def test_source_labels_do_not_invent_anatomical_axes():
+    signal=MODULE.signal_definition('source_LAnkleMomentX_Nm_kg')
+    assert signal['reference_side']=='left' and signal['source_axis']=='X'
+    assert signal['label']=='Left ankle moment · X'
+    assert 'dorsiflexion' not in signal['label']
+
+
+def test_display_metadata_does_not_change_scientific_values():
+    rows=fixture_rows();rows[0]['source_ankle_angle_deg']=12.345
+    output=MODULE.preview_from_rows(rows)
+    assert output['observations'][0]['signals']['source_ankle_angle_deg'][0]==12.345
+    assert output['observation_count']==2 and output['subject_count']==1

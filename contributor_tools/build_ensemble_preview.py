@@ -9,6 +9,7 @@ import html
 import json
 import math
 import os
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,6 +26,27 @@ def digest(path):
 
 def finite(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def signal_definition(column):
+    unit = next(unit for unit in UNITS if column.endswith('_'+unit))
+    standard = {
+        'hip_flexion_angle_ipsi_rad': 'Hip flexion',
+        'knee_flexion_angle_ipsi_rad': 'Knee flexion',
+        'ankle_dorsiflexion_angle_ipsi_rad': 'Ankle dorsiflexion',
+        'hip_flexion_moment_ipsi_Nm_kg': 'Hip flexion moment',
+        'knee_flexion_moment_ipsi_Nm_kg': 'Knee flexion moment',
+        'ankle_dorsiflexion_moment_ipsi_Nm_kg': 'Ankle dorsiflexion moment',
+    }
+    result = {'column': column, 'unit': unit, 'label': standard.get(column, column.replace('_', ' ')),
+              'source_component': column.startswith('source_')}
+    match = re.fullmatch(r'source_([RL])(Pelvis|Hip|Knee|Ankle|Foot)?(Angle|Moment|GRF)([XYZ])_(deg|Nm_kg|N_kg)', column)
+    if match:
+        side, joint, quantity, axis, _ = match.groups()
+        label = 'ground force' if quantity == 'GRF' else f'{joint.lower()} {quantity.lower()}'
+        result.update(label=f"{'Right' if side == 'R' else 'Left'} {label} · {axis}",
+                      reference_side='right' if side == 'R' else 'left', source_axis=axis)
+    return result
 
 
 def preview_from_rows(rows):
@@ -75,8 +97,7 @@ def preview_from_rows(rows):
     return {'schema_version':1, 'observation_type':'ensemble_curve', 'scientific_approval':False,
             'subjects':sorted({identity[0] for identity in groups}), 'subject_count':len({identity[0] for identity in groups}),
             'observation_count':len(observations), 'observations':observations,
-            'signals':[{'column':column,'label':column.replace('_',' '),
-                        'unit':next(unit for unit in UNITS if column.endswith('_'+unit))} for column in columns],
+            'signals':[signal_definition(column) for column in columns],
             'note':'Each curve is a source participant-condition mean. Legs and conditions remain separate. Cycle count, duration and within-participant standard deviation are unavailable. No additional averaging is performed.'}
 
 
@@ -84,7 +105,7 @@ def document(payload, chart_script, preview_script):
     encoded = json.dumps(payload, allow_nan=False, separators=(',',':')).replace('<','\\u003c')
     return '''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fukuchi walking ensemble preview</title><style>
-body{font:16px/1.5 system-ui;color:#263345;background:#f8fafc;max-width:1200px;margin:32px auto;padding:0 20px}h1{font-size:1.4rem}button,input,select{font:inherit}fieldset{border:1px solid #cbd5e1;margin:16px 0}label{display:inline-block;margin:5px 16px 5px 0}.plots{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px}.plot{min-width:0;border-top:1px solid #cbd5e1}svg{width:100%;font:11px system-ui;fill:#526174}.preview-grid{stroke:#e2e8f0}.preview-zero{stroke:#94a3b8}.aggregate-mean{fill:none;stroke:#334155;stroke-width:2}table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:6px;border-bottom:1px solid #cbd5e1}.scroll{overflow:auto;max-height:320px}a{color:#334e77}
+[hidden]{display:none!important}body{font:16px/1.5 system-ui;color:#263345;background:#f8fafc;max-width:1200px;margin:32px auto;padding:0 20px}h1{font-size:1.4rem}h2{font-size:1.1rem}.units,.hint{color:#526174;font-size:.9rem}.source-options{max-height:260px;overflow:auto}.source-search{display:block;width:min(100%,400px);box-sizing:border-box;margin:12px 0}details{margin:12px 0}summary{cursor:pointer}button{padding:6px 10px;border:1px solid #94a3b8;border-radius:4px;background:white;color:#263345}.signal-name{overflow-wrap:anywhere}button,input,select{font:inherit}fieldset{border:1px solid #cbd5e1;margin:16px 0}label{display:inline-block;margin:5px 16px 5px 0}.plots{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px}.plot{min-width:0;border-top:1px solid #cbd5e1}svg{width:100%;font:11px system-ui;fill:#526174}.preview-grid{stroke:#e2e8f0}.preview-zero{stroke:#94a3b8}.aggregate-mean{fill:none;stroke:#334155;stroke-width:2}table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:6px;border-bottom:1px solid #cbd5e1}.scroll{overflow:auto;max-height:320px}a{color:#334e77}
 </style><h1>Fukuchi walking: participant-condition averages</h1>
 <p>Source values checked; scientific review remains open. This local pilot is not the complete dataset.</p>
 <p id="scope"></p><p id="note"></p><div id="controls"></div><div id="plots" class="plots"></div>
