@@ -45,10 +45,12 @@
     "Retained body-weight normalization and interpolation are not independently validated by this label correction."
   ],
   "validation": {
-    "tests_passed": 8,
-    "scope": "Six scalar fixtures plus time/phase persisted Parquet fixtures crossing batch boundaries, null vs NaN, signed zero, categorical columns, field/schema metadata and intentional metadata corruption.",
+    "status": "passed",
+    "scope": "Six scalar fixtures, two producing-converter lineage fixtures, and time/phase persisted Parquet fixtures crossing batch boundaries; null vs NaN, signed zero, categorical columns, field/schema metadata and intentional corruption.",
     "real_data_executed": false,
-    "tool_sha256": "d93ee4e510a391bda5596e117d7f56d4f983c6185b00d856b3107754e22f6b73"
+    "tool_sha256": "5070fbf5a7960a977834065c69d22d822c28cfe0788f78b772f48099db0315bc",
+    "pilot_bindings_verified": 20,
+    "tests_passed": 10
   },
   "phase_converter": {
     "path": "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_phase_to_parquet.m",
@@ -62,13 +64,5 @@
       1425
     ],
     "finding": "Independent direct raw converter; maps global ForceX/Z to anterior/lateral before body-weight normalization. Native phase runs are not derivatives of time Parquet."
-  },
-  "synthetic_verification": {
-    "status": "passed",
-    "tests": 10,
-    "scope": "Six scalar fixtures, two producing-converter lineage fixtures, and time/phase persisted Parquet fixtures crossing batch boundaries; null vs NaN, signed zero, categorical columns, field/schema metadata and intentional corruption.",
-    "real_data_executed": false,
-    "tool_sha256": "5070fbf5a7960a977834065c69d22d822c28cfe0788f78b772f48099db0315bc",
-    "pilot_bindings_verified": 20
   }
 }
