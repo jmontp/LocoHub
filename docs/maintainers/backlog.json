@@ -192,19 +192,23 @@
       "title": "Resolve source frames and local participant coverage",
       "evidence_paths": [
         "docs/quality/audits/gt21-completed-force-readback.json",
-        "docs/quality/audits/gt21-all-source-phases.json"
+        "docs/quality/audits/gt21-all-source-phases.json",
+        "docs/quality/audits/gt21-participant-source-coverage.json",
+        "docs/quality/audits/gt21-ab17-recovery.json"
       ],
       "external_blocker": "May require missing participant source files or source frame documentation; do not infer from waveforms.",
       "group": "dataset",
       "acceptance": [
         "Document force/COP coordinate system and reference point supported by source processing",
         "Distinguish missing anatomical projection from verified lab-axis values",
-        "Reconcile 16 local participants with original cohort; identify unavailable sources explicitly"
+        "Reconcile 16 local participants with original cohort; identify unavailable sources explicitly",
+        "Account for all six missing publisher participants with verified source acquisition/conversion or a concrete unresolved disposition; the 2,301-record local rebuild alone does not establish full 22-participant coverage."
       ],
       "prerequisites": [],
       "lane": "parallel bounded source/document review",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Open; see prerequisites"
+      "status": "Six missing participants identified; AB17 archive recovered, not converted",
+      "progress_note": "Publisher version 1 lists 22 participants; the active source inventory contains 16. Missing: AB12, AB15, AB17, AB19, AB23 and AB28. AB17 archive hash and directory were checked, but extraction and conversion remain pending. Publisher version 1 lacks later static and ik_offset additions; source versions must remain explicit."
     },
     {
       "id": "UM21-01",
@@ -896,7 +900,7 @@
       "dataset": "GT25",
       "priority": "P1",
       "title": "Validate publisher events for source-only recordings",
-      "status": "Three original event files retrieved and byte-checked; contents unparsed",
+      "status": "Three-file event/clock inspection queued; actual values remain unchecked",
       "group": "dataset",
       "owner": "GT25 source reviewer; coordinator owns numerical execution",
       "lane": "source review; serial numerical validation",
@@ -905,7 +909,8 @@
       ],
       "evidence_paths": [
         "docs/quality/audits/gt25-author-event-source-review.json",
-        "docs/quality/audits/gt25-author-event-acquisition.json"
+        "docs/quality/audits/gt25-author-event-acquisition.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
       ],
       "acceptance": [
         "Validate the first three original parsing files against source clocks, preserving physical side and optional event types.",
