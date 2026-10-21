@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T23:06:55.047112-04:00",
-  "recorded_at": "2026-10-21T03:07:26.916013+00:00",
-  "base_revision": "60546929af31466a91e153b743f1ce3a6f750aaf",
+  "started_at": "2026-10-20T23:09:13.916117-04:00",
+  "recorded_at": "2026-10-21T03:09:46.006459+00:00",
+  "base_revision": "4d0c64dbed186dbe92412b714ebe7b5ad3d0edc1",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "2a82691daced9abfd0c53c53ce74f8d9a6846540a9a9cee76ae49e2dde426990",
+  "junit_sha256": "0bd909dae287d75f451088a0639fbe4e81097406971d32c75dac983cafde0c00",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -59,7 +59,7 @@
       ]
     },
     "tests.test_converter_scientific_provenance": {
-      "passed": 45,
+      "passed": 47,
       "failed": 0,
       "skipped": 0,
       "cases": [
@@ -241,6 +241,14 @@
         },
         {
           "name": "test_mblue_derivatives_do_not_fill_a_missing_center_sample",
+          "status": "passed"
+        },
+        {
+          "name": "test_gt24_failed_loadcell_torques_remain_missing_for_both_reference_sides[l]",
+          "status": "passed"
+        },
+        {
+          "name": "test_gt24_failed_loadcell_torques_remain_missing_for_both_reference_sides[r]",
           "status": "passed"
         }
       ]
@@ -631,6 +639,21 @@
         },
         {
           "name": "test_recording_prefix_respects_numeric_boundaries",
+          "status": "passed"
+        }
+      ]
+    },
+    "tests.test_gt24_invalid_torque_audit": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_source_exclusions_reset_side_and_stop_at_next_section",
+          "status": "passed"
+        },
+        {
+          "name": "test_zero_and_infinity_are_not_missing_torques",
           "status": "passed"
         }
       ]
@@ -1272,7 +1295,7 @@
     }
   },
   "totals": {
-    "passed": 255,
+    "passed": 259,
     "failed": 0,
     "skipped": 2
   }

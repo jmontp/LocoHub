@@ -608,3 +608,23 @@ def test_mblue_derivatives_do_not_fill_a_missing_center_sample(mblue):
     assert np.isnan(velocity[1:4]).all()
     assert np.isnan(acceleration[1:4]).all()
     np.testing.assert_allclose(velocity[[0,4]],1.)
+
+
+@pytest.mark.parametrize('reference_side', ['l', 'r'])
+def test_gt24_failed_loadcell_torques_remain_missing_for_both_reference_sides(gt24, reference_side):
+    data = gait_source()
+    for joint in ('hip_flexion', 'knee_angle', 'ankle_angle'):
+        data['moment_filt'][f'{joint}_r_moment'] = np.nan
+    data['moment_filt_bio'] = data['moment_filt'].copy()
+    result = gt24.process_stride(
+        data, 0, 200, 'BT01', 70.0, 'level_walking', 'level', {}, 0,
+        reference_side, 1, 'no_exo', source_recording_id='synthetic:failed_right_loadcell',
+        skip_segment_angles=True,
+    )
+    failed_role = 'ipsi' if reference_side == 'r' else 'contra'
+    healthy_role = 'contra' if reference_side == 'r' else 'ipsi'
+    for joint in ('hip_flexion', 'knee_flexion', 'ankle_dorsiflexion'):
+        for kind in ('moment', 'biological_moment'):
+            assert result[f'{joint}_{kind}_{failed_role}_Nm_kg'].isna().all()
+            assert np.isfinite(result[f'{joint}_{kind}_{healthy_role}_Nm_kg']).all()
+        assert np.isfinite(result[f'{joint}_angle_{failed_role}_rad']).all()
