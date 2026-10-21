@@ -9,9 +9,19 @@
     "pdf_url": "https://www.nature.com/articles/s41597-025-05391-0.pdf",
     "local_pdf_path": "contributor_tools/conversion_scripts/Gait120/s41597-025-05391-0.pdf",
     "local_pdf_sha256": "8b1c62a9c663ecc09ea4bece5b030bcccaf77eff355d23e43beac5ed30190af7",
-    "evidence_access": "Publisher-indexed article/PDF text; local PDF hash recorded, but coordinator local text extraction was not yet available when this report was written.",
+    "evidence_access": "Reconciled against all relevant sections of the locally extracted ten-page PDF; source hash retained.",
     "location": "Figure 4 caption; Methods; Motion capture data; Comparison of joint kinematics with public dataset",
-    "pdf_page": "Figure 4 identified; exact PDF page not independently confirmed in this review"
+    "local_text_path": "converted_datasets/reconversion_v2/swarm_backlog_20261021/gait120_paper_text.txt",
+    "local_text_sha256": "fcda70ab75c92da0f71a84166c47269c6bff2e3a5878c89bad3e06af223c66b5",
+    "pdf_pages": {
+      "source_segmentation_and_model": 5,
+      "force_availability_and_units": 6,
+      "right_joint_angle_signs_figure_4": 7,
+      "stair_and_slope_protocol": 8,
+      "stool_height": 2,
+      "code_availability": 9,
+      "dataset_reference_46": 10
+    }
   },
   "supported_angle_mapping": {
     "hip_flexion": "Source positive flexion; preserve sign.",
@@ -52,11 +62,45 @@
   },
   "remaining_gates": [
     "Exact modified model and original setup provenance, including left-side coordinate conventions.",
-    "Plate-to-foot assignment and anatomical frame transformation remain unverified.",
+    "Despite documented global axes, per-recording plate-to-foot assignment and conversion to an anatomical local frame remain unverified.",
     "Moment-arm units are documented, but ankle-relative COP and free-torque reference conventions are not established.",
     "Derived segment orientations require model/frame evidence; scalar angle sums are insufficient.",
     "Independent full-output source comparisons and complete exclusion accounting remain required."
   ],
   "current_implementation": "Default reconstruction keeps experimental inverse dynamics disabled, raw plate channels retained and canonical anatomical force/COP missing. No source or queued code changed.",
-  "possible_isolated_followup": "Add paper-supported terrain/stool metadata with explicit protocol provenance; retain self-selected speed as unknown per recording."
+  "possible_isolated_followup": "Add paper-supported terrain/stool metadata with explicit protocol provenance; retain self-selected speed as unknown per recording.",
+  "source_model_and_methods": {
+    "pdf_page": 5,
+    "reported_model": "Modified Rajagopal model, with one knee rotational degree of freedom; OpenSim4.0 inverse kinematics.",
+    "source_angle_units": "degrees",
+    "reported_global_axes": {
+      "x": "anterior",
+      "y": "superior",
+      "z": "right lateral"
+    },
+    "reported_angle_rotation_order": "Z, X, Y for flexion/extension, adduction/abduction, internal/external rotation. This documents the authors convention; it does not establish the exact modified XML or validate segment-angle sums.",
+    "segmentation": {
+      "level_walking": "Right heel-strike at vertical GRF upward crossing20N; toe-off at downward crossing20N.",
+      "stairs_and_slopes": "Manual foot-marker event selection.",
+      "locomotion_observation": "Right heel-strike to next right heel-strike.",
+      "stool_transfers": "Pelvis/shoulder marker-defined start/end; one complete transfer."
+    }
+  },
+  "data_and_code_availability": {
+    "dataset_doi": "10.6084/m9.figshare.27677016",
+    "dataset_reference_pdf_page": 10,
+    "data_records_pdf_page": 5,
+    "described_layout": [
+      "MotionCapture",
+      "JointAngle",
+      "EMG"
+    ],
+    "code_availability_pdf_page": 9,
+    "listed_code": [
+      "signal_processing.m",
+      "MVC_calculation.m",
+      "data_visualization.m"
+    ],
+    "limitation": "The code-availability section lists EMG processing and visualization scripts, not the exact modified musculoskeletal model or IK setup. This is not proof those artifacts are absent from every external location."
+  }
 }
