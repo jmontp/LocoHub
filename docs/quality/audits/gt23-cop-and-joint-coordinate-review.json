@@ -1,0 +1,77 @@
+{
+  "status": "source_frame_review_complete_exact_model_export_link_unresolved",
+  "scientific_approval": false,
+  "scope": "GT23 COP origin and joint coordinates; excludes the separately frozen global-force correction.",
+  "primary_paper": {
+    "doi": "10.1038/s41597-023-02840-6",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10740031/",
+    "xml_sha256": "5c30a9035c70bc7a1d1041373623cc2e69d4d2caba3a71d1a0ee16f0d1f72baa",
+    "sections": [
+      "Methods: motion capture and inverse kinematics",
+      "Data Records: Raw data",
+      "Table 3"
+    ],
+    "claims": "Subject models derive from gait2354; Models/Statics.csv associates recordings with static calibrations. Transform tables describe segment frames. Table 3 distinguishes global GRF/COP from foot-frame insole signals, whose AP origin is at the back of the calcaneus."
+  },
+  "proven_cop_computation": {
+    "time_converter": "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_2023_time_to_parquet.m",
+    "time_sha256": "8de9c1ae8938423be9f918720a3b0dfaab396f99bc6950fa47c18557d69fd69e",
+    "time_lines": [
+      573,
+      637
+    ],
+    "phase_converter": "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_phase_to_parquet.m",
+    "phase_sha256": "ec2c3015a03996d5fb9304fd17a1d56b27d40f843da824b80384ef1d529f17d6",
+    "phase_lines": [
+      845,
+      892
+    ],
+    "expression": "R_calcn_transpose * (COP_global - calcn_translation)",
+    "source": "GroundFrame_GRFs.csv plus Transforms calcn_l/calcn_r, not Insole.csv",
+    "mapping": "Local X -> cop_anterior; local Y -> cop_vertical; local Z -> cop_lateral, separately for each reference side.",
+    "finding": "The retained origin is the calcn transform origin. No ankle-origin translation is applied. A code comment equating calcn with ankle is unsupported.",
+    "caveat": "The paper's insole heel-origin definition does not by itself establish the origin of these independently transformed global COP values."
+  },
+  "local_model_evidence": {
+    "extraction": "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt23_ab01_model_coordinates.json",
+    "method": "Bounded standard-library XML parsing of four AB01 model files; no OpenSim import, numerical simulation or trajectory load.",
+    "static_mapping": "AB01 Models/Statics.csv maps ball_toss_1 and sit_to_stand_1 to static1.",
+    "origin_evidence": "Both original and mod variants have a nonzero talus-to-calcn joint-origin offset: right (-0.04877,-0.04195,+0.00792) m, left (-0.04877,-0.04195,-0.00792) m. The ankle's talus-side location is zero. These model files therefore distinguish calcn and ankle origins.",
+    "joint_evidence": "Original and mod variants give hip_flexion and knee_angle rotations about +Z with coefficient +1; ankle rotations have mirrored X/Y and common positive Z components with coefficient +1. This documents model-coordinate direction, not a complete verified CSV-to-anatomy mapping.",
+    "provenance_limits": "Static1 does not select among original/mod/2d model variants. Their local bytes have not been reconciled against publisher archive member hashes. The CSV export transformation from model coordinates has not been located. Do not infer that filenames containing original prove publisher provenance.",
+    "extraction_sha256": "5bf294eff49237bee91d6c773908dddd6324de6a7383dd2040de4e09f417c06e"
+  },
+  "actionable_metadata_correction": {
+    "cop_source_frame": "calcn body frame from supplied transform table",
+    "cop_origin": "calcn transform translation; not established as anatomical ankle",
+    "cop_axis_mapping": {
+      "anterior": "local X",
+      "vertical": "local Y",
+      "lateral": "local Z"
+    },
+    "value_changes": "None justified by this review. Do not subtract a generic model offset or invent a subject-independent ankle correction.",
+    "canonical_policy": "The present data reference specifies COP in metres and requires coordinate-frame provenance, but does not require an ankle origin. Correct provenance and misleading comments first; do not discard all COP solely because the origin is not the ankle. Anatomical axis approval remains explicit and separate."
+  },
+  "joint_decision": "No joint angle, velocity or moment sign change. Neither plotted sign direction nor generic gait2354 defaults override the missing exact model/export correspondence.",
+  "next_bounded_evidence": [
+    "Reconcile the small AB01 model files and Statics.csv with the original publisher archive directory and member checksums.",
+    "Locate the author export code or setup records selecting the actual model variant and writing Joint_Angle.csv and Joint_Moments.csv; record any sign changes between OpenSim coordinates and CSV columns.",
+    "With an exact model/export link, use an independently specified synthetic pose to establish anatomical direction; schedule any native execution through the coordinator.",
+    "If ankle-origin COP is desired, derive the subject/model-specific frame translation and rotation from verified joint geometry, preserving original calcn-frame aliases. Do not apply the AB01 offset to all participants."
+  ],
+  "frozen_state": "No changes to converters, force correction helper, plans, queued jobs or scientific outputs.",
+  "verification": "Paper XML, both converter hashes, all four extracted model hashes and Statics.csv hash rechecked against local files. Publisher archive-byte reconciliation remains pending.",
+  "prepared_metadata_tool": {
+    "path": "contributor_tools/annotate_gt23_cop_frame.py",
+    "status": "prepared_not_executed",
+    "changes": "Only task_info strings; no source aliases required because numerical COP remains unchanged.",
+    "readback": "Exact schema and metadata equality, per-field null masks, valid floating-point bit patterns including signed zero and NaN payloads, and unchanged other arrays.",
+    "lineage": "Pinned existing producing-mode validator; original native time/phase inputs only. A future force-corrected input requires a separately reviewed chain receipt, not an invented hash.",
+    "validation": {
+      "tests_passed": 7,
+      "pilot_bindings_verified": 24,
+      "real_data_executed": false,
+      "tool_sha256": "c464769ffe4a88f8c35e6979ec3de02dd88382ce93b61b60d84e1c3ab0077e41"
+    }
+  }
+}
