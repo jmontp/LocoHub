@@ -374,3 +374,54 @@ def test_gt24_preserves_missing_samples_and_rejects_misaligned_clocks(gt24):
     source['grf']['time']=source['angle_filt']['time']+0.02
     with pytest.raises(ValueError,match='timestamps do not align'):
         gt24.process_stride(source,0,200,'BT01',70.,'level_walking','level',{},0,'l',3,'powered',skip_segment_angles=True,source_recording_id='gt24:Phase3/BT01/misaligned')
+
+
+@pytest.fixture
+def mblue(monkeypatch):
+    return load_converter('MBLUEAnkle/convert_mblue_ankle_to_parquet.py',monkeypatch)
+
+
+def mblue_source(with_times=True):
+    fields={}
+    for side in ['l','r']:
+        for joint in ['hip_flexion','knee_angle','ankle_angle']:
+            fields[f'{joint}_{side}']=np.linspace(0,10,101)[:,None]
+        if with_times:fields[f'time_{side}']=np.linspace(0,1,101)[:,None]
+    result=np.empty((),dtype=[(name,object) for name in fields])
+    for name,value in fields.items():result[name][()]=value
+    return result[()]
+
+
+def test_mblue_missing_time_and_pelvis_do_not_become_measurements(mblue):
+    source=mblue_source(False)
+    assert np.isnan(mblue.extract_stride_duration(source,'l',0))
+    frames,_=mblue.process_gait_task(source,'AB01',70.,'level_walking','level',1.,'bare')
+    assert len(frames)==2
+    for frame in frames:
+        assert frame.phase_ipsi_dot.isna().all()
+        assert frame.hip_flexion_velocity_ipsi_rad_s.isna().all()
+        assert frame.pelvis_sagittal_angle_rad.isna().all()
+        assert frame.hip_flexion_angle_contra_rad.isna().all()
+        assert frame.hip_flexion_angle_ipsi_rad.notna().all()
+
+
+def test_mblue_overlap_uses_time_not_stride_index_and_retains_gaps(mblue):
+    ipsi=np.linspace(0,4,9)
+    times=np.array([[0,3],[.5,3.5],[1,4.]])
+    values=2*times
+    result=mblue.time_sync_contra_data(ipsi,times,values,9)
+    np.testing.assert_allclose(result[[0,1,2,6,7,8]],[0,1,2,6,7,8])
+    assert np.isnan(result[3:6]).all()
+    # Unequal curve counts are rejected instead of clamping the last curve.
+    with pytest.raises(ValueError,match='identical shapes'):
+        mblue.time_sync_contra_data(ipsi,times,values[:,:1],9)
+    conflict=mblue.time_sync_contra_data([0,1],np.array([[0,0],[1,1]]),np.array([[0,5],[1,6]]),3)
+    assert np.isnan(conflict).all()
+
+
+def test_mblue_missing_source_samples_are_not_bridged(mblue):
+    result=mblue.interpolate_to_phase(np.array([0.,1.,np.nan,3.,4.]),9).ravel()
+    assert np.isnan(result[3:6]).all()
+    source=mblue_source()
+    source['time_l'][50,0]=source['time_l'][49,0]
+    assert np.isnan(mblue.extract_stride_duration(source,'l',0))

@@ -23,7 +23,8 @@
   "current_limitations": {
     "umich": "Treadmill hip/knee subset regenerated; all 252 normalized transfer curves preserved with exact source-channel readback but unknown side/timing. MATLAB duplication and ordinal timing removed, native execution unverified. Remaining tasks, canonical signals, source pairing and full release reconciliation open.",
     "gt24": "Canonical task labels, short-trial trimming, transfer duration and source-clock interpolation corrected. Three-recording timing/trim pilot: 24 observations checked against source hips/knees. New timing queue running; all-task/signal coverage, event validity, exclusions and conventions remain open.",
-    "gt25": "Seven BT01 recordings regenerated: 152 observations / 22,800 rows, source-matched for checked channels. All-subject/task coverage, ankle sign, segment angles, COP frames, event validity and exclusion accounting remain open."
+    "gt25": "Seven BT01 recordings regenerated: 152 observations / 22,800 rows, source-matched for checked channels. All-subject/task coverage, ankle sign, segment angles, COP frames, event validity and exclusion accounting remain open.",
+    "mblue": "Assumed duration/pelvis and index-based opposite-leg pairing removed. 102-observation real walking pilot verifies 45,228 temporal-overlap angle values. Stable identities, full regeneration, bilateral task timing, force/COP mappings and exclusions remain open."
   },
   "findings": [
     {
@@ -322,8 +323,9 @@
       "affected_paths": [
         "contributor_tools/conversion_scripts/MBLUEAnkle/convert_mblue_ankle_to_parquet.py"
       ],
-      "status": "open",
-      "required_followup": "Use missing values for unavailable timing/angles and add independent fixtures asserting no manufactured measurements."
+      "status": "code_fixed_limited_real_source_check_full_regeneration_pending",
+      "required_followup": "Use missing values for unavailable timing/angles and add independent fixtures asserting no manufactured measurements.",
+      "pilot_evidence": "converted_datasets/reconversion_v2/mblue_overlap_pilot_20261020/source_comparison.json"
     },
     {
       "id": "remaining-9",
@@ -332,8 +334,9 @@
       "affected_paths": [
         "contributor_tools/conversion_scripts/MBLUEAnkle/convert_mblue_ankle_to_parquet.py"
       ],
-      "status": "open",
-      "required_followup": "Align by observed timestamps/events, preserve missing overlap, and test unequal counts and derivative behavior at the wrap seam."
+      "status": "code_fixed_limited_real_source_check_full_regeneration_pending",
+      "required_followup": "Align by observed timestamps/events, preserve missing overlap, and test unequal counts and derivative behavior at the wrap seam.",
+      "pilot_evidence": "converted_datasets/reconversion_v2/mblue_overlap_pilot_20261020/source_comparison.json"
     },
     {
       "id": "remaining-10",

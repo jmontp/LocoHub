@@ -269,148 +269,33 @@ TASK_MAPPING = {
 }
 
 
-def circular_phase_shift(data: np.ndarray, shift_percent: float = 50.0) -> np.ndarray:
-    """
-    Circularly shift phase-normalized data by a percentage of the gait cycle.
-
-    In gait, the contralateral leg is approximately 50% out of phase with the
-    ipsilateral leg. When data is phase-normalized per-leg (heel strike to heel
-    strike), the contra data needs to be shifted to align with the ipsi phase.
-
-    Design Decision: 50% Phase Shift vs Time-Based Synchronization
-    ---------------------------------------------------------------
-    The source data has timestamps (time_l, time_r) that could enable precise
-    time-based synchronization. Analysis showed the actual phase relationship
-    varies from ~49.6% to ~51.3% stride-to-stride. However, time-based sync
-    has complications:
-
-    1. Boundary conditions: Left and right leg recordings may start/end at
-       different times, leaving some strides without overlapping contra data.
-       E.g., Left stride 0 (80.6-81.8s) has no overlapping right stride
-       (right starts at 81.2s).
-
-    2. Stride count mismatch: Left and right legs may have different numbers
-       of detected strides, complicating index-based pairing.
-
-    3. Complexity vs benefit: For this treadmill walking data, the actual
-       phase relationship is very close to 50% (within ~1%), so the added
-       complexity of time-based sync provides minimal benefit.
-
-    The 50% approximation is standard in gait analysis literature and is
-    sufficiently accurate for steady-state treadmill walking. For datasets
-    with asymmetric gait or overground walking, time-based sync may be
-    worth implementing.
-
-    Args:
-        data: Phase-normalized data array (num_points,) or (num_points, N)
-        shift_percent: Percentage of gait cycle to shift (default 50%)
-
-    Returns:
-        Circularly shifted data array (same shape as input)
-    """
-    if data.ndim == 1:
-        num_points = len(data)
-        shift_points = int(round(num_points * shift_percent / 100.0))
-        return np.roll(data, shift_points)
-    else:
-        num_points = data.shape[0]
-        shift_points = int(round(num_points * shift_percent / 100.0))
-        return np.roll(data, shift_points, axis=0)
-
-
-def time_sync_contra_data(
-    ipsi_times: np.ndarray,
-    contra_times: np.ndarray,
-    contra_data: np.ndarray,
-    num_points: int = NUM_POINTS
-) -> np.ndarray:
-    """
-    Synchronize contralateral data to ipsilateral timing using time-based lookup.
-
-    Instead of assuming a fixed 50% phase offset, this finds what the contra leg
-    was actually doing at each ipsi time point by interpolating across contra strides.
-
-    Args:
-        ipsi_times: Time array for ipsi stride (101 points)
-        contra_times: Time array for all contra strides (101 x n_contra_strides)
-        contra_data: Data array for all contra strides (101 x n_contra_strides)
-        num_points: Number of output points (default 150)
-
-    Returns:
-        Synchronized contra data interpolated to num_points
-    """
+def time_sync_contra_data(ipsi_times, contra_times, contra_data, num_points=NUM_POINTS):
+    """Use observed overlap only, retaining gaps and rejecting conflicting overlap."""
+    result = np.full(num_points, np.nan)
     if ipsi_times is None or contra_times is None or contra_data is None:
-        return np.full(num_points, np.nan)
-
-    # Handle 1D arrays
-    if contra_times.ndim == 1:
-        contra_times = contra_times.reshape(-1, 1)
-    if contra_data.ndim == 1:
-        contra_data = contra_data.reshape(-1, 1)
-
-    n_contra_strides = contra_times.shape[1]
-    if n_contra_strides == 0:
-        return np.full(num_points, np.nan)
-
-    # Get valid ipsi times
-    valid_ipsi = ~np.isnan(ipsi_times)
-    if np.sum(valid_ipsi) < 2:
-        return np.full(num_points, np.nan)
-
-    ipsi_t = ipsi_times[valid_ipsi]
-    t_start, t_end = ipsi_t[0], ipsi_t[-1]
-
-    # Build a combined time->value mapping from all contra strides
-    # that overlap with the ipsi time range
-    all_times = []
-    all_values = []
-
-    for stride_idx in range(n_contra_strides):
-        contra_t = contra_times[:, stride_idx]
-        contra_v = contra_data[:, stride_idx]
-
-        valid = ~np.isnan(contra_t) & ~np.isnan(contra_v)
-        if np.sum(valid) < 2:
+        return result
+    ipsi = np.asarray(ipsi_times, dtype=float).reshape(-1)
+    if len(ipsi) < 2 or not np.isfinite(ipsi).all() or not (np.diff(ipsi) > 0).all():
+        return result
+    clocks = np.asarray(contra_times, dtype=float)
+    values = np.asarray(contra_data, dtype=float)
+    if clocks.ndim == 1: clocks = clocks[:, None]
+    if values.ndim == 1: values = values[:, None]
+    if clocks.shape != values.shape or clocks.ndim != 2:
+        raise ValueError('Contralateral signals and timestamps must have identical shapes')
+    target = np.linspace(ipsi[0], ipsi[-1], num_points)
+    conflict = np.zeros(num_points, dtype=bool)
+    for column in range(clocks.shape[1]):
+        clock, signal = clocks[:, column], values[:, column]
+        if len(clock) < 2 or not np.isfinite(clock).all() or not (np.diff(clock) > 0).all():
             continue
-
-        ct = contra_t[valid]
-        cv = contra_v[valid]
-
-        # Check if this contra stride overlaps with ipsi time range
-        if ct[-1] < t_start or ct[0] > t_end:
-            continue
-
-        all_times.extend(ct)
-        all_values.extend(cv)
-
-    if len(all_times) < 2:
-        return np.full(num_points, np.nan)
-
-    # Sort by time and remove duplicates (keep first occurrence)
-    sorted_indices = np.argsort(all_times)
-    all_times = np.array(all_times)[sorted_indices]
-    all_values = np.array(all_values)[sorted_indices]
-
-    # Remove duplicates
-    _, unique_idx = np.unique(all_times, return_index=True)
-    all_times = all_times[unique_idx]
-    all_values = all_values[unique_idx]
-
-    if len(all_times) < 2:
-        return np.full(num_points, np.nan)
-
-    # Interpolate contra data at ipsi time points
-    try:
-        interp_func = interp1d(all_times, all_values, kind='linear',
-                               bounds_error=False, fill_value=np.nan)
-
-        # Generate target times at num_points resolution
-        target_times = np.linspace(t_start, t_end, num_points)
-        synced_data = interp_func(target_times)
-
-        return synced_data
-    except Exception:
-        return np.full(num_points, np.nan)
+        candidate = np.interp(target, clock, np.where(np.isfinite(signal), signal, np.nan), left=np.nan, right=np.nan)
+        overlap = np.isfinite(result) & np.isfinite(candidate)
+        conflict |= overlap & ~np.isclose(result, candidate, rtol=1e-7, atol=1e-10)
+        take = ~np.isfinite(result) & np.isfinite(candidate)
+        result[take] = candidate[take]
+    result[conflict] = np.nan
+    return result
 
 
 def interpolate_to_phase(data: np.ndarray, num_points: int = NUM_POINTS) -> np.ndarray:
@@ -437,19 +322,10 @@ def interpolate_to_phase(data: np.ndarray, num_points: int = NUM_POINTS) -> np.n
     x_original = np.linspace(0, 100, n_source)
     x_target = np.linspace(0, 100, num_points)
 
-    result = np.zeros((num_points, n_strides))
+    result = np.full((num_points, n_strides), np.nan)
     for i in range(n_strides):
-        stride_data = data[:, i]
-        valid_mask = ~np.isnan(stride_data)
-        if np.sum(valid_mask) < 2:
-            result[:, i] = np.nan
-            continue
-        try:
-            interp_func = interp1d(x_original[valid_mask], stride_data[valid_mask],
-                                   kind='linear', fill_value='extrapolate')
-            result[:, i] = interp_func(x_target)
-        except Exception:
-            result[:, i] = np.nan
+        values = np.where(np.isfinite(data[:, i]), data[:, i], np.nan)
+        result[:, i] = np.interp(x_target, x_original, values)
 
     return result
 
@@ -465,7 +341,7 @@ def compute_velocity_from_angle(angle_rad: np.ndarray, stride_duration_s: float)
     Returns:
         Angular velocity in rad/s
     """
-    if len(angle_rad) < 2 or stride_duration_s <= 0:
+    if len(angle_rad) < 2 or not np.isfinite(stride_duration_s) or stride_duration_s <= 0:
         return np.full_like(angle_rad, np.nan)
     dt = stride_duration_s / (len(angle_rad) - 1)
     velocity = np.gradient(angle_rad) / dt
@@ -474,7 +350,7 @@ def compute_velocity_from_angle(angle_rad: np.ndarray, stride_duration_s: float)
 
 def compute_acceleration_from_velocity(velocity_rad_s: np.ndarray, stride_duration_s: float) -> np.ndarray:
     """Compute angular acceleration from velocity data using gradient."""
-    if len(velocity_rad_s) < 2 or stride_duration_s <= 0:
+    if len(velocity_rad_s) < 2 or not np.isfinite(stride_duration_s) or stride_duration_s <= 0:
         return np.full_like(velocity_rad_s, np.nan)
     dt = stride_duration_s / (len(velocity_rad_s) - 1)
     acceleration = np.gradient(velocity_rad_s) / dt
@@ -507,55 +383,25 @@ def get_nested_field(data, *keys):
         return None
 
 
-def extract_stride_duration(task_data, leg_side: str, stride_idx: int) -> float:
-    """
-    Extract stride duration from time data.
-
-    Args:
-        task_data: Task data struct
-        leg_side: 'l' or 'r'
-        stride_idx: Stride index
-
-    Returns:
-        Stride duration in seconds (default 1.0 if not available)
-    """
-    time_key = f'time_{leg_side}'
-    if hasattr(task_data, 'dtype') and task_data.dtype.names and time_key in task_data.dtype.names:
-        time_data = task_data[time_key]
-        if time_data.size > 0:
-            # time_data may have different shapes
-            if time_data.ndim == 2 and stride_idx < time_data.shape[1]:
-                stride_time = time_data[:, stride_idx]
-                valid = ~np.isnan(stride_time)
-                if np.sum(valid) > 1:
-                    return stride_time[valid][-1] - stride_time[valid][0]
-            elif time_data.ndim == 1:
-                return float(time_data[-1] - time_data[0]) if len(time_data) > 1 else 1.0
-    # Default stride duration estimate (typical walking ~1.0s)
-    return 1.0
-
-
 def extract_stride_times(task_data, leg_side: str, stride_idx: int) -> Tuple[float, float]:
-    """
-    Extract start and end times for a stride.
+    """Return observed endpoints only for a finite, increasing source clock."""
+    key = f'time_{leg_side}'
+    if not getattr(getattr(task_data, 'dtype', None), 'names', None) or key not in task_data.dtype.names:
+        return np.nan, np.nan
+    clock = task_data[key]
+    if clock.ndim == 2 and 0 <= stride_idx < clock.shape[1]:
+        clock = clock[:, stride_idx]
+    elif clock.ndim != 1 or stride_idx != 0:
+        return np.nan, np.nan
+    if len(clock) < 2 or not np.isfinite(clock).all() or not (np.diff(clock) > 0).all():
+        return np.nan, np.nan
+    return float(clock[0]), float(clock[-1])
 
-    Args:
-        task_data: Task data struct
-        leg_side: 'l' or 'r'
-        stride_idx: Stride index
 
-    Returns:
-        Tuple of (start_time, end_time) in seconds, or (NaN, NaN) if not available
-    """
-    time_key = f'time_{leg_side}'
-    if hasattr(task_data, 'dtype') and task_data.dtype.names and time_key in task_data.dtype.names:
-        time_data = task_data[time_key]
-        if time_data.size > 0 and time_data.ndim == 2 and stride_idx < time_data.shape[1]:
-            stride_time = time_data[:, stride_idx]
-            valid = ~np.isnan(stride_time)
-            if np.sum(valid) > 1:
-                return float(stride_time[valid][0]), float(stride_time[valid][-1])
-    return np.nan, np.nan
+def extract_stride_duration(task_data, leg_side: str, stride_idx: int) -> float:
+    """Measured duration or NaN; never substitute a typical walking duration."""
+    start, end = extract_stride_times(task_data, leg_side, stride_idx)
+    return end - start
 
 
 def process_gait_task(
@@ -645,33 +491,11 @@ def process_gait_task(
                 negate_anterior=is_decline
             )
 
-            # For contra COP extraction
-            # For stairs: extract during ipsi time window (no phase shift needed)
-            # For walking: extract from contra stride, then phase shift
-            is_stair = task in ['stair_ascent', 'stair_descent']
-
-            if is_stair:
-                # For stairs, extract contra COP during the ipsi stride time window
-                # This gives us concurrent data without needing phase shift
-                cop_ap_contra, cop_ml_contra = extract_cop_for_stride(
-                    mot_df, stride_start, stride_end, contra_plate, NUM_POINTS,
-                    negate_anterior=is_decline
-                )
-            else:
-                # For walking, use contra stride times and phase shift
-                contra_idx = min(stride_idx, n_strides_contra - 1) if n_strides_contra > 0 else 0
-                contra_start, contra_end = extract_stride_times(task_data, contra, contra_idx)
-                cop_ap_contra_raw, cop_ml_contra_raw = extract_cop_for_stride(
-                    mot_df, contra_start, contra_end, contra_plate, NUM_POINTS,
-                    negate_anterior=is_decline
-                )
-                # Apply 50% phase shift to contra COP (same as other contra data)
-                cop_ap_contra = circular_phase_shift(cop_ap_contra_raw)
-                cop_ml_contra = circular_phase_shift(cop_ml_contra_raw)
-
-            # Extract and interpolate kinematics (angles in degrees -> radians)
-            # For stairs, use time-based sync; for walking, use 50% phase shift
-            use_time_sync = task in ['stair_ascent', 'stair_descent']
+            # Both force plates must be sampled over the same observed interval.
+            cop_ap_contra, cop_ml_contra = extract_cop_for_stride(
+                mot_df, stride_start, stride_end, contra_plate, NUM_POINTS,
+                negate_anterior=is_decline)
+            use_time_sync = True
 
             # Get time data for time-based synchronization
             ipsi_time_key = f'time_{ipsi}'
@@ -684,6 +508,8 @@ def process_gait_task(
                     time_data = task_data[ipsi_time_key]
                     if time_data.ndim == 2 and stride_idx < time_data.shape[1]:
                         ipsi_times = time_data[:, stride_idx]
+                    elif time_data.ndim == 1 and stride_idx == 0:
+                        ipsi_times = time_data
                 if contra_time_key in task_data.dtype.names:
                     contra_times = task_data[contra_time_key]
 
@@ -691,23 +517,10 @@ def process_gait_task(
             hip_ipsi_deg = hip_ipsi_data[:, stride_idx] if hip_ipsi_data.ndim == 2 else hip_ipsi_data
             hip_ipsi_rad = interpolate_to_phase(hip_ipsi_deg * deg2rad).flatten()
 
-            if use_time_sync and ipsi_times is not None and hip_contra_data is not None:
-                # Time-based sync: find what contra leg was doing during ipsi stride
-                hip_contra_rad = time_sync_contra_data(
-                    ipsi_times, contra_times, hip_contra_data * deg2rad, NUM_POINTS
-                )
-            else:
-                # Standard approach: index-based pairing with phase shift
-                if hip_contra_data is not None and hip_contra_data.size > 0:
-                    if hip_contra_data.ndim == 2:
-                        contra_idx = min(stride_idx, hip_contra_data.shape[1] - 1)
-                        hip_contra_deg = hip_contra_data[:, contra_idx]
-                    else:
-                        hip_contra_deg = hip_contra_data
-                else:
-                    hip_contra_deg = np.full_like(hip_ipsi_deg, np.nan)
-                hip_contra_unshifted = interpolate_to_phase(hip_contra_deg * deg2rad).flatten()
-                hip_contra_rad = circular_phase_shift(hip_contra_unshifted)
+            hip_contra_rad = time_sync_contra_data(
+                ipsi_times, contra_times,
+                hip_contra_data * deg2rad if hip_contra_data is not None else None,
+                NUM_POINTS)
 
             # Knee angle (negate: source has extension positive, we want flexion positive)
             knee_ipsi_data = task_data[f'knee_angle_{ipsi}']
@@ -715,21 +528,10 @@ def process_gait_task(
             knee_ipsi_deg = knee_ipsi_data[:, stride_idx] if knee_ipsi_data.ndim == 2 else knee_ipsi_data
             knee_ipsi_rad = interpolate_to_phase(-knee_ipsi_deg * deg2rad).flatten()
 
-            if use_time_sync and ipsi_times is not None and knee_contra_data is not None:
-                knee_contra_rad = time_sync_contra_data(
-                    ipsi_times, contra_times, -knee_contra_data * deg2rad, NUM_POINTS
-                )
-            else:
-                if knee_contra_data is not None and knee_contra_data.size > 0:
-                    if knee_contra_data.ndim == 2:
-                        contra_idx = min(stride_idx, knee_contra_data.shape[1] - 1)
-                        knee_contra_deg = knee_contra_data[:, contra_idx]
-                    else:
-                        knee_contra_deg = knee_contra_data
-                else:
-                    knee_contra_deg = np.full_like(knee_ipsi_deg, np.nan)
-                knee_contra_unshifted = interpolate_to_phase(-knee_contra_deg * deg2rad).flatten()
-                knee_contra_rad = circular_phase_shift(knee_contra_unshifted)
+            knee_contra_rad = time_sync_contra_data(
+                ipsi_times, contra_times,
+                -knee_contra_data * deg2rad if knee_contra_data is not None else None,
+                NUM_POINTS)
 
             # Ankle dorsiflexion
             ankle_ipsi_data = task_data[f'ankle_angle_{ipsi}']
@@ -737,24 +539,13 @@ def process_gait_task(
             ankle_ipsi_deg = ankle_ipsi_data[:, stride_idx] if ankle_ipsi_data.ndim == 2 else ankle_ipsi_data
             ankle_ipsi_rad = interpolate_to_phase(ankle_ipsi_deg * deg2rad).flatten()
 
-            if use_time_sync and ipsi_times is not None and ankle_contra_data is not None:
-                ankle_contra_rad = time_sync_contra_data(
-                    ipsi_times, contra_times, ankle_contra_data * deg2rad, NUM_POINTS
-                )
-            else:
-                if ankle_contra_data is not None and ankle_contra_data.size > 0:
-                    if ankle_contra_data.ndim == 2:
-                        contra_idx = min(stride_idx, ankle_contra_data.shape[1] - 1)
-                        ankle_contra_deg = ankle_contra_data[:, contra_idx]
-                    else:
-                        ankle_contra_deg = ankle_contra_data
-                else:
-                    ankle_contra_deg = np.full_like(ankle_ipsi_deg, np.nan)
-                ankle_contra_unshifted = interpolate_to_phase(ankle_contra_deg * deg2rad).flatten()
-                ankle_contra_rad = circular_phase_shift(ankle_contra_unshifted)
+            ankle_contra_rad = time_sync_contra_data(
+                ipsi_times, contra_times,
+                ankle_contra_data * deg2rad if ankle_contra_data is not None else None,
+                NUM_POINTS)
 
             # Extract pelvis_tilt (global, same for both legs)
-            pelvis_tilt_rad = np.zeros(NUM_POINTS)
+            pelvis_tilt_rad = np.full(NUM_POINTS, np.nan)
             if 'pelvis_tilt' in task_data.dtype.names:
                 pelvis_data = task_data['pelvis_tilt']
                 if pelvis_data.ndim == 2 and stride_idx < pelvis_data.shape[1]:
@@ -829,11 +620,6 @@ def process_gait_task(
                     hip_mom_contra = time_sync_contra_data(
                         ipsi_times, contra_times, mom_data / subject_mass, NUM_POINTS
                     )
-                elif mom_data.ndim == 2 and mom_data.shape[1] > 0:
-                    contra_idx = min(stride_idx, mom_data.shape[1] - 1)
-                    hip_mom_contra = circular_phase_shift(interpolate_to_phase(mom_data[:, contra_idx] / subject_mass).flatten())
-                elif mom_data.ndim == 1:
-                    hip_mom_contra = circular_phase_shift(interpolate_to_phase(mom_data / subject_mass).flatten())
 
             if knee_mom_ipsi_key in task_data.dtype.names:
                 mom_data = task_data[knee_mom_ipsi_key]
@@ -849,11 +635,6 @@ def process_gait_task(
                     knee_mom_contra = time_sync_contra_data(
                         ipsi_times, contra_times, -mom_data / subject_mass, NUM_POINTS
                     )
-                elif mom_data.ndim == 2 and mom_data.shape[1] > 0:
-                    contra_idx = min(stride_idx, mom_data.shape[1] - 1)
-                    knee_mom_contra = circular_phase_shift(interpolate_to_phase(-mom_data[:, contra_idx] / subject_mass).flatten())
-                elif mom_data.ndim == 1:
-                    knee_mom_contra = circular_phase_shift(interpolate_to_phase(-mom_data / subject_mass).flatten())
 
             if ankle_mom_ipsi_key in task_data.dtype.names:
                 mom_data = task_data[ankle_mom_ipsi_key]
@@ -868,11 +649,6 @@ def process_gait_task(
                     ankle_mom_contra = time_sync_contra_data(
                         ipsi_times, contra_times, mom_data / subject_mass, NUM_POINTS
                     )
-                elif mom_data.ndim == 2 and mom_data.shape[1] > 0:
-                    contra_idx = min(stride_idx, mom_data.shape[1] - 1)
-                    ankle_mom_contra = circular_phase_shift(interpolate_to_phase(mom_data[:, contra_idx] / subject_mass).flatten())
-                elif mom_data.ndim == 1:
-                    ankle_mom_contra = circular_phase_shift(interpolate_to_phase(mom_data / subject_mass).flatten())
 
             # Extract and interpolate GRF (N -> BW)
             grf_ipsi_key = f'ForceN_{ipsi}'
@@ -894,11 +670,6 @@ def process_gait_task(
                     grf_vert_contra = time_sync_contra_data(
                         ipsi_times, contra_times, grf_data / body_weight_N, NUM_POINTS
                     )
-                elif grf_data.ndim == 2 and grf_data.shape[1] > 0:
-                    contra_idx = min(stride_idx, grf_data.shape[1] - 1)
-                    grf_vert_contra = circular_phase_shift(interpolate_to_phase(grf_data[:, contra_idx] / body_weight_N).flatten())
-                elif grf_data.ndim == 1:
-                    grf_vert_contra = circular_phase_shift(interpolate_to_phase(grf_data / body_weight_N).flatten())
 
             # Build task_info string (includes exo metadata per reference spec)
             info_parts = [f"leg:{leg_side}"]
@@ -1047,7 +818,7 @@ def process_bilateral_task(
 
     for cycle_idx in range(n_cycles):
         # Extract stride duration (use 'time' if available, otherwise estimate)
-        stride_duration_s = 2.0  # Default for sit-stand ~2s
+        stride_duration_s = np.nan  # No timing is inferred from normalized sample count.
         if 'time' in task_data.dtype.names:
             time_data = task_data['time']
             if time_data.size > 0:
@@ -1076,7 +847,7 @@ def process_bilateral_task(
         ankle_contra_rad = interpolate_to_phase(ankle_contra_deg * deg2rad).flatten()
 
         # Extract pelvis_tilt (global, same for both legs)
-        pelvis_tilt_rad = np.zeros(NUM_POINTS)
+        pelvis_tilt_rad = np.full(NUM_POINTS, np.nan)
         if 'pelvis_tilt' in task_data.dtype.names:
             pelvis_data = task_data['pelvis_tilt']
             if pelvis_data.ndim == 2 and cycle_idx < pelvis_data.shape[1]:
@@ -1327,7 +1098,7 @@ def process_subject(
     while data_out.shape == (1, 1):
         data_out = data_out[0, 0]
 
-    subject_mass = SUBJECT_INFO.get(subject_id, {}).get('mass', 70.0)
+    subject_mass = SUBJECT_INFO.get(subject_id, {}).get('mass', np.nan)
     all_strides = []
 
     # Load FileInfo.mat to get exo filename_suffixes

@@ -379,3 +379,21 @@ provides verified source preservation, not evidence of native execution.
 
 GT24 was stopped at a recording boundary for this bounded export, then resumed
 from the same immutable timing-corrected outputs.
+
+
+### MBLUE observed-time alignment pilot
+
+MBLUE walking no longer pairs opposite-leg curves by index, clamps to the last
+available curve or applies a fixed half-cycle shift. Angles, moments and force
+use original timestamp overlap. COP samples use the same ipsilateral time window
+for both plates. Gaps and conflicting overlapping samples remain missing.
+Missing source duration and pelvis measurements no longer become 1/2 seconds or
+zero degrees; unknown subject mass no longer defaults to 70 kg.
+
+`mblue_overlap_pilot_20261020` contains 102 AB01 bare level-walking observations
+at 1 m/s. The independent `check_mblue_time_overlap.py` probe checked 45,228
+opposite-leg hip/knee/ankle values against uniquely overlapping source intervals;
+maximum error was 4.44e-16 radians. Source, converter and output hashes are saved.
+This is a provisional legacy-schema pilot, not a publishable release. Stable
+identities, all subjects/conditions, bilateral-task alignment, full force/COP
+semantics and exclusion accounting remain open. GT24 resumed after this pilot.
