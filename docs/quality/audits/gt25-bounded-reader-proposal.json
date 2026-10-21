@@ -1,7 +1,7 @@
 {
-  "status": "bounded_projected_reader_implemented_segmentation_integration_pending",
+  "status": "first_oversized_transfer_converted_independent_audit_pending",
   "scientific_approval": false,
-  "scope": "Metadata/code review and synthetic tests only; no scientific CSV body read or numerical conversion",
+  "scope": "One real oversized BT07 recording converted under the 768 MiB cap; independent source audit and full coverage remain pending.",
   "inventory_path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt25_coverage_proposal_20261021/isolated_repo/converted_datasets/reconversion_v2/inventory_review/inventory.json",
   "inventory_sha256": "728d649f972da264d3ab9f1de7e0829de9bf4714bebad278ad02031d35be25f3",
   "remaining_mapped_oversized": [
@@ -288,7 +288,9 @@
     "contributor_tools/gt25_projected_row_store.py": "2623ddafd6104b041919eb51ce54634a7f1930879848472c7bbd90a4d7ce1f8f",
     "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py": "682fe112e68a5d336d5feffa244814777fa8c6ad3d79b977550d56078e670a57",
     "contributor_tools/common/stride_segmentation.py": "eecf12b9ff0e643a07de4c6053ba1cf6c3d15eb37c88d6e77905933abb4cfce6",
-    "contributor_tools/reconvert_recording.py": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f"
+    "contributor_tools/reconvert_recording.py": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f",
+    "contributor_tools/gt25_streaming_transfers.py": "76719fa17be330e78b2eabddfd1f8e594f90ea91c8706f389b4286309ae78dd0",
+    "contributor_tools/run_gt25_streaming_transfer_pilot.py": "6d8f2871b0768ad257d2130db8923d111000fe568dbec814ba59919352568ff4"
   },
   "bottlenecks": [
     {
@@ -439,5 +441,36 @@
     "Guarded source pilot for smallest oversized transfer then longest selected-byte transfer; original frozen source untouched and no scientific readiness claim from fixtures.",
     "All34 inventory entries must receive a terminal converted-or-evidence-backed-failure status; cannot close coverage at450/484."
   ],
-  "tests": "8 synthetic projected CSV/store tests passed; no whole-trial streaming segmentation or scientific pilot yet"
+  "tests": "21 synthetic tests passed in2.71s: reader corruption/clock/schema fixtures, original full-array segmentation equivalence across chunk1/17/63/4096 and irregular clocks, initial unknown state, short source, NaN velocity, BW heuristic, globalIQR enable/disable; complete original process_stride output equivalence incl both transfer directions, first/last20sample IMU initialization, nonzero absolute source offsets.; all-NaN GRF and missing velocity fail-closed fixtures added.",
+  "implementation": {
+    "reader": "contributor_tools/gt25_projected_row_store.py",
+    "segmentation": "contributor_tools/gt25_streaming_transfers.py",
+    "adapter": "contributor_tools/run_gt25_streaming_transfer_pilot.py",
+    "first_pilot_plan": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt25_streaming_transfer_pilot_v2_20261021/plan.json",
+    "first_pilot_plan_sha256": "6c1d4b8427db17d804ecb4919f18692fb74dc18477cb28c727a5681b0344133e",
+    "first_pilot_subject": "BT07",
+    "first_pilot_recording": "sit_to_stand_1_0task_short-arm_on",
+    "output": "Incremental150row Parquet groups plus per-observation schema assessments and disk-backed segmentation candidate/accepted ledger; no frame accumulation.",
+    "guards": "768MiB hard address-space limit,2816MiB Windows startup/2048MiB runtime reserve,15second checks, one-hour pilot timeout, unchanged shared disk/WSL headroom guard, lowpriority; plan-only default."
+  },
+  "remaining_integration_gates": [
+    "Completed first real oversized pilot: BT07, 28 transfers, 4200 rows. This demonstrates bounded execution; independent raw-source audit is still required.",
+    "Independent raw CSV output audit must be implemented/run before adoption; existing check_gt25_source.py hardcodesBT01 and caches whole columns, so it is not falsely claimed suitable for BT07 streaming pilot.",
+    "Whole-trial IMU mean dt uses endpoint telescoping, mathematically equivalent to mean(diff) with bounded floating-point differences; synthetic output comparison tolerance1e-10relative/1e-8absolute, not bitwise equivalence.",
+    "All34 oversized sources must be processed; existing450within-limit and192unmapped require their separate coverage gates."
+  ],
+  "first_pilot_result": {
+    "status": "streaming_transfer_converted_unreviewed",
+    "scientific_approval": false,
+    "observations": 28,
+    "rows": 4200,
+    "peak_rss_kib": 170112,
+    "plan_sha256": "6c1d4b8427db17d804ecb4919f18692fb74dc18477cb28c727a5681b0344133e",
+    "phase_sha256": "cbbfcc6218c391632b8ef0a9d0573099d453f170e9276eb3c6358cf11ea99e09",
+    "segmentation_sha256": "5c46094f61a9c857a92683f35c4bd854fa6e06308f0581a56abe4aaf970dfd37",
+    "evidence_path": "converted_datasets/reconversion_v2/gt25_streaming_transfer_pilot_v2_20261021/conversion_summary.json",
+    "evidence_sha256": "b86c02e447629704bd076e0bfb7a84ecc7d23d9bea96b2b3fa9275d1ea2846e2",
+    "verified_sources": 11,
+    "verified_code_bindings": 65
+  }
 }
