@@ -1,5 +1,5 @@
 {
-  "updated_at_utc": "2026-10-21 05:01 UTC",
+  "updated_at_utc": "2026-10-21 05:35 UTC",
   "snapshot_notice": "Manually refreshed evidence snapshot, not a live monitor. No dataset has final scientific approval.",
   "organization": {
     "coordinator": "Execution, integration, memory guards and evidence reconciliation",
@@ -17,13 +17,15 @@
     "mblue_fileinfo_queue": "converted_datasets/reconversion_v2/mblue_fileinfo_serial_queue_20261021",
     "mblue_pose_queue": "converted_datasets/reconversion_v2/mblue_modelpose_serial_queue_20261021",
     "um21_boundary_scope_queue": "converted_datasets/reconversion_v2/um21_boundary_scope_serial_queue_20261021",
-    "gt24_ankle_adoption_queue": "converted_datasets/reconversion_v2/gt24_phase_ankle_adoption_serial_queue_20261021"
+    "gt24_ankle_adoption_queue": "converted_datasets/reconversion_v2/gt24_phase_ankle_adoption_serial_queue_20261021",
+    "queue_state_notice": "19 historical queues stopped; 39 job definitions retained for reviewed replacement. Queue paths below identify preserved plans, not live workers.",
+    "queue_recovery_evidence": "docs/quality/audits/reconstruction-queue-recovery.json"
   },
   "datasets": [
     {
       "dataset": "MBLUE",
-      "state": "Full planar-label correction running",
-      "remaining": "15,061 observations across 335 blocks targeted; 3D orientation reconstruction and scientific review remain open."
+      "state": "Full planar-label correction completed",
+      "remaining": "335 blocks and 15,061 observations preserved. Physical 3D orientation reconstruction and scientific review remain open."
     },
     {
       "dataset": "GT21",
@@ -32,13 +34,13 @@
     },
     {
       "dataset": "UMich 2021",
-      "state": "Partial full outputs + pilots",
-      "remaining": "Running and partial treadmill readback passed. Components, stairs, Wtr and boundary recovery queued."
+      "state": "Partial outputs; ankle audit waiting for memory",
+      "remaining": "Boundary and planar jobs need rescheduling after the original downstream queues stopped. Upstream components, stairs and Wtr remain separate."
     },
     {
       "dataset": "GT24",
-      "state": "Mass selection defect; adoption stopped",
-      "remaining": "Shared phase/day mass lookup invalidates independent mass-normalization claims. Correct and revalidate affected values before full phase or continuous adoption; transition coverage remains open."
+      "state": "Participant normalization prepared; actual checks pending",
+      "remaining": "Two-record pilot requires Complete membership checks first. Unknown moment denominators and interaction units remain explicit; full source coverage is incomplete."
     },
     {
       "dataset": "GT23",
@@ -47,8 +49,8 @@
     },
     {
       "dataset": "GT25",
-      "state": "Ankle sign defect; conversion and audit held",
-      "remaining": "Pinned README defines plantarflexion positive. Converter and audit share the opposite anatomical label. Correct signs and independently recheck before full conversion; preserve the 28-transfer pilot as superseded evidence."
+      "state": "Ankle and normalization fixes prepared; actual checks pending",
+      "remaining": "Synthetic fixtures passed. Run the 28-transfer source audit before restoring the full 676-recording scope; segment estimates need explicit reference metadata."
     },
     {
       "dataset": "Gait120",
@@ -57,8 +59,8 @@
     },
     {
       "dataset": "StrokePiG",
-      "state": "Native pilots verified; full batch queued",
-      "remaining": "151 walking sources. Native preservation must be followed by canonical mapping and phase reconstruction."
+      "state": "Native pilots checked; full batch needs rescheduling",
+      "remaining": "151 walking sources retained in the stopped-job backlog. Canonical mapping and phase reconstruction remain open."
     }
   ],
   "historical_scope": {
@@ -146,7 +148,7 @@
       ],
       "lane": "parallel source/code review now; native pilot and regeneration serial",
       "owner": "GT21 review agent",
-      "status": "Combined pilots queued after existing conversions",
+      "status": "Combined pilots prepared; stopped queue needs rescheduling",
       "progress_note": "Levelground and treadmill combined pilots are queued serially. All source-pair, signal, force/COP and treadmill metadata checks must pass; native execution remains pending."
     },
     {
@@ -415,7 +417,7 @@
       "prerequisites": [],
       "lane": "parallel-safe",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Full planar-label correction running; physical orientation review open",
+      "status": "Full planar-label preservation completed; physical orientation review open",
       "progress_note": "Distinct early full run preserves all planar estimates and unrelated values, with unsupported canonical orientations explicitly missing. Target: 335 blocks / 15,061 observations. Native FileInfo decoder is implemented and tested, awaiting 3 GiB host startup headroom."
     },
     {
@@ -481,7 +483,7 @@
       "prerequisites": [],
       "lane": "parallel-safe",
       "owner": "GT25 coverage agent",
-      "status": "Pilot preserved; ankle convention correction required before audit",
+      "status": "V4 ankle and normalization corrections prepared; actual readback pending",
       "progress_note": "Streaming BT07 pilot converted 28 transfers / 4,200 rows with 170,112 KiB peak RSS. Eleven raw-source hashes and 65 code bindings verified; independent event/value audit and all remaining oversized sources are still required."
     },
     {
@@ -590,7 +592,7 @@
       ],
       "lane": "serial-heavy",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Open; see prerequisites"
+      "status": "Full batch retained; stopped queue needs rescheduling"
     },
     {
       "id": "SCOPE-01",
@@ -707,7 +709,7 @@
       "id": "QA-01",
       "priority": "P0",
       "title": "Verify every final dataset against original source",
-      "status": "partly queued; final results required",
+      "status": "Partial evidence available; stopped jobs need reviewed replacement",
       "acceptance": [
         "Final output hashes tie to exact source and converter versions",
         "All changed signals/identity/clock/units checked over relevant full scope",
@@ -816,7 +818,7 @@
       "prerequisites": [],
       "lane": "source review and isolated correction; serial numerical validation",
       "owner": "GT24 reviewer; coordinator schedules conversion",
-      "status": "Confirmed defect; waiting jobs stopped before execution",
+      "status": "Participant normalization tested; Complete membership and actual correction pending",
       "progress_note": "Overlapping Phase1And2 participants BT01/BT02/BT13 can receive Phase3 masses. Separate day-2 masses also need explicit mapping. Earlier matching audits shared the lookup and cannot establish mass correctness."
     },
     {
@@ -838,8 +840,32 @@
       "prerequisites": [],
       "lane": "source correction; serial reconstruction",
       "owner": "GT25 reviewer and coordinator",
-      "status": "Confirmed source contradiction; original queued work held",
+      "status": "Ankle correction tested; v4 source comparison and full rebuild pending",
       "progress_note": "Converter and audit kept ankle_angle positive under dorsiflexion names, contradicting the pinned source README."
+    },
+    {
+      "id": "EXEC-03",
+      "priority": "P0",
+      "dataset": "all",
+      "title": "Restore all retained jobs after correcting GT25 and GT24",
+      "status": "19 stopped queues; 39 job definitions preserved",
+      "owner": "coordinator",
+      "lane": "serial conversion",
+      "group": "coordination",
+      "prerequisites": [
+        "corrected converter pilots and independent source checks",
+        "safe host memory headroom"
+      ],
+      "evidence_paths": [
+        "docs/quality/audits/reconstruction-queue-recovery.json",
+        "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt25_stop_dependency_closure_replacement.json"
+      ],
+      "acceptance": [
+        "Every retained job has an explicit replacement or independently verified superseding result",
+        "No stopped prerequisite is treated as successful",
+        "Unrelated work including StrokePiG is restored",
+        "One scientific worker at a time; original resource guards retained"
+      ]
     }
   ]
 }
