@@ -115,3 +115,25 @@ def test_phase_shared_clock_disagreement_fails_closed(tmp_path):
  fixture(tmp_path);tool.phase_clock_agreement(tmp_path)
  write(tmp_path/'Joint_Angle.csv',['time'],[[0],[.9]])
  with pytest.raises(ValueError,match='producer clock bug'):tool.phase_clock_agreement(tmp_path)
+
+
+@pytest.mark.parametrize('case_index',[0,1])
+def test_actual_sanitized_native_receipt_shapes(case_index):
+ import json,copy
+ cases=json.loads((Path(__file__).parent/'fixtures/gt23_native_receipt_shapes.json').read_text());case=cases[case_index]
+ selected,extra=tool.resolve_sources(case['manifest'],case['evidence'],case['options'],case['original_evidence_sha256'],case['mode'])
+ assert len(selected)==3 and all('/AB01/CSV_Data/' in p for p in selected)
+ options={**case['options'],'subject':'AB03'}
+ with pytest.raises(ValueError):tool.resolve_sources(case['manifest'],case['evidence'],options,case['original_evidence_sha256'],case['mode'])
+ evidence=copy.deepcopy(case['evidence'])
+ if case_index==0:evidence['csv_files']['Joint_Moments.csv']['window_sha256']='wrong'
+ else:evidence['output_sha256']='wrong'
+ with pytest.raises(ValueError):tool.resolve_sources(case['manifest'],evidence,case['options'],case['original_evidence_sha256'],case['mode'])
+
+
+@pytest.mark.parametrize('case_index',[0,1])
+def test_actual_producer_mode_cannot_switch_source_schema(case_index):
+ import json
+ case=json.loads((Path(__file__).parent/'fixtures/gt23_native_receipt_shapes.json').read_text())[case_index]
+ with pytest.raises(ValueError,match='mode/source schema'):
+  tool.resolve_sources(case['manifest'],case['evidence'],case['options'],case['original_evidence_sha256'],'phase' if case['mode']=='time' else 'time')

@@ -6,7 +6,7 @@ validity, event detection, or COP transformations. Run in the serial guarded slo
 """
 from itertools import zip_longest
 import argparse,csv,hashlib,json,math,os,resource
-from pathlib import Path
+from pathlib import Path,PureWindowsPath
 ROOT=Path(__file__).resolve().parents[1]
 MASS=ROOT/'docs/quality/audits/source_evidence/gt23/publisher-subject-masses.csv'
 MASS_SHA='ff7f268497c0f2945374894005f68d647e869130e46e90194346752ea6508ab0'
@@ -108,19 +108,54 @@ def check_rows(rows,folder,mode,mass,offset=0,coverage=None):
    if row[f'grf_anterior_{role}_BW'] is not None or row[f'grf_lateral_{role}_BW'] is not None:raise ValueError('Unsupported anatomical horizontal force present')
  return finite,total
 
-def prepare(report_path,manifest_path,output):
+def windows_local(value):
+ p=PureWindowsPath(value)
+ if p.drive.upper() not in ('S:','C:') or '..' in p.parts:raise ValueError('Unsupported native source root')
+ return Path('/mnt')/p.drive[0].lower()/Path(*p.parts[1:])
+
+
+def resolve_sources(manifest,evidence,options,evidence_sha,mode):
+ """Handle the actual native time-window and phase receipt schemas explicitly."""
+ if mode not in ('time','phase') or ('prepared_input_manifest' in manifest)!=(mode=='time'):raise ValueError('Actual producer mode/source schema mismatch')
+ required={'Joint_Angle.csv','Joint_Moments.csv','GroundFrame_GRFs.csv'}
+ extra={}
+ if 'prepared_input_manifest' in manifest:
+  if evidence_sha!=manifest['prepared_input_manifest'] or manifest['prepared_input_sha256'].get('source_window_manifest.json')!=evidence_sha:raise ValueError('Prepared source manifest hash mismatch')
+  if evidence['subject']!=options['subject'] or evidence['parsing']!=options['recording']:raise ValueError('Prepared recording identity mismatch')
+  selected={}
+  for name in required:
+   row=evidence['csv_files'][name];source=Path(row['source'])
+   relative=f"RawData/{evidence['subject']}/CSV_Data/{evidence['recording']}/{name}"
+   if source.parts[-5:]!=Path(relative).parts or manifest['prepared_input_sha256'].get(relative)!=row['window_sha256']:raise ValueError('Prepared/raw source mapping differs')
+   selected[str(source)]=row['source_sha256'];extra[str(windows_local(options['data_root'])/relative)]=row['window_sha256']
+ else:
+  if evidence.get('output_sha256')!=manifest['output_sha256'] or evidence.get('scientific_approval') is not False:raise ValueError('Independent source receipt is not for native output')
+  sources=evidence['source_sha256']
+  parsing=windows_local(options['data_root'])/'Segmentation'/options['subject']/options['recording']
+  if str(parsing) not in sources:raise ValueError('Native parsing identity not source-bound')
+  extra[str(parsing)]=sources[str(parsing)]
+  selected={p:h for p,h in sources.items() if Path(p).name in required}
+ if len(selected)!=3 or len({str(Path(p).parent) for p in selected})!=1:raise ValueError('One exact raw recording required')
+ folder=Path(next(iter(selected))).parent
+ if folder.parent.name!='CSV_Data' or folder.parent.parent.name!=options['subject']:raise ValueError('Source subject differs from native options')
+ return selected,extra
+
+
+def prepare(report_path,manifest_path,output,source_evidence,source_evidence_sha256):
  report_path=Path(report_path).resolve();manifest_path=Path(manifest_path).resolve();output=Path(output).resolve()
  report=json.loads(report_path.read_text());manifest=json.loads(manifest_path.read_text());bindings=report['verified_input_sha256']
  if report.get('status')!='force_cop_and_publisher_normalization_corrected_unreviewed' or report.get('scientific_approval') is not False:raise ValueError('Completed normalization required')
  if bindings.get(str(manifest_path))!=digest(manifest_path):raise ValueError('Native source manifest not bound by correction chain')
- sources=manifest['sources'];required={'Joint_Angle.csv','Joint_Moments.csv','GroundFrame_GRFs.csv'};selected={p:h for p,h in sources.items() if Path(p).name in required}
- if len(selected)!=3 or len({str(Path(p).parent) for p in selected})!=1:raise ValueError('One exact raw recording required')
+ evidence_path=Path(source_evidence).resolve();options_path=manifest_path.with_name('options.json')
+ if digest(evidence_path)!=source_evidence_sha256:raise ValueError('Source evidence receipt changed')
+ if bindings.get(str(options_path))!=digest(options_path):raise ValueError('Native options not bound')
+ selected,extra_sources=resolve_sources(manifest,json.loads(evidence_path.read_text()),json.loads(options_path.read_text()),source_evidence_sha256,report['actual_producing_converter']['mode'])
  parquet=report_path.parent/'corrected.parquet'
  if digest(parquet)!=report['output_sha256']:raise ValueError('Corrected output changed')
  mode=report['actual_producing_converter']['mode']
  if mode not in ('time','phase'):raise ValueError('Actual producing mode unknown')
  if not output.is_relative_to(ROOT/'converted_datasets/reconversion_v2') or output.exists():raise ValueError('Fresh local audit root required')
- extra={**selected,str(report_path):digest(report_path),str(manifest_path):digest(manifest_path),str(parquet):report['output_sha256'],str(MASS):MASS_SHA,str(README):README_SHA,str(Path(__file__).resolve()):digest(__file__)}
+ extra={**selected,**extra_sources,str(evidence_path):source_evidence_sha256,str(report_path):digest(report_path),str(manifest_path):digest(manifest_path),str(parquet):report['output_sha256'],str(MASS):MASS_SHA,str(README):README_SHA,str(Path(__file__).resolve()):digest(__file__)}
  for path,value in extra.items():
   if path in bindings and bindings[path]!=value:raise ValueError('Conflicting source binding')
  bound={**bindings,**extra}
@@ -170,7 +205,7 @@ def run(plan_path,expected):
  with target.open('x') as f:json.dump(report,f,indent=2)
 
 def main():
- ap=argparse.ArgumentParser(description=__doc__);s=ap.add_subparsers(dest='mode',required=True);a=s.add_parser('prepare');a.add_argument('--report',type=Path,required=True);a.add_argument('--native-source-manifest',type=Path,required=True);a.add_argument('--output',type=Path,required=True);a=s.add_parser('run');a.add_argument('--plan',type=Path,required=True);a.add_argument('--plan-sha256',required=True);x=ap.parse_args()
- if x.mode=='prepare':print(json.dumps(prepare(x.report,x.native_source_manifest,x.output)))
+ ap=argparse.ArgumentParser(description=__doc__);s=ap.add_subparsers(dest='mode',required=True);a=s.add_parser('prepare');a.add_argument('--report',type=Path,required=True);a.add_argument('--native-source-manifest',type=Path,required=True);a.add_argument('--source-evidence',type=Path,required=True);a.add_argument('--source-evidence-sha256',required=True);a.add_argument('--output',type=Path,required=True);a=s.add_parser('run');a.add_argument('--plan',type=Path,required=True);a.add_argument('--plan-sha256',required=True);x=ap.parse_args()
+ if x.mode=='prepare':print(json.dumps(prepare(x.report,x.native_source_manifest,x.output,x.source_evidence,x.source_evidence_sha256)))
  else:run(x.plan,x.plan_sha256)
 if __name__=='__main__':main()
