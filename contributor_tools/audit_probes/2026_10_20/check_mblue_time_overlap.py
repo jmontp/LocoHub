@@ -22,7 +22,7 @@ ensure_storage_headroom(out);out.mkdir(exist_ok=False)
 data=loadmat(source,squeeze_me=False,struct_as_record=True)['dataOut'][0,0]['bare'][0,0]['level_1x0'][0,0]
 frames,_=module.process_gait_task(data,'AB01',module.SUBJECT_INFO['AB01']['mass'],'level_walking','level_1x0',1.,'bare',task_key='level_1x0')
 from contributor_tools.common.data_contract import inspect_contract
-errors=[];position=0;identities=set()
+errors=[];ipsi_errors=[];position=0;identities=set()
 for side,other in [('l','r'),('r','l')]:
  for index in range(data[f'time_{side}'].shape[1]):
   frame=frames[position];position+=1
@@ -35,6 +35,12 @@ for side,other in [('l','r'),('r','l')]:
   np.testing.assert_allclose(frame.time_s,target-clock[0],atol=1e-10)
   np.testing.assert_allclose(frame.source_start_time_s,clock[0])
   np.testing.assert_allclose(frame.source_end_time_s,clock[-1])
+  for joint,key,sign in [('hip_flexion','hip_flexion',1),('knee_flexion','knee_angle',-1),('ankle_dorsiflexion','ankle_angle',1)]:
+   expected=np.interp(target,clock,data[f'{key}_{side}'][:,index])*sign*np.pi/180
+   actual=frame[f'{joint}_angle_ipsi_rad'].to_numpy()
+   np.testing.assert_allclose(actual,expected,atol=1e-12,rtol=1e-10,equal_nan=True)
+   np.testing.assert_allclose(frame[f'{joint}_velocity_ipsi_rad_s'],np.gradient(expected,target),atol=1e-9,rtol=1e-9,equal_nan=True)
+   ipsi_errors.extend(abs(actual[np.isfinite(expected)]-expected[np.isfinite(expected)]))
   # Independently check points lying strictly inside one opposite-leg source cycle.
   for row,t in enumerate(target):
    candidates=[j for j in range(data[f'time_{other}'].shape[1]) if data[f'time_{other}'][0,j]<t<data[f'time_{other}'][-1,j]]
@@ -51,8 +57,8 @@ import pandas as pd
 import pyarrow as pa
 pa.set_cpu_count(1);pa.set_io_thread_count(1)
 path=out/'phase_unreviewed.parquet';pd.concat(frames,ignore_index=True).to_parquet(path,index=False)
-report={'scientific_approval':False,'scope':'AB01 bare level walking at 1 m/s, both reference legs; opposite hip/knee/ankle samples with unique source time overlap.',
- 'observations':len(frames),'compared_values':len(errors),'max_abs_error_rad':max(errors),
+report={'scientific_approval':False,'scope':'AB01 bare level walking at 1 m/s, both reference legs; ipsilateral hip/knee/ankle and velocities on observed timestamps, plus opposite samples with unique source time overlap.',
+ 'observations':len(frames),'compared_values':len(errors),'ipsilateral_values_checked':len(ipsi_errors),'max_ipsilateral_error_rad':max(ipsi_errors),'max_abs_error_rad':max(errors),
  'source_sha256':digest(source),'converter_sha256':digest(code),'output_sha256':digest(path),
- 'limitations':['Walking identities, JSON metadata and schema checked; transfer identity migration remains pending.','Other conditions, signals, force/COP mappings and task coverage remain unverified.']}
+ 'limitations':['Walking identities, JSON metadata and schema checked; transfer identities are checked separately.','Other conditions, signals, force/COP mappings and task coverage remain unverified.']}
 (out/'source_comparison.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))

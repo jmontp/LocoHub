@@ -331,6 +331,20 @@ def interpolate_to_phase(data: np.ndarray, num_points: int = NUM_POINTS) -> np.n
     return result
 
 
+def interpolate_source_clock(values, clock, num_points=NUM_POINTS):
+    """Use observed time; retain normalized curves without inventing missing time."""
+    values = np.asarray(values).reshape(-1)
+    if clock is None:
+        return interpolate_to_phase(values, num_points)
+    clock = np.asarray(clock).reshape(-1)
+    if len(values) != len(clock):
+        raise ValueError('Signal and source clock lengths disagree')
+    if len(clock) < 2 or not np.isfinite(clock).all() or not (np.diff(clock) > 0).all():
+        return interpolate_to_phase(values, num_points)
+    valid_values = np.where(np.isfinite(values), values, np.nan)
+    return np.interp(np.linspace(clock[0], clock[-1], num_points), clock, valid_values)[:, None]
+
+
 def compute_velocity_from_angle(angle_rad: np.ndarray, stride_duration_s: float) -> np.ndarray:
     """
     Compute angular velocity from angle data using gradient.
@@ -548,9 +562,12 @@ def process_gait_task(
                 if contra_time_key in task_data.dtype.names:
                     contra_times = task_data[contra_time_key]
 
+            def interpolate_ipsilateral(values):
+                return interpolate_source_clock(values, ipsi_times)
+
             # Hip flexion
             hip_ipsi_deg = hip_ipsi_data[:, stride_idx] if hip_ipsi_data.ndim == 2 else hip_ipsi_data
-            hip_ipsi_rad = interpolate_to_phase(hip_ipsi_deg * deg2rad).flatten()
+            hip_ipsi_rad = interpolate_ipsilateral(hip_ipsi_deg * deg2rad).flatten()
 
             hip_contra_rad = time_sync_contra_data(
                 ipsi_times, contra_times,
@@ -561,7 +578,7 @@ def process_gait_task(
             knee_ipsi_data = task_data[f'knee_angle_{ipsi}']
             knee_contra_data = task_data[f'knee_angle_{contra}'] if f'knee_angle_{contra}' in task_data.dtype.names else None
             knee_ipsi_deg = knee_ipsi_data[:, stride_idx] if knee_ipsi_data.ndim == 2 else knee_ipsi_data
-            knee_ipsi_rad = interpolate_to_phase(-knee_ipsi_deg * deg2rad).flatten()
+            knee_ipsi_rad = interpolate_ipsilateral(-knee_ipsi_deg * deg2rad).flatten()
 
             knee_contra_rad = time_sync_contra_data(
                 ipsi_times, contra_times,
@@ -572,7 +589,7 @@ def process_gait_task(
             ankle_ipsi_data = task_data[f'ankle_angle_{ipsi}']
             ankle_contra_data = task_data[f'ankle_angle_{contra}'] if f'ankle_angle_{contra}' in task_data.dtype.names else None
             ankle_ipsi_deg = ankle_ipsi_data[:, stride_idx] if ankle_ipsi_data.ndim == 2 else ankle_ipsi_data
-            ankle_ipsi_rad = interpolate_to_phase(ankle_ipsi_deg * deg2rad).flatten()
+            ankle_ipsi_rad = interpolate_ipsilateral(ankle_ipsi_deg * deg2rad).flatten()
 
             ankle_contra_rad = time_sync_contra_data(
                 ipsi_times, contra_times,
@@ -584,9 +601,9 @@ def process_gait_task(
             if 'pelvis_tilt' in task_data.dtype.names:
                 pelvis_data = task_data['pelvis_tilt']
                 if pelvis_data.ndim == 2 and stride_idx < pelvis_data.shape[1]:
-                    pelvis_tilt_rad = interpolate_to_phase(pelvis_data[:, stride_idx] * deg2rad).flatten()
+                    pelvis_tilt_rad = interpolate_ipsilateral(pelvis_data[:, stride_idx] * deg2rad).flatten()
                 elif pelvis_data.ndim == 1:
-                    pelvis_tilt_rad = interpolate_to_phase(pelvis_data * deg2rad).flatten()
+                    pelvis_tilt_rad = interpolate_ipsilateral(pelvis_data * deg2rad).flatten()
 
             # Compute segment angles from kinematic chain
             # thigh_angle = pelvis_tilt + hip_flexion
@@ -645,9 +662,9 @@ def process_gait_task(
             if hip_mom_ipsi_key in task_data.dtype.names:
                 mom_data = task_data[hip_mom_ipsi_key]
                 if mom_data.ndim == 2 and stride_idx < mom_data.shape[1]:
-                    hip_mom_ipsi = interpolate_to_phase(mom_data[:, stride_idx] / subject_mass).flatten()
+                    hip_mom_ipsi = interpolate_ipsilateral(mom_data[:, stride_idx] / subject_mass).flatten()
                 elif mom_data.ndim == 1:
-                    hip_mom_ipsi = interpolate_to_phase(mom_data / subject_mass).flatten()
+                    hip_mom_ipsi = interpolate_ipsilateral(mom_data / subject_mass).flatten()
 
             if hip_mom_contra_key in task_data.dtype.names:
                 mom_data = task_data[hip_mom_contra_key]
@@ -660,9 +677,9 @@ def process_gait_task(
                 mom_data = task_data[knee_mom_ipsi_key]
                 if mom_data.ndim == 2 and stride_idx < mom_data.shape[1]:
                     # Negate knee moment for flexion-positive convention
-                    knee_mom_ipsi = interpolate_to_phase(-mom_data[:, stride_idx] / subject_mass).flatten()
+                    knee_mom_ipsi = interpolate_ipsilateral(-mom_data[:, stride_idx] / subject_mass).flatten()
                 elif mom_data.ndim == 1:
-                    knee_mom_ipsi = interpolate_to_phase(-mom_data / subject_mass).flatten()
+                    knee_mom_ipsi = interpolate_ipsilateral(-mom_data / subject_mass).flatten()
 
             if knee_mom_contra_key in task_data.dtype.names:
                 mom_data = task_data[knee_mom_contra_key]
@@ -674,9 +691,9 @@ def process_gait_task(
             if ankle_mom_ipsi_key in task_data.dtype.names:
                 mom_data = task_data[ankle_mom_ipsi_key]
                 if mom_data.ndim == 2 and stride_idx < mom_data.shape[1]:
-                    ankle_mom_ipsi = interpolate_to_phase(mom_data[:, stride_idx] / subject_mass).flatten()
+                    ankle_mom_ipsi = interpolate_ipsilateral(mom_data[:, stride_idx] / subject_mass).flatten()
                 elif mom_data.ndim == 1:
-                    ankle_mom_ipsi = interpolate_to_phase(mom_data / subject_mass).flatten()
+                    ankle_mom_ipsi = interpolate_ipsilateral(mom_data / subject_mass).flatten()
 
             if ankle_mom_contra_key in task_data.dtype.names:
                 mom_data = task_data[ankle_mom_contra_key]
@@ -695,9 +712,9 @@ def process_gait_task(
             if grf_ipsi_key in task_data.dtype.names:
                 grf_data = task_data[grf_ipsi_key]
                 if grf_data.ndim == 2 and stride_idx < grf_data.shape[1]:
-                    grf_vert_ipsi = interpolate_to_phase(grf_data[:, stride_idx] / body_weight_N).flatten()
+                    grf_vert_ipsi = interpolate_ipsilateral(grf_data[:, stride_idx] / body_weight_N).flatten()
                 elif grf_data.ndim == 1:
-                    grf_vert_ipsi = interpolate_to_phase(grf_data / body_weight_N).flatten()
+                    grf_vert_ipsi = interpolate_ipsilateral(grf_data / body_weight_N).flatten()
 
             if grf_contra_key in task_data.dtype.names:
                 grf_data = task_data[grf_contra_key]

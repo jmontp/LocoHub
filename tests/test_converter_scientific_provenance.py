@@ -586,3 +586,16 @@ def test_mblue_transfer_interpolation_uses_recorded_nonuniform_clock(mblue):
     np.testing.assert_allclose(frames[0].hip_flexion_angle_ipsi_rad,np.linspace(0,10,150)*np.pi/180,atol=1e-12)
     np.testing.assert_allclose(frames[0].hip_flexion_velocity_ipsi_rad_s,10*np.pi/180,atol=1e-12)
     assert frames[0].observation_type.eq('transfer').all()
+
+
+def test_mblue_gait_interpolation_uses_source_clock_on_both_sides(mblue):
+    source=mblue_source()
+    clock=np.linspace(0,1,101)**2
+    for side in ['l','r']:
+        source['time_'+side][:,0]=clock
+        source['hip_flexion_'+side][:,0]=10*clock
+    frames,_=mblue.process_gait_task(source,'AB01',70.,'level_walking','level',1.,'bare')
+    for frame in frames:
+        for role in ['ipsi','contra']:
+            np.testing.assert_allclose(frame[f'hip_flexion_angle_{role}_rad'],np.linspace(0,10,150)*np.pi/180,atol=1e-12)
+            np.testing.assert_allclose(frame[f'hip_flexion_velocity_{role}_rad_s'],10*np.pi/180,atol=1e-12)
