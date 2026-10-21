@@ -28,7 +28,7 @@
     "gt21": "Native single-recording pilot verified. Resumable guarded batch inventories 2,301 recordings across 16 local subjects and is scheduled after GT24 completes. Full source-subject coverage, all-recording regeneration, force/COP semantics and exclusions remain open.",
     "gait120": "Removed invented metadata and unsupported leg swaps/half-cycle rotation. Source protocol specifies right-foot cycles. Fourteen recordings across all seven tasks (S001/S011) regenerated and all bilateral sagittal angles source-matched; source anthropometry checked. Full rebuild, independent event/contact verification, model sign/force/COP and inverse-dynamics anomalies remain open. Force/COP timing-based leg guesses removed; all available raw plate force/COP/torque axes preserved on the IK clock (36 source-channel comparisons exact across three force-bearing pilot recordings). Anatomical GRF/COP remains missing until mapping is verified. Full local inventory matches published totals: 6,882 recordings, 120 subjects, seven tasks. Guarded per-recording reconstruction is queued after GT21; only its one-recording worker smoke check has executed. Non-sagittal signal standardization is also still pending.",
     "strokepig": "Source C3D foot strikes, inclusive endpoints, actual-time interpolation and one-frame C3D/IK clock correction verified on TVC03/BWA6 (3 observations, 450 rows). Full reconstruction, clinical side, force/COP, model conventions and empty-recording exclusion accounting remain open.",
-    "gt23": "Source audit found measured vertical COP discarded in both converters. Code now preserves all three coordinates and avoids transform extrapolation, but corrected MATLAB paths have not executed. Historical eight-row angle/moment/force match is limited evidence. Native bounded reconstruction, identities, source coverage, event/model conventions and release validation remain open."
+    "gt23": "Measured three-dimensional COP and non-extrapolated transform timing corrected. Guarded native time pilot produced 2,475 rows; six COP channels match an independent source/transform calculation within 6.3e-15 m, and structure/source/code hashes pass. Phase-native execution, full reconstruction, frame/contact conventions and source coverage remain open."
   },
   "findings": [
     {
@@ -459,9 +459,9 @@
         "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_phase_to_parquet.m",
         "converted_datasets/gtech_2023_time.parquet"
       ],
-      "status": "code_changed_source_defect_confirmed_native_execution_pending",
-      "required_followup": "Execute corrected MATLAB paths under native guards; verify all transformed coordinates against original COP and calcn transforms, then regenerate affected recordings with immutable source identities. Confirm units/frame/contact masking before approval.",
-      "evidence": "converted_datasets/reconversion_v2/gt23_cop_source_review_20261020/source_comparison.json"
+      "status": "code_fixed_native_time_pilot_verified_full_regeneration_pending",
+      "required_followup": "Native time pilot verifies six transformed COP channels across 2,475 rows. Execute corrected phase path, verify further tasks and original units/frame/contact masking, then regenerate full time/phase artifacts with source identities.",
+      "evidence": "converted_datasets/reconversion_v2/gt23_native_time_pilot_20261020/source_comparison.json"
     }
   ]
 }

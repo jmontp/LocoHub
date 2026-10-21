@@ -1,4 +1,4 @@
-function convert_gtech_2023_time_to_parquet()
+function convert_gtech_2023_time_to_parquet(options)
 % CONVERT_GTECH_2023_TIME_TO_PARQUET  Time-indexed export for the Georgia Tech
 % 2023 dataset (s41597-023-02840-6), aligned to the LocoHub standard.
 %
@@ -39,6 +39,11 @@ function convert_gtech_2023_time_to_parquet()
     script_dir = fileparts(mfilename('fullpath'));
     addpath(script_dir);  % for parse_gtech_activity_matlab
     addpath(fullfile(fileparts(mfilename('fullpath')), '..', 'matlab_common'));
+
+    if nargin > 0
+        convert_one_recording(options);
+        return;
+    end
 
     data_root = getenv('GTECH2023_DATA_ROOT');
     if isempty(data_root)
@@ -203,6 +208,61 @@ function convert_gtech_2023_time_to_parquet()
     merge_parquet_shards(merger_script, shard_dir, output_path);
     rmdir(shard_dir, 's');
     fprintf('Done: %s (%d rows)\n', output_path, total_rows);
+end
+
+
+function convert_one_recording(options)
+% Bounded native entry point: exactly one original parsing window, immutable output.
+    required = {'data_root', 'subject', 'recording', 'output_path'};
+    assert(all(isfield(options, required)), 'Missing recording options');
+    assert(~isfile(options.output_path), 'Output already exists');
+    assert(~contains(options.recording, '/') && ~contains(options.recording, '\'), 'Expected a parsing filename');
+    assert(~isempty(regexp(options.subject, '^AB\d+$', 'once')), 'Invalid subject');
+    [activity, variant, raw_folder] = derive_activity(options.recording);
+    assert(~isempty(raw_folder), 'Unsupported parsing filename');
+    parsing = fullfile(options.data_root, 'Segmentation', options.subject, options.recording);
+    [t0, t1, reference] = window_from_parsing(parsing);
+    assert(isfinite(t0) && isfinite(t1) && t1 > t0, 'Invalid source interval');
+    raw_root = fullfile(options.data_root, 'RawData');
+    cached = load_activity_csvs(fullfile(raw_root, options.subject, 'CSV_Data', raw_folder), ...
+        fullfile(raw_root, options.subject, 'Transforms', [raw_folder '.mat']));
+    masses = load_subject_masses(fullfile(raw_root, 'Subject_masses.csv'));
+    mass = NaN;
+    if isKey(masses, options.subject); mass = masses(options.subject); end
+    if ~isscalar(mass) || ~isfinite(mass) || mass <= 0; mass = NaN; end
+    rows = build_time_window(cached, t0, t1, reference, mass * 9.81);
+    assert(~isempty(rows) && height(rows) > 1, 'No source samples in window');
+    [task, task_id, task_info] = parse_gtech_activity_matlab(activity, variant);
+    n = height(rows);
+    rows.subject = repmat(string(['GT23_' options.subject]), n, 1);
+    rows.subject_metadata = repmat(string(jsonencode(struct('weight_kg', mass))), n, 1);
+    rows.task = repmat(string(task), n, 1);
+    rows.task_id = repmat(string(task_id), n, 1);
+    rows.task_info = repmat(string(task_info), n, 1);
+    rows.reference_leg = repmat(string(reference), n, 1);
+    rows.time_scope = repmat("continuous_trial", n, 1);
+    rows.time_reset_per = repmat("segment", n, 1);
+    rows = locohub_add_provenance(rows, sprintf('gt23:%s/%s', options.subject, raw_folder), ...
+        options.recording, reference, 'continuous_recording', t0, t1);
+    rows.step = rows.observation_id;
+    parquetwrite(options.output_path, rows);
+    % Preserve native MAT table values for independent COP comparisons in Python.
+    if cached.has_transforms
+        selection = cached.trans_time >= t0-1 & cached.trans_time <= t1+1;
+        for leg = {'l', 'r'}
+            side = leg{1};
+            R = cached.(['R_' side]); Tr = cached.(['Tr_' side]);
+            evidence = table(cached.trans_time(selection), 'VariableNames', {'time'});
+            for i = 1:3
+                evidence.(sprintf('translation%d', i)) = Tr(i, selection).';
+                for j = 1:3
+                    evidence.(sprintf('r%d%d', i, j)) = reshape(R(i, j, selection), [], 1);
+                end
+            end
+            writetable(evidence, fullfile(fileparts(options.output_path), ['source_calcn_' side '.csv']));
+        end
+    end
+    fprintf('Converted bounded GT23 window: %s (%d rows)\n', options.recording, n);
 end
 
 

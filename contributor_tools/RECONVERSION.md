@@ -608,3 +608,30 @@ fixture demonstrates that measured global Y changes local anterior COP in a
 rotated frame. Neither test executes MATLAB. Native converter execution, original
 transform/frame checks and affected artifact reconstruction remain pending; this
 finding is not closed by the source audit or Python tests.
+
+
+### GT23 guarded native time pilot
+
+`convert_gtech_2023_time_to_parquet(options)` now supports exactly one named source
+parsing window and an immutable output path. The original no-argument path remains
+available. The bounded path records source/observation identities and exports the
+original calcn transform entries read by MATLAB for independent comparison.
+`run_gt23_recording_guarded.ps1` reuses the reviewed Windows job guard with a fixed
+GT23 entry point; it does not modify the frozen launcher used by pending GT21 work.
+The 2 GiB hard job limit, host-memory reserve, disk floor, timeout, idle priority
+and S-backed temporary/preferences paths are retained.
+
+`gt23_native_time_pilot_20261020` executed AB01/ball_toss_1_center_parsing.mat from
+28.3 MiB of admitted source input and produced 2,475 time rows. Independent Python
+calculation from original COP CSVs and native-read source transforms matches all
+six local COP channels (both sides, all three coordinates), with 2,475 finite
+samples per channel and maximum difference 6.25e-15 m. The time schema check and
+all original source/code snapshot hashes pass. Inputs, output, native status and
+comparison hashes are recorded in the conversion manifest. This supersedes the
+prior statement that the corrected time path had not run.
+
+The phase MATLAB path has not run. Broader task coverage, full reconstruction,
+physical frame semantics and contact thresholds remain unverified. This is a
+source-arithmetic check, not scientific approval. GT24 was paused at a recording
+boundary during the native pilot and then resumed; both GT21 and Gait120 waiting
+dispatchers were rebound to the resumed queue.
