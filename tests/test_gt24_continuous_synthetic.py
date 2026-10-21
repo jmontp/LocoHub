@@ -3,8 +3,9 @@ import ast
 import json
 from pathlib import Path
 import pytest
-from contributor_tools.prepare_gt24_continuous_correction import patch,TIME,ROOT
+from contributor_tools.prepare_gt24_continuous_correction import patch
 
+BASELINE=Path(__file__).parent/"fixtures/gt24_time_converter_baseline.py.txt"
 
 def fixture(state='powered',bad_clock=False):
     import numpy as np
@@ -18,7 +19,7 @@ def fixture(state='powered',bad_clock=False):
         for axis in ('x','z'):insole[f'insole_{side}_cop_{axis}']=np.full(4,.02)
     for name,values in [('angle_filt',angle),('velocity',velocity),('moment_filt',moment),('grf',grf),('insole_sim',insole)]:data[name]=pd.DataFrame(values)
     if bad_clock:data['moment_filt'].loc[1,'time']+=.01
-    tree=ast.parse(patch((ROOT/TIME).read_text()));needed={'_gradient_over_time','_series_or_nan','process_trial_time'}
+    tree=ast.parse(patch(BASELINE.read_text()));needed={'_gradient_over_time','_series_or_nan','process_trial_time'}
     module=ast.Module(body=[n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name in needed],type_ignores=[])
     namespace={'np':np,'pd':pd,'json':json,'Path':Path,'Optional':__import__('typing').Optional,'map_task_name':lambda _:('level_walking','synthetic',{}),'get_collection_phase':lambda *_:1,'get_exo_state':lambda *_:state,'is_day2_trial':lambda _:False,'get_subject_mass':lambda *_:70.,'load_trial_data':lambda *_:data,'_determine_reference_leg':lambda *_:'l'}
     exec(compile(module,'<synthetic continuous fixture>','exec'),namespace)

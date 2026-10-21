@@ -1,7 +1,8 @@
 <!doctype html>
-<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fukuchi full-ensemble run: interruption and recovery</title>
 <style>body{font:16px/1.55 system-ui;color:#263345;max-width:850px;margin:32px auto;padding:0 16px}code{overflow-wrap:anywhere}li{margin:12px 0}a{color:#334e77}</style>
+</head><body><main>
 <h1>Recover an interrupted ensemble run</h1>
 <p>This is a maintainer procedure for the prepared full-cohort run. It does not report that all 508 pairs have been converted. The original pilot and its frozen queue remain separate.</p>
 <p>The runner intentionally stops when it encounters a partial output, an existing exclusive log, or a source file without a matching acquisition receipt. Repeating <code>--resume</code> cannot repair those cases. Preserve the evidence first.</p>
@@ -17,4 +18,4 @@
 <h2>Worker limits</h2>
 <p>The imported guard starts each worker in its own process group, removes <code>PYTHONOPTIMIZE</code>, checks resources every 15 seconds, limits resource probes to 10 seconds and enforces a 120-second step timeout. Its <code>finally</code> block sends TERM to that owned group, waits up to five seconds, then sends KILL. The converter applies a 768 MiB address-space limit and one numerical thread. HTTP range reads have a separate 10-second socket timeout and a bounded byte admission; they are not numerical workers.</p>
 <p>A hard kill of the runner cannot execute its cleanup handler. The coordinator must check the recorded child PID and process group before restarting. Resource limits and source readback are not scientific approval of anatomical conventions; left values remain source-only.</p>
-</html>
+</main></body></html>

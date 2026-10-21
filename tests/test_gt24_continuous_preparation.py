@@ -2,13 +2,14 @@
 import ast
 from pathlib import Path
 import unittest
-from contributor_tools.prepare_gt24_continuous_correction import patch,TIME,ROOT
+from contributor_tools.prepare_gt24_continuous_correction import patch
 from contributor_tools.run_gt24_continuous_pilot import manual_derivative
 
+BASELINE=Path(__file__).parent/"fixtures/gt24_time_converter_baseline.py.txt"
 
 class ContinuousPreparationTests(unittest.TestCase):
     def test_ankle_and_knee_native_velocity_signs_with_no_second_fallback_flip(self):
-        tree=ast.parse(patch((ROOT/TIME).read_text()))
+        tree=ast.parse(patch(BASELINE.read_text()))
         assignments=[x for x in ast.walk(tree) if isinstance(x,ast.Assign)]
         for side in ('ipsi','contra'):
             for name in [f'ankle_{side}',f'ankle_vel_{side}',f'ankle_mom_{side}',f'ankle_bio_{side}',f'knee_vel_{side}']:
@@ -19,7 +20,7 @@ class ContinuousPreparationTests(unittest.TestCase):
             self.assertEqual(fallback.value.args[0].id,f'ankle_{side}')
 
     def test_actual_clock_and_missing_force_policy_present(self):
-        source=patch((ROOT/TIME).read_text())
+        source=patch(BASELINE.read_text())
         self.assertNotIn('time_s = np.arange',source)
         self.assertNotIn('n_samples = min(required_lengths)',source)
         self.assertNotIn('if lat_mean > 0',source)
@@ -31,5 +32,5 @@ class ContinuousPreparationTests(unittest.TestCase):
         for value in result:self.assertAlmostEqual(value,2.)
 
     def test_unknown_source_shape_fails_closed(self):
-        source=(ROOT/TIME).read_text().replace('    ankle_ipsi = _series_or_nan','    ankle_ipsi = something_else')
+        source=BASELINE.read_text().replace('    ankle_ipsi = _series_or_nan','    ankle_ipsi = something_else')
         with self.assertRaises(ValueError):patch(source)
