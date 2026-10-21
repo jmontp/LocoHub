@@ -37,8 +37,8 @@
     },
     {
       "dataset": "GT24",
-      "state": "Phase and continuous pilots checked; full scope pending",
-      "remaining": "40 phase observations and 8,002 continuous rows checked. Full phase correction queued; native transition coverage and full continuous conversion remain."
+      "state": "Mass selection defect; adoption stopped",
+      "remaining": "Shared phase/day mass lookup invalidates independent mass-normalization claims. Correct and revalidate affected values before full phase or continuous adoption; transition coverage remains open."
     },
     {
       "dataset": "GT23",
@@ -317,8 +317,8 @@
       "prerequisites": [],
       "lane": "parallel source/document review",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "40-observation phase and 8,002-row continuous pilots passed; full scope pending",
-      "progress_note": "Continuous v2 audit verified 141 input bindings, four output hashes and exact unrelated-field preservation under 768 MiB. Complete archives contain transition samples beyond Parsed folders; full-scope conversion must account for them."
+      "status": "Ankle checks retained; full adoption stopped for mass correction",
+      "progress_note": "The 40-observation phase and 8,002-row continuous checks retain their limited source/preservation evidence. Mass validation reused a faulty phase/day lookup; affected normalized outputs require independent source-mass review under GT24-04."
     },
     {
       "id": "GT24-02",
@@ -794,6 +794,30 @@
         "contributor_tools/conversion_scripts/Fukuchi_2018_Walking/candidate.json"
       ],
       "progress_note": "One-participant/two-leg pilot and browser preview passed. Full inventory: 508 condition pairs / 51 participants. Version 2 sequential runner verifies prior completion receipts on resume. Full run has not started; left anatomical values remain source-only."
+    },
+    {
+      "id": "GT24-04",
+      "priority": "P0",
+      "dataset": "gt24",
+      "title": "Correct phase/day mass selection and independently validate normalization",
+      "evidence_paths": [
+        "docs/quality/index.html",
+        "converted_datasets/reconversion_v2/gt24_equivalence_after_gt23_20261021/status.json",
+        "converted_datasets/reconversion_v2/gt24_phase_ankle_adoption_serial_queue_20261021/queue_status.json"
+      ],
+      "external_blocker": null,
+      "group": "dataset",
+      "acceptance": [
+        "Select mass from explicit collection phase, participant, day and actuator condition; never infer collection phase from overlapping participant IDs.",
+        "Bind README and per-recording Statics/model metadata independently of converter and phase Parquet outputs. Missing or ambiguous mass stays unassessed.",
+        "Distinguish participant body mass from model mass including the exoskeleton and identify each channel actually normalized by the converter.",
+        "Integrate mass correction with ankle, timing, missingness and frame corrections; run new source-readback pilots before full adoption. Preserve superseded receipts and stopped queue evidence."
+      ],
+      "prerequisites": [],
+      "lane": "source review and isolated correction; serial numerical validation",
+      "owner": "GT24 reviewer; coordinator schedules conversion",
+      "status": "Confirmed defect; waiting jobs stopped before execution",
+      "progress_note": "Overlapping Phase1And2 participants BT01/BT02/BT13 can receive Phase3 masses. Separate day-2 masses also need explicit mapping. Earlier matching audits shared the lookup and cannot establish mass correctness."
     }
   ]
 }
