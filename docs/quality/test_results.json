@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T23:38:11.450830-04:00",
-  "recorded_at": "2026-10-21T03:38:47.392181+00:00",
-  "base_revision": "741c17be881750f3dedf7916e39da7152092ada1",
-  "working_tree_changes": false,
+  "started_at": "2026-10-20T23:40:57.225391-04:00",
+  "recorded_at": "2026-10-21T03:41:28.828079+00:00",
+  "base_revision": "6e107ce18fee8e6e7ce755c766ddb67a0c8e1ad9",
+  "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "9206fb913092424fa499315d24701cfd078596ee7ceef3009151352b9c93c5eb",
+  "junit_sha256": "57d9c6d42e6c8aae5503b5b4612d5a3f2228fc18065b851f6bb179ad2d3ff0bb",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -795,6 +795,37 @@
         }
       ]
     },
+    "tests.test_gt21_terrain_fix": {
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_patch_removes_invented_terrain_and_preserves_signal_processing",
+          "status": "passed"
+        },
+        {
+          "name": "test_patch_refuses_unreviewed_source_shape",
+          "status": "passed"
+        },
+        {
+          "name": "test_preservation_check_rejects_any_changed_output[signal]",
+          "status": "passed"
+        },
+        {
+          "name": "test_preservation_check_rejects_any_changed_output[metadata]",
+          "status": "passed"
+        },
+        {
+          "name": "test_preservation_check_rejects_any_changed_output[missing_row]",
+          "status": "passed"
+        },
+        {
+          "name": "test_preservation_check_accepts_exact_values_including_missing",
+          "status": "passed"
+        }
+      ]
+    },
     "tests.test_gt23_native_batch": {
       "passed": 3,
       "failed": 0,
@@ -1512,7 +1543,7 @@
     }
   },
   "totals": {
-    "passed": 301,
+    "passed": 307,
     "failed": 0,
     "skipped": 2
   }
