@@ -1,8 +1,8 @@
 # Converted Datasets
 
-Standardized biomechanical datasets ready for analysis.
+Local reconstruction and historical data artifacts. No dataset has completed final scientific review. See the [reconstruction backlog](../docs/maintainers/backlog.html) for current evidence and remaining work.
 
-**Documentation:** [Datasets](../docs/datasets/index.md) • [Schema Reference](../docs/reference/index.md) • [Tutorials](../docs/tutorials/)
+**Documentation:** [Datasets](../docs/datasets/index.html) • [Schema Reference](../docs/reference/index.html) • [Tutorials](../docs/tutorials/)
 
 ## Available Datasets
 
@@ -53,8 +53,8 @@ data = readtable('gtech_2021_phase.parquet');
 For detailed information on each dataset:
 - **Dataset Documentation:** [docs/datasets/](../docs/datasets/)
 - **Usage Tutorials:** [docs/tutorials/](../docs/tutorials/)
-- **Schema Reference:** [docs/reference/index.md](../docs/reference/index.md)
+- **Schema Reference:** [docs/reference/index.md](../docs/reference/index.html)
 
 ---
 
-*These datasets are cleaned, tested, and ready for reproducible biomechanical research.*
+Historical filenames such as `clean` describe prior filtering, not verified scientific correctness. Corrected outputs and independent source checks are still being produced.
