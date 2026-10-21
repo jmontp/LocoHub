@@ -1,0 +1,144 @@
+{
+  "status": "publisher_metadata_and_code_review_author_events_available_not_validated",
+  "scientific_approval": false,
+  "primary_sources": [
+    {
+      "url": "https://pubmed.ncbi.nlm.nih.gov/41259448/",
+      "claim": "Verifies paper title, authors and DOI10.1126/scirobotics.ads8652; abstract does not establish CSV field denominators."
+    },
+    {
+      "url": "https://repository.gatech.edu/server/api/core/items/d6798aa7-541e-4f6e-980e-4855cdd3f629/bundles",
+      "claim": "Public repository API resolves publisher archive identities despite landing-page403."
+    },
+    {
+      "url": "https://repository.gatech.edu/server/api/core/bitstreams/8409263d-7d96-4b78-a714-6b778c0657ae/content",
+      "claim": "Retrieved publisher README byte-equals local pinnedREADME; Segmented section defines per-leg cycle start/end matrices and optional types."
+    },
+    {
+      "url": "https://repository.gatech.edu/server/api/core/bitstreams/4aa59e24-dac5-4b46-b04e-3bb3a56a1423/content",
+      "claim": "Publisher Figure Code.zip849588bytes; only MATLAB source text extracted/inspected, no MAT arrays loaded."
+    },
+    {
+      "url": "https://repository.gatech.edu/server/api/core/bitstreams/e1b222c9-6766-426b-95ee-6af6c60b6235/content",
+      "claim": "Only65557byte archive-tail metadata HTTP206 range requested.298directoryentries; no event or waveform members downloaded."
+    }
+  ],
+  "new_findings": {
+    "author_event_coverage": {
+      "total": 192,
+      "author_parsing_exact": 69,
+      "missing_exact_parsing": 123,
+      "by_task": {
+        "ball_toss": 54,
+        "cutting": 12,
+        "start_stop": 3
+      }
+    },
+    "source_parsing_total_bytes": 31246,
+    "source_observation_definition": "README Segmented section says each right/left parsing matrix row contains cycle start/end times, optional types. This is a candidate source identity, not proof of gait cycles, scalar continuity or anatomical-reference eligibility.",
+    "author_code": "Figure7.m lines1-7 and19-25 uses Parsed and Segmented ball_toss/cutting; lines58-64 compare exo torque_estimated and moment_filt, changing hip sign; lines115-122 use per-leg segmented structures. This binds comparison to source fields but contains no normalization producer or torque_interaction export definition.",
+    "taxonomy": "Existing task_registry.py lines163-182 already defines time-indexed cutting, free_walk_episode (start_stop example), and load_handling (ball_toss example). README task descriptions support proposed broad taxonomy for192; phase/event admission remains separate."
+  },
+  "unchanged_unknowns": [
+    "moment_filt and moment_filt_bio exported Nm/kg denominator remains unidentified; comparison without rescaling in authorfigure is not evidence whether numerator was divided by body or body+exo mass.",
+    "Actual torque_interaction unit remains unidentified; authorcode uses torque_estimated, not torque_interaction.",
+    "Virtual IMU local-body gyro-z estimates remain unverified as global anatomical orientations; no body-to-global producer/model code found in this figure package.",
+    "123records lack exact named parsing member in this directory; do not infer no useful data or create events to compensate.",
+    "Complete archive availability is known from metadata, but no full native transition restoration or fullsource coverage is asserted."
+  ],
+  "next_bounded_verification": {
+    "status": "prepared_evidence_only_not_scheduled",
+    "selected_records": [
+      {
+        "subject": "BT01",
+        "recording": "ball_toss_1_0task_left_on",
+        "source_task": "ball_toss",
+        "proposed_time_indexed_task": "load_handling",
+        "proposed_task_scope": "Broad task taxonomy only; no approved canonical observations or cycles",
+        "author_event_member": {
+          "name": "Segmented/BT01/ball_toss_1_0task_left_on_parsing.mat",
+          "compressed_bytes": 309,
+          "bytes": 309,
+          "method": 0,
+          "crc32": 3314081091,
+          "local_header_offset": 36764534
+        },
+        "event_status": "exact_named_author_parsing_available_values_unassessed",
+        "scientific_approval": false
+      },
+      {
+        "subject": "BT01",
+        "recording": "cutting_1_0task_right-fast_on",
+        "source_task": "cutting",
+        "proposed_time_indexed_task": "cutting",
+        "proposed_task_scope": "Broad task taxonomy only; no approved canonical observations or cycles",
+        "author_event_member": {
+          "name": "Segmented/BT01/cutting_1_0task_right-fast_on_parsing.mat",
+          "compressed_bytes": 624,
+          "bytes": 624,
+          "method": 0,
+          "crc32": 2022888915,
+          "local_header_offset": 222879427
+        },
+        "event_status": "exact_named_author_parsing_available_values_unassessed",
+        "scientific_approval": false
+      },
+      {
+        "subject": "BT01",
+        "recording": "start_stop_1_baseline_on",
+        "source_task": "start_stop",
+        "proposed_time_indexed_task": "free_walk_episode",
+        "proposed_task_scope": "Broad task taxonomy only; no approved canonical observations or cycles",
+        "author_event_member": {
+          "name": "Segmented/BT01/start_stop_1_baseline_on_parsing.mat",
+          "compressed_bytes": 1175,
+          "bytes": 1175,
+          "method": 0,
+          "crc32": 2573518792,
+          "local_header_offset": 31840442
+        },
+        "event_status": "exact_named_author_parsing_available_values_unassessed",
+        "scientific_approval": false
+      }
+    ],
+    "compressed_event_bytes": 2108,
+    "steps": [
+      "Retrieve only three exact publisher parsing members by admitted byte ranges, validate local ZIP header/name/method/CRC against stored central-directory metadata, record SHA256. No fullarchive download.",
+      "In one externally guarded768MiB scientific slot, inspect each tiny MAT schema: left/right shapes, optional types, finite strictly increasing start/end pairs; preserve source cycle-type identity. Do not execute authorfigure scripts.",
+      "Compare event clocks against the corresponding local Parsed angle/activity/force clocks in bounded projected batches, with exact source hashes and complete event membership accounting; assess whether per-leg source reference is meaningful for each event type.",
+      "Where task is noncyclic or eventreference remains unsupported, admit only source-time observations with broad task metadata; do not map to150phase samples or duplicate into artificial strides.",
+      "Only after these three independent source checks pass consider all69author-event records, with123explicit continuous-only/pending dispositions."
+    ],
+    "selection_reason": "Smallest available BT01 file within each task family, a feasibility probe only; not scientifically representative."
+  },
+  "bindings": {
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/swarm_backlog_20261021/gt25_unmapped192_source_classification.json": "14ce7fed8803ae2a81eacce110b0ac97194ce4e94934874cbf33a820aba4dce7",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt25_author_code_followup_20261021/retrievals.json": "99aba56e56255389b758718c335c3546f1d39cfb63b1c58df25090eb365e7d64",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt25_author_code_followup_20261021/readme.txt": "aabd45edb66e565a5238f86e26e5c1c1b47469764f3fd611014caf742d20ab63",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt25_author_code_followup_20261021/figure_code.zip": "05975403f030a9d1730db49a056bd7d539a6b9524e19f41af716215d4fa458e1",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt25_author_code_followup_20261021/archive_inventory.json": "a3fb880729d1f5d9db7959091ed1697e27a204f06854cc4fe8380884497391bb",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt25_author_code_followup_20261021/segmented_central_directory.bin": "dba9e130d046eb29754a9629a85563caad2bfaf2882470b0a0ac67ed019c76d9",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt25_author_code_followup_20261021/segmented_inventory.json": "3d88ad17b43976b1d7dbbbaa9ee5229991a4030e96816545938dd52cc3b06c41",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt25_author_code_followup_20261021/author_event_membership.json": "a64d9bd76fb75f5fa833e7a89f815c1a0e9e3c14e1af36fdff228a30417e7e2b",
+    "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/common/task_registry.py": "263b2b7397b535bfb02934857fd7c8c0fd85b3f83447cdbef530a5e946e89e5b",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt25_author_code_followup_20261021/text/Figure Code/Figure7.m": "add134d1c802682da5fa76e29262d49effdf3dc8fe94e6ee4b5862d015540ce5"
+  },
+  "source_line_refs": {
+    "publisher_readme": {
+      "segmented_definition": "45-48",
+      "task_descriptions": "83-112",
+      "moment_columns": "196-212",
+      "exo_columns": "250-264",
+      "imu_body_frames": "323-349"
+    },
+    "author_Figure7_m": [
+      "1-7",
+      "19-25",
+      "58-64",
+      "115-122",
+      "186",
+      "207"
+    ],
+    "local_task_registry_py": "163-182"
+  }
+}
