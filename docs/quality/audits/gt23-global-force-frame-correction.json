@@ -1,0 +1,53 @@
+{
+  "status": "synthetic_parquet_preservation_checked_real_pilot_pending",
+  "scientific_approval": false,
+  "paper": {
+    "doi": "10.1038/s41597-023-02840-6",
+    "url": "https://doi.org/10.1038/s41597-023-02840-6",
+    "location": "Table 3, _grf.csv and _insole_sim.csv rows",
+    "local_xml": "converted_datasets/reconversion_v2/swarm_backlog_20261021/gt23_paper_fulltext.xml",
+    "sha256": "5c30a9035c70bc7a1d1041373623cc2e69d4d2caba3a71d1a0ee16f0d1f72baa",
+    "finding": "Ground-frame X/Z components vary relative to the person as the person changes orientation. Y is vertical. The distinct insole output uses a foot frame and a COP origin at the back of the calcaneus for its anterior/posterior direction."
+  },
+  "converter": {
+    "path": "contributor_tools/conversion_scripts/Gtech_2023/convert_gtech_2023_time_to_parquet.m",
+    "sha256": "8de9c1ae8938423be9f918720a3b0dfaab396f99bc6950fa47c18557d69fd69e",
+    "source_read_line": 377,
+    "affected_mapping_lines": [
+      501,
+      506
+    ],
+    "defect": "ForceX and ForceZ from GroundFrame_GRFs.csv are normalized and assigned directly to anatomical anterior/lateral fields, without a heading rotation."
+  },
+  "correction": {
+    "tool": "contributor_tools/correct_gt23_global_force_frame.py",
+    "scope": "Postprocess a specifically hash-bound time or phase Parquet with reviewed lineage to the affected converter. Keep the input immutable and write a fresh local artifact.",
+    "source_aliases": [
+      "source_grf_global_x_ipsi_BW",
+      "source_grf_global_z_ipsi_BW",
+      "source_grf_global_x_contra_BW",
+      "source_grf_global_z_contra_BW"
+    ],
+    "anatomical_horizontal_fields": "Set the four grf_anterior/lateral ipsi/contra columns to missing. No rotation is inferred.",
+    "metadata": "Append gt23_force_frame to each task_info object, including source frame, units, evidence DOI and paper hash.",
+    "unchanged": "All unrelated columns, identities, phase/time grids, joint signs, vertical force and COP. Missing masks and finite values of the four original force columns are retained in the source aliases.",
+    "readback": "Independently reread the written Parquet in 512-row batches; compare every unchanged column, all source aliases, missing masks, signed zeros and task metadata. Bind input, lineage, converter and tool hashes before and after processing. Unchanged Arrow arrays are retained directly; field and schema metadata are checked after serialization.",
+    "limits": "One thread; 768 MiB address-space limit; 512-row batches admitted at 8 MiB. Coordinator must provide external process-group timeout and resource monitoring. No automatic launch."
+  },
+  "lineage_requirement": "A separately reviewed JSON must bind input_sha256 and converter_sha256; its own SHA256 is required on the command line. A phase derivative needs its upstream lineage established before this receipt is supplied. This is not automatic raw-source verification.",
+  "acceptance_pending": [
+    "Select one small actual time output and its phase derivative; independently establish lineage, then run the guarded postprocessor and inspect readback.",
+    "Freeze tool and evidence hashes in a dedicated correction plan before full use."
+  ],
+  "unresolved": [
+    "COP currently uses a transformed calcn frame. This correction neither relabels it nor establishes that its origin is the anatomical ankle.",
+    "Joint angle and moment sign conventions remain a separate source-coordinate review; plotted figure direction alone is insufficient.",
+    "Retained body-weight normalization and interpolation are not independently validated by this label correction."
+  ],
+  "validation": {
+    "tests_passed": 8,
+    "scope": "Six scalar fixtures plus time/phase persisted Parquet fixtures crossing batch boundaries, null vs NaN, signed zero, categorical columns, field/schema metadata and intentional metadata corruption.",
+    "real_data_executed": false,
+    "tool_sha256": "d93ee4e510a391bda5596e117d7f56d4f983c6185b00d856b3107754e22f6b73"
+  }
+}
