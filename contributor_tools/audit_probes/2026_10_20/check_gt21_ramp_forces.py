@@ -54,6 +54,15 @@ def main():
             for side in ('ipsi','contra'):
                 output=d[f'grf_anterior_{side}_BW'].to_numpy();valid=np.isfinite(output)&np.isfinite(shear)
                 rec['anterior_source_sign_errors_BW'][side]={label:float(np.max(abs(output[valid]-sign*shear[valid]))) if valid.any() else None for label,sign in [('positive',1),('negative',-1)]}
+            rec['cop_contact_checks'] = {}
+            for side in ('ipsi','contra'):
+                leg=r.reference_side if side=='ipsi' else ('right' if r.reference_side=='left' else 'left')
+                checks={}
+                for axis,component,sign in [('anterior','z',np.sign(direction_z)),('lateral','x',1),('vertical','y',1)]:
+                    expected=sign*(np.interp(t,ft,fp[plate+'_p'+component])-np.interp(t,mt,markers[f'{leg[0].upper()}_Ankle_Lat_{component}'])/1000)
+                    actual=d[f'cop_{axis}_{side}_m'].to_numpy();valid=contact&np.isfinite(expected)&np.isfinite(actual)
+                    checks[axis]={'finite_contact_samples':int(valid.sum()),'max_contact_error_m':float(np.max(abs(actual[valid]-expected[valid]))) if valid.any() else None}
+                rec['cop_contact_checks'][side]=checks
             item['plates'].append(rec)
         records.append(item)
     report={'status':'source_contact_accounting','scientific_approval':False,'records':records,'source_readback_sha256':digest(a.source/'source_comparison.json'),'converted_sha256':digest(a.converted),'probe_sha256':digest(Path(__file__)),'limitations':['Two-foot proximity is supporting evidence, not a force-plate contact ground truth','Checks exported cycles only; omitted source cycles remain a separate coverage issue','No sign chosen by moment or waveform fit']}

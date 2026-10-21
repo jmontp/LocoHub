@@ -1,0 +1,87 @@
+{
+  "status": "measured_forward_axis_pilots_checked",
+  "scientific_approval": false,
+  "pilots": [
+    {
+      "recording": "tread",
+      "observations": 114,
+      "rows": 17100,
+      "native_status": {
+        "options": "S:\\workspace\\locomotion-data-standardization\\converted_datasets\\reconversion_v2\\gt21_geometry_sign_tread_pilot_20261021\\options.json",
+        "exit_code": 0,
+        "started_utc": "2026-10-21T02:42:18.6896201Z",
+        "timeout_seconds": 300,
+        "finished_utc": "2026-10-21T02:43:01.0792847Z",
+        "pid": 1464,
+        "memory_limit_mib": 1536,
+        "status": "completed"
+      },
+      "output_sha256": "9b9f54cde62541cc69b6895e01c4cce8367267b9ed85f35b8e52ac96a05e8d7b",
+      "code_sha256": {
+        "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/conversion_scripts/Gtech_2021/convert_gtech_2021_phase_to_parquet.m": "fec8b87c9a8952b352919fccb1c8bd2a92e091791282f1687f11a3b813ba86dc",
+        "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/conversion_scripts/Gtech_2021/utilities/gtech_compute_grf_cop_stride.m": "679fcd64e5f3665d194e2e3747256135d0528952458ce94c39a04d0df9b58323",
+        "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/conversion_scripts/Gtech_2021/utilities/gtech_forward_source_z_sign.m": "49448995b6b89f3eda8827386374369bcddea71eaf600462eafeb7d8ada5b958"
+      },
+      "changed_columns": [
+        "cop_anterior_ipsi_m",
+        "cop_lateral_ipsi_m",
+        "cop_vertical_ipsi_m",
+        "cop_anterior_contra_m",
+        "cop_lateral_contra_m",
+        "cop_vertical_contra_m"
+      ],
+      "non_force_columns_exactly_preserved": true,
+      "cop_without_sufficient_contact_is_missing": true
+    },
+    {
+      "recording": "ramp",
+      "observations": 2,
+      "rows": 300,
+      "native_status": {
+        "options": "S:\\workspace\\locomotion-data-standardization\\converted_datasets\\reconversion_v2\\gt21_geometry_sign_ramp_pilot_20261021\\options.json",
+        "exit_code": 0,
+        "started_utc": "2026-10-21T02:43:03.2909367Z",
+        "timeout_seconds": 300,
+        "finished_utc": "2026-10-21T02:43:20.3700751Z",
+        "pid": 48336,
+        "memory_limit_mib": 1536,
+        "status": "completed"
+      },
+      "output_sha256": "5726fed2f9ee89347cebf89ca9758649087929ca8b6c6c88dff4dd5981fd83bd",
+      "code_sha256": {
+        "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/conversion_scripts/Gtech_2021/convert_gtech_2021_phase_to_parquet.m": "fec8b87c9a8952b352919fccb1c8bd2a92e091791282f1687f11a3b813ba86dc",
+        "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/conversion_scripts/Gtech_2021/utilities/gtech_compute_grf_cop_stride.m": "679fcd64e5f3665d194e2e3747256135d0528952458ce94c39a04d0df9b58323",
+        "/mnt/s/workspace/locomotion-data-standardization/contributor_tools/conversion_scripts/Gtech_2021/utilities/gtech_forward_source_z_sign.m": "49448995b6b89f3eda8827386374369bcddea71eaf600462eafeb7d8ada5b958"
+      },
+      "changed_columns": [
+        "cop_anterior_ipsi_m",
+        "cop_lateral_ipsi_m",
+        "cop_vertical_ipsi_m"
+      ],
+      "non_force_columns_exactly_preserved": true,
+      "cop_without_sufficient_contact_is_missing": true
+    }
+  ],
+  "synthetic_matlab_checks": {
+    "status": "synthetic_forward_axis_checks_passed",
+    "checks": 10,
+    "scientific_approval": false
+  },
+  "coordinate_convention": {
+    "anterior": "Signed laboratory Z: orientation from ASIS minus PSIS pelvis geometry, consistent sign and Z dominance throughout the source cycle",
+    "lateral": "Laboratory +X, not an inferred outward direction for each leg",
+    "vertical": "Laboratory +Y",
+    "cop_origin": "Measured lateral ankle marker; not an inferred joint centre",
+    "undefined_direction": "Missing markers, changing direction, or non-Z-dominant paths yield missing anterior values",
+    "cop_contact": "Missing below 0.2 BW or with nonfinite vertical force"
+  },
+  "independent_readbacks": {
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_geometry_sign_tread_readback_20261021/source_geometry.json": "f56c7492135b26363dd0bd428fc64d1df5287bdd73e2147bc1024fe304724df5",
+    "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt21_geometry_sign_ramp_readback_v2_20261021/source_contacts.json": "57d0b06a595491bb0b12ca604a93aff9cf7070dbf69427d8ebf010f84a981213"
+  },
+  "remaining": [
+    "Force-plate selection outside the checked recordings remains unverified",
+    "Opposite-reference-leg coverage and other task exclusions remain open",
+    "Full regeneration and checks across every subject remain pending"
+  ]
+}

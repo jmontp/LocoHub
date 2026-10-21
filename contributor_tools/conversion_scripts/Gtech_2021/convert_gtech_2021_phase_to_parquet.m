@@ -1588,18 +1588,15 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                 stride_data.lateral_grf_contra_BW = NaN(NUM_POINTS, 1);
             end
             
-            % Adjust GRF sign conventions
-            % 1) Flip anterior GRF so that positive corresponds to expected forward direction
-            if ~all(isnan(stride_data.anterior_grf_ipsi_BW))
-                % For treadmill (dedicated channels), flip anterior; other tasks tuned later
-                if treadmill_task
-                    stride_data.anterior_grf_ipsi_BW = -stride_data.anterior_grf_ipsi_BW;
-                end
+            % Orient source Z from measured pelvis geometry for this cycle.
+            forward_sign = NaN;
+            if has_markers
+                forward_sign = gtech_forward_source_z_sign(trial_data.markers, ...
+                    [stride_start_time, stride_end_time]);
             end
-            if ~all(isnan(stride_data.anterior_grf_contra_BW))
-                stride_data.anterior_grf_contra_BW = -stride_data.anterior_grf_contra_BW;
-            end
-            
+            stride_data.anterior_grf_ipsi_BW = forward_sign * stride_data.anterior_grf_ipsi_BW;
+            stride_data.anterior_grf_contra_BW = forward_sign * stride_data.anterior_grf_contra_BW;
+
             % Lateral force retains the source global Right+ convention.
             % Never infer a force sign from its mean or reference leg.
 
@@ -1629,7 +1626,7 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                     stride_data.cop_lateral_ipsi_m = (cop_lat(:) - ankle_lateral_ipsi_m(:));
                     stride_data.cop_vertical_ipsi_m = (cop_vert(:) - ankle_vertical_ipsi_m(:));
                     % Flip anterior COP to match forward-positive convention
-                    stride_data.cop_anterior_ipsi_m = -(cop_ant(:) - ankle_anterior_ipsi_m(:));
+                    stride_data.cop_anterior_ipsi_m = forward_sign * (cop_ant(:) - ankle_anterior_ipsi_m(:));
                 end
                 
                 if any(strcmp(trial_data.fp.Properties.VariableNames, contra_px)) && ...
@@ -1640,7 +1637,7 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                     cop_ant = interp1(fp_time, trial_data.fp.(contra_pz), target_times, 'linear', NaN);
                     stride_data.cop_lateral_contra_m = (cop_lat(:) - ankle_lateral_contra_m(:));
                     stride_data.cop_vertical_contra_m = (cop_vert(:) - ankle_vertical_contra_m(:));
-                    stride_data.cop_anterior_contra_m = -(cop_ant(:) - ankle_anterior_contra_m(:));
+                    stride_data.cop_anterior_contra_m = forward_sign * (cop_ant(:) - ankle_anterior_contra_m(:));
                 end
             elseif stair_ramp_task && has_markers && exist('best_fp_ipsi', 'var') && ~isempty(best_fp_ipsi)
                 ipsi_px = [best_fp_ipsi '_px'];
@@ -1655,23 +1652,23 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
                     stride_data.cop_lateral_ipsi_m = (cop_lat(:) - ankle_lateral_ipsi_m(:));
                     stride_data.cop_vertical_ipsi_m = (cop_vert(:) - ankle_vertical_ipsi_m(:));
                     % Flip anterior COP to match forward-positive convention
-                    stride_data.cop_anterior_ipsi_m = -(cop_ant(:) - ankle_anterior_ipsi_m(:));
+                    stride_data.cop_anterior_ipsi_m = forward_sign * (cop_ant(:) - ankle_anterior_ipsi_m(:));
                 end
             end
             
-            % Zero COP when GRF is below contact threshold
+            % COP is unavailable without sufficient measured contact.
             contact_threshold_BW = 0.2;
             if ~all(isnan(stride_data.vertical_grf_ipsi_BW))
-                low_force_mask = stride_data.vertical_grf_ipsi_BW < contact_threshold_BW;
-                stride_data.cop_anterior_ipsi_m(low_force_mask) = 0;
-                stride_data.cop_lateral_ipsi_m(low_force_mask) = 0;
-                stride_data.cop_vertical_ipsi_m(low_force_mask) = 0;
+                low_force_mask = ~isfinite(stride_data.vertical_grf_ipsi_BW) | stride_data.vertical_grf_ipsi_BW < contact_threshold_BW;
+                stride_data.cop_anterior_ipsi_m(low_force_mask) = NaN;
+                stride_data.cop_lateral_ipsi_m(low_force_mask) = NaN;
+                stride_data.cop_vertical_ipsi_m(low_force_mask) = NaN;
             end
             if ~all(isnan(stride_data.vertical_grf_contra_BW))
-                low_force_mask = stride_data.vertical_grf_contra_BW < contact_threshold_BW;
-                stride_data.cop_anterior_contra_m(low_force_mask) = 0;
-                stride_data.cop_lateral_contra_m(low_force_mask) = 0;
-                stride_data.cop_vertical_contra_m(low_force_mask) = 0;
+                low_force_mask = ~isfinite(stride_data.vertical_grf_contra_BW) | stride_data.vertical_grf_contra_BW < contact_threshold_BW;
+                stride_data.cop_anterior_contra_m(low_force_mask) = NaN;
+                stride_data.cop_lateral_contra_m(low_force_mask) = NaN;
+                stride_data.cop_vertical_contra_m(low_force_mask) = NaN;
             end
         else
             % No force plate data available - fill with NaN
@@ -1748,35 +1745,6 @@ function rows = extract_and_process_strides_single_leg(trial_data, time_start, t
             end
         end
         
-        % FINAL SIGN TUNING (ipsi): choose COP anterior and shear GRF signs that best match ID ankle moment
-        if ~strcmpi(mode, 'treadmill') && isfield(stride_data, 'ankle_dorsiflexion_moment_ipsi_Nm_kg')
-            cop_ant = stride_data.cop_anterior_ipsi_m;
-            cop_vert = stride_data.cop_vertical_ipsi_m;
-            vgrf = stride_data.vertical_grf_ipsi_BW;
-            sgrf = stride_data.anterior_grf_ipsi_BW;
-            measured = stride_data.ankle_dorsiflexion_moment_ipsi_Nm_kg;
-            
-            if ~all(isnan(cop_ant(:))) && ~all(isnan(vgrf(:))) && ~all(isnan(sgrf(:))) && ~all(isnan(measured(:)))
-                flip_opts = [1, -1];
-                best_rmse = inf;
-                best_sa = 1;  % COP anterior sign
-                best_sg = 1;  % shear GRF sign
-                for sa = flip_opts
-                    for sg = flip_opts
-                        est = (-(sa * cop_ant) .* vgrf + cop_vert .* (sg * sgrf)) * 9.81;  % Nm/kg (mass cancels)
-                        rmse = sqrt(mean((est - measured).^2, 'omitnan'));
-                        if rmse < best_rmse
-                            best_rmse = rmse;
-                            best_sa = sa;
-                            best_sg = sg;
-                        end
-                    end
-                end
-                stride_data.cop_anterior_ipsi_m = best_sa * cop_ant;
-                stride_data.anterior_grf_ipsi_BW = best_sg * sgrf;
-            end
-        end
-
         % Override ipsilateral GRF/COP/ankle moment with canonical helper
         % for treadmill and ramp/stair strides to match
         % debug_ankle_torque_from_fp pipeline.

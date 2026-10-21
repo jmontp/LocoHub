@@ -90,7 +90,8 @@ vy = interp_named(fp, vy_var, [], target_times, NaN);
 vz = interp_named(fp, vz_var, [], target_times, NaN);
 
 vertical_grf = vy / (subject_mass * 9.81);
-anterior_grf = vz / (subject_mass * 9.81);
+forward_sign = gtech_forward_source_z_sign(markers, stride_time);
+anterior_grf = forward_sign * vz / (subject_mass * 9.81);
 lateral_grf = vx / (subject_mass * 9.81);
 
 [ankle_lat, ankle_vert, ankle_ant] = ankle_marker(markers, stride_time, target_times, leg_side);
@@ -98,50 +99,19 @@ cop_lat = interp_named(fp, px_var, [], target_times, NaN) - ankle_lat;
 cop_vert = interp_named(fp, py_var, [], target_times, NaN) - ankle_vert;
 cop_ant = interp_named(fp, pz_var, [], target_times, NaN);
 if ~all(isnan(cop_ant))
-    cop_ant = -(cop_ant - ankle_ant);
+    cop_ant = forward_sign * (cop_ant - ankle_ant);
 end
 
-% Zero COP where vertical GRF is below contact threshold
+% COP is unavailable without sufficient measured contact, never a zero location.
 contact_threshold_BW = 0.2;
-mask_low = vertical_grf < contact_threshold_BW;
-cop_ant(mask_low) = 0;
-cop_lat(mask_low) = 0;
-cop_vert(mask_low) = 0;
+mask_low = ~isfinite(vertical_grf) | vertical_grf < contact_threshold_BW;
+cop_ant(mask_low) = NaN;
+cop_lat(mask_low) = NaN;
+cop_vert(mask_low) = NaN;
 
-% Treadmill forward is source -Z, supported by the original coordinate
-% transform and anterior/posterior pelvis markers. Use a fixed mapping.
-if strcmpi(mode, 'treadmill')
-    anterior_grf = -anterior_grf;
-    best_est = (-cop_ant .* vertical_grf + cop_vert .* anterior_grf) * 9.81;
-    best_rmse = sqrt(mean((best_est - ankle_moment).^2, 'omitnan'));
-else
-    % Historical non-treadmill mapping remains unverified pending geometry audit.
-% Sign search over anterior COP / shear GRF to best match ID ankle moment
-flip_opts = [1, -1];
-best_est = zeros(NUM_POINTS, 1);
-best_rmse = inf;
-best_sa = 1;
-best_sg = 1;
-for sa = flip_opts
-    for sg = flip_opts
-        est_candidate = (-(sa * cop_ant) .* vertical_grf + cop_vert .* (sg * anterior_grf)) * 9.81;
-        rmse = sqrt(mean((est_candidate - ankle_moment).^2, 'omitnan'));
-        if rmse < best_rmse
-            best_rmse = rmse;
-            best_est = est_candidate;
-            best_sa = sa;
-            best_sg = sg;
-        end
-    end
-end
-
-% Apply best sign combination to COP anterior and shear GRF so that any
-% downstream torque computation using (-cop_ant .* vgrf + cop_vert .* sgrf)
-% is already sign-consistent with the ID ankle moment.
-cop_ant = best_sa * cop_ant;
-anterior_grf = best_sg * anterior_grf;
-
-end
+% Torque reconstruction is diagnostic only; it never chooses signal signs.
+best_est = (-cop_ant .* vertical_grf + cop_vert .* anterior_grf) * 9.81;
+best_rmse = sqrt(mean((best_est - ankle_moment).^2, 'omitnan'));
 
 sd.phase = target_pct;
 sd.ankle_moment_Nm_kg = ankle_moment;
