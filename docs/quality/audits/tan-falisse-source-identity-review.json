@@ -204,7 +204,15 @@
       "Gait_1 cannot acquire level terrain or speed from name alone.",
       "Every source record/excluded observation accounted once; equal trial names across subjects/segments remain distinct.",
       "Missing source identity prevents canonical task admission."
-    ]
+    ],
+    "converter_correction": {
+      "status": "implemented_not_reconverted",
+      "behavior": "Falisse task mapping now returns null canonical task and preserves the exact original name in task_id. Unknown identity cannot trigger cyclic phase conversion.",
+      "source_sha256": "b20016da068b58f4d4ec82e45eb62ed29fc1a7aab1730066cf4e0a0dad57622d",
+      "tests": "tests/test_addbiomechanics_unresolved_tasks.py",
+      "tests_passed": 13,
+      "scope_limit": "Existing converted files are unchanged and remain unverified. Original B3D recording identity, numerical source readback and full reconstruction still required."
+    }
   },
   "local_source_availability": {
     "paths_checked_absent": [
@@ -229,7 +237,8 @@
     },
     {
       "path": "contributor_tools/conversion_scripts/AddBiomechanics/dataset_configs.py",
-      "sha256": "d2079811883fdedcc42401d504aa79dae72d5ef0432cb4b5e09bf7085c749fe2"
+      "sha256": "d2079811883fdedcc42401d504aa79dae72d5ef0432cb4b5e09bf7085c749fe2",
+      "binding_scope": "Source snapshot at initial defect review, before converter correction; corrected source hash is recorded separately."
     },
     {
       "path": "contributor_tools/conversion_scripts/AddBiomechanics/_archive/add_task_info.py",
