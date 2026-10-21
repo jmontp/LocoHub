@@ -1,7 +1,7 @@
 {
   "dataset": "fu18",
-  "reviewed_at_utc": "2026-10-21T04:40:22.311600+00:00",
-  "status": "first_ensemble_pilot_queued_not_yet_run",
+  "reviewed_at_utc": "2026-10-21T04:46:26.984552+00:00",
+  "status": "bounded_ensemble_pilot_passed_source_readback",
   "catalog_activation": false,
   "scientific_approval": false,
   "frozen_files_modified": false,
@@ -12,7 +12,7 @@
     "pid": 417474,
     "state": "waiting_for_existing_conversions",
     "waiting_for_pid": 417045,
-    "note": "Point-in-time read-only observation, not a live progress endpoint."
+    "note": "Historical original queue observation retained. A separate early pilot has now passed; this does not complete or modify the original queued pilot."
   },
   "primary_sources": [
     {
@@ -79,18 +79,18 @@
     },
     {
       "gate": "bounded_conversion_and_independent_readback",
-      "state": "pending_serial_queue",
-      "evidence": "Requires guarded summary status ensemble_pilot_source_readback_passed_unreviewed and unchanged frozen hashes."
+      "state": "passed",
+      "evidence": "Separate early pilot completed; guarded summary and source readback hashes independently reverified. See pilot-evidence.json."
     },
     {
       "gate": "exact_pilot_coverage",
-      "state": "pending_output",
-      "evidence": "Require subject FU18_01, comfortable overground, two side-specific ensemble IDs,300 rows and150 inclusive phase points per observation. Never report full archive coverage from the pilot."
+      "state": "passed",
+      "evidence": "One participant, two independent leg ensembles,300 rows; exact identity/metadata/columns and150-point phase grids passed independent readback."
     },
     {
       "gate": "scientific_scope_review",
-      "state": "pending_output_review",
-      "evidence": "Inspect source preservation/missingness results; retain unsupported anatomical mappings as missing and all observation/timing caveats."
+      "state": "source_preservation_passed_anatomical_review_limited",
+      "evidence": "8100 finite source values compared; missingness preserved. This is not full biomechanical approval. Left canonical mapping remains unavailable."
     },
     {
       "gate": "immutable_bundle_and_attribution",
@@ -99,8 +99,8 @@
     },
     {
       "gate": "researcher_preview_and_download",
-      "state": "not_enabled",
-      "evidence": "Point only to an existing immutable artifact after review; label participant-condition means prominently. Do not show stride statistics, inferred opposite-leg phase, SD or an individual-cycle count."
+      "state": "local_static_preview_ready_no_published_download",
+      "evidence": "Self-contained local preview generated and copied for user review. It preserves separate legs/conditions and omits unavailable stride statistics. No catalog activation or data release."
     },
     {
       "gate": "remaining_archive_coverage",
@@ -115,8 +115,8 @@
   ],
   "additional_validation_recommendation": {
     "run_now": false,
-    "reason": "The frozen serial job already performs an independent source readback with identity, metadata, exact columns and before/after hash checks. Do not duplicate it or add competing numerical work.",
-    "safe_followup_after_completion": "Read the small guarded summary, conversion manifest and readback report; verify their hashes and compare exact scope to these gates. If successful, first review the existing release builder ensemble support with synthetic fixtures before creating a review bundle."
+    "reason": "The bounded pilot and independent source readback passed. Do not duplicate numerical work while GT24 runs.",
+    "next_safe_review": "Inspect the static preview in a browser, then exercise existing ensemble release support with small synthetic fixtures in a coordinator-approved slot. Full dataset coverage and raw-cycle processing remain deferred."
   },
   "suggested_attribution": {
     "authors": [
@@ -131,5 +131,6 @@
   "deferred_frozen_prose_cleanup": [
     "Fix spaces in candidate.json and source_review.json after queue unfreezes; never change their hashes while waiting."
   ],
-  "next_dataset": "Do not begin another candidate until this first candidate has a recorded pilot disposition and reviewed next step."
+  "next_dataset": "First pilot disposition is successful with explicitly limited scope; coordinator should decide publication/release review before any next candidate.",
+  "actual_pilot_evidence": "pilot-evidence.json"
 }
