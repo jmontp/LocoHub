@@ -917,3 +917,38 @@ The shared-code fix requires fresh reconstruction fingerprints and a restarted
 queue; GT21/Gait120/GT23 waiting dispatchers are terminal, not active jobs. Full
 GT24 reconstruction, the 869 task omissions and scientific boundary validation
 remain open. Software validation: 210 passed, 2 skipped.
+
+
+### UM21 running full readback passed; corrected queue restarted
+
+All 30 available running trials across ten subjects completed: 2,681 original
+bilateral heel-strike intervals, 402,150 rows and 84 original source-component
+columns per trial. The independent probe verifies the complete original trial and
+event inventory, all source/output hashes, phase/time grids, both canonical hip/
+knee angles and 33,780,600 finite source-component values. Maximum component
+difference is 4.22e-11 from independent interpolation arithmetic. Evidence is
+`um21_running_full_20261020/source_comparison.json`. This is full coverage of the
+local Run trials' joint channels, not completion of all UM21 signals/tasks or
+physical frame/sign verification.
+
+The first readback attempt failed during NumPy initialization because the new
+queue launcher did not propagate one-thread settings. It wrote no verification
+report and left data untouched. Both the probe and launcher now set numerical
+thread limits explicitly. The failed log/plan and prior probe snapshot remain
+preserved with a `before_thread_guard` suffix; the successful check ran at about
+190 MiB RSS under the 768 MiB address-space limit.
+
+`corrected_serial_queue_20261021` now owns the active serial queue, with frozen
+per-job code snapshots and new output roots. Order: successful UM21 readback,
+GT21, GT24 Phase3, GT24 Phase1And2, Gait120, GT23. GT21 is first because it is a
+user-priority dataset. Its 2,301-recording native batch has started at
+`gt21_native_corrected_20261021`; the first guarded MATLAB worker is running.
+Later output roots are `gt24_phase3_unique_20261021`,
+`gt24_phase1and2_unique_20261021`, `gait120_corrected_20261021` and
+`gt23_native_corrected_20261021`. Existing partial artifacts are not overwritten.
+
+The queue checks fingerprints before and after each job and stops on a failed
+verification/batch; resource guards remain in the individual workers. A queue
+`STOP_AFTER_CURRENT` propagates to the active batch. Successful execution remains
+unreviewed, and GT23's explicitly unresolved inputs cannot become scientific
+approval. Known GT24 task omissions and remaining dataset-family work stay open.

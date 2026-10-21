@@ -1,6 +1,9 @@
 """Independent all-recording readback of UM21 running events and source components."""
 import resource
 resource.setrlimit(resource.RLIMIT_AS,(768*1024**2,768*1024**2))
+import os
+for name in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS','NUMEXPR_NUM_THREADS'):
+    os.environ[name]='1'
 import json
 from pathlib import Path
 import sys
