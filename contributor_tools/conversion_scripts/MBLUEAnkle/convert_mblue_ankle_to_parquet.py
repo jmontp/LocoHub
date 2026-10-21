@@ -16,6 +16,7 @@ Output: Phase-normalized parquet file with 150 points per gait cycle.
 """
 
 import os
+import json
 import sys
 import numpy as np
 import pandas as pd
@@ -404,6 +405,39 @@ def extract_stride_duration(task_data, leg_side: str, stride_idx: int) -> float:
     return end - start
 
 
+def metadata_json(text):
+    """Convert this adapter's scalar metadata to JSON, preserving missing values."""
+    result = {}
+    for item in text.split(','):
+        key, value = item.split(':', 1)
+        try:
+            number = float(value)
+            result[key] = number if np.isfinite(number) else None
+        except ValueError:
+            result[key] = value
+    return json.dumps(result, sort_keys=True, allow_nan=False)
+
+
+def identify_gait_curve(frame, subject, condition, source_path, side, index, start, end, observation_type="individual_cycle"):
+    """Identify the original normalized source column, independently of output order."""
+    if not source_path:
+        raise ValueError('Source task path is required')
+    recording = f'mblue:{subject}_NormalizedStrides.mat:dataOut/{condition}/{source_path}'
+    identity = f'{recording}:{side}:column:{index + 1}'
+    frame['source_recording_id'] = recording
+    frame['observation_id'] = identity
+    frame['reference_side'] = 'left' if side == 'l' else 'right'
+    frame['observation_type'] = observation_type
+    frame['source_curve_index'] = index + 1
+    frame['source_start_time_s'] = start
+    frame['source_end_time_s'] = end
+    frame['time_s'] = np.linspace(0, end - start, len(frame)) if np.isfinite(start) and np.isfinite(end) else np.nan
+    frame['step'] = identity
+    for name in ('subject_metadata', 'task_info'):
+        frame[name] = metadata_json(frame[name].iloc[0])
+    return frame
+
+
 def process_gait_task(
     task_data,
     subject_id: str,
@@ -414,7 +448,8 @@ def process_gait_task(
     condition: str,
     step_offset: int = 0,
     mot_df: Optional[pd.DataFrame] = None,
-    task_key: str = ''
+    task_key: str = '',
+    source_task_path: Optional[str] = None
 ) -> Tuple[List[pd.DataFrame], int]:
     """
     Process a gait task (walking, stairs) with left/right strides.
@@ -764,10 +799,33 @@ def process_gait_task(
                 'foot_sagittal_velocity_contra_rad_s': foot_vel_contra,
             })
 
+            stride_df = identify_gait_curve(
+                stride_df, subject_id, condition, source_task_path or task_key or task_id,
+                leg_side, stride_idx, stride_start, stride_end)
             strides.append(stride_df)
             step_num += 1
 
     return strides, step_num
+
+
+def bilateral_source_times(task_data, index):
+    """Use paired source clocks only when they prove column-wise alignment."""
+    clocks = []
+    for side in ('l', 'r'):
+        key = f'time_{side}'
+        if key not in task_data.dtype.names:
+            raise ValueError('Bilateral source clocks are required; do not pair by column order alone')
+        values = task_data[key]
+        if values.ndim == 2 and index < values.shape[1]:
+            values = values[:, index]
+        elif values.ndim != 1 or index != 0:
+            raise ValueError('Missing bilateral source clock column')
+        if len(values) < 2 or not np.isfinite(values).all() or not (np.diff(values) > 0).all():
+            raise ValueError('Bilateral source clock must be finite and strictly increasing')
+        clocks.append(values)
+    if not np.array_equal(clocks[0], clocks[1]):
+        raise ValueError('Bilateral source clocks disagree; temporal reconciliation is required')
+    return float(clocks[0][0]), float(clocks[0][-1])
 
 
 def process_bilateral_task(
@@ -779,7 +837,8 @@ def process_bilateral_task(
     condition: str,
     step_offset: int = 0,
     mot_df: Optional[pd.DataFrame] = None,
-    task_key: Optional[str] = None
+    task_key: Optional[str] = None,
+    source_task_path: Optional[str] = None
 ) -> Tuple[List[pd.DataFrame], int]:
     """
     Process a bilateral task (sit-to-stand, squat) - no left/right separation.
@@ -817,43 +876,43 @@ def process_bilateral_task(
     n_cycles = hip_data.shape[1] if hip_data.ndim == 2 else 1
 
     for cycle_idx in range(n_cycles):
-        # Extract stride duration (use 'time' if available, otherwise estimate)
-        stride_duration_s = np.nan  # No timing is inferred from normalized sample count.
-        if 'time' in task_data.dtype.names:
-            time_data = task_data['time']
-            if time_data.size > 0:
-                if time_data.ndim == 2 and cycle_idx < time_data.shape[1]:
-                    t = time_data[:, cycle_idx]
-                    valid = ~np.isnan(t)
-                    if np.sum(valid) > 1:
-                        stride_duration_s = t[valid][-1] - t[valid][0]
-                elif time_data.ndim == 1 and len(time_data) > 1:
-                    stride_duration_s = time_data[-1] - time_data[0]
+        # The shared `time` field can be empty while both observed leg clocks exist.
+        source_start, source_end = bilateral_source_times(task_data, cycle_idx)
+        stride_duration_s = source_end - source_start
+        source_clock = task_data['time_l']
+        source_clock = source_clock[:, cycle_idx] if source_clock.ndim == 2 else source_clock
+        target_clock = np.linspace(source_start, source_end, NUM_POINTS)
+        def interpolate_observed(values):
+            values = np.asarray(values).reshape(-1)
+            if len(values) != len(source_clock):
+                raise ValueError('Signal and paired source clock lengths disagree')
+            values = np.where(np.isfinite(values), values, np.nan)
+            return np.interp(target_clock, source_clock, values)
 
         # Extract and interpolate kinematics
         hip_ipsi_deg = task_data[f'hip_flexion_{ipsi}'][:, cycle_idx] if hip_data.ndim == 2 else hip_data
         hip_contra_deg = task_data[f'hip_flexion_{contra}'][:, cycle_idx] if task_data[f'hip_flexion_{contra}'].ndim == 2 else task_data[f'hip_flexion_{contra}']
-        hip_ipsi_rad = interpolate_to_phase(hip_ipsi_deg * deg2rad).flatten()
-        hip_contra_rad = interpolate_to_phase(hip_contra_deg * deg2rad).flatten()
+        hip_ipsi_rad = interpolate_observed(hip_ipsi_deg * deg2rad).flatten()
+        hip_contra_rad = interpolate_observed(hip_contra_deg * deg2rad).flatten()
 
         knee_ipsi_deg = task_data[f'knee_angle_{ipsi}'][:, cycle_idx] if task_data[f'knee_angle_{ipsi}'].ndim == 2 else task_data[f'knee_angle_{ipsi}']
         knee_contra_deg = task_data[f'knee_angle_{contra}'][:, cycle_idx] if task_data[f'knee_angle_{contra}'].ndim == 2 else task_data[f'knee_angle_{contra}']
-        knee_ipsi_rad = interpolate_to_phase(-knee_ipsi_deg * deg2rad).flatten()
-        knee_contra_rad = interpolate_to_phase(-knee_contra_deg * deg2rad).flatten()
+        knee_ipsi_rad = interpolate_observed(-knee_ipsi_deg * deg2rad).flatten()
+        knee_contra_rad = interpolate_observed(-knee_contra_deg * deg2rad).flatten()
 
         ankle_ipsi_deg = task_data[f'ankle_angle_{ipsi}'][:, cycle_idx] if task_data[f'ankle_angle_{ipsi}'].ndim == 2 else task_data[f'ankle_angle_{ipsi}']
         ankle_contra_deg = task_data[f'ankle_angle_{contra}'][:, cycle_idx] if task_data[f'ankle_angle_{contra}'].ndim == 2 else task_data[f'ankle_angle_{contra}']
-        ankle_ipsi_rad = interpolate_to_phase(ankle_ipsi_deg * deg2rad).flatten()
-        ankle_contra_rad = interpolate_to_phase(ankle_contra_deg * deg2rad).flatten()
+        ankle_ipsi_rad = interpolate_observed(ankle_ipsi_deg * deg2rad).flatten()
+        ankle_contra_rad = interpolate_observed(ankle_contra_deg * deg2rad).flatten()
 
         # Extract pelvis_tilt (global, same for both legs)
         pelvis_tilt_rad = np.full(NUM_POINTS, np.nan)
         if 'pelvis_tilt' in task_data.dtype.names:
             pelvis_data = task_data['pelvis_tilt']
             if pelvis_data.ndim == 2 and cycle_idx < pelvis_data.shape[1]:
-                pelvis_tilt_rad = interpolate_to_phase(pelvis_data[:, cycle_idx] * deg2rad).flatten()
+                pelvis_tilt_rad = interpolate_observed(pelvis_data[:, cycle_idx] * deg2rad).flatten()
             elif pelvis_data.ndim == 1:
-                pelvis_tilt_rad = interpolate_to_phase(pelvis_data * deg2rad).flatten()
+                pelvis_tilt_rad = interpolate_observed(pelvis_data * deg2rad).flatten()
 
         # Compute segment angles from kinematic chain
         # thigh_angle = pelvis_tilt + hip_flexion
@@ -904,9 +963,9 @@ def process_bilateral_task(
                 if mom_key in task_data.dtype.names:
                     mom_data = task_data[mom_key]
                     if mom_data.ndim == 2 and cycle_idx < mom_data.shape[1]:
-                        mom_interp = interpolate_to_phase(sign * mom_data[:, cycle_idx] / subject_mass).flatten()
+                        mom_interp = interpolate_observed(sign * mom_data[:, cycle_idx] / subject_mass).flatten()
                     elif mom_data.ndim == 1:
-                        mom_interp = interpolate_to_phase(sign * mom_data / subject_mass).flatten()
+                        mom_interp = interpolate_observed(sign * mom_data / subject_mass).flatten()
                     else:
                         continue
 
@@ -934,9 +993,9 @@ def process_bilateral_task(
             if grf_key in task_data.dtype.names:
                 grf_data = task_data[grf_key]
                 if grf_data.ndim == 2 and cycle_idx < grf_data.shape[1]:
-                    grf_interp = interpolate_to_phase(grf_data[:, cycle_idx] / body_weight_N).flatten()
+                    grf_interp = interpolate_observed(grf_data[:, cycle_idx] / body_weight_N).flatten()
                 elif grf_data.ndim == 1:
-                    grf_interp = interpolate_to_phase(grf_data / body_weight_N).flatten()
+                    grf_interp = interpolate_observed(grf_data / body_weight_N).flatten()
                 else:
                     continue
 
@@ -1058,6 +1117,10 @@ def process_bilateral_task(
             'foot_sagittal_velocity_contra_rad_s': foot_vel_contra,
         })
 
+        stride_df = identify_gait_curve(
+            stride_df, subject_id, condition, source_task_path or task_id, 'l', cycle_idx,
+            source_start, source_end,
+            observation_type='transfer' if task in {'sit_to_stand', 'stand_to_sit'} else 'individual_cycle')
         strides.append(stride_df)
         step_num += 1
 
@@ -1258,7 +1321,7 @@ def process_subject(
                     strides, step_offset = process_bilateral_task(
                         sub_data, subject_id, subject_mass,
                         task, task_id, condition, step_offset,
-                        mot_df=mot_df, task_key='STS'
+                        mot_df=mot_df, task_key='STS', source_task_path=f'STS/{sub_task}'
                     )
                     all_strides.extend(strides)
 
@@ -1321,7 +1384,7 @@ def process_subject(
                         strides, step_offset = process_gait_task(
                             step_data, subject_id, subject_mass,
                             task, step_task_id, None, condition, step_offset,
-                            mot_df=mot_df, task_key='stairs'
+                            mot_df=mot_df, task_key='stairs', source_task_path=f'stairs/{direction}/{step_key}'
                         )
                         all_strides.extend(strides)
 

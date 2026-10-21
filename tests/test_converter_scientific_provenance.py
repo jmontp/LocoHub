@@ -541,3 +541,48 @@ def test_stroke_c3d_clock_restores_acquisition_frame_number(monkeypatch,tmp_path
     monkeypatch.setattr(parser,'_extract_force_plates',lambda raw,time:None)
     path=tmp_path/'source.c3d';path.write_bytes(b'fixture')
     np.testing.assert_allclose(parser.load_c3d_file(path)['time'],[9.34,9.35])
+
+
+def test_mblue_source_identity_survives_output_reordering(mblue):
+    import json
+    from contributor_tools.common.data_contract import inspect_contract
+    source=mblue_source()
+    first,_=mblue.process_gait_task(source,'AB01',70.,'level_walking','level',1.,'bare',0,task_key='level_1x0')
+    reordered,_=mblue.process_gait_task(source,'AB01',70.,'level_walking','level',1.,'bare',999,task_key='level_1x0')
+    assert [f.observation_id.iloc[0] for f in first]==[f.observation_id.iloc[0] for f in reordered]
+    assert len({f.observation_id.iloc[0] for f in first})==2
+    for frame in first:
+        assert inspect_contract(frame,mode='phase').schema_passed
+        assert json.loads(frame.subject_metadata.iloc[0])['weight_kg']==70.
+        np.testing.assert_allclose(frame.time_s,np.linspace(0,1,150))
+    stairs=first[0].copy()
+    a=mblue.identify_gait_curve
+    # Two distinct source blocks must not share identities even at equal timestamps.
+    for col in ['subject_metadata','task_info']:
+        stairs[col]='source:fixture'
+    other=a(stairs,'AB01','exo','stairs/descent/s2','l',0,0.,1.)
+    assert other.observation_id.iloc[0]!=first[0].observation_id.iloc[0]
+
+
+def test_mblue_bilateral_duration_uses_matching_source_clocks(mblue):
+    source=mblue_source()
+    assert mblue.bilateral_source_times(source,0)==(0.,1.)
+    source['time_r'][50,0]+=.001
+    with pytest.raises(ValueError,match='clocks disagree'):
+        mblue.bilateral_source_times(source,0)
+    with pytest.raises(ValueError,match='clocks are required'):
+        mblue.bilateral_source_times(mblue_source(False),0)
+
+
+def test_mblue_transfer_interpolation_uses_recorded_nonuniform_clock(mblue):
+    from contributor_tools.common.data_contract import inspect_contract
+    source=mblue_source()
+    clock=np.linspace(0,1,101)**2
+    for side in ['l','r']:
+        source['time_'+side][:,0]=clock
+        source['hip_flexion_'+side][:,0]=10*clock
+    frames,_=mblue.process_bilateral_task(source,'AB01',70.,'sit_to_stand','sit_stand','bare',source_task_path='STS/sit_stand')
+    assert len(frames)==1 and inspect_contract(frames[0],mode='phase').schema_passed
+    np.testing.assert_allclose(frames[0].hip_flexion_angle_ipsi_rad,np.linspace(0,10,150)*np.pi/180,atol=1e-12)
+    np.testing.assert_allclose(frames[0].hip_flexion_velocity_ipsi_rad_s,10*np.pi/180,atol=1e-12)
+    assert frames[0].observation_type.eq('transfer').all()

@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T21:48:05.747634-04:00",
-  "recorded_at": "2026-10-21T01:48:39.205500+00:00",
-  "base_revision": "1dd7a403c62c8becba2d09beb8f5be78bf82e56a",
+  "started_at": "2026-10-20T21:51:17.147923-04:00",
+  "recorded_at": "2026-10-21T01:51:47.569776+00:00",
+  "base_revision": "577933a0bc1d7b3ba66062a10dee9bfeca018bcf",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "635690992ac96a870e9c35cb7832d30d4cf4a575ff646f7d8d6f4011bf41ae08",
+  "junit_sha256": "52247dd3a9eb9d087a7725804de7070c29ac816c487a0bb6d0ff1a392c7339af",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -59,7 +59,7 @@
       ]
     },
     "tests.test_converter_scientific_provenance": {
-      "passed": 40,
+      "passed": 43,
       "failed": 0,
       "skipped": 0,
       "cases": [
@@ -221,6 +221,18 @@
         },
         {
           "name": "test_stroke_c3d_clock_restores_acquisition_frame_number",
+          "status": "passed"
+        },
+        {
+          "name": "test_mblue_source_identity_survives_output_reordering",
+          "status": "passed"
+        },
+        {
+          "name": "test_mblue_bilateral_duration_uses_matching_source_clocks",
+          "status": "passed"
+        },
+        {
+          "name": "test_mblue_transfer_interpolation_uses_recorded_nonuniform_clock",
           "status": "passed"
         }
       ]
@@ -1082,7 +1094,7 @@
     }
   },
   "totals": {
-    "passed": 218,
+    "passed": 221,
     "failed": 0,
     "skipped": 2
   }
