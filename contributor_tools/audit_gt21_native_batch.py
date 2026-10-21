@@ -151,7 +151,12 @@ def main():
                 try:command=Path(f'/proc/{args.watch_pid}/cmdline').read_bytes();alive=b'run_gt21_native_batch.py' in command and str(root).encode() in command
                 except FileNotFoundError:pass
             if not alive:
-                state['status']='all_recordings_source_checked_unreviewed' if cursor==len(plan) and batch_state.get('status')=='complete_unreviewed' else 'checked_completed_subset_unreviewed'
+                # A converter can finish while this earlier snapshot is being
+                # checked. Read its terminal manifest and drain any final files.
+                latest=json.loads((root/'batch_status.json').read_text())
+                if cursor<int(latest.get('completed',0)):continue
+                state['batch_summary_sha256']=digest(root/'batch_status.json')
+                state['status']='all_recordings_source_checked_unreviewed' if cursor==len(plan) and latest.get('status')=='complete_unreviewed' else 'checked_completed_subset_unreviewed'
                 break
             state['status']='waiting_for_completed_recordings';save(out/'audit_status.json',state);time.sleep(10)
     except Exception as error:
