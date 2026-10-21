@@ -494,3 +494,31 @@ model sign conventions, complete source coverage and a ledger for recordings wit
 no accepted cycles remain to be verified. The GT24 queue resumed after this pilot;
 the GT21 dispatcher was rebound to the resumed queue and still waits for successful
 completion of both GT24 phases.
+
+
+### Gait120 original anatomical reference and sample order
+
+The source paper (Scientific Data 12:1023, DOI 10.1038/s41597-025-05391-0,
+Methods page 5) states that supplied gait cycles span right heel strike to the
+next right heel strike. Transfers use pelvis/shoulder boundaries. This contradicts
+the converter's unsupported left/right swap and half-cycle circular rotation.
+Both transformations were removed, including optional pipeline/ID output rotation.
+The default precomputed-angle path uses actual source time and preserves missing
+gaps. Exports now record source identities, anatomical reference, observation type,
+endpoint samples/times and the source protocol supporting the phase boundaries.
+
+`gait120_source_pilot_20261020` reconstructed 14 recordings: one per task for S001
+(no source forces) and S011 (source forces for eligible tasks), totaling 2,100 rows.
+All bilateral hip/knee/ankle angles match direct interpolation from the original
+MOT tables to at most 4.45e-16 rad. Every saved output passes the structural check
+and exact Parquet readback. Source/code/output hashes and converter snapshots are
+retained. `anthropometry_comparison.json` independently checks all 14 outputs
+against the actual fallback spreadsheet, including its hash. The pilot runner now
+also includes that spreadsheet directly in future source manifests.
+
+These checks establish preservation of the stated source frame and transformed
+samples; they do not independently validate the original event detection or model
+signs. Full Gait120 reconstruction, force/COP frames and historical inverse-dynamics
+anomalies remain open. The paper also states that force data for S001–S010 are
+unavailable because acquisition coordinate frames were not correctly aligned;
+missing force values for these participants must remain missing.

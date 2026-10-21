@@ -26,7 +26,7 @@
     "gt25": "Seven BT01 recordings regenerated: 152 observations / 22,800 rows, source-matched for checked channels. All-subject/task coverage, ankle sign, segment angles, COP frames, event validity and exclusion accounting remain open.",
     "mblue": "Assumed duration/pelvis and index-based opposite-leg pairing removed. 102-observation real walking pilot verifies 45,228 temporal-overlap angle values. Stable identities, full regeneration, bilateral task timing, force/COP mappings and exclusions remain open.",
     "gt21": "Native single-recording pilot verified. Resumable guarded batch inventories 2,301 recordings across 16 local subjects and is scheduled after GT24 completes. Full source-subject coverage, all-recording regeneration, force/COP semantics and exclusions remain open.",
-    "gait120": "Missing mass/height/timing/pelvis fallbacks removed; reconstruction requires measured anthropometry. Reader matches all 120 source-sheet masses and heights. Affected exports, phase/anatomical mapping and inverse-dynamics anomalies remain unresolved.",
+    "gait120": "Removed invented metadata and unsupported leg swaps/half-cycle rotation. Source protocol specifies right-foot cycles. Fourteen recordings across all seven tasks (S001/S011) regenerated and all bilateral sagittal angles source-matched; source anthropometry checked. Full rebuild, independent event/contact verification, model sign/force/COP and inverse-dynamics anomalies remain open.",
     "strokepig": "Source C3D foot strikes, inclusive endpoints, actual-time interpolation and one-frame C3D/IK clock correction verified on TVC03/BWA6 (3 observations, 450 rows). Full reconstruction, clinical side, force/COP, model conventions and empty-recording exclusion accounting remain open."
   },
   "findings": [
@@ -359,8 +359,9 @@
       "affected_paths": [
         "contributor_tools/conversion_scripts/Gait120/convert_gait120_to_parquet.py"
       ],
-      "status": "open",
-      "required_followup": "Compare multiple original trial events and simultaneous channels, including asymmetric/noncyclic tasks; publish measured phase origin and reference-side evidence."
+      "status": "code_fixed_limited_pilot_full_regeneration_pending",
+      "required_followup": "The source paper specifies right heel strike to right heel strike, contradicting the historical leg swap and half-cycle roll; both removed. Fourteen recordings across seven tasks source-matched after actual-time interpolation. Verify boundaries/contact independently across the full source, regenerate all recordings, and validate force/COP and model conventions.",
+      "evidence": "converted_datasets/reconversion_v2/gait120_source_pilot_20261020/source_comparison.json"
     },
     {
       "id": "remaining-12",

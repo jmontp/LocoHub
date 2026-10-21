@@ -472,6 +472,31 @@ def test_gait120_kinematics_keeps_missing_metadata_and_pelvis(gait120,monkeypatc
     assert frame.hip_flexion_angle_ipsi_rad.notna().all()
 
 
+def test_gait120_preserves_right_reference_source_order_and_clock(gait120,monkeypatch,tmp_path):
+    clock=np.linspace(0,1,101)**1.3
+    source=pd.DataFrame({f'{joint}_{side}':offset+10*clock
+                         for joint in ['hip_flexion','knee_angle','ankle_angle']
+                         for side,offset in [('r',5),('l',40)]})
+    source['time']=clock+3
+    monkeypatch.setattr(gait120,'load_mot_file',lambda path:source)
+    path=tmp_path/'S001/JointAngle/LevelWalking/Trial01/step01.mot'
+    frame=gait120.process_step_file(path,'G120_S001','level_walking','level',0)
+    np.testing.assert_allclose(frame.hip_flexion_angle_ipsi_rad,np.deg2rad(5+10*np.linspace(0,1,150)))
+    np.testing.assert_allclose(frame.hip_flexion_angle_contra_rad,np.deg2rad(40+10*np.linspace(0,1,150)))
+    np.testing.assert_allclose(frame.hip_flexion_velocity_ipsi_rad_s,np.deg2rad(10),atol=1e-12)
+    assert frame.reference_side.eq('right').all()
+    assert frame.source_start_time_s.iloc[0]==3 and frame.source_end_time_s.iloc[0]==4
+    from contributor_tools.common.data_contract import inspect_contract
+    assert inspect_contract(frame,mode='phase').schema_passed
+    with pytest.raises(ValueError,match='right-foot reference'):
+        gait120.process_step_file(path,'G120_S001','level_walking','level',0,leg_side='l')
+
+
+def test_gait120_missing_samples_are_not_interpolated_away(gait120):
+    result=gait120.interpolate_to_phase(np.array([0.,1.,np.nan,3.,4.]),9)
+    assert np.isnan(result[3:6]).all()
+
+
 
 def test_stroke_annotated_strikes_override_peak_heuristic(stroke,monkeypatch):
     source=pd.DataFrame({'time':np.arange(601)/100})

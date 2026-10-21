@@ -225,35 +225,16 @@ def load_mot_file(mot_path: Path) -> Optional[pd.DataFrame]:
         return None
 
 
-def interpolate_to_phase(data: np.ndarray, num_points: int = NUM_POINTS) -> np.ndarray:
-    """
-    Interpolate time-series data to fixed number of phase points (0-100%).
-
-    Args:
-        data: Input data array
-        num_points: Number of output points (default 150)
-
-    Returns:
-        Interpolated data array of length num_points
-    """
-    if len(data) < 2:
+def interpolate_to_phase(data, num_points=NUM_POINTS, source_time=None):
+    """Interpolate on the observed clock, retaining missing sample gaps."""
+    values = np.asarray(data, dtype=float)
+    if len(values) < 2:
         return np.full(num_points, np.nan)
-
-    # Create interpolation function
-    x_original = np.linspace(0, 100, len(data))
-    x_target = np.linspace(0, 100, num_points)
-
-    # Handle NaN values
-    valid_mask = ~np.isnan(data)
-    if np.sum(valid_mask) < 2:
-        return np.full(num_points, np.nan)
-
-    try:
-        interp_func = interp1d(x_original[valid_mask], data[valid_mask],
-                               kind='linear', fill_value='extrapolate')
-        return interp_func(x_target)
-    except Exception:
-        return np.full(num_points, np.nan)
+    clock = np.arange(len(values)) if source_time is None else np.asarray(source_time)
+    if len(clock) != len(values) or not np.isfinite(clock).all() or not (np.diff(clock) > 0).all():
+        raise ValueError('Signal samples require a finite, increasing source clock')
+    return np.interp(np.linspace(clock[0], clock[-1], num_points), clock,
+                     np.where(np.isfinite(values), values, np.nan))
 
 
 # NOTE: compute_velocity_from_shifted_angle and compute_acceleration_from_velocity
@@ -614,25 +595,6 @@ def get_ankle_positions(
     )
 
 
-def circular_phase_shift(data: np.ndarray, shift_percent: float = 50.0) -> np.ndarray:
-    """
-    Circularly shift phase-normalized data by a percentage of the gait cycle.
-
-    In gait, the contralateral leg is approximately 50% out of phase with the
-    ipsilateral leg.
-
-    Args:
-        data: Phase-normalized data array
-        shift_percent: Percentage of gait cycle to shift (default 50%)
-
-    Returns:
-        Circularly shifted data array (same shape as input)
-    """
-    num_points = len(data)
-    shift_points = int(round(num_points * shift_percent / 100.0))
-    return np.roll(data, shift_points)
-
-
 def estimate_stride_duration_from_mot(df: pd.DataFrame) -> float:
     """
     Estimate stride duration from .mot file time column.
@@ -748,12 +710,14 @@ def process_step_file(
     # Get column mapping
     col_map = get_column_mapping(df)
 
-    # Check for required columns
-    # NOTE: Source files are segmented by contralateral heel strike (not ipsilateral)
-    # So we need to SWAP which leg maps to ipsi vs contra in the output
-    # When processing a "right leg" step file, the LEFT leg is actually ipsilateral
-    source_ipsi = 'l' if leg_side == 'r' else 'r'  # Swapped!
-    source_contra = leg_side  # Swapped!
+    # Source protocol: gait files span right heel strike to right heel strike.
+    # Scientific Data 12:1023, doi:10.1038/s41597-025-05391-0, Methods p. 5.
+    # Keep anatomical columns and sample order; no leg swap or half-cycle roll.
+    is_bilateral = task in ['sit_to_stand', 'stand_to_sit', 'squat']
+    if leg_side not in {'l', 'r'} or (not is_bilateral and leg_side != 'r'):
+        raise ValueError('Gait120 source gait cycles have a right-foot reference')
+    source_ipsi = leg_side
+    source_contra = 'l' if leg_side == 'r' else 'r'
 
     # Gait120 uses knee_angle and ankle_angle (not knee_flexion, ankle_dorsiflexion)
     required_ipsi = [f'hip_flexion_{source_ipsi}', f'knee_angle_{source_ipsi}', f'ankle_angle_{source_ipsi}']
@@ -767,6 +731,10 @@ def process_step_file(
 
     # Estimate stride duration
     stride_duration_s = estimate_stride_duration_from_mot(df)
+    if not np.isfinite(stride_duration_s) or stride_duration_s <= 0:
+        raise ValueError('Gait120 conversion requires the original increasing timestamps')
+    def resample(values):
+        return interpolate_to_phase(values, source_time=df.time.to_numpy(dtype=float))
 
     # Calculate body weight in Newtons for GRF normalization
     body_weight_N = subject_mass_kg * 9.81
@@ -780,52 +748,32 @@ def process_step_file(
         """Get column data directly from DataFrame."""
         if name in df.columns:
             return df[name].values
-        return np.zeros(len(df))
+        return np.full(len(df), np.nan)
 
     # Hip flexion (no sign change needed)
     # Use source_ipsi/source_contra to get data from correct source columns
     hip_ipsi_deg = get_col(f'hip_flexion_{source_ipsi}')
     hip_contra_deg = get_col(f'hip_flexion_{source_contra}') if has_contra else np.full_like(hip_ipsi_deg, np.nan)
-    hip_ipsi_rad = interpolate_to_phase(hip_ipsi_deg * DEG2RAD)
-    hip_contra_rad = interpolate_to_phase(hip_contra_deg * DEG2RAD)
+    hip_ipsi_rad = resample(hip_ipsi_deg * DEG2RAD)
+    hip_contra_rad = resample(hip_contra_deg * DEG2RAD)
 
     # Knee angle (NEGATE: source extension+ -> standard flexion+)
     # Gait120 uses 'knee_angle_r' and 'knee_angle_l'
     knee_ipsi_deg = get_col(f'knee_angle_{source_ipsi}')
     knee_contra_deg = get_col(f'knee_angle_{source_contra}') if has_contra else np.full_like(knee_ipsi_deg, np.nan)
-    knee_ipsi_rad = interpolate_to_phase(-knee_ipsi_deg * DEG2RAD)  # Negate for flexion+
-    knee_contra_rad = interpolate_to_phase(-knee_contra_deg * DEG2RAD)  # Negate for flexion+
+    knee_ipsi_rad = resample(-knee_ipsi_deg * DEG2RAD)  # Negate for flexion+
+    knee_contra_rad = resample(-knee_contra_deg * DEG2RAD)  # Negate for flexion+
 
     # Ankle dorsiflexion (no sign change needed)
     # Gait120 uses 'ankle_angle_r' and 'ankle_angle_l'
     ankle_ipsi_deg = get_col(f'ankle_angle_{source_ipsi}')
     ankle_contra_deg = get_col(f'ankle_angle_{source_contra}') if has_contra else np.full_like(ankle_ipsi_deg, np.nan)
-    ankle_ipsi_rad = interpolate_to_phase(ankle_ipsi_deg * DEG2RAD)
-    ankle_contra_rad = interpolate_to_phase(ankle_contra_deg * DEG2RAD)
-
-    # Phase alignment correction for Gait120 data
-    # The source .mot files are segmented starting at ~50% phase (around toe-off)
-    # We need to shift by 50% to align with heel strike at 0%
-    is_bilateral = task in ['sit_to_stand', 'stand_to_sit', 'squat']
-    if not is_bilateral:
-        # Shift ipsilateral data by 50% to align heel strike with phase 0%
-        hip_ipsi_rad = circular_phase_shift(hip_ipsi_rad, 50.0)
-        knee_ipsi_rad = circular_phase_shift(knee_ipsi_rad, 50.0)
-        ankle_ipsi_rad = circular_phase_shift(ankle_ipsi_rad, 50.0)
-
-        # Shift contralateral data by 50% as well (maintains ~50% offset from ipsi)
-        if has_contra:
-            hip_contra_rad = circular_phase_shift(hip_contra_rad, 50.0)
-            knee_contra_rad = circular_phase_shift(knee_contra_rad, 50.0)
-            ankle_contra_rad = circular_phase_shift(ankle_contra_rad, 50.0)
+    ankle_ipsi_rad = resample(ankle_ipsi_deg * DEG2RAD)
+    ankle_contra_rad = resample(ankle_contra_deg * DEG2RAD)
 
     # Pelvis tilt (global reference)
     pelvis_tilt_deg = get_col('pelvis_tilt')
-    pelvis_tilt_rad = interpolate_to_phase(pelvis_tilt_deg * DEG2RAD) if 'pelvis_tilt' in col_map else np.full(NUM_POINTS, np.nan)
-
-    # Apply same phase shift to pelvis for gait tasks
-    if not is_bilateral:
-        pelvis_tilt_rad = circular_phase_shift(pelvis_tilt_rad, 50.0)
+    pelvis_tilt_rad = resample(pelvis_tilt_deg * DEG2RAD) if 'pelvis_tilt' in col_map else np.full(NUM_POINTS, np.nan)
 
     def _compute_derived_kinematics(
         hip_ipsi_arr: np.ndarray,
@@ -836,8 +784,7 @@ def process_step_file(
         ankle_contra_arr: np.ndarray,
         pelvis_arr: np.ndarray,
     ) -> Dict[str, np.ndarray]:
-        is_shifted = not is_bilateral
-        disc_idx = NUM_POINTS // 2 if is_shifted else None  # 75 for 150 points
+        disc_idx = None  # Source sample order is continuous and is never rolled.
 
         thigh_ipsi_arr = pelvis_arr + hip_ipsi_arr
         thigh_contra_arr = pelvis_arr + hip_contra_arr
@@ -1018,20 +965,6 @@ def process_step_file(
         cop_anterior_contra = np.full(NUM_POINTS, np.nan)
         cop_lateral_contra = np.full(NUM_POINTS, np.nan)
 
-    # Apply phase shift to GRF and COP data (same as kinematics)
-    # The source data is segmented at ~50% phase, we shift to align with heel strike at 0%
-    if not is_bilateral:
-        grf_vertical_ipsi = circular_phase_shift(grf_vertical_ipsi, 50.0)
-        grf_vertical_contra = circular_phase_shift(grf_vertical_contra, 50.0)
-        grf_anterior_ipsi = circular_phase_shift(grf_anterior_ipsi, 50.0)
-        grf_anterior_contra = circular_phase_shift(grf_anterior_contra, 50.0)
-        grf_lateral_ipsi = circular_phase_shift(grf_lateral_ipsi, 50.0)
-        grf_lateral_contra = circular_phase_shift(grf_lateral_contra, 50.0)
-        cop_anterior_ipsi = circular_phase_shift(cop_anterior_ipsi, 50.0)
-        cop_lateral_ipsi = circular_phase_shift(cop_lateral_ipsi, 50.0)
-        cop_anterior_contra = circular_phase_shift(cop_anterior_contra, 50.0)
-        cop_lateral_contra = circular_phase_shift(cop_lateral_contra, 50.0)
-
     # Compute inverse dynamics if OpenSim is available and GRF data exists
     hip_moment_ipsi = np.full(NUM_POINTS, np.nan)
     hip_moment_contra = np.full(NUM_POINTS, np.nan)
@@ -1101,16 +1034,6 @@ def process_step_file(
 
                 if pipeline_kinematics_applied:
                     kinematics_source = "opensim_ik"
-                    # Apply 50% phase shift for gait tasks (pipeline output is not shifted)
-                    if not is_bilateral:
-                        hip_ipsi_rad = circular_phase_shift(hip_ipsi_rad, 50.0)
-                        hip_contra_rad = circular_phase_shift(hip_contra_rad, 50.0)
-                        knee_ipsi_rad = circular_phase_shift(knee_ipsi_rad, 50.0)
-                        knee_contra_rad = circular_phase_shift(knee_contra_rad, 50.0)
-                        ankle_ipsi_rad = circular_phase_shift(ankle_ipsi_rad, 50.0)
-                        ankle_contra_rad = circular_phase_shift(ankle_contra_rad, 50.0)
-                        pelvis_tilt_rad = circular_phase_shift(pelvis_tilt_rad, 50.0)
-
                     # Recompute all derived kinematics from the OpenSim IK angles.
                     derived = _compute_derived_kinematics(
                         hip_ipsi_rad,
@@ -1162,15 +1085,6 @@ def process_step_file(
                 if 'ankle_dorsiflexion_moment_contra_Nm_kg' in pipeline_result:
                     ankle_moment_contra = pipeline_result['ankle_dorsiflexion_moment_contra_Nm_kg']
 
-                # Apply 50% phase shift for gait tasks (pipeline output is not shifted)
-                if not is_bilateral:
-                    hip_moment_ipsi = circular_phase_shift(hip_moment_ipsi, 50.0)
-                    hip_moment_contra = circular_phase_shift(hip_moment_contra, 50.0)
-                    knee_moment_ipsi = circular_phase_shift(knee_moment_ipsi, 50.0)
-                    knee_moment_contra = circular_phase_shift(knee_moment_contra, 50.0)
-                    ankle_moment_ipsi = circular_phase_shift(ankle_moment_ipsi, 50.0)
-                    ankle_moment_contra = circular_phase_shift(ankle_moment_contra, 50.0)
-
     elif (COMPUTE_INVERSE_DYNAMICS and OPENSIM_AVAILABLE and
             grf_mot_path is not None and OPENSIM_MODEL_PATH.exists()):
         # Legacy mode: use pre-computed IK with our model for ID
@@ -1213,15 +1127,6 @@ def process_step_file(
                         moments['ankle_dorsiflexion_moment_contra_Nm_kg'], time_arr, NUM_POINTS
                     )
 
-                # Apply 50% phase shift (same as kinematics) for gait tasks
-                if not is_bilateral:
-                    hip_moment_ipsi = circular_phase_shift(hip_moment_ipsi, 50.0)
-                    hip_moment_contra = circular_phase_shift(hip_moment_contra, 50.0)
-                    knee_moment_ipsi = circular_phase_shift(knee_moment_ipsi, 50.0)
-                    knee_moment_contra = circular_phase_shift(knee_moment_contra, 50.0)
-                    ankle_moment_ipsi = circular_phase_shift(ankle_moment_ipsi, 50.0)
-                    ankle_moment_contra = circular_phase_shift(ankle_moment_contra, 50.0)
-
         except Exception as e:
             # ID computation failed - keep NaN values
             pass
@@ -1230,10 +1135,15 @@ def process_step_file(
     phase = np.linspace(0, 100, NUM_POINTS)
     phase_dot = np.full(NUM_POINTS, 100.0 / stride_duration_s)
 
-    # Build task_info string
-    # Note: source_ipsi is the actual ipsilateral leg in our output (after swap)
-    task_info_parts = [f"leg:{source_ipsi}", "exo_state:no_exo", f"kinematics_source:{kinematics_source}"]
-    task_info_str = ",".join(task_info_parts)
+    source_parts = mot_path.parts
+    relative_source = Path(*source_parts[source_parts.index('JointAngle'):]).as_posix() if 'JointAngle' in source_parts else mot_path.name
+    source_recording_id = f'gait120:{subject_id}/{relative_source}'
+    reference_side = 'right' if source_ipsi == 'r' else 'left'
+    task_info_str = json.dumps({
+        'leg': source_ipsi, 'exo_state': 'no_exo', 'kinematics_source': kinematics_source,
+        'phase_boundary_method': 'source_pelvis_shoulder_transfer_boundaries' if is_bilateral else 'source_right_heel_strike_boundaries',
+        'phase_boundary_evidence': 'doi:10.1038/s41597-025-05391-0',
+    }, sort_keys=True)
 
     # Build subject metadata
     subject_metadata = json.dumps({
@@ -1249,6 +1159,14 @@ def process_step_file(
         'task_id': task_id,
         'task_info': task_info_str,
         'step': f"{step_num:03d}",
+        'source_recording_id': source_recording_id,
+        'observation_id': f'{source_recording_id}:{reference_side}',
+        'observation_type': 'transfer' if is_bilateral else 'individual_cycle',
+        'reference_side': reference_side,
+        'source_start_sample': 0,
+        'source_end_sample': len(df) - 1,
+        'source_start_time_s': float(df.time.iloc[0]),
+        'source_end_time_s': float(df.time.iloc[-1]),
         'phase_ipsi': phase,
         'phase_ipsi_dot': phase_dot,
 
@@ -1379,7 +1297,7 @@ def process_task(
 
         for mot_file in mot_files:
             # Process once per file - source files contain bilateral data for one stride
-            # Using leg_side='r' with the ipsi/contra swap gives correct phase alignment
+            # The source protocol defines right-foot gait cycles.
             stride_df = process_step_file(
                 mot_path=mot_file,
                 subject_id=subject_id,
