@@ -69,6 +69,7 @@ def main():
     (out/'options.json').write_text(json.dumps(options, indent=2)+'\n')
     sources = [args.lineage, ik, Path(model['path']), worker, original_guard, Path(__file__),
                ROOT/'contributor_tools/plan_mblue_orientation_lineage.py',
+               ROOT/'contributor_tools/audit_mblue_orientation_pose_pilot.py',
                Path('/mnt/s/workspace/MBLUEAnkleOpenSimProcessing/O5_main_OpenSimProcessing.m'),
                Path('/mnt/c/OpenSim 4.4/sdk/Java/org-opensim-modeling.jar')]
     bindings = {str(p.resolve()): digest(p) for p in sources}
