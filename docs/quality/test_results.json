@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T22:19:08.770529-04:00",
-  "recorded_at": "2026-10-21T02:19:51.796143+00:00",
-  "base_revision": "79ea8b18fb7170a24a046aea78268f9cc3710479",
+  "started_at": "2026-10-20T22:30:13.931836-04:00",
+  "recorded_at": "2026-10-21T02:30:47.565982+00:00",
+  "base_revision": "81e96fbf7e087f4e5427e38dd597056182fdb824",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "617e2fd5cb7d5e6fc585e2b4e3c24dd9fef8a1f9f9ee6dbbf7ceb612646f96fa",
+  "junit_sha256": "e980904144cd1633072907bbddae8c0043e2e41af0024f8fbe6cf1b0e992f75f",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -620,6 +620,21 @@
         }
       ]
     },
+    "tests.test_live_source_audit_completion": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_final_manifest_is_read_after_record_check[2-complete_unreviewed-all_recordings_source_checked_unreviewed]",
+          "status": "passed"
+        },
+        {
+          "name": "test_final_manifest_is_read_after_record_check[1-stopped_incomplete-checked_completed_subset_unreviewed]",
+          "status": "passed"
+        }
+      ]
+    },
     "tests.test_memory_safe_parquet_tools": {
       "passed": 3,
       "failed": 0,
@@ -1148,7 +1163,7 @@
     }
   },
   "totals": {
-    "passed": 231,
+    "passed": 233,
     "failed": 0,
     "skipped": 2
   }

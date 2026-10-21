@@ -17,11 +17,8 @@ addpath(fullfile(fileparts(mfilename('fullpath')), '..', 'matlab_common'));
 global ENABLE_DATA_FIXES;
 ENABLE_DATA_FIXES = true;  % Set to false to disable all data corrections
 % 
-% Data fixes controlled by this flag:
-% 1. Foot angle bias/sign corrections (including contralateral phase offset)
-% 2. Direct pelvis from motion capture vs derived calculation
-% 3. 90-degree offset correction for incline walking ankle angles  
-% 4. Sign flip for decline walking knee moments
+% Legacy pelvis/kinetic options below are not a scientific validity assessment.
+% Foot/ankle offsets and signs must never be selected from waveform shape.
 
 % Prefer per-subject files to keep the large nested MAT structure out of RAM.
 % Set UMICH_STREAMING_SUBJECT_DIR to a directory containing AB01.mat, etc.
@@ -869,12 +866,8 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 l_ankle_rot = interpolate_signal(...
                     angles.LAnkleAngles(l_start_frame:l_end_frame, transverse_plane), NUM_POINTS) * deg2rad;
                 
-                % Task-specific correction for incline walking ankle angles
-                % DATA FIX: Apply 90-degree offset correction for incline walking ankle angles
-                if ENABLE_DATA_FIXES && strcmp(task_type, 'incline_walking')
-                    r_ankle_flex = apply_90_degree_correction(r_ankle_flex);
-                    l_ankle_flex = apply_90_degree_correction(l_ankle_flex);
-                end
+                % Preserve source ankle values. A large angle is a review
+                % finding, not evidence for a waveform-dependent 90-degree shift.
                 
                 % Assign based on which leg is ipsilateral
                 if strcmp(leg_side, 'right')
@@ -1057,28 +1050,22 @@ function stride_table = process_strides_single_leg(trial_data, ...
             stride_data.ankle_rotation_moment_contra_Nm_kg = nan_vector;
         end
         
-        % Calculate segment angles using FOOT-UP approach with corrected foot angles
+        % Calculate legacy joint-derived segment angles; anatomical frames remain unverified
         if isfield(angles, 'RFootProgressAngles') && isfield(angles, 'LFootProgressAngles') && ...
                 isfield(angles, 'RAnkleAngles') && isfield(angles, 'LAnkleAngles') && ...
                 isfield(angles, 'RKneeAngles') && isfield(angles, 'LKneeAngles')
-            % Get foot angles in time domain and apply corrections FIRST
+            % Retain the existing negated foot-progression convention without fitted offsets
             r_foot_raw = interpolate_signal(...
                 -angles.RFootProgressAngles(r_start_frame:r_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
             l_foot_raw = interpolate_signal(...
                 -angles.LFootProgressAngles(l_start_frame:l_end_frame, sagittal_plane), NUM_POINTS) * deg2rad;
             
-            % Apply foot angle corrections before using for segment calculations
-            % DATA FIX START: Fix foot angle bias/sign
-            if ENABLE_DATA_FIXES
-                offset_index =  strcmp(leg_side, 'left'); % Do we offset the leg to account for the 50% phase offset?
-                r_foot_corrected = apply_foot_angle_correction(r_foot_raw, offset_index);
-                l_foot_corrected = apply_foot_angle_correction(l_foot_raw, ~offset_index);
-            else
-                r_foot_corrected = r_foot_raw;
-                l_foot_corrected = l_foot_raw;
-            end
-            % DATA FIX END: Fix foot angle bias/sign
-            
+            % Keep the existing source-to-foot mapping explicit. Do not choose
+            % offsets or signs from presumed stance/swing waveform shapes.
+            % The absolute anatomical foot frame remains unverified.
+            r_foot_angle = r_foot_raw;
+            l_foot_angle = l_foot_raw;
+
             % Get ankle dorsiflexion angles
             r_ankle_angles_rad = angles.RAnkleAngles(r_start_frame:r_end_frame, sagittal_plane) * deg2rad;
             l_ankle_angles_rad = angles.LAnkleAngles(l_start_frame:l_end_frame, sagittal_plane) * deg2rad;
@@ -1087,9 +1074,9 @@ function stride_table = process_strides_single_leg(trial_data, ...
             r_ankle_interp = interpolate_signal(r_ankle_angles_rad, NUM_POINTS);
             l_ankle_interp = interpolate_signal(l_ankle_angles_rad, NUM_POINTS);
             
-            % Calculate shank angle = corrected_foot_angle + ankle_dorsiflexion
-            r_shank_angles_150pt = r_foot_corrected - r_ankle_interp;
-            l_shank_angles_150pt = l_foot_corrected - l_ankle_interp;
+            % Legacy shank construction from foot progression and relative ankle angle
+            r_shank_angles_150pt = r_foot_angle - r_ankle_interp;
+            l_shank_angles_150pt = l_foot_angle - l_ankle_interp;
             
             % Get knee angles for segment calculation (positive for segment chain)
             r_knee_for_segments = angles.RKneeAngles(r_start_frame:r_end_frame, sagittal_plane) * deg2rad;
@@ -1133,8 +1120,8 @@ function stride_table = process_strides_single_leg(trial_data, ...
             l_thigh_angles_150pt = stride_data.pelvis_sagittal_angle_rad + l_hip_interp;
             r_shank_angles_150pt = r_thigh_angles_150pt - r_knee_segment_interp;
             l_shank_angles_150pt = l_thigh_angles_150pt - l_knee_segment_interp;
-            r_foot_corrected = r_shank_angles_150pt + r_ankle_interp;
-            l_foot_corrected = l_shank_angles_150pt + l_ankle_interp;
+            r_foot_angle = r_shank_angles_150pt + r_ankle_interp;
+            l_foot_angle = l_shank_angles_150pt + l_ankle_interp;
 
             % Calculate velocities from interpolated angles using effective sampling rate
             effective_Hz = (NUM_POINTS - 1) / stride_duration_s;  % 149 intervals across 150 points
@@ -1142,13 +1129,13 @@ function stride_table = process_strides_single_leg(trial_data, ...
             r_shank_velocity = gradient(r_shank_angles_150pt) * effective_Hz;
             l_thigh_velocity = gradient(l_thigh_angles_150pt) * effective_Hz;
             l_shank_velocity = gradient(l_shank_angles_150pt) * effective_Hz;
-            r_foot_velocity = gradient(r_foot_corrected) * effective_Hz;
-            l_foot_velocity = gradient(l_foot_corrected) * effective_Hz;
+            r_foot_velocity = gradient(r_foot_angle) * effective_Hz;
+            l_foot_velocity = gradient(l_foot_angle) * effective_Hz;
             
             % Assign segment angles and velocities based on which leg is ipsilateral
             if strcmp(leg_side, 'right')
-                stride_data.foot_sagittal_angle_ipsi_rad = r_foot_corrected;
-                stride_data.foot_sagittal_angle_contra_rad = l_foot_corrected;
+                stride_data.foot_sagittal_angle_ipsi_rad = r_foot_angle;
+                stride_data.foot_sagittal_angle_contra_rad = l_foot_angle;
                 stride_data.foot_sagittal_velocity_ipsi_rad_s = r_foot_velocity;
                 stride_data.foot_sagittal_velocity_contra_rad_s = l_foot_velocity;
                 stride_data.thigh_sagittal_angle_ipsi_rad = r_thigh_angles_150pt;
@@ -1160,8 +1147,8 @@ function stride_table = process_strides_single_leg(trial_data, ...
                 stride_data.shank_sagittal_velocity_ipsi_rad_s = r_shank_velocity;
                 stride_data.shank_sagittal_velocity_contra_rad_s = l_shank_velocity;
             else
-                stride_data.foot_sagittal_angle_ipsi_rad = l_foot_corrected;
-                stride_data.foot_sagittal_angle_contra_rad = r_foot_corrected;
+                stride_data.foot_sagittal_angle_ipsi_rad = l_foot_angle;
+                stride_data.foot_sagittal_angle_contra_rad = r_foot_angle;
                 stride_data.foot_sagittal_velocity_ipsi_rad_s = l_foot_velocity;
                 stride_data.foot_sagittal_velocity_contra_rad_s = r_foot_velocity;
                 stride_data.thigh_sagittal_angle_ipsi_rad = l_thigh_angles_150pt;
@@ -1707,61 +1694,6 @@ function [corrected_signal, flipped] = ensure_grf_orientation(signal_BW, vertica
             end
         end
     end
-end
-
-% Helper function to apply foot angle corrections (matching phase script)
-function corrected_angle = apply_foot_angle_correction(foot_angle_rad, contra)
-    % Constants
-    midstance_idx_1 = 95;  % 70% of 150-point cycle
-    midstance_idx_2 = 100;  % 73% of 150-point cycle
-    deg2rad_factor = pi/180;
-
-    if contra
-        midstance_idx_1 = mod(midstance_idx_1 + 150/2, 150);
-        midstance_idx_2 = mod(midstance_idx_2 + 150/2, 150);
-    end
-    
-    % Step 1: Apply iterative 90-degree offset correction to first point
-    first_point = foot_angle_rad(1);
-    
-    % Keep applying ±90 degree offsets until within range [-50, 50] degrees
-    while first_point > deg2rad_factor * 50  % Greater than 50 degrees
-        foot_angle_rad = foot_angle_rad - pi/2;
-        first_point = first_point - pi/2;
-    end
-    
-    while first_point < -deg2rad_factor * 50  % Less than -50 degrees
-        foot_angle_rad = foot_angle_rad + pi/2;
-        first_point = first_point + pi/2;
-    end
-    
-    % Step 2: Check 70% midstance point for sign flip
-    midstance_angle_1 = foot_angle_rad(midstance_idx_1);
-    midstance_angle_2 = foot_angle_rad(midstance_idx_2);
-    if midstance_angle_1 > 0  && midstance_angle_2 > 0 % Should be negative (plantarflexion at 70% cycle)
-        foot_angle_rad = -foot_angle_rad;
-    end
-    
-    corrected_angle = foot_angle_rad;
-end
-
-% Helper function for 90-degree correction only (for ankle in incline)
-function corrected = apply_90_degree_correction(angle_rad)
-    % Apply iterative 90-degree offsets until within [-50, 50] degrees
-    deg2rad_factor = pi/180;
-    first_point = angle_rad(1);
-    
-    while first_point > deg2rad_factor * 50
-        angle_rad = angle_rad - pi/2;
-        first_point = first_point - pi/2;
-    end
-    
-    while first_point < -deg2rad_factor * 50
-        angle_rad = angle_rad + pi/2;
-        first_point = first_point + pi/2;
-    end
-    
-    corrected = angle_rad;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

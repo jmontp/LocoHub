@@ -501,10 +501,7 @@ function trial_table = process_trial_time( ...
 
     right_ankle_flex = resample_signal(angles.RAnkleAngles(idx, sagittal_plane) * deg2rad_factor, source_time_s, time_s);
     left_ankle_flex = resample_signal(angles.LAnkleAngles(idx, sagittal_plane) * deg2rad_factor, source_time_s, time_s);
-    if strcmp(task, 'incline_walking')
-        right_ankle_flex = apply_90_degree_correction(right_ankle_flex);
-        left_ankle_flex = apply_90_degree_correction(left_ankle_flex);
-    end
+    % Preserve source ankle measurements; do not fit offsets to their values.
     right_ankle_add = resample_signal(angles.RAnkleAngles(idx, frontal_plane) * deg2rad_factor, source_time_s, time_s);
     left_ankle_add = resample_signal(angles.LAnkleAngles(idx, frontal_plane) * deg2rad_factor, source_time_s, time_s);
     right_ankle_rot = resample_signal(angles.RAnkleAngles(idx, transverse_plane) * deg2rad_factor, source_time_s, time_s);
@@ -950,7 +947,7 @@ function signal = get_optional_foot_angle(angles, field_name, idx, source_time_s
     signal = default_signal;
     if isfield(angles, field_name) && size(angles.(field_name), 2) >= 1
         signal = resample_signal(-angles.(field_name)(idx, 1) * deg2rad_factor, source_time_s, target_time_s);
-        signal = apply_90_degree_correction(signal);
+        % No waveform-dependent offset or sign correction.
     end
 end
 
@@ -983,24 +980,6 @@ function signal_out = resample_signal(signal_in, source_time_s, target_time_s)
 
     signal_out = interp1(source_time_s, signal_in, target_time_s, 'linear', 'extrap');
     signal_out = signal_out(:);
-end
-
-
-function corrected = apply_90_degree_correction(angle_rad)
-    deg2rad_factor = pi / 180;
-    first_point = angle_rad(1);
-
-    while first_point > deg2rad_factor * 50
-        angle_rad = angle_rad - pi / 2;
-        first_point = first_point - pi / 2;
-    end
-
-    while first_point < -deg2rad_factor * 50
-        angle_rad = angle_rad + pi / 2;
-        first_point = first_point + pi / 2;
-    end
-
-    corrected = angle_rad;
 end
 
 
