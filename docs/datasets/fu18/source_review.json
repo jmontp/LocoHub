@@ -63,8 +63,8 @@
       "GRF": "N/kg"
     },
     "source_event_evidence": "Overground pipeline sets 20 N force-platform threshold, uses Automatic_Gait_Events and exports RON+RON and LON+LON windows separately. Exact raw timestamps/foot association still require pilot.",
-    "processed_grid_evidence": "Author MATLAB plotting script constructs 101 points from 0 to 100; pipeline enables normalized export. Actual table layout and individual cycle versus ensemble semantics remain unverified.",
-    "bilateral_warning": "Leg-specific normalized windows must not be joined by row number or synthetic half-cycle offset."
+    "processed_grid_evidence": "Original paper page 5 identifies processed curves as participant/speed/environment ensemble averages. Acquired angle/kinetic tables each have 101 data rows; neither is an individual stride.",
+    "bilateral_warning": "Left and right normalized ensemble curves do not preserve simultaneous bilateral timing; do not fabricate a phase offset or a common cycle duration."
   },
   "evidence_files": [
     {
@@ -132,15 +132,15 @@
   "first_pilot_requirements": [
     {
       "step": 1,
-      "task": "Acquire only WBDSinfo.csv under 16 MiB bound and reconcile v6 participant IDs, filenames and speeds; no cohort count assumed from old MATLAB code."
+      "task": "Completed: v6 metadata reconciles 51 subjects and 7,203 unique filenames exactly with current raw/ASCII archive inventories."
     },
     {
       "step": 2,
-      "task": "Obtain one complete overground recording plus corresponding left/right processed exports and source events, each under 16 MiB total pilot budget. Archives exceed budget; use verified bounded archive-member retrieval only if supported, otherwise report acquisition blocked without full download."
+      "task": "Completed: bounded HTTP ranges acquired one raw recording from current/event archives plus matching raw text and condition-ensemble tables; whole archive hashes remain unverified."
     },
     {
       "step": 3,
-      "task": "Inspect actual headers and whether each column/window represents individual cycles or averages; retain ensemble type if no individual cycles."
+      "task": "Resolved as ensemble averages: preserve participant-condition observation type. Raw individual-cycle reconstruction requires separate event validation."
     },
     {
       "step": 4,
@@ -151,5 +151,25 @@
       "task": "Run one serial bounded pilot, independent source readback, observation 150-point/endpoints checks where cycles are justified, provenance and missingness tests. No active download link until immutable converted output exists."
     }
   ],
-  "resource_policy": "One serial pilot after coordinator scheduling;16 MiB acquisition ceiling; no data archive downloaded and no numerical job launched in source review."
+  "resource_policy": "About 2.34 MiB conservative cumulative acquisition, below 16 MiB ceiling. Raw files remain local; no numerical conversion or scientific sample parsing performed.",
+  "metadata_reconciliation": {
+    "rows": 7203,
+    "unique_filenames": 7203,
+    "subjects": 51,
+    "age_groups": {
+      "Young": 24,
+      "Older": 27
+    },
+    "sha256": "1bd39bd02dae423c415bc8a8092bde47ea3af7b1b30046984534a278197808e3",
+    "publisher_md5_verified": true
+  },
+  "processed_observation_type": "participant_condition_ensemble",
+  "bounded_pilot_acquisition": {
+    "status": "bounded_source_acquired_no_numeric_conversion",
+    "cumulative_upper_bound_bytes": 2341461,
+    "scientific_files_acquired": 6,
+    "numerical_samples_read": false,
+    "review_path": "source_evidence/bounded_acquisition_review.json",
+    "event_archive_gap_walking_recordings": 54
+  }
 }

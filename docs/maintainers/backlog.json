@@ -381,7 +381,8 @@
       "title": "Review source anatomical segment and force/COP definitions",
       "evidence_paths": [
         "contributor_tools/reconvert_mblue_normalized.py",
-        "docs/quality/audits/mblue-complete-source-readback.json"
+        "docs/quality/audits/mblue-complete-source-readback.json",
+        "docs/quality/audits/mblue-source-model-review.json"
       ],
       "group": "dataset",
       "acceptance": [
@@ -392,7 +393,8 @@
       "prerequisites": [],
       "lane": "parallel-safe",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Open; see prerequisites"
+      "status": "Source model reviewed; segment semantics correction in preparation",
+      "progress_note": "Scalar sums are planar estimates; source OpenSim model has multiple rotation axes. Preserve estimates explicitly, withhold unsupported canonical orientations, then pursue model-based orientation reconstruction. Force plate configuration known; per-block raw lineage and exclusions still open."
     },
     {
       "id": "GT23-01",
@@ -749,7 +751,7 @@
       "group": "new_datasets",
       "title": "Review and add new datasets one at a time",
       "owner": "Dataset discovery agent",
-      "status": "First candidate staged: Fukuchi 2018 Walking; metadata review in progress",
+      "status": "Fukuchi source inventory reconciled; bounded pilot acquired; conversion pending",
       "lane": "Paper and source review, then serial guarded pilot",
       "prerequisites": [],
       "acceptance": [
@@ -764,7 +766,7 @@
         "docs/datasets/fu18/source_review.json",
         "contributor_tools/conversion_scripts/Fukuchi_2018_Walking/candidate.json"
       ],
-      "progress_note": "Source v6 describes 51 participants versus 42 in the paper. Only small source documentation and code acquired; no numerical conversion started."
+      "progress_note": "51 subjects and 7,203 files reconciled. Processed tables are participant-condition ensembles, not strides. Six sample files acquired under 2.4 MiB; 54 walking recordings lack event-archive counterparts."
     }
   ]
 }

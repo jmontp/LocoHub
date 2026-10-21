@@ -29,9 +29,9 @@ def source_plan(inventory_path):
                        'source_md5': f['computed_md5'], 'url': f['download_url'],
                        'within_single_file_pilot_budget': 0 < f['size'] <= MAX_PILOT_DOWNLOAD_BYTES}
                       for f in files],
-            'blockers': ['51-person v6 metadata versus42-person paper; reconcile participant/recording inventory',
-                         'Actual table headers, per-cycle versus average semantics and leg-specific clocks uninspected',
-                         'Individual gait event/timing provenance required before150-point cycle export',
+            'blockers': ['Processed tables are participant-condition ensembles, not individual cycles',
+                         'Raw event correctness and timing still require a bounded source pilot',
+                         '54 walking recordings lack a counterpart in the separate event archive',
                          'Canonical source frames and moment signs require independent bounded source readback'],
             'download_performed': False, 'converted_observations': 0}
 
