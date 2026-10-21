@@ -635,7 +635,7 @@
       "id": "EXEC-01",
       "priority": "P0",
       "title": "Complete and inspect current MBLUE detour",
-      "status": "running",
+      "status": "Complete; four accepted summaries inspected and native controller resumed",
       "acceptance": [
         "All four preserved jobs have accepted terminal summaries and matching frozen hashes",
         "Inspect reconstructed source readback and exact preservation findings",
@@ -644,13 +644,17 @@
       "group": "coordination",
       "prerequisites": [],
       "lane": "coordination",
-      "owner": "single execution coordinator"
+      "owner": "single execution coordinator",
+      "evidence_paths": [
+        "docs/quality/audits/mblue-complete-scope.json",
+        "converted_datasets/reconversion_v2/mblue_priority_handoff_20261021/status.json"
+      ]
     },
     {
       "id": "EXEC-02",
       "priority": "P0",
       "title": "Keep one bounded reconstruction worker progressing",
-      "status": "queued behind EXEC-01",
+      "status": "Active; native conversion waits for Windows headroom, bounded detours run sequentially",
       "acceptance": [
         "Each serial job finishes or yields explicit accounted-for source failures",
         "Monitor Windows as well as WSL memory and disk headroom",
