@@ -1,11 +1,11 @@
 {
-  "started_at": "2026-10-20T23:09:13.916117-04:00",
-  "recorded_at": "2026-10-21T03:09:46.006459+00:00",
-  "base_revision": "4d0c64dbed186dbe92412b714ebe7b5ad3d0edc1",
+  "started_at": "2026-10-20T23:13:14.942212-04:00",
+  "recorded_at": "2026-10-21T03:13:45.605479+00:00",
+  "base_revision": "54f5d540fd27046d31a5d8d88b9a3dbd675fcb99",
   "working_tree_changes": true,
   "scope": "Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.",
   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n19 ionice -c3 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml",
-  "junit_sha256": "0bd909dae287d75f451088a0639fbe4e81097406971d32c75dac983cafde0c00",
+  "junit_sha256": "d61d828a98636993b4060214a72deb2e7691bd662b69fa801c6c74a315fb5f64",
   "groups": {
     "tests.test_aggregate_previews": {
       "passed": 11,
@@ -578,6 +578,25 @@
         }
       ]
     },
+    "tests.test_gt21_memory_wait": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_only_proven_prelaunch_refusal_can_retry",
+          "status": "passed"
+        },
+        {
+          "name": "test_partial_output_and_other_errors_never_retry",
+          "status": "passed"
+        },
+        {
+          "name": "test_native_workspace_means_launch_may_have_started",
+          "status": "passed"
+        }
+      ]
+    },
     "tests.test_gt21_native_batch": {
       "passed": 5,
       "failed": 0,
@@ -654,6 +673,33 @@
         },
         {
           "name": "test_zero_and_infinity_are_not_missing_torques",
+          "status": "passed"
+        }
+      ]
+    },
+    "tests.test_gt24_missing_torque_outputs": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        {
+          "name": "test_invalid_right_side_follows_reference_leg",
+          "status": "passed"
+        },
+        {
+          "name": "test_plausible_values_and_infinity_are_rejected[0]",
+          "status": "passed"
+        },
+        {
+          "name": "test_plausible_values_and_infinity_are_rejected[1]",
+          "status": "passed"
+        },
+        {
+          "name": "test_plausible_values_and_infinity_are_rejected[inf]",
+          "status": "passed"
+        },
+        {
+          "name": "test_missing_columns_and_unknown_sides_do_not_pass",
           "status": "passed"
         }
       ]
@@ -1295,7 +1341,7 @@
     }
   },
   "totals": {
-    "passed": 259,
+    "passed": 267,
     "failed": 0,
     "skipped": 2
   }
