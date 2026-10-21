@@ -26,7 +26,7 @@
     "gt25": "Seven BT01 recordings regenerated: 152 observations / 22,800 rows, source-matched for checked channels. All-subject/task coverage, ankle sign, segment angles, COP frames, event validity and exclusion accounting remain open.",
     "mblue": "Assumed duration/pelvis and index-based opposite-leg pairing removed. 102-observation real walking pilot verifies 45,228 temporal-overlap angle values. Stable identities, full regeneration, bilateral task timing, force/COP mappings and exclusions remain open.",
     "gt21": "Native single-recording pilot verified. Resumable guarded batch inventories 2,301 recordings across 16 local subjects and is scheduled after GT24 completes. Full source-subject coverage, all-recording regeneration, force/COP semantics and exclusions remain open.",
-    "gait120": "Removed invented metadata and unsupported leg swaps/half-cycle rotation. Source protocol specifies right-foot cycles. Fourteen recordings across all seven tasks (S001/S011) regenerated and all bilateral sagittal angles source-matched; source anthropometry checked. Full rebuild, independent event/contact verification, model sign/force/COP and inverse-dynamics anomalies remain open.",
+    "gait120": "Removed invented metadata and unsupported leg swaps/half-cycle rotation. Source protocol specifies right-foot cycles. Fourteen recordings across all seven tasks (S001/S011) regenerated and all bilateral sagittal angles source-matched; source anthropometry checked. Full rebuild, independent event/contact verification, model sign/force/COP and inverse-dynamics anomalies remain open. Force/COP timing-based leg guesses removed; all available raw plate force/COP/torque axes preserved on the IK clock (36 source-channel comparisons exact across three force-bearing pilot recordings). Anatomical GRF/COP remains missing until mapping is verified.",
     "strokepig": "Source C3D foot strikes, inclusive endpoints, actual-time interpolation and one-frame C3D/IK clock correction verified on TVC03/BWA6 (3 observations, 450 rows). Full reconstruction, clinical side, force/COP, model conventions and empty-recording exclusion accounting remain open."
   },
   "findings": [
@@ -435,6 +435,19 @@
       "status": "inventory_based_batch_implemented_regeneration_and_source_coverage_pending",
       "required_followup": "Process every locally available subject/date, reconcile inventory with original publication/source archive, and account explicitly for unavailable source subjects.",
       "evidence": "converted_datasets/reconversion_v2/gt21_native_batch_20261020/inventory.json"
+    },
+    {
+      "id": "gait120-force-mapping",
+      "finding": "Gait120 force plate assignment and COP coordinates were inferred inconsistently",
+      "scope": "converter_and_artifact",
+      "affected_paths": [
+        "contributor_tools/conversion_scripts/Gait120/convert_gait120_to_parquet.py",
+        "converted_datasets/gait120_phase.parquet",
+        "converted_datasets/gait120_opensim_phase.parquet"
+      ],
+      "status": "unsafe_mapping_removed_source_channels_preserved_mapping_pending",
+      "required_followup": "Establish original force/TRC frames and plate-to-anatomical-side assignment from source evidence, including transfers and direction changes, before restoring canonical force/COP. Verify ID using the actual source model and external loads. Full regeneration and lineage reconciliation remain required.",
+      "evidence": "converted_datasets/reconversion_v2/gait120_force_pilot_20261020/source_comparison.json"
     }
   ]
 }

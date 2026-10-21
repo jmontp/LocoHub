@@ -497,6 +497,20 @@ def test_gait120_missing_samples_are_not_interpolated_away(gait120):
     assert np.isnan(result[3:6]).all()
 
 
+def test_gait120_force_plates_preserve_axes_clock_and_missing_values(gait120):
+    source=pd.DataFrame({'time':[2.,2.2,3.], 'ground_force1_vx':[10.,20.,40.],
+                         'ground_force2_vy':[100.,np.nan,300.],
+                         'ground_force1_pz':[.1,.2,.4], 'ground_torque1_y':[1.,2.,4.]})
+    result=gait120.resample_source_force_plates(source,np.array([1.9,2.,2.1,2.2,3.,3.1]))
+    np.testing.assert_allclose(result['source_plate1_force_x_N'],[np.nan,10.,15.,20.,40.,np.nan],equal_nan=True)
+    np.testing.assert_allclose(result['source_plate1_cop_z_m'],[np.nan,.1,.15,.2,.4,np.nan],equal_nan=True)
+    assert np.isnan(result['source_plate2_force_y_N'][2:4]).all()
+    assert 'source_plate2_force_x_N' not in result
+    source.time=[2.,2.,3.]
+    with pytest.raises(ValueError,match='strictly increasing'):
+        gait120.resample_source_force_plates(source,np.array([2.,3.]))
+
+
 
 def test_stroke_annotated_strikes_override_peak_heuristic(stroke,monkeypatch):
     source=pd.DataFrame({'time':np.arange(601)/100})

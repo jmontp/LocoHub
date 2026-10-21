@@ -22,7 +22,7 @@ from contributor_tools.conversion_scripts.Gait120 import convert_gait120_to_parq
 from contributor_tools.common.data_contract import inspect_contract
 
 SOURCE = Path('/mnt/s/locomotion_data/Gait120')
-OUTPUT = ROOT / 'converted_datasets/reconversion_v2/gait120_source_pilot_20261020'
+OUTPUT = ROOT / 'converted_datasets/reconversion_v2/gait120_force_pilot_20261020'
 
 
 def digest(path):
@@ -70,13 +70,31 @@ def main():
             destination.parent.mkdir(parents=True, exist_ok=True)
             frame.to_parquet(destination, index=False)
             pd.testing.assert_frame_equal(frame.reset_index(drop=True), pd.read_parquet(destination))
-            sources = [source, converter.get_grf_mot_path(source), converter.get_trc_path(source)]
+            force_path = converter.get_grf_mot_path(source)
+            force_errors = {}
+            if force_path is not None:
+                forces = pd.read_csv(io.StringIO(force_path.read_text().split('endheader', 1)[1].strip()), sep=r'\s+')
+                for plate in (1, 2):
+                    for axis in 'xyz':
+                        for source_col, out_col in [
+                            (f'ground_force{plate}_v{axis}', f'source_plate{plate}_force_{axis}_N'),
+                            (f'ground_force{plate}_p{axis}', f'source_plate{plate}_cop_{axis}_m'),
+                            (f'ground_torque{plate}_{axis}', f'source_plate{plate}_torque_{axis}_Nm'),
+                        ]:
+                            if source_col not in forces:
+                                assert out_col not in frame
+                                continue
+                            expected = np.interp(target, forces.time, forces[source_col], left=np.nan, right=np.nan)
+                            np.testing.assert_allclose(frame[out_col], expected, atol=1e-10, rtol=1e-10, equal_nan=True)
+                            force_errors[out_col] = float(np.nanmax(abs(frame[out_col]-expected)))
+            assert frame.filter(regex='^(grf_|cop_)').isna().all().all()
+            sources = [source, force_path, converter.get_trc_path(source)]
             for path in sources:
                 if path is not None:
                     source_hashes[str(path)] = digest(path)
             results.append({'source': str(source), 'output': str(destination.relative_to(OUTPUT)),
                             'output_sha256': digest(destination), 'rows': len(frame),
-                            'max_angle_errors_rad': errors, 'status': 'converted_unreviewed'})
+                            'max_angle_errors_rad': errors, 'max_plate_channel_errors': force_errors, 'status': 'converted_unreviewed'})
     spreadsheet = SOURCE / 'Anthropometric_Data_Participants.xlsx'
     if not spreadsheet.exists():
         spreadsheet = ROOT / 'contributor_tools/conversion_scripts/Gait120/Anthropometric_Data_Participants.xlsx'

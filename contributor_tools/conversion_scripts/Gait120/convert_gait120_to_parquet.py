@@ -67,10 +67,6 @@ from common.derivatives import (
     compute_velocity_from_shifted_angle,
     compute_acceleration_from_velocity,
 )
-from common.force_plate import (
-    ForcePlateConfig,
-    process_force_plate_data,
-)
 from common.opensim_inverse_dynamics import (
     OPENSIM_AVAILABLE,
     InverseDynamicsConfig,
@@ -239,6 +235,31 @@ def interpolate_to_phase(data, num_points=NUM_POINTS, source_time=None):
 
 # NOTE: compute_velocity_from_shifted_angle and compute_acceleration_from_velocity
 # are now imported from common.derivatives to handle discontinuities from phase shifts
+
+
+def resample_source_force_plates(frame, target_time):
+    """Retain measured plate axes on the IK clock without anatomical guesses."""
+    if frame is None:
+        return {}
+    if 'time' not in frame:
+        raise ValueError('Force plate data require original timestamps')
+    clock = frame.time.to_numpy(dtype=float)
+    if len(clock) < 2 or not np.isfinite(clock).all() or not (np.diff(clock) > 0).all():
+        raise ValueError('Force plate timestamps must be finite and strictly increasing')
+    result = {}
+    for plate in (1, 2):
+        for axis in 'xyz':
+            for source, output in [
+                (f'ground_force{plate}_v{axis}', f'source_plate{plate}_force_{axis}_N'),
+                (f'ground_force{plate}_p{axis}', f'source_plate{plate}_cop_{axis}_m'),
+                (f'ground_torque{plate}_{axis}', f'source_plate{plate}_torque_{axis}_Nm'),
+            ]:
+                if source not in frame:
+                    continue
+                values = frame[source].to_numpy(dtype=float)
+                result[output] = np.interp(target_time, clock,
+                    np.where(np.isfinite(values), values, np.nan), left=np.nan, right=np.nan)
+    return result
 
 
 def get_grf_mot_path(kinematics_mot_path: Path) -> Optional[Path]:
@@ -878,92 +899,22 @@ def process_step_file(
     ankle_acc_ipsi = derived['ankle_acc_ipsi']
     ankle_acc_contra = derived['ankle_acc_contra']
 
-    # Load GRF/COP data if available
-    # COP in Gait120 is in lab coordinates, so we need to subtract ankle position
-    # to get ankle-relative (foot-relative) COP
-    grf_data = None
-    grf_df = None
+    # Plate identity is measured; anatomical assignment and frame transforms are
+    # not established by early/late loading, especially for bilateral transfers.
     grf_mot_path = get_grf_mot_path(mot_path)
-    if grf_mot_path is not None:
-        grf_df = load_mot_file(grf_mot_path)
-        if grf_df is not None and len(grf_df) > 10:
-            grf_data = process_force_plate_data(grf_df, num_points=NUM_POINTS)
-
-    # Initialize GRF/COP arrays (NaN if not available)
-    if grf_data is not None:
-        grf_vertical_ipsi = grf_data.grf_vertical_ipsi_N
-        grf_vertical_contra = grf_data.grf_vertical_contra_N
-        grf_anterior_ipsi = grf_data.grf_anterior_ipsi_N
-        grf_anterior_contra = grf_data.grf_anterior_contra_N
-        grf_lateral_ipsi = grf_data.grf_lateral_ipsi_N
-        grf_lateral_contra = grf_data.grf_lateral_contra_N
-
-        # Get lab-frame COP
-        cop_anterior_ipsi_lab = grf_data.cop_anterior_ipsi_m
-        cop_lateral_ipsi_lab = grf_data.cop_lateral_ipsi_m
-        cop_anterior_contra_lab = grf_data.cop_anterior_contra_m
-        cop_lateral_contra_lab = grf_data.cop_lateral_contra_m
-
-        # Transform COP from lab frame to ankle-relative frame
-        trc_path = get_trc_path(mot_path)
-        if trc_path is not None:
-            trc_df = load_trc_file(trc_path)
-            if trc_df is not None and grf_df is not None:
-                # Get ankle marker positions (resampled to phase)
-                # Coordinate mapping: TRC Z = anterior, TRC X = lateral
-                ankle_ant_ipsi, ankle_lat_ipsi, ankle_ant_contra, ankle_lat_contra = \
-                    get_ankle_positions(trc_df, grf_df, source_ipsi, NUM_POINTS)
-
-                # Subtract ankle position to get ankle-relative COP
-                # Only transform during stance (when GRF > threshold), set NaN during swing
-                grf_threshold = 20.0  # N
-                ipsi_stance = grf_vertical_ipsi > grf_threshold
-                contra_stance = grf_vertical_contra > grf_threshold
-
-                cop_anterior_ipsi = np.where(
-                    ipsi_stance,
-                    cop_anterior_ipsi_lab - ankle_ant_ipsi,
-                    np.nan
-                )
-                cop_lateral_ipsi = np.where(
-                    ipsi_stance,
-                    cop_lateral_ipsi_lab - ankle_lat_ipsi,
-                    np.nan
-                )
-                cop_anterior_contra = np.where(
-                    contra_stance,
-                    cop_anterior_contra_lab - ankle_ant_contra,
-                    np.nan
-                )
-                cop_lateral_contra = np.where(
-                    contra_stance,
-                    cop_lateral_contra_lab - ankle_lat_contra,
-                    np.nan
-                )
-            else:
-                # TRC not available - keep lab frame COP
-                cop_anterior_ipsi = cop_anterior_ipsi_lab
-                cop_lateral_ipsi = cop_lateral_ipsi_lab
-                cop_anterior_contra = cop_anterior_contra_lab
-                cop_lateral_contra = cop_lateral_contra_lab
-        else:
-            # TRC not available - keep lab frame COP
-            cop_anterior_ipsi = cop_anterior_ipsi_lab
-            cop_lateral_ipsi = cop_lateral_ipsi_lab
-            cop_anterior_contra = cop_anterior_contra_lab
-            cop_lateral_contra = cop_lateral_contra_lab
-    else:
-        # No GRF data available - fill with NaN
-        grf_vertical_ipsi = np.full(NUM_POINTS, np.nan)
-        grf_vertical_contra = np.full(NUM_POINTS, np.nan)
-        grf_anterior_ipsi = np.full(NUM_POINTS, np.nan)
-        grf_anterior_contra = np.full(NUM_POINTS, np.nan)
-        grf_lateral_ipsi = np.full(NUM_POINTS, np.nan)
-        grf_lateral_contra = np.full(NUM_POINTS, np.nan)
-        cop_anterior_ipsi = np.full(NUM_POINTS, np.nan)
-        cop_lateral_ipsi = np.full(NUM_POINTS, np.nan)
-        cop_anterior_contra = np.full(NUM_POINTS, np.nan)
-        cop_lateral_contra = np.full(NUM_POINTS, np.nan)
+    grf_df = load_mot_file(grf_mot_path) if grf_mot_path is not None else None
+    source_force_channels = resample_source_force_plates(
+        grf_df, np.linspace(df.time.iloc[0], df.time.iloc[-1], NUM_POINTS))
+    grf_vertical_ipsi = np.full(NUM_POINTS, np.nan)
+    grf_vertical_contra = np.full(NUM_POINTS, np.nan)
+    grf_anterior_ipsi = np.full(NUM_POINTS, np.nan)
+    grf_anterior_contra = np.full(NUM_POINTS, np.nan)
+    grf_lateral_ipsi = np.full(NUM_POINTS, np.nan)
+    grf_lateral_contra = np.full(NUM_POINTS, np.nan)
+    cop_anterior_ipsi = np.full(NUM_POINTS, np.nan)
+    cop_lateral_ipsi = np.full(NUM_POINTS, np.nan)
+    cop_anterior_contra = np.full(NUM_POINTS, np.nan)
+    cop_lateral_contra = np.full(NUM_POINTS, np.nan)
 
     # Compute inverse dynamics if OpenSim is available and GRF data exists
     hip_moment_ipsi = np.full(NUM_POINTS, np.nan)
@@ -1143,6 +1094,9 @@ def process_step_file(
         'leg': source_ipsi, 'exo_state': 'no_exo', 'kinematics_source': kinematics_source,
         'phase_boundary_method': 'source_pelvis_shoulder_transfer_boundaries' if is_bilateral else 'source_right_heel_strike_boundaries',
         'phase_boundary_evidence': 'doi:10.1038/s41597-025-05391-0',
+        'force_mapping_status': 'unverified_plate_to_anatomical_mapping' if grf_df is not None else 'source_force_file_unavailable',
+        'source_force_axes': 'original_MOT_axes',
+        'source_cop_frame': 'original_MOT_plate_positions_not_ankle_relative',
     }, sort_keys=True)
 
     # Build subject metadata
@@ -1167,6 +1121,7 @@ def process_step_file(
         'source_end_sample': len(df) - 1,
         'source_start_time_s': float(df.time.iloc[0]),
         'source_end_time_s': float(df.time.iloc[-1]),
+        **source_force_channels,
         'phase_ipsi': phase,
         'phase_ipsi_dot': phase_dot,
 

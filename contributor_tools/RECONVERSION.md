@@ -522,3 +522,31 @@ signs. Full Gait120 reconstruction, force/COP frames and historical inverse-dyna
 anomalies remain open. The paper also states that force data for S001–S010 are
 unavailable because acquisition coordinate frames were not correctly aligned;
 missing force values for these participants must remain missing.
+
+
+### Gait120 force plate preservation pending anatomical mapping
+
+The old force helper assigned early/late loading to legs using an assumed gait
+pattern, including for bilateral transfers. It also mapped force X/Z and COP X/Z
+to conflicting anatomical axes, and could publish lab-frame COP as ankle-relative
+when markers were missing. The Gait120 adapter no longer uses those guesses.
+
+Available original plate force, COP and torque channels are retained under
+`source_plate*_force_*_N`, `source_plate*_cop_*_m` and `source_plate*_torque_*_Nm`.
+They retain original MOT axes and are interpolated onto actual IK timestamps;
+missing samples and timestamps outside force coverage remain missing. Canonical
+anatomical GRF/COP fields remain missing with an explicit reason in task metadata
+until plate-to-side and coordinate transforms are verified. This is an unresolved
+mapping, not a claim that the source measurements are unavailable or invalid.
+
+`gait120_force_pilot_20261020` regenerated the same 14-recording/2,100-row pilot.
+All bilateral sagittal angles still match. Walking supplies two plates while the
+two transfer trials supply only one: all 36 available force/COP/torque channels
+match independent source interpolation exactly. Source, code, output and actual
+anthropometric spreadsheet hashes are retained. The initial probe incorrectly
+assumed both plates existed in transfers; its partial outputs and failure record
+are preserved in `gait120_force_pilot_20261020_incomplete_probe`. The corrected
+probe explicitly checks that absent channels remain absent.
+
+Full reconstruction and anatomical force/COP validation remain open. Experimental
+OpenSim/ID paths are not verified by this default precomputed-angle pilot.
