@@ -1,5 +1,5 @@
 {
-  "updated_at_utc": "2026-10-21T04:41:12.799528+00:00",
+  "updated_at_utc": "2026-10-21 05:01 UTC",
   "snapshot_notice": "Manually refreshed evidence snapshot, not a live monitor. No dataset has final scientific approval.",
   "organization": {
     "coordinator": "Execution, integration, memory guards and evidence reconciliation",
@@ -22,8 +22,8 @@
   "datasets": [
     {
       "dataset": "MBLUE",
-      "state": "Source, preservation and stair selection passed",
-      "remaining": "15,061 observations retained across 335 blocks. Planar labeling, physical orientation and scientific/model review remain."
+      "state": "Full planar-label correction running",
+      "remaining": "15,061 observations across 335 blocks targeted; 3D orientation reconstruction and scientific review remain open."
     },
     {
       "dataset": "GT21",
@@ -37,8 +37,8 @@
     },
     {
       "dataset": "GT24",
-      "state": "Pilots verified; full builds queued",
-      "remaining": "40-observation ankle correction pilot passed; full phase correction queued. Time exporter defects and869 omitted recordings remain."
+      "state": "Phase and continuous pilots checked; full scope pending",
+      "remaining": "40 phase observations and 8,002 continuous rows checked. Full phase correction queued; native transition coverage and full continuous conversion remain."
     },
     {
       "dataset": "GT23",
@@ -47,8 +47,8 @@
     },
     {
       "dataset": "GT25",
-      "state": "Pilot verified; full build queued",
-      "remaining": "Coverage proposal leaves192 excluded records and34 oversized sit-to-stand records. Guarded pilots and bounded conversion integration remain."
+      "state": "First oversized transfer converted; source audit pending",
+      "remaining": "BT07 produced 28 transfers / 4,200 rows at 166 MiB peak RSS. Independent event/value audit, all 34 oversized recordings and remaining coverage gaps are still open."
     },
     {
       "dataset": "Gait120",
@@ -317,8 +317,8 @@
       "prerequisites": [],
       "lane": "parallel source/document review",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "40-observation converter pilot passed; full phase correction queued; time exporter correction in development",
-      "progress_note": "Both dataset phases checked with exact source clocks and values; 254 interior derivative samples per leg and finite power products verified. BT01 right torque/power missingness retained and unassessed."
+      "status": "40-observation phase and 8,002-row continuous pilots passed; full scope pending",
+      "progress_note": "Continuous v2 audit verified 141 input bindings, four output hashes and exact unrelated-field preservation under 768 MiB. Complete archives contain transition samples beyond Parsed folders; full-scope conversion must account for them."
     },
     {
       "id": "GT24-02",
@@ -415,8 +415,8 @@
       "prerequisites": [],
       "lane": "parallel-safe",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Planar preservation correction implemented and queued; physical orientation review remains open",
-      "progress_note": "15 synthetic tests passed, including persisted Parquet metadata/null-mask preservation and cross-shard duplicate rejection. Fresh output job waits behind terrain pilots and requires successful complete MBLUE scope evidence. This does not reconstruct physical orientations."
+      "status": "Full planar-label correction running; physical orientation review open",
+      "progress_note": "Distinct early full run preserves all planar estimates and unrelated values, with unsupported canonical orientations explicitly missing. Target: 335 blocks / 15,061 observations. Native FileInfo decoder is implemented and tested, awaiting 3 GiB host startup headroom."
     },
     {
       "id": "GT23-01",
@@ -481,8 +481,8 @@
       "prerequisites": [],
       "lane": "parallel-safe",
       "owner": "GT25 coverage agent",
-      "status": "Three guarded pilots queued after existing conversions",
-      "progress_note": "Coverage correction leaves34 mapped oversized sit-to-stand recordings. Bounded projected source reader implemented and8 synthetic tests passed; exact streaming transfer segmentation/output integration remains in development."
+      "status": "First oversized source converted; independent audit pending",
+      "progress_note": "Streaming BT07 pilot converted 28 transfers / 4,200 rows with 170,112 KiB peak RSS. Eleven raw-source hashes and 65 code bindings verified; independent event/value audit and all remaining oversized sources are still required."
     },
     {
       "id": "GT25-02",
@@ -778,7 +778,7 @@
       "group": "new_datasets",
       "title": "Review and add new datasets one at a time",
       "owner": "Dataset discovery agent",
-      "status": "Fukuchi ensemble pilot implemented, tested and queued",
+      "status": "Fukuchi first pilot checked; full 508-pair conversion prepared",
       "lane": "Paper and source review, then serial guarded pilot",
       "prerequisites": [],
       "acceptance": [
@@ -793,7 +793,7 @@
         "docs/datasets/fu18/source_review.json",
         "contributor_tools/conversion_scripts/Fukuchi_2018_Walking/candidate.json"
       ],
-      "progress_note": "23 source/identity fixtures and 8 execution-guard fixtures pass. Pilot waits behind existing corrections; no converted observations yet. Participant-condition averages remain separate from individual cycles."
+      "progress_note": "One-participant/two-leg pilot and browser preview passed. Full inventory: 508 condition pairs / 51 participants. Version 2 sequential runner verifies prior completion receipts on resume. Full run has not started; left anatomical values remain source-only."
     }
   ]
 }
