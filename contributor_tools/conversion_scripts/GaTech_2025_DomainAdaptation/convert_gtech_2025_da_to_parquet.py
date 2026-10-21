@@ -20,6 +20,7 @@ Output: Phase-normalized parquet file with 150 points per gait cycle.
 """
 
 import os
+import json
 import re
 import sys
 import numpy as np
@@ -52,8 +53,8 @@ MAX_STRIDE_SAMPLES = 600  # Maximum samples for valid stride (~3s at 200Hz)
 SAMPLING_RATE = 200  # Hz
 
 # Stride filtering parameters
-SKIP_FIRST_STRIDES = 2  # Transition strides to skip at trial start
-SKIP_LAST_STRIDES = 1   # Transition strides to skip at trial end
+SKIP_FIRST_STRIDES = 0  # Source Parsed files already have transition data removed.
+SKIP_LAST_STRIDES = 0   # Keep every complete detected cycle, including short stair trials.
 IQR_MULTIPLIER = 1.5    # IQR multiplier for stride duration outlier detection
 
 # Task mapping: source task name patterns -> (standard_task, task_id_template, metadata)
@@ -70,9 +71,9 @@ TASK_MAPPING = {
     r'stairs.*_down': ('stair_descent', 'stair_descent', {'incline_deg': 0.0}),
 
     # Backward walking
-    r'walk_backward.*_0-6': ('backward_walking', 'backward_0.6ms', {'incline_deg': 0.0}),
-    r'walk_backward.*_0-8': ('backward_walking', 'backward_0.8ms', {'incline_deg': 0.0}),
-    r'walk_backward.*_1-0': ('backward_walking', 'backward_1.0ms', {'incline_deg': 0.0}),
+    r'walk_backward.*_0-6': ('walk_backward', 'backward_0.6ms', {'incline_deg': 0.0}),
+    r'walk_backward.*_0-8': ('walk_backward', 'backward_0.8ms', {'incline_deg': 0.0}),
+    r'walk_backward.*_1-0': ('walk_backward', 'backward_1.0ms', {'incline_deg': 0.0}),
 
     # Sit-to-stand
     r'sit_to_stand': ('sit_to_stand', 'sit_to_stand', {'incline_deg': 0.0}),
@@ -348,7 +349,8 @@ def process_stride(
     segment_angle_offset_ipsi: float = 0.0,
     segment_angle_offset_contra: float = 0.0,
     use_accel_init: bool = False,
-    skip_segment_angles: bool = False
+    skip_segment_angles: bool = False,
+    source_recording_id: Optional[str] = None
 ) -> Optional[pd.DataFrame]:
     """
     Process a single stride from heel strike to heel strike.
@@ -356,8 +358,12 @@ def process_stride(
     Returns:
         DataFrame with 150 rows (one per phase point) or None if invalid
     """
+    if not source_recording_id:
+        raise ValueError('source_recording_id is required; supply the actual source recording')
+    if leg_side not in {'l', 'r'}:
+        raise ValueError('Reference leg must be l or r')
     stride_len = end_idx - start_idx
-    if stride_len < MIN_STRIDE_SAMPLES or stride_len > MAX_STRIDE_SAMPLES:
+    if task not in {'sit_to_stand','stand_to_sit'} and (stride_len < MIN_STRIDE_SAMPLES or stride_len > MAX_STRIDE_SAMPLES):
         return None
 
     time_data = data['angle_filt']['time'].values
@@ -569,20 +575,17 @@ def process_stride(
         grf_df[f'fp_{contra}_force_y'].values[start_idx:end_idx + 1] / body_weight_N
     )
 
-    # Anterior GRF (negate z: +z = braking -> we want +z = propulsion)
-    grf_ant_ipsi_raw = -grf_df[f'fp_{ipsi}_force_z'].values[start_idx:end_idx + 1] / body_weight_N
-    grf_ant_contra_raw = -grf_df[f'fp_{contra}_force_z'].values[start_idx:end_idx + 1] / body_weight_N
-
-    # Preserve the declared source-axis transform; never choose signs from waveform shape.
-    grf_ant_ipsi = resample(grf_ant_ipsi_raw)
-    grf_ant_contra = resample(grf_ant_contra_raw)
-
-    # Lateral GRF: retain signed source x-axis values. Anatomical mapping needs source review.
-    grf_lat_ipsi_raw = grf_df[f'fp_{ipsi}_force_x'].values[start_idx:end_idx + 1] / body_weight_N
-    grf_lat_contra_raw = grf_df[f'fp_{contra}_force_x'].values[start_idx:end_idx + 1] / body_weight_N
-
-    grf_lat_ipsi = resample(grf_lat_ipsi_raw)
-    grf_lat_contra = resample(grf_lat_contra_raw)
+    # Global horizontal axes are available, but a trial-specific anatomical
+    # transform is not established by the source README. Preserve source data.
+    source_grf = {}
+    for role, leg in [('ipsi', ipsi), ('contra', contra)]:
+        for axis in ['x', 'z']:
+            source_grf[f'source_grf_global_{axis}_{role}_N'] = resample(
+                grf_df[f'fp_{leg}_force_{axis}'].values[start_idx:end_idx + 1])
+    grf_ant_ipsi = np.full(NUM_POINTS, np.nan)
+    grf_ant_contra = np.full(NUM_POINTS, np.nan)
+    grf_lat_ipsi = np.full(NUM_POINTS, np.nan)
+    grf_lat_contra = np.full(NUM_POINTS, np.nan)
 
     # COP from insole_sim (foot-relative coordinates)
     insole_df = data['insole_sim']
@@ -593,19 +596,22 @@ def process_stride(
     cop_vert_ipsi = np.full(NUM_POINTS, np.nan)
     cop_vert_contra = np.full(NUM_POINTS, np.nan)
 
-    # Build task_info string
-    info_parts = [f"leg:{leg_side}"]
-    info_parts.append("exo_state:powered")
-    info_parts.append("exo_joints:hip_knee")
-    info_parts.append(f"model:{model_variant}")
-
-    for k, v in task_info.items():
-        if v is not None:
-            info_parts.append(f"{k}:{v}")
-    task_info_str = ",".join(info_parts)
-
-    # Subject metadata
-    subject_metadata = f"weight_kg:{subject_mass:.1f}"
+    reference_side = {'l': 'left', 'r': 'right'}[leg_side]
+    observation_id = f'{source_recording_id}:samples:{start_idx}:{end_idx}:{reference_side}'
+    info = {key: value for key, value in task_info.items() if value is not None}
+    info.update(model=model_variant, leg=leg_side, exo_state='powered', exo_joints='hip_knee',
+                source_grf_frame='OpenSim_global_y_vertical',
+                horizontal_grf_alignment='unresolved_trial_forward_and_anatomical_lateral_axes',
+                cop_frame='OpenSim_calcn_foot_frame', cop_vertical_status='unavailable_in_source',
+                moment_semantics='source_filtered_total_joint_moment_Nm_per_source_model_kg',
+                biological_moment_semantics='source_total_minus_exo_interaction_when_available',
+                segment_angle_method='virtual_IMU_integration_with_converter_initialization')
+    info['phase_boundary_method'] = ('inferred_transfer_from_grf_and_joint_velocity'
+                                     if task in ('sit_to_stand','stand_to_sit')
+                                     else 'vertical_force_upward_20N_crossing')
+    task_info_str = json.dumps(info, sort_keys=True, allow_nan=False)
+    subject_metadata = json.dumps({'weight_kg': subject_mass if np.isfinite(subject_mass) else None,
+                                   'weight_basis': 'source_model_including_worn_exo'}, sort_keys=True)
 
     # Create output DataFrame
     stride_df = pd.DataFrame({
@@ -614,7 +620,16 @@ def process_stride(
         'task': task,
         'task_id': task_id,
         'task_info': task_info_str,
-        'step': f"{step_num:03d}",
+        'step': observation_id,
+        'source_recording_id': source_recording_id,
+        'observation_id': observation_id,
+        'reference_side': reference_side,
+        'observation_type': 'transfer' if task in ('sit_to_stand', 'stand_to_sit') else 'individual_cycle',
+        'source_start_sample': start_idx,
+        'source_end_sample': end_idx,
+        'source_start_time_s': float(source_time[0]),
+        'source_end_time_s': float(source_time[-1]),
+        'time_s': np.linspace(0, stride_duration_s, NUM_POINTS),
         'phase_ipsi': phase,
         'phase_ipsi_dot': phase_dot,
 
@@ -702,6 +717,8 @@ def process_stride(
         'foot_sagittal_velocity_contra_rad_s': foot_seg_vel_contra,
     })
 
+    for name, values in source_grf.items():
+        stride_df[name] = values
     return stride_df
 
 
@@ -815,6 +832,7 @@ def process_trial(
         List of stride DataFrames
     """
     folder_name = trial_path.name
+    source_recording_id = f"gt25:Parsed/{subject_id}/{folder_name}"
 
     task, task_id, task_info = map_task_name(folder_name)
 
@@ -872,7 +890,8 @@ def process_trial(
                 model_variant=model_variant,
                 imu_df=imu_df,
                 imu_dt=imu_dt,
-                use_accel_init=True
+                use_accel_init=True,
+                source_recording_id=source_recording_id
             )
             if stride_df is not None:
                 strides.append(stride_df)
@@ -918,7 +937,8 @@ def process_trial(
                     imu_df=imu_df,
                     imu_dt=imu_dt,
                     segment_angle_offset_ipsi=offset_ipsi,
-                    segment_angle_offset_contra=offset_contra
+                    segment_angle_offset_contra=offset_contra,
+                    source_recording_id=source_recording_id
                 )
                 if stride_df is not None:
                     strides.append(stride_df)

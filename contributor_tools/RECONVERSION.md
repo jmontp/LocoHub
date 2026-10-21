@@ -302,3 +302,32 @@ fixtures exercise these changes. GT25 regeneration, identities, full task covera
 and source convention reconciliation are still pending. The full remaining scope
 is tracked in `contributor_tools/dataset_remediation.json`; code tests or partial
 kinematics reconstruction alone do not close dataset-level findings.
+
+
+### GT25 source-linked pilot
+
+The recording adapter is
+`contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/reconvert_recording.py`.
+It accepts source-root, subject, recording, output-root, memory-mib, max-source-mib
+and resume arguments, and uses the same guarded staging worker as GT24. Its source
+manifest includes the original README containing measured masses and conventions.
+
+`gt25_source_pilot_20261020` contains seven BT01 recordings covering three walking
+controller models, backward walking, chair transfers, and stair ascent/descent:
+152 observations / 22,800 rows. The independent `check_gt25_source.py` probe in
+`contributor_tools/audit_probes/2026_10_20/` checks every observation against source
+CSVs, binding its results to manifests and output hashes. Maximum checked signal
+error was 4.44e-16. This verifies the stated transforms, not the unresolved
+anatomical interpretation of every source channel.
+
+Already-parsed short stair trials were previously erased by first/last-stride
+trimming; each of the two pilot stair recordings now retains three observations.
+The gait duration ceiling no longer rejects longer chair transfers. IDs encode
+actual recording, source endpoints and reference side; missing horizontal-frame
+interpretations remain missing while raw global force channels are retained.
+
+This is a partial pilot, not a finished GT25 release. Remaining work includes all
+subjects/tasks, candidate exclusion accounting, event validation, segment-angle
+interpretation, COP coordinates, and the source README/converter disagreement on
+ankle-angle sign. GT24 resumed from verified outputs after this serial pilot;
+its own boundary-stride trimming still needs source-specific review.

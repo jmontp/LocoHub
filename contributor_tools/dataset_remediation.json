@@ -23,7 +23,7 @@
   "current_limitations": {
     "umich": "Only treadmill hip/knee subset regenerated. Remaining signals, tasks and normalized transfers still open.",
     "gt24": "Backward task-name fix verified on three real recordings. Noncyclic coverage, segmentation exclusions and remaining signal/source checks still open.",
-    "gt25": "Code fixes tested; regeneration and source reconciliation still pending."
+    "gt25": "Seven BT01 recordings regenerated: 152 observations / 22,800 rows, source-matched for checked channels. All-subject/task coverage, ankle sign, segment angles, COP frames, event validity and exclusion accounting remain open."
   },
   "findings": [
     {
@@ -171,10 +171,11 @@
         "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py:371",
         "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py:387"
       ],
-      "status": "code_fixed_regeneration_and_source_checks_pending",
+      "status": "code_fixed_pilot_source_checked_full_regeneration_pending",
       "required_followup": "Use inclusive source endpoints and actual source times; analytic ramp fixture; source-to-export test before regeneration.",
       "code": "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py",
-      "tests": "tests/test_converter_scientific_provenance.py"
+      "tests": "tests/test_converter_scientific_provenance.py",
+      "pilot_evidence": "converted_datasets/reconversion_v2/gt25_source_pilot_20261020/source_comparison.json"
     },
     {
       "id": "gtech-6",
@@ -183,10 +184,11 @@
       "affected_paths": [
         "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py:104"
       ],
-      "status": "code_fixed_regeneration_and_source_checks_pending",
+      "status": "code_fixed_pilot_source_checked_full_regeneration_pending",
       "required_followup": "Return missing mass and unavailable normalized signals or explicitly reject; test unknown subject. Do not infer all stored values are affected.",
       "code": "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/convert_gtech_2025_da_to_parquet.py",
-      "tests": "tests/test_converter_scientific_provenance.py"
+      "tests": "tests/test_converter_scientific_provenance.py",
+      "pilot_evidence": "converted_datasets/reconversion_v2/gt25_source_pilot_20261020/source_comparison.json"
     },
     {
       "id": "gtech-7",
@@ -369,6 +371,30 @@
       ],
       "status": "open",
       "required_followup": "Verify observation subset and unchanged retained values, log each exclusion reason and approved range applicability; separate exo/speed/task conditions in interpretations."
+    },
+    {
+      "id": "gt25-short-trials",
+      "finding": "Removing first/last cycles discards short already-parsed staircase recordings",
+      "status": "code_fixed_pilot_source_checked_full_regeneration_pending",
+      "required_followup": "Two real stair recordings now retain three observations each; complete all-subject regeneration and candidate exclusion accounting."
+    },
+    {
+      "id": "gt25-transfers",
+      "finding": "Gait duration limit drops transfers longer than three seconds",
+      "status": "code_fixed_full_coverage_pending",
+      "required_followup": "Long-transfer fixture passes; independently verify real transfer boundaries and every excluded candidate."
+    },
+    {
+      "id": "gt25-ankle-sign",
+      "finding": "Source README and converter disagree on positive ankle-angle convention",
+      "status": "open",
+      "required_followup": "Resolve from source model or independent geometry before approving canonical ankle angles."
+    },
+    {
+      "id": "gt24-trimming",
+      "finding": "GT24 drops boundary cycles although source README says Parsed transitions were removed",
+      "status": "open",
+      "required_followup": "Remove unconditional trimming, verify short real recordings, preserve rejected candidate reasons, and regenerate affected outputs with fresh provenance."
     }
   ]
 }

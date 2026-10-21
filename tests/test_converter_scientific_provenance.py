@@ -236,7 +236,7 @@ def test_gt25_inclusive_endpoint_and_velocity_use_actual_source_times(gt25):
     for side in ['l','r']:
         for joint in ['hip_flexion','knee_angle','ankle_angle']:
             source['angle_filt'][f'{joint}_{side}'] = 2*clock
-    result = gt25.process_stride(source,0,200,'BT01',70.,'level_walking','level',{},0,'l','baseline',skip_segment_angles=True)
+    result = gt25.process_stride(source,0,200,'BT01',70.,'level_walking','level',{},0,'l','baseline',skip_segment_angles=True,source_recording_id='gt25:Parsed/BT01/fixture')
     np.testing.assert_allclose(result.hip_flexion_angle_ipsi_rad,np.deg2rad(2*np.linspace(0,1,150)),atol=1e-12)
     np.testing.assert_allclose(result.hip_flexion_velocity_ipsi_rad_s,np.deg2rad(2.),atol=1e-12)
 
@@ -244,7 +244,7 @@ def test_gt25_inclusive_endpoint_and_velocity_use_actual_source_times(gt25):
 def test_gt25_unknown_mass_and_unmeasured_assistance_stay_missing(gt25):
     mass = gt25.get_subject_mass('unknown_subject')
     assert np.isnan(mass)
-    result=gt25.process_stride(gait_source(),0,200,'unknown_subject',mass,'level_walking','level',{},0,'l','baseline',skip_segment_angles=True)
+    result=gt25.process_stride(gait_source(),0,200,'unknown_subject',mass,'level_walking','level',{},0,'l','baseline',skip_segment_angles=True,source_recording_id='gt25:Parsed/BT01/fixture')
     assert result.grf_vertical_ipsi_BW.isna().all()
     assert result.hip_flexion_angle_ipsi_rad.notna().all()
     assistance=result.filter(regex='assistance_moment_')
@@ -263,8 +263,70 @@ def test_gt25_force_sign_is_not_selected_from_expected_waveform(gt25):
     positive=gait_source();negative=gait_source()
     negative['grf']=-negative['grf']
     def convert(source):
-        return gt25.process_stride(source,0,200,'BT01',70.,'level_walking','level',{},0,'l','baseline',skip_segment_angles=True)
+        return gt25.process_stride(source,0,200,'BT01',70.,'level_walking','level',{},0,'l','baseline',skip_segment_angles=True,source_recording_id='gt25:Parsed/BT01/fixture')
     a,b=convert(positive),convert(negative)
-    for feature in ['grf_anterior_ipsi_BW','grf_lateral_ipsi_BW','grf_anterior_contra_BW','grf_lateral_contra_BW']:
+    for feature in ['source_grf_global_x_ipsi_N','source_grf_global_z_ipsi_N','source_grf_global_x_contra_N','source_grf_global_z_contra_N']:
         np.testing.assert_allclose(a[feature],-b[feature])
     assert a.cop_vertical_ipsi_m.isna().all()
+    assert a.grf_anterior_ipsi_BW.isna().all()
+    assert a.grf_lateral_ipsi_BW.isna().all()
+
+
+def test_gt25_identity_is_source_based_and_contract_valid(gt25):
+    from contributor_tools.common.data_contract import inspect_contract
+    def make(recording, step=0, side='l'):
+        return gt25.process_stride(gait_source(),0,200,'BT01',70.,'level_walking','level',{},step,side,'baseline',skip_segment_angles=True,source_recording_id=recording)
+    first=make('gt25:Parsed/BT01/trial_A')
+    assert inspect_contract(first,mode='phase').schema_passed
+    assert make('gt25:Parsed/BT01/trial_A',99).observation_id.equals(first.observation_id)
+    assert make('gt25:Parsed/BT01/trial_B').observation_id.iloc[0] != first.observation_id.iloc[0]
+    assert make('gt25:Parsed/BT01/trial_A',side='r').observation_id.iloc[0] != first.observation_id.iloc[0]
+    assert first.source_end_time_s.iloc[0] == 1.
+    assert first.time_s.iloc[-1] == 1.
+    with pytest.raises(ValueError,match='source_recording_id'):
+        make(None)
+
+
+def test_gt25_trial_propagates_original_recording_identity(gt25, monkeypatch, tmp_path):
+    from types import SimpleNamespace
+    trial=tmp_path/'normal_walk_1_baseline_1-2_on';trial.mkdir()
+    monkeypatch.setattr(gt25,'load_trial_data',lambda *args:gait_source())
+    monkeypatch.setattr(gt25,'segment_trial_gait',lambda *args:[SimpleNamespace(start_idx=0,end_idx=200)])
+    frames=gt25.process_trial(trial,'BT01')
+    assert len(frames)==2
+    assert {f.source_recording_id.iloc[0] for f in frames}=={'gt25:Parsed/BT01/normal_walk_1_baseline_1-2_on'}
+    assert {f.reference_side.iloc[0] for f in frames}=={'left','right'}
+
+
+def test_gt25_long_transfer_is_not_rejected_as_a_long_walking_stride(gt25):
+    source=gait_source()
+    # Expand the fixture to a 4-second transfer sampled at 200 Hz.
+    for key,frame in source.items():
+        source[key]=pd.concat([frame.iloc[:-1]]*4+[frame.iloc[-1:]],ignore_index=True)
+    source['angle_filt']['time']=np.arange(801)/200
+    for side in ['l','r']:
+        source['angle_filt'][f'hip_flexion_{side}']=np.linspace(30,0,801)
+    result=gt25.process_stride(source,0,800,'BT01',70.,'sit_to_stand','sit_to_stand',{},0,'l','baseline',skip_segment_angles=True,source_recording_id='gt25:Parsed/BT01/transfer')
+    assert result is not None
+    assert result.observation_type.iloc[0]=='transfer'
+    assert result.time_s.iloc[-1]==4
+    np.testing.assert_allclose(result.hip_flexion_velocity_ipsi_rad_s,np.deg2rad(-7.5))
+
+
+def test_gt25_all_enabled_task_mappings_are_canonical(gt25, monkeypatch):
+    from contributor_tools.common.task_registry import is_valid_task
+    for task,_,_ in gt25.TASK_MAPPING.values():
+        assert task is None or is_valid_task(task)
+    mapping=load_converter('GaTech_2025_DomainAdaptation/task_mapping.py',monkeypatch)
+    for task,_,_ in mapping.FULL_TASK_MAPPING.values():
+        assert task is None or is_valid_task(task)
+
+
+def test_gt25_retains_complete_cycles_in_short_parsed_stair_trials(gt25):
+    time=np.arange(701)/200
+    force=np.zeros(701)
+    for start in [100,300,500]:force[start:start+100]=700
+    source=pd.DataFrame({'time_s':time,'grf_vertical_ipsi_N':force})
+    segments=gt25.segment_trial_gait(source,'l')
+    assert len(segments)==2
+    assert all(np.isclose(s.duration_s,1.) for s in segments)
