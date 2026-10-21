@@ -535,13 +535,16 @@
       "priority": "P1",
       "title": "Complete full reconstruction and source-based output checks",
       "evidence_paths": [
-        "converted_datasets/reconversion_v2/metadata_serial_queue_20261021/plan.json"
+        "converted_datasets/reconversion_v2/metadata_serial_queue_20261021/plan.json",
+        "docs/quality/audits/gait120-extended-source-review.json",
+        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
       ],
       "group": "dataset",
       "acceptance": [
         "Every6882 source recording accounted for",
         "All7 tasks verified with correct transfer/cycle types, true clocks and reference IDs",
-        "Unknown raw-coordinate channels remain labeled raw; no fabricated canonical force/COP"
+        "Unknown raw-coordinate channels remain labeled raw; no fabricated canonical force/COP",
+        "All 19 derivative outputs independently checked against original source angles and actual duration, with missing values reported as unassessed; planar segment estimates kept separate from verified anatomical orientations"
       ],
       "prerequisites": [
         "primary queue predecessors",
@@ -549,7 +552,8 @@
       ],
       "lane": "serial-heavy",
       "owner": "Dataset reviewer; coordinator schedules conversion",
-      "status": "Open; see prerequisites"
+      "status": "Full source-preservation rebuild queued; derivative correction prepared, not executed",
+      "progress_note": "The guarded 6,882-record rebuild checks source angles and plate channels. It does not approve derivatives or segment anatomy. Independent synthetic evidence confirms unintended discontinuity repair in 19 derivative calls. An isolated correction and extended source auditor are committed; full corrected production and independent readback remain required."
     },
     {
       "id": "SP50-01",
