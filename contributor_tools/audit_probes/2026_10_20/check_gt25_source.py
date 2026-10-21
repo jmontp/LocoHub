@@ -3,6 +3,9 @@
 Run from repo root with one numerical thread, nice 19, ionice 3.
 This verifies explicit source transforms, not clinical validity or event semantics.
 """
+import os
+for key in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS'):os.environ[key]='1'
+import argparse
 import resource
 resource.setrlimit(resource.RLIMIT_AS,(768*1024**2,768*1024**2))
 import hashlib
@@ -26,10 +29,14 @@ def digest(path):
 
 
 def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output-root',type=Path,default=BASE)
+    args=parser.parse_args()
+    base=args.output_root
     mass=float(re.search(r'^BT01:\s*[\d.]+ kg\s*\|\s*([\d.]+) kg',
                          (SOURCE/'readme.txt').read_text(),re.M).group(1))
     results=[]
-    for folder in sorted((BASE/'gt25/Parsed/BT01').iterdir()):
+    for folder in sorted((base/'gt25/Parsed/BT01').iterdir()):
         if not (folder/'phase.parquet').exists():
             raise AssertionError(f'No output for {folder.name}')
         parquet=pq.ParquetFile(folder/'phase.parquet')
@@ -80,7 +87,7 @@ def main():
             'limitations':['Ankle sign convention requires reconciliation with source README; matching a source moment sign is not evidence its anatomical name is correct.',
                            'IMU-derived segment orientation, COP interpretation, event definitions and excluded candidates not independently approved.',
                            'Only BT01 selected recordings; full dataset regeneration and checks remain pending.'], 'recordings':results}
-    (BASE/'source_comparison.json').write_text(json.dumps(report,indent=2,allow_nan=False)+'\n')
+    (base/'source_comparison.json').write_text(json.dumps(report,indent=2,allow_nan=False)+'\n')
     print(json.dumps({'recordings_checked':len(results),'observations_checked':sum(r['observations_checked'] for r in results),'worst_error':max(v for r in results for v in r['max_error_by_signal'].values())}))
 
 
