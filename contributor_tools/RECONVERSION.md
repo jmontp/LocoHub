@@ -733,3 +733,34 @@ is explicitly pending. The preparation manifest says `converted_data: false`;
 these inputs must not be reported as completed reconstruction. The pilot retains
 the exact preparation code snapshot used before a subsequent CLI thread-limit
 addition. Full reconstruction and scientific checks remain open.
+
+
+### GT23 native transform preparation and larger-window reconstruction
+
+`prepare_gt23_transforms.m` loads one source MAT file admitted below 64 MiB,
+keeps the original Header/calcn_l/calcn_r columns within the requested envelope
+plus available neighboring samples, and verifies an exact native MAT save/load
+comparison. These are the columns consumed by both existing converters; other
+original transform columns remain in the unchanged source archive. The native
+adapter adds a preparation entry point under the same 2 GiB Windows job limit,
+timeout, idle priority and host/disk headroom checks.
+
+For the AB01 sit-to-stand preparation pilot, the original 49,235-row transform
+table yields 20,113 exact rows in a 3.60 MiB MAT file. CSV inputs plus required
+transforms now fit the existing 64 MiB conversion admission. Original source
+hashes, exact readback evidence and frozen code accompany the prepared view.
+The earlier preparation manifest is retained as historical evidence; the later
+`transform_preparation/source_comparison.json` records completed extraction.
+
+`gt23_window_native_time_pilot_20261020` reconstructs that view natively under
+the unchanged guard, producing 20,111 time-domain rows. Independent comparison
+against original CSV sources verifies bilateral hip/knee/ankle angles, velocities,
+and moments plus six COP channels (24 channels total, maximum numeric error
+5.94e-15). Schema checks pass. The conversion manifest binds each prepared CSV/MAT,
+the original preparation manifest, native transform verification and code/output
+hashes. This checks arithmetic and routing, not physical sign/frame conventions.
+
+The GT24 worker was paused only between recordings for each native operation and
+resumed in a finally block. No queue restart or frozen conversion code change was
+needed. All-window preparation and reconstruction are still pending; the one
+original transform file above 64 MiB still needs a bounded admission decision.
