@@ -709,3 +709,27 @@ Larger transfer recordings still need a bounded reconstruction strategy. Full
 reconstruction, boundary precision and broader convention checks remain open.
 Earlier native time and curb-phase pilots remain evidence for their own frozen
 code snapshots. The source-only audit's native-pending note predates this pilot.
+
+
+### GT23 bounded input preparation (not reconstructed data)
+
+Full local input preflight covers 787 parsing windows across 12 subjects. All
+expected CSV and transform files exist; 568 windows fit the current 64 MiB native
+input admission and 219 exceed it. The largest input is about 176.13 MiB. This
+is an input inventory, not validation of every source channel.
+
+`prepare_gt23_recording.py` streams the six source CSV files, retains the exact
+original lines within the annotated time envelope and available interpolation
+neighbors, and hashes/checks the clock of the entire original file. It rejects
+nonfinite/nonincreasing clocks, changed sources and existing output directories.
+The CLI uses a 768 MiB address-space limit and one numerical thread. No native
+MATLAB memory guard or shared running-conversion code was changed.
+
+The AB01 sit-to-stand input pilot in `gt23_window_input_pilot_20261020` reduces
+94.18 MiB of CSV inputs to 38.31 MiB. A separate source-line readback verifies all
+six excerpts byte-for-byte (20,113 rows each), including source precision and
+missing values. Original transform hashes are retained, but transform extraction
+is explicitly pending. The preparation manifest says `converted_data: false`;
+these inputs must not be reported as completed reconstruction. The pilot retains
+the exact preparation code snapshot used before a subsequent CLI thread-limit
+addition. Full reconstruction and scientific checks remain open.
