@@ -1,0 +1,102 @@
+{
+  "reviewed_on": "2026-10-21",
+  "status": "research_backlog_only",
+  "gate": "Finish and review the full Fukuchi 2018 walking ensemble addition before implementing another dataset.",
+  "candidates": [
+    {
+      "priority": 1,
+      "name": "Fukuchi 2017 running",
+      "paper_doi": "10.7717/peerj.3298",
+      "paper_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5426356/",
+      "data_doi": "10.6084/m9.figshare.4543435.v5",
+      "evidence": "The paper describes raw C3D and text recordings, processed tables and metadata. Its Results section explicitly identifies CC BY 4.0 for the downloadable dataset.",
+      "reason_to_review_next": "Running complements the walking addition, with original processing materials available for source review.",
+      "remaining_admission_checks": [
+        "Reconcile v5 cohort and duplicate metadata file IDs with exact recording coverage; current repository has 39 processed files whereas the paper reports 28 people.",
+        "Determine whether processed files contain individual cycles or participant means.",
+        "Verify bilateral coordinate signs, units and source event timing from this dataset's own model and code.",
+        "Check the active and historical catalog again for duplicates before adding files.",
+        "Design one small bounded source-readback pilot after the walking review."
+      ],
+      "implemented": false,
+      "repository_api": "https://api.figshare.com/v2/articles/4543435/versions/5",
+      "license_status": "Direct repository metadata confirms CC BY 4.0 for version 5.",
+      "version_review": {
+        "paper_participants": 28,
+        "v5_repository_participants": 39,
+        "processed_files": 39,
+        "repository_file_count": 428,
+        "total_file_bytes": 808014065,
+        "warning": "Current archive extends the paper cohort and has unequal condition coverage. RBDS031 and RBDS033-039 have only T35 trial names; do not fabricate all three speeds.",
+        "duplicate_metadata_names": [
+          {
+            "name": "RBDSinfo.txt",
+            "file_ids": [
+              7841131,
+              39452932
+            ]
+          },
+          {
+            "name": "RBDSinfo.xlsx",
+            "file_ids": [
+              7841128,
+              39452935
+            ]
+          }
+        ],
+        "metadata_rule": "Pin file IDs and hashes; basename alone is ambiguous. Reconcile both metadata generations with current participant/condition coverage before importing."
+      }
+    },
+    {
+      "priority": 2,
+      "name": "Ferber 2024 walking and running",
+      "paper_doi": "10.1038/s41597-024-04011-7",
+      "paper_url": "https://www.nature.com/articles/s41597-024-04011-7",
+      "data_doi": "10.25452/figshare.plus.24255795.v2",
+      "evidence": "The paper describes 1,798 participants, timestamped JSON marker recordings and CSV clinical metadata. Its Methods describe stance partitioning and normalization, which must not be presented as complete strides without checking the released code.",
+      "license_status": "Version 2 repository explicitly licenses data under CC BY 4.0 and accompanying code under MIT.",
+      "remaining_admission_checks": [
+        "Verify bounded member access and pin v2 file IDs/checksums before any scientific data download; data license verified, source contents not yet inspected.",
+        "Inspect recording timestamps, sampling rates, stance versus full-cycle semantics and event fallbacks.",
+        "Preserve clinical side, collection-session identity and source quality warnings.",
+        "Assess computation needed from raw markers before proposing a memory-safe pilot."
+      ],
+      "implemented": false,
+      "repository_api": "https://api.figshare.com/v2/articles/24255795/versions/2",
+      "repository_size_review": {
+        "total_bytes": 24143187137,
+        "main_archive_bytes": 22749955646,
+        "supplement_archive_bytes": 1392459250,
+        "decision": "No bulk acquisition: main archive exceeds currently reported S-drive headroom. A bounded member-access approach needs separate review."
+      },
+      "overlap_warning": "Repository states 601 of 1,798 participants were included in previous research publications. Track original cohort/session provenance; new DOI does not prove new participants."
+    }
+  ],
+  "reviewed_at_utc": "2026-10-21T05:15:45.259376+00:00",
+  "active_addition": {
+    "name": "Fukuchi 2018 walking",
+    "status": "pilot_checked_full_run_prepared_not_started",
+    "paper_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5922232/",
+    "source_doi": "10.6084/m9.figshare.5722711.v6",
+    "scope": "508 published participant-condition angle/kinetic table pairs; 51 participants; ensemble means, not individual strides",
+    "acceptance_review": "../quality/audits/fu18-full-run-readiness.json"
+  },
+  "evidence_receipts": {
+    "fukuchi2017": {
+      "api_url": "https://api.figshare.com/v2/articles/4543435",
+      "local_sha256": "9c3cca724d3cde1a199eec27816e94449ff0090015d3375e6625cceaf821bc63",
+      "bytes": 128843
+    },
+    "fukuchi2018_v6": {
+      "api_url": "https://api.figshare.com/v2/articles/5722711/versions/6",
+      "local_sha256": "9d9fb6cd104d114e1e02847d3208fcc9f4f11bf8f345b04e92d5988406c5cab3",
+      "bytes": 6203
+    },
+    "ferber2024": {
+      "api_url": "https://api.figshare.com/v2/articles/24255795",
+      "local_sha256": "d16a91464b87a5dfa70d2cc16de3b2de4d235bb462803c29819fd53f5dc95f15",
+      "bytes": 10838
+    }
+  },
+  "duplicate_review": "No matching running/Ferber study pages found in current docs/datasets index pages. Historical or composite datasets still need source-identity checks before a second addition; title search is not proof of independent participants."
+}

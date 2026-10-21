@@ -1,0 +1,189 @@
+{
+  "dataset": "fu18",
+  "reviewed_at_utc": "2026-10-21T05:15:45.259376+00:00",
+  "status": "prepared_not_run_bindings_reverified",
+  "scientific_approval": false,
+  "catalog_activation": false,
+  "plan_sha256": "ee8776499bb5cd0d66c21eedcb3cce2f24545a2757ee13edebabcde8c0ae599a",
+  "verified_bindings": 45,
+  "full_run_output_root_exists": false,
+  "pilot_evidence": "../../datasets/fu18/pilot-evidence.json",
+  "published_scope": {
+    "subjects": 51,
+    "pairs": 508,
+    "members": 1016,
+    "conditions": {
+      "OC": 42,
+      "OF": 42,
+      "OS": 42,
+      "T01": 51,
+      "T02": 51,
+      "T03": 51,
+      "T04": 51,
+      "T05": 51,
+      "T06": 51,
+      "T07": 40,
+      "T08": 36
+    },
+    "environments": {
+      "overground": 126,
+      "treadmill": 382
+    },
+    "cohort_subjects": {
+      "Older": 27,
+      "Young": 24
+    },
+    "compressed_payload_bytes": 13543452,
+    "uncompressed_bytes": 33726253,
+    "largest_uncompressed_member_bytes": 42268,
+    "range_bytes_including_local_headers_and_names": 13602128,
+    "absent_condition_pairs": {
+      "FU18_28": [
+        "T08"
+      ],
+      "FU18_29": [
+        "T08"
+      ],
+      "FU18_32": [
+        "T07",
+        "T08"
+      ],
+      "FU18_36": [
+        "T08"
+      ],
+      "FU18_37": [
+        "T08"
+      ],
+      "FU18_39": [
+        "T07",
+        "T08"
+      ],
+      "FU18_43": [
+        "OS",
+        "OC",
+        "OF",
+        "T07",
+        "T08"
+      ],
+      "FU18_44": [
+        "OS",
+        "OC",
+        "OF",
+        "T07",
+        "T08"
+      ],
+      "FU18_45": [
+        "OS",
+        "OC",
+        "OF",
+        "T07",
+        "T08"
+      ],
+      "FU18_46": [
+        "OS",
+        "OC",
+        "OF",
+        "T07",
+        "T08"
+      ],
+      "FU18_47": [
+        "OS",
+        "OC",
+        "OF",
+        "T07",
+        "T08"
+      ],
+      "FU18_48": [
+        "OS",
+        "OC",
+        "OF",
+        "T07",
+        "T08"
+      ],
+      "FU18_49": [
+        "OS",
+        "OC",
+        "OF",
+        "T07",
+        "T08"
+      ],
+      "FU18_50": [
+        "OS",
+        "OC",
+        "OF",
+        "T07",
+        "T08"
+      ],
+      "FU18_51": [
+        "OS",
+        "OC",
+        "OF",
+        "T07",
+        "T08"
+      ]
+    },
+    "planned_side_observations_upper_bound": 1016,
+    "planned_rows_upper_bound": 152400
+  },
+  "source_links": {
+    "paper": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5922232/",
+    "repository": "https://doi.org/10.6084/m9.figshare.5722711.v6",
+    "license": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  "admission": {
+    "coordinator_only": true,
+    "one_numerical_worker": true,
+    "full_run_not_started": true,
+    "first_step": "Run one pair with previews, inspect readback and actual disk use, then explicitly resume the same immutable plan.",
+    "limits": {
+      "child_address_space_mib": 768,
+      "worker_seconds": 120,
+      "host_prelaunch_mib": 2816,
+      "host_runtime_mib": 2048,
+      "linux_available_mib": 2048,
+      "probe_seconds": 15,
+      "probe_timeout_seconds": 10,
+      "disk_c_free_gib": 1,
+      "disk_s_free_gib": 5,
+      "source_member_limit_mib": 1,
+      "maximum_source_pair_uncompressed_bytes": 84536,
+      "expected_uncompressed_sources_mib": 32.16,
+      "disk_note": "Keep5 GiB reserve. Source text is32.16 MiB; output/preview size is bounded per pair and must be measured during execution, not advertised as known."
+    },
+    "cumulative_acquisition_upper_bound_bytes": 15946637,
+    "release_review_admission_mib": 256,
+    "note": "Existing converter process address-space cap is 768 MiB; this is not an increase in the 256 MiB default release/review data admission. Do not load the whole dataset to bypass admission."
+  },
+  "acceptance_gates": [
+    {
+      "gate": "Full published coverage",
+      "required": "Exactly 508 unique pairs, 51 participants, 126 overground and 382 treadmill pairs. Reconcile absent conditions to pinned source inventory; no invented files."
+    },
+    {
+      "gate": "Independent source readback",
+      "required": "Every pair must retain a matching acquisition receipt, conversion manifest, output hash and independent all-value/missingness/identity readback. Verify prior receipts before resume."
+    },
+    {
+      "gate": "Observation semantics",
+      "required": "Up to 1,016 separate leg-condition means and 152,400 rows; 150 inclusive points each. No individual strides, durations, within-subject SD, stride counts or simultaneous contralateral phase."
+    },
+    {
+      "gate": "Anatomical conventions",
+      "required": "Keep left canonical fields unavailable until exact left processed export/frame evidence is established. Preserve all left source components. Do not use matching curve shapes to approve signs."
+    },
+    {
+      "gate": "Attribution and distribution",
+      "required": "Keep DOI/version/CC BY 4.0, source author attribution, transformations and limitations alongside immutable data. Whole-archive MD5 remains unverified under bounded range acquisition."
+    },
+    {
+      "gate": "Readable static preview",
+      "required": "Check a treadmill and overground condition, right and source-only left, actual absent conditions and small-screen layout; no unavailable SD bands."
+    },
+    {
+      "gate": "Release scope",
+      "required": "Source-readback success is not anatomical scientific approval. Any catalog addition must clearly distinguish supported canonical fields from source-only/unassessed values."
+    }
+  ],
+  "remaining_source_issue": "Supplied overground pipeline does not establish the final left processed export or treadmill processing chain. Current v6 cohort differs from original 42-person paper cohort.",
+  "next_candidate_policy": "No second dataset implementation until this addition has a documented full-run disposition."
+}
