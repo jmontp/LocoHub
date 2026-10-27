@@ -1,0 +1,43 @@
+name: Data contract and release checks
+
+on:
+  pull_request:
+    paths:
+      - 'contributor_tools/**'
+      - 'tests/**'
+      - 'conftest.py'
+      - 'pyproject.toml'
+      - 'requirements-curation.txt'
+      - '.github/workflows/data-quality.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'contributor_tools/**'
+      - 'tests/**'
+      - 'conftest.py'
+      - 'pyproject.toml'
+      - 'requirements-curation.txt'
+      - '.github/workflows/data-quality.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-data-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install contributor test dependencies
+        run: python -m pip install -r requirements-curation.txt
+      - name: Check tiny source fixtures and immutable release artifacts
+        run: python -m pytest -q

@@ -1,3 +1,5 @@
+> **Historical assessment — unreviewed release.** These preserved results predate the observation contract and may contain inconsistent counts. They are not a current quality certification. Use the dataset limitations and versioned release evidence when available.
+
 **Report generated:** 2025-12-21 18:50
 
 ## Status Summary

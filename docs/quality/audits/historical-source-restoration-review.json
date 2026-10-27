@@ -1,0 +1,324 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-10-21",
+  "status": "restoration_source_backlog_not_scientific_approval",
+  "scope": "Existing historical datasets only; Fukuchi walking remains first new addition pending actual first-pair review.",
+  "scientific_archives_downloaded": false,
+  "numerical_jobs_started": false,
+  "priority_meaning": {
+    "1": "resolve provenance or semantics before reconstruction",
+    "2": "recover versioned source crosswalk and coverage"
+  },
+  "common_source": {
+    "url": "https://addbiomechanics.org/download_data.html",
+    "license": "CCBY4.0 for derivative dataset; capture distributed LICENSE.txt and DATA_CITATIONS.txt",
+    "core_archive_url_advertised_not_downloaded": "http://archive.simtk.org/addbiomechanics/addbiomechanics.zip",
+    "gate": "Pin actual release/core versus public-upload snapshot; source labels are not proof of original experiment identity."
+  },
+  "shared_acceptance": [
+    "Every historical recording maps to source subject/trial/segment/pass or an explicit unresolved disposition.",
+    "Preserve raw/native versus reprocessed derivative lineage; do not count them as separate participants or independent observations.",
+    "Independently prove source units, anatomical signs, model/force frames, mass denominator and task identity before canonical admission.",
+    "A bounded pilot requires exact source hashes, independent source readback, missingness/exclusion ledger and output preservation checks. No source availability or license finding is scientific approval."
+  ],
+  "datasets": [
+    {
+      "dataset": "um24k",
+      "priority": 1,
+      "source_urls": [
+        "https://datadryad.org/dataset/doi:10.5061/dryad.z34tmpgks"
+      ],
+      "findings": "Publisher lists dataset_S1.mat890361bytes,dataset_S2.mat16092bytes and README5898bytes. README field description says101x10 participant ensembles, not across-participant averages. Introductory S1/S2 description conflicts with detailed fields and publisher abstract.",
+      "next_admission_action": "Bind publisher files to existing local hashes; inspect only bounded MAT structure; identify actual S1 fields. Retain participant ensembles, no invented durations/individual cycles; audit extension-positive torque, flexion-positive knee, vertical segment references and BW foot-sensor provenance.",
+      "license": "Publisher JSON-LD declares CC0-1.0.",
+      "status": "source_locations_reviewed_not_reconverted",
+      "scientific_approval": false
+    },
+    {
+      "dataset": "ca23",
+      "priority": 1,
+      "source_urls": [
+        "https://researchdata.bath.ac.uk/1341/"
+      ],
+      "findings": "Official AddBiomechanics link identifies Bath2024 source,50participants. Historical code CA23 and6converted participants are not original source scope. Colorado attribution unsupported. Publisher says running on one force plate; plate number is not anatomical side.",
+      "next_admission_action": "Bind original file naming and Participant_Info to historical trial IDs; reconcile subset exclusions and source plate-to-leg assignment before conversion. Preserve source date separate from historical identifier.",
+      "license": "CCBY4.0 shown per data/documentation file.",
+      "status": "source_locations_reviewed_not_reconverted",
+      "scientific_approval": false
+    },
+    {
+      "dataset": "fa16",
+      "priority": 1,
+      "source_urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/27875132/",
+        "https://addbiomechanics.org/assets/AddBiomechanics_Dataset_Paper.pdf",
+        "https://github.com/KULeuvenNeuromechanics/MuscleRedundancySolver"
+      ],
+      "findings": "Official bibliography ref25 is Falisse EMG-driven parameter estimation, whereas local citation10.1007/s10439-016-1591-9 is a different cited solver paper. Current mapper defaults unknown trials including STS to walking.",
+      "next_admission_action": "Recover DATA_CITATIONS/LICENSE and B3D source URL; prove which experiment produced Gait/STS records. Replace fallback only after task evidence; require explicit unsupported-task disposition.",
+      "license": "AddBiomechanics derivative CCBY4.0; original experiment file license and exact identity unresolved; solver software license is not data permission.",
+      "status": "source_locations_reviewed_not_reconverted",
+      "scientific_approval": false
+    },
+    {
+      "dataset": "ta21",
+      "priority": 1,
+      "source_urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/35594817/",
+        "https://addbiomechanics.org/download_data.html"
+      ],
+      "findings": "Local running mini/nike SI/SR names resemble strike-index protocol, but local Tan2021 label differs from official Tan2022 source. This is a candidate crosswalk, not proven membership.",
+      "next_admission_action": "Read archive citation/source metadata and compare exact recording IDs to strike-index study before changing year/institution or combining participants.",
+      "license": "Derivative CCBY4.0; original source archive/license not independently resolved.",
+      "status": "source_locations_reviewed_not_reconverted",
+      "scientific_approval": false
+    },
+    {
+      "dataset": "ta22",
+      "priority": 1,
+      "source_urls": [
+        "https://ieeexplore.ieee.org/document/9826418/",
+        "https://simtk.org/projects/imukinetics",
+        "https://github.com/StanfordMIMI/SSL_IMU"
+      ],
+      "findings": "Local modified-walking labels match candidate IMU/camera fusion study listed officially as Tan2023; source folder year alone cannot establish identity. SimTK offers project downloads; exact license package scope remains to bind.",
+      "next_admission_action": "Match baseline/fpa/step_width/trunk_sway IDs to original manifest and DATA_CITATIONS; independently verify joint-moment normalization and modified-gait metadata, no NUS attribution from placeholder.",
+      "license": "Derivative CCBY4.0; SimTK package license text exists but file-specific rights require capture.",
+      "status": "source_locations_reviewed_not_reconverted",
+      "scientific_approval": false
+    },
+    {
+      "dataset": "ha13",
+      "priority": 1,
+      "source_urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/23246045/",
+        "https://simtk.org/projects/nmbl_running"
+      ],
+      "findings": "Correct linked publication is Hamner and Delp2013, DOI10.1016/j.jbiomech.2012.11.024, ten-subject multispeed study. Local citation/title/DOI differs; one historical participant does not establish full coverage.",
+      "next_admission_action": "Reconcile subject/trial IDs with original ten-participant release and AddBiomechanics source pass; distinguish older one-subject RunningSim study. Audit model signs and per-trial speed.",
+      "license": "Derivative CCBY4.0; original download package license must be bound.",
+      "status": "source_locations_reviewed_not_reconverted",
+      "scientific_approval": false
+    },
+    {
+      "dataset": "ti19",
+      "priority": 2,
+      "source_urls": [
+        "https://doi.org/10.1038/s41597-019-0323-z",
+        "https://doi.org/10.6084/m9.figshare.c.4494755.v1",
+        "https://api.figshare.com/v2/articles/9784973"
+      ],
+      "findings": "Lencioni source offers individual SubjectX.mat files plus CalcAngle.m and walking_fig.m. Historical Tiziana naming uses given name. Local43subjects/level-walking only needs full inclusion ledger.",
+      "next_admission_action": "Inventory collection version/per-item licenses before bounded single-subject read. Bind segment reference frames and original toe/heel/stair task labels; recover missing task/subject dispositions rather than assume all level walking.",
+      "license": "Sample Subject3 v1 metadata declares CC0; collection-wide per-file license still requires verification.",
+      "status": "source_locations_reviewed_not_reconverted",
+      "scientific_approval": false
+    },
+    {
+      "dataset": "vz22",
+      "priority": 2,
+      "source_urls": [
+        "https://doi.org/10.1038/s41597-022-01817-1",
+        "https://doi.org/10.6084/m9.figshare.c.5897423.v1",
+        "https://api.figshare.com/v2/articles/16530939",
+        "https://github.com/timvanderzee/human-walking-biomechanics"
+      ],
+      "findings": "Source describes ten participants and33speed/step-length/step-width conditions. Five-stride subset is separately published; it overlaps full source and excludes variable-width selections.",
+      "next_admission_action": "Bind full collection versus five-stride subset, preserve trial conditions from original records and local/global frames from V3S pipeline; explain nine historical subjects.",
+      "license": "Five-stride article16530939v4 CCBY4.0 verified; full collection file licenses not yet individually checked.",
+      "status": "source_locations_reviewed_not_reconverted",
+      "scientific_approval": false
+    },
+    {
+      "dataset": "mo15",
+      "priority": 2,
+      "source_urls": [
+        "https://zenodo.org/records/13030",
+        "https://raw.githubusercontent.com/csu-hmc/perturbed-data-paper/master/README.rst",
+        "https://doi.org/10.7717/peerj.918"
+      ],
+      "findings": "Existing MO15 is already a derivative of Moore/Hnat/van den Bogert data; raw restoration is not a new dataset. Original study15subjects, historical11 and core12 are different coverage scopes.",
+      "next_admission_action": "Recover original subject/trial crosswalk, perturbation intervals and sync; inventory archive members before selective acquisition. Do not double-count raw and AddBiomechanics recordings.",
+      "license": "Authors README distinguishes source data CC0 from repository text/code CCBY4.0.",
+      "status": "source_locations_reviewed_not_reconverted",
+      "scientific_approval": false
+    },
+    {
+      "dataset": "wa23",
+      "priority": 2,
+      "source_urls": [
+        "https://doi.org/10.1017/wtc.2023.7",
+        "https://zenodo.org/records/6457662",
+        "https://github.com/HuaweiWang/WearableMeasurementSystem"
+      ],
+      "findings": "Official source is Wang/Basu/Durandau/Sartori wearable measurement study with raw/processed sensor channels, not catalog generic Stanford attribution. Laboratory and wearable estimates are distinct.",
+      "next_admission_action": "Bind local records to Zenodo1.0 and processing branch; distinguish laboratory force plate, wearable force estimate and model outputs. Explain8historical versus9core participants; preserve landing/task distinctions.",
+      "license": "Derivative CCBY4.0; publisher article CCBY4.0 does not prove original data license. Zenodo rendered license label lacked value; verify metadata before acquisition.",
+      "status": "source_locations_reviewed_not_reconverted",
+      "scientific_approval": false
+    },
+    {
+      "dataset": "ha23",
+      "priority": 2,
+      "source_urls": [
+        "https://hanxingjian.github.io/groundlink.html",
+        "https://csr.bu.edu/groundlink/",
+        "https://github.com/hanxingjian/GroundLink",
+        "https://arxiv.org/abs/2310.03930"
+      ],
+      "findings": "Authors project links individual subject C3D/FBX/MoSh++/force downloads. These are different representations of shared recordings; local6subjects and limited tasks require reconciliation.",
+      "next_admission_action": "Bind subject/trial/force clocks and original force-plate reference to AddBiomechanics records; distinguish body model fits from measured channels and preserve unsupported tasks.",
+      "license": "Derivative CCBY4.0; author data landing page did not expose explicit data license in bounded inspection, so native redistribution remains unresolved.",
+      "status": "source_locations_reviewed_not_reconverted",
+      "scientific_approval": false
+    },
+    {
+      "dataset": "fr12",
+      "priority": 2,
+      "source_urls": [
+        "https://doi.org/10.1002/jor.22023",
+        "https://simtk.org/projects/kneeloads"
+      ],
+      "findings": "Grand Challenge source spans multiple competitions and instrumented knee replacements. Historical one-subject subset cannot establish implant side or full six-subject coverage.",
+      "next_admission_action": "Identify competition and original subject, implanted side, trial/source model; separate measured implant contact force from net inverse-dynamics moment. Capture exact package license and inclusion ledger.",
+      "license": "Derivative CCBY4.0; SimTK shows package license text but exact selected experimental-file license remains to bind.",
+      "status": "source_locations_reviewed_not_reconverted",
+      "scientific_approval": false
+    }
+  ],
+  "local_bindings": [
+    {
+      "path": "contributor_tools/conversion_scripts/AddBiomechanics/dataset_configs.py",
+      "sha256": "d2079811883fdedcc42401d504aa79dae72d5ef0432cb4b5e09bf7085c749fe2"
+    },
+    {
+      "path": "contributor_tools/conversion_scripts/UMich_2024_KneeExo/README.md",
+      "sha256": "a2aa0846738fa7ca1e2cd7a879329597c8ecefdc9d4a80732d209981c0a0e6c8"
+    },
+    {
+      "path": "docs/datasets/um24k/index.html",
+      "sha256": "c81d8f690b454b968821b37136f4912ad6e9e71f9ffff52048d9e305e5df8e01"
+    },
+    {
+      "path": "docs/datasets/ca23/index.html",
+      "sha256": "090da7a8e31d7c1293e69384d08a2a38c0239e401823a57e580f6e45e1081c39"
+    },
+    {
+      "path": "docs/datasets/fa16/index.html",
+      "sha256": "fd81a401ec191cde2f53c013f74e1709043bfd1f2bdc8cd3d26fc48535200b3c"
+    },
+    {
+      "path": "docs/datasets/ta21/index.html",
+      "sha256": "48c652aa4389decac9e09188b2bc7b0b3cc9efab2331546d3eb3cce9fcffda0f"
+    },
+    {
+      "path": "docs/datasets/ta22/index.html",
+      "sha256": "942178fb3449e5c83cf195f236e42bf93125fdb8f18043287657e097cf2690d7"
+    },
+    {
+      "path": "docs/datasets/ha13/index.html",
+      "sha256": "7014557ed9c05f6ddf96236de743710916dbc47827cde31a638d53fb95e17fd4"
+    },
+    {
+      "path": "docs/datasets/ti19/index.html",
+      "sha256": "675c4685f38fca9536913eb0e443d2a56e7d36f8ed0f68acb3e73a0c99f6ca96"
+    },
+    {
+      "path": "docs/datasets/vz22/index.html",
+      "sha256": "261778ac48f1b762177f686522ef9d2b000c7c9ee7e887c20635766400706bca"
+    },
+    {
+      "path": "docs/datasets/mo15/index.html",
+      "sha256": "83441faf034c6182b428975eeca047f2fd4800757c7e42ef7edce98dad9285c3"
+    },
+    {
+      "path": "docs/datasets/wa23/index.html",
+      "sha256": "a6f097e0b78e1928f3076cfa10dff76453bd15b34ea83afae38892de0cf8baa4"
+    },
+    {
+      "path": "docs/datasets/ha23/index.html",
+      "sha256": "598aebdde3ecd530e93be2617d73c8331281e6c6e4c9abe1b834038902fc22fa"
+    },
+    {
+      "path": "docs/datasets/fr12/index.html",
+      "sha256": "728248d1dbc4aecb8138b19dff760851d4622ac59ff061180aa7cc5f0dba7c72"
+    }
+  ],
+  "web_text_receipts": [
+    {
+      "url": "https://addbiomechanics.org/download_data.html",
+      "final_url": "https://addbiomechanics.org/download_data.html",
+      "bytes": 14380,
+      "sha256": "7dcb3f2090465db82ccf8b668ae075fa23f4e1b7df6ae157f8926954327cc791",
+      "status": "metadata_or_text_read_only"
+    },
+    {
+      "url": "https://api.figshare.com/v2/articles/16530939",
+      "final_url": "https://api.figshare.com/v2/articles/16530939",
+      "bytes": 6229,
+      "sha256": "777b461d8ff9f43da2b430df296e7eb3a2f190d2d35160e1c417f4443a0acba3",
+      "status": "metadata_or_text_read_only"
+    },
+    {
+      "url": "https://api.figshare.com/v2/articles/9784973",
+      "final_url": "https://api.figshare.com/v2/articles/9784973",
+      "bytes": 4280,
+      "sha256": "f40b6bd3b3b59d460b0eabee96c3d187256ba8dad0ea610516ca038c9380d8de",
+      "status": "metadata_or_text_read_only"
+    },
+    {
+      "url": "https://csr.bu.edu/groundlink/",
+      "final_url": "https://csr.bu.edu/groundlink/",
+      "bytes": 12438,
+      "sha256": "cbf48f74873ed439ae9d141c4dde1394465436b4fd85bced638656e45d662686",
+      "status": "metadata_or_text_read_only"
+    },
+    {
+      "url": "https://datadryad.org/dataset/doi:10.5061/dryad.z34tmpgks",
+      "final_url": "https://datadryad.org/dataset/doi:10.5061/dryad.z34tmpgks",
+      "bytes": 47169,
+      "sha256": "1cdb18f4e08b6e8be4b8da97f2412fdc7d2fda39dde4e9d3e20c984f27c829f1",
+      "status": "metadata_or_text_read_only"
+    },
+    {
+      "url": "https://hanxingjian.github.io/groundlink.html",
+      "final_url": "https://hanxingjian.github.io/groundlink.html",
+      "bytes": 8518,
+      "sha256": "5d74711eb8338028a82bfc6d4995fdab830385c94418bbeb314e6418663bd902",
+      "status": "metadata_or_text_read_only"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/csu-hmc/perturbed-data-paper/master/README.rst",
+      "final_url": "https://raw.githubusercontent.com/csu-hmc/perturbed-data-paper/master/README.rst",
+      "bytes": 16506,
+      "sha256": "c557aa043339d0421030c1097642c8444b1fa8cd5d7a392266bfea543c120365",
+      "status": "metadata_or_text_read_only"
+    },
+    {
+      "url": "https://researchdata.bath.ac.uk/1341/",
+      "final_url": "https://researchdata.bath.ac.uk/1341/",
+      "bytes": 104652,
+      "sha256": "3a55a6c1b599e0365c83438f717cf1fc6000acdce957c9f76e8a746c604f121c",
+      "status": "metadata_or_text_read_only"
+    }
+  ],
+  "local_bindings_stage": "Before the accompanying four-page citation and ensemble-description correction; preserved as review input evidence.",
+  "page_corrections": [
+    {
+      "path": "docs/datasets/ca23/index.html",
+      "sha256": "02c072e7fc981b62b7ebe0d193021c43c101228fe712f90ecde3d23072b5d972"
+    },
+    {
+      "path": "docs/datasets/ha13/index.html",
+      "sha256": "fc5658eae23829869bc9fd3d0d3e4fdce47be925db2ec0909a60d536398dc2c7"
+    },
+    {
+      "path": "docs/datasets/fa16/index.html",
+      "sha256": "4d2bb2fffff6fd7799984c467aa2609300441cebadfdce696dd0b29ea4700a25"
+    },
+    {
+      "path": "docs/datasets/um24k/index.html",
+      "sha256": "ee4c534ae4bad29dbaafd4286d87bf677d3ddd0cfda98c7e88a1aceca7de7212"
+    }
+  ]
+}

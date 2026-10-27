@@ -1,0 +1,150 @@
+{
+  "status": "source_document_conventions_reviewed_outputs_not_validated",
+  "scientific_approval": false,
+  "reviewed_at_utc": "2026-10-21T04:09:01.358940+00:00",
+  "source": {
+    "title": "Comprehensive human locomotion and electromyography dataset: Gait120",
+    "doi": "10.1038/s41597-025-05391-0",
+    "url": "https://www.nature.com/articles/s41597-025-05391-0",
+    "pdf_url": "https://www.nature.com/articles/s41597-025-05391-0.pdf",
+    "local_pdf_path": "contributor_tools/conversion_scripts/Gait120/s41597-025-05391-0.pdf",
+    "local_pdf_sha256": "8b1c62a9c663ecc09ea4bece5b030bcccaf77eff355d23e43beac5ed30190af7",
+    "evidence_access": "Reconciled against all relevant sections of the locally extracted ten-page PDF; source hash retained.",
+    "location": "Figure 4 caption; Methods; Motion capture data; Comparison of joint kinematics with public dataset",
+    "local_text_path": "converted_datasets/reconversion_v2/swarm_backlog_20261021/gait120_paper_text.txt",
+    "local_text_sha256": "fcda70ab75c92da0f71a84166c47269c6bff2e3a5878c89bad3e06af223c66b5",
+    "pdf_pages": {
+      "source_segmentation_and_model": 5,
+      "force_availability_and_units": 6,
+      "right_joint_angle_signs_figure_4": 7,
+      "stair_and_slope_protocol": 8,
+      "stool_height": 2,
+      "code_availability": 9,
+      "dataset_reference_46": 10
+    }
+  },
+  "supported_angle_mapping": {
+    "hip_flexion": "Source positive flexion; preserve sign.",
+    "knee_flexion": "Source positive extension; negate for canonical flexion.",
+    "ankle_dorsiflexion": "Source positive dorsiflexion; preserve sign.",
+    "scope": "Figure4 describes right-limb kinematics. These statements support current sagittal mapping, not every converted value or an independently checked left-side model."
+  },
+  "force_provenance": {
+    "source_units": {
+      "force": "N",
+      "torque": "Nm",
+      "moment_arm": "m"
+    },
+    "available_tasks": [
+      "level_walking",
+      "sit_to_stand",
+      "stand_to_sit"
+    ],
+    "unavailable_subjects": [
+      "S001",
+      "S002",
+      "S003",
+      "S004",
+      "S005",
+      "S006",
+      "S007",
+      "S008",
+      "S009",
+      "S010"
+    ],
+    "missing_reason": "Source paper reports force-plate/motion-capture coordinate misalignment for first ten participants; retain missingness."
+  },
+  "protocol_metadata_supported": {
+    "stair_height_m": 0.1,
+    "slope_magnitude_deg": 10.1,
+    "stool_height_m": 0.49,
+    "speed": "Self-selected; reported population mean must not become recording speed."
+  },
+  "remaining_gates": [
+    "Exact modified model and original setup provenance, including left-side coordinate conventions.",
+    "Despite documented global axes, per-recording plate-to-foot assignment and conversion to an anatomical local frame remain unverified.",
+    "Moment-arm units are documented, but ankle-relative COP and free-torque reference conventions are not established.",
+    "Derived segment orientations require model/frame evidence; scalar angle sums are insufficient.",
+    "Independent full-output source comparisons and complete exclusion accounting remain required."
+  ],
+  "current_implementation": "Default reconstruction keeps experimental inverse dynamics disabled, raw plate channels retained and canonical anatomical force/COP missing. No source or queued code changed.",
+  "possible_isolated_followup": "Add paper-supported terrain/stool metadata with explicit protocol provenance; retain self-selected speed as unknown per recording.",
+  "source_model_and_methods": {
+    "pdf_page": 5,
+    "reported_model": "Modified Rajagopal model, with one knee rotational degree of freedom; OpenSim4.0 inverse kinematics.",
+    "source_angle_units": "degrees",
+    "reported_global_axes": {
+      "x": "anterior",
+      "y": "superior",
+      "z": "right lateral"
+    },
+    "reported_angle_rotation_order": "Z, X, Y for flexion/extension, adduction/abduction, internal/external rotation. This documents the authors convention; it does not establish the exact modified XML or validate segment-angle sums.",
+    "segmentation": {
+      "level_walking": "Right heel-strike at vertical GRF upward crossing20N; toe-off at downward crossing20N.",
+      "stairs_and_slopes": "Manual foot-marker event selection.",
+      "locomotion_observation": "Right heel-strike to next right heel-strike.",
+      "stool_transfers": "Pelvis/shoulder marker-defined start/end; one complete transfer."
+    }
+  },
+  "data_and_code_availability": {
+    "dataset_doi": "10.6084/m9.figshare.27677016",
+    "dataset_reference_pdf_page": 10,
+    "data_records_pdf_page": 5,
+    "described_layout": [
+      "MotionCapture",
+      "JointAngle",
+      "EMG"
+    ],
+    "code_availability_pdf_page": 9,
+    "listed_code": [
+      "signal_processing.m",
+      "MVC_calculation.m",
+      "data_visualization.m"
+    ],
+    "limitation": "The code-availability section lists EMG processing and visualization scripts, not the exact modified musculoskeletal model or IK setup. This is not proof those artifacts are absent from every external location."
+  },
+  "publisher_code_review": {
+    "source_url": "https://api.figshare.com/v2/articles/27677016",
+    "article_sha256": "a497896e2da3d010bebae4d2f43d82ec35b1af40a52f4194542c2c376eb97b2a",
+    "zip_sha256": "fba7a633f65066242903129c274c4dde3cb60fb314034345fc62619c7f7b0075",
+    "publisher_md5_matched": true,
+    "files": [
+      "calculateMVC.m",
+      "dataVisualizer.m",
+      "emgProcessedDataConstruction.m",
+      "README.md",
+      "signalProcess.m"
+    ],
+    "scientific_approval": false,
+    "header_example": {
+      "path": "/mnt/s/locomotion_data/Gait120/S001/JointAngle/LevelWalking/Trial01/step01.mot",
+      "selected_columns_1_based": {
+        "8": "hip_flexion_r",
+        "9": "hip_adduction_r",
+        "10": "hip_rotation_r",
+        "11": "knee_angle_r",
+        "13": "ankle_angle_r"
+      },
+      "scope": "One source header only; no data rows loaded"
+    },
+    "publisher_knee_mapping": {
+      "script": "dataVisualizer.m",
+      "selection_line": 34,
+      "negation_line": 105,
+      "axis_label_line": 112,
+      "interpretation": "Selected knee source column is negated before labeling plot Knee Flexion; corroborates source paper right-knee convention",
+      "script_sha256": "9ccc445180d9c289f66e9ed1e86f9901ddaf87dc6d6c23480fd009f496080b3c"
+    },
+    "scope": "Bounded publisher archive inspection and one local MOT header; no numerical source values loaded",
+    "conclusion": "Publisher plotting code independently corroborates right-knee negation for flexion. Archive contains processing and visualization scripts, not the modified musculoskeletal model."
+  },
+  "protocol_metadata_proposal": {
+    "status": "isolated_metadata_proposal_not_adopted",
+    "helper": "contributor_tools/gait120_protocol_metadata.py",
+    "tests": "tests/test_gait120_protocol_metadata.py",
+    "tests_passed": 9,
+    "local_proposal": "converted_datasets/reconversion_v2/swarm_backlog_20261021/gait120_protocol_proposal/proposal_manifest.json",
+    "scope": "Adds only documented apparatus dimensions and field-specific DOI/page evidence; numerical functions unchanged; speed remains absent",
+    "remaining": "Integrate in new immutable conversion or metadata correction and verify persisted outputs before adoption"
+  }
+}

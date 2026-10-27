@@ -1,0 +1,144 @@
+{
+  "status": "full_model_XML_scope_reviewed_orientation_definition_still_pending",
+  "scientific_approval": false,
+  "full_target_scope": {
+    "subjects": 10,
+    "normalized_blocks": 335,
+    "retained_observations": 15061
+  },
+  "preservation_status": "Source-only full-scope preservation is complete per existing evidence. This review does not rerun it or promote canonical orientation.",
+  "existing_preparation": {
+    "lineage_blocks": 335,
+    "blocks_with_ik_path": 136,
+    "matched_stair_windows": 764,
+    "fileinfo_watcher_status": "waiting_for_predecessor",
+    "fileinfo_watcher_pid": 433720,
+    "model_pose_plan": "converted_datasets/reconversion_v2/mblue_modelpose_pilot_v2_20261021/plan.json",
+    "model_pose_status": "Prepared, not executed; frozen artifacts unchanged"
+  },
+  "new_evidence": {
+    "models_checked": 33,
+    "placed_models": 22,
+    "scaled_models": 11,
+    "subject_date_groups_with_models": 11,
+    "subjects": [
+      "AB01",
+      "AB02",
+      "AB03",
+      "AB04",
+      "AB05",
+      "AB06",
+      "AB08",
+      "AB09",
+      "AB10",
+      "AB11"
+    ],
+    "model_hashes_match_existing_census": true,
+    "all_models": {
+      "length_units": "meters",
+      "force_units": "N",
+      "gravity": "0 -9.8066499999999994 0",
+      "coordinates": 23,
+      "bilateral_knee_x_y_translations": "SimmSpline functions of knee_angle in every model; not a fixed hinge-center translation",
+      "ankle_axes": "Oblique and mirrored between sides in every model",
+      "subtalar_mtp_axes": "Additional non-sagittal joint rotations in every model; must use full source IK states"
+    },
+    "local_primary_code": {
+      "path": "/mnt/s/workspace/MBLUEAnkleOpenSimProcessing/Utility_OpenSim/StaticVirtualMarkers4Scaling_Updated.m",
+      "lines": [
+        15,
+        32
+      ],
+      "finding": "Original scaling helper explicitly states OpenSim x forward, y up, z right. It creates heel/metatarsal projected markers by setting ground Y to zero in the static trial."
+    },
+    "placed_marker_availability": "All 22 placed bare/exo models contain bilateral heel and first/fifth metatarsal landmarks. Source marker coordinates can support a separately declared landmark-axis derivation; naming alone does not approve calibration or clinical interpretation."
+  },
+  "important_definition_difference": {
+    "thigh": "Queued pilot rotates femur local -Y. Knee translation splines mean that vector must not be described as an exact hip-to-knee joint-center line without an explicit comparison. Both definitions can be valid derived quantities, but they are different.",
+    "shank": "Queued pilot rotates tibia local -Y. Its source frame and ankle offset are explicitly recorded; do not substitute it for a marker-defined segment axis without deciding the definition.",
+    "foot": "Queued pilot rotates calcaneus local +X. Placed heel/metatarsal marker offsets include nonzero vertical/lateral differences; local +X is not identical to the actual model landmark direction. The calcaneus body includes hindfoot/midfoot/metatarsals, while toes remain a separate body.",
+    "heading": "Queued pilot uses pelvis +X projected horizontally per sample. This is pelvis-relative heading, not independently validated direction of travel or treadmill belt direction. Keep the chosen frame explicit.",
+    "neutral": "No neutral calibration is applied in the queued pilot. Model coordinate zero and physical foot-flat/clinical neutral are not interchangeable."
+  },
+  "example_literal_XML": {
+    "path": "/mnt/s/locomotion_data/MBLUE_Ankle_Vicon/AB01/08162024/OpenSimGenFiles/gait2392_simbody_AB01_placed.osim",
+    "sha256": "dd5c9f97191e87c7356ee52a05b5c2585076f65ba13aa3a36cff5ac3b1b87c45",
+    "right_heel": {
+      "parent": "/bodyset/calcn_r",
+      "location": "-0.008291791266076487 0.056089635426524093 0.001474564890178276"
+    },
+    "right_met1": {
+      "parent": "/bodyset/calcn_r",
+      "location": "0.19961861358353628 0.019613961374282785 -0.01528026950540895"
+    },
+    "right_met5": {
+      "parent": "/bodyset/calcn_r",
+      "location": "0.18649523972392301 0.005808630730165576 0.063433041166000126"
+    },
+    "right_mtp_frames": [
+      {
+        "name": "calcn_r_offset",
+        "parent": "/bodyset/calcn_r",
+        "translation": "0.18952587061752438 -0.0029448214543290486 0.0011883790081443513",
+        "orientation": "0 0 0"
+      },
+      {
+        "name": "toes_r_offset",
+        "parent": "/bodyset/toes_r",
+        "translation": "0 0 0",
+        "orientation": "0 0 0"
+      }
+    ]
+  },
+  "concrete_transformation_path": [
+    "Finish existing native FileInfo job and bind every one of 335 blocks to source subject/date/configuration/IK/placed model. Do not select AB01 model by latest date.",
+    "Use model gravity and explicit processing-coordinate convention for ground up. Retain degrees flag from source IK header and let native OpenSim convert only rotational coordinates. Preserve translations in metres.",
+    "Load all 23 source coordinate states in the selected model, respect locked/constrained coordinates, assemble and verify that assembly does not alter source values. Use native body transforms; never reconstruct from sagittal sums.",
+    "Keep queued body-axis pilot as explicitly named derived model-axis evidence, documenting femur/tibia local -Y, calcaneus local +X and pelvis-relative heading. Preserve unsupported canonical anatomical fields as missing. Do not require user preference for this conservative source-preserving disposition; canonical restoration needs an evidence-backed shared axis/frame definition.",
+    "If landmark foot definition is selected, bind exact heel/metatarsal marker offsets from the chosen model; evaluate those stations in ground with native OpenSim, form the declared heel-to-forefoot vector and document whether static projected markers define calibration. Do not silently replace the current pilot axis.",
+    "Require independent known-pose 3D fixtures and independent native body/station checks for both sides, bare/exo, and task configurations. Current pose auditor checks clocks and projection arithmetic only, not independent physical pose accuracy.",
+    "Only after source-pose verification, interpolate using actual retained normalized target clocks for all 15061 observations, preserve all unrelated fields and identities, and keep missing/degenerate projections explicitly unassessed."
+  ],
+  "primary_web_sources": [
+    {
+      "url": "https://opensimconfluence.atlassian.net/wiki/spaces/OpenSim/pages/53086215/Gait+2392+and+2354+Models",
+      "support": "Model family documentation: fixed body frames, multi-axis hip and separate ankle/subtalar/metatarsophalangeal joints. Actual participant XML remains authority."
+    },
+    {
+      "url": "https://opensimconfluence.atlassian.net/wiki/spaces/OpenSim/pages/53090629/Coordinate+Systems+in+OpenSim",
+      "support": "Coordinate-system matching is required; generic model conventions are not proof of experimental alignment."
+    },
+    {
+      "url": "https://opensimconfluence.atlassian.net/wiki/spaces/OpenSim33/pages/53674149",
+      "support": "IK generalized coordinates and locked-coordinate behavior; actual model settings must govern."
+    }
+  ],
+  "implementation": {
+    "tool": "contributor_tools/inspect_mblue_orientation_model_xml.py",
+    "scope": "Sequential bounded XML parser, <=2 MiB per model, no IK/MAT arrays, native import, pose evaluation or conversion. Preserves literal source joint axes/functions/frame offsets/marker locations and verifies existing model hashes.",
+    "tests": "5 synthetic XML fixtures passed in 0.38 s under a 768 MiB address-space cap, including bounded reads. Not scientific dataset approval."
+  },
+  "remaining_blockers": [
+    "Full 335-block FileInfo/model/raw-clock correspondence is not yet complete.",
+    "The current canonical specification does not establish equivalence of the chosen model body axes and pelvis-relative heading to canonical anatomical orientation. Explicit source-derived projections can be retained without claiming that equivalence.",
+    "Actual native pilot and independent physical pose checks have not run.",
+    "Full 15061-observation corrected physical-orientation production remains unexecuted."
+  ],
+  "bindings": {
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/mblue_model_xml_axes_20261021.json": "b77075e5598baeb239144f6e7694a5b6f5e133685584906bc3b9bf62ec50c0af",
+    "/mnt/s/workspace/MBLUEAnkleOpenSimProcessing/Utility_OpenSim/StaticVirtualMarkers4Scaling_Updated.m": "793438dd6aab5cfeef02720179e9e0a6e736a5dba263be212966ac723d801a66",
+    "converted_datasets/reconversion_v2/mblue_modelpose_pilot_v2_20261021/plan.json": "5f47c0517b837e6daf5cfa158a95632e54b3a8e9961803a4662199fa211256e6",
+    "converted_datasets/reconversion_v2/swarm_backlog_20261021/mblue_orientation_lineage_v2.json": "0fdbade0d67a03ca4ebae608041fbe7de04772a560cf7b9a5dfbfa244461e16a",
+    "contributor_tools/inspect_mblue_orientation_model_xml.py": "5fab36aff979ce14d8d9412b6d3567dfd6a32f9755df520ccde077ddbccf157c",
+    "tests/test_mblue_orientation_xml_evidence.py": "b72de8ad5672d9c60b8a4a8e5d481bbdc67b821f1b85b583038ac4ccc6d7235f",
+    "contributor_tools/common/feature_constants.py": "024509411d3874fccbb2ff5d5daad893362a32cb74b32c6d9513fe129981ad52",
+    "docs/reference/index.html": "e101e9b1a2539c59d4f4122e203958327819bb19dc405342da26a6d16b5401f2",
+    "contributor_tools/common/plotting/generate_forward_kinematics_reference.py": "df10c1feb9f26e5652dbee7be35f8929e94eec52db2e80283103cb2de4212d5d"
+  },
+  "canonical_specification_comparison": {
+    "feature_constants": "contributor_tools/common/feature_constants.py lines 176-180 defines anatomical sagittal forward/backward tilt and segment orientation in space; it does not specify body-fixed axes, landmarks or heading.",
+    "researcher_reference": "docs/reference/index.html identifies segment orientation in radians and requires coordinate-frame, signs and derivative provenance; it does not select pelvis heading or body-axis landmarks.",
+    "illustrative_reference": "contributor_tools/common/plotting/generate_forward_kinematics_reference.py lines 436-438 uses vertical-down zero for thigh/shank and forward-horizontal zero for foot. This fixes illustrated zero references but does not prove actual model axes or experimental heading.",
+    "disposition": "No user preference is required to preserve explicitly named derived model-axis projections with exact body axes, pelvis-relative heading and zero reference. These source-derived quantities must remain separate from unsupported canonical anatomical fields. Canonical restoration requires an evidence-backed shared anatomical/frame definition and independently verified mapping; the present specification does not supply that mapping."
+  }
+}

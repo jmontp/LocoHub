@@ -22,7 +22,7 @@ import argparse
 from datetime import datetime
 import sys
 
-# Ensure repository root and src/ are importable so `import locohub` works
+# Ensure internal contributor tools are importable from a direct script invocation
 repo_root = Path(__file__).parent.parent
 src_dir = repo_root / "src"
 if str(repo_root) not in sys.path:
@@ -252,7 +252,7 @@ class UnifiedValidationGenerator:
         lines = []
         lines.append("# Validation Ranges")
         lines.append("")
-        lines.append("**Biomechanically validated ranges for locomotion data quality assessment**")
+        lines.append("**Curated reference ranges; evidence and population applicability require review**")
         lines.append("")
         
         # Configuration metadata
@@ -311,7 +311,7 @@ class UnifiedValidationGenerator:
             # Phase-based visualizations
             lines.append("### Phase-Based Visualizations")
             lines.append("")
-            lines.append("Validation ranges across the full gait cycle (0-100% phase):")
+            lines.append("Reference bounds at configured phase samples (not a continuous waveform assessment):")
             lines.append("")
             
             # Kinematic variables plot
@@ -455,13 +455,13 @@ class UnifiedValidationGenerator:
         lines.append("## Usage")
         lines.append("")
         lines.append("```python")
-        lines.append("from locohub import LocomotionData")
+        lines.append("import pandas as pd")
         lines.append("")
         lines.append(f"# Load the dataset")
-        lines.append(f"data = LocomotionData('converted_datasets/{dataset_name.lower().replace(' ', '_')}_phase.parquet')")
+        lines.append(f"data = pd.read_parquet('converted_datasets/{dataset_name.lower().replace(' ', '_')}_phase.parquet')")
         lines.append("")
         lines.append("# Get data for analysis")
-        lines.append("cycles_3d, features = data.get_cycles('SUB01', 'level_walking')")
+        lines.append("walking = data.loc[data['task'].eq('level_walking')]")
         lines.append("```")
         lines.append("")
         

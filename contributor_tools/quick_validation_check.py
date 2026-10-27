@@ -39,7 +39,7 @@ import threading
 import time
 import numpy as np
 
-# Ensure repository root and src/ are importable so `import locohub` works
+# Ensure internal contributor tools are importable from a direct script invocation
 project_root = Path(__file__).parent.parent
 src_dir = project_root / "src"
 if str(project_root) not in sys.path:
@@ -48,8 +48,8 @@ if src_dir.exists() and str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
 from contributor_tools.common.validation import Validator
-from locohub import task_registry
-from locohub import LocomotionData
+from contributor_tools.common import task_registry
+from contributor_tools.common.dataset_table import DatasetTable
 
 # Detect if we're in a headless environment (no display available)
 import os
@@ -278,8 +278,16 @@ def generate_plots(dataset_path: str, validator: Validator, task_filter: Optiona
     from contributor_tools.common.plotting import create_task_combined_plot
     import matplotlib.pyplot as plt
 
-    locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
+    locomotion_data = DatasetTable(dataset_path, phase_col='phase_ipsi')
     dataset_name = Path(dataset_path).stem
+    # `manage_dataset_documentation.update_validation_gallery()` expects plot filenames to contain
+    # `*_phase_<variant?>_<task>_all_features_validation.png` so it can parse tasks/variants.
+    #
+    # Standard dataset basenames already contain `_phase_` (e.g., `gtech_2024_phase_clean`) or end
+    # with `_phase` (e.g., `umich_2021_phase`). Only append `_phase` when the basename has no
+    # phase token at all.
+    if '_phase_' not in dataset_name and not dataset_name.endswith('_phase'):
+        dataset_name = f"{dataset_name}_phase"
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
     
     # Determine which tasks to plot
@@ -301,6 +309,20 @@ def generate_plots(dataset_path: str, validator: Validator, task_filter: Optiona
         show = False  # If output_dir is specified, save files instead of showing
     else:
         show = True  # Default to showing plots if no output_dir specified
+
+    # Remove stale task plots so downstream documentation uses only current outputs.
+    if output_dir:
+        stale_count = 0
+        for task in tasks:
+            for old_plot in output_dir.glob(f"*_{task}_all_features_validation.png"):
+                old_plot.unlink(missing_ok=True)
+                stale_count += 1
+            legacy_plot = output_dir / f"{task}_all_features_validation.png"
+            if legacy_plot.exists():
+                legacy_plot.unlink()
+                stale_count += 1
+        if stale_count:
+            print(f"🧹 Removed {stale_count} stale plot file(s)")
     
     # Generate plots for each task
     print(f"\n🎨 Generating plots for {len(tasks)} task(s)...")
@@ -310,7 +332,8 @@ def generate_plots(dataset_path: str, validator: Validator, task_filter: Optiona
         
         try:
             # Get validation failures for this task
-            failures = validator._validate_task_with_failing_features(locomotion_data, task)
+            assessment = validator._validate_task_details(locomotion_data, task)
+            failures = assessment.failing_features
             
             # Get task data
             data_3d, features = locomotion_data.get_cycles(subject=None, task=task)
@@ -330,6 +353,7 @@ def generate_plots(dataset_path: str, validator: Validator, task_filter: Optiona
                 data_3d=data_3d,
                 feature_names=features,
                 failing_features=failures,
+                assessed_passing=assessment.global_passing_strides,
                 dataset_name=dataset_name,
                 timestamp=timestamp,
                 show_interactive=show,
@@ -379,10 +403,10 @@ def print_validation_summary(result: Dict, task_details: Optional[Dict[str, Dict
 
     if mode == 'phase':
         total_strides = stats['total_strides']
-        passing_strides = total_strides - stats['total_failing_strides']
-        print(f"Overall Pass Rate: {stats['pass_rate']:.1%} ({passing_strides}/{total_strides} strides)")
+        passing_strides = stats.get('total_passing_strides', 0)
+        print(f"Selected-profile conformance: {stats['pass_rate']:.1%} ({passing_strides}/{total_strides} strides)")
     else:
-        print(f"Overall Pass Rate: {stats['pass_rate']:.1%} (structural checks)")
+        print(f"Selected-profile conformance: {stats['pass_rate']:.1%} (structural checks)")
 
     quality_gate = result.get('quality_gate_passed')
     threshold = result.get('quality_gate_threshold')
@@ -392,7 +416,7 @@ def print_validation_summary(result: Dict, task_details: Optional[Dict[str, Dict
             threshold_pct = f"{threshold * 100:.0f}%"
         else:
             threshold_pct = "n/a"
-        print(f"Quality Gate ({threshold_pct} threshold): {icon}")
+        print(f"All required checks passed: {icon}")
 
     phase_icon = "✅" if result['phase_valid'] else "❌"
     structure_label = "Time Structure" if mode == 'time' else "Phase Structure"
@@ -412,7 +436,7 @@ def print_validation_summary(result: Dict, task_details: Optional[Dict[str, Dict
                 details = task_details[task]
                 total = details.get('total_strides', 0) or 0
                 failing = details.get('failing_strides', 0) or 0
-                passing = total - failing if total else 0
+                passing = details.get('passing_strides', 0)
 
                 if total:
                     pass_pct = details.get('pass_rate', 1.0) * 100
@@ -521,6 +545,8 @@ def _build_summary_payload(
         'dataset': str(dataset_path),
         'ranges': str(ranges_file),
         'mode': mode,
+        'review_status': result.get('review_status', 'unreviewed'),
+        'publishable': result.get('publishable', False),
         'passed': bool(result.get('passed')),
         'schema_passed': bool(result.get('schema_passed', result.get('passed'))),
         'quality_gate_passed': result.get('quality_gate_passed'),
@@ -531,6 +557,8 @@ def _build_summary_payload(
             'pass_rate': _safe_float(stats.get('pass_rate')),
             'total_strides': _safe_int(stats.get('total_strides')),
             'total_failing_strides': _safe_int(stats.get('total_failing_strides')),
+            'total_passing_strides': _safe_int(stats.get('total_passing_strides')),
+            'total_unassessed_strides': _safe_int(stats.get('total_unassessed_strides')),
             'num_tasks': _safe_int(stats.get('num_tasks')),
             'total_checks': _safe_int(stats.get('total_checks')),
             'total_violations': _safe_int(stats.get('total_violations')),
@@ -750,7 +778,7 @@ def _compute_task_statistics(
     dataset_path: Path,
     validator: Validator,
     result: Dict,
-    locomotion_data: Optional[LocomotionData] = None,
+    locomotion_data: Optional[DatasetTable] = None,
 ) -> Dict[str, Dict[str, object]]:
     """Collect per-task stride and feature statistics for reporting."""
     task_details: Dict[str, Dict[str, object]] = {}
@@ -759,28 +787,19 @@ def _compute_task_statistics(
         return task_details
 
     if locomotion_data is None:
-        locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
+        locomotion_data = DatasetTable(dataset_path, phase_col='phase_ipsi')
     dataset_tasks = list(locomotion_data.get_tasks())
     violation_tasks = list(result.get('violations', {}).keys())
     all_tasks = sorted(set(dataset_tasks) | set(violation_tasks))
 
     for task in all_tasks:
-        total_strides = 0
-        if task in dataset_tasks:
-            task_df = locomotion_data.df[locomotion_data.df['task'] == task]
-            if locomotion_data.POINTS_PER_CYCLE:
-                total_strides = len(task_df) // locomotion_data.POINTS_PER_CYCLE
-
+        canonical = result.get('tasks', {}).get(task, {})
+        total_strides = canonical.get('total_strides', 0)
+        passing_strides = len(canonical.get('global_passing_strides', []))
+        failing_strides = len(canonical.get('failing_strides_map', {}))
+        unassessed = len(canonical.get('unassessed_strides', []))
         violations = result.get('violations', {}).get(task, {})
-
-        failing_stride_indices: Set[int] = set()
-        for indices in violations.values():
-            failing_stride_indices.update(indices)
-
-        failing_strides = len(failing_stride_indices)
-        pass_rate = 1.0
-        if total_strides > 0:
-            pass_rate = max(0.0, 1.0 - (failing_strides / total_strides))
+        pass_rate = passing_strides / total_strides if total_strides else 0.0
 
         # Analyse failures by phase (below / above limits)
         feature_phase_stats: Dict[str, Dict[int, Dict[str, int]]] = {}
@@ -793,6 +812,7 @@ def _compute_task_statistics(
                 for feature_name in phase_data.keys()
             })
 
+            config_features = [f for f in config_features if f in locomotion_data.features]
             if config_features:
                 data_3d, feature_names = locomotion_data.get_cycles(
                     subject=None,
@@ -859,6 +879,8 @@ def _compute_task_statistics(
         task_details[task] = {
             'total_strides': total_strides,
             'failing_strides': failing_strides,
+            'passing_strides': passing_strides,
+            'unassessed_strides': unassessed,
             'pass_rate': pass_rate,
             'feature_failures': feature_failures
         }
@@ -888,7 +910,7 @@ def _report_task_registry_mismatches(dataset_tasks: List[str], range_tasks: List
     if registry_ok:
         print("\n✅ Task registry check passed (all tasks recognised).")
     else:
-        print("\n⚠️  Update internal/config_management/task_registry.py if these tasks are expected.")
+        print("\n⚠️  Update contributor_tools/common/task_registry.py if these tasks are expected.")
 
     return registry_ok
 

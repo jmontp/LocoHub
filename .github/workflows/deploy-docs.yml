@@ -4,13 +4,37 @@ on:
   push:
     branches:
       - main
-      - human-managed-refactor  # Remove this later when merged to main
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - 'requirements-curation.txt'
+      - 'contributor_tools/common/**'
+      - 'tests/test_data_documentation.py'
+      - '.github/workflows/deploy-docs.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - 'requirements-curation.txt'
+      - 'contributor_tools/common/**'
+      - 'tests/test_data_documentation.py'
+      - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:  # Allow manual trigger
 
 permissions:
   contents: read
   pages: write
   id-token: write
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  OPENBLAS_NUM_THREADS: '1'
+  OMP_NUM_THREADS: '1'
+  MKL_NUM_THREADS: '1'
+  MPLBACKEND: Agg
 
 jobs:
   build:
@@ -21,24 +45,42 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
           
       - name: Install dependencies
         run: |
-          pip install mkdocs
-          pip install mkdocs-material
-          pip install mkdocs-mermaid2-plugin
+          python -m pip install -r requirements-curation.txt
+
+      - name: Test the published data examples
+        run: python -m pytest tests/test_data_documentation.py -q
           
-      - name: Build documentation
-        run: mkdocs build
+      - name: Check authored HTML and build static documentation
+        run: |
+          python docs/build.py --check
+          python docs/build.py --output site
+
+      - name: Upload pull request HTML preview
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: locohub-html-preview
+          path: ./site
+          include-hidden-files: true
+          retention-days: 7
         
       - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./site
           
   deploy:
     needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     
     environment:

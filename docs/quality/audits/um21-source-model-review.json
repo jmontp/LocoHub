@@ -1,0 +1,367 @@
+{
+  "status": "source_model_review_with_isolated_disclosure_proposal",
+  "scientific_approval": false,
+  "local_source": {
+    "path": "contributor_tools/conversion_scripts/Umich_2021/R01 Dataset README.pdf",
+    "sha256": "5836bb3fedd473701cfc3e2bbbced5c31e9c893363af265d20c4f250c87e2cbd",
+    "evidence": [
+      {
+        "page": 1,
+        "claim": "Joint angles, forces, moments and powers sampled at100Hz; forceplates1000Hz."
+      },
+      {
+        "page": 2,
+        "claim": "Markers use global coordinates in metres; joint angles in degrees."
+      },
+      {
+        "page": 3,
+        "claim": "Joint moments already Nm/kg and corrected to internal moment. Forceplate force is N/kg in local plate axes: xside-to-side,ypropulsive/braking,zground-normal; COP metres. No generic local-to-global/anatomical transform given."
+      },
+      {
+        "page": 3,
+        "claim": "velProf.cvel is commanded treadmill velocity; lvel/rvel experimental per-stride velocity. Their actual indexed clocks still require verification."
+      },
+      {
+        "page": 6,
+        "claim": "Pelvis/foot angles absolute; hip/knee/ankle relative. Normalized legs concatenated, so bilateral pairing cannot be inferred from array order."
+      }
+    ]
+  },
+  "primary_external_sources": [
+    {
+      "url": "https://vicon-help.atlassian.net/wiki/spaces/Nexus216/pages/11605972/Plug-in%2BGait%2Boutput%2Bspecification",
+      "sections": "Joint kinematic definitions (lines222-244); Joint kinetics(lines245-276)",
+      "paraphrase": "Segment reconstruction requires ordered embedded-axis rotations with side-specific signs. Ankle order differs and has a model zero-position offset. Reaction frames are configurable; moment component order is not simply local xyz. Generic Nexus units differ from the curated UM21 units, so do not reapply generic scaling.",
+      "limitation": "Nexus2.16 documentation supports model mechanics; does not prove exact2021 processing configuration or calibration."
+    },
+    {
+      "url": "https://vicon-help.atlassian.net/wiki/spaces/Nexus216/pages/11611411/Plug-in%2BGait%2Bkinematic%2Bvariables",
+      "sections": "lines122-153",
+      "paraphrase": "Relative joint angles are geometric projections about embedded axes. Absolute progression axes follow walking direction. Foot progression is a transverse-plane angle. Scalar sagittal addition is not general3D segment reconstruction."
+    }
+  ],
+  "finding": {
+    "path": "contributor_tools/reconvert_umich_streaming.py",
+    "lines": "86-95",
+    "claim": "Current shared cycle_frame directly exports pelvis+hip and pelvis+hip-knee as canonical thigh/shank orientations. Correct arithmetic reproduction does not verify model orientation. No waveform-based ankle offset/sign change is justified."
+  },
+  "affected_producers": [
+    {
+      "producer": "reconvert_umich_streaming.py",
+      "fields": [
+        "thigh_sagittal_angle_ipsi_rad",
+        "thigh_sagittal_angle_contra_rad",
+        "shank_sagittal_angle_ipsi_rad",
+        "shank_sagittal_angle_contra_rad"
+      ],
+      "foot_fields": [],
+      "segment_velocity_fields": [],
+      "pelvis": "RPelvisAngles component0 converted to radians; source-based, separate convention review, not algebraic sum."
+    },
+    {
+      "producer": "reconvert_umich_running.py",
+      "lines": "17,99",
+      "effect": "Imports cycle_frame; same4derived fields; also retains full source joint components."
+    },
+    {
+      "producer": "reconvert_umich_stairs.py",
+      "lines": "15,119",
+      "effect": "Imports cycle_frame; same4derived fields; also retains full source joint components."
+    },
+    {
+      "producer": "recover_umich_curated_boundaries.py",
+      "lines": "13,131",
+      "effect": "Imports cycle_frame; same4derived fields."
+    },
+    {
+      "producer": "extend_umich_tread_source.py",
+      "lines": "150-159",
+      "effect": "Copies all existing phase columns, so propagates same4derived fields; adds full source joint components."
+    },
+    {
+      "producer": "reconvert_umich_wtr.py",
+      "effect": "Source-component companion only; no canonical derived segment or segment-velocity fields."
+    },
+    {
+      "producer": "reconvert_umich_transfers.py",
+      "lines": "18-44",
+      "effect": "Original normalized source curves only; no canonical derived segment or segment-velocity fields."
+    },
+    {
+      "producer": "conversion_scripts/Umich_2021/convert_umich_phase_to_parquet.m",
+      "lines": "1959-2027",
+      "fields": [
+        "thigh_sagittal_angle_ipsi_rad",
+        "thigh_sagittal_angle_contra_rad",
+        "thigh_sagittal_velocity_ipsi_rad_s",
+        "thigh_sagittal_velocity_contra_rad_s",
+        "shank_sagittal_angle_ipsi_rad",
+        "shank_sagittal_angle_contra_rad",
+        "shank_sagittal_velocity_ipsi_rad_s",
+        "shank_sagittal_velocity_contra_rad_s",
+        "foot_sagittal_angle_ipsi_rad",
+        "foot_sagittal_angle_contra_rad",
+        "foot_sagittal_velocity_ipsi_rad_s",
+        "foot_sagittal_velocity_contra_rad_s"
+      ],
+      "effect": "Historical native path derives thigh/shank/foot angles and their velocities; not the active corrected Python queue."
+    },
+    {
+      "producer": "conversion_scripts/Umich_2021/convert_umich_time_to_parquet.m",
+      "lines": "564-587,830-844",
+      "fields": [
+        "thigh_sagittal_angle_ipsi_rad",
+        "thigh_sagittal_angle_contra_rad",
+        "thigh_sagittal_velocity_ipsi_rad_s",
+        "thigh_sagittal_velocity_contra_rad_s",
+        "shank_sagittal_angle_ipsi_rad",
+        "shank_sagittal_angle_contra_rad",
+        "shank_sagittal_velocity_ipsi_rad_s",
+        "shank_sagittal_velocity_contra_rad_s",
+        "foot_sagittal_angle_ipsi_rad",
+        "foot_sagittal_angle_contra_rad",
+        "foot_sagittal_velocity_ipsi_rad_s",
+        "foot_sagittal_velocity_contra_rad_s"
+      ],
+      "effect": "Historical native path derives same12fields; pelvis can fall back to an inferred chain if source pelvis missing, requiring separate provenance."
+    }
+  ],
+  "available_reconstruction_inputs": {
+    "manifest": "converted_datasets/reconversion_v2/um21_running_full_20261020/AB01/s1x8/source_columns.json",
+    "manifest_sha256": "0a49fd52750665d96d9cd93edc26cfbfae7b9b1f2611c4f6c7c2567b75702b9f",
+    "joint_angle_components": {
+      "source_joint_angle_lankleangles_component_0_deg": {
+        "group": "jointAngles",
+        "variable": "LAnkleAngles",
+        "matlab_component_1based": 1,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_lankleangles_component_1_deg": {
+        "group": "jointAngles",
+        "variable": "LAnkleAngles",
+        "matlab_component_1based": 2,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_lankleangles_component_2_deg": {
+        "group": "jointAngles",
+        "variable": "LAnkleAngles",
+        "matlab_component_1based": 3,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_lfootprogressangles_component_0_deg": {
+        "group": "jointAngles",
+        "variable": "LFootProgressAngles",
+        "matlab_component_1based": 1,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_lfootprogressangles_component_1_deg": {
+        "group": "jointAngles",
+        "variable": "LFootProgressAngles",
+        "matlab_component_1based": 2,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_lfootprogressangles_component_2_deg": {
+        "group": "jointAngles",
+        "variable": "LFootProgressAngles",
+        "matlab_component_1based": 3,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_lhipangles_component_0_deg": {
+        "group": "jointAngles",
+        "variable": "LHipAngles",
+        "matlab_component_1based": 1,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_lhipangles_component_1_deg": {
+        "group": "jointAngles",
+        "variable": "LHipAngles",
+        "matlab_component_1based": 2,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_lhipangles_component_2_deg": {
+        "group": "jointAngles",
+        "variable": "LHipAngles",
+        "matlab_component_1based": 3,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_lkneeangles_component_0_deg": {
+        "group": "jointAngles",
+        "variable": "LKneeAngles",
+        "matlab_component_1based": 1,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_lkneeangles_component_1_deg": {
+        "group": "jointAngles",
+        "variable": "LKneeAngles",
+        "matlab_component_1based": 2,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_lkneeangles_component_2_deg": {
+        "group": "jointAngles",
+        "variable": "LKneeAngles",
+        "matlab_component_1based": 3,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_lpelvisangles_component_0_deg": {
+        "group": "jointAngles",
+        "variable": "LPelvisAngles",
+        "matlab_component_1based": 1,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_lpelvisangles_component_1_deg": {
+        "group": "jointAngles",
+        "variable": "LPelvisAngles",
+        "matlab_component_1based": 2,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_lpelvisangles_component_2_deg": {
+        "group": "jointAngles",
+        "variable": "LPelvisAngles",
+        "matlab_component_1based": 3,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rankleangles_component_0_deg": {
+        "group": "jointAngles",
+        "variable": "RAnkleAngles",
+        "matlab_component_1based": 1,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rankleangles_component_1_deg": {
+        "group": "jointAngles",
+        "variable": "RAnkleAngles",
+        "matlab_component_1based": 2,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rankleangles_component_2_deg": {
+        "group": "jointAngles",
+        "variable": "RAnkleAngles",
+        "matlab_component_1based": 3,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rfootprogressangles_component_0_deg": {
+        "group": "jointAngles",
+        "variable": "RFootProgressAngles",
+        "matlab_component_1based": 1,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rfootprogressangles_component_1_deg": {
+        "group": "jointAngles",
+        "variable": "RFootProgressAngles",
+        "matlab_component_1based": 2,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rfootprogressangles_component_2_deg": {
+        "group": "jointAngles",
+        "variable": "RFootProgressAngles",
+        "matlab_component_1based": 3,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rhipangles_component_0_deg": {
+        "group": "jointAngles",
+        "variable": "RHipAngles",
+        "matlab_component_1based": 1,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rhipangles_component_1_deg": {
+        "group": "jointAngles",
+        "variable": "RHipAngles",
+        "matlab_component_1based": 2,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rhipangles_component_2_deg": {
+        "group": "jointAngles",
+        "variable": "RHipAngles",
+        "matlab_component_1based": 3,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rkneeangles_component_0_deg": {
+        "group": "jointAngles",
+        "variable": "RKneeAngles",
+        "matlab_component_1based": 1,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rkneeangles_component_1_deg": {
+        "group": "jointAngles",
+        "variable": "RKneeAngles",
+        "matlab_component_1based": 2,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rkneeangles_component_2_deg": {
+        "group": "jointAngles",
+        "variable": "RKneeAngles",
+        "matlab_component_1based": 3,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rpelvisangles_component_0_deg": {
+        "group": "jointAngles",
+        "variable": "RPelvisAngles",
+        "matlab_component_1based": 1,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rpelvisangles_component_1_deg": {
+        "group": "jointAngles",
+        "variable": "RPelvisAngles",
+        "matlab_component_1based": 2,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      },
+      "source_joint_angle_rpelvisangles_component_2_deg": {
+        "group": "jointAngles",
+        "variable": "RPelvisAngles",
+        "matlab_component_1based": 3,
+        "unit": "deg",
+        "canonical_frame_verified": false
+      }
+    },
+    "scope": "One completed Run source-column manifest inspected; not a claim all recording schemas are identical. Full treadmill extension/stairs/boundary/Wtr source components are queued or partly reconstructed.",
+    "still_required": [
+      "Determine dataset-specific progression axes, side conventions, rotation order, ankle definition and calibration from original processing or independent marker/model evidence",
+      "Retain all3pelvis/hip/knee/ankle components and source clocks; do not reconstruct3D from sagittal curves alone",
+      "Reconstruct full3D segment frames then project to documented researcher coordinates",
+      "Check against source marker geometry or original segment frames across both sides and nonplanar poses; measure angular derivatives on real time only",
+      "Resolve pelvis right/left selection and inferred historical fallback explicitly"
+    ]
+  },
+  "isolated_proposal": "converted_datasets/reconversion_v2/um21_planar_disclosure_proposal_20261021/field_policy.json",
+  "tests": "4 stdlib text/schema tests passed; no research data processed",
+  "completion_limit": "Withholding unsupported canonical fields is interim disclosure, not completion. True model-based segment outputs remain required before claiming this gap fixed.",
+  "reviewed_code_sha256": {
+    "contributor_tools/reconvert_umich_streaming.py": "87484583032660fb020816fdcc51916de07305694f5a38e2998b7756509ee42e",
+    "contributor_tools/reconvert_umich_running.py": "c3ef8f722ada6916474e630bbc333eea7a01d727c15c53509df4bff2adad419b",
+    "contributor_tools/reconvert_umich_stairs.py": "37d054d5d8f32276079d0ecc78162cea7f9f3acdea465b3c483aa706c5703a07",
+    "contributor_tools/recover_umich_curated_boundaries.py": "b5662be40bbb0bea9504a743d6fcdb2554d6f7c31522341fcc933296ae81089c",
+    "contributor_tools/extend_umich_tread_source.py": "a7c565ebe25d00effd81403b295638ba82b049632555bf154c404eb524367075",
+    "contributor_tools/reconvert_umich_wtr.py": "b6fd2543220ccb2b2b4befb183ae5003cf27f36f316e29e07b53cfa604aab960",
+    "contributor_tools/reconvert_umich_transfers.py": "d3461dc2042787e5fea535e59c318697170ca3ecb54d2bd297ca57b1909668e8",
+    "contributor_tools/conversion_scripts/Umich_2021/convert_umich_phase_to_parquet.m": "f0909e0c738d0bcbd5ee140bd063b23f233e921064a666a634af132f6945d2ec",
+    "contributor_tools/conversion_scripts/Umich_2021/convert_umich_time_to_parquet.m": "f568268a5c8b222a54fcae7ed2e53c5ab969dd75f08a89bf852677d800fc6216"
+  }
+}

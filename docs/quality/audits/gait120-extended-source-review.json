@@ -1,0 +1,88 @@
+{
+  "status": "separate_extended_auditor_and_derivative_correction_prepared_not_executed",
+  "scientific_approval": false,
+  "frozen_baseline": {
+    "watcher_pid": 440145,
+    "watcher_start": "25617792",
+    "plan": "converted_datasets/reconversion_v2/gait120_source_checked_full_v4_20261021/plan.json",
+    "unchanged": true,
+    "records": 6882,
+    "subjects": 120,
+    "tasks": 7
+  },
+  "confirmed_derivative_issue": {
+    "converter_lines": [
+      808,
+      837
+    ],
+    "helper_lines": [
+      213,
+      309
+    ],
+    "finding": "The source adapter sets discontinuity_idx=None but omits detect_discontinuity=False in 19 calls. Shared helpers default detection on; None does not disable it. Thus unshifted source curves can be spline-repaired before velocity/acceleration computation.",
+    "independent_synthetic_evidence": "A 150-point increasing sequence with one added step triggers the frozen helper and produces derivatives different from scalar endpoint/centered differences. Explicit detect_discontinuity=False matches those independently computed differences. Synthetic source only; no claim of prevalence in actual records.",
+    "correction": "Isolated converter changes 19 keyword arguments and 3 provenance metadata fields only; AST equality verified after removing exactly those additions. No unrelated numerical functions changed.",
+    "not_claimed": "A source jump need not represent valid motion; preserve it and flag quality separately rather than silently invoking phase-shift repair."
+  },
+  "extended_audit": {
+    "source": "contributor_tools/audit_gait120_extended_sources.py",
+    "coverage": "Future prepared full audit requires actual completed 6,882-record source summary, exact ordered ledger and pinned per-record receipts. No partial pilot substituted.",
+    "checks": [
+      "Six joint velocities and six accelerations against scalar physical-duration finite differences when unshifted repair is not triggered.",
+      "Six planar segment angles and six velocities plus source pelvis angle/velocity arithmetic; no anatomical approval.",
+      "Original subject-keyed spreadsheet Bodymass(Kg) and Height(mm), independently read without converter metadata helpers; duplicate/missing subject rejected."
+    ],
+    "repair_triggered_values": "Explicitly unassessed; missing values never passing.",
+    "prepare_command": [
+      "python3",
+      "contributor_tools/audit_gait120_extended_sources.py",
+      "prepare",
+      "--original-plan",
+      "converted_datasets/reconversion_v2/gait120_source_checked_full_v4_20261021/plan.json",
+      "--output-root",
+      "converted_datasets/reconversion_v2/gait120_extended_full_audit_20261021"
+    ],
+    "worker_command_template": [
+      "python3",
+      "contributor_tools/audit_gait120_extended_sources.py",
+      "worker",
+      "--plan",
+      "converted_datasets/reconversion_v2/gait120_extended_full_audit_20261021/plan.json",
+      "--index",
+      "0..6881"
+    ],
+    "execution_gate": "Root serial scheduling only, external own-process-group guard, 1 GiB worker, 120 seconds, Windows 3,072 MiB / Linux 3,584 MiB startup. Full predecessor output does not yet exist; no fabricated audit plan/receipts."
+  },
+  "segment_successor": {
+    "source": "contributor_tools/withhold_gait120_planar_segments.py",
+    "proposal": "Retain 12 original planar angle/velocity arrays under derived_planar aliases, null unsupported canonical segment orientations, preserve every unrelated array/schema metadata/null/float bits.",
+    "anatomical_limit": "Sagittal scalar addition is not verified 3D model orientation; source segment zero/reference alignment remains unresolved. Derivative repair provenance retained rather than presenting estimates as measurements.",
+    "execution": "Not applied; requires separate receipt-bound successor after root review."
+  },
+  "proposal_manifest": {
+    "path": "converted_datasets/reconversion_v2/gait120_unshifted_derivative_proposal_20261021/proposal_manifest.json",
+    "sha256": "620dcefcc8b3b4b2363c2f839051fd69ee1ea529658726fd6852817dbde7e47f",
+    "patched_converter_sha256": "28a8907589cc2be43bfd69e6456cfc89dc7b0e01c4f9a74b67a58c247a0ee6fc"
+  },
+  "tests": {
+    "passed": 8,
+    "scientific_data_loaded": false,
+    "coverage": [
+      "Analytic scalar derivatives",
+      "Unshifted jump vs actual frozen helper",
+      "Independent source-sheet identity/units",
+      "Every reviewed derivative and planar estimate on synthetic signals",
+      "Exact alias preservation and corruption rejection",
+      "AST-restricted patch"
+    ]
+  },
+  "bindings": {
+    "contributor_tools/audit_gait120_extended_sources.py": "3465a61540819ef843593c73d2b634e1c6ad57eff0e54da9dc690d921e6e5d7e",
+    "contributor_tools/withhold_gait120_planar_segments.py": "36f37706c8620d42cf104454e144a79133bf2088c1b28aa877327bd5696f4dea",
+    "contributor_tools/prepare_gait120_unshifted_derivatives.py": "57aea47b44720aeab6f5956c9c1febfaff288fc3438300686ad24880e7b14466",
+    "tests/test_gait120_extended_sources.py": "88c8c0f86096e9fef9cde360737e8b5ef28af52c7dd47619e0654450caba2282",
+    "contributor_tools/common/derivatives.py": "34f97fd8d68b21ba3343ddcb354f9004e492c16d715f4c9b53b6c7253ecc51b5",
+    "contributor_tools/conversion_scripts/Gait120/scale_model.py": "f4083908c4d8874cd6b8deadf568f24a6ea65b8e04c21aeadcb0f9ef03a79d8a",
+    "contributor_tools/conversion_scripts/Gait120/convert_gait120_to_parquet.py": "950579287b8c34cc97ae7e7e9372aacb924e7709e73287b943164b756804f55e"
+  }
+}

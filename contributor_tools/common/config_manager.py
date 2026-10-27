@@ -7,19 +7,39 @@ Stores ipsilateral and contralateral ranges exactly as defined in YAML.
 """
 
 import copy
+import math
 import yaml
 from pathlib import Path
 from typing import Dict, Optional, Any, Tuple, List
 from datetime import datetime
 
 
+class _ProfileLoader(yaml.SafeLoader):
+    """Prevent repeated YAML keys from silently changing a scientific rule."""
+
+
+def _unique_mapping(loader, node, deep=False):
+    mapping = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in mapping:
+            raise ValueError(f"Duplicate validation-profile key: {key!r}")
+        mapping[key] = loader.construct_object(value_node, deep=deep)
+    return mapping
+
+
+_ProfileLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _unique_mapping
+)
+
+
 class ValidationConfigManager:
     """Manage validation configurations with explicit ipsilateral/contralateral data."""
-    
+
     def __init__(self, config_path: Optional[Path] = None):
         """
         Initialize the config manager.
-        
+
         Args:
             config_path: Optional path to load initial data from.
                         If None, creates an empty configuration.
@@ -32,26 +52,26 @@ class ValidationConfigManager:
         }
         # Track legacy GRF variable names seen during load for user warnings
         self._legacy_grf_seen: set[str] = set()
-        
+
         # Default config directory
         project_root = Path(__file__).parent.parent.parent
         self.config_dir = project_root / "contributor_tools" / "validation_ranges"
         self.config_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Default config file path
         self.default_config_path = self.config_dir / "default_ranges.yaml"
-        
+
         # Load initial data if path provided
         if config_path:
             self.load(config_path)
-    
+
     def load(self, config_path: Optional[Path] = None) -> None:
         """
         Load validation ranges from YAML file into internal storage.
-        
+
         Args:
             config_path: Path to config file. If None, uses default.
-            
+
         Raises:
             FileNotFoundError: If config file doesn't exist
             ValueError: If phase values are invalid
@@ -61,23 +81,25 @@ class ValidationConfigManager:
             config_path = self.default_config_path
         else:
             config_path = Path(config_path)
-        
+
         if not config_path.exists():
             raise FileNotFoundError(f"Config file not found: {config_path}")
-        
+
         with open(config_path, 'r') as f:
-            config = yaml.safe_load(f)
-        
+            config = yaml.load(f, Loader=_ProfileLoader)
+        if not isinstance(config, dict) or not isinstance(config.get('tasks'), dict):
+            raise ValueError("Validation profile must contain a 'tasks' mapping")
+
         # Clear existing data
         self._data.clear()
         self._metadata.clear()
         self._legacy_grf_seen.clear()
-        
+
         # Extract metadata (everything except 'tasks')
         for key, value in config.items():
             if key != 'tasks':
                 self._metadata[key] = value
-        
+
         tasks_block = config.get('tasks', {}) or {}
 
         for task_name, task_section in tasks_block.items():
@@ -102,24 +124,8 @@ class ValidationConfigManager:
                 f"{vars_list}"
             )
 
-    # Legacy GRF naming aliases (old -> new). Duplicated from src/locohub/feature_constants
-    # to avoid internal modules depending on user-facing code.
-    _LEGACY_GRF_ALIASES: Dict[str, str] = {
-        # Raw GRF (N)
-        'vertical_grf_ipsi_N': 'grf_vertical_ipsi_N',
-        'vertical_grf_contra_N': 'grf_vertical_contra_N',
-        'anterior_grf_ipsi_N': 'grf_anterior_ipsi_N',
-        'anterior_grf_contra_N': 'grf_anterior_contra_N',
-        'lateral_grf_ipsi_N': 'grf_lateral_ipsi_N',
-        'lateral_grf_contra_N': 'grf_lateral_contra_N',
-        # Normalized GRF (BW)
-        'vertical_grf_ipsi_BW': 'grf_vertical_ipsi_BW',
-        'vertical_grf_contra_BW': 'grf_vertical_contra_BW',
-        'anterior_grf_ipsi_BW': 'grf_anterior_ipsi_BW',
-        'anterior_grf_contra_BW': 'grf_anterior_contra_BW',
-        'lateral_grf_ipsi_BW': 'grf_lateral_ipsi_BW',
-        'lateral_grf_contra_BW': 'grf_lateral_contra_BW',
-    }
+    # One internal catalog owns accepted legacy names.
+    from .feature_constants import LEGACY_GRF_ALIASES as _LEGACY_GRF_ALIASES
 
     def _normalize_phases(
         self,
@@ -130,6 +136,12 @@ class ValidationConfigManager:
         normalized: Dict[int, Dict[str, Dict[str, float]]] = {}
 
         for phase_key, variables in (phases or {}).items():
+            try:
+                numeric_phase = float(phase_key)
+                if not math.isfinite(numeric_phase) or numeric_phase != int(numeric_phase):
+                    raise ValueError("Phase must be a finite integer percentage")
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise ValueError(f"Invalid phase {phase_key!r} in {task_name}") from exc
             if isinstance(phase_key, str):
                 try:
                     phase = int(float(phase_key))
@@ -145,20 +157,29 @@ class ValidationConfigManager:
                     f"Phase {phase} in task {task_name} is out of range. Must be 0-100."
                 )
 
+            if phase in normalized:
+                raise ValueError(f"Duplicate normalized phase {phase} in {task_name}")
             normalized[phase] = {}
+            if not isinstance(variables, dict):
+                raise ValueError(f"Phase {phase} in {task_name} must contain a variable mapping")
             for var_name, var_range in (variables or {}).items():
                 # Normalize legacy GRF variable names to the new schema
                 canonical_name = self._LEGACY_GRF_ALIASES.get(var_name, var_name)
+                if canonical_name in normalized[phase]:
+                    raise ValueError(f"Duplicate normalized variable {canonical_name} in {task_name}/{phase}")
                 if canonical_name != var_name:
                     self._legacy_grf_seen.add(var_name)
                 if not isinstance(var_range, dict):
                     raise ValueError(
                         f"Variable '{canonical_name}' at phase {phase} in task {task_name} must be a dict with min/max."
                     )
-                normalized[phase][canonical_name] = {
-                    'min': var_range.get('min'),
-                    'max': var_range.get('max')
-                }
+                bounds = [var_range.get('min'), var_range.get('max')]
+                if any(isinstance(v, bool) or not isinstance(v, (int, float))
+                       or not math.isfinite(v) for v in bounds):
+                    raise ValueError(f"{task_name}/{phase}/{canonical_name}: min/max must be finite numbers")
+                if bounds[0] > bounds[1]:
+                    raise ValueError(f"{task_name}/{phase}/{canonical_name}: min exceeds max")
+                normalized[phase][canonical_name] = dict(zip(('min', 'max'), bounds))
 
         return normalized
 
@@ -173,13 +194,13 @@ class ValidationConfigManager:
             config_path = self.default_config_path
         else:
             config_path = Path(config_path)
-        
+
         # Build config structure
         config = self._metadata.copy()
-        
+
         # Update generation time
         config['generated'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        
+
         # Add validation data - direct serialization of nested structure
         config['tasks'] = {}
         for task_name, task_data in self._data.items():
@@ -199,27 +220,27 @@ class ValidationConfigManager:
 
             task_entry['phases'] = serialized_phases
             config['tasks'][task_name] = task_entry
-        
+
         # Write to file with nice formatting
         with open(config_path, 'w') as f:
-            yaml.dump(config, f, 
-                     default_flow_style=False, 
+            yaml.dump(config, f,
+                     default_flow_style=False,
                      sort_keys=False,
                      width=120,
                      indent=2)
-        
+
         print(f"✅ Saved validation config to: {config_path}")
-    
+
     def get_range(self, task: str, phase: int, variable: str) -> Optional[Tuple[float, float]]:
         """
         Get min/max range for a specific variable.
         Works for both ipsi and contra variables.
-        
+
         Args:
             task: Task name
             phase: Phase percentage (0-100)
             variable: Variable name (ipsi or contra)
-            
+
         Returns:
             Tuple of (min, max) or None if not found
         """
@@ -229,7 +250,7 @@ class ValidationConfigManager:
         if not range_data:
             return None
         return (range_data.get('min'), range_data.get('max'))
-    
+
     def set_range(self,
                   task: str,
                   phase: int,
@@ -245,17 +266,17 @@ class ValidationConfigManager:
             variable: Variable name
             min_val: Minimum value
             max_val: Maximum value
-            
+
         Raises:
             ValueError: If phase is out of range
         """
         # Ensure phase is an integer
         phase = int(phase) if not isinstance(phase, int) else phase
-        
+
         # Validate phase range
         if not 0 <= phase <= 100:
             raise ValueError(f"Phase {phase} is out of range. Must be 0-100.")
-        
+
         if task not in self._data:
             self._data[task] = {'metadata': {}, 'phases': {}}
 
@@ -264,16 +285,16 @@ class ValidationConfigManager:
         range_entry = phase_entry.setdefault(variable, {})
         range_entry['min'] = min_val
         range_entry['max'] = max_val
-    
+
     def get_tasks(self) -> List[str]:
         """
         Get list of all tasks in the configuration.
-        
+
         Returns:
             List of task names
         """
         return list(self._data.keys())
-    
+
     def get_task_data(self, task: str) -> Dict[int, Dict[str, Dict[str, float]]]:
         """Return a deep copy of the stored validation ranges for a task."""
         task_info = self._data.get(task)
@@ -287,30 +308,30 @@ class ValidationConfigManager:
             }
             for phase, variables in task_info.get('phases', {}).items()
         }
-    
+
     def get_phases(self, task: str) -> List[int]:
         """
         Get list of phases for a specific task.
-        
+
         Args:
             task: Task name
-            
+
         Returns:
             Sorted list of phase percentages
         """
         if task not in self._data:
             return []
         return sorted(self._data[task].get('phases', {}).keys())
-    
+
     def get_variables(self, task: str, phase: int, include_contra: bool = True) -> List[str]:
         """
         Get list of variables for a specific task and phase.
-        
+
         Args:
             task: Task name
             phase: Phase percentage
             include_contra: Whether to include contralateral features
-            
+
         Returns:
             List of variable names
         """
@@ -321,39 +342,39 @@ class ValidationConfigManager:
             return variables
 
         return [name for name in variables if '_contra' not in name]
-    
+
     def clear(self) -> None:
         """Clear all validation data (but keep metadata)."""
         self._data.clear()
-    
+
     def set_metadata(self, key: str, value: Any) -> None:
         """
         Set a metadata field.
-        
+
         Args:
             key: Metadata key
             value: Metadata value
         """
         self._metadata[key] = value
-    
+
     def get_metadata(self, key: str = None) -> Any:
         """
         Get metadata.
-        
+
         Args:
             key: Specific metadata key. If None, returns all metadata.
-            
+
         Returns:
             Metadata value or entire metadata dict
         """
         if key is None:
             return self._metadata.copy()
         return self._metadata.get(key)
-    
+
     def set_task_metadata(self, task: str, key: str, value: Any) -> None:
         """
         Set task-specific metadata.
-        
+
         Args:
             task: Task name
             key: Metadata key
@@ -364,15 +385,15 @@ class ValidationConfigManager:
         if 'metadata' not in self._data[task]:
             self._data[task]['metadata'] = {}
         self._data[task]['metadata'][key] = value
-    
+
     def get_task_metadata(self, task: str, key: str = None) -> Any:
         """
         Get task-specific metadata.
-        
+
         Args:
             task: Task name
             key: Specific metadata key. If None, returns all task metadata.
-            
+
         Returns:
             Metadata value or entire task metadata dict
         """
@@ -380,7 +401,7 @@ class ValidationConfigManager:
         if key is None:
             return metadata.copy()
         return metadata.get(key)
-    
+
     def set_data(self, data: Dict[str, Any]) -> None:
         """Replace the internal data structure with the provided dictionary."""
         self._data.clear()
@@ -406,21 +427,21 @@ class ValidationConfigManager:
                 'metadata': metadata,
                 'phases': explicit
             }
-    
+
     def get_data(self) -> Dict[str, Dict[str, Any]]:
         """
         Get a copy of the entire internal data structure.
         For debugging purposes only.
-        
+
         Returns:
             Deep copy of internal validation data.
         """
         return copy.deepcopy(self._data)
-    
+
     def has_task(self, task: str) -> bool:
         """Check if a task exists in the configuration."""
         return task in self._data
-    
+
     def has_variable(self, task: str, phase: int, variable: str) -> bool:
         """
         Check if a specific variable exists for a task/phase.

@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browse locomotion datasets, preview signals, and download files for Python or MATLAB.">
+  <meta name="color-scheme" content="light dark">
+  <title>File format and data checks · LocoHub</title>
+  <link rel="stylesheet" href="../stylesheets/site.css">
+  <script src="../javascripts/extra.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="../index.html" aria-label="LocoHub home">LocoHub</a>
+      <nav class="primary-nav" aria-label="Main navigation"><a href="../index.html">Data</a>
+<a href="../tutorials/index.html">Tutorials</a>
+<a href="index.html" aria-current="page">File format</a>
+<a href="../quality/index.html">Testing &amp; data quality</a></nav>
+      <form class="header-search" role="search" aria-label="Site search" action="../search/index.html"><label class="visually-hidden" for="header-query">Search documentation</label><input id="header-query" type="search" name="q" placeholder="Search docs" required><button type="submit">Search</button></form>
+      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub</a>
+    </div>
+  </header>
+  <div class="page-layout">
+    <main id="main" class="page-content" tabindex="-1">
+      <div class="page-kicker"><a href="../index.html">LocoHub</a><span aria-hidden="true">/</span>File format and data checks</div>
+      
+<h1 id="data-contract-and-quality-evidence">File format and data checks</h1>
+<p>LocoHub files use named columns with explicit units and identifiers for participants, recordings, and cycles. This page describes <strong>file format version 2.0</strong> and its checks. Current catalog downloads may use earlier conventions; consult each dataset’s notes before using these definitions.</p>
+<h2 id="observation-identity">Identifying cycles and recordings</h2>
+<p>A cycle, transfer, averaged curve, or continuous recording is called an <em>observation</em> in the file format. Its samples stay together during checks and filtering. Its identity is the combination of:</p>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>subject</code></td>
+<td>Participant identifier scoped consistently across the dataset.</td>
+</tr>
+<tr>
+<td><code>source_recording_id</code></td>
+<td>Original recording or trial identity, preserved across derived observations.</td>
+</tr>
+<tr>
+<td><code>observation_id</code></td>
+<td>Stable identifier for a cycle, transfer, ensemble curve, or continuous recording.</td>
+</tr>
+<tr>
+<td><code>reference_side</code></td>
+<td><code>left</code>, <code>right</code>, or <code>none</code>; identifies the limb defining ipsilateral signals when applicable. Source ensembles may retain <code>unknown</code>, with a recorded warning.</td>
+</tr>
+</tbody>
+</table></div>
+<p>These fields must be explicit, nonempty, and traceable to the source. A legacy <code>step</code> label alone does not establish observation identity. Row order and blocks of 150 are not substitutes for source identities. Do not invent a recording identity merely to pass validation.</p>
+<p><code>observation_type</code> declares what the observation represents:</p>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Meaning and analysis implication</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>individual_cycle</code></td>
+<td>One segmented cycle. Repeated cycles from a participant are not independent participants.</td>
+</tr>
+<tr>
+<td><code>transfer</code></td>
+<td>One segmented transfer or action with documented boundaries.</td>
+</tr>
+<tr>
+<td><code>ensemble_curve</code></td>
+<td>An aggregate curve. Do not count it as an individual stride or treat its samples as independent measurements.</td>
+</tr>
+<tr>
+<td><code>continuous_recording</code></td>
+<td>A continuous time observation with increasing timestamps.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Bilateral views may share a source recording. Keep related observations together when defining training/test splits or assessing participant-level uncertainty.</p>
+<h2 id="metadata">Metadata</h2>
+<p>Every observation requires <code>task</code>, <code>task_id</code>, and <code>task_info</code> alongside its identity and observation type. Metadata must remain constant within the observation.</p>
+<ul>
+<li><code>task</code> identifies the activity family, for example <code>level_walking</code> or <code>stair_ascent</code>.</li>
+<li><code>task_id</code> identifies a specific protocol variant within the dataset.</li>
+<li><code>task_info</code> is a JSON object, serialized as a JSON string in CSV/Parquet when needed: <code>{"speed_m_s":1.2,"incline_deg":0,"treadmill":true}</code>.</li>
+<li>Optional <code>subject_metadata</code> uses the same JSON representation. Preserve unknown demographic values as unknown; do not infer them.</li>
+<li>Optional <code>source_start_time_s</code> and <code>source_end_time_s</code> are supplied together and remain constant within the observation. Known boundaries must be finite, with end greater than start. Transfers and ensembles may preserve both boundaries as unknown; one unknown boundary alone is invalid. Never invent durations for normalized source curves.</li>
+</ul>
+<p>Older releases may contain comma-separated <code>key:value</code> strings. That legacy representation requires explicit conversion and review before a version 2.0 release. Missing values are not zero and are not evidence of a negative finding.</p>
+<p>Task definitions live in <code>contributor_tools/common/task_registry.py</code>; variable definitions live in <code>contributor_tools/common/feature_constants.py</code>. These are internal contributor tools, not a public analysis SDK. Document population and assistance conditions alongside task metadata; a matching task name alone does not make studies comparable.</p>
+<h2 id="sample-indices">Sample indices</h2>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Index</th>
+<th>Required structure</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase</td>
+<td><code>phase_ipsi</code></td>
+<td>Exactly 150 distinct samples matching the inclusive grid <code>linspace(0, 100, 150)</code> when ordered within each observation.</td>
+</tr>
+<tr>
+<td>Ensemble</td>
+<td><code>phase_ipsi</code></td>
+<td>The same grid, with <code>observation_type="ensemble_curve"</code>.</td>
+</tr>
+<tr>
+<td>Time</td>
+<td><code>time_s</code></td>
+<td>At least two distinct finite timestamps, sorted within each observation for analysis.</td>
+</tr>
+</tbody>
+</table></div>
+<p>The phase grid includes both 0% and 100%; these endpoints describe consecutive boundaries. Event definitions, interpolation, and original durations belong in provenance. For non-gait actions, document what the start and end events mean. Phase normalization changes the sampling representation and does not retain all original time samples.</p>
+<p>Time mode supports recordings without defensible cycle boundaries. A continuous recording must not be relabeled as an individual cycle merely to use phase tooling. File rows may be interleaved; checks sort by index within each identity. Phase indices must be unique within an observation; time observations must not repeat timestamps.</p>
+<h2 id="signals-units-and-missing-values">Signals, units, and missing values</h2>
+<p>Use explicit column names with unit and side tokens. Examples:</p>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Example column</th>
+<th>Stored unit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Joint angle</td>
+<td><code>knee_flexion_angle_ipsi_rad</code></td>
+<td>radians</td>
+</tr>
+<tr>
+<td>Angular velocity</td>
+<td><code>knee_flexion_velocity_ipsi_rad_s</code></td>
+<td>radians/second</td>
+</tr>
+<tr>
+<td>Mass-normalized moment</td>
+<td><code>hip_flexion_moment_ipsi_Nm_kg</code></td>
+<td>Nm/kg</td>
+</tr>
+<tr>
+<td>Ground reaction force</td>
+<td><code>grf_vertical_ipsi_BW</code></td>
+<td>body weights</td>
+</tr>
+<tr>
+<td>Center of pressure</td>
+<td><code>cop_anterior_ipsi_m</code></td>
+<td>meters</td>
+</tr>
+<tr>
+<td>Segment orientation</td>
+<td><code>pelvis_sagittal_angle_rad</code></td>
+<td>radians</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>ipsi</code> is the reference limb and <code>contra</code> is the opposite limb. Contralateral event timing must come from the recorded protocol or a documented derivation; it is not universally a 50% shift. Preserve whether moments represent total, biological, or assistance moments. Record the coordinate frame, signs, normalization mass, force-plate assignment, filtering, and derivative method in conversion provenance.</p>
+<p>Unavailable signals stay missing. Zero-filled missing features can create false evidence that a signal was measured. A column existing in a file does not establish coverage across every task or observation. Inspect finite-value coverage and required/optional signal declarations before analysis.</p>
+<h2 id="quality-states">Check results</h2>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>State</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>passed</code></td>
+<td>Applicable checks ran and their conditions were satisfied.</td>
+</tr>
+<tr>
+<td><code>failed</code></td>
+<td>Applicable checks ran and at least one condition was not satisfied.</td>
+</tr>
+<tr>
+<td><code>missing</code></td>
+<td>Signal data were unavailable; required and optional signals are identified separately.</td>
+</tr>
+<tr>
+<td><code>unchecked</code></td>
+<td>No applicable profile/check ran, or no mandatory checks were configured.</td>
+</tr>
+<tr>
+<td><code>invalid</code></td>
+<td>Structural or nonfinite data prevented a trustworthy result.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Structural integrity, signal coverage, and biomechanical profile conformance are separate evidence. A profile only checks its configured features and phases or time ranges. It does not establish correct source measurements, coordinate transforms, event detection, or clinical applicability.</p>
+<p>A profile declares its intended tasks, observation types, required/optional features, thresholds, and supporting rationale. Empirical or manually tuned ranges must be described as such. Call them literature-derived only when traceable sources support the rules. Ensemble curves need a profile that explicitly includes <code>ensemble_curve</code>.</p>
+<p>Profiles can restrict applicability using recorded metadata such as population or assistance condition. Missing or mismatched applicability metadata leaves an observation unchecked. Profiles without those restrictions disclose that limitation. Whole-waveform diagnostics record missing and infinite values, constant signals, and the largest adjacent-sample change. Optional <code>waveform_ranges</code> check bounds across every sample; a configured <code>max_abs_step</code> produces a review warning, not an automatic exclusion. See the contributor contract guide in the repository for profile syntax.</p>
+<p>No applicable profile means <strong>unchecked</strong>, not passed. A dataset with unchecked observations may retain full converted data and evidence, but those observations are excluded from the filtered download. A low pass rate warrants investigation of both conversion and applicability; increasing thresholds is not itself a correction.</p>
+<h2 id="release-evidence">Download contents</h2>
+<p>Newly prepared versions include the files below. Older catalog downloads may not include these records.</p>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>full.parquet</code></td>
+<td>Byte-identical copy of the admitted converted input file.</td>
+</tr>
+<tr>
+<td><code>filtered.parquet</code></td>
+<td>Whole observations eligible under the specified profile; may be empty.</td>
+</tr>
+<tr>
+<td><code>quality.json</code></td>
+<td>Structural checks, signal coverage, observation states, and reasons.</td>
+</tr>
+<tr>
+<td><code>exclusions.parquet</code></td>
+<td>Identities and reasons for observations excluded from the filtered artifact.</td>
+</tr>
+<tr>
+<td><code>manifest.json</code></td>
+<td>Version identifier, file format version, file hashes, counts, and links to source and processing records.</td>
+</tr>
+<tr>
+<td><code>manifest.sha256</code></td>
+<td>Checksum of the manifest itself.</td>
+</tr>
+<tr>
+<td><code>provenance.json</code></td>
+<td>Source identifiers/hashes, converter revision, contributor review, and processing notes.</td>
+</tr>
+<tr>
+<td><code>profile.yaml</code></td>
+<td>Snapshot of the rule profile, when one was supplied.</td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td>Generated data card describing counts, artifacts, and limitations.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Full download</strong> contains converted data, not the original source recordings. A <strong>filtered download</strong> keeps complete cycles, curves, or recordings selected by named checks. Report which download and checks you used. Older <code>clean</code>/<code>dirty</code> filenames do not establish which checks were applied.</p>
+<p>Building a bundle records checks and contributor review; it does not automatically grant independent maintainer approval. Source URIs and hashes without accessible local source files remain contributor declarations. Reconcile release artifacts with the original study and inspect limitations before publication.</p>
+<p>The interactive tuner saves draft profiles with a rationale and an audit sidecar recording hashes, changes, and decision counts. Draft profiles cannot be used to publish a release bundle; review the rules and their evidence before recording an approved profile.</p>
+<p>New release directories are immutable: changes to data, profiles, or provenance produce a new directory and identifier. Existing catalog downloads have not yet been re-checked. Their status changes only when the actual files are reprocessed and reviewed.</p>
+<h2 id="source-companions">Source companion tables</h2>
+<p>Some reconstruction files preserve source measurements before a reliable activity label or coordinate mapping is available. These local staging files are not approved standard downloads. In the UMich walk/run companion, <code>task</code> is blank, <code>source_protocol_intervals</code> records the original speed/acceleration intervals, and <code>source_protocol_status</code> identifies cycles inside, crossing, or outside those intervals. Every source heel-strike pair is retained. A blank task does not mean the signal is missing.</p>
+<p><code>source_columns.json</code> identifies each original variable, component and unit. <code>cycle_ledger.jsonl</code> records each cycle’s source frames and reference leg. These tables do not establish the precise frame at which walking changes to running.</p>
+<p>The StrokePiG native companion preserves continuous Vicon model outputs in <code>source_time.parquet</code>. Columns retain each source label, its three original components and residual. <code>source_metadata.json</code> records the original events, source checksum, declared unit labels and processing mass where available. Missing events do not cause the recording to be discarded or artificial cycles to be added.</p>
+<p>These Vicon outputs are distinct from OpenSim IK results. Their components have not been mapped to the standard anatomical axes. C3D unit labels also need interpretation: <a href="https://help.vicon.com/download/attachments/11611993/Plug-in%20Gait%20Reference%20Guide.pdf">Vicon’s reference guide</a> explains that Plug-in Gait joint kinetics are stored per kilogram although the C3D labels omit that denominator. The companion preserves values without applying a second mass normalization.</p>
+<h2 id="related-workflows">Related workflows</h2>
+<ul>
+<li><a href="../tutorials/">Load and inspect the complete example</a></li>
+<li><a href="../datasets/">Find datasets</a></li>
+<li><a href="../contributing/">Prepare a release</a></li>
+<li><a href="../maintainers/">Review a release</a></li>
+</ul>
+
+    </main>
+    <aside class="page-outline" aria-label="On this page"><p>On this page</p><ol><li><a href="#observation-identity">Identifying cycles and recordings</a></li><li><a href="#metadata">Metadata</a></li><li><a href="#sample-indices">Sample indices</a></li><li><a href="#signals-units-and-missing-values">Signals, units, and missing values</a></li><li><a href="#quality-states">Check results</a></li><li><a href="#release-evidence">Download contents</a></li><li><a href="#source-companions">Source companion tables</a></li><li><a href="#related-workflows">Related workflows</a></li></ol></aside>
+  </div>
+  <footer class="site-footer"><p>LocoHub</p><nav aria-label="Additional links"><a href="../contributing/index.html">Contribute data</a><a href="../maintainers/index.html">Maintainers</a><a href="index.html#release-evidence">Download notes</a><a href="https://github.com/jmontp/LocoHub/issues">Report an issue</a></nav></footer>
+</body>
+</html>

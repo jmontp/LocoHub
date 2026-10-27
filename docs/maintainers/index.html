@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browse locomotion datasets, preview signals, and download files for Python or MATLAB.">
+  <meta name="color-scheme" content="light dark">
+  <title>Review and maintain releases · LocoHub</title>
+  <link rel="stylesheet" href="../stylesheets/site.css">
+  <script src="../javascripts/extra.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="../index.html" aria-label="LocoHub home">LocoHub</a>
+      <nav class="primary-nav" aria-label="Main navigation"><a href="../index.html">Data</a>
+<a href="../tutorials/index.html">Tutorials</a>
+<a href="../reference/index.html">File format</a>
+<a href="../quality/index.html">Testing &amp; data quality</a></nav>
+      <form class="header-search" role="search" aria-label="Site search" action="../search/index.html"><label class="visually-hidden" for="header-query">Search documentation</label><input id="header-query" type="search" name="q" placeholder="Search docs" required><button type="submit">Search</button></form>
+      <a class="repository-link" href="https://github.com/jmontp/LocoHub">GitHub</a>
+    </div>
+  </header>
+  <div class="page-layout">
+    <main id="main" class="page-content" tabindex="-1">
+      <aside class="callout" role="note"><p><strong>Website source:</strong> Published pages are authored HTML under <code>docs/</code>. The legacy documentation manager updates Markdown audit files and catalog metadata; it does not update these HTML pages. Review and edit the corresponding HTML when study notes, downloads, or release evidence change.</p></aside>
+<div class="page-kicker"><a href="../index.html">LocoHub</a><span aria-hidden="true">/</span>Review and maintain releases</div>
+      
+<h1 id="review-and-maintain-releases">Review and maintain releases</h1>
+<p>LocoHub maintains data contracts, conversion tooling, quality evidence, and dataset releases. Researchers use native data readers. Former analysis libraries are preserved in <code>legacy/</code>; maintaining or publishing an analysis SDK is outside the supported workflow.</p>
+<p><a href="backlog.html">Work backlog and the next ready task</a></p>
+<h2 id="continue-project-work">Continue project work</h2>
+<p>The <a href="backlog.json">versioned backlog</a> holds the current tasks and their evidence. Agents working at different times use it to continue one ready task, check its dependencies, and leave a handoff. Task progress and dataset verification are recorded separately.</p>
+<pre><code>python3 contributor_tools/build_backlog_page.py --next
+python3 contributor_tools/build_backlog_page.py
+python3 contributor_tools/build_backlog_page.py --check</code></pre>
+<p>Edit the JSON when the evidence changes, regenerate its HTML view, and check both before handing off. Record the exact scope of source comparisons, the changed files, remaining questions, and the next action. A prepared script or a stopped job is not a verified result. Numerical and native work still needs a reviewed handoff and the single guarded worker slot.</p>
+<h2 id="review-a-prepared-release">Review a prepared release</h2>
+<ol>
+<li><strong>Verify provenance.</strong> Match original study/source identifiers, local source hashes where available, converter revision, citation, data terms, and actual contributor review. Remote source declarations are not verification that the source was retrieved.</li>
+<li><strong>Check identity and representation.</strong> Recording IDs, observation IDs, reference side, and observation type must be recoverable from the source. Separate ensemble curves, transfers, continuous recordings, and individual cycles. Confirm related bilateral views remain related.</li>
+<li><strong>Review conversion decisions.</strong> Inspect a representative pilot against source traces. Check units, signs, frames, event timing, filtering, derivatives, normalizations, and force-plate/limb assignments.</li>
+<li><strong>Review quality coverage.</strong> Read structural issues, required/optional signal coverage, and passed/failed/missing/unchecked/invalid states. A high aggregate pass rate is insufficient evidence.</li>
+<li><strong>Review the profile.</strong> Confirm applicability to the population, tasks, and observation types. Require a rationale for thresholds and changes; identify empirical or provisional rules honestly.</li>
+<li><strong>Reconcile artifacts.</strong> Full and filtered downloads, check results, exclusions, profile snapshot, hashes, and manifest counts must agree. Filter whole observations and examine exclusions by participant and task.</li>
+<li><strong>Record the decision.</strong> Document approval or unresolved limitations with the actual reviewer and exact artifact identity. A successful build records checks and contributor review; it does not create independent scientific approval.</li>
+</ol>
+<h2 id="acceptance-and-limitations">Acceptance and limitations</h2>
+<p>Structural failures and unreviewed identities block release preparation. Missing or unchecked biomechanical evidence must remain visible; it cannot be converted into a passing result. Filtering never repairs source units, event detection, or missing channels.</p>
+<p>Review scientific limitations even when the structural contract passes. Current rule checks do not prove correct coordinate transforms, force-plate assignment, event detection, or validity of the original measurements. Avoid a universal quality score and do not rank studies by incomparable rule profiles.</p>
+<p>Legacy downloads remain <strong>legacy / unreviewed</strong> until the corresponding source mapping and artifacts are reprocessed and reviewed. Preserve historical counts without presenting them as a new release validation. Changing a label or regenerating documentation is not approval.</p>
+<h2 id="immutability-and-updates">Immutability and updates</h2>
+<p>Use <code>contributor_tools/build_dataset_release.py</code> to create a new release directory. Existing output directories are rejected. Changes to source data, conversion, profile, or provenance require a new release identifier and new evidence. Keep prior releases traceable.</p>
+<p>The manifest identifies produced artifacts; verify hashes when moving or distributing a bundle. Review any change in retained subjects, tasks, and signal coverage before linking a replacement download. Keep original study citation and data license distinct from the repository's code license.</p>
+<h2 id="work-within-the-resource-budget">Work within the resource budget</h2>
+<p>Run a small representative pilot before scaling. Release admission defaults to 256 MB of estimated decoded input and 500,000 rows. Processing is bounded in-memory, not streaming; actual process memory also includes interpreter and computation overhead. Plan larger shards deliberately and avoid concurrent full-dataset reads on a shared workstation.</p>
+<p>On WSL, also check the Windows drive containing the virtual disk: free space inside Linux does not guarantee room for that disk to grow. <code>contributor_tools/watch_reconversion_storage.py</code> monitors the host drive for specified serial queues and creates their <code>STOP_AFTER_CURRENT</code> markers below its configured free-space floor (1 GiB by default). Workers finish the current recording before stopping. This complements per-worker memory limits and the output-drive disk floor; it does not compact or shut down WSL.</p>
+<p>Tests for contracts, release integrity, and public examples should use small deterministic fixtures. Full dataset conversion and review are explicit jobs, not incidental documentation or CI tasks.</p>
+<h2 id="implementation-boundaries">Implementation boundaries</h2>
+<div aria-label="Scrollable data table" class="table-scroll" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dataset converters</td>
+<td><code>contributor_tools/conversion_scripts/</code></td>
+</tr>
+<tr>
+<td>Contract and quality implementation</td>
+<td><code>contributor_tools/common/data_contract.py</code></td>
+</tr>
+<tr>
+<td>Internal table/schema/task helpers</td>
+<td><code>contributor_tools/common/</code></td>
+</tr>
+<tr>
+<td>Release entrypoint</td>
+<td><code>contributor_tools/build_dataset_release.py</code></td>
+</tr>
+<tr>
+<td>Rule profiles</td>
+<td><code>contributor_tools/validation_ranges/</code></td>
+</tr>
+<tr>
+<td>Dataset metadata and legacy reports</td>
+<td><code>docs/datasets/</code></td>
+</tr>
+<tr>
+<td>Former analysis implementations</td>
+<td><code>legacy/</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Keep validation decisions in the shared contract implementation. CLI summaries, filtering, release manifests, and documentation must consume the same result, rather than independently reconstructing counts. Contributor utilities are internal implementation, not a new public SDK.</p>
+<h2 id="update-plot-summaries">Update plot summaries</h2>
+<p>The catalog preview, study phase plots, and dataset comparator share <code>javascripts/phase-chart.js</code>, a browser SVG renderer. They read the same small numerical summaries, with no plotting server or Matplotlib needed for the live charts. Study pages retain earlier pass/fail figures in a closed historical section; those classifications are not reproduced by the new average plots.</p>
+<p>The data browser reads precomputed JSON, not whole Parquet files. To refresh the task and subject plots from the existing local files, run:</p>
+<pre><code>nice -n 19 ionice -c 3 python3 contributor_tools/build_aggregate_previews.py
+python3 docs/build.py --check</code></pre>
+<p>Wait for all dataset workers to finish before building or publishing the site. The exporter uses one worker at a time, a 1 GiB address-space limit, small projected column groups, and temporary SQLite storage. It does not reconvert or repair the source data. The source filenames are listed in <code>contributor_tools/build_data_previews.py</code>.</p>
+<p>Within each task, complete stored curves are averaged for each subject. The overall mean gives each available subject mean equal weight; its sample standard deviation measures variation between subject means. Choosing one subject shows variation across that subject’s stored curves instead. Missing values are excluded point by point, counts are retained, and standard deviation is absent with fewer than two contributors.</p>
+<p>Older files may already contain averaged curves. Task summaries also combine available speeds and other conditions, so these plots are descriptive previews, not controlled comparisons or evidence of scientific review. The source file name, size and modification time are recorded; the full source file is not content-hashed or verified against its online download.</p>
+<p>Each task file contains its overall summary and links to separate subject files. The site loads those subject files only when requested. Keep all generated files referenced by <code>docs/datasets/aggregate_previews/manifest.json</code> together when publishing.</p>
+<h2 id="comparison-design">Comparison charts</h2>
+<p>Overlay a few datasets for direct comparison, or use aligned signal rows when curves overlap. Dataset colours and dash patterns stay consistent. Axes are shared per signal across datasets and remain fixed when datasets or SD bands are hidden; different signals retain their own units. The choice follows <a href="https://service-manual.ons.gov.uk/data-visualisation/chart-types/small-multiple-charts">ONS small-multiple guidance</a>, <a href="https://service-manual.ons.gov.uk/data-visualisation/colours/using-colours-in-charts">ONS guidance on consistent colours</a>, and <a href="https://www.datawrapper.de/blog/what-to-consider-when-creating-small-multiple-line-charts">Datawrapper’s comparison guidance</a>. Exact-value tables and CSV downloads accompany the charts.</p>
+<h2 id="refresh-quality-evidence">Refresh the quality page</h2>
+<p>The quality page separates recorded software tests, preview structural checks, and illustrative bounds. Refresh the evidence only from a real test run:</p>
+<pre><code>OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python3 -m pytest -q --junitxml=/tmp/locohub-quality-tests.xml
+python3 contributor_tools/build_quality_page_data.py --junit /tmp/locohub-quality-tests.xml --command &quot;the exact command used for this run&quot;
+python3 contributor_tools/build_audit_evidence_page.py
+python3 docs/build.py --check</code></pre>
+<p>The range export uses the shared configuration loader and the validator’s nearest-sample rule. It records the YAML checksum. The overlay compares displayed means, not individual curves, and must never be presented as a new dataset validation run. A changed profile requires regeneration; a new test run requires a new result snapshot.</p>
+<h2 id="documentation-checks">Documentation checks</h2>
+<p>The public site should let a researcher identify the population, available signals, artifact variant, limitations, and quality evidence before downloading. Preserve native Python and MATLAB examples that run on the complete synthetic fixture.</p>
+<pre><code data-language="bash">python -m pytest tests/test_data_documentation.py
+python docs/build.py --check
+</code></pre>
+<p>Review the generated site under the <code>/LocoHub/</code> base path. Check links, download labels, keyboard interaction, mobile layout, and dark mode. Do not publish legacy reports as current evidence or describe manually tuned thresholds as literature norms without traceable support.</p>
+<p>See the <a href="../contributing/">contributor workflow</a>, <a href="../reference/">file format</a>, and <a href="../api/api-index/">former API notice</a>.</p>
+
+    </main>
+    <aside class="page-outline" aria-label="On this page"><p>On this page</p><ol><li><a href="#review-a-prepared-release">Review a prepared release</a></li><li><a href="#acceptance-and-limitations">Acceptance and limitations</a></li><li><a href="#immutability-and-updates">Immutability and updates</a></li><li><a href="#work-within-the-resource-budget">Work within the resource budget</a></li><li><a href="#implementation-boundaries">Implementation boundaries</a></li><li><a href="#documentation-checks">Documentation checks</a></li></ol></aside>
+  </div>
+  <footer class="site-footer"><p>LocoHub</p><nav aria-label="Additional links"><a href="../contributing/index.html">Contribute data</a><a href="index.html">Maintainers</a><a href="../reference/index.html#release-evidence">Download notes</a><a href="https://github.com/jmontp/LocoHub/issues">Report an issue</a></nav></footer>
+</body>
+</html>

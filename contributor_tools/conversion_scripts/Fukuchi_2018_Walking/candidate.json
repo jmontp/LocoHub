@@ -1,0 +1,175 @@
+{
+  "dataset_id": "fu18",
+  "display_name": "Fukuchi 2018 Walking",
+  "status": "candidate_source_reviewed_not_converted",
+  "review_date": "2026-10-21T04:17:28.109219+00:00",
+  "scientific_approval": false,
+  "converted_observations": 0,
+  "catalog_activation": false,
+  "paper": {
+    "title": "A public dataset of overground and treadmill walking kinematics and kinetics in healthy individuals",
+    "doi": "10.7717/peerj.4640",
+    "url": "https://peerj.com/articles/4640/",
+    "pubmed_url": "https://pubmed.ncbi.nlm.nih.gov/29707431/",
+    "reported_participants": 42,
+    "young_adults": 24,
+    "older_adults": 18
+  },
+  "pinned_source": {
+    "doi": "10.6084/m9.figshare.5722711.v6",
+    "version": 6,
+    "url": "https://figshare.com/articles/dataset/A_public_data_set_of_overground_and_treadmill_walking_kinematics_and_kinetics_of_healthy_individuals/5722711",
+    "api_url": "https://api.figshare.com/v2/articles/5722711/versions/6",
+    "reported_participants": 51,
+    "young_adults": 24,
+    "older_adults": 27,
+    "access": "Public file URLs, no account required for reviewed metadata/code/model files. Large data archives not downloaded.",
+    "license": {
+      "value": 1,
+      "name": "CC BY 4.0",
+      "url": "https://creativecommons.org/licenses/by/4.0/"
+    },
+    "redistribution": "CC BY 4.0 permits sharing/adaptation with attribution, license link and changes indicated. Preserve author/source attribution; dataset license does not grant rights to proprietary Visual3D software."
+  },
+  "version_warning": "Paper and v4 source describe42 participants. v6 describes 51; bundled MATLAB script still loops24 young + 18 older. Never reuse its cohort counts for v6 or silently mix old gait-event archive with updated data.",
+  "protocol": {
+    "tasks": [
+      "level_walking"
+    ],
+    "environments": [
+      "overground",
+      "treadmill"
+    ],
+    "speeds": "Source script identifies3 overground conditions slow/comfortable/fast and8 treadmill condition codes. Actual per-participant speeds require WBDSinfo.csv.",
+    "signals": [
+      "pelvis/lower-limb angles",
+      "joint moments",
+      "ground reaction forces",
+      "raw optical markers",
+      "source gait events in a separately listed archive"
+    ],
+    "formats": [
+      "C3D",
+      "ASCII TXT",
+      "CSV metadata",
+      "Visual3D MDH model",
+      "Visual3D V3S pipeline",
+      "MATLAB exploratory code"
+    ],
+    "model_provenance": "Original WBDSmodel.mdh and wbdsOvergroundDA.v3s are available and checksum-verified as source text; Visual3D reprocessing has not been performed.",
+    "source_units_from_author_script": {
+      "angles": "degrees",
+      "moments": "Nm/kg",
+      "GRF": "N/kg"
+    },
+    "source_event_evidence": "Overground pipeline sets 20 N force-platform threshold, uses Automatic_Gait_Events and exports RON+RON and LON+LON windows separately. Exact raw timestamps/foot association still require pilot.",
+    "processed_grid_evidence": "Original paper page 5 identifies processed curves as participant/speed/environment ensemble averages. Acquired angle/kinetic tables each have 101 data rows; neither is an individual stride.",
+    "bilateral_warning": "Left and right normalized ensemble curves do not preserve simultaneous bilateral timing; do not fabricate a phase offset or a common cycle duration."
+  },
+  "evidence_files": [
+    {
+      "path": "contributor_tools/conversion_scripts/Fukuchi_2018_Walking/source_evidence/figshare_v4_inventory.json",
+      "bytes": 6255,
+      "sha256": "6e6674c9aba66c6a3bcad45021a84db7902b77a702ef6378ee84187839702944",
+      "source_file_id": null,
+      "source_md5": null
+    },
+    {
+      "path": "contributor_tools/conversion_scripts/Fukuchi_2018_Walking/source_evidence/figshare_v6_inventory.json",
+      "bytes": 6201,
+      "sha256": "dfe932c59aefce0da09549880cb8c3b08f7d6bf6c81eb2db0d22c11ecd4db76b",
+      "source_file_id": null,
+      "source_md5": null
+    },
+    {
+      "path": "contributor_tools/conversion_scripts/Fukuchi_2018_Walking/source_evidence/figshare_versions.json",
+      "bytes": 492,
+      "sha256": "3bff7f68461b955362ee91b9a11a4061eb7763e36233e08c3afbfe5008f00db0",
+      "source_file_id": null,
+      "source_md5": null
+    },
+    {
+      "path": "contributor_tools/conversion_scripts/Fukuchi_2018_Walking/source_evidence/wbdsExploratoryDA.m",
+      "bytes": 35793,
+      "sha256": "20f4d7cccd38cd8340e494da2c69189a0470f24574409525ce6aecb82c3f5137",
+      "source_file_id": 10167060,
+      "source_md5": "48d700f360c64d021dbdeb8ec2d50ec6"
+    },
+    {
+      "path": "contributor_tools/conversion_scripts/Fukuchi_2018_Walking/source_evidence/WBDSmodel.mdh",
+      "bytes": 28691,
+      "sha256": "58e35044083b93b94e9e313820dbf29386d7dfcc8b4126b029423b49385af4cf",
+      "source_file_id": 11341412,
+      "source_md5": "49e01170d916fff32f855d89794d7ee2"
+    },
+    {
+      "path": "contributor_tools/conversion_scripts/Fukuchi_2018_Walking/source_evidence/wbdsOvergroundDA.v3s",
+      "bytes": 26214,
+      "sha256": "161634a007b6ff4b1b7d324c5fcb51c74d631b7ecdc4abc8f2b00f99b8e394f0",
+      "source_file_id": 10058989,
+      "source_md5": "780b97ca17f2117ba6507b0cde7347c6"
+    }
+  ],
+  "candidate_comparison": [
+    {
+      "candidate": "Fukuchi 2018Walking",
+      "decision": "first addition",
+      "reason": "Missing from repository inventory; open license plus original model, processing pipeline and explicit event exports allow tractable source review."
+    },
+    {
+      "candidate": "Fukuchi 2017Running",
+      "decision": "deferred; not added",
+      "primary_source": "https://figshare.com/articles/dataset/4543435",
+      "reason": "Useful complementary running dataset; sequential lane examines this only after first candidate reaches pilot disposition."
+    },
+    {
+      "candidate": "Ferber 2024 1,798 participants",
+      "decision": "deferred; not added",
+      "primary_source": "https://www.nature.com/articles/s41597-024-04011-7",
+      "reason": "Much larger heterogeneous walking/running scope; detailed license and source audit not completed."
+    }
+  ],
+  "first_pilot_requirements": [
+    {
+      "step": 1,
+      "task": "Completed: v6 metadata reconciles 51 subjects and 7,203 unique filenames exactly with current raw/ASCII archive inventories."
+    },
+    {
+      "step": 2,
+      "task": "Completed: bounded HTTP ranges acquired one raw recording from current/event archives plus matching raw text and condition-ensemble tables; whole archive hashes remain unverified."
+    },
+    {
+      "step": 3,
+      "task": "Resolved as ensemble averages: preserve participant-condition observation type. Raw individual-cycle reconstruction requires separate event validation."
+    },
+    {
+      "step": 4,
+      "task": "Verify source clocks/events/leg identity and transformations against original pipeline; convert only supported measured signals, retaining unknowns."
+    },
+    {
+      "step": 5,
+      "task": "Run one serial bounded pilot, independent source readback, observation 150-point/endpoints checks where cycles are justified, provenance and missingness tests. No active download link until immutable converted output exists."
+    }
+  ],
+  "resource_policy": "About 2.34 MiB conservative cumulative acquisition, below 16 MiB ceiling. Raw files remain local; no numerical conversion or scientific sample parsing performed.",
+  "metadata_reconciliation": {
+    "rows": 7203,
+    "unique_filenames": 7203,
+    "subjects": 51,
+    "age_groups": {
+      "Young": 24,
+      "Older": 27
+    },
+    "sha256": "1bd39bd02dae423c415bc8a8092bde47ea3af7b1b30046984534a278197808e3",
+    "publisher_md5_verified": true
+  },
+  "processed_observation_type": "participant_condition_ensemble",
+  "bounded_pilot_acquisition": {
+    "status": "bounded_source_acquired_no_numeric_conversion",
+    "cumulative_upper_bound_bytes": 2341461,
+    "scientific_files_acquired": 6,
+    "numerical_samples_read": false,
+    "review_path": "source_evidence/bounded_acquisition_review.json",
+    "event_archive_gap_walking_recordings": 54
+  }
+}

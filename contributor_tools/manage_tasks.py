@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI for maintaining canonical locomotion task definitions.
 
-The registry lives in internal/config_management/task_registry.py.
+The registry lives in contributor_tools/common/task_registry.py.
 This helper allows contributors to add, delete, or list task families
 without editing the module by hand.
 """
@@ -18,7 +18,7 @@ from typing import Dict, Iterable, List
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = PROJECT_ROOT / "src"
-REGISTRY_PATH = PROJECT_ROOT / "internal" / "config_management" / "task_registry.py"
+REGISTRY_PATH = PROJECT_ROOT / "contributor_tools" / "common" / "task_registry.py"
 REFERENCE_DOC = PROJECT_ROOT / "docs" / "reference" / "index.md"
 
 # Ensure imports resolve when the script is launched from arbitrary directories.
@@ -31,7 +31,7 @@ if SRC_DIR.exists() and str(SRC_DIR) not in sys.path:
 def load_tasks() -> Dict[str, "TaskRecord"]:
     """Import the registry module and return a copy of its task mapping."""
 
-    module = importlib.import_module("internal.config_management.task_registry")
+    module = importlib.import_module("contributor_tools.common.task_registry")
     # Reload to pick up on-disk edits within the same interpreter session.
     module = importlib.reload(module)
     return dict(module._TASKS)  # type: ignore[attr-defined]
@@ -40,7 +40,7 @@ def load_tasks() -> Dict[str, "TaskRecord"]:
 def render_registry(tasks: Dict[str, "TaskRecord"]) -> str:
     """Render the canonical _TASKS dictionary with deterministic formatting."""
 
-    module = importlib.import_module("internal.config_management.task_registry")
+    module = importlib.import_module("contributor_tools.common.task_registry")
     TaskRecord = module.TaskRecord  # noqa: N806 - match dataclass capitalisation
 
     # Convert generic mappings into TaskRecord instances for consistency.
@@ -122,7 +122,7 @@ def validate_task_name(name: str) -> None:
 
 def cmd_list(args: argparse.Namespace) -> None:
     tasks = load_tasks()
-    module = importlib.import_module("internal.config_management.task_registry")
+    module = importlib.import_module("contributor_tools.common.task_registry")
     TaskRecord = module.TaskRecord
 
     filtered: Iterable[str] = sorted(tasks)
@@ -158,7 +158,7 @@ def cmd_add(args: argparse.Namespace) -> None:
     if args.name in tasks:
         raise SystemExit(f"Task '{args.name}' already exists")
 
-    module = importlib.import_module("internal.config_management.task_registry")
+    module = importlib.import_module("contributor_tools.common.task_registry")
     TaskRecord = module.TaskRecord
 
     example_ids = args.example_id or []

@@ -34,7 +34,7 @@ from contributor_tools.common.plotting.filters_by_phase_plots import (
     create_filters_by_phase_plot  # Keep for backward compatibility
 )
 from contributor_tools.common.plotting.step_classifier import StepClassifier
-from locohub import LocomotionData
+from contributor_tools.common.dataset_table import DatasetTable, phase_groups, read_review_table
 
 
 class ValidationReportGenerator:
@@ -233,7 +233,7 @@ class ValidationReportGenerator:
             
             # Always required columns (must exist)
             required_cols = []
-            for col in ['subject', 'task', 'step', 'phase_ipsi']:
+            for col in ['subject', 'task', 'task_id', 'task_info', 'step', 'source_recording_id', 'observation_id', 'reference_side', 'observation_type', 'phase_ipsi']:
                 if col in available_columns:
                     required_cols.append(col)
                 else:
@@ -256,7 +256,7 @@ class ValidationReportGenerator:
             print(f"📊 Found {sagittal_found}/{len(feature_names)} sagittal features in dataset")
             
             # Add velocity features for velocity validation (only if they exist)
-            from locohub.feature_constants import (
+            from contributor_tools.common.feature_constants import (
                 ANGLE_FEATURES, VELOCITY_FEATURES, 
                 SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES
             )
@@ -297,7 +297,7 @@ class ValidationReportGenerator:
             # Return None to trigger full dataset loading
             return None
     
-    def _load_dataset_optimized(self, dataset_path: str, phase_col: str = 'phase_ipsi') -> 'LocomotionData':
+    def _load_dataset_optimized(self, dataset_path: str, phase_col: str = 'phase_ipsi') -> 'DatasetTable':
         """
         Load dataset with memory optimization by selecting only required columns.
         
@@ -306,7 +306,7 @@ class ValidationReportGenerator:
             phase_col: Phase column name
             
         Returns:
-            LocomotionData instance with minimal memory footprint
+            DatasetTable instance with minimal memory footprint
         """
         self._log_memory("optimized_load_start", "Starting optimized dataset loading")
         
@@ -316,92 +316,21 @@ class ValidationReportGenerator:
         # Load data - use column optimization if available
         if required_cols is not None:
             try:
-                df_subset = pd.read_parquet(dataset_path, columns=required_cols)
+                df_subset = read_review_table(dataset_path, columns=required_cols)
                 self._log_memory("optimized_load_columns", f"Loaded {len(required_cols)} columns, shape: {df_subset.shape}")
                 print(f"✅ Column optimization successful")
             except Exception as e:
                 print(f"⚠️  Column loading failed ({e}), falling back to full load")
                 self._log_memory("optimized_load_fallback", f"Column loading failed: {e}")
-                df_subset = pd.read_parquet(dataset_path)
+                df_subset = read_review_table(dataset_path)
         else:
             print("📊 Loading full dataset (column optimization unavailable)")
             self._log_memory("full_load", "Loading full dataset")
-            df_subset = pd.read_parquet(dataset_path)
+            df_subset = read_review_table(dataset_path)
         
-        # Create a minimal LocomotionData instance by temporarily replacing the DataFrame
-        from locohub import LocomotionData
-        
-        # Create instance with minimal loading
-        loco_data = LocomotionData.__new__(LocomotionData)
-        loco_data.data_path = Path(dataset_path)
-        loco_data.subject_col = 'subject'
-        loco_data.task_col = 'task'
-        loco_data.phase_col = phase_col
-        loco_data.df = df_subset
-        loco_data._cache = {}
-        
-        # Initialize features list
-        loco_data.features = [col for col in df_subset.columns 
-                             if col not in ['subject', 'task', 'step', 'phase_ipsi', 'phase_ipsi_dot']]
-        
-        # Add required methods
-        def get_tasks():
-            return sorted(df_subset['task'].unique())
-        
-        def get_cycles(subject=None, task=None, features=None):
-            # Enhanced version that handles concatenated cycles
-            data_filtered = df_subset.copy()
-            if subject:
-                data_filtered = data_filtered[data_filtered['subject'] == subject]
-            if task:
-                data_filtered = data_filtered[data_filtered['task'] == task]
-                
-            if features is None:
-                features = loco_data.features
-            
-            # Group by subject/task/step and reshape to 3D array
-            groups = data_filtered.groupby(['subject', 'task', 'step'])
-            cycles_list = []
-            total_groups = len(groups)
-            valid_groups = 0
-            total_cycles_extracted = 0
-            
-            for (subj, tsk, step), group in groups:
-                group_len = len(group)
-                if group_len % 150 == 0 and group_len >= 150:  # Valid cycle(s)
-                    valid_groups += 1
-                    n_cycles = group_len // 150
-                    
-                    # Extract feature data and reshape to cycles
-                    group_data = group[features].values
-                    try:
-                        # Reshape to separate individual cycles
-                        cycles_data = group_data.reshape(n_cycles, 150, len(features))
-                        
-                        # Add each cycle individually
-                        for cycle_idx in range(n_cycles):
-                            cycles_list.append(cycles_data[cycle_idx])
-                            total_cycles_extracted += 1
-                            
-                    except ValueError as e:
-                        # Log reshape errors for debugging
-                        print(f"⚠️  Reshape error for {subj}-{tsk}-{step}: {group_len} points, {len(features)} features - {e}")
-            
-            # Log extraction statistics
-            print(f"    Cycle extraction: {valid_groups}/{total_groups} valid groups, {total_cycles_extracted} total cycles")
-            
-            if cycles_list:
-                cycles_3d = np.stack(cycles_list, axis=0)
-                return cycles_3d, features
-            else:
-                return np.array([]).reshape(0, 150, len(features)), features
-        
-        loco_data.get_tasks = get_tasks
-        loco_data.get_cycles = get_cycles
-        
-        self._log_memory("optimized_load_complete", f"Optimized LocomotionData created")
-        
-        return loco_data
+        # Use the same checked grouping as validation and cleaning.
+        return DatasetTable.from_frame(df_subset, dataset_path, phase_col)
+
     
     def _calculate_file_hash(self, file_path: Path) -> str:
         """
@@ -630,7 +559,7 @@ class ValidationReportGenerator:
         Generate task plot with memory optimization by processing features in smaller batches.
         
         Args:
-            task_locomotion_data: LocomotionData instance for this task
+            task_locomotion_data: DatasetTable instance for this task
             task: Task name
             available_features: List of available feature names
             velocity_results: Velocity validation results
@@ -720,6 +649,7 @@ class ValidationReportGenerator:
                     data_3d=all_data_3d,
                     feature_names=all_feature_names,
                     failing_features=merged_failures,
+                    assessed_passing=self.validator._validate_task_details(task_locomotion_data, task).global_passing_strides,
                     dataset_name=Path(dataset_path).stem,
                     timestamp=timestamp,
                     show_interactive=show_interactive,
@@ -747,48 +677,27 @@ class ValidationReportGenerator:
             gc.collect()
             return None
     
-    def _get_velocity_failures_for_task(self, locomotion_data: LocomotionData, task: str, velocity_results: Dict) -> Dict[int, List[str]]:
+    def _get_velocity_failures_for_task(self, locomotion_data: DatasetTable, task: str, velocity_results: Dict) -> Dict[int, List[str]]:
         """
         Extract velocity failing features for a specific task.
         
         Args:
-            locomotion_data: LocomotionData instance
+            locomotion_data: DatasetTable instance
             task: Task name to filter for
             velocity_results: Results from validate_velocity_consistency
             
         Returns:
             Dictionary mapping stride indices to list of failed velocity variables
         """
-        velocity_failing_features = {}
-        
-        # Filter for task data to build stride mapping
         task_data = locomotion_data.df[locomotion_data.df['task'] == task]
-        
-        # Build mapping from global stride index to task-local stride index
-        stride_idx = 0
-        for subject in sorted(task_data['subject'].unique()):
-            subject_data = task_data[task_data['subject'] == subject]
-            for step in sorted(subject_data['step'].unique()):
-                step_data = subject_data[subject_data['step'] == step]
-                n_cycles = len(step_data) // 150  # 150 points per cycle
-                
-                # Each step can have multiple cycles
-                for cycle in range(n_cycles):
-                    # Check if this stride failed any velocity variables
-                    failed_velocities = []
-                    
-                    for vel_var, result in velocity_results.items():
-                        if 'failing_strides' in result:
-                            if stride_idx in result['failing_strides']:
-                                failed_velocities.append(vel_var)
-                    
-                    if failed_velocities:
-                        velocity_failing_features[stride_idx] = failed_velocities
-                    
-                    stride_idx += 1
-        
-        return velocity_failing_features
-    
+        failures = {}
+        for ordinal, (key, _) in enumerate(phase_groups(task_data)):
+            failed = [name for name, result in velocity_results.items()
+                      if isinstance(result, dict) and list(key) in result.get('failing_observations', [])]
+            if failed:
+                failures[ordinal] = failed
+        return failures
+
     def _merge_failure_types(self, biomechanical_failures: Dict[int, List[str]], 
                            velocity_failures: Dict[int, List[str]]) -> Dict[int, Dict[str, List[str]]]:
         """
@@ -851,7 +760,7 @@ class ValidationReportGenerator:
         comparison_plots_dir.mkdir(exist_ok=True)
         
         # Load dataset
-        locomotion_data = LocomotionData(dataset_path, phase_col='phase_ipsi')
+        locomotion_data = DatasetTable(dataset_path, phase_col='phase_ipsi')
         data = locomotion_data.df
         tasks = locomotion_data.get_tasks()
         dataset_name = Path(dataset_path).stem.replace('_phase', '').replace('_time', '')
@@ -890,7 +799,8 @@ class ValidationReportGenerator:
                     output_dir=str(comparison_plots_dir),
                     data_3d=all_data_3d,
                     feature_names=all_feature_names,
-                    failing_features=merged_failures,  # Pass merged structure for three-color support
+                    failing_features=merged_failures,
+                    assessed_passing=self.validator._validate_task_details(locomotion_data, task).global_passing_strides,
                     dataset_name=dataset_name,
                     timestamp=timestamp,
                     comparison_mode=True,  # KEY: Single column layout
@@ -926,7 +836,7 @@ class ValidationReportGenerator:
         """
         import numpy as np
         import gc
-        from locohub.feature_constants import (
+        from contributor_tools.common.feature_constants import (
             ANGLE_FEATURES, VELOCITY_FEATURES,
             SEGMENT_ANGLE_FEATURES, SEGMENT_VELOCITY_FEATURES
         )
@@ -935,8 +845,10 @@ class ValidationReportGenerator:
         
         # Check if phase_ipsi_dot exists
         if 'phase_ipsi_dot' not in df.columns:
-            return {'error': 'phase_ipsi_dot column not found - velocity validation requires phase rate information'}
+            return {'assessment': {'status': 'unchecked', 'message': 'Physical velocity checks require measured phase rate information'}}
         
+        groups = phase_groups(df)
+
         # Map angles to velocities
         angle_velocity_pairs = []
         
@@ -974,32 +886,20 @@ class ValidationReportGenerator:
             
             errors = []
             stride_count = 0
-            failing_stride_indices = []  # Track which strides failed velocity validation
+            failing_stride_indices = []
+            failing_observations = []
             
             # Process each stride
-            for stride_idx, ((subject, task, step), stride_df) in enumerate(df.groupby(['subject', 'task', 'step'])):
-                if len(stride_df) != 150:
-                    continue
-                
+            for stride_idx, (key, positions) in enumerate(groups):
+                stride_df = df.iloc[positions]
                 stride_count += 1
-                phase_dot = stride_df['phase_ipsi_dot'].iloc[0]  # Constant for stride
-                
-                # Calculate expected velocity from angle using chain rule
-                angle_data = stride_df[angle_col].values
-                
-                # Skip if all NaN
-                if np.all(np.isnan(angle_data)):
+                phase_dot = stride_df['phase_ipsi_dot'].to_numpy(float)
+                angle_data = stride_df[angle_col].to_numpy(float)
+                if not (np.isfinite(angle_data).all() and np.isfinite(phase_dot).all() and (phase_dot > 0).all()):
                     continue
-                
-                # Calculate gradient with respect to index
-                dangle_dindex = np.gradient(angle_data)
-                
-                # Convert to per-phase-percent (150 points = 100%)
-                dangle_dphase = dangle_dindex * (100 / 150)
-                
-                # Apply chain rule: dθ/dt = (dθ/dφ) × (dφ/dt)
-                expected_velocity = dangle_dphase * phase_dot
-                
+                phase = stride_df['phase_ipsi'].to_numpy(float)
+                expected_velocity = np.gradient(angle_data, phase, edge_order=2) * phase_dot
+
                 # Check if stored velocity exists
                 if velocity_col in stride_df.columns:
                     stored_velocity = stride_df[velocity_col].values
@@ -1007,7 +907,7 @@ class ValidationReportGenerator:
                     # Skip if stored velocity is all NaN
                     if not np.all(np.isnan(stored_velocity)):
                         # Calculate mean absolute error
-                        valid_mask = ~(np.isnan(expected_velocity) | np.isnan(stored_velocity))
+                        valid_mask = np.isfinite(expected_velocity) & np.isfinite(stored_velocity)
                         if np.any(valid_mask):
                             mae = np.mean(np.abs(expected_velocity[valid_mask] - stored_velocity[valid_mask]))
                             errors.append(mae)
@@ -1015,6 +915,7 @@ class ValidationReportGenerator:
                             # Check if this stride fails velocity validation
                             if mae >= 0.5:  # Using same threshold as before
                                 failing_stride_indices.append(stride_idx)
+                                failing_observations.append(list(key))
             
             # Determine pass/fail (threshold: 0.5 rad/s mean error)
             if errors:
@@ -1031,6 +932,7 @@ class ValidationReportGenerator:
                     'var_error': var_error,  # Include variance
                     'num_strides': len(errors),
                     'total_strides': stride_count,
+                    'failing_observations': failing_observations,
                     'failing_strides': failing_stride_indices  # Track failing stride indices
                 }
                 status_symbol = "✅" if mean_error < 0.5 else "❌"
@@ -1152,7 +1054,7 @@ class ValidationReportGenerator:
         if quality_gate is not None:
             icon = "✅" if quality_gate else "⚠️"
             threshold_pct = f"{threshold * 100:.0f}%" if isinstance(threshold, (int, float)) and threshold else "n/a"
-            lines.append(f"**Quality Gate ({threshold_pct} stride pass)**: {icon} {validation_result['stats']['pass_rate']:.1%}  ")
+            lines.append(f"**Conformance to selected profile**: {icon} {validation_result['stats']['pass_rate']:.1%}  ")
         else:
             lines.append(f"**Pass Rate**: {validation_result['stats']['pass_rate']:.1%}  ")
 
@@ -1179,9 +1081,9 @@ class ValidationReportGenerator:
             
             for var_name, result in velocity_results.items():
                 status = result.get('status', 'unknown')
-                if status == 'passed':
+                if status == 'pass':
                     velocity_passed += 1
-                elif status == 'failed':
+                elif status == 'fail':
                     velocity_failed += 1
                 elif status == 'calculated_only':
                     velocity_calculated_only += 1
@@ -1329,7 +1231,7 @@ class ValidationReportGenerator:
         if velocity_results is None:
             # Load and validate velocity consistency if not done yet
             import pandas as pd
-            dataset = pd.read_parquet(dataset_path)
+            dataset = read_review_table(dataset_path)
             velocity_results = self.validate_velocity_consistency(dataset)
         
         # Generate validation section content
@@ -1411,27 +1313,20 @@ class ValidationReportGenerator:
         lines.append("| Metric | Value | Status |")
         lines.append("|--------|-------|--------|")
         
-        # Overall status
+        # Profile conformance is distinct from universal data validity.
         pass_rate = validation_result['stats']['pass_rate']
-        if pass_rate >= 0.95:
-            status_icon = "✅"
-            status_text = "PASSED"
-        elif pass_rate >= 0.80:
-            status_icon = "⚠️"
-            status_text = "PARTIAL"
-        else:
-            status_icon = "❌"
-            status_text = "FAILED"
-        
-        lines.append(f"| **Overall Status** | {pass_rate:.1%} Valid | {status_icon} {status_text} |")
-        
+        status_icon = "✅" if validation_result.get('quality_gate_passed') else "⚠️"
+        status_text = "All required checks passed" if validation_result.get('quality_gate_passed') else "Review coverage and findings"
+        lines.append(f"| **Profile conformance** | {pass_rate:.1%} of observations | {status_icon} {status_text} |")
+        lines.append(f"| **Release provenance** | {validation_result.get('review_status', 'unreviewed')} | See versioned release manifest |")
+
         # Phase structure
         phase_status = "✅ Valid" if validation_result['phase_valid'] else "❌ Invalid"
         lines.append(f"| **Phase Structure** | 150 points/cycle | {phase_status} |")
         
         # Tasks validated
         num_tasks = validation_result['stats']['num_tasks']
-        lines.append(f"| **Tasks Validated** | {num_tasks} tasks | ✅ Complete |")
+        lines.append(f"| **Tasks Validated** | {num_tasks} tasks | See assessed coverage |")
         
         # Total checks
         lines.append(f"| **Total Checks** | {validation_result['stats']['total_checks']:,} | - |")
@@ -1440,8 +1335,6 @@ class ValidationReportGenerator:
         violations = validation_result['stats']['total_violations']
         if violations == 0:
             viol_status = "✅ None"
-        elif violations < 1000:
-            viol_status = "⚠️ Minor"
         else:
             viol_status = "⚠️ Present"
         lines.append(f"| **Violations** | {violations:,} | {viol_status} |")
@@ -1457,7 +1350,7 @@ class ValidationReportGenerator:
             # Fallback: load dataset and run velocity validation if not provided
             print("⚠️  Running fallback velocity validation (should not happen)")
             import pandas as pd
-            df = pd.read_parquet(dataset_path)
+            df = read_review_table(dataset_path)
             velocity_results = self.validate_velocity_consistency(df)
             self._log_memory("velocity_fallback", "Fallback velocity validation completed")
         
@@ -1575,7 +1468,7 @@ class ValidationReportGenerator:
         # Load dataset to extract information
         try:
             import pandas as pd
-            df = pd.read_parquet(dataset_path)
+            df = read_review_table(dataset_path)
             
             # Extract subject information
             subjects = sorted(df['subject'].unique())
@@ -1701,13 +1594,13 @@ class ValidationReportGenerator:
 ## Usage
 
 ```python
-from locohub import LocomotionData
+import pandas as pd
 
-# Load the dataset
-data = LocomotionData('converted_datasets/{doc_name}_phase.parquet')
+# Load the selected release
+data = pd.read_parquet('converted_datasets/{doc_name}_phase.parquet')
 
 # Get data for analysis
-cycles_3d, features = data.get_cycles('SUB01', 'level_walking')
+walking = data.loc[data['task'].eq('level_walking')]
 ```
 
 ---

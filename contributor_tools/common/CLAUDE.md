@@ -9,6 +9,12 @@ Shared Python libraries for biomechanical data processing, used by conversion sc
 | `stride_segmentation.py` | Unified stride/cycle segmentation for all task types |
 | `phase_detection.py` | Low-level GRF-based gait event detection |
 | `near_miss_analysis.py` | Marginal failure analysis for validation tuning |
+| `opensim_inverse_dynamics.py` | OpenSim-based inverse dynamics computation |
+| `opensim_scaling.py` | OpenSim ScaleTool wrapper for model scaling |
+| `opensim_ik.py` | OpenSim IKTool wrapper for inverse kinematics |
+| `opensim_pipeline.py` | Orchestrates Scale → IK → ID pipeline |
+| `force_plate.py` | Force plate data processing and leg assignment |
+| `derivatives.py` | Velocity/acceleration computation from angle data |
 
 ## Stride Segmentation (`stride_segmentation.py`)
 
@@ -227,6 +233,208 @@ marginal_strides = identify_marginal_failures(
 | Min stable duration | 0.2-0.3 s | State confirmation |
 | IQR multiplier | 1.5 | Duration outlier detection |
 
+## OpenSim Inverse Dynamics (`opensim_inverse_dynamics.py`)
+
+Wrapper for OpenSim's InverseDynamicsTool to compute joint moments from kinematics and GRF data.
+
+### Requirements
+
+- OpenSim 4.4+ with Python bindings: `conda install -c opensim-org opensim`
+- Musculoskeletal model file (.osim)
+- Kinematics file (.mot) with joint angles
+- GRF file (.mot) with force plate data
+
+### Quick Start
+
+```python
+from common.opensim_inverse_dynamics import (
+    OPENSIM_AVAILABLE,
+    compute_inverse_dynamics_for_stride,
+    interpolate_to_phase,
+)
+
+if OPENSIM_AVAILABLE:
+    moments = compute_inverse_dynamics_for_stride(
+        model_path=Path('model.osim'),
+        ik_mot_path=Path('kinematics.mot'),
+        grf_mot_path=Path('forces.mot'),
+        ipsi_side='r',
+        body_mass_kg=75.0,
+    )
+
+    # Phase-normalize the moments
+    if moments is not None:
+        hip_moment = interpolate_to_phase(
+            moments['hip_flexion_moment_ipsi_Nm_kg'],
+            moments['time'],
+            num_points=150
+        )
+```
+
+### Functions
+
+| Function | Purpose |
+|----------|---------|
+| `check_opensim_available()` | Check if OpenSim Python API is installed |
+| `setup_external_loads()` | Create external loads XML for force plates |
+| `run_inverse_dynamics()` | Run OpenSim ID tool |
+| `read_sto_file()` | Parse OpenSim .sto output files |
+| `extract_sagittal_moments()` | Extract hip, knee, ankle moments with sign conventions |
+| `modify_rajagopal_model()` | Lock secondary knee DOFs for single-DOF knee models |
+| `disable_model_forces()` | Disable muscles/reserves so ID outputs net moments |
+| `compute_inverse_dynamics_for_stride()` | High-level function for single stride ID |
+
+### Sign Conventions
+
+The module automatically handles sign convention conversion:
+
+| Joint | OpenSim Convention | LocoHub Standard | Action |
+|-------|-------------------|------------------|--------|
+| Hip flexion | Flexion + | Flexion + | None |
+| Knee | Extension + | Flexion + | Negate |
+| Ankle | Dorsiflexion + | Dorsiflexion + | None |
+
+### Configuration
+
+```python
+from common.opensim_inverse_dynamics import InverseDynamicsConfig
+
+config = InverseDynamicsConfig(
+    lowpass_cutoff_hz=6.0,      # Filter cutoff for kinematics
+    disable_model_forces=True,  # Disable muscles/reserves so output reflects net ID moments
+    subtract_inertia_baseline=False,  # Only use if you explicitly want to remove inertial baseline
+    right_foot_body='calcn_r',   # Body name for right foot forces
+    left_foot_body='calcn_l',    # Body name for left foot forces
+    force1_identifier='ground_force1',  # Force plate 1 column prefix
+    force2_identifier='ground_force2',  # Force plate 2 column prefix
+)
+```
+
+## OpenSim Model Scaling (`opensim_scaling.py`)
+
+Wrapper for OpenSim's ScaleTool to scale musculoskeletal models using static marker trials.
+
+### Quick Start
+
+```python
+from common.opensim_scaling import (
+    OPENSIM_AVAILABLE,
+    scale_model_with_static_trial,
+    scale_model_with_measurements,
+    ScalingConfig,
+)
+
+if OPENSIM_AVAILABLE:
+    scaled_model = scale_model_with_static_trial(
+        generic_model_path='rajagopal.osim',
+        static_trc_path='static_trial.trc',
+        output_model_path='scaled_model.osim',
+        subject_mass_kg=75.0,
+    )
+```
+
+### Functions
+
+| Function | Purpose |
+|----------|---------|
+| `scale_model_with_static_trial()` | Scale model using static marker trial |
+| `scale_model_with_measurements()` | Scale model using height/mass only |
+| `get_model_marker_names()` | Get list of markers defined in model |
+| `verify_marker_correspondence()` | Check which TRC markers match model |
+| `create_scale_setup_xml()` | Create ScaleTool setup file |
+
+## OpenSim Inverse Kinematics (`opensim_ik.py`)
+
+Wrapper for OpenSim's InverseKinematicsTool to compute joint angles from marker data.
+
+### Quick Start
+
+```python
+from common.opensim_ik import (
+    OPENSIM_AVAILABLE,
+    run_inverse_kinematics,
+    IKConfig,
+    IKResult,
+)
+
+if OPENSIM_AVAILABLE:
+    result = run_inverse_kinematics(
+        model_path='scaled_model.osim',
+        trc_path='markers.trc',
+        output_mot_path='ik_output.mot',
+    )
+    if result.success:
+        print(f"IK completed with RMS error: {result.rms_error}")
+```
+
+### Functions
+
+| Function | Purpose |
+|----------|---------|
+| `run_inverse_kinematics()` | Run IK on marker data |
+| `read_mot_file()` | Parse OpenSim .mot files |
+| `get_ik_coordinate_names()` | Get model coordinates |
+| `validate_ik_against_reference()` | Compare IK output to reference |
+| `create_ik_setup_xml()` | Create IKTool setup file |
+
+## OpenSim Pipeline (`opensim_pipeline.py`)
+
+High-level orchestrator for the complete Scale → IK → ID workflow.
+
+### Quick Start
+
+```python
+from common.opensim_pipeline import (
+    OpenSimPipeline,
+    PipelineConfig,
+    StrideResult,
+)
+
+pipeline = OpenSimPipeline(
+    generic_model_path='rajagopal.osim',
+    output_dir='opensim_output/',
+)
+
+# Process a stride
+result = pipeline.process_stride(
+    subject_id='S011',
+    static_trc_path='S011/Static/static.trc',
+    stride_trc_path='S011/LevelWalking/stride.trc',
+    grf_mot_path='S011/LevelWalking/grf.mot',
+    subject_mass_kg=75.0,
+    ipsi_side='r',
+)
+
+if result.success:
+    kinematics = result.kinematics_phase  # Phase-normalized
+    moments = result.moments_phase        # Phase-normalized
+```
+
+### Features
+
+- **Model caching:** Scaled models are cached per subject
+- **IK caching:** IK results can be cached to avoid recomputation
+- **Phase normalization:** Optional automatic phase normalization
+- **Configurable:** IK marker weights, ID filter settings, etc.
+
+### Configuration
+
+```python
+from common.opensim_pipeline import PipelineConfig
+from common.opensim_scaling import ScalingConfig
+from common.opensim_ik import IKConfig
+from common.opensim_inverse_dynamics import InverseDynamicsConfig
+
+config = PipelineConfig(
+    scaling=ScalingConfig(preserve_mass_distribution=True),
+    ik=IKConfig(marker_weights={'LASI': 10.0, 'RASI': 10.0, ...}),
+    id=InverseDynamicsConfig(lowpass_cutoff_hz=6.0),
+    cache_scaled_models=True,
+    cache_ik_results=True,
+    num_phase_points=150,
+)
+```
+
 ## Example: Using in a Conversion Script
 
 ```python
@@ -258,4 +466,35 @@ def process_trial(df, task):
         return segment_sit_stand_transfers(df, config, transfer_type=task)
 
     # ... handle other archetypes
+```
+
+## Example: Using OpenSim Pipeline
+
+```python
+from common.opensim_pipeline import OpenSimPipeline, PipelineConfig
+from common.opensim_ik import IKConfig
+
+# Initialize pipeline
+pipeline = OpenSimPipeline(
+    generic_model_path=Path('model.osim'),
+    output_dir=Path('output/'),
+    config=PipelineConfig(
+        ik=IKConfig(marker_weights={'LASI': 10.0, 'RASI': 10.0}),
+    ),
+)
+
+# Process multiple strides for a subject
+for stride_trc in stride_files:
+    result = pipeline.process_stride(
+        subject_id='S001',
+        static_trc_path=static_trc,
+        stride_trc_path=stride_trc,
+        grf_mot_path=grf_mot,
+        subject_mass_kg=75.0,
+        ipsi_side='r',
+    )
+
+    if result.success:
+        # Use result.kinematics_phase and result.moments_phase
+        pass
 ```

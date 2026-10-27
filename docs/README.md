@@ -1,52 +1,52 @@
-# Documentation Structure
+# Plain HTML documentation
 
-This directory contains the source for the public LocoHub documentation site. Pages
-are authored in Markdown and rendered with MkDocs + Material.
-
-## Build the site locally
+The public website is authored **HTML, CSS, and JavaScript** served by GitHub Pages.
+The authoritative pages are `index.html` and the route directories under `docs/`.
+There is no Markdown renderer, theme framework, CDN, or package installation needed
+to build or serve the static website.
 
 ```bash
-pip install -r requirements-container.txt
-mkdocs serve        # Live preview at http://127.0.0.1:8000/
-mkdocs build        # Writes the static site to site/
+python3 docs/build.py --check
+python3 docs/build.py --output site
+python3 -m http.server 8000 --directory site
 ```
 
-Run these commands from the repository root so MkDocs can resolve paths, snippets,
-and dataset metadata.
+Open `http://localhost:8000/`. The builder uses only Python's standard library:
+it checks local links and anchors, copies authored HTML and referenced assets,
+and creates a plain JSON search index. A fresh output directory is required on
+first use; subsequent builds recognize their own output manifest. No scientific
+datasets outside `docs/` are read. Existing plot files are referenced and copied,
+not duplicated into the authored source pages.
 
-## Directory overview
+## Editing
 
-- `index.md` – Homepage with dataset table, quickstart, and download links
-- `datasets/` – Automatically generated dataset overviews and validation summaries
-- `tutorials/` – Python and MATLAB walkthroughs using the standardized schema
-- `contributing/` – Contributor workflow, tooling docs, and SOPs
-- `maintainers/` – Reviewer checklists and validator guidance
-- `reference/` – Schema reference, task registry notes, and variable catalog
-- `api/` – Hand-authored API reference for `src/locohub`
-- `assets/`, `stylesheets/`, `javascripts/` – Shared static assets and theme tweaks
+- Edit HTML pages directly. Preserve page titles, the main landmark, navigation,
+  relative URLs, and code example `data-language` attributes.
+- Shared layout is styled by `stylesheets/site.css`; progressive enhancements
+  for catalog filters, comparison, and search live in `javascripts/extra.js`.
+- The catalog's HTML table remains usable without JavaScript. Comparison reads
+  `datasets/comparison_data.json`; search reads the build-generated index.
+- Keep the synthetic CSV and Parquet fixture equivalent. Tests execute the actual
+  Python code embedded in `tutorials/index.html` and check both language examples.
+- Add new pages with the same accessible shell. The builder discovers HTML routes
+  automatically; it does not transform Markdown into HTML.
 
-## Writing guidelines
+Markdown files and generated report snippets retained in this tree are historical
+or internal audit references. They are **not published** and do not update the
+HTML. `manage_dataset_documentation.py` maintains legacy Markdown/metadata outputs;
+review corresponding HTML pages separately when catalog facts change. The retired
+MkDocs configuration is archived at `legacy/docs/mkdocs.yml`.
 
-- Keep examples runnable against files in `converted_datasets/` or
-  `docs/tutorials/assets/`
-- Prefer task-focused headings ("Validate a dataset") over feature lists
-- Show both Python and MATLAB snippets when possible; use the tabbed fences already
-  in place
-- Link to the canonical task registry (`internal/config_management/task_registry.py`)
-  when describing task names or suffix conventions
+## Checks and publication
 
-## Maintenance checklist
+```bash
+python3 -m pip install -r requirements-curation.txt
+python3 -m pytest tests/test_data_documentation.py
+python3 docs/build.py --check
+```
 
-- Re-run `python contributor_tools/manage_dataset_documentation.py update-documentation`
-  after adding or refreshing a dataset so tables in `index.md`, `README.md`, and
-  `datasets/index.md` stay in sync
-- Keep the API reference aligned with `src/locohub/` and
-  `internal/validation_engine/`
-- Update screenshots or diagrams when the UI of contributor tools changes
-- Use `mkdocs build --strict` before publishing to catch broken links or code blocks
-
-## Deployment
-
-Docs are deployed automatically from the `main` branch via the
-`deploy-docs` GitHub Actions workflow. The action runs `mkdocs build` and publishes
-`site/` to GitHub Pages.
+The dependency installation is for fixture/quality tests, not static publishing.
+The documentation workflow validates pull requests against any base branch and
+uploads a downloadable `locohub-html-preview` artifact. Production GitHub Pages
+publication happens only from `main` after checks pass. The output includes
+`.nojekyll`, and relative URLs preserve the `/LocoHub/` project base path.

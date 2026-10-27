@@ -1,0 +1,46 @@
+{
+  "status": "confirmed_shared_sign_error_isolated_successor_prepared",
+  "scientific_approval": false,
+  "source_evidence": {
+    "readme_path": "/mnt/s/locomotion_data/GaTech_2025_DomainAdaptation/readme.txt",
+    "sha256": "aabd45edb66e565a5238f86e26e5c1c1b47469764f3fd611014caf742d20ab63",
+    "positive_direction_lines": [
+      68,
+      71
+    ],
+    "explicit_column_lines": [
+      169,
+      213
+    ],
+    "finding": "The bound README defines biological ankle plantarflexion as positive and identifies ankle_angle_<side> in angle_filt plus ankle_angle_<side>_moment in moment_filt and moment_filt_bio.",
+    "same_package_binding": "Streaming transfer pilot v2 plan binds this exact README alongside Parsed/BT07/sit_to_stand_1_0task_short-arm_on source paths; its parent coverage preparation manifest binds the same README. Publisher archive-byte reconciliation is not newly claimed."
+  },
+  "confirmed_defect": "Original converter keeps positive source ankle values under dorsiflexion labels. The independent raw audit independently implements interpolation/events but repeats the same ankle sign +1, so agreement can conceal this source-convention error.",
+  "affected_fields": "Both reference roles: ankle dorsiflexion angle, derived velocity, derived acceleration, total moment and biological moment (10 columns).",
+  "correction": {
+    "preparer": "contributor_tools/prepare_gt25_ankle_fix.py",
+    "prepared_snapshot": "converted_datasets/reconversion_v2/gt25_ankle_sign_proposal_v3_20261021",
+    "independent_audit": "isolated_repo/contributor_tools/audit_gt25_streaming_transfer_ankle_v3.py",
+    "mapping": "Negate source ankle angle and total/biological moments; derive velocity and acceleration from the corrected angle exactly once.",
+    "preservation": "10 source_ankle_plantarflexion aliases preserve original resampled quantities and derived source-sign derivatives. Subject, trial, side, boundaries, all unrelated signals and missingness remain unchanged.",
+    "power": "Moment and velocity both reverse sign, preserving their product. No separate power column is invented or claimed equal to an independently sampled source power channel.",
+    "assistance": "GT25 exposes hip/knee exoskeleton interaction torque. Existing ankle assistance is unavailable/NaN and stays unchanged; no nonzero ankle assistance sign is inferred.",
+    "segment_dependencies": "All virtual-IMU segment functions remain AST-identical; they do not depend on the corrected process_stride ankle arrays.",
+    "verification": "Coordinator reran all eight tests successfully: scalar/AST checks and both-side numerical coupling, missing biological moments, exact unrelated fields, invariant moment-times-velocity product and raw-source audit expectations. No scientific conversion or audit executed."
+  },
+  "mass_review": "No GT25 day/phase mass bug established. Converter lookup and audit README parsing are separate implementations. BT07 with-exo 81.23 kg matches README line 63; the source lists one without/with-exo pair per subject. This validates lookup agreement, not independent physical weighing or model mass provenance.",
+  "other_GT25_audit_limits": [
+    "SQL event calculations independently reproduce the declared heuristic, but do not establish true anatomical transfer boundaries. Shared threshold choices are intentional algorithm-equivalence checks.",
+    "Fixed left reference is an explicit transfer representation choice, not an inferred leading limb. Source l/r columns are read separately.",
+    "Subject/trial/kind source paths are trusted from the frozen preparation plan. An additional independent filename-to-plan census would detect a jointly misselected recording; no such misselection was found here.",
+    "COP axes and virtual-IMU segment orientation remain source-model assumptions, not independent anatomical approval."
+  ],
+  "UM21_review": {
+    "tool": "contributor_tools/audit_um21_ankle_full_cycle.py",
+    "finding": "No concrete wrong source assumption found in this bounded review. It compares same physical side and exact frame window against separately curated Normalized data, rejects duplicate curated identities, distinguishes missing matches from mismatches, and uses documented degree/dorsiflexion conventions.",
+    "limits": "100 Hz time-to-frame conversion, curated side code 1/2 and first-component sagittal selection depend on published source conventions. Curated and Streaming data share upstream motion processing, so agreement does not validate marker quality or anatomy. Mass is outside this ankle-only audit scope.",
+    "gate": "Audit-complete status alone is not a pass: inspect mismatch and unassessed counts. Do not promote all-unassessed results or source fidelity to anatomical approval."
+  },
+  "full_queue_impact": "Coordinator stopped the waiting full GT25 queue before any job ran. Its 19-queue, 39-job dependent closure stopped safely and is preserved for replacement scheduling, including unrelated StrokePiG work. Original statuses and plans remain unchanged.",
+  "frozen_files": "Original converter, original independent audit, original preparation plans and queued code unchanged."
+}

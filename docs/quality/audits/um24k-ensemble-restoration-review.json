@@ -1,0 +1,92 @@
+{
+  "status": "prepared_unexecuted_source_restoration",
+  "scientific_approval": false,
+  "dataset": "um24k",
+  "reviewed_on": "2026-10-21",
+  "primary_sources": [
+    {
+      "url": "https://datadryad.org/dataset/doi:10.5061/dryad.z34tmpgks",
+      "support": "Methods explicitly identifies S1 as non-fatiguing EMG, kinematics, torque and foot-sensor data. Introductory README S1/S2 wording reverses these names; detailed fields and actual top-level MAT names support Methods."
+    },
+    {
+      "url": "https://datadryad.org/api/v2/versions/314890/files",
+      "support": "Version 6 publisher SHA256 and byte sizes match both existing local MAT sources and archived original README exactly."
+    },
+    {
+      "url": "https://doi.org/10.1126/scirobotics.adr8282",
+      "support": "Associated paper identity from publisher; no additional source-coordinate claims inferred from plots."
+    }
+  ],
+  "license": "Historical publisher JSON-LD review declares CC0-1.0. Preserved original scientific files remain local; this preparation does not publish them.",
+  "publisher_version": {
+    "id": 314890,
+    "versionNumber": 6,
+    "publicationDate": "2024-09-04"
+  },
+  "source_identity": {
+    "S1_sha256": "efb525cc2166bf6bca1e1a802722f24b08a92fcd2d4e81d127855c188094f77c",
+    "S2_sha256": "3f347db39ee86441140695aa94de5ec440fc2f61f61fc0925bf74f5e669b3c8f",
+    "README_sha256": "5bc99c9848ff17adaf60310580fa6318e23cecc9ff7f01a657d63b6a6e54723a",
+    "method": "Bounded byte hashing and ZIP README extraction; scipy.io.whosmat reads only top-level names/shapes/classes. No actual scientific arrays loaded."
+  },
+  "actual_header_inventory": {
+    "S1": [
+      "emg",
+      "exo"
+    ],
+    "S2": "11 documented summary structures plus MATLAB __function_workspace__ uint8 metadata; preserved original and not treated as an observation."
+  },
+  "corrections": [
+    "Retain all 10 source participant columns across 6 tasks and both EMG conditions: 120 expected participant-condition ensemble observations, not individual cycles. Actual nested source shape verification remains an execution gate.",
+    "Retain all five exo measures for 60 assisted observations, seven EMG ensembles and seven source cycle means for each condition. Do not compute source means from a different interpolation grid.",
+    "Write exact original 101-point samples separately; interpolate 150 inclusive phase points without filling or extrapolating missing samples. All-missing observations remain accounted for.",
+    "Unknown-side knee and segment angles retain original degrees and named directions; extension-positive exo torque retains Nm. Foot sensor remains BW with unresolved direction/side, not canonical vertical ipsilateral force.",
+    "No invented mass, ipsilateral/contralateral phase, time, duration, physical derivative, stride count or SD. Source participant column numbers remain explicit ordinal identities.",
+    "Source-backed stair height is exactly 7 inches = 0.1778 m; slope angles +15/-15 degrees; unsupported step count omitted."
+  ],
+  "scope": {
+    "participants": 10,
+    "conditions": 2,
+    "tasks": 6,
+    "expected_ensembles": 120,
+    "source_rows": 12120,
+    "phase_rows": 18000,
+    "status": "Prepared scope, not actual converted coverage"
+  },
+  "unresolved": [
+    "Exact anatomical side or aggregation of sensor arrays is not specified in released field definitions.",
+    "Foot sensor direction and limb assignment remain unresolved; BW denominator is documented but individual participant masses unavailable here.",
+    "Within-participant cycle count, timing and variability unavailable.",
+    "S2 fatigue, progression and perceptual summaries remain original source only; separate structured restoration is still required before claiming all published source content converted.",
+    "Strict nested field and array shape gates have not been exercised on actual source arrays; controlled pilot is next."
+  ],
+  "tests": {
+    "synthetic_only": true,
+    "passed": 8,
+    "seconds": 1.5,
+    "memory_cap_mib": 768,
+    "checks": [
+      "Both conditions and source participant identity",
+      "Independent scalar interpolation and original signed-zero bit preservation",
+      "Missing-gap and all-missing observation preservation",
+      "Source shape, unexpected field and infinity rejection",
+      "Altered numerical value and invented time rejection",
+      "Persisted full 120-observation synthetic MAT-to-Parquet independent readback with separate MAT representation",
+      "Incomplete coverage ledger rejection"
+    ]
+  },
+  "plan": {
+    "path": "converted_datasets/reconversion_v2/um24k_ensemble_restoration_preparation_v2_20261021/plan.json",
+    "sha256": "68dd1f578ca625b329a155253c9f322ea2055957976f0ef00d8453cbd510b62e",
+    "status": "Prepared, not queued or run; external single-worker guard required"
+  },
+  "bindings": {
+    "contributor_tools/restore_um24k_ensembles.py": "101e1d46f3b402ecf23672cd8e3b102fd8195458f1d8051dfc6225613cd19112",
+    "contributor_tools/audit_um24k_ensembles.py": "c184718e0f7cf5763b33d69ff3f8f1b97560800b8296de92d33ba48f8c2dede5",
+    "tests/test_um24k_ensemble_restoration.py": "9826a99409f0eed657f86bff7c4654cb7b062e38d3e2552cdae46a306f85e888",
+    "docs/quality/audits/source_evidence/um24k/publisher-version.json": "986e220823edb942b3ebcee8257f78f07383a946688a489cf650ddbab0c7f8fd",
+    "docs/quality/audits/source_evidence/um24k/publisher-files.json": "bd135a2761a3f326acc853c0fdc18ed99a6b92ba71de5ad78f87395f31b868c7",
+    "docs/quality/audits/source_evidence/um24k/publisher-readme.txt": "5bc99c9848ff17adaf60310580fa6318e23cecc9ff7f01a657d63b6a6e54723a"
+  },
+  "next_action": "Root review tools and source-only semantics, then schedule one 768 MiB externally guarded source conversion/readback after actual queue tail. Preserve historical output and all existing frozen plans. No release or catalog activation."
+}

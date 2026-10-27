@@ -4,7 +4,7 @@ This directory contains conversion scripts for the Georgia Tech 2023 human lower
 
 ## Dataset Citation
 
-Camargo, J., Flanagan, W., Csomay-Shanklin, N. et al. **A human lower-limb biomechanics and wearable sensors dataset during cyclic and non-cyclic activities**. Sci Data 10, 933 (2023). https://doi.org/10.1038/s41597-023-02840-6
+Scherpereel, K., Molinaro, D., Inan, O. et al. **A human lower-limb biomechanics and wearable sensors dataset during cyclic and non-cyclic activities**. Sci Data 10, 924 (2023). https://doi.org/10.1038/s41597-023-02840-6
 
 [Link to publication](https://www.nature.com/articles/s41597-023-02840-6)
 
