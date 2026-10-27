@@ -49,6 +49,25 @@ native MATLAB run because it has a larger startup memory footprint.
 
 ## Working conventions
 
+### Work backlog and agent handoffs
+
+- Start with `docs/maintainers/backlog.json` and run
+  `python3 contributor_tools/build_backlog_page.py --next` to read the next ready task.
+  The HTML view is `docs/maintainers/backlog.html`; edit the JSON and regenerate it.
+- Work on one ready task at a time. Record its ID before making changes. Check its
+  prerequisites and current evidence; a saved job plan is not a running worker.
+- Before numerical or native work, verify current process ownership and resource
+  headroom. Never restart a stopped job only because its prior wait expired.
+- At handoff, update the task with changed files, exact checks and their coverage,
+  remaining questions, evidence paths, and the next action. Leave blocked work
+  explicitly blocked with the condition needed to proceed.
+- Move a task to `review` when its deliverables are ready. Mark it `done` only
+  after its acceptance criteria and exact supporting evidence have been checked.
+  Task completion does not confer scientific approval on an entire dataset.
+- Check backlog consistency with
+  `python3 contributor_tools/build_backlog_page.py --check` before handing off.
+  Keep unrelated source and conversion artifacts unchanged during planning work.
+
 Human-managed, focused development. Preserve pre-existing edits. Keep source
 adapters and reviewer tools simple; add tests against independently known values
 rather than mirroring implementation. Use synthetic fixtures honestly labeled as

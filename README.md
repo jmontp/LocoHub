@@ -52,6 +52,14 @@ Follow the [contributor guide](https://jmontp.github.io/LocoHub/contributing/). 
 
 ## Develop the documentation
 
+For project work, start with the [work backlog](docs/maintainers/backlog.html).
+It records dependencies, evidence needed to finish each task, and the handoff
+for the next agent or contributor. Read the next ready task with:
+
+```bash
+python3 contributor_tools/build_backlog_page.py --next
+```
+
 ```bash
 python -m pip install -r requirements-curation.txt
 python -m pytest tests/test_data_documentation.py

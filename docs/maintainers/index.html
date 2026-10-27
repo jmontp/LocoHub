@@ -29,7 +29,13 @@
       
 <h1 id="review-and-maintain-releases">Review and maintain releases</h1>
 <p>LocoHub maintains data contracts, conversion tooling, quality evidence, and dataset releases. Researchers use native data readers. Former analysis libraries are preserved in <code>legacy/</code>; maintaining or publishing an analysis SDK is outside the supported workflow.</p>
-<p><a href="backlog.html">Current reconstruction status and task backlog</a></p>
+<p><a href="backlog.html">Work backlog and the next ready task</a></p>
+<h2 id="continue-project-work">Continue project work</h2>
+<p>The <a href="backlog.json">versioned backlog</a> holds the current tasks and their evidence. Agents working at different times use it to continue one ready task, check its dependencies, and leave a handoff. Task progress and dataset verification are recorded separately.</p>
+<pre><code>python3 contributor_tools/build_backlog_page.py --next
+python3 contributor_tools/build_backlog_page.py
+python3 contributor_tools/build_backlog_page.py --check</code></pre>
+<p>Edit the JSON when the evidence changes, regenerate its HTML view, and check both before handing off. Record the exact scope of source comparisons, the changed files, remaining questions, and the next action. A prepared script or a stopped job is not a verified result. Numerical and native work still needs a reviewed handoff and the single guarded worker slot.</p>
 <h2 id="review-a-prepared-release">Review a prepared release</h2>
 <ol>
 <li><strong>Verify provenance.</strong> Match original study/source identifiers, local source hashes where available, converter revision, citation, data terms, and actual contributor review. Remote source declarations are not verification that the source was retrieved.</li>
