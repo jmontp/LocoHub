@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-10-31T17:01:26Z",
+  "updated_at_utc": "2026-10-31T17:42:39Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -6475,6 +6475,73 @@
           "Everything in acceptance."
         ]
       }
+    },
+    {
+      "id": "HIST-03",
+      "priority": "P1",
+      "dataset": "all",
+      "title": "Find original sources for the AddBiomechanics studies and test GRF-only extraction",
+      "status": "ready",
+      "stage": "source_inventory",
+      "question": "For each of the 11 AddBiomechanics-derived studies, where is the original publisher data, and can the AddBiomechanics predicted GRF be obtained alone without downloading full archives?",
+      "scope": "Per D-HIST-01-1 = B (José): rebuild from original datasets. Search for openly licensed originals for all 11 (5 known: Carter, Moore, Wang, Lencioni, van der Zee; look for Fregly, Hamner, Falisse, Han, Tan x2). Separately test whether the AddBiomechanics predicted-GRF channel can be fetched by itself: e.g., HTTP range requests on individual zip members, per-subject B3D downloads, B3D internal layout (can GRF frames be read without the rest), or an AddBiomechanics API. Small header/range fetches only into the scratchpad; no full archive downloads.",
+      "depends_on": [
+        "HIST-01"
+      ],
+      "inputs": [],
+      "deliverables": [
+        "Per-study original-source table with license, size and format",
+        "GRF-only feasibility report with measured bytes per subject"
+      ],
+      "acceptance": [
+        "Every claim cites its source URL/DOI",
+        "No full archive downloaded",
+        "Bytes needed for GRF-only stated per study"
+      ],
+      "next_action": "Search originals; probe zip range support and B3D layout.",
+      "resource_class": "read_only",
+      "evidence_paths": [],
+      "handoff": {
+        "last_checked_at_utc": "2026-10-31T17:42:39Z",
+        "summary": "Created from José's 2026-10-31 instructions.",
+        "checks": [],
+        "remaining": [
+          "Everything in acceptance."
+        ]
+      }
+    },
+    {
+      "id": "DOC-05",
+      "priority": "P1",
+      "dataset": "all",
+      "title": "Publish a broken-vs-fixed data comparison page",
+      "status": "ready",
+      "stage": "documentation",
+      "question": "Can a reader see, for each data problem LocoHub found, what the published source data looked like and what LocoHub releases instead?",
+      "scope": "One documentation page (docs/quality/fixes.html or similar, linked from the quality page) with one card per verified finding: GT24 ankle sign (README vs data), GT23 moment units and wrong-participant mass, UM21 ankle 180-degree branch episode, UM21 belt-clock misalignment, UM21 AB01 duplicate recording, UM21 AB04/i0 reversed pelvis, UM21 thigh/shank recipe (pelvis + hip vs hip - pelvis), sign rule. Each card: before/after figure, one-sentence cause, evidence link, and status (fixed in released files / documented, not yet released). Figures must come from committed audit evidence; no new numbers. Only verified findings.",
+      "depends_on": [],
+      "inputs": [],
+      "deliverables": [
+        "Comparison page with figures",
+        "Builder script that regenerates figures from audit JSON"
+      ],
+      "acceptance": [
+        "Every card cites a done task and its audit",
+        "Legible at 390 and 1100 px",
+        "docs/build.py --check passes",
+        "Status per card is accurate (most fixes are not yet in released files)"
+      ],
+      "next_action": "Inventory verified findings and draft the page.",
+      "resource_class": "read_only",
+      "evidence_paths": [],
+      "handoff": {
+        "last_checked_at_utc": "2026-10-31T17:42:39Z",
+        "summary": "Created from José's 2026-10-31 instructions.",
+        "checks": [],
+        "remaining": [
+          "Everything in acceptance."
+        ]
+      }
     }
   ],
   "decisions": [
@@ -6894,7 +6961,10 @@
       "why": "The publisher originals are the primary records for five studies and cut the total download from about 347 to about 108 GB (Carter from 245 to 29 GB). The cost is five new source adapters, each piloted one study at a time.",
       "check": "Decision sheet figure: Carter's blue AddBiomechanics bar (245 GB) crosses the free-disk line, while its orange publisher bar (29 GB) does not.",
       "decide_before_recommendation": false,
-      "status": "open"
+      "status": "answered",
+      "answer": "B",
+      "answered_at_utc": "2026-10-31T17:42:39Z",
+      "answer_note": "José 2026-10-31: use the original datasets rather than AddBiomechanics; AddBiomechanics adds GRF predictions that add many rows. Add only the predicted-GRF column if it can be obtained without the full download; otherwise not worth the storage."
     }
   ]
 }
