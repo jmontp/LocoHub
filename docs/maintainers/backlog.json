@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-10-31T19:22:14Z",
+  "updated_at_utc": "2026-10-31T22:33:48Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -6654,6 +6654,75 @@
           "Everything in acceptance."
         ]
       }
+    },
+    {
+      "id": "GT23-C05",
+      "priority": "P1",
+      "dataset": "gt23",
+      "title": "Compare GT23 moment error before and after rescaling, per trial",
+      "status": "ready",
+      "stage": "conventions",
+      "question": "For each GT23 trial, is the error of moments rescaled with LocoHub's estimated divisor lower than the error of the published moments?",
+      "scope": "José's condition on D-GT23-C04-1: rescale everything if the rescaled error is lower than the original error, otherwise report back. Per trial, estimate original error (published divisor vs own mass, using exact divisors where known and the force-plate estimate with its uncertainty otherwise) and the error after rescaling by the best available divisor (exact, matched table mass, or the force-plate estimate itself) including estimator uncertainty and any between-estimator disagreement; account for trials where the published divisor may already be the own mass. Use the committed GT23-C03/C04 audits; bounded reads only if a number is missing. State for which trial classes rescaling is lower-error with confidence, which are uncertain, and which are worse.",
+      "depends_on": [
+        "GT23-C04"
+      ],
+      "inputs": [],
+      "deliverables": [
+        "Per-trial before/after error table",
+        "Plain answer to José's question by trial class"
+      ],
+      "acceptance": [
+        "Uses only verified estimators with stated uncertainty",
+        "Does not claim lower error where the estimator is unvalidated (e.g., non-gait tasks) without evidence",
+        "Independent verification"
+      ],
+      "next_action": "Compute from the committed audits.",
+      "resource_class": "read_only",
+      "evidence_paths": [],
+      "handoff": {
+        "last_checked_at_utc": "2026-10-31T22:33:48Z",
+        "summary": "Created from José's 2026-11-01 answers.",
+        "checks": [],
+        "remaining": [
+          "Everything in acceptance."
+        ]
+      }
+    },
+    {
+      "id": "HIST-05",
+      "priority": "P1",
+      "dataset": "all",
+      "title": "Write the AddBiomechanics acquisition and one-row-per-frame converter for Falisse and both Tan studies",
+      "status": "ready",
+      "stage": "conversion",
+      "question": "Can the 33 kept participants be streamed, hash-checked and converted to one row per frame from the dynamics pass with reconstructed metadata?",
+      "scope": "Per D-HIST-04-1 = A (one row per frame, dynamics pass) and D-HIST-04-2 = A (no contact; drop Falisse subject_1, subject_7, subject_8, keeping the 8 that reproduce the TBME 2017 cohort). Write contributor_tools/acquire_addbiomechanics_member.py to the requirements in hist04-addbiomechanics-metadata.json (stream and inflate one member, CRC32 and SHA-256, header cross-check, delete after conversion, receipts), and a converter writing one row per frame from the dynamics pass with the metadata columns reconstructed per the HIST-04 table (missing stays missing). Synthetic tests; regenerate plans excluding the 3 dropped subjects; pilot Falisse subject_0 or the smallest kept member through the guarded launcher only after review.",
+      "depends_on": [
+        "HIST-04"
+      ],
+      "inputs": [],
+      "deliverables": [
+        "Acquisition script and converter with tests",
+        "Regenerated plan-only specs"
+      ],
+      "acceptance": [
+        "Dropped subjects never acquired",
+        "Pass chosen by name (dynamics), not index",
+        "No invented metadata",
+        "Independent verification before any launch"
+      ],
+      "next_action": "Write the scripts and synthetic tests.",
+      "resource_class": "fixture",
+      "evidence_paths": [],
+      "handoff": {
+        "last_checked_at_utc": "2026-10-31T22:33:48Z",
+        "summary": "Created from José's 2026-11-01 answers.",
+        "checks": [],
+        "remaining": [
+          "Everything in acceptance."
+        ]
+      }
     }
   ],
   "decisions": [
@@ -7139,7 +7208,8 @@
       "check": "Sheet, first figure: AB11's bar has no blue part, so none of its trials would get rescaled kinetics under B or C.",
       "cost_of_waiting": "GT23 moments and powers stay out of any release; GT23 kinematics, forces and other datasets are unaffected.",
       "decide_before_recommendation": true,
-      "status": "open"
+      "status": "open",
+      "answer_note_pending": "José 2026-11-01: \"is the rescaled error lower than the original error? if so, then yeah rescale everything. else get back to me.\" Conditional; GT23-C05 answers the question before this decision is recorded."
     },
     {
       "id": "D-HIST-04-1",
@@ -7169,7 +7239,10 @@
       "why": "A follows José's preference for fewer rows, keeps every frame with its force-quality flag, and uses AddBiomechanics' final force-matched result. Left-out data can be rebuilt only by re-downloading from the archive while it serves the same hash-checked bytes and reconverting. Cost: values will not match the old files, and a separate convention is still needed for which body mass normalizes moments.",
       "check": "Decision sheet figure: option C's bar (14.6 million rows) is four times option A's (3.7 million).",
       "decide_before_recommendation": true,
-      "status": "open"
+      "status": "answered",
+      "answer": "A",
+      "answered_at_utc": "2026-10-31T22:33:48Z",
+      "answer_note": "José 2026-11-01: A, it stores the least duplicate information."
     },
     {
       "id": "D-HIST-04-2",
@@ -7194,7 +7267,10 @@
       "why": "Only the source team can confirm the trial protocol and the three extra participants; without it the Falisse task mapping cannot be sourced, and the request costs one email.",
       "check": "HIST-04 sheet figure: exactly one subset (blue bar at 6) reproduces all six statistics the paper reports.",
       "decide_before_recommendation": false,
-      "status": "open"
+      "status": "answered",
+      "answer": "A",
+      "answered_at_utc": "2026-10-31T22:33:48Z",
+      "answer_note": "José 2026-11-01: do NOT email; drop the 3 unexplained Falisse subjects (subject_1, subject_7, subject_8) and keep the 8 that reproduce the TBME 2017 cohort."
     }
   ]
 }
