@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-10-31T18:08:18Z",
+  "updated_at_utc": "2026-10-31T18:45:16Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -6530,7 +6530,7 @@
       "priority": "P1",
       "dataset": "all",
       "title": "Publish a broken-vs-fixed data comparison page",
-      "status": "ready",
+      "status": "done",
       "stage": "documentation",
       "question": "Can a reader see, for each data problem LocoHub found, what the published source data looked like and what LocoHub releases instead?",
       "scope": "One documentation page (docs/quality/fixes.html or similar, linked from the quality page) with one card per verified finding: GT24 ankle sign (README vs data), GT23 moment units and wrong-participant mass, UM21 ankle 180-degree branch episode, UM21 belt-clock misalignment, UM21 AB01 duplicate recording, UM21 AB04/i0 reversed pelvis, UM21 thigh/shank recipe (pelvis + hip vs hip - pelvis), sign rule. Each card: before/after figure, one-sentence cause, evidence link, and status (fixed in released files / documented, not yet released). Figures must come from committed audit evidence; no new numbers. Only verified findings.",
@@ -6546,15 +6546,21 @@
         "docs/build.py --check passes",
         "Status per card is accurate (most fixes are not yet in released files)"
       ],
-      "next_action": "Inventory verified findings and draft the page.",
+      "next_action": "Done. docs/quality/fixes.html: 8 before/after cards from verified evidence (2 UM21-T02 cards by José approval 2026-10-31); local paths redacted in published copies. Publish checklist: run tests with --run-integration before publishing.",
       "resource_class": "read_only",
-      "evidence_paths": [],
+      "evidence_paths": [
+        "docs/quality/fixes.html",
+        "docs/maintainers/handoffs/DOC-05.json",
+        "docs/maintainers/handoffs/DOC-05-verify.json"
+      ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-31T17:42:39Z",
-        "summary": "Created from José's 2026-10-31 instructions.",
-        "checks": [],
+        "last_checked_at_utc": "2026-10-31T18:45:16Z",
+        "summary": "Done. docs/quality/fixes.html: 8 before/after cards from verified evidence (2 UM21-T02 cards by José approval 2026-10-31); local paths redacted in published copies. Publish checklist: run tests with --run-integration before publishing.",
+        "checks": [
+          "Independent verifier: rounds 1-4 back_to_worker (status wording, thigh card attribution, duplicate card citation, path redaction coverage), round 5 done. Every card number reproduced from its audit."
+        ],
         "remaining": [
-          "Everything in acceptance."
+          "José publishes; run --run-integration redaction test first."
         ]
       }
     },

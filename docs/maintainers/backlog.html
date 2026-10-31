@@ -15,7 +15,7 @@
 <div class="page-layout"><main id="main" class="page-content" tabindex="-1">
 <h1>Work backlog</h1>
 <p>Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.</p>
-<p>Updated <time datetime="2026-10-31T18:08:18Z">2026-10-31T18:08:18Z</time>. <a href="backlog.json">Task list (JSON)</a></p>
+<p>Updated <time datetime="2026-10-31T18:45:16Z">2026-10-31T18:45:16Z</time>. <a href="backlog.json">Task list (JSON)</a></p>
 <nav aria-label="Backlog sections"><a href="#decisions">Needs José</a> · <a href="#next-task">Next task</a> · <a href="#tasks">All tasks</a> · <a href="#datasets">Datasets</a> · <a href="#workflow">Working rules</a></nav>
 <section id="decisions"><h2>Needs José</h2>
 <h3>D-HIST-03-1: Three historical studies have no complete original data outside AddBiomechanics: Falisse (none found), Tan running (only the AddBiomechanics copy), and Tan walking (the authors share only cut-out right-foot stance steps). AddBiomechanics force data turned out to be measured plate forces, not predictions. What should LocoHub do with these three?</h3><ul><li><strong>A</strong>: Keep all three archived — Pages stay labelled legacy with corrected citations; nothing downloaded; no new adapter. Reversible.</li><li><strong>B</strong>: Tan walking from the authors&#x27; stance steps; archive the other two — About 2 GB; one new adapter; only right-leg stance windows, not full strides or continuous recordings. Reversible.</li><li><strong>C</strong>: AddBiomechanics for all three — About 22 GB transferred one participant at a time, under 2 GB on disk at once; measured forces. The current adapter writes 4 rows per frame (raw plus 3 passes) and keeps flagged frames: about 15 million rows (rough estimate); output size not estimated. No converter change assumed. Reversible.</li><li><strong>defer</strong>: The three pages stay legacy and unreviewed; the other eight studies can proceed from their originals; no active dataset is affected.</li></ul><p><strong>Quick check:</strong> Open the Tan running Google Drive folder from the HIST-01 record: its title is &#x27;Tan2021_Formatted_No_Arm&#x27;, an AddBiomechanics export name.</p><details><summary>Show agent recommendation after choosing</summary><p>Agent recommends <strong>C</strong> (AddBiomechanics for all three), medium confidence: C is the only complete source for all three, and streaming keeps disk use under 2 GB. The premise behind avoiding AddBiomechanics (predicted forces) does not hold, but the rows-and-storage cost remains and the output size is unestimated, and José&#x27;s note preferred originals over AddBiomechanics, so this needs his fresh choice. A is the low-cost alternative if derivatives are unwanted.</p></details><p><small>Task <a href="#HIST-03">HIST-03</a>. Reply in chat: <code>D-HIST-03-1: &lt;option&gt;</code></small></p>
@@ -25,7 +25,7 @@
 <h3><a href="#UM21-T02">UM21-T02 — Validate a treadmill component and phase pilot</a></h3><p>um21 · P0 · Pilot</p><p>Does the selected complete recording preserve its source values and real stride timing?</p><p><strong>Start here:</strong> Pick an aligned pilot record (reviewed producer change needed to select it), bind audit b3278c87 in the job spec, dry run, fresh census, single launch.</p>
 <p>Read the task’s inputs and handoff before starting. This page does not start jobs or change task states.</p></section>
 <h2 id="tasks">All tasks</h2>
-<details><summary>View all 100 tasks — 14 ready, 0 in progress, 56 blocked, 0 awaiting review, 30 done</summary>
+<details><summary>View all 100 tasks — 13 ready, 0 in progress, 56 blocked, 0 awaiting review, 31 done</summary>
 <div class="table-scroll"><table><caption>Maintained task states, not live process monitoring</caption><thead><tr><th>Task</th><th>Dataset</th><th>Priority</th><th>Status</th><th>Stage</th><th>Depends on</th></tr></thead><tbody>
 <tr><th scope="row"><a href="#PM-01">PM-01: Inspect stopped jobs and prepare one safe pilot handoff</a></th><td>project</td><td>P0</td><td>Done</td><td>Operations</td><td>—</td></tr>
 <tr><th scope="row"><a href="#PM-02">PM-02: Reconcile every retained job with a current disposition</a></th><td>project</td><td>P0</td><td>Done</td><td>Operations</td><td>—</td></tr>
@@ -125,7 +125,7 @@
 <tr><th scope="row"><a href="#GT23-C04">GT23-C04: Census every GT23 trial&#x27;s normalizing mass for rescaling</a></th><td>gt23</td><td>P1</td><td>Ready</td><td>Conventions</td><td><a href="#GT23-C03">GT23-C03</a></td></tr>
 <tr><th scope="row"><a href="#UM21-P02">UM21-P02: Apply the AB04/i0 pelvis correction in the sign table</a></th><td>um21</td><td>P1</td><td>Done</td><td>Conventions</td><td><a href="#UM21-P01">UM21-P01</a></td></tr>
 <tr><th scope="row"><a href="#HIST-03">HIST-03: Find original sources for the AddBiomechanics studies and test GRF-only extraction</a></th><td>all</td><td>P1</td><td>Done</td><td>Source inventory</td><td><a href="#HIST-01">HIST-01</a></td></tr>
-<tr><th scope="row"><a href="#DOC-05">DOC-05: Publish a broken-vs-fixed data comparison page</a></th><td>all</td><td>P1</td><td>Ready</td><td>Documentation</td><td>—</td></tr>
+<tr><th scope="row"><a href="#DOC-05">DOC-05: Publish a broken-vs-fixed data comparison page</a></th><td>all</td><td>P1</td><td>Done</td><td>Documentation</td><td>—</td></tr>
 <tr><th scope="row"><a href="#CORE-11-P-UM21">CORE-11-P-UM21: Pilot the bound sign-application build on UMich 2021</a></th><td>um21</td><td>P1</td><td>Ready</td><td>Pilot</td><td><a href="#UM21-P02">UM21-P02</a></td></tr>
 </tbody></table></div></details>
 <h2 id="datasets">Dataset status</h2>
@@ -1782,19 +1782,19 @@
 <p><strong>Checks completed</strong></p><ul><li>Independent verifier: round 1 back_to_worker (wrong extra-rows attribution, missing option C output size), round 2 done. Side finding: legacy AddBiomechanics converters read processingPasses[1], which is the low-pass pass in the sample subject, not dynamics.</li></ul>
 <p><strong>Still needed</strong></p><ul><li>Everything in acceptance.</li></ul>
 </details>
-<details id="DOC-05"><summary>DOC-05 — Publish a broken-vs-fixed data comparison page · Ready</summary>
+<details id="DOC-05"><summary>DOC-05 — Publish a broken-vs-fixed data comparison page · Done</summary>
 <p><strong>Question:</strong> Can a reader see, for each data problem LocoHub found, what the published source data looked like and what LocoHub releases instead?</p>
 <p><strong>Scope:</strong> One documentation page (docs/quality/fixes.html or similar, linked from the quality page) with one card per verified finding: GT24 ankle sign (README vs data), GT23 moment units and wrong-participant mass, UM21 ankle 180-degree branch episode, UM21 belt-clock misalignment, UM21 AB01 duplicate recording, UM21 AB04/i0 reversed pelvis, UM21 thigh/shank recipe (pelvis + hip vs hip - pelvis), sign rule. Each card: before/after figure, one-sentence cause, evidence link, and status (fixed in released files / documented, not yet released). Figures must come from committed audit evidence; no new numbers. Only verified findings.</p>
-<p><strong>Next action:</strong> Inventory verified findings and draft the page.</p>
+<p><strong>Next action:</strong> Done. docs/quality/fixes.html: 8 before/after cards from verified evidence (2 UM21-T02 cards by José approval 2026-10-31); local paths redacted in published copies. Publish checklist: run tests with --run-integration before publishing.</p>
 <p><strong>Depends on:</strong> None · <strong>Resources:</strong> Read only</p>
 <h4>Inputs</h4><p>None recorded.</p>
 <h4>Deliverables</h4><ul><li>Comparison page with figures</li><li>Builder script that regenerates figures from audit JSON</li></ul>
 <h4>Acceptance checks</h4><ul><li>Every card cites a done task and its audit</li><li>Legible at 390 and 1100 px</li><li>docs/build.py --check passes</li><li>Status per card is accurate (most fixes are not yet in released files)</li></ul>
-<h4>Evidence</h4><p>None recorded.</p>
-<h4>Latest handoff</h4><p>Created from José&#x27;s 2026-10-31 instructions.</p>
-<p>Checked <time datetime="2026-10-31T17:42:39Z">2026-10-31T17:42:39Z</time>.</p>
-<p><strong>Checks completed</strong></p><p>None recorded.</p>
-<p><strong>Still needed</strong></p><ul><li>Everything in acceptance.</li></ul>
+<h4>Evidence</h4><ul><li><a href="../quality/fixes.html"><code>docs/quality/fixes.html</code></a></li><li><a href="handoffs/DOC-05.json"><code>docs/maintainers/handoffs/DOC-05.json</code></a></li><li><a href="handoffs/DOC-05-verify.json"><code>docs/maintainers/handoffs/DOC-05-verify.json</code></a></li></ul>
+<h4>Latest handoff</h4><p>Done. docs/quality/fixes.html: 8 before/after cards from verified evidence (2 UM21-T02 cards by José approval 2026-10-31); local paths redacted in published copies. Publish checklist: run tests with --run-integration before publishing.</p>
+<p>Checked <time datetime="2026-10-31T18:45:16Z">2026-10-31T18:45:16Z</time>.</p>
+<p><strong>Checks completed</strong></p><ul><li>Independent verifier: rounds 1-4 back_to_worker (status wording, thigh card attribution, duplicate card citation, path redaction coverage), round 5 done. Every card number reproduced from its audit.</li></ul>
+<p><strong>Still needed</strong></p><ul><li>José publishes; run --run-integration redaction test first.</li></ul>
 </details>
 <details id="CORE-11-P-UM21"><summary>CORE-11-P-UM21 — Pilot the bound sign-application build on UMich 2021 · Ready</summary>
 <p><strong>Question:</strong> Does the bound detector + hook + audited-sign build pass a guarded-launcher pilot on UM21 treadmill recordings?</p>

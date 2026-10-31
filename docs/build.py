@@ -3,6 +3,10 @@
 
 No Markdown is rendered. Only HTML and its referenced local assets are published.
 Research datasets outside docs/ are never opened.
+
+Published text copies have local absolute paths redacted (see redact_paths); the
+files under docs/ are never modified, so hash-bound audit records stay intact.
+A binary asset that contains a local path is refused.
 """
 
 from __future__ import annotations
@@ -11,12 +15,80 @@ import argparse
 from html.parser import HTMLParser
 import json
 from pathlib import Path
+import re
 import shutil
 from urllib.parse import unquote, urlsplit
 
 DOCS = Path(__file__).resolve().parent
 SITE_PREFIX = "/LocoHub/"
 GENERATED_ASSETS = {"search_index.json"}
+REPO = DOCS.parent.resolve().as_posix()
+TEXT_SUFFIXES = {".html", ".json", ".js", ".css", ".svg", ".yaml", ".yml", ".csv", ".md", ".txt"}
+# Long literal markers only: short patterns would match by chance inside compressed binaries.
+BINARY_LOCAL_MARKERS = (b"/mnt/", b"/home/", b"/Users/", b"/tmp/claude-", b"\\wsl$", b"\\wsl.localhost")
+SEP = r"(?:\\\\|\\|/)"          # one path separator: '/', '\' or JSON-escaped '\\'
+NAME = r"[^\\/\s\"'<>\[\]]+"    # one path segment (for example a user name)
+
+
+def _windows_forms(posix: str) -> list[str]:
+    """'/mnt/s/a/b' -> regex for 'S:\a\b', 'S:\\a\\b' and 'S:/a/b' (any drive-letter case)."""
+    parts = posix.strip("/").split("/")
+    if len(parts) < 3 or parts[0] != "mnt" or len(parts[1]) != 1:
+        return []
+    return [f"(?<![A-Za-z0-9])(?i:{parts[1]}):" + "".join(SEP + re.escape(p) for p in parts[2:])]
+
+
+def _rooted(posix: str) -> str:
+    """Regex for a /mnt/<d>/... root in POSIX, Windows (raw or JSON-escaped) or file:/// form."""
+    return "|".join([re.escape(posix)] + _windows_forms(posix))
+
+
+REDACTIONS = [
+    # (pattern, token); applied in order, so more specific roots come first.
+    (r"/tmp/claude-\d+", "[scratch]"),
+    (r"(?:\\\\|\\){2}wsl(?:\$|\.localhost)" + SEP + NAME + SEP + "home" + SEP + NAME, "[home]"),
+    (r"(?:\\\\|\\){2}wsl(?:\$|\.localhost)" + SEP + NAME, "[local]"),
+    (_rooted(REPO), "[repo]"),
+    (_rooted("/mnt/s/locomotion_data"), "[source-root]"),
+    (r"file:///(?=[A-Za-z]:/)", ""),
+    (r"/mnt/[A-Za-z]/Users/" + NAME, "[home]"),
+    (r"(?<![A-Za-z0-9])[A-Za-z]:" + SEP + "Users" + SEP + NAME, "[home]"),
+    (r"(?<![\w.:/-])/(?:home|Users)/" + NAME, "[home]"),
+    (r"/mnt/[A-Za-z0-9_.-]+", "[local]"),
+    (r"(?<![A-Za-z0-9/])[A-Za-z]:(?=\\\\|\\|/(?!/))", "[local]"),
+    (r"file:///?(?=\[(?:repo|source-root|home|local|scratch)\])", ""),
+]
+REDACTION_RES = [(re.compile(pattern), token) for pattern, token in REDACTIONS]
+
+
+def redact_paths(text: str) -> str:
+    r"""Replace local absolute paths with bracketed tokens that are safe in HTML, JSON and SVG.
+
+    Covers the repo root, the source root, /mnt/<drive>, /home/<user>, /Users/<user>,
+    Windows drive paths (raw and JSON-escaped, with C:\Users\<user> dropped),
+    \\wsl$ and \\wsl.localhost paths, file:/// URLs to these, and /tmp/claude-<uid>.
+    Public URLs (https://github.com/...) are left alone.
+    """
+    for pattern, token in REDACTION_RES:
+        text = pattern.sub(token, text)
+    return text
+
+
+def publish_file(path: Path, destination: Path) -> None:
+    """Copy one published file; text gets redact_paths, binaries with a local path are refused."""
+    data = path.read_bytes()
+    if path.suffix.lower() in TEXT_SUFFIXES:
+        text = data.decode("utf-8")
+        redacted = redact_paths(text)
+        if redacted == text:
+            shutil.copy2(path, destination)
+            return
+        destination.write_bytes(redacted.encode("utf-8"))
+        shutil.copystat(path, destination)
+        return
+    if any(marker in data for marker in BINARY_LOCAL_MARKERS):
+        raise ValueError(f"Binary asset contains a local path; not published: {path}")
+    shutil.copy2(path, destination)
 
 
 class Page(HTMLParser):
@@ -222,13 +294,13 @@ def build(output: Path, source: Path = DOCS) -> tuple[int, int]:
         relative = path.relative_to(source)
         destination = output / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(path, destination)
+        publish_file(path, destination)
         published.add(relative.as_posix())
     index = [
         {
             "url": path.relative_to(source).as_posix(),
             "title": page.title.removesuffix(" · LocoHub"),
-            "text": " ".join(" ".join(page.main_text).split())[:40000],
+            "text": redact_paths(" ".join(" ".join(page.main_text).split()))[:40000],
         }
         for path, page in pages.items()
         if path.relative_to(source).as_posix() != "search/index.html"
