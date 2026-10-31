@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-10-31T16:59:46Z",
+  "updated_at_utc": "2026-10-31T17:01:26Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -4052,10 +4052,10 @@
       "priority": "P0",
       "dataset": "gt21",
       "title": "Recover the five remaining publisher participants or retain explicit source blockers",
-      "status": "blocked",
+      "status": "ready",
       "stage": "source_inventory",
       "question": "Can the missing publisher sources be recovered and independently verified?",
-      "scope": "AB12, AB15, AB19, AB23 and AB28; AB17 is handled by GT21-A01. Preserve version, licensing and all original channel identities.",
+      "scope": "AB12, AB15, AB19, AB23 and AB28; AB17 is handled by GT21-A01. Preserve version, licensing and all original channel identities. D-GT21-S01-1 = C (2026-10-31): acquire the six from the authors' 2024 copy, recording our own hashes at download; check the folder structure matches the local 16 (static, ik_offset).",
       "depends_on": [
         "PM-01",
         "GT21-S01"
@@ -4074,7 +4074,7 @@
         "Preserve disk reserves and one bounded I/O/numerical job; do not trigger automatic bulk downloads or extraction.",
         "If original data is unavailable, record the exact source blocker and leave full-cohort completion blocked; missing-source disposition alone is not a recovered cohort."
       ],
-      "next_action": "Choose one missing participant from the source crosswalk; prepare a bounded acquisition and integrity check with a fresh disk and memory admission.",
+      "next_action": "Locate the authors' 2024 copy and write a plan-only acquisition spec per participant for the guarded launcher.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
@@ -4090,7 +4090,6 @@
           "Choose one missing participant from the source crosswalk; prepare a bounded acquisition and integrity check with a fresh disk and memory admission."
         ]
       },
-      "blocked_reason": "Required evidence is unfinished: PM-01, GT21-S01. Recheck the actual artifacts and resource conditions before execution; a task plan does not satisfy these prerequisites.",
       "legacy_ids": [
         "GT21-04"
       ]
@@ -6410,6 +6409,70 @@
         "remaining": [
           "Per-dataset pilots CORE-11-P-UM21/GT23/GT24/GT21",
           "Release builder should verify sign-application log hashes"
+        ]
+      }
+    },
+    {
+      "id": "GT23-C04",
+      "priority": "P1",
+      "dataset": "gt23",
+      "title": "Census every GT23 trial's normalizing mass for rescaling",
+      "status": "ready",
+      "stage": "conventions",
+      "question": "What divisor was used for every GT23 trial, so moments and powers can be rescaled to each participant's own mass (D-GT23-C03-1 = B)?",
+      "scope": "Per-trial divisor census over all GT23 trials using the GT23-C03 methods (exact N*m re-runs where they match; force-plate lever-arm estimate otherwise); flag trials whose divisor cannot be established; produce a per-trial rescale table. No rescaling applied to data in this task.",
+      "depends_on": [
+        "GT23-C03"
+      ],
+      "inputs": [],
+      "deliverables": [
+        "Evidence report and handoff"
+      ],
+      "acceptance": [
+        "Independently verified",
+        "Bounded reads or guarded launcher only"
+      ],
+      "next_action": "Write the census probe and run it under the guarded launcher after a pilot.",
+      "resource_class": "numerical",
+      "evidence_paths": [],
+      "handoff": {
+        "last_checked_at_utc": "2026-10-31T17:01:26Z",
+        "summary": "Created from José's answer.",
+        "checks": [],
+        "remaining": [
+          "Everything in acceptance."
+        ]
+      }
+    },
+    {
+      "id": "UM21-P02",
+      "priority": "P1",
+      "dataset": "um21",
+      "title": "Apply the AB04/i0 pelvis correction in the sign table",
+      "status": "ready",
+      "stage": "conventions",
+      "question": "Does the audited-sign table flip AB04/i0 pelvis tilt per D-UM21-P01-1 = C and recompute thigh, shank and foot from it?",
+      "scope": "Replace the hold exception UM21-P01-AB04-i0-pelvis with a logged per-recording sign correction (pelvis tilt x -1 from marker evidence); thigh, shank and foot derived from the corrected tilt; tests updated.",
+      "depends_on": [
+        "UM21-P01"
+      ],
+      "inputs": [],
+      "deliverables": [
+        "Evidence report and handoff"
+      ],
+      "acceptance": [
+        "Independently verified",
+        "Bounded reads or guarded launcher only"
+      ],
+      "next_action": "Update audited_signs.json and the hook tests.",
+      "resource_class": "fixture",
+      "evidence_paths": [],
+      "handoff": {
+        "last_checked_at_utc": "2026-10-31T17:01:26Z",
+        "summary": "Created from José's answer.",
+        "checks": [],
+        "remaining": [
+          "Everything in acceptance."
         ]
       }
     }
