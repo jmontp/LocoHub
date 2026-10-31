@@ -1,0 +1,58 @@
+{
+  "task_id": "GA26-C01",
+  "verifier_role": "independent second agent; metadata only (publisher zip and spreadsheets, paper PDF text, .osim XML, file-name listings, one .mot header); no data arrays parsed",
+  "verdict": "back_to_worker",
+  "last_checked_at_utc": "2026-10-31T23:59:00Z",
+  "research_data_read": "No arrays parsed. Disclosure: one sample row of S001/JointAngle/LevelWalking/Trial01/step01.mot was printed incidentally while listing its column labels (sed range off by one). It was not used for any conclusion.",
+  "scientific_approval": false,
+  "summary": "The knee convention conclusion holds. The stored right knee is extension-positive (Fig. 4 caption; dataVisualizer.m negates column 11 = knee_angle_r before labelling it Knee Flexion), so the converter's negation at lines 785-786 yields rule-B flexion-positive. The --run-ik moment defect, the masses, the counts, the force coverage and the step/Step fragility all check out. Two corrections are needed. (1) rajagopal_gait120.osim is not 'unmodified': its knee_angle_r_beta and knee_angle_l_beta coordinates are locked (false in rajagopal_original.osim), and the file was re-serialized by OpenSim 4.6. The walker-knee joint XML and the 0-2.0944 rad knee range are identical, so the irrelevance conclusion stands. (2) An unreported sibling of the --run-ik finding: the opt-in --enable-id path runs ID on the publisher's extension-positive JointAngle .mot with the flexion-positive Rajagopal model, then negates the knee moment.",
+  "checks": [
+    {"id": 1, "area": "knee sign evidence", "result": "pass", "evidence": [
+      "Paper PDF text (contributor_tools/conversion_scripts/Gait120/s41597-025-05391-0.pdf, pypdf): Fig. 4 caption 'Joint Kinematics of the right lower limb ... Positive values indicate hip flexion, hip adduction, hip internal rotation, knee extension, and ankle dorsiflexion.' Methods: 'a modified Rajagopal model44, with only one rotational degree of freedom in the knee joint'.",
+      "Publisher zip MD5 8964047e6686be9083766e4ba0483d23 matches. dataVisualizer.m sha256 9ccc4451...0b3c. Line 34 'target_mot_col_idx = [8, 9, 10, 11, 13];', lines 103-104 'if joint_idx == 4 / temp_joint_data = -temp_joint_data;', line 112 labels joint 4 'Knee Flexion (Deg)'.",
+      "SplineMotData (line 237) indexes readMOT data columns including time. In the S001 step01.mot header, column 11 is knee_angle_r (1 time, 2-7 pelvis, 8-10 hip_r, 11 knee_angle_r, 12 knee_angle_r_beta, 13 ankle_angle_r).",
+      "Two independent publisher statements agree: the stored right knee is extension-positive.",
+      "Converter: convert_gait120_to_parquet.py lines 785-786 negate knee_angle_{ipsi,contra} ('Negate for flexion+'); line 813 builds shank = thigh - knee, consistent with rule B composition.",
+      "Left knee: no source statement. The converter negates it by symmetry, which stays unverified until the probe runs."
+    ]},
+    {"id": 2, "area": "bundled .osim", "result": "conclusion holds; description inaccurate", "evidence": [
+      "Both files: model name Rajagopal2016; knee_angle_r/l range 0 to 2.0944 rad, clamped; the walker_knee_r joint XML hash is identical (cc222ac3...).",
+      "rajagopal_gait120.osim has knee_angle_r_beta and knee_angle_l_beta locked=true; rajagopal_original.osim has them locked=false.",
+      "The gait120 file is OpenSimDocument Version 40600 (the original is 40000), so setup_opensim_model.py was run with --lock-secondary-knee-dofs and re-serialized it.",
+      "Not 'unmodified', but still not the authors' unpublished model, so it says nothing about the stored values."
+    ]},
+    {"id": 3, "area": "ID knee-moment negation", "result": "pass, plus one sibling finding", "evidence": [
+      "common/opensim_inverse_dynamics.py extract_sagittal_moments lines 226/228 negate knee_angle_*_moment unconditionally.",
+      "In --run-ik, common/opensim_pipeline.py lines 237-250 pass knee_angle_* through as knee_flexion_angle (correct, since the Rajagopal knee is flexion-positive). The ID generalized force is therefore already flexor-positive, and the negation makes extensor positive, breaking rule B. Confirmed by code reading, not on data.",
+      "Sibling: --enable-id (COMPUTE_INVERSE_DYNAMICS, line 121 default False; lines 1040-1050) runs ID with ik_mot_path = the publisher's extension-positive JointAngle .mot on the flexion-positive Rajagopal model, so the knee coordinate is inverted for ID, and the same negation follows. CLAUDE.md calls this mode inaccurate but not sign-inverted. Both paths are opt-in; the default path computes no moments.",
+      "The negation is correct for gait2392 (flexion-negative knee) and wrong for Rajagopal, so a fix must depend on the model. That is a code task, not a convention choice."
+    ]},
+    {"id": 4, "area": "masses", "result": "pass (recomputed)", "evidence": [
+      "Anthropometric_Data_Participants.xlsx (repo copy, md5 e8a02c43...) has sheets [YG, OG]. YG has 120 unique IDs S001-S120.",
+      "Subject_Demographics.xlsx (md5 4a110fc2... matches figshare) has 120 rows, all M.",
+      "0 mass mismatches and 0 height mismatches (YG mm / 1000 vs demographics m) across all 120. Mass 74.19 +/- 12.52 kg (48.2-118), height 1732.3 +/- 56.0 mm, matching the paper's 74.1 +/- 12.5 kg and 173.2 +/- 5.6 cm. No 75 kg entries.",
+      "OG: two rows labelled S001 (1665 mm, 69.2 kg) and S002 (1725 mm, 62.1 kg). Neither equals YG S001/S002 (1636/48.2, 1760/85) nor any YG row. The anomaly is confirmed; the sheet is unused by the converter."
+    ]},
+    {"id": 5, "area": "file counts from listings", "result": "pass", "evidence": [
+      "My own name-only find under /mnt/s/locomotion_data/Gait120: JointAngle .mot 6,882 = paper total.",
+      "Per task: LevelWalking 1,060, StairAscent 1,187, StairDescent 1,186, SlopeAscent 1,172, SlopeDescent 1,150, SitToStand 558, StandToSit 569. All equal the paper's p. 2 counts.",
+      "Non-static TRC 6,882 pairs 1:1 with JointAngle case-insensitively.",
+      "Force .mot 1,998 = LevelWalking 969 + StandToSit 520 + SitToStand 509. That equals the set of S011-S120 JointAngle records for those three tasks exactly; none fall in S001-S010."
+    ]},
+    {"id": 6, "area": "step/Step fragility", "result": "confirmed", "evidence": "All 6,882 JointAngle files are named 'step##' and all 1,998 force files 'Step##'. get_grf_path (lines 284-303) and get_trc_path build the MotionCapture path from the JointAngle name and test exists(). On /mnt/s, 'ls step01.mot' finds Step01.mot (case-insensitive). On the ext4 scratchpad the same lookup fails. On a case-sensitive filesystem, force and TRC would be silently absent."},
+    {"id": 7, "area": "probe design", "result": "sound and bounded", "evidence": [
+      "The rules are fixed in the docstring before any data are read.",
+      "Transfers anchor on hip flexion >= 45 deg at the seated frame. If a left hip sign were also inverted, the anchor fails and the side stays unresolved, so it fails safe.",
+      "Locomotion uses symmetric +/-40/20 deg swing rules. A side gets a sign only if all sampled files agree.",
+      "At most 21 files (3 per task), each <= 2 MiB, seeded selection (20261031) from the inventory, no pandas, one output file, launcher-only.",
+      "8 synthetic fixture tests pass. Not run on data (numerical slot held), as stated."
+    ]},
+    {"id": 8, "area": "no José decision", "result": "agree", "evidence": "Rule B already fixes every sign here. The open items are evidence (left knee probe, plate-to-foot assignment) or code fixes (model-dependent moment sign, step/Step pairing). The OG sheet is unused, so nothing is excluded."},
+    {"id": 9, "area": "test runs", "result": "pass", "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py tests/test_ga26_knee_sign_probe.py -> 79 passed. python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (103 tasks)."}
+  ],
+  "required_fixes": [
+    "Correct the .osim description in the audit and handoff: Rajagopal2016 with knee_angle_*_beta locked (setup_opensim_model.py --lock-secondary-knee-dofs, re-serialized at OpenSim 4.6); same walker-knee joint and knee range as the original; still not the authors' model.",
+    "Add the --enable-id finding (publisher extension-positive IK fed to the flexion-positive Rajagopal model, then knee moment negated) next to the --run-ik finding. Record the fix as model-dependent: negate only for flexion-negative knee coordinates."
+  ],
+  "verifier_scratch": "Session scratchpad ga26/: ja.txt and mc.txt (name listings only), cs/ (case-sensitivity probe)."
+}

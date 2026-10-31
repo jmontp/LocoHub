@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-10-31T22:33:48Z",
+  "updated_at_utc": "2026-10-31T22:47:58Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -3160,7 +3160,7 @@
       "priority": "P1",
       "dataset": "ga26",
       "title": "Resolve Gait120 model, mass and load conventions",
-      "status": "ready",
+      "status": "done",
       "stage": "conventions",
       "question": "Which model and load mappings are source-supported across both sides?",
       "scope": "All120 participant masses, seven tasks, source ID anomalies and missing force in S001–S010. Also settle the Gait120 knee sign from source evidence: docs/converter say source knee is extension-positive, but the bundled model knee coordinate ranges 0 to 2.09 rad (flexion-positive?).",
@@ -3180,18 +3180,19 @@
         "120 subject masses traced to spreadsheet; alternate uniform75kg artifact explicitly legacy/quarantined",
         "Right-leg paper evidence does not establish left-side signs or global segment orientation."
       ],
-      "next_action": "Bind spreadsheet/model/load metadata and document exact remaining native-pose questions.",
+      "next_action": "Done. Right knee stored extension-positive; converter negation gives rule B. Left knee probe pending; converter fixes queued in GA26-F01.",
       "resource_class": "read_only",
       "evidence_paths": [
-        "docs/quality/audits/remaining.json",
-        "contributor_tools/conversion_scripts/Gait120",
-        "docs/quality/audits/gait120-source-conventions.json"
+        "docs/quality/audits/ga26-c01-conventions.json",
+        "docs/maintainers/handoffs/GA26-C01.json",
+        "docs/maintainers/handoffs/GA26-C01-verify.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
+        "last_checked_at_utc": "2026-10-31T22:47:58Z",
         "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
         "checks": [
-          "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
+          "Read original task scope and acceptance; no scientific arrays loaded or jobs started.",
+          "Independent verifier: core finding confirmed; two text corrections (lab-modified .osim; --enable-id knee moment) applied and checked by coordinator."
         ],
         "remaining": [
           "Bind spreadsheet/model/load metadata and document exact remaining native-pose questions."
@@ -3209,7 +3210,7 @@
       "status": "blocked",
       "stage": "source_readback",
       "question": "Do all source values and 19 derivatives use true clocks across the full scope?",
-      "scope": "6,882 recordings,120 subjects,seven tasks; retain missing/unassessed force and segment mappings.",
+      "scope": "6,882 recordings,120 subjects,seven tasks; retain missing/unassessed force and segment mappings. Prerequisites from GA26-C01: model-dependent knee-moment sign in --run-ik/--enable-id (negation correct only for gait2392); select the YG sheet explicitly; pair force/TRC files case-insensitively (step## vs Step##); run the left-knee sign probe (contributor_tools/probe_ga26_knee_sign.py) once through the guarded launcher and fix the left knee only if it is flexion-positive.",
       "depends_on": [
         "PM-01",
         "GA26-C01"
