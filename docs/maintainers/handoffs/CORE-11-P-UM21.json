@@ -1,0 +1,277 @@
+{
+ "task_id": "CORE-11-P-UM21",
+ "title": "Pilot the bound sign-application build on UMich 2021",
+ "phase": "pilot launched and recorded (v3r1 spec); awaiting commit and independent verification",
+ "status": "done",
+ "status_note": "Verified (CORE-11-P-UM21-verify.json round_4, all 7 claims pass); condition C1 fixed. Backlog task set to done with the gate citations. Not committed; the coordinator commits.",
+ "scientific_approval": false,
+ "research_data_read": true,
+ "launched": true,
+ "last_checked_at_utc": "2026-11-01T00:25:00Z",
+ "repository_head": "8de0b8b",
+ "summary": "contributor_tools/adapters/um21_sign_adapter.py wires UM21 treadmill recordings to sign_application.run_sign_application, one recording and leg at a time. It refuses the six recordings excluded by D-UM21-T02-1 = A before touching any data, and refuses to run unless the backlog still records answer A. It reads untransformed component-1 channels, converting deg to rad only (moments and powers as stored, float64), with the same bounded reading and evidence as probe_core04_um21.py. It calls the hook with dataset UM21, the recording id and the declared detector sha256. Only after the hook does it derive thigh, shank and foot (derive_segment_angles) and the pelvis, thigh, shank and foot sagittal velocities (derive_angular_velocities, spacing = stride duration / 149) from the published channels. It passes no segment angle or velocity to the hook and checks that (F2). contributor_tools/run_core11_um21_pilot.py has two steps. 'plan' wrote docs/quality/audits/core11-p-um21-pilot-spec.json, validated in-process. 'run' is the launched job: it refuses outside the launcher's niceness and address-space limit, writes only under a new output root, and ends with automated pilot checks and pilot_summary.json.",
+ "changed_files": [
+  "contributor_tools/adapters/__init__.py",
+  "contributor_tools/adapters/um21_sign_adapter.py",
+  "contributor_tools/run_core11_um21_pilot.py",
+  "tests/test_um21_sign_adapter.py",
+  "docs/quality/audits/core11-p-um21-pilot-spec-v3.json",
+  "docs/maintainers/handoffs/CORE-11-P-UM21.json",
+  "docs/quality/audits/core11-p-um21-pilot-spec-v3r1.json",
+  "docs/quality/audits/core11-p-um21-launcher-receipt-v3.json",
+  "docs/quality/audits/core11-p-um21-launcher-receipt-v3r1.json",
+  "docs/quality/audits/core11-p-um21-launcher-receipt-v3r1.log",
+  "docs/quality/audits/core11-p-um21-pilot-record-v3.json",
+  "docs/maintainers/backlog.json",
+  "docs/maintainers/backlog.html"
+ ],
+ "not_changed": [
+  "docs/maintainers/backlog.json",
+  "docs/maintainers/backlog.html",
+  "AGENTS.md",
+  "contributor_tools/common/ (sign_application.py, sign_offset_detector.py, documentation_policy.py, refuted_documentation.json, audited_signs.json: the bound build is unchanged)",
+  "contributor_tools/conversion_scripts/Umich_2021/ (MATLAB converters; F2 is met by the adapter instead)",
+  "contributor_tools/reconvert_umich_streaming.py",
+  "contributor_tools/guarded_launcher.py",
+  "converted_datasets/"
+ ],
+ "design": {
+  "order": [
+   "exclusion check (before any data access)",
+   "read untransformed source channels and evidence",
+   "run_sign_application (bound build, committed audited-sign table, mode pilot)",
+   "derive_segment_angles from published channels",
+   "derive_angular_velocities from the published pelvis tilt and the derived segments"
+  ],
+  "hook_inputs": "pelvis_tilt, hip/knee/ankle angle (jointAngles <side><Name>Angles component 1, deg -> rad), hip/knee/ankle moment (jointMoments component 1, N*m/kg as stored), hip/knee/ankle power (jointPowers first filled component, W/kg as stored). Pelvis per leg from that side's PelvisAngles, as the CORE-04 probe.",
+  "F2": "No segment angle and no *_velocity channel is read from Streaming.mat, the UM21 MATLAB converters or reconvert_umich_streaming.py; apply_leg raises if one is passed. Segment angles come from derive_segment_angles on the hook's published channels. Velocities come from derive_angular_velocities on the published pelvis tilt and those segments. A held pelvis yields no pelvis velocity and no segments, and the reasons are logged.",
+  "units": "Strides: consecutive source heel strikes 50-250 frames apart (UM21-C03 rule), resampled to 150 samples. Unit ids: um21:Streaming/<subject>/Tread/<condition>:<leg>:frames:<a>:<b>. These are not yet the UM21-T01 task-labelled release observations.",
+  "evidence": "As probe_core04_um21.py: sagittal markers (forward axis from heel->toe via the bound detector's forward_axis), GRF on the foot (N), CoP by the UM21-C03 midpoint rule, plate tilt from the README slope with the sign from the heel path (skipped for i0), task, ParticipantDetails body mass, stride durations. Evidence helpers come from the bound detector bytes.",
+  "exclusions": {
+   "decision": "D-UM21-T02-1 = A",
+   "recordings": [
+    "AB01/d10",
+    "AB01/d5",
+    "AB01/i5",
+    "AB08/i10",
+    "AB09/i10",
+    "AB10/i0"
+   ],
+   "rule": "Refused with ExcludedRecordingError before any data access. The planner also refuses if the committed UM21-T02 census clock failures differ from this set."
+  },
+  "adapter_log": "Per leg: adapter path and sha256, order, stride rule and frames per unit, unit conversion, source columns, power slots, hook inputs, F2 statement, input hashes, recording and leg facts, exclusion decision, published, held, derived. The hook's own log, review and derivation logs carry the rest."
+ },
+ "pilot_spec": {
+  "path": "docs/quality/audits/core11-p-um21-pilot-spec-v3.json",
+  "sha256": "0781e671ab70264edf11111c2ae1a26f9e052371c6e09d43cf6362163abda8da",
+  "validated": "Post-launch: the planned v3 spec (docs/quality/audits/core11-p-um21-pilot-spec-v3.json) and the launched v3r1 spec (identical except receipt_path) both pass guarded_launcher.validate_spec in-process; v3r1 passed the launcher dry-run and ran once (receipt v3r1: completed, clean). The v3 launch was refused (foreign_worker_linux) before running.",
+  "job_id": "CORE-11-P-UM21-pilot-v3",
+  "seed": 20261102,
+  "recordings": [
+   "AB04/i0",
+   "AB04/d10",
+   "AB06/i5",
+   "AB10/i10",
+   "AB10/i5",
+   "AB03/i10",
+   "AB03/d10"
+  ],
+  "output_root": "converted_datasets/reconversion_v2/core11_p_um21_pilot_v3 (new; does not exist)",
+  "receipt_path": "docs/quality/audits/core11-p-um21-launcher-receipt-v3.json",
+  "record_path": "docs/quality/audits/core11-p-um21-pilot-record-v3.json (record step after the run; requires the receipt to have run this spec)",
+  "bindings": "Bound build (5 files), adapter 81c14488..., runner 33de204a..., UM21-T02 census, UM21-C03 record, Streaming.mat at its recorded sha256. No package __init__ executes in the job.",
+  "limits": "timeout 3600 s, address space 768 MiB, PM-01 memory reserves, RSS cap 300 MiB checked per recording, one recording at a time, 1 MiB h5py chunk cache",
+  "automated_checks_in_job": [
+   "no published sign contradicts the audited truth (rule B: pelvis -1; hip, knee, ankle angles and moments +1; power slot 1 -1, slot 3 +1; AB04/i0 pelvis sign_vs_corrected_source -1 with net multiplier +1)",
+   "every hold, conflict and guard refusal carries a logged reason",
+   "segments hash-linked to published channels, velocities to published or derived angles",
+   "AB04/i0 correction UM21-P01-AB04-i0-pelvis applied with D-UM21-P01-1 = C in both legs, thigh, shank and foot derived; no other recording corrected",
+   "no segment angle or velocity passed to the hook",
+   "written hook outputs reloaded and undone against the log sha256 reproduce the adapter input hashes; written derived arrays match the derivation logs",
+   "source size and mtime unchanged; exit status 0 only if all pass",
+   "every joint's power slot equals the UM21-C03 layout record (else the recording fails)",
+   "every cross-group review item explained by structured fields (power slots differ; held only by an exception, a not-released channel, or a detector that neither opposes the truth nor reports a conflict)",
+   "no package __init__ ran in the job"
+  ],
+  "launched_spec": {
+   "path": "docs/quality/audits/core11-p-um21-pilot-spec-v3r1.json",
+   "sha256": "b8197e6fbb670ed5c295ff3fe5999f004cf8374e7ccc4f36400e7a9d3549b61f"
+  }
+ },
+ "checks": [
+  {
+   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_um21_sign_adapter.py tests/test_sign_application.py tests/test_backlog_workflow.py",
+   "result": "256 passed, 1 warning (numpy matrix PendingDeprecationWarning)",
+   "coverage": "Synthetic HDF5 laid out like Streaming.mat (seed-41 gait leg in UM21-C03 source conventions): AB02/i0 normal, AB04/i0 pelvis reversed, AB05/i0 power layout 2, AB03/i10 and AB06/i0 with storage contradicting the C03 layout. Real committed audited-sign table, backlog and C03 record. Synthetic git repo for the record-writer gate test. No research data. Crafted logs for the held-group explanation rule."
+  },
+  {
+   "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+   "result": "Backlog valid; HTML current (103 tasks)."
+  },
+  {
+   "command": "same prefix: python3 contributor_tools/run_core11_um21_pilot.py plan",
+   "result": "v3 spec written, sha256 0781e671ab70264edf11111c2ae1a26f9e052371c6e09d43cf6362163abda8da"
+  },
+  {
+   "command": "same prefix: python3 -m pytest -q tests/test_um21_sign_adapter.py",
+   "result": "46 passed"
+  },
+  {
+   "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check (after render)",
+   "result": "Backlog valid; HTML current (104 tasks)."
+  },
+  {
+   "command": "full-run gate dry form: sign_application.check_pilot_record on the real record and backlog",
+   "result": "As is: refused only because the record is not committed (expected before commit). With the HEAD-blob lookup simulated as 'committed as is' and every other condition real (task done, dataset, citations of path, record sha256 and receipt sha256, receipt clean, bindings before/after, bound build): passed."
+  }
+ ],
+ "not_checked": [
+  "No research data read. Memory on real recordings is estimated from the CORE-04 probe (peak 224 MiB under a 1 GiB address-space limit), not measured under 768 MiB.",
+  "Streaming.mat bytes were not rehashed; the binding uses the recorded sha256, and the launcher hashes the file before and after the run.",
+  "Joint angular velocities (hip, knee, ankle) are not derived here; out of the F2 scope.",
+  "The real HDF5 layout of the two layout-2 recordings in the sample was not read; the slot check fails the run if storage differs from the C03 record."
+ ],
+ "remaining": [
+  "Coordinator: commit the files in changed_files (not converted_datasets/), then rerun check_pilot_record without simulation.",
+  "UM21-E01 (P2): diagnose incline/decline evidence-gate anomalies and the unreported NaN stride before the UM21 full run.",
+  "For future pilots: runner record-step relative-path bug and v3 defaults (changes the runner hash).",
+  "Open: units follow the UM21-C03 stride rule, not the UM21-T01 task-labelled observations."
+ ],
+ "next_action": "Coordinator commits; then the UM21 full run may proceed in mode full after UM21-E01 is considered.",
+ "hashes_sha256": {
+  "contributor_tools/adapters/__init__.py": "a98b99ecee256d1585815af04455f3b072eadd71c8a3a88a3debce32633735ee",
+  "contributor_tools/adapters/um21_sign_adapter.py": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
+  "contributor_tools/run_core11_um21_pilot.py": "33de204ad14031819b559df83035d12170aa5e12b633687ddbb83f67b0cc2d24",
+  "tests/test_um21_sign_adapter.py": "89f47b71fb003b051f5be519e3c5854669fc4fe7049c7cde8565487513324242",
+  "contributor_tools/common/sign_offset_detector.py": "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+  "contributor_tools/common/sign_application.py": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+  "contributor_tools/common/audited_signs.json": "3403390d2696613c7e8485ed4c570438b4f6b7793451bf5da15c4fba89e8985f",
+  "docs/quality/audits/core11-p-um21-pilot-spec-v3.json": "0781e671ab70264edf11111c2ae1a26f9e052371c6e09d43cf6362163abda8da",
+  "docs/quality/audits/core11-p-um21-pilot-spec-v3r1.json": "b8197e6fbb670ed5c295ff3fe5999f004cf8374e7ccc4f36400e7a9d3549b61f",
+  "docs/quality/audits/core11-p-um21-launcher-receipt-v3r1.json": "6f4cfe0a9ded88777afb5f01efdca61dac27a4c5ad663143359160b5b564e752",
+  "docs/quality/audits/core11-p-um21-pilot-record-v3.json": "7385e6984821bd5c837a1549bec11330d9c42818848d0e6a7878a9b63cce39ee",
+  "docs/quality/audits/core11-p-um21-launcher-receipt-v3.json": "e2e537f47362a3c02d591d010d560263baf4660637d6d5f1dc64118c9c669a21"
+ },
+ "resources": {
+  "mode": "Fixture only: synthetic HDF5 under pytest tmp_path; no research data read; no job launched; AGENTS.md low-priority prefix."
+ },
+ "backlog_edit_requested": {
+  "task": "CORE-11-P-UM21",
+  "next_action": "Adapter and plan-only spec v3 ready after pre-launch review round 2 (handoff CORE-11-P-UM21.json). Third pre-launch check, then one guarded launch when the numerical slot is free; then the record step, commit and verification.",
+  "evidence_paths_add": [
+   "docs/maintainers/handoffs/CORE-11-P-UM21.json",
+   "docs/maintainers/handoffs/CORE-11-P-UM21-verify.json",
+   "docs/quality/audits/core11-p-um21-pilot-spec-v3.json"
+  ]
+ },
+ "deleted": {
+  "docs/quality/audits/core11-p-um21-pilot-spec.json": {
+   "sha256": "357721598a2e0bb3687bcbc7d289be7c0b83e5812ea5f4040d9faf68eda0fb3a",
+   "why": "v1: untracked, never launched, no layout-2 recording (R1). Deleted so it cannot be launched; recorded in run_core11_um21_pilot.SUPERSEDED, and plan refuses while it exists. Its job id, output root and receipt path are not reused."
+  },
+  "docs/quality/audits/core11-p-um21-pilot-spec-v2.json": {
+   "sha256": "5b0c5300e999f888c950eedcadb9ddec7fdcda3df482781a578d6a9057d18c24",
+   "why": "v2: untracked, never launched; the runner changed in round 2 (R5). Deleted and recorded in run_core11_um21_pilot.SUPERSEDED; plan refuses while it exists; its paths are not reused."
+  }
+ },
+ "round1_fixes": {
+  "R1": [
+   "Sample = AB04/i0, then from one random.Random(20261102): one power layout-2 recording chosen from the bound UM21-C03 kinetic_layout.power_layout_2_recordings (in scope, minus AB04/i0), then 5 others. Seeded result: AB04/i0, AB04/d10 (layout 2), AB06/i5, AB10/i10, AB10/i5, AB03/i10 (also layout 2), AB03/d10. AB04/d10 also checks that the AB04/i0 correction does not touch another AB04 recording.",
+   "v2 paths: spec docs/quality/audits/core11-p-um21-pilot-spec-v2.json, job id CORE-11-P-UM21-pilot-v2, output root converted_datasets/reconversion_v2/core11_p_um21_pilot_v2, receipt docs/quality/audits/core11-p-um21-launcher-receipt-v2.json, record docs/quality/audits/core11-p-um21-pilot-record-v2.json.",
+   "Spec test requires the layout-2 pick (reproduced independently from the C03 list and the seed), the v2 paths and the absence of the v1 spec."
+  ],
+  "R2": [
+   "The adapter reads the layout from the bound UM21-C03 record. The expected slot is 3 for every joint in layout-2 recordings and 1 otherwise. A joint whose first filled slot differs, or that has no filled slot, raises PowerSlotError and the recording fails. The layout and expected slot are logged per leg (adapter_log.power_layout).",
+   "Synthetic tests: AB05/i0 stored as layout 2 uses slot 3 for every joint, ankle power is published with +1 and check_group is clean. AB03/i10 stored as layout 1 (C03 says 2) and AB06/i0 stored as layout 2 (C03 says 1) both fail."
+  ],
+  "recommended": [
+   "Cross-group items: explain_cross_group marks each item explained or unexplained, and an unexplained item fails the automated outcome. 'Power slots differ' is explained only when the published groups use different slots and each has its slot's audited sign (a forged equal-slot contrast stays unexplained). I also explain a channel held in some groups and published in others, when every held group has a logged hold reason and every published sign matches the truth. That second category goes beyond the reviewer's wording; please confirm or reject it.",
+   "Import chain: the runner loads the adapter from its file, and the adapter loads the hook from its file (sys.modules name reused only when it is the same file). No package __init__ runs in the job. A subprocess test confirms that no contributor_tools package and no pandas get imported. The summary records any that did, and the pilot then fails.",
+   "Record writer: 'record' step (build_record/write_record, exclusive create). It writes dataset UM21, pilot_task, outcome, launcher_receipt {path, sha256} and bindings identical to the receipt's spec bindings. Outcome is passed only for a clean completed receipt of job CORE-11-P-UM21-pilot-v2 whose bindings all match before and after, whose hashed outputs include this pilot_summary.json, whose bindings include the summary's bound build, and whose summary automated outcome passed. Tested against sign_application.check_pilot_record on a synthetic committed git repo: the good case passes the gate; six bad runs give outcome failed and the gate refuses them."
+  ]
+ },
+ "evidence_paths": [
+  "docs/maintainers/handoffs/CORE-11-P-UM21-verify.json"
+ ],
+ "round2_fixes": {
+  "R3": [
+   "explain_cross_group now judges each held group with benign_hold, which uses only structured log fields (verdict, detector_sign, exceptions_applied, recording_exceptions.not_released), never the reason text.",
+   "A held group explains an item only when (a) the hold comes from a per-recording exception or a not-released channel, or (b) the verdict is not conflict and the detector sign is None or equals expected_sign (powers by their slot). Every published group must also have the audited sign. Anything else is unexplained, and the pilot fails.",
+   "Tests on crafted logs (knee_angle published in one leg, held in the other): suggests -1, applies -1, conflict with no sign and conflict with +1 all stay unexplained. Abstain with no sign and suggest +1 are explained. An ankle_power hold is judged against its slot (suggest -1 explained for slot 1, +1 not). An exception hold is explained even when the detector opposes the truth."
+  ],
+  "R4": [
+   "build_record requires that the receipt ran the reviewed spec file (default docs/quality/audits/core11-p-um21-pilot-spec-v3.json): the receipt spec_sha256 must equal the file's sha256, and the receipt's spec bindings must equal the file's bindings. The record carries spec {path, sha256}.",
+   "Tests: a receipt whose spec dropped the adapter binding (and its before/after entries) gives outcome failed with exactly the bindings problem. A different spec_sha256 gives outcome failed with exactly the sha256 problem. Both are in the gate test too, where check_pilot_record refuses."
+  ],
+  "R5": [
+   "v3 paths: spec docs/quality/audits/core11-p-um21-pilot-spec-v3.json, job id CORE-11-P-UM21-pilot-v3, output root converted_datasets/reconversion_v2/core11_p_um21_pilot_v3, receipt docs/quality/audits/core11-p-um21-launcher-receipt-v3.json, record docs/quality/audits/core11-p-um21-pilot-record-v3.json.",
+   "The v2 spec is deleted and SUPERSEDED lists v1 and v2. The sample is unchanged (same seed and rule)."
+  ]
+ },
+ "launch": {
+  "first_attempt": {
+   "spec": "docs/quality/audits/core11-p-um21-pilot-spec-v3.json",
+   "receipt": "docs/quality/audits/core11-p-um21-launcher-receipt-v3.json",
+   "sha256": "e2e537f47362a3c02d591d010d560263baf4660637d6d5f1dc64118c9c669a21",
+   "status": "refused_precondition (foreign_worker_linux: other sessions' read-only backlog check and a shell loop); nothing ran; kept as history"
+  },
+  "spec": {
+   "path": "docs/quality/audits/core11-p-um21-pilot-spec-v3r1.json",
+   "sha256": "b8197e6fbb670ed5c295ff3fe5999f004cf8374e7ccc4f36400e7a9d3549b61f",
+   "differs_from_v3": "receipt_path only (coordinator-approved option B)"
+  },
+  "wait": "Quiet window by the launcher's own is_linux_worker rule (scratchpad waiter, own PID excluded, exited before the dry-run): Linux clean on two scans 60 s apart, then the Windows census clean. A first pattern-only waiter found no window in 30 min because it counted an MCP server python with its cwd in the repository, which the launcher rule does not count.",
+  "dry_run": "preflight_passed (bindings including Streaming.mat at df8b3e31..., census, memory, disk)",
+  "receipt": {
+   "path": "docs/quality/audits/core11-p-um21-launcher-receipt-v3r1.json",
+   "sha256": "6f4cfe0a9ded88777afb5f01efdca61dac27a4c5ad663143359160b5b564e752",
+   "status": "completed",
+   "exit_code": 0,
+   "clean_success": true,
+   "wall_time_seconds": 7.213,
+   "peak_rss_kib_largest_process": 161840,
+   "checks": "cleanup_proven, bindings_unchanged, envelope_unchanged, no new Linux/Windows worker, no orphans, outputs hashed, expected outputs present"
+  },
+  "verify_cleanup": "proven (same_boot_proc_scan, no group members, no fallback receipts)",
+  "pilot_summary": {
+   "path": "converted_datasets/reconversion_v2/core11_p_um21_pilot_v3/pilot_summary.json",
+   "sha256": "14b1896f4f1eae95362fba974b7288916b9ef422b42c35cd64f26f6d0546bac1",
+   "automated_outcome": "passed",
+   "groups": 14,
+   "failures": {},
+   "unexplained_cross_group_items": 0,
+   "package_inits_imported": [],
+   "peak_rss_mib": 156.5,
+   "output_size": "33 MB"
+  },
+  "record": {
+   "path": "docs/quality/audits/core11-p-um21-pilot-record-v3.json",
+   "sha256": "7385e6984821bd5c837a1549bec11330d9c42818848d0e6a7878a9b63cce39ee",
+   "outcome": "passed",
+   "problems": []
+  },
+  "per_channel_14_legs": {
+   "pelvis_tilt": "suggest 14 (all -1 vs corrected source), published 14",
+   "hip_angle": "apply 9, suggest 5, published 14",
+   "knee_angle": "apply 11, suggest 3, published 14",
+   "ankle_angle": "apply 14, published 14",
+   "hip_moment": "apply 7, suggest 7, published 14",
+   "knee_moment": "suggest 11, abstain 3, published 14",
+   "ankle_moment": "apply 12, suggest 2, published 14",
+   "hip_power": "suggest 8, abstain 6, held 14 (no audit, no guarded apply)",
+   "knee_power": "abstain 14, held 14",
+   "ankle_power": "apply 8 (layout 1, -1), suggest 6, published 8, held 6 (AB04/d10 and AB03/i10 layout 2 suggest +1; AB03/d10 suggest -1)",
+   "wrong_published_signs": 0,
+   "conflicts": 0,
+   "guard_refusals": 0
+  },
+  "ab04_i0": "Correction UM21-P01-AB04-i0-pelvis applied in both legs (net multiplier +1, sign vs corrected source -1, D-UM21-P01-1 = C); every other recording, AB04/d10 included, has multiplier -1 and no correction. Thigh, shank and foot and the four velocities were derived in all 14 groups.",
+  "cross_group": "one item, ankle_power published in 8 legs and held in 6; explained (every held leg's detector sign equals its slot's truth or is held as suggest-only; no disagreement)",
+  "record_step_note": "The record step raised ValueError on a relative --spec path (relative_to on an unresolved path) before writing anything; rerun with absolute --spec and --receipt paths. The runner was not edited after the run. Fix the path handling before the next dataset reuses this writer (changes the runner hash, so only for future pilots)."
+ },
+ "runner_defaults_note": "contributor_tools/run_core11_um21_pilot.py still defaults --spec to docs/quality/audits/core11-p-um21-pilot-spec-v3.json and --receipt to docs/quality/audits/core11-p-um21-launcher-receipt-v3.json (SPEC/RECEIPT constants); the launched run used v3r1, so the record step must be given --spec and --receipt for v3r1 explicitly, with absolute paths (relative --spec raises before writing). Not changed: the runner is bound.",
+ "round4_fixes": {
+  "C1": "tests/test_um21_sign_adapter.py::test_pilot_spec_is_seeded_includes_ab04_i0_and_a_layout_2_recording_and_validates is valid before and after the launch. It still requires the seeded AB04/i0 + layout-2 sample and the bound build. It now checks that v3r1 validates and equals the planned spec except receipt_path. When the output root exists, it requires the v3r1 receipt to be a clean completed run of exactly that spec (spec sha256, output root, bindings, pilot_summary.json among outputs). No bound file changed.",
+  "backlog": "CORE-11-P-UM21 set to done; handoff.checks cite the record path with sha256 7385e698... and the receipt with sha256 6f4cfe0a... (full-run gate format) and round_4. Added P2 task UM21-E01 (evidence-gate diagnosis, read_only, depends on CORE-11-P-UM21). backlog.html re-rendered."
+ }
+}

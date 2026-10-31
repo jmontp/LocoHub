@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-10-31T23:11:08Z",
+  "updated_at_utc": "2026-11-01T00:20:00Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -6575,7 +6575,7 @@
       "priority": "P1",
       "dataset": "um21",
       "title": "Pilot the bound sign-application build on UMich 2021",
-      "status": "ready",
+      "status": "done",
       "stage": "pilot",
       "question": "Does the bound detector + hook + audited-sign build pass a guarded-launcher pilot on UM21 treadmill recordings?",
       "scope": "Write the UM21 adapter for contributor_tools/common/sign_application.py and run a pilot through the guarded launcher on a seeded set of aligned recordings including AB04/i0. Condition from UM21-P02 (F2): thigh, shank and foot angles and the pelvis, thigh, shank and foot sagittal velocities must be computed after the hook from published channels (derive_segment_angles, derive_angular_velocities); the UM21 MATLAB converters and reconvert_umich_streaming.py lines 91-92 (pelvis + hip on the source-convention pelvis) must not supply them. No UM21 full run until this pilot is done.",
@@ -6596,14 +6596,63 @@
         "AB04/i0 corrected and logged",
         "Independent verification"
       ],
-      "next_action": "Write the UM21 adapter and a pilot job spec.",
+      "next_action": "Done. UM21 full runs may use mode full with the committed pilot record below (any edit to a bound file invalidates it). Follow-up UM21-E01 (evidence-gate diagnosis) before the full run.",
       "resource_class": "numerical",
       "evidence_paths": [
+        "docs/maintainers/handoffs/CORE-11-P-UM21.json",
+        "docs/maintainers/handoffs/CORE-11-P-UM21-verify.json",
+        "docs/quality/audits/core11-p-um21-pilot-record-v3.json",
+        "docs/quality/audits/core11-p-um21-launcher-receipt-v3r1.json",
+        "docs/quality/audits/core11-p-um21-pilot-spec-v3r1.json",
         "docs/maintainers/handoffs/UM21-P02-verify.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-31T18:04:29Z",
-        "summary": "Created after UM21-P02 verification.",
+        "last_checked_at_utc": "2026-11-01T00:20:00Z",
+        "summary": "Pilot of the bound sign-application build on 7 seeded UM21 treadmill recordings (AB04/i0, AB04/d10, AB06/i5, AB10/i10, AB10/i5, AB03/i10, AB03/d10; two power layout-2), 14 legs, through the guarded launcher (spec v3r1, one clean run). No wrong published sign; AB04/i0 pelvis correction applied in both legs (D-UM21-P01-1 = C); segments and velocities derived after the hook (F2). Independent verification CORE-11-P-UM21-verify.json round_4: all 7 claims pass; condition C1 (stale test) fixed.",
+        "checks": [
+          "Pilot record docs/quality/audits/core11-p-um21-pilot-record-v3.json sha256 7385e6984821bd5c837a1549bec11330d9c42818848d0e6a7878a9b63cce39ee; launcher receipt docs/quality/audits/core11-p-um21-launcher-receipt-v3r1.json sha256 6f4cfe0a9ded88777afb5f01efdca61dac27a4c5ad663143359160b5b564e752.",
+          "Verification: docs/maintainers/handoffs/CORE-11-P-UM21-verify.json round_4 (post-launch, independent second agent): pass_with_conditions; C1 fixed in tests/test_um21_sign_adapter.py.",
+          "Receipt: completed, exit 0, clean_success true, wall 7.2 s, peak RSS 158 MiB (largest process), all launcher checks true; verify-cleanup proven. The earlier v3 launch was refused (foreign_worker_linux) and nothing ran; its receipt is kept as history.",
+          "Per channel (14 legs): pelvis, hip, knee, ankle angles and moments published 14 each; hip power held 14; knee power held 14; ankle power published 8 (detector apply, slot 1), held 6; 0 wrong signs, 0 conflicts, 0 guard refusals; 1 cross-recording item (ankle power), explained."
+        ],
+        "remaining": [
+          "UM21-E01: diagnose the incline/decline evidence-gate anomalies and the unreported NaN stride before the UM21 full run.",
+          "Runner defaults (--spec, --receipt) still point at v3 paths, and the record step needs absolute paths (relative-path bug); fix for future pilots only (changes the runner hash)."
+        ]
+      }
+    },
+    {
+      "id": "UM21-E01",
+      "priority": "P2",
+      "dataset": "um21",
+      "title": "Diagnose UM21 sign-detector evidence gates on incline and decline recordings",
+      "status": "ready",
+      "stage": "quality",
+      "question": "Why do some detector evidence gates not pass on UM21 incline and decline recordings in the CORE-11-P-UM21 pilot, and why is one AB04/d10 stride all-NaN without being reported?",
+      "scope": "Diagnosis only, no fix and no change to the bound build. From the CORE-11-P-UM21 pilot outputs and, if needed, read-only probes of single recordings (AGENTS.md probe exception): (1) leg_assignment_check unknown in AB03/i10 and AB10/i10 (both legs); (2) cop_within_foot fail in AB03/i10 (both legs); (3) cop_progression unknown in AB03/d10 right and AB04/d10 (both legs); (4) AB04/d10 right has one stride unit with NaN in all four joint angles (33 samples) that pilot_summary does not report. All are on tilted plates; no published sign was affected (CORE-11-P-UM21-verify.json round_4 not_checked). Report the cause of each and whether the full run needs an adapter or summary change.",
+      "depends_on": [
+        "CORE-11-P-UM21"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/CORE-11-P-UM21-verify.json",
+        "docs/maintainers/handoffs/CORE-11-P-UM21.json",
+        "converted_datasets/reconversion_v2/core11_p_um21_pilot_v3/pilot_summary.json"
+      ],
+      "deliverables": [
+        "Diagnosis per anomaly with evidence",
+        "Recommendation: adapter, summary or no change before the UM21 full run"
+      ],
+      "acceptance": [
+        "Each of the four anomalies has a stated cause or is explicitly left unexplained",
+        "No bound file changed",
+        "Independent verification"
+      ],
+      "next_action": "Read the four groups' sign_application.json checks and the AB04/d10 right arrays from the pilot outputs; probe single recordings only if the logs do not explain them.",
+      "resource_class": "read_only",
+      "evidence_paths": [],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-01T00:20:00Z",
+        "summary": "Created from CORE-11-P-UM21 verification round_4 not_checked items.",
         "checks": [],
         "remaining": [
           "Everything in acceptance."
