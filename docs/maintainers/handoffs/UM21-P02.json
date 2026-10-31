@@ -1,0 +1,114 @@
+{
+ "task_id": "UM21-P02",
+ "title": "Apply the AB04/i0 pelvis correction in the sign table",
+ "status": "ready_for_review",
+ "scientific_approval": false,
+ "corrections_applied_to_data": false,
+ "last_checked_at_utc": "2026-10-31T18:00:21Z",
+ "repository_head": "80705045fc291864beed13bbfc83b5404e5786ca",
+ "decision": {
+  "id": "D-UM21-P01-1",
+  "answer": "C",
+  "answered_at_utc": "2026-10-31T16:59:46Z"
+ },
+ "summary": "The audited-sign table exception UM21-P01-AB04-i0-pelvis (id kept, so the existing UM21-P01 citation still links) changed from action hold to action correct: AB04/i0 pelvis_tilt x -1, decision D-UM21-P01-1 = C, audit_tasks UM21-P01 and UM21-P02, evidence basis and citation from the UM21-P01 audit and verifier. The hook (sign-application/0.4) negates the stored channel before detection, so the detector, guard and publication rule see it as the other 49 recordings store it; the logged multiplier is the net sign on the stored array (correction -1 x dataset sign -1 = +1), and the log records source_correction (id, factor, decision, audit tasks, evidence), sign_vs_corrected_source, corrections_applied, recording_exceptions and a 'correction' review item. Thigh, shank and foot are never flipped: inputs for AB04/i0 are held, and derive_segment_angles recomputes them from the hook's published channels along the rule-B chain (thigh = pelvis + hip, shank = thigh - knee, foot = shank + ankle). Obliquity (flipped) and rotation (+180 deg) are listed as not released for AB04/i0. The correction is active only when every audit task is done and cites the id and the backlog decision carries answer C; otherwise it holds everything it touches (fail-safe). With the backlog as it stands (UM21-P02 not done) the committed table therefore still holds AB04/i0 pelvis, thigh, shank and foot.",
+ "changed_files": [
+  "contributor_tools/common/audited_signs.json",
+  "contributor_tools/common/sign_application.py",
+  "tests/test_sign_application.py",
+  "docs/maintainers/sign-offset-detector-design.md",
+  "docs/maintainers/handoffs/UM21-P02.json"
+ ],
+ "not_changed": [
+  "docs/maintainers/backlog.json",
+  "docs/maintainers/backlog.html",
+  "AGENTS.md",
+  "contributor_tools/common/sign_offset_detector.py",
+  "contributor_tools/conversion_scripts/Umich_2021/ (MATLAB producers)",
+  "converted_datasets/"
+ ],
+ "derived_channels": {
+  "who_computes_them": "No adapter calls the hook yet. The current UM21 producers derive segment angles in MATLAB from the stored pelvis before any sign handling: convert_umich_time_to_parquet.m (right/left_thigh_sag = pelvis_sag + hip_flex, shank = thigh - knee, foot = shank + ankle, after choose_pelvis_signal) and convert_umich_phase_to_parquet.m (block 'enforces hip = thigh - pelvis', thigh = pelvis + hip). Both use the source-sign pelvis, so they are wrong for AB04/i0 (and use the pre-rule-B recipe for all recordings).",
+  "rule": "When UM21 is wired to the hook (CORE-11-P-UM21), segment angles are computed after the hook with derive_segment_angles from the published pelvis, hip, knee and ankle, and pelvis sagittal and thigh/shank/foot velocities with derive_angular_velocities from those angles (or left out for AB04/i0). The hook holds segment-angle and velocity inputs for AB04/i0, holds velocity inputs for every recording, and derive_segment_angles never reads passed-in segment angles.",
+  "recipe_equivalence": "Rule B pelvis = -1 x corrected source pelvis, so thigh = hip - pelvis_source, shank = hip - pelvis_source - knee, foot = hip - pelvis_source - knee + ankle: the UM21-C03 per_channel recipes.",
+  "velocities_in_converters": "Time converter: pelvis_sag_vel = gradient(pelvis_sag, dt) and thigh/shank/foot velocities from the stored-pelvis segments. Phase converter: thigh/shank/foot velocities = gradient(angle) * effective_Hz from stored-pelvis segments. For AB04/i0: pelvis sagittal and frontal velocities have the wrong sign, transverse can spike at the wrap, segment velocities carry 2 x d(tilt)/dt."
+ },
+ "checks": [
+  {
+   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_sign_application.py tests/test_sign_offset_detector.py tests/test_sign_offset_detector_verify.py tests/test_documentation_policy.py tests/test_core04_probe_builders.py tests/test_backlog_workflow.py",
+   "result": "379 passed, 1 warning (numpy matrix PendingDeprecationWarning). tests/test_sign_application.py alone: 139 passed.",
+   "coverage": "Synthetic leg (tests/test_sign_offset_detector.py synthetic_leg seed 41) with a reversed pelvis (stored tilt negated) as recording rec4; synthetic tables and backlogs with a synthetic decision under tmp_path; the real committed table and the real backlog (plus a tmp copy in which UM21-P02 is done) for the AB04/i0 tests. No research data read."
+  },
+  {
+   "tests": [
+    "test_correction_publishes_the_corrected_pelvis_and_is_logged: published pelvis equals the rule-B truth bit for bit; net multiplier +1, sign_vs_corrected_source -1; source_correction, corrections_applied, counts.corrected, review item and not_released logged; no other channel carries a correction",
+    "test_correction_is_undone_exactly_to_the_stored_array: undo from the dict and from the written log with its manifest sha256 returns the stored arrays bit for bit",
+    "test_correction_touches_only_its_recording: rec1 (normal) has no correction; rec1 and rec4 publish identical arrays for all six channels; cross_group_review finds nothing",
+    "test_reversed_recording_without_the_correction_is_not_published: contrast, the same reversed pelvis without a correction is held, and a reversal published as stored would be flagged by cross_group_review",
+    "test_segment_angles_are_derived_from_the_corrected_tilt: thigh = truth pelvis + hip and shank = that - knee bit for bit; mean error to the independently noised segment truth < 0.01 / 0.012 rad; foot = shank + published ankle; the uncorrected tilt would put the thigh off by > 0.25 rad",
+    "test_derived_inputs_for_the_corrected_recording_are_held_not_flipped",
+    "test_inactive_correction_holds_everything_it_touches[5 cases: decision unanswered, other answer, decision missing, task not done, not cited]: pelvis and thigh held, nothing derived",
+    "test_malformed_corrections_are_refused[10 cases]",
+    "test_a_channel_named_by_two_exceptions_of_one_recording_raises",
+    "test_hook_segment_chain_equals_the_detector_chain",
+    "test_um21_ab04_i0_correction_records_josé_answer (replaces test_um21_ab04_i0_pelvis_exception_waits_for_jose)",
+    "test_um21_ab04_i0_with_the_committed_table (replaces test_um21_ab04_i0_pelvis_is_held_with_the_committed_table): held now because UM21-P02 is not done; published corrected with a tmp backlog copy in which UM21-P02 is done; AB01/i0 untouched",
+    "test_velocity_inputs_are_held_not_flipped_or_detected",
+    "test_velocities_are_recomputed_from_the_corrected_angles",
+    "test_angular_velocity_method_on_known_values",
+    "test_malformed_corrections_are_refused: two derived_velocities cases added",
+    "test_inactive_correction_holds_everything_it_touches: velocity input added",
+    "test_um21_ab04_i0_correction_records_josé_answer: velocities named in derived_velocities, velocity_rule and not_released"
+   ]
+  },
+  {
+   "command": "same prefix: python3 contributor_tools/core11_gt21_publication_effect.py",
+   "result": "Unchanged: GT21 182 publish, 161 held, 0 published signs disagree with probe truth."
+  },
+  {
+   "command": "same prefix: python3 contributor_tools/build_backlog_page.py --check",
+   "result": "Backlog valid; HTML current (99 tasks)."
+  }
+ ],
+ "backlog_citation": {
+  "UM21-P01": "already cites UM21-P01-AB04-i0-pelvis (handoff checks, audited-sign table exception line; its wording describes the old hold and may be refreshed)",
+  "UM21-P02": "the scope text already contains the id as a whole token, so the link test passes; an explicit citation is requested in handoff.checks",
+  "requested_line_for_UM21-P02_handoff_checks": "Audited-sign table correction (CORE-11, contributor_tools/common/audited_signs.json): UM21-P01-AB04-i0-pelvis (AB04/i0 pelvis_tilt x -1 per D-UM21-P01-1 = C; thigh_angle, shank_angle, foot_angle and the pelvis tilt, thigh, shank and foot velocities recomputed after the hook from the corrected tilt or left out; pelvis obliquity, rotation and their velocities not released)."
+ },
+ "not_checked": [
+  "No research data read; the correction and velocities are exercised on synthetic arrays only. No UM21 adapter calls the hook yet, so no AB04/i0 output has been produced.",
+  "The MATLAB producers still derive segment angles and velocities from the stored pelvis; not changed here (F2).",
+  "derive_angular_velocities equals MATLAB gradient by formula; not compared against a MATLAB run (no MATLAB launched).",
+  "Frontal/transverse moment components of AB04/i0 (carried over from UM21-P01)."
+ ],
+ "remaining": [
+  "Independent re-verification; on done, the correction becomes active in the committed table.",
+  "Editing sign_application.py and audited_signs.json changes the bound build; any CORE-11 pilot must bind these hashes (none has run).",
+  "CORE-11-P-UM21 (when created): F2 condition in its acceptance criteria."
+ ],
+ "next_action": "Coordinator adds the requested UM21-P02 handoff line, moves UM21-P02 to review, and records F2 when CORE-11-P-UM21 is created; a second agent re-verifies.",
+ "hashes_sha256": {
+  "contributor_tools/common/sign_application.py": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+  "contributor_tools/common/audited_signs.json": "3403390d2696613c7e8485ed4c570438b4f6b7793451bf5da15c4fba89e8985f",
+  "tests/test_sign_application.py": "23f689d9d69165e0462ad91e9ed7adbfd8c0193f02428228e296ddd4ea48c70a",
+  "docs/maintainers/sign-offset-detector-design.md": "7e18508156abcaaf994d94404721677379fa640824ffecdde9c59b7c4a2ef1da",
+  "contributor_tools/common/sign_offset_detector.py": "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d"
+ },
+ "resources": {
+  "mode": "fixture only: synthetic arrays in pytest, stored GT21 evidence JSON; no research data read; no job launched; AGENTS.md low-priority prefix"
+ },
+ "status_note": "Round 2: verifier F1 fixed (velocities); F2 recorded as a CORE-11-P-UM21 condition. Ready for re-verification.",
+ "round2_fixes": {
+  "F1": [
+   "audited_signs.json AB04/i0 exception: derived_velocities = pelvis_tilt, thigh, shank, foot velocity (required by the hook to name the velocity of every corrected and derived channel); velocity_rule names pelvis_sagittal_velocity_rad_s and thigh/shank/foot_sagittal_velocity_{ipsi,contra}_rad_s: recompute after the hook with derive_angular_velocities from the published pelvis tilt and the derive_segment_angles outputs, or leave out; not_released adds pelvis_obliquity_velocity (pelvis_frontal_velocity_rad_s, wrong sign) and pelvis_rotation_velocity (pelvis_transverse_velocity_rad_s, can spike at the +/-180 deg wrap).",
+   "sign_application.py: velocity inputs named in derived_velocities and not-released channels are held for that recording (active or not) and never given to the detector; any <angle>_velocity input is held for every recording (velocities are never sign-applied).",
+   "sign_application.derive_angular_velocities(angles, spacing_s) with VELOCITY_METHOD: per unit numpy.gradient(edge_order=1), i.e. MATLAB gradient as in the UM21 converters (time: h = 1/sampling_rate_hz; phase: gradient(x) * (150-1)/stride_duration_s, i.e. h = stride_duration_s/149 per stride; equal up to rounding).",
+   "Tests: velocity inputs held, not flipped, not detected (also on a normal recording); recomputed velocities equal a hand-written central difference of the rule-B chain and a normally stored recording bit for bit; converter-recipe contrast differs by -2 x d(tilt)/dt; method on a ramp, a quadratic and per-stride spacing; bad spacing and float32 refused; malformed derived_velocities refused; inactive correction holds the velocity; the committed table names the velocities."
+  ],
+  "F2_condition_for_CORE-11-P-UM21": "No UM21 full run until the adapter derives segment angles (derive_segment_angles) and the pelvis and segment velocities (derive_angular_velocities) after the hook, or the MATLAB converters (convert_umich_time_to_parquet.m, convert_umich_phase_to_parquet.m) are fixed to build them from rule-B angles after the correction. The hook holds AB04/i0 velocity inputs, but velocities written directly by the converters bypass it. Record this in the acceptance criteria of CORE-11-P-UM21 when it is created.",
+  "F3": "Coordinator-owned: UM21-P02 should move to review now and to done only after re-verification (done activates the correction)."
+ },
+ "evidence_paths": [
+  "docs/maintainers/handoffs/UM21-P02-verify.json"
+ ]
+}

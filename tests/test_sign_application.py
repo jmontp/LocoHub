@@ -471,8 +471,10 @@ def test_publication_rule(verdict, dsign, applied, audit, expected):
     assert sa.publication_rule(verdict, dsign, applied, audit)[:3] == expected
 
 
-def _audit_world(tmp_path, *, status="done", signs=None, audit_task="T-AUDIT", record=None, exceptions=()):
-    """Synthetic audited-sign table and backlog. By default the T-AUDIT record cites every entry id."""
+def _audit_world(tmp_path, *, status="done", signs=None, audit_task="T-AUDIT", record=None, exceptions=(),
+                 decisions=()):
+    """Synthetic audited-sign table and backlog (with synthetic `decisions`). By default the T-AUDIT record
+    cites every entry and exception id."""
     signs = signs or INJECTED_TRUTH
     entries = [{"id": f"SYNTH-{k}", "channel": k, "sign": v, "audit_tasks": [audit_task],
                 "evidence_basis": "synthetic", "citation": "synthetic"} for k, v in signs.items()]
@@ -482,7 +484,11 @@ def _audit_world(tmp_path, *, status="done", signs=None, audit_task="T-AUDIT", r
     record = record or {"status": status, "dataset": "synth",
                         "handoff": {"checks": ["Entries: " + ", ".join([e["id"] for e in entries]
                                                                        + [x["id"] for x in exceptions])]}}
-    return dict(audited_path=table, backlog_path=_backlog(tmp_path, {audit_task: record}))
+    backlog = _backlog(tmp_path, {audit_task: record})
+    if decisions:
+        data = json.loads(backlog.read_text())
+        backlog.write_text(json.dumps({**data, "decisions": list(decisions)}))
+    return dict(audited_path=table, backlog_path=backlog)
 
 
 def test_verified_audit_publishes_agreeing_and_abstaining_channels_with_the_audited_sign(tmp_path):
@@ -609,14 +615,252 @@ def test_adapters_cannot_pass_signs():
         _run(src, evidence, audited_signs={"knee_power": {"sign": -1, "audit_task": "GT24-C02"}})
 
 
+# ---------------------------------------------------------------- per-recording corrections (synthetic)
+CORRECTION = {"id": "SYNTH-rec4-pelvis", "recordings": ["rec4"], "action": "correct",
+              "corrections": {"pelvis_tilt": -1}, "derived_channels": ["thigh_angle", "shank_angle", "foot_angle"],
+              "derived_velocities": ["pelvis_tilt_velocity", "thigh_angle_velocity", "shank_angle_velocity",
+                                     "foot_angle_velocity"],
+              "not_released": {"pelvis_obliquity": "synthetic: flipped by the same reversal",
+                               "pelvis_obliquity_velocity": "synthetic: derivative of the flipped obliquity"},
+              "decision": {"id": "D-SYNTH-2", "answer": "C"}, "audit_tasks": ["T-AUDIT"],
+              "evidence_basis": "synthetic", "citation": "synthetic", "reason": "synthetic reversed pelvis"}
+ANSWERED = {"id": "D-SYNTH-2", "status": "answered", "answer": "C"}
+SIX = ("pelvis_tilt", "hip_angle", "knee_angle", "ankle_angle", "knee_moment", "ankle_moment")
+
+
+def _correction_run(tmp_path, recording="rec4", correction=CORRECTION, decisions=(ANSWERED,), extra=None, **kw):
+    src, evidence = _fixture()
+    chans = {k: src[k] for k in SIX}
+    stored = _reversed(chans) if recording == "rec4" else chans
+    stored.update(extra or {})
+    world = _audit_world(tmp_path, exceptions=[correction], decisions=decisions, **kw)
+    return chans, stored, _run(stored, evidence, recording=recording, **world)
+
+
+@pytest.fixture(scope="module")
+def corrected(tmp_path_factory):
+    return _correction_run(tmp_path_factory.mktemp("corr"))
+
+
+def test_correction_publishes_the_corrected_pelvis_and_is_logged(corrected):
+    _, stored, res = corrected
+    truth = synthetic_leg(seed=41)[0]
+    c = res.log["channels"]["pelvis_tilt"]
+    # the stored (reversed) tilt equals the rule-B truth, so the net multiplier is +1: correction -1 x dataset -1
+    assert c["publication"] == "publish" and c["multiplier"] == 1 and c["sign_vs_corrected_source"] == -1
+    assert _bits_equal(res.channels["pelvis_tilt"], truth["pelvis_tilt"])
+    assert c["source_correction"] == {**c["source_correction"], "id": "SYNTH-rec4-pelvis", "factor": -1,
+                                      "applied": True, "decision": {"id": "D-SYNTH-2", "answer": "C"},
+                                      "audit_tasks": ["T-AUDIT"]}
+    assert res.log["corrections_applied"] == [{"id": "SYNTH-rec4-pelvis", "channel": "pelvis_tilt", "factor": -1,
+                                               "decision": {"id": "D-SYNTH-2", "answer": "C"},
+                                               "audit_tasks": ["T-AUDIT"], "net_multiplier": 1}]
+    assert res.log["counts"]["corrected"] == 1
+    assert any(i["kind"] == "correction" and i["channel"] == "pelvis_tilt" for i in res.review)
+    rx = res.log["recording_exceptions"][0]
+    assert rx["active"] and set(rx["not_released"]) == {"pelvis_obliquity", "pelvis_obliquity_velocity"}
+    assert c["input_sha256"] == sa.array_sha256(stored["pelvis_tilt"])  # the log anchors the stored array
+    for k in SIX[1:]:  # nothing else in the recording changes because of the correction
+        assert res.log["channels"][k]["source_correction"] is None, k
+
+
+def test_correction_is_undone_exactly_to_the_stored_array(corrected, tmp_path):
+    _, stored, res = corrected
+    restored = sa.undo_sign_application(res.channels, res.log)
+    assert all(_bits_equal(restored[k], stored[k]) for k in stored)
+    path = tmp_path / "sign_application.json"
+    digest = sa.write_json_exclusive(path, res.log)
+    restored = sa.undo_sign_application(res.channels, path, expected_log_sha256=digest)
+    assert _bits_equal(restored["pelvis_tilt"], stored["pelvis_tilt"])
+
+
+def test_correction_touches_only_its_recording(tmp_path):
+    (tmp_path / "a").mkdir(), (tmp_path / "b").mkdir()
+    _, _, normal = _correction_run(tmp_path / "a", recording="rec1")
+    _, _, rev = _correction_run(tmp_path / "b")
+    assert normal.log["corrections_applied"] == [] and normal.log["recording_exceptions"] == []
+    assert normal.log["channels"]["pelvis_tilt"]["multiplier"] == -1
+    for k in SIX:  # both recordings publish the same rule-B arrays: the correction undoes the reversal exactly
+        assert _bits_equal(normal.channels[k], rev.channels[k]), k
+    assert sa.cross_group_review([{**normal.log, "group_id": "rec1"}, {**rev.log, "group_id": "rec4"}]) == []
+
+
+def test_reversed_recording_without_the_correction_is_not_published(tmp_path):
+    """Contrast: the same reversed pelvis with no correction is held (the detector sees the flip)."""
+    src, evidence = _fixture()
+    res = _run(_reversed({k: src[k] for k in SIX}), evidence, recording="rec4", **_audit_world(tmp_path))
+    assert res.log["channels"]["pelvis_tilt"]["publication"] == "hold"
+    ok = {**res.log, "group_id": "rec4", "channels": {"pelvis_tilt": {**res.log["channels"]["pelvis_tilt"], "publication": "publish",
+                                                  "multiplier": 1, "sign_vs_corrected_source": 1}}}
+    ref = {**res.log, "group_id": "rec1", "channels": {"pelvis_tilt": {"publication": "publish", "multiplier": -1}}}
+    assert sa.cross_group_review([ok, ref])  # an uncorrected reversal published as stored would be flagged
+
+
+def test_segment_angles_are_derived_from_the_corrected_tilt(corrected):
+    _, stored, res = corrected
+    truth = synthetic_leg(seed=41)[0]
+    seg, dlog = sa.derive_segment_angles(res)
+    # rule-B chain of the known rule-B pelvis, hip and knee (no offsets in those synthetic sources), bit for bit
+    assert _bits_equal(seg["thigh_angle"], truth["pelvis_tilt"] + truth["hip_angle"])
+    assert _bits_equal(seg["shank_angle"], truth["pelvis_tilt"] + truth["hip_angle"] - truth["knee_angle"])
+    # and against the independently noised segment truth: only the 0.005 rad noise of each term remains
+    assert np.mean(np.abs(seg["thigh_angle"] - truth["thigh_angle"])) < 0.01
+    assert np.mean(np.abs(seg["shank_angle"] - truth["shank_angle"])) < 0.012
+    # foot carries the published ankle (known 5 deg source offset, never removed)
+    assert _bits_equal(seg["foot_angle"], seg["shank_angle"] + res.channels["ankle_angle"])
+    assert dlog["from_corrected_channels"] == [{"id": "SYNTH-rec4-pelvis", "channel": "pelvis_tilt"}]
+    assert dlog["derived"]["thigh_angle"]["inputs_sha256"]["pelvis_tilt"] == \
+        res.log["channels"]["pelvis_tilt"]["output_sha256"]
+    # contrast: the stored (reversed) tilt would put the thigh off by twice the tilt
+    wrong = stored["pelvis_tilt"] * -1 + res.channels["hip_angle"]  # the dataset sign alone, no correction
+    assert np.mean(np.abs(wrong - truth["thigh_angle"])) > 0.25  # truth tilt is about -0.17 rad
+
+
+def test_derived_inputs_for_the_corrected_recording_are_held_not_flipped(tmp_path):
+    src, evidence = _fixture()
+    stale = {"thigh_angle": np.negative(src["pelvis_tilt"]) + src["hip_angle"]}  # built from the stored tilt
+    _, stored, res = _correction_run(tmp_path, extra=stale)
+    c = res.log["channels"]["thigh_angle"]
+    assert c["publication"] == "hold" and c["multiplier"] == 1 and "recompute" in c["hold_reason"]
+    assert _bits_equal(res.channels["thigh_angle"], stored["thigh_angle"])
+    seg, _ = sa.derive_segment_angles(res)  # the held input is ignored; thigh comes from the published chain
+    truth = synthetic_leg(seed=41)[0]
+    assert _bits_equal(seg["thigh_angle"], truth["pelvis_tilt"] + truth["hip_angle"])
+
+
+@pytest.mark.parametrize("why, kw", [
+    ("decision unanswered", dict(decisions=({"id": "D-SYNTH-2", "status": "open"},))),
+    ("other answer", dict(decisions=({**ANSWERED, "answer": "B"},))),
+    ("decision missing", dict(decisions=())),
+    ("task not done", dict(status="review")),
+    ("not cited", dict(record={"status": "done", "dataset": "synth", "summary": "pelvis reversed"})),
+])
+def test_inactive_correction_holds_everything_it_touches(tmp_path, why, kw):
+    src, evidence = _fixture()
+    extra = {"thigh_angle": src["hip_angle"].copy(), "pelvis_tilt_velocity": np.gradient(src["pelvis_tilt"], DT, axis=1)}
+    _, stored, res = _correction_run(tmp_path, extra=extra, **kw)
+    for k in ("pelvis_tilt", "thigh_angle", "pelvis_tilt_velocity"):
+        c = res.log["channels"][k]
+        assert c["publication"] == "hold" and "not active" in c["hold_reason"], (why, k)
+        assert _bits_equal(res.channels[k], stored[k])
+    assert res.log["corrections_applied"] == [] and res.log["counts"]["corrected"] == 0
+    seg, dlog = sa.derive_segment_angles(res)  # no segment is built from a held pelvis or a held thigh input
+    assert seg == {} and "pelvis_tilt (hold)" in dlog["not_derived"]["thigh_angle"], why
+    assert set(dlog["not_derived"]) == {"thigh_angle", "shank_angle", "foot_angle"}
+
+
+@pytest.mark.parametrize("bad", [
+    {"corrections": {"pelvis_tilt": 1}}, {"corrections": {"pelvis_tilt": -1.0}}, {"corrections": {}},
+    {"decision": None}, {"decision": {"id": "D-SYNTH-2"}}, {"derived_channels": ["pelvis_tilt"]},
+    {"derived_channels": ["knee_angle"]}, {"channels": ["pelvis_tilt"]}, {"evidence_basis": ""},
+    {"derived_velocities": ["pelvis_tilt_velocity", "thigh_angle_velocity", "shank_angle_velocity"]},
+    {"derived_velocities": None},
+    {"action": "flip"}])
+def test_malformed_corrections_are_refused(tmp_path, bad):
+    with pytest.raises(ValueError):
+        _correction_run(tmp_path, correction={**CORRECTION, **bad})
+
+
+def test_a_channel_named_by_two_exceptions_of_one_recording_raises(tmp_path):
+    src, evidence = _fixture()
+    hold = {**EXCEPTION, "recordings": ["rec4"], "channels": ["pelvis_tilt"]}
+    world = _audit_world(tmp_path, exceptions=[CORRECTION, hold], decisions=(ANSWERED,))
+    with pytest.raises(ValueError, match="named by exceptions"):
+        _run({k: src[k] for k in SIX}, evidence, recording="rec4", **world)
+
+
+def test_velocity_inputs_are_held_not_flipped_or_detected(tmp_path):
+    """AB04/i0-like recording: the converters' velocities come from the stored (reversed) pelvis."""
+    src, evidence = _fixture()
+    stored_p = np.negative(src["pelvis_tilt"])
+    extra = {"pelvis_tilt_velocity": np.gradient(stored_p, DT, axis=1),
+             "thigh_angle_velocity": np.gradient(np.negative(stored_p) + src["hip_angle"], DT, axis=1),
+             "pelvis_obliquity_velocity": np.ones_like(stored_p)}
+    _, stored, res = _correction_run(tmp_path, extra=extra)
+    for k in extra:
+        c = res.log["channels"][k]
+        assert c["publication"] == "hold" and c["multiplier"] == 1 and c["verdict"] == "not_run", k
+        assert _bits_equal(res.channels[k], stored[k]), k
+        assert k not in res.report["channels"], k  # never given to the detector
+    assert "derive_angular_velocities" in res.log["channels"]["thigh_angle_velocity"]["hold_reason"]
+    assert "not released" in res.log["channels"]["pelvis_obliquity_velocity"]["hold_reason"]
+    assert res.log["channels"]["pelvis_tilt"]["publication"] == "publish"  # the angle itself is unaffected
+    # a velocity passed for any other recording is held too: velocities are never sign-applied
+    (tmp_path / "n").mkdir()
+    _, _, normal = _correction_run(tmp_path / "n", recording="rec1",
+                                   extra={"pelvis_tilt_velocity": np.gradient(src["pelvis_tilt"], DT, axis=1)})
+    c = normal.log["channels"]["pelvis_tilt_velocity"]
+    assert c["publication"] == "hold" and "not sign-applied" in c["hold_reason"]
+
+
+def _central_differences(a, h):
+    """Independent hand-written MATLAB gradient(a, h) along samples."""
+    v = np.empty_like(a)
+    v[:, 1:-1] = (a[:, 2:] - a[:, :-2]) / (2 * h)
+    v[:, 0] = (a[:, 1] - a[:, 0]) / h
+    v[:, -1] = (a[:, -1] - a[:, -2]) / h
+    return v
+
+
+def test_velocities_are_recomputed_from_the_corrected_angles(corrected, tmp_path):
+    _, stored, res = corrected
+    truth = synthetic_leg(seed=41)[0]
+    seg, _ = sa.derive_segment_angles(res)
+    vel, vlog = sa.derive_angular_velocities({"pelvis_tilt": res.channels["pelvis_tilt"], **seg}, DT)
+    assert set(vel) == {"pelvis_tilt_velocity", "thigh_angle_velocity", "shank_angle_velocity", "foot_angle_velocity"}
+    chain = {"pelvis_tilt": truth["pelvis_tilt"], "thigh_angle": truth["pelvis_tilt"] + truth["hip_angle"]}
+    for k, a in chain.items():
+        assert np.allclose(vel[k + "_velocity"], _central_differences(a, DT), rtol=1e-12, atol=1e-12), k
+    assert "MATLAB gradient" in vlog["method"]
+    # the same rule-B velocities as a normally stored recording
+    (tmp_path / "n").mkdir()
+    _, _, normal = _correction_run(tmp_path / "n", recording="rec1")
+    nseg, _ = sa.derive_segment_angles(normal)
+    nvel, _ = sa.derive_angular_velocities({"pelvis_tilt": normal.channels["pelvis_tilt"], **nseg}, DT)
+    assert all(_bits_equal(vel[k], nvel[k]) for k in vel)
+    # contrast: the converters' recipe on the stored tilt carries 2 x d(tilt)/dt in the thigh velocity
+    stale = np.gradient(np.negative(stored["pelvis_tilt"]) + res.channels["hip_angle"], DT, axis=1)
+    assert np.allclose(stale - vel["thigh_angle_velocity"], -2 * _central_differences(truth["pelvis_tilt"], DT),
+                       atol=1e-9)
+    assert np.mean(np.abs(stale - vel["thigh_angle_velocity"])) > 0.1
+
+
+def test_angular_velocity_method_on_known_values():
+    t = np.arange(150) * 0.01
+    ramp = np.vstack([3.0 * t - 1.0, -0.5 * t])
+    v, _ = sa.derive_angular_velocities({"a": ramp}, 0.01)
+    assert np.allclose(v["a_velocity"], [[3.0] * 150, [-0.5] * 150], rtol=0, atol=1e-9)  # exact slope, ends too
+    quad = np.vstack([t ** 2])
+    v, _ = sa.derive_angular_velocities({"q": quad}, 0.01)
+    assert np.allclose(v["q_velocity"][0, 1:-1], 2 * t[1:-1], atol=1e-9)  # central differences: exact inside
+    assert np.isclose(v["q_velocity"][0, 0], 0.01) and np.isclose(v["q_velocity"][0, -1], t[-1] + t[-2])  # one-sided
+    # phase-normalized strides: one spacing per unit (stride_duration_s / 149)
+    dur = np.array([1.49, 0.745])
+    x = np.vstack([np.linspace(0, 1, 150), np.linspace(0, 1, 150)])
+    v, vlog = sa.derive_angular_velocities({"p": x}, dur / 149)
+    assert np.allclose(v["p_velocity"], (1 / dur)[:, None], rtol=1e-9) and vlog["spacing_s"] == list(dur / 149)
+    for bad in (0.0, -0.01, np.nan, [0.01, 0.0]):
+        with pytest.raises(ValueError):
+            sa.derive_angular_velocities({"p": x}, bad)
+    with pytest.raises(ValueError):
+        sa.derive_angular_velocities({"p": x.astype(np.float32)}, 0.01)
+
+
+def test_hook_segment_chain_equals_the_detector_chain():
+    det = sa.load_bound_detector(BUILD)
+    assert tuple((d, q, j) for d, q, j, _ in sa.SEGMENT_CHAIN) == det.CHAIN
+    assert all(c == det.JOINT_CCW[j.split("_")[0]] for _, _, j, c in sa.SEGMENT_CHAIN)
+
+
 # ---------------------------------------------------------------- the committed table and provenance
 TABLE = json.loads(sa.AUDITED_PATH.read_text())
 BACKLOG = {t["id"]: t for t in json.loads(sa.BACKLOG_PATH.read_text())["tasks"]}
 ITEMS = [(ds, item) for ds, d in TABLE["datasets"].items() for item in d["entries"] + d["exceptions"]]
 # Coordinator-owned backlog records that do not yet cite these items by id (requested in the CORE-11 handoff,
-# backlog_edits_requested). Strict: once every listed task cites an item, its test passes and the id must be
-# removed from this set.
+# backlog_edits_requested). Strict: once every listed task cites an item, its test
+# passes and the id must be removed from this set.
 PENDING_BACKLOG_CITATIONS = set()
+DECISIONS = {d["id"]: d for d in json.loads(sa.BACKLOG_PATH.read_text()).get("decisions", [])}
 
 
 def test_committed_table_is_well_formed_and_bound():
@@ -624,12 +868,15 @@ def test_committed_table_is_well_formed_and_bound():
     assert "SIGN-SURVEY" not in json.dumps([i for _, i in ITEMS])  # the survey is not a verified task
     assert not any(i["id"] == "GT24-hip_moment" for _, i in ITEMS)  # removed: one family, no model definition
     for _, i in ITEMS:
-        assert i["audit_tasks"] and all(BACKLOG.get(t, {}).get("status") == "done" for t in i["audit_tasks"]), i["id"]
+        assert i["audit_tasks"] and all(t in BACKLOG for t in i["audit_tasks"]), i["id"]
+        if i.get("action") != "correct":  # a correction may wait on its own task; it holds until then
+            assert all(BACKLOG[t].get("status") == "done" for t in i["audit_tasks"]), i["id"]
         assert "channels" in i or i["evidence_basis"].strip()
     policy, _ = sa._load_policy()
     for ds in TABLE["datasets"]:
         entries, exceptions, pattern = sa.load_audited_signs(ds, TABLE, BACKLOG,
-                                                             lambda t: policy.task_done(t, sa.BACKLOG_PATH))
+                                                             lambda t: policy.task_done(t, sa.BACKLOG_PATH),
+                                                             DECISIONS)
         assert pattern
         for x in exceptions:
             assert all(re.fullmatch(pattern, r) for r in x["recordings"]), x["id"]
@@ -645,27 +892,69 @@ def test_each_audit_task_record_cites_its_table_entry(dataset, item):
     assert sa.entry_linked(item, BACKLOG)[0], item["id"]
 
 
-def test_um21_ab04_i0_pelvis_exception_waits_for_jose():
-    x = next(i for ds, i in ITEMS if i["id"] == "UM21-P01-AB04-i0-pelvis")
-    # every channel built from the pelvis: tilt, and the thigh, shank and foot recipes
-    assert x["recordings"] == ["AB04/i0"]
-    assert set(x["channels"]) == {"pelvis_tilt", "thigh_angle", "shank_angle", "foot_angle"}
-    assert x["action"] == "hold" and x["pending_decision"] == "D-UM21-P01-1" and x["audit_tasks"] == ["UM21-P01"]
-    assert BACKLOG["UM21-P01"]["status"] == "done"
-    decision = next(d for d in json.loads(sa.BACKLOG_PATH.read_text())["decisions"] if d["id"] == "D-UM21-P01-1")
-    # When José answers, the table must be updated to his answer (and the build re-piloted).
-    assert not decision.get("answer"), "D-UM21-P01-1 answered: update the AB04/i0 exception"
+AB04 = next(i for ds, i in ITEMS if i["id"] == "UM21-P01-AB04-i0-pelvis")
 
 
-def test_um21_ab04_i0_pelvis_is_held_with_the_committed_table():
+def test_um21_ab04_i0_correction_records_josé_answer():
+    """D-UM21-P01-1 = C: the hold became a per-recording pelvis tilt correction (UM21-P02)."""
+    x = AB04
+    assert x["recordings"] == ["AB04/i0"] and x["action"] == "correct"
+    assert x["corrections"] == {"pelvis_tilt": -1}
+    # every segment angle built from the pelvis is recomputed from the corrected tilt, never flipped
+    assert x["derived_channels"] == ["thigh_angle", "shank_angle", "foot_angle"] and "channels" not in x
+    # the reversal also flips obliquity and shifts rotation; outside the sagittal release, not released here
+    assert set(x["not_released"]) == {"pelvis_obliquity", "pelvis_rotation",
+                                      "pelvis_obliquity_velocity", "pelvis_rotation_velocity"}
+    # velocities of the corrected and derived channels are recomputed after the hook or left out (F1, UM21-P02)
+    assert x["derived_velocities"] == ["pelvis_tilt_velocity", "thigh_angle_velocity", "shank_angle_velocity",
+                                       "foot_angle_velocity"]
+    for col in ("pelvis_sagittal_velocity_rad_s", "thigh/shank/foot_sagittal_velocity", "derive_angular_velocities"):
+        assert col in x["velocity_rule"], col
+    assert x["audit_tasks"] == ["UM21-P01", "UM21-P02"] and BACKLOG["UM21-P01"]["status"] == "done"
+    assert x["decision"] == {"id": "D-UM21-P01-1", "answer": "C"}
+    assert DECISIONS["D-UM21-P01-1"]["answer"] == "C"  # the recorded answer is the backlog's answer
+    assert "um21-p01-pelvis-heading.json" in x["citation"] and "UM21-P01" in x["evidence_basis"]
+
+
+def _reversed(src):
+    """Synthetic AB04/i0: the same leg stored with the pelvis computed facing backwards (tilt negated)."""
+    return {**src, "pelvis_tilt": np.negative(src["pelvis_tilt"])}
+
+
+def _activated_backlog(tmp_path):
+    """Copy of the real backlog in which UM21-P02 is done and cites the correction (what verification does)."""
+    data = json.loads(sa.BACKLOG_PATH.read_text())
+    for t in data["tasks"]:
+        if t["id"] == "UM21-P02":
+            t["status"] = "done"
+            t.setdefault("handoff", {}).setdefault("checks", []).append("Correction: UM21-P01-AB04-i0-pelvis.")
+    path = tmp_path / "backlog.json"
+    path.write_text(json.dumps(data))
+    return path
+
+
+def test_um21_ab04_i0_with_the_committed_table(tmp_path):
+    """Real table: AB04/i0 pelvis is held until UM21-P02 is done and cites the correction, then published
+    corrected; AB01/i0 is never touched by it."""
     src, evidence = _fixture()
-    chans = {k: src[k] for k in ("pelvis_tilt", "knee_angle")}
-    held = _run(chans, evidence, dataset="UM21", recording="AB04/i0", audited_path=sa.AUDITED_PATH)
-    assert held.log["channels"]["pelvis_tilt"]["publication"] == "hold"
-    assert "D-UM21-P01-1" in held.log["channels"]["pelvis_tilt"]["hold_reason"]
-    assert _bits_equal(held.channels["pelvis_tilt"], src["pelvis_tilt"])
-    other = _run(chans, evidence, dataset="UM21", recording="AB01/i0", audited_path=sa.AUDITED_PATH)
-    assert "UM21-P01" not in (other.log["channels"]["pelvis_tilt"]["hold_reason"] or "")
+    truth = synthetic_leg(seed=41)[0]
+    chans = {k: src[k] for k in ("pelvis_tilt", "hip_angle", "knee_angle")}
+    ab04 = _reversed(chans)
+    now = _run(ab04, evidence, dataset="UM21", recording="AB04/i0", audited_path=sa.AUDITED_PATH)
+    if BACKLOG["UM21-P02"]["status"] != "done" or not sa.entry_linked(AB04, BACKLOG)[0]:
+        c = now.log["channels"]["pelvis_tilt"]
+        assert c["publication"] == "hold" and "not active" in c["hold_reason"]
+        assert _bits_equal(now.channels["pelvis_tilt"], ab04["pelvis_tilt"])
+    on = _run(ab04, evidence, dataset="UM21", recording="AB04/i0", audited_path=sa.AUDITED_PATH,
+              backlog_path=_activated_backlog(tmp_path))
+    c = on.log["channels"]["pelvis_tilt"]
+    assert c["publication"] == "publish" and c["source_correction"]["applied"]
+    assert c["source_correction"]["decision"] == {"id": "D-UM21-P01-1", "answer": "C"}
+    assert _bits_equal(on.channels["pelvis_tilt"], truth["pelvis_tilt"])  # rule-B pelvis, known by construction
+    other = _run(chans, evidence, dataset="UM21", recording="AB01/i0", audited_path=sa.AUDITED_PATH,
+                 backlog_path=_activated_backlog(tmp_path))
+    assert other.log["channels"]["pelvis_tilt"]["source_correction"] is None
+    assert other.log["corrections_applied"] == [] and other.log["channels"]["pelvis_tilt"]["multiplier"] == -1
 
 
 def test_publication_policy_cites_josé_quote_recorded_under_um21_c01():

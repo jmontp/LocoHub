@@ -1,8 +1,8 @@
 {
- "schema_version": "audited-signs/0.2",
- "purpose": "Verified per-dataset sagittal signs (rule B, target = sign x source) and per-recording exceptions consumed by contributor_tools/common/sign_application.py (CORE-11). Part of the bound build. An entry is used only when every task in audit_tasks is done in docs/maintainers/backlog.json and every one of those backlog records cites the entry id explicitly. Everything else falls back to the detector alone.",
+ "schema_version": "audited-signs/0.3",
+ "purpose": "Verified per-dataset sagittal signs (rule B, target = sign x source) and per-recording exceptions (hold, or a sign correction approved by a backlog decision) consumed by contributor_tools/common/sign_application.py (CORE-11). Part of the bound build. An entry is used only when every task in audit_tasks is done in docs/maintainers/backlog.json and every one of those backlog records cites the entry id explicitly. Everything else falls back to the detector alone. A correction is applied only when every task in its audit_tasks is done and cites its id and its decision carries the recorded answer; otherwise its channels are held.",
  "target_rule": "B (D-UM21-C03-1 = B)",
- "seeded": "2026-10-31, CORE-11 rounds 3-4, from the verified audits named per entry and the coordinator's round-4 rulings; no data read",
+ "seeded": "2026-10-31, CORE-11 rounds 3-4, from the verified audits named per entry and the coordinator's round-4 rulings; no data read; AB04/i0 exception changed from hold to correct by UM21-P02 (D-UM21-P01-1 = C), no data read",
  "omitted": [
   "UM21 powers: two storage layouts per recording (UM21-C03 kinetic_layout); a dataset-wide sign would be wrong for one layout. Detector alone.",
   "GT21 and GT23 pelvis: not a sagittal tilt or not published.",
@@ -94,19 +94,40 @@
      "recordings": [
       "AB04/i0"
      ],
-     "channels": [
-      "pelvis_tilt",
+     "action": "correct",
+     "corrections": {
+      "pelvis_tilt": -1
+     },
+     "derived_channels": [
       "thigh_angle",
       "shank_angle",
       "foot_angle"
      ],
-     "action": "hold",
-     "pending_decision": "D-UM21-P01-1",
-     "citation": "docs/quality/audits/um21-p01-pelvis-heading.json summary.classes.reversed = [AB04/i0]",
-     "reason": "Plug-in Gait computed the AB04/i0 pelvis facing backwards, so its stored pelvis tilt, and every segment angle built from it (thigh, shank and foot recipes all use the pelvis; UM21-C03 per_channel recipes), have the wrong sign; held until José answers D-UM21-P01-1. Joint angles and moments are unaffected (UM21-P01).",
+     "derivation": "Rule B after sign application (sign_application.derive_segment_angles, SEGMENT_CHAIN): thigh = pelvis_tilt + hip_angle, shank = thigh - knee_angle, foot = shank + ankle_angle, from the hook's published channels, so the corrected tilt reaches all three. In source signs this is the UM21-C03 recipe family (thigh = hip - pelvis, shank = hip - pelvis - knee, foot = hip - pelvis - knee + ankle). The current MATLAB producers derive these columns from the stored pelvis before any sign handling (conversion_scripts/Umich_2021/convert_umich_time_to_parquet.m, thigh/shank/foot lines after choose_pelvis_signal; convert_umich_phase_to_parquet.m, 'enforces hip = thigh - pelvis' block); segment angles passed to the hook for AB04/i0 are held, never flipped.",
+     "derived_velocities": [
+      "pelvis_tilt_velocity",
+      "thigh_angle_velocity",
+      "shank_angle_velocity",
+      "foot_angle_velocity"
+     ],
+     "velocity_rule": "pelvis_sagittal_velocity_rad_s and thigh/shank/foot_sagittal_velocity_{ipsi,contra}_rad_s of AB04/i0 are recomputed after the hook with sign_application.derive_angular_velocities from the published pelvis tilt and the derive_segment_angles outputs (same differentiation as the UM21 converters, MATLAB gradient; see VELOCITY_METHOD), or left out. The converters' own velocities are built from the stored (reversed) pelvis: pelvis sagittal velocity has the wrong sign and segment velocities carry 2 x d(tilt)/dt. Velocity inputs passed to the hook are held.",
+     "not_released": {
+      "pelvis_obliquity": "flipped by the same 180 deg heading reversal (UM21-P01: 228/228 strides); outside the sagittal release; not corrected and not released for this recording",
+      "pelvis_rotation": "shifted by 180 deg by the same reversal (UM21-P01); outside the sagittal release; not corrected and not released for this recording",
+      "pelvis_obliquity_velocity": "pelvis_frontal_velocity_rad_s: derivative of the flipped obliquity (wrong sign); not released for this recording",
+      "pelvis_rotation_velocity": "pelvis_transverse_velocity_rad_s: derivative of a rotation stored about +/-180 deg, which can spike at the wrap; not released for this recording"
+     },
+     "decision": {
+      "id": "D-UM21-P01-1",
+      "answer": "C"
+     },
      "audit_tasks": [
-      "UM21-P01"
-     ]
+      "UM21-P01",
+      "UM21-P02"
+     ],
+     "evidence_basis": "marker pelvis tilt independent of the pelvis channel (UM21-P01: markers agree with the flipped tilt in 114/114 right and 114/114 left strides, median residual 0.15 deg vs 3.05/3.01 deg as stored) + stored pelvis rotation 180 deg off (heading -179.77 / +179.77 deg), the exact (-tilt, -obliquity, rotation + 180) pattern of a reference turned 180 deg about vertical; reproduced by the UM21-P01 verifier (0/171 windows published sign, flipped residual 0.13 deg)",
+     "citation": "docs/quality/audits/um21-p01-pelvis-heading.json summary.classes.reversed = [AB04/i0]; docs/maintainers/handoffs/UM21-P01-verify.json checks 1-2; backlog decision D-UM21-P01-1 answer C (2026-10-31T16:59:46Z)",
+     "reason": "Plug-in Gait computed the AB04/i0 pelvis facing backwards, so its stored pelvis tilt has the wrong sign. José chose C (D-UM21-P01-1): keep the recording with pelvis tilt sign-flipped from marker evidence, and thigh, shank and foot computed from the corrected tilt. Joint angles and moments are unaffected (UM21-P01)."
     }
    ]
   },

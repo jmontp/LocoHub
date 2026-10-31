@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-10-31T17:42:39Z",
+  "updated_at_utc": "2026-10-31T18:04:29Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -6313,7 +6313,8 @@
           "Rendered with Playwright (Chrome) at 1100 and 390 px: scrollWidth equals viewport, 3 images load, both details closed, recommendation text absent from visible innerText.",
           "Seeded picks (seed 20261101): contrast AB02/i10 from the 43 normal in-scope recordings; strides AB04/i0 R frames 3512-3675, AB02/i10 R frames 2189-2300.",
           "Independent verifier: done; own classifier on 7 recordings agrees; 5 isolated flipped strides are end-of-trial turns, not heading changes.",
-          "Audited-sign table exception (CORE-11, contributor_tools/common/audited_signs.json): UM21-P01-AB04-i0-pelvis (AB04/i0 pelvis_tilt, thigh_angle, shank_angle, foot_angle held until D-UM21-P01-1)."
+          "Audited-sign table exception (CORE-11, contributor_tools/common/audited_signs.json): UM21-P01-AB04-i0-pelvis (AB04/i0 pelvis_tilt, thigh_angle, shank_angle, foot_angle held until D-UM21-P01-1).",
+          "Update 2026-10-31: D-UM21-P01-1 = C; UM21-P01-AB04-i0-pelvis is now a correction (pelvis_tilt x -1), applied once UM21-P02 is done."
         ],
         "remaining": [
           "Frontal/transverse moment components in AB04/i0 not checked."
@@ -6449,7 +6450,7 @@
       "priority": "P1",
       "dataset": "um21",
       "title": "Apply the AB04/i0 pelvis correction in the sign table",
-      "status": "ready",
+      "status": "done",
       "stage": "conventions",
       "question": "Does the audited-sign table flip AB04/i0 pelvis tilt per D-UM21-P01-1 = C and recompute thigh, shank and foot from it?",
       "scope": "Replace the hold exception UM21-P01-AB04-i0-pelvis with a logged per-recording sign correction (pelvis tilt x -1 from marker evidence); thigh, shank and foot derived from the corrected tilt; tests updated.",
@@ -6464,13 +6465,21 @@
         "Independently verified",
         "Bounded reads or guarded launcher only"
       ],
-      "next_action": "Update audited_signs.json and the hook tests.",
+      "next_action": "Done. AB04/i0 pelvis tilt correction (x -1) is active; segments and velocities must be recomputed after the hook (CORE-11-P-UM21 condition).",
       "resource_class": "fixture",
-      "evidence_paths": [],
+      "evidence_paths": [
+        "contributor_tools/common/audited_signs.json",
+        "docs/maintainers/handoffs/UM21-P02.json",
+        "docs/maintainers/handoffs/UM21-P02-verify.json"
+      ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-31T17:01:26Z",
+        "last_checked_at_utc": "2026-10-31T18:04:29Z",
         "summary": "Created from José's answer.",
-        "checks": [],
+        "checks": [
+          "Audited-sign table correction (CORE-11, contributor_tools/common/audited_signs.json): UM21-P01-AB04-i0-pelvis (AB04/i0 pelvis_tilt x -1 per D-UM21-P01-1 = C; thigh_angle, shank_angle, foot_angle recomputed from the corrected tilt; pelvis_obliquity and pelvis_rotation not released).",
+          "Audited-sign table correction (CORE-11, contributor_tools/common/audited_signs.json): UM21-P01-AB04-i0-pelvis (AB04/i0 pelvis_tilt x -1 per D-UM21-P01-1 = C; thigh_angle, shank_angle, foot_angle and the pelvis tilt, thigh, shank and foot velocities recomputed after the hook from the corrected tilt or left out; pelvis obliquity, rotation and their velocities not released).",
+          "Independent verifier: round 1 back_to_worker (velocities missing), round 2 done; 379 tests pass."
+        ],
         "remaining": [
           "Everything in acceptance."
         ]
@@ -6537,6 +6546,46 @@
       "handoff": {
         "last_checked_at_utc": "2026-10-31T17:42:39Z",
         "summary": "Created from José's 2026-10-31 instructions.",
+        "checks": [],
+        "remaining": [
+          "Everything in acceptance."
+        ]
+      }
+    },
+    {
+      "id": "CORE-11-P-UM21",
+      "priority": "P1",
+      "dataset": "um21",
+      "title": "Pilot the bound sign-application build on UMich 2021",
+      "status": "ready",
+      "stage": "pilot",
+      "question": "Does the bound detector + hook + audited-sign build pass a guarded-launcher pilot on UM21 treadmill recordings?",
+      "scope": "Write the UM21 adapter for contributor_tools/common/sign_application.py and run a pilot through the guarded launcher on a seeded set of aligned recordings including AB04/i0. Condition from UM21-P02 (F2): thigh, shank and foot angles and the pelvis, thigh, shank and foot sagittal velocities must be computed after the hook from published channels (derive_segment_angles, derive_angular_velocities); the UM21 MATLAB converters and reconvert_umich_streaming.py lines 91-92 (pelvis + hip on the source-convention pelvis) must not supply them. No UM21 full run until this pilot is done.",
+      "depends_on": [
+        "UM21-P02"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/UM21-P02.json",
+        "docs/maintainers/handoffs/CORE-11.json"
+      ],
+      "deliverables": [
+        "UM21 adapter",
+        "Committed pilot record and launcher receipt"
+      ],
+      "acceptance": [
+        "Segments and velocities derived after the hook",
+        "Pilot record and receipt committed and cited here with sha256",
+        "AB04/i0 corrected and logged",
+        "Independent verification"
+      ],
+      "next_action": "Write the UM21 adapter and a pilot job spec.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/UM21-P02-verify.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-10-31T18:04:29Z",
+        "summary": "Created after UM21-P02 verification.",
         "checks": [],
         "remaining": [
           "Everything in acceptance."

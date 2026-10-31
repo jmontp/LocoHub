@@ -1036,13 +1036,52 @@ declares a `recording_id_pattern`; the adapter's recording id must fully
 match it.
 
 **Per-recording exceptions** come from verified audits and are applied before
-any sign: their channels are held for that recording, whatever the detector
-or audit says. A hold is fail-safe, so it applies even before the backlog
-cites it. The table has one exception. UM21-P01 found that Plug-in Gait
-computed the AB04/i0 pelvis facing backwards. So that recording's pelvis tilt,
-and every segment angle built from it (thigh, shank and foot), are held until
-José answers D-UM21-P01-1. Its joint angles and moments are unaffected. A test
-fails once that decision is answered, so the table must then be updated.
+any sign. There are two actions.
+
+- `hold`: the channels are held for that recording, whatever the detector or
+  audit says. A hold is fail-safe, so it applies even before the backlog cites
+  it.
+- `correct` (UM21-P02): a stored channel is negated before detection, because
+  an audit proved a source error and a backlog decision approved the fix. The
+  entry names `corrections` (channel → −1), `derived_channels`, `not_released`,
+  `decision` (id and answer), `audit_tasks`, `evidence_basis` and `citation`.
+  It is active only when every audit task is done and cites its id, and the
+  backlog decision carries the recorded answer. An inactive correction holds
+  everything it touches. When active, the detector, guard and publication rule
+  see the corrected channel. The logged `multiplier` is the net sign on the
+  stored array, so undo returns the stored array. The log records
+  `source_correction`, `sign_vs_corrected_source`, `corrections_applied` and
+  `recording_exceptions`, and a `correction` review item is added.
+  Derived segment angles passed in for that recording are held, never
+  flipped. They are recomputed after the hook by `derive_segment_angles`, which
+  applies the rule-B chain (thigh = pelvis + hip, shank = thigh − knee,
+  foot = shank + ankle; `SEGMENT_CHAIN`, a test checks it equals the
+  detector's) to published channels only. The entry also lists
+  `derived_velocities`, the velocity of every corrected and derived channel.
+  Those inputs are held too. They are recomputed after the hook by
+  `derive_angular_velocities` from the published or derived angles, or left
+  out. That helper uses the UM21 converters' differentiation (MATLAB
+  `gradient`: central differences inside, one-sided at the ends; time
+  spacing 1/sampling rate, phase spacing stride duration/149;
+  `VELOCITY_METHOD`).
+
+Any channel named `<angle>_velocity` is held for every recording and is never
+given to the detector, because velocities are never sign-applied. Channels a
+correction does not release are held and not detected.
+
+The table has one exception. UM21-P01 found that Plug-in Gait computed the
+AB04/i0 pelvis facing backwards. José chose D-UM21-P01-1 = C: pelvis tilt is
+corrected (× −1), and thigh, shank and foot are computed from the corrected
+tilt, and so are their velocities (UM21-P02 verifier F1). Obliquity
+(flipped), rotation (+180°) and their velocities are recorded as not released
+for that recording. The rotation velocity is not released because the gradient
+can spike where the stored rotation wraps at ±180°. Its joint angles and moments are unaffected. The audit
+tasks are UM21-P01 and UM21-P02, so the correction holds until UM21-P02 is
+done. The current UM21 MATLAB producers derive segment angles and the pelvis
+and segment velocities from the stored pelvis before any sign handling. No
+UM21 full run may proceed until the adapter derives segment angles and their
+velocities after the hook, or the producers are fixed (verifier F2, a
+condition for CORE-11-P-UM21).
 
 **Entries** (rule B; coordinator rulings of round 3; no data read):
 
@@ -1093,11 +1132,12 @@ applies, and 343 are not applied.
 
 In both cases no published sign disagrees with the probe's truth.
 
-### Sign-application log (`sign-application/0.3`)
+### Sign-application log (`sign-application/0.4`)
 
 Per group, the log records:
 
 - dataset, leg, group id and unit ids (one per row, in order);
+- per-recording exceptions (holds, corrections applied, not-released channels);
 - target rule, the detector's path, sha256, schema and parameters, and the
   bound build;
 - mode and pilot facts: the record path and sha256, the receipt sha256 and the
@@ -1252,6 +1292,15 @@ Any edit to a bound file invalidates the pilot.
   - An unknown or miscased dataset key raises.
   - A per-recording exception holds even a detector-applied channel for that
     recording only.
+  - A correction publishes the corrected channel, is logged with its decision,
+    undoes exactly to the stored array, touches only its recording, and makes
+    derived segment angles match the rule-B chain of the published channels;
+    velocities recomputed after the hook match a hand-written central
+    difference and a normally stored recording; velocity inputs are held
+    and never detected; derived inputs are held, and an unanswered,
+    differently answered,
+    undone or uncited correction holds. Malformed or overlapping exceptions
+    raise.
   - Recording ids must match the dataset pattern, malformed entries are
     refused, and adapters cannot pass signs.
   - Cross-group inconsistencies are flagged.
@@ -1260,6 +1309,7 @@ Any edit to a bound file invalidates the pilot.
   - No entry cites SIGN-SURVEY and the GT24 hip moment is absent.
   - Every listed task's record must cite each entry. Strict expected
     failures mark the citations requested from the coordinator.
-  - The AB04/i0 exception holds the pelvis, thigh, shank and foot until
-    D-UM21-P01-1 is answered, and the real table holds AB04/i0 pelvis tilt.
+  - The AB04/i0 correction records D-UM21-P01-1 = C. With the real table,
+    AB04/i0 pelvis tilt is held until UM21-P02 is done, then published
+    corrected; AB01/i0 is untouched.
   - José's quote is found under UM21-C01 in the backlog.

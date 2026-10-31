@@ -19,10 +19,15 @@ source recording id. Audited signs come only from the committed table audited_si
 4. runs ``detect_leg`` with the build's own DEFAULTS (no parameter overrides);
 5. accepts a detector ``apply`` only when an independent guard, using the hook's own frozen family
    table, finds agreeing moderate/strong tests from at least two families and no dissent;
-6. holds the channels named by a per-recording exception, then decides every other channel with
-   ``publication_rule`` (standing preference: standardized names by default when a verified audit
-   supports the sign), multiplies by that sign
-   (exact negation or copy) and changes nothing else; offsets are never applied;
+6. applies per-recording exceptions first: a ``hold`` keeps its channels out; an active ``correct``
+   (its audit tasks done and citing it, its backlog decision answered as recorded) negates the stored
+   channel before detection, holds that recording's derived segment-angle and velocity inputs (they
+   must be recomputed from the corrected channel with ``derive_segment_angles`` and
+   ``derive_angular_velocities``, or left out) and holds the channels it does not release; any
+   ``*_velocity`` channel is held for every recording (velocities are never sign-applied); an inactive ``correct`` holds everything it touches. Every other channel is
+   decided with ``publication_rule`` (standing preference: standardized names by default when a
+   verified audit supports the sign), multiplied by that sign (exact negation or copy; a correction
+   is folded into the logged net multiplier) and nothing else changes; offsets are never applied;
 7. checks that the input channels and every evidence array are unchanged (by hash);
 8. returns a sign-application log (enough to undo every change and verify both directions by hash)
    and a review list.
@@ -45,7 +50,7 @@ import types
 
 import numpy as np
 
-SCHEMA_VERSION = "sign-application/0.3"
+SCHEMA_VERSION = "sign-application/0.4"
 ROOT = Path(__file__).resolve().parents[2]
 HOOK_PATH = Path(__file__).resolve()
 HOOK_SHA256 = hashlib.sha256(HOOK_PATH.read_bytes()).hexdigest()  # hashed at import
@@ -84,6 +89,21 @@ FAMILY_TABLE = {
 PLATE_TIMING_TESTS = frozenset({"late_stance_plantarflexor", "hip_stance_extension",
                                 "ankle_pushoff_plantarflexion", "hip_moment_timing", "power_timing"})
 
+# Per-recording exceptions: 'hold' keeps channels out; 'correct' flips a stored channel (a source
+# error proved by an audit and approved by a backlog decision) before detection and publication.
+EXCEPTION_ACTIONS = ("hold", "correct")
+# The hook's own frozen copy of the rule-B segment chain (a test checks it equals the detector's CHAIN
+# and JOINT_CCW): distal = proximal + JOINT_CCW x joint, i.e. thigh = pelvis + hip, shank = thigh - knee,
+# foot = shank + ankle. Used by derive_segment_angles on published (rule-B) channels only.
+SEGMENT_CHAIN = (("thigh_angle", "pelvis_tilt", "hip_angle", 1),
+                 ("shank_angle", "thigh_angle", "knee_angle", -1),
+                 ("foot_angle", "shank_angle", "ankle_angle", 1))
+SEGMENT_CHANNELS = tuple(d for d, _, _, _ in SEGMENT_CHAIN)
+# Angular velocities are never sign-applied: a channel named <angle>_velocity passed to the hook is held
+# (never given to the detector) and must be recomputed after the hook from published or derived angles
+# with derive_angular_velocities, which uses the UM21 converters' differentiation (MATLAB gradient).
+VELOCITY_SUFFIX = "_velocity"
+
 # Policy application, not a new decision (D-CORE-11-1 withdrawn). Provenance: José's words recorded by
 # the coordinator in docs/maintainers/backlog.json, task UM21-C01, handoff checks (a test finds them).
 PREFERENCE_QUOTE = "all standardized names (thats the point of the project)"
@@ -104,7 +124,10 @@ PUBLICATION_POLICY = {
     "verified_audit": ("an entry counts only if every audit task it lists has status done in "
                        "docs/maintainers/backlog.json and every one of those backlog records cites the entry id "
                        "explicitly; a mention of the channel name does not count"),
-    "exceptions": "per-recording exceptions in the table are applied first: their channels are held",
+    "exceptions": ("per-recording exceptions in the table are applied first: a hold holds its channels; an "
+                   "active correction negates the stored channel before the rule (logged with its audit tasks "
+                   "and decision), holds the recording's derived segment-angle inputs for recomputation and "
+                   "lists its not-released channels; an inactive correction holds"),
 }
 
 
@@ -224,10 +247,63 @@ def entry_linked(item, records):
     return True, f"cited by {', '.join(tasks)}"
 
 
-def load_audited_signs(dataset, table, records, task_done):
+def _check_exception(x):
+    """Shape checks for one per-recording exception (action 'hold' or 'correct')."""
+    xid = x.get("id")
+    if not x.get("recordings") or x.get("action") not in EXCEPTION_ACTIONS:
+        raise ValueError(f"exception {xid!r}: needs recordings and action 'hold' or 'correct'")
+    if x["action"] == "hold":
+        if not x.get("channels"):
+            raise ValueError(f"exception {xid!r}: a hold needs channels")
+        return
+    corr = x.get("corrections")
+    if not isinstance(corr, dict) or not corr or any(type(v) is not int or v != -1 for v in corr.values()):
+        raise ValueError(f"exception {xid!r}: corrections must map channels to the integer -1 (a sign flip)")
+    if "channels" in x:
+        raise ValueError(f"exception {xid!r}: a correction names its channels in corrections, not channels")
+    dec = x.get("decision")
+    if not isinstance(dec, dict) or not isinstance(dec.get("id"), str) or not isinstance(dec.get("answer"), str):
+        raise ValueError(f"exception {xid!r}: a correction needs the decision id and answer that approved it")
+    derived = x.get("derived_channels")
+    if not isinstance(derived, list) or set(derived) - set(SEGMENT_CHANNELS) or set(derived) & set(corr):
+        raise ValueError(f"exception {xid!r}: derived_channels must list segment angles ({SEGMENT_CHANNELS}) "
+                         "that are not themselves corrected")
+    if not isinstance(x.get("not_released", {}), dict):
+        raise ValueError(f"exception {xid!r}: not_released must map channel -> reason")
+    want = {c + VELOCITY_SUFFIX for c in list(corr) + derived}
+    vel = x.get("derived_velocities")
+    if not isinstance(vel, list) or set(vel) != want or len(vel) != len(set(vel)):
+        raise ValueError(f"exception {xid!r}: derived_velocities must name the velocity of every corrected and "
+                         f"derived channel ({sorted(want)}): they are recomputed after the hook or left out")
+    for key in ("evidence_basis", "citation"):
+        if not isinstance(x.get(key), str) or not x[key].strip():
+            raise ValueError(f"exception {xid!r}: a correction needs {key}")
+
+
+def correction_active(x, records, task_done, decisions):
+    """(ok, reason) for a 'correct' exception: every listed audit task is done and cites the id, and the
+    backlog decision it names is answered with exactly the recorded answer. Otherwise the hook holds."""
+    linked, lwhy = entry_linked(x, records)
+    why = [w for ok, w in (task_done(t) for t in x["audit_tasks"]) if not ok]
+    if not linked:
+        why.append(lwhy)
+    dec = (decisions or {}).get(x["decision"]["id"])
+    if dec is None:
+        why.append(f"decision {x['decision']['id']} is not in the backlog")
+    elif dec.get("answer") != x["decision"]["answer"]:
+        why.append(f"decision {x['decision']['id']} answer is {dec.get('answer')!r}, "
+                   f"not {x['decision']['answer']!r}")
+    if why:
+        return False, "; ".join(why)
+    return True, f"{lwhy}; {x['decision']['id']} = {x['decision']['answer']}"
+
+
+def load_audited_signs(dataset, table, records, task_done, decisions=None):
     """(entries by channel, exceptions, recording pattern) for one dataset key, which must be in the
     table exactly (an unknown or miscased key raises: it would skip the exceptions). An entry is
-    `verified` only when every listed audit task is done and cites the entry id."""
+    `verified` only when every listed audit task is done and cites the entry id. A 'correct' exception
+    is `active` only when it is verified the same way and its decision (from `decisions`, the backlog's
+    decisions by id) carries the recorded answer; an inactive correction holds its channels."""
     datasets = table.get("datasets") or {}
     if dataset not in datasets:
         raise ValueError(f"dataset key {dataset!r} is not in the audited-sign table (keys: {sorted(datasets)}); "
@@ -252,11 +328,48 @@ def load_audited_signs(dataset, table, records, task_done):
                                  "reason": "; ".join(not_done + [lwhy]) if not_done else lwhy}
     exceptions = []
     for x in ds.get("exceptions", []):
-        if x.get("action") != "hold" or not x.get("recordings") or not x.get("channels"):
-            raise ValueError(f"exception {x.get('id')!r}: needs action 'hold', recordings and channels")
+        _check_exception(x)
         linked, lwhy = entry_linked(x, records)
-        exceptions.append({**x, "linked": linked, "link_reason": lwhy})  # a hold applies even if unlinked
+        item = {**x, "linked": linked, "link_reason": lwhy}  # a hold applies even if unlinked
+        if x["action"] == "correct":
+            item["active"], item["active_reason"] = correction_active(x, records, task_done, decisions)
+        exceptions.append(item)
     return entries, exceptions, pattern
+
+
+def _recording_exceptions(exceptions, recording):
+    """(held: channel -> (exception, reason), corrected: channel -> active 'correct' exception,
+    not_released: channel names a correction does not release) for one recording. A channel named by two
+    exceptions of one recording is ambiguous and raises."""
+    held, corrected, seen, not_released = {}, {}, {}, set()
+    for x in exceptions:
+        if recording not in x["recordings"]:
+            continue
+        if x["action"] == "hold":
+            names = {c: f"per-recording exception {x['id']} ({', '.join(x['audit_tasks'])}"
+                        + (f", pending {x['pending_decision']}" if x.get("pending_decision") else "")
+                        + f"): {x['reason']}" for c in x["channels"]}
+        elif not x["active"]:  # fail-safe: an unverified correction holds everything it touches
+            names = {c: f"per-recording correction {x['id']} not active ({x['active_reason']}); held: {x['reason']}"
+                     for c in list(x["corrections"]) + x["derived_channels"] + x["derived_velocities"]}
+        else:
+            names = {c: f"per-recording correction {x['id']}: derived from the uncorrected stored channels; "
+                        f"recompute with derive_segment_angles from the published channels"
+                     for c in x["derived_channels"]}
+            names.update({c: f"per-recording correction {x['id']}: velocity of the uncorrected stored channels; "
+                             f"recompute with derive_angular_velocities from the published or derived angle, "
+                             f"or leave it out" for c in x["derived_velocities"]})
+            corrected.update({c: x for c in x["corrections"]})
+        if x["action"] == "correct":
+            not_released |= set(x.get("not_released") or {})
+            names.update({c: f"per-recording correction {x['id']}: not released for this recording: {why}"
+                          for c, why in (x.get("not_released") or {}).items()})
+        for c in list(names) + [c for c in corrected if corrected[c] is x]:
+            if c in seen:
+                raise ValueError(f"recording {recording}: {c} is named by exceptions {seen[c]} and {x['id']}")
+            seen[c] = x["id"]
+        held.update({c: (x, why) for c, why in names.items()})
+    return held, corrected, not_released
 
 
 # ---------------------------------------------------------------- pilot gate
@@ -482,7 +595,9 @@ def run_sign_application(*, dataset, leg, group_id, recording, unit_ids, channel
     build = {_rel(detector_path): detector_sha256, _rel(HOOK_PATH): HOOK_SHA256,
              _rel(policy_path): policy_sha, _rel(refuted_path): hashlib.sha256(table_bytes).hexdigest(),
              _rel(audited_path): hashlib.sha256(audited_bytes).hexdigest()}
-    records = {t.get("id"): t for t in json.loads(backlog_bytes).get("tasks", [])}
+    backlog = json.loads(backlog_bytes)
+    records = {t.get("id"): t for t in backlog.get("tasks", [])}
+    decisions = {d.get("id"): d for d in backlog.get("decisions", [])}
     with tempfile.TemporaryDirectory() as tmp:  # the policy reads our single copies
         tmp = Path(tmp)
         (tmp / "refuted_documentation.json").write_bytes(table_bytes)
@@ -492,7 +607,8 @@ def run_sign_application(*, dataset, leg, group_id, recording, unit_ids, channel
         if mode == "full":
             rec, facts = check_pilot_record(pilot_record_path, dataset, build, task_done, records, repo_root)
             pilot = {**facts, "pilot_task": rec["pilot_task"]}
-        audits, exceptions, pattern = load_audited_signs(dataset, json.loads(audited_bytes), records, task_done)
+        audits, exceptions, pattern = load_audited_signs(dataset, json.loads(audited_bytes), records, task_done,
+                                                         decisions)
         items = [tuple(i) for i in documentation]
         kept, policy_log = policy.split_documentation(dataset, items, path=tmp / "refuted_documentation.json",
                                                       backlog_path=tmp / "backlog.json")
@@ -517,16 +633,27 @@ def run_sign_application(*, dataset, leg, group_id, recording, unit_ids, channel
         src[k] = a
     in_hash = {k: array_sha256(a) for k, a in src.items()}
     ev_hash = _evidence_hashes(evidence)
-    held_by = {c: x for x in exceptions if recording in x["recordings"] for c in x["channels"]}
+    held_by, corrected, not_released = _recording_exceptions(exceptions, recording)
+    # An active correction fixes a proved source error first (exact negation): the detector, the guard
+    # and the publication rule then see the channel as every other recording stores it.
+    # Velocities and channels an exception does not release are never sign-applied: held, not detected.
+    for k in src:
+        if k.endswith(VELOCITY_SUFFIX) and k not in held_by:
+            held_by[k] = (None, "angular velocities are not sign-applied by the hook; recompute after the hook "
+                                "with derive_angular_velocities from the published or derived angle")
+    not_detected = {k for k in src if k.endswith(VELOCITY_SUFFIX) or k in not_released}
+    det_src = {k: (np.negative(a) if k in corrected else a) for k, a in src.items() if k not in not_detected}
 
-    report = det.detect_leg(f"{dataset} {group_id}", leg, src, documentation=kept,
+    report = det.detect_leg(f"{dataset} {group_id}", leg, det_src, documentation=kept,
                             source_columns=source_columns, **evidence)
     params = report["parameters"]
     min_families, grouping = params["min_families"], params["family_grouping"]
 
     out, log_channels, review = {}, {}, []
     for k, a in src.items():
-        c = report["channels"][k]
+        c = report["channels"][k] if k not in not_detected else {
+            "verdict": "not_run", "sign": None, "confidence": None, "families": [], "evidence": [],
+            "reason": "held before detection (velocity or not-released channel)"}
         detector_applied, guard = False, None
         if c["verdict"] == "apply":
             detector_applied, guard = guard_apply(c, min_families, grouping)
@@ -538,14 +665,29 @@ def run_sign_application(*, dataset, leg, group_id, recording, unit_ids, channel
                                             "reason")}
                  if entry else None)
         audit_sign = entry["sign"] if entry and entry["verified"] else None
-        if k in held_by:  # per-recording exception from a verified audit: applied before any sign
-            x = held_by[k]
-            mult, basis, publication = 1, "none", "hold"
-            hold = (f"per-recording exception {x['id']} ({', '.join(x['audit_tasks'])}"
-                    + (f", pending {x['pending_decision']}" if x.get("pending_decision") else "") + f"): {x['reason']}")
+        correction = None
+        if k in held_by:  # per-recording exception: applied before any sign
+            mult, basis, publication, hold = 1, "none", "hold", held_by[k][1]
         else:
             mult, basis, publication, hold = publication_rule(c["verdict"], c.get("sign"), detector_applied,
                                                               audit_sign)
+        sign_vs_corrected = mult  # the sign relative to the (corrected) source, comparable across recordings
+        if k in corrected:
+            x = corrected[k]
+            factor = x["corrections"][k]
+            applied = publication == "publish"
+            if applied:
+                mult = mult * factor  # net multiplier on the stored array; still exactly +1 or -1
+            else:
+                sign_vs_corrected = 1  # a held channel is returned as stored, uncorrected
+            correction = {"id": x["id"], "factor": factor, "applied": applied,
+                          "decision": x["decision"], "audit_tasks": x["audit_tasks"],
+                          "evidence_basis": x["evidence_basis"], "citation": x["citation"],
+                          "active_reason": x["active_reason"], "derived_channels": x["derived_channels"]}
+            if applied:
+                review.append({"kind": "correction", "channel": k, "exception": x["id"], "factor": factor,
+                               "decision": x["decision"], "net_multiplier": mult,
+                               "recompute": x["derived_channels"]})
         out[k] = np.negative(a) if mult == -1 else a.copy()  # exact; each its own inverse
         off = c.get("offset") or {}
         log_channels[k] = {
@@ -554,6 +696,7 @@ def run_sign_application(*, dataset, leg, group_id, recording, unit_ids, channel
             "reason": c.get("reason"), "families": c.get("families") or [], "weak_hint": c.get("weak_hint"),
             "detector_applied": detector_applied, "guard": guard, "audit": audit,
             "multiplier": mult, "sign_basis": basis, "publication": publication, "hold_reason": hold,
+            "source_correction": correction, "sign_vs_corrected_source": sign_vs_corrected,
             "votes": [_vote(e, grouping) for e in c["evidence"]],
             "offset": {"estimate": off.get("estimate"), "ci95": off.get("ci95"),
                        "flag_for_review": bool(off.get("flag_for_review")), "applied": False,
@@ -594,10 +737,32 @@ def run_sign_application(*, dataset, leg, group_id, recording, unit_ids, channel
                   "offsets": "never applied; listed for review",
                   "documentation": "never applies a sign; statements refuted by a done task are withheld",
                   "other_changes": "none: output = multiplier x input, exactly",
-                  "held_channels": "returned in the source convention; never written under a rule-B name"},
+                  "held_channels": "returned in the source convention; never written under a rule-B name",
+                  "corrections": "an active per-recording correction (audit tasks done and citing it, decision "
+                                 "answered as recorded) negates the stored channel before detection; the "
+                                 "multiplier is the net sign on the stored array; derived segment angles of that "
+                                 "recording are held as inputs and recomputed by derive_segment_angles; their "
+                                 "velocities and the corrected channel's velocity are held and recomputed by "
+                                 "derive_angular_velocities (or left out); not-released channels are held",
+                  "velocities": "any <angle>_velocity input is held and not detected; recompute after the hook"},
         "documentation": _documentation_log(items, policy_log),
-        "exceptions_applied": [{x: held_by[c].get(x) for x in ("id", "audit_tasks", "pending_decision", "linked")}
-                               | {"channel": c} for c in sorted(held_by) if c in src],
+        "exceptions_applied": [{x: (held_by[c][0] or {}).get(x) for x in ("id", "action", "audit_tasks", "pending_decision",
+                                                                     "linked")}
+                               | {"channel": c, "reason": held_by[c][1]} for c in sorted(held_by)
+                               if c in src and held_by[c][0] is not None],
+        "corrections_applied": [{"id": log_channels[c]["source_correction"]["id"], "channel": c,
+                                 "factor": log_channels[c]["source_correction"]["factor"],
+                                 "decision": log_channels[c]["source_correction"]["decision"],
+                                 "audit_tasks": log_channels[c]["source_correction"]["audit_tasks"],
+                                 "net_multiplier": log_channels[c]["multiplier"]}
+                                for c in sorted(corrected) if c in src
+                                and log_channels[c]["source_correction"]["applied"]],
+        "recording_exceptions": [{"id": x["id"], "action": x["action"],
+                                  "active": x.get("active"), "active_reason": x.get("active_reason"),
+                                  "derived_channels": x.get("derived_channels"),
+                                  "derived_velocities": x.get("derived_velocities"),
+                                  "not_released": x.get("not_released")}
+                                 for x in exceptions if recording in x["recordings"]],
         "checks": {k: report.get(k) for k in ("marker_checks", "plate_frame_check", "grf_unit_check",
                                               "leg_assignment_check", "cop_registration")},
         "evidence_sha256": ev_hash,
@@ -606,6 +771,7 @@ def run_sign_application(*, dataset, leg, group_id, recording, unit_ids, channel
         "channels": log_channels,
         "counts": {**{v: sum(c["verdict"] == v for c in chans) for v in ("apply", "suggest", "conflict", "abstain")},
                    "detector_applied": sum(c["detector_applied"] for c in chans),
+                   "corrected": sum(bool((c["source_correction"] or {}).get("applied")) for c in chans),
                    "guard_refused": sum(i["kind"] == "guard_refused" for i in review),
                    "published": sum(c["publication"] == "publish" for c in chans),
                    "held": sum(c["publication"] == "hold" for c in chans),
@@ -613,7 +779,8 @@ def run_sign_application(*, dataset, leg, group_id, recording, unit_ids, channel
                       for b in ("audit_and_detector", "audit", "detector")}},
         "undo": "multiply each channel by its multiplier (+1 or -1, each its own inverse); the log's sha256 "
                 "(from the manifest) authenticates the log, output_sha256 must match before undo and "
-                "input_sha256 after",
+                "input_sha256 after; a per-recording correction is part of the multiplier, so undo "
+                "returns the stored (uncorrected) array",
     }
     return SignApplication(out, _finite(log), _finite(review), report)
 
@@ -660,7 +827,9 @@ def cross_group_review(logs):
             seen.setdefault((lg["dataset"], k), []).append((lg["group_id"], lg["leg"], c))
     items = []
     for (ds, k), rows in sorted(seen.items()):
-        signs = sorted({c["multiplier"] for _, _, c in rows if c["publication"] == "publish"})
+        # compare signs against the corrected source: a logged per-recording correction is not mixed storage
+        signs = sorted({c.get("sign_vs_corrected_source", c["multiplier"]) for _, _, c in rows
+                        if c["publication"] == "publish"})
         held = [f"{g} {leg}" for g, leg, c in rows if c["publication"] == "hold"]
         if len(signs) > 1 or (signs and held):
             items.append({"kind": "inconsistent_across_groups", "dataset": ds, "channel": k,
@@ -668,6 +837,74 @@ def cross_group_review(logs):
                                               if c["publication"] == "publish"},
                           "held": held})
     return items
+
+
+def derive_segment_angles(application):
+    """Rule-B segment angles from the published channels of one SignApplication, along the hook's
+    SEGMENT_CHAIN (thigh = pelvis + hip, shank = thigh - knee, foot = shank + ankle).
+
+    Use this for datasets whose segment angles are derived (UM21) so that a per-recording correction of
+    the pelvis reaches thigh, shank and foot: the inputs are the hook's outputs, never the stored arrays.
+    A segment is derived only when its proximal segment and joint are both available (published, or
+    derived here); otherwise it is left out with the reason. Returns (segments, log); the log records the
+    formula and the output_sha256 of every input, so it can be checked against the sign-application log.
+    """
+    chans, log_ch = application.channels, application.log["channels"]
+    # segment angles passed to the hook are never used: every segment comes from the chain
+    available = {k: chans[k] for k, c in log_ch.items() if c["publication"] == "publish" and k not in SEGMENT_CHANNELS}
+    out, derivation, missing = {}, {}, {}
+    for distal, proximal, joint, ccw in SEGMENT_CHAIN:
+        absent = [n for n in (proximal, joint) if n not in available]
+        if absent:
+            def why(n):
+                if n in SEGMENT_CHANNELS:
+                    return f"{n} (not derived)"
+                return f"{n} ({log_ch[n]['publication']})" if n in log_ch else f"{n} (not passed)"
+            missing[distal] = "unavailable: " + ", ".join(why(n) for n in absent)
+            continue
+        q, j = available[proximal], available[joint]
+        out[distal] = q + j if ccw == 1 else q - j
+        available[distal] = out[distal]
+        derivation[distal] = {"formula": f"{distal} = {proximal} {'+' if ccw == 1 else '-'} {joint}",
+                              "inputs_sha256": {n: array_sha256(available[n]) for n in (proximal, joint)},
+                              "output_sha256": array_sha256(out[distal])}
+    corrections = [{"id": c["source_correction"]["id"], "channel": k}
+                   for k, c in log_ch.items() if (c.get("source_correction") or {}).get("applied")]
+    return out, {"rule": "B segment chain (SEGMENT_CHAIN)", "recording": application.log["recording"],
+                 "leg": application.log["leg"], "group_id": application.log["group_id"],
+                 "derived": derivation, "not_derived": missing, "from_corrected_channels": corrections}
+
+
+VELOCITY_METHOD = ("per unit (row): numpy.gradient(angle, spacing_s, edge_order=1), i.e. central differences "
+                   "(a[i+1] - a[i-1]) / (2 h) inside and one-sided differences (a[1] - a[0]) / h, "
+                   "(a[-1] - a[-2]) / h at the ends, as MATLAB gradient(angle, h) in the UM21 converters "
+                   "(convert_umich_time_to_parquet.m: h = 1 / sampling_rate_hz; convert_umich_phase_to_parquet.m: "
+                   "gradient(angle) * effective_Hz with effective_Hz = (150 - 1) / stride_duration_s, i.e. "
+                   "h = stride_duration_s / 149 per stride); equal to MATLAB up to floating-point rounding; NaN "
+                   "samples propagate to their neighbours")
+
+
+def derive_angular_velocities(angles, spacing_s):
+    """Angular velocities of published or derived angles, recomputed after the hook (VELOCITY_METHOD).
+
+    angles: name -> float64 (units, samples) array, taken from SignApplication.channels of published
+    channels or from derive_segment_angles; never the stored arrays. spacing_s: the sample spacing in
+    seconds, one positive number (time series) or one per unit (phase-normalized strides,
+    stride_duration_s / 149). Returns ({name + '_velocity': array}, log).
+    """
+    out, log = {}, {}
+    for name, a in angles.items():
+        if type(a) is not np.ndarray or a.dtype != np.dtype("<f8") or a.ndim != 2 or a.shape[1] < 2:
+            raise ValueError(f"{name}: need a float64 (units, samples) array with at least 2 samples")
+        h = np.broadcast_to(np.asarray(spacing_s, dtype=float), (a.shape[0],))
+        if not np.all(np.isfinite(h)) or np.any(h <= 0):
+            raise ValueError(f"{name}: spacing_s must be positive and finite (one value, or one per unit)")
+        v = np.stack([np.gradient(a[u], h[u], edge_order=1) for u in range(a.shape[0])])
+        out[name + VELOCITY_SUFFIX] = v
+        log[name + VELOCITY_SUFFIX] = {"from": name, "input_sha256": array_sha256(a),
+                                       "output_sha256": array_sha256(v)}
+    return out, {"method": VELOCITY_METHOD, "spacing_s": np.asarray(spacing_s, dtype=float).tolist(),
+                 "derived": log}
 
 
 def write_json_exclusive(path, obj):
