@@ -1,0 +1,605 @@
+{
+ "task_id": "HIST-03",
+ "checked_at_utc": "2026-10-31T17:57:10Z",
+ "status": "review",
+ "scientific_approval": false,
+ "repository_head": "80705045fc291864beed13bbfc83b5404e5786ca",
+ "context": "José's ruling D-HIST-01-1 = B with note: use original datasets rather than AddBiomechanics; add AddBiomechanics predicted-GRF column only if obtainable without the full download.",
+ "method": [
+  "Read-only web/metadata work, 2026-10-31. No full archive, original-data file or B3D file other than one 503,665-byte zip member was downloaded.",
+  "AddBiomechanics archive: HEAD, single and two-range GETs; zip64 tail and full central directory (331,662 B) re-read by HTTP Range and parsed independently; sha256 equals the HIST-01 value 88d494cc...ce09.",
+  "One B3D: train/No_Arm/Tiziana2019_Formatted_No_Arm/Subject29/Subject29.b3d (smallest non-empty member) range-fetched (503,665 B compressed), CRC32 verified, then only the header protobuf parsed with a minimal wire decoder; frames were not decoded.",
+  "Official dataset Google Drive tree (download-page redirect) listed from public folder pages only; one 1 KiB range and one two-range request against the same Subject29 file on Drive.",
+  "Originals: SimTK project and download pages, GroundLink page and HEAD requests, Zenodo/figshare/DataCite APIs, author README, PubMed, web search."
+ ],
+ "evidence_files": [
+  "docs/quality/audits/source_evidence/hist03/fetch-receipts.json",
+  "docs/quality/audits/source_evidence/hist03/b3d-header-tiziana2019-subject29.json",
+  "docs/quality/audits/source_evidence/hist03/adb-archive-study-member-stats.json",
+  "docs/quality/audits/source_evidence/hist03/adb-drive-tree-depth2.json"
+ ],
+ "grf_premise": {
+  "question": "Are AddBiomechanics ground reaction forces predicted, or processed measured force-plate data?",
+  "answer": "Processed measured force-plate data. No predicted GRF is part of the AddBiomechanics 1.0 release.",
+  "evidence": [
+   {
+    "claim": "Released frames contain measured ground reaction forces and moments from force plates.",
+    "quote": "Each of these frames contains optical marker locations and ground reaction moment and force measurements ... Each raw data source includes experimental optical motion capture and force plate data",
+    "source": "https://addbiomechanics.org/download_data.html (also Werling K, et al. AddBiomechanics Dataset: Capturing the Physics of Human Motion at Scale. ECCV 2024, doi:10.1007/978-3-031-73223-2_27; arXiv:2406.18537 (read via https://ar5iv.arxiv.org/html/2406.18537), section 3)",
+    "quote_check": "Download-page wording checked in the saved page (sha256 7dcb3f20...c791); the ECCV section-3 match was read via an automated web reader."
+   },
+   {
+    "claim": "The B3D keeps raw plate readings and, per processing pass, plate data assigned to contact bodies.",
+    "quote": "raw_force_plate_*: \"the raw force plate readings, per force plate, without any assignment to feet or any post-processing\"; ground_contact_center_of_pressure/torque/force: \"the original force-plate data in world space, one per ground contact body\"",
+    "source": "https://github.com/keenon/nimblephysics/blob/c405b056fc35068027e03e0c384e84e12870b475/dart/proto/SubjectOnDisk.proto"
+   },
+   {
+    "claim": "Plate loads are assigned to the feet and the measured forces and centers of pressure are inputs, not optimization variables.",
+    "quote": "\"We assign loads from each force plate to the feet in the model based on when the feet are penetrating the ground\"; \"Since the ground reaction forces are known from experimental data\"; \"the center of pressure locations are fixed based on the ground reaction force data\"",
+    "source": "Werling K, et al. AddBiomechanics: Automating model scaling, inverse kinematics, and inverse dynamics from human motion data through sequential optimization. PLoS ONE 18(11):e0295152, 2023, doi:10.1371/journal.pone.0295152",
+    "quote_check": "Quote extracted by an automated web reader from the publisher HTML / ar5iv rendering; not re-checked against the PDF."
+   },
+   {
+    "claim": "Per-pass copies may be filtered: pass headers carry low-pass cutoff/order and per-plate background-noise cutoffs; an acceleration-minimizing pass type has a force regularization weight.",
+    "quote": "force_plate_cutoff; lowpass_cutoff_frequency; acc_minimizing_force_regularization_weight",
+    "source": "https://github.com/keenon/nimblephysics/blob/c405b056fc35068027e03e0c384e84e12870b475/dart/proto/SubjectOnDisk.proto; https://nimblephysics.org/docs/working-with-addbiomechanics-data.html"
+   },
+   {
+    "claim": "Frames without trustworthy GRF are kept and flagged per frame, not filled with predictions.",
+    "quote": "missingGRFReason: \"the reason that this frame is missing GRF, or else ... notMissingGRF to indicate that this frame has physics. WARNING: If this is true, you can't trust the tau or acc values on this frame!!\" Enum includes notOverForcePlate, interpolatedClippedGRF, shiftGRF, manualReview, footContactDetectedButNoForce.",
+    "source": "https://nimblephysics.org/docs/working-with-addbiomechanics-data.html; https://github.com/keenon/nimblephysics/blob/c405b056fc35068027e03e0c384e84e12870b475/dart/proto/SubjectOnDisk.proto"
+   },
+   {
+    "claim": "Measured example: Subject29 (Tiziana2019) has one trial of 64 frames; 16 frames notMissingGRF, 48 flagged (43 manualReview, 3 footContactDetectedButNoForce, 2 missingBlip). Contact bodies calcn_r, calcn_l; passes kinematics, lowPassFilter, dynamics.",
+    "source": "docs/quality/audits/source_evidence/hist03/b3d-header-tiziana2019-subject29.json"
+   },
+   {
+    "claim": "GRF prediction appears only as a benchmark task with baseline models in the dataset paper, not as released data.",
+    "quote": "section 5 benchmark \"estimating physical forces from an observed movement\"; baselines in section 5.3",
+    "source": "Werling K, et al. AddBiomechanics Dataset: Capturing the Physics of Human Motion at Scale. ECCV 2024, doi:10.1007/978-3-031-73223-2_27; arXiv:2406.18537 (read via https://ar5iv.arxiv.org/html/2406.18537)",
+    "quote_check": "Quote extracted by an automated web reader from the publisher HTML / ar5iv rendering; not re-checked against the PDF."
+   }
+  ],
+  "likely_source_of_extra_rows": "The legacy LocoHub files were not written by the current converter. The two earlier converters, the consolidated script at commit cc94be4 (contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_to_parquet.py at cc94be4, line 140 'ss = frame.processingPasses[1]  # Use dynamics processing pass', records appended once per frame near line 317) and contributor_tools/conversion_scripts/AddBiomechanics/_archive/b3d_to_parquet.py (line 116 'ss = a.processingPasses[1]'), each write one row per frame from processingPasses[1]. cc94be4 also substitutes 70.0 kg when the subject mass is unavailable (line 287); the _archive script reads getMassKg() with no fallback (lines 272-278). Per-pass row expansion therefore cannot explain extra rows in the legacy files. Plausible remaining cause, unverified against legacy files (not local): frames whose GRF is flagged (e.g. off the force plates) are kept in the B3D and were written as rows (Subject29: 48 of 64 frames flagged); trials are also split into segments by GRF availability and at most 20 s ('AddBiomechanics will automatically crop trials into different segments depending on the time points that have ground reaction force data', https://addbiomechanics.org/faq.html).",
+  "consequence": "Where the original dataset includes force plates (9 of 11; Tan walking only as stance windows), the AddBiomechanics GRF would duplicate measured GRF already in the original, after AddBiomechanics foot assignment and filtering. It is not an independent predicted channel.",
+  "current_converter_rows": "The current source-preservation adapter (convert_addbiomechanics_to_parquet.py at HEAD, lines 104-106) writes one raw-frame row plus one row per processing pass for every frame (1 + P rows; 4 for a 3-pass trial), with JSON source payloads, and keeps flagged frames. It produced none of the legacy files. This matters for any future AddBiomechanics rebuild (D-HIST-03-1 option C)."
+ },
+ "grf_only_feasibility": {
+  "archive_host": {
+   "url": "http://archive.simtk.org/addbiomechanics/addbiomechanics.zip",
+   "bytes": 417665422113,
+   "etag": "\"613ecc9321-631d01550d044\"",
+   "accept_ranges": "bytes",
+   "single_range": "206 Partial Content (bytes 0-1023)",
+   "multi_range": "206 multipart/byteranges",
+   "central_directory": {
+    "offset": 417665090353,
+    "bytes": 331662,
+    "entries": 2335,
+    "sha256": "88d494ccf3b1026ded8c37b9fcbf093e5f76adf0f1bda3d2956b19d3f508ce09",
+    "matches_hist01": true
+   },
+   "member_access": "Yes: any single member can be fetched by range from its local header offset (Subject29: local header 30+65+28 B at 257476763268, payload 503,665 B at 257476763391).",
+   "limitation": "B3D members are deflate-compressed (method 8; 1,085 of 2,335 entries). Deflate is sequential, so no frame can be decoded without all compressed bytes before it; a 64 KiB prefix of Subject29 expanded to 1,428,033 B, less than its 3,103,603-B header. GRF-only from the zip therefore requires the whole member."
+  },
+  "per_subject_b3d": {
+   "available": true,
+   "host": "Google Drive folder linked by https://addbiomechanics.org/redirect/main_dataset_download.html -> https://drive.google.com/drive/folders/1X3OEJXF5gzvjR5vRG7VO7h58bRwYTV0a (\"addb_dataset_publication\": test|train / No_Arm|With_Arm / study / subject / .b3d)",
+   "uncompressed": true,
+   "single_range": "206, Content-Range bytes 0-1023/3605883 for Subject29.b3d; the 1 KiB equals the expanded zip member prefix",
+   "multi_range": "416 (not supported)",
+   "note": "Drive download quotas and throttling were not tested. The AddBiomechanics docs ask users not to re-download from their servers repeatedly (AWS cost); that request concerns the app, but repeated per-frame requests would be the same kind of load."
+  },
+  "b3d_layout": {
+   "confirmed_on": "Tiziana2019 Subject29 (one file)",
+   "layout": "int64 little-endian header length, SubjectOnDiskHeader protobuf, then fixed-size frame records in trial order; each record = one sensor frame (markers, IMU, EMG, raw plate force/CoP/torque) followed by one frame per processing pass (pos, vel, acc, tau, ground-contact wrench/CoP/torque/force, COM, root-frame copies).",
+   "source": "https://github.com/keenon/nimblephysics/blob/c405b056fc35068027e03e0c384e84e12870b475/dart/proto/SubjectOnDisk.proto; https://github.com/keenon/nimblephysics/blob/c405b056fc35068027e03e0c384e84e12870b475/dart/biomechanics/SubjectOnDisk.cpp (read: lines 308-365; write: lines 415-500; readFrames seek: lines 960-1060)",
+   "measured": {
+    "header_bytes": 3103603,
+    "header_share_of_file": 0.861,
+    "header_content": "mostly OpenSim model text per pass (SubjectOnDiskPass.model_osim_text)",
+    "raw_sensor_frame_bytes": 849,
+    "processing_pass_frame_bytes": 2333,
+    "passes": [
+     "kinematics",
+     "lowPassFilter",
+     "dynamics"
+    ],
+    "frames": 64,
+    "data_section_bytes": 502272,
+    "data_section_equals_header_arithmetic": true,
+    "crc32_ok": true,
+    "version": 4
+   },
+   "grf_bytes_per_pass_frame": 248,
+   "grf_bytes_basis": "Schema arithmetic for 2 contact bodies: wrench 12 doubles, CoP/torque/force 6 doubles each, plus 2-B tag+length per packed field; frames not decoded.",
+   "grf_share_of_frame_record": 0.0316,
+   "can_read_grf_without_rest": "Only in principle and only from the uncompressed Drive files: header + one byte range per frame (GRF fields are interleaved in every frame record, and Drive refuses multi-range requests). That is about one HTTP request per frame, of order 10^7 requests for these 11 studies (estimate), so not practical. From the zip it is impossible without the whole member."
+  },
+  "practical_route": "Stream one No_Arm member at a time from the archive by range, extract GRF, delete the member. Transfer equals the full compressed member bytes; peak disk equals the largest member (1.64 GB, ta21); retained data is the GRF fields only (about 3% of frame bytes by the Subject29 layout).",
+  "verdict": "GRF cannot in practice be obtained without transferring each needed subject's full B3D bytes. It does not require the whole 417.7 GB archive, the With_Arm variant, or keeping any B3D on disk. Because the GRF is measured plate data and not a prediction, it adds nothing for studies whose original data include force plates."
+ },
+ "per_study": [
+  {
+   "slug": "ca23",
+   "adb_folder": "Carter2023",
+   "original": {
+    "status": "found_open",
+    "repository": "University of Bath Research Data Archive",
+    "doi": "10.15125/BATH-01341",
+    "url": "https://doi.org/10.15125/BATH-01341",
+    "title": "Full Body Kinematics and Ground Reaction Forces of Fifty Heterogeneous Runners Completing Treadmill Running at Various Speeds and Gradients",
+    "version": "1",
+    "license": "CC-BY-4.0 (DataCite rightsList)",
+    "access": "open download",
+    "bytes": 28882233915,
+    "bytes_basis": "DataCite sizes strings, rounded MB, summed (HIST-01)",
+    "formats": "50 participant ZIPs of C3D files, plus FileNaming_Convention.txt, MarkerSet_Info.docx, Participant_Info.csv",
+    "subjects_original": 50,
+    "subjects_adb": 50,
+    "grf_force_plates": "yes: 3-D GRF 1000 Hz, Bertec split-belt instrumented treadmill; running on plate 1 only",
+    "markers": "yes: full-body marker set, 250 Hz, Qualisys",
+    "ik_outputs": "not stated",
+    "id_outputs": "not stated",
+    "other": "6 IMUs (Delsys Trigno, 519 Hz)",
+    "citations": [
+     "https://api.datacite.org/dois/10.15125/BATH-01341 (description, formats, rights)"
+    ]
+   },
+   "addbiomechanics_grf_only": {
+    "variant_used": "No_Arm (present for all 11; With_Arm absent for ta21, ta22, wa23)",
+    "nonempty_b3d_members": 288,
+    "empty_b3d_members": 41,
+    "transfer_bytes_zip_member_route": 95602120528,
+    "transfer_bytes_zip_member_route_basis": "Exact: sum of compressed sizes of the No_Arm members in the archive central directory (deflate; each member must be fetched whole).",
+    "transfer_bytes_drive_whole_file_route": 125653554461,
+    "transfer_bytes_drive_whole_file_route_basis": "Exact: sum of expanded member sizes (Drive serves the same uncompressed B3D bytes; checked for one subject).",
+    "largest_single_member_compressed_bytes": 499238680,
+    "with_arm_compressed_bytes_not_needed": 149312083173,
+    "estimated_grf_only_partial_read_bytes": 4836295585,
+    "estimated_frames_equals_http_requests": 15897007,
+    "partial_read_estimate_basis": "Order of magnitude only: assumes every subject has the Tiziana2019 Subject29 layout (header 3,103,603 B; frame 849 + 3 x 2,333 B; 248 B of GRF fields per pass frame). Frame sizes differ with marker and pass counts; not measured for this study."
+   }
+  },
+  {
+   "slug": "fa16",
+   "adb_folder": "Falisse2017",
+   "original": {
+    "status": "not_found",
+    "repository": null,
+    "searched": [
+     "AddBiomechanics official source table links only PubMed 27875132 (https://addbiomechanics.org/download_data.html)",
+     "PubMed abstract (https://pubmed.ncbi.nlm.nih.gov/27875132/): no data availability statement",
+     "Web searches for SimTK/Zenodo/data availability of Falisse et al. 2017 (doi:10.1109/TBME.2016.2630009): none found",
+     "KU Leuven accepted-manuscript PDF https://lirias.kuleuven.be/retrieve/494460 fetched but its text could not be extracted here (no PDF text tool); data statement not checked"
+    ],
+    "subjects_adb": 11,
+    "note": "Only public copy identified is the AddBiomechanics B3D (11 subjects, trials Gait_* and STS_*). Bounded search; not a global absence claim."
+   },
+   "addbiomechanics_grf_only": {
+    "variant_used": "No_Arm (present for all 11; With_Arm absent for ta21, ta22, wa23)",
+    "nonempty_b3d_members": 11,
+    "empty_b3d_members": 0,
+    "transfer_bytes_zip_member_route": 241940889,
+    "transfer_bytes_zip_member_route_basis": "Exact: sum of compressed sizes of the No_Arm members in the archive central directory (deflate; each member must be fetched whole).",
+    "transfer_bytes_drive_whole_file_route": 371584630,
+    "transfer_bytes_drive_whole_file_route_basis": "Exact: sum of expanded member sizes (Drive serves the same uncompressed B3D bytes; checked for one subject).",
+    "largest_single_member_compressed_bytes": 37858900,
+    "with_arm_compressed_bytes_not_needed": 301388510,
+    "estimated_grf_only_partial_read_bytes": 44803032,
+    "estimated_frames_equals_http_requests": 42997,
+    "partial_read_estimate_basis": "Order of magnitude only: assumes every subject has the Tiziana2019 Subject29 layout (header 3,103,603 B; frame 849 + 3 x 2,333 B; 248 B of GRF fields per pass frame). Frame sizes differ with marker and pass counts; not measured for this study."
+   }
+  },
+  {
+   "slug": "fr12",
+   "adb_folder": "Fregly2012",
+   "original": {
+    "status": "found_login_required",
+    "repository": "SimTK project kneeloads (Grand Challenge Competition to Predict In Vivo Knee Loads)",
+    "url": "https://simtk.org/projects/kneeloads",
+    "downloads_url": "https://simtk.org/frs/?group_id=413",
+    "citation_required": "Fregly et al. 2012, J Orthop Res 30(4):503-513, doi:10.1002/jor.22023",
+    "license": "Packages for competitions 4-6: MIT-style permission notice, Copyright Stanford University (embedded package license text). Competitions 1-3: no license shown on the downloads page.",
+    "access": "free SimTK account login required (download link redirects to /account/login.php)",
+    "bytes": 8108000000,
+    "bytes_basis": "Sum of all six competition packages as displayed on the SimTK downloads page (rounded MB; includes CT/MR/X-ray/geometry). Motion data only (raw + synchronized, excluding duplicate split parts): about 4,517 MB; synchronized motion data only: about 447 MB.",
+    "formats": "ZIP packages per competition: geometry, raw CT/MR/X-ray, raw motion, raw strength, synchronized motion, synchronized strength; inner file formats not checked (described in each Competition Data Description.pdf)",
+    "subjects_original": "6 competition packages, each from a subject with an instrumented knee prosthesis; whether they are 6 distinct people was not checked",
+    "subjects_adb": 6,
+    "grf_force_plates": "yes (\"motion capture, ground reaction, EMG, tibial contact force, and strength data\")",
+    "markers": "yes (motion capture; Marker Set Description.pdf)",
+    "ik_outputs": "not stated",
+    "id_outputs": "not stated",
+    "other": "in vivo tibial contact forces, EMG, strength; subject-specific OpenSim model in competition 4",
+    "citations": [
+     "https://simtk.org/projects/kneeloads",
+     "https://simtk.org/frs/?group_id=413"
+    ]
+   },
+   "addbiomechanics_grf_only": {
+    "variant_used": "No_Arm (present for all 11; With_Arm absent for ta21, ta22, wa23)",
+    "nonempty_b3d_members": 6,
+    "empty_b3d_members": 0,
+    "transfer_bytes_zip_member_route": 379897287,
+    "transfer_bytes_zip_member_route_basis": "Exact: sum of compressed sizes of the No_Arm members in the archive central directory (deflate; each member must be fetched whole).",
+    "transfer_bytes_drive_whole_file_route": 553142872,
+    "transfer_bytes_drive_whole_file_route_basis": "Exact: sum of expanded member sizes (Drive serves the same uncompressed B3D bytes; checked for one subject).",
+    "largest_single_member_compressed_bytes": 102734690,
+    "with_arm_compressed_bytes_not_needed": 297585990,
+    "estimated_grf_only_partial_read_bytes": 35512707,
+    "estimated_frames_equals_http_requests": 68109,
+    "partial_read_estimate_basis": "Order of magnitude only: assumes every subject has the Tiziana2019 Subject29 layout (header 3,103,603 B; frame 849 + 3 x 2,333 B; 248 B of GRF fields per pass frame). Frame sizes differ with marker and pass counts; not measured for this study."
+   }
+  },
+  {
+   "slug": "ha13",
+   "adb_folder": "Hamner2013 (With_Arm folder spelled Hammer2013)",
+   "original": {
+    "status": "found_login_required",
+    "repository": "SimTK project nmbl_running",
+    "url": "https://simtk.org/projects/nmbl_running",
+    "downloads_url": "https://simtk.org/frs/?group_id=603",
+    "license": "MIT-style permission notice, Copyright Stanford University (embedded license text on every package)",
+    "access": "free SimTK account login required (download link redirects to /account/login.php)",
+    "bytes": 2059000000,
+    "bytes_basis": "10 subject ZIPs (192-224 MB each) plus RAW_EMG_DATA.zip 8 MB, as displayed (rounded MB)",
+    "formats": "per-subject ZIP: OpenSim model, experimental data, settings and simulation results (OpenSim 2.4); inner formats not checked",
+    "subjects_original": 10,
+    "subjects_adb": 10,
+    "subject_ids_match": "SimTK subjects 01,02,03,04,08,10,11,17,19,20; AddBiomechanics Drive train/No_Arm has subject01,02,03,04,08,11,17,19,20 (subject10 not in train; test not listed at file depth)",
+    "grf_force_plates": "yes (\"experimental data (i.e., motion capture, EMG, GRFs)\"; instrumented treadmill)",
+    "markers": "yes (motion capture)",
+    "ik_outputs": "yes (workflow included Scale, IK, RRA, CMC, IAA)",
+    "id_outputs": "not stated (RRA and CMC results are distributed)",
+    "citations": [
+     "https://simtk.org/projects/nmbl_running",
+     "https://simtk.org/frs/?group_id=603"
+    ]
+   },
+   "addbiomechanics_grf_only": {
+    "variant_used": "No_Arm (present for all 11; With_Arm absent for ta21, ta22, wa23)",
+    "nonempty_b3d_members": 10,
+    "empty_b3d_members": 0,
+    "transfer_bytes_zip_member_route": 58413085,
+    "transfer_bytes_zip_member_route_basis": "Exact: sum of compressed sizes of the No_Arm members in the archive central directory (deflate; each member must be fetched whole).",
+    "transfer_bytes_drive_whole_file_route": 106796093,
+    "transfer_bytes_drive_whole_file_route_basis": "Exact: sum of expanded member sizes (Drive serves the same uncompressed B3D bytes; checked for one subject).",
+    "largest_single_member_compressed_bytes": 6696129,
+    "with_arm_compressed_bytes_not_needed": 77082957,
+    "estimated_grf_only_partial_read_bytes": 33430078,
+    "estimated_frames_equals_http_requests": 9653,
+    "partial_read_estimate_basis": "Order of magnitude only: assumes every subject has the Tiziana2019 Subject29 layout (header 3,103,603 B; frame 849 + 3 x 2,333 B; 248 B of GRF fields per pass frame). Frame sizes differ with marker and pass counts; not measured for this study."
+   }
+  },
+  {
+   "slug": "ha23",
+   "adb_folder": "Han2023",
+   "original": {
+    "status": "found_license_not_stated",
+    "repository": "GroundLink project page, Boston University",
+    "url": "https://csr.bu.edu/groundlink/",
+    "paper_doi": "10.1145/3610548.3618247",
+    "license": "No data license stated on the download page; code repository github.com/hanxingjian/GroundLink is MIT (GitHub API), which covers code, not data.",
+    "access": "open HTTP download, Accept-Ranges: bytes",
+    "bytes": 2745356293,
+    "bytes_basis": "Exact HEAD Content-Length: c3d.zip 2,694,867,241 + force.zip 50,489,052. All four modalities (adding fbx.zip 1,814,816,461 and moshpp.zip 764,506,172): 5,324,678,926.",
+    "formats": "C3D (96 markers, raw force-plate data embedded), Force (filtered GRF and CoP annotated left/right), FBX skeleton 250 fps, SMPL-X NPZ; per-subject and all-subject ZIPs",
+    "subjects_original": 7,
+    "subjects_adb": 7,
+    "grf_force_plates": "yes (raw in C3D; filtered and annotated per foot in Force)",
+    "markers": "yes (C3D, 96 markers)",
+    "ik_outputs": "no OpenSim IK; QTM skeleton (FBX) and MoSh++ SMPL-X parameters",
+    "id_outputs": "no",
+    "citations": [
+     "https://csr.bu.edu/groundlink/",
+     "https://api.github.com/repos/hanxingjian/GroundLink"
+    ]
+   },
+   "addbiomechanics_grf_only": {
+    "variant_used": "No_Arm (present for all 11; With_Arm absent for ta21, ta22, wa23)",
+    "nonempty_b3d_members": 25,
+    "empty_b3d_members": 1,
+    "transfer_bytes_zip_member_route": 2242776408,
+    "transfer_bytes_zip_member_route_basis": "Exact: sum of compressed sizes of the No_Arm members in the archive central directory (deflate; each member must be fetched whole).",
+    "transfer_bytes_drive_whole_file_route": 2824395300,
+    "transfer_bytes_drive_whole_file_route_basis": "Exact: sum of expanded member sizes (Drive serves the same uncompressed B3D bytes; checked for one subject).",
+    "largest_single_member_compressed_bytes": 221038779,
+    "with_arm_compressed_bytes_not_needed": 3795961926,
+    "estimated_grf_only_partial_read_bytes": 164390240,
+    "estimated_frames_equals_http_requests": 350000,
+    "partial_read_estimate_basis": "Order of magnitude only: assumes every subject has the Tiziana2019 Subject29 layout (header 3,103,603 B; frame 849 + 3 x 2,333 B; 248 B of GRF fields per pass frame). Frame sizes differ with marker and pass counts; not measured for this study."
+   }
+  },
+  {
+   "slug": "mo15",
+   "adb_folder": "Moore2015",
+   "original": {
+    "status": "found_open",
+    "repository": "Zenodo",
+    "doi": "10.5281/zenodo.13030",
+    "url": "https://zenodo.org/records/13030",
+    "license": "CC0-1.0 (Zenodo cc-zero)",
+    "access": "open download",
+    "bytes": 2444992214,
+    "bytes_basis": "Zenodo API file sizes, exact",
+    "formats": "2 tar.gz archives; per trial mocap-xxx.txt (TSV markers + force plates), record-xxx.txt, meta-xxx.yml",
+    "subjects_original": "15 in the paper",
+    "subjects_adb": 12,
+    "grf_force_plates": "yes: three forces and three moments from each of two force plates (instrumented treadmill)",
+    "markers": "yes (.PosX/.PosY/.PosZ columns)",
+    "ik_outputs": "not distributed; 2-D joint angles computed by the provided GaitAnalysisToolKit",
+    "id_outputs": "not distributed; 2-D joint torques computed by the provided software",
+    "citations": [
+     "https://zenodo.org/api/records/13030",
+     "Moore JK et al. PeerJ 3:e918 (2015), doi:10.7717/peerj.918, read via https://pmc.ncbi.nlm.nih.gov/articles/PMC4419525/"
+    ]
+   },
+   "addbiomechanics_grf_only": {
+    "variant_used": "No_Arm (present for all 11; With_Arm absent for ta21, ta22, wa23)",
+    "nonempty_b3d_members": 12,
+    "empty_b3d_members": 0,
+    "transfer_bytes_zip_member_route": 12734823412,
+    "transfer_bytes_zip_member_route_basis": "Exact: sum of compressed sizes of the No_Arm members in the archive central directory (deflate; each member must be fetched whole).",
+    "transfer_bytes_drive_whole_file_route": 16639724584,
+    "transfer_bytes_drive_whole_file_route_basis": "Exact: sum of expanded member sizes (Drive serves the same uncompressed B3D bytes; checked for one subject).",
+    "largest_single_member_compressed_bytes": 1227967704,
+    "with_arm_compressed_bytes_not_needed": 19117688570,
+    "estimated_grf_only_partial_read_bytes": 561888416,
+    "estimated_frames_equals_http_requests": 2115504,
+    "partial_read_estimate_basis": "Order of magnitude only: assumes every subject has the Tiziana2019 Subject29 layout (header 3,103,603 B; frame 849 + 3 x 2,333 B; 248 B of GRF fields per pass frame). Frame sizes differ with marker and pass counts; not measured for this study."
+   }
+  },
+  {
+   "slug": "ta21",
+   "adb_folder": "Tan2021",
+   "original": {
+    "status": "not_found_only_addbiomechanics_copy",
+    "repository": null,
+    "paper_doi": "10.1016/j.jbiomech.2022.111145",
+    "finding": "The Google Drive folder recorded in HIST-01 as the author folder (id 1ZDy_JIj3j0wsXdHaC1Bpw1vTE-LGwoJ6) is titled \"Tan2021_Formatted_No_Arm\" and is the train/No_Arm/Tan2021_Formatted_No_Arm folder of the official AddBiomechanics dataset Drive tree; it holds only s*.b3d files. It is an AddBiomechanics derivative, not raw marker/force data.",
+    "searched": [
+     "Web search for data availability of Tan et al. 2022 strike-index paper: none found",
+     "Official AddBiomechanics Drive tree listing (download-page redirect)"
+    ],
+    "subjects_original": "16 participants in the paper (per search abstract; not checked against full text)",
+    "subjects_adb": 8,
+    "citations": [
+     "https://drive.google.com/drive/folders/1ZDy_JIj3j0wsXdHaC1Bpw1vTE-LGwoJ6",
+     "https://drive.google.com/drive/folders/1X3OEJXF5gzvjR5vRG7VO7h58bRwYTV0a"
+    ]
+   },
+   "addbiomechanics_grf_only": {
+    "variant_used": "No_Arm (present for all 11; With_Arm absent for ta21, ta22, wa23)",
+    "nonempty_b3d_members": 8,
+    "empty_b3d_members": 0,
+    "transfer_bytes_zip_member_route": 12226592437,
+    "transfer_bytes_zip_member_route_basis": "Exact: sum of compressed sizes of the No_Arm members in the archive central directory (deflate; each member must be fetched whole).",
+    "transfer_bytes_drive_whole_file_route": 16533314253,
+    "transfer_bytes_drive_whole_file_route_basis": "Exact: sum of expanded member sizes (Drive serves the same uncompressed B3D bytes; checked for one subject).",
+    "largest_single_member_compressed_bytes": 1640560231,
+    "with_arm_compressed_bytes_not_needed": null,
+    "estimated_grf_only_partial_read_bytes": 546503694,
+    "estimated_frames_equals_http_requests": 2103527,
+    "partial_read_estimate_basis": "Order of magnitude only: assumes every subject has the Tiziana2019 Subject29 layout (header 3,103,603 B; frame 849 + 3 x 2,333 B; 248 B of GRF fields per pass frame). Frame sizes differ with marker and pass counts; not measured for this study."
+   }
+  },
+  {
+   "slug": "ta22",
+   "adb_folder": "Tan2022",
+   "original": {
+    "status": "found_partial_windows_only",
+    "repository": "SimTK project imukinetics",
+    "url": "https://simtk.org/projects/imukinetics",
+    "downloads_url": "https://simtk.org/frs/?group_id=2087",
+    "license": "MIT-style permission notice, Copyright 2022 Wearable Systems Lab, Shanghai Jiao Tong University (embedded package license)",
+    "access": "free SimTK account login required (same SimTK download mechanism; not separately tested for this project)",
+    "bytes": 1976000000,
+    "bytes_basis": "all_17_subjects.h5 1976 MB as displayed, plus example_data_loader.py 590 B",
+    "formats": "HDF5: per subject a steps x samples x 256-field matrix; 100 Hz; each step from heel-strike minus 20 samples to toe-off plus 20 samples, zero-padded",
+    "subjects_original": 17,
+    "subjects_adb": 17,
+    "grf_force_plates": "yes but windowed: plate_2_force/cop fields; plate 2 is the right foot (split-belt Bertec treadmill)",
+    "markers": "yes (32 markers, MarkerName_Axis fields), windowed",
+    "ik_outputs": "not stated",
+    "id_outputs": "knee adduction/flexion moment targets (per README); not a general ID output",
+    "limitation": "Stance-step windows only, right side; not continuous recordings or full strides. The README names AddBiomechanics as where the marker and force data are available after AddBiomechanics processing ('marker and force data have been processed by AddBiomechanics and is available in https://addbiomechanics.org/download_data.html'), i.e. AddBiomechanics is the route to the full data; it does not say the SimTK HDF5 windows are AddBiomechanics output.",
+    "citations": [
+     "https://simtk.org/projects/imukinetics",
+     "https://simtk.org/frs/?group_id=2087",
+     "https://raw.githubusercontent.com/Tian-A-Tan/KAM_and_KFM_Estimation/main/README.md"
+    ]
+   },
+   "addbiomechanics_grf_only": {
+    "variant_used": "No_Arm (present for all 11; With_Arm absent for ta21, ta22, wa23)",
+    "nonempty_b3d_members": 17,
+    "empty_b3d_members": 0,
+    "transfer_bytes_zip_member_route": 9879479954,
+    "transfer_bytes_zip_member_route_basis": "Exact: sum of compressed sizes of the No_Arm members in the archive central directory (deflate; each member must be fetched whole).",
+    "transfer_bytes_drive_whole_file_route": 12695482506,
+    "transfer_bytes_drive_whole_file_route_basis": "Exact: sum of expanded member sizes (Drive serves the same uncompressed B3D bytes; checked for one subject).",
+    "largest_single_member_compressed_bytes": 583437518,
+    "with_arm_compressed_bytes_not_needed": null,
+    "estimated_grf_only_partial_read_bytes": 452276397,
+    "estimated_frames_equals_http_requests": 1610948,
+    "partial_read_estimate_basis": "Order of magnitude only: assumes every subject has the Tiziana2019 Subject29 layout (header 3,103,603 B; frame 849 + 3 x 2,333 B; 248 B of GRF fields per pass frame). Frame sizes differ with marker and pass counts; not measured for this study."
+   }
+  },
+  {
+   "slug": "ti19",
+   "adb_folder": "Tiziana2019",
+   "original": {
+    "status": "found_open",
+    "repository": "figshare collection",
+    "doi": "10.6084/m9.figshare.c.4494755.v1",
+    "url": "https://doi.org/10.6084/m9.figshare.c.4494755.v1",
+    "license": "Collection CC-BY-4.0 (DataCite); all 54 items CC0 (figshare API); not reconciled (HIST-01)",
+    "access": "open download",
+    "bytes": 515231189,
+    "bytes_basis": "figshare article API file sizes, exact (HIST-01)",
+    "formats": "SubjectX.mat structures (50) plus All_Subjects.zip, Demo_Anthro.xlsx, MATLAB functions",
+    "subjects_original": 50,
+    "subjects_adb": 50,
+    "grf_force_plates": "yes: two force plates (GrfVarName, GrfFreq)",
+    "markers": "yes (MarkerVarName)",
+    "ik_outputs": "yes: joint angles (AngVarName)",
+    "id_outputs": "yes: joint moments and powers (MomVarName, PwrVarName)",
+    "other": "EMG",
+    "citations": [
+     "https://api.figshare.com/v2/collections/4494755"
+    ]
+   },
+   "addbiomechanics_grf_only": {
+    "variant_used": "No_Arm (present for all 11; With_Arm absent for ta21, ta22, wa23)",
+    "nonempty_b3d_members": 48,
+    "empty_b3d_members": 2,
+    "transfer_bytes_zip_member_route": 995425148,
+    "transfer_bytes_zip_member_route_basis": "Exact: sum of compressed sizes of the No_Arm members in the archive central directory (deflate; each member must be fetched whole).",
+    "transfer_bytes_drive_whole_file_route": 1502985127,
+    "transfer_bytes_drive_whole_file_route_basis": "Exact: sum of expanded member sizes (Drive serves the same uncompressed B3D bytes; checked for one subject).",
+    "largest_single_member_compressed_bytes": 72976493,
+    "with_arm_compressed_bytes_not_needed": 1335227353,
+    "estimated_grf_only_partial_read_bytes": 191760281,
+    "estimated_frames_equals_http_requests": 172529,
+    "partial_read_estimate_basis": "Order of magnitude only: assumes every subject has the Tiziana2019 Subject29 layout (header 3,103,603 B; frame 849 + 3 x 2,333 B; 248 B of GRF fields per pass frame). Frame sizes differ with marker and pass counts; not measured for this study."
+   }
+  },
+  {
+   "slug": "vz22",
+   "adb_folder": "vanderZee2022",
+   "original": {
+    "status": "found_open",
+    "repository": "figshare collection",
+    "doi": "10.6084/m9.figshare.c.5897423.v1",
+    "url": "https://doi.org/10.6084/m9.figshare.c.5897423.v1",
+    "license": "Collection CC-BY-4.0 (DataCite); all 4 items CC0 (figshare API); not reconciled (HIST-01)",
+    "access": "open download",
+    "bytes": 15593203562,
+    "bytes_basis": "figshare article API file sizes, exact (HIST-01)",
+    "formats": "Level 1 C3D, Level 2 Visual3D CMO, Level 3 MATLAB, trial look-up table",
+    "subjects_original": 10,
+    "subjects_adb": 10,
+    "grf_force_plates": "yes (ground reaction forces)",
+    "markers": "yes (raw C3D)",
+    "ik_outputs": "yes: joint angles; segment positions and orientations",
+    "id_outputs": "yes: joint moments and powers (ankle, knee, hip)",
+    "citations": [
+     "https://api.figshare.com/v2/collections/5897423",
+     "https://api.figshare.com/v2/collections/5897423/articles"
+    ]
+   },
+   "addbiomechanics_grf_only": {
+    "variant_used": "No_Arm (present for all 11; With_Arm absent for ta21, ta22, wa23)",
+    "nonempty_b3d_members": 10,
+    "empty_b3d_members": 0,
+    "transfer_bytes_zip_member_route": 14703691022,
+    "transfer_bytes_zip_member_route_basis": "Exact: sum of compressed sizes of the No_Arm members in the archive central directory (deflate; each member must be fetched whole).",
+    "transfer_bytes_drive_whole_file_route": 18866183210,
+    "transfer_bytes_drive_whole_file_route_basis": "Exact: sum of expanded member sizes (Drive serves the same uncompressed B3D bytes; checked for one subject).",
+    "largest_single_member_compressed_bytes": 1556453449,
+    "with_arm_compressed_bytes_not_needed": 19352947815,
+    "estimated_grf_only_partial_read_bytes": 626234360,
+    "estimated_frames_equals_http_requests": 2399993,
+    "partial_read_estimate_basis": "Order of magnitude only: assumes every subject has the Tiziana2019 Subject29 layout (header 3,103,603 B; frame 849 + 3 x 2,333 B; 248 B of GRF fields per pass frame). Frame sizes differ with marker and pass counts; not measured for this study."
+   }
+  },
+  {
+   "slug": "wa23",
+   "adb_folder": "Wang2023",
+   "original": {
+    "status": "found_open",
+    "repository": "Zenodo",
+    "doi": "10.5281/zenodo.6457662",
+    "url": "https://zenodo.org/records/6457662",
+    "license": "CC BY 3.0 Netherlands (DataCite rights); Zenodo API shows no license id (HIST-01)",
+    "access": "open download",
+    "bytes": 31012438583,
+    "bytes_basis": "Zenodo API file sizes, exact: Processed_data.rar 17,916,719,552 + Raw_data.rar 13,095,719,031",
+    "formats": "two RAR archives (raw, processed); inner formats not checked; record notes a split 2 GB-file version",
+    "subjects_original": 12,
+    "subjects_adb": 9,
+    "grf_force_plates": "yes: split-belt instrumented treadmill (Motek); also pressure insoles (vertical GRF, CoP)",
+    "markers": "yes: optical motion capture (Qualisys)",
+    "ik_outputs": "not stated in the record (processing pipeline BioMechPro on GitHub)",
+    "id_outputs": "not stated in the record",
+    "other": "8 Xsens IMUs, 9 EMG, video (separate record)",
+    "citations": [
+     "https://zenodo.org/api/records/6457662"
+    ]
+   },
+   "addbiomechanics_grf_only": {
+    "variant_used": "No_Arm (present for all 11; With_Arm absent for ta21, ta22, wa23)",
+    "nonempty_b3d_members": 9,
+    "empty_b3d_members": 0,
+    "transfer_bytes_zip_member_route": 4052765688,
+    "transfer_bytes_zip_member_route_basis": "Exact: sum of compressed sizes of the No_Arm members in the archive central directory (deflate; each member must be fetched whole).",
+    "transfer_bytes_drive_whole_file_route": 5208183646,
+    "transfer_bytes_drive_whole_file_route_basis": "Exact: sum of expanded member sizes (Drive serves the same uncompressed B3D bytes; checked for one subject).",
+    "largest_single_member_compressed_bytes": 472918044,
+    "with_arm_compressed_bytes_not_needed": null,
+    "estimated_grf_only_partial_read_bytes": 191630477,
+    "estimated_frames_equals_http_requests": 660072,
+    "partial_read_estimate_basis": "Order of magnitude only: assumes every subject has the Tiziana2019 Subject29 layout (header 3,103,603 B; frame 849 + 3 x 2,333 B; 248 B of GRF fields per pass frame). Frame sizes differ with marker and pass counts; not measured for this study."
+   }
+  }
+ ],
+ "totals": {
+  "addbiomechanics_no_arm_transfer_bytes_zip_route": 153117925858,
+  "addbiomechanics_no_arm_transfer_bytes_drive_route": 200955346682,
+  "addbiomechanics_estimated_partial_bytes": 7684725267,
+  "addbiomechanics_estimated_requests": 25430339,
+  "original_bytes_full_originals_found": 91360455756,
+  "original_full_found_slugs": [
+   "ca23",
+   "fr12",
+   "ha13",
+   "ha23",
+   "mo15",
+   "ti19",
+   "vz22",
+   "wa23"
+  ],
+  "without_full_original": {
+   "fa16": "none found",
+   "ta21": "only the AddBiomechanics copy",
+   "ta22": "authors' stance-step windows only (1.98 GB)"
+  },
+  "no_arm_transfer_bytes_for_fa16_ta21_ta22": 22348013280
+ },
+ "not_checked": [
+  "Inner file formats of SimTK kneeloads and nmbl_running ZIPs and of the Wang RAR archives (no archive opened).",
+  "GroundLink data license (none stated on the page); kneeloads competitions 1-3 license (none shown).",
+  "Whether the six kneeloads competition subjects are six distinct people; Moore 15 vs 12, Wang 12 vs 9 and Tan running 16 vs 8 participant crosswalks.",
+  "Whether No_Arm and With_Arm GRF are identical.",
+  "Frame sizes for any B3D other than Tiziana2019 Subject29; per-study partial-read numbers are estimates.",
+  "Falisse 2017 manuscript text (PDF text extraction unavailable here).",
+  "Google Drive quotas for bulk range requests."
+ ],
+ "legacy_pass_index_note": {
+  "for_tasks": [
+   "HIST-01",
+   "HIST-02"
+  ],
+  "finding": "Both legacy converters read processingPasses[1], commented as the dynamics pass. In Tiziana2019 Subject29 the trial's pass order is [kinematics, lowPassFilter, dynamics], so index 1 is the low-pass-filter pass, which per the nimblephysics docs filters the kinematics pass output before the dynamics pass. Legacy joint angles, moments and GRF may therefore come from a pre-dynamics pass for such subjects. Checked on one subject only; pass order in other subjects and whether that pass's tau/GRF equal the dynamics pass were not checked.",
+  "sources": [
+   "docs/quality/audits/source_evidence/hist03/b3d-header-tiziana2019-subject29.json",
+   "https://nimblephysics.org/docs/working-with-addbiomechanics-data.html",
+   "git show cc94be4:contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_to_parquet.py (line 140)",
+   "contributor_tools/conversion_scripts/AddBiomechanics/_archive/b3d_to_parquet.py (lines 110-116)"
+  ]
+ },
+ "option_c_output_estimate": {
+  "studies": [
+   "fa16",
+   "ta21",
+   "ta22"
+  ],
+  "estimated_frames": 3757472,
+  "rows_per_frame_current_converter": "1 + P (P = processing passes per trial; 3 in the one subject read)",
+  "estimated_rows_current_converter": 15029888,
+  "estimated_rows_one_row_per_frame": 3757472,
+  "basis": "Frame count is an order-of-magnitude estimate from the Subject29 frame size applied to each study's expanded No_Arm bytes; P = 3 assumed for every trial.",
+  "output_bytes": "not estimated: depends on the JSON payload size per row and Parquet compression, neither measured",
+  "converter_change": "None assumed. Fewer rows (one pass per frame, flagged frames kept or dropped) would need a converter change, which is not proposed here."
+ }
+}

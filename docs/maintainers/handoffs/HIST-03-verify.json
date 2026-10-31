@@ -1,0 +1,77 @@
+{
+  "task_id": "HIST-03",
+  "verifier_role": "independent second agent; read-only web/metadata checks, small byte ranges only (1 KiB range + a 32-byte two-range probe), own parser for the one fetched B3D member; scratch in the session scratchpad under hist03_verify/",
+  "verdict": "done",
+  "decision_ready_to_copy": true,
+  "decision_needs_review_sheet": false,
+  "last_checked_at_utc": "2026-10-31T19:50:00Z",
+  "round_2": {
+    "verdict": "done",
+    "decision_ready_to_copy": true,
+    "last_checked_at_utc": "2026-10-31T19:50:00Z",
+    "summary": "All four fixes are in the files and check out. The round-1 verifier note was imprecise on mass: only cc94be4 substitutes 70 kg; _archive/b3d_to_parquet.py calls getMassKg() with no fallback. The worker's correction is right. D-HIST-03-1 is ready to copy as written. Done covers the source search and the feasibility evidence only, not scientific approval.",
+    "checks": [
+      {"area": "extra-row attribution", "result": "pass", "evidence": "The audit now names the two legacy converters as writing one row per frame from processingPasses[1]: cc94be4 line 140 and _archive line 116. It rules out per-pass expansion for legacy files and keeps flagged frames and segment cropping as unverified candidates. The mass correction checked in code: _archive/b3d_to_parquet.py line 273 is 'mass = my_subject.getMassKg()', and the file contains no 70 or 70.0. The cc94be4 converter has 'mass_kg = 70.0  # Default if mass not available'."},
+      {"area": "option C output and 3.8M frames", "result": "pass", "evidence": "Recomputed from adb-archive-study-member-stats.json as (expanded bytes - members x (8 + 3,103,603)) / (849 + 3 x 2,333) per No_Arm folder. fa16 42,998 (11 members), ta21 2,103,528 (8), ta22 1,610,948 (17): 3,757,473 frames, x 4 = 15,029,894 rows. This matches the audit's per-study estimates and 'about 15 million rows'. It assumes the Subject29 layout and 3 passes for every subject, which the consequence calls a rough estimate; the output size is stated as not estimated."},
+      {"area": "why / decide_before / Tan walking wording", "result": "pass", "evidence": "The why no longer claims C matches José's note. It says the rows-and-storage cost remains and that his note preferred originals, so he needs to choose afresh. decide_before_recommendation is true. The ta22 limitation now says the README names AddBiomechanics as the route to the full data and does not say the SimTK windows are AddBiomechanics output."},
+      {"area": "schema, neutrality, leak", "result": "pass", "evidence": "validate_backlog passes on an in-memory copy (1 open decision). Order by download size (0, about 2, about 22 GB) is strict. I rendered the card with render_backlog: the recommendation and why sit inside the 'Show agent recommendation after choosing' fold. The visible text (question, options, defer, quick check, reply line) has no recommend/prefer/best wording. Each option states what changes, its cost and that it is reversible."},
+      {"area": "review sheet", "result": "not required", "evidence": "Unchanged from round 1. The facts are three sizes and one qualitative difference, with no disk risk. Give José the premise correction in one plain line at session start."},
+      {"area": "test runs", "result": "pass", "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py -> 71 passed. python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (100 tasks)."}
+    ]
+  },
+  "round_1_verdict": "back_to_worker",
+  "scientific_approval": false,
+  "summary": "The core finding holds: AddBiomechanics GRF are measured force-plate data assigned to the feet, not predictions. The range, layout, size and original-source claims also check out. Two things need fixing before the decision reaches José. (1) The 'extra rows' attribution points at the wrong code. The legacy LocoHub files were written by earlier converters that emit one row per frame from processingPasses[1]. The one-raw-row-plus-one-row-per-pass expansion is in the current source-preservation adapter, which produced none of the legacy files. (2) That same expansion applies to option C's outputs, so C's consequence must state the output rows and storage. José's stated reason for avoiding AddBiomechanics was rows and storage, and that cost is currently not shown.",
+  "checks": [
+    {"id": 1, "area": "premise: measured vs predicted GRF", "result": "confirmed", "evidence": [
+      "PLoS ONE 10.1371/journal.pone.0295152 (publisher HTML, read by me): 'Ground reaction forces are recorded from force plates embedded in the ground'; 'We assign loads from each force plate to the feet in the model based on when the feet are penetrating the ground'; 'Since the ground reaction forces are known from experimental data'; 'the center of pressure locations are fixed based on the ground reaction force data'. No GRF prediction for experimental trials.",
+      "ECCV 2024 / arXiv 2406.18537 (HTML): 'Each of these frames contains optical marker locations and ground reaction moment and force measurements'; 'Each raw data source includes experimental optical motion capture and force plate data'. Force estimation appears only as the benchmark ('estimating physical forces from an observed movement', section 5), with no statement that baseline predictions are released.",
+      "nimblephysics docs: groundContactForce is 'the ground-reaction force from a contact, measured on the force plate'; missingGRFReason text matches the worker's quote.",
+      "SubjectOnDisk.proto at c405b056: I fetched it, and its sha256 is 37c6c94d...54bf, equal to the worker's. Line 187: 'the original force-plate data in world space, one per ground contact body'. Line 228: 'the raw force plate readings, per force plate, without any assignment to feet or any post-processing'. The MissingGRFReason enum (lines 5-17) includes manualReview=10 and footContactDetectedButNoForce=11.",
+      "Nuance, not a defect: the ECCV text says frames with steps off force plates are 'discarded' from the analysis, while the B3D keeps such frames flagged. Subject29 shows this: 48 of 64 frames are flagged. So 'kept and flagged' is right at the file level."
+    ]},
+    {"id": 2, "area": "converter row multiplication (attribution of extra rows)", "result": "failed: misattributed", "evidence": [
+      "The current contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_to_parquet.py extract_frame_data (lines ~99-106) emits one raw_frame row (source_pass_index -1) plus one row per processing pass, i.e. 1+P rows per frame. The worker's description of that code is correct.",
+      "However, the legacy files were not made by it. The consolidated converter at cc94be4 ('Consolidate AddBiomechanics conversion into unified script'), lines 128-140 and the frame loop near line 310, and the older _archive/b3d_to_parquet.py (line 116) both append one record per frame using frame.processingPasses[1]. They also default mass to 70 kg, which the current adapter explicitly forbids.",
+      "So per-pass row expansion cannot explain extra rows in the legacy LocoHub files. Candidates that remain are the retained GRF-flagged frames (48/64 in Subject29) and continuous native-rate frames. The worker's other listed causes (GRF-flagged frames kept; segment cropping) stand, unverified against legacy files.",
+      "Related legacy finding for HIST-01/02, not checked further: processingPasses[1] was commented 'Use dynamics processing pass', but in Subject29 the global pass order is [kinematics(0), lowPassFilter(2), dynamics(1)] (my parse). Index 1 is therefore the low-pass pass, not dynamics, for such subjects."
+    ]},
+    {"id": 3, "area": "range support and B3D layout", "result": "confirmed", "evidence": [
+      "HEAD archive.simtk.org/addbiomechanics/addbiomechanics.zip: 200, Accept-Ranges bytes, Content-Length 417665422113, ETag \"613ecc9321-631d01550d044\".",
+      "Range 1 KiB at payload offset 257476763391: 206 with Content-Range, and the bytes equal the worker's member prefix. Two-range request: 206 multipart/byteranges.",
+      "My own raw-deflate decode and protobuf wire parse of the fetched member: 503,665 B compressed (sha256 f99ca4c8...5fce), 3,605,883 B expanded, CRC32 1498174794 matches. int64 header length 3,103,603; data section 502,272 = 64 frames x (849 + 3 x 2,333).",
+      "Header from my parse: version 4, 23 DOFs, contact bodies calcn_r/calcn_l, passes [0, 2, 1], 1 trial of 64 frames. missing_GRF_reason counts: 0:16, 10:43, 11:3, 7:2. These equal the worker's figures.",
+      "The member is deflate-compressed (method 8), so any frame needs all preceding compressed bytes. GRF fields sit inside every sensor and pass frame record. A GRF-only partial read is therefore impractical, as stated.",
+      "Streaming totals recomputed from adb-archive-study-member-stats.json: No_Arm sum 153.12 GB; fa16 + ta21 + ta22 = 0.242 + 12.227 + 9.879 = 22.35 GB. Both match."
+    ]},
+    {"id": 4, "area": "new originals", "result": "confirmed with wording notes", "evidence": [
+      "Hamner (SimTK nmbl_running, frs group 603): 10 subject ZIPs, 192-224 MB, 2,051 MB total, plus RAW_EMG 8 MB, each labelled 'MIT Use Agreement'. The worker's receipt records the download_confirm login redirect (187 B).",
+      "Fregly (SimTK kneeloads, group 413): six competitions. An 'MIT Use Agreement' license link appears only on competitions 4-6; 1-3 show none (matches). Displayed sizes are consistent with the about 8.1 GB total and the about 4.5 GB motion subset.",
+      "Han (GroundLink, csr.bu.edu/groundlink): my HEAD on groundlink_data/c3d/c3d.zip gives 2,694,867,241 B and on force.zip 50,489,052 B, both with Accept-Ranges bytes. The page states no data license (BibTeX only). Matches.",
+      "Tan walking (SimTK imukinetics, group 2087): all_17_subjects.h5 1976 MB, 'MIT Use Agreement'. The README confirms the heel-strike-20 to toe-off+20 windows and 'Plate 2 corresponds to right foot'.",
+      "Wording note: the README sentence 'marker and force data have been processed by AddBiomechanics and is available in [AddBiomechanics]' points to AddBiomechanics as the full-data route. It does not say the SimTK HDF5 windows themselves are AddBiomechanics output. The worker's paraphrase is ambiguous on this.",
+      "Tan running: Drive folder 1ZDy_JIj3j0wsXdHaC1Bpw1vTE-LGwoJ6 has <title> 'Tan2021_Formatted_No_Arm - Google Drive' and the same ID appears at /train/No_Arm/Tan2021_Formatted_No_Arm in the official tree listing. Confirmed as the AddBiomechanics copy.",
+      "Falisse: the bounded search is stated as bounded. Not re-searched."
+    ]},
+    {"id": 5, "area": "D-HIST-03-1", "result": "schema valid; not ready to copy", "evidence": [
+      "validate_backlog passes on an in-memory copy with the decision appended (1 open decision).",
+      "Order by data to download (0, about 2, about 22 GB) is strict and neutral.",
+      "decide_before_recommendation is false, so the recommendation shows openly, which the schema allows.",
+      "Completeness gap: option C uses the current adapter, which writes 1+P rows per frame with JSON source payloads and keeps flagged frames. That is exactly the rows-and-storage cost José gave as his reason to avoid AddBiomechanics. C's consequence states only transfer (about 22 GB) and transient disk (under 2 GB), not output rows or size.",
+      "Lean: the 'why' says C 'matches the earlier answer's AddBiomechanics otherwise'. José's answer note says 'use the original datasets rather than AddBiomechanics'. Because his reason rested on the corrected premise, consider decide_before_recommendation true so he re-decides on the facts, not on the agent's reading of his earlier note.",
+      "The question's sentence correcting the premise is necessary context and is factual. Keep it."
+    ]},
+    {"id": 6, "area": "review sheet", "result": "not required", "evidence": "The choice turns on three numbers (0, about 2, about 22 GB) and one qualitative difference (stance windows vs full recordings), and no disk limit is at risk. The text options table suffices. The premise correction should be given to José in one plain line at session start. An optional single figure (Subject29: 16 measured-GRF frames vs 48 flagged, none predicted) would help only if the coordinator wants the correction shown visually."},
+    {"id": 7, "area": "test runs", "result": "pass", "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py -> 71 passed. python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (100 tasks)."}
+  ],
+  "required_fixes": [
+    "Correct grf_premise.likely_source_of_extra_rows and the matching handoff text. The legacy files came from earlier converters (cc94be4 consolidated script; _archive/b3d_to_parquet.py) with one row per frame from processingPasses[1], so per-pass expansion does not explain legacy rows. The current adapter's 1+P rows per frame applies to any new AddBiomechanics conversion. Keep 'not verified against legacy files'.",
+    "Revise D-HIST-03-1 option C's consequence to state the output: rows per frame under the current adapter (1 + number of passes, with flagged frames kept) and an estimated output size, or 'output size not estimated' if it cannot be bounded from metadata.",
+    "Reword the 'why' so it does not claim C matches José's earlier note. Consider decide_before_recommendation true."
+  ],
+  "recommended": [
+    "Log for HIST-01/02: the legacy converter's processingPasses[1] is the low-pass pass, not dynamics, when the pass order is [kinematics, lowPassFilter, dynamics] (Subject29). Legacy AddBiomechanics-derived values may come from a kinematics-only pass.",
+    "Clarify the ta22 README paraphrase (the SimTK windows vs the AddBiomechanics full-data route)."
+  ],
+  "verifier_scratch": "Session scratchpad hist03_verify/: SubjectOnDisk.proto (fetched, sha256 37c6c94d...), parse_b3d.py (own deflate + protobuf wire parser), range probe files r1.bin/r2.bin (1 KiB and 32 B). No archive downloaded."
+}
