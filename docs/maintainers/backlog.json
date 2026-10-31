@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-10-31T18:45:16Z",
+  "updated_at_utc": "2026-10-31T18:51:54Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -4084,7 +4084,8 @@
         "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task.",
         "changed_files": [],
         "checks": [
-          "Reviewed the retained project scope and declared dependencies only."
+          "Reviewed the retained project scope and declared dependencies only.",
+          "José 2026-10-31: \"add all 6 new subjects for gt21\" (AB12, AB15, AB17, AB19, AB23, AB28 from the authors' 2024 copy)."
         ],
         "remaining": [
           "Choose one missing participant from the source crosswalk; prepare a bounded acquisition and integrity check with a fresh disk and memory admission."
@@ -6603,6 +6604,44 @@
           "Everything in acceptance."
         ]
       }
+    },
+    {
+      "id": "HIST-04",
+      "priority": "P1",
+      "dataset": "all",
+      "title": "Acquire Falisse and both Tan studies from AddBiomechanics with metadata reconstruction",
+      "status": "ready",
+      "stage": "source_inventory",
+      "question": "Can Falisse, Tan running and Tan walking be streamed from AddBiomechanics one participant at a time with every LocoHub metadata column reconstructable from source?",
+      "scope": "Per D-HIST-03-1 = C (José: make sure we can reconstruct the metadata columns). First, from B3D headers only (range fetches), check that each LocoHub metadata column (subject id, mass, height, sex/age if published, task, trial/recording id, side, speed/incline where applicable, sampling rate, model) can be reconstructed from the B3D header, trial names or the study's own publications; list any column that cannot and its source. Then plan streaming acquisition (per-participant member, SHA-256, transient disk < 2 GB) through the guarded launcher. Note the legacy processingPasses[1] = low-pass pass finding when choosing which pass to convert. Output rows per frame is a converter design question to raise with José if it changes storage materially.",
+      "depends_on": [
+        "HIST-03"
+      ],
+      "inputs": [
+        "docs/quality/audits/hist03-originals-and-grf.json"
+      ],
+      "deliverables": [
+        "Metadata reconstruction table per study",
+        "Plan-only acquisition specs"
+      ],
+      "acceptance": [
+        "Every metadata column has a cited source or is listed as missing",
+        "No full download before the plan is reviewed",
+        "Independent verification"
+      ],
+      "next_action": "Read B3D headers by range for one participant per study and build the metadata table.",
+      "resource_class": "read_only",
+      "evidence_paths": [
+        "docs/quality/audits/hist03-originals-and-grf.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-10-31T18:51:54Z",
+        "summary": "Created from José's answer to D-HIST-03-1.",
+        "checks": [],
+        "remaining": [
+          "Everything in acceptance."
+        ]
+      }
     }
   ],
   "decisions": [
@@ -7055,7 +7094,10 @@
       "why": "C is the only complete source for all three, and streaming keeps disk use under 2 GB. The premise behind avoiding AddBiomechanics (predicted forces) does not hold, but the rows-and-storage cost remains and the output size is unestimated, and José's note preferred originals over AddBiomechanics, so this needs his fresh choice. A is the low-cost alternative if derivatives are unwanted.",
       "check": "Open the Tan running Google Drive folder from the HIST-01 record: its title is 'Tan2021_Formatted_No_Arm', an AddBiomechanics export name.",
       "decide_before_recommendation": true,
-      "status": "open"
+      "status": "answered",
+      "answer": "C",
+      "answered_at_utc": "2026-10-31T18:51:54Z",
+      "answer_note": "José 2026-10-31: C, \"make sure we can reconstruct the metadata columns\". Also: \"add all 6 new subjects for gt21\" (GT21-S02 acquisition)."
     }
   ]
 }
