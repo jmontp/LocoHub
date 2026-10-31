@@ -1,0 +1,96 @@
+{
+ "task_id": "GT23-C01",
+ "verifier_role": "independent second agent (metadata, docs and code only; no data arrays read; builder not imported)",
+ "verdict": "done",
+ "last_checked_at_utc": "2026-10-31T23:30:00Z",
+ "round_2": {
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-31T23:30:00Z",
+  "summary": "Round 2, files only, no data read. Both required fixes and the optional items are in. The option counts recompute from the audit's activity table, option B states the current rule correctly, the decision passes the schema with a neutral order and no leak, the probe change is bounded, and both sheets pass at 1100 and 390 px. The decision is ready to copy. Done means the deliverables meet their acceptance criteria. It is not scientific approval; probes P1-P3 have still not run.",
+  "fix_checks": [
+   {
+    "fix": 1,
+    "result": "pass",
+    "evidence": "Options are now A facing (26), B direction of travel (13), C forward walking only (11), plus defer. Recomputed from audit forward_axis_classes: C = overground_forward 6 (curb_down, curb_up, stairs, start_stop, step_ups, tire_run) + treadmill_forward 5 (dynamic_walk, incline_walk, normal_walk, obstacle_walk, weighted_walk) = 11, matching the named list. B = those 11 + walk_backward + side_shuffle = 13. The other 13 are ball_toss, cutting, jump, lift_weight, lunges, meander, poses, push, sit_to_stand, squats, tug_of_war, turn_and_step and twister. A covers all 26. B describes the current rule correctly: docs/reference/index.md says '+x is the walking direction' while sagittal angles are drawn facing right, so read literally +x is travel. B's consequence states the resulting split (forward force opposite or sideways to facing in backward walking and side shuffle, angles in the facing frame). The redundant 'lab only' option is gone. Defer keeps lab values, so no option duplicates defer."
+   },
+   {
+    "fix": 2,
+    "result": "pass",
+    "evidence": "probe() now runs the 20 N contact check when the parsing name contains '_hop', in addition to individual_cycle activities. probe_plan adds one seeded hop file (AB07 jump_1_hop) and one running file (AB01 normal_walk_1_2-0): 40 recordings instead of 38. Still bounded: the same RLIMIT_AS 768 MiB and 64 MiB per-CSV cap, 3 columns per CSV, refusal to overwrite, and the bounds text now says files are read whole under the cap. Wording note: the plan says 'every jump hop file', but the code covers every hop file in the selection (here the one extra), not all 12. Not blocking."
+   },
+   {
+    "fix": "optional",
+    "result": "pass",
+    "evidence": "audit totals now include phase_dropped_hop_contacts 127 (reported apart from the 498 gait cycles), recordings_without_parsing_files 85 and recordings_without_source_intervals 90 (F1 and F2 text updated). The handoff notes the shuffling ambiguity, and the stale queue_note was removed."
+   }
+  ],
+  "decision_checks": "review_sheets/D-GT23-C01-1/decision.json equals handoff decisions[0]. Appended to a copy of backlog.json it passes validate_backlog (open would be D-GT23-C05-1 and D-GT23-C01-1). The order is neutral by activities with values (26, 13, 11), stated in options_order and the builder (line 733). decide_before_recommendation is true and the recommendation appears only in the click-to-reveal fold. The headline, chips, figure caption and reply hint do not name it. The table has 'Left out' first and a defer row. The check (backward-walking arrows opposite) is visible in the made-up figure.",
+  "sheet_recheck": "Both sheets rendered at 1100 px and in a 390 px iframe and inspected. Nothing clips; figures are 4.50 in wide; the builder has no fontsize under 10; no IDs, paths or hashes appear before the details. Minor: the sheet's option A row drops 'reference wording extended for all datasets', which decision.json states. Not blocking.",
+  "gates": "tests/test_backlog_workflow.py: 71 passed. build_backlog_page.py --check: 'Backlog valid; HTML current (103 tasks).' Current hashes: builder df07312b..., audit e93cb592..., decision.json 0af11878..., index.html 835143df....",
+  "decision_ready_to_copy": "Yes. Copy D-GT23-C01-1 exactly as in docs/maintainers/handoffs/GT23-C01.json decisions[0] (A facing 26, B travel 13, C forward walking 11; decide_before_recommendation true). With D-GT23-C05-1 open, that makes 2 open decisions.",
+  "next_action": "The main session marks GT23-C01 done and copies D-GT23-C01-1. Probes P1-P3 run later under the probe exception, one at a time."
+ },
+ "round_1": {
+  "verdict": "back_to_worker",
+  "last_checked_at_utc": "2026-10-31T22:52:00Z",
+  "summary": "The activity table, event classes, counts and converter findings F1-F6 reproduce from the README, GroupTasks.m, the field inventory and the converter code. The CoP frame mismatch is real. Returned for (1) the decision's option set: C (lab only) has the same outcome as defer, and the literal reading of the current rule (+x = direction of travel) is not offered; and (2) probe P2, which promises a hop contact check that its code never runs. No scientific approval is implied.",
+  "checks": [
+   {
+    "id": 1,
+    "name": "Activity table re-derived",
+    "result": "pass",
+    "evidence": "RawData directory names give 488 recordings and 26 base tasks. source_coverage.json (sha256 1dc0199e...) gives 787 parsing files over 19 tasks, 9 empty (AB01 stairs_1_2/4/6/8/10_down; AB05 and AB10 normal_walk_1_2-0/2-5, matching README 108/139; the AB01 ones are unexplained). That is 403 recordings with any parsing file, 398 with non-empty ones. The 7 unsegmented tasks are meander, obstacle_walk, poses, push, start_stop, tug_of_war and twister, as README 278 lists. Event classes from README 272-277: heel strike for dynamic_walk, incline_walk, normal_walk (skip by README 273), stairs, walk_backward and weighted_walk (6); plate pass for cutting and tire_run (2); trunk-velocity lift_weight plus pelvis-velocity ball_toss, curb_down, curb_up, jump, lunges, side_shuffle, sit_to_stand, squats, step_ups and turn_and_step (11). The jump_hop 20 N contact exception (README 274) is noted in the audit. GroupTasks.m (Code.zip), mapped expression by expression: normal 2-0/2-5 -> run, skip -> calisthenics, heel/toe walk -> misc, hop -> jump_in_place, side_shuffle -> jump_across, obstacle_walk -> step_over. README 272 lists 'shuffling' among the heel-strike tasks. Reading it as normal_walk_1_shuffle (0.4 m/s, GroupTasks 'walk') is consistent with side_shuffle's identical left/right typed windows (150/150), but the audit does not state the ambiguity."
+   },
+   {
+    "id": 2,
+    "name": "Converter findings F1-F6 against code",
+    "result": "pass",
+    "evidence": "F1: convert_gtech_phase_to_parquet.m 443-490 keeps the leg with more intervals (tie: earlier first start) and drops the other. My own re-implementation on the inventory (conditions expanded as expand_parsing_conditions 1573-1597 does) gives kept 8171 and dropped 4948, with identical per-activity counts. The 498 = normal_walk 349 (only the 14 running files 2-0/2-5 carry both legs) + stairs 149. Not counted in the 498: jump_hop drops 127 per-contact intervals (README 274 contact events), probably near-duplicate both-leg windows (10 of 12 hop files equal L/R). F2: window_from_parsing (time converter 319-357) takes [min start, max end] over every Nx2 field, and reference leg = earlier first start. Note: 85 recordings have no parsing file and 5 more have only empty ones, so 90 recordings carry no source intervals (F2 says 85). F3: the fallback (phase 217-226) fires only when both legs are empty after condition expansion, and only for names containing sit_to_stand or jump. utilities/segment_sit_stand_transitions.m and segment_jump_cycles.m default to 600/400 N and 25 deg/s. Every sit_to_stand/jump file in the inventory has fields, so 'should never fire' holds. F4: parse_gtech_activity_matlab.m 22-39 labels every normal_walk level_walking (2-0/2-5 parsed as speed 2.0/2.5; skip as a variant); GroupTasks says run and calisthenics. F5: stairs height_m 0.15 and step_number = pass index (96-105); curb_up/curb_down 0.15 and step_ups 0.20 (240-251); the paper XML Table 1 gives 152 for the stair columns; no curb or step-up height is found in the paper text. F6: the time converter writes LForceX/ForceZ to grf_anterior/grf_lateral (501-506); the phase converter maps ForceX/ForceZ the same way (794-835)."
+   },
+   {
+    "id": 3,
+    "name": "CoP frame mismatch",
+    "result": "pass",
+    "evidence": "The time converter's cop_local (573-636) transforms global CoP by R^T (cop - Tr) into the calcn body frame and writes local x/z/y as cop_anterior/lateral/vertical. docs/reference/index.md (row 'Centre of pressure') defines CoP as a 'Ground-frame point x, y, ±z' with only the origin dataset-specific. A foot-fixed frame rotates with the foot, so this is an axis (frame) mismatch, not just an origin difference."
+   },
+   {
+    "id": 4,
+    "name": "Decision D-GT23-C01-1",
+    "result": "fail (option set)",
+    "evidence": "Mechanics pass: decision.json equals handoff decisions[0]; appended to a copy of backlog.json it passes validate_backlog (open would be D-GT23-C04-1 and this; the queue_note naming D-HIST-04-1/2 is stale, since only D-GT23-C04-1 is open now). The order is neutral (most to none), stated in options_order and the builder (line 709). The recommendation appears only in the fold, the reply hint is neutral, and the options table has 'Left out' first plus defer. The check (backward-walking arrows opposite) is visible in the made-up figure. It is José's call: docs/reference defines +x as 'the walking direction' while the frame is drawn 'facing right', which does not determine non-forward tasks, and any answer sets a cross-dataset convention. Completeness: (a) C 'lab only' and defer have the same outcome (no GT23 forward/sideways values, lab values kept); C only makes it final. (b) The literal reading of the existing rule, +x = direction of travel where travel is steady (which would give values for walk_backward and side_shuffle, with braking/propulsion signs flipping relative to facing), is not offered, so José cannot choose the rule as written. (c) Minor: B's consequence lists 'forward walking, running, stairs, curbs and step-ups' but its forward class also holds start_stop and tire_run, and meander (forward overground walking with a turning heading) is excluded as 'heading_changes' without saying so."
+   },
+   {
+    "id": 5,
+    "name": "Probes P1-P3",
+    "result": "fail (one gap)",
+    "evidence": "Bounded and read-only: RLIMIT_AS 768 MiB, CSV files over 64 MiB refused, 3 columns per CSV, 38 seeded recordings (seed 20261031, 2 per segmented activity) plus all 787 small parsing files, parsing sha256 checked against inventory.json, and refusal to overwrite docs/quality/audits/gt23-c01-probe.json. It was not run, as stated. P1 logic is correct: identical windows within 0.0025 s, contiguity, and conditions split by the first '_'. Gap: the plan text says P2 checks the 20 N crossing 'for heel_strike/skip/hop activities', but the code runs the crossing check only when the activity's observation_type is individual_cycle. jump (hop) is classed transfer, so the hop contact check never runs. Minor: _read_columns builds a full Python list, not a stream as the bounds text says; it is safe under the 64 MiB cap. The running files' right-leg events vs README 93 (no right treadmill plate) are covered by P2's NaN fraction only if a running file is drawn."
+   },
+   {
+    "id": 6,
+    "name": "Sheets (rendered at 1100 px and in a 390 px iframe)",
+    "result": "pass",
+    "evidence": "GT23-C01: 8 chips (2 pass, 4 failed, 2 not checked), 2 question-titled figures, 3 not-shown items, reply 'ok | what looks wrong' with no IDs or paths before the details. D-GT23-C01-1: 2 chips, 1 labelled made-up figure, options table with 'Left out' first, defer row, recommendation in the fold only, 2 not-shown items. All PNGs are 720 px at 160 dpi = 4.50 in, the builder has no fontsize under 10, and nothing clips. The CSV header bytes the worker printed are disclosed and not used."
+   },
+   {
+    "id": 7,
+    "name": "Gates",
+    "result": "pass",
+    "evidence": "tests/test_backlog_workflow.py: 71 passed. build_backlog_page.py --check: 'Backlog valid; HTML current (103 tasks).' Handoff/audit/builder hashes: builder d633a11d..., audit 31bfdfad..., decision.json 87bdeb68...."
+   }
+  ],
+  "required_fixes": [
+   "1. Decision D-GT23-C01-1 option set: replace C (same outcome as defer) with 'direction of travel wherever travel is steady' (the current rule read literally; for example walk_backward and side_shuffle get values with travel as +x), or state in the sheet and handoff why that reading is excluded. Keep the neutral order and update decision.json and handoff decisions[0] identically.",
+   "2. Probe P2: run the 20 N contact check for jump_hop (README 274), or remove 'hop' from the P2 plan text."
+  ],
+  "optional": [
+   "B's consequence: list start_stop and tire_run, and say that meander is excluded as a heading-changes activity.",
+   "F2: say that 90 recordings have no source intervals (85 without parsing files and 5 with only empty ones).",
+   "Note the README 272 'shuffling' ambiguity and the 127 hop per-contact intervals F1 drops.",
+   "Refresh the stale queue_note."
+  ],
+  "decision_ready_to_copy": "No. Copy only after fix 1 is verified.",
+  "next_action": "Worker applies fixes 1-2 (code and sheet text only). The verifier re-checks. Probes P1-P3 then run under the probe exception or the launcher when the numerical slot frees."
+ },
+ "resources": "No data arrays read: only metadata JSON (inventory, field inventory), the README copy, the paper XML text, Code.zip text members, converter sources, RawData directory names, and the sheet renders.",
+ "next_action": "The main session marks GT23-C01 done and copies D-GT23-C01-1. Probes P1-P3 run later under the probe exception, one at a time."
+}

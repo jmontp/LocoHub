@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-10-31T22:56:29Z",
+  "updated_at_utc": "2026-10-31T22:57:38Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -2480,7 +2480,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Resolve GT23 event and anatomical conventions",
-      "status": "ready",
+      "status": "done",
       "stage": "conventions",
       "question": "Which of 19 activities have valid events and source-supported physical frames?",
       "scope": "Parsing semantics, model known-pose evidence, force/COP and segment directions.",
@@ -2501,20 +2501,20 @@
         "Force, COP and joint conventions traced to original models or source documentation",
         "Independent verification plan includes contact missingness and non-gait activities"
       ],
-      "next_action": "Review publisher parser and known-pose preparation; specify independent native pilot and leave unsupported mappings explicit.",
+      "next_action": "Done. Events per activity and frames consolidated; converter findings F1-F6 for GT23-F01; probes P1-P3 written, not run. D-GT23-C01-1 open.",
       "resource_class": "read_only",
       "evidence_paths": [
-        "contributor_tools/conversion_scripts/Gtech_2023",
-        "docs/quality/audits/gtech23-source-probe.json",
-        "docs/quality/audits/gt23-joint-sign-and-segment-evidence.json",
-        "docs/quality/audits/gt23-known-pose-preparation.json",
-        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
+        "docs/quality/audits/gt23-c01-events-and-frames.json",
+        "docs/maintainers/handoffs/GT23-C01.json",
+        "docs/maintainers/handoffs/GT23-C01-verify.json",
+        "review_sheets/D-GT23-C01-1/index.html"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
+        "last_checked_at_utc": "2026-10-31T22:57:38Z",
         "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
         "checks": [
-          "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
+          "Read original task scope and acceptance; no scientific arrays loaded or jobs started.",
+          "Independent verifier: round 1 back_to_worker (incomplete options, P2 hop gap), round 2 done."
         ],
         "remaining": [
           "Review publisher parser and known-pose preparation; specify independent native pilot and leave unsupported mappings explicit."
@@ -2533,7 +2533,7 @@
       "status": "blocked",
       "stage": "source_readback",
       "question": "Are 488 recordings and 787 parsing files accounted for without invented cycles?",
-      "scope": "All ten publisher CSV channel groups, including 85 records without parsing entries; AB01/AB03 pilot receipts required.",
+      "scope": "All ten publisher CSV channel groups, including 85 records without parsing entries; AB01/AB03 pilot receipts required. Converter findings from GT23-C01: F1 one leg dropped per condition (498 gait cycles + 127 hop intervals); F2 time export merges parsing fields and skips 90 recordings without intervals; F3 remove absolute-threshold fallback segmentation; F4 running/skipping mislabelled level_walking; F5 invented curb/step heights (stair rise 152 mm per paper); F6 lab X/Z forces written as anterior/lateral; CoP written in calcn frame. Run probes P1-P3 first.",
       "depends_on": [
         "PM-01",
         "GT23-C01"
@@ -7335,6 +7335,36 @@
       "cost_of_waiting": "GT24 standard kinetic columns cannot be finalized; the divisor probe and all other GT24 work are unaffected.",
       "decide_before_recommendation": true,
       "status": "queued"
+    },
+    {
+      "id": "D-GT23-C01-1",
+      "task_id": "GT23-C01",
+      "question": "Our sign rule defines forward (+x) as the walking direction. In GaTech 2023, 15 of 26 activities have no single forward walk (backward walking, side shuffle, squats, sit-to-stand, lifts, jumps, lunges, turns, cutting, meander and others). What should forward mean there for forward and sideways ground force and centre of pressure?",
+      "options": [
+        {
+          "key": "A",
+          "label": "The person's facing direction in every activity",
+          "consequence": "Forward and sideways force and pressure filled for all 26 activities from pelvis facing measured per window; windows without a steady facing left out; the sign-rule wording is extended for all datasets. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "The direction of travel (the current rule read literally)",
+          "consequence": "Filled for the 13 activities with steady travel: forward walking plus backward walking and side shuffle, where forward force is opposite or sideways to the person's facing while joint angles stay in the facing frame. The other 13 (in place or turning) keep lab-axis values only. Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Forward walking only",
+          "consequence": "Filled for the 11 forward-walking activities (curb_down, curb_up, dynamic_walk, incline_walk, normal_walk, obstacle_walk, stairs, start_stop, step_ups, tire_run, weighted_walk) from the measured heading; the other 15, including meander (turning heading), keep lab-axis values only. Reversible."
+        }
+      ],
+      "options_order": "By GaTech 2023 activities with forward and sideways values: 26, 13, 11.",
+      "recommended": "C",
+      "confidence": "medium",
+      "why": "In forward walking, facing and travel agree, so forward is unambiguous and matches the frame used for joint angles. Travel splits force from the angle frame in backward walking and side shuffle, and facing needs a new rule for turning and in-place tasks that would bind every dataset.",
+      "check": "Decision sheet figure: in the backward-walking example the blue facing arrow and the orange travel arrow point opposite ways.",
+      "cost_of_waiting": "GaTech 2023 forward and sideways force and pressure stay out of any release (lab values kept); vertical force, joint angles and other datasets are unaffected.",
+      "decide_before_recommendation": true,
+      "status": "open"
     }
   ]
 }
