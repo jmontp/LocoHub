@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-10-31T22:57:38Z",
+  "updated_at_utc": "2026-10-31T23:11:08Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -4047,7 +4047,7 @@
       "priority": "P0",
       "dataset": "gt21",
       "title": "Recover the five remaining publisher participants or retain explicit source blockers",
-      "status": "ready",
+      "status": "done",
       "stage": "source_inventory",
       "question": "Can the missing publisher sources be recovered and independently verified?",
       "scope": "AB12, AB15, AB19, AB23 and AB28; AB17 is handled by GT21-A01. Preserve version, licensing and all original channel identities. D-GT21-S01-1 = C (2026-10-31): acquire the six from the authors' 2024 copy, recording our own hashes at download; check the folder structure matches the local 16 (static, ik_offset).",
@@ -4069,18 +4069,21 @@
         "Preserve disk reserves and one bounded I/O/numerical job; do not trigger automatic bulk downloads or extraction.",
         "If original data is unavailable, record the exact source blocker and leave full-cohort completion blocked; missing-source disposition alone is not a recovered cohort."
       ],
-      "next_action": "Locate the authors' 2024 copy and write a plan-only acquisition spec per participant for the guarded launcher.",
+      "next_action": "Done. AB12, AB15, AB17, AB19, AB23 (attempt 2), AB28 acquired from the authors' 2024 copy and verified, not extracted (10,189 files, 7.0 GB). Extraction and conversion are separate gated steps.",
       "resource_class": "numerical",
       "evidence_paths": [
-        "docs/quality/audits/backlog-refresh-20261027.json"
+        "docs/quality/audits/gt21-s02-2024-copy.json",
+        "docs/maintainers/handoffs/GT21-S02.json",
+        "docs/maintainers/handoffs/GT21-S02-verify.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:23:49+00:00",
+        "last_checked_at_utc": "2026-10-31T23:11:08Z",
         "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task.",
         "changed_files": [],
         "checks": [
           "Reviewed the retained project scope and declared dependencies only.",
-          "José 2026-10-31: \"add all 6 new subjects for gt21\" (AB12, AB15, AB17, AB19, AB23, AB28 from the authors' 2024 copy)."
+          "José 2026-10-31: \"add all 6 new subjects for gt21\" (AB12, AB15, AB17, AB19, AB23, AB28 from the authors' 2024 copy).",
+          "Independent verifier: plan and scripts done (2 rounds), AB17 acquisition ok_to_continue, final_six done. AB23 attempt 1 transport cutoff kept as .rejected; AB28 launcher flag (transient grep) accepted by coordinator."
         ],
         "remaining": [
           "Choose one missing participant from the source crosswalk; prepare a bounded acquisition and integrity check with a fresh disk and memory admission."

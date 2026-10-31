@@ -1,0 +1,302 @@
+{
+ "task_id": "GT21-S02",
+ "verifier_role": "independent second agent; read-only web metadata (my own Dropbox shared-folder lister for root, AB15 and AB23; two small root files), local listings, ZIP central directories and synthetic fixtures; no archive downloaded; worker files, backlog and AGENTS.md not edited",
+ "verdict": "done",
+ "scope": "Plan (2024-copy findings, six specs, AB14 supersession) and scripts (acquire_gt21_author_mirror_participant.py, compare_gt21_v1_vs_author_mirror_crc.py, tests/test_acquire_gt21_author_mirror.py).",
+ "last_checked_at_utc": "2026-11-01T02:40:00Z",
+ "round_2": {
+  "verdict": "done_for_scripts",
+  "last_checked_at_utc": "2026-11-01T00:30:00Z",
+  "summary": "S-1 and S-2 are fixed and the symlink refusal works. The six regenerated specs validate and bind the current hashes, and AB19's worst-case runtime fits inside the internal 3,400 s deadline and the launcher's 3,600 s timeout. The plan findings from round 1 stand. Next step: launch AB17 alone through the guarded launcher after a fresh admission. This is source acquisition only; it is not scientific approval and does not complete the cohort.",
+  "file_checks": [
+   {
+    "item": "S-1: publish only verified archives",
+    "result": "pass",
+    "evidence": "In acquire() the ZIP checks (check_zip, hash_members) and the post-download re-list run on <subject>.zip.partial. member_manifest.json is written, and os.link(partial, final) runs, only after all of them pass. Synthetic probes on the new script (sha256 b7f77df0…): an extra member, a member size mismatch, a symlink member, a post-download listing change and a STOP mid-stream each leave only <subject>.zip.rejected, no <subject>.zip and no member_manifest.json, with status failed_preserved and rejected_path recorded. A clean ZIP is still acquired_verified_not_extracted with <subject>.zip and a manifest."
+   },
+   {
+    "item": "S-2: live working copy",
+    "result": "pass",
+    "evidence": "The lister is called a second time after the download and hashing, and any path, size, ts or link difference is refused. In my probe the ZIP held a same-size edit and the second listing showed only a ts change (+60 s). Result: 'listing changed during the download (1 items)', the difference recorded under listing_differences_after_download, and the archive kept as .rejected. The deadline is re-checked before publication."
+   },
+   {
+    "item": "symlink members",
+    "result": "pass",
+    "evidence": "check_zip refuses (external_attr >> 16) & S_IFMT == S_IFLNK; the probe with one symlink entry is refused."
+   },
+   {
+    "item": "hard links on the data drive",
+    "result": "pass",
+    "evidence": "Publication and rejection use os.link. A transient probe on /mnt/s/scratch_data (a temp dir, removed afterwards) shows os.link works on this drvfs mount (st_nlink 2), so a verified archive will not fail at the final step for lack of hard links."
+   },
+   {
+    "item": "specs and bindings",
+    "result": "pass",
+    "evidence": "guarded_launcher.validate_spec passes for AB12, AB15, AB17, AB19, AB23 and AB28. Every binding equals the current file: acquire script b7f77df0…, review module 8f5d723b…, and each expected listing (AB17 b932f208…, unchanged from round 1). Timeout is 3600 s, address space 256 MiB, and memory and disk floors are as in round 1."
+   },
+   {
+    "item": "AB19 runtime",
+    "result": "pass",
+    "evidence": "AB19 lists 1,261,399,267 bytes, so the download at 1 MiB/s takes about 1,203 s (the transfer cap is 2,700 s). Two full re-listings take about 8 min each at 1 request/s (the worker's and my measurements), about 960 s. Startup checks and streaming every member for CRC and SHA-256 (about 1.26 GB) take about 2 min. Total about 2,300-2,400 s, roughly 1,000 s below the internal 3,400 s deadline and 1,200 s below the launcher's 3,600 s timeout. If the listing endpoint slows, guard() and the pre-publication deadline check refuse before the launcher has to kill the job."
+   },
+   {
+    "item": "tests",
+    "result": "pass",
+    "evidence": "tests/test_acquire_gt21_author_mirror.py plus tests/test_backlog_workflow.py: 93 passed under the AGENTS.md prefix. build_backlog_page.py --check: Backlog valid; HTML current (101 tasks)."
+   }
+  ],
+  "notes": [
+   "If a hard-link failure after a successful manifest write were ever to occur, the manifest would exist while the archive stayed .partial or .rejected. Hard links work on /mnt/s, so this is not expected; the result receipt would still say failed_preserved."
+  ],
+  "next_action": "Coordinator: launch AB17 alone through the guarded launcher with a fresh admission. Then run compare_gt21_v1_vs_author_mirror_crc.py against the local AB17 v1 ZIP, and verify that report before AB15, AB12, AB23, AB28 and AB19 follow one at a time.",
+  "artifact_hashes": {
+   "contributor_tools/acquire_gt21_author_mirror_participant.py": "b7f77df0f35f6743…",
+   "contributor_tools/review_gt21_s02_author_mirror.py": "8f5d723bb2e30f25…"
+  },
+  "test_runs": [
+   {
+    "command": "scratchpad gt21s02/scripts/probe_r2.py (synthetic: extra member, size mismatch, symlink member, post-download ts change, clean, STOP)",
+    "result": "as in file_checks"
+   },
+   {
+    "command": "os.link probe in a temporary /mnt/s/scratch_data folder (removed)",
+    "result": "works"
+   },
+   {
+    "command": "guarded_launcher.validate_spec ×6 and binding sha256 recompute",
+    "result": "all valid; all match"
+   },
+   {
+    "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_acquire_gt21_author_mirror.py tests/test_backlog_workflow.py",
+    "result": "93 passed"
+   },
+   {
+    "command": "python3 contributor_tools/build_backlog_page.py --check",
+    "result": "Backlog valid; HTML current (101 tasks)"
+   }
+  ],
+  "questions_for_jose": []
+ },
+ "round_1_verdict": "back_to_worker",
+ "summary": "The plan is sound. My independent re-listing of AB15 and AB23 equals the bound expected listings in every path, size and modification time. README.txt and SubjectInfo.mat match the local copies byte for byte. The AB17 v1-versus-2024 size comparison reproduces exactly, the six specs validate and fit the PM-01 envelope, superseding AB14 is sound, and no José decision is needed. The scripts are close: exclusivity, the size allowance, ZIP-prefix handling, CRC coverage, STOP and memory polling (which works under a 256 MiB address-space limit) and the CRC classifier all behave correctly under adversarial synthetic fixtures. Two fixes are needed before AB17 launches. (1) The ZIP is published under its final name before the central-directory and member checks, so a rejected archive is left as <subject>.zip. (2) The folder is a live working copy and is re-listed only before the roughly 17-20 min download, so a same-size change during the download is accepted silently; my probe confirms this.",
+ "checks": [
+  {
+   "id": 1,
+   "area": "re-fetched listing and spot-check (AB15, AB23)",
+   "result": "pass",
+   "evidence": "I wrote my own lister against Dropbox's web listing endpoint (the only available one), opening a fresh session from the EPIC lab link. The root has 25 entries: AB06-AB30 without AB22/26/29, plus README.txt, SubjectInfo.mat and scripts. AB15: 59 folders, 1,638 files, 1,097,436,233 bytes, recordings 25/63/41/7. AB23: 59 folders, 1,746 files, 1,192,149,616 bytes, recordings 33/63/42/7. Both equal the worker's AB15/AB23 expected listings in path, bytes and ts, and match the handoff's per-participant counts. The six listing totals sum to 7,005,667,538 bytes, as stated."
+  },
+  {
+   "id": 2,
+   "area": "README.txt and SubjectInfo.mat identity",
+   "result": "pass",
+   "evidence": "Fetched via dl=1 links from my root listing (5,245 B and 1,281 B): SHA-256 45282345f808b0ea… and bc990b2c182e0cfc…, both equal to the local CAMARGO_ET_AL_J_BIOMECH_DATASET copies."
+  },
+  {
+   "id": 3,
+   "area": "AB17 v1 vs 2024 size comparison",
+   "result": "pass",
+   "evidence": "I read the local v1 ZIP's central directory with zipfile, independently of v1compare. It has 1,466 files against 1,602 in the 2024 listing. All 1,466 are common and 1,464 have equal size. 0 are v1-only and 136 are 2024-only (ik_offset 133, static/ik 1, static/ik_offset 1, static/markers 1). Size differs for ramp/id/ramp_6_r_01_04.mat and ramp_1_r_01_01.mat. The AB17 listing totals 1,051,956,822 bytes."
+  },
+  {
+   "id": 4,
+   "area": "specs against the launcher envelope",
+   "result": "pass",
+   "evidence": "guarded_launcher.validate_spec passes for all six specs. The binding hashes equal the current acquire script (ffa8eeb9…), review module (2a2d8b45…) and each expected listing. All have timeout 3600 s (envelope maximum), address space 256 MiB (≤ 768), startup memory linux 3584 / windows 2816 and runtime 2048/2048 (equal to the PM-01 minima). The disk floor equals 15 GiB plus twice the listing bytes, to within 1 MiB of rounding: AB17 17,368 MiB, AB19 17,766, and so on. Free space is now about 154 GiB. The output root (/mnt/s/locomotion_data/gt21_author_mirror_2024/<subject>) is outside the active source root and the v1 folder, and the launcher receipt (…/launcher_receipts/<subject>.json) and script receipts (…/acquisition_receipts/<subject>) are both outside it. The launcher refuses an existing output root and does not create it, which is consistent with the script creating it exclusively. Timing: the listing at 1 MiB/s takes about 1,003-1,203 s, plus about 2 min of re-listing and about 1-2 min of member hashing, well under the 3,400 s internal deadline."
+  },
+  {
+   "id": 5,
+   "area": "AB14 supersession",
+   "result": "pass",
+   "evidence": "The AB14 plan asked whether the 2024 update changed shared files relative to v1. The AB17 v1 ZIP is already local, so a CRC comparison against the 2024 AB17 download answers the same question for the same file classes without a further 0.96 GB download. Keeping AB14 as a fallback is reasonable. Byte identity of the other 15 local participants remains listed as not checked."
+  },
+  {
+   "id": 6,
+   "area": "acquisition script, adversarial synthetic probes",
+   "result": "failed (2 items); others pass",
+   "evidence": [
+    "I ran a scratchpad probe calling acquire() with fake lister and opener, a 52-file GT21-layout listing, and stored ZIPs.",
+    "Pass: a prefixed or unprefixed ZIP is acquired_verified_not_extracted. A changed listing ts is refused before the output root is created. An extra member, Content-Length below the listing, a short body, a wrong Content-Disposition, a traversal or mixed-prefix member, short disk and short memory are all refused. A STOP file mid-stream is refused with the .partial preserved. An existing output root is refused with nothing written. A receipt directory inside the output root is refused.",
+    "Exclusivity: the receipt dir is created with mkdir(exist_ok=False), every receipt with open('x'), the output root with mkdir(exist_ok=False), and publication uses os.link, which does not clobber. _inside resolves symlinked parents. The CLI cannot skip the re-list (the lister is a function parameter only).",
+    "Size allowance (1 KiB per file + 64 KiB): safe. The observed AB12 overhead is 362,042 B for 1,770 files (about 205 B per file), inside the 1,876,544 B allowance. Any compression makes Content-Length < listed bytes and is refused (fail closed). The audit text says '≤ 1 MiB above the listing sum' and 'differing from the HEAD-time value'; the script uses the per-file rule and no HEAD. That is acceptable, but the audit text should match.",
+    "ZIP-prefix ambiguity: handled. It is all-prefixed or all-unprefixed, mixed is refused, and any other wrapper name fails path equality.",
+    "CRC coverage: every non-directory member is streamed. Byte count and CRC32 are recomputed against the central directory, zipfile also checks the CRC at EOF, and the SHA-256 per member is recorded.",
+    "STOP and memory: guard() runs before every 1 MiB read and before every member. Windows memory is polled at most every 15 s. I ran windows_free_mib() and an HTTPS request in a process with RLIMIT_AS 256 MiB; both work (6,372 MiB free reported, HTTP 200).",
+    "FAILED, ordering: the archive is linked to <out>/<subject>.zip and the .partial removed before check_zip and hash_members. In the 'extra member' probe, the refused archive remains as AB99.zip with status failed_preserved. The launcher's expected_output_names ['AB17.zip'] would also see a rejected archive under the accepted name.",
+    "FAILED, live copy: a same-size content change in the ZIP is accepted ('same-size content change' probe → acquired_verified_not_extracted). The listing is checked only before the download. The 2024 folder is demonstrably live (AB28 opensim.log dated 2026-10-11), and a change during the download would show in the Dropbox ts but not in ZIP sizes."
+   ]
+  },
+  {
+   "id": 7,
+   "area": "CRC comparison classifier",
+   "result": "pass",
+   "evidence": "Synthetic case. ramp/id size-differs is expected; ramp/ik_offset and static mirror-only are expected. levelground/ik crc-differs, stair/emg v1-only and osimxml/opensim.log mirror-only are unexpected. Identical files are counted and not listed. The v1 path normalization matches the v1 ZIP layout <subject>/<session>/<mode>/<channel>/<file> (checked on the real AB17 central directory). The report is written exclusively and binds the manifest and script hashes."
+  },
+  {
+   "id": 8,
+   "area": "José decision",
+   "result": "none needed",
+   "evidence": "D-GT21-S01-1 = C chose the 2024 copy, and the coordinator relays José's approval to add all six participants. Acquisition order, receipts and checks are agent-level guarded-job details. The ramp/id v1-versus-2024 differences affect only how the copy is cross-checked."
+  },
+  {
+   "id": 9,
+   "area": "tests",
+   "result": "pass",
+   "evidence": "tests/test_acquire_gt21_author_mirror.py: 19 passed. tests/test_backlog_workflow.py: 71 passed. build_backlog_page.py --check: Backlog valid; HTML current (101 tasks)."
+  }
+ ],
+ "required_fixes": [
+  "S-1 (publish only verified archives): run check_zip and hash_members on the .partial file, and os.link it to <subject>.zip only after both pass and member_manifest.json is written. On any failure, keep the bytes under a non-final name (e.g. <subject>.zip.partial or .rejected) and record that name in the receipt. Add a synthetic test that a ZIP failing the listing check leaves no <subject>.zip.",
+  "S-2 (live working copy): after the download and member hashing, re-list the participant folder again and require it to equal the bound listing (paths, bytes, ts, folder link). If it differs, record the differences and do not publish the final name. Add a synthetic test with a lister whose second call returns a changed ts. Optionally also compare Dropbox revision_id where the listing provides it.",
+  "After S-1 and S-2: regenerate the six specs with the new script hash (validate_spec again), and update the audit's acquisition_script_requirements to state the actual Content-Length rule (1 KiB per file + 64 KiB; no HEAD comparison)."
+ ],
+ "optional": [
+  "check_zip could also refuse symlink members (external_attr) now, before the later extraction step.",
+  "The layout check compares channel file counts, not trial names; the listing-equality check already pins names, so this is informational only."
+ ],
+ "questions_for_jose": [],
+ "test_runs": [
+  {
+   "command": "scratchpad gt21s02/scripts/relist.py out AB15 AB23 (own lister, about 1 req/s)",
+   "result": "root 25 entries; AB15 and AB23 equal to the expected listings"
+  },
+  {
+   "command": "curl dl=1 README.txt and SubjectInfo.mat (5 KB, 1 KB) into the scratchpad",
+   "result": "SHA-256 equal to local"
+  },
+  {
+   "command": "zipfile central-directory read of the local AB17 v1 ZIP vs AB17_expected_listing.json",
+   "result": "1,464/1,466 equal size; 136 2024-only; 2 ramp/id differ"
+  },
+  {
+   "command": "guarded_launcher.validate_spec on six specs + binding hash recompute",
+   "result": "all valid; hashes match"
+  },
+  {
+   "command": "scratchpad gt21s02/scripts/probe_acquire.py (synthetic acquire() probes, 15 cases)",
+   "result": "as in check 6"
+  },
+  {
+   "command": "windows_free_mib() and open_url(EPIC page) under RLIMIT_AS 256 MiB",
+   "result": "6,372 MiB; HTTP 200"
+  },
+  {
+   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_acquire_gt21_author_mirror.py",
+   "result": "19 passed"
+  },
+  {
+   "command": "same prefix: pytest -q -p no:cacheprovider tests/test_backlog_workflow.py",
+   "result": "71 passed"
+  },
+  {
+   "command": "python3 contributor_tools/build_backlog_page.py --check",
+   "result": "Backlog valid; HTML current (101 tasks)"
+  }
+ ],
+ "artifact_hashes": {
+  "contributor_tools/acquire_gt21_author_mirror_participant.py": "ffa8eeb9db035972…",
+  "contributor_tools/compare_gt21_v1_vs_author_mirror_crc.py": "db2d928ed6842963…",
+  "contributor_tools/review_gt21_s02_author_mirror.py": "2a2d8b45bd372dc7…",
+  "tests/test_acquire_gt21_author_mirror.py": "fba0fca97bb185fd…"
+ },
+ "next_action": "Worker applies S-1 and S-2, regenerates the specs and returns for a script-only recheck. AB17 is not launched until then.",
+ "ab17_acquisition": {
+  "verdict": "ok_to_continue",
+  "last_checked_at_utc": "2026-11-01T01:10:00Z",
+  "summary": "The AB17 acquisition is clean and consistent. The launcher shows clean success with cleanup proven, no new workers and unchanged bindings. The archive hash agrees across launcher, receipt and manifest. The 1,602 manifest members equal the bound listing, and the CRC comparison reproduces exactly with 0 unexpected differences. The other five may run one at a time. Read only the small JSON receipts and the v1 central directory; the 1 GB archive was not re-hashed.",
+  "checks": [
+   {
+    "item": "launcher receipt",
+    "result": "pass",
+    "evidence": "status completed, exit 0, clean_success true. All checks are true: cleanup_proven, bindings_unchanged, envelope_unchanged, linux_no_new_worker, windows_no_new_worker, no_orphans_at_leader_exit, outputs_hashed, expected_outputs_present. windows_new_workers [], orphans [], launcher and finalisation errors []. Every binding matches before and after (acquire script b7f77df0…). Wall time 1,821.8 s, inside 3,400/3,600 s."
+   },
+   {
+    "item": "archive hash agreement",
+    "result": "pass",
+    "evidence": "Launcher outputs AB17.zip: 1,052,281,536 B, sha256 4bf059ed8ae4c107…. acquisition_result.json zip_sha256 and zip_bytes are identical. member_manifest.json zip_sha256 is identical, and the manifest file's sha256 equals member_manifest_sha256 in the result (a00e1085…). The status is acquired_verified_not_extracted with no listing differences before (19:15:52Z) or after (19:40:08Z) the download, and scientific_approval is false."
+   },
+   {
+    "item": "manifest against listing",
+    "result": "pass",
+    "evidence": "1,602 members. The {path: bytes} map equals AB17_expected_listing.json exactly, with 1,051,956,822 member bytes."
+   },
+   {
+    "item": "CRC comparison, independent recount",
+    "result": "pass",
+    "evidence": "From the manifest CRC32 values against the local v1 ZIP central directory, read independently: 1,464 identical (size and CRC), 136 2024-only (ik_offset 133, static/ik 1, static/ik_offset 1, static/markers 1), 2 size-differs (ramp/id ramp_1_r_01_01.mat, ramp_6_r_01_04.mat), 0 v1-only and 0 CRC-only changes. AB17_v1_vs_2024_crc.json reports the same totals, 138 expected differences and unexpected_count 0, and binds the same manifest sha256. Every shared file other than the two rewritten ramp/id files is CRC-identical to v1."
+   }
+  ],
+  "questions_for_jose": []
+ },
+ "final_six": {
+  "verdict": "done",
+  "checked_at_utc": "2026-11-01T02:40:00Z",
+  "scope": "Small JSON receipts, member manifests and the saved expected listings only; no archive re-hashed, opened or extracted.",
+  "summary": "All six missing GT21 participants (AB12, AB15, AB17, AB19, AB23 via attempt 2, AB28) are acquired, verified and not extracted: 10,189 members, 7,005,667,538 member bytes. These equal the six saved listings exactly by path and size. AB28's only failed launcher check is linux_no_new_worker, caused by another agent's read-only grep/ugrep at the post-run census. Every acquisition check passed, so the coordinator's acceptance fits its stated rule.",
+  "per_participant": {
+   "AB17": {
+    "launcher": "completed, exit 0, clean_success true, cleanup proven",
+    "zip": "4bf059ed...301a, 1,052,281,536 B",
+    "members": "1,602 / 1,051,956,822 B"
+   },
+   "AB15": {
+    "launcher": "completed, exit 0, clean_success true, cleanup proven",
+    "zip": "56de613c...0fc, 1,097,769,011 B",
+    "members": "1,638 / 1,097,436,233 B"
+   },
+   "AB12": {
+    "launcher": "completed, exit 0, clean_success true, cleanup proven",
+    "zip": "9f713c81...01db, 1,165,363,841 B",
+    "members": "1,770 / 1,165,001,799 B"
+   },
+   "AB23_attempt2": {
+    "launcher": "completed, exit 0, clean_success true, cleanup proven",
+    "zip": "27d3dc23...4b19, 1,192,506,586 B",
+    "members": "1,746 / 1,192,149,616 B"
+   },
+   "AB28": {
+    "launcher": "completed, exit 0, clean_success false, cleanup proven; only failed check linux_no_new_worker",
+    "zip": "0cae814b...586a, 1,238,072,687 B",
+    "members": "1,711 / 1,237,723,801 B"
+   },
+   "AB19": {
+    "launcher": "completed, exit 0, clean_success true, cleanup proven",
+    "zip": "0de1abab...541, 1,261,750,277 B",
+    "members": "1,722 / 1,261,399,267 B"
+   }
+  },
+  "checks": [
+   {
+    "check": "launcher status, exit and cleanup",
+    "result": "pass",
+    "evidence": "All six launcher receipts have status completed, exit_code 0 and checks.cleanup_proven true. launcher_errors and finalisation_errors are empty and there are no orphans at leader exit. All were run with launcher sha256 8df6f115..., the reviewed launcher."
+   },
+   {
+    "check": "archive hash = launcher output hash",
+    "result": "pass",
+    "evidence": "For each participant, launcher outputs[0].sha256 and bytes equal acquisition_result.zip_sha256/zip_bytes and member_manifest.zip_sha256/zip_bytes (6/6). I compared recorded values only; I did not re-hash."
+   },
+   {
+    "check": "manifest = saved listing",
+    "result": "pass",
+    "evidence": "Each saved expected listing (converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/plans/<AB>_expected_listing.json) matches the expected_listing_sha256 bound in its result (6/6). Its (path, bytes) set equals the member manifest's set exactly. Counts and bytes equal acquisition_result.members/member_bytes, and member_manifest_sha256 matches. Totals: 10,189 members and 7,005,667,538 B, matching the handoff."
+   },
+   {
+    "check": "listing before = after download",
+    "result": "pass (by the script's refusal rule)",
+    "evidence": "Every result records relisted_at_utc and relisted_after_download_at_utc and ends in status acquired_verified_not_extracted with central_directory_checks 'passed: paths and sizes equal the listing; layout passed'. The acquisition script (steps 1 and 7, listing_differences) refuses unless each re-listing, including modification times, equals the bound listing. The re-listings themselves are not saved, so this rests on the script's refusal logic reviewed in earlier rounds."
+   },
+   {
+    "check": "AB28 launcher flag",
+    "result": "pass (acceptable under the coordinator rule)",
+    "evidence": "census_after.linux.workers lists 3 non-ancestor processes: an agent shell running 'grep -rl ...' and a 'ugrep ... -rl \"receipt_...\"' child. All are read-only searches, none is a descendant of the job, and pgid_members is empty. All other launcher checks are true (cleanup, bindings, envelope, Windows, orphans, outputs hashed, outputs present), and the acquisition passed every check."
+   },
+   {
+    "check": "AB23 attempt 1",
+    "result": "pass",
+    "evidence": "Launcher status failed, exit 2, expected_outputs_present false. AB23/AB23.zip.rejected (1,191,723,369 B, recorded sha c98530e0...) is kept, and the accepted archive is AB23_attempt2/AB23.zip."
+   }
+  ],
+  "verifier_note": "While locating a listing I briefly started a filesystem-wide 'find /' as a background command. I stopped it within about 2 minutes, and pgrep confirmed no remaining process. It may appear in any launcher census taken in that window as a foreign read-only worker."
+ }
+}

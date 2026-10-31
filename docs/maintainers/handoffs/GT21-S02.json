@@ -1,0 +1,613 @@
+{
+  "task_id": "GT21-S02",
+  "status": "review",
+  "last_checked_at_utc": "2026-10-31T23:06:57+00:00",
+  "scientific_approval": false,
+  "summary": "Following D-GT21-S01-1 = C, the authors' 2024 copy is the public Dropbox folder linked from the EPIC lab page. It holds all six missing participants (AB12, AB15, AB17, AB19, AB23, AB28) with the same layout as the local 16: one session folder, osimxml, four modes with 12 channel folders each (ik_offset included, counts equal to conditions), and static/ik, static/ik_offset, static/markers. Together the six are 10,189 files, 7,005,667,538 bytes and 846 recordings (conditions files). Several checks support that the local 16 came from this folder. The root folder has the local root's name. The local README and SubjectInfo.mat are byte-identical to the folder's copies. Local AB14 equals its folder listing by path and byte size (1,722 of 1,722). One plan-only guarded-launcher spec per participant passes validate_spec in-process and binds the hashes of the acquisition script and its imported listing helper. Both scripts are written and await review. Nothing was launched or downloaded beyond two small root files. No José decision is needed.",
+  "findings": [
+    "All six present: AB12 1,770 files (levelground 34, ramp 63, stair 43, treadmill 7); AB15 1,638 (25/63/41/7); AB17 1,602 (22/61/43/7); AB19 1,722 (30/65/41/7); AB23 1,746 (33/63/42/7); AB28 1,711 (30/64/41/7).",
+    "AB17: the 2024 trial counts equal the version 1 restoration plan (133). Size comparison of the local version 1 ZIP central directory against the 2024 listing: 1,464 of 1,466 version 1 files have equal size. 0 are version 1 only and 136 are 2024 only (133 ik_offset plus 3 static). 2 ramp/id files differ in size (ramp_1_r_01_01, ramp_6_r_01_04).",
+    "Listing modification times: in all seven listed participants the 2024-04-08 files are exactly ik_offset plus static. Every ramp/id file was rewritten on 2021-09-23/24, between version 1 and version 2. So version 1 checksums cannot vouch for ramp/id, and probably explain the 2 AB17 size differences. Dropbox times are metadata, not proof.",
+    "AB28 holds an extra osimxml/opensim.log dated 2026-10-11. The folder is a live working copy, so each acquisition must re-list and refuse on any change.",
+    "Download channel: the participant folder link with dl=1 returns a ZIP generated on request. A HEAD for AB12 gave Content-Length 1,165,363,841 against 1,165,001,799 listed bytes. There are no publisher checksums, so LocoHub's identity is the bound listing plus per-member SHA-256 recorded at download.",
+    "AB14 version 1 equivalence plan: superseded and not launched. The AB17 version 1 archive is already local, and the 2024 AB17 download answers the same question at CRC level without the extra 0.96 GB download. The AB14 plan is kept as a fallback only."
+  ],
+  "checks": [
+    "EPIC lab page fetched (HTML sha256 3436aa14...): its only data link is the Dropbox shared link, which redirects to the scl/fo folder already recorded in the GT21 coverage audit.",
+    "Root listing: 25 entries, has_more_entries false, total_num_entries 25. The 22 participant folders match the publisher cohort; no AB22, AB26 or AB29.",
+    "Full recursive listing of AB12, AB14, AB15, AB17, AB19, AB23 and AB28: 59 folders each. Every folder's entry count equals Dropbox total_num_entries, and pagination is handled. 1-second spacing; about 95 requests per participant.",
+    "README.txt (5,245 bytes) and SubjectInfo.mat (1,281 bytes) fetched from the folder; SHA-256 45282345... and bc990b2c... equal the local files. SubjectInfo also equals the publisher record.",
+    "Structure per participant from listings (review_gt21_s02_author_mirror.py structure()): ik_offset_in_all_four_modes and every_channel_matches_conditions_count are true for all seven; there are no unclassified paths.",
+    "Local AB14 vs listing: os.stat only, no file opened. 1,722 paths in common, all sizes equal, no local-only or listing-only paths.",
+    "AB17 version 1 comparison: zipfile central directory only, no member read; it reproduces through the v1compare subcommand.",
+    "Six specs: guarded_launcher.validate_spec passed in-process. Each spec sets a 3,600 s timeout, 256 MiB address space, PM-01 memory reserves and a disk floor of 15 GiB plus twice the listing size on /mnt/s/locomotion_data (free now about 154 GiB). The output root is /mnt/s/locomotion_data/gt21_author_mirror_2024/<subject>, separate from the active source root and the version 1 folder, with receipts outside it.",
+    "tests/test_backlog_workflow.py and build_backlog_page.py --check: see test_runs.",
+    "Synthetic tests (tests/test_acquire_gt21_author_mirror.py, 19 cases; synthetic participant AB99; no network). They cover: a fake listing plus a fake ZIP, with and without the participant prefix, checking SHA-256, CRC32 and sizes against independently computed values; a member size mismatch and an unlisted member; a changed listing (extra opensim.log, changed time) refused before any download; a short disk refused before the output root is created; a pre-existing output root left untouched; a pre-existing receipt directory; receipts inside the output root; layouts missing ik_offset or static; a Content-Length outside its bounds; a wrong attachment name; a corrupted stored byte failing CRC; an unsafe member name; a STOP guard; and CRC comparison classification (expected, unexpected, v1-only, no overwrite).",
+    "Plan mode (no --run, no network) on the six real expected listings: all pass the layout check, including AB28 with its opensim.log.",
+    "The six saved specs were re-validated with guarded_launcher.validate_spec in-process. Every binding hash equals the current file, and no output root exists. Nothing was launched.",
+    "Round 3: tests/test_acquire_gt21_author_mirror.py now has 22 synthetic cases, adding the post-download re-list, the success path re-listing twice and a symlink member, and tightening the size-mismatch and CRC cases to assert no final name.",
+    "Round 3: the six specs were regenerated with the plan subcommand. The six expected listings are byte-unchanged (sha256sum -c). validate_spec passed in-process for all six, every binding equals the current file (acquisition script b7f77df0..., review module 8f5d723b...), and no output root exists. Nothing was launched or downloaded."
+  ],
+  "test_runs": [
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_acquire_gt21_author_mirror.py tests/test_backlog_workflow.py tests/test_gt21_archive_acquisition.py",
+      "result": "101 passed (22 + 71 + 8)"
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (101 tasks)"
+    }
+  ],
+  "remaining": [
+    "Extraction of the six archives into a versioned source root, and conversion, are separate gates; full-cohort completion stays blocked until they pass.",
+    "Decoded comparison of the two AB17 ramp/id files that differ from version 1 (what changed, and whether it matters for the converter) is not done.",
+    "Re-list each participant immediately before its download; a changed listing needs a new spec.",
+    "After the AB17 2024 download: compare CRC32 with the local version 1 AB17 central directory. This covers the two size-different ramp/id files and any same-size content changes.",
+    "Byte identity of the other 15 local participants to the 2024 listing is not checked; only AB14 was compared, by size.",
+    "Extraction into a source root and conversion of the six are separate gated steps. Full-cohort completion stays blocked until all six are acquired, verified and converted."
+  ],
+  "next_action": "Verifier: check the six acquisition receipts and manifests against the bound listings and the handoff. Then plan extraction of the six archives into a separate versioned source root (its own gate). The CRC comparison was done for AB17 only, because only AB17 has a local version 1 archive.",
+  "changed_files": [
+    "contributor_tools/review_gt21_s02_author_mirror.py (new: fetch, summarize, plan, audit, v1compare)",
+    "tests/test_acquire_gt21_author_mirror.py (new)",
+    "contributor_tools/compare_gt21_v1_vs_author_mirror_crc.py (new)",
+    "contributor_tools/acquire_gt21_author_mirror_participant.py (new)",
+    "docs/quality/audits/gt21-s02-2024-copy.json (new)",
+    "docs/maintainers/handoffs/GT21-S02.json (new)",
+    "converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/ (gitignored: listings, expected listings, 6 plan-only specs with bound script hashes, AB17 version 1 size comparison)"
+  ],
+  "evidence_paths": [
+    "docs/quality/audits/gt21-s02-2024-copy.json",
+    "contributor_tools/review_gt21_s02_author_mirror.py",
+    "converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/plans/",
+    "converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/listings_a/",
+    "converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/listings_b/"
+  ],
+  "output_sha256": {
+    "contributor_tools/review_gt21_s02_author_mirror.py": "8f5d723bb2e30f258a04eddeff5c1212ed6fe7cf89443dc87e06bf7dfb8483ea",
+    "contributor_tools/acquire_gt21_author_mirror_participant.py": "b7f77df0f35f6743c68a70c4c7b9c26c58870bf628433bab823ef56a4744fd47",
+    "contributor_tools/compare_gt21_v1_vs_author_mirror_crc.py": "db2d928ed6842963dc1a4fd1491e014c28b7a73612855bff31cc8aaf4438b25a",
+    "tests/test_acquire_gt21_author_mirror.py": "261d8208658f6f8e835f8ba50a7cb9f0f54e7d52fcf266fb5a5833b25d28b587",
+    "docs/quality/audits/gt21-s02-2024-copy.json": "44c857c30f2b505520eedebbf817cbc52ac8e0142d8fa3bb55a1630569b81984",
+    "converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/plans/AB12_spec.json": "e4447f6cb8cb526c59822306ddd2fdc146315c9b44e16f724e9c186db97512b9",
+    "converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/plans/AB15_spec.json": "53c25c78392a8b7b3a72d73e71fe22ec0505b106845b4362efe8e7d2744710e0",
+    "converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/plans/AB17_spec.json": "e03701547d6b165fe4887f4bc9248796e29855da1e8cc1edd776794fc7d7dd46",
+    "converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/plans/AB19_spec.json": "4f675058c22b0879e5eded281e2f55cfb5906e2bc5c060e68cfedbdbf2a1f95c",
+    "converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/plans/AB23_spec.json": "e4f69abeed6dcfacff503ae6940fa9a755a56028176da69562f2a741a5c62b70",
+    "converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/plans/AB28_spec.json": "622733e612b84547104edb026ac8fc36577c9f83e1016ea79c645637cf335e07",
+    "converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/plans/AB17_v1compare.json": "56816c6ad656188a928a841662efd5f0c33250b1b419696ef5867da13d0738cf",
+    "converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/AB17_v1_vs_2024_crc.json": "ad22383bd7f015a87231dd43a5db3e352bb4b14be070953b1898593ee4b83e02"
+  },
+  "decisions": [],
+  "reproduce": [
+    "python3 contributor_tools/review_gt21_s02_author_mirror.py fetch OUT AB12 AB15 AB17 AB19 AB23 AB28 AB14   (network metadata only; about 8 min per participant)",
+    "python3 contributor_tools/review_gt21_s02_author_mirror.py plan OUT PLAN_DIR",
+    "python3 contributor_tools/review_gt21_s02_author_mirror.py v1compare /mnt/s/locomotion_data/gt21_missing_participants_v1/AB17/<sha>.zip OUT/AB17.json > PLAN_DIR/AB17_v1compare.json",
+    "python3 contributor_tools/review_gt21_s02_author_mirror.py audit docs/quality/audits/gt21-s02-2024-copy.json PLAN_DIR OUT_A OUT_B"
+  ],
+  "round_2_coordinator_request": {
+    "request": "Write the acquisition script and the AB17 CRC comparison script, add synthetic tests, bind the script hashes into the six specs, and do not launch.",
+    "summary": "Done. contributor_tools/acquire_gt21_author_mirror_participant.py implements the audit requirements. In order, it: refuses an existing output root or receipt directory, or either one inside a protected source root; re-lists the folder and refuses on any path, size, time or link change; checks disk (15 GiB reserve plus archive) and Windows memory; creates the output root exclusively; streams the dl=1 ZIP with SHA-256, a byte ceiling and a 1 MiB/s rate; publishes it with a no-clobber link; checks central-directory paths and sizes against the listing plus the GT21 layout (four modes x 12 channels, ik_offset, static); then streams every member for bytes, CRC32 and SHA-256 without extracting. All receipts go to acquisition_receipts/<subject> with exclusive creation; the output root holds only <subject>.zip. contributor_tools/compare_gt21_v1_vs_author_mirror_crc.py compares the local version 1 central directory with the manifest CRC32 values offline and splits differences into expected (2024-only ik_offset/static; ramp/id) and unexpected. The six specs now bind both scripts' hashes (the acquisition script imports the listing helpers from the review script) and add --receipt-dir; expected_output_names is now only <subject>.zip. The six expected listings are byte-unchanged.",
+    "review_points": [
+      "The ZIP member naming of Dropbox folder downloads is not observed (no real download). The script accepts either all members prefixed with '<subject>/' or none, and refuses a mix or any unsafe name.",
+      "The Content-Length allowance is the listed bytes plus 1 KiB per file plus 64 KiB. AB12's HEAD value lies inside it: 362,042 bytes over the listing against an allowance of 1,878,016.",
+      "The re-list takes about 8 minutes (about 95 requests) inside the 3,400 s script deadline and the launcher's 3,600 s timeout; the download is capped at 2,700 s at 1 MiB/s (AB19 needs about 1,203 s).",
+      "Changing the review script, for example after verifier edits, changes a bound hash; the specs must then be regenerated with the plan subcommand."
+    ]
+  },
+  "round_3_verifier_fixes": {
+    "source": "docs/maintainers/handoffs/GT21-S02-verify.json (back_to_worker, S-1 and S-2)",
+    "S-1": "Every check now runs on <subject>.zip.partial: central directory, layout, per-member CRC32/SHA-256 and the post-download re-list. member_manifest.json is written and <subject>.zip is linked (no-clobber) only after all checks pass. On any failure after the download, the bytes are kept as <subject>.zip.rejected (falling back to .partial) and the path is recorded as rejected_path; a rejected archive never carries the final name. Tests: the size-mismatch and CRC-corruption cases now assert the output root holds only <subject>.zip.rejected and no manifest.",
+    "S-2": "After the download and member hashing, the folder is re-listed and compared with the bound listing (paths, bytes, modification times, folder link). Any difference, including a same-size edit (changed time), is refused, recorded as listing_differences_after_download and not published. The deadline is re-checked after this listing. Tests: a lister whose second call changes one file's time is refused with .rejected and no manifest; a clean run calls the lister exactly twice.",
+    "optional_taken": "Symlink members (external_attr) are refused now; test added.",
+    "audit_wording": "acquisition_script_requirements now states the actual Content-Length rule: listed bytes up to listed bytes + 1 KiB per listed file + 64 KiB, with no HEAD request by the script. The survey HEAD receipt is labelled as a survey-only request. The requirements also list the check-before-publish order and the post-download re-list.",
+    "not_taken": "Dropbox revision_id comparison: the bound expected listings keep path, bytes and ts only, and adding revision_id would change the reviewed listings. The ts check already catches a same-size edit.",
+    "timing": "The two re-lists take about 8 minutes each (about 95 requests at about 5 s per request, measured on 2026-10-31). With a download of about 1,003-1,203 s at 1 MiB/s and 1-2 min of hashing, AB19 needs about 38 min, under the 3,400 s script deadline and the 3,600 s launcher timeout."
+  },
+  "ab17_acquisition": {
+    "launched_by": "worker, one guarded-launcher call after the coordinator relayed review done_for_scripts and José's approval of all six; no other participant launched",
+    "preflight": "census showed no numerical worker (only MCP servers); 'guarded_launcher run AB17_spec.json --dry-run' gave preflight_passed",
+    "spec": "converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/plans/AB17_spec.json",
+    "spec_sha256": "e03701547d6b165fe4887f4bc9248796e29855da1e8cc1edd776794fc7d7dd46",
+    "launcher_receipt": "/mnt/s/locomotion_data/gt21_author_mirror_2024/launcher_receipts/AB17.json",
+    "launcher_receipt_sha256": "fa0d80f767c6df68f06f7f07dce17221a31cee438e19bffa26935d196eb7a5b7",
+    "launcher_log_sha256": "b1629c970a829300e14266a450b3cbd1518fd1bb8d180c795e451f72af9f4dfc",
+    "receipt_status": "completed",
+    "clean_success": true,
+    "exit_code": 0,
+    "wall_time_seconds": 1821.816,
+    "peak_rss_kib_largest_process": 32412,
+    "peak_group_rss_kib_sampled": 34152,
+    "launcher_checks": "cleanup_proven, bindings_unchanged, envelope_unchanged, no new Linux or Windows worker, no orphans, outputs hashed, expected outputs present: all true",
+    "startup_admission": "Linux 13,232 MiB available (reserve 3,584); Windows 6,376 MiB (reserve 2,816); /mnt/s 157,306 MiB free (spec floor 17,368)",
+    "verify_cleanup": "proven (same_boot_proc_scan, no group members, no fallback receipts) at 2026-10-31T19:40:21Z",
+    "acquisition_result": {
+      "path": "/mnt/s/locomotion_data/gt21_author_mirror_2024/acquisition_receipts/AB17/acquisition_result.json",
+      "status": "acquired_verified_not_extracted",
+      "relisted_before": "2026-10-31T19:15:52Z, equal to the bound listing",
+      "relisted_after": "2026-10-31T19:40:08Z, equal to the bound listing",
+      "http": "200; Content-Length 1,052,281,536 (listed 1,051,956,822 + 324,714 header bytes, inside the 1,705,984-byte allowance); attachment AB17.zip",
+      "zip_path": "/mnt/s/locomotion_data/gt21_author_mirror_2024/AB17/AB17.zip",
+      "zip_bytes": 1052281536,
+      "zip_sha256": "4bf059ed8ae4c107f927690d68d373689bff38a6d171efa657c4c72c4d2a301a",
+      "zip_sha256_independent": "launcher outputs hash equals the script's streaming hash",
+      "members": 1602,
+      "member_bytes": 1051956822,
+      "member_manifest_sha256": "a00e10852a735afbaf5cc39c940df7306af417148685fded7648b36748f20cf0",
+      "central_directory_checks": "paths and sizes equal the listing; layout passed; every member CRC32 recomputed and SHA-256 recorded"
+    },
+    "crc_comparison": {
+      "script": "contributor_tools/compare_gt21_v1_vs_author_mirror_crc.py",
+      "report": "converted_datasets/reconversion_v2/gt21_s02_author_mirror_20261031/AB17_v1_vs_2024_crc.json",
+      "report_sha256": "ad22383bd7f015a87231dd43a5db3e352bb4b14be070953b1898593ee4b83e02",
+      "v1_zip": "/mnt/s/locomotion_data/gt21_missing_participants_v1/AB17/9acf79dd6ed4dd318f9d81fc911d4de5459e2d1e306c6223d33ae9832ede944c.zip (central directory only)",
+      "totals": {
+        "identical_size_and_crc32": 1464,
+        "mirror_only": 136,
+        "size_differs": 2,
+        "crc_differs_same_size": 0,
+        "v1_only": 0
+      },
+      "expected_differences": "138: 133 ik_offset + 3 static files only in 2024; 2 ramp/id files differ in size and CRC32 (ramp_1_r_01_01: v1 322,984 B 95fb0e77 vs 2024 324,295 B e1504517; ramp_6_r_01_04: v1 284,406 B 4202cf9f vs 2024 299,554 B 2be01d5c)",
+      "unexpected_differences": 0,
+      "reading": "Every shared file except 2 ramp/id files is CRC32-identical to publisher version 1, including 59 of 61 ramp/id files that carry 2021-09 modification times. So version 1 publisher checksums corroborate AB17's 2024 trial files apart from those 2 ramp/id files and the 2024 additions. CRC32 detects change; it is not a cryptographic proof. No array was decoded; what changed inside the 2 ramp/id files is not checked.",
+      "peak_rss_kib": 21072
+    },
+    "not_done": "No extraction or conversion of AB17; no other participant launched; nothing committed."
+  },
+  "timestamp_note": "Earlier last_checked values written as 2026-10-31T20:30Z and 2026-11-01T00:30Z were estimates, not clock readings; the host clock read 2026-10-31T19:40:54Z at this update.",
+  "remaining_five_acquisitions": {
+    "AB15": {
+      "spec_sha256": "53c25c78392a8b7b3a72d73e71fe22ec0505b106845b4362efe8e7d2744710e0",
+      "launcher_receipt": "/mnt/s/locomotion_data/gt21_author_mirror_2024/launcher_receipts/AB15.json",
+      "launcher_receipt_sha256": "162a5d070ca9a1712a91297a81e490be5b336c181c395f0bf334a347ba9069f8",
+      "launcher_log_sha256": "af85b3b255f57f9e777f8c97690b2ad09d4fecfb5d7f7e5d237b999be1db5141",
+      "receipt_status": "completed",
+      "clean_success": true,
+      "exit_code": 0,
+      "refusal_reason": null,
+      "wall_time_seconds": 1877.212,
+      "peak_rss_kib_largest_process": 32960,
+      "launcher_checks": {
+        "cleanup_proven": true,
+        "bindings_unchanged": true,
+        "envelope_unchanged": true,
+        "linux_no_new_worker": true,
+        "windows_no_new_worker": true,
+        "no_orphans_at_leader_exit": true,
+        "outputs_hashed": true,
+        "expected_outputs_present": true
+      },
+      "launcher_outputs": [
+        {
+          "path": "AB15.zip",
+          "bytes": 1097769011,
+          "sha256": "56de613c637f94fa8adea601dc50900269d1f4deffb190932da004980ac9a0fc"
+        }
+      ],
+      "verify_cleanup": {
+        "proven": true,
+        "checked_at_utc": "2026-10-31T20:15:05+00:00",
+        "fallback_receipts": []
+      },
+      "acquisition_result": {
+        "status": "acquired_verified_not_extracted",
+        "reason": null,
+        "relisted_at_utc": "2026-10-31T19:49:39+00:00",
+        "relisted_after_download_at_utc": "2026-10-31T20:14:52+00:00",
+        "http": {
+          "status": 200,
+          "headers": {
+            "Content-Length": "1097769011",
+            "Content-Disposition": "attachment; filename=\"AB15.zip\"; filename*=UTF-8''AB15.zip",
+            "Content-Type": "application/zip"
+          }
+        },
+        "zip_path": "/mnt/s/locomotion_data/gt21_author_mirror_2024/AB15/AB15.zip",
+        "zip_bytes": 1097769011,
+        "zip_sha256": "56de613c637f94fa8adea601dc50900269d1f4deffb190932da004980ac9a0fc",
+        "members": 1638,
+        "member_bytes": 1097436233,
+        "member_manifest_sha256": "4456f56a1322fee6f8d64efab6cd9e7853e7b21099ea483811c685234e28a101",
+        "rejected_path": null,
+        "listing_differences": null,
+        "listing_differences_after_download": null
+      },
+      "acquisition_result_sha256": "d2106220a5898c0961c626b25bc94b4230029fe1fbe1ee3a34cb159a1ca38897"
+    },
+    "AB12": {
+      "spec_sha256": "e4447f6cb8cb526c59822306ddd2fdc146315c9b44e16f724e9c186db97512b9",
+      "launcher_receipt": "/mnt/s/locomotion_data/gt21_author_mirror_2024/launcher_receipts/AB12.json",
+      "launcher_receipt_sha256": "6d75fa9198d3bb429a048c62a96bbf162169083e04e7ebe4f55a019b13991851",
+      "launcher_log_sha256": "fbd7dc674ef896c240e0a546bff12877f7f904aa5aefbd850c585ff95a97343d",
+      "receipt_status": "completed",
+      "clean_success": true,
+      "exit_code": 0,
+      "refusal_reason": null,
+      "wall_time_seconds": 2031.192,
+      "peak_rss_kib_largest_process": 32532,
+      "launcher_checks": {
+        "cleanup_proven": true,
+        "bindings_unchanged": true,
+        "envelope_unchanged": true,
+        "linux_no_new_worker": true,
+        "windows_no_new_worker": true,
+        "no_orphans_at_leader_exit": true,
+        "outputs_hashed": true,
+        "expected_outputs_present": true
+      },
+      "launcher_outputs": [
+        {
+          "path": "AB12.zip",
+          "bytes": 1165363841,
+          "sha256": "9f713c81b89ea87064321f98a182f36b56bd9d1e6ff6272750c90b3f42b101db"
+        }
+      ],
+      "verify_cleanup": {
+        "proven": true,
+        "checked_at_utc": "2026-10-31T20:50:25+00:00",
+        "fallback_receipts": []
+      },
+      "acquisition_result": {
+        "status": "acquired_verified_not_extracted",
+        "reason": null,
+        "relisted_at_utc": "2026-10-31T20:23:09+00:00",
+        "relisted_after_download_at_utc": "2026-10-31T20:50:13+00:00",
+        "http": {
+          "status": 200,
+          "headers": {
+            "Content-Length": "1165363841",
+            "Content-Disposition": "attachment; filename=\"AB12.zip\"; filename*=UTF-8''AB12.zip",
+            "Content-Type": "application/zip"
+          }
+        },
+        "zip_path": "/mnt/s/locomotion_data/gt21_author_mirror_2024/AB12/AB12.zip",
+        "zip_bytes": 1165363841,
+        "zip_sha256": "9f713c81b89ea87064321f98a182f36b56bd9d1e6ff6272750c90b3f42b101db",
+        "members": 1770,
+        "member_bytes": 1165001799,
+        "member_manifest_sha256": "6e15ac145675f440c3b9e5c7c68feada5c8960255c8df9bfb60dfd65e578eeee",
+        "rejected_path": null,
+        "listing_differences": null,
+        "listing_differences_after_download": null
+      },
+      "acquisition_result_sha256": "60509e9e89c27c0df4c4dbf3c888ed7b62f6aaa5aedef1bbbcd076b83a389bb8"
+    },
+    "AB23": {
+      "spec_sha256": "e4f69abeed6dcfacff503ae6940fa9a755a56028176da69562f2a741a5c62b70",
+      "launcher_receipt": "/mnt/s/locomotion_data/gt21_author_mirror_2024/launcher_receipts/AB23.json",
+      "launcher_receipt_sha256": "fa08d9cdb97f6ee241f24a769392184cec08138670866f15786945f361da0cef",
+      "launcher_log_sha256": "75e76898d948964ea569ac0fedb867e19020161da7dc12b12a7d208f1c02a2cf",
+      "receipt_status": "failed",
+      "clean_success": false,
+      "exit_code": 2,
+      "refusal_reason": null,
+      "wall_time_seconds": 1585.077,
+      "peak_rss_kib_largest_process": 29856,
+      "launcher_checks": {
+        "cleanup_proven": true,
+        "bindings_unchanged": true,
+        "envelope_unchanged": true,
+        "linux_no_new_worker": true,
+        "windows_no_new_worker": true,
+        "no_orphans_at_leader_exit": true,
+        "outputs_hashed": true,
+        "expected_outputs_present": false
+      },
+      "launcher_outputs": [
+        {
+          "path": "AB23.zip.rejected",
+          "bytes": 1191723369,
+          "sha256": "c98530e09e04a3f0065732a33b7f834363bf85e1f04ea19c89c04585d61983c7"
+        }
+      ],
+      "verify_cleanup": {
+        "proven": true,
+        "checked_at_utc": "2026-10-31T21:18:06+00:00",
+        "fallback_receipts": []
+      },
+      "acquisition_result": {
+        "status": "failed_preserved",
+        "reason": "Refused: received 1191723369 of 1192506586 bytes",
+        "relisted_at_utc": "2026-10-31T20:58:14+00:00",
+        "relisted_after_download_at_utc": null,
+        "http": {
+          "status": 200,
+          "headers": {
+            "Content-Length": "1192506586",
+            "Content-Disposition": "attachment; filename=\"AB23.zip\"; filename*=UTF-8''AB23.zip",
+            "Content-Type": "application/zip"
+          }
+        },
+        "zip_path": null,
+        "zip_bytes": null,
+        "zip_sha256": null,
+        "members": null,
+        "member_bytes": null,
+        "member_manifest_sha256": null,
+        "rejected_path": "/mnt/s/locomotion_data/gt21_author_mirror_2024/AB23/AB23.zip.rejected",
+        "listing_differences": null,
+        "listing_differences_after_download": null
+      },
+      "acquisition_result_sha256": "bc25e8e783610b90fb31c908fff402c08c2521c851c3753c8968fa2ec13aa2ac"
+    },
+    "AB23_attempt2": {
+      "spec_sha256": "116dd5224cb5c37eca8c1933ecc83d31bcc5eba42b68888086140ac2cfa9905a",
+      "launcher_receipt": "/mnt/s/locomotion_data/gt21_author_mirror_2024/launcher_receipts/AB23_attempt2.json",
+      "launcher_receipt_sha256": "01a603ad3865119742442cce755e0ac047d5bd913a172667949a6ae91185ea6b",
+      "launcher_log_sha256": "419eaf3f2e1ea61dc136cd57f1b6807d39006db9c1e5c7c78fbe0bea75799f29",
+      "receipt_status": "completed",
+      "clean_success": true,
+      "exit_code": 0,
+      "refusal_reason": null,
+      "wall_time_seconds": 2069.108,
+      "peak_rss_kib_largest_process": 32580,
+      "launcher_checks": {
+        "cleanup_proven": true,
+        "bindings_unchanged": true,
+        "envelope_unchanged": true,
+        "linux_no_new_worker": true,
+        "windows_no_new_worker": true,
+        "no_orphans_at_leader_exit": true,
+        "outputs_hashed": true,
+        "expected_outputs_present": true
+      },
+      "launcher_outputs": [
+        {
+          "path": "AB23.zip",
+          "bytes": 1192506586,
+          "sha256": "27d3dc23c512541ffa2c29b6e33f7904c9646a37a594130dab6ee9c8beb94b19"
+        }
+      ],
+      "verify_cleanup": {
+        "proven": true,
+        "checked_at_utc": "2026-10-31T21:54:38+00:00",
+        "fallback_receipts": []
+      },
+      "acquisition_result": {
+        "status": "acquired_verified_not_extracted",
+        "reason": null,
+        "relisted_at_utc": "2026-10-31T21:26:35+00:00",
+        "relisted_after_download_at_utc": "2026-10-31T21:54:25+00:00",
+        "http": {
+          "status": 200,
+          "headers": {
+            "Content-Length": "1192506586",
+            "Content-Disposition": "attachment; filename=\"AB23.zip\"; filename*=UTF-8''AB23.zip",
+            "Content-Type": "application/zip"
+          }
+        },
+        "zip_path": "/mnt/s/locomotion_data/gt21_author_mirror_2024/AB23_attempt2/AB23.zip",
+        "zip_bytes": 1192506586,
+        "zip_sha256": "27d3dc23c512541ffa2c29b6e33f7904c9646a37a594130dab6ee9c8beb94b19",
+        "members": 1746,
+        "member_bytes": 1192149616,
+        "member_manifest_sha256": "ddbbafbaf92ca37008b723bc1b48b023d9ec2d6e34dfb471cbb8c5fe81499227",
+        "rejected_path": null,
+        "listing_differences": null,
+        "listing_differences_after_download": null
+      },
+      "acquisition_result_sha256": "bbd1ab53651aab53d5088e6cee49b5def0ef3f510931ef08dfa57608e886c449",
+      "spec_note": "Coordinator-ordered single retry (operations decision). Hand-made copy of AB23_spec.json with new job_id, output root AB23_attempt2, receipt directory acquisition_receipts/AB23_attempt2 and launcher receipt AB23_attempt2.json; same bound listing and script hashes. validate_spec passed in-process and every binding matched. Attempt-1 files were left untouched (launcher receipt fa08d9cd..., acquisition_result bc25e8e7..., acquisition_started e43adabf...; AB23.zip.rejected 1,191,723,369 bytes).",
+      "transport_note": "Both attempts received the same Content-Length (1,192,506,586); attempt 2 received every byte. This is consistent with attempt 1 being a transport cutoff."
+    },
+    "AB28": {
+      "spec_sha256": "622733e612b84547104edb026ac8fc36577c9f83e1016ea79c645637cf335e07",
+      "launcher_receipt": "/mnt/s/locomotion_data/gt21_author_mirror_2024/launcher_receipts/AB28.json",
+      "launcher_receipt_sha256": "b9b5147c5d00cb759aff0a8f910df5ee2fd9c04c283e5902040998413cbce191",
+      "launcher_log_sha256": "d0fbe413fab4752e23568959df83c9447399ef3ac5f0cc6c1490562ad06980e2",
+      "receipt_status": "completed",
+      "clean_success": false,
+      "exit_code": 0,
+      "refusal_reason": null,
+      "wall_time_seconds": 2067.924,
+      "peak_rss_kib_largest_process": 32560,
+      "launcher_checks": {
+        "cleanup_proven": true,
+        "bindings_unchanged": true,
+        "envelope_unchanged": true,
+        "linux_no_new_worker": false,
+        "windows_no_new_worker": true,
+        "no_orphans_at_leader_exit": true,
+        "outputs_hashed": true,
+        "expected_outputs_present": true
+      },
+      "launcher_outputs": [
+        {
+          "path": "AB28.zip",
+          "bytes": 1238072687,
+          "sha256": "0cae814badbc487bad922955ecc01297c92d3543ca1f617c0ea9d6e2cda2586a"
+        }
+      ],
+      "verify_cleanup": {
+        "proven": true,
+        "checked_at_utc": "2026-10-31T22:30:35+00:00",
+        "fallback_receipts": []
+      },
+      "acquisition_result": {
+        "status": "acquired_verified_not_extracted",
+        "reason": null,
+        "relisted_at_utc": "2026-10-31T22:02:36+00:00",
+        "relisted_after_download_at_utc": "2026-10-31T22:29:58+00:00",
+        "http": {
+          "status": 200,
+          "headers": {
+            "Content-Length": "1238072687",
+            "Content-Disposition": "attachment; filename=\"AB28.zip\"; filename*=UTF-8''AB28.zip",
+            "Content-Type": "application/zip"
+          }
+        },
+        "zip_path": "/mnt/s/locomotion_data/gt21_author_mirror_2024/AB28/AB28.zip",
+        "zip_bytes": 1238072687,
+        "zip_sha256": "0cae814badbc487bad922955ecc01297c92d3543ca1f617c0ea9d6e2cda2586a",
+        "members": 1711,
+        "member_bytes": 1237723801,
+        "member_manifest_sha256": "e093cd8b9c2b7f880500b98e296f43d914ae9a970796d4f2f6d1163606b3ee71",
+        "rejected_path": null,
+        "listing_differences": null,
+        "listing_differences_after_download": null
+      },
+      "acquisition_result_sha256": "8dfda9f01475e1c98664cfc2feb099bef13dfbd12954559a74ee8842981e3a7d",
+      "clean_success_false_reason": "The only failed launcher check is linux_no_new_worker. The post-run census at 2026-10-31T22:29:58Z saw a foreign, short-lived read-only search, 'grep -rl \"receipt_path\" docs contributor_tools tests' (zsh pids 1666374/1666375 and ugrep 1666377), from another agent session using the same shell snapshot. It was not started by this job: it is not in the launcher's process group, and cleanup is proven. By 22:31Z it was gone. The acquisition itself passed every check: both listings equal the bound listing, ZIP paths and sizes equal the listing, the layout passed, and every member's CRC32 and SHA-256 are recorded. Exit 0.",
+      "coordinator_acceptance": {
+        "decision": "accepted",
+        "by": "coordinator (operations ruling relayed to the worker)",
+        "recorded_at_utc": "2026-10-31T22:31:21+00:00",
+        "reason": "The only failed check, linux_no_new_worker, was a conservative false positive: the census matched a short read-only grep whose arguments named contributor_tools. The process was not numerical, ran outside the job's process group and exited within about 2 minutes. Every AB28 acquisition check passed.",
+        "launcher_receipt": "left unchanged (clean_success false stays on record)"
+      }
+    },
+    "AB19": {
+      "spec_sha256": "4f675058c22b0879e5eded281e2f55cfb5906e2bc5c060e68cfedbdbf2a1f95c",
+      "launcher_receipt": "/mnt/s/locomotion_data/gt21_author_mirror_2024/launcher_receipts/AB19.json",
+      "launcher_receipt_sha256": "7694fbd12dc49735a1028a2c16a4abf5ef8eb7fa66fafbe98b8795312cd7ed3d",
+      "launcher_log_sha256": "d3e7ab2d1786d02a9a8ae7867e1b8a528da5940a7b4dbee199417e9156f92187",
+      "receipt_status": "completed",
+      "clean_success": true,
+      "exit_code": 0,
+      "refusal_reason": null,
+      "wall_time_seconds": 2067.262,
+      "peak_rss_kib_largest_process": 32380,
+      "launcher_checks": {
+        "cleanup_proven": true,
+        "bindings_unchanged": true,
+        "envelope_unchanged": true,
+        "linux_no_new_worker": true,
+        "windows_no_new_worker": true,
+        "no_orphans_at_leader_exit": true,
+        "outputs_hashed": true,
+        "expected_outputs_present": true
+      },
+      "launcher_outputs": [
+        {
+          "path": "AB19.zip",
+          "bytes": 1261750277,
+          "sha256": "0de1abab2dcdb42f935212623b573e702c34b4578a2d5f71deb68b3c3e41e541"
+        }
+      ],
+      "verify_cleanup": {
+        "proven": true,
+        "checked_at_utc": "2026-10-31T23:06:57+00:00",
+        "fallback_receipts": []
+      },
+      "acquisition_result": {
+        "status": "acquired_verified_not_extracted",
+        "reason": null,
+        "relisted_at_utc": "2026-10-31T22:38:43+00:00",
+        "relisted_after_download_at_utc": "2026-10-31T23:06:37+00:00",
+        "http": {
+          "status": 200,
+          "headers": {
+            "Content-Length": "1261750277",
+            "Content-Disposition": "attachment; filename=\"AB19.zip\"; filename*=UTF-8''AB19.zip",
+            "Content-Type": "application/zip"
+          }
+        },
+        "zip_path": "/mnt/s/locomotion_data/gt21_author_mirror_2024/AB19/AB19.zip",
+        "zip_bytes": 1261750277,
+        "zip_sha256": "0de1abab2dcdb42f935212623b573e702c34b4578a2d5f71deb68b3c3e41e541",
+        "members": 1722,
+        "member_bytes": 1261399267,
+        "member_manifest_sha256": "589a4390f1081c634729f5859f7b7e0b72e6fee4d4230870c3e26da80963a3b6",
+        "rejected_path": null,
+        "listing_differences": null,
+        "listing_differences_after_download": null
+      },
+      "acquisition_result_sha256": "7d744dbd2dc8f538adbea0ea179f160d9a299d5d88ca779be65411d085613c46"
+    }
+  },
+  "sequence_summary": {
+    "order": [
+      "AB15",
+      "AB12",
+      "AB23",
+      "AB23_attempt2",
+      "AB28",
+      "AB19"
+    ],
+    "acquired_verified_not_extracted": [
+      "AB17",
+      "AB15",
+      "AB12",
+      "AB23 (attempt 2)",
+      "AB28 (coordinator-accepted census flag)",
+      "AB19"
+    ],
+    "attempt_failed": {
+      "AB23 (attempt 1)": "transport cutoff, 783,217 bytes short; kept as AB23.zip.rejected"
+    },
+    "total": "6 of 6 participants acquired and verified, not extracted (AB12, AB15, AB17, AB19, AB23 via attempt 2, AB28).",
+    "coordinator_rule_for_AB19": "Accept the same way if the only failed check is a transient read-only shell command (grep, find, ls, cat and the like) seen at the post-run census and every acquisition check passed; on any other failure, stop and report."
+  },
+  "final_six": {
+    "participants": {
+      "AB17": {
+        "status": "acquired_verified_not_extracted",
+        "zip_sha256": "4bf059ed8ae4c107f927690d68d373689bff38a6d171efa657c4c72c4d2a301a",
+        "zip_bytes": 1052281536,
+        "members": 1602,
+        "member_bytes": 1051956822,
+        "wall_time_seconds": 1821.816,
+        "launcher_clean_success": true,
+        "zip_path": "/mnt/s/locomotion_data/gt21_author_mirror_2024/AB17/AB17.zip"
+      },
+      "AB15": {
+        "status": "acquired_verified_not_extracted",
+        "zip_sha256": "56de613c637f94fa8adea601dc50900269d1f4deffb190932da004980ac9a0fc",
+        "zip_bytes": 1097769011,
+        "members": 1638,
+        "member_bytes": 1097436233,
+        "wall_time_seconds": 1877.212,
+        "launcher_clean_success": true,
+        "zip_path": "/mnt/s/locomotion_data/gt21_author_mirror_2024/AB15/AB15.zip"
+      },
+      "AB12": {
+        "status": "acquired_verified_not_extracted",
+        "zip_sha256": "9f713c81b89ea87064321f98a182f36b56bd9d1e6ff6272750c90b3f42b101db",
+        "zip_bytes": 1165363841,
+        "members": 1770,
+        "member_bytes": 1165001799,
+        "wall_time_seconds": 2031.192,
+        "launcher_clean_success": true,
+        "zip_path": "/mnt/s/locomotion_data/gt21_author_mirror_2024/AB12/AB12.zip"
+      },
+      "AB23": {
+        "status": "acquired_verified_not_extracted",
+        "zip_sha256": "27d3dc23c512541ffa2c29b6e33f7904c9646a37a594130dab6ee9c8beb94b19",
+        "zip_bytes": 1192506586,
+        "members": 1746,
+        "member_bytes": 1192149616,
+        "wall_time_seconds": 2069.108,
+        "launcher_clean_success": true,
+        "zip_path": "/mnt/s/locomotion_data/gt21_author_mirror_2024/AB23_attempt2/AB23.zip"
+      },
+      "AB28": {
+        "status": "acquired_verified_not_extracted",
+        "zip_sha256": "0cae814badbc487bad922955ecc01297c92d3543ca1f617c0ea9d6e2cda2586a",
+        "zip_bytes": 1238072687,
+        "members": 1711,
+        "member_bytes": 1237723801,
+        "wall_time_seconds": 2067.924,
+        "launcher_clean_success": false,
+        "zip_path": "/mnt/s/locomotion_data/gt21_author_mirror_2024/AB28/AB28.zip",
+        "note": "launcher clean_success false (foreign read-only grep at post-run census); accepted by coordinator"
+      },
+      "AB19": {
+        "status": "acquired_verified_not_extracted",
+        "zip_sha256": "0de1abab2dcdb42f935212623b573e702c34b4578a2d5f71deb68b3c3e41e541",
+        "zip_bytes": 1261750277,
+        "members": 1722,
+        "member_bytes": 1261399267,
+        "wall_time_seconds": 2067.262,
+        "launcher_clean_success": true,
+        "zip_path": "/mnt/s/locomotion_data/gt21_author_mirror_2024/AB19/AB19.zip"
+      }
+    },
+    "total_members": 10189,
+    "total_member_bytes": 7005667538,
+    "total_zip_bytes": 7007743938,
+    "total_wall_seconds_successful_runs": 11934.5,
+    "plus_failed_AB23_attempt1_seconds": 1585.077,
+    "member_bytes_equal_listing_total": true
+  }
+}
