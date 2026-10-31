@@ -1,0 +1,42 @@
+{
+ "policy": {
+  "decided_by": "José",
+  "decided_on": "2026-10-30",
+  "instruction": "we should just fix both readmes based on the evidence",
+  "rule": "A verified audit overrides a publisher README. Adapters pass to the detector only documentation statements that no verified audit has refuted; refuted statements are logged with their refutation instead of being passed as evidence.",
+  "implemented": "2026-10-31, CORE-04 (policy implementation of the instruction above, not a new scientific decision)",
+  "provenance": {
+   "quote": "José instruction in chat, 2026-10-30: \"we should just fix both readmes based on the evidence\"",
+   "tasks": [
+    "GT24-C02",
+    "GT23-C02"
+   ],
+   "location": "docs/maintainers/backlog.json, the handoff checks of tasks GT24-C02 and GT23-C02 (the coordinator's verbatim record of the chat instruction, confirmed authoritative)"
+  },
+  "enforcement": "A refutation is honoured only if refuted_by_task has status done in docs/maintainers/backlog.json (the single authoritative record: only the coordinator sets done, after the independent verifier's done verdict; verify files are not parsed). Statements match entries by exact citation_id (<document>:<locator>, e.g. \"gt24-readme:L90-91\"), never by substring. Statement and refuted signs must be the integers +1 or -1. Every matching entry is evaluated on channel, citation_id and sign: only the refuted sign is withheld; a statement agreeing with the verified finding is kept."
+ },
+ "datasets": {
+  "GT24": [
+   {
+    "id": "GT24-README-ankle-sign",
+    "statement": "README lines 90-91: ankle plantarflexion is positive",
+    "citation_ids": [
+     "gt24-readme:L90-91"
+    ],
+    "channels": [
+     "ankle_angle",
+     "ankle_moment"
+    ],
+    "refuted_by": "GT24-C02 (docs/quality/audits/gt24-c02-ankle-sign.json; verified, done)",
+    "corroborated_by": [
+     "GT24-C02 verifier (fresh seed 20261103)",
+     "CORE-04 GT24 pilot, data only: push-off, ankle lever arm and late stance dorsiflexion positive in 40/40 legs",
+     "CORE-04 GT24 pilot verifier (seed 20261108): README ankle statement a conflict in every leg"
+    ],
+    "refuted_by_task": "GT24-C02",
+    "refuted_sign": -1,
+    "note_on_sign": "refuted_sign is the rule-B sign the statement implies (ankle plantarflexion positive -> target = -1 x source); the verified finding is +1"
+   }
+  ]
+ }
+}

@@ -1,0 +1,358 @@
+{
+  "task_id": "UM21-T02",
+  "part": "guarded single-job launcher only",
+  "verifier_role": "independent second agent (own tests; the worker's test helpers were not imported or reused)",
+  "verdict": "done_for_launcher",
+  "last_checked_at_utc": "2026-10-30T22:25:26Z",
+  "scientific_approval": false,
+  "round_4": {
+    "verdict": "done_for_launcher",
+    "last_checked_at_utc": "2026-10-30T22:25:26Z",
+    "reviewed_sha256": {
+      "contributor_tools/guarded_launcher.py": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b",
+      "tests/test_guarded_launcher.py": "99f0f26f5a49eed23175028e199075adda3b8810abeb2173f26f473993eef3c3",
+      "tests/test_guarded_launcher_verify.py (as handed back by the worker)": "bc9af2d506364f20c766d3e323e3aa32a06d6098062483d802301e2674d8474a",
+      "tests/test_guarded_launcher_verify.py (after reviewer round-4 additions)": "5f2f4fdb70b6850038f53bf3b1181af8b3ed55042e049577c27c4e627ab76f6c",
+      "docs/quality/audits/pm01-um21-tread-pilot-handoff.json": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+    },
+    "summary": "Fix D closes the gap where each loop iteration started a fresh shell. Every agent-style loop I tried now gets exactly one launch. One-off launches from separate agent tool calls still work, and a second launch inside the same tool call is refused. The test hook is unreachable from the CLI. verify-cleanup lists fallback receipts. R3-1 to R3-4 are in. Every remaining hole needs deliberate circumvention by a person or a deliberately evasive script. The verdict covers the launcher deliverable only. It does not authorise a launch and does not approve the science.",
+    "test_file_diff_ruling": "accepted. Re-adding the one round-3 xfail decorator to the worker's copy (bc9af2d5...) reproduces my round-3 hash 30b3caff... exactly, so nothing else changed.",
+    "checks": [
+      {
+        "item": "1. Test-file diff",
+        "result": "pass",
+        "evidence": "As above; only the strict-xfail decorator on test_r3_ledger_blocks_a_fresh_shell_per_iteration was removed."
+      },
+      {
+        "item": "2. Shell-loop probes",
+        "result": "pass",
+        "evidence": "Each probe ran run_job with a synthetic census and a dummy 'true' job under real processes; the ledger walk read the real /proc. Every case gave one launch and then parent_already_launched: 'for ...; do sh -c \"cd /tmp && <l>\"'; 'bash -c \"<l>; echo\"' and 'zsh -c \"<l>; true\"' in a loop; 'xargs -I{} sh -c'; 'find -exec sh -c' in a loop; make with simple recipe lines (exec'd by make) and with shell recipe lines (one /bin/sh -c per line); 'nohup bash -c \"<l>; <l>\"'; and a loop in a detached tmux session on a private socket (tmux runs zsh -c with a pty stdin, which is correctly not treated as an interactive terminal). Runtime indirection, where the command is built in a variable and run through setsid -w sh -c, is also blocked, because the claim is structural (shell or driver ancestors) and does not depend on the launcher text. GNU parallel is not installed, so it was not run. It runs jobs through a shell, which falls under the same shell-or-driver rule. The walk stops at the 'claude' agent host, so the top claimed key is always this tool call's fresh 'zsh -c'."
+      },
+      {
+        "item": "3. One-off launches from separate agent tool calls",
+        "result": "pass",
+        "evidence": "Two separate Bash tool calls, sharing one ledger, each completed a dummy launch. A second launch inside the second tool call was refused with parent_already_launched. The effective rule is one launch per agent tool call."
+      },
+      {
+        "item": "4. _parent_pid test hook",
+        "result": "pass",
+        "evidence": "Only Host.launching_parent and Host.ledger_ancestors use it, and it returns os.getppid(). main() builds an unmodified Host() and always passes launch_ledger=LEDGER_ROOT. Nothing reads an environment variable, CLI flag or spec key for it. Overriding it needs in-process subclassing, and a library caller is already a census worker, so using it would also mean patching the census in code (test_r4_production_cli_uses_unmodified_host)."
+      },
+      {
+        "item": "5. verify-cleanup fallback reporting",
+        "result": "pass",
+        "evidence": "verify_cleanup lists <stem>.final-*.json and <stem>.conflict-*.json next to the receipt, with their status. A corrupt fallback shows as 'unreadable', other jobs' fallbacks are not listed, and the primary status and cleanup proof are reported, including the reboot branch. A failed final write now gives status launcher_error in the .final file (R3-3)."
+      },
+      {
+        "item": "R3-1 / R3-4",
+        "result": "pass",
+        "evidence": "A 10**400 JSON integer now raises SpecError. If an ancestor vanishes during the ledger lookup, the launch refuses with launch_ledger_unavailable and nothing launches (test_r4_vanishing_parent_fails_closed)."
+      }
+    ],
+    "residual_risks_deliberate_only": [
+      "Renaming a driver's argv[0] to a walk boundary (for example 'exec -a tmux bash -c \"<loop>\"', or naming it claude, codex or init) stops the walk below it. Verified: 2 launches.",
+      "Deleting the per-uid ledger directory under /tmp, or pointing TMPDIR elsewhere for one invocation, resets the ledger.",
+      "A deliberately built pseudo-terminal (script, expect), or a person or agent typing a loop at a real interactive prompt, is exempt from the ledger by design.",
+      "Separate parents per job, such as one cron entry or systemd unit per spec, each get one launch.",
+      "Patching Host or the census in-process from a library caller is a code-level change.",
+      "A setsid escapee with a neutral argv and cwd is invisible to the post-run census; only cgroup containment would close this."
+    ],
+    "scope_limits_carried_forward": [
+      "Linux-only stop path: no MATLAB or native Windows job may use this launcher until a reviewed native extension exists. This is documented in the module.",
+      "A SIGKILLed launcher leaves the receipt 'running'. The job ends through PDEATHSIG and GNU timeout, and recovery is verify-cleanup.",
+      "A D-state member can block the final wait.",
+      "Conservative false positives: one launch per agent tool call; any concurrent pytest, grep or editor whose argv names contributor_tools, converted_datasets and the like blocks a launch; any Windows python.exe blocks a launch."
+    ],
+    "not_launch_authorization": "done_for_launcher covers this deliverable only. A UM21-T02 launch still needs PM-01 marked done, the record selected under UM21-T01, the independent T02 audit script written, reviewed and hash-bound, a job spec with the PM-01 values, a passing --dry-run, and a fresh census. No scientific approval is implied.",
+    "tests_run": [
+      "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_guarded_launcher.py tests/test_guarded_launcher_verify.py tests/test_backlog_workflow.py: 212 passed in 20.1 s, which is the worker's 205 plus 7 new reviewer round-4 tests. The two launcher files alone: 141 passed. No xfail remains.",
+      "No dummy, probe or tmux-probe process remained. The real ledger directory /tmp/locohub_guarded_launcher_uid1000 was never created. The private tmux socket server was killed by this reviewer.",
+      "python3 contributor_tools/build_backlog_page.py --check: Backlog valid; HTML current (87 tasks)."
+    ],
+    "next_action": "The coordinator records the launcher deliverable as reviewed in the UM21-T02 handoff and backlog. The next UM21-T02 step is the independent audit script, which must not reuse source_components() or the producer interpolation, must set RLIMIT_AS <= 768 MiB, and must be reviewed and bound before any launch."
+  },
+  "round_3": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-30T22:16:18Z",
+    "reviewed_sha256": {
+      "contributor_tools/guarded_launcher.py": "a2a9abc89216aa9b007e97bf0b5e4552b328fc8f69d4a6fafdb88f8d81476f37",
+      "tests/test_guarded_launcher.py": "5d71afa375c655c566d3abadd54b9a16471c627c8240c6c7f7f714d184e1d77b",
+      "tests/test_guarded_launcher_verify.py (as handed back by the worker)": "d1f39d2b95c2ce072f0e7af220e5fc09a66310b0b70c72420c3e19c2593e8601",
+      "tests/test_guarded_launcher_verify.py (after reviewer round-3 additions)": "30b3caff8183a97b880ac36412a0cd6b8f478a52f38e616d1e22c1cb6d7b4075",
+      "docs/quality/audits/pm01-um21-tread-pilot-handoff.json": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+    },
+    "summary": "Fixes A and B hold, and so does fix C apart from the ledger. One gap in the ledger remains, and it is an agent pattern, not deliberate circumvention. The ledger is keyed on the nearest non-wrapper parent, so a loop that starts a fresh shell for each iteration gets a new slot every time. Examples are 'for s in ...; do sh -c \"cd repo && <launcher run $s>\"; done', 'xargs -I{} sh -c \"<launcher run {}>\"', and bash -c with any command after the launcher. Plain shell loops, 'xargs <launcher>', wrapper chains, 'find -exec sh -c', parent re-exec, bash -c with the launcher as its last command, and setsid -f are all blocked. Everything else checked passes. Once fix D is in, the remaining holes need deliberate circumvention by a person or a deliberately evasive script (see residual_after_fix_D). No real job was launched, no research data was read, and the real ledger directory was never touched.",
+    "worker_deviation_ruling": {
+      "result": "accepted; it is not a deviation",
+      "evidence": "Round-2 fix C(2) asked for a shell to be exempt only when -c occupies the first argument position, not when -c appears anywhere. It never asked for the -c command to be exactly the launcher. _shell_mode returns 'command' when the first argument after options is -c or a cluster containing c (such as -ec or -lc), 'interactive' when there are no non-option arguments, and otherwise 'script'. That matches the request. 'bash queue.sh -c x' is now 'script'. Loops inside an exempt -c shell are the ledger's job; see fix D."
+    },
+    "test_file_diff_ruling": "accepted. Re-adding my 5 round-2 marker edits to the worker's copy (d1f39d2b...) reproduces my round-2 file hash 8bbb1632... exactly, so only the strict-xfail markers were removed.",
+    "checks": [
+      {
+        "item": "Ledger: plain loop, xargs, wrappers, find -exec, parent re-exec, setsid",
+        "result": "pass",
+        "evidence": "The probes call Host.launching_parent and claim_launch_slot into a scratch ledger, or run run_job with a synthetic census and a dummy 'true' job. Blocked on the second iteration: 'for ...; do <launcher>; done'; 'xargs -I{} <launcher>'; 'timeout 10 nice -n 19 <launcher>' (wrappers are skipped); 'find -exec sh -c \"<l>; <l>\"'; and 'bash -c \"cd /tmp && <l>\"' in a loop (bash 5.2 execs the final command, so the outer shell stays the parent). A parent re-exec keeps its PID and start ticks and is refused. With setsid -f the launcher is reparented to the WSL session /init (PID 1475), and the second launch is refused because the key is shared."
+      },
+      {
+        "item": "Ledger: fresh shell per iteration",
+        "result": "fail",
+        "evidence": "Each iteration gets a new parent PID, so each gets a slot. Probes (both launch): 'for i in 1 2; do sh -c \"cd /tmp && <l>\"; done' (dash does not exec the final command); 'xargs -I{} sh -c \"<l>\"'; 'for ...; do bash -c \"<l>; echo done\"'; and 'zsh -c \"<l>; true\"'. Agents write all of these routinely; the cd-and-run form is the usual way to call a repo tool. Encoded as test_r3_ledger_blocks_a_fresh_shell_per_iteration (3 strict xfails). The loop text names the launcher literally, so a fix based on the text or on structure will both satisfy it. -> fix D."
+      },
+      {
+        "item": "Ledger: corrupted, deleted or unusable; PID reuse; dry run",
+        "result": "pass",
+        "evidence": "A corrupted (non-JSON) entry still refuses with parent_already_launched, because the exclusive create fails. A ledger path that is a file refuses with launch_ledger_unavailable. A dry run returns before the ledger and writes no entry. A reused PID has different start ticks, so it is correctly a new key; start ticks cannot be forged. Deleting the per-uid ledger directory under /tmp, or setting TMPDIR for one invocation, resets the ledger. Both are deliberate acts and are listed as residual. This session's TMPDIR is empty, so the root is /tmp."
+      },
+      {
+        "item": "Interactive-terminal exemption",
+        "result": "spoofable_by_deliberate_pty",
+        "evidence": "printf '<l>\\n<l>\\nexit\\n' | script -qfc 'bash --norc' /dev/null gave the launcher an interactive bash on /dev/pts as its parent, so both launches were ledger-exempt. A loop typed or sent through tmux send-keys at a real prompt is exempt by design and documented. Exploiting this takes a deliberately built pseudo-terminal or a terminal session driven by hand, which is not how this repository's agents run commands: the Claude tool shell is 'zsh -c' with a non-tty stdin."
+      },
+      {
+        "item": "NaN, inf and huge numbers",
+        "result": "pass",
+        "evidence": "_positive (isfinite) covers every spec number: timeout, grace, poll, each disk item, startup and runtime reserves, and the address space. The envelope limits are checked too. Readings go through _at_least, where NaN, inf, None and strings never admit (disk, startup and runtime). The guard minimum ignores non-finite values. A JSON integer of 10**400 makes math.isfinite raise OverflowError instead of SpecError. That fails closed, with a traceback and no launch (R3-1)."
+      },
+      {
+        "item": "Post-reap failures and fallback receipt",
+        "result": "pass_with_note",
+        "evidence": "Each _finalise step is isolated; the unreadable output file case is now recorded under outputs[].error and outputs_hashed false. If the final receipt write fails, the primary receipt stays 'running', and a terminal <receipt>.final-<leader_pid>.json is written exclusively next to it (verified). It can be found from the running receipt's leader_pid, but neither the docstring nor verify-cleanup mentions the .final-/.conflict- names (R3-2). In that fallback, status stays the job outcome ('completed') with clean_success false, whereas other finalisation errors set launcher_error (R3-3). If both writes fail, for example on a full disk, only stderr records it. The job is already reaped, so this is a recordkeeping gap, not a safety gap."
+      },
+      {
+        "item": "PDEATHSIG refusal path",
+        "result": "pass",
+        "evidence": "With _libc_prctl returning None, the launch refuses before anything starts (parent_death_signal_unavailable; dry run too). With prctl returning -1 in the child, the preexec raises, Popen raises SubprocessError, the receipt is refused_precondition with launch_failed, and the marker file is not created. The ledger slot is consumed only if the failure happens after the claim, which is conservative."
+      },
+      {
+        "item": "converted_datasets pattern",
+        "result": "pass",
+        "evidence": "It catches 'python -c' or tools that name research data from any cwd. Conservative false positives: any ls, tail, editor or grep naming converted_datasets blocks a launch while it runs. The MCP servers and the claude node process are still not flagged."
+      }
+    ],
+    "required_fixes": [
+      "D. Close the per-iteration-shell gap in the ledger. Recommended: besides the nearest non-wrapper parent, check and then claim an entry for every ancestor up to the first interactive terminal, agent host or init that either (a) is a shell, xargs, find, make or parallel process, or (b) has an argv mentioning guarded_launcher. Refuse if any of those entries already exists. Rule (a) alone also blocks env-var indirection; rule (b) alone keeps one launch per agent tool call. The Claude tool shell 'zsh -c' is fresh for each call, so legitimate one-off launches are unaffected. Remove the 3 strict-xfail markers on test_r3_ledger_blocks_a_fresh_shell_per_iteration once they pass."
+    ],
+    "recommended_not_blocking": [
+      "R3-1. Convert OverflowError from huge JSON integers into SpecError.",
+      "R3-2. Document the .final-<pid>.json and .conflict-<pid>.json fallback names in the docstring, and have verify-cleanup report any sibling fallback receipt.",
+      "R3-3. Set status launcher_error when the receipt write is what failed, to match the other finalisation errors.",
+      "R3-4. In launching_parent, when an ancestor's stat disappears mid-walk (a race with setsid -f), refuse instead of keying on a dead PID with start_ticks None."
+    ],
+    "residual_after_fix_D": "Once D is in, every remaining hole needs deliberate circumvention by a person or a deliberately evasive script. None is the old watcher-chain agent pattern. The holes: deleting the per-uid ledger directory or pointing TMPDIR elsewhere; building a pseudo-terminal (script, expect) or driving a tmux prompt by hand so the parent counts as an interactive terminal; hiding the launcher text behind runtime indirection while also using a non-shell driver; one cron entry or systemd unit per job; and a setsid escapee with a neutral argv and cwd. Pre-armed watcher chains in the old style are blocked by the census itself, because a waiting watcher's argv names the launcher and counts as a foreign worker at the next launch.",
+    "tests_run": [
+      "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_guarded_launcher.py tests/test_guarded_launcher_verify.py tests/test_backlog_workflow.py: 196 passed, 3 xfailed in 19.4 s. The two launcher files alone give 125 passed and 3 xfailed: the worker's 107 plus 18 new reviewer round-3 tests. The 3 strict xfails are fix D; each failed for its stated reason when run with --runxfail.",
+      "No probe, dummy job or escapee process remained, and the real ledger directory /tmp/locohub_guarded_launcher_uid1000 was never created.",
+      "python3 contributor_tools/build_backlog_page.py --check: Backlog valid; HTML current (87 tasks)."
+    ],
+    "next_action": "The worker applies fix D and removes the 3 round-3 markers once the tests pass (test intent unchanged). Round 4 can then be limited to the ledger change plus a full test run. UM21-T02 stays blocked for launch until the launcher is marked reviewed."
+  },
+  "round_2": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-30T22:12:00Z",
+    "reviewed_sha256": {
+      "contributor_tools/guarded_launcher.py": "fa9f0fb0b3773119f577f8a22698aab063127bfae4a92a2a317f35c101765e4b",
+      "tests/test_guarded_launcher.py": "880cca41909b8ebde9738a53285e60f2be3b6a68b7b7695557d3caae8cdccd4b",
+      "tests/test_guarded_launcher_verify.py (as handed back by the worker)": "acb5ee2347664b55489af34c9a5bd2ca5380e43c8dac42e2e14f3eb9858a56c4",
+      "tests/test_guarded_launcher_verify.py (after reviewer round-2 additions)": "8bbb163264a6e7b0ceb1c680f043d500dfc70968258a8d139e195f90a9d623f7",
+      "docs/quality/audits/pm01-um21-tread-pilot-handoff.json": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+    },
+    "summary": "I checked each of the 8 round-1 fixes against the code. Fixes 3, 4, 5, 7 and 8 hold. PDEATHSIG and the address-space limit work as claimed. Three new defects block approval. (A) A JSON spec with NaN passes every floor and maximum, and NaN runtime reserves or a NaN poll interval switch off the memory guard: in a test, 10 MiB available was not treated as a breach. (B) After the leader is reaped, a job output file the launcher cannot read stops the terminal receipt from being written, and the receipt stays 'running'. (C) Two routes still let a driver chain launches: any process that imports run_job is exempt from the census as 'the launcher itself', and a script-running shell is exempt whenever '-c' appears anywhere in its arguments. Nothing was launched beyond dummy commands, no research data was read, and no powershell was called.",
+    "teardown_deviation_ruling": {
+      "result": "accepted",
+      "evidence": "I rebuilt my round-1 file from my own edits; its sha256 is 4f74069f..., the hash recorded in round 1. Diffing it against the worker's copy (acb5ee23...) shows exactly two kinds of change. First, the 7 strict-xfail decorator lines are removed (covering 12 test instances). Second, the teardown in test_unexpected_error_mid_run_stops_group_and_finalises_receipt wraps the os.waitid probe so that ChildProcessError means 'already reaped'. That code is in the finally block, after every assertion. os.killpg is still sent only when the leader is our own unreaped child. Once fix 2 is in, the launcher reaps the leader itself, so the original teardown would have raised ChildProcessError and reported an ERROR even with every assertion passing. No assertion or test intent changed."
+    },
+    "fix_checks": [
+      {
+        "fix": 1,
+        "result": "fail",
+        "evidence": "Maxima and floors are enforced for finite values: 3601 s, 31 s, 15.01 s, inf, 769 MiB, disk 1023 MiB, startup 3583 and runtime 2047 are all rejected. The output volume (>= 5120 MiB) and C: (>= 1024 MiB) floors are always added, even with disk_admission []. A changed envelope hash refuses. NaN, however, passes every check, because every comparison with NaN is false. Python's json.loads accepts NaN, so a spec file can contain it. NaN poll_seconds means next_poll is never reached, so no memory poll happens; NaN runtime reserves mean v < NaN is never true, so there is never a breach (test_r2_nan_runtime_reserve_disables_the_memory_guard). A NaN timeout makes GNU timeout fail with 125, and the backstop is NaN as well. -> fix A."
+      },
+      {
+        "fix": 2,
+        "result": "partial",
+        "evidence": "Pass: a mid-run exception (round-1 test); failure of the first running-receipt write (status launcher_error, the group is gone, and a single conflict receipt is written exclusively); an exception inside prove_cleanup (recorded as cleanup_proven false and not clean, and the receipt is terminal). Fail: everything after os.wait4 runs outside the wrapper. If the job leaves an unreadable file in its output root (chmod 000), sha256_file raises PermissionError, run_job raises, and the receipt stays 'running' for a job that is already reaped. The same applies to the log hash and the final receipt write. The job is safe, since it is reaped and the cleanup proof has run, but the spec's terminal receipt is lost, and job output can cause it. -> fix B."
+      },
+      {
+        "fix": 3,
+        "result": "pass",
+        "evidence": "A stop flag raised during preconditions (set from inside the Windows census) leaves the job unlaunched: launched false, and no marker file is created. The remaining window between that check and Popen is handled by the first loop iteration, which stops the group."
+      },
+      {
+        "fix": 4,
+        "result": "pass",
+        "evidence": "The round-1 setsid escapee test passes: linux_no_new_worker is false and clean_success is false. The remaining limit is not documented: an escapee with a neutral argv and cwd (python -c in /) matches no worker rule, so the post-run census cannot see it (test_r2_escapee_outside_repo_without_patterns_is_missed_documented)."
+      },
+      {
+        "fix": 5,
+        "result": "pass",
+        "evidence": "The round-1 sacrificial driver test passes: the driver exits 0, so no group signal reached it. stop_group raises when pgid != pid. Note: the check reads boot_id before getpgid/getsid. If that read raised, group_ok would be false, the launcher would SIGKILL only the leader (timeout), and the job's grandchildren would be orphaned with no timeout bound (recommendation R2-1)."
+      },
+      {
+        "fix": 6,
+        "result": "fail",
+        "evidence": "Python, MATLAB and OpenSim ancestors and 'bash queue.sh' now count as workers. Under 'bash -c \"python3 driver.py\"', 'timeout 4000 python3 driver.py' or tmux, the driver itself is a Python ancestor, so it is caught. Two bypasses remain. (1) Linux census treats the launcher's own PID as exempt whatever its argv. A Python script that imports guarded_launcher and calls run_job in a loop is therefore 'the launcher itself' and passes every census; this is verified with a real read-only /proc census from 'python3 -c' in the repository (test_r2_library_driver_is_not_exempt_as_launcher_itself). (2) ancestor_is_exempt exempts a shell when '-c' appears anywhere in argv, so 'bash queue.sh -c x' is exempt. Exempt by design, and undocumented as a chaining route: 'bash -c \"for s in ...; do python3 -m contributor_tools.guarded_launcher run $s; done\"', 'xargs -n1 python3 -m contributor_tools.guarded_launcher run', 'make', 'nohup', and a script fed through stdin to a bare 'bash'. -> fix C."
+      },
+      {
+        "fix": 7,
+        "result": "pass",
+        "evidence": "All 3 round-1 false-negative cases are detected, and the real MCP server argv shapes are still not flagged. New conservative false positive: any relative path argument resolving inside the repository now flags a process, e.g. an MCP server run with '--config ./cfg.toml' and cwd in the repository."
+      },
+      {
+        "fix": 8,
+        "result": "pass",
+        "evidence": "The docstring covers the SIGKILLed launcher, the Linux-only stop path (no MATLAB or native job), the D-state wait and the conservative census."
+      },
+      {
+        "fix": "R2 PDEATHSIG",
+        "result": "pass",
+        "evidence": "prctl(PR_SET_PDEATHSIG, SIGTERM) runs in the timeout leader before exec; it is preserved across exec, and nice and ionice exec in place. When I SIGKILLed the driver, the job's Python grandchild (child of sh, grandchild of timeout) was gone in under 5 s against a 60 s timeout. On TERM, GNU timeout forwards it to its own process group and arms kill-after, so the signal does reach the grandchild. The launcher forks from a single thread, so the PDEATHSIG thread-exit caveat does not apply. Minor: prctl's return value is not checked, so parent_death_signal in the receipt records intent, not outcome (R2-2)."
+      },
+      {
+        "fix": "R5 address space",
+        "result": "pass",
+        "evidence": "address_space_mib 512 reaches the job, which sees an RLIMIT_AS soft limit of 536870912, and the value appears in observed_address_space_limits. 769 is rejected, and an omitted value is allowed, as PM-01 puts the limit in the producer. Observed limits are stored as a set of distinct strings, so the receipt cannot show which process ran without a limit (R2-3)."
+      }
+    ],
+    "required_fixes": [
+      "A. Reject non-finite numbers. Every numeric spec field (timeout, grace, poll, reserves, disk floors, address space) must pass math.isfinite before the floor and maximum checks. Remove the strict-xfail markers on test_r2_non_finite_thresholds_are_rejected and test_r2_nan_runtime_reserve_disables_the_memory_guard once they pass.",
+      "B. Make finalisation after reap exception-safe. Record per-file errors when hashing outputs and the log instead of raising. If any finalisation step fails, still write the terminal receipt, with finalisation_errors listed and clean_success false. If the receipt write itself fails, fall back to an exclusive conflict file. Remove the marker on test_r2_unreadable_output_file_still_finalises_receipt.",
+      "C. Close the chaining exemptions. (1) Exempt the launcher's own PID only when its argv is the CLI form (-m contributor_tools.guarded_launcher or a path ending guarded_launcher.py), so a Python process calling run_job in a loop is a worker. (2) Exempt a shell only when its first non-option argument position holds -c, not when -c appears anywhere. (3) Either refuse a second launch from the same parent process, by recording parent PID plus start ticks in a small host ledger (recommended; this covers shell -c loops, xargs and make), or document in the docstring that such drivers remain exempt and are prohibited by policy. Remove the markers on test_r2_library_driver_is_not_exempt_as_launcher_itself and the 'bash queue.sh -c x' case once they pass."
+    ],
+    "recommended_not_blocking": [
+      "R2-1. Read getpgid and getsid before boot_id, so that a boot_id failure still leaves a verified group to stop.",
+      "R2-2. In the preexec hook, check prctl's return value and _exit on failure, so that parent_death_signal records the outcome.",
+      "R2-3. Record observed RLIMIT_AS per member, with PID and a trimmed argv, rather than as a set of distinct values.",
+      "R2-4. Add 'converted_datasets' to LINUX_PATTERNS, so that 'python -c' reading research data from a neutral cwd is caught.",
+      "R2-5. Document the escape limit: a setsid descendant with a neutral argv and cwd is invisible to the post-run census, and only cgroup containment would close it."
+    ],
+    "tests_run": [
+      "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_guarded_launcher.py tests/test_guarded_launcher_verify.py: 93 passed, 8 xfailed in 15.7 s. That is the worker's 71 plus 22 new reviewer round-2 tests passing. The 8 strict xfails encode fixes A, B and C; each failed for its stated reason when run without the marker.",
+      "After the run, no dummy job, escapee or driver process remained.",
+      "python3 contributor_tools/build_backlog_page.py --check: Backlog valid; HTML current (87 tasks)."
+    ],
+    "next_action": "The worker applies fixes A-C, removes the 8 round-2 strict-xfail markers as each test passes (test intent unchanged), updates the handoff hashes, and returns for round 3. UM21-T02 stays blocked for launch until the launcher is marked reviewed."
+  },
+  "round_1": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-30T21:51:08Z",
+    "scientific_approval": false,
+    "reviewed_sha256": {
+      "contributor_tools/guarded_launcher.py": "18a3b9ae0858749cde8a527487329e4e79a1ed86e1c05ded905db8487307ad24",
+      "tests/test_guarded_launcher.py": "817c57c05fc7d8c0f8c6b0def13945c5382c9d374726e95e3a5a2e77eb40b787",
+      "docs/quality/audits/pm01-um21-tread-pilot-handoff.json": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9",
+      "tests/test_guarded_launcher_verify.py": "4f74069f82751521df18f79e770ebbab2b04f2c09ac490b2a380d844c68716bd"
+    },
+    "repository_head": "569ee8f4d7cdf83d96d5f74aa6b65354b4a78da4",
+    "summary": "The hashes match the worker's handoff. The core mechanics are sound and I verified them: a new session with pgid = sid = leader PID; nice 19 and idle I/O; the five thread variables reach the job; TERM, then grace, then KILL; the leader is reaped only after the last signal; the cleanup proof follows the spec, including the reboot case; refusals fail closed; no PID or successor field is accepted. It is returned for 7 required fixes. A job spec can lower any PM-01 threshold. Any unexpected exception mid-run leaves the job unguarded. A stop requested during preconditions still launches. A descendant that leaves the group does not affect clean_success. pgid == leader PID is assumed rather than checked; with that assumption broken, I showed the launcher SIGTERMs its own group. A Python ancestor is excluded from the census, which lets a driver script chain launches. Three kinds of repo Python worker are missed. Documentation is also required for the unguarded run after a launcher SIGKILL and for the missing native stop path. No real job was launched and no research data was read.",
+    "checks": [
+      {
+        "id": 1,
+        "name": "Spec conformance, item by item",
+        "result": "partial",
+        "items": {
+          "precondition PM-01 and UM21-T01 done": "not enforced by the launcher; operator responsibility. Acceptable, but must be stated in the job-spec review.",
+          "precondition censuses both sides, recorded in receipt": "pass (order: output root, bindings, disk, Linux census, Windows census, memory, launch; census is last before launch). See checks 3 and 6 for classifier gaps.",
+          "precondition re-hash bindings, mismatch refuses": "pass (worker test plus code read; mismatch writes refused_precondition and launches nothing).",
+          "precondition output root absent": "pass. Note: checked before the multi-minute source hash, so not re-checked immediately before Popen (recommended R3).",
+          "precondition disk S: >= 5 GiB and C: >= 1 GiB": "fail_by_design: values come only from the job spec, with no floor and no requirement that both drives be listed (fix 1).",
+          "precondition startup memory 3584 / 2816 MiB": "mechanism pass (>= boundary verified at exactly 3584/2816 and refused at -0.1 MiB); values are spec-supplied with no floor (fix 1).",
+          "envelope numerical_workers 1": "pass for the census gate, except ancestor exclusion (fix 6) and classifier gaps (fix 7).",
+          "envelope chaining none": "pass inside the launcher (one Popen, no successor field, unknown keys rejected); the ancestor exclusion is a chaining route (fix 6).",
+          "envelope priority nice 19 / ionice -c 3": "pass (child observed nice 19 and ionice 'idle').",
+          "envelope thread_env": "pass (all five variables observed as '1' in the child).",
+          "envelope address_space_mib 768": "acceptable per spec text (see check 5).",
+          "envelope launch_form setsid timeout --signal=TERM --kill-after=30s 3600 nice ionice": "pass (Popen start_new_session=True is setsid; observed pgid == sid == leader PID; argv prefix verified).",
+          "envelope finite timeout 3600": "mechanism pass; the value is spec-supplied with no ceiling (fix 1 covers it).",
+          "envelope runtime poll 15 s, reserves 2048/2048": "mechanism pass, and an unreadable Linux or Windows reading counts as a breach (verified both). The poll interval and reserves are spec-supplied; a spec with poll_seconds 600 is accepted (fix 1).",
+          "envelope stop SIGTERM, wait 30 s, SIGKILL": "pass (a TERM-ignoring job got SIGTERM first and was gone after the 2 s test grace, within 10 s).",
+          "envelope cleanup_proof incl. reboot": "pass (boot_id compare, no PGID member, no leader PID with the same start ticks; reboot branch returns proven by reboot; Windows re-census with new-worker flag).",
+          "envelope on_resource_breach": "pass (status stopped_resource_guard, partial output kept, retry 'never automatic').",
+          "terminal_receipt_must_bind": "pass for the generic contents: bindings before/after, all output files with sha256, both censuses before/after, process identity, cleanup proof, exit code, wall time, peak RSS (wait4 largest process plus sampled group sum). Which files are bound depends on the job spec. The envelope file itself is named but not hashed (recommended R1).",
+          "no historical PID coupling": "pass (spec keys are a closed set; the only PIDs read are census rows and the launcher's own child)."
+        }
+      },
+      {
+        "id": 2,
+        "name": "Process safety",
+        "result": "fail",
+        "evidence": [
+          "PGID reuse: pass. The leader stays unreaped (waitid WNOWAIT) through every killpg, and wait4 reaps only after the last signal; nothing is signalled after reaping. Verified with my own SIGTERM/SIGHUP handlers in the pytest process and a sibling sleep in pytest's group: after a breach stop and an orphan stop, the handlers recorded no signal and the sibling was alive.",
+          "pgid == leader PID is never asserted (fix 5). In a sacrificial driver in its own session, with Popen forced to start_new_session=False, the orphan path SIGTERMed the driver's own group (driver exit -15). Popen raises if setsid itself fails, so this needs a code regression or misuse, but a one-line check removes the only route to signalling outside the job's group.",
+          "Launcher exception mid-run (fix 2): with a one-off RuntimeError in group_members during polling, run_job raised, the job kept running in its group with no guard, and the receipt stayed 'running'. There is no try/finally around launch-to-reap. My test cleaned up its own job.",
+          "Stop requested before launch (fix 3): SIGTERM/SIGINT/SIGHUP during preconditions (the source hash can take minutes) sets a flag that is checked only after Popen, so the job starts and is then stopped. Verified: receipt launched true.",
+          "Launcher SIGKILLed (fix 8, documentation): the job keeps running in its own session with no memory guard. GNU timeout still ends it (verified: group gone within timeout plus kill-after), and the receipt stays 'running'. This is not documented in the module or handoff. Recommended R2: PR_SET_PDEATHSIG=SIGTERM on the timeout leader. GNU timeout then forwards TERM to its group and applies --kill-after, which is the spec's own stop sequence.",
+          "Escape from the group (fix 4): a descendant that calls setsid is not stopped and not in the PGID proof. The post-run Linux census records it (verified with a synthetic token census), but clean_success stays true because no Linux after-census check exists.",
+          "Receipt race: running-receipt identity was readable by the job 0.5 s after start (verified). The window between Popen and the first receipt write is unrecorded; R2 covers it. Refusal receipts are written non-exclusively, so a refusing second launcher with the same receipt_path can overwrite a live 'running' receipt (R4). The log is opened 'xb', so two concurrent launches with one spec cannot both start a job.",
+          "If a member is in uninterruptible sleep 10 s after SIGKILL (possible on drvfs), the final waitid blocks indefinitely. This is safe (no further signals) but the receipt stays 'running'. Document it with fix 8."
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Census correctness",
+        "result": "fail",
+        "evidence": [
+          "Read-only real Linux census at 21:4xZ: 62 processes, 0 workers. The four MCP servers from 3 Claude sessions (python -m alex_mcp.server, an absolute crossref_server.py, the zotero-mcp console script, paper_fetch_mcp) are correctly not flagged. The excluded ancestors were /init, tmux, -zsh, claude and the tool shell.",
+          "Detected as intended (tests pass): Windows MATLAB.exe with null cmdline or odd args, pythonw.exe, opensim-cmd.exe; MATLAB via WSL interop (matlab.exe and win64/MATLAB.exe paths) on Linux; a conda python3.11 or venv python running repo code; python -I -c in the repo. Not flagged: MathWorksServiceHost.exe, wsl.exe, and the launcher's own powershell census process.",
+          "False negatives (fix 7), all with Python running repo code: the console-script pytest in the repo, e.g. /usr/bin/python3 ~/.local/bin/pytest --run-integration (the first argument is an absolute path outside the repo); a Jupyter kernel in the repo (python -m ipykernel_launcher); and a repo script by absolute path when the cwd is outside the repo (the python rule requires cwd inside the repo).",
+          "Ancestor exclusion (fix 6): every ancestor is excluded, including Python processes running repo code. Verified: a census run from a child of this repo's python -m pytest does not list pytest as a worker. A driver such as python3 contributor_tools/run_queue.py that calls the launcher repeatedly would pass every census, which recreates the historical watcher chains PM-01 retired. Only shells, tmux, claude and init should be excludable; the invoking zsh -c line contains 'contributor_tools.guarded_launcher', so excluding by classifier alone would block the normal CLI.",
+          "False positives are conservative and acceptable but should be documented. Any Windows python.exe blocks, as does any Linux process whose argv mentions contributor_tools, matlab, opensim, locohub or reconversion_v2 (for example another agent's grep or an editor). Concurrent pytest in the repo also blocks, which AGENTS.md one-at-a-time rules allow."
+        ]
+      },
+      {
+        "id": 4,
+        "name": "Admission and thresholds",
+        "result": "fail",
+        "evidence": [
+          "The comparisons are correct: >= for startup and runtime reserves, and a value exactly at the reserve passes. The worker's tests and handoff 'remaining' carry the PM-01 values exactly (5120/1024 MiB disk, 3584/2816 startup, 2048/2048 runtime, 3600 s, 30 s, 15 s).",
+          "The launcher itself holds no PM-01 value. validate_spec accepts startup or runtime reserves of 1 MiB, a disk floor of 1 MiB, poll_seconds 600, any timeout, and disk_admission without a C: entry (fix 1; 4 strict-xfail tests). PM-01 says the reserves are 'carried forward unchanged and not raised or lowered', and AGENTS.md forbids changing an admission threshold to bypass a rejection. A guard whose thresholds are an input of the guarded job does not enforce either.",
+          "Unreadable readings fail closed. Windows census: a null FreePhysicalMemory parsed as 0 refuses, and malformed JSON or a missing key gives windows_census_unavailable, both through the real Host.windows_census parser with a stubbed powershell. Linux MemAvailable unreadable at startup: run_job raises before launch, nothing starts and no log is written, but no refusal receipt is written either (minor; include in fix 2's handling). Runtime readings that cannot be read are breaches on both sides."
+        ]
+      },
+      {
+        "id": 5,
+        "name": "Exit codes and RLIMIT_AS",
+        "result": "pass_with_notes",
+        "evidence": [
+          "Verified: TERM honoured at timeout gives 124 and timed_out; TERM ignored gives -9 and timed_out (the worker's test); an untimed self-SIGKILL, standing in for an OOM kill, gives -9 and failed, not timed_out, because wall < timeout; a job that exits 124 early gives failed. With timeout as the leader, 137 cannot occur: GNU timeout 9.4 re-raises the child's fatal signal on itself. The 137 branch is dead but harmless, and the comment overstates it.",
+          "RLIMIT_AS 768 MiB: PM-01 says 'Set inside extend_umich_tread_source.py by RLIMIT_AS. Any separate T02 audit script must set the same limit or a lower one.' The obligation is on the job code, which is hash-bound, so not enforcing it in the launcher conforms to the spec for this pilot. It is not sufficient as a general guard for future jobs, because the receipt cannot show that a limit was in effect. Recommended R5: an optional address_space_mib spec field applied by setrlimit in the child, and the observed 'Max address space' from /proc/<pid>/limits recorded at each poll."
+        ]
+      },
+      {
+        "id": 6,
+        "name": "Tests and backlog check",
+        "result": "pass",
+        "evidence": [
+          "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_guarded_launcher.py tests/test_guarded_launcher_verify.py: 50 passed, 12 xfailed in 14.3 s (worker 18 passed; reviewer 32 passed, 12 strict xfail).",
+          "Each xfail was also run with --runxfail to confirm it fails for the stated reason. Results: DID NOT RAISE SpecError (4); receipt status still 'running'; launched True; clean_success True with the escapee in census_after; driver exit -15; pytest PID absent from workers; classifier False (3).",
+          "Dummy commands only (true, sleep, sh, python -c); no powershell call; one read-only real /proc census. Afterwards no test sleep, escapee or driver process remained.",
+          "python3 contributor_tools/build_backlog_page.py --check: Backlog valid; HTML current (85 tasks)."
+        ]
+      }
+    ],
+    "required_fixes": [
+      "1. Enforce PM-01 thresholds in the launcher, not only in the job spec. Startup reserves must be >= 3584/2816 MiB, runtime reserves >= 2048/2048 MiB, disk admission must include S: >= 5120 MiB and C: >= 1024 MiB, poll_seconds <= 15, kill_after_seconds 30, and timeout finite and <= a reviewed ceiling. Load these from the envelope or from constants, with a test-only override, and record the envelope sha256 in the receipt.",
+      "2. Wrap everything from Popen to reap in try/except/finally. On any unexpected exception, while the leader is unreaped, stop the group (TERM, grace, KILL), reap, and write a terminal receipt with status launcher_error and the exception. Write a refusal receipt for unreadable startup readings (e.g. Linux MemAvailable).",
+      "3. Check stop_requested immediately before Popen. If a stop was requested, refuse with stopped_by_request_before_launch and launch nothing.",
+      "4. Gate clean_success on the post-run Linux census. Any worker in census_after.linux (none existed before, by precondition) or an unavailable post-run Linux census makes the check false. Optionally also scan the leader's session ID during cleanup.",
+      "5. Right after Popen, assert os.getpgid(pid) == pid == os.getsid(pid). If not, never call killpg: kill only the unreaped leader by PID, reap it, and write status launcher_error.",
+      "6. Do not exclude ancestors that are workers. Only the launcher process itself, plus non-Python and non-MATLAB ancestors (init, tmux, shells, claude), may be excluded. Any Python or MATLAB ancestor running repo code refuses with foreign_worker_linux_ancestor, so a driver script cannot chain launches.",
+      "7. Close the Linux census gaps. Classify a Python process as a worker when any argv path resolves inside the repository, whatever its cwd. Also classify a console-script pytest, ipykernel or jupyter whose cwd is in the repository. The MCP servers listed in check 3 must stay unflagged.",
+      "8. Document in the module docstring and handoff: (a) a SIGKILLed or OOM-killed launcher leaves the job unguarded until timeout plus kill-after, with the receipt left 'running', and verify-cleanup is the recovery path; (b) the stop path reaches Linux processes only, so a job with a native Windows step (MATLAB.exe through interop) has no reviewed native stop or cleanup action beyond the new-worker flag, and needs a reviewed extension before any MATLAB job uses this launcher; (c) the final wait can block if a member is in uninterruptible sleep."
+    ],
+    "recommended_not_blocking": [
+      "R1. Bind the envelope file's sha256 in every receipt.",
+      "R2. Set PR_SET_PDEATHSIG=SIGTERM in the child before exec, re-checking getppid, so a dead launcher triggers timeout's own TERM then kill-after sequence. This also covers the unrecorded window between Popen and the first receipt write.",
+      "R3. Re-check that the output root is absent immediately before Popen; the current check precedes the source hash.",
+      "R4. Write refusal receipts exclusively (O_EXCL), or to a distinct name, so they never replace another launcher's running receipt.",
+      "R5. Add an optional address_space_mib applied with setrlimit in the child, and record the observed RLIMIT_AS of group members in the runtime guard.",
+      "R6. Correct the 137 comment. Add a linux_no_new_worker check and an orphans_present flag to checks."
+    ],
+    "not_checked": [
+      "Real powershell.exe census behaviour under slow or degraded interop. I did not call powershell; the worker's smoke is the only evidence.",
+      "Whether killing the WSL interop stub ends a Windows MATLAB.exe. Not tested; no native job was run.",
+      "Behaviour with the 2.2 GB source hash or a real 45 s record; no real job was launched."
+    ],
+    "resources": "Dummy subprocesses only, in pytest temporary directories; one read-only /proc census; no research data read; no process signalled except those this reviewer's tests started.",
+    "next_action": "The worker applies fixes 1-8, removes the strict xfail markers from tests/test_guarded_launcher_verify.py as each one passes (the test intent must not change), updates the handoff hashes, and returns for a second review round. UM21-T02 stays blocked for launch until the launcher is marked reviewed."
+  }
+}

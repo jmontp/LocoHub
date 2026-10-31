@@ -1,0 +1,346 @@
+{
+  "task_id": "UM21-T02",
+  "part": "independent audit script for the existing AB01/d10 pilot_v2 output",
+  "verifier_role": "independent second agent (own mutation tests; the worker's synthetic fixture writer is reused, but every mutation and expected outcome is the reviewer's own)",
+  "verdict": "done_for_audit_script",
+  "decision_sheet_verdict": "superseded by decisions_verdict (round 3)",
+  "decisions_verdict": "back_to_worker (round 3)",
+  "last_checked_at_utc": "2026-10-31T00:45:00Z",
+  "scientific_approval": false,
+  "round_3": {
+    "round": 3,
+    "scope": "decisions D-UM21-T02-1 and D-UM21-T02-2 and their sheets only; audit script b3278c87... unchanged and still accepted",
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-31T00:45:00Z",
+    "reviewed_sha256": {
+      "contributor_tools/audit_um21_tread_pilot.py (unchanged)": "b3278c876824662838894aae5724661d6cde7a3a5c560e2b4ff57f0c07951c59",
+      "docs/quality/audits/um21-t02-clock-census.json": "661f9dd528b7e167aa5516e1fc44dbdd5aa982daaf57cacffbf2331f29d36dfd",
+      "contributor_tools/audit_probes/2026_10_30/census_um21_tread_clock.py": "afb4ac2b61ea1ab3f65fe7c9bb13173503890927e91f19240db8e8d631dab384",
+      "contributor_tools/review_um21_t02_clock.py": "184b4c908354599fe7d013b7573cd4e5d37de75e6e7e5b4c64a9d85de5c0dbf2",
+      "docs/maintainers/handoffs/UM21-T02-audit.json": "a918a55c7b3ff7a1751623d18594b9f42fe23721256ca22f115b4c15428ed70f",
+      "review_sheets/D-UM21-T02-1/index.html (gitignored)": "4099f06113960f006490486ca41adbc33e18f6eb56383f8773f2d77e3b5603b1",
+      "review_sheets/D-UM21-T02-2/index.html (gitignored)": "e5a425251af6edd027f37720a1d5439dbef232797551c40e07fcbbef06128b30",
+      "tests/test_audit_um21_tread_pilot_verify.py (reviewer, unchanged)": "57577fd4f0345d649e0ef5ef2a13fb26f0efa9b382e5151143a44cfb60deb9d0"
+    },
+    "summary": "The counts, the duplicate evidence, the schema, the letters, the order and the folded recommendations all check out, and R2-1 and R2-2 are substantively done. Three short wording fixes remain before a verbatim copy. D-UM21-T02-1's released counts silently assume AB01 i10 is released, which option A of D-UM21-T02-2 removes. The table and options of D-UM21-T02-2 argue against option A in words that echo the folded recommendation (B). One sheet chip contradicts itself. Nothing needs new data; the builder strings and the handoff decision text are enough.",
+    "r2_3_ruling": "Accepted. Putting the reason split in the census (not_evaluable_detail) keeps the reviewed audit hash. The audit still fails closed on both causes, and the census now shows that AB08 i10 and AB10 i0 lack cvel, which I confirmed in round 2: VelProf is absent and all four heel/toe markers are present. The audit's combined reason string remains a cosmetic limitation; fold the split into the next audit revision that needs a new hash anyway.",
+    "checks": [
+      {
+        "item": "1. Recount D-UM21-T02-1 from the census",
+        "result": "pass_with_M1",
+        "evidence": "Published, all 50: 8,626. Minus AB01 i5 (148): 8,478 (C). A leaves out AB01 d10 183 + d5 163 + AB08 i10 225 + AB09 i10 178 + AB10 i0 167 = 916, giving 7,562. B: 7,562 + re-aligned 189 + 167 + 183 = 8,101, leaving out 225 + 167 = 392. Changed decisions 42 + 85 + 102 = 229 of 260 + 234 + 260 = 754. All equal the stated figures. M1: every figure includes AB01 i10 (154), so under D-UM21-T02-2 A each would be 154 lower (7,408 / 7,947 / 8,324; order unchanged). The decision_note calls the two decisions independent, but the counts are not."
+      },
+      {
+        "item": "1. Recount D-UM21-T02-2",
+        "result": "pass",
+        "evidence": "AB01 i5 written as published 148 and i10 154: A 0 released (302 left out), B 154 (148 left out), C 302."
+      },
+      {
+        "item": "2. Duplicate claim 62/62 and no other pair",
+        "result": "pass",
+        "evidence": "Round 2: in my probe every dataset matched byte for byte for this pair: jointAngles 10, jointForces 6, jointMoments 6, jointPowers 6, markers 28, forceplates 6 = 62; LHS/RHS/LStrideTime/RStrideTime also matched, and only cutPoints and newID differ. Round 3: /tmp/claude-1000/um21_verify/probe_dup3.py (sha256 4b7f523a...) hashed 10 datasets from every group (including events LHS/RHS) in all 50 records, one record at a time, and pooled the hashes across dataset names. The only recordings that share any hash are AB01/i10 and AB01/i5, on all 10. Peak RSS 75.6 MiB, wall 3.4 s. The census per-group coverage (events 5/7, differing cutPoints and newID) agrees."
+      },
+      {
+        "item": "3. Backlog schema with D-CORE-04-1 open",
+        "result": "pass",
+        "evidence": "Both decisions_for_backlog entries were appended in memory to a copy of backlog.json. validate_backlog accepts them, giving 3 open (D-CORE-04-1, D-UM21-T02-1, D-UM21-T02-2), the maximum. In the rendered backlog card, both recommendations sit inside <details>, and no 'recommend' text appears before the fold."
+      },
+      {
+        "item": "4. Letters, order, leaks",
+        "result": "pass_with_M2",
+        "evidence": "Each sheet's decision.json equals its handoff entry (sorted-key diff empty). Letters A/B/C match. Order is strides released, ascending (7,562 / 8,101 / 8,478 and 0 / 154 / 302), as the builder states. The folded sections stay closed at both widths. M2 (lean): D-UM21-T02-2's option A reads 'Most conservative about provenance; loses AB01 i10, whose task clock fits its motion' in the consequence and 'AB01 i10 also lost, though its clock fits' in the table's Effect cell. 'though its clock fits' argues against A with the folded 'why' for B, and B's entry carries no matching cost. Example neutral cost for B: 'AB01 then has no 5-degree incline recording; assigning the motion to i10 rests on the marker belt-speed fit'."
+      },
+      {
+        "item": "5. Figures",
+        "result": "pass_minor",
+        "evidence": "6 PNGs, each one panel, 4.27-4.37 in at 160 dpi. rcParams font.size 10.5 (ticks inherit it), legends and annotations 10. Contrasts: sheet 1 control AB05/i0 drawn with Random(20261031) from the aligned, non-held-out records; sheet 2 overlay against source cvel plus contrast AB01/i0. Each figure is titled as a question and shows the claimed failure (dots lead the line; i5 and i10 traces coincide while i0 differs; dots follow the i10 command, not the i5 one). Minor: sheet 2's contrast pool (aligned AB01 recordings other than the pair) holds only AB01/i0, so the 'seeded' pick is forced. Say 'the only other aligned AB01 recording'. In sheet 2 figure 1 the y-label 'right hip flexion (deg, source)' is clipped at the top. In figure 2 the 0 % contrast bars are invisible and only their '0/n' labels show, which the decision 'check' text calls 'blue contrast bars'. Sheet 1's offsets-figure labels no longer overlap (R2-3 done)."
+      },
+      {
+        "item": "6. Render 1100 px and 390 px (headless Chrome via Playwright)",
+        "result": "pass_with_M3",
+        "evidence": "No horizontal scroll on either sheet at either width (scrollWidth equals viewport). The options tables become cards at 390 px. Order and budgets are within AGENTS.md: sheet 1 has 5 chips, 3 figures and 3 not-shown items; sheet 2 has 5 chips, 3 figures and 2 not-shown items. M3: the sheet 2 chip 'No other pair among the 50 recordings shares any dataset (1 pair found)' contradicts itself. Screenshots: /tmp/claude-1000/um21_verify/r3_D-UM21-T02-{1,2}_{1100,390}.png."
+      },
+      {
+        "item": "7. Tests and backlog check",
+        "result": "pass",
+        "evidence": "AGENTS.md env prefix: pytest tests/test_audit_um21_tread_pilot.py tests/test_audit_um21_tread_pilot_verify.py tests/test_backlog_workflow.py gives 114 passed. build_backlog_page.py --check: Backlog valid; HTML current (87 tasks)."
+      }
+    ],
+    "required_fixes": [
+      {
+        "id": "R3-1 (M1)",
+        "fix": "D-UM21-T02-1: add to options_order and to the sheet footnote: 'Counts include AB01 i10 (154 strides); D-UM21-T02-2 option A would lower each by 154.' Change decision_note so it no longer calls the decisions independent; say the letters are independent but the counts are conditional."
+      },
+      {
+        "id": "R3-2 (M2)",
+        "fix": "D-UM21-T02-2: rewrite option A neutrally, for example consequence 'Neither recording is released (148 + 154 strides left out). Reversible.' and Effect 'AB01 i5 and AB01 i10 both left out'. Give B its own factual cost, for example 'AB01 has no 5-degree incline recording; the motion is assigned to i10 by the belt-speed fit'. Keep C's facts. Do not change options, letters or counts."
+      },
+      {
+        "id": "R3-3 (M3 + figure nits)",
+        "fix": "Reword the chip to 'Only one pair among the 50 recordings shares any dataset'. Unclip the figure 1 y-label. Either draw a visible marker at 0 % for the contrast bars or change the decision 'check' text to 'the AB01 i0 contrast reads 0/n'. Caption the contrast as the only other aligned AB01 recording."
+      }
+    ],
+    "not_checked": [
+      "Whether original AB01 i5 data exists elsewhere (needs the authors).",
+      "Near-copies (byte-exact comparison only, mine and the census's)."
+    ],
+    "next_action": "Worker: apply R3-1 to R3-3 (builder strings and handoff text only), rebuild both sheets, hand back. Reviewer: a string-level re-check. Coordinator: copy nothing into backlog.json until then."
+  },
+  "round_2": {
+    "round": 2,
+    "verdict": "done_for_audit_script",
+    "decision_sheet_verdict": "back_to_worker: do not copy D-UM21-T02-1 into backlog.json yet",
+    "last_checked_at_utc": "2026-10-31T00:10:00Z",
+    "reviewed_sha256": {
+      "contributor_tools/audit_um21_tread_pilot.py": "b3278c876824662838894aae5724661d6cde7a3a5c560e2b4ff57f0c07951c59",
+      "tests/test_audit_um21_tread_pilot.py": "7c9c6d8a2af3593c7bc5243050610e65831dd6b82077aff878a3ec6775674bc5",
+      "tests/test_audit_um21_tread_pilot_verify.py (reviewer, unchanged since round 1)": "57577fd4f0345d649e0ef5ef2a13fb26f0efa9b382e5151143a44cfb60deb9d0",
+      "contributor_tools/audit_probes/2026_10_30/census_um21_tread_clock.py": "6ce9531e2bd7a09662f850f8104d8fc57d4406fe25e13bcf48db1871cc75a7ad",
+      "docs/quality/audits/um21-t02-clock-census.json": "493a84b178a8c3f36398e148c8102c1958304dd5676c571f64d8204928e65a4c",
+      "contributor_tools/review_um21_t02_clock.py": "3adfa42ecabe9147fb0a91ae1367e1dcaf5b44f192b5ac70b85a0fe0a58b9e00",
+      "review_sheets/D-UM21-T02-1/index.html (gitignored)": "64ebdd645c7819c4932405b1f899f3c67636d750d66f87d45144a5c2f3d4019a",
+      "docs/maintainers/handoffs/UM21-T02-audit.json": "337650b29ec85e5f1a3e9a69cf988d7000e1c8f8414334469d91bb146dfb1b5d",
+      "docs/quality/audits/pm01-um21-tread-pilot-handoff.json": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+    },
+    "summary": "R1-R4 are fixed correctly, and the audit script is ready to be hash-bound into the job spec. The census lags hold up under my own estimator, and the duplicate claim is confirmed. The option counts recount exactly. The decision is not ready to copy. Options B and C silently or explicitly release AB01 i5, whose motion data is a byte-for-byte copy of AB01 i10. That folds a second, separable exclusion question into the clock question and tilts the comparison.",
+    "checks": [
+      {
+        "item": "1. Reviewer tests unchanged",
+        "result": "pass",
+        "evidence": "tests/test_audit_um21_tread_pilot_verify.py sha256 57577fd4... equals the round-1 hash. All 20 still pass against the changed worker fixture, which now writes markers and cvel."
+      },
+      {
+        "item": "2. R1 thresholds",
+        "result": "pass",
+        "evidence": "TOLERANCES states, before any data is read: |best lag| <= 50 frames, lag-0 excess error <= 0.02 m/s, search -1000..1000, at least max(8, ceil(n0/2)) comparisons at every lag, and ties broken toward the smaller |lag|. This matches the round-1 proposal. A failure is a failed check (exit 1), not a flag. The method matches my probe: frames h+15..h+29, HEE+TOE, AP axis by largest median |v|, transitions ±300. The marker validity rule (row 4 == 0) is right on real data: in AB01/d10, all 513 flag-0 frames are exactly the (0,0,0) frames, and AB05/i0 has none. Worker synthetic tests (exact quadratic belt): shift 150 fails (best 150, error 0.150); shift 40 fails on the error criterion only; shift 10 passes. On real data the aligned recordings show lag-0 excess error <= 0.007 m/s, so the margin is ample."
+      },
+      {
+        "item": "2. R1 not-evaluable path",
+        "result": "pass_minor",
+        "evidence": "Missing cvel or marker, no transition interval, no valid heel strike near a transition, or fewer than 8 lag-0 comparisons all give passed=false with a 'not evaluable: ...' reason, so the audit exits 1. It fails closed and never passes. Test: test_missing_markers_make_alignment_fail_not_pass. Minor (non-blocking): one reason string covers both 'cvel missing' and 'marker missing'. For AB08 i10 and AB10 i0 I confirmed that cvel (events/VelProf) is absent and all four heel/toe markers are present; the reason could say which."
+      },
+      {
+        "item": "2. R2, R3, R4",
+        "result": "pass",
+        "evidence": "R2: the spec has 15 bindings, including check_um21_tread_source.py and source_comparison.json. R3: json.dumps runs before open('x'); a non-finite value exits 2 and writes no file (test_non_finite_report_value_exits_2_without_writing_a_file). R4: finite_difference sets NaN wherever the angle sample is NaN, matching np.gradient's non-uniform 3-point formula."
+      },
+      {
+        "item": "3. Independent lag spot-check (my estimator, np.gradient, h+14..h+28, own code; one record per process)",
+        "result": "pass",
+        "evidence": "AB09/i10 +688 vs census +685 (lag-0 error 0.662 vs 0.666). AB01/d5 +684 vs +695. AB03/d10 +12 vs +12. AB06/i10 +6 vs +20, both inside ±50; this is the census's largest aligned lag. From round 1: AB01/d10 +165 vs +169, AB01/i5 -404 vs -413, AB02/d10 +10 vs -2, AB05/d10 +11 vs 0, AB08/d10 -2 vs -10, AB01/i0 +17 vs +16, AB01/i10 -9 vs -7. Every pass/fail classification agrees. Peak RSS 46 MiB per probe."
+      },
+      {
+        "item": "4. Duplicate claim",
+        "result": "pass_understated",
+        "evidence": "Probe /tmp/claude-1000/um21_verify/probe_dup2.py (sha256 6c93741c...; peak 59 MiB). AB01 i5 and i10 are byte-identical in every dataset of jointAngles (10), jointForces (6), jointMoments (6), jointPowers (6), markers (28) and forceplates (6), and in LHS/RHS/LStrideTime/RStrideTime. Only cutPoints, newID and tasks differ. Hashing RHipAngles across all 50 treadmill records finds that pair and no other. The census reports jointAngles and markers only; the copy covers kinetics and force plates too."
+      },
+      {
+        "item": "5. Option counts recount from the census",
+        "result": "pass",
+        "evidence": "Recomputed from records[]: all 50 as published = 8,626. Minus AB01 d10/d5/i5, AB08 i10, AB09 i10, AB10 i0 (183+163+148+225+178+167 = 1,064) = 7,562 (A). Plus re-aligned 189+167+155+183 = 694 = 8,256 (B), which leaves out 225+167 = 392. Decisions changed 42+85+65+102 = 294 of 260+234+224+260 = 978 pairs."
+      },
+      {
+        "item": "6. Option B releases AB01 i5",
+        "result": "failed",
+        "evidence": "Defect in how the options are stated. AB01 i5's motion is i10's motion: its own cutPoints misfit by -413 frames, while i10's fit at -7. Releasing it under any option publishes the i10 strides a second time, labelled as a 5-degree incline. That is invented provenance, not a clock-alignment consequence. B states the release openly, and C (8,626) releases i5's 148 strides without saying so. A drops i5 only because its clock check fails. The duplicate's disposition is a separate exclusion question. Bundling it into B makes B look worse for a reason unrelated to the clock question, and the folded 'why' leans on it. The 'not checked' chip and the B table cell put it in front of José before he chooses."
+      },
+      {
+        "item": "7. Backlog schema, letters, order, leak",
+        "result": "pass_with_6",
+        "evidence": "In memory, the handoff decision_for_backlog equals the sheet's decision.json. Appended to a copy of backlog.json, it passes validate_backlog (2 open decisions after). Letters A/B/C match the sheet. Order is neutral (strides released ascending, stated in the builder). decide_before_recommendation is true, and the backlog card and the sheet both fold the recommendation. The question has no paths or hashes. The only lean is the item-6 framing."
+      },
+      {
+        "item": "8. Sheet render 1100 px and 390 px (headless Chrome via Playwright)",
+        "result": "pass_minor",
+        "evidence": "No horizontal scroll at either width (scrollWidth 1100 and 390). Order: ask strip, headline, 6 chips, 3 figures, decision, not-shown (3 items), reply, folded details. Prose is under 60 words. Figures are one panel each, 4.30-4.37 in wide at 160 dpi, titled as questions. The control record was drawn from seed 20261031. Paths and hashes appear only in the folded details. The options table collapses to cards at 390 px. Minor: in the offsets figure, the 'no belt record' labels for AB08 i10 and AB10 i0 overlap the tolerance band and the row of aligned dots. Screenshots in scratch: /tmp/claude-1000/um21_verify/sheet_full_1100.png and sheet_full_390.png."
+      },
+      {
+        "item": "9. Tests and backlog check",
+        "result": "pass",
+        "evidence": "AGENTS.md env prefix: pytest tests/test_audit_um21_tread_pilot.py tests/test_audit_um21_tread_pilot_verify.py tests/test_backlog_workflow.py gives 114 passed. build_backlog_page.py --check: Backlog valid; HTML current (87 tasks)."
+      }
+    ],
+    "required_fixes_decision_sheet": [
+      {
+        "id": "R2-1",
+        "blocking_for_decision_copy": true,
+        "fix": "Remove AB01 i5 from the clock decision in all three options, with a note: 'held out pending its own decision; its motion is a copy of AB01 i10'. Recount from the census: A 7,562 (unchanged), B 8,101 (8,256 - 155), C 8,478 (8,626 - 148). The order is unchanged. Drop the duplicate from the B 'Changes' cell, from the folded 'why', and from the chips, or move it to a neutral fact on a separate sheet. B then re-aligns 3 recordings (AB01 d10, AB01 d5, AB09 i10; 42+85+102 = 229 decisions of 754 pairs)."
+      },
+      {
+        "id": "R2-2",
+        "blocking_for_decision_copy": true,
+        "fix": "Draft the duplicate as its own decision with its own sheet. Options: exclude AB01 i5 only (motion stays under i10, whose cutPoints fit it); exclude both i5 and i10; keep both as published. Order by strides released. Cost of waiting: AB01 i5 and i10 stay out of the treadmill release. With D-CORE-04-1 open, this would be the third open decision, which the backlog allows. Include in the census that the copy covers kinetics, force plates and events (item 4)."
+      },
+      {
+        "id": "R2-3",
+        "blocking_for_decision_copy": false,
+        "fix": "Offsets figure: move the AB08 i10 / AB10 i0 'no belt record' labels off the tolerance band and the aligned dots. Optional: split the not-evaluable reason string into 'cvel missing' and 'heel/toe marker missing'."
+      }
+    ],
+    "not_checked": [
+      "Launcher dry run (not run, per instruction); full source sha256.",
+      "Census lags for the 39 records I did not re-estimate; my estimator agrees with the census on all 11 records compared."
+    ],
+    "next_action": "Coordinator: bind audit_um21_tread_pilot.py b3278c87... in the job spec. Then dry run, fresh census and a single launch on an aligned pilot record, once UM21-T01/PM-01 authorize the slot (AB01/d10 now exits 1 by design). Worker: restate D-UM21-T02-1 per R2-1 and draft the duplicate decision per R2-2. Hand both back for review before either is copied into backlog.json."
+  },
+  "round_1": {
+    "verdict": "back_to_worker",
+    "last_checked_at_utc": "2026-10-30T23:30:00Z",
+    "repository_head": "569ee8f4d7cdf83d96d5f74aa6b65354b4a78da4",
+    "reviewed_sha256": {
+      "contributor_tools/audit_um21_tread_pilot.py": "447e23050e85832d219f92c246b6e7e23121a026ac7e33f1c362cc5c3ae4a35d",
+      "tests/test_audit_um21_tread_pilot.py": "e0afbdb48b6ffa30e3420b81a9589ffc312391d7d634d089665cee3f54140b61",
+      "tests/test_audit_um21_tread_pilot_verify.py (reviewer, new)": "57577fd4f0345d649e0ef5ef2a13fb26f0efa9b382e5151143a44cfb60deb9d0",
+      "docs/quality/audits/pm01-um21-tread-pilot-handoff.json": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+    },
+    "summary": "The script's mechanics are sound. It imports no producer code, its checks catch every mutation I tried, it holds RLIMIT_AS at 768 MiB, and a re-run on AB01/d10 reproduced the worker's numbers exactly. It goes back because the shared cutPoints assumption is wrong for this record. Bounded source reads show that the cutPoints index the treadmill velocity-profile clock (cvel), not the joint clock. On AB01/d10 that clock is offset by about 1.65 to 1.9 s from the joint, marker, forceplate and heel-strike clock. The pilot's task windows are therefore shifted. The audit reproduces them and reports pass with only a flag. On AB01/d10 this mislabels 8 of the 18 transition strides and changes 39 to 44 of the 260 pair decisions.",
+    "cutpoint_ruling": {
+      "ruling": "blocking for the AB01/d10 pilot's task labels and exclusions, and for any claim that the audit validated them. It is not blocking for the audit's value, side, phase, clock-unit or receipt checks, which hold.",
+      "evidence": [
+        "Source layout (AB01/d10, bounded h5py metadata reads): joint, marker channels 16193 frames; forceplates 161930 (= 10 x 16193); events/VelProf/cvel 16295 samples; cutPoints max 16294.",
+        "cutPoints index the cvel clock: every cutPoint edge coincides with a cvel ramp edge to within one sample (s0x8 starts where cvel stops being NaN at 1828; s1 [5049, 8048] and s1x2 [8272, 11271] are flat at 1.000 and 1.200; each transition interval spans exactly one cvel ramp, e.g. d0x2 [15667, 16294] goes from 1.2 to 0).",
+        "Heel strikes are on the joint and forceplate clock. Source LHS and RHS sit within 0.4 and 0.05 joint frames (median) of left and right forceplate force onsets, with 87% and 90% within 2 frames. This also gives independent physical-side evidence: LHS goes with the left plate and RHS with the right plate.",
+        "Belt speed was estimated independently from the heel and toe marker AP velocity 15-30 frames after each source heel strike, on the joint clock, and compared with cvel at index = joint frame + lag. The probe was run on transition periods ±3 s. On AB01/d10 the best lag is +165 frames (median error 0.046 m/s); at lag 0 the error is 0.247 m/s. Around a0x2, the belt reaches 1.25 m/s by joint frame 14988, while cvel at the same index is 0.86 and does not reach 1.2 until 15166.",
+        "Controls show the method finds lag near 0 where the clocks agree: AB02/d10 +10, AB03/d10 +12, AB05/d10 +11, AB08/d10 -2, AB01/i0 +17, AB01/i10 -9 (errors 0.01-0.08 m/s, lag-0 error within 0.004 m/s of best). AB01 is anomalous: d10 +165, d5 +684, i5 -404.",
+        "Separate source anomaly: AB01/i5 and AB01/i10 contain identical jointAngles (RHipAngles bitwise equal) and identical RHS, but different cutPoints. Only i10's cutPoints fit the kinematics, which suggests the i5 kinematics are a copy of i10.",
+        "Impact on AB01/d10: if the cutPoints are shifted into joint frames by lag 165 (or 190), 39 (or 44) of 260 pairs change classification. All 4 pilot a0x5 strides and 4 of 10 a0x2 strides fall outside a transition (the belt is already at a steady 1.2 m/s). About 3 strides per steady-speed condition move across each window edge. Previously excluded pairs become d0x2 (4), d0x5 (2) and a0x2/a0x5 (7). Exclusions fall from 77 to 72 (lag 165) or 71 (lag 190)."
+      ],
+      "proposed_independent_check": "Add a check named, for example, 'clock_cut_points_aligned_with_joint_frames' to the audit. For each source heel strike h, belt speed = |mean AP velocity of that side's HEE and TOE markers over joint frames h+15..h+29| (central difference x 100 Hz; AP axis = the axis with the largest median |velocity|). Compare with cvel[h+22+lag-1] over the transition intervals ±300 frames, for lags in [-1000, 1000]. State in advance: pass only if the best lag is within ±50 frames AND the lag-0 median error is within 0.02 m/s of the best. Otherwise fail. Do not flag. Report the best lag and both errors. Reads are bounded: 4 marker arrays of 0.5 MiB each plus cvel; peak RSS was 46 MiB in the reviewer probe. Do not shift cutPoints in the audit; the alignment rule is José's call (see decision_for_jose).",
+      "reviewer_probe_scripts_scratch_only": {
+        "/tmp/claude-1000/um21_verify/probe_lag2.py": "e63452c8cc1d1b40daf0f1935117d6f72ccee507cbccad89a167d05acb9082b5",
+        "/tmp/claude-1000/um21_verify/probe_hs.py": "89c8f03d5a92e8ca5c29f6caceea52f39d45ce6119ce3d254d024b22cba94134",
+        "/tmp/claude-1000/um21_verify/probe_impact.py": "fc065a63e290f2fb99d6394f911715841528d7c1339a152256c563fecb7eb083",
+        "note": "Scratch, not committed. Each probe read one recording, used RLIMIT_AS 768 MiB, nice 19 / ionice idle and single-threaded env, and wrote nothing outside /tmp/claude-1000. Peak RSS was 41-53 MiB per probe. Records were read one at a time and in sequence: AB01 d10/d5/i0/i5/i10, AB02/AB03/AB05/AB08 d10."
+      }
+    },
+    "checks": [
+      {
+        "item": "1. Independence: imports",
+        "result": "pass",
+        "evidence": "AST: stdlib plus numpy/h5py/pyarrow only. No source_components(), np.interp, interp1d or np.gradient. The runtime sys.modules guard is in place, and the re-run reported no_producer_module_loaded."
+      },
+      {
+        "item": "1. Independence: shared assumptions",
+        "result": "failed",
+        "evidence": "classify() repeats the producer's windows() rule exactly (same constants, same assumption that cutPoints are joint frames). The (start-1)/100 clock, the RPelvisAngles-for-both-legs recipe and the linear resampling convention are also shared. Shared conventions are acceptable when they are decided or documented. The cutPoints clock domain is neither, and it is wrong for AB01/d10 (see cutpoint_ruling)."
+      },
+      {
+        "item": "2a. Events and side by identity",
+        "result": "pass",
+        "evidence": "Pairs come from LHS/RHS and are matched by (side, start, end), not by row order. side_discriminating_data_present fails when the legs are symmetric (reviewer test). A mislabelled ledger side fails the ledger accounting. Independent physical-side support: LHS/RHS match left/right forceplate onsets (reviewer probe)."
+      },
+      {
+        "item": "2b. Clock units and elapsed duration",
+        "result": "pass",
+        "evidence": "Reviewer mutations at x10 and /10 (1000 Hz) on source_start/end and time_s fail as expected, as does a 100 Hz forceplate. Independent support for 100 Hz: marker-derived steady belt speed is about 1.245 m/s against cvel 1.2."
+      },
+      {
+        "item": "2c. 150 inclusive samples, 0 to 100",
+        "result": "pass",
+        "evidence": "Fails as expected for: phase one step late; rows reversed within an observation; an end-exclusive window (frames start..end-1); a whole stride shifted one frame in base and pilot alike (caught against source, not against base)."
+      },
+      {
+        "item": "2d. 84 components and NaN masks",
+        "result": "pass_with_limit",
+        "evidence": "An extra NaN in one pilot component, a bridged source NaN in base and pilot, and a knee-moment sign flip each fail as expected. Limit: AB01/d10 has no non-finite value in any exported window (finite counts = 183 x 150 x 84 and 183 x 150 x 11 exactly), so mask logic is exercised only on synthetic data."
+      },
+      {
+        "item": "2e. Prior columns bitwise",
+        "result": "pass",
+        "evidence": "Reordering observations in the pilot only fails bitwise. The same permutation in base and pilot passes, so identity is not tied to row order. The worker's 1-ulp test also passes."
+      },
+      {
+        "item": "2f. Exclusion reasons",
+        "result": "pass_mechanics_failed_science",
+        "evidence": "Every pair is accounted for, reasons are explicit and match the rule, and relabelling a written pair's task fails. On AB01/d10, though, the rule is applied on the wrong clock (cutpoint_ruling), so the 77 exclusions are reproduced, not validated."
+      },
+      {
+        "item": "2g. Rule C signs",
+        "result": "pass",
+        "evidence": "Pre-applied pelvis and knee-angle sign flips fail prior_angle checks; a knee-moment component flip fails the component check."
+      },
+      {
+        "item": "2h. Receipt hashes",
+        "result": "pass",
+        "evidence": "A stale pilot phase hash in the summary and a tampered code snapshot each fail only their own check. Input hashes in the re-run equal the PM-01 bindings and the worker's probe."
+      },
+      {
+        "item": "3. Resources and CLI",
+        "result": "pass_with_fixes",
+        "evidence": "RLIMIT_AS is set before the numpy/h5py/pyarrow imports ([805306368, 805306368] in the re-run). Requests above 768 MiB exit 2. The RSS guard exits 4. An existing output dir, a missing parent, a malformed hash or no hash choice each exit 2 with no report. See required fixes R2 and R3."
+      },
+      {
+        "item": "3. Job spec vs launcher envelope",
+        "result": "pass_with_fixes",
+        "evidence": "validate_spec() (pure function, in-process; no dry run, no census, no launch) accepts the draft with <YYYYMMDD>=20261031. Output root and receipt are absent, all 13 binding paths exist, the producer hashes equal PM-01, and the envelope sha256 equals the launcher's reviewed value. The spec omits two files PM-01 binds (R2). A real dry run was not executed, per instruction."
+      },
+      {
+        "item": "4. Re-run on AB01/d10 (probe exception)",
+        "result": "reproduced",
+        "evidence": "Exit 0, status pass, flag cut_points_exceed_joint_frames. Counts: 183 obs (L 92 / R 91), 165 decline + 18 transition, 260 pairs, 77 excluded, 84 components. Max errors 4.6e-12 / 1.1e-15 / 1.4e-13, finite counts 2305800 / 301950 / 109800, 5490 bitwise checks. All input hashes are identical to the worker's. Peak RSS 177.8 MiB self / 178.5 MiB GNU time, wall 11.7 s. Report (scratch) /tmp/claude-1000/um21_verify/audit_rerun_ab01_d10/audit_report.json sha256 11a5bdc20fa95eb8dba50be3b84608c09315e0e8a4d5b35b40db89b680e3956d; it differs from the worker's only in paths and timing fields."
+      },
+      {
+        "item": "5. Tests and backlog check",
+        "result": "pass",
+        "evidence": "AGENTS.md env prefix: pytest tests/test_audit_um21_tread_pilot.py tests/test_audit_um21_tread_pilot_verify.py tests/test_backlog_workflow.py: 109 passed (18 worker + 20 reviewer + backlog). build_backlog_page.py --check: Backlog valid; HTML current (87 tasks)."
+      }
+    ],
+    "required_fixes": [
+      {
+        "id": "R1",
+        "blocking": true,
+        "fix": "Implement the independent cutPoints/cvel-to-joint-clock alignment check described in cutpoint_ruling.proposed_independent_check as a failing check, not a flag, with tolerances stated in advance in TOLERANCES. Add synthetic tests: one whose fixture markers move at the cvel speed with lag 0 (passes), and one with the cvel/cutPoints shifted by 150 frames (fails). With the check in place, the AB01/d10 audit is expected to exit 1. The pilot cannot pass until José rules on the alignment (decision below) and the producer and audit then apply that ruling."
+      },
+      {
+        "id": "R2",
+        "blocking": false,
+        "fix": "Add the two remaining PM-01 bindings to the job spec: contributor_tools/audit_probes/2026_10_20/check_um21_tread_source.py (f340d486...7d87) and converted_datasets/reconversion_v2/um21_tread_full_readback_20261021/source_comparison.json (958a2b2c...ea51). PM-01 says to re-hash every file in its bindings."
+      },
+      {
+        "id": "R3",
+        "blocking": false,
+        "fix": "Make report writing fail closed with exit 2. Today json.dumps(allow_nan=False) runs after open(..., 'x'). A NaN reaching the report (for example a NaN cutPoint feeding clock.cut_points_max) would leave an empty audit_report.json and exit 1 through an uncaught ValueError. Serialize first, then open and write, and return 2 on failure."
+      },
+      {
+        "id": "R4",
+        "blocking": false,
+        "fix": "Record a known limit, or handle it: the producer's np.gradient on linspace times uses the non-uniform 3-point formula, which includes f[i]. The audit's central difference skips f[i]. For a lone NaN sample (possible only when a stride exceeds 149 frames), the masks would differ. The audit would fail closed, not pass wrongly. Similar fail-closed divergence: linspace positions vs exact rational positions next to a NaN frame. Not reachable on AB01/d10 (no NaN)."
+      }
+    ],
+    "decision_for_jose": {
+      "note": "Drafted for the coordinator to copy into backlog.json; the reviewer did not edit backlog.json. Proposed as a high-stakes convention item (decide_before_recommendation true).",
+      "question": "The treadmill task intervals in the UM21 source run on the belt-speed clock. For some AB01 recordings that clock is offset by up to several seconds from the motion data. How should treadmill strides be assigned to tasks?",
+      "options": [
+        {
+          "letter": "A",
+          "label": "Exclude misaligned recordings",
+          "consequence": "Recordings whose belt-speed/motion offset exceeds 0.5 s (AB01 d10, d5, i5 among those checked) lose task labels and are left out; cheap, reversible."
+        },
+        {
+          "letter": "B",
+          "label": "Re-align by measured offset",
+          "consequence": "Task intervals are shifted by an offset measured from the marker belt speed for each recording; keeps the data but adds a new derived step that needs its own review; reversible."
+        },
+        {
+          "letter": "C",
+          "label": "Keep source intervals as published",
+          "consequence": "No change; about 15% of AB01/d10 pair decisions and 8 of its 18 transition strides stay mislabelled."
+        }
+      ],
+      "cost_of_waiting": "The UM21 treadmill pilot and the 50-record treadmill release stay blocked. Other datasets are unaffected.",
+      "recommended": "A for the pilot now (choose a pilot record whose clocks agree, e.g. AB02/d10 at lag +10), B considered later with its own review",
+      "confidence": "medium",
+      "why": "The offset is large and clearly measured on AB01, while other subjects line up within about 0.2 s. Excluding is conservative and invents nothing; re-aligning is a new estimate.",
+      "check": "In AB01 d10, the belt is already at full speed (1.25 m/s from the markers) at motion frame 14988, while the source's acceleration interval does not end until 15166.",
+      "related_finding": "AB01 i5 and i10 contain identical motion data with different task intervals; i5's motion appears to be a copy of i10. Needs its own scope decision for the 50-record treadmill release."
+    },
+    "not_checked": [
+      "A real launcher dry run (instruction: do not run the launcher). Only validate_spec() was exercised.",
+      "The full source sha256 (the re-run used --skip-source-hash).",
+      "Records beyond the nine probed for clock alignment. AB01 is the only subject seen misaligned so far; the 50-record scope needs the same check.",
+      "Whether the marker-based belt-speed estimate carries a small systematic lag (controls show +10 to +17 frames). The proposed ±50-frame tolerance absorbs it, but it is a reviewer estimate, not a published method."
+    ],
+    "next_action": "Worker: implement R1-R3 (and R4 note), re-hash, hand back for review. Coordinator: copy decision_for_jose to backlog.json. UM21-T01: reconsider AB01/d10 as the pilot record.",
+    "round": 1
+  }
+}

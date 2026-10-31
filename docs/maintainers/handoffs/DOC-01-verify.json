@@ -1,0 +1,161 @@
+{
+  "task_id": "DOC-01",
+  "verifier_role": "independent second agent; read small audit JSON/YAML/markdown and file listings only; no data arrays opened; worker files, backlog and AGENTS.md not edited",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-31T11:30:00Z",
+  "round_2": {
+    "verdict": "done",
+    "last_checked_at_utc": "2026-10-31T11:30:00Z",
+    "summary": "F1 and F2 are fixed and the three optional items are done, each matching its cited source. Pages render cleanly at true 390 px and 1100 px. All docs tests and gates pass. Done covers DOC-01's documentation acceptance only; it is not scientific approval of any dataset.",
+    "file_checks": [
+      {
+        "item": "F1 StrokePiG card and labels",
+        "result": "pass",
+        "evidence": "The label is 'Legacy only' on the card and on both catalogs (docs/index.html and docs/datasets/index.html), with the status-sp50 link. Card 'Rebuilt': 'No checked gait cycles. An earlier run rebuilt 46 of 151 walking recordings (136 cycles); it has no recorded source check and is unreviewed.' That matches the PM-02 row strokepig_serial_20261020 (complete 46/46, completed_unreviewed, 'covers 46 of the 151 native StrokePiG sources') and its batch_summary.json metadata (completed_recordings 46, observations 136, rows 20,400 = 136 × 150). Card 'Checked against source': 'Native source-channel time series (not gait cycles) for 2 recordings read back exactly', which matches strokepig-source-coverage.json native_companion_pilots (2 records, exact readback). The full native export is 'prepared but stopped', which is correct. A run-records link to pm02-job-dispositions.json was added. The legend now defines the labels by gait cycles, so 'Legacy only' (no rebuilt gait cycles checked) fits StrokePiG, GT23, GT25 and Gait120."
+      },
+      {
+        "item": "F2 converted_datasets/README.md row",
+        "result": "pass",
+        "evidence": "The row is now 'Reconstruction job records | reconversion_v2/<job>/'. It describes working directories of many kinds (rebuilt outputs, receipts, plans, censuses, stopped or superseded runs) and says an output is source-checked only with a completed source-readback receipt, for that receipt's scope. It says none are reviewed or a release, and it links Status by dataset and the PM-02 record. The C11 counts match pm02-job-dispositions.json exactly: 419 rows = 167 superseded + 103 completed_unreviewed + 100 needs_fresh_reviewed_plan + 37 obsolete + 12 quarantined_known_bad."
+      },
+      {
+        "item": "GT24 wording",
+        "result": "pass",
+        "evidence": "The card and both catalogs read 'Source-checked pilot; ankle fix withdrawn'. The card Open text still states that source ankle data are dorsiflexion-positive (GT24-C02 done; gt24-c02-ankle-sign.json). The pilot numbers are unchanged (40 phase observations, 8,002 continuous rows)."
+      },
+      {
+        "item": "MBLUE wording",
+        "result": "pass",
+        "evidence": "The 'Checked against source' row adds 'These receipts have not yet been independently reconciled.' That is consistent with MB24-F01 'Reconcile MBLUE full source and preservation receipts' still being ready, and with the receipts' unreviewed statuses."
+      },
+      {
+        "item": "test-count wording",
+        "result": "pass",
+        "evidence": "The quality page now says 'Test files added after the recorded run below are not in it and count as unassessed here', with no fixed count that can go stale."
+      },
+      {
+        "item": "rendering",
+        "result": "pass",
+        "evidence": "Playwright with system Chrome, true viewports. Document overflow is 0 px for home, catalog and quality at 390 and 1100 px; reference has 91 px at 390, which is pre-existing and not a DOC-01 page. Inspected the 390 px catalog rows (the labels wrap legibly, e.g. 'Source-checked pilot; ankle fix withdrawn') and the 1100 px MBLUE/StrokePiG cards."
+      }
+    ],
+    "test_runs": [
+      {
+        "command": "node --check docs/javascripts/{quality,extra,data-preview,aggregate-preview}.js",
+        "result": "all ok"
+      },
+      {
+        "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_data_documentation.py tests/test_quality_page.py tests/test_data_preview.py tests/test_static_aggregate_preview.py tests/test_aggregate_previews.py tests/test_ensemble_preview.py",
+        "result": "47 passed"
+      },
+      {
+        "command": "python3 docs/build.py --check",
+        "result": "exit 0; 40 HTML pages, 1667 assets"
+      },
+      {
+        "command": "python3 contributor_tools/build_backlog_page.py --check",
+        "result": "Backlog valid; HTML current (90 tasks)"
+      }
+    ],
+    "artifact_hashes": {
+      "docs/quality/index.html": "5f6ddec3695f671f...",
+      "docs/datasets/index.html": "dd596c47ba9f2f91...",
+      "docs/index.html": "3b84ce6050c124f5...",
+      "converted_datasets/README.md": "a5c19a67333d5cb2..."
+    },
+    "questions_for_jose": []
+  },
+  "round_1_verdict": "back_to_worker",
+  "summary": "Most of the work is accurate and readable. The status cards for UM21, GT21, GT23, GT24, GT25, Gait120 and MBLUE match their cited audits, and the GT21 '102 of 2,301, stopped' claim is exact. The four count mismatches are real. The GT23 unit correction matches GT23-C02 and its erratum, and the GT24 sentence and errata are untouched. The JS changes keep name parsing and previews working, the pages read clearly at true 390 px and 1100 px, and all gates pass. Two claims overstate the evidence and must be fixed. First, the StrokePiG card and label present two native source-channel exports as rebuilt pilot recordings, and they omit an earlier 46-recording run. Second, converted_datasets/README.md calls every reconversion_v2 job directory 'rebuilt, source-checked'.",
+  "checks": [
+    {
+      "id": 1,
+      "area": "status labels and cards vs audits and backlog",
+      "result": "failed (StrokePiG); others pass",
+      "evidence": {
+        "um21_partly_rebuilt": "pass. backlog-refresh-20261027 dataset_claims: treadmill 50 recordings / 8,626 observations, running 30 / 2,681; um21-tread-source-readback.json: 50 recordings, 8,626 observations; PM-02 row um21_running_readback completed with a source_comparison receipt. Follow-up runs stopped (refresh).",
+        "gt21_partly_rebuilt": "pass. Refresh: batch_status stopped_incomplete, recordings 102, planned 2,301, observations 1,299; source audit checked_recordings 102. gt21-completed-force-readback.json: 51 AB06 recordings, 1,111 observations. 2,301 − 102 = 2,199. The bilateral recovery is only 'prepared' (gt21-bilateral-recovery.json), so 'opposite-leg cycles are omitted' holds.",
+        "gt23_legacy_only": "pass. gtech23-source-probe.json: 8 rows of one recording. The GT23-C02 verdict matches the card (see check 3). No local phase file: gtech.json lists 'GT23 phase artifact unavailable locally', and converted_datasets/ holds only gtech_2023_time.parquet.",
+        "gt24_source_checked_pilot": "pass with an optional note. gt24-ankle-converter-pilot.json has two phase records (12 + 28 = 40 observations); gt24-continuous-pilot.json has rows_checked 8,002 over two records. The card states that the pilot's ankle negation was later withdrawn (GT24-C02 done). The catalog label alone does not carry that caveat.",
+        "gt25d_legacy_only": "pass. gt25-ankle-audit-independence-review.json: shared sign error confirmed, successor prepared. gtech.json: 'GT25 invents 75 kg for unknown subjects'.",
+        "ga26_legacy_only": "pass. gait120-extended-source-review.json: status 'separate_extended_auditor_and_derivative_correction_prepared_not_executed', 6,882 records frozen. The refresh lists the Gait120 watchers as stopped_incomplete.",
+        "mb24_rebuilt_local_only": "pass. mblue-complete-scope.json: 335 blocks, 15,825 → 15,061 observations after selecting 764 stair views. mblue-pelvis-full-readback.json: 335 blocks read back. The refresh reports all preservation flags true. PM-02 lists mblue_complete_source_audit, final_acceptance and pelvis_full_readback/preservation as completed_unreviewed. The card discloses the planar-sum segment angles and that force/COP lineage is under review. Optional: note that MB24-F01 (reconcile these receipts) is still ready.",
+        "sp50_source_checked_pilot": "FAILED. strokepig-source-coverage.json native_companion_pilots: two 'exact_source_companion_readback' records. Their row counts (504 and 168) are not multiples of 150, and their checks are 'components_and_residuals'. They are native source-channel time-series exports, which is SP50-F01's 'preserve native sources' step; no phase cycles were reconstructed. The card's 'Rebuilt: 2 of 151 walking recordings' and the catalog label 'Source-checked pilot' (defined as 'a few recordings rebuilt and matched to the original files') put them in the same tier as the GT24 canonical-observation pilots. The card also omits PM-02 row strokepig_serial_20261020: completed 46/46 recordings, 136 observations (20,400 rows), completed_unreviewed, with no source check recorded. Its 'A full export is prepared but stopped' is correct (native_after_fukuchi stopped_incomplete; native_full never launched)."
+      }
+    },
+    {
+      "id": 2,
+      "area": "four count mismatches (metadata only)",
+      "result": "pass",
+      "evidence": "um21.yaml: total_strides 14,240 and last_dataset_path umich_2021_phase_raw.parquet, while download_dirty_url names umich_2021_phase_dirty.parquet. gt23.yaml: total_strides 2,215, while the comparison_tasks sum is 2,940. mb24.yaml: 15,825 counts both stair leg views (mblue-complete-scope gives 15,825 before and 15,061 after). sp50.yaml: total_strides 0 and comparison sum 144 from contributor_tools/conversion_scripts/StrokePiG/converted_datasets/strokepig_phase.parquet, while the preview manifest uses the root strokepig_phase.parquet with 3 complete observations. GT21 is not a mismatch: the count names the Full download file and the preview uses the clean file (manifest 17,418 = passing_strides). The catalog cells label each case correctly. I did not verify the worker's footer row count for the UM21 raw file (2,122,650 rows)."
+    },
+    {
+      "id": 3,
+      "area": "GT23 unit correction; GT24 sentence and errata untouched",
+      "result": "pass",
+      "evidence": "The quality-page card and evidence paragraph say source moments are already N·m/kg despite the README's N·m, that no further division is applied, that this reverses the earlier review, and that the AB03 mass (about 113.5-114 vs 82.18 kg) stands. That is the gt23-c02-moment-units.json verdict (GT23-C02 done in the backlog). The page links the 30 October erratum. The GT24 sentences 'The publisher README states that ankle plantarflexion is positive, but the source data are dorsiflexion-positive' and 'LocoHub does not negate the source ankle channels' each appear once. docs/datasets/gt23.md, gt23/index.html, gt24.md and gt24/index.html are dated 2026-10-30 14:47-14:51, before DOC-01's edits on 31 October."
+    },
+    {
+      "id": 4,
+      "area": "converted_datasets/README.md rewrite",
+      "result": "failed (one claim); file list pass",
+      "evidence": "File list: 21 top-level legacy *.parquet files from 8 studies match the directory listing exactly (Gait120 3, GT21 4, GT23 1, GT24 4, GT25 2, MBLUE 2, StrokePiG 2, UM21 3). The nested StrokePiG converter file is correctly not counted as a top-level file. Every 'known issues' cell is supported by a titled finding in docs/quality/audits/umich.json, gtech.json or remaining.json, or by a status card. The cleaned/tested claims are gone, and the examples use the synthetic tutorial file. FAILED: the 'Rebuilt, source-checked (partial) | reconversion_v2/<job>/' row says every job directory was rebuilt by the current converter and read back against source. PM-02 dispositions show that reconversion_v2 holds 364 job directories: 103 completed_unreviewed, 167 superseded, plus stopped, never-launched and no-terminal-record jobs. Many are plans, censuses, smokes or stopped runs, and some completed rebuilds (e.g. strokepig_serial_20261020) have no source check."
+    },
+    {
+      "id": 5,
+      "area": "JS changes",
+      "result": "pass",
+      "evidence": "node --check passes for quality.js, extra.js, data-preview.js and aggregate-preview.js. Name parsing now reads the [data-dataset-notes] link in cell 0. All 8 rows on both catalogs have that link, so the status label cannot leak into names (parsed names: Gait120 … Umich 2021). The lineage reader takes the last path segment of the Dropbox URL, which yields e.g. umich_2021_phase_dirty.parquet. Every row has [data-task-list] with the listed task count. aria-labels now say 'Legacy full download' etc. The rendered preview shows the correct lineage sentence (Gait120: 'No download has this file name. It covers 7 tasks of the 7 listed'). build_quality_page_data.py adds only repository_test_modules. Tests: test_data_documentation, test_quality_page, test_data_preview and test_static_aggregate_preview gave 21 passed; test_aggregate_previews and test_ensemble_preview gave 26 passed."
+    },
+    {
+      "id": 6,
+      "area": "rendering at 390 and 1100 px",
+      "result": "pass",
+      "evidence": "Playwright with system Chrome at true 390x900 and 1100x900 viewports. Document horizontal overflow is 0 px for home, catalog and quality at both widths; the reference page has 91 px at 390, but that is pre-existing and not a DOC-01 page. Plain headless Chrome --window-size=390 lays pages out wider than 390 px, so those screenshots are not valid phone renders. The catalog status label sits under each dataset name with an icon and text, and the count column scrolls inside the table region on phones. Status cards are one column on phones and two at 1100 px, with Downloads/Rebuilt/Checked/Open/Evidence rows. The status is readable in about 5 seconds. The software-test section is grouped by purpose with passed/failed/not-run counts and the record date."
+    },
+    {
+      "id": 7,
+      "area": "gate commands",
+      "result": "pass",
+      "evidence": "With the AGENTS.md prefix: docs/build.py --check → 'Checked 40 HTML pages and 1665 referenced assets.' (exit 0); the docs tests above all pass; build_backlog_page.py --check → 'Backlog valid; HTML current (89 tasks).'"
+    }
+  ],
+  "required_fixes": [
+    "F1 (StrokePiG): State exactly what was rebuilt. Two recordings have a native source-channel (time-series) export that read back exactly, and no phase cycles were reconstructed. Add the earlier 20 Oct run of 46 recordings / 136 observations, which is unreviewed with no source check recorded (PM-02 strokepig_serial_20261020). Then make the catalog label and card label consistent with the definition. Either use 'Legacy only' and note the native-export pilot in the card, or revise the label definition so that 'Source-checked pilot' does not imply rebuilt LocoHub cycles. Update the catalog row on both docs/index.html and docs/datasets/index.html together.",
+    "F2 (converted_datasets/README.md): Replace the 'Rebuilt, source-checked (partial)' row. reconversion_v2/ holds job directories of many kinds: rebuilt outputs, source-check receipts, plans, censuses, and stopped or superseded runs. Only outputs whose job has a completed source-readback receipt are source-checked, for that receipt's scope. Point readers to the Status by dataset section and the PM-02 dispositions rather than implying every job directory qualifies."
+  ],
+  "optional": [
+    "GT24 catalog label: consider a qualifier such as 'Source-checked pilot (ankle sign withdrawn)', so a 5-second reader does not treat the pilot as correct.",
+    "MBLUE card: note that the receipts are unreviewed and that their reconciliation (MB24-F01) is still pending.",
+    "Status cards: under sign rule B (D-UM21-C03-1 = B, 31 Oct), pelvis tilt flips in every dataset that has it. The 'Open' rows of datasets with pelvis or segment angles (MBLUE, GT24, UM21) could say so.",
+    "Software tests: 'On 31 October 2026 the repository held 166 test files' is hand-written and is already 173 today. Phrase it as of the page edit time, or let quality.js derive it from repository_test_modules once test_results.json is regenerated."
+  ],
+  "questions_for_jose": [],
+  "test_runs": [
+    {
+      "command": "node --check docs/javascripts/{quality,extra,data-preview,aggregate-preview}.js",
+      "result": "all ok"
+    },
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_data_documentation.py tests/test_quality_page.py tests/test_data_preview.py tests/test_static_aggregate_preview.py",
+      "result": "21 passed"
+    },
+    {
+      "command": "same prefix: pytest -q -p no:cacheprovider tests/test_aggregate_previews.py tests/test_ensemble_preview.py",
+      "result": "26 passed"
+    },
+    {
+      "command": "same prefix: python3 docs/build.py --check",
+      "result": "exit 0; 40 HTML pages, 1665 assets"
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (89 tasks)"
+    },
+    {
+      "command": "Playwright (system Chrome) renders of home, catalog, quality at 390x900 and 1100x900 from a local http.server",
+      "result": "overflow 0 px on the three DOC-01 pages; screenshots inspected"
+    }
+  ],
+  "next_action": "Worker applies F1 and F2 and returns DOC-01 to review. The verifier then rechecks only the StrokePiG card and labels, the README row and the gates."
+}

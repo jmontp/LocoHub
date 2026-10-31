@@ -1,0 +1,103 @@
+{
+  "task_id": "UM21-C01",
+  "status": "review",
+  "last_checked_at_utc": "2026-10-27T23:58:00+00:00",
+  "summary": "Field-by-field release policy for the UMich 2021 treadmill signals, with exact author and Vicon evidence plus a bounded marker/kinetic probe (4 random recordings, seed 20261028, plus the AB02/i5 lead and 2 anomaly recordings; an independent verifier reproduced it on 5 disjoint recordings, seed 4242). Canonical: pelvis tilt, hip flexion and knee flexion (Vicon text: PSIS above ASIS positive; authors: flexion and dorsiflexion positive; pelvis matches marker tilt with median error within 0.1 deg in all 10 trials of both samples). Derived estimate: hip/knee velocities. Source-only: powers (source power has the opposite sign of internal moment x joint speed in 60 of 60 joint-sides; slope -0.71 to -1.02), joint forces, non-sagittal components, foot progression, and force plates (newtons and millimetres, vs README N/kg and metres; walking direction flips between trials). The current pelvis + hip thigh/shank values are wrong by about twice the pelvic tilt against markers; the author hip - pelvis recipe tracks them. They are withheld in every option. Two decisions are open: thigh/shank release form, and whether ankle angle and sagittal moments become canonical. The AB07 incline-10 right ankle run and the AB08 level left excursion (screen-dependent: 9 frames at 45 deg, 8 at 60, 2 at 90) stay source-only and unshifted; canonical ankle stays missing for both whole recording-sides. The coordinator lead (AB02/i5 hip never in extension) is explained by Plug-in Gait hip being relative to an anteriorly tilted pelvis (mean tilt 18.8 deg). It is not a sign error, and it supports hip - pelvis.",
+  "checks": [
+    "Read all 5 task inputs, the README PDF text (11 pages), paper.xml Methods and Tables 2-3, the publisher example script, both UM21 producers and the planar disclosure proposal. Bound sha256 for each in docs/quality/audits/um21-c01-tread-conventions.json.",
+    "Fetched the Vicon Nexus 2.16 Plug-in Gait kinematic-variables and output-specification pages and quoted them: sign definitions, component order (1st = tilt/flexion for every joint and side), moment component axes, reaction-frame dependence of ankle moments, and Nexus native N.mm/kg.",
+    "Recovered the historical LocoHub sign section from git 330789e:docs/reference/index.md. The current reference no longer states moment internal/external or segment signs.",
+    "Ran `nice -n 19 ionice -c 3 python3 contributor_tools/review_um21_c01_conventions.py probe` (one trial at a time, RLIMIT_AS 1 GiB, MemAvailable about 13.5 GiB). It read markers, angles, sagittal moments/powers and the right plate for AB08/i5, AB08/d10, AB09/i5, AB10/d5 (random) and AB02/i5 (lead), plus AnkleAngles for AB07/i10 and AB08/i0. Streaming.mat size/mtime were checked against the receipt before and after; it was not hashed or bulk-read.",
+    "Coverage of the marker checks: 4 random recordings plus the lead (5 trials, 10 legs). Pelvis tilt sign and the thigh/shank recipe were checked in all 10 legs. Moment sign and power slope were checked for 3 joints x 2 sides x 5 trials. The force-plate unit/axis was checked on the right plate in 5 trials. With the verifier, 10 of 50 recordings.",
+    "Condition naming: README p.2 states Streaming d5 = 5 deg decline and i5 = incline; p.5 states Normalized 'in' = downhill. The aliases d5/d10 -> in5/in10 are therefore source-documented.",
+    "Did not run build_backlog_page.py --check: this handoff does not edit backlog.json, and the main session merges.",
+    "Revision after verifier return (UM21-C01-verify.json). (1) The probe now sweeps 45/60/90 deg ankle screens. AB07/i10 right is identical at all three (11712-17134, 34 strides). AB08/i0 left is 9/8/2 frames, and the touched strides change at 90 deg. The boundary is reported as screen-dependent; none is adopted, and canonical ankle stays missing for both whole recording-sides.",
+    "(2) D-UM21-C01-2 options B and C now name the prerequisite: a written LocoHub moment sign rule (Q7). D-UM21-C01-1 option C names the segment sign rule.",
+    "(3) Bounds are now stated as sample ranges across both samples: pelvis 95th percentile 0.2-3.2 deg, thigh median -7.7 to +5.0 deg, power slope -0.71 to -1.02. The D-UM21-C01-1 why now says about 8 deg. Chips use medians and per-leg ranges.",
+    "(4) P5 now records the paper as internally inconsistent: Methods says 100 Hz, Table 2 says 1000 Hz, and the data are 1000 Hz. E3/P4 cite the Table 2 power definition. The summary says 4 random recordings.",
+    "(5) Sheets rebuilt with the committed builder. The mapping is split into 4 panels (one per PNG, 4.5 in wide, 10 pt text); the last panel holds labeled made-up wrong mappings (wrong component, flipped sign) as the contrast. Task and decision IDs moved into the folded details: titles, decision headings and reply lines are plain words. The chip says pelvis markers. The ankle figure is 4.5 in wide with 10 pt text. Rendered at 1100x2600 and inside a 390 px iframe (allow-file-access-from-files) and inspected both: no clipping, mapping and plots legible at 390 px."
+  ],
+  "remaining": [
+    "Open decisions D-UM21-C01-1 and D-UM21-C01-2. Until they are answered, thigh, shank, ankle_dorsiflexion and flexion-moment columns stay missing, and the source copies remain. Any adopted moment column (and standard-name segment columns) also waits on Q7.",
+    "Author correspondence questions Q1-Q6 in the evidence report: PiG version/reaction frame/static offsets; power sign; force-plate units, frame and action/reaction; the AB07/i10 right ankle run (frames 11712-17134; components 2/3 near 180 deg suggest an alternate Euler solution, unproven); Normalized pelvis side; decline-trial facing direction.",
+    "Q7 (internal): restore an explicit LocoHub sign section (moment internal/external, segment-angle signs, GRF axes) in docs/reference before any moment or segment column ships as canonical.",
+    "The producers (reconvert_umich_streaming.py lines 86-92) still compute pelvis + hip. Changing them belongs to UM21-T02/T03 after D-UM21-C01-1; no converter was edited here.",
+    "Marker checks cover 10 of 50 recordings across author and verifier. A full-scope pelvis/thigh readback should run in the guarded pilot (UM21-T02), not ad hoc.",
+    "AB08/i0 left anomaly boundary is screen-dependent. A source-evidenced criterion or an author answer (Q4) is needed before canonical ankle values for AB07/i10 right or AB08/i0 left are produced."
+  ],
+  "next_action": "Short re-verification of the five returned items only (no re-probe needed). Then the main session adds D-UM21-C01-1 and D-UM21-C01-2 to backlog decisions, with the Q7 prerequisite disclosed, and points UM21-C02/T02 at the field policy.",
+  "changed_files": [
+    "contributor_tools/review_um21_c01_conventions.py",
+    "docs/quality/audits/um21-c01-tread-conventions.json",
+    "docs/quality/audits/um21-c01-source-probe.json",
+    "docs/maintainers/handoffs/UM21-C01.json",
+    "review_sheets/UM21-C01/ (gitignored: index.html, fig1a_standard.png, fig1b_waiting.png, fig1c_source.png, fig1d_failure.png, fig2_ankle.png)",
+    "review_sheets/D-UM21-C01-1/ (gitignored: index.html, fig1_thigh.png, fig2_shank.png)"
+  ],
+  "evidence_paths": [
+    "docs/quality/audits/um21-c01-tread-conventions.json",
+    "docs/quality/audits/um21-c01-source-probe.json",
+    "review_sheets/UM21-C01/index.html",
+    "review_sheets/D-UM21-C01-1/index.html"
+  ],
+  "decisions": [
+    {
+      "id": "D-UM21-C01-1",
+      "task_id": "UM21-C01",
+      "question": "How should UMich 2021 treadmill thigh and shank angles be released?",
+      "why": "The authors publish hip minus pelvis as their thigh estimate, and leg markers agree within about 8 degrees across two independent samples (10 of 10 legs closer than the current recipe in each). It is still a planar sum of 3D angles, and the shank step (minus knee) is ours, so a labeled estimate is more honest than the standard names.",
+      "options": [
+        {
+          "key": "A",
+          "label": "Leave out thigh and shank",
+          "consequence": "No segment columns until a 3D model reconstruction exists; nothing to correct later. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Labeled planar estimate (hip - pelvis, hip - pelvis - knee)",
+          "consequence": "Separately named estimate columns with formula provenance; standard names stay missing. Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Standard thigh/shank names from the same recipe",
+          "consequence": "Users get standard columns that are planar approximations; first requires a written LocoHub segment-angle sign rule (reference section). Reversible, but outward-facing once released."
+        }
+      ],
+      "recommended": "B",
+      "confidence": "medium",
+      "check": "review_sheets/D-UM21-C01-1/index.html: one random stride, marker thigh/shank vs both recipes.",
+      "cost_of_waiting": "Thigh/shank stay missing in the first treadmill release; nothing else waits.",
+      "decide_before_recommendation": true,
+      "status": "open"
+    },
+    {
+      "id": "D-UM21-C01-2",
+      "task_id": "UM21-C01",
+      "question": "Should UMich 2021 treadmill ankle angle and hip/knee/ankle flexion moments become standard columns (moments only after the LocoHub moment sign rule is written)?",
+      "why": "The authors state dorsiflexion/flexion positive and internal moments, Vicon puts flexion first for every joint and side, and the ankle stance moment sign agrees in every sampled leg (hip/knee signs rest on the authors). Any adopted moment column first needs a written LocoHub internal/external moment sign section in the reference. The ankle zero carries unpublished static offsets, and anomalous ankle recording-sides stay missing in every option.",
+      "options": [
+        {
+          "key": "A",
+          "label": "Neither yet",
+          "consequence": "Wait for author replies; the first release has no ankle angle or moments as standard columns. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Flexion moments only",
+          "consequence": "Three sagittal moments become standard, unchanged from source, once the LocoHub moment sign rule is written; the ankle angle waits on its zero offset. Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Ankle angle and flexion moments",
+          "consequence": "Four signals become standard, unchanged from source, once the LocoHub moment sign rule is written; anomalous ankle recording-sides stay missing. Reversible."
+        }
+      ],
+      "recommended": "C",
+      "confidence": "medium",
+      "check": "review_sheets/UM21-C01/index.html: mapping panels with a made-up wrong-mapping contrast, ankle anomaly figure and the ankle moment-sign chip.",
+      "cost_of_waiting": "Ankle and kinetic columns stay missing in the first treadmill release; the pilot can still run.",
+      "decide_before_recommendation": true,
+      "status": "open"
+    }
+  ]
+}

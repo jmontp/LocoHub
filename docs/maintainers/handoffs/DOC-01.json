@@ -1,0 +1,63 @@
+{
+ "task_id": "DOC-01",
+ "title": "Make catalog and quality UI show exact evidence status",
+ "status": "review",
+ "last_checked_at_utc": "2026-10-31T06:48:23Z",
+ "round": 2,
+ "summary": "Round 2 after verifier return: StrokePiG relabelled Legacy only with the exact native time-series pilot and the unreviewed 46-recording run; README job-directory row rewritten; GT24 label carries the withdrawn ankle fix; MBLUE receipts marked unreviewed; test count no longer hand-written. Round 1: Catalog rows now carry a linked evidence status and count labels naming the file counted; downloads are labelled legacy. Quality page gains a Status by dataset section (8 cards), removes all historical queued claims (now prepared/stopped per the 27 Oct refresh), corrects the superseded GT23 moment-unit claim, and summarizes software tests by purpose with passed/failed/not-run counts and a dated unassessed count. Previews state their legacy source file, download-name relation, task coverage, equal-subject mean and SD, and pooling. converted_datasets/README.md rewritten without cleaned/tested claims.",
+ "changed_files": [
+  "docs/quality/index.html",
+  "docs/datasets/index.html",
+  "docs/index.html",
+  "converted_datasets/README.md",
+  "docs/javascripts/quality.js",
+  "docs/javascripts/aggregate-preview.js",
+  "docs/javascripts/data-preview.js",
+  "docs/javascripts/extra.js",
+  "contributor_tools/build_quality_page_data.py",
+  "docs/stylesheets/quality.css",
+  "docs/stylesheets/data-preview.css",
+  "docs/datasets/ga26/index.html",
+  "docs/datasets/fu18/index.html",
+  "docs/quality/audits/doc01-evidence-status.json",
+  "docs/maintainers/handoffs/DOC-01.json"
+ ],
+ "checks": [
+  "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 docs/build.py --check -> Checked 40 HTML pages and 1662 referenced assets.",
+  "same prefix python3 -m pytest -q tests/test_data_documentation.py tests/test_quality_page.py tests/test_data_preview.py tests/test_static_aggregate_preview.py -> 21 passed.",
+  "same prefix python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (88 tasks).",
+  "node --check on quality.js, aggregate-preview.js, data-preview.js, extra.js -> OK.",
+  "Rendered catalog, home and quality pages (status cards, test table, coverage table, range explorer with UM21) with system Chrome via Playwright at true 390 px and 1100 px viewports from a local http.server; looked at each screenshot; document horizontal overflow 0 px at both widths (catalog table scrolls inside its own region, as before).",
+  "grep: no \"queued\" on any edited page; GT24 erratum sentence present once."
+ ],
+ "remaining": [
+  "test_results.json is from 20 Oct 2026 and misses test files added since (123 of 166 on 31 Oct); a fresh recorded run (one worker) would replace the dated statement with exact counts.",
+  "build_audit_evidence_page.py output and the hand-edited audit block have diverged; regenerating would drop current corrections. Needs the generator to carry those notes or the block to be marked authored.",
+  "GT23 record total (2,215) and task sum (2,940) disagree in docs/datasets/_metadata/gt23.yaml; shown as disputed, not resolved.",
+  "Optional verifier note not done: pelvis tilt sign flip under rule B is not added to Open rows (sign-rule work belongs to the concurrent reference/detector tasks).",
+  "Status cards are hand-written from audits dated up to 30 Oct; any new rebuild or decision requires updating the card and catalog label together.",
+  "Older audit JSONs (e.g. gt21-completed-force-readback, strokepig-source-coverage) still contain historical \"queued\" fields; the page cites backlog-refresh-20261027 for their stopped status."
+ ],
+ "next_action": "Independent reviewer: check each claim C1-C9 in docs/quality/audits/doc01-evidence-status.json against its cited evidence, open both catalogs and the quality page at 390 and 1100 px, and confirm no unsupported status claim remains.",
+ "evidence_paths": [
+  "docs/quality/audits/doc01-evidence-status.json",
+  "docs/quality/audits/backlog-refresh-20261027.json",
+  "docs/quality/audits/gt23-c02-moment-units.json"
+ ],
+ "output_sha256": {
+  "docs/quality/index.html": "5f6ddec3695f671f8a20aa9b3769225ac8157f0b227520f35f4df78e7bc9cd6d",
+  "docs/datasets/index.html": "dd596c47ba9f2f91a3a3d5b1a6466387a981ae3f50fd71b2288cc5932a6d6577",
+  "docs/index.html": "3b84ce6050c124f5405693c685db74e615623790e1a534e317c22a75a8a6d177",
+  "converted_datasets/README.md": "a5c19a67333d5cb2fe19b28af4b33701cbe124409c14be12f6047bb901f6c179",
+  "docs/javascripts/quality.js": "dbb0bc294bbe08e2264b3d8595f0d4f6feb83d88c04dacaffa52635a612a6470",
+  "docs/javascripts/aggregate-preview.js": "c2bac9b90cdbbdaf965d83e259622c5994f29095e4ad267b5e290ba19b31a81f",
+  "docs/javascripts/data-preview.js": "3c618d4dc509c68bedfbdee03534792b4501a0849a5b9e9cec5f4870692a68a2",
+  "docs/javascripts/extra.js": "cbf59cf5a4f4436f32a2814bf118b5c4ed56425e1b2e656c188b92814858af94",
+  "contributor_tools/build_quality_page_data.py": "26ab42758abbb50b59dfde249a3bab74ed9b57852db40e425a0bfa5398b2253b",
+  "docs/stylesheets/quality.css": "a7a5d0fadb3b5a2bac1e8ac8fd1be2532f8274c928d2d149e6ce9bdc5f9fa242",
+  "docs/stylesheets/data-preview.css": "1ea4bbaff38cd8873f1bbf7e2d8fc6420a98ae941e66a43e1495ac0fa0701966",
+  "docs/datasets/ga26/index.html": "80c11fa858d3cba92ee08545cc05cfaf7ae069fcf9e6117919ed84c1577754a9",
+  "docs/datasets/fu18/index.html": "4146ca551567ee5e72fa3748459aac63dbbfafa576e3a92a341fecb525e4a82f"
+ },
+ "resources": "Read-only metadata; one local static http.server and one headless Chrome for screenshots; no numerical or MATLAB job."
+}

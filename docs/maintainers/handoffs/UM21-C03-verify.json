@@ -1,0 +1,127 @@
+{
+ "task_id": "UM21-C03",
+ "verifier_role": "independent second agent (own code; worker functions not imported or reused)",
+ "verdict": "done",
+ "last_checked_at_utc": "2026-10-30T17:15:06Z",
+ "round_2": {
+  "last_checked_at_utc": "2026-10-30T17:15:06Z",
+  "verdict": "done",
+  "summary": "Second round. I checked all six required fixes against the files, not the worker's report, and each one is in. The rebuilt census JSON differs from round 1 only by the new step-percentile fields: removing them and restoring the old builder hash reproduces the round-1 file hash 94437187... exactly. I computed the new step percentiles myself and they match. Both sheets meet the AGENTS.md rules at 1100 px and in a 390 px iframe. Done means the deliverables meet their acceptance criteria. It is not scientific approval: D-UM21-C03-1 and D-UM21-C03-2 remain queued for José.",
+  "fix_checks": [
+   {
+    "fix": 1,
+    "result": "pass",
+    "evidence": "task_id_note now says the task was renumbered from UM21-C02 and no collision remains. remaining[0] says the same. The backlog holds UM21-C02 (pelvis correspondence) and no UM21-C03."
+   },
+   {
+    "fix": 2,
+    "result": "pass",
+    "evidence": "The handoff output_sha256 equals the current file hashes: builder 3298ebd9c535..., source-probe 887fb33bc1ad... (unchanged, the renamed round-1 file), episode-census 2a53c360b4c3... and conventions 244e3c354b64.... The conventions outputs_sha256 lists the same builder, probe and census hashes. The census code_sha256 is the current builder. The probe JSON still records the pre-rename builder 141e3b80...; this is disclosed in corrections, and the probe was not re-run. The census check: stripping the 48 inside/outside_step_p50_p95_deg entries and restoring code_sha256 to 141e3b80... reproduces 94437187db03941d27fd7719feedd16ff7b8f538d640be1c4c5b2136743df1b1 byte for byte, so no other census value changed."
+   },
+   {
+    "fix": 3,
+    "result": "pass",
+    "evidence": "UM21-C03 fig1_signs.png is 765 px at 170 dpi = 4.50 in, from a fixed 4.5 x 5.4 in canvas saved without a tight bbox. Fonts: rcParams 10.5 pt, tick labels 10 pt, title 10 pt. Labels are not clipped at 1100 px and are legible, though small, in the 390 px iframe. Widths of the other images: 4.27, 4.27, 4.30, 4.21 and 3.97 (D-UM21-C03-1) in."
+   },
+   {
+    "fix": 4,
+    "result": "pass",
+    "evidence": "The chip now reads 'knee moment is flexor-positive, the mirror of the counterclockwise force-plate estimate (16 of 16 legs); ankle matches as published (16 of 16)'. The figure question is 'How does each source moment compare with the force plates?' and the caption is 'Knee is flexor-positive, so mirrored; ankle matches.' I confirmed the 16/16 counts from the probe JSON: published vs flipped component 1 by median absolute residual gives knee 16/16 with x -1 under pure counterclockwise and ankle 16/16 with x +1. This agrees with my round-1 sample: knee r -0.81 to -0.96, ankle +0.94 to +0.98."
+   },
+   {
+    "fix": 5,
+    "result": "pass",
+    "evidence": "The D-UM21-C03-2 'why', the sheet fold and the conventions interpretation no longer use the matrix identity as evidence. The interpretation calls it 'a check of the rule, not evidence'. They cite the p1-p99 range match and step percentiles. My independent computation over consecutive non-zero frame pairs: inside median 0.51, p95 2.43 deg; outside 0.64, 2.77 (yxz). In xyz order: 0.51/2.41 and 0.62/2.71. This matches the worker."
+   },
+   {
+    "fix": 6,
+    "result": "pass",
+    "evidence": "Frame numbers are labeled 1-based in the sheet details, the handoff summary and the conventions interpretation. Jump clusters 11704-11713, 12704-12705, 14931-14932, 14973 and 14986-14991 match my 13 frames (0-based + 1). Both ankle legends now show the outside median ('their median') and the 2 inside jump strides. The as-published panel counts 29 + 2, which is consistent with 31 inside strides."
+   }
+  ],
+  "sheet_rechecks": "Both sheets re-rendered at 1100 px and in a 390 px iframe. Order, budgets and chip states are unchanged and valid (UM21-C03: 8 chips, 3 figure blocks, 3 not-shown; D-UM21-C03-1: 4 chips, 1 figure, 3 not-shown). No paths, hashes or task IDs appear outside the folded details. Each sheet has exactly one recommendation fold, and no other text names the recommended option. Option letters and meanings on both sheets match the handoff JSON (A none / B outside only / C re-express; A clinical names / B segments counterclockwise / C counterclockwise for all). The neutral ordering is stated in the builder comments (lines 557, 888, 916). Both decisions pass validate_backlog with a stub UM21-C03 task, and both stay queued with decide_before_recommendation true. The D-UM21-C03-1 index.html is byte-identical to round 1 (0a2b0a98...); none of the fixes targeted it. backlog --check: valid, HTML current (78 tasks).",
+  "resources": "This round: read-only file checks, one bounded single-channel read (AB07/i10 RAnkleAngles) for the step percentiles, and headless Chrome renders. Nothing was written under converted_datasets/.",
+  "remaining": [
+   "The main session adds task UM21-C03 to the backlog and copies the two decisions as queued.",
+   "Hip moment component identity stays weak; the sign is supported.",
+   "The level-walking chip still says 'not checked'. The verifier's AB01/i0 check passed, but the worker's own samples still contain no level-walking recording. This is acceptable as disclosed."
+  ]
+ },
+ "round_1": {
+  "verdict": "back_to_worker",
+  "last_checked_at_utc": "2026-10-30T17:08:00Z",
+  "summary": "The science reproduces. On a fresh sample that includes level walking (seed 20261101: AB02/d5, AB02/i10, AB07/d5, AB01/i0), each angle channel's component 1 with the published sign fits marker angles best under the clinical convention in 8 of 8 legs. Pure counterclockwise needs a flip for pelvis and knee. Knee and ankle moment signs agree with a force-plate lever-arm estimate in 8 of 8 legs. Hip agrees in sign in 8 of 8 legs but is weak, as reported. The ankle episode, the 13 jump frames, the stride counts 86/31/29/115, the 3 ankle and 21 foot-progression census channels and the 42/8 power split all reproduce exactly. The renumbering reverses exactly. Returned for documentation and sheet fixes only: a task-ID note made wrong by the rename, stale output hashes, one figure wider than 4.5 in, a moment chip and caption that contradict the figure, and a decision rationale that cites a mathematical identity as evidence. No scientific approval is implied.",
+  "checks": [
+   {
+    "id": 1,
+    "name": "Sign convention derivation",
+    "result": "pass",
+    "evidence": "Derived independently with x = forward, y = up and z = x cross y = the person's right side, counterclockwise positive. Thigh and shank are measured from straight down (distal end forward = +), foot from forward horizontal (toes up = +) and pelvis as PSIS->ASIS from forward horizontal (anterior tilt = clockwise = -). Joint angle = distal minus proximal: hip flexion +, knee flexion - and ankle dorsiflexion +. Internal moments act on the distal segment: hip flexor +, knee extensor + (so knee flexor -) and ankle dorsiflexor +. The conflicts with the clinical names are exactly pelvis anterior tilt, knee flexion angle and knee flexion moment, as claimed. Power is invariant. The marker data confirm the frame: markers are z-up and y-forward, right = +x = forward x up, which agrees with the person's right. The caveat that the left leg is also viewed from the right is correctly flagged by the worker."
+   },
+   {
+    "id": 2,
+    "name": "Per-channel transforms on a fresh sample incl. level walking",
+    "result": "pass",
+    "evidence": "Marker angles (GT->mid knee, mid knee->mid malleoli, HEE->TOE, mid PSIS->mid ASIS) were compared with the 6 component/sign candidates after a median offset. Component 1 with the published sign under the clinical convention ranked best in 8/8 legs for every channel. Median absolute residuals: pelvis 0.07-0.14 deg (opposite sign 3.1-4.3), hip 1.0-2.2 (opposite 17.8-34.3), knee 1.2-2.9 (opposite 11.3-33.2), ankle 0.40-1.39 (opposite 5.5-9.9). AB01/i0 (level) behaves the same: pelvis 0.066, hip 1.06-1.11, knee 1.22-1.37, ankle 0.40-0.60. Moments: the lever-arm internal moment (counterclockwise +) uses GRF on the foot = -(plate force), CoP in mm registered to the heel/toe markers in stance, and a plate tilt sign chosen so the mean gravity-frame horizontal force is about 0 (residual 0.0001-0.004 BW). Source component 1 correlation: ankle +0.935 to +0.980 (slope 0.72-0.85; component 1 best by correlation in 8/8); knee -0.807 to -0.956 (slope -0.95 to -1.07; component 1 best in 8/8; so the source knee moment is flexor-positive and needs x -1 under pure counterclockwise); hip +0.30 to +0.86 (sign agrees in 8/8; component 1 best by correlation only 3/8, component 2 in 5/8). Physiology agrees: the source ankle in the last 40% of stance is -1.0 to -1.5 N*m/kg (plantarflexor negative); the source hip is -0.25 to -1.0 in early stance and +0.4 to +0.6 in late stance (flexor-positive pattern). Conclusion: transforms as claimed. Hip remains weak, as the worker states."
+   },
+   {
+    "id": 3,
+    "name": "Ankle episode AB07/i10 right",
+    "result": "pass",
+    "evidence": "|c2| > 90 deg on non-zero frames gives 5429 frames in two runs, 0-based [11703, 14987] and [14990, 17133]. These equal the worker's 1-based [11704, 14988] and [14991, 17134]. For (c1+180, 180-c2, c3+180), the maximum matrix difference from the raw triple is 1.28e-15 in all 6 Cardan orders; c1+180 alone gives 2.00. Re-expressed inside p1-p99 is [-16.6, 27.0], [1.1, 6.1], [-24.2, -3.4] against outside [-15.9, 27.8], [0.5, 6.3], [-24.9, -0.5], identical to the claim. Frame-to-frame orientation steps over 20 deg: 13 frames, the same set in yxz, xyz and zyx, equal to the worker's 1-based list minus 1. The p95 step inside the window is 2.4 deg. Stride accounting from RHS: 122 heel-strike pairs = 86 clean + 31 inside + 5 duration-screened (including a 14775-15724 gap that holds jump frames 14931-14991). Jump frames fall in 2 inside strides, so 29 re-expressable strides and option counts 0/86/115 are correct. The run ends where (0,0,0) zero fill begins (from 17135, 1-based). Caveat for wording (fix 5): the matrix identity holds for any triple by construction, so it is not evidence that the re-expressed values are right. The evidence is the distribution match and the small inside steps."
+   },
+   {
+    "id": 4,
+    "name": "Census and power storage",
+    "result": "pass",
+    "evidence": "Full independent scan, not a sample: 500 joint-angle channels have alternate-branch frames in FootProgress 21, Ankle 3 and Pelvis/Hip/Knee 0. The ankle channels are AB05/d10 L (5 frames), AB06/d5 R (8) and AB07/i10 R (5429). AB05/d10 L is a pass through the c2 ~ 90 deg singularity with c1 50-114 deg, and re-expression gives -130 to -66, so neither branch is plausible: a glitch. AB06/d5 R is a ramp to c2 = 165 just before zero fill: a glitch. I agree that only one real branch episode exists. Power: 300 channels; components 1 and 2 are all zero in exactly AB03/i10, AB04/d10, AB04/d5, AB04/i5, AB05/d10, AB05/d5, AB05/i0 and AB05/i10, giving 8 layout-2 and 42 layout-1 recordings with no mixed recording. Sign: in AB02/i0 R, component 1 correlates -1.000 with M1 x dtheta1/dt (ankle and knee); in AB05/i0 R, component 3 correlates +0.997 (ankle) and +0.963 (knee)."
+   },
+   {
+    "id": 5,
+    "name": "Renumbering",
+    "result": "pass",
+    "evidence": "Reversing the sed on the current builder (sha256 a81d6142...) gives 141e3b80b39e7f298ab685a69f8514f95a2ba06f26dfcd44d8772624dc198d11 exactly. The same reverse sed on the current probe and census JSONs gives the handoff's 84872446... and 695768ee... exactly, so those files were renamed too and are otherwise unchanged. The conventions JSON was regenerated by the sheet step, and its reverse-sed hash (6ed8b758...) differs from the handoff's 9b1b6887.... That is expected after a regeneration, but it is not recorded (fix 2)."
+   },
+   {
+    "id": 6,
+    "name": "Decisions",
+    "result": "partial",
+    "evidence": "Both decisions pass validate_backlog once a task with ID UM21-C03 exists. Without that task they fail with 'unknown task UM21-C03', which is expected before the main session adds the task. With status 'queued' the backlog stays at 3 open; setting them 'open' would fail the at-most-three rule. Option letters and meanings on both sheets match the handoff JSON exactly (A none / B outside only / C re-express; A clinical names / B segments counterclockwise / C counterclockwise for all). Options are ordered by a neutral count (released strides 0/86/115; flipped signals 0/1/3), stated in builder comments (lines 553, 861, 889) and in options_order. The recommendation appears only in the click-to-reveal fold. The chips, reply hints and headline do not name B or C. One pass chip ('re-expressed strides match ... 29 of 31') reports supporting evidence for C. I judge this a factual check, not a leak. Problem: the D-UM21-C03-2 'why' and the sheet fold cite 'same 3D orientation (matrix difference 1e-15)' as support. That holds for any triple, so it is not evidence (fix 5)."
+   },
+   {
+    "id": 7,
+    "name": "Sheets",
+    "result": "failed",
+    "evidence": "Order is correct (ask, headline, chips, figures, decision, not shown, reply, details). Budgets: 8 and 4 chips, 3 and 1 figure blocks, 3 not-shown items, prose within the builder's 60-word count. Chip states are the three allowed. Figure titles are questions. No paths, hashes or task IDs appear outside the folded details. Renders at 1100 px and in a 390 px iframe: nothing clips and tables stack (a bare 390 px window clips because headless Chrome has a minimum window width, not the page). Failures: (a) the UM21-C03 'Which source signs disagree...' image is 951 px at 170 dpi = 5.6 in wide (bbox_inches='tight' grows the 4.5 in figure). Its labels render at about 7 px on the phone, which breaks the 4.5 in / 10 pt rule. (b) The chip 'knee and ankle moments follow force plates' and the caption 'Ankle agrees: the contrast.' contradict the knee panel, where the source is the mirror image of the counterclockwise estimate. (c) In the ankle figure, the black line in both panels is not in the legend, and neither are the left panel's red dotted jump strides. The ankle-episode figure is otherwise clear in 5 seconds: published inside strides sit at -150 to -200 deg, far from the grey band, and the re-expressed blue strides lie inside it. It shows component 1 only, so it cannot by itself tell the full rule from a c1+180 shift; the matrix check covers that."
+   }
+  ],
+  "required_fixes": [
+   "1. Handoff task_id_note and remaining[0]: the rename sed turned the collision note into a false statement ('backlog.json already holds a different task UM21-C03 ...'). Backlog holds UM21-C02 for the pelvis-correspondence task and has no UM21-C03. Rewrite the note to say the task was renumbered from UM21-C02 and that no collision remains. Drop or update remaining[0].",
+   "2. Handoff output_sha256 is stale for all four files. Current values: builder a81d6142010b3a57c140256fed705ec49f38476a8c14c03d42fbce6ed8b9ed0f, source-probe 887fb33bc1adf663bec6e79fb04e90179e7e1a74aa074231ab1daf09202cae1a, episode-census 94437187db03941d27fd7719feedd16ff7b8f538d640be1c4c5b2136743df1b1, conventions dffe5549805cb791daf5006f15710b45cb118e3e334c4e55163997ac7ab91e06 (or whatever the rebuild yields). Record them, and state in corrections that the probe and census JSONs were also sed-renamed (the reverse sed reproduces 84872446... and 695768ee...).",
+   "3. Rebuild review_sheets/UM21-C03/fig1_signs.png so the saved image is at most 4.5 in wide at its dpi (shorten the row labels or shrink figsize so that bbox_inches='tight' stays within 4.5 in). Confirm the labels are legible at 390 px.",
+   "4. UM21-C03 sheet, moment chip and fig 2 caption: state that the source knee moment is flexor-positive, so it is the mirror image of the counterclockwise estimate (as expected under the clinical sign), and that the ankle matches as published. Replace 'Ankle agrees: the contrast.' and the chip 'follow force plates', which contradicts the knee panel.",
+   "5. D-UM21-C03-2 'why' (handoff) and the recommendation fold on the UM21-C03 sheet: remove 'same 3D orientation (matrix difference 1e-15)' as support, because it is a mathematical identity true for any triple. Cite the real evidence: inside p1-p99 matches outside in all three components, and the p95 frame step inside the run is about 2.4 deg.",
+   "6. Minor: label frame numbers as 1-based (sheet details, handoff summary). Correct the jump-frame ranges in the handoff summary and the conventions interpretation ('11704-11712' omits 11713; the last cluster is 14986-14991, not 14984-14991). Add the black line and the left-panel jump strides to the ankle-figure legends."
+  ],
+  "optional": [
+   "The level-walking chip can cite this verification (AB01/i0: all four angle channels and the knee/ankle moment signs agree) instead of 'none drawn'. Only if the worker re-checks it; otherwise leave it as not checked."
+  ],
+  "next_action": "Worker applies fixes 1-6 (no source reads needed except the fig1 re-render, which is the sheet step only). The verifier then re-checks hashes, fig1 width and the reworded text, and moves the task to done."
+ },
+ "seed": {
+  "value": 20261101,
+  "rule": "pool = the 50 treadmill recordings minus the worker's 8 (seeds 20261030/20261031); random.Random(20261101).sample(pool, 3) -> AB02/d5, AB02/i10, AB07/d5; no i0 drawn, so the same rng .choice() over the remaining i0 recordings -> AB01/i0."
+ },
+ "peak_rss_mib": {
+  "fit": 72.1,
+  "episode": 51.1,
+  "census": 66.1,
+  "note": "Each step ran alone in the foreground, single-threaded BLAS, nice 19, ionice idle, with RLIMIT_AS 1.5 GiB. Reads were one dataset at a time. Streaming.mat size and mtime were unchanged across each step. Nothing was written under converted_datasets/. MATLAB was not used. The headless Chrome renders are not included in these RSS figures."
+ },
+ "verifier_code": {
+  "path": "contributor_tools/audit_probes/2026_10_30/verify_um21_c03_signs.py",
+  "sha256": "166f77516c295b0a474d2f63f5fea29911e41c027ce200b36604bd8693a46ef7",
+  "note": "The fit step was rerun after one fix to my own tilt-sign selection. The first version chose the tilt sign with a plate-axis sign that the moment calculation never used, which biased the decline lever arms. The episode and census code did not change. Outputs are in the session scratchpad (not committed): v_fit.json b97f835916e8..., v_episode.json 7f368cf443ba..., v_census.json 7001dd10c2e5..."
+ },
+ "next_action": "Main session: add task UM21-C03 to backlog.json (status done after this verification), copy D-UM21-C03-1 and D-UM21-C03-2 as queued, and point UM21-T02 at the power-layout and zero-fill findings."
+}

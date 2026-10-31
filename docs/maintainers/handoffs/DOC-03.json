@@ -1,0 +1,70 @@
+{
+ "task_id": "DOC-03",
+ "scope_of_this_handoff": "Reference, diagram, DATA_CONTRACT summary and DOC-02 historical notes switched to rule B. The sign-offset detector code, its design doc and the CORE-07 plan belong to another agent and were not touched.",
+ "status": "review",
+ "last_checked_at_utc": "2026-10-31T06:16:40Z",
+ "summary": "Rule B per D-UM21-C03-1 = B (answered 2026-10-31T06:11:20Z, previously C): segment angles (pelvis, trunk, thigh, shank, foot) counterclockwise-positive, so pelvis anterior tilt negative; joint angles and internal moments positive in their named direction (hip flexion, knee flexion, ankle dorsiflexion; hip flexor, knee flexor, ankle dorsiflexor; plantarflexor negative); power = M x omega, generation positive; sideways GRF/COP outward per leg (D-GT21-C01-1 = B, unchanged).",
+ "changed_files": [
+  "docs/reference/index.md",
+  "docs/reference/index.html",
+  "docs/assets/sagittal-signs.svg",
+  "contributor_tools/DATA_CONTRACT.md",
+  "contributor_tools/common/CLAUDE.md",
+  "contributor_tools/conversion_scripts/Gait120/CLAUDE.md",
+  "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/CLAUDE.md",
+  "contributor_tools/conversion_scripts/MBLUEAnkle/CLAUDE.md",
+  "contributor_tools/conversion_scripts/UMich_2024_KneeExo/README.md",
+  "contributor_tools/conversion_scripts/GaTech_2024_TaskAgnostic/README.md (tracked as readme.md; CRLF kept)",
+  "contributor_tools/conversion_scripts/StrokePiG/CLAUDE.md (untracked)",
+  "docs/contributing/community.md (CRLF kept)",
+  "docs/datasets/ga26/index.html",
+  "docs/datasets/mb24/index.html",
+  "docs/datasets/fu18/reading-the-data.html",
+  "docs/maintainers/handoffs/DOC-03.json"
+ ],
+ "changes": {
+  "reference_section": "Rewritten from one script for md and html. Dated change note (changed 2026-10-31 from the all-counterclockwise rule adopted 2026-10-30). 'Decided' list: frame, segment angles CCW (pelvis anterior tilt -, trunk back +), joint angles named direction, internal moments named direction, power, sideways outward per leg. 'LocoHub definitions': composition thigh = pelvis + hip, shank = thigh - knee, foot = shank + ankle (up to zero offsets), zero references, GRF on the person.",
+  "table": "Knee angle: flexion +, gait2392 = -knee_angle_r/l. Moments: named direction, gait2392 hip_flexion_r_moment, -knee_angle_r_moment, ankle_angle_r_moment. Velocity/acceleration: coordinate speed/acceleration, negated for the knee. Power: unchanged by the knee negation. Segment rows unchanged (gait2392 shank = thigh + knee_angle in gait2392's own sign).",
+  "callout": "Now 'Pelvis anterior tilt is negative; knee flexion is positive' (60 deg flexion = +1.05 rad; LocoHub knee = -knee_angle).",
+  "diagram": "Header 'Each arrow points in the + direction'; legend 'Segment angle: counterclockwise +', 'Joint angle: named direction +'. Knee arrow now clockwise behind the knee (flexion), label moved left. Other arrows unchanged. title/desc/alt/caption updated. Checked at 343 px (text about 10.3 pt) and 400 px.",
+  "data_contract": "Summary attributes D-UM21-C03-1 = B (2026-10-31, changed from C) and D-GT21-C01-1 = B, with the rule-B items; definitions separated as before.",
+  "converter_docs": "DOC-02 'Historical (before the 2026-10-30 sign rule)' notes replaced by 'Sign rule note (2026-10-31)': knee-flexion-positive mapping matches the current rule; the note describes the converter's mapping and does not verify existing output files. Table headers and wording that round 2 changed to 'pre-rule output' restored to the original 'LocoHub Standard' text. GT25 publisher-README ankle clarification kept.",
+  "dataset_pages": "GA26, MB24, FU18 notes now say knee-flexion-positive (and FU18 flexor/dorsiflexor moments) match the rule and that the current files have not been re-verified; FU18 hip moment still marked as unchecked source sign. community.md FAQ states rule B."
+ },
+ "sweep": "grep over active docs and contributor_tools (*.md, *.html, *.yaml; excluding legacy, handoffs, audits, backlog) for rule-C phrasings (knee flexion negative, knee flexor negative, counterclockwise for everything, -1.05, rule C): only docs/maintainers/sign-offset-detector-design.md remains (detector owner; it already notes the change to B at line 385 ; line 166 describes a synthetic fixture's injected source signs, not the rule) and a GT25 source exo-convention line (source description, correct).",
+ "checks": [
+  {
+   "command": "python3 docs/build.py --check",
+   "result": "exit 1; all 4 errors are in maintainers/backlog.html, which renders backlog.json paths as links to Markdown files (../contributing/community.md, ../contributing/index.md, ../reference/index.md, sign-offset-detector-design.md). No error from any file changed here. Fix belongs to the backlog owner (render .md paths as code, or reference the .html pages)."
+  },
+  {
+   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_data_documentation.py",
+   "result": "7 passed, 1 failed on the same backlog.html links."
+  },
+  {
+   "command": "python3 contributor_tools/build_backlog_page.py --check",
+   "result": "Backlog valid; HTML current (88 tasks)."
+  },
+  {
+   "command": "headless Chrome render of docs/reference/index.html at 375 and 1280 px",
+   "result": "section and diagram render; page overflow at 375 px (481 px) pre-existing from Metadata inline code."
+  }
+ ],
+ "output_sha256": {
+  "docs/assets/sagittal-signs.svg": "6fa19406fd34dc7d9515d0b01421fe5fa90b035120b26bc51de07f2746afe7cb"
+ },
+ "not_touched": [
+  "sign-offset detector code, tests and design doc (other agent)",
+  "CORE-07 plan",
+  "contributor_tools/validation_ranges/default_ranges.yaml (separate task; under B only pelvis tilt ranges would need mirroring, knee ranges already flexion-positive -- for the range task owner to confirm)",
+  "backlog.json/backlog.html, AGENTS.md",
+  "GT23/GT24 errata"
+ ],
+ "remaining": [
+  "Verifier checks the rule-B table, callout, diagram knee arrow and DATA_CONTRACT attribution against D-UM21-C03-1 = B.",
+  "docs/build.py --check passes only after backlog.html stops linking Markdown paths.",
+  "CORE-07 plan and detector target rule: detector owner."
+ ],
+ "next_action": "Second-agent review of DOC-03 reference/diagram part; detector part tracked separately.",
+ "resources": "docs only; no data reads; no numerical or MATLAB jobs; headless Chrome renders."
+}

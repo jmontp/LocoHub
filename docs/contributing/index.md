@@ -24,7 +24,7 @@ Follow the [version 2.0 data contract](../reference/index.md). Supply explicit o
 
 Start with a small source subset that covers the intended task and signal types. Review representative source-to-output traces and document:
 
-- source signal → output column, units, signs, and coordinate transformations;
+- source signal → output column, units, signs (to the [standard signs and frames](../reference/index.md#signs-and-frames)), and coordinate transformations;
 - event detection, cycle boundaries, interpolation, and bilateral mappings;
 - filtering and derivative methods, including their order;
 - normalization masses, assistance/biological moment definitions, and force-plate assignments;

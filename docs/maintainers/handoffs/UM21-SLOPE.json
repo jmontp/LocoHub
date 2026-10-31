@@ -1,0 +1,116 @@
+{
+  "task_id": "UM21-SLOPE",
+  "part": "walking-surface slope from midstance for the 50 UMich 2021 treadmill recordings (evidence for D-UM21-T02-2)",
+  "status": "probe_complete_ready_for_review",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-10-31T06:45:00+00:00",
+  "requested_by": "José: use midstance to get the true ground slope.",
+  "summary": "The motion shared by AB01 i5 and AB01 i10 was walked on a 10-degree incline. Midstance foot path gives 10.09 deg (IQR 9.98-10.20), heel-toe pitch minus the level offset gives 11.00 deg (10.68-11.25), and plate force tilt gives 9.76 deg (9.60-9.90). AB01 i10 is correctly labelled. AB01 i5 is the mislabelled copy, as D-UM21-T02-2 already assumed. Every method flags AB01 i5, and no other recording disagrees with its label on the marker methods.",
+  "changed_files": [
+    "contributor_tools/audit_probes/2026_10_31/probe_um21_midstance_slope.py (new)",
+    "docs/quality/audits/um21-midstance-slope-blind.json (new; blind run, AB01 i5/i10 withheld)",
+    "docs/quality/audits/um21-midstance-slope.json (new; final run)",
+    "contributor_tools/review_um21_t02_clock.py (D-UM21-T02-2 slope figure replaces the hip-trace figure; slope added to chips, why, option B and check)",
+    "docs/maintainers/handoffs/UM21-T02-audit.json (decisions_for_backlog D-UM21-T02-2 re-copied; round5_slope_evidence; hashes)",
+    "docs/maintainers/handoffs/UM21-SLOPE.json (this file)"
+  ],
+  "not_changed": "backlog.json/html, AGENTS.md, converted_datasets/, source folders, the audit script and its tests, D-UM21-T02-1 (its decision.json is byte-identical to the previous build).",
+  "method": {
+    "frames": "Markers are in the lab frame (README: global coordinates, m). Up = lab +z: the pelvis is above the heel in 50/50 recordings. Forward = the median horizontal heel->toe direction. The stance foot moves backward along it in 97.1-100 % of strides. Plates are in the local plate frame (README).",
+    "midstance": "Strides 0.7-2.0 s. Foot-flat frames fall between 10 % and 50 % of the stride, where |v_heel - v_toe| <= 0.05 m/s (heel and toe carried together by the belt), with at least 3 per stride. The fixed 25-35 % window is also reported. In AB04, AB09 and others the foot still rotates there (0.1-0.2 m/s), which biased it in blind run 1.",
+    "estimates": {
+      "foot_pitch": "José's method: heel->toe pitch atan2(dz, d.forward) at the foot-flat frames, minus the same participant's and leg's level (i0) median.",
+      "belt_path": "Pitch of the flat foot's path (mean heel/toe velocity) at the same frames, with belt speed >= 0.4 m/s. No offset is needed.",
+      "plate_force": "Tilt of the stride-mean total GRF (L+R plates) from the plate normal. The plate +y sign comes from braking-before-propulsion order. Valid only when the plates carry the full body weight, which is reported per recording."
+    },
+    "tolerance": "Fixed in code before AB01 i5/i10 values were seen. A --blind run withheld both, and the final run reproduced the blind tolerances exactly, with the same probe sha. Per method, over the 38 non-level recordings other than AB01 i5/i10: tol = max(1, ceil_0.5(|median residual| + 4 x 1.4826 x MAD)). Result: belt_path 2.5 deg (robust SD 0.52), foot_pitch 5.5 deg (robust SD 1.28), plate_force 1.0 deg (robust SD 0.08). Only plate_force has tol < 2.5 under the rule. The AB01 answer does not depend on that, because all three methods put the motion at 9.8-11.0 deg, nearest label 10.",
+    "development_log": "Blind run 1 used the fixed window only. The foot-flat gate and the plate body-weight check were added after blind runs 1-2, using the other 48 recordings only. The tolerance rule was not changed."
+  },
+  "results": {
+    "AB01_i5_i10_shared_motion_deg": {
+      "belt_path": 10.088,
+      "foot_pitch": 11.004,
+      "plate_force": 9.758,
+      "per_leg_belt_path": {
+        "left": 10.009,
+        "right": 10.158
+      },
+      "per_leg_foot_pitch": {
+        "left": 10.978,
+        "right": 11.027
+      }
+    },
+    "verdict": "10-degree incline. AB01 i10's label is correct; AB01 i5's label (5 deg) is wrong by about 5 deg. AB01 has no recording walked at 5-degree incline in this source.",
+    "flags": {
+      "belt_path": [
+        "AB01/i5"
+      ],
+      "foot_pitch": [
+        "AB01/i5"
+      ],
+      "plate_force": [
+        "AB01/i5",
+        "AB03/d10",
+        "AB03/d5",
+        "AB03/i0",
+        "AB10/d10",
+        "AB10/d5",
+        "AB10/i10"
+      ],
+      "belt_path_25_35 (fixed window)": [
+        "AB01/i5",
+        "AB04/d10",
+        "AB09/d5"
+      ],
+      "foot_pitch_25_35 (fixed window)": [
+        "AB01/i5"
+      ]
+    },
+    "residual_range_other_48_deg": {
+      "belt_path": [
+        -1.245,
+        0.924
+      ],
+      "foot_pitch": [
+        -4.891,
+        3.735
+      ],
+      "plate_force": [
+        -1.831,
+        3.942
+      ]
+    },
+    "plate_d5_question": "The earlier verifier saw a 2.25-deg plate tilt on a d5 recording. Only AB03 d5 (-1.79 deg) and AB10 d5 (-2.16 deg) look like that, and there the plates carry only 0.93 and 0.94 body weights per stride. The other 8 d5 recordings give -4.92 to -5.02 deg with 0.99-1.01 body weights. In AB03 and AB10 the plates carry 0.91-0.98 body weights, least on declines. The tilt shrinks with the missing weight, which fits support off the plates (for example a handrail; not verified). The midstance foot path agrees with the label in all of them (AB03 d5 -5.20, AB10 d5 -5.21 deg). The README 5 deg holds. In the other 38 recordings (8 participants, AB01 i5/i10 excluded), the plate tilt is within -0.25 to +0.09 deg of the label."
+  },
+  "side_findings_not_acted_on": [
+    "Forceplate force is in N, not the README's N/kg: the stride-mean |GRF| equals body mass x 9.81 (0.99-1.01 body weights in full-weight recordings).",
+    "AB03 and AB10 plates carry 3-9 % less than body weight, most on declines. Any UM21 kinetics release should check this before using their plate forces."
+  ],
+  "checks_run": {
+    "probe_blind": "nice 19, ionice idle, single-thread env, RLIMIT_AS soft 768 MiB, one recording at a time; peak RSS 192.9 MiB",
+    "probe_final": "same; peak RSS 192.7 MiB, 8.5 s; --blind-report tolerances equal",
+    "sheet_build": "review_um21_t02_clock.py peak RSS 207.4 MiB",
+    "render": "Playwright Chrome at 1100 and 390 px: scrollWidth = viewport, details closed, 3/3 images load, recommendation not visible",
+    "tests": "OPENBLAS/OMP/MKL=1 MPLBACKEND=Agg nice 19 ionice -c3 pytest -q tests/test_audit_um21_tread_pilot*.py tests/test_backlog_workflow.py: 114 passed. build_backlog_page.py --check: Backlog valid; HTML current (88 tasks). No tests cover the probe itself; its evidence is the reproducible blind/final pair."
+  },
+  "evidence_paths": [
+    "docs/quality/audits/um21-midstance-slope.json",
+    "docs/quality/audits/um21-midstance-slope-blind.json",
+    "review_sheets/D-UM21-T02-2/index.html (gitignored)",
+    "review_sheets/D-UM21-T02-2/slope.png (gitignored)"
+  ],
+  "deliverable_hashes_sha256": {
+    "contributor_tools/audit_probes/2026_10_31/probe_um21_midstance_slope.py": "c1237450ee26d4db48e68c038e257771f75475ee846af860f458cd7bfad7a7a5",
+    "docs/quality/audits/um21-midstance-slope-blind.json": "2c99e47b880fba67e23b128bd4606a45c31dad1f1e1afb16ec64dadf091613c4",
+    "docs/quality/audits/um21-midstance-slope.json": "fb1895fb871c0581cf0b577e6e31fdeb9269b2246bc343feb100f72678160ca3",
+    "contributor_tools/review_um21_t02_clock.py": "0d98fa4026ca065b0fa6ed8c08c346aff7e44129561bed7dcce654e22168b664",
+    "review_sheets/D-UM21-T02-2/index.html (gitignored)": "1a5fdb7410bfe55f34a0fc2f858c16f4c5866dd7db982bd9ed99a7a206edab80"
+  },
+  "not_checked": [
+    "Why AB01 i5 holds a copy, or whether an original AB01 5-degree recording exists elsewhere (authors not asked).",
+    "Why the AB03/AB10 plates carry less than body weight (handrail or harness use is a hypothesis only).",
+    "Per-participant marker placement changes between sessions; the level offset assumes the same placement across one participant's treadmill trials."
+  ],
+  "remaining": "Independent review. The coordinator re-copies D-UM21-T02-2 from decisions_for_backlog into backlog.json. The option letters and their order are unchanged; option B's consequence, why and check text changed.",
+  "next_action": "Second agent: re-run the probe with --blind into a new path and confirm the same tolerances. Then re-run it unblinded with --blind-report and confirm the AB01 values and flags. Inspect review_sheets/D-UM21-T02-2 at both widths."
+}

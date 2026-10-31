@@ -1,0 +1,59 @@
+{
+  "task_id": "MB24-F01",
+  "verifier_role": "independent second agent; own scratch recount reading only JSON receipts (each < 4 MiB) and hashing only those; large files stat-only; nothing launched; nothing under converted_datasets/ written",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-31T16:10:00Z",
+  "round_2": {
+    "verdict": "done",
+    "last_checked_at_utc": "2026-10-31T16:10:00Z",
+    "summary": "The required binding fix and all three recommendations are in the audit, and each checks out against the files. Done covers receipt reconciliation only. The full-byte job is still specified, not written or run, and its gaps stay open as stated. This is not scientific approval.",
+    "checks": [
+      {"area": "validate_spec (my in-process call)", "result": "pass", "evidence": "As written, it raises SpecError (bindings) because of the disclosed TO_BIND_AFTER_REVIEW placeholder for contributor_tools/verify_mblue_final_bytes.py. With that one value replaced by a dummy hash, validate_spec passes, with cwd = repository root."},
+      {"area": "bindings resolve and match", "result": "pass", "evidence": "guarded_launcher.hash_bindings against the validated cwd: all four receipt keys (converted_datasets/reconversion_v2/...correction_summary.json, conversion_summary.json, source_inventory.json, reference_recovery.json) exist and match their recorded hashes (257,262 / 168,359 / 488,860 / 255,220 bytes). The audit note now describes the prefix correctly."},
+      {"area": "593 / 59 recount", "result": "pass", "evidence": "My scratch recount, re-run with all 13 checks passing, gives 16,418 inventory side-cycles. That includes 593 right-cycle arrays from 59 STS/crouch blocks, all with bilateral_clocks_exactly_equal true, so 16,418 - 593 = 15,825. The audit's new builder check and lineage line state the same figures."},
+      {"area": "right-surplus pattern and stage-2 overlap target", "result": "pass", "evidence": "Recorded under right_unchanged_decomposition.right_surplus_pattern with status not_checked (7 blocks with surplus >= 2, 3 of them with unchanged views, 0 elsewhere). The text says the pattern is not established. Stage 2 adds a per-view left-clock-overlap target compared against the 4 unchanged views. The single-thread requirement for pyarrow under 768 MiB is noted."},
+      {"area": "informational", "result": "note", "evidence": "estimated_read_bytes (2,208,309,391) was not raised, although stage 2 now also reads the 140 rebuild treadmill outputs and the source clocks. Update the estimate when the verifier script is written and reviewed. Not blocking."},
+      {"area": "test runs", "result": "pass", "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py -> 71 passed. python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (93 tasks)."}
+    ]
+  },
+  "round_1_verdict": "back_to_worker",
+  "research_data_read": false,
+  "scientific_approval": false,
+  "summary": "The reconciliation is correct, and the gaps are stated honestly. My independent recount reproduces every count and every stair lineage entry, and all sampled hash bindings hold. One defect sends it back: the full-byte job spec's four receipt bindings are written without their converted_datasets/reconversion_v2/ prefix, although the audit note says the prefix is used. The launcher resolves bindings against the repository root, so the job would be refused with binding_mismatch. It fails safe, but the spec is not launch-ready as specified. The fix is one line per key. No José decision is needed.",
+  "checks": [
+    {"id": 1, "area": "recount of blocks, views and windows", "result": "pass", "evidence": [
+      "335 unique inventory blocks: 140 treadmill, 136 stairs, 40 sit-stand, 19 crouch.",
+      "Views = 15,825 under the converter's rule (reconvert_mblue_normalized.py lines 61-67): gait and stair blocks emit one view per side cycle; STS and crouch blocks emit one observation per left cycle, with the right side as contra. All 59 such blocks have bilateral_clocks_exactly_equal true.",
+      "The inventory itself holds 16,418 side-cycles, so 593 right STS/crouch cycles are carried as contra columns. The handoff's chain line 'inventory (335 blocks, 15,825 views)' is shorthand for this, not a literal inventory count.",
+      "Conversion and readback records cover the same 335 blocks, with per-block observations equal to these views. The readback sum is 15,825 and its maximum error is 1.8e-15.",
+      "764 recovered windows (426 right, 338 left) across exactly 136 stair blocks. Each subject/condition's expected_windows equals its single matched candidate.",
+      "observations_after sums to 15,061 = 15,825 - 764."
+    ]},
+    {"id": 2, "area": "stair lineage parse", "result": "pass (all 136 blocks, not only a sample)", "evidence": "For every stair block I parsed the IDs with my own regex. Retained IDs equal the recovered (side, curve index) windows. Omitted IDs equal the other leg at the same columns. Their union equals every inventory view of the block, and before/after counts agree. Seeded spot sample (seed 20261031) includes AB06/exo/stairs/descent/s3, where the reference side varies within the block (left 6; right 1-5) and is reproduced exactly."},
+    {"id": 3, "area": "pelvis preservation", "result": "pass", "evidence": "Per block, left_unchanged equals all left views, and right_changed plus right_unchanged equals all right views. Totals: treadmill 6,858 left unchanged, 6,842 right changed, 4 right unchanged; stairs 764 and 764 unchanged; sit-stand 404 and crouch 189 left unchanged. Every changed block lists the same 14 pelvis/segment columns, and all_other_columns_exactly_preserved is true."},
+    {"id": 4, "area": "receipt hashes", "result": "pass", "evidence": "14 bindings recomputed by me all equal the current bytes: inventory to conversion and recovery, baseline and corrected summaries to preservation, rebuild to readback and correction, recovery to correction, and all 7 scope-gate inputs. A seeded sample of 8 entries in the worker's receipts_sha256 equals my hashes. data_contract.py: the recorded 553ced... equals git HEAD; the working tree is 0b535c..., as the handoff says. Final directory (stat): 335 parquet files, 1,069,429,723 bytes, plus only correction_summary.json. Deliverable hashes match the handoff."},
+    {"id": 5, "area": "the 4 unchanged right treadmill views", "result": "not explained in receipts; worker's statement accurate", "evidence": [
+      "No receipt records a per-view reason; preservation gives counts only.",
+      "The three blocks have more right than left cycles: AB04/exo/decline_10deg r-l = 2 (1 unchanged), AB05/bare/decline_5deg r-l = 7 (2 unchanged), AB11/bare/incline_10deg r-l = 2 (1 unchanged). Among all 140 treadmill blocks, unchanged right views occur only where r-l >= 2 (3 of 7 such blocks; 0 in the 133 blocks with r-l <= 1).",
+      "That pattern fits right cycles lacking left-clock overlap ('missing overlap preserved'), but the receipts cannot prove it, because pre-fix values are not recorded per view. It stays a not-checked item for the full-byte job or a targeted probe."
+    ]},
+    {"id": 6, "area": "full-byte job spec vs guarded_launcher envelope", "result": "failed (binding paths); envelope values pass", "evidence": [
+      "validate_spec on the spec as written raises SpecError (bindings) because of the TO_BIND_AFTER_REVIEW placeholder. That is expected and disclosed.",
+      "With the placeholder replaced by a dummy hash, validate_spec passes in-process. timeout 3600, kill_after 30, poll 15, memory 3584/2816 and 2048/2048, address space 768 MiB and disk 5120 MiB all sit at the PM-01 limits.",
+      "Defect: run_job hashes bindings relative to cwd, the repository root. The four receipt keys ('mblue_reference_corrected_full_20261021/correction_summary.json' etc.) do not exist there, so the launch would be refused with binding_mismatch. With the converted_datasets/reconversion_v2/ prefix, all four recorded hashes equal the current files. The audit note claims the prefix is used.",
+      "Feasibility note: importing pyarrow under RLIMIT_AS 768 MiB hung (timed out) without the thread environment. With the launcher's THREAD_ENV (ARROW_NUM_THREADS=1 etc.), import and a small read succeed at 768 MiB. So stage 2 is feasible only through the launcher, and the pilot must confirm it."
+    ]},
+    {"id": 7, "area": "gaps honesty and José", "result": "pass", "evidence": "Each gap holds against the files: no independent readback of the 136 rewritten stair outputs; large files not re-hashed; inventory run lacks a terminal record; 4 unchanged views unexplained. The stale docs audits are confirmed: mblue-pelvis-clock-fix.json and mblue-stair-reference.json still say 'queued'. acceptance item 4 is assessed as only partly met (199/335 by identical hash), which is accurate. No José decision is needed: the work is verification within the existing scope, nothing is excluded, and nothing is released."},
+    {"id": 8, "area": "test runs", "result": "pass", "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py -> 71 passed. python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (93 tasks)."}
+  ],
+  "required_fixes": [
+    "In full_byte_verification_job.launcher_spec.bindings, prefix the four receipt keys with converted_datasets/reconversion_v2/ (or set cwd and re-check output_root and receipt_path), and correct the note."
+  ],
+  "recommended_additions": [
+    "Record the right-surplus correlation for the 4 unchanged views (check 5) and add a stage-2 target: list, per view, which right treadmill views lack left-clock overlap, and compare against these 4.",
+    "Note that stage 2 (pyarrow) needs the launcher's thread environment under the 768 MiB address limit.",
+    "Clarify the lineage line: 16,418 inventory side-cycles map to 15,825 views (593 STS/crouch right cycles become contra columns)."
+  ],
+  "verifier_scratch": "Scratchpad script verify_mb24_f01.py (not committed); reads only the 7 JSON receipts plus the audit, hashes only those receipts; 12 checks, all pass after applying the converter's bilateral rule.",
+  "next_action": "Worker: fix the binding paths and return to review. Then follow the existing next_action: write and review verify_mblue_final_bytes.py, pilot it, and run it through the launcher under PM-01."
+}

@@ -1,0 +1,67 @@
+{
+  "task_id": "CORE-02",
+  "title": "Verify immutable release lineage and filtering integrity",
+  "status": "review",
+  "status_note": "Round 2 after back_to_worker (CORE-02-verify.json). Schema claim scoped to the fixture; G6 implemented (filtered rows selected on the Arrow table) and the verifier's two G6 strict-xfail markers removed with assertions unchanged; G7 and G8 added; G1 raised to high. Nothing published; no scientific release implied.",
+  "last_checked_at_utc": "2026-10-30T21:49:11Z",
+  "summary": "Six synthetic 150-sample phase observations (one each passed, failed, missing, unchecked, invalid, plus a second pass with partial optional NaN; observation_id c1 is reused across recordings and sides) exercise the release builder end to end. Identity recording, whole-observation filtering by full identity, known-missing preservation, a ledger driven by the same assessment, overwrite and lock refusal, changed-input rejection, incomplete review evidence, and remote checksum handling all behave as the contract states. Defect: an export replaced between admission and hashing was released, with the manifest's admitted row count (900) describing a different file than its checksum (1800 rows). Fix: hash the input before admission so the existing post-read comparison rejects it. Round 2: the verifier showed filtered.parquet was a pandas re-encoding (types, schema metadata, NaN). The builder now keeps the Arrow table and writes table.take(sorted eligible positions), so the filtered export is a row selection of the full export.",
+  "changed_files": [
+    "contributor_tools/build_dataset_release.py (round 1: input_hash moved before _admit_input; round 2: _filtered_rows returns sorted row positions, the Arrow table is kept and filtered.parquet is table.take(positions); filtered_rows count from num_rows)",
+    "tests/test_release_lineage_adversarial.py (new; 41 synthetic tests; round 2: schema comment scoped to the fixture's column types)",
+    "tests/test_release_lineage_verify.py (verifier's file; round 2: only the two CORE-02-G6 strict-xfail markers removed)",
+    "docs/quality/audits/core02-release-lineage.json (checks, example identities, gaps G1-G8)",
+    "docs/maintainers/handoffs/CORE-02.json (this file)"
+  ],
+  "checks": [
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_release_lineage_verify.py tests/test_release_lineage_adversarial.py tests/test_dataset_release.py tests/test_data_contract.py tests/test_backlog_workflow.py",
+      "result": "169 passed, 2 xfailed (strict: G7, G8).",
+      "coverage": "Acceptance items 1-4 on synthetic fixtures. The two G6 verifier tests (schema/metadata and NaN encoding) were strict xfail before the round-2 fix and pass after it; test_input_replaced_after_admission_is_rejected failed before the round-1 fix and passes after it."
+    },
+    {
+      "command": "python3 <scratchpad>/demo_swap.py (not committed; run before the round-1 fix)",
+      "result": "Bundle built; manifest input.rows = 900, counts.full_rows = 1800, input.sha256 equal to the replacement file."
+    },
+    {
+      "command": "python3 <scratchpad>/range_index_probe.py (not committed; synthetic)",
+      "result": "After Arrow take, a stored RangeIndex in pandas metadata reads back as a default index; a stored index column is kept, as in the full export."
+    },
+    {
+      "command": "python3 <scratchpad>/probe_rename.py (not committed; temporary empty directories only, removed)",
+      "result": "ext4: existing destination refused (EEXIST), new destination published. Windows-mounted drive (drvfs): existing destination refused (EEXIST), new destination fails (EINVAL)."
+    },
+    {
+      "command": "python3 <scratchpad>/evidence_run.py (not committed)",
+      "result": "Example identities recorded in the audit; output hashes for the fixture are unchanged by the G6 fix."
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (85 tasks)."
+    }
+  ],
+  "not_checked": [
+    "No research dataset or converted_datasets/ content was read; no dataset release was built or published.",
+    "Time-mode and ensemble-mode bundles were not exercised adversarially.",
+    "The native Windows publication path (os.rename) was not run."
+  ],
+  "remaining": [
+    "CORE-02-G1 (high; blocks the first treadmill packaging; scheduled separately by the coordinator): no-overwrite publication fails (EINVAL) on the WSL Windows-mounted drive that holds the repository. Document a Linux-filesystem output location or add an exclusive-mkdir fallback, tested on both filesystems.",
+    "CORE-02-G2 (medium): profiles self-declaring reviewed/approved are accepted without a review record (reviewer, time, scope). Release-policy question; until settled, add a limitation when the record is absent.",
+    "CORE-02-G3 (low): provenance review.scope is optional, and contributor review fields are copied unlabeled into manifest.review. Require scope or add a limitation, and show the scope in the README.",
+    "CORE-02-G4 (low): a replaced input is rejected, but only after one eager read. Admit, hash and read from one open file handle.",
+    "CORE-02-G5 (inherent, no action): change-and-restore between fixed-point hashes is undetectable; local sources are verified at build time only.",
+    "CORE-02-G7 (low): categorical identity columns raise an uncaught TypeError (fails closed; the CLI shows a traceback). Convert it to a ReleaseError, then remove the strict-xfail marker on test_categorical_identity_columns_fail_with_a_release_error.",
+    "CORE-02-G8 (low): a remote URI verified only through a local copy is labelled verified_local without a URI-not-downloaded limitation. Add one, then remove the strict-xfail marker on test_remote_uri_verified_only_through_a_local_copy_is_labelled."
+  ],
+  "decisions": [],
+  "next_action": "Verifier: check the diff of build_dataset_release.py (round-1 hash move plus the round-2 Arrow selection), confirm that the only change to tests/test_release_lineage_verify.py is the removal of the two G6 markers, check the audit/handoff corrections, and rerun the pytest command above. Coordinator: G1 is scheduled separately; G7/G8 are small follow-ups; G2 may need a scope/release decision from José.",
+  "evidence_paths": [
+    "docs/quality/audits/core02-release-lineage.json",
+    "docs/maintainers/handoffs/CORE-02-verify.json",
+    "tests/test_release_lineage_adversarial.py",
+    "tests/test_release_lineage_verify.py",
+    "tests/test_dataset_release.py",
+    "contributor_tools/build_dataset_release.py"
+  ],
+  "resources": "Synthetic fixtures only; one process, about 6 s for all five test files. No research data read; no numerical slot used."
+}

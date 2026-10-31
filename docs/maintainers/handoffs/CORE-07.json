@@ -1,0 +1,248 @@
+{
+ "task_id": "CORE-07",
+ "title": "Convert validation ranges to the adopted sign rule",
+ "status": "review",
+ "status_note": "Round 3. The run pelvis band is mirrored exactly in the two active profiles only, and D-CORE-07-1 stays withdrawn. At coordinator direction, the 20 docs/datasets/*_validation_ranges.yaml snapshots were restored byte-identical to commit 569ee8f; round 2 had flipped them on an instruction the coordinator later corrected. The flip is exact for sign; it does not establish the band's zero.",
+ "last_checked_at_utc": "2026-10-31T07:00:33Z",
+ "summary": "Classified every feature in contributor_tools/validation_ranges (7 files) from range values in context; the verifier agreed with every classification. Joints, joint moments, joint velocities, thigh/shank/foot segment angles and velocities, vertical and fore-aft GRF, and fore-aft CoP agree with rule B. Frontal/transverse features and sideways GRF/CoP are outside rule B. pelvis_sagittal_angle_rad: the sit-to-stand and stand-to-sit entries already read as rule B (the pelvis tips forward mid-transfer and the centre goes negative), and the transition entries are near-symmetric magnitude checks; both are unchanged. The run entries (phases 0, 25, 50, 75) were a constant band [-0.05, +0.63..0.68] centred near +0.3 rad, which is anterior-positive under every documented zero; running tilts the pelvis forward, which is negative under rule B. These 4 entries were mirrored exactly (negated, min and max swapped, digit text preserved) in the two active profiles, default_ranges.yaml and gtech_2024_ranges.yaml. Each changed file gained a top-level sign_rule_conversions provenance note (date, CORE-07, rule B / D-UM21-C03-1, reason, and that the band's zero is undocumented). No other byte changed. The docs/datasets/*_validation_ranges.yaml snapshots are records of legacy validation runs under the old pelvis sign. They are left unchanged on purpose and are byte-identical to 569ee8f. Per the verifier, the walking and stair pelvis entries in the 11 snapshots from 2025-11-25 consistently read anterior-positive, so each snapshot is an internally consistent old-convention record.",
+ "rule_b_reference": "docs/reference/index.html#signs-and-frames (31 October 2026 rule; decision D-UM21-C03-1)",
+ "inventory": {
+  "method": "Per feature, range bounds and midpoints were read per task and phase and compared with known sagittal biomechanics (e.g., swing knee flexion, seated hip/thigh flexion, push-off plantarflexor moment, stance knee extensor moment in decline, braking GRF, toes-down foot after toe-off, pelvis forward tilt during sit/stand transfers). Only YAML range files and converter source code were read; no research data.",
+  "files": {
+   "default_ranges.yaml": {
+    "features": 69,
+    "agree": 38,
+    "outside_rule_b": 30,
+    "mixed": [
+     "pelvis_sagittal_angle_rad"
+    ],
+    "disagree": []
+   },
+   "gtech_2024_ranges.yaml": {
+    "features": 69,
+    "agree": 38,
+    "outside_rule_b": 30,
+    "mixed": [
+     "pelvis_sagittal_angle_rad"
+    ],
+    "disagree": [],
+    "note": "Pelvis, run and transition entries identical to default_ranges.yaml."
+   },
+   "strokepig_ranges.yaml": {
+    "features": 23,
+    "agree": 18,
+    "outside_rule_b": 4,
+    "mixed": [
+     "pelvis_sagittal_angle_rad"
+    ],
+    "disagree": [],
+    "note": "Untracked file (not at HEAD). Bounds are close to symmetric about 0 (pelvis about -1.4 to +1.5 rad), so values are non-diagnostic. Its converter maps gait2392 pelvis_tilt (counterclockwise by model definition) and builds thigh = pelvis + hip. Left unchanged."
+   },
+   "impaired_ranges.yaml": {
+    "features": 3,
+    "agree": 3,
+    "disagree": [],
+    "note": "Hip/knee/ankle joint angles only (swing knee flexion positive, push-off ankle negative). Template without a 'tasks' mapping, so it is not a loadable profile (pre-existing)."
+   },
+   "example_custom_ranges.yaml": {
+    "features": 9,
+    "agree": 9,
+    "disagree": [],
+    "note": "Template. Legacy or non-schema names: ankle_flexion_angle_ipsi_rad, *_Nm, grf_vertical_ipsi_N, trunk_flexion_angle_rad (forward lean positive, a named-direction column, not trunk_sagittal_angle_rad). Values agree with their names."
+   },
+   "test_custom_phases.yaml": {
+    "features": 3,
+    "agree": 3,
+    "disagree": [],
+    "note": "Phase-support demo; legacy ankle_flexion name, values dorsiflexion-positive."
+   },
+   "validation_ranges_with_adduction.yaml": {
+    "features": 21,
+    "agree": 9,
+    "outside_rule_b": 12,
+    "disagree": [],
+    "note": "Legacy 2025 UMich-derived file, referenced by no code. *_Nm moments have per-kg magnitudes; hip extensor early stance, ankle plantarflexor at push-off and knee extensor in decline stance are negative (agree). Contains NaN bounds for incline_walking moments, so the profile loader rejects it (pre-existing at HEAD)."
+   }
+  },
+  "pelvis_evidence": {
+   "sit_to_stand_midpoints_rad": {
+    "0 seated": 0.33,
+    "25": 0.03,
+    "50": -0.22,
+    "75": -0.11
+   },
+   "stand_to_sit_midpoints_rad": {
+    "0 standing": -0.02,
+    "25": -0.18,
+    "50": -0.36,
+    "75 seated": 0.02
+   },
+   "reading": "Both transfers tip the pelvis forward mid-movement; the midpoints go negative there, which is counterclockwise (rule B). Under anterior-positive they would describe the pelvis tipping backward while rising, which is not the known pattern.",
+   "run": "[-0.05, +0.63..0.68] at every phase: a constant offset with no within-cycle sign signature. Positive reads as anterior tilt only if the zero is upright standing; the source zero is not documented.",
+   "transition": "Midpoints -0.17 to +0.02; non-diagnostic.",
+   "provenance": "The tuning dataset per task is not recorded in the file. Converters that output pelvis_sagittal_angle_rad for these tasks: AddBiomechanics (b3d pose index 0 = OpenSim pelvis_tilt, heading-dependent), GT21 (pelvis_tilt, mostly frontal obliquity per docs/quality/audits/gt21-c01-conventions.json), GT23 (pelvis_Z from local YZX Euler, 'anatomical_mapping_unassessed' per gt23-joint-sign-and-segment-evidence.json). None comes from the UMich clinical (anterior-positive) source; default_ranges has no walking-task pelvis ranges.",
+   "older_snapshots": "The 2025-11-25 per-dataset snapshots in docs/datasets (e.g., fr12) also carry walking-task pelvis ranges: incline midpoints positive and decline negative (reads anterior-positive), level near zero. The source is mixed across tasks."
+  },
+  "outside_rule_b": "Hip/knee/ankle adduction and rotation angles and moments and pelvis frontal/transverse: frontal and transverse signs are not yet adopted. grf_lateral_* and cop_lateral_*: the outward-per-leg rule is decision D-GT21-C01-1, not rule B; ipsi/contra ranges do not record which physical leg, so it is not assessed here.",
+  "no_trunk_sagittal_ranges": "No file has trunk_sagittal_angle_rad ranges."
+ },
+ "mirrored_features": [
+  {
+   "task": "run",
+   "phases": [
+    0,
+    25,
+    50,
+    75
+   ],
+   "feature": "pelvis_sagittal_angle_rad",
+   "before": {
+    "0": [
+     -0.05,
+     0.67
+    ],
+    "25": [
+     -0.05,
+     0.629
+    ],
+    "50": [
+     -0.05,
+     0.675
+    ],
+    "75": [
+     -0.05,
+     0.634
+    ]
+   },
+   "after": {
+    "0": [
+     -0.67,
+     0.05
+    ],
+    "25": [
+     -0.629,
+     0.05
+    ],
+    "50": [
+     -0.675,
+     0.05
+    ],
+    "75": [
+     -0.634,
+     0.05
+    ]
+   },
+   "files": [
+    "contributor_tools/validation_ranges/default_ranges.yaml",
+    "contributor_tools/validation_ranges/gtech_2024_ranges.yaml"
+   ],
+   "zero": "Undocumented. The flip is exact for sign but does not establish the zero; a later range task should rebuild the band from rule-B reconverted data with a stated zero."
+  }
+ ],
+ "changed_files": [
+  "contributor_tools/validation_ranges/default_ranges.yaml",
+  "contributor_tools/validation_ranges/gtech_2024_ranges.yaml",
+  "tests/test_validation_ranges_rule_b.py",
+  "docs/maintainers/handoffs/CORE-07.json"
+ ],
+ "unchanged_by_design": [
+  "docs/datasets/*_validation_ranges.yaml: legacy old-convention records, byte-identical to 569ee8f on purpose.",
+  "sit_to_stand, stand_to_sit and transition pelvis entries in the active profiles (already rule B, or near-symmetric).",
+  "strokepig_ranges.yaml (untracked; it has no run task, and its bounds are near-symmetric).",
+  "All other features in every range file."
+ ],
+ "checks": [
+  {
+   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_validation_ranges_rule_b.py",
+   "result": "94 passed.",
+   "coverage": "Each of the 20 snapshots is byte-identical to 569ee8f, compared as raw bytes from git show. In the 5 tracked range files, parsed values equal the baseline except MIRRORED, which is exactly the 4 run pelvis entries in default and gtech_2024 only and equal -old with bounds swapped. Task and top-level keys are unchanged; only the two active profiles carry the provenance note, and its content is checked. Textually, only the 8 pelvis min/max lines differ once the note is removed. The run band centres below -0.17 rad. A missing baseline commit fails. Also covered: loader, 8 sign signatures, mirror helper."
+  },
+  {
+   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_validation_ranges_rule_b_verify.py",
+   "result": "26 passed (file not edited by the worker; the verifier has updated its run-band test since round 2)."
+  },
+  {
+   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_tuner_review_safeguards.py tests/test_data_contract.py tests/test_review_regressions.py tests/test_quality_assessment_safeguards.py tests/test_backlog_workflow.py",
+   "result": "174 passed."
+  },
+  {
+   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 docs/build.py --check",
+   "result": "Checked 40 HTML pages and 1674 referenced assets."
+  },
+  {
+   "command": "python3 contributor_tools/build_backlog_page.py --check",
+   "result": "Backlog valid; HTML current (91 tasks)."
+  }
+ ],
+ "not_checked": [
+  "The zero of the run pelvis band (undocumented; range centres cannot set it, per the verifier).",
+  "Which dataset each default_ranges task was tuned on; the file does not record it."
+ ],
+ "sign_assumption_consumers": [
+  {
+   "path": "contributor_tools/common/sign_offset_detector.py",
+   "owner": "sign-offset detector agent",
+   "note": "Encodes rule B (pelvis anterior tilt negative, joints named direction); knee hinge test infers sign from the larger excursion side. Does not read range files."
+  },
+  {
+   "path": "docs/quality/audits/core01-assessment-safeguards.json (sign_dependence)",
+   "owner": "CORE-01",
+   "note": "States range checks are sign-dependent and assume rule B. Now true for the run pelvis band too; sit/stand pelvis already read as rule B."
+  },
+  {
+   "path": "docs/datasets/*_validation_ranges.yaml (20 tracked snapshots)",
+   "owner": "DOC-01",
+   "note": "Legacy old-convention records (pelvis anterior positive), byte-identical to 569ee8f and left unchanged on purpose. The pages should label them legacy (request to the DOC-01 owner)."
+  },
+  {
+   "path": "contributor_tools/reconvert_umich_streaming.py:86 and contributor_tools/audit_um21_tread_pilot.py:35",
+   "owner": "UM21 tasks",
+   "note": "Copies clinical RPelvisAngles (anterior-positive); rule B needs pelvis x -1 as a release transform. Without it, any UMich run pelvis data would fail the now anterior-negative run band (not checked whether UMich files carry a run task with pelvis)."
+  },
+  {
+   "path": "contributor_tools/common/opensim_pipeline.py:256, contributor_tools/conversion_scripts/add_biomechanics_update/io/b3d_reader.py:19, Gtech_2021 *.m (pelvis_tilt), Gtech_2023 *.m (pelvis_Z)",
+   "owner": "converter tasks",
+   "note": "Producers of the pelvis values behind the current pelvis ranges; heading-dependent or unassessed."
+  },
+  {
+   "path": "contributor_tools/common/plotting/generate_forward_kinematics_reference.py:640",
+   "owner": "unowned",
+   "note": "Says knee flexion + is clockwise shank rotation relative to thigh: consistent with rule B; no change needed."
+  },
+  {
+   "path": "contributor_tools/interactive_validation_tuner.py, contributor_tools/manage_ranges.py, contributor_tools/common/validation/validator.py",
+   "owner": "unowned",
+   "note": "Feature lists only; no sign transform applied to ranges (grep for negation/flip/sign found none)."
+  }
+ ],
+ "remaining": [
+  "DOC-01 owner: label the docs/datasets/*_validation_ranges.yaml snapshots on the dataset pages as legacy, with pelvis tilt under the old sign (anterior positive).",
+  "Coordinator: update the CORE-07 backlog scope/next_action ('mirror only pelvis tilt features') to say that only the run pelvis entries in the two active profiles were mirrored.",
+  "Later range task: rebuild the run pelvis band from rule-B reconverted data with a documented zero."
+ ],
+ "next_action": "Second agent re-verifies round 3: snapshots byte-identical to 569ee8f, the mirror and note confined to the two active profiles.",
+ "evidence_paths": [
+  "contributor_tools/validation_ranges/",
+  "docs/reference/index.html#signs-and-frames",
+  "docs/quality/audits/gt21-c01-conventions.json",
+  "docs/quality/audits/gt23-joint-sign-and-segment-evidence.json",
+  "docs/quality/audits/core04-um21-pilot.json",
+  "docs/maintainers/handoffs/DOC-02-verify.json",
+  "docs/datasets/fr12_validation_ranges.yaml",
+  "tests/test_validation_ranges_rule_b.py",
+  "docs/maintainers/handoffs/CORE-07-verify.json"
+ ],
+ "resources": "Fixture-only: YAML range files and source code read with bounded reads; no research data, no numerical worker, no MATLAB.",
+ "procedure": "A one-off text transform (not committed) found the '  run:' task block, replaced each pelvis min/max line pair by the swapped, sign-toggled number text, asserted exactly 4 pairs per file, and inserted the provenance block before 'tasks:'. Round 3 restored the 20 snapshots with git checkout 569ee8f. git diff --numstat now shows only the two active profiles, +19 -8 each.",
+ "proposed_decision_withdrawn": {
+  "id": "D-CORE-07-1",
+  "withdrawn_at_utc": "2026-10-31T06:51:41Z",
+  "reason": "Coordinator direction after verification: rule B is decided and the run band disagrees under every documented zero, so an exact sign conversion needs no José decision. Do not copy D-CORE-07-1 to the backlog."
+ },
+ "legacy_snapshots": {
+  "files": "docs/datasets/*_validation_ranges.yaml (20 tracked files)",
+  "state": "Byte-identical to commit 569ee8f (restored with git checkout 569ee8f -- <files>; cmp against git show confirms every file).",
+  "why_unchanged": "Each snapshot records a legacy validation run that used the old band. All carry the old-sign run pelvis entries; the 11 generated 2025-11-25 also carry walking and stair pelvis entries that read anterior-positive. Converting them would misstate what those runs checked.",
+  "request_for_DOC-01_owner": "Label these snapshots on the dataset pages as legacy, with the pelvis tilt under the old sign (anterior tilt positive), not rule B."
+ }
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "CORE-01",
+  "title": "Make quality assessments source-aware and profile-specific",
+  "status": "review",
+  "status_note": "Fixture-only. Existing assessment already met most acceptance items; three demonstrated gaps were fixed minimally. No dataset approved.",
+  "last_checked_at_utc": "2026-10-31T00:00:00Z",
+  "summary": "Probed data_contract.py with synthetic fixtures before editing. Fixed: (1) stringified missing identities ('nan', 'None', '<NA>', 'null', 'NaT') in subject/source_recording_id/observation_id were publishable passes, now invalid_identity; (2) ensemble_curve with finite source start/end (a fabricated duration) passed, now ensemble_source_bounds error; (3) observation records lacked time lineage, now carry time_lineage with index first/last and source clock bounds, null when unavailable. Applicability mismatches/absence for population, protocol, reference side, sign rule, task, unit suffix and observation type stay unchecked.",
+  "changed_files": [
+    "contributor_tools/common/data_contract.py (+37 lines: _PLACEHOLDER_IDENTITIES, ensemble_source_bounds, _time_lineage, time_lineage key)",
+    "contributor_tools/DATA_CONTRACT.md (3 short additions: ensemble source clocks unavailable and placeholder IDs rejected in 'Observation contract'; time_lineage in 'Quality profiles'. 'Signs and frames' and 'Release creation' untouched)",
+    "tests/test_quality_assessment_safeguards.py (new, synthetic, 41 tests)",
+    "docs/quality/audits/core01-assessment-safeguards.json (new)",
+    "docs/maintainers/handoffs/CORE-01.json (this file)"
+  ],
+  "checks": [
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_quality_assessment_safeguards.py tests/test_data_contract.py tests/test_backlog_workflow.py",
+      "result": "141 passed",
+      "coverage": "All acceptance items at schema/fixture level."
+    },
+    {
+      "command": "same new test file against HEAD data_contract.py (temporarily swapped, restored)",
+      "result": "19 failed / 22 passed; failures are exactly the three new safeguards."
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (88 tasks)."
+    },
+    {
+      "command": "same prefix, tests/test_dataset_release.py tests/test_release_lineage_adversarial.py tests/test_release_lineage_verify.py tests/test_quality_page.py",
+      "result": "11 passed; 63 passed, 2 xfailed. The same 2 xfails (CORE-02-G7 categorical identities, CORE-02-G8 remote URI label) occur with the HEAD data_contract.py (temporarily swapped, restored, hash re-verified), so they predate this change."
+    },
+    {
+      "command": "python3 docs/build.py --check",
+      "result": "exit 1: 18 missing anchors, all quality/index.html#dataset-status and #status-<dataset>, referenced from index.html and datasets/index.html. docs/quality is DOC-01's in-progress area and build.py does not read DATA_CONTRACT.md, so this is not caused by CORE-01. Not fixed here."
+    },
+    {
+      "command": "rerun after DATA_CONTRACT.md edit: pytest new file + test_data_contract + test_backlog_workflow; build_backlog_page.py --check",
+      "result": "141 passed; Backlog valid; HTML current (88 tasks)."
+    }
+  ],
+  "not_checked": [
+    "No research data read; no converted dataset was re-assessed, so the effect of the new identity and ensemble-bounds errors on existing exports is unknown.",
+    "Recording inventory reconciliation (source recordings with zero observations, provenance source list vs observed source_recording_id) is outside the assessment and remains on release/per-dataset tasks.",
+    "Mass provenance for mass-normalized signals is not structurally checked."
+  ],
+  "remaining": [
+    "Possible José decision (scope/convention): whether profiles without an applicability block may filter releases (currently yes, with a limitation).",
+    "Possible José decision (convention): whether transfers/ensembles with reference_side none may carry ipsi/contra columns.",
+    "CORE-05 owner may add time_lineage columns to exclusions.parquet.",
+    "docs/build.py --check fails on quality-page anchors owned by DOC-01; recheck once DOC-01 lands."
+  ],
+  "decisions": [],
+  "next_action": "Verifier: check the three fixes against the audit's demonstrations and run the listed commands. Then, under the guarded launcher, a bounded pilot re-assessment of one converted export to see whether any existing identities or ensemble bounds now fail.",
+  "evidence_paths": [
+    "docs/quality/audits/core01-assessment-safeguards.json",
+    "tests/test_quality_assessment_safeguards.py",
+    "contributor_tools/common/data_contract.py"
+  ],
+  "resources": "Synthetic tests only; one process, a few seconds. No research data read."
+}

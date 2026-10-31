@@ -1,0 +1,128 @@
+{
+ "task_id": "DOC-02",
+ "title": "Write the adopted LocoHub sagittal sign rule into the reference",
+ "status": "review",
+ "last_checked_at_utc": "2026-10-30T22:02:44Z",
+ "summary": "Added one authoritative 'Signs and frames' section (Markdown source and authored HTML) stating decisions D-UM21-C03-1 = C and D-GT21-C01-1 = B: frame (+x walking, +y up, +z person's right), counterclockwise positive for all sagittal signals (gait2392), internal moments with the angle's sign, power = moment x joint speed, sideways GRF/COP outward per leg. Compact table covers 16 signal families with positive direction, one-line physical definition and gait2392 equivalent; frontal/transverse signs are stated as not yet adopted. Added a labeled sagittal SVG diagram and a callout that knee_flexion_angle, knee_flexion_moment and pelvis_sagittal_angle are negative in their named direction. DATA_CONTRACT.md gained a short summary pointing to the section. Contradicting active statements were fixed or marked historical. Docs only; no converter, data, backlog or AGENTS edits.",
+ "changed_files": [
+  "contributor_tools/DATA_CONTRACT.md",
+  "contributor_tools/common/CLAUDE.md",
+  "contributor_tools/conversion_scripts/GaTech_2024_TaskAgnostic/README.md (untracked)",
+  "contributor_tools/conversion_scripts/GaTech_2025_DomainAdaptation/CLAUDE.md",
+  "contributor_tools/conversion_scripts/Gait120/CLAUDE.md",
+  "contributor_tools/conversion_scripts/MBLUEAnkle/CLAUDE.md",
+  "contributor_tools/conversion_scripts/StrokePiG/CLAUDE.md (untracked)",
+  "contributor_tools/conversion_scripts/UMich_2024_KneeExo/README.md",
+  "docs/assets/sagittal-signs.svg",
+  "docs/contributing/community.md",
+  "docs/contributing/index.html",
+  "docs/contributing/index.md",
+  "docs/datasets/fu18/reading-the-data.html",
+  "docs/datasets/ga26/index.html",
+  "docs/datasets/mb24/index.html",
+  "docs/maintainers/handoffs/DOC-02.json",
+  "docs/quality/index.html",
+  "docs/reference/index.html",
+  "docs/reference/index.md",
+  "docs/stylesheets/site.css"
+ ],
+ "contradictions": [
+  {
+   "where": "docs/reference/index.md at git 330789e (historical)",
+   "statement": "OpenSim right-handed frames, right-hand rule, with knee flexion + and pelvis anterior tilt +",
+   "resolution": "Already removed from the current page before this task; the new section states the adopted rule. Copies under legacy/ and docs/datasets/_legacy were skipped per instructions."
+  },
+  {
+   "where": "docs/contributing/community.md (FAQ)",
+   "statement": "Follow ISB recommendations; link to nonexistent anchor #coordinate-sign-conventions",
+   "resolution": "Replaced with the LocoHub rule summary and link to #signs-and-frames; checklist item now links the section and says to use source documentation, not curve appearance."
+  },
+  {
+   "where": "docs/datasets/ga26/index.html",
+   "statement": "Knee angle converted to flexion+",
+   "resolution": "Kept (true for the current download) and marked historical with a link; under the rule knee flexion is negative."
+  },
+  {
+   "where": "docs/datasets/mb24/index.html",
+   "statement": "Knee angle flipped to flexion-positive",
+   "resolution": "Kept and marked historical with a link."
+  },
+  {
+   "where": "docs/datasets/fu18/reading-the-data.html",
+   "statement": "Named angles: knee flexion positive; knee moment reversed to express flexion (flexor +)",
+   "resolution": "Kept and marked that the pilot files predate the rule (knee flexion and knee flexor moment negative under it)."
+  },
+  {
+   "where": "docs/quality/index.html (GT21 force section)",
+   "statement": "Frame is laboratory +X lateral",
+   "resolution": "Added that lab +X is the pilot's sideways sign and the adopted outward-per-leg rule is not yet applied to these files."
+  },
+  {
+   "where": "docs/reference/index.{md,html} Signals section",
+   "statement": "Record the coordinate frame and signs in provenance (no standard stated)",
+   "resolution": "Now says signs follow #signs-and-frames and provenance records the source frame/signs."
+  }
+ ],
+ "left_unchanged_with_reason": [
+  "docs/datasets/gt23.md, gt24.md and their HTML errata written 2026-10-30 (instructed not to change).",
+  "docs/datasets/validation_reports/gtech_2023_time_validation_report.md says 'knee/hip flexion positive': gitignored local GT23 report, not published.",
+  "docs/datasets/.generated/{ga26,mb24}_documentation.md, docs/datasets/_metadata/{ga26,mb24}.yaml and contributor_tools/conversion_scripts/*/..._metadata.yaml repeat the flexion-positive processing note: unpublished generator inputs/outputs; accurate description of current files. A future docs regeneration will not touch authored HTML (site uses authored HTML only).",
+  "docs/maintainers/sign-offset-detector-design.md already states rule C consistently.",
+  ".claude/commands/{convert-dataset,diagnose-failures}.md suggest flipping signs when validation fails; untracked agent command files, out of scope.",
+  "contributor_tools/validation_ranges/default_ranges.yaml still encodes knee flexion + and pelvis anterior tilt +; separate task per coordinator."
+ ],
+ "checks": [
+  {
+   "command": "python3 docs/build.py --check",
+   "result": "exit 1 with exactly one error outside DOC-02 files: maintainers/backlog.html links to ../reference/index.md. The link is rendered from the new range-conversion task's inputs entry 'docs/reference/index.md' in backlog.json (owner: coordinator; backlog edits out of scope). Changing that input to docs/reference/index.html, or regenerating, clears it."
+  },
+  {
+   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_data_documentation.py",
+   "result": "7 passed, 1 failed on the same backlog.html link."
+  },
+  {
+   "command": "python3 contributor_tools/build_backlog_page.py --check",
+   "result": "Backlog valid; HTML current (87 tasks)."
+  },
+  {
+   "command": "headless Chrome render of docs/reference/index.html at 375 and 1280 px",
+   "result": "diagram 343 px and 400 px wide; page scrollWidth 481 at 375 px, pre-existing (identical on HEAD)."
+  }
+ ],
+ "stated_beyond_the_two_decisions": [
+  "GRF is the force applied by the ground to the person (vertical + up, anterior + forward). Follows from the adopted frame and existing GRF usage (validation ranges, GT21 audit 'positive upward support on the body'); José may confirm.",
+  "Zero references for segment angles (thigh/shank from straight down, foot and pelvis from forward horizontal) taken from the UM21-C03 convention proposal; dataset zero offsets are stated as dataset-specific.",
+  "Trunk sagittal angle: counterclockwise + (leaning back) by 'counterclockwise for everything'; trunk zero is not defined.",
+  "Frontal/transverse signs and COP origin explicitly marked not adopted / dataset-specific."
+ ],
+ "remaining": [
+  "Verifier rechecks F1-F4, the quality-page GT24 sentence and the gates.",
+  "build.py --check passes once the backlog task input 'docs/reference/index.md' is changed to the .html page (coordinator-owned).",
+  "No dataset files follow the rule yet; reconversion tasks must apply it from source evidence."
+ ],
+ "next_action": "Verifier rechecks round-2 fixes and moves DOC-02 to done.",
+ "evidence_paths": [
+  "docs/quality/audits/um21-c03-conventions.json",
+  "docs/quality/audits/gt21-c01-conventions.json",
+  "docs/quality/audits/sign-conventions-source-survey.json"
+ ],
+ "output_sha256": {
+  "docs/assets/sagittal-signs.svg": "6dec8948ffc82d0f4491e910b616db1b7e2c2c04bf9818bc5ec204fa364ba2ff"
+ },
+ "resources": "read_only docs work; no data reads, no numerical or MATLAB jobs; one headless Chrome render.",
+ "round_2": {
+  "trigger": "DOC-02-verify.json verdict back_to_worker (F1-F4) plus coordinator request to fix the GT24 ankle sentence on the quality page.",
+  "F1": "Marked pre-rule knee-flexion-positive statements as historical converter output, with a link to #signs-and-frames; no converter code changed. contributor_tools/common/CLAUDE.md (note + column renamed 'Pre-rule output (knee flexion +)'), conversion_scripts/Gait120/CLAUDE.md (note, 'our standard' wording, moment table column), GaTech_2025_DomainAdaptation/CLAUDE.md (note; README 'ankle plantarflexion+' now attributed to the publisher README, with gait2392 ankle_angle dorsiflexion+ and the GT24 erratum; GT25 ankle sign stated as under separate review), MBLUEAnkle/CLAUDE.md, UMich_2024_KneeExo/README.md (torque inversion and knee-angle row), untracked GaTech_2024_TaskAgnostic/README.md (CRLF preserved), untracked StrokePiG/CLAUDE.md.",
+  "F2": "Joint-angle composition now stated as holding only up to each dataset's constant zero offsets; table segment rows give 'LocoHub zero: ...; dataset notes state the actual zero' (trunk: zero not yet defined) and gait2392 equivalents read 'same sense, up to zero offsets'. Both md and html.",
+  "F3": "Reference (md, html) and DATA_CONTRACT.md now split 'Decided on 30 October 2026' (frame, CCW rule, internal moments with the angle's sign, power, outward-per-leg sideways GRF/COP) from 'LocoHub definitions' (composition, zero references, trunk sign, GRF acting on the person). GRF table row also says '(LocoHub definition)'.",
+  "F4": "docs/contributing/community.md restored to CRLF; git diff now shows 2 changed lines. Line endings of all other touched files checked: unchanged from HEAD.",
+  "quality_page_gt24": "docs/quality/index.html: 'The source defines ankle plantarflexion as positive. A correction to dorsiflexion-positive exports is prepared.' replaced with: the README states plantarflexion positive, the source data are dorsiflexion-positive (links to the GT24 page erratum and audits/gt24-c02-ankle-sign.json), the previously prepared negation applies the wrong sign, and LocoHub does not negate the source ankle channels (per gt24.md erratum and the audit's reconciliation_with_prior_audits).",
+  "optional_done": [
+   "FU18 moment row now says the hip moment keeps the unverified source sign.",
+   "SVG trunk arc now starts on the trunk axis, above the head; re-rendered at 343 px (phone) and 400 px."
+  ],
+  "left_unchanged": [
+   "contributor_tools/validation_ranges/default_ranges.yaml (coordinator scheduling a separate task)."
+  ]
+ }
+}

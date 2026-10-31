@@ -1,0 +1,141 @@
+{
+  "task_id": "CORE-01",
+  "title": "Make quality assessments source-aware and profile-specific",
+  "checked_at_utc": "2026-10-31T00:00:00Z",
+  "scope": "Fixture-only review of the structured assessment path: contributor_tools/common/data_contract.py (inspect_contract, assess_observations), contributor_tools/common/config_manager.py (ValidationConfigManager task metadata) and contributor_tools/DATA_CONTRACT.md (read only). No research dataset or converted_datasets/ content was read; no numerical or MATLAB job was launched.",
+  "scientific_approval": false,
+  "authorizes_publication": false,
+  "base_commit": "569ee8f4d7cdf83d96d5f74aa6b65354b4a78da4",
+  "inputs_sha256": {
+    "contributor_tools/common/config_manager.py": "3239c6e43ed7a11d29256d075d461c3dd52912d69fa57db28b08bc40ac7f4943",
+    "contributor_tools/DATA_CONTRACT.md": "61de3ea2cc9f4025808f06a5785532da96fa726b9305a3ca7e582d2eb2ce36e8",
+    "tests/test_data_contract.py": "ad7f5220cc6976e93550506cfeda442bc4c5256e6528acd9367535872d188c73"
+  },
+  "outputs_sha256": {
+    "contributor_tools/common/data_contract.py": "3d08bbe9fa9d2fbb9a02304b52dbb0f2c537840dd60ab1e843ad3c3f362405e4",
+    "tests/test_quality_assessment_safeguards.py": "4d928ed18bfa7fba2132faa15bf78085bc21a8002b7c4aaf1a6874a848dcda49",
+    "contributor_tools/DATA_CONTRACT.md": "109071b3a29750ad876f39e0980948bfe8057d5d344603e42880089af6012bd8"
+  },
+  "fixture": {
+    "label": "synthetic",
+    "definition": "tests/test_quality_assessment_safeguards.py::cycle, ::recording, ::profile",
+    "design": "One invented subject S01, recording synthetic/trial-1, constant knee_flexion_angle_ipsi_rad of 0.5 rad on the inclusive 150-sample phase grid, profile range 0-1 rad at 0 and 100 percent. Expected states follow from the constant values (0.5 inside, 2.0 outside, NaN missing, inf invalid) without running the assessment.",
+    "represents_dataset": false
+  },
+  "method": "Probed existing behavior first; added code only where a fixture showed a false pass or missing lineage. The new test file was run against the pre-change module (HEAD copy swapped in temporarily, then restored): 19 of 41 tests failed, exactly the three new safeguards; the other 22 pass on both versions and document existing behavior.",
+  "acceptance": [
+    {
+      "item": "Unsupported source identities, anatomy, mass, timing and laterality are not invented or converted into passing data.",
+      "result": "pass after fix",
+      "existing_behavior": [
+        "Missing source_recording_id/observation_id stay unreviewed and unpublishable (test_data_contract::test_legacy_missing_ids_remains_unreviewed).",
+        "Numeric subject is rejected, not stringified (new: test_numeric_subject_is_not_silently_stringified).",
+        "Cycle sides unknown/Left/ipsi/affected are unreviewed, not mapped to left/right; limb-indexed cycle with side none is rejected and kept as none.",
+        "Body-weight-normalized signal is checked exactly as supplied; no mass is read, invented or used for rescaling.",
+        "Unavailable source clocks (both NaN) remain unavailable."
+      ],
+      "gaps_found_and_fixed": [
+        {
+          "code": "invalid_identity (stringified missing value)",
+          "demonstration": "subject/source_recording_id/observation_id equal to 'nan', 'None', '<NA>', ' NaN ' or 'null' were publishable and passed (probe before fix: counts passed=1).",
+          "fix": "inspect_contract rejects these tokens (case- and whitespace-insensitive, plus 'nat') for the three source identity columns. reference_side keeps its explicit 'none'."
+        },
+        {
+          "code": "ensemble_source_bounds",
+          "demonstration": "An ensemble_curve with source_start_time_s=0.0 and source_end_time_s=1.1 (an assumed stride duration) passed and was publishable.",
+          "fix": "inspect_contract rejects finite source event bounds on ensemble_curve observations; both-unavailable bounds remain valid. Existing ensemble converter pilot (Fukuchi 2018) writes NaN bounds, so it is unaffected (read from code, not data)."
+        }
+      ]
+    },
+    {
+      "item": "The schema supports complete recording and exclusion accounting.",
+      "result": "pass (schema level only)",
+      "evidence": "test_every_observation_is_accounted_for_once: four identities (including same observation_id on the other side and a malformed 149-sample cycle) yield four observation records; state counts sum to total_observations; every non-eligible record carries reasons. Every record carries source_recording_id, so recordings are recoverable from identities.",
+      "not_covered": "A source recording that yields zero observations cannot appear in the observation table; reconciling the provenance source list against observed source_recording_id values belongs to the release builder and per-dataset source-readback tasks."
+    },
+    {
+      "item": "Distinguish passed, failed, missing, unchecked and invalid with explicit source, side and time lineage.",
+      "result": "pass after fix",
+      "existing_behavior": "The five states were already distinct (test_data_contract::test_required_missing_invalid_unchecked_and_failed_are_distinct); each record carried the identity (source recording and reference side).",
+      "gaps_found_and_fixed": [
+        {
+          "code": "time_lineage",
+          "demonstration": "Observation records had keys eligible, identity, observation_type, profile_applicability, reasons, row_count, signals, status, task, task_id; no time information, so a failed or excluded observation could not be traced to its source clock.",
+          "fix": "Each record now has time_lineage {index_column, index_first, index_last, source_start_time_s, source_end_time_s}. Values come only from the supplied columns; unavailable, nonconstant or nonfinite values are null, never computed."
+        }
+      ],
+      "evidence": "test_each_state_reports_source_side_and_time_lineage (all five states, alternating sides, distinct clocks), test_unavailable_clock_lineage_stays_unavailable, test_time_observation_lineage_reports_recorded_clock (shuffled rows; first/last 10.0/10.02 s)."
+    },
+    {
+      "item": "150 inclusive phase samples, valid real clocks and source bounds without fabricating ensemble duration.",
+      "result": "pass after fix",
+      "evidence": "Existing: phase length/grid/duplicate/NaN/nonnumeric checks (test_data_contract). New: ensembles with 149 or 151 samples rejected; time observations with repeated, NaN or single timestamps rejected and not repaired; ensemble finite source bounds rejected (above)."
+    },
+    {
+      "item": "Profile applicability explicit for population, protocol, task, unit, reference and observation type; mismatches and absent rules remain unchecked.",
+      "result": "pass for declared rules; one documented exception (see open_questions)",
+      "evidence": [
+        "population and protocol mismatch -> unchecked, 0 executed checks.",
+        "reference: applicability on reference_side (right vs a left cycle) -> unchecked.",
+        "sign: an undeclared sign_rule against a profile requiring rule B -> unchecked.",
+        "task: unmatched task -> unchecked (test_data_contract).",
+        "unit: units live in feature names; a _deg column is never converted to the _rad rule (required _rad missing, _deg unchecked, not eligible).",
+        "observation type: transfer and ensemble_curve outside observation_types -> unchecked.",
+        "absent signal rule: a required signal with no range is unchecked and the observation cannot qualify."
+      ]
+    },
+    {
+      "item": "Fixture/schema completion does not approve any dataset.",
+      "result": "acknowledged",
+      "evidence": "No dataset was read. Each dataset still needs its own source comparison and applicability/limitations review."
+    }
+  ],
+  "sign_dependence": "Range checks are sign-dependent: a knee flexion range such as 0-1 rad assumes the adopted rule B (docs/reference #signs-and-frames: joint angles and moments positive in their named direction, knee flexion +). The assessment cannot detect a sign error that stays inside a range. Profiles may require a declared sign rule through applicability; no current profile or data column declares one, so this is offered as an option, not enforced.",
+  "open_questions": [
+    {
+      "kind": "scope/convention (for José)",
+      "question": "Should a profile with no applicability block stay usable for release filtering?",
+      "fact": "Synthetic stroke-labelled cycle passes a profile with no applicability metadata; the result carries a limitation string only. This is documented contract behavior, so it was not changed.",
+      "options": [
+        "Keep: legacy profiles apply with a visible limitation.",
+        "Require applicability for releases: profiles without it leave every observation unchecked (filtered exports would be empty until profiles declare population/protocol)."
+      ]
+    },
+    {
+      "kind": "convention (for José)",
+      "question": "Transfers (and ensembles) with reference_side none may carry _ipsi_/_contra_ columns; ipsi has no stated anatomical reference then.",
+      "fact": "Allowed by the current contract text; not changed."
+    },
+    {
+      "kind": "gap, no code change",
+      "question": "Mass-normalized signals (_BW, _Nm_kg, _W_kg) have no structural check that a source mass was recorded.",
+      "fact": "The assessment neither invents nor uses mass. Enforcement would need a convention for where mass provenance is declared."
+    }
+  ],
+  "handoff_requests": {
+    "release_builder_owner_CORE-05": "exclusions.parquet does not yet carry time_lineage; quality.json does via the assessment records. Adding source_start_time_s/source_end_time_s columns to the exclusion ledger is optional and left to that task.",
+    "DATA_CONTRACT.md_text": "Done in CORE-01 after CORE-05 released the file: all three rules added in their sections."
+  },
+  "checks": [
+    {
+      "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_quality_assessment_safeguards.py tests/test_data_contract.py tests/test_backlog_workflow.py",
+      "result": "141 passed"
+    },
+    {
+      "command": "same prefix, tests/test_quality_assessment_safeguards.py against the HEAD data_contract.py (temporarily swapped, then restored)",
+      "result": "19 failed, 22 passed; failures are only the identity-placeholder, ensemble-bounds and time-lineage tests"
+    },
+    {
+      "command": "same prefix, tests/test_dataset_release.py tests/test_release_lineage_adversarial.py tests/test_release_lineage_verify.py tests/test_quality_page.py",
+      "result": "11 passed; 63 passed, 2 xfailed (regression check of assessment consumers). The 2 xfails (CORE-02-G7, CORE-02-G8) also occur with the HEAD module, so they predate this change."
+    },
+    {
+      "command": "python3 contributor_tools/build_backlog_page.py --check",
+      "result": "Backlog valid; HTML current (88 tasks)."
+    },
+    {
+      "command": "python3 docs/build.py --check",
+      "result": "exit 1 on 18 missing quality/index.html anchors (DOC-01 in-progress page); unrelated to this task."
+    }
+  ]
+}

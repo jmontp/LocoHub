@@ -241,6 +241,8 @@ This downloads the Rajagopal 2015 model and modifies it to match Gait120's singl
 
 ## Sign Conventions
 
+> **Sign rule note (2026-10-31).** The flexion-positive "standard" below matches the current rule. The current LocoHub rule is [Signs and frames](../../../docs/reference/index.html#signs-and-frames): joint angles and moments positive in their named direction (knee flexion +), segment angles counterclockwise (pelvis anterior tilt −). This describes the converter's sign mapping; it does not verify existing output files.
+
 ### Kinematics
 
 **Source data (OpenSim modified Rajagopal model):**

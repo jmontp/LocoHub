@@ -1,0 +1,727 @@
+{
+ "task_id": "UM21-P01",
+ "status": "ready_for_review",
+ "scientific_approval": false,
+ "corrections_applied": false,
+ "last_checked_at_utc": "2026-10-31T07:16:00Z",
+ "repository_head": "569ee8f4d7cdf83d96d5f74aa6b65354b4a78da4",
+ "summary": "Census of all 50 UMich 2021 treadmill recordings, both pelvis channels (RPelvisAngles with right strides, LPelvisAngles with left strides). Exactly one recording is reversed: AB04/i0 (heading -179.77 / +179.77 deg; markers agree with the flipped tilt in 114/114 right and 114/114 left strides; median |-stored - marker| 0.15 deg vs |stored - marker| 3.05/3.01 deg). The other 49 are normal: heading -4.75 to +4.75 deg, published tilt sign in 11,710 of 11,715 strides. In AB04/i0 pelvis obliquity is flipped (228/228) and rotation keeps its oscillation sign (228/228), the exact pattern of a lab reference turned 180 deg about vertical (tilt, obliquity, rotation) -> (-tilt, -obliquity, rotation + 180). Hip flexion and adduction match markers (228/228 each). The released thigh recipe (hip - pelvis) is closer with the flipped tilt in 223/228 strides; shank is inconclusive at this subject's small tilt (about 2 deg). AB04/i0 is in the release scope (not excluded by D-UM21-T02-1 = A). Decision D-UM21-P01-1 drafted with review sheet; not copied into backlog.json (coordinator does that from a verified handoff).",
+ "changed_files": [
+  "contributor_tools/audit_probes/2026_10_31/probe_um21_pelvis_heading.py",
+  "contributor_tools/review_um21_p01_pelvis_heading.py",
+  "docs/quality/audits/um21-p01-pelvis-heading.json",
+  "docs/quality/audits/um21-p01-pelvis-heading-blind.json",
+  "docs/maintainers/handoffs/UM21-P01.json"
+ ],
+ "not_changed": [
+  "docs/maintainers/backlog.json",
+  "docs/maintainers/backlog.html",
+  "AGENTS.md",
+  "converted_datasets/",
+  "contributor_tools/conversion_scripts/Umich_2021/ (source read only)"
+ ],
+ "deliverable_hashes_sha256": {
+  "contributor_tools/audit_probes/2026_10_31/probe_um21_pelvis_heading.py": "41be0393d261c744f9a0c510057967b34c22feca5dfcce74fbe36f58a5caf106",
+  "contributor_tools/review_um21_p01_pelvis_heading.py": "dfdfa24278a2ab4ba2d91de5398858f9446859e5549d4a22a2c0da9cad19745b",
+  "docs/quality/audits/um21-p01-pelvis-heading.json": "41f8248c53c7a68bc02083318650dccd993ed9bae6b51af0a40dde3ef0d90278",
+  "docs/quality/audits/um21-p01-pelvis-heading-blind.json": "5a79a87538462cbdb52adfb0d92a8a1659047c688d2bb9a24bcf6728f36334bb",
+  "review_sheets/D-UM21-P01-1/decision.json": "226373c7611e2e659d1377513bdba83f4d8d6da1d3f057bde07f87ab3476143f",
+  "review_sheets/D-UM21-P01-1/index.html": "a6fa4dc6c0d270af0a3ca624aa6766b5914d44310e7f0180e6ce249bc701afb0"
+ },
+ "method": {
+  "evidence": "Markers only (ASIS/PSIS, GT, knee and ankle epicondyle/malleolus pairs, heel/toe). Forward = mean horizontal PSIS->ASIS direction (the person's own facing), independent of Plug-in Gait's progression choice. Marker pelvis tilt as in UM21-C03 (clinical target, published sign +1 there).",
+  "tilt_vote": "Per stride (same-side heel strikes, 50-250 frames, >= 30 valid frames): published sign if median |marker - stored| < median |marker + stored|, no offset.",
+  "other_channels": "Per-stride sign of the de-meaned correlation between stored component and marker target; expected sign = majority over normal recordings, judged only when that reliability >= 0.9.",
+  "rule": "normal: both sides |H| < 90, V >= 0.9, >= 20 voting strides; reversed: both sides |H| > 90, V <= 0.1, >= 20 voting strides; else unresolved (also any within-recording heading switch). H = circular median stored pelvis rotation; V = fraction of strides whose marker tilt vote is the published sign.",
+  "rule_fixed_before_ab04_i0": "Rule and thresholds written in the probe before any run. Blind run (AB04/i0 withheld) first; final run with the identical probe (sha256 41be0393...) reproduced the other 49 records, expected signs and contrast pick exactly (blind_check in the audit)."
+ },
+ "per_recording": {
+  "AB01/d10": {
+   "class": "normal",
+   "release_status": "leaves under D-UM21-T02-1 = A",
+   "pelvis_rotation_median_deg": {
+    "R": 0.83,
+    "L": -0.83
+   },
+   "tilt_published_sign_strides": {
+    "R": "126/126",
+    "L": "128/128"
+   }
+  },
+  "AB01/d5": {
+   "class": "normal",
+   "release_status": "leaves under D-UM21-T02-1 = A",
+   "pelvis_rotation_median_deg": {
+    "R": 0.6,
+    "L": -0.6
+   },
+   "tilt_published_sign_strides": {
+    "R": "115/115",
+    "L": "115/115"
+   }
+  },
+  "AB01/i0": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 1.05,
+    "L": -1.05
+   },
+   "tilt_published_sign_strides": {
+    "R": "108/108",
+    "L": "108/108"
+   }
+  },
+  "AB01/i10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 1.19,
+    "L": -1.19
+   },
+   "tilt_published_sign_strides": {
+    "R": "110/110",
+    "L": "109/109"
+   }
+  },
+  "AB01/i5": {
+   "class": "normal",
+   "release_status": "leaves under D-UM21-T02-1 = A",
+   "pelvis_rotation_median_deg": {
+    "R": 1.19,
+    "L": -1.19
+   },
+   "tilt_published_sign_strides": {
+    "R": "110/110",
+    "L": "109/109"
+   }
+  },
+  "AB02/d10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": -0.26,
+    "L": 0.26
+   },
+   "tilt_published_sign_strides": {
+    "R": "121/121",
+    "L": "118/118"
+   }
+  },
+  "AB02/d5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": -0.32,
+    "L": 0.32
+   },
+   "tilt_published_sign_strides": {
+    "R": "118/118",
+    "L": "118/118"
+   }
+  },
+  "AB02/i0": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": -1.74,
+    "L": 1.74
+   },
+   "tilt_published_sign_strides": {
+    "R": "111/111",
+    "L": "111/111"
+   }
+  },
+  "AB02/i10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": -2.09,
+    "L": 2.09
+   },
+   "tilt_published_sign_strides": {
+    "R": "107/107",
+    "L": "107/107"
+   }
+  },
+  "AB02/i5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": -1.86,
+    "L": 1.86
+   },
+   "tilt_published_sign_strides": {
+    "R": "105/105",
+    "L": "103/103"
+   }
+  },
+  "AB03/d10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 2.5,
+    "L": -2.5
+   },
+   "tilt_published_sign_strides": {
+    "R": "117/117",
+    "L": "118/118"
+   }
+  },
+  "AB03/d5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 1.47,
+    "L": -1.47
+   },
+   "tilt_published_sign_strides": {
+    "R": "118/118",
+    "L": "115/115"
+   }
+  },
+  "AB03/i0": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 0.34,
+    "L": -0.34
+   },
+   "tilt_published_sign_strides": {
+    "R": "109/109",
+    "L": "108/108"
+   }
+  },
+  "AB03/i10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": -0.6,
+    "L": 0.6
+   },
+   "tilt_published_sign_strides": {
+    "R": "111/111",
+    "L": "115/115"
+   }
+  },
+  "AB03/i5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 0.01,
+    "L": -0.01
+   },
+   "tilt_published_sign_strides": {
+    "R": "108/108",
+    "L": "110/110"
+   }
+  },
+  "AB04/d10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": -1.04,
+    "L": 1.04
+   },
+   "tilt_published_sign_strides": {
+    "R": "125/125",
+    "L": "125/125"
+   }
+  },
+  "AB04/d5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 0.01,
+    "L": -0.01
+   },
+   "tilt_published_sign_strides": {
+    "R": "120/120",
+    "L": "119/119"
+   }
+  },
+  "AB04/i0": {
+   "class": "reversed",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": -179.77,
+    "L": 179.77
+   },
+   "tilt_published_sign_strides": {
+    "R": "0/114",
+    "L": "0/114"
+   }
+  },
+  "AB04/i10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 0.35,
+    "L": -0.35
+   },
+   "tilt_published_sign_strides": {
+    "R": "105/105",
+    "L": "107/107"
+   }
+  },
+  "AB04/i5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 0.94,
+    "L": -0.94
+   },
+   "tilt_published_sign_strides": {
+    "R": "111/111",
+    "L": "108/108"
+   }
+  },
+  "AB05/d10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 1.25,
+    "L": -1.25
+   },
+   "tilt_published_sign_strides": {
+    "R": "134/135",
+    "L": "137/138"
+   }
+  },
+  "AB05/d5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 0.0,
+    "L": -0.0
+   },
+   "tilt_published_sign_strides": {
+    "R": "126/126",
+    "L": "126/126"
+   }
+  },
+  "AB05/i0": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 0.46,
+    "L": -0.46
+   },
+   "tilt_published_sign_strides": {
+    "R": "120/120",
+    "L": "122/122"
+   }
+  },
+  "AB05/i10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 1.7,
+    "L": -1.7
+   },
+   "tilt_published_sign_strides": {
+    "R": "114/114",
+    "L": "116/116"
+   }
+  },
+  "AB05/i5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 0.4,
+    "L": -0.4
+   },
+   "tilt_published_sign_strides": {
+    "R": "120/120",
+    "L": "123/123"
+   }
+  },
+  "AB06/d10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 0.56,
+    "L": -0.56
+   },
+   "tilt_published_sign_strides": {
+    "R": "136/136",
+    "L": "136/136"
+   }
+  },
+  "AB06/d5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 0.62,
+    "L": -0.62
+   },
+   "tilt_published_sign_strides": {
+    "R": "125/125",
+    "L": "127/127"
+   }
+  },
+  "AB06/i0": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 0.34,
+    "L": -0.34
+   },
+   "tilt_published_sign_strides": {
+    "R": "122/122",
+    "L": "118/118"
+   }
+  },
+  "AB06/i10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 1.97,
+    "L": -1.97
+   },
+   "tilt_published_sign_strides": {
+    "R": "119/119",
+    "L": "117/118"
+   }
+  },
+  "AB06/i5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 0.82,
+    "L": -0.82
+   },
+   "tilt_published_sign_strides": {
+    "R": "112/112",
+    "L": "111/111"
+   }
+  },
+  "AB07/d10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 2.54,
+    "L": -2.54
+   },
+   "tilt_published_sign_strides": {
+    "R": "132/132",
+    "L": "132/132"
+   }
+  },
+  "AB07/d5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 1.41,
+    "L": -1.41
+   },
+   "tilt_published_sign_strides": {
+    "R": "133/133",
+    "L": "128/128"
+   }
+  },
+  "AB07/i0": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": -0.4,
+    "L": 0.4
+   },
+   "tilt_published_sign_strides": {
+    "R": "123/123",
+    "L": "122/122"
+   }
+  },
+  "AB07/i10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": -0.96,
+    "L": 0.96
+   },
+   "tilt_published_sign_strides": {
+    "R": "117/117",
+    "L": "116/116"
+   }
+  },
+  "AB07/i5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": -1.25,
+    "L": 1.25
+   },
+   "tilt_published_sign_strides": {
+    "R": "119/119",
+    "L": "120/120"
+   }
+  },
+  "AB08/d10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 2.62,
+    "L": -2.62
+   },
+   "tilt_published_sign_strides": {
+    "R": "127/128",
+    "L": "126/127"
+   }
+  },
+  "AB08/d5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 2.81,
+    "L": -2.81
+   },
+   "tilt_published_sign_strides": {
+    "R": "116/116",
+    "L": "115/115"
+   }
+  },
+  "AB08/i0": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 2.4,
+    "L": -2.4
+   },
+   "tilt_published_sign_strides": {
+    "R": "115/115",
+    "L": "112/112"
+   }
+  },
+  "AB08/i10": {
+   "class": "normal",
+   "release_status": "leaves under D-UM21-T02-1 = A",
+   "pelvis_rotation_median_deg": {
+    "R": 2.38,
+    "L": -2.38
+   },
+   "tilt_published_sign_strides": {
+    "R": "132/132",
+    "L": "134/134"
+   }
+  },
+  "AB08/i5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 2.41,
+    "L": -2.41
+   },
+   "tilt_published_sign_strides": {
+    "R": "107/107",
+    "L": "109/109"
+   }
+  },
+  "AB09/d10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 0.49,
+    "L": -0.49
+   },
+   "tilt_published_sign_strides": {
+    "R": "148/148",
+    "L": "146/146"
+   }
+  },
+  "AB09/d5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 1.72,
+    "L": -1.72
+   },
+   "tilt_published_sign_strides": {
+    "R": "131/131",
+    "L": "132/132"
+   }
+  },
+  "AB09/i0": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": -2.64,
+    "L": 2.64
+   },
+   "tilt_published_sign_strides": {
+    "R": "130/130",
+    "L": "134/134"
+   }
+  },
+  "AB09/i10": {
+   "class": "normal",
+   "release_status": "leaves under D-UM21-T02-1 = A",
+   "pelvis_rotation_median_deg": {
+    "R": -1.47,
+    "L": 1.47
+   },
+   "tilt_published_sign_strides": {
+    "R": "125/125",
+    "L": "128/128"
+   }
+  },
+  "AB09/i5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": -0.29,
+    "L": 0.29
+   },
+   "tilt_published_sign_strides": {
+    "R": "124/124",
+    "L": "125/125"
+   }
+  },
+  "AB10/d10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 4.11,
+    "L": -4.11
+   },
+   "tilt_published_sign_strides": {
+    "R": "128/128",
+    "L": "132/132"
+   }
+  },
+  "AB10/d5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 4.75,
+    "L": -4.75
+   },
+   "tilt_published_sign_strides": {
+    "R": "126/126",
+    "L": "124/124"
+   }
+  },
+  "AB10/i0": {
+   "class": "normal",
+   "release_status": "leaves under D-UM21-T02-1 = A",
+   "pelvis_rotation_median_deg": {
+    "R": 4.19,
+    "L": -4.19
+   },
+   "tilt_published_sign_strides": {
+    "R": "109/109",
+    "L": "109/109"
+   }
+  },
+  "AB10/i10": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 4.33,
+    "L": -4.33
+   },
+   "tilt_published_sign_strides": {
+    "R": "110/110",
+    "L": "109/109"
+   }
+  },
+  "AB10/i5": {
+   "class": "normal",
+   "release_status": "in the treadmill release scope",
+   "pelvis_rotation_median_deg": {
+    "R": 4.42,
+    "L": -4.42
+   },
+   "tilt_published_sign_strides": {
+    "R": "121/121",
+    "L": "117/117"
+   }
+  }
+ },
+ "ab04_i0_channels": {
+  "pelvis_obliquity_R": "flipped",
+  "pelvis_rotation_R": "unchanged",
+  "hip_flexion_R": "unchanged",
+  "hip_adduction_R": "unchanged",
+  "hip_rotation_R": "not judged (marker target unreliable in normal recordings)",
+  "foot_progression_R": "unresolved",
+  "thigh_recipe_R": "wrong pelvis sign",
+  "shank_recipe_R": "unresolved",
+  "pelvis_obliquity_L": "flipped",
+  "pelvis_rotation_L": "unchanged",
+  "hip_flexion_L": "unchanged",
+  "hip_adduction_L": "unchanged",
+  "hip_rotation_L": "not judged (marker target unreliable in normal recordings)",
+  "foot_progression_L": "unresolved",
+  "thigh_recipe_L": "wrong pelvis sign",
+  "shank_recipe_L": "wrong pelvis sign"
+ },
+ "ab04_i0_channel_notes": [
+  "Pelvis tilt: flipped (114/114 per side). Released column pelvis_sagittal_angle_rad comes from RPelvisAngles component 1, so it is wrong-signed for this recording.",
+  "Pelvis obliquity: flipped (0/114 agree per side). Not a release column.",
+  "Pelvis rotation: shifted by 180 deg, oscillation sign unchanged (114/114 per side). Not a release column.",
+  "Hip flexion, hip adduction: unchanged (114/114 per side). Hip rotation: not judged; marker knee-axis estimate agrees in only 51-56% of normal strides. No source-channel comparison with the participant's other recordings is used (AB04/i0 is that participant's only level recording).",
+  "Thigh (hip1 - p1): wrong pelvis sign 111/114 R, 112/114 L. Shank (hip1 - p1 - knee1): R unresolved (53/114 closer with flipped tilt), L wrong (105/114). Small tilt (about 2 deg) means the recipe error is about 4-5 deg, near the GT-proxy residual.",
+  "Foot progression: R median -167.9 deg vs marker toe-out 11.6 deg (about 180 deg off); L in the alternate Cardan branch for 17,120 frames; correlation verdict unresolved by rule. Not a release column. Alternate-branch foot progression also occurs in other recordings (AB06/d10 L, AB08/d10 R and L), unrelated to heading.",
+  "Moments and powers: not checked (Plug-in Gait expresses them in segment frames; expected unaffected, untested)."
+ ],
+ "checks": [
+  "Probe blind run (AB04/i0 withheld) then final run; blind_check other_49_records_identical true, expected_signs_identical true, contrast_identical true.",
+  "Probe exception: one recording at a time, h5py read-only, RLIMIT_AS 768 MiB, nice 19 / ionice idle, single-threaded env. Peak RSS 159.8 MiB (blind) and 160.6 MiB (final); wall 13.1 s and 11.2 s. Source size 2195168300 and mtime unchanged; nothing written under converted_datasets/ or source folders.",
+  "Concurrency: during the blind run another session was running small docs/unit pytest files (no dataset loads); the final run started after they exited, alone.",
+  "Smoke test of the probe recording() on AB02/i0 only before the census (scratchpad script, not kept).",
+  "Sheet built by contributor_tools/review_um21_p01_pelvis_heading.py from the audit JSON only; page() budgets enforced (8 chips, 3 figures, 3 not-shown, <= 60 words). Figures 4.10-4.19 in wide at 160 dpi, fonts >= 10 pt, one panel each.",
+  "Rendered with Playwright (Chrome) at 1100 and 390 px: scrollWidth equals viewport, 3 images load, both details closed, recommendation text absent from visible innerText.",
+  "Seeded picks (seed 20261101): contrast AB02/i10 from the 43 normal in-scope recordings; strides AB04/i0 R frames 3512-3675, AB02/i10 R frames 2189-2300."
+ ],
+ "not_checked": [
+  "5 isolated strides in normal recordings voted the flipped tilt sign (AB05/d10 R and L, AB06/i10 L, AB08/d10 R and L); not investigated.",
+  "Hip rotation (marker target unreliable); moments and powers.",
+  "Why Plug-in Gait chose the reversed progression axis for this trial (anatomical forward in AB04/i0 is +y like the others)."
+ ],
+ "decisions_for_backlog": [
+  {
+   "id": "D-UM21-P01-1",
+   "task_id": "UM21-P01",
+   "question": "In one UMich 2021 treadmill recording (AB04, level walking), Vicon computed the pelvis facing backwards, so its stored pelvis tilt has the wrong sign, and so do the thigh and shank angles built from it. How should that recording's pelvis-dependent columns be released?",
+   "options": [
+    {
+     "key": "A",
+     "label": "Leave AB04 i0 out",
+     "consequence": "165 strides leave; nothing changed. Reversible."
+    },
+    {
+     "key": "B",
+     "label": "Keep AB04 i0; leave its pelvis tilt, thigh and shank missing",
+     "consequence": "165 strides stay; 5 columns missing for this recording. Reversible."
+    },
+    {
+     "key": "C",
+     "label": "Keep AB04 i0 with pelvis tilt sign-flipped from marker evidence; thigh and shank from it",
+     "consequence": "165 strides stay; one logged per-recording sign change. Reversible."
+    }
+   ],
+   "options_order": "By how much of the recording is released: nothing; everything except pelvis tilt, thigh and shank; everything.",
+   "recommended": "C",
+   "confidence": "medium",
+   "why": "A pelvis frame turned 180 degrees about vertical flips tilt and obliquity and shifts rotation by 180 degrees exactly; the markers show all three in every stride, and the flipped tilt sits within 0.15 degrees of the markers, as in the other 49 recordings. Hip angles are unaffected. B is the conservative fallback; A also drops hip, knee and ankle data that are unaffected.",
+   "check": "review_sheets/D-UM21-P01-1/index.html, second figure: the red stored tilt is the mirror image of the black marker line and the dashed blue line lies on it; in the third figure red lies on black.",
+   "cost_of_waiting": "AB04 i0 pelvis tilt, thigh and shank cannot be released; the other 49 recordings and the AB04 i0 hip, knee and ankle columns are unaffected.",
+   "decide_before_recommendation": true,
+   "status": "open"
+  }
+ ],
+ "remaining": [
+  "Independent review of this census and the D-UM21-P01-1 sheet.",
+  "After review, coordinator copies D-UM21-P01-1 into backlog.json decisions.",
+  "Whichever option José picks, the treadmill pilot/release spec must carry the AB04/i0 handling; under C the sign change is logged per recording and source copies stay unchanged."
+ ],
+ "next_action": "Second agent verifies UM21-P01 (recount from the audit JSON, independent marker check on AB04/i0 and one seeded normal recording, sheet against AGENTS.md).",
+ "evidence_paths": [
+  "docs/quality/audits/um21-p01-pelvis-heading.json",
+  "docs/quality/audits/um21-p01-pelvis-heading-blind.json",
+  "contributor_tools/audit_probes/2026_10_31/probe_um21_pelvis_heading.py",
+  "contributor_tools/review_um21_p01_pelvis_heading.py",
+  "review_sheets/D-UM21-P01-1/index.html",
+  "review_sheets/D-UM21-P01-1/decision.json"
+ ]
+}

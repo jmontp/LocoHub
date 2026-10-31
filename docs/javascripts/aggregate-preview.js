@@ -20,7 +20,7 @@
   const {makeChart, displayUnit} = window.LocoHubPhaseChart;
 
   async function mount(options) {
-    const {panel, slug, anchor, controls: rawControls, plot: rawPlot, meta, note, sampleRows, sample, stopRawChart} = options;
+    const {panel, slug, anchor, controls: rawControls, plot: rawPlot, meta, note, sampleRows, sample, stopRawChart, lineage = {}} = options;
     const current = generation;
     if (!panel.dataset.aggregateSource) return;
     if (!manifestPromise) {
@@ -42,7 +42,16 @@
     widget.setAttribute('aria-label', 'Explore task averages');
     rawControls.replaceWith(widget); rawPlot.remove();
     meta.replaceChildren(el('code', dataset.source.filename));
-    note.textContent = 'Averages from a local file; its version may differ from the download.';
+    // State which file feeds the averages and how it relates to the catalog, without implying a byte match.
+    const file = dataset.source.filename;
+    const variant = file === lineage.full ? 'It has the same name as the Full download, but the bytes were not compared.'
+      : file === lineage.filtered ? 'It has the same name as the Filtered download, but the bytes were not compared.'
+      : 'No download has this file name.';
+    const covered = dataset.tasks.length, listed = lineage.catalogTasks;
+    note.className = 'preview-lineage';
+    note.replaceChildren(document.createTextNode('Averages come from the legacy, unreviewed local file '), el('code', file), document.createTextNode(`. ${variant} `
+      + `It covers ${covered} task${covered === 1 ? '' : 's'}${Number.isFinite(listed) ? ` of the ${listed} listed in the catalog` : ''}. `
+      + 'All subjects: the line is the mean of subject averages, each subject weighted equally; the band is ±1 SD between subjects. Speeds and conditions within a task are pooled.'));
     const rawTask = sample?.rows?.[0]?.task || 'as stored';
     if (sampleRows) sampleRows.querySelector('summary').textContent = `Example file rows · ${String(rawTask).replaceAll('_', ' ')}`;
     const form = el('div', undefined, 'aggregate-controls');
@@ -127,7 +136,7 @@
         : 'Line: mean of subject averages, with equal weight per subject. Shading: ±1 standard deviation between subject averages.';
       if (!band.checked) caption.textContent = caption.textContent.split(' Shading:')[0] + ' Standard deviation hidden.';
       else if (!sdAvailable) caption.textContent = caption.textContent.split(' Shading:')[0] + ' No band: standard deviation needs at least two contributors.';
-      caption.textContent += ` Displayed in ${unit.label}; missing portions stay blank.`;
+      caption.textContent += ` ${task.label}: speeds and conditions pooled. Displayed in ${unit.label}; missing portions stay blank.`;
       const table = el('table'), head = el('thead'), tr = el('tr');
       ['Movement (%)', `Mean (${unit.label})`, `SD (${unit.label})`, subject ? 'Curves (n)' : 'Subjects (n)'].forEach((text) => { const th = el('th', text); th.scope = 'col'; tr.append(th); });
       head.append(tr); table.append(head); const body = el('tbody');

@@ -1,0 +1,101 @@
+{
+  "task_id": "CORE-01",
+  "verifier_role": "independent second agent; own synthetic fixtures in tests/test_quality_assessment_safeguards_verify.py (no imports from the worker's test file); no research data read; worker files, backlog and AGENTS.md not edited",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-31T08:00:00Z",
+  "summary": "The three fixes are correct, minimal and fail closed. My 96 independent fixture tests all pass on the worktree. Against the HEAD data_contract.py, 61 of them fail, and those failures are exactly the placeholder-identity, ensemble-bounds and time_lineage tests. The other 35 pass on both versions, which confirms the worker's claim that the remaining acceptance items already held. There are no regressions in release, lineage, quality-page or contract tests (311 passed, 2 pre-existing xfails). The DATA_CONTRACT.md additions match the code and touch only the two stated sections. Neither of the worker's possible José questions needs José: each has a conventional default. The non-blocking gaps are recorded below. This is fixture/schema completion only. It approves no dataset; each dataset still needs its own source comparison and applicability review.",
+  "worker_artifacts_checked": {
+    "contributor_tools/common/data_contract.py": "sha256 3d08bbe9... matches the audit outputs_sha256; git diff HEAD is +37/-0",
+    "tests/test_quality_assessment_safeguards.py": "sha256 4d928ed1... matches the audit",
+    "contributor_tools/DATA_CONTRACT.md": "sha256 109071b3... matches the audit",
+    "docs/quality/audits/core01-assessment-safeguards.json": "present; scientific_approval false, authorizes_publication false"
+  },
+  "checks": [
+    {
+      "id": 1,
+      "area": "placeholder identities",
+      "result": "pass",
+      "evidence": "Invalid as invalid_identity (contract not publishable; every observation invalid; 0 eligible) for subject, source_recording_id and observation_id with: nan, NaN, NAN, ' nan', 'nan\\t', '\\u00a0None\\u00a0' (NBSP is stripped by str.strip), none, NONE, <NA>, <na>, NaT, nat, null, NULL, '\\nNull\\n'. True missing values in object columns (np.nan, None, pd.NA, pd.NaT) and pandas StringDtype pd.NA are rejected by the pre-existing nonempty-string check. Legitimate look-alikes stay valid and pass: NA01, nan_trial, Nancy, none-left, S_null_2, NaT-7, N. reference_side 'none' stays valid for a transfer. 'None' and 'nan' as reference_side are rejected (unreviewed_reference_side, case-sensitive), so a stringified None is never read as side none."
+    },
+    {
+      "id": 2,
+      "area": "ensemble source bounds",
+      "result": "pass",
+      "evidence": "ensemble_curve fails with ensemble_source_bounds for start/end = (NaN, 3.0), (2.0, NaN), (2.0, 3.0), (inf, NaN) and (0.0, 0.0), and when one row of an otherwise empty clock is filled. With both clocks entirely unavailable, the contract is publishable and the observation passes once the profile opts in to ensemble_curve. time_lineage then reports null clocks. With only one clock column present, the check fails as incomplete_source_bounds. Individual cycles with valid clocks still pass, and reversed clocks still fail invalid_source_bounds."
+    },
+    {
+      "id": 3,
+      "area": "time_lineage",
+      "result": "pass",
+      "evidence": "Gapped time index [5.0, 5.01, 5.5, 6.25]: index_first 5.0, index_last 6.25, row_count 4. No duration or rate is computed, and the source clocks are null when absent. Unsorted rows [7, 5, 6, 5.5]: assess sorts each group by the index first, so first/last are 5.0 and 7.0 (earliest/latest). Duplicate time: the observation is invalid (invalid_time_order) and lineage still reports the endpoints. A NaN in the index gives null first/last and an invalid observation. A nonconstant source clock gives a null lineage value, and the contract flags inconsistent_metadata. Lineage is JSON-serializable with allow_nan=False. No mass or duration keys appear anywhere in an observation record."
+    },
+    {
+      "id": 4,
+      "area": "profile applicability and states",
+      "result": "pass",
+      "evidence": "These all stay unchecked and not eligible: population mismatch (subject_metadata stroke vs healthy); absent applicability metadata; protocol mismatch via task_info (exo_state); reference_side applicability mismatch; task not in profile; ensemble not opted in through observation_types; no profile. A unit mismatch (column suffix _deg vs the profile's _rad) never passes: the _deg signal is unchecked and the required _rad signal is missing. Conflicting applicability between task_info and subject_metadata is invalid. A matching population passes. In one frame, the five states passed, failed, missing, unchecked and invalid come out exactly as constructed."
+    },
+    {
+      "id": 5,
+      "area": "pre-existing safeguards (laterality, phase grid)",
+      "result": "pass",
+      "evidence": "A cycle with side none and ipsi columns is rejected (missing_reference_side), and an unknown-side cycle is unpublishable. Phase lengths 149, 151 and 101 are invalid_phase_length, and an exclusive 0-99.33 grid is invalid_phase_grid. All of these pass on HEAD as well, so this is existing behavior, as the worker stated."
+    },
+    {
+      "id": 6,
+      "area": "minimality and regressions",
+      "result": "pass",
+      "evidence": "The diff is 37 added lines and 0 removed: the placeholder set, one elif branch, one ensemble branch in the existing source-bounds block, _time_lineage, and one record key. The placeholder check runs only after the existing all-strings check, so it cannot raise on non-strings. Consumers: build_dataset_release.py uses observation identity, eligible and fixed exclusion-table columns. The new time_lineage key flows only into quality.json and holds finite floats or null, which keeps it JSON-safe. Regression run: 311 passed, 2 xfailed. The xfails are CORE-02-G7/G8, which the worker showed also occur with HEAD."
+    },
+    {
+      "id": 7,
+      "area": "DATA_CONTRACT.md text vs code",
+      "result": "pass",
+      "evidence": "The CORE-01 additions are three: the ensemble-clock sentence and the placeholder sentence in 'Observation contract', and the time_lineage paragraph in 'Quality profiles'. The other hunks in git diff HEAD belong to DOC-02/03 (Signs and frames) and the release-builder task (drvfs publication fallback); CORE-01 did not change them. The text matches the code: placeholders are case-insensitive, and the code also strips surrounding whitespace. Unavailable, nonconstant and nonfinite lineage values are null. Two wording nits are listed under optional."
+    },
+    {
+      "id": 8,
+      "area": "gate commands",
+      "result": "pass",
+      "evidence": "pytest (AGENTS prefix) on the verifier tests, the worker tests, test_data_contract, test_dataset_release, both release-lineage files, test_quality_page and test_backlog_workflow: 311 passed, 2 xfailed. build_backlog_page.py --check: Backlog valid; HTML current (88 tasks). docs/build.py --check exited 0 at my run ('Checked 40 HTML pages and 1662 referenced assets'). The 18 quality-page anchor failures the coordinator mentioned no longer reproduce. They were DOC-01's in any case and are not counted for CORE-01."
+    }
+  ],
+  "required_fixes": [],
+  "optional": [
+    "DATA_CONTRACT.md: 'finite values fail the contract' should read 'any recorded value fails the contract'. The code also rejects an infinite or partially filled clock.",
+    "DATA_CONTRACT.md: 'its first and last values' are the earliest and latest index values after time-order sorting. Say so, or rename the keys index_min/index_max.",
+    "Efficiency: the placeholder check runs a Python lambda on every row of three columns, which doubles the existing per-row identity scan. Checking pd.unique(values) instead gives the same result at much lower cost on large exports."
+  ],
+  "observations_not_blocking": [
+    "Placeholder coverage is limited to Python/pandas stringification, which is what the worker claimed. These still pass as identities: MATLAB '<missing>' and '<undefined>'; CSV-style 'N/A', '#N/A', 'NA' and '-nan'; zero-width or full-width variants ('\\u200bnan', 'ｎａｎ'). Composite IDs with an embedded missing component also pass, for example 'gt21:AB01/NaN/...' from sprintf in the MATLAB converters. The cheapest safe extension is to add '<missing>', '<undefined>', 'n/a', '#n/a' and '-nan' to the set, since none of these can be a legitimate identity. Leave 'NA' alone, because it can be. Component-level detection needs a separator rule and is best a warning. Either is an agent-level follow-up, not a José question.",
+    "task_id is not an identity column, so a stringified 'nan' task_id still passes. This was not in CORE-01's stated scope.",
+    "One placeholder row anywhere makes the whole frame invalid (a global contract issue). This fails closed but does not name which observations are affected.",
+    "Categorical identity columns raise TypeError in the pre-existing nonempty-string check (CORE-02-G7). This is unchanged by CORE-01 and still fails closed.",
+    "The effect of the new errors on existing converted exports is unknown until the bounded pilot re-assessment the worker proposes runs under the guarded launcher."
+  ],
+  "rulings_on_worker_questions": [
+    {
+      "question": "Should a profile with no applicability block still filter releases?",
+      "needs_jose": false,
+      "ruling": "There is a conventional default. AGENTS.md says reference ranges need population/protocol context and evidence, and that draft profiles are not release profiles. The release builder already blocks draft profiles. It labels profiles with no review status legacy_unspecified and attaches a limitation. Every release still requires José's release approval, and he sees that limitation there. Act conservatively and log it rather than ask: a follow-up for the release-builder owner should require an applicability block on any profile marked reviewed or approved. Legacy unspecified profiles stay usable for internal pilots only. This removes no data and changes no released scope, because no release exists yet."
+    },
+    {
+      "question": "May side-'none' transfers or ensembles carry ipsi/contra columns?",
+      "needs_jose": false,
+      "ruling": "There is a conventional default. The reference defines reference_side as 'the limb defining ipsilateral signals when applicable'. For a source ensemble or transfer with no anatomical side, ipsi/contra are roles relative to the source's phase-defining limb, not invented laterality. This is the current documented contract behavior. Keep it, and require each converter's provenance to state how the ipsi role was chosen. A dataset whose role definition is ambiguous is handled in that dataset's source review. Only a case that would assign clinical laterality would need José."
+    }
+  ],
+  "independence": {
+    "verifier_tests": "tests/test_quality_assessment_safeguards_verify.py: 96 tests with their own fixture builders (hip_flexion_angle_ipsi_rad, subject P7, range -0.2..0.8 rad at 0/50/100%, time-mode ranges via time_ranges). No import from the worker's test module.",
+    "against_head": "Run from a git-archive copy of HEAD contributor_tools/common in the scratchpad: 61 failed, 35 passed. Every failure is a placeholder, ensemble-bounds or time_lineage test."
+  },
+  "test_runs": [
+    {"command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_quality_assessment_safeguards_verify.py", "result": "96 passed"},
+    {"command": "same prefix: pytest -q -p no:cacheprovider tests/test_quality_assessment_safeguards_verify.py tests/test_quality_assessment_safeguards.py tests/test_data_contract.py tests/test_dataset_release.py tests/test_release_lineage_adversarial.py tests/test_release_lineage_verify.py tests/test_quality_page.py tests/test_backlog_workflow.py", "result": "311 passed, 2 xfailed"},
+    {"command": "same verifier test file against HEAD data_contract.py (scratch git-archive copy)", "result": "61 failed, 35 passed"},
+    {"command": "python3 contributor_tools/build_backlog_page.py --check", "result": "Backlog valid; HTML current (88 tasks)"},
+    {"command": "python3 docs/build.py --check", "result": "exit 0 at verification time (not counted for CORE-01)"}
+  ],
+  "questions_for_jose": [],
+  "next_action": "Coordinator moves CORE-01 to done. Optional: an agent follow-up for the extra placeholder tokens and the reviewed-profile applicability requirement. The worker's bounded pilot re-assessment of one converted export runs only under the reviewed guarded launcher."
+}

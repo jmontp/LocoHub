@@ -41,6 +41,7 @@ import re
 import shutil
 import subprocess
 import gc
+import hashlib
 from pathlib import Path, PurePosixPath
 from datetime import datetime
 from typing import Dict, Optional, Tuple, List, Any
@@ -92,6 +93,34 @@ DEFAULT_RANGES_CANDIDATES = [
 
 DOCS_DATASETS_DIR = repo_root / "docs" / "datasets"
 DOCS_DATASETS_GENERATED_DIR = DOCS_DATASETS_DIR / ".generated"
+
+# The validation-range snapshots published at 569ee8f predate the reference sign rule: their run,
+# walking and stair pelvis_sagittal_angle_rad entries are anterior-positive (DOC-04). Pages that link
+# one of these exact files keep a label; a snapshot of the current ranges gets none.
+LEGACY_PELVIS_SIGN_SNAPSHOT_SHA256 = frozenset({
+    "6abe9f53e9bd7810585aa9017d4e6ca96030d9fd460aae64c1072451008fdc93",
+    "85db3b9d48595b1f06d37e92494aa5cbc70500d6e2cf96d531d66876f0262e9a",
+    "f21f475865de1870104f6bbb3621c5c16c20f6cc19d70e4c0e7793a973f434a2",
+    "fc02975543fa044f77cb731de712e901f8469c4b577359531b652e9e81422611",
+})
+LEGACY_PELVIS_SIGN_LABEL = (
+    "Legacy record: pelvis tilt for run, walking and stair uses the old anterior-positive sign; "
+    "current ranges follow the reference sign rule"
+)
+SIGN_RULE_LINK = "../reference/index.md#signs-and-frames"
+
+
+def _legacy_snapshot_label(snapshot_name: Optional[str]) -> str:
+    """Return the legacy pelvis-sign label (Markdown) if the named snapshot is a known legacy file, else ''."""
+    if not snapshot_name:
+        return ''
+    try:
+        digest = hashlib.sha256((DOCS_DATASETS_DIR / Path(snapshot_name).name).read_bytes()).hexdigest()
+    except OSError:
+        return ''
+    if digest not in LEGACY_PELVIS_SIGN_SNAPSHOT_SHA256:
+        return ''
+    return f'<br><small class="legacy-sign-label">[{LEGACY_PELVIS_SIGN_LABEL}]({SIGN_RULE_LINK})</small>'
 
 
 FEATURE_AVAILABILITY_STYLE = """
@@ -1579,6 +1608,8 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
     ranges_source = metadata.get('validation_ranges_source')
     if ranges_source and ranges_entry != '—':
         ranges_entry = f"{ranges_entry} (source: {ranges_source})"
+    if ranges_entry != '—':
+        ranges_entry += _legacy_snapshot_label(metadata.get('validation_ranges_download'))
 
     clean_url = (metadata.get('download_clean_url') or metadata.get('download_url') or '').strip()
     dirty_url = (metadata.get('download_dirty_url') or '').strip()
@@ -1821,7 +1852,7 @@ def generate_validation_page(
         ranges_section = (
             "Download the YAML snapshot used for this validation: "
             f"[Download](./{ranges_download_filename})"
-        )
+        ) + _legacy_snapshot_label(ranges_download_filename)
     else:
         ranges_section = "Validation ranges snapshot not available."
 

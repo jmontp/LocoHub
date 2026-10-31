@@ -1,0 +1,2787 @@
+{
+  "task_id": "GT21-C01",
+  "status": "conventions_documented_unreviewed",
+  "scientific_approval": false,
+  "generated_at_utc": "2026-10-27T23:47:29.848603+00:00",
+  "builder": {
+    "path": "contributor_tools/review_gt21_c01_conventions.py",
+    "sha256": "751c7e0025d8cbe584c5a0a709f329fc1802c2120b8561cddbdaa36e9869ef5c"
+  },
+  "resource_class": "read_only; one thread; restricted MAT reader (64 MiB per file); MemAvailable >= 1 GiB before each read; no MATLAB/OpenSim",
+  "inputs_sha256": {
+    "publisher": {
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/README.txt": "45282345f808b0eae6792ef728d8f1ba15f2ab5e3645123aab8c275b0831bace",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/RUN_OSIM.m": "85757146c32101f6db63fb3560b6fca0a6c205480f50be89935467cd1873bbe1",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/lib/RampID.m": "b57d45505964354865e0098cb7d3609ef30e67187874debb17ff0306557b4cae",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/lib/TransformForceplates.m": "07e450741761c9d1a61695e03342590406bd3e6459939fffce1a52de62e738ca",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Osim/correlateForcePlates.m": "90f33006319b111e00ace1ef8a6b0276232e17ac81b35ee5317b44215cd22769",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Osim/createExternalLoads.m": "f690fe00fa363c3c77b0e6bcf196247267ffaba0251ac45aec0e7f40f4ba707e",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Vicon/C3DtoMOT.m": "b9a9c7bfe749bf13dec911cf73496c453f5fc4915500a7995ab789bbd8e9adbc",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Vicon/C3DtoTRC.m": "80d1bd5a1799804894a458fb7dfbb200e1b6a927855232ac291bd100504dc9a6",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Vicon/transform.m": "fe7e226739d49a2682d9d3e1b1508dd4a3002cc591eca8f8459283d194630a13"
+    },
+    "adapter": {
+      "contributor_tools/conversion_scripts/Gtech_2021/convert_gtech_2021_phase_to_parquet.m": "219918731a2539e9a8df7d816a6d651bd476afb25f4f2012427f1b5a7d8a005a",
+      "contributor_tools/conversion_scripts/Gtech_2021/utilities/gtech_compute_grf_cop_stride.m": "7c708c0adf3dd92e4f97944f5c7d8d60967a34cfe6680972d1b4cc72651d8137",
+      "contributor_tools/conversion_scripts/Gtech_2021/utilities/gtech_forward_source_z_sign.m": "49448995b6b89f3eda8827386374369bcddea71eaf600462eafeb7d8ada5b958",
+      "contributor_tools/conversion_scripts/Gtech_2021/utilities/gtech_select_force_plate.m": "96c8b82e62e5d76ad21bc4a2078b84f25f23d0a2e9ee1a0ef9d3cfdea740f973"
+    },
+    "prior_audits": {
+      "docs/quality/audits/gt21-force-geometry.json": "bebc39c9215f55a7b091a18331538a642fb42d41ec841835b242f48f850ac6d0",
+      "docs/quality/audits/gt21-measured-force-direction.json": "c1aff6041750c7dab116d4523bbca842f4d760b10eac31a1cd8f9364cff56c9e",
+      "docs/quality/audits/gt21-completed-force-readback.json": "d7da2802987e814522630deac2f76cd678db5cf9b0c872edbc61a743835aebef",
+      "docs/quality/audits/gt21-all-source-phases.json": "18c3eca8b5dfcead0cb8218cc6915a8ee780092f92ea6d08a23660c7dd8ade3d",
+      "docs/quality/audits/gt21-participant-source-coverage.json": "f3077fe91eddc226eaa6a670d499c6ec10836af46fb1d3311d7dff0c1aa61b0b",
+      "docs/quality/audits/gt21-ab17-recovery.json": "dea974eb35323f6b2370b72f0c24653760e9d73ebb7954dbcfbd78e92312961d",
+      "docs/quality/audits/queue-recovery-expanded-49-summary.json": "ef23a85ba40a74b0cc86aeafbe01779b385a73ae6731b658f96ef0998f159d73",
+      "docs/quality/audits/gt21-plate-assignment-fix.json": "6de962bdaa1c6daa8da11df74c7d8e0b23ccecc7b62bda23e123c31bb45e1cf5",
+      "docs/quality/audits/gt21-force-fix.json": "7143660ab6e849705d1d37af2948476eae76c3045c7ee99e48daa0f3e5538bd0",
+      "docs/quality/audits/gt21-ab17-native-metadata-reuse.json": "fb42f47dd866069ff4c559371e51f5c77299378fa006992e957f21b8d64b09f5"
+    },
+    "reader": {
+      "contributor_tools/gt21_numeric_source.py": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917"
+    }
+  },
+  "source_processing_statements": [
+    {
+      "file": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Vicon/C3DtoMOT.m",
+      "lines": "3-4",
+      "statement": "Force-plate tables are declared to be in the OpenSim frame with Y up."
+    },
+    {
+      "file": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Vicon/C3DtoMOT.m",
+      "lines": "98-100",
+      "statement": "F in N; M divided by 1000 to N m; COP P divided by 1000 to m."
+    },
+    {
+      "file": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Vicon/C3DtoMOT.m",
+      "lines": "74, 83-85",
+      "statement": "COP uses zero top-cover thickness; plate origin Y is negated \"for some reason\" (publisher comment)."
+    },
+    {
+      "file": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Vicon/C3DtoMOT.m",
+      "lines": "24, 44-45, 58-78, 98",
+      "statement": "Only the local Fz/Mx/My used for COP are low-pass filtered (FilterFreq default 15 Hz, filtfilt); local COP is set to the plate origin (0) when local Fz > -10 N or nonfinite; exported F and M are the unfiltered btk global wrenches."
+    },
+    {
+      "file": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Vicon/C3DtoMOT.m",
+      "lines": "127",
+      "statement": "All force, COP and moment triples pass through Vicon.transform(...,\"OsimXYZ\")."
+    },
+    {
+      "file": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Vicon/transform.m",
+      "lines": "19-21",
+      "statement": "Row-vector rotation: OpenSim (X, Y, Z) = Vicon (X, Z, -Y)."
+    },
+    {
+      "file": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Vicon/C3DtoTRC.m",
+      "lines": "19",
+      "statement": "Markers pass through the same OsimXYZ transform; TRC markers remain in mm."
+    },
+    {
+      "file": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Osim/correlateForcePlates.m",
+      "lines": "47, 53, 60-65",
+      "statement": "Markers divided by 1000 and compared with plate COP; contact is _vy > 100 N."
+    },
+    {
+      "file": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/MoCapTools/+Osim/createExternalLoads.m",
+      "lines": "38-41, 91-96",
+      "statement": "Plate _v and _p are applied to calcn_r/calcn_l, both expressed in ground; no torque identifier, so plate moments are not used by inverse dynamics."
+    },
+    {
+      "file": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/RUN_OSIM.m",
+      "lines": "39-47",
+      "statement": "ID uses correlateForcePlates side assignment (RampID for ramps) and filters ID output."
+    },
+    {
+      "file": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/RUN_OSIM.m",
+      "lines": "63-69",
+      "statement": "ik_offset = ik minus the mean static-trial IK, per coordinate."
+    },
+    {
+      "file": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/lib/RampID.m",
+      "lines": "16-20, 33-37",
+      "statement": "Ramp ID assumes the third plate may carry either foot and splits trials at idle midpoints."
+    },
+    {
+      "file": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/README.txt",
+      "lines": "28, 36-37, 47-48",
+      "statement": "fp is ground reaction force of all plates at 1000 Hz; static and ik_offset (angles relative to the static pose) added 4/28/2024; no units or axis statement for fp."
+    }
+  ],
+  "source_processing_caveat": "The toolbox converters (C3DtoMOT, C3DtoTRC, transform) are shipped with the data, but no producer log ties them to the published fp/markers files. Their stated frame is corroborated below by the data, not proven as the producer. The btk wrench force-sign convention is not stated in the scripts; force-on-body is supported by the publisher contact rule, the ID load application and the absence of samples below -100 N.",
+  "model": {
+    "models_sha256": {
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB06/osimxml/AB06.osim": "7b6e44e26ff77c2a59653da590eed30c38a392555b9431c580e8be7042311539",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB07/osimxml/ab07.osim": "151ca215fa3c60023a8f8d894a2661a86260fa88e32b239a225844bf4080feaf",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB08/osimxml/AB08.osim": "466c7fbd80a99158b3caecf582623762e0bec42e25a466f553ce8f7eb3f368c2",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB09/osimxml/AB09.osim": "02c1ce91bc93f1575bb3f33ff3c72e575136f2ae75ed6072f8bce55312a44872",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB10/osimxml/AB10.osim": "443402fe6e80cb54fc22f4cb314ec3e8c98fed940578ad2b9656abaff4e7dea6",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB11/osimxml/AB11.osim": "93acc2983e6380618919940c208e88070652dbc4a46c991f30260a961d66777a",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB13/osimxml/AB13.osim": "8ec202d47f7eb3db54cf0e950cd1450c13738e5e6a12d8badba48fd896404693",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB14/osimxml/AB14.osim": "a3c63d85c4325522154cda6a96e1f828d5b43068fdde5860b05ea60cf4030791",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB16/osimxml/AB16.osim": "b237618bd3c1604d2a3996e824f8c3e014242d7dbf812513813a3044d2c152f3",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB18/osimxml/AB18.osim": "767770c2c50f617f377ff6a8e8205f0047f12516b46aea7b8caaf9bc2354d1ed",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB20/osimxml/AB20.osim": "2ab52d1ae1e5f68054f7590a3745e7ba17d6ea55c1f83f0e740f460b1f6921ad",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB21/osimxml/AB21.osim": "77b62e96ec980888d42804ea356e3b78ea12b47e94b8e75414667e57103c9a75",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB24/osimxml/AB24.osim": "ab43c3acce17a5f6698a3523c36a816ef354a9c635327aea15e63233a591354d",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB25/osimxml/AB25.osim": "fbd27a9623459d946379096931277029d5eef7ea7d164065b4e067aaa7675bb7",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB27/osimxml/AB27.osim": "b4af3bc25bb488b97d76b84b76ab0caff4fd016fab287aba5f8470dc27ae1885",
+      "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB30/osimxml/AB30.osim": "49a87ffb3eb5d63da6443279cb6ae3114cbd28b4c139d7ef2e26374006ac96c2"
+    },
+    "identical_axis_definitions": true,
+    "gravity": [
+      0.0,
+      -9.80665,
+      0.0
+    ],
+    "rotation_axes": {
+      "ankle_l": [
+        [
+          "ankle_angle_l",
+          [
+            0.105014,
+            0.174022,
+            0.979126
+          ]
+        ],
+        [
+          "",
+          [
+            0.0,
+            1.0,
+            0.0
+          ]
+        ],
+        [
+          "",
+          [
+            0.979126,
+            0.0,
+            -0.105014
+          ]
+        ]
+      ],
+      "ankle_r": [
+        [
+          "ankle_angle_r",
+          [
+            -0.105014,
+            -0.174022,
+            0.979126
+          ]
+        ],
+        [
+          "",
+          [
+            0.0,
+            1.0,
+            0.0
+          ]
+        ],
+        [
+          "",
+          [
+            0.979126,
+            -0.0,
+            0.105014
+          ]
+        ]
+      ],
+      "back": [
+        [
+          "lumbar_extension",
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        [
+          "lumbar_bending",
+          [
+            1.0,
+            0.0,
+            0.0
+          ]
+        ],
+        [
+          "lumbar_rotation",
+          [
+            0.0,
+            1.0,
+            0.0
+          ]
+        ]
+      ],
+      "ground_pelvis": [
+        [
+          "pelvis_tilt",
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        [
+          "pelvis_list",
+          [
+            1.0,
+            0.0,
+            0.0
+          ]
+        ],
+        [
+          "pelvis_rotation",
+          [
+            0.0,
+            1.0,
+            0.0
+          ]
+        ]
+      ],
+      "hip_l": [
+        [
+          "hip_flexion_l",
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        [
+          "hip_adduction_l",
+          [
+            -1.0,
+            0.0,
+            0.0
+          ]
+        ],
+        [
+          "hip_rotation_l",
+          [
+            0.0,
+            -1.0,
+            0.0
+          ]
+        ]
+      ],
+      "hip_r": [
+        [
+          "hip_flexion_r",
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        [
+          "hip_adduction_r",
+          [
+            1.0,
+            0.0,
+            0.0
+          ]
+        ],
+        [
+          "hip_rotation_r",
+          [
+            0.0,
+            1.0,
+            0.0
+          ]
+        ]
+      ],
+      "knee_l": [
+        [
+          "knee_angle_l",
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        [
+          "",
+          [
+            0.0,
+            1.0,
+            0.0
+          ]
+        ],
+        [
+          "",
+          [
+            1.0,
+            0.0,
+            0.0
+          ]
+        ]
+      ],
+      "knee_r": [
+        [
+          "knee_angle_r",
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        [
+          "",
+          [
+            0.0,
+            1.0,
+            0.0
+          ]
+        ],
+        [
+          "",
+          [
+            1.0,
+            0.0,
+            0.0
+          ]
+        ]
+      ]
+    },
+    "knee_ranges_rad": {
+      "knee_angle_l": [
+        -2.0944,
+        0.1745
+      ],
+      "knee_angle_r": [
+        -2.0944,
+        0.1745
+      ]
+    },
+    "ground_and_pelvis_offset_orientations": [
+      "0 0 0"
+    ]
+  },
+  "random_sample": {
+    "seed": 20261027,
+    "per_mode": 2,
+    "inventory_counts": {
+      "treadmill": 115,
+      "levelground": 506,
+      "ramp": 1015,
+      "stair": 665
+    },
+    "drawn": [
+      "AB08/10_21_2018/treadmill/treadmill_03_01.mat",
+      "AB06/10_09_18/treadmill/treadmill_07_01.mat",
+      "AB16/11_11_2018/levelground/levelground_ccw_normal_01_05.mat",
+      "AB14/11_25_2018/levelground/levelground_cw_fast_01_03.mat",
+      "AB24/12_02_2018/ramp/ramp_3_l_02_03.mat",
+      "AB06/10_09_18/ramp/ramp_3_l_02_01.mat",
+      "AB10/10_28_2018/stair/stair_3_r_01_02.mat",
+      "AB07/10_14_18/stair/stair_3_l_01_03.mat"
+    ],
+    "reader_rejections": []
+  },
+  "recordings": [
+    {
+      "recording": "AB08/10_21_2018/treadmill/treadmill_03_01.mat",
+      "sha256": {
+        "fp": "92d12f05075f958b29a20ccbacaf71b7a104edf9a05f2a1a7bc75fbde9c3d6d5",
+        "markers": "ea7c5a97dfac2ac2ef9325859153783c113939803b349332ba728646d92c4b3d"
+      },
+      "marker_samples": 28645,
+      "right_handed_fraction": 1.0,
+      "heading_all_samples": {
+        "faces lab -Z": 28645,
+        "faces lab +Z": 0,
+        "walks along lab \u00b1X": 0,
+        "no pelvis markers": 0
+      },
+      "z_dominant_heading_deviation_deg_quantiles_50_95_100": [
+        4.32,
+        10.01,
+        25.73
+      ],
+      "plates": [
+        {
+          "plate": "Treadmill_R",
+          "contact_samples_fp_clock": 83990,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 16788,
+          "cop_y_m_quantiles_05_50_95": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.038,
+            0.0826,
+            0.1228
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2034,
+            0.4518,
+            0.6857
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            0.7594,
+            1.2691,
+            1.4809
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 16788,
+            "faces lab +Z": 0,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            265.5,
+            699.0,
+            1153.5
+          ]
+        },
+        {
+          "plate": "Treadmill_L",
+          "contact_samples_fp_clock": 85108,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 17021,
+          "cop_y_m_quantiles_05_50_95": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0344,
+            0.079,
+            0.1285
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2151,
+            0.4482,
+            0.6863
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            0.7399,
+            1.2577,
+            1.4835
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 17021,
+            "faces lab +Z": 0,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            251.2,
+            674.9,
+            1084.0
+          ]
+        }
+      ]
+    },
+    {
+      "recording": "AB06/10_09_18/treadmill/treadmill_07_01.mat",
+      "sha256": {
+        "fp": "7a499a65407713d5d581cd7e3765d212b3e086258c164fb0a6eebe37414b6d74",
+        "markers": "1dc34df29f077e065bff37e1cfe4c67823d1d8936b630b9fc2010e6dd6691eb5"
+      },
+      "marker_samples": 28813,
+      "right_handed_fraction": 1.0,
+      "heading_all_samples": {
+        "faces lab -Z": 28813,
+        "faces lab +Z": 0,
+        "walks along lab \u00b1X": 0,
+        "no pelvis markers": 0
+      },
+      "z_dominant_heading_deviation_deg_quantiles_50_95_100": [
+        2.33,
+        7.72,
+        35.88
+      ],
+      "plates": [
+        {
+          "plate": "Treadmill_R",
+          "contact_samples_fp_clock": 84674,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 16926,
+          "cop_y_m_quantiles_05_50_95": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0332,
+            0.1451,
+            0.1904
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1756,
+            0.4592,
+            0.765
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            0.8089,
+            1.2031,
+            1.4635
+          ],
+          "left_foot_nearer_fraction": 0.0138,
+          "heading_during_contact": {
+            "faces lab -Z": 16926,
+            "faces lab +Z": 0,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            245.8,
+            741.1,
+            1211.5
+          ]
+        },
+        {
+          "plate": "Treadmill_L",
+          "contact_samples_fp_clock": 84868,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 16982,
+          "cop_y_m_quantiles_05_50_95": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0376,
+            0.1482,
+            0.1862
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1928,
+            0.4707,
+            0.7424
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            0.8,
+            1.2027,
+            1.4613
+          ],
+          "left_foot_nearer_fraction": 0.9989,
+          "heading_during_contact": {
+            "faces lab -Z": 16982,
+            "faces lab +Z": 0,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            253.2,
+            738.2,
+            1187.7
+          ]
+        }
+      ]
+    },
+    {
+      "recording": "AB16/11_11_2018/levelground/levelground_ccw_normal_01_05.mat",
+      "sha256": {
+        "fp": "30ef4854c85c60e8cc54bf09d2dc589add43e80326b883b4d5eef00a02812994",
+        "markers": "d82359bf152b6cdc2270bc3f43de6415953b9af4b7a9328fa4c54acede2f7456"
+      },
+      "marker_samples": 3624,
+      "right_handed_fraction": 1.0,
+      "heading_all_samples": {
+        "faces lab -Z": 1640,
+        "faces lab +Z": 1519,
+        "walks along lab \u00b1X": 465,
+        "no pelvis markers": 0
+      },
+      "z_dominant_heading_deviation_deg_quantiles_50_95_100": [
+        5.18,
+        36.41,
+        44.95
+      ],
+      "plates": [
+        {
+          "plate": "Treadmill_R",
+          "contact_samples_fp_clock": 2692,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 539,
+          "cop_y_m_quantiles_05_50_95": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0367,
+            0.0456,
+            0.1057
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1885,
+            0.218,
+            0.5889
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            0.5169,
+            1.0611,
+            1.1297
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 539,
+            "faces lab +Z": 0,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            166.9,
+            332.9,
+            538.3
+          ]
+        },
+        {
+          "plate": "Treadmill_L",
+          "contact_samples_fp_clock": 2899,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 580,
+          "cop_y_m_quantiles_05_50_95": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0348,
+            0.0397,
+            0.1084
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.198,
+            0.231,
+            0.5727
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            0.194,
+            1.0378,
+            2.076
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 580,
+            "faces lab +Z": 0,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            132.7,
+            242.4,
+            883.2
+          ]
+        },
+        {
+          "plate": "FP1",
+          "contact_samples_fp_clock": 1769,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 354,
+          "cop_y_m_quantiles_05_50_95": [
+            0.0109,
+            0.0113,
+            0.0114
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0432,
+            0.0896,
+            0.1126
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2151,
+            0.2207,
+            0.6357
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            0.0932,
+            0.1887,
+            0.2274
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 0,
+            "faces lab +Z": 354,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            19.8,
+            31.4,
+            103.1
+          ]
+        },
+        {
+          "plate": "FP2",
+          "contact_samples_fp_clock": 665,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 133,
+          "cop_y_m_quantiles_05_50_95": [
+            0.007,
+            0.0077,
+            0.0078
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0458,
+            0.1159,
+            0.1317
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1823,
+            0.5705,
+            0.8158
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            0.4802,
+            0.7675,
+            0.8864
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 0,
+            "faces lab +Z": 133,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            29.7,
+            69.6,
+            117.1
+          ]
+        },
+        {
+          "plate": "FP5",
+          "contact_samples_fp_clock": 632,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 127,
+          "cop_y_m_quantiles_05_50_95": [
+            -0.0007,
+            -0.0007,
+            -0.0006
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0428,
+            0.0763,
+            0.1191
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1866,
+            0.4931,
+            0.5852
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            8.8596,
+            9.0906,
+            9.2341
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 0,
+            "faces lab +Z": 0,
+            "walks along lab \u00b1X": 127,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            28.8,
+            43.6,
+            60.0
+          ]
+        },
+        {
+          "plate": "FP6",
+          "contact_samples_fp_clock": 662,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 132,
+          "cop_y_m_quantiles_05_50_95": [
+            -0.0006,
+            -0.0005,
+            -0.0004
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0424,
+            0.074,
+            0.1187
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1681,
+            0.4745,
+            0.5476
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            8.3023,
+            8.5914,
+            8.6117
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 46,
+            "faces lab +Z": 0,
+            "walks along lab \u00b1X": 86,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            35.8,
+            87.9,
+            141.3
+          ]
+        },
+        {
+          "plate": "Combined",
+          "contact_samples_fp_clock": 644,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 129,
+          "cop_y_m_quantiles_05_50_95": [
+            -0.0008,
+            -0.0005,
+            -0.0005
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0404,
+            0.0963,
+            0.118
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1662,
+            0.4623,
+            0.633
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            3.675,
+            4.0309,
+            4.1925
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 0,
+            "faces lab +Z": 129,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            896.8,
+            1787.3,
+            2016.7
+          ]
+        }
+      ]
+    },
+    {
+      "recording": "AB14/11_25_2018/levelground/levelground_cw_fast_01_03.mat",
+      "sha256": {
+        "fp": "19ca32c11afff2211262a3030053d24ada7c956f1d7e4f96816d48eec62f4ad6",
+        "markers": "e908ea3851af46f66d8dc438ee330973da19d239dc5243103d0e19d448277227"
+      },
+      "marker_samples": 2338,
+      "right_handed_fraction": 1.0,
+      "heading_all_samples": {
+        "faces lab -Z": 1095,
+        "faces lab +Z": 1045,
+        "walks along lab \u00b1X": 198,
+        "no pelvis markers": 0
+      },
+      "z_dominant_heading_deviation_deg_quantiles_50_95_100": [
+        4.96,
+        31.51,
+        44.29
+      ],
+      "plates": [
+        {
+          "plate": "Treadmill_R",
+          "contact_samples_fp_clock": 2257,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 452,
+          "cop_y_m_quantiles_05_50_95": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0381,
+            0.0581,
+            0.1028
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2065,
+            0.216,
+            0.591
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            0.3268,
+            0.3655,
+            2.1954
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 0,
+            "faces lab +Z": 452,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            116.0,
+            254.9,
+            1079.8
+          ]
+        },
+        {
+          "plate": "Treadmill_L",
+          "contact_samples_fp_clock": 1570,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 314,
+          "cop_y_m_quantiles_05_50_95": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0495,
+            0.0658,
+            0.115
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2153,
+            0.2192,
+            0.568
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            0.3419,
+            0.3505,
+            1.2474
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 0,
+            "faces lab +Z": 314,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            117.4,
+            153.4,
+            729.9
+          ]
+        },
+        {
+          "plate": "FP1",
+          "contact_samples_fp_clock": 1433,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 286,
+          "cop_y_m_quantiles_05_50_95": [
+            0.0114,
+            0.0115,
+            0.0119
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0384,
+            0.0607,
+            0.0991
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2695,
+            0.2936,
+            0.6084
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            0.2826,
+            0.3037,
+            0.3748
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 286,
+            "faces lab +Z": 0,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            28.8,
+            52.8,
+            93.7
+          ]
+        },
+        {
+          "plate": "FP2",
+          "contact_samples_fp_clock": 481,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 97,
+          "cop_y_m_quantiles_05_50_95": [
+            0.0077,
+            0.0082,
+            0.0086
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0479,
+            0.0793,
+            0.112
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1738,
+            0.5018,
+            0.6981
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            0.2861,
+            0.619,
+            0.6597
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 97,
+            "faces lab +Z": 0,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            22.7,
+            44.5,
+            109.2
+          ]
+        },
+        {
+          "plate": "FP5",
+          "contact_samples_fp_clock": 474,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 94,
+          "cop_y_m_quantiles_05_50_95": [
+            -0.0009,
+            -0.0008,
+            -0.0006
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0572,
+            0.0824,
+            0.1186
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1795,
+            0.4843,
+            0.669
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            8.9198,
+            9.1733,
+            9.256
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 0,
+            "faces lab +Z": 27,
+            "walks along lab \u00b1X": 67,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            27.0,
+            56.3,
+            80.0
+          ]
+        },
+        {
+          "plate": "FP6",
+          "contact_samples_fp_clock": 475,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 95,
+          "cop_y_m_quantiles_05_50_95": [
+            -0.0009,
+            -0.0007,
+            -0.0004
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0511,
+            0.0674,
+            0.1092
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.19,
+            0.5059,
+            0.6839
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            8.0643,
+            8.4979,
+            8.6519
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 0,
+            "faces lab +Z": 95,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            61.3,
+            115.3,
+            190.5
+          ]
+        },
+        {
+          "plate": "Combined",
+          "contact_samples_fp_clock": 446,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 89,
+          "cop_y_m_quantiles_05_50_95": [
+            -0.0034,
+            -0.0033,
+            -0.0026
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0445,
+            0.0816,
+            0.1167
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1632,
+            0.5154,
+            0.684
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            4.3066,
+            4.92,
+            4.9349
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 89,
+            "faces lab +Z": 0,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            1140.9,
+            2326.1,
+            3441.6
+          ]
+        }
+      ]
+    },
+    {
+      "recording": "AB24/12_02_2018/ramp/ramp_3_l_02_03.mat",
+      "sha256": {
+        "fp": "1e0606f13e9d666f07a42b92984b52628f54f2bfa5af33fdaef5e0ef3c30c260",
+        "markers": "ac246e7a4c621bfbaf568ad16ffed798773eaa2cdb071c2e81cec053811b8a60"
+      },
+      "marker_samples": 3409,
+      "right_handed_fraction": 1.0,
+      "heading_all_samples": {
+        "faces lab -Z": 1632,
+        "faces lab +Z": 1644,
+        "walks along lab \u00b1X": 133,
+        "no pelvis markers": 0
+      },
+      "z_dominant_heading_deviation_deg_quantiles_50_95_100": [
+        2.02,
+        11.33,
+        44.92
+      ],
+      "plates": [
+        {
+          "plate": "FP1",
+          "contact_samples_fp_clock": 1487,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 297,
+          "cop_y_m_quantiles_05_50_95": [
+            0.8339,
+            0.835,
+            0.8362
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0249,
+            0.0555,
+            0.1246
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1567,
+            0.4044,
+            0.6469
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            0.8437,
+            1.2921,
+            1.3182
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 154,
+            "faces lab +Z": 143,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            19.8,
+            54.3,
+            118.9
+          ]
+        },
+        {
+          "plate": "FP2",
+          "contact_samples_fp_clock": 1378,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 275,
+          "cop_y_m_quantiles_05_50_95": [
+            0.7572,
+            0.7769,
+            0.7973
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0235,
+            0.0736,
+            0.1266
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1524,
+            0.5163,
+            0.6373
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            1.1727,
+            1.8382,
+            1.9024
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 136,
+            "faces lab +Z": 139,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            15.1,
+            60.3,
+            123.2
+          ]
+        },
+        {
+          "plate": "FP3",
+          "contact_samples_fp_clock": 1340,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 269,
+          "cop_y_m_quantiles_05_50_95": [
+            0.4454,
+            0.4558,
+            0.4732
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0312,
+            0.07,
+            0.1308
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1691,
+            0.5097,
+            0.6496
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            3.7668,
+            4.3727,
+            4.458
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 130,
+            "faces lab +Z": 139,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            25.5,
+            63.9,
+            135.4
+          ]
+        },
+        {
+          "plate": "FP4",
+          "contact_samples_fp_clock": 1443,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 289,
+          "cop_y_m_quantiles_05_50_95": [
+            0.1167,
+            0.1241,
+            0.1425
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0315,
+            0.0833,
+            0.1316
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1784,
+            0.5611,
+            0.7202
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            6.6351,
+            7.2714,
+            7.3658
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 143,
+            "faces lab +Z": 146,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            19.3,
+            58.1,
+            94.1
+          ]
+        },
+        {
+          "plate": "FP5",
+          "contact_samples_fp_clock": 1408,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 281,
+          "cop_y_m_quantiles_05_50_95": [
+            -0.0061,
+            -0.0059,
+            -0.0051
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0371,
+            0.0839,
+            0.1294
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2073,
+            0.5094,
+            0.7556
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            7.7289,
+            8.287,
+            8.4528
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 132,
+            "faces lab +Z": 149,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            22.7,
+            62.8,
+            92.3
+          ]
+        }
+      ]
+    },
+    {
+      "recording": "AB06/10_09_18/ramp/ramp_3_l_02_01.mat",
+      "sha256": {
+        "fp": "c313ccc9c023afaae581293b69868db5d36ed67504160bb4fc71355d6d24fe53",
+        "markers": "2b935e39dec7e0cb7a5db21ad2981d63dd01830cc1ede8d6434a74b79d5d69fc"
+      },
+      "marker_samples": 2994,
+      "right_handed_fraction": 1.0,
+      "heading_all_samples": {
+        "faces lab -Z": 1495,
+        "faces lab +Z": 1377,
+        "walks along lab \u00b1X": 122,
+        "no pelvis markers": 0
+      },
+      "z_dominant_heading_deviation_deg_quantiles_50_95_100": [
+        2.81,
+        10.28,
+        44.9
+      ],
+      "plates": [
+        {
+          "plate": "FP1",
+          "contact_samples_fp_clock": 1488,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 297,
+          "cop_y_m_quantiles_05_50_95": [
+            0.8336,
+            0.835,
+            0.8364
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0273,
+            0.0733,
+            0.1667
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1733,
+            0.4869,
+            0.6829
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            0.7637,
+            1.226,
+            1.2811
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 155,
+            "faces lab +Z": 142,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            20.8,
+            67.5,
+            143.0
+          ]
+        },
+        {
+          "plate": "FP2",
+          "contact_samples_fp_clock": 1315,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 263,
+          "cop_y_m_quantiles_05_50_95": [
+            0.7567,
+            0.7765,
+            0.7925
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0248,
+            0.076,
+            0.1674
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1704,
+            0.5095,
+            0.6739
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            1.0965,
+            1.751,
+            1.8493
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 132,
+            "faces lab +Z": 131,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            25.0,
+            65.0,
+            107.3
+          ]
+        },
+        {
+          "plate": "FP3",
+          "contact_samples_fp_clock": 1254,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 251,
+          "cop_y_m_quantiles_05_50_95": [
+            0.4391,
+            0.4565,
+            0.4742
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0384,
+            0.0838,
+            0.1683
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1778,
+            0.4901,
+            0.638
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            3.7383,
+            4.3578,
+            4.4279
+          ],
+          "left_foot_nearer_fraction": 0.0319,
+          "heading_during_contact": {
+            "faces lab -Z": 123,
+            "faces lab +Z": 128,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            24.8,
+            57.8,
+            130.4
+          ]
+        },
+        {
+          "plate": "FP4",
+          "contact_samples_fp_clock": 1373,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 274,
+          "cop_y_m_quantiles_05_50_95": [
+            0.1101,
+            0.1206,
+            0.1395
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0233,
+            0.0877,
+            0.1734
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.1587,
+            0.5416,
+            0.7089
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            6.6823,
+            7.2959,
+            7.3599
+          ],
+          "left_foot_nearer_fraction": 0.9818,
+          "heading_during_contact": {
+            "faces lab -Z": 131,
+            "faces lab +Z": 143,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            30.8,
+            54.6,
+            101.6
+          ]
+        },
+        {
+          "plate": "FP5",
+          "contact_samples_fp_clock": 1418,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 284,
+          "cop_y_m_quantiles_05_50_95": [
+            -0.0066,
+            -0.0059,
+            -0.005
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0518,
+            0.088,
+            0.1818
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.212,
+            0.3927,
+            0.7284
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            7.6831,
+            8.2124,
+            8.3926
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 143,
+            "faces lab +Z": 141,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            23.7,
+            53.2,
+            100.6
+          ]
+        }
+      ]
+    },
+    {
+      "recording": "AB10/10_28_2018/stair/stair_3_r_01_02.mat",
+      "sha256": {
+        "fp": "39e1818e57f6159b11262c02e31ac82c9dba0c737f89db6cb73b247cb6afcd07",
+        "markers": "b58b4527bd60253495bf09772eaf2773ff21b387ccc514a3303140cdb5a67087"
+      },
+      "marker_samples": 2563,
+      "right_handed_fraction": 1.0,
+      "heading_all_samples": {
+        "faces lab -Z": 1220,
+        "faces lab +Z": 1233,
+        "walks along lab \u00b1X": 110,
+        "no pelvis markers": 0
+      },
+      "z_dominant_heading_deviation_deg_quantiles_50_95_100": [
+        3.29,
+        15.64,
+        44.4
+      ],
+      "plates": [
+        {
+          "plate": "FP1",
+          "contact_samples_fp_clock": 1552,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 311,
+          "cop_y_m_quantiles_05_50_95": [
+            0.9699,
+            0.9718,
+            0.9734
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0411,
+            0.053,
+            0.1157
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2283,
+            0.3633,
+            0.5014
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            1.1925,
+            1.542,
+            1.5689
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 150,
+            "faces lab +Z": 161,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            24.9,
+            67.4,
+            152.8
+          ]
+        },
+        {
+          "plate": "FP2",
+          "contact_samples_fp_clock": 1468,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 294,
+          "cop_y_m_quantiles_05_50_95": [
+            0.8079,
+            0.8107,
+            0.8118
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0445,
+            0.0748,
+            0.1196
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2724,
+            0.363,
+            0.4621
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            1.3164,
+            1.6745,
+            1.6982
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 141,
+            "faces lab +Z": 153,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            44.3,
+            111.5,
+            167.9
+          ]
+        },
+        {
+          "plate": "FP3",
+          "contact_samples_fp_clock": 1219,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 243,
+          "cop_y_m_quantiles_05_50_95": [
+            0.4901,
+            0.4925,
+            0.4955
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0429,
+            0.061,
+            0.1185
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2841,
+            0.3303,
+            0.4807
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            1.7774,
+            2.1143,
+            2.1309
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 107,
+            "faces lab +Z": 136,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            47.5,
+            107.5,
+            203.1
+          ]
+        },
+        {
+          "plate": "FP4",
+          "contact_samples_fp_clock": 1266,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 253,
+          "cop_y_m_quantiles_05_50_95": [
+            0.1753,
+            0.1774,
+            0.18
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0449,
+            0.0571,
+            0.1179
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2835,
+            0.3711,
+            0.5098
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            2.4609,
+            2.7793,
+            2.8239
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 115,
+            "faces lab +Z": 138,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            43.7,
+            96.7,
+            179.8
+          ]
+        },
+        {
+          "plate": "FP5",
+          "contact_samples_fp_clock": 1269,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 254,
+          "cop_y_m_quantiles_05_50_95": [
+            0.007,
+            0.0075,
+            0.0085
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0464,
+            0.0701,
+            0.1168
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.3097,
+            0.451,
+            0.5585
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            2.9554,
+            3.3355,
+            3.4854
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 119,
+            "faces lab +Z": 135,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            41.9,
+            102.4,
+            160.7
+          ]
+        }
+      ]
+    },
+    {
+      "recording": "AB07/10_14_18/stair/stair_3_l_01_03.mat",
+      "sha256": {
+        "fp": "b166ae76373093774ff0754d5a87621565a2f97f99478bdacd7242b6ec64b4d9",
+        "markers": "01120fe6f52e99b5ef43e05593a577183ce743fe07949739823031cfd4fb33ea"
+      },
+      "marker_samples": 3404,
+      "right_handed_fraction": 1.0,
+      "heading_all_samples": {
+        "faces lab -Z": 1662,
+        "faces lab +Z": 1610,
+        "walks along lab \u00b1X": 132,
+        "no pelvis markers": 0
+      },
+      "z_dominant_heading_deviation_deg_quantiles_50_95_100": [
+        2.15,
+        11.56,
+        44.84
+      ],
+      "plates": [
+        {
+          "plate": "FP1",
+          "contact_samples_fp_clock": 1773,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 356,
+          "cop_y_m_quantiles_05_50_95": [
+            0.9707,
+            0.9718,
+            0.9731
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0414,
+            0.0536,
+            0.1228
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2001,
+            0.3435,
+            0.4314
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            1.1841,
+            1.5057,
+            1.5608
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 170,
+            "faces lab +Z": 186,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            15.9,
+            44.2,
+            76.9
+          ]
+        },
+        {
+          "plate": "FP2",
+          "contact_samples_fp_clock": 1706,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 342,
+          "cop_y_m_quantiles_05_50_95": [
+            0.809,
+            0.8102,
+            0.8111
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.049,
+            0.0749,
+            0.1234
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2168,
+            0.3144,
+            0.4883
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            1.3205,
+            1.6238,
+            1.6917
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 170,
+            "faces lab +Z": 172,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            20.3,
+            51.2,
+            85.9
+          ]
+        },
+        {
+          "plate": "FP3",
+          "contact_samples_fp_clock": 1476,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 296,
+          "cop_y_m_quantiles_05_50_95": [
+            0.4908,
+            0.4923,
+            0.4946
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0393,
+            0.0637,
+            0.1142
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.18,
+            0.2779,
+            0.4299
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            1.7876,
+            2.0941,
+            2.1154
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 131,
+            "faces lab +Z": 165,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            30.3,
+            74.3,
+            87.3
+          ]
+        },
+        {
+          "plate": "FP4",
+          "contact_samples_fp_clock": 1656,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 331,
+          "cop_y_m_quantiles_05_50_95": [
+            0.1755,
+            0.1769,
+            0.1793
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.0311,
+            0.0634,
+            0.1192
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2127,
+            0.3476,
+            0.4752
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            2.4345,
+            2.7417,
+            2.8512
+          ],
+          "left_foot_nearer_fraction": 1.0,
+          "heading_during_contact": {
+            "faces lab -Z": 154,
+            "faces lab +Z": 177,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            29.5,
+            86.2,
+            125.7
+          ]
+        },
+        {
+          "plate": "FP5",
+          "contact_samples_fp_clock": 1555,
+          "samples_below_minus_100N": 0,
+          "contact_samples_marker_clock": 311,
+          "cop_y_m_quantiles_05_50_95": [
+            0.0074,
+            0.0078,
+            0.0083
+          ],
+          "cop_to_nearer_foot_m_quantiles": [
+            0.029,
+            0.0509,
+            0.1246
+          ],
+          "cop_to_other_foot_m_quantiles": [
+            0.2195,
+            0.4355,
+            0.5232
+          ],
+          "cop_in_camera_axes_to_nearer_foot_m_quantiles": [
+            2.8901,
+            3.318,
+            3.4819
+          ],
+          "left_foot_nearer_fraction": 0.0,
+          "heading_during_contact": {
+            "faces lab -Z": 153,
+            "faces lab +Z": 158,
+            "walks along lab \u00b1X": 0,
+            "no pelvis markers": 0
+          },
+          "moment_magnitude_Nm_quantiles": [
+            19.9,
+            39.5,
+            58.2
+          ]
+        }
+      ]
+    }
+  ],
+  "pooled": {
+    "contact_heading_samples": {
+      "faces lab -Z": 72143,
+      "faces lab +Z": 4486,
+      "walks along lab \u00b1X": 280,
+      "no pelvis markers": 0
+    },
+    "plates_with_over_10pct_x_direction_contact": [
+      "AB16/11_11_2018/levelground/levelground_ccw_normal_01_05.mat:FP5",
+      "AB16/11_11_2018/levelground/levelground_ccw_normal_01_05.mat:FP6",
+      "AB14/11_25_2018/levelground/levelground_cw_fast_01_03.mat:FP5"
+    ],
+    "ramp_stair_recordings_with_both_z_directions": [
+      "AB24/12_02_2018/ramp/ramp_3_l_02_03.mat",
+      "AB06/10_09_18/ramp/ramp_3_l_02_01.mat",
+      "AB10/10_28_2018/stair/stair_3_r_01_02.mat",
+      "AB07/10_14_18/stair/stair_3_l_01_03.mat"
+    ],
+    "no_plate_below_minus_100N": true,
+    "min_right_handed_fraction": 1.0,
+    "cop_to_nearer_foot_median_m": 0.0942,
+    "cop_in_camera_axes_to_nearer_foot_median_m": 1.2414
+  },
+  "pelvis_check": {
+    "recordings": [
+      {
+        "recording": "AB08/10_21_2018/treadmill/treadmill_03_01.mat",
+        "samples": 28645,
+        "marker_to_model_offset_deg": 18.61,
+        "pelvis_rotation_deg_quantiles_05_50_95": [
+          87.7,
+          92.7,
+          99.3
+        ],
+        "zxy_agreement": {
+          "tilt": {
+            "rms_deg": 2.2,
+            "r": 0.657
+          },
+          "list": {
+            "rms_deg": 1.64,
+            "r": 0.682
+          },
+          "rotation": {
+            "rms_deg": 1.18
+          }
+        },
+        "heading_removed_sagittal_tilt": {
+          "source_vs_marker_r": 0.735,
+          "source_vs_marker_rms_deg": 1.34,
+          "pelvis_tilt_vs_marker_r": -0.008
+        },
+        "stride_level": {
+          "strides": 124,
+          "stride_mean_r_with_marker_tilt": {
+            "pelvis_tilt": 0.032,
+            "-pelvis_list": -0.04,
+            "heading-removed source tilt": 0.069
+          },
+          "median_within_stride_r_with_marker_tilt": {
+            "pelvis_tilt": -0.001,
+            "-pelvis_list": 0.509,
+            "heading-removed source tilt": 0.555
+          },
+          "stride_mean_peak_to_peak_deg": {
+            "marker tilt": 3.25,
+            "pelvis_tilt": 7.79,
+            "-pelvis_list": 2.54,
+            "heading-removed source tilt": 2.31
+          },
+          "heading_removed_vs_minus_list_sample_r": 0.989
+        },
+        "sha256": {
+          "markers": "ea7c5a97dfac2ac2ef9325859153783c113939803b349332ba728646d92c4b3d",
+          "ik": "d45e19c8e4a2a9bb3cc41199bac288c6867f3e0e6e0e1956c9d8f6094c40d4f6",
+          "gcRight": "f58336e2062e1328c93a7f8034cb7876f9e97f52be05870b37bde404d400b615"
+        }
+      },
+      {
+        "recording": "AB06/10_09_18/treadmill/treadmill_07_01.mat",
+        "samples": 28813,
+        "marker_to_model_offset_deg": 17.01,
+        "pelvis_rotation_deg_quantiles_05_50_95": [
+          85.1,
+          90.7,
+          96.3
+        ],
+        "zxy_agreement": {
+          "tilt": {
+            "rms_deg": 2.56,
+            "r": 0.666
+          },
+          "list": {
+            "rms_deg": 1.55,
+            "r": 0.554
+          },
+          "rotation": {
+            "rms_deg": 1.33
+          }
+        },
+        "heading_removed_sagittal_tilt": {
+          "source_vs_marker_r": 0.535,
+          "source_vs_marker_rms_deg": 1.59,
+          "pelvis_tilt_vs_marker_r": 0.184
+        },
+        "stride_level": {
+          "strides": 139,
+          "stride_mean_r_with_marker_tilt": {
+            "pelvis_tilt": 0.709,
+            "-pelvis_list": -0.23,
+            "heading-removed source tilt": -0.247
+          },
+          "median_within_stride_r_with_marker_tilt": {
+            "pelvis_tilt": 0.487,
+            "-pelvis_list": 0.214,
+            "heading-removed source tilt": 0.199
+          },
+          "stride_mean_peak_to_peak_deg": {
+            "marker tilt": 2.23,
+            "pelvis_tilt": 8.99,
+            "-pelvis_list": 3.25,
+            "heading-removed source tilt": 3.67
+          },
+          "heading_removed_vs_minus_list_sample_r": 0.991
+        },
+        "sha256": {
+          "markers": "1dc34df29f077e065bff37e1cfe4c67823d1d8936b630b9fc2010e6dd6691eb5",
+          "ik": "12d9286bbeb40e597fd43c31aee960337ce849aec98f0a4e2e315347bbb820ba",
+          "gcRight": "b4a117cf78d7e3b29aa4aa99ee84bf188327a7c1db634eeddab99bb6342af2d9"
+        }
+      },
+      {
+        "recording": "AB16/11_11_2018/levelground/levelground_ccw_normal_01_05.mat",
+        "samples": 3624,
+        "marker_to_model_offset_deg": 15.84,
+        "pelvis_rotation_deg_quantiles_05_50_95": [
+          81.9,
+          161.3,
+          278.1
+        ],
+        "zxy_agreement": {
+          "tilt": {
+            "rms_deg": 2.21,
+            "r": 0.818
+          },
+          "list": {
+            "rms_deg": 1.45,
+            "r": 0.977
+          },
+          "rotation": {
+            "rms_deg": 0.47
+          }
+        },
+        "heading_removed_sagittal_tilt": {
+          "source_vs_marker_r": 0.791,
+          "source_vs_marker_rms_deg": 1.22,
+          "pelvis_tilt_vs_marker_r": -0.087
+        },
+        "stride_level": {
+          "strides": 13,
+          "stride_mean_r_with_marker_tilt": {
+            "pelvis_tilt": 0.399,
+            "-pelvis_list": -0.34,
+            "heading-removed source tilt": 0.458
+          },
+          "median_within_stride_r_with_marker_tilt": {
+            "pelvis_tilt": 0.25,
+            "-pelvis_list": -0.062,
+            "heading-removed source tilt": 0.68
+          },
+          "stride_mean_peak_to_peak_deg": {
+            "marker tilt": 2.17,
+            "pelvis_tilt": 0.9,
+            "-pelvis_list": 1.95,
+            "heading-removed source tilt": 2.81
+          },
+          "heading_removed_vs_minus_list_sample_r": -0.33
+        },
+        "sha256": {
+          "markers": "d82359bf152b6cdc2270bc3f43de6415953b9af4b7a9328fa4c54acede2f7456",
+          "ik": "6e15dd6a49785b805c5b6e41d1a2a71bff824c199dc4e57fbe78ca40fdcfbfc9",
+          "gcRight": "2ba4edb201f0e64597f2a7e81737f7b60465f6c87f5ed3f1924c9630a5f75b3c"
+        }
+      },
+      {
+        "recording": "AB14/11_25_2018/levelground/levelground_cw_fast_01_03.mat",
+        "samples": 2338,
+        "marker_to_model_offset_deg": 17.58,
+        "pelvis_rotation_deg_quantiles_05_50_95": [
+          -99.3,
+          0.8,
+          96.4
+        ],
+        "zxy_agreement": {
+          "tilt": {
+            "rms_deg": 2.7,
+            "r": 0.746
+          },
+          "list": {
+            "rms_deg": 1.67,
+            "r": 0.93
+          },
+          "rotation": {
+            "rms_deg": 1.22
+          }
+        },
+        "heading_removed_sagittal_tilt": {
+          "source_vs_marker_r": 0.905,
+          "source_vs_marker_rms_deg": 1.52,
+          "pelvis_tilt_vs_marker_r": 0.292
+        },
+        "stride_level": {
+          "strides": 11,
+          "stride_mean_r_with_marker_tilt": {
+            "pelvis_tilt": -0.662,
+            "-pelvis_list": 0.277,
+            "heading-removed source tilt": 0.382
+          },
+          "median_within_stride_r_with_marker_tilt": {
+            "pelvis_tilt": 0.354,
+            "-pelvis_list": 0.402,
+            "heading-removed source tilt": 0.731
+          },
+          "stride_mean_peak_to_peak_deg": {
+            "marker tilt": 3.69,
+            "pelvis_tilt": 0.97,
+            "-pelvis_list": 1.95,
+            "heading-removed source tilt": 3.18
+          },
+          "heading_removed_vs_minus_list_sample_r": -0.167
+        },
+        "sha256": {
+          "markers": "e908ea3851af46f66d8dc438ee330973da19d239dc5243103d0e19d448277227",
+          "ik": "ed3ea8e4d1ea841e9299b15eba19834927cff9678a4633061f84d2f333992839",
+          "gcRight": "6a0ae35e699915ce4db3b920a31a2e7314e96a2109b6582c8fa8c45129a894ee"
+        }
+      },
+      {
+        "recording": "AB24/12_02_2018/ramp/ramp_3_l_02_03.mat",
+        "samples": 3409,
+        "marker_to_model_offset_deg": 17.76,
+        "pelvis_rotation_deg_quantiles_05_50_95": [
+          -276.7,
+          -174.1,
+          -89.4
+        ],
+        "zxy_agreement": {
+          "tilt": {
+            "rms_deg": 1.52,
+            "r": 0.934
+          },
+          "list": {
+            "rms_deg": 0.85,
+            "r": 0.997
+          },
+          "rotation": {
+            "rms_deg": 1.25
+          }
+        },
+        "heading_removed_sagittal_tilt": {
+          "source_vs_marker_r": 0.946,
+          "source_vs_marker_rms_deg": 0.92,
+          "pelvis_tilt_vs_marker_r": 0.15
+        },
+        "stride_level": {
+          "strides": 12,
+          "stride_mean_r_with_marker_tilt": {
+            "pelvis_tilt": 0.21,
+            "-pelvis_list": 0.54,
+            "heading-removed source tilt": 0.574
+          },
+          "median_within_stride_r_with_marker_tilt": {
+            "pelvis_tilt": 0.283,
+            "-pelvis_list": -0.14,
+            "heading-removed source tilt": 0.897
+          },
+          "stride_mean_peak_to_peak_deg": {
+            "marker tilt": 2.43,
+            "pelvis_tilt": 6.52,
+            "-pelvis_list": 2.69,
+            "heading-removed source tilt": 2.14
+          },
+          "heading_removed_vs_minus_list_sample_r": 0.472
+        },
+        "sha256": {
+          "markers": "ac246e7a4c621bfbaf568ad16ffed798773eaa2cdb071c2e81cec053811b8a60",
+          "ik": "89a3bc8765303b7ac4a9fcc595d33071c89f67c16f1fa446d01a685eb3a1c5c1",
+          "gcRight": "689a9d8a3e9e3a474383c3004576acd50683eb5e4ce026e200878e193258678d"
+        }
+      },
+      {
+        "recording": "AB06/10_09_18/ramp/ramp_3_l_02_01.mat",
+        "samples": 2994,
+        "marker_to_model_offset_deg": 17.01,
+        "pelvis_rotation_deg_quantiles_05_50_95": [
+          -276.2,
+          -222.1,
+          -86.8
+        ],
+        "zxy_agreement": {
+          "tilt": {
+            "rms_deg": 1.75,
+            "r": 0.738
+          },
+          "list": {
+            "rms_deg": 1.6,
+            "r": 0.855
+          },
+          "rotation": {
+            "rms_deg": 0.96
+          }
+        },
+        "heading_removed_sagittal_tilt": {
+          "source_vs_marker_r": 0.899,
+          "source_vs_marker_rms_deg": 1.53,
+          "pelvis_tilt_vs_marker_r": 0.337
+        },
+        "stride_level": {
+          "strides": 12,
+          "stride_mean_r_with_marker_tilt": {
+            "pelvis_tilt": -0.11,
+            "-pelvis_list": -0.351,
+            "heading-removed source tilt": 0.302
+          },
+          "median_within_stride_r_with_marker_tilt": {
+            "pelvis_tilt": 0.267,
+            "-pelvis_list": -0.027,
+            "heading-removed source tilt": 0.649
+          },
+          "stride_mean_peak_to_peak_deg": {
+            "marker tilt": 3.31,
+            "pelvis_tilt": 1.76,
+            "-pelvis_list": 2.25,
+            "heading-removed source tilt": 3.56
+          },
+          "heading_removed_vs_minus_list_sample_r": -0.187
+        },
+        "sha256": {
+          "markers": "2b935e39dec7e0cb7a5db21ad2981d63dd01830cc1ede8d6434a74b79d5d69fc",
+          "ik": "40504aec7166c28149a521f3359ca77f6c9273a7b942089f5f08c3cff77f6549",
+          "gcRight": "16013a133e90ead809718a160608977920024cd22589680eb238e5ee9bea8eae"
+        }
+      },
+      {
+        "recording": "AB10/10_28_2018/stair/stair_3_r_01_02.mat",
+        "samples": 2563,
+        "marker_to_model_offset_deg": 17.13,
+        "pelvis_rotation_deg_quantiles_05_50_95": [
+          -272.5,
+          -180.2,
+          -85.0
+        ],
+        "zxy_agreement": {
+          "tilt": {
+            "rms_deg": 2.25,
+            "r": 0.904
+          },
+          "list": {
+            "rms_deg": 1.55,
+            "r": 0.954
+          },
+          "rotation": {
+            "rms_deg": 1.28
+          }
+        },
+        "heading_removed_sagittal_tilt": {
+          "source_vs_marker_r": 0.898,
+          "source_vs_marker_rms_deg": 1.66,
+          "pelvis_tilt_vs_marker_r": 0.262
+        },
+        "stride_level": {
+          "strides": 8,
+          "stride_mean_r_with_marker_tilt": {
+            "pelvis_tilt": -0.122,
+            "-pelvis_list": 0.077,
+            "heading-removed source tilt": 0.793
+          },
+          "median_within_stride_r_with_marker_tilt": {
+            "pelvis_tilt": -0.165,
+            "-pelvis_list": 0.121,
+            "heading-removed source tilt": 0.939
+          },
+          "stride_mean_peak_to_peak_deg": {
+            "marker tilt": 4.86,
+            "pelvis_tilt": 8.66,
+            "-pelvis_list": 2.81,
+            "heading-removed source tilt": 2.51
+          },
+          "heading_removed_vs_minus_list_sample_r": 0.459
+        },
+        "sha256": {
+          "markers": "b58b4527bd60253495bf09772eaf2773ff21b387ccc514a3303140cdb5a67087",
+          "ik": "637eb1e5d826d8c360b2ed4a1f8c963452b1b48bd0ef47d122244e97c1dcd930",
+          "gcRight": "bc1684da34e5c792b1b4e8b9fac79e123a5f80701df7949b22f8dd68b1b0b93f"
+        }
+      },
+      {
+        "recording": "AB07/10_14_18/stair/stair_3_l_01_03.mat",
+        "samples": 3404,
+        "marker_to_model_offset_deg": 17.51,
+        "pelvis_rotation_deg_quantiles_05_50_95": [
+          -277.7,
+          -201.6,
+          -88.6
+        ],
+        "zxy_agreement": {
+          "tilt": {
+            "rms_deg": 0.9,
+            "r": 0.95
+          },
+          "list": {
+            "rms_deg": 1.0,
+            "r": 0.981
+          },
+          "rotation": {
+            "rms_deg": 0.81
+          }
+        },
+        "heading_removed_sagittal_tilt": {
+          "source_vs_marker_r": 0.971,
+          "source_vs_marker_rms_deg": 1.02,
+          "pelvis_tilt_vs_marker_r": 0.232
+        },
+        "stride_level": {
+          "strides": 11,
+          "stride_mean_r_with_marker_tilt": {
+            "pelvis_tilt": 0.469,
+            "-pelvis_list": 0.085,
+            "heading-removed source tilt": 0.806
+          },
+          "median_within_stride_r_with_marker_tilt": {
+            "pelvis_tilt": 0.04,
+            "-pelvis_list": 0.349,
+            "heading-removed source tilt": 0.954
+          },
+          "stride_mean_peak_to_peak_deg": {
+            "marker tilt": 1.65,
+            "pelvis_tilt": 5.42,
+            "-pelvis_list": 1.8,
+            "heading-removed source tilt": 1.6
+          },
+          "heading_removed_vs_minus_list_sample_r": 0.679
+        },
+        "sha256": {
+          "markers": "01120fe6f52e99b5ef43e05593a577183ce743fe07949739823031cfd4fb33ea",
+          "ik": "43bfd69d826c8cb6c20ae3caf90347fdb99716fc8265d7d5782feba3adfc358a",
+          "gcRight": "92e8a0d3148bc2c34cc74aafbffa35a4ec3a0f471c9438cbb348c583d6bf893f"
+        }
+      }
+    ],
+    "figure_examples": {
+      "seed": 20261027,
+      "recordings": [
+        "AB08/10_21_2018/treadmill/treadmill_03_01.mat",
+        "AB16/11_11_2018/levelground/levelground_ccw_normal_01_05.mat"
+      ],
+      "kind": "right-stride means (120-600 samples), each stride centred"
+    },
+    "heading_removed_stride_mean_r_by_mode": {
+      "treadmill": [
+        0.069,
+        -0.247
+      ],
+      "levelground": [
+        0.458,
+        0.382
+      ],
+      "ramp": [
+        0.574,
+        0.302
+      ],
+      "stair": [
+        0.793,
+        0.806
+      ]
+    },
+    "method": "Marker pelvis frame (x = mean ASIS - mean PSIS, z = R_ASIS - L_ASIS orthogonalized). One constant marker-to-model rotation fitted per recording (orthogonal Procrustes against R = Rz(tilt) Rx(list) Ry(rotation) built from source IK), then decomposed in the same Z-X-Y order. Angle differences are wrapped and median-centred. Heading-removed tilt: R = Ry(h) Rz(theta) Rx(phi), forward tilt = -theta, for both source IK and markers.",
+    "independent_prompt": "Verifier (seed 58213) reported the same Z-X-Y reproduction on two treadmill recordings without the constant offset; re-derived here on this sample with the offset, across all four modes.",
+    "interpretation": "The source pelvis coordinates are successive Z-X-Y rotations of the model pelvis (reproduced within a few degrees in all modes). Because subjects face lab Z, pelvis_tilt is mostly frontal obliquity, so the adapter pelvis_sagittal_angle = pelvis_tilt is wrong. No source-derived forward tilt is validated at the stride level: on treadmill the heading-removed source tilt is nearly identical to -pelvis_list (sample r about 0.99) and neither reproduces the stride-mean marker tilt (r 0.07 and -0.25); overground stride-mean r is 0.30-0.81 from 8-13 strides of mixed ascent/descent per recording, with stride-mean amplitudes of 2-5 deg. Sample-level agreement is not sufficient. Pelvis and the four inherited segment angles stay source-only/unresolved; the treadmill disagreement is unexplained (marker noise, soft tissue or IK weighting not separated)."
+  },
+  "channel_policy": {
+    "grf_vertical_{ipsi,contra}_BW": {
+      "source": "selected plate _vy / (mass * 9.81)",
+      "frame": "publisher lab/ground frame: +Y up (model gravity -Y), +X and +Z horizontal, right-handed",
+      "sign": "positive upward support on the body; publisher contact rule is _vy > 100 N and ID applies _v to calcn",
+      "status": "verified_lab_axis",
+      "note": "Gravity-aligned on ramps, not surface-normal. Exported force is the unfiltered btk global wrench. BW normalization inherits the unresolved SubjectInfo.Weight unit."
+    },
+    "grf_anterior_{ipsi,contra}_BW": {
+      "source": "selected plate _vz times per-cycle pelvis-marker sign along lab Z",
+      "sign": "positive toward the measured walking direction along lab Z",
+      "status": "verified_lab_axis_with_measured_sign",
+      "missing_when": "pelvis markers missing, heading not Z-dominant, or sign changes within the cycle",
+      "note": "Lab Z component only; heading deviation within Z-dominant cycles is reported per recording, not rotated out."
+    },
+    "grf_lateral_{ipsi,contra}_BW": {
+      "source": "selected plate _vx, unsigned by heading or leg",
+      "sign": "lab +X",
+      "status": "anatomical_projection_unsupported",
+      "note": "Lab +X is the right foot's outward side when facing -Z, inward when facing +Z, and forward or backward on X-direction plates. Pending D-GT21-C01-1."
+    },
+    "cop_anterior_{ipsi,contra}_m": {
+      "source": "(plate _pz - lateral ankle marker z / 1000) times the anterior sign",
+      "origin": "lateral ankle marker, not a joint centre",
+      "status": "verified_lab_axis_with_measured_sign",
+      "missing_when": "vertical force < 0.2 BW or anterior sign missing",
+      "note": "Source COP comes from 15 Hz (default) filtered local Fz/Mx/My and is set to the local plate origin, not NaN, when local Fz > -10 N; the adapter 0.2 BW mask removes those samples."
+    },
+    "cop_lateral_{ipsi,contra}_m": {
+      "source": "plate _px - lateral ankle marker x / 1000",
+      "sign": "lab +X",
+      "origin": "lateral ankle marker",
+      "status": "anatomical_projection_unsupported",
+      "note": "Same heading/leg ambiguity as grf_lateral. Pending D-GT21-C01-1."
+    },
+    "cop_vertical_{ipsi,contra}_m": {
+      "source": "plate _py - lateral ankle marker y / 1000",
+      "sign": "lab +Y (up)",
+      "origin": "lateral ankle marker",
+      "status": "verified_lab_axis",
+      "note": "Source _py is the plate surface height in the lab (0 on floor and treadmill, step/ramp heights elsewhere)."
+    },
+    "plate_moment_xyz": {
+      "source": "plate _moment_x/y/z",
+      "status": "unresolved_not_exported",
+      "note": "Magnitudes of hundreds of N m on contact indicate a moment about a plate or lab point, not a free moment at the COP. Reference point and sign are not stated; publisher ID does not use them."
+    },
+    "plate_assignment": {
+      "treadmill": "named Treadmill_R/Treadmill_L plates (publisher TransformForceplates uses heel geometry for all modes)",
+      "overground": "unique plate with > 2/3 COP-nearer heel/toe midpoint during > 100 N contact, else missing",
+      "status": "rule_follows_publisher_geometry_not_independent_contact_labels",
+      "note": "Levelground files include a virtual Combined plate (publisher combineForcePlates: vertical-force-weighted COP); not separated from its components."
+    },
+    "joint_angles": {
+      "source": "ik_offset (= ik minus mean static IK; publisher RUN_OSIM.m 63-69), degrees",
+      "axes": {
+        "ankle_l": [
+          [
+            "ankle_angle_l",
+            [
+              0.105014,
+              0.174022,
+              0.979126
+            ]
+          ],
+          [
+            "",
+            [
+              0.0,
+              1.0,
+              0.0
+            ]
+          ],
+          [
+            "",
+            [
+              0.979126,
+              0.0,
+              -0.105014
+            ]
+          ]
+        ],
+        "ankle_r": [
+          [
+            "ankle_angle_r",
+            [
+              -0.105014,
+              -0.174022,
+              0.979126
+            ]
+          ],
+          [
+            "",
+            [
+              0.0,
+              1.0,
+              0.0
+            ]
+          ],
+          [
+            "",
+            [
+              0.979126,
+              -0.0,
+              0.105014
+            ]
+          ]
+        ],
+        "back": [
+          [
+            "lumbar_extension",
+            [
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          [
+            "lumbar_bending",
+            [
+              1.0,
+              0.0,
+              0.0
+            ]
+          ],
+          [
+            "lumbar_rotation",
+            [
+              0.0,
+              1.0,
+              0.0
+            ]
+          ]
+        ],
+        "ground_pelvis": [
+          [
+            "pelvis_tilt",
+            [
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          [
+            "pelvis_list",
+            [
+              1.0,
+              0.0,
+              0.0
+            ]
+          ],
+          [
+            "pelvis_rotation",
+            [
+              0.0,
+              1.0,
+              0.0
+            ]
+          ]
+        ],
+        "hip_l": [
+          [
+            "hip_flexion_l",
+            [
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          [
+            "hip_adduction_l",
+            [
+              -1.0,
+              0.0,
+              0.0
+            ]
+          ],
+          [
+            "hip_rotation_l",
+            [
+              0.0,
+              -1.0,
+              0.0
+            ]
+          ]
+        ],
+        "hip_r": [
+          [
+            "hip_flexion_r",
+            [
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          [
+            "hip_adduction_r",
+            [
+              1.0,
+              0.0,
+              0.0
+            ]
+          ],
+          [
+            "hip_rotation_r",
+            [
+              0.0,
+              1.0,
+              0.0
+            ]
+          ]
+        ],
+        "knee_l": [
+          [
+            "knee_angle_l",
+            [
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          [
+            "",
+            [
+              0.0,
+              1.0,
+              0.0
+            ]
+          ],
+          [
+            "",
+            [
+              1.0,
+              0.0,
+              0.0
+            ]
+          ]
+        ],
+        "knee_r": [
+          [
+            "knee_angle_r",
+            [
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          [
+            "",
+            [
+              0.0,
+              1.0,
+              0.0
+            ]
+          ],
+          [
+            "",
+            [
+              1.0,
+              0.0,
+              0.0
+            ]
+          ]
+        ]
+      },
+      "sign": "hip_flexion +flexion (about segment +Z); knee_angle +extension (range -120..10 deg), negated to flexion-positive by the adapter; ankle_angle +dorsiflexion about the oblique talocrural axis (about 12 deg from Z)",
+      "status": "model_axes_verified_zero_reference_open",
+      "note": "Zero is the static standing pose, not the model zero. Version-1 archives (AB17) lack ik_offset and static. Open question queued after the two current decisions."
+    },
+    "joint_moments": {
+      "source": "OpenSim ID generalized forces divided by mass",
+      "sign": "positive along the coordinate; knee negated by the adapter",
+      "status": "model_axes_verified",
+      "note": "Publisher ID applied plate force at the COP in ground, no plate torque; filtered after ID."
+    },
+    "pelvis_tilt_list_rotation": {
+      "source": "ik pelvis_tilt, pelvis_list, pelvis_rotation (degrees)",
+      "composition": "R_pelvis_in_ground = Rz(pelvis_tilt) Rx(pelvis_list) Ry(pelvis_rotation): model axes (0,0,1), (1,0,0), (0,1,0) applied as successive rotations; reproduced from markers in every sampled mode (see pelvis_check).",
+      "status": "verified_source_definition",
+      "note": "Subjects walk along lab Z, so pelvis_rotation is near +90 or -90 deg. pelvis_tilt is then a rotation about lab Z (mostly frontal obliquity) and pelvis_list carries forward/backward tilt with a sign that flips with walking direction."
+    },
+    "pelvis_and_segment_sagittal_angles": {
+      "source": "adapter: pelvis_sagittal = pelvis_tilt; thigh = pelvis + hip_flexion; shank = thigh - knee flexion; foot = shank + ankle; trunk = pelvis + lumbar_extension",
+      "status": "unresolved_source_only",
+      "note": "pelvis_tilt is mostly obliquity, so the current mapping is wrong and all five segment angles are unsupported. No source-derived forward tilt (heading-removed IK tilt, equivalently -pelvis_list on -Z-facing treadmill) reproduces marker tilt at the stride level on treadmill; overground evidence is partial. Keep source pelvis_tilt/list/rotation under source names only. Pending D-GT21-C01-2."
+    }
+  },
+  "prior_audits_revalidated": {
+    "gt21-force-geometry.json": "AB06 treadmill: forward -Z, left-to-right +X agrees with this sample; anterior sign matched source_negative on all 228 legs because that recording faces -Z.",
+    "gt21-measured-force-direction.json": "Coordinate statement (anterior signed lab Z, lateral lab +X, vertical +Y, COP origin lateral ankle marker) matches the adapter source. Lateral is a lab axis, not anatomical.",
+    "gt21-plate-assignment-fix.json": "Assignment rule matches gtech_select_force_plate.m; Combined plate handling not covered.",
+    "gt21-completed-force-readback.json": "AB06 only; readback checks decoding and declared lab mapping, not anatomical frames."
+  },
+  "unresolved": [
+    "Anatomical sideways (lateral) force and COP sign (D-GT21-C01-1).",
+    "Pelvis and segment sagittal angles: current pelvis_tilt mapping is wrong; no source-derived tilt validates at stride level on treadmill (D-GT21-C01-2). Unexplained treadmill marker/IK disagreement.",
+    "Joint-angle zero reference: static-pose offset (ik_offset) versus model zero (ik); queued after the two current decisions.",
+    "Anterior force/COP use lab Z only; Z-dominant cycles allow up to 45 deg heading.",
+    "Plate moment reference point and sign; Combined virtual plate composition.",
+    "COP reference: lateral ankle marker offset from the ankle joint centre is not quantified.",
+    "Mass unit for BW normalization (SubjectInfo.Weight) is resolved elsewhere (GT21-A02/S01)."
+  ]
+}

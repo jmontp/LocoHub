@@ -65,6 +65,8 @@ def main():
     result = {'started_at': suite.attrib.get('timestamp') if suite is not None else None, 'recorded_at': datetime.fromtimestamp(args.junit.stat().st_mtime, timezone.utc).isoformat(),
               'base_revision': revision, 'working_tree_changes': bool(subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no'], cwd=ROOT, text=True).strip()), 'scope': 'Small synthetic fixtures and source checks; not a validation run over the downloaded datasets.',
               'command': args.command,
+              # Lets the page count test files absent from this run as unassessed rather than passing.
+              'repository_test_modules': sorted(path.stem for path in (ROOT / 'tests').glob('test_*.py')),
               'junit_sha256': hashlib.sha256(args.junit.read_bytes()).hexdigest(), 'groups': groups,
               'totals': {state: sum(g[state] for g in groups.values()) for state in ['passed', 'failed', 'skipped']}}
     (output / 'test_results.json').write_text(json.dumps(result, indent=2) + '\n')

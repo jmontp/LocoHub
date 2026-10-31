@@ -1,0 +1,51 @@
+{
+  "task_id": "UM21-SLOPE",
+  "part": "midstance walking-surface slope for the 50 UM21 treadmill recordings, and the rebuilt D-UM21-T02-2",
+  "verifier_role": "independent second agent (own probe code and own midstance definition; the worker's probe was re-run only to reproduce its blind/final pair)",
+  "verdict": "done",
+  "d_um21_t02_2_ready_to_recopy": false,
+  "last_checked_at_utc": "2026-10-31T07:30:00Z",
+  "scientific_approval": false,
+  "reviewed_sha256": {
+    "docs/maintainers/handoffs/UM21-SLOPE.json": "746bbddf6db3d77874a55634765932b52201383fc2a1905de4d6b72986ebd0f7",
+    "contributor_tools/audit_probes/2026_10_31/probe_um21_midstance_slope.py": "c1237450ee26d4db48e68c038e257771f75475ee846af860f458cd7bfad7a7a5",
+    "docs/quality/audits/um21-midstance-slope-blind.json": "2c99e47b880fba67e23b128bd4606a45c31dad1f1e1afb16ec64dadf091613c4",
+    "docs/quality/audits/um21-midstance-slope.json": "fb1895fb871c0581cf0b577e6e31fdeb9269b2246bc343feb100f72678160ca3",
+    "contributor_tools/review_um21_t02_clock.py": "0d98fa4026ca065b0fa6ed8c08c346aff7e44129561bed7dcce654e22168b664",
+    "docs/maintainers/handoffs/UM21-T02-audit.json": "126a4cec0c2311d2195d6ded7e700d5459523d08f59e9883b2eb64fa7c7df85c",
+    "review_sheets/D-UM21-T02-2/index.html (gitignored)": "1a5fdb7410bfe55f34a0fc2f858c16f4c5866dd7db982bd9ed99a7a206edab80",
+    "review_sheets/D-UM21-T02-2/slope.png (gitignored)": "8786e9a5c768b37aef342282a1fd7eb1029c3e095c9dbcb0baf555f32604c1cf"
+  },
+  "summary": "The slope evidence holds. With my own code and my own midstance definition, the AB01 i5/i10 motion comes out at 9.4 degrees from the foot path and 9.8 degrees from the plates. AB02 i10 gives 9.5 and 9.8 the same way, and AB05 i5 gives 5.9 and 5.1. The shared motion is the 10-degree recording, and the slope check verdict is done. The blind/final pair reproduces exactly. Plate forces are in N. The AB03/AB10 plate shortfall is real. D-UM21-T02-2 is not ready to re-copy: José has since answered D-UM21-T02-1 with A, so option C's count of 302 released strides is now stale.",
+  "checks": [
+    {"item": "1. Independent slope estimates", "result": "pass",
+     "method": "Own probe /tmp/claude-1000/um21_verify/slope_rev.py (sha256 e3ff634c...), one recording per process. Midstance = the middle half of each single-support interval, where single support means the own plate is loaded (>5 % of its 99th percentile) and the other plate is not. Foot path = atan2(-v_up, v_horizontal) of the mean heel+toe velocity at belt speed >= 0.4 m/s, median per leg. Plates = whole-recording mean of the summed L+R force (net momentum change about 0), with tilt measured from the plate-normal axis and magnitude compared with body mass x 9.81 (mass from ParticipantDetails). Peak RSS 60-62 MiB per recording.",
+     "evidence": "Reviewer (foot path / plate tilt, unsigned) vs worker (belt_path / plate_force):\n AB01 i10 = i5: 9.43 / 9.80 vs 10.09 / 9.76\n AB02 i10: 9.48 / 9.84 vs 10.09 / 9.76\n AB05 i5: 5.92 / 5.07 vs 5.92 / 5.03\n AB04 d5: -5.79 / 4.96 vs -5.32 / -5.01\n AB07 d10: -10.92 / 10.03 vs -10.59 / -10.05\n AB01 i0: -0.92 / 0.30 vs -0.19 / -0.25\n AB03 d5 (plate-flagged): -5.30 / 2.23 vs -5.20 / -1.79\n AB10 d10 (plate-flagged): -10.38 / 6.90 vs -10.37 / -6.26\nMy foot-path estimate runs about 0.6 degrees low on the 10-degree inclines and on level ground. The comparison holds anyway, because AB01 sits with AB02 i10 and not with AB05 i5. Both methods put the shared motion at the 10-degree label."},
+    {"item": "2. Blind/final protocol", "result": "pass_with_limit",
+     "evidence": "In code, the tolerance pool excludes WITHHELD = {AB01 i5, AB01 i10} in both modes (and i0). --blind replaces their values with 'withheld (blind run)' and drops them from the flags. I re-ran --blind to scratch: tolerances, flags and all 50 records are identical to the committed blind report (ignoring the peak-RSS field). I re-ran the final run with --blind-report pointed at the committed blind report: tolerances, flags and records are identical to the committed final run. Limits: the development history (blind runs 1-2, the gate added afterwards) cannot be audited after the fact, and AB01 d10/d5/i0 are in the pool, so 'fixed before viewing AB01' on the sheet should say AB01 i5/i10. Probe nit: --blind-report must lie inside the repository (relative_to(ROOT)), so a blind report written to scratch cannot be passed back; a reviewer has to use the committed blind file."},
+    {"item": "3. Plate body-weight explanation", "result": "pass_with_nuance",
+     "evidence": "|mean plate force| / (m g): 1.006 for AB01 i10, 0.99-1.01 in the other full-weight checks, 0.930 for AB03 d5, 0.923 for AB10 d10. The worker's per-leg medians agree: AB03 and AB10 run 0.908-0.983, so 1.7-9.2 % is missing, not the sheet's '3-9 %'. In those recordings the plate tilt is always smaller in magnitude than the label, on inclines as well as declines. Nuance: subtracting the expected m g components shows the missing force is about 37-43 degrees from the plate normal (AB10 d10: about 46 N fore-aft and 50 N normal; AB03 d5: about 31 N and 40 N). A purely vertical support would barely change the tilt, so the shortfall needs a substantial fore-aft component (for example a handrail being pulled or pushed). That fits 'support off the plates', which remains unverified. Marker methods agree with the labels there, so no label is in doubt."},
+    {"item": "3. Foot-flat window bias", "result": "pass",
+     "evidence": "The worker's foot-flat gate (10-50 % of stride, |v_heel - v_toe| <= 0.05 m/s) sits closer to the nominal labels than my single-support window: belt_path median residual -0.20 degrees, robust SD 0.52 over 38 recordings; my estimate is about 0.6 degrees low on the inclines. The fixed 25-35 % window flags AB04 d10 and AB09 d5 from foot rotation, which supports the gate. The AB01 conclusion does not depend on the window: 9.4-10.1 degrees across the two windows and both reviewers."},
+    {"item": "4. Force units N, not N/kg", "result": "pass",
+     "evidence": "AB01 i10 mean summed force is 845.8 N normal, |F| about 0.99-1.01 of 87.0 kg x 9.81. Every full-weight recording I checked gives a ratio of 0.99-1.01 using raw values as N. In N/kg they would be about 9.8. The README unit is wrong for forceplates/*Force."},
+    {"item": "5. Rebuilt D-UM21-T02-2", "result": "failed",
+     "evidence": "Letters, labels and the 0/154/302 order are unchanged from round 3. The sheet's decision.json equals the handoff entry. The recommendation is folded. The visible table text is neutral (R3-2 applied). The slope evidence in the chips, why and check is stated accurately: 9.8-11.0 equals the three medians 9.76/10.09/11.00, '±2.5°' equals belt_path tol, and the check sentence matches the figure. Blocking: backlog.json now records D-UM21-T02-1 answered A (2026-10-31T06:18:26Z, before this rebuild). Under A, every recording that fails the clock check is excluded, and AB01 i5 fails it (-413 frames). Option C 'Keep both as published' therefore no longer releases 302 strides: AB01 i5 leaves on its clock check, so C releases 154, the same as B. C's consequence ('Both are released; the same motion appears twice') and its 302 count are stale. Minor: the slope caption should say 'before viewing AB01 i5/i10'. The folded-details '3-9 %' should be '2-9 %'. Option B's 'AB01 has no 5-degree incline recording' should add 'in this source'."},
+    {"item": "5. Slope figure vs AGENTS.md", "result": "pass",
+     "evidence": "One panel, 4.28 in at 160 dpi, fonts at least 10 pt. Titled as a question. The contrast is a stated reference band (blind tolerance ±2.5 degrees around each label). The failure is visible: the AB01 pair dot sits at 10 above the +5 label while the other +5 dots sit near 5. No hand-picked example."},
+    {"item": "6. Render 1100 px and 390 px (headless Chrome via Playwright)", "result": "pass",
+     "evidence": "scrollWidth equals the viewport at both widths. All 3 images load. Both details elements are closed. Order: ask, headline, 7 chips, 3 figures, decision, not-shown, reply, details. The 0 % contrast bars now show as stubs. Screenshots: /tmp/claude-1000/um21_verify/r5_D2_1100.png and r5_D2_390.png."},
+    {"item": "7. Tests and backlog check", "result": "pass",
+     "evidence": "AGENTS.md env prefix: pytest tests/test_audit_um21_tread_pilot.py tests/test_audit_um21_tread_pilot_verify.py tests/test_backlog_workflow.py: 114 passed. build_backlog_page.py --check: Backlog valid; HTML current (88 tasks). In memory, swapping the backlog's D-UM21-T02 entries for the handoff copies validates, and the recommendation stays folded."}
+  ],
+  "required_fixes": [
+    {"id": "S-1", "blocking_for_recopy": true, "fix": "Restate D-UM21-T02-2 given D-UM21-T02-1 = A. Option C (keep both) now releases 154 strides, because AB01 i5 leaves on its failed clock check, so B and C differ only in the exclusion reason. Either drop C (two options plus defer), or restate C with its real outcome and count and break the tie by a stated neutral attribute. Check that 'Strides released (of 302)' and options_order still hold. Keep the backlog status the coordinator sets ('queued' or 'open'); do not overwrite it with the handoff's 'open'."},
+    {"id": "S-2", "blocking_for_recopy": false, "fix": "Sheet wording: change 'Band: tolerance fixed before viewing AB01' to '... before viewing AB01 i5/i10'; change the folded '3-9 % of body weight' to '2-9 %'; add 'in this source' to option B's 'AB01 has no 5-degree incline recording'."},
+    {"id": "S-3", "blocking_for_recopy": false, "fix": "Probe: accept a --blind-report outside the repository (record its absolute path and hash), so a reviewer can reproduce the blind/final pair entirely in scratch. Record that the AB03/AB10 shortfall has a fore-aft component (item 3)."}
+  ],
+  "not_checked": [
+    "Recordings beyond the 9 I estimated (AB01 i5, i10, i0; AB02 i10; AB03 d5; AB04 d5; AB05 i5; AB07 d10; AB10 d10). The other 41 rest on the worker's probe, which I reproduced but did not re-derive.",
+    "What the AB03/AB10 off-plate support was (handrail, harness or other)."
+  ],
+  "next_action": "UM21-SLOPE: done. Worker: restate D-UM21-T02-2 per S-1 (and S-2), rebuild the sheet, hand back. Coordinator: do not re-copy D-UM21-T02-2 into backlog.json until then."
+}

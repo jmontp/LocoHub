@@ -1,0 +1,138 @@
+{
+ "task_id": "GT23-C03",
+ "status": "review",
+ "last_checked_at_utc": "2026-10-31T07:20:00Z",
+ "summary": "GT23 published moments (N*m/kg) were not divided by the participant's own mass in most subjects, and the divisor can change between trials of one subject. Evidence 1 (exact): RawData/<subj>/MotionFile_EH/inverse_dynamics.sto (local N*m inverse dynamics, NOT in the publisher archive directory, provenance unknown) equals the published normal_walk_1 moments times a constant (corr 1.0; max residual 0.0-0.03 N*m in AB01/05/06/08/10/12, 0.2-0.4 AB09, 3.5-4.7 AB13 on p99 100-260 N*m) for 8 subjects. Divisors: AB01 78.9 (own), AB05 78.9 (own 71.5), AB06 71.5 (own 79.1), AB08 62.3 (own 87.6), AB09 87.57 (own 84.1), AB10 84.1 (own 67.5), AB12 65.1 (own 64.0), AB13 64.0 (own 67.6). Evidence 2 (independent, mass-free): force-plate lever-arm moment in the calcn frame with joint centres/axes from each trial's own scaled model (Statics.csv; foot is unscaled in every used model, so ankle = generic 0.04877/0.04195 m; knee uses the subject's tibia length and Joint_Angle ankle/subtalar angles). The lever-arm bias (0.9942, robust sd 0.015 log) was calibrated on 5 of the 8 re-run trials (AB01, AB06, AB09, AB12, AB13); out of sample it held on 3 of 3 (AB05 2.1 %, AB08 1.3 %, AB10 4.9 %, the last at the band edge). It tracks the exact divisor, not the README mass (fig 3). Lever-arm level-walk divisors for the other subjects: AB02 82.1 (own 82.2), AB03 82.6 (own 113.5; AB02's 82.2), AB07 76.6 (own 62.3; AB06's 79.1), AB11 67.3 (own 65.1 / AB10's 67.5, ambiguous). README masses are true body masses (force plates within 1 % in 12/12; model masses equal README). Established counts: the level-walk divisor is not the subject's own mass in 9 of 12 subjects (AB03, AB05, AB06, AB07, AB08, AB09, AB10, AB12, AB13). In 7 of them a re-run fixes it at another subject's README table mass (AB05 78.9 = AB01; AB06 71.5; AB08 62.3; AB10 84.1; AB12 65.1 exact, residual 0.0-0.03 N*m; AB09 87.57 and AB13 64.0 near-exact, residual 0.2-0.4 and 3.5-4.7 N*m). In 6 of these it is the previous subject in README order (AB06, AB08, AB09, AB10, AB12, AB13); AB05's level walk uses AB01's mass instead. AB03 and AB07 are force-plate only and not unique: AB03 82.6 fits 82.2 (AB02) or 84.1 (AB09), and within this worker's +/-4.9 % band also 78.9 and 79.1; AB07 76.6 fits 79.1 (AB06) or 78.9 (AB01). Both clearly exclude their own mass (113.5, 62.3). AB01 is correct (own 78.9, exact); AB02 and AB11 cannot be told apart from own vs another mass at 5 %. AB05 incline_walk_1, incline_walk_2, turn_and_step_1 and dynamic_walk_1 use about 113-118 kg (consistent with AB03's 113.5; ankle and knee agree). The exact divisors are the one-decimal table values (AB06 71.5 gives 0.0 N*m residual; AB05's model mass 71.541 gives 0.09-0.14), consistent with a table lookup offset; the mechanism is not established. Published values are 0.61-1.46 times the correctly normalized per-kg value over 52 trials with ankle corr >= 0.98 (subject level-walk factors: AB03 1.375, AB05 0.906 [0.63 in incline/turn/dynamic], AB06 1.106, AB07 0.814, AB08 1.406, AB09 0.960, AB10 0.803, AB12 0.983, AB13 1.056). Trial outliers confirmed by ankle and knee besides AB05: AB12 cutting_1 (~82.6 kg vs 65.1) and AB13 tire_run_1 (~77 kg vs 64.0); cause not identified. Curb trials give unreliable lever estimates (ankle corr < 0.98 in 6 of 9). Prior C02 findings explained: AB03 78-85 kg is consistent with AB02's 82.2 kg but not unique (not the AB02 model file: its tibia lengths differ from AB02's own model, and the file is unused per Statics.csv); AB05 incline_walk_2 114-120 kg is consistent with AB03's 113.5 kg; AB10 1.33x = 84.1/67.5 = 1.25 (exact); AB08 0.73x = 62.3/87.6 = 0.71 (exact). Nothing rescaled or excluded. Handling drafted as decision D-GT23-C03-1.",
+ "verdict": {
+  "divisor_per_subject_level_walk_kg": {
+   "AB01": 78.9,
+   "AB02": "82.1 (lever; own 82.2 or AB01 78.9 within tolerance)",
+   "AB03": "82.6 (lever; fits AB02 82.2 or AB09 84.1, also 78.9/79.1 within +/-4.9 %; not own 113.5)",
+   "AB05": 78.9,
+   "AB06": 71.5,
+   "AB07": "76.6 (lever; fits AB06 79.1 or AB01 78.9; not own 62.3)",
+   "AB08": 62.3,
+   "AB09": "87.57 (near-exact; AB08 87.6)",
+   "AB10": 84.1,
+   "AB11": "67.3 (lever; AB10 67.5 or own 65.1)",
+   "AB12": 65.1,
+   "AB13": "64.0 (near-exact; AB12 64.0)"
+  },
+  "mis_scaled_subjects": "Not own mass at level walking: 9 of 12 (AB03, AB05, AB06, AB07, AB08, AB09, AB10, AB12, AB13). Another subject's table mass fixed by re-run: 7 (AB05, AB06, AB08, AB10, AB12 exact; AB09, AB13 near-exact). Previous subject in README order: 6 (AB06, AB08, AB09, AB10, AB12, AB13). AB03 and AB07 force-plate only, not unique. AB01 correct; AB02 and AB11 not distinguishable at 5 %.",
+  "per_trial": "Divisor varies within subject: AB05 (78.9 level walk vs 113-118 in 4 other trials); AB12 cutting_1 and AB13 tire_run_1 differ from the subject's walking divisor by 1.27x and 1.21x (ankle and knee agree). Only 4-6 trials per subject were tested.",
+  "likely_cause": "Normalization used another subject's mass-table value (one-decimal table values, not model masses): the previous subject in README order in 6 of 7 re-run-fixed cases, with AB05's level walk = AB01's mass as an exception. README masses, force plates and models agree with each other, so the error is in the authors' division step, not the mass table or the AB02 model file in AB03's folder. The mechanism (e.g., an indexing error) is not established.",
+  "powers": "Joint_Powers share the moment normalization (C02), so they inherit the same factors (not re-tested here)."
+ },
+ "tolerance": {
+  "pre_registered_v1": "Fixed in the reference stage before test-subject data were read: log(implied/README) over reference seeded trials, centre 1.034, band 0.868-1.232 (3 robust sd). Reported in the audit as flags_v1_readme_band. Superseded as the primary rule because the reference subjects themselves turned out to be mis-normalized (exact re-run divisors differ from README in AB06/09/12/13), so README agreement is not a valid reference.",
+  "v2": "Added after the reference stage, before any test-subject (AB03/05/08/10) data were read (timestamps in the audit): lever-arm calibrated against the 5 reference subjects with exact re-run divisors (AB01/06/09/12/13 normal_walk_1): bias 0.9942, half width max(3 x 0.0152, log 1.05) = 0.0488 log (about +/-5 %). Trial band: within-subject deviation from the subject's level-walk lever estimate, robust sd 0.028, half width log 1.10.",
+  "honesty_note": "v2 was introduced after seeing reference-subject results, not test-subject results. The test was not blind: the test subjects (AB03, AB05, AB08, AB10) were chosen because they were the known GT23-C02 anomalies, so their direction was known in advance. The audit's tolerance timestamps (tolerance_fixed_at_utc 06:43:02, tolerance_v2_fixed_at_utc 06:43:04, finished 06:43:11) come from the final rerun of all three stages only; they show ordering within that run, not that test data were unseen during development. During development, reference and calibrate ran before any test-subject read, and the tolerance rules were not changed after test results were seen. The exact re-run divisors do not depend on any tolerance; tolerance affects only the force-plate-only subjects (AB02, AB03, AB07, AB11) and the trial flags."
+ },
+ "checks": [
+  "Read AGENTS.md, the GT23-C03 backlog entry, gt23-c02-moment-units.json, GT23-C02.json, GT23-C02-verify.json and the bound publisher README copy (lines 1-140).",
+  "Model inventory: parsed every .osim (OpenSim 3.0 format) in RawData/AB*/Models; all models used by Statics.csv match publisher CRC32+size from raw_zip_directory.json (AB01's local AB01-Scaled1_original.osim equals publisher AB01-Scaled1.osim). Subtalar location_in_parent is the unscaled gait2392 value in every model except the unused AB03-Scaled9.osim, so the subject-model ankle position in calcn equals the generic one; model masses equal README masses (AB03 models 113.52; AB03/Models/AB02-Scaled1.osim 82.18 kg has tibia lengths 0.482/0.471 m, not AB02's 0.477, and no Statics.csv entry uses it).",
+  "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 /usr/bin/time python3 contributor_tools/audit_probes/2026_10_31/probe_gt23_c03_normalizing_mass.py reference` then `calibrate` then `test` (one at a time): peak RSS 192.8 / 177.2 / 190.2 MiB (/usr/bin/time 197.4 / 181.4 / 194.8 MB), 8.5 / 2.2 / 6.7 s. Seed 20261031, 4 trials per subject from 14 locomotion families, 2 redraws (AB06 stairs_1_2, AB03 stairs_1_6: < 4 stances). 60 distinct usable trials (48 seeded, targeted AB05 incline_walk_1/2, AB03 weighted_walk_1, AB10 incline_walk_1, AB08 weighted_walk_1, plus each subject's normal_walk_1 as calibration trial). 316 file reads (about 910 MB), each sha256-hashed; 0 publisher CRC mismatches; 15 reads not in the publisher archive (local MotionFile_EH files, renamed AB01 model). Source mtimes re-checked; nothing written under converted_datasets/ or /mnt/s/locomotion_data.",
+  "Pilot before the run: AB02 incline_walk_2 reproduces C02 (ankle implied 80.7 vs C02 81.4/84.0 per leg; knee 83.8, corr 0.997).",
+  "`... probe_gt23_c03_normalizing_mass.py sheet` (reads only the audit JSON): review_sheets/D-GT23-C03-1/index.html with 3 single-panel figures, each 765 px at 170 dpi = 4.50 in, fonts >= 10 pt; prose within the 60-word budget (enforced by review_sheet.py); comparison subject AB11 drawn with seed 20261032 from the README-consistent subjects (AB01, AB02, AB11). Rendered with headless Chrome at 1100 px and in a 390 px iframe and inspected; fig 2 label overlap fixed and re-rendered. Renders: rv_wide_D-GT23-C03-1.png, rv_phone_D-GT23-C03-1.png in the session scratchpad.",
+  "After the three probe stages, only the sheet/figure functions of the probe were edited; the probe stage code that produced the audit is unchanged.",
+  "tests/test_backlog_workflow.py: 71 passed; build_backlog_page.py --check: Backlog valid; HTML current (90 tasks)."
+ ],
+ "changed_files": [
+  "contributor_tools/audit_probes/2026_10_31/probe_gt23_c03_normalizing_mass.py (new)",
+  "docs/quality/audits/gt23-c03-normalizing-mass.json (new)",
+  "docs/maintainers/handoffs/GT23-C03.json (new)",
+  "review_sheets/D-GT23-C03-1/ (gitignored: index.html, fig1_subjects.png, fig2_trials.png, fig3_method.png, decision.json)"
+ ],
+ "evidence_paths": [
+  "docs/quality/audits/gt23-c03-normalizing-mass.json",
+  "review_sheets/D-GT23-C03-1/index.html",
+  "review_sheets/D-GT23-C03-1/decision.json"
+ ],
+ "output_sha256": {
+  "contributor_tools/audit_probes/2026_10_31/probe_gt23_c03_normalizing_mass.py": "66a837546a4290dbdd1abfb38bbf86f67dc2c1ace99ccea7c4bed115ba2690bf",
+  "docs/quality/audits/gt23-c03-normalizing-mass.json": "9dcc6b2d05680af1e70c411ba055a8cc223a0514db7865eb61692d8db90bb7fd",
+  "review_sheets/D-GT23-C03-1/index.html": "4bf271b89733854d07e60739fcdb417da19c9caa72cf917d8bdaf7323a4bb2bc",
+  "review_sheets/D-GT23-C03-1/decision.json": "d005d0b66338682f68d5f61e8df3a9259fc6c7ce847a47c7e723694be365de4f"
+ },
+ "resources": {
+  "peak_rss_mib": {
+   "reference": 192.8,
+   "calibrate": 177.2,
+   "test": 190.2,
+   "sheet": "matplotlib, not separately measured"
+  },
+  "workers": 1,
+  "note": "Read-only probe exception; no guarded-launcher job, no MATLAB, no full-dataset run.",
+  "tests": [
+   "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_backlog_workflow.py`: 71 passed.",
+   "`python3 contributor_tools/build_backlog_page.py --check`: \"Backlog valid; HTML current (90 tasks).\" backlog.json/html not edited."
+  ]
+ },
+ "remaining": [
+  "Only 4-6 trials per subject were tested; a full per-trial divisor census (all locomotion trials, both legs, ankle and knee) is needed before any rescale (option B) and should run through the reviewed guarded launcher after a pilot.",
+  "Provenance of RawData/*/MotionFile_EH (see motionfile_eh_caveats): ask José where it came from. The force-plate evidence does not depend on it; the exact divisors do.",
+  "AB12 cutting_1 (~82.6 kg) and AB13 tire_run_1 (~77 kg): per-trial divisors that differ from the subject's walking divisor with ankle and knee agreeing; cause unknown.",
+  "Curb trials: lever-arm estimate unreliable (ankle corr 0.76-0.97); AB03 curbs suggest ~111 kg (own mass) but are not trusted.",
+  "Knee estimate ignores shank/foot weight, inertia and the gait2392 knee spline translation (knee bias 1.14, calibrated); ML loads not used.",
+  "Reporting the error to the corresponding author is outward-facing and José's call.",
+  "LocoHub GT23 docs (C02 erratum) still say moments are per kg of the participant; once D-GT23-C03-1 is answered, extend the erratum."
+ ],
+ "decisions": [
+  {
+   "id": "D-GT23-C03-1",
+   "task_id": "GT23-C03",
+   "question": "GT23 joint moments and powers were divided by another participant's body mass in most subjects, and the mass can change between trials of one participant. How should LocoHub release GT23 moments and powers?",
+   "options": [
+    {
+     "key": "A",
+     "label": "Withhold GT23 moments and powers",
+     "consequence": "Kinematics and forces still released; no GT23 joint kinetics until the authors confirm the masses or a full check is reviewed. Nothing is estimated. Reversible."
+    },
+    {
+     "key": "B",
+     "label": "Rescale each trial to its participant's own mass",
+     "consequence": "Needs a full per-trial check first: each trial's divisor is measured (exact where an N·m re-run matches the published values by a constant, else force plates within 5 %) and matched to a recorded mass; unmatched trials are left out. Adds a derived step that needs its own review. Reversible."
+    },
+    {
+     "key": "C",
+     "label": "Release as published with an erratum",
+     "consequence": "All values kept with a per-subject warning table; users get moments and powers 0.61 to 1.46 times the per-kg value and must correct them. Reversible."
+    }
+   ],
+   "options_order": "By GT23 moment trials released: none, only those with a matched divisor, all.",
+   "recommended": "A",
+   "confidence": "medium",
+   "why": "An N·m re-run fixes the divisor in 8 level-walking trials; in 7 it is another participant's mass, and the divisor changes between trials of one subject, so a correction needs a divisor for every trial. Withholding invents nothing and is reversed once a full check or the authors confirm the masses.",
+   "check": "Sheet, first figure: the black square for AB06 sits on the orange diamond (71.5 kg, the previous subject), not on its own grey circle (79.1 kg).",
+   "cost_of_waiting": "GT23 joint kinetics stay out of any release and drafts keep the published mis-scaled values; GT23 kinematics and other datasets are unaffected.",
+   "decide_before_recommendation": true,
+   "status": "open"
+  }
+ ],
+ "decision_note": "Draft for docs/maintainers/backlog.json decisions (copy from this verified handoff only; option letters must match the sheet: A withhold, B rescale, C as published). Options ordered by GT23 moment trials released (none, matched only, all). Recommendation hidden on the sheet (decide_before_recommendation true).",
+ "next_action": "Verifier re-checks the four wording fixes against the sheet, decision.json and this handoff, then the main session copies D-GT23-C03-1 (from review_sheets/D-GT23-C03-1/decision.json, identical to decisions[0]) into backlog.json.",
+ "motionfile_eh_caveats": [
+  "Not in the publisher archive (no MotionFile entry among 7038 RawData members); files dated 2024-08-06 to 08-08 (AB05 .sto 2024-10-15); plain OpenSim header with no model or version; AB07 folder empty; AB01 ID_results.mot is mislabeled (holds coordinates). Provenance unknown.",
+  "In AB01 and AB05 the IK file beside the .sto does not match the published angles (up to 0.15 deg), although the .sto matches the published moments to 0.1 N*m, so the IK and ID in that folder are not a consistent pair.",
+  "The AB02, AB03 and AB11 re-runs do not match the published moments by a constant (corr 0.9937-0.9997); they are different runs and are not used as exact references.",
+  "Right-side .sto moments use plate forces that the README calls invalid (broken equipment on treadmill trials) and must not be used.",
+  "Use as an exact reference only where it matches the published moments by a constant (corr 1.0). It is validated by force plates (verifier: .sto ankle vs mass-free lever arm slope 0.940-0.986, corr >= 0.999), not by provenance; it is physical N*m, not published values times a mass (verifier check 2)."
+ ],
+ "revision_2": {
+  "at_utc": "2026-10-31T07:20:00Z",
+  "source": "docs/maintainers/handoffs/GT23-C03-verify.json round_1 (back_to_worker, wording only)",
+  "fixes": [
+   "1. Decision 'why' now reads: 'An N·m re-run fixes the divisor in 8 level-walking trials; in 7 it is another participant's mass, and the divisor changes between trials of one subject, ...'. Option letters and meanings unchanged (A withhold, B rescale, C as published).",
+   "2. Headline 'GT23 moments not divided by the subject's own mass in 9 of 12 subjects'; failed chip 'Not own mass in 9 of 12 subjects; another subject's mass by re-run in 7, the previous subject's in 6'; handoff summary/verdict use the same counts; figure 1 marks every recorded mass inside the band for force-plate-only subjects (open dot plus ticks) and the caption says 'Squares exact; open dots not unique.'; x axis labelled 'mass (kg, log scale)'.",
+   "3. Chip 'Force-plate estimate within 4.9 % of the exact divisor out of sample (3 of 3; bias set on 5 of 8)'; details say calibrated on 5 of the 8 re-run trials (AB01, AB06, AB09, AB12, AB13), out of sample 3 of 3, worst 4.9 %.",
+   "4. tolerance.honesty_note extended (non-blind test subjects; timestamps from the final run only).",
+   "Optional items adopted: option B consequence says 'exact where an N·m re-run matches the published values by a constant'; table-value mechanism clue recorded; decision ID removed from the ask strip and title (kept in the reply line); MotionFile_EH caveats recorded.",
+   "Difference from the verifier: with this worker's +/-4.9 % band, AB03 (82.6) also admits 78.9 and 79.1, not only 82.2 and 84.1; the sheet details list all four."
+  ],
+  "no_new_data_reads": true,
+  "checks": [
+   "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/audit_probes/2026_10_31/probe_gt23_c03_normalizing_mass.py sheet` (reads only the audit JSON; audit unchanged, sha256 9dcc6b2d...). Prose within the 60-word budget.",
+   "Rendered with headless Chrome at 1100 px and in a 390 px iframe and inspected: nothing clips; figure 1 legend and ticks legible. Renders rv_wide_D-GT23-C03-1_r2.png, rv_phone_D-GT23-C03-1_r2.png in the session scratchpad."
+  ]
+ }
+}

@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import ctypes
 from datetime import datetime, timezone
+import errno
 import hashlib
 import json
 import os
@@ -15,6 +16,7 @@ import shutil
 import sys
 import tempfile
 from typing import Any, Optional
+from urllib.parse import urlsplit
 
 # Keep this contributor command usable without installing an analysis SDK.
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +38,7 @@ from contributor_tools.common.data_contract import (
     IDENTITY_COLUMNS,
     _json_object,
     assess_observations,
+    profile_applicability_gaps,
 )
 
 
@@ -88,6 +91,65 @@ def _admit_input(
     }
 
 
+# Applicability keys that restate the task or restrict observation structure or
+# identity; none of them names a population or condition.
+_TASK_KEYS = {"task", "task_id", "observation_type", *IDENTITY_COLUMNS}
+
+
+def _check_profile_review(review: Any, status: str) -> None:
+    """A profile marked reviewed/approved records who reviewed it and when (scope optional)."""
+    if not isinstance(review, dict):
+        raise ReleaseError(
+            f"A profile marked {status} requires a profile review record with reviewer and reviewed_at."
+        )
+    for key in ("reviewer", "reviewed_at"):
+        if not isinstance(review.get(key), str) or not review[key].strip():
+            raise ReleaseError(
+                f"A profile marked {status} requires profile review.{key} as a nonempty string "
+                "(quote timestamps in YAML)."
+            )
+    try:
+        reviewed_at = datetime.fromisoformat(review["reviewed_at"].replace("Z", "+00:00"))
+        if reviewed_at.utcoffset() is None:
+            raise ValueError("Missing timezone")
+    except ValueError as exc:
+        raise ReleaseError("profile review.reviewed_at must be an ISO8601 timestamp with timezone.") from exc
+    if "scope" in review and (not isinstance(review["scope"], str) or not review["scope"].strip()):
+        raise ReleaseError("profile review.scope, when given, must be a nonempty string.")
+
+
+def _read_admitted_input(path: Path, admission: dict[str, int], input_hash: str) -> pa.Table:
+    """Read only bytes whose footer matches the admission; reject them unless hashed.
+
+    The footer is compared on an open file that must still be the file at
+    ``path``. Where /proc exists, the table is read through that same open file,
+    so a file replaced after admission is never read eagerly; elsewhere only the
+    interval between the identity check and the read remains unguarded.
+    """
+    with path.open("rb") as handle:
+        opened = os.fstat(handle.fileno())
+        if not os.path.samestat(opened, os.stat(path)):
+            raise ReleaseError("Input changed after admission; it was not read.")
+        with pq.ParquetFile(handle) as parquet:
+            metadata = parquet.metadata
+            footer = (
+                metadata.num_rows, len(parquet.schema_arrow),
+                sum(metadata.row_group(index).total_byte_size for index in range(metadata.num_row_groups)),
+            )
+        if footer != (admission["rows"], admission["columns"], admission["parquet_uncompressed_bytes"]):
+            raise ReleaseError("Input changed after admission; it was not read.")
+        same_file = Path(f"/proc/self/fd/{handle.fileno()}")
+        # use_threads=False avoids a CPU burst on shared hosts.
+        table = pq.read_table(same_file if same_file.exists() else path, use_threads=False)
+        handle.seek(0)
+        digest = hashlib.sha256()
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    if digest.hexdigest() != input_hash:
+        raise ReleaseError("Input changed while it was being read.")
+    return table
+
+
 def _read_provenance(path: Path) -> tuple[dict[str, Any], list[dict[str, str]]]:
     provenance = _json_object(path.read_text(encoding="utf-8"))
     if not isinstance(provenance, dict):
@@ -108,6 +170,9 @@ def _read_provenance(path: Path) -> tuple[dict[str, Any], list[dict[str, str]]]:
         for key in keys:
             if not isinstance(provenance[section].get(key), str) or not provenance[section][key].strip():
                 raise ReleaseError(f"Provenance requires {section}.{key}.")
+    scope = provenance["review"].get("scope")
+    if "scope" in provenance["review"] and (not isinstance(scope, str) or not scope.strip()):
+        raise ReleaseError("review.scope, when given, must be a nonempty string.")
     try:
         reviewed_at = datetime.fromisoformat(provenance["review"]["reviewed_at"].replace("Z", "+00:00"))
         if reviewed_at.utcoffset() is None:
@@ -138,17 +203,30 @@ def _read_provenance(path: Path) -> tuple[dict[str, Any], list[dict[str, str]]]:
     return provenance, verification
 
 
-def _filtered_rows(df: pd.DataFrame, quality: dict[str, Any]) -> pd.DataFrame:
+def _filtered_rows(df: pd.DataFrame, quality: dict[str, Any]) -> np.ndarray:
+    """Input row positions of whole eligible observations, sorted by identity and index.
+
+    Positions select rows from the Arrow table, so the filtered export keeps the
+    full export's schema, metadata and NaN encoding instead of a pandas re-encoding.
+    """
     accepted = {
         tuple(observation["identity"][column] for column in IDENTITY_COLUMNS)
         for observation in quality["observations"] if observation["eligible"]
     }
     if not accepted:
-        return df.iloc[:0].copy()
-    index = pd.MultiIndex.from_frame(df[list(IDENTITY_COLUMNS)])
-    filtered = df.loc[index.isin(accepted)].copy()
+        return np.empty(0, dtype=np.int64)
     sample_column = "time_s" if quality["contract"]["mode"] == "time" else "phase_ipsi"
-    return filtered.sort_values(list(IDENTITY_COLUMNS) + [sample_column], kind="stable")
+    # A positional index, whatever index pandas restored from the file metadata.
+    keys = df[list(IDENTITY_COLUMNS) + [sample_column]].reset_index(drop=True)
+    # Sort identities by value, not by categorical category order, so the row
+    # order does not depend on how an identity column was encoded.
+    for column in IDENTITY_COLUMNS:
+        if isinstance(keys[column].dtype, pd.CategoricalDtype):
+            keys[column] = keys[column].astype(object)
+    index = pd.MultiIndex.from_frame(keys[list(IDENTITY_COLUMNS)])
+    keys = keys.loc[index.isin(accepted)]
+    keys = keys.sort_values(list(IDENTITY_COLUMNS) + [sample_column], kind="stable")
+    return keys.index.to_numpy(dtype=np.int64)
 
 
 def _exclusion_table(quality: dict[str, Any]) -> pa.Table:
@@ -174,13 +252,22 @@ def _exclusion_table(quality: dict[str, Any]) -> pa.Table:
     return pa.Table.from_pylist(records, schema=schema)
 
 
-def _publish_directory(stage: Path, destination: Path) -> None:
+# Marker present in a destination whose per-file publication has not finished.
+INCOMPLETE_MARKER = "RELEASE_INCOMPLETE.txt"
+# errno values meaning "this filesystem cannot rename with RENAME_NOREPLACE".
+# Stage and destination are siblings, so EINVAL cannot mean a self-nesting rename.
+_NOREPLACE_UNSUPPORTED = {errno.EINVAL, errno.ENOSYS, errno.EOPNOTSUPP}
+# errno values meaning "this filesystem cannot hard-link"; EEXIST is never one.
+_LINK_UNSUPPORTED = {errno.EPERM, errno.EOPNOTSUPP, errno.ENOSYS, errno.EXDEV, errno.EMLINK}
+
+
+def _rename_noreplace(stage: Path, destination: Path) -> None:
     """Atomically rename without replacing even a concurrently created empty directory."""
     if sys.platform.startswith("linux"):
         libc = ctypes.CDLL(None, use_errno=True)
         rename = getattr(libc, "renameat2", None)
         if rename is None:
-            raise ReleaseError("This host lacks atomic no-overwrite directory publication.")
+            raise OSError(errno.ENOSYS, "renameat2 is unavailable", str(destination))
         rename.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
         rename.restype = ctypes.c_int
         # AT_FDCWD and RENAME_NOREPLACE are Linux API constants.
@@ -192,6 +279,115 @@ def _publish_directory(stage: Path, destination: Path) -> None:
         os.rename(stage, destination)
     else:
         raise ReleaseError("Atomic no-overwrite release publication is supported on Linux/WSL and Windows.")
+
+
+def _place_exclusively(source: Path, target: Path) -> None:
+    """Hard-link, or copy into an exclusively created file; never replace ``target``."""
+    try:
+        os.link(source, target)
+        return
+    except OSError as exc:
+        if exc.errno not in _LINK_UNSUPPORTED:
+            raise
+    descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+    with os.fdopen(descriptor, "wb") as handle, source.open("rb") as staged:
+        shutil.copyfileobj(staged, handle, 1024 * 1024)
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+def _publish_files_exclusively(stage: Path, destination: Path) -> None:
+    """Publish where no-replace directory renames are unsupported (e.g. WSL drvfs).
+
+    Creates ``destination`` with an exclusive mkdir, writes ``INCOMPLETE_MARKER``
+    first, places each staged file without replacing anything (manifest files
+    last), verifies every published hash against the staged hashes (which must
+    equal manifest.json's artifact hashes and manifest.sha256) after removing
+    every staged name so no hard link aliases a published file, and removes the
+    marker last. Symlinked staged entries are refused. On an error the files this call placed are removed. A hard
+    interruption leaves the marker, so the bundle never looks complete.
+    """
+    names = sorted(path.name for path in stage.iterdir())
+    if INCOMPLETE_MARKER in names or not all(
+        (stage / name).is_file() and not (stage / name).is_symlink() for name in names
+    ):
+        raise ReleaseError("A staged release must contain only regular files.")
+    expected = {name: sha256_file(stage / name) for name in names}
+    if "manifest.json" in expected:
+        manifest = json.loads((stage / "manifest.json").read_text(encoding="utf-8"))
+        sealed = {name: value["sha256"] for name, value in manifest["artifacts"].items()}
+        seal = (stage / "manifest.sha256").read_text(encoding="utf-8").split()[0]
+        if (
+            set(expected) != set(sealed) | {"manifest.json", "manifest.sha256"}
+            or any(expected[name] != digest for name, digest in sealed.items())
+            or seal != expected["manifest.json"]
+        ):
+            raise ReleaseError("Staged files do not match their manifest; nothing was published.")
+    order = sorted(names, key=lambda name: (name.startswith("manifest."), name == "manifest.sha256", name))
+    os.mkdir(destination)  # Raises FileExistsError for any existing entry.
+    placed: list[Path] = []
+    try:
+        marker = os.open(destination / INCOMPLETE_MARKER, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+        with os.fdopen(marker, "w", encoding="utf-8") as handle:
+            handle.write(
+                "This release directory is incomplete: publication did not finish.\n"
+                "Do not use it. Remove it and rebuild the release.\n"
+            )
+        for name in order:
+            _place_exclusively(stage / name, destination / name)
+            placed.append(destination / name)
+        present = sorted(path.name for path in destination.iterdir())
+        if present != sorted(names + [INCOMPLETE_MARKER]):
+            raise ReleaseError(f"Unexpected entries appeared in {destination} during publication.")
+        # Unlink staged names before the final check: a surviving staged hard
+        # link would let a later edit change a file after its hash was checked.
+        for name in names:
+            (stage / name).unlink()
+        for name, digest in expected.items():
+            if sha256_file(destination / name) != digest:
+                raise ReleaseError(f"Published {name} does not match the staged manifest hash.")
+        (destination / INCOMPLETE_MARKER).unlink()
+    except BaseException:
+        for path in placed:
+            path.unlink(missing_ok=True)
+        # Remove the marker and directory only if nothing foreign was added.
+        try:
+            if [path.name for path in destination.iterdir()] == [INCOMPLETE_MARKER]:
+                (destination / INCOMPLETE_MARKER).unlink()
+            destination.rmdir()
+        except OSError:
+            pass
+        raise
+    shutil.rmtree(stage, ignore_errors=True)  # Published; leftover staging is only residue.
+
+
+def _publish_directory(stage: Path, destination: Path) -> None:
+    """Publish ``stage`` as ``destination`` without ever replacing an existing entry.
+
+    Uses an atomic no-replace rename. Where the filesystem rejects that flag (WSL
+    drvfs/9p mounts such as /mnt/s return EINVAL), falls back to
+    ``_publish_files_exclusively``. Callers hold the release lock.
+    """
+    try:
+        _rename_noreplace(stage, destination)
+    except OSError as exc:
+        if exc.errno not in _NOREPLACE_UNSUPPORTED:
+            raise
+        _publish_files_exclusively(stage, destination)
+
+
+def _profile_review_line(profile: dict) -> str:
+    """The profile's review status, labelled as the profile's own claim."""
+    status, review = profile["review_status"], profile["review"]
+    if status in {"reviewed", "approved"}:
+        return (
+            f"- Profile review status, as declared by the profile: {status} "
+            f"({review['reviewer']} at {review['reviewed_at']}; "
+            f"scope: {review.get('scope', 'not declared')}). The builder did not verify this review."
+        )
+    if status == "legacy_unspecified":
+        return "- Profile review status, as declared by the profile: none (recorded as legacy_unspecified)"
+    return "- Profile review status: not applicable; no profile was supplied"
 
 
 def _release_card(manifest: dict, quality: dict, provenance: dict) -> str:
@@ -215,7 +411,7 @@ def _release_card(manifest: dict, quality: dict, provenance: dict) -> str:
         f"- Informational waveform warnings: {coverage['warning_count']}",
         f"- Constant finite signals (informational): {coverage['constant_signals']}",
         f"- Profile: {manifest['profile']['filename'] or 'None; no observations qualify for the filtered export'}",
-        f"- Profile review status: {manifest['profile']['review_status']}",
+        _profile_review_line(manifest["profile"]),
         "",
         "## Downloads and evidence",
         "",
@@ -250,9 +446,10 @@ def _release_card(manifest: dict, quality: dict, provenance: dict) -> str:
         "",
         "## Review and limitations",
         "",
-        f"Source review recorded by {manifest['review']['reviewer']} "
-        f"at {manifest['review']['reviewed_at']}.",
-        f"Converter: {manifest['converter']['name']} ({manifest['converter']['revision']}).",
+        f"Source review declared by the contributor: {manifest['review']['reviewer']} "
+        f"at {manifest['review']['reviewed_at']}; "
+        f"scope: {manifest['review'].get('scope', 'not declared')}. The builder did not verify this review.",
+        f"Converter (declared by the contributor): {manifest['converter']['name']} ({manifest['converter']['revision']}).",
         "",
     ])
     if "license" in provenance:
@@ -282,7 +479,16 @@ def build_release(
 
     The full Parquet is copied byte-for-byte. The filtered Parquet retains whole
     eligible observations. An unpublished staging directory is removed on error.
-    This function neither uploads data nor changes the source export.
+    This function neither uploads data nor changes the source export. Converter
+    and review fields are recorded as contributor declarations, not verified.
+
+    Publication is an atomic no-replace directory rename. Filesystems that reject
+    that rename (WSL drvfs mounts such as /mnt/s) use a fallback under the same
+    lock: exclusive mkdir, a ``RELEASE_INCOMPLETE.txt`` marker written first,
+    per-file hard links or exclusive-create copies that never replace a file,
+    a hash check of every published file against the manifest, and marker
+    removal last. Errors roll back the files placed; a hard interruption leaves
+    the marker and the lock, so an unfinished bundle never looks complete.
     """
     input_path = Path(input_path).resolve()
     output_dir = Path(output_dir).absolute()
@@ -292,6 +498,9 @@ def build_release(
         raise ReleaseError(f"Release directory already exists and will not be overwritten: {output_dir}")
     if not input_path.is_file() or input_path.suffix.lower() != ".parquet":
         raise ReleaseError("The release input must be an existing Parquet file.")
+    # Hash before admission so the post-read check also covers a replacement
+    # between admission and reading; admission must describe the hashed bytes.
+    input_hash = sha256_file(input_path)
     admission = _admit_input(
         input_path, memory_budget_mb=memory_budget_mb, max_input_rows=max_input_rows
     )
@@ -309,13 +518,40 @@ def build_release(
         raise ReleaseError(
             f"Profile review_status={profile_review!r} cannot be published; use a reviewed or approved profile."
         )
-    input_hash = sha256_file(input_path)
-    # One bounded admitted eager read; use_threads=False avoids a CPU burst.
-    table = pq.read_table(input_path, use_threads=False)
+    applicability_gaps = profile_applicability_gaps(config)
+    if applicability_gaps:
+        raise ReleaseError(
+            f"Profile review_status={profile_review!r} requires an applicability block "
+            f"(population/condition the ranges apply to) for every task; missing: "
+            f"{', '.join(applicability_gaps)}."
+        )
+    if profile_review is not None:
+        task_only = [
+            task for task in config.get_tasks()
+            if isinstance(config.get_task_metadata(task).get("applicability"), dict)
+            and set(config.get_task_metadata(task)["applicability"]) <= _TASK_KEYS
+        ]
+        if task_only:
+            raise ReleaseError(
+                f"Applicability must name more than the task or observation structure "
+                f"(a population or condition) for a {profile_review} profile; "
+                f"only {', '.join(sorted(_TASK_KEYS))} keys for: {', '.join(task_only)}."
+            )
+        _check_profile_review(config.get_metadata("review"), profile_review)
+    if config is not None:
+        # The review is copied into quality.json and manifest.json; an unquoted
+        # YAML date anywhere in it is not JSON. Refuse rather than convert it.
+        try:
+            json.dumps(config.get_metadata("review"), allow_nan=False)
+        except (TypeError, ValueError) as exc:
+            raise ReleaseError(
+                "The profile review must contain only JSON values (strings, numbers, "
+                f"lists, mappings); quote dates and timestamps in YAML ({exc})."
+            ) from exc
+    # One bounded admitted eager read. The Arrow table is kept so the filtered
+    # export is a row selection of it.
+    table = _read_admitted_input(input_path, admission, input_hash)
     df = table.to_pandas(split_blocks=True)
-    del table
-    if sha256_file(input_path) != input_hash:
-        raise ReleaseError("Input changed while it was being read.")
     quality = assess_observations(df, config, mode=mode, required_features=required_features)
     if not quality["publishable"]:
         details = "; ".join(issue["message"] for issue in quality["contract"]["issues"][:5])
@@ -337,11 +573,29 @@ def build_release(
         quality["limitations"].append(
             "Remote source checksums were declared by the contributor and were not downloaded or independently verified."
         )
+    copied_remote = [
+        source["uri"] for source in source_verification
+        if source["status"] == "verified_local" and len(urlsplit(source["uri"]).scheme) > 1
+        and urlsplit(source["uri"]).scheme.lower() != "file"
+    ]
+    if copied_remote:
+        quality["limitations"].append(
+            "Remote source URIs were not downloaded; their checksums were verified only against "
+            "local copies, which are not independently tied to the URIs: " + ", ".join(copied_remote) + "."
+        )
+    if "scope" not in provenance["review"]:
+        quality["limitations"].append(
+            "The contributor's source review declares no scope, so what was reviewed is not stated."
+        )
+    if profile_review is not None and "scope" not in config.get_metadata("review"):
+        quality["limitations"].append(
+            "The profile's review does not state a scope, so what its ranges were checked against is unknown."
+        )
     if config and profile_review is None:
         quality["limitations"].append(
             "The legacy profile has no explicit review status; this release records no inferred profile approval."
         )
-    filtered = _filtered_rows(df, quality)
+    filtered = table.take(pa.array(_filtered_rows(df, quality), type=pa.int64()))
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     # Exclusive sibling lock prevents two builders from publishing the same ID.
     lock_path = output_dir.parent / f".{output_dir.name}.release.lock"
@@ -359,8 +613,7 @@ def build_release(
         if sha256_file(stage / "full.parquet") != input_hash:
             raise ReleaseError("Input changed during release creation; retry from a stable export.")
         pq.write_table(
-            pa.Table.from_pandas(filtered, preserve_index=False),
-            stage / "filtered.parquet", row_group_size=16_384, compression="zstd",
+            filtered, stage / "filtered.parquet", row_group_size=16_384, compression="zstd",
         )
         pq.write_table(_exclusion_table(quality), stage / "exclusions.parquet", row_group_size=16_384)
         _write_json(stage / "quality.json", quality)
@@ -379,6 +632,8 @@ def build_release(
             "input": {"filename": input_path.name, "sha256": input_hash, **admission},
             "sources": source_verification,
             "converter": provenance["converter"], "review": provenance["review"],
+            # Copied verbatim from provenance.json; the builder does not verify them.
+            "declared_by_contributor": ["converter", "review"],
             "profile": quality["profile"],
             "filter_policy": {
                 "unit": "whole_observation",
@@ -388,7 +643,7 @@ def build_release(
                 "universal_pass_rate_threshold": None,
             },
             "counts": {
-                "full_rows": len(df), "filtered_rows": len(filtered),
+                "full_rows": len(df), "filtered_rows": filtered.num_rows,
                 "full_observations": len(quality["observations"]),
                 "filtered_observations": quality["coverage"]["eligible_observations"],
                 "observation_statuses": quality["counts"],
@@ -420,7 +675,8 @@ def build_release(
             f"{sha256_file(stage / 'manifest.json')}  manifest.json\n", encoding="utf-8"
         )
         # Both directories are on the same filesystem. Readers see either no
-        # release or the complete directory. Never merge into an existing one.
+        # release, the complete directory, or (fallback only) a directory marked
+        # RELEASE_INCOMPLETE.txt. Never merge into an existing one.
         if output_dir.exists() or output_dir.is_symlink():
             raise ReleaseError(f"Release destination already exists: {output_dir}")
         _publish_directory(stage, output_dir)

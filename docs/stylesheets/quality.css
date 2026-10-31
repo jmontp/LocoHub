@@ -23,3 +23,24 @@
 @media(max-width:600px) { .audit-table table { min-width:660px; } .audit-evidence[open] { padding-left:.6rem; } }
 
 .audit-file-location { display:block; font-weight:400; font-size:.72rem; margin-top:.3rem; overflow-wrap:anywhere; }
+
+/* DOC-01: per-dataset evidence status; one column on phones, two from 760px. */
+.status-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:1rem; margin:1rem 0; }
+@media(min-width:760px) { .status-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.status-card { padding:.8rem 1rem; border:1px solid var(--line); border-radius:4px; background:var(--surface); scroll-margin-top:1rem; }
+.status-card:target { border-color:var(--accent); box-shadow:inset 3px 0 0 var(--accent); }
+.status-card h3 { margin:0 0 .5rem; font-size:1rem; }
+.status-label { display:inline-block; margin-left:.35rem; color:var(--muted); font-size:.78rem; font-weight:500; white-space:nowrap; }
+.status-label::before { content:""; display:inline-block; width:.6rem; height:.6rem; margin-right:.3rem; border:1.5px solid var(--control); border-radius:50%; vertical-align:-.02em; }
+.status-label[data-status="pilot"]::before { background:linear-gradient(90deg,var(--control) 30%,transparent 30%); }
+.status-label[data-status="partial"]::before { background:linear-gradient(90deg,var(--control) 50%,transparent 50%); }
+.status-label[data-status="rebuilt"]::before { background:var(--control); }
+.status-card dl { display:grid; grid-template-columns:minmax(0,1fr); gap:.1rem; margin:0; font-size:.86rem; line-height:1.45; }
+.status-card dt { margin-top:.35rem; color:var(--muted); font-size:.75rem; font-weight:600; }
+.status-card dd { margin:0; overflow-wrap:anywhere; }
+@media(min-width:420px) { .status-card dl { grid-template-columns:8.5rem minmax(0,1fr); column-gap:.8rem; } .status-card dt { margin-top:.3rem; } .status-card dd { margin-top:.3rem; } }
+.test-summary table { width:100%; font-size:.86rem; }
+.test-summary th[scope="row"] { font-weight:500; text-align:left; }
+.test-summary td.num { text-align:right; font-variant-numeric:tabular-nums; }
+.test-purpose { margin:1rem 0 .3rem; font-size:.9rem; }
+.test-scope { display:block; color:var(--muted); font-size:.75rem; font-weight:400; }

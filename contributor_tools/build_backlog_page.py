@@ -20,6 +20,8 @@ STAGES = {'source_inventory', 'conventions', 'conversion', 'pilot', 'source_read
 RESOURCES = {'read_only', 'fixture', 'numerical', 'native'}
 PRIORITIES = {'P0', 'P1', 'P2'}
 GATE_STATES = {'unreviewed', 'partial', 'verified', 'not_applicable'}
+DECISION_STATES = {'open', 'queued', 'answered'}
+CONFIDENCE = {'low', 'medium', 'high'}
 ID = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.:-]*$')
 
 
@@ -107,7 +109,7 @@ def validate_backlog(data):
     if not isinstance(tasks, list) or not tasks:
         raise BacklogError('tasks: expected at least one task')
     by_id = {}
-    anchors = {'main', 'next-task', 'tasks', 'datasets', 'workflow', 'task-details'}
+    anchors = {'main', 'decisions', 'next-task', 'tasks', 'datasets', 'workflow', 'task-details'}
     aliases = set()
     for task in tasks:
         if not isinstance(task, dict):
@@ -177,6 +179,48 @@ def validate_backlog(data):
             pending = [task_id for task_id in linked if by_id[task_id]['status'] != 'done']
             if pending:
                 raise BacklogError(f'{dataset["id"]}.{gate_id}: verified gate has unfinished tasks: {", ".join(pending)}')
+    decisions = data.get('decisions', [])
+    if not isinstance(decisions, list):
+        raise BacklogError('decisions: expected a list')
+    decision_ids = set()
+    for decision in decisions:
+        if not isinstance(decision, dict):
+            raise BacklogError('decision: expected an object')
+        for key in ('id', 'task_id', 'question', 'recommended', 'confidence', 'check', 'cost_of_waiting', 'status'):
+            _text(decision.get(key), f'decision.{key}')
+        if not ID.fullmatch(decision['id']) or decision['id'] in decision_ids:
+            raise BacklogError(f'Duplicate or invalid decision id: {decision["id"]}')
+        decision_ids.add(decision['id'])
+        if decision['task_id'] not in by_id:
+            raise BacklogError(f'{decision["id"]}: unknown task {decision["task_id"]}')
+        options = decision.get('options')
+        if not isinstance(options, list) or not 2 <= len(options) <= 3:
+            raise BacklogError(f'{decision["id"]}.options: expected two or three options')
+        keys = []
+        for option in options:
+            if not isinstance(option, dict):
+                raise BacklogError(f'{decision["id"]}.options: expected objects')
+            _text(option.get('key'), f'{decision["id"]}.option.key')
+            _text(option.get('label'), f'{decision["id"]}.option.label')
+            _text(option.get('consequence'), f'{decision["id"]}.option.consequence')
+            keys.append(option['key'])
+        if len(set(keys)) != len(keys):
+            raise BacklogError(f'{decision["id"]}: duplicate option key')
+        if decision['recommended'] not in keys:
+            raise BacklogError(f'{decision["id"]}: recommended option is not listed')
+        if decision['confidence'] not in CONFIDENCE:
+            raise BacklogError(f'{decision["id"]}.confidence: unsupported value {decision["confidence"]!r}')
+        if type(decision.get('decide_before_recommendation', False)) is not bool:
+            raise BacklogError(f'{decision["id"]}.decide_before_recommendation: expected true or false')
+        if decision['status'] not in DECISION_STATES:
+            raise BacklogError(f'{decision["id"]}.status: unsupported value {decision["status"]!r}')
+        if decision['status'] == 'answered':
+            _text(decision.get('answer'), f'{decision["id"]}.answer')
+            _utc(decision.get('answered_at_utc'), f'{decision["id"]}.answered_at_utc')
+            if decision['answer'] not in keys + ['defer']:
+                raise BacklogError(f'{decision["id"]}: answer is not a listed option')
+    if sum(d['status'] == 'open' for d in decisions) > 3:
+        raise BacklogError('decisions: at most three open; queue the rest')
     for task in tasks:
         for dep in task['depends_on']:
             if dep == task['id']:
@@ -236,7 +280,8 @@ def _reference(value, docs_root):
         return f'<a href="{safe}">{safe}</a>'
     if not parsed.scheme and not parsed.query and value.startswith('docs/'):
         target = (docs_root.parent / parsed.path).resolve()
-        if target.is_relative_to(docs_root.resolve()) and target.is_file():
+        # Markdown sources are not published, so they stay plain text.
+        if target.is_relative_to(docs_root.resolve()) and target.is_file() and target.suffix != '.md':
             href = os.path.relpath(target, docs_root / 'maintainers').replace(os.sep, '/')
             if parsed.fragment:
                 href += '#' + parsed.fragment
@@ -273,8 +318,34 @@ def render_backlog(data, docs_root=None):
         if 'changed_files' in handoff:
             content.append('<p><strong>Changed files</strong></p>' + items(handoff['changed_files'], True))
         return '\n'.join(content)
+    def decision_card(decision):
+        # Commit-first items hide the recommendation to counter automation bias.
+        blind = decision.get('decide_before_recommendation', False)
+        options = ''.join(f'<li><strong>{esc(o["key"])}</strong>: {esc(o["label"])} — {esc(o["consequence"])}</li>' for o in decision['options'])
+        options += f'<li><strong>defer</strong>: {esc(decision["cost_of_waiting"])}</li>'
+        label = next(o['label'] for o in decision['options'] if o['key'] == decision['recommended'])
+        advice = f'Agent recommends <strong>{esc(decision["recommended"])}</strong> ({esc(label)}), {esc(decision["confidence"])} confidence' + (f': {esc(decision["why"])}' if decision.get('why') else '.')
+        advice = f'<details><summary>Show agent recommendation after choosing</summary><p>{advice}</p></details>' if blind else f'<p>{advice}</p>'
+        return (f'<h3>{esc(decision["id"])}: {esc(decision["question"])}</h3><ul>{options}</ul>'
+                f'<p><strong>Quick check:</strong> {esc(decision["check"])}</p>{advice}'
+                f'<p><small>Task <a href="#{esc(decision["task_id"])}">{esc(decision["task_id"])}</a>. Reply in chat: <code>{esc(decision["id"])}: &lt;option&gt;</code></small></p>')
+    decisions = data.get('decisions', [])
+    open_decisions = [d for d in decisions if d['status'] == 'open']
+    answered = [d for d in decisions if d['status'] == 'answered']
+    inbox = ['<section id="decisions"><h2>Needs José</h2>']
+    inbox.extend(decision_card(d) for d in open_decisions)
+    if not open_decisions:
+        inbox.append('<p>No open decisions.</p>')
+    queued = [d for d in decisions if d['status'] == 'queued']
+    if queued:
+        inbox.append(f'<details><summary>Queued ({len(queued)})</summary><ul>' + ''.join(
+            f'<li>{esc(d["id"])}: {esc(d["question"])}</li>' for d in queued) + '</ul></details>')
+    if answered:
+        inbox.append(f'<details><summary>Decision log ({len(answered)})</summary><ul>' + ''.join(
+            f'<li>{esc(d["answered_at_utc"])} · {esc(d["id"])}: {esc(d["question"])} → <strong>{esc(next((o["label"] for o in d["options"] if o["key"] == d["answer"]), "Deferred"))}</strong></li>' for d in answered) + '</ul></details>')
+    inbox.append('</section>')
     selected = next_task(data)
-    counts = {status: sum(task['status'] == status for task in data['tasks']) for status in STATUSES}
+    counts ={status: sum(task['status'] == status for task in data['tasks']) for status in STATUSES}
     count_labels = {'ready': 'ready', 'working': 'in progress', 'blocked': 'blocked', 'review': 'awaiting review', 'done': 'done'}
     task_summary = (f'View all {len(data["tasks"])} tasks — ' +
                     ', '.join(f'{counts[status]} {count_labels[status]}' for status in ('ready', 'working', 'blocked', 'review', 'done')))
@@ -295,7 +366,8 @@ def render_backlog(data, docs_root=None):
            '<div class="page-layout"><main id="main" class="page-content" tabindex="-1">',
            '<h1>Work backlog</h1>', f'<p>{esc(data["snapshot_notice"])}</p>',
            f'<p>Updated <time datetime="{esc(data["updated_at_utc"])}">{esc(data["updated_at_utc"])}</time>. <a href="backlog.json">Task list (JSON)</a></p>',
-           '<nav aria-label="Backlog sections"><a href="#next-task">Next task</a> · <a href="#tasks">All tasks</a> · <a href="#datasets">Datasets</a> · <a href="#workflow">Working rules</a></nav>',
+           '<nav aria-label="Backlog sections"><a href="#decisions">Needs José</a> · <a href="#next-task">Next task</a> · <a href="#tasks">All tasks</a> · <a href="#datasets">Datasets</a> · <a href="#workflow">Working rules</a></nav>',
+           *inbox,
            '<section id="next-task"><h2>Next task</h2>',
            next_card,
            '<p>Read the task’s inputs and handoff before starting. This page does not start jobs or change task states.</p></section>',

@@ -1,0 +1,1343 @@
+{
+  "task_id": "MB24-F01",
+  "checked_at_utc": "2026-10-31T07:31:04+00:00",
+  "status": "receipts_reconciled_full_bytes_not_rechecked",
+  "scientific_approval": false,
+  "method": "Read-only. JSON receipts only (4 MiB cap), SHA256 of small JSON receipts and bound code, stat (size, mtime) of large source and output files without opening them. No arrays loaded, no MAT or Parquet opened, no job started, nothing under converted_datasets/ written.",
+  "repository_head": "569ee8f4d7cdf83d96d5f74aa6b65354b4a78da4",
+  "builder": {
+    "path": "contributor_tools/review_mb24_f01_receipts.py",
+    "sha256": "861945e64e06194ef3b427c2b2fe6984a3e8f4834b0e108bf1742a6bfeed817b"
+  },
+  "receipts_sha256": {
+    "mblue_source_inventory_20261021/source_inventory.json": "a7a2146a8abc69bb222e0a230f951981e7cf71f4624c8a523007d35876e6e327",
+    "mblue_full_normalized_v2_20261021/conversion_summary.json": "d546f5ddc1736bfb3aff80305368c118454f7a0991a0a6f49b053f28f16a2524",
+    "mblue_pelvis_corrected_full_20261021/conversion_summary.json": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+    "mblue_pelvis_full_readback_20261021/source_comparison.json": "2967676b513402f7692a5161a97ab9b50300c2ee9e63e0e821e9a05823b93731",
+    "mblue_pelvis_full_preservation_20261021/preservation.json": "c9384ee1ac668ea11b2d1d66da7dbd8ed3ad0b454fac233dd824b784a781133d",
+    "mblue_stair_reference_review_v3_20261021/reference_recovery.json": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02",
+    "mblue_reference_corrected_full_20261021/correction_summary.json": "47cb1720fa54711527473fc2a9cf9bf4a31fac4bde2433f585606059a77787dd",
+    "mblue_final_acceptance_20261021/scope_evidence.json": "5c3c29eadf8afb1ad065a8ae34723baa693fa510716fc0fe4ec2a1902f26bce5",
+    "mblue_final_acceptance_20261021/status.json": "9893319dffa58b0a760697f50c97eb05e2cc0538ce443207ddeac7be5039d4d1",
+    "mblue_final_acceptance_20261021/plan.json": "738bbcbc703a7528d3e62767f132eac99efc01433114e77939fbd5d2b536ad97",
+    "mblue_priority_handoff_20261021/status.json": "ddc3b76d7a97ce9600cb037da79efe029dc2c03daf65067f8cce8ad5be96b434",
+    "mblue_pelvis_serial_queue_20261021/plan.json": "fa06a2b1c949d3197588126454dce3976e152373e969fa293e4a57c2988dee56",
+    "mblue_stair_reference_serial_queue_20261021/plan.json": "f77ccf62a601aa84ca33f4c8c57a3b1251f87500d62377afeb94e8335b038870",
+    "mblue_marker_endpoint_review_20261021/marker_endpoints.json": "75d99ec569878d51b9f26978684f9dc9b416fadfb0c7ccdc9e5e8a41f66fc38a",
+    "mblue_planar_preserved_early_full_20261021/planar_preservation_summary.json": "e8a0d0654bfba2df680080177d6acb2ff950be5f655eee4922483d141ca125a2",
+    "mblue_full_source_audit_v2_20261021/source_comparison.json": "5bc2dbf184ff42b44725879b37999b872712e4dd4acfe9afeb53db50305533b1",
+    "mblue_final_blocks_audit_20261021/source_comparison.json": "da75aa32f1a557b0c891d1fe8f27259c94e205308b71762280c7a57a618c6d33",
+    "mblue_pelvis_pilot_v2_20261021/conversion_summary.json": "2ea49e6748e7264cd78d3e5ba95ea6d1c6939799b1023e26716985fa28923175",
+    "mblue_pelvis_pilot_readback_v2_20261021/source_comparison.json": "b8c2b6a1f5f08f68e6468c823b0bec06d10dcae3dd0369005507e973768e5595",
+    "mblue_pelvis_preservation_pilot_20261021/preservation.json": "bb13872935751d2a4206ac8dfaaa2a3b08b2210156a67d58f57fb5ab3911ba3f",
+    "mblue_stair_reference_pilot_v2_20261021/correction_summary.json": "95c10b7835b6d0dd9f5362ad927013ada6254c8190778a5758a7af4a019395bb"
+  },
+  "scope_counts": {
+    "blocks": 335,
+    "blocks_by_kind": {
+      "treadmill": 140,
+      "sit_stand": 40,
+      "crouch": 19,
+      "stairs": 136
+    },
+    "observations_before_stair_correction": 15825,
+    "observations_after": 15061,
+    "stair_windows": 764,
+    "retained_reference_views": 764,
+    "omitted_nonreference_views": 764,
+    "reference_sides": {
+      "right": 426,
+      "left": 338
+    },
+    "endpoint_basis": {
+      "force_event": 652,
+      "source_marker": 112
+    },
+    "pelvis_fix_views": {
+      "left_unchanged": 8215,
+      "right_changed": 6842,
+      "right_unchanged": 768
+    },
+    "pelvis_fix_views_by_kind": {
+      "treadmill": {
+        "left_unchanged": 6858,
+        "right_changed": 6842,
+        "right_unchanged": 4
+      },
+      "sit_stand": {
+        "left_unchanged": 404
+      },
+      "crouch": {
+        "left_unchanged": 189
+      },
+      "stairs": {
+        "left_unchanged": 764,
+        "right_unchanged": 764
+      }
+    },
+    "right_unchanged_decomposition": {
+      "stairs": 764,
+      "treadmill": 4,
+      "treadmill_blocks_with_unchanged_right_views": [
+        "AB04/exo/decline_10deg",
+        "AB05/bare/decline_5deg",
+        "AB11/bare/incline_10deg"
+      ],
+      "right_surplus_pattern": {
+        "treadmill_blocks": 140,
+        "blocks_with_right_minus_left_at_least_2": 7,
+        "of_those_with_unchanged_right_views": 3,
+        "blocks_with_right_minus_left_at_most_1_and_unchanged_right_views": 0,
+        "blocks": [
+          {
+            "block": "AB03/bare/decline_5deg",
+            "right_minus_left_cycles": 2,
+            "right_unchanged": 0
+          },
+          {
+            "block": "AB04/exo/decline_10deg",
+            "right_minus_left_cycles": 2,
+            "right_unchanged": 1
+          },
+          {
+            "block": "AB05/bare/decline_5deg",
+            "right_minus_left_cycles": 7,
+            "right_unchanged": 2
+          },
+          {
+            "block": "AB05/bare/incline_5deg",
+            "right_minus_left_cycles": 2,
+            "right_unchanged": 0
+          },
+          {
+            "block": "AB05/exo/decline_5deg",
+            "right_minus_left_cycles": 2,
+            "right_unchanged": 0
+          },
+          {
+            "block": "AB11/bare/incline_10deg",
+            "right_minus_left_cycles": 2,
+            "right_unchanged": 1
+          },
+          {
+            "block": "AB11/bare/incline_5deg",
+            "right_minus_left_cycles": 2,
+            "right_unchanged": 0
+          }
+        ],
+        "reading": "Unchanged right views occur only in blocks with at least 2 more right than left cycles. This fits right cycles with no left-clock overlap, whose pelvis stayed missing before and after the fix. The receipts do not record pre-fix values per view, so this is not established.",
+        "status": "not_checked"
+      }
+    },
+    "pelvis_changed_columns": [
+      "foot_sagittal_angle_contra_rad",
+      "foot_sagittal_angle_ipsi_rad",
+      "foot_sagittal_velocity_contra_rad_s",
+      "foot_sagittal_velocity_ipsi_rad_s",
+      "pelvis_sagittal_angle_rad",
+      "pelvis_sagittal_velocity_rad_s",
+      "shank_sagittal_angle_contra_rad",
+      "shank_sagittal_angle_ipsi_rad",
+      "shank_sagittal_velocity_contra_rad_s",
+      "shank_sagittal_velocity_ipsi_rad_s",
+      "thigh_sagittal_angle_contra_rad",
+      "thigh_sagittal_angle_ipsi_rad",
+      "thigh_sagittal_velocity_contra_rad_s",
+      "thigh_sagittal_velocity_ipsi_rad_s"
+    ],
+    "totals": {
+      "inventory_views": 15825,
+      "readback_records_sum": 15825,
+      "readback_reported": 15825,
+      "readback_finite_values_sum": 79665196,
+      "readback_finite_values_reported": 79665196,
+      "readback_max_error_over_blocks": 1.7763568394002505e-15,
+      "preservation_counts_reported": {
+        "left_unchanged": 8215,
+        "right_changed": 6842,
+        "right_unchanged": 768
+      },
+      "correction_before_reported": 15825,
+      "correction_after_reported": 15061,
+      "correction_after_records_sum": 15061,
+      "planar_observations_reported": 15061,
+      "planar_records_sum": 15061,
+      "scope_gate": {
+        "blocks": 335,
+        "observations_before": 15825,
+        "observations_after": 15061,
+        "retained_stair_windows": 764,
+        "omitted_nonreference_views": 764
+      }
+    }
+  },
+  "lineage": {
+    "chain": [
+      "source MAT (10 subjects) + FileInfo -> inventory (335 blocks, 16,418 side-cycles = 15,825 views; see block_to_observation)",
+      "inventory -> pelvis-corrected rebuild (335 outputs; summary binds source and FileInfo hashes per block)",
+      "rebuild -> full source readback (re-hashes each rebuild output and each source MAT before comparing values)",
+      "baseline v2 + rebuild -> preservation (re-hashes both output sets; only pelvis/segment columns may differ; left views identical)",
+      "source MAT + stair force/IK .mot -> reference recovery (20 subject-conditions, 764 windows)",
+      "rebuild + recovery -> stair correction (199 outputs copied byte-identical; 136 stair outputs rewritten keeping one view per window plus 4 source-event columns)",
+      "all seven summaries -> scope gate (summary consistency only)",
+      "correction -> planar relabel (downstream, separate gate)"
+    ],
+    "block_to_observation": "The inventory holds 16,418 side-cycles. Treadmill and stair blocks emit one view per side cycle (l + r). The 59 sit-stand and crouch blocks have identical left and right clocks and emit one observation per left cycle, with the right side as contra columns, so their 593 right cycles are not separate views: 16,418 - 593 = 15,825 views.",
+    "observation_to_window": "Stair identity mblue:<subject>_NormalizedStrides.mat:dataOut/<path>:<l|r>:column:<k> maps to recovered window (subject, path, k); the kept view letter equals the recovered reference side.",
+    "nonreference_views": "Omitted view identities are listed per block in correction_summary.json; none is silently dropped.",
+    "unused_recovery_candidates": [
+      {
+        "subject": "AB01",
+        "condition": "bare",
+        "ik_file": "bare_stairs_corrected_IK_Results.mot",
+        "session": "05292024",
+        "reason": "Clock does not match antialiased cubic resize"
+      },
+      {
+        "subject": "AB01",
+        "condition": "exo",
+        "ik_file": "exo_stairs_corrected_IK_Results.mot",
+        "session": "05292024",
+        "reason": "Clock does not match antialiased cubic resize"
+      }
+    ]
+  },
+  "hash_reconciliation": {
+    "recorded_references": 50,
+    "mismatched": 0,
+    "rows": [
+      {
+        "recorded_in": "scope gate input_sha256",
+        "receipt": "mblue_source_inventory_20261021/source_inventory.json",
+        "recorded_sha256": "a7a2146a8abc69bb222e0a230f951981e7cf71f4624c8a523007d35876e6e327",
+        "current_sha256": "a7a2146a8abc69bb222e0a230f951981e7cf71f4624c8a523007d35876e6e327",
+        "match": true
+      },
+      {
+        "recorded_in": "scope gate input_sha256",
+        "receipt": "mblue_full_normalized_v2_20261021/conversion_summary.json",
+        "recorded_sha256": "d546f5ddc1736bfb3aff80305368c118454f7a0991a0a6f49b053f28f16a2524",
+        "current_sha256": "d546f5ddc1736bfb3aff80305368c118454f7a0991a0a6f49b053f28f16a2524",
+        "match": true
+      },
+      {
+        "recorded_in": "scope gate input_sha256",
+        "receipt": "mblue_pelvis_corrected_full_20261021/conversion_summary.json",
+        "recorded_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "current_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "match": true
+      },
+      {
+        "recorded_in": "scope gate input_sha256",
+        "receipt": "mblue_pelvis_full_readback_20261021/source_comparison.json",
+        "recorded_sha256": "2967676b513402f7692a5161a97ab9b50300c2ee9e63e0e821e9a05823b93731",
+        "current_sha256": "2967676b513402f7692a5161a97ab9b50300c2ee9e63e0e821e9a05823b93731",
+        "match": true
+      },
+      {
+        "recorded_in": "scope gate input_sha256",
+        "receipt": "mblue_pelvis_full_preservation_20261021/preservation.json",
+        "recorded_sha256": "c9384ee1ac668ea11b2d1d66da7dbd8ed3ad0b454fac233dd824b784a781133d",
+        "current_sha256": "c9384ee1ac668ea11b2d1d66da7dbd8ed3ad0b454fac233dd824b784a781133d",
+        "match": true
+      },
+      {
+        "recorded_in": "scope gate input_sha256",
+        "receipt": "mblue_stair_reference_review_v3_20261021/reference_recovery.json",
+        "recorded_sha256": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02",
+        "current_sha256": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02",
+        "match": true
+      },
+      {
+        "recorded_in": "scope gate input_sha256",
+        "receipt": "mblue_reference_corrected_full_20261021/correction_summary.json",
+        "recorded_sha256": "47cb1720fa54711527473fc2a9cf9bf4a31fac4bde2433f585606059a77787dd",
+        "current_sha256": "47cb1720fa54711527473fc2a9cf9bf4a31fac4bde2433f585606059a77787dd",
+        "match": true
+      },
+      {
+        "recorded_in": "baseline inventory_sha256",
+        "receipt": "mblue_source_inventory_20261021/source_inventory.json",
+        "recorded_sha256": "a7a2146a8abc69bb222e0a230f951981e7cf71f4624c8a523007d35876e6e327",
+        "current_sha256": "a7a2146a8abc69bb222e0a230f951981e7cf71f4624c8a523007d35876e6e327",
+        "match": true
+      },
+      {
+        "recorded_in": "rebuild inventory_sha256",
+        "receipt": "mblue_source_inventory_20261021/source_inventory.json",
+        "recorded_sha256": "a7a2146a8abc69bb222e0a230f951981e7cf71f4624c8a523007d35876e6e327",
+        "current_sha256": "a7a2146a8abc69bb222e0a230f951981e7cf71f4624c8a523007d35876e6e327",
+        "match": true
+      },
+      {
+        "recorded_in": "recovery inventory_sha256",
+        "receipt": "mblue_source_inventory_20261021/source_inventory.json",
+        "recorded_sha256": "a7a2146a8abc69bb222e0a230f951981e7cf71f4624c8a523007d35876e6e327",
+        "current_sha256": "a7a2146a8abc69bb222e0a230f951981e7cf71f4624c8a523007d35876e6e327",
+        "match": true
+      },
+      {
+        "recorded_in": "readback summary_sha256",
+        "receipt": "mblue_pelvis_corrected_full_20261021/conversion_summary.json",
+        "recorded_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "current_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "match": true
+      },
+      {
+        "recorded_in": "preservation baseline_summary_sha256",
+        "receipt": "mblue_full_normalized_v2_20261021/conversion_summary.json",
+        "recorded_sha256": "d546f5ddc1736bfb3aff80305368c118454f7a0991a0a6f49b053f28f16a2524",
+        "current_sha256": "d546f5ddc1736bfb3aff80305368c118454f7a0991a0a6f49b053f28f16a2524",
+        "match": true
+      },
+      {
+        "recorded_in": "preservation corrected_summary_sha256",
+        "receipt": "mblue_pelvis_corrected_full_20261021/conversion_summary.json",
+        "recorded_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "current_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "match": true
+      },
+      {
+        "recorded_in": "correction baseline_summary_sha256",
+        "receipt": "mblue_pelvis_corrected_full_20261021/conversion_summary.json",
+        "recorded_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "current_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "match": true
+      },
+      {
+        "recorded_in": "correction reference_recovery_sha256",
+        "receipt": "mblue_stair_reference_review_v3_20261021/reference_recovery.json",
+        "recorded_sha256": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02",
+        "current_sha256": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02",
+        "match": true
+      },
+      {
+        "recorded_in": "marker endpoint recovery_sha256",
+        "receipt": "mblue_stair_reference_review_v3_20261021/reference_recovery.json",
+        "recorded_sha256": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02",
+        "current_sha256": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02",
+        "match": true
+      },
+      {
+        "recorded_in": "planar input correction_summary",
+        "receipt": "mblue_reference_corrected_full_20261021/correction_summary.json",
+        "recorded_sha256": "47cb1720fa54711527473fc2a9cf9bf4a31fac4bde2433f585606059a77787dd",
+        "current_sha256": "47cb1720fa54711527473fc2a9cf9bf4a31fac4bde2433f585606059a77787dd",
+        "match": true
+      },
+      {
+        "recorded_in": "planar input scope_evidence",
+        "receipt": "mblue_final_acceptance_20261021/scope_evidence.json",
+        "recorded_sha256": "5c3c29eadf8afb1ad065a8ae34723baa693fa510716fc0fe4ec2a1902f26bce5",
+        "current_sha256": "5c3c29eadf8afb1ad065a8ae34723baa693fa510716fc0fe4ec2a1902f26bce5",
+        "match": true
+      },
+      {
+        "recorded_in": "old tail readback summary_sha256",
+        "receipt": "mblue_full_normalized_v2_20261021/conversion_summary.json",
+        "recorded_sha256": "d546f5ddc1736bfb3aff80305368c118454f7a0991a0a6f49b053f28f16a2524",
+        "current_sha256": "d546f5ddc1736bfb3aff80305368c118454f7a0991a0a6f49b053f28f16a2524",
+        "match": true
+      },
+      {
+        "recorded_in": "PM-02 pelvis queue plan",
+        "receipt": "mblue_pelvis_serial_queue_20261021/plan.json",
+        "recorded_sha256": "fa06a2b1c949d3197588126454dce3976e152373e969fa293e4a57c2988dee56",
+        "current_sha256": "fa06a2b1c949d3197588126454dce3976e152373e969fa293e4a57c2988dee56",
+        "match": true
+      },
+      {
+        "recorded_in": "docs stair-reference queue plan",
+        "receipt": "mblue_stair_reference_serial_queue_20261021/plan.json",
+        "recorded_sha256": "f77ccf62a601aa84ca33f4c8c57a3b1251f87500d62377afeb94e8335b038870",
+        "current_sha256": "f77ccf62a601aa84ca33f4c8c57a3b1251f87500d62377afeb94e8335b038870",
+        "match": true
+      },
+      {
+        "recorded_in": "docs stair-reference recovery",
+        "receipt": "mblue_stair_reference_review_v3_20261021/reference_recovery.json",
+        "recorded_sha256": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02",
+        "current_sha256": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02",
+        "match": true
+      },
+      {
+        "recorded_in": "docs stair-reference pilot summary",
+        "receipt": "mblue_stair_reference_pilot_v2_20261021/correction_summary.json",
+        "recorded_sha256": "95c10b7835b6d0dd9f5362ad927013ada6254c8190778a5758a7af4a019395bb",
+        "current_sha256": "95c10b7835b6d0dd9f5362ad927013ada6254c8190778a5758a7af4a019395bb",
+        "match": true
+      },
+      {
+        "recorded_in": "docs stair-reference marker report",
+        "receipt": "mblue_marker_endpoint_review_20261021/marker_endpoints.json",
+        "recorded_sha256": "75d99ec569878d51b9f26978684f9dc9b416fadfb0c7ccdc9e5e8a41f66fc38a",
+        "current_sha256": "75d99ec569878d51b9f26978684f9dc9b416fadfb0c7ccdc9e5e8a41f66fc38a",
+        "match": true
+      },
+      {
+        "recorded_in": "docs pelvis-clock-fix pilot summary",
+        "receipt": "mblue_pelvis_pilot_v2_20261021/conversion_summary.json",
+        "recorded_sha256": "2ea49e6748e7264cd78d3e5ba95ea6d1c6939799b1023e26716985fa28923175",
+        "current_sha256": "2ea49e6748e7264cd78d3e5ba95ea6d1c6939799b1023e26716985fa28923175",
+        "match": true
+      },
+      {
+        "recorded_in": "docs pelvis-clock-fix pilot readback",
+        "receipt": "mblue_pelvis_pilot_readback_v2_20261021/source_comparison.json",
+        "recorded_sha256": "b8c2b6a1f5f08f68e6468c823b0bec06d10dcae3dd0369005507e973768e5595",
+        "current_sha256": "b8c2b6a1f5f08f68e6468c823b0bec06d10dcae3dd0369005507e973768e5595",
+        "match": true
+      },
+      {
+        "recorded_in": "docs pelvis-clock-fix pilot preservation",
+        "receipt": "mblue_pelvis_preservation_pilot_20261021/preservation.json",
+        "recorded_sha256": "bb13872935751d2a4206ac8dfaaa2a3b08b2210156a67d58f57fb5ab3911ba3f",
+        "current_sha256": "bb13872935751d2a4206ac8dfaaa2a3b08b2210156a67d58f57fb5ab3911ba3f",
+        "match": true
+      },
+      {
+        "recorded_in": "docs pelvis-full-readback evidence",
+        "receipt": "mblue_pelvis_full_readback_20261021/source_comparison.json",
+        "recorded_sha256": "2967676b513402f7692a5161a97ab9b50300c2ee9e63e0e821e9a05823b93731",
+        "current_sha256": "2967676b513402f7692a5161a97ab9b50300c2ee9e63e0e821e9a05823b93731",
+        "match": true
+      },
+      {
+        "recorded_in": "docs pelvis-full-preservation evidence",
+        "receipt": "mblue_pelvis_full_preservation_20261021/preservation.json",
+        "recorded_sha256": "c9384ee1ac668ea11b2d1d66da7dbd8ed3ad0b454fac233dd824b784a781133d",
+        "current_sha256": "c9384ee1ac668ea11b2d1d66da7dbd8ed3ad0b454fac233dd824b784a781133d",
+        "match": true
+      },
+      {
+        "recorded_in": "docs pelvis-full-preservation baseline",
+        "receipt": "mblue_full_normalized_v2_20261021/conversion_summary.json",
+        "recorded_sha256": "d546f5ddc1736bfb3aff80305368c118454f7a0991a0a6f49b053f28f16a2524",
+        "current_sha256": "d546f5ddc1736bfb3aff80305368c118454f7a0991a0a6f49b053f28f16a2524",
+        "match": true
+      },
+      {
+        "recorded_in": "docs pelvis-full-preservation corrected",
+        "receipt": "mblue_pelvis_corrected_full_20261021/conversion_summary.json",
+        "recorded_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "current_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "match": true
+      },
+      {
+        "recorded_in": "docs complete-scope evidence",
+        "receipt": "mblue_final_acceptance_20261021/scope_evidence.json",
+        "recorded_sha256": "5c3c29eadf8afb1ad065a8ae34723baa693fa510716fc0fe4ec2a1902f26bce5",
+        "current_sha256": "5c3c29eadf8afb1ad065a8ae34723baa693fa510716fc0fe4ec2a1902f26bce5",
+        "match": true
+      },
+      {
+        "recorded_in": "docs complete-source-readback summary",
+        "receipt": "mblue_full_normalized_v2_20261021/conversion_summary.json",
+        "recorded_sha256": "d546f5ddc1736bfb3aff80305368c118454f7a0991a0a6f49b053f28f16a2524",
+        "current_sha256": "d546f5ddc1736bfb3aff80305368c118454f7a0991a0a6f49b053f28f16a2524",
+        "match": true
+      },
+      {
+        "recorded_in": "detour status mblue_pelvis_rebuild",
+        "receipt": "mblue_pelvis_corrected_full_20261021/conversion_summary.json",
+        "recorded_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "current_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "match": true
+      },
+      {
+        "recorded_in": "detour status mblue_pelvis_readback",
+        "receipt": "mblue_pelvis_full_readback_20261021/source_comparison.json",
+        "recorded_sha256": "2967676b513402f7692a5161a97ab9b50300c2ee9e63e0e821e9a05823b93731",
+        "current_sha256": "2967676b513402f7692a5161a97ab9b50300c2ee9e63e0e821e9a05823b93731",
+        "match": true
+      },
+      {
+        "recorded_in": "detour status mblue_pelvis_preservation",
+        "receipt": "mblue_pelvis_full_preservation_20261021/preservation.json",
+        "recorded_sha256": "c9384ee1ac668ea11b2d1d66da7dbd8ed3ad0b454fac233dd824b784a781133d",
+        "current_sha256": "c9384ee1ac668ea11b2d1d66da7dbd8ed3ad0b454fac233dd824b784a781133d",
+        "match": true
+      },
+      {
+        "recorded_in": "detour status mblue_stair_reference_correction",
+        "receipt": "mblue_reference_corrected_full_20261021/correction_summary.json",
+        "recorded_sha256": "47cb1720fa54711527473fc2a9cf9bf4a31fac4bde2433f585606059a77787dd",
+        "current_sha256": "47cb1720fa54711527473fc2a9cf9bf4a31fac4bde2433f585606059a77787dd",
+        "match": true
+      },
+      {
+        "recorded_in": "PM-02 recheck mblue_pelvis_rebuild",
+        "receipt": "mblue_pelvis_corrected_full_20261021/conversion_summary.json",
+        "recorded_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "current_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "match": true
+      },
+      {
+        "recorded_in": "PM-02 recheck mblue_pelvis_readback",
+        "receipt": "mblue_pelvis_full_readback_20261021/source_comparison.json",
+        "recorded_sha256": "2967676b513402f7692a5161a97ab9b50300c2ee9e63e0e821e9a05823b93731",
+        "current_sha256": "2967676b513402f7692a5161a97ab9b50300c2ee9e63e0e821e9a05823b93731",
+        "match": true
+      },
+      {
+        "recorded_in": "PM-02 recheck mblue_pelvis_preservation",
+        "receipt": "mblue_pelvis_full_preservation_20261021/preservation.json",
+        "recorded_sha256": "c9384ee1ac668ea11b2d1d66da7dbd8ed3ad0b454fac233dd824b784a781133d",
+        "current_sha256": "c9384ee1ac668ea11b2d1d66da7dbd8ed3ad0b454fac233dd824b784a781133d",
+        "match": true
+      },
+      {
+        "recorded_in": "PM-02 recheck mblue_stair_reference_correction",
+        "receipt": "mblue_reference_corrected_full_20261021/correction_summary.json",
+        "recorded_sha256": "47cb1720fa54711527473fc2a9cf9bf4a31fac4bde2433f585606059a77787dd",
+        "current_sha256": "47cb1720fa54711527473fc2a9cf9bf4a31fac4bde2433f585606059a77787dd",
+        "match": true
+      },
+      {
+        "recorded_in": "docs complete-scope inventory",
+        "receipt": "mblue_source_inventory_20261021/source_inventory.json",
+        "recorded_sha256": "a7a2146a8abc69bb222e0a230f951981e7cf71f4624c8a523007d35876e6e327",
+        "current_sha256": "a7a2146a8abc69bb222e0a230f951981e7cf71f4624c8a523007d35876e6e327",
+        "match": true
+      },
+      {
+        "recorded_in": "docs complete-scope baseline",
+        "receipt": "mblue_full_normalized_v2_20261021/conversion_summary.json",
+        "recorded_sha256": "d546f5ddc1736bfb3aff80305368c118454f7a0991a0a6f49b053f28f16a2524",
+        "current_sha256": "d546f5ddc1736bfb3aff80305368c118454f7a0991a0a6f49b053f28f16a2524",
+        "match": true
+      },
+      {
+        "recorded_in": "docs complete-scope rebuild",
+        "receipt": "mblue_pelvis_corrected_full_20261021/conversion_summary.json",
+        "recorded_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "current_sha256": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "match": true
+      },
+      {
+        "recorded_in": "docs complete-scope source_audit",
+        "receipt": "mblue_pelvis_full_readback_20261021/source_comparison.json",
+        "recorded_sha256": "2967676b513402f7692a5161a97ab9b50300c2ee9e63e0e821e9a05823b93731",
+        "current_sha256": "2967676b513402f7692a5161a97ab9b50300c2ee9e63e0e821e9a05823b93731",
+        "match": true
+      },
+      {
+        "recorded_in": "docs complete-scope preservation",
+        "receipt": "mblue_pelvis_full_preservation_20261021/preservation.json",
+        "recorded_sha256": "c9384ee1ac668ea11b2d1d66da7dbd8ed3ad0b454fac233dd824b784a781133d",
+        "current_sha256": "c9384ee1ac668ea11b2d1d66da7dbd8ed3ad0b454fac233dd824b784a781133d",
+        "match": true
+      },
+      {
+        "recorded_in": "docs complete-scope recovery",
+        "receipt": "mblue_stair_reference_review_v3_20261021/reference_recovery.json",
+        "recorded_sha256": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02",
+        "current_sha256": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02",
+        "match": true
+      },
+      {
+        "recorded_in": "docs complete-scope correction",
+        "receipt": "mblue_reference_corrected_full_20261021/correction_summary.json",
+        "recorded_sha256": "47cb1720fa54711527473fc2a9cf9bf4a31fac4bde2433f585606059a77787dd",
+        "current_sha256": "47cb1720fa54711527473fc2a9cf9bf4a31fac4bde2433f585606059a77787dd",
+        "match": true
+      },
+      {
+        "recorded_in": "docs complete-source-readback component",
+        "receipt": "mblue_full_source_audit_v2_20261021/source_comparison.json",
+        "recorded_sha256": "5bc2dbf184ff42b44725879b37999b872712e4dd4acfe9afeb53db50305533b1",
+        "current_sha256": "5bc2dbf184ff42b44725879b37999b872712e4dd4acfe9afeb53db50305533b1",
+        "match": true
+      },
+      {
+        "recorded_in": "docs complete-source-readback component",
+        "receipt": "mblue_final_blocks_audit_20261021/source_comparison.json",
+        "recorded_sha256": "da75aa32f1a557b0c891d1fe8f27259c94e205308b71762280c7a57a618c6d33",
+        "current_sha256": "da75aa32f1a557b0c891d1fe8f27259c94e205308b71762280c7a57a618c6d33",
+        "match": true
+      }
+    ]
+  },
+  "code_bindings": {
+    "bindings": 36,
+    "changed_in_working_tree": [
+      "contributor_tools/common/data_contract.py"
+    ],
+    "rows": [
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_rebuild",
+        "path": "contributor_tools/reconvert_mblue_normalized.py",
+        "recorded_sha256": "607f9aea226cff3d7b0c878f1c5681e701bb7e9f3bcbd621f4e571cd50c61ea1",
+        "current_sha256": "607f9aea226cff3d7b0c878f1c5681e701bb7e9f3bcbd621f4e571cd50c61ea1",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_rebuild",
+        "path": "contributor_tools/conversion_scripts/MBLUEAnkle/convert_mblue_ankle_to_parquet.py",
+        "recorded_sha256": "faf161c5312607ab1cc74dfac5cff21fb8657bc65ea03910a4a2d47a6191305a",
+        "current_sha256": "faf161c5312607ab1cc74dfac5cff21fb8657bc65ea03910a4a2d47a6191305a",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_rebuild",
+        "path": "contributor_tools/reconvert_recording.py",
+        "recorded_sha256": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f",
+        "current_sha256": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_rebuild",
+        "path": "contributor_tools/common/data_contract.py",
+        "recorded_sha256": "553ced002f105236f1a4d10a085c02d028b0ec8887b6b968a209e810b155cf48",
+        "current_sha256": "0b535c06a0d0c7339db61c1ff261ed00e327dc94b4ca60d1b7cc2ebc68dbce99",
+        "match": false,
+        "head_sha256": "553ced002f105236f1a4d10a085c02d028b0ec8887b6b968a209e810b155cf48",
+        "recorded_equals_head": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_rebuild",
+        "path": "contributor_tools/common/task_registry.py",
+        "recorded_sha256": "263b2b7397b535bfb02934857fd7c8c0fd85b3f83447cdbef530a5e946e89e5b",
+        "current_sha256": "263b2b7397b535bfb02934857fd7c8c0fd85b3f83447cdbef530a5e946e89e5b",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_rebuild",
+        "path": "contributor_tools/audit_mblue_normalized.py",
+        "recorded_sha256": "280c4ad81526a3bdaa2ad3f181d689ea062bd2fb03394beb0917d1a58302957c",
+        "current_sha256": "280c4ad81526a3bdaa2ad3f181d689ea062bd2fb03394beb0917d1a58302957c",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_rebuild",
+        "path": "contributor_tools/audit_mblue_pelvis_preservation.py",
+        "recorded_sha256": "b2672d2ea978c1f24f6fb90c17a67c7aa67cc0089423cb75b4e16c1cf7b5bf67",
+        "current_sha256": "b2672d2ea978c1f24f6fb90c17a67c7aa67cc0089423cb75b4e16c1cf7b5bf67",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_readback",
+        "path": "contributor_tools/reconvert_mblue_normalized.py",
+        "recorded_sha256": "607f9aea226cff3d7b0c878f1c5681e701bb7e9f3bcbd621f4e571cd50c61ea1",
+        "current_sha256": "607f9aea226cff3d7b0c878f1c5681e701bb7e9f3bcbd621f4e571cd50c61ea1",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_readback",
+        "path": "contributor_tools/conversion_scripts/MBLUEAnkle/convert_mblue_ankle_to_parquet.py",
+        "recorded_sha256": "faf161c5312607ab1cc74dfac5cff21fb8657bc65ea03910a4a2d47a6191305a",
+        "current_sha256": "faf161c5312607ab1cc74dfac5cff21fb8657bc65ea03910a4a2d47a6191305a",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_readback",
+        "path": "contributor_tools/reconvert_recording.py",
+        "recorded_sha256": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f",
+        "current_sha256": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_readback",
+        "path": "contributor_tools/common/data_contract.py",
+        "recorded_sha256": "553ced002f105236f1a4d10a085c02d028b0ec8887b6b968a209e810b155cf48",
+        "current_sha256": "0b535c06a0d0c7339db61c1ff261ed00e327dc94b4ca60d1b7cc2ebc68dbce99",
+        "match": false,
+        "head_sha256": "553ced002f105236f1a4d10a085c02d028b0ec8887b6b968a209e810b155cf48",
+        "recorded_equals_head": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_readback",
+        "path": "contributor_tools/common/task_registry.py",
+        "recorded_sha256": "263b2b7397b535bfb02934857fd7c8c0fd85b3f83447cdbef530a5e946e89e5b",
+        "current_sha256": "263b2b7397b535bfb02934857fd7c8c0fd85b3f83447cdbef530a5e946e89e5b",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_readback",
+        "path": "contributor_tools/audit_mblue_normalized.py",
+        "recorded_sha256": "280c4ad81526a3bdaa2ad3f181d689ea062bd2fb03394beb0917d1a58302957c",
+        "current_sha256": "280c4ad81526a3bdaa2ad3f181d689ea062bd2fb03394beb0917d1a58302957c",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_readback",
+        "path": "contributor_tools/audit_mblue_pelvis_preservation.py",
+        "recorded_sha256": "b2672d2ea978c1f24f6fb90c17a67c7aa67cc0089423cb75b4e16c1cf7b5bf67",
+        "current_sha256": "b2672d2ea978c1f24f6fb90c17a67c7aa67cc0089423cb75b4e16c1cf7b5bf67",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_preservation",
+        "path": "contributor_tools/reconvert_mblue_normalized.py",
+        "recorded_sha256": "607f9aea226cff3d7b0c878f1c5681e701bb7e9f3bcbd621f4e571cd50c61ea1",
+        "current_sha256": "607f9aea226cff3d7b0c878f1c5681e701bb7e9f3bcbd621f4e571cd50c61ea1",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_preservation",
+        "path": "contributor_tools/conversion_scripts/MBLUEAnkle/convert_mblue_ankle_to_parquet.py",
+        "recorded_sha256": "faf161c5312607ab1cc74dfac5cff21fb8657bc65ea03910a4a2d47a6191305a",
+        "current_sha256": "faf161c5312607ab1cc74dfac5cff21fb8657bc65ea03910a4a2d47a6191305a",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_preservation",
+        "path": "contributor_tools/reconvert_recording.py",
+        "recorded_sha256": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f",
+        "current_sha256": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_preservation",
+        "path": "contributor_tools/common/data_contract.py",
+        "recorded_sha256": "553ced002f105236f1a4d10a085c02d028b0ec8887b6b968a209e810b155cf48",
+        "current_sha256": "0b535c06a0d0c7339db61c1ff261ed00e327dc94b4ca60d1b7cc2ebc68dbce99",
+        "match": false,
+        "head_sha256": "553ced002f105236f1a4d10a085c02d028b0ec8887b6b968a209e810b155cf48",
+        "recorded_equals_head": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_preservation",
+        "path": "contributor_tools/common/task_registry.py",
+        "recorded_sha256": "263b2b7397b535bfb02934857fd7c8c0fd85b3f83447cdbef530a5e946e89e5b",
+        "current_sha256": "263b2b7397b535bfb02934857fd7c8c0fd85b3f83447cdbef530a5e946e89e5b",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_preservation",
+        "path": "contributor_tools/audit_mblue_normalized.py",
+        "recorded_sha256": "280c4ad81526a3bdaa2ad3f181d689ea062bd2fb03394beb0917d1a58302957c",
+        "current_sha256": "280c4ad81526a3bdaa2ad3f181d689ea062bd2fb03394beb0917d1a58302957c",
+        "match": true
+      },
+      {
+        "bound_in": "pelvis_queue_plan:mblue_pelvis_preservation",
+        "path": "contributor_tools/audit_mblue_pelvis_preservation.py",
+        "recorded_sha256": "b2672d2ea978c1f24f6fb90c17a67c7aa67cc0089423cb75b4e16c1cf7b5bf67",
+        "current_sha256": "b2672d2ea978c1f24f6fb90c17a67c7aa67cc0089423cb75b4e16c1cf7b5bf67",
+        "match": true
+      },
+      {
+        "bound_in": "stair_queue_plan:mblue_stair_reference_correction",
+        "path": "contributor_tools/correct_mblue_stair_reference.py",
+        "recorded_sha256": "9e9d26bbcd9df641660e5f3e801c4bee00c2d044a7f736702da4c87b98fbcef8",
+        "current_sha256": "9e9d26bbcd9df641660e5f3e801c4bee00c2d044a7f736702da4c87b98fbcef8",
+        "match": true
+      },
+      {
+        "bound_in": "stair_queue_plan:mblue_stair_reference_correction",
+        "path": "contributor_tools/reconvert_recording.py",
+        "recorded_sha256": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f",
+        "current_sha256": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f",
+        "match": true
+      },
+      {
+        "bound_in": "stair_queue_plan:mblue_stair_reference_correction",
+        "path": "converted_datasets/reconversion_v2/mblue_stair_reference_review_v3_20261021/reference_recovery.json",
+        "recorded_sha256": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02",
+        "current_sha256": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02",
+        "match": true
+      },
+      {
+        "bound_in": "rebuild summary",
+        "path": "contributor_tools/reconvert_mblue_normalized.py",
+        "recorded_sha256": "607f9aea226cff3d7b0c878f1c5681e701bb7e9f3bcbd621f4e571cd50c61ea1",
+        "current_sha256": "607f9aea226cff3d7b0c878f1c5681e701bb7e9f3bcbd621f4e571cd50c61ea1",
+        "match": true
+      },
+      {
+        "bound_in": "rebuild summary",
+        "path": "contributor_tools/conversion_scripts/MBLUEAnkle/convert_mblue_ankle_to_parquet.py",
+        "recorded_sha256": "faf161c5312607ab1cc74dfac5cff21fb8657bc65ea03910a4a2d47a6191305a",
+        "current_sha256": "faf161c5312607ab1cc74dfac5cff21fb8657bc65ea03910a4a2d47a6191305a",
+        "match": true
+      },
+      {
+        "bound_in": "rebuild summary",
+        "path": "contributor_tools/reconvert_recording.py",
+        "recorded_sha256": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f",
+        "current_sha256": "5e2ee7dc6ff586d726b0444c4d66bbaeebaf37856b63cde0f0a5b3874b18bc6f",
+        "match": true
+      },
+      {
+        "bound_in": "rebuild summary",
+        "path": "contributor_tools/common/data_contract.py",
+        "recorded_sha256": "553ced002f105236f1a4d10a085c02d028b0ec8887b6b968a209e810b155cf48",
+        "current_sha256": "0b535c06a0d0c7339db61c1ff261ed00e327dc94b4ca60d1b7cc2ebc68dbce99",
+        "match": false,
+        "head_sha256": "553ced002f105236f1a4d10a085c02d028b0ec8887b6b968a209e810b155cf48",
+        "recorded_equals_head": true
+      },
+      {
+        "bound_in": "rebuild summary",
+        "path": "contributor_tools/common/task_registry.py",
+        "recorded_sha256": "263b2b7397b535bfb02934857fd7c8c0fd85b3f83447cdbef530a5e946e89e5b",
+        "current_sha256": "263b2b7397b535bfb02934857fd7c8c0fd85b3f83447cdbef530a5e946e89e5b",
+        "match": true
+      },
+      {
+        "bound_in": "scope gate plan",
+        "path": "contributor_tools/check_mblue_final_scope.py",
+        "recorded_sha256": "92e6ac8401df077f60e04fd98cfbc8bd2b919b46b48279cb57122af85c17bea2",
+        "current_sha256": "92e6ac8401df077f60e04fd98cfbc8bd2b919b46b48279cb57122af85c17bea2",
+        "match": true
+      },
+      {
+        "bound_in": "readback probe",
+        "path": "contributor_tools/audit_mblue_normalized.py",
+        "recorded_sha256": "280c4ad81526a3bdaa2ad3f181d689ea062bd2fb03394beb0917d1a58302957c",
+        "current_sha256": "280c4ad81526a3bdaa2ad3f181d689ea062bd2fb03394beb0917d1a58302957c",
+        "match": true
+      },
+      {
+        "bound_in": "preservation probe",
+        "path": "contributor_tools/audit_mblue_pelvis_preservation.py",
+        "recorded_sha256": "b2672d2ea978c1f24f6fb90c17a67c7aa67cc0089423cb75b4e16c1cf7b5bf67",
+        "current_sha256": "b2672d2ea978c1f24f6fb90c17a67c7aa67cc0089423cb75b4e16c1cf7b5bf67",
+        "match": true
+      },
+      {
+        "bound_in": "correction probe",
+        "path": "contributor_tools/correct_mblue_stair_reference.py",
+        "recorded_sha256": "9e9d26bbcd9df641660e5f3e801c4bee00c2d044a7f736702da4c87b98fbcef8",
+        "current_sha256": "9e9d26bbcd9df641660e5f3e801c4bee00c2d044a7f736702da4c87b98fbcef8",
+        "match": true
+      },
+      {
+        "bound_in": "inventory probe",
+        "path": "contributor_tools/audit_probes/2026_10_20/check_mblue_source_inventory.py",
+        "recorded_sha256": "67455222ef6afe1ab4863cf860e331237b819c5acf54c3b8d4bf7b23953b4ad9",
+        "current_sha256": "67455222ef6afe1ab4863cf860e331237b819c5acf54c3b8d4bf7b23953b4ad9",
+        "match": true
+      },
+      {
+        "bound_in": "recovery probe",
+        "path": "contributor_tools/audit_probes/2026_10_20/check_mblue_stair_reference.py",
+        "recorded_sha256": "beccc2d8d911309c0b65b412ee736d45ebd632b49d534ade825f0c6144a7ce63",
+        "current_sha256": "beccc2d8d911309c0b65b412ee736d45ebd632b49d534ade825f0c6144a7ce63",
+        "match": true
+      },
+      {
+        "bound_in": "marker endpoint probe",
+        "path": "contributor_tools/audit_probes/2026_10_20/check_mblue_marker_endpoints.py",
+        "recorded_sha256": "d25d40b788fdee8351dcbd360a95e90b5f0125c5b4480c9057b703077d3c92bb",
+        "current_sha256": "d25d40b788fdee8351dcbd360a95e90b5f0125c5b4480c9057b703077d3c92bb",
+        "match": true
+      }
+    ]
+  },
+  "on_disk_stat": {
+    "final_outputs": {
+      "root": "converted_datasets/reconversion_v2/mblue_reference_corrected_full_20261021",
+      "files": 335,
+      "missing": [],
+      "bytes": 1069429723,
+      "stair_bytes": 58628940
+    },
+    "rebuild_outputs": {
+      "root": "converted_datasets/reconversion_v2/mblue_pelvis_corrected_full_20261021",
+      "files": 335,
+      "missing": [],
+      "bytes": 1121741089,
+      "stair_bytes": 110940306
+    },
+    "source_mat": [
+      {
+        "subject": "AB01",
+        "source_exists": true,
+        "source_bytes_match_inventory": true,
+        "source_mtime_utc": "2026-01-12T17:27:52.262967+00:00",
+        "fileinfo_exists": true,
+        "fileinfo_bytes": 1390
+      },
+      {
+        "subject": "AB02",
+        "source_exists": true,
+        "source_bytes_match_inventory": true,
+        "source_mtime_utc": "2026-01-12T17:30:54.245761+00:00",
+        "fileinfo_exists": true,
+        "fileinfo_bytes": 1546
+      },
+      {
+        "subject": "AB03",
+        "source_exists": true,
+        "source_bytes_match_inventory": true,
+        "source_mtime_utc": "2026-01-12T17:33:44.272626+00:00",
+        "fileinfo_exists": true,
+        "fileinfo_bytes": 1510
+      },
+      {
+        "subject": "AB04",
+        "source_exists": true,
+        "source_bytes_match_inventory": true,
+        "source_mtime_utc": "2026-01-12T17:36:43.688093+00:00",
+        "fileinfo_exists": true,
+        "fileinfo_bytes": 1685
+      },
+      {
+        "subject": "AB05",
+        "source_exists": true,
+        "source_bytes_match_inventory": true,
+        "source_mtime_utc": "2026-01-12T17:39:08.906248+00:00",
+        "fileinfo_exists": true,
+        "fileinfo_bytes": 1574
+      },
+      {
+        "subject": "AB06",
+        "source_exists": true,
+        "source_bytes_match_inventory": true,
+        "source_mtime_utc": "2026-01-12T17:41:44.777940+00:00",
+        "fileinfo_exists": true,
+        "fileinfo_bytes": 1498
+      },
+      {
+        "subject": "AB08",
+        "source_exists": true,
+        "source_bytes_match_inventory": true,
+        "source_mtime_utc": "2026-01-12T17:44:32.205599+00:00",
+        "fileinfo_exists": true,
+        "fileinfo_bytes": 1515
+      },
+      {
+        "subject": "AB09",
+        "source_exists": true,
+        "source_bytes_match_inventory": true,
+        "source_mtime_utc": "2026-01-12T17:47:04.859795+00:00",
+        "fileinfo_exists": true,
+        "fileinfo_bytes": 1509
+      },
+      {
+        "subject": "AB10",
+        "source_exists": true,
+        "source_bytes_match_inventory": true,
+        "source_mtime_utc": "2026-01-12T17:49:40.475863+00:00",
+        "fileinfo_exists": true,
+        "fileinfo_bytes": 1604
+      },
+      {
+        "subject": "AB11",
+        "source_exists": true,
+        "source_bytes_match_inventory": true,
+        "source_mtime_utc": "2026-01-12T17:52:41.214476+00:00",
+        "fileinfo_exists": true,
+        "fileinfo_bytes": 1503
+      }
+    ],
+    "source_mat_bytes": 167184265,
+    "fileinfo_bytes": 15334,
+    "stair_force_ik_files": 40,
+    "stair_force_ik_bytes": 860739763
+  },
+  "checks": [
+    {
+      "check": "Every recorded receipt hash equals the current receipt bytes",
+      "result": "pass",
+      "detail": "50 recorded references to 17 receipts; 0 mismatched"
+    },
+    {
+      "check": "Bound producer/checker code unchanged, or recorded version recoverable from HEAD",
+      "result": "pass",
+      "detail": "36 bindings; changed in working tree: ['contributor_tools/common/data_contract.py']"
+    },
+    {
+      "check": "Terminal success status in every chain receipt; none claims scientific approval",
+      "result": "pass",
+      "detail": "unexpected: none; inventory has no status field (PM-02: no terminal record)"
+    },
+    {
+      "check": "Readback started at block 0 and correction scope is full_baseline",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "check": "baseline: 335 unique blocks equal to the inventory block set",
+      "result": "pass",
+      "detail": "335 records"
+    },
+    {
+      "check": "rebuild: 335 unique blocks equal to the inventory block set",
+      "result": "pass",
+      "detail": "335 records"
+    },
+    {
+      "check": "readback: 335 unique blocks equal to the inventory block set",
+      "result": "pass",
+      "detail": "335 records"
+    },
+    {
+      "check": "preservation: 335 unique blocks equal to the inventory block set",
+      "result": "pass",
+      "detail": "335 records"
+    },
+    {
+      "check": "correction: 335 unique blocks equal to the inventory block set",
+      "result": "pass",
+      "detail": "335 records"
+    },
+    {
+      "check": "planar: 335 unique blocks equal to the inventory block set",
+      "result": "pass",
+      "detail": "335 records"
+    },
+    {
+      "check": "Inventory names 10 source MAT files, one per subject, and every block subject has one",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "check": "Every rebuild and baseline record binds its subject source hash from the inventory",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "check": "Baseline and rebuild agree on subject_info hash, rows and output paths for every block",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "check": "Recovery normalized hashes equal the inventory source hashes",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "check": "Per-block views equal inventory cycles in baseline, rebuild, readback and correction (before)",
+      "result": "pass",
+      "detail": "total 15825; mismatched blocks 0"
+    },
+    {
+      "check": "Rows are exactly 150 per observation in baseline and rebuild",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "check": "Preservation counts per block sum to the block observations",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "check": "Receipt totals equal the sum of their per-block records",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "check": "Every left view unchanged and every right view classified (changed or unchanged)",
+      "result": "pass",
+      "detail": "left 8215; right 7610"
+    },
+    {
+      "check": "Changed columns are only pelvis and pelvis-derived segment columns",
+      "result": "pass",
+      "detail": "14 distinct columns"
+    },
+    {
+      "check": "Stairs and bilateral blocks have no changed views (their right clock equals the left clock)",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "check": "Recovery: 20 subject-condition records, each with exactly one fully matched source candidate",
+      "result": "pass",
+      "detail": "2 non-matching candidate sessions retained as unresolved (not used)"
+    },
+    {
+      "check": "Recovered side and endpoint counts equal the docs stair-reference receipt",
+      "result": "pass",
+      "detail": "{\"right\": 426, \"left\": 338, \"force_event_endpoints\": 652, \"source_marker_endpoints\": 112}"
+    },
+    {
+      "check": "Marker-endpoint reproduction covers every marker-derived endpoint",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "check": "Every stair block has l and r cycles equal to its recovered window count",
+      "result": "pass",
+      "detail": "136 stair blocks, 764 windows"
+    },
+    {
+      "check": "Stair lineage: each recovered window keeps exactly its reference view and omits exactly the other view",
+      "result": "pass",
+      "detail": "retained 764, omitted 764, errors none"
+    },
+    {
+      "check": "Non-stair blocks: no exclusions and final output hash equals the readback-checked rebuild hash",
+      "result": "pass",
+      "detail": "199 blocks"
+    },
+    {
+      "check": "Stair blocks: final outputs are new files (hash differs from rebuild) and are not covered by the rebuild readback",
+      "result": "pass",
+      "detail": "136 of 136"
+    },
+    {
+      "check": "Exclusion accounting: before minus after equals omitted non-reference views",
+      "result": "pass",
+      "detail": "15825 - 15061 = 764"
+    },
+    {
+      "check": "Downstream planar outputs bind the final correction output hashes (all 335)",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "check": "All 335 final and 335 rebuild outputs exist; final directory holds only those plus its summary",
+      "result": "pass",
+      "detail": "final 1069429723 bytes, rebuild 1121741089 bytes (stat only, not hashed)"
+    },
+    {
+      "check": "No final output modified after its correction summary was written (mtime only; not byte evidence)",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "check": "All 10 source MAT files exist with the inventory byte size; all 10 FileInfo files exist",
+      "result": "pass",
+      "detail": ""
+    },
+    {
+      "check": "All 40 matched stair force/IK source files exist",
+      "result": "pass",
+      "detail": "860739763 bytes"
+    },
+    {
+      "check": "Inventory side-cycles minus right sit-stand/crouch cycles (carried as contra columns) equal the views",
+      "result": "pass",
+      "detail": "16418 - 593 = 15825; 59 bilateral blocks, all with exactly equal bilateral clocks"
+    },
+    {
+      "check": "Why 4 right treadmill views were unchanged by the pelvis fix",
+      "result": "not_checked",
+      "detail": "only in blocks with right-left >= 2 (3 of 7; 0 of 133 other treadmill blocks); consistent with no left-clock overlap, not established; stage 2 target"
+    }
+  ],
+  "failed_checks": 0,
+  "claims": [
+    {
+      "claim": "All 335 blocks and 15,825 source views are reconstructed",
+      "evidence": "rebuild summary, inventory, scope gate",
+      "basis": "receipt_exact",
+      "rests_on_unreviewed": [
+        "inventory has no terminal status record (PM-02 needs_fresh_reviewed_plan)"
+      ]
+    },
+    {
+      "claim": "Rebuild values agree with the source MAT to at most 1.8e-15 (79,665,196 finite values, tolerance 1e-8)",
+      "evidence": "pelvis-corrected full readback",
+      "basis": "receipt_exact; bound to rebuild bytes, not to the final stair files",
+      "rests_on_unreviewed": [
+        "readback checker is not independently reviewed; it shares the producer's digest helper"
+      ]
+    },
+    {
+      "claim": "Corrected right pelvis uses the left source clock; missing or conflicting overlap stays missing",
+      "evidence": "readback checker (pelvis expected from left clock; equal_nan comparison); preservation (6,842 right views changed)",
+      "basis": "receipt_exact (checker logic, not a separate count of missing samples)",
+      "rests_on_unreviewed": [
+        "no receipt counts the samples left missing by the overlap rule"
+      ]
+    },
+    {
+      "claim": "Every unrelated column is exactly preserved by the pelvis fix",
+      "evidence": "preservation receipt (check_exact on all non-pelvis/segment columns; left views identical)",
+      "basis": "receipt_exact",
+      "rests_on_unreviewed": []
+    },
+    {
+      "claim": "Each of 764 stair windows exports exactly its recovered reference view, both legs retained",
+      "evidence": "correction summary identities reconciled here against recovery windows",
+      "basis": "receipt_exact for identities; value preservation of the 136 rewritten stair files rests on the producer self-check only",
+      "rests_on_unreviewed": [
+        "no independent readback of the 136 final stair files",
+        "reference side follows the source force-threshold convention, not physical contact"
+      ]
+    },
+    {
+      "claim": "No synthetic timing",
+      "evidence": "readback: time_s equals the source clock resampled to 150 points; source event times copied from recovery",
+      "basis": "receipt_exact (rebuild); producer self-check (final stair event columns)",
+      "rests_on_unreviewed": []
+    },
+    {
+      "claim": "Final outputs still hold the recorded bytes",
+      "evidence": "none current; recorded hashes date from 2026-10-21",
+      "basis": "not_rechecked",
+      "rests_on_unreviewed": [
+        "needs the full-byte job below"
+      ]
+    },
+    {
+      "claim": "Source MAT, FileInfo and stair .mot files still hold the recorded bytes",
+      "evidence": "sizes match; bytes not rehashed here",
+      "basis": "not_rechecked",
+      "rests_on_unreviewed": [
+        "needs the full-byte job below"
+      ]
+    }
+  ],
+  "acceptance_assessment": [
+    {
+      "criterion": "All 335 blocks accounted for; corrected right pelvis uses left source clock with missing overlap preserved",
+      "assessment": "met_by_receipts",
+      "gap": "Byte currency of outputs and sources not rechecked."
+    },
+    {
+      "criterion": "Every unrelated column exactly preserved; no synthetic timing",
+      "assessment": "met_by_receipts_for_rebuild; stair files by producer self-check",
+      "gap": "Independent check that the 136 stair files equal the rebuild views they keep."
+    },
+    {
+      "criterion": "Each of 764 stair windows exports exactly its recovered reference view, retaining both legs; dropped views have explicit lineage",
+      "assessment": "met_by_receipts",
+      "gap": "Same as above for values; identities fully reconciled."
+    },
+    {
+      "criterion": "Final source readback bound to final corrected hashes",
+      "assessment": "partly_met",
+      "gap": "Readback is bound to the rebuild hashes. 199 final outputs share those hashes; the 136 rewritten stair outputs are bound only through the producer, which compared kept views to the rebuild with check_exact."
+    },
+    {
+      "criterion": "Do not rerun verified full work merely because old queues stopped",
+      "assessment": "met",
+      "gap": "No rerun proposed; only byte currency and the stair-file comparison remain."
+    },
+    {
+      "criterion": "Scope-specific handoff for profile/limitations review and later release reconciliation",
+      "assessment": "handoff_written",
+      "gap": "Profile, anatomy, force/COP lineage and release gates stay open."
+    }
+  ],
+  "full_byte_verification_job": {
+    "job_id": "mb24-f01-full-byte-verify-20261031",
+    "status": "specified_not_written_not_run",
+    "scheduling": "PM-01, through the reviewed guarded launcher only after UM21-T02 is reviewed; one numerical worker; no native code.",
+    "verifier_to_write": "contributor_tools/verify_mblue_final_bytes.py (new; Linux Python only; pyarrow for stage 2)",
+    "stages": [
+      {
+        "stage": 1,
+        "name": "byte identity",
+        "reads": "streaming SHA256, 1 MiB chunks, no parsing",
+        "targets": [
+          "335 final outputs under converted_datasets/reconversion_v2/mblue_reference_corrected_full_20261021 against correction_summary.json outputs",
+          "136 rebuild stair outputs against the rebuild conversion_summary.json outputs",
+          "10 source MAT files against source_inventory.json sources[].sha256",
+          "10 FileInfo files against the rebuild records subject_info_sha256",
+          "40 matched stair force/IK .mot files against reference_recovery.json candidates"
+        ],
+        "pass": "every current hash equals its recorded hash; any mismatch stops stage 2 and is reported, never repaired"
+      },
+      {
+        "stage": 2,
+        "name": "independent stair-view comparison (136 blocks, 1,528 rebuild views, 764 final views)",
+        "reads": "one stair block at a time, 150-row batches",
+        "targets": [
+          "each final stair observation equals the rebuild observation with the same observation_id in every rebuild column (exact)",
+          "the final file holds exactly the retained identities in correction_summary.json and none of the omitted ones",
+          "source_event_start/end_time_s and bases equal the recovery window values",
+          "every row has 150 samples and time_s is unchanged",
+          "per right treadmill view (140 blocks): from the source time_l/time_r clocks, list the right views whose clock window has no left-clock overlap; check that pelvis and derived segment columns are missing exactly where no overlap exists, and compare the list with the 4 views the pelvis fix left unchanged (AB04/exo/decline_10deg, AB05/bare/decline_5deg, AB11/bare/incline_10deg)"
+        ],
+        "pass": "all 764 kept views exact; 764 omitted views absent; the no-overlap list explains the 4 unchanged views or is reported as an open anomaly"
+      }
+    ],
+    "estimated_read_bytes": 2208309391,
+    "launcher_spec": {
+      "job_id": "mb24-f01-full-byte-verify-20261031",
+      "command": [
+        "python3",
+        "contributor_tools/verify_mblue_final_bytes.py",
+        "--correction",
+        "converted_datasets/reconversion_v2/mblue_reference_corrected_full_20261021/correction_summary.json",
+        "--rebuild",
+        "converted_datasets/reconversion_v2/mblue_pelvis_corrected_full_20261021/conversion_summary.json",
+        "--inventory",
+        "converted_datasets/reconversion_v2/mblue_source_inventory_20261021/source_inventory.json",
+        "--recovery",
+        "converted_datasets/reconversion_v2/mblue_stair_reference_review_v3_20261021/reference_recovery.json",
+        "--output",
+        "converted_datasets/reconversion_v2/mb24_f01_full_byte_verify_20261031"
+      ],
+      "output_root": "converted_datasets/reconversion_v2/mb24_f01_full_byte_verify_20261031",
+      "receipt_path": "converted_datasets/reconversion_v2/mb24_f01_full_byte_verify_20261031.receipt.json",
+      "bindings": {
+        "contributor_tools/verify_mblue_final_bytes.py": "TO_BIND_AFTER_REVIEW (script not yet written)",
+        "converted_datasets/reconversion_v2/mblue_reference_corrected_full_20261021/correction_summary.json": "47cb1720fa54711527473fc2a9cf9bf4a31fac4bde2433f585606059a77787dd",
+        "converted_datasets/reconversion_v2/mblue_pelvis_corrected_full_20261021/conversion_summary.json": "115bea01d584b2c2c30833b7e31be0ca3abc6283c99c98d18e3467780eb093b6",
+        "converted_datasets/reconversion_v2/mblue_source_inventory_20261021/source_inventory.json": "a7a2146a8abc69bb222e0a230f951981e7cf71f4624c8a523007d35876e6e327",
+        "converted_datasets/reconversion_v2/mblue_stair_reference_review_v3_20261021/reference_recovery.json": "cd5b30a73d8f7b9ef55bf2ec25a61e66e865d6c1fbceaab7f808898cbb82da02"
+      },
+      "timeout_seconds": 3600,
+      "kill_after_seconds": 30,
+      "poll_seconds": 15,
+      "startup_memory_mib": {
+        "linux": 3584,
+        "windows": 2816
+      },
+      "runtime_memory_mib": {
+        "linux": 2048,
+        "windows": 2048
+      },
+      "address_space_mib": 768,
+      "expected_output_names": [
+        "byte_identity.json",
+        "stair_view_comparison.json"
+      ],
+      "disk_admission": [
+        {
+          "path": "converted_datasets/reconversion_v2",
+          "min_free_mib": 5120
+        }
+      ]
+    },
+    "notes": [
+      "Binding keys are repository-root relative (the launcher hashes them against cwd, which defaults to the repository root); the four receipt keys carry the converted_datasets/reconversion_v2/ prefix and their hashes equal the current files (spec_validation).",
+      "The verifier binding is TO_BIND_AFTER_REVIEW: the script is not written, so this spec cannot launch until its reviewed hash replaces the placeholder.",
+      "Stage 1 needs no pyarrow. Stage 2 reads the 136 stair files of each set plus, for the overlap target, the 140 rebuild treadmill outputs and the source clocks.",
+      "Stage 2 imports pyarrow under the 768 MiB address-space cap; that import hung without single-thread settings in the reviewer test. It must run through the launcher, whose default thread_env sets OPENBLAS/OMP/MKL/ARROW/NUMEXPR_NUM_THREADS=1, and the pilot must confirm it.",
+      "The verifier must not import contributor_tools.common.data_contract (changed in the working tree since the rebuild).",
+      "A pilot of the same bound code on one treadmill and one stair block is required before the full run (AGENTS.md)."
+    ],
+    "spec_validation": {
+      "validate_spec_with_dummy_verifier_hash": "pass",
+      "error": null,
+      "dummy_replaced_bindings": [
+        "contributor_tools/verify_mblue_final_bytes.py"
+      ],
+      "placeholder_disclosed": "TO_BIND_AFTER_REVIEW kept in the spec; validate_spec rejects it as written, as intended",
+      "normalized_cwd": ".",
+      "receipt_bindings_from_repository_root": {
+        "converted_datasets/reconversion_v2/mblue_reference_corrected_full_20261021/correction_summary.json": {
+          "exists": true,
+          "matches": true
+        },
+        "converted_datasets/reconversion_v2/mblue_pelvis_corrected_full_20261021/conversion_summary.json": {
+          "exists": true,
+          "matches": true
+        },
+        "converted_datasets/reconversion_v2/mblue_source_inventory_20261021/source_inventory.json": {
+          "exists": true,
+          "matches": true
+        },
+        "converted_datasets/reconversion_v2/mblue_stair_reference_review_v3_20261021/reference_recovery.json": {
+          "exists": true,
+          "matches": true
+        }
+      },
+      "all_receipt_bindings_match": true,
+      "launcher_sha256": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b"
+    }
+  },
+  "remaining": [
+    "Run the full-byte job (stage 1 byte identity, stage 2 independent stair-view comparison) under PM-01 after the launcher review; pilot first.",
+    "Source inventory has no terminal status record; its source hashes were re-established by the readback (which re-hashes each source MAT), but the inventory run itself is unreviewed.",
+    "Docs audits mblue-pelvis-clock-fix.json and mblue-stair-reference.json still say the full rebuild/correction is queued; both completed on 2026-10-21. Owner of docs/quality/audits should mark them superseded by this reconciliation.",
+    "docs audit mblue-complete-source-readback.json describes the pre-fix baseline (two partial readbacks, different checker versions); it is superseded for pelvis and segment columns.",
+    "contributor_tools/common/data_contract.py differs from the version bound to the rebuild (the bound version equals git HEAD). Existing outputs are unaffected; any rerun must bind the current file.",
+    "Not checked: 4 right treadmill views in 3 blocks (AB04/exo/decline_10deg, AB05/bare/decline_5deg, AB11/bare/incline_10deg) were unchanged by the pelvis fix. They occur only in blocks with at least 2 more right than left cycles (3 of 7 such blocks; none in the other 133), consistent with right cycles that have no left-clock overlap. The receipts cannot establish this; stage 2 of the full-byte job lists no-overlap views per view.",
+    "Not reconciled here: anatomical/model orientation, force/COP source lineage, raw event exclusions, the planar relabel gate, profile/limitations review and release reconciliation."
+  ],
+  "limitations": [
+    "Receipts, recorded hashes and file stats only; no scientific value was reread.",
+    "Agreement among receipts written by the same pipeline is not independent of that pipeline.",
+    "completed_unreviewed and pass here are not scientific approval."
+  ]
+}

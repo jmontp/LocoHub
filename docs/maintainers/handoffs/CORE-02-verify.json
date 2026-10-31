@@ -1,0 +1,108 @@
+{
+  "task_id": "CORE-02",
+  "verifier_role": "independent second agent; own synthetic fixtures and expected values; the worker's fixture generator and helpers were not imported",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-30T23:10:00Z",
+  "round_2": {
+    "verdict": "done",
+    "last_checked_at_utc": "2026-10-30T23:10:00Z",
+    "summary": "All three round-1 required fixes are in the files, and the optional G6 fix is implemented and holds against adversarial fixtures. filtered.parquet is now table.take(sorted positions) of the Arrow table the builder read. Its schema (including metadata) and values equal an independently computed row selection of full.parquet. G1 (high) is tracked as backlog task CORE-05 (P0, blocked). G2-G5, G7 and G8 remain recorded follow-ups. Done covers the CORE-02 fixture/infrastructure acceptance only; it is not scientific approval and authorizes no release.",
+    "file_checks": [
+      {"item": "build_dataset_release.py diff vs HEAD", "result": "pass", "evidence": "Round-1 hash move, unchanged. Round 2: _filtered_rows now returns int64 row positions (identity + sample column, reset to a positional index, isin on full identity, stable sort). 'del table' is removed so the table is kept. filtered = table.take(positions); pq.write_table(filtered, ...) with the same row_group_size and compression; counts.filtered_rows = filtered.num_rows. No other change."},
+      {"item": "tests/test_release_lineage_verify.py", "result": "pass", "evidence": "271 lines (273 before). The only difference is the two removed CORE-02-G6 strict-xfail decorators. Every assertion, fixture and parametrization matches the round-1 text. The G7 and G8 markers are still present."},
+      {"item": "audit schema claim and gaps", "result": "pass", "evidence": "The filtering check now limits the schema claim to the fixture's column types (strings, float64). A separate G6 check records the defect and the fix. The gap list has G1-G8; G1 is high and states that it blocks the first treadmill packaging."},
+      {"item": "CORE-02.json handoff", "result": "pass", "evidence": "status review. changed_files lists round-2 edits, including the verifier file (markers only). remaining has G1-G5, G7 and G8 with severities, and the test comment at line 164 is scoped. The handoff names no CORE-05 ID; it says G1 is 'scheduled separately'. CORE-05 exists in backlog.json (P0, blocked)."}
+    ],
+    "g6_adversarial": [
+      {"fixture": "shuffled rows, 8 row groups (row_group_size=97), dictionary string column, list<double> with null elements and null lists, struct<int32,string>, tz-aware timestamp, all-null decimal128, custom schema metadata", "result": "pass", "evidence": "filtered.schema.equals(full.schema, check_metadata=True); the filtered table equals full.take(order), where order is computed independently (eligible identities from quality.json, sorted by identity, phase, original position); 450 rows, matching counts.filtered_rows, the sum of eligible row_count and the README."},
+      {"fixture": "every observation fails", "result": "pass", "evidence": "Zero-row filtered table with the full schema and metadata; counts.filtered_rows 0; pandas reads 0 rows."},
+      {"fixture": "stored named non-range index; stored RangeIndex; offset RangeIndex(1000..)", "result": "pass", "evidence": "Positions are taken positionally (reset_index), so the restored pandas index does not misalign selection. A named index column is carried as in full.parquet. A RangeIndex in the pandas metadata reads back as a default 0..n-1 index with the right length."},
+      {"fixture": "reversed row order", "result": "pass", "evidence": "Phase increases strictly within every filtered observation, and row-order changes still give byte-identical filtered files (verifier test)."},
+      {"fixture": "dictionary-encoded identity column (read back as pandas categorical)", "result": "pass with G7 refined", "evidence": "With 2 categories: 5 observations and no phantom empty groups, and the filtered selection is correct. With exactly 1 category: TypeError (G7). Series.map keeps a categorical dtype only when the mapping is one-to-one, so G7 is limited to single-valued (or mixed empty/nonempty) categorical identity columns. It still fails closed."}
+    ],
+    "observations": [
+      "Removing 'del table' keeps the Arrow table alive during assessment. Peak memory is about the same as before (the old path held pandas copies plus a from_pandas table) and stays within the 4x-uncompressed admission estimate's stated scope. Not a regression; no action.",
+      "The backlog row for CORE-02 still shows status 'ready'. The coordinator moves it to done when copying this verdict."
+    ],
+    "test_runs": [
+      {"command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_release_lineage_verify.py tests/test_release_lineage_adversarial.py tests/test_dataset_release.py tests/test_data_contract.py tests/test_backlog_workflow.py -rxX", "result": "169 passed, 2 xfailed (strict: G7, G8)"},
+      {"command": "python3 contributor_tools/build_backlog_page.py --check", "result": "Backlog valid; HTML current (85 tasks)."}
+    ],
+    "remaining_follow_ups": ["CORE-05 (G1, high)", "G2 (medium; may need a José release-policy decision)", "G3, G4, G7, G8 (low)", "G5 (inherent, no action)"]
+  },
+  "round_1_verdict": "back_to_worker",
+  "summary":"The builder fix is correct and is the only code change. Acceptance items 1, 3 and 4 hold on my fixtures, and G1 reproduces on this machine. The task goes back for a documentation-level correction. The audit states that filtered rows match the full export 'with identical column names and Arrow types', and a worker test comment says the filtered export is 'not a re-encoding'. Both hold only for the worker's fixture. filtered.parquet is rebuilt from pandas, which changes Arrow types, drops Parquet schema metadata and turns IEEE NaN into nulls (new gap G6). Two smaller gaps (G7, G8) were also missed. No research data was read, nothing was published, and no scientific approval is implied.",
+  "checks": [
+    {
+      "id": 1,
+      "area": "diff and fix",
+      "result": "pass",
+      "evidence": "git diff of contributor_tools/build_dataset_release.py: +3/-1 lines. input_hash = sha256_file(input_path) moves from after the profile-status check to before _admit_input, with a two-line comment. Nothing else changes. Own reproduction (scratchpad probe, synthetic): a HEAD copy of the builder admits a 300-row export and then receives a 600-row replacement. HEAD built the bundle with manifest input.rows=300, counts.full_rows=600 and input.sha256 equal to the replacement. The worktree builder raises 'Input changed while it was being read.' and leaves no bundle, lock or staging directory. The committed form is test_export_swapped_in_after_admission_is_not_released."
+    },
+    {
+      "id": 2,
+      "area": "acceptance 1: identities, immutability, changed inputs, overwrite",
+      "result": "pass",
+      "evidence": "full.parquet hash equals the input hash, and two row orders of the same rows give different input identities. A change made after the read is caught by the copy check (test_export_changed_after_read_is_caught_by_copy_check). An existing file, a dangling symlink, or a symlink to a directory at the destination is refused without writing through (parametrized test). Profile statuses 'draft', 'Reviewed', 'approved ' and 'pending' are refused. No staging directory or lock remains after any rejection."
+    },
+    {
+      "id": 3,
+      "area": "acceptance 2: whole-observation filtering, shared lineage, known-missing, exclusions",
+      "result": "pass for membership; failed for the worker's schema claim",
+      "evidence": "Membership: five observations (passed, failed on the other side of the same IDs, missing required signal, unprofiled task, second pass) split into filtered and ledger by full identity. Filtered rows plus ledger row_count equal the full rows, and the eligible identities in quality.json equal the filtered identities. Separator-like identities ('a|b','c' vs 'a','b|c') stay distinct. Shuffled inputs give byte-identical filtered.parquet. With no profile, nothing passes and everything is ledgered as unchecked. Schema: filtered.parquet is written with pa.Table.from_pandas after to_pandas, so it is a re-encoding. Verified drift: an int64 column with nulls anywhere becomes double; a string column that is null within the eligible subset becomes Arrow null type; large_string becomes string; Parquet schema key-value metadata is dropped; IEEE NaN values in a float signal (as non-pandas writers may store them) become Parquet nulls (15 NaN in, 0 NaN and 15 nulls out). Values still read the same in pandas. Both the audit claim (core02-release-lineage.json line 58) and the test comment (test_release_lineage_adversarial.py line 164) overstate the result."
+    },
+    {
+      "id": 4,
+      "area": "acceptance 3: review scope, approval wording, remote checksums",
+      "result": "pass with a new low gap",
+      "evidence": "The README and manifest (outside the contract block) contain no 'approv'/'certified' wording when the profile is 'reviewed'; the 'not a universal quality certification' limitation is present. A remote-only source is recorded as contributor_declared with a lowercased hash and the not-downloaded limitation. New gap G8: an https URI that has a local 'path' copy is recorded as verified_local, and no limitation says the URI itself was not downloaded or tied to those bytes."
+    },
+    {
+      "id": 5,
+      "area": "acceptance 4: incomplete evidence and error handling",
+      "result": "pass with a new low gap",
+      "evidence": "The worker's tests cover missing review, converter and source fields. New gap G7: pandas-categorical identity columns, which round-trip through Parquet, raise an uncaught TypeError in data_contract._nonempty_strings. main() catches only ValueError, OSError and ArrowException, so the CLI ends in a traceback. It fails closed: no bundle, lock or staging directory is left."
+    },
+    {
+      "id": 6,
+      "area": "G1 on this machine",
+      "result": "confirmed",
+      "evidence": "_publish_directory on ext4 (scratchpad): a new destination is published, and an existing empty destination is refused (EEXIST). On the /mnt/s 9p/drvfs mount (temporary directory under /mnt/s/workspace, removed afterwards): a new destination fails with EINVAL, and an existing destination is refused (EEXIST). It fails closed, so integrity is safe, but the repository drive cannot receive a release."
+    },
+    {
+      "id": 7,
+      "area": "test runs",
+      "result": "pass",
+      "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_release_lineage_verify.py tests/test_release_lineage_adversarial.py tests/test_dataset_release.py tests/test_data_contract.py tests/test_backlog_workflow.py -> 167 passed, 4 xfailed (strict; gaps G6 x2, G7, G8). The worker's file has 41 tests. python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (84 tasks)."
+    }
+  ],
+  "gap_severity": [
+    {"id": "CORE-02-G1", "severity": "high (operational), no integrity risk", "judgment": "Blocks releases to the default repository location. Fix or document before the first treadmill packaging. The worker rated it medium; I rate it higher because it blocks the next planned step."},
+    {"id": "CORE-02-G2", "severity": "medium", "judgment": "Agree. Release policy (a José scope/release decision). Add a limitation when no profile review record exists."},
+    {"id": "CORE-02-G3", "severity": "low", "judgment": "Agree."},
+    {"id": "CORE-02-G4", "severity": "low", "judgment": "Agree. Needs a concurrent replacement; the bypass is one unadmitted eager read on a shared host."},
+    {"id": "CORE-02-G5", "severity": "low, inherent", "judgment": "Agree; no action."},
+    {"id": "CORE-02-G6", "severity": "medium", "judgment": "New. filtered.parquet is not schema-identical to full.parquet: type drift, dropped schema metadata, NaN to null. Fix: select rows on the Arrow table (sort the pandas-derived row positions, then table.take) so filtered is a true subset of the full export. Fix before first packaging."},
+    {"id": "CORE-02-G7", "severity": "low", "judgment": "New. Categorical identities crash with TypeError. Fails closed; convert to a ReleaseError, or accept categorical/dictionary string identities."},
+    {"id": "CORE-02-G8", "severity": "low", "judgment": "New. A remote URI verified only through a local copy is labelled verified_local without a URI-not-downloaded limitation."}
+  ],
+  "required_fixes": [
+    "Correct docs/quality/audits/core02-release-lineage.json line 58 so 'identical column names and Arrow types' is scoped to the fixture's column types, and add G6 to its gaps (follow-up: Arrow-level take; see gap_severity).",
+    "Correct the comment at tests/test_release_lineage_adversarial.py line 164 ('not a re-encoding') to match.",
+    "Add G6, G7 and G8 to docs/quality/audits/core02-release-lineage.json gaps and to docs/maintainers/handoffs/CORE-02.json remaining. Raise G1 priority to block the first treadmill packaging.",
+    "Optional (recommended, may be a separate task): implement the G6 Arrow-level selection, then remove the strict-xfail markers in tests/test_release_lineage_verify.py that start passing."
+  ],
+  "verifier_tests": {
+    "file": "tests/test_release_lineage_verify.py",
+    "count": "15 passing + 4 strict xfail",
+    "fixtures": "Synthetic constant 0.5 rad (inside the synthetic [0,1] range) and 2.0 rad (outside) knee cycles on the 150-sample phase grid. Not a population reference.",
+    "xfail_markers": ["CORE-02-G6 schema", "CORE-02-G6 NaN encoding", "CORE-02-G7", "CORE-02-G8"]
+  },
+  "not_checked": [
+    "Time-mode and ensemble-mode bundles.",
+    "The native Windows os.rename publication path.",
+    "Any research dataset or converted_datasets/ content."
+  ],
+  "next_action": "Worker: apply the documentation corrections and gap entries above, then return the task to review. A re-verify needs only the audit/handoff diff plus the pytest command in check 7.",
+  "resources": "Synthetic fixtures only; one process; about 6 s per test run. Scratchpad probes (probe.py, probe2.py, g1.py and a patched HEAD copy of the builder) were not committed. No numerical slot was used."
+}

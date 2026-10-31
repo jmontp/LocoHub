@@ -1,0 +1,2302 @@
+{
+  "task_id": "GT21-S01",
+  "status": "crosswalk_reconciled_unreviewed_source_decision_open",
+  "scientific_approval": false,
+  "generated_at_utc": "2026-10-31T07:29:59+00:00",
+  "builder": {
+    "path": "contributor_tools/review_gt21_s01_crosswalk.py",
+    "sha256": "fa0d0fd3310d145d5b1d7d5ee4e7ecb6e22535d9c64a1cb9bbe485f8212c3238"
+  },
+  "resource_class": "read_only; manifests, receipts and directory listings only; no data arrays opened; no archive downloaded or extracted",
+  "publisher": {
+    "paper": "Camargo J, Ramanathan A, Flanagan W, Young A. A comprehensive, open-source dataset of lower limb biomechanics in multiple conditions of stairs, ramps, and level-ground ambulation and transitions. J Biomech 2021:110320. doi:10.1016/j.jbiomech.2021.110320",
+    "paper_cohort": "22 able-bodied adults (abstract quoted in the local README)",
+    "repository": {
+      "fcgm3chfff": {
+        "part": 1,
+        "versions": [
+          {
+            "version": 1,
+            "publish_date": "2021-02-26",
+            "available": true
+          },
+          {
+            "version": 2,
+            "publish_date": "2021-10-18",
+            "available": true
+          }
+        ],
+        "licence_v1": "CC BY 4.0"
+      },
+      "k9kvm5tn3f": {
+        "part": 2,
+        "versions": [
+          {
+            "version": 1,
+            "publish_date": "2021-02-26",
+            "available": true
+          },
+          {
+            "version": 2,
+            "publish_date": "2021-10-18",
+            "available": true
+          }
+        ],
+        "licence_v1": "CC BY 4.0"
+      },
+      "jj3r5f9pnf": {
+        "part": 3,
+        "versions": [
+          {
+            "version": 1,
+            "publish_date": "2021-02-26",
+            "available": true
+          },
+          {
+            "version": 2,
+            "publish_date": "2021-10-18",
+            "available": true
+          }
+        ],
+        "licence_v1": "CC BY 4.0"
+      }
+    },
+    "version_note": "Mendeley lists only versions 1 (2021-02-26) and 2 (2021-10-18) for all three parts on 2026-10-31; both predate the README-documented 2024-04-28 static/ik_offset additions. Whether a version 2 container includes static trials is not checked (member lists not fetched).",
+    "local_readme_matches_publisher_readme": false,
+    "local_readme_note": "Local README differs from the 4,970-byte README in publisher v1 and v2 and documents the 2024-04-28 additions; exact provenance of the local tree is not recorded.",
+    "numbering_gaps": "AB22, AB26 and AB29 have no publisher archive; no meaning is inferred."
+  },
+  "counts": {
+    "publisher_v1_subject_archives": 22,
+    "publisher_v1_archives_rechecked_20261031": 22,
+    "local_present": 16,
+    "local_recordings_from_conditions_files": 2301,
+    "prior_census_recordings": 2301,
+    "local_recordings_match_prior_census": true,
+    "recovered_not_converted": [
+      "AB17"
+    ],
+    "unrecovered": [
+      "AB12",
+      "AB15",
+      "AB19",
+      "AB23",
+      "AB28"
+    ],
+    "unexpected_local": [],
+    "missing_matches_prior_audit": true
+  },
+  "converter_requirements": {
+    "reads": {
+      "conditions": "convert_gtech_2021_phase_to_parquet.m 821",
+      "ik_offset": "convert_gtech_2021_phase_to_parquet.m 849 (joint angles); also exported at 73",
+      "id": "convert_gtech_2021_phase_to_parquet.m 860",
+      "gcRight": "convert_gtech_2021_phase_to_parquet.m 871",
+      "gcLeft": "convert_gtech_2021_phase_to_parquet.m 884",
+      "fp": "convert_gtech_2021_phase_to_parquet.m 897",
+      "markers": "convert_gtech_2021_phase_to_parquet.m 908",
+      "static/markers": "gtech_estimate_segment_lengths.m 75-80, called at convert_gtech_2021_phase_to_parquet.m 152; preferred source of segment lengths, with silent fallback to walking-trial markers"
+    },
+    "version1_gap": "Version 1 (AB17 archive) has no ik_offset and no static folder, so the current converter has no joint-angle input for a version 1 participant and would take segment lengths from walking-trial markers instead of the static pose."
+  },
+  "folder_comparison_from_listings": {
+    "v1_AB17_zip_directory": {
+      "conditions": 133,
+      "emg": 133,
+      "fp": 133,
+      "gcLeft": 133,
+      "gcRight": 133,
+      "gon": 133,
+      "id": 133,
+      "ik": 133,
+      "imu": 133,
+      "jp": 133,
+      "markers": 133,
+      "osimxml": 3
+    },
+    "local_2024_AB14": {
+      "conditions": 143,
+      "emg": 143,
+      "fp": 143,
+      "gcLeft": 143,
+      "gcRight": 143,
+      "gon": 143,
+      "id": 143,
+      "ik": 143,
+      "ik_offset": 143,
+      "imu": 143,
+      "jp": 143,
+      "markers": 143,
+      "osimxml": 3,
+      "static/ik": 1,
+      "static/ik_offset": 1,
+      "static/markers": 1
+    },
+    "note": "Different participants; presence and counts only. Byte equality of shared folders is not checked."
+  },
+  "metadata_provenance": {
+    "source": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/SubjectInfo.mat",
+    "publisher_record": "v1 and v2 manifest SHA-256 bc990b2c182e0cfc7b405b99fb429026585c224ce6d1ff5249734ec89cb2ce08",
+    "local_matches_publisher": true,
+    "rows_exported": 22,
+    "native_exact_readback": true,
+    "units": "VariableUnits may be empty. Do not infer units from the Weight name or model mass. An external serial watcher must be prepared and reviewed before launch.",
+    "processing_evidence": "Publisher-version equivalence of this local bundle and explicit kilogram evidence remain necessary before approving the recovered AB17 canonical mass."
+  },
+  "participants": [
+    {
+      "subject": "AB06",
+      "publisher_v1_archive": {
+        "doi": "10.17632/fcgm3chfff.1",
+        "part": 1,
+        "filename": "AB06.zip",
+        "file_id": "38140606-9761-4eb1-b77c-a9673128bc92",
+        "size": 1202725820,
+        "sha256": "39df723296b038a4a40c3561a6d92e8796641a65e94e20ab2e7201238360eaa7",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part1_AB06-AB14.zip",
+        "doi": "10.17632/fcgm3chfff.2",
+        "size": 10076406262,
+        "sha256": "9d0ddd17a8100fbd0bde04642e76ab1203faec759f877a7dea4c3c24f34fe603",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "74.84",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "10_09_18"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 30,
+          "ramp": 63,
+          "stair": 42,
+          "treadmill": 8
+        },
+        "recordings": 143,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB06"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB07",
+      "publisher_v1_archive": {
+        "doi": "10.17632/fcgm3chfff.1",
+        "part": 1,
+        "filename": "AB07.zip",
+        "file_id": "53cfb91a-a6ec-4bf6-8845-542b378dfbdd",
+        "size": 1340004847,
+        "sha256": "aae0bd04b7a52d446ae78428ce171dd526160367e1540456f14b365f08e0920e",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part1_AB06-AB14.zip",
+        "doi": "10.17632/fcgm3chfff.2",
+        "size": 10076406262,
+        "sha256": "9d0ddd17a8100fbd0bde04642e76ab1203faec759f877a7dea4c3c24f34fe603",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "55.34",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "10_14_18"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 31,
+          "ramp": 70,
+          "stair": 43,
+          "treadmill": 9
+        },
+        "recordings": 153,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB07"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB08",
+      "publisher_v1_archive": {
+        "doi": "10.17632/fcgm3chfff.1",
+        "part": 1,
+        "filename": "AB08.zip",
+        "file_id": "87ae2bef-a990-4bf2-9e2a-e1d88a9e57af",
+        "size": 1050055506,
+        "sha256": "391e13d4a62652e730e12a63667a7a025c75c03763965b8a1033e24472bf6000",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part1_AB06-AB14.zip",
+        "doi": "10.17632/fcgm3chfff.2",
+        "size": 10076406262,
+        "sha256": "9d0ddd17a8100fbd0bde04642e76ab1203faec759f877a7dea4c3c24f34fe603",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "72.57",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "10_21_2018"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 36,
+          "ramp": 60,
+          "stair": 35,
+          "treadmill": 7
+        },
+        "recordings": 138,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB08"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB09",
+      "publisher_v1_archive": {
+        "doi": "10.17632/fcgm3chfff.1",
+        "part": 1,
+        "filename": "AB09.zip",
+        "file_id": "05adb3d8-60e1-4464-8280-f1ee3c6e48e4",
+        "size": 1138036032,
+        "sha256": "8a2092a1c26a6fed64546fd557acc97a6be81f4f4b6f1aa6d057c4c139c2cf50",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part1_AB06-AB14.zip",
+        "doi": "10.17632/fcgm3chfff.2",
+        "size": 10076406262,
+        "sha256": "9d0ddd17a8100fbd0bde04642e76ab1203faec759f877a7dea4c3c24f34fe603",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "63.5",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "10_21_2018"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 32,
+          "ramp": 63,
+          "stair": 41,
+          "treadmill": 7
+        },
+        "recordings": 143,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB09"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB10",
+      "publisher_v1_archive": {
+        "doi": "10.17632/fcgm3chfff.1",
+        "part": 1,
+        "filename": "AB10.zip",
+        "file_id": "cad3eff4-8c53-4b4f-b501-8cb7f5016565",
+        "size": 1083403291,
+        "sha256": "88e0758f9c46f2b4a5ac030c2eabae3d932a436c4f9c9299abaa74ff7c689963",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part1_AB06-AB14.zip",
+        "doi": "10.17632/fcgm3chfff.2",
+        "size": 10076406262,
+        "sha256": "9d0ddd17a8100fbd0bde04642e76ab1203faec759f877a7dea4c3c24f34fe603",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "83.91",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "10_28_2018"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 32,
+          "ramp": 62,
+          "stair": 45,
+          "treadmill": 7
+        },
+        "recordings": 146,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB10"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB11",
+      "publisher_v1_archive": {
+        "doi": "10.17632/fcgm3chfff.1",
+        "part": 1,
+        "filename": "AB11.zip",
+        "file_id": "f3d515b2-9588-4ef3-9dbf-42c87c417d1f",
+        "size": 1192358547,
+        "sha256": "e0ce8239f1eddcd6a2c94139df75ee36b5dce69a68f063e1390de41bcc06d020",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part1_AB06-AB14.zip",
+        "doi": "10.17632/fcgm3chfff.2",
+        "size": 10076406262,
+        "sha256": "9d0ddd17a8100fbd0bde04642e76ab1203faec759f877a7dea4c3c24f34fe603",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "77.11",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "10_28_2018"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 32,
+          "ramp": 64,
+          "stair": 44,
+          "treadmill": 7
+        },
+        "recordings": 147,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB11"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB12",
+      "publisher_v1_archive": {
+        "doi": "10.17632/fcgm3chfff.1",
+        "part": 1,
+        "filename": "AB12.zip",
+        "file_id": "900890d9-d86c-434f-be9b-b46772717117",
+        "size": 1054202853,
+        "sha256": "ee6fee588b6b9a1e9973712ec75c0ee4e1775910e5a4daaa4f571fdfc4a62fb1",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part1_AB06-AB14.zip",
+        "doi": "10.17632/fcgm3chfff.2",
+        "size": 10076406262,
+        "sha256": "9d0ddd17a8100fbd0bde04642e76ab1203faec759f877a7dea4c3c24f34fe603",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "86.18",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": null,
+      "publisher_availability": {
+        "head_20261021": {
+          "http_status": 200,
+          "content_length": "1054202853"
+        }
+      },
+      "in_local_2301_source_census": false,
+      "converter_inputs_present": false,
+      "disposition": "unrecovered_publisher_archive_available_not_fetched",
+      "recoverability": "publisher v1 archive listed COMPLETED with SHA-256; not downloaded",
+      "blockers": [
+        "No local bytes. Which source to recover from is open (D-GT21-S01-1).",
+        "Version 1 is expected to lack static and ik_offset like AB17; not checked for this archive."
+      ]
+    },
+    {
+      "subject": "AB13",
+      "publisher_v1_archive": {
+        "doi": "10.17632/fcgm3chfff.1",
+        "part": 1,
+        "filename": "AB13.zip",
+        "file_id": "27416f15-46e8-488c-9506-e79eda54a498",
+        "size": 1055353062,
+        "sha256": "45ccab0093c83967a344092d2bd72f1fea641285b7c38b364f18b00ea8f61a52",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part1_AB06-AB14.zip",
+        "doi": "10.17632/fcgm3chfff.2",
+        "size": 10076406262,
+        "sha256": "9d0ddd17a8100fbd0bde04642e76ab1203faec759f877a7dea4c3c24f34fe603",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "58.97",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "11_04_2018"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 30,
+          "ramp": 66,
+          "stair": 39,
+          "treadmill": 7
+        },
+        "recordings": 142,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB13"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB14",
+      "publisher_v1_archive": {
+        "doi": "10.17632/fcgm3chfff.1",
+        "part": 1,
+        "filename": "AB14.zip",
+        "file_id": "15ae5d50-223b-4e2b-a841-a0e3e515caaa",
+        "size": 957109717,
+        "sha256": "eaae6976793ecdb02ebe6672ac9db92c3249305a99f364c68711b85d29d85702",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part1_AB06-AB14.zip",
+        "doi": "10.17632/fcgm3chfff.2",
+        "size": 10076406262,
+        "sha256": "9d0ddd17a8100fbd0bde04642e76ab1203faec759f877a7dea4c3c24f34fe603",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "58.41",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "11_25_2018"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 32,
+          "ramp": 64,
+          "stair": 40,
+          "treadmill": 7
+        },
+        "recordings": 143,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB14"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB15",
+      "publisher_v1_archive": {
+        "doi": "10.17632/k9kvm5tn3f.1",
+        "part": 2,
+        "filename": "AB15.zip",
+        "file_id": "789b7453-81fe-4d1b-87c1-df727ac4853a",
+        "size": 994631418,
+        "sha256": "f2f65ec8fba9a665665dbd2a0640074c943412421795a01c4564089fcac1c37d",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part2_AB15-AB24.zip",
+        "doi": "10.17632/k9kvm5tn3f.2",
+        "size": 9508948781,
+        "sha256": "68819977da6a0a7cad67b710f34b97bd61007f41fc71060faff3911d663ba43c",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "96.16",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": null,
+      "publisher_availability": {
+        "head_20261021": {
+          "http_status": 200,
+          "content_length": "994631418"
+        }
+      },
+      "in_local_2301_source_census": false,
+      "converter_inputs_present": false,
+      "disposition": "unrecovered_publisher_archive_available_not_fetched",
+      "recoverability": "publisher v1 archive listed COMPLETED with SHA-256; not downloaded",
+      "blockers": [
+        "No local bytes. Which source to recover from is open (D-GT21-S01-1).",
+        "Version 1 is expected to lack static and ik_offset like AB17; not checked for this archive."
+      ]
+    },
+    {
+      "subject": "AB16",
+      "publisher_v1_archive": {
+        "doi": "10.17632/k9kvm5tn3f.1",
+        "part": 2,
+        "filename": "AB16.zip",
+        "file_id": "b554466b-48da-49e1-a94d-ded704817aab",
+        "size": 1142428614,
+        "sha256": "bc1f89e45d7b5fcda22f7652df7c0b28aaf618c5d01732586bbad00f0592eea5",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part2_AB15-AB24.zip",
+        "doi": "10.17632/k9kvm5tn3f.2",
+        "size": 9508948781,
+        "sha256": "68819977da6a0a7cad67b710f34b97bd61007f41fc71060faff3911d663ba43c",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "55.79",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "11_11_2018"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 31,
+          "ramp": 62,
+          "stair": 40,
+          "treadmill": 7
+        },
+        "recordings": 140,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB16"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB17",
+      "publisher_v1_archive": {
+        "doi": "10.17632/k9kvm5tn3f.1",
+        "part": 2,
+        "filename": "AB17.zip",
+        "file_id": "f31474c4-a718-4354-be12-3dcca6246ae6",
+        "size": 953425349,
+        "sha256": "9acf79dd6ed4dd318f9d81fc911d4de5459e2d1e306c6223d33ae9832ede944c",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part2_AB15-AB24.zip",
+        "doi": "10.17632/k9kvm5tn3f.2",
+        "size": 9508948781,
+        "sha256": "68819977da6a0a7cad67b710f34b97bd61007f41fc71060faff3911d663ba43c",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "61.23",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "root": "/mnt/s/locomotion_data/gt21_missing_participants_v1/AB17",
+        "archive_bytes_stat_20261031": 953425349,
+        "archive_sha256_from_acquisition_receipt": "9acf79dd6ed4dd318f9d81fc911d4de5459e2d1e306c6223d33ae9832ede944c",
+        "receipt_sha256_matches_publisher_v1_manifest": true,
+        "receipt_bytes_match_publisher_v1_manifest": true,
+        "archive_rehashed_this_task": false,
+        "zip_directory": {
+          "members": 1517,
+          "expanded_bytes": 973954788
+        },
+        "planned_recordings_by_mode": {
+          "levelground": 22,
+          "ramp": 61,
+          "stair": 43,
+          "treadmill": 7
+        },
+        "planned_recordings": 133,
+        "session_directories": [
+          "11_11_2018"
+        ],
+        "channels_in_every_planned_record": [
+          "conditions",
+          "emg",
+          "fp",
+          "gcLeft",
+          "gcRight",
+          "gon",
+          "id",
+          "ik",
+          "imu",
+          "jp",
+          "markers"
+        ],
+        "static_directory_present": false,
+        "ik_offset_present": false,
+        "extracted": false,
+        "extraction_watcher_status": "stopped_incomplete",
+        "subjectinfo_unit_watcher_status": "stopped_incomplete"
+      },
+      "in_local_2301_source_census": false,
+      "converter_inputs_present": false,
+      "disposition": "recovered_publisher_v1_archive_verified_not_extracted_not_converted",
+      "recoverability": "bytes held locally; extraction and conversion blocked",
+      "blockers": [
+        "Publisher v1 lacks ik_offset/static; converter cannot substitute ik without documented processing.",
+        "Archive lacks SubjectInfo.mat; independently version-bound participant mass required.",
+        "All133 recordings need event/task/force validation; four selected records are feasibility only.",
+        "Extraction watcher stopped incomplete; a fresh reviewed launch through the guarded launcher is required (GT21-A01).",
+        "SubjectInfo Weight units unresolved; guarded native unit read stopped before launch (GT21-A02).",
+        "Source choice for the missing participants is open (D-GT21-S01-1)."
+      ]
+    },
+    {
+      "subject": "AB18",
+      "publisher_v1_archive": {
+        "doi": "10.17632/k9kvm5tn3f.1",
+        "part": 2,
+        "filename": "AB18.zip",
+        "file_id": "5e779990-e1e4-406d-97b5-b05ccb488494",
+        "size": 1056913701,
+        "sha256": "6087246736c769cd89eb2ae7f5c17059d31b0db738142e91336dcc83fc599132",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part2_AB15-AB24.zip",
+        "doi": "10.17632/k9kvm5tn3f.2",
+        "size": 9508948781,
+        "sha256": "68819977da6a0a7cad67b710f34b97bd61007f41fc71060faff3911d663ba43c",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "60.13",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "11_14_2018"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 32,
+          "ramp": 65,
+          "stair": 45,
+          "treadmill": 7
+        },
+        "recordings": 149,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB18"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB19",
+      "publisher_v1_archive": {
+        "doi": "10.17632/k9kvm5tn3f.1",
+        "part": 2,
+        "filename": "AB19.zip",
+        "file_id": "647b775c-23a2-4031-b890-b0cfe39875a1",
+        "size": 1140694615,
+        "sha256": "3a53cf477cef37e4a4fa9c76553be805c5e8e9f63ad267b629efa868b49906aa",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part2_AB15-AB24.zip",
+        "doi": "10.17632/k9kvm5tn3f.2",
+        "size": 9508948781,
+        "sha256": "68819977da6a0a7cad67b710f34b97bd61007f41fc71060faff3911d663ba43c",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "68.04",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": null,
+      "publisher_availability": {
+        "head_20261021": {
+          "http_status": 200,
+          "content_length": "1140694615"
+        }
+      },
+      "in_local_2301_source_census": false,
+      "converter_inputs_present": false,
+      "disposition": "unrecovered_publisher_archive_available_not_fetched",
+      "recoverability": "publisher v1 archive listed COMPLETED with SHA-256; not downloaded",
+      "blockers": [
+        "No local bytes. Which source to recover from is open (D-GT21-S01-1).",
+        "Version 1 is expected to lack static and ik_offset like AB17; not checked for this archive."
+      ]
+    },
+    {
+      "subject": "AB20",
+      "publisher_v1_archive": {
+        "doi": "10.17632/k9kvm5tn3f.1",
+        "part": 2,
+        "filename": "AB20.zip",
+        "file_id": "b4f97255-0721-4342-af38-3f390eac9a2e",
+        "size": 1040518375,
+        "sha256": "e28a3ad3a000daf04991640280b4966cc24b7eef3947a7c8c5f58a1d7dbda01e",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part2_AB15-AB24.zip",
+        "doi": "10.17632/k9kvm5tn3f.2",
+        "size": 9508948781,
+        "sha256": "68819977da6a0a7cad67b710f34b97bd61007f41fc71060faff3911d663ba43c",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "68.04",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "11_18_2018"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 28,
+          "ramp": 62,
+          "stair": 44,
+          "treadmill": 7
+        },
+        "recordings": 141,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB20"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB21",
+      "publisher_v1_archive": {
+        "doi": "10.17632/k9kvm5tn3f.1",
+        "part": 2,
+        "filename": "AB21.zip",
+        "file_id": "202ed926-688b-49e4-b6f1-36fe29c2b020",
+        "size": 1010923660,
+        "sha256": "e318220f600f9f27ea691f3539444346862afb2b4cc132dca0cc4000d3c7ebc1",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part2_AB15-AB24.zip",
+        "doi": "10.17632/k9kvm5tn3f.2",
+        "size": 9508948781,
+        "sha256": "68819977da6a0a7cad67b710f34b97bd61007f41fc71060faff3911d663ba43c",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "58.06",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "01_27_2019"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 30,
+          "ramp": 65,
+          "stair": 41,
+          "treadmill": 7
+        },
+        "recordings": 143,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB21"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB23",
+      "publisher_v1_archive": {
+        "doi": "10.17632/k9kvm5tn3f.1",
+        "part": 2,
+        "filename": "AB23.zip",
+        "file_id": "422c1fc9-cda8-4a25-9654-4cc87c0de6ab",
+        "size": 1076774425,
+        "sha256": "bc1ddfe13504193e5ccdb6c69f056438f366e62602c7f4f8b8151a8712b14902",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part2_AB15-AB24.zip",
+        "doi": "10.17632/k9kvm5tn3f.2",
+        "size": 9508948781,
+        "sha256": "68819977da6a0a7cad67b710f34b97bd61007f41fc71060faff3911d663ba43c",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "76.82",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": null,
+      "publisher_availability": {
+        "head_20261021": {
+          "http_status": 200,
+          "content_length": "1076774425"
+        }
+      },
+      "in_local_2301_source_census": false,
+      "converter_inputs_present": false,
+      "disposition": "unrecovered_publisher_archive_available_not_fetched",
+      "recoverability": "publisher v1 archive listed COMPLETED with SHA-256; not downloaded",
+      "blockers": [
+        "No local bytes. Which source to recover from is open (D-GT21-S01-1).",
+        "Version 1 is expected to lack static and ik_offset like AB17; not checked for this archive."
+      ]
+    },
+    {
+      "subject": "AB24",
+      "publisher_v1_archive": {
+        "doi": "10.17632/k9kvm5tn3f.1",
+        "part": 2,
+        "filename": "AB24.zip",
+        "file_id": "be42627c-0c76-4562-8f2c-f70d2309820d",
+        "size": 1090156667,
+        "sha256": "93d0f3fac7dea955734b0427ebe8fd1fb20dbebd9b3024d26d37aa1dc8a02709",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part2_AB15-AB24.zip",
+        "doi": "10.17632/k9kvm5tn3f.2",
+        "size": 9508948781,
+        "sha256": "68819977da6a0a7cad67b710f34b97bd61007f41fc71060faff3911d663ba43c",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "72.57",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "12_02_2018"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 32,
+          "ramp": 62,
+          "stair": 40,
+          "treadmill": 7
+        },
+        "recordings": 141,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB24"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB25",
+      "publisher_v1_archive": {
+        "doi": "10.17632/k9kvm5tn3f.1",
+        "part": 2,
+        "filename": "AB25.zip",
+        "file_id": "5ed70f75-9d81-41ac-8e21-a58f93f2544e",
+        "size": 1159042116,
+        "sha256": "66da41cc5c80a4224b3417d67a09653b78e952bc1c3cd0b4caa0bac6b58cca20",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part3_AB25-AB30.zip",
+        "doi": "10.17632/jj3r5f9pnf.2",
+        "size": 4658784970,
+        "sha256": "ef2a2a8584e3323a20fef345d25191b2e50c66e1b6fda1b499f0ddf14553de0f",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "52.16",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "01_20_2019"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 33,
+          "ramp": 61,
+          "stair": 40,
+          "treadmill": 7
+        },
+        "recordings": 141,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB25"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB27",
+      "publisher_v1_archive": {
+        "doi": "10.17632/jj3r5f9pnf.1",
+        "part": 3,
+        "filename": "AB27.zip",
+        "file_id": "3f30407d-1690-4e7a-9b25-1ad58f9a2e21",
+        "size": 1183166480,
+        "sha256": "cf888a2920726c7f7cb14c27aee96890545b5d1f1219ee5e9ea783ab9df2c50b",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part3_AB25-AB30.zip",
+        "doi": "10.17632/jj3r5f9pnf.2",
+        "size": 4658784970,
+        "sha256": "ef2a2a8584e3323a20fef345d25191b2e50c66e1b6fda1b499f0ddf14553de0f",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "68.04",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "02_24_2019"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 31,
+          "ramp": 62,
+          "stair": 43,
+          "treadmill": 7
+        },
+        "recordings": 143,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB27"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    },
+    {
+      "subject": "AB28",
+      "publisher_v1_archive": {
+        "doi": "10.17632/jj3r5f9pnf.1",
+        "part": 3,
+        "filename": "AB28.zip",
+        "file_id": "b2edc2c4-c6d7-42c8-afa2-980011d18622",
+        "size": 1117975417,
+        "sha256": "03827e9f825cf9127c1c890cf322ca1728e7f089ba9c40ccb6ab912a023bfc47",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part3_AB25-AB30.zip",
+        "doi": "10.17632/jj3r5f9pnf.2",
+        "size": 4658784970,
+        "sha256": "ef2a2a8584e3323a20fef345d25191b2e50c66e1b6fda1b499f0ddf14553de0f",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "62.14",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": null,
+      "publisher_availability": {
+        "head_20261021": {
+          "http_status": 200,
+          "content_length": "1117975417"
+        }
+      },
+      "in_local_2301_source_census": false,
+      "converter_inputs_present": false,
+      "disposition": "unrecovered_publisher_archive_available_not_fetched",
+      "recoverability": "publisher v1 archive listed COMPLETED with SHA-256; not downloaded",
+      "blockers": [
+        "No local bytes. Which source to recover from is open (D-GT21-S01-1).",
+        "Version 1 is expected to lack static and ik_offset like AB17; not checked for this archive."
+      ]
+    },
+    {
+      "subject": "AB30",
+      "publisher_v1_archive": {
+        "doi": "10.17632/jj3r5f9pnf.1",
+        "part": 3,
+        "filename": "AB30.zip",
+        "file_id": "6a2213ca-f758-4f06-af45-ad97719df8d4",
+        "size": 1197344744,
+        "sha256": "05becaeee8bc5e071cfb783a726ececb39928b4b98e02a937248829c984d8d3f",
+        "status": "COMPLETED",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "publisher_v2_container": {
+        "archive": "Subjects_Part3_AB25-AB30.zip",
+        "doi": "10.17632/jj3r5f9pnf.2",
+        "size": 4658784970,
+        "sha256": "ef2a2a8584e3323a20fef345d25191b2e50c66e1b6fda1b499f0ddf14553de0f",
+        "membership": "not_checked: assigned from the archive-name range only; member list not fetched"
+      },
+      "licence": "CC BY 4.0",
+      "author_2024_mirror": "not_checked: the saved mirror page does not expose participant folders in plain text",
+      "metadata": {
+        "source_file": "SubjectInfo.mat (byte-equal to the publisher v1 and v2 manifest record)",
+        "Weight_literal": "77.03",
+        "Weight_units": "unresolved (no VariableUnits read; local scripts divide id/jp by it, which supports but does not prove kg)",
+        "height_and_other_columns": "not_checked: the native export read only Subject and Weight",
+        "canonical_mass_approved": false
+      },
+      "local_source": {
+        "session_directories": [
+          "03_09_2019"
+        ],
+        "osimxml_present": true,
+        "mode_directories": [
+          "levelground",
+          "ramp",
+          "stair",
+          "static",
+          "treadmill"
+        ],
+        "recordings_by_mode_conditions_files": {
+          "levelground": 34,
+          "ramp": 64,
+          "stair": 43,
+          "treadmill": 7
+        },
+        "recordings": 148,
+        "static_directory_present": true,
+        "ik_offset_present_in_all_four_modes": true,
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB30"
+      },
+      "local_byte_identity_to_publisher": "not_checked: no publisher archive for this subject was fetched; the local tree carries 2024 static/ik_offset additions absent from the recovered v1 AB17 archive, so it is not the v1 archive as published",
+      "in_local_2301_source_census": true,
+      "converter_inputs_present": true,
+      "disposition": "local_source_present_publisher_byte_identity_not_checked",
+      "recoverability": "present locally"
+    }
+  ],
+  "source_decision_draft": {
+    "id": "D-GT21-S01-1",
+    "task_id": "GT21-S01",
+    "question": "Six of the 22 Georgia Tech 2021 participants are missing here. Their checksummed publisher archives (2021) lack the static-pose trials and static-relative joint angles that our converter reads; the authors' 2024 copy, which the other 16 came from, has them but no publisher checksums. Where should the six come from?",
+    "options": [
+      {
+        "key": "A",
+        "label": "Stop at 16 participants",
+        "consequence": "The six are documented as unavailable; GT21 is released with 16 of 22; no downloads. Reversible."
+      },
+      {
+        "key": "B",
+        "label": "Publisher version 1 archives (checksummed)",
+        "consequence": "Bytes verified against publisher checksums; the six need a second recipe (model-zero angles, segment lengths from walking markers) or are released without joint angles; about 5.4 GB more to download. Reversible."
+      },
+      {
+        "key": "C",
+        "label": "Authors' 2024 copy",
+        "consequence": "Same folders and recipe as the 16; LocoHub records its own hashes at download; trial files can be checked against version 1 checksums if the planned one-participant comparison shows them unchanged; whether the copy holds all six is not yet checked. Reversible."
+      }
+    ],
+    "options_order": "By participants releasable with the current converter (16, 16, up to 22); ties broken by download size (none, then about 5.4 GB).",
+    "recommended": "C",
+    "confidence": "medium",
+    "why": "The 16 local participants already come from the authors' 2024 update without publisher checksums, so C adds no new trust assumption and keeps one recipe and one angle reference across the cohort. B would mix two angle references in one dataset. C still depends on the copy holding all six, which is not yet checked.",
+    "check": "Sheet, second figure: the version 1 column is red in the ik_offset and static rows, and the 2024 column is green there.",
+    "cost_of_waiting": "The six stay unrecovered. Work on the 16, the AB17 checks and the one-participant comparison can continue; only recovery of the six waits.",
+    "decide_before_recommendation": true,
+    "status": "open"
+  },
+  "next_action": {
+    "kind": "plan_only_source_equivalence",
+    "plan_path": "converted_datasets/reconversion_v2/gt21_ab14_v1_equivalence_20261031/plan.json",
+    "plan_sha256": "ecc3c2490fd9d2912523101e8c188c6ae7fee65321f83a2f156a989b54c3907e",
+    "plan": {
+      "status": "plan_only_not_launched",
+      "scientific_approval": false,
+      "question": "Did the 2024 author update change the shared trial files (conditions, emg, fp, gcLeft, gcRight, gon, id, ik, imu, jp, markers, osimxml) relative to publisher version 1?",
+      "why": "Settles, for any choice in D-GT21-S01-1, whether version 1 checksums can verify trial files of the 2024 copy and whether the 2024 RUN_OSIM update changed ik/id.",
+      "subject": "AB14",
+      "selection_rule": "Smallest version 1 archive of a participant already held locally.",
+      "archive": {
+        "doi": "10.17632/fcgm3chfff.1",
+        "filename": "AB14.zip",
+        "file_id": "15ae5d50-223b-4e2b-a841-a0e3e515caaa",
+        "size": 957109717,
+        "sha256": "eaae6976793ecdb02ebe6672ac9db92c3249305a99f364c68711b85d29d85702",
+        "status": "COMPLETED",
+        "download_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/15ae5d50-223b-4e2b-a841-a0e3e515caaa/file_downloaded",
+        "licence": "CC BY 4.0",
+        "recheck_20261031": "file id, size and SHA-256 unchanged"
+      },
+      "destination": "/mnt/s/locomotion_data/gt21_v1_equivalence_reference/AB14",
+      "local_reference": {
+        "root": "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/AB14",
+        "files": 1722,
+        "bytes": 1058109726,
+        "files_by_folder": {
+          "conditions": 143,
+          "emg": 143,
+          "fp": 143,
+          "gcLeft": 143,
+          "gcRight": 143,
+          "gon": 143,
+          "id": 143,
+          "ik": 143,
+          "ik_offset": 143,
+          "imu": 143,
+          "jp": 143,
+          "markers": 143,
+          "osimxml": 3,
+          "static/ik": 1,
+          "static/ik_offset": 1,
+          "static/markers": 1
+        }
+      },
+      "steps": [
+        "Download the single archive through the reviewed guarded launcher, one job, after the numerical/I-O slot is free; stream with fixed size and SHA-256 validation; never write into the active source root.",
+        "Read only the ZIP central directory (member names, uncompressed sizes, CRC32); do not extract.",
+        "For each version 1 member, find the same relative path in the local tree; compare byte size, then CRC32 of the local file bytes (streamed, no MAT decoding).",
+        "Report counts per mode and folder: identical, size or CRC differs, version 1 only, local only. Expected local only: 143 ik_offset trial files and 3 static files; anything else is a finding.",
+        "Members that differ are listed for a separate decoded comparison task; no array is decoded in this job."
+      ],
+      "limits": {
+        "parallel_downloads": 1,
+        "buffer_bytes": 1048576,
+        "bandwidth_bytes_per_second": 1048576,
+        "timeout_seconds": 2700,
+        "disk_reserve_after_download_bytes": 16106127360,
+        "address_space_mib": 256,
+        "windows_startup_mib": 2816,
+        "windows_runtime_mib": 2048,
+        "process_priority": "nice 19, ionice idle",
+        "local_bytes_read_for_crc": 1058109726
+      },
+      "prerequisites": [
+        "Reviewed guarded launcher (UM21-T02) available; until then launch nothing.",
+        "acquire_gt21_missing_participant.py accepts only participants in the missing ledger and writes under gt21_missing_participants_v1; a reviewed reference mode (explicit subject, separate destination) and a CRC comparison script are required before launch.",
+        "Fresh disk and memory admission immediately before launch."
+      ],
+      "outputs_expected": [
+        "acquisition receipt with SHA-256",
+        "central-directory listing",
+        "per-folder identity table",
+        "list of differing members"
+      ],
+      "not_claimed": "CRC32 equality detects change; it is not a cryptographic proof. Equality of trial files would not validate static or ik_offset, which version 1 lacks."
+    },
+    "withdrawn": "The earlier proposal to recover AB15 next is withdrawn: another version 1 archive meets the same ik_offset/static gap, and the source choice is open."
+  },
+  "review_sheet": {
+    "path": "review_sheets/D-GT21-S01-1/index.html",
+    "figures": [
+      "fig1_participants.png",
+      "fig2_folders.png"
+    ]
+  },
+  "not_checked": [
+    "Byte identity of the 16 local participant trees to any publisher archive.",
+    "Member lists of the version 2 combined archives and of the five unrecovered archives.",
+    "Author mirror folders for all six missing participants, including static/ik_offset content.",
+    "SubjectInfo columns other than Subject and Weight, and Weight units.",
+    "AB17 archive SHA-256 was not recomputed in this task (size only)."
+  ],
+  "limitations": [
+    "Source inventory only. No conversion, readback or scientific approval for any participant.",
+    "The 2,301-recording local subtotal is not full-cohort coverage."
+  ],
+  "embedded_receipts_20261031": {
+    "fc-v1-files.json": {
+      "sha256": "6e60a0cdceeb5f7a1b9127c2b223c384d573c855c90d74d9973e70a8839d4cbf",
+      "bytes": 8647,
+      "content": [
+        {
+          "filename": "AB06.zip",
+          "id": "38140606-9761-4eb1-b77c-a9673128bc92",
+          "content_details": {
+            "id": "78bd7ed8-fa44-40b6-8af4-f5cbd71f7f4f",
+            "sha256_hash": "39df723296b038a4a40c3561a6d92e8796641a65e94e20ab2e7201238360eaa7",
+            "content_type": "application/x-zip-compressed",
+            "size": 1202725820,
+            "created_date": "2021-02-24T23:57:37.982Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/38140606-9761-4eb1-b77c-a9673128bc92/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/38140606-9761-4eb1-b77c-a9673128bc92/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.799088497Z"
+          },
+          "size": 1202725820,
+          "last_modified_date": "2021-02-24T23:57:37.982Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB07.zip",
+          "id": "53cfb91a-a6ec-4bf6-8845-542b378dfbdd",
+          "content_details": {
+            "id": "312c8926-3f30-404e-a75e-2fbdc403d46d",
+            "sha256_hash": "aae0bd04b7a52d446ae78428ce171dd526160367e1540456f14b365f08e0920e",
+            "content_type": "application/x-zip-compressed",
+            "size": 1340004847,
+            "created_date": "2021-02-25T05:52:58.854Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/53cfb91a-a6ec-4bf6-8845-542b378dfbdd/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/53cfb91a-a6ec-4bf6-8845-542b378dfbdd/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.799095877Z"
+          },
+          "size": 1340004847,
+          "last_modified_date": "2021-02-25T05:52:58.854Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB08.zip",
+          "id": "87ae2bef-a990-4bf2-9e2a-e1d88a9e57af",
+          "content_details": {
+            "id": "f1dc9ecb-8c5e-4e36-934e-c0771b41ff77",
+            "sha256_hash": "391e13d4a62652e730e12a63667a7a025c75c03763965b8a1033e24472bf6000",
+            "content_type": "application/x-zip-compressed",
+            "size": 1050055506,
+            "created_date": "2021-02-25T05:44:00.355Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/87ae2bef-a990-4bf2-9e2a-e1d88a9e57af/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/87ae2bef-a990-4bf2-9e2a-e1d88a9e57af/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.799101487Z"
+          },
+          "size": 1050055506,
+          "last_modified_date": "2021-02-25T05:44:00.355Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB09.zip",
+          "id": "05adb3d8-60e1-4464-8280-f1ee3c6e48e4",
+          "content_details": {
+            "id": "15659ea8-2130-4836-ab87-1a9bcc133124",
+            "sha256_hash": "8a2092a1c26a6fed64546fd557acc97a6be81f4f4b6f1aa6d057c4c139c2cf50",
+            "content_type": "application/x-zip-compressed",
+            "size": 1138036032,
+            "created_date": "2021-02-25T02:23:40.832Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/05adb3d8-60e1-4464-8280-f1ee3c6e48e4/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/05adb3d8-60e1-4464-8280-f1ee3c6e48e4/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.799107227Z"
+          },
+          "size": 1138036032,
+          "last_modified_date": "2021-02-25T02:23:40.832Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB10.zip",
+          "id": "cad3eff4-8c53-4b4f-b501-8cb7f5016565",
+          "content_details": {
+            "id": "0412a7e0-52d8-4094-8603-daf0c7253125",
+            "sha256_hash": "88e0758f9c46f2b4a5ac030c2eabae3d932a436c4f9c9299abaa74ff7c689963",
+            "content_type": "application/x-zip-compressed",
+            "size": 1083403291,
+            "created_date": "2021-02-25T06:36:21.916Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/cad3eff4-8c53-4b4f-b501-8cb7f5016565/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/cad3eff4-8c53-4b4f-b501-8cb7f5016565/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.799112348Z"
+          },
+          "size": 1083403291,
+          "last_modified_date": "2021-02-25T06:36:21.916Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB11.zip",
+          "id": "f3d515b2-9588-4ef3-9dbf-42c87c417d1f",
+          "content_details": {
+            "id": "a08f501a-f7b9-4a91-af36-852c98b074d3",
+            "sha256_hash": "e0ce8239f1eddcd6a2c94139df75ee36b5dce69a68f063e1390de41bcc06d020",
+            "content_type": "application/x-zip-compressed",
+            "size": 1192358547,
+            "created_date": "2021-02-25T08:54:38.044Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/f3d515b2-9588-4ef3-9dbf-42c87c417d1f/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/f3d515b2-9588-4ef3-9dbf-42c87c417d1f/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.799117688Z"
+          },
+          "size": 1192358547,
+          "last_modified_date": "2021-02-25T08:54:38.044Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB12.zip",
+          "id": "900890d9-d86c-434f-be9b-b46772717117",
+          "content_details": {
+            "id": "a660adce-e218-4e74-a715-2ff8d8f2e951",
+            "sha256_hash": "ee6fee588b6b9a1e9973712ec75c0ee4e1775910e5a4daaa4f571fdfc4a62fb1",
+            "content_type": "application/x-zip-compressed",
+            "size": 1054202853,
+            "created_date": "2021-02-25T00:24:09.568Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/900890d9-d86c-434f-be9b-b46772717117/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/900890d9-d86c-434f-be9b-b46772717117/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.799122958Z"
+          },
+          "size": 1054202853,
+          "last_modified_date": "2021-02-25T00:24:09.568Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB13.zip",
+          "id": "27416f15-46e8-488c-9506-e79eda54a498",
+          "content_details": {
+            "id": "0b1f16b0-fd85-45ed-9408-545d37ce6eaa",
+            "sha256_hash": "45ccab0093c83967a344092d2bd72f1fea641285b7c38b364f18b00ea8f61a52",
+            "content_type": "application/x-zip-compressed",
+            "size": 1055353062,
+            "created_date": "2021-02-25T18:59:28.593Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/27416f15-46e8-488c-9506-e79eda54a498/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/27416f15-46e8-488c-9506-e79eda54a498/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.799128168Z"
+          },
+          "size": 1055353062,
+          "last_modified_date": "2021-02-25T18:59:28.593Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB14.zip",
+          "id": "15ae5d50-223b-4e2b-a841-a0e3e515caaa",
+          "content_details": {
+            "id": "c8f5a91c-f63a-4408-88d0-3f432f6d1de4",
+            "sha256_hash": "eaae6976793ecdb02ebe6672ac9db92c3249305a99f364c68711b85d29d85702",
+            "content_type": "application/x-zip-compressed",
+            "size": 957109717,
+            "created_date": "2021-02-25T00:29:56.799Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/15ae5d50-223b-4e2b-a841-a0e3e515caaa/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/15ae5d50-223b-4e2b-a841-a0e3e515caaa/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.799133058Z"
+          },
+          "size": 957109717,
+          "last_modified_date": "2021-02-25T00:29:56.799Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "README.txt",
+          "id": "87d1e6e3-0f8e-4a59-b0a7-a22cc5cc2de4",
+          "content_details": {
+            "id": "0630aa4f-1f7e-41db-8686-3a52cdc1f2dd",
+            "sha256_hash": "832677212a483b32b9f96d1b9e6c3b2cdecc510d6947609b3d6657fae7bbf24f",
+            "content_type": "text/plain",
+            "size": 4970,
+            "created_date": "2021-02-25T21:41:12.626Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/87d1e6e3-0f8e-4a59-b0a7-a22cc5cc2de4/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/87d1e6e3-0f8e-4a59-b0a7-a22cc5cc2de4/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.799138308Z"
+          },
+          "size": 4970,
+          "last_modified_date": "2021-02-25T21:41:12.626Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "scripts.zip",
+          "id": "905e2156-86e9-4f16-a70d-e569402858d4",
+          "content_details": {
+            "id": "9db75501-2e50-48df-a069-f4e256c5a41e",
+            "sha256_hash": "f1ac74ec87c1466e5493ecaa25dac1176e517e8253f428e3eccba49f8cc7fdcc",
+            "content_type": "application/x-zip-compressed",
+            "size": 8239973,
+            "created_date": "2021-02-25T21:18:55.981Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/905e2156-86e9-4f16-a70d-e569402858d4/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/905e2156-86e9-4f16-a70d-e569402858d4/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.799143588Z"
+          },
+          "size": 8239973,
+          "last_modified_date": "2021-02-25T21:18:55.981Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "SubjectInfo.mat",
+          "id": "d0f204d7-903c-4064-aff6-7080b2b5acb8",
+          "content_details": {
+            "id": "9c2d3475-5abc-4e05-af7c-a3c78140bbc9",
+            "sha256_hash": "bc990b2c182e0cfc7b405b99fb429026585c224ce6d1ff5249734ec89cb2ce08",
+            "content_type": "application/octet-stream",
+            "size": 1281,
+            "created_date": "2021-02-25T21:42:30.257Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/d0f204d7-903c-4064-aff6-7080b2b5acb8/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/fcgm3chfff/files/d0f204d7-903c-4064-aff6-7080b2b5acb8/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.799149188Z"
+          },
+          "size": 1281,
+          "last_modified_date": "2021-02-25T21:42:30.257Z",
+          "status": "COMPLETED"
+        }
+      ]
+    },
+    "fcgm3chfff-v1-meta.json": {
+      "sha256": "cbb308b17135bae3cd7112ce613824f0b45001489db5876b4f065516a8869f1e",
+      "bytes": 2623,
+      "content": {
+        "id": "fcgm3chfff",
+        "doi": {
+          "id": "10.17632/fcgm3chfff.1",
+          "status": "allocated",
+          "prefix": "10.17632"
+        },
+        "name": "Data repository for Camargo, et. al. A comprehensive, open-source dataset of lower limb biomechanics. Part 1 of 3",
+        "description": "Part 1/3 of the dataset for \"Camargo, et. al. A comprehensive, open-source dataset of lower limb biomechanics in multiple conditions of stairs, ramps, and level-ground ambulation and transitions.\" Dataset linked from: https://doi.org/10.1016/j.jbiomech.2021.110320 (2021-02-24) ",
+        "version": 1,
+        "contributors": [
+          {
+            "profile_id": "b8fa9545-2f63-315b-beb0-8fae40274b8f",
+            "first_name": "Jonathan",
+            "last_name": "Camargo"
+          }
+        ],
+        "versions": [
+          {
+            "version": 2,
+            "available": true,
+            "publish_date": "2021-10-18T15:18:08.855Z"
+          },
+          {
+            "version": 1,
+            "available": true,
+            "publish_date": "2021-02-26T00:02:32.741Z"
+          }
+        ],
+        "articles": [],
+        "categories": [
+          {
+            "id": "data.elsevier.com/vocabulary/OmniScience/Concept-252578356",
+            "label": "Electromyography"
+          },
+          {
+            "id": "data.elsevier.com/vocabulary/OmniScience/Concept-258636781",
+            "label": "Biomechanics of Gait"
+          },
+          {
+            "id": "data.elsevier.com/vocabulary/OmniScience/Concept-330093370",
+            "label": "Wearable Sensor"
+          }
+        ],
+        "institutions": [
+          {
+            "id": "62b0bccc-86d9-51fd-a58d-dedfc81c9ef1",
+            "name": "Georgia Institute of Technology",
+            "ror_id": "https://ror.org/01zkghx44"
+          }
+        ],
+        "available": true,
+        "method": "Please refer to our paper https://doi.org/10.1016/j.jbiomech.2021.110320",
+        "size": 0,
+        "owner": {
+          "profile_id": "b8fa9545-2f63-315b-beb0-8fae40274b8f",
+          "first_name": "Jonathan",
+          "last_name": "Camargo"
+        },
+        "channel": "WEB",
+        "owner_id": "b8fa9545-2f63-315b-beb0-8fae40274b8f",
+        "publish_date": "2021-02-26T00:02:32.741Z",
+        "data_licence": {
+          "id": "01d9c749-3c4d-4431-9df3-620b2dcfe144",
+          "description": "You can share, copy and modify this dataset so long as you give appropriate credit, provide a link to the CC BY license, and indicate if changes were made, but you may not do so in a way that suggests the rights holder has endorsed you or your use of the dataset. Note that further permission may be required for any content within the dataset that is identified as belonging to a third party.",
+          "url": "http://creativecommons.org/licenses/by/4.0",
+          "category": "Creative",
+          "short_name": "CC BY 4.0",
+          "full_name": "Creative Commons Attribution 4.0 International"
+        },
+        "related_links": [
+          {
+            "type": "article",
+            "rel": "source_of",
+            "href": " https://doi.org/10.1016/j.jbiomech.2021.110320"
+          }
+        ],
+        "funders": [],
+        "customer_id": "7377952c-6404-4428-bbfc-77242cfc301e",
+        "modified_on": "2021-02-25T21:42:30.211Z",
+        "created_on": "2021-02-24T19:03:46.917Z",
+        "confidential": false,
+        "links": {
+          "view": "https://data.mendeley.com/datasets/fcgm3chfff"
+        },
+        "repository": {
+          "id": "MENDELEY_DATA",
+          "name": "Mendeley Data"
+        }
+      }
+    },
+    "fcgm3chfff-versions.json": {
+      "sha256": "c80727101b074cf74d88093ee4571f597946b86aecc4333ced6bc7f3f0d21048",
+      "bytes": 119,
+      "content": [
+        {
+          "version": 1,
+          "publish_date": "2021-02-26",
+          "available": true
+        },
+        {
+          "version": 2,
+          "publish_date": "2021-10-18",
+          "available": true
+        }
+      ]
+    },
+    "jj-v1-files.json": {
+      "sha256": "3fb16173034bb3b60a9d62d9f2ab9ce6a09c885e64ec1611c7ea4d310b644b7b",
+      "bytes": 2171,
+      "content": [
+        {
+          "filename": "AB27.zip",
+          "id": "3f30407d-1690-4e7a-9b25-1ad58f9a2e21",
+          "content_details": {
+            "id": "93b6bbfe-d79f-4aa3-ae72-0c972c89ba85",
+            "sha256_hash": "cf888a2920726c7f7cb14c27aee96890545b5d1f1219ee5e9ea783ab9df2c50b",
+            "content_type": "application/x-zip-compressed",
+            "size": 1183166480,
+            "created_date": "2021-02-25T21:37:30.873Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/jj3r5f9pnf/files/3f30407d-1690-4e7a-9b25-1ad58f9a2e21/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/jj3r5f9pnf/files/3f30407d-1690-4e7a-9b25-1ad58f9a2e21/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.968136698Z"
+          },
+          "size": 1183166480,
+          "last_modified_date": "2021-02-25T21:37:30.873Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB28.zip",
+          "id": "b2edc2c4-c6d7-42c8-afa2-980011d18622",
+          "content_details": {
+            "id": "2962dffb-514c-4a88-8537-496a45610d07",
+            "sha256_hash": "03827e9f825cf9127c1c890cf322ca1728e7f089ba9c40ccb6ab912a023bfc47",
+            "content_type": "application/x-zip-compressed",
+            "size": 1117975417,
+            "created_date": "2021-02-25T05:47:19.66Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/jj3r5f9pnf/files/b2edc2c4-c6d7-42c8-afa2-980011d18622/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/jj3r5f9pnf/files/b2edc2c4-c6d7-42c8-afa2-980011d18622/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.968143678Z"
+          },
+          "size": 1117975417,
+          "last_modified_date": "2021-02-25T05:47:19.66Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB30.zip",
+          "id": "6a2213ca-f758-4f06-af45-ad97719df8d4",
+          "content_details": {
+            "id": "bab12616-93de-487f-980e-c9ac62fd4a92",
+            "sha256_hash": "05becaeee8bc5e071cfb783a726ececb39928b4b98e02a937248829c984d8d3f",
+            "content_type": "application/x-zip-compressed",
+            "size": 1197344744,
+            "created_date": "2021-02-25T08:56:05.041Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/jj3r5f9pnf/files/6a2213ca-f758-4f06-af45-ad97719df8d4/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/jj3r5f9pnf/files/6a2213ca-f758-4f06-af45-ad97719df8d4/file_viewed",
+            "download_expiry_time": "2126-10-31T07:26:42.968148598Z"
+          },
+          "size": 1197344744,
+          "last_modified_date": "2021-02-25T08:56:05.041Z",
+          "status": "COMPLETED"
+        }
+      ]
+    },
+    "jj3r5f9pnf-v1-meta.json": {
+      "sha256": "b8ecf656a1c12acab166bf1b68d0007db447ea0eba0c95d0a7afe0f24f038024",
+      "bytes": 2621,
+      "content": {
+        "id": "jj3r5f9pnf",
+        "doi": {
+          "id": "10.17632/jj3r5f9pnf.1",
+          "status": "allocated",
+          "prefix": "10.17632"
+        },
+        "name": "Data repository for Camargo, et. al. A comprehensive, open-source dataset of lower limb biomechanics. Part 3 of 3",
+        "description": "Part 3/3 of the dataset for \"Camargo, et. al. A comprehensive, open-source dataset of lower limb biomechanics in multiple conditions of stairs, ramps, and level-ground ambulation and transitions.\" Dataset linked from https://doi.org/10.1016/j.jbiomech.2021.110320 (2021-02-24) ",
+        "version": 1,
+        "contributors": [
+          {
+            "profile_id": "b8fa9545-2f63-315b-beb0-8fae40274b8f",
+            "first_name": "Jonathan",
+            "last_name": "Camargo"
+          }
+        ],
+        "versions": [
+          {
+            "version": 2,
+            "available": true,
+            "publish_date": "2021-10-18T15:18:44.887Z"
+          },
+          {
+            "version": 1,
+            "available": true,
+            "publish_date": "2021-02-26T00:03:26.078Z"
+          }
+        ],
+        "articles": [],
+        "categories": [
+          {
+            "id": "data.elsevier.com/vocabulary/OmniScience/Concept-252578356",
+            "label": "Electromyography"
+          },
+          {
+            "id": "data.elsevier.com/vocabulary/OmniScience/Concept-258636781",
+            "label": "Biomechanics of Gait"
+          },
+          {
+            "id": "data.elsevier.com/vocabulary/OmniScience/Concept-330093370",
+            "label": "Wearable Sensor"
+          }
+        ],
+        "institutions": [
+          {
+            "id": "62b0bccc-86d9-51fd-a58d-dedfc81c9ef1",
+            "name": "Georgia Institute of Technology",
+            "ror_id": "https://ror.org/01zkghx44"
+          }
+        ],
+        "available": true,
+        "method": "Please refer to our paper https://doi.org/10.1016/j.jbiomech.2021.110320",
+        "size": 0,
+        "owner": {
+          "profile_id": "b8fa9545-2f63-315b-beb0-8fae40274b8f",
+          "first_name": "Jonathan",
+          "last_name": "Camargo"
+        },
+        "channel": "WEB",
+        "owner_id": "b8fa9545-2f63-315b-beb0-8fae40274b8f",
+        "publish_date": "2021-02-26T00:03:26.078Z",
+        "data_licence": {
+          "id": "01d9c749-3c4d-4431-9df3-620b2dcfe144",
+          "description": "You can share, copy and modify this dataset so long as you give appropriate credit, provide a link to the CC BY license, and indicate if changes were made, but you may not do so in a way that suggests the rights holder has endorsed you or your use of the dataset. Note that further permission may be required for any content within the dataset that is identified as belonging to a third party.",
+          "url": "http://creativecommons.org/licenses/by/4.0",
+          "category": "Creative",
+          "short_name": "CC BY 4.0",
+          "full_name": "Creative Commons Attribution 4.0 International"
+        },
+        "related_links": [
+          {
+            "type": "article",
+            "rel": "source_of",
+            "href": "https://doi.org/10.1016/j.jbiomech.2021.110320"
+          }
+        ],
+        "funders": [],
+        "customer_id": "7377952c-6404-4428-bbfc-77242cfc301e",
+        "modified_on": "2021-02-25T21:37:30.822Z",
+        "created_on": "2021-02-25T05:31:30.583Z",
+        "confidential": false,
+        "links": {
+          "view": "https://data.mendeley.com/datasets/jj3r5f9pnf"
+        },
+        "repository": {
+          "id": "MENDELEY_DATA",
+          "name": "Mendeley Data"
+        }
+      }
+    },
+    "jj3r5f9pnf-versions.json": {
+      "sha256": "c80727101b074cf74d88093ee4571f597946b86aecc4333ced6bc7f3f0d21048",
+      "bytes": 119,
+      "content": [
+        {
+          "version": 1,
+          "publish_date": "2021-02-26",
+          "available": true
+        },
+        {
+          "version": 2,
+          "publish_date": "2021-10-18",
+          "available": true
+        }
+      ]
+    },
+    "k9-v1-files.json": {
+      "sha256": "d3967c4de40108759bd78ccdc5895bc84efe72030dc5ba981263d3fcf531f6e7",
+      "bytes": 7233,
+      "content": [
+        {
+          "filename": "AB15.zip",
+          "id": "789b7453-81fe-4d1b-87c1-df727ac4853a",
+          "content_details": {
+            "id": "6706b3f0-7485-4853-8010-71d7935e264f",
+            "sha256_hash": "f2f65ec8fba9a665665dbd2a0640074c943412421795a01c4564089fcac1c37d",
+            "content_type": "application/x-zip-compressed",
+            "size": 994631418,
+            "created_date": "2021-02-25T21:33:39.788Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/789b7453-81fe-4d1b-87c1-df727ac4853a/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/789b7453-81fe-4d1b-87c1-df727ac4853a/file_viewed",
+            "download_expiry_time": "2126-10-31T07:17:17.243651244Z"
+          },
+          "size": 994631418,
+          "last_modified_date": "2021-02-25T21:33:39.788Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB16.zip",
+          "id": "b554466b-48da-49e1-a94d-ded704817aab",
+          "content_details": {
+            "id": "729cb15c-356a-4d8c-8ee5-34a44034ba05",
+            "sha256_hash": "bc1f89e45d7b5fcda22f7652df7c0b28aaf618c5d01732586bbad00f0592eea5",
+            "content_type": "application/x-zip-compressed",
+            "size": 1142428614,
+            "created_date": "2021-02-25T05:54:58.783Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/b554466b-48da-49e1-a94d-ded704817aab/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/b554466b-48da-49e1-a94d-ded704817aab/file_viewed",
+            "download_expiry_time": "2126-10-31T07:17:17.243656034Z"
+          },
+          "size": 1142428614,
+          "last_modified_date": "2021-02-25T05:54:58.783Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB17.zip",
+          "id": "f31474c4-a718-4354-be12-3dcca6246ae6",
+          "content_details": {
+            "id": "f95cbc51-2889-4638-9d5b-df1453258147",
+            "sha256_hash": "9acf79dd6ed4dd318f9d81fc911d4de5459e2d1e306c6223d33ae9832ede944c",
+            "content_type": "application/x-zip-compressed",
+            "size": 953425349,
+            "created_date": "2021-02-25T07:33:22.916Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/f31474c4-a718-4354-be12-3dcca6246ae6/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/f31474c4-a718-4354-be12-3dcca6246ae6/file_viewed",
+            "download_expiry_time": "2126-10-31T07:17:17.243660854Z"
+          },
+          "size": 953425349,
+          "last_modified_date": "2021-02-25T07:33:22.916Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB18.zip",
+          "id": "5e779990-e1e4-406d-97b5-b05ccb488494",
+          "content_details": {
+            "id": "317e7285-82d2-4460-8150-5f74f4d9a757",
+            "sha256_hash": "6087246736c769cd89eb2ae7f5c17059d31b0db738142e91336dcc83fc599132",
+            "content_type": "application/x-zip-compressed",
+            "size": 1056913701,
+            "created_date": "2021-02-25T08:48:01.319Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/5e779990-e1e4-406d-97b5-b05ccb488494/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/5e779990-e1e4-406d-97b5-b05ccb488494/file_viewed",
+            "download_expiry_time": "2126-10-31T07:17:17.243665554Z"
+          },
+          "size": 1056913701,
+          "last_modified_date": "2021-02-25T08:48:01.319Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB19.zip",
+          "id": "647b775c-23a2-4031-b890-b0cfe39875a1",
+          "content_details": {
+            "id": "5ef5a5e0-d215-4c86-83ec-49d1dbd3be72",
+            "sha256_hash": "3a53cf477cef37e4a4fa9c76553be805c5e8e9f63ad267b629efa868b49906aa",
+            "content_type": "application/x-zip-compressed",
+            "size": 1140694615,
+            "created_date": "2021-02-25T17:18:29.288Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/647b775c-23a2-4031-b890-b0cfe39875a1/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/647b775c-23a2-4031-b890-b0cfe39875a1/file_viewed",
+            "download_expiry_time": "2126-10-31T07:17:17.243670194Z"
+          },
+          "size": 1140694615,
+          "last_modified_date": "2021-02-25T17:18:29.288Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB20.zip",
+          "id": "b4f97255-0721-4342-af38-3f390eac9a2e",
+          "content_details": {
+            "id": "fb91bf7f-2260-4077-bda4-466ce2f3abfa",
+            "sha256_hash": "e28a3ad3a000daf04991640280b4966cc24b7eef3947a7c8c5f58a1d7dbda01e",
+            "content_type": "application/x-zip-compressed",
+            "size": 1040518375,
+            "created_date": "2021-02-25T17:53:40.381Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/b4f97255-0721-4342-af38-3f390eac9a2e/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/b4f97255-0721-4342-af38-3f390eac9a2e/file_viewed",
+            "download_expiry_time": "2126-10-31T07:17:17.243674874Z"
+          },
+          "size": 1040518375,
+          "last_modified_date": "2021-02-25T17:53:40.381Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB21.zip",
+          "id": "202ed926-688b-49e4-b6f1-36fe29c2b020",
+          "content_details": {
+            "id": "ca15057c-3c79-4f96-b04e-cf0861389783",
+            "sha256_hash": "e318220f600f9f27ea691f3539444346862afb2b4cc132dca0cc4000d3c7ebc1",
+            "content_type": "application/x-zip-compressed",
+            "size": 1010923660,
+            "created_date": "2021-02-25T22:05:46.335Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/202ed926-688b-49e4-b6f1-36fe29c2b020/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/202ed926-688b-49e4-b6f1-36fe29c2b020/file_viewed",
+            "download_expiry_time": "2126-10-31T07:17:17.243679484Z"
+          },
+          "size": 1010923660,
+          "last_modified_date": "2021-02-25T22:05:46.335Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB23.zip",
+          "id": "422c1fc9-cda8-4a25-9654-4cc87c0de6ab",
+          "content_details": {
+            "id": "74fce263-036a-46f8-a1d5-aba5bacd7db4",
+            "sha256_hash": "bc1ddfe13504193e5ccdb6c69f056438f366e62602c7f4f8b8151a8712b14902",
+            "content_type": "application/x-zip-compressed",
+            "size": 1076774425,
+            "created_date": "2021-02-25T18:21:00.227Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/422c1fc9-cda8-4a25-9654-4cc87c0de6ab/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/422c1fc9-cda8-4a25-9654-4cc87c0de6ab/file_viewed",
+            "download_expiry_time": "2126-10-31T07:17:17.243684214Z"
+          },
+          "size": 1076774425,
+          "last_modified_date": "2021-02-25T18:21:00.227Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB24.zip",
+          "id": "be42627c-0c76-4562-8f2c-f70d2309820d",
+          "content_details": {
+            "id": "d1f7c326-8ebc-4732-a402-3460646f04e8",
+            "sha256_hash": "93d0f3fac7dea955734b0427ebe8fd1fb20dbebd9b3024d26d37aa1dc8a02709",
+            "content_type": "application/x-zip-compressed",
+            "size": 1090156667,
+            "created_date": "2021-02-25T18:37:36.089Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/be42627c-0c76-4562-8f2c-f70d2309820d/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/be42627c-0c76-4562-8f2c-f70d2309820d/file_viewed",
+            "download_expiry_time": "2126-10-31T07:17:17.243688885Z"
+          },
+          "size": 1090156667,
+          "last_modified_date": "2021-02-25T18:37:36.089Z",
+          "status": "COMPLETED"
+        },
+        {
+          "filename": "AB25.zip",
+          "id": "5ed70f75-9d81-41ac-8e21-a58f93f2544e",
+          "content_details": {
+            "id": "f2e40c73-dc23-496d-917a-48f8c33e280d",
+            "sha256_hash": "66da41cc5c80a4224b3417d67a09653b78e952bc1c3cd0b4caa0bac6b58cca20",
+            "content_type": "application/x-zip-compressed",
+            "size": 1159042116,
+            "created_date": "2021-02-25T19:04:45.1Z",
+            "download_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/5ed70f75-9d81-41ac-8e21-a58f93f2544e/file_downloaded",
+            "view_url": "https://data.mendeley.com/public-files/datasets/k9kvm5tn3f/files/5ed70f75-9d81-41ac-8e21-a58f93f2544e/file_viewed",
+            "download_expiry_time": "2126-10-31T07:17:17.243693795Z"
+          },
+          "size": 1159042116,
+          "last_modified_date": "2021-02-25T19:04:45.1Z",
+          "status": "COMPLETED"
+        }
+      ]
+    },
+    "k9kvm5tn3f-v1-meta.json": {
+      "sha256": "33ff05f7c4555fcdc2a3b5a88542787b021c0571d7f7cbc21a97395e08b86932",
+      "bytes": 2621,
+      "content": {
+        "id": "k9kvm5tn3f",
+        "doi": {
+          "id": "10.17632/k9kvm5tn3f.1",
+          "status": "allocated",
+          "prefix": "10.17632"
+        },
+        "name": "Data repository for Camargo, et. al. A comprehensive, open-source dataset of lower limb biomechanics. Part 2 of 3",
+        "description": "Part 2/3 of the dataset for \"Camargo, et. al. A comprehensive, open-source dataset of lower limb biomechanics in multiple conditions of stairs, ramps, and level-ground ambulation and transitions.\" Dataset linked from https://doi.org/10.1016/j.jbiomech.2021.110320 (2021-02-24) ",
+        "version": 1,
+        "contributors": [
+          {
+            "profile_id": "b8fa9545-2f63-315b-beb0-8fae40274b8f",
+            "first_name": "Jonathan",
+            "last_name": "Camargo"
+          }
+        ],
+        "versions": [
+          {
+            "version": 2,
+            "available": true,
+            "publish_date": "2021-10-18T15:21:31.054Z"
+          },
+          {
+            "version": 1,
+            "available": true,
+            "publish_date": "2021-02-26T00:02:37.202Z"
+          }
+        ],
+        "articles": [],
+        "categories": [
+          {
+            "id": "data.elsevier.com/vocabulary/OmniScience/Concept-252578356",
+            "label": "Electromyography"
+          },
+          {
+            "id": "data.elsevier.com/vocabulary/OmniScience/Concept-258636781",
+            "label": "Biomechanics of Gait"
+          },
+          {
+            "id": "data.elsevier.com/vocabulary/OmniScience/Concept-330093370",
+            "label": "Wearable Sensor"
+          }
+        ],
+        "institutions": [
+          {
+            "id": "62b0bccc-86d9-51fd-a58d-dedfc81c9ef1",
+            "name": "Georgia Institute of Technology",
+            "ror_id": "https://ror.org/01zkghx44"
+          }
+        ],
+        "available": true,
+        "method": "Please refer to our paper https://doi.org/10.1016/j.jbiomech.2021.110320",
+        "size": 0,
+        "owner": {
+          "profile_id": "b8fa9545-2f63-315b-beb0-8fae40274b8f",
+          "first_name": "Jonathan",
+          "last_name": "Camargo"
+        },
+        "channel": "WEB",
+        "owner_id": "b8fa9545-2f63-315b-beb0-8fae40274b8f",
+        "publish_date": "2021-02-26T00:02:37.202Z",
+        "data_licence": {
+          "id": "01d9c749-3c4d-4431-9df3-620b2dcfe144",
+          "description": "You can share, copy and modify this dataset so long as you give appropriate credit, provide a link to the CC BY license, and indicate if changes were made, but you may not do so in a way that suggests the rights holder has endorsed you or your use of the dataset. Note that further permission may be required for any content within the dataset that is identified as belonging to a third party.",
+          "url": "http://creativecommons.org/licenses/by/4.0",
+          "category": "Creative",
+          "short_name": "CC BY 4.0",
+          "full_name": "Creative Commons Attribution 4.0 International"
+        },
+        "related_links": [
+          {
+            "type": "article",
+            "rel": "source_of",
+            "href": "https://doi.org/10.1016/j.jbiomech.2021.110320"
+          }
+        ],
+        "funders": [],
+        "customer_id": "7377952c-6404-4428-bbfc-77242cfc301e",
+        "modified_on": "2021-02-25T22:05:46.291Z",
+        "created_on": "2021-02-25T05:27:26.885Z",
+        "confidential": false,
+        "links": {
+          "view": "https://data.mendeley.com/datasets/k9kvm5tn3f"
+        },
+        "repository": {
+          "id": "MENDELEY_DATA",
+          "name": "Mendeley Data"
+        }
+      }
+    },
+    "k9kvm5tn3f-versions.json": {
+      "sha256": "c80727101b074cf74d88093ee4571f597946b86aecc4333ced6bc7f3f0d21048",
+      "bytes": 119,
+      "content": [
+        {
+          "version": 1,
+          "publish_date": "2021-02-26",
+          "available": true
+        },
+        {
+          "version": 2,
+          "publish_date": "2021-10-18",
+          "available": true
+        }
+      ]
+    }
+  },
+  "bindings": {
+    "/mnt/s/locomotion_data/gt21_missing_participants_v1/AB17/acquisition_plan.json": "ea8ae805f6d0699d8604ab93b1a9bbbedcec57c37ed7f265ed280d5e3403ee4e",
+    "/mnt/s/locomotion_data/gt21_missing_participants_v1/AB17/acquisition_result.json": "2c07b9d214b81e10c5fd9365b386dcd5e8c5ddc70e1c1af0e19d20eac391caa0",
+    "/mnt/s/locomotion_data/gt21_missing_participants_v1/AB17/archive_inspection.json": "00318ce6d744a3cb9abe61554afb00c2c15d5b6240bfdabe48c7a0a63bacc20e",
+    "contributor_tools/acquire_gt21_missing_participant.py": "f248b941bc334cc1d3d240ca4c34bd1be391fb390092abb1d26526635c7ca939",
+    "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/README.txt": "45282345f808b0eae6792ef728d8f1ba15f2ab5e3645123aab8c275b0831bace",
+    "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/SubjectInfo.mat": "bc990b2c182e0cfc7b405b99fb429026585c224ce6d1ff5249734ec89cb2ce08",
+    "contributor_tools/conversion_scripts/Gtech_2021/convert_gtech_2021_phase_to_parquet.m": "219918731a2539e9a8df7d816a6d651bd476afb25f4f2012427f1b5a7d8a005a",
+    "contributor_tools/conversion_scripts/Gtech_2021/utilities/gtech_estimate_segment_lengths.m": "595017b67b7fcdee87a2ae06dae150633d1e16430f0c37f3dab0c33a32c00bc4",
+    "converted_datasets/reconversion_v2/gt21_ab17_after_gt23_pose_20261021/status.json": "ce0f903da1cea270275643a92a3d9942a6f6bc7de27a380893ca7ffe69223cb6",
+    "converted_datasets/reconversion_v2/gt21_ab17_restoration_v4_20261021/plan.json": "5a99665dc16a5b009b62c4cdd6c6c3d8ab0caaf4cc7fbcfe4e51459006ff4dd7",
+    "converted_datasets/reconversion_v2/gt21_participant_repository_receipts_20261021/fcgm3chfff-v1-files.json": "7f564c9ca24b1d287e68f2d734f685567c1d050ff779e5a5800bd231b1e9d15e",
+    "converted_datasets/reconversion_v2/gt21_participant_repository_receipts_20261021/fcgm3chfff-v2-files.json": "dc7473296b2b355e82642a9286479628be1dc12c0a84967329b28ec584869b35",
+    "converted_datasets/reconversion_v2/gt21_participant_repository_receipts_20261021/head-receipts.json": "f28782ee03d4f52c562519669be2150c885c9956f5136b2cdb69f72ad34c68c3",
+    "converted_datasets/reconversion_v2/gt21_participant_repository_receipts_20261021/jj3r5f9pnf-v1-files.json": "a86b7cb842c29a811b7ca9d747fc932941072513cac52f52660222b2db9e37b0",
+    "converted_datasets/reconversion_v2/gt21_participant_repository_receipts_20261021/jj3r5f9pnf-v2-files.json": "9eab4f058ab936a09ac929ec0c976c6cf6ff066506c9408f733948cbb686c01a",
+    "converted_datasets/reconversion_v2/gt21_participant_repository_receipts_20261021/k9kvm5tn3f-v1-files.json": "2ba27350694593e0e0d2f7a2c724ee46ec81d95910230d6ad5042b166ba5deb9",
+    "converted_datasets/reconversion_v2/gt21_participant_repository_receipts_20261021/k9kvm5tn3f-v2-files.json": "a163eaa7d7aa61e2e7950843a6dacc587219320c646ddf579216a0b5719bef6a",
+    "converted_datasets/reconversion_v2/gt21_s01_crosswalk_20261031/fc-v1-files.json": "6e60a0cdceeb5f7a1b9127c2b223c384d573c855c90d74d9973e70a8839d4cbf",
+    "converted_datasets/reconversion_v2/gt21_s01_crosswalk_20261031/fcgm3chfff-v1-meta.json": "cbb308b17135bae3cd7112ce613824f0b45001489db5876b4f065516a8869f1e",
+    "converted_datasets/reconversion_v2/gt21_s01_crosswalk_20261031/fcgm3chfff-versions.json": "c80727101b074cf74d88093ee4571f597946b86aecc4333ced6bc7f3f0d21048",
+    "converted_datasets/reconversion_v2/gt21_s01_crosswalk_20261031/jj-v1-files.json": "3fb16173034bb3b60a9d62d9f2ab9ce6a09c885e64ec1611c7ea4d310b644b7b",
+    "converted_datasets/reconversion_v2/gt21_s01_crosswalk_20261031/jj3r5f9pnf-v1-meta.json": "b8ecf656a1c12acab166bf1b68d0007db447ea0eba0c95d0a7afe0f24f038024",
+    "converted_datasets/reconversion_v2/gt21_s01_crosswalk_20261031/jj3r5f9pnf-versions.json": "c80727101b074cf74d88093ee4571f597946b86aecc4333ced6bc7f3f0d21048",
+    "converted_datasets/reconversion_v2/gt21_s01_crosswalk_20261031/k9-v1-files.json": "d3967c4de40108759bd78ccdc5895bc84efe72030dc5ba981263d3fcf531f6e7",
+    "converted_datasets/reconversion_v2/gt21_s01_crosswalk_20261031/k9kvm5tn3f-v1-meta.json": "33ff05f7c4555fcdc2a3b5a88542787b021c0571d7f7cbc21a97395e08b86932",
+    "converted_datasets/reconversion_v2/gt21_s01_crosswalk_20261031/k9kvm5tn3f-versions.json": "c80727101b074cf74d88093ee4571f597946b86aecc4333ced6bc7f3f0d21048",
+    "converted_datasets/reconversion_v2/gt21_subject_mass_review_20261021/source_comparison.json": "c18db48a8a073dc2f2d4ba543140638766222223b0a12b4cef8ded1f843d8f3f",
+    "converted_datasets/reconversion_v2/gt21_subject_mass_review_20261021/subject_masses.csv": "71642b19a0faef5937a5988cc6f0b2879e4a863adfb13b62dd25a91e825e3e84",
+    "converted_datasets/reconversion_v2/gt21_subjectinfo_after_um21_20261021/status.json": "f103e2717dcd451553e50f79c504989631a963b3034d74a7ac1ab3aa915d36c7",
+    "docs/quality/audits/gt21-ab17-local-processing-recipe.json": "b8fe0214f6178795220f811b55ae4190cdd10cf2c1944797d0f33c2887e1db55",
+    "docs/quality/audits/gt21-ab17-metadata-source-followup.json": "ad8d900d2268cb39f323463e6bff42c798d2c77710e5d16392cfbb7c4c748fbe",
+    "docs/quality/audits/gt21-ab17-native-metadata-enrichment-v2.json": "d3abb0756f39f869123e660c84a12e1f3f126eb97494cb0d6aeb77844f834e8d",
+    "docs/quality/audits/gt21-ab17-recovery.json": "dea974eb35323f6b2370b72f0c24653760e9d73ebb7954dbcfbd78e92312961d",
+    "docs/quality/audits/gt21-all-source-phases.json": "18c3eca8b5dfcead0cb8218cc6915a8ee780092f92ea6d08a23660c7dd8ade3d",
+    "docs/quality/audits/gt21-participant-source-coverage.json": "f3077fe91eddc226eaa6a670d499c6ec10836af46fb1d3311d7dff0c1aa61b0b",
+    "docs/quality/audits/queue-recovery-expanded-49-summary.json": "ef23a85ba40a74b0cc86aeafbe01779b385a73ae6731b658f96ef0998f159d73"
+  }
+}

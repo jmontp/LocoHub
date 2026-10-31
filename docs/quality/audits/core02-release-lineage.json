@@ -1,0 +1,258 @@
+{
+  "task_id": "CORE-02",
+  "title": "Verify immutable release lineage and filtering integrity",
+  "checked_at_utc": "2026-10-30T21:49:11Z",
+  "scope": "Fixture-only review of contributor_tools/build_dataset_release.py and the helpers it calls (contributor_tools/common/data_contract.py assess_observations/inspect_contract, config_manager.ValidationConfigManager). No research dataset or converted_datasets/ content was read; no numerical job was launched.",
+  "scientific_approval": false,
+  "authorizes_publication": false,
+  "fixture": {
+    "label": "synthetic",
+    "definition": "tests/test_release_lineage_adversarial.py::synthetic_frame and ::inputs",
+    "observations": [
+      {
+        "identity": [
+          "S01",
+          "rec_A",
+          "c1",
+          "left"
+        ],
+        "design": "required 0.5 in range; optional signal entirely NaN",
+        "expected_status": "passed"
+      },
+      {
+        "identity": [
+          "S01",
+          "rec_B",
+          "c1",
+          "left"
+        ],
+        "design": "same observation_id as above in another recording; required 2.0 out of range",
+        "expected_status": "failed"
+      },
+      {
+        "identity": [
+          "S01",
+          "rec_A",
+          "c1",
+          "right"
+        ],
+        "design": "same recording and observation_id, other side; optional NaN at samples 40-59",
+        "expected_status": "passed"
+      },
+      {
+        "identity": [
+          "S02",
+          "rec_A",
+          "c1",
+          "left"
+        ],
+        "design": "required signal entirely NaN",
+        "expected_status": "missing"
+      },
+      {
+        "identity": [
+          "S02",
+          "rec_C",
+          "c2",
+          "left"
+        ],
+        "design": "task incline_walking, absent from profile",
+        "expected_status": "unchecked"
+      },
+      {
+        "identity": [
+          "S02",
+          "rec_C",
+          "c3",
+          "left"
+        ],
+        "design": "required +inf at sample 75; phase-checked samples in range",
+        "expected_status": "invalid"
+      }
+    ],
+    "rows": 900,
+    "phase_samples_per_observation": 150,
+    "profile": "review_status reviewed; required knee_flexion_angle_ipsi_rad, optional hip_flexion_angle_ipsi_rad; ranges [0, 1] at phases 0 and 100 (synthetic, not a population reference)",
+    "provenance": "one local synthetic source file verified by SHA-256; remote variant added per test"
+  },
+  "example_run_identities": {
+    "note": "One build of the fixture in a scratch directory with Python 3.12.3, pandas 2.2.3, pyarrow 20.0.0, numpy 2.2.6. Input Parquet bytes depend on library versions; manifest.json varies with created_at and is not listed. Rebuilt after the G6 fix: every output hash is unchanged for this fixture, because its columns are only strings and float64 and it was written without NaN-as-value encoding.",
+    "inputs_sha256": {
+      "input.parquet": "9db950c6a350aa259ebad2cec9d8745bf2a10a7055d14ce1740a0e5c74fe8e40",
+      "ranges.yaml": "180b627af7249cbff2e409d5616b67c3ab6d9aab86f577062ae8cf4f5d9b776d",
+      "provenance.json": "66f42bab95d5b05af5c02d182a99a8ac4d291e63de35c672aa08cd3f295620d4",
+      "synthetic_source.csv": "9b1dc0002558b38a0cdc6190bb1417485c2f4f8e08283e932a44bbc6e113faef"
+    },
+    "outputs_sha256": {
+      "full.parquet": "9db950c6a350aa259ebad2cec9d8745bf2a10a7055d14ce1740a0e5c74fe8e40",
+      "filtered.parquet": "7e9278f975c9b276db880f58eea8622b8892853df3f947c21ec1f8298b5a6010",
+      "exclusions.parquet": "e56ab227aec6f9cf14a778f553a899a031cd9bb8c664dcd92a225c98e04fcaeb",
+      "quality.json": "49927d9cb4b112a22cf27d82e055502aa60d3e5e82bf8852aa470a92ac0fb390",
+      "profile.yaml": "180b627af7249cbff2e409d5616b67c3ab6d9aab86f577062ae8cf4f5d9b776d",
+      "provenance.json": "66f42bab95d5b05af5c02d182a99a8ac4d291e63de35c672aa08cd3f295620d4",
+      "README.md": "1de14675690eef83d7bfc45ca3dd06859d46079ee2ff04f9533372f30f1e2623"
+    },
+    "counts": {
+      "full_rows": 900,
+      "filtered_rows": 300,
+      "full_observations": 6,
+      "filtered_observations": 2,
+      "observation_statuses": {
+        "passed": 2,
+        "failed": 1,
+        "missing": 1,
+        "unchecked": 1,
+        "invalid": 1
+      }
+    },
+    "code_sha256": {
+      "contributor_tools/build_dataset_release.py (HEAD 569ee8f, before fix)": "61afdbc70fece9318ea9ce4c403f608ea631dab4e1d0644da1d3d32cae14354a",
+      "contributor_tools/common/data_contract.py": "553ced002f105236f1a4d10a085c02d028b0ec8887b6b968a209e810b155cf48",
+      "contributor_tools/common/config_manager.py": "3239c6e43ed7a11d29256d075d461c3dd52912d69fa57db28b08bc40ac7f4943",
+      "tests/test_release_lineage_adversarial.py": "dddee387f4aae4b7cc38e55f9f81b1b7b1b0432fb70feb1c58c9541ef071bace",
+      "tests/test_dataset_release.py": "e51f56fc057461957395f415a6ec750635b7eaeb018b61c52a2ffb4b5ab120fa",
+      "contributor_tools/build_dataset_release.py (after both fixes)": "da0f4f249b2ee198801c0d0a10a7a6a6aa945464a8c5399209f5ad4d8b9f74de",
+      "tests/test_release_lineage_verify.py (verifier file; only two G6 xfail markers removed)": "cf9e8107105f05397847cbd18c14a9b9196cede4092271b15482f2802e7be285"
+    }
+  },
+  "checks": [
+    {
+      "area": "identity recording",
+      "result": "pass",
+      "evidence": "test_manifest_binds_every_input_output_and_code_identity",
+      "finding": "Manifest records input filename/SHA-256/admitted rows, provenance and profile SHA-256 (quality.json source + byte-identical copies), converter name/revision, processing-code hashes matching the files, and a hash and size for every published file except manifest.json/manifest.sha256, which are sealed by manifest.sha256."
+    },
+    {
+      "area": "whole-observation filtering with shared lineage",
+      "result": "pass",
+      "evidence": "test_filter_keeps_whole_observations_by_full_identity_not_observation_id",
+      "finding": "Filtering keys on the full identity (subject, source_recording_id, observation_id, reference_side). A shared observation_id across recordings and sides does not leak rows. Filtered rows equal the full-export rows for eligible identities value for value; full.parquet is byte-identical to the input. The worker test checks identical column names and Arrow types only for this fixture's column types (strings and float64). Other types, schema metadata and NaN encoding are covered by the G6 check below."
+    },
+    {
+      "area": "known-missing preservation",
+      "result": "pass",
+      "evidence": "test_known_missing_optional_values_are_preserved_not_imputed",
+      "finding": "Fully and partially missing optional signals remain NaN in filtered.parquet (20 NaN at samples 40-59) and are recorded as 'missing', never 'passed'. A missing required signal excludes the observation with status 'missing'."
+    },
+    {
+      "area": "exclusions driven by the same assessment",
+      "result": "pass",
+      "evidence": "test_exclusion_ledger_accounts_for_every_observation_from_one_assessment",
+      "finding": "Ledger and filtered identities are disjoint and together equal the full set; ledger row_count plus filtered rows equals full rows; each ledger status and reasons list equals quality.json for that identity; every exclusion carries identity, task, task_id, observation_type, status and a nonempty reason; manifest counts agree."
+    },
+    {
+      "area": "missing or ambiguous exclusion metadata",
+      "result": "pass",
+      "evidence": "test_missing_or_ambiguous_exclusion_metadata_blocks_the_whole_release (4 cases)",
+      "finding": "A missing task_id column, a blank task_id, task_info that varies within an observation, and a non-anatomical reference_side each make the dataset unpublishable; no bundle, staging directory or lock remains. Per-observation contract errors block the entire release rather than producing ledger rows with incomplete metadata (conservative)."
+    },
+    {
+      "area": "immutability and overwrite refusal",
+      "result": "pass",
+      "evidence": "test_any_existing_destination_is_refused_untouched (3 cases); test_stale_lock_is_refused_and_left_for_its_owner; test_destination_created_mid_build_is_not_merged_or_replaced; test_no_replace_rename_refuses_existing_empty_directory; tests/test_dataset_release.py::test_existing_release_is_immutable",
+      "finding": "An existing empty directory, file or dangling symlink is refused and left unchanged. A held lock is refused and not deleted. A destination created by another writer during the build is neither merged nor replaced; staging and the builder's own lock are cleaned up. The no-replace rename refuses an existing empty directory."
+    },
+    {
+      "area": "changed-input rejection",
+      "result": "pass after fix",
+      "evidence": "test_input_replaced_after_admission_is_rejected; test_input_modified_during_read_is_rejected; test_profile_changed_after_hashing_is_rejected; test_provenance_changed_after_parsing_is_rejected; test_missing_local_source_file_is_not_downgraded_to_declared",
+      "finding": "DEFECT FOUND AND FIXED. Before the fix the input was hashed after memory admission, so an export replaced between admission and hashing was loaded and released: the synthetic demonstration produced a bundle whose manifest input.rows was 900 while counts.full_rows was 1800, and its checksum matched the replacement. The fix hashes the input before admission so the existing post-read hash comparison rejects any replacement after hashing. Input modified during read, profile changed after loading, provenance changed after parsing, and a missing declared local source are all rejected with nothing published."
+    },
+    {
+      "area": "incomplete review and lineage evidence",
+      "result": "pass",
+      "evidence": "test_incomplete_review_or_lineage_evidence_is_refused (13 cases); test_duplicate_provenance_keys_are_refused; test_unrecognized_profile_review_status_is_refused (4 cases)",
+      "finding": "Missing or non-object review, missing or blank reviewer, missing reviewed_at, timestamps without timezone or unparseable, missing converter.revision, empty sources, missing or malformed source SHA-256, null local path, empty release_id, duplicate JSON keys, and profile statuses draft/Approved/true/pending are all refused before publication."
+    },
+    {
+      "area": "no manufactured scientific approval",
+      "result": "pass",
+      "evidence": "test_declared_review_is_recorded_verbatim_without_added_approval; test_legacy_profile_and_no_profile_never_imply_approval; tests/test_dataset_release.py::test_no_profile_makes_empty_filtered_artifact_not_a_quality_pass",
+      "finding": "The declared review (including its scope) and profile review block are recorded verbatim; the builder adds no approval wording; the universal pass-rate threshold is null and the profile-only limitation is present. A legacy profile is labeled legacy_unspecified with a limitation; no profile yields zero passing observations."
+    },
+    {
+      "area": "remote checksum declarations",
+      "result": "pass",
+      "evidence": "test_remote_checksums_stay_declared_even_when_claimed_verified; test_all_local_sources_add_no_remote_limitation; tests/test_dataset_release.py::test_remote_source_hash_is_explicitly_declared_not_verified",
+      "finding": "A remote source that itself claims status verified_download and verified: true is recorded as contributor_declared with only uri/sha256/status; the not-downloaded limitation appears in the manifest and README. Mixed local and remote sources keep per-source status. No limitation is added when every source is verified locally."
+    },
+    {
+      "area": "filtered export schema and encoding (G6)",
+      "result": "pass after fix",
+      "evidence": "tests/test_release_lineage_verify.py::test_filtered_export_keeps_the_full_export_arrow_schema; ::test_filtered_export_keeps_source_nan_encoding (verifier tests, strict-xfail markers removed, assertions unchanged)",
+      "finding": "DEFECT FOUND BY VERIFIER AND FIXED. filtered.parquet was rebuilt from pandas: nullable int64 became double, a text column that was all null in the subset became Arrow null type, large_string became string, Parquet schema metadata was dropped, and IEEE NaN became null. The builder now keeps the Arrow table it read, computes the sorted positions of the eligible rows from pandas, and writes table.take(positions). The filtered export is a row selection of the full export, with the same schema, metadata and encoding. A stored RangeIndex in the pandas metadata falls back to a default index on read (probe); a stored index column is kept as in the full export."
+    }
+  ],
+  "environment_probe": {
+    "check": "_publish_directory (renameat2 RENAME_NOREPLACE) on the ext4 scratch directory and on the Windows-mounted repository drive (/mnt/s, drvfs)",
+    "result": "ext4: refuses an existing destination (EEXIST) and publishes a new one. drvfs: refuses an existing destination (EEXIST) but fails to publish a new one (EINVAL).",
+    "consequence": "A release whose output directory is on the Windows-mounted drive cannot be published; the build fails safely (staging removed, lock released, nothing overwritten). Releases must currently be built on a Linux filesystem."
+  },
+  "gaps": [
+    {
+      "id": "CORE-02-G1",
+      "severity": "high",
+      "kind": "usability",
+      "gap": "No-overwrite publication fails with EINVAL on the WSL drvfs mount that holds the repository. Blocks the first treadmill packaging at the default repository location. Fails closed: no integrity risk. Reproduced independently by the verifier.",
+      "follow_up": "Either document that release output directories must be on a Linux filesystem (and copied afterwards with checksum verification), or add a fallback that creates the destination with an exclusive mkdir and moves staged files into it, with a test on both filesystems. Scheduled separately by the coordinator."
+    },
+    {
+      "id": "CORE-02-G2",
+      "severity": "medium",
+      "kind": "review evidence",
+      "gap": "A profile's self-declared review_status 'reviewed' or 'approved' is accepted without a recorded profile review (reviewer, time, scope); manifest.profile.review is then null. DATA_CONTRACT.md currently permits this.",
+      "follow_up": "Decide (scope/release policy) whether reviewed/approved profiles must carry a review record; until then add a limitation when the record is absent. Owner: release workflow, not this fixture task."
+    },
+    {
+      "id": "CORE-02-G3",
+      "severity": "low",
+      "kind": "review evidence",
+      "gap": "Provenance review.scope is optional. Without it, manifest.review and the README line 'Source review recorded by X at T' do not state what was reviewed; contributor-supplied review fields are copied into manifest.review without being labeled as declarations.",
+      "follow_up": "Require review.scope, or record a limitation when it is absent, and render the scope in the README review line."
+    },
+    {
+      "id": "CORE-02-G4",
+      "severity": "low",
+      "kind": "resource",
+      "gap": "After the fix a replaced input is rejected, but only after it has been read into memory, so admission can still be bypassed for one eager read.",
+      "follow_up": "Admit, hash and read from one open file descriptor (pq.ParquetFile and read_table on the same handle) and compare fstat before and after."
+    },
+    {
+      "id": "CORE-02-G5",
+      "severity": "low",
+      "kind": "inherent",
+      "gap": "A change-and-restore of an input, profile, provenance file or local source between checks is not detectable by hashing at fixed points; local sources are verified at build time only and are not bundled.",
+      "follow_up": "None required; build from a stable, write-protected staging copy when this matters."
+    },
+    {
+      "id": "CORE-02-G6",
+      "severity": "medium",
+      "kind": "output fidelity",
+      "status": "fixed in this task",
+      "gap": "filtered.parquet was re-encoded through pandas (type drift, dropped schema metadata, NaN to null), so it was not a true subset of full.parquet.",
+      "follow_up": "Done: rows are selected on the Arrow table. No further action."
+    },
+    {
+      "id": "CORE-02-G7",
+      "severity": "low",
+      "kind": "error handling",
+      "status": "open",
+      "gap": "Pandas-categorical identity columns, which round-trip through Parquet, raise an uncaught TypeError in data_contract._nonempty_strings; main() catches only ValueError, OSError and ArrowException, so the CLI ends in a traceback. It fails closed (no bundle, lock or staging left).",
+      "follow_up": "Raise a ReleaseError (or accept categorical/dictionary string identities explicitly); then remove the strict-xfail marker on tests/test_release_lineage_verify.py::test_categorical_identity_columns_fail_with_a_release_error."
+    },
+    {
+      "id": "CORE-02-G8",
+      "severity": "low",
+      "kind": "source verification",
+      "status": "open",
+      "gap": "A remote (https) source URI that also has a local 'path' copy is recorded as verified_local, and no limitation says the URI itself was not downloaded or tied to those bytes.",
+      "follow_up": "Add a limitation (or a distinct status) when a non-local URI is verified only through a local copy; then remove the strict-xfail marker on tests/test_release_lineage_verify.py::test_remote_uri_verified_only_through_a_local_copy_is_labelled."
+    }
+  ],
+  "not_covered": [
+    "Full-scope source reconciliation, dataset-specific profile review and catalog/download matching (each dataset quality/release task).",
+    "Time-mode and ensemble-mode bundles were not exercised adversarially here; existing contract tests cover their schema rules.",
+    "Native Windows publication path (os.rename) was not run."
+  ],
+  "revision": "Round 2 after independent verification (docs/maintainers/handoffs/CORE-02-verify.json): schema claim scoped to the fixture, G6 implemented, G7 and G8 added, G1 raised to high."
+}

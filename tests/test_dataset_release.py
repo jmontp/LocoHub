@@ -19,7 +19,7 @@ def release_inputs(tmp_path):
         "subject": "S01", "source_recording_id": "fixture.csv",
         "observation_id": np.repeat(["pass", "fail"], 150),
         "reference_side": "left", "observation_type": "individual_cycle",
-        "task": "level_walking", "task_id": "level_1_m_s", "task_info": "{}",
+        "task": "level_walking", "task_id": "level_1_m_s", "task_info": '{"population": "synthetic"}',  # synthetic label
         "phase_ipsi": np.tile(np.linspace(0, 100, 150), 2),
         SIGNAL: np.repeat([0.5, 2.0], 150),
     })
@@ -29,7 +29,8 @@ def release_inputs(tmp_path):
     data.sample(frac=1, random_state=7).to_parquet(source, index=False)
     profile = tmp_path / "ranges.yaml"
     profile.write_text(
-        f"version: '2.0'\ntasks:\n  level_walking:\n    phases:\n"
+        # Synthetic applicability: matches the synthetic population label above.
+        f"version: '2.0'\ntasks:\n  level_walking:\n    metadata: {{applicability: {{population: [synthetic]}}}}\n    phases:\n"
         f"      0:\n        {SIGNAL}:\n          min: 0\n          max: 1\n"
         f"      100:\n        {SIGNAL}:\n          min: 0\n          max: 1\n"
     )
@@ -170,7 +171,11 @@ def test_draft_profile_cannot_publish(release_inputs, tmp_path):
 
 def test_reviewed_profile_status_is_preserved(release_inputs, tmp_path):
     source, profile, provenance = release_inputs
-    profile.write_text("review_status: reviewed\n" + profile.read_text())
+    profile.write_text(
+        "review_status: reviewed\n"
+        "review: {reviewer: synthetic-profile-reviewer, reviewed_at: '2026-01-02T00:00:00Z'}\n"
+        + profile.read_text()
+    )
     result = release.build_release(source, tmp_path / "release", provenance, ranges_path=profile)
     assert result["profile"]["review_status"] == "reviewed"
     assert not any("legacy profile" in limitation for limitation in result["limitations"])

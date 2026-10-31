@@ -1,0 +1,193 @@
+{
+  "task_id": "UM21-C03",
+  "task_id_note": "Renumbered, resolved: this task was filed as UM21-C02, which the backlog already uses for the pelvis-correspondence task. The main session renumbered it to UM21-C03 (IDs, decision IDs D-UM21-C03-1/2, file names and sheet folders). The backlog has no other UM21-C03, so no collision remains.",
+  "title": "Fit UMich 2021 treadmill channels to a right-hand-rule sagittal convention and census ankle branch episodes",
+  "status": "review",
+  "last_checked_at_utc": "2026-10-30T17:20:00Z",
+  "summary": "Proposed a LocoHub sagittal frame (x walking direction, y up, z = person's right side out of the page, counterclockwise positive) and derived each signal's sign. Pure right-hand rule conflicts with clinical names in three places: pelvis anterior tilt, knee flexion angle and knee flexion moment (all negative under pure RHR). Every UM21 angle and moment channel was fitted (component x sign x offset) against independent evidence on 8 recordings, 16 legs (seed 20261030: AB07/i5, AB03/i5, AB08/d10, AB05/d5; disjoint seed 20261031: AB05/d10, AB04/d5, AB06/d5, AB01/i5). Best transform is component 1 with the published sign under the clinical convention for pelvis, hip, knee and ankle angles (best of 6 candidates in 16/16 legs each; median absolute residual against marker angles 0.03-0.14 deg pelvis, 0.65-2.6 hip, 0.97-3.3 knee, 0.41-1.5 ankle; opposite sign 1.8-31 deg). Under pure RHR the same component wins with sign -1 for pelvis and knee. Knee and ankle moments: component 1 wins against force-plate lever-arm moments in 15/16 and 14/16 legs; the published sign beats the flipped sign in 16/16 for both (knee needs x -1 under pure RHR); slope 0.75-0.91, so N*m/kg as stored. Hip moment is weak (component 1 wins in 8/16; published sign better in 14/16). New finding: power is stored in two layouts. In 42 recordings, components 1-3 are filled and component 1 = -(moment x joint speed). In 8 recordings (AB03/i10, AB04/d10, AB04/d5, AB04/i5, AB05/d10, AB05/d5, AB05/i0, AB05/i10), components 1-2 are zero and component 3 = +(moment x joint speed). Both layouts agree with force-plate moment x marker joint speed after that transform (power is invariant to the convention choice). Ankle: the AB07/i10 right run (1-based frames 11704-17134, 5429 frames, 34 strides) is the alternate Cardan solution (c1+180, 180-c2, c3+180) of a continuous ankle orientation. After re-expression, inside p1-p99 is [-16.6, 27.0], [1.1, 6.1], [-24.2, -3.4] deg vs outside [-15.9, 27.8], [0.5, 6.3], [-24.9, -0.5], and the frame-to-frame orientation step inside the run is 0.51 deg median, 2.43 deg at the 95th percentile (outside 0.64 and 2.77). The matrix identity (raw and re-expressed triples give the same rotation, 1.3e-15) holds for any triple; it checks the rule, it is not evidence. The run is not all clean: 13 frames change orientation by 20-171 deg in one frame (1-based clusters 11704-11713, 12704-12705, 14931-14932, 14973, 14986-14991). These are not alternate solutions; 29 of 31 inside strides are free of them. Census of all 500 joint-angle channels: alternate-branch frames in 3 ankle channels only (the AB07/i10 R episode plus AB05/d10 L 5 frames and AB06/d5 R 8 frames, which are glitches, not branch switches) and 21 FootProgress channels (left source-only). Also found: exact (0,0,0) fill in 241 of 500 angle channels, 23,386 frames between first and last heel strike in 87 channels.",
+  "checks": [
+    "Read AGENTS.md, UM21-C01 handoff, um21-c01-tread-conventions.json, um21-c01-source-probe.json, the C01 builder and contributor_tools/common/review_sheet.py.",
+    "Fetched Vicon Nexus 2.16 'Plug-in Gait kinematic variables' (2026-10-30): hip/knee/pelvis described as flexion/tilt, then adduction/obliquity, then rotation (YXZ in Plug-in Gait axes); ankle 'not calculated as strict Cardan angles'. Quoted in um21-c03-conventions.json vicon_evidence. Page html not stored or hashed.",
+    "Synthetic identity check (1000 random triples): re-expression recovers the original triple to 6e-14 deg; rotation matrices of alternate triples equal the originals to 1e-15 in xyz, yxz and zyx orders; a mirrored sign flip differs by 2.0.",
+    "Ran `nice -n 19 ionice -c 3 python3 contributor_tools/review_um21_c03_conventions.py census` (jointAngles for 50 recordings x 2 sides x 5 channels, plus hip/knee/ankle jointMoments/jointPowers for the kinetic layout; one channel at a time, RLIMIT_AS 1 GiB, MemAvailable about 12.8 GiB). Peak RSS 83.5 MiB, 13 s.",
+    "Ran `... review_um21_c03_conventions.py probe` (markers, angles, moments, powers and both plates for 8 recordings, one recording at a time). Peak RSS 92.6 MiB, 6 s.",
+    "Ran `... review_um21_c03_conventions.py sheet` (no source read). Peak RSS about 200 MiB (matplotlib).",
+    "Streaming.mat size and mtime were re-checked against the conversion receipt before and after each read; the file was not rehashed or bulk-read. Nothing was written under converted_datasets/.",
+    "Method revisions made during the work and logged in the evidence: (1) RMS ranking replaced by median-absolute-residual ranking. Pelvis marker-label glitches (marker tilt up to 160 deg in AB08/d10 and AB05/d10) dominated RMS, while the component 1 median difference stayed within 0.05 deg, consistent with C01. (2) Midpoint CoP registration was too crude: a 3 cm change flipped component winners. It was replaced by one CoP shift (forward, up) per plate fitted jointly to hip, knee and ankle for each of the 8 sign combinations. The fitted shifts are 0.6-6.2 cm forward and -2 to +6 cm up, except one implausible leg (AB06/d5 R, -21 cm up, 1208 zero-fill frames). The midpoint result is kept as midpoint_registration_check. (3) Exact (0,0,0) triples are treated as missing.",
+    "Plate geometry from data: the marker frame is gravity-aligned (heel/toe foot-flat path slope 0, about 5 and about 10 deg by condition); the plates tilt with the belt; GRF on the foot = -(plate force), confirmed by braking-then-propulsion; CoP in mm, markers in m. The plate tilt used is the README slope, with sign from the marker path. The residual mean horizontal force is within 0.3 % body weight in 7 of 8 recordings; AB01/i5 shows -8.4 %, where the marker path gives 10 deg against the nominal 5 deg (unexplained, recorded).",
+    "Rendered review_sheets/UM21-C03/index.html and review_sheets/D-UM21-C03-1/index.html with headless Chrome at 1100 px and inside a 390 px iframe (allow-file-access-from-files) and looked at both. Nothing clips; tables stack on the phone. At 390 px the per-leg sign figure labels are small (each image links to full size). Renders: scratchpad rv_wide_UM21-C03.png, rv_phone_UM21-C03.png, rv_wide_D-UM21-C03-1.png, rv_phone_D-UM21-C03-1.png (not committed).",
+    "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/build_backlog_page.py --check`: 'Backlog valid; HTML current (78 tasks).' This handoff did not edit backlog.json or backlog.html.",
+    "Same env prefix: `python3 -m pytest -q tests/test_backlog_workflow.py`: 71 passed.",
+    "Not run: an independent verifier sample beyond the two seeds; no level-walking (i0) recording was drawn by either seed.",
+    "Revision 2026-10-30 (verifier return): ran `... review_um21_c03_conventions.py census` then `... sheet` under the AGENTS.md env prefix; re-rendered both sheets with headless Chrome at 1100 px and in a 390 px iframe and inspected them (figure 1 at 4.5 in, labels about 10 px on the phone; nothing clips); re-ran build_backlog_page.py --check and tests/test_backlog_workflow.py."
+  ],
+  "per_channel_best_transform": [
+    {
+      "channel": "PelvisAngles",
+      "clinical": "component 1, x +1, x pi/180",
+      "pure_rhr": "component 1, x -1",
+      "evidence": "marker pelvic tilt",
+      "legs": "16/16 both samples"
+    },
+    {
+      "channel": "HipAngles",
+      "clinical": "component 1, x +1",
+      "pure_rhr": "component 1, x +1",
+      "evidence": "marker thigh - pelvis",
+      "legs": "16/16"
+    },
+    {
+      "channel": "KneeAngles",
+      "clinical": "component 1, x +1",
+      "pure_rhr": "component 1, x -1",
+      "evidence": "marker shank - thigh",
+      "legs": "16/16"
+    },
+    {
+      "channel": "AnkleAngles",
+      "clinical": "component 1, x +1 after the alternate-branch re-expression (if adopted)",
+      "pure_rhr": "same",
+      "evidence": "marker foot - shank (offset -6.1 to +2.1 deg, unpublished static offsets)",
+      "legs": "16/16"
+    },
+    {
+      "channel": "FootProgressAngles",
+      "both": "-(component 1) - 90 deg tracks marker foot pitch (median abs 0.27-0.94 deg)",
+      "legs": "14/16 (whole-recording alternate branches in 4 recording-sides); kept source-only"
+    },
+    {
+      "channel": "HipMoment",
+      "clinical": "component 1, x +1, N*m/kg",
+      "pure_rhr": "same",
+      "evidence": "force-plate lever arm",
+      "legs": "best 8/16; sign 14/16; weak"
+    },
+    {
+      "channel": "KneeMoment",
+      "clinical": "component 1, x +1",
+      "pure_rhr": "component 1, x -1",
+      "evidence": "force-plate lever arm",
+      "legs": "best 15/16; sign 16/16"
+    },
+    {
+      "channel": "AnkleMoment",
+      "clinical": "component 1, x +1",
+      "pure_rhr": "same",
+      "evidence": "force-plate lever arm",
+      "legs": "best 14/16; sign 16/16"
+    },
+    {
+      "channel": "Hip/Knee/AnklePower",
+      "both": "layout 1: -(component 1); layout 2: +(component 3); W/kg",
+      "evidence": "source moment x speed (10/10 and 6/6 legs) and force-plate moment x marker speed (ankle 8/10 and 6/6, knee 9/10 and 6/6, hip 4/10 and 6/6)"
+    }
+  ],
+  "remaining": [
+    "Renumbering UM21-C02 -> UM21-C03 is done (main session); no ID collision remains. The decisions validate once a task UM21-C03 exists in the backlog.",
+    "Decisions D-UM21-C03-1 (sign rule) and D-UM21-C03-2 (AB07/i10 right-ankle stretch) are proposed with status queued because three decisions are already open. D-UM21-C03-1 is the written LocoHub moment/segment sign rule that D-UM21-C01-2 options B/C and D-UM21-C01-1 option C already require (C01 Q7), so it should precede them.",
+    "Power: two storage layouts (8 of 50 recordings differ). Power stays source-only. Any future power column needs the layout-aware rule recorded here, plus an author question on the software/version per recording (extends C01 Q1/Q2).",
+    "Zero fill: 23,386 interior frames in 87 of 500 joint-angle channels are exact (0,0,0). Whether the current UM21 producers mask them is NOT CHECKED; this belongs to UM21-T02 (pilot) before any phase export.",
+    "Hip moment sign evidence is weak (lever arm ignores leg inertia; greater trochanter proxy). The hip still rests on the authors' statement and the joint-combination fit (15/16).",
+    "Ankle jump frames inside the AB07/i10 episode (13 frames, cause unknown) and the AB05/d10 L and AB06/d5 R glitches need a stride-level screen. Screens of 10/20/45/90 deg are reported; for AB07/i10 R the strides touched are identical at 20, 45 and 90 deg. No screen is adopted.",
+    "AB01/i5 plate tilt anomaly (marker path 10 deg vs README 5 deg; residual horizontal force -8.4 % BW) is unexplained; it did not change any winner in that recording.",
+    "The pure-RHR derivation assumes both legs use the same frame (viewed from the right). If José wants per-leg mirrored frames for the left leg, the derivation must be redone.",
+    "Not checked: level walking (no i0 drawn), running/stairs/transitions, frontal/transverse signs, GRF/CoP axis conventions, other LocoHub datasets under options B or C."
+  ],
+  "next_action": "Verifier re-checks the refreshed hashes, figure 1 width and the reworded chip, caption and decision rationale; then the task can move to done.",
+  "changed_files": [
+    "contributor_tools/review_um21_c03_conventions.py (new)",
+    "docs/quality/audits/um21-c03-conventions.json (new)",
+    "docs/quality/audits/um21-c03-source-probe.json (new, compact JSON, 442 KB)",
+    "docs/quality/audits/um21-c03-episode-census.json (new, compact JSON, 376 KB)",
+    "docs/maintainers/handoffs/UM21-C03.json (new)",
+    "review_sheets/UM21-C03/ (gitignored: index.html, fig1_signs.png, fig2a_knee.png, fig2b_ankle.png, fig3a_raw.png, fig3b_fixed.png)",
+    "review_sheets/D-UM21-C03-1/ (gitignored: index.html, fig1_signs.png)"
+  ],
+  "evidence_paths": [
+    "docs/quality/audits/um21-c03-conventions.json",
+    "docs/quality/audits/um21-c03-source-probe.json",
+    "docs/quality/audits/um21-c03-episode-census.json",
+    "review_sheets/UM21-C03/index.html",
+    "review_sheets/D-UM21-C03-1/index.html"
+  ],
+  "output_sha256": {
+    "contributor_tools/review_um21_c03_conventions.py": "3298ebd9c535e82789538d1f60b45aeb77c7e01cecfdef043d4f3d709edbad53",
+    "docs/quality/audits/um21-c03-source-probe.json": "887fb33bc1adf663bec6e79fb04e90179e7e1a74aa074231ab1daf09202cae1a",
+    "docs/quality/audits/um21-c03-episode-census.json": "2a53c360b4c35efdc739694c7e83baa7f8c947f02871868dfcb5adf3d4d7c5c9",
+    "docs/quality/audits/um21-c03-conventions.json": "244e3c354b6439edf1181aceee735e51b536b017593a982f27d318b256c1f4c3"
+  },
+  "resources": {
+    "peak_rss_mib": {
+      "census": 83.5,
+      "probe": 92.6,
+      "sheet": 200.1
+    },
+    "rule": "one process at a time, nice 19, ionice idle, single-threaded BLAS, RLIMIT_AS 1 GiB for source reads, foreground, no launcher (same as C01)"
+  },
+  "decisions": [
+    {
+      "id": "D-UM21-C03-1",
+      "task_id": "UM21-C03",
+      "question": "Which sagittal sign rule should LocoHub adopt, with the person facing right and counterclockwise positive?",
+      "why": "Segment angles have no anatomical name, so counterclockwise is the natural rule and composes cleanly (thigh = pelvis + hip). Joint columns are named flexion and dorsiflexion, and a knee flexion column that is negative in flexion invites misuse. A is cheapest and matches the UMich source exactly; C is the purest but contradicts the column names. Cross-dataset cost of B is unchecked.",
+      "options": [
+        {
+          "key": "A",
+          "label": "Clinical names everywhere (pelvis forward tilt, knee flexion and knee flexion moment positive)",
+          "consequence": "No sign changes for UMich 2021; the reference must stop calling it a right-hand rule for pelvis and knee. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Segment angles counterclockwise, joint angles and moments positive in their named direction",
+          "consequence": "Pelvis tilt flips sign (forward tilt negative) in every dataset that has it; joint columns unchanged. Reversible before release."
+        },
+        {
+          "key": "C",
+          "label": "Counterclockwise for everything",
+          "consequence": "Pelvis tilt, knee angle and knee moment flip in every dataset; knee flexion becomes negative under a flexion name. Reversible before release; outward-facing once released."
+        }
+      ],
+      "options_order": "By how many signals differ from the published UMich sign: 0, 1, 3.",
+      "recommended": "B",
+      "confidence": "low",
+      "check": "review_sheets/D-UM21-C03-1/index.html: the sign table shows exactly three red cells for C and one for B.",
+      "cost_of_waiting": "Moment and segment-angle columns cannot become standard in any dataset (C01 Q7); the treadmill pilot can still run with source copies.",
+      "decide_before_recommendation": true,
+      "status": "queued"
+    },
+    {
+      "id": "D-UM21-C03-2",
+      "task_id": "UM21-C03",
+      "question": "How should the broken right-ankle stretch in the UMich 2021 incline-10 recording of one participant be released?",
+      "why": "Inside the stretch, re-expressed values span the same 1st-99th percentile ranges as the leg's outside strides in all three components, and orientation changes by 2.4 degrees per frame at the 95th percentile (outside: 2.8). The 2 strides with sudden jumps stay out. B is the conservative fallback.",
+      "options": [
+        {
+          "key": "A",
+          "label": "None: keep the whole right ankle of that recording missing",
+          "consequence": "0 strides released from this leg (current C01 policy). Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Only strides outside the stretch",
+          "consequence": "86 strides released; the 31 inside strides stay missing. Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Re-express the stretch with the logged rule; drop strides with sudden jumps",
+          "consequence": "115 strides released (86 + 29); every re-expressed frame is logged; source copies stay unchanged. Reversible."
+        }
+      ],
+      "options_order": "By how many ankle strides from this leg are released: 0, 86, 115.",
+      "recommended": "C",
+      "confidence": "medium",
+      "check": "review_sheets/UM21-C03/index.html, third figure: blue re-expressed strides lie inside the grey band of the same leg's other strides.",
+      "cost_of_waiting": "That one right ankle stays missing as now; nothing else waits.",
+      "decide_before_recommendation": true,
+      "status": "queued"
+    }
+  ],
+  "corrections": [
+    "2026-10-30, main session: renumbered from UM21-C02 (ID already used by the pelvis-correspondence task). Only ID strings changed (sed UM21-C02/um21-c02/um21_c02 -> C03). Builder sha256 before rename 141e3b80b39e7f298ab685a69f8514f95a2ba06f26dfcd44d8772624dc198d11, after a81d6142010b3a57c140256fed705ec49f38476a8c14c03d42fbce6ed8b9ed0f; the probe and census JSONs still record the pre-rename builder hash. Sheet step re-run after rename (no source read).",
+    "2026-10-30, worker, after verifier return (UM21-C03-verify.json, fixes 1-6). (1) The task_id_note and remaining[0] now record the renumbering as resolved. The rename also applied to the probe and census JSONs, whose content was otherwise unchanged; the reverse sed reproduces 84872446... and 695768ee... (verifier check 5). (2) output_sha256 refreshed. The probe JSON is the renamed file, unchanged (887fb33b...); it still records the pre-rename builder hash 141e3b80..., and its probe code is unchanged apart from the renamed output path. (3) Fix 5 needed a new number, so the census step was re-run (joint-angle and kinetic channels only, peak RSS 83.5 MiB, 13 s) to add the inside- and outside-run orientation-step percentiles. The values are inside 0.51/2.43 deg (median/95th percentile) and outside 0.64/2.77; the verifier found 2.4. No other census value changed. The census and sheet steps were then re-run with the final builder, so the census code hash is current. (4) Sheet figure 1 now uses a fixed 4.5 x 5.4 in canvas saved without tight bbox: 765 px at 170 dpi = 4.5 in, row labels 10 pt. (5) The moment chip now reads: knee moment is flexor-positive, the mirror of the counterclockwise force-plate estimate (16 of 16 legs); ankle matches as published (16 of 16). The figure 2 caption is \"Knee is flexor-positive, so mirrored; ankle matches.\" and the question is \"How does each source moment compare with the force plates?\". (6) The D-UM21-C03-2 why and the sheet fold drop the matrix identity and cite the range match and the step percentiles. The conventions interpretation states that the identity is a rule check, not evidence. (7) Frame numbers are labeled 1-based. Jump clusters are generated from the data: 11704-11713, 12704-12705, 14931-14932, 14973, 14986-14991. Ankle-figure legends now include the outside median line and, in both panels, the 2 jump strides; the as-published panel counts 29 clean + 2 jump strides. (8) To keep the 60-word prose budget, two captions, two not-shown items and the decision footnote were shortened. Both sheets were re-rendered at 1100 px and in a 390 px iframe and inspected."
+  ]
+}

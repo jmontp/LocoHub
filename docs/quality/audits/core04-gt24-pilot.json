@@ -1,0 +1,8181 @@
+{
+ "task_id": "CORE-04",
+ "pilot": "GT24",
+ "run": "v1",
+ "status": "review",
+ "scientific_approval": false,
+ "applies_to_dataset": "nothing",
+ "question": "Does the detector reproduce the GT24 signs (ankle dorsiflexion positive in the data), report the README ankle statement as a conflict, and never apply it?",
+ "target_rule": "B (D-UM21-C03-1 = B)",
+ "seed": 20261104,
+ "selection": "default_rng(20261104).permutation over sorted (phase, subject) README-mass units; first 3 with exo-off level walking, first 3 without; level 1.2 exo on is required.",
+ "subjects": [
+  "Phase1And2/BT06",
+  "Phase1And2/BT07",
+  "Phase1And2/BT12",
+  "Phase1And2/BT16",
+  "Phase3/BT01",
+  "Phase3/BT22"
+ ],
+ "subjects_with_exo_off": [
+  "Phase1And2/BT12",
+  "Phase1And2/BT07",
+  "Phase1And2/BT06"
+ ],
+ "conditions": [
+  "level 1.2 m/s, exo on",
+  "level 1.2 m/s, exo off",
+  "incline 5 deg, exo on",
+  "decline 5 deg, exo on"
+ ],
+ "inputs_sha256": {
+  "docs/quality/audits/core04-gt24-pilot-probe.json": "b3788aebcb1c7ea3e5e8e6ab3561012ec78e0fb477385a3fd654836a9312033b"
+ },
+ "code_sha256": {
+  "contributor_tools/probe_core04_gt24.py": "f85c34f41b9c864b975e58f4dc72b013c32aa7d775c0066689722c7c89509902",
+  "contributor_tools/common/sign_offset_detector.py": "efd74e7389ad54e319d6f512e553c81d76fd399e76bf6f20e906d56b88f22803",
+  "contributor_tools/review_core04_gt24_pilot.py (sheet)": "7a483c93171b0645c93f772f7db7d81c2f54ee3e216c1eb3bc0391795e771c3c"
+ },
+ "builder_history": [
+  {
+   "probe_file": "core04-gt24-pilot-probe.json (v1)",
+   "probe_builder": "contributor_tools/probe_core04_gt24.py",
+   "sheet_builder": "contributor_tools/review_core04_gt24_pilot.py",
+   "note": "Probe and sheet steps are separate files from the start, so sheet edits never change the probe hash recorded in the probe output."
+  },
+  {
+   "probe_file": "v1 (unchanged; ran with every README statement supplied)",
+   "probe_builder": "probe_core04_gt24.py after the documentation policy",
+   "note": "Documentation policy (Jose, 2026-10-30, \"fix both readmes based on the evidence\"): the adapter now passes only statements no verified audit has refuted (refuted_documentation.json); the README ankle statement is logged as refuted by GT24-C02. v1 was re-scored from its stored evidence under the policy (no data read); the next probe run passes the filtered list itself."
+  }
+ ],
+ "ground_truth": {
+  "source": "docs/quality/audits/gt24-c02-ankle-sign.json (done) and the sign survey, mapped to rule B",
+  "signs": {
+   "hip_angle": 1,
+   "knee_angle": -1,
+   "ankle_angle": 1,
+   "hip_moment": 1,
+   "knee_moment": -1,
+   "ankle_moment": 1,
+   "hip_power": 1,
+   "knee_power": 1,
+   "ankle_power": 1
+  },
+  "readme_statement": [
+   "Biological joint DOFs follow OpenSim conventions:",
+   "\t- Hip flexion, knee extension, and ankle plantarflexion is positive."
+  ],
+  "pelvis": "no pelvis channel or markers in the Parsed zips"
+ },
+ "adapter": {
+  "channels": "angle_filt (deg -> rad), moment_filt (net ID, N*m/kg; normalizing mass unresolved), power (W/kg)",
+  "units": "heel strike to heel strike per leg from insole_sim vertical force > 10 % body weight, 0.4-2.5 s, resampled to 150",
+  "geometry": "calcn frame: CoP and force from insole_sim (publisher plate data rotated into calcn); ankle at the generic talus position (0.04877, 0.04195) m in calcn; no markers in the Parsed zips",
+  "mass": "README w/ exo (exo on) or w/o exo (exo off), first day",
+  "documentation": [
+   [
+    "hip_angle",
+    1,
+    "README lines 90-91: \"Hip flexion, knee extension, and ankle plantarflexion is positive\""
+   ],
+   [
+    "knee_angle",
+    -1,
+    "README lines 90-91: \"Hip flexion, knee extension, and ankle plantarflexion is positive\""
+   ],
+   [
+    "ankle_angle",
+    -1,
+    "README lines 90-91: \"Hip flexion, knee extension, and ankle plantarflexion is positive\""
+   ],
+   [
+    "hip_moment",
+    1,
+    "README lines 90-91: \"Hip flexion, knee extension, and ankle plantarflexion is positive\" (read as the DOF generalized-force sign)"
+   ],
+   [
+    "knee_moment",
+    -1,
+    "README lines 90-91: \"Hip flexion, knee extension, and ankle plantarflexion is positive\" (read as the DOF generalized-force sign)"
+   ],
+   [
+    "ankle_moment",
+    -1,
+    "README lines 90-91: \"Hip flexion, knee extension, and ankle plantarflexion is positive\" (read as the DOF generalized-force sign)"
+   ]
+  ],
+  "forward_axis": "not needed: no markers; ankle geometry in the calcn frame"
+ },
+ "counts_primary_with_readme": {
+  "applied_right": 0,
+  "applied_wrong": 0,
+  "suggested_right": 162,
+  "suggested_wrong": 0,
+  "conflict": 80,
+  "abstained": 118,
+  "leg_channels": 360
+ },
+ "counts_data_only": {
+  "applied_right": 40,
+  "applied_wrong": 0,
+  "suggested_right": 202,
+  "suggested_wrong": 0,
+  "conflict": 0,
+  "abstained": 118,
+  "leg_channels": 360
+ },
+ "counts_policy_rescore": {
+  "applied_right": 40,
+  "applied_wrong": 0,
+  "suggested_right": 202,
+  "suggested_wrong": 0,
+  "conflict": 0,
+  "abstained": 118,
+  "leg_channels": 360
+ },
+ "policy_rescore_equals_data_only": "360/360",
+ "per_channel_outcomes_policy": {
+  "hip_angle": {
+   "suggested_correct": 40
+  },
+  "knee_angle": {
+   "suggested_correct": 38,
+   "abstain": 2
+  },
+  "ankle_angle": {
+   "suggested_correct": 40
+  },
+  "hip_moment": {
+   "suggested_correct": 40
+  },
+  "knee_moment": {
+   "abstain": 40
+  },
+  "ankle_moment": {
+   "applied_correct": 40
+  },
+  "hip_power": {
+   "suggested_correct": 16,
+   "abstain": 24
+  },
+  "knee_power": {
+   "abstain": 40
+  },
+  "ankle_power": {
+   "suggested_correct": 28,
+   "abstain": 12
+  }
+ },
+ "per_channel_outcomes_primary": {
+  "hip_angle": {
+   "suggested_correct": 40
+  },
+  "knee_angle": {
+   "suggested_correct": 38,
+   "abstain": 2
+  },
+  "ankle_angle": {
+   "conflict": 40
+  },
+  "hip_moment": {
+   "suggested_correct": 40
+  },
+  "knee_moment": {
+   "abstain": 40
+  },
+  "ankle_moment": {
+   "conflict": 40
+  },
+  "hip_power": {
+   "suggested_correct": 16,
+   "abstain": 24
+  },
+  "knee_power": {
+   "abstain": 40
+  },
+  "ankle_power": {
+   "suggested_correct": 28,
+   "abstain": 12
+  }
+ },
+ "per_channel_outcomes_data_only": {
+  "hip_angle": {
+   "suggested_correct": 40
+  },
+  "knee_angle": {
+   "suggested_correct": 38,
+   "abstain": 2
+  },
+  "ankle_angle": {
+   "suggested_correct": 40
+  },
+  "hip_moment": {
+   "suggested_correct": 40
+  },
+  "knee_moment": {
+   "abstain": 40
+  },
+  "ankle_moment": {
+   "applied_correct": 40
+  },
+  "hip_power": {
+   "suggested_correct": 16,
+   "abstain": 24
+  },
+  "knee_power": {
+   "abstain": 40
+  },
+  "ankle_power": {
+   "suggested_correct": 28,
+   "abstain": 12
+  }
+ },
+ "readme_sign_applied_anywhere": [],
+ "per_test_data_only": {
+  "stance extension: hip angle": {
+   "right": 40
+  },
+  "knee range: knee angle": {
+   "right": 38,
+   "no decision": 2
+  },
+  "push-off: ankle angle": {
+   "right": 40
+  },
+  "lever arm: hip moment": {
+   "no decision": 40
+  },
+  "stance timing: hip moment": {
+   "right": 40
+  },
+  "ID-light: hip moment": {
+   "no decision": 40
+  },
+  "lever arm: knee moment": {
+   "no decision": 40
+  },
+  "lever arm: ankle moment": {
+   "right": 40
+  },
+  "late stance: ankle moment": {
+   "right": 40
+  },
+  "power timing: hip power": {
+   "right": 16,
+   "no decision": 24
+  },
+  "power timing: ankle power": {
+   "right": 28,
+   "no decision": 12
+  },
+  "power identity: hip": {
+   "right": 40
+  },
+  "power identity: knee": {
+   "right": 40
+  },
+  "power identity: ankle": {
+   "right": 40
+  }
+ },
+ "new_tests": {
+  "stance extension: hip angle": {
+   "right": 40
+  },
+  "push-off: ankle angle": {
+   "right": 40
+  },
+  "stance timing: hip moment": {
+   "right": 40
+  },
+  "ID-light: hip moment": {
+   "no decision": 40
+  },
+  "power timing: hip power": {
+   "right": 16,
+   "no decision": 24
+  },
+  "power timing: ankle power": {
+   "right": 28,
+   "no decision": 12
+  }
+ },
+ "half_cycle": {
+  "ankle_moment / lever_arm": {
+   "lag0": 40
+  }
+ },
+ "explanations": {
+  "wrong_signs": "none, in the primary run (with README documentation) and in the data-only run",
+  "readme_conflict": {
+   "legs": 40,
+   "channels": [
+    "ankle_angle",
+    "ankle_moment"
+   ],
+   "why": "README lines 90-91 state ankle plantarflexion positive (-1 under rule B). The push-off test (ankle angle), the calcn-frame lever arm and the late-stance test (ankle moment) all vote dorsiflexion positive (+1) in every leg, so the detector reports a conflict and applies nothing. Without the documentation the ankle moment applies +1 (two families) and the ankle angle is suggest +1 (push-off only). GT24-C02 reached the same conclusion independently."
+  },
+  "hip_angle_suggest": {
+   "why": "Only hip stance extension (plate timing) is available; no marker reference, so one family."
+  },
+  "knee_angle": {
+   "suggest": [
+    "P3/BT01 lvl on L",
+    "P3/BT01 lvl on R",
+    "P3/BT01 dn5 L",
+    "P3/BT01 dn5 R",
+    "P12/BT12 lvl on L",
+    "P12/BT12 lvl off L",
+    "P12/BT12 up5 L",
+    "P12/BT12 up5 R",
+    "P12/BT12 dn5 L",
+    "P12/BT12 dn5 R",
+    "P12/BT16 lvl on L",
+    "P12/BT16 lvl on R",
+    "P12/BT16 up5 L",
+    "P12/BT16 up5 R",
+    "P12/BT16 dn5 L",
+    "P12/BT16 dn5 R",
+    "P12/BT07 lvl on L",
+    "P12/BT07 lvl on R",
+    "P12/BT07 lvl off L",
+    "P12/BT07 lvl off R",
+    "P12/BT07 up5 L",
+    "P12/BT07 up5 R",
+    "P12/BT07 dn5 L",
+    "P12/BT07 dn5 R",
+    "P3/BT22 lvl on L",
+    "P3/BT22 lvl on R",
+    "P3/BT22 up5 L",
+    "P3/BT22 up5 R",
+    "P3/BT22 dn5 L",
+    "P3/BT22 dn5 R",
+    "P12/BT06 lvl on L",
+    "P12/BT06 lvl on R",
+    "P12/BT06 lvl off L",
+    "P12/BT06 lvl off R",
+    "P12/BT06 up5 L",
+    "P12/BT06 up5 R",
+    "P12/BT06 dn5 L",
+    "P12/BT06 dn5 R"
+   ],
+   "abstain": [
+    "P3/BT01 up5 L",
+    "P3/BT01 up5 R"
+   ],
+   "why": "Only the knee-range test (joint anatomy) is available; it cast too few votes on 2 incline legs (abstain)."
+  },
+  "hip_moment_suggest": {
+   "why": "Only stance timing; the hip lever arm and ID-light need hip, knee, heel and toe positions, which the Parsed data do not have."
+  },
+  "knee_moment_abstain": {
+   "why": "The knee lever arm needs a knee position; no other knee-moment test exists."
+  },
+  "powers": {
+   "hip_suggest": [
+    "P3/BT01 lvl on L",
+    "P3/BT01 lvl on R",
+    "P12/BT12 lvl on L",
+    "P12/BT12 lvl off L",
+    "P12/BT16 lvl on L",
+    "P12/BT16 lvl on R",
+    "P12/BT07 lvl on L",
+    "P12/BT07 lvl on R",
+    "P12/BT07 lvl off L",
+    "P12/BT07 lvl off R",
+    "P3/BT22 lvl on L",
+    "P3/BT22 lvl on R",
+    "P12/BT06 lvl on L",
+    "P12/BT06 lvl on R",
+    "P12/BT06 lvl off L",
+    "P12/BT06 lvl off R"
+   ],
+   "ankle_suggest": [
+    "P3/BT01 lvl on L",
+    "P3/BT01 lvl on R",
+    "P3/BT01 up5 L",
+    "P3/BT01 up5 R",
+    "P12/BT12 lvl on L",
+    "P12/BT12 lvl off L",
+    "P12/BT12 up5 L",
+    "P12/BT12 up5 R",
+    "P12/BT16 lvl on L",
+    "P12/BT16 lvl on R",
+    "P12/BT16 up5 L",
+    "P12/BT16 up5 R",
+    "P12/BT07 lvl on L",
+    "P12/BT07 lvl on R",
+    "P12/BT07 lvl off L",
+    "P12/BT07 lvl off R",
+    "P12/BT07 up5 L",
+    "P12/BT07 up5 R",
+    "P3/BT22 lvl on L",
+    "P3/BT22 lvl on R",
+    "P3/BT22 up5 L",
+    "P3/BT22 up5 R",
+    "P12/BT06 lvl on L",
+    "P12/BT06 lvl on R",
+    "P12/BT06 lvl off L",
+    "P12/BT06 lvl off R",
+    "P12/BT06 up5 L",
+    "P12/BT06 up5 R"
+   ],
+   "why": "Power timing votes on level walking (hip) and level/incline walking (ankle); declines are outside it. The power identity needs the moment and angle applied, which no joint has here (the ankle moment applies only without documentation, and the ankle angle is suggest), so powers are suggest at most. Knee power has the identity only."
+  },
+  "skipped": [
+   {
+    "leg": "Phase3/BT01 level 1.2 m/s, exo off",
+    "why": "condition not present",
+    "cause": "no exo-off level trial for this subject"
+   },
+   {
+    "leg": "Phase1And2/BT12 level 1.2 m/s, exo on right",
+    "why": "0 strides (< 5)",
+    "cause": "BT12 right leg: no strides in either level trial because the publisher NaN-filled that leg (insole and moments 0 % finite in both level trials, 95 % in incline 5; CORE-04 GT24 verifier), as README line 95 describes: \"Due to a failure in one of the loadcells on our instrumented treadmill, there are several trials where the resulting joint torques are invalid. The invalid data has been NaNd in the dataset.\""
+   },
+   {
+    "leg": "Phase1And2/BT12 level 1.2 m/s, exo off right",
+    "why": "0 strides (< 5)",
+    "cause": "BT12 right leg: no strides in either level trial because the publisher NaN-filled that leg (insole and moments 0 % finite in both level trials, 95 % in incline 5; CORE-04 GT24 verifier), as README line 95 describes: \"Due to a failure in one of the loadcells on our instrumented treadmill, there are several trials where the resulting joint torques are invalid. The invalid data has been NaNd in the dataset.\""
+   },
+   {
+    "leg": "Phase1And2/BT16 level 1.2 m/s, exo off",
+    "why": "condition not present",
+    "cause": "no exo-off level trial for this subject"
+   },
+   {
+    "leg": "Phase3/BT22 level 1.2 m/s, exo off",
+    "why": "condition not present",
+    "cause": "no exo-off level trial for this subject"
+   }
+  ],
+  "documentation_policy": {
+   "instruction": "Jose, 2026-10-30: \"we should just fix both readmes based on the evidence\" (a verified audit overrides a publisher README); recorded verbatim in docs/maintainers/backlog.json in the handoff checks of GT24-C02 and GT23-C02",
+   "implementation": "contributor_tools/common/documentation_policy.py + refuted_documentation.json; a statement is withheld only if its exact citation_id, its channel and its sign match an entry whose task has status done in backlog.json (the single authoritative record; verify files not parsed); every matching entry evaluated; integer signs required; otherwise kept and logged; policy implementation, not a new scientific decision",
+   "refuted_log": [
+    {
+     "channel": "ankle_angle",
+     "sign": -1,
+     "citation_id": "gt24-readme:L90-91",
+     "action": "withheld",
+     "ids": [
+      "GT24-README-ankle-sign"
+     ],
+     "statement": "README lines 90-91: ankle plantarflexion is positive",
+     "refuted_by_task": "GT24-C02",
+     "summary": "README lines 90-91: ankle plantarflexion is positive: refuted by GT24-C02 (done); not passed as evidence",
+     "other_entries": []
+    },
+    {
+     "channel": "ankle_moment",
+     "sign": -1,
+     "citation_id": "gt24-readme:L90-91",
+     "action": "withheld",
+     "ids": [
+      "GT24-README-ankle-sign"
+     ],
+     "statement": "README lines 90-91: ankle plantarflexion is positive",
+     "refuted_by_task": "GT24-C02",
+     "summary": "README lines 90-91: ankle plantarflexion is positive: refuted by GT24-C02 (done); not passed as evidence",
+     "other_entries": []
+    }
+   ],
+   "passed": [
+    [
+     "hip_angle",
+     1,
+     "README lines 90-91: \"Hip flexion, knee extension, and ankle plantarflexion is positive\""
+    ],
+    [
+     "knee_angle",
+     -1,
+     "README lines 90-91: \"Hip flexion, knee extension, and ankle plantarflexion is positive\""
+    ],
+    [
+     "hip_moment",
+     1,
+     "README lines 90-91: \"Hip flexion, knee extension, and ankle plantarflexion is positive\" (read as the DOF generalized-force sign)"
+    ],
+    [
+     "knee_moment",
+     -1,
+     "README lines 90-91: \"Hip flexion, knee extension, and ankle plantarflexion is positive\" (read as the DOF generalized-force sign)"
+    ]
+   ],
+   "rescore": "stored primary evidence recombined without the refuted statements: equals the data-only run in 360 of 360 leg-channels"
+  },
+  "frame_checks": {
+   "counts": {
+    "cop_progression / pass": 40,
+    "cop_within_foot / unknown": 40,
+    "braking_propulsion / unknown": 36,
+    "braking_propulsion / fail": 4
+   },
+   "why": "CoP progression is checked against the generic ankle in the calcn frame (passes in every leg). CoP-within-foot needs heel and toe markers (unknown), so the ankle lever arm stays moderate. The braking/propulsion check reads force_x in the foot frame, which pitches with the foot; it is unknown or fails (anterior force then dropped), which does not change the lever-arm sign here."
+  },
+  "gate": {
+   "counts": {
+    "level_walking / pass": 16,
+    "incline_walking / pass": 12,
+    "decline_walking / pass": 12
+   }
+  }
+ },
+ "per_leg": [
+  {
+   "leg": "P3/BT01 lvl on L",
+   "exo": "on",
+   "strides": 17,
+   "body_mass_kg": 84.28,
+   "source_condition": "normal_walk_1_1_1-2_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P3/BT01 lvl on R",
+   "exo": "on",
+   "strides": 17,
+   "body_mass_kg": 84.28,
+   "source_condition": "normal_walk_1_1_1-2_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P3/BT01 up5 L",
+   "exo": "on",
+   "strides": 16,
+   "body_mass_kg": 84.28,
+   "source_condition": "incline_walk_1_1_up5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "16/16"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "16/16"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "16/16"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "16/16"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "16/16"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "16/16"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P3/BT01 up5 R",
+   "exo": "on",
+   "strides": 17,
+   "body_mass_kg": 84.28,
+   "source_condition": "incline_walk_1_1_up5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P3/BT01 dn5 L",
+   "exo": "on",
+   "strides": 17,
+   "body_mass_kg": 84.28,
+   "source_condition": "incline_walk_1_1_down5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "15/15"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "10/10"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P3/BT01 dn5 R",
+   "exo": "on",
+   "strides": 17,
+   "body_mass_kg": 84.28,
+   "source_condition": "incline_walk_1_1_down5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "15/15"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "9/9"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT12 lvl on L",
+   "exo": "on",
+   "strides": 17,
+   "body_mass_kg": 84.62,
+   "source_condition": "normal_walk_1_1_1-2_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT12 lvl off L",
+   "exo": "off",
+   "strides": 18,
+   "body_mass_kg": 78.15,
+   "source_condition": "normal_walk_1_2_1-2_off",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "18/18"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "18/18"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT12 up5 L",
+   "exo": "on",
+   "strides": 15,
+   "body_mass_kg": 84.62,
+   "source_condition": "incline_walk_1_1_up5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "15/15"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "10/10"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "14/14"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "15/15"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "15/15"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "15/15"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "14/14"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT12 up5 R",
+   "exo": "on",
+   "strides": 14,
+   "body_mass_kg": 84.62,
+   "source_condition": "incline_walk_1_1_up5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "14/14"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "12/12"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "14/14"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "14/14"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "14/14"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "14/14"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "14/14"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT12 dn5 L",
+   "exo": "on",
+   "strides": 17,
+   "body_mass_kg": 84.62,
+   "source_condition": "incline_walk_1_1_down5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "6/6"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT12 dn5 R",
+   "exo": "on",
+   "strides": 17,
+   "body_mass_kg": 84.62,
+   "source_condition": "incline_walk_1_1_down5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "15/15"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT16 lvl on L",
+   "exo": "on",
+   "strides": 18,
+   "body_mass_kg": 72.03,
+   "source_condition": "normal_walk_2_1_1-2_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "18/18"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "18/18"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT16 lvl on R",
+   "exo": "on",
+   "strides": 17,
+   "body_mass_kg": 72.03,
+   "source_condition": "normal_walk_2_1_1-2_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT16 up5 L",
+   "exo": "on",
+   "strides": 17,
+   "body_mass_kg": 72.03,
+   "source_condition": "incline_walk_1_1_up5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT16 up5 R",
+   "exo": "on",
+   "strides": 17,
+   "body_mass_kg": 72.03,
+   "source_condition": "incline_walk_1_1_up5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "14/14"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT16 dn5 L",
+   "exo": "on",
+   "strides": 18,
+   "body_mass_kg": 72.03,
+   "source_condition": "incline_walk_1_1_down5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "8/8"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "16/16"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "18/18"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "18/18"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT16 dn5 R",
+   "exo": "on",
+   "strides": 18,
+   "body_mass_kg": 72.03,
+   "source_condition": "incline_walk_1_1_down5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "13/13"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "18/18"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "18/18"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT07 lvl on L",
+   "exo": "on",
+   "strides": 19,
+   "body_mass_kg": 70.61,
+   "source_condition": "normal_walk_1_1_1-2_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "19/19"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "19/19"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "19/19"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "19/19"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT07 lvl on R",
+   "exo": "on",
+   "strides": 19,
+   "body_mass_kg": 70.61,
+   "source_condition": "normal_walk_1_1_1-2_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "19/19"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "19/19"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "19/19"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "19/19"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT07 lvl off L",
+   "exo": "off",
+   "strides": 18,
+   "body_mass_kg": 64.49,
+   "source_condition": "normal_walk_1_2_1-2_off",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "18/18"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "18/18"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT07 lvl off R",
+   "exo": "off",
+   "strides": 18,
+   "body_mass_kg": 64.49,
+   "source_condition": "normal_walk_1_2_1-2_off",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "18/18"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "18/18"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT07 up5 L",
+   "exo": "on",
+   "strides": 18,
+   "body_mass_kg": 70.61,
+   "source_condition": "incline_walk_1_1_up5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "15/15"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "18/18"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "18/18"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT07 up5 R",
+   "exo": "on",
+   "strides": 19,
+   "body_mass_kg": 70.61,
+   "source_condition": "incline_walk_1_1_up5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "15/15"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "19/19"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "19/19"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "19/19"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT07 dn5 L",
+   "exo": "on",
+   "strides": 19,
+   "body_mass_kg": 70.61,
+   "source_condition": "incline_walk_1_1_down5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "10/10"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "19/19"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "19/19"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT07 dn5 R",
+   "exo": "on",
+   "strides": 19,
+   "body_mass_kg": 70.61,
+   "source_condition": "incline_walk_1_1_down5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "7/7"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "19/19"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "19/19"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P3/BT22 lvl on L",
+   "exo": "on",
+   "strides": 17,
+   "body_mass_kg": 84.27,
+   "source_condition": "normal_walk_1_1_1-2_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P3/BT22 lvl on R",
+   "exo": "on",
+   "strides": 18,
+   "body_mass_kg": 84.27,
+   "source_condition": "normal_walk_1_1_1-2_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "18/18"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "18/18"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P3/BT22 up5 L",
+   "exo": "on",
+   "strides": 17,
+   "body_mass_kg": 84.27,
+   "source_condition": "incline_walk_1_1_up5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "12/12"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P3/BT22 up5 R",
+   "exo": "on",
+   "strides": 18,
+   "body_mass_kg": 84.27,
+   "source_condition": "incline_walk_1_1_up5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "18/18"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "18/18"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P3/BT22 dn5 L",
+   "exo": "on",
+   "strides": 18,
+   "body_mass_kg": 84.27,
+   "source_condition": "incline_walk_1_1_down5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "18/18"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "18/18"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P3/BT22 dn5 R",
+   "exo": "on",
+   "strides": 19,
+   "body_mass_kg": 84.27,
+   "source_condition": "incline_walk_1_1_down5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "15/15"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "19/19"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "19/19"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT06 lvl on L",
+   "exo": "on",
+   "strides": 19,
+   "body_mass_kg": 85.78,
+   "source_condition": "normal_walk_1_1_1-2_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "19/19"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "19/19"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "19/19"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "19/19"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT06 lvl on R",
+   "exo": "on",
+   "strides": 18,
+   "body_mass_kg": 85.78,
+   "source_condition": "normal_walk_1_1_1-2_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "18/18"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "18/18"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT06 lvl off L",
+   "exo": "off",
+   "strides": 18,
+   "body_mass_kg": 79.33,
+   "source_condition": "normal_walk_1_2_1-2_off",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "18/18"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "18/18"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT06 lvl off R",
+   "exo": "off",
+   "strides": 17,
+   "body_mass_kg": 79.33,
+   "source_condition": "normal_walk_1_2_1-2_off",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT06 up5 L",
+   "exo": "on",
+   "strides": 18,
+   "body_mass_kg": 85.78,
+   "source_condition": "incline_walk_1_1_up5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "9/9"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "18/18"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "18/18"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "18/18"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT06 up5 R",
+   "exo": "on",
+   "strides": 17,
+   "body_mass_kg": 85.78,
+   "source_condition": "incline_walk_1_1_up5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "15/15"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "17/17"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "17/17"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      1,
+      "17/17"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT06 dn5 L",
+   "exo": "on",
+   "strides": 19,
+   "body_mass_kg": 85.78,
+   "source_condition": "incline_walk_1_1_down5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "19/19"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "19/19"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "19/19"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   }
+  },
+  {
+   "leg": "P12/BT06 dn5 R",
+   "exo": "on",
+   "strides": 18,
+   "body_mass_kg": 85.78,
+   "source_condition": "incline_walk_1_1_down5_on",
+   "hip_angle": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "hip_stance_extension": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_angle": {
+    "primary": [
+     "suggest",
+     -1
+    ],
+    "data_only": [
+     "suggest",
+     -1
+    ],
+    "truth": -1,
+    "tests": {
+     "knee_hinge_asymmetry": [
+      -1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_angle": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "ankle_pushoff_plantarflexion": [
+      1,
+      "17/17"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_moment": {
+    "primary": [
+     "suggest",
+     1
+    ],
+    "data_only": [
+     "suggest",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "hip_moment_timing": [
+      1,
+      "18/18"
+     ],
+     "inverse_dynamics_light": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      1,
+      "0/0"
+     ]
+    }
+   },
+   "knee_moment": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": -1,
+    "tests": {
+     "lever_arm": [
+      null,
+      "0/0"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "ankle_moment": {
+    "primary": [
+     "conflict",
+     null
+    ],
+    "data_only": [
+     "apply",
+     1
+    ],
+    "truth": 1,
+    "tests": {
+     "lever_arm": [
+      1,
+      "18/18"
+     ],
+     "late_stance_plantarflexor": [
+      1,
+      "18/18"
+     ],
+     "documentation": [
+      -1,
+      "0/0"
+     ]
+    }
+   },
+   "hip_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   },
+   "knee_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {}
+   },
+   "ankle_power": {
+    "primary": [
+     "abstain",
+     null
+    ],
+    "data_only": [
+     "abstain",
+     null
+    ],
+    "truth": 1,
+    "tests": {
+     "power_timing": [
+      null,
+      "0/0"
+     ]
+    }
+   }
+  }
+ ],
+ "resources": {
+  "peak_rss_mib": 205.4,
+  "cap_mib": 300,
+  "mode": "read-only probe exception; one trial at a time, one zip member at a time; nice 19, ionice idle, 1 thread; RLIMIT_AS 1.5 GiB"
+ },
+ "members_read": 84,
+ "limitations": [
+  "6 subjects, 40 legs, treadmill level/incline/decline walking only.",
+  "No markers in the Parsed zips: no marker references, no knee/hip positions, no ID-light; hip, knee and powers cannot reach apply.",
+  "Moment normalizing mass unresolved (gt24-unknown-normalization-mass-review.json); only signs tested.",
+  "Ankle lever arm uses a generic talus position in calcn.",
+  "No threshold was changed for this pilot."
+ ],
+ "generated_by": "contributor_tools/review_core04_gt24_pilot.py"
+}

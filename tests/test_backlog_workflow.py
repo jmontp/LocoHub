@@ -238,3 +238,83 @@ def test_partial_gate_can_link_unfinished_tasks_without_claiming_verified():
     b.validate_backlog(data)
     html = b.render_backlog(data)
     assert 'Partial<br><small>Tasks: <a href="#NEXT">NEXT</a>' in html
+
+
+def decision(**changes):
+    row = {'id': 'D-1', 'task_id': 'NEXT', 'question': 'Which recording is the pilot?', 'why': 'Scope choice.',
+           'options': [{'key': 'A', 'label': 'Reuse the existing pilot', 'consequence': 'No rerun.'},
+                       {'key': 'B', 'label': 'Choose a new record', 'consequence': 'Converter change first.'}],
+           'recommended': 'A', 'confidence': 'medium', 'check': 'Synthetic record has both sides.',
+           'cost_of_waiting': 'Pilot stays blocked.', 'status': 'open'}
+    row.update(changes)
+    return row
+
+
+def test_open_decision_renders_first_and_answered_goes_to_log():
+    data = backlog()
+    data['decisions'] = [decision(), decision(id='D-2', status='answered', answer='B', answered_at_utc='2026-10-27T11:00:00Z')]
+    html = b.render_backlog(data)
+    assert html.index('Needs José') < html.index('id="next-task"')
+    assert 'Which recording is the pilot?' in html and 'Pilot stays blocked.' in html
+    assert 'Agent recommends <strong>A</strong>' in html and 'medium confidence' in html
+    assert 'Decision log (1)' in html and '<strong>Choose a new record</strong>' in html
+
+
+def test_no_decisions_states_empty_inbox():
+    assert 'No open decisions.' in b.render_backlog(backlog())
+
+
+@pytest.mark.parametrize('fault', [
+    {'task_id': 'MISSING'}, {'recommended': 'Z'}, {'status': 'maybe'},
+    {'options': [{'key': 'A', 'label': 'Only one'}]},
+    {'options': [{'key': 'A', 'label': 'One'}, {'key': 'A', 'label': 'Two'}]},
+    {'status': 'answered'}, {'status': 'answered', 'answer': 'Z', 'answered_at_utc': '2026-10-27T11:00:00Z'},
+    {'confidence': 'certain'}, {'check': ''}, {'cost_of_waiting': None}, {'decide_before_recommendation': 'yes'},
+    {'options': [{'key': 'A', 'label': 'One'}, {'key': 'B', 'label': 'Two', 'consequence': 'x'}]},
+    {'options': [{'key': k, 'label': k, 'consequence': k} for k in 'ABCD']},
+])
+def test_invalid_decisions(fault):
+    data = backlog(); data['decisions'] = [decision(**fault)]
+    with pytest.raises(b.BacklogError):
+        b.validate_backlog(data)
+
+
+def test_duplicate_decision_ids_rejected():
+    data = backlog(); data['decisions'] = [decision(), decision()]
+    with pytest.raises(b.BacklogError, match='decision id'):
+        b.validate_backlog(data)
+
+
+def test_commit_first_decision_hides_recommendation_and_defer_is_logged():
+    data = backlog()
+    data['decisions'] = [decision(decide_before_recommendation=True),
+                         decision(id='D-2', status='answered', answer='defer', answered_at_utc='2026-10-27T11:00:00Z')]
+    html = b.render_backlog(data)
+    assert '<details><summary>Show agent recommendation after choosing</summary><p>Agent recommends' in html
+    assert '→ <strong>Deferred</strong>' in html
+
+
+def test_review_sheet_enforces_states_and_budgets(tmp_path):
+    from contributor_tools.common import review_sheet as rs
+    base = dict(title='T', ask='Look at one figure.', headline='Synthetic claim', reply='ok',
+                chips=[('pass', 'checked'), ('unchecked', 'not checked')],
+                figures=[('f.png', 'Is it missing?', 'Short caption.', 'alt')], not_shown=['Timing'])
+    rs.page(tmp_path / 'ok/index.html', **base)
+    html = (tmp_path / 'ok/index.html').read_text()
+    assert html.index('Look at one figure.') < html.index('Synthetic claim') < html.index('Is it missing?') < html.index('Not shown')
+    assert 'class="chip unchecked"' in html
+    with pytest.raises(ValueError, match='chip state'):
+        rs.page(tmp_path / 'a/index.html', **{**base, 'chips': [('maybe', 'x')]})
+    with pytest.raises(ValueError, match='budget'):
+        rs.page(tmp_path / 'b/index.html', **{**base, 'not_shown': ['word ' * 70]})
+    with pytest.raises(ValueError, match='budget'):
+        rs.page(tmp_path / 'c/index.html', **{**base, 'figures': base['figures'] * 4})
+
+
+def test_more_than_three_open_decisions_rejected_and_queue_renders():
+    data = backlog()
+    data['decisions'] = [decision(id=f'D-{i}') for i in range(4)]
+    with pytest.raises(b.BacklogError, match='at most three open'):
+        b.validate_backlog(data)
+    data['decisions'][3]['status'] = 'queued'
+    assert 'Queued (1)' in b.render_backlog(data)

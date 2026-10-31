@@ -1,0 +1,28 @@
+{
+  "task_id": "CORE-09",
+  "verifier_role": "independent second agent; own synthetic fixtures; reviewed builder sha256 175597d6...",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-31T13:50:00Z",
+  "research_data_read": false,
+  "scientific_approval": false,
+  "authorizes_publication": false,
+  "summary": "The provenance-consistent G2 default, R1, R2 (task-only) and R3 are implemented correctly and refuse before any read. My fixtures were updated with a synthetic profile review record, and no assertion changed. Two low residuals are pinned as strict xfails: structural-only applicability passes the task-only rule (V1), and a non-JSON YAML value elsewhere in a profile review crashes JSON writing, which fails closed (V2). Neither blocks done.",
+  "checks": [
+    {"id": 1, "area": "verifier fixtures", "result": "pass", "evidence": "I added a synthetic profile review record (reviewer synthetic-profile-reviewer, reviewed_at '2026-01-02T00:00:00Z') to _profile in test_release_lineage_verify.py, _inputs in test_release_publish_drvfs_verify.py and _profile_text in test_release_builder_gaps_verify.py. Only fixture setup changed. The 83 tests in the three files pass. The worker's only edit to my files was removing the R1 strict-xfail decorator; the test body is unchanged."},
+    {"id": 2, "area": "G2 review record (reviewed and approved)", "result": "pass", "evidence": "Each case is refused before any read (zero pq.read_table calls), with no bundle: an unquoted YAML timestamp (message asks for quotes), a naive timestamp string, a date-only string, a whitespace-only reviewer, a numeric reviewer, a YAML-boolean reviewer ('yes'), a non-mapping review, a missing review, and a whitespace-only scope. With scope absent, the release carries the 'does not state a scope' limitation. Legacy profiles (no status) are unaffected, and no committed profile declares review_status."},
+    {"id": 3, "area": "R1 ordering race", "result": "pass", "evidence": "Staged names are unlinked before the final hash check. My test that edits a staged file after its hash check now passes on Linux tmp and /mnt/s, and the release still verifies. Residual, inherent and not a defect: a writer holding a file descriptor opened before the unlink could still write; no same-user filesystem protection closes that."},
+    {"id": 4, "area": "R2 applicability", "result": "pass with residual V1", "evidence": "{task}, {task_id} and {task, task_id} blocks are refused for reviewed profiles. Residual V1 (low): {observation_type: [individual_cycle]} or {reference_side: [left]} passes. Like the task, these keys restrict structure, not the population or condition the ranges apply to, so by the R2 intent they should count as task-only. Pinned as strict xfail. Follow-up: extend _TASK_KEYS to the structural keys (observation_type, reference_side and the identity columns), or require at least one key that is a task_info/subject_metadata field."},
+    {"id": 5, "area": "R3 card wording", "result": "pass", "evidence": "The reviewed or approved line reads '- Profile review status, as declared by the profile: <status> (<reviewer> at <reviewed_at>; scope: <scope or not declared>). The builder did not verify this review.' Legacy reads 'as declared by the profile: none (recorded as legacy_unspecified)'. With no profile it reads 'not applicable'. Nothing claims verification."},
+    {"id": 6, "area": "non-JSON YAML values", "result": "residual V2", "evidence": "A reviewed profile whose review has an extra unquoted date (checked_on: 2026-01-03) passes _check_profile_review. quality.json writing then raises 'TypeError: Object of type date is not JSON serializable'. It fails closed, because the stage and lock are removed, but the CLI shows a traceback. The same applies to legacy profiles with a non-JSON review value. Pinned as strict xfail (raises=TypeError). Follow-up: check that the whole profile review is JSON-serializable, with a ReleaseError naming the key."},
+    {"id": 7, "area": "test runs", "result": "pass", "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_release_builder_gaps.py tests/test_release_builder_gaps_verify.py tests/test_release_publish_drvfs.py tests/test_release_publish_drvfs_verify.py tests/test_release_lineage_adversarial.py tests/test_release_lineage_verify.py tests/test_dataset_release.py tests/test_data_contract.py tests/test_backlog_workflow.py -rxXs -> 331 passed, 3 xfailed (strict: V1 x2, V2). --runxfail confirms the stated failures ('DID NOT RAISE' x2; 'date is not JSON serializable'). python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (90 tasks). No temporary directories are left on /mnt/s."}
+  ],
+  "residuals": [
+    {"id": "CORE-09-V1", "severity": "low", "follow_up": "Treat structural applicability keys (observation_type, reference_side, identity columns) like task/task_id for reviewed profiles, then remove the strict-xfail marker on test_structural_only_applicability_is_refused."},
+    {"id": "CORE-09-V2", "severity": "low", "follow_up": "Refuse non-JSON values in the profile review (and other copied profile metadata) with a ReleaseError, then remove the strict-xfail marker on test_non_json_profile_review_values_fail_with_a_release_error."}
+  ],
+  "verifier_tests": {
+    "file": "tests/test_release_builder_gaps_verify.py",
+    "added": "CORE-09 section: 18 review-record refusals (9 cases x reviewed/approved), 3 task-only refusals, 1 card-wording test, 3 strict xfails (V1 x2, V2)."
+  },
+  "next_action": "Coordinator: move CORE-09 to done; V1 and V2 are small follow-ups."
+}

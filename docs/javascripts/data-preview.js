@@ -4,7 +4,7 @@
   const panel = document.getElementById("data-preview");
   if (!panel) return;
   const buttons = Array.from(document.querySelectorAll("[data-preview-dataset]"));
-  const names = new Map(buttons.map((button) => [button, button.closest("tr").cells[0].textContent.trim()]));
+  const names = new Map(buttons.map((button) => { const cell = button.closest("tr").cells[0]; return [button, (cell.querySelector("[data-dataset-notes]") || cell).textContent.trim()]; }));
   const announcer = document.getElementById("preview-status");
   // Must match the .catalog-layout breakpoint in site.css.
   const split = window.matchMedia("(min-width: 1200px)");
@@ -105,6 +105,13 @@
     else panel.removeAttribute("tabindex");
   }
 
+  function rowLineage(row) {
+    const name = (selector) => { const link = row.querySelector(selector); try { return link ? decodeURIComponent(new URL(link.href).pathname.split("/").pop()) : undefined; } catch (_) { return undefined; } };
+    const tasks = row.querySelector("[data-task-list]");
+    return {full: name('[data-download="full"]'), filtered: name('[data-download="filtered"]'),
+      catalogTasks: tasks ? tasks.textContent.split(",").filter((task) => task.trim()).length : undefined};
+  }
+
   function render(slug, options = {}) {
     const button = buttons.find((item) => item.dataset.previewDataset === slug);
     if (!button) return;
@@ -139,7 +146,7 @@
       panel.append(meta, note, controls, plot);
       const details = row.querySelector("[data-dataset-notes]");
       if (details) { const link = details.cloneNode(true); link.textContent = "Open dataset notes"; panel.append(link); }
-      window.LocoHubAverages?.mount({panel, slug, anchor: head, controls, plot, meta, note, sampleRows: null, sample,
+      window.LocoHubAverages?.mount({panel, slug, anchor: head, controls, plot, meta, note, lineage: rowLineage(row), sampleRows: null, sample,
         stopRawChart: () => {}
       }).catch(() => { if (head.isConnected) note.textContent += " Task averages are unavailable."; });
       updateScrollable();
@@ -228,7 +235,7 @@
     source.append(element("p", "The full source file was not hashed or compared with the online download. This checksum identifies the exported sample rows only."));
     source.append(element("code", sample.source.sample_sha256));
     panel.append(source);
-    window.LocoHubAverages?.mount({panel, slug, anchor: head, controls, plot, meta, note, sampleRows: details, sample,
+    window.LocoHubAverages?.mount({panel, slug, anchor: head, controls, plot, meta, note, lineage: rowLineage(row), sampleRows: details, sample,
       stopRawChart: () => { if (observer) { observer.disconnect(); observer = undefined; } source.querySelector("summary").textContent = "About these example rows"; }
     }).catch(() => { if (head.isConnected) note.textContent += " Task averages are unavailable."; });
     updateScrollable();

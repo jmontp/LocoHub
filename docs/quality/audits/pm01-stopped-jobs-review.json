@@ -1,0 +1,146 @@
+{
+  "task_id": "PM-01",
+  "checked_at_utc": "2026-10-27T20:37:48+00:00",
+  "status": "stopped_jobs_reviewed_no_job_started",
+  "scientific_approval": false,
+  "method": "Read-only. Bounded JSON/log/code reads, SHA256 of small receipts and code, /proc stat identities on Linux and a Win32_Process census on Windows. No MAT/HDF5/Parquet arrays loaded, no process signalled, no file under converted_datasets/ modified.",
+  "repository_head": "569ee8f4d7cdf83d96d5f74aa6b65354b4a78da4",
+  "inputs_sha256": {
+    "docs/quality/audits/backlog-refresh-20261027.json": "438d71f9af35921b689ba80eca6c6cf9022886499471251ffeadc0b8586c29b3",
+    "docs/quality/audits/reconstruction-queue-recovery.json": "080d2daeb93149a50ec47ef1f08ebb91aa1b6e365801386f0d15514273df45e1",
+    "docs/maintainers/backlog.json (before this handoff)": "de4f3936d18d53529fbe0e281d71b7ebe76c9304204a30f48fc157be43dfb40c"
+  },
+  "host_census": {
+    "linux": {
+      "checked_at_utc": "2026-10-27T20:35:48Z",
+      "boot_id": "1570e813-f7dd-44f7-b4bb-542164173260",
+      "uptime_seconds": 503311,
+      "same_boot_as_historical_identities": false,
+      "historical_pids_checked": 37,
+      "historical_pids_checked_scope": "33 watcher PIDs from backlog-refresh-20261027.json, controllers 402224 and 402226, GT21 producer 516926 and auditor 516927; checked in the current boot, so absence is guaranteed rather than a start-tick comparison",
+      "historical_pids_present": 0,
+      "current_numerical_processes": "None. Only unattended-upgrades and MCP helper servers (alex, crossref, zotero, paper-fetch) run Python; no contributor_tools, reconversion_v2, MATLAB or OpenSim command lines.",
+      "mem_available_mib": 13298,
+      "mem_total_mib": 15991,
+      "load_average_1m": 0.59,
+      "cpus": 20,
+      "boot_note": "Corrected after independent verification: current boot 1570e813 began 2026-10-21 17:56 EDT; the historical PIDs were recorded in the previous boot 8b0e06c4 (2026-10-18 01:03 to 2026-10-21 17:37 EDT). Every historical process therefore ended with that boot; current /proc absence is consistent."
+    },
+    "windows": {
+      "checked_at_utc": "2026-10-27T20:36Z",
+      "last_boot": "2026-09-07T17:16:10 local",
+      "matlab_python_opensim_processes": "None. Only MathWorksServiceHost.exe 25748 (started 2026-10-22 16:41), its CrashReporter 45360 and Monitor 49872 companion services; no MATLAB.exe worker.",
+      "gt21_native_worker_pid_50688_present": false,
+      "free_physical_mib": 9197,
+      "total_physical_mib": 32457,
+      "free_virtual_mib": 23786
+    },
+    "disk_free_gib": {
+      "S: (/mnt/s, outputs and sources)": 131,
+      "C: (/mnt/c)": 130
+    },
+    "interpretation": "No historical Linux watcher, controller or producer is alive, and no MATLAB or Python worker is alive on Windows. This is current-state evidence only: receipts whose native_windows_cleanup or native_controller_resumed fields are null remain unknown, not successful, and no stopped chain is resumable from them."
+  },
+  "watcher_review": {
+    "watchers": 33,
+    "status_stopped_incomplete": 33,
+    "owned_linux_workers_cleaned_reported": 33,
+    "native_windows_cleanup_recorded": {
+      "count": 4,
+      "names": [
+        "gt21_ab17_after_gt23_pose_20261021",
+        "gt21_subjectinfo_after_um21_20261021",
+        "gt23_known_pose_after_author_events_20261021",
+        "um21_correspondence_after_ab17_20261021"
+      ],
+      "value": "safe_to_release true, native_not_launched true"
+    },
+    "native_windows_cleanup_unknown": 29,
+    "stop_reasons": {
+      "predecessor safe release absent or unproved": 32,
+      "nine-hour memory wait expired without controller hold (um21_ankle_after_mblue_retry3_20261021)": 1
+    },
+    "resumability": "None. Every watcher pins a predecessor PID/start-tick identity and most pin the GT21 memory-wait controller 402226; all are absent, so each would fail its own identity gate. Preserve all directories unchanged as historical receipts.",
+    "historical_queues_reconstruction_recovery": "19 queues and 39 jobs, all stopped (stopped_by_request or stopped_incomplete) with old processes absent; stopped queues are not successful prerequisites."
+  },
+  "gt21_raw_batch": {
+    "receipt": "converted_datasets/reconversion_v2/gt21_force_corrected_full_20261021/batch_status.json",
+    "receipt_sha256": "c07323aa54db90cd3d1af6c522a483453e2fc0e90dd30e5b6b4369ddc1ff27c3",
+    "batch_code_sha256": "851923d29a9d92e9950fd1d4798e39214976497d0400c412488090012c57553a",
+    "batch_counter": {
+      "status": "stopped_incomplete",
+      "completed_recordings": 102,
+      "planned_recordings": 2301,
+      "observations": 1299,
+      "meaning": "Producer progress counter only."
+    },
+    "source_checked_subset": {
+      "status": "checked_completed_subset_unreviewed",
+      "checked_recordings": 102,
+      "observations": 1299,
+      "auditor_pid": 516927,
+      "meaning": "Separate auditor receipt (from backlog-refresh-20261027.json) covering the same 102 producer outputs; unreviewed, and receipt hash bound here and confirmed by the independent verifier; the audit itself was not re-run. It is not corrected-output approval and does not extend to the other 2,199 recordings.",
+      "receipt": "converted_datasets/reconversion_v2/gt21_memory_wait_20261021/attempt_1792594489842444408/source_audit/audit_status.json",
+      "receipt_sha256": "d524fe57e06d666e93106c1e4e65039b5d693c62b634291df968bc3b728eec9c"
+    },
+    "failure_receipt": {
+      "recording": "AB06/10_09_18/stair/stair_1_l_01_02.mat",
+      "folder": "converted_datasets/reconversion_v2/gt21_force_corrected_full_20261021/AB06/10_09_18/stair/stair_1_l_01_02",
+      "native_status_sha256": "65fd412d7c7080a5c7a41ea54bd5fbf53edcaf86defa31fcdc59954d24d9b3fd",
+      "launcher_log_sha256": "9d6778de9450c068c7cccd309e5e9bc2a2df730e3541c57431c0b366cf687c78",
+      "matlab_log_sha256": "6c50f46d5454915cdbd39c94fb345c691c244b819b3eab78bd6226b9edc21ca0",
+      "input_manifest_sha256": "a457526aaef56be215e29b40a6057913630c1914ae762b2f609556358a66f0a9",
+      "options_sha256": "40e8a519b817f91ccb133c0a9430c659c49e8ae427021d28ba371af57167cdf6",
+      "windows_pid": 50688,
+      "started_utc": "2026-10-21T15:14:54Z",
+      "finished_utc": "2026-10-21T15:15:26Z",
+      "timeout_seconds": 300,
+      "memory_limit_mib": 2048,
+      "exit_code": 1,
+      "cause": "Deterministic converter assertion, not a resource or native crash: convert_gtech_2021_phase_to_parquet.m logged 'WARNING: Stair file with unknown pattern, skipping fallback: stair_1_l_01_02.mat' (line 645) and then asserted LocoHub:NoObservations at line 68 ('Recording produced no observations; investigate exclusions').",
+      "recovery_implication": "A retry with the same code fails identically. Recovery first needs a source-backed decision on this stair naming pattern: either a mapping or an explicit, recorded exclusion. That decision belongs to a GT21 source/coverage task, not to an operations retry."
+    }
+  },
+  "um21_prior_attempts": {
+    "um21_tread_components_after_gt23_20261021": {
+      "status": "stopped_incomplete, reason 'Predecessor terminal safe release absent'",
+      "status_sha256": "b11be2e627fd9bbb0e8661a0ef518b443c001c9507daf7a23729395a2f9cd042",
+      "execution_plan_sha256": "c4fc17f25ab9559d8511b4bcee80951e8743203bc13da10562576f826638b466",
+      "run_py_sha256": "7fb181c28a9c94b1560771ae34ccfa23b61ffa2f07a52252eb24005a0bea71b6",
+      "bindings_recheck": "All 12 execution-plan bindings still match current files.",
+      "not_resumable_because": "Gated on absent GT23 predecessor 438248 and SIGSTOP of absent controller 402226; scope is the full 50-record restoration, not a pilot."
+    },
+    "um21_tread_components_restored_20261021": {
+      "contents": [
+        "plan.json"
+      ],
+      "plan_sha256": "22b2fca57e27810357ee2a48f82fa4b0656223dd3a4ddb03479e414b26c0cd88",
+      "status": "prepared_not_executed; full 50-record plan, no attempt made"
+    },
+    "um21_tread_components_pilot_20261021": {
+      "status": "partial_requested_limit, AB01/d10",
+      "note": "Produced with an older extend_umich_tread_source.py (edffa7d38b0f...); superseded, retain as history."
+    },
+    "um21_tread_components_pilot_v2_20261021": {
+      "status": "partial_requested_limit, AB01/d10, 183 observations, 84 source columns, producer self-readback max error 1.1e-16",
+      "producer_code_matches_current": true,
+      "persisted_phase_parquet_matches_receipt": true,
+      "measured_record_duration_seconds": 45,
+      "output_size_mib": 29,
+      "limitation": "Self-readback by the producer's own interpolation; it does not independently reconstruct events, physical side or clock units, so it does not satisfy UM21-T02 by itself."
+    }
+  },
+  "proposal": {
+    "handoff": "docs/quality/audits/pm01-um21-tread-pilot-handoff.json",
+    "summary": "One fresh, single-worker UM21 treadmill pilot under an explicit guard envelope. It does not wait on any historical process. Record selection belongs to UM21-T01."
+  },
+  "limitations": [
+    "Process absence was checked at one instant; it must be rechecked immediately before any launch.",
+    "Unknown historical Windows cleanup fields remain unknown; the current Windows census only shows that no MATLAB/Python worker is alive now.",
+    "Scientific outputs (Parquet, HDF5, MAT) were not opened; output hashes were recomputed only for the two UM21 pilot phase.parquet files.",
+    "The GT21 102-record source-check status is bound by receipt hash; the audit was not re-executed."
+  ],
+  "corrections": [
+    "2026-10-27: same-boot claim corrected (previous boot); GT21 auditor receipt bound by path and hash. Both found by the independent verifier."
+  ]
+}

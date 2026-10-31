@@ -1,0 +1,104 @@
+{
+ "task_id": "HIST-01",
+ "title": "Give all twelve historical studies an exact source disposition",
+ "status": "review",
+ "last_checked_at_utc": "2026-10-31T07:31:50Z",
+ "summary": "Each of the 12 historical slugs now has one record with publisher/DOI and version, local source files (paths, sizes, SHA-256), official AddBiomechanics 1.0 archive members (metadata only), legacy artifact and converter candidate, discrepancies, unknowns, disposition, linked tasks and next bounded action. UM24K: local S1/S2 MAT files are byte-identical to Dryad version 6 (source_available_reconcilable, owned by UM24K-F01). The other eleven derive from AddBiomechanics: no B3D source found in the searched folders, legacy Parquet not local and not traceable to source bytes; official archive members are identified (both model variants: 346.7 GB compressed; ca23 alone 244.9 GB). Five of them (ca23, mo15, ti19, vz22, wa23) also have openly licensed original publisher data (78.4 GB together; ca23 28.9 GB). Rebuild scope and source route are put to José as D-HIST-01-1. All twelve legacy artifacts stay archive_legacy_unbound. The AddBiomechanics ledger's 12 studies are not the 12 pages: they include sa17 (no page; out of scope, untouched) and exclude um24k.",
+ "changed_files": [
+  "contributor_tools/review_hist01_source_dispositions.py",
+  "docs/quality/audits/hist01-source-dispositions.json",
+  "docs/maintainers/handoffs/HIST-01.json"
+ ],
+ "local_only_outputs": [
+  "review_sheets/HIST-01/index.html (verification sheet, gitignored)",
+  "review_sheets/D-HIST-01-1/index.html (decision sheet, gitignored)"
+ ],
+ "checks": [
+  "Builder contributor_tools/review_hist01_source_dispositions.py (sha256 b3676912fd3fe1c5f08bd41869c65ce752ccae4e23b0805b3d29110b55bf7ba7) re-ran at nice 19 / ionice 3, one thread, HEAD 569ee8f. Wrote docs/quality/audits/hist01-source-dispositions.json (sha256 231a34bebf902aab597adfaadddbda7c31d9601323440cb8955caf3d515c45ec).",
+  "No Parquet/HDF5/MAT/CSV arrays opened; no B3D read; nothing downloaded or launched. Byte hashing only for the three UM24K files (<1 MB each).",
+  "UM24K: dataset_S1.mat 890,361 B sha256 efb525cc...f77c and dataset_S2.mat 16,092 B sha256 3f347db3...3c8f equal the Dryad version 314890 (v6) digests in source_evidence/um24k/publisher-files.json; dataset.zip README member sha256 5bc99c98...723a equals the publisher README digest (unzip -p).",
+  "AddBiomechanics: per-study member counts, empty members, subject folders and compressed bytes recomputed from the central-directory ledger (sha256 e04a5eca...e177e, central directory sha256 88d494cc...ce09); study subject counts cross-checked against the official download page table (receipt sha256 7dcb3f20...c791).",
+  "Local source search: in addition to the prior bounded search receipt, find over /mnt/s/locomotion_data, /mnt/s/scratch_data, /mnt/s/Downloads, /home/jmontp (depth 4) and /mnt/s/workspace (depth 5) returned 0 .b3d or study-named source files; only the UM24K files were found. Not a global absence claim. No legacy historical Parquet exists in converted_datasets/.",
+  "Publisher identities resolved 2026-10-31 via Crossref: 10.1109/TBME.2016.2630009, 10.1002/jor.22023, 10.1016/j.jbiomech.2012.11.024, 10.1145/3610548.3618247, 10.7717/peerj.918, 10.1016/j.jbiomech.2022.111145, 10.1109/TII.2022.3189648, 10.1038/s41597-019-0323-z, 10.1126/scirobotics.adr8282, 10.1038/s41597-022-01817-1, 10.1017/wtc.2023.7. Legacy DOIs checked as wrong: 10.1007/s10439-016-1591-9 is De Groote et al. 2016; 10.1016/j.jbiomech.2012.08.014 is Kobayashi et al. 2012.",
+  "Data records resolved via DataCite: Bath 10.15125/BATH-01341 v1 CC-BY-4.0 (50 runners); Dryad 10.5061/dryad.z34tmpgks v6 CC0-1.0; Zenodo 13030 CC0-1.0; Zenodo 6457662 v1.0 CC BY 3.0 Netherlands; figshare collections 4494755 v1 and 5897423 v1 CC-BY-4.0.",
+  "Every historical pass rate is recorded with historical_pass_rate_is_source_evidence=false.",
+  "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_backlog_workflow.py and python3 contributor_tools/build_backlog_page.py --check -> 71 passed; Backlog valid; HTML current (93 tasks). backlog.json and backlog.html not edited by this task.",
+  "Review sheets rebuilt with contributor_tools/common/review_sheet.py (budgets enforced); rendered with Chrome at 1100 px and 390 px: horizontal overflow 0 on both sheets; recommendation text absent outside the fold (string check); figures inspected."
+ ],
+ "acceptance_coverage": {
+  "source_artifact_ownership_disposition": "Each record has local_source, addbiomechanics_source or original_data, legacy_artifact, linked_tasks and disposition (source + legacy_artifact).",
+  "pass_rates_not_verification": "Flagged false in every record.",
+  "addbiomechanics_scope": "Eleven pages are AddBiomechanics-derived and covered by no active queue; scope choice is D-HIST-01-1 (decision, not agent-assumed).",
+  "tan_membership": "Not bound. Official table: Tan et al. 2022 (strike index, 9 subjects) and Tan et al. 2023 (TII, 17 subjects); archive folders Tan2021 (8 subject folders s1, s3-s9) and Tan2022 (17). Folder-to-paper rests on counts and the author README only; trial membership needs B3D header trial names.",
+  "falisse_tasks": "Gait_* and STS_* keep no canonical task; corrected converter withholds tasks (not reconverted). Original vs derivative: archive folder Falisse2017, 11 subjects; legacy label Falisse2016, 1 subject; original non-derivative data location not identified.",
+  "license_version_citation_scope_next_action": "Present per record; unchecked licenses are marked status not_checked."
+ },
+ "page_correction_requests": [
+  "ca23 metadata (docs/datasets/_metadata/ca23.yaml): University of Colorado and 6 subjects contradict the Bath record (50 runners); page already says Bath.",
+  "fa16 metadata: DOI 10.1007/s10439-016-1591-9 is a different paper; use 10.1109/TBME.2016.2630009 as the page does.",
+  "ha13 metadata: DOI 10.1016/j.jbiomech.2012.08.014 is unrelated; use 10.1016/j.jbiomech.2012.11.024 as the page does.",
+  "ha23 page: KAIST unsupported; add citation Han et al. SIGGRAPH Asia 2023, 10.1145/3610548.3618247.",
+  "ta21 page: year 2021 and National University of Singapore unsupported; supported study Tan et al. J Biomech 2022, 10.1016/j.jbiomech.2022.111145 (membership unproven).",
+  "ta22 page: National University of Singapore unsupported; cite Tan et al. IEEE TII 2023, 10.1109/TII.2022.3189648.",
+  "wa23 page: Stanford University unsupported; cite Wang et al. Wearable Technol 2023, 10.1017/wtc.2023.7; data Zenodo 6457662 v1.0.",
+  "ti19 page: description says 50 subjects; state that the legacy record covers 43 of 50.",
+  "vz22 page: VU Amsterdam not checked; verify or remove.",
+  "AddBiomechanics dataset_metadata/*.yaml (not a docs page) repeat the fa16/ha13/ca23 errors and give ha23 22 subjects and ti19 49 subjects."
+ ],
+ "remaining": [
+  "D-HIST-01-1 (José): which source, if any, to rebuild the eleven AddBiomechanics-derived studies from. Blocks only those eleven; UM24K proceeds under UM24K-F01.",
+  "Not checked: remote legacy Dropbox files; B3D bytes/headers; original-data licenses for fr12, ha13, ha23, ta21, ta22, fa16; ti19 collection CC-BY-4.0 versus Subject3 item CC0; institutions beyond the listed corrections.",
+  "HIST-02 should create per-study work items from this audit after D-HIST-01-1; UM24K and ADB-P01/ADB-C01/ADB-F01 are the existing owners.",
+  "If B is chosen: five new original-format adapters (Bath ZIP, Moore tar.gz, Lencioni MAT, van der Zee C3D/MAT, Wang RAR), each piloted one study at a time; original-data versus AddBiomechanics identities must be crosswalked so participants are not double-counted."
+ ],
+ "next_action": "Independent reviewer: re-check F1/F2 (original-route sizes against the five repository metadata endpoints, option totals 0 / 107.9 / 346.7 GB, bounded wording, no leak). Coordinator: copy D-HIST-01-1 into backlog decisions only after that verification.",
+ "evidence_paths": [
+  "docs/quality/audits/hist01-source-dispositions.json",
+  "docs/quality/audits/historical-source-restoration-review.json",
+  "docs/quality/audits/tan-falisse-source-identity-review.json",
+  "docs/quality/audits/addbiomechanics-source-preservation-review.json",
+  "docs/quality/audits/um24k-ensemble-restoration-review.json",
+  "docs/quality/audits/source_evidence/um24k/publisher-files.json",
+  "converted_datasets/reconversion_v2/swarm_backlog_20261021/adb_official_release_metadata_20261021/historical_study_member_ledger.json"
+ ],
+ "decisions": [
+  {
+   "id": "D-HIST-01-1",
+   "task_id": "HIST-01",
+   "question": "Eleven historical studies came from AddBiomechanics. Their source files were not found in the searched folders, and the old LocoHub files cannot be traced to any source file. Five also have openly licensed original data from the publishers. From which source, if any, should LocoHub rebuild them?",
+   "options": [
+    {
+     "key": "A",
+     "label": "Archive all eleven",
+     "consequence": "Pages stay labelled legacy with corrected citations; no download; AddBiomechanics tasks pause. Reversible."
+    },
+    {
+     "key": "B",
+     "label": "Publisher originals where open, AddBiomechanics otherwise",
+     "consequence": "Originals for Carter, Moore, Lencioni, van der Zee and Wang, AddBiomechanics for the other six: about 108 GB; needs five new original-format adapters plus the AddBiomechanics one. Reversible."
+    },
+    {
+     "key": "C",
+     "label": "AddBiomechanics for all eleven",
+     "consequence": "About 347 GB with one adapter; Carter alone is 245 GB, more than the 164 GB free; reprocessed derivatives only. Reversible."
+    }
+   ],
+   "options_order": "By total data to download: none, about 108 GB, about 347 GB.",
+   "cost_of_waiting": "Historical pages stay labelled legacy and unreviewed; AddBiomechanics tasks stay blocked; no active dataset is affected.",
+   "recommended": "B",
+   "confidence": "medium",
+   "why": "The publisher originals are the primary records for five studies and cut the total download from about 347 to about 108 GB (Carter from 245 to 29 GB). The cost is five new source adapters, each piloted one study at a time.",
+   "check": "Decision sheet figure: Carter's blue AddBiomechanics bar (245 GB) crosses the free-disk line, while its orange publisher bar (29 GB) does not.",
+   "decide_before_recommendation": false,
+   "status": "open"
+  }
+ ],
+ "rework": {
+  "verifier_report": "docs/maintainers/handoffs/HIST-01-verify.json (back_to_worker)",
+  "F1": "D-HIST-01-1 now asks which source to rebuild from. Options: A archive (none), B publisher originals for the five studies with open data plus AddBiomechanics for the other six (107.9 GB), C AddBiomechanics for all eleven (346.7 GB). Ordered by total download; recommendation only in the fold. Per-study, per-route sizes are in each audit record (original_route) and in the decision figure.",
+  "F1_sizes": "Metadata-only fetches to the scratchpad on 2026-10-31, no data files: Bath DataCite sizes (50 ZIPs, 28.88 GB, rounded MB strings); Zenodo 13030 2.445 GB exact; Zenodo 6457662 31.01 GB exact; figshare 4494755 54 items 0.515 GB exact; figshare 5897423 4 items 15.59 GB exact. Each metadata response sha256 is recorded in the builder ORIGINAL_ROUTE table.",
+  "F1_new_fact": "figshare item-level licenses are CC0 for all 54 Lencioni and all 4 van der Zee items, while DataCite lists both collections as CC-BY-4.0; recorded as not reconciled.",
+  "F2": "Decision headline now: no source found in searched folders; all eleven are in AddBiomechanics and five also have open publisher data. The D-HIST-01-1 question and the HIST-01 headline use the bounded wording \"not found in the searched folders\".",
+  "free_disk_units": "Free space is 164.3 GB decimal = 153 GiB (df -h prints 154G in GiB). All sizes on the sheet are decimal GB, so the figure is labelled \"164 GB (153 GiB)\" rather than \"154 GB\", which would mix units. Measured at build time."
+ }
+}

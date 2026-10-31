@@ -286,6 +286,8 @@ if OPENSIM_AVAILABLE:
 
 ### Sign Conventions
 
+> **Sign rule note (2026-10-31).** The knee-flexion-positive output in this table matches the current rule. The current LocoHub rule is [Signs and frames](../../docs/reference/index.html#signs-and-frames): joint angles and moments positive in their named direction (knee flexion +), segment angles counterclockwise (pelvis anterior tilt −). This describes the converter's sign mapping; it does not verify existing output files.
+
 The module automatically handles sign convention conversion:
 
 | Joint | OpenSim Convention | LocoHub Standard | Action |

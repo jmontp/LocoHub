@@ -9,7 +9,9 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import asdict, dataclass, field
 import json
+import re
 from typing import Any, Optional
+import unicodedata
 
 import numpy as np
 import pandas as pd
@@ -27,6 +29,19 @@ OBSERVATION_TYPES = {
 }
 PHASE_GRID = np.linspace(0.0, 100.0, 150)
 QUALITY_STATES = ("passed", "failed", "missing", "unchecked", "invalid")
+# Text that missing values become after string conversion (pandas, MATLAB
+# string/categorical, spreadsheets); never a source identity. "NA" stays valid.
+_PLACEHOLDER_IDENTITIES = {
+    "nan", "-nan", "none", "null", "<na>", "nat", "<missing>", "<undefined>", "n/a", "#n/a",
+    "#na", "1.#qnan",
+}
+# Parts of composite IDs (e.g. "gt21:AB01/NaN/..."). "none"/"null"/"nat" are left
+# out because a path part such as "none" can be a real condition label.
+_PLACEHOLDER_PARTS = {
+    "nan", "-nan", "<na>", "<missing>", "<undefined>", "n/a", "#n/a", "#na", "1.#qnan",
+}
+_SEPARATORS = r"/\\:|;,"
+_ZERO_WIDTH = dict.fromkeys(map(ord, "\u200b\u200c\u200d\u2060\ufeff"))
 _METADATA_COLUMNS = (
     "task", "task_id", "task_info", "observation_type",
     "subject_metadata", "source_start_time_s", "source_end_time_s",
@@ -65,13 +80,16 @@ def _identity_key(identity: dict[str, str]) -> tuple[str, ...]:
 
 
 def _groups(df: pd.DataFrame):
-    return df.groupby(list(IDENTITY_COLUMNS), sort=False, dropna=False)
+    # observed=True: categorical identities form only the combinations present.
+    return df.groupby(list(IDENTITY_COLUMNS), sort=False, dropna=False, observed=True)
 
 
 def _nonempty_strings(values: pd.Series) -> bool:
-    return bool(values.map(
-        lambda value: isinstance(value, str) and bool(value.strip())
-    ).all())
+    # Unique values as plain objects, so categorical columns behave like strings.
+    return all(
+        isinstance(value, str) and bool(value.strip())
+        for value in pd.unique(np.asarray(values, dtype=object))
+    )
 
 
 def _json_object(value: Any) -> dict:
@@ -100,6 +118,24 @@ def _metadata_token(value: Any) -> str:
             raise ValueError("Metadata numbers must be finite")
         return "number:" + str(float(value))
     return json.dumps(value, sort_keys=True, allow_nan=False)
+
+
+def _placeholder_text(value: Any) -> bool:
+    """Whether a string is, or has a composite part that is, a stringified missing value."""
+    if not isinstance(value, str):
+        return False
+    # NFKC folds full-width forms; zero-width characters are dropped.
+    text = unicodedata.normalize("NFKC", value).translate(_ZERO_WIDTH).strip().lower()
+    if text in _PLACEHOLDER_IDENTITIES:
+        return True
+    # "n/a" contains a separator, so mark a whole "n/a" part before splitting.
+    text = re.sub(rf"(?<![^{_SEPARATORS}])#?n/a(?![^{_SEPARATORS}])", "<na>", text)
+    # A blank (whitespace-only) part is a formatted missing component; an empty
+    # part is not, because URLs, drive letters and absolute paths produce it.
+    return any(
+        part.strip() in _PLACEHOLDER_PARTS or (part and not part.strip())
+        for part in re.split(rf"[{_SEPARATORS}]", text)
+    )
 
 
 def _numeric(values: pd.Series) -> np.ndarray:
@@ -160,6 +196,11 @@ def inspect_contract(
             ))
     if result.issues:
         return result
+    # Unique values only; affected observations are named in the loop below.
+    placeholders = {
+        column: {value for value in pd.unique(df[column]) if _placeholder_text(value)}
+        for column in IDENTITY_COLUMNS if column != "reference_side"
+    }
     result.review_status = "identified"
     for key, group in _groups(df):
         identity = _identity(key)
@@ -167,6 +208,11 @@ def inspect_contract(
 
         def issue(code: str, message: str) -> None:
             result.issues.append(ContractIssue(code, message, identity))
+
+        for column, values in placeholders.items():
+            if identity[column] in values:
+                issue("invalid_identity", f"{column} {identity[column]!r} is a stringified missing value, not a source identity.")
+                result.review_status = "unreviewed"
 
         side = identity["reference_side"]
         observation_type = group["observation_type"].iloc[0]
@@ -210,6 +256,8 @@ def inspect_contract(
         for column in ("task", "task_id", "observation_type"):
             if not _nonempty_strings(group[column]):
                 issue("invalid_metadata", f"{column} must contain nonempty strings.")
+        if _placeholder_text(group["task_id"].iloc[0]):
+            issue("invalid_metadata", "task_id is a stringified missing value.")
         # No metadata source silently takes precedence over another source.
         try:
             sources = {
@@ -262,6 +310,10 @@ def inspect_contract(
         elif start_present:
             if group["source_start_time_s"].isna().all() and group["source_end_time_s"].isna().all():
                 continue
+            if observation_type == "ensemble_curve":
+                # An aggregate of many cycles has no single source event span.
+                issue("ensemble_source_bounds", "A source ensemble cannot carry one source event start/end time.")
+                continue
             try:
                 start = _numeric(group["source_start_time_s"])
                 end = _numeric(group["source_end_time_s"])
@@ -269,9 +321,56 @@ def inspect_contract(
                     issue("invalid_source_bounds", "Source event bounds must be finite with end greater than start.")
             except (ValueError, TypeError):
                 issue("invalid_source_bounds", "Source event bounds must be numeric.")
+    affected = len({
+        _identity_key(issue.identity) for issue in result.issues
+        if issue.code == "invalid_identity" and issue.identity
+    })
+    if affected:
+        # A detached placeholder row may belong to any observation, so none is eligible.
+        result.issues.append(ContractIssue(
+            "placeholder_identity_in_file",
+            f"{affected} observation(s) have placeholder identities; no observation in this file is eligible.",
+        ))
     result.schema_passed = not any(issue.severity == "error" for issue in result.issues)
     result.publishable = result.schema_passed and result.review_status == "identified"
     return result
+
+
+def _time_lineage(group: pd.DataFrame, index_column: str) -> dict[str, Any]:
+    """Report recorded index and source-clock values; unavailable values stay None."""
+    def single(column: str) -> Optional[float]:
+        try:
+            values = np.unique(_numeric(group[column])) if column in group else np.empty(0)
+        except (ValueError, TypeError):
+            return None
+        return float(values[0]) if len(values) == 1 and np.isfinite(values[0]) else None
+
+    try:
+        index = _numeric(group[index_column]) if index_column in group else np.empty(0)
+    except (ValueError, TypeError):
+        index = np.empty(0)
+    finite = len(index) > 0 and bool(np.isfinite(index).all())
+    return {
+        "index_column": index_column,
+        "index_first": float(index.min()) if finite else None,
+        "index_last": float(index.max()) if finite else None,
+        "source_start_time_s": single("source_start_time_s"),
+        "source_end_time_s": single("source_end_time_s"),
+    }
+
+
+def profile_applicability_gaps(config: Optional[ValidationConfigManager]) -> list[str]:
+    """Tasks of a reviewed/approved profile without a nonempty applicability block.
+
+    Draft and unlabelled profiles are not reported here; release creation blocks
+    or labels them separately.
+    """
+    if config is None or config.get_metadata("review_status") not in {"reviewed", "approved"}:
+        return []
+    return [
+        task for task in config.get_tasks()
+        if not config.get_task_metadata(task).get("applicability")
+    ]
 
 
 def _signal_columns(df: pd.DataFrame) -> set[str]:
@@ -590,6 +689,7 @@ def assess_observations(
             "task": task, "task_id": str(group["task_id"].iloc[0]) if "task_id" in group else "",
             "row_count": len(group), "status": status, "eligible": bool(eligible),
             "reasons": reasons, "signals": signals, "profile_applicability": applicability,
+            "time_lineage": _time_lineage(group, index_column),
         })
         result["counts"][status] += 1
     result["coverage"] = {

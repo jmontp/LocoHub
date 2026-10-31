@@ -12,10 +12,11 @@
     const status = document.getElementById("catalog-status");
     const rows = Array.from(table.tBodies[0].rows).map((row) => {
       const cells = row.cells;
-      const name = cells[0].textContent.trim();
+      const name = (cells[0].querySelector("[data-dataset-notes]") || cells[0]).textContent.trim();
       row.querySelectorAll("a").forEach((link) => {
         const variant = link.hasAttribute("data-dataset-notes") ? "Dataset notes"
-          : {filtered: "Filtered download", full: "Full download", time: "Time data"}[link.dataset.download];
+          : link.classList.contains("evidence-status") ? `evidence status, ${link.textContent.trim()}`
+          : {filtered: "Legacy filtered download", full: "Legacy full download", time: "Legacy time data"}[link.dataset.download];
         if (variant) link.setAttribute("aria-label", `${name}: ${variant}`);
       });
       return { row, text: row.textContent.toLowerCase(),
