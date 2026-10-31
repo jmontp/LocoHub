@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-10-31T19:11:36Z",
+  "updated_at_utc": "2026-10-31T19:22:14Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -6617,7 +6617,7 @@
       "priority": "P1",
       "dataset": "all",
       "title": "Acquire Falisse and both Tan studies from AddBiomechanics with metadata reconstruction",
-      "status": "ready",
+      "status": "done",
       "stage": "source_inventory",
       "question": "Can Falisse, Tan running and Tan walking be streamed from AddBiomechanics one participant at a time with every LocoHub metadata column reconstructable from source?",
       "scope": "Per D-HIST-03-1 = C (José: make sure we can reconstruct the metadata columns). First, from B3D headers only (range fetches), check that each LocoHub metadata column (subject id, mass, height, sex/age if published, task, trial/recording id, side, speed/incline where applicable, sampling rate, model) can be reconstructed from the B3D header, trial names or the study's own publications; list any column that cannot and its source. Then plan streaming acquisition (per-participant member, SHA-256, transient disk < 2 GB) through the guarded launcher. Note the legacy processingPasses[1] = low-pass pass finding when choosing which pass to convert. Output rows per frame is a converter design question to raise with José if it changes storage materially.",
@@ -6636,15 +6636,20 @@
         "No full download before the plan is reviewed",
         "Independent verification"
       ],
-      "next_action": "Read B3D headers by range for one participant per study and build the metadata table.",
+      "next_action": "Done. Metadata reconstructable except speed/incline and Tan token meanings (kept missing). D-HIST-04-1 (rows per frame) and D-HIST-04-2 (contact authors) open.",
       "resource_class": "read_only",
       "evidence_paths": [
-        "docs/quality/audits/hist03-originals-and-grf.json"
+        "docs/quality/audits/hist04-addbiomechanics-metadata.json",
+        "docs/maintainers/handoffs/HIST-04.json",
+        "docs/maintainers/handoffs/HIST-04-verify.json",
+        "review_sheets/D-HIST-04-1/index.html"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-31T18:51:54Z",
+        "last_checked_at_utc": "2026-10-31T19:22:14Z",
         "summary": "Created from José's answer to D-HIST-03-1.",
-        "checks": [],
+        "checks": [
+          "Independent verifier: round 1 back_to_worker (Falisse cohort reasoning), round 2 one wording fix applied by coordinator (3 of the paper's 6 motions)."
+        ],
         "remaining": [
           "Everything in acceptance."
         ]
@@ -7134,6 +7139,61 @@
       "check": "Sheet, first figure: AB11's bar has no blue part, so none of its trials would get rescaled kinetics under B or C.",
       "cost_of_waiting": "GT23 moments and powers stay out of any release; GT23 kinematics, forces and other datasets are unaffected.",
       "decide_before_recommendation": true,
+      "status": "open"
+    },
+    {
+      "id": "D-HIST-04-1",
+      "task_id": "HIST-04",
+      "question": "Each AddBiomechanics frame holds the raw sensor data plus three processed versions of the motion (marker fit, filtered, and force-matched). The current converter writes all four as separate rows. How many rows per frame should LocoHub write for Falisse and both Tan studies?",
+      "options": [
+        {
+          "key": "A",
+          "label": "One row per frame from the force-matched (dynamics) result",
+          "consequence": "About 3.7 million rows (about 4 GB before compression); the other two versions, raw markers and raw plate readings are left out. Each file is deleted after conversion, so they return only by re-downloading from the archive while it serves the same hash-checked bytes and reconverting. Values will differ from the old files, which used the filtered version."
+        },
+        {
+          "key": "B",
+          "label": "One row per frame for each of the three processed versions",
+          "consequence": "About 11.0 million rows (about 11 GB before compression) with a version column users must filter on; raw markers and plate readings left out. Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Keep the current converter: raw row plus one row per version",
+          "consequence": "About 14.6 million rows, every field stored as text; nothing left out; size not estimated; no converter change. Reversible."
+        }
+      ],
+      "options_order": "By row count: about 3.7, 11.0 and 14.6 million.",
+      "cost_of_waiting": "Acquisition can still be planned and piloted; conversion of the three studies waits; their pages stay legacy; no active dataset is affected.",
+      "recommended": "A",
+      "confidence": "medium",
+      "why": "A follows José's preference for fewer rows, keeps every frame with its force-quality flag, and uses AddBiomechanics' final force-matched result. Left-out data can be rebuilt only by re-downloading from the archive while it serves the same hash-checked bytes and reconverting. Cost: values will not match the old files, and a separate convention is still needed for which body mass normalizes moments.",
+      "check": "Decision sheet figure: option C's bar (14.6 million rows) is four times option A's (3.7 million).",
+      "decide_before_recommendation": true,
+      "status": "open"
+    },
+    {
+      "id": "D-HIST-04-2",
+      "task_id": "HIST-04",
+      "question": "Eight of the eleven AddBiomechanics Falisse participants very likely are the volunteers of the cited 2017 paper, but three extra men are unexplained, and the files hold only 3 of the paper's 6 motions (gait, sit-to-stand, stair ascent; squat, stair descent and squat jump are absent). Should LocoHub contact the AddBiomechanics team or the KU Leuven authors to ask which participants are the paper's volunteers, who the other three are, and which protocol the trials followed?",
+      "options": [
+        {
+          "key": "A",
+          "label": "No, do not contact",
+          "consequence": "Falisse stays unreleasable with task and protocol unresolved; acquisition and demographics are unaffected; no outward contact. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Yes, contact them",
+          "consequence": "One email from José; if answered, Falisse task, protocol and citation could be resolved for all eleven; no data or download change. Reversible until sent."
+        }
+      ],
+      "options_order": "By outward action: none, then one email.",
+      "cost_of_waiting": "Falisse stays unreleasable; Tan running and Tan walking are unaffected; acquisition can proceed.",
+      "recommended": "B",
+      "confidence": "medium",
+      "why": "Only the source team can confirm the trial protocol and the three extra participants; without it the Falisse task mapping cannot be sourced, and the request costs one email.",
+      "check": "HIST-04 sheet figure: exactly one subset (blue bar at 6) reproduces all six statistics the paper reports.",
+      "decide_before_recommendation": false,
       "status": "open"
     }
   ]

@@ -1,0 +1,88 @@
+{
+  "task_id": "HIST-04",
+  "verifier_role": "independent second agent; own protobuf wire parser on the 15 local header files (header bytes only); Falisse manuscript PDF and PubMed E-utilities abstract for cohort/protocol; no frames or members downloaded",
+  "verdict": "back_to_worker",
+  "decision_ready_to_copy": {"D-HIST-04-1": true, "D-HIST-04-2": false},
+  "last_checked_at_utc": "2026-10-31T21:10:00Z",
+  "round_2": {
+    "verdict": "back_to_worker",
+    "decision_ready_to_copy": {"D-HIST-04-1": true, "D-HIST-04-2": false},
+    "last_checked_at_utc": "2026-10-31T21:10:00Z",
+    "summary": "Three of the four fixes are correct. D-HIST-04-1 is ready to copy. D-HIST-04-2 needs one wording fix before copying. Its question calls the Falisse trials 'walking, sit-to-stand, stair ascent, not the paper's six motions'. The paper's own list ('six functional motions: gait, squat, stair descent, stair ascent, sit-to-stand-to-sit, and squat jump', manuscript section II.A, re-read by me) contains all three, so the trials are three of the six, with squat, stair descent and squat jump absent. My round-1 phrasing ('the paper reports other motions') was also too loose; the audit's unresolved list already states it correctly.",
+    "checks": [
+      {"area": "Falisse attribution and subset test", "result": "pass", "evidence": "The builder's falisse_subsets() scores all 35 4M/4F subsets: scores {0:15, 1:14, 2:4, 3:1, 6:1}, with one full match (subject_0, 2, 3, 4, 5, 6, 9, 10). That is the same subset I found. The earlier SD-band error is acknowledged in the audit. The new falisse_subsets.png shows one blue bar at 6 against grey bars at 0-3. The chips now read '8 Falisse subjects reproduce the paper's cohort' (pass) and '3 extra Falisse men; trials differ from paper' (not checked)."},
+      {"area": "mass range", "result": "pass", "evidence": "The handoff summary now reads 'Falisse 0.71x to 1.80x ... Tan 1.00x to 1.09x'; no '0.72x' remains."},
+      {"area": "option A recoverability", "result": "pass", "evidence": "The backlog-form decision (consequence and why) and the D-HIST-04-1 sheet row both say files are deleted after conversion and left-out data return only by re-downloading while the archive serves the same checked bytes, then reconverting."},
+      {"area": "D-HIST-04-1", "result": "ready to copy", "evidence": "validate_backlog passes with both HIST-04 decisions appended (open: D-GT23-C04-1, D-HIST-04-1, D-HIST-04-2, which is the 3-open maximum). The rendered card keeps the recommendation in the fold with no recommend/prefer/best wording visible. The order by rows is strict."},
+      {"area": "D-HIST-04-2", "result": "schema valid; one factual wording fix", "evidence": [
+        "Two options ordered by outward action (none, then one email), with defer and its cost.",
+        "decide_before_recommendation is false, so the recommendation shows openly. That is allowed: this is an outward-facing yes/no, not a convention or release item, and so is not one AGENTS.md says to hide.",
+        "The check points at the HIST-04 sheet's subset figure, which exists and shows the claimed single bar at 6.",
+        "Required: replace 'not the paper's six motions' with 'only three of the paper's six motions; squat, stair descent and squat jump are absent'. Optionally soften B's 'can be resolved for all eleven' to 'could be resolved', to match A's neutral tone."
+      ]},
+      {"area": "sheet for the yes/no", "result": "acceptable without its own sheet", "evidence": "AGENTS.md asks for a separate sheet per decision only 'when it needs its own figures'. D-HIST-04-2 turns on one fact, the unique cohort match, which the HIST-04 verification sheet already shows. Its check names that figure, which José can verify in under a minute. A one-line options table on the backlog card is enough."},
+      {"area": "gates", "result": "pass", "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py -> 71 passed. python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (101 tasks)."}
+    ],
+    "required_fixes": [
+      "D-HIST-04-2 question: say the trials are three of the paper's six motions (squat, stair descent and squat jump absent). Mirror this on the HIST-04 sheet chip ('trials differ from paper' -> 'only 3 of the paper's 6 motions')."
+    ]
+  },
+  "round_1_verdict": "back_to_worker",
+  "research_data_read": false,
+  "scientific_approval": false,
+  "summary": "Header parsing, the metadata table, the row and size estimates, the pass order and the specs all check out. The headline Falisse finding is wrong in its main inference. Exactly one 4-male/4-female subset of the 11 AddBiomechanics subjects (subject_0, 2, 3, 4, 5, 6, 9, 10) reproduces every cohort statistic the TBME 2017 paper reports, at the paper's rounding: age 29.8 +/- 3.9 y, height 176 +/- 6.6 cm, mass 69.6 +/- 6.0 kg. So the folder very likely contains the paper's 8 volunteers plus 3 additional men (subject_1, 7, 8). The 'ages outside 29.8 +/- 3.9 contradict the cohort' argument, which also appears on the review sheet, treats a standard-deviation band as a range. What genuinely stays unresolved is the 3 extra people and the trials: the files hold Gait/STS/StairUp, while the paper reports other motions. Smaller fixes: the mass-ratio minimum is 0.71 (subject_9 0.706), not 0.72; and option A's 'fetchable by hash' needs qualifying, because the B3D is deleted after conversion.",
+  "checks": [
+    {"id": 1, "area": "own header parse (all 15 local headers)", "result": "pass", "evidence": [
+      "Each .hdr.bin length equals its .len.bin int64 and the receipt header_len, and its SHA-256 equals the receipt header_sha256 (15/15).",
+      "Parsed fields: sex, height, mass, age, subject_tag, global passes with model text, and per trial name/original_name/length/timestep/pass headers.",
+      "Pass order is kinematics, lowPassFilter, dynamics globally and in every trial: Falisse 69 trials, Tan running 270, Tan walking 96.",
+      "Timesteps: Falisse 0.009948-0.009989 s; Tan running 0.005; Tan walking 0.009999-0.01.",
+      "Trial names: Falisse Gait_*/STS_*; Tan running {nike|mini}_{SI|SR|baseline}_{24|28}; Tan walking baseline/fpa/step_width/trunk_sway.",
+      "Falisse frames sum to 34,923, matching the audit exactly.",
+      "Absent trial fields in Tan walking 10: trial_tag(6), marker_names_guessed(9), original start/end(12-15), has_manual_GRF_annotation(16), trial_type(17), detected_trial_feature(18). data_quality(25) is absent. All match the audit's absent lists."
+    ]},
+    {"id": 2, "area": "Falisse cohort vs TBME 2017", "result": "failed: inference overstated", "evidence": [
+      "Paper: KU Leuven manuscript (lirias 494460; fetched, sha256 prefix d53f6559, equal to the worker's), section II.A: 'Eight healthy volunteers (four males and four females, age 29.8 +/- 3.9 years, height 176 +/- 6.6 cm, and weight 69.6 +/- 6.0 kg)'.",
+      "AddBiomechanics headers: 11 distinct records, 7 male and 4 female, ages 24-43. Confirmed.",
+      "Subset test (my code): of the 35 possible 4M/4F subsets of the 11, exactly one reproduces all six reported values when rounded as the paper rounds. It is subject_3, 0, 10, 2, 4, 5, 6, 9: age 29.8/3.9, height 176.0/6.6, mass 69.6/6.0. The 3 left over are men (subject_1 43 y, subject_7 37 y, subject_8 39 y).",
+      "A chance match of six statistics in one of 35 subsets is very unlikely. The folder is most plausibly the paper's cohort plus 3 additional men.",
+      "The audit's consequence ('Eleven distinct people cannot be eight volunteers' eleven legs, and ages up to 43 sit far outside 29.8 +/- 3.9') and the HIST-04 sheet caption ('Dots outside the grey band ... contradict the paper's cohort') misuse a mean +/- SD band as a range. They do not establish a mismatch for the 8.",
+      "What does remain unmatched: the 3 extra subjects, and the trials. The B3D trials are Gait/STS/StairUp, while the paper reports six motions including squat, stair descent and squat jump (audit quote). So protocol facts and the task mapping still cannot be taken from the paper without confirmation."
+    ]},
+    {"id": 3, "area": "mass ratio", "result": "pass with a text error", "evidence": "Dynamics-model mass / entered mass, recomputed from <mass> sums in each pass's model text, equals the audit per subject. Falisse ranges 0.706 (subject_9) to 1.801 (subject_1: 117.99 kg vs 65.5); Tan running 1.046-1.092; Tan walking 0.996-1.001. The kinematics-model sum is the entered mass + 0.12 to 0.15 kg. The audit table has 0.706, but the handoff summary says '0.72x to 1.80x'; that should be 0.71x."},
+    {"id": 4, "area": "row and size estimates", "result": "pass", "evidence": [
+      "Falisse frames are exact (34,923).",
+      "Tan running: 514,265 read + (unread expanded bytes - 6 x (mean header + 8)) / 8,040 B per frame = 2,037,579.",
+      "Tan walking: 186,301 read + unread / 7,920 B per frame = 1,584,022 (audit 1,584,021).",
+      "Rows: A 3,656,523; B x3 = 10,969,569; C x4 = 14,626,092.",
+      "A's bytes: 34,923 x 135 x 8 + 3,621,600 x 126 x 8 = 3,688,289,640 B, float64 before compression. Matches.",
+      "Peak transient: the largest expanded member is Tan running s3 at 2,215,534,429 B, matching the receipt file_bytes. D-HIST-03-1's 'under 2 GB' was the compressed size (1.64 GB), as stated."
+    ]},
+    {"id": 5, "area": "metadata table honesty", "result": "pass", "evidence": [
+      "21 rows; every absent value is marked missing with its reason.",
+      "Speed and incline are missing for all three studies.",
+      "Tan running tokens are mapped only as tokens. The PubMed abstract (E-utilities, PMID 35594817) gives 16 participants, an instrumented treadmill, two footwear types and two running speeds, with no values. It names three strike patterns (rearfoot, midfoot, forefoot), which do not map plainly onto the tokens SR/SI/baseline, so leaving token meanings missing is right.",
+      "Sampling rates are kept unrounded, and absent proto3 fields are not defaulted.",
+      "The forbidden_inventions list matches the AGENTS.md rules.",
+      "One item needs revision with check 2: the blanket ban on applying TBME protocol facts should stay for trials and protocol, but its stated reason (cohort mismatch) changes."
+    ]},
+    {"id": 6, "area": "acquisition specs", "result": "pass", "evidence": "All 36 pass guarded_launcher.validate_spec in-process. Every binding except the acquisition script matches current files. The script binding is an all-zero placeholder for a file that does not exist, so a launch would be refused at binding_mismatch, which fails safe. Not launched."},
+    {"id": 7, "area": "D-HIST-04-1", "result": "schema valid; one consequence needs qualifying", "evidence": [
+      "validate_backlog passes on an in-memory copy (2 open decisions with D-GT23-C04-1).",
+      "Order by row count (3.7, 11.0, 14.6 million) is strict.",
+      "decide_before_recommendation is true. The rendered card and the D-HIST-04-1 sheet keep the recommendation in the click-to-reveal fold, with no recommend/prefer/best wording visible. The sheet has an options table with a Left out column, a defer row and 'Ordered by row count'.",
+      "Quick check: 14.6 / 3.66 = 4.0. True.",
+      "Option A: the acquisition plan deletes each B3D after its conversion verifies. The left-out passes, raw markers and raw plate readings are therefore not kept locally. They can be recovered only by re-fetching while archive.simtk.org still serves the same bytes (ETag, CRC32 and SHA-256 checked), then reconverting. 'Stay fetchable by hash' overstates this.",
+      "Fix: say 'not kept; re-fetchable from the AddBiomechanics archive while it serves the same hash-checked bytes; reversing means re-acquiring and reconverting', or add the cost of keeping the compressed members (about 22 GB)."
+    ]},
+    {"id": 8, "area": "contacting the Falisse authors", "result": "flag to José", "evidence": "Contacting the authors is outward-facing, so it is José's call under AGENTS.md. The handoff lists it only under remaining. Surface it as a one-line yes/no at session start, with the question narrowed by check 2: are subjects 0, 2, 3, 4, 5, 6, 9 and 10 the TBME 2017 volunteers; who are subjects 1, 7 and 8; and under which protocol were the Gait/STS/StairUp trials recorded? Acquisition (0.24 GB) is not blocked meanwhile."},
+    {"id": 9, "area": "test runs", "result": "pass", "evidence": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py -> 71 passed. python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (101 tasks)."}
+  ],
+  "required_fixes": [
+    "Rewrite falisse_attribution in the audit, the handoff summary and the HIST-04 sheet (chip, falisse_ages figure and caption). State that a unique 8-person subset matches the paper's reported cohort to its rounding and that 3 extra men are present. Remove the SD-band 'contradiction'. Keep trials, protocol and task unresolved because the motions differ.",
+    "Correct the handoff mass-ratio range to 0.71x-1.80x.",
+    "Qualify D-HIST-04-1 option A's recoverability (B3D deleted after conversion; re-fetch depends on the archive), here and on the decision sheet.",
+    "Add the author-contact question for José as an explicit outward-facing item with the narrowed wording."
+  ],
+  "verifier_scratch": "Session scratchpad hist03_verify/: parse_hist04_headers.py, hist04_parse.json, falisse.pdf (public manuscript, 1.0 MB); subset search run inline."
+}
