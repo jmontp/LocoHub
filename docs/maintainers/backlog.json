@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-10-31T22:47:58Z",
+  "updated_at_utc": "2026-10-31T22:53:28Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -6661,7 +6661,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Compare GT23 moment error before and after rescaling, per trial",
-      "status": "ready",
+      "status": "done",
       "stage": "conventions",
       "question": "For each GT23 trial, is the error of moments rescaled with LocoHub's estimated divisor lower than the error of the published moments?",
       "scope": "José's condition on D-GT23-C04-1: rescale everything if the rescaled error is lower than the original error, otherwise report back. Per trial, estimate original error (published divisor vs own mass, using exact divisors where known and the force-plate estimate with its uncertainty otherwise) and the error after rescaling by the best available divisor (exact, matched table mass, or the force-plate estimate itself) including estimator uncertainty and any between-estimator disagreement; account for trials where the published divisor may already be the own mass. Use the committed GT23-C03/C04 audits; bounded reads only if a number is missing. State for which trial classes rescaling is lower-error with confidence, which are uncertain, and which are worse.",
@@ -6678,13 +6678,20 @@
         "Does not claim lower error where the estimator is unvalidated (e.g., non-gait tasks) without evidence",
         "Independent verification"
       ],
-      "next_action": "Compute from the committed audits.",
+      "next_action": "Done. Rescaled error is lower with confidence for 52 of 488 trials, not for everything. D-GT23-C05-1 open.",
       "resource_class": "read_only",
-      "evidence_paths": [],
+      "evidence_paths": [
+        "docs/quality/audits/gt23-c05-rescale-error.json",
+        "docs/maintainers/handoffs/GT23-C05.json",
+        "docs/maintainers/handoffs/GT23-C05-verify.json",
+        "review_sheets/D-GT23-C05-1/index.html"
+      ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-31T22:33:48Z",
+        "last_checked_at_utc": "2026-10-31T22:53:28Z",
         "summary": "Created from José's 2026-11-01 answers.",
-        "checks": [],
+        "checks": [
+          "Independent verifier: done; classes reproduced trial for trial; widening is conservative (C04 band only: 61 lower with confidence)."
+        ],
         "remaining": [
           "Everything in acceptance."
         ]
@@ -7209,8 +7216,10 @@
       "check": "Sheet, first figure: AB11's bar has no blue part, so none of its trials would get rescaled kinetics under B or C.",
       "cost_of_waiting": "GT23 moments and powers stay out of any release; GT23 kinematics, forces and other datasets are unaffected.",
       "decide_before_recommendation": true,
-      "status": "open",
-      "answer_note_pending": "José 2026-11-01: \"is the rescaled error lower than the original error? if so, then yeah rescale everything. else get back to me.\" Conditional; GT23-C05 answers the question before this decision is recorded."
+      "status": "answered",
+      "answer": "defer",
+      "answered_at_utc": "2026-10-31T22:53:28Z",
+      "answer_note": "José 2026-11-01: \"is the rescaled error lower than the original error? if so, then yeah rescale everything. else get back to me.\" GT23-C05 found it is not lower for everything; resolved by D-GT23-C05-1."
     },
     {
       "id": "D-HIST-04-1",
@@ -7272,6 +7281,36 @@
       "answer": "A",
       "answered_at_utc": "2026-10-31T22:33:48Z",
       "answer_note": "José 2026-11-01: do NOT email; drop the 3 unexplained Falisse subjects (subject_1, subject_7, subject_8) and keep the 8 that reproduce the TBME 2017 cohort."
+    },
+    {
+      "id": "D-GT23-C05-1",
+      "task_id": "GT23-C05",
+      "question": "Rescaling GT23 moments to each participant's own mass lowers the error in only some trials. Which GT23 trials should carry moments and powers? Trials left out keep kinematics and forces; their moments and powers are withheld.",
+      "options": [
+        {
+          "key": "A",
+          "label": "Rescale only where error falls in every plausible case (54 trials)",
+          "consequence": "52 trials rescaled (remaining error at most 11 %, median 4 %, if the divisor is a recorded mass) and 2 kept whose only plausible divisor is the own mass. Other trials keep kinematics and forces; their moments and powers are withheld. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Also trials that improve only if the divisor is a recorded mass, or stay unchanged (93 trials)",
+          "consequence": "As the previous option plus 15 trials whose error falls only if the divisor is a recorded mass (else up to 17 %), and 24 kept as published because the estimate is nearest the own mass, though another mass is plausible (published error up to 23 %). Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Rescale every trial with an estimate (450 trials)",
+          "consequence": "Also 41 walking trials where error could rise or fall and 316 trials without a validated estimator (non-gait, curb, short or low-correlation trials), so error rises in some trials by an unknown amount. Reversible."
+        }
+      ],
+      "options_order": "By GT23 trials released with kinetics: 54, 93, 450.",
+      "recommended": "A",
+      "confidence": "medium",
+      "why": "Rescaling lowers the error in every plausible case only for 52 trials. In the others the own mass and another mass are both plausible, the gain depends on the divisor being a recorded mass, or no estimator is validated, so rescaling everything would raise the error in some trials.",
+      "check": "Sheet, second figure: the non-gait bar is all grey, so no non-gait trial gets kinetics under A or B.",
+      "cost_of_waiting": "GT23 moments and powers stay out of any release; GT23 kinematics, forces and other datasets are unaffected.",
+      "decide_before_recommendation": true,
+      "status": "open"
     }
   ]
 }

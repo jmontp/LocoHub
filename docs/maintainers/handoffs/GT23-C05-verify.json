@@ -1,0 +1,69 @@
+{
+ "task_id": "GT23-C05",
+ "verifier_role": "independent second agent (own code from the committed C04 audit; worker probe not imported; no data arrays read)",
+ "verdict": "done",
+ "last_checked_at_utc": "2026-10-31T23:05:00Z",
+ "round_1": {
+  "verdict": "done",
+  "last_checked_at_utc": "2026-10-31T23:05:00Z",
+  "summary": "The classes reproduce exactly from the committed C04 audit with my own code, and the answer to José ('not for everything') is plain and holds under any interval rule. The post-hoc family widening is conservative: it moves trials out of 'lower with confidence' and does not create claims. The sheet meets the AGENTS.md rules. D-GT23-C05-1 passes the schema with a neutral order and no leak, and is ready to copy. The backlog schema has no 'superseded' state, so the main session must close D-GT23-C04-1 in a schema-valid way when copying (see coordinator_action). No scientific approval is implied.",
+  "checks": [
+   {
+    "id": 1,
+    "name": "Classes recomputed from the C04 audit",
+    "result": "pass",
+    "evidence": "My implementation (exact divisor where known; validated = C04 reliable family, at least 10 gait stances, ankle corr at least 0.98, lever present; interval = lever × exp(±max(0.0488, family max |ln(second/lever)|)) joined with the trial's second estimate ±0.0488; plausible = table masses inside; rescale to the table mass nearest the lever; per-scenario lower/same/worse with a 0.5 % tolerance; lower_confident = lower for every table mass AND on a 401-point continuous grid) gives lower_confident 52, lower_if_recorded_mass 15, own_mass_only 2, no_change 24, mixed 41, the same trial for trial. The family half-widths I derive from the screen block equal the worker's (cutting 0.1567, tire_run 0.1359, meander 0.0952, ..., dynamic_walk 0.0389). The only differences are labels among non-claims: 56 trials with a loaded-sample estimate but no lever estimate are 'not_validated' for the worker and 'no_estimate' for me (316 + 38 = 260 + 94 = 354 either way). Option counts follow: A = 52 + 2 = 54; B = 54 + 15 + 24 = 93; C = 93 + 41 + 316 = 450 = 488 - 38."
+   },
+   {
+    "id": 2,
+    "name": "Post-hoc family widening",
+    "result": "pass (conservative; disclosed)",
+    "evidence": "With the C04 band only (no widening) my recomputation gives lower_confident 61, lower_if_recorded_mass 20, mixed 27, and no_change + own_mass_only 26 (5 + 21 by my label split, 1 + 25 by the worker's). This matches the worker's sensitivity line (61/20/27 and 26). Widening only removes 9 confident claims and adds 14 mixed, so it biases against rescaling, not toward it. The answer to José does not depend on it: 354 trials have no validated estimator and at least 27 are mixed under either rule. Option A would be about 62 trials instead of 54 under the narrower band. The sheet details show this, but option A's consequence does not (optional)."
+   },
+   {
+    "id": 3,
+    "name": "'Lower with confidence' under both assumptions",
+    "result": "pass",
+    "evidence": "By construction in my recomputation, every lower_confident trial is lower for every plausible table mass and over the whole continuous interval. The 7 exact trials are lower with zero rescaled error. The 2 AB09 no-match trials (dynamic_walk_1, weighted_walk_1) have no table mass in the interval and are lower_confident through the continuous check only. The handoff discloses this. The 3 tire-run trials are lower even with the 0.136 log family width, because every plausible divisor is far from the own mass (AB03, AB05, AB08)."
+   },
+   {
+    "id": 4,
+    "name": "Answer stated plainly",
+    "result": "pass",
+    "evidence": "answer_to_jose begins 'Not for everything.' The sheet headline reads 'Rescaling lowers moment error with confidence in 52 of 488 GT23 trials, not all', with a failed chip 'Not lower for everything: 41 walking trials could rise or fall' and a not-checked chip for the 354 trials without a validated estimator. The worker's switch from |d/m - 1| to symmetric |log| is disclosed and identical for d > m."
+   },
+   {
+    "id": 5,
+    "name": "Decision D-GT23-C05-1",
+    "result": "pass, with a coordinator action",
+    "evidence": "decision.json equals handoff decisions[0]. Appended to a copy of backlog.json it passes validate_backlog (open would be D-GT23-C04-1 and D-GT23-C05-1). The order is neutral by trials with kinetics (54, 93, 450), stated in options_order, the footnote and the builder (line 437). decide_before_recommendation is true, and the recommendation appears only in the fold; chips, captions and the reply hint are neutral. 'Left out' is the first column and defer has its cost. The check (non-gait bar all grey) is visible. José's 'get back to me' branch is honoured: the options span rescale-where-safe (A), plus conditional and unchanged trials (B), and everything with an estimate (C); defer withholds all kinetics. Superseding: build_backlog_page.py allows only open, queued and answered (DECISION_STATES line 23), and 'answered' requires a listed key or 'defer'. The handoff's 'mark D-GT23-C04-1 superseded' is therefore not representable as written."
+   },
+   {
+    "id": 6,
+    "name": "Sheet (rendered at 1100 px and in a 390 px iframe)",
+    "result": "pass",
+    "evidence": "Order: ask, headline, 8 chips (2 pass, 2 failed, 4 not checked), 2 question-titled figures (figure 1 contrast: the equal-error line with a shaded 'rescaling adds error' region; mixed trials cross it), options table, fold, 3 not-shown items, reply, details. Both PNGs are 765 px at 170 dpi = 4.50 in, the builder has no fontsize under 10, nothing clips at either width, and no IDs, paths or hashes appear before the details. The decision ID in the reply line is the allowed reply form."
+   },
+   {
+    "id": 7,
+    "name": "Gates and files",
+    "result": "pass",
+    "evidence": "tests/test_backlog_workflow.py: 71 passed. build_backlog_page.py --check: 'Backlog valid; HTML current (103 tasks).' Handoff output_sha256 values match: audit befedeae..., probe 767ed200..., index.html 6a7e75bf..., decision.json f02e221d...; input C04 audit 484c1c07... unchanged."
+   }
+  ],
+  "coordinator_action": "When copying D-GT23-C05-1, close D-GT23-C04-1 in the same edit so José never sees both open. A schema-valid way: status 'answered', answer 'defer', answered_at_utc = José's answer time, plus a note field quoting his condition ('is the rescaled error lower than the original error? if so rescale everything, else get back to me') and 'resolved by D-GT23-C05-1'. Alternatively, add a 'superseded' decision state to build_backlog_page.py with a test, as a separate small task. Do not leave D-GT23-C04-1 open.",
+  "optional": [
+   "Option A consequence: add that a narrower (C04-band) interval would give about 62 trials.",
+   "Use one label for trials with only a loaded-sample estimate (not_validated vs no_estimate) in the handoff text."
+  ],
+  "decision_ready_to_copy": "Yes: copy D-GT23-C05-1 exactly as in handoff decisions[0], and close D-GT23-C04-1 as described in coordinator_action in the same edit.",
+  "next_action": "The main session marks GT23-C05 done, copies D-GT23-C05-1 and closes D-GT23-C04-1 per coordinator_action."
+ },
+ "verifier_code": {
+  "path": "contributor_tools/audit_probes/2026_10_31/verify_gt23_c05_rescale_error.py",
+  "command": "python3 contributor_tools/audit_probes/2026_10_31/verify_gt23_c05_rescale_error.py <out.json> [--band-only]",
+  "note": "reads only the committed C04 and C05 audits"
+ },
+ "resources": "No data arrays read; audit JSON only (< 2 s, no numerical slot).",
+ "next_action": "Copy D-GT23-C05-1 and close D-GT23-C04-1 per coordinator_action."
+}
