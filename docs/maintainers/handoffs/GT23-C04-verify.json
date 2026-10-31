@@ -1,0 +1,529 @@
+{
+ "task_id": "GT23-C04",
+ "verifier_role": "independent second agent (own code; worker probes not imported)",
+ "verdict": "back_to_worker",
+ "last_checked_at_utc": "2026-10-31T19:12:00Z",
+ "round_2": {
+  "verdict": "back_to_worker",
+  "last_checked_at_utc": "2026-10-31T19:12:00Z",
+  "summary": "Round 2. The screen is correct: I recounted it from the audit and get exactly 8 exact, 27 kept, 26 re-classed, B 25 and C 35. My own fitted-talus code reaches the same pass/fail as the worker's second estimator on 8 of 8 spot-checked trials. The stance rule is sound, and the decision fields pass the schema with a neutral order and no leak. Returned for small sheet fixes only: the tire-run/cutting estimator disagreement is not shown as a not-checked chip on either sheet, option C's consequence does not mention the 2 such trials it adds, and the verification sheet's reply line shows the task ID. No new data are needed.",
+  "checks": [
+   {
+    "id": 1,
+    "name": "Screen recount from the audit",
+    "result": "pass",
+    "evidence": "My own implementation of screen.rules on the 61 recorded matches (at least 10 gait stances; second estimate / 1.0035 within ±0.0488 log of the matched mass; nearest table value, with values within 0.5 % merged) gives exact 8, kept 27 and re-classed ambiguous 26, the same screened class for 61/61, B (exact + kept not fragile) 25 and C 35. The worker lists both 'band' and 'nearest' reasons where the band fails, so its reason lists are a superset of mine; the classes are identical. The kept trials' factors are 0.904-1.587. 0.711 remains only through AB08's exact normal_walk_1, as stated. All 10 four-stance stairs matches are dropped (9 on stances alone, 1 also on nearest mass). Subjects with an established divisor: AB05 8, AB06 7, AB01 5, AB07 5, AB09 5, AB10 2, AB08/AB12/AB13 1 each, and none for AB02, AB03 and AB11, as claimed."
+   },
+   {
+    "id": 2,
+    "name": "Spot-check of the second estimator with my own code",
+    "result": "pass",
+    "evidence": "My fitted-talus estimator (verify_gt23_c04_trial_divisors.estimators e2, both sides pooled, bias 1.0035) on 8 screened trials, mine vs worker: AB05 dynamic_walk_1 117.97 / 117.52; AB06 meander_1 69.98 / 69.62; AB07 tire_run_1 79.79 / 79.91; AB09 obstacle_walk_1 86.12 / 86.03; AB01 side_shuffle_1 79.72 / 78.86 (6 kept trials agree within 1.1 %); AB07 normal_walk_1 81.16 / 80.9 (dropped: nearer 82.2). AB01 tire_run_1 70.86 / 66.9 and AB03 cutting_1 106.0 / 96.9 differ by 6-9 % between the two fitted-talus variants, yet both are dropped either way. The pass/fail outcome agrees in 8/8. Those two differences show the estimators are unstable in running and cutting (check 4). Ran alone (ps before and after), 142 MiB peak, 0.8 s, read-only."
+   },
+   {
+    "id": 3,
+    "name": "Stance-rule justification",
+    "result": "pass",
+    "evidence": "Requiring the pooled per-stance sampling error (90th-percentile per-stance sd 0.047 log divided by the square root of n) to be at most the calibration sd (0.0152) gives n ≥ (0.047/0.0152)^2 = 9.56 (the handoff says 9.7, presumably from an unrounded 0.047; immaterial). This is sound as a heuristic, assuming stance errors are independent. I confirmed from the screen records that matched trials have either 4 stances (10 trials) or at least 11, so any threshold from 5 to 11 gives the same split. The rule is post hoc, which the audit states (post_hoc true, set after my round-1 finding), and it only removes trials."
+   },
+   {
+    "id": 4,
+    "name": "Tire-run/cutting disagreement disclosed as not checked",
+    "result": "fail",
+    "evidence": "Of the 8 matched tire-run/cutting trials, the second estimator reads -15.2 % (AB01 tire_run_1), -14.6 % (AB03 cutting_1), -10.4 % (AB13 tire_run_1), -5.7 %, -5.5 % and -4.6 % from the matched mass, so 6 are dropped. 2 are kept, both fragile, so only in C: AB07 cutting_1 (+0.4 %) and AB07 tire_run_1 (+1.3 %). The handoff remaining list states the disagreement, but neither sheet has a not-checked chip for it, although figure 2 shows the -10 to -15 % crosses without explanation. AGENTS.md requires any unexplained anomaly to be a not-checked chip. Option C's consequence does not say it adds 2 trials from these task types."
+   },
+   {
+    "id": 5,
+    "name": "Decision D-GT23-C04-1",
+    "result": "pass (fields); sheet fix pending",
+    "evidence": "review_sheets/D-GT23-C04-1/decision.json equals the handoff decisions[0]. Appended to a copy of backlog.json it passes validate_backlog (status open; it would be the only open decision). The letters are A withhold all, B 25 well-separated, C 35 all matches, in neutral order by trials with kinetics (0, 25, 35), stated in options_order, the footnote and the builder (line 277). decide_before_recommendation is true, and the recommendation appears only in the click-to-reveal fold; the chips, captions and reply hint 'A, B, C or defer' are neutral. The question, B and C state that other trials keep kinematics and forces with moments and powers withheld. The check (AB11's bar has no blue part) is true: AB11 has 0 established trials."
+   },
+   {
+    "id": 6,
+    "name": "Sheets (rendered at 1100 px and in a 390 px iframe)",
+    "result": "fail (two small items)",
+    "evidence": "GT23-C04: ask, headline, 8 chips (3 pass, 2 failed, 3 not checked), 3 figures titled as questions (figure 3 contrast is a labelled made-up trial), 3 not-shown items, reply, details. D-GT23-C04-1: 3 chips, 2 figures, options table with 'Left out' first, defer row with its cost, recommendation fold, 3 not-shown items. All 5 PNGs are 765 px at 170 dpi = 4.50 in, the builder has no fontsize under 10, nothing clips at either width, and no paths or hashes appear before the details. Failures: (a) the GT23-C04 reply line 'GT23-C04: looks right, or what is wrong' shows a task ID outside the folded details (the decision sheet's 'D-GT23-C04-1:' is the allowed decision-reply form); (b) the missing tire-run/cutting chip (check 4)."
+   },
+   {
+    "id": 7,
+    "name": "Gates and files",
+    "result": "pass",
+    "evidence": "tests/test_backlog_workflow.py 71 passed; build_backlog_page.py --check 'Backlog valid; HTML current (101 tasks).' The handoff output_sha256 values match the current files (audit 484c1c07..., screen probe efa18ede..., census probe bd30dd1e..., both index.html files, decision.json 916c7381...). The audit records the screen-stage hash 95b8d3be from the run; the handoff states that only sheet and figure code changed afterwards, and the screen classes reproduce from the recorded values (check 1)."
+   }
+  ],
+  "required_fixes": [
+   "1. Add a not-checked chip on both sheets, e.g. 'Estimators disagree by 5-15 % in 6 of 8 tire-run and cutting matches (dropped); 2 such trials remain in the largest option'. The GT23-C04 sheet is at 8 chips, so merge or replace one (for example fold the AB09 chip into details).",
+   "2. Option C consequence: add that 2 of its 10 extra trials (AB07 cutting_1, AB07 tire_run_1) come from task types where the two estimators disagree elsewhere. Update decision.json and handoff decisions[0] identically.",
+   "3. GT23-C04 reply line: drop the task ID ('looks right, or what is wrong')."
+  ],
+  "optional": [
+   "Stance rule: write 9.6 (or give the unrounded sd).",
+   "The chip 'Independent re-check: 488 of 488 trial classes reproduced' could read 'recomputed from the recorded estimates' (the verifier recomputed classes from recorded values; raw data were spot-checked on 23 trials)."
+  ],
+  "decision_ready_to_copy": "Not yet. The fields, schema, letters, order and blinding pass, but fix 2 changes C's consequence text. Copy D-GT23-C04-1 from the handoff after the verifier confirms fixes 1-3 (a file-only check, no data reads).",
+  "next_action": "Worker applies fixes 1-3 (sheet step and handoff only). The verifier re-checks text, equality and schema and renders; then the main session copies D-GT23-C04-1."
+ },
+ "round_1": {
+  "verdict": "back_to_worker",
+  "last_checked_at_utc": "2026-10-31T18:52:00Z",
+  "summary": "The census is applied as recorded. I recomputed all 488 classes, candidate sets and factors from the recorded estimates with my own implementation of rules{} and got 0 mismatches; the 23-trial fragile set reproduces exactly; the census code hash 0d96b700 reproduces when the sensitivity stage is removed. 'Unreliable' is not too conservative: on non-gait trials, equally plausible mass-free estimators disagree by up to 7 %, and the mass table is too dense for any ±5 % method. The knee power ratio is explained: published powers use the 6 Hz low-passed moment (ratio 1.0000, corr 1.0000). Returned because (1) there is no review sheet for the task or the decision, (2) the knee 'cause unknown' should be replaced by the explanation, and (3) the unique-estimate matches in short trials depend on the estimator, which the decision options must disclose or screen. No scientific approval is implied.",
+  "checks": [
+   {
+    "id": 1,
+    "name": "Own-code sample, seed 20261104 (23 trials) + 8 exact calibration trials",
+    "result": "pass (census reproduced) with one robustness finding",
+    "evidence": "Sample stratified by the worker's classes (frame read from the audit): 6 unique-estimate, 5 ambiguous, 2 no-match, 6 non-gait unreliable, 1 not-usable stairs, 1 curb, 1 low-corr. Estimators (mass-free, Virtual_Insoles): e1 = gait stances with a fixed talus point; e2 = talus point fitted with the mass, all loaded samples; e3 = fixed talus, all loaded samples. On the 8 exact trials: e1 bias 1.043 (robust sd 0.026), e2 1.004 (sd 0.012, worst -3.0 % AB13 and +4.3 % AB10), e3 1.047 (sd 0.020). e2 is about as well calibrated as the worker's estimator (bias 0.994, sd 0.015). Gait classes, worker lever vs my e2/1.004: AB05 turn_and_step_1 113.5 vs 112.0 (same unique 113.5, AB03's); ambiguous trials stay ambiguous (AB08 obstacle 61.2 vs 63.3; AB12 obstacle 65.8 vs 65.4; AB12 stairs_1_7 65.2 vs 64.9; AB13 side_shuffle 61.9 vs 63.5). Robustness finding: of 6 sampled unique-estimates, only AB05 turn_and_step_1 stays unique with the same mass under e2. AB07 side_shuffle_1 (11 stances, fragile) moves to 71.5 (factor 1.148 instead of 1.266; split halves 76.6/68.2). AB07 weighted_walk_1 (fragile), AB09 stairs_1_4 (fragile) and AB09 stairs_1_9 (well-separated, 4 stances) become ambiguous. AB08 stairs_1_5 (well-separated, 4 stances, factor 0.711, the census minimum) has no table mass within 4.9 % under e2 (57.6 kg). The worker's divisor lies within ±4.9 % of my e2 in 4 of 6, so assignment is consistent on balance, but uniqueness is estimator-dependent in short or unstable trials. Of the 38 well-separated trials, 4 are 4-stance stairs trials. No-match AB09 dynamic_walk_1 / weighted_walk_1 (worker 92.4 / 92.0): e2 gives 87.6 / 88.4 (split halves 97.0 / 87.3 unstable, and 89.1 / 88.4). Both are probably AB08's 87.6 read 5 % high by the fixed-talus estimator; 'no-match' is conservative and harmless."
+   },
+   {
+    "id": 2,
+    "name": "Is 'unreliable' too conservative? Alternative methods for non-gait",
+    "result": "pass (keep unreliable)",
+    "evidence": "Non-gait trials give high correlations (0.994-0.9993), but the estimators disagree. AB02 poses_1: e2 77.3 vs e3 86.7/1.047 = 82.8 kg (7 % apart; candidates 78.9 / 79.1 / 82.2 / 84.1). AB01 ball_toss_1 e2 split halves 79.9 / 76.3 (4.7 %). AB12 lunges_1: e1 / e2 / e3 bias-corrected 76.8 / 79.6 / 76.5. AB06 jump_2: e2 69.5 sits between 67.6 and 71.5. No exact reference exists outside normal_walk_1 to decide which estimator is right in quasi-static postures. In quiet stance the CoP is near the talus, the configuration most sensitive to talus-position error. Vertical GRF vs body weight re-measures body mass (already verified correct) and carries no information on the moment divisor. A known-reference-trial transfer assumes the divisor is constant within a subject, which the census disproves (AB05, AB07, AB01, AB06, AB10, AB13). The mass table is dense: within ±4.9 %, every table mass except 71.5 and 113.5 has 1-4 neighbours (for example 65.1: 62.3, 64.0, 67.5, 67.6). So even a perfect non-gait estimator at ±2-3 % would leave most trials ambiguous. Conclusion: 'unreliable' reflects missing calibration and an intrinsic resolution limit. A different method would need its own exact reference, which does not exist here."
+   },
+   {
+    "id": 3,
+    "name": "Class rules and fragile rule",
+    "result": "pass",
+    "evidence": "My own implementation of rules{} on the recorded lever divisors, families, stance counts and correlations gives the same class for 488/488 trials, the same candidate sets, and the same rescale factors (|diff| < 0.001). Unreliable reasons: non-gait 196, not usable 76, curb 24, corr < 0.98 7. The 8 exact divisors equal the C03 re-run values; AB09 87.57 maps to 87.6 under the 0.1 % rule. Fragile rule: added after the census (sensitivity.added_after_census true; it reads only the audit). Recomputed from the recorded divisors it gives the same 23 trials. It only splits unique-estimate into two groups and changes no class or factor, so it is post hoc but harmless. Removing the sensitivity function and its two argparse lines reproduces the census code sha256 0d96b700... recorded in the audit. rules_fixed_at_utc (18:27:21) is from the final run (finished 18:28:52), so it shows ordering within that run only; the honesty note covers the pilots and the power-rule change."
+   },
+   {
+    "id": 4,
+    "name": "Knee power ratio 0.83-1.03",
+    "result": "explained (worker's 'not checked' to be replaced)",
+    "evidence": "Published Joint_Powers = [5th-order zero-lag Butterworth 6 Hz low-pass of Joint_Moments] x Joint_Velocities (rad/s). Median ratio 1.0000, slope 1.000, corr 1.0000 in all 12 knee/ankle columns of AB05 side_shuffle_1 (the census minimum, raw knee 0.83/0.87), AB01 incline_walk_2 and AB05 meander_1. It also equals ProcessedData moment_filt x velocity exactly (ratio 1.0000, corr 1.0000) for side_shuffle_1 and meander_1. Against the raw moment the knee reads 0.83-0.98, because the knee moment carries high-frequency content (impact peaks) that the filter removes. The ankle moment is smooth (about 0.99-1.00), and slow overground tasks give about 1.00 (consistent with the audit's family pattern). Consequences: the filter is linear, so each trial's moment divisor applies to hip, knee and ankle powers equally, and powers can take the same rescale factor. The worker's power check could include the knee by using the filtered moment. RawData powers are not raw-moment x velocity, which belongs in the GT23 documentation."
+   },
+   {
+    "id": 5,
+    "name": "Decision D-GT23-C04-1",
+    "result": "not ready",
+    "evidence": "Schema: as written, its status ('draft ...') fails validate_backlog. With status 'open' it passes (open decisions would be 2 of 3: D-HIST-03-1 and this). Options are ordered neutrally by trials released (0, 38, 61), stated in options_order; decide_before_recommendation is true. Content: José's GT23-C03 answer B already said 'unmatched trials are left out', so per-trial release of the matched set with kinetics withheld for the rest is what he chose. Coverage (12.5 %) was not known then, so re-asking with A (withhold everything) is justified. The coordinator's suggested option 'withhold moments for trials without an established divisor and release the rest' is exactly B and C here. The dataset-level choice is A. The options cover the space within the 3-option limit, but the question should say plainly that kinetics for all other trials are withheld (kinematics and forces released). Missing: there is no review sheet for this decision or a verification sheet for the task (AGENTS.md: José validates by looking). B's consequence calls the 38 'well separated' without saying that 4 are 4-stance stairs trials whose match changes under an equally calibrated estimator (check 1). The check field is accurate: 75.2 kg is 4.7 % below 78.9 and 5.2 % above 71.5."
+   },
+   {
+    "id": 6,
+    "name": "Tests, files, resources",
+    "result": "pass",
+    "evidence": "tests/test_backlog_workflow.py: 71 passed. build_backlog_page.py --check: 'Backlog valid; HTML current (100 tasks).' Handoff output_sha256 equals the current probe bd30dd1e... and audit f2ca1383.... My probe ran alone: ps checked immediately before and after showed no other python, pytest or MATLAB job; an earlier pytest and the GT21 mirror fetch had finished. Peak RSS 192.7 MiB (/usr/bin/time 192.7 MiB), 3.4 s wall, 77 file reads, all mtimes unchanged, output to the scratchpad only."
+   }
+  ],
+  "required_fixes": [
+   "1. Build the review sheets with contributor_tools/common/review_sheet.py: a GT23-C04 verification sheet, and a D-GT23-C04-1 decision sheet with the options table ('left out' first), defer and its cost, the recommendation in the fold only, and figures that make the coverage and the fragile/short-trial matches visible. Render at 1100 and 390 px. Set the decision status to 'open' only when copying.",
+   "2. Replace the knee-power 'cause not identified' with the explanation (published power = 6 Hz-filtered moment x velocity; ratio 1.0000), and state that the rescale factor applies to all powers of a trial. Optionally extend the power check to the knee using the filtered moment.",
+   "3. Make the 38 / 61 counts robust or disclose their limits. Preferred: a conservative screen on the 61 matched trials (for example at least 8 gait stances, and/or agreement of a second mass-free estimator such as the free-talus fit), re-counted and recorded as post hoc. This needs a bounded read of only those 61 trials under the probe exception. At minimum, B's and C's consequences must say that some matches (including 4 stairs trials with 4 stances, among them the 0.711 minimum factor) change under an equally calibrated estimator.",
+   "4. Reword the question or labels so it is explicit that trials without an established divisor keep kinematics and forces but have kinetics withheld."
+  ],
+  "optional": [
+   "If José wants more coverage: ambiguous trials whose candidate factors span at most about 3 % could be released at the midpoint factor with a stated error. This is a different evidence standard and would replace one of the three options or be a later decision.",
+   "Document in the GT23 notes that AB09's two no-match trials probably used 87.6 (a second estimator gives 87.6-88.4)."
+  ],
+  "decision_ready": "No. It needs its review sheet (fix 1), status 'open', the explicit withhold wording (fix 4) and the robustness disclosure or screen (fix 3). Letters A none / B well-separated / C all matched and the neutral order can stay.",
+  "next_action": "Worker applies fixes 1-4 (fix 3 may need a bounded read of the 61 matched trials only). Verifier re-checks the counts, sheets and decision; then the main session copies D-GT23-C04-1."
+ },
+ "seed": 20261104,
+ "calibration_exact_trials": [
+  {
+   "subject": "AB01",
+   "exact_kg": 78.9,
+   "e1_ratio": 1.064,
+   "e2_ratio": 1.007,
+   "e3_ratio": 1.06
+  },
+  {
+   "subject": "AB05",
+   "exact_kg": 78.9,
+   "e1_ratio": 1.049,
+   "e2_ratio": 1.012,
+   "e3_ratio": 1.055
+  },
+  {
+   "subject": "AB06",
+   "exact_kg": 71.5,
+   "e1_ratio": 1.027,
+   "e2_ratio": 0.974,
+   "e3_ratio": 1.032
+  },
+  {
+   "subject": "AB08",
+   "exact_kg": 62.3,
+   "e1_ratio": 1.02,
+   "e2_ratio": 1.011,
+   "e3_ratio": 1.021
+  },
+  {
+   "subject": "AB09",
+   "exact_kg": 87.6,
+   "e1_ratio": 1.057,
+   "e2_ratio": 0.995,
+   "e3_ratio": 1.061
+  },
+  {
+   "subject": "AB10",
+   "exact_kg": 84.1,
+   "e1_ratio": 1.091,
+   "e2_ratio": 1.043,
+   "e3_ratio": 1.097
+  },
+  {
+   "subject": "AB12",
+   "exact_kg": 65.1,
+   "e1_ratio": 1.015,
+   "e2_ratio": 1.0,
+   "e3_ratio": 1.018
+  },
+  {
+   "subject": "AB13",
+   "exact_kg": 64.0,
+   "e1_ratio": 1.036,
+   "e2_ratio": 0.97,
+   "e3_ratio": 1.039
+  }
+ ],
+ "sample": [
+  {
+   "subject": "AB05",
+   "task": "turn_and_step_1",
+   "worker_class": "unique-estimate",
+   "worker_reason": null,
+   "worker_lever_kg": 113.46,
+   "stances": 41,
+   "e1_kg": 117.23,
+   "e2_free_kg": 112.36,
+   "e2_split_half_kg": [
+    112.31,
+    111.73
+   ],
+   "e3_kg": 117.61
+  },
+  {
+   "subject": "AB07",
+   "task": "side_shuffle_1",
+   "worker_class": "unique-estimate",
+   "worker_reason": null,
+   "worker_lever_kg": 75.55,
+   "stances": 11,
+   "e1_kg": 77.91,
+   "e2_free_kg": 73.5,
+   "e2_split_half_kg": [
+    76.6,
+    68.24
+   ],
+   "e3_kg": 79.65
+  },
+  {
+   "subject": "AB07",
+   "task": "weighted_walk_1",
+   "worker_class": "unique-estimate",
+   "worker_reason": null,
+   "worker_lever_kg": 78.27,
+   "stances": 31,
+   "e1_kg": 80.09,
+   "e2_free_kg": 81.11,
+   "e2_split_half_kg": [
+    81.04,
+    81.1
+   ],
+   "e3_kg": 80.05
+  },
+  {
+   "subject": "AB08",
+   "task": "stairs_1_5",
+   "worker_class": "unique-estimate",
+   "worker_reason": null,
+   "worker_lever_kg": 59.91,
+   "stances": 4,
+   "e1_kg": 62.49,
+   "e2_free_kg": 57.8,
+   "e2_split_half_kg": [
+    63.06,
+    63.23
+   ],
+   "e3_kg": 62.65
+  },
+  {
+   "subject": "AB09",
+   "task": "stairs_1_4",
+   "worker_class": "unique-estimate",
+   "worker_reason": null,
+   "worker_lever_kg": 88.62,
+   "stances": 4,
+   "e1_kg": 92.38,
+   "e2_free_kg": 87.42,
+   "e2_split_half_kg": [
+    88.28,
+    88.56
+   ],
+   "e3_kg": 93.89
+  },
+  {
+   "subject": "AB09",
+   "task": "stairs_1_9",
+   "worker_class": "unique-estimate",
+   "worker_reason": null,
+   "worker_lever_kg": 91.42,
+   "stances": 4,
+   "e1_kg": 93.35,
+   "e2_free_kg": 88.15,
+   "e2_split_half_kg": [
+    89.1,
+    90.43
+   ],
+   "e3_kg": 93.43
+  },
+  {
+   "subject": "AB02",
+   "task": "incline_walk_1",
+   "worker_class": "ambiguous",
+   "worker_reason": null,
+   "worker_lever_kg": 82.47,
+   "stances": 69,
+   "e1_kg": 83.83,
+   "e2_free_kg": 78.29,
+   "e2_split_half_kg": [
+    78.46,
+    78.71
+   ],
+   "e3_kg": 85.6
+  },
+  {
+   "subject": "AB08",
+   "task": "obstacle_walk_1",
+   "worker_class": "ambiguous",
+   "worker_reason": null,
+   "worker_lever_kg": 61.18,
+   "stances": 71,
+   "e1_kg": 63.91,
+   "e2_free_kg": 63.49,
+   "e2_split_half_kg": [
+    63.4,
+    63.57
+   ],
+   "e3_kg": 64.16
+  },
+  {
+   "subject": "AB12",
+   "task": "obstacle_walk_1",
+   "worker_class": "ambiguous",
+   "worker_reason": null,
+   "worker_lever_kg": 65.78,
+   "stances": 68,
+   "e1_kg": 67.1,
+   "e2_free_kg": 65.6,
+   "e2_split_half_kg": [
+    65.85,
+    65.35
+   ],
+   "e3_kg": 67.54
+  },
+  {
+   "subject": "AB12",
+   "task": "stairs_1_7",
+   "worker_class": "ambiguous",
+   "worker_reason": null,
+   "worker_lever_kg": 65.23,
+   "stances": 4,
+   "e1_kg": 66.06,
+   "e2_free_kg": 65.09,
+   "e2_split_half_kg": [
+    65.12,
+    65.2
+   ],
+   "e3_kg": 66.3
+  },
+  {
+   "subject": "AB13",
+   "task": "side_shuffle_1",
+   "worker_class": "ambiguous",
+   "worker_reason": null,
+   "worker_lever_kg": 61.91,
+   "stances": 34,
+   "e1_kg": 65.91,
+   "e2_free_kg": 63.72,
+   "e2_split_half_kg": [
+    64.61,
+    62.2
+   ],
+   "e3_kg": 66.41
+  },
+  {
+   "subject": "AB09",
+   "task": "dynamic_walk_1",
+   "worker_class": "no-match",
+   "worker_reason": null,
+   "worker_lever_kg": 92.42,
+   "stances": 99,
+   "e1_kg": 96.07,
+   "e2_free_kg": 87.89,
+   "e2_split_half_kg": [
+    96.98,
+    87.25
+   ],
+   "e3_kg": 96.81
+  },
+  {
+   "subject": "AB09",
+   "task": "weighted_walk_1",
+   "worker_class": "no-match",
+   "worker_reason": null,
+   "worker_lever_kg": 92.01,
+   "stances": 28,
+   "e1_kg": 95.65,
+   "e2_free_kg": 88.75,
+   "e2_split_half_kg": [
+    89.05,
+    88.4
+   ],
+   "e3_kg": 95.87
+  },
+  {
+   "subject": "AB01",
+   "task": "ball_toss_1",
+   "worker_class": "unreliable",
+   "worker_reason": "non-gait family",
+   "worker_lever_kg": 77.6,
+   "stances": 24,
+   "e1_kg": 81.44,
+   "e2_free_kg": 78.39,
+   "e2_split_half_kg": [
+    79.88,
+    76.25
+   ],
+   "e3_kg": 82.04
+  },
+  {
+   "subject": "AB01",
+   "task": "poses_1",
+   "worker_class": "unreliable",
+   "worker_reason": "non-gait family",
+   "worker_lever_kg": 78.15,
+   "stances": 18,
+   "e1_kg": 83.41,
+   "e2_free_kg": 79.14,
+   "e2_split_half_kg": [
+    78.71,
+    79.46
+   ],
+   "e3_kg": 84.19
+  },
+  {
+   "subject": "AB02",
+   "task": "poses_1",
+   "worker_class": "unreliable",
+   "worker_reason": "non-gait family",
+   "worker_lever_kg": 82.7,
+   "stances": 6,
+   "e1_kg": 84.74,
+   "e2_free_kg": 77.59,
+   "e2_split_half_kg": [
+    77.73,
+    77.28
+   ],
+   "e3_kg": 86.74
+  },
+  {
+   "subject": "AB06",
+   "task": "jump_2",
+   "worker_class": "unreliable",
+   "worker_reason": "non-gait family",
+   "worker_lever_kg": 72.46,
+   "stances": 126,
+   "e1_kg": 74.15,
+   "e2_free_kg": 69.71,
+   "e2_split_half_kg": [
+    70.32,
+    68.78
+   ],
+   "e3_kg": 74.15
+  },
+  {
+   "subject": "AB12",
+   "task": "lunges_1",
+   "worker_class": "unreliable",
+   "worker_reason": "non-gait family",
+   "worker_lever_kg": 78.77,
+   "stances": 60,
+   "e1_kg": 80.03,
+   "e2_free_kg": 79.85,
+   "e2_split_half_kg": [
+    80.08,
+    79.76
+   ],
+   "e3_kg": 80.12
+  },
+  {
+   "subject": "AB13",
+   "task": "twister_1",
+   "worker_class": "unreliable",
+   "worker_reason": "non-gait family",
+   "worker_lever_kg": 63.82,
+   "stances": 18,
+   "e1_kg": 66.94,
+   "e2_free_kg": 64.13,
+   "e2_split_half_kg": [
+    64.82,
+    63.59
+   ],
+   "e3_kg": 67.32
+  },
+  {
+   "subject": "AB07",
+   "task": "stairs_1_4",
+   "worker_class": "unreliable",
+   "worker_reason": "not usable",
+   "worker_lever_kg": null,
+   "stances": 3,
+   "e1_kg": null,
+   "e2_free_kg": 81.84,
+   "e2_split_half_kg": [
+    75.31,
+    85.43
+   ],
+   "e3_kg": 77.3
+  },
+  {
+   "subject": "AB12",
+   "task": "curb_up_1",
+   "worker_class": "unreliable",
+   "worker_reason": "curb family",
+   "worker_lever_kg": 63.13,
+   "stances": 30,
+   "e1_kg": 64.81,
+   "e2_free_kg": 65.09,
+   "e2_split_half_kg": [
+    64.97,
+    65.22
+   ],
+   "e3_kg": 67.29
+  },
+  {
+   "subject": "AB10",
+   "task": "meander_1",
+   "worker_class": "unreliable",
+   "worker_reason": "ankle corr < 0.98",
+   "worker_lever_kg": 76.91,
+   "stances": 6,
+   "e1_kg": 85.18,
+   "e2_free_kg": 82.64,
+   "e2_split_half_kg": [
+    85.35,
+    79.72
+   ],
+   "e3_kg": 87.76
+  }
+ ],
+ "peak_rss_mib": {
+  "probe": 192.7,
+  "probe_usr_bin_time_mib": 192.7
+ },
+ "resources": "Read-only probe exception: ran alone (ps before and after), one trial in memory at a time, nice 19, ionice idle, single-threaded BLAS, ulimit -v 1.5 GiB, 3.4 s wall; output in the session scratchpad (gt23_c04_verify.json).",
+ "verifier_code": {
+  "path": "contributor_tools/audit_probes/2026_10_31/verify_gt23_c04_trial_divisors.py",
+  "sha256": "89ed13bfe4f3333fab2e1e8aab97c68e372e6e4488e8a5147f17137cd944f13e",
+  "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/audit_probes/2026_10_31/verify_gt23_c04_trial_divisors.py <out.json>"
+ },
+ "next_action": "Worker applies fixes 1-3 (sheet step and handoff only). The verifier re-checks text, equality and schema and renders; then the main session copies D-GT23-C04-1.",
+ "round_2_spot_check_code": {
+  "path": "contributor_tools/audit_probes/2026_10_31/verify_gt23_c04_screen_spotcheck.py",
+  "sha256": "97be58c00a07b854fefa12ed65421da1eb330798c822585e4a2baf8844c7a50c",
+  "peak_rss_mib": 142.0,
+  "output": "session scratchpad gt23_c04_r2_spot.json"
+ }
+}

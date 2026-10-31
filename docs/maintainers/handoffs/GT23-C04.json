@@ -1,0 +1,336 @@
+{
+ "task_id": "GT23-C04",
+ "status": "review",
+ "last_checked_at_utc": "2026-10-31T19:35:00Z",
+ "summary": "Per-trial divisor census over all 488 GT23 trials, then a post hoc screen of the 61 matched trials. After the screen: exact 8, unique-estimate 27, ambiguous 148 (122 + 26 re-classed), no-match 2, unreliable 303. Trials with an established divisor (rescalable): 35 of 488; 25 if matches with another recorded mass just outside the band are also left out (before the screen 61 / 38). Rescale factors (divisor / own README mass) 0.7112-1.5874. Screen (rules fixed before the read): at least 10 gait stances, and a second mass-free estimator (fitted talus point, no model or joint angles; bias 1.0035, robust sd 0.0099 log on the 8 exact trials) must lie within the +/-4.9 % band of the matched mass and be nearest to it. Dropped 26: 10 four-stance stairs trials (AB08 x3 incl. stairs_1_5 with factor 0.711, AB09 x7) and 16 trials where the second estimate is nearer another mass or outside the band (e.g. AB07 normal_walk_1 80.9 kg -> 82.2; AB01 tire_run_1 66.9 vs 78.9; AB03 cutting_1 96.9 vs 113.5; AB13 tire_run_1 70.7 vs 78.9). Both estimators are calibrated only on level walking; in dynamic trials (tire run, cutting) they can disagree by 10-15 %. Powers: published power = 6 Hz low-pass-filtered moment x velocity (verifier: ratio 1.0000, corr 1.0000 in 12 columns); the filter is linear, so each trial's rescale factor applies to all its powers (hip, knee, ankle). Census ankle check: 448/448 within 5 %. Trials without an established divisor keep kinematics and forces; only their moments and powers are withheld. Nothing rescaled or excluded in the data; no data written.",
+ "verdict": {
+  "counts_by_class": {
+   "exact": 8,
+   "unique-estimate": 53,
+   "ambiguous": 122,
+   "no-match": 2,
+   "unreliable": 303
+  },
+  "rescalable_strict": 61,
+  "rescalable_excluding_fragile": 38,
+  "counts_by_subject": {
+   "AB01": {
+    "exact": 1,
+    "unique-estimate": 6,
+    "ambiguous": 6,
+    "no-match": 0,
+    "unreliable": 27
+   },
+   "AB02": {
+    "exact": 0,
+    "unique-estimate": 0,
+    "ambiguous": 12,
+    "no-match": 0,
+    "unreliable": 31
+   },
+   "AB03": {
+    "exact": 0,
+    "unique-estimate": 1,
+    "ambiguous": 10,
+    "no-match": 0,
+    "unreliable": 29
+   },
+   "AB05": {
+    "exact": 1,
+    "unique-estimate": 9,
+    "ambiguous": 0,
+    "no-match": 0,
+    "unreliable": 30
+   },
+   "AB06": {
+    "exact": 1,
+    "unique-estimate": 8,
+    "ambiguous": 3,
+    "no-match": 0,
+    "unreliable": 27
+   },
+   "AB07": {
+    "exact": 0,
+    "unique-estimate": 11,
+    "ambiguous": 0,
+    "no-match": 0,
+    "unreliable": 29
+   },
+   "AB08": {
+    "exact": 1,
+    "unique-estimate": 4,
+    "ambiguous": 17,
+    "no-match": 0,
+    "unreliable": 18
+   },
+   "AB09": {
+    "exact": 1,
+    "unique-estimate": 12,
+    "ambiguous": 7,
+    "no-match": 2,
+    "unreliable": 18
+   },
+   "AB10": {
+    "exact": 1,
+    "unique-estimate": 1,
+    "ambiguous": 17,
+    "no-match": 0,
+    "unreliable": 22
+   },
+   "AB11": {
+    "exact": 0,
+    "unique-estimate": 0,
+    "ambiguous": 19,
+    "no-match": 0,
+    "unreliable": 22
+   },
+   "AB12": {
+    "exact": 1,
+    "unique-estimate": 0,
+    "ambiguous": 22,
+    "no-match": 0,
+    "unreliable": 20
+   },
+   "AB13": {
+    "exact": 1,
+    "unique-estimate": 1,
+    "ambiguous": 9,
+    "no-match": 0,
+    "unreliable": 30
+   }
+  },
+  "unreliable_reasons": {
+   "non-gait family": 196,
+   "curb family": 24,
+   "not usable": 76,
+   "ankle corr < 0.98": 7
+  },
+  "no_match_trials": [
+   [
+    "AB09",
+    "dynamic_walk_1",
+    92.42
+   ],
+   [
+    "AB09",
+    "weighted_walk_1",
+    92.01
+   ]
+  ],
+  "exact_lever_cross_check": [
+   [
+    "AB01",
+    "normal_walk_1",
+    78.9,
+    78.09,
+    true
+   ],
+   [
+    "AB05",
+    "normal_walk_1",
+    78.9,
+    80.6,
+    true
+   ],
+   [
+    "AB06",
+    "normal_walk_1",
+    71.5,
+    72.31,
+    true
+   ],
+   [
+    "AB08",
+    "normal_walk_1",
+    62.3,
+    61.47,
+    true
+   ],
+   [
+    "AB09",
+    "normal_walk_1",
+    87.6,
+    89.67,
+    true
+   ],
+   [
+    "AB10",
+    "normal_walk_1",
+    84.1,
+    88.21,
+    true
+   ],
+   [
+    "AB12",
+    "normal_walk_1",
+    65.1,
+    65.1,
+    true
+   ],
+   [
+    "AB13",
+    "normal_walk_1",
+    64.0,
+    63.67,
+    true
+   ]
+  ],
+  "rescale_table": "docs/quality/audits/gt23-c04-trial-divisors.json summary.rescale_table (subject, task, class, divisor kg, factor); per trial: trials[].census (cls, divisor_kg, candidates, rescale_factor, rescalable, nearest_excluded_log_margin, candidate_factor_range); fragile list in sensitivity.fragile_unique_estimates",
+  "powers": "Published Joint_Powers = 6 Hz low-pass (zero-lag Butterworth) moment x velocity (verifier round 1, ratio 1.0000, corr 1.0000 in 12 knee/ankle columns). The filter is linear, so each trial's rescale factor applies to all powers of that trial. The raw-moment knee ratio 0.83-1.03 in the census is the filter's effect on high-frequency knee moments, not a different divisor.",
+  "implication_for_option_B": "Rescaled kinetics for 35 of 488 trials (7.2 %), 25 if near-edge matches are left out; none for AB02, AB03, AB11; no non-gait or stairs trial.",
+  "counts_after_screen": {
+   "exact": 8,
+   "unique-estimate": 27,
+   "ambiguous": 148,
+   "no-match": 2,
+   "unreliable": 303
+  },
+  "rescalable_after_screen": {
+   "C_all_matched": 35,
+   "B_well_separated": 25
+  },
+  "rescale_table_after_screen": "audit screen.rescale_table_after_screen (subject, task, class, divisor kg, factor, fragile); per-trial screen results in screen.trials",
+  "withheld": "Trials without an established divisor keep kinematics and forces; their moments and powers are withheld."
+ },
+ "tolerance": {
+  "fixed_before_data": "rules{} in the audit, stamped rules_fixed_at_utc before the first trial read of each run; values read from the GT23-C03 audit tolerance_v2 (sha256 recorded), not recomputed: ankle bias 0.9942, band half width 0.0488 log (about +/-4.9 %), exact re-run corr >= 0.9999 and table match within 0.1 %, reliable families = the 14 C03 locomotion families minus curb_up/curb_down, ankle corr >= 0.98, >= 4 gait stances. Table masses within 0.5 % of each other (78.9/79.1, 67.5/67.6) count as one value; divisor = the nearest one (effect <= 0.25 %).",
+  "changed_after_pilots": "Only the power check (not a class gate) changed between pilots: pilot 1 used d(angle)/dt with |log slope| <= 0.02 and corr >= 0.98 and failed on filtering differences; pilot 2 switched to the published joint velocity; pilot 3 used the median top-quartile ratio for all columns, and knee columns read 3-17 % low in trials whose ankle ratio is 1.00; pilot 4 (the bound code) tests ankle columns only and records knee. Moment classes were identical in pilots 1-4 (exact 2, unique 9, ambiguous 22, unreliable 50 for AB05+AB12).",
+  "added_after_census": "sensitivity block (fragile = another README mass within one C03 robust sd, 0.0152 log, outside the band): 23 of 53 unique-estimates. Reads only the audit JSON; census classes unchanged.",
+  "honesty_note": "Pilot subjects AB05 and AB12 were chosen because their C03 anomalies (AB05 incline ~115 kg, AB12 cutting ~82.6 kg) let the pilot check reproduction; the pilot is a code and resource check, not a blind test. The +/-4.9 % band rests on 5 calibration trials and 3 out-of-sample trials, all level walking; its validity for other gait families is assumed, not shown.",
+  "screen": "Post hoc (after the census and the verifier's round 1), rules fixed in code (SCREEN_RULES, stamped 19:03:47Z) before the 61 trials were re-read: min 10 gait stances (from the census per-stance spread: 90th-percentile robust log sd 0.047; (0.047/0.0152)^2 = 9.7; any threshold 5-11 gives the same split because matched trials have 4 or >= 11 stances); second estimator within 0.0488 log of the matched mass and nearest to it. My own implementation, written without reading the verifier's code. Exact trials not screened."
+ },
+ "checks": [
+  "Read AGENTS.md (on-disk version with the read-only probe exception), the GT23-C03/C04 backlog entries, docs/quality/audits/gt23-c03-normalizing-mass.json, docs/maintainers/handoffs/GT23-C03.json and GT23-C03-verify.json, and the C03 probe.",
+  "Process census before starting (2026-10-31T17:44:50Z): no python/MATLAB/pytest numerical jobs; only claude, MCP servers and codex daemons; 13.3 GiB available; load spike from another agent's git/ugrep. Snapshots before each run in the session scratchpad (pilot2.census, pilot3.census, pilot4.census, census.census).",
+  "Probe: contributor_tools/audit_probes/2026_10_31/probe_gt23_c04_trial_divisors.py imports the C03 probe (sha256 66a83754..., unchanged) and reuses its reader, model inventory, joint frames, stance detection, lever estimate, eh_check and exact_divisor unchanged; adds per-trial classification, a loaded-sample estimate (informational) and a power check.",
+  "Pilot (same bound code as the census, sha256 0d96b700...): `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 /usr/bin/time -v python3 contributor_tools/audit_probes/2026_10_31/probe_gt23_c04_trial_divisors.py pilot --subjects AB05,AB12 --out <scratchpad>/gt23_c04_pilot4.json`: 83 trials, 13.2 s, peak RSS 203.8 MiB; reproduces C03 values (AB05 incline_walk_1 115.32, incline_walk_2 114.51, dynamic_walk_1 117.94; AB12 cutting_1 82.63; exact AB05 78.9 = AB01, AB12 65.1 = AB11). Pilots 1-3 (earlier power-check versions): 27.3 / 15.3 / 13.3 s, 198.8 / 193.3 / 198.2 MiB.",
+  "Census: `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 /usr/bin/time -v python3 contributor_tools/audit_probes/2026_10_31/probe_gt23_c04_trial_divisors.py census`: 488 trials, 87.8 s in-process (1:30.9 wall), peak RSS 217.1 MiB (getrusage and /usr/bin/time agree), RLIMIT_AS 1.5 GiB. One trial in memory at a time. 2988 file reads (6.46 GB), each sha256-hashed; 0 publisher CRC32 mismatches; 15 reads not in the publisher archive (local models and MotionFile_EH re-runs, as in C03). Source mtimes checked during each trial read (C03 analyse_trial). Wrote only the audit JSON; nothing under converted_datasets/ or /mnt/s/locomotion_data.",
+  "Guarded launcher not used: the full census fit the read-only probe exception (1.5 min, < 300 MiB), so no job spec was written.",
+  "`python3 contributor_tools/audit_probes/2026_10_31/probe_gt23_c04_trial_divisors.py sensitivity` (reads the audit only) added the sensitivity block. Census code unchanged: removing the sensitivity function and its two argparse lines reproduces the census sha256 0d96b70090529239b84f59e23d06e527a48ecf2aca2763f934d5ebaf34187703 recorded in the audit.",
+  "Loaded-sample estimator (all samples with insole force > 100 N) vs calibrated gait-stance estimator on 177 reliable gait trials: median log difference 0.0035, robust sd 0.0058. Informational only; it is not calibrated for non-gait postures.",
+  "Round 2 process census 19:03:47Z: no other python/pytest/MATLAB job (an earlier screen launch at 19:01:44Z was blocked by the guard while another agent's GT21 relist job ran; I waited for it to exit at 19:03:39Z). After the run (19:03:51Z): none.",
+  "Screen: `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 /usr/bin/time -v python3 contributor_tools/audit_probes/2026_10_31/probe_gt23_c04_screen.py screen`: 61 trials only (Joint_Moments + Virtual_Insoles), 122 file reads (258 MB), 0 CRC mismatches, source mtimes checked, 3.6 s (4.0 s wall), peak RSS 158.8 MiB. Ran alone. Wrote only the audit's screen block (census content unchanged).",
+  "Second-estimator calibration on the 8 exact trials: bias 1.0035, robust sd 0.0099 log, worst 3.6 % (AB10 +4.1 % raw); matches the verifier's independent e2 (1.004, sd 0.012).",
+  "Sheets: `... probe_gt23_c04_screen.py sheets` (reads the audit only) -> review_sheets/GT23-C04/ (8 chips: 3 pass, 2 failed, 3 not checked; 3 figures) and review_sheets/D-GT23-C04-1/ (3 chips, 2 figures, options table with 'Left out' first, defer row, recommendation only in the fold, decision.json). Each PNG 765 px at 170 dpi = 4.5 in, fonts >= 10 pt; prose budget enforced by review_sheet.py. Figure 3 contrast is a labelled made-up trial (powers divided by AB05's own mass while moments used 113.5 kg). Rendered with headless Chrome at 1100 px and in a 390 px iframe and inspected; fixed fig 1 legend colours and fig 2 legend overlap, then re-rendered. Renders rv_wide_/rv_phone_{GT23-C04,D-GT23-C04-1}.png in the session scratchpad.",
+  "After the screen run only sheet/figure code in probe_gt23_c04_screen.py changed (check text, captions, legends, open circles); stage_screen and SCREEN_RULES are unchanged from the run hash 95b8d3be recorded in the audit."
+ ],
+ "deviations": [
+  "Runs alone: pilot 1 and the census ran while another agent's GT21 author-mirror network fetch (review_gt21_s02_author_mirror.py, nice 19, about 26 MiB RSS, about 0 % CPU) was running; I waited out its first instance (25 min) but a second one with a 55-min timeout started, and I proceeded. Pilot 4 started while another agent's build_fixes_page.py --check (51 MiB) ran. No other numerical, MATLAB or pytest job ran during the census."
+ ],
+ "remaining": [
+  "José: D-GT23-C04-1 (which trials get rescaled kinetics).",
+  "Non-gait (196) and short stairs trials cannot be rescaled: no estimator is calibrated for them, and the dense mass table limits any +/-5 % method (verifier check 2).",
+  "Tire run and cutting (not checked): in 6 of 8 matched trials the second estimator reads 4.6-15.2 % low (all dropped); AB07 cutting_1 and AB07 tire_run_1 are kept, both only in option C. Cause unexplained; both estimators are calibrated on level walking only.",
+  "Cause of within-subject divisor changes not identified; reporting to the authors is José's call.",
+  "MotionFile_EH provenance unknown; the 8 exact divisors depend on it (both force-plate estimators agree in 8 of 8).",
+  "GT23 docs: published powers are 6 Hz-filtered moment x velocity; AB09 dynamic_walk_1 / weighted_walk_1 probably used 87.6 kg (no-match kept).",
+  "Implementing the rescale needs its own task, guarded-launcher run and review."
+ ],
+ "changed_files": [
+  "contributor_tools/audit_probes/2026_10_31/probe_gt23_c04_trial_divisors.py (new)",
+  "contributor_tools/audit_probes/2026_10_31/probe_gt23_c04_screen.py (new, round 2)",
+  "docs/quality/audits/gt23-c04-trial-divisors.json (new; round 2 adds the screen block)",
+  "docs/maintainers/handoffs/GT23-C04.json (new)",
+  "review_sheets/GT23-C04/ and review_sheets/D-GT23-C04-1/ (gitignored)"
+ ],
+ "evidence_paths": [
+  "docs/quality/audits/gt23-c04-trial-divisors.json",
+  "contributor_tools/audit_probes/2026_10_31/probe_gt23_c04_trial_divisors.py",
+  "contributor_tools/audit_probes/2026_10_31/probe_gt23_c04_screen.py",
+  "review_sheets/GT23-C04/index.html",
+  "review_sheets/D-GT23-C04-1/index.html",
+  "review_sheets/D-GT23-C04-1/decision.json"
+ ],
+ "output_sha256": {
+  "docs/quality/audits/gt23-c04-trial-divisors.json": "484c1c079e08035a823fc8770a54a3f53191b65329b586250690be391c6e9184",
+  "contributor_tools/audit_probes/2026_10_31/probe_gt23_c04_trial_divisors.py": "bd30dd1efe374888a93a01a36ea81fb73981be6bf1cc497f89a26b35241caf0f",
+  "contributor_tools/audit_probes/2026_10_31/probe_gt23_c04_screen.py": "c5020ebfa7f96bc2690987733fee344596fbb1cdae4ae7656863fbf21fd69812",
+  "review_sheets/GT23-C04/index.html": "689de80164c9a5b1e9ec8b3b1896676f440a4ef072b4aa7c5979b865d737e30b",
+  "review_sheets/D-GT23-C04-1/index.html": "1293afcc492e886132c1b34217b53ad762c072dad6e146a5bbfe56b903c65496",
+  "review_sheets/D-GT23-C04-1/decision.json": "cd5999cf4107e8987ebebf0ff30d671db9bc20a61ef322c4f3286f43a9168a14"
+ },
+ "resources": {
+  "peak_rss_mib": {
+   "pilot_1": 198.8,
+   "pilot_2": 193.3,
+   "pilot_3": 198.2,
+   "pilot_4_bound": 203.8,
+   "census": 217.1,
+   "screen": 158.8
+  },
+  "runtime_seconds": {
+   "pilot_4_bound": 13.2,
+   "census": 87.8,
+   "census_wall": 90.9,
+   "screen": 3.6
+  },
+  "workers": 1,
+  "note": "Read-only probe exception; no guarded-launcher job, no MATLAB."
+ },
+ "tests": [
+  "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py`: 71 passed.",
+  "`python3 contributor_tools/build_backlog_page.py --check`: \"Backlog valid; HTML current (101 tasks).\" backlog.json/html and AGENTS.md not edited.",
+  "decisions[0] appended to an in-memory copy of backlog.json passes validate_backlog (open decisions would be: D-GT23-C04-1 only)."
+ ],
+ "next_action": "Verifier re-checks the three round-3 fixes against the sheets and decisions[0]; then the main session copies D-GT23-C04-1 into backlog.json.",
+ "decisions": [
+  {
+   "id": "D-GT23-C04-1",
+   "task_id": "GT23-C04",
+   "question": "Only some GT23 trials have a clearly identified divisor. Which GT23 trials should carry moments and powers rescaled to the participant's own mass? Trials not rescaled keep kinematics and forces; their moments and powers are withheld.",
+   "options": [
+    {
+     "key": "A",
+     "label": "Withhold kinetics for every GT23 trial",
+     "consequence": "Returns to the withhold option for GT23. Kinematics and forces released; no GT23 moments or powers. Nothing estimated. Reversible."
+    },
+    {
+     "key": "B",
+     "label": "Rescale the 25 well-separated matches",
+     "consequence": "Moments and powers rescaled to own mass for 25 trials (exact or matched by two estimators, at least 10 stances, no other recorded mass near the band edge). Other trials keep kinematics and forces; their moments and powers are withheld. Reversible."
+    },
+    {
+     "key": "C",
+     "label": "Rescale all 35 matches",
+     "consequence": "As the previous option plus 10 matches with another recorded mass just outside the 5 % band, so a few factors may be off by 5-10 %. These include AB07 cutting and AB07 tire-run, the only tire-run and cutting matches kept; in the other 6 the second estimator reads 4.6-15.2 % low. Other trials keep kinematics and forces; their moments and powers are withheld. Reversible."
+    }
+   ],
+   "options_order": "By GT23 trials released with kinetics: 0, 25, 35.",
+   "recommended": "B",
+   "confidence": "medium",
+   "why": "The 25 trials are exact or matched by two independent estimators with enough stances and no recorded mass at the band edge; the other 10 matches could be a neighbouring mass, which would make their factor wrong by 5-10 %.",
+   "check": "Sheet, first figure: AB11's bar has no blue part, so none of its trials would get rescaled kinetics under B or C.",
+   "cost_of_waiting": "GT23 moments and powers stay out of any release; GT23 kinematics, forces and other datasets are unaffected.",
+   "decide_before_recommendation": true,
+   "status": "open"
+  }
+ ],
+ "decision_note": "Copy decisions[0] (identical to review_sheets/D-GT23-C04-1/decision.json) into backlog.json after re-verification. Letters A none / B well-separated / C all matched, neutral order by trials released with kinetics (0, 25, 35).",
+ "round_2": {
+  "at_utc": "2026-10-31T19:20:00Z",
+  "source": "docs/maintainers/handoffs/GT23-C04-verify.json round_1 (back_to_worker)",
+  "fixes": [
+   "1. Review sheets built and rendered (GT23-C04 verification, D-GT23-C04-1 decision).",
+   "2. Knee-power 'cause not identified' replaced by the verifier's explanation (6 Hz-filtered moment x velocity, ratio 1.0000); rescale factor applies to all powers.",
+   "3. Screen of the 61 matched trials: min 10 stances (justified) + second fitted-talus estimator agreement; 26 re-classed ambiguous. B 38 -> 25, C 61 -> 35. The 0.711 stairs match (AB08 stairs_1_5) and all 4-stance stairs matches are dropped; 0.711 remains only as AB08's exact level walk.",
+   "4. Question and consequences state that trials without an established divisor keep kinematics and forces and have moments and powers withheld.",
+   "5. Decision status 'open', letters and neutral order kept, in backlog schema in decisions[0]."
+  ]
+ },
+ "round_3": {
+  "at_utc": "2026-10-31T19:35:00Z",
+  "source": "docs/maintainers/handoffs/GT23-C04-verify.json round_2 (back_to_worker, sheet/text only)",
+  "no_new_data_reads": true,
+  "fixes": [
+   "1. Not-checked chip on both sheets: 'Tire run and cutting: second estimate 4.6-15.2 % low in 6 of 8 matches, cause unknown; 2 kept' (computed from the audit). GT23-C04 sheet kept at 8 chips by moving the AB09 no-match item into the folded details.",
+   "2. Option C consequence names the 2 kept trials: '... These include AB07 cutting and AB07 tire-run, the only tire-run and cutting matches kept; in the other 6 the second estimator reads 4.6-15.2 % low. ...'; decisions[0] here is identical to review_sheets/D-GT23-C04-1/decision.json. Letters, labels, order (0, 25, 35), status open unchanged. The builder raises if the audit ever contradicts this wording (dropped not all low, or kept not all only-in-C).",
+   "3. GT23-C04 sheet reply line is now 'looks right, or what is wrong' (no task ID); the decision sheet keeps 'D-GT23-C04-1: A, B, C or defer' per the AGENTS.md reply convention."
+  ],
+  "checks": [
+   "`OPENBLAS_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/audit_probes/2026_10_31/probe_gt23_c04_screen.py sheets` (reads the audit only; audit sha256 484c1c07... unchanged before and after). Prose budget enforced by review_sheet.py.",
+   "Rendered with headless Chrome at 1100 px and in a 390 px iframe and inspected (chips wrap, nothing clips). Renders rv_wide_/rv_phone_{GT23-C04,D-GT23-C04-1}_r3.png in the session scratchpad.",
+   "Only sheet-text code in probe_gt23_c04_screen.py changed (run_cut helper, chip, option C text, reply); stage_screen and SCREEN_RULES unchanged.",
+   "`tests/test_backlog_workflow.py`: 71 passed; `build_backlog_page.py --check`: \"Backlog valid; HTML current (101 tasks).\"; decisions[0] appended to a copy of backlog.json passes validate_backlog."
+  ]
+ }
+}

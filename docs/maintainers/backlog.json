@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-10-31T18:51:54Z",
+  "updated_at_utc": "2026-10-31T19:11:36Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -6419,7 +6419,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Census every GT23 trial's normalizing mass for rescaling",
-      "status": "ready",
+      "status": "done",
       "stage": "conventions",
       "question": "What divisor was used for every GT23 trial, so moments and powers can be rescaled to each participant's own mass (D-GT23-C03-1 = B)?",
       "scope": "Per-trial divisor census over all GT23 trials using the GT23-C03 methods (exact N*m re-runs where they match; force-plate lever-arm estimate otherwise); flag trials whose divisor cannot be established; produce a per-trial rescale table. No rescaling applied to data in this task.",
@@ -6434,13 +6434,20 @@
         "Independently verified",
         "Bounded reads or guarded launcher only"
       ],
-      "next_action": "Write the census probe and run it under the guarded launcher after a pilot.",
+      "next_action": "Done. Of 488 GT23 trials, 35 have an established divisor (25 well separated). D-GT23-C04-1 open for José. Rescaling itself is a later guarded task.",
       "resource_class": "numerical",
-      "evidence_paths": [],
+      "evidence_paths": [
+        "docs/quality/audits/gt23-c04-trial-divisors.json",
+        "docs/maintainers/handoffs/GT23-C04.json",
+        "docs/maintainers/handoffs/GT23-C04-verify.json",
+        "review_sheets/D-GT23-C04-1/index.html"
+      ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-31T17:01:26Z",
+        "last_checked_at_utc": "2026-10-31T19:11:36Z",
         "summary": "Created from José's answer.",
-        "checks": [],
+        "checks": [
+          "Independent verifier: round 1 back_to_worker (sheets, knee power, robustness), round 2 back_to_worker (tire-run/cutting disclosure), round 3 file-only fixes confirmed by coordinator (decision.json equals handoff, chip present, no task ID in reply line)."
+        ],
         "remaining": [
           "Everything in acceptance."
         ]
@@ -7098,6 +7105,36 @@
       "answer": "C",
       "answered_at_utc": "2026-10-31T18:51:54Z",
       "answer_note": "José 2026-10-31: C, \"make sure we can reconstruct the metadata columns\". Also: \"add all 6 new subjects for gt21\" (GT21-S02 acquisition)."
+    },
+    {
+      "id": "D-GT23-C04-1",
+      "task_id": "GT23-C04",
+      "question": "Only some GT23 trials have a clearly identified divisor. Which GT23 trials should carry moments and powers rescaled to the participant's own mass? Trials not rescaled keep kinematics and forces; their moments and powers are withheld.",
+      "options": [
+        {
+          "key": "A",
+          "label": "Withhold kinetics for every GT23 trial",
+          "consequence": "Returns to the withhold option for GT23. Kinematics and forces released; no GT23 moments or powers. Nothing estimated. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Rescale the 25 well-separated matches",
+          "consequence": "Moments and powers rescaled to own mass for 25 trials (exact or matched by two estimators, at least 10 stances, no other recorded mass near the band edge). Other trials keep kinematics and forces; their moments and powers are withheld. Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Rescale all 35 matches",
+          "consequence": "As the previous option plus 10 matches with another recorded mass just outside the 5 % band, so a few factors may be off by 5-10 %. These include AB07 cutting and AB07 tire-run, the only tire-run and cutting matches kept; in the other 6 the second estimator reads 4.6-15.2 % low. Other trials keep kinematics and forces; their moments and powers are withheld. Reversible."
+        }
+      ],
+      "options_order": "By GT23 trials released with kinetics: 0, 25, 35.",
+      "recommended": "B",
+      "confidence": "medium",
+      "why": "The 25 trials are exact or matched by two independent estimators with enough stances and no recorded mass at the band edge; the other 10 matches could be a neighbouring mass, which would make their factor wrong by 5-10 %.",
+      "check": "Sheet, first figure: AB11's bar has no blue part, so none of its trials would get rescaled kinetics under B or C.",
+      "cost_of_waiting": "GT23 moments and powers stay out of any release; GT23 kinematics, forces and other datasets are unaffected.",
+      "decide_before_recommendation": true,
+      "status": "open"
     }
   ]
 }
