@@ -1,0 +1,118 @@
+{
+ "task_id": "GT24-C01",
+ "status": "review",
+ "last_checked_at_utc": "2026-11-01T01:30:00Z",
+ "summary": "Policy for every GT24 channel family from metadata, README and existing audits only (no GT24 time series read). Signs: hip +1, knee -1, ankle +1 (no negation, GT24-C02); frontal/transverse source sign kept. Source moment divisor: not established. Re-reading the GT24-C02 lever-arm slopes (6 trials) with the external GT23-C04 lever bias (0.9942) fits the worn model mass in 6/6 and body mass in 1/6, but only if the GT23 bias transfers to GT24; with a free bias both fit 5-6/6. BT18 and BT24 Phase3 Statics model masses equal each other's README rows (146 recordings). No no-exoskeleton trials exist (0/2,421). Phase3 mass rows bind per trial through exact Statics-to-own-README-row equality (BT02, BT13, BT23); Phase1And2 BT06/BT07/BT13 cannot be day-bound without an exact divisor and have no day-2 body mass. Bounded probe (E1 interaction-torque divisor identity, E2 plate weight, E3 lever arm with the bias fixed to GT23-C04) written and synthetically tested, not run. D-GT24-C01-1 (mass basis) prepared and queued until the probe pilot reports.",
+ "checks": [
+  "Read AGENTS.md, the GT24-C01 backlog entry, gt24-unknown-normalization-mass-review.json, gt24-c02-ankle-sign.json, gt24-source-companion-scope.json, gt24-ankle-evidence-ranking.json, gt23-c03/c04 audits and GT23-C04 handoff, gt25-normalization-source-review.json, gt24_gt25 source-units review, the publisher README (sha256 e896c6b4..., all 683 lines), DATA_CONTRACT.md signs section, docs/reference/index.md, docs/datasets/gt24.md, both GT24 converters, metadata.yaml, PLAN_add_no_exo_data.md, gt24_source_mass.py, gt24_mass_field_policy.py, apply_gt24_participant_normalization_v2.py.",
+  "Mass matrix (gt24_source_mass_coverage_v4 matrix.json, sha256 688dec9d..., README + 10 Statics CSVs only) tabulated per folder: categories single_mass_row 17 folders/1,712 recordings; phase3_two_mass_rows_bound_by_statics 3/227; phase12_two_worn_masses_day_unknown 3/336; statics_conflicts_own_readme_row 2/146.",
+  "Crossref metadata for 10.1038/s41586-024-08157-7: Molinaro, Scherpereel, Schonhaut, Evangelopoulos, Shepherd, Young; Nature 635:337-344 (2024). metadata.yaml cites Slade et al. (wrong).",
+  "`python3 contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py plan` (metadata only): 25 folders, 58 trials (A level walk 35, B Statics mass groups 5, C repeat-day 18), seed 20261031.",
+  "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 contributor_tools/review_gt24_c01_normalization_policy.py audit` then `... sheets` (no source time series read).",
+  "Sheets rendered with headless Chrome at 1100 px and in a 390 px iframe (scratchpad rv_GT24-C01_*.png, rv_D-GT24-C01-1_*.png); fixed a wrong-way percentage range, a misleading chip and an overclaiming decision headline; nothing clips.",
+  "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py tests/test_gt24_c01_divisor_probe.py`: 78 passed.",
+  "`python3 contributor_tools/build_backlog_page.py --check`: \"Backlog valid; HTML current (103 tasks).\" backlog.json/html and AGENTS.md not edited.",
+  "decisions[0] appended to an in-memory copy of backlog.json passes validate_backlog; open decisions would be D-GT23-C04-1 and D-GT24-C01-1."
+ ],
+ "acceptance_map": {
+  "README coordinate definition, field scope, contradictory evidence": "audit readme.bindings (lines 9-10, 52, 57-86, 76, 90-95, 179-180, 502, 520, 556, 570-578, 37); README ankle line contradicted by GT24-C02; hip/knee lines supported by exo encoders.",
+  "plantarflexion-to-dorsiflexion mapping and phase/participant/day/actuator mass selection": "audit supported_ankle_policy (identity mapping, sign +1), phase_day_exo_mapping, mass_units (per folder rule).",
+  "body mass vs exoskeleton-inclusive mass; normalized channels; missing/ambiguous handling": "audit channel_families, mass_units, unsupported; basis itself = D-GT24-C01-1.",
+  "existing code and required changes; mapping and verification plan": "audit required_code_changes, probe_plan (interpretation_rules).",
+  "unknown denominators and interaction units source-only; no double division": "channel_families: canonical = sign*source*D/m_basis only with exact D; raw torque_interaction source-only unless E1 shows a mass-valued constant ratio."
+ },
+ "deviations": [
+  "Wrote a numerical probe and a small synthetic test file in addition to the requested JSON outputs, to fix the selection and rules before any data read.",
+  "The policy binds Phase3 body mass by exact Statics-to-README-row equality, which gt24_source_mass.py currently refuses; rationale in audit other_findings."
+ ],
+ "remaining": [
+  "Run the probe pilot (one guarded job); if E1 is exact and E3 agrees, a separate guarded E1 census over all 2,421 recordings.",
+  "After the pilot: re-check D-GT24-C01-1 wording against the measured divisor, then copy decisions[0] into backlog.json.",
+  "BT18/BT24 swap: after E2/E1, a decision on binding the other row's body masses or withholding.",
+  "Phase1And2 BT06/BT07/BT13 second-day trials: no body mass in README.",
+  "Code fixes before use: gt24_mass_field_policy ankle sign; get_subject_mass Phase1And2/Phase3 mix-up; get_collection_phase subject-ID inference; invented day/no-exo logic; assistance from raw interaction torque; metadata.yaml citation.",
+  "Not checked: hip/knee moment signs by force plates; insole CoP lateral sign and frame; IMU-integrated segment angles; whether the GT23 lever bias transfers to GT24.",
+  "GT25-C01 should test its README ankle sign independently."
+ ],
+ "changed_files": [
+  "contributor_tools/review_gt24_c01_normalization_policy.py (new)",
+  "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py (new; not run on data)",
+  "tests/test_gt24_c01_divisor_probe.py (new; synthetic)",
+  "docs/quality/audits/gt24-c01-normalization-policy.json (new)",
+  "docs/maintainers/handoffs/GT24-C01.json (new)",
+  "review_sheets/GT24-C01/ and review_sheets/D-GT24-C01-1/ (gitignored)"
+ ],
+ "evidence_paths": [
+  "docs/quality/audits/gt24-c01-normalization-policy.json",
+  "contributor_tools/review_gt24_c01_normalization_policy.py",
+  "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py",
+  "tests/test_gt24_c01_divisor_probe.py",
+  "review_sheets/GT24-C01/index.html",
+  "review_sheets/D-GT24-C01-1/index.html",
+  "review_sheets/D-GT24-C01-1/decision.json"
+ ],
+ "output_sha256": {
+  "docs/quality/audits/gt24-c01-normalization-policy.json": "5607169a285789e349fd704f9150835774ea075fb688ffd80ba8d5fda4b5ee45",
+  "contributor_tools/review_gt24_c01_normalization_policy.py": "06428d23a21d8d39e810584cac64cac14b7f412bb9aaea5e1b2c7f34215e388c",
+  "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py": "5ce9b738c7390361c52e5f2ccfef8a922866ca97152403cab87d2de00e4dbd94",
+  "tests/test_gt24_c01_divisor_probe.py": "23bfc518e5a219d331ed676872dbf5a191e3969ab1c2922397261117b2ad2b7c",
+  "review_sheets/GT24-C01/index.html": "4356d50285f3833bfad756b137d249e6d1cbf8aa0652b9515ee7c810070941a8",
+  "review_sheets/D-GT24-C01-1/index.html": "b65efafb4cc8968991d8826e9aa706a593aaa227ad9a18b3a899f9bcb360f96b",
+  "review_sheets/D-GT24-C01-1/decision.json": "f70bd78f192707f4b0b32dd2eff7db45c6dc8c9b1a6bf0dc221397017902c7f6"
+ },
+ "resources": {
+  "note": "Read-only metadata work; no GT24 time series, no numerical job, no MATLAB. Only the mass matrix JSON, README, audits and code were read."
+ },
+ "next_action": "Verifier re-checks the four round-2 fixes. Coordinator schedules the probe pilot as one guarded job (python3 contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py pilot). Do not copy D-GT24-C01-1 into backlog.json until the pilot reports and its wording is re-checked.",
+ "decisions": [],
+ "decision_note": "queued_decisions[0] is identical to review_sheets/D-GT24-C01-1/decision.json and validates against the backlog schema. Hold it until the E1 probe pilot reports. Options are ordered by normalizing mass: A none, B worn (heavier), C body (lighter).",
+ "round_2": {
+  "at_utc": "2026-11-01T01:30:00Z",
+  "source": "docs/maintainers/handoffs/GT24-C01-verify.json (back_to_worker)",
+  "no_new_data_reads": true,
+  "fixes": [
+   "1. Divisor re-reading now uses the external GT23-C04 ankle_bias_centre_ratio 0.9942 (sha256 recorded in the audit) instead of the median of the same 6 trials; audit states the transfer assumption and reports the free-bias sensitivity (worn 6/6 at 0.980, body 5/6 at 0.889). Sheet chip 'Body mass ruled out in 5 of 6' replaced by 'not checked: worn vs body divisor holds only if GT23 calibration transfers'; headline now 'GT24 divisor still open; two folders' masses are swapped'. BT24 slope evidence marked conditional (BT24 README body mass also fits).",
+   "2. Added to required_code_changes: get_subject_mass line 226 gives Phase1And2 BT01/BT02/BT13 Phase3 masses (BT01 84.28 instead of 87.02 kg); get_collection_phase line 156 infers collection from the subject ID because both zips extract to Parsed/.",
+   "3. Probe caveat recorded (audit probe_plan.caveat, probe docstring): E1 measures the interaction-torque divisor D_x; it equals the net-moment divisor only if one mass was used for both; E3 tests that under the same bias-transfer assumption. Probe summarize() now classifies E3 against the fixed external bias (RULES.lever_bias_external = 0.9942); the pilot median is reported only. Not run.",
+   "4. D-GT24-C01-1 queued: question and option C no longer assert the worn divisor (values are converted back with the measured divisor, then divided by the chosen mass); options ordered by normalizing mass (none, heavier worn, lighter body); decision sheet ask strip 'Queued: answer after the divisor probe reports'; figure 1 removed from the decision sheet."
+  ],
+  "gates": [
+   "`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_backlog_workflow.py tests/test_gt24_c01_divisor_probe.py`: 78 passed.",
+   "`python3 contributor_tools/build_backlog_page.py --check`: \"Backlog valid; HTML current (103 tasks).\"",
+   "decisions[0] appended to an in-memory backlog copy passes validate_backlog.",
+   "Both sheets re-rendered at 1100 px and in a 390 px iframe; nothing clips."
+  ]
+ },
+ "queued_decisions": [
+  {
+   "id": "D-GT24-C01-1",
+   "task_id": "GT24-C01",
+   "question": "GT24 participants wore a 6-8 kg exoskeleton. Which mass should LocoHub's standard GT24 moment, power and force columns be per kg of? Published per-kg values will first be converted back with the divisor the authors used, once a probe measures it.",
+   "options": [
+    {
+     "key": "A",
+     "label": "Leave GT24 kinetics empty",
+     "consequence": "Left out: All standard GT24 moments, powers and body-weight forces. Published per-kg values only under source names; nothing rescaled. Reversible."
+    },
+    {
+     "key": "B",
+     "label": "Worn mass (person + exoskeleton)",
+     "consequence": "Left out: BT18/BT24 (146 recordings) until resolved; trials without an established divisor. Published values rescaled from their measured divisor to the worn mass; forces in worn-system weights; values 6-12 % below body-mass values. Reversible."
+    },
+    {
+     "key": "C",
+     "label": "Body mass (without exoskeleton)",
+     "consequence": "Left out: As B, plus second-day trials of BT06, BT07, BT13 (first collection): no body mass reported. Published values rescaled from their measured divisor to body mass (× 1.07-1.13 if the measured divisor is the worn mass, × 1 if it is body mass); comparable with datasets without an exoskeleton; published values kept under source names. Reversible."
+    }
+   ],
+   "options_order": "By the normalizing mass: none (withheld), heavier (worn), lighter (body).",
+   "recommended": "C",
+   "confidence": "medium",
+   "why": "LocoHub defines forces in body weights and moments per kg; D-GT23-C03-1 rescaled GT23 to each participant's own mass; the task acceptance forbids substituting exoskeleton model mass for body mass. Source per-kg values stay available, so option B remains recoverable. Cost: second-day trials of three first-collection subjects lose kinetics.",
+   "check": "README subject-mass table: every \"w/ exo\" mass is 6.1-7.8 kg above its \"w/o exo\" mass.",
+   "cost_of_waiting": "GT24 standard kinetic columns cannot be finalized; the divisor probe and all other GT24 work are unaffected.",
+   "decide_before_recommendation": true,
+   "status": "open"
+  }
+ ]
+}

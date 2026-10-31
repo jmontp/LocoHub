@@ -1,0 +1,1811 @@
+{
+ "task_id": "GT24-C01",
+ "status": "review",
+ "scientific_approval": false,
+ "question": "Which GT24 channels can be signed and normalized canonically from independent source evidence, with which masses, and how do collection phases, days and exo conditions map?",
+ "scope": "All 2421 Parsed recordings in 25 phase/subject folders; metadata, README and existing audits only. No GT24 time series read by this task.",
+ "inputs_sha256": {
+  "docs/quality/audits/gt24-c02-ankle-sign.json": "9607250fe4cf40da13f14b667114f9b0d8765387b13b6c70269011959539597c",
+  "docs/quality/audits/gt24-unknown-normalization-mass-review.json": "95c8e97b240c7b02e1cc40d4067f6490e6d1e58eeca9f1d616eb7dc57d5c6d60",
+  "docs/quality/audits/gt24-source-companion-scope.json": "163752a03776fad6972e3fa1fe8a72597a1c2707528c57a55bd7d1f488d1f208",
+  "docs/quality/audits/gt24-ankle-evidence-ranking.json": "5fe64ce6ff2122023b12a2408d4ae01c6d583bec1754a78554326086e4f4ba3c",
+  "docs/quality/audits/gt23-c03-normalizing-mass.json": "9dcc6b2d05680af1e70c411ba055a8cc223a0514db7865eb61692d8db90bb7fd",
+  "docs/quality/audits/gt23-c04-trial-divisors.json": "484c1c079e08035a823fc8770a54a3f53191b65329b586250690be391c6e9184",
+  "docs/quality/audits/gt25-normalization-source-review.json": "f22ece90ccbd4fc0df52db751503269a52912d95ea48e7a03ee398c8d18febb5",
+  "converted_datasets/reconversion_v2/gt24_source_mass_coverage_v4_20261021/matrix.json": "688dec9d45ecf103c43a57740c0fbc019ab3e67b47fd37834a726bdd6062b462",
+  "converted_datasets/reconversion_v2/gt24_gt25_source_units_web_20261021/review.json": "12a24120c11cdb8bd0c06fcc54c41cd252c029750dacdaff45c4d3b9682b55ce",
+  "contributor_tools/DATA_CONTRACT.md": "d0c9afe2ac6408a2b144a75c41d309754ae3facc34635446841f7882ef1ac6dd",
+  "docs/reference/index.md": "010073cb752d81ff83a704a6448fe2db1113153e7d2a89694fa64dd5ef076aad",
+  "docs/datasets/gt24.md": "03b41493270f1295311c95ae9d1bd7ada07d344602d51a965d2be2fa142f0fd8",
+  "contributor_tools/conversion_scripts/GaTech_2024_TaskAgnostic/convert_gtech_2024_phase_to_parquet.py": "48baf7d239ad7a658f27ff76670d41c8a88827104b4377f09469bda3696ce821",
+  "contributor_tools/conversion_scripts/GaTech_2024_TaskAgnostic/convert_gtech_2024_time_to_parquet.py": "38d30eeb5e9e0706d0ea880052ca83d75b95298e4c54a019b442c3e52ae4c886",
+  "contributor_tools/conversion_scripts/GaTech_2024_TaskAgnostic/metadata.yaml": "22cff6119a9757b3ee4be40cb9e8269e727e5febffc70486a883fccf85055b72",
+  "contributor_tools/conversion_scripts/GaTech_2024_TaskAgnostic/PLAN_add_no_exo_data.md": "3a5b67149a5a47b77a118a6289dccbd43330bf01d59cf7f3c07170f17df618b1",
+  "contributor_tools/gt24_source_mass.py": "b2c2b54e024370b0aea423fd4c0bb678c3d3a6d837f5a0c88d231e26a8c45a27",
+  "contributor_tools/gt24_mass_field_policy.py": "7088ac6bba7f5791c7e78286a0853288ae46714a55be1718f15e3eb556c72298",
+  "contributor_tools/apply_gt24_participant_normalization_v2.py": "2a5a9e86dce1cb2cbfa8916ac1e3539b59e52bd95c6f3870e209e12b81ff7765",
+  "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py": "5ce9b738c7390361c52e5f2ccfef8a922866ca97152403cab87d2de00e4dbd94",
+  "tests/test_gt24_c01_divisor_probe.py": "23bfc518e5a219d331ed676872dbf5a191e3969ab1c2922397261117b2ad2b7c"
+ },
+ "readme": {
+  "path": "/mnt/s/locomotion_data/GaTech_2024_TaskAgnostic/readme.txt",
+  "sha256": "e896c6b424c45f50f261ade2e40c5f5832065fbcd745c593b7cd72fdeb84026f",
+  "bindings": {
+   "collection_phases": {
+    "lines": [
+     9,
+     10
+    ],
+    "text": "Phase1And2: data phase 1 (BT01-BT12, unpowered all tasks + heuristic controller some tasks) and data phase 2 (BT13-BT17, preliminary model, all powered). Phase3: BT01, BT02, BT13 returned + BT18-BT24, all powered."
+   },
+   "task_name_rule": {
+    "line": 52,
+    "text": "<base>_<vicon trial>_<on/off>_<descriptor>; vicon trial number not consistent across subjects"
+   },
+   "mass_table": {
+    "lines": [
+     57,
+     86
+    ],
+    "text": "w/o exo | w/ exo, plus day-2 values for some subjects"
+   },
+   "statics": {
+    "line": 76,
+    "text": "exact mass of each OpenSim model used for Phase3 in Statics.csv (complete data)"
+   },
+   "sign_statement": {
+    "lines": [
+     90,
+     94
+    ],
+    "text": "hip flexion +, knee extension +, ankle plantarflexion + (ankle part wrong: GT24-C02); exo extension +"
+   },
+   "invalid_torques": {
+    "line": 95
+   },
+   "bt13_day_controllers": {
+    "lines": [
+     179,
+     180
+    ]
+   },
+   "moment_units": {
+    "line": 502,
+    "text": "Nm/kg; denominator not stated"
+   },
+   "bio_definition": {
+    "line": 520,
+    "text": "moment_filt minus exo interaction torque"
+   },
+   "power_exo_definition": {
+    "line": 556
+   },
+   "exo_torque_units": {
+    "lines": [
+     570,
+     578
+    ],
+    "text": "estimated Nm/kg; desired/measured Nm; torque_interaction not listed"
+   },
+   "grf_frame": {
+    "line": 37
+   }
+  }
+ },
+ "answer": {
+  "signs": "Hip +1, knee -1, ankle +1 for sagittal angles, velocities, net/biological/assistance moments (powers unchanged). Ankle: no negation (GT24-C02). Frontal/transverse: source sign kept.",
+  "source_divisor": "Not established. Re-reading the GT24-C02 lever-arm slopes (6 trials) with the externally calibrated GT23-C04 lever bias (0.9942) fits the worn model mass (person + exoskeleton) in 6/6 and body mass in 1/6 (BT24 folder, by coincidence of values); this assumes the GT23 bias transfers to GT24. With a free bias the slopes cannot separate worn from body mass. the BT24 folder fits its Statics model mass (74.96 kg, BT18's README row), not BT24's README 84.84 kg. Exact per-trial divisors need the probe (E1 identity).",
+  "normalization_basis": "Queued: D-GT24-C01-1 (participant body mass vs worn mass vs withhold), held until the divisor probe reports. It sets a convention for exoskeleton datasets, so José decides.",
+  "masses": "README w/ exo exceeds w/o exo by 6.12-7.81 kg (ratio 1.065-1.131) in all 31 rows.",
+  "phase_day_exo": "Collection from the zip (never from subject IDs); exo state from the _on/_off/_hilo suffix; no no-exoskeleton trials exist; day bound only through an exact model-mass match (Phase3 Statics, or the E1 divisor for Phase1And2)."
+ },
+ "phase_day_exo_mapping": {
+  "collection": "Phase1And2_Parsed.zip vs Phase3_Parsed.zip is the collection identity. BT01, BT02 and BT13 occur in both with different masses and models; never merge or infer collection from the ID. Within Phase1And2, README line 9 assigns BT01-BT12 to data phase 1 and BT13-BT17 to data phase 2.",
+  "exo_state": {
+   "_on": "powered (914 Phase1And2, 752 Phase3)",
+   "_off": "worn_unpowered (740 Phase1And2)",
+   "_hilo": "powered, hilo-inspired controller (15 Phase1And2: BT03, BT07, BT08, BT09, BT11, BT12)",
+   "no_exo": "does not occur: 0 of 2,421 Parsed recordings. README \"w/o exo\" values are body masses, not a trial condition; the converters' _noexo/_bare branch and PLAN_add_no_exo_data.md misread the table."
+  },
+  "controller": "Phase1And2 data phase 1 _on: heuristic controller (README line 9) except _hilo; data phase 2: preliminary model; BT13 (Phase1And2) day 1 commanded net torque 10 %/8 %, day 2 bio torque 20 %/10 % (README lines 179-180), so BT13 controller per trial is unresolved until its day is bound. Phase3: final deployed model.",
+  "day": "No trial-to-day table exists. Phase3: each native trial's Statics model mass equals exactly one README w/ exo value of the folder's own row (day 1 or day 2), except BT18/BT24; that binds the mass row, and the body mass of the same row. Phase1And2 BT06, BT07, BT13: two worn masses 0.25-0.8 % apart, no trial mapping; only an exact divisor (E1) can bind them; the README gives no day-2 body mass for this collection. The converters' day field (hard-coded 1) and is_day2 name test are invented and must be replaced by null unless bound.",
+  "inclusive_phase_samples": "Unchanged: phase exports keep 150 samples from 0 to 100 % (converter NUM_POINTS = 150)."
+ },
+ "mass_units": [
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT01",
+   "parsed_recordings": 128,
+   "exo_states": {
+    "powered": 54,
+    "worn_unpowered": 74
+   },
+   "readme_line": 58,
+   "readme_row": {
+    "participant_day1_kg": "80.59",
+    "model_day1_with_exo_kg": "87.02"
+   },
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo.",
+   "divisor_rule": "README w/ exo expected; confirmed by E1 (or E3 within the band when E1 is not exact)."
+  },
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT02",
+   "parsed_recordings": 128,
+   "exo_states": {
+    "powered": 54,
+    "worn_unpowered": 74
+   },
+   "readme_line": 59,
+   "readme_row": {
+    "participant_day1_kg": "72.24",
+    "model_day1_with_exo_kg": "79.09"
+   },
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo.",
+   "divisor_rule": "README w/ exo expected; confirmed by E1 (or E3 within the band when E1 is not exact)."
+  },
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT03",
+   "parsed_recordings": 129,
+   "exo_states": {
+    "powered": 57,
+    "worn_unpowered": 72
+   },
+   "readme_line": 60,
+   "readme_row": {
+    "participant_day1_kg": "95.29",
+    "model_day1_with_exo_kg": "101.52"
+   },
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo.",
+   "divisor_rule": "README w/ exo expected; confirmed by E1 (or E3 within the band when E1 is not exact)."
+  },
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT06",
+   "parsed_recordings": 128,
+   "exo_states": {
+    "powered": 54,
+    "worn_unpowered": 74
+   },
+   "readme_line": 62,
+   "readme_row": {
+    "participant_day1_kg": "79.33",
+    "model_day1_with_exo_kg": "85.78",
+    "model_day2_with_exo_kg": "85.14"
+   },
+   "category": "phase12_two_worn_masses_day_unknown",
+   "participant_mass_rule": "Trials whose E1 divisor equals the day-1 w/ exo value: README w/o exo. Trials matching the day-2 w/ exo value: withheld (README reports no day-2 body mass for this collection). Unmatched: withheld.",
+   "divisor_rule": "E1 exact identity per trial (day-1 and day-2 worn masses differ by 0.25-0.8 %, below force-plate precision)."
+  },
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT07",
+   "parsed_recordings": 135,
+   "exo_states": {
+    "powered": 60,
+    "worn_unpowered": 75
+   },
+   "readme_line": 63,
+   "readme_row": {
+    "participant_day1_kg": "64.49",
+    "model_day1_with_exo_kg": "70.61",
+    "model_day2_with_exo_kg": "71.19"
+   },
+   "category": "phase12_two_worn_masses_day_unknown",
+   "participant_mass_rule": "Trials whose E1 divisor equals the day-1 w/ exo value: README w/o exo. Trials matching the day-2 w/ exo value: withheld (README reports no day-2 body mass for this collection). Unmatched: withheld.",
+   "divisor_rule": "E1 exact identity per trial (day-1 and day-2 worn masses differ by 0.25-0.8 %, below force-plate precision)."
+  },
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT08",
+   "parsed_recordings": 131,
+   "exo_states": {
+    "powered": 57,
+    "worn_unpowered": 74
+   },
+   "readme_line": 64,
+   "readme_row": {
+    "participant_day1_kg": "69.13",
+    "model_day1_with_exo_kg": "75.67"
+   },
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo.",
+   "divisor_rule": "README w/ exo expected; confirmed by E1 (or E3 within the band when E1 is not exact)."
+  },
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT09",
+   "parsed_recordings": 131,
+   "exo_states": {
+    "powered": 57,
+    "worn_unpowered": 74
+   },
+   "readme_line": 65,
+   "readme_row": {
+    "participant_day1_kg": "82.31",
+    "model_day1_with_exo_kg": "88.97"
+   },
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo.",
+   "divisor_rule": "README w/ exo expected; confirmed by E1 (or E3 within the band when E1 is not exact)."
+  },
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT10",
+   "parsed_recordings": 130,
+   "exo_states": {
+    "powered": 55,
+    "worn_unpowered": 75
+   },
+   "readme_line": 66,
+   "readme_row": {
+    "participant_day1_kg": "93.45",
+    "model_day1_with_exo_kg": "100.11"
+   },
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo.",
+   "divisor_rule": "README w/ exo expected; confirmed by E1 (or E3 within the band when E1 is not exact)."
+  },
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT11",
+   "parsed_recordings": 131,
+   "exo_states": {
+    "powered": 57,
+    "worn_unpowered": 74
+   },
+   "readme_line": 67,
+   "readme_row": {
+    "participant_day1_kg": "50.39",
+    "model_day1_with_exo_kg": "56.98"
+   },
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo.",
+   "divisor_rule": "README w/ exo expected; confirmed by E1 (or E3 within the band when E1 is not exact)."
+  },
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT12",
+   "parsed_recordings": 131,
+   "exo_states": {
+    "powered": 57,
+    "worn_unpowered": 74
+   },
+   "readme_line": 68,
+   "readme_row": {
+    "participant_day1_kg": "78.15",
+    "model_day1_with_exo_kg": "84.62"
+   },
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo.",
+   "divisor_rule": "README w/ exo expected; confirmed by E1 (or E3 within the band when E1 is not exact)."
+  },
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT13",
+   "parsed_recordings": 73,
+   "exo_states": {
+    "powered": 73
+   },
+   "readme_line": 69,
+   "readme_row": {
+    "participant_day1_kg": "89.85",
+    "model_day1_with_exo_kg": "96.74",
+    "model_day2_with_exo_kg": "96.50"
+   },
+   "category": "phase12_two_worn_masses_day_unknown",
+   "participant_mass_rule": "Trials whose E1 divisor equals the day-1 w/ exo value: README w/o exo. Trials matching the day-2 w/ exo value: withheld (README reports no day-2 body mass for this collection). Unmatched: withheld.",
+   "divisor_rule": "E1 exact identity per trial (day-1 and day-2 worn masses differ by 0.25-0.8 %, below force-plate precision)."
+  },
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT14",
+   "parsed_recordings": 73,
+   "exo_states": {
+    "powered": 73
+   },
+   "readme_line": 70,
+   "readme_row": {
+    "participant_day1_kg": "67.30",
+    "model_day1_with_exo_kg": "74.35"
+   },
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo.",
+   "divisor_rule": "README w/ exo expected; confirmed by E1 (or E3 within the band when E1 is not exact)."
+  },
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT15",
+   "parsed_recordings": 74,
+   "exo_states": {
+    "powered": 74
+   },
+   "readme_line": 71,
+   "readme_row": {
+    "participant_day1_kg": "58.40",
+    "model_day1_with_exo_kg": "65.87"
+   },
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo.",
+   "divisor_rule": "README w/ exo expected; confirmed by E1 (or E3 within the band when E1 is not exact)."
+  },
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT16",
+   "parsed_recordings": 74,
+   "exo_states": {
+    "powered": 74
+   },
+   "readme_line": 72,
+   "readme_row": {
+    "participant_day1_kg": "64.33",
+    "model_day1_with_exo_kg": "72.03"
+   },
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo.",
+   "divisor_rule": "README w/ exo expected; confirmed by E1 (or E3 within the band when E1 is not exact)."
+  },
+  {
+   "phase": "Phase1And2",
+   "subject_folder": "BT17",
+   "parsed_recordings": 73,
+   "exo_states": {
+    "powered": 73
+   },
+   "readme_line": 73,
+   "readme_row": {
+    "participant_day1_kg": "60.03",
+    "model_day1_with_exo_kg": "67.36"
+   },
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo.",
+   "divisor_rule": "README w/ exo expected; confirmed by E1 (or E3 within the band when E1 is not exact)."
+  },
+  {
+   "phase": "Phase3",
+   "subject_folder": "BT01",
+   "parsed_recordings": 76,
+   "exo_states": {
+    "powered": 76
+   },
+   "readme_line": 77,
+   "readme_row": {
+    "participant_day1_kg": "77.29",
+    "model_day1_with_exo_kg": "84.28"
+   },
+   "statics_groups": [
+    {
+     "model_mass_kg": "84.2842196283257",
+     "parsed_recordings": 76,
+     "own_row_fields": [
+      "model_day1_with_exo_kg"
+     ],
+     "other_rows_matching": []
+    }
+   ],
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo (day 1).",
+   "divisor_rule": "Statics model mass of the trial (equals README w/ exo), confirmed by E1."
+  },
+  {
+   "phase": "Phase3",
+   "subject_folder": "BT02",
+   "parsed_recordings": 76,
+   "exo_states": {
+    "powered": 76
+   },
+   "readme_line": 78,
+   "readme_row": {
+    "participant_day1_kg": "72.33",
+    "model_day1_with_exo_kg": "79.10",
+    "participant_day2_kg": "69.83",
+    "model_day2_with_exo_kg": "76.74"
+   },
+   "statics_groups": [
+    {
+     "model_mass_kg": "76.7386574562227",
+     "parsed_recordings": 12,
+     "own_row_fields": [
+      "model_day2_with_exo_kg"
+     ],
+     "other_rows_matching": []
+    },
+    {
+     "model_mass_kg": "79.0980607683209",
+     "parsed_recordings": 64,
+     "own_row_fields": [
+      "model_day1_with_exo_kg"
+     ],
+     "other_rows_matching": []
+    }
+   ],
+   "category": "phase3_two_mass_rows_bound_by_statics",
+   "participant_mass_rule": "Per trial: the README row (day 1 or day 2) whose w/ exo value equals the trial's Statics model mass; body mass = that row's w/o exo value.",
+   "divisor_rule": "Statics model mass of the trial, confirmed by E1."
+  },
+  {
+   "phase": "Phase3",
+   "subject_folder": "BT13",
+   "parsed_recordings": 76,
+   "exo_states": {
+    "powered": 76
+   },
+   "readme_line": 79,
+   "readme_row": {
+    "participant_day1_kg": "88.99",
+    "model_day1_with_exo_kg": "96.03",
+    "participant_day2_kg": "86.91",
+    "model_day2_with_exo_kg": "93.80"
+   },
+   "statics_groups": [
+    {
+     "model_mass_kg": "93.8060005230687",
+     "parsed_recordings": 12,
+     "own_row_fields": [
+      "model_day2_with_exo_kg"
+     ],
+     "other_rows_matching": []
+    },
+    {
+     "model_mass_kg": "96.0380212549001",
+     "parsed_recordings": 64,
+     "own_row_fields": [
+      "model_day1_with_exo_kg"
+     ],
+     "other_rows_matching": []
+    }
+   ],
+   "category": "phase3_two_mass_rows_bound_by_statics",
+   "participant_mass_rule": "Per trial: the README row (day 1 or day 2) whose w/ exo value equals the trial's Statics model mass; body mass = that row's w/o exo value.",
+   "divisor_rule": "Statics model mass of the trial, confirmed by E1."
+  },
+  {
+   "phase": "Phase3",
+   "subject_folder": "BT18",
+   "parsed_recordings": 70,
+   "exo_states": {
+    "powered": 70
+   },
+   "readme_line": 80,
+   "readme_row": {
+    "participant_day1_kg": "67.96",
+    "model_day1_with_exo_kg": "74.96",
+    "participant_day2_kg": "68.37",
+    "model_day2_with_exo_kg": "75.23"
+   },
+   "statics_groups": [
+    {
+     "model_mass_kg": "84.8435361822889",
+     "parsed_recordings": 20,
+     "own_row_fields": [],
+     "other_rows_matching": [
+      "Phase3 BT24 model_day1_with_exo_kg"
+     ]
+    },
+    {
+     "model_mass_kg": "87.1501204253825",
+     "parsed_recordings": 50,
+     "own_row_fields": [],
+     "other_rows_matching": [
+      "Phase3 BT24 model_day2_with_exo_kg"
+     ]
+    }
+   ],
+   "category": "statics_conflicts_own_readme_row",
+   "participant_mass_rule": "Withheld. Folder model masses equal another subject's README row; resolve with the plate-weight estimator (E2) and a decision before binding any body mass.",
+   "divisor_rule": "E1 exact identity per trial; expected (not assumed) to equal the folder Statics mass."
+  },
+  {
+   "phase": "Phase3",
+   "subject_folder": "BT19",
+   "parsed_recordings": 76,
+   "exo_states": {
+    "powered": 76
+   },
+   "readme_line": 81,
+   "readme_row": {
+    "participant_day1_kg": "69.95",
+    "model_day1_with_exo_kg": "76.84"
+   },
+   "statics_groups": [
+    {
+     "model_mass_kg": "76.8438623027198",
+     "parsed_recordings": 76,
+     "own_row_fields": [
+      "model_day1_with_exo_kg"
+     ],
+     "other_rows_matching": []
+    }
+   ],
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo (day 1).",
+   "divisor_rule": "Statics model mass of the trial (equals README w/ exo), confirmed by E1."
+  },
+  {
+   "phase": "Phase3",
+   "subject_folder": "BT20",
+   "parsed_recordings": 75,
+   "exo_states": {
+    "powered": 75
+   },
+   "readme_line": 82,
+   "readme_row": {
+    "participant_day1_kg": "55.44",
+    "model_day1_with_exo_kg": "62.50"
+   },
+   "statics_groups": [
+    {
+     "model_mass_kg": "62.502313248334",
+     "parsed_recordings": 75,
+     "own_row_fields": [
+      "model_day1_with_exo_kg"
+     ],
+     "other_rows_matching": []
+    }
+   ],
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo (day 1).",
+   "divisor_rule": "Statics model mass of the trial (equals README w/ exo), confirmed by E1."
+  },
+  {
+   "phase": "Phase3",
+   "subject_folder": "BT21",
+   "parsed_recordings": 76,
+   "exo_states": {
+    "powered": 76
+   },
+   "readme_line": 83,
+   "readme_row": {
+    "participant_day1_kg": "58.85",
+    "model_day1_with_exo_kg": "65.86"
+   },
+   "statics_groups": [
+    {
+     "model_mass_kg": "65.8599206916656",
+     "parsed_recordings": 76,
+     "own_row_fields": [
+      "model_day1_with_exo_kg"
+     ],
+     "other_rows_matching": []
+    }
+   ],
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo (day 1).",
+   "divisor_rule": "Statics model mass of the trial (equals README w/ exo), confirmed by E1."
+  },
+  {
+   "phase": "Phase3",
+   "subject_folder": "BT22",
+   "parsed_recordings": 76,
+   "exo_states": {
+    "powered": 76
+   },
+   "readme_line": 84,
+   "readme_row": {
+    "participant_day1_kg": "76.79",
+    "model_day1_with_exo_kg": "84.27"
+   },
+   "statics_groups": [
+    {
+     "model_mass_kg": "84.2781832504942",
+     "parsed_recordings": 76,
+     "own_row_fields": [
+      "model_day1_with_exo_kg"
+     ],
+     "other_rows_matching": []
+    }
+   ],
+   "category": "single_mass_row",
+   "participant_mass_rule": "README w/o exo (day 1).",
+   "divisor_rule": "Statics model mass of the trial (equals README w/ exo), confirmed by E1."
+  },
+  {
+   "phase": "Phase3",
+   "subject_folder": "BT23",
+   "parsed_recordings": 75,
+   "exo_states": {
+    "powered": 75
+   },
+   "readme_line": 85,
+   "readme_row": {
+    "participant_day1_kg": "67.23",
+    "model_day1_with_exo_kg": "74.24",
+    "participant_day2_kg": "67.16",
+    "model_day2_with_exo_kg": "73.93"
+   },
+   "statics_groups": [
+    {
+     "model_mass_kg": "73.9318234784596",
+     "parsed_recordings": 12,
+     "own_row_fields": [
+      "model_day2_with_exo_kg"
+     ],
+     "other_rows_matching": []
+    },
+    {
+     "model_mass_kg": "74.2378051364384",
+     "parsed_recordings": 63,
+     "own_row_fields": [
+      "model_day1_with_exo_kg"
+     ],
+     "other_rows_matching": []
+    }
+   ],
+   "category": "phase3_two_mass_rows_bound_by_statics",
+   "participant_mass_rule": "Per trial: the README row (day 1 or day 2) whose w/ exo value equals the trial's Statics model mass; body mass = that row's w/o exo value.",
+   "divisor_rule": "Statics model mass of the trial, confirmed by E1."
+  },
+  {
+   "phase": "Phase3",
+   "subject_folder": "BT24",
+   "parsed_recordings": 76,
+   "exo_states": {
+    "powered": 76
+   },
+   "readme_line": 86,
+   "readme_row": {
+    "participant_day1_kg": "77.79",
+    "model_day1_with_exo_kg": "84.84",
+    "participant_day2_kg": "79.56",
+    "model_day2_with_exo_kg": "87.15"
+   },
+   "statics_groups": [
+    {
+     "model_mass_kg": "74.9572980922401",
+     "parsed_recordings": 64,
+     "own_row_fields": [],
+     "other_rows_matching": [
+      "Phase3 BT18 model_day1_with_exo_kg"
+     ]
+    },
+    {
+     "model_mass_kg": "75.231230483426",
+     "parsed_recordings": 12,
+     "own_row_fields": [],
+     "other_rows_matching": [
+      "Phase3 BT18 model_day2_with_exo_kg"
+     ]
+    }
+   ],
+   "category": "statics_conflicts_own_readme_row",
+   "participant_mass_rule": "Withheld. Folder model masses equal another subject's README row; resolve with the plate-weight estimator (E2) and a decision before binding any body mass.",
+   "divisor_rule": "E1 exact identity per trial; expected (not assumed) to equal the folder Statics mass."
+  }
+ ],
+ "mass_categories": {
+  "single_mass_row": {
+   "units": [
+    "Phase1And2/BT01",
+    "Phase1And2/BT02",
+    "Phase1And2/BT03",
+    "Phase1And2/BT08",
+    "Phase1And2/BT09",
+    "Phase1And2/BT10",
+    "Phase1And2/BT11",
+    "Phase1And2/BT12",
+    "Phase1And2/BT14",
+    "Phase1And2/BT15",
+    "Phase1And2/BT16",
+    "Phase1And2/BT17",
+    "Phase3/BT01",
+    "Phase3/BT19",
+    "Phase3/BT20",
+    "Phase3/BT21",
+    "Phase3/BT22"
+   ],
+   "parsed_recordings": 1712
+  },
+  "phase12_two_worn_masses_day_unknown": {
+   "units": [
+    "Phase1And2/BT06",
+    "Phase1And2/BT07",
+    "Phase1And2/BT13"
+   ],
+   "parsed_recordings": 336
+  },
+  "phase3_two_mass_rows_bound_by_statics": {
+   "units": [
+    "Phase3/BT02",
+    "Phase3/BT13",
+    "Phase3/BT23"
+   ],
+   "parsed_recordings": 227
+  },
+  "statics_conflicts_own_readme_row": {
+   "units": [
+    "Phase3/BT18",
+    "Phase3/BT24"
+   ],
+   "parsed_recordings": 146
+  }
+ },
+ "statics_conflict": {
+  "finding": "BT18 folder Statics.csv lists 84.84/87.15 kg models (README BT24 w/ exo day 1/day 2); BT24 folder lists 74.96/75.23 kg (README BT18 day 1/day 2). The two files, the two folders, or the two README rows are swapped; which one is not known.",
+  "existing_data_evidence": "GT24-C02 BT24-folder incline trial: lever slope 1.10 with 84.84 kg, i.e. divisor near 75 kg (inside the band for 74.96 kg) if the GT23 lever bias transfers; BT24's README body mass 77.79 kg also fits, so this alone does not decide.",
+  "resolution_plan": "E2 plate weight in both folders separates 75 vs 85 kg; E1 confirms the divisor. Then a decision on whether to bind BT18-row body masses to the BT24 folder (and vice versa) or withhold; not raised before data.",
+  "parsed_recordings_affected": 146
+ },
+ "c02_divisor_evidence": {
+  "method": "From the GT24-C02 audit only (no new reads). C02 slope = source / (lever-arm moment / m_used) = b * m_used / D, with D the true divisor and b the lever bias (generic talus, foot inertia). For each candidate D, slope * D / m_used should equal b for every trial. b is taken from outside these trials: GT23-C04 rules.ankle_bias_centre_ratio (0.9942), the same lever method calibrated on GT23 trials with known divisors; band +/-4.9 % (GT23-C03 tolerance_v2, reused). One trial per subject, ankle only.",
+  "common_bias_b": 0.9942,
+  "common_bias_source": "docs/quality/audits/gt23-c04-trial-divisors.json rules.ankle_bias_centre_ratio",
+  "common_bias_source_sha256": "484c1c079e08035a823fc8770a54a3f53191b65329b586250690be391c6e9184",
+  "assumption": "The GT23 lever bias transfers to GT24 (different subjects, OpenSim models and an exoskeleton worn). If it does not, these 6 slopes cannot separate the worn and body divisors: with a free bias per hypothesis both fit 5-6 of 6 (sensitivity_free_bias).",
+  "band_half_width_log": 0.0488,
+  "trials": [
+   {
+    "trial": "Phase1And2/BT10 incline_walk_2_1_down10_on",
+    "mass_used_by_c02_kg": 100.11,
+    "mean_slope_two_legs": 0.962,
+    "candidates_kg": {
+     "worn_mass_readme_own_row_day1": 100.11,
+     "body_mass_readme_own_row_day1": 93.45,
+     "worn_mass_statics_trial_model": 100.11
+    },
+    "slope_over_predicted": {
+     "worn_mass_readme_own_row_day1": 0.962,
+     "body_mass_readme_own_row_day1": 0.898,
+     "worn_mass_statics_trial_model": 0.962
+    },
+    "log_dev_from_common_bias": {
+     "worn_mass_readme_own_row_day1": -0.0329,
+     "body_mass_readme_own_row_day1": -0.1018,
+     "worn_mass_statics_trial_model": -0.0329
+    },
+    "inside_band": {
+     "worn_mass_readme_own_row_day1": true,
+     "body_mass_readme_own_row_day1": false,
+     "worn_mass_statics_trial_model": true
+    }
+   },
+   {
+    "trial": "Phase3/BT02 normal_walk_1_1_2-0_on",
+    "mass_used_by_c02_kg": 79.1,
+    "mean_slope_two_legs": 0.993,
+    "candidates_kg": {
+     "worn_mass_readme_own_row_day1": 79.1,
+     "body_mass_readme_own_row_day1": 72.33,
+     "worn_mass_statics_trial_model": 79.0980607683209
+    },
+    "slope_over_predicted": {
+     "worn_mass_readme_own_row_day1": 0.993,
+     "body_mass_readme_own_row_day1": 0.908,
+     "worn_mass_statics_trial_model": 0.993
+    },
+    "log_dev_from_common_bias": {
+     "worn_mass_readme_own_row_day1": -0.0012,
+     "body_mass_readme_own_row_day1": -0.0907,
+     "worn_mass_statics_trial_model": -0.0012
+    },
+    "inside_band": {
+     "worn_mass_readme_own_row_day1": true,
+     "body_mass_readme_own_row_day1": false,
+     "worn_mass_statics_trial_model": true
+    }
+   },
+   {
+    "trial": "Phase1And2/BT07 normal_walk_1_2_1-2_off",
+    "mass_used_by_c02_kg": 70.61,
+    "mean_slope_two_legs": 0.964,
+    "candidates_kg": {
+     "worn_mass_readme_own_row_day1": 70.61,
+     "body_mass_readme_own_row_day1": 64.49,
+     "worn_mass_statics_trial_model": 70.61
+    },
+    "slope_over_predicted": {
+     "worn_mass_readme_own_row_day1": 0.964,
+     "body_mass_readme_own_row_day1": 0.8804,
+     "worn_mass_statics_trial_model": 0.964
+    },
+    "log_dev_from_common_bias": {
+     "worn_mass_readme_own_row_day1": -0.0308,
+     "body_mass_readme_own_row_day1": -0.1216,
+     "worn_mass_statics_trial_model": -0.0308
+    },
+    "inside_band": {
+     "worn_mass_readme_own_row_day1": true,
+     "body_mass_readme_own_row_day1": false,
+     "worn_mass_statics_trial_model": true
+    }
+   },
+   {
+    "trial": "Phase3/BT24 incline_walk_1_1_up5_on",
+    "mass_used_by_c02_kg": 84.84,
+    "mean_slope_two_legs": 1.103,
+    "candidates_kg": {
+     "worn_mass_readme_own_row_day1": 84.84,
+     "body_mass_readme_own_row_day1": 77.79,
+     "worn_mass_statics_trial_model": 74.9572980922401
+    },
+    "slope_over_predicted": {
+     "worn_mass_readme_own_row_day1": 1.103,
+     "body_mass_readme_own_row_day1": 1.0113,
+     "worn_mass_statics_trial_model": 0.9745
+    },
+    "log_dev_from_common_bias": {
+     "worn_mass_readme_own_row_day1": 0.1039,
+     "body_mass_readme_own_row_day1": 0.0171,
+     "worn_mass_statics_trial_model": -0.02
+    },
+    "inside_band": {
+     "worn_mass_readme_own_row_day1": false,
+     "body_mass_readme_own_row_day1": true,
+     "worn_mass_statics_trial_model": true
+    }
+   },
+   {
+    "trial": "Phase3/BT20 incline_walk_1_1_up5_on",
+    "mass_used_by_c02_kg": 62.5,
+    "mean_slope_two_legs": 0.9865,
+    "candidates_kg": {
+     "worn_mass_readme_own_row_day1": 62.5,
+     "body_mass_readme_own_row_day1": 55.44,
+     "worn_mass_statics_trial_model": 62.502313248334
+    },
+    "slope_over_predicted": {
+     "worn_mass_readme_own_row_day1": 0.9865,
+     "body_mass_readme_own_row_day1": 0.8751,
+     "worn_mass_statics_trial_model": 0.9865
+    },
+    "log_dev_from_common_bias": {
+     "worn_mass_readme_own_row_day1": -0.0078,
+     "body_mass_readme_own_row_day1": -0.1276,
+     "worn_mass_statics_trial_model": -0.0078
+    },
+    "inside_band": {
+     "worn_mass_readme_own_row_day1": true,
+     "body_mass_readme_own_row_day1": false,
+     "worn_mass_statics_trial_model": true
+    }
+   },
+   {
+    "trial": "Phase1And2/BT11 incline_walk_1_1_down5_on",
+    "mass_used_by_c02_kg": 56.98,
+    "mean_slope_two_legs": 0.9855,
+    "candidates_kg": {
+     "worn_mass_readme_own_row_day1": 56.98,
+     "body_mass_readme_own_row_day1": 50.39,
+     "worn_mass_statics_trial_model": 56.98
+    },
+    "slope_over_predicted": {
+     "worn_mass_readme_own_row_day1": 0.9855,
+     "body_mass_readme_own_row_day1": 0.8715,
+     "worn_mass_statics_trial_model": 0.9855
+    },
+    "log_dev_from_common_bias": {
+     "worn_mass_readme_own_row_day1": -0.0088,
+     "body_mass_readme_own_row_day1": -0.1317,
+     "worn_mass_statics_trial_model": -0.0088
+    },
+    "inside_band": {
+     "worn_mass_readme_own_row_day1": true,
+     "body_mass_readme_own_row_day1": false,
+     "worn_mass_statics_trial_model": true
+    }
+   }
+  ],
+  "counts_inside_band": {
+   "worn_mass_readme_own_row_day1": "5/6",
+   "body_mass_readme_own_row_day1": "1/6",
+   "worn_mass_statics_trial_model": "6/6"
+  },
+  "sensitivity_free_bias": {
+   "worn_mass_readme_own_row_day1": {
+    "own_median_bias": 0.986,
+    "inside_band": "5/6"
+   },
+   "body_mass_readme_own_row_day1": {
+    "own_median_bias": 0.8892,
+    "inside_band": "5/6"
+   },
+   "worn_mass_statics_trial_model": {
+    "own_median_bias": 0.98,
+    "inside_band": "6/6"
+   }
+  },
+  "reading": "If the GT23 lever bias transfers: worn model mass (Statics for Phase3, README w/ exo for Phase1And2) fits 6/6 within the band; README own-row w/ exo fits 5/6 (BT24 folder about +12 %, where its Statics model mass is BT18's README value); body mass w/o exo fits 1/6 (BT24, whose own body mass 77.79 kg lies 3.7 % from its folder model mass 74.96 kg). Without that assumption the slopes do not separate worn from body mass. Preliminary and conditional; the probe (E1, with E3) is the test."
+ },
+ "channel_families": [
+  {
+   "family": "Sagittal joint angles",
+   "source": "angle.csv, angle_filt.csv: hip_flexion_<s>, knee_angle_<s>, ankle_angle_<s> (deg)",
+   "canonical": "hip_flexion_angle, knee_flexion_angle, ankle_dorsiflexion_angle (rad)",
+   "sign": "hip +1, knee -1, ankle +1",
+   "sign_evidence": "Hip/knee: README line 91 (hip flexion +, knee extension +) agrees with exo encoders (README line 94 extension +): exo hip vs hip_flexion corr -0.90 to -0.99, exo knee vs knee_angle +0.93 to +0.99 in 12/12 legs (GT24-C02). Ankle: GT24-C02 force-plate evidence, dorsiflexion +; README line 91 is wrong for the ankle.",
+   "normalization": "none (mass-independent)",
+   "status": "supported"
+  },
+  {
+   "family": "Sagittal joint velocities and accelerations",
+   "source": "velocity.csv (deg/s, central difference of angle_filt, README); acceleration derived by the converter",
+   "canonical": "*_velocity_*_rad_s, *_acceleration_*_rad_s2",
+   "sign": "same as the angle",
+   "sign_evidence": "velocity equals d(angle_filt)/dt (C02: correlation 1.0 for the ankle); signs follow the angle",
+   "normalization": "none",
+   "status": "supported"
+  },
+  {
+   "family": "Frontal/transverse angles, velocities and moments",
+   "source": "hip_adduction, hip_rotation, subtalar_angle columns",
+   "canonical": "none adopted",
+   "sign": "source sign kept (LocoHub frontal/transverse rule not adopted)",
+   "sign_evidence": "README line 92 only",
+   "normalization": "as sagittal moments when exported",
+   "status": "source_only"
+  },
+  {
+   "family": "Net joint moments",
+   "source": "moment.csv, moment_filt.csv: <coord>_<s>_moment (README: Nm/kg, denominator not stated)",
+   "canonical": "*_moment_*_Nm_kg",
+   "sign": "hip +1, knee -1, ankle +1",
+   "sign_evidence": "OpenSim generalized force shares its coordinate's direction (reference sign table); coordinate signs as for angles. Ankle force-plate tested (GT24-C02); hip and knee moment signs not force-plate tested.",
+   "normalization": "canonical = sign * source * D / m_basis, with D the trial's exact source divisor (probe E1, net moments checked by E3) and m_basis per D-GT24-C01-1; withheld when D or m_basis is unresolved; published per-kg values kept under source names; never divided again",
+   "status": "supported_after_probe_and_decision"
+  },
+  {
+   "family": "Biological joint moments",
+   "source": "moment_filt_bio.csv (README line 520: moment_filt minus exo interaction torque)",
+   "canonical": "*_biological_moment_*_Nm_kg",
+   "sign": "as net moments",
+   "sign_evidence": "as net moments; ankle bio equals net exactly (C02, 12 legs)",
+   "normalization": "as net moments (same D by README line 520 construction; E1 measures it)",
+   "status": "supported_after_probe_and_decision"
+  },
+  {
+   "family": "Assistance (exoskeleton) moments",
+   "source": "derived: moment_filt - moment_filt_bio; raw exo.csv <joint>_angle_<s>_torque_interaction (units not in README)",
+   "canonical": "*_assistance_moment_*_Nm_kg",
+   "sign": "hip +1, knee -1 applied to (moment_filt - moment_filt_bio); ankle: the difference is exactly 0 in every C02 leg (no ankle actuator)",
+   "sign_evidence": "README line 520 defines bio = moment_filt - interaction, so total = biological + assistance holds by construction in the bio coordinate convention; no exo sign assumption needed",
+   "normalization": "same D and m_basis as net moments. The raw interaction column stays source-only with unknown units unless E1 shows interaction / (net - bio) is a constant equal to a recorded mass (then N*m). The current converters divide the raw column by the worn mass: unsupported.",
+   "status": "supported_after_probe_and_decision"
+  },
+  {
+   "family": "Joint powers",
+   "source": "power.csv, power_bio.csv, power_exo.csv (W/kg)",
+   "canonical": "dataset power columns (not exported by the current converters)",
+   "sign": "none (moment x velocity is invariant to the coordinate sign)",
+   "sign_evidence": "definition (README lines for power*.csv)",
+   "normalization": "same D / m_basis factor as moments (E1 second identity checks power_exo uses D)",
+   "status": "supported_after_probe_and_decision"
+  },
+  {
+   "family": "Vertical ground reaction force",
+   "source": "grf.csv fp_<s>_force_y (N, OpenSim global frame, y up; README line 37)",
+   "canonical": "grf_vertical_*_BW",
+   "sign": "+1 (up)",
+   "sign_evidence": "README line 37; stance force > 0 (C02)",
+   "normalization": "canonical = F / (m_basis g) per D-GT24-C01-1; source N kept",
+   "status": "supported_after_decision"
+  },
+  {
+   "family": "Horizontal ground reaction force and global CoP",
+   "source": "grf.csv fp_<s>_force_x/z, fp_<s>_cop_x/y/z",
+   "canonical": "grf_anterior_*, grf_lateral_*, cop_* (ground frame)",
+   "sign": "unresolved: walking heading and anatomical lateral axis per trial not established",
+   "sign_evidence": "none independent; converter already keeps source axes",
+   "normalization": "source N/m kept",
+   "status": "source_only"
+  },
+  {
+   "family": "Foot-frame insole force and CoP",
+   "source": "insole_sim.csv (calcn frames; force N, CoP m)",
+   "canonical": "currently mapped to cop_anterior/cop_lateral by the converters",
+   "sign": "x anterior, y up confirmed (C02); z (lateral) sign per leg not checked",
+   "sign_evidence": "C02 frame checks for x and y only",
+   "normalization": "none",
+   "status": "unsupported_as_canonical (foot-frame CoP is not the ground-frame CoP the reference defines; left-leg mirror unchecked); source alias only"
+  },
+  {
+   "family": "Exoskeleton sensors and torques",
+   "source": "exo.csv encoders (deg, extension +), IMUs, insoles (CoP unitless), torque_estimated (Nm/kg), torque_desired/measured (Nm), torque_interaction (no unit)",
+   "canonical": "none",
+   "sign": "exo convention extension + (README line 94; C02 encoder correlations agree)",
+   "sign_evidence": "README + C02",
+   "normalization": "none; torque_estimated denominator unknown",
+   "status": "source_only"
+  },
+  {
+   "family": "Virtual IMUs and IMU-integrated segment angles",
+   "source": "imu_sim.csv (OpenSim body frames); converter integrates gyros with its own initialization",
+   "canonical": "thigh/shank/foot sagittal angles (converter estimate)",
+   "sign": "not checked here",
+   "sign_evidence": "none in this task",
+   "normalization": "none",
+   "status": "not_checked (separate review; not part of this policy)"
+  }
+ ],
+ "supported_ankle_policy": "GT24 ankle (GT24-C02; supersedes the README sign line and gt24-ankle-evidence-ranking.json proposed_mapping). The published ankle_angle_<side> (angle.csv, angle_filt.csv), ankle_angle_<side>_velocity (velocity.csv) and ankle_angle_<side>_moment (moment.csv, moment_filt.csv, moment_filt_bio.csv) are dorsiflexion-positive, with internal moments (plantarflexor negative), as in OpenSim; README line 91 (\"ankle plantarflexion is positive\") is wrong for the ankle. LocoHub maps them with sign +1 (no negation): ankle_dorsiflexion_angle = rad(ankle_angle); ankle_dorsiflexion_velocity = rad(ankle_angle_velocity); ankle_dorsiflexion_moment and ankle_dorsiflexion_biological_moment = +source x D / m_basis (normalization per D-GT24-C01-1; withheld while D or m_basis is unresolved); ankle_dorsiflexion_assistance_moment = moment_filt - moment_filt_bio (0 in every leg checked; the exoskeleton has no ankle actuator), scaled the same way; ankle powers keep their sign. Published values stay available under source names. Do not adopt prepare_gt24_ankle_fix.py, adopt_gt24_phase_ankle_sign.py or run_gt24_ankle_converter_pilot.py; their negation would make ankle_dorsiflexion_* plantarflexion-positive. Evidence covers forward level, incline and decline walking and heel/toe walking (6 subjects, 12 legs); other tasks use the same coordinate and are not separately tested. Ankle angle zero is the OpenSim model neutral position (not checked).",
+ "required_code_changes": [
+  "gt24_mass_field_policy.normalize_sample: sign table is hip +1, knee -1, ankle -1; the ankle must be +1 (GT24-C02). Blocking for any canonical ankle moment (apply_gt24_participant_normalization_v2 uses it).",
+  "gt24_mass_field_policy / gt24_source_mass: bind Phase3 body mass per trial through the exact Statics-to-own-README-row match (day-k w/o exo); keep BT18/BT24 as conflict; bind Phase1And2 BT06/BT07/BT13 only through an exact E1 divisor; add an \"independent_net_bio_interaction_identity\" evidence record per trial from the probe output.",
+  "Phase converter get_subject_mass (line 226) tests `'Phase3' in data_source or subject_id in PHASE3_SUBJECTS`, so Phase1And2 BT01, BT02 and BT13 receive Phase3 masses (e.g. BT01 gets 84.28 kg instead of 87.02 kg). The time converter imports this function.",
+  "Phase converter get_collection_phase (line 156) treats data_source == 'Parsed' as Phase3 for shared IDs, but both Parsed zips extract to Parsed/, so collection is inferred from the subject ID, against the collection rule above. Collection must come from the archive (Phase1And2_Parsed.zip vs Phase3_Parsed.zip) carried with each recording.",
+  "Phase and time converters: remove the _noexo/_bare and is_day2 logic (no such trials); write day = null unless bound; take D per trial from bound evidence instead of SUBJECT_MASS_*; GRF and moments per D-GT24-C01-1; assistance = moment_filt - moment_filt_bio instead of -torque_interaction / worn mass; Phase3 BT18/BT24 currently get README row masses that disagree with their Statics models.",
+  "Converters label foot-frame insole CoP as cop_anterior/cop_lateral: keep as a source alias until a ground-frame CoP mapping is reviewed.",
+  "metadata.yaml: citation is wrong (Crossref for 10.1038/s41586-024-08157-7: Molinaro, Scherpereel, Schonhaut, Evangelopoulos, Shepherd, Young, Nature 635, 337-344, 2024; the file names Slade et al.); \"clothing-integrated hip exoskeleton\" contradicts README (hip and knee actuators); \"first 2 and last 1 strides excluded\" contradicts SKIP_FIRST/LAST_STRIDES = 0.",
+  "PLAN_add_no_exo_data.md (untracked) misreads the README mass table as no-exo trials; mark obsolete when the converter is next changed."
+ ],
+ "unsupported": [
+  "Canonical kinetics for BT18 and BT24 (Phase3) until the Statics/README swap is resolved (146 recordings).",
+  "Body-mass-normalized kinetics for second-day trials of BT06, BT07, BT13 (Phase1And2): no day-2 body mass in the README.",
+  "Raw torque_interaction in N*m/kg or as canonical assistance; torque_estimated denominator.",
+  "Horizontal GRF, global CoP and foot-frame insole CoP as canonical anatomical axes.",
+  "Frontal/transverse canonical signs (rule not adopted).",
+  "BT04: README mass row but no Parsed or Complete data (nothing to convert)."
+ ],
+ "probe_plan": {
+  "script": "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py",
+  "script_sha256": "5ce9b738c7390361c52e5f2ccfef8a922866ca97152403cab87d2de00e4dbd94",
+  "tests": "tests/test_gt24_c01_divisor_probe.py (synthetic, 7)",
+  "status": "written, not run (numerical slot held by another agent)",
+  "caveat": "E1 gives the divisor used to convert torque_interaction before subtraction (bio = net - interaction / D_x). It equals the net-moment divisor only if the authors used the same mass for both. E3 tests that, and E3 carries the same assumption as the C02 re-reading: that the GT23 lever bias transfers to GT24. If E3 cannot confirm D_net = D_x, the net/biological moment divisor stays unresolved even when E1 is exact.",
+  "estimators": {
+   "E1": "exact identity interaction = s D_x (moment_filt - moment_filt_bio), plus interaction x velocity = s D_x power_exo (hip, knee, both sides); D_x is the interaction-torque divisor",
+   "E2": "plate weight over whole level-walk strides = worn mass",
+   "E3": "C02 lever arm in N*m: net ankle moments share the E1 divisor"
+  },
+  "selection": {
+   "seed": 20261031,
+   "matrix_sha256": "688dec9d45ecf103c43a57740c0fbc019ab3e67b47fd37834a726bdd6062b462",
+   "rules": {
+    "fixed_at": "GT24-C01, before any GT24 data read by this probe",
+    "identity_top_quantile": 0.75,
+    "identity_min_samples": 200,
+    "identity_exact_max_rel_spread": 0.001,
+    "identity_exact_min_abs_corr": 0.9999,
+    "identity_filtered_min_abs_corr": 0.99,
+    "mass_match_max_abs_log": 0.0005,
+    "plate_threshold_N": 50.0,
+    "plate_min_strides": 10,
+    "plate_unique_margin_log": 0.02,
+    "lever_window": [
+     0.4,
+     0.9
+    ],
+    "lever_stance_threshold_N": 50.0,
+    "lever_band_half_width_log": 0.0488,
+    "lever_bias_external": 0.9942,
+    "level_walk_preference": [
+     "1-2",
+     "1-8",
+     "0-6"
+    ],
+    "repeat_day_phase12_extra_trials": 6
+   },
+   "units": 25,
+   "trials": 58,
+   "by_stage": {
+    "A_level_walk": 35,
+    "B_statics_mass_group": 5,
+    "C_repeat_day": 18
+   },
+   "selection": [
+    {
+     "phase": "Phase1And2",
+     "subject": "BT01",
+     "recording": "normal_walk_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT01",
+     "recording": "normal_walk_3_1-2_off",
+     "stage": "A_level_walk",
+     "exo_state": "worn_unpowered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT02",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT02",
+     "recording": "normal_walk_1_2_1-2_off",
+     "stage": "A_level_walk",
+     "exo_state": "worn_unpowered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT03",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT03",
+     "recording": "normal_walk_1_2_1-2_off",
+     "stage": "A_level_walk",
+     "exo_state": "worn_unpowered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT06",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT06",
+     "recording": "normal_walk_1_2_1-2_off",
+     "stage": "A_level_walk",
+     "exo_state": "worn_unpowered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT06",
+     "recording": "lift_weight_2_1_0lbs-r-c_on",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT06",
+     "recording": "walk_backward_1_1_1-0_on",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT06",
+     "recording": "stairs_2_8_down_on",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT06",
+     "recording": "tug_of_war_1_2_off",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT06",
+     "recording": "curb_down_1_2_off",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT06",
+     "recording": "stairs_1_1_up_on",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT07",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT07",
+     "recording": "normal_walk_1_2_1-2_off",
+     "stage": "A_level_walk",
+     "exo_state": "worn_unpowered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT07",
+     "recording": "normal_walk_1_1_2-5_on",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT07",
+     "recording": "tug_of_war_1_2_off",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT07",
+     "recording": "start_stop_1_off",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT07",
+     "recording": "sit_to_stand_1_1_short-noarm_on",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT07",
+     "recording": "stairs_1_2_down_off",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT07",
+     "recording": "incline_walk_2_2_up10_off",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT08",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT08",
+     "recording": "normal_walk_1_2_1-2_off",
+     "stage": "A_level_walk",
+     "exo_state": "worn_unpowered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT09",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT09",
+     "recording": "normal_walk_1_2_1-2_off",
+     "stage": "A_level_walk",
+     "exo_state": "worn_unpowered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT10",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT10",
+     "recording": "normal_walk_1_2_1-2_off",
+     "stage": "A_level_walk",
+     "exo_state": "worn_unpowered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT11",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT11",
+     "recording": "normal_walk_1_2_1-2_off",
+     "stage": "A_level_walk",
+     "exo_state": "worn_unpowered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT12",
+     "recording": "normal_walk_2_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT12",
+     "recording": "normal_walk_1_2_1-2_off",
+     "stage": "A_level_walk",
+     "exo_state": "worn_unpowered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT13",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT13",
+     "recording": "lift_weight_1_1_25lbs-l-l_on",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT13",
+     "recording": "ball_toss_1_1_left_on",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT13",
+     "recording": "dynamic_walk_1_1_heel-walk_on",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT13",
+     "recording": "lift_weight_1_1_25lbs-l-c_on",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT13",
+     "recording": "lunges_1_1_on",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT13",
+     "recording": "incline_walk_1_2_up10_on",
+     "stage": "C_repeat_day",
+     "estimators": [
+      "E1"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT14",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT15",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT16",
+     "recording": "normal_walk_2_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase1And2",
+     "subject": "BT17",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ]
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT01",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ],
+     "statics_trial": "normal_walk_1_1",
+     "statics_mass_kg": "84.2842196283257"
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT02",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ],
+     "statics_trial": "normal_walk_1_1",
+     "statics_mass_kg": "79.0980607683209"
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT02",
+     "recording": "stairs_3_12_down_on",
+     "stage": "B_statics_mass_group",
+     "statics_mass_kg": "76.7386574562227",
+     "estimators": [
+      "E1"
+     ],
+     "statics_trial": "stairs_3_12"
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT13",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ],
+     "statics_trial": "normal_walk_1_1",
+     "statics_mass_kg": "96.0380212549001"
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT13",
+     "recording": "stairs_2_3_up_on",
+     "stage": "B_statics_mass_group",
+     "statics_mass_kg": "93.8060005230687",
+     "estimators": [
+      "E1"
+     ],
+     "statics_trial": "stairs_2_3"
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT18",
+     "recording": "normal_walk_1_1_0-6_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ],
+     "statics_trial": "normal_walk_1_1",
+     "statics_mass_kg": "84.8435361822889"
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT18",
+     "recording": "stairs_3_10_down_on",
+     "stage": "B_statics_mass_group",
+     "statics_mass_kg": "87.1501204253825",
+     "estimators": [
+      "E1"
+     ],
+     "statics_trial": "stairs_3_10"
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT19",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ],
+     "statics_trial": "normal_walk_1_1",
+     "statics_mass_kg": "76.8438623027198"
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT20",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ],
+     "statics_trial": "normal_walk_1_1",
+     "statics_mass_kg": "62.502313248334"
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT21",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ],
+     "statics_trial": "normal_walk_1_1",
+     "statics_mass_kg": "65.8599206916656"
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT22",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ],
+     "statics_trial": "normal_walk_1_1",
+     "statics_mass_kg": "84.2781832504942"
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT23",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ],
+     "statics_trial": "normal_walk_1_1",
+     "statics_mass_kg": "74.2378051364384"
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT23",
+     "recording": "stairs_3_12_down_on",
+     "stage": "B_statics_mass_group",
+     "statics_mass_kg": "73.9318234784596",
+     "estimators": [
+      "E1"
+     ],
+     "statics_trial": "stairs_3_12"
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT24",
+     "recording": "normal_walk_1_1_1-2_on",
+     "stage": "A_level_walk",
+     "exo_state": "powered",
+     "estimators": [
+      "E1",
+      "E2",
+      "E3"
+     ],
+     "statics_trial": "normal_walk_1_1",
+     "statics_mass_kg": "74.9572980922401"
+    },
+    {
+     "phase": "Phase3",
+     "subject": "BT24",
+     "recording": "stairs_2_2_down_on",
+     "stage": "B_statics_mass_group",
+     "statics_mass_kg": "75.231230483426",
+     "estimators": [
+      "E1"
+     ],
+     "statics_trial": "stairs_2_2"
+    }
+   ]
+  },
+  "resource_estimate": "one worker, one zip member at a time (largest about 5 MB), RLIMIT_AS 1.5 GiB; GT24-C02 read 78 members in 7.3 s at 176 MiB; this reads about 330 members.",
+  "launch": "Through contributor_tools.guarded_launcher (single job, AGENTS.md prefix): python3 contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py pilot",
+  "interpretation_rules": [
+   "E1 exact and equal (0.05 %) to the trial's worn model mass (Statics, or README w/ exo for Phase1And2): D bound for that trial; Phase1And2 repeat-day trials get their mass row from this match.",
+   "E1 exact but equal to another value (body mass, another subject, the other day): record as a divisor anomaly; withhold canonical kinetics for that trial pending review.",
+   "E1 not exact for both joints/sides: D unbound unless E3 is inside the band of one recorded worn mass that is unique within 8 %; then class \"lever_estimate\" (not exact).",
+   "E3 bias is fixed to the GT23-C04 calibration (0.9942), not re-fitted to the pilot. E3 inside the band of the E1 value: net moments taken to share D_x (conditional on bias transfer). E3 outside: net moments use a different divisor than the interaction subtraction, or the bias does not transfer; stop and report.",
+   "E2: worn mass of the person in the folder; BT18/BT24 resolved only if E2 is unique at 2 % and agrees with E1.",
+   "If the pilot is all exact, extend E1 (3 members per recording) to all 2,421 recordings as a separate guarded census job; otherwise report and stop."
+  ]
+ },
+ "other_findings": [
+  "GT25 (same lab, same README template): gt25-normalization-source-review.json keeps an ankle negation from its README; GT24-C02 found the GT24 README ankle line wrong, so GT25-C01 should test its ankle sign independently before adopting the negation.",
+  "gt24_source_mass.py refuses to bind Phase3 days from model-mass agreement; this policy binds the README mass row (not a calendar day) through exact equality of two publisher documents, which is source evidence, not inference from trial counters."
+ ],
+ "readme_mass_spread": {
+  "worn_minus_body_kg": [
+   6.12,
+   7.81
+  ],
+  "worn_over_body": [
+   1.0654,
+   1.1308
+  ],
+  "rows": 31,
+  "note": "All README rows, including BT04 (no data)"
+ },
+ "decision_candidate": {
+  "id": "D-GT24-C01-1",
+  "task_id": "GT24-C01",
+  "question": "GT24 participants wore a 6-8 kg exoskeleton. Which mass should LocoHub's standard GT24 moment, power and force columns be per kg of? Published per-kg values will first be converted back with the divisor the authors used, once a probe measures it.",
+  "options": [
+   {
+    "key": "A",
+    "label": "Leave GT24 kinetics empty",
+    "consequence": "Left out: All standard GT24 moments, powers and body-weight forces. Published per-kg values only under source names; nothing rescaled. Reversible."
+   },
+   {
+    "key": "B",
+    "label": "Worn mass (person + exoskeleton)",
+    "consequence": "Left out: BT18/BT24 (146 recordings) until resolved; trials without an established divisor. Published values rescaled from their measured divisor to the worn mass; forces in worn-system weights; values 6-12 % below body-mass values. Reversible."
+   },
+   {
+    "key": "C",
+    "label": "Body mass (without exoskeleton)",
+    "consequence": "Left out: As B, plus second-day trials of BT06, BT07, BT13 (first collection): no body mass reported. Published values rescaled from their measured divisor to body mass (× 1.07-1.13 if the measured divisor is the worn mass, × 1 if it is body mass); comparable with datasets without an exoskeleton; published values kept under source names. Reversible."
+   }
+  ],
+  "options_order": "By the normalizing mass: none (withheld), heavier (worn), lighter (body).",
+  "recommended": "C",
+  "confidence": "medium",
+  "why": "LocoHub defines forces in body weights and moments per kg; D-GT23-C03-1 rescaled GT23 to each participant's own mass; the task acceptance forbids substituting exoskeleton model mass for body mass. Source per-kg values stay available, so option B remains recoverable. Cost: second-day trials of three first-collection subjects lose kinetics.",
+  "check": "README subject-mass table: every \"w/ exo\" mass is 6.1-7.8 kg above its \"w/o exo\" mass.",
+  "cost_of_waiting": "GT24 standard kinetic columns cannot be finalized; the divisor probe and all other GT24 work are unaffected.",
+  "decide_before_recommendation": true,
+  "status": "open",
+  "queued_until": "GT24-C01 divisor probe pilot (E1 with E3) reports; re-check the option wording against it before copying into backlog.json."
+ },
+ "limitations": [
+  "No GT24 time series were read by this task; every divisor statement is preliminary until the probe runs.",
+  "C02-derived divisor evidence: 6 trials, one per subject, ankle only, generic talus; the common bias comes from the same trials.",
+  "Hip and knee moment signs follow the OpenSim coordinate definition plus encoder checks; no force-plate test of hip/knee moments."
+ ],
+ "builder_sha256": "06428d23a21d8d39e810584cac64cac14b7f412bb9aaea5e1b2c7f34215e388c"
+}

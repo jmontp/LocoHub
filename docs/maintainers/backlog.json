@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-10-31T22:53:28Z",
+  "updated_at_utc": "2026-10-31T22:56:29Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -2584,7 +2584,7 @@
       "priority": "P1",
       "dataset": "gt24",
       "title": "Specify phase/day normalization and the supported ankle policy",
-      "status": "ready",
+      "status": "done",
       "stage": "conventions",
       "question": "Which GT24 channels can be normalized or signed canonically from independent source evidence?",
       "scope": "All phase/participant/day conditions, unknown masses, source-normalized moments and interaction channels.",
@@ -2612,25 +2612,19 @@
         "Inspect existing code and source metadata to identify required changes. Deliver the mapping and verification plan; actual numerical fixtures, pilots and regenerated outputs belong to GT24-P01 and GT24-F01.",
         "Retain unknown source moment denominators and interaction units as source-only; do not double-divide source moments or substitute exoskeleton model mass for body mass."
       ],
-      "next_action": "Review four-pilot requirements and source mass matrix. Ankle policy is settled by GT24-C02: no negation; do not adopt prepare_gt24_ankle_fix.py, adopt_gt24_phase_ankle_sign.py or run_gt24_ankle_converter_pilot.py.",
+      "next_action": "Done. GT24 signs and normalization policy specified; divisor not established; BT18/BT24 masses swapped; no no-exo trials; converter bugs listed. Next: divisor probe pilot (58 trials, one guarded job), then re-check D-GT24-C01-1 wording and open it.",
       "resource_class": "read_only",
       "evidence_paths": [
-        "docs/quality/audits/gt24-ankle-convention.json",
-        "docs/quality/audits/gt24-ankle-convention-review.json",
-        "docs/quality/audits/gt24-ankle-evidence-ranking.json",
-        "docs/quality/audits/gt24-native-parsed-ankle-pilot.json",
-        "docs/quality/audits/gt24-ankle-converter-pilot.json",
-        "converted_datasets/reconversion_v2/gt24_phase_ankle_adoption_serial_queue_20261021/plan.json",
-        "docs/quality/index.html",
-        "converted_datasets/reconversion_v2/gt24_equivalence_after_gt23_20261021/status.json",
-        "converted_datasets/reconversion_v2/gt24_phase_ankle_adoption_serial_queue_20261021/queue_status.json",
-        "docs/quality/audits/queue-recovery-expanded-49-summary.json"
+        "docs/quality/audits/gt24-c01-normalization-policy.json",
+        "docs/maintainers/handoffs/GT24-C01.json",
+        "docs/maintainers/handoffs/GT24-C01-verify.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
+        "last_checked_at_utc": "2026-10-31T22:56:29Z",
         "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
         "checks": [
-          "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
+          "Read original task scope and acceptance; no scientific arrays loaded or jobs started.",
+          "Independent verifier: round 1 back_to_worker (circular divisor evidence, missed converter bugs), round 2 done; probe pilot approved as one guarded job."
         ],
         "remaining": [
           "Review four-pilot requirements and source mass matrix; identify exact independent evidence needed for each unresolved field."
@@ -7311,6 +7305,36 @@
       "cost_of_waiting": "GT23 moments and powers stay out of any release; GT23 kinematics, forces and other datasets are unaffected.",
       "decide_before_recommendation": true,
       "status": "open"
+    },
+    {
+      "id": "D-GT24-C01-1",
+      "task_id": "GT24-C01",
+      "question": "GT24 participants wore a 6-8 kg exoskeleton. Which mass should LocoHub's standard GT24 moment, power and force columns be per kg of? Published per-kg values will first be converted back with the divisor the authors used, once a probe measures it.",
+      "options": [
+        {
+          "key": "A",
+          "label": "Leave GT24 kinetics empty",
+          "consequence": "Left out: All standard GT24 moments, powers and body-weight forces. Published per-kg values only under source names; nothing rescaled. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Worn mass (person + exoskeleton)",
+          "consequence": "Left out: BT18/BT24 (146 recordings) until resolved; trials without an established divisor. Published values rescaled from their measured divisor to the worn mass; forces in worn-system weights; values 6-12 % below body-mass values. Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Body mass (without exoskeleton)",
+          "consequence": "Left out: As B, plus second-day trials of BT06, BT07, BT13 (first collection): no body mass reported. Published values rescaled from their measured divisor to body mass (× 1.07-1.13 if the measured divisor is the worn mass, × 1 if it is body mass); comparable with datasets without an exoskeleton; published values kept under source names. Reversible."
+        }
+      ],
+      "options_order": "By the normalizing mass: none (withheld), heavier (worn), lighter (body).",
+      "recommended": "C",
+      "confidence": "medium",
+      "why": "LocoHub defines forces in body weights and moments per kg; D-GT23-C03-1 rescaled GT23 to each participant's own mass; the task acceptance forbids substituting exoskeleton model mass for body mass. Source per-kg values stay available, so option B remains recoverable. Cost: second-day trials of three first-collection subjects lose kinetics.",
+      "check": "README subject-mass table: every \"w/ exo\" mass is 6.1-7.8 kg above its \"w/o exo\" mass.",
+      "cost_of_waiting": "GT24 standard kinetic columns cannot be finalized; the divisor probe and all other GT24 work are unaffected.",
+      "decide_before_recommendation": true,
+      "status": "queued"
     }
   ]
 }
