@@ -1,0 +1,402 @@
+{
+ "task_id": "HIST-05",
+ "verifier_role": "independent second agent; synthetic fixtures, the 15 local HIST-04 B3D headers, nimblephysics source at c405b056 (SubjectOnDisk.proto, SubjectOnDisk.cpp fetched as text to the scratchpad) and the locally installed nimblephysics 0.10.52.1 reader; no archive member downloaded, nothing launched; worker files, backlog and AGENTS.md not edited",
+ "verdict": "batch_accepted",
+ "last_checked_at_utc": "2026-11-01T03:33:30Z",
+ "batch_round": {
+  "verdict": "batch_accepted",
+  "last_checked_at_utc": "2026-11-01T03:33:30Z",
+  "scope": "plans_r3 jobs 02-33 (8 Falisse, 17 Tan walking, 8 Tan running), with 01 and 01b for the ledger and hash checks. Read-only: 34 launcher receipts, 33 acquisition receipt folders, conversion.json files, parquet footers, sha256sum of all 33 frames.parquet files, the HIST-04 headers, a seeded recount of the flags, and a Tan trial-name scan. Nothing launched; backlog not edited; no commit.",
+  "summary": "All 33 participants (3,647,949 rows) pass. Each job ran once, with all launcher checks true, one bound code hash and parquet hashes that match. No B3D remains. Flag counts match the handoff and the HIST-04 headers. The seeded recount matches exactly. hip_calibration in Tan running s7 is the only non-matching Tan name. No memory limit changed. Dry runs and rows for the 21 members without a HIST-04 header are not independently checked.",
+  "file_checks": [
+   {
+    "item": "1. One ledger entry per job; receipts; identical hashes",
+    "result": "pass (dry runs not checked)",
+    "evidence": "All 34 receipts (33 acquisition jobs plus 01b) are on one boot. Each has status completed, exit 0 and clean_success true, with all 8 checks true and cleanup_proof proven. stop_actions, launcher_errors and finalisation_errors are empty, there was no runtime breach, and bindings matched before and after. Each receipt claims exactly one launch-ledger entry, and no entry is claimed twice. From 23:50:50 to 03:28:50 UTC the ledger holds 34 entries, all claimed by these receipts and no others. launcher_receipts holds 68 files (34 .json and 34 .log), with no .conflict-* or .final-* files. Every receipt's spec_sha256 equals its spec file, and those files equal plans_r3/index.json. The bound code is the same in all 34 jobs: acquisition 5ff9565c..., converter f8baebfb..., zip helper 091c70c5.... The launcher (8df6f115...) and the envelope (9f204cfd...) are also the same in all 34. Every acquisition_result records the same script and converter hashes. Spec file hashes differ by job, as expected, since each names its own member. Dry runs write nothing by design, so the handoff's dry-run claims cannot be checked."
+   },
+   {
+    "item": "2. Parquet hashes, row counts, no B3D",
+    "result": "pass (rows for 21 of 33 checked only against the in-job header)",
+    "evidence": "sha256sum of all 33 frames.parquet files equals the launcher receipt's output hash. The receipt hash in turn equals acquisition_result, conversion.json and the handoff hash for every participant. For every participant, footer rows equal the acquisition rows, conversion rows, conversion frames_in_file and the handoff rows. frames_excluded is 0, every trial is written, and the total is 3,647,949 (fa16 27,719, ta22 1,584,018, ta21 2,036,212). 12 members have an independently fetched HIST-04 header: all 8 Falisse, Tan walking 04 and 10, and Tan running s8 and s3. For these, the header frame total equals the rows, and the header SHA-256 equals the acquisition receipt's header_sha256. The other 21 have no HIST-04 header. Their rows equal the frame count in the header read during the job, and the converter's layout arithmetic reproduced the file size. find -iname '*.b3d*' under /mnt/s/locomotion_data returns nothing; the only .rejected file belongs to the GT21 mirror. On disk: fa16 40,617,395 B, ta22 1,673,783,644 B, ta21 2,054,078,926 B."
+   },
+   {
+    "item": "3. Flag counts and seeded recount",
+    "result": "pass",
+    "evidence": "For all 33 participants, the handoff's flag counts sum to the row count. For the 12 members with a HIST-04 header, the counts decoded from that header equal the handoff counts exactly. Seeded recount: seed 20261101, random.Random(seed).choice over each study's participant folders sorted by name, studies in the order fa16, ta22, ta21. It picked Falisse subject_10 (5,060 rows), Tan walking 06 (93,145) and Tan running s8 (241,173). Reading only missing_grf_reason, source_trial_index and source_frame_index, the counts equal the handoff exactly. Frame indices run without gaps within each trial, and rows per trial equal conversion.json. No GRF-altering flag (shiftGRF, interpolatedClippedGRF, extendedToNearestPeakForce) appears in the recount or in the handoff."
+   },
+   {
+    "item": "4. RSS and admission memory",
+    "result": "pass",
+    "evidence": "Peak RSS per receipt: Falisse 143.1-159.9 MiB, Tan walking 268.7-284.0 MiB, Tan running 407.5-433.9 MiB. The handoff values equal the receipts to within 0.1 MiB. No limit changed. All 33 acquisition specs keep address_space_mib 768; the observed RLIMIT_AS is 805,306,368 B (768 MiB) in every job; startup reserves (3584/2816) and runtime floors (2048/2048) are the same in every spec; and the launcher and envelope hashes are unchanged. The ruling is logged in HIST-05.json tan_running_run.coordinator_ruling: about 410-470 MiB accepted under the 768 MiB cap, the 290 MiB line was an early warning, and new stop rules apply (600 MiB peak, 4 GiB admission). Those rules tighten the limits; they do not relax them. Admission minimum: Linux 13,203 MiB and Windows 4,481 MiB (4.38 GiB). The runtime minimum polled during jobs was Linux 12,926 MiB and Windows 4,457 MiB, so memory never fell below 4 GiB. Note: the ruling is in the task handoff only, and the backlog.json HIST-05 entry still reads 'ready' with its creation-time handoff."
+   },
+   {
+    "item": "5. s7 hip_calibration and MAP-TAN-TASK; Tan trial-name scan",
+    "result": "pass",
+    "evidence": "Recorded in HIST-05.json under tan_running_run.stop_reason_history, coordinator_ruling_hip_calibration, required_for_mapping_step MAP-TAN-TASK and batch_summary.known_label_issue. My own scan read task_id, source_original_trial_name and task, one row group at a time, from all 25 Tan files. Tan walking: 17 of 17 participants have exactly 4 task_id values within baseline|fpa|step_width|trunk_sway, with task null throughout. Tan running: each participant has 12 task_id values matching {nike|mini}_{SR|SI|baseline}_{24|28}, all with task 'run'. The one exception is s7, which has a 13th value, hip_calibration, on 2,000 rows labelled task 'run'. task_id equals source_original_trial_name everywhere. There is no other non-matching name."
+   },
+   {
+    "item": "6. Dropped Falisse subjects never acquired",
+    "result": "pass",
+    "evidence": "No subject_1, subject_7 or subject_8 folder exists under fa16 or acquisition_receipts, and no such launcher receipt exists. They appear in no plans_r3 spec; index.json lists them only under 'dropped'. With 34 ledger entries for 34 receipts, no launch went unaccounted for. Their only local trace is the HIST-04 header-only reads (hdr.bin), which predate HIST-05 and are not acquisitions."
+   }
+  ],
+  "not_checked": [
+   "Dry runs: the launcher writes nothing on --dry-run, so these rest on the handoff.",
+   "Rows against an independent header for the 21 members without a HIST-04 header. They are checked against the header read in-job and the file-size layout.",
+   "Frame values against nimblephysics for any participant other than the pilot. Same code hash; not required by the acceptance criteria."
+  ],
+  "commit_and_done": "HIST-05's acceptance criteria are met: dropped subjects never acquired, pass chosen by name, no invented metadata (round 3), and independent verification before launch (round 3 and the pilot). The deliverables can be committed. Stage specific files only: contributor_tools/acquire_addbiomechanics_member.py, contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_dynamics_frames.py, tests/test_hist05_addbiomechanics_member.py, docs/maintainers/handoffs/HIST-05.json and HIST-05-verify.json. The plans_r3 specs stay local, since they are gitignored. The coordinator should set HIST-05 to done in backlog.json, which currently reads 'ready' with a stale handoff, in the same update. In that update, also queue MAP-TAN-TASK and the P2 converter-memory follow-up as backlog items so they are not left only in the handoff. Done does not mean scientific approval of the data.",
+  "test_runs": [
+   {
+    "command": "scratchpad hist05_batch/receipts_check.py (receipts, specs, ledger, footers, HIST-04 headers; nice 19, ionice idle)",
+    "result": "as above; peak RSS 121 MiB"
+   },
+   {
+    "command": "nice -n 19 ionice -c 3 sha256sum <study>/<participant>/frames.parquet (33 files)",
+    "result": "33 of 33 equal the receipts"
+   },
+   {
+    "command": "scratchpad hist05_batch/flags_tasks.py (seed 20261101 recount and Tan trial-name scan; bounded column and row-group reads)",
+    "result": "as above; peak RSS 190 MiB"
+   }
+  ],
+  "questions_for_jose": []
+ },
+ "pilot_round": {
+  "verdict": "pilot_accepted",
+  "last_checked_at_utc": "2026-10-31T23:58:04Z",
+  "scope": "plans_r3 job 01 (acquire and convert Falisse subject_4) and job 01b (nimblephysics comparison, release, B3D deletion). Read-only: launcher receipts, acquisition receipts, comparison, conversion record, current scripts and specs, one bounded read of frames.parquet (selected columns, peak RSS 126 MiB, nice 19 / ionice idle), and the HIST-04 header of the same B3D. Nothing launched; backlog not edited; no commit.",
+  "summary": "The pilot holds. Each job ran once with all launcher checks true. nimblephysics agreed exactly on 738 frames and 98,892 values, including all 19,926 contact force, CoP and torque values. The B3D is gone, and the parquet hash matches. 01b had no address-space cap, which was disclosed and accepted in review before launch. Its 737 MiB peak was not bounded by any declared limit. Job 02 may proceed.",
+  "file_checks": [
+   {
+    "item": "1. One launch per spec, dry runs, launcher checks, cleanup, no overwrite",
+    "result": "pass (dry runs not checked)",
+    "evidence": "Each receipt has status completed, exit 0, clean_success true and all 8 checks true (cleanup_proven, bindings_unchanged, envelope_unchanged, linux/windows_no_new_worker, no_orphans_at_leader_exit, outputs_hashed, expected_outputs_present). cleanup_proof is same_boot_proc_scan, proven, attempts 1. The receipts' spec_sha256 values (ced76aae... for 01, 84b15670... for 01b) equal the current spec files, and launcher_sha256 8df6f115... equals the current launcher. The launch ledger for this boot has exactly one entry per job (23:50:50 and 23:51:20 UTC). The 23:48:37 entry belongs to the UM21 pilot. run_job refuses an existing receipt or log, and every write is exclusive. No .conflict-* or .final-* receipt exists, and each log is single-run (150 B and 87 B). Dry runs: --dry-run writes nothing by design, so preflight_passed rests on the worker's statement alone."
+   },
+   {
+    "item": "2. 01b memory limit: set in review or raised",
+    "result": "pass: set in review, not raised to bypass a rejection; the 737 MiB peak was not bounded by any declared limit",
+    "evidence": [
+     "01b declares startup_memory_mib {linux 3584, windows 2816} and runtime_memory_mib {2048, 2048}. These equal the PM-01 envelope minimums (guarded_launcher ENVELOPE_LIMITS) and every other plans_r3 spec. It omits address_space_mib, which validate_spec treats as optional; the envelope sets only a maximum of 768. No spec field caps RSS, so 737 MiB (754,680 KiB) is within the declared limits only because nothing bounds it. runtime_guard.observed_address_space_limits is 'unlimited' for 01b and 805306368 (768 MiB) for 01.",
+     "AGENTS.md's 256 MiB default admission estimate is the release builder's Parquet admission budget. DATA_CONTRACT.md describes it as 'not an operating-system memory limit'. 01b does not load through that builder, so the estimate was neither applicable nor raised.",
+     "History. git log cannot show the field's history because the specs are gitignored (.gitignore:179, converted_datasets/reconversion_v2/) and the HIST-05 handoffs and acquire_addbiomechanics_member.py are untracked. From disk: plans/ and plans_r2/ have no 01b, and every acquisition spec in all three generations carries address_space_mib 768. 01b first appears in plans_r3, built by plan() with the comment 'No address_space_mib: nimblephysics (libtorch) cannot map under the 768 MiB PM-01 cap' (acquire_addbiomechanics_member.py line 535). The worker disclosed it in rework_round_2, and verify round_3 accepted it before launch as 'acceptable for this pilot only' (610 MiB synthetic peak, about 650 MiB expected). The launcher and the envelope have one commit each (38c77ac), and the envelope SHA-256 is unchanged (9f204cfd...). The AGENTS.md 256 MiB line dates from 38e5dec.",
+     "Caveats: the runtime guard made 0 polls in both jobs because each run (2.2 s and 4.6 s) was shorter than the 15 s poll. For 01b, the only active memory control was startup admission (13,237 MiB available against a 3,584 MiB reserve). The actual peak was 13% above the review estimate. No later plans_r3 job uses nimblephysics, and all 33 acquisition specs keep the 768 MiB cap. Any future nimblephysics job needs its own estimate."
+    ]
+   },
+   {
+    "item": "3. Comparison independence and coverage",
+    "result": "pass (not re-run: the B3D is deleted by design)",
+    "evidence": "compare_with_reader loads the B3D with nimblephysics.biomechanics.SubjectOnDisk and calls readFrames(trial, 0, n, includeSensorData=False, includeProcessingPasses=True). It finds the dynamics record from nimblephysics' own pass label, which must equal the parquet's pass index (2). It never calls the converter's wire decoder. The values come from nimblephysics attributes pos, vel, acc, tau, groundContactForce, groundContactCenterOfPressure, groundContactTorque, comPos/Vel/Acc and residualWrenchInRootFrame. A field-number or force/CoP/torque mislabel in the converter would therefore show up as a mismatch. Coverage is 134 values per frame: 23 DOF x 4, 3 bodies x 9 contact values, 9 COM values and 6 residuals. That is all 134 signal columns of the 163; the other 29 are identity and metadata. 738 x 134 = 98,892 values, and 3 x 9 x 738 = 19,926 contact values. Equality is exact, and NaN matches only NaN. comparison.json SHA-256 5720c6a0... equals the launcher receipt's output hash, and its fields equal comparison_release.json. Shared with the worker: the column list (conv.columns) and the comparison code itself, written by the same worker and run inside the job. I could not recompute it independently. Metadata columns are outside the comparison; I checked missing_grf_reason separately (item 5)."
+   },
+   {
+    "item": "4. Measured GRF only; dynamics-pass selection",
+    "result": "pass (low-pass filtering of the forces not checked)",
+    "evidence": [
+     "The converter selects the pass whose type is 'dynamics' in the trial's pass header (order kinematics, lowPassFilter, dynamics; index 2). Every row has source_pass_type 'dynamics' and index 2.",
+     "Contact columns come from SubjectOnDiskProcessingPassFrame fields 8, 6 and 7 (ground_contact_force, center_of_pressure, torque). In nimblephysics SubjectOnDisk.proto at c405b056, these fields carry the comment 'These are the original force-plate data in world space, one per ground contact body'. Field 5 (ground_contact_wrench), the root-frame contact copies (14, 18-20) and the joint centres are not written. No column name suggests a predicted, estimated or synthetic force.",
+     "Residuals ship as separately named columns: root_residual_0-5 (field 12, root-frame residual wrench) and dynamics_linear/angular_residual (per-frame header arrays). They are labelled residuals, not GRF, and are never added into the contact columns. The proto has no predicted-GRF field.",
+     "Plates: the header records 3 force plates for 3 contact bodies (calcn_r, calcn_l, pelvis). Pelvis carries the seat force: 452 N mean while seated and 0 N while standing.",
+     "Not checked: the dynamics pass follows a lowPassFilter pass (header: 30 Hz, order 2). These are therefore measured force-plate data, probably filtered, not raw plate samples. Raw readings are not kept by design (D-HIST-04-1 = A). The proto's MissingGRFReason also includes shiftGRF, interpolatedClippedGRF and extendedToNearestPeakForce, which mark frames where AddBiomechanics altered the GRF. None occurs in this pilot."
+    ]
+   },
+   {
+    "item": "5. Frame flags preserved; exclusions accounted",
+    "result": "pass",
+    "evidence": "frames.parquet has 738 rows, equal to the header trial length, with frames_excluded 0. source_frame_index runs 0-737 without gaps, and the 27 contact columns contain no NaN. The missing_grf_reason counts are notMissingGRF 269, footContactDetectedButNoForce 467 and missingBlip 2. They equal the counts decoded independently from the HIST-04 Drive header of the same file (SHA-256 ca86d249..., equal to the acquisition receipt's header_sha256). Runs: 0-130 ok, 131-597 contact-no-force, 598-599 blip, 600-737 ok. No frame was dropped. Body weight: summed Fy averages 623.7 N over all frames (-0.94%) and 635.2 N over notMissingGRF frames (+0.90%), against 629.6 N for the entered 64.2 kg (g 9.80665). The worker's 629.8 N implies g 9.81; this is immaterial."
+   },
+   {
+    "item": "6. B3D gone; parquet hash",
+    "result": "pass",
+    "evidence": "A search for *.b3d* under /mnt/s/locomotion_data finds nothing, and fa16/subject_4/source/ no longer exists. pending_comparisons and transient_files under the fixed root are both empty. sha256sum frames.parquet gives e88c6a54323274366a7fb3576fefe579ea5e275203a84274477e881fcdd813d0, which equals the launcher receipt, acquisition_result, conversion.json, comparison.json and the handoff. conversion.json (fdcbd616...) and dynamics_model.osim (1cef5729...) also match the launcher receipt."
+   },
+   {
+    "item": "7. Storage per subject",
+    "result": "pass",
+    "evidence": "Subject output is 1,908,376 B: frames.parquet 862,850, dynamics_model.osim 1,042,887 and conversion.json 2,639. Receipts, logs and the comparison add 36,010 B, for 1,944,386 B in total, 19% of the 10,193,550 B B3D. The model file is 55% of the subject output."
+   }
+  ],
+  "not_checked_anomalies": [
+   "Frames 0 and 737, the first and last, have zero force on all three plates but are flagged notMissingGRF, even though the subject is seated (the pelvis plate reads about 450 N in neighbouring frames). This is copied exactly from the source and is likely an edge artefact. It is unexplained and not hidden.",
+   "footContactDetectedButNoForce does not mean empty force columns. In those 467 frames the feet carry 313 N and 304 N and the pelvis plate reads 0. Readers should use the label, not assume zero GRF."
+  ],
+  "job_02": "May proceed when the coordinator gives the numerical slot and a fresh census passes. Gates are clear: no pending pilot, no transient B3D, 02 spec valid with bindings equal to the current files, and neither its output root nor its receipt exists. Conditions: one job per tool call; record each subject's missing_grf_reason counts and flag any shiftGRF, interpolatedClippedGRF or extendedToNearestPeakForce frames; re-check the time budget before the first Tan running job, since the 1.4 MB/s pilot rate comes from a 5.7 MB transfer.",
+  "test_runs": [
+   {
+    "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -rs -p no:cacheprovider tests/test_hist05_addbiomechanics_member.py tests/test_addbiomechanics_member_acquisition.py tests/test_backlog_workflow.py",
+    "result": "127 passed"
+   },
+   {
+    "command": "python3 contributor_tools/build_backlog_page.py --check",
+    "result": "Backlog valid; HTML current (103 tasks)"
+   },
+   {
+    "command": "scratchpad hist05_pilot/probe.py and probe2.py (frames.parquet selected columns plus the HIST-04 header; nice 19, ionice idle)",
+    "result": "as above; peak RSS 126 MiB and 119 MiB"
+   },
+   {
+    "command": "sha256sum of the outputs, specs and scripts; pending_comparisons and transient_files; validate_spec on 02",
+    "result": "as above"
+   }
+  ],
+  "artifact_hashes": {
+   "frames.parquet": "e88c6a54323274366a7fb3576fefe579ea5e275203a84274477e881fcdd813d0",
+   "comparison.json": "5720c6a0bba7b56230676eb55d5590b145dae1d7851ebb1f7dc3b88c2bd2f375",
+   "contributor_tools/acquire_addbiomechanics_member.py": "5ff9565c027925ebff90e27747a1c60ed49931ba69bf57e199ea3b29b4d0b9b6",
+   "contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_dynamics_frames.py": "f8baebfb72ea23ecce2c25bba61a8df9c4ca18a4d21161e32fc2e5f8a95904d5",
+   "01 spec": "ced76aaea0771b451edc90797022becd4b4d22b8403c1bad291a95b8e90d153b",
+   "01b spec": "84b1567080c27903d918528ef26860ebc5c790f2d12a6fa6e6e4b3c0c83a2537"
+  },
+  "questions_for_jose": []
+ },
+ "round_3": {
+  "verdict": "ok_to_pilot",
+  "last_checked_at_utc": "2026-11-01T04:30:00Z",
+  "summary": "G1 and G2 are fixed. release-pilot now computes the comparison itself with nimblephysics readFrames. A forged or hand-written release record cannot unblock later jobs while the pilot B3D exists, and redirected receipt or transient roots are refused. All 34 plans_r3 specs validate with matching bindings, and the plans/ and plans_r2/ specs are superseded (their bindings no longer match). Spec 01b without an address-space cap is acceptable for this pilot. Run 01 alone, then 01b, before 02.",
+  "file_checks": [
+   {
+    "item": "G1: comparison computed, not trusted",
+    "result": "pass",
+    "evidence": "release_pilot(receipt_dir, out_dir) re-hashes the retained B3D and frames.parquet against the pilot receipt and loads the B3D with nimblephysics.SubjectOnDisk. For every written trial and frame it compares every frames.parquet signal column with the record nimblephysics labels dynamics: exact equality, NaN only matching NaN, and the reader's dynamics index must equal the converter's. It writes comparison.json with counts, hashes, the nimblephysics version and the script and converter hashes, and deletes the B3D only on 0 mismatches with full row coverage. Synthetic run with the real nimblephysics reader: 7 frames, 315 values, 0 mismatches, released in 0.9 s; job 02 then runs. Tampering with frames.parquet after the pilot is refused by the hash check."
+   },
+   {
+    "item": "G1: release record validity",
+    "result": "pass",
+    "evidence": "pending_comparisons counts a pilot as released only if comparison_release.json records status agree, 0 mismatches, frames_compared equal to the receipt rows (> 0), values > 0, matching B3D and frames.parquet hashes and a nimblephysics version, and the retained B3D no longer exists. A hand-written, field-perfect release record with the B3D present was refused (job 02 blocked). It only passes if the B3D is also deleted by hand. That is deliberate evidence destruction, which no script can prevent, and the launcher and receipts would still show that no 01b job ran."
+   },
+   {
+    "item": "G2: fixed roots",
+    "result": "pass",
+    "evidence": "CLI --run refuses unless --transient-root is DEST, --receipt-dir's parent is DEST/acquisition_receipts and --out is inside DEST. run() always checks pending pilots under fixed_root/acquisition_receipts and leftover B3Ds under fixed_root, whatever paths are passed. Probe: job 02 with redirected receipt and transient roots was refused (B3D under the fixed root)."
+   },
+   {
+    "item": "plans_r3 specs",
+    "result": "pass",
+    "evidence": "34 specs (33 acquisition specs plus 01b_release_pilot_fa16_subject_4). guarded_launcher.validate_spec passes for all, and every binding equals the current file (acquisition script 5ff9565c\u2026, converter f8baebfb\u2026). 33 distinct members, none dropped. They sort as 01, 01b, 02. The 01 specs in plans/ and plans_r2/ no longer match their bindings, so the launcher refuses them."
+   },
+   {
+    "item": "spec 01b without an address-space cap",
+    "result": "acceptable for this pilot only",
+    "evidence": "nimblephysics (libtorch) cannot map under the 768 MiB PM-01 cap, so 01b omits address_space_mib (the envelope does not allow a higher cap). In a fresh process, release_pilot on the synthetic B3D peaks at 610 MiB RSS, almost all of it library load. The real pilot B3D is about 10 MB with 738 frames, so a peak of roughly 650 MiB is expected. Startup admission requires 3,584 MiB free on Linux and 2,816 MiB on Windows, the launcher polls a 2,048 MiB floor every 15 s, the timeout is 1,800 s, and the output is one comparison.json. With a bounded 10 MB input and about 2.9 GiB of headroom over the measured peak, runtime polling is sufficient. Not a template: any later nimblephysics job on a large B3D needs its own memory estimate and pilot."
+   },
+   {
+    "item": "gates",
+    "result": "pass",
+    "evidence": "Under the AGENTS.md prefix: tests/test_hist05_addbiomechanics_member.py, tests/test_addbiomechanics_member_acquisition.py and tests/test_backlog_workflow.py give 127 passed. build_backlog_page.py --check: Backlog valid; HTML current (103 tasks)."
+   }
+  ],
+  "notes": [
+   "Record the launcher's peak RSS for 01b in the pilot handoff.",
+   "Measure transfer throughput on 01 before the first Tan running job (from round 1)."
+  ],
+  "next_action": "Launch 01 (Falisse subject_4) alone through the guarded launcher when the numerical slot is free, then 01b (release-pilot). Only after 01b records 'agree' and deletes the B3D does 02 follow, one job per tool call.",
+  "artifact_hashes": {
+   "contributor_tools/acquire_addbiomechanics_member.py": "5ff9565c027925eb\u2026",
+   "contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_dynamics_frames.py": "f8baebfb72ea23ec\u2026"
+  },
+  "test_runs": [
+   {
+    "command": "scratchpad hist05/gate_probe3.py (synthetic: pending, redirected roots, real nimblephysics release, forged release with and without the B3D, tampered parquet)",
+    "result": "as above"
+   },
+   {
+    "command": "fresh-process release_pilot on the synthetic B3D",
+    "result": "released; peak RSS 610 MiB"
+   },
+   {
+    "command": "guarded_launcher.validate_spec \u00d734 (plans_r3) and binding recompute",
+    "result": "all valid; all match"
+   },
+   {
+    "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_hist05_addbiomechanics_member.py tests/test_addbiomechanics_member_acquisition.py tests/test_backlog_workflow.py",
+    "result": "127 passed"
+   },
+   {
+    "command": "python3 contributor_tools/build_backlog_page.py --check",
+    "result": "Backlog valid; HTML current (103 tasks)"
+   }
+  ],
+  "questions_for_jose": []
+ },
+ "round_2_verdict": "back_to_worker",
+ "round_2": {
+  "verdict": "back_to_worker",
+  "last_checked_at_utc": "2026-11-01T03:30:00Z",
+  "summary": "R1 and the alias and central-directory hardening work. All 33 plans_r2 specs validate with matching bindings, and the old plans/ specs no longer match their bindings. The release-pilot gate breaks in two ways. (1) It accepts any hand-written comparison JSON that copies the B3D hash, claims 'agree' and names any reader with one frame; my forged file released the pilot and job 02 then ran. (2) A job given other --receipt-dir and --transient-root paths skips both barriers (pending-pilot receipts and the transient B3D check) and ran while the pilot was still unreleased. Zero frames, a disagreement, a deleted receipt, an edited receipt status and a hand-written comparison_release.json were all correctly blocked, the last three by the still-present B3D.",
+  "file_checks": [
+   {
+    "item": "R1 pass-order guard",
+    "result": "pass",
+    "evidence": "In the worker's 4-trial fixture, the trial with order [dynamics, kinematics, lowPassFilter] is excluded with 'trial pass order \u2026 differs' in conversion.json. nimblephysics readFrames against the converter on every written trial: 0 mismatching fields."
+   },
+   {
+    "item": "dropped-subject hardening",
+    "result": "pass",
+    "evidence": "Refused: test/\u2026/subject_1, subject_01, Subject_7, 'subject_8 ', subject_1x.b3d under subject_1, and subject_1x/subject_1.b3d. Accepted: subject_10 (not a false drop). run() re-checks the expected entry against the hash-verified central directory before any network call."
+   },
+   {
+    "item": "plans_r2 specs",
+    "result": "pass",
+    "evidence": "33 specs; guarded_launcher.validate_spec passes for all; every binding equals the current file (acquisition 2aa153b7\u2026, converter f8baebfb\u2026, zip helper, expected files); 33 distinct members; only 01_fa16_subject_4 carries --keep-source-for-comparison and lists <subject>.b3d as an expected output. The old plans/01 spec's bindings no longer match the current files, so the launcher would refuse it."
+   },
+   {
+    "item": "gate probes (synthetic, scratchpad hist05/gate_probe.py)",
+    "result": "failed (2 of 8)",
+    "evidence": [
+     "Job 02 while the pilot is pending: refused (pending pilot). Correct.",
+     "BROKEN: a forged comparison {b3d_sha256 copied from the receipt, compared_frames 1, reader 'made up', status 'agree'} gives 'released', and job 02 then RAN. release_pilot checks only the form of the JSON, not that a comparison happened or what it covered.",
+     "'agree' with 0 frames: refused. Correct.",
+     "Pilot receipt deleted, B3D kept: job 02 refused by the transient-B3D check. Correct.",
+     "Receipt status hand-edited, B3D kept: refused by the transient check. Correct.",
+     "Hand-written comparison_release.json, B3D kept: refused by the transient check. Correct.",
+     "Receipt and B3D both deleted by hand: job 02 runs. This is deliberate evidence destruction outside the scripts' reach; noted, not a script defect.",
+     "BROKEN: job 02 with --receipt-dir and --transient-root pointing elsewhere RAN while the pilot was unreleased. pending_comparisons looks only under receipt_dir.parent, and the transient check only under the given root; a hand-made spec (validate_spec checks form, not these paths) bypasses both.",
+     "Disagreement: refused, comparison_record.json written, B3D kept, and job 02 still blocked. Correct."
+    ]
+   },
+   {
+    "item": "tests",
+    "result": "pass",
+    "evidence": "tests/test_hist05_addbiomechanics_member.py, tests/test_addbiomechanics_member_acquisition.py and tests/test_backlog_workflow.py: 123 passed. build_backlog_page.py --check: Backlog valid; HTML current (103 tasks)."
+   }
+  ],
+  "required_fixes": [
+   "G1 (comparison computed, not trusted): release-pilot should run the comparison itself, not accept an external JSON. Load the retained B3D with nimblephysics.SubjectOnDisk and readFrames, and for every written trial and every frame (the pilot has 738) compare each signal column of frames.parquet (pos, vel, acc, tau, per-body force/CoP/torque, COM pos/vel/acc, root residual) with the record nimblephysics labels dynamics. Require exact equality, or a stated tolerance of 0 for doubles, and full coverage. Record the counts, the nimblephysics version and the hashes of the B3D, frames.parquet and the script, then delete. nimblephysics' reader works in this environment (I used it); its Python writer setters segfault, so do not depend on them.",
+   "G2 (fixed roots): in --run mode, require transient_root == DEST and receipt_dir.parent == DEST/'acquisition_receipts' (tests may pass explicit roots through the function API only), or always check pending pilots and transient B3Ds under DEST regardless of arguments. Then regenerate plans_r2 and validate the specs."
+  ],
+  "artifact_hashes": {
+   "contributor_tools/acquire_addbiomechanics_member.py": "2aa153b76fe55b15\u2026",
+   "contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_dynamics_frames.py": "f8baebfb72ea23ec\u2026"
+  },
+  "test_runs": [
+   {
+    "command": "scratchpad hist05/gate_probe.py (synthetic: pending, forged agree, zero frames, deleted receipt, deleted receipt+B3D, edited status, forged release file, other roots, disagree)",
+    "result": "as above"
+   },
+   {
+    "command": "scratchpad hist05/nim_read.py (nimblephysics readFrames against the converter on the fixture)",
+    "result": "0 mismatches on written trials; the mismatched-order trial is excluded"
+   },
+   {
+    "command": "guarded_launcher.validate_spec \u00d733 (plans_r2) and binding recompute",
+    "result": "all valid; all match"
+   },
+   {
+    "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_hist05_addbiomechanics_member.py tests/test_addbiomechanics_member_acquisition.py tests/test_backlog_workflow.py",
+    "result": "123 passed"
+   },
+   {
+    "command": "python3 contributor_tools/build_backlog_page.py --check",
+    "result": "Backlog valid; HTML current (103 tasks)"
+   }
+  ],
+  "questions_for_jose": []
+ },
+ "round_1_verdict": "back_to_worker",
+ "summary": "The decoder is right: field numbers, packed encodings and the per-frame layout match the nimblephysics schema and C++. Independent cross-checks with nimblephysics' own C++ reader agree on all 15 real headers and on every frame of the synthetic B3D whose pass order equals the global order. Metadata handling, exclusivity, the one-B3D rule, .rejected handling, the 768 MiB limit, the 33 specs and the deadline arithmetic all hold. Two small fixes are needed before the pilot. (1) nimblephysics labels each per-frame pass record by the global pass list (FramePass::readFromProto: type = header.mPasses[pass]->mType), while the converter uses each trial's own pass-header list. In all 15 real headers the two lists are identical, but the worker's fixture deliberately differs, and there nimblephysics and the converter pick different records. Exclude or refuse such trials so the two readers can never disagree. (2) The planned pilot check (compare frames with nimblephysics readFrames on the same B3D) is impossible as designed, because the job deletes the B3D after conversion. Job 01 must keep its B3D for that comparison. Dropped subjects cannot be acquired.",
+ "checks": [
+  {
+   "id": 1,
+   "area": "dropped subjects (Falisse subject_1, 7, 8)",
+   "result": "pass (hardening optional)",
+   "evidence": [
+    "The pinned central directory holds all three under train/ only (train/No_Arm/Falisse2017_Formatted_No_Arm/subject_{1,7,8}/\u2026). DROPPED holds exactly these names, and check_member refuses them before any network call or receipt. The plan's 33 specs bind 33 distinct members and none of the three.",
+    "Aliases: check_member refuses '//', './' and leading-'/' variants by layout. It accepts 'test/\u2026/subject_1', 'subject_01', 'Subject_1' and 'subject_1 '. None of those names exists in the archive, and run() requires the remote local-header name to equal the expected member exactly (header_identity: 'Local member name differs'). An alias therefore cannot fetch the dropped bytes; it fails after one 30-byte range request.",
+    "Spec edits: a hand-made spec with the exact dropped name is refused by the bound script before any network call. Removing that refusal changes the script hash bound in every spec.",
+    "Optional hardening: key DROPPED on (study, subject) after normalizing case and whitespace, independent of split; also re-check the expected entry against the hash-verified central directory inside run(), not only in plan()."
+   ]
+  },
+  {
+   "id": 2,
+   "area": "pass chosen by type, not index",
+   "result": "pass, with the R1 consistency guard required",
+   "evidence": [
+    "convert() takes k = types.index('dynamics') from the trial's processing-pass headers and excludes a trial without exactly one dynamics pass.",
+    "nimblephysics' reader assigns each per-frame record the type of the global pass at the same index (SubjectOnDisk.cpp line 1225).",
+    "I wrote the worker's 3-trial fixture B3D to the scratchpad and read it with nimblephysics.SubjectOnDisk.readFrames. Trial 0 (order equal to global) matches the converter in pos, vel, acc, tau, CoP, force, torque, COM pos/vel/acc and root residual for all 4 frames, with exact equality. Trial 1 (order [dynamics, kinematics, lowPassFilter] against global [kinematics, lowPassFilter, dynamics]) disagrees: nimblephysics labels record 2 as dynamics, the converter takes record 0.",
+    "In all 15 real headers every trial's pass order equals the global order [kinematics, lowPassFilter, dynamics] (Falisse 9/5/9/3/12/1/5/7/9/8/10 trials; Tan running s3 143 and s8 127; Tan walking 10 and 04 48 each), so for these studies both rules give k = 2."
+   ]
+  },
+  {
+   "id": 3,
+   "area": "protobuf decoder against the schema and C++",
+   "result": "pass",
+   "evidence": [
+    "Field numbers (proto at c405b056). Header: num_dofs 1, raw_sensor_frame_size 3, processing_pass_frame_size 4, passes 5 (pass_type 1, model_osim_text 2), ground_contact_body 6, trial_header 9, version 10, href 11, notes 12, biological_sex 13, height_m 14 double, mass_kg 15 double, age_years 16 int32 (negative values handled as 64-bit two's complement), marker_name 17, subject_tag 23, data_quality 25. Trial header: name 1, missing_GRF_reason 2 (packed enum), trial_length 3, trial_timestep 4 double, processing_pass_header 5, num_force_plates 7, original_name 10, split_index 11, trial_type 17. Pass header: type 1, marker_rms 5, linear_residual 7, angular_residual 8 (packed float). Pass frame: pos 1, vel 2, acc 3, tau 4, ground_contact_center_of_pressure 6, ground_contact_torque 7, ground_contact_force 8, com_pos/vel/acc 9/10/11, root_frame_residual 12. All match the converter.",
+    "Layout: SubjectOnDisk.cpp writes int64 header length, header, then per trial and frame one sensor record of raw_sensor_frame_size followed by mTrialPasses.size() pass records of processing_pass_frame_size (lines 415-500). readFrames computes the same offsets (lines 960-1065). Per-body CoP, torque and force are written body by body as 3-vectors (writeProcessingPassFrame), matching the converter's 3*b slicing. Fields absent from a frame become NaN, never 0, and the length of each field is checked.",
+    "Real headers: I fed the 15 local headers (int64 length plus header) to nimblephysics.SubjectOnDisk and compared with the converter's parse_header. Number of DOFs, trial count, every trial length, timestep (exact float equality), name, original name, pass count, split index, missing-GRF enum sequence, dynamics-pass marker RMS, mass, height, sex, age (absent equals nimblephysics' 0), contact bodies and global pass order (naming only: low_pass_filter versus lowPassFilter) all agree for 15/15. The worker's layout arithmetic equals the file size for 15/15 (handoff; layout reproduced).",
+    "Safe to pilot: yes, once R1 and R2 are in. The decoder agrees with nimblephysics wherever the two can be compared without a download. The remaining risk is real per-frame payloads (extra fields 14-24 are skipped by field number, and every expected length is checked). R2 settles this on the pilot's own B3D before the second job."
+   ]
+  },
+  {
+   "id": 4,
+   "area": "metadata",
+   "result": "pass",
+   "evidence": "Synthetic run: time_s = frame \u00d7 the unrounded source timestep (0.009947643979057591, exact equality). source_timestep_s is unrounded. Entered mass_kg and the dynamics-model body-mass sum are written as entered_mass_kg and dynamics_model_mass_kg, with the kinematics-model mass in subject_metadata. normalization_mass_kg is all NaN with a pending-convention status. Absent proto3 fields stay absent (age, data_quality; worker test). Unavailable task fields are listed under 'unavailable', never filled. Missing-GRF codes map to the proto enum names (nimblephysics reads 10 = manualReview, 5 = notOverForcePlate, 11 = footContactDetectedButNoForce, matching MGR). One caveat: split_index absent is read as 0, which is proto3's defined default and not invented."
+  },
+  {
+   "id": 5,
+   "area": "disk, one B3D at a time, .rejected, receipts",
+   "result": "pass",
+   "evidence": "run() refuses if the output root or receipt directory exists, if either is inside the other, if the output root is outside the transient root, or if any *.b3d, *.b3d.partial or *.b3d.rejected exists anywhere under the transient root. Receipts use exclusive creation, the output root mkdir is exclusive, and the B3D is published by os.link (which works on /mnt/s; checked in GT21-S02). On any failure, partial or final becomes source/<subject>.b3d.rejected, which blocks the next job through the transient check until a person intervenes. Disk admission is 15 GiB plus twice the expanded size (s3: 19,586 MiB), and the in-stream guard keeps 15 GiB plus the expanded bytes free."
+  },
+  {
+   "id": 6,
+   "area": "768 MiB address space, specs and bindings",
+   "result": "pass",
+   "evidence": "Under RLIMIT_AS 768 MiB, my synthetic 20,000-frame conversion (23 DOF, 2 bodies) completed (223 MiB max RSS without the limit), and windows_free_mib() works. guarded_launcher.validate_spec passes for all 33 specs. Every binding equals the current file: acquisition f907f1e2\u2026, converter e4ac8783\u2026, zip helper 091c70c5\u2026, and each expected file. The specs hold 33 distinct members with no dropped subject. Address space 768 is at the PM-01 maximum, timeout 3600, and expected outputs are frames.parquet, conversion.json and dynamics_model.osim."
+  },
+  {
+   "id": 7,
+   "area": "3400 s deadline for Tan running",
+   "result": "pass (measure on pilot)",
+   "evidence": "Tan running s3 is the largest: 273,092 frames, 2,215,534,429 B expanded, about 1.64 GB transfer. Transfer at the 2 MiB/s ceiling takes about 780 s (about 1,560 s if the server only sustains 1 MiB/s). Reads of about 6.6 GB on drvfs (persisted re-hash, conversion read, pre-delete re-hash) take roughly 1-2 min. Conversion measured on synthetic frames at about 48 \u00b5s per frame plus about 16 \u00b5s to decode a full-size real pass record, about 65 \u00b5s per frame, so about 18 s. That is about 950 s at full rate and about 1,750 s at half rate, inside 3,400 s. The guard refuses safely (.rejected, which blocks the next job) if the deadline is hit. The pilot's measured throughput should be recorded before the first Tan running job."
+  },
+  {
+   "id": 8,
+   "area": "tests",
+   "result": "pass",
+   "evidence": "Under the AGENTS.md prefix: tests/test_hist05_addbiomechanics_member.py, tests/test_addbiomechanics_member_acquisition.py and tests/test_backlog_workflow.py give 111 passed. build_backlog_page.py --check: Backlog valid; HTML current (103 tasks)."
+  }
+ ],
+ "required_fixes": [
+  "R1 (pass-order consistency): in convert(), and in run()'s header checks, treat a trial whose processing-pass types differ from the global header pass types at the same indices as excluded (or refuse the file). Record the reason in conversion.json. Keep the fixture case with differing orders, but expect exclusion, because nimblephysics would label that record differently. No real header is affected (15/15 equal).",
+  "R2 (pilot verification is possible): let job 01 (Falisse subject_4) keep its B3D after conversion, e.g. a spec-bound --keep-source flag used only in spec 01. The kept file sits under the transient root and so blocks job 02 until the nimblephysics readFrames comparison (dynamics pass, a seeded sample of frames, all signal fields) is recorded and the B3D is deleted, with that action logged. Then regenerate the 33 specs with the new script hashes and validate them."
+ ],
+ "optional": [
+  "Normalize dropped-subject matching to (study, subject) regardless of split, case and whitespace, and verify the expected entry against the hash-verified central directory inside run().",
+  "Record measured transfer and conversion throughput in the pilot receipt to reassess the Tan running deadline."
+ ],
+ "questions_for_jose": [],
+ "test_runs": [
+  {
+   "command": "nimblephysics.SubjectOnDisk on the worker's fixture B3D vs convert() (scratchpad hist05/nim_read.py)",
+   "result": "trial 0 (order = global): 4/4 frames identical in all fields; trial 1 (order differs): records disagree (see R1)"
+  },
+  {
+   "command": "nimblephysics.SubjectOnDisk on 15 real headers vs parse_header (scratchpad hist05/hdr_cmp.py)",
+   "result": "all fields agree for 15/15"
+  },
+  {
+   "command": "dropped-member alias probe of check_member",
+   "result": "exact names refused; aliases accepted by check_member but cannot match a real archive member"
+  },
+  {
+   "command": "synthetic 20,000-frame conversion, with and without RLIMIT_AS 768 MiB",
+   "result": "1.0 s, about 48 \u00b5s per frame; completes under 768 MiB"
+  },
+  {
+   "command": "guarded_launcher.validate_spec \u00d733 and binding sha256 recompute",
+   "result": "all valid; all bindings match"
+  },
+  {
+   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_hist05_addbiomechanics_member.py tests/test_addbiomechanics_member_acquisition.py tests/test_backlog_workflow.py",
+   "result": "111 passed"
+  },
+  {
+   "command": "python3 contributor_tools/build_backlog_page.py --check",
+   "result": "Backlog valid; HTML current (103 tasks)"
+  }
+ ],
+ "round_1_next_action": "Worker applies R1 and R2 and regenerates the specs; the verifier then rechecks only those two changes and the bindings. Then pilot 01 alone, run the nimblephysics comparison on its kept B3D, and only then job 02.",
+ "next_action": "Batch accepted. Coordinator: commit the HIST-05 deliverables (specific files), set HIST-05 to done in backlog.json, and queue MAP-TAN-TASK and the P2 converter-memory follow-up."
+}

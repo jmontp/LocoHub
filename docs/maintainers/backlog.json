@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-11-01T00:20:00Z",
+  "updated_at_utc": "2026-11-01T03:45:00Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -6748,7 +6748,7 @@
       "priority": "P1",
       "dataset": "all",
       "title": "Write the AddBiomechanics acquisition and one-row-per-frame converter for Falisse and both Tan studies",
-      "status": "ready",
+      "status": "done",
       "stage": "conversion",
       "question": "Can the 33 kept participants be streamed, hash-checked and converted to one row per frame from the dynamics pass with reconstructed metadata?",
       "scope": "Per D-HIST-04-1 = A (one row per frame, dynamics pass) and D-HIST-04-2 = A (no contact; drop Falisse subject_1, subject_7, subject_8, keeping the 8 that reproduce the TBME 2017 cohort). Write contributor_tools/acquire_addbiomechanics_member.py to the requirements in hist04-addbiomechanics-metadata.json (stream and inflate one member, CRC32 and SHA-256, header cross-check, delete after conversion, receipts), and a converter writing one row per frame from the dynamics pass with the metadata columns reconstructed per the HIST-04 table (missing stays missing). Synthetic tests; regenerate plans excluding the 3 dropped subjects; pilot Falisse subject_0 or the smallest kept member through the guarded launcher only after review.",
@@ -6766,12 +6766,112 @@
         "No invented metadata",
         "Independent verification before any launch"
       ],
-      "next_action": "Write the scripts and synthetic tests.",
+      "next_action": "Done. Follow-ups: HIST-06 (Tan task labels and canonical mapping) and HIST-07 (P2 converter memory).",
+      "resource_class": "fixture",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/HIST-05.json",
+        "docs/maintainers/handoffs/HIST-05-verify.json",
+        "contributor_tools/acquire_addbiomechanics_member.py",
+        "contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_dynamics_frames.py",
+        "tests/test_hist05_addbiomechanics_member.py",
+        "converted_datasets/reconversion_v2/hist05_addbiomechanics_20261101/plans_r3/index.json",
+        "/mnt/s/locomotion_data/addbiomechanics_hist04/launcher_receipts/",
+        "/mnt/s/locomotion_data/addbiomechanics_hist04/acquisition_receipts/",
+        "/mnt/s/locomotion_data/addbiomechanics_hist04/pilot_comparison/fa16_subject_4/comparison.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-01T03:45:00Z",
+        "summary": "All 33 kept participants (Falisse 8, Tan walking 17, Tan running 8; 3,647,949 rows, 0 excluded) were acquired by range from the pinned AddBiomechanics archive, converted to one row per frame from the dynamics pass (chosen by name), and their B3D deleted, through 34 guarded-launcher jobs on one bound code hash. Pilot (Falisse subject_4): 738 frames and 98,892 values equal nimblephysics readFrames exactly. No GRF-altered flags anywhere. Falisse subject_1, 7, 8 never acquired. Known label issue: Tan running s7 hip_calibration (1 segment, 2,000 frames) is written as task 'run'; it is carried to HIST-06. Done does not mean scientific approval of the data.",
+        "changed_files": [
+          "contributor_tools/acquire_addbiomechanics_member.py",
+          "contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_dynamics_frames.py",
+          "tests/test_hist05_addbiomechanics_member.py",
+          "docs/maintainers/handoffs/HIST-05.json",
+          "docs/maintainers/handoffs/HIST-05-verify.json"
+        ],
+        "checks": [
+          "Synthetic tests: 33 HIST-05 tests (fake B3D built by the test's own encoder; real nimblephysics reader on the fixture), with the zip-member and backlog tests: 127 passed.",
+          "Verifier rounds 1-3 (back_to_worker twice: pass-order guard R1, pilot retention R2, release gate G1, fixed roots G2; round 3 ok_to_pilot).",
+          "pilot_round (pilot_accepted): jobs 01 and 01b each launched once, all launcher checks true; nimblephysics agreement exact on 738 frames, 98,892 values (19,926 GRF/CoP/torque); B3D deleted; parquet hash matches.",
+          "batch_round (batch_accepted): 34 receipts on one boot, one ledger entry each, all checks true, one bound code hash; sha256 of all 33 frames.parquet equals the receipts; no B3D remains; flag counts and a seeded recount match; hip_calibration is the only non-matching Tan name; no memory limit changed.",
+          "Coordinator rulings: Tan running peak RSS 407.5-433.9 MiB accepted within the reviewed 768 MiB cap; converter kept unchanged for one hash; hip_calibration recorded for the mapping step."
+        ],
+        "remaining": [
+          "Not checked: dry runs (they write nothing, so preflight_passed rests on the worker's report).",
+          "Not checked: row counts of the 21 members without a HIST-04 header were checked only against the in-job header.",
+          "Not checked: frame values against nimblephysics for every participant except the pilot (same code hash).",
+          "Follow-ups: HIST-06 (Tan task labels, DOF names, signs, normalization mass) and HIST-07 (P2 converter header-array memory)."
+        ]
+      }
+    },
+    {
+      "id": "HIST-06",
+      "priority": "P1",
+      "dataset": "all",
+      "title": "Map the AddBiomechanics Falisse and Tan frames to LocoHub conventions, including Tan task labels",
+      "status": "ready",
+      "stage": "conventions",
+      "question": "How do the 33 HIST-05 frames files map to LocoHub task labels, joint names, signs and normalization, without labelling non-protocol trials?",
+      "scope": "Inputs are the HIST-05 frames files (one row per frame, dynamics pass, source names). (1) MAP-TAN-TASK: any Tan trial (running or walking) whose original name does not match the study's protocol pattern (running {nike|mini}_{SR|SI|baseline}_{24|28}; walking baseline|fpa|step_width|trunk_sway) gets no task label. Its task stays unassigned, it goes into no task table, and it is kept in the frames file with its source name. Known case: Tan running s7 hip_calibration (1 segment, 2,000 frames), currently written as task 'run'. Whether calibration trials are released at all is a later scope question for José. (2) Joint names: map DOF indices to the model coordinates from source evidence (the dynamics model and nimblephysics), not by order alone. (3) Signs and frames under the adopted sign rule B (named direction positive). (4) Normalization mass: entered versus dynamics-model mass is a José convention; present it as a decision if not yet set. Tan walking task family (level_walking versus dynamic_walk) and the Falisse task mapping remain conventions.",
+      "depends_on": [
+        "HIST-05"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/HIST-05.json",
+        "docs/quality/audits/hist04-addbiomechanics-metadata.json"
+      ],
+      "deliverables": [
+        "Mapping specification with MAP-TAN-TASK applied",
+        "Mapped outputs or a reviewed mapping plan"
+      ],
+      "acceptance": [
+        "No non-protocol Tan trial carries a task label or appears in a task table; s7 hip_calibration kept with its source name",
+        "DOF names traced to source evidence",
+        "Signs follow rule B with evidence",
+        "Normalization mass set only by José's decision"
+      ],
+      "next_action": "Draft the mapping specification; raise the normalization-mass convention as a decision if it is not yet set.",
+      "resource_class": "read_only",
+      "evidence_paths": [],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-01T03:45:00Z",
+        "summary": "Created from the HIST-05 batch acceptance (MAP-TAN-TASK and the mapping step).",
+        "checks": [],
+        "remaining": [
+          "Everything in acceptance."
+        ]
+      }
+    },
+    {
+      "id": "HIST-07",
+      "priority": "P2",
+      "dataset": "all",
+      "title": "Reduce the AddBiomechanics converter's header-array memory (future revision)",
+      "status": "ready",
+      "stage": "conversion",
+      "question": "Can the converter keep only the dynamics-pass per-frame header arrays in compact form, lowering peak RSS (407.5-433.9 MiB on Tan running), without changing any output value?",
+      "scope": "Future converter revision only; do not apply to the completed HIST-05 batch. parse_header keeps marker_rms, linear_residual and angular_residual for every pass, plus missing_grf, as Python lists. Keep only the dynamics-pass arrays, as compact arrays. Any change invalidates the bound converter hash, so it needs review, new specs and a pilot that shows byte-identical frames.parquet against a HIST-05 output for the same member before use. Do not mix code hashes within a study's run.",
+      "depends_on": [
+        "HIST-05"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/HIST-05.json"
+      ],
+      "deliverables": [
+        "Revised converter with tests",
+        "Pilot showing identical output and lower peak RSS"
+      ],
+      "acceptance": [
+        "Frames output identical to the HIST-05 output for the pilot member",
+        "Peak RSS reduced and recorded",
+        "Independent verification"
+      ],
+      "next_action": "Only when a new AddBiomechanics conversion is planned: write the change and a byte-identity pilot.",
       "resource_class": "fixture",
       "evidence_paths": [],
       "handoff": {
-        "last_checked_at_utc": "2026-10-31T22:33:48Z",
-        "summary": "Created from José's 2026-11-01 answers.",
+        "last_checked_at_utc": "2026-11-01T03:45:00Z",
+        "summary": "Created from the HIST-05 P2 follow-up (Tan running peak RSS).",
         "checks": [],
         "remaining": [
           "Everything in acceptance."

@@ -123,6 +123,10 @@
   {
    "command": "full-run gate dry form: sign_application.check_pilot_record on the real record and backlog",
    "result": "As is: refused only because the record is not committed (expected before commit). With the HEAD-blob lookup simulated as 'committed as is' and every other condition real (task done, dataset, citations of path, record sha256 and receipt sha256, receipt clean, bindings before/after, bound build): passed."
+  },
+  {
+   "command": "full-run gate check_pilot_record after commit 122eb3a, no simulation",
+   "result": "{\"result\": \"passed\", \"record\": \"docs/quality/audits/core11-p-um21-pilot-record-v3.json\", \"record_sha256\": \"7385e6984821bd5c837a1549bec11330d9c42818848d0e6a7878a9b63cce39ee\", \"receipt_sha256\": \"6f4cfe0a9ded88777afb5f01efdca61dac27a4c5ad663143359160b5b564e752\"}"
   }
  ],
  "not_checked": [
@@ -137,7 +141,7 @@
   "For future pilots: runner record-step relative-path bug and v3 defaults (changes the runner hash).",
   "Open: units follow the UM21-C03 stride rule, not the UM21-T01 task-labelled observations."
  ],
- "next_action": "Coordinator commits; then the UM21 full run may proceed in mode full after UM21-E01 is considered.",
+ "next_action": "UM21 full runs may use mode full with this pilot record (any edit to a bound file invalidates it); consider UM21-E01 first.",
  "hashes_sha256": {
   "contributor_tools/adapters/__init__.py": "a98b99ecee256d1585815af04455f3b072eadd71c8a3a88a3debce32633735ee",
   "contributor_tools/adapters/um21_sign_adapter.py": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
@@ -273,5 +277,18 @@
  "round4_fixes": {
   "C1": "tests/test_um21_sign_adapter.py::test_pilot_spec_is_seeded_includes_ab04_i0_and_a_layout_2_recording_and_validates is valid before and after the launch. It still requires the seeded AB04/i0 + layout-2 sample and the bound build. It now checks that v3r1 validates and equals the planned spec except receipt_path. When the output root exists, it requires the v3r1 receipt to be a clean completed run of exactly that spec (spec sha256, output root, bindings, pilot_summary.json among outputs). No bound file changed.",
   "backlog": "CORE-11-P-UM21 set to done; handoff.checks cite the record path with sha256 7385e698... and the receipt with sha256 6f4cfe0a... (full-run gate format) and round_4. Added P2 task UM21-E01 (evidence-gate diagnosis, read_only, depends on CORE-11-P-UM21). backlog.html re-rendered."
+ },
+ "commit": {
+  "id": "122eb3a",
+  "by": "coordinator",
+  "note": "receipt .log not committed (*.log is gitignored; no earlier receipt log is tracked)"
+ },
+ "full_run_gate": {
+  "checked_at_head": "122eb3a",
+  "command": "sign_application.check_pilot_record(record, 'UM21', bound_build(), task_done, backlog records), no simulation",
+  "result": "passed",
+  "record": "docs/quality/audits/core11-p-um21-pilot-record-v3.json",
+  "record_sha256": "7385e6984821bd5c837a1549bec11330d9c42818848d0e6a7878a9b63cce39ee",
+  "receipt_sha256": "6f4cfe0a9ded88777afb5f01efdca61dac27a4c5ad663143359160b5b564e752"
  }
 }

@@ -1,0 +1,1074 @@
+{
+ "task_id": "HIST-05",
+ "title": "Write the AddBiomechanics acquisition and one-row-per-frame converter for Falisse and both Tan studies",
+ "status": "review",
+ "scientific_approval": false,
+ "last_checked_at_utc": "2026-11-01T03:32:00Z",
+ "decision_context": {
+  "D-HIST-04-1": "A: one row per frame from the dynamics pass",
+  "D-HIST-04-2": "A: no contact; drop Falisse subject_1, subject_7, subject_8"
+ },
+ "summary": "Fixture-only build; no download, no launch. New acquisition script streams one archive member by HTTP range (pinned ETag, exact 206), checks the local header against the central directory, inflates straight to one B3D (no compressed copy), checks CRC32, SHA-256 (streamed and re-read) and, where HIST-04 read it, the Drive header SHA-256, then the layout arithmetic. It then converts and deletes the B3D. Only one B3D may exist under the transient root (peak 2.22 GB, Tan running s3); a failed attempt keeps it as .rejected, which blocks the next job. New converter writes one row per frame from the pass whose recorded type is 'dynamics' in each trial's pass header (never by index); a trial without exactly one dynamics pass writes no rows and is counted. All frames are kept with their missing-GRF reason. Metadata follow the HIST-04 table. Timesteps are not rounded. Absent fields stay absent. Entered and dynamics-model masses are columns; normalization_mass_kg stays missing pending José's convention. Signals keep source names: DOF-index columns, contact-body names, world frame. reference_side is 'none' with no ipsi/contra columns; canonical mapping is a later step. Falisse subject_1, 7 and 8 are refused by both scripts. 33 plan-only specs regenerated with the real script hashes; validate_spec passed for each.",
+ "changed_files": [
+  "contributor_tools/acquire_addbiomechanics_member.py",
+  "contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_dynamics_frames.py",
+  "tests/test_hist05_addbiomechanics_member.py",
+  "docs/maintainers/handoffs/HIST-05.json"
+ ],
+ "local_artifacts": [
+  "converted_datasets/reconversion_v2/hist05_addbiomechanics_20261101/plans_r3/ (current: 33 specs + 01b release spec, expected files, index.json)",
+  "converted_datasets/reconversion_v2/hist05_addbiomechanics_20261101/plans_r2/ and converted_datasets/reconversion_v2/hist05_addbiomechanics_20261101/plans/ (superseded; SUPERSEDED.txt; stale bindings)"
+ ],
+ "not_changed": [
+  "docs/maintainers/backlog.json",
+  "docs/maintainers/backlog.html",
+  "AGENTS.md",
+  "contributor_tools/acquire_addbiomechanics_zip_member.py (imported for header_identity and stream_member)",
+  "contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_to_parquet.py (legacy source-preservation adapter, unused here)"
+ ],
+ "design": {
+  "frame_decoder": "Own protobuf wire decoder, not nimblephysics. It follows the record layout in nimblephysics SubjectOnDisk.cpp at c405b056 (write 415-500, readFrames 960-1065): each frame is a sensor record, then one pass record per trial pass in that trial's pass order. The dynamics record offset is sensor + k x pass size, where k is the index of 'dynamics' in that trial's pass headers.",
+  "columns": "Identity, task, task_info and subject_metadata JSON; trial, split and frame indices; time_s = frame x source timestep; source_timestep_s; dynamics marker RMS and linear/angular residuals (per-frame header arrays); missing_grf_reason. Signals: dofNN_pos/vel/acc/tau; <body>_force/cop/torque_xyz for each contact body (world frame); com_pos/vel/acc_xyz; root_residual_0-5.",
+  "not_written": "Raw sensor record and the kinematics and low-pass passes (per D-HIST-04-1). From the dynamics pass: ground_contact_wrench, joint centres and the root-frame copies other than the residual. Listed in each conversion.json.",
+  "task": "Falisse task null (unresolved). Tan running task 'run' with tokens only. Tan walking task null (level_walking versus dynamic_walk pending), with a modification token. speed_m_s and incline_deg are listed as unavailable, never filled.",
+  "address_space": "768 MiB in the specs: pyarrow fails to allocate under 256 MiB RLIMIT_AS (checked)."
+ },
+ "checks": [
+  "17 synthetic tests (tests/test_hist05_addbiomechanics_member.py). The fake B3D is built with the test's own protobuf encoder: 3 trials with different pass orders, one without a dynamics pass. Values encode pass, trial and frame; the B3D is served from an in-memory fake archive behind a deflated local header.",
+  "End to end: the dynamics values are chosen in both pass orders (pass index 2 and 0); the trial without a dynamics pass is counted as excluded (2 frames); the B3D is deleted; the outputs are exactly frames.parquet, conversion.json and dynamics_model.osim.",
+  "Metadata: time_s equals frame x the unrounded timestep 0.009947643979057591; mass, height, sex and age come from the header; the model masses are 60/80 kg; normalization_mass_kg is missing; missing_grf_reason names are mapped; the split index is in task_info.",
+  "Absent fields: age and data_quality are absent when not in the file; treadmill and speed are not filled for Falisse.",
+  "Refusals: dropped subjects 1, 7 and 8 are refused before any network call; a central-directory CRC mismatch, a payload CRC mismatch while streaming (kept as .rejected), a Drive header-hash mismatch, a changed ETag, an existing output root, existing converter outputs, short disk (refused before download), another B3D already under the transient root, and a layout mismatch.",
+  "Real headers (no frames): the converter's parse_header and layout reproduce the file size for 15 of 15 HIST-04 headers. Every trial has exactly one dynamics pass, and the per-frame missing-GRF and dynamics-pass arrays have trial length.",
+  "Plan: 33 specs (Falisse 8, Tan walking 17, Tan running 8); no dropped subject. Bindings: acquisition script f907f1e2..., converter e4ac8783..., zip-member helper 091c70c5..., plus each expected file. validate_spec passed in-process for each. Pilot order 01 = Falisse subject_4 (smallest kept, 5.7 MB transfer). Total transfer 22.3 GB; peak transient 2,215,534,429 B. Not launched."
+ ],
+ "test_runs": [
+  {
+   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -rs -p no:cacheprovider tests/test_hist05_addbiomechanics_member.py tests/test_addbiomechanics_member_acquisition.py tests/test_backlog_workflow.py",
+   "result": "127 passed, 0 skipped"
+  },
+  {
+   "command": "python3 contributor_tools/build_backlog_page.py --check",
+   "result": "Backlog valid; HTML current (103 tasks)"
+  }
+ ],
+ "acceptance_coverage": {
+  "dropped_subjects_never_acquired": "check_member refuses before any network call or receipt (tested for 1, 7 and 8); the plan excludes them (33 of 36).",
+  "pass_by_name": "Each trial's pass-header type selects the dynamics pass record; tested with dynamics at index 2 and at index 0.",
+  "no_invented_metadata": "Only header, trial-name and HIST-04-cited values; unavailable keys are listed, never filled; no rounding; absent fields stay absent (tested).",
+  "independent_verification_before_launch": "Pending."
+ },
+ "remaining": [
+  "Independent verification of the full batch (receipts, row counts, hashes, flag counts, one-B3D rule, no dropped subject acquired).",
+  "Mapping step (DOF names, ipsi/contra view, signs, normalization mass) including MAP-TAN-TASK.",
+  "P2: converter header-array memory (future revision only)."
+ ],
+ "next_action": "Independent reviewer: verify the batch against launcher receipts in /mnt/s/locomotion_data/addbiomechanics_hist04/launcher_receipts and acquisition_receipts, and the frames files. Coordinator: then queue the mapping task.",
+ "evidence_paths": [
+  "contributor_tools/acquire_addbiomechanics_member.py",
+  "contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_dynamics_frames.py",
+  "tests/test_hist05_addbiomechanics_member.py",
+  "converted_datasets/reconversion_v2/hist05_addbiomechanics_20261101/plans_r3/index.json",
+  "docs/quality/audits/hist04-addbiomechanics-metadata.json",
+  "/mnt/s/locomotion_data/addbiomechanics_hist04/launcher_receipts/fa16_subject_4.json",
+  "/mnt/s/locomotion_data/addbiomechanics_hist04/launcher_receipts/release_fa16_subject_4.json",
+  "/mnt/s/locomotion_data/addbiomechanics_hist04/pilot_comparison/fa16_subject_4/comparison.json"
+ ],
+ "output_sha256": {
+  "contributor_tools/acquire_addbiomechanics_member.py": "5ff9565c027925ebff90e27747a1c60ed49931ba69bf57e199ea3b29b4d0b9b6",
+  "contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_dynamics_frames.py": "f8baebfb72ea23ecce2c25bba61a8df9c4ca18a4d21161e32fc2e5f8a95904d5",
+  "tests/test_hist05_addbiomechanics_member.py": "ae1dabd1c62648b2574ee3e30636410295b7bb051518b96dde0ccce9fc6d5d52",
+  "converted_datasets/reconversion_v2/hist05_addbiomechanics_20261101/plans_r3/index.json": "f77c8d231f74dd440f3a6a9a8657f574b0693ed1edbca14b4abfcce5bcd8b6fa"
+ },
+ "reproduce": [
+  "python3 contributor_tools/acquire_addbiomechanics_member.py plan converted_datasets/reconversion_v2/hist04_addbiomechanics_20261031/headers <new empty PLAN_DIR>",
+  "python3 contributor_tools/acquire_addbiomechanics_member.py release-pilot <receipt dir of job 01> <new comparison folder>   (run as guarded job 01b)"
+ ],
+ "decisions": [],
+ "rework": {
+  "verifier_report": "docs/maintainers/handoffs/HIST-05-verify.json (back_to_worker)",
+  "R1_pass_order": "convert() now excludes, with a logged reason and frame count, any trial whose pass list differs from the file-wide pass list at the same positions. nimblephysics labels records by the file-wide list, so the two readers cannot disagree. Tests: the mismatched-order fixture trial (Mis_1) is excluded, and with a file-wide order of kinematics, dynamics, lowPassFilter the dynamics record is still found by name (index 1).",
+  "R2_pilot_retained": "Spec 01 (Falisse subject_4) adds --keep-source-for-comparison: the B3D is kept (status converted_source_retained_for_comparison) and listed in expected_output_names. Every later run refuses while any receipt with that status lacks comparison_release.json. That holds even if the B3D was deleted by hand; the one-B3D-on-disk rule also blocks. New 'release-pilot RECEIPT_DIR COMPARISON.json' requires b3d_sha256 equal to the pilot's, a named reader and compared_frames > 0. It deletes the B3D (after re-hashing it) only for status 'agree'; otherwise it writes comparison_record.json, keeps the file and keeps blocking. Tests cover blocking, disagree-keeps-blocking, deletion without a record still blocks, release unblocks, and a comparison for another B3D refused.",
+  "hardening": "Dropped subjects are matched by (study, subject) ignoring split, case, spacing, leading zeros, repeated slashes and './' (is_dropped; tests for 4 aliases and 2 kept members). Each run re-checks its expected entry against the hash-checked central directory before any receipt or network call (test).",
+  "specs": "Regenerated into converted_datasets/reconversion_v2/hist05_addbiomechanics_20261101/plans_r2/: 33 specs, validate_spec passed in-process, bindings equal the current files (acquisition 2aa153b7..., converter f8baebfb..., zip helper 091c70c5...). The first plans/ directory is superseded; its bound hashes no longer match, so the launcher would refuse it."
+ },
+ "rework_round_2": {
+  "verifier_report": "docs/maintainers/handoffs/HIST-05-verify.json (round 2, back_to_worker: release gate bypassable)",
+  "G1_computed_comparison": "release-pilot RECEIPT_DIR NEW_OUT_DIR takes no comparison file. It first re-hashes the retained B3D and frames.parquet against the pilot receipt. It then reads every written trial with nimblephysics SubjectOnDisk.readFrames (reader only; no writer setters) and picks the record nimblephysics labels DYNAMICS, which must sit at the parquet's pass index. Every signal column (dofNN pos/vel/acc/tau, per-body force/CoP/torque, COM pos/vel/acc, root residual) is compared with exact equality; NaN only matches NaN. It checks full coverage: the trial set equals the written trials, rows per trial equal the conversion record, and frames compared equal the receipt rows (738 expected for the pilot). It writes comparison.json (counts, mismatch examples, nimblephysics version, B3D/parquet/conversion/script/converter hashes) to the new folder. It deletes the B3D only if there are 0 mismatches and coverage is full, then writes comparison_release.json. On disagreement it writes comparison_record.json, keeps the B3D and stays blocked. A release record only unblocks if it holds such a complete agreeing comparison for this pilot's hashes and row count, and the B3D is gone; a hand-written record does not.",
+  "G2_fixed_roots": "CLI --run refuses unless --transient-root is DEST, the receipt dir sits directly under DEST/acquisition_receipts and --out is inside DEST. run() always checks DEST (fixed_root) for pending pilots and leftover B3Ds, in addition to the passed roots.",
+  "tests": "33 HIST-05 tests (was 29). New: pilot blocks job 02; release with a reader stub built from the fixture's encoding rule agrees on 7 frames x 39 values and unblocks; a 1e-12 tau mismatch on one frame is refused, keeps the B3D and keeps job 02 blocked; a forged comparison file passed as argument is refused, and a hand-written release record plus a hand-deleted B3D still block; job 02 with redirected roots is refused by the fixed root; CLI --run with non-DEST roots returns 2; release with the real nimblephysics 0.10.52.1 reader on the synthetic B3D agrees (runs here; skipped where nimblephysics is absent).",
+  "specs": "Regenerated into converted_datasets/reconversion_v2/hist05_addbiomechanics_20261101/plans_r3: 33 acquisition specs plus 01b_release_pilot_fa16_subject_4_spec.json (release-pilot as its own guarded job between 01 and 02). validate_spec passed in-process for all 34; bindings equal current files (acquisition 5ff9565c..., converter f8baebfb..., zip helper 091c70c5...). The release spec has no address_space_mib because nimblephysics (libtorch) fails to map under the 768 MiB PM-01 cap (checked); launcher runtime memory polling still applies. plans/ and plans_r2/ carry SUPERSEDED.txt."
+ },
+ "pilot": {
+  "slot": "Coordinator released the slot after the UM21 pilot finished (about 23:49 UTC). Only launcher-mediated jobs; no watcher with worker patterns in its argv.",
+  "job_01": {
+   "spec": "converted_datasets/reconversion_v2/hist05_addbiomechanics_20261101/plans_r3/01_fa16_subject_4_spec.json",
+   "dry_run": "preflight_passed",
+   "launched_utc": "2026-10-31T23:50:49Z",
+   "status": "completed",
+   "exit_code": 0,
+   "clean_success": true,
+   "checks": "cleanup_proven, bindings_unchanged, envelope_unchanged, linux/windows_no_new_worker, no_orphans, outputs_hashed, expected_outputs_present: all true",
+   "verify_cleanup": "completed; cleanup proven (same-boot proc scan); no fallback receipts",
+   "wall_time_seconds": 4.609,
+   "peak_rss_kib_largest_process": 146564,
+   "transfer": "5,688,522 compressed bytes, inflated to 10,193,550; CRC32 and SHA-256 passed; the B3D header SHA-256 equals the Drive header read in HIST-04 (cross-host identity)",
+   "download_speed": "about 1.4 MB/s: start 23:50:50 to the last B3D write at 23:50:54.5, including the two local-header range requests; the ceiling is 2 MiB/s (receipt times have 1 s resolution, so this is approximate)",
+   "frames_parquet": {
+    "rows": 738,
+    "frames_excluded": 0,
+    "sha256": "e88c6a54323274366a7fb3576fefe579ea5e275203a84274477e881fcdd813d0",
+    "columns": 163
+   },
+   "status_receipt": "converted_source_retained_for_comparison",
+   "receipts": [
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/launcher_receipts/fa16_subject_4.json",
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/acquisition_receipts/fa16_subject_4/acquisition_result.json"
+   ]
+  },
+  "job_01b": {
+   "spec": "converted_datasets/reconversion_v2/hist05_addbiomechanics_20261101/plans_r3/01b_release_pilot_fa16_subject_4_spec.json",
+   "dry_run": "preflight_passed",
+   "launched_utc": "2026-10-31T23:51:19Z",
+   "status": "completed",
+   "exit_code": 0,
+   "clean_success": true,
+   "checks": "all launcher checks true",
+   "verify_cleanup": "completed; cleanup proven",
+   "wall_time_seconds": 2.208,
+   "peak_rss_kib_largest_process": 754680,
+   "comparison": {
+    "reader": "nimblephysics 0.10.52.1 SubjectOnDisk.readFrames",
+    "status": "agree",
+    "frames_compared": 738,
+    "values_compared": 98892,
+    "values_per_frame": 134,
+    "grf_values_compared": 19926,
+    "mismatches": 0,
+    "tolerance": "exact equality",
+    "trials_compared": 1
+   },
+   "b3d_deleted": true,
+   "receipts": [
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/launcher_receipts/release_fa16_subject_4.json",
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/pilot_comparison/fa16_subject_4/comparison.json",
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/acquisition_receipts/fa16_subject_4/comparison_release.json"
+   ]
+  },
+  "grf_original_vs_release": "Exact: all 19,926 contact-body force/CoP/torque values (3 bodies x 9 x 738 frames) in frames.parquet equal what nimblephysics reads from the original B3D's dynamics pass. Sanity read of the released forces (one STS_2 trial, 7.36 s at about 100.1 Hz): the summed vertical force of calcn_r, calcn_l and pelvis averages 623.7 N over all frames and 635.2 N over the 269 frames flagged notMissingGRF, against 629.8 N body weight from the entered 64.2 kg (-1.0% and +0.9%) and 585.0 N from the dynamics-model mass of 59.6 kg. 467 of 738 frames (63%) are flagged footContactDetectedButNoForce and 2 missingBlip; they are kept and labelled. Not compared: the raw per-plate readings (not in the release; B3D now deleted).",
+  "not_run": "Job 02 and later, as instructed."
+ },
+ "falisse_run": {
+  "scope": "plans_r3 02-08 (Falisse subject_0, 5, 6, 3, 2, 10, 9) after the pilot (01, 01b). Stopped before 09 (first Tan walking job), as instructed.",
+  "procedure": "Each job in its own tool call: plain dry run (output kept, status checked by grep), one launch, verify-cleanup, then a read-only summary run with python3 -I from /tmp after the launcher exited. Before this run, one dry run of 02 was refused because I had piped the launcher output into python3 -c with the repository as cwd (the census counts that as a worker). It was reported; the coordinator approved the procedure above. No later refusal.",
+  "window_utc": "00:01:12-00:04:15 on 2026-11-01 (about 3 min for 7 jobs; job walls 10.2-22.1 s)",
+  "per_subject": [
+   {
+    "subject": "subject_4",
+    "compressed_bytes": 5688522,
+    "expanded_bytes": 10193550,
+    "rows": 738,
+    "frames_excluded": 0,
+    "wall_s": 4.609,
+    "peak_rss_mib": 143.1,
+    "b3d_deleted": false,
+    "parquet_sha256": "e88c6a54323274366a7fb3576fefe579ea5e275203a84274477e881fcdd813d0",
+    "trials": 1,
+    "flags": {
+     "footContactDetectedButNoForce": 467,
+     "notMissingGRF": 269,
+     "missingBlip": 2
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "subject_0",
+    "compressed_bytes": 15383048,
+    "expanded_bytes": 27768708,
+    "rows": 2587,
+    "frames_excluded": 0,
+    "wall_s": 10.22,
+    "peak_rss_mib": 148.1,
+    "b3d_deleted": true,
+    "parquet_sha256": "df5d0a13f49884263f4733705e18342c62051ca83b2670bc9ad4ecae01f51d2b",
+    "trials": 5,
+    "flags": {
+     "footContactDetectedButNoForce": 1452,
+     "manualReview": 956,
+     "missingBlip": 74,
+     "notMissingGRF": 61,
+     "measuredGrfZeroWhenAccelerationNonZero": 30,
+     "forceDiscrepancy": 14
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "subject_5",
+    "compressed_bytes": 20558351,
+    "expanded_bytes": 29266026,
+    "rows": 2710,
+    "frames_excluded": 0,
+    "wall_s": 12.615,
+    "peak_rss_mib": 149.4,
+    "b3d_deleted": true,
+    "parquet_sha256": "7dbfb7aeaee735475e273681d44c35d70807f344df4de5fc79982e647e73a106",
+    "trials": 5,
+    "flags": {
+     "notMissingGRF": 1383,
+     "footContactDetectedButNoForce": 1209,
+     "manualReview": 110,
+     "missingBlip": 8
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "subject_6",
+    "compressed_bytes": 21692167,
+    "expanded_bytes": 37750860,
+    "rows": 3572,
+    "frames_excluded": 0,
+    "wall_s": 13.815,
+    "peak_rss_mib": 151.3,
+    "b3d_deleted": true,
+    "parquet_sha256": "74a40644a3e4047d591dec3e38f64e3f7ef86839c2c9491cf2cfbd9ca268823f",
+    "trials": 7,
+    "flags": {
+     "notMissingGRF": 1595,
+     "footContactDetectedButNoForce": 1276,
+     "missingBlip": 420,
+     "manualReview": 159,
+     "measuredGrfZeroWhenAccelerationNonZero": 65,
+     "forceDiscrepancy": 57
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "subject_3",
+    "compressed_bytes": 26919708,
+    "expanded_bytes": 38622924,
+    "rows": 3671,
+    "frames_excluded": 0,
+    "wall_s": 16.713,
+    "peak_rss_mib": 154.5,
+    "b3d_deleted": true,
+    "parquet_sha256": "9a50df4e0cda240eb1494c7441d719655e088c19ac2e9d2d7cfa81110e4c5eec",
+    "trials": 9,
+    "flags": {
+     "footContactDetectedButNoForce": 1426,
+     "notMissingGRF": 1216,
+     "unmeasuredExternalForceDetected": 428,
+     "manualReview": 390,
+     "missingBlip": 123,
+     "measuredGrfZeroWhenAccelerationNonZero": 88
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "subject_2",
+    "compressed_bytes": 30251136,
+    "expanded_bytes": 43283954,
+    "rows": 4153,
+    "frames_excluded": 0,
+    "wall_s": 19.291,
+    "peak_rss_mib": 149.6,
+    "b3d_deleted": true,
+    "parquet_sha256": "eda37e0bb5cf716e824e2b9b1587f106a440fe49ab6807d29e55fb089b4882f7",
+    "trials": 12,
+    "flags": {
+     "notMissingGRF": 1973,
+     "footContactDetectedButNoForce": 1385,
+     "missingBlip": 260,
+     "unmeasuredExternalForceDetected": 193,
+     "manualReview": 160,
+     "measuredGrfZeroWhenAccelerationNonZero": 105,
+     "forceDiscrepancy": 77
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "subject_10",
+    "compressed_bytes": 37858900,
+    "expanded_bytes": 52050602,
+    "rows": 5060,
+    "frames_excluded": 0,
+    "wall_s": 22.102,
+    "peak_rss_mib": 159.9,
+    "b3d_deleted": true,
+    "parquet_sha256": "25087f3a21167edc8b73fe82fb88cab9821f6d2c5d01527a5c4e53f20a9e0b6f",
+    "trials": 9,
+    "flags": {
+     "footContactDetectedButNoForce": 2075,
+     "unmeasuredExternalForceDetected": 1520,
+     "notMissingGRF": 1038,
+     "missingBlip": 280,
+     "measuredGrfZeroWhenAccelerationNonZero": 138,
+     "forceDiscrepancy": 9
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "subject_9",
+    "compressed_bytes": 31201409,
+    "expanded_bytes": 53926367,
+    "rows": 5228,
+    "frames_excluded": 0,
+    "wall_s": 19.695,
+    "peak_rss_mib": 159.8,
+    "b3d_deleted": true,
+    "parquet_sha256": "c0b66da650a4ba0c717b554848dec9eb968f35eaa5ff6da868840cffa036f471",
+    "trials": 10,
+    "flags": {
+     "footContactDetectedButNoForce": 2289,
+     "notMissingGRF": 1710,
+     "manualReview": 738,
+     "missingBlip": 438,
+     "forceDiscrepancy": 53
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   }
+  ],
+  "totals": {
+   "subjects": 8,
+   "rows": 27719,
+   "compressed_bytes": 189553241,
+   "expanded_bytes": 292862991,
+   "flags": {
+    "footContactDetectedButNoForce": 11579,
+    "forceDiscrepancy": 210,
+    "manualReview": 2513,
+    "measuredGrfZeroWhenAccelerationNonZero": 426,
+    "missingBlip": 1605,
+    "notMissingGRF": 9245,
+    "unmeasuredExternalForceDetected": 2141
+   }
+  },
+  "checks": "All 7 completed, exit 0, clean_success true, every launcher check true, verify-cleanup proven with no fallback receipts. Rows equal the frame counts read from the HIST-04 headers for every subject; 0 frames excluded. No .b3d remains under the destination. Disk free about 146 GiB afterwards.",
+  "grf_altered_flags": "None. No shiftGRF, interpolatedClippedGRF or extendedToNearestPeakForce frame in any of the 8 subjects.",
+  "not_checked_anomalies": [
+   "subject_0 has only 61 of 2,587 frames (2.4%) flagged notMissingGRF (1,452 footContactDetectedButNoForce, 956 manualReview); every other subject has 21-51%.",
+   "subject_10 has 1,520 unmeasuredExternalForceDetected frames (30%) and subject_3 has 428. Both are source labels, kept as written; whether they mark seat or handrail contact was not checked."
+  ],
+  "tan_running_time_budget": "Measured: the downloads ran at about the 2 MiB/s ceiling (2.10 MB/s). Wall minus transfer at the ceiling leaves about 4-5 s per 4,000-5,200 frames, roughly 1 ms per frame, which includes converting, the two SHA-256 re-reads and the parquet hash. Tan running s3 (largest): 1,640,560,231 B is 782 s at the ceiling, plus about 273 s for 273,092 frames, plus about 30-60 s for re-reading 2.2 GB twice: about 1,100-1,150 s, roughly a third of the 3,400 s script deadline (launcher timeout 3,600 s). The deadline is reached only if the server delivers less than about 0.53 MB/s. The Falisse files are small, so the per-frame and re-read costs at Tan scale are extrapolated; Tan walking (09-25, about 580 MB and 93,000 frames each, about 280 + 95 s) will measure them before any Tan running job."
+ },
+ "tan_walking_run": {
+  "scope": "plans_r3 09-25 (Tan walking, 17 participants). Stopped before 26 (first Tan running job), as instructed.",
+  "procedure": "Same as the Falisse run: plain dry run (status checked by grep), one launch, verify-cleanup, then a read-only summary with python3 -I from /tmp after the launcher exited. One job per tool call. No refusals.",
+  "window_utc": "00:05:30-01:35:23 on 2026-11-01 (about 90 min for 17 jobs; each job 298.3-300.7 s)",
+  "per_subject": [
+   {
+    "subject": "08",
+    "compressed_bytes": 582539382,
+    "expanded_bytes": 746349831,
+    "rows": 93122,
+    "frames_excluded": 0,
+    "wall_s": 299.894,
+    "peak_rss_mib": 283.8,
+    "b3d_deleted": true,
+    "parquet_sha256": "9ba96760a86ed8dbded7c4850d4cff72cd737e91de0017abd83458eaee4a8536",
+    "trials": 48,
+    "flags": {
+     "notMissingGRF": 79426,
+     "missingBlip": 7436,
+     "footContactDetectedButNoForce": 6260
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "06",
+    "compressed_bytes": 580278870,
+    "expanded_bytes": 746533405,
+    "rows": 93145,
+    "frames_excluded": 0,
+    "wall_s": 299.154,
+    "peak_rss_mib": 283.7,
+    "b3d_deleted": true,
+    "parquet_sha256": "c962595116e66d757acf4c943fa9ab2f948cc7a03d3011969680816931c52a91",
+    "trials": 48,
+    "flags": {
+     "notMissingGRF": 78268,
+     "missingBlip": 8125,
+     "footContactDetectedButNoForce": 6752
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "04",
+    "compressed_bytes": 579765427,
+    "expanded_bytes": 746557221,
+    "rows": 93148,
+    "frames_excluded": 0,
+    "wall_s": 298.759,
+    "peak_rss_mib": 283.2,
+    "b3d_deleted": true,
+    "parquet_sha256": "39905823e055b92233ce45a78ffbaa4a43362fe372784e66271958677e6da688",
+    "trials": 48,
+    "flags": {
+     "notMissingGRF": 68180,
+     "missingBlip": 13051,
+     "footContactDetectedButNoForce": 11917
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "07",
+    "compressed_bytes": 581633033,
+    "expanded_bytes": 746581523,
+    "rows": 93151,
+    "frames_excluded": 0,
+    "wall_s": 299.652,
+    "peak_rss_mib": 284.0,
+    "b3d_deleted": true,
+    "parquet_sha256": "f03175bb010cadc5e08d68f8f157c0d06b665a4f2aadf84ef9993713e3be1619",
+    "trials": 48,
+    "flags": {
+     "notMissingGRF": 79611,
+     "footContactDetectedButNoForce": 6860,
+     "missingBlip": 6680
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "19",
+    "compressed_bytes": 582857893,
+    "expanded_bytes": 746588871,
+    "rows": 93152,
+    "frames_excluded": 0,
+    "wall_s": 300.309,
+    "peak_rss_mib": 270.0,
+    "b3d_deleted": true,
+    "parquet_sha256": "e18a9149219aa77e45000553ac2a3f56d08bed6d52d47eb2d7c76dafd46d050c",
+    "trials": 48,
+    "flags": {
+     "notMissingGRF": 82346,
+     "footContactDetectedButNoForce": 6709,
+     "missingBlip": 4097
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "20",
+    "compressed_bytes": 580448173,
+    "expanded_bytes": 746589468,
+    "rows": 93152,
+    "frames_excluded": 0,
+    "wall_s": 299.111,
+    "peak_rss_mib": 283.2,
+    "b3d_deleted": true,
+    "parquet_sha256": "8eb54e1e5957e293586df7d20d9ad1a1adee8961aae1ea1e07311fec9a46929e",
+    "trials": 48,
+    "flags": {
+     "notMissingGRF": 66508,
+     "footContactDetectedButNoForce": 15077,
+     "missingBlip": 11567
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "10",
+    "compressed_bytes": 578819441,
+    "expanded_bytes": 746597345,
+    "rows": 93153,
+    "frames_excluded": 0,
+    "wall_s": 298.291,
+    "peak_rss_mib": 283.9,
+    "b3d_deleted": true,
+    "parquet_sha256": "139b711b5c7ef659fc36974bf1f601cb2394f7265903c402f3ec8af41ad7e68c",
+    "trials": 48,
+    "flags": {
+     "notMissingGRF": 71175,
+     "footContactDetectedButNoForce": 13773,
+     "missingBlip": 8205
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "12",
+    "compressed_bytes": 580383086,
+    "expanded_bytes": 746628950,
+    "rows": 93157,
+    "frames_excluded": 0,
+    "wall_s": 299.437,
+    "peak_rss_mib": 284.0,
+    "b3d_deleted": true,
+    "parquet_sha256": "654db1cbb84660ad99c335dc09ad2579f926890426e307c0ca1d5a2b48e0247c",
+    "trials": 48,
+    "flags": {
+     "notMissingGRF": 61020,
+     "footContactDetectedButNoForce": 18380,
+     "missingBlip": 13757
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "15",
+    "compressed_bytes": 582878436,
+    "expanded_bytes": 746645294,
+    "rows": 93159,
+    "frames_excluded": 0,
+    "wall_s": 300.449,
+    "peak_rss_mib": 269.1,
+    "b3d_deleted": true,
+    "parquet_sha256": "4334bec1cbfbfe5f939fd5aec616a7f14edbc37af55e5e051bbb5c72b72a2ecc",
+    "trials": 48,
+    "flags": {
+     "notMissingGRF": 79705,
+     "footContactDetectedButNoForce": 7818,
+     "missingBlip": 5636
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "05",
+    "compressed_bytes": 579824058,
+    "expanded_bytes": 746653423,
+    "rows": 93160,
+    "frames_excluded": 0,
+    "wall_s": 298.881,
+    "peak_rss_mib": 283.9,
+    "b3d_deleted": true,
+    "parquet_sha256": "065c831c33a6aa7e2d559c63b02519918a9d07f08c866b47c7be51102ea39f99",
+    "trials": 48,
+    "flags": {
+     "notMissingGRF": 62205,
+     "footContactDetectedButNoForce": 17104,
+     "missingBlip": 13821,
+     "unmeasuredExternalForceDetected": 30
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "14",
+    "compressed_bytes": 580597809,
+    "expanded_bytes": 746764926,
+    "rows": 93174,
+    "frames_excluded": 0,
+    "wall_s": 299.513,
+    "peak_rss_mib": 283.2,
+    "b3d_deleted": true,
+    "parquet_sha256": "de26f995fb26873557315d97c031619499086936be87b28ebb9d08d227705e59",
+    "trials": 48,
+    "flags": {
+     "notMissingGRF": 74230,
+     "footContactDetectedButNoForce": 11147,
+     "missingBlip": 7758,
+     "unmeasuredExternalForceDetected": 39
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "18",
+    "compressed_bytes": 580967728,
+    "expanded_bytes": 746796916,
+    "rows": 93178,
+    "frames_excluded": 0,
+    "wall_s": 299.563,
+    "peak_rss_mib": 283.8,
+    "b3d_deleted": true,
+    "parquet_sha256": "f682e71f30d5170ab223767c1cc35bffd765888c1461d37240f56bf7f870f9d0",
+    "trials": 48,
+    "flags": {
+     "notMissingGRF": 85446,
+     "footContactDetectedButNoForce": 4768,
+     "missingBlip": 2964
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "02",
+    "compressed_bytes": 583437518,
+    "expanded_bytes": 747020495,
+    "rows": 93206,
+    "frames_excluded": 0,
+    "wall_s": 300.67,
+    "peak_rss_mib": 283.4,
+    "b3d_deleted": true,
+    "parquet_sha256": "46ca07594eff48014ca09f644fd4d411c5de448660393c67ce29a4f896036a1c",
+    "trials": 48,
+    "flags": {
+     "notMissingGRF": 80491,
+     "footContactDetectedButNoForce": 6418,
+     "missingBlip": 6228,
+     "unmeasuredExternalForceDetected": 69
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "11",
+    "compressed_bytes": 581120525,
+    "expanded_bytes": 747027915,
+    "rows": 93207,
+    "frames_excluded": 0,
+    "wall_s": 299.671,
+    "peak_rss_mib": 283.7,
+    "b3d_deleted": true,
+    "parquet_sha256": "c856ea34143abcc49c95fcd93692404517ece324bc1960603f99e5a9c145401d",
+    "trials": 48,
+    "flags": {
+     "notMissingGRF": 73580,
+     "footContactDetectedButNoForce": 9726,
+     "missingBlip": 9556,
+     "unmeasuredExternalForceDetected": 345
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "13",
+    "compressed_bytes": 581328720,
+    "expanded_bytes": 747156216,
+    "rows": 93223,
+    "frames_excluded": 0,
+    "wall_s": 299.966,
+    "peak_rss_mib": 268.7,
+    "b3d_deleted": true,
+    "parquet_sha256": "1e20a07f23725b1b4946fbc18b83c4675d5ca7687f03a155bfb0f64c96ffedc1",
+    "trials": 49,
+    "flags": {
+     "notMissingGRF": 75529,
+     "missingBlip": 8980,
+     "footContactDetectedButNoForce": 8714
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "17",
+    "compressed_bytes": 582651481,
+    "expanded_bytes": 747403558,
+    "rows": 93254,
+    "frames_excluded": 0,
+    "wall_s": 300.588,
+    "peak_rss_mib": 269.8,
+    "b3d_deleted": true,
+    "parquet_sha256": "023b43dd8fa58108230488bf27942b2d641178bb7d0324fbec0d43a9af0a6d84",
+    "trials": 49,
+    "flags": {
+     "notMissingGRF": 73604,
+     "footContactDetectedButNoForce": 11420,
+     "missingBlip": 8230
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "09",
+    "compressed_bytes": 579948374,
+    "expanded_bytes": 747587149,
+    "rows": 93277,
+    "frames_excluded": 0,
+    "wall_s": 299.542,
+    "peak_rss_mib": 270.5,
+    "b3d_deleted": true,
+    "parquet_sha256": "d17002dcf07de2904c8b9f544fe9773a780efd8b99bfc4258803979b92b2f06a",
+    "trials": 49,
+    "flags": {
+     "notMissingGRF": 82279,
+     "footContactDetectedButNoForce": 6477,
+     "missingBlip": 4521
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   }
+  ],
+  "totals": {
+   "subjects": 17,
+   "rows": 1584018,
+   "compressed_bytes": 9879479954,
+   "expanded_bytes": 12695482506,
+   "flags": {
+    "footContactDetectedButNoForce": 169320,
+    "missingBlip": 140612,
+    "notMissingGRF": 1273603,
+    "unmeasuredExternalForceDetected": 483
+   },
+   "share_notMissingGRF": 0.804,
+   "output_on_disk": "about 1.6 GB under the destination ta22 folder"
+  },
+  "checks": "All 17 completed, exit 0, clean_success true, every launcher check true, verify-cleanup proven with no fallback receipts. 0 frames excluded. The 1,584,018 rows differ by 3 from the HIST-04 estimate of 1,584,021 (15 of the 17 were estimated from file size). No .b3d remains; disk free about 144 GiB. Peak RSS 268.7-284.0 MiB.",
+  "grf_altered_flags": "None in any of the 17 participants.",
+  "anomalies_not_checked": [
+   "notMissingGRF share ranges 65.5% (participant 12) to 91.7% (participant 18).",
+   "unmeasuredExternalForceDetected in 4 participants (05: 30, 14: 39, 02: 69, 11: 345 frames).",
+   "Participants 13, 17 and 09 have 49 segments; the 2 read in HIST-04 had 48. These are source segment counts and were not checked against the protocol."
+  ],
+  "measured_cost": "Wall time minus transfer time at the 2 MiB/s ceiling: 22.1-23.0 s per job, 0.238-0.247 ms per frame (mean 0.242). This covers conversion, the two SHA-256 re-reads of the 747 MB B3D and the parquet hash. Wall times of 298-301 s match the ceiling (582 MB / 2 MiB/s = 278 s), so the server delivered at least 2 MiB/s throughout.",
+  "tan_running_time_budget": "Scaled by frames (or equally by expanded bytes, both about 2.9x Tan walking): largest member s3 = 782 s transfer + about 66 s processing = about 850 s, 25% of the 3,400 s script deadline (launcher timeout 3,600 s). The deadline is reached only if the server falls below about 0.49 MB/s. All 8 Tan running jobs: 12.23 GB at the ceiling = 5,830 s, plus about 490 s processing = about 6,300 s (about 1 h 45 min) run one at a time. Each Tan running job (about 760-850 s) exceeds the 600 s foreground tool limit, so each should run as a single background tool call and be waited on, still one job at a time. Transient disk peaks at 2.22 GB (s3)."
+ },
+ "tan_running_run": {
+  "scope": "plans_r3 26-33 (Tan running, 8 participants), all run. s7 hip_calibration recorded and run continued per the coordinator ruling.",
+  "job_26_s8": {
+   "dry_run": "preflight_passed",
+   "launched_utc": "01:36:35",
+   "finished_utc": "01:49:36",
+   "status": "completed",
+   "exit_code": 0,
+   "clean_success": true,
+   "failed_checks": [],
+   "verify_cleanup": "proven; no fallback receipts",
+   "wall_s": 760.927,
+   "peak_rss_mib": 407.5,
+   "compressed_bytes": 1449065782,
+   "expanded_bytes": 1956949952,
+   "rows": 241173,
+   "frames_excluded": 0,
+   "b3d_deleted": true,
+   "parquet_sha256": "ce7879077981363af820f3618fc45c8c059792e7aeb11531b0446618356f0781",
+   "trials": 127,
+   "flags": {
+    "notMissingGRF": 117518,
+    "footContactDetectedButNoForce": 113059,
+    "missingBlip": 8916,
+    "manualReview": 1634,
+    "unmeasuredExternalForceDetected": 30,
+    "forceDiscrepancy": 14,
+    "measuredGrfZeroWhenAccelerationNonZero": 2
+   },
+   "grf_altered": "none"
+  },
+  "budget_check": "Predicted about 691 s transfer + about 58 s processing = about 750 s; measured 760.9 s (overhead 70 s, 0.29 ms per frame).",
+  "likely_cause_not_verified": "The converter's header parse keeps per-frame arrays for all three passes (marker RMS, linear and angular residuals) and the missing-GRF list as Python lists. For s8 that is 241,173 frames x (3 passes x 3 arrays + 1), about 2.4 million Python floats and ints, plus the 18 MB header bytes and the pass model texts. Tan walking has 93,000 frames. Keeping only the dynamics-pass arrays, as compact arrays, would cut this. Not measured.",
+  "coordinator_ruling": "Coordinator 2026-11-01: accepted a peak RSS of roughly 410-470 MiB for Tan running within the reviewed 768 MiB address-space cap; the 290 MiB line was an early-warning threshold, not a reviewed limit. Converter unchanged, so every subject stays on one bound code hash. New stop rules for 27-33: peak RSS above 600 MiB, or available memory at admission below 4 GiB.",
+  "per_subject": [
+   {
+    "subject": "s8",
+    "compressed_bytes": 1449065782,
+    "expanded_bytes": 1956949952,
+    "rows": 241173,
+    "frames_excluded": 0,
+    "wall_s": 760.927,
+    "peak_rss_mib": 407.5,
+    "admission_available_mib": {
+     "linux": 13256,
+     "windows": 4594
+    },
+    "b3d_deleted": true,
+    "parquet_sha256": "ce7879077981363af820f3618fc45c8c059792e7aeb11531b0446618356f0781",
+    "trials": 127,
+    "flags": {
+     "notMissingGRF": 117518,
+     "footContactDetectedButNoForce": 113059,
+     "missingBlip": 8916,
+     "manualReview": 1634,
+     "unmeasuredExternalForceDetected": 30,
+     "forceDiscrepancy": 14,
+     "measuredGrfZeroWhenAccelerationNonZero": 2
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "s9",
+    "compressed_bytes": 1482433342,
+    "expanded_bytes": 1982492223,
+    "rows": 244326,
+    "frames_excluded": 0,
+    "wall_s": 761.777,
+    "peak_rss_mib": 410.5,
+    "admission_available_mib": {
+     "linux": 13265,
+     "windows": 4876
+    },
+    "b3d_deleted": true,
+    "parquet_sha256": "9759af097731e4c46e50381122cb222619ba49cc1af2596f46f39cbe51fad4cd",
+    "trials": 128,
+    "flags": {
+     "notMissingGRF": 130789,
+     "footContactDetectedButNoForce": 101420,
+     "missingBlip": 9164,
+     "manualReview": 2953
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "s5",
+    "compressed_bytes": 1490893364,
+    "expanded_bytes": 2023312144,
+    "rows": 248628,
+    "frames_excluded": 0,
+    "wall_s": 767.407,
+    "peak_rss_mib": 414.0,
+    "admission_available_mib": {
+     "linux": 13218,
+     "windows": 4852
+    },
+    "b3d_deleted": true,
+    "parquet_sha256": "a774b5b17d69642bf82cad82a14721367460c470cf5c163fe7f94dfb05c759c2",
+    "trials": 131,
+    "flags": {
+     "footContactDetectedButNoForce": 125059,
+     "notMissingGRF": 109484,
+     "missingBlip": 8667,
+     "manualReview": 5418
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "s1",
+    "compressed_bytes": 1508963490,
+    "expanded_bytes": 2030257609,
+    "rows": 250222,
+    "frames_excluded": 0,
+    "wall_s": 775.409,
+    "peak_rss_mib": 415.2,
+    "admission_available_mib": {
+     "linux": 13279,
+     "windows": 4843
+    },
+    "b3d_deleted": true,
+    "parquet_sha256": "c4691f47cc30d4a8c87bfb6093142683627d97ddeff89cea0c0bbac94dac54ee",
+    "trials": 130,
+    "flags": {
+     "footContactDetectedButNoForce": 119396,
+     "notMissingGRF": 119392,
+     "missingBlip": 9363,
+     "manualReview": 2071
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "s6",
+    "compressed_bytes": 1517425023,
+    "expanded_bytes": 2059697529,
+    "rows": 253856,
+    "frames_excluded": 0,
+    "wall_s": 781.42,
+    "peak_rss_mib": 419.0,
+    "admission_available_mib": {
+     "linux": 13284,
+     "windows": 4700
+    },
+    "b3d_deleted": true,
+    "parquet_sha256": "d49cecec293ef565f4c7ebfc45b77856b74c1bee17a44057f698749af33241df",
+    "trials": 133,
+    "flags": {
+     "footContactDetectedButNoForce": 138913,
+     "notMissingGRF": 101964,
+     "missingBlip": 8767,
+     "manualReview": 4119,
+     "forceDiscrepancy": 51,
+     "unmeasuredExternalForceDetected": 42
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "s4",
+    "compressed_bytes": 1557837938,
+    "expanded_bytes": 2125414388,
+    "rows": 261968,
+    "frames_excluded": 0,
+    "wall_s": 801.594,
+    "peak_rss_mib": 424.2,
+    "admission_available_mib": {
+     "linux": 13265,
+     "windows": 4672
+    },
+    "b3d_deleted": true,
+    "parquet_sha256": "0c318a84c210098f0944e9ba0c83e947ecddf15d5e553463e84a47dca58c54ab",
+    "trials": 135,
+    "flags": {
+     "footContactDetectedButNoForce": 127709,
+     "notMissingGRF": 124457,
+     "missingBlip": 9580,
+     "unmeasuredExternalForceDetected": 129,
+     "forceDiscrepancy": 86,
+     "measuredGrfZeroWhenAccelerationNonZero": 7
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "s7",
+    "compressed_bytes": 1579413267,
+    "expanded_bytes": 2139655979,
+    "rows": 262947,
+    "frames_excluded": 0,
+    "wall_s": 811.403,
+    "peak_rss_mib": 426.3,
+    "admission_available_mib": {
+     "linux": 13248,
+     "windows": 4662
+    },
+    "b3d_deleted": true,
+    "parquet_sha256": "9748fdd322af96699904944a0f2225daeeaefac6823092809511f02721d78beb",
+    "trials": 135,
+    "flags": {
+     "footContactDetectedButNoForce": 138582,
+     "notMissingGRF": 107126,
+     "missingBlip": 11242,
+     "manualReview": 5997
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   },
+   {
+    "subject": "s3",
+    "compressed_bytes": 1640560231,
+    "expanded_bytes": 2215534429,
+    "rows": 273092,
+    "frames_excluded": 0,
+    "wall_s": 843.629,
+    "peak_rss_mib": 433.9,
+    "admission_available_mib": {
+     "linux": 13270,
+     "windows": 4620
+    },
+    "b3d_deleted": true,
+    "parquet_sha256": "34e51f547576622314fb692f29046eac38bb3741379b7d332a2da0c2fa979863",
+    "trials": 143,
+    "flags": {
+     "footContactDetectedButNoForce": 137056,
+     "notMissingGRF": 125542,
+     "missingBlip": 10494
+    },
+    "grf_altered": {},
+    "clean_success": true,
+    "failed_checks": []
+   }
+  ],
+  "fix_options": [
+   "Patch task_fields so Tan running gets task 'run' only when the trial name matches {nike|mini}_{SR|SI|baseline}_{24|28}, otherwise task null with 'unrecognized source trial'. This is a reviewed converter change with a new hash; then rerun s7 (and the others, for one code hash) and run s3 with it.",
+   "Keep the converter; record that the s7 hip_calibration segment is mislabelled and correct the task in the later canonical-mapping step (task is metadata; the signal values are unaffected). Run s3 on the same hash."
+  ],
+  "coordinator_ruling_hip_calibration": "Coordinator 2026-11-01: keep the converter (one bound hash for all subjects). The s7 'hip_calibration' trial (1 segment, 2,000 frames, observation hip_calibration_segment_0) is recorded as mislabelled task 'run' in frames.parquet; the mapping step corrects it. Whether calibration trials are released at all is deferred.",
+  "s3_preflight_trial_names": "From the s3 header read in HIST-04 (SHA-256 739903e8..., the same hash the s3 job is bound to check): 143 segments, 12 original names, all matching {nike|mini}_{SR|SI|baseline}_{24|28}; no non-matching names.",
+  "totals": {
+   "subjects": 8,
+   "rows": 2036212,
+   "compressed_bytes": 12226592437,
+   "expanded_bytes": 16533314253,
+   "flags": {
+    "footContactDetectedButNoForce": 1001194,
+    "forceDiscrepancy": 151,
+    "manualReview": 22192,
+    "measuredGrfZeroWhenAccelerationNonZero": 9,
+    "missingBlip": 76193,
+    "notMissingGRF": 936272,
+    "unmeasuredExternalForceDetected": 201
+   },
+   "share_notMissingGRF": 0.46,
+   "peak_rss_mib_range": [
+    407.5,
+    433.9
+   ],
+   "wall_s_range": [
+    760.927,
+    843.629
+   ],
+   "admission_available_mib_min": {
+    "linux": 13218,
+    "windows": 4594
+   },
+   "window_utc": "01:36:35-03:28:53"
+  },
+  "stop_reason_history": "Anomaly in s7 (job 32): the source has a trial named 'hip_calibration' (one segment, 2,000 frames; 211 notMissingGRF). The converter labels every Tan running trial task='run', so this calibration trial is written as task 'run' (task_id 'hip_calibration', no tokens). That is a wrong task label, not a run. Job 32 itself passed every check. 33 (s3) not launched. RSS stayed within the new rule (max 426.3 MiB < 600) and admission memory too (Linux at least 13,218 MiB, Windows at least 4,662 MiB).",
+  "s3_budget_check": "Predicted about 850 s and about 430 MiB; measured 843.6 s and 433.9 MiB."
+ },
+ "follow_ups": [
+  {
+   "priority": "P2",
+   "title": "Reduce converter header-array memory (future converter revision)",
+   "note": "parse_header keeps per-frame marker_rms, linear_residual and angular_residual for every pass, plus missing_grf, as Python lists (about 2.4 million objects for Tan running s8, peak RSS 407.5 MiB). Keep only the dynamics-pass arrays and store them as array('f')/array('B') or numpy. Needs a reviewed converter change, new spec hashes and a re-pilot; do not mix code hashes within a study's run."
+  }
+ ],
+ "required_for_mapping_step": [
+  {
+   "id": "MAP-TAN-TASK",
+   "requirement": "Any Tan trial (running or walking) whose original name does not match the study's protocol pattern (Tan running: {nike|mini}_{SR|SI|baseline}_{24|28}; Tan walking: baseline|fpa|step_width|trunk_sway) gets no task label: task unassigned, excluded from every task table, kept in the frames file with its source name. Known case: Tan running s7 hip_calibration (1 segment, 2,000 frames), currently written as task 'run'. Release of calibration trials is undecided."
+  }
+ ],
+ "batch_summary": {
+  "status": "All 33 kept participants acquired, converted and source-deleted; ready for independent verification. scientific_approval false.",
+  "studies": {
+   "fa16": {
+    "participants": 8,
+    "rows": 27719,
+    "jobs": "01 (pilot, plus 01b nimblephysics release) and 02-08"
+   },
+   "ta22": {
+    "participants": 17,
+    "rows": 1584018,
+    "jobs": "09-25"
+   },
+   "ta21": {
+    "participants": 8,
+    "rows": 2036212,
+    "jobs": "26-33"
+   }
+  },
+  "rows_total": 3647949,
+  "frames_excluded_total": 0,
+  "dropped": "Falisse subject_1, 7, 8 were never acquired (D-HIST-04-2 = A).",
+  "outputs": "/mnt/s/locomotion_data/addbiomechanics_hist04/<study>/<participant>/{frames.parquet, conversion.json, dynamics_model.osim}: 33 frames files, about 3.6 GB total (fa16 39 MB, ta22 1.6 GB, ta21 2.0 GB). No .b3d remains; disk free about 142 GiB.",
+  "checks": "Every job: dry run passed, one launch, exit 0, clean_success true, all launcher checks true, verify-cleanup proven with no fallback receipts. Rows equal the header frame counts where read; 0 frames excluded. The pilot's 738 frames x 134 values equal nimblephysics readFrames exactly.",
+  "code": "All 33 on one bound hash: acquisition 5ff9565c..., converter f8baebfb..., zip helper 091c70c5... (plans_r3).",
+  "grf_altered_flags": "None in any participant.",
+  "known_label_issue": "Tan running s7 hip_calibration (1 segment, 2,000 frames) is written as task 'run'. It is the only non-matching Tan trial name in all 25 Tan outputs (all frames files scanned). See required_for_mapping_step MAP-TAN-TASK.",
+  "not_checked": [
+   "Frames against nimblephysics for any participant but the pilot (same code hash).",
+   "Low trusted-force shares: Falisse subject_0 2.4%; Tan running 46% overall; their causes.",
+   "DOF names, signs, frames and normalization mass (later mapping step and José's convention)."
+  ],
+  "follow_ups": [
+   "P2 converter header-array memory (follow_ups).",
+   "MAP-TAN-TASK in the mapping step.",
+   "Normalization-mass convention (José)."
+  ]
+ }
+}
