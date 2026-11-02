@@ -1,0 +1,218 @@
+{
+ "task_id": "GT24-C01",
+ "stage": "census_pilot_check",
+ "scientific_approval": false,
+ "probe_sha256_in_output": "05dae969c970145e3c52935bc11474bb8c12e1a3d819b701aaa780c105a3c8e8",
+ "probe_sha256_bound": "05dae969c970145e3c52935bc11474bb8c12e1a3d819b701aaa780c105a3c8e8",
+ "probe_matches_binding": true,
+ "census_pilot_output_sha256": "abad6fd0ac9f03f18890a80549ef722daee7cc4580e7ffe6e24549d22e9a8f7a",
+ "first_pilot_output_sha256": "b096d8ff29480fabbecd975fba7b2cf00981a44cd286bd7970ff25ddd0b20f6d",
+ "checks": [
+  {
+   "criterion": "job completes under the guarded launcher with zips unchanged and peak RSS under 512 MiB",
+   "pass": true,
+   "evidence": {
+    "receipt_status": "completed",
+    "exit_code": 0,
+    "clean_success": true,
+    "failed_receipt_checks": [],
+    "zips_unchanged": true,
+    "peak_rss_mib": 212.2,
+    "stage": "census_pilot",
+    "trials": 24
+   }
+  },
+  {
+   "criterion": "the 5 fixed v1-exact trials keep identity_class exact and the same divisor (within 1e-12 relative) as the 58-trial pilot output",
+   "pass": true,
+   "evidence": [
+    {
+     "trial": "Phase1And2/BT09/normal_walk_1_1_1-2_on",
+     "class": "exact",
+     "divisor_kg": 88.9720884033425,
+     "first_pilot_kg": 88.9720884033425,
+     "rel_diff": 0.0,
+     "pass": true
+    },
+    {
+     "trial": "Phase1And2/BT09/normal_walk_1_2_1-2_off",
+     "class": "exact",
+     "divisor_kg": 88.97208840334244,
+     "first_pilot_kg": 88.97208840334244,
+     "rel_diff": 0.0,
+     "pass": true
+    },
+    {
+     "trial": "Phase3/BT18/normal_walk_1_1_0-6_on",
+     "class": "exact",
+     "divisor_kg": 84.8435361822889,
+     "first_pilot_kg": 84.8435361822889,
+     "rel_diff": 0.0,
+     "pass": true
+    },
+    {
+     "trial": "Phase3/BT18/stairs_3_10_down_on",
+     "class": "exact",
+     "divisor_kg": 87.15012042538248,
+     "first_pilot_kg": 87.15012042538248,
+     "rel_diff": 0.0,
+     "pass": true
+    },
+    {
+     "trial": "Phase3/BT24/normal_walk_1_1_1-2_on",
+     "class": "exact",
+     "divisor_kg": 74.9572980922401,
+     "first_pilot_kg": 74.9572980922401,
+     "rel_diff": 0.0,
+     "pass": true
+    }
+   ]
+  },
+  {
+   "criterion": "every fixed short trial is reported as exact_short or not_exact with a stated per-column reason; none is labelled exact",
+   "pass": true,
+   "evidence": [
+    {
+     "trial": "Phase1And2/BT06/stairs_1_1_up_on",
+     "class": "exact_short",
+     "divisor_kg": 85.14053845904607,
+     "columns": {
+      "hip_flexion_l": "exact_short",
+      "knee_angle_l": "exact_short",
+      "hip_flexion_r": "exact_short",
+      "knee_angle_r": "exact_short"
+     },
+     "pass": true
+    },
+    {
+     "trial": "Phase1And2/BT07/stairs_1_2_down_off",
+     "class": "exact_short",
+     "divisor_kg": 71.19327104707841,
+     "columns": {
+      "hip_flexion_l": "exact_short",
+      "knee_angle_l": "exact_short",
+      "hip_flexion_r": "exact_short",
+      "knee_angle_r": "exact_short"
+     },
+     "pass": true
+    },
+    {
+     "trial": "Phase3/BT02/stairs_3_12_down_on",
+     "class": "exact_short",
+     "divisor_kg": 76.73865745622268,
+     "columns": {
+      "hip_flexion_l": "exact_short",
+      "knee_angle_l": "exact_short",
+      "hip_flexion_r": "exact_short",
+      "knee_angle_r": "exact_short"
+     },
+     "pass": true
+    },
+    {
+     "trial": "Phase3/BT13/stairs_2_3_up_on",
+     "class": "exact_short",
+     "divisor_kg": 93.8060005230687,
+     "columns": {
+      "hip_flexion_l": "exact_short",
+      "knee_angle_l": "exact_short",
+      "hip_flexion_r": "exact_short",
+      "knee_angle_r": "exact_short"
+     },
+     "pass": true
+    },
+    {
+     "trial": "Phase3/BT23/stairs_3_12_down_on",
+     "class": "exact_short",
+     "divisor_kg": 73.9318234784596,
+     "columns": {
+      "hip_flexion_l": "exact_short",
+      "knee_angle_l": "exact_short",
+      "hip_flexion_r": "exact_short",
+      "knee_angle_r": "exact_short"
+     },
+     "pass": true
+    },
+    {
+     "trial": "Phase3/BT24/stairs_2_2_down_on",
+     "class": "exact_short",
+     "divisor_kg": 75.231230483426,
+     "columns": {
+      "hip_flexion_l": "exact_short",
+      "knee_angle_l": "exact_short",
+      "hip_flexion_r": "exact_short",
+      "knee_angle_r": "exact_short"
+     },
+     "pass": true
+    }
+   ]
+  },
+  {
+   "criterion": "both BT09 trials list their own README worn row under own_readme_row and the other folder's mass under other_candidates",
+   "pass": true,
+   "evidence": [
+    {
+     "trial": "Phase1And2/BT09/normal_walk_1_1_1-2_on",
+     "own_readme_row": [
+      "model_day1_with_exo_kg"
+     ],
+     "other_candidates": [
+      "Phase3 BT13 participant_day1_kg"
+     ],
+     "pass": true
+    },
+    {
+     "trial": "Phase1And2/BT09/normal_walk_1_2_1-2_off",
+     "own_readme_row": [
+      "model_day1_with_exo_kg"
+     ],
+     "other_candidates": [
+      "Phase3 BT13 participant_day1_kg"
+     ],
+     "pass": true
+    }
+   ]
+  },
+  {
+   "criterion": "the BT18 and BT24 folder trials report an empty own_readme_row and an own_statics match",
+   "pass": true,
+   "evidence": [
+    {
+     "trial": "Phase3/BT18/normal_walk_1_1_0-6_on",
+     "own_readme_row": 0,
+     "own_statics": [
+      "model ids 7"
+     ],
+     "pass": true
+    },
+    {
+     "trial": "Phase3/BT18/stairs_3_10_down_on",
+     "own_readme_row": 0,
+     "own_statics": [
+      "model ids 2,4,6"
+     ],
+     "pass": true
+    },
+    {
+     "trial": "Phase3/BT24/normal_walk_1_1_1-2_on",
+     "own_readme_row": 0,
+     "own_statics": [
+      "model ids 2,4,5"
+     ],
+     "pass": true
+    }
+   ]
+  },
+  {
+   "criterion": "projected full-census wall time (pilot seconds per trial x 2,421) is under 0.6 x the 3,600 s launcher maximum; otherwise the census is split by --phase",
+   "pass": true,
+   "evidence": {
+    "seconds_per_trial": 0.442,
+    "runtime_seconds": 10.6,
+    "projected_full_census_s": 1070.1,
+    "limit_s": 2160.0,
+    "split_by_phase": false
+   }
+  }
+ ],
+ "all_pass": true
+}

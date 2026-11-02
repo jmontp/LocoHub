@@ -4,11 +4,17 @@ Steps:
   audit   Writes docs/quality/audits/gt24-c01-normalization-policy.json from the publisher README
           (hash-checked), the GT24 mass matrix (README + Statics metadata only), the GT24-C02 audit,
           and code inspection notes. Reads no GT24 time series.
-  sheets  Builds review_sheets/GT24-C01/ (verification) and review_sheets/D-GT24-C01-1/ (decision)
-          from that JSON only.
+  sheets  Builds review_sheets/GT24-C01/ (verification) from that JSON only. Writes nothing else.
+  decision-sheet
+          Builds review_sheets/D-GT24-C01-1/ (decision sheet and decision.json) from that JSON (read only),
+          the 58-trial divisor pilot result and the E1 census result (both hash-checked), and the round-6
+          decision wording in DECISION, which must equal round_6.proposed_decision_wording in the GT24-C01
+          handoff; every number in it must be recomputed from the evidence. Reads no GT24 time series;
+          writes no audit.
 
-The divisor question needs data; it is planned (contributor_tools/audit_probes/2026_10_31/
-probe_gt24_c01_divisors.py, seeded selection embedded here) and not run by this task.
+The divisor probe (contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py) ran as a
+58-trial pilot (E1-E3) and as the E1 census over all 2,421 Parsed recordings, each under the guarded
+launcher; results in gt24-c01-divisor-pilot-result.json and gt24-c01-e1-census-result.json.
 """
 import os
 for key in ('OPENBLAS_NUM_THREADS', 'OMP_NUM_THREADS', 'MKL_NUM_THREADS'):
@@ -36,6 +42,44 @@ PROBE = ROOT / 'contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisor
 AUDIT = ROOT / 'docs/quality/audits/gt24-c01-normalization-policy.json'
 SHEET_V = ROOT / 'review_sheets/GT24-C01'
 SHEET_D = ROOT / 'review_sheets/D-GT24-C01-1'
+PILOT_RESULT = ROOT / 'docs/quality/audits/gt24-c01-divisor-pilot-result.json'
+PILOT_RESULT_SHA256 = 'd2f0f549170a654afe70b013c5ffac7eea7cd9e42a1b408df20adce173436219'
+HANDOFF = ROOT / 'docs/maintainers/handoffs/GT24-C01.json'
+CENSUS_RESULT = ROOT / 'docs/quality/audits/gt24-c01-e1-census-result.json'
+CENSUS_RESULT_SHA256 = '4ff81a6982b27caf7e15247823c079c430f23e94f67b8eeb79b4f77468ba3523'
+REPEAT_DAY = ('BT06', 'BT07', 'BT13')   # first-collection folders with a day-2 worn mass and no day-2 body mass
+GT23_LEVER_BIAS = 0.9942   # GT23-C04 rules.ankle_bias_centre_ratio (external calibration, as in the probe)
+# D-GT24-C01-1, round-6 wording (round 4 plus the E1 census counts). Options in neutral order by normalizing mass:
+# none (A), heavier = worn (B), lighter = body (C). Each consequence is 'Left out: <left>. <rest>'.
+DECISION_OPTIONS = [
+    ('A', 'Leave GT24 kinetics empty', 'all standard GT24 moments, powers and body-weight forces',
+     'Published per-kg values only under source names; nothing rescaled. Reversible.'),
+    ('B', 'Worn mass (person + exoskeleton)', 'nothing; every recording has an exact exoskeleton divisor',
+     'Standard columns equal the published per-kg values, assuming the net moments use the same worn mass, as the lever-arm '
+     'check supports; forces in worn-system weights; values 6-12 % below body-mass values. Reversible.'),
+    ('C', 'Body mass (without exoskeleton)',
+     'BT18 and BT24 (146 recordings) until their swapped mass rows are resolved, plus second-day recordings of BT06, '
+     'BT07 and BT13 in the first collection (106 of their 336 recordings; no body mass reported)',
+     'Published values x 1.07-1.13, assuming the net moments use the same worn mass, as the lever-arm check supports; '
+     'comparable with datasets without an exoskeleton; published values kept under source names. Reversible.'),
+]
+DECISION = {
+    'id': 'D-GT24-C01-1', 'task_id': 'GT24-C01',
+    'question': ('GT24 exoskeleton torques and powers were divided exactly by the person-plus-exoskeleton (worn) mass in all '
+                 '2,421 recordings. The net joint moments match the same worn mass only within a few percent, from a lever-arm check '
+                 'against the force plates. Which mass should LocoHub\'s standard GT24 moment, power and force columns be per kg of?'),
+    'options': [{'key': k, 'label': lab, 'consequence': f'Left out: {left}. {rest}'} for k, lab, left, rest in DECISION_OPTIONS],
+    'options_order': 'By the normalizing mass: none (withheld), heavier (worn), lighter (body).',
+    'recommended': 'C', 'confidence': 'medium',
+    'why': ('LocoHub defines forces in body weights and moments per kg; D-GT23-C03-1 rescaled GT23 to each participant\'s own mass; '
+            'the task acceptance forbids substituting exoskeleton model mass for body mass. The published worn-mass values stay '
+            'available under source names, so option B remains recoverable. The x 1.07-1.13 factor rests on the net moments using '
+            'the worn mass, which the lever-arm check supports within a few percent but does not prove. Cost: the 146 BT18/BT24 '
+            'recordings until resolved and the 106 first-collection second-day recordings lose standard kinetics.'),
+    'check': 'README subject-mass table: every "w/ exo" mass is 6.1-7.8 kg above its "w/o exo" mass.',
+    'cost_of_waiting': 'GT24 standard kinetic columns cannot be finalized; all other GT24 work is unaffected.',
+    'decide_before_recommendation': True, 'status': 'open',
+}
 BAND = 0.0488   # GT23-C03 tolerance_v2 lever band half width (log), reused unchanged
 INPUTS = ['docs/quality/audits/gt24-c02-ankle-sign.json', 'docs/quality/audits/gt24-unknown-normalization-mass-review.json',
           'docs/quality/audits/gt24-source-companion-scope.json', 'docs/quality/audits/gt24-ankle-evidence-ranking.json',
@@ -435,14 +479,11 @@ def build_sheets():
     data = json.loads(AUDIT.read_text())
     ev, units = data['c02_divisor_evidence'], data['mass_units']
     plt = style()
-    for d in (SHEET_V, SHEET_D):
-        d.mkdir(parents=True, exist_ok=True)
-        for old in d.glob('*.png'):
-            old.unlink()
-    for d in (SHEET_V, SHEET_D):
-        fig_divisor(plt, save, ev, d / 'fig1_divisor.png')
+    SHEET_V.mkdir(parents=True, exist_ok=True)
+    for old in SHEET_V.glob('*.png'):
+        old.unlink()
+    fig_divisor(plt, save, ev, SHEET_V / 'fig1_divisor.png')
     fig_statics(plt, save, units, SHEET_V / 'fig2_statics.png')
-    fig_ratio(plt, save, units, SHEET_D / 'fig3_ratio.png')
     c = ev['counts_inside_band']
     conflict = data['statics_conflict']['parsed_recordings_affected']
     n_rec = sum(u['parsed_recordings'] for u in units)
@@ -477,49 +518,208 @@ def build_sheets():
          chips=chips, figures=figs,
          not_shown=['New GT24 data (probe not run)', 'Author confirmation', 'CoP, IMU and segment angles'],
          reply='looks right, or what is wrong', details=details)
-    options = [
-        ('A', 'Leave GT24 kinetics empty', 'All standard GT24 moments, powers and body-weight forces',
-         'Published per-kg values only under source names; nothing rescaled. Reversible.'),
-        ('B', 'Worn mass (person + exoskeleton)', f'BT18/BT24 ({conflict} recordings) until resolved; trials without an established divisor',
-         f'Published values rescaled from their measured divisor to the worn mass; forces in worn-system weights; values {(1 - 1 / min(ratios)) * 100:.0f}-{(1 - 1 / max(ratios)) * 100:.0f} % below body-mass values. Reversible.'),
-        ('C', 'Body mass (without exoskeleton)', f'As B, plus second-day trials of BT06, BT07, BT13 (first collection): no body mass reported',
-         f'Published values rescaled from their measured divisor to body mass (× {min(ratios):.2f}-{max(ratios):.2f} if the measured divisor is the worn mass, × 1 if it is body mass); comparable with datasets without an exoskeleton; published values kept under source names. Reversible.')]
-    rows = [(f'{k} · {lab}', [left, cons]) for k, lab, left, cons in options]
-    rows.append(('Defer', ['GT24 standard kinetics', 'The divisor probe and other GT24 work proceed; the adapter cannot finish kinetic columns.']))
-    ordering = 'Ordered by the normalizing mass: none, heavier (worn), lighter (body).'
-    why = ('LocoHub defines forces in body weights and moments per kg; D-GT23-C03-1 rescaled GT23 to each participant\'s own mass; the task acceptance '
-           'forbids substituting exoskeleton model mass for body mass. Source per-kg values stay available, so option B remains recoverable. '
-           'Cost: second-day trials of three first-collection subjects lose kinetics.')
-    decision = {'question': 'Which mass should standard GT24 moment, power and force columns use?', 'columns': ['Left out', 'Consequence'], 'rows': rows,
-                'recommendation': f'C. {why} Confidence: medium.', 'footnote': ordering}
-    chips_d = [('unchecked', 'Published divisor: probe not run yet'), chips[2], ('pass', f'Worn mass exceeds body mass by {min(diffs):.1f}-{max(diffs):.1f} kg in every README row')]
+    print(json.dumps({'chips': chips}, indent=1, ensure_ascii=False))
+
+
+# ---------------------------------------------------------------- decision sheet (round 4)
+
+def _readme_rows(units):
+    return {(u['phase'], u['subject_folder']): u['readme_row'] for u in units}
+
+
+def _matched_row(t, rows):
+    """README worn row the trial's exact divisor matched: own row if any, else the README match (BT18/BT24 folders)."""
+    if t['own_readme_worn_row']:
+        phase, folder, field, own = t['phase'], t['folder'], t['own_readme_worn_row'][0], True
+    else:
+        lab = next(m for m in t['E1_matches'] if m.startswith('README ') and 'with_exo' in m)
+        _, phase, folder, field = lab.split(' ')
+        own = False
+    row = rows[(phase, folder)]
+    body_field = field.replace('model_', 'participant_').replace('_with_exo', '')
+    return {'own': own, 'worn_kg': float(row[field]),
+            'body_kg': float(row[body_field]) if body_field in row else None}
+
+
+def _census_matched_row(r, rows):
+    """Census row: README worn row its divisor matched (own row, else the other folder's row for BT18/BT24)."""
+    worn = [f for f in r['own_readme_fields'] if 'with_exo' in f]
+    if worn:
+        phase, folder, field, own = r['phase'], r['folder'], worn[0], True
+    else:
+        lab = next(o for o in r['other_candidates'] if o.startswith('README ') and 'with_exo' in o)
+        _, phase, folder, field = lab.split(' ')[:4]
+        own = False
+    row = rows[(phase, folder)]
+    body_field = field.replace('model_', 'participant_').replace('_with_exo', '')
+    return {'own': own, 'worn_kg': float(row[field]), 'body_kg': float(row[body_field]) if body_field in row else None}
+
+
+def fig_e1_worn_vs_body(plt, save, census_rows, rows, path):
+    """Every census recording twice: exact divisor against its README worn mass and the same row's body mass."""
+    fig, ax = plt.subplots(figsize=(4.5, 3.2), layout='constrained')
+    pts = {True: ([], [], [], []), False: ([], [], [], [])}
+    ex = [r for r in census_rows if r['divisor_kg'] is not None]
+    for i, r in enumerate(ex):
+        m = _census_matched_row(r, rows)
+        dy = ((i * 37) % 101 / 100 - 0.5) * 0.24               # deterministic spread, no randomness
+        dy = dy - 0.08 if m['own'] else 0.26 + dy / 4          # swapped-row recordings drawn just above, not on top
+        xw, yw, xb, yb = pts[m['own']]
+        xw.append(100 * (r['divisor_kg'] / m['worn_kg'] - 1)); yw.append(1 + dy)
+        if m['body_kg']:
+            xb.append(100 * (r['divisor_kg'] / m['body_kg'] - 1)); yb.append(dy)
+    for own, (xw, yw, xb, yb) in pts.items():
+        col, face = (INK, INK) if own else (RED, 'none')
+        kw = dict(s=10 if own else 16, zorder=3 if own else 4, linewidths=0.8, alpha=0.5 if own else 0.9)
+        ax.scatter(xw + xb, yw + yb, color=col, facecolors=face, **kw)
+    ax.axvline(0, color=MUTED, lw=.8)
+    ax.text(0.4, 1.42, 'divisor = that mass', color=MUTED, fontsize=10)
+    ax.set_yticks([0, 1]); ax.set_yticklabels(['body mass\n(same row)', 'worn mass\n(README row)'], fontsize=10)
+    ax.set_ylim(-0.45, 1.6); ax.set_xlim(-3, 16)
+    ax.set_xlabel('exoskeleton divisor vs mass (%)')
+    ax.scatter([], [], color=INK, s=26, label='own README row')
+    ax.scatter([], [], color=RED, facecolors='none', s=26, label='BT18/BT24 folders (swapped row)')
+    fig.legend(fontsize=10, loc='outside lower left', ncols=1)
+    save(fig, path); plt.close(fig)
+
+
+def fig_e3_lever(plt, save, trials, rows, path):
+    """Lever-arm ratio per leg against the GT23-calibrated band; hollow = where a body-mass net divisor would put it."""
+    fig, ax = plt.subplots(figsize=(4.5, 3.2), layout='constrained')
+    c = -math.log(GT23_LEVER_BIAS)
+    ax.axvspan(math.exp(c - BAND), math.exp(c + BAND), color='#999999', alpha=.18, lw=0)
+    ax.axvline(math.exp(c), color=MUTED, lw=.8)
+    obs, body = [], []
+    for t in trials:
+        if not t['E1_exact']:
+            continue
+        m = _matched_row(t, rows)
+        for v in t['E3_log_ratio_by_side'].values():
+            if v is None:
+                continue
+            obs.append(math.exp(v))
+            if m['body_kg']:
+                body.append(m['body_kg'] / m['worn_kg'] / GT23_LEVER_BIAS)
+    for y, vals, kw in ((1, obs, dict(color=INK)), (0, body, dict(color=BLUE, facecolors='none'))):
+        for i, v in enumerate(vals):    # pilot order; vertical spread only separates overlapping points
+            ax.scatter(v, y + ((i * 7) % 11 / 10 - 0.5) * 0.36, s=22, zorder=3, linewidths=1.0, **kw)
+    above = sum(v > math.exp(c + BAND) for v in obs)
+    ax.text(math.exp(c), 0.5, 'net ÷ worn\n(GT23 band)', color=MUTED, fontsize=10, ha='center', va='center')
+    ax.text(math.exp(c + BAND) + 0.003, 1.42, f'{above} of {len(obs)} above', color=INK, fontsize=10)
+    ax.set_yticks([0, 1]); ax.set_yticklabels(['if net ÷ body\n(expected)', 'measured\n(per leg)'], fontsize=10)
+    ax.set_ylim(-0.45, 1.6); ax.set_xlim(0.85, 1.10)
+    ax.set_xlabel('lever-arm divisor ÷ worn mass')
+    save(fig, path); plt.close(fig)
+    return {'legs': len(obs), 'above_band': above, 'inside_band': sum(abs(math.log(v) - c) <= BAND for v in obs)}
+
+
+def decision_numbers(data, census):
+    """Recompute every number in DECISION from the evidence; the builder stops if one differs."""
+    sp = data['readme_mass_spread']
+    ratios, diffs = sp['worn_over_body'], sp['worn_minus_body_kg']
+    cs = census['summary']
+    groups = cs['by_group']
+    if set(groups) != {'exact', 'exact_short'}:
+        raise ValueError(f'census has recordings without an exact divisor: {groups}')
+    rep = cs['repeat_day_phase1and2']
+    if any(v['readme_has_day2_body_mass'] or v['no_exact_divisor'] or v['other_divisor'] for v in rep.values()):
+        raise ValueError('repeat-day assumptions changed')
+    swapped = sum(cs['without_own_readme_match_by_folder'].values())
+    if swapped != data['statics_conflict']['parsed_recordings_affected']:
+        raise ValueError('swapped-row recording counts disagree')
+    return {
+        'all recordings': f'in all {cs["trials"]:,} recordings',
+        'swapped recordings': f'({swapped} recordings)',
+        'below body': f'{(1 - 1 / min(ratios)) * 100:.0f}-{(1 - 1 / max(ratios)) * 100:.0f} % below',
+        'factor': f'x {min(ratios):.2f}-{max(ratios):.2f}',
+        'day-2 recordings': f'{sum(v["day2_worn"] for v in rep.values())} of their {sum(v["recordings"] for v in rep.values())} recordings',
+        'cost day-2': f'the {sum(v["day2_worn"] for v in rep.values())} first-collection second-day recordings',
+        'cost swapped': f'the {swapped} BT18/BT24',
+        'worn minus body': f'{min(diffs):.1f}-{max(diffs):.1f} kg',
+    }
+
+
+def build_decision_sheet():
+    from contributor_tools.common.review_sheet import page
+    from contributor_tools.review_gt24_c02_ankle_sign import save, style
+    if digest(PILOT_RESULT) != PILOT_RESULT_SHA256:
+        raise ValueError('divisor pilot result changed; re-check the wording')
+    if digest(CENSUS_RESULT) != CENSUS_RESULT_SHA256:
+        raise ValueError('E1 census result changed; re-check the wording')
+    data, result = json.loads(AUDIT.read_text()), json.loads(PILOT_RESULT.read_text())
+    census = json.loads(CENSUS_RESULT.read_text())
+    handoff = json.loads(HANDOFF.read_text())
+    if handoff.get('round_6', {}).get('proposed_decision_wording') != DECISION:
+        raise ValueError('DECISION differs from round_6.proposed_decision_wording in the GT24-C01 handoff')
+    text = json.dumps(DECISION, ensure_ascii=False)
+    nums = decision_numbers(data, census)
+    missing = {k: v for k, v in nums.items() if v not in text}
+    if missing:
+        raise ValueError(f'decision text disagrees with the evidence: {missing}')
+    rows, units = _readme_rows(data['mass_units']), data['mass_units']
+    plt = style()
+    SHEET_D.mkdir(parents=True, exist_ok=True)
+    for old in SHEET_D.glob('*.png'):
+        old.unlink()
+    fig_e1_worn_vs_body(plt, save, census['trials'], rows, SHEET_D / 'fig1_exo_divisor.png')
+    lever = fig_e3_lever(plt, save, result['trials'], rows, SHEET_D / 'fig2_net_lever.png')
+    fig_ratio(plt, save, units, SHEET_D / 'fig3_ratio.png')
+    e2 = result['E2']
+    lo, hi = (100 * (x - 1) for x in e2['plate_over_D_range'])
+    n_body_missing = sum(1 for r in census['trials'] if r['divisor_kg'] is not None and _census_matched_row(r, rows)['body_kg'] is None)
+    cs = census['summary']
+    odd = {k: v for k, v in cs['column_classes'].items() if k not in ('exact', 'exact_short')}
+    rep_day = cs['repeat_day_phase1and2']
+    chips = [
+        ('pass', f'Exoskeleton torque and power ÷ worn mass: exact in all {cs["trials"]:,} recordings ({cs["by_group"]["exact_short"]} short ones by a stricter test)'),
+        ('unchecked', 'Net moments ÷ worn mass: within a few percent (lever check), not exact'),
+        ('unchecked', f'Lever check sits about 3 % off the GT23 calibration; {lever["above_band"]} of {lever["legs"]} legs above band'),
+        ('pass', f'Plate weight within {lo:+.1f} to {hi:+.1f} % of worn mass in {e2["estimates"]} of {e2["estimates"]} estimates'),
+        ('unchecked', f'{odd.get("proportional_not_exact", 0)} BT03 left-knee columns: ratio exact, correlation just below the gate; trial divisors unaffected'),
+        ('fail', f'BT18 and BT24 mass rows swapped against their folders {nums["swapped recordings"]}'),
+        ('pass', f'Day of every BT06, BT07, BT13 first-collection recording bound by its divisor ({nums["day-2 recordings"].split(" of ")[0]} are day 2)'),
+        ('pass', f'Worn mass exceeds body mass by {nums["worn minus body"]} in every README row'),
+    ]
+    figs = [('fig1_exo_divisor.png', 'Which mass divided the exoskeleton torque and power?', 'Exact identity; 0 = that mass.',
+             'Exact exoskeleton divisor of each census recording relative to its README worn mass and the same row body mass'),
+            ('fig2_net_lever.png', 'Do the net joint moments use the worn mass too?', 'Approximate; 58 pilot trials; grey: GT23 band.',
+             'Lever-arm divisor over worn mass per leg, against the GT23-calibrated band and the body-mass expectation'),
+            ('fig3_ratio.png', 'How far apart are the two masses?', 'Dashed: equal masses.', 'Worn mass over body mass for every README row')]
+    table = [(f'{k} · {lab}', [left, rest]) for k, lab, left, rest in DECISION_OPTIONS]
+    table.append(('Defer', ['Nothing yet', DECISION['cost_of_waiting']]))
+    decision = {'question': DECISION['question'], 'columns': ['Left out', 'Consequence'], 'rows': table,
+                'recommendation': f'{DECISION["recommended"]}. {DECISION["why"]} Confidence: {DECISION["confidence"]}.',
+                'footnote': 'Ordered by normalizing mass: none, heavier (worn), lighter (body).'}
+    details = [
+        f'Figure 1: all {cs["trials"]:,} census recordings ({cs["by_group"]["exact"]:,} exact; {cs["by_group"]["exact_short"]} exact_short: 50-199 samples, spread <= 1e-9, power identity and joints agree); the exoskeleton identity (interaction torque = D x (net - biological moment), '
+        f'and x velocity = D x exoskeleton power) fixes D to about 1e-12. It cancels the net divisor, so it says nothing about the net moments. '
+        f'Worn points sit within the README print rounding (0.05 %). Body points: same README row and day; {n_body_missing} first-collection second-day recordings have no reported body mass and show no body point. '
+        'Hollow red: BT18/BT24 folder recordings, compared with the README row their divisor matched (the other participant\'s).',
+        f'Figure 2: implied divisor = net divisor / lever bias. Band: GT23-C04 bias {GT23_LEVER_BIAS} with the GT23-C03 +/-4.9 % tolerance, assumed to transfer. '
+        f'{lever["inside_band"]} of {lever["legs"]} legs inside; all above the band centre (median implies a GT24 bias near 0.962). '
+        'Hollow blue: where each leg would sit if the net moments were divided by body mass with the GT23 bias. A body-mass divisor needs a bias of about 0.85-0.91 instead.',
+        f'Plate weight: {e2["estimates"]} level-walk estimates; {len(e2["not_estimated"])} not estimated (too few strides or non-finite force).',
+        'Second-day recordings in option C: ' + '; '.join(f'{k} {v["day2_worn"]} of {v["recordings"]}' for k, v in rep_day.items()) + ' (divisor = README day-2 worn mass; the README reports no day-2 body mass).',
+        f'Census column classes: {json.dumps(cs["column_classes"])}. The {odd.get("proportional_not_exact", 0)} proportional_not_exact columns are BT03 left knee: per-sample ratio exact on the top quartile, '
+        'whole-signal correlation 0.9967-0.9999 below the 0.9999 gate; cause not checked. too_few_samples columns sit in BT01/BT12 walking and BT02 stairs trials whose other columns are exact.',
+        'Options ordered by normalizing mass: none (A), worn, the heavier (B), body, the lighter (C); the builder writes them in that order. Defer is always allowed.',
+        f'Evidence: {CENSUS_RESULT.relative_to(ROOT)} (sha256 {CENSUS_RESULT_SHA256[:12]}...); {PILOT_RESULT.relative_to(ROOT)} (sha256 {PILOT_RESULT_SHA256[:12]}...); {AUDIT.relative_to(ROOT)}; builder {HERE.relative_to(ROOT)} decision-sheet.',
+    ]
     page(SHEET_D / 'index.html', title='GT24 mass basis',
-         ask='Queued: answer after the divisor probe reports.',
-         headline='Choose a mass basis for standard GT24 kinetics',
-         chips=chips_d,
-         figures=[('fig3_ratio.png', 'How far apart are the two masses?', 'Dashed: equal masses.', 'Worn mass over body mass for every README row')],
-         not_shown=['Exact divisors (probe not run)', 'Other exoskeleton datasets', 'Author confirmation'],
-         reply='D-GT24-C01-1: A, B, C or defer', details=[details[2], details[4], 'Options ordered by the normalizing mass: none (A), worn, the heavier (B), body, the lighter (C); the builder writes them in that order.', 'Whatever the probe finds, published per-kg values are first converted back with the measured divisor, then divided by the chosen mass.', details[-1]], decision=decision)
-    backlog = {'id': 'D-GT24-C01-1', 'task_id': 'GT24-C01',
-               'question': ('GT24 participants wore a 6-8 kg exoskeleton. Which mass should LocoHub\'s standard GT24 moment, power and force columns be per kg of? '
-                            'Published per-kg values will first be converted back with the divisor the authors used, once a probe measures it.'),
-               'options': [{'key': k, 'label': lab, 'consequence': f'Left out: {left}. {cons}'} for k, lab, left, cons in options],
-               'options_order': 'By the normalizing mass: none (withheld), heavier (worn), lighter (body).',
-               'recommended': 'C', 'confidence': 'medium', 'why': why,
-               'check': f'README subject-mass table: every "w/ exo" mass is {min(diffs):.1f}-{max(diffs):.1f} kg above its "w/o exo" mass.',
-               'cost_of_waiting': 'GT24 standard kinetic columns cannot be finalized; the divisor probe and all other GT24 work are unaffected.',
-               'decide_before_recommendation': True, 'status': 'open'}
-    (SHEET_D / 'decision.json').write_text(json.dumps(backlog, indent=2, ensure_ascii=False) + '\n')
-    data['decision_candidate'] = dict(backlog, queued_until='GT24-C01 divisor probe pilot (E1 with E3) reports; re-check the option wording against it before copying into backlog.json.')
-    AUDIT.write_text(json.dumps(data, indent=1, ensure_ascii=False) + '\n')
-    print(json.dumps({'chips': chips, 'decision': backlog}, indent=1, ensure_ascii=False))
+         ask='Choose a mass basis for GT24 kinetics.',
+         headline='Exoskeleton torques use worn mass exactly in all 2,421 recordings; net moments only approximately',
+         chips=chips, figures=figs,
+         not_shown=['An exact net-moment divisor', 'Plate and lever checks beyond 58 pilot trials', 'Author confirmation'],
+         reply='D-GT24-C01-1: A, B, C or defer', details=details, decision=decision)
+    (SHEET_D / 'decision.json').write_text(json.dumps(DECISION, indent=2, ensure_ascii=False) + '\n')
+    print(json.dumps({'chips': chips, 'lever': lever, 'numbers': nums, 'body_missing': n_body_missing}, indent=1, ensure_ascii=False))
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('step', choices=['audit', 'sheets'])
+    ap.add_argument('step', choices=['audit', 'sheets', 'decision-sheet'])
     a = ap.parse_args()
-    build_audit() if a.step == 'audit' else build_sheets()
+    {'audit': build_audit, 'sheets': build_sheets, 'decision-sheet': build_decision_sheet}[a.step]()
 
 
 if __name__ == '__main__':

@@ -1,14 +1,25 @@
 """GT24-C01: which mass divided each GT24 trial's per-kg moments, and how heavy is the person in each folder?
 
-Written by GT24-C01 as a bounded pilot. NOT RUN by GT24-C01 (another agent held the numerical
-slot). The selection is fixed from metadata only (``plan``); the data step (``pilot``) must be
-launched as one job through contributor_tools.guarded_launcher under the AGENTS.md prefix.
+Written by GT24-C01. The 58-trial ``pilot`` ran once under the guarded launcher on an earlier version
+of this file (rules v1 only). Selections are fixed from metadata only (``plan``, ``census-plan``); every
+data step must be launched as one job through contributor_tools.guarded_launcher under the AGENTS.md
+prefix, and the full ``census`` only after a passing ``census-pilot`` of the same bound file.
 
 Usage:
   plan                       print the seeded selection (reads only the GT24 mass matrix JSON)
   pilot [--out PATH]         read the selected Parsed CSV members, one at a time, from the publisher
                              zips (no extraction) and write the result JSON
                              (default docs/quality/audits/gt24-c01-divisor-probe.json)
+  census-plan [--phase P]    print the census-pilot selection (no --phase) or one phase's census (metadata only)
+  census-pilot --out PATH    E1 only, on CENSUS_PILOT (fixed trials + seeded random); same code path as census
+  census --out PATH [--phase P]
+                             E1 only, on every Parsed recording in the matrix (2,421), or one phase
+
+Rule versions: RULES v1 was fixed before any data were read. RULES['identity_short_rule_v2'] was added
+after the 58-trial pilot and before the census: columns with 50-199 top-quartile samples may be labelled
+'exact_short' (never 'exact') under a tighter gate; columns with >= 200 samples are classified as in v1.
+Census reporting separates a divisor's match to the trial's own README row (and own Statics models) from
+other candidate masses inside the 0.05 % tolerance; the latter are flagged and never binding.
 
 Three independent estimators (rules fixed in RULES before any data are read):
   E1 exact identity (no physics, no model): README line 520 defines moment_filt_bio as moment_filt
@@ -79,6 +90,52 @@ RULES = {
     'lever_bias_external': 0.9942,          # GT23-C04 rules.ankle_bias_centre_ratio; assumed to transfer to GT24, not re-fitted
     'level_walk_preference': ['1-2', '1-8', '0-6'],
     'repeat_day_phase12_extra_trials': 6,
+    # Version 2, added AFTER the pilot read data and BEFORE any census read. Every entry above is the
+    # unchanged version 1. A column with >= identity_min_samples (200) is classified exactly as in v1.
+    'identity_short_rule_v2': {
+        'version': 2,
+        'added': 'GT24-C01 round 4, 2026-11-01, after the 58-trial pilot, before the E1 census',
+        'reason': ('All 6 non-exact pilot trials were short stairs trials with 96-176 top-quartile samples, '
+                   'below the v1 minimum of 200; no identity failure was seen. True identities reached a relative '
+                   'spread of 6.6e-13 in the pilot. Short columns are admitted only under a gate about 1e6 '
+                   'tighter than v1, a second exact identity (power) and cross-joint agreement, and are labelled '
+                   'separately so they are never counted as v1 exact.'),
+        'min_samples': 50,                         # below this a column stays 'too_few_samples'
+        'applies_below': 200,                      # = v1 identity_min_samples
+        'max_rel_spread': 1e-9,                    # for the moment and the power identity
+        'min_abs_corr': 0.9999,                    # = v1 identity_exact_min_abs_corr
+        'require_power_identity': True,            # same column's power identity, divisor within the tolerance below
+        'max_divisor_disagreement_rel': 1e-9,      # power vs moment, and across joints (incl. any v1 exact column)
+        'label': 'exact_short',
+    },
+}
+SHORT = RULES['identity_short_rule_v2']
+E1_KINDS = ('exo', 'moment_filt', 'moment_filt_bio', 'power_exo', 'velocity')
+# Census pilot: every pilot trial that tests the round-4 changes, plus seeded random census trials.
+CENSUS_PILOT = {
+    'seed': SEED + 1,
+    'random_trials': 13,
+    'fixed_trials': [  # (phase, folder, recording, why)
+        ('Phase1And2', 'BT06', 'stairs_1_1_up_on', 'v1 too_few_samples'),
+        ('Phase1And2', 'BT07', 'stairs_1_2_down_off', 'v1 too_few_samples'),
+        ('Phase3', 'BT02', 'stairs_3_12_down_on', 'v1 too_few_samples'),
+        ('Phase3', 'BT13', 'stairs_2_3_up_on', 'v1 too_few_samples'),
+        ('Phase3', 'BT23', 'stairs_3_12_down_on', 'v1 too_few_samples'),
+        ('Phase3', 'BT24', 'stairs_2_2_down_on', 'v1 too_few_samples'),
+        ('Phase1And2', 'BT09', 'normal_walk_1_1_1-2_on', 'v1 exact; also inside tolerance of another folder\'s mass'),
+        ('Phase1And2', 'BT09', 'normal_walk_1_2_1-2_off', 'v1 exact; also inside tolerance of another folder\'s mass'),
+        ('Phase3', 'BT18', 'normal_walk_1_1_0-6_on', 'v1 exact; no own README row match'),
+        ('Phase3', 'BT18', 'stairs_3_10_down_on', 'v1 exact; no own README row match'),
+        ('Phase3', 'BT24', 'normal_walk_1_1_1-2_on', 'v1 exact; no own README row match'),
+    ],
+    'pass_criteria': [
+        'job completes under the guarded launcher with zips unchanged and peak RSS under 512 MiB',
+        'the 5 fixed v1-exact trials keep identity_class exact and the same divisor (within 1e-12 relative) as the 58-trial pilot output',
+        'every fixed short trial is reported as exact_short or not_exact with a stated per-column reason; none is labelled exact',
+        'both BT09 trials list their own README worn row under own_readme_row and the other folder\'s mass under other_candidates',
+        'the BT18 and BT24 folder trials report an empty own_readme_row and an own_statics match',
+        'projected full-census wall time (pilot seconds per trial x 2,421) is under 0.6 x the 3,600 s launcher maximum; otherwise the census is split by --phase',
+    ],
 }
 JOINTS = (('hip_flexion', 'hip'), ('knee_angle', 'knee'))
 LEVEL = re.compile(r'^normal_walk_[\d_]+_(0-6|1-2|1-8)_(on|off)$')
@@ -128,6 +185,15 @@ def match(value, cands, tol):
         return []
     hits = [dict(c, abs_log=round(abs(math.log(value / c['kg'])), 6)) for c in cands if abs(math.log(value / c['kg'])) <= tol]
     return sorted(hits, key=lambda c: c['abs_log'])
+
+
+def split_matches(hits, subject):
+    """Own README row, own Statics models, and every other candidate inside the tolerance (flagged, never binding)."""
+    own_readme = [h for h in hits if h['source'] == 'README' and h['own_row']]
+    own_statics = [h for h in hits if h['source'] == 'Statics' and h['own_row']]
+    other = [dict(h, relation='same_folder_other_phase' if h['subject'] == subject else 'other_folder')
+             for h in hits if not h['own_row']]
+    return {'own_readme_row': own_readme, 'own_statics': own_statics, 'other_candidates': other}
 
 
 def plan():
@@ -206,7 +272,8 @@ def ratio_estimate(numer, denom, q=None):
     sel = both & _top(np.where(both, denom, np.nan), q)
     n = int(sel.sum())
     out = {'n_used': n, 'n_finite': int(both.sum())}
-    if n < RULES['identity_min_samples']:
+    short = n < RULES['identity_min_samples']
+    if short and n < SHORT['min_samples']:
         out['class'] = 'too_few_samples'
         return out
     r = numer[sel] / denom[sel]
@@ -215,6 +282,13 @@ def ratio_estimate(numer, denom, q=None):
     corr = float(np.corrcoef(numer[both], denom[both])[0, 1]) if np.std(denom[both]) > 0 and np.std(numer[both]) > 0 else math.nan
     ls = float(numer[both] @ denom[both] / (denom[both] @ denom[both]))
     out.update(ratio_median=med, divisor_kg=abs(med), sign=int(np.sign(med)), rel_spread=spread, corr=corr, ls_ratio=ls)
+    if short:
+        # v2: a candidate only; promote_short() decides 'exact_short' at trial level (power identity, joints).
+        ok = spread <= SHORT['max_rel_spread'] and abs(corr) >= SHORT['min_abs_corr']
+        out['class'] = 'short_candidate' if ok else 'short_not_exact'
+        if not ok:
+            out['short_rule_failed'] = 'spread_or_corr'
+        return out
     if spread <= RULES['identity_exact_max_rel_spread'] and abs(corr) >= RULES['identity_exact_min_abs_corr']:
         out['class'] = 'exact'
     elif abs(corr) >= RULES['identity_filtered_min_abs_corr']:
@@ -224,6 +298,60 @@ def ratio_estimate(numer, denom, q=None):
     else:
         out['class'] = 'no_identity'
     return out
+
+
+def _rel(a, b):
+    return abs(a - b) / abs(b)
+
+
+def promote_short(identity, power_identity):
+    """v2 trial-level rule (RULES['identity_short_rule_v2']); mutates both dicts.
+
+    A moment column that is a 'short_candidate' becomes 'exact_short' only if (1) the same column's power
+    identity is v1 'exact' or a 'short_candidate' with a divisor within the tolerance, and (2) every such
+    column agrees, within the same tolerance, with every other passing short column and every v1 'exact'
+    column of the trial. Otherwise it becomes 'short_not_exact' with the failed condition. v1 classes are
+    never changed. Power columns get the class of their moment column when they confirmed it.
+    """
+    tol = SHORT['max_divisor_disagreement_rel']
+    passing = {}
+    for key, m in identity.items():
+        if m.get('class') != 'short_candidate':
+            continue
+        p = power_identity.get(key, {})
+        if p.get('class') not in ('exact', 'short_candidate'):
+            m.update({'class': 'short_not_exact', 'short_rule_failed': 'power_identity_not_exact'})
+        elif _rel(p['divisor_kg'], m['divisor_kg']) > tol:
+            m.update({'class': 'short_not_exact', 'short_rule_failed': 'power_divisor_disagrees'})
+        else:
+            passing[key] = m['divisor_kg']
+    v1 = [m['divisor_kg'] for m in identity.values() if m.get('class') == 'exact']
+    pool = list(passing.values()) + v1
+    if passing and (max(pool) - min(pool)) / float(np.median(pool)) > tol:
+        for key in passing:
+            identity[key].update({'class': 'short_not_exact', 'short_rule_failed': 'joints_disagree'})
+        passing = {}
+    for key in passing:
+        identity[key]['class'] = SHORT['label']
+    for key, p in power_identity.items():
+        if p.get('class') != 'short_candidate':
+            continue
+        m = identity.get(key, {})
+        if m.get('class') in ('exact', SHORT['label']) and _rel(p['divisor_kg'], m['divisor_kg']) <= tol:
+            p['class'] = SHORT['label']
+        else:
+            p.update({'class': 'short_not_exact', 'short_rule_failed': 'moment_identity_not_confirmed'})
+    return identity, power_identity
+
+
+def trial_identity(identity):
+    """Trial class and divisor: v1 'exact' columns if any (unchanged v1 result), else 'exact_short' columns."""
+    v1 = [v['divisor_kg'] for v in identity.values() if v.get('class') == 'exact']
+    sh = [v['divisor_kg'] for v in identity.values() if v.get('class') == SHORT['label']]
+    use = v1 or sh
+    return {'identity_class': 'exact' if v1 else (SHORT['label'] if sh else 'not_exact'),
+            'identity_divisor_kg': float(np.median(use)) if use else None,
+            'identity_divisor_spread_rel': float((max(use) - min(use)) / np.median(use)) if use else None}
 
 
 def plate_mass(fy_l, fy_r):
@@ -282,17 +410,40 @@ def lever_divisor(fx, fy, copx, src, offset=(0.04877, 0.04195)):
 
 # ---------------------------------------------------------------- data step
 
-def run_trial(rd, meta, item):
+def _e1_columns():
+    cols = {k: set() for k in E1_KINDS}
+    for side in ('l', 'r'):
+        for coord, exo_joint in JOINTS:
+            cols['exo'].add(f'{exo_joint}_angle_{side}_torque_interaction')
+            cols['moment_filt'].add(f'{coord}_{side}_moment')
+            cols['moment_filt_bio'].add(f'{coord}_{side}_moment')
+            cols['power_exo'].add(f'{coord}_{side}_power')
+            cols['velocity'].add(f'{coord}_{side}_velocity')
+    return cols
+
+
+def e1_trial(rd, meta, item, restrict_columns=False, keep_net=False):
+    """E1 for one trial. restrict_columns parses only the E1 columns (same values; less memory and time)."""
     phase, subject, rec = item['phase'], item['subject'], item['recording']
     base = f'Parsed/{subject}/{rec}/{subject}_{rec}_'
     cands = candidates(meta, phase, subject)
     tol = RULES['mass_match_max_abs_log']
     out = dict(item, identity={}, power_identity={})
-    exo = rd.table(phase, base + 'exo.csv')
-    net = rd.table(phase, base + 'moment_filt.csv')
-    bio = rd.table(phase, base + 'moment_filt_bio.csv')
-    pex = rd.table(phase, base + 'power_exo.csv')
-    vel = rd.table(phase, base + 'velocity.csv')
+    cols = _e1_columns()
+
+    def read(kind):
+        # A kind the matrix lists as absent is not read; its columns then report 'column_absent'.
+        if kind in item.get('missing_kinds', ()):
+            out.setdefault('kinds_not_read', []).append(kind)
+            return {}
+        use = (lambda c, w=cols[kind]: c in w) if restrict_columns else None
+        try:
+            return rd.table(phase, base + kind + '.csv', usecols=use)
+        except KeyError:   # member not in the zip
+            out.setdefault('kinds_not_read', []).append(kind)
+            return {}
+
+    exo, net, bio, pex, vel = (read(k) for k in E1_KINDS)
     for side in ('l', 'r'):
         for coord, exo_joint in JOINTS:
             key = f'{coord}_{side}'
@@ -302,21 +453,30 @@ def run_trial(rd, meta, item):
                 out['identity'][key] = {'class': 'column_absent'}
                 continue
             x = exo[col_x].to_numpy(float)
-            res = ratio_estimate(x, net[col_m].to_numpy(float) - bio[col_m].to_numpy(float))
-            res['matches'] = match(res.get('divisor_kg'), cands, tol) if res.get('class') == 'exact' else []
-            out['identity'][key] = res
+            out['identity'][key] = ratio_estimate(x, net[col_m].to_numpy(float) - bio[col_m].to_numpy(float))
             col_p, col_v = f'{coord}_{side}_power', f'{coord}_{side}_velocity'
             if col_p in pex and col_v in vel:
-                pr = ratio_estimate(x * np.deg2rad(vel[col_v].to_numpy(float)), pex[col_p].to_numpy(float))
-                pr['matches'] = match(pr.get('divisor_kg'), cands, tol) if pr.get('class') == 'exact' else []
-                out['power_identity'][key] = pr
+                out['power_identity'][key] = ratio_estimate(x * np.deg2rad(vel[col_v].to_numpy(float)),
+                                                            pex[col_p].to_numpy(float))
             else:
                 out['power_identity'][key] = {'class': 'column_absent'}
-    del exo, pex, vel
-    exact = [v['divisor_kg'] for v in out['identity'].values() if v.get('class') == 'exact']
-    out['identity_divisor_kg'] = float(np.median(exact)) if exact else None
-    out['identity_divisor_spread_rel'] = float((max(exact) - min(exact)) / np.median(exact)) if exact else None
+    del exo, bio, pex, vel
+    promote_short(out['identity'], out['power_identity'])
+    for res in list(out['identity'].values()) + list(out['power_identity'].values()):
+        if res.get('class') != 'column_absent':
+            res['matches'] = match(res.get('divisor_kg'), cands, tol) if res.get('class') in ('exact', SHORT['label']) else []
+    out.update(trial_identity(out['identity']))
     out['identity_matches'] = match(out['identity_divisor_kg'], cands, tol)
+    out['identity_match_split'] = split_matches(out['identity_matches'], subject)
+    return (out, net) if keep_net else out
+
+
+def run_trial(rd, meta, item):
+    """Pilot step: E1 (all columns parsed, as in the first pilot) plus E2/E3 where selected."""
+    phase, subject, rec = item['phase'], item['subject'], item['recording']
+    base = f'Parsed/{subject}/{rec}/{subject}_{rec}_'
+    cands = candidates(meta, phase, subject)
+    out, net = e1_trial(rd, meta, item, keep_net=True)
     if 'E2' in item['estimators']:
         grf = rd.table(phase, base + 'grf.csv', usecols=['fp_l_force_y', 'fp_r_force_y'])
         pm = plate_mass(grf['fp_l_force_y'], grf['fp_r_force_y'])
@@ -359,14 +519,115 @@ def summarize(results):
         if t.get('plate', {}).get('mass_kg'):
             u['plate_kg'].append(round(t['plate']['mass_kg'], 2))
     return {'lever_pilot_median_log_reported_only': bias, 'lever_external_centre_log': centre, 'units': units,
-            'trials_identity_exact': sum(t['identity_divisor_kg'] is not None for t in results), 'trials': len(results)}
+            'trials_identity_exact': sum(t.get('identity_class') == 'exact' for t in results),
+            'trials_identity_exact_short': sum(t.get('identity_class') == SHORT['label'] for t in results), 'trials': len(results)}
 
 
-def pilot(out_path):
-    import zipfile
+# ---------------------------------------------------------------- E1 census (and its pilot)
+
+def census_plan(stage, phase=None):
+    """stage 'census': every Parsed recording in the matrix (optionally one phase). stage 'census_pilot':
+    CENSUS_PILOT fixed trials plus seeded random ones from the rest. Metadata only."""
+    m = load_matrix()
+    meta = m['source_metadata']
+    if meta['readme']['sha256'] != README_SHA256:
+        raise ValueError('README binding changed')
+    recs = sorted(m['parsed_recordings'], key=lambda r: (r['phase'], r['subject'], r['recording']))
+    if stage == 'census_pilot':
+        if phase:
+            raise ValueError('the census pilot covers both phases')
+        index = {(r['phase'], r['subject'], r['recording']): r for r in recs}
+        chosen = []
+        for ph, subj, rec, why in CENSUS_PILOT['fixed_trials']:
+            if (ph, subj, rec) not in index:
+                raise ValueError(f'census pilot trial absent from the matrix: {ph}/{subj}/{rec}')
+            chosen.append((index[(ph, subj, rec)], why))
+        fixed = {(ph, subj, rec) for ph, subj, rec, _ in CENSUS_PILOT['fixed_trials']}
+        rest = [r for r in recs if (r['phase'], r['subject'], r['recording']) not in fixed]
+        rng = np.random.default_rng(CENSUS_PILOT['seed'])
+        picks = sorted(int(i) for i in rng.choice(len(rest), CENSUS_PILOT['random_trials'], replace=False))
+        chosen += [(rest[i], 'seeded random') for i in picks]
+    elif stage == 'census':
+        chosen = [(r, None) for r in recs if phase is None or r['phase'] == phase]
+    else:
+        raise ValueError(stage)
+    selection = []
+    for r, why in chosen:
+        item = {'phase': r['phase'], 'subject': r['subject'], 'recording': r['recording'], 'stage': stage,
+                'estimators': ['E1'], 'missing_kinds': [k for k in E1_KINDS if k not in r['source_file_kinds']]}
+        if why:
+            item['why'] = why
+        if r['phase'] == 'Phase3':
+            st = meta['phase3_static_models'].get(r['subject'], {}).get('records', {})
+            key = statics_trial(st, r['recording'])
+            item['statics_trial'] = key
+            item['statics_mass_kg'] = st[key]['source_model_mass_kg_decimal'] if key else None
+        selection.append(item)
+    return {'seed': CENSUS_PILOT['seed'] if stage == 'census_pilot' else None, 'matrix_sha256': MATRIX_SHA256,
+            'rules': RULES, 'census_pilot': CENSUS_PILOT if stage == 'census_pilot' else None, 'phase': phase,
+            'trials': len(selection), 'selection': selection}
+
+
+def _label(c):
+    return f"{c['source']} {c['phase']} {c['subject']} {c['field']}"
+
+
+def census_summary(results):
+    """Counts only; own-row matches reported apart from other candidates, which are flagged and never binding."""
+    from collections import Counter
+    by_class = Counter(t['identity_class'] for t in results)
+    col_classes = Counter(v['class'] + (':' + v['short_rule_failed'] if 'short_rule_failed' in v else '')
+                          for t in results if t['identity_class'] == 'not_exact' for v in t['identity'].values())
+    own_kinds, no_own_readme, no_own_any, own_body, other = Counter(), [], [], [], []
+    units = {}
+    for t in results:
+        if t['identity_divisor_kg'] is None:
+            continue
+        name = f"{t['phase']}/{t['subject']}/{t['recording']}"
+        s = t['identity_match_split']
+        fields = sorted({h['field'] for h in s['own_readme_row']})
+        own_kinds[('own_readme_row: ' + ','.join(fields) if fields else 'own_readme_row: none')
+                  + ('; own_statics' if s['own_statics'] else '')] += 1
+        if not fields:
+            no_own_readme.append({'trial': name, 'divisor_kg': t['identity_divisor_kg'],
+                                  'own_statics': [h['field'] for h in s['own_statics']]})
+        if not fields and not s['own_statics']:
+            no_own_any.append(name)
+        if any(f.startswith('participant_') for f in fields):
+            own_body.append(name)
+        if s['other_candidates']:
+            other.append({'trial': name, 'divisor_kg': t['identity_divisor_kg'],
+                          'own': [_label(h) for h in s['own_readme_row'] + s['own_statics']],
+                          'other_candidates_not_binding': [dict(label=_label(h), relation=h['relation'], abs_log=h['abs_log'])
+                                                           for h in s['other_candidates']]})
+        u = units.setdefault(f"{t['phase']}/{t['subject']}", {})
+        key = f"{t['identity_divisor_kg']:.6f}"
+        e = u.setdefault(key, {'trials': 0, 'exact_short': 0, 'own_readme_fields': fields, 'own_statics': bool(s['own_statics'])})
+        e['trials'] += 1
+        e['exact_short'] += t['identity_class'] == SHORT['label']
+    spreads = [t['identity_divisor_spread_rel'] for t in results if t['identity_divisor_spread_rel'] is not None]
+    return {'trials': len(results), 'by_identity_class': dict(by_class),
+            'not_exact_column_classes': dict(col_classes),
+            'own_match_kinds': dict(own_kinds),
+            'trials_matching_own_body_mass': own_body,
+            'trials_without_own_readme_match': no_own_readme,
+            'trials_without_any_own_match': no_own_any,
+            'trials_with_other_candidates_in_tolerance': other,
+            'max_cross_joint_divisor_spread_rel': max(spreads) if spreads else None,
+            'units_divisors': units}
+
+
+def census_trial(rd, meta, item):
+    return e1_trial(rd, meta, item, restrict_columns=True)
+
+
+def execute(stage, p, worker, summarizer, out_path):
     from contributor_tools.review_gt24_c02_ankle_sign import Reader, ZIPS, peak_rss_mib, mem_available
-    resource.setrlimit(resource.RLIMIT_AS, (int(1.5 * 2 ** 30), int(1.5 * 2 ** 30)))
-    p = plan()
+    soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+    cap = int(1.5 * 2 ** 30)
+    if hard != resource.RLIM_INFINITY:
+        cap = min(cap, hard)   # only ever lower a limit set by the launcher
+    resource.setrlimit(resource.RLIMIT_AS, (cap, hard if hard != resource.RLIM_INFINITY else cap))
     meta = load_matrix()['source_metadata']
     before = {k: (v.stat().st_size, v.stat().st_mtime_ns) for k, v in ZIPS.items()}
     started = dt.datetime.now(dt.timezone.utc).isoformat()
@@ -376,28 +637,47 @@ def pilot(out_path):
     for item in p['selection']:
         if mem_available() < 2 ** 30:
             raise MemoryError('Less than 1 GiB available; stopping without partial success')
-        results.append(run_trial(rd, meta, item))
+        results.append(worker(rd, meta, item))
     for z in rd.zips.values():
         z.close()
     after = {k: (v.stat().st_size, v.stat().st_mtime_ns) for k, v in ZIPS.items()}
     if before != after:
         raise RuntimeError('Source zip changed during the read')
-    doc = {'task_id': 'GT24-C01', 'stage': 'pilot', 'scientific_approval': False, 'probe_sha256': digest_file(__file__),
-           'plan': p, 'started_at_utc': started, 'runtime_seconds': round(time.time() - t0, 1), 'peak_rss_mib': peak_rss_mib(),
-           'zips_unchanged': True, 'members_read': rd.members, 'results': results, 'summary': summarize(results)}
-    Path(out_path).write_text(json.dumps(doc, indent=1, default=float) + '\n')
-    print(json.dumps(doc['summary'], indent=1))
+    runtime = time.time() - t0
+    doc = {'task_id': 'GT24-C01', 'stage': stage, 'scientific_approval': False, 'probe_sha256': digest_file(__file__),
+           'plan': p, 'started_at_utc': started, 'runtime_seconds': round(runtime, 1),
+           'seconds_per_trial': round(runtime / max(len(results), 1), 3), 'peak_rss_mib': peak_rss_mib(),
+           'zips_unchanged': True, 'members_read': rd.members, 'results': results, 'summary': summarizer(results)}
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    with open(out_path, 'x') as f:   # never overwrite
+        f.write(json.dumps(doc, indent=1, default=float) + '\n')
+    print(json.dumps({k: doc[k] for k in ('stage', 'runtime_seconds', 'seconds_per_trial', 'peak_rss_mib')}, indent=1))
+
+
+def pilot(out_path):
+    execute('pilot', plan(), run_trial, summarize, out_path)
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('step', choices=['plan', 'pilot'])
-    ap.add_argument('--out', default=str(OUT))
+    ap.add_argument('step', choices=['plan', 'pilot', 'census-plan', 'census-pilot', 'census'])
+    ap.add_argument('--out', default=None, help='required for census-pilot and census')
+    ap.add_argument('--phase', choices=['Phase1And2', 'Phase3'], default=None, help='census only: one phase')
     a = ap.parse_args()
     if a.step == 'plan':
         print(json.dumps(plan(), indent=1))
+    elif a.step == 'pilot':
+        pilot(a.out or str(OUT))
+    elif a.step == 'census-plan':
+        p = census_plan('census_pilot') if a.phase is None else census_plan('census', a.phase)
+        print(json.dumps({k: v for k, v in p.items() if k != 'rules'}, indent=1))
     else:
-        pilot(a.out)
+        if not a.out:
+            ap.error('--out is required for census steps')
+        stage = a.step.replace('-', '_')
+        if stage == 'census_pilot' and a.phase:
+            ap.error('the census pilot covers both phases')
+        execute(stage, census_plan(stage, a.phase), census_trial, census_summary, a.out)
 
 
 if __name__ == '__main__':
