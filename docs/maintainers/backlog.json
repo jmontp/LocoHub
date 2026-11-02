@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-11-02T00:20:00Z",
+  "updated_at_utc": "2026-11-02T00:00:00Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -6617,9 +6617,12 @@
         "AB04/i0 corrected and logged",
         "Independent verification"
       ],
-      "next_action": "Done. UM21 full runs may use mode full with the committed pilot record below (any edit to a bound file invalidates it). Follow-up UM21-E01 (evidence-gate diagnosis) before the full run.",
+      "next_action": "Done. UM21 full runs may use mode full with the v4 pilot record (any edit to a bound file invalidates it). Follow-up UM21-E01 before the full run.",
       "resource_class": "numerical",
       "evidence_paths": [
+        "docs/quality/audits/core11-p-um21-pilot-record-v4.json",
+        "docs/quality/audits/core11-p-um21-launcher-receipt-v4.json",
+        "docs/quality/audits/core11-p-um21-pilot-spec-v4.json",
         "docs/maintainers/handoffs/CORE-11-P-UM21.json",
         "docs/maintainers/handoffs/CORE-11-P-UM21-verify.json",
         "docs/quality/audits/core11-p-um21-pilot-record-v3.json",
@@ -6628,13 +6631,14 @@
         "docs/maintainers/handoffs/UM21-P02-verify.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-01T00:20:00Z",
+        "last_checked_at_utc": "2026-11-02T00:00:00Z",
         "summary": "Pilot of the bound sign-application build on 7 seeded UM21 treadmill recordings (AB04/i0, AB04/d10, AB06/i5, AB10/i10, AB10/i5, AB03/i10, AB03/d10; two power layout-2), 14 legs, through the guarded launcher (spec v3r1, one clean run). No wrong published sign; AB04/i0 pelvis correction applied in both legs (D-UM21-P01-1 = C); segments and velocities derived after the hook (F2). Independent verification CORE-11-P-UM21-verify.json round_4: all 7 claims pass; condition C1 (stale test) fixed.",
         "checks": [
-          "Pilot record docs/quality/audits/core11-p-um21-pilot-record-v3.json sha256 7385e6984821bd5c837a1549bec11330d9c42818848d0e6a7878a9b63cce39ee; launcher receipt docs/quality/audits/core11-p-um21-launcher-receipt-v3r1.json sha256 6f4cfe0a9ded88777afb5f01efdca61dac27a4c5ad663143359160b5b564e752.",
+          "Pilot record docs/quality/audits/core11-p-um21-pilot-record-v4.json sha256 c459e7a7238105547d0efa10d6a6173af0f0bb5aafc6981023e9cad759788be3; launcher receipt docs/quality/audits/core11-p-um21-launcher-receipt-v4.json sha256 3b6ff3f4759a9e5e90d77ded35079ab4851f2310e6a579740fcccd6163724505.",
           "Verification: docs/maintainers/handoffs/CORE-11-P-UM21-verify.json round_4 (post-launch, independent second agent): pass_with_conditions; C1 fixed in tests/test_um21_sign_adapter.py.",
           "Receipt: completed, exit 0, clean_success true, wall 7.2 s, peak RSS 158 MiB (largest process), all launcher checks true; verify-cleanup proven. The earlier v3 launch was refused (foreign_worker_linux) and nothing ran; its receipt is kept as history.",
-          "Per channel (14 legs): pelvis, hip, knee, ankle angles and moments published 14 each; hip power held 14; knee power held 14; ankle power published 8 (detector apply, slot 1), held 6; 0 wrong signs, 0 conflicts, 0 guard refusals; 1 cross-recording item (ankle power), explained."
+          "Per channel (14 legs): pelvis, hip, knee, ankle angles and moments published 14 each; hip power held 14; knee power held 14; ankle power published 8 (detector apply, slot 1), held 6; 0 wrong signs, 0 conflicts, 0 guard refusals; 1 cross-recording item (ankle power), explained.",
+          "Re-pilot v4 (2026-11-02) after HIST-06 (5de8448) changed audited_signs.json to 261f344d...: the v3 record (core11-p-um21-pilot-record-v3.json, receipt v3r1) no longer binds the current build and is superseded for the full-run gate. Spec v4 = v3r1 with the current bound build, a new output root and a new receipt path. Clean run (exit 0, wall 7.6 s, peak RSS 160 MiB); per-channel verdicts, detector signs, publications, multipliers, votes and input/output array hashes identical to v3r1 in all 14 groups (2,044 comparisons, 0 differences)."
         ],
         "remaining": [
           "UM21-E01: diagnose the incline/decline evidence-gate anomalies and the unreported NaN stride before the UM21 full run.",

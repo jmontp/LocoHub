@@ -1,8 +1,8 @@
 {
   "task_id": "CORE-11-P-UM21",
   "verifier": "independent second agent",
-  "verdict": "pilot_verified_with_conditions",
-  "verdict_note": "Round 4 (post-launch): all seven pilot claims pass against the evidence. Before commit: update the stale pre-launch spec test (C1). Moving the task to done is left to the coordinator (backlog.json not edited by the verifier).",
+  "verdict": "pilot_verified",
+  "verdict_note": "Round 5: the v4 re-pilot (audited_signs.json 261f344d..., UM21 entries byte-identical) passes and reproduces v3r1 exactly in every verdict, sign, multiplier, correction and array hash. Round-4 condition C1 is resolved (test updated, passing). The current pilot evidence is the v4 record c459e7a7... and receipt 3b6ff3f4...; v3r1 is history. backlog.json not edited by the verifier.",
   "rounds": {
     "round_1": {
       "phase": "pre-launch review of adapter, runner and plan-only spec",
@@ -390,6 +390,85 @@
       ],
       "scratch": "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/{verify_core11_p_um21.py, verify_out.json, core11_p_um21_pilot_verify_notes.md}",
       "next_action": "Worker or coordinator: fix C1 and the stale handoff fields, commit the pilot artifacts, then move CORE-11-P-UM21 to done citing the record and receipt hashes. Optionally queue a look at the incline/decline evidence-gate anomalies before the full UM21 run."
+    },
+    "round_5": {
+      "phase": "verification of the v4 re-pilot (HIST-06 changed audited_signs.json)",
+      "checked_at_utc": "2026-11-02",
+      "verdict": "pass",
+      "research_data_read": "pilot outputs only (v3 and v4 logs and summaries; array files compared by sha256); Streaming.mat not read",
+      "launched": false,
+      "method": "ps: no launcher, pytest or repository worker; about 12.7 GB available. Read-only scratch script (nice 19, ionice idle, single-threaded, peak RSS 18.5 MiB); guarded_launcher verify-cleanup, which only prints (checked in code, lines 1040-1074); git show/diff; pytest on two fixture files; backlog --check.",
+      "reviewed_sha256": {
+        "docs/quality/audits/core11-p-um21-pilot-spec-v4.json": "6f5cc5a7e53f3a2c97a4aaf7641ee3926bc15356955576c89aa4783f68956df6",
+        "docs/quality/audits/core11-p-um21-launcher-receipt-v4.json": "3b6ff3f4759a9e5e90d77ded35079ab4851f2310e6a579740fcccd6163724505",
+        "docs/quality/audits/core11-p-um21-launcher-receipt-v4.log": "271b302767d9331a16e951ac9e1cfe7ef99bc264903579764746922e36deaa46",
+        "docs/quality/audits/core11-p-um21-pilot-record-v4.json": "c459e7a7238105547d0efa10d6a6173af0f0bb5aafc6981023e9cad759788be3",
+        "converted_datasets/reconversion_v2/core11_p_um21_pilot_v4/pilot_summary.json": "81e5a7335fe75b3cde6dbb06ae08d181faa12a8a32ec80cd06fe9c8c0059d27c",
+        "contributor_tools/common/audited_signs.json": "261f344d578f30c6c8049acee66db3e1b3598ca9c1403c43815d6ee688b51ee6",
+        "contributor_tools/run_core11_um21_pilot.py": "33de204ad14031819b559df83035d12170aa5e12b633687ddbb83f67b0cc2d24",
+        "contributor_tools/adapters/um21_sign_adapter.py": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec"
+      },
+      "checks": [
+        {
+          "claim": "1. v4 differs from v3r1 only in the audited_signs binding, the output root and the receipt path",
+          "result": "pass",
+          "evidence": [
+            "diff of the two spec files: four lines. They are the command's --output-root argument and output_root (_v3 -> _v4), receipt_path (-v3r1 -> -v4), and the audited_signs.json binding (3403390d... -> 261f344d...).",
+            "Seed, recordings, detector sha256, the other nine bindings, limits, expected outputs and job id are unchanged."
+          ]
+        },
+        {
+          "claim": "2. Clean receipt, one launch, verify-cleanup proven, hashes match",
+          "result": "pass",
+          "evidence": [
+            "receipt-v4: status completed, launched true, exit_code 0, clean_success true, all eight checks true. No stop actions, orphans, launcher or finalisation errors, or new Linux/Windows workers. Peak RSS 163372 KiB = 159.5 MiB; RLIMIT_AS 805306368.",
+            "One launch: one launch-ledger entry; no v4 .conflict-* or .final-* receipt; verify-cleanup shows fallback_receipts [].",
+            "My own verify-cleanup run at 2026-11-02T18:27:03Z: proven true (same_boot_proc_scan, no group members, leader gone).",
+            "Hashes: spec_sha256 = sha256(spec-v4); log_sha256 = sha256(.log); receipt bindings = spec-v4 bindings; the nine file bindings equal the files on disk. All 72 outputs match disk in sha256 and size, with nothing unlisted or missing. The record's receipt, spec and summary hashes match the files, and its bindings equal the receipt's."
+          ]
+        },
+        {
+          "claim": "3. v4 and v3r1 summaries and leg logs identical in verdicts, published signs, multipliers, AB04/i0 corrections and output array hashes",
+          "result": "pass",
+          "evidence": [
+            "Own script, 2,464 comparisons over 14 legs. Per channel: verdict, detector sign, confidence, families, detector_applied, guard, multiplier, sign_basis, publication, hold_reason, sign_vs_corrected_source, votes, audit, offset, source_correction, input and output sha256. Per leg: corrections_applied, recording_exceptions, exceptions_applied, counts, unit_ids, evidence_sha256. 0 differences.",
+            "A full recursive diff of every leg's sign_application.json differs only at bound_build.audited_signs.json. sign_review.json, derivations.json, hook_outputs.npz and derived.npz are byte-identical in all 14 legs (56 files).",
+            "The pilot_summary diff covers only backlog_snapshot_sha256, bound_build.audited_signs.json, the 14 sign_application.json hashes (bound-build field), and resources.peak_rss_mib and wall_seconds. The backlog snapshot differs because the backlog changed between runs; the identical audit, source_correction and corrections_applied fields show the same decisions and tasks were in force."
+          ]
+        },
+        {
+          "claim": "4. Audited table vs HEAD~1: UM21 entries byte-identical",
+          "result": "pass",
+          "evidence": [
+            "HEAD~1 (5d144a9) = 3403390d... (the v3r1 binding); HEAD (5de8448, HIST-06) = disk = 261f344d... (the v4 binding).",
+            "git numstat: 231 insertions, 0 deletions. Parsed-JSON diff: only datasets.FA16, datasets.TA21 and datasets.TA22 added; schema_version, purpose, target_rule, seeded, omitted, and UM21, GT21, GT23 and GT24 unchanged.",
+            "The serialized UM21 block (6,643 characters, sha256 3306e7ac...) is byte-identical in both commits."
+          ]
+        },
+        {
+          "claim": "5. The test change does not weaken the seeding, AB04/i0 or layout-2 assertions",
+          "result": "pass",
+          "evidence": [
+            "git diff HEAD touches only the post-launch block (and adds a pathlib import). The function's lines 464-486 match the round-4 copy line for line: the seeded layout-2 choice and sample, AB04/i0 first, rec[1] in the C03 layout-2 list, pool 42, no excluded recording, job id, detector, bound-build/adapter/runner/source bindings, and the planned v3 output root and receipt.",
+            "New block: v4 (current) must equal the planned spec after normalising output root, command argument and receipt path, so it binds the current build. v3r1 (history) must equal it except for bindings, with the same binding keys, and its bindings are pinned by its receipt's spec bindings and spec_sha256. Each existing output root must come from a clean receipt of exactly that spec. The v4 spec must exist.",
+            "The only relaxation is v3r1's bindings no longer matching the current build. That is necessary after HIST-06 and does not touch seeding, AB04/i0 or layout 2.",
+            "pytest tests/test_um21_sign_adapter.py tests/test_sign_application.py: 206 passed, 1 warning. Round-4 C1 is resolved. build_backlog_page.py --check: valid (107 tasks)."
+          ]
+        }
+      ],
+      "notes_for_coordinator": [
+        "The v4 run reuses job id CORE-11-P-UM21-pilot-v3 (needed by the runner's JOB_ID check; documented in the handoff). v3r1 and v4 are told apart by spec sha256, receipt path and output root, not by job id.",
+        "Round-4 not-checked items still apply and are unchanged in v4: evidence-gate 'unknown'/'fail' results on the AB03/i10, AB10/i10, AB03/d10 and AB04/d10 plates, and one AB04/d10-right unit with NaN joint angles.",
+        "check_pilot_record (the full-run gate) not run: the v4 record and receipt are not yet committed."
+      ],
+      "commands": [
+        "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m contributor_tools.guarded_launcher verify-cleanup docs/quality/audits/core11-p-um21-launcher-receipt-v4.json -> proven, no fallback receipts",
+        "same prefix: python3 <scratch>/compare_v3r1_v4.py (read-only; peak RSS 18.5 MiB)",
+        "same prefix: python3 -m pytest -q tests/test_um21_sign_adapter.py tests/test_sign_application.py -> 206 passed, 1 warning",
+        "same prefix: python3 contributor_tools/build_backlog_page.py --check -> Backlog valid; HTML current (107 tasks)"
+      ],
+      "scratch": "/tmp/claude-1000/-mnt-s-workspace-locomotion-data-standardization/3d235b25-b0d5-4f59-8a02-50c68fe5c13c/scratchpad/{compare_v3r1_v4.py, compare_out.json}",
+      "next_action": "Coordinator: commit the v4 spec, receipt (and .log if tracked), record, handoff, verify file and test; then CORE-11-P-UM21 can be done, citing the v4 record c459e7a7... and receipt 3b6ff3f4..."
     }
   }
 }

@@ -7,7 +7,7 @@
  "scientific_approval": false,
  "research_data_read": true,
  "launched": true,
- "last_checked_at_utc": "2026-11-01T00:25:00Z",
+ "last_checked_at_utc": "2026-11-02T00:00:00Z",
  "repository_head": "8de0b8b",
  "summary": "contributor_tools/adapters/um21_sign_adapter.py wires UM21 treadmill recordings to sign_application.run_sign_application, one recording and leg at a time. It refuses the six recordings excluded by D-UM21-T02-1 = A before touching any data, and refuses to run unless the backlog still records answer A. It reads untransformed component-1 channels, converting deg to rad only (moments and powers as stored, float64), with the same bounded reading and evidence as probe_core04_um21.py. It calls the hook with dataset UM21, the recording id and the declared detector sha256. Only after the hook does it derive thigh, shank and foot (derive_segment_angles) and the pelvis, thigh, shank and foot sagittal velocities (derive_angular_velocities, spacing = stride duration / 149) from the published channels. It passes no segment angle or velocity to the hook and checks that (F2). contributor_tools/run_core11_um21_pilot.py has two steps. 'plan' wrote docs/quality/audits/core11-p-um21-pilot-spec.json, validated in-process. 'run' is the launched job: it refuses outside the launcher's niceness and address-space limit, writes only under a new output root, and ends with automated pilot checks and pilot_summary.json.",
  "changed_files": [
@@ -23,7 +23,10 @@
   "docs/quality/audits/core11-p-um21-launcher-receipt-v3r1.log",
   "docs/quality/audits/core11-p-um21-pilot-record-v3.json",
   "docs/maintainers/backlog.json",
-  "docs/maintainers/backlog.html"
+  "docs/maintainers/backlog.html",
+  "docs/quality/audits/core11-p-um21-pilot-spec-v4.json",
+  "docs/quality/audits/core11-p-um21-launcher-receipt-v4.json",
+  "docs/quality/audits/core11-p-um21-pilot-record-v4.json"
  ],
  "not_changed": [
   "docs/maintainers/backlog.json",
@@ -141,7 +144,7 @@
   "For future pilots: runner record-step relative-path bug and v3 defaults (changes the runner hash).",
   "Open: units follow the UM21-C03 stride rule, not the UM21-T01 task-labelled observations."
  ],
- "next_action": "UM21 full runs may use mode full with this pilot record (any edit to a bound file invalidates it); consider UM21-E01 first. UM21 full run needs a fresh pilot on the post-HIST-06 bound build.",
+ "next_action": "Coordinator commits the v4 files; then rerun check_pilot_record without simulation.",
  "hashes_sha256": {
   "contributor_tools/adapters/__init__.py": "a98b99ecee256d1585815af04455f3b072eadd71c8a3a88a3debce32633735ee",
   "contributor_tools/adapters/um21_sign_adapter.py": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
@@ -290,5 +293,51 @@
   "record": "docs/quality/audits/core11-p-um21-pilot-record-v3.json",
   "record_sha256": "7385e6984821bd5c837a1549bec11330d9c42818848d0e6a7878a9b63cce39ee",
   "receipt_sha256": "6f4cfe0a9ded88777afb5f01efdca61dac27a4c5ad663143359160b5b564e752"
+ },
+ "repilot_v4": {
+  "why": "HIST-06 (commit 5de8448) changed contributor_tools/common/audited_signs.json from 3403390d... to 261f344d... (FA16/TA21/TA22 entries added; UM21 entries unchanged), so the committed v3 record no longer matched the bound build and the full-run gate would refuse.",
+  "spec": {
+   "path": "docs/quality/audits/core11-p-um21-pilot-spec-v4.json",
+   "sha256": "6f5cc5a7e53f3a2c97a4aaf7641ee3926bc15356955576c89aa4783f68956df6",
+   "made_by": "contributor_tools.run_core11_um21_pilot.build_spec() on the current bound build, with output_root and the --output-root argument set to converted_datasets/reconversion_v2/core11_p_um21_pilot_v4 and receipt_path set to the v4 receipt; validate_spec in-process; exclusive create",
+   "differs_from_v3r1": [
+    "bindings: audited_signs.json 3403390d... -> 261f344d...",
+    "output_root and command --output-root: _v3 -> _v4",
+    "receipt_path: -v3r1 -> -v4"
+   ],
+   "unchanged": "seed 20261102, recordings, detector sha256, limits, expected outputs, job id CORE-11-P-UM21-pilot-v3 (the record writer checks the runner's JOB_ID)"
+  },
+  "runner": "Not edited (sha256 33de204a... unchanged). Its defaults still point at v3; the v4 paths are documented here and the record step was run with explicit absolute --spec, --receipt, --summary and --out.",
+  "dry_run": "preflight_passed on the first attempt (no retries)",
+  "receipt": {
+   "path": "docs/quality/audits/core11-p-um21-launcher-receipt-v4.json",
+   "sha256": "3b6ff3f4759a9e5e90d77ded35079ab4851f2310e6a579740fcccd6163724505",
+   "status": "completed",
+   "exit_code": 0,
+   "clean_success": true,
+   "wall_time_seconds": 7.62,
+   "peak_rss_kib_largest_process": 163372,
+   "all_launcher_checks_true": true
+  },
+  "verify_cleanup": "proven, no fallback receipts",
+  "pilot_summary": {
+   "path": "converted_datasets/reconversion_v2/core11_p_um21_pilot_v4/pilot_summary.json",
+   "sha256": "81e5a7335fe75b3cde6dbb06ae08d181faa12a8a32ec80cd06fe9c8c0059d27c",
+   "automated_outcome": "passed",
+   "failures": {},
+   "unexplained_cross_group_items": 0,
+   "peak_rss_mib": 159.5,
+   "wall_seconds": 8.2
+  },
+  "record": {
+   "path": "docs/quality/audits/core11-p-um21-pilot-record-v4.json",
+   "sha256": "c459e7a7238105547d0efa10d6a6173af0f0bb5aafc6981023e9cad759788be3",
+   "outcome": "passed",
+   "problems": []
+  },
+  "comparison_with_v3r1": "14 groups, 2,044 field comparisons (per channel: verdict, detector sign, confidence, families, detector_applied, multiplier, sign basis, publication, hold reason, sign vs corrected source, votes, audit, input and output array sha256; per group: counts, corrections applied, unit ids, evidence hashes, segment and velocity output hashes; cross-group review): 0 differences. The only bound-build difference is audited_signs.json.",
+  "test": "test_pilot_spec_is_seeded_includes_ab04_i0_and_a_layout_2_recording_and_validates now checks every launched spec (v3r1 as history, v4 as current): same seed, sample, command, limits and job id as the planned spec; v4 binds the current build; an existing output root must come from a clean run of exactly that spec (spec sha256, bindings, output root, pilot_summary.json). Seeding, AB04/i0 and layout-2 assertions unchanged.",
+  "superseded": "v3 record (7385e698...) and v3r1 receipt (6f4cfe0a...) remain committed as history; the backlog now cites the v4 record and receipt.",
+  "independent_verification": "not yet done for v4 (the comparison above is the worker's own)"
  }
 }

@@ -14,6 +14,7 @@ verified; the AB04/i0 correction active). No research dataset is read and nothin
 import copy
 import json
 import random
+from pathlib import Path
 
 import h5py
 import numpy as np
@@ -483,22 +484,39 @@ def test_pilot_spec_is_seeded_includes_ab04_i0_and_a_layout_2_recording_and_vali
     assert s["cwd"] == str(pilot.ROOT) and s["address_space_mib"] <= 768
     assert s["output_root"].endswith("converted_datasets/reconversion_v2/core11_p_um21_pilot_v3")
     assert s["receipt_path"].endswith("docs/quality/audits/core11-p-um21-launcher-receipt-v3.json")
-    # The launched spec is v3r1, identical to the planned spec except receipt_path (coordinator option B,
-    # after the v3 launch was refused). Valid before and after the launch: the output root may exist only as
-    # the output of the clean v3r1 run of exactly this spec.
-    v3r1 = pilot.ROOT / "docs/quality/audits/core11-p-um21-pilot-spec-v3r1.json"
-    launched = pilot.ROOT / "docs/quality/audits/core11-p-um21-launcher-receipt-v3r1.json"
-    if v3r1.exists():
-        r1 = json.loads(v3r1.read_text())
-        validate_spec(r1)
-        assert {**r1, "receipt_path": spec["receipt_path"]} == spec
-        assert r1["receipt_path"] == "docs/quality/audits/core11-p-um21-launcher-receipt-v3r1.json"
-    if (pilot.ROOT / pilot.OUTPUT_ROOT).exists():  # written only by the launched job
-        receipt = json.loads(launched.read_text())
-        assert receipt["status"] == "completed" and receipt["clean_success"] is True
-        assert receipt["spec_sha256"] == sa.file_sha256(v3r1)
-        assert receipt["spec"]["output_root"] == s["output_root"] and receipt["spec"]["bindings"] == spec["bindings"]
-        assert any(o["path"] == "pilot_summary.json" for o in receipt["outputs"])
+    # Launched specs: v3r1 (planned spec with another receipt_path, after the v3 launch was refused; run on the
+    # bound build of its time) and v4 (re-pilot after HIST-06 changed audited_signs.json: the planned spec on the
+    # current bound build with a new output root and receipt path). Each must keep the planned seed, sample,
+    # command, limits and job id. A launched spec's output root may exist only as the output of a clean run of
+    # exactly that spec. The current spec (v4) must bind the current build; v3r1 is history.
+    def launched(name, receipt_name, output_root, current):
+        path = pilot.ROOT / f"docs/quality/audits/{name}"
+        if not path.exists():
+            return
+        ls = json.loads(path.read_text())
+        validate_spec(ls)
+        cmd = list(ls["command"])
+        assert cmd[cmd.index("--output-root") + 1] == output_root
+        cmd[cmd.index("--output-root") + 1] = spec["output_root"]
+        same = {**ls, "command": cmd, "output_root": spec["output_root"], "receipt_path": spec["receipt_path"]}
+        if current:
+            assert same == spec  # current bound build, adapter and runner
+        else:
+            assert {k: v for k, v in same.items() if k != "bindings"} == {k: v for k, v in spec.items() if k != "bindings"}
+            assert set(ls["bindings"]) == set(spec["bindings"])
+        assert ls["output_root"] == output_root and ls["receipt_path"] == f"docs/quality/audits/{receipt_name}"
+        if (pilot.ROOT / output_root).exists():  # written only by the launched job
+            receipt = json.loads((pilot.ROOT / ls["receipt_path"]).read_text())
+            assert receipt["status"] == "completed" and receipt["clean_success"] is True
+            assert receipt["spec_sha256"] == sa.file_sha256(path)
+            assert receipt["spec"]["bindings"] == ls["bindings"]
+            assert Path(receipt["spec"]["output_root"]) == pilot.ROOT / output_root
+            assert any(o["path"] == "pilot_summary.json" for o in receipt["outputs"])
+    launched("core11-p-um21-pilot-spec-v3r1.json", "core11-p-um21-launcher-receipt-v3r1.json",
+             "converted_datasets/reconversion_v2/core11_p_um21_pilot_v3", current=False)
+    launched("core11-p-um21-pilot-spec-v4.json", "core11-p-um21-launcher-receipt-v4.json",
+             "converted_datasets/reconversion_v2/core11_p_um21_pilot_v4", current=True)
+    assert (pilot.ROOT / "docs/quality/audits/core11-p-um21-pilot-spec-v4.json").exists()
     assert set(pilot.SUPERSEDED) == {"docs/quality/audits/core11-p-um21-pilot-spec.json",
                                      "docs/quality/audits/core11-p-um21-pilot-spec-v2.json"}
     for old in pilot.SUPERSEDED:  # the never-launched v1 and v2 specs are gone and their paths are not reused
