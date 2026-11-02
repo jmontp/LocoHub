@@ -130,6 +130,10 @@
   {
    "command": "full-run gate check_pilot_record after commit 122eb3a, no simulation",
    "result": "{\"result\": \"passed\", \"record\": \"docs/quality/audits/core11-p-um21-pilot-record-v3.json\", \"record_sha256\": \"7385e6984821bd5c837a1549bec11330d9c42818848d0e6a7878a9b63cce39ee\", \"receipt_sha256\": \"6f4cfe0a9ded88777afb5f01efdca61dac27a4c5ad663143359160b5b564e752\"}"
+  },
+  {
+   "command": "full-run gate check_pilot_record on the v4 record after commit ebcedc7, no simulation",
+   "result": "{\"result\": \"passed\", \"record\": \"docs/quality/audits/core11-p-um21-pilot-record-v4.json\", \"record_sha256\": \"c459e7a7238105547d0efa10d6a6173af0f0bb5aafc6981023e9cad759788be3\", \"receipt_sha256\": \"3b6ff3f4759a9e5e90d77ded35079ab4851f2310e6a579740fcccd6163724505\"}"
   }
  ],
  "not_checked": [
@@ -339,5 +343,15 @@
   "test": "test_pilot_spec_is_seeded_includes_ab04_i0_and_a_layout_2_recording_and_validates now checks every launched spec (v3r1 as history, v4 as current): same seed, sample, command, limits and job id as the planned spec; v4 binds the current build; an existing output root must come from a clean run of exactly that spec (spec sha256, bindings, output root, pilot_summary.json). Seeding, AB04/i0 and layout-2 assertions unchanged.",
   "superseded": "v3 record (7385e698...) and v3r1 receipt (6f4cfe0a...) remain committed as history; the backlog now cites the v4 record and receipt.",
   "independent_verification": "not yet done for v4 (the comparison above is the worker's own)"
+ },
+ "full_run_gate_v4": {
+  "commit": "ebcedc7",
+  "checked_at_head": "ebcedc7",
+  "verification": "round_5 passed",
+  "command": "sign_application.check_pilot_record(record v4, 'UM21', bound_build(), task_done, backlog records), no simulation",
+  "result": "passed",
+  "record": "docs/quality/audits/core11-p-um21-pilot-record-v4.json",
+  "record_sha256": "c459e7a7238105547d0efa10d6a6173af0f0bb5aafc6981023e9cad759788be3",
+  "receipt_sha256": "3b6ff3f4759a9e5e90d77ded35079ab4851f2310e6a579740fcccd6163724505"
  }
 }
