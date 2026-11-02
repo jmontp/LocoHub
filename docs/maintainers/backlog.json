@@ -3,7 +3,7 @@
   "updated_at_utc": "2026-11-02T00:00:00Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
-  "next_task_id": "UM21-T02",
+  "next_task_id": "UM21-T03",
   "workflow": {
     "statuses": {
       "ready": "Dependencies are satisfied; the next action can be taken within its stated resource limits.",
@@ -1355,7 +1355,7 @@
       "priority": "P0",
       "dataset": "um21",
       "title": "Validate a treadmill component and phase pilot",
-      "status": "ready",
+      "status": "done",
       "stage": "pilot",
       "question": "Does the selected complete recording preserve its source values and real stride timing?",
       "scope": "One full bounded treadmill record selected from the 50-record scope, with both physical sides and representative transition/missingness cases.",
@@ -1382,7 +1382,7 @@
         "Receipt binds original source, output, converter and independent audit hashes before and after execution.",
         "Launcher is reviewed and tested before first use; it pins no historical PID or controller."
       ],
-      "next_action": "Pick an aligned pilot record (reviewed producer change needed to select it), bind audit b3278c87 in the job spec, dry run, fresh census, single launch.",
+      "next_action": "UM21-T03: full treadmill conversion (50 records, 84 components) with the same bound producer and audit, as one guarded launch with its own reviewed spec; sign application (CORE-11) is a separate step. See handoffs/UM21-T02-verify.json.",
       "resource_class": "numerical",
       "evidence_paths": [
         "contributor_tools/restore_um21_tread_components.py",
@@ -1395,6 +1395,12 @@
         "docs/maintainers/handoffs/UM21-T02-audit-verify.json",
         "docs/maintainers/handoffs/UM21-T02-audit.json",
         "docs/maintainers/handoffs/UM21-T02-launcher-verify.json",
+        "docs/maintainers/handoffs/UM21-T02-runner.json",
+        "docs/maintainers/handoffs/UM21-T02-runner-verify.json",
+        "docs/maintainers/handoffs/UM21-T02-verify.json",
+        "docs/quality/audits/um21-t02-pilot-launcher-receipt.json",
+        "docs/quality/audits/um21-t02-pilot-spec.json",
+        "converted_datasets/reconversion_v2/um21_tread_t02_pilot_AB04_d10_20261102/audit/audit_report.json",
         "docs/maintainers/handoffs/UM21-T02.json",
         "docs/quality/audits/um21-midstance-slope.json",
         "docs/quality/audits/um21-t02-clock-census.json",
@@ -1402,8 +1408,8 @@
         "review_sheets/D-UM21-T02-2/index.html"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-31T06:29:52Z",
-        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
+        "last_checked_at_utc": "2026-11-02T23:10:00Z",
+        "summary": "Pilot on AB04/d10 ran once under the guarded launcher (clean, 71.9 s, 213.6 MiB) and was independently verified: receipt, 16 output hashes, 13 bindings, audit 53/53, own probe. Source-sign staging only; not scientific approval of the dataset.",
         "checks": [
           "Read original task scope and acceptance; no scientific arrays loaded or jobs started.",
           "Guarded launcher contributor_tools/guarded_launcher.py: independent review rounds 1-3 back_to_worker, round 4 done_for_launcher; 212 tests pass. Residual risks need deliberate circumvention only.",
@@ -1411,7 +1417,7 @@
           "Midstance slope check (UM21-SLOPE, independently verified done): the motion shared by AB01 i5 and i10 is a 10-degree incline (foot path 9.4-10.1, plate tilt 9.8); all other 48 recordings match their slope labels. Force-plate forces are N, not N/kg (README wrong)."
         ],
         "remaining": [
-          "Prepare and execute only the reviewed bounded treadmill pilot after PM-01 authorizes exclusive ownership.",
+          "T03 full conversion; AB04/d10 evidence covers one aligned record only (misaligned and no-cvel records are not exercised).",
           "Coordinator resolution (2026-10-31): D-UM21-T02-2 withdrawn. With D-UM21-T02-1 = A, AB01 i5 already leaves (clock check fails, -413 frames), so keep-both and drop-i5 release the same strides. AB01 i10 passes the clock and slope checks and stays, with a provenance note that its arrays also appear under the i5 label. Dropping i10 too would be an extra exclusion; José can still ask for it.",
           "UM21-SLOPE follow-ups: probe --blind-report should accept paths outside the repo; AB03/AB10 plates miss 2-9% body weight with a fore-aft component (unverified handrail)."
         ]
@@ -1426,7 +1432,7 @@
       "priority": "P0",
       "dataset": "um21",
       "title": "Complete treadmill components and independent full readback",
-      "status": "blocked",
+      "status": "ready",
       "stage": "source_readback",
       "question": "Does the full first-release scope match the source?",
       "scope": "All 50 recordings and 84 components; preserve existing accepted-cycle identities without approving prior exclusions.",
@@ -1474,8 +1480,7 @@
       "legacy_ids": [
         "UM21-01",
         "QA-01"
-      ],
-      "blocked_reason": "Requires completed dependency evidence: PM-01, UM21-T02. Numerical/native execution also requires current exclusive ownership, unchanged resource guards and a reviewed single-job handoff; old stopped predecessors are not success."
+      ]
     },
     {
       "id": "UM21-C01",
@@ -6651,7 +6656,7 @@
       "priority": "P2",
       "dataset": "um21",
       "title": "Diagnose UM21 sign-detector evidence gates on incline and decline recordings",
-      "status": "ready",
+      "status": "done",
       "stage": "quality",
       "question": "Why do some detector evidence gates not pass on UM21 incline and decline recordings in the CORE-11-P-UM21 pilot, and why is one AB04/d10 stride all-NaN without being reported?",
       "scope": "Diagnosis only, no fix and no change to the bound build. From the CORE-11-P-UM21 pilot outputs and, if needed, read-only probes of single recordings (AGENTS.md probe exception): (1) leg_assignment_check unknown in AB03/i10 and AB10/i10 (both legs); (2) cop_within_foot fail in AB03/i10 (both legs); (3) cop_progression unknown in AB03/d10 right and AB04/d10 (both legs); (4) AB04/d10 right has one stride unit with NaN in all four joint angles (33 samples) that pilot_summary does not report. All are on tilted plates; no published sign was affected (CORE-11-P-UM21-verify.json round_4 not_checked). Report the cause of each and whether the full run needs an adapter or summary change.",
@@ -6672,15 +6677,21 @@
         "No bound file changed",
         "Independent verification"
       ],
-      "next_action": "Read the four groups' sign_application.json checks and the AB04/d10 right arrays from the pilot outputs; probe single recordings only if the logs do not explain them.",
+      "next_action": "Done. Optional at T03: report non-finite units and feed the hook the released observation set. See handoffs/UM21-E01-verify.json.",
       "resource_class": "read_only",
-      "evidence_paths": [],
+      "evidence_paths": [
+        "docs/maintainers/handoffs/UM21-E01.json"
+      ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-01T00:20:00Z",
-        "summary": "Created from CORE-11-P-UM21 verification round_4 not_checked items.",
-        "checks": [],
+        "last_checked_at_utc": "2026-11-02T00:00:00Z",
+        "summary": "All four anomalies explained; none blocks the UM21 full run; no bound file changed. Details and probe RSS in docs/maintainers/handoffs/UM21-E01.json.",
+        "checks": [
+          "Gate abstentions on slopes: leg gate fails on high incline knee median (leg assignment independently confirmed); AB03/i10 CoP path exceeds foot (cause of CoP excursion unexplained); decline CoP progression ~1 cm (below vote); AB04/d10 NaN stride = source zero fill in a 51-frame pair already excluded from the release baseline.",
+          "Read-only probes, one recording each, 69-74 MiB peak RSS, nice 19 / ionice idle."
+        ],
         "remaining": [
-          "Everything in acceptance."
+          "Independent verification.",
+          "Optional at T03: report non-finite units; feed the hook the released observation set."
         ]
       }
     },
