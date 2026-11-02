@@ -269,6 +269,7 @@ def test_no_decisions_states_empty_inbox():
     {'options': [{'key': 'A', 'label': 'Only one'}]},
     {'options': [{'key': 'A', 'label': 'One'}, {'key': 'A', 'label': 'Two'}]},
     {'status': 'answered'}, {'status': 'answered', 'answer': 'Z', 'answered_at_utc': '2026-10-27T11:00:00Z'},
+    {'status': 'answered', 'answer': 'other', 'answered_at_utc': '2026-10-27T11:00:00Z'},
     {'confidence': 'certain'}, {'check': ''}, {'cost_of_waiting': None}, {'decide_before_recommendation': 'yes'},
     {'options': [{'key': 'A', 'label': 'One'}, {'key': 'B', 'label': 'Two', 'consequence': 'x'}]},
     {'options': [{'key': k, 'label': k, 'consequence': k} for k in 'ABCD']},
@@ -292,6 +293,14 @@ def test_commit_first_decision_hides_recommendation_and_defer_is_logged():
     html = b.render_backlog(data)
     assert '<details><summary>Show agent recommendation after choosing</summary><p>Agent recommends' in html
     assert '→ <strong>Deferred</strong>' in html
+
+
+def test_answer_outside_options_is_logged_in_his_words():
+    data = backlog()
+    data['decisions'] = [decision(id='D-2', status='answered', answer='other', answer_text='Keep as published',
+                                  answered_at_utc='2026-10-27T11:00:00Z')]
+    b.validate_backlog(data)
+    assert '→ <strong>Keep as published</strong>' in b.render_backlog(data)
 
 
 def test_review_sheet_enforces_states_and_budgets(tmp_path):

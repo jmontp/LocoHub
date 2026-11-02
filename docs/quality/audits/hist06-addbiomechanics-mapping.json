@@ -1,0 +1,221 @@
+{
+ "task_id": "HIST-06",
+ "title": "Mapping of the HIST-05 AddBiomechanics frames (Falisse fa16, Tan running ta21, Tan walking ta22) to LocoHub names, frames and signs",
+ "status": "draft_for_review",
+ "scientific_approval": false,
+ "mapping_version": "hist06-addb-mapping/0.1",
+ "adapter": "contributor_tools/adapters/addbiomechanics_sign_adapter.py",
+ "target_rule": "B (docs/reference/index.md, section Signs and frames, lines 76-119): +x walking direction, +y up, +z = x cross y (person's right); joint angles and internal moments positive in their named direction; segment angles counterclockwise (pelvis anterior tilt negative); lateral force and CoP outward per leg; GRF = force of the ground on the person",
+ "sources": {
+  "S1": "dynamics_model.osim of each participant (the dynamics-pass model, written by HIST-05 from the B3D header; sha256 per participant in conversion.json and in the probe record). Structure identical in all 33 (probe model.identical_across_participants: coordinates, couplers, ground_pelvis axes and offsets, gravity all true).",
+  "S2": "docs/quality/audits/hist06-addb-mapping-probe.json (contributor_tools/audit_probes/2026_10_31/probe_hist06_addb_mapping.py; read-only, nice 19 / ionice idle, peak RSS 139.4 MiB): model, dof_order, heading_weight sections.",
+  "S3": "nimblephysics 0.10.52.1 Python stubs, nimblephysics_libs/biomechanics/__init__.pyi, class FramePass (lines 1216-1483): pos/vel/acc 'The joint positions/velocities/accelerations on this frame'; tau 'The joint control forces on this frame'; groundContactForce 'the ground-reaction force from a contact, measured on the force plate ... expressed in the world frame, and is assumed to be acting at the corresponding CoP'; groundContactCenterOfPressure 'CoP ... expressed in the world frame'; comPos/comVel/comAcc 'in world space'; residualWrenchInRootFrame (root frame).",
+  "S4": "contributor_tools/conversion_scripts/AddBiomechanics/convert_addbiomechanics_dynamics_frames.py (HIST-05, sha256 f8baebfb...): columns dofNN_pos/vel/acc/tau by DOF index (decode_pass_frame fields 1-4), <body>_force/cop/torque_xyz (fields 8, 6, 7), com_pos/vel/acc (9-11), root_residual (12), missing_grf_reason; conversion.json model_coordinates and contact_bodies.",
+  "S5": "docs/quality/audits/hist04-addbiomechanics-metadata.json: publications and protocol quotes (Falisse TBME 2017 'six functional motions: gait, squat, stair descent, stair ascent, sit-to-stand-to-sit, and squat jump'; Tan 2022 running 'two footwear types and two running speeds' on an instrumented treadmill; Tan walking 2-minute treadmill trials with foot progression angle, step width and trunk sway modifications at three speeds), mass_check.",
+  "S6": "OpenSim convention used for the pelvis: a CustomJoint SpatialTransform applies rotation1-3 as a body-fixed sequence (ground_pelvis = Rz(pelvis_tilt) Rx(pelvis_list) Ry(pelvis_rotation)); PhysicalOffsetFrame orientation = body-fixed X-Y-Z. Not re-fetched from OpenSim documentation in this task. Data support (S2 dof_order): with the person facing +x (Tan walking), dof00 spans 0.32-0.45 rad and dof01 -0.17 to 0.09 rad; with the person facing about -z (Tan running), dof00 spans -0.17 to 0.16 rad and dof01 0.07-0.18 rad, i.e. tilt and list exchange roles, as a body-fixed sequence with the heading rotation last predicts. The single-coordinate FK sign tests below do not depend on this sequence; the pelvis pitch and facing direction do."
+ },
+ "dof_order": {
+  "rule": "DOF column k = k-th model coordinate after removing knee_angle_r_beta and knee_angle_l_beta (H23)",
+  "evidence": [
+   "S1: CoordinateCouplerConstraint patellofemoral_knee_angle_<s>_con, isEnforced true, dependent knee_angle_<s>_beta = 1 x knee_angle_<s> + 0 (both sides): the beta coordinates are not independent DOFs.",
+   "S4: every frames file has 23 DOF columns (dof00-dof22) for 25 model coordinates.",
+   "S2 dof_order, three studies: under H23 every rotational column except hip flexion (Tan walking, 0.78) and subtalar (Tan running s1, 0.25) lies inside its coordinate range in all frames; under H_order (first 23 coordinates) dof10 would be knee_angle_r_beta, which the coupler makes equal to dof09, but max |dof10 - dof09| is 1.27-1.86 rad, and the H_order knee_angle_l column (dof17) is outside 0-2.09 rad in 36-55 % of frames.",
+   "S2: under H23 right (dof06-10) and left (dof13-17) blocks have matching percentile ranges (e.g. Tan running knee 0.39-1.54 vs 0.36-1.60 rad)."
+  ],
+  "not_checked": "nimblephysics skeleton DOF names for these models (parseOsim needs libtorch, above the 300 MiB probe limit; would need a guarded job)."
+ },
+ "fk_model_definition": {
+  "method": "S2 model section: rotation-only forward kinematics of S1, +0.2 rad per coordinate from the zero pose (knee from 0.2 to 0.4 rad), rotation of the child body in the world frame (x forward, y up, z right at the zero pose; the pelvis frame equals the world frame there). Same sign pattern in all 33 models.",
+  "results": {
+   "pelvis_tilt": "pelvis rotates +0.2 rad about +z (counterclockwise: front up)",
+   "hip_flexion_r / _l": "femur +0.2 rad about +z (thigh forward: flexion)",
+   "knee_angle_r / _l": "tibia -0.202 rad about +z (clockwise: shank back, flexion), small coupled x/y components",
+   "ankle_angle_r / _l": "talus +0.196 rad about +z (toes up: dorsiflexion)",
+   "hip_adduction_r": "femur +0.2 about +x (distal end toward -z, medial: adduction)",
+   "hip_adduction_l": "femur -0.2 about +x (distal end toward +z, medial: adduction)",
+   "hip_rotation_r / _l": "+0.2 about +y / -y (anterior face medial: internal rotation)",
+   "lumbar_extension": "torso +0.2 about +z (leaning back)"
+  }
+ },
+ "frame": {
+  "world": "AddBiomechanics world frame; +y up (S1 gravity 0 -9.80665 0); GRF and CoP in the world frame (S3).",
+  "facing": "pelvis anterior axis from dof00-02 (S6), circular mean yaw per trial (S2 heading: resultant >= 0.943 in every trial).",
+  "observed_facing": {
+   "fa16 Gait, StairUp": "yaw -3.4 to 1.8 deg (world +x); mean COM travel within 2.1 deg of +x (S2)",
+   "fa16 STS": "yaw 82-90 deg (world -z); no travel",
+   "ta21 (all trials)": "trial means 54.8-113.8 deg (world -z on average; up to 35 deg off in some trials of s3, s4)",
+   "ta22 (all trials)": "yaw -9.0 to 6.9 deg (world +x)"
+  },
+  "walking_direction": "treadmill (ta21, ta22 protocol trials): principal horizontal axis of within-stance CoP displacement, oriented with the facing direction; overground (fa16 Gait, StairUp): mean horizontal COM velocity. Each must lie within 45 deg of the facing direction, else anterior and lateral force and CoP stay empty for that trial. Pelvis yaw is not used as the walking direction on the treadmill because Tan running trial means differ from the belt axis by up to 35 deg (pelvis rotation offset).",
+  "no_forward_locomotion": "fa16 STS, ta21 hip_calibration and any non-protocol trial: vertical force and vertical CoP only; forward for such tasks is the open cross-dataset decision D-GT23-C01-1."
+ },
+ "columns": [
+  {
+   "source": "dof06_pos (hip_flexion_r), dof13_pos (hip_flexion_l)",
+   "unit": "rad",
+   "frame": "joint (pelvis to femur)",
+   "source_sign": "flexion + (S1 FK)",
+   "target": "hip_flexion_angle_{ipsi,contra}_rad",
+   "rule_b_sign": 1,
+   "via": "CORE-11 hook (adapter passes untransformed; audited table decides)"
+  },
+  {
+   "source": "dof09_pos (knee_angle_r), dof16_pos (knee_angle_l)",
+   "unit": "rad",
+   "frame": "joint (walker knee, range 0 to 2.0944)",
+   "source_sign": "flexion + (S1 FK, range)",
+   "target": "knee_flexion_angle_{ipsi,contra}_rad",
+   "rule_b_sign": 1,
+   "via": "CORE-11 hook"
+  },
+  {
+   "source": "dof10_pos (ankle_angle_r), dof17_pos (ankle_angle_l)",
+   "unit": "rad",
+   "frame": "joint (tibia to talus)",
+   "source_sign": "dorsiflexion + (S1 FK)",
+   "target": "ankle_dorsiflexion_angle_{ipsi,contra}_rad",
+   "rule_b_sign": 1,
+   "via": "CORE-11 hook"
+  },
+  {
+   "source": "dof06/09/10_tau, dof13/16/17_tau",
+   "unit": "N*m",
+   "frame": "generalized force along the coordinate (S3 'joint control forces'), acting on the child segment",
+   "source_sign": "positive in the coordinate's positive (named) direction: internal flexor / flexor / dorsiflexor",
+   "target": "{hip_flexion,knee_flexion,ankle_dorsiflexion}_moment_{ipsi,contra}_Nm; _Nm_kg = N*m / recorded mass",
+   "rule_b_sign": 1,
+   "via": "CORE-11 hook"
+  },
+  {
+   "source": "dof00-02_pos (pelvis_tilt, pelvis_list, pelvis_rotation)",
+   "unit": "rad",
+   "frame": "ground-relative body-fixed Z-X-Y Euler angles (S6)",
+   "source_sign": "pelvis_tilt is sagittal only when facing +x; it is obliquity when facing -z (fa16 STS, all ta21)",
+   "target": "pelvis_sagittal_angle_rad = asin(up component of the pelvis anterior axis), derived, front up positive",
+   "rule_b_sign": 1,
+   "via": "derived pitch passed to the CORE-11 hook as pelvis_tilt; published only when both legs publish it with one sign"
+  },
+  {
+   "source": "derived",
+   "unit": "rad, rad/s",
+   "frame": "rule B",
+   "target": "thigh/shank/foot_sagittal_angle_*_rad and all *_velocity_* columns",
+   "via": "after the hook from published channels only: derive_segment_angles (thigh = pelvis + hip, shank = thigh - knee, foot = shank + ankle) and derive_angular_velocities (numpy.gradient, spacing = source timestep)"
+  },
+  {
+   "source": "dof07/08_pos and _tau (hip_adduction_r, hip_rotation_r), dof14/15 (left)",
+   "unit": "rad, N*m",
+   "frame": "joint",
+   "source_sign": "adduction +, internal rotation + on both sides (S1 FK)",
+   "target": "hip_adduction_angle/moment_*, hip_rotation_angle/moment_*",
+   "rule_b_sign": "not adopted: source sign kept and stated (docs/reference/index.md line 119)",
+   "via": "direct (no hook: the detector is sagittal only)"
+  },
+  {
+   "source": "calcn_r_force_xyz, calcn_l_force_xyz",
+   "unit": "N",
+   "frame": "world (S3), on the foot",
+   "target": "grf_vertical_*_N (+y), grf_anterior_*_N (walking direction), grf_lateral_*_N (outward: +z' right, -z' left); _BW = N / (recorded mass x 9.80665)",
+   "via": "rule-B basis per trial; recorded force on every frame (flags do not blank; coordinator ruling on HIST-06-verify F1 under José's keep-recorded-values rule); empty only where the source value is NaN; a recorded zero stays zero"
+  },
+  {
+   "source": "calcn_r_cop_xyz, calcn_l_cop_xyz",
+   "unit": "m",
+   "frame": "world; origin = AddBiomechanics world origin",
+   "target": "cop_vertical/anterior/lateral_*_m",
+   "via": "recorded CoP where that foot's recorded vertical force is positive; empty where it is not, independent of the flag (the source stores an undefined CoP as an exact (0, 0, 0) placeholder: 99.8 % of unloaded frames in ta21/s3, HIST-06-verify F3); empty where the source is NaN"
+  },
+  {
+   "source": "dofNN_vel, dofNN_acc",
+   "target": "not mapped this round",
+   "why": "CORE-11 never sign-applies velocities; LocoHub velocities are recomputed from published angles. Source speeds and accelerations stay in the HIST-05 file."
+  },
+  {
+   "source": "dof03-05 (pelvis translation), dof11/18 (subtalar), dof12/19 (mtp), dof20-22 (lumbar)",
+   "target": "not mapped this round",
+   "why": "no LocoHub column (subtalar, mtp, translations) or trunk zero not yet defined (lumbar)"
+  },
+  {
+   "source": "calcn_*_torque_xyz, pelvis_force/cop/torque (fa16 seat contact), com_*, root_residual_*",
+   "target": "not mapped",
+   "why": "no LocoHub column; com_vel is used only to find the overground walking direction"
+  },
+  {
+   "source": "missing_grf_reason, time_s, source_frame_index, source_trial_index, source_recording_id, observation_id, source_original_trial_name",
+   "target": "carried unchanged; observation_id = source trial segment name; reference_side right and left (two rows per frame, ipsi = that leg)"
+  },
+  {
+   "source": "missing_grf_reason (HIST-05 column; per-frame, not per-foot)",
+   "unit": "label",
+   "target": "missing_grf_reason quality column, carried unchanged with the source label (nimblephysics MissingGRFReason names as decoded by HIST-05: notMissingGRF, footContactDetectedButNoForce, missingBlip, manualReview, measuredGrfZeroWhenAccelerationNonZero, forceDiscrepancy, ...)",
+   "via": "never used to blank or exclude; users filter on it. Coverage in the pilot participants: most Falisse and Tan running frames carry a flag (HIST-06-verify F1: 98 % of fa16/subject_0, 54 % of ta21/s3, 15 % of ta22/07)."
+  }
+ ],
+ "tasks": {
+  "MAP-TAN-TASK": "a Tan trial whose original name does not match running (nike|mini)_(SR|SI|baseline)_(24|28) or walking baseline|fpa|step_width|trunk_sway gets task null, in_task_table false, task_id = its source name. Known case: ta21 s7 hip_calibration (1 segment, 2,000 frames). Falisse names outside (Gait|STS|StairUp)_N get the same treatment.",
+  "ta21": "protocol trials: run (HIST-04 table)",
+  "ta22, fa16": "labels only from the answer to D-HIST-06-2 (queued in the HIST-06 handoff)",
+  "counts": {
+   "ta22": {
+    "baseline": [
+     105,
+     204042
+    ],
+    "fpa": [
+     238,
+     460330
+    ],
+    "step_width": [
+     238,
+     459820
+    ],
+    "trunk_sway": [
+     238,
+     459826
+    ]
+   },
+   "fa16": {
+    "Gait": [
+     21,
+     4545
+    ],
+    "StairUp": [
+     3,
+     764
+    ],
+    "STS": [
+     34,
+     22410
+    ]
+   },
+   "ta21": {
+    "protocol": [
+     1061,
+     2034212
+    ],
+    "hip_calibration": [
+     1,
+     2000
+    ]
+   },
+   "format": "[trial segments, frames]"
+  }
+ },
+ "normalization_mass": {
+  "decision": "Not a José decision: José's standing rule (2026-11-02) keeps recorded values and forbids refits, so per-kg moments and body-weight forces divide by the recorded participant mass (entered_mass_kg); the fitted dynamics-model mass is metadata only.",
+  "evidence_S2_weight": "Mean summed vertical contact force over notMissingGRF frames / g, per participant. Falisse (feet + seat, dominated by sit-to-stand trials): 0.938-1.015 x entered mass, 0.988-1.401 x dynamics-model mass (subject_0 1.31, subject_6 1.40, subject_9 1.38). Tan walking: 0.991-1.034 x entered and 0.994-1.026 x model (the two masses agree within 2.5 %). Tan running: 1.16-1.42 x either mass: the notMissingGRF frames over-represent stance, so this estimator is not valid there.",
+  "evidence_S5": "the entered Falisse masses reproduce the TBME 2017 cohort statistics (HIST-04 falisse_attribution)."
+ },
+ "audited_sign_table": {
+  "status": "keys only (FA16, TA21, TA22 with recording_id_pattern, no entries), added 2026-11-02 under the coordinator's B1 ruling, reduced from the ruled entries+keys edit",
+  "why": "tests/test_sign_application.py requires every committed entry's audit tasks to be done and to cite the entry (test_committed_table_is_well_formed_and_bound, test_each_audit_task_record_cites_its_table_entry); entries citing a not-done HIST-06 fail 23 of them. With keys only, the hook runs for these datasets and every sagittal channel is held unless a guarded detector apply occurs.",
+  "proposed": "entries in docs/maintainers/handoffs/HIST-06.json proposed_audited_entries, to add once HIST-06 is done and cites them (second bound-build change)"
+ },
+ "not_checked": [
+  "Pelvis pitch for trials whose facing is far from both +x and -z (ta21 trial means up to 35 deg off): the pitch is heading-independent by construction, but relies on S6.",
+  "Zero offsets: Tan walking pelvis pitch median 0.40 rad (posterior) with hip flexion median -0.24 rad; Falisse and Tan lumbar extension medians -0.43 and -0.65 rad. Model zero definitions, not signs; offsets are never applied.",
+  "Moments on frames flagged missing GRF are carried with their flag; whether AddBiomechanics torques on those frames are usable was not checked.",
+  "Tan running facing offsets (up to 35 deg) were not explained."
+ ],
+ "stride_rule": "Stride units for the CORE-11 hook: heel strike = recorded vertical force of that foot rising to >= 50 N after >= 5 frames below; stride = consecutive strikes 0.4-2.5 s apart with every frame finite (source NaN breaks a stride, a flag does not). Read-only recount with the adapter's stride_pairs (2026-11-02, peak RSS 138.6 MiB): ta21/s3 3,255 strides (right 1,628, left 1,627) in 140 of 143 trials; ta22/07 1,803 strides in 48 of 48; fa16/subject_0 0 strides: its only locomotion trial (Gait_7) has one recorded contact per foot, as every Falisse Gait and StairUp trial (one plate contact per foot; StairUp left second contact starts at frame 2), so no heel-to-heel stride exists in the recorded force; ta21/s7 hip_calibration: blocks by design."
+}

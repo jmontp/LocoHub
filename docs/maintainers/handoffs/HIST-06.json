@@ -1,0 +1,608 @@
+{
+ "task_id": "HIST-06",
+ "title": "Map the AddBiomechanics Falisse and Tan frames to LocoHub conventions, including Tan task labels",
+ "status": "done",
+ "scientific_approval": false,
+ "last_checked_at_utc": "2026-11-02T20:00:00Z",
+ "round": "plan, adapter and synthetic fixtures; no launch, no commit",
+ "decision_context": {
+  "D-HIST-04-1": "A: one row per frame from the dynamics pass",
+  "D-HIST-04-2": "A: no contact; Falisse subject_1, 7, 8 dropped (the adapter refuses them)",
+  "D-UM21-C03-1": "B: sign rule B",
+  "standing": "standardized names by default (UM21-C01); MAP-TAN-TASK (HIST-05 batch acceptance)",
+  "open_elsewhere": "D-GT23-C01-1 (what forward means without forward walking) governs the anterior and lateral force and CoP of Falisse sit-to-stand and non-protocol trials; until answered they stay empty (vertical kept)"
+ },
+ "summary": "Mapping specification with citations (hist06-addbiomechanics-mapping.json), a read-only probe of all 33 participants (peak RSS 139.4 MiB, nice 19 / ionice idle), the adapter, a guarded pilot runner and synthetic tests are written. Key findings: (1) the 23 DOF columns are the 25 model coordinates minus the two enforced-coupled knee_angle_*_beta coordinates; reading the first 23 by order is refuted (dof10 would equal dof09; it differs by up to 1.86 rad). (2) The dynamics model defines hip flexion, knee flexion, ankle dorsiflexion and their generalized forces positive in the named direction, so every sagittal joint channel maps with sign +1 to rule B. (3) The source pelvis_tilt is a ground-relative Euler angle: Falisse sit-to-stand and all Tan running trials face world -z, where it is pelvic obliquity; the adapter derives the pelvis pitch from the full pelvis orientation. (4) Tan running pelvis yaw differs from the treadmill axis by up to 35 deg, so the walking direction comes from within-stance CoP displacement (treadmill) or COM travel (overground). (5) Plate weight matches the entered Falisse masses within 6 % but the fitted masses only within 40 %. Pre-launch review (HIST-06-verify.json round 1) passed every mapping item; F1 fixed per the coordinator's ruling (recorded force kept on flagged frames, flag carried, strides from recorded force), F2 fixed. Re-review round 2: F3 (unloaded CoP placeholder) and F4 (docstring) fixed; spec v1r5. Falisse has no heel-to-heel stride in its recorded force (one plate contact per foot), so FA16 still falls back to blocks; reported, not worked around.",
+ "changed_files": [
+  "contributor_tools/adapters/addbiomechanics_sign_adapter.py (new)",
+  "contributor_tools/run_hist06_addb_pilot.py (new)",
+  "contributor_tools/audit_probes/2026_10_31/probe_hist06_addb_mapping.py (new)",
+  "tests/test_addbiomechanics_sign_adapter.py (new)",
+  "docs/quality/audits/hist06-addbiomechanics-mapping.json (new)",
+  "docs/quality/audits/hist06-addb-mapping-probe.json (new, probe output, exclusive create)",
+  "docs/maintainers/handoffs/HIST-06.json (new)",
+  "docs/maintainers/handoffs/CORE-11-P-UM21.json (next_action note only, per coordinator ruling on B1)",
+  "contributor_tools/common/audited_signs.json (FA16, TA21, TA22 keys only; bound build: new sha256 356a19cc...)",
+  "docs/quality/audits/hist06-addb-pilot-spec-v1r5.json (new, plan-only; v1 to v1r4 never launched and deleted)",
+  "docs/maintainers/backlog.json (HIST-06 status, blocked_reason, next_action, evidence_paths, handoff only)",
+  "docs/maintainers/backlog.html (regenerated)"
+ ],
+ "not_changed": [
+  "contributor_tools/common/sign_application.py, sign_offset_detector.py, documentation_policy.py",
+  "HIST-05 converter and every file under /mnt/s/locomotion_data/addbiomechanics_hist04 (read only)",
+  "tests/test_sign_application.py, tests/test_um21_sign_adapter.py and every other bound-build file"
+ ],
+ "mapping_summary": {
+  "record": "docs/quality/audits/hist06-addbiomechanics-mapping.json",
+  "dof_order": "H23: model order without knee_angle_r_beta and knee_angle_l_beta (dof06 hip_flexion_r, dof09 knee_angle_r, dof10 ankle_angle_r, dof13 hip_flexion_l, dof16 knee_angle_l, dof17 ankle_angle_l, dof20-22 lumbar)",
+  "sagittal_joints": "hip_flexion/knee_angle/ankle_angle pos (rad) -> hip_flexion/knee_flexion/ankle_dorsiflexion_angle_{ipsi,contra}_rad, sign +1 by model definition; tau (N*m, generalized force) -> *_moment_*_Nm, +1. Published only through the CORE-11 hook (audited table decides).",
+  "pelvis": "pelvis_sagittal_angle_rad = asin(up component of the pelvis anterior axis) from dof00-02; front up positive (rule B). Published only when both legs publish it with one sign.",
+  "segments_velocities": "thigh/shank/foot angles and every velocity derived after the hook from published channels (sign_application.derive_segment_angles, derive_angular_velocities with the source timestep). Source dofNN_vel/acc not mapped.",
+  "frontal_transverse": "hip_adduction and hip_rotation angle and moment, source sign (adduction +, internal rotation + both sides); no frontal/transverse rule adopted yet.",
+  "grf_cop": "calcn_r/l force and CoP (world, on the foot) -> grf_vertical/anterior/lateral_*_N and cop_*_m in the rule-B frame: x' = measured walking direction, y' = up, z' = x' x y'; lateral outward per leg. Force recorded on every frame (flag carried unchanged as missing_grf_reason; empty only where the source is NaN; zeros stay zero). CoP empty where that foot's recorded vertical force is not positive (source (0,0,0) placeholder), independent of the flag. Anterior/lateral empty without forward locomotion.",
+  "not_mapped": "subtalar, mtp, lumbar, pelvis translations and raw pelvis Euler angles, contact torques, Falisse seat contact, COM, root residual (kept in the HIST-05 files)",
+  "rows": "one row per source frame and reference leg (reference_side right and left, ipsi = that leg); identity (subject, source_recording_id, observation_id = source segment name, reference_side)",
+  "task": "MAP-TAN-TASK applied (non-protocol names: task null, in_task_table false, task_id = source name); Tan running protocol trials run; Tan walking and Falisse labels only from D-HIST-06-2",
+  "normalization": "_Nm_kg and _BW divide by the recorded participant mass (entered_mass_kg) under José's standing rule (2026-11-02); the fitted dynamics-model mass is never used to normalize. Missing or non-positive recorded mass: those columns empty."
+ },
+ "agent_decisions_logged": [
+  "Both reference legs written as separate observations (contract: both reference legs may be represented with explicit identities). No side is privileged; a converter flag can drop to one leg.",
+  "Superseded by the coordinator's F1 ruling (2026-11-02, José's keep-recorded-values rule): recorded GRF and CoP are written on every frame; the AddBiomechanics flag is carried unchanged as missing_grf_reason; only source NaN stays empty; recorded zeros stay zero; strides come from the recorded vertical force.",
+  "Walking direction measured per trial (treadmill CoP axis, overground COM travel), checked against the pelvis facing within 45 deg; failing trials get no anterior/lateral values.",
+  "The model definition is passed to the hook as documentation only (never applies a sign). No forward-kinematics joint positions are passed as marker evidence: they restate the model definition and would not be independent data."
+ ],
+ "blockers": [
+  {
+   "id": "B1",
+   "owner": "coordinator",
+   "item": "sign_application.load_audited_signs refuses a dataset key that is not in contributor_tools/common/audited_signs.json. The HIST-06 pilot (FA16, TA21, TA22) cannot run until those keys exist. The table is part of the bound build: any edit changes its sha256, so the committed CORE-11-P-UM21 pilot record no longer binds the current build and a UM21 full run would be refused until it is re-piloted (check_pilot_record).",
+   "proposal": "One edit: add the three keys with recording_id_pattern (adapter.recording_pattern) and the proposed entries below with audit_tasks [HIST-06]. Entries count only when HIST-06 is done and its backlog record cites each id, so in the pilot they are inactive (everything held, detector verdicts recorded as data evidence); they activate after independent verification, without a second table edit.",
+   "ruling": "Coordinator ruling 2026-11-01: make the single proposed edit (FA16, TA21, TA22 keys and entries citing HIST-06, inactive until HIST-06 is verified done). The UM21 pilot (7 s job) is re-run on the new bound build before any UM21 full run; recorded in the CORE-11-P-UM21 handoff next_action ('UM21 full run needs a fresh pilot on the post-HIST-06 bound build'). Nothing else in the bound build changes. Sequence: commands_pending first, then the table edit, then re-plan and dry-run of the pilot spec; no launch.",
+   "status": "resolved",
+   "outcome": "Applied as ruled first (sha256 c55302897e83...): tests/test_sign_application.py failed 23 tests (test_committed_table_is_well_formed_and_bound and 22 x test_each_audit_task_record_cites_its_table_entry for the FA16/TA21/TA22 ids: the committed table may hold only entries whose audit tasks are done and cite them). Replaced, without other changes, by the keys-only edit (three datasets, recording_id_pattern and example, entries [] and exceptions []; pure insertion of 18 lines after GT24; every pre-existing key and dataset byte-identical by parsed comparison). New sha256 356a19cc84af688691ddd28848922a5679e131343499d02446487f8ab7967f36 (was 3403390d2696613c7e8485ed4c570438b4f6b7793451bf5da15c4fba89e8985f). Effect on the pilot: none (entries would have been inactive while HIST-06 is not done). Cost: a second table edit (the entries) after HIST-06 is done, and so a second cheap UM21 re-pilot. Alternative for the coordinator: change the CORE-11 test policy to allow not-yet-verified entries (not done here).",
+   "confirmation": "Coordinator 2026-11-02: keys-only edit confirmed; do not change the CORE-11 test rule. Entries are added in a second edit after HIST-06 is done (then a fresh UM21 pilot)."
+  }
+ ],
+ "proposed_audited_entries": {
+  "status": "entries reworded per channel after HIST-06-verify round 4 (model definition plus detector +1, or model definition only); written to contributor_tools/common/audited_signs.json with HIST-06 done",
+  "datasets": {
+   "FA16": "(train|test)/No_Arm/Falisse2017_Formatted_No_Arm/([A-Za-z0-9_]+)/\\2\\.b3d#trial[0-9]+",
+   "TA21": "(train|test)/No_Arm/Tan2021_Formatted_No_Arm/([A-Za-z0-9_]+)/\\2\\.b3d#trial[0-9]+",
+   "TA22": "(train|test)/No_Arm/Tan2022_Formatted_No_Arm/([A-Za-z0-9_]+)/\\2\\.b3d#trial[0-9]+"
+  },
+  "entries": {
+   "FA16": [
+    {
+     "id": "FA16-pelvis_tilt",
+     "channel": "pelvis_tilt",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: adapter input is the pelvis pitch derived from the model's ground_pelvis orientation, front up positive by construction (HIST-06 mapping S1, S6); HIST-06 pilot v1r5: detector abstains (blocks, no task: one recorded contact per foot)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "FA16-hip_angle",
+     "channel": "hip_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: +hip_flexion rotates the femur counterclockwise about +z (flexion) (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: detector abstains (blocks, no task: one recorded contact per foot)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "FA16-knee_angle",
+     "channel": "knee_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: walker knee: +knee_angle rotates the tibia clockwise about +z (flexion), range 0-2.09 rad (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: detector abstains (blocks, no task: one recorded contact per foot)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "FA16-ankle_angle",
+     "channel": "ankle_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: +ankle_angle rotates the talus counterclockwise about +z (dorsiflexion) (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: detector abstains (blocks, no task: one recorded contact per foot)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "FA16-hip_moment",
+     "channel": "hip_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: generalized force along hip_flexion (nimblephysics FramePass.tau), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: detector abstains (blocks, no task: one recorded contact per foot)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "FA16-knee_moment",
+     "channel": "knee_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: generalized force along knee_angle (flexion positive), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: detector abstains (blocks, no task: one recorded contact per foot)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "FA16-ankle_moment",
+     "channel": "ankle_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: generalized force along ankle_angle (dorsiflexion positive), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: detector abstains (blocks, no task: one recorded contact per foot)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    }
+   ],
+   "TA21": [
+    {
+     "id": "TA21-pelvis_tilt",
+     "channel": "pelvis_tilt",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: adapter input is the pelvis pitch derived from the model's ground_pelvis orientation, front up positive by construction (HIST-06 mapping S1, S6); HIST-06 pilot v1r5: detector abstains (no marker evidence)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA21-hip_angle",
+     "channel": "hip_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: +hip_flexion rotates the femur counterclockwise about +z (flexion) (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 267 of 286 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA21-knee_angle",
+     "channel": "knee_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: walker knee: +knee_angle rotates the tibia clockwise about +z (flexion), range 0-2.09 rad (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: knee hinge test is walking-only",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA21-ankle_angle",
+     "channel": "ankle_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: +ankle_angle rotates the talus counterclockwise about +z (dorsiflexion) (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 267 of 286 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA21-hip_moment",
+     "channel": "hip_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: generalized force along hip_flexion (nimblephysics FramePass.tau), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: hip moment timing test is walking-only",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA21-knee_moment",
+     "channel": "knee_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: generalized force along knee_angle (flexion positive), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: no lever-arm test (no joint positions)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA21-ankle_moment",
+     "channel": "ankle_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: generalized force along ankle_angle (dorsiflexion positive), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 267 of 286 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    }
+   ],
+   "TA22": [
+    {
+     "id": "TA22-pelvis_tilt",
+     "channel": "pelvis_tilt",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: adapter input is the pelvis pitch derived from the model's ground_pelvis orientation, front up positive by construction (HIST-06 mapping S1, S6); HIST-06 pilot v1r5: detector abstains (no marker evidence)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA22-hip_angle",
+     "channel": "hip_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: +hip_flexion rotates the femur counterclockwise about +z (flexion) (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 96 of 96 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA22-knee_angle",
+     "channel": "knee_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: walker knee: +knee_angle rotates the tibia clockwise about +z (flexion), range 0-2.09 rad (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 95 of 96 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA22-ankle_angle",
+     "channel": "ankle_angle",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: +ankle_angle rotates the talus counterclockwise about +z (dorsiflexion) (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 96 of 96 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA22-hip_moment",
+     "channel": "hip_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: generalized force along hip_flexion (nimblephysics FramePass.tau), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 96 of 96 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA22-knee_moment",
+     "channel": "knee_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition only: generalized force along knee_angle (flexion positive), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5: no lever-arm test (no joint positions)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    },
+    {
+     "id": "TA22-ankle_moment",
+     "channel": "ankle_moment",
+     "sign": 1,
+     "audit_tasks": [
+      "HIST-06"
+     ],
+     "evidence_basis": "model definition plus detector +1: generalized force along ankle_angle (dorsiflexion positive), same sense as the coordinate (dynamics-model forward kinematics, identical in 33/33 models (HIST-06 mapping fk_model_definition)); HIST-06 pilot v1r5 detector suggest +1 in 96 of 96 legs (one family, low confidence; no apply, no opposite sign)",
+     "citation": "docs/maintainers/handoffs/HIST-06.json proposed_audited_entries; docs/maintainers/handoffs/HIST-06-verify.json round_4 sign_entry_readiness.per_channel_evidence; docs/quality/audits/hist06-addbiomechanics-mapping.json fk_model_definition"
+    }
+   ]
+  },
+  "audit_tasks": [
+   "HIST-06"
+  ]
+ },
+ "decisions_proposed": {
+  "note": "Not copied into backlog.json: three decisions are already open or queued (D-GT23-C05-1, D-GT23-C01-1, D-GT24-C01-1) and decisions are copied only from a verified handoff. Option letters below equal the adapter constant TASK_OPTIONS.",
+  "dropped": [
+   {
+    "id": "D-HIST-06-1",
+    "status": "dropped 2026-11-02; decided under José's standing rule, not a José decision",
+    "decided_under": "José's standing rule (2026-11-02, relayed by the coordinator): fix only blatant errors (sign flips, +180 deg offsets, swapped labels); keep published or recorded values otherwise; no percent-level refits.",
+    "decision": "Per-kg moments (_Nm_kg) and body-weight forces (_BW) of Falisse, Tan running and Tan walking divide by the source's recorded participant mass (B3D header mass_kg, the HIST-05 entered_mass_kg column). The AddBiomechanics dynamics-pass fitted mass is not used for normalization (it is a refit); it stays a recorded metadata column. No refit of any mass.",
+    "evidence_kept_for_reference": "Plate-measured weight matches the recorded Falisse masses within about 6 % (probe heading_weight); the fitted masses differ by up to 40 % (subject_0, 6, 9). Not needed for the rule, recorded only.",
+    "implementation": "Done 2026-11-02 (coordinator request during review): the adapter divides _Nm_kg and _BW by entered_mass_kg (NORMALIZATION_MASS_COLUMN) with normalization_mass_basis = NORMALIZATION_RULE; the fitted dynamics_model_mass_kg is only carried as metadata; a missing or non-positive recorded mass leaves per-kg and body-weight columns empty; a recorded mass that varies within a trial raises. MASS_DECISION and MASS_OPTIONS removed; decision_answers reads only D-HIST-06-2."
+   }
+  ],
+  "items": [
+   {
+    "id": "D-HIST-06-2",
+    "task_id": "HIST-06",
+    "question": "Tan walking has normal walking plus three deliberately modified gaits (toe angle, step width, trunk sway), and Falisse has walking, stair ascent and sit-to-stand-to-sit trials. Which of these trials should get LocoHub task labels? Unlabelled trials stay in the files under their source names but in no task table.",
+    "options": [
+     {
+      "key": "A",
+      "label": "Plain walking and stair ascent only (129 segments)",
+      "consequence": "Tan normal walking and Falisse walking labelled level walking, Falisse stairs stair ascent; 714 modified-gait and 34 sit-to-stand segments unlabelled. Reversible."
+     },
+     {
+      "key": "B",
+      "label": "Also modified gaits as level walking (843 segments)",
+      "consequence": "As A, plus 714 modified-gait segments labelled level walking, with the modification as the task variant; sit-to-stand unlabelled. Reversible."
+     },
+     {
+      "key": "C",
+      "label": "Also sit-to-stand (877 segments)",
+      "consequence": "As B, plus 34 Falisse sit-to-stand-to-sit segments labelled sit-to-stand, although each also contains the sit-down. Reversible."
+     }
+    ],
+    "options_order": "By labelled trial segments: 129, 843, 877.",
+    "recommended": "A",
+    "confidence": "medium",
+    "why": "Modified gaits change the very signals level-walking tables summarize, and a sit-to-stand-to-sit trial is two transfers; both stay available under their source names. A labels only what matches one LocoHub task without qualification.",
+    "check": "Tan walking trial names are exactly baseline, fpa, step_width and trunk_sway (843 segments; 105 baseline).",
+    "cost_of_waiting": "Tan walking and Falisse trials stay unlabelled and in no task table; Tan running, all signals and other datasets are unaffected.",
+    "decide_before_recommendation": true,
+    "status": "proposed",
+    "standing_rule_note": "José's 2026-11-02 rule (fix only blatant errors; keep recorded values) does not settle this: each option keeps every recorded value and source name, and the choice is which LocoHub task families to assign, i.e. scope. The least-change option is A: it assigns a label only where the recorded trial name already names one LocoHub task (normal walking, stair ascent) and reinterprets nothing. Kept as a José decision; this note is not shown to José on the sheet (the recommendation stays folded)."
+   }
+  ]
+ },
+ "checks": [
+  "Probe docs/quality/audits/hist06-addb-mapping-probe.json (contributor_tools/audit_probes/2026_10_31/probe_hist06_addb_mapping.py; read-only, one file at a time, bounded columns per row group, nice 19 / ionice idle; peak RSS 139.4 MiB): model structure identical in 33/33; FK sign patterns identical in 33/33; DOF order H23 supported and H_order refuted in one trial per study; per-trial facing for all 33; plate weight per participant.",
+  "Earlier scratch run of the model and dof_order sections only (scratchpad, peak RSS 132.5 MiB); same results."
+ ],
+ "pilot_plan": {
+  "spec": "docs/quality/audits/hist06-addb-pilot-spec-v1r5.json (sha256 2488d64a...; binds adapter a076ebbe... and the keys-only table 356a19cc...)",
+  "sample": "random.Random(20261106): one participant per study from the sorted HIST-05 folders, plus Tan running s7 hip_calibration when s7 is not drawn",
+  "output_root": "converted_datasets/reconversion_v2/hist06_addb_mapping_pilot_v1",
+  "limits": "address space 768 MiB, RSS cap 300 MiB in the job, timeout 3600 s, one participant and one trial at a time",
+  "automated_checks": "no published sign differs from the model-definition truth (+1); every hold has a reason; undo reproduces inputs; segments hash-linked to published channels; MAP-TAN-TASK; two rows per frame; knee/ankle DOF range guard; source frames.parquet sha256 unchanged; no package __init__",
+  "not_launched": true,
+  "expected_outcome": "With keys only and HIST-06 not done, every hook channel is held unless a guarded detector apply occurs. TA21 and TA22 trials now give stride units with a detector task (plate-timing evidence recorded per channel); FA16 locomotion trials fall back to blocks with no task (one recorded contact per foot), so FA16 evidence is the model definition only."
+ },
+ "remaining": [
+  "UM21 re-pilot on the post-HIST-06 bound build before any UM21 full run.",
+  "HIST-08 (F5): survey all Tan running participants and add a per-segment quality flag (no exclusion).",
+  "Queue D-HIST-06-2 when a decision slot opens.",
+  "Not checked: nimblephysics skeleton DOF names (needs libtorch, a guarded job); the OpenSim body-fixed rotation order is supported by data, not re-fetched; Tan running pelvis yaw offsets up to 35 deg unexplained; moments on frames flagged missing GRF."
+ ],
+ "next_action": "Done. Follow-ups: UM21 re-pilot on the post-HIST-06 bound build; HIST-08 (F5 flag); queue D-HIST-06-2.",
+ "test_runs": [
+  {
+   "command": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_addbiomechanics_sign_adapter.py",
+   "result": "pre-edit: 60 passed (first run 1 failed: test_frame_basis_hand_computed had a wrong hand value, right of a person facing world -z is +x, not -x; the test was corrected, the adapter unchanged)"
+  },
+  {
+   "command": "same prefix: tests/test_addbiomechanics_sign_adapter.py tests/test_um21_sign_adapter.py tests/test_backlog_workflow.py",
+   "result": "pre-edit: 176 passed, 1 failed (backlog.html stale; passed after regeneration)"
+  },
+  {
+   "command": "python3 contributor_tools/run_hist06_addb_pilot.py plan (pre-edit spec v1)",
+   "result": "written and validate_spec passed; audited_table_keys_missing FA16, TA21, TA22"
+  },
+  {
+   "command": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/hist06-addb-pilot-spec-v1.json --dry-run (output to a scratch file, not piped)",
+   "result": "preflight_passed"
+  },
+  {
+   "command": "python3 contributor_tools/build_backlog_page.py (render) and --check",
+   "result": "Backlog valid; HTML current (106 tasks)"
+  },
+  {
+   "command": "B1 as ruled, then plan --spec-out ...-v1r1.json and its --dry-run",
+   "result": "v1r1 preflight_passed; v1 dry-run after the edit refused_precondition binding_mismatch (as intended)"
+  },
+  {
+   "command": "same pytest prefix: HIST-06, UM21 adapter, backlog, sign_application tests on the ruled edit",
+   "result": "23 failed (CORE-11 committed-table tests, see blockers B1), 313 passed"
+  },
+  {
+   "command": "keys-only edit; same pytest prefix: tests/test_addbiomechanics_sign_adapter.py tests/test_um21_sign_adapter.py tests/test_backlog_workflow.py tests/test_sign_application.py tests/test_sign_offset_detector.py",
+   "result": "398 passed, 1 skipped (HIST-06 'dataset missing from the committed table' no longer applies), 1 failed: test_um21_sign_adapter.py::test_pilot_spec_is_seeded_includes_ab04_i0_and_a_layout_2_recording_and_validates (its rebuilt spec binds the new audited-table hash, unlike the committed v3r1 spec: the anticipated UM21 re-pilot). A backlog --check failure seen once inside that run did not reproduce (71/71 backlog tests pass; --check valid), consistent with a concurrent backlog edit by another agent."
+  },
+  {
+   "command": "run_hist06_addb_pilot.py plan --spec-out docs/quality/audits/hist06-addb-pilot-spec-v1r2.json; guarded_launcher --dry-run on v1r2",
+   "result": "spec sha256 88951fdbc7a7e3aef6eb455d64781fe580d341a3ef96eed9e852e68369a66d55; preflight_passed. Sample (seed 20261106): fa16/subject_0, ta21/s3, ta22/07, plus ta21/s7 hip_calibration. Not launched. v1 and v1r1 (never launched, stale bindings) deleted."
+  },
+  {
+   "command": "same pytest prefix: tests/test_addbiomechanics_sign_adapter.py (after the recorded-mass change)",
+   "result": "64 passed, 1 skipped (table now lists TA22). New tests: per-kg and BW equal the synthetic per-kg truth after dividing by the recorded 70 kg, not the fitted 64 kg; divisor follows the recorded column (82.5 kg: truth x 70 / 82.5, with the fitted mass set to 70); NaN, 0 and -5 kg recorded mass leave per-kg and BW empty without error; a recorded mass that varies within a trial raises."
+  },
+  {
+   "command": "same pytest prefix: tests/test_addbiomechanics_sign_adapter.py tests/test_um21_sign_adapter.py tests/test_backlog_workflow.py",
+   "result": "182 passed, 1 skipped, 1 failed: test_um21_sign_adapter.py::test_pilot_spec_is_seeded_includes_ab04_i0_and_a_layout_2_recording_and_validates (committed UM21 v3r1 spec binds the pre-HIST-06 audited table; the planned UM21 re-pilot)"
+  },
+  {
+   "command": "python3 contributor_tools/build_backlog_page.py --check",
+   "result": "Backlog valid; HTML current (106 tasks)"
+  },
+  {
+   "command": "run_hist06_addb_pilot.py plan --spec-out docs/quality/audits/hist06-addb-pilot-spec-v1r3.json; guarded_launcher --dry-run on v1r3 (output to a scratch file)",
+   "result": "spec sha256 3002fb74314d444be31ed34638f343bb146ffde8ca760616b296f5aaf97264e4. First dry run refused_precondition foreign_worker_linux (another process at that moment; not inspected); one retry after the tests: preflight_passed. v1r2 (never launched) deleted. Not launched."
+  },
+  {
+   "command": "same pytest prefix: tests/test_addbiomechanics_sign_adapter.py (F1 fix)",
+   "result": "67 passed, 1 skipped (TA22 already in the table)"
+  },
+  {
+   "command": "same pytest prefix: tests/test_addbiomechanics_sign_adapter.py tests/test_um21_sign_adapter.py tests/test_backlog_workflow.py",
+   "result": "see final run below"
+  },
+  {
+   "command": "read-only stride recount (scratchpad hist06_probe/stride_count.py, nice 19 / ionice idle, prlimit 768 MiB, 4 columns, one trial at a time)",
+   "result": "ta21/s3 3,255 strides in 140/143 trials; ta22/07 1,803 in 48/48; fa16/subject_0 0 (1 locomotion trial); ta21/s7 hip_calibration blocks; no source NaN in vertical force; peak RSS 138.6 MiB"
+  },
+  {
+   "command": "read-only Falisse contact probe (scratchpad hist06_probe/gait_contacts.py, same limits, ARROW_DEFAULT_MEMORY_POOL=system after one allocator failure under prlimit)",
+   "result": "all 24 Falisse Gait/StairUp trials: one recorded contact per foot (StairUp left: two, the first starting at frame 2); peak RSS 113.8 MiB"
+  },
+  {
+   "command": "plan --spec-out docs/quality/audits/hist06-addb-pilot-spec-v1r4.json; guarded_launcher --dry-run (scratch output)",
+   "result": "spec sha256 ec8cd9ebc0a26e6bc79fda18f813f5144d2018959eebfec81961c778b2e0a89b; first dry run refused foreign_worker_linux (not inspected), one retry after the tests preflight_passed; v1r3 deleted; not launched"
+  },
+  {
+   "command": "same pytest prefix: tests/test_addbiomechanics_sign_adapter.py (F3/F4)",
+   "result": "68 passed, 1 skipped (first run 1 failed: the fixture's missingBlip slice included the unloaded frame 1590; slice corrected to the loaded stance, adapter unchanged)"
+  },
+  {
+   "command": "same pytest prefix: tests/test_addbiomechanics_sign_adapter.py tests/test_um21_sign_adapter.py tests/test_backlog_workflow.py",
+   "result": "186 passed, 1 skipped, 1 failed: the known UM21 committed-spec test (UM21 re-pilot pending)"
+  },
+  {
+   "command": "plan --spec-out docs/quality/audits/hist06-addb-pilot-spec-v1r5.json; guarded_launcher --dry-run twice (scratch output, not piped)",
+   "result": "spec sha256 2488d64a5eeaf88f20638fc23f49089282e48aae6ed104bc97fa44d8a5224f2a, validate_spec passed; both dry runs refused_precondition foreign_worker_linux (another process; not inspected; no further retries). v1r4 deleted. Not launched."
+  }
+ ],
+ "output_sha256": {
+  "contributor_tools/adapters/addbiomechanics_sign_adapter.py": "a076ebbe5476e4dd757e23de9043e358d3325f7ee5d6f428544db0b7a2560f35",
+  "contributor_tools/run_hist06_addb_pilot.py": "6a5e2dd2836f51a6665e2729f52a6dff4cede7c50cd28c12cfbe315c62f4650a",
+  "tests/test_addbiomechanics_sign_adapter.py": "c642fccec24b0f67d613d2b8edacb00918fe7dcfae04539d91a14735c716dba1",
+  "contributor_tools/audit_probes/2026_10_31/probe_hist06_addb_mapping.py": "81193c06116e8737f4506240b75c4843595787d5a843495ad0760fbe25a59014",
+  "docs/quality/audits/hist06-addb-mapping-probe.json": "159bc48e6ada63b17b7b7f6dc50953bb3c6a2d37b45c80e75fdc56946d241a40",
+  "contributor_tools/common/audited_signs.json": "261f344d578f30c6c8049acee66db3e1b3598ca9c1403c43815d6ee688b51ee6",
+  "docs/quality/audits/hist06-addb-pilot-spec-v1r5.json": "2488d64a5eeaf88f20638fc23f49089282e48aae6ed104bc97fa44d8a5224f2a"
+ },
+ "review": {
+  "verify_file": "docs/maintainers/handoffs/HIST-06-verify.json",
+  "round_1": "back_to_worker: all mapping items pass; F1 blocking, F2 housekeeping",
+  "F1": "Fixed per coordinator ruling: grf_world no longer blanks flagged frames (only source NaN is empty); flag carried; stride boundaries from recorded vertical force. Tests: test_flagged_frames_keep_recorded_force_and_carry_the_flag, test_flagged_burst_does_not_break_strides, test_real_marking_pattern_keeps_force_and_finds_strides (frame-level flags on every unloaded frame, a whole >700 N stance marked missingBlip, an exact recorded zero in stance kept, a source NaN left empty; independent stride counts 21 right / 23 left), test_block_fallback_without_strides (36 blocks, no task). Real-data recount (adapter stride_pairs, read-only, peak RSS 138.6 MiB): ta21/s3 3,255 strides in 140/143 trials (was 0/143); ta22/07 1,803 in 48/48; fa16/subject_0 0: its Gait_7 trial has one recorded contact per foot (all Falisse Gait/StairUp trials do), so the requirement that it produce strides cannot be met from recorded force without inventing events. FA16 sign evidence in the pilot therefore remains model definition only unless a later task derives gait events from kinematics (scope for the coordinator).",
+  "F2": "Fixed: pilot_plan, next_action and remaining cite spec v1r4; v1r2 and v1r3 (never launched) deleted.",
+  "coordinator_question": "Answered by the coordinator (2026-11-02): blanking was an invented exclusion; keep recorded values.",
+  "round_2": "passed F1 and F2; F3 and F4 found",
+  "F3": "Fixed per coordinator: grf_world sets CoP NaN where that foot's recorded vertical force is not positive (independent of the flag; force values unchanged). Docstring and mapping audit restored. Fixture now stores the source's (0,0,0) placeholder on unloaded frames; test_unloaded_cop_placeholder_is_empty_and_independent_of_the_flag (all frames flagged in one half, clean in the other: unloaded CoP empty, loaded CoP finite in both halves, force unchanged with zeros kept); real-pattern test asserts CoP empty at the zero-force frame and the source-NaN frame and finite across the flagged missingBlip stance (fixture slice corrected to the loaded frames 1501-1589).",
+  "F4": "Fixed: docstring item 4 says strides come from the recorded vertical force, every frame finite whatever its flag."
+ },
+ "pilot_run": {
+  "spec": "docs/quality/audits/hist06-addb-pilot-spec-v1r5.json (sha256 2488d64a5eeaf88f20638fc23f49089282e48aae6ed104bc97fa44d8a5224f2a)",
+  "approval": "HIST-06-verify.json round 3 approved v1r5 on condition of a passing dry run; dry run (after a 2 min wait, try 1) preflight_passed; launched once (background Bash call, no polling)",
+  "receipt": {
+   "path": "docs/quality/audits/hist06-addb-launcher-receipt-v1.json",
+   "sha256": "6aca25dcc83fe7be398a03df717fb83416fd7e8102f11f93aab1d59bb10a2756",
+   "log_sha256": "2717f2616f4d76d8e43bf7dc6feb59d67da2359fefbad9e421e289a87abe7b7e",
+   "status": "completed",
+   "exit_code": 0,
+   "clean_success": true,
+   "checks": "cleanup_proven, bindings_unchanged, envelope_unchanged, linux/windows_no_new_worker, no_orphans_at_leader_exit, outputs_hashed, expected_outputs_present: all true",
+   "wall_time_seconds": 49.995,
+   "peak_rss_kib_largest_process": 226124,
+   "peak_group_rss_kib_sampled": 208048,
+   "runtime_breach": null,
+   "stop_actions": [],
+   "launcher_errors": [],
+   "finalisation_errors": [],
+   "address_space_limit_bytes": 805306368,
+   "finished_at_utc": "2026-11-02T18:11:36+00:00"
+  },
+  "verify_cleanup": "completed; cleanup proven (same_boot_proc_scan, attempts 1); no fallback receipts",
+  "pilot_summary": {
+   "path": "converted_datasets/reconversion_v2/hist06_addb_mapping_pilot_v1/pilot_summary.json",
+   "sha256": "699c25ab13f09c8db34d5e64941a37caab12f4dd9b5573178a39b5d7fad032c7 (equals the receipt's hashed output)",
+   "automated_outcome": "passed",
+   "failures": {},
+   "package_inits_imported": [],
+   "cross_group_review_items": 0,
+   "job_peak_rss_mib": 220.8,
+   "bound_build_equals_receipt_bindings": true
+  },
+  "per_participant": [
+   {
+    "participant": "fa16/subject_0",
+    "trials": 5,
+    "frames": 2587,
+    "rows": 5174,
+    "stride_units": 0,
+    "block_units": 48,
+    "unit_kinds": "block/block in 5 of 5",
+    "walking_direction_ok": "1 of 1 locomotion trial (Gait_7, 0.6 deg from facing); 4 sit-to-stand: forward undefined",
+    "frames_flagged_kept": 2526,
+    "source_nan_force_frames": 0,
+    "task": "null (pending D-HIST-06-2)"
+   },
+   {
+    "participant": "ta21/s3",
+    "trials": 143,
+    "frames": 273092,
+    "rows": 546184,
+    "stride_units": 3255,
+    "block_units": 16,
+    "unit_kinds": "stride/stride 140, block/block 3",
+    "walking_direction_ok": "140 of 143 (3 trials with 1 stance CoP displacement; max 34.7 deg from facing)",
+    "frames_flagged_kept": 147550,
+    "source_nan_force_frames": 0,
+    "task": "run (protocol names)"
+   },
+   {
+    "participant": "ta22/07",
+    "trials": 48,
+    "frames": 93151,
+    "rows": 186302,
+    "stride_units": 1803,
+    "block_units": 0,
+    "unit_kinds": "stride/stride 48",
+    "walking_direction_ok": "48 of 48 (max 4.2 deg from facing)",
+    "frames_flagged_kept": 13540,
+    "source_nan_force_frames": 0,
+    "task": "null (pending D-HIST-06-2)"
+   },
+   {
+    "participant": "ta21/s7 hip_calibration (extra trial)",
+    "trials": 1,
+    "frames": 2000,
+    "rows": 4000,
+    "stride_units": 0,
+    "block_units": 40,
+    "walking_direction_ok": "no forward locomotion",
+    "frames_flagged_kept": 1789,
+    "task": "null; in_task_table false; task_id and source_original_trial_name 'hip_calibration'; rule: MAP-TAN-TASK"
+   }
+  ],
+  "detector_verdicts_per_leg": {
+   "note": "Every channel held in every leg (keys-only table, HIST-06 not done: no audited sign). No detector apply, no conflict, no opposite-sign suggestion anywhere. All suggestions are +1 (the model-definition sign).",
+   "fa16/subject_0 (10 legs)": "all 7 channels abstain (blocks, no task)",
+   "ta21/s3 (286 legs)": {
+    "pelvis_tilt": "abstain 286",
+    "hip_angle": "suggest +1 267, abstain 19",
+    "ankle_angle": "suggest +1 267, abstain 19",
+    "ankle_moment": "suggest +1 267, abstain 19",
+    "hip_moment": "abstain 286 (hip moment timing is a walking-only test)",
+    "knee_angle": "abstain 286 (knee hinge is a walking-only test)",
+    "knee_moment": "abstain 286 (no lever arm: no joint positions)"
+   },
+   "ta22/07 (96 legs)": {
+    "pelvis_tilt": "abstain 96",
+    "hip_angle": "suggest +1 96",
+    "hip_moment": "suggest +1 96",
+    "knee_angle": "suggest +1 95, abstain 1",
+    "knee_moment": "abstain 96",
+    "ankle_angle": "suggest +1 96",
+    "ankle_moment": "suggest +1 96"
+   },
+   "ta21/s7 hip_calibration (2 legs)": "all 7 channels abstain (blocks, no task)"
+  },
+  "anomalies_and_not_checked": [
+   "Pelvis abstains everywhere: no marker evidence exists in these files, so pelvis sign evidence is the model definition only (as are FA16 and all knee moments).",
+   "ta21/s3: 19 legs abstain on hip/ankle angle and ankle moment: the 6 block legs of the 3 no-stride trials plus 13 stride legs (not broken down; consistent with fewer than the detector's 5 voting units).",
+   "ta21/s3: walking direction up to 34.7 deg from the pelvis facing (within the 45 deg limit); the Tan running pelvis yaw offset remains unexplained (already in not_checked).",
+   "Flags kept as recorded: 97.6 % of fa16/subject_0 frames, 54.0 % of ta21/s3, 14.5 % of ta22/07 carry a non-notMissingGRF label.",
+   "Mapped values were not compared frame by frame against the source in this run (automated checks: signs, holds, undo, hash links, MAP-TAN-TASK, rows, DOF guard, source hashes)."
+  ]
+ },
+ "audited_table": {
+  "sha256_before": "356a19cc84af688691ddd28848922a5679e131343499d02446487f8ab7967f36 (keys only)",
+  "entries_added": [
+   "FA16-pelvis_tilt",
+   "FA16-hip_angle",
+   "FA16-knee_angle",
+   "FA16-ankle_angle",
+   "FA16-hip_moment",
+   "FA16-knee_moment",
+   "FA16-ankle_moment",
+   "TA21-pelvis_tilt",
+   "TA21-hip_angle",
+   "TA21-knee_angle",
+   "TA21-ankle_angle",
+   "TA21-hip_moment",
+   "TA21-knee_moment",
+   "TA21-ankle_moment",
+   "TA22-pelvis_tilt",
+   "TA22-hip_angle",
+   "TA22-knee_angle",
+   "TA22-ankle_angle",
+   "TA22-hip_moment",
+   "TA22-knee_moment",
+   "TA22-ankle_moment"
+  ],
+  "sha256_after": "261f344d578f30c6c8049acee66db3e1b3598ca9c1403c43815d6ee688b51ee6"
+ }
+}

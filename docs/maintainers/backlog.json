@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-11-01T03:45:00Z",
+  "updated_at_utc": "2026-11-02T00:20:00Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-T02",
@@ -2612,22 +2612,41 @@
         "Inspect existing code and source metadata to identify required changes. Deliver the mapping and verification plan; actual numerical fixtures, pilots and regenerated outputs belong to GT24-P01 and GT24-F01.",
         "Retain unknown source moment denominators and interaction units as source-only; do not double-divide source moments or substitute exoskeleton model mass for body mass."
       ],
-      "next_action": "Done. GT24 signs and normalization policy specified; divisor not established; BT18/BT24 masses swapped; no no-exo trials; converter bugs listed. Next: divisor probe pilot (58 trials, one guarded job), then re-check D-GT24-C01-1 wording and open it.",
+      "next_action": "Done (verifier round 6). D-GT24-C01-1 open. Next: GT24-P01 applies the policy with per-trial divisors from the E1 census; resolve the BT18/BT24 row swap before body-mass option C can apply.",
       "resource_class": "read_only",
       "evidence_paths": [
         "docs/quality/audits/gt24-c01-normalization-policy.json",
         "docs/maintainers/handoffs/GT24-C01.json",
-        "docs/maintainers/handoffs/GT24-C01-verify.json"
+        "docs/maintainers/handoffs/GT24-C01-verify.json",
+        "docs/quality/audits/gt24-c01-divisor-pilot-spec.json",
+        "docs/quality/audits/gt24-c01-divisor-pilot-receipt.json",
+        "docs/quality/audits/gt24-c01-divisor-pilot-result.json",
+        "docs/quality/audits/gt24-c01-e1-census-pilot-spec.json",
+        "docs/quality/audits/gt24-c01-e1-census-pilot-receipt.json",
+        "docs/quality/audits/gt24-c01-e1-census-pilot-check.json",
+        "docs/quality/audits/gt24-c01-e1-census-spec.json",
+        "docs/quality/audits/gt24-c01-e1-census-receipt.json",
+        "docs/quality/audits/gt24-c01-e1-census-result.json",
+        "contributor_tools/audit_probes/2026_10_31/probe_gt24_c01_divisors.py",
+        "contributor_tools/audit_probes/2026_10_31/check_gt24_c01_census_pilot.py",
+        "contributor_tools/audit_probes/2026_10_31/summarize_gt24_c01_census.py",
+        "contributor_tools/review_gt24_c01_normalization_policy.py"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-31T22:56:29Z",
-        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
+        "last_checked_at_utc": "2026-11-02T00:20:00Z",
+        "summary": "Policy specified (round 2). Divisor measured: in all 2,421 Parsed recordings the exoskeleton torque and power are divided exactly by a worn model mass (2,117 exact; 304 short trials exact under the stricter v2 rule); none by a body mass. Net moments match the worn mass within a few percent (lever check, 58-trial pilot), not exactly. BT18/BT24 folders are divided by their own Statics masses, which equal the other participant's README rows (146 recordings). First collection BT06/BT07/BT13: 106 of 336 recordings use the day-2 worn mass (no README day-2 body mass). D-GT24-C01-1 open (round-6 wording).",
         "checks": [
-          "Read original task scope and acceptance; no scientific arrays loaded or jobs started.",
-          "Independent verifier: round 1 back_to_worker (circular divisor evidence, missed converter bugs), round 2 done; probe pilot approved as one guarded job."
+          "Verifier round 1 back_to_worker, round 2 done (policy); pilot round done (58-trial E1/E2/E3 pilot, one guarded job).",
+          "Verifier round 4: approved the census-pilot launch (versioned short-trial rule v2, own-row vs other-candidate match reporting, decision wording).",
+          "Verifier round 5: approved the full census after the census pilot passed all six pre-registered criteria (checker check_gt24_c01_census_pilot.py; 24 trials; 11.0 s; 212 MiB).",
+          "Verifier round 6: done. Full E1 census: one guarded job, completed, exit 0, clean_success, cleanup proven; 1,199 s wall, 335 MiB probe peak RSS (launcher sample 360 MiB).",
+          "Tests: tests/test_gt24_c01_divisor_probe.py (23 synthetic) and tests/test_gt24_c01_census_pilot_check.py (9 synthetic) pass with the backlog tests.",
+          "Decision sheet D-GT24-C01-1 rebuilt by review_gt24_c01_normalization_policy.py decision-sheet; rendered at 1280 and 390 px; recommendation only in the fold."
         ],
         "remaining": [
-          "Review four-pilot requirements and source mass matrix; identify exact independent evidence needed for each unresolved field."
+          "Not checked: 27 BT03 knee_angle_l columns with exact top-quartile ratio but whole-signal correlation 0.9967-0.9999 (below the 0.9999 gate); 124 too_few_samples moment columns (BT01/BT12 walking, BT02 stairs); 8 short_not_exact power columns. All in trials exact through other columns; no trial divisor affected.",
+          "GT24-P01/F01: bind mass per trial only from the own README row or own Statics plus the archive collection identity, never the nearest mass; resolve the BT18/BT24 swap before option C.",
+          "GT24-P01/F01: code fixes in the policy audit required_code_changes."
         ]
       },
       "legacy_ids": [
@@ -2689,12 +2708,13 @@
         "docs/quality/audits/queue-recovery-expanded-49-summary.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
+        "last_checked_at_utc": "2026-11-02T00:20:00Z",
         "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
         "checks": [
           "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
         ],
         "remaining": [
+          "Verifier GT24-C01 round 6 binding rule: take each trial's normalizing mass only from its own README row or its own folder Statics model, with the collection identity from the source archive, never the nearest README mass (other folders' masses fall inside the 0.05 % match tolerance for BT02, BT09, BT15, BT21, BT01 and BT22). Per-trial divisors come from the GT24-C01 E1 census. Resolve the BT18/BT24 README-vs-folder swap before body-mass option C of D-GT24-C01-1 can apply.",
           "Inspect stopped pilot receipts and execute only missing reviewed bounded pilots sequentially."
         ]
       },
@@ -2745,12 +2765,13 @@
         "converted_datasets/reconversion_v2/gt24_torque_serial_queue_20261021/plan.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
+        "last_checked_at_utc": "2026-11-02T00:20:00Z",
         "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
         "checks": [
           "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
         ],
         "remaining": [
+          "Verifier GT24-C01 round 6 binding rule: take each trial's normalizing mass only from its own README row or its own folder Statics model, with the collection identity from the source archive, never the nearest README mass (other folders' masses fall inside the 0.05 % match tolerance for BT02, BT09, BT15, BT21, BT01 and BT22). Per-trial divisors come from the GT24-C01 E1 census. Resolve the BT18/BT24 README-vs-folder swap before body-mass option C of D-GT24-C01-1 can apply.",
           "Prepare the full coordinator only after actual pilot receipts; run per-record bounded production and independent audits."
         ]
       },
@@ -6809,7 +6830,7 @@
       "priority": "P1",
       "dataset": "all",
       "title": "Map the AddBiomechanics Falisse and Tan frames to LocoHub conventions, including Tan task labels",
-      "status": "ready",
+      "status": "done",
       "stage": "conventions",
       "question": "How do the 33 HIST-05 frames files map to LocoHub task labels, joint names, signs and normalization, without labelling non-protocol trials?",
       "scope": "Inputs are the HIST-05 frames files (one row per frame, dynamics pass, source names). (1) MAP-TAN-TASK: any Tan trial (running or walking) whose original name does not match the study's protocol pattern (running {nike|mini}_{SR|SI|baseline}_{24|28}; walking baseline|fpa|step_width|trunk_sway) gets no task label. Its task stays unassigned, it goes into no task table, and it is kept in the frames file with its source name. Known case: Tan running s7 hip_calibration (1 segment, 2,000 frames), currently written as task 'run'. Whether calibration trials are released at all is a later scope question for José. (2) Joint names: map DOF indices to the model coordinates from source evidence (the dynamics model and nimblephysics), not by order alone. (3) Signs and frames under the adopted sign rule B (named direction positive). (4) Normalization mass: entered versus dynamics-model mass is a José convention; present it as a decision if not yet set. Tan walking task family (level_walking versus dynamic_walk) and the Falisse task mapping remain conventions.",
@@ -6830,15 +6851,35 @@
         "Signs follow rule B with evidence",
         "Normalization mass set only by José's decision"
       ],
-      "next_action": "Draft the mapping specification; raise the normalization-mass convention as a decision if it is not yet set.",
+      "next_action": "Done. Follow-ups: UM21 re-pilot on the post-HIST-06 bound build (CORE-11-P-UM21 handoff); HIST-08 (Tan running kinematic-fit artefact flag); queue D-HIST-06-2 (task labels) when a decision slot opens.",
       "resource_class": "read_only",
-      "evidence_paths": [],
+      "evidence_paths": [
+        "docs/maintainers/handoffs/HIST-06.json",
+        "docs/quality/audits/hist06-addbiomechanics-mapping.json",
+        "docs/quality/audits/hist06-addb-mapping-probe.json",
+        "contributor_tools/adapters/addbiomechanics_sign_adapter.py",
+        "contributor_tools/run_hist06_addb_pilot.py",
+        "tests/test_addbiomechanics_sign_adapter.py",
+        "docs/quality/audits/hist06-addb-pilot-spec-v1r5.json",
+        "docs/maintainers/handoffs/HIST-06-verify.json",
+        "docs/quality/audits/hist06-addb-launcher-receipt-v1.json",
+        "docs/quality/audits/hist06-addb-launcher-receipt-v1.log",
+        "contributor_tools/common/audited_signs.json"
+      ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-01T03:45:00Z",
-        "summary": "Created from the HIST-05 batch acceptance (MAP-TAN-TASK and the mapping step).",
-        "checks": [],
+        "last_checked_at_utc": "2026-11-02T20:00:00Z",
+        "summary": "Mapping specification, adapter, pilot runner and synthetic tests delivered; pilot v1r5 launched once and verified. DOF order H23 from the model couplers and data; joint angles and generalized forces +1 to rule B by model definition; pelvis pitch from the full pelvis orientation; rule-B force/CoP frame from the measured walking direction; MAP-TAN-TASK applied (ta21/s7 hip_calibration: no task, in no task table, source name kept); normalization by the recorded participant mass (José's standing rule, no decision); recorded force kept on AddBiomechanics-flagged frames with the flag carried. FA16, TA21 and TA22 sign entries added to the audited-sign table citing this task. Done does not mean scientific approval of the data.",
+        "checks": [
+          "Independent verification docs/maintainers/handoffs/HIST-06-verify.json rounds 1-4: round 1 back_to_worker (F1 flagged-frame blanking, F2 stale spec citations; every mapping item pass); round 2 F1 and F2 pass, F3 (unloaded CoP placeholder) and F4 (docstring) found; round 3 approved spec v1r5 subject to a passing dry run; round 4 pilot_verified (run integrity, counts, detector verdicts, frame-by-frame spot check 52/52 and 40/40, F5 diagnosed as a source fit artefact).",
+          "Pilot receipt docs/quality/audits/hist06-addb-launcher-receipt-v1.json sha256 6aca25dcc83fe7be398a03df717fb83416fd7e8102f11f93aab1d59bb10a2756 (log sha256 2717f2616f4d76d8e43bf7dc6feb59d67da2359fefbad9e421e289a87abe7b7e): completed, exit 0, clean_success, wall 50.0 s, peak RSS 226,124 KiB; spec docs/quality/audits/hist06-addb-pilot-spec-v1r5.json sha256 2488d64a5eeaf88f20638fc23f49089282e48aae6ed104bc97fa44d8a5224f2a; pilot_summary sha256 699c25ab13f09c8db34d5e64941a37caab12f4dd9b5573178a39b5d7fad032c7, automated outcome passed.",
+          "Audited sign entries (rule B, sign +1, audit task HIST-06; evidence per channel as in HIST-06-verify round 4): FA16-pelvis_tilt, FA16-hip_angle, FA16-knee_angle, FA16-ankle_angle, FA16-hip_moment, FA16-knee_moment, FA16-ankle_moment, TA21-pelvis_tilt, TA21-hip_angle, TA21-knee_angle, TA21-ankle_angle, TA21-hip_moment, TA21-knee_moment, TA21-ankle_moment, TA22-pelvis_tilt, TA22-hip_angle, TA22-knee_angle, TA22-ankle_angle, TA22-hip_moment, TA22-knee_moment, TA22-ankle_moment.",
+          "Detector in the pilot: 1,280 suggest +1, 1,478 abstain, no apply, no conflict, no opposite sign over 394 legs x 7 channels. TA22 hip angle/moment, knee angle, ankle angle/moment and TA21 hip angle, ankle angle/moment: model definition plus detector +1; all FA16 channels, pelvis and knee moment everywhere, TA21 knee angle and hip moment: model definition only."
+        ],
         "remaining": [
-          "Everything in acceptance."
+          "UM21 re-pilot on the post-HIST-06 bound build before any UM21 full run (its committed-spec test stays red until then).",
+          "HIST-08: Tan running kinematic-fit artefact (F5) survey and per-segment quality flag.",
+          "Queue D-HIST-06-2 (task labels) when a decision slot opens; Tan walking and Falisse stay unlabelled until answered.",
+          "Not checked: nimblephysics skeleton DOF names; OpenSim rotation order from documentation (data-supported); moments on frames flagged missing GRF; model zero offsets; segment-angle identities on real data (nothing published in the pilot)."
         ]
       }
     },
@@ -6872,6 +6913,45 @@
       "handoff": {
         "last_checked_at_utc": "2026-11-01T03:45:00Z",
         "summary": "Created from the HIST-05 P2 follow-up (Tan running peak RSS).",
+        "checks": [],
+        "remaining": [
+          "Everything in acceptance."
+        ]
+      }
+    },
+    {
+      "id": "HIST-08",
+      "priority": "P1",
+      "dataset": "all",
+      "title": "Flag the Tan running kinematic-fit artefact (pelvis turned, lumbar rotation up to about 95 deg)",
+      "status": "ready",
+      "stage": "quality",
+      "question": "Which Tan running segments show the failed kinematic fit found in s3 nike_SR_24, and can a per-segment quality flag on the affected channels carry it without excluding data?",
+      "scope": "HIST-06-verify round 4 F5: in ta21/s3 nike_SR_24 (13 segments, trials 99-111) the fitted pelvis is turned about 30 deg off the belt axis, lumbar rotation reaches about +-95 deg and hip rotation about +-23 deg, while legs and CoP stay on the belt axis. Coordinator ruling under José's keep-recorded-values rule: exclude nothing; flag a blatant artefact. (1) Read-only probe (AGENTS.md exception) of every Tan running participant (s1, s3, s4, s5, s6, s7, s8, s9): per segment, the offset between the within-stance CoP axis and the pelvis facing, lumbar rotation range and hip rotation asymmetry, with the rule fixed in the script before reading. (2) Adapter change: a per-segment quality flag column for the affected frontal/transverse hip and lumbar channels (and the pelvis pitch derived from the same pelvis), values unchanged; synthetic tests; new spec and a guarded pilot. (3) A José exclusion decision only if the flag is not enough.",
+      "depends_on": [
+        "HIST-06"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/HIST-06-verify.json",
+        "docs/maintainers/handoffs/HIST-06.json",
+        "docs/quality/audits/hist06-addbiomechanics-mapping.json"
+      ],
+      "deliverables": [
+        "Survey record of all 8 Tan running participants",
+        "Adapter quality flag with tests and a verified pilot"
+      ],
+      "acceptance": [
+        "Every Tan running participant surveyed with a rule fixed before reading",
+        "No value excluded or changed; affected segments flagged per channel",
+        "Pilot of the changed adapter passes through the guarded launcher",
+        "Independent verification"
+      ],
+      "next_action": "Write the read-only survey probe with its rule fixed in the script; run it one participant at a time.",
+      "resource_class": "numerical",
+      "evidence_paths": [],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-02T20:00:00Z",
+        "summary": "Created from HIST-06-verify round 4 finding F5 and the coordinator's flag-not-exclude ruling.",
         "checks": [],
         "remaining": [
           "Everything in acceptance."
@@ -7456,37 +7536,42 @@
       "check": "Sheet, second figure: the non-gait bar is all grey, so no non-gait trial gets kinetics under A or B.",
       "cost_of_waiting": "GT23 moments and powers stay out of any release; GT23 kinematics, forces and other datasets are unaffected.",
       "decide_before_recommendation": true,
-      "status": "open"
+      "status": "answered",
+      "answer": "other",
+      "answered_at_utc": "2026-11-02T17:00:00Z",
+      "answer_text": "No rescaling: release every GT23 trial's moments and powers exactly as published (original weight), with the divisor mismatch documented"
     },
     {
       "id": "D-GT24-C01-1",
       "task_id": "GT24-C01",
-      "question": "GT24 participants wore a 6-8 kg exoskeleton. Which mass should LocoHub's standard GT24 moment, power and force columns be per kg of? Published per-kg values will first be converted back with the divisor the authors used, once a probe measures it.",
+      "question": "GT24 exoskeleton torques and powers were divided exactly by the person-plus-exoskeleton (worn) mass in all 2,421 recordings. The net joint moments match the same worn mass only within a few percent, from a lever-arm check against the force plates. Which mass should LocoHub's standard GT24 moment, power and force columns be per kg of?",
       "options": [
         {
           "key": "A",
           "label": "Leave GT24 kinetics empty",
-          "consequence": "Left out: All standard GT24 moments, powers and body-weight forces. Published per-kg values only under source names; nothing rescaled. Reversible."
+          "consequence": "Left out: all standard GT24 moments, powers and body-weight forces. Published per-kg values only under source names; nothing rescaled. Reversible."
         },
         {
           "key": "B",
           "label": "Worn mass (person + exoskeleton)",
-          "consequence": "Left out: BT18/BT24 (146 recordings) until resolved; trials without an established divisor. Published values rescaled from their measured divisor to the worn mass; forces in worn-system weights; values 6-12 % below body-mass values. Reversible."
+          "consequence": "Left out: nothing; every recording has an exact exoskeleton divisor. Standard columns equal the published per-kg values, assuming the net moments use the same worn mass, as the lever-arm check supports; forces in worn-system weights; values 6-12 % below body-mass values. Reversible."
         },
         {
           "key": "C",
           "label": "Body mass (without exoskeleton)",
-          "consequence": "Left out: As B, plus second-day trials of BT06, BT07, BT13 (first collection): no body mass reported. Published values rescaled from their measured divisor to body mass (× 1.07-1.13 if the measured divisor is the worn mass, × 1 if it is body mass); comparable with datasets without an exoskeleton; published values kept under source names. Reversible."
+          "consequence": "Left out: BT18 and BT24 (146 recordings) until their swapped mass rows are resolved, plus second-day recordings of BT06, BT07 and BT13 in the first collection (106 of their 336 recordings; no body mass reported). Published values x 1.07-1.13, assuming the net moments use the same worn mass, as the lever-arm check supports; comparable with datasets without an exoskeleton; published values kept under source names. Reversible."
         }
       ],
       "options_order": "By the normalizing mass: none (withheld), heavier (worn), lighter (body).",
       "recommended": "C",
       "confidence": "medium",
-      "why": "LocoHub defines forces in body weights and moments per kg; D-GT23-C03-1 rescaled GT23 to each participant's own mass; the task acceptance forbids substituting exoskeleton model mass for body mass. Source per-kg values stay available, so option B remains recoverable. Cost: second-day trials of three first-collection subjects lose kinetics.",
+      "why": "LocoHub defines forces in body weights and moments per kg; D-GT23-C03-1 rescaled GT23 to each participant's own mass; the task acceptance forbids substituting exoskeleton model mass for body mass. The published worn-mass values stay available under source names, so option B remains recoverable. The x 1.07-1.13 factor rests on the net moments using the worn mass, which the lever-arm check supports within a few percent but does not prove. Cost: the 146 BT18/BT24 recordings until resolved and the 106 first-collection second-day recordings lose standard kinetics.",
       "check": "README subject-mass table: every \"w/ exo\" mass is 6.1-7.8 kg above its \"w/o exo\" mass.",
-      "cost_of_waiting": "GT24 standard kinetic columns cannot be finalized; the divisor probe and all other GT24 work are unaffected.",
+      "cost_of_waiting": "GT24 standard kinetic columns cannot be finalized; all other GT24 work is unaffected.",
       "decide_before_recommendation": true,
-      "status": "queued"
+      "status": "answered",
+      "answer": "B",
+      "answered_at_utc": "2026-11-02T17:00:00Z"
     },
     {
       "id": "D-GT23-C01-1",
@@ -7516,7 +7601,10 @@
       "check": "Decision sheet figure: in the backward-walking example the blue facing arrow and the orange travel arrow point opposite ways.",
       "cost_of_waiting": "GaTech 2023 forward and sideways force and pressure stay out of any release (lab values kept); vertical force, joint angles and other datasets are unaffected.",
       "decide_before_recommendation": true,
-      "status": "open"
+      "status": "answered",
+      "answer": "C",
+      "answered_at_utc": "2026-11-02T17:00:00Z",
+      "answer_note": "José delegated the choice in chat (\"can you not figure this out? Just answer\"); coordinator chose C, the least change: forward walking only, lab axes elsewhere."
     }
   ]
 }

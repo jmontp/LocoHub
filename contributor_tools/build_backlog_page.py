@@ -217,8 +217,11 @@ def validate_backlog(data):
         if decision['status'] == 'answered':
             _text(decision.get('answer'), f'{decision["id"]}.answer')
             _utc(decision.get('answered_at_utc'), f'{decision["id"]}.answered_at_utc')
-            if decision['answer'] not in keys + ['defer']:
+            if decision['answer'] not in keys + ['defer', 'other']:
                 raise BacklogError(f'{decision["id"]}: answer is not a listed option')
+            # José may answer outside the listed options; record his words, never map them to a letter.
+            if decision['answer'] == 'other':
+                _text(decision.get('answer_text'), f'{decision["id"]}.answer_text')
     if sum(d['status'] == 'open' for d in decisions) > 3:
         raise BacklogError('decisions: at most three open; queue the rest')
     for task in tasks:
@@ -342,7 +345,7 @@ def render_backlog(data, docs_root=None):
             f'<li>{esc(d["id"])}: {esc(d["question"])}</li>' for d in queued) + '</ul></details>')
     if answered:
         inbox.append(f'<details><summary>Decision log ({len(answered)})</summary><ul>' + ''.join(
-            f'<li>{esc(d["answered_at_utc"])} · {esc(d["id"])}: {esc(d["question"])} → <strong>{esc(next((o["label"] for o in d["options"] if o["key"] == d["answer"]), "Deferred"))}</strong></li>' for d in answered) + '</ul></details>')
+            f'<li>{esc(d["answered_at_utc"])} · {esc(d["id"])}: {esc(d["question"])} → <strong>{esc(d["answer_text"] if d["answer"] == "other" else next((o["label"] for o in d["options"] if o["key"] == d["answer"]), "Deferred"))}</strong></li>' for d in answered) + '</ul></details>')
     inbox.append('</section>')
     selected = next_task(data)
     counts ={status: sum(task['status'] == status for task in data['tasks']) for status in STATUSES}

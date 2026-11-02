@@ -1,0 +1,710 @@
+{
+  "schema": "locohub.guarded_launcher.receipt/2",
+  "job_id": "HIST-06-addb-mapping-pilot-v1",
+  "status": "completed",
+  "scientific_approval": false,
+  "envelope": {
+    "path": "docs/quality/audits/pm01-um21-tread-pilot-handoff.json",
+    "reviewed_sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9",
+    "limits": {
+      "timeout_seconds_max": 3600,
+      "kill_after_seconds_max": 30,
+      "poll_seconds_max": 15,
+      "startup_memory_mib_min": {
+        "linux": 3584,
+        "windows": 2816
+      },
+      "runtime_memory_mib_min": {
+        "linux": 2048,
+        "windows": 2048
+      },
+      "output_volume_free_mib_min": 5120,
+      "c_drive_free_mib_min": 1024,
+      "c_drive_path": "/mnt/c",
+      "address_space_mib_max": 768
+    },
+    "sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+  },
+  "spec": {
+    "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+    "kill_after_seconds": 30,
+    "poll_seconds": 15,
+    "disk_admission": [],
+    "thread_env": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "ARROW_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    },
+    "expected_output_names": [
+      "pilot_summary.json"
+    ],
+    "address_space_mib": 768,
+    "job_id": "HIST-06-addb-mapping-pilot-v1",
+    "command": [
+      "python3",
+      "contributor_tools/run_hist06_addb_pilot.py",
+      "run",
+      "--output-root",
+      "converted_datasets/reconversion_v2/hist06_addb_mapping_pilot_v1",
+      "--detector-sha256",
+      "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+      "--participants",
+      "fa16/subject_0,ta21/s3,ta22/07",
+      "--seed",
+      "20261106",
+      "--extra-trial",
+      "ta21/s7/hip_calibration"
+    ],
+    "output_root": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/hist06_addb_mapping_pilot_v1",
+    "receipt_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/hist06-addb-launcher-receipt-v1.json",
+    "bindings": {
+      "contributor_tools/common/sign_offset_detector.py": "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+      "contributor_tools/common/sign_application.py": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "contributor_tools/common/documentation_policy.py": "32518cf6d8e5c045b33addde4be20e76a31a8d5d259dbb2111bfba35f2076cbd",
+      "contributor_tools/common/refuted_documentation.json": "3392c0caed84420a8c67a7fd89055cdf7a7e9a17c272ba2139f2db16eb84c4fd",
+      "contributor_tools/common/audited_signs.json": "356a19cc84af688691ddd28848922a5679e131343499d02446487f8ab7967f36",
+      "contributor_tools/adapters/addbiomechanics_sign_adapter.py": "a076ebbe5476e4dd757e23de9043e358d3325f7ee5d6f428544db0b7a2560f35",
+      "contributor_tools/run_hist06_addb_pilot.py": "6a5e2dd2836f51a6665e2729f52a6dff4cede7c50cd28c12cfbe315c62f4650a",
+      "docs/quality/audits/hist06-addb-mapping-probe.json": "159bc48e6ada63b17b7b7f6dc50953bb3c6a2d37b45c80e75fdc56946d241a40",
+      "/mnt/s/locomotion_data/addbiomechanics_hist04/fa16/subject_0/conversion.json": "6435d5c3b078a9f69f25ff4f370f665f3a1f6efe771e148f5a7ff87aeae898b5",
+      "/mnt/s/locomotion_data/addbiomechanics_hist04/fa16/subject_0/frames.parquet": "df5d0a13f49884263f4733705e18342c62051ca83b2670bc9ad4ecae01f51d2b",
+      "/mnt/s/locomotion_data/addbiomechanics_hist04/fa16/subject_0/dynamics_model.osim": "c06ba484e93fcfd16efb75408dd9468a0edce6f7e24719a615b2d9000e86a112",
+      "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s3/conversion.json": "ab72c220b8da45428eb5a2b9756db7e82191b3caccac65a6efebc037b3726e94",
+      "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s3/frames.parquet": "34e51f547576622314fb692f29046eac38bb3741379b7d332a2da0c2fa979863",
+      "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s3/dynamics_model.osim": "87ae5bb2367c3eb20557a4f33a62157861f61c832738ada46c333957aa558e4e",
+      "/mnt/s/locomotion_data/addbiomechanics_hist04/ta22/07/conversion.json": "125f9255ea79bb0d57245558f720978ac384bcbde81351506729acc650c3b727",
+      "/mnt/s/locomotion_data/addbiomechanics_hist04/ta22/07/frames.parquet": "f03175bb010cadc5e08d68f8f157c0d06b665a4f2aadf84ef9993713e3be1619",
+      "/mnt/s/locomotion_data/addbiomechanics_hist04/ta22/07/dynamics_model.osim": "c5ab8461be18d1a1961850253420cded551ccc39b89c61bd1693c6908bcdd27c",
+      "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s7/conversion.json": "344c58f4dbc9761790ad2b84d617be62b857bc5ad1d7f3011e0d560a93a7b554",
+      "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s7/frames.parquet": "9748fdd322af96699904944a0f2225daeeaefac6823092809511f02721d78beb",
+      "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s7/dynamics_model.osim": "6e43711c17498f2e108cd7a959e774298ffc0ab363524c322599f3d897b575b9"
+    },
+    "timeout_seconds": 3600,
+    "startup_memory_mib": {
+      "linux": 3584,
+      "windows": 2816
+    },
+    "runtime_memory_mib": {
+      "linux": 2048,
+      "windows": 2048
+    }
+  },
+  "spec_sha256": "2488d64a5eeaf88f20638fc23f49089282e48aae6ed104bc97fa44d8a5224f2a",
+  "launcher_sha256": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b",
+  "checked_at_utc": "2026-11-02T18:10:40+00:00",
+  "chaining": "none; no successor is started",
+  "bindings_before": {
+    "contributor_tools/common/sign_offset_detector.py": {
+      "expected": "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+      "actual": "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+      "bytes": 73830,
+      "matches": true
+    },
+    "contributor_tools/common/sign_application.py": {
+      "expected": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "actual": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "bytes": 56217,
+      "matches": true
+    },
+    "contributor_tools/common/documentation_policy.py": {
+      "expected": "32518cf6d8e5c045b33addde4be20e76a31a8d5d259dbb2111bfba35f2076cbd",
+      "actual": "32518cf6d8e5c045b33addde4be20e76a31a8d5d259dbb2111bfba35f2076cbd",
+      "bytes": 6954,
+      "matches": true
+    },
+    "contributor_tools/common/refuted_documentation.json": {
+      "expected": "3392c0caed84420a8c67a7fd89055cdf7a7e9a17c272ba2139f2db16eb84c4fd",
+      "actual": "3392c0caed84420a8c67a7fd89055cdf7a7e9a17c272ba2139f2db16eb84c4fd",
+      "bytes": 2362,
+      "matches": true
+    },
+    "contributor_tools/common/audited_signs.json": {
+      "expected": "356a19cc84af688691ddd28848922a5679e131343499d02446487f8ab7967f36",
+      "actual": "356a19cc84af688691ddd28848922a5679e131343499d02446487f8ab7967f36",
+      "bytes": 17365,
+      "matches": true
+    },
+    "contributor_tools/adapters/addbiomechanics_sign_adapter.py": {
+      "expected": "a076ebbe5476e4dd757e23de9043e358d3325f7ee5d6f428544db0b7a2560f35",
+      "actual": "a076ebbe5476e4dd757e23de9043e358d3325f7ee5d6f428544db0b7a2560f35",
+      "bytes": 42293,
+      "matches": true
+    },
+    "contributor_tools/run_hist06_addb_pilot.py": {
+      "expected": "6a5e2dd2836f51a6665e2729f52a6dff4cede7c50cd28c12cfbe315c62f4650a",
+      "actual": "6a5e2dd2836f51a6665e2729f52a6dff4cede7c50cd28c12cfbe315c62f4650a",
+      "bytes": 20055,
+      "matches": true
+    },
+    "docs/quality/audits/hist06-addb-mapping-probe.json": {
+      "expected": "159bc48e6ada63b17b7b7f6dc50953bb3c6a2d37b45c80e75fdc56946d241a40",
+      "actual": "159bc48e6ada63b17b7b7f6dc50953bb3c6a2d37b45c80e75fdc56946d241a40",
+      "bytes": 664813,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/fa16/subject_0/conversion.json": {
+      "expected": "6435d5c3b078a9f69f25ff4f370f665f3a1f6efe771e148f5a7ff87aeae898b5",
+      "actual": "6435d5c3b078a9f69f25ff4f370f665f3a1f6efe771e148f5a7ff87aeae898b5",
+      "bytes": 3792,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/fa16/subject_0/frames.parquet": {
+      "expected": "df5d0a13f49884263f4733705e18342c62051ca83b2670bc9ad4ecae01f51d2b",
+      "actual": "df5d0a13f49884263f4733705e18342c62051ca83b2670bc9ad4ecae01f51d2b",
+      "bytes": 2988956,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/fa16/subject_0/dynamics_model.osim": {
+      "expected": "c06ba484e93fcfd16efb75408dd9468a0edce6f7e24719a615b2d9000e86a112",
+      "actual": "c06ba484e93fcfd16efb75408dd9468a0edce6f7e24719a615b2d9000e86a112",
+      "bytes": 1042887,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s3/conversion.json": {
+      "expected": "ab72c220b8da45428eb5a2b9756db7e82191b3caccac65a6efebc037b3726e94",
+      "actual": "ab72c220b8da45428eb5a2b9756db7e82191b3caccac65a6efebc037b3726e94",
+      "bytes": 46131,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s3/frames.parquet": {
+      "expected": "34e51f547576622314fb692f29046eac38bb3741379b7d332a2da0c2fa979863",
+      "actual": "34e51f547576622314fb692f29046eac38bb3741379b7d332a2da0c2fa979863",
+      "bytes": 274171673,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s3/dynamics_model.osim": {
+      "expected": "87ae5bb2367c3eb20557a4f33a62157861f61c832738ada46c333957aa558e4e",
+      "actual": "87ae5bb2367c3eb20557a4f33a62157861f61c832738ada46c333957aa558e4e",
+      "bytes": 1043998,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta22/07/conversion.json": {
+      "expected": "125f9255ea79bb0d57245558f720978ac384bcbde81351506729acc650c3b727",
+      "actual": "125f9255ea79bb0d57245558f720978ac384bcbde81351506729acc650c3b727",
+      "bytes": 16690,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta22/07/frames.parquet": {
+      "expected": "f03175bb010cadc5e08d68f8f157c0d06b665a4f2aadf84ef9993713e3be1619",
+      "actual": "f03175bb010cadc5e08d68f8f157c0d06b665a4f2aadf84ef9993713e3be1619",
+      "bytes": 97465234,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta22/07/dynamics_model.osim": {
+      "expected": "c5ab8461be18d1a1961850253420cded551ccc39b89c61bd1693c6908bcdd27c",
+      "actual": "c5ab8461be18d1a1961850253420cded551ccc39b89c61bd1693c6908bcdd27c",
+      "bytes": 1038285,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s7/conversion.json": {
+      "expected": "344c58f4dbc9761790ad2b84d617be62b857bc5ad1d7f3011e0d560a93a7b554",
+      "actual": "344c58f4dbc9761790ad2b84d617be62b857bc5ad1d7f3011e0d560a93a7b554",
+      "bytes": 43721,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s7/frames.parquet": {
+      "expected": "9748fdd322af96699904944a0f2225daeeaefac6823092809511f02721d78beb",
+      "actual": "9748fdd322af96699904944a0f2225daeeaefac6823092809511f02721d78beb",
+      "bytes": 263804138,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s7/dynamics_model.osim": {
+      "expected": "6e43711c17498f2e108cd7a959e774298ffc0ab363524c322599f3d897b575b9",
+      "actual": "6e43711c17498f2e108cd7a959e774298ffc0ab363524c322599f3d897b575b9",
+      "bytes": 1043863,
+      "matches": true
+    }
+  },
+  "disk_admission": [
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/hist06_addb_mapping_pilot_v1",
+      "min_free_mib": 5120,
+      "source": "envelope: output volume (S:)",
+      "free_mib": 145268.02734375,
+      "passes": true
+    },
+    {
+      "path": "/mnt/c",
+      "min_free_mib": 1024,
+      "source": "envelope: C:",
+      "free_mib": 109138.203125,
+      "passes": true
+    }
+  ],
+  "census_before": {
+    "linux": {
+      "checked_at_utc": "2026-11-02T18:10:43+00:00",
+      "boot_id": "1570e813-f7dd-44f7-b4bb-542164173260",
+      "process_count": 73,
+      "exempt": [
+        {
+          "pid": 2,
+          "start_ticks": 233,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1474,
+          "start_ticks": 3111,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1475,
+          "start_ticks": 3113,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1977,
+          "start_ticks": 3964,
+          "cwd": "/mnt/c/Windows/System32",
+          "cmdline": "tmux",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1082279,
+          "start_ticks": 50017091,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1092061,
+          "start_ticks": 50305298,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1869040,
+          "start_ticks": 100123830,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1793133140567-6irr6x.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'OPENBLAS_NUM_",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1869041,
+          "start_ticks": 100123831,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/hist06-addb-pilot-spec-v1r5.json",
+          "why": "launcher itself (CLI)"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-02T18:10:44+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 322,
+      "free_physical_mib": 12467.71875,
+      "workers": []
+    }
+  },
+  "startup_memory": {
+    "linux": {
+      "available_mib": 12087.03125,
+      "reserve_mib": 3584,
+      "passes": true
+    },
+    "windows": {
+      "available_mib": 12467.71875,
+      "reserve_mib": 2816,
+      "passes": true
+    }
+  },
+  "launch_ledger": {
+    "parent": {
+      "pid": 1869040,
+      "ppid": 1092061,
+      "start_ticks": 100123830,
+      "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1793133140567-6irr6x.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'OPENBLAS_NUM_",
+      "interactive_terminal": false
+    },
+    "claimed": true,
+    "entries": [
+      "/tmp/locohub_guarded_launcher_uid1000/1570e813-f7dd-44f7-b4bb-542164173260/1869040-100123830.json"
+    ],
+    "keys": [
+      {
+        "pid": 1869040,
+        "ppid": 1092061,
+        "start_ticks": 100123830,
+        "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1793133140567-6irr6x.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'OPENBLAS_NUM_",
+        "interactive_terminal": false
+      }
+    ]
+  },
+  "launched": true,
+  "process_identity": {
+    "leader_pid": 1869063,
+    "launched_at_utc": "2026-11-02T18:10:44+00:00",
+    "argv": [
+      "timeout",
+      "--signal=TERM",
+      "--kill-after=30s",
+      "3600",
+      "nice",
+      "-n",
+      "19",
+      "ionice",
+      "-c",
+      "3",
+      "python3",
+      "contributor_tools/run_hist06_addb_pilot.py",
+      "run",
+      "--output-root",
+      "converted_datasets/reconversion_v2/hist06_addb_mapping_pilot_v1",
+      "--detector-sha256",
+      "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+      "--participants",
+      "fa16/subject_0,ta21/s3,ta22/07",
+      "--seed",
+      "20261106",
+      "--extra-trial",
+      "ta21/s7/hip_calibration"
+    ],
+    "log_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/hist06-addb-launcher-receipt-v1.log",
+    "parent_death_signal": "SIGTERM",
+    "parent_death_signal_set": true,
+    "pgid": 1869063,
+    "sid": 1869063,
+    "own_session_verified": true,
+    "boot_id": "1570e813-f7dd-44f7-b4bb-542164173260",
+    "leader_start_ticks": 100124222
+  },
+  "job_outcome": "completed",
+  "finished_at_utc": "2026-11-02T18:11:36+00:00",
+  "exit_code": 0,
+  "wall_time_seconds": 49.995,
+  "peak_rss_kib_largest_process": 226124,
+  "peak_group_rss_kib_sampled": 208048,
+  "runtime_guard": {
+    "poll_seconds": 15,
+    "reserve_mib": {
+      "linux": 2048,
+      "windows": 2048
+    },
+    "polls": 3,
+    "min_linux_available_mib": 12010.8,
+    "min_windows_free_mib": 12357.6,
+    "breach": null,
+    "observed_address_space_limits": [
+      "805306368"
+    ],
+    "observed_address_space_by_process": [
+      {
+        "pid": 1869063,
+        "start_ticks": 100124222,
+        "limit": "805306368",
+        "cmdline": "timeout --signal=TERM --kill-after=30s 3600 nice -n 19 ionice -c 3 python3 contributor_tools/run_hist06_addb_pilot.py run --output-root converted_datasets/reconversion_v2/hist06_addb_mapping_pilot_v1 "
+      },
+      {
+        "pid": 1869064,
+        "start_ticks": 100124222,
+        "limit": "805306368",
+        "cmdline": "python3 contributor_tools/run_hist06_addb_pilot.py run --output-root converted_datasets/reconversion_v2/hist06_addb_mapping_pilot_v1 --detector-sha256 ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25ab"
+      }
+    ]
+  },
+  "stop_actions": [],
+  "orphans_at_leader_exit": [],
+  "launcher_errors": [],
+  "finalisation_errors": [],
+  "clean_success": true,
+  "retry": "never automatic",
+  "cleanup_proof": {
+    "checked_at_utc": "2026-11-02T18:11:36+00:00",
+    "basis": "same_boot_proc_scan",
+    "proven": true,
+    "boot_id_now": "1570e813-f7dd-44f7-b4bb-542164173260",
+    "pgid_members": [],
+    "leader_pid_with_same_start_ticks_present": false,
+    "attempts": 1
+  },
+  "census_after": {
+    "linux": {
+      "checked_at_utc": "2026-11-02T18:11:36+00:00",
+      "boot_id": "1570e813-f7dd-44f7-b4bb-542164173260",
+      "process_count": 72,
+      "exempt": [
+        {
+          "pid": 2,
+          "start_ticks": 233,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1474,
+          "start_ticks": 3111,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1475,
+          "start_ticks": 3113,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1977,
+          "start_ticks": 3964,
+          "cwd": "/mnt/c/Windows/System32",
+          "cmdline": "tmux",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1082279,
+          "start_ticks": 50017091,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1092061,
+          "start_ticks": 50305298,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1869040,
+          "start_ticks": 100123830,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1793133140567-6irr6x.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'OPENBLAS_NUM_",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1869041,
+          "start_ticks": 100123831,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/hist06-addb-pilot-spec-v1r5.json",
+          "why": "launcher itself (CLI)"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-02T18:11:37+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 320,
+      "free_physical_mib": 12424.44921875,
+      "workers": []
+    }
+  },
+  "windows_new_workers": [],
+  "bindings_after": {
+    "contributor_tools/common/sign_offset_detector.py": {
+      "expected": "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+      "actual": "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+      "bytes": 73830,
+      "matches": true
+    },
+    "contributor_tools/common/sign_application.py": {
+      "expected": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "actual": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "bytes": 56217,
+      "matches": true
+    },
+    "contributor_tools/common/documentation_policy.py": {
+      "expected": "32518cf6d8e5c045b33addde4be20e76a31a8d5d259dbb2111bfba35f2076cbd",
+      "actual": "32518cf6d8e5c045b33addde4be20e76a31a8d5d259dbb2111bfba35f2076cbd",
+      "bytes": 6954,
+      "matches": true
+    },
+    "contributor_tools/common/refuted_documentation.json": {
+      "expected": "3392c0caed84420a8c67a7fd89055cdf7a7e9a17c272ba2139f2db16eb84c4fd",
+      "actual": "3392c0caed84420a8c67a7fd89055cdf7a7e9a17c272ba2139f2db16eb84c4fd",
+      "bytes": 2362,
+      "matches": true
+    },
+    "contributor_tools/common/audited_signs.json": {
+      "expected": "356a19cc84af688691ddd28848922a5679e131343499d02446487f8ab7967f36",
+      "actual": "356a19cc84af688691ddd28848922a5679e131343499d02446487f8ab7967f36",
+      "bytes": 17365,
+      "matches": true
+    },
+    "contributor_tools/adapters/addbiomechanics_sign_adapter.py": {
+      "expected": "a076ebbe5476e4dd757e23de9043e358d3325f7ee5d6f428544db0b7a2560f35",
+      "actual": "a076ebbe5476e4dd757e23de9043e358d3325f7ee5d6f428544db0b7a2560f35",
+      "bytes": 42293,
+      "matches": true
+    },
+    "contributor_tools/run_hist06_addb_pilot.py": {
+      "expected": "6a5e2dd2836f51a6665e2729f52a6dff4cede7c50cd28c12cfbe315c62f4650a",
+      "actual": "6a5e2dd2836f51a6665e2729f52a6dff4cede7c50cd28c12cfbe315c62f4650a",
+      "bytes": 20055,
+      "matches": true
+    },
+    "docs/quality/audits/hist06-addb-mapping-probe.json": {
+      "expected": "159bc48e6ada63b17b7b7f6dc50953bb3c6a2d37b45c80e75fdc56946d241a40",
+      "actual": "159bc48e6ada63b17b7b7f6dc50953bb3c6a2d37b45c80e75fdc56946d241a40",
+      "bytes": 664813,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/fa16/subject_0/conversion.json": {
+      "expected": "6435d5c3b078a9f69f25ff4f370f665f3a1f6efe771e148f5a7ff87aeae898b5",
+      "actual": "6435d5c3b078a9f69f25ff4f370f665f3a1f6efe771e148f5a7ff87aeae898b5",
+      "bytes": 3792,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/fa16/subject_0/frames.parquet": {
+      "expected": "df5d0a13f49884263f4733705e18342c62051ca83b2670bc9ad4ecae01f51d2b",
+      "actual": "df5d0a13f49884263f4733705e18342c62051ca83b2670bc9ad4ecae01f51d2b",
+      "bytes": 2988956,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/fa16/subject_0/dynamics_model.osim": {
+      "expected": "c06ba484e93fcfd16efb75408dd9468a0edce6f7e24719a615b2d9000e86a112",
+      "actual": "c06ba484e93fcfd16efb75408dd9468a0edce6f7e24719a615b2d9000e86a112",
+      "bytes": 1042887,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s3/conversion.json": {
+      "expected": "ab72c220b8da45428eb5a2b9756db7e82191b3caccac65a6efebc037b3726e94",
+      "actual": "ab72c220b8da45428eb5a2b9756db7e82191b3caccac65a6efebc037b3726e94",
+      "bytes": 46131,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s3/frames.parquet": {
+      "expected": "34e51f547576622314fb692f29046eac38bb3741379b7d332a2da0c2fa979863",
+      "actual": "34e51f547576622314fb692f29046eac38bb3741379b7d332a2da0c2fa979863",
+      "bytes": 274171673,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s3/dynamics_model.osim": {
+      "expected": "87ae5bb2367c3eb20557a4f33a62157861f61c832738ada46c333957aa558e4e",
+      "actual": "87ae5bb2367c3eb20557a4f33a62157861f61c832738ada46c333957aa558e4e",
+      "bytes": 1043998,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta22/07/conversion.json": {
+      "expected": "125f9255ea79bb0d57245558f720978ac384bcbde81351506729acc650c3b727",
+      "actual": "125f9255ea79bb0d57245558f720978ac384bcbde81351506729acc650c3b727",
+      "bytes": 16690,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta22/07/frames.parquet": {
+      "expected": "f03175bb010cadc5e08d68f8f157c0d06b665a4f2aadf84ef9993713e3be1619",
+      "actual": "f03175bb010cadc5e08d68f8f157c0d06b665a4f2aadf84ef9993713e3be1619",
+      "bytes": 97465234,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta22/07/dynamics_model.osim": {
+      "expected": "c5ab8461be18d1a1961850253420cded551ccc39b89c61bd1693c6908bcdd27c",
+      "actual": "c5ab8461be18d1a1961850253420cded551ccc39b89c61bd1693c6908bcdd27c",
+      "bytes": 1038285,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s7/conversion.json": {
+      "expected": "344c58f4dbc9761790ad2b84d617be62b857bc5ad1d7f3011e0d560a93a7b554",
+      "actual": "344c58f4dbc9761790ad2b84d617be62b857bc5ad1d7f3011e0d560a93a7b554",
+      "bytes": 43721,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s7/frames.parquet": {
+      "expected": "9748fdd322af96699904944a0f2225daeeaefac6823092809511f02721d78beb",
+      "actual": "9748fdd322af96699904944a0f2225daeeaefac6823092809511f02721d78beb",
+      "bytes": 263804138,
+      "matches": true
+    },
+    "/mnt/s/locomotion_data/addbiomechanics_hist04/ta21/s7/dynamics_model.osim": {
+      "expected": "6e43711c17498f2e108cd7a959e774298ffc0ab363524c322599f3d897b575b9",
+      "actual": "6e43711c17498f2e108cd7a959e774298ffc0ab363524c322599f3d897b575b9",
+      "bytes": 1043863,
+      "matches": true
+    }
+  },
+  "outputs": [
+    {
+      "path": "fa16_subject_0/mapped_frames.parquet",
+      "bytes": 700117,
+      "sha256": "a34f6b25f19276fa24d463a68890a22528734f6b9f387b823227c59ec28e8246"
+    },
+    {
+      "path": "fa16_subject_0/sign_applications.json",
+      "bytes": 213210,
+      "sha256": "ec4dc7ea0efab38cd155cc5acf8d4d02a5296dd4d7716d042ee3541ff8b3c774"
+    },
+    {
+      "path": "fa16_subject_0/trial_logs.json",
+      "bytes": 19649,
+      "sha256": "477ae0cde680f89ec2b880dc3bc5f8c7b9e3f31ad3604cf3ed14909b2cd1833c"
+    },
+    {
+      "path": "inputs/backlog_snapshot.json",
+      "bytes": 525187,
+      "sha256": "592fbbb93c4fd234d809ad9561bf47526ce649305ef50a54c74d2e0ae1c4845e"
+    },
+    {
+      "path": "pilot_summary.json",
+      "bytes": 9744,
+      "sha256": "699c25ab13f09c8db34d5e64941a37caab12f4dd9b5573178a39b5d7fad032c7"
+    },
+    {
+      "path": "ta21_s3/mapped_frames.parquet",
+      "bytes": 74290173,
+      "sha256": "6ee02ad7ef994695ff21592a4468df77194a4c6065dcc9e580c5877a46957481"
+    },
+    {
+      "path": "ta21_s3/sign_applications.json",
+      "bytes": 6363333,
+      "sha256": "d80c5c068bf33b0378953512e368c67da46af288e8be51057280ae6b71f8aba7"
+    },
+    {
+      "path": "ta21_s3/trial_logs.json",
+      "bytes": 686112,
+      "sha256": "2ad4934018c3cfada2d4a514d6d1b035e80003a4fd3ceff0e8befd2d7e74516d"
+    },
+    {
+      "path": "ta21_s7_hip_calibration/mapped_frames.parquet",
+      "bytes": 410877,
+      "sha256": "3999a8f9a99243d6c8d383f17f9a91964a6084c14460eb455f96bb3c177e3be0"
+    },
+    {
+      "path": "ta21_s7_hip_calibration/sign_applications.json",
+      "bytes": 45038,
+      "sha256": "b5e0d9f707d011da54d7c513b23b056a104b22100a18a20f21f07ec831de45ac"
+    },
+    {
+      "path": "ta21_s7_hip_calibration/trial_logs.json",
+      "bytes": 3961,
+      "sha256": "fe7b6a74ff71f49f7bb625274d7099c05b6cf1463ad101575de049ad143d98b6"
+    },
+    {
+      "path": "ta22_07/mapped_frames.parquet",
+      "bytes": 34003234,
+      "sha256": "66704a256fb351a3cb565f30620700e08161873e0e711b5c3779579d35b48f6c"
+    },
+    {
+      "path": "ta22_07/sign_applications.json",
+      "bytes": 2203679,
+      "sha256": "ad4044f907c6cc3b32f88556659914802709a907af01b91b90f6a2eb5ace7efc"
+    },
+    {
+      "path": "ta22_07/trial_logs.json",
+      "bytes": 255617,
+      "sha256": "d38cd11d0e1b6ef9123c8b8e2ca1bf744d07e0a607772ec071c57442e60e97f4"
+    }
+  ],
+  "expected_outputs_missing": [],
+  "log_sha256": "2717f2616f4d76d8e43bf7dc6feb59d67da2359fefbad9e421e289a87abe7b7e",
+  "checks": {
+    "cleanup_proven": true,
+    "bindings_unchanged": true,
+    "envelope_unchanged": true,
+    "linux_no_new_worker": true,
+    "windows_no_new_worker": true,
+    "no_orphans_at_leader_exit": true,
+    "outputs_hashed": true,
+    "expected_outputs_present": true
+  }
+}
