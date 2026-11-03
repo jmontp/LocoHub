@@ -1770,7 +1770,7 @@
       "legacy_ids": [
         "QA-01"
       ],
-      "blocked_reason": "Waits for UM21-T04 (CORE-11 signs on T03 outputs) and José decision D-UM21-Q01-1."
+      "blocked_reason": "Waits only on José decision D-UM21-Q01-1 (UM21-T04 is done)."
     },
     {
       "id": "UM21-R01",
@@ -6993,7 +6993,7 @@
       "priority": "P0",
       "dataset": "um21",
       "title": "Apply CORE-11 signs to the T03 treadmill outputs",
-      "status": "review",
+      "status": "done",
       "stage": "conversion",
       "question": "Can the bound sign-application build publish rule-B columns for every released T03 treadmill observation, with exact observation identity?",
       "scope": "44 T03 treadmill records (7,562 observations) via the guarded launcher, one record at a time, into a NEW output root. T03 outputs are never modified. Mode full with the v4 pilot record; pilot of the T04 runner first (AB04/i0, then 7 seeded records).",
@@ -7019,7 +7019,7 @@
         "Segments and velocities derived after the hook (F2)",
         "Pilot passes before the full run; independent verification"
       ],
-      "next_action": "Independent review of T04; then unblock UM21-Q01.",
+      "next_action": "Done. Independent verification passed (round full-readback in docs/maintainers/handoffs/UM21-T04-verify.json). R01 open items: 15 unmapped observations, contralateral columns, stable schema, logical-to-canonical naming; T03 thigh/shank and zero-fill-dip moment/power columns must not ship (T04 values replace them).",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/UM21-Q01.json",
@@ -7038,7 +7038,8 @@
         "docs/quality/audits/um21-t04-full-AB07-launcher-receipt-v1.json",
         "docs/quality/audits/um21-t04-full-AB08-launcher-receipt-v1.json",
         "docs/quality/audits/um21-t04-full-AB09-launcher-receipt-v1.json",
-        "docs/quality/audits/um21-t04-full-AB10-launcher-receipt-v1.json"
+        "docs/quality/audits/um21-t04-full-AB10-launcher-receipt-v1.json",
+        "docs/maintainers/handoffs/UM21-T04-verify.json"
       ],
       "handoff": {
         "last_checked_at_utc": "2026-11-02T00:00:00+00:00",
@@ -7051,10 +7052,11 @@
           "stage b receipt docs/quality/audits/um21-t04-pilot-b-launcher-receipt-v2.json: wall 10.6 s, peak RSS 239 MiB (launcher) / 233 in-job, automated outcome passed, cleanup proven",
           "tests/test_um21_t04_signs.py: 18 passed; full specs validate; AB01 dry run preflight_passed",
           "v3 receipts docs/quality/audits/um21-t04-pilot-{a,b}-launcher-receipt-v3.json: wall 2.2 s / 10.6 s, peak RSS 211 / 238 MiB (launcher), clean, cleanup proven; 8 recordings byte-identical to v2",
-          "Full batch receipts (docs/quality/audits/): um21-t04-full-AB01-launcher-receipt-v1.json, um21-t04-full-AB02-launcher-receipt-v1.json, um21-t04-full-AB03-launcher-receipt-v1.json, um21-t04-full-AB04-launcher-receipt-v1.json, um21-t04-full-AB05-launcher-receipt-v1.json, um21-t04-full-AB06-launcher-receipt-v1.json, um21-t04-full-AB07-launcher-receipt-v1.json, um21-t04-full-AB08-launcher-receipt-v1.json, um21-t04-full-AB09-launcher-receipt-v1.json, um21-t04-full-AB10-launcher-receipt-v1.json. Per batch wall s / peak RSS MiB: AB01 4.409/224; AB02 9.211/227; AB03 9.011/231; AB04 9.015/230; AB05 9.618/229; AB06 9.819/230; AB07 9.811/233; AB08 7.609/226; AB09 8.411/230; AB10 7.811/233"
+          "Full batch receipts (docs/quality/audits/): um21-t04-full-AB01-launcher-receipt-v1.json, um21-t04-full-AB02-launcher-receipt-v1.json, um21-t04-full-AB03-launcher-receipt-v1.json, um21-t04-full-AB04-launcher-receipt-v1.json, um21-t04-full-AB05-launcher-receipt-v1.json, um21-t04-full-AB06-launcher-receipt-v1.json, um21-t04-full-AB07-launcher-receipt-v1.json, um21-t04-full-AB08-launcher-receipt-v1.json, um21-t04-full-AB09-launcher-receipt-v1.json, um21-t04-full-AB10-launcher-receipt-v1.json. Per batch wall s / peak RSS MiB: AB01 4.409/224; AB02 9.211/227; AB03 9.011/231; AB04 9.015/230; AB05 9.618/229; AB06 9.819/230; AB07 9.811/233; AB08 7.609/226; AB09 8.411/230; AB10 7.811/233",
+          "Independent verifier round full-readback (2026-11-02): receipts, cleanup, hashes, bindings, gate facts, totals 7,562 = 7,547 + 15, six-record source-times-multiplier readback, rule-B segment formulas, one-leg rule on all 44: all pass. Details in UM21-T04-verify.json."
         ],
         "remaining": [
-          "Independent review of the 10 batches (receipts, hashes, alignment readback); then Q01 profile work and R01 decisions on the 15 unmapped, contralateral columns and schema."
+          "None for T04."
         ],
         "changed_files": [
           "contributor_tools/run_um21_t04_signs.py",
