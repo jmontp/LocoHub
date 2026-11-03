@@ -3,7 +3,7 @@
   "updated_at_utc": "2026-11-02T00:00:00Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
-  "next_task_id": "UM21-T03",
+  "next_task_id": "UM21-X01",
   "workflow": {
     "statuses": {
       "ready": "Dependencies are satisfied; the next action can be taken within its stated resource limits.",
@@ -1432,7 +1432,7 @@
       "priority": "P0",
       "dataset": "um21",
       "title": "Complete treadmill components and independent full readback",
-      "status": "ready",
+      "status": "done",
       "stage": "source_readback",
       "question": "Does the full first-release scope match the source?",
       "scope": "All 50 recordings and 84 components; preserve existing accepted-cycle identities without approving prior exclusions.",
@@ -1458,23 +1458,30 @@
         "Terminal reports bind final output hashes and full ledger totals; partial reports cannot establish completion.",
         "For um21 treadmill, issue a scope-specific handoff for profile/limitations review and later release reconciliation. Do not treat source preservation, completed jobs or another dataset approval as satisfying these gates."
       ],
-      "next_action": "Run fresh bounded per-record extension and independent readback using the reviewed pilot recipe.",
+      "next_action": "Done. Next for um21 treadmill: CORE-11 signs, profile/limitations review, release reconciliation.",
       "resource_class": "numerical",
       "evidence_paths": [
         "contributor_tools/restore_um21_tread_components.py",
         "converted_datasets/reconversion_v2/metadata_serial_queue_20261021/plan.json",
         "converted_datasets/reconversion_v2/um21_stair_serial_queue_20261021/plan.json",
         "converted_datasets/reconversion_v2/um21_wtr_serial_queue_20261021/plan.json",
-        "converted_datasets/reconversion_v2/um21_boundary_serial_queue_20261021/plan.json"
+        "converted_datasets/reconversion_v2/um21_boundary_serial_queue_20261021/plan.json",
+        "docs/quality/audits/um21-t03-integrity-check.json",
+        "docs/quality/audits/um21-t03-readback-report.json",
+        "docs/quality/audits/um21-t03-readback-launcher-receipt.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
-        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
+        "last_checked_at_utc": "2026-11-02T00:00:00+00:00",
+        "summary": "44 records and 7,562 observations converted in seven clean guarded jobs; 44/44 audits pass; 6 recordings (1,064 observations) not converted under D-UM21-T02-1 = A; 3,265 preserved exclusions. The first batch 2 failed (address space) and its root is invalid. Not scientific approval. Independent verification passed 2026-11-02 (handoffs/UM21-T03-verify.json): run integrity for all seven receipts, and full readback of 44 records / 7,562 observations (1,760 seeded sampled observations, 147,840 components re-read from source, 0 mismatches). Not scientific approval.",
         "checks": [
-          "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
+          "seven launcher receipts completed, clean, verify-cleanup proven",
+          "per-record observation counts equal scope v2",
+          "largest group peak 244.9 MiB",
+          "verifier: integrity check pass (docs/quality/audits/um21-t03-integrity-check.json)",
+          "verifier: independent readback pass, 44/44 records, peak 183 MiB (docs/quality/audits/um21-t03-readback-report.json)"
         ],
         "remaining": [
-          "Run fresh bounded per-record extension and independent readback using the reviewed pilot recipe."
+          "CORE-11 signs, profile/limitations review, release reconciliation"
         ]
       },
       "legacy_ids": [

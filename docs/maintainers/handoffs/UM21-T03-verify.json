@@ -1,0 +1,102 @@
+{
+  "task_id": "UM21-T03",
+  "reviewer_role": "independent pre-launch reviewer (no launch, no commit, no backlog edit)",
+  "rounds": [
+    {
+      "round": "pre-launch",
+      "verified_at_utc": "2026-11-02",
+      "verdict": "approve_launch_batch_0_only",
+      "scientific_approval": false,
+      "checks": {
+        "scope_vs_decision": "D-UM21-T02-1 = A (answered 2026-10-31). Option A count 8,626 - 148 - 916 = 7,562 equals scope kept_observations. 916 = 183+163+225+178+167 = AB01 d10, AB01 d5, AB08 i10, AB09 i10, AB10 i0, so AB08 i10 and AB10 i0 are inside option A's own count (not a new exclusion). AB01 i5 (148) is the 'held out of every option' recording named in the decision text. Dropped 6 / 1,064 observations, kept 44 / 7,562; 4 batches of 11, 44 unique records; AB01 i10 kept.",
+        "scope_open_items_for_jose": "Option A's text refers to D-UM21-T02-2 (AB01 i10 duplicate of AB01 i5), but no decision with that id exists in backlog.json. AB01 i10 is kept per the worker's 'coordinator resolution'. That is the conservative default and reversible (154 observations), but whether it stays is a scientific call for Jose. Task text says 'all 50 recordings'; read as 44 converted + 6 declared excluded this follows from the answered decision, but the acceptance wording should be updated at review time.",
+        "bound_files_unchanged": "git ls-files tracks 9 of the 11 bound producer/audit/census/baseline files; git diff HEAD is empty for all. run_um21_t02_pilot.py and the T03 runner are untracked/new; their hashes match spec bindings (T02 pilot already verified the pilot hash). Producer, audit, census, baseline summary and readback bindings are identical across all four specs and equal to batch 0.",
+        "batch_equals_full_run": "Read run_um21_t03_full.py and extend_umich_tread_source.py. Producer loops over records with no cross-record state (per-record folder, per-record writer, per-record mapping); only report['records'] summary dicts accumulate and the summary file is per batch. Each audit is a separate process with its own output dir. No shared counters or global ids. Staging copies baseline files, hash-checked before and after, in baseline order, narrows summary/readback with the summary hash re-bound. Per-record outputs therefore do not depend on batching. Note: there is no cross-batch summary; the independent full readback must aggregate the four run_summary/conversion_summary files.",
+        "memory": "No accumulation per record: producer reads 150-row batches (one observation) through iter_batches and a ParquetWriter; readback also 150-row batches; per-record h5py reads are slice-bounded; only small dicts are retained. Producer sets RLIMIT_AS 768 MiB and nice 19 itself; audit self-guards at 300 MiB RSS and is a fresh process. Largest kept record has 214 observations (pilot 180 at 182 MiB audit peak, 214 MiB combined); batch sizes 1,785 to 1,957 observations. Residual risks are allocator fragmentation and h5py chunk cache over 11 records in one producer process, bounded by the 768 MiB address-space cap (fails the job, not the host) and the launcher 2 GiB runtime kill. Not measured: whole-batch peak RSS, so batch 0 is also the measurement for batches 1-3.",
+        "specs": "All four specs: 36 bindings. Batch 0 re-hashed fully including the 2.2 GB Streaming.mat: 0 mismatches. Batches 1-3 re-hashed except Streaming.mat: 0 mismatches; record bindings (22 per batch) match each batch's scope list; shared bindings equal batch 0. address_space_mib 768, timeout_seconds 3600 (launcher maxima), startup 3584/runtime 2048 MiB. Output roots and receipt paths do not exist. Expected outputs: run_summary.json, audit_report.json, conversion_summary.json, phase.parquet, candidate_ledger.jsonl, source_columns.json (matched by file name anywhere under the output root). Scope hash e08c0667... bound and equals the --scope-sha256 argument.",
+        "tests": "OPENBLAS/OMP/MKL=1 nice 19 ionice idle pytest on tests/test_run_um21_t03_full.py: 7 passed in 3.3 s. Fixtures are labelled SYNTHETIC with small made-up byte files and independently known counts (kept 1+3+4, dropped 2 and 5, order, refusal on tampered/duplicate/unknown/existing, producer gate cases, stubbed run with a failing audit). They cover bookkeeping only, not the producer or scientific output. Handoff says 8 new tests; 7 found in the file (the extra may be elsewhere; cosmetic)."
+      },
+      "residual_risks": [
+        "Specs bind run_um21_t03_full.py by hash; any edit before launch invalidates the bindings.",
+        "Timing unmeasured (estimated 10-15 min per batch against a 3,600 s cap); each audit re-hashes the 2.2 GB source."
+      ],
+      "launch_conditions": [
+        "Dry run of batch 0 first, then launch batch 0 alone and record its receipt peak RSS and wall time.",
+        "Launch batches 1-3 only after batch 0 passes and its peak RSS is acceptable; one job at a time.",
+        "If any batch fails, do not rerun automatically; output roots must stay fresh."
+      ],
+      "recommendation": "Approve launching batch 0 (dry run first). Batches 1-3 follow after batch 0's receipt is reviewed."
+    },
+    {
+      "round": "scope-v2 re-batch (after v1 batch 2 failure)",
+      "verified_at_utc": "2026-11-02",
+      "verdict": "approve_v2_batches_2_to_6_one_at_a_time",
+      "scientific_approval": false,
+      "checks": {
+        "scope_v2": "Same schema, decision, baseline/census/source hashes, kept list (44 records, 7,562 observations) and dropped list as v1; batches flatten to the same 44 records in the same order. Batches 0 and 1 are identical to v1 (11 records each). New batches: AB06 5, AB07 5, AB08 4, AB09 4, AB10 4. Scope v2 sha256 7695a035... records supersedes_scope_sha256 = v1 e08c0667... Batches 0 and 1 launch receipts and run_summaries (batch_passed_unreviewed, completed, exit 0, record lists equal v2 batches 0 and 1; child peak RSS 220.9 and 225.5 MiB) still match; they bound scope v1 (same records), so the readback must accept v1 for batches 0-1 and v2 for 2-6.",
+        "bound_files": "run_um21_t03_full.py sha256 still 59e0d9a1... (unchanged); git diff HEAD empty for producer, audit, launcher; no tracked file modified under contributor_tools except an unrelated build_fixes_page.py. New files are only the scope-v2 maker, its tests and the scope-v2 file.",
+        "specs": "Five specs v2-batch2..6: bindings re-hashed (all but the 2.2 GB source, covered by batch 0) 0 mismatches. Versus batch 0 the only binding differences are record files (22 or 8-10 per batch), the new scope-v2 file and the maker script. Limits (timeouts 3,600 s, address space 768 MiB, startup/runtime memory, expected outputs) equal batch 0. --batch indices 2..6 and scope hash 7695a035 match the file; record bindings match each batch's list. Output roots (um21_tread_t03_v2_batchN_20261102) and receipts do not exist.",
+        "old_batch2_leak": "Not marked in the output root itself: no INVALID marker file there; only run_summary.json (status producer_failed), producer.log, base_batch and a partial components/ folder. The v2 scope and specs reference no output roots, so v2 does not read it, but its name (um21_tread_t03_batch2_20261102) matches a glob like t03_batch*. Condition for readback: enumerate outputs only from receipts and specs of batches 0, 1 and v2 2-6; never glob. Recommend the worker add a plain invalid marker or move-note to that root (a note in the handoff exists).",
+        "batch_size": "5 is reasonable, not a large margin. The failed run completed AB06's 5 records, then died in record 6, so the AB06 batch is exactly the 5 that already succeeded (RSS ~216 MiB while address space hit 768 MiB, which points at virtual growth, not resident). The other batches have 4-5 records and the same 768 MiB cap; batches 0 and 1 did 11 records fine, so growth is record-dependent or allocator-related, not a simple per-record rate. A failure costs only a re-run. Suggest launching the AB06 batch first (known pattern), then comparing peaks; if any batch fails, go to 2-3 records rather than raise the cap.",
+        "tests": "tests/test_make_um21_t03_scope_v2.py plus tests/test_run_um21_t03_full.py under the AGENTS.md prefix: 9 passed (2 new, synthetic, membership/order and keep-two cases)."
+      },
+      "recommendation": "Approve v2 batches 2-6, one at a time, dry run first; the readback must take output roots from receipts, not globs."
+    },
+    {
+      "round": "post-run independent verification",
+      "verified_at_utc": "2026-11-02",
+      "verdict": "pass",
+      "scientific_approval": false,
+      "part1_run_integrity": {
+        "status": "pass",
+        "evidence": "docs/quality/audits/um21-t03-integrity-check.json",
+        "script": "contributor_tools/audit_probes/2026_11_02/verify_um21_t03_integrity.py",
+        "facts": [
+          "7 receipts completed, exit 0, clean_success, all 8 checks true, cleanup proven, bindings before/after match",
+          "1 launch-ledger entry per job, all distinct",
+          "every receipt-listed output (371 files) hashed on disk: 0 mismatches",
+          "runner/producer/audit hashes identical across the 7 jobs; producer a7c565eb... and audit b3278c87... equal the T02 pilot bindings",
+          "44 unique records, 7,562 observations equal scope v1 (batches 0-1) and v2 (batches 2-6); 3,265 interval exclusions (ledger lines) match per-record scope counts",
+          "6 dropped under D-UM21-T02-1 = A: 1,064 observations, 409 excluded pairs; 7,562+1,064 = 8,626 and 3,265+409 = 3,674",
+          "outputs enumerated from receipts/specs only; invalid batch2 root not used"
+        ]
+      },
+      "part2_full_readback": {
+        "status": "pass",
+        "evidence": "docs/quality/audits/um21-t03-readback-report.json",
+        "script": "contributor_tools/audit_probes/2026_11_02/verify_um21_t03_readback.py",
+        "spec": "docs/quality/audits/um21-t03-readback-spec.json",
+        "receipt": "docs/quality/audits/um21-t03-readback-launcher-receipt.json",
+        "seed": 20261102,
+        "sample_per_record": 40,
+        "pilot_probe": "one record AB06/d10, nice 19 ionice idle, wrote nothing under converted_datasets: 4.2 s, peak RSS 160.7 MiB (x1.5 = 241 MiB < 600), single job",
+        "job": "guarded launcher, plain dry run passed, one background launch, exit 0 clean_success, verify-cleanup proven; wall 118 s, peak process RSS 183.0 MiB, group 185.7 MiB",
+        "coverage": {
+          "records": 44,
+          "observations": 7562,
+          "rows": "150 x 7,562 = 1,134,300",
+          "sampled_observations": 1760,
+          "sampled_components_compared": 147840,
+          "finite_values_compared": 22176000,
+          "max_abs_error": 0.0,
+          "excluded_pairs_confirmed_absent": 3265,
+          "mismatches": 0
+        },
+        "checks_per_record": [
+          "exactly 150 rows/observation, phase 0..100 inclusive on the linspace grid",
+          "observation ids, order, side, source start/end times equal the ledger copy; ledger sha equals the baseline ledger bound in the spec",
+          "ledger written+excluded pairs equal consecutive source LHS/RHS heel-strike pairs per side (every pair accounted for once); no observation for any excluded pair",
+          "exactly 84 source component columns equal to the source structure; source_columns.json equals it",
+          "sampled observations: all 84 components re-read from Streaming.mat and interpolated independently (np.interp), match exactly"
+        ]
+      },
+      "limits_not_covered": [
+        "Sampled values are 40 observations per record (23% of all); other observations are checked structurally, not value-by-value (their values were checked by the producer's own readback and audits).",
+        "No sampled source value was NaN, so the missing-value mask path was not exercised by data.",
+        "Frame base: ledger frames are treated as MATLAB 1-based heel-strike frames (time = (frame-1)/100, array index frame-1); this reproduces the output exactly but a one-frame (10 ms) convention was not tested against an independent physical event.",
+        "Non-source (pre-existing) columns were not re-derived here; they are covered by the T02/T03 audits."
+      ],
+      "recommendation": "Mark UM21-T03 done. Not scientific approval; CORE-11 signs, profile/limitations review and release reconciliation remain."
+    }
+  ]
+}
