@@ -1,0 +1,645 @@
+{
+ "task_id": "UM21-C02",
+ "status": "check_complete_unreviewed",
+ "scientific_approval": false,
+ "canonical_3d_approval": false,
+ "planar_formula_adopted": false,
+ "question": "Do the normalized and streaming pelvis fields describe the same physical stride?",
+ "answer": "Yes. All 7,224 normalized strides of the 44 T03 treadmill recordings bind exactly to consecutive same-side Streaming heel strikes, and each stride's three normalized pelvis components equal the same-side Streaming pelvis resampled to 150 points (largest difference 2.8e-14 deg; no missing-value or zero-fill differences). The opposite-side Streaming pelvis fails in obliquity and rotation for all 7,224; the sign-flipped same-side channel fails in all three components.",
+ "bindings": {
+  "report": {
+   "path": "converted_datasets/reconversion_v2/um21_c02_pelvis_20261102/pelvis_correspondence_report.json",
+   "sha256": "66999178c64a493a482677494cb1504b4f2359f2d397307c31d1366c385b9cd1"
+  },
+  "probe": {
+   "path": "contributor_tools/audit_probes/2026_11_02/probe_um21_pelvis_correspondence.py",
+   "sha256": "7572d80d40f060998a8fe3517bdcf2657e01bbec241d07dcc06659a600bc3b3e"
+  },
+  "tests": {
+   "path": "tests/test_probe_um21_pelvis_correspondence.py",
+   "sha256": "4913142a442a5ea13b025317a7217fdf2c0fb8d9d29f8c3617cf699654a9c114",
+   "note": "synthetic fixtures, 7 tests"
+  },
+  "spec": {
+   "path": "docs/quality/audits/um21-c02-spec.json",
+   "sha256": "0dbfc06faea087ce4fefcebda3d551662375633447d3453a8487eb3983c6d2d2"
+  },
+  "receipt": {
+   "path": "docs/quality/audits/um21-c02-launcher-receipt.json",
+   "sha256": "6aa3465c1cb8a9f67e4f5fb9dec17a177de670bd4c2cebc9873d8373c4bf3443"
+  },
+  "sources": {
+   "Normalized.mat": "c83cad34fca5748dd565c212a335658c2e7ea0a5be1b162c6b7d70b010c03dae",
+   "Streaming.mat": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+   "note": "both hashed by the launcher before and after (bindings match); not the INVALID t03 batch2 root"
+  },
+  "scope_and_receipts_used": "records, ledgers and output roots enumerated from the seven T03 receipts and scope v1 (batches 0-1) / v2 (batches 2-6); no glob"
+ },
+ "run": {
+  "pilot": "AB04/d10 read-only probe, nice 19 / ionice idle, wrote nothing under converted_datasets, peak RSS 52.9 MiB (176 strides, all matched, hip frame-base control as below)",
+  "job": "one guarded-launcher job, plain dry run first, one background launch, exit 0, clean_success, verify-cleanup proven",
+  "wall_seconds": 4.81,
+  "peak_rss_kib_largest_process": 75336,
+  "probe_peak_rss_mib": 73.6
+ },
+ "method": {
+  "identity": "Explicit StrideDetails rows [first, last, duration, leg 1=Left 2=Right]; accepted only if duration = last - first and (side, first, last) equals consecutive same-side LHS/RHS heel strikes; no duplicates. Array order never used.",
+  "grid": "Streaming window frames a..b (1-based) resampled linearly to 150 points on the inclusive grid.",
+  "tolerance_deg": 1e-06,
+  "hypotheses_reported_not_selected": [
+   "H1 same-side Streaming pelvis",
+   "H2 opposite-side Streaming pelvis",
+   "H1neg same-side with sign flipped (diagnostic)"
+  ],
+  "positive_control": "Same-side hip: same window and resampling."
+ },
+ "results": {
+  "recordings": 44,
+  "normalized_strides": 7224,
+  "bound_exactly": 7224,
+  "unbound": 0,
+  "left_strides": 3585,
+  "right_strides": 3639,
+  "H1_same_side": {
+   "matched_all_components": {
+    "left": 3585,
+    "right": 3639
+   },
+   "worst_error_deg": 2.842170943040401e-14,
+   "mask_mismatch_strides": 0
+  },
+  "H2_opposite_side": {
+   "matched_all_components": 0,
+   "tilt_component_matched": 7224,
+   "obliquity_matched": 0,
+   "rotation_matched": 0,
+   "reading": "Left and right Streaming pelvis tilt are numerically identical, so the sagittal component cannot tell the two hypotheses apart; obliquity and rotation can, and reject the opposite side."
+  },
+  "H1neg_sign_flipped": {
+   "matched_all_components": 0
+  },
+  "hip_control": {
+   "frame_base_1_matched": 7224,
+   "frame_base_0_matched": 0,
+   "reading": "Frame base a-1..b-1 reproduces the normalized hip in 7,224/7,224; shifting by one frame matches 0, so the one-frame convention is tested against the independent normalized series."
+  },
+  "missing_and_zero": {
+   "normalized_pelvis_all_zero": 0,
+   "normalized_pelvis_nan": 0,
+   "streaming_same_side_pelvis_all_zero_windows": 0,
+   "normalized_sagittal_pelvis_nonzero": 7224,
+   "limit": "No missing values exist in any compared pelvis stride, so the mask comparison (equal, all finite) did not exercise a gap path."
+  },
+  "t03_overlap": {
+   "t03_written_observations": 7562,
+   "with_normalized_twin": 6794,
+   "twin_pelvis_matched_H1": 6794,
+   "task_label_agreement": "all 6,794 ledger labels equal the Normalized task block",
+   "t03_written_without_normalized_twin": 768,
+   "normalized_strides_not_in_t03_release": 430,
+   "reading": "768 released observations have no Normalized stride, so the normalized series cannot back them; 430 normalized strides are not in the T03 release (reason not examined here)."
+  },
+  "AB04_i0": "Normalized pelvis of AB04/i0 equals the stored Streaming pelvis in 157 of 157 strides, and the stored Streaming pelvis is the reversed one (UM21-P01), so Normalized carries the same 180 deg heading problem. The two series are not independent evidence for each other; the D-UM21-P01-1 = C correction must apply to both alike."
+ },
+ "evidence_gates": {
+  "clock": "Finite: every StrideDetails row has duration = last - first (README: duration at 100 Hz), checked for all 7,224 rows; frame base tested by the hip control.",
+  "units": "Degrees per README p.5; normalized hip equals Streaming hip to 1e-14, so both are in the same unit.",
+  "source_frame": "Same Plug-in Gait pelvis fields (identical to 1e-14 after resampling); P01 and C03 already tie tilt sign to markers.",
+  "planar_formula": "Not adopted here. The evidence above is for correspondence only; the author hip - pelvis recipe, rule B and CORE-11 treatment are unchanged. Canonical 3D remains unapproved."
+ },
+ "limitations": [
+  "Values compared at every stride, but only for records and tasks present in Normalized; no scientific approval.",
+  "Streaming pelvis was compared to the 150-point normalized series, not to markers; marker evidence is in UM21-C03 and UM21-P01.",
+  "Both pelvis sides agree on tilt, so the hypothesis question matters only for obliquity and rotation, which are not released."
+ ],
+ "per_record": {
+  "AB01/i0": {
+   "normalized_strides": 157,
+   "bound": 157,
+   "left": 76,
+   "right": 81,
+   "H1_matched": 157,
+   "H2_matched": 0,
+   "H2_tilt_matched": 157,
+   "t03_written": 160,
+   "t03_written_with_normalized_twin": 148,
+   "normalized_strides_not_in_t03_release": 9
+  },
+  "AB01/i10": {
+   "normalized_strides": 142,
+   "bound": 142,
+   "left": 69,
+   "right": 73,
+   "H1_matched": 142,
+   "H2_matched": 0,
+   "H2_tilt_matched": 142,
+   "t03_written": 154,
+   "t03_written_with_normalized_twin": 134,
+   "normalized_strides_not_in_t03_release": 8
+  },
+  "AB02/d10": {
+   "normalized_strides": 168,
+   "bound": 168,
+   "left": 84,
+   "right": 84,
+   "H1_matched": 168,
+   "H2_matched": 0,
+   "H2_tilt_matched": 168,
+   "t03_written": 176,
+   "t03_written_with_normalized_twin": 160,
+   "normalized_strides_not_in_t03_release": 8
+  },
+  "AB02/d5": {
+   "normalized_strides": 163,
+   "bound": 163,
+   "left": 80,
+   "right": 83,
+   "H1_matched": 163,
+   "H2_matched": 0,
+   "H2_tilt_matched": 163,
+   "t03_written": 167,
+   "t03_written_with_normalized_twin": 153,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB02/i0": {
+   "normalized_strides": 148,
+   "bound": 148,
+   "left": 72,
+   "right": 76,
+   "H1_matched": 148,
+   "H2_matched": 0,
+   "H2_tilt_matched": 148,
+   "t03_written": 158,
+   "t03_written_with_normalized_twin": 139,
+   "normalized_strides_not_in_t03_release": 9
+  },
+  "AB02/i10": {
+   "normalized_strides": 151,
+   "bound": 151,
+   "left": 73,
+   "right": 78,
+   "H1_matched": 151,
+   "H2_matched": 0,
+   "H2_tilt_matched": 151,
+   "t03_written": 151,
+   "t03_written_with_normalized_twin": 141,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB02/i5": {
+   "normalized_strides": 142,
+   "bound": 142,
+   "left": 68,
+   "right": 74,
+   "H1_matched": 142,
+   "H2_matched": 0,
+   "H2_tilt_matched": 142,
+   "t03_written": 148,
+   "t03_written_with_normalized_twin": 132,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB03/d10": {
+   "normalized_strides": 167,
+   "bound": 167,
+   "left": 80,
+   "right": 87,
+   "H1_matched": 167,
+   "H2_matched": 0,
+   "H2_tilt_matched": 167,
+   "t03_written": 175,
+   "t03_written_with_normalized_twin": 158,
+   "normalized_strides_not_in_t03_release": 9
+  },
+  "AB03/d5": {
+   "normalized_strides": 160,
+   "bound": 160,
+   "left": 79,
+   "right": 81,
+   "H1_matched": 160,
+   "H2_matched": 0,
+   "H2_tilt_matched": 160,
+   "t03_written": 173,
+   "t03_written_with_normalized_twin": 150,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB03/i0": {
+   "normalized_strides": 145,
+   "bound": 145,
+   "left": 76,
+   "right": 69,
+   "H1_matched": 145,
+   "H2_matched": 0,
+   "H2_tilt_matched": 145,
+   "t03_written": 159,
+   "t03_written_with_normalized_twin": 135,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB03/i10": {
+   "normalized_strides": 160,
+   "bound": 160,
+   "left": 79,
+   "right": 81,
+   "H1_matched": 160,
+   "H2_matched": 0,
+   "H2_tilt_matched": 160,
+   "t03_written": 164,
+   "t03_written_with_normalized_twin": 150,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB03/i5": {
+   "normalized_strides": 155,
+   "bound": 155,
+   "left": 82,
+   "right": 73,
+   "H1_matched": 155,
+   "H2_matched": 0,
+   "H2_tilt_matched": 155,
+   "t03_written": 159,
+   "t03_written_with_normalized_twin": 144,
+   "normalized_strides_not_in_t03_release": 11
+  },
+  "AB04/d10": {
+   "normalized_strides": 176,
+   "bound": 176,
+   "left": 86,
+   "right": 90,
+   "H1_matched": 176,
+   "H2_matched": 0,
+   "H2_tilt_matched": 176,
+   "t03_written": 180,
+   "t03_written_with_normalized_twin": 167,
+   "normalized_strides_not_in_t03_release": 9
+  },
+  "AB04/d5": {
+   "normalized_strides": 177,
+   "bound": 177,
+   "left": 87,
+   "right": 90,
+   "H1_matched": 177,
+   "H2_matched": 0,
+   "H2_tilt_matched": 177,
+   "t03_written": 176,
+   "t03_written_with_normalized_twin": 166,
+   "normalized_strides_not_in_t03_release": 11
+  },
+  "AB04/i0": {
+   "normalized_strides": 157,
+   "bound": 157,
+   "left": 77,
+   "right": 80,
+   "H1_matched": 157,
+   "H2_matched": 0,
+   "H2_tilt_matched": 157,
+   "t03_written": 165,
+   "t03_written_with_normalized_twin": 146,
+   "normalized_strides_not_in_t03_release": 11
+  },
+  "AB04/i10": {
+   "normalized_strides": 150,
+   "bound": 150,
+   "left": 73,
+   "right": 77,
+   "H1_matched": 150,
+   "H2_matched": 0,
+   "H2_tilt_matched": 150,
+   "t03_written": 152,
+   "t03_written_with_normalized_twin": 138,
+   "normalized_strides_not_in_t03_release": 12
+  },
+  "AB04/i5": {
+   "normalized_strides": 132,
+   "bound": 132,
+   "left": 58,
+   "right": 74,
+   "H1_matched": 132,
+   "H2_matched": 0,
+   "H2_tilt_matched": 132,
+   "t03_written": 151,
+   "t03_written_with_normalized_twin": 122,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB05/d10": {
+   "normalized_strides": 183,
+   "bound": 183,
+   "left": 93,
+   "right": 90,
+   "H1_matched": 183,
+   "H2_matched": 0,
+   "H2_tilt_matched": 183,
+   "t03_written": 197,
+   "t03_written_with_normalized_twin": 176,
+   "normalized_strides_not_in_t03_release": 7
+  },
+  "AB05/d5": {
+   "normalized_strides": 181,
+   "bound": 181,
+   "left": 91,
+   "right": 90,
+   "H1_matched": 181,
+   "H2_matched": 0,
+   "H2_tilt_matched": 181,
+   "t03_written": 183,
+   "t03_written_with_normalized_twin": 170,
+   "normalized_strides_not_in_t03_release": 11
+  },
+  "AB05/i0": {
+   "normalized_strides": 170,
+   "bound": 170,
+   "left": 81,
+   "right": 89,
+   "H1_matched": 170,
+   "H2_matched": 0,
+   "H2_tilt_matched": 170,
+   "t03_written": 174,
+   "t03_written_with_normalized_twin": 157,
+   "normalized_strides_not_in_t03_release": 13
+  },
+  "AB05/i10": {
+   "normalized_strides": 158,
+   "bound": 158,
+   "left": 79,
+   "right": 79,
+   "H1_matched": 158,
+   "H2_matched": 0,
+   "H2_tilt_matched": 158,
+   "t03_written": 164,
+   "t03_written_with_normalized_twin": 148,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB05/i5": {
+   "normalized_strides": 159,
+   "bound": 159,
+   "left": 82,
+   "right": 77,
+   "H1_matched": 159,
+   "H2_matched": 0,
+   "H2_tilt_matched": 159,
+   "t03_written": 175,
+   "t03_written_with_normalized_twin": 150,
+   "normalized_strides_not_in_t03_release": 9
+  },
+  "AB06/d10": {
+   "normalized_strides": 198,
+   "bound": 198,
+   "left": 99,
+   "right": 99,
+   "H1_matched": 198,
+   "H2_matched": 0,
+   "H2_tilt_matched": 198,
+   "t03_written": 197,
+   "t03_written_with_normalized_twin": 189,
+   "normalized_strides_not_in_t03_release": 9
+  },
+  "AB06/d5": {
+   "normalized_strides": 178,
+   "bound": 178,
+   "left": 91,
+   "right": 87,
+   "H1_matched": 178,
+   "H2_matched": 0,
+   "H2_tilt_matched": 178,
+   "t03_written": 184,
+   "t03_written_with_normalized_twin": 169,
+   "normalized_strides_not_in_t03_release": 9
+  },
+  "AB06/i0": {
+   "normalized_strides": 170,
+   "bound": 170,
+   "left": 85,
+   "right": 85,
+   "H1_matched": 170,
+   "H2_matched": 0,
+   "H2_tilt_matched": 170,
+   "t03_written": 169,
+   "t03_written_with_normalized_twin": 160,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB06/i10": {
+   "normalized_strides": 168,
+   "bound": 168,
+   "left": 85,
+   "right": 83,
+   "H1_matched": 168,
+   "H2_matched": 0,
+   "H2_tilt_matched": 168,
+   "t03_written": 169,
+   "t03_written_with_normalized_twin": 157,
+   "normalized_strides_not_in_t03_release": 11
+  },
+  "AB06/i5": {
+   "normalized_strides": 155,
+   "bound": 155,
+   "left": 77,
+   "right": 78,
+   "H1_matched": 155,
+   "H2_matched": 0,
+   "H2_tilt_matched": 155,
+   "t03_written": 157,
+   "t03_written_with_normalized_twin": 145,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB07/d10": {
+   "normalized_strides": 186,
+   "bound": 186,
+   "left": 92,
+   "right": 94,
+   "H1_matched": 186,
+   "H2_matched": 0,
+   "H2_tilt_matched": 186,
+   "t03_written": 195,
+   "t03_written_with_normalized_twin": 176,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB07/d5": {
+   "normalized_strides": 176,
+   "bound": 176,
+   "left": 92,
+   "right": 84,
+   "H1_matched": 176,
+   "H2_matched": 0,
+   "H2_tilt_matched": 176,
+   "t03_written": 187,
+   "t03_written_with_normalized_twin": 166,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB07/i0": {
+   "normalized_strides": 170,
+   "bound": 170,
+   "left": 83,
+   "right": 87,
+   "H1_matched": 170,
+   "H2_matched": 0,
+   "H2_tilt_matched": 170,
+   "t03_written": 180,
+   "t03_written_with_normalized_twin": 162,
+   "normalized_strides_not_in_t03_release": 8
+  },
+  "AB07/i10": {
+   "normalized_strides": 139,
+   "bound": 139,
+   "left": 81,
+   "right": 58,
+   "H1_matched": 139,
+   "H2_matched": 0,
+   "H2_tilt_matched": 139,
+   "t03_written": 169,
+   "t03_written_with_normalized_twin": 131,
+   "normalized_strides_not_in_t03_release": 8
+  },
+  "AB07/i5": {
+   "normalized_strides": 167,
+   "bound": 167,
+   "left": 82,
+   "right": 85,
+   "H1_matched": 167,
+   "H2_matched": 0,
+   "H2_tilt_matched": 167,
+   "t03_written": 168,
+   "t03_written_with_normalized_twin": 157,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB08/d10": {
+   "normalized_strides": 165,
+   "bound": 165,
+   "left": 83,
+   "right": 82,
+   "H1_matched": 165,
+   "H2_matched": 0,
+   "H2_tilt_matched": 165,
+   "t03_written": 182,
+   "t03_written_with_normalized_twin": 154,
+   "normalized_strides_not_in_t03_release": 11
+  },
+  "AB08/d5": {
+   "normalized_strides": 155,
+   "bound": 155,
+   "left": 75,
+   "right": 80,
+   "H1_matched": 155,
+   "H2_matched": 0,
+   "H2_tilt_matched": 155,
+   "t03_written": 165,
+   "t03_written_with_normalized_twin": 145,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB08/i0": {
+   "normalized_strides": 126,
+   "bound": 126,
+   "left": 52,
+   "right": 74,
+   "H1_matched": 126,
+   "H2_matched": 0,
+   "H2_tilt_matched": 126,
+   "t03_written": 162,
+   "t03_written_with_normalized_twin": 119,
+   "normalized_strides_not_in_t03_release": 7
+  },
+  "AB08/i5": {
+   "normalized_strides": 149,
+   "bound": 149,
+   "left": 73,
+   "right": 76,
+   "H1_matched": 149,
+   "H2_matched": 0,
+   "H2_tilt_matched": 149,
+   "t03_written": 153,
+   "t03_written_with_normalized_twin": 137,
+   "normalized_strides_not_in_t03_release": 12
+  },
+  "AB09/d10": {
+   "normalized_strides": 209,
+   "bound": 209,
+   "left": 104,
+   "right": 105,
+   "H1_matched": 209,
+   "H2_matched": 0,
+   "H2_tilt_matched": 209,
+   "t03_written": 214,
+   "t03_written_with_normalized_twin": 200,
+   "normalized_strides_not_in_t03_release": 9
+  },
+  "AB09/d5": {
+   "normalized_strides": 192,
+   "bound": 192,
+   "left": 102,
+   "right": 90,
+   "H1_matched": 192,
+   "H2_matched": 0,
+   "H2_tilt_matched": 192,
+   "t03_written": 194,
+   "t03_written_with_normalized_twin": 185,
+   "normalized_strides_not_in_t03_release": 7
+  },
+  "AB09/i0": {
+   "normalized_strides": 182,
+   "bound": 182,
+   "left": 94,
+   "right": 88,
+   "H1_matched": 182,
+   "H2_matched": 0,
+   "H2_tilt_matched": 182,
+   "t03_written": 186,
+   "t03_written_with_normalized_twin": 172,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB09/i5": {
+   "normalized_strides": 163,
+   "bound": 163,
+   "left": 82,
+   "right": 81,
+   "H1_matched": 163,
+   "H2_matched": 0,
+   "H2_tilt_matched": 163,
+   "t03_written": 177,
+   "t03_written_with_normalized_twin": 153,
+   "normalized_strides_not_in_t03_release": 10
+  },
+  "AB10/d10": {
+   "normalized_strides": 183,
+   "bound": 183,
+   "left": 90,
+   "right": 93,
+   "H1_matched": 183,
+   "H2_matched": 0,
+   "H2_tilt_matched": 183,
+   "t03_written": 182,
+   "t03_written_with_normalized_twin": 172,
+   "normalized_strides_not_in_t03_release": 11
+  },
+  "AB10/d5": {
+   "normalized_strides": 167,
+   "bound": 167,
+   "left": 78,
+   "right": 89,
+   "H1_matched": 167,
+   "H2_matched": 0,
+   "H2_tilt_matched": 167,
+   "t03_written": 181,
+   "t03_written_with_normalized_twin": 158,
+   "normalized_strides_not_in_t03_release": 9
+  },
+  "AB10/i10": {
+   "normalized_strides": 164,
+   "bound": 164,
+   "left": 81,
+   "right": 83,
+   "H1_matched": 164,
+   "H2_matched": 0,
+   "H2_tilt_matched": 164,
+   "t03_written": 160,
+   "t03_written_with_normalized_twin": 153,
+   "normalized_strides_not_in_t03_release": 11
+  },
+  "AB10/i5": {
+   "normalized_strides": 161,
+   "bound": 161,
+   "left": 79,
+   "right": 82,
+   "H1_matched": 161,
+   "H2_matched": 0,
+   "H2_tilt_matched": 161,
+   "t03_written": 170,
+   "t03_written_with_normalized_twin": 150,
+   "normalized_strides_not_in_t03_release": 11
+  }
+ }
+}

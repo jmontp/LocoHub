@@ -1588,7 +1588,7 @@
       "priority": "P0",
       "dataset": "um21",
       "title": "Check exact normalized-to-streaming pelvis correspondence",
-      "status": "blocked",
+      "status": "done",
       "stage": "pilot",
       "question": "Do normalized and streaming pelvis fields describe the same physical stride?",
       "scope": "Prepared AB04 d10/in10 s1 four-stride comparison, two strides per physical side; nonzero pelvis required.",
@@ -1611,28 +1611,33 @@
         "Compare all three components and missing masks on the same 150-point grid, reporting both pelvis hypotheses without automatic selection.",
         "Require finite clock/unit and source frame evidence before adopting any planar formula; canonical 3D remains unapproved."
       ],
-      "next_action": "Revalidate the existing prepared correspondence pilot and execute only in a reviewed exclusive slot.",
+      "next_action": "None; verified. Planar formula adoption and CORE-11 treatment are separate tasks.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/um21-pelvis-correspondence-pilot-review.json",
         "docs/quality/audits/um21-ankle-source-review.json",
         "converted_datasets/reconversion_v2/um21_running_full_20261020/source_comparison.json",
-        "docs/quality/audits/um21-author-planar-recipe-followup.json"
+        "docs/quality/audits/um21-author-planar-recipe-followup.json",
+        "docs/quality/audits/um21-c02-pelvis-correspondence.json",
+        "docs/maintainers/handoffs/UM21-C02.json",
+        "docs/maintainers/handoffs/UM21-C02-verify.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
-        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
+        "last_checked_at_utc": "2026-11-03T00:45:00Z",
+        "summary": "Yes, the normalized and streaming pelvis fields describe the same physical stride. All 7,224 normalized strides in the 44 T03 treadmill recordings bind exactly (explicit StrideDetails side and frames, consecutive same-side heel strikes, duration = end - start; no concatenation order used). For every one, all three normalized pelvis components equal the same-side streaming pelvis resampled to the same 150 points (largest difference 2.8e-14 deg, no missing-value or zero-fill differences). The opposite-side streaming pelvis matches tilt but fails obliquity and rotation in all 7,224 (left and right tilt are identical, so tilt cannot tell them apart); a sign-flipped pelvis fails everywhere. A same-side hip control matches 7,224/7,224 with the 1-based frame base and 0 with a one-frame shift. AB04/i0 normalized carries the same reversed pelvis as streaming, so the two are not independent evidence there. No planar formula adopted; canonical 3D unapproved; not scientific approval.",
         "checks": [
-          "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
+          "Read AGENTS.md, UM21-C01/C03/P01/P02/T03/T03-verify handoffs and the pelvis pilot review and author-recipe audits.",
+          "Wrote the probe and 7 synthetic tests (tests/test_probe_um21_pelvis_correspondence.py: 7 passed; known values by construction).",
+          "Pilot: AB04/d10 as a read-only probe (nice 19, ionice idle, wrote nothing under converted_datasets, peak RSS 52.9 MiB): 176 strides, all matched.",
+          "Full: one guarded-launcher job (plain dry run, one background launch, exit 0, clean_success, verify-cleanup proven, wall 4.8 s, peak RSS 73.6 MiB). Records, ledgers and output roots taken from the seven T03 receipts and scope v1/v2, never a glob; the invalid batch2 root was not used.",
+          "Sources (Normalized.mat c83cad34..., Streaming.mat df8b3e31...) hashed by the launcher before and after; bindings unchanged."
         ],
-        "remaining": [
-          "Revalidate the existing prepared correspondence pilot and execute only in a reviewed exclusive slot."
-        ]
+        "remaining": [],
+        "verification": "Independently verified 2026-11-03: see docs/maintainers/handoffs/UM21-C02-verify.json (receipt/hashes/cleanup re-run, own probe on 2 seeded records, 44 strides; 430 excluded strides accounted for in T03 ledgers; 768 released observations have no normalized cross-check)."
       },
       "legacy_ids": [
         "UM21-02"
-      ],
-      "blocked_reason": "Requires completed dependency evidence: PM-01, UM21-C01. Numerical/native execution also requires current exclusive ownership, unchanged resource guards and a reviewed single-job handoff; old stopped predecessors are not success."
+      ]
     },
     {
       "id": "UM21-C03",
@@ -1722,7 +1727,7 @@
       "priority": "P0",
       "dataset": "um21",
       "title": "Assess treadmill observations with applicable quality rules",
-      "status": "blocked",
+      "status": "ready",
       "stage": "quality",
       "question": "Which treadmill observations are valid, failed or unassessed under justified rules?",
       "scope": "First treadmill release only; retain all full-variant observations and explicit filtered membership.",
@@ -1762,8 +1767,7 @@
       },
       "legacy_ids": [
         "QA-01"
-      ],
-      "blocked_reason": "Requires completed dependency evidence: PM-01, UM21-T03, UM21-C02, CORE-01. Numerical/native execution also requires current exclusive ownership, unchanged resource guards and a reviewed single-job handoff; old stopped predecessors are not success."
+      ]
     },
     {
       "id": "UM21-R01",
