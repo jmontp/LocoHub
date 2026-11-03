@@ -182,5 +182,31 @@
   "needs_jose": [
    "R01 scope (not blocking full-mode review): contralateral columns, 15 unmapped observations, and whether a half-evidenced channel may be published for one leg."
   ]
+ },
+ "round_fullmode_pre": {
+  "round": "fullmode-pre",
+  "reviewed_commit": "6f73409",
+  "verdict": "Approve v3 pilot a, then v3 pilot b. Full batches only after both pass review and the conditions below.",
+  "gate": "pass: record path is a runner constant, its sha256 (c459e7a7...) and the receipt sha256 (3b6ff3f4...) equal the files; both committed and unmodified; path never from the command line; ModeProxy only in full mode and only forwards the path to the unmodified check_pilot_record; I called check_pilot_record directly on the current backlog and bound build and it ACCEPTS (record and receipt facts returned); tests exercise the real hook refusing a missing record, a missing file and a copy outside audits. Summary fails a run if any group lacks hook pilot facts. No bound file changed (git clean; spec bindings equal current hashes).",
+  "one_leg_rule": "pass: settle_recording publishes a hook channel only if both legs published with the same multiplier; derived segments and velocities require both legs and kept inputs. I applied it to the logs of all 8 v2 pilot records (stage a and b): it reproduces exactly the v2 written columns, adds none and drops none, no flags. Because it requires both legs to publish, it can only publish a subset of what the old intersection published. Residual: segment loop iterates right-leg segments only; a segment derived only on the left is silently not kept (safe direction).",
+  "repilot": "pass: v3 pilot specs a and b bind the runner hash 967debea... which equals the current file and the runner bound in all ten full specs; they differ from v2 only in that hash (plus job id and roots); recordings identical to v2 (AB04/i0; the same 7). Limits unchanged (768 MiB, 3600 s, 30 s kill, 15 s poll, 3584/2048 MiB); output roots and receipts do not exist.",
+  "full_specs": "pass: ten per-subject specs; recordings equal stage_recordings('full', subject) and together are exactly the 44 T03 receipt records, no duplicates and none of the six excluded; subject counts 2,5,5,5,5,5,5,4,4,4. Inputs come from the seven valid receipts (T03_JOBS); the invalid um21_tread_t03_batch2_20261102 root appears in no record path (v2_batch2 is the valid one). Each binds the v4 record and receipt, 20 bindings, same limits, new output roots (um21_t04_full_ABxx_v1), mode full, stage full.",
+  "tests": "18 passed with the AGENTS.md prefix.",
+  "conditions_before_full_batches": [
+   "v3 pilot a then b pass independent post-run review (integrity, alignment on 2 seeded records, columns identical to v2 for the same recordings, no new holds other than rule-flag cases).",
+   "Do not edit backlog.json CORE-11-P-UM21 record, the v4 record or receipt, or commit changes to them between review and launch: the gate reads the working-tree backlog and HEAD blobs per group and would refuse (fail closed).",
+   "Launch one subject at a time, each through the launcher with a dry run, checking the previous receipt and verify-cleanup first; confirm peak RSS under 300 MiB (stage b: 239 MiB on 7 records; five-record subjects should be lower).",
+   "After the batches: a combined readback (44 records, mapped plus unmapped equals 7,562 with 15 unmapped listed, held-by-rule channels per record, rule flags) by an independent agent.",
+   "R01 items from round 1 and post-b still open (contralateral columns, 15 unmapped, T03 thigh/shank/foot not rule-B)."
+  ],
+  "needs_jose": []
+ },
+ "round_post_v3": {
+  "round": "post-v3",
+  "verdict": "v3 pilots a and b pass. Approve the AB01 full batch (2 records) as the first full launch, then stop for a gate-facts check.",
+  "receipt_integrity": "pass for both: completed, clean_success, exit 0, no orphans or errors; verify-cleanup re-run proven true for both receipts; all 14 (a) and 86 (b) output hashes match; bindings before/after match and equal the v3 specs; spec sha256 matches; runner hash 967debea... equals the current file and the summary's code_sha256; summaries passed with no rule flags, findings, group failures or unexplained cross-group items; totals a 165/165 mapped, b 1,187 with 1,182 mapped and 5 unmapped as before; peak RSS 211 and 238 MiB. Bound files git-clean.",
+  "identity_to_v2": "pass: for all 8 recordings the v3 observations_signed.parquet has the same column names and row count as v2, every float column is bit-identical (compared as raw 64-bit patterns, so NaNs included), ids equal, and the observation map statuses and unit indices are identical. I agree that identity stands in for a repeated alignment check: the v2 alignment, power and pelvis checks apply unchanged to byte-identical data.",
+  "gate_adequacy": "AB01 first is adequate with conditions. It exercises the real gate on four groups (two records, both legs) and the new rule in full mode, with the smallest exposure. It does not exercise the AB04/i0 correction expectation or hold-heavy records; stage a/b already did in pilot mode and the AB04 batch will in full mode, so review AB04 as its own checkpoint. Facts to check after AB01 before launching AB02-AB10: (1) t04_summary.json pilot_gate.groups_without_hook_pilot_facts is empty and every group's pilot_facts is non-empty with record = core11-p-um21-pilot-record-v4.json, sha256 c459e7a7..., receipt sha256 3b6ff3f4..., pilot_task CORE-11-P-UM21; (2) each sign_application.json mode is full; (3) the receipt and verify-cleanup are clean; (4) AB01 counts equal J0 and columns follow the rule; (5) peak RSS under 300 MiB; (6) bindings include the record and receipt and match; (7) nothing in HEAD blobs or the CORE-11-P-UM21 backlog record changed since the gate check. If the gate refuses on the first group the run fails closed with a consumed output root; then fix and re-spec as v2 rather than reusing the root.",
+  "needs_jose": []
  }
 }
