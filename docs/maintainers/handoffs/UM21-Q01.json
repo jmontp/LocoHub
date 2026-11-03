@@ -1,0 +1,136 @@
+{
+  "task_id": "UM21-Q01",
+  "phase": "plan only (step 1); nothing launched, no data read beyond parquet schema of one T03 record, nothing committed",
+  "status": "working",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-02T00:00:00Z",
+  "facts_checked": [
+    "T03 phase tables (um21_tread_t03_*/components/ABxx/<cond>/phase.parquet, enumerate from the seven T03 receipts, never a glob; batch2 root is INVALID) hold 150 samples per observation, 114 columns, about 26 MiB on disk per record (AB01/i0: 24,000 rows). Schema read only.",
+    "They carry source_* component columns (deg, N/kg, N*m/kg, W/kg) plus some canonical-named columns (pelvis, hip, knee, thigh, shank, ankle_dorsiflexion, hip/knee velocity) written by the pre-CORE-11 producer. There are NO canonical moment, power or GRF/CoP columns. The pre-hook thigh/shank/velocities must not be trusted as canonical (CORE-11-P-UM21 condition F2).",
+    "No sign application has been run on T03 outputs. The v4 pilot adapter uses its own strides (consecutive heel strikes 50-250 frames apart), not T03 observation IDs (UM21-E01 left 'feed the hook the released observation set' as optional at T03). No task in the backlog covers a full-mode run.",
+    "contributor_tools/validation_ranges/default_ranges.yaml: header 'Interactive Validation Tuner', no review_status, no review record, no applicability block, no evidence. By DATA_CONTRACT it is legacy_unspecified. CORE-07 only mirrored 4 run pelvis entries. Walking tasks (level, incline, decline) have 24 features: hip/knee/ankle angle, moments, GRF, CoP; no pelvis, thigh, shank or velocities. The README says the ranges were generated from UMich 2021 itself, so judging UM21 against them is circular.",
+    "No open José decisions. Answered and relevant: D-1=C (8,626 strides), D-UM21-C01-2=C (ankle angle and flexion moments standard, moments after the sign rule), D-UM21-C01-1=C (thigh/shank standard names from the planar recipe), D-UM21-C03-2=C. Backlog status 'working' is allowed by the schema (shown as in progress)."
+  ],
+  "plan": {
+    "1_where_sign_application_happens": "Its own guarded job, before Q01 plausibility, not part of R01 (R01 only bundles reviewed columns; it must not run numerics). Recommended new task UM21-T04 'Apply CORE-11 full-mode signs to the T03 treadmill outputs' (depends on UM21-T03, CORE-11-P-UM21, UM21-E01; Q01 and R01 then depend on it). Not added to the backlog here (minimal edits); coordinator decides. Design: a new thin runner and adapter step that, for each of the 44 T03 records, re-reads the untransformed Streaming.mat channels one recording at a time, calls run_sign_application(mode='full', pilot_record_path=v4 record) with unit IDs equal to the T03 observation IDs, then derives segments and velocities after the hook, and writes rule-B columns plus sign_application.json and sign_review.json to a NEW output root (never overwriting T03). Open mapping risk: T03 observations may not equal the adapter's heel-strike pairs (curated windows). Step 0 is a read-only probe on one record (observation_id/source_start/end only, under 100 MiB) to measure the match. If the adapter or any bound file must change, the v4 pilot is invalid and a v5 re-pilot (7 records, about 8 s, 160 MiB) is needed first. Preferred: put the observation mapping in the new runner, outside the bound set, and verify bindings list before editing anything.",
+    "2_profile_ranges": "No approved range fits today, so by default every plausibility check is unassessed (state 'unchecked', visible, never pass). The default profile is a tuner draft with no applicability, review or evidence, and is circular for UM21. Plausibility is a separate assessment layer from the structural/time/side/source-fidelity layer (150 inclusive samples, finite, real clock, side and observation lineage). Eligible canonical columns after T04: pelvis tilt, hip and knee angle, and hip/knee/ankle flexion moments (rule B, audited signs). Never passing: ankle angle (zero offset unreviewed, anomalous recording-sides missing), thigh/shank (planar approximations), velocities, powers, joint forces, GRF/CoP (source-only, N and mm), frontal/transverse. A profile for Q01 would be a new reviewed file with population (able-bodied adults), task (level/incline/decline treadmill), units, canonical applicability and evidence per feature, plus a review record. That approval is a scientific choice: see the drafted decision below. Until José answers, Q01 can finish the structural layer and the plausibility layer as all-unchecked.",
+    "3_jobs_and_memory": "All launcher jobs: one worker, thread env 1, nice 19 / ionice idle, address space 768 MiB (never raised), serial, dry run first, a pilot before the full run of the same bound code, one record at a time. J0 read-only probe (no launcher, AGENTS.md exception): one record, id/start/end columns only, estimate 60-100 MiB peak RSS, record it. J1 T04 pilot: 1 record (AB04/i0, the pelvis-correction case), then 7 seeded records, estimate 150-200 MiB (v4 pilot: 160 MiB on 7 records). J2 T04 full: 44 records in 4 serial batches of 11 as in T03, one record resident at a time, estimate under 250 MiB (T03 largest 245 MiB, readback 183 MiB). J3 Q01 structural + plausibility assessment: reads only needed columns per record (about 30 of 114 columns, 24,000 rows, under 10 MiB of arrays), via assess_observations, one record per pass, estimate under 150 MiB, below the 256 MiB admission estimate; writes one JSON assessment plus a per-observation table under a new root; pilot on one record then 44. Nothing runs until J0, then J1, pass. MATLAB not needed."
+  },
+  "next_actions": [
+    "Coordinator: decide whether to add UM21-T04 (recommended) and wire Q01/R01 dependencies.",
+    "José: answer D-UM21-Q01-1 below (or defer).",
+    "Then J0 probe, J1 pilot, review, J2, J3."
+  ],
+  "drafted_decision_not_in_backlog": {
+    "note": "Draft only. Per AGENTS.md copy into backlog.json from a verified handoff.",
+    "id": "D-UM21-Q01-1",
+    "task_id": "UM21-Q01",
+    "question": "No reviewed range exists for able-bodied treadmill walking in this dataset. What should the first treadmill release check for plausibility?",
+    "options_order": "By amount of plausibility checking: none, gross limits, population ranges.",
+    "options": [
+      {
+        "key": "A",
+        "label": "Nothing beyond structure; plausibility left unassessed",
+        "consequence": "Every plausibility result shows as not checked and nothing is removed for being implausible; no approval needed. Reversible."
+      },
+      {
+        "key": "B",
+        "label": "Gross physical limits only (blatant errors)",
+        "consequence": "Flags only impossible values (angle beyond a full turn, moment beyond a stated bound), each with a written source; keeps source values otherwise. One reviewed profile to write. Reversible."
+      },
+      {
+        "key": "C",
+        "label": "Able-bodied walking ranges per task",
+        "consequence": "Excludes strides outside published level, incline and decline bands. Needs cited population evidence for each column; the current ranges came from this dataset, so they cannot be used as is. Slowest, and can remove real variation. Reversible."
+      }
+    ],
+    "cost_of_waiting": "Structural assessment and the sign step proceed; the release shows all plausibility as not checked until answered.",
+    "recommended": "B",
+    "confidence": "medium",
+    "why": "Matches the standing rule to fix only blatant errors; avoids tuning to this dataset's own distribution.",
+    "check": "Open the walking ranges file header: it says Interactive Validation Tuner and has no review or population note.",
+    "decide_before_recommendation": false,
+    "status": "queued (no open decisions now, so it may be opened)"
+  },
+  "changed_files": [
+    "docs/maintainers/handoffs/UM21-Q01.json",
+    "docs/maintainers/backlog.json (Q01 status ready -> working; handoff pointer)",
+    "docs/maintainers/backlog.html (regenerated)"
+  ],
+  "j0_probe": {
+    "result": "NOT one-to-one. Stopped per coordinator ruling; no runner or spec written.",
+    "method": "Probe script (scratchpad j0_probe.py, not in repo): per record, observation_id column from T03 phase.parquet (roots from the seven receipts) vs adapter stride pairs (consecutive heel strikes 50-250 frames apart from Streaming.mat events only; no channels read). Wrote nothing.",
+    "one_record_AB04_d10": "180 observations, 250 adapter strides, 180 matched, 0 observation-only, 70 adapter-only; peak RSS 176.6 MiB.",
+    "all_44_records": "7,562 observations; 10,503 adapter strides; 7,547 observations match an adapter stride; 15 observations have no adapter stride (all lie outside the adapter 50-250 frame rule, e.g. 29, 46, 269 frames, in about 10 records incl. AB03/i10, AB04/i10, AB04/i5, AB05/d10, AB05/i5, AB07/d10, AB07/d5, AB07/i0, AB09/d5, AB09/i0); 2,956 adapter strides are not T03 observations (excluded by T03 and not released).",
+    "rss_note": "The single-record run was 176.6 MiB. The follow-up all-44 pass in one process reached 365.4 MiB peak RSS, above the 300 MiB probe limit in AGENTS.md; that pass should be treated as an exception breach (read-only, wrote nothing, nice 19 / ionice idle). No further probe of that kind should loop records in one process.",
+    "consequence": "The adapter cannot be fed T03 observation IDs unchanged. Options: (a) run the hook on the adapter's strides and publish only the 7,547 matched observations, listing 15 as unmapped (no sign evidence, left unassessed); (b) change the stride rule or add the 15 observations to the hook unit set, which edits a bound file and needs a v5 re-pilot; (c) coordinator/José decision on whether the 15 short/long observations belong in the release at all. Decision for the coordinator.",
+    "rss_breach_logged": "The all-44 J0 pass (365.4 MiB peak RSS, one process) breached the 300 MiB read-only probe rule in AGENTS.md. Logged per coordinator ruling; from now on probes run one record at a time or through the launcher."
+  },
+  "t04_runner": {
+    "ruling": "Coordinator: apply hook multipliers to all 7,562 only if the bound API can apply a settled multiplier to given arrays; else option (a).",
+    "api_finding": "The bound sign_application module has no function that applies a settled multiplier or verdict to other arrays. run_sign_application re-runs the detector on whatever it is given; undo_sign_application refuses arrays whose hashes differ from the log. Applying a multiplier to the 15 extra observations would reimplement the arithmetic, so fallback option (a) is used. The 15 are listed as unmapped and unassessed.",
+    "files": [
+      "contributor_tools/run_um21_t04_signs.py",
+      "tests/test_um21_t04_signs.py",
+      "docs/quality/audits/um21-t04-pilot-a-spec-v2.json",
+      "docs/quality/audits/um21-t04-pilot-b-spec-v2.json"
+    ],
+    "design": "Outside the bound set; bound in the spec. Adapter and hook run unchanged (adapter convert_recording, pilot-style group checks/writes imported from run_core11_um21_pilot by file). A T03 observation is signed only if its id equals a hook unit id exactly; per-observation evidence log gives hook units and the leg-level multipliers. Held channels never written. Output is a new root; T03 phase files are sha256-checked against the T03 receipts and read two columns only. Full mode is not enabled in the CLI (a ModeProxy that hands the committed v4 pilot record path to the bound hook is written and tested but unused); full mode needs its own review.",
+    "specs": {
+      "a": "AB04/i0 only, v2, sha256 62c29385387651272216d6b6b9a9e4582658fef1083b91febfad7c3cc1ead5ec",
+      "b": "v2, AB05/i5,AB04/d10,AB03/i0,AB03/i10,AB04/d5,AB10/i10,AB03/d5, sha256 35505ba79f94d880e046b3292e05613c9b8b4ab95af5aaee0d446a4fc0444224",
+      "v1": "v1 specs deleted (never launched; the runner hash is bound)."
+    },
+    "checks": [
+      "pytest tests/test_um21_t04_signs.py: 9 passed (synthetic fixtures, known values; real data read only: the seven T03 receipts)",
+      "validate_spec in-process: both specs pass",
+      "guarded_launcher dry run: both preflight_passed (nothing launched)"
+    ],
+    "memory_estimate_mib": "Reviewer estimate 200-270 MiB RSS for the job. Measured parts: T03 read 105 MiB RSS (VmPeak 339 MiB); v4 pilot (adapter + hook, 7 recordings) 160 MiB; the two combine, so expect roughly 200-270 MiB RSS per recording, below the 300 MiB in-job cap and with the 768 MiB address-space cap unchanged. Not yet measured end to end; stage a will measure it.",
+    "not_done": "No launch, no commit. Limits: ipsilateral signed channels only; contralateral columns, logical-to-canonical column naming and any plausibility belong to later steps. Review needed on: observation-id exact match rule, the ModeProxy approach for later full mode, and the pilot sample.",
+    "pre_launch_1_fix": {
+      "B1": "ARROW_DEFAULT_MEMORY_POOL=system set at the top of the runner before pyarrow loads; T03 columns read with ParquetFile(buffer_size=0).iter_batches(batch_size=4096, use_threads=False); the signed table is written and reloaded in row groups of 20 observations.",
+      "probes": [
+        "tests/test_um21_t04_signs.py::test_read_and_write_paths_fit_the_launcher_address_space: synthetic record (250 obs x 150 rows x 114 columns), read + write 20 channels + reload, in a child under RLIMIT_AS 768 MiB (limit set after numpy/runner import; pyarrow loads inside the limit); asserts RSS under 300 MiB.",
+        "Real read-only probe, one record, AB04/i0 phase.parquet (sha256 checked against the T03 receipt), under RLIMIT_AS 768 MiB, nice 19 / ionice idle, 2 columns only: 165 observations, RSS 105 MiB, VmPeak 339 MiB. The write path was not run on real data."
+      ],
+      "proxy": "ModeProxy no longer installed in the job (class and test kept for the later full-mode review).",
+      "multipliers": "Each mapped row in observation_map.json now carries leg_channel_multipliers and multiplier_scope = per channel per leg per recording (hook-settled), not per stride.",
+      "checks": "tests/test_um21_t04_signs.py 12 passed; with tests/test_um21_sign_adapter.py 58 passed; both v2 specs validate and dry-run to preflight_passed."
+    },
+    "open_for_R01": [
+      "The 15 T03 observations outside the hook stride rule are unsigned and unassessed (option a); whether they stay in the release is an R01/Q01 question.",
+      "Contralateral columns are not produced (ipsilateral signed channels only).",
+      "One stable release schema: select_observation_arrays drops a channel from a recording's table when it is held on either leg with mapped observations; decide per-leg tables or NaN fill before the full run (reviewer gap).",
+      "Logical-to-canonical column naming.",
+      "Which stable schema applies given the one-leg rule (channels held for the whole recording make columns vary by recording)."
+    ],
+    "stage_a_result": {
+      "receipt": "docs/quality/audits/um21-t04-pilot-a-launcher-receipt-v2.json",
+      "output_root": "converted_datasets/reconversion_v2/um21_t04_pilot_a_v2",
+      "status": "completed, exit 0, clean_success, cleanup proven",
+      "wall_s": 2.4,
+      "peak_rss_mib": "211 (launcher), 202.5 (in-job); VmPeak not recorded; rlimit_as 768 MiB",
+      "AB04_i0": "165 observations, 165 mapped, 0 unmapped; hook units 114 right / 114 left (32 and 31 without an observation); published 8 of 10 per leg (pelvis, hip, knee, ankle angles; hip, knee, ankle moments; ankle power); held hip_power and knee_power; pelvis correction UM21-P01-AB04-i0-pelvis applied in both legs (net multiplier +1); no group failures, no unexplained cross-group items; automated outcome passed. Stage b not started."
+    },
+    "stage_b_result": {
+      "receipt": "docs/quality/audits/um21-t04-pilot-b-launcher-receipt-v2.json",
+      "output_root": "converted_datasets/reconversion_v2/um21_t04_pilot_b_v2",
+      "status": "completed, exit 0, clean, cleanup proven",
+      "wall_s": 10.6,
+      "peak_rss_mib": "239 launcher / 233 in-job (cap 300)",
+      "totals": "1,187 observations, 1,182 mapped, 5 unmapped (AB05/i5: 4 at 26-27 frames; AB03/i10: 1 at 46 frames)",
+      "j0_agreement": "All counts equal J0 (hook units per leg, observations, unmapped); the other five records have 0 unmapped, as in J0.",
+      "note": "Per-record wall time is not recorded."
+    },
+    "full_mode_prep": {
+      "status": "prepared, not launched, not committed; stop for full-mode review",
+      "gate": "Full mode installs ModeProxy; the record path is the constant docs/quality/audits/core11-p-um21-pilot-record-v4.json with sha256 c459e7a7... checked in the runner (never a CLI argument). The full specs bind that record and the v4 receipt (3b6ff3f4...). The bound hook's unmodified check_pilot_record runs per group; each group's hook pilot facts are written to t04_summary.json (pilot_facts) and a missing fact fails the run. Tested against the real hook: passes with the v4 record, refuses no record, a missing file and a copy outside the audits folder.",
+      "one_leg_rule": "settle_recording(): publish a hook channel for a recording only if both legs published it with the same multiplier; otherwise hold it for the whole recording and log which leg decided; a multiplier disagreement holds both and is flagged (rule_flags in summary and observation_map recording_rule). Derived segments need both legs and all inputs kept; derived velocities need both legs and a kept source angle. Tested on known cases and on the real hook output of the synthetic recording. This replaces the earlier intersection rule.",
+      "batches": "One subject per batch from the seven T03 receipts: AB01 2, AB02 5, AB03 5, AB04 5, AB05 5, AB06 5, AB07 5, AB08 4, AB09 4, AB10 4 records (44). Specs docs/quality/audits/um21-t04-full-ABxx-spec-v1.json, output roots um21_t04_full_ABxx_v1. AB01 dry run: preflight_passed; nothing launched. Memory expected about 240 MiB peak RSS (pilot b 233 MiB); in-job stop at 300 MiB; address space 768 MiB.",
+      "pilot_of_the_same_code": "The runner changed after the v2 pilots (full mode, one-leg rule), so a pilot of this exact runner is required before any full run. Pilot specs v3 (a: AB04/i0, b: seven records) are written and validated: um21-t04-pilot-a-spec-v3.json sha256 90901191238adfeab0463838ad67c63a086fd8d0145713ffaf25fc00baf3b24a, um21-t04-pilot-b-spec-v3.json sha256 1fbb2bf750905985dbed498a83567fdd4368a18038107c7cd15ef38b92afca8e. Not dry-run or launched. v2 specs and receipts stay as history.",
+      "checks": "tests/test_um21_t04_signs.py 18 passed. Full specs validate in-process; AB01 dry run preflight_passed."
+    },
+    "thigh_shank_finding": "Post-b readback: T03 thigh and shank (and probably foot and the contralateral segment columns) were built with the source-sign pelvis. They differ from the T04 post-hook values by exactly -2 x the T03 pelvis. T04's derived values (from the published pelvis, F2) replace them; R01 must never ship T03's segment columns. AB04/i0 agrees only because its net pelvis multiplier is +1."
+  }
+}

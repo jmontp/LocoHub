@@ -1727,7 +1727,7 @@
       "priority": "P0",
       "dataset": "um21",
       "title": "Assess treadmill observations with applicable quality rules",
-      "status": "ready",
+      "status": "blocked",
       "stage": "quality",
       "question": "Which treadmill observations are valid, failed or unassessed under justified rules?",
       "scope": "First treadmill release only; retain all full-variant observations and explicit filtered membership.",
@@ -1735,7 +1735,8 @@
         "PM-01",
         "UM21-T03",
         "UM21-C02",
-        "CORE-01"
+        "CORE-01",
+        "UM21-T04"
       ],
       "inputs": [
         "docs/maintainers/backlog.json"
@@ -1753,21 +1754,23 @@
       "next_action": "Apply reviewed applicable profiles to the full-readback outputs and inspect failures without changing thresholds to fit data.",
       "resource_class": "numerical",
       "evidence_paths": [
-        "docs/maintainers/backlog.json"
+        "docs/maintainers/backlog.json",
+        "docs/maintainers/handoffs/UM21-Q01.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
-        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
+        "last_checked_at_utc": "2026-11-02T00:00:00+00:00",
+        "summary": "Plan written, nothing launched. Plausibility on canonical columns needs a full-mode CORE-11 run on T03 outputs first (proposed UM21-T04); no approved ranges exist so plausibility is unassessed pending a José decision. See docs/maintainers/handoffs/UM21-Q01.json.",
         "checks": [
           "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
         ],
         "remaining": [
-          "Apply reviewed applicable profiles to the full-readback outputs and inspect failures without changing thresholds to fit data."
+          "Coordinator to add UM21-T04; José decision D-UM21-Q01-1 (drafted in handoff); then read-only probe, pilot, full runs."
         ]
       },
       "legacy_ids": [
         "QA-01"
-      ]
+      ],
+      "blocked_reason": "Waits for UM21-T04 (CORE-11 signs on T03 outputs) and José decision D-UM21-Q01-1."
     },
     {
       "id": "UM21-R01",
@@ -1781,7 +1784,8 @@
       "depends_on": [
         "PM-01",
         "UM21-Q01",
-        "CORE-02"
+        "CORE-02",
+        "UM21-T04"
       ],
       "inputs": [
         "contributor_tools/build_dataset_release.py"
@@ -6981,6 +6985,86 @@
         "checks": [],
         "remaining": [
           "Everything in acceptance."
+        ]
+      }
+    },
+    {
+      "id": "UM21-T04",
+      "priority": "P0",
+      "dataset": "um21",
+      "title": "Apply CORE-11 signs to the T03 treadmill outputs",
+      "status": "working",
+      "stage": "conversion",
+      "question": "Can the bound sign-application build publish rule-B columns for every released T03 treadmill observation, with exact observation identity?",
+      "scope": "44 T03 treadmill records (7,562 observations) via the guarded launcher, one record at a time, into a NEW output root. T03 outputs are never modified. Mode full with the v4 pilot record; pilot of the T04 runner first (AB04/i0, then 7 seeded records).",
+      "depends_on": [
+        "UM21-T03",
+        "CORE-11-P-UM21",
+        "UM21-E01"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/UM21-Q01.json",
+        "docs/quality/audits/core11-p-um21-pilot-record-v4.json",
+        "docs/quality/audits/um21-t03-integrity-check.json"
+      ],
+      "deliverables": [
+        "T04 runner outside the bound set with synthetic tests",
+        "Pilot spec validated and dry-run, then pilot and full receipts",
+        "Rule-B columns, sign_application.json and sign_review.json per record in a new root",
+        "Updated task handoff"
+      ],
+      "acceptance": [
+        "Every T03 observation maps one-to-one to a hook unit or is listed as unmapped with a reason",
+        "No bound file changed; bindings match before and after",
+        "Segments and velocities derived after the hook (F2)",
+        "Pilot passes before the full run; independent verification"
+      ],
+      "next_action": "Full-mode review; then pilot v3 (same runner), then full batches.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/UM21-Q01.json",
+        "docs/quality/audits/um21-t04-pilot-a-spec-v2.json",
+        "docs/quality/audits/um21-t04-pilot-b-spec-v2.json",
+        "docs/quality/audits/um21-t04-pilot-a-launcher-receipt-v2.json",
+        "docs/quality/audits/um21-t04-pilot-b-launcher-receipt-v2.json"
+      ],
+      "owner": "claude-agent (UM21-T04)",
+      "started_at_utc": "2026-11-02T00:00:00+00:00",
+      "handoff": {
+        "last_checked_at_utc": "2026-11-02T00:00:00+00:00",
+        "summary": "Pilot passed (stages a, b; reviewed). Full mode prepared and not launched: v4 pilot record gate (constants, bound, tested against the real hook), one-leg rule, one-subject batches (10 specs, AB01 dry run preflight_passed), v3 pilot specs for the changed runner. Finding: T03 thigh/shank carry the source-sign pelvis and must not ship. Awaiting full-mode review.",
+        "checks": [
+          "tests/test_um21_t04_signs.py: 12 passed (incl. 768 MiB address-space probe)",
+          "real one-record read probe under 768 MiB: RSS 105 MiB, VmPeak 339 MiB",
+          "v2 specs validate and dry-run: preflight_passed",
+          "stage a receipt docs/quality/audits/um21-t04-pilot-a-launcher-receipt-v2.json: wall 2.4 s, peak RSS 211 MiB (launcher) / 202.5 MiB (in-job), automated outcome passed; verify-cleanup proven",
+          "stage b receipt docs/quality/audits/um21-t04-pilot-b-launcher-receipt-v2.json: wall 10.6 s, peak RSS 239 MiB (launcher) / 233 in-job, automated outcome passed, cleanup proven",
+          "tests/test_um21_t04_signs.py: 18 passed; full specs validate; AB01 dry run preflight_passed"
+        ],
+        "remaining": [
+          "Full-mode review; pilot v3 a then b (same runner), then full batches AB01..AB10 one at a time, then readback. Open for R01: 15 unmapped, contralateral columns, schema, naming."
+        ],
+        "changed_files": [
+          "contributor_tools/run_um21_t04_signs.py",
+          "tests/test_um21_t04_signs.py",
+          "docs/quality/audits/um21-t04-pilot-a-spec-v2.json",
+          "docs/quality/audits/um21-t04-pilot-b-spec-v2.json",
+          "docs/quality/audits/um21-t04-pilot-a-launcher-receipt-v2.json",
+          "docs/quality/audits/um21-t04-pilot-a-launcher-receipt-v2.log",
+          "docs/quality/audits/um21-t04-pilot-b-launcher-receipt-v2.json",
+          "docs/quality/audits/um21-t04-pilot-b-launcher-receipt-v2.log",
+          "docs/quality/audits/um21-t04-pilot-a-spec-v3.json",
+          "docs/quality/audits/um21-t04-pilot-b-spec-v3.json",
+          "docs/quality/audits/um21-t04-full-AB01-spec-v1.json",
+          "docs/quality/audits/um21-t04-full-AB02-spec-v1.json",
+          "docs/quality/audits/um21-t04-full-AB03-spec-v1.json",
+          "docs/quality/audits/um21-t04-full-AB04-spec-v1.json",
+          "docs/quality/audits/um21-t04-full-AB05-spec-v1.json",
+          "docs/quality/audits/um21-t04-full-AB06-spec-v1.json",
+          "docs/quality/audits/um21-t04-full-AB07-spec-v1.json",
+          "docs/quality/audits/um21-t04-full-AB08-spec-v1.json",
+          "docs/quality/audits/um21-t04-full-AB09-spec-v1.json",
+          "docs/quality/audits/um21-t04-full-AB10-spec-v1.json"
         ]
       }
     }
