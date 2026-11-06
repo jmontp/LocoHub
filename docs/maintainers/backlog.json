@@ -1727,7 +1727,7 @@
       "priority": "P0",
       "dataset": "um21",
       "title": "Assess treadmill observations with applicable quality rules",
-      "status": "blocked",
+      "status": "done",
       "stage": "quality",
       "question": "Which treadmill observations are valid, failed or unassessed under justified rules?",
       "scope": "First treadmill release only; retain all full-variant observations and explicit filtered membership.",
@@ -1751,26 +1751,52 @@
         "Every failure/exclusion has an observation ID and reason; unassessed values remain visible.",
         "One structured assessment drives filtering, summary counts and quality UI; no tuning to obtain a desired pass rate."
       ],
-      "next_action": "Apply reviewed applicable profiles to the full-readback outputs and inspect failures without changing thresholds to fit data.",
+      "next_action": "Done: v2 independently re-verified (see handoffs/UM21-Q01-verify.json v2). R01 may read assessment.json.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/backlog.json",
-        "docs/maintainers/handoffs/UM21-Q01.json"
+        "docs/maintainers/handoffs/UM21-Q01.json",
+        "docs/maintainers/handoffs/UM21-Q01-verify.json",
+        "converted_datasets/reconversion_v2/um21_q01_full_v2/assessment.json",
+        "docs/quality/audits/um21-q01-full-launcher-receipt-v2.json",
+        "docs/quality/audits/um21-q01-pilot-launcher-receipt-v2.json",
+        "docs/maintainers/handoffs/UM21-Q01-verify.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-02T00:00:00+00:00",
-        "summary": "Plan written, nothing launched. Plausibility on canonical columns needs a full-mode CORE-11 run on T03 outputs first (proposed UM21-T04); no approved ranges exist so plausibility is unassessed pending a José decision. See docs/maintainers/handoffs/UM21-Q01.json.",
+        "last_checked_at_utc": "2026-11-06T21:00:00+00:00",
+        "summary": "v1 failed review: published angles are radians but limits were degrees. v2 converts radians to degrees (unit evidence checked in-job; unknown unit refused). Full run: 7,547 assessed, 23 failed (22 AB07/i10 right ankle L1, 2 of them also L2 ankle and foot; 1 AB08/i0 left ankle L1), 15 unmapped listed, 8 held power channels not_checked_no_column, most columns unchecked, ankle offset unverified. Peak 131.5 MiB.",
+        "changed_files": [
+          "contributor_tools/run_um21_q01_assessment.py",
+          "tests/test_um21_q01_assessment.py",
+          "docs/quality/audits/um21-q01-pilot-spec-v1.json",
+          "docs/quality/audits/um21-q01-full-spec-v1.json",
+          "docs/quality/audits/um21-q01-pilot-launcher-receipt-v1.json(.log)",
+          "docs/quality/audits/um21-q01-full-launcher-receipt-v1.json(.log)",
+          "converted_datasets/reconversion_v2/um21_q01_pilot_v1/",
+          "converted_datasets/reconversion_v2/um21_q01_full_v1/",
+          "docs/maintainers/handoffs/UM21-Q01.json",
+          "docs/maintainers/backlog.json",
+          "docs/maintainers/backlog.html",
+          "docs/quality/audits/um21-q01-{pilot,full}-spec-v2.json",
+          "docs/quality/audits/um21-q01-{pilot,full}-launcher-receipt-v2.json(.log)",
+          "converted_datasets/reconversion_v2/um21_q01_{pilot,full}_v2/",
+          "converted_datasets/reconversion_v2/um21_q01_{pilot,full}_v1/INVALID_DO_NOT_USE.txt"
+        ],
         "checks": [
-          "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
+          "pytest tests/test_um21_q01_assessment.py: 14 passed (synthetic)",
+          "guarded launcher v2: dry run, pilot (AB01/i0, AB07/i10), dry run, full; exit 0, clean, cleanup proven",
+          "totals 7,547 + 15 in-job"
         ],
         "remaining": [
-          "Coordinator to add UM21-T04; José decision D-UM21-Q01-1 (drafted in handoff); then read-only probe, pilot, full runs."
+          "Independent re-review",
+          "R01: apply D-UM21-C03-2 = C to AB07/i10; AB08/i0 stride is separate and needs a rule",
+          "Textbook end-of-range values unverified against a primary text",
+          "Per-stride identity of the 768 without normalized twin not available"
         ]
       },
       "legacy_ids": [
         "QA-01"
-      ],
-      "blocked_reason": "Waits only on José decision D-UM21-Q01-1 (UM21-T04 is done)."
+      ]
     },
     {
       "id": "UM21-R01",

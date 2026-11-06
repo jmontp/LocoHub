@@ -1,0 +1,157 @@
+{
+  "task_id": "UM21-Q01",
+  "verifier": "independent",
+  "verdict": "fail_back_to_ready",
+  "checked_at_utc": "2026-11-06T19:00:00+00:00",
+  "blocking_finding": "Published T04 v2 angle columns are in RADIANS (project sign_offset_detector docstring: angles are radians). The runner compares raw values to limits written in degrees (L1_BOUNDS_DEG, L2_JUMP_DEG) with no conversion (grep for rad/convert in run_um21_q01_assessment.py finds none). So L1 and L2 could never fire; the reported 0 failures is not genuine. The 9 tests use degree-valued synthetic arrays only, so they did not catch it.",
+  "independent_probe": {
+    "records": 44,
+    "strides": 7547,
+    "raw_min_max_published_units": {
+      "hip_angle": [
+        -0.449,
+        1.327
+      ],
+      "knee_angle": [
+        -0.238,
+        1.497
+      ],
+      "ankle_angle": [
+        -4.647,
+        0.65
+      ],
+      "pelvis_tilt": [
+        -0.703,
+        0.076
+      ],
+      "thigh_angle": [
+        -0.593,
+        0.938
+      ],
+      "shank_angle": [
+        -1.326,
+        0.642
+      ],
+      "foot_angle": [
+        -5.432,
+        0.649
+      ]
+    },
+    "after_radian_to_degree_min_max": {
+      "hip_angle": [
+        -25.7,
+        76.1
+      ],
+      "knee_angle": [
+        -13.6,
+        85.8
+      ],
+      "ankle_angle": [
+        -266.3,
+        37.2
+      ]
+    },
+    "closest_to_L1_after_conversion": "hip max 76.1 vs 150 (74 deg room); hip min -25.7 vs -50; knee max 85.8 vs 165; knee min -13.6 vs -30; ankle max 37.2 vs 50 (12.8 room); ankle min -266.3 vs -80 BREACH (AB07/i10)",
+    "largest_adjacent_jump_deg_after_conversion": {
+      "ankle_angle": "135.8 (um21:Streaming/AB07/Tread/i10:right:frames:11703:11834) BREACH",
+      "foot_angle": "135.5 same stride BREACH",
+      "hip_angle": 3.7,
+      "knee_angle": 5.9,
+      "pelvis_tilt": 1.7,
+      "thigh_angle": 3.3,
+      "shank_angle": 5.4
+    },
+    "strides_that_would_fail_if_units_correct": {
+      "total": 23,
+      "AB07/i10": "22 strides (L1 ankle, L2 ankle, L2 foot)",
+      "AB08/i0": "1 stride (L1 ankle)"
+    },
+    "note": "AB07/i10 ankle min -4.65 rad and jumps of 2.37 rad look like a real ankle offset/wrap problem in that recording; the runner marks all 169 of its strides no_failure_found."
+  },
+  "passed_checks": [
+    "observations.jsonl and failures.jsonl sha256 equal assessment.json sidecar hashes (bc65bcd7..., e3b0c442... empty)",
+    "pilot and full receipts: status completed, exit 0, clean_success true, cleanup_proven true, bindings unchanged; runner binding d1d5f917... equals current runner file",
+    "44 recordings enumerated from 10 T04 v2 receipts; 7547 strides = 7547 in observations.jsonl; 7547+15 = 7562",
+    "376 strides with missing samples confirmed from parquet (any non-finite channel); AB08/i0 has 12 strides with ankle_angle all-missing confirmed (13 strides have NaN in parquet; 12 all-missing, 1 partial which is the one L1 ankle stride after conversion)",
+    "channel list per recording matches assessment: 17 channels, 6 recordings lack power columns (8 held power channels: AB03/i10 x3, AB04/d10, AB04/d5, AB05/d10, AB05/d5, AB06/d5 hip_power) and are not_checked_no_column; no limit-less channel is marked pass",
+    "pytest tests/test_um21_q01_assessment.py: 9 passed",
+    "build_backlog_page.py --check: valid"
+  ],
+  "required_fix": "Convert published angle channels (all 7 angle columns) from radians to degrees before L1/L2, or restate limits in radians; record units in profile; add a test with radian-valued synthetic data that must fail an out-of-range stride; re-run pilot then full through the guarded launcher; expect AB07/i10 and AB08/i0 failures; then re-review. Also check that limits at 30 deg margin still sensible; AB07/i10 ankle may need a decision (offset/wrap) after the re-run.",
+  "resources": {
+    "probe_peak_rss_mib": 119.4,
+    "second_probe_peak_rss_mib": 118.3,
+    "time_v_max_rss_kib": [
+      122624,
+      121092
+    ],
+    "nice": 19,
+    "ionice": "idle",
+    "writes_under_converted_datasets": false,
+    "python_left_running": false
+  },
+  "v2": {
+    "verifier": "independent second agent (did not write the runner; runner not imported)",
+    "verdict": "pass",
+    "checked_at_utc": "2026-11-06T21:00:00+00:00",
+    "independent_probe": {
+      "method": "read all 44 T04 v2 recordings one at a time, enumerated from the ten um21-t04-full-AB*-launcher-receipt-v2.json files; numpy.degrees on angle columns; L1 on hip/knee/ankle; L2 (>30 deg adjacent) on 7 angle channels per stride (no cross-stride adjacency); own code, pyarrow system pool, buffer_size=0, batch 4096, no threads",
+      "records": 44,
+      "strides": 7547,
+      "failing_strides_mine": 23,
+      "failing_strides_worker": 23,
+      "exact_match": true,
+      "match_detail": "same observation IDs and same failed-limit/channel lists (22 AB07/i10 right ankle L1; two of them also L2 ankle and foot; 1 AB08/i0 left ankle L1)",
+      "differences": []
+    },
+    "ab08_i0_stride": {
+      "id": "um21:Streaming/AB08/Tread/i0:left:frames:13770:13899",
+      "ankle_deg_samples_138_to_149": [
+        -32.1,
+        -43.4,
+        -57.2,
+        -71.9,
+        -77.7,
+        -82.7,
+        -86.7,
+        -89.5,
+        -90.5,
+        -88.4,
+        -81.4,
+        -66.4
+      ],
+      "samples_143_148_below_minus80": true,
+      "nan_in_stride": 0,
+      "exact_zero_in_stride": 0,
+      "finding": "smooth single plantar-flexion trough, foot and shank angles move smoothly too; no missing or zero-filled samples in the published table. Raw-source gaps were not re-read (outside probe rules); a stride resampled across a source gap could not be told apart here."
+    },
+    "passed_checks": [
+      "hashes of observations.jsonl and failures.jsonl and assessment.json equal the full receipt outputs",
+      "both receipts completed, exit 0, clean_success, cleanup_proof proven, all checks true, no launcher errors",
+      "runner binding hash 86e6620b... equals the current runner file; no binding changed since",
+      "all 88 derivations.json (44 recordings x 2 legs) say 'angles deg -> rad'",
+      "hip/knee only ever 'pass'; ankle 'pass_offset_unverified', foot/shank/thigh/pelvis_tilt 'pass_jump_only'; moments, powers, velocities 'unchecked'; no unchecked channel is labeled pass",
+      "8 held power channels (record level) have no column; 1407 stride-level not_checked_no_column (163+163+1081)",
+      "each channel's states sum to 7547; 7547 + 15 unmapped = 7562",
+      "v1 roots carry INVALID_DO_NOT_USE.txt",
+      "pytest tests/test_um21_q01_assessment.py: 14 passed",
+      "build_backlog_page.py --check: valid, HTML current"
+    ],
+    "anomalies": [
+      "ankle_angle for AB07/i10 reaches -266 deg: a recording-level offset/wrap problem, correctly flagged but the ankle offset itself stays unverified for all recordings ('pass_offset_unverified')",
+      "113 (stride, channel) pairs contain NaN samples; the runner reports them as missing, not as pass"
+    ],
+    "scientific_approval": false,
+    "task_status_set": "done",
+    "resources": {
+      "probe_peak_rss_mib": 134.4,
+      "time_v_max_rss_kib": 137636,
+      "nice": 19,
+      "ionice": "idle",
+      "writes_under_converted_datasets": false,
+      "python_left_running": false,
+      "linux_available_mb_before": 10773,
+      "windows_free_mb_before": 7308
+    }
+  }
+}

@@ -1,9 +1,9 @@
 {
   "task_id": "UM21-Q01",
-  "phase": "plan only (step 1); nothing launched, no data read beyond parquet schema of one T03 record, nothing committed",
-  "status": "working",
+  "phase": "assessment v2 done (units fixed); ready for independent re-review",
+  "status": "review",
   "scientific_approval": false,
-  "last_checked_at_utc": "2026-11-02T00:00:00Z",
+  "last_checked_at_utc": "2026-11-06T00:00:00Z",
   "facts_checked": [
     "T03 phase tables (um21_tread_t03_*/components/ABxx/<cond>/phase.parquet, enumerate from the seven T03 receipts, never a glob; batch2 root is INVALID) hold 150 samples per observation, 114 columns, about 26 MiB on disk per record (AB01/i0: 24,000 rows). Schema read only.",
     "They carry source_* component columns (deg, N/kg, N*m/kg, W/kg) plus some canonical-named columns (pelvis, hip, knee, thigh, shank, ankle_dorsiflexion, hip/knee velocity) written by the pre-CORE-11 producer. There are NO canonical moment, power or GRF/CoP columns. The pre-hook thigh/shank/velocities must not be trusted as canonical (CORE-11-P-UM21 condition F2).",
@@ -17,9 +17,7 @@
     "3_jobs_and_memory": "All launcher jobs: one worker, thread env 1, nice 19 / ionice idle, address space 768 MiB (never raised), serial, dry run first, a pilot before the full run of the same bound code, one record at a time. J0 read-only probe (no launcher, AGENTS.md exception): one record, id/start/end columns only, estimate 60-100 MiB peak RSS, record it. J1 T04 pilot: 1 record (AB04/i0, the pelvis-correction case), then 7 seeded records, estimate 150-200 MiB (v4 pilot: 160 MiB on 7 records). J2 T04 full: 44 records in 4 serial batches of 11 as in T03, one record resident at a time, estimate under 250 MiB (T03 largest 245 MiB, readback 183 MiB). J3 Q01 structural + plausibility assessment: reads only needed columns per record (about 30 of 114 columns, 24,000 rows, under 10 MiB of arrays), via assess_observations, one record per pass, estimate under 150 MiB, below the 256 MiB admission estimate; writes one JSON assessment plus a per-observation table under a new root; pilot on one record then 44. Nothing runs until J0, then J1, pass. MATLAB not needed."
   },
   "next_actions": [
-    "Coordinator: decide whether to add UM21-T04 (recommended) and wire Q01/R01 dependencies.",
-    "José: answer D-UM21-Q01-1 below (or defer).",
-    "Then J0 probe, J1 pilot, review, J2, J3."
+    "Independent re-review. Then R01: apply D-UM21-C03-2 = C to AB07/i10, decide the AB08/i0 stride, and read assessment.json for filtering, counts and the docs page."
   ],
   "drafted_decision_not_in_backlog": {
     "note": "Draft only. Per AGENTS.md copy into backlog.json from a verified handoff.",
@@ -290,5 +288,108 @@
       "AB10/i10: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-0.99; knee physics r=-1.00/-1.00",
       "AB10/i5: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-0.99; knee physics r=-1.00/-1.00"
     ]
+  },
+  "q01_result": {
+    "decision": "D-UM21-Q01-1 = B (coarse limits L1, L2; structural L3, L4)",
+    "units_fix": "Limits stay in degrees. Published angle columns (pelvis_tilt, hip, knee, ankle, thigh, shank, foot) are radians and are converted with numpy.degrees before L1 and L2; velocities are rad/s, moments N*m/kg, power W/kg. Unit evidence: sign_offset_detector.py docstring 'Angles are radians'; each recording's two derivations.json (hash-checked against the T04 receipt) must state 'angles deg -> rad', checked in the job and recorded per recording in assessment.json per_record.unit_evidence; the parquet carries no unit metadata. A column with no unit entry, or a limited angle given unconverted, raises UnitError (tested).",
+    "runner": "contributor_tools/run_um21_q01_assessment.py sha256 86e6620b78452a5bae7513bcc5770d3680e673e0c5664c0f0464939f67c37c22 (bound in both v2 specs, unchanged between pilot and full)",
+    "tests": "tests/test_um21_q01_assessment.py: 14 passed (synthetic; 5 new: radian-valued clean stride passes, radian ankle -4.65 rad fails L1 at -266 deg, radian 2.37 rad jump fails L2 at 135.8 deg and 0.5 rad passes, unknown unit and unconverted angle refused, unit evidence must state the conversion)",
+    "pilot": {
+      "spec": "docs/quality/audits/um21-q01-pilot-spec-v2.json",
+      "receipt": "docs/quality/audits/um21-q01-pilot-launcher-receipt-v2.json",
+      "root": "converted_datasets/reconversion_v2/um21_q01_pilot_v2",
+      "records": "AB01/i0 (clean), AB07/i10",
+      "result": "329 assessed, 22 failed (all AB07/i10), exit 0, clean, cleanup proven, peak RSS 128.9 MiB in-job, 0.5 s"
+    },
+    "full": {
+      "spec": "docs/quality/audits/um21-q01-full-spec-v2.json",
+      "receipt": "docs/quality/audits/um21-q01-full-launcher-receipt-v2.json",
+      "root": "converted_datasets/reconversion_v2/um21_q01_full_v2",
+      "result": "7,547 assessed, 15 unmapped listed; 7,524 no_failure_found, 23 failed; exit 0, clean, cleanup proven; 6.6 s; peak RSS 131.5 MiB in-job, 134.6 MiB launcher",
+      "assessment_file": "converted_datasets/reconversion_v2/um21_q01_full_v2/assessment.json sha256 a8391930...; observations.jsonl 1aa1a7f9...; failures.jsonl 85be2277... (hashes inside assessment.json)"
+    },
+    "failures": {
+      "strides_failed_by_limit": {
+        "L1": 23,
+        "L2": 2
+      },
+      "by_recording_and_limit": {
+        "AB07/i10": {
+          "L1": 22,
+          "L2": 2
+        },
+        "AB08/i0": {
+          "L1": 1
+        }
+      },
+      "failed_samples_by_limit_and_channel": {
+        "L1:ankle_angle": 3296,
+        "L2:ankle_angle": 4,
+        "L2:foot_angle": 4
+      },
+      "AB07/i10 right (22)": "L1 ankle on all 22 (worst ankle -266.3 deg, stride frames 12608:12735; others 175-196 deg beyond range); L2 ankle and L2 foot on 2 strides: frames 11703:11834 (jump about 135.8 deg) and 12608:12735. Stride frame windows: 11703:11834, 11834:11966, 11966:12093, 12093:12221, 12221:12352, 12352:12479, 12479:12608, 12608:12735, 12735:12867, 12867:12994, 12994:13129, 13129:13264, 13264:13392, 13392:13526, 13526:13659, 13659:13788, 13788:13923, 13923:14056, 14056:14184, 14184:14314, 15724:15778, 15778:15903.",
+      "AB08/i0 left (1)": "L1 ankle only: stride frames 13770:13899, samples 143-148 between -81 and -90.5 deg (limit -80); this stride also has non-finite samples."
+    },
+    "c03_relation": {
+      "source": "docs/quality/audits/um21-c03-episode-census.json; D-UM21-C03-2 = C (31 strides inside the stretch; 29 re-expressed, the 2 with sudden jumps stay out; 115 released).",
+      "AB07_i10": "Census lists two right-ankle alternate-branch runs: frames 11704-14988 and 14991-17135. 20 of the 22 failing strides (11703:11834 through 14184:14314) lie inside run 1 (the first starts one frame before the run edge at 11704). The other 2 (15724:15778, 15778:15903) lie inside run 2. So all 22 fall inside the census's right-ankle broken stretch, but I could not tell from the census alone which of its runs the decision's '31 inside strides' counts; R01 must read the C03 stride ledger to confirm run 2. The 2 L2-jump strides (11703:11834 and 12608:12735, jumps at census edges 11704 and 12704-12705) are consistent with the decision's '2 strides with sudden jumps stay out'; consistent, not confirmed against the ledger. Q01 records these failures on the T04 outputs as they stand (not re-expressed); the re-expression and drop are applied at UM21-R01.",
+      "AB08_i0": "Separate. Left ankle, not an alternate-branch run (census alternate_frames = 0). The stride sits at the end of a zero-fill/step episode (steps over 20 deg at frames 13900-13901; 2,511 zero-fill frames between first and last heel strike) and has non-finite samples. D-UM21-C03-2 does not cover it. Needs a decision or rule at R01 (fail and drop, or review)."
+    },
+    "other_findings": {
+      "missing_samples": "376 strides have non-finite samples; AB08/i0 has 12 strides with ankle angle entirely missing (unchecked_all_missing).",
+      "held_power": "8 recording-channel holds, state not_checked_no_column.",
+      "unmapped": "15 left out strides listed with reasons.",
+      "normalized_crosscheck": "768 shown per recording (record-level counts only).",
+      "unchecked": "moments, powers, velocities have no limit; pelvis tilt, thigh, shank, foot are jump-limit only (pass_jump_only); ankle passes carry offset unverified (7,512 pass_offset_unverified)."
+    },
+    "textbook_values_verification": "Unverified against a primary text. One web search (2026-11-06) returned only secondary pages (Enlyte explainer, Knowt study set) that agree with the draft (hip flexion 120, extension 20-30, knee flexion 135, ankle DF 20, PF 50); other pages differ (hip flexion 100, knee 150, DF 30). Nothing cited as a source. With a 30 degree margin a few degrees of difference changes no result; the sources differ by up to about 30, so larger differences are not excluded by this check, though with zero failures in the data no result would change unless the bounds were tightened by more than the margin.",
+    "next_action": "Independent re-review. Then R01: apply D-UM21-C03-2 = C to AB07/i10, decide the AB08/i0 stride, and read assessment.json for filtering, counts and the docs page."
+  },
+  "changed_files_q01": [
+    "contributor_tools/run_um21_q01_assessment.py",
+    "tests/test_um21_q01_assessment.py",
+    "docs/quality/audits/um21-q01-pilot-spec-v1.json",
+    "docs/quality/audits/um21-q01-full-spec-v1.json",
+    "docs/quality/audits/um21-q01-pilot-launcher-receipt-v1.json(.log)",
+    "docs/quality/audits/um21-q01-full-launcher-receipt-v1.json(.log)",
+    "converted_datasets/reconversion_v2/um21_q01_pilot_v1/",
+    "converted_datasets/reconversion_v2/um21_q01_full_v1/",
+    "docs/maintainers/handoffs/UM21-Q01.json",
+    "docs/maintainers/backlog.json",
+    "docs/maintainers/backlog.html",
+    "docs/quality/audits/um21-q01-{pilot,full}-spec-v2.json",
+    "docs/quality/audits/um21-q01-{pilot,full}-launcher-receipt-v2.json(.log)",
+    "converted_datasets/reconversion_v2/um21_q01_{pilot,full}_v2/",
+    "converted_datasets/reconversion_v2/um21_q01_{pilot,full}_v1/INVALID_DO_NOT_USE.txt"
+  ],
+  "q01_result_v1_invalid": {
+    "decision": "D-UM21-Q01-1 = B (coarse limits L1, L2; structural L3, L4)",
+    "runner": "contributor_tools/run_um21_q01_assessment.py (sha256 d1d5f917d172e6bdfd5b15be8a0a0daab1ffa81b2ce74e5a3faa471e22d13077); bound in both specs; unchanged between pilot and full",
+    "tests": "tests/test_um21_q01_assessment.py: 9 passed (synthetic fixtures: 180 degree jump fails L2, out-of-range fails L1 at exact samples, bounds exact, NaN is missing, unlimited column stays unchecked, held channel is not_checked_no_column, L3 never filters)",
+    "pilot": {
+      "spec": "docs/quality/audits/um21-q01-pilot-spec-v1.json",
+      "receipt": "docs/quality/audits/um21-q01-pilot-launcher-receipt-v1.json",
+      "root": "converted_datasets/reconversion_v2/um21_q01_pilot_v1",
+      "records": "AB04/i0, AB05/i5",
+      "result": "336 assessed, 4 unmapped, exit 0, clean, cleanup proven, peak RSS 130 MiB (launcher), 126.8 in-job"
+    },
+    "full": {
+      "spec": "docs/quality/audits/um21-q01-full-spec-v1.json",
+      "receipt": "docs/quality/audits/um21-q01-full-launcher-receipt-v1.json",
+      "root": "converted_datasets/reconversion_v2/um21_q01_full_v1",
+      "result": "44 records from the ten T04 v2 receipts; 7,547 assessed, 15 unmapped listed with reasons; exit 0, clean, cleanup proven; wall 6.4 s; peak RSS 130.5 MiB in-job, 133.6 MiB launcher (cap 300 / address space 768 unchanged)",
+      "assessment_file": "converted_datasets/reconversion_v2/um21_q01_full_v1/assessment.json (sha256 600684e4...) with sidecars observations.jsonl (bc65bcd7...) and failures.jsonl (empty, e3b0c442...), hashed inside assessment.json"
+    },
+    "findings": {
+      "limit_failures": "none: 0 strides failed L1, 0 failed L2; no structural failures; no stride time outside 0.4-2.5 s. overall = no_failure_found for all 7,547. The tests show the limits do fire on synthetic bad data. This does NOT mean the data are validated: most columns have no limit.",
+      "missing_samples": "376 observations have at least one non-finite sample (reported per sample index); AB08/i0 has 12 observations whose ankle angle is entirely missing (state unchecked_all_missing).",
+      "held_power": "8 recording-channel holds (AB03/i10 ankle, hip, knee power; hip power in AB04/d10, AB04/d5, AB05/d10, AB05/d5, AB06/d5): no column, state not_checked_no_column.",
+      "unmapped": "15 strides already left out (D-UM21-T04-2 = A), listed with reasons in assessment.json unmapped_observations.",
+      "normalized_crosscheck": "768 observations have no normalized twin. The C02 report holds only record-level counts, so the 768 are shown per record (assessment.json observations_without_normalized_twin), not per observation id. Not recoverable without re-reading the source.",
+      "unchecked": "moments, powers, velocities (no limit); pelvis tilt, thigh, shank, foot: jump limit L2 only (state pass_jump_only); ankle angle always pass_offset_unverified. T03 segment columns are never read or shipped."
+    },
+    "textbook_values_verification": "Unverified against a primary text. One web search (2026-11-06) returned only secondary pages (Enlyte explainer, Knowt study set) that agree with the draft (hip flexion 120, extension 20-30, knee flexion 135, ankle DF 20, PF 50); other pages differ (hip flexion 100, knee 150, DF 30). Nothing cited as a source. With a 30 degree margin a few degrees of difference changes no result; the sources differ by up to about 30, so larger differences are not excluded by this check, though with zero failures in the data no result would change unless the bounds were tightened by more than the margin.",
+    "next_action": "Independent reviewer: check acceptance criteria against the assessment file, receipts and tests; then R01 reads assessment.json for filtering, counts and the documentation page. Optional for review: a primary-source check of the textbook ranges.",
+    "INVALID": "v1 compared radian columns to degree limits; superseded by q01_result (v2). Its roots carry INVALID_DO_NOT_USE.txt."
   }
 }
