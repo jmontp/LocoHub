@@ -1,0 +1,894 @@
+{
+  "schema": "locohub.guarded_launcher.receipt/2",
+  "job_id": "UM21-T04-full-AB10-v2",
+  "status": "completed",
+  "scientific_approval": false,
+  "envelope": {
+    "path": "docs/quality/audits/pm01-um21-tread-pilot-handoff.json",
+    "reviewed_sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9",
+    "limits": {
+      "timeout_seconds_max": 3600,
+      "kill_after_seconds_max": 30,
+      "poll_seconds_max": 15,
+      "startup_memory_mib_min": {
+        "linux": 3584,
+        "windows": 2816
+      },
+      "runtime_memory_mib_min": {
+        "linux": 2048,
+        "windows": 2048
+      },
+      "output_volume_free_mib_min": 5120,
+      "c_drive_free_mib_min": 1024,
+      "c_drive_path": "/mnt/c",
+      "address_space_mib_max": 768
+    },
+    "sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+  },
+  "spec": {
+    "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+    "kill_after_seconds": 30,
+    "poll_seconds": 15,
+    "disk_admission": [],
+    "thread_env": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "ARROW_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    },
+    "expected_output_names": [
+      "t04_summary.json"
+    ],
+    "address_space_mib": 768,
+    "job_id": "UM21-T04-full-AB10-v2",
+    "command": [
+      "python3",
+      "contributor_tools/run_um21_t04_signs.py",
+      "run",
+      "--output-root",
+      "converted_datasets/reconversion_v2/um21_t04_full_AB10_v2",
+      "--detector-sha256",
+      "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+      "--recordings",
+      "AB10/d10,AB10/d5,AB10/i10,AB10/i5",
+      "--stage",
+      "full",
+      "--mode",
+      "full",
+      "--subject",
+      "AB10"
+    ],
+    "output_root": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/um21_t04_full_AB10_v2",
+    "receipt_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/um21-t04-full-AB10-launcher-receipt-v2.json",
+    "bindings": {
+      "contributor_tools/common/sign_offset_detector.py": "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+      "contributor_tools/common/sign_application.py": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "contributor_tools/common/documentation_policy.py": "32518cf6d8e5c045b33addde4be20e76a31a8d5d259dbb2111bfba35f2076cbd",
+      "contributor_tools/common/refuted_documentation.json": "3392c0caed84420a8c67a7fd89055cdf7a7e9a17c272ba2139f2db16eb84c4fd",
+      "contributor_tools/common/audited_signs.json": "261f344d578f30c6c8049acee66db3e1b3598ca9c1403c43815d6ee688b51ee6",
+      "contributor_tools/adapters/um21_sign_adapter.py": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
+      "contributor_tools/run_core11_um21_pilot.py": "33de204ad14031819b559df83035d12170aa5e12b633687ddbb83f67b0cc2d24",
+      "docs/quality/audits/um21-t02-clock-census.json": "661f9dd528b7e167aa5516e1fc44dbdd5aa982daaf57cacffbf2331f29d36dfd",
+      "docs/quality/audits/um21-c03-conventions.json": "244e3c354b6439edf1181aceee735e51b536b017593a982f27d318b256c1f4c3",
+      "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+      "contributor_tools/run_um21_t04_signs.py": "96ca293258ba4293f6fc7b317b964d29ab33a3f71b580d804d9c0e515299b3a2",
+      "docs/quality/audits/um21-t03-batch0-launcher-receipt.json": "046a3bb4193530c893093b24e7d5ce2dee50c9d5496af155d8eb8b06ac9f8110",
+      "docs/quality/audits/um21-t03-batch1-launcher-receipt.json": "e290eaea8de83e0927dbc7e36395da71280ae1801ec45e228f41285d1075d343",
+      "docs/quality/audits/um21-t03-v2-batch2-launcher-receipt.json": "fccfc3e203fed22d0de3fde01169cb62da3037549e659a220e25e83664f5fb43",
+      "docs/quality/audits/um21-t03-v2-batch3-launcher-receipt.json": "1dd7537e5503b4e087420c40265296820309a21c7f0b402bbcbf23df95b4d89d",
+      "docs/quality/audits/um21-t03-v2-batch4-launcher-receipt.json": "ba68bf1a7d441a21e5fd064d9ea85684202d855b6a49fe38edf462fc8f7d7028",
+      "docs/quality/audits/um21-t03-v2-batch5-launcher-receipt.json": "a1b045cecb125758203b82e5314e87875a03c09ede351e37cc2ff1ea04bf04b0",
+      "docs/quality/audits/um21-t03-v2-batch6-launcher-receipt.json": "bc33329df7f004d37a75798b7a99eb7a20dc3cd70684b5525bd5b28eab6ca60f",
+      "docs/quality/audits/core11-p-um21-pilot-record-v4.json": "c459e7a7238105547d0efa10d6a6173af0f0bb5aafc6981023e9cad759788be3",
+      "docs/quality/audits/core11-p-um21-launcher-receipt-v4.json": "3b6ff3f4759a9e5e90d77ded35079ab4851f2310e6a579740fcccd6163724505"
+    },
+    "timeout_seconds": 3600,
+    "startup_memory_mib": {
+      "linux": 3584,
+      "windows": 2816
+    },
+    "runtime_memory_mib": {
+      "linux": 2048,
+      "windows": 2048
+    }
+  },
+  "spec_sha256": "9a2504796ca9ce3f39eeac2c175826794493ceb80d386c74a15f2b251bbdbf8d",
+  "launcher_sha256": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b",
+  "checked_at_utc": "2026-11-06T18:19:21+00:00",
+  "chaining": "none; no successor is started",
+  "bindings_before": {
+    "contributor_tools/common/sign_offset_detector.py": {
+      "expected": "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+      "actual": "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+      "bytes": 73830,
+      "matches": true
+    },
+    "contributor_tools/common/sign_application.py": {
+      "expected": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "actual": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "bytes": 56217,
+      "matches": true
+    },
+    "contributor_tools/common/documentation_policy.py": {
+      "expected": "32518cf6d8e5c045b33addde4be20e76a31a8d5d259dbb2111bfba35f2076cbd",
+      "actual": "32518cf6d8e5c045b33addde4be20e76a31a8d5d259dbb2111bfba35f2076cbd",
+      "bytes": 6954,
+      "matches": true
+    },
+    "contributor_tools/common/refuted_documentation.json": {
+      "expected": "3392c0caed84420a8c67a7fd89055cdf7a7e9a17c272ba2139f2db16eb84c4fd",
+      "actual": "3392c0caed84420a8c67a7fd89055cdf7a7e9a17c272ba2139f2db16eb84c4fd",
+      "bytes": 2362,
+      "matches": true
+    },
+    "contributor_tools/common/audited_signs.json": {
+      "expected": "261f344d578f30c6c8049acee66db3e1b3598ca9c1403c43815d6ee688b51ee6",
+      "actual": "261f344d578f30c6c8049acee66db3e1b3598ca9c1403c43815d6ee688b51ee6",
+      "bytes": 32392,
+      "matches": true
+    },
+    "contributor_tools/adapters/um21_sign_adapter.py": {
+      "expected": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
+      "actual": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
+      "bytes": 24823,
+      "matches": true
+    },
+    "contributor_tools/run_core11_um21_pilot.py": {
+      "expected": "33de204ad14031819b559df83035d12170aa5e12b633687ddbb83f67b0cc2d24",
+      "actual": "33de204ad14031819b559df83035d12170aa5e12b633687ddbb83f67b0cc2d24",
+      "bytes": 31150,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t02-clock-census.json": {
+      "expected": "661f9dd528b7e167aa5516e1fc44dbdd5aa982daaf57cacffbf2331f29d36dfd",
+      "actual": "661f9dd528b7e167aa5516e1fc44dbdd5aa982daaf57cacffbf2331f29d36dfd",
+      "bytes": 403549,
+      "matches": true
+    },
+    "docs/quality/audits/um21-c03-conventions.json": {
+      "expected": "244e3c354b6439edf1181aceee735e51b536b017593a982f27d318b256c1f4c3",
+      "actual": "244e3c354b6439edf1181aceee735e51b536b017593a982f27d318b256c1f4c3",
+      "bytes": 66448,
+      "matches": true
+    },
+    "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat": {
+      "expected": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+      "actual": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+      "bytes": 2195168300,
+      "matches": true
+    },
+    "contributor_tools/run_um21_t04_signs.py": {
+      "expected": "96ca293258ba4293f6fc7b317b964d29ab33a3f71b580d804d9c0e515299b3a2",
+      "actual": "96ca293258ba4293f6fc7b317b964d29ab33a3f71b580d804d9c0e515299b3a2",
+      "bytes": 44771,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-batch0-launcher-receipt.json": {
+      "expected": "046a3bb4193530c893093b24e7d5ce2dee50c9d5496af155d8eb8b06ac9f8110",
+      "actual": "046a3bb4193530c893093b24e7d5ce2dee50c9d5496af155d8eb8b06ac9f8110",
+      "bytes": 59150,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-batch1-launcher-receipt.json": {
+      "expected": "e290eaea8de83e0927dbc7e36395da71280ae1801ec45e228f41285d1075d343",
+      "actual": "e290eaea8de83e0927dbc7e36395da71280ae1801ec45e228f41285d1075d343",
+      "bytes": 59140,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch2-launcher-receipt.json": {
+      "expected": "fccfc3e203fed22d0de3fde01169cb62da3037549e659a220e25e83664f5fb43",
+      "actual": "fccfc3e203fed22d0de3fde01169cb62da3037549e659a220e25e83664f5fb43",
+      "bytes": 41637,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch3-launcher-receipt.json": {
+      "expected": "1dd7537e5503b4e087420c40265296820309a21c7f0b402bbcbf23df95b4d89d",
+      "actual": "1dd7537e5503b4e087420c40265296820309a21c7f0b402bbcbf23df95b4d89d",
+      "bytes": 41640,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch4-launcher-receipt.json": {
+      "expected": "ba68bf1a7d441a21e5fd064d9ea85684202d855b6a49fe38edf462fc8f7d7028",
+      "actual": "ba68bf1a7d441a21e5fd064d9ea85684202d855b6a49fe38edf462fc8f7d7028",
+      "bytes": 38478,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch5-launcher-receipt.json": {
+      "expected": "a1b045cecb125758203b82e5314e87875a03c09ede351e37cc2ff1ea04bf04b0",
+      "actual": "a1b045cecb125758203b82e5314e87875a03c09ede351e37cc2ff1ea04bf04b0",
+      "bytes": 38485,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch6-launcher-receipt.json": {
+      "expected": "bc33329df7f004d37a75798b7a99eb7a20dc3cd70684b5525bd5b28eab6ca60f",
+      "actual": "bc33329df7f004d37a75798b7a99eb7a20dc3cd70684b5525bd5b28eab6ca60f",
+      "bytes": 38490,
+      "matches": true
+    },
+    "docs/quality/audits/core11-p-um21-pilot-record-v4.json": {
+      "expected": "c459e7a7238105547d0efa10d6a6173af0f0bb5aafc6981023e9cad759788be3",
+      "actual": "c459e7a7238105547d0efa10d6a6173af0f0bb5aafc6981023e9cad759788be3",
+      "bytes": 2151,
+      "matches": true
+    },
+    "docs/quality/audits/core11-p-um21-launcher-receipt-v4.json": {
+      "expected": "3b6ff3f4759a9e5e90d77ded35079ab4851f2310e6a579740fcccd6163724505",
+      "actual": "3b6ff3f4759a9e5e90d77ded35079ab4851f2310e6a579740fcccd6163724505",
+      "bytes": 31730,
+      "matches": true
+    }
+  },
+  "disk_admission": [
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/um21_t04_full_AB10_v2",
+      "min_free_mib": 5120,
+      "source": "envelope: output volume (S:)",
+      "free_mib": 143629.23828125,
+      "passes": true
+    },
+    {
+      "path": "/mnt/c",
+      "min_free_mib": 1024,
+      "source": "envelope: C:",
+      "free_mib": 110096.3671875,
+      "passes": true
+    }
+  ],
+  "census_before": {
+    "linux": {
+      "checked_at_utc": "2026-11-06T18:19:29+00:00",
+      "boot_id": "1570e813-f7dd-44f7-b4bb-542164173260",
+      "process_count": 99,
+      "exempt": [
+        {
+          "pid": 2,
+          "start_ticks": 233,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1474,
+          "start_ticks": 3111,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1475,
+          "start_ticks": 3113,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1977,
+          "start_ticks": 3964,
+          "cwd": "/mnt/c/Windows/System32",
+          "cmdline": "tmux",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1082279,
+          "start_ticks": 50017091,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1092061,
+          "start_ticks": 50305298,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2653537,
+          "start_ticks": 133945934,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1793133140567-6irr6x.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'nice -n 19 io",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2653538,
+          "start_ticks": 133945934,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/um21-t04-full-AB10-spec-v2.json",
+          "why": "launcher itself (CLI)"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-06T18:19:30+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 319,
+      "free_physical_mib": 8278.1015625,
+      "workers": []
+    }
+  },
+  "startup_memory": {
+    "linux": {
+      "available_mib": 11231.171875,
+      "reserve_mib": 3584,
+      "passes": true
+    },
+    "windows": {
+      "available_mib": 8278.1015625,
+      "reserve_mib": 2816,
+      "passes": true
+    }
+  },
+  "launch_ledger": {
+    "parent": {
+      "pid": 2653537,
+      "ppid": 1092061,
+      "start_ticks": 133945934,
+      "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1793133140567-6irr6x.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'nice -n 19 io",
+      "interactive_terminal": false
+    },
+    "claimed": true,
+    "entries": [
+      "/tmp/locohub_guarded_launcher_uid1000/1570e813-f7dd-44f7-b4bb-542164173260/2653537-133945934.json"
+    ],
+    "keys": [
+      {
+        "pid": 2653537,
+        "ppid": 1092061,
+        "start_ticks": 133945934,
+        "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1793133140567-6irr6x.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'nice -n 19 io",
+        "interactive_terminal": false
+      }
+    ]
+  },
+  "launched": true,
+  "process_identity": {
+    "leader_pid": 2653563,
+    "launched_at_utc": "2026-11-06T18:19:30+00:00",
+    "argv": [
+      "timeout",
+      "--signal=TERM",
+      "--kill-after=30s",
+      "3600",
+      "nice",
+      "-n",
+      "19",
+      "ionice",
+      "-c",
+      "3",
+      "python3",
+      "contributor_tools/run_um21_t04_signs.py",
+      "run",
+      "--output-root",
+      "converted_datasets/reconversion_v2/um21_t04_full_AB10_v2",
+      "--detector-sha256",
+      "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+      "--recordings",
+      "AB10/d10,AB10/d5,AB10/i10,AB10/i5",
+      "--stage",
+      "full",
+      "--mode",
+      "full",
+      "--subject",
+      "AB10"
+    ],
+    "log_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/um21-t04-full-AB10-launcher-receipt-v2.log",
+    "parent_death_signal": "SIGTERM",
+    "parent_death_signal_set": true,
+    "pgid": 2653563,
+    "sid": 2653563,
+    "own_session_verified": true,
+    "boot_id": "1570e813-f7dd-44f7-b4bb-542164173260",
+    "leader_start_ticks": 133946767
+  },
+  "job_outcome": "completed",
+  "finished_at_utc": "2026-11-06T18:19:39+00:00",
+  "exit_code": 0,
+  "wall_time_seconds": 9.412,
+  "peak_rss_kib_largest_process": 239556,
+  "peak_group_rss_kib_sampled": 0,
+  "runtime_guard": {
+    "poll_seconds": 15,
+    "reserve_mib": {
+      "linux": 2048,
+      "windows": 2048
+    },
+    "polls": 0,
+    "min_linux_available_mib": null,
+    "min_windows_free_mib": null,
+    "breach": null,
+    "observed_address_space_limits": [
+      "805306368"
+    ],
+    "observed_address_space_by_process": [
+      {
+        "pid": 2653563,
+        "start_ticks": 133946767,
+        "limit": "805306368",
+        "cmdline": "timeout --signal=TERM --kill-after=30s 3600 nice -n 19 ionice -c 3 python3 contributor_tools/run_um21_t04_signs.py run --output-root converted_datasets/reconversion_v2/um21_t04_full_AB10_v2 --detector"
+      },
+      {
+        "pid": 2653564,
+        "start_ticks": 133946767,
+        "limit": "805306368",
+        "cmdline": "python3 contributor_tools/run_um21_t04_signs.py run --output-root converted_datasets/reconversion_v2/um21_t04_full_AB10_v2 --detector-sha256 ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa2021"
+      }
+    ]
+  },
+  "stop_actions": [],
+  "orphans_at_leader_exit": [],
+  "launcher_errors": [],
+  "finalisation_errors": [],
+  "clean_success": true,
+  "retry": "never automatic",
+  "cleanup_proof": {
+    "checked_at_utc": "2026-11-06T18:19:39+00:00",
+    "basis": "same_boot_proc_scan",
+    "proven": true,
+    "boot_id_now": "1570e813-f7dd-44f7-b4bb-542164173260",
+    "pgid_members": [],
+    "leader_pid_with_same_start_ticks_present": false,
+    "attempts": 1
+  },
+  "census_after": {
+    "linux": {
+      "checked_at_utc": "2026-11-06T18:19:39+00:00",
+      "boot_id": "1570e813-f7dd-44f7-b4bb-542164173260",
+      "process_count": 101,
+      "exempt": [
+        {
+          "pid": 2,
+          "start_ticks": 233,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1474,
+          "start_ticks": 3111,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1475,
+          "start_ticks": 3113,
+          "cwd": null,
+          "cmdline": "/init",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1977,
+          "start_ticks": 3964,
+          "cwd": "/mnt/c/Windows/System32",
+          "cmdline": "tmux",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1082279,
+          "start_ticks": 50017091,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1092061,
+          "start_ticks": 50305298,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2653537,
+          "start_ticks": 133945934,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1793133140567-6irr6x.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'unsetenv'; \\builtin unset -f -- 'unsetenv'; } >/dev/null 2>&1 || true && eval 'nice -n 19 io",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2653538,
+          "start_ticks": 133945934,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/um21-t04-full-AB10-spec-v2.json",
+          "why": "launcher itself (CLI)"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-06T18:19:40+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 315,
+      "free_physical_mib": 8470.03125,
+      "workers": []
+    }
+  },
+  "windows_new_workers": [],
+  "bindings_after": {
+    "contributor_tools/common/sign_offset_detector.py": {
+      "expected": "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+      "actual": "ed52fc494ceeaa9b21d60411adcd77021d8b31018eeee25abeaebfa20219802d",
+      "bytes": 73830,
+      "matches": true
+    },
+    "contributor_tools/common/sign_application.py": {
+      "expected": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "actual": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "bytes": 56217,
+      "matches": true
+    },
+    "contributor_tools/common/documentation_policy.py": {
+      "expected": "32518cf6d8e5c045b33addde4be20e76a31a8d5d259dbb2111bfba35f2076cbd",
+      "actual": "32518cf6d8e5c045b33addde4be20e76a31a8d5d259dbb2111bfba35f2076cbd",
+      "bytes": 6954,
+      "matches": true
+    },
+    "contributor_tools/common/refuted_documentation.json": {
+      "expected": "3392c0caed84420a8c67a7fd89055cdf7a7e9a17c272ba2139f2db16eb84c4fd",
+      "actual": "3392c0caed84420a8c67a7fd89055cdf7a7e9a17c272ba2139f2db16eb84c4fd",
+      "bytes": 2362,
+      "matches": true
+    },
+    "contributor_tools/common/audited_signs.json": {
+      "expected": "261f344d578f30c6c8049acee66db3e1b3598ca9c1403c43815d6ee688b51ee6",
+      "actual": "261f344d578f30c6c8049acee66db3e1b3598ca9c1403c43815d6ee688b51ee6",
+      "bytes": 32392,
+      "matches": true
+    },
+    "contributor_tools/adapters/um21_sign_adapter.py": {
+      "expected": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
+      "actual": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
+      "bytes": 24823,
+      "matches": true
+    },
+    "contributor_tools/run_core11_um21_pilot.py": {
+      "expected": "33de204ad14031819b559df83035d12170aa5e12b633687ddbb83f67b0cc2d24",
+      "actual": "33de204ad14031819b559df83035d12170aa5e12b633687ddbb83f67b0cc2d24",
+      "bytes": 31150,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t02-clock-census.json": {
+      "expected": "661f9dd528b7e167aa5516e1fc44dbdd5aa982daaf57cacffbf2331f29d36dfd",
+      "actual": "661f9dd528b7e167aa5516e1fc44dbdd5aa982daaf57cacffbf2331f29d36dfd",
+      "bytes": 403549,
+      "matches": true
+    },
+    "docs/quality/audits/um21-c03-conventions.json": {
+      "expected": "244e3c354b6439edf1181aceee735e51b536b017593a982f27d318b256c1f4c3",
+      "actual": "244e3c354b6439edf1181aceee735e51b536b017593a982f27d318b256c1f4c3",
+      "bytes": 66448,
+      "matches": true
+    },
+    "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat": {
+      "expected": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+      "actual": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+      "bytes": 2195168300,
+      "matches": true
+    },
+    "contributor_tools/run_um21_t04_signs.py": {
+      "expected": "96ca293258ba4293f6fc7b317b964d29ab33a3f71b580d804d9c0e515299b3a2",
+      "actual": "96ca293258ba4293f6fc7b317b964d29ab33a3f71b580d804d9c0e515299b3a2",
+      "bytes": 44771,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-batch0-launcher-receipt.json": {
+      "expected": "046a3bb4193530c893093b24e7d5ce2dee50c9d5496af155d8eb8b06ac9f8110",
+      "actual": "046a3bb4193530c893093b24e7d5ce2dee50c9d5496af155d8eb8b06ac9f8110",
+      "bytes": 59150,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-batch1-launcher-receipt.json": {
+      "expected": "e290eaea8de83e0927dbc7e36395da71280ae1801ec45e228f41285d1075d343",
+      "actual": "e290eaea8de83e0927dbc7e36395da71280ae1801ec45e228f41285d1075d343",
+      "bytes": 59140,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch2-launcher-receipt.json": {
+      "expected": "fccfc3e203fed22d0de3fde01169cb62da3037549e659a220e25e83664f5fb43",
+      "actual": "fccfc3e203fed22d0de3fde01169cb62da3037549e659a220e25e83664f5fb43",
+      "bytes": 41637,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch3-launcher-receipt.json": {
+      "expected": "1dd7537e5503b4e087420c40265296820309a21c7f0b402bbcbf23df95b4d89d",
+      "actual": "1dd7537e5503b4e087420c40265296820309a21c7f0b402bbcbf23df95b4d89d",
+      "bytes": 41640,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch4-launcher-receipt.json": {
+      "expected": "ba68bf1a7d441a21e5fd064d9ea85684202d855b6a49fe38edf462fc8f7d7028",
+      "actual": "ba68bf1a7d441a21e5fd064d9ea85684202d855b6a49fe38edf462fc8f7d7028",
+      "bytes": 38478,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch5-launcher-receipt.json": {
+      "expected": "a1b045cecb125758203b82e5314e87875a03c09ede351e37cc2ff1ea04bf04b0",
+      "actual": "a1b045cecb125758203b82e5314e87875a03c09ede351e37cc2ff1ea04bf04b0",
+      "bytes": 38485,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch6-launcher-receipt.json": {
+      "expected": "bc33329df7f004d37a75798b7a99eb7a20dc3cd70684b5525bd5b28eab6ca60f",
+      "actual": "bc33329df7f004d37a75798b7a99eb7a20dc3cd70684b5525bd5b28eab6ca60f",
+      "bytes": 38490,
+      "matches": true
+    },
+    "docs/quality/audits/core11-p-um21-pilot-record-v4.json": {
+      "expected": "c459e7a7238105547d0efa10d6a6173af0f0bb5aafc6981023e9cad759788be3",
+      "actual": "c459e7a7238105547d0efa10d6a6173af0f0bb5aafc6981023e9cad759788be3",
+      "bytes": 2151,
+      "matches": true
+    },
+    "docs/quality/audits/core11-p-um21-launcher-receipt-v4.json": {
+      "expected": "3b6ff3f4759a9e5e90d77ded35079ab4851f2310e6a579740fcccd6163724505",
+      "actual": "3b6ff3f4759a9e5e90d77ded35079ab4851f2310e6a579740fcccd6163724505",
+      "bytes": 31730,
+      "matches": true
+    }
+  },
+  "outputs": [
+    {
+      "path": "inputs/backlog_snapshot.json",
+      "bytes": 549795,
+      "sha256": "94d200eaa325ecb4fe0d93cb0b68d0b535010a4ecfd4c5563e4b6f57ace4f4bd"
+    },
+    {
+      "path": "records/AB10_d10/groups/AB10_d10_left/derivations.json",
+      "bytes": 15854,
+      "sha256": "647b3d31a5888fca644c30c5e19d2e7da44a63e0fa924c15fbb237b1675a1c74"
+    },
+    {
+      "path": "records/AB10_d10/groups/AB10_d10_left/derived.npz",
+      "bytes": 1110668,
+      "sha256": "f8bab1d9526af438273ec623119bedf64609c8d6b65f90ff3ff21f531c6ba346"
+    },
+    {
+      "path": "records/AB10_d10/groups/AB10_d10_left/hook_outputs.npz",
+      "bytes": 1586550,
+      "sha256": "a756b58c2c2a0459abb14980a6fca4e1e209259160c19ad7242511ab88d36984"
+    },
+    {
+      "path": "records/AB10_d10/groups/AB10_d10_left/sign_application.json",
+      "bytes": 34244,
+      "sha256": "5c50a8d941850a8ce925ae4e7f12e9f5719707912d7e44d06f354ef2f2c01867"
+    },
+    {
+      "path": "records/AB10_d10/groups/AB10_d10_left/sign_review.json",
+      "bytes": 4039,
+      "sha256": "d3bf834af3c923fc474b7dc3cb1ed27617bf0d7f2bddf89e12308c9a37096fde"
+    },
+    {
+      "path": "records/AB10_d10/groups/AB10_d10_right/derivations.json",
+      "bytes": 15628,
+      "sha256": "583ed0e545eeaacd92094a521ce94ff4d88072426a1dda1a3f8e5fc334930abc"
+    },
+    {
+      "path": "records/AB10_d10/groups/AB10_d10_right/derived.npz",
+      "bytes": 1077068,
+      "sha256": "e970e1c6feb987585ef38153ffca11d96a84b4a301a552201cd44ea3a0cccb86"
+    },
+    {
+      "path": "records/AB10_d10/groups/AB10_d10_right/hook_outputs.npz",
+      "bytes": 1538550,
+      "sha256": "ab12abc9494bcf70d388817397bb6de58eca416de585857428bba11e6c45a1af"
+    },
+    {
+      "path": "records/AB10_d10/groups/AB10_d10_right/sign_application.json",
+      "bytes": 34147,
+      "sha256": "383688a1baf50819e6f4f0b836bbc6a8def50a4b64e50da032f8550d881904e4"
+    },
+    {
+      "path": "records/AB10_d10/groups/AB10_d10_right/sign_review.json",
+      "bytes": 4042,
+      "sha256": "281fde246575906ae85c1e983514c1708d1542731a24b0ddd19ecdfe6c5ef261"
+    },
+    {
+      "path": "records/AB10_d10/observation_map.json",
+      "bytes": 226779,
+      "sha256": "7b4d7ef04fcb206687f0b4a58f93c381aaed2c0b4e7b9ff86fcfa3427ca12950"
+    },
+    {
+      "path": "records/AB10_d10/observations_signed.parquet",
+      "bytes": 3850308,
+      "sha256": "fde7f6a06915aafb98d7a420794b295c85aeb11b9662d19899b56b7f57aeab0f"
+    },
+    {
+      "path": "records/AB10_d5/groups/AB10_d5_left/derivations.json",
+      "bytes": 15369,
+      "sha256": "38f827d14f5441ecc7d6c505738d46330238aee6fab85041a8b69240571082af"
+    },
+    {
+      "path": "records/AB10_d5/groups/AB10_d5_left/derived.npz",
+      "bytes": 1043468,
+      "sha256": "74751c44828448cb800cd72d40500c7a48299e25c840c7ec094c2a3855e4e37f"
+    },
+    {
+      "path": "records/AB10_d5/groups/AB10_d5_left/hook_outputs.npz",
+      "bytes": 1490550,
+      "sha256": "a25299c49d4cbf060453122d42c0d1db737837087d68490896086739f2b9c8a6"
+    },
+    {
+      "path": "records/AB10_d5/groups/AB10_d5_left/sign_application.json",
+      "bytes": 33627,
+      "sha256": "be8f85f0e7e3e80c663f6d9f55d29cbedbd6b97ab5fca68610af2449f1146d62"
+    },
+    {
+      "path": "records/AB10_d5/groups/AB10_d5_left/sign_review.json",
+      "bytes": 4032,
+      "sha256": "fc9666c4dfa1e7ef16bb55f5d8083c45d22c3adc2b6cbc185a9125575c8f38fd"
+    },
+    {
+      "path": "records/AB10_d5/groups/AB10_d5_right/derivations.json",
+      "bytes": 15495,
+      "sha256": "7d5ff3bebc67fc2d0c5dd325910a9fc17b17e61aef5b1436de531c14aceaa0ea"
+    },
+    {
+      "path": "records/AB10_d5/groups/AB10_d5_right/derived.npz",
+      "bytes": 1060268,
+      "sha256": "60486c8e8899ef0d3a7dd8b8da91d10e10c7f9e86829111ac2c300e214b1fd44"
+    },
+    {
+      "path": "records/AB10_d5/groups/AB10_d5_right/hook_outputs.npz",
+      "bytes": 1514550,
+      "sha256": "edcb7c57f2d2be4d74361e7b41bc5442c205ea9cfd311a7a41c4a05295275223"
+    },
+    {
+      "path": "records/AB10_d5/groups/AB10_d5_right/sign_application.json",
+      "bytes": 33876,
+      "sha256": "3a750a68b212e867ead0179600ffc344c88156d79ef3f961c5a543bb8185cb97"
+    },
+    {
+      "path": "records/AB10_d5/groups/AB10_d5_right/sign_review.json",
+      "bytes": 4035,
+      "sha256": "6dc14119c73a79924c50142efd443b3d555f2e4001651ed6ec5e462cdf5c2131"
+    },
+    {
+      "path": "records/AB10_d5/observation_map.json",
+      "bytes": 225094,
+      "sha256": "1dfb777aec2924e76871a812907d120476054f3e8cf57a030ce42bc7391cff68"
+    },
+    {
+      "path": "records/AB10_d5/observations_signed.parquet",
+      "bytes": 3827645,
+      "sha256": "5c32db3e1e7feca89d87231eea364a9288a06d4cfe277f0728fcdd4433436a57"
+    },
+    {
+      "path": "records/AB10_i10/groups/AB10_i10_left/derivations.json",
+      "bytes": 14575,
+      "sha256": "a28ea1546aee155ddbaa5f3315eaab0c5311fd9ececd84ea4bb9fb13b007f0c1"
+    },
+    {
+      "path": "records/AB10_i10/groups/AB10_i10_left/derived.npz",
+      "bytes": 917468,
+      "sha256": "44a5d934f34afe4358fdf442f7bcd97a84ccecfab8f78f59bd39869a88977ed3"
+    },
+    {
+      "path": "records/AB10_i10/groups/AB10_i10_left/hook_outputs.npz",
+      "bytes": 1310550,
+      "sha256": "916e82733470ed43471cd78df0977750445884aa8f9cc084f883bf66697ad170"
+    },
+    {
+      "path": "records/AB10_i10/groups/AB10_i10_left/sign_application.json",
+      "bytes": 32516,
+      "sha256": "1ae0ab49d687eae1c63bbfba85a91dad014afef9183e3eda596dfd3e5f837683"
+    },
+    {
+      "path": "records/AB10_i10/groups/AB10_i10_left/sign_review.json",
+      "bytes": 4660,
+      "sha256": "38dcedda7c8da57c8c0a8639ced342e0e48bf35a007154d26c8745ef4c3c2d93"
+    },
+    {
+      "path": "records/AB10_i10/groups/AB10_i10_right/derivations.json",
+      "bytes": 14636,
+      "sha256": "06e13d4fc9c3d63059fcf142f573d42261bf4dbfda2262830513fec7c8e33562"
+    },
+    {
+      "path": "records/AB10_i10/groups/AB10_i10_right/derived.npz",
+      "bytes": 925868,
+      "sha256": "bfb9f708a3ef185ac5a6831140338e1634688cfcb424846964ab2e45b213a956"
+    },
+    {
+      "path": "records/AB10_i10/groups/AB10_i10_right/hook_outputs.npz",
+      "bytes": 1322550,
+      "sha256": "dc7ba290b9369889ef764d1210ef0eb40a68953598da9bcc547241b3ea742fb3"
+    },
+    {
+      "path": "records/AB10_i10/groups/AB10_i10_right/sign_application.json",
+      "bytes": 32664,
+      "sha256": "0ae248e671737d8a4f3aced32b9e0b91e2a31f006925b5e027611df6ef3ca82b"
+    },
+    {
+      "path": "records/AB10_i10/groups/AB10_i10_right/sign_review.json",
+      "bytes": 3696,
+      "sha256": "93286b0442ebc406f43b972588a74242c31dc84f6cf68e7506b7332ae3d6babe"
+    },
+    {
+      "path": "records/AB10_i10/observation_map.json",
+      "bytes": 200033,
+      "sha256": "150dece3199fe50b4fd4625624bb1d944eacc5106222f09ad8733bcb0e15c874"
+    },
+    {
+      "path": "records/AB10_i10/observations_signed.parquet",
+      "bytes": 3381887,
+      "sha256": "332afc6428442857796d8a4930a29e767ea31eb59a05b642a63dfdd6aaac45c9"
+    },
+    {
+      "path": "records/AB10_i5/groups/AB10_i5_left/derivations.json",
+      "bytes": 14989,
+      "sha256": "86e21b9006f85b37196ab9bf926bab15e7d779c4cc58e9cb0fb115ad49dc04b9"
+    },
+    {
+      "path": "records/AB10_i5/groups/AB10_i5_left/derived.npz",
+      "bytes": 984668,
+      "sha256": "a65d6d39e0f3bd9959ed295fda0d1cca26bd2c2800dd34d9eb44779f9cfa79e2"
+    },
+    {
+      "path": "records/AB10_i5/groups/AB10_i5_left/hook_outputs.npz",
+      "bytes": 1406550,
+      "sha256": "9f07932f25d456887aab66cc7b0894473680c4dd75841a03756802c9ed9d2f7b"
+    },
+    {
+      "path": "records/AB10_i5/groups/AB10_i5_left/sign_application.json",
+      "bytes": 33155,
+      "sha256": "b4fae94d1d7b5c2df83aab73fecb49284d8890898b602313ca66df1f708a1b63"
+    },
+    {
+      "path": "records/AB10_i5/groups/AB10_i5_left/sign_review.json",
+      "bytes": 3279,
+      "sha256": "666edbd5239e12ac216e12c038107f36ac509abb521878dabecae2c6e8c713af"
+    },
+    {
+      "path": "records/AB10_i5/groups/AB10_i5_right/derivations.json",
+      "bytes": 15205,
+      "sha256": "07240d57360c6b415d21037e2aee0aee84d7dccb37c807c7ccdf9318fdc76d9a"
+    },
+    {
+      "path": "records/AB10_i5/groups/AB10_i5_right/derived.npz",
+      "bytes": 1018268,
+      "sha256": "008bf1b43c9859ee3b629a2ea2916cd1c25877211b0ebc935ae451ad7a8c5ed8"
+    },
+    {
+      "path": "records/AB10_i5/groups/AB10_i5_right/hook_outputs.npz",
+      "bytes": 1454550,
+      "sha256": "8f8e1ddad5f59799d831c9ccc179f0719f335f5d57ca1e456cd96c04e5a2ee81"
+    },
+    {
+      "path": "records/AB10_i5/groups/AB10_i5_right/sign_application.json",
+      "bytes": 33605,
+      "sha256": "39241fa55e4bec96abcbc6ca7586a63e6e0ca41d2ff3e848f30eafc4d23ea841"
+    },
+    {
+      "path": "records/AB10_i5/groups/AB10_i5_right/sign_review.json",
+      "bytes": 3373,
+      "sha256": "8151352c5be80514de788ce0cfeb642febba0e8fd32ae3e70fa2b39c2c7569ec"
+    },
+    {
+      "path": "records/AB10_i5/observation_map.json",
+      "bytes": 211495,
+      "sha256": "955d3fb518286d4aab1b9810fbd0d627c1bc6810f62c0556b5f9d81a7321bb35"
+    },
+    {
+      "path": "records/AB10_i5/observations_signed.parquet",
+      "bytes": 3593628,
+      "sha256": "ddb61da28c7acafb8f234110aac6a3828796d3b13948a136dec55cc40bc97738"
+    },
+    {
+      "path": "t04_summary.json",
+      "bytes": 26201,
+      "sha256": "5034a7ddfa5cc162ee0fa917584140ee49d8ddf8a01b624efb71d6a8d77db1ab"
+    }
+  ],
+  "expected_outputs_missing": [],
+  "log_sha256": "4fec391e925aeb2967fe266bb0f62c276d41063b7665710bfb13f6031b9a2370",
+  "checks": {
+    "cleanup_proven": true,
+    "bindings_unchanged": true,
+    "envelope_unchanged": true,
+    "linux_no_new_worker": true,
+    "windows_no_new_worker": true,
+    "no_orphans_at_leader_exit": true,
+    "outputs_hashed": true,
+    "expected_outputs_present": true
+  }
+}

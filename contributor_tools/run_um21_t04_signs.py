@@ -97,7 +97,7 @@ ID_RE = re.compile(r"^um21:Streaming/(AB\d{2})/Tread/([di]\d+):(right|left):fram
 LEGS = ("right", "left")
 READ_BATCH_ROWS = 4096
 WRITE_OBSERVATIONS = 20
-VERSION = {"a": "v3", "b": "v3", "full": "v1"}  # v3 pilots: the runner changed after the v2 pilots (full mode, one-leg rule)
+VERSION = {"a": "v4", "b": "v4", "full": "v2"}  # v4 pilots / v2 full: runner changed again (D-UM21-T04-1 = C copy, -3 = B physics power)
 
 
 def sha256_file(path):
@@ -144,40 +144,140 @@ def install_full_mode(record_path):
 
 
 # ---------------------------------------------------------------- one-leg rule (pure)
-def settle_recording(hook_logs, segment_logs, velocity_logs):
+R_MIN = 0.9                 # D-UM21-T04-3 = B: |r| below this holds power
+MIN_PHYSICS_SAMPLES = 300   # finite samples needed for a correlation (two strides' worth)
+POWER_JOINTS = ("hip", "knee", "ankle")
+
+
+def apply_multiplier(source, m):
+    """source x multiplier for a multiplier of exactly +1 or -1, and nothing else."""
+    if m not in (1, -1):
+        raise ValueError(f"multiplier must be +1 or -1, got {m!r}")
+    return np.negative(source) if m == -1 else source.copy()
+
+
+def source_array(output, multiplier):
+    """The adapter's untransformed input from a hook output and its logged multiplier (each is its own inverse)."""
+    return apply_multiplier(output, multiplier)
+
+
+def physics_correlation(power, moment, angle, spacing_s):
+    """Pearson r between source power and published moment x d(published angle)/dt, pooled over the finite
+    samples of all units of one leg on the common 150-sample grid. The derivative is the hook's own
+    method (numpy.gradient, spacing per unit). NaN samples (zero-fill) are missing in every array."""
+    spacing = np.broadcast_to(np.asarray(spacing_s, dtype=float), (power.shape[0],))
+    omega = np.stack([np.gradient(angle[u], spacing[u], edge_order=1) for u in range(angle.shape[0])])
+    prod = moment * omega
+    ok = np.isfinite(power) & np.isfinite(prod)
+    n = int(ok.sum())
+    if n < MIN_PHYSICS_SAMPLES:
+        return {"r": None, "n": n, "why": f"fewer than {MIN_PHYSICS_SAMPLES} finite samples"}
+    x, y = power[ok], prod[ok]
+    if np.std(x) == 0 or np.std(y) == 0:
+        return {"r": None, "n": n, "why": "constant series"}
+    r = float(np.corrcoef(x, y)[0, 1])
+    return {"r": r, "n": n, "why": None if np.isfinite(r) else "non-finite correlation"}
+
+
+def _physics_why(v):
+    if not v:
+        return "moment or angle not published"
+    if v.get("r") is None:
+        return v.get("why") or "no correlation"
+    return f"|r| = {abs(v['r']):.3f} below {R_MIN}"
+
+
+# ---------------------------------------------------------------- recording rule (pure)
+def settle_recording(hook_logs, segment_logs, velocity_logs, physics=None, copy_settled=True):
     """The recording-level publication rule from per-leg hook logs.
 
-    hook_logs: leg -> {channel: {"publication", "multiplier"}} (the hook's log channels); segment_logs and
-    velocity_logs: leg -> the derivation logs ({"derived": {...}}). Returns (kept, decisions, flags):
-    kept = hook channels and derived channels to write, decisions = per channel {"decision", "decided_by",
-    "legs", "flag"}, flags = review items. Rule: publish a hook channel only if BOTH legs published it with
-    the same multiplier; if either leg held it, hold it for the whole recording and name the deciding leg(s);
-    if both published with different multipliers, hold both and flag it. A derived segment is kept only if
-    both legs derived it and every input is kept; a derived velocity only if both derived it from a kept
-    angle."""
+    hook_logs: leg -> {channel: {"publication", "multiplier"[, "sign_vs_corrected_source", "detector_sign",
+    "verdict"]}}; segment_logs, velocity_logs: leg -> derivation logs ({"derived": {...}}). physics: leg ->
+    {power channel: physics_correlation result or {"r": None, "why": ...}}, or None. Returns (kept, decisions,
+    flags): kept = channels to write, decisions = per channel {"decision", "decided_by", "legs", "flag",
+    "origin" {leg: hook|copied|physics|None}, "multipliers" {leg: m}, "physics"}, flags = review items.
+
+    Per hook channel: (1) both legs published with the same multiplier: publish, origin hook. (2) both
+    published with different multipliers: hold both, flag multiplier_disagreement. (3) one leg published and the
+    other held (D-UM21-T04-1 = C, copy_settled): copy the settled multiplier to the other leg, origin copied,
+    unless the held leg's detector opposes it (verdict conflict, or a detector sign unlike the published leg's
+    sign): then hold both and flag copy_disagreement. (4) neither leg published a POWER channel with physics
+    given (D-UM21-T04-3 = B): sign = sign(r) per leg, published only if both legs have |r| >= R_MIN and the same
+    sign, origin physics; otherwise held (legs of opposite sign are flagged physics_legs_disagree). (5) for
+    published power, a leg with |r| >= R_MIN whose sign contradicts the multiplier holds both and flags
+    physics_contradicts_sign. r is logged for every leg. Derived segments need both legs and all inputs kept; a
+    derived velocity both legs and a kept angle."""
     legs = sorted(hook_logs)
     if legs != ["left", "right"]:
         raise ValueError(f"both legs are required, got {legs}")
     kept, decisions, flags = set(), {}, []
     for ch in sorted(set().union(*[set(hook_logs[l]) for l in legs])):
-        info = {l: ({"publication": hook_logs[l][ch]["publication"], "multiplier": hook_logs[l][ch]["multiplier"]}
-                    if ch in hook_logs[l] else {"publication": "absent", "multiplier": None}) for l in legs}
+        info = {}
+        for l in legs:
+            c = hook_logs[l].get(ch)
+            info[l] = ({"publication": c["publication"], "multiplier": c["multiplier"],
+                        "sign_vs_corrected_source": c.get("sign_vs_corrected_source", c["multiplier"]),
+                        "detector_sign": c.get("detector_sign"), "verdict": c.get("verdict")}
+                       if c else {"publication": "absent", "multiplier": None, "sign_vs_corrected_source": None,
+                                  "detector_sign": None, "verdict": None})
+        phys = {l: (physics or {}).get(l, {}).get(ch) for l in legs} if ch.endswith("_power") else {}
         pub = [l for l in legs if info[l]["publication"] == "publish"]
-        flag = None
+        flag, origin, mult = None, {l: None for l in legs}, {l: None for l in legs}
         if len(pub) == 2 and info["left"]["multiplier"] == info["right"]["multiplier"]:
             decision, by = "publish", "both legs published with the same multiplier"
-            kept.add(ch)
+            origin = {l: "hook" for l in legs}
+            mult = {l: info[l]["multiplier"] for l in legs}
         elif len(pub) == 2:
             decision, by, flag = "hold", "both legs published with different multipliers", "multiplier_disagreement"
-            flags.append({"kind": flag, "channel": ch, "multipliers": {l: info[l]["multiplier"] for l in legs}})
+        elif len(pub) == 1 and copy_settled:
+            src = pub[0]
+            other = [l for l in legs if l != src][0]
+            o = info[other]
+            if o["publication"] == "absent":
+                decision, by = "hold", f"{other} leg absent"
+            elif o["verdict"] == "conflict" or (o["detector_sign"] is not None
+                                                 and o["detector_sign"] != info[src]["sign_vs_corrected_source"]):
+                decision, by, flag = "hold", f"{other} detector opposes the {src} sign", "copy_disagreement"
+            else:
+                decision, by = "publish", f"multiplier settled on the {src} leg copied to the {other} leg"
+                origin = {src: "hook", other: "copied"}
+                mult = {l: info[src]["multiplier"] for l in legs}
+        elif not pub and ch.endswith("_power") and physics is not None:
+            rs = {l: phys.get(l) for l in legs}
+            ok = all(v and v.get("r") is not None and abs(v["r"]) >= R_MIN for v in rs.values())
+            if ok and np.sign(rs["left"]["r"]) == np.sign(rs["right"]["r"]):
+                m = int(np.sign(rs["left"]["r"]))
+                decision, by = "publish", f"power = published moment x joint speed: sign of r, |r| >= {R_MIN} on both legs"
+                origin = {l: "physics" for l in legs}
+                mult = {l: m for l in legs}
+            elif ok:
+                decision, by, flag = "hold", "the legs' correlations have opposite signs", "physics_legs_disagree"
+            else:
+                why = {l: _physics_why(v) for l, v in rs.items()}
+                decision, by = "hold", f"physics rule not met: {why}"
         else:
             held = [l for l in legs if l not in pub]
             decision = "hold"
-            by = ("both legs held" if len(held) == 2 else f"{held[0]} leg did not publish (the other published)")
-        decisions[ch] = {"decision": decision, "decided_by": by, "legs": info, "flag": flag}
+            by = "both legs held" if len(held) == 2 else f"{held[0]} leg did not publish (the other published)"
+        if decision == "publish" and phys:
+            for l in legs:  # cross-check a hook or copied sign against the physics
+                r = (phys.get(l) or {}).get("r")
+                if r is not None and abs(r) >= R_MIN and origin[l] != "physics" and int(np.sign(r)) != mult[l]:
+                    decision, by, flag = "hold", f"physics contradicts the {l} leg multiplier", "physics_contradicts_sign"
+                    origin, mult = {x: None for x in legs}, {x: None for x in legs}
+                    break
+        if decision == "publish":
+            kept.add(ch)
+        if flag:
+            flags.append({"kind": flag, "channel": ch, "multipliers": {l: info[l]["multiplier"] for l in legs},
+                          "physics_r": {l: (phys.get(l) or {}).get("r") for l in legs} if phys else None})
+        decisions[ch] = {"decision": decision, "decided_by": by,
+                         "legs": {l: {k: info[l][k] for k in ("publication", "multiplier")} for l in legs},
+                         "flag": flag, "origin": origin, "multipliers": mult,
+                         "physics": ({l: phys.get(l) for l in legs} if phys else None)}
     for seg in list(segment_logs["right"]["derived"]):
         both = all(seg in segment_logs[l]["derived"] for l in legs)
-        inputs = set(segment_logs["right"]["derived"][seg]["inputs_sha256"]) if both else set()
+        inputs = set()
         for l in legs:
             if seg in segment_logs[l]["derived"]:
                 inputs |= set(segment_logs[l]["derived"][seg]["inputs_sha256"])
@@ -185,7 +285,8 @@ def settle_recording(hook_logs, segment_logs, velocity_logs):
         ok = both and not missing
         if ok:
             kept.add(seg)
-        decisions[seg] = {"decision": "derive" if ok else "hold", "legs": {l: seg in segment_logs[l]["derived"] for l in legs},
+        decisions[seg] = {"decision": "derive" if ok else "hold",
+                          "legs": {l: seg in segment_logs[l]["derived"] for l in legs},
                           "decided_by": "derived on both legs from kept inputs" if ok else
                           ("not derived on both legs" if not both else f"inputs not kept: {missing}"), "flag": None}
     for vel in sorted(set().union(*[set(velocity_logs[l]["derived"]) for l in legs])):
@@ -194,7 +295,8 @@ def settle_recording(hook_logs, segment_logs, velocity_logs):
         ok = both and len(src) == 1 and src <= kept
         if ok:
             kept.add(vel)
-        decisions[vel] = {"decision": "derive" if ok else "hold", "legs": {l: vel in velocity_logs[l]["derived"] for l in legs},
+        decisions[vel] = {"decision": "derive" if ok else "hold",
+                          "legs": {l: vel in velocity_logs[l]["derived"] for l in legs},
                           "decided_by": "derived on both legs from a kept angle" if ok else
                           f"not derived on both legs or angle {sorted(src)} not kept", "flag": None}
     return kept, decisions, flags
@@ -284,7 +386,8 @@ def map_observations(observations, unit_ids_by_leg, recording):
         if i is None:
             rows.append({"observation_id": oid, "leg": p["leg"], "status": "unmapped", "unit_index": None,
                          "hook_unit_id": None, "reason": unmapped_reason(p),
-                         "assessment_state": "unassessed (no sign-applied values)"})
+                         "release": "excluded from the release with this reason (D-UM21-T04-2 = A)",
+                         "assessment_state": "not released; no sign-applied values"})
         else:
             used[p["leg"]].add(i)
             rows.append({"observation_id": oid, "leg": p["leg"], "status": "mapped", "unit_index": i,
@@ -358,6 +461,53 @@ def leg_arrays(result):
     return {**result.published, **result.segments, **result.velocities}
 
 
+def compute_physics(per_leg):
+    """leg -> {power channel: physics_correlation result, or None when the joint's moment and angle are not
+    both published on both legs with the same multiplier}. Source power, published moment and published angle
+    come from the bound hook's outputs; nothing else is read."""
+    logs = {leg: res.application.log["channels"] for leg, (res, _) in per_leg.items()}
+
+    def agreed(ch):
+        return all(ch in logs[l] and logs[l][ch]["publication"] == "publish" for l in logs) and \
+            len({logs[l][ch]["multiplier"] for l in logs}) == 1
+    out = {}
+    for leg, (res, _) in per_leg.items():
+        out[leg] = {}
+        ch_out, lg = res.application.channels, logs[leg]
+        for j in POWER_JOINTS:
+            power = f"{j}_power"
+            if power not in lg:
+                continue
+            if not (agreed(f"{j}_moment") and agreed(f"{j}_angle")):
+                out[leg][power] = None
+                continue
+            out[leg][power] = physics_correlation(source_array(ch_out[power], lg[power]["multiplier"]),
+                                                  ch_out[f"{j}_moment"], ch_out[f"{j}_angle"],
+                                                  res.velocity_log["spacing_s"])
+    return out
+
+
+def final_leg_arrays(res, decisions, kept, leg):
+    """Arrays to write for one leg: hook outputs where the hook published, source x settled multiplier where the
+    sign was copied or set by the physics rule, hook-derived segments and velocities."""
+    chans, lg = res.application.channels, res.application.log["channels"]
+    out = {}
+    for ch in kept:
+        d = decisions[ch]
+        origin = d.get("origin", {}).get(leg)
+        if origin == "hook":
+            out[ch] = res.published[ch]
+        elif origin in ("copied", "physics"):
+            out[ch] = apply_multiplier(source_array(chans[ch], lg[ch]["multiplier"]), d["multipliers"][leg])
+        elif ch in res.segments:
+            out[ch] = res.segments[ch]
+        elif ch in res.velocities:
+            out[ch] = res.velocities[ch]
+        else:
+            raise ValueError(f"{ch}: no array for the {leg} leg")
+    return out
+
+
 def process_recording(handle, rec, t03, detector_sha256, out, backlog_path, mode="pilot", pilot_record=None):
     """One recording: hook (per leg), pilot-style group checks and writes, then exact observation mapping and
     selection. Returns (record_summary, group_summaries, logs, findings_by_group, slots_by_group)."""
@@ -382,8 +532,9 @@ def process_recording(handle, rec, t03, detector_sha256, out, backlog_path, mode
         per_leg[res.leg] = (res, leg_arrays(res))
     kept, decisions, rule_flags = settle_recording(
         {leg: per_leg[leg][0].application.log["channels"] for leg in per_leg},
-        {leg: per_leg[leg][0].segment_log for leg in per_leg}, {leg: per_leg[leg][0].velocity_log for leg in per_leg})
-    per_leg = {leg: (res, {k: a for k, a in arrs.items() if k in kept}) for leg, (res, arrs) in per_leg.items()}
+        {leg: per_leg[leg][0].segment_log for leg in per_leg}, {leg: per_leg[leg][0].velocity_log for leg in per_leg},
+        physics=compute_physics(per_leg))
+    per_leg = {leg: (res, final_leg_arrays(res, decisions, kept, leg)) for leg, (res, _) in per_leg.items()}
     rows, extra = map_observations(observations, {leg: per_leg[leg][0].unit_ids for leg in per_leg}, rec)
     sides = dict(observations)
     obs_ids, arrays, dropped = select_observation_arrays(rows, {leg: v[1] for leg, v in per_leg.items()})
@@ -394,12 +545,13 @@ def process_recording(handle, rec, t03, detector_sha256, out, backlog_path, mode
                                             [sides[o] for o in obs_ids])
         table_findings = reload_check(rdir / "observations_signed.parquet", obs_ids, arrays)
     mapped = sum(r["status"] == "mapped" for r in rows)
-    mult = {leg: {k: {"multiplier": c["multiplier"], "publication": c["publication"]}
-                  for k, c in per_leg[leg][0].application.log["channels"].items()} for leg in per_leg}
+    mult = {leg: {k: {"multiplier": decisions[k]["multipliers"][leg], "origin": decisions[k]["origin"][leg]}
+                  for k in sorted(kept) if "origin" in decisions[k]} for leg in per_leg}
     for r in rows:  # the multiplier is one per channel and leg; each row carries its leg's table
         if r["status"] == "mapped":
             r["leg_channel_multipliers"] = mult[r["leg"]]
-            r["multiplier_scope"] = "per channel per leg per recording (hook-settled), not per stride"
+            r["multiplier_scope"] = ("per channel per leg per recording (hook-settled, copied or physics-set; "
+                                     "see recording_rule), not per stride")
     evidence = {leg: {"hook_units": len(per_leg[leg][0].unit_ids),
                       "unit_ids_sha256": hashlib.sha256("\n".join(per_leg[leg][0].unit_ids).encode()).hexdigest(),
                       "log": f"groups/{per_leg[leg][0].group_id.replace('/', '_').replace(':', '_')}/sign_application.json",
@@ -410,7 +562,9 @@ def process_recording(handle, rec, t03, detector_sha256, out, backlog_path, mode
                 for leg in per_leg}
     map_doc = {"recording": rec, "scientific_approval": False, "mode": mode, "t03_phase_sha256": t03["sha256"],
                "t03_job": t03["job"], "observations": rows, "hook_units_without_observation": extra,
-               "recording_rule": {"text": "publish only if both legs published with the same multiplier; else hold for the whole recording",
+               "recording_rule": {"text": ("hook rule per channel and recording; one leg settled and the other unsure: copy "
+                                           "(D-UM21-T04-1 = C); power with no hook sign: sign of the correlation with "
+                                           "published moment x joint speed, |r| >= 0.9 (D-UM21-T04-3 = B); else hold"),
                                   "decisions": decisions, "flags": rule_flags},
                "channels_not_written_for_all_legs": dropped, "evidence": evidence,
                "rule": "Exact observation id = hook unit id. Unmapped observations receive no signed values "
@@ -427,6 +581,10 @@ def process_recording(handle, rec, t03, detector_sha256, out, backlog_path, mode
                "hook_units": {leg: len(per_leg[leg][0].unit_ids) for leg in per_leg},
                "hook_units_without_observation": extra, "written_columns": sorted(arrays),
                "observation_table_sha256": table_sha, "observation_map_sha256": map_sha,
+               "signs_not_from_hook": {ch: d["origin"] for ch, d in sorted(decisions.items())
+                                       if d["decision"] == "publish" and "origin" in d
+                                       and any(o != "hook" for o in d["origin"].values())},
+               "power_correlations": {ch: d["physics"] for ch, d in sorted(decisions.items()) if d.get("physics")},
                "rule_flags": rule_flags, "channels_held_by_rule": sorted(k for k, d in decisions.items() if d["decision"] == "hold"),
                "findings": findings}
     return summary, groups, logs, found_by_group, slots, facts

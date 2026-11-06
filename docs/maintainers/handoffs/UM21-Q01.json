@@ -132,5 +132,163 @@
       "checks": "tests/test_um21_t04_signs.py 18 passed. Full specs validate in-process; AB01 dry run preflight_passed."
     },
     "thigh_shank_finding": "Post-b readback: T03 thigh and shank (and probably foot and the contralateral segment columns) were built with the source-sign pelvis. They differ from the T04 post-hook values by exactly -2 x the T03 pelvis. T04's derived values (from the published pelvis, F2) replace them; R01 must never ship T03's segment columns. AB04/i0 agrees only because its net pelvis multiplier is +1."
+  },
+  "q01_coarse_limits_draft": {
+    "status": "DRAFT for review, plan only; nothing computed, no data read, no profile file written. Decision D-UM21-Q01-1 = B (structure plus coarse physical limits, blatant errors only; no literature-fitted ranges).",
+    "principle": "Each limit catches an impossible value or a processing error, not an unusual person. Every limit is a failure with observation ID, channel, sample index and reason; a column with no limit stays unchecked (never pass). Limits apply only to channels published by T04 (hook, copied or physics, as logged), per observation. No limit is tuned on this dataset; the pass rate is not used to choose them.",
+    "limits": [
+      {
+        "id": "L1",
+        "name": "Joint angle beyond any human range",
+        "what": "Any sample of a published hip, knee or ankle sagittal angle outside the textbook end of range widened by 30 degrees (rule B signs: hip flexion +, knee flexion +, ankle dorsiflexion +).",
+        "draft_bounds_deg": {
+          "hip_angle": "-50 to +150 (textbook extension about 20-30, flexion about 120)",
+          "knee_angle": "-30 to +165 (textbook flexion about 135-140, extension 0; knee bent backwards beyond 30 degrees is impossible)",
+          "ankle_angle": "-80 to +50 (textbook dorsiflexion about 20, plantarflexion about 50)"
+        },
+        "references": "Norkin CC, White DJ. Measurement of Joint Motion: A Guide to Goniometry (F.A. Davis). AAOS values are cited through the secondary table in that book (and similar goniometry texts) that reproduces the AAOS norms (Greene WB, Heckman JD, eds., The Clinical Measurement of Joint Motion, AAOS 1994), not through the AAOS book itself, which I did not consult. The textbook end-of-range values above are from memory and NOT checked against the books in this session; the reviewer should confirm them before approval. The 30-degree margin is my choice, stated so it is not mistaken for literature.",
+        "note": "The ankle zero offset is unreviewed (offsets are reported, never applied), so an ankle pass means only 'not blatantly impossible', and the ankle column keeps its 'zero offset unverified' chip."
+      },
+      {
+        "id": "L2",
+        "name": "Angle jump between adjacent samples (wraps and 180 degree offsets)",
+        "what": "Any published angle (pelvis, hip, knee, ankle, derived segments) changing by more than 30 degrees between adjacent samples of the 150-sample stride, i.e. about 4,000 degrees per second at about 7 ms per sample. Catches +/-180 or 360 wraps and alternate Euler-branch jumps (UM21-C03 episodes).",
+        "references": "None; a physical argument (no body segment turns that fast in walking). Chosen, not fitted. The 30 degree value is a proposal for review.",
+        "note": "The AB07/i10 right-ankle stretch is already handled by D-UM21-C03-2 = C (re-expressed or dropped with a log); this limit is the safety net for anything else."
+      },
+      {
+        "id": "L4",
+        "name": "Non-finite published samples",
+        "what": "Any NaN or infinite sample in a published column of a released observation is reported as 'missing', with the sample index; this is structural, listed here only so it is not mistaken for a plausibility pass."
+      },
+      {
+        "id": "L3",
+        "name": "Impossible stride time",
+        "what": "Stride duration (source frames / 100 Hz) outside 0.4 to 2.5 s, the repository's own gait segmentation limits (contributor_tools/CLAUDE.md, min_stride_duration_s 0.4, max 2.5).",
+        "references": "Repository default; no external literature.",
+        "note": "The released 7,547 strides already satisfy the hook's 50-250 frame rule (0.5-2.5 s), so L3 will not fail any of them by construction. It is a cross-check on clock and frame bookkeeping. The 15 unmapped strides are already left out under D-UM21-T04-2 = A.",
+        "layer": "structural layer (moved from plausibility per review); reported with the structural/time checks, not as a plausibility limit and never as a filter"
+      }
+    ],
+    "not_covered_unchecked": [
+      "Pelvis tilt, thigh, shank and foot angles: no cited human range in the sources I have; left unchecked except L2 and L4 unless José or the reviewer supplies a reference.",
+      "Moments and powers: no cited limit; the repository's tuner-generated time_structural_abs_limits (for example 20 N*m/kg) are an unreviewed draft and are not adopted here.",
+      "Velocities, GRF and CoP: source-only or derived; unchecked.",
+      "Any normal per-task range (option C was not chosen)."
+    ],
+    "open_for_review": [
+      "Confirm the textbook end-of-range values and the 30 degree margin.",
+      "Confirm 30 degrees per sample for L2.",
+      "Confirm the textbook end-of-range values and the 30 degree margin (already listed); the ankle label is kept as reviewed."
+    ],
+    "how_it_would_be_built": "A new profile file with review_status draft until reviewed, applicability (able-bodied adults, treadmill walking, canonical rule-B columns), units, and per-feature evidence text; applied by the one structured assessment to the T04 output, one record at a time (estimated under 150 MiB), after T04 review.",
+    "order_of_work": "Limits L1, L2 (and L4) are applied only after the T04 v2 outputs exist and are reviewed; nothing runs on the v1 outputs. L3 belongs to the structural layer.",
+    "ankle_label": "Kept: an ankle pass on L1 means only 'not blatantly impossible'; the ankle column keeps its 'zero offset unverified' chip."
+  },
+  "t04_v2_changes": {
+    "decisions": "D-UM21-T04-1 = C (copy a settled leg's multiplier to the other leg when the legs never disagree), D-UM21-T04-2 = A (15 unmapped strides left out of the release with reasons; rows now say so), D-UM21-T04-3 = B (power sign from the correlation with published moment x joint speed, |r| >= 0.9). D-UM21-Q01-1 = B (coarse limits, drafted above).",
+    "implementation": "contributor_tools/run_um21_t04_signs.py only; no bound file touched (git status clean for contributor_tools/common, adapters and run_core11_um21_pilot.py). settle_recording now: hook rule; copy rule; physics rule for power; physics cross-check of hook or copied power (a contradiction at |r| >= 0.9 holds both and flags). r per leg is logged for every power channel (recording_rule.decisions[ch].physics and summary power_correlations). Copied and physics-set arrays are exactly source x multiplier (apply_multiplier accepts only +1 or -1; the source is the hook output times its logged multiplier). Signed values for hook-published channels still come from bound-hook arrays.",
+    "physics_method": "Per leg and recording: pooled Pearson r over all finite samples of all strides on the 150-sample grid between SOURCE power and (published moment x d(published angle)/dt), derivative by numpy.gradient with spacing stride_duration/149 (the hook's own method); NaN samples (zero fill) are missing in all three; at least 300 finite samples; both legs must have |r| >= 0.9 and the same sign or the channel is held; needs the joint's published moment and angle (both legs, same multiplier).",
+    "precedence": "both legs hook-published same multiplier: hook; one leg published and the other unsure (no opposing detector sign, no conflict): copied; either disagreement: hold both and flag; no hook sign on either leg (power only): physics.",
+    "tests": "tests/test_um21_t04_signs.py: 25 tests with the sign-adapter tests 71 passed. Synthetic, known answers: copied leg (exactly -source), disagreeing legs (held and flagged, three variants), r = +0.99 (sign +1), r = -0.99 (sign -1), r = 0.6 (held), one leg weak, opposite-sign legs, hook sign contradicted by physics, zero-fill NaN as missing, too few samples, end to end on the synthetic recording (layout 1 stores -(M x w): any published power has multiplier -1).",
+    "specs": "Pilot v4 (a: AB04/i0; b: the same 7 records) and full v2 specs written and validated in-process; stage a v4 dry run was refused (startup_memory_reserve, then foreign_worker_linux, then startup_memory_reserve) on 4 tries with waits; see the report. Not launched.",
+    "pilot_v4_a_launch_attempt": "2026-11-03: not launched. Dry run refused on every one of 8 retries (about 3 min apart, plain sleeps from /tmp): startup_memory_reserve and foreign_worker_linux, alternating. A first attempt through a wrapper script was refused with foreign_worker_linux_ancestor (my wrapper in the ancestor chain; launch the launcher directly as the background command). No output root created. The self-check scripts (scratchpad check_v4.py, dry_launch.sh) are ready but unused."
+  },
+  "t04_v2_power_summary": {
+    "scope": "T04 v2 full run, 44 recordings; r = correlation of source power with published moment x joint speed, left/right leg",
+    "counts_of_power_channels_by_rule": {
+      "hook": 24,
+      "physics": 96,
+      "copied": 4,
+      "held": 8
+    },
+    "held": [
+      {
+        "recording": "AB03/i10",
+        "channel": "ankle_power",
+        "why": "physics rule not met: {'left': '|r| = 0.890 below 0.9', 'right': '|r| = 0.859 below 0.9'}"
+      },
+      {
+        "recording": "AB03/i10",
+        "channel": "hip_power",
+        "why": "physics rule not met: {'left': '|r| = 0.796 below 0.9', 'right': '|r| = 0.667 below 0.9'}"
+      },
+      {
+        "recording": "AB03/i10",
+        "channel": "knee_power",
+        "why": "physics rule not met: {'left': '|r| = 0.916 below 0.9', 'right': '|r| = 0.899 below 0.9'}"
+      },
+      {
+        "recording": "AB04/d10",
+        "channel": "hip_power",
+        "why": "physics rule not met: {'left': '|r| = 0.649 below 0.9', 'right': '|r| = 0.772 below 0.9'}"
+      },
+      {
+        "recording": "AB04/d5",
+        "channel": "hip_power",
+        "why": "physics rule not met: {'left': '|r| = 0.798 below 0.9', 'right': '|r| = 0.880 below 0.9'}"
+      },
+      {
+        "recording": "AB05/d10",
+        "channel": "hip_power",
+        "why": "physics rule not met: {'left': '|r| = 0.775 below 0.9', 'right': '|r| = 0.671 below 0.9'}"
+      },
+      {
+        "recording": "AB05/d5",
+        "channel": "hip_power",
+        "why": "physics rule not met: {'left': '|r| = 0.791 below 0.9', 'right': '|r| = 0.866 below 0.9'}"
+      },
+      {
+        "recording": "AB06/d5",
+        "channel": "hip_power",
+        "why": "physics rule not met: right leg |r| = 0.867 below 0.9 (left leg 0.998 passed; the runner message lists both legs)"
+      }
+    ],
+    "per_record": [
+      "AB01/i0: ankle hook r=-1.00/-1.00; hip hook r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB01/i10: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB02/d10: ankle physics r=-1.00/-1.00; hip physics r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB02/d5: ankle physics r=-1.00/-1.00; hip physics r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB02/i0: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB02/i10: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB02/i5: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB03/d10: ankle physics r=-1.00/-1.00; hip physics r=-0.98/-0.97; knee physics r=-1.00/-1.00",
+      "AB03/d5: ankle physics r=-1.00/-1.00; hip physics r=-0.99/-0.98; knee physics r=-1.00/-1.00",
+      "AB03/i0: ankle hook r=-1.00/-1.00; hip copied r=-0.98/-0.97; knee physics r=-1.00/-1.00",
+      "AB03/i10: ankle HELD r=+0.89/+0.86; hip HELD r=+0.80/+0.67; knee HELD r=+0.92/+0.90",
+      "AB03/i5: ankle hook r=-1.00/-1.00; hip physics r=-0.99/-0.98; knee physics r=-1.00/-1.00",
+      "AB04/d10: ankle physics r=+1.00/+1.00; hip HELD r=+0.65/+0.77; knee physics r=+0.96/+0.98",
+      "AB04/d5: ankle physics r=+1.00/+1.00; hip HELD r=+0.80/+0.88; knee physics r=+0.98/+0.99",
+      "AB04/i0: ankle hook r=-1.00/-1.00; hip physics r=-0.99/-0.99; knee physics r=-1.00/-1.00",
+      "AB04/i10: ankle copied r=-1.00/-1.00; hip physics r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB04/i5: ankle hook r=+0.99/+1.00; hip physics r=+0.93/+0.94; knee physics r=+0.98/+0.99",
+      "AB05/d10: ankle physics r=+0.98/+0.97; hip HELD r=+0.78/+0.67; knee physics r=+0.99/+0.99",
+      "AB05/d5: ankle physics r=+1.00/+1.00; hip HELD r=+0.79/+0.87; knee physics r=+0.99/+0.99",
+      "AB05/i0: ankle hook r=+1.00/+1.00; hip copied r=+0.83/+0.79; knee physics r=+1.00/+0.97",
+      "AB05/i10: ankle physics r=+1.00/+1.00; hip physics r=+0.97/+0.95; knee physics r=+1.00/+0.99",
+      "AB05/i5: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-0.99; knee physics r=-1.00/-1.00",
+      "AB06/d10: ankle physics r=-1.00/-1.00; hip physics r=-1.00/-0.98; knee physics r=-1.00/-1.00",
+      "AB06/d5: ankle physics r=-1.00/-1.00; hip HELD r=-1.00/-0.87; knee physics r=-1.00/-0.99",
+      "AB06/i0: ankle hook r=-1.00/-1.00; hip hook r=-1.00/-0.99; knee physics r=-1.00/-1.00",
+      "AB06/i10: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-1.00; knee physics r=-0.99/-1.00",
+      "AB06/i5: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB07/d10: ankle physics r=-1.00/-1.00; hip physics r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB07/d5: ankle physics r=-1.00/-1.00; hip physics r=-0.99/-0.98; knee physics r=-1.00/-1.00",
+      "AB07/i0: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB07/i10: ankle physics r=-1.00/-0.91; hip physics r=-1.00/-0.99; knee physics r=-1.00/-0.95",
+      "AB07/i5: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB08/d10: ankle physics r=-1.00/-1.00; hip physics r=-1.00/-0.99; knee physics r=-1.00/-1.00",
+      "AB08/d5: ankle physics r=-1.00/-0.99; hip physics r=-1.00/-0.99; knee physics r=-1.00/-0.99",
+      "AB08/i0: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-0.99; knee physics r=-0.99/-1.00",
+      "AB08/i5: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB09/d10: ankle physics r=-1.00/-0.96; hip physics r=-0.99/-0.99; knee physics r=-1.00/-0.99",
+      "AB09/d5: ankle physics r=-1.00/-1.00; hip physics r=-0.99/-0.99; knee physics r=-1.00/-1.00",
+      "AB09/i0: ankle hook r=-1.00/-1.00; hip copied r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB09/i5: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-1.00; knee physics r=-1.00/-1.00",
+      "AB10/d10: ankle physics r=-1.00/-1.00; hip physics r=-1.00/-0.98; knee physics r=-1.00/-1.00",
+      "AB10/d5: ankle physics r=-1.00/-1.00; hip physics r=-1.00/-0.99; knee physics r=-1.00/-1.00",
+      "AB10/i10: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-0.99; knee physics r=-1.00/-1.00",
+      "AB10/i5: ankle hook r=-1.00/-1.00; hip physics r=-1.00/-0.99; knee physics r=-1.00/-1.00"
+    ]
   }
 }
