@@ -1,6 +1,6 @@
 {
   "task_id": "UM21-R01",
-  "phase": "bundle built locally (pilot then full); documentation page NOT built (later step)",
+  "phase": "bundle built and verified; documentation page built locally (awaiting second-agent check of the page)",
   "status": "review",
   "scientific_approval": false,
   "last_checked_at_utc": "2026-11-06T18:48:52Z",
@@ -379,5 +379,21 @@
     "converted_datasets/reconversion_v2/um21_r01_review_v2",
     "converted_datasets/reconversion_v2/um21_r01_review_pilot_v2",
     "docs/quality/audits/um21-r01-full-launcher-receipt-v2.json"
-  ]
+  ],
+  "documentation_page": {
+    "built_at_utc": "2026-11-06",
+    "builder": "contributor_tools/build_um21_doc_page.py",
+    "test": "tests/test_um21_doc_page.py (4 passed: counts equal manifest.json, every exclusion reason and count shown, no hashes/paths/internal ids visible, unchecked stated plainly)",
+    "files_written": [
+      "docs/datasets/um21/index.html (replaces the old page; old Dropbox download links removed, downloads say local review files, not published yet)"
+    ],
+    "site_copy": "site/html/datasets/um21/index.html (copied identical to docs page). docs/build.py --check passed (41 pages, 1847 assets). Full `docs/build.py --output site/html` aborted at its copy step on an untracked launcher log under docs/quality/audits (um21-t04-pilot-b-launcher-receipt-v2.log, contains a local path); not mine, not changed. Files copied before the abort include the um21 page and its stylesheets; site/html/quality/fixes figures verified identical to docs.",
+    "figures_reused": "docs/quality/fixes/um21-clock, pelvis-before/after, thigh-before/after, ankle-before/after .svg (linked, not modified). Phase plots are inline SVG drawn by the builder.",
+    "aggregate": "No new aggregate job was run. Used the committed, hash-bound phase_preview.json in the bundle (mean and sample sd per phase sample, cleaned variant, per condition/task/side); the builder pools left and right legs. Its plot content had not been independently checked, so a read-only probe recomputed level_walking/left hip angle and hip power from filtered.parquet (one column pair, streamed, system pool, batch 4096, no threads, nice 19, ionice idle): n identical, max |mean diff| 5.0e-7 and max |sd diff| 4.9e-7 (rounding of stored values). Peak RSS 94,196 KiB (about 92 MiB). Launcher not used (read-only probe, writes nothing under converted_datasets).",
+    "renders": "review_sheets/um21_doc_page/page_1280.png and page_390.png (Playwright with system Chrome, full page, first two signal groups opened). No horizontal page overflow at 390 px (scrollWidth 390); wide tables scroll inside their own box; section nav scrolls as on other site pages.",
+    "not_shown": [
+      "Not checked per VERIFY: the plot content beyond one condition/leg and two columns.",
+      "Page statements about task timing and thigh/shank evidence reuse the fixes page wording."
+    ]
+  }
 }
