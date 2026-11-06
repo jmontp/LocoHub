@@ -1803,7 +1803,7 @@
       "priority": "P0",
       "dataset": "um21",
       "title": "Build a trustworthy local treadmill review release",
-      "status": "blocked",
+      "status": "review",
       "stage": "release",
       "question": "Can users inspect the first treadmill subset with clear limitations and exact lineage?",
       "scope": "Explicit treadmill subset; not completion of all UM21 tasks.",
@@ -1828,25 +1828,38 @@
         "Create a local review bundle only; no upload or publication without the requested workflow.",
         "The UMich 2021 dataset page is rebuilt from the review bundle in plain words, shows what was fixed (original vs fixed) and what was left out and why, and is rendered at wide and phone width before José is pointed to it."
       ],
-      "next_action": "Build and inspect the immutable treadmill bundle and matching static documentation.",
+      "next_action": "Bundle verified. Build the UMich 2021 documentation page from phase_preview.json and the original-vs-fixed list (separate step), then mark done.",
       "resource_class": "numerical",
       "evidence_paths": [
-        "contributor_tools/build_dataset_release.py"
+        "docs/maintainers/handoffs/UM21-R01.json",
+        "converted_datasets/reconversion_v2/um21_r01_review_v2/manifest.json",
+        "docs/quality/audits/um21-r01-full-launcher-receipt-v2.json",
+        "docs/quality/audits/um21-r01-pilot-launcher-receipt-v2.json",
+        "contributor_tools/run_um21_r01_bundle.py",
+        "tests/test_um21_r01_bundle.py",
+        "docs/maintainers/handoffs/UM21-R01-verify.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
-        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
+        "last_checked_at_utc": "2026-11-06T18:49:10+00:00",
+        "summary": "Bundle built locally (documentation page not built; not scientific approval). Full variant 7,545 strides, filtered 7,544; 18 listed exclusions: 15 outside the stride rule (T04-2 = A), 2 AB07/i10 strides with sudden jumps (C03-2 = C), 1 AB08/i0 stride failing a coarse limit (in full, out of filtered). 20 AB07/i10 right-ankle strides re-expressed and re-checked clean; 3,000 samples logged. 15 stable signal columns; held power is present-but-missing with 'held: sign unsettled'; no contralateral columns; foot not released. Peak 279.9 MiB in job.",
         "checks": [
-          "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
+          "Pilot v1 stopped on a boundary-frame rule; fixed; pilot v2 (AB03/i10, AB07/i10) passed, then full v2 passed through the guarded launcher (dry run, one launch, cleanup proven).",
+          "tests/test_um21_r01_bundle.py + tests/test_um21_q01_assessment.py: 23 passed (synthetic fixtures plus the committed ledger).",
+          "manifest.sha256 verified; runner self-checks T1-T9 all pass; independent read-only probe (98 MiB) confirms 7,545 / 7,544 observations, 20 re-expressed, one failed stride only in full."
         ],
         "remaining": [
-          "Build and inspect the immutable treadmill bundle and matching static documentation."
-        ]
+          "Independent verification by a second agent.",
+          "Documentation page from the bundle (separate step; needs original-vs-fixed list in the handoff).",
+          "Still unchecked: moments, powers, velocities; ankle offset; per-task ranges (see handoff)."
+        ],
+        "handoff_file": "docs/maintainers/handoffs/UM21-R01.json",
+        "verification": "Independent verifier 2026-11-06: bundle PASS (hashes, receipts, counts, values bit-identical to T04 v2, re-expression, held power, decisions, 23 tests). Documentation page not yet built; task stays in review. Details: docs/maintainers/handoffs/UM21-R01-verify.json"
       },
       "legacy_ids": [
         "RELEASE-02"
       ],
-      "blocked_reason": "Requires completed dependency evidence: PM-01, UM21-Q01, CORE-02. Numerical/native execution also requires current exclusive ownership, unchanged resource guards and a reviewed single-job handoff; old stopped predecessors are not success."
+      "owner": "UM21-R01 worker agent (claude)",
+      "started_at_utc": "2026-11-06T18:41:01Z"
     },
     {
       "id": "UM21-S01",
