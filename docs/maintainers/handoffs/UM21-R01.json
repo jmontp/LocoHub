@@ -1,399 +1,533 @@
 {
-  "task_id": "UM21-R01",
-  "phase": "bundle built and verified; documentation page built locally (awaiting second-agent check of the page)",
-  "status": "review",
-  "scientific_approval": false,
-  "last_checked_at_utc": "2026-11-06T18:48:52Z",
-  "scope": "Local review bundle for the explicit UMich 2021 treadmill subset (44 recordings). Not completion of all UM21 tasks, not scientific approval, not published.",
-  "bundle_root": "converted_datasets/reconversion_v2/um21_r01_review_v2",
-  "runner": {
-    "path": "contributor_tools/run_um21_r01_bundle.py",
-    "sha256": "c701d9b384559fd52cb85a3e70c51fe76131986cae24bb623fa94f583b60162c",
-    "why_not_build_dataset_release": "build_dataset_release.py is in-memory and refuses inputs above 500,000 rows and a 256 MiB estimate; this bundle has 1.13 million rows, and the guard must not be raised. A small runner modeled on run_um21_q01_assessment.py streams one recording at a time and imports the Q01 assessment functions (bound by hash).",
-    "tests": "tests/test_um21_r01_bundle.py (9 tests, synthetic fixtures labeled as such, plus one check of the real committed C03 ledger: 29 clean and 2 jump strides). Command: OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_um21_r01_bundle.py tests/test_um21_q01_assessment.py -> 23 passed. Covers: re-expression of a made-up wrapped angle, ledger classification incl. shared boundary frame, jump check, full/filtered exclusion accounting (5 gap cases), held-column status, column list, and an end-to-end synthetic table/readback/preview."
+ "task_id": "UM21-R01",
+ "phase": "bundle built and verified; documentation page built locally (awaiting second-agent check of the page)",
+ "status": "review",
+ "scientific_approval": false,
+ "last_checked_at_utc": "2026-11-06T18:48:52Z",
+ "scope": "Local review bundle for the explicit UMich 2021 treadmill subset (44 recordings). Not completion of all UM21 tasks, not scientific approval, not published.",
+ "bundle_root": "converted_datasets/reconversion_v2/um21_r01_review_v2",
+ "runner": {
+  "path": "contributor_tools/run_um21_r01_bundle.py",
+  "sha256": "c701d9b384559fd52cb85a3e70c51fe76131986cae24bb623fa94f583b60162c",
+  "why_not_build_dataset_release": "build_dataset_release.py is in-memory and refuses inputs above 500,000 rows and a 256 MiB estimate; this bundle has 1.13 million rows, and the guard must not be raised. A small runner modeled on run_um21_q01_assessment.py streams one recording at a time and imports the Q01 assessment functions (bound by hash).",
+  "tests": "tests/test_um21_r01_bundle.py (9 tests, synthetic fixtures labeled as such, plus one check of the real committed C03 ledger: 29 clean and 2 jump strides). Command: OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_um21_r01_bundle.py tests/test_um21_q01_assessment.py -> 23 passed. Covers: re-expression of a made-up wrapped angle, ledger classification incl. shared boundary frame, jump check, full/filtered exclusion accounting (5 gap cases), held-column status, column list, and an end-to-end synthetic table/readback/preview."
+ },
+ "jobs": [
+  {
+   "stage": "pilot v1",
+   "spec": "docs/quality/audits/um21-r01-pilot-spec-v1.json",
+   "receipt": "docs/quality/audits/um21-r01-pilot-launcher-receipt-v1.json",
+   "result": "exit 1, clean. Runner self-check T4 failed: stride 11573:11703 of AB07/i10 shares its last frame with the first frame of the ankle-stretch run and was reported as a partial overlap. Rule fixed (overlap of two or more frames counts); runner changed, so the root is marked INVALID_DO_NOT_USE.txt and a v2 pilot was run on the same code as the full run."
   },
-  "jobs": [
-    {
-      "stage": "pilot v1",
-      "spec": "docs/quality/audits/um21-r01-pilot-spec-v1.json",
-      "receipt": "docs/quality/audits/um21-r01-pilot-launcher-receipt-v1.json",
-      "result": "exit 1, clean. Runner self-check T4 failed: stride 11573:11703 of AB07/i10 shares its last frame with the first frame of the ankle-stretch run and was reported as a partial overlap. Rule fixed (overlap of two or more frames counts); runner changed, so the root is marked INVALID_DO_NOT_USE.txt and a v2 pilot was run on the same code as the full run."
-    },
-    {
-      "stage": "pilot v2",
-      "spec": "docs/quality/audits/um21-r01-pilot-spec-v2.json",
-      "receipt": "docs/quality/audits/um21-r01-pilot-launcher-receipt-v2.json",
-      "records": [
-        "AB03/i10 (held power columns)",
-        "AB07/i10 (ankle stretch)"
-      ],
-      "result": "exit 0, clean, cleanup proven, 330 full / 330 filtered, 3 exclusions, peak RSS 222.4 MiB in job, 227,708 KiB launcher",
-      "root": "converted_datasets/reconversion_v2/um21_r01_review_pilot_v2"
-    },
-    {
-      "stage": "full v2",
-      "spec": "docs/quality/audits/um21-r01-full-spec-v2.json",
-      "receipt": "docs/quality/audits/um21-r01-full-launcher-receipt-v2.json",
-      "result": "exit 0, clean, cleanup proven, bindings unchanged, 76 s, peak RSS 279.9 MiB in job, 286,640 KiB launcher largest process, 289,860 KiB group sampled",
-      "root": "converted_datasets/reconversion_v2/um21_r01_review_v2"
-    }
-  ],
-  "inputs": {
-    "t04_receipts": "enumerated from docs/quality/audits/um21-t04-full-AB01..AB10-launcher-receipt-v2.json (44 records); no root holds INVALID_DO_NOT_USE.txt (checked in the runner)",
-    "assessment": "converted_datasets/reconversion_v2/um21_q01_full_v2 (assessment.json, observations.jsonl, failures.jsonl; hashes re-checked in the job)",
-    "t03_phase_tables": "used only for task, task_id, task_info, subject, source recording id and source clocks, selected by the sha256 stored in each T04 observation map; no T03 signal column is read or shipped (T03 thigh, shank, foot, velocity and contralateral columns are never used)",
-    "c03_ledger": "docs/quality/audits/um21-c03-episode-census.json (figure_episode.inside_pairs) and um21-c03-conventions.json (ankle_episode_census.branch_episode: runs and one-frame step frames)"
+  {
+   "stage": "pilot v2",
+   "spec": "docs/quality/audits/um21-r01-pilot-spec-v2.json",
+   "receipt": "docs/quality/audits/um21-r01-pilot-launcher-receipt-v2.json",
+   "records": [
+    "AB03/i10 (held power columns)",
+    "AB07/i10 (ankle stretch)"
+   ],
+   "result": "exit 0, clean, cleanup proven, 330 full / 330 filtered, 3 exclusions, peak RSS 222.4 MiB in job, 227,708 KiB launcher",
+   "root": "converted_datasets/reconversion_v2/um21_r01_review_pilot_v2"
   },
-  "hashes": {
-    "full.parquet": "2a819a8d04ee94b9f972048fd2feb747beff3d98b998b58ed2c990ff4bebc8fb",
-    "filtered.parquet": "b51815292399c76be42baa56c275df6a4517c9259f54e605210cfe18a3cc1229",
-    "exclusions.csv": "f09e5136d5e8263b865a3e9904db61289982fd2447c406b499cee763873a6baa",
-    "ankle_reexpression_log.csv": "ec6d3ed506ed4e2249e9f1741853bba89deb16afbb41a74d843d8c2cf69a2410",
-    "assessment_amendments.jsonl": "260e5b0ecb38fa282b3be3702a6fdb61799824eed242942c9a18e4c59f17a648",
-    "all_files": {
-      "README.md": "8ebc6d40b103b3e60c331cbba7d1a39404fcd843e93d8e6bb6f5b3d95afa4089",
-      "ankle_reexpression_log.csv": "ec6d3ed506ed4e2249e9f1741853bba89deb16afbb41a74d843d8c2cf69a2410",
-      "assessment_amendments.jsonl": "260e5b0ecb38fa282b3be3702a6fdb61799824eed242942c9a18e4c59f17a648",
-      "dataset_index.json": "69e296432996926f7dbff3f57fff98e6ad0383f9736b833e8210b030863b2c70",
-      "exclusions.csv": "f09e5136d5e8263b865a3e9904db61289982fd2447c406b499cee763873a6baa",
-      "filtered.parquet": "b51815292399c76be42baa56c275df6a4517c9259f54e605210cfe18a3cc1229",
-      "full.parquet": "2a819a8d04ee94b9f972048fd2feb747beff3d98b998b58ed2c990ff4bebc8fb",
-      "held_signals.csv": "bbe89ab0fe9d11d15fb2cbae6eecec3aa2ad242f71efed80dcb2f1b4cbf3ae40",
-      "phase_preview.json": "ecb02cb04725188d79aaf650d40248ef13dae0e3622921726144297c7b4487f3",
-      "test_summary.json": "e70cd4437e5b9795b34feb11464186e934685389f050891d48b1262d903c3bfd"
-    },
-    "manifest.json": "11f2ee877adb69db17c3cfe3041ef6dbf51e67a776a34d62f021152c695aa369",
-    "lineage_id (hash of the bound inputs)": "5af9373812a74dd498d61037fe00cf3d2bb47bb1fa9617ae118323240cb30c40",
-    "assessment_id (Q01 assessment.json sha256)": "a83919309c95c5b9915f7bbde8699f70578278a3cfa15300e2f9662d1126ad41",
-    "binding_note": "dataset_index.json, phase_preview.json and test_summary.json each embed the same full/filtered/exclusions hashes and counts; the preview and the column finite counts were computed by re-reading the written files. Every row of both variants carries the same lineage_id and assessment_id."
-  },
-  "counts": {
-    "input_t04_observations": 7547,
-    "unmapped_outside_stride_rule": 15,
-    "upstream_total": 7562,
-    "full": {
-      "observations": 7545,
-      "rows": 1131750
-    },
-    "filtered": {
-      "observations": 7544,
-      "rows": 1131600
-    },
-    "exclusions_total": 18,
-    "exclusions_by_reason": {
-      "t04_2_outside_stride_rule (left out of both, D-UM21-T04-2 = A)": 15,
-      "c03_2_sudden_jump (left out of both, D-UM21-C03-2 = C)": 2,
-      "q01_limit_failed (in full with failure recorded, left out of filtered)": 1
-    },
-    "accounting": "7,562 = 7,545 in full + 17 left out of both (15 + 2); filtered = 7,545 - 1. Checked by the runner (T3, T5, T6) and by the unit tests.",
-    "recordings_left_out_before_this_bundle": "D-UM21-T02-1 = A: AB01 d10, AB01 d5, AB08 i10, AB09 i10, AB10 i0 (clock check) plus AB01 i5 (copy of AB01 i10): 6 of 50 recordings; 8,626 task-window strides (D-1 = C) minus 7,562 aligned = 1,064 strides, per um21-t02-clock-census.json totals (arithmetic from that file, not recomputed here)."
-  },
-  "exclusion_evidence": "exclusions.csv (observation_id, recording, side, stage, reason_code, reason, decision, in_full_variant, in_filtered_variant): 18 rows; failures remain visible per row in full.parquet (quality_status, failed_limits).",
-  "decisions_applied": [
-    {
-      "id": "D-1 = C",
-      "how": "Stride membership is the T03 task-window rule as released by T03/T04; the bundle adds no stride and removes only what the other decisions name."
-    },
-    {
-      "id": "D-UM21-T02-1 = A",
-      "how": "The six recordings are absent from the T04 inputs, so they are absent here. D-UM21-T02-2 does not exist in the backlog (withdrawn per the fixes page); AB01 i5 is held out as that note states."
-    },
-    {
-      "id": "D-UM21-C01-1 = C",
-      "how": "Thigh and shank are released under the standard names thigh_sagittal_angle_ipsi_rad and shank_sagittal_angle_ipsi_rad from the T04 planar recipe (hip, pelvis, knee as published after signs). Status 'jump limit only; planar estimate'. T03 thigh/shank/foot columns are not used. Foot angle and foot velocity are NOT released: D-UM21-C01-1 covers thigh and shank only, and the foot angle carries the ankle offset."
-    },
-    {
-      "id": "D-UM21-C01-2 = C",
-      "how": "Ankle angle and hip/knee/ankle flexion moments are standard columns, values as published after T04 signs. Anomalous ankle recording-sides stay missing as T04/Q01 left them (AB08/i0 left ankle: 12 strides all-missing). Ankle angle is marked offset unverified."
-    },
-    {
-      "id": "D-UM21-C03-1 = B",
-      "how": "Sign rule applied by T04 (pelvis tilt x -1 in 43 of 44 recordings; the other 1 is AB04/i0, see P01). Hip, knee and ankle angles and moments keep their published sign. Segment angles counterclockwise, joint angles and moments positive in their named direction."
-    },
-    {
-      "id": "D-UM21-C03-2 = C",
-      "how": "AB07/i10 right ankle: the 22 strides the Q01 assessment flagged (22 failing L1) are exactly the released strides of the ledger's 31 inside strides (the other 9 ledger strides are not in the T04 set: not T03 observations). Re-expression c1 -> wrap(c1 + 180 deg) on all 150 samples of 20 strides; the 2 strides with sudden jumps (frames 11703:11834 and 12608:12735; census step frames inside, and a 30+ deg jump remains after re-expression) are left out of both variants; source copies untouched; every re-expressed sample logged in ankle_reexpression_log.csv (3,000 rows). Re-check with the same L1/L2 limits on the re-expressed arrays: 20 of 20 pass (assessment_amendments.jsonl); re-expressed ankle spans -16.2 to 26.8 deg vs the census p1-p99 -16.6 to 27.0 deg outside the stretch. Ledger check: 29 clean and 2 jump strides of 31 (matches the decision text). Stride-level rule used because the 150-sample table has no second Cardan component: stretch membership comes from the census run edges (which were tested per frame with |c2| > 90 deg), not re-tested here. Partial overlap check: no stride overlaps a run without lying inside it (one stride shares a single boundary frame and stays untouched; Q01 had it clean)."
-    },
-    {
-      "id": "D-UM21-P01-1 = C",
-      "how": "Applied upstream in T04 (AB04/i0 pelvis multiplier +1 instead of -1, i.e. flipped from marker evidence; thigh and shank built from it). 165 AB04/i0 strides stay (no change here)."
-    },
-    {
-      "id": "D-UM21-Q01-1 = B",
-      "how": "Filtering and release facts use the one Q01 assessment (coarse limits L1, L2; structure L3, L4). Only the 20 re-expressed strides were re-assessed (amendments file); every other stride uses its Q01 entry unchanged. Moments, powers, velocities unchecked; pelvis, thigh, shank jump-only."
-    },
-    {
-      "id": "D-UM21-T04-1 = C",
-      "how": "Copied-sign channels are published as T04 decided (4 power channel-recordings copied); nothing added here."
-    },
-    {
-      "id": "D-UM21-T04-2 = A",
-      "how": "The 15 unmapped strides are listed in exclusions.csv with their reasons (13 under 50 frames, 2 over 250 frames) and are in neither variant."
-    },
-    {
-      "id": "D-UM21-T04-3 = B",
-      "how": "Power sign set by correlation with published moment x joint speed (|r| >= 0.9); where that failed (8 channel-recordings) power is held: present-but-missing column, see held columns."
-    }
-  ],
-  "full_vs_filtered": {
-    "shared": "identical column list, same lineage_id and assessment_id on every row; filtered = full minus strides whose assessment overall is 'failed' after amendment.",
-    "full_only": "AB08/i0 left stride um21:Streaming/AB08/Tread/i0:left:frames:13770:13899: stays in full with quality_status 'failed' (L1 ankle, samples 143-148 below -80 deg; it also has non-finite samples); left out of filtered."
-  },
-  "open_items_resolved": {
-    "contralateral_columns": "None. T04 publishes each stride's own leg only; the opposite leg is a separate observation with its own identity. Copying or mirroring would invent values; the older T03 contra columns pre-date the sign step and are not trusted. All column names are _ipsi_ (pelvis has no side). Reversible later by an added column family; no decision needed.",
-    "stable_column_schema": "All 15 signal columns exist in every row of both variants. Held power channels (8 channel-recordings in 6 recordings) are present but all missing, and each row's held_signals JSON names them with the text 'held: sign unsettled'; held_signals.csv lists recording, column and reason. Checked: zero finite values in any held cell (T8). Consistent with DATA_CONTRACT.md: unavailable signals stay missing, column presence is not coverage, never a value.",
-    "column_naming": "LocoHub reference names (docs/reference/index.md): hip_flexion_angle_ipsi_rad, knee_flexion_angle_ipsi_rad, ankle_dorsiflexion_angle_ipsi_rad, pelvis_sagittal_angle_rad, thigh/shank_sagittal_angle_ipsi_rad, *_velocity_*_rad_s, *_moment_ipsi_Nm_kg, *_power_ipsi_W_kg (the reference leaves power names dataset-specific). Raw T04 aliases are named in manifest.json column_status.t04_channel.",
-    "jose_decision_raised": "none"
-  },
-  "columns": [
-    {
-      "column": "pelvis_sagittal_angle_rad",
-      "status": "partly_checked",
-      "unit": "rad",
-      "t04_channel": "pelvis_tilt",
-      "finite_values_full": 1131559,
-      "finite_values_filtered": 1131409,
-      "status_plain": "jump limit L2 only (no plausible range exists); thigh and shank are planar estimates"
-    },
-    {
-      "column": "hip_flexion_angle_ipsi_rad",
-      "status": "checked",
-      "unit": "rad",
-      "t04_channel": "hip_angle",
-      "finite_values_full": 1129518,
-      "finite_values_filtered": 1129368,
-      "status_plain": "checked: coarse limits L1 (range) and L2 (jump) passed"
-    },
-    {
-      "column": "knee_flexion_angle_ipsi_rad",
-      "status": "checked",
-      "unit": "rad",
-      "t04_channel": "knee_angle",
-      "finite_values_full": 1129518,
-      "finite_values_filtered": 1129368,
-      "status_plain": "checked: coarse limits L1 (range) and L2 (jump) passed"
-    },
-    {
-      "column": "ankle_dorsiflexion_angle_ipsi_rad",
-      "status": "offset_unverified",
-      "unit": "rad",
-      "t04_channel": "ankle_angle",
-      "finite_values_full": 1129507,
-      "finite_values_filtered": 1129357,
-      "status_plain": "offset unverified: coarse limits only; a pass means 'not blatantly impossible'"
-    },
-    {
-      "column": "thigh_sagittal_angle_ipsi_rad",
-      "status": "partly_checked",
-      "unit": "rad",
-      "t04_channel": "thigh_angle",
-      "finite_values_full": 1129518,
-      "finite_values_filtered": 1129368,
-      "status_plain": "jump limit L2 only (no plausible range exists); thigh and shank are planar estimates"
-    },
-    {
-      "column": "shank_sagittal_angle_ipsi_rad",
-      "status": "partly_checked",
-      "unit": "rad",
-      "t04_channel": "shank_angle",
-      "finite_values_full": 1129518,
-      "finite_values_filtered": 1129368,
-      "status_plain": "jump limit L2 only (no plausible range exists); thigh and shank are planar estimates"
-    },
-    {
-      "column": "pelvis_sagittal_velocity_rad_s",
-      "status": "unchecked",
-      "unit": "rad/s",
-      "t04_channel": "pelvis_tilt_velocity",
-      "finite_values_full": 1131555,
-      "finite_values_filtered": 1131405,
-      "status_plain": "unchecked: no limit exists; values are as published after the sign step"
-    },
-    {
-      "column": "thigh_sagittal_velocity_ipsi_rad_s",
-      "status": "unchecked",
-      "unit": "rad/s",
-      "t04_channel": "thigh_angle_velocity",
-      "finite_values_full": 1129509,
-      "finite_values_filtered": 1129359,
-      "status_plain": "unchecked: no limit exists; values are as published after the sign step"
-    },
-    {
-      "column": "shank_sagittal_velocity_ipsi_rad_s",
-      "status": "unchecked",
-      "unit": "rad/s",
-      "t04_channel": "shank_angle_velocity",
-      "finite_values_full": 1129509,
-      "finite_values_filtered": 1129359,
-      "status_plain": "unchecked: no limit exists; values are as published after the sign step"
-    },
-    {
-      "column": "hip_flexion_moment_ipsi_Nm_kg",
-      "status": "unchecked",
-      "unit": "N*m/kg",
-      "t04_channel": "hip_moment",
-      "finite_values_full": 1125705,
-      "finite_values_filtered": 1125555,
-      "status_plain": "unchecked: no limit exists; values are as published after the sign step"
-    },
-    {
-      "column": "knee_flexion_moment_ipsi_Nm_kg",
-      "status": "unchecked",
-      "unit": "N*m/kg",
-      "t04_channel": "knee_moment",
-      "finite_values_full": 1125705,
-      "finite_values_filtered": 1125555,
-      "status_plain": "unchecked: no limit exists; values are as published after the sign step"
-    },
-    {
-      "column": "ankle_dorsiflexion_moment_ipsi_Nm_kg",
-      "status": "unchecked",
-      "unit": "N*m/kg",
-      "t04_channel": "ankle_moment",
-      "finite_values_full": 1125705,
-      "finite_values_filtered": 1125555,
-      "status_plain": "unchecked: no limit exists; values are as published after the sign step"
-    },
-    {
-      "column": "hip_flexion_power_ipsi_W_kg",
-      "status": "unchecked",
-      "unit": "W/kg",
-      "t04_channel": "hip_power",
-      "finite_values_full": 964064,
-      "finite_values_filtered": 963914,
-      "status_plain": "unchecked: no limit exists; values are as published after the sign step; held in some recordings (see held_signals.csv)"
-    },
-    {
-      "column": "knee_flexion_power_ipsi_W_kg",
-      "status": "unchecked",
-      "unit": "W/kg",
-      "t04_channel": "knee_power",
-      "finite_values_full": 1101255,
-      "finite_values_filtered": 1101105,
-      "status_plain": "unchecked: no limit exists; values are as published after the sign step; held in some recordings (see held_signals.csv)"
-    },
-    {
-      "column": "ankle_dorsiflexion_power_ipsi_W_kg",
-      "status": "unchecked",
-      "unit": "W/kg",
-      "t04_channel": "ankle_power",
-      "finite_values_full": 1101255,
-      "finite_values_filtered": 1101105,
-      "status_plain": "unchecked: no limit exists; values are as published after the sign step; held in some recordings (see held_signals.csv)"
-    }
-  ],
-  "extra_columns": [
-    "quality_status",
-    "failed_limits",
-    "held_signals",
-    "ankle_reexpressed",
-    "lineage_id",
-    "assessment_id"
-  ],
-  "columns_not_released": {
-    "foot_angle": "not covered by D-UM21-C01-1 (thigh and shank only); carries the ankle offset",
-    "foot_angle_velocity": "not covered by D-UM21-C01-1 (thigh and shank only)"
-  },
-  "still_unchecked": [
-    "No reviewed per-task reference ranges (D-UM21-Q01-1 = B): only coarse limits. The textbook L1 end-of-range values are unverified (Q01 profile says so); margin 30 deg.",
-    "Moments, powers and all velocities: no limits (unchecked). Pelvis, thigh, shank: jump limit only.",
-    "Ankle angle zero offset unverified; ankle 'pass' means not blatantly impossible.",
-    "Thigh and shank are planar approximations, not 3D segment angles.",
-    "8 hip/knee/ankle power channel-recordings in 6 recordings held (sign unsettled).",
-    "Re-expressed ankle: stretch membership from census run edges, not per-frame |c2| in this job; the re-expressed values match the outside-stretch range but the offset itself is unverified.",
-    "12 strides in AB08/i0 have an all-missing ankle (stay in both variants); 376 strides in total have some missing samples (Q01); missing is never counted as a pass.",
-    "C02 pelvis: record-level counts of observations without a normalized twin are not resolved per stride (Q01 note).",
-    "scientific_approval is false for the whole bundle; the T03 task windows (D-1 = C) include 47 odd-duration strides per the decision text.",
-    "pytest is a unit check of the rules on synthetic data; it does not regenerate or approve the dataset."
-  ],
-  "original_vs_fixed": [
-    {
-      "fix": "Task timing (belt-speed clock)",
-      "original": "Published task intervals were timed on the belt-speed record, not on the motion data; in 4 of 50 treadmill recordings the clock is off by 1.7 to 7 s (and 2 cannot be checked), so strides near a speed or incline change can carry the wrong task label.",
-      "fixed": "Recordings that fail the clock check are left out of this bundle (no interval is shifted or estimated). The 44 kept recordings agree within the accepted band.",
-      "decision": "D-UM21-T02-1 = A",
-      "example": "Recording AB09 incline 10: the best lag is 685 frames (6.85 s) and belt-speed error drops from 0.67 to 0.07 m/s at that lag, so it is left out. (A recording-level example: its strides are not in the bundle, so there is no observation ID.) Also AB01 incline 5 is an exact copy of AB01 incline 10 and is left out.",
-      "evidence": "docs/quality/audits/um21-t02-clock-census.json"
-    },
-    {
-      "fix": "Pelvis tilt direction",
-      "original": "In AB04 level walking the motion-capture software computed the pelvis facing backwards, so its stored tilt has the wrong sign (and thigh/shank built on it).",
-      "fixed": "For that recording only, pelvis tilt sign is flipped from marker evidence and thigh/shank are rebuilt from it; the change is logged per recording in the T04 map.",
-      "decision": "D-UM21-P01-1 = C",
-      "example": "um21:Streaming/AB04/Tread/i0:right:frames:1052:1211 (pelvis multiplier +1 here, -1 in the other 43 recordings).",
-      "evidence": "docs/quality/audits/um21-p01-pelvis-heading.json"
-    },
-    {
-      "fix": "Sign convention (pelvis tilt)",
-      "original": "The source reports forward pelvis tilt as positive; LocoHub's counterclockwise rule makes forward tilt negative.",
-      "fixed": "Pelvis tilt x -1 in 43 of 44 recordings (all strides); hip, knee and ankle angles and flexion/dorsiflexion moments keep their published sign (checked against marker and force-plate evidence).",
-      "decision": "D-UM21-C03-1 = B",
-      "example": "um21:Streaming/AB01/Tread/i0:right:frames:965:1142 (pelvis x -1 from the source sign; hip, knee, ankle x +1).",
-      "evidence": "docs/quality/audits/um21-c03-conventions.json"
-    },
-    {
-      "fix": "Thigh and shank angles",
-      "original": "Pre-fix rebuild code added pelvis tilt to hip flexion, but the authors subtract it; the thigh angle was off by about twice the pelvis tilt. The older T03 columns are not trusted.",
-      "fixed": "Thigh and shank are rebuilt from published pelvis, hip and knee after signs and released as side-view (planar) estimates under standard names.",
-      "decision": "D-UM21-C01-1 = C",
-      "example": "Any stride, e.g. um21:Streaming/AB01/Tread/i0:right:frames:965:1142 (thigh_sagittal_angle_ipsi_rad).",
-      "evidence": "docs/quality/audits/um21-c01-source-probe.json"
-    },
-    {
-      "fix": "Ankle 180-degree stretch",
-      "original": "For 5,429 frames of one recording's right ankle (AB07, incline 10) the software reported the ankle in an equivalent but different form that shifts it by about 180 degrees: strides sat near minus 160 degrees.",
-      "fixed": "20 strides are converted to the standard form (angle + 180 degrees, wrapped) with all 3,000 samples logged; 2 strides with one-frame jumps are left out; the converted values fall on the recording's other strides and pass the same coarse limits.",
-      "decision": "D-UM21-C03-2 = C",
-      "example": "um21:Streaming/AB07/Tread/i10:right:frames:11834:11966, sample 10: -159.6 degrees as published becomes 20.4 degrees.",
-      "evidence": "docs/quality/audits/um21-c03-episode-census.json; bundle ankle_reexpression_log.csv"
-    },
-    {
-      "fix": "Power sign",
-      "original": "Power is stored in two layouts (8 recordings differ) and its sign was unsettled by the hook alone.",
-      "fixed": "Power sign set so power = published moment x joint speed (correlation at least 0.9 on both legs); where that fails, power is held (present but missing).",
-      "decision": "D-UM21-T04-3 = B",
-      "example": "Published: um21:Streaming/AB02/Tread/d10:right:frames:2139:2258 (hip power x -1, r = -1.00). Held: AB03 incline 10 hip power (r = 0.80 / 0.67), e.g. um21:Streaming/AB03/Tread/i10:right:frames:2413:2523 has hip_flexion_power_ipsi_W_kg missing with held_signals naming it.",
-      "evidence": "converted_datasets/reconversion_v2/um21_t04_full_AB*_v2 maps; docs/maintainers/handoffs/UM21-Q01.json t04_v2_power_summary"
-    }
-  ],
-  "resources": {
-    "pilot_peak_rss_mib_in_job": 222.4,
-    "full_peak_rss_mib_in_job": 279.9,
-    "full_launcher_largest_process_kib": 286640,
-    "address_space_cap_mib": 768,
-    "nice": 19,
-    "readback_probe_peak_kib": 98844,
-    "note": "All launches used the launcher with a plain dry run first, then one direct launch; verify-cleanup proven. No limit changed. No python left running."
-  },
-  "limitations_of_this_handoff": "Not independently verified yet (review needed). Pilot v1 root is INVALID by design. The documentation page, review sheets and the weekly audit are not part of this assignment.",
-  "next_action": "Independent second agent re-checks acceptance against bundle files (hashes, counts, exclusions, held columns, re-expression) and moves to done; then build the UMich 2021 documentation page from this bundle's phase_preview.json and this original_vs_fixed list.",
-  "changed_files": [
-    "contributor_tools/run_um21_r01_bundle.py (new)",
-    "tests/test_um21_r01_bundle.py (new)",
-    "docs/quality/audits/um21-r01-pilot-spec-v1.json, um21-r01-pilot-spec-v2.json, um21-r01-full-spec-v2.json (new)",
-    "docs/quality/audits/um21-r01-*-launcher-receipt-*.json/.log (new)",
-    "docs/maintainers/handoffs/UM21-R01.json (new)",
-    "docs/maintainers/backlog.json and backlog.html (status review)"
-  ],
-  "evidence_paths": [
-    "converted_datasets/reconversion_v2/um21_r01_review_v2",
-    "converted_datasets/reconversion_v2/um21_r01_review_pilot_v2",
-    "docs/quality/audits/um21-r01-full-launcher-receipt-v2.json"
-  ],
-  "documentation_page": {
-    "built_at_utc": "2026-11-06",
-    "builder": "contributor_tools/build_um21_doc_page.py",
-    "test": "tests/test_um21_doc_page.py (4 passed: counts equal manifest.json, every exclusion reason and count shown, no hashes/paths/internal ids visible, unchecked stated plainly)",
-    "files_written": [
-      "docs/datasets/um21/index.html (replaces the old page; old Dropbox download links removed, downloads say local review files, not published yet)"
-    ],
-    "site_copy": "site/html/datasets/um21/index.html (copied identical to docs page). docs/build.py --check passed (41 pages, 1847 assets). Full `docs/build.py --output site/html` aborted at its copy step on an untracked launcher log under docs/quality/audits (um21-t04-pilot-b-launcher-receipt-v2.log, contains a local path); not mine, not changed. Files copied before the abort include the um21 page and its stylesheets; site/html/quality/fixes figures verified identical to docs.",
-    "figures_reused": "docs/quality/fixes/um21-clock, pelvis-before/after, thigh-before/after, ankle-before/after .svg (linked, not modified). Phase plots are inline SVG drawn by the builder.",
-    "aggregate": "No new aggregate job was run. Used the committed, hash-bound phase_preview.json in the bundle (mean and sample sd per phase sample, cleaned variant, per condition/task/side); the builder pools left and right legs. Its plot content had not been independently checked, so a read-only probe recomputed level_walking/left hip angle and hip power from filtered.parquet (one column pair, streamed, system pool, batch 4096, no threads, nice 19, ionice idle): n identical, max |mean diff| 5.0e-7 and max |sd diff| 4.9e-7 (rounding of stored values). Peak RSS 94,196 KiB (about 92 MiB). Launcher not used (read-only probe, writes nothing under converted_datasets).",
-    "renders": "review_sheets/um21_doc_page/page_1280.png and page_390.png (Playwright with system Chrome, full page, first two signal groups opened). No horizontal page overflow at 390 px (scrollWidth 390); wide tables scroll inside their own box; section nav scrolls as on other site pages.",
-    "not_shown": [
-      "Not checked per VERIFY: the plot content beyond one condition/leg and two columns.",
-      "Page statements about task timing and thigh/shank evidence reuse the fixes page wording."
-    ]
+  {
+   "stage": "full v2",
+   "spec": "docs/quality/audits/um21-r01-full-spec-v2.json",
+   "receipt": "docs/quality/audits/um21-r01-full-launcher-receipt-v2.json",
+   "result": "exit 0, clean, cleanup proven, bindings unchanged, 76 s, peak RSS 279.9 MiB in job, 286,640 KiB launcher largest process, 289,860 KiB group sampled",
+   "root": "converted_datasets/reconversion_v2/um21_r01_review_v2"
   }
+ ],
+ "inputs": {
+  "t04_receipts": "enumerated from docs/quality/audits/um21-t04-full-AB01..AB10-launcher-receipt-v2.json (44 records); no root holds INVALID_DO_NOT_USE.txt (checked in the runner)",
+  "assessment": "converted_datasets/reconversion_v2/um21_q01_full_v2 (assessment.json, observations.jsonl, failures.jsonl; hashes re-checked in the job)",
+  "t03_phase_tables": "used only for task, task_id, task_info, subject, source recording id and source clocks, selected by the sha256 stored in each T04 observation map; no T03 signal column is read or shipped (T03 thigh, shank, foot, velocity and contralateral columns are never used)",
+  "c03_ledger": "docs/quality/audits/um21-c03-episode-census.json (figure_episode.inside_pairs) and um21-c03-conventions.json (ankle_episode_census.branch_episode: runs and one-frame step frames)"
+ },
+ "hashes": {
+  "full.parquet": "2a819a8d04ee94b9f972048fd2feb747beff3d98b998b58ed2c990ff4bebc8fb",
+  "filtered.parquet": "b51815292399c76be42baa56c275df6a4517c9259f54e605210cfe18a3cc1229",
+  "exclusions.csv": "f09e5136d5e8263b865a3e9904db61289982fd2447c406b499cee763873a6baa",
+  "ankle_reexpression_log.csv": "ec6d3ed506ed4e2249e9f1741853bba89deb16afbb41a74d843d8c2cf69a2410",
+  "assessment_amendments.jsonl": "260e5b0ecb38fa282b3be3702a6fdb61799824eed242942c9a18e4c59f17a648",
+  "all_files": {
+   "README.md": "8ebc6d40b103b3e60c331cbba7d1a39404fcd843e93d8e6bb6f5b3d95afa4089",
+   "ankle_reexpression_log.csv": "ec6d3ed506ed4e2249e9f1741853bba89deb16afbb41a74d843d8c2cf69a2410",
+   "assessment_amendments.jsonl": "260e5b0ecb38fa282b3be3702a6fdb61799824eed242942c9a18e4c59f17a648",
+   "dataset_index.json": "69e296432996926f7dbff3f57fff98e6ad0383f9736b833e8210b030863b2c70",
+   "exclusions.csv": "f09e5136d5e8263b865a3e9904db61289982fd2447c406b499cee763873a6baa",
+   "filtered.parquet": "b51815292399c76be42baa56c275df6a4517c9259f54e605210cfe18a3cc1229",
+   "full.parquet": "2a819a8d04ee94b9f972048fd2feb747beff3d98b998b58ed2c990ff4bebc8fb",
+   "held_signals.csv": "bbe89ab0fe9d11d15fb2cbae6eecec3aa2ad242f71efed80dcb2f1b4cbf3ae40",
+   "phase_preview.json": "ecb02cb04725188d79aaf650d40248ef13dae0e3622921726144297c7b4487f3",
+   "test_summary.json": "e70cd4437e5b9795b34feb11464186e934685389f050891d48b1262d903c3bfd"
+  },
+  "manifest.json": "11f2ee877adb69db17c3cfe3041ef6dbf51e67a776a34d62f021152c695aa369",
+  "lineage_id (hash of the bound inputs)": "5af9373812a74dd498d61037fe00cf3d2bb47bb1fa9617ae118323240cb30c40",
+  "assessment_id (Q01 assessment.json sha256)": "a83919309c95c5b9915f7bbde8699f70578278a3cfa15300e2f9662d1126ad41",
+  "binding_note": "dataset_index.json, phase_preview.json and test_summary.json each embed the same full/filtered/exclusions hashes and counts; the preview and the column finite counts were computed by re-reading the written files. Every row of both variants carries the same lineage_id and assessment_id."
+ },
+ "counts": {
+  "input_t04_observations": 7547,
+  "unmapped_outside_stride_rule": 15,
+  "upstream_total": 7562,
+  "full": {
+   "observations": 7545,
+   "rows": 1131750
+  },
+  "filtered": {
+   "observations": 7544,
+   "rows": 1131600
+  },
+  "exclusions_total": 18,
+  "exclusions_by_reason": {
+   "t04_2_outside_stride_rule (left out of both, D-UM21-T04-2 = A)": 15,
+   "c03_2_sudden_jump (left out of both, D-UM21-C03-2 = C)": 2,
+   "q01_limit_failed (in full with failure recorded, left out of filtered)": 1
+  },
+  "accounting": "7,562 = 7,545 in full + 17 left out of both (15 + 2); filtered = 7,545 - 1. Checked by the runner (T3, T5, T6) and by the unit tests.",
+  "recordings_left_out_before_this_bundle": "D-UM21-T02-1 = A: AB01 d10, AB01 d5, AB08 i10, AB09 i10, AB10 i0 (clock check) plus AB01 i5 (copy of AB01 i10): 6 of 50 recordings; 8,626 task-window strides (D-1 = C) minus 7,562 aligned = 1,064 strides, per um21-t02-clock-census.json totals (arithmetic from that file, not recomputed here)."
+ },
+ "exclusion_evidence": "exclusions.csv (observation_id, recording, side, stage, reason_code, reason, decision, in_full_variant, in_filtered_variant): 18 rows; failures remain visible per row in full.parquet (quality_status, failed_limits).",
+ "decisions_applied": [
+  {
+   "id": "D-1 = C",
+   "how": "Stride membership is the T03 task-window rule as released by T03/T04; the bundle adds no stride and removes only what the other decisions name."
+  },
+  {
+   "id": "D-UM21-T02-1 = A",
+   "how": "The six recordings are absent from the T04 inputs, so they are absent here. D-UM21-T02-2 does not exist in the backlog (withdrawn per the fixes page); AB01 i5 is held out as that note states."
+  },
+  {
+   "id": "D-UM21-C01-1 = C",
+   "how": "Thigh and shank are released under the standard names thigh_sagittal_angle_ipsi_rad and shank_sagittal_angle_ipsi_rad from the T04 planar recipe (hip, pelvis, knee as published after signs). Status 'jump limit only; planar estimate'. T03 thigh/shank/foot columns are not used. Foot angle and foot velocity are NOT released: D-UM21-C01-1 covers thigh and shank only, and the foot angle carries the ankle offset."
+  },
+  {
+   "id": "D-UM21-C01-2 = C",
+   "how": "Ankle angle and hip/knee/ankle flexion moments are standard columns, values as published after T04 signs. Anomalous ankle recording-sides stay missing as T04/Q01 left them (AB08/i0 left ankle: 12 strides all-missing). Ankle angle is marked offset unverified."
+  },
+  {
+   "id": "D-UM21-C03-1 = B",
+   "how": "Sign rule applied by T04 (pelvis tilt x -1 in 43 of 44 recordings; the other 1 is AB04/i0, see P01). Hip, knee and ankle angles and moments keep their published sign. Segment angles counterclockwise, joint angles and moments positive in their named direction."
+  },
+  {
+   "id": "D-UM21-C03-2 = C",
+   "how": "AB07/i10 right ankle: the 22 strides the Q01 assessment flagged (22 failing L1) are exactly the released strides of the ledger's 31 inside strides (the other 9 ledger strides are not in the T04 set: not T03 observations). Re-expression c1 -> wrap(c1 + 180 deg) on all 150 samples of 20 strides; the 2 strides with sudden jumps (frames 11703:11834 and 12608:12735; census step frames inside, and a 30+ deg jump remains after re-expression) are left out of both variants; source copies untouched; every re-expressed sample logged in ankle_reexpression_log.csv (3,000 rows). Re-check with the same L1/L2 limits on the re-expressed arrays: 20 of 20 pass (assessment_amendments.jsonl); re-expressed ankle spans -16.2 to 26.8 deg vs the census p1-p99 -16.6 to 27.0 deg outside the stretch. Ledger check: 29 clean and 2 jump strides of 31 (matches the decision text). Stride-level rule used because the 150-sample table has no second Cardan component: stretch membership comes from the census run edges (which were tested per frame with |c2| > 90 deg), not re-tested here. Partial overlap check: no stride overlaps a run without lying inside it (one stride shares a single boundary frame and stays untouched; Q01 had it clean)."
+  },
+  {
+   "id": "D-UM21-P01-1 = C",
+   "how": "Applied upstream in T04 (AB04/i0 pelvis multiplier +1 instead of -1, i.e. flipped from marker evidence; thigh and shank built from it). 165 AB04/i0 strides stay (no change here)."
+  },
+  {
+   "id": "D-UM21-Q01-1 = B",
+   "how": "Filtering and release facts use the one Q01 assessment (coarse limits L1, L2; structure L3, L4). Only the 20 re-expressed strides were re-assessed (amendments file); every other stride uses its Q01 entry unchanged. Moments, powers, velocities unchecked; pelvis, thigh, shank jump-only."
+  },
+  {
+   "id": "D-UM21-T04-1 = C",
+   "how": "Copied-sign channels are published as T04 decided (4 power channel-recordings copied); nothing added here."
+  },
+  {
+   "id": "D-UM21-T04-2 = A",
+   "how": "The 15 unmapped strides are listed in exclusions.csv with their reasons (13 under 50 frames, 2 over 250 frames) and are in neither variant."
+  },
+  {
+   "id": "D-UM21-T04-3 = B",
+   "how": "Power sign set by correlation with published moment x joint speed (|r| >= 0.9); where that failed (8 channel-recordings) power is held: present-but-missing column, see held columns."
+  }
+ ],
+ "full_vs_filtered": {
+  "shared": "identical column list, same lineage_id and assessment_id on every row; filtered = full minus strides whose assessment overall is 'failed' after amendment.",
+  "full_only": "AB08/i0 left stride um21:Streaming/AB08/Tread/i0:left:frames:13770:13899: stays in full with quality_status 'failed' (L1 ankle, samples 143-148 below -80 deg; it also has non-finite samples); left out of filtered."
+ },
+ "open_items_resolved": {
+  "contralateral_columns": "None. T04 publishes each stride's own leg only; the opposite leg is a separate observation with its own identity. Copying or mirroring would invent values; the older T03 contra columns pre-date the sign step and are not trusted. All column names are _ipsi_ (pelvis has no side). Reversible later by an added column family; no decision needed.",
+  "stable_column_schema": "All 15 signal columns exist in every row of both variants. Held power channels (8 channel-recordings in 6 recordings) are present but all missing, and each row's held_signals JSON names them with the text 'held: sign unsettled'; held_signals.csv lists recording, column and reason. Checked: zero finite values in any held cell (T8). Consistent with DATA_CONTRACT.md: unavailable signals stay missing, column presence is not coverage, never a value.",
+  "column_naming": "LocoHub reference names (docs/reference/index.md): hip_flexion_angle_ipsi_rad, knee_flexion_angle_ipsi_rad, ankle_dorsiflexion_angle_ipsi_rad, pelvis_sagittal_angle_rad, thigh/shank_sagittal_angle_ipsi_rad, *_velocity_*_rad_s, *_moment_ipsi_Nm_kg, *_power_ipsi_W_kg (the reference leaves power names dataset-specific). Raw T04 aliases are named in manifest.json column_status.t04_channel.",
+  "jose_decision_raised": "none"
+ },
+ "columns": [
+  {
+   "column": "pelvis_sagittal_angle_rad",
+   "status": "partly_checked",
+   "unit": "rad",
+   "t04_channel": "pelvis_tilt",
+   "finite_values_full": 1131559,
+   "finite_values_filtered": 1131409,
+   "status_plain": "jump limit L2 only (no plausible range exists); thigh and shank are planar estimates"
+  },
+  {
+   "column": "hip_flexion_angle_ipsi_rad",
+   "status": "checked",
+   "unit": "rad",
+   "t04_channel": "hip_angle",
+   "finite_values_full": 1129518,
+   "finite_values_filtered": 1129368,
+   "status_plain": "checked: coarse limits L1 (range) and L2 (jump) passed"
+  },
+  {
+   "column": "knee_flexion_angle_ipsi_rad",
+   "status": "checked",
+   "unit": "rad",
+   "t04_channel": "knee_angle",
+   "finite_values_full": 1129518,
+   "finite_values_filtered": 1129368,
+   "status_plain": "checked: coarse limits L1 (range) and L2 (jump) passed"
+  },
+  {
+   "column": "ankle_dorsiflexion_angle_ipsi_rad",
+   "status": "offset_unverified",
+   "unit": "rad",
+   "t04_channel": "ankle_angle",
+   "finite_values_full": 1129507,
+   "finite_values_filtered": 1129357,
+   "status_plain": "offset unverified: coarse limits only; a pass means 'not blatantly impossible'"
+  },
+  {
+   "column": "thigh_sagittal_angle_ipsi_rad",
+   "status": "partly_checked",
+   "unit": "rad",
+   "t04_channel": "thigh_angle",
+   "finite_values_full": 1129518,
+   "finite_values_filtered": 1129368,
+   "status_plain": "jump limit L2 only (no plausible range exists); thigh and shank are planar estimates"
+  },
+  {
+   "column": "shank_sagittal_angle_ipsi_rad",
+   "status": "partly_checked",
+   "unit": "rad",
+   "t04_channel": "shank_angle",
+   "finite_values_full": 1129518,
+   "finite_values_filtered": 1129368,
+   "status_plain": "jump limit L2 only (no plausible range exists); thigh and shank are planar estimates"
+  },
+  {
+   "column": "pelvis_sagittal_velocity_rad_s",
+   "status": "unchecked",
+   "unit": "rad/s",
+   "t04_channel": "pelvis_tilt_velocity",
+   "finite_values_full": 1131555,
+   "finite_values_filtered": 1131405,
+   "status_plain": "unchecked: no limit exists; values are as published after the sign step"
+  },
+  {
+   "column": "thigh_sagittal_velocity_ipsi_rad_s",
+   "status": "unchecked",
+   "unit": "rad/s",
+   "t04_channel": "thigh_angle_velocity",
+   "finite_values_full": 1129509,
+   "finite_values_filtered": 1129359,
+   "status_plain": "unchecked: no limit exists; values are as published after the sign step"
+  },
+  {
+   "column": "shank_sagittal_velocity_ipsi_rad_s",
+   "status": "unchecked",
+   "unit": "rad/s",
+   "t04_channel": "shank_angle_velocity",
+   "finite_values_full": 1129509,
+   "finite_values_filtered": 1129359,
+   "status_plain": "unchecked: no limit exists; values are as published after the sign step"
+  },
+  {
+   "column": "hip_flexion_moment_ipsi_Nm_kg",
+   "status": "unchecked",
+   "unit": "N*m/kg",
+   "t04_channel": "hip_moment",
+   "finite_values_full": 1125705,
+   "finite_values_filtered": 1125555,
+   "status_plain": "unchecked: no limit exists; values are as published after the sign step"
+  },
+  {
+   "column": "knee_flexion_moment_ipsi_Nm_kg",
+   "status": "unchecked",
+   "unit": "N*m/kg",
+   "t04_channel": "knee_moment",
+   "finite_values_full": 1125705,
+   "finite_values_filtered": 1125555,
+   "status_plain": "unchecked: no limit exists; values are as published after the sign step"
+  },
+  {
+   "column": "ankle_dorsiflexion_moment_ipsi_Nm_kg",
+   "status": "unchecked",
+   "unit": "N*m/kg",
+   "t04_channel": "ankle_moment",
+   "finite_values_full": 1125705,
+   "finite_values_filtered": 1125555,
+   "status_plain": "unchecked: no limit exists; values are as published after the sign step"
+  },
+  {
+   "column": "hip_flexion_power_ipsi_W_kg",
+   "status": "unchecked",
+   "unit": "W/kg",
+   "t04_channel": "hip_power",
+   "finite_values_full": 964064,
+   "finite_values_filtered": 963914,
+   "status_plain": "unchecked: no limit exists; values are as published after the sign step; held in some recordings (see held_signals.csv)"
+  },
+  {
+   "column": "knee_flexion_power_ipsi_W_kg",
+   "status": "unchecked",
+   "unit": "W/kg",
+   "t04_channel": "knee_power",
+   "finite_values_full": 1101255,
+   "finite_values_filtered": 1101105,
+   "status_plain": "unchecked: no limit exists; values are as published after the sign step; held in some recordings (see held_signals.csv)"
+  },
+  {
+   "column": "ankle_dorsiflexion_power_ipsi_W_kg",
+   "status": "unchecked",
+   "unit": "W/kg",
+   "t04_channel": "ankle_power",
+   "finite_values_full": 1101255,
+   "finite_values_filtered": 1101105,
+   "status_plain": "unchecked: no limit exists; values are as published after the sign step; held in some recordings (see held_signals.csv)"
+  }
+ ],
+ "extra_columns": [
+  "quality_status",
+  "failed_limits",
+  "held_signals",
+  "ankle_reexpressed",
+  "lineage_id",
+  "assessment_id"
+ ],
+ "columns_not_released": {
+  "foot_angle": "not covered by D-UM21-C01-1 (thigh and shank only); carries the ankle offset",
+  "foot_angle_velocity": "not covered by D-UM21-C01-1 (thigh and shank only)"
+ },
+ "still_unchecked": [
+  "No reviewed per-task reference ranges (D-UM21-Q01-1 = B): only coarse limits. The textbook L1 end-of-range values are unverified (Q01 profile says so); margin 30 deg.",
+  "Moments, powers and all velocities: no limits (unchecked). Pelvis, thigh, shank: jump limit only.",
+  "Ankle angle zero offset unverified; ankle 'pass' means not blatantly impossible.",
+  "Thigh and shank are planar approximations, not 3D segment angles.",
+  "8 hip/knee/ankle power channel-recordings in 6 recordings held (sign unsettled).",
+  "Re-expressed ankle: stretch membership from census run edges, not per-frame |c2| in this job; the re-expressed values match the outside-stretch range but the offset itself is unverified.",
+  "12 strides in AB08/i0 have an all-missing ankle (stay in both variants); 376 strides in total have some missing samples (Q01); missing is never counted as a pass.",
+  "C02 pelvis: record-level counts of observations without a normalized twin are not resolved per stride (Q01 note).",
+  "scientific_approval is false for the whole bundle; the T03 task windows (D-1 = C) include 47 odd-duration strides per the decision text.",
+  "pytest is a unit check of the rules on synthetic data; it does not regenerate or approve the dataset."
+ ],
+ "original_vs_fixed": [
+  {
+   "fix": "Task timing (belt-speed clock)",
+   "original": "Published task intervals were timed on the belt-speed record, not on the motion data; in 4 of 50 treadmill recordings the clock is off by 1.7 to 7 s (and 2 cannot be checked), so strides near a speed or incline change can carry the wrong task label.",
+   "fixed": "Recordings that fail the clock check are left out of this bundle (no interval is shifted or estimated). The 44 kept recordings agree within the accepted band.",
+   "decision": "D-UM21-T02-1 = A",
+   "example": "Recording AB09 incline 10: the best lag is 685 frames (6.85 s) and belt-speed error drops from 0.67 to 0.07 m/s at that lag, so it is left out. (A recording-level example: its strides are not in the bundle, so there is no observation ID.) Also AB01 incline 5 is an exact copy of AB01 incline 10 and is left out.",
+   "evidence": "docs/quality/audits/um21-t02-clock-census.json"
+  },
+  {
+   "fix": "Pelvis tilt direction",
+   "original": "In AB04 level walking the motion-capture software computed the pelvis facing backwards, so its stored tilt has the wrong sign (and thigh/shank built on it).",
+   "fixed": "For that recording only, pelvis tilt sign is flipped from marker evidence and thigh/shank are rebuilt from it; the change is logged per recording in the T04 map.",
+   "decision": "D-UM21-P01-1 = C",
+   "example": "um21:Streaming/AB04/Tread/i0:right:frames:1052:1211 (pelvis multiplier +1 here, -1 in the other 43 recordings).",
+   "evidence": "docs/quality/audits/um21-p01-pelvis-heading.json"
+  },
+  {
+   "fix": "Sign convention (pelvis tilt)",
+   "original": "The source reports forward pelvis tilt as positive; LocoHub's counterclockwise rule makes forward tilt negative.",
+   "fixed": "Pelvis tilt x -1 in 43 of 44 recordings (all strides); hip, knee and ankle angles and flexion/dorsiflexion moments keep their published sign (checked against marker and force-plate evidence).",
+   "decision": "D-UM21-C03-1 = B",
+   "example": "um21:Streaming/AB01/Tread/i0:right:frames:965:1142 (pelvis x -1 from the source sign; hip, knee, ankle x +1).",
+   "evidence": "docs/quality/audits/um21-c03-conventions.json"
+  },
+  {
+   "fix": "Thigh and shank angles",
+   "original": "Pre-fix rebuild code added pelvis tilt to hip flexion, but the authors subtract it; the thigh angle was off by about twice the pelvis tilt. The older T03 columns are not trusted.",
+   "fixed": "Thigh and shank are rebuilt from published pelvis, hip and knee after signs and released as side-view (planar) estimates under standard names.",
+   "decision": "D-UM21-C01-1 = C",
+   "example": "Any stride, e.g. um21:Streaming/AB01/Tread/i0:right:frames:965:1142 (thigh_sagittal_angle_ipsi_rad).",
+   "evidence": "docs/quality/audits/um21-c01-source-probe.json"
+  },
+  {
+   "fix": "Ankle 180-degree stretch",
+   "original": "For 5,429 frames of one recording's right ankle (AB07, incline 10) the software reported the ankle in an equivalent but different form that shifts it by about 180 degrees: strides sat near minus 160 degrees.",
+   "fixed": "20 strides are converted to the standard form (angle + 180 degrees, wrapped) with all 3,000 samples logged; 2 strides with one-frame jumps are left out; the converted values fall on the recording's other strides and pass the same coarse limits.",
+   "decision": "D-UM21-C03-2 = C",
+   "example": "um21:Streaming/AB07/Tread/i10:right:frames:11834:11966, sample 10: -159.6 degrees as published becomes 20.4 degrees.",
+   "evidence": "docs/quality/audits/um21-c03-episode-census.json; bundle ankle_reexpression_log.csv"
+  },
+  {
+   "fix": "Power sign",
+   "original": "Power is stored in two layouts (8 recordings differ) and its sign was unsettled by the hook alone.",
+   "fixed": "Power sign set so power = published moment x joint speed (correlation at least 0.9 on both legs); where that fails, power is held (present but missing).",
+   "decision": "D-UM21-T04-3 = B",
+   "example": "Published: um21:Streaming/AB02/Tread/d10:right:frames:2139:2258 (hip power x -1, r = -1.00). Held: AB03 incline 10 hip power (r = 0.80 / 0.67), e.g. um21:Streaming/AB03/Tread/i10:right:frames:2413:2523 has hip_flexion_power_ipsi_W_kg missing with held_signals naming it.",
+   "evidence": "converted_datasets/reconversion_v2/um21_t04_full_AB*_v2 maps; docs/maintainers/handoffs/UM21-Q01.json t04_v2_power_summary"
+  }
+ ],
+ "resources": {
+  "pilot_peak_rss_mib_in_job": 222.4,
+  "full_peak_rss_mib_in_job": 279.9,
+  "full_launcher_largest_process_kib": 286640,
+  "address_space_cap_mib": 768,
+  "nice": 19,
+  "readback_probe_peak_kib": 98844,
+  "note": "All launches used the launcher with a plain dry run first, then one direct launch; verify-cleanup proven. No limit changed. No python left running."
+ },
+ "limitations_of_this_handoff": "Not independently verified yet (review needed). Pilot v1 root is INVALID by design. The documentation page, review sheets and the weekly audit are not part of this assignment.",
+ "next_action": "Independent second agent re-checks acceptance against bundle files (hashes, counts, exclusions, held columns, re-expression) and moves to done; then build the UMich 2021 documentation page from this bundle's phase_preview.json and this original_vs_fixed list.",
+ "changed_files": [
+  "contributor_tools/run_um21_r01_bundle.py (new)",
+  "tests/test_um21_r01_bundle.py (new)",
+  "docs/quality/audits/um21-r01-pilot-spec-v1.json, um21-r01-pilot-spec-v2.json, um21-r01-full-spec-v2.json (new)",
+  "docs/quality/audits/um21-r01-*-launcher-receipt-*.json/.log (new)",
+  "docs/maintainers/handoffs/UM21-R01.json (new)",
+  "docs/maintainers/backlog.json and backlog.html (status review)"
+ ],
+ "evidence_paths": [
+  "converted_datasets/reconversion_v2/um21_r01_review_v2",
+  "converted_datasets/reconversion_v2/um21_r01_review_pilot_v2",
+  "docs/quality/audits/um21-r01-full-launcher-receipt-v2.json"
+ ],
+ "documentation_page": {
+  "built_at_utc": "2026-11-06",
+  "builder": "contributor_tools/build_um21_doc_page.py",
+  "test": "tests/test_um21_doc_page.py (4 passed: counts equal manifest.json, every exclusion reason and count shown, no hashes/paths/internal ids visible, unchecked stated plainly)",
+  "files_written": [
+   "docs/datasets/um21/index.html (replaces the old page; old Dropbox download links removed, downloads say local review files, not published yet)"
+  ],
+  "site_copy": "site/html/datasets/um21/index.html (copied identical to docs page). docs/build.py --check passed (41 pages, 1847 assets). Full `docs/build.py --output site/html` aborted at its copy step on an untracked launcher log under docs/quality/audits (um21-t04-pilot-b-launcher-receipt-v2.log, contains a local path); not mine, not changed. Files copied before the abort include the um21 page and its stylesheets; site/html/quality/fixes figures verified identical to docs.",
+  "figures_reused": "docs/quality/fixes/um21-clock, pelvis-before/after, thigh-before/after, ankle-before/after .svg (linked, not modified). Phase plots are inline SVG drawn by the builder.",
+  "aggregate": "No new aggregate job was run. Used the committed, hash-bound phase_preview.json in the bundle (mean and sample sd per phase sample, cleaned variant, per condition/task/side); the builder pools left and right legs. Its plot content had not been independently checked, so a read-only probe recomputed level_walking/left hip angle and hip power from filtered.parquet (one column pair, streamed, system pool, batch 4096, no threads, nice 19, ionice idle): n identical, max |mean diff| 5.0e-7 and max |sd diff| 4.9e-7 (rounding of stored values). Peak RSS 94,196 KiB (about 92 MiB). Launcher not used (read-only probe, writes nothing under converted_datasets).",
+  "renders": "review_sheets/um21_doc_page/page_1280.png and page_390.png (Playwright with system Chrome, full page, first two signal groups opened). No horizontal page overflow at 390 px (scrollWidth 390); wide tables scroll inside their own box; section nav scrolls as on other site pages.",
+  "not_shown": [
+   "Not checked per VERIFY: the plot content beyond one condition/leg and two columns.",
+   "Page statements about task timing and thigh/shank evidence reuse the fixes page wording."
+  ]
+ },
+ "fix_scope": {
+  "added_at_utc": "2026-11-06",
+  "what": "Each fix card on the UMich 2021 page now has 'How much was affected' (totals, table, participant-by-task grid) and 'What else this could affect' (one verdict per downstream signal). Pelvis sign rule and power cards got new before/after example figures; every card got a scope grid.",
+  "scope_json": "docs/quality/audits/um21-r01-fix-scope.json (built by contributor_tools/build_um21_fix_scope.py from the bundle index, held list, committed audits/handoffs and the probe)",
+  "probe": {
+   "script": "contributor_tools/probe_um21_fix_scope.py",
+   "output": "docs/quality/audits/um21-r01-fix-scope-probe.json",
+   "reads": "full.parquet streamed in 4096-row batches, system memory pool, no threads, no read buffer; writes nothing under converted_datasets/",
+   "peak_rss_kib": {
+    "probe_run_1": 99512,
+    "probe_run_2_final": 101572,
+    "figures": 129284
+   },
+   "limits": "nice 19, ionice idle, /usr/bin/time -v; memory checked before (Linux 10.5 GB available, Windows 4.5 GB free)",
+   "strides_read": 7545
+  },
+  "figures": {
+   "script": "contributor_tools/build_um21_scope_figures.py",
+   "dir": "docs/datasets/um21/figures/",
+   "seed": 20261106,
+   "examples": "docs/datasets/um21/figures/figures.json",
+   "files": [
+    "scope-clock",
+    "scope-pelvis_backwards",
+    "scope-sign_rule",
+    "scope-thigh_shank",
+    "scope-ankle_180",
+    "scope-power",
+    "sign-before",
+    "sign-after",
+    "power-before",
+    "power-after"
+   ]
+  },
+  "totals": {
+   "clock": {
+    "recordings_affected": 6,
+    "recordings_total": 50,
+    "strides_affected": 1064,
+    "strides_total": 8626,
+    "strides_pct": 12.3,
+    "minutes_affected": 17.4,
+    "minutes_total": 146.3,
+    "labels_that_would_change": 294
+   },
+   "pelvis_backwards": {
+    "recordings_affected": 1,
+    "recordings_total": 44,
+    "strides_affected": 165,
+    "strides_total": 7562,
+    "strides_pct": 2.2,
+    "samples_affected": 24750,
+    "samples_total": 1134300
+   },
+   "sign_rule": {
+    "recordings_affected": 44,
+    "recordings_total": 44,
+    "strides_affected": 7547,
+    "strides_total": 7562,
+    "strides_pct": 99.8,
+    "samples_affected": 1132050,
+    "samples_total": 1134300,
+    "recordings_sign_flipped": 43,
+    "strides_sign_flipped": 7382
+   },
+   "thigh_shank": {
+    "recordings_affected": 44,
+    "recordings_total": 44,
+    "strides_affected": 7547,
+    "strides_total": 7562,
+    "strides_pct": 99.8,
+    "samples_affected": 1132050,
+    "samples_total": 1134300,
+    "error_deg_min": 2.3,
+    "error_deg_max": 57.8
+   },
+   "ankle_180": {
+    "recordings_affected": 1,
+    "recordings_total": 44,
+    "strides_affected": 22,
+    "strides_total": 7562,
+    "strides_pct": 0.29,
+    "samples_affected": 3300,
+    "samples_total": 1134300,
+    "turned_back": 20,
+    "left_out": 2,
+    "never_converted": 9,
+    "stretch_strides": 31,
+    "right_leg_strides_in_recording": 82,
+    "recording_strides": 169
+   },
+   "power": {
+    "channels_total": 132,
+    "channels_copied": 4,
+    "channels_held": 8,
+    "channels_physics": 96,
+    "channels_source_layout_rule": 24,
+    "channels_sign_flipped": 107,
+    "channels_sign_kept": 17,
+    "stride_joint_values_total": 22635,
+    "stride_joint_values_held": 1407,
+    "stride_joint_values_copied": 669,
+    "stride_joint_values_physics": 16633,
+    "samples_held": 211050,
+    "samples_physics": 2494950,
+    "recordings_with_second_storage": 8
+   }
+  },
+  "verdict_counts": {
+   "Also wrong, fixed": 3,
+   "Checked, not affected": 23,
+   "Left out": 10,
+   "Not checked": 8
+  },
+  "not_checked": [
+   "clock: Exact position of each speed or slope change in the kept recordings",
+   "pelvis_backwards: Five strides at the end of a trial, where the person turns around",
+   "sign_rule: Other datasets' pelvis tilt",
+   "thigh_shank: How far side-view thigh and shank are from the true 3D angles",
+   "ankle_180: Sudden knee jumps seen at the edges of the stretch",
+   "ankle_180: Two short ankle glitches elsewhere",
+   "power: The moment or speed in those held recordings",
+   "power: Joint work or energy computed from power by a user"
+  ],
+  "cheap_checks_done": [
+   "Thigh = hip + pelvis and shank = thigh - knee hold exactly in all 7,545 released strides",
+   "Stored thigh, shank and pelvis speeds match the slope of their angles in all strides",
+   "AB04 level hip angle (5.1 deg mean) sits between AB04's 5 deg decline (4.0) and 5 deg incline (9.2); matches markers 228/228",
+   "AB07 10 deg incline turned-back strides: power vs moment x speed agreement 0.998 (min 0.994); ankle speed not released"
+  ],
+  "screenshots": "review_sheets/um21_doc_page/ (card1..6 at 1280 and 390 px; phone shots rendered in a 390 px frame)",
+  "tests": "tests/test_um21_doc_page.py (8 passed)",
+  "not_done": "No commit, no publish. site/html/datasets/um21/ updated by copy only; full docs/build.py not run (aborts on an untracked launcher log)."
+ }
 }

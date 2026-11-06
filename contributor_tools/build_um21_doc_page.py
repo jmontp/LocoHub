@@ -22,6 +22,9 @@ ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = ROOT / "converted_datasets/reconversion_v2/um21_r01_review_v2"
 HANDOFFS = ROOT / "docs/maintainers/handoffs"
 OUT = ROOT / "docs/datasets/um21/index.html"
+SCOPE = ROOT / "docs/quality/audits/um21-r01-fix-scope.json"
+FIGS = ROOT / "docs/datasets/um21/figures"
+FIGJSON = FIGS / "figures.json"
 
 CONDITION = {"d10": "10° decline", "d5": "5° decline", "i0": "level", "i5": "5° incline", "i10": "10° incline"}
 COLORS = {"d10": "#0072B2", "d5": "#56B4E9", "i0": "#009E73", "i5": "#E69F00", "i10": "#D55E00"}
@@ -264,14 +267,63 @@ def fig(src, side, label, alt, cap=""):
             f'<img src="../../quality/fixes/{src}" width="450" height="310" loading="lazy" alt="{esc(alt)}">{c}</figure>')
 
 
-def card(title, wrong, how, did, example, figures="", single=False):
-    f = f'<div class="fix-figures{" fix-figures-single" if single else ""}">{figures}</div>' if figures else ""
+
+# ---------- scope blocks (all numbers come from um21-r01-fix-scope.json) ----------
+VERDICT_CLASS = {"Also wrong, fixed": "v-fixed", "Checked, not affected": "v-ok", "Left out": "v-left", "Not checked": "v-nc"}
+
+
+def local_fig(src, label, alt, cap=""):
+    import re
+    svg = (FIGS / src).read_text(encoding="utf-8")
+    m = re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', svg)
+    w, h = float(m.group(1)), float(m.group(2))
+    c = f"<figcaption>{esc(cap)}</figcaption>" if cap else ""
+    return (f'<figure class="fix-figure"><figcaption class="fix-side">{esc(label)}</figcaption>'
+            f'<img src="figures/{src}" width="{round(w * 100 / 72)}" height="{round(h * 100 / 72)}" loading="lazy" alt="{esc(alt)}">{c}</figure>')
+
+
+def scope_block(fix):
+    t = fix["table"]
+    head = "".join(f"<th>{esc(c)}</th>" for c in t["columns"])
+    body = "".join("<tr>" + "".join(f"<td>{esc(c)}</td>" for c in row) + "</tr>" for row in t["rows"])
+    table = (f'<div class="table-scroll" role="region" aria-label="{esc(fix["card"])}: affected recordings" tabindex="0">'
+             f'<table class="plain-table scope-table"><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>')
+    if t["fold"]:
+        table = f'<details class="scope-fold"><summary>Show all {len(t["rows"])} rows</summary>{table}</details>'
+    q = {"clock": "Which recordings have the wrong task timing?", "pelvis_backwards": "Which recordings had a backwards pelvis?",
+         "sign_rule": "Which recordings go through the pelvis sign rule?", "thigh_shank": "Which recordings had a wrong thigh and shank?",
+         "ankle_180": "Which recordings had an ankle turned by 180°?", "power": "Which recordings have an empty or copied power channel?"}[fix["key"]]
+    g = local_fig(f"scope-{fix['key']}.svg", q, f"Grid of participants by task. {fix['grid_caption']}", fix["grid_caption"])
+    return (f'<div class="scope-block"><h4>How much was affected</h4><p class="scope-total">{esc(fix["total_line"])}</p>'
+            f'<p class="note">{esc(fix["denominator_text"])}</p>'
+            f'<div class="fix-figures fix-figures-single">{g}</div>{table}</div>')
+
+
+def knock_block(fix):
+    items = []
+    for k in fix["knock_on"]:
+        ev = f'<span class="ko-evidence"><em>How we know:</em> {esc(k["evidence"])}</span>' if k["evidence"] else '<span class="ko-evidence"><em>No evidence yet.</em></span>'
+        items.append(f'<li class="ko-item"><span class="verdict {VERDICT_CLASS[k["verdict"]]}">{esc(k["verdict"])}</span> '
+                     f'<strong>{esc(k["signal"])}.</strong> {esc(k["line"])} {ev}</li>')
+    d = f'<p class="ko-direction">{esc(fix["direction"])}</p>' if fix.get("direction") else ""
+    return f'<div class="scope-block"><h4>What else this could affect</h4>{d}<ul class="ko-list">{"".join(items)}</ul></div>'
+
+
+def card(title, wrong, how, did, example, figures="", single=False, scope=None):
+    q = ""
+    if figures.startswith('<p class="fig-question">'):
+        q, figures = figures.split("</p>", 1)
+        q += "</p>"
+    f = q + (f'<div class="fix-figures{" fix-figures-single" if single else ""}">{figures}</div>' if figures else "")
     return (f'<article class="fix-card"><h3>{esc(title)}</h3>'
             f'<p><strong>What was wrong.</strong> {esc(wrong)}</p><p><strong>How we know.</strong> {esc(how)}</p>'
-            f'<p><strong>What we did.</strong> {esc(did)}</p>{f}<p class="fix-evidence"><strong>Example.</strong> {esc(example)}</p></article>')
+            f'<p><strong>What we did.</strong> {esc(did)}</p>{f}<p class="fix-evidence"><strong>Example.</strong> {esc(example)}</p>'
+            f'{scope_block(scope) if scope else ""}{knock_block(scope) if scope else ""}</article>')
 
 
-def fix_cards():
+def fix_cards(scope):
+    S = {f["key"]: f for f in scope["fixes"]}
+    figinfo = json.loads(FIGJSON.read_text(encoding="utf-8"))
     c = []
     c.append(card(
         "Task timing was off in some recordings",
@@ -281,7 +333,7 @@ def fix_cards():
         "AB09 at 10° incline: the best shift is 6.85 s, and the belt-speed error drops from 0.67 to 0.07 m/s at that shift, so the recording is left out. AB01 at 5° incline is an exact copy of its 10° incline recording and is also left out.",
         fig("um21-clock.svg", "before", "Before and after, per recording",
             "Shift of the task timing for each of 50 treadmill recordings. Most sit in a narrow band near zero; four sit 1.7 to 7 seconds away and two cannot be checked.",
-            "Shift that best lines up the belt-speed record with belt speed from the markers. Crosses at the bottom cannot be checked."), single=True))
+            "Shift that best lines up the belt-speed record with belt speed from the markers. Crosses at the bottom cannot be checked."), single=True, scope=S["clock"]))
     c.append(card(
         "One recording's pelvis was computed facing backwards",
         "In AB04 level walking the motion-capture software computed the pelvis facing backwards, so its stored tilt has the wrong sign, and so do the thigh and shank angles built on it.",
@@ -290,13 +342,20 @@ def fix_cards():
         "AB04 level walking, right leg: the pelvis tilt is multiplied by +1 there and by −1 in the other 43 recordings.",
         fig("um21-pelvis-before.svg", "before", "Before: as published", "Published pelvis tilt is the mirror image of tilt computed from the pelvis markers.")
         + fig("um21-pelvis-after.svg", "after", "After: sign flipped", "Published pelvis tilt times minus one overlaps the marker tilt.",
-              "Shown with the source sign (forward tilt positive); LocoHub files store pelvis tilt with the opposite sign.")))
+              "Shown with the source sign (forward tilt positive); LocoHub files store pelvis tilt with the opposite sign."), scope=S["pelvis_backwards"]))
     c.append(card(
         "Pelvis tilt direction follows one sign rule",
         "The source reports forward pelvis tilt as positive. LocoHub's rule (counterclockwise is positive) makes forward tilt negative.",
         "We checked the sign of each angle and moment against marker and force-plate evidence.",
         "We multiplied pelvis tilt by −1 in 43 of the 44 recordings (all strides). Hip, knee and ankle angles and the hip, knee and ankle moments keep their published sign.",
-        "AB01 level walking, right leg: pelvis tilt is multiplied by −1; hip, knee and ankle are unchanged."))
+        "AB01 level walking, right leg: pelvis tilt is multiplied by −1; hip, knee and ankle are unchanged.",
+        '<p class="fig-question">Does the rule flip pelvis tilt, and which way is forward?</p>'
+        + local_fig("sign-before.svg", "Before: as the source publishes it (forward tilt is positive)",
+                    "One stride of pelvis tilt as the source publishes it; forward tilt is up.")
+        + local_fig("sign-after.svg", "After: LocoHub's rule (forward tilt is negative)",
+                    "The same stride after multiplying by minus one; forward tilt is down.",
+                    f"One stride drawn at random: {figinfo['sign_example']['who']}. The source sign is the released value times −1, since the rule is an exact −1."),
+        scope=S["sign_rule"]))
     c.append(card(
         "Thigh and shank angles are rebuilt",
         "Earlier rebuild code added pelvis tilt to the hip angle, but the dataset's authors subtract it, so the thigh angle was off by about twice the pelvis tilt. The older thigh and shank columns are not trusted.",
@@ -304,7 +363,7 @@ def fix_cards():
         "We rebuilt thigh and shank from the published pelvis, hip and knee angles (after the sign step) and release them as side-view estimates.",
         "AB08 at 5° incline, right leg: the earlier rebuild was about 38° off in the example stride.",
         fig("um21-thigh-before.svg", "before", "Before: the earlier rebuild", "Pelvis plus hip runs far above the thigh angle from markers for the whole stride.")
-        + fig("um21-thigh-after.svg", "after", "After: the authors' formula", "Hip minus pelvis follows the thigh angle from markers within a few degrees.")))
+        + fig("um21-thigh-after.svg", "after", "After: the authors' formula", "Hip minus pelvis follows the thigh angle from markers within a few degrees."), scope=S["thigh_shank"]))
     c.append(card(
         "Part of one ankle recording was turned 180°",
         "For 5,429 frames of one recording's right ankle (AB07, 10° incline) the software reported the ankle in an equivalent but different form that shifts it by about 180°. The strides inside sat near −160°.",
@@ -313,13 +372,20 @@ def fix_cards():
         "One stride's tenth sample: −159.6° as published becomes 20.4°. Of the 31 strides in the stretch, 20 were turned back, 2 were left out, and 9 were never part of the converted strides, so they were never released.",
         fig("um21-ankle-before.svg", "before", "Before: as published", "Strides inside the stretch sit near minus 160 degrees, far below the strides outside it.")
         + fig("um21-ankle-after.svg", "after", "After: turned back", "Converted strides fall on the strides outside the stretch. The vertical scale differs from the Before figure.",
-              "The vertical scale differs from the Before figure. Both figures are drawn from all 31 strides in the stretch; only 20 of them are in the converted set, 2 were left out for jumps, and 9 were never released.")))
+              "The vertical scale differs from the Before figure. Both figures are drawn from all 31 strides in the stretch; only 20 of them are in the converted set, 2 were left out for jumps, and 9 were never released."), scope=S["ankle_180"]))
     c.append(card(
         "Power sign was unsettled",
         "Power is stored in two ways (8 recordings differ), and its sign could not be settled from the source alone.",
         "We kept the sign for which power equals the published moment times the joint speed, with agreement of at least 0.9 on both legs.",
         "We set the sign that way, and left the power empty where the agreement stays below 0.9.",
-        "AB02 at 10° decline: hip power is multiplied by −1, with agreement −1.00. AB03 at 10° incline: hip power agreement is only 0.80 on one leg and 0.67 on the other, so hip power is left empty there."))
+        "AB02 at 10° decline: hip power is multiplied by −1, with agreement −1.00. AB03 at 10° incline: hip power agreement is only 0.80 on one leg and 0.67 on the other, so hip power is left empty there.",
+        '<p class="fig-question">Does the set sign make power equal moment times joint speed?</p>'
+        + local_fig("power-before.svg", "Before: power as the source stores it",
+                    "One stride of ankle power as the source stores it is the mirror image of joint moment times joint speed.")
+        + local_fig("power-after.svg", "After: sign set by the check",
+                    "The same stride after the sign is set; power lies on joint moment times joint speed.",
+                    f"One stride drawn at random: {figinfo['power_example']['who']}; agreement after the fix {figinfo['power_example']['agreement_after']}. Joint speed is the slope of the ankle angle."),
+        scope=S["power"]))
     return "".join(c)
 
 
@@ -346,12 +412,27 @@ CSS = """
 .um21 .phase-legend { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: .8rem; color: var(--muted); margin: .2rem 0 .6rem; }
 .um21 .phase-legend i { display: inline-block; width: .8rem; height: .25rem; margin-right: .35rem; vertical-align: middle; }
 .um21 .fix-card h3 { margin: 0 0 .35rem; font-size: 1.1rem; }
+.um21 .scope-block { border-top: 1px solid var(--line); margin-top: .9rem; padding-top: .4rem; }
+.um21 .scope-block h4 { margin: .2rem 0 .4rem; font-size: 1rem; }
+.um21 .scope-total { max-width: 72ch; font-weight: 600; margin: .2rem 0; }
+.um21 .scope-table { min-width: 31rem; }
+.um21 .scope-fold > summary { cursor: pointer; font-size: .9rem; padding: .3rem 0; }
+.um21 .fig-question { font-weight: 600; margin: .8rem 0 .2rem; max-width: 72ch; }
+.um21 .ko-list { list-style: none; margin: .3rem 0; padding: 0; max-width: 80ch; }
+.um21 .ko-item { padding: .5rem 0; border-bottom: 1px solid var(--line); font-size: .92rem; }
+.um21 .ko-evidence { display: block; color: var(--muted); font-size: .85rem; margin-top: .15rem; }
+.um21 .ko-direction { max-width: 72ch; font-size: .92rem; background: var(--soft, transparent); }
+.um21 .verdict { display: inline-block; font-size: .78rem; font-weight: 600; padding: .05rem .45rem; border-radius: 3px; border: 1px solid currentColor; margin-right: .3rem; white-space: nowrap; }
+.um21 .v-ok { color: #1f6aa5; } .um21 .v-fixed { color: #1b7a43; } .um21 .v-left { color: #8a5a00; } .um21 .v-nc { color: #a3361a; }
+@media (prefers-color-scheme: dark) { .um21 .v-ok { color: #6db3e8; } .um21 .v-fixed { color: #5cc98a; } .um21 .v-left { color: #e0a93b; } .um21 .v-nc { color: #f08a6e; } }
+@media (max-width: 40rem) { .um21 .scope-table th, .um21 .scope-table td { padding: .35rem .4rem; font-size: .8rem; } }
 .um21 .local-box { border: 1px solid var(--warn-line); background: var(--warn); padding: .8rem 1rem; max-width: 72ch; border-radius: 3px; }
 """
 
 
 def build() -> str:
     manifest, index, excl, held, preview, r01 = load_inputs()
+    scope = json.loads(SCOPE.read_text(encoding="utf-8"))
     n = manifest["counts"]
     recordings = len(index["recordings"])
     subjects = len({r["subject"] for r in index["recordings"]})
@@ -397,8 +478,8 @@ def build() -> str:
       <p class="lead">Treadmill walking from {subjects} participants at level, 5° and 10° incline, and 5° and 10° decline, plus the transitions between them: {recordings} recordings. This is a local review version and is not released. The full version has <strong>{n['full']:,} strides</strong>; the cleaned version has <strong>{n['filtered']:,}</strong>. Every stride has exactly 150 samples from 0 to 100 percent of the stride.</p></section>
 
       <section id="fixed" aria-labelledby="fixed-h"><h2 id="fixed-h">What we fixed (original vs fixed)</h2>
-      <p class="note">One card per fix. Figures come from the fixes page and show the published data and the fixed data side by side.</p>
-      {fix_cards()}</section>
+      <p class="note">One card per fix. Each card says what was wrong, how much of the data it touched, and what else it could affect. Before-and-after figures show the published data and the fixed data side by side. Example strides are drawn at random, not hand-picked.</p>
+      {fix_cards(scope)}</section>
 
       <section id="left-out" aria-labelledby="left-h"><h2 id="left-h">What we left out and why</h2>
       {exclusion_table(manifest, excl, held, r01)}</section>
