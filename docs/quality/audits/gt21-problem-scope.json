@@ -1,0 +1,3272 @@
+{
+ "task_id": "GT21-problems-page",
+ "part": "problem scope and knock-on analysis for the Georgia Tech 2021 page",
+ "scientific_approval": false,
+ "builder": "contributor_tools/build_gt21_problem_scope.py",
+ "probe": "docs/quality/audits/gt21-problem-scope-probe.json (contributor_tools/probe_gt21_problem_scope.py)",
+ "seed": 20261118,
+ "denominators": {
+  "publisher_participants": 22,
+  "local_participants": 16,
+  "missing_participants": 6,
+  "local_recordings": 2301,
+  "local_recordings_by_task": {
+   "levelground": 506,
+   "ramp": 1015,
+   "stair": 665,
+   "treadmill": 115
+  },
+  "acquired_recordings_of_six": 846,
+  "acquired_by_task": {
+   "levelground": 174,
+   "ramp": 379,
+   "stair": 251,
+   "treadmill": 42
+  },
+  "recordings_local_plus_acquired": 3147,
+  "source_steps_local": 78604,
+  "source_samples_local_gait_tables": 21363858,
+  "rebuilt_recordings": 102,
+  "rebuilt_steps": 1299,
+  "rebuilt_participants": [
+   "AB06"
+  ],
+  "rebuilt_by_task": {
+   "levelground": 30,
+   "ramp": 63,
+   "treadmill": 8,
+   "stair": 1
+  },
+  "note": "Scope is measured against the source dataset: 22 participants in the original study, of which 16 are here (2,301 recordings) and six are not converted (846 recordings in the authors' 2024 copy). A step is one heel strike to the next heel strike of one leg; the 16 local participants have 78,604 of them in the source gait tables (21,363,858 samples). Only 102 recordings (1,299 steps), all from AB06, have been rebuilt, so measured counts below come from small checked sets and say so. Sample counts are given only where an audit has them."
+ },
+ "verdict_words": [
+  "Also wrong, fixed in a pilot",
+  "Also wrong, not yet fixed",
+  "Checked, not affected",
+  "Left out",
+  "Not checked"
+ ],
+ "status_words": [
+  "Fixed in a checked pilot",
+  "Decided by José, fix not yet run",
+  "Open",
+  "Documented only, kept as published"
+ ],
+ "problems": [
+  {
+   "key": "missing_participants",
+   "card": "Six of the 22 participants are not in the local data",
+   "status": {
+    "key": "decided",
+    "label": "Decided by José, fix not yet run",
+    "detail": "José chose the authors' 2024 copy as the source for the six. All six are downloaded and checked against the folder listing. None is unpacked or converted yet.",
+    "needs": ""
+   },
+   "wrong": "The original study has 22 participants. The local source folder holds 16 of them (2,301 recordings). AB12, AB15, AB17, AB19, AB23 and AB28 were never converted. For AB17, the one participant whose 2021 published archive we opened, that archive has no static-pose files and no joint angles relative to the static pose, which our conversion code reads.",
+   "how": "The publisher lists 22 archives, rechecked on 31 October 2026 with unchanged size and checksum. The local folder holds 16 participants and no extra ones. The other five 2021 archives were not opened.",
+   "example": "AB17, compared with its 2021 archive: 1,464 of 1,466 files are identical in size and checksum, 136 exist only in the 2024 copy (133 relative joint-angle files and 3 static-pose files), and 2 ramp joint-moment files differ.",
+   "total_line": "6 of 22 participants (27.3%); 846 of 3,147 recordings (26.9%), counting the 2,301 local recordings plus the 846 in the 2024 copy.",
+   "total_numbers": {
+    "participants_missing": 6,
+    "participants_total": 22,
+    "recordings_missing": 846,
+    "recordings_total": 3147
+   },
+   "denominator_text": "Recordings are counted from the file listings of the 2024 copy (one recording per conditions file). Samples are not known: the six have not been opened.",
+   "table": {
+    "columns": [
+     "Participant",
+     "Recordings",
+     "Level / ramp / stair / treadmill",
+     "Files",
+     "Size",
+     "Where it stands"
+    ],
+    "rows": [
+     [
+      "AB12",
+      "147",
+      "34 / 63 / 43 / 7",
+      "1,770",
+      "1.17 GB",
+      "Downloaded and checked, not unpacked or converted"
+     ],
+     [
+      "AB15",
+      "136",
+      "25 / 63 / 41 / 7",
+      "1,638",
+      "1.10 GB",
+      "Downloaded and checked, not unpacked or converted"
+     ],
+     [
+      "AB17",
+      "133",
+      "22 / 61 / 43 / 7",
+      "1,602",
+      "1.05 GB",
+      "Downloaded and checked, not unpacked or converted"
+     ],
+     [
+      "AB19",
+      "143",
+      "30 / 65 / 41 / 7",
+      "1,722",
+      "1.26 GB",
+      "Downloaded and checked, not unpacked or converted"
+     ],
+     [
+      "AB23",
+      "145",
+      "33 / 63 / 42 / 7",
+      "1,746",
+      "1.19 GB",
+      "Downloaded and checked, not unpacked or converted"
+     ],
+     [
+      "AB28",
+      "142",
+      "30 / 64 / 41 / 7",
+      "1,711",
+      "1.24 GB",
+      "Downloaded and checked, not unpacked or converted"
+     ]
+    ],
+    "fold": false
+   },
+   "grid": {
+    "kind": "affected",
+    "rows": [
+     "AB06",
+     "AB07",
+     "AB08",
+     "AB09",
+     "AB10",
+     "AB11",
+     "AB12",
+     "AB13",
+     "AB14",
+     "AB15",
+     "AB16",
+     "AB17",
+     "AB18",
+     "AB19",
+     "AB20",
+     "AB21",
+     "AB23",
+     "AB24",
+     "AB25",
+     "AB27",
+     "AB28",
+     "AB30"
+    ],
+    "cols": [
+     "levelground",
+     "ramp",
+     "stair",
+     "treadmill"
+    ],
+    "cols_plain": [
+     "Level walking",
+     "Ramps",
+     "Stairs",
+     "Treadmill"
+    ],
+    "cells": {
+     "AB06/levelground": 0.0,
+     "AB06/ramp": 0.0,
+     "AB06/stair": 0.0,
+     "AB06/treadmill": 0.0,
+     "AB07/levelground": 0.0,
+     "AB07/ramp": 0.0,
+     "AB07/stair": 0.0,
+     "AB07/treadmill": 0.0,
+     "AB08/levelground": 0.0,
+     "AB08/ramp": 0.0,
+     "AB08/stair": 0.0,
+     "AB08/treadmill": 0.0,
+     "AB09/levelground": 0.0,
+     "AB09/ramp": 0.0,
+     "AB09/stair": 0.0,
+     "AB09/treadmill": 0.0,
+     "AB10/levelground": 0.0,
+     "AB10/ramp": 0.0,
+     "AB10/stair": 0.0,
+     "AB10/treadmill": 0.0,
+     "AB11/levelground": 0.0,
+     "AB11/ramp": 0.0,
+     "AB11/stair": 0.0,
+     "AB11/treadmill": 0.0,
+     "AB12/levelground": 100.0,
+     "AB12/ramp": 100.0,
+     "AB12/stair": 100.0,
+     "AB12/treadmill": 100.0,
+     "AB13/levelground": 0.0,
+     "AB13/ramp": 0.0,
+     "AB13/stair": 0.0,
+     "AB13/treadmill": 0.0,
+     "AB14/levelground": 0.0,
+     "AB14/ramp": 0.0,
+     "AB14/stair": 0.0,
+     "AB14/treadmill": 0.0,
+     "AB15/levelground": 100.0,
+     "AB15/ramp": 100.0,
+     "AB15/stair": 100.0,
+     "AB15/treadmill": 100.0,
+     "AB16/levelground": 0.0,
+     "AB16/ramp": 0.0,
+     "AB16/stair": 0.0,
+     "AB16/treadmill": 0.0,
+     "AB17/levelground": 100.0,
+     "AB17/ramp": 100.0,
+     "AB17/stair": 100.0,
+     "AB17/treadmill": 100.0,
+     "AB18/levelground": 0.0,
+     "AB18/ramp": 0.0,
+     "AB18/stair": 0.0,
+     "AB18/treadmill": 0.0,
+     "AB19/levelground": 100.0,
+     "AB19/ramp": 100.0,
+     "AB19/stair": 100.0,
+     "AB19/treadmill": 100.0,
+     "AB20/levelground": 0.0,
+     "AB20/ramp": 0.0,
+     "AB20/stair": 0.0,
+     "AB20/treadmill": 0.0,
+     "AB21/levelground": 0.0,
+     "AB21/ramp": 0.0,
+     "AB21/stair": 0.0,
+     "AB21/treadmill": 0.0,
+     "AB23/levelground": 100.0,
+     "AB23/ramp": 100.0,
+     "AB23/stair": 100.0,
+     "AB23/treadmill": 100.0,
+     "AB24/levelground": 0.0,
+     "AB24/ramp": 0.0,
+     "AB24/stair": 0.0,
+     "AB24/treadmill": 0.0,
+     "AB25/levelground": 0.0,
+     "AB25/ramp": 0.0,
+     "AB25/stair": 0.0,
+     "AB25/treadmill": 0.0,
+     "AB27/levelground": 0.0,
+     "AB27/ramp": 0.0,
+     "AB27/stair": 0.0,
+     "AB27/treadmill": 0.0,
+     "AB28/levelground": 100.0,
+     "AB28/ramp": 100.0,
+     "AB28/stair": 100.0,
+     "AB28/treadmill": 100.0,
+     "AB30/levelground": 0.0,
+     "AB30/ramp": 0.0,
+     "AB30/stair": 0.0,
+     "AB30/treadmill": 0.0
+    },
+    "note": ""
+   },
+   "grid_caption": "Shaded rows are the six participants that are not converted yet.",
+   "figure_question": "Which participants are missing, and for which tasks?",
+   "direction": "Direction: missing people change who the data describes. They do not change the values of the 16 people we have.",
+   "knock_on": [
+    {
+     "signal": "The 16 participants already here",
+     "verdict": "Checked, not affected",
+     "line": "The six were downloaded into a separate folder; the local source folder was not written.",
+     "evidence": "Local folder still holds exactly 16 participants and 2,301 recordings; no unexpected participant.",
+     "ref": "gt21-s01-cohort-crosswalk counts"
+    },
+    {
+     "signal": "Any result that pools the whole cohort",
+     "verdict": "Left out",
+     "line": "Until the six are converted, pooled results describe 16 of 22 people.",
+     "evidence": "846 recordings (26.9%) are not in the converted set.",
+     "ref": "gt21-s02-2024-copy participants"
+    },
+    {
+     "signal": "Joint-angle zero used for the six",
+     "verdict": "Not checked",
+     "line": "Their folders list the same relative joint-angle files as the 16, but no file of the six has been read.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Body mass of the six",
+     "verdict": "Not checked",
+     "line": "The subject sheet has a Weight number for all 22, but its unit is unresolved (see the body-mass card).",
+     "evidence": "",
+     "ref": ""
+    }
+   ],
+   "extra_figures": []
+  },
+  {
+   "key": "file_version",
+   "card": "The local files are the authors' 2024 copy, not the checksummed 2021 release",
+   "status": {
+    "key": "decided",
+    "label": "Decided by José, fix not yet run",
+    "detail": "José chose the 2024 copy. The file-by-file comparison with the 2021 release has run for AB17 only.",
+    "needs": ""
+   },
+   "wrong": "The 16 local participants, and the six now downloaded, come from the authors' 2024 copy. Only the 2021 release has publisher checksums. The listings show that every ramp joint-moment file was rewritten in September 2021, after the first release, and that relative joint-angle files were added in April 2024.",
+   "how": "We compared AB17's 2021 archive with the 2024 copy by size and checksum. Modification times in the listings are labels, not proof, and the 2024 folder is a live working copy.",
+   "example": "AB17 ramp recording 1 (right leg): the joint-moment file is 322,984 bytes in 2021 and 324,295 bytes in 2024. Ramp recording 6 (right leg, trial 4): 284,406 against 299,554 bytes. What changed inside is not decoded.",
+   "total_line": "2 of 61 AB17 ramp joint-moment files (3.3%) differ between 2021 and 2024. The other 1,333 ramp recordings of the 22 participants have not been compared.",
+   "total_numbers": {
+    "files_differ": 2,
+    "ramp_files_compared": 61,
+    "ramp_recordings_all_22": 1394,
+    "ramp_not_compared": 1333,
+    "identical_files_ab17": 1464,
+    "files_only_in_2024": 136
+   },
+   "denominator_text": "Counted over AB17's 1,602 files in the 2024 copy against 1,466 files in its 2021 archive. Percentages for the other participants are unknown, not zero. Samples are not counted.",
+   "table": {
+    "columns": [
+     "Group of AB17 files",
+     "Files",
+     "Result"
+    ],
+    "rows": [
+     [
+      "Same size and checksum in 2021 and 2024",
+      "1,464",
+      "Identical"
+     ],
+     [
+      "Only in the 2024 copy",
+      "136",
+      "133 relative joint-angle files, 3 static-pose files"
+     ],
+     [
+      "Ramp joint-moment files that differ",
+      "2",
+      "Rewritten after the 2021 release"
+     ],
+     [
+      "Ramp joint-moment files that match",
+      "59",
+      "Identical, although dated September 2021"
+     ]
+    ],
+    "fold": false
+   },
+   "grid": {
+    "kind": "affected",
+    "rows": [
+     "AB06",
+     "AB07",
+     "AB08",
+     "AB09",
+     "AB10",
+     "AB11",
+     "AB12",
+     "AB13",
+     "AB14",
+     "AB15",
+     "AB16",
+     "AB17",
+     "AB18",
+     "AB19",
+     "AB20",
+     "AB21",
+     "AB23",
+     "AB24",
+     "AB25",
+     "AB27",
+     "AB28",
+     "AB30"
+    ],
+    "cols": [
+     "levelground",
+     "ramp",
+     "stair",
+     "treadmill"
+    ],
+    "cols_plain": [
+     "Level walking",
+     "Ramps",
+     "Stairs",
+     "Treadmill"
+    ],
+    "cells": {
+     "AB06/levelground": "nc",
+     "AB06/ramp": "nc",
+     "AB06/stair": "nc",
+     "AB06/treadmill": "nc",
+     "AB07/levelground": "nc",
+     "AB07/ramp": "nc",
+     "AB07/stair": "nc",
+     "AB07/treadmill": "nc",
+     "AB08/levelground": "nc",
+     "AB08/ramp": "nc",
+     "AB08/stair": "nc",
+     "AB08/treadmill": "nc",
+     "AB09/levelground": "nc",
+     "AB09/ramp": "nc",
+     "AB09/stair": "nc",
+     "AB09/treadmill": "nc",
+     "AB10/levelground": "nc",
+     "AB10/ramp": "nc",
+     "AB10/stair": "nc",
+     "AB10/treadmill": "nc",
+     "AB11/levelground": "nc",
+     "AB11/ramp": "nc",
+     "AB11/stair": "nc",
+     "AB11/treadmill": "nc",
+     "AB12/levelground": "nc",
+     "AB12/ramp": "nc",
+     "AB12/stair": "nc",
+     "AB12/treadmill": "nc",
+     "AB13/levelground": "nc",
+     "AB13/ramp": "nc",
+     "AB13/stair": "nc",
+     "AB13/treadmill": "nc",
+     "AB14/levelground": "nc",
+     "AB14/ramp": "nc",
+     "AB14/stair": "nc",
+     "AB14/treadmill": "nc",
+     "AB15/levelground": "nc",
+     "AB15/ramp": "nc",
+     "AB15/stair": "nc",
+     "AB15/treadmill": "nc",
+     "AB16/levelground": "nc",
+     "AB16/ramp": "nc",
+     "AB16/stair": "nc",
+     "AB16/treadmill": "nc",
+     "AB17/levelground": 0.0,
+     "AB17/ramp": 3.3,
+     "AB17/stair": 0.0,
+     "AB17/treadmill": 0.0,
+     "AB18/levelground": "nc",
+     "AB18/ramp": "nc",
+     "AB18/stair": "nc",
+     "AB18/treadmill": "nc",
+     "AB19/levelground": "nc",
+     "AB19/ramp": "nc",
+     "AB19/stair": "nc",
+     "AB19/treadmill": "nc",
+     "AB20/levelground": "nc",
+     "AB20/ramp": "nc",
+     "AB20/stair": "nc",
+     "AB20/treadmill": "nc",
+     "AB21/levelground": "nc",
+     "AB21/ramp": "nc",
+     "AB21/stair": "nc",
+     "AB21/treadmill": "nc",
+     "AB23/levelground": "nc",
+     "AB23/ramp": "nc",
+     "AB23/stair": "nc",
+     "AB23/treadmill": "nc",
+     "AB24/levelground": "nc",
+     "AB24/ramp": "nc",
+     "AB24/stair": "nc",
+     "AB24/treadmill": "nc",
+     "AB25/levelground": "nc",
+     "AB25/ramp": "nc",
+     "AB25/stair": "nc",
+     "AB25/treadmill": "nc",
+     "AB27/levelground": "nc",
+     "AB27/ramp": "nc",
+     "AB27/stair": "nc",
+     "AB27/treadmill": "nc",
+     "AB28/levelground": "nc",
+     "AB28/ramp": "nc",
+     "AB28/stair": "nc",
+     "AB28/treadmill": "nc",
+     "AB30/levelground": "nc",
+     "AB30/ramp": "nc",
+     "AB30/stair": "nc",
+     "AB30/treadmill": "nc"
+    },
+    "note": ""
+   },
+   "grid_caption": "Only AB17 was compared. Every other cell is not checked, which is different from not affected.",
+   "figure_question": "Which participants have had their files compared with the 2021 release?",
+   "direction": "Direction: a changed file only affects the quantity stored in it. Ramp joint moments are the exposed quantity; angles, forces and marker files were identical in AB17.",
+   "knock_on": [
+    {
+     "signal": "Ramp joint moments and powers",
+     "verdict": "Not checked",
+     "line": "Two AB17 files changed; whether the change matters is unknown for AB17 and for every other participant.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Joint angles, forces and markers of AB17",
+     "verdict": "Checked, not affected",
+     "line": "Every shared file except the two ramp moment files has the same size and checksum as in 2021.",
+     "evidence": "1,464 of 1,466 shared files identical; 0 differ in content at the same size.",
+     "ref": "GT21-S02 crc_comparison"
+    },
+    {
+     "signal": "Level, stair and treadmill moments of AB17",
+     "verdict": "Checked, not affected",
+     "line": "Same size and checksum as in 2021.",
+     "evidence": "All level, stair and treadmill joint-moment files of AB17 match.",
+     "ref": "GT21-S02 crc_comparison"
+    },
+    {
+     "signal": "The other 15 local participants",
+     "verdict": "Not checked",
+     "line": "No 2021 archive is held for them, so no comparison is possible without another download.",
+     "evidence": "",
+     "ref": ""
+    }
+   ],
+   "extra_figures": []
+  },
+  {
+   "key": "plate_and_sign",
+   "card": "Force plates and force signs were picked from force and ankle-moment waveforms",
+   "status": {
+    "key": "fixed_pilot",
+    "label": "Fixed in a checked pilot",
+    "detail": "New rules ran in small trial runs (a pilot) and agree with the source. The full rebuild has not adopted them.",
+    "needs": ""
+   },
+   "wrong": "For overground walking the old conversion code decided which plate belonged to which foot with early-stance and late-swing force thresholds, and it chose the sign of forward force and centre of pressure by whichever matched the ankle moment curve. That can put one foot's force on the other foot or flip a sign without the data saying so.",
+   "how": "The code review found both rules. Plate positions and pelvis markers can answer the same questions without the moment curve. Treadmill plates are named by side, and the one treadmill pilot recording shows one sign matching the measured plate data to rounding error.",
+   "did": "",
+   "example": "One of 24 legs drawn at random from the 228 legs of the treadmill pilot recording (seed 20261118): a left leg where assuming forward force is positive is off by up to 0.13 body weights and assuming it is negative is off by only 5e-15.",
+   "total_line": "In the 36 recordings compared before and after (30 overground, 6 treadmill, all AB06; 128,400 rows) the new rules changed 484,957 force values. None of the other columns changed.",
+   "total_numbers": {
+    "recordings_compared": 36,
+    "rows": 128400,
+    "values_changed": 484957,
+    "overground_missing_to_measured": 46503,
+    "treadmill_measured_to_missing": 271392,
+    "treadmill_cycles_in_pilot": 114,
+    "pilot_rows": 17100
+   },
+   "denominator_text": "Of the 2,301 local recordings, 36 have been compared before and after, all from AB06, so 1.6% of recordings. Percentages are not extrapolated. The old rule applied to every recording with force plates. Overground values changed from missing to measured; treadmill values changed from measured to missing, mostly because centre of pressure is now left missing when the foot carries under 0.2 body weight.",
+   "table": {
+    "columns": [
+     "Task",
+     "Recordings compared",
+     "Rows",
+     "Force values changed",
+     "Missing to measured",
+     "Measured to missing"
+    ],
+    "rows": [
+     [
+      "Level walking (AB06)",
+      "30",
+      "20,550",
+      "46,503",
+      "46,503",
+      "0"
+     ],
+     [
+      "Treadmill (AB06)",
+      "6",
+      "107,850",
+      "438,454",
+      "0",
+      "271,392"
+     ],
+     [
+      "Ramps and stairs",
+      "1 and 1 (pilot only)",
+      "300 and 150",
+      "not measured",
+      "not measured",
+      "not measured"
+     ]
+    ],
+    "fold": false
+   },
+   "grid": {
+    "kind": "checked",
+    "rows": [
+     "AB06",
+     "AB07",
+     "AB08",
+     "AB09",
+     "AB10",
+     "AB11",
+     "AB13",
+     "AB14",
+     "AB16",
+     "AB18",
+     "AB20",
+     "AB21",
+     "AB24",
+     "AB25",
+     "AB27",
+     "AB30",
+     "SIX"
+    ],
+    "cols": [
+     "levelground",
+     "ramp",
+     "stair",
+     "treadmill"
+    ],
+    "cols_plain": [
+     "Level walking",
+     "Ramps",
+     "Stairs",
+     "Treadmill"
+    ],
+    "cells": {
+     "AB06/levelground": 100.0,
+     "AB06/ramp": 1.6,
+     "AB06/stair": 2.4,
+     "AB06/treadmill": 75.0,
+     "AB07/levelground": 0.0,
+     "AB07/ramp": 0.0,
+     "AB07/stair": 0.0,
+     "AB07/treadmill": 0.0,
+     "AB08/levelground": 0.0,
+     "AB08/ramp": 0.0,
+     "AB08/stair": 0.0,
+     "AB08/treadmill": 0.0,
+     "AB09/levelground": 0.0,
+     "AB09/ramp": 0.0,
+     "AB09/stair": 0.0,
+     "AB09/treadmill": 0.0,
+     "AB10/levelground": 0.0,
+     "AB10/ramp": 0.0,
+     "AB10/stair": 0.0,
+     "AB10/treadmill": 0.0,
+     "AB11/levelground": 0.0,
+     "AB11/ramp": 0.0,
+     "AB11/stair": 0.0,
+     "AB11/treadmill": 0.0,
+     "AB13/levelground": 0.0,
+     "AB13/ramp": 0.0,
+     "AB13/stair": 0.0,
+     "AB13/treadmill": 0.0,
+     "AB14/levelground": 0.0,
+     "AB14/ramp": 0.0,
+     "AB14/stair": 0.0,
+     "AB14/treadmill": 0.0,
+     "AB16/levelground": 0.0,
+     "AB16/ramp": 0.0,
+     "AB16/stair": 0.0,
+     "AB16/treadmill": 0.0,
+     "AB18/levelground": 0.0,
+     "AB18/ramp": 0.0,
+     "AB18/stair": 0.0,
+     "AB18/treadmill": 0.0,
+     "AB20/levelground": 0.0,
+     "AB20/ramp": 0.0,
+     "AB20/stair": 0.0,
+     "AB20/treadmill": 0.0,
+     "AB21/levelground": 0.0,
+     "AB21/ramp": 0.0,
+     "AB21/stair": 0.0,
+     "AB21/treadmill": 0.0,
+     "AB24/levelground": 0.0,
+     "AB24/ramp": 0.0,
+     "AB24/stair": 0.0,
+     "AB24/treadmill": 0.0,
+     "AB25/levelground": 0.0,
+     "AB25/ramp": 0.0,
+     "AB25/stair": 0.0,
+     "AB25/treadmill": 0.0,
+     "AB27/levelground": 0.0,
+     "AB27/ramp": 0.0,
+     "AB27/stair": 0.0,
+     "AB27/treadmill": 0.0,
+     "AB30/levelground": 0.0,
+     "AB30/ramp": 0.0,
+     "AB30/stair": 0.0,
+     "AB30/treadmill": 0.0,
+     "SIX/levelground": "pending",
+     "SIX/ramp": "pending",
+     "SIX/stair": "pending",
+     "SIX/treadmill": "pending"
+    },
+    "note": ""
+   },
+   "grid_caption": "Share of each group's recordings that the new rules were compared on. Zero means not looked at.",
+   "figure_question": "Which participants and tasks have been compared before and after?",
+   "direction": "Direction: a wrong plate or sign changes force and centre of pressure. Angles and the authors' joint moments are separate source columns.",
+   "knock_on": [
+    {
+     "signal": "Forces and centre of pressure of the 36 compared recordings",
+     "verdict": "Also wrong, fixed in a pilot",
+     "line": "Every changed value is a force or centre-of-pressure value.",
+     "evidence": "484,957 force values changed; centre of pressure agrees with the measured plate position to 1e-14 m at contact.",
+     "ref": "gt21-force-fix-preservation; gt21-force-fix"
+    },
+    {
+     "signal": "Joint angles, moments, powers and timing in those recordings",
+     "verdict": "Checked, not affected",
+     "line": "They are copied from the authors' files, not computed from our force columns.",
+     "evidence": "All non-force columns identical in 36 recordings (128,400 rows) before and after.",
+     "ref": "gt21-force-fix-preservation non_force_columns_identical"
+    },
+    {
+     "signal": "Ramp and stair forces",
+     "verdict": "Not checked",
+     "line": "Only 2 ramp steps and 1 stair step were rebuilt with the new rules.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Treadmill and overground recordings other than the 36",
+     "verdict": "Not checked",
+     "line": "Needs the full rebuild, which is a guarded job (a supervised run with memory limits).",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "The plate rule itself",
+     "verdict": "Not checked",
+     "line": "The rule follows the publisher's geometry; no independent contact label exists to test it.",
+     "evidence": "",
+     "ref": ""
+    }
+   ],
+   "extra_figures": [
+    {
+     "file": "force-sign.svg",
+     "question": "Which forward-force sign matches the measured plate data?",
+     "alt": "For 24 randomly drawn legs, the error of assuming forward force is positive is about 0.1 body weight, while assuming negative is off by about one part in a trillion.",
+     "cap": "24 legs drawn at random (seed 20261118) from the 228 legs of one treadmill pilot recording. Each dot is one leg; lower is a better match."
+    }
+   ],
+   "figure_data": {
+    "force_sign_draw": [
+     {
+      "index": 0,
+      "leg": "left",
+      "error_sign_a": 0.1302709163059825,
+      "error_sign_b": 5.037636974236648e-15
+     },
+     {
+      "index": 1,
+      "leg": "right",
+      "error_sign_a": 0.1399608112269185,
+      "error_sign_b": 3.608224830031759e-16
+     },
+     {
+      "index": 4,
+      "leg": "left",
+      "error_sign_a": 0.14485526663782267,
+      "error_sign_b": 1.3877787807814457e-17
+     },
+     {
+      "index": 11,
+      "leg": "right",
+      "error_sign_a": 0.10448256079510522,
+      "error_sign_b": 5.530298441414061e-15
+     },
+     {
+      "index": 13,
+      "leg": "right",
+      "error_sign_a": 0.12746724146319569,
+      "error_sign_b": 5.812191006260292e-15
+     },
+     {
+      "index": 19,
+      "leg": "right",
+      "error_sign_a": 0.1259078188578781,
+      "error_sign_b": 4.045375145977914e-15
+     },
+     {
+      "index": 42,
+      "leg": "right",
+      "error_sign_a": 0.25104184484432646,
+      "error_sign_b": 2.7755575615628914e-17
+     },
+     {
+      "index": 52,
+      "leg": "right",
+      "error_sign_a": 0.2984711201502357,
+      "error_sign_b": 2.7755575615628914e-17
+     },
+     {
+      "index": 55,
+      "leg": "left",
+      "error_sign_a": 0.31385649906590174,
+      "error_sign_b": 4.9008919752319136e-15
+     },
+     {
+      "index": 57,
+      "leg": "left",
+      "error_sign_a": 0.31271220440009717,
+      "error_sign_b": 2.7755575615628914e-17
+     },
+     {
+      "index": 58,
+      "leg": "right",
+      "error_sign_a": 0.31604548609686883,
+      "error_sign_b": 2.7755575615628914e-17
+     },
+     {
+      "index": 80,
+      "leg": "right",
+      "error_sign_a": 0.31672521259313297,
+      "error_sign_b": 2.7755575615628914e-17
+     },
+     {
+      "index": 87,
+      "leg": "left",
+      "error_sign_a": 0.29120997691619765,
+      "error_sign_b": 2.7755575615628914e-17
+     },
+     {
+      "index": 94,
+      "leg": "right",
+      "error_sign_a": 0.4892590871947785,
+      "error_sign_b": 5.551115123125783e-17
+     },
+     {
+      "index": 97,
+      "leg": "left",
+      "error_sign_a": 0.4645419162307183,
+      "error_sign_b": 2.7755575615628914e-17
+     },
+     {
+      "index": 108,
+      "leg": "right",
+      "error_sign_a": 0.4947517844450786,
+      "error_sign_b": 2.7755575615628914e-17
+     },
+     {
+      "index": 126,
+      "leg": "right",
+      "error_sign_a": 0.43690345997604896,
+      "error_sign_b": 2.7755575615628914e-17
+     },
+     {
+      "index": 139,
+      "leg": "left",
+      "error_sign_a": 0.4509565312941161,
+      "error_sign_b": 2.7755575615628914e-17
+     },
+     {
+      "index": 167,
+      "leg": "left",
+      "error_sign_a": 0.679976930518374,
+      "error_sign_b": 5.551115123125783e-17
+     },
+     {
+      "index": 173,
+      "leg": "left",
+      "error_sign_a": 0.6871874434964966,
+      "error_sign_b": 5.551115123125783e-17
+     },
+     {
+      "index": 179,
+      "leg": "left",
+      "error_sign_a": 0.6298523735740456,
+      "error_sign_b": 5.551115123125783e-17
+     },
+     {
+      "index": 180,
+      "leg": "right",
+      "error_sign_a": 0.5874802864939375,
+      "error_sign_b": 5.551115123125783e-17
+     },
+     {
+      "index": 192,
+      "leg": "right",
+      "error_sign_a": 0.5714074195159632,
+      "error_sign_b": 1.3125611708630913e-13
+     },
+     {
+      "index": 212,
+      "leg": "right",
+      "error_sign_a": 0.6141025818520431,
+      "error_sign_b": 5.551115123125783e-17
+     }
+    ],
+    "seed": 20261118,
+    "pool": 228
+   }
+  },
+  {
+   "key": "sideways",
+   "card": "Sideways force and centre of pressure point opposite ways for the two feet",
+   "status": {
+    "key": "decided",
+    "label": "Decided by José, fix not yet run",
+    "detail": "José chose option B: positive outward for each leg, so the left leg is mirrored. The conversion code has not been changed or run for this.",
+    "needs": ""
+   },
+   "wrong": "The sideways columns were exported on the lab's fixed X axis. That axis points to the person's right when they face the lab's negative Z direction. So it points outward for the right foot and inward for the left foot, and it flips when they walk the other way. The name 'lateral' therefore does not describe the numbers.",
+   "how": "We read the force plate table of three treadmill recordings drawn at random (seed 20261118), one at a time. On the right plate the mean sideways force over stance is -32.1, -23.1 and -27.4 N; on the left plate it is +31.8, +40.9 and +23.4 N. Same axis, opposite signs.",
+   "example": "AB07, treadmill trial 2: 123 right-foot and 123 left-foot stance phases averaged. The right foot pushes toward negative X, the left toward positive X.",
+   "total_line": "All 2,301 local recordings (100%), in the two sideways force columns and the two sideways centre-of-pressure columns, wherever a plate gives a value.",
+   "total_numbers": {
+    "recordings_affected": 2301,
+    "recordings_total": 2301,
+    "walking_samples_faced_negative_z": 72143,
+    "walking_samples_faced_positive_z": 4486,
+    "walking_samples_along_x": 280,
+    "walking_samples_total": 76909,
+    "treadmill_mean_right_N": [
+     -32.1369450240268,
+     -23.129474927938322,
+     -27.41996748778785
+    ],
+    "treadmill_mean_left_N": [
+     31.81511021472246,
+     40.92447442998463,
+     23.388704374632734
+    ]
+   },
+   "denominator_text": "Recordings: 2,301 local ones; the 846 not yet converted would be affected the same way. Steps and samples are not counted because the fix is not run. In 8 recordings checked for walking direction, 72,143 of 76,909 on-plate samples (93.8%) face -Z, 4,486 (5.8%) face +Z and 280 (0.4%) walk along X.",
+   "table": {
+    "columns": [
+     "Treadmill recording (drawn at random)",
+     "Right plate mean (N)",
+     "Left plate mean (N)"
+    ],
+    "rows": [
+     [
+      "AB07, treadmill trial 2",
+      "-32.1",
+      "+31.8"
+     ],
+     [
+      "AB06, treadmill trial 6",
+      "-23.1",
+      "+40.9"
+     ],
+     [
+      "AB25, treadmill trial 3",
+      "-27.4",
+      "+23.4"
+     ]
+    ],
+    "fold": false
+   },
+   "grid": {
+    "kind": "affected",
+    "rows": [
+     "AB06",
+     "AB07",
+     "AB08",
+     "AB09",
+     "AB10",
+     "AB11",
+     "AB13",
+     "AB14",
+     "AB16",
+     "AB18",
+     "AB20",
+     "AB21",
+     "AB24",
+     "AB25",
+     "AB27",
+     "AB30",
+     "SIX"
+    ],
+    "cols": [
+     "levelground",
+     "ramp",
+     "stair",
+     "treadmill"
+    ],
+    "cols_plain": [
+     "Level walking",
+     "Ramps",
+     "Stairs",
+     "Treadmill"
+    ],
+    "cells": {
+     "AB06/levelground": 100.0,
+     "AB06/ramp": 100.0,
+     "AB06/stair": 100.0,
+     "AB06/treadmill": 100.0,
+     "AB07/levelground": 100.0,
+     "AB07/ramp": 100.0,
+     "AB07/stair": 100.0,
+     "AB07/treadmill": 100.0,
+     "AB08/levelground": 100.0,
+     "AB08/ramp": 100.0,
+     "AB08/stair": 100.0,
+     "AB08/treadmill": 100.0,
+     "AB09/levelground": 100.0,
+     "AB09/ramp": 100.0,
+     "AB09/stair": 100.0,
+     "AB09/treadmill": 100.0,
+     "AB10/levelground": 100.0,
+     "AB10/ramp": 100.0,
+     "AB10/stair": 100.0,
+     "AB10/treadmill": 100.0,
+     "AB11/levelground": 100.0,
+     "AB11/ramp": 100.0,
+     "AB11/stair": 100.0,
+     "AB11/treadmill": 100.0,
+     "AB13/levelground": 100.0,
+     "AB13/ramp": 100.0,
+     "AB13/stair": 100.0,
+     "AB13/treadmill": 100.0,
+     "AB14/levelground": 100.0,
+     "AB14/ramp": 100.0,
+     "AB14/stair": 100.0,
+     "AB14/treadmill": 100.0,
+     "AB16/levelground": 100.0,
+     "AB16/ramp": 100.0,
+     "AB16/stair": 100.0,
+     "AB16/treadmill": 100.0,
+     "AB18/levelground": 100.0,
+     "AB18/ramp": 100.0,
+     "AB18/stair": 100.0,
+     "AB18/treadmill": 100.0,
+     "AB20/levelground": 100.0,
+     "AB20/ramp": 100.0,
+     "AB20/stair": 100.0,
+     "AB20/treadmill": 100.0,
+     "AB21/levelground": 100.0,
+     "AB21/ramp": 100.0,
+     "AB21/stair": 100.0,
+     "AB21/treadmill": 100.0,
+     "AB24/levelground": 100.0,
+     "AB24/ramp": 100.0,
+     "AB24/stair": 100.0,
+     "AB24/treadmill": 100.0,
+     "AB25/levelground": 100.0,
+     "AB25/ramp": 100.0,
+     "AB25/stair": 100.0,
+     "AB25/treadmill": 100.0,
+     "AB27/levelground": 100.0,
+     "AB27/ramp": 100.0,
+     "AB27/stair": 100.0,
+     "AB27/treadmill": 100.0,
+     "AB30/levelground": 100.0,
+     "AB30/ramp": 100.0,
+     "AB30/stair": 100.0,
+     "AB30/treadmill": 100.0,
+     "SIX/levelground": "pending",
+     "SIX/ramp": "pending",
+     "SIX/stair": "pending",
+     "SIX/treadmill": "pending"
+    },
+    "note": ""
+   },
+   "grid_caption": "Every recording carries the sideways columns, so every cell is affected.",
+   "figure_question": "Which recordings carry the sideways columns?",
+   "direction": "Direction: the sign fix changes only sideways force and sideways centre of pressure. It does not reach vertical or forward values or any angle.",
+   "knock_on": [
+    {
+     "signal": "Sideways centre of pressure",
+     "verdict": "Also wrong, not yet fixed",
+     "line": "It is measured on the same X axis as the sideways force, so it has the same left-right flip.",
+     "evidence": "Both columns are declared lab +X in the conventions review.",
+     "ref": "gt21-c01-conventions channel_policy"
+    },
+    {
+     "signal": "Vertical force and centre-of-pressure height",
+     "verdict": "Checked, not affected",
+     "line": "They sit on the lab's up axis, which is checked.",
+     "evidence": "Gravity points down the lab Y axis; right-handed in 100% of 8 sampled recordings.",
+     "ref": "gt21-c01-conventions"
+    },
+    {
+     "signal": "Forward force and centre of pressure",
+     "verdict": "Checked, not affected",
+     "line": "Their sign comes from the measured pelvis direction of each step, not from the sideways rule.",
+     "evidence": "Forward sign measured per step on the lab Z axis; missing if the direction is unclear.",
+     "ref": "gt21-measured-force-direction"
+    },
+    {
+     "signal": "Angles, joint moments and powers",
+     "verdict": "Checked, not affected",
+     "line": "Changing a force or position sign left every other column exactly as it was in the pilot runs.",
+     "evidence": "Non-force columns identical in 2 pilot recordings (114 treadmill and 2 ramp steps).",
+     "ref": "gt21-measured-force-direction"
+    },
+    {
+     "signal": "Walking along the X axis",
+     "verdict": "Not checked",
+     "line": "280 of 76,909 on-plate samples in 8 recordings walk along X, where 'sideways' would be forward or backward. Beyond those 8 recordings it is not measured.",
+     "evidence": "",
+     "ref": ""
+    }
+   ],
+   "extra_figures": [
+    {
+     "file": "sideways.svg",
+     "question": "Does 'sideways' point the same way for both feet?",
+     "alt": "Average sideways force over stance for the right and left treadmill plates of one recording. The right foot pushes toward negative X, the left toward positive X.",
+     "cap": "AB07, treadmill trial 2, one of three recordings drawn at random (seed 20261118). Lines are averages over stance phases."
+    }
+   ],
+   "figure_data": {
+    "probe_curve": {
+     "right": [
+      -22.728772667365345,
+      -26.748787547176253,
+      92.1380493434735,
+      55.43885720895626,
+      11.310820177361677,
+      -4.829619135812872,
+      -4.919352393986466,
+      -6.528041276027226,
+      -5.001090983995262,
+      -4.320560520174476,
+      -22.72226290230198,
+      -35.287707155635374,
+      -46.860553208580654,
+      -36.990815825456814,
+      -30.007479450647665,
+      -33.88503761414072,
+      -42.05177283946916,
+      -49.423596204442575,
+      -49.11187306564192,
+      -48.91039615019219,
+      -41.26035081466147,
+      -43.427250484555486,
+      -53.81934795707167,
+      -60.28030544624839,
+      -55.68890361311289,
+      -50.24374515207313,
+      -53.5447035378541,
+      -54.57672998804737,
+      -53.996251919121086,
+      -51.424894718992505,
+      -52.67449393299364,
+      -50.769363256710335,
+      -45.92866686908503,
+      -43.24253981675597,
+      -44.07879714358038,
+      -45.50285054279255,
+      -43.02403350627093,
+      -40.1942154510836,
+      -37.00661719936908,
+      -36.03762081322023,
+      -37.49311405948546,
+      -38.488387591615925,
+      -36.59293697983984,
+      -32.93375981855513,
+      -32.36896408067281,
+      -34.12307321981299,
+      -35.482718163918314,
+      -34.28678848556209,
+      -32.68123231047991,
+      -32.2630096658588,
+      -33.182979188079294,
+      -33.38424934486798,
+      -33.31150162383451,
+      -32.79241834591795,
+      -32.72784699005063,
+      -33.10929792037276,
+      -33.31711543470888,
+      -33.33684522314423,
+      -33.65834240765684,
+      -33.90848279302676,
+      -33.92035575240851,
+      -34.53101432019014,
+      -34.617489563123385,
+      -36.075532832855046,
+      -36.593845464858504,
+      -37.30637966299198,
+      -38.15028079479937,
+      -38.050591793907614,
+      -38.673925294051365,
+      -39.66443084619128,
+      -41.13638960024064,
+      -41.885181748730126,
+      -41.81534117975636,
+      -42.604062811166045,
+      -43.909136000020226,
+      -45.08989084586356,
+      -45.367216862236155,
+      -45.413712498940505,
+      -45.79063353499898,
+      -46.559731890006226,
+      -47.257924555675,
+      -47.445642622155056,
+      -46.886817823736834,
+      -46.781615258594,
+      -45.09917618929433,
+      -44.02770269305522,
+      -42.027118435690944,
+      -39.22771896508869,
+      -36.860520277566465,
+      -31.050063123291597,
+      -25.649821414653445,
+      -23.6111246444065,
+      -20.655622385968893,
+      -13.763811177706618,
+      -6.731059483299593,
+      -4.226948970779318,
+      -2.6185420323667223,
+      -0.07818610031659229,
+      4.429340636661531,
+      2.098393634082825
+     ],
+     "left": [
+      20.88841384019309,
+      8.058099213350186,
+      -78.78383333541574,
+      -36.60776721458897,
+      -1.4216662765058856,
+      -5.080611617479342,
+      0.9004151653737393,
+      -6.531775462721652,
+      6.881222658738365,
+      16.122833500061365,
+      20.82456927234149,
+      38.90164176300064,
+      40.00522550557955,
+      26.02433653175485,
+      27.08045976389352,
+      34.33468130957028,
+      44.761840038385834,
+      55.31978301739633,
+      48.78385985065148,
+      37.33280091349771,
+      37.730285038038886,
+      50.69927207118136,
+      58.15535272255246,
+      49.81185137427625,
+      43.65735407620403,
+      48.711506850695756,
+      55.14063603715325,
+      53.01419841036299,
+      51.19912679377342,
+      51.26522064522181,
+      49.47221581646372,
+      48.559150780382225,
+      47.81627318263497,
+      48.48304479749011,
+      47.53595229840531,
+      42.281506771700535,
+      41.06164947757717,
+      40.753992592415955,
+      40.69975290410227,
+      40.653338717778325,
+      37.645513987691004,
+      35.38084879898267,
+      35.26983192971797,
+      35.904988265932246,
+      35.89874791366788,
+      34.46766472003852,
+      32.55614332155706,
+      32.16493714176035,
+      33.48742191590164,
+      33.30348189401806,
+      32.366157175236886,
+      32.01107110669111,
+      31.943398370935203,
+      31.994060507898272,
+      32.40727708679767,
+      31.930704642333172,
+      31.76245321690501,
+      31.27420204089384,
+      31.315027478000882,
+      31.698809142300455,
+      31.87316308088396,
+      32.189597810949756,
+      32.37120709885663,
+      32.637737807042654,
+      34.006912445721795,
+      34.82437979619749,
+      35.91852782541325,
+      36.54349033317817,
+      37.535913101979716,
+      38.40434959469891,
+      39.67028274279063,
+      41.00364427549926,
+      41.60033097023988,
+      42.95938070002465,
+      43.8780219544907,
+      44.798210766197336,
+      46.272243372253854,
+      46.88776390123966,
+      47.46695756031266,
+      47.71688492160831,
+      47.4465699034122,
+      48.26936912113635,
+      48.28320942048924,
+      47.99780102015783,
+      47.43697755470228,
+      45.04580739351633,
+      44.22625992562055,
+      40.953383125028736,
+      37.71209027601514,
+      34.65904805366146,
+      25.316451270759067,
+      22.705515450892854,
+      20.82360439859791,
+      15.980677523616526,
+      8.022987833750356,
+      2.943297232116693,
+      0.48180406508807255,
+      -0.41736428291517685,
+      -3.636577813272938,
+      -7.04943649167937
+     ],
+     "who": "AB07, treadmill trial 2",
+     "seed": 20261118
+    }
+   }
+  },
+  {
+   "key": "pelvis",
+   "card": "Pelvis tilt, and the angles built on it, do not match the markers",
+   "status": {
+    "key": "decided",
+    "label": "Decided by José, fix not yet run",
+    "detail": "José chose option C: take tilt from the pelvis markers directly. The conversion code has not been changed or run for this.",
+    "needs": ""
+   },
+   "wrong": "The old conversion code exported the authors' model 'pelvis tilt' as forward-back tilt. The authors' model turns the pelvis about 90 degrees in heading, so that column is not forward-back tilt. After removing the heading, no tilt we can derive from the authors' data follows the marker tilt over treadmill strides, and overground it follows only partly. Thigh, shank, foot and trunk angles were built on that tilt.",
+   "how": "We compared each candidate with the tilt of the four pelvis markers over the strides of 8 recordings drawn at random (seed 20261027). Stride-average agreement on the two treadmill recordings is 0.07 and -0.25 (1 would be identical). In a separate set of 131 recordings, only 1 had the model's heading in the forward-back frame.",
+   "example": "AB08 treadmill, 124 strides: the published pelvis tilt agrees with the marker tilt at 0.03. The marker-based tilt sits about 19 degrees from the model's zero.",
+   "total_line": "The pelvis tilt column and four angle columns built on it (thigh, shank, foot, trunk) in all 2,301 local recordings (100%).",
+   "total_numbers": {
+    "recordings_affected": 2301,
+    "recordings_total": 2301,
+    "columns_affected": 5,
+    "heading_sample_recordings": 131,
+    "heading_sagittal": 1,
+    "tilt_sample_recordings": 8,
+    "marker_offset_range_deg": [
+     15.84,
+     18.61
+    ]
+   },
+   "denominator_text": "Recordings: 2,301 local ones. Evidence comes from 8 recordings (7 participants) for agreement and 131 recordings (6 participants) for heading. Strides and samples are not counted for the whole set.",
+   "table": {
+    "columns": [
+     "Recording (drawn at random)",
+     "Strides",
+     "Published pelvis tilt",
+     "Heading removed",
+     "Marker tilt offset"
+    ],
+    "rows": [
+     [
+      "AB08 treadmill",
+      "124",
+      "0.03",
+      "0.07",
+      "18.6°"
+     ],
+     [
+      "AB06 treadmill",
+      "139",
+      "0.71",
+      "-0.25",
+      "17.0°"
+     ],
+     [
+      "AB16 level walking",
+      "13",
+      "0.40",
+      "0.46",
+      "15.8°"
+     ],
+     [
+      "AB14 level walking",
+      "11",
+      "-0.66",
+      "0.38",
+      "17.6°"
+     ],
+     [
+      "AB24 ramps",
+      "12",
+      "0.21",
+      "0.57",
+      "17.8°"
+     ],
+     [
+      "AB06 ramps",
+      "12",
+      "-0.11",
+      "0.30",
+      "17.0°"
+     ],
+     [
+      "AB10 stairs",
+      "8",
+      "-0.12",
+      "0.79",
+      "17.1°"
+     ],
+     [
+      "AB07 stairs",
+      "11",
+      "0.47",
+      "0.81",
+      "17.5°"
+     ]
+    ],
+    "fold": false
+   },
+   "grid": {
+    "kind": "affected",
+    "rows": [
+     "AB06",
+     "AB07",
+     "AB08",
+     "AB09",
+     "AB10",
+     "AB11",
+     "AB13",
+     "AB14",
+     "AB16",
+     "AB18",
+     "AB20",
+     "AB21",
+     "AB24",
+     "AB25",
+     "AB27",
+     "AB30",
+     "SIX"
+    ],
+    "cols": [
+     "levelground",
+     "ramp",
+     "stair",
+     "treadmill"
+    ],
+    "cols_plain": [
+     "Level walking",
+     "Ramps",
+     "Stairs",
+     "Treadmill"
+    ],
+    "cells": {
+     "AB06/levelground": 100.0,
+     "AB06/ramp": 100.0,
+     "AB06/stair": 100.0,
+     "AB06/treadmill": 100.0,
+     "AB07/levelground": 100.0,
+     "AB07/ramp": 100.0,
+     "AB07/stair": 100.0,
+     "AB07/treadmill": 100.0,
+     "AB08/levelground": 100.0,
+     "AB08/ramp": 100.0,
+     "AB08/stair": 100.0,
+     "AB08/treadmill": 100.0,
+     "AB09/levelground": 100.0,
+     "AB09/ramp": 100.0,
+     "AB09/stair": 100.0,
+     "AB09/treadmill": 100.0,
+     "AB10/levelground": 100.0,
+     "AB10/ramp": 100.0,
+     "AB10/stair": 100.0,
+     "AB10/treadmill": 100.0,
+     "AB11/levelground": 100.0,
+     "AB11/ramp": 100.0,
+     "AB11/stair": 100.0,
+     "AB11/treadmill": 100.0,
+     "AB13/levelground": 100.0,
+     "AB13/ramp": 100.0,
+     "AB13/stair": 100.0,
+     "AB13/treadmill": 100.0,
+     "AB14/levelground": 100.0,
+     "AB14/ramp": 100.0,
+     "AB14/stair": 100.0,
+     "AB14/treadmill": 100.0,
+     "AB16/levelground": 100.0,
+     "AB16/ramp": 100.0,
+     "AB16/stair": 100.0,
+     "AB16/treadmill": 100.0,
+     "AB18/levelground": 100.0,
+     "AB18/ramp": 100.0,
+     "AB18/stair": 100.0,
+     "AB18/treadmill": 100.0,
+     "AB20/levelground": 100.0,
+     "AB20/ramp": 100.0,
+     "AB20/stair": 100.0,
+     "AB20/treadmill": 100.0,
+     "AB21/levelground": 100.0,
+     "AB21/ramp": 100.0,
+     "AB21/stair": 100.0,
+     "AB21/treadmill": 100.0,
+     "AB24/levelground": 100.0,
+     "AB24/ramp": 100.0,
+     "AB24/stair": 100.0,
+     "AB24/treadmill": 100.0,
+     "AB25/levelground": 100.0,
+     "AB25/ramp": 100.0,
+     "AB25/stair": 100.0,
+     "AB25/treadmill": 100.0,
+     "AB27/levelground": 100.0,
+     "AB27/ramp": 100.0,
+     "AB27/stair": 100.0,
+     "AB27/treadmill": 100.0,
+     "AB30/levelground": 100.0,
+     "AB30/ramp": 100.0,
+     "AB30/stair": 100.0,
+     "AB30/treadmill": 100.0,
+     "SIX/levelground": "pending",
+     "SIX/ramp": "pending",
+     "SIX/stair": "pending",
+     "SIX/treadmill": "pending"
+    },
+    "note": ""
+   },
+   "grid_caption": "Every recording has the pelvis tilt column, so every cell is affected.",
+   "figure_question": "Which recordings carry the pelvis tilt column?",
+   "direction": "Direction: pelvis tilt feeds the thigh, shank, foot and trunk angles. Hip, knee and ankle angles are separate joint angles.",
+   "knock_on": [
+    {
+     "signal": "Thigh, shank, foot and trunk angles (side view)",
+     "verdict": "Also wrong, not yet fixed",
+     "line": "They inherit the pelvis tilt, so they carry the same error.",
+     "evidence": "The conversion builds them from the pelvis tilt; the marker route would mix marker and model zeros.",
+     "ref": "GT21-C01 summary"
+    },
+    {
+     "signal": "Hip, knee and ankle angles",
+     "verdict": "Checked, not affected",
+     "line": "They are the model's own joint angles, not built on the pelvis tilt column.",
+     "evidence": "0 wrong signs among 648 leg channels tested (521 right, 127 left undecided).",
+     "ref": "core04-gt21-pilot counts"
+    },
+    {
+     "signal": "Joint moments and powers",
+     "verdict": "Not checked",
+     "line": "They are the authors' own values and do not use our pelvis column, so no change is expected, but no run has shown it.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Why the treadmill markers and the model disagree",
+     "verdict": "Not checked",
+     "line": "Marker noise, soft tissue and model weighting are candidates. It needs a guarded job (a supervised run with memory limits).",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "The six participants not yet converted",
+     "verdict": "Not checked",
+     "line": "Their files have not been read.",
+     "evidence": "",
+     "ref": ""
+    }
+   ],
+   "extra_figures": [
+    {
+     "file": "pelvis.svg",
+     "question": "Does any source tilt follow the marker tilt, stride by stride?",
+     "alt": "Stride-average agreement with marker tilt for three candidate tilts in 8 recordings. None is close to 1 on both treadmill recordings.",
+     "cap": "8 recordings drawn at random (seed 20261027). Each bar is the stride-average correlation with the pelvis-marker tilt; 1 would be identical."
+    }
+   ],
+   "figure_data": {
+    "pelvis": [
+     {
+      "who": "AB08 treadmill",
+      "strides": 124,
+      "published_tilt": 0.032,
+      "minus_list": -0.04,
+      "heading_removed": 0.069,
+      "marker_offset_deg": 18.61
+     },
+     {
+      "who": "AB06 treadmill",
+      "strides": 139,
+      "published_tilt": 0.709,
+      "minus_list": -0.23,
+      "heading_removed": -0.247,
+      "marker_offset_deg": 17.01
+     },
+     {
+      "who": "AB16 level walking",
+      "strides": 13,
+      "published_tilt": 0.399,
+      "minus_list": -0.34,
+      "heading_removed": 0.458,
+      "marker_offset_deg": 15.84
+     },
+     {
+      "who": "AB14 level walking",
+      "strides": 11,
+      "published_tilt": -0.662,
+      "minus_list": 0.277,
+      "heading_removed": 0.382,
+      "marker_offset_deg": 17.58
+     },
+     {
+      "who": "AB24 ramps",
+      "strides": 12,
+      "published_tilt": 0.21,
+      "minus_list": 0.54,
+      "heading_removed": 0.574,
+      "marker_offset_deg": 17.76
+     },
+     {
+      "who": "AB06 ramps",
+      "strides": 12,
+      "published_tilt": -0.11,
+      "minus_list": -0.351,
+      "heading_removed": 0.302,
+      "marker_offset_deg": 17.01
+     },
+     {
+      "who": "AB10 stairs",
+      "strides": 8,
+      "published_tilt": -0.122,
+      "minus_list": 0.077,
+      "heading_removed": 0.793,
+      "marker_offset_deg": 17.13
+     },
+     {
+      "who": "AB07 stairs",
+      "strides": 11,
+      "published_tilt": 0.469,
+      "minus_list": 0.085,
+      "heading_removed": 0.806,
+      "marker_offset_deg": 17.51
+     }
+    ]
+   }
+  },
+  {
+   "key": "joint_zero",
+   "card": "It is not settled what 'zero' means for the joint angles",
+   "status": {
+    "key": "open",
+    "label": "Open",
+    "detail": "",
+    "needs": "Needs a decision from José (not yet raised), and a guarded job to measure the size."
+   },
+   "wrong": "Joint angles come in two versions. One is zero at the model's own zero. The other is the trial angle minus the average of the participant's static standing trial (added by the authors in April 2024). The conversion code reads the relative version, our sign tests used the model zero, and the 2021 archive of AB17 has no relative version. No decision has been made, and the size of the difference is not measured.",
+   "how": "The README dates the relative files to 28 April 2024, and the authors' script subtracts the column average of the first static trial it finds, without wrapping angles. We then tried to measure the difference with our safe file reader: it refused all 20 files we tried (16 static-pose files and one relative file for each of the four tasks).",
+   "example": "No measured example exists: the size of the difference has not been measured, so the figure is a made-up illustration, labelled as one.",
+   "total_line": "Every joint angle in all 2,301 local recordings (100%) has this open choice. The size of the difference is not measured.",
+   "total_numbers": {
+    "recordings_affected": 2301,
+    "recordings_total": 2301,
+    "files_tried": 20,
+    "files_read": 0,
+    "static_files_tried": 16,
+    "relative_files_tried": 4
+   },
+   "denominator_text": "Recordings: 2,301 local ones. Participants: all 16 local and the six not yet converted. Samples are not counted. 'Affected' means the choice applies, not that the values are wrong.",
+   "table": {
+    "columns": [
+     "What we tried",
+     "Files",
+     "Read"
+    ],
+    "rows": [
+     [
+      "Static-pose joint-angle files (one per local participant)",
+      "16",
+      "0"
+     ],
+     [
+      "Relative joint-angle files (one per task, drawn at random)",
+      "4",
+      "0"
+     ]
+    ],
+    "fold": false
+   },
+   "grid": {
+    "kind": "affected",
+    "rows": [
+     "AB06",
+     "AB07",
+     "AB08",
+     "AB09",
+     "AB10",
+     "AB11",
+     "AB13",
+     "AB14",
+     "AB16",
+     "AB18",
+     "AB20",
+     "AB21",
+     "AB24",
+     "AB25",
+     "AB27",
+     "AB30",
+     "SIX"
+    ],
+    "cols": [
+     "levelground",
+     "ramp",
+     "stair",
+     "treadmill"
+    ],
+    "cols_plain": [
+     "Level walking",
+     "Ramps",
+     "Stairs",
+     "Treadmill"
+    ],
+    "cells": {
+     "AB06/levelground": 100.0,
+     "AB06/ramp": 100.0,
+     "AB06/stair": 100.0,
+     "AB06/treadmill": 100.0,
+     "AB07/levelground": 100.0,
+     "AB07/ramp": 100.0,
+     "AB07/stair": 100.0,
+     "AB07/treadmill": 100.0,
+     "AB08/levelground": 100.0,
+     "AB08/ramp": 100.0,
+     "AB08/stair": 100.0,
+     "AB08/treadmill": 100.0,
+     "AB09/levelground": 100.0,
+     "AB09/ramp": 100.0,
+     "AB09/stair": 100.0,
+     "AB09/treadmill": 100.0,
+     "AB10/levelground": 100.0,
+     "AB10/ramp": 100.0,
+     "AB10/stair": 100.0,
+     "AB10/treadmill": 100.0,
+     "AB11/levelground": 100.0,
+     "AB11/ramp": 100.0,
+     "AB11/stair": 100.0,
+     "AB11/treadmill": 100.0,
+     "AB13/levelground": 100.0,
+     "AB13/ramp": 100.0,
+     "AB13/stair": 100.0,
+     "AB13/treadmill": 100.0,
+     "AB14/levelground": 100.0,
+     "AB14/ramp": 100.0,
+     "AB14/stair": 100.0,
+     "AB14/treadmill": 100.0,
+     "AB16/levelground": 100.0,
+     "AB16/ramp": 100.0,
+     "AB16/stair": 100.0,
+     "AB16/treadmill": 100.0,
+     "AB18/levelground": 100.0,
+     "AB18/ramp": 100.0,
+     "AB18/stair": 100.0,
+     "AB18/treadmill": 100.0,
+     "AB20/levelground": 100.0,
+     "AB20/ramp": 100.0,
+     "AB20/stair": 100.0,
+     "AB20/treadmill": 100.0,
+     "AB21/levelground": 100.0,
+     "AB21/ramp": 100.0,
+     "AB21/stair": 100.0,
+     "AB21/treadmill": 100.0,
+     "AB24/levelground": 100.0,
+     "AB24/ramp": 100.0,
+     "AB24/stair": 100.0,
+     "AB24/treadmill": 100.0,
+     "AB25/levelground": 100.0,
+     "AB25/ramp": 100.0,
+     "AB25/stair": 100.0,
+     "AB25/treadmill": 100.0,
+     "AB27/levelground": 100.0,
+     "AB27/ramp": 100.0,
+     "AB27/stair": 100.0,
+     "AB27/treadmill": 100.0,
+     "AB30/levelground": 100.0,
+     "AB30/ramp": 100.0,
+     "AB30/stair": 100.0,
+     "AB30/treadmill": 100.0,
+     "SIX/levelground": "pending",
+     "SIX/ramp": "pending",
+     "SIX/stair": "pending",
+     "SIX/treadmill": "pending"
+    },
+    "note": ""
+   },
+   "grid_caption": "The choice applies to every recording; the size of the difference is not measured.",
+   "figure_question": "Which recordings does the zero choice apply to?",
+   "direction": "Direction: the zero shifts every sample of the joint angles. Moments and powers come from separate files.",
+   "knock_on": [
+    {
+     "signal": "Hip, knee and ankle angles",
+     "verdict": "Not checked",
+     "line": "Every sample shifts by a constant that is not measured here.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Signs of hip, knee and ankle angles",
+     "verdict": "Checked, not affected",
+     "line": "A constant shift does not flip a sign; our sign test found none wrong.",
+     "evidence": "0 wrong signs in 648 leg channels tested (305 applied, 216 suggested, 127 left undecided), using the model zero.",
+     "ref": "core04-gt21-pilot counts"
+    },
+    {
+     "signal": "Reference ranges for the angles",
+     "verdict": "Not checked",
+     "line": "Ranges depend on which zero is chosen, so none can be set yet.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Joint moments and powers",
+     "verdict": "Checked, not affected",
+     "line": "The authors' script only writes a new angle file; moments are read from their own files.",
+     "evidence": "The authors' script writes the relative angle file only and leaves the moment files alone.",
+     "ref": "gt21-ab17-local-processing-recipe static_recipe"
+    },
+    {
+     "signal": "Thigh, shank, foot and trunk angles",
+     "verdict": "Not checked",
+     "line": "They are tied to the pelvis problem (see its card).",
+     "evidence": "",
+     "ref": ""
+    }
+   ],
+   "extra_figures": [
+    {
+     "file": "zero.svg",
+     "question": "What would a different zero do to a joint angle?",
+     "alt": "Made-up illustration: the same knee-angle curve drawn twice, one shifted up by a constant.",
+     "cap": "Made-up illustration. The real shift has not been measured."
+    }
+   ]
+  },
+  {
+   "key": "mass_unit",
+   "card": "The unit of participant weight is not stated",
+   "status": {
+    "key": "open",
+    "label": "Open",
+    "detail": "",
+    "needs": "Needs source evidence first (the authors' scripts or paper). If none turns up, a decision will be needed."
+   },
+   "wrong": "Forces are divided by body weight and moments and powers by body mass, using the Weight number in the subject sheet. No file we hold states its unit. The numbers look like kilograms, but that is not proof, and the model's mass is not an acceptable stand-in.",
+   "how": "The README gives no unit for the subject sheet; the authors' inverse-kinematics tool does not use it; a download of the 2021 scripts archive was refused. The local scripts divide forces and moments by it, which supports kilograms but does not prove it. The 22 values run from 52.16 to 96.16.",
+   "example": "AB17 has the Weight number 61.23; AB25 has 52.16. Neither number carries a unit.",
+   "total_line": "Every force, moment and power column that is divided by body weight or mass, in all 2,301 local recordings (100%), and all 22 participants have a number.",
+   "total_numbers": {
+    "recordings_affected": 2301,
+    "recordings_total": 2301,
+    "participants_with_number": 22,
+    "weight_min": 52.16,
+    "weight_max": 96.16
+   },
+   "denominator_text": "Recordings: 2,301 local ones. Participants: 22 of 22 have a number; the unit is the open question. Samples are not counted.",
+   "table": {
+    "columns": [
+     "Participants",
+     "Weight number present",
+     "Unit stated"
+    ],
+    "rows": [
+     [
+      "22 of 22",
+      "Yes",
+      "No"
+     ]
+    ],
+    "fold": false
+   },
+   "grid": {
+    "kind": "affected",
+    "rows": [
+     "AB06",
+     "AB07",
+     "AB08",
+     "AB09",
+     "AB10",
+     "AB11",
+     "AB13",
+     "AB14",
+     "AB16",
+     "AB18",
+     "AB20",
+     "AB21",
+     "AB24",
+     "AB25",
+     "AB27",
+     "AB30",
+     "SIX"
+    ],
+    "cols": [
+     "levelground",
+     "ramp",
+     "stair",
+     "treadmill"
+    ],
+    "cols_plain": [
+     "Level walking",
+     "Ramps",
+     "Stairs",
+     "Treadmill"
+    ],
+    "cells": {
+     "AB06/levelground": 100.0,
+     "AB06/ramp": 100.0,
+     "AB06/stair": 100.0,
+     "AB06/treadmill": 100.0,
+     "AB07/levelground": 100.0,
+     "AB07/ramp": 100.0,
+     "AB07/stair": 100.0,
+     "AB07/treadmill": 100.0,
+     "AB08/levelground": 100.0,
+     "AB08/ramp": 100.0,
+     "AB08/stair": 100.0,
+     "AB08/treadmill": 100.0,
+     "AB09/levelground": 100.0,
+     "AB09/ramp": 100.0,
+     "AB09/stair": 100.0,
+     "AB09/treadmill": 100.0,
+     "AB10/levelground": 100.0,
+     "AB10/ramp": 100.0,
+     "AB10/stair": 100.0,
+     "AB10/treadmill": 100.0,
+     "AB11/levelground": 100.0,
+     "AB11/ramp": 100.0,
+     "AB11/stair": 100.0,
+     "AB11/treadmill": 100.0,
+     "AB13/levelground": 100.0,
+     "AB13/ramp": 100.0,
+     "AB13/stair": 100.0,
+     "AB13/treadmill": 100.0,
+     "AB14/levelground": 100.0,
+     "AB14/ramp": 100.0,
+     "AB14/stair": 100.0,
+     "AB14/treadmill": 100.0,
+     "AB16/levelground": 100.0,
+     "AB16/ramp": 100.0,
+     "AB16/stair": 100.0,
+     "AB16/treadmill": 100.0,
+     "AB18/levelground": 100.0,
+     "AB18/ramp": 100.0,
+     "AB18/stair": 100.0,
+     "AB18/treadmill": 100.0,
+     "AB20/levelground": 100.0,
+     "AB20/ramp": 100.0,
+     "AB20/stair": 100.0,
+     "AB20/treadmill": 100.0,
+     "AB21/levelground": 100.0,
+     "AB21/ramp": 100.0,
+     "AB21/stair": 100.0,
+     "AB21/treadmill": 100.0,
+     "AB24/levelground": 100.0,
+     "AB24/ramp": 100.0,
+     "AB24/stair": 100.0,
+     "AB24/treadmill": 100.0,
+     "AB25/levelground": 100.0,
+     "AB25/ramp": 100.0,
+     "AB25/stair": 100.0,
+     "AB25/treadmill": 100.0,
+     "AB27/levelground": 100.0,
+     "AB27/ramp": 100.0,
+     "AB27/stair": 100.0,
+     "AB27/treadmill": 100.0,
+     "AB30/levelground": 100.0,
+     "AB30/ramp": 100.0,
+     "AB30/stair": 100.0,
+     "AB30/treadmill": 100.0,
+     "SIX/levelground": "pending",
+     "SIX/ramp": "pending",
+     "SIX/stair": "pending",
+     "SIX/treadmill": "pending"
+    },
+    "note": ""
+   },
+   "grid_caption": "Every normalised force, moment and power depends on the number.",
+   "figure_question": "Which recordings use the weight number?",
+   "direction": "Direction: the weight unit scales forces, moments and powers. It does not touch angles or positions.",
+   "knock_on": [
+    {
+     "signal": "Forces in body weights",
+     "verdict": "Not checked",
+     "line": "They scale directly with the unit; a wrong unit would scale every value.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Joint moments and powers per kilogram",
+     "verdict": "Not checked",
+     "line": "Same scaling; no check against another source has been run.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Centre-of-pressure positions in metres",
+     "verdict": "Checked, not affected",
+     "line": "They come from plate and marker positions, not from weight.",
+     "evidence": "Computed from plate position minus ankle marker position, in metres.",
+     "ref": "gt21-c01-conventions channel_policy"
+    },
+    {
+     "signal": "Joint angles",
+     "verdict": "Checked, not affected",
+     "line": "Angles do not use mass.",
+     "evidence": "Angles are read from the authors' joint angle files.",
+     "ref": "gt21-c01-conventions channel_policy"
+    }
+   ],
+   "extra_figures": [
+    {
+     "file": "mass.svg",
+     "question": "What do the Weight numbers look like?",
+     "alt": "Dot plot of the 22 participant Weight numbers, from about 52 to 96, with no unit.",
+     "cap": "One dot per participant. Hollow dots are the six participants not yet converted."
+    }
+   ],
+   "figure_data": {
+    "weights": {
+     "AB06": 74.84,
+     "AB07": 55.34,
+     "AB08": 72.57,
+     "AB09": 63.5,
+     "AB10": 83.91,
+     "AB11": 77.11,
+     "AB12": 86.18,
+     "AB13": 58.97,
+     "AB14": 58.41,
+     "AB15": 96.16,
+     "AB16": 55.79,
+     "AB17": 61.23,
+     "AB18": 60.13,
+     "AB19": 68.04,
+     "AB20": 68.04,
+     "AB21": 58.06,
+     "AB23": 76.82,
+     "AB24": 72.57,
+     "AB25": 52.16,
+     "AB27": 68.04,
+     "AB28": 62.14,
+     "AB30": 77.03
+    },
+    "six": [
+     "AB12",
+     "AB15",
+     "AB17",
+     "AB19",
+     "AB23",
+     "AB28"
+    ]
+   }
+  },
+  {
+   "key": "opposite_leg",
+   "card": "Many steps of the other leg were not exported",
+   "status": {
+    "key": "open",
+    "label": "Open",
+    "detail": "A fix that processes both legs is written; its two trial runs are prepared but have not run.",
+    "needs": "Needs a guarded job (a supervised run with memory limits)."
+   },
+   "wrong": "The old conversion code exported one reference leg's steps for each stretch of walking and left out the matching steps of the other leg, even when the source has them. Opposite-leg steps overlap in time, so they are not independent trials.",
+   "how": "We compared every source step in 36 completed recordings with what was exported.",
+   "example": "Of 2,270 source steps, 856 were exported, 798 were not exported although their leg's step qualifies, and 616 fell outside a complete task window.",
+   "total_line": "798 of 2,270 source steps (35.2%) in 36 recordings qualify but were not exported. Another 616 (27.1%) lie outside a task window.",
+   "total_numbers": {
+    "steps_total": 2270,
+    "steps_exported": 856,
+    "steps_recoverable_not_exported": 798,
+    "steps_outside_window": 616,
+    "recordings": 36
+   },
+   "denominator_text": "Counted over 36 of the 2,301 local recordings (30 overground, 6 treadmill, all AB06). The local source gait tables hold 78,604 steps in all; how many qualify across them is not measured. Samples are not counted.",
+   "table": {
+    "columns": [
+     "Steps in the 36 recordings",
+     "Count",
+     "Share"
+    ],
+    "rows": [
+     [
+      "Exported",
+      "856",
+      "37.7%"
+     ],
+     [
+      "Qualify but not exported (other leg)",
+      "798",
+      "35.2%"
+     ],
+     [
+      "Outside a complete task window",
+      "616",
+      "27.1%"
+     ]
+    ],
+    "fold": false
+   },
+   "grid": {
+    "kind": "checked",
+    "rows": [
+     "AB06",
+     "AB07",
+     "AB08",
+     "AB09",
+     "AB10",
+     "AB11",
+     "AB13",
+     "AB14",
+     "AB16",
+     "AB18",
+     "AB20",
+     "AB21",
+     "AB24",
+     "AB25",
+     "AB27",
+     "AB30",
+     "SIX"
+    ],
+    "cols": [
+     "levelground",
+     "ramp",
+     "stair",
+     "treadmill"
+    ],
+    "cols_plain": [
+     "Level walking",
+     "Ramps",
+     "Stairs",
+     "Treadmill"
+    ],
+    "cells": {
+     "AB06/levelground": 100.0,
+     "AB06/ramp": 0.0,
+     "AB06/stair": 0.0,
+     "AB06/treadmill": 75.0,
+     "AB07/levelground": 0.0,
+     "AB07/ramp": 0.0,
+     "AB07/stair": 0.0,
+     "AB07/treadmill": 0.0,
+     "AB08/levelground": 0.0,
+     "AB08/ramp": 0.0,
+     "AB08/stair": 0.0,
+     "AB08/treadmill": 0.0,
+     "AB09/levelground": 0.0,
+     "AB09/ramp": 0.0,
+     "AB09/stair": 0.0,
+     "AB09/treadmill": 0.0,
+     "AB10/levelground": 0.0,
+     "AB10/ramp": 0.0,
+     "AB10/stair": 0.0,
+     "AB10/treadmill": 0.0,
+     "AB11/levelground": 0.0,
+     "AB11/ramp": 0.0,
+     "AB11/stair": 0.0,
+     "AB11/treadmill": 0.0,
+     "AB13/levelground": 0.0,
+     "AB13/ramp": 0.0,
+     "AB13/stair": 0.0,
+     "AB13/treadmill": 0.0,
+     "AB14/levelground": 0.0,
+     "AB14/ramp": 0.0,
+     "AB14/stair": 0.0,
+     "AB14/treadmill": 0.0,
+     "AB16/levelground": 0.0,
+     "AB16/ramp": 0.0,
+     "AB16/stair": 0.0,
+     "AB16/treadmill": 0.0,
+     "AB18/levelground": 0.0,
+     "AB18/ramp": 0.0,
+     "AB18/stair": 0.0,
+     "AB18/treadmill": 0.0,
+     "AB20/levelground": 0.0,
+     "AB20/ramp": 0.0,
+     "AB20/stair": 0.0,
+     "AB20/treadmill": 0.0,
+     "AB21/levelground": 0.0,
+     "AB21/ramp": 0.0,
+     "AB21/stair": 0.0,
+     "AB21/treadmill": 0.0,
+     "AB24/levelground": 0.0,
+     "AB24/ramp": 0.0,
+     "AB24/stair": 0.0,
+     "AB24/treadmill": 0.0,
+     "AB25/levelground": 0.0,
+     "AB25/ramp": 0.0,
+     "AB25/stair": 0.0,
+     "AB25/treadmill": 0.0,
+     "AB27/levelground": 0.0,
+     "AB27/ramp": 0.0,
+     "AB27/stair": 0.0,
+     "AB27/treadmill": 0.0,
+     "AB30/levelground": 0.0,
+     "AB30/ramp": 0.0,
+     "AB30/stair": 0.0,
+     "AB30/treadmill": 0.0,
+     "SIX/levelground": "pending",
+     "SIX/ramp": "pending",
+     "SIX/stair": "pending",
+     "SIX/treadmill": "pending"
+    },
+    "note": ""
+   },
+   "grid_caption": "Share of each group's recordings that the step count covers. Zero means not looked at.",
+   "figure_question": "Which participants and tasks have been counted?",
+   "direction": "Direction: missing steps lower the number of strides per person and task. They do not change values inside the strides that were exported.",
+   "knock_on": [
+    {
+     "signal": "Number of strides per participant and task",
+     "verdict": "Also wrong, not yet fixed",
+     "line": "Counts are lower than the source supports.",
+     "evidence": "798 qualifying steps missing in 36 recordings.",
+     "ref": "gt21-event-eligibility"
+    },
+    {
+     "signal": "Treating strides as independent trials",
+     "verdict": "Not checked",
+     "line": "Left and right steps overlap in time; the overlap is documented but its effect on any statistic is not tested.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Force and centre of pressure of the recovered steps",
+     "verdict": "Not checked",
+     "line": "They would need the force checks to run again.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Steps already exported",
+     "verdict": "Not checked",
+     "line": "A hardened check that every old step stays identical exists with 16 synthetic tests but has not been run on the real recordings.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Ramps and stairs",
+     "verdict": "Not checked",
+     "line": "The step count covers overground and treadmill recordings only.",
+     "evidence": "",
+     "ref": ""
+    }
+   ],
+   "extra_figures": [
+    {
+     "file": "steps.svg",
+     "question": "Which source steps reach the data?",
+     "alt": "One bar of 2,270 source steps split into exported, qualifying but not exported, and outside a task window.",
+     "cap": "Source steps in 36 AB06 recordings (30 overground, 6 treadmill)."
+    }
+   ],
+   "figure_data": {
+    "steps": {
+     "outside_complete_eligible_task_window": 616,
+     "opposite_reference_leg_not_exported": 798,
+     "exported": 856
+    }
+   }
+  },
+  {
+   "key": "terrain_defaults",
+   "card": "Ramp and stair labels could be filled with defaults",
+   "status": {
+    "key": "open",
+    "label": "Open",
+    "detail": "A fix that removes the defaults is written and passed 6 small tests. It has not been run in MATLAB and the full rebuild does not use it.",
+    "needs": "Needs a guarded job (a supervised run with memory limits)."
+   },
+   "wrong": "If the source lacks a ramp direction the old conversion code still assumes ascent, if it lacks a stair height it uses four inches, and if no labelled step survives it falls back to the whole recording. These would be invented labels.",
+   "how": "We read the terrain label of every local ramp and stair recording. None is missing or invalid. In the 51 completed recordings, 39 ramp and stair steps show no default.",
+   "example": "Of 1,015 ramp recordings and 665 stair recordings, 0 lack a label, an incline or a stair height.",
+   "total_line": "0 of 1,680 local ramp and stair recordings (0%) lack a source label. The risk is latent, so what is exposed is 1,680 recordings.",
+   "total_numbers": {
+    "recordings_affected": 0,
+    "ramp_recordings": 1015,
+    "stair_recordings": 665,
+    "terrain_steps_checked_in_outputs": 39,
+    "completed_recordings_checked": 51,
+    "steps_checked": 1111,
+    "steps_with_phase_issues": 0
+   },
+   "denominator_text": "Source labels were checked in all 1,680 local ramp and stair recordings; output checks cover 39 steps of the completed recordings only (all AB06). The six participants not yet converted are not checked.",
+   "table": {
+    "columns": [
+     "Task",
+     "Recordings",
+     "Label or size missing"
+    ],
+    "rows": [
+     [
+      "Ramps",
+      "1,015",
+      "0"
+     ],
+     [
+      "Stairs",
+      "665",
+      "0"
+     ]
+    ],
+    "fold": false
+   },
+   "grid": {
+    "kind": "affected",
+    "rows": [
+     "AB06",
+     "AB07",
+     "AB08",
+     "AB09",
+     "AB10",
+     "AB11",
+     "AB13",
+     "AB14",
+     "AB16",
+     "AB18",
+     "AB20",
+     "AB21",
+     "AB24",
+     "AB25",
+     "AB27",
+     "AB30",
+     "SIX"
+    ],
+    "cols": [
+     "levelground",
+     "ramp",
+     "stair",
+     "treadmill"
+    ],
+    "cols_plain": [
+     "Level walking",
+     "Ramps",
+     "Stairs",
+     "Treadmill"
+    ],
+    "cells": {
+     "AB06/levelground": null,
+     "AB06/ramp": 0.0,
+     "AB06/stair": 0.0,
+     "AB06/treadmill": null,
+     "AB07/levelground": null,
+     "AB07/ramp": 0.0,
+     "AB07/stair": 0.0,
+     "AB07/treadmill": null,
+     "AB08/levelground": null,
+     "AB08/ramp": 0.0,
+     "AB08/stair": 0.0,
+     "AB08/treadmill": null,
+     "AB09/levelground": null,
+     "AB09/ramp": 0.0,
+     "AB09/stair": 0.0,
+     "AB09/treadmill": null,
+     "AB10/levelground": null,
+     "AB10/ramp": 0.0,
+     "AB10/stair": 0.0,
+     "AB10/treadmill": null,
+     "AB11/levelground": null,
+     "AB11/ramp": 0.0,
+     "AB11/stair": 0.0,
+     "AB11/treadmill": null,
+     "AB13/levelground": null,
+     "AB13/ramp": 0.0,
+     "AB13/stair": 0.0,
+     "AB13/treadmill": null,
+     "AB14/levelground": null,
+     "AB14/ramp": 0.0,
+     "AB14/stair": 0.0,
+     "AB14/treadmill": null,
+     "AB16/levelground": null,
+     "AB16/ramp": 0.0,
+     "AB16/stair": 0.0,
+     "AB16/treadmill": null,
+     "AB18/levelground": null,
+     "AB18/ramp": 0.0,
+     "AB18/stair": 0.0,
+     "AB18/treadmill": null,
+     "AB20/levelground": null,
+     "AB20/ramp": 0.0,
+     "AB20/stair": 0.0,
+     "AB20/treadmill": null,
+     "AB21/levelground": null,
+     "AB21/ramp": 0.0,
+     "AB21/stair": 0.0,
+     "AB21/treadmill": null,
+     "AB24/levelground": null,
+     "AB24/ramp": 0.0,
+     "AB24/stair": 0.0,
+     "AB24/treadmill": null,
+     "AB25/levelground": null,
+     "AB25/ramp": 0.0,
+     "AB25/stair": 0.0,
+     "AB25/treadmill": null,
+     "AB27/levelground": null,
+     "AB27/ramp": 0.0,
+     "AB27/stair": 0.0,
+     "AB27/treadmill": null,
+     "AB30/levelground": null,
+     "AB30/ramp": 0.0,
+     "AB30/stair": 0.0,
+     "AB30/treadmill": null,
+     "SIX/levelground": "pending",
+     "SIX/ramp": "pending",
+     "SIX/stair": "pending",
+     "SIX/treadmill": "pending"
+    },
+    "note": ""
+   },
+   "grid_caption": "No local ramp or stair recording lacks a label. Level walking and treadmill have no terrain label to check.",
+   "figure_question": "Do ramp and stair recordings carry a label and a size?",
+   "direction": "Direction: a wrong terrain label changes which strides are grouped together, not the values inside a stride.",
+   "knock_on": [
+    {
+     "signal": "Which strides are grouped as ramp up, ramp down, stairs",
+     "verdict": "Checked, not affected",
+     "line": "No default was used in the checked outputs.",
+     "evidence": "39 terrain steps checked; current output fallback observed: no.",
+     "ref": "gt21-events-and-terrain"
+    },
+    {
+     "signal": "Step timing from the source gait tables",
+     "verdict": "Checked, not affected",
+     "line": "Every source gait table was read.",
+     "evidence": "4,602 tables, 21,363,858 samples, 0 non-finite, 0 out of range, 0 of 78,604 steps with issues.",
+     "ref": "gt21-all-source-phases"
+    },
+    {
+     "signal": "Whether the stair or ramp size is true",
+     "verdict": "Not checked",
+     "line": "Sizes are the authors' annotations, not measured geometry.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Stair outputs",
+     "verdict": "Not checked",
+     "line": "The rebuild failed on a stair recording, so no stair output has been reviewed.",
+     "evidence": "",
+     "ref": ""
+    }
+   ],
+   "extra_figures": [
+    {
+     "file": "terrain.svg",
+     "question": "How many ramp and stair recordings lack a label or size?",
+     "alt": "Two bars, 1,015 ramp and 665 stair recordings, each with every recording labelled and none missing.",
+     "cap": "All local ramp and stair recordings."
+    }
+   ],
+   "figure_data": {
+    "ramp": 1015,
+    "stair": 665
+   }
+  },
+  {
+   "key": "rebuild_stopped",
+   "card": "Only 102 of 2,301 recordings have been rebuilt, and a stair recording failed",
+   "status": {
+    "key": "open",
+    "label": "Open",
+    "detail": "The rebuild stopped when its worker failed on a stair recording.",
+    "needs": "Needs a guarded job to find out why (a supervised run with memory limits)."
+   },
+   "wrong": "The full rebuild stopped after 102 recordings (1,299 steps), all from AB06. The native worker failed on a stair recording (AB06, stair 1 left, trial 2). No other participant has been rebuilt, and only one stair recording finished. Two restart attempts also ended with an error.",
+   "how": "The batch status reports 102 of 2,301 completed and 1,299 steps; the output folder holds only AB06: 30 level, 63 ramp, 8 treadmill and 1 stair recording.",
+   "example": "AB06 level walking, ramps and treadmill are all rebuilt. AB06 stairs: 1 of 42 finished, 1 failed, 40 not tried.",
+   "total_line": "2,199 of 2,301 local recordings (95.6%) are not rebuilt; 15 of 16 local participants have none. Stairs: 664 of 665 (99.8%) not rebuilt.",
+   "total_numbers": {
+    "recordings_rebuilt": 102,
+    "recordings_total": 2301,
+    "steps_rebuilt": 1299,
+    "participants_rebuilt": 1,
+    "participants_total_local": 16,
+    "stair_rebuilt": 1,
+    "stair_total": 665
+   },
+   "denominator_text": "Recordings: 2,301 local ones (the 846 not yet converted would add more). Steps: 1,299 rebuilt steps; the source holds 78,604. Samples are not counted.",
+   "table": {
+    "columns": [
+     "Task (AB06)",
+     "Recordings in AB06",
+     "Rebuilt"
+    ],
+    "rows": [
+     [
+      "Level walking",
+      "30",
+      "30"
+     ],
+     [
+      "Ramps",
+      "63",
+      "63"
+     ],
+     [
+      "Stairs",
+      "42",
+      "1"
+     ],
+     [
+      "Treadmill",
+      "8",
+      "8"
+     ]
+    ],
+    "fold": false
+   },
+   "grid": {
+    "kind": "checked",
+    "rows": [
+     "AB06",
+     "AB07",
+     "AB08",
+     "AB09",
+     "AB10",
+     "AB11",
+     "AB13",
+     "AB14",
+     "AB16",
+     "AB18",
+     "AB20",
+     "AB21",
+     "AB24",
+     "AB25",
+     "AB27",
+     "AB30",
+     "SIX"
+    ],
+    "cols": [
+     "levelground",
+     "ramp",
+     "stair",
+     "treadmill"
+    ],
+    "cols_plain": [
+     "Level walking",
+     "Ramps",
+     "Stairs",
+     "Treadmill"
+    ],
+    "cells": {
+     "AB06/levelground": 100.0,
+     "AB06/ramp": 100.0,
+     "AB06/stair": 2.4,
+     "AB06/treadmill": 100.0,
+     "AB07/levelground": 0.0,
+     "AB07/ramp": 0.0,
+     "AB07/stair": 0.0,
+     "AB07/treadmill": 0.0,
+     "AB08/levelground": 0.0,
+     "AB08/ramp": 0.0,
+     "AB08/stair": 0.0,
+     "AB08/treadmill": 0.0,
+     "AB09/levelground": 0.0,
+     "AB09/ramp": 0.0,
+     "AB09/stair": 0.0,
+     "AB09/treadmill": 0.0,
+     "AB10/levelground": 0.0,
+     "AB10/ramp": 0.0,
+     "AB10/stair": 0.0,
+     "AB10/treadmill": 0.0,
+     "AB11/levelground": 0.0,
+     "AB11/ramp": 0.0,
+     "AB11/stair": 0.0,
+     "AB11/treadmill": 0.0,
+     "AB13/levelground": 0.0,
+     "AB13/ramp": 0.0,
+     "AB13/stair": 0.0,
+     "AB13/treadmill": 0.0,
+     "AB14/levelground": 0.0,
+     "AB14/ramp": 0.0,
+     "AB14/stair": 0.0,
+     "AB14/treadmill": 0.0,
+     "AB16/levelground": 0.0,
+     "AB16/ramp": 0.0,
+     "AB16/stair": 0.0,
+     "AB16/treadmill": 0.0,
+     "AB18/levelground": 0.0,
+     "AB18/ramp": 0.0,
+     "AB18/stair": 0.0,
+     "AB18/treadmill": 0.0,
+     "AB20/levelground": 0.0,
+     "AB20/ramp": 0.0,
+     "AB20/stair": 0.0,
+     "AB20/treadmill": 0.0,
+     "AB21/levelground": 0.0,
+     "AB21/ramp": 0.0,
+     "AB21/stair": 0.0,
+     "AB21/treadmill": 0.0,
+     "AB24/levelground": 0.0,
+     "AB24/ramp": 0.0,
+     "AB24/stair": 0.0,
+     "AB24/treadmill": 0.0,
+     "AB25/levelground": 0.0,
+     "AB25/ramp": 0.0,
+     "AB25/stair": 0.0,
+     "AB25/treadmill": 0.0,
+     "AB27/levelground": 0.0,
+     "AB27/ramp": 0.0,
+     "AB27/stair": 0.0,
+     "AB27/treadmill": 0.0,
+     "AB30/levelground": 0.0,
+     "AB30/ramp": 0.0,
+     "AB30/stair": 0.0,
+     "AB30/treadmill": 0.0,
+     "SIX/levelground": "pending",
+     "SIX/ramp": "pending",
+     "SIX/stair": "pending",
+     "SIX/treadmill": "pending"
+    },
+    "note": ""
+   },
+   "grid_caption": "Share of each group's recordings that are rebuilt. Zero means not rebuilt.",
+   "figure_question": "Which recordings have been rebuilt?",
+   "direction": "Direction: every other fix on this page can only be adopted after a rebuild. Source data are not affected.",
+   "knock_on": [
+    {
+     "signal": "Source timing in all 2,301 recordings",
+     "verdict": "Checked, not affected",
+     "line": "The source gait tables were read, not the rebuilt data.",
+     "evidence": "4,602 tables, 0 steps with issues.",
+     "ref": "gt21-all-source-phases"
+    },
+    {
+     "signal": "Force values of the 51 completed recordings",
+     "verdict": "Checked, not affected",
+     "line": "They match the original force and marker tables.",
+     "evidence": "51 recordings, 1,111 steps; largest difference 2e-12.",
+     "ref": "gt21-completed-force-readback"
+    },
+    {
+     "signal": "The other 51 completed recordings",
+     "verdict": "Not checked",
+     "line": "Readback has not covered them.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Quality ranges and filtered version",
+     "verdict": "Not checked",
+     "line": "They need the full rebuild.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Why the stair recording failed",
+     "verdict": "Not checked",
+     "line": "The cause has not been found.",
+     "evidence": "",
+     "ref": ""
+    }
+   ],
+   "extra_figures": []
+  },
+  {
+   "key": "no_plate",
+   "card": "Some legs have no usable force plate",
+   "status": {
+    "key": "documented",
+    "label": "Documented only, kept as published",
+    "detail": "Force and centre of pressure are left missing when no plate can be matched to a leg. We never guess.",
+    "needs": ""
+   },
+   "wrong": "On the overground walkway a foot does not always land on one plate, and sometimes two feet land on one. Those legs have no force or centre of pressure. This is a limit of the source, not an error we corrected.",
+   "how": "We read back the force of 51 completed recordings and counted the legs that matched a plate by position. Separately, a seeded sample of 3,389 strides from 6 participants was classified.",
+   "example": "Of 3,389 sampled strides, 1,538 used a named plate, 701 a plate matched by nearest foot, 795 had no plate contact, 292 had stance that was not captured as one block, and 63 had one plate carrying both feet.",
+   "total_line": "235 of 2,222 leg-steps (10.6%) in the 51 completed recordings have no supported plate: overground 200 of 274 (73.0%), ramps 35 of 78 (44.9%), treadmill 0 of 1,870.",
+   "total_numbers": {
+    "leg_steps_total": 2222,
+    "leg_steps_no_plate": 235,
+    "overground_no_plate": 200,
+    "overground_leg_steps": 274,
+    "ramp_no_plate": 35,
+    "ramp_leg_steps": 78,
+    "treadmill_leg_steps": 1870,
+    "sample_strides": 3389,
+    "sample_no_contact": 795,
+    "sample_split": 292,
+    "sample_both_feet": 63,
+    "sample_named": 1538,
+    "sample_nearest": 701
+   },
+   "denominator_text": "A leg-step is one leg's step in one recording (both legs of each step are counted). Counts come from AB06's 51 completed recordings, which is 2.2% of the 2,301, plus a separate seeded sample of 3,389 strides from 6 participants. Stairs are not covered because no stair output was reviewed.",
+   "table": {
+    "columns": [
+     "Task (completed recordings)",
+     "Leg-steps",
+     "No supported plate",
+     "Share"
+    ],
+    "rows": [
+     [
+      "Level walking",
+      "274",
+      "200",
+      "73.0%"
+     ],
+     [
+      "Ramps",
+      "78",
+      "35",
+      "44.9%"
+     ],
+     [
+      "Treadmill",
+      "1,870",
+      "0",
+      "0%"
+     ]
+    ],
+    "fold": false
+   },
+   "grid": {
+    "kind": "affected",
+    "rows": [
+     "AB06",
+     "AB07",
+     "AB08",
+     "AB09",
+     "AB10",
+     "AB11",
+     "AB13",
+     "AB14",
+     "AB16",
+     "AB18",
+     "AB20",
+     "AB21",
+     "AB24",
+     "AB25",
+     "AB27",
+     "AB30",
+     "SIX"
+    ],
+    "cols": [
+     "levelground",
+     "ramp",
+     "stair",
+     "treadmill"
+    ],
+    "cols_plain": [
+     "Level walking",
+     "Ramps",
+     "Stairs",
+     "Treadmill"
+    ],
+    "cells": {
+     "AB06/levelground": 73.0,
+     "AB06/ramp": 44.9,
+     "AB06/stair": "nc",
+     "AB06/treadmill": 0.0,
+     "AB07/levelground": "nc",
+     "AB07/ramp": "nc",
+     "AB07/stair": "nc",
+     "AB07/treadmill": "nc",
+     "AB08/levelground": "nc",
+     "AB08/ramp": "nc",
+     "AB08/stair": "nc",
+     "AB08/treadmill": "nc",
+     "AB09/levelground": "nc",
+     "AB09/ramp": "nc",
+     "AB09/stair": "nc",
+     "AB09/treadmill": "nc",
+     "AB10/levelground": "nc",
+     "AB10/ramp": "nc",
+     "AB10/stair": "nc",
+     "AB10/treadmill": "nc",
+     "AB11/levelground": "nc",
+     "AB11/ramp": "nc",
+     "AB11/stair": "nc",
+     "AB11/treadmill": "nc",
+     "AB13/levelground": "nc",
+     "AB13/ramp": "nc",
+     "AB13/stair": "nc",
+     "AB13/treadmill": "nc",
+     "AB14/levelground": "nc",
+     "AB14/ramp": "nc",
+     "AB14/stair": "nc",
+     "AB14/treadmill": "nc",
+     "AB16/levelground": "nc",
+     "AB16/ramp": "nc",
+     "AB16/stair": "nc",
+     "AB16/treadmill": "nc",
+     "AB18/levelground": "nc",
+     "AB18/ramp": "nc",
+     "AB18/stair": "nc",
+     "AB18/treadmill": "nc",
+     "AB20/levelground": "nc",
+     "AB20/ramp": "nc",
+     "AB20/stair": "nc",
+     "AB20/treadmill": "nc",
+     "AB21/levelground": "nc",
+     "AB21/ramp": "nc",
+     "AB21/stair": "nc",
+     "AB21/treadmill": "nc",
+     "AB24/levelground": "nc",
+     "AB24/ramp": "nc",
+     "AB24/stair": "nc",
+     "AB24/treadmill": "nc",
+     "AB25/levelground": "nc",
+     "AB25/ramp": "nc",
+     "AB25/stair": "nc",
+     "AB25/treadmill": "nc",
+     "AB27/levelground": "nc",
+     "AB27/ramp": "nc",
+     "AB27/stair": "nc",
+     "AB27/treadmill": "nc",
+     "AB30/levelground": "nc",
+     "AB30/ramp": "nc",
+     "AB30/stair": "nc",
+     "AB30/treadmill": "nc",
+     "SIX/levelground": "pending",
+     "SIX/ramp": "pending",
+     "SIX/stair": "pending",
+     "SIX/treadmill": "pending"
+    },
+    "note": ""
+   },
+   "grid_caption": "Share of each group's leg-steps with no plate. Only AB06 was read back; every other cell is not checked.",
+   "figure_question": "How many leg-steps get a force plate?",
+   "direction": "Direction: a leg with no plate has no force or centre of pressure. Its joint angles, moments and powers are separate source columns.",
+   "knock_on": [
+    {
+     "signal": "Force and centre of pressure of those legs",
+     "verdict": "Left out",
+     "line": "They are missing, not estimated.",
+     "evidence": "235 of 2,222 leg-steps in the completed recordings.",
+     "ref": "gt21-completed-force-readback by_mode"
+    },
+    {
+     "signal": "Joint angles, moments and powers of those legs",
+     "verdict": "Checked, not affected",
+     "line": "They are copied from the authors' files.",
+     "evidence": "Non-force columns identical in 36 recordings when the force rules changed.",
+     "ref": "gt21-force-fix-preservation"
+    },
+    {
+     "signal": "Whether the matched plate is the right plate",
+     "verdict": "Not checked",
+     "line": "The match uses marker distance, not an independent contact label.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Any participant except AB06",
+     "verdict": "Not checked",
+     "line": "No other participant has been read back.",
+     "evidence": "",
+     "ref": ""
+    }
+   ],
+   "extra_figures": [
+    {
+     "file": "plates.svg",
+     "question": "How many leg-steps get a force plate?",
+     "alt": "Stacked bars of leg-steps with and without a supported plate: overground 74 and 200, treadmill 1,870 and 0, ramp 43 and 35.",
+     "cap": "Leg-steps in the 51 completed AB06 recordings."
+    }
+   ],
+   "figure_data": {
+    "plates": {
+     "levelground": {
+      "assigned": 74,
+      "multiple_candidates": 0,
+      "no_supported_plate": 200
+     },
+     "treadmill": {
+      "assigned": 1870,
+      "multiple_candidates": 0,
+      "no_supported_plate": 0
+     },
+     "ramp": {
+      "assigned": 43,
+      "multiple_candidates": 0,
+      "no_supported_plate": 35
+     }
+    }
+   }
+  },
+  {
+   "key": "forward_direction",
+   "card": "Forward force and centre of pressure use one fixed lab direction",
+   "status": {
+    "key": "documented",
+    "label": "Documented only, kept as published",
+    "detail": "Forward values are measured on the lab Z axis only. They are kept with this limit stated.",
+    "needs": ""
+   },
+   "wrong": "Forward force and forward centre of pressure use the lab Z axis, signed by the measured pelvis direction of each step. A step is kept while the walking path stays within 45 degrees of Z. On curved overground paths the forward value is therefore under-reported. Steps where the direction is unclear are left missing.",
+   "how": "We measured the path direction in 8 recordings drawn at random (seed 20261027). The 95th percentile of the deviation from Z is 7.7 to 36.4 degrees, lowest on the treadmill and highest overground.",
+   "example": "AB16 level walking: half of the samples deviate by 5.2 degrees or less, 95% by 36.4 degrees or less, and the worst by 45.0.",
+   "total_line": "Forward force and forward centre of pressure in all 2,301 local recordings (100%) carry this limit; how much is lost per recording is measured in 8 only.",
+   "total_numbers": {
+    "recordings_with_limit": 2301,
+    "recordings_total": 2301,
+    "recordings_measured": 8,
+    "deviation_p95_min": 7.72,
+    "deviation_p95_max": 36.41,
+    "walking_along_x_samples": 280,
+    "walking_samples_total": 76909
+   },
+   "denominator_text": "Recordings: 2,301 local ones; angles measured in 8. Samples: 76,909 on-plate samples in those 8 recordings.",
+   "table": {
+    "columns": [
+     "Recording (drawn at random)",
+     "Deviation from Z, 95% of samples (degrees)",
+     "Worst (degrees)"
+    ],
+    "rows": [
+     [
+      "AB08 treadmill",
+      "10.0",
+      "25.7"
+     ],
+     [
+      "AB06 treadmill",
+      "7.7",
+      "35.9"
+     ],
+     [
+      "AB16 level walking",
+      "36.4",
+      "45.0"
+     ],
+     [
+      "AB14 level walking",
+      "31.5",
+      "44.3"
+     ],
+     [
+      "AB24 ramps",
+      "11.3",
+      "44.9"
+     ],
+     [
+      "AB06 ramps",
+      "10.3",
+      "44.9"
+     ],
+     [
+      "AB10 stairs",
+      "15.6",
+      "44.4"
+     ],
+     [
+      "AB07 stairs",
+      "11.6",
+      "44.8"
+     ]
+    ],
+    "fold": false
+   },
+   "grid": {
+    "kind": "checked",
+    "rows": [
+     "AB06",
+     "AB07",
+     "AB08",
+     "AB09",
+     "AB10",
+     "AB11",
+     "AB13",
+     "AB14",
+     "AB16",
+     "AB18",
+     "AB20",
+     "AB21",
+     "AB24",
+     "AB25",
+     "AB27",
+     "AB30",
+     "SIX"
+    ],
+    "cols": [
+     "levelground",
+     "ramp",
+     "stair",
+     "treadmill"
+    ],
+    "cols_plain": [
+     "Level walking",
+     "Ramps",
+     "Stairs",
+     "Treadmill"
+    ],
+    "cells": {
+     "AB06/levelground": 0.0,
+     "AB06/ramp": 1.6,
+     "AB06/stair": 0.0,
+     "AB06/treadmill": 12.5,
+     "AB07/levelground": 0.0,
+     "AB07/ramp": 0.0,
+     "AB07/stair": 2.3,
+     "AB07/treadmill": 0.0,
+     "AB08/levelground": 0.0,
+     "AB08/ramp": 0.0,
+     "AB08/stair": 0.0,
+     "AB08/treadmill": 14.3,
+     "AB09/levelground": 0.0,
+     "AB09/ramp": 0.0,
+     "AB09/stair": 0.0,
+     "AB09/treadmill": 0.0,
+     "AB10/levelground": 0.0,
+     "AB10/ramp": 0.0,
+     "AB10/stair": 2.2,
+     "AB10/treadmill": 0.0,
+     "AB11/levelground": 0.0,
+     "AB11/ramp": 0.0,
+     "AB11/stair": 0.0,
+     "AB11/treadmill": 0.0,
+     "AB13/levelground": 0.0,
+     "AB13/ramp": 0.0,
+     "AB13/stair": 0.0,
+     "AB13/treadmill": 0.0,
+     "AB14/levelground": 3.1,
+     "AB14/ramp": 0.0,
+     "AB14/stair": 0.0,
+     "AB14/treadmill": 0.0,
+     "AB16/levelground": 3.2,
+     "AB16/ramp": 0.0,
+     "AB16/stair": 0.0,
+     "AB16/treadmill": 0.0,
+     "AB18/levelground": 0.0,
+     "AB18/ramp": 0.0,
+     "AB18/stair": 0.0,
+     "AB18/treadmill": 0.0,
+     "AB20/levelground": 0.0,
+     "AB20/ramp": 0.0,
+     "AB20/stair": 0.0,
+     "AB20/treadmill": 0.0,
+     "AB21/levelground": 0.0,
+     "AB21/ramp": 0.0,
+     "AB21/stair": 0.0,
+     "AB21/treadmill": 0.0,
+     "AB24/levelground": 0.0,
+     "AB24/ramp": 1.6,
+     "AB24/stair": 0.0,
+     "AB24/treadmill": 0.0,
+     "AB25/levelground": 0.0,
+     "AB25/ramp": 0.0,
+     "AB25/stair": 0.0,
+     "AB25/treadmill": 0.0,
+     "AB27/levelground": 0.0,
+     "AB27/ramp": 0.0,
+     "AB27/stair": 0.0,
+     "AB27/treadmill": 0.0,
+     "AB30/levelground": 0.0,
+     "AB30/ramp": 0.0,
+     "AB30/stair": 0.0,
+     "AB30/treadmill": 0.0,
+     "SIX/levelground": "pending",
+     "SIX/ramp": "pending",
+     "SIX/stair": "pending",
+     "SIX/treadmill": "pending"
+    },
+    "note": ""
+   },
+   "grid_caption": "Share of each group's recordings that were measured. Zero means not looked at.",
+   "figure_question": "Which recordings have had their walking direction measured?",
+   "direction": "Direction: the path direction affects forward and sideways force and centre of pressure. Vertical values are not affected.",
+   "knock_on": [
+    {
+     "signal": "Sideways force and centre of pressure",
+     "verdict": "Not checked",
+     "line": "A curved path also tilts the sideways axis; no check has measured it.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Vertical force and centre-of-pressure height",
+     "verdict": "Checked, not affected",
+     "line": "They do not depend on path direction.",
+     "evidence": "Vertical uses the lab up axis in all 8 recordings.",
+     "ref": "gt21-c01-conventions"
+    },
+    {
+     "signal": "Forces on ramps",
+     "verdict": "Not checked",
+     "line": "Ramp forces are along the lab's up axis, not the ramp surface. How much that matters is not measured.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Joint angles, moments and powers",
+     "verdict": "Not checked",
+     "line": "They do not use this direction; no run has compared them.",
+     "evidence": "",
+     "ref": ""
+    }
+   ],
+   "extra_figures": [
+    {
+     "file": "heading.svg",
+     "question": "Which way is the person facing when a foot is on a plate?",
+     "alt": "Bars of on-plate samples in 8 recordings: 72,143 facing negative Z, 4,486 facing positive Z, 280 walking along X.",
+     "cap": "On-plate samples in 8 recordings drawn at random (seed 20261027)."
+    }
+   ],
+   "figure_data": {
+    "heading": {
+     "faces lab -Z": 72143,
+     "faces lab +Z": 4486,
+     "walks along lab ±X": 280,
+     "no pelvis markers": 0
+    }
+   }
+  },
+  {
+   "key": "cop_origin",
+   "card": "Centre of pressure is measured from the outer ankle marker",
+   "status": {
+    "key": "documented",
+    "label": "Documented only, kept as published",
+    "detail": "The origin is stated; the offset from the ankle joint is not measured.",
+    "needs": ""
+   },
+   "wrong": "Centre of pressure is stored relative to the outer ankle marker, not the ankle joint centre. The distance between the two is not measured. The authors' own centre of pressure is also filtered at 15 Hz by default, and is set to the plate origin when the plate sees almost no load; our code leaves those samples missing.",
+   "how": "The authors' scripts were read line by line. In 8 sampled recordings the centre of pressure lies a median of 9.4 cm from the nearer foot, so it lands near the foot.",
+   "example": "A median distance of 9.4 cm to the nearer foot says the values land near the right foot. It does not say how far they sit from the ankle joint.",
+   "total_line": "All centre-of-pressure columns in all 2,301 local recordings (100%) are relative to the ankle marker. The offset to the joint is not measured.",
+   "total_numbers": {
+    "recordings_affected": 2301,
+    "recordings_total": 2301,
+    "median_cop_to_foot_cm": 9.4,
+    "sampled_recordings": 8
+   },
+   "denominator_text": "Recordings: 2,301 local ones. Samples are not counted. 'Affected' means the stated origin applies.",
+   "table": {
+    "columns": [
+     "Check",
+     "Result"
+    ],
+    "rows": [
+     [
+      "Median distance from centre of pressure to the nearer foot, 8 recordings",
+      "9.4 cm"
+     ],
+     [
+      "Distance to the ankle joint centre",
+      "Not measured"
+     ]
+    ],
+    "fold": false
+   },
+   "grid": {
+    "kind": "affected",
+    "rows": [
+     "AB06",
+     "AB07",
+     "AB08",
+     "AB09",
+     "AB10",
+     "AB11",
+     "AB13",
+     "AB14",
+     "AB16",
+     "AB18",
+     "AB20",
+     "AB21",
+     "AB24",
+     "AB25",
+     "AB27",
+     "AB30",
+     "SIX"
+    ],
+    "cols": [
+     "levelground",
+     "ramp",
+     "stair",
+     "treadmill"
+    ],
+    "cols_plain": [
+     "Level walking",
+     "Ramps",
+     "Stairs",
+     "Treadmill"
+    ],
+    "cells": {
+     "AB06/levelground": 100.0,
+     "AB06/ramp": 100.0,
+     "AB06/stair": 100.0,
+     "AB06/treadmill": 100.0,
+     "AB07/levelground": 100.0,
+     "AB07/ramp": 100.0,
+     "AB07/stair": 100.0,
+     "AB07/treadmill": 100.0,
+     "AB08/levelground": 100.0,
+     "AB08/ramp": 100.0,
+     "AB08/stair": 100.0,
+     "AB08/treadmill": 100.0,
+     "AB09/levelground": 100.0,
+     "AB09/ramp": 100.0,
+     "AB09/stair": 100.0,
+     "AB09/treadmill": 100.0,
+     "AB10/levelground": 100.0,
+     "AB10/ramp": 100.0,
+     "AB10/stair": 100.0,
+     "AB10/treadmill": 100.0,
+     "AB11/levelground": 100.0,
+     "AB11/ramp": 100.0,
+     "AB11/stair": 100.0,
+     "AB11/treadmill": 100.0,
+     "AB13/levelground": 100.0,
+     "AB13/ramp": 100.0,
+     "AB13/stair": 100.0,
+     "AB13/treadmill": 100.0,
+     "AB14/levelground": 100.0,
+     "AB14/ramp": 100.0,
+     "AB14/stair": 100.0,
+     "AB14/treadmill": 100.0,
+     "AB16/levelground": 100.0,
+     "AB16/ramp": 100.0,
+     "AB16/stair": 100.0,
+     "AB16/treadmill": 100.0,
+     "AB18/levelground": 100.0,
+     "AB18/ramp": 100.0,
+     "AB18/stair": 100.0,
+     "AB18/treadmill": 100.0,
+     "AB20/levelground": 100.0,
+     "AB20/ramp": 100.0,
+     "AB20/stair": 100.0,
+     "AB20/treadmill": 100.0,
+     "AB21/levelground": 100.0,
+     "AB21/ramp": 100.0,
+     "AB21/stair": 100.0,
+     "AB21/treadmill": 100.0,
+     "AB24/levelground": 100.0,
+     "AB24/ramp": 100.0,
+     "AB24/stair": 100.0,
+     "AB24/treadmill": 100.0,
+     "AB25/levelground": 100.0,
+     "AB25/ramp": 100.0,
+     "AB25/stair": 100.0,
+     "AB25/treadmill": 100.0,
+     "AB27/levelground": 100.0,
+     "AB27/ramp": 100.0,
+     "AB27/stair": 100.0,
+     "AB27/treadmill": 100.0,
+     "AB30/levelground": 100.0,
+     "AB30/ramp": 100.0,
+     "AB30/stair": 100.0,
+     "AB30/treadmill": 100.0,
+     "SIX/levelground": "pending",
+     "SIX/ramp": "pending",
+     "SIX/stair": "pending",
+     "SIX/treadmill": "pending"
+    },
+    "note": ""
+   },
+   "grid_caption": "Every centre-of-pressure column is relative to the ankle marker.",
+   "figure_question": "Which recordings carry centre of pressure relative to the ankle marker?",
+   "direction": "Direction: the origin offsets all centre-of-pressure positions by a roughly constant amount. Forces and angles are unaffected.",
+   "knock_on": [
+    {
+     "signal": "Centre-of-pressure positions",
+     "verdict": "Not checked",
+     "line": "Every value is shifted by the unmeasured ankle-marker offset.",
+     "evidence": "",
+     "ref": ""
+    },
+    {
+     "signal": "Forces and joint angles",
+     "verdict": "Checked, not affected",
+     "line": "They do not use the centre of pressure.",
+     "evidence": "Forces come from plate force columns and angles from joint angle files.",
+     "ref": "gt21-c01-conventions channel_policy"
+    },
+    {
+     "signal": "Anything computed from centre of pressure, such as moment arms",
+     "verdict": "Not checked",
+     "line": "No such quantity is exported or tested.",
+     "evidence": "",
+     "ref": ""
+    }
+   ],
+   "extra_figures": []
+  }
+ ],
+ "checked_fine": [
+  "All 4,602 source gait-phase tables of the 16 local participants were read: 21,363,858 samples, 0 non-finite or out of range, and 0 of 78,604 steps with a timing problem.",
+  "All 1,680 local ramp and stair recordings carry a terrain label and a positive incline or stair height.",
+  "Force values of 51 completed recordings (1,111 steps) match the original force and marker tables; the largest difference is 2e-12.",
+  "The sign test on 648 leg channels (6 participants, seeded) found 0 wrong signs; 127 channels were left undecided and are not counted as passed.",
+  "Vertical force and centre-of-pressure height use the lab's up axis; the lab frame was right-handed in all 8 sampled recordings."
+ ],
+ "other_limits": [
+  "Plate moments are not exported: their reference point and sign are not stated, and values of hundreds of newton-metres on contact show they are not free moments.",
+  "Overground files include a virtual 'Combined' plate (a force-weighted merge of the real plates) that we do not separate from its parts.",
+  "Static-pose file choice in the authors' script depends on file ordering, so the intended calibration for a participant is unknown.",
+  "The 2024 source folder is a live working copy: one file in AB28 is dated October 2026, so each download re-lists the folder first.",
+  "No producer log ties the shipped force-conversion tools to the published force files; the frame is corroborated by data, not proven by the producer."
+ ]
+}
