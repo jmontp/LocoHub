@@ -35,9 +35,9 @@
     <main id="main" class="page-content" tabindex="-1">
       <div class="page-kicker"><a href="../../index.html">LocoHub</a><span aria-hidden="true">/</span>Gtech 2023</div>
       
-<header class="dataset-heading"><h1 id="gtech-2023">Gtech 2023</h1>
+<header class="dataset-heading"><h1 id="gtech-2023">Gtech 2023</h1><!-- STATUS_START --><p class="dataset-status" data-status="rebuilding"><strong>Status: being rebuilt.</strong> The data is being rebuilt from the original files. Downloads and plots on this page, where present, come from the earlier conversion, which has not been checked. Signs and zero references in files not yet rebuilt may differ from the <a href="../../reference/index.html#signs-and-frames">current standard</a>. <a href="problems.html">Known problems</a>.</p><!-- STATUS_END -->
 <p class="dataset-note">These files and reports use earlier conversions and have not yet been re-checked. Read the processing notes and recorded checks before analysis.</p>
-<p class="dataset-note"><strong>Erratum (2026-10-30), joint moment and power units.</strong> The publisher README (readme.txt, lines 32-33) states that RawData Joint_Moments.csv is in N·m and Joint_Powers.csv in W. The data show N·m/kg and W/kg. Evidence, 5 seeded random subjects, 8 legs of walking: against a mass-free force-plate lever-arm estimate of the ankle moment in N·m, the source ankle column is smaller by a factor of 64 to 90, a body mass (a column in N·m would give 1; correlation 0.997 or higher); force-plate body masses match the README masses; joint power equals moment times angular velocity (ratio 0.96 to 1.00). ProcessedData is affected too: README lines 18-20 make the same N·m and W claims, and ProcessedData _moment.csv left hip, knee and ankle sagittal values equal RawData Joint_Moments.csv on matched time stamps (3 trials with finite values, checked by an independent verifier; the _moment_filt.csv and _power.csv files were not compared). LocoHub therefore does not divide these moments by mass again. Which mass the authors divided by is not resolved. Audit: <code>docs/quality/audits/gt23-c02-moment-units.json</code>.</p></header>
+<p class="dataset-note"><strong>Erratum (2026-10-30), joint moment and power units.</strong> The publisher README (readme.txt, lines 32-33) states that RawData Joint_Moments.csv is in N·m and Joint_Powers.csv in W. The data show N·m/kg and W/kg. Evidence, 5 seeded random subjects, 8 legs of walking: against a mass-free force-plate lever-arm estimate of the ankle moment in N·m, the source ankle column is smaller by a factor of 64 to 90, a body mass (a column in N·m would give 1; correlation 0.997 or higher); force-plate body masses match the README masses; joint power equals moment times angular velocity (ratio 0.96 to 1.00). ProcessedData is affected too: README lines 18-20 make the same N·m and W claims, and ProcessedData _moment.csv left hip, knee and ankle sagittal values equal RawData Joint_Moments.csv on matched time stamps (3 trials with finite values, checked by an independent verifier; the _moment_filt.csv and _power.csv files were not compared). LocoHub therefore does not divide these moments by mass again. Which mass the authors divided by is not resolved. Audit record: <a href="../../quality/audits/gt23-c02-moment-units.json">moment units check (JSON)</a>.</p></header>
 <nav class="dataset-section-nav" aria-label="Study sections"><a href="#phase-plots">Phase plots</a><a href="#overview">Overview</a><a href="#downloads">Downloads</a><a href="#subjects-and-tasks">Subjects &amp; tasks</a><a href="#feature-availability-by-task">Signals</a><a href="#collection-details">Collection</a><a href="#validation">Recorded checks</a><a href="#citation">Citation</a></nav>
 <span id="study-and-converted-data" class="dataset-anchor" aria-hidden="true"></span>
 <div class="dataset-overview-grid">
@@ -1324,7 +1324,7 @@
 <ul>
 <li><strong>Status</strong>: ❌ Needs Review (2.6%)</li>
 <li><strong>Stride Pass Rate</strong>: 2.6%</li>
-<li><strong>Validation Ranges</strong>: <a href="../gt23_validation_ranges.yaml">Download validation ranges</a> (source: contributor_tools/validation_ranges/default_ranges.yaml)<br><small class="legacy-sign-label"><a href="../../reference/index.html#signs-and-frames">Legacy record: pelvis tilt for run, walking and stair uses the old anterior-positive sign; current ranges follow the reference sign rule</a></small></li>
+<li><strong>Validation Ranges</strong>: <a href="../gt23_validation_ranges.yaml">Download validation ranges</a> (source: the default validation ranges file)<br><small class="legacy-sign-label"><a href="../../reference/index.html#signs-and-frames">Legacy record: pelvis tilt for run, walking and stair uses the old anterior-positive sign; current ranges follow the reference sign rule</a></small></li>
 <li><strong>Detailed Report</strong>: <a href="#validation">View validation report</a></li>
 </ul>
 </section>
@@ -1344,7 +1344,7 @@
 <ul>
 <li><code>gtech_2023_phase_raw.parquet</code> — Phase-normalized dataset</li>
 <li><a href="#validation">Validation report</a></li>
-<li>Conversion script in <code>contributor_tools/conversion_scripts/gt23/</code></li>
+<li>Conversion script: in the LocoHub repository, under the conversion scripts folder</li>
 </ul>
 <hr/>
 <p><em>Generated by Dataset Submission Tool on 2026-01-09 10:02</em></p>
@@ -1472,7 +1472,7 @@
 <section class="dataset-section" aria-labelledby="validation-ranges-snapshot">
 <h2 id="validation-ranges-snapshot">Validation Ranges Snapshot</h2>
 <p>Download the YAML snapshot used for this validation: <a href="../gt23_validation_ranges.yaml">Download</a><br><small class="legacy-sign-label"><a href="../../reference/index.html#signs-and-frames">Legacy record: pelvis tilt for run, walking and stair uses the old anterior-positive sign; current ranges follow the reference sign rule</a></small></p>
-<p><em>Source ranges file: contributor_tools/validation_ranges/default_ranges.yaml</em></p>
+<p><em>Source ranges file: the default validation ranges</em></p>
 </section>
 <section class="dataset-section phase-explorer" id="phase-plots" data-study-phase="gt23" data-aggregate-source="../aggregate_previews/manifest.json" aria-label="Phase plots">
 <h2>Phase plots</h2><p class="phase-source"></p><p class="phase-note">Loading task averages…</p><div class="phase-controls"></div><div class="phase-plot"></div>

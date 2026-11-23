@@ -283,8 +283,8 @@ def _reference(value, docs_root):
         return f'<a href="{safe}">{safe}</a>'
     if not parsed.scheme and not parsed.query and value.startswith('docs/'):
         target = (docs_root.parent / parsed.path).resolve()
-        # Markdown sources are not published, so they stay plain text.
-        if target.is_relative_to(docs_root.resolve()) and target.is_file() and target.suffix != '.md':
+        # Markdown sources, source code and launcher logs (git-ignored, local paths) are not published, so they stay plain text.
+        if target.is_relative_to(docs_root.resolve()) and target.is_file() and target.suffix not in ('.md', '.log', '.py'):
             href = os.path.relpath(target, docs_root / 'maintainers').replace(os.sep, '/')
             if parsed.fragment:
                 href += '#' + parsed.fragment

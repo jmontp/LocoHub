@@ -50,6 +50,14 @@ Tests for contracts, release integrity, and public examples should use small det
 
 Keep validation decisions in the shared contract implementation. CLI summaries, filtering, release manifests, and documentation must consume the same result, rather than independently reconstructing counts. Contributor utilities are internal implementation, not a new public SDK.
 
+## How to land a dataset page
+
+A dataset page is built from its verified local review bundle (see the HTML page for details).
+
+1. The dataset's R01 task must be `done` in the work backlog; the builder refuses otherwise.
+2. Run `python3 contributor_tools/build_dataset_review_page.py contributor_tools/page_specs/<dataset>.json`, then `python3 contributor_tools/dataset_status.py`.
+3. Run `python3 docs/build.py --check` and render the catalog and the new page at 1280 and 390 px wide.
+
 ## Documentation checks
 
 The public site should let a researcher identify the population, available signals, artifact variant, limitations, and quality evidence before downloading. Preserve native Python and MATLAB examples that run on the complete synthetic fixture.

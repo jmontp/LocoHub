@@ -1,0 +1,381 @@
+{
+ "schema": 1,
+ "slug": "um21",
+ "display_name": "Umich 2021",
+ "title": "Umich 2021 · LocoHub",
+ "css_class": "um21",
+ "r01_task_id": "UM21-R01",
+ "bundle": "converted_datasets/reconversion_v2/um21_r01_review_v2",
+ "handoff": "docs/maintainers/handoffs/UM21-R01.json",
+ "scope": "docs/quality/audits/um21-r01-fix-scope.json",
+ "verified_date": "2026-11-06",
+ "meta_description": "UMich 2021 treadmill walking: what we fixed, what we left out, and what we checked.",
+ "heading_note": "Local review version, not yet released. Nothing on this page has been approved scientifically.",
+ "lead": "Treadmill walking from {subjects} participants at level, 5° and 10° incline, and 5° and 10° decline, plus the transitions between them: {recordings} recordings. This is a local review version and is not released. The full version has <strong>{full:,} strides</strong>; the cleaned version has <strong>{filtered:,}</strong>. Every stride has exactly 150 samples from 0 to 100 percent of the stride.",
+ "conditions": {
+  "d10": "10° decline",
+  "d5": "5° decline",
+  "i0": "level",
+  "i5": "5° incline",
+  "i10": "10° incline"
+ },
+ "colors": {
+  "d10": "#0072B2",
+  "d5": "#56B4E9",
+  "i0": "#009E73",
+  "i5": "#E69F00",
+  "i10": "#D55E00"
+ },
+ "panels": [
+  {
+   "task": "decline_walking",
+   "label": "Decline walking",
+   "conditions": [
+    "d10",
+    "d5"
+   ]
+  },
+  {
+   "task": "level_walking",
+   "label": "Level walking",
+   "conditions": [
+    "i0"
+   ]
+  },
+  {
+   "task": "incline_walking",
+   "label": "Incline walking",
+   "conditions": [
+    "i5",
+    "i10"
+   ]
+  },
+  {
+   "task": "transition",
+   "label": "Transitions (belt speed or slope changing)",
+   "conditions": [
+    "d10",
+    "d5",
+    "i0",
+    "i5",
+    "i10"
+   ]
+  }
+ ],
+ "plain": {
+  "pelvis_sagittal_angle_rad": {
+   "name": "Pelvis tilt",
+   "unit": "radians"
+  },
+  "hip_flexion_angle_ipsi_rad": {
+   "name": "Hip angle",
+   "unit": "radians"
+  },
+  "knee_flexion_angle_ipsi_rad": {
+   "name": "Knee angle",
+   "unit": "radians"
+  },
+  "ankle_dorsiflexion_angle_ipsi_rad": {
+   "name": "Ankle angle",
+   "unit": "radians"
+  },
+  "thigh_sagittal_angle_ipsi_rad": {
+   "name": "Thigh angle (side-view estimate)",
+   "unit": "radians"
+  },
+  "shank_sagittal_angle_ipsi_rad": {
+   "name": "Shank angle (side-view estimate)",
+   "unit": "radians"
+  },
+  "pelvis_sagittal_velocity_rad_s": {
+   "name": "Pelvis tilt speed",
+   "unit": "radians per second"
+  },
+  "thigh_sagittal_velocity_ipsi_rad_s": {
+   "name": "Thigh angle speed",
+   "unit": "radians per second"
+  },
+  "shank_sagittal_velocity_ipsi_rad_s": {
+   "name": "Shank angle speed",
+   "unit": "radians per second"
+  },
+  "hip_flexion_moment_ipsi_Nm_kg": {
+   "name": "Hip moment",
+   "unit": "newton-metres per kg body mass"
+  },
+  "knee_flexion_moment_ipsi_Nm_kg": {
+   "name": "Knee moment",
+   "unit": "newton-metres per kg body mass"
+  },
+  "ankle_dorsiflexion_moment_ipsi_Nm_kg": {
+   "name": "Ankle moment",
+   "unit": "newton-metres per kg body mass"
+  },
+  "hip_flexion_power_ipsi_W_kg": {
+   "name": "Hip power",
+   "unit": "watts per kg body mass"
+  },
+  "knee_flexion_power_ipsi_W_kg": {
+   "name": "Knee power",
+   "unit": "watts per kg body mass"
+  },
+  "ankle_dorsiflexion_power_ipsi_W_kg": {
+   "name": "Ankle power",
+   "unit": "watts per kg body mass"
+  }
+ },
+ "status_text": {
+  "checked": {
+   "label": "Checked",
+   "note": "Checked against impossible angle ranges and sudden jumps."
+  },
+  "offset_unverified": {
+   "label": "Checked; zero point not checked",
+   "note": "Checked only against clearly impossible values and sudden jumps. Where the ankle angle is zero has not been checked."
+  },
+  "partly_checked": {
+   "label": "Partly checked",
+   "note": "Checked for sudden jumps only; no plausible range exists to check against."
+  },
+  "unchecked": {
+   "label": "Not checked",
+   "note": "Values are as published after the sign step; no check was run."
+  }
+ },
+ "scope_questions": {
+  "clock": "Which recordings have the wrong task timing?",
+  "pelvis_backwards": "Which recordings had a backwards pelvis?",
+  "sign_rule": "Which recordings go through the pelvis sign rule?",
+  "thigh_shank": "Which recordings had a wrong thigh and shank?",
+  "ankle_180": "Which recordings had an ankle turned by 180°?",
+  "power": "Which recordings have an empty or copied power channel?"
+ },
+ "fixed_note": "One card per fix. Each card says what was wrong, how much of the data it touched, and what else it could affect. Before-and-after figures show the published data and the fixed data side by side. Example strides are drawn at random, not hand-picked.",
+ "cards": [
+  {
+   "title": "Task timing was off in some recordings",
+   "wrong": "The published task intervals (when belt speed or slope changes) were timed on the belt-speed record, not on the motion data. In 4 of 50 treadmill recordings that clock is off by 1.7 to 7 s, and 2 more cannot be checked, so strides near a change can carry the wrong task label.",
+   "how": "We lined up the belt-speed record with the belt speed measured from heel and toe markers. 44 recordings agree within the accepted band.",
+   "did": "We left the six failing recordings out instead of shifting or estimating any interval.",
+   "example": "AB09 at 10° incline: the best shift is 6.85 s, and the belt-speed error drops from 0.67 to 0.07 m/s at that shift, so the recording is left out. AB01 at 5° incline is an exact copy of its 10° incline recording and is also left out.",
+   "figures": [
+    {
+     "kind": "published",
+     "src": "um21-clock.svg",
+     "side": "before",
+     "label": "Before and after, per recording",
+     "alt": "Shift of the task timing for each of 50 treadmill recordings. Most sit in a narrow band near zero; four sit 1.7 to 7 seconds away and two cannot be checked.",
+     "caption": "Shift that best lines up the belt-speed record with belt speed from the markers. Crosses at the bottom cannot be checked."
+    }
+   ],
+   "single": true,
+   "scope_key": "clock"
+  },
+  {
+   "title": "One recording's pelvis was computed facing backwards",
+   "wrong": "In AB04 level walking the motion-capture software computed the pelvis facing backwards, so its stored tilt has the wrong sign, and so do the thigh and shank angles built on it.",
+   "how": "The published tilt is the mirror image of the tilt computed from the pelvis markers.",
+   "did": "For that recording only, we flipped the sign of the pelvis tilt using the marker evidence and rebuilt the thigh and shank angles from it.",
+   "example": "AB04 level walking, right leg: the pelvis tilt is multiplied by +1 there and by −1 in the other 43 recordings.",
+   "figures": [
+    {
+     "kind": "published",
+     "src": "um21-pelvis-before.svg",
+     "side": "before",
+     "label": "Before: as published",
+     "alt": "Published pelvis tilt is the mirror image of tilt computed from the pelvis markers."
+    },
+    {
+     "kind": "published",
+     "src": "um21-pelvis-after.svg",
+     "side": "after",
+     "label": "After: sign flipped",
+     "alt": "Published pelvis tilt times minus one overlaps the marker tilt.",
+     "caption": "Shown with the source sign (forward tilt positive); LocoHub files store pelvis tilt with the opposite sign."
+    }
+   ],
+   "single": false,
+   "scope_key": "pelvis_backwards"
+  },
+  {
+   "title": "Pelvis tilt direction follows one sign rule",
+   "wrong": "The source reports forward pelvis tilt as positive. LocoHub's rule (counterclockwise is positive) makes forward tilt negative.",
+   "how": "We checked the sign of each angle and moment against marker and force-plate evidence.",
+   "did": "We multiplied pelvis tilt by −1 in 43 of the 44 recordings (all strides). Hip, knee and ankle angles and the hip, knee and ankle moments keep their published sign.",
+   "example": "AB01 level walking, right leg: pelvis tilt is multiplied by −1; hip, knee and ankle are unchanged.",
+   "figures": [
+    {
+     "question": "Does the rule flip pelvis tilt, and which way is forward?"
+    },
+    {
+     "kind": "local",
+     "src": "sign-before.svg",
+     "label": "Before: as the source publishes it (forward tilt is positive)",
+     "alt": "One stride of pelvis tilt as the source publishes it; forward tilt is up."
+    },
+    {
+     "kind": "local",
+     "src": "sign-after.svg",
+     "label": "After: LocoHub's rule (forward tilt is negative)",
+     "alt": "The same stride after multiplying by minus one; forward tilt is down.",
+     "caption": "One stride drawn at random: {fi[sign_example][who]}. The source sign is the released value times −1, since the rule is an exact −1."
+    }
+   ],
+   "single": false,
+   "scope_key": "sign_rule"
+  },
+  {
+   "title": "Thigh and shank angles are rebuilt",
+   "wrong": "Earlier rebuild code added pelvis tilt to the hip angle, but the dataset's authors subtract it, so the thigh angle was off by about twice the pelvis tilt. The older thigh and shank columns are not trusted.",
+   "how": "Hip minus pelvis follows the thigh angle computed from the markers within a few degrees; the markers use the bump at the top of the thigh bone, so a small offset is expected.",
+   "did": "We rebuilt thigh and shank from the published pelvis, hip and knee angles (after the sign step) and release them as side-view estimates.",
+   "example": "AB08 at 5° incline, right leg: the earlier rebuild was about 38° off in the example stride.",
+   "figures": [
+    {
+     "kind": "published",
+     "src": "um21-thigh-before.svg",
+     "side": "before",
+     "label": "Before: the earlier rebuild",
+     "alt": "Pelvis plus hip runs far above the thigh angle from markers for the whole stride."
+    },
+    {
+     "kind": "published",
+     "src": "um21-thigh-after.svg",
+     "side": "after",
+     "label": "After: the authors' formula",
+     "alt": "Hip minus pelvis follows the thigh angle from markers within a few degrees."
+    }
+   ],
+   "single": false,
+   "scope_key": "thigh_shank"
+  },
+  {
+   "title": "Part of one ankle recording was turned 180°",
+   "wrong": "For 5,429 frames of one recording's right ankle (AB07, 10° incline) the software reported the ankle in an equivalent but different form that shifts it by about 180°. The strides inside sat near −160°.",
+   "how": "After the turn, the strides fall on the strides outside the stretch: −16.2° to 26.8° against −16.6° to 27.0°, and all 20 pass the same angle limits.",
+   "did": "We turned 20 strides back by 180° and logged every one of their 3,000 samples. 2 strides with one-sample jumps are left out. The source copy is untouched.",
+   "example": "One stride's tenth sample: −159.6° as published becomes 20.4°. Of the 31 strides in the stretch, 20 were turned back, 2 were left out, and 9 were never part of the converted strides, so they were never released.",
+   "figures": [
+    {
+     "kind": "published",
+     "src": "um21-ankle-before.svg",
+     "side": "before",
+     "label": "Before: as published",
+     "alt": "Strides inside the stretch sit near minus 160 degrees, far below the strides outside it."
+    },
+    {
+     "kind": "published",
+     "src": "um21-ankle-after.svg",
+     "side": "after",
+     "label": "After: turned back",
+     "alt": "Converted strides fall on the strides outside the stretch. The vertical scale differs from the Before figure.",
+     "caption": "The vertical scale differs from the Before figure. Both figures are drawn from all 31 strides in the stretch; only 20 of them are in the converted set, 2 were left out for jumps, and 9 were never released."
+    }
+   ],
+   "single": false,
+   "scope_key": "ankle_180"
+  },
+  {
+   "title": "Power sign was unsettled",
+   "wrong": "Power is stored in two ways (8 recordings differ), and its sign could not be settled from the source alone.",
+   "how": "We kept the sign for which power equals the published moment times the joint speed, with agreement of at least 0.9 on both legs.",
+   "did": "We set the sign that way, and left the power empty where the agreement stays below 0.9.",
+   "example": "AB02 at 10° decline: hip power is multiplied by −1, with agreement −1.00. AB03 at 10° incline: hip power agreement is only 0.80 on one leg and 0.67 on the other, so hip power is left empty there.",
+   "figures": [
+    {
+     "question": "Does the set sign make power equal moment times joint speed?"
+    },
+    {
+     "kind": "local",
+     "src": "power-before.svg",
+     "label": "Before: power as the source stores it",
+     "alt": "One stride of ankle power as the source stores it is the mirror image of joint moment times joint speed."
+    },
+    {
+     "kind": "local",
+     "src": "power-after.svg",
+     "label": "After: sign set by the check",
+     "alt": "The same stride after the sign is set; power lies on joint moment times joint speed.",
+     "caption": "One stride drawn at random: {fi[power_example][who]}; agreement after the fix {fi[power_example][agreement_after]}. Joint speed is the slope of the ankle angle."
+    }
+   ],
+   "single": false,
+   "scope_key": "power"
+  }
+ ],
+ "exclusion_rows": [
+  {
+   "what": "Too short or too long to check ({short} under 50 samples, {long} over 250 samples at 100 per second)",
+   "count": {
+    "reason": "t04_2_outside_stride_rule"
+   },
+   "where": "Neither version",
+   "why": "Left out because a stride this short or long cannot be checked against the others."
+  },
+  {
+   "what": "Sudden ankle jumps (AB07, 10° incline, right leg)",
+   "count": {
+    "reason": "c03_2_sudden_jump"
+   },
+   "where": "Neither version",
+   "why": "Left out because turning the ankle back by 180° cannot remove a one-sample jump inside these two strides."
+  },
+  {
+   "what": "Ankle angle beyond the angle limit (AB08, level, left leg)",
+   "count": {
+    "reason": "q01_limit_failed"
+   },
+   "where": "Full version only, marked failed",
+   "why": "Left out of the cleaned version because six samples fall below the lowest ankle angle we accept; it also has missing samples."
+  },
+  {
+   "what": "Whole recordings left out earlier",
+   "count": 6,
+   "where": "Neither version",
+   "why": "Left out because the task timing is shifted by 1.7 to 7 s in four of them and cannot be checked in two. They are AB01 10° decline, AB01 5° decline, AB08 10° incline, AB09 10° incline, AB10 level, and AB01 5° incline (an exact copy of its 10° incline recording)."
+  },
+  {
+   "what": "AB07 strides that were never converted",
+   "count": 9,
+   "where": "Never part of the converted set",
+   "why": "These 9 strides lie in the same 180° stretch, but they are not among the strides the conversion was built from, so they were never released. They are not counted above."
+  },
+  {
+   "what": "Foot angle and foot angle speed",
+   "count": 2,
+   "where": "Not released",
+   "why": "Left out because the foot angle carries the unchecked ankle zero point."
+  },
+  {
+   "what": "Power channels left empty ({held_n} channels)",
+   "count": "held_n",
+   "where": "Present but empty in both versions",
+   "why": "Left empty because we could not settle the sign of the power: {held_text}."
+  },
+  {
+   "what": "Kept with an empty ankle (AB08, level, left leg)",
+   "count": 12,
+   "where": "Both versions",
+   "why": "These strides stay in, but the ankle angle is missing from the source. Missing is never counted as a pass."
+  }
+ ],
+ "accounting_note": "Accounting: {upstream:,} strides came in; {full:,} are in the full version (15 + 2 left out of both); the cleaned version has {filtered:,} (the AB08 stride is the one difference). The counts for whole recordings, never-converted strides, foot angles and empty columns are counted in recordings, strides or columns as stated in each row, not in the strides above.",
+ "checked": {
+  "checked": [
+   "Hip, knee and ankle angles against clearly impossible ranges (the ankle only for impossible values).",
+   "Every angle (pelvis, hip, knee, ankle, thigh, shank) for sudden jumps between neighbouring samples.",
+   "That every stride has 150 samples and that values were not changed except where this page says so."
+  ],
+  "not_checked": [
+   "Moments, powers and all angle speeds: no check was run.",
+   "Belt speeds.",
+   "Where the ankle angle is zero.",
+   "Plausible ranges for each task: we used only coarse limits, not reviewed ranges.",
+   "Thigh and shank are side-view estimates, not full 3D angles."
+  ],
+  "note": "A stride that passes has not been shown to be right, only not clearly impossible. Missing samples are never counted as a pass: 376 strides have some missing samples."
+ },
+ "phase_note": "Mean (line) and spread of one standard deviation (band) of each released signal over the stride, from the cleaned version. Left and right legs are pooled. Colors are the slope. Strides with the power left empty are not in the power plots. These plots show the data as released; they do not mean the signals are correct.",
+ "columns_note": "Every column has a value for each stride's own leg only; pelvis has no side. Foot angle and foot angle speed are not released.",
+ "downloads_text": "<strong>Local review files, not published yet.</strong> The full version, the cleaned version, the list of left-out strides and the log of turned ankle samples exist only on the maintainer's computer. They will get download links when they are released."
+}

@@ -4,6 +4,9 @@
 No Markdown is rendered. Only HTML and its referenced local assets are published.
 Research datasets outside docs/ are never opened.
 
+Launcher logs (*.log) are git-ignored scratch output with local paths and tool warnings.
+They are never published and a page may not link to one (cite the matching .json receipt).
+
 Published text copies have local absolute paths redacted (see redact_paths); the
 files under docs/ are never modified, so hash-bound audit records stay intact.
 A binary asset that contains a local path is refused.
@@ -221,6 +224,9 @@ def check_site(source: Path = DOCS) -> tuple[dict[Path, Page], set[Path]]:
             target, anchor = result
             if target.relative_to(source).as_posix() in GENERATED_ASSETS:
                 continue
+            if target.suffix == ".log":
+                errors.append(f"{path.relative_to(source)}: launcher logs are not published; cite the .json receipt instead: {value}")
+                continue
             if not target.is_file():
                 errors.append(f"{path.relative_to(source)}: missing local target {value}")
                 continue
@@ -319,7 +325,8 @@ def build(output: Path, source: Path = DOCS) -> tuple[int, int]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Check authored HTML links and assets without copying.")
-    parser.add_argument("--output", type=Path, default=DOCS.parent / "site", help="Static site output directory.")
+    parser.add_argument("--output", type=Path, default=DOCS.parent / "site" / "html",
+                        help="Static site output directory (default site/html). A directory that is not empty and was not made by this script is refused, so the old site/ folder cannot be overwritten.")
     args = parser.parse_args()
     try:
         if args.check:

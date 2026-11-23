@@ -7,8 +7,8 @@ to build or serve the static website.
 
 ```bash
 python3 docs/build.py --check
-python3 docs/build.py --output site
-python3 -m http.server 8000 --directory site
+python3 docs/build.py            # writes site/html (the default)
+python3 -m http.server 8000 --directory site/html
 ```
 
 Open `http://localhost:8000/`. The builder uses only Python's standard library:

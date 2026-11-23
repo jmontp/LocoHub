@@ -36,11 +36,13 @@ def card(card_id):
 def test_gt23_mass_counts_and_factor_range():
     subjects = audit("gt23-c03-normalizing-mass.json")["subjects"]
     wrong = [s for s, v in subjects.items() if not v["readme_consistent"]]
-    # Published / correct = own mass / divisor, computed here from the two masses.
+    # Published / correct = own mass / mass used, computed here from the two masses.
     factors = [subjects[s]["readme_mass_kg"] / subjects[s]["divisor_kg_best"] for s in wrong]
     text = card("gt23-normalizing-mass")
-    assert f"In {len(wrong)} of {len(subjects)} participants" in text
-    assert f"{min(factors):.2f} to {max(factors):.2f}" in text
+    assert f"For {len(wrong)} of {len(subjects)} participants" in text
+    low, high = round(100 * (1 - min(factors))), round(100 * (max(factors) - 1))
+    assert (low, high) == (20, 41)
+    assert f"off by {low} % too low to {high} % too high" in text
     assert all(subjects[s]["calibration_trial"] == "normal_walk_1" for s in subjects)  # 'level walking'
 
 

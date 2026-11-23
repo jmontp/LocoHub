@@ -114,9 +114,10 @@ def test_authored_html_links_and_native_examples_are_complete():
         assert page.main_count == 1
         assert "mkdocs" not in page.path.read_text().lower()
     dataset = pages[(ROOT / "docs/datasets/um21/index.html").resolve()]
-    assert "Human locomotion" in " ".join(dataset.main_text)
-    assert "validation" in dataset.ids
-    assert any("umich_2021" in str(asset) for asset in assets)
+    # The UMich 2021 page is the review-version page (what we fixed, left out, checked).
+    assert "Local review version" in " ".join(dataset.main_text)
+    assert {"fixed", "left-out", "checked", "downloads"} <= dataset.ids
+    assert any("um21" in str(asset) for asset in assets)
 
 
 def test_static_publisher_does_not_need_markdown_or_copy_unreferenced_files(tmp_path):

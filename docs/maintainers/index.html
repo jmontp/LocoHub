@@ -97,6 +97,14 @@ python3 contributor_tools/build_backlog_page.py --check</code></pre>
 </tbody>
 </table></div>
 <p>Keep validation decisions in the shared contract implementation. CLI summaries, filtering, release manifests, and documentation must consume the same result, rather than independently reconstructing counts. Contributor utilities are internal implementation, not a new public SDK.</p>
+<h2 id="land-a-dataset-page">How to land a dataset page</h2>
+<p>A dataset page is built from its verified local review bundle. Every number on the page comes from the bundle; the page never opens the full data tables. Each dataset has a spec file with the plain-words text (fix cards, left-out rows, checked lists) in <code>contributor_tools/page_specs/</code>.</p>
+<ol>
+<li><strong>Verify first.</strong> The dataset's R01 task must be <code>done</code> in the work backlog, meaning a second agent checked the bundle. The builder refuses the page otherwise. Task completion is not scientific approval, so the page keeps the label &ldquo;local review version (not released)&rdquo;.</li>
+<li><strong>Run the command.</strong> <code>python3 contributor_tools/build_dataset_review_page.py contributor_tools/page_specs/&lt;dataset&gt;.json</code> writes <code>docs/datasets/&lt;dataset&gt;/index.html</code>. Then run <code>python3 contributor_tools/dataset_status.py</code> to refresh the status label on the catalog, the quality page and every dataset page; the label is derived from the backlog, never typed by hand.</li>
+<li><strong>Check the page.</strong> Run <code>python3 docs/build.py --check</code>. Then render the catalog and the new page at 1280 px and 390 px wide with <code>google-chrome --headless=new</code>, on a temporary copy with lazy loading removed, and look at the pictures: nothing cut off, no sideways scrolling, no raw task IDs, paths or hashes in the text. Delete the temporary copy.</li>
+<li><strong>Keep it honest.</strong> The page must say it is not released. Add download links only after a release is published.</li>
+</ol>
 <h2 id="update-plot-summaries">Update plot summaries</h2>
 <p>The catalog preview, study phase plots, and dataset comparator share <code>javascripts/phase-chart.js</code>, a browser SVG renderer. They read the same small numerical summaries, with no plotting server or Matplotlib needed for the live charts. Study pages retain earlier pass/fail figures in a closed historical section; those classifications are not reproduced by the new average plots.</p>
 <p>The data browser reads precomputed JSON, not whole Parquet files. To refresh the task and subject plots from the existing local files, run:</p>

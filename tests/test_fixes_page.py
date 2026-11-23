@@ -3,9 +3,9 @@
 Reads only the committed page, backlog and verification handoffs (no data).
 
 Inclusion rule: a card's backlog task is done and its <task>-verify.json says done.
-Exception (José's approval, 2026-10-31): exactly the two UM21-T02 cards below may
+Exception (approved 2026-10-31): exactly the two UM21-T02 cards below may
 appear while UM21-T02 is not done, each marked data-rule="approved-exception",
-citing the approval, and backed by independently verified evidence.
+stating the approval date, and backed by independently verified evidence.
 """
 from __future__ import annotations
 
@@ -54,7 +54,7 @@ def test_approved_exceptions_are_only_the_two_um21_t02_cards_with_verified_evide
     audit_verify = verify("UM21-T02-audit-verify")
     for card_id, (task, body) in excepted.items():
         assert task == APPROVED_EXCEPTIONS[card_id]
-        assert "José approved showing it on 2026-10-31" in body and f"Task {task} is not done" in body
+        assert "shown anyway, approved 2026-10-31" in body and f"Task {task} is not done" in body
         assert audit_verify["verdict"] == "done_for_audit_script"
     if "um21-belt-clock" in excepted:
         assert round_item(audit_verify, "round_2", "3. Independent lag spot-check") == "pass"

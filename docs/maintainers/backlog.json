@@ -4583,18 +4583,21 @@
       "inputs": [
         "docs/maintainers/backlog.json",
         "contributor_tools/common/data_contract.py",
-        "contributor_tools/DATA_CONTRACT.md"
+        "contributor_tools/DATA_CONTRACT.md",
+        "docs/maintainers/handoffs/ESML-crosswalk.json"
       ],
       "deliverables": [
         "GT21-Q01: scope-specific evidence report with exact source, code and output identities.",
-        "Updated handoff recording findings, coverage, unresolved cases and the next action."
+        "Updated handoff recording findings, coverage, unresolved cases and the next action.",
+        "Angle-outlier checks: the AB24 ramp_1 segments (5.8-7.8 rad, likely wraps) and AB07 levelground cw slow seg01 listed with evidence; plate-dropout rule (vertical force = 0 with |moment| > 0.3 Nm/kg) as a check. Source: /mnt/s/workspace_docs/energy shaping ml/esml_research/code/training/../docs/ankle_expressivity_20260918.md (proposed there, not applied)"
       ],
       "acceptance": [
         "Bind the exact output and independent source-readback versions; verify scope and exclusions before interpreting diagnostics.",
         "Use the shared structured observation assessment for schema, missingness, filtering and release facts; retain unassessed source semantics explicitly.",
         "Distinguish sample clocks and source timing from normalized phase. Assess time-domain missingness, discontinuities and cross-signal relationships only with justified source definitions.",
         "Any phase or time profile states population, protocol, task, units and observation-type applicability and its evidence; no universal pass-rate threshold or range tuning to achieve a desired result.",
-        "Record source measurement/model limitations separately from conversion fidelity. Unsupported anatomy or events remain unresolved; source preservation does not approve them."
+        "Record source measurement/model limitations separately from conversion fidelity. Unsupported anatomy or events remain unresolved; source preservation does not approve them.",
+        "Outliers and dropouts are reported and accounted for, never silently removed or tuned to a pass rate"
       ],
       "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision. Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked. Update 2026-11-23 (GT21-REB-PLAN): 5 guarded jobs (1 pilot plus 4 per-mode streaming assessments) after GT21-RB05 and GT21-F02; row-group streaming, no raised admission, legacy tuner file is not an approved profile.",
       "resource_class": "numerical",
@@ -4617,6 +4620,9 @@
       "legacy_ids": [
         "SCI-01",
         "QA-01"
+      ],
+      "notes": [
+        "Prior-work port rule (José, 2026-11-23): write LocoHub code with its own tests; credit each source file in the module docstring; never import from the energy-shaping-ML project and never open its parquets; its published per-recording counts are an independent comparison only."
       ]
     },
     {
@@ -6928,7 +6934,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Preserve and index all GT23 source files with a Python reader",
-      "status": "ready",
+      "status": "working",
       "stage": "source_readback",
       "question": "Is every one of the 488 recordings and its 4,880 channel files, marker files, body-orientation files and authors' stride files accounted for, hashed and readable without MATLAB?",
       "scope": "27 guarded jobs: 3 pilots (AB05 normal_walk_1; AB02 normal_walk_1, the largest marker file; AB11 stairs_1_1, random draw seed 20261123) + 12 participant batches + 12 independent audit batches. Ledger of hashes, row counts, clocks, per-marker and per-plate finite shares for the 22 markers the rebuild needs, lossless Parquet companions of the ten channel groups, and the publisher's README mass table bound by hash. Closes the oversized-table problem (AB02 is read from its Euler CSV). Local RawData/Subject_masses.csv is not the publisher's file and is never read.",
@@ -6980,7 +6986,9 @@
           "docs/maintainers/backlog.json",
           "docs/maintainers/backlog.html"
         ]
-      }
+      },
+      "owner": "claude-worker-gt23-x01",
+      "started_at_utc": "2026-11-23T20:45:35+00:00"
     },
     {
       "id": "GT23-S01",
@@ -7559,7 +7567,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Preserve all 22 GT21 sources: extract the six, export labels, inventory",
-      "status": "ready",
+      "status": "working",
       "stage": "source_inventory",
       "question": "Is every recording of all 22 participants present, unchanged and readable, with its terrain labels and mass on record?",
       "scope": "3,147 recordings: 2,301 local (16 participants) and 846 from the six in the authors' 2024 copy (AB12, AB15, AB17, AB19, AB23, AB28). 30 guarded jobs: 6 zip extractions (AB17 first), 22 MATLAB label and subject exports (AB06 first), 1 metadata inventory, 1 AB17 2021-versus-2024 comparison.",
@@ -7588,7 +7596,7 @@
         "Label export agrees with the 1,680 ramp and stair terrain labels already checked; stair_1_l_01_02 window list recorded.",
         "Pilots (AB17 extraction, AB06 export) pass before the other jobs; one job at a time, nice 19, ionice idle, memory headroom checked before each; nothing under existing converted_datasets files is overwritten."
       ],
-      "next_action": "Write and dry-run the guarded launcher spec for the AB17 extraction pilot; review the native extension for the MATLAB label export. Run nothing else until both dry runs pass.",
+      "next_action": "Wait for the launcher census to clear (a docs http.server blocks it), then dry-run and launch the AB17 extraction pilot; native extension draft awaits independent review.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
@@ -7597,21 +7605,33 @@
         "docs/quality/audits/gt21-ab17-recovery.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
-        "summary": "Planned from read-only probes. Mass unit found to be kilograms by three lines of evidence; markers, forces and gait tables are readable by the existing fail-closed Python reader; conditions, ik_offset, static and SubjectInfo are not.",
+        "last_checked_at_utc": "2026-11-23T21:30:00+00:00",
+        "summary": "Python runner, specs, synthetic tests and a DRAFT native MATLAB launcher extension are written and their synthetic tests pass (14 passed). No guarded job has launched: the launcher census refuses every launch because of a long-running non-LocoHub process (python3 -m http.server 8000 --directory .../site/html, started about 4.7 days ago, parent init). It matches the census rule 'a python argument path inside the repository'. It was not stopped; stopping or restarting it is the host owner's call.",
         "checks": [
-          "Plan written from read-only probes only; no conversion, MATLAB or write under converted_datasets/ or source folders ran.",
-          "Probes: weights, STRIDES.m, plate-implied mass, file readability, marker lists (peak RSS under 160 MiB)."
+          "14 synthetic tests pass (extraction, inventory, native launcher with fake host)",
+          "No guarded job launched: foreign_worker_linux on plain dry run"
         ],
         "remaining": [
-          "Everything in this task is still to run."
+          "All guarded jobs (6 extractions, inventory) once the launcher census clears",
+          "MATLAB export after independent review of the native extension",
+          "Evidence report with per-mode counts, AB17 comparison binding, mass-unit evidence"
         ],
         "changed_files": [
-          "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+          "contributor_tools/run_gt21_rb01.py",
+          "contributor_tools/build_gt21_rb01_specs.py",
+          "contributor_tools/guarded_launcher_native.py",
+          "contributor_tools/conversion_scripts/Gtech_2021/gt21_rb01_label_export.m",
+          "tests/test_run_gt21_rb01.py",
+          "tests/test_guarded_launcher_native.py",
+          "docs/quality/audits/gt21-rb01-extract-AB17-spec.json (and AB12, AB15, AB19, AB23, AB28)",
+          "docs/maintainers/handoffs/GT21-RB01.json",
           "docs/maintainers/backlog.json",
           "docs/maintainers/backlog.html"
-        ]
-      }
+        ],
+        "detail": "docs/maintainers/handoffs/GT21-RB01.json"
+      },
+      "owner": "claude-worker-gt21-rb01",
+      "started_at_utc": "2026-11-23T21:00:00+00:00"
     },
     {
       "id": "GT21-RB02",
@@ -7634,18 +7654,22 @@
         "docs/quality/audits/gt21-force-fix.json",
         "docs/quality/audits/gt21-completed-force-readback.json",
         "contributor_tools/conversion_scripts/Gtech_2021/utilities/gtech_select_force_plate.m",
-        "contributor_tools/gt21_numeric_source.py"
+        "contributor_tools/gt21_numeric_source.py",
+        "docs/maintainers/handoffs/ESML-crosswalk.json"
       ],
       "deliverables": [
         "Per-step plate, force and plate-contact ledger for 3,147 recordings with reasons for every unassigned leg",
-        "Pilot report comparing the Python port with the MATLAB-fixed pilots"
+        "Pilot report comparing the Python port with the MATLAB-fixed pilots",
+        "Port of the prior per-foot plate assignment as LocoHub code with own tests: each plate contact goes to the foot whose heel-toe midpoint is nearest the plate CoP (ambiguous two-feet zone, events fallback); a foot's force and CoP are summed over its plates",
+        "Treadmill-branch force signs (vertical = sum vy, anterior = -sum vz, lateral = sum vx, over Weight x 9.81) as LocoHub code with own tests; credit /mnt/s/workspace_docs/energy shaping ml/esml_research/code/training/ankle_expressivity/gt21_force.py"
       ],
       "acceptance": [
         "Python port reproduces the MATLAB-fixed pilot forces of the 36 compared and 51 completed recordings within 1e-9.",
         "CoP at contact equals the measured plate position; left and right belts sum to body weight within a stated band; left sideways force is the negative of the lab-axis value.",
         "Synthetic plate fixtures including a left-right swap give the known answer; no peak-force choice or waveform swap anywhere.",
         "Unassigned legs (no plate, several plates) stay missing and are counted per mode; forward force uses the lab Z axis signed by pelvis heading as published and is labelled so.",
-        "Memory: pilot shows the launcher peak under its cap (expected 150-300 MiB); one job at a time."
+        "Memory: pilot shows the launcher peak under its cap (expected 150-300 MiB); one job at a time.",
+        "Per-recording plate counts compared with the prior per-recording counts CSV (read as an independent comparison, not imported); differences listed, not tuned away"
       ],
       "next_action": "José, 2026-11-23: merge the plate/force pass (RB02) and the model-fit/conventions pass (RB04) so each raw recording is read once; keep one job at a time. Segmentation (RB03) must therefore run on the merged pass's outputs or before it; replan job structure accordingly. After GT21-RB01 is done: dry-run the levelground pilot spec (levelground_ccw_fast_01_01) and read back against the existing bilateral pilot.",
       "resource_class": "numerical",
@@ -7669,7 +7693,10 @@
           "docs/maintainers/backlog.html"
         ]
       },
-      "blocked_reason": "Waits for GT21-RB01 (extracted sources and label ledger)."
+      "blocked_reason": "Waits for GT21-RB01 (extracted sources and label ledger).",
+      "notes": [
+        "Prior-work port rule (José, 2026-11-23): write LocoHub code with its own tests; credit each source file in the module docstring; never import from the energy-shaping-ML project and never open its parquets; its published per-recording counts are an independent comparison only."
+      ]
     },
     {
       "id": "GT21-RB03",
@@ -7750,19 +7777,22 @@
         "docs/reference/index.md",
         "docs/quality/audits/gt21-c01-conventions.json",
         "docs/quality/audits/gt21-force-geometry.json",
-        "contributor_tools/run_um21_t04_signs.py"
+        "contributor_tools/run_um21_t04_signs.py",
+        "docs/maintainers/handoffs/ESML-crosswalk.json"
       ],
       "deliverables": [
         "Per-batch converted observations in a new root",
         "Sign test of the six new participants",
-        "Definition note for centres and foot frame, once D-GT21-REB-1 is answered"
+        "Definition note for centres and foot frame, once D-GT21-REB-1 is answered",
+        "Foot-heading frame for the outward CoP (rows beyond 0.10 m stay missing) and ankle centre from tibia_<side>_offset in the scaled models (prior median 8.6 mm anterior of the lateral malleolus marker; no medial marker exists), as LocoHub code with own tests; credit /mnt/s/workspace_docs/energy shaping ml/esml_research/code/training/cop_reference.py and cop_reference_gt21.m"
       ],
       "acceptance": [
         "Synthetic rigid-body fixtures with known rotations give the imposed segment angles; knee = thigh - shank exactly; composition thigh = pelvis + hip, shank = thigh - knee, foot = shank + ankle to 1e-12 rad.",
         "Foot-frame CoP: the ankle centre maps to -0.100 m, the point 0.100 m forward maps to zero, a rigid foot rotation leaves it unchanged, left mirrors right.",
         "Pelvis tilt agrees with the authors' marker fit within the range in the GT21-C01 review; mass check: moments equal id / Weight and BW uses Weight x 9.81, never model mass.",
         "Sign test on all leg channels of the six new participants; undecided channels counted as not passed.",
-        "All 28 named markers are checked per recording; a missing needed marker gives a listed exclusion; 15 Hz and plate-origin placeholder CoP samples stay missing; peak memory recorded (expected 250-400 MiB)."
+        "All 28 named markers are checked per recording; a missing needed marker gives a listed exclusion; 15 Hz and plate-origin placeholder CoP samples stay missing; peak memory recorded (expected 250-400 MiB).",
+        "Ankle centre per subject from the scaled model with its own check; the prior 8.6 mm median and 4.5-5.7 cm ankle height above the sole are compared, not copied"
       ],
       "next_action": "José, 2026-11-23: merge the plate/force pass (RB02) and the model-fit/conventions pass (RB04) so each raw recording is read once; keep one job at a time. Segmentation (RB03) must therefore run on the merged pass's outputs or before it; replan job structure accordingly. After GT21-RB03 is done and D-GT21-REB-1 is answered: run the levelground pilot with the chosen centre method.",
       "resource_class": "numerical",
@@ -7786,7 +7816,10 @@
           "docs/maintainers/backlog.html"
         ]
       },
-      "blocked_reason": "Waits for GT21-RB03 and for decision D-GT21-REB-1 (how joint centres and the foot direction are found from the markers)."
+      "blocked_reason": "Waits for GT21-RB03 and for decision D-GT21-REB-1 (how joint centres and the foot direction are found from the markers).",
+      "notes": [
+        "Prior-work port rule (José, 2026-11-23): write LocoHub code with its own tests; credit each source file in the module docstring; never import from the energy-shaping-ML project and never open its parquets; its published per-recording counts are an independent comparison only."
+      ]
     },
     {
       "id": "GT21-RB05",
@@ -7840,6 +7873,55 @@
         ]
       },
       "blocked_reason": "Waits for GT21-RB04."
+    },
+    {
+      "id": "DOC-06",
+      "priority": "P1",
+      "dataset": "all",
+      "title": "Fix the user-facing site and add a landing path for new dataset pages",
+      "status": "review",
+      "stage": "documentation",
+      "question": "Does the site build, say honestly what state each dataset is in, and can a rebuilt dataset get its page with one command?",
+      "scope": "Make docs/build.py complete (launcher logs are never published; default output site/html). Audit researcher pages for paths, stale claims and the 23 Nov 2026 standard. One plain status label per dataset, derived from backlog.json by a committed script, on the catalog, quality cards and every dataset page, with links to the GT21 and GT23 known-problems pages. Generalize the UMich 2021 page builder into build_dataset_review_page.py driven by a spec and the verified R01 bundle.",
+      "depends_on": [],
+      "inputs": [],
+      "deliverables": [
+        "docs/build.py fix and README/contributing command fix",
+        "contributor_tools/dataset_status.py",
+        "contributor_tools/build_dataset_review_page.py and contributor_tools/page_specs/um21.json",
+        "docs/maintainers/index.html section: How to land a dataset page",
+        "tests/test_dataset_review_page.py",
+        "Screenshots in review_sheets/site_fix/"
+      ],
+      "acceptance": [
+        "python3 docs/build.py completes and docs/build.py --check passes",
+        "Every catalog row and dataset page shows one status label that equals the backlog rule",
+        "UMich 2021 page is reproduced from its spec; differences from the earlier page are only the status line",
+        "Builder refuses a bundle whose R01 task is not done",
+        "Catalog and two dataset pages render at 1280 and 390 px without cut-off text, except the catalog table, which scrolls sideways by design"
+      ],
+      "next_action": "Second agent: verify acceptance criteria and move to done or back with reasons. Open items: docs/quality/fixes.html and docs/datasets/comparison still show task IDs, decision IDs and a person's name (their builder, build_fixes_page.py, has uncommitted edits from other work and was not touched).",
+      "resource_class": "read_only",
+      "evidence_paths": [
+        "docs/build.py",
+        "contributor_tools/dataset_status.py",
+        "contributor_tools/build_dataset_review_page.py",
+        "contributor_tools/page_specs/um21.json",
+        "tests/test_dataset_review_page.py",
+        "docs/maintainers/index.html",
+        "review_sheets/site_fix/"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-23T00:00:00Z",
+        "summary": "Site build fixed, status labels from backlog added, general review-page builder added and tested. Not committed.",
+        "checks": [
+          "pytest tests/test_dataset_review_page.py and the docs tests; docs/build.py --check; dataset_status.py --check; screenshots at 1280 and 390 px"
+        ],
+        "remaining": [
+          "Task IDs and a name still visible on the fixes and comparison pages (builder has other uncommitted edits)",
+          "Older dataset pages are generated by manage_dataset_documentation.py, which can write local file names back into visible text"
+        ]
+      }
     }
   ],
   "decisions": [

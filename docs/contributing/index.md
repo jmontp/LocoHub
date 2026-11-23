@@ -114,8 +114,8 @@ Preview documentation locally and run the small documentation tests:
 
 ```bash
 python -m pytest tests/test_data_documentation.py
-python docs/build.py --output site
-python -m http.server 8000 --directory site
+python docs/build.py
+python -m http.server 8000 --directory site/html
 ```
 
 See the [maintainer review checklist](../maintainers/index.md) for the release decision and the [catalog](../datasets/index.md) for currently available artifacts.
