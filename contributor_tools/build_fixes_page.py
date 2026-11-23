@@ -543,13 +543,18 @@ def card_html(card, verified_on):
     links = ' · '.join(f'<a href="{ESC(href)}">{ESC(text)}</a>' for text, href in card['evidence'])
     how = f'<p><strong>How we know.</strong> {ESC(card["how"])}</p>\n' if card.get('how') else ''
     note = f' {ESC(card["evidence_note"])}' if card.get('evidence_note') else ''
+    # Researcher-visible text names no task or decision IDs; they sit in the folded maintainer details.
     if card['id'] in APPROVED_EXCEPTIONS:
-        verified_text = (f'Evidence independently verified {verified_on}. Task {card["task"]} is not done; '
-                         f'{APPROVAL}.')
+        verified_text = f'Evidence independently verified {verified_on}.'
+        maintainer = f'Task {card["task"]} is not done; {APPROVAL}.'
         rule = ' data-rule="approved-exception"'
     else:
-        verified_text = f'Task {card["task"]}, independently verified {verified_on}.'
+        verified_text = f'Independently verified {verified_on}.'
+        maintainer = f'Task {card["task"]}, independently verified {verified_on}.'
         rule = ''
+    if card.get('evidence_note'):
+        maintainer += f' {card["evidence_note"]}'
+    note = ''
     return f'''<article class="fix-card" id="{card['id']}" data-task="{card['task']}"{rule}>
 <h2>{ESC(card['title'])}</h2>
 <p class="fix-status"><span class="fix-label" data-status="{card['status'][0]}">{ESC(card['status'][1])}</span></p>
@@ -558,6 +563,7 @@ def card_html(card, verified_on):
 <p><strong>What LocoHub does.</strong> {ESC(card['does'])}</p>
 <div class="{grid}">{figures}</div>
 <p class="fix-evidence">{ESC(card['example'])} Evidence: {links}. {verified_text}{note}</p>
+<details class="fix-maintainer"><summary>Maintainer details</summary><p>{ESC(maintainer)}</p></details>
 </article>'''
 
 
@@ -638,7 +644,7 @@ def build(write_figure):
          'example': f'All {n_folders} participant folders and {n_rec:,} recordings shown.',
          'evidence': [('mass check results (JSON)', 'audits/gt24-c01-e1-census-result.json'),
                       ('README masses and policy (JSON)', 'audits/gt24-c01-normalization-policy.json'),
-                      ('logged decision D-GT24-C01-1 (backlog)', '../maintainers/backlog.html#GT24-C01')]})
+                      ('maintainer decision (backlog)', '../maintainers/backlog.html#GT24-C01')]})
 
     b, a, example, legs = figures_gt24(plt)
     add({'id': 'gt24-ankle-sign', 'task': 'GT24-C02', 'short': 'GT24 ankle sign',
@@ -700,13 +706,13 @@ def build(write_figure):
     rescale = load('gt23-c05-rescale-error.json')['summary']
     add({'id': 'gt23-normalizing-mass', 'task': 'GT23-C03', 'short': 'GT23 mass used for per-kg moments',
          'title': 'Georgia Tech 2023: per-kg moments were divided by another participant’s body mass',
-         'status': ('decided', 'Correction decided by José · not yet run or released'),
+         'status': ('decided', 'Correction decided · not yet run or released'),
          'wrong': f'For {n_wrong} of {n_all} participants, the authors did not use the person’s own body mass to turn moments into per-kg '
                   'moments; for most of them they used exactly another participant’s listed body mass.',
          'how': 'The source gives some signals both in N·m and in N·m/kg, and dividing one by the other gives the mass that was used '
                 '(where that was not possible, it was estimated from force-plate moments instead).',
          'means': f'Their per-kg moments in level walking are off by {round(100 * (1 - lo))} % too low to {round(100 * (hi - 1))} % too high.',
-         'does': 'José decided on 23 November 2026 to fix the '
+         'does': 'The LocoHub maintainers decided on 23 November 2026 to fix the '
                  f'{rescale["by_class"]["lower_confident"]} of {rescale["trials"]} recordings where correcting to the person’s own mass lowers the error in every '
                  'plausible case: their moments and powers get multiplied by the mass used divided by the own mass. Recordings where the mass used cannot be told '
                  'stay as published, with a note. Of the '
@@ -722,7 +728,7 @@ def build(write_figure):
          'example': 'All 12 participants shown.',
          'evidence': [('mass check results (JSON)', 'audits/gt23-c03-normalizing-mass.json'),
                       ('per-trial rescaling check (JSON)', 'audits/gt23-c05-rescale-error.json'),
-                      ('logged decisions D-GT23-C05-2 and D-GT23-C05-3 (backlog)', '../maintainers/backlog.html#GT23-C05')]})
+                      ('maintainer decisions (backlog)', '../maintainers/backlog.html#GT23-C05')]})
 
     b, a, n_inside, n_keep, frames = figures_um21_branch(plt)
     add({'id': 'um21-ankle-branch', 'task': 'UM21-C03', 'short': 'UM21 ankle 180° stretch',
@@ -837,7 +843,8 @@ def build(write_figure):
 <h2>Background: one sign convention for every dataset</h2>
 <p>Several cards are about which direction counts as positive. LocoHub follows one written <a href="../reference/index.html#signs-and-frames">sign convention</a>: segment angles are positive counterclockwise with the person facing right, and joint angles and moments are positive in their named direction (hip flexion, knee flexion, ankle dorsiflexion). Forward pelvis tilt is therefore negative in LocoHub files, although many sources report it as positive. This is a convention, not an error in any dataset.</p>
 <p class="fix-status"><span class="fix-label" data-status="documented">Adopted {SIGN_RULE_ADOPTED} · current downloads are legacy and predate it</span></p>
-<figure class="fix-figure fix-sign"><img src="../assets/sagittal-signs.svg" width="400" height="600" loading="lazy" alt="Side view of a person facing right with +x forward, +y up and +z out of the page; curved arrows show the positive direction of each segment and joint angle."><figcaption>The sign convention from the file-format reference. Task DOC-03, independently verified {sign_ok}.</figcaption></figure>
+<figure class="fix-figure fix-sign"><img src="../assets/sagittal-signs.svg" width="400" height="600" loading="lazy" alt="Side view of a person facing right with +x forward, +y up and +z out of the page; curved arrows show the positive direction of each segment and joint angle."><figcaption>The sign convention from the file-format reference. Independently verified {sign_ok}.</figcaption></figure>
+<details class="fix-maintainer"><summary>Maintainer details</summary><p>Task DOC-03, independently verified {sign_ok}.</p></details>
 </section>'''
         outline.append(('sign-rule', 'Sign convention (background)'))
     return cards, context, outline, skipped, compare

@@ -127,8 +127,8 @@ def main():
         six_tab.append([s, n(sum(r.values())), f"{r['levelground']} / {r['ramp']} / {r['stair']} / {r['treadmill']}", n(st["files"]), f"{st['bytes'] / 1e9:.2f} GB", "Downloaded and checked, not unpacked or converted"])
     probs.append({
         "key": "missing_participants", "card": "Six of the 22 participants are not in the local data",
-        "status": {"key": "decided", "label": "Decided by José, fix not yet run",
-                   "detail": "José chose the authors' 2024 copy as the source for the six. All six are downloaded and checked against the folder listing. None is unpacked or converted yet.",
+        "status": {"key": "decided", "label": "Decided, fix not yet run",
+                   "detail": "The maintainers chose the authors' 2024 copy as the source for the six. All six are downloaded and checked against the folder listing. None is unpacked or converted yet.",
                    "needs": ""},
         "wrong": "The original study has 22 participants. The local source folder holds 16 of them (2,301 recordings). AB12, AB15, AB17, AB19, AB23 and AB28 were never converted. For AB17, the one participant whose 2021 published archive we opened, that archive has no static-pose files and no joint angles relative to the static pose, which our conversion code reads.",
         "how": "The publisher lists 22 archives, rechecked on 31 October 2026 with unchanged size and checksum. The local folder holds 16 participants and no extra ones. The other five 2021 archives were not opened.",
@@ -162,8 +162,8 @@ def main():
     ramp_all = mode_tot["ramp"] + six_mode["ramp"]
     probs.append({
         "key": "file_version", "card": "The local files are the authors' 2024 copy, not the checksummed 2021 release",
-        "status": {"key": "decided", "label": "Decided by José, fix not yet run",
-                   "detail": "José chose the 2024 copy. The file-by-file comparison with the 2021 release has run for AB17 only.", "needs": ""},
+        "status": {"key": "decided", "label": "Decided, fix not yet run",
+                   "detail": "The maintainers chose the 2024 copy. The file-by-file comparison with the 2021 release has run for AB17 only.", "needs": ""},
         "wrong": "The 16 local participants, and the six now downloaded, come from the authors' 2024 copy. Only the 2021 release has publisher checksums. The listings show that every ramp joint-moment file was rewritten in September 2021, after the first release, and that relative joint-angle files were added in April 2024.",
         "how": "We compared AB17's 2021 archive with the 2024 copy by size and checksum. Modification times in the listings are labels, not proof, and the 2024 folder is a live working copy.",
         "example": "AB17 ramp recording 1 (right leg): the joint-moment file is 322,984 bytes in 2021 and 324,295 bytes in 2024. Ramp recording 6 (right leg, trial 4): 284,406 against 299,554 bytes. What changed inside is not decoded.",
@@ -261,8 +261,8 @@ def main():
     curve0 = st[0]["plates"]
     probs.append({
         "key": "sideways", "card": "Sideways force and centre of pressure point opposite ways for the two feet",
-        "status": {"key": "decided", "label": "Decided by José, fix not yet run",
-                   "detail": "José chose option B: positive outward for each leg, so the left leg is mirrored. The conversion code has not been changed or run for this.", "needs": ""},
+        "status": {"key": "decided", "label": "Decided, fix not yet run",
+                   "detail": "The maintainers chose option B: positive outward for each leg, so the left leg is mirrored. The conversion code has not been changed or run for this.", "needs": ""},
         "wrong": "The sideways columns were exported on the lab's fixed X axis. That axis points to the person's right when they face the lab's negative Z direction. So it points outward for the right foot and inward for the left foot, and it flips when they walk the other way. The name 'lateral' therefore does not describe the numbers.",
         "how": f"We read the force plate table of three treadmill recordings drawn at random (seed {probe['seed']}), one at a time. On the right plate the mean sideways force over stance is {rt[0]:.1f}, {rt[1]:.1f} and {rt[2]:.1f} N; on the left plate it is {lf[0]:+.1f}, {lf[1]:+.1f} and {lf[2]:+.1f} N. Same axis, opposite signs.",
         "example": f"{who(st[0]['recording'])}: {curve0['Treadmill_R']['bouts']} right-foot and {curve0['Treadmill_L']['bouts']} left-foot stance phases averaged. The right foot pushes toward negative X, the left toward positive X.",
@@ -307,8 +307,8 @@ def main():
     ph = core04["pelvis_heading"]
     probs.append({
         "key": "pelvis", "card": "Pelvis tilt, and the angles built on it, do not match the markers",
-        "status": {"key": "decided", "label": "Decided by José, fix not yet run",
-                   "detail": "José chose option C: take tilt from the pelvis markers directly. The conversion code has not been changed or run for this.", "needs": ""},
+        "status": {"key": "decided", "label": "Decided, fix not yet run",
+                   "detail": "The maintainers chose option C: take tilt from the pelvis markers directly. The conversion code has not been changed or run for this.", "needs": ""},
         "wrong": "The old conversion code exported the authors' model 'pelvis tilt' as forward-back tilt. The authors' model turns the pelvis about 90 degrees in heading, so that column is not forward-back tilt. After removing the heading, no tilt we can derive from the authors' data follows the marker tilt over treadmill strides, and overground it follows only partly. Thigh, shank, foot and trunk angles were built on that tilt.",
         "how": f"We compared each candidate with the tilt of the four pelvis markers over the strides of 8 recordings drawn at random (seed 20261027). Stride-average agreement on the two treadmill recordings is {pelvis_rows[0]['heading_removed']:.2f} and {pelvis_rows[1]['heading_removed']:.2f} (1 would be identical). In a separate set of {ph['recordings']} recordings, only {ph['sagittal']} had the model's heading in the forward-back frame.",
         "example": f"{pelvis_rows[0]['who']}, {pelvis_rows[0]['strides']} strides: the published pelvis tilt agrees with the marker tilt at {pelvis_rows[0]['published_tilt']:.2f}. The marker-based tilt sits about {offs[0]:.0f} degrees from the model's zero.",
@@ -345,8 +345,8 @@ def main():
     assert all(not t["admitted"] for t in tried) and all("rejected" in p for p in pose)
     probs.append({
         "key": "joint_zero", "card": "Joint-angle zero is now defined by the segment angles",
-        "status": {"key": "decided", "label": "Decided by José, fix not yet run", "detail": "José decided on 23 November 2026: joint angles are differences of segment angles, and segment angles are measured against gravity, so there is no separate joint zero (no static pose, no model zero). The conversion code has not been changed or run for this.", "needs": "Needs segment angles (thigh, shank, foot and pelvis) for every recording. Pelvis-marker tilt is available (the earlier pelvis decision); whether thigh, shank and foot angles can be built from the markers and the ankle centre found: not checked. A guarded job is needed to measure how far the old zeros differ from the new one."},
-        "wrong": "Joint angles come in two versions. One is zero at the model's own zero. The other is the trial angle minus the average of the participant's static standing trial (added by the authors in April 2024). The conversion code reads the relative version, our sign tests used the model zero, and the 2021 archive of AB17 has no relative version. José has now decided the zero (see the status above); the size of the difference between the old files and the new rule is not measured.",
+        "status": {"key": "decided", "label": "Decided, fix not yet run", "detail": "The maintainers decided on 23 November 2026: joint angles are differences of segment angles, and segment angles are measured against gravity, so there is no separate joint zero (no static pose, no model zero). The conversion code has not been changed or run for this.", "needs": "Needs segment angles (thigh, shank, foot and pelvis) for every recording. Pelvis-marker tilt is available (the earlier pelvis decision); whether thigh, shank and foot angles can be built from the markers and the ankle centre found: not checked. A guarded job is needed to measure how far the old zeros differ from the new one."},
+        "wrong": "Joint angles come in two versions. One is zero at the model's own zero. The other is the trial angle minus the average of the participant's static standing trial (added by the authors in April 2024). The conversion code reads the relative version, our sign tests used the model zero, and the 2021 archive of AB17 has no relative version. The maintainers have now decided the zero (see the status above); the size of the difference between the old files and the new rule is not measured.",
         "how": "The README dates the relative files to 28 April 2024, and the authors' script subtracts the column average of the first static trial it finds, without wrapping angles. We then tried to measure the difference with our safe file reader: it refused all 20 files we tried (16 static-pose files and one relative file for each of the four tasks).",
         "example": "No measured example exists: the size of the difference has not been measured, so the figure is a made-up illustration, labelled as one.",
         "total_line": "Every joint angle in all 2,301 local recordings (100%) is affected by the new zero rule. The size of the difference is not measured.",
@@ -563,8 +563,8 @@ def main():
     # ================= L2: centre of pressure origin =================
     probs.append({
         "key": "cop_origin", "card": "Centre of pressure is measured from the outer ankle marker, not from the decided origin",
-        "status": {"key": "decided", "label": "Decided by José, fix not yet run",
-                   "detail": "José decided on 23 November 2026: the centre of pressure moves with the foot, with its origin 100 mm forward of the ankle joint centre along the foot's heel-to-toe direction. The conversion code has not been changed or run for this.",
+        "status": {"key": "decided", "label": "Decided, fix not yet run",
+                   "detail": "The maintainers decided on 23 November 2026: the centre of pressure moves with the foot, with its origin 100 mm forward of the ankle joint centre along the foot's heel-to-toe direction. The conversion code has not been changed or run for this.",
                    "needs": "Needs the ankle joint centre and the foot's direction for every sample, from markers. Whether the markers give them: not checked. The current offset from the outer ankle marker is not measured."},
         "wrong": "Centre of pressure is stored relative to the outer ankle marker, not the ankle joint centre. The distance between the two is not measured. The authors' own centre of pressure is also filtered at 15 Hz by default, and is set to the plate origin when the plate sees almost no load; our code leaves those samples missing.",
         "how": f"The authors' scripts were read line by line. In 8 sampled recordings the centre of pressure lies a median of {conv['pooled']['cop_to_nearer_foot_median_m'] * 100:.1f} cm from the nearer foot, so it lands near the foot.",
@@ -604,7 +604,7 @@ def main():
         "scientific_approval": False, "builder": "contributor_tools/build_gt21_problem_scope.py",
         "probe": "docs/quality/audits/gt21-problem-scope-probe.json (contributor_tools/probe_gt21_problem_scope.py)",
         "seed": SEED, "denominators": den, "verdict_words": VERDICTS,
-        "status_words": ["Fixed in a checked pilot", "Decided by José, fix not yet run", "Open", "Documented only, kept as published"],
+        "status_words": ["Fixed in a checked pilot", "Decided, fix not yet run", "Open", "Documented only, kept as published"],
         "problems": probs, "checked_fine": checked_fine, "other_limits": other_limits,
     }
     OUT.write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")

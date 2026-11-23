@@ -1910,27 +1910,39 @@
         "Observation identities, 150-point inclusive phase grid and every exclusion are accounted for against the v2 bundle; full and filtered share lineage; Q01 re-run, not reused.",
         "Pilot of the same bound code passes before the full run; one numerical job at a time, peak memory recorded; v2 bundle untouched."
       ],
-      "next_action": "Review the plan, then write run_um21_s02_frame.py and the audit script with synthetic tests; dry run and pilot only after review.",
+      "next_action": "Launch the v3 pilot when the launcher is free, then draft the CoP decision for Jose from its endpoint numbers.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/UM21-STD-plan.json",
         "contributor_tools/audit_probes/2026_11_23/probe_um21_std_plan_source_check.py"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T12:00:00+00:00",
-        "summary": "Plan only. The source has markers and plate CoP; the plate position in the lab frame is missing, so CoP needs a fitted, independently checked registration. About 8 guarded jobs.",
+        "last_checked_at_utc": "2026-11-23T22:00:00+00:00",
+        "summary": "Runner, 45 synthetic tests and a 5-recording pilot (v1, receipt clean except other agents appeared; cleanup proven) done. Angles agree with v2 (r 0.97-1.0, offsets = zero change); CoP fit holds out the ankle moment (r 0.975-0.999) and agrees with the re-implemented ESML method within 19 mm on 9 of 10 plates. Runner then changed (endpoint check, pelvis hold limit) and the v3 pilot has not run. Pilot only; task stays working.",
         "checks": [
-          "Read-only probes on AB06/i5, AB08/d10, AB03/i10 (peak 78 MB RSS)."
+          "pytest tests/test_um21_s02_frame.py: 45 passed (synthetic only)",
+          "Guarded pilot v1: 5 recordings, peak RSS 231 MiB, 25.7 s, source unchanged, verify-cleanup proven",
+          "Composition error 2.2e-16 rad in all five written tables"
         ],
         "remaining": [
-          "Independent review of the plan",
-          "Runner, audit and synthetic tests",
-          "Pilot then full"
+          "Launch v3 pilot (spec v3 unlaunched; v2 refused)",
+          "Decision: publish CoP from fitted registration, and tolerances",
+          "Independent audit script, Q01 v3, R01 v3, full run"
         ],
-        "handoff_file": "docs/maintainers/handoffs/UM21-STD-plan.json"
+        "handoff_file": "docs/maintainers/handoffs/UM21-STD-plan.json (pilot_results)"
       },
       "owner": "agent (UM21-S02 worker)",
-      "started_at_utc": "2026-11-23T00:00:00Z"
+      "started_at_utc": "2026-11-23T00:00:00Z",
+      "changed_files": [
+        "contributor_tools/run_um21_s02_frame.py",
+        "tests/test_um21_s02_frame.py",
+        "docs/quality/audits/um21-s02-pilot-spec-v1.json",
+        "docs/quality/audits/um21-s02-pilot-spec-v2.json",
+        "docs/quality/audits/um21-s02-pilot-spec-v3.json",
+        "docs/quality/audits/um21-s02-pilot-launcher-receipt-v1.json",
+        "docs/quality/audits/um21-s02-pilot-launcher-receipt-v2.json",
+        "docs/maintainers/handoffs/UM21-STD-plan.json"
+      ]
     },
     {
       "id": "UM21-S01",
@@ -7900,7 +7912,7 @@
         "Builder refuses a bundle whose R01 task is not done",
         "Catalog and two dataset pages render at 1280 and 390 px without cut-off text, except the catalog table, which scrolls sideways by design"
       ],
-      "next_action": "Second agent: verify acceptance criteria and move to done or back with reasons. Open items: docs/quality/fixes.html and docs/datasets/comparison still show task IDs, decision IDs and a person's name (their builder, build_fixes_page.py, has uncommitted edits from other work and was not touched).",
+      "next_action": "Second agent: verify acceptance criteria and move to done or back with reasons. Follow-up done: task IDs, decision IDs and a person's name are gone from researcher-visible text on the fixes, comparison and GT21/GT23 problems pages (builders changed; IDs kept in folded maintainer details); manage_dataset_documentation.py no longer writes local file names (test added).",
       "resource_class": "read_only",
       "evidence_paths": [
         "docs/build.py",
@@ -7909,17 +7921,17 @@
         "contributor_tools/page_specs/um21.json",
         "tests/test_dataset_review_page.py",
         "docs/maintainers/index.html",
-        "review_sheets/site_fix/"
+        "review_sheets/site_fix/",
+        "tests/test_dataset_docs_no_local_paths.py"
       ],
       "handoff": {
         "last_checked_at_utc": "2026-11-23T00:00:00Z",
-        "summary": "Site build fixed, status labels from backlog added, general review-page builder added and tested. Not committed.",
+        "summary": "Site build fixed, status labels from backlog added, general review-page builder added and tested, visible task IDs and names removed. Not committed (follow-up edits after c317106).",
         "checks": [
           "pytest tests/test_dataset_review_page.py and the docs tests; docs/build.py --check; dataset_status.py --check; screenshots at 1280 and 390 px"
         ],
         "remaining": [
-          "Task IDs and a name still visible on the fixes and comparison pages (builder has other uncommitted edits)",
-          "Older dataset pages are generated by manage_dataset_documentation.py, which can write local file names back into visible text"
+          "Audit JSON copies published on the site still contain bracketed folder placeholders (by design; the quality page explains them in plain words)"
         ]
       }
     }

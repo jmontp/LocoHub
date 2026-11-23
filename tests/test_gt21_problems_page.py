@@ -57,7 +57,7 @@ def test_every_card_has_a_figure_and_status():
     assert len(cards) == len(SCOPE["problems"])
     for c in cards:
         assert "<img " in c and 'class="status ' in c
-    assert set(p["status"]["label"] for p in SCOPE["problems"]) <= {"Fixed in a checked pilot", "Decided by José, fix not yet run", "Open", "Documented only, kept as published"}
+    assert set(p["status"]["label"] for p in SCOPE["problems"]) <= {"Fixed in a checked pilot", "Decided, fix not yet run", "Open", "Documented only, kept as published"}
     for img in re.findall(r'src="(figures/[^"]+)"', PAGE):
         assert (ROOT / "docs/datasets/gt21" / img).exists()
 

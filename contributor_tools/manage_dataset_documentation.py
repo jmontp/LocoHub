@@ -986,6 +986,11 @@ def _relative_path(path: Path) -> str:
         return path.name
 
 
+def _public_name(value) -> str:
+    """File name only. Published pages must not show repo or local folder paths."""
+    return Path(str(value).replace("\\", "/")).name
+
+
 def _display_path(path: Path) -> str:
     """Return repo-relative path if possible, else full path string."""
     try:
@@ -1607,7 +1612,7 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
     ranges_entry = metadata.get('validation_ranges_file', '—')
     ranges_source = metadata.get('validation_ranges_source')
     if ranges_source and ranges_entry != '—':
-        ranges_entry = f"{ranges_entry} (source: {ranges_source})"
+        ranges_entry = f"{ranges_entry} (source: {_public_name(ranges_source)})"
     if ranges_entry != '—':
         ranges_entry += _legacy_snapshot_label(metadata.get('validation_ranges_download'))
 
@@ -1715,8 +1720,8 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
             '</div>',
         ])
 
-        source_dataset = metadata.get('feature_task_source') or _relative_path(dataset_path)
-        doc_body_lines.append(f'<p class="feature-source">Coverage computed from `{source_dataset}`.</p>')
+        source_dataset = _public_name(metadata.get('feature_task_source') or dataset_path)
+        doc_body_lines.append(f'<p class="feature-source">Coverage computed from the file {source_dataset}.</p>')
         doc_body_lines.append("")
 
         for group_entry in feature_groups_meta:
@@ -1769,9 +1774,9 @@ def generate_dataset_page(dataset_path: Path, metadata: Dict, validation_doc_fil
         "",
         "## Files Included",
         "",
-        f"- `{dataset_rel}` — Phase-normalized dataset",
+        f"- `{_public_name(dataset_rel)}` — Phase-normalized dataset",
         f"- [Validation report]({validation_link})",
-        f"- Conversion script in `contributor_tools/conversion_scripts/{dataset_slug}/`",
+        "- Conversion script: in the LocoHub repository, under the conversion scripts folder",
         "",
         "---",
         "",
@@ -1857,7 +1862,7 @@ def generate_validation_page(
         ranges_section = "Validation ranges snapshot not available."
 
     if ranges_source_display:
-        ranges_section += f"\n\n_Source ranges file: {ranges_source_display}_"
+        ranges_section += f"\n\n_Source ranges file: {_public_name(ranges_source_display)}_"
 
     validation_doc_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -1880,7 +1885,7 @@ def generate_validation_page(
         "",
         "---",
         "",
-        f"*Generated from `{_relative_path(dataset_path)}` on {generated_timestamp}*",
+        f"*Generated from `{_public_name(dataset_path)}` on {generated_timestamp}*",
     ]
 
     validation_content = "\n".join(body_lines) + "\n"
