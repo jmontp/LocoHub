@@ -10,6 +10,11 @@ They are never published and a page may not link to one (cite the matching .json
 Published text copies have local absolute paths redacted (see redact_paths); the
 files under docs/ are never modified, so hash-bound audit records stay intact.
 A binary asset that contains a local path is refused.
+
+Only the datasets listed under "shown" in docs/site_datasets.json are published. Every other
+dataset page folder (docs/datasets/<slug>/) stays on disk but is left out of the build, links to it
+are errors, and its entries are dropped from the published copies of comparison_data.json,
+preview_data.json and aggregate_previews/manifest.json. To show another dataset, add its slug to the list.
 """
 
 from __future__ import annotations
@@ -25,6 +30,11 @@ from urllib.parse import unquote, urlsplit
 DOCS = Path(__file__).resolve().parent
 SITE_PREFIX = "/LocoHub/"
 GENERATED_ASSETS = {"search_index.json"}
+SITE_LIST = DOCS / "site_datasets.json"
+# Folders under docs/datasets/ that hold a page but are not one dataset.
+NOT_DATASETS = {"comparison", "validation_ranges"}
+# Published JSON copies that list datasets; hidden datasets are dropped from the copy.
+FILTERED_JSON = {"datasets/comparison_data.json", "datasets/preview_data.json", "datasets/aggregate_previews/manifest.json"}
 REPO = DOCS.parent.resolve().as_posix()
 TEXT_SUFFIXES = {".html", ".json", ".js", ".css", ".svg", ".yaml", ".yml", ".csv", ".md", ".txt"}
 # Long literal markers only: short patterns would match by chance inside compressed binaries.
@@ -77,9 +87,13 @@ def redact_paths(text: str) -> str:
     return text
 
 
-def publish_file(path: Path, destination: Path) -> None:
+def publish_file(path: Path, destination: Path, hidden: set[str] | None = None, relative: str = "") -> None:
     """Copy one published file; text gets redact_paths, binaries with a local path are refused."""
     data = path.read_bytes()
+    if hidden and relative in FILTERED_JSON:
+        text = json.dumps(filter_hidden_json(json.loads(data.decode("utf-8")), hidden), ensure_ascii=False, separators=(",", ":"))
+        destination.write_bytes(redact_paths(text).encode("utf-8"))
+        return
     if path.suffix.lower() in TEXT_SUFFIXES:
         text = data.decode("utf-8")
         redacted = redact_paths(text)
@@ -164,10 +178,52 @@ class Page(HTMLParser):
             self._code_text.append(data)
 
 
+def shown_datasets(source: Path = DOCS) -> list[str]:
+    """Dataset slugs the site shows, from docs/site_datasets.json."""
+    listing = source / "site_datasets.json"
+    if not listing.is_file():
+        return sorted(dataset_slugs(source))
+    return list(json.loads(listing.read_text(encoding="utf-8"))["shown"])
+
+
+def dataset_slugs(source: Path = DOCS) -> set[str]:
+    folder = source / "datasets"
+    if not folder.is_dir():
+        return set()
+    return {p.name for p in folder.iterdir()
+            if p.is_dir() and (p / "index.html").is_file() and not p.name.startswith((".", "_")) and p.name not in NOT_DATASETS}
+
+
+def hidden_datasets(source: Path = DOCS) -> set[str]:
+    """Dataset slugs with a page folder on disk that the site does not show."""
+    return dataset_slugs(source) - set(shown_datasets(source))
+
+
+def hidden_reference(relative: str, hidden: set[str]) -> str | None:
+    """The hidden dataset a published-relative file path belongs to, if any (folder or file-name prefix)."""
+    name = relative.rsplit("/", 1)[-1]
+    for slug in hidden:
+        if relative.startswith(f"datasets/{slug}/") or name.startswith((f"{slug}_", f"{slug}-", f"{slug}.")):
+            return slug
+    return None
+
+
+def filter_hidden_json(data: dict, hidden: set[str]) -> dict:
+    datasets = data.get("datasets")
+    if isinstance(datasets, list):
+        data["datasets"] = [d for d in datasets if d.get("slug") not in hidden]
+    elif isinstance(datasets, dict):
+        data["datasets"] = {key: value for key, value in datasets.items() if key not in hidden}
+    return data
+
+
 def page_paths(source: Path = DOCS) -> list[Path]:
+    hidden = hidden_datasets(source)
     return sorted(
         path for path in source.rglob("*.html")
         if not any(part.startswith((".", "_")) for part in path.relative_to(source).parts)
+        and not (path.relative_to(source).parts[0] == "datasets" and len(path.relative_to(source).parts) > 2
+                 and path.relative_to(source).parts[1] in hidden)
     )
 
 
@@ -208,6 +264,7 @@ def check_site(source: Path = DOCS) -> tuple[dict[Path, Page], set[Path]]:
         raise ValueError("The authored site needs docs/index.html")
     assets: set[Path] = set()
     errors: list[str] = []
+    hidden = hidden_datasets(source)
     for path, page in pages.items():
         if page.main_count != 1 or not page.title.strip():
             errors.append(f"{path.relative_to(source)}: needs one main region and a page title")
@@ -238,12 +295,18 @@ def check_site(source: Path = DOCS) -> tuple[dict[Path, Page], set[Path]]:
                 elif anchor and anchor not in pages[target].ids:
                     errors.append(f"{path.relative_to(source)}: missing anchor {value}")
             else:
+                belongs = hidden_reference(target.relative_to(source).as_posix(), hidden)
+                if belongs:
+                    errors.append(f"{path.relative_to(source)}: links a file of the hidden dataset {belongs}: {value}")
+                    continue
                 assets.add(target)
     comparison_path = source / "datasets/comparison_data.json"
     if comparison_path.is_file():
         assets.add(comparison_path)
         comparison = json.loads(comparison_path.read_text(encoding="utf-8"))
         for dataset in comparison["datasets"]:
+            if dataset["slug"] in hidden:
+                continue
             if source / "datasets" / dataset["slug"] / "index.html" not in pages:
                 errors.append(f"comparison_data.json: no HTML page for {dataset['slug']}")
             for task in dataset.get("tasks", []):
@@ -260,6 +323,8 @@ def check_site(source: Path = DOCS) -> tuple[dict[Path, Page], set[Path]]:
     if aggregate_path in assets:
         aggregate = json.loads(aggregate_path.read_text(encoding="utf-8"))
         for slug, dataset in aggregate["datasets"].items():
+            if slug in hidden:
+                continue
             for task in dataset.get("tasks", []):
                 try:
                     result = resolve_local(source, aggregate_path, task["url"])
@@ -290,6 +355,7 @@ def build(output: Path, source: Path = DOCS) -> tuple[int, int]:
     if output == source or output.is_relative_to(source) or source.is_relative_to(output):
         raise ValueError("Output must be separate from docs/ and cannot contain it.")
     pages, assets = check_site(source)
+    hidden = hidden_datasets(source)
     marker = output / ".locohub-static-files.json"
     if output.exists() and any(output.iterdir()) and not marker.is_file():
         raise ValueError(f"Refusing to overwrite a non-LocoHub output directory: {output}")
@@ -300,7 +366,7 @@ def build(output: Path, source: Path = DOCS) -> tuple[int, int]:
         relative = path.relative_to(source)
         destination = output / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
-        publish_file(path, destination)
+        publish_file(path, destination, hidden, relative.as_posix())
         published.add(relative.as_posix())
     index = [
         {

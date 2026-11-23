@@ -151,7 +151,8 @@
           "UM21-R02"
         ]
       },
-      "gate_evidence": {}
+      "gate_evidence": {},
+      "rebuild_in_progress": true
     },
     {
       "id": "gt21",
@@ -196,7 +197,8 @@
           "GT21-R01"
         ]
       },
-      "gate_evidence": {}
+      "gate_evidence": {},
+      "rebuild_in_progress": true
     },
     {
       "id": "gt23",
@@ -241,7 +243,8 @@
           "GT23-R01"
         ]
       },
-      "gate_evidence": {}
+      "gate_evidence": {},
+      "rebuild_in_progress": true
     },
     {
       "id": "gt24",
@@ -1910,7 +1913,7 @@
         "Observation identities, 150-point inclusive phase grid and every exclusion are accounted for against the v2 bundle; full and filtered share lineage; Q01 re-run, not reused.",
         "Pilot of the same bound code passes before the full run; one numerical job at a time, peak memory recorded; v2 bundle untouched."
       ],
-      "next_action": "Launch the v3 pilot when the launcher is free, then draft the CoP decision for Jose from its endpoint numbers.",
+      "next_action": "Ask José the fitted-plate publication question with the v3 endpoint numbers; then audit script.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/UM21-STD-plan.json",
@@ -1918,15 +1921,15 @@
       ],
       "handoff": {
         "last_checked_at_utc": "2026-11-23T22:00:00+00:00",
-        "summary": "Runner, 45 synthetic tests and a 5-recording pilot (v1, receipt clean except other agents appeared; cleanup proven) done. Angles agree with v2 (r 0.97-1.0, offsets = zero change); CoP fit holds out the ankle moment (r 0.975-0.999) and agrees with the re-implemented ESML method within 19 mm on 9 of 10 plates. Runner then changed (endpoint check, pelvis hold limit) and the v3 pilot has not run. Pilot only; task stays working.",
+        "summary": "Runner, 45 synthetic tests and a 5-recording pilot (v1, receipt clean except other agents appeared; cleanup proven) done. Angles agree with v2 (r 0.97-1.0, offsets = zero change); CoP fit holds out the ankle moment (r 0.975-0.999) and agrees with the re-implemented ESML method within 19 mm on 9 of 10 plates. Runner then changed (endpoint check, pelvis hold limit) and the v3 pilot has not run. Pilot only; task stays working. Final-runner pilot v3 has now run: endpoints fail the provisional 3 cm gate on all ten plates (heel worst).",
         "checks": [
           "pytest tests/test_um21_s02_frame.py: 45 passed (synthetic only)",
           "Guarded pilot v1: 5 recordings, peak RSS 231 MiB, 25.7 s, source unchanged, verify-cleanup proven",
-          "Composition error 2.2e-16 rad in all five written tables"
+          "Composition error 2.2e-16 rad in all five written tables",
+          "Guarded pilot v3 (final runner): clean_success true, peak RSS 231.6 MiB, 21.6 s, cleanup proven"
         ],
         "remaining": [
-          "Launch v3 pilot (spec v3 unlaunched; v2 refused)",
-          "Decision: publish CoP from fitted registration, and tolerances",
+          "Decision: publish CoP from fitted registration, and endpoint tolerance (needs José)",
           "Independent audit script, Q01 v3, R01 v3, full run"
         ],
         "handoff_file": "docs/maintainers/handoffs/UM21-STD-plan.json (pilot_results)"
@@ -6946,7 +6949,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Preserve and index all GT23 source files with a Python reader",
-      "status": "working",
+      "status": "review",
       "stage": "source_readback",
       "question": "Is every one of the 488 recordings and its 4,880 channel files, marker files, body-orientation files and authors' stride files accounted for, hashed and readable without MATLAB?",
       "scope": "27 guarded jobs: 3 pilots (AB05 normal_walk_1; AB02 normal_walk_1, the largest marker file; AB11 stairs_1_1, random draw seed 20261123) + 12 participant batches + 12 independent audit batches. Ledger of hashes, row counts, clocks, per-marker and per-plate finite shares for the 22 markers the rebuild needs, lossless Parquet companions of the ten channel groups, and the publisher's README mass table bound by hash. Closes the oversized-table problem (AB02 is read from its Euler CSV). Local RawData/Subject_masses.csv is not the publisher's file and is never read.",
@@ -6977,26 +6980,37 @@
         "Re-read hashes equal the ledger in the audit batches, which use separate code.",
         "Pilot shows peak memory under the launcher's 768 MiB address-space cap; one job at a time; nothing under converted_datasets/ or source folders is overwritten."
       ],
-      "next_action": "Write the reader and the three pilot job specs; dry-run each through python3 -m contributor_tools.guarded_launcher run SPEC.json --dry-run; run the AB05 pilot first.",
+      "next_action": "Independent verifier: run the 12 audit batches (audit_gt23_x01.py, one guarded job each) against the batch roots and the events root, then mark done or send back with reasons. Prior read-only findings for later GT23 steps (C06 conventions, S01 segmentation) are in docs/maintainers/handoffs/ESML-crosswalk.json.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT23-rebuild-plan.json",
-        "docs/quality/audits/gt23-rebuild-probes.json"
+        "docs/quality/audits/gt23-rebuild-probes.json",
+        "docs/quality/audits/gt23-x01-summary-v2-launcher-receipt.json",
+        "converted_datasets/reconversion_v2/gt23_x01_summary_v2/summary.json",
+        "converted_datasets/reconversion_v2/gt23_x01_events/events_summary.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T20:38:07+00:00",
-        "summary": "Planned. Source has everything the later fixes need: markers, ankle markers, heel and toe markers, body orientations (Transforms_Euler) and per-kg moments and powers for all 488 recordings.",
+        "last_checked_at_utc": "2026-11-23T22:52:14+00:00",
+        "summary": "Python-only source reader, ledger and lossless Parquet companions for all 488 GT23 recordings. Counts equal the plan exactly: 488 recordings, 4,880 channel files, 787 event files (9 empty), 13,119 windows (7,721 left, 5,398 right), 398 recordings with windows, 90 without. Marker rows equal 200 Hz channel rows in all 488; Raw_EMGs is 2000 Hz (ten rows per 200 Hz row) and is checked that way. 17 recordings lack one of the 22 needed markers (named below). Independent audit of the 12 participant batches NOT yet done.",
         "checks": [
-          "Plan written from read-only probes only (22 runs, one file at a time, peak RSS 150 to 241 MiB); no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+          "tests/test_gt23_x01.py: 8 synthetic tests pass, also under ulimit -v 786432 with one thread (tamper test: the audit fails on a modified companion)",
+          "All 12 batches: 0 failed recordings; every companion reads back equal to the parsed values (parquet_readback_matches) and matches its own digest",
+          "Summary job: all nine acceptance counts equal the expected values",
+          "Every launched job: verify-cleanup proof, windows_new_workers empty; peak memory 140-207 MiB, far below the 768 MiB cap; one job at a time"
         ],
         "remaining": [
-          "Write the reader; three pilots; 12 batches; 12 audits."
+          "Independent sonnet audit of the 12 batches: for each subject run audit_gt23_x01.py audit with --batch-root (the batch root), --events-root converted_datasets/reconversion_v2/gt23_x01_events, new --output-root; spec helper: run_gt23_x01.py spec --kind audit --events-root ..."
         ],
         "changed_files": [
-          "docs/maintainers/handoffs/GT23-rebuild-plan.json",
-          "docs/quality/audits/gt23-rebuild-probes.json",
+          "contributor_tools/gt23_source_reader.py",
+          "contributor_tools/run_gt23_x01.py",
+          "contributor_tools/audit_gt23_x01.py",
+          "contributor_tools/summarize_gt23_x01.py",
+          "tests/test_gt23_x01.py",
+          "docs/maintainers/handoffs/GT23-X01.json",
           "docs/maintainers/backlog.json",
-          "docs/maintainers/backlog.html"
+          "docs/maintainers/backlog.html",
+          "docs/quality/audits/gt23-x01-*"
         ]
       },
       "owner": "claude-worker-gt23-x01",
@@ -7034,9 +7048,10 @@
         "All 90 recordings without windows have one disposition and the counts add to 90 (23 gait, 3 window, 64 continuous).",
         "No silent filter: no trimming of first or last strides, no outlier drop; every excluded stride has a reason.",
         "Both legs segmented where force exists; right-plate-missing trials report zero right strides, not invented ones; an unknown task stops the job.",
-        "Synthetic traces with known crossing times give those times exactly. Agreement is reported, never tuned to a pass rate."
+        "Synthetic traces with known crossing times give those times exactly. Agreement is reported, never tuned to a pass rate.",
+        "The phase reconstruction audit in docs/maintainers/handoffs/ESML-crosswalk.json (energy-shaping-ML survey) is used as a comparison for our own segmentation; credit the file; no import from that project and none of its parquets opened."
       ],
-      "next_action": "After GT23-X01 is done: write the module and tests, then dry-run the AB12 normal_walk_1 pilot.",
+      "next_action": "After GT23-X01 is done: write the module and tests, then dry-run the AB12 normal_walk_1 pilot. Use the phase reconstruction audit in docs/maintainers/handoffs/ESML-crosswalk.json as a comparison.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT23-rebuild-plan.json",
@@ -7094,9 +7109,10 @@
         "Sign of published hip, knee (negated) and ankle speeds agrees with the derivative of the recomputed angles in every task class; disagreements are listed per task, not hidden.",
         "Forward and sideways force and pressure point are empty in the 15 no-forward tasks; left and right sideways mirror.",
         "Pelvis angle has no IK reference (probed correlation near 0): the report says so and names the reference used instead.",
-        "Pilots show peak memory under the 768 MiB cap; one job at a time."
+        "Pilots show peak memory under the 768 MiB cap; one job at a time.",
+        "Scaled1 model geometry (ankle centre about 35.7 mm below the ankle-marker midpoint, talus origin, calcn offset 0.04877 m) is re-implemented as LocoHub code with its own synthetic tests and checked against GT23 data before it is relied on; credit docs/maintainers/handoffs/ESML-crosswalk.json (energy-shaping-ML survey); no import from that project and none of its parquets opened. The values are that project's claims, not yet verified here."
       ],
-      "next_action": "After GT23-S01 is done: write the module and fixtures, then dry-run the AB05 normal_walk_1 pilot.",
+      "next_action": "After GT23-S01 is done: write the module and fixtures, then dry-run the AB05 normal_walk_1 pilot. Also read the GT23 items in docs/maintainers/handoffs/ESML-crosswalk.json (Scaled1 model geometry: talus origin, ankle centre 35.7 mm below the ankle-marker midpoint, calcn offset 0.04877 m); port as re-implemented code with tests and verify on GT23 data.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT23-rebuild-plan.json",
@@ -7926,7 +7942,7 @@
       ],
       "handoff": {
         "last_checked_at_utc": "2026-11-23T00:00:00Z",
-        "summary": "Site build fixed, status labels from backlog added, general review-page builder added and tested, visible task IDs and names removed. Not committed (follow-up edits after c317106).",
+        "summary": "Site build fixed, status labels from backlog added, general review-page builder added and tested, visible task IDs and names removed. Scope change 2026-11-23 (D-DOC-06-1): site shows only UMich 2021, GT21 and GT23 (docs/site_datasets.json); other dataset pages hidden, listed in a closed Coming later section. Edits made; builders and tests still to be run.",
         "checks": [
           "pytest tests/test_dataset_review_page.py and the docs tests; docs/build.py --check; dataset_status.py --check; screenshots at 1280 and 390 px"
         ],
@@ -8753,7 +8769,7 @@
       "confidence": "medium",
       "why": "His words were 'fix the 52', and the 52 are the recordings where rescaling lowers the error in every plausible case; but his stated rule was 'known exactly', which fits only 7.",
       "check": "GT23 problems page, mass card table: each participant's mass is marked 'worked out exactly' or 'estimated from force plates'.",
-      "status": "open",
+      "status": "answered",
       "decide_before_recommendation": false,
       "answer": "B",
       "answered_at_utc": "2026-11-23T00:00:00Z",
@@ -8874,8 +8890,69 @@
       "why": "It is the only option that gives the ankle centre the decided centre-of-pressure frame needs, with the authors' own files and no outside data.",
       "check": "Authors' model for any participant lists 28 markers: none at the hip, none on the inner knee or inner ankle.",
       "decide_before_recommendation": true,
-      "status": "open",
+      "status": "answered",
       "answer": "C",
+      "answered_at_utc": "2026-11-23T00:00:00Z"
+    },
+    {
+      "id": "D-UM21-S02-1",
+      "task_id": "UM21-S02",
+      "question": "The UMich 2021 treadmill plate position is not recorded; it can only be fitted from the data. Should the centre of pressure built on that fitted position be published?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Publish, labelled as an estimated plate position",
+          "consequence": "A recording passes only if the hold-out ankle moment check has r of at least 0.95 and the toe-off end lies within 4 cm. AB04 10° decline is held until its 20 cm heel offset is explained, and AB03 10° incline is held if its up/down disagreement fails. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Do not publish centre of pressure for UMich 2021",
+          "consequence": "The columns stay empty; angles still ship. Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Release angles now, decide on centre of pressure after the full run",
+          "consequence": "Centre of pressure waits for the numbers from all 44 recordings. Reversible."
+        }
+      ],
+      "cost_of_waiting": "Only the centre-of-pressure columns wait; angles are unaffected.",
+      "recommended": "A",
+      "confidence": "medium",
+      "why": "The hold-out ankle moment matches closely (r 0.975–0.999), and the fitted plate lands a median 7 mm from an independent estimate.",
+      "check": "In the pilot, 9 of 10 plates are within 19 mm of the independent estimate.",
+      "answer": "A",
+      "answered_at_utc": "2026-11-23T00:00:00Z",
+      "note": "José answered in chat: 'do A' (chat options listed in the same order and wording).",
+      "status": "answered",
+      "options_order": "By how much is published, most first.",
+      "decide_before_recommendation": false
+    },
+    {
+      "id": "D-DOC-06-1",
+      "task_id": "DOC-06",
+      "question": "Which datasets should the public site show?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Show only the three datasets being rebuilt now",
+          "consequence": "The catalog, fixes, comparison and quality pages cover UMich 2021, Georgia Tech 2021 and Georgia Tech 2023. Other dataset pages stay on disk but are left out of the build. Reversible by editing one list."
+        },
+        {
+          "key": "B",
+          "label": "Keep all datasets on the site",
+          "consequence": "Older legacy pages stay visible next to the rebuilt ones, which makes the updated pages harder to find. No change to the files."
+        }
+      ],
+      "options_order": "By number of datasets shown, fewest first.",
+      "recommended": "A",
+      "confidence": "high",
+      "why": "The three datasets are the ones with updated fixes pages; the others are legacy and unchecked.",
+      "check": "Open the catalog: three rows, plus a closed section for the others.",
+      "cost_of_waiting": "The site keeps showing legacy pages beside the rebuilt ones.",
+      "decide_before_recommendation": false,
+      "status": "answered",
+      "answer": "other",
+      "answer_text": "José, 23 November 2026: \"remove some of the old datasets ... only keep the three that we are working with now. That way we have the updated 'stuff that we fixed' pages.\" Refinement: the other datasets still appear in the catalog, as plain text, in a closed collapsible section titled for later; their detail pages are not built.",
       "answered_at_utc": "2026-11-23T00:00:00Z"
     }
   ]

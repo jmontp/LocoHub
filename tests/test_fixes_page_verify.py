@@ -58,15 +58,12 @@ def test_um21_branch_frames_and_kept_strides():
     assert f"{len(kept)} of {len(inside)} inside strides kept" in text
 
 
-def test_gt24_pool_seed_and_stances():
-    trials = audit("gt24-c02-ankle-sign.json")["trials"]
-    pool = [(t, s) for t in trials for s in t["sides"]
-            if s.get("stances_with_finite_moment", 0) >= 5 and "moment_source_Nm_kg" in s.get("curves", {})]
-    trial, side = random.Random(20261031).choice(pool)
-    summary = audit("gt24-c02-ankle-sign.json")["summary"]
-    text = card("gt24-ankle-sign")
-    assert len(pool) == summary["legs_with_moment"] == 12 and "12 of 12" in text
-    assert f"mean of {side['stances_with_finite_moment']} stances" in text and trial["subject"] in text
+def test_hidden_datasets_have_no_card():
+    # The site shows only the datasets in docs/site_datasets.json; GT24 cards are hidden, not deleted.
+    shown = json.loads((ROOT / "docs/site_datasets.json").read_text(encoding="utf-8"))["shown"]
+    ids = re.findall(r'<article class="fix-card" id="([^"]+)"', PAGE.read_text(encoding="utf-8"))
+    assert ids and all(card_id.split("-")[0] in shown for card_id in ids)
+    assert "gt24-ankle-sign" not in ids and "gt24-worn-mass" not in ids
 
 
 def test_gt23_units_range_and_legs():

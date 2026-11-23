@@ -4,7 +4,9 @@
 The rule (first match wins) uses only backlog facts, never a hand-typed status:
   1. The dataset's R01 task (the local review release) is `review` or `done`
      -> "local review version (not released)".
-  2. Any task of the dataset is `working` -> "being rebuilt".
+  2. Any task of the dataset is `working` or `review`, or its backlog entry has
+     `rebuild_in_progress: true` (set when José puts a rebuild in scope)
+     -> "being rebuilt".
   3. The dataset's pilot or source-readback gate is `partial`
      -> "partly rebuilt locally (not released)".
   4. Otherwise -> "legacy, not yet checked".
@@ -50,6 +52,11 @@ def load_backlog(path: Path = BACKLOG) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def shown_slugs() -> list[str]:
+    """Datasets the site shows (docs/site_datasets.json); hidden dataset pages are left untouched."""
+    return list(json.loads((DOCS / "site_datasets.json").read_text(encoding="utf-8"))["shown"])
+
+
 def backlog_id(slug: str) -> str:
     return "historical" if slug in HISTORICAL else slug
 
@@ -58,12 +65,13 @@ def status_for(data: dict, slug: str) -> tuple[str, bool]:
     """Return (status key, an_update_is_being_rebuilt) for a dataset slug."""
     ds = backlog_id(slug)
     tasks = [t for t in data["tasks"] if t["dataset"] == ds]
-    working = any(t["status"] == "working" for t in tasks)
+    entry = next((d for d in data["datasets"] if d["id"] == ds), None)
+    # A rebuild José put in scope stays "being rebuilt" between steps, when no task is momentarily working.
+    working = any(t["status"] in ("working", "review") for t in tasks) or bool(entry and entry.get("rebuild_in_progress"))
     if any(t["id"].endswith("-R01") and t["status"] in ("review", "done") for t in tasks):
         return "review", working
     if working:
         return "rebuilding", False
-    entry = next((d for d in data["datasets"] if d["id"] == ds), None)
     gates = entry["gate_status"] if entry else {}
     if "partial" in (gates.get("pilot"), gates.get("readback")):
         return "partial", False
@@ -106,6 +114,30 @@ CATALOG_RE = re.compile(r'<a class="evidence-status"[^>]*? href="((?:\.\./)?)qua
 CARD_RE = re.compile(r'(<article class="status-card" id="status-(\w+)"><h3>[^<]*?) <span class="status-label" data-status="\w+">[^<]*</span>')
 
 
+FUTURE_LINE = {
+    "legacy": "not yet checked",
+    "rebuilding": "being rebuilt",
+    "partial": "partly rebuilt on the maintainer's computer; not released",
+    "review": "local review version; not released",
+}
+FUTURE_RE = re.compile(r"<!-- FUTURE_START -->.*?<!-- FUTURE_END -->", re.S)
+
+
+def future_block(data: dict) -> str:
+    """Closed "Coming later" list: plain text only, because these datasets have no built page."""
+    listing = json.loads((DOCS / "site_datasets.json").read_text(encoding="utf-8"))
+    later, group = listing.get("later", []), listing.get("later_group")
+    items = "".join(f"<li><strong>{escape(d['name'])}</strong>: {escape(FUTURE_LINE[status_for(data, d['slug'])[0]])}.</li>" for d in later)
+    total = len(later)
+    if group:  # one line for the earlier studies; their status is the backlog's status for the first slug of the group
+        status = FUTURE_LINE[status_for(data, group["slugs"][0])[0]]
+        items += f"<li><strong>{escape(group['label'])} ({len(group['names'])})</strong>: {escape(status)}. {escape(', '.join(group['names']))}.</li>"
+        total += len(group["names"])
+    return (f'<!-- FUTURE_START --><details class="future-datasets"><summary>Coming later ({total} datasets)</summary>'
+            '<p class="note">These datasets are not on this site yet. Their pages are not published.</p>'
+            f"<ul>{items}</ul></details><!-- FUTURE_END -->")
+
+
 def apply_catalog(html: str, data: dict) -> str:
     def repl(m):
         up, slug = m.group(1), m.group(2)
@@ -115,7 +147,8 @@ def apply_catalog(html: str, data: dict) -> str:
             href = f"{slug}/problems.html" if up else f"datasets/{slug}/problems.html"
             out += f'<a class="problems-link" href="{href}">Known problems</a>'
         return out
-    return CATALOG_RE.sub(repl, html)
+    html = CATALOG_RE.sub(repl, html)
+    return FUTURE_RE.sub(lambda m: future_block(data), html)
 
 
 def apply_cards(html: str, data: dict) -> str:
@@ -129,7 +162,7 @@ def targets(data: dict):
     yield DOCS / "index.html", lambda h: apply_catalog(h, data)
     yield DOCS / "datasets/index.html", lambda h: apply_catalog(h, data)
     yield DOCS / "quality/index.html", lambda h: apply_cards(h, data)
-    slugs = [d for d in ("um21", "gt21", "gt23", "gt24", "gt25d", "mb24", "sp50", "ga26", "um24k") + HISTORICAL]
+    slugs = shown_slugs()
     for slug in slugs:
         page = DOCS / "datasets" / slug / "index.html"
         if page.is_file():
@@ -149,7 +182,7 @@ def main(argv=None) -> int:
             stale.append(path.relative_to(ROOT).as_posix())
             if not args.check:
                 path.write_text(new, encoding="utf-8")
-    for slug in ("um21", "gt21", "gt23", "gt24", "gt25d", "mb24", "sp50", "ga26", "um24k"):
+    for slug in shown_slugs():
         print(f"{slug}: {LABELS[status_for(data, slug)[0]]}")
     print(("out of date: " if args.check else "updated: ") + (", ".join(stale) or "none"))
     return 1 if (args.check and stale) else 0

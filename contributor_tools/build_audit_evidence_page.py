@@ -15,7 +15,16 @@ FAMILIES = [('umich_2021','um21','Umich 2021'),('gtech_2021','gt21','Georgia Tec
             ('gtech_2023','gt23','Georgia Tech 2023'),('gtech_2024','gt24','Georgia Tech 2024'),
             ('gtech_2025','gt25d','Georgia Tech 2025'),('gait120','ga26','Gait120'),
             ('mblue','mb24','MBLUE Ankle'),('strokepig','sp50','StrokePiG')]
+# Only the datasets in docs/site_datasets.json are shown; evidence for the others stays on disk, unpublished.
+SHOWN = json.loads((ROOT / 'docs/site_datasets.json').read_text(encoding='utf-8'))['shown']
+GROUP_FAMILIES = {'umich': {'um21'}, 'gtech': {'gt21', 'gt23', 'gt24', 'gt25d'}, 'remaining': {'ga26', 'mb24', 'sp50'}}
 ESC = lambda value: html.escape(str(value), quote=True)
+
+
+def names_hidden_dataset(finding):
+    """True if a converter-code finding names a dataset the site hides (by slug, label or file prefix)."""
+    text = json.dumps(finding).lower()
+    return any(word.lower() in text for prefix, slug, label in FAMILIES if slug not in SHOWN for word in (slug, label, prefix))
 
 
 def file_status(findings):
@@ -39,12 +48,15 @@ def evidence_html(directory):
     artifacts = []
     risks = []
     for group, _ in GROUPS:
+        if not GROUP_FAMILIES[group] & set(SHOWN):
+            continue  # no shown dataset in this group: its investigation record is not read or linked
         report = json.loads((directory / f'{group}.json').read_text())
-        risks.extend((group, f) for f in report['findings'] if f['scope'] == 'converter')
+        risks.extend((group, f) for f in report['findings'] if f['scope'] == 'converter' and not names_hidden_dataset(f))
         for artifact in report['artifacts']:
             findings = [f for f in report['findings'] if f['scope'] == 'artifact' and artifact['path'] in f['paths']]
             slug, name = family(artifact['path'])
-            artifacts.append((slug, name, group, artifact, findings))
+            if slug in SHOWN:
+                artifacts.append((slug, name, group, artifact, findings))
     order = {slug: i for i, (_, slug, _) in enumerate(FAMILIES)}
     artifacts.sort(key=lambda r: (order.get(r[0], 99), r[3]['path']))
     text = ['<details class="audit-method"><summary>Audit scope &amp; status definitions</summary>',

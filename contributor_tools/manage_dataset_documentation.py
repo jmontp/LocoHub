@@ -986,6 +986,12 @@ def _relative_path(path: Path) -> str:
         return path.name
 
 
+def _shown_site_datasets() -> List[str]:
+    """Dataset slugs the site shows (docs/site_datasets.json); every other dataset page is hidden, not deleted."""
+    listing = repo_root / "docs" / "site_datasets.json"
+    return json.loads(listing.read_text(encoding="utf-8"))["shown"]
+
+
 def _public_name(value) -> str:
     """File name only. Published pages must not show repo or local folder paths."""
     return Path(str(value).replace("\\", "/")).name
@@ -1336,6 +1342,9 @@ def update_dataset_tables() -> None:
             continue
         # Skip hidden datasets (e.g., AddBiomechanics datasets not yet ready for public)
         if data.get('hidden', False):
+            continue
+        # Only datasets listed in docs/site_datasets.json are shown on the site.
+        if meta_file.stem not in _shown_site_datasets():
             continue
         data['dataset_name'] = meta_file.stem
         metadata_entries.append(data)

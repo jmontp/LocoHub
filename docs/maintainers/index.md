@@ -50,6 +50,10 @@ Tests for contracts, release integrity, and public examples should use small det
 
 Keep validation decisions in the shared contract implementation. CLI summaries, filtering, release manifests, and documentation must consume the same result, rather than independently reconstructing counts. Contributor utilities are internal implementation, not a new public SDK.
 
+## Hidden datasets
+
+The site shows only the datasets under `shown` in `docs/site_datasets.json`. Other dataset pages stay on disk but are left out of the build; links to them are build errors. To show one again, add it to `shown` and rerun the status, audit-evidence and fixes-page builders.
+
 ## How to land a dataset page
 
 A dataset page is built from its verified local review bundle (see the HTML page for details).

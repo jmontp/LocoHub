@@ -272,6 +272,21 @@ def _label(value):
     return value.replace('_', ' ').capitalize()
 
 
+def _hidden_dataset(rel, docs_root):
+    """The slug of a dataset the site hides (docs/site_datasets.json) that this docs-relative path belongs to, else None."""
+    listing = docs_root / 'site_datasets.json'
+    if not listing.is_file():
+        return None
+    shown = set(json.loads(listing.read_text(encoding='utf-8'))['shown'])
+    folder = docs_root / 'datasets'
+    slugs = {p.name for p in folder.iterdir() if p.is_dir() and (p / 'index.html').is_file() and not p.name.startswith(('.', '_'))}
+    name = rel.rsplit('/', 1)[-1]
+    for slug in slugs - shown - {'comparison', 'validation_ranges'}:
+        if rel.startswith(f'datasets/{slug}/') or name.startswith((f'{slug}_', f'{slug}-', f'{slug}.')):
+            return slug
+    return None
+
+
 def _reference(value, docs_root):
     """Only HTTP(S) evidence and actual files inside docs receive hyperlinks."""
     safe = escape(value, quote=True)
@@ -284,7 +299,7 @@ def _reference(value, docs_root):
     if not parsed.scheme and not parsed.query and value.startswith('docs/'):
         target = (docs_root.parent / parsed.path).resolve()
         # Markdown sources, source code and launcher logs (git-ignored, local paths) are not published, so they stay plain text.
-        if target.is_relative_to(docs_root.resolve()) and target.is_file() and target.suffix not in ('.md', '.log', '.py'):
+        if target.is_relative_to(docs_root.resolve()) and target.is_file() and target.suffix not in ('.md', '.log', '.py') and not _hidden_dataset(target.relative_to(docs_root.resolve()).as_posix(), docs_root.resolve()):
             href = os.path.relpath(target, docs_root / 'maintainers').replace(os.sep, '/')
             if parsed.fragment:
                 href += '#' + parsed.fragment

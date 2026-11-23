@@ -11,7 +11,7 @@ python3 docs/build.py            # writes site/html (the default)
 python3 -m http.server 8000 --directory site/html
 ```
 
-Open `http://localhost:8000/`. The builder uses only Python's standard library:
+Open `http://localhost:8000/`. Only the datasets listed in `site_datasets.json` are built; other dataset pages stay on disk but are left out. The builder uses only Python's standard library:
 it checks local links and anchors, copies authored HTML and referenced assets,
 and creates a plain JSON search index. A fresh output directory is required on
 first use; subsequent builds recognize their own output manifest. No scientific

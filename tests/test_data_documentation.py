@@ -105,7 +105,7 @@ def test_documentation_javascript_parses():
 
 def test_authored_html_links_and_native_examples_are_complete():
     pages, assets = STATIC_DOCS.check_site()
-    assert len(pages) >= 29
+    assert len(pages) >= 18  # the site shows three datasets; the other dataset pages are hidden
     tutorial = pages[(ROOT / "docs/tutorials/index.html").resolve()]
     assert tutorial.language_panels == {"python": 3, "matlab": 3}
     assert len([code for language, code in tutorial.code_blocks if language == "matlab"]) == 3
