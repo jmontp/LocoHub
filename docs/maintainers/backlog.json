@@ -6949,7 +6949,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Preserve and index all GT23 source files with a Python reader",
-      "status": "review",
+      "status": "done",
       "stage": "source_readback",
       "question": "Is every one of the 488 recordings and its 4,880 channel files, marker files, body-orientation files and authors' stride files accounted for, hashed and readable without MATLAB?",
       "scope": "27 guarded jobs: 3 pilots (AB05 normal_walk_1; AB02 normal_walk_1, the largest marker file; AB11 stairs_1_1, random draw seed 20261123) + 12 participant batches + 12 independent audit batches. Ledger of hashes, row counts, clocks, per-marker and per-plate finite shares for the 22 markers the rebuild needs, lossless Parquet companions of the ten channel groups, and the publisher's README mass table bound by hash. Closes the oversized-table problem (AB02 is read from its Euler CSV). Local RawData/Subject_masses.csv is not the publisher's file and is never read.",
@@ -6980,14 +6980,16 @@
         "Re-read hashes equal the ledger in the audit batches, which use separate code.",
         "Pilot shows peak memory under the launcher's 768 MiB address-space cap; one job at a time; nothing under converted_datasets/ or source folders is overwritten."
       ],
-      "next_action": "Independent verifier: run the 12 audit batches (audit_gt23_x01.py, one guarded job each) against the batch roots and the events root, then mark done or send back with reasons. Prior read-only findings for later GT23 steps (C06 conventions, S01 segmentation) are in docs/maintainers/handoffs/ESML-crosswalk.json.",
+      "next_action": "Done. Later GT23 steps read events only from the events root (see the supersession note). GT23-M01 is next.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT23-rebuild-plan.json",
         "docs/quality/audits/gt23-rebuild-probes.json",
         "docs/quality/audits/gt23-x01-summary-v2-launcher-receipt.json",
         "converted_datasets/reconversion_v2/gt23_x01_summary_v2/summary.json",
-        "converted_datasets/reconversion_v2/gt23_x01_events/events_summary.json"
+        "converted_datasets/reconversion_v2/gt23_x01_events/events_summary.json",
+        "docs/maintainers/handoffs/GT23-X01-verify.json",
+        "docs/quality/audits/gt23-x01-events-supersession.json"
       ],
       "handoff": {
         "last_checked_at_utc": "2026-11-23T22:52:14+00:00",
@@ -7014,7 +7016,12 @@
         ]
       },
       "owner": "claude-worker-gt23-x01",
-      "started_at_utc": "2026-11-23T20:45:35+00:00"
+      "started_at_utc": "2026-11-23T20:45:35+00:00",
+      "verification": {
+        "verified_at_utc": "2026-11-23",
+        "result": "pass: 12 audits, independent spot check and supersession marker all verified",
+        "evidence": "docs/maintainers/handoffs/GT23-X01-verify.json"
+      }
     },
     {
       "id": "GT23-S01",

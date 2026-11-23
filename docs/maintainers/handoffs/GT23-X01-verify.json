@@ -1,0 +1,1563 @@
+{
+  "task_id": "GT23-X01",
+  "verifier": "independent claude verifier (not the worker)",
+  "verified_at_utc": "2026-11-23",
+  "scientific_approval": false,
+  "verdict": "pass after v2 marker check (earlier sent back only for the missing marker)",
+  "audit_jobs": {
+    "specs": "docs/quality/audits/gt23-x01-audit-AB##-spec.json",
+    "receipts": "docs/quality/audits/gt23-x01-audit-AB##-launcher-receipt.json",
+    "reports": "converted_datasets/reconversion_v2/gt23_x01_audit_AB##/audit_report.json",
+    "pilot_first": "AB05",
+    "all_pass": true,
+    "recordings_checked_total": 488,
+    "per_participant": {
+      "AB01": {
+        "launcher_peak_mib": 163.3,
+        "recordings_checked": 40,
+        "status": "pass",
+        "failures": 0,
+        "wall_s": 116.251,
+        "clean_success": true
+      },
+      "AB02": {
+        "launcher_peak_mib": 162.4,
+        "recordings_checked": 43,
+        "status": "pass",
+        "failures": 0,
+        "wall_s": 122.214,
+        "clean_success": true
+      },
+      "AB03": {
+        "launcher_peak_mib": 164.9,
+        "recordings_checked": 40,
+        "status": "pass",
+        "failures": 0,
+        "wall_s": 112.019,
+        "clean_success": true
+      },
+      "AB05": {
+        "launcher_peak_mib": 163.5,
+        "recordings_checked": 40,
+        "status": "pass",
+        "failures": 0,
+        "wall_s": 127.495,
+        "clean_success": true
+      },
+      "AB06": {
+        "launcher_peak_mib": 163.6,
+        "recordings_checked": 39,
+        "status": "pass",
+        "failures": 0,
+        "wall_s": 122.421,
+        "clean_success": true
+      },
+      "AB07": {
+        "launcher_peak_mib": 163.8,
+        "recordings_checked": 40,
+        "status": "pass",
+        "failures": 0,
+        "wall_s": 116.148,
+        "clean_success": true
+      },
+      "AB08": {
+        "launcher_peak_mib": 164.2,
+        "recordings_checked": 40,
+        "status": "pass",
+        "failures": 0,
+        "wall_s": 115.639,
+        "clean_success": true
+      },
+      "AB09": {
+        "launcher_peak_mib": 163.9,
+        "recordings_checked": 40,
+        "status": "pass",
+        "failures": 0,
+        "wall_s": 121.686,
+        "clean_success": true
+      },
+      "AB10": {
+        "launcher_peak_mib": 164.2,
+        "recordings_checked": 41,
+        "status": "pass",
+        "failures": 0,
+        "wall_s": 119.203,
+        "clean_success": true
+      },
+      "AB11": {
+        "launcher_peak_mib": 163.0,
+        "recordings_checked": 41,
+        "status": "pass",
+        "failures": 0,
+        "wall_s": 142.203,
+        "clean_success": true
+      },
+      "AB12": {
+        "launcher_peak_mib": 164.4,
+        "recordings_checked": 43,
+        "status": "pass",
+        "failures": 0,
+        "wall_s": 123.385,
+        "clean_success": true
+      },
+      "AB13": {
+        "launcher_peak_mib": 164.2,
+        "recordings_checked": 41,
+        "status": "pass",
+        "failures": 0,
+        "wall_s": 129.899,
+        "clean_success": true
+      }
+    },
+    "note": "The AB05 job was started by a plain 'run' (no --dry-run first) by mistake; it was the pilot and passed, then each later job was one launch per shell call followed by verify-cleanup (proven true for all 12). Linux available memory was 8.1-8.2 GB and Windows free 6.2-9.0 GB before each launch."
+  },
+  "independent_spot_check": {
+    "seed": 20261123,
+    "method": "stdlib/pandas/numpy/pyarrow/scipy only, worker code not imported; one recording and one file at a time; nice 19, ionice idle; wrote nothing under converted_datasets/; script was /tmp/spot.py (not kept in repo)",
+    "sample": [
+      "AB11/stairs_1_1",
+      "AB09/lunges_1",
+      "AB13/lunges_1",
+      "AB10/lunges_2",
+      "AB08/lift_weight_1",
+      "AB02/walk_backward_1",
+      "AB03/incline_walk_1",
+      "AB12/lunges_1",
+      "AB09/dynamic_walk_1",
+      "AB02/incline_walk_1",
+      "AB08/tire_run_1",
+      "AB12/stairs_1_7"
+    ],
+    "extra_named_missing_marker_recordings": [
+      "AB07/normal_walk_1",
+      "AB13/stairs_1_9",
+      "AB02/stairs_1_10"
+    ],
+    "checked_per_recording": [
+      "10 channel CSVs equal their Parquet companions: same columns, same rows, same NaN positions, max relative difference below 1e-12 (largest seen 9.9e-13)",
+      "Raw_EMGs rows are exactly 10 times the 200 Hz rows, EMG time step 0.0005 s, and every tenth EMG time equals the 200 Hz time",
+      "marker file rows equal declared frames equal channel rows; marker columns equal 3 per declared marker; finite shares of the 22 needed markers equal the ledger to 6 digits; missing needed markers equal the ledger",
+      "window counts from the authors' parsing files equal events root counts (files, left, right)"
+    ],
+    "result": "15 of 15 recordings reproduced exactly, 0 differences",
+    "per_recording": [
+      {
+        "rec": "AB11/stairs_1_1",
+        "Activity_Flag": {
+          "rows": 650,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 650,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 650,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 650,
+          "maxrel": 9.172522079663235e-13,
+          "maxabs": 9.606031248221569e-17
+        },
+        "Joint_Powers": {
+          "rows": 650,
+          "maxrel": 8.07323570343383e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Velocities": {
+          "rows": 650,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Raw_EMGs": {
+          "rows": 6500,
+          "maxrel": 9.836802876808206e-13,
+          "maxabs": 9.904186845655083e-17
+        },
+        "Real_IMUs": {
+          "rows": 650,
+          "maxrel": 9.344936925619022e-14,
+          "maxabs": 8.153200337090993e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 650,
+          "maxrel": 8.522227468292233e-14,
+          "maxabs": 9.020562075079397e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 650,
+          "maxrel": 6.7754748138639e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "emg": {
+          "rows": 6500,
+          "rows200": 650,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0004999999999997229,
+          "dt200": 0.004999999999999893
+        },
+        "trc": {
+          "declared_frames": 650,
+          "rows": 650,
+          "markers": 35,
+          "names_n": 35,
+          "cols": 107,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [],
+          "ledger_missing": [],
+          "max_finite_share_diff": 0.0,
+          "min_share": 0.8892307692307693
+        },
+        "events": {
+          "mine": [
+            1,
+            2,
+            2
+          ],
+          "preserved": [
+            1,
+            2,
+            2
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 172.91796875
+      },
+      {
+        "rec": "AB09/lunges_1",
+        "Activity_Flag": {
+          "rows": 18563,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 18563,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 18563,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 18563,
+          "maxrel": 9.732311048850354e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Powers": {
+          "rows": 18563,
+          "maxrel": 9.887471211475105e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Velocities": {
+          "rows": 18563,
+          "maxrel": 2.3965444459331673e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "Raw_EMGs": {
+          "rows": 185630,
+          "maxrel": 9.887020791109768e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Real_IMUs": {
+          "rows": 18563,
+          "maxrel": 6.548695908406542e-13,
+          "maxabs": 9.904186845655083e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 18563,
+          "maxrel": 7.148442005678814e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 18563,
+          "maxrel": 8.721270577462536e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "emg": {
+          "rows": 185630,
+          "rows200": 18563,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0005,
+          "dt200": 0.005
+        },
+        "trc": {
+          "declared_frames": 18563,
+          "rows": 18563,
+          "markers": 35,
+          "names_n": 35,
+          "cols": 107,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [],
+          "ledger_missing": [],
+          "max_finite_share_diff": 0.0,
+          "min_share": 0.9991380703550072
+        },
+        "events": {
+          "mine": [
+            1,
+            20,
+            20
+          ],
+          "preserved": [
+            1,
+            20,
+            20
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 378.6484375
+      },
+      {
+        "rec": "AB13/lunges_1",
+        "Activity_Flag": {
+          "rows": 24500,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 24500,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 24500,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 24500,
+          "maxrel": 9.473572102200127e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Powers": {
+          "rows": 24500,
+          "maxrel": 9.824055197280699e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Velocities": {
+          "rows": 24500,
+          "maxrel": 1.7688564859371062e-13,
+          "maxabs": 9.020562075079397e-17
+        },
+        "Raw_EMGs": {
+          "rows": 245000,
+          "maxrel": 9.890834216638708e-13,
+          "maxabs": 9.904186845655083e-17
+        },
+        "Real_IMUs": {
+          "rows": 24500,
+          "maxrel": 7.834408085343701e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 24500,
+          "maxrel": 6.806244245886122e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 24500,
+          "maxrel": 9.88085285161505e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "emg": {
+          "rows": 245000,
+          "rows200": 24500,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0005,
+          "dt200": 0.005
+        },
+        "trc": {
+          "declared_frames": 24500,
+          "rows": 24500,
+          "markers": 35,
+          "names_n": 35,
+          "cols": 107,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [],
+          "ledger_missing": [],
+          "max_finite_share_diff": 0.0,
+          "min_share": 1.0
+        },
+        "events": {
+          "mine": [
+            1,
+            28,
+            28
+          ],
+          "preserved": [
+            1,
+            28,
+            28
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 481.76953125
+      },
+      {
+        "rec": "AB10/lunges_2",
+        "Activity_Flag": {
+          "rows": 7792,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 7792,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 7792,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 7792,
+          "maxrel": 9.065906747927333e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Powers": {
+          "rows": 7792,
+          "maxrel": 9.669579303833487e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Velocities": {
+          "rows": 7792,
+          "maxrel": 2.8150199921479386e-13,
+          "maxabs": 9.020562075079397e-17
+        },
+        "Raw_EMGs": {
+          "rows": 77920,
+          "maxrel": 9.899623615542586e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Real_IMUs": {
+          "rows": 7792,
+          "maxrel": 6.113885913683315e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 7792,
+          "maxrel": 7.182640035210123e-13,
+          "maxabs": 9.80118763926896e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 7792,
+          "maxrel": 8.413370039572416e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "emg": {
+          "rows": 77920,
+          "rows200": 7792,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0005,
+          "dt200": 0.005
+        },
+        "trc": {
+          "declared_frames": 7792,
+          "rows": 7792,
+          "markers": 35,
+          "names_n": 35,
+          "cols": 107,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [],
+          "ledger_missing": [],
+          "max_finite_share_diff": 0.0,
+          "min_share": 1.0
+        },
+        "events": {
+          "mine": [
+            2,
+            10,
+            10
+          ],
+          "preserved": [
+            2,
+            10,
+            10
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 481.76953125
+      },
+      {
+        "rec": "AB08/lift_weight_1",
+        "Activity_Flag": {
+          "rows": 18025,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 18025,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 18025,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 18025,
+          "maxrel": 8.871972368950792e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Powers": {
+          "rows": 18025,
+          "maxrel": 9.570572556371848e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Velocities": {
+          "rows": 18025,
+          "maxrel": 6.776526023225875e-13,
+          "maxabs": 9.400032835449323e-17
+        },
+        "Raw_EMGs": {
+          "rows": 180250,
+          "maxrel": 9.884648407574086e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Real_IMUs": {
+          "rows": 18025,
+          "maxrel": 4.6918230593111e-13,
+          "maxabs": 9.901476340223869e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 18025,
+          "maxrel": 6.627908353485803e-13,
+          "maxabs": 9.80118763926896e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 18025,
+          "maxrel": 9.549858081487418e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "emg": {
+          "rows": 180250,
+          "rows200": 18025,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0005,
+          "dt200": 0.005
+        },
+        "trc": {
+          "declared_frames": 18025,
+          "rows": 18025,
+          "markers": 35,
+          "names_n": 35,
+          "cols": 107,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [],
+          "ledger_missing": [],
+          "max_finite_share_diff": 0.0,
+          "min_share": 1.0
+        },
+        "events": {
+          "mine": [
+            4,
+            24,
+            24
+          ],
+          "preserved": [
+            4,
+            24,
+            24
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 481.76953125
+      },
+      {
+        "rec": "AB02/walk_backward_1",
+        "Activity_Flag": {
+          "rows": 23810,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 23810,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 23810,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 23810,
+          "maxrel": 9.134113214991075e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Powers": {
+          "rows": 23810,
+          "maxrel": 9.758175856790721e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Velocities": {
+          "rows": 23810,
+          "maxrel": 2.2282624905194474e-13,
+          "maxabs": 9.400032835449323e-17
+        },
+        "Raw_EMGs": {
+          "rows": 238100,
+          "maxrel": 9.899907404629972e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Real_IMUs": {
+          "rows": 23810,
+          "maxrel": 6.247896510618881e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 23810,
+          "maxrel": 8.630599490615076e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 23810,
+          "maxrel": 9.252883578709588e-13,
+          "maxabs": 9.904186845655083e-17
+        },
+        "emg": {
+          "rows": 238100,
+          "rows200": 23810,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0005,
+          "dt200": 0.005
+        },
+        "trc": {
+          "declared_frames": 23810,
+          "rows": 23810,
+          "markers": 35,
+          "names_n": 35,
+          "cols": 107,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [],
+          "ledger_missing": [],
+          "max_finite_share_diff": 0.0,
+          "min_share": 0.9548509029819403
+        },
+        "events": {
+          "mine": [
+            3,
+            52,
+            0
+          ],
+          "preserved": [
+            3,
+            52,
+            0
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 524.65625
+      },
+      {
+        "rec": "AB03/incline_walk_1",
+        "Activity_Flag": {
+          "rows": 17420,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 17420,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 17420,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 17420,
+          "maxrel": 9.477619064469307e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Powers": {
+          "rows": 17420,
+          "maxrel": 9.735123983132276e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Velocities": {
+          "rows": 17420,
+          "maxrel": 7.44945605667798e-13,
+          "maxabs": 9.80118763926896e-17
+        },
+        "Raw_EMGs": {
+          "rows": 174200,
+          "maxrel": 9.900016170750392e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Real_IMUs": {
+          "rows": 17420,
+          "maxrel": 7.063389330209484e-13,
+          "maxabs": 9.597899731927928e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 17420,
+          "maxrel": 9.34243741926122e-13,
+          "maxabs": 9.900121087508262e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 17420,
+          "maxrel": 8.607415987390529e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "emg": {
+          "rows": 174200,
+          "rows200": 17420,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0005,
+          "dt200": 0.005
+        },
+        "trc": {
+          "declared_frames": 17420,
+          "rows": 17420,
+          "markers": 35,
+          "names_n": 35,
+          "cols": 107,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [],
+          "ledger_missing": [],
+          "max_finite_share_diff": 0.0,
+          "min_share": 0.9731917336394948
+        },
+        "events": {
+          "mine": [
+            2,
+            16,
+            18
+          ],
+          "preserved": [
+            2,
+            16,
+            18
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 524.65625
+      },
+      {
+        "rec": "AB12/lunges_1",
+        "Activity_Flag": {
+          "rows": 15378,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 15378,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 15378,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 15378,
+          "maxrel": 9.714507246866038e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Powers": {
+          "rows": 15378,
+          "maxrel": 9.624855629980311e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Velocities": {
+          "rows": 15378,
+          "maxrel": 4.884365662883645e-13,
+          "maxabs": 9.798477133837746e-17
+        },
+        "Raw_EMGs": {
+          "rows": 153780,
+          "maxrel": 9.892859992007883e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Real_IMUs": {
+          "rows": 15378,
+          "maxrel": 6.276265950254249e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 15378,
+          "maxrel": 8.941559980785872e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 15378,
+          "maxrel": 9.241718455196234e-13,
+          "maxabs": 9.904186845655083e-17
+        },
+        "emg": {
+          "rows": 153780,
+          "rows200": 15378,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0005,
+          "dt200": 0.005
+        },
+        "trc": {
+          "declared_frames": 15378,
+          "rows": 15378,
+          "markers": 35,
+          "names_n": 35,
+          "cols": 107,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [],
+          "ledger_missing": [],
+          "max_finite_share_diff": 0.0,
+          "min_share": 0.9997398881519053
+        },
+        "events": {
+          "mine": [
+            1,
+            20,
+            20
+          ],
+          "preserved": [
+            1,
+            20,
+            20
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 524.65625
+      },
+      {
+        "rec": "AB09/dynamic_walk_1",
+        "Activity_Flag": {
+          "rows": 25117,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 25117,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 25117,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 25117,
+          "maxrel": 9.365572847550151e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Powers": {
+          "rows": 25117,
+          "maxrel": 9.591982084415383e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Velocities": {
+          "rows": 25117,
+          "maxrel": 1.779838406320237e-13,
+          "maxabs": 9.80118763926896e-17
+        },
+        "Raw_EMGs": {
+          "rows": 251170,
+          "maxrel": 9.899339842724833e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Real_IMUs": {
+          "rows": 25117,
+          "maxrel": 8.065330374219276e-13,
+          "maxabs": 9.904186845655083e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 25117,
+          "maxrel": 5.348259770496313e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 25117,
+          "maxrel": 9.441515111749597e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "emg": {
+          "rows": 251170,
+          "rows200": 25117,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0005,
+          "dt200": 0.005
+        },
+        "trc": {
+          "declared_frames": 25117,
+          "rows": 25117,
+          "markers": 35,
+          "names_n": 35,
+          "cols": 107,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [],
+          "ledger_missing": [],
+          "max_finite_share_diff": 0.0,
+          "min_share": 0.8426563681968388
+        },
+        "events": {
+          "mine": [
+            4,
+            60,
+            0
+          ],
+          "preserved": [
+            4,
+            60,
+            0
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 567.84765625
+      },
+      {
+        "rec": "AB02/incline_walk_1",
+        "Activity_Flag": {
+          "rows": 20340,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 20340,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 20340,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 20340,
+          "maxrel": 9.665906293282563e-13,
+          "maxabs": 9.904186845655083e-17
+        },
+        "Joint_Powers": {
+          "rows": 20340,
+          "maxrel": 9.465317462755195e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Velocities": {
+          "rows": 20340,
+          "maxrel": 2.3703857375004493e-13,
+          "maxabs": 9.199455433539505e-17
+        },
+        "Raw_EMGs": {
+          "rows": 203400,
+          "maxrel": 9.898138669983881e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Real_IMUs": {
+          "rows": 20340,
+          "maxrel": 6.956091910001401e-13,
+          "maxabs": 9.790345617544105e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 20340,
+          "maxrel": 6.494430627817278e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 20340,
+          "maxrel": 8.848170383083044e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "emg": {
+          "rows": 203400,
+          "rows200": 20340,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0005,
+          "dt200": 0.005
+        },
+        "trc": {
+          "declared_frames": 20340,
+          "rows": 20340,
+          "markers": 35,
+          "names_n": 35,
+          "cols": 107,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [],
+          "ledger_missing": [],
+          "max_finite_share_diff": 0.0,
+          "min_share": 0.45860373647984265
+        },
+        "events": {
+          "mine": [
+            2,
+            15,
+            17
+          ],
+          "preserved": [
+            2,
+            15,
+            17
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 567.84765625
+      },
+      {
+        "rec": "AB08/tire_run_1",
+        "Activity_Flag": {
+          "rows": 10507,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 10507,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 10507,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 10507,
+          "maxrel": 9.27966471959102e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Powers": {
+          "rows": 10507,
+          "maxrel": 9.545216042326771e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Velocities": {
+          "rows": 10507,
+          "maxrel": 1.0269633020883955e-13,
+          "maxabs": 9.020562075079397e-17
+        },
+        "Raw_EMGs": {
+          "rows": 105070,
+          "maxrel": 9.893885061343228e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Real_IMUs": {
+          "rows": 10507,
+          "maxrel": 5.712692390183382e-13,
+          "maxabs": 9.80118763926896e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 10507,
+          "maxrel": 6.351170918957474e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 10507,
+          "maxrel": 7.015090837845086e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "emg": {
+          "rows": 105070,
+          "rows200": 10507,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0005,
+          "dt200": 0.005
+        },
+        "trc": {
+          "declared_frames": 10507,
+          "rows": 10507,
+          "markers": 35,
+          "names_n": 35,
+          "cols": 107,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [],
+          "ledger_missing": [],
+          "max_finite_share_diff": 0.0,
+          "min_share": 0.9791567526410964
+        },
+        "events": {
+          "mine": [
+            1,
+            10,
+            10
+          ],
+          "preserved": [
+            1,
+            10,
+            10
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 567.84765625
+      },
+      {
+        "rec": "AB12/stairs_1_7",
+        "Activity_Flag": {
+          "rows": 730,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 730,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 730,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 730,
+          "maxrel": 6.534422608214549e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "Joint_Powers": {
+          "rows": 730,
+          "maxrel": 8.463912726685945e-13,
+          "maxabs": 9.901476340223869e-17
+        },
+        "Joint_Velocities": {
+          "rows": 730,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Raw_EMGs": {
+          "rows": 7300,
+          "maxrel": 9.702775236896546e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Real_IMUs": {
+          "rows": 730,
+          "maxrel": 1.4408477032221514e-13,
+          "maxabs": 9.400032835449323e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 730,
+          "maxrel": 1.4674290896363244e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 730,
+          "maxrel": 4.4557950144632066e-14,
+          "maxabs": 9.020562075079397e-17
+        },
+        "emg": {
+          "rows": 7300,
+          "rows200": 730,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0005000000000023874,
+          "dt200": 0.005000000000002558
+        },
+        "trc": {
+          "declared_frames": 730,
+          "rows": 730,
+          "markers": 35,
+          "names_n": 35,
+          "cols": 107,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [],
+          "ledger_missing": [],
+          "max_finite_share_diff": 0.0,
+          "min_share": 0.763013698630137
+        },
+        "events": {
+          "mine": [
+            1,
+            1,
+            2
+          ],
+          "preserved": [
+            1,
+            1,
+            2
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 567.84765625
+      },
+      {
+        "rec": "AB07/normal_walk_1",
+        "Activity_Flag": {
+          "rows": 49596,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 49596,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 49596,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 49596,
+          "maxrel": 9.423342827950683e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Powers": {
+          "rows": 49596,
+          "maxrel": 9.761457767248162e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Joint_Velocities": {
+          "rows": 49596,
+          "maxrel": 2.2772309822692007e-13,
+          "maxabs": 9.80118763926896e-17
+        },
+        "Raw_EMGs": {
+          "rows": 495960,
+          "maxrel": 9.899623615542586e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Real_IMUs": {
+          "rows": 49596,
+          "maxrel": 8.616661615741607e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 49596,
+          "maxrel": 7.642835551008988e-13,
+          "maxabs": 9.904186845655083e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 49596,
+          "maxrel": 8.468461403792103e-13,
+          "maxabs": 9.904186845655083e-17
+        },
+        "emg": {
+          "rows": 495960,
+          "rows200": 49596,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0005,
+          "dt200": 0.005
+        },
+        "trc": {
+          "declared_frames": 49596,
+          "rows": 49596,
+          "markers": 34,
+          "names_n": 34,
+          "cols": 104,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [
+            "LMANK"
+          ],
+          "ledger_missing": [
+            "LMANK"
+          ],
+          "max_finite_share_diff": 0.0,
+          "min_share": 0.9871965481087185
+        },
+        "events": {
+          "mine": [
+            0,
+            0,
+            0
+          ],
+          "preserved": [
+            0,
+            0,
+            0
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 716.55859375
+      },
+      {
+        "rec": "AB13/stairs_1_9",
+        "Activity_Flag": {
+          "rows": 375,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 375,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 375,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 375,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Powers": {
+          "rows": 375,
+          "maxrel": 7.703259435657725e-13,
+          "maxabs": 9.703609443745265e-17
+        },
+        "Joint_Velocities": {
+          "rows": 375,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Raw_EMGs": {
+          "rows": 3750,
+          "maxrel": 9.88652079361861e-13,
+          "maxabs": 9.90960785651751e-17
+        },
+        "Real_IMUs": {
+          "rows": 375,
+          "maxrel": 2.7084932667082887e-13,
+          "maxabs": 8.933825901280557e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 375,
+          "maxrel": 6.761728215781154e-14,
+          "maxabs": 9.020562075079397e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 375,
+          "maxrel": 9.733571754694864e-14,
+          "maxabs": 8.901299836105991e-17
+        },
+        "emg": {
+          "rows": 3750,
+          "rows200": 375,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0005000000000023874,
+          "dt200": 0.0049999999999954525
+        },
+        "trc": {
+          "declared_frames": 375,
+          "rows": 375,
+          "markers": 34,
+          "names_n": 34,
+          "cols": 104,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [
+            "RKNE"
+          ],
+          "ledger_missing": [
+            "RKNE"
+          ],
+          "max_finite_share_diff": 0.0,
+          "min_share": 0.6693333333333333
+        },
+        "events": {
+          "mine": [
+            1,
+            0,
+            1
+          ],
+          "preserved": [
+            1,
+            0,
+            1
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 716.55859375
+      },
+      {
+        "rec": "AB02/stairs_1_10",
+        "Activity_Flag": {
+          "rows": 424,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "GroundFrame_GRFs": {
+          "rows": 424,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Angle": {
+          "rows": 424,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Joint_Moments": {
+          "rows": 424,
+          "maxrel": 8.282474272443421e-13,
+          "maxabs": 9.901476340223869e-17
+        },
+        "Joint_Powers": {
+          "rows": 424,
+          "maxrel": 9.49470791901518e-13,
+          "maxabs": 9.898765834792655e-17
+        },
+        "Joint_Velocities": {
+          "rows": 424,
+          "maxrel": 0.0,
+          "maxabs": 0.0
+        },
+        "Raw_EMGs": {
+          "rows": 4240,
+          "maxrel": 9.817163387498999e-13,
+          "maxabs": 9.904186845655083e-17
+        },
+        "Real_IMUs": {
+          "rows": 424,
+          "maxrel": 1.2146652630237805e-13,
+          "maxabs": 8.153200337090993e-17
+        },
+        "Virtual_IMUs": {
+          "rows": 424,
+          "maxrel": 1.4066352487206526e-13,
+          "maxabs": 9.020562075079397e-17
+        },
+        "Virtual_Insoles": {
+          "rows": 424,
+          "maxrel": 4.332853856275451e-13,
+          "maxabs": 9.798477133837746e-17
+        },
+        "emg": {
+          "rows": 4240,
+          "rows200": 424,
+          "ratio10": true,
+          "emg_time_matches_200hz": true,
+          "emg_dt": 0.0005000000000023874,
+          "dt200": 0.005000000000009663
+        },
+        "trc": {
+          "declared_frames": 424,
+          "rows": 424,
+          "markers": 34,
+          "names_n": 34,
+          "cols": 104,
+          "rows_eq_channel": true
+        },
+        "markers": {
+          "missing_needed": [
+            "LPSI"
+          ],
+          "ledger_missing": [
+            "LPSI"
+          ],
+          "max_finite_share_diff": 0.0,
+          "min_share": 0.7452830188679245
+        },
+        "events": {
+          "mine": [
+            1,
+            1,
+            1
+          ],
+          "preserved": [
+            1,
+            1,
+            1
+          ]
+        },
+        "ok": true,
+        "notes": [],
+        "peak_rss_mib": 716.55859375
+      }
+    ],
+    "peak_rss_mib_sample_probe": 734,
+    "peak_rss_mib_events_probe": 132,
+    "limit_breach": "The sample probe peaked at about 734 MiB (time -v), above the 300 MiB read-only probe limit, because it held a full CSV, a Parquet table and the marker table for recordings up to 49,596 rows in one process. No job was running, free memory was above 8 GB, and it read nothing in parallel; the breach is reported, not repeated. The result is unaffected."
+  },
+  "whole_dataset_independent_event_recount": {
+    "files": 787,
+    "empty_files": 9,
+    "windows_left": 7721,
+    "windows_right": 5398,
+    "windows": 13119,
+    "recordings": 488,
+    "with_windows": 398,
+    "without_windows": 90,
+    "method": "re-read every parsing file under Segmentation with scipy, one at a time; side from the key prefix left/right (types key skipped); recording from the longest recording name that prefixes the file name",
+    "peak_rss_mib": 132
+  },
+  "summary_counts_checked": {
+    "recordings": 488,
+    "channel_files": 4880,
+    "event_files": 787,
+    "empty_event_files": 9,
+    "windows": 13119,
+    "windows_left": 7721,
+    "windows_right": 5398,
+    "with_windows": 398,
+    "without_windows": 90,
+    "recordings_with_issues": 17,
+    "recordings_failed": 0,
+    "result": "all equal; also equal to the sum of the 12 audit reports (488 recordings, 0 failures)"
+  },
+  "missing_needed_markers": {
+    "count": 17,
+    "by_participant": {
+      "AB02": 4,
+      "AB03": 5,
+      "AB07": 7,
+      "AB13": 1
+    },
+    "result": "the audit reports' ledger_issues count per participant (4,5,7,1 = 17) equals the handoff list; three of them re-derived independently from the .trc headers (AB07/normal_walk_1 LMANK, AB13/stairs_1_9 RKNE, AB02/stairs_1_10 LPSI)"
+  },
+  "anomalies": [
+    "FAIL: the superseded per-batch events.json files are not marked superseded. Their only content is subject and files, and their window totals sum to 7,767 (5,045 left, 2,722 right) instead of 13,119. The supersession is stated only in the handoff code_note. The events root (events_AB##.json, events_summary.json) and summary.json also carry no statement that they replace the batch files and the ledger event_files field. A reader of the output folders cannot tell.",
+    "The AB05 audit was launched with plain run instead of --dry-run first (deviation from the requested order; job itself was guarded and passed).",
+    "Sample probe memory breach (734 MiB vs 300 MiB) as above.",
+    "The audit checks companions against a second parse to 1e-12 relative; the worker's limit note already states this. The independent check saw at most 9.9e-13, i.e. text-to-binary differences at the last digit only."
+  ],
+  "needed_to_close": [
+    "Mark the 12 per-batch events.json files and the ledger event_files field as superseded by the events root, and state in the events root that it is the authoritative event count. Do this without overwriting hash-bound outputs (for example a new note file or a field added in a fresh output root, with the audit bindings left intact), then a quick re-check that the note exists. No data job is needed."
+  ],
+  "next_action": "Worker adds the supersession marker (documentation only), then moves GT23-X01 back to review; a verifier only needs to check the marker, since all 12 audits and the independent spot check passed. GT23-M01 stays blocked until then.",
+  "v2": {
+    "checked": "2026-11-23",
+    "note": "docs/quality/audits/gt23-x01-events-supersession.json",
+    "result": "pass",
+    "detail": "All 12 listed sha256 values equal the current per-batch events.json files; the statement (7,767 vs 13,119, events root authoritative) matches my earlier recount; note added to the handoff and task evidence_paths. Task set to done."
+  }
+}
