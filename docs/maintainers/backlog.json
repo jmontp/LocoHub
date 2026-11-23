@@ -170,19 +170,24 @@
         "inventory": [
           "GT21-S01",
           "GT21-S02",
-          "GT21-A01"
+          "GT21-A01",
+          "GT21-RB01"
         ],
         "conventions": [
           "GT21-C01",
-          "GT21-A02"
+          "GT21-A02",
+          "GT21-RB04"
         ],
         "pilot": [
           "GT21-P01",
-          "GT21-P02"
+          "GT21-P02",
+          "GT21-RB02",
+          "GT21-RB03"
         ],
         "readback": [
           "GT21-F01",
-          "GT21-F02"
+          "GT21-F02",
+          "GT21-RB05"
         ],
         "quality": [
           "GT21-Q01"
@@ -196,7 +201,7 @@
     {
       "id": "gt23",
       "name": "Georgia Tech 2023",
-      "state": "Correction and source-check code prepared; replacement watchers stopped.",
+      "state": "Seven-step Python rebuild planned (GT23-X01 to GT23-E01, then Q01 and R01); no job run; old converters and watchers retired.",
       "remaining": "All 488 recordings and 787 parsing files remain in scope. Actual AB01/AB03 pilots, full source preservation and reconstruction, events, normalization and anatomical conventions require review.",
       "gate_status": {
         "inventory": "partial",
@@ -208,15 +213,25 @@
       },
       "gate_tasks": {
         "inventory": [
+          "GT23-X01",
           "GT23-F01"
         ],
         "conventions": [
-          "GT23-C01"
+          "GT23-C01",
+          "GT23-S01",
+          "GT23-C06",
+          "GT23-M01"
         ],
         "pilot": [
+          "GT23-X01",
+          "GT23-S01",
+          "GT23-C06",
+          "GT23-M01",
+          "GT23-E01",
           "GT23-F01"
         ],
         "readback": [
+          "GT23-E01",
           "GT23-F01"
         ],
         "quality": [
@@ -1863,6 +1878,61 @@
       "started_at_utc": "2026-11-06T18:41:01Z"
     },
     {
+      "id": "UM21-S02",
+      "priority": "P0",
+      "dataset": "um21",
+      "title": "Apply the gravity-referenced zero and foot-frame CoP",
+      "status": "working",
+      "stage": "conversion",
+      "question": "Can the UMich 2021 treadmill bundle follow the standard's zero (joint angles are differences of gravity-referenced segment angles) and the foot-frame centre of pressure?",
+      "scope": "44 treadmill recordings of the R01 bundle. Columns changed: hip, knee, ankle, thigh, shank angles and velocities; new foot angle and velocity; new centre of pressure. Not scientific approval; v2 bundle stays legacy-zero. Builds on the R01 bundle (in review) as the v2 reference; does not wait for R01 sign-off.",
+      "depends_on": [
+        "UM21-Q01",
+        "UM21-T04",
+        "PM-01"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/UM21-STD-plan.json",
+        "converted_datasets/reconversion_v2/um21_r01_review_v2",
+        "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat",
+        "docs/reference/index.md"
+      ],
+      "deliverables": [
+        "contributor_tools/run_um21_s02_frame.py and an independent audit script, with synthetic tests built from known values",
+        "Reviewed S02 pilot (5 recordings) and full run through the guarded launcher, with independent audits",
+        "Q01 v3 assessment and R01 v3 review bundle with exclusions re-accounted",
+        "Updated task handoff with checked facts, unresolved cases and the registration evidence for the centre of pressure"
+      ],
+      "acceptance": [
+        "hip = thigh - pelvis, knee = thigh - shank, ankle = foot - shank hold to 1e-12 rad in the written table; thigh, shank from straight down, foot and pelvis from forward horizontal, checked on synthetic known values and by an independent second implementation.",
+        "Every centre-of-pressure value is in the foot frame (origin 100 mm forward of the ankle centre along heel-to-toe); synthetic round trip passes for flipped plate axis, tilted belt, reversed heading and left leg; unloaded samples are missing, never zero.",
+        "Centre of pressure is published only for recordings whose registration passes independent checks written down before the full run; otherwise columns are present but missing with a reason. No value is invented.",
+        "Observation identities, 150-point inclusive phase grid and every exclusion are accounted for against the v2 bundle; full and filtered share lineage; Q01 re-run, not reused.",
+        "Pilot of the same bound code passes before the full run; one numerical job at a time, peak memory recorded; v2 bundle untouched."
+      ],
+      "next_action": "Review the plan, then write run_um21_s02_frame.py and the audit script with synthetic tests; dry run and pilot only after review.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/UM21-STD-plan.json",
+        "contributor_tools/audit_probes/2026_11_23/probe_um21_std_plan_source_check.py"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-23T12:00:00+00:00",
+        "summary": "Plan only. The source has markers and plate CoP; the plate position in the lab frame is missing, so CoP needs a fitted, independently checked registration. About 8 guarded jobs.",
+        "checks": [
+          "Read-only probes on AB06/i5, AB08/d10, AB03/i10 (peak 78 MB RSS)."
+        ],
+        "remaining": [
+          "Independent review of the plan",
+          "Runner, audit and synthetic tests",
+          "Pilot then full"
+        ],
+        "handoff_file": "docs/maintainers/handoffs/UM21-STD-plan.json"
+      },
+      "owner": "agent (UM21-S02 worker)",
+      "started_at_utc": "2026-11-23T00:00:00Z"
+    },
+    {
       "id": "UM21-S01",
       "priority": "P1",
       "dataset": "um21",
@@ -2198,7 +2268,8 @@
       "scope": "Exact prepared levelground/treadmill records; no full adoption from a nonempty added set.",
       "depends_on": [
         "PM-01",
-        "GT21-C01"
+        "GT21-C01",
+        "GT21-RB03"
       ],
       "inputs": [
         "contributor_tools/prepare_gt21_strict_pilot.py",
@@ -2220,7 +2291,7 @@
         "Compose bilateral and strict-terrain fixes into one validated adapter so neither replaces the other",
         "Preservation gates must remain effective under Python optimization; timing, side, overlap and new force/COP values independently checked."
       ],
-      "next_action": "Review stopped strict pilot plans and prepare a fresh native handoff with Windows cleanup proof.",
+      "next_action": "Review stopped strict pilot plans and prepare a fresh native handoff with Windows cleanup proof. Update 2026-11-23 (GT21-REB-PLAN): the strict bilateral pilots now run as the GT21-RB03 mode pilots; a second reviewer closes this task from the RB03 evidence. No separate job.",
       "resource_class": "native",
       "evidence_paths": [
         "contributor_tools/prepare_gt21_strict_pilot.py",
@@ -2230,8 +2301,8 @@
         "docs/quality/audits/queue-recovery-expanded-49-summary.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
-        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
+        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
+        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval. Update 2026-11-23: folded into GT21-RB03 pilots.",
         "checks": [
           "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
         ],
@@ -2276,7 +2347,7 @@
         "Source-derived ledger covers both legs and every eligible terrain pair; supplied one-label evidence is insufficient.",
         "Boundary rounding matches actual MATLAB formatting; newly recovered cycles pass force/COP checks."
       ],
-      "next_action": "Review stopped ramp and stair proposals; prepare fresh baseline-to-combined comparison after bilateral pilot review.",
+      "next_action": "Review stopped ramp and stair proposals; prepare fresh baseline-to-combined comparison after bilateral pilot review. Update 2026-11-23 (GT21-REB-PLAN): the strict ramp and stair pilots, including the failed stair_1_l_01_02, run inside GT21-RB03; no separate job.",
       "resource_class": "native",
       "evidence_paths": [
         "docs/quality/audits/gt21-ramp-source-review.json",
@@ -2284,8 +2355,8 @@
         "converted_datasets/reconversion_v2/gt21_terrain_serial_queue_20261021/plan.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
-        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
+        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
+        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval. Update 2026-11-23: folded into GT21-RB03 pilots.",
         "checks": [
           "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
         ],
@@ -2309,7 +2380,8 @@
       "scope": "2,301 recordings from 16 local participants, explicitly distinct from the 22-person publisher cohort.",
       "depends_on": [
         "PM-01",
-        "GT21-P02"
+        "GT21-P02",
+        "GT21-RB05"
       ],
       "inputs": [
         "converted_datasets/reconversion_v2/gt21_memory_wait_20261021/status.json",
@@ -2331,7 +2403,7 @@
         "Hash-bind per-record source, loaded helpers and audits; independent pair, joint, timing and force/COP readback covers final outputs.",
         "For gt21 local 16-participant scope, issue a scope-specific handoff for profile/limitations review and later release reconciliation. Do not treat source preservation, completed jobs or another dataset approval as satisfying these gates."
       ],
-      "next_action": "Prepare a fresh full-scope plan only after all four mode pilots and complete source ledgers pass review. Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked.",
+      "next_action": "Prepare a fresh full-scope plan only after all four mode pilots and complete source ledgers pass review. Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked. Update 2026-11-23 (GT21-REB-PLAN): the full rebuild is steps GT21-RB01 to GT21-RB05 (195 guarded jobs in all steps, one at a time); this task closes from the RB05 readback for the 2,301-recording local subtotal.",
       "resource_class": "native",
       "evidence_paths": [
         "converted_datasets/reconversion_v2/gt21_memory_wait_20261021/status.json",
@@ -2339,8 +2411,8 @@
         "converted_datasets/reconversion_v2/gt21_events_serial_queue_20261021/plan.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
-        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
+        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
+        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran). Update 2026-11-23: full rebuild planned as GT21-RB01-RB05.",
         "checks": [
           "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
         ],
@@ -2384,7 +2456,7 @@
         "Four-mode schema checks preserve original header coordinates and mark clock units unverified until proved.",
         "No raw ik renamed to ik_offset; extraction is not canonical conversion."
       ],
-      "next_action": "Inspect stopped AB17 receipts and revalidate the guarded extraction/schema plan before any execution.",
+      "next_action": "Inspect stopped AB17 receipts and revalidate the guarded extraction/schema plan before any execution. Update 2026-11-23 (GT21-REB-PLAN): AB17 comes from the 2024 copy through GT21-RB01 (extraction plus 2021-versus-2024 comparison); this task keeps the 2021 archive check only.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/gt21-ab17-recovery.json",
@@ -2395,7 +2467,7 @@
         "docs/quality/audits/queue-recovery-expanded-49-summary.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
+        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
         "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
         "checks": [
           "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
@@ -2437,7 +2509,7 @@
         "Bind local STRIDES/RUN_OSIM processing to publisher version or keep version uncertain; distinguish active normalization from commented examples.",
         "Document exact static calibration/column ordering if recovered; otherwise define honest raw-angle source-only output and a separate guarded unit-metadata pilot."
       ],
-      "next_action": "Review SubjectInfo enrichment and local processing evidence; search only bounded publisher/source metadata.",
+      "next_action": "Review SubjectInfo enrichment and local processing evidence; search only bounded publisher/source metadata. Update 2026-11-23 (GT21-REB-PLAN): mass unit now evidenced as kilograms (STRIDES.m scales by mass x 9.81; 18 of 22 values are whole pounds converted to kilograms; plate-implied mass is 1.03 to 1.05 of Weight). Static calibration is no longer needed (D-REF-1). A reviewer can close this task from the plan file.",
       "resource_class": "read_only",
       "evidence_paths": [
         "docs/quality/audits/gt21-ab17-native-metadata-enrichment-v2.json",
@@ -2449,8 +2521,8 @@
         "docs/quality/audits/queue-recovery-expanded-49-summary.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
-        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
+        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
+        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval. Update 2026-11-23: mass-unit evidence found; see GT21-rebuild-plan.json.",
         "checks": [
           "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
         ],
@@ -2597,10 +2669,11 @@
       "status": "blocked",
       "stage": "source_readback",
       "question": "Are 488 recordings and 787 parsing files accounted for without invented cycles?",
-      "scope": "All ten publisher CSV channel groups, including 85 records without parsing entries; AB01/AB03 pilot receipts required. Converter findings from GT23-C01: F1 one leg dropped per condition (498 gait cycles + 127 hop intervals); F2 time export merges parsing fields and skips 90 recordings without intervals; F3 remove absolute-threshold fallback segmentation; F4 running/skipping mislabelled level_walking; F5 invented curb/step heights (stair rise 152 mm per paper); F6 lab X/Z forces written as anterior/lateral; CoP written in calcn frame. Run probes P1-P3 first.",
+      "scope": "All ten publisher CSV channel groups, including 85 records without parsing entries; AB01/AB03 pilot receipts required. Converter findings from GT23-C01: F1 one leg dropped per condition (498 gait cycles + 127 hop intervals); F2 time export merges parsing fields and skips 90 recordings without intervals; F3 remove absolute-threshold fallback segmentation; F4 running/skipping mislabelled level_walking; F5 invented curb/step heights (stair rise 152 mm per paper); F6 lab X/Z forces written as anterior/lateral; CoP written in calcn frame. Run probes P1-P3 first. Update 2026-11-23: replaced by the seven-step Python rebuild in docs/maintainers/handoffs/GT23-rebuild-plan.json (GT23-X01, S01, C06, M01, E01 then Q01 and R01); this task closes when GT23-E01 is done.",
       "depends_on": [
         "PM-01",
-        "GT23-C01"
+        "GT23-C01",
+        "GT23-E01"
       ],
       "inputs": [
         "docs/quality/audits/gt23-full-source-scope.json",
@@ -2621,7 +2694,7 @@
         "Do not expand before actual source/model pilots and bounded oversized-file admission are reviewed.",
         "For gt23, issue a scope-specific handoff for profile/limitations review and later release reconciliation. Do not treat source preservation, completed jobs or another dataset approval as satisfying these gates."
       ],
-      "next_action": "Reconcile stopped AB01/AB03 receipts, validate one successor pilot, then prepare full scope with independent raw-source readback. Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked.",
+      "next_action": "None until GT23-E01 is done. The rebuild starts at GT23-X01 (ready). See docs/maintainers/handoffs/GT23-rebuild-plan.json.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/gt23-full-source-scope.json",
@@ -2642,7 +2715,7 @@
       "legacy_ids": [
         "GT23-01"
       ],
-      "blocked_reason": "Requires completed dependency evidence: PM-01, GT23-C01. Numerical/native execution also requires current exclusive ownership, unchanged resource guards and a reviewed single-job handoff; old stopped predecessors are not success."
+      "blocked_reason": "Closes when GT23-E01 (export and independent full readback) is done; the rebuild steps GT23-X01, S01, C06, M01 and E01 replace the old pilot-then-expand route."
     },
     {
       "id": "GT24-C01",
@@ -4523,13 +4596,13 @@
         "Any phase or time profile states population, protocol, task, units and observation-type applicability and its evidence; no universal pass-rate threshold or range tuning to achieve a desired result.",
         "Record source measurement/model limitations separately from conversion fidelity. Unsupported anatomy or events remain unresolved; source preservation does not approve them."
       ],
-      "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision. Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked.",
+      "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision. Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked. Update 2026-11-23 (GT21-REB-PLAN): 5 guarded jobs (1 pilot plus 4 per-mode streaming assessments) after GT21-RB05 and GT21-F02; row-group streaming, no raised admission, legacy tuner file is not an approved profile.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
         "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "changed_files": [],
         "checks": [
@@ -4576,13 +4649,13 @@
         "The catalog, download variant and preview refer to this exact reviewed artifact or remain explicitly legacy/unreviewed.",
         "Record any release limitation and remaining source gaps. Publishing or uploading follows the user-requested destination/workflow and is separate from this local review."
       ],
-      "next_action": "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope. Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked.",
+      "next_action": "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope. Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked. Update 2026-11-23 (GT21-REB-PLAN): 2 jobs (bundle build and independent readback); limits to state: forward force on lab Z axis, no-plate legs, 2021 ramp-moment rewrite unmeasured for 21 participants, moments from model inverse dynamics with marker angles.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
         "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "changed_files": [],
         "checks": [
@@ -4606,7 +4679,7 @@
       "status": "blocked",
       "stage": "quality",
       "question": "Which signals and observations are supported, failed, missing, invalid or still unchecked?",
-      "scope": "Complete retained Georgia Tech 2023 source scope and every exported observation type; any smaller local bundle remains an explicitly separate scope.",
+      "scope": "Complete retained Georgia Tech 2023 source scope and every exported observation type; any smaller local bundle remains an explicitly separate scope. Rebuilt output only (GT23-E01); 13 guarded jobs: 1 pilot + 12 participant batches.",
       "depends_on": [
         "GT23-F01",
         "CORE-01"
@@ -4627,7 +4700,7 @@
         "Any phase or time profile states population, protocol, task, units and observation-type applicability and its evidence; no universal pass-rate threshold or range tuning to achieve a desired result.",
         "Record source measurement/model limitations separately from conversion fidelity. Unsupported anatomy or events remain unresolved; source preservation does not approve them."
       ],
-      "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision. Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked.",
+      "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision. Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked. Rebuild plan: docs/maintainers/handoffs/GT23-rebuild-plan.json.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
@@ -4658,7 +4731,7 @@
       "status": "blocked",
       "stage": "release",
       "question": "Do this dataset's exact data files, review evidence and researcher-facing claims agree?",
-      "scope": "Complete retained Georgia Tech 2023 source scope and every exported observation type; any smaller local bundle remains an explicitly separate scope.",
+      "scope": "Complete retained Georgia Tech 2023 source scope and every exported observation type; any smaller local bundle remains an explicitly separate scope. Rebuilt output only; the time table is about 20 million rows, so what a release contains is a scope question for José when this task starts.",
       "depends_on": [
         "GT23-Q01",
         "CORE-02"
@@ -4680,7 +4753,7 @@
         "The catalog, download variant and preview refer to this exact reviewed artifact or remain explicitly legacy/unreviewed.",
         "Record any release limitation and remaining source gaps. Publishing or uploading follows the user-requested destination/workflow and is separate from this local review."
       ],
-      "next_action": "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope. Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked.",
+      "next_action": "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope. Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked. Rebuild plan: docs/maintainers/handoffs/GT23-rebuild-plan.json.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
@@ -6851,6 +6924,299 @@
       }
     },
     {
+      "id": "GT23-X01",
+      "priority": "P1",
+      "dataset": "gt23",
+      "title": "Preserve and index all GT23 source files with a Python reader",
+      "status": "ready",
+      "stage": "source_readback",
+      "question": "Is every one of the 488 recordings and its 4,880 channel files, marker files, body-orientation files and authors' stride files accounted for, hashed and readable without MATLAB?",
+      "scope": "27 guarded jobs: 3 pilots (AB05 normal_walk_1; AB02 normal_walk_1, the largest marker file; AB11 stairs_1_1, random draw seed 20261123) + 12 participant batches + 12 independent audit batches. Ledger of hashes, row counts, clocks, per-marker and per-plate finite shares for the 22 markers the rebuild needs, lossless Parquet companions of the ten channel groups, and the publisher's README mass table bound by hash. Closes the oversized-table problem (AB02 is read from its Euler CSV). Local RawData/Subject_masses.csv is not the publisher's file and is never read.",
+      "depends_on": [
+        "PM-01",
+        "GT23-C01",
+        "GT23-C05"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+        "docs/datasets/gt23/problems.html",
+        "docs/quality/audits/gt23-problem-scope.json",
+        "docs/reference/index.md",
+        "contributor_tools/guarded_launcher.py",
+        "docs/quality/audits/gt23-full-source-scope.json",
+        "docs/quality/audits/source_evidence/gt23/publisher-readme.txt",
+        "contributor_tools/audit_probes/2026_11_23/probe_gt23_rebuild_source.py"
+      ],
+      "deliverables": [
+        "Python source reader that fails closed, with synthetic tests",
+        "Per-recording ledger for 488 recordings and 4,880 channel files",
+        "Independent audit receipts for all 12 participants"
+      ],
+      "acceptance": [
+        "Counts equal 488 recordings, 4,880 channel files, 787 event files (9 empty), 13,119 windows (7,721 left, 5,398 right), 398 with and 90 without windows.",
+        "Marker rows equal channel rows at 200 Hz in every recording; any mismatch is listed, not repaired.",
+        "All 22 needed markers present and their finite shares recorded for every recording (probed: 9 of 9 recordings at least 97.7%); a recording without them is named, not skipped.",
+        "Re-read hashes equal the ledger in the audit batches, which use separate code.",
+        "Pilot shows peak memory under the launcher's 768 MiB address-space cap; one job at a time; nothing under converted_datasets/ or source folders is overwritten."
+      ],
+      "next_action": "Write the reader and the three pilot job specs; dry-run each through python3 -m contributor_tools.guarded_launcher run SPEC.json --dry-run; run the AB05 pilot first.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+        "docs/quality/audits/gt23-rebuild-probes.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-23T20:38:07+00:00",
+        "summary": "Planned. Source has everything the later fixes need: markers, ankle markers, heel and toe markers, body orientations (Transforms_Euler) and per-kg moments and powers for all 488 recordings.",
+        "checks": [
+          "Plan written from read-only probes only (22 runs, one file at a time, peak RSS 150 to 241 MiB); no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+        ],
+        "remaining": [
+          "Write the reader; three pilots; 12 batches; 12 audits."
+        ],
+        "changed_files": [
+          "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+          "docs/quality/audits/gt23-rebuild-probes.json",
+          "docs/maintainers/backlog.json",
+          "docs/maintainers/backlog.html"
+        ]
+      }
+    },
+    {
+      "id": "GT23-S01",
+      "priority": "P1",
+      "dataset": "gt23",
+      "title": "Segment every GT23 recording with our own scripts and check against the authors' strides",
+      "status": "blocked",
+      "stage": "pilot",
+      "question": "Do our own per-task rules reproduce the authors' labelled strides, and does every one of the 90 recordings without event windows get a stated disposition?",
+      "scope": "28 guarded jobs: 4 pilots (AB12 normal_walk_1; AB01 stairs_1_2, an empty-event stair descent; AB12 poses_1, random draw seed 20261124; AB11 squats_1) + 12 batches + 12 audits. New GT23 module: gait tasks use the publisher's 20 N rising rule for each leg; window tasks use the documented 0.5 m/s speed-crossing rule; tasks with no defensible cycle become continuous recordings. The repo's common stride_segmentation.py covers 11 of 26 tasks in kind but is untested, uses 50 N and one leg, and filters silently, so it is not used as is. Labels such as speed come only from the authors' windows.",
+      "depends_on": [
+        "GT23-X01"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+        "docs/datasets/gt23/problems.html",
+        "docs/quality/audits/gt23-problem-scope.json",
+        "docs/reference/index.md",
+        "contributor_tools/guarded_launcher.py",
+        "contributor_tools/common/stride_segmentation.py",
+        "docs/quality/audits/gt23-c01-events-and-frames.json",
+        "/mnt/s/locomotion_data/Gtech_2023/Segmentation"
+      ],
+      "deliverables": [
+        "GT23 segmentation module with synthetic tests",
+        "Per-recording ledger of strides, windows and continuous recordings with a rule name for each",
+        "Agreement table against the authors' 13,119 windows, per task and per leg"
+      ],
+      "acceptance": [
+        "Authors' stride starts versus our 20 N crossings: every one of the 13,119 windows is matched or listed unmatched with a reason (probed: 0 ms median and maximum, 100% within 10 ms on AB05 and AB12 normal walking).",
+        "All 90 recordings without windows have one disposition and the counts add to 90 (23 gait, 3 window, 64 continuous).",
+        "No silent filter: no trimming of first or last strides, no outlier drop; every excluded stride has a reason.",
+        "Both legs segmented where force exists; right-plate-missing trials report zero right strides, not invented ones; an unknown task stops the job.",
+        "Synthetic traces with known crossing times give those times exactly. Agreement is reported, never tuned to a pass rate."
+      ],
+      "next_action": "After GT23-X01 is done: write the module and tests, then dry-run the AB12 normal_walk_1 pilot.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+        "docs/quality/audits/gt23-rebuild-probes.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-23T20:38:07+00:00",
+        "summary": "Planned. Probe shows the README rule reproduces the authors' stride starts exactly on level walking.",
+        "checks": [
+          "Plan written from read-only probes only (22 runs, one file at a time, peak RSS 150 to 241 MiB); no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+        ],
+        "remaining": [
+          "Module; four pilots; 12 batches; 12 audits."
+        ],
+        "changed_files": [
+          "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+          "docs/quality/audits/gt23-rebuild-probes.json",
+          "docs/maintainers/backlog.json",
+          "docs/maintainers/backlog.html"
+        ]
+      },
+      "blocked_reason": "Waits for GT23-X01 (ledger and reader)."
+    },
+    {
+      "id": "GT23-C06",
+      "priority": "P1",
+      "dataset": "gt23",
+      "title": "Compute segment and joint angles, knee sign, forward frame and foot-frame pressure point",
+      "status": "blocked",
+      "stage": "conventions",
+      "question": "Do the recomputed angles, signs, forward/sideways force and foot-frame pressure point agree with independently known values for every task class?",
+      "scope": "28 guarded jobs: 4 pilots (AB05 normal_walk_1; AB12 normal_walk_1; AB11 squats_1; AB05 turn_and_step_1, random draw seed 20261123) + 12 batches + 12 audits. Pelvis from the PSIS-to-ASIS markers; thigh and shank from the authors' model segment axes (Transforms_Euler, order read from the file, not its column names); foot from heel to toe markers; joint angles as differences; knee negated for published speed and moment; pressure point in the foot frame (origin 100 mm forward of the midpoint of the two ankle markers); forward and sideways force and pressure point only in the 11 forward-walking tasks, lab axes in the other 15 (D-GT23-C01-1 = C). Agent defaults G1 to G5 in the plan are logged, not asked.",
+      "depends_on": [
+        "GT23-S01"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+        "docs/datasets/gt23/problems.html",
+        "docs/quality/audits/gt23-problem-scope.json",
+        "docs/reference/index.md",
+        "contributor_tools/guarded_launcher.py",
+        "docs/quality/audits/gt23-joint-sign-and-segment-evidence.json",
+        "docs/quality/audits/gt23-cop-and-joint-coordinate-review.json",
+        "docs/quality/audits/gt23-source-frame-review.json"
+      ],
+      "deliverables": [
+        "Conversion module with synthetic rigid-body tests",
+        "Per-recording convention receipts",
+        "Independent audit receipts for all 12 participants"
+      ],
+      "acceptance": [
+        "Knee flexion from segments versus minus the authors' IK knee angle: correlation at least 0.99 in walking pilots (probed 0.9988 to 0.9997), knee positive when flexed; zero offset reported, not removed.",
+        "Pressure point in AB05 left-leg walking moves from about -0.16 m at stance start to about +0.10 m at the end, vertical about -0.095 m, sideways near 0 (probed); same shape in every pilot with force.",
+        "Composition thigh = pelvis + hip, shank = thigh - knee, foot = shank + ankle holds to 1e-12.",
+        "Sign of published hip, knee (negated) and ankle speeds agrees with the derivative of the recomputed angles in every task class; disagreements are listed per task, not hidden.",
+        "Forward and sideways force and pressure point are empty in the 15 no-forward tasks; left and right sideways mirror.",
+        "Pelvis angle has no IK reference (probed correlation near 0): the report says so and names the reference used instead.",
+        "Pilots show peak memory under the 768 MiB cap; one job at a time."
+      ],
+      "next_action": "After GT23-S01 is done: write the module and fixtures, then dry-run the AB05 normal_walk_1 pilot.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+        "docs/quality/audits/gt23-rebuild-probes.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-23T20:38:07+00:00",
+        "summary": "Planned. Probes: knee agreement with IK, flat-foot mid-stance, foot-frame pressure point, and Euler order recovered from the pelvis.",
+        "checks": [
+          "Plan written from read-only probes only (22 runs, one file at a time, peak RSS 150 to 241 MiB); no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+        ],
+        "remaining": [
+          "Module; four pilots; 12 batches; 12 audits."
+        ],
+        "changed_files": [
+          "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+          "docs/quality/audits/gt23-rebuild-probes.json",
+          "docs/maintainers/backlog.json",
+          "docs/maintainers/backlog.html"
+        ]
+      },
+      "blocked_reason": "Waits for GT23-S01 (strides and windows)."
+    },
+    {
+      "id": "GT23-M01",
+      "priority": "P1",
+      "dataset": "gt23",
+      "title": "Rescale moments and powers of 52 recordings and fix AB03 body weight",
+      "status": "blocked",
+      "stage": "conversion",
+      "question": "Are exactly the 52 recordings rescaled by (mass used / own mass), AB03 forces in body weights right, and everything else unchanged?",
+      "scope": "27 guarded jobs: 3 pilots (AB05 normal_walk_1, exact, factor 1.1035; AB03 dynamic_walk_1, estimated, factor 0.741; an AB03 body-weight force check) + 12 batches + 12 audits. List and factors from the hash-bound gt23-c05-rescale-error.json (7 exact, 45 estimated and matched to the nearest recorded mass; estimate and interval kept in provenance). Other 436 recordings keep published moments and powers with a note. Body weights use the publisher's README mass table. Units are documented only (values already per kg).",
+      "depends_on": [
+        "GT23-C06",
+        "GT23-C05"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+        "docs/datasets/gt23/problems.html",
+        "docs/quality/audits/gt23-problem-scope.json",
+        "docs/reference/index.md",
+        "contributor_tools/guarded_launcher.py",
+        "docs/quality/audits/gt23-c05-rescale-error.json",
+        "docs/quality/audits/gt23-c03-normalizing-mass.json",
+        "docs/quality/audits/gt23-publisher-units-and-mass-review.json"
+      ],
+      "deliverables": [
+        "Mass step module with synthetic tests",
+        "Per-recording factor ledger",
+        "Independent audit receipts"
+      ],
+      "acceptance": [
+        "Exactly 52 recordings rescaled and they equal the list in the hash-bound C05 audit; the other 436 are byte-identical in moments and powers.",
+        "For the 7 exact recordings, rescaled moment times own mass equals the N·m inverse dynamics within 1e-3 N·m (probed: slope 78.9, 78.9, 84.1, 71.5 kg in four cases).",
+        "Powers carry the same factor as their recording's moments.",
+        "AB03 standing vertical force sums to about 1 BW with 113.5 kg (plates give 113.8 kg).",
+        "Every moment and power column is labelled per kg."
+      ],
+      "next_action": "After GT23-C06 is done: write the module, then dry-run the AB05 normal_walk_1 pilot.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+        "docs/quality/audits/gt23-rebuild-probes.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-23T20:38:07+00:00",
+        "summary": "Planned. Probe reproduced the authors' divisors from local N·m inverse dynamics.",
+        "checks": [
+          "Plan written from read-only probes only (22 runs, one file at a time, peak RSS 150 to 241 MiB); no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+        ],
+        "remaining": [
+          "Module; three pilots; 12 batches; 12 audits."
+        ],
+        "changed_files": [
+          "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+          "docs/quality/audits/gt23-rebuild-probes.json",
+          "docs/maintainers/backlog.json",
+          "docs/maintainers/backlog.html"
+        ]
+      },
+      "blocked_reason": "Waits for GT23-C06 (converted columns)."
+    },
+    {
+      "id": "GT23-E01",
+      "priority": "P1",
+      "dataset": "gt23",
+      "title": "Export GT23 phase and time tables and read them back independently",
+      "status": "blocked",
+      "stage": "conversion",
+      "question": "Does every exported observation equal what the source, segmentation, conventions and mass steps say, and is every source recording and authors' window accounted for?",
+      "scope": "27 guarded jobs: 3 pilots (AB05 normal_walk_1; AB01 stairs_1_1; AB12 poses_1, seed 20261124) + 12 batches + 12 independent full readbacks. One Parquet shard per participant for phase observations (150 inclusive samples) and for continuous time recordings; identity, task labels and task_info from the authors' grouping (2.0 and 2.5 m/s files as run, skipping files as skip, stair rise 0.152 m citing the paper, pass number renamed, no curb or step-up height); trunk missing; frontal and transverse signs kept and labelled. Closes GT23-F01.",
+      "depends_on": [
+        "GT23-M01"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+        "docs/datasets/gt23/problems.html",
+        "docs/quality/audits/gt23-problem-scope.json",
+        "docs/reference/index.md",
+        "contributor_tools/guarded_launcher.py",
+        "contributor_tools/DATA_CONTRACT.md",
+        "contributor_tools/common/data_contract.py"
+      ],
+      "deliverables": [
+        "Export module with synthetic tests",
+        "Per-participant phase and time shards",
+        "Independent full readback receipts"
+      ],
+      "acceptance": [
+        "Every observation has subject, source_recording_id, observation_id, reference_side and 150 inclusive samples from 0 to 100 (or increasing time).",
+        "Every source recording and every authors' window is accounted for exactly once, as exported or with a stated exclusion.",
+        "Independent readback agrees with the source to float precision and with the mass and sign rules.",
+        "Labels: the 33 normal-walk event files are run or skip; no curb or step-up height unless a source gives one.",
+        "Right-plate-missing recordings show the gap, not zeros; shards stream by row group under the 768 MiB cap."
+      ],
+      "next_action": "After GT23-M01 is done: write the export module, then dry-run the AB05 normal_walk_1 pilot.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+        "docs/quality/audits/gt23-rebuild-probes.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-23T20:38:07+00:00",
+        "summary": "Planned. Replaces the old MATLAB time and phase converters for GT23.",
+        "checks": [
+          "Plan written from read-only probes only (22 runs, one file at a time, peak RSS 150 to 241 MiB); no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+        ],
+        "remaining": [
+          "Module; three pilots; 12 batches; 12 readbacks."
+        ],
+        "changed_files": [
+          "docs/maintainers/handoffs/GT23-rebuild-plan.json",
+          "docs/quality/audits/gt23-rebuild-probes.json",
+          "docs/maintainers/backlog.json",
+          "docs/maintainers/backlog.html"
+        ]
+      },
+      "blocked_reason": "Waits for GT23-M01 (mass step)."
+    },
+    {
       "id": "HIST-05",
       "priority": "P1",
       "dataset": "all",
@@ -7187,6 +7553,293 @@
         ],
         "verification_v2": "Independent v2 review PASS 2026-11-06: 10 receipts clean and bound to current runner hash; 7,562 = 7,547 + 15; own recompute of power sign from published moment x finite-difference speed agrees on all 248 leg-joint series (min r 0.78); non-power columns bit-identical to v1 in all 44 recordings; 4 copies from settled left legs; 8 held channels absent; 15 unmapped absent with reasons; tests 25 passed. Details: handoffs/UM21-T04-verify.json v2."
       }
+    },
+    {
+      "id": "GT21-RB01",
+      "priority": "P1",
+      "dataset": "gt21",
+      "title": "Preserve all 22 GT21 sources: extract the six, export labels, inventory",
+      "status": "ready",
+      "stage": "source_inventory",
+      "question": "Is every recording of all 22 participants present, unchanged and readable, with its terrain labels and mass on record?",
+      "scope": "3,147 recordings: 2,301 local (16 participants) and 846 from the six in the authors' 2024 copy (AB12, AB15, AB17, AB19, AB23, AB28). 30 guarded jobs: 6 zip extractions (AB17 first), 22 MATLAB label and subject exports (AB06 first), 1 metadata inventory, 1 AB17 2021-versus-2024 comparison.",
+      "depends_on": [
+        "PM-01"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+        "docs/datasets/gt21/problems.html",
+        "docs/quality/audits/gt21-problem-scope.json",
+        "docs/reference/index.md",
+        "docs/quality/audits/gt21-s02-2024-copy.json",
+        "docs/quality/audits/gt21-s01-cohort-crosswalk.json",
+        "contributor_tools/extract_gt21_recovered_archive.py",
+        "contributor_tools/guarded_launcher.py"
+      ],
+      "deliverables": [
+        "New source root with the six participants extracted (member CRC checked) and a per-recording ledger of conditions labels, stair height, ramp incline and Weight",
+        "Reviewed native extension for the single-participant MATLAB label export",
+        "Evidence report covering mass unit (kilograms), AB17 2021-versus-2024 comparison and per-mode recording counts"
+      ],
+      "acceptance": [
+        "Per-member CRC32 and size equal the zip directory and the bound 2024 listing; the listing is re-read before each extraction (AB28 is a live folder).",
+        "Recording counts per mode equal 506/1015/665/115 (local) and 174/379/251/42 (six); all 12 channel files present for every recording.",
+        "22 Weight literals equal the 22 already read; the mass-unit evidence (STRIDES.m uses mass x 9.81, 18 of 22 values are whole pounds in kilograms, plate-implied mass 1.03 to 1.05 of Weight) is bound into the report.",
+        "Label export agrees with the 1,680 ramp and stair terrain labels already checked; stair_1_l_01_02 window list recorded.",
+        "Pilots (AB17 extraction, AB06 export) pass before the other jobs; one job at a time, nice 19, ionice idle, memory headroom checked before each; nothing under existing converted_datasets files is overwritten."
+      ],
+      "next_action": "Write and dry-run the guarded launcher spec for the AB17 extraction pilot; review the native extension for the MATLAB label export. Run nothing else until both dry runs pass.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+        "docs/quality/audits/gt21-s02-2024-copy.json",
+        "docs/quality/audits/gt21-s01-cohort-crosswalk.json",
+        "docs/quality/audits/gt21-ab17-recovery.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
+        "summary": "Planned from read-only probes. Mass unit found to be kilograms by three lines of evidence; markers, forces and gait tables are readable by the existing fail-closed Python reader; conditions, ik_offset, static and SubjectInfo are not.",
+        "checks": [
+          "Plan written from read-only probes only; no conversion, MATLAB or write under converted_datasets/ or source folders ran.",
+          "Probes: weights, STRIDES.m, plate-implied mass, file readability, marker lists (peak RSS under 160 MiB)."
+        ],
+        "remaining": [
+          "Everything in this task is still to run."
+        ],
+        "changed_files": [
+          "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+          "docs/maintainers/backlog.json",
+          "docs/maintainers/backlog.html"
+        ]
+      }
+    },
+    {
+      "id": "GT21-RB02",
+      "priority": "P1",
+      "dataset": "gt21",
+      "title": "Assign force plates and fix force signs on every source step",
+      "status": "blocked",
+      "stage": "pilot",
+      "question": "Does every leg-step of all 22 participants have the right plate, force sign and outward sideways sign, or an honest gap?",
+      "scope": "37 guarded jobs: 4 mode pilots plus 33 batches of at most 100 recordings, over every heel-strike-to-heel-strike step of both legs. Python port of the checked plate assignment (markers close to the plate, more than 2/3, over 100 N; named treadmill plates) and the force-sign fix; sideways force positive outward for each leg.",
+      "depends_on": [
+        "GT21-RB01"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+        "docs/datasets/gt21/problems.html",
+        "docs/quality/audits/gt21-problem-scope.json",
+        "docs/reference/index.md",
+        "docs/quality/audits/gt21-plate-assignment-fix.json",
+        "docs/quality/audits/gt21-force-fix.json",
+        "docs/quality/audits/gt21-completed-force-readback.json",
+        "contributor_tools/conversion_scripts/Gtech_2021/utilities/gtech_select_force_plate.m",
+        "contributor_tools/gt21_numeric_source.py"
+      ],
+      "deliverables": [
+        "Per-step plate, force and plate-contact ledger for 3,147 recordings with reasons for every unassigned leg",
+        "Pilot report comparing the Python port with the MATLAB-fixed pilots"
+      ],
+      "acceptance": [
+        "Python port reproduces the MATLAB-fixed pilot forces of the 36 compared and 51 completed recordings within 1e-9.",
+        "CoP at contact equals the measured plate position; left and right belts sum to body weight within a stated band; left sideways force is the negative of the lab-axis value.",
+        "Synthetic plate fixtures including a left-right swap give the known answer; no peak-force choice or waveform swap anywhere.",
+        "Unassigned legs (no plate, several plates) stay missing and are counted per mode; forward force uses the lab Z axis signed by pelvis heading as published and is labelled so.",
+        "Memory: pilot shows the launcher peak under its cap (expected 150-300 MiB); one job at a time."
+      ],
+      "next_action": "José, 2026-11-23: merge the plate/force pass (RB02) and the model-fit/conventions pass (RB04) so each raw recording is read once; keep one job at a time. Segmentation (RB03) must therefore run on the merged pass's outputs or before it; replan job structure accordingly. After GT21-RB01 is done: dry-run the levelground pilot spec (levelground_ccw_fast_01_01) and read back against the existing bilateral pilot.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+        "docs/quality/audits/gt21-plate-assignment-fix.json",
+        "docs/quality/audits/gt21-force-fix.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
+        "summary": "Planned. The assignment and force-sign fix are already source-checked in MATLAB pilots; the port is new code and needs the pilots as independent references.",
+        "checks": [
+          "Plan written from read-only probes only; no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+        ],
+        "remaining": [
+          "All jobs."
+        ],
+        "changed_files": [
+          "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+          "docs/maintainers/backlog.json",
+          "docs/maintainers/backlog.html"
+        ]
+      },
+      "blocked_reason": "Waits for GT21-RB01 (extracted sources and label ledger)."
+    },
+    {
+      "id": "GT21-RB03",
+      "priority": "P1",
+      "dataset": "gt21",
+      "title": "Segment steps of both legs with strict terrain labels and account for every step",
+      "status": "blocked",
+      "stage": "conversion",
+      "question": "Which source steps become observations, and why is every other step left out?",
+      "scope": "8 guarded jobs: 4 mode pilots (the stair pilot includes the failed recording stair_1_l_01_02) plus 4 per-mode bookkeeping jobs. Both legs from their own heel-strike resets; strict terrain fix (no default ascent, height or whole-recording fallback); a recording with no eligible step becomes a listed exclusion instead of stopping the batch.",
+      "depends_on": [
+        "GT21-RB02"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+        "docs/datasets/gt21/problems.html",
+        "docs/quality/audits/gt21-problem-scope.json",
+        "docs/reference/index.md",
+        "docs/quality/audits/gt21-event-eligibility.json",
+        "docs/quality/audits/gt21-bilateral-recovery.json",
+        "docs/quality/audits/gt21-terrain-fix.json",
+        "docs/quality/audits/gt21-all-source-phases.json",
+        "contributor_tools/conversion_scripts/Gtech_2021/convert_gtech_2021_phase_to_parquet.m"
+      ],
+      "deliverables": [
+        "Step ledger with one disposition per step and per recording",
+        "Measured stair yield (steps per label window) for every stair recording",
+        "Stair failure cause confirmed or refuted on stair_1_l_01_02"
+      ],
+      "acceptance": [
+        "78,604 local source steps and 83,206 resets reproduce exactly; the 36-recording identity 856 + 798 + 616 = 2,270 holds (new run exports 1,654, lists 616 with a reason).",
+        "Every previously exported observation stays identical outside the force columns.",
+        "Terrain, incline and stair height equal the source labels for all 1,680 ramp and stair recordings; zero defaults used.",
+        "Every source step and recording has exactly one disposition; counts sum to source totals.",
+        "If stair steps that straddle two label windows would be excluded in large numbers, stop and put the measured counts to José as a scope question."
+      ],
+      "next_action": "After GT21-RB02 is done: run the stair pilot on stair_1_l_01_02 and the label windows from the RB01 ledger.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+        "docs/quality/audits/gt21-event-eligibility.json",
+        "docs/quality/audits/pm01-stopped-jobs-review.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
+        "summary": "Planned. The old stair failure (stair_1_l_01_02) reads as: six label windows, each with one right-leg strike, so no stride fits inside a window; the fallback refuses an unnamed file and the assert stops the batch. Probable, not proven.",
+        "checks": [
+          "Plan written from read-only probes only; no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+        ],
+        "remaining": [
+          "All jobs."
+        ],
+        "changed_files": [
+          "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+          "docs/maintainers/backlog.json",
+          "docs/maintainers/backlog.html"
+        ]
+      },
+      "blocked_reason": "Waits for GT21-RB02 (per-step plate ledger)."
+    },
+    {
+      "id": "GT21-RB04",
+      "priority": "P1",
+      "dataset": "gt21",
+      "title": "Apply conventions: marker segment angles, joint angles, foot-frame CoP, mass",
+      "status": "blocked",
+      "stage": "conventions",
+      "question": "Are all angles, forces and moments in the data reference convention, with nothing invented?",
+      "scope": "68 guarded jobs: 4 mode pilots, 1 sign and marker pilot on the six new participants, and 63 conversion batches of about 50 recordings. Pelvis from markers; thigh, shank, foot from markers; hip = thigh - pelvis, knee = thigh - shank, ankle = foot - shank; CoP in the foot frame (origin 100 mm forward of the ankle centre); Weight in kilograms for BW and Nm/kg; trunk stays missing (no source).",
+      "depends_on": [
+        "GT21-RB03"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+        "docs/datasets/gt21/problems.html",
+        "docs/quality/audits/gt21-problem-scope.json",
+        "docs/reference/index.md",
+        "docs/reference/index.md",
+        "docs/quality/audits/gt21-c01-conventions.json",
+        "docs/quality/audits/gt21-force-geometry.json",
+        "contributor_tools/run_um21_t04_signs.py"
+      ],
+      "deliverables": [
+        "Per-batch converted observations in a new root",
+        "Sign test of the six new participants",
+        "Definition note for centres and foot frame, once D-GT21-REB-1 is answered"
+      ],
+      "acceptance": [
+        "Synthetic rigid-body fixtures with known rotations give the imposed segment angles; knee = thigh - shank exactly; composition thigh = pelvis + hip, shank = thigh - knee, foot = shank + ankle to 1e-12 rad.",
+        "Foot-frame CoP: the ankle centre maps to -0.100 m, the point 0.100 m forward maps to zero, a rigid foot rotation leaves it unchanged, left mirrors right.",
+        "Pelvis tilt agrees with the authors' marker fit within the range in the GT21-C01 review; mass check: moments equal id / Weight and BW uses Weight x 9.81, never model mass.",
+        "Sign test on all leg channels of the six new participants; undecided channels counted as not passed.",
+        "All 28 named markers are checked per recording; a missing needed marker gives a listed exclusion; 15 Hz and plate-origin placeholder CoP samples stay missing; peak memory recorded (expected 250-400 MiB)."
+      ],
+      "next_action": "José, 2026-11-23: merge the plate/force pass (RB02) and the model-fit/conventions pass (RB04) so each raw recording is read once; keep one job at a time. Segmentation (RB03) must therefore run on the merged pass's outputs or before it; replan job structure accordingly. After GT21-RB03 is done and D-GT21-REB-1 is answered: run the levelground pilot with the chosen centre method.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+        "docs/quality/audits/gt21-c01-conventions.json",
+        "docs/quality/audits/gt21-force-geometry.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
+        "summary": "Planned. The standard fixes zeros and frames but not the landmarks for joint centres; the source has only lateral knee and ankle markers, so one decision is needed.",
+        "checks": [
+          "Plan written from read-only probes only; no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+        ],
+        "remaining": [
+          "D-GT21-REB-1 answer; all jobs."
+        ],
+        "changed_files": [
+          "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+          "docs/maintainers/backlog.json",
+          "docs/maintainers/backlog.html"
+        ]
+      },
+      "blocked_reason": "Waits for GT21-RB03 and for decision D-GT21-REB-1 (how joint centres and the foot direction are found from the markers)."
+    },
+    {
+      "id": "GT21-RB05",
+      "priority": "P1",
+      "dataset": "gt21",
+      "title": "Export 150-sample observations with lineage and full accounting, then read back independently",
+      "status": "blocked",
+      "stage": "source_readback",
+      "question": "Does the exported file match the source value for value, with every exclusion listed?",
+      "scope": "45 guarded jobs: 22 per-participant exports, 1 streaming merge, 22 independent readbacks. Output in a new root; existing converted files never overwritten. Expected about 11 million rows (roughly 4 GB compressed).",
+      "depends_on": [
+        "GT21-RB04"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+        "docs/datasets/gt21/problems.html",
+        "docs/quality/audits/gt21-problem-scope.json",
+        "docs/reference/index.md",
+        "docs/maintainers/handoffs/GT21-RB04.json",
+        "contributor_tools/run_um21_r01_bundle.py",
+        "contributor_tools/DATA_CONTRACT.md"
+      ],
+      "deliverables": [
+        "Full converted file with observation identities, source lineage and exclusion table",
+        "Independent readback per participant"
+      ],
+      "acceptance": [
+        "Every observation has exactly 150 samples on linspace(0,100,150) inclusive and constant metadata; observations x 150 equals rows.",
+        "Observations plus listed exclusions equal source steps for every recording; 2,301 and 846 recordings each have a disposition.",
+        "A second code path re-derives seeded recordings from the source for every participant and every exported value agrees.",
+        "Streaming by row group within 256 MiB; the admission estimate is not raised."
+      ],
+      "next_action": "After GT21-RB04 is done: export AB06 and read it back.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/GT21-rebuild-plan.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
+        "summary": "Planned.",
+        "checks": [
+          "Plan written from read-only probes only; no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+        ],
+        "remaining": [
+          "All jobs."
+        ],
+        "changed_files": [
+          "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+          "docs/maintainers/backlog.json",
+          "docs/maintainers/backlog.html"
+        ]
+      },
+      "blocked_reason": "Waits for GT21-RB04."
     }
   ],
   "decisions": [
@@ -8098,6 +8751,38 @@
       "answer_text": "The origin should rotate with the foot. Ie it should be 100mm from the ankle center pointing forward in the ankle-foot frame.",
       "answer_note": "José 2026-11-23: applies to all datasets. Recorded in the data reference.",
       "decide_before_recommendation": false
+    },
+    {
+      "id": "D-GT21-REB-1",
+      "task_id": "GT21-RB04",
+      "question": "The Georgia Tech 2021 markers have no hip marker and only outer (lateral) knee and ankle markers. How should the thigh and shank axes, the ankle centre and the foot direction be found?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Leave them missing",
+          "consequence": "Thigh, shank and foot angles, hip, knee and ankle angles and the foot-frame centre of pressure stay empty for this dataset. No new method. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Markers only: outer knee and ankle markers as the centres, hip centre from the pelvis markers",
+          "consequence": "Gives segment and joint angles; has no ankle centre (no inner ankle marker), so the centre of pressure cannot follow the decided foot frame. Needs a published hip-centre rule. Reversible."
+        },
+        {
+          "key": "C",
+          "label": "Authors' scaled model locates the centres: fit its marker positions to the measured markers each frame (no joint angles taken from the model)",
+          "consequence": "Gives hip, knee and ankle centres and so every decided quantity, using the authors' own model files for all 22 participants; the centres come from scaled geometry, not measured joints. Largest adapter work. Reversible."
+        }
+      ],
+      "option_order": "Ascending adapter work.",
+      "cost_of_waiting": "All other steps can run; the angle and centre-of-pressure columns of the rebuild wait.",
+      "recommended": "C",
+      "confidence": "medium",
+      "why": "It is the only option that gives the ankle centre the decided centre-of-pressure frame needs, with the authors' own files and no outside data.",
+      "check": "Authors' model for any participant lists 28 markers: none at the hip, none on the inner knee or inner ankle.",
+      "decide_before_recommendation": true,
+      "status": "open",
+      "answer": "C",
+      "answered_at_utc": "2026-11-23T00:00:00Z"
     }
   ]
 }

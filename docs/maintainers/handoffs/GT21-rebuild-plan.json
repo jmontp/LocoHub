@@ -1,0 +1,411 @@
+{
+  "task_id": "GT21-REB-PLAN",
+  "status": "plan_ready_for_review_no_job_run",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
+  "summary": "Seven-step rebuild of Georgia Tech 2021 (22 participants, 3,147 recordings) in Python from the numeric source tables, with one MATLAB export per participant for the label tables that Python cannot read. 195 guarded jobs, one at a time. The first step (source preservation) is ready; every later step is blocked on its predecessor. One decision is needed from José and it blocks only the conventions step.",
+  "scope": {
+    "participants": 22,
+    "local_participants": 16,
+    "new_participants": [
+      "AB12",
+      "AB15",
+      "AB17",
+      "AB19",
+      "AB23",
+      "AB28"
+    ],
+    "recordings_local": {
+      "total": 2301,
+      "levelground": 506,
+      "ramp": 1015,
+      "stair": 665,
+      "treadmill": 115
+    },
+    "recordings_new": {
+      "total": 846,
+      "levelground": 174,
+      "ramp": 379,
+      "stair": 251,
+      "treadmill": 42
+    },
+    "recordings_total": 3147,
+    "source_steps_local": 78604,
+    "source_copy": "authors' 2024 copy for all 22 (D-GT21-S01-1 = C); six new ones sit unextracted as zips in the 2024-copy download folder",
+    "applied_decisions": [
+      "D-GT21-C01-1 sideways outward per leg",
+      "D-GT21-C01-2 = C pelvis tilt from markers",
+      "D-GT21-S01-1 = C six from 2024 copy",
+      "D-REF-1 joint angles are differences of gravity-referenced segment angles",
+      "D-REF-2 CoP in foot frame, origin 100 mm forward of ankle centre",
+      "plate assignment and force-sign fix adopted everywhere",
+      "opposite-leg steps recovered"
+    ],
+    "not_asked_because_the_reference_answers": [
+      "sign rule",
+      "joint zero",
+      "CoP origin and frame",
+      "sideways direction",
+      "pelvis zero",
+      "phase grid (150 samples, 0 to 100 inclusive)",
+      "missing is not zero"
+    ]
+  },
+  "engine_choice": {
+    "decision_owner": "agent (not science)",
+    "choice": "Python adapter over the numeric source tables for markers, ik, id, fp, gcLeft and gcRight (read by contributor_tools/gt21_numeric_source.py, which fails closed). MATLAB only for one export per participant of what Python cannot read: the conditions tables (string labels, stair height, ramp incline) and SubjectInfo.",
+    "why": "The old route started MATLAB once per recording (about 30 s each; it stopped at 102 of 2,301). The new route needs 22 MATLAB starts. ik_offset and static files, which Python also cannot read, are no longer needed because D-REF-1 removes the static-pose zero.",
+    "native_review_needed": "AGENTS.md: MATLAB jobs need a reviewed native extension of the guarded launcher; RB01 starts with that review, and the Python paths need none.",
+    "independent_known_values_for_the_python_port": "The 51 completed MATLAB recordings (1,111 steps, force values agree with source to 2e-12) and the plate-assignment, force-fix and bilateral pilots are the independent references for the port."
+  },
+  "problem_to_step": [
+    {
+      "problem": "missing_participants",
+      "step": "RB01",
+      "also": "RB02-RB05 treat all 22 alike",
+      "what": "extract six zips into a new root, CRC and listing check, inventory of every channel file"
+    },
+    {
+      "problem": "file_version",
+      "step": "RB01",
+      "what": "all 22 come from the 2024 copy (decided). AB17 only: compare the 2021 archive member list and sizes with the 2024 copy (two ramp moment files differ). Whether the 2021-09 rewrite of ramp moment files changed values for the other 21 cannot be measured (no 2021 archive held) and stays a stated limit in RB07."
+    },
+    {
+      "problem": "plate_and_sign",
+      "step": "RB02",
+      "what": "adopt marker-geometry plate assignment (unique plate with more than 2/3 closer heel/toe during more than 100 N; named treadmill plates; no peak-force choice, no waveform swap) and the checked force-sign fix on every step of every recording"
+    },
+    {
+      "problem": "sideways",
+      "step": "RB02 (force) and RB04 (CoP)",
+      "what": "grf_lateral positive outward for each leg (left mirrored); CoP lateral comes out of the foot frame in RB04"
+    },
+    {
+      "problem": "pelvis",
+      "step": "RB04",
+      "what": "pelvis sagittal angle from ASIS/PSIS markers, zero forward horizontal, anterior tilt negative"
+    },
+    {
+      "problem": "joint_zero",
+      "step": "RB04",
+      "what": "hip = thigh - pelvis, knee = thigh - shank, ankle = foot - shank from gravity-referenced segment angles; ik and ik_offset angles are not exported as joint angles"
+    },
+    {
+      "problem": "mass_unit",
+      "step": "RB01 evidence, RB04 application",
+      "what": "unit evidenced as kilograms (see probes); BW = Weight x 9.81 N and Nm/kg use the declared Weight, never the model mass"
+    },
+    {
+      "problem": "opposite_leg",
+      "step": "RB03",
+      "what": "both legs processed from their own heel-strike resets; every source step gets a disposition"
+    },
+    {
+      "problem": "terrain_defaults",
+      "step": "RB03",
+      "what": "adopt the strict terrain fix: labelled windows and positive finite incline or stair height required; no default ascent, no 4-inch height, no whole-recording fallback"
+    },
+    {
+      "problem": "rebuild_stopped",
+      "step": "RB03 (cause) and RB01/RB05 (per-recording disposition)",
+      "what": "a recording with no eligible step becomes a listed exclusion with its reason and the run goes on; nothing aborts a batch"
+    },
+    {
+      "problem": "no_plate",
+      "step": "RB02 and RB05",
+      "what": "stays missing, never guessed; counted per step and listed in the export accounting"
+    },
+    {
+      "problem": "forward_direction",
+      "step": "RB02 and RB07",
+      "what": "GRF anterior stays on the lab Z axis signed by pelvis heading, 45 degree gate, documented as a limit. CoP forward no longer depends on it because RB04 puts CoP in the foot frame."
+    },
+    {
+      "problem": "cop_origin",
+      "step": "RB04",
+      "what": "CoP in the moving foot frame, origin 100 mm forward of the ankle centre along heel-to-toe; 15 Hz filtering and plate-origin placeholder samples stay missing, never filled"
+    }
+  ],
+  "steps": [
+    {
+      "id": "GT21-RB01",
+      "name": "source preservation",
+      "jobs": 30,
+      "job_breakdown": "6 zip extractions (AB17 first) + 22 MATLAB label/subject exports (AB06 first) + 1 metadata inventory + 1 AB17 2021-versus-2024 member comparison",
+      "pilot": "AB17 extraction (also settles 2021 versus 2024) and the AB06 label export, which includes the failing stair recording stair_1_l_01_02",
+      "checks_against_known_values": [
+        "Per-member CRC32 and size equal the zip directory and the bound 2024 listing; AB12 listing counts conditions files levelground 34, ramp 63, stair 43, treadmill 7",
+        "Recording counts per mode equal 506/1015/665/115 for the 16 local and 174/379/251/42 for the six (3,147 total)",
+        "The 22 Weight literals equal the 22 values already read in the cohort crosswalk",
+        "Every local recording has all 12 channel files (conditions, emg, fp, gcLeft, gcRight, gon, id, ik, ik_offset, imu, jp, markers)",
+        "Label export agrees with the stairHeight/rampIncline values already checked for the 1,680 local ramp and stair recordings"
+      ],
+      "memory": "Extraction and inventory: under 150 MiB RSS, 1 MiB streaming chunks, disk admission about 1.2 GB per participant (7.7 GB for six, 116 GB free). MATLAB export: native cap 2,048 MiB, start-up dominated; one at a time with Windows free memory above 2.8 GB.",
+      "wall_hours": 3.5
+    },
+    {
+      "id": "GT21-RB02",
+      "name": "plates and forces",
+      "jobs": 37,
+      "job_breakdown": "4 pilots (one per mode) + 33 batches of at most 100 recordings (24 local, 9 new)",
+      "pilot": "levelground_ccw_fast_01_01 (AB06, existing bilateral pilot), treadmill_01_01, one AB06 ramp, stair_1_l_01_02",
+      "checks_against_known_values": [
+        "Python port reproduces the MATLAB-fixed pilot forces of the 36 compared and 51 completed AB06 recordings within 1e-9 (old audits show 1.6e-12 against source)",
+        "CoP at contact equals the measured plate position (old pilot: 1e-14 m)",
+        "Treadmill mean vertical force of left plus right belts is body weight within the stated band; probe values: 1.032, 1.054, 1.040 times Weight for AB06, AB25, AB30",
+        "Per-leg force impulse over stance is consistent between legs on level walking; the mirror of left sideways force equals the negative of the lab-axis value",
+        "Synthetic plate fixtures with known answers (8 existing checks) plus a left/right swapped fixture",
+        "Plate counts per mode against the old audit: AB06 levelground 74 assigned, 200 unsupported of 137 cycles (old single-leg count) must be reproduced for the same legs"
+      ],
+      "memory": "Expected 150-300 MiB RSS (probe: 160 MiB for markers plus fp of one recording; treadmill fp is 28,600 rows x 64 columns). Launcher address-space cap 768 MiB must be proven by the pilot, since numpy and scipy imports count against it.",
+      "wall_hours": 3.0
+    },
+    {
+      "id": "GT21-RB03",
+      "name": "segmentation",
+      "jobs": 8,
+      "job_breakdown": "4 pilots (one per mode, stair pilot holds two recordings) + 4 per-mode full bookkeeping jobs over source gait tables and the RB01 label ledger",
+      "pilot": "stair_1_l_01_02 (reproduce the old failure and show the new disposition), a normal stair, AB06 levelground_ccw_fast_01_01, treadmill_01_01, one ramp",
+      "checks_against_known_values": [
+        "Source steps: 78,604 local pairs, 0 with issues, 4,602 tables, 83,206 resets (all-source-phases audit) reproduced exactly",
+        "Old 36-recording count identity: of 2,270 source steps 856 exported, 798 opposite-leg missing, 616 outside window; the new run exports 856 + 798 = 1,654 of them, identical on the 856, and lists 616 with reason",
+        "Every old exported observation stays bit-identical on its non-force columns",
+        "Terrain labels, incline and stair height equal the source labels for all 1,680 ramp and stair recordings; zero defaults",
+        "Every source step and every recording has exactly one disposition (converted or excluded with reason); counts sum to the source totals",
+        "Left and right observations of one recording keep their own observation ids and share the source recording id"
+      ],
+      "memory": "Expected under 150 MiB RSS; only gait tables and a small JSON ledger are read.",
+      "wall_hours": 0.5
+    },
+    {
+      "id": "GT21-RB04",
+      "name": "conventions",
+      "jobs": 68,
+      "job_breakdown": "4 mode pilots + 1 sign and marker-set pilot on the six new participants + 63 conversion batches of about 50 recordings",
+      "pilot": "the RB03 pilot recordings plus AB17 and AB25 treadmill for the new participant and a second mass",
+      "checks_against_known_values": [
+        "Synthetic rigid-body fixtures with known segment rotations: recovered thigh, shank, foot, pelvis angles equal the imposed angles; knee equals thigh minus shank exactly; composition thigh = pelvis + hip, shank = thigh - knee, foot = shank + ankle holds to 1e-12 rad",
+        "Pelvis tilt from markers agrees with the authors' own marker-to-rotation fit within the 0.9-2.7 degree range reported in the GT21-C01 review (plausibility, not truth)",
+        "CoP in the foot frame: the ankle centre maps to (-0.100 m, 0, 0); a point 0.100 m forward of the ankle centre along heel-to-toe maps to (0,0,0); a rigid foot rotation leaves the foot-frame value unchanged",
+        "Left/right mirror: a left-leg step mirrored equals the right-leg convention for lateral CoP",
+        "Mass: Weight x 9.81 equals BW used; moments in Nm/kg equal id moment / Weight; model mass is never used",
+        "Sign tests of the six new participants run on all leg channels, with undecided channels counted as not passed (old run: 648 leg channels, 0 wrong, 127 undecided)",
+        "Per-recording availability of the 28 named markers (4 pelvis, 3 thigh cluster + lateral knee, 3 shank cluster + lateral ankle, heel, 3 toes per side) checked before use; unnamed C_ markers are ignored; a recording missing a needed marker gets a listed exclusion, never a filled value"
+      ],
+      "memory": "Expected 250-400 MiB RSS (markers 85-97 columns x up to 28,600 rows, plus ik, id, fp, with temporaries); a fixed batch size does not raise it because one recording is resident at a time. Pilot must record the launcher peak.",
+      "wall_hours": 6.5
+    },
+    {
+      "id": "GT21-RB05",
+      "name": "export",
+      "jobs": 45,
+      "job_breakdown": "22 per-participant 150-sample exports + 1 streaming merge + 22 independent readbacks",
+      "pilot": "AB06 export plus readback is the first of the 22",
+      "checks_against_known_values": [
+        "Every observation has exactly 150 samples at linspace(0,100,150) inclusive, finite phase, constant metadata",
+        "Row counts: observations x 150 equals rows; observations plus listed exclusions equal source steps for every recording",
+        "Independent readback re-derives 3 recordings per participant (seeded) from source tables with a second code path and compares every exported value",
+        "Shared source lineage between full and later filtered files; hashes bound in a manifest",
+        "Existing converted_datasets files are not overwritten; output goes to a new root"
+      ],
+      "memory": "Per participant under 256 MiB with 4,096-row batches and small row groups (the UM21-R01 pattern). Expected total file about 11 million rows, roughly 4 GB compressed, versus 2.6 million rows and 1.0 GB today.",
+      "wall_hours": 2.5
+    },
+    {
+      "id": "GT21-Q01",
+      "name": "quality",
+      "jobs": 5,
+      "job_breakdown": "1 pilot on AB06 plus 4 per-mode streaming assessments",
+      "pilot": "AB06 all modes",
+      "checks_against_known_values": [
+        "Structured observation assessment counts: passed + failed + missing + unchecked + invalid equals observations",
+        "Missing or unassessed signals are never counted as passed",
+        "No threshold changed to reach an aggregate rate; the legacy tuner file docs/datasets/gt21_validation_ranges.yaml is dated 2026-01-09 and is not an approved profile, so observations stay unchecked unless a profile with population and protocol evidence is approved"
+      ],
+      "memory": "Under 256 MiB; the 256 MiB release admission is not raised; row-group streaming only.",
+      "wall_hours": 1.0
+    },
+    {
+      "id": "GT21-R01",
+      "name": "release",
+      "jobs": 2,
+      "job_breakdown": "1 bundle build + 1 independent readback",
+      "pilot": "none beyond the build (UM21-R01 pattern)",
+      "checks_against_known_values": [
+        "Manifest hashes, counts and exclusions equal the RB05 and Q01 receipts",
+        "Every known problem is named as fixed, or as a stated limit",
+        "Local bundle only; no publishing"
+      ],
+      "memory": "Under 256 MiB streaming; the 4 GB file may not fit the default admission estimate, in which case ask how to shard (do not raise the estimate).",
+      "wall_hours": 0.5
+    }
+  ],
+  "totals": {
+    "jobs": 195,
+    "matlab_jobs": 22,
+    "serial_compute_hours_rough": 20,
+    "calendar_note": "about 20 hours of serial compute; calendar several days because each step ends with an independent review before the next is unblocked"
+  },
+  "probes": {
+    "conditions": "read-only, one file at a time, flock + nice 19 + ionice idle, /usr/bin/time -v; scripts in /tmp/gt21probe (outside the repository); nothing written under converted_datasets/ or the source folders; no MATLAB",
+    "free_memory_before": "Linux available 8.6 GB (above 3.5 GB); Windows free 8,259 MB (above 2.8 GB); rechecked before each batch of probes",
+    "results": [
+      {
+        "question": "markers for every segment angle",
+        "answer": "yes for pelvis, thigh, shank, foot; no for trunk",
+        "detail": "28 named markers in every probed recording (AB06 levelground, ramp, stair_1_l_01_02, treadmill; AB25 stair, treadmill): L/R ASIS and PSIS; Thigh_Upper, Thigh_Front, Thigh_Rear, Knee_Lat; Shank_Upper, Shank_Front, Shank_Rear, Ankle_Lat; Heel, Toe_Tip, Toe_Med, Toe_Lat. All finite in the probed samples. Extra unnamed C_28..C_31 columns appear in some recordings and are almost all missing. No hip, medial knee, medial ankle or thorax marker. The model file lists the same 28 markers.",
+        "peak_rss_mib": [
+          69,
+          96,
+          154,
+          160
+        ]
+      },
+      {
+        "question": "ankle joint centre",
+        "answer": "not measured; derivable from the authors' scaled model",
+        "detail": "Only the lateral ankle marker exists. The authors' AB06 model has tibia and talus frames and the same markers fixed to bodies, so the ankle centre can be placed by fitting the shank markers to the model each frame. Not verified numerically yet; RB04 pilot checks it with synthetic fixtures. There is no python OpenSim here, so this is plain rigid-body fitting from the model file's marker and joint offsets.",
+        "peak_rss_mib": []
+      },
+      {
+        "question": "foot orientation",
+        "answer": "yes",
+        "detail": "Heel and Toe_Tip markers (plus medial and lateral toe markers) are present and finite on all probed recordings, in millimetres on the lab frame.",
+        "peak_rss_mib": [
+          160
+        ]
+      },
+      {
+        "question": "body-weight unit",
+        "answer": "kilograms; strong evidence, not a file label",
+        "detail": "(1) The authors' STRIDES.m scales force-plate data by subjectMass*9.81 (in a commented line) and divides id and jp by subjectMass. (2) 18 of the 22 Weight values are whole pounds times 0.45359237 to within 0.03 lb (e.g. 74.84 = 165.0 lb), so the authors recorded kilograms converted from pound readings. (3) Treadmill left plus right vertical force, middle 60% of treadmill_01_01, divided by 9.81 gives 77.25, 54.97, 80.14 kg for Weight 74.84, 52.16, 77.03 (ratio 1.03 to 1.05); if Weight were in pounds the ratio would be 2.3. The model-file mass sums to 78.1 for AB06. The 3-5% excess over Weight is a documented limit, not a reason to switch to model mass.",
+        "peak_rss_mib": [
+          148
+        ]
+      },
+      {
+        "question": "files Python cannot read",
+        "answer": "conditions, ik_offset, static, SubjectInfo",
+        "detail": "The fail-closed reader accepts markers, ik, id, fp, gcLeft, gcRight (all probed). It rejects ik_offset and the static markers table. conditions tables hold string labels; the stair height and ramp incline are stored as separate scalars beside the table.",
+        "peak_rss_mib": [
+          69
+        ]
+      },
+      {
+        "question": "trunk",
+        "answer": "not derivable",
+        "detail": "imu holds accelerometer and gyroscope only (no orientation); there are no thorax markers; id has lumbar_extension moment and ik has lumbar angles only inside the model whose pelvis orientation did not match markers. The standard also leaves the trunk zero undefined.",
+        "peak_rss_mib": [
+          65
+        ]
+      },
+      {
+        "question": "inconclusive probe",
+        "answer": "labels per recording",
+        "detail": "A raw-byte scan of all 1,680 ramp and stair conditions files finds the same label names in every file because the table stores the category list; it cannot say which labels a recording uses. Do not read it as evidence. The label export in RB01 is the way to know.",
+        "peak_rss_mib": [
+          63
+        ]
+      }
+    ]
+  },
+  "stair_failure": {
+    "recording": "AB06 stair_1_l_01_02",
+    "evidence": "The native log shows a stair height of 0.102 m and six lines 'First heel strike: right leg' at 44.4, 43.1, 45.77, 52.89, 51.565 and 54.245 s, then 'Stair file with unknown pattern, skipping fallback', then the assert 'Recording produced no observations'. Source gait tables (read now): 10 left and 11 right heel strikes between 40.9 and 55.4 s; right strikes at 41.8, 43.1, 44.4, 45.8, 47.1, 48.3, 50.0, 51.6, 52.9, 54.2, 55.3 s.",
+    "reading": "Six labelled windows were found and each begins with a different right-leg strike, consecutive strikes 1.3 s apart. The old code takes one reference leg per window and needs two of its strikes inside the same window, so every window gave no stride. The fallback is skipped because the file name has neither 'ascent' nor 'descent', so the run ended in the assert and the whole batch stopped. It was not a crash of the numerics.",
+    "confidence": "probable, not proven: the window edges live in the conditions label table that Python cannot read. RB01 exports it and the RB03 stair pilot reproduces or refutes this on this one recording.",
+    "consequence_for_plan": "1) a recording without an eligible step is a listed exclusion, never a batch stop. 2) The stair yield may be low if windows hold one step each; RB03 measures steps per window for every stair recording before any full run. If many steps would be excluded for straddling two windows, that excludes data and goes to José as a scope question with the measured counts (not asked now because the count is not known).",
+    "also_note": "AB06 stairs: 1 of 42 finished, 40 never tried, so no other stair evidence exists."
+  },
+  "standard_gaps": [
+    {
+      "id": "G1",
+      "gap": "Where the long axes of thigh and shank end when the source has no hip, medial knee or medial ankle marker",
+      "standard_says": "thigh and shank long axis, zero straight down; nothing on landmarks or joint-centre method",
+      "needed_by": "RB04 segment angles and joint angles",
+      "action": "decision D-GT21-REB-1 (open, blocks only RB04)"
+    },
+    {
+      "id": "G2",
+      "gap": "How the ankle joint centre is found",
+      "standard_says": "origin 100 mm forward of the ankle joint centre; no method",
+      "needed_by": "RB04 CoP",
+      "action": "same decision D-GT21-REB-1"
+    },
+    {
+      "id": "G3",
+      "gap": "Full three-dimensional foot frame",
+      "standard_says": "forward along heel-to-toe, up perpendicular, sideways outward; no landmarks for heel-to-toe or for resolving roll",
+      "needed_by": "RB04 CoP",
+      "action": "same decision D-GT21-REB-1"
+    },
+    {
+      "id": "G4",
+      "gap": "Walking direction on curved overground paths",
+      "standard_says": "+x is the walking direction; no rule for changing heading",
+      "needed_by": "RB02 GRF anterior and lateral, RB04 plane of the sagittal projection",
+      "action": "agent default, least change and logged: lab Z axis signed by pelvis heading per step with the existing 45 degree gate, the same as published; José can overrule; not asked because it changes no convention that was decided"
+    },
+    {
+      "id": "G5",
+      "gap": "Trunk zero and any trunk source",
+      "standard_says": "trunk zero not yet defined",
+      "needed_by": "trunk_sagittal columns",
+      "action": "not asked: the source has no trunk measurement, so the columns stay missing (never invent)"
+    },
+    {
+      "id": "G6",
+      "gap": "Frontal and transverse signs",
+      "standard_says": "not yet adopted",
+      "needed_by": "hip adduction/rotation, pelvis list/rotation columns",
+      "action": "keep source sign, label it, no cross-dataset use; unchanged"
+    },
+    {
+      "id": "G7",
+      "gap": "Moments come from the authors' model-based inverse dynamics, angles from markers: the standard does not say whether moment and angle must share a kinematic source",
+      "needed_by": "any later power column; GT21 exports no power today",
+      "action": "documented limit in RB07; no power column is added"
+    },
+    {
+      "id": "G8",
+      "gap": "Tooling, not the standard: the contract and release admission assume one file under 256 MiB estimate; the rebuilt table is about 11 million rows",
+      "needed_by": "Q01 and R01",
+      "action": "stream by row group and shard by participant; do not raise the admission estimate; raise to José only if the release builder cannot admit it"
+    }
+  ],
+  "decisions_added": [
+    "D-GT21-REB-1"
+  ],
+  "risks": [
+    "Stair yield may be low (see stair_failure).",
+    "Python numeric reader accepts one table layout (hash-bound); a participant of the six may use another layout and would then need native export; RB01 tests this per file before anything depends on it.",
+    "Address-space cap of 768 MiB with numpy, scipy and pyarrow loaded is unproven; pilots must show it.",
+    "AB28 folder is a live working copy (one file dated 2026-10-11); the listing is rechecked before each use.",
+    "The six new participants have never been through the sign test.",
+    "Model-based joint centres (option A) use scaled geometry, not measured joints; the error is not quantified until the RB04 pilot."
+  ],
+  "checks": [
+    "Read AGENTS.md, docs/reference/index.md, problem scope (13 problems), handoffs, audits, backlog GT21 tasks, the old converter and the UM21 runners.",
+    "Ran ten read-only probe runs (seven small scripts in /tmp), one file at a time, locked, nice 19 / ionice idle, peak RSS 60-160 MiB (all under 300 MiB).",
+    "Counted weights and tested pound conversions; read the 2021 scripts for the mass use.",
+    "No conversion, no MATLAB, nothing written under converted_datasets/ or source folders; no process left running."
+  ],
+  "remaining": [
+    "Review of this plan by José (one decision) and an independent agent; then RB01 can launch its first guarded job after a dry run."
+  ],
+  "next_action": "GT21-RB01: write and dry-run the guarded spec for the AB17 extraction pilot and review the native extension for the MATLAB label export; run nothing else until the dry runs pass.",
+  "changed_files": [
+    "docs/maintainers/handoffs/GT21-rebuild-plan.json",
+    "docs/maintainers/backlog.json",
+    "docs/maintainers/backlog.html"
+  ],
+  "evidence_paths": [
+    "docs/quality/audits/gt21-problem-scope.json",
+    "docs/quality/audits/gt21-all-source-phases.json",
+    "docs/quality/audits/gt21-plate-assignment-fix.json",
+    "docs/quality/audits/gt21-event-eligibility.json",
+    "docs/quality/audits/gt21-s01-cohort-crosswalk.json",
+    "docs/quality/audits/gt21-s02-2024-copy.json",
+    "docs/quality/audits/pm01-stopped-jobs-review.json"
+  ]
+}

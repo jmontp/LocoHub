@@ -1,0 +1,224 @@
+{
+ "task_id": "UM21-S02",
+ "part": "plan (UM21-STD-plan)",
+ "status": "plan_ready_for_review",
+ "scientific_approval": false,
+ "last_checked_at_utc": "2026-11-23T00:00:00Z",
+ "scope": "Plan only. No conversion, no guarded job, nothing written under converted_datasets/ or source folders. Read-only probes on three recordings (one at a time).",
+ "summary": "The bundle um21_r01_review_v2 (44 recordings, 1,131,750 rows) follows neither new rule. Joint angles are Vicon values with Vicon zero; thigh/shank are hip-minus-pelvis recipes; no foot angle; no centre of pressure and no ground force. The source Streaming.mat has what is needed: 18 lower-body and pelvis markers at 100 Hz (ASIS, PSIS, GT, knee lateral/medial, ankle lateral/medial, heel, toe, both sides) and per-leg plate force and centre of pressure at 1000 Hz. It does NOT give the plate position in the lab frame, so the centre of pressure needs a fitted registration; that is the one real risk. Plan: one new runner computes segment angles from markers, derives joint angles as differences, and converts the centre of pressure to the foot frame per stride, then Q01 and R01 are re-run for a v3 bundle. About 8 guarded jobs.",
+ "bundle_inventory": {
+  "root": "converted_datasets/reconversion_v2/um21_r01_review_v2",
+  "columns_present": [
+   "pelvis_sagittal_angle_rad",
+   "hip_flexion_angle_ipsi_rad",
+   "knee_flexion_angle_ipsi_rad",
+   "ankle_dorsiflexion_angle_ipsi_rad",
+   "thigh_sagittal_angle_ipsi_rad",
+   "shank_sagittal_angle_ipsi_rad",
+   "pelvis_sagittal_velocity_rad_s",
+   "thigh_sagittal_velocity_ipsi_rad_s",
+   "shank_sagittal_velocity_ipsi_rad_s",
+   "hip/knee/ankle moments (Nm_kg)",
+   "hip/knee/ankle power (W_kg, held)",
+   "quality_status",
+   "failed_limits",
+   "held_signals",
+   "ankle_reexpressed",
+   "lineage_id",
+   "assessment_id"
+  ],
+  "absent": [
+   "foot_sagittal_angle_ipsi_rad",
+   "foot velocity",
+   "cop_anterior/vertical/lateral_ipsi_m",
+   "grf_*"
+  ],
+  "evidence": "pyarrow schema read of full.parquet (metadata only); runner COLUMNS and NOT_RELEASED in contributor_tools/run_um21_r01_bundle.py"
+ },
+ "columns_changed_by_the_rules": {
+  "value_changes": {
+   "hip_flexion_angle_ipsi_rad": "becomes thigh - pelvis from markers (was Vicon hip, Vicon zero)",
+   "knee_flexion_angle_ipsi_rad": "becomes thigh - shank from markers (was Vicon knee)",
+   "ankle_dorsiflexion_angle_ipsi_rad": "becomes foot - shank from markers (was Vicon ankle with unpublished static offset; status offset_unverified goes away). The Euler alternate-branch re-expression of the AB07/i10 right ankle is no longer needed.",
+   "thigh_sagittal_angle_ipsi_rad": "absolute from markers, zero straight down (was hip - pelvis planar recipe)",
+   "shank_sagittal_angle_ipsi_rad": "absolute from markers, zero straight down (was thigh - knee)",
+   "thigh_sagittal_velocity_ipsi_rad_s, shank_sagittal_velocity_ipsi_rad_s": "follow the new angles; same derivative method as before (sa.derive_angular_velocities)"
+  },
+  "new_columns": {
+   "foot_sagittal_angle_ipsi_rad": "heel-to-toe line from forward horizontal; previously withheld because of the ankle zero offset",
+   "foot_sagittal_velocity_ipsi_rad_s": "derivative of the foot angle",
+   "cop_anterior_ipsi_m, cop_vertical_ipsi_m, cop_lateral_ipsi_m": "centre of pressure in the foot frame (origin 100 mm forward of the ankle centre along heel-to-toe)"
+  },
+  "kept_with_a_check": {
+   "pelvis_sagittal_angle_rad": "Vicon pelvis already equals the marker PSIS-to-ASIS angle from forward horizontal with anterior tilt negative (probe: published + marker tilt median 0.01 deg on AB06/i5, -0.05 deg on AB08/d10; C03: 0.03-0.14 deg over 16 legs). Keep the source values; the job re-checks against markers on every stride."
+  },
+  "unchanged": [
+   "moments",
+   "powers (still held where the sign layout is unsettled)",
+   "identity, phase, lineage columns"
+  ],
+  "must_be_rerun": [
+   "quality_status, failed_limits, assessment_id (Q01 re-assessment on the new angles; coarse limits unchanged, foot angle gets the same L2 only)",
+   "exclusions.csv (jump and limit strides were judged on the Vicon ankle)",
+   "ankle_reexpressed column and ankle_reexpression_log.csv (retired)",
+   "README, manifest, dataset page text ('ankle zero offset unverified')"
+  ]
+ },
+ "source_check": {
+  "location": "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat (2.2 GB, HDF5), path Streaming/<AB##>/Tread/<cond>; sha256 bound by the T04/R01 receipts",
+  "markers": "4 x N at 100 Hz (x,y,z m, 4th row = camera-visible flag): L/R ASI, PSI, GT, KNE, KNEM, ANK, ANKM, HEE, TOE, plus TIB, THI, 1M, 5M, IC, L1M, L5M. Sufficient for pelvis, thigh, shank, foot, ankle centre. No hip joint centre and no ankle joint centre channel; both must be derived.",
+  "forceplates": "Force, Moment, CoP as 3 x 10N at 1000 Hz per leg. CoP is in millimetres (README says metres; values -388..353 on the long axis), vertical CoP is exactly 0, unloaded samples are exact 0 (zero fill, must become missing), plate vertical force is negative (force on the plate; ground force on the person is its negative).",
+  "plate_frame_in_lab": "Not given. Plate long axis flips between trials (probe slope of ankle forward position versus CoP long axis: +0.0014 to +0.0016 in AB06/i5 and AB03/i10, -0.0010 in AB08/d10), the frame is tilted with the belt slope (C03), and the plate origin relative to the marker frame is absent. C03 fitted a per-plate shift against Vicon moments: forward 0.6 to 6.2 cm, up -21 to +6 cm across 16 legs.",
+  "existing_evidence": [
+   "UM21-C01 (markers and plates read; pelvis tilt, thigh/shank recipes, plate units and axis flips)",
+   "UM21-C03 (angle census: exact zero fill in 241 of 500 angle channels, ankle alternate branch AB07/i10 R, plate registration)",
+   "UM21-P01 (AB04/i0 is the only reversed-heading recording; forward axis from PSIS-to-ASIS)",
+   "UM21-C02 (pelvis fields)",
+   "UM21-T02/T03/T04 (stride windows and observation ids)",
+   "UM21-X01 is ready and unstarted; this plan covers only the treadmill columns the rules change"
+  ],
+  "probes": [
+   {
+    "name": "structure listing AB06/i5",
+    "peak_rss_kb": 40928,
+    "reads": "HDF5 metadata only"
+   },
+   {
+    "name": "marker/plate check AB06/i5",
+    "peak_rss_kb": 76752,
+    "script": "contributor_tools/audit_probes/2026_11_23/probe_um21_std_plan_source_check.py"
+   },
+   {
+    "name": "marker/plate check AB08/d10",
+    "peak_rss_kb": 76424
+   },
+   {
+    "name": "marker/plate check AB03/i10",
+    "peak_rss_kb": 78292
+   }
+  ],
+  "probe_rules_followed": "flock /tmp/locohub-probe.lock, nice 19, ionice idle, /usr/bin/time -v, RLIMIT_AS 1 GiB, one recording at a time, nothing written under converted_datasets/ or source folders. Memory before probes: Linux available about 8.6 GB, Windows free about 8.3 GB. No process left running. (One probe call earlier failed on an argument typo and one on a missing import; no data effect.)",
+  "marker_coverage": "AB06/i5: 17 of 18 needed markers 100 % visible, LGT 99.5 %. AB08/d10 all 18 at 100 %. Other recordings not checked; the pilot reports per-marker coverage for every recording.",
+  "probe_numbers_AB06_i5_AB08_d10_AB03_i10": {
+   "pelvis_published_plus_marker_median_deg": [
+    0.01,
+    -0.05,
+    "AB03/i10 not printed"
+   ],
+   "knee_published_minus_marker_median_deg": {
+    "AB06/i5": {
+     "R": -2.6,
+     "L": 4.1
+    }
+   },
+   "ankle_published_minus_marker_median_deg": {
+    "AB06/i5": {
+     "R": 4.7,
+     "L": 6.1
+    },
+    "AB08/d10": {
+     "R": 3.5,
+     "L": 2.1
+    },
+    "AB03/i10": {
+     "R": 6.5,
+     "L": 0.3
+    }
+   },
+   "ankle_published_vs_marker_correlation": {
+    "AB06/i5": {
+     "R": 0.51,
+     "L": 0.96
+    },
+    "AB08/d10": {
+     "R": 0.69,
+     "L": 0.45
+    },
+    "AB03/i10": {
+     "R": 0.98,
+     "L": 1.0
+    }
+   },
+   "note": "The offsets are the size of the change the new zero will make (0.3 to 6.5 deg) and differ by leg and trial, so they are not one constant. The low correlations (0.45-0.69 in three leg-trials) are NOT explained: the Vicon ankle is not defined from the heel-to-toe markers, and the hip centre proxy here was the GT marker. Treat as a not-checked chip until the pilot separates marker dropouts, foot definition and hip-centre choice. Hip difference up to 5 deg in AB06/i5 R comes from using GT as hip centre in the probe.",
+   "foot_marker_angle_p5_p95_deg": "-60 to 19 (R, AB06/i5), toe-off plantarflexion included",
+   "heel_toe_length_m": 0.21,
+   "ankle_to_heel_fwd_m": -0.07,
+   "ankle_to_toe_fwd_m": 0.13,
+   "malleolar_width_m": 0.089
+  }
+ },
+ "computation_and_checks": [
+  {
+   "column": "pelvis, thigh, shank, foot segment angles",
+   "how": "Per recording: forward axis = mean horizontal PSIS-to-ASIS direction (the person's facing; handles AB04/i0), vertical = marker Z (gravity; C01 checked). Pelvis = angle of PSIS-to-ASIS from forward horizontal, counterclockwise. Thigh = angle of hip centre to knee centre from straight down, knee centre = midpoint(KNE, KNEM). Shank = knee centre to ankle centre, ankle centre = midpoint(ANK, ANKM). Foot = HEE to TOE from forward horizontal. Sagittal projection. Hip centre: Davis/Harrington regression from ASIS positions and leg length (ParticipantDetails), the model Vicon used; GT marker kept only as a cross-check. Markers where the visible flag is not 1 are missing; no gap filling; a stride with a missing needed marker gets that column missing and the reason logged. Interpolate to the 150-point inclusive phase grid exactly as T04 (stride frames a..b from the T04 observation maps).",
+   "known_value_check": "Synthetic markers built by construction from chosen segment angles (thigh +30, shank -10, foot +20, pelvis -12 deg; both legs; forward along -X to mimic AB04/i0; a tilted treadmill case) with expected joint angles written down first: hip 42, knee 40, ankle 30 deg. Tests in tests/ labeled synthetic.",
+   "independent_check": "A separate audit script that does not import the runner: rebuilds segment angles with rotation matrices on the pilot/full outputs' source frames and compares stride by stride (max difference below 1e-6 rad). Also compares pelvis with the kept Vicon pelvis (median below 0.2 deg per stride, as C03) and hip/knee/ankle with Vicon after removing the median offset: reported as agreement with the source up to its zero, not as pass/fail of the values. Shape agreement below correlation 0.9 is listed per stride."
+  },
+  {
+   "column": "hip, knee, ankle joint angles",
+   "how": "hip = thigh - pelvis, knee = thigh - shank, ankle = foot - shank, computed from the arrays, never read from Vicon.",
+   "check": "Composition holds to 1e-12 rad in the written table (thigh = pelvis + hip, shank = thigh - knee, foot = shank + ankle); straight standing pose in synthetic gives 0 for knee and ankle."
+  },
+  {
+   "column": "segment velocities (thigh, shank, foot; pelvis unchanged)",
+   "how": "Same derivative method and spacing rule as T04 (stride duration over 149).",
+   "check": "Known-value test: constant-rate synthetic angle returns the rate; the derived velocity integrates back to within the stride's angle change."
+  },
+  {
+   "column": "cop_anterior/vertical/lateral_ipsi_m",
+   "how": "(1) Plate to metres (CoP mm / 1000), CoP zero when plate force is below 20 N (README noise level; one threshold, logged) becomes missing, never zero. (2) Plate frame to lab frame: rotate about the belt tilt (from the task slope, checked against the marker path as C03 did), sign and axis of the long direction fixed per recording from the data (stance-time regression of ankle forward position on CoP axes, as in the probe). (3) Register the plate origin per recording and plate by fitting a forward and an up shift, the C03 method, with the lateral shift from the mean CoP lateral position inside the foot. (4) Express in the foot frame: origin = ankle centre + 0.1 m along heel-to-toe (sagittal projection), forward along heel-to-toe, up perpendicular, lateral outward from that leg (+z right leg, -z left leg). (5) Plate 1000 Hz to the phase grid by linear interpolation on loaded samples only; a phase point is missing if either neighbouring plate sample is unloaded.",
+   "known_value_check": "Synthetic foot at a chosen angle with CoP placed at a known foot-frame point (+0.15 m, -0.08 m, +0.02 m) in the plate frame, with flipped axis, tilted belt, reversed walking direction and left leg: round-trip must return the point to 1e-9 m.",
+   "independent_check": "(a) Endpoint test not used in the fit: in at least 95 % of loaded strides the first loaded CoP lies within 3 cm of the heel marker position along the foot and the last within 3 cm of the toe (tolerances to be set from the pilot, written down before the full run). (b) Hold-out ankle moment: fit on hip and knee only, compare predicted with Vicon ankle moment. (c) Left and right plate assignment: plate stance overlaps the same-side heel strikes. (d) Registration spread: shifts per recording reported; if the independent checks fail the CoP columns are held for that recording (present but missing with a reason), never filled."
+  }
+ ],
+ "pilot": {
+  "recordings": [
+   "AB03/i10 (incline plate forward positive, held power, R ankle offset 6.5 deg)",
+   "AB04/i0 (the one reversed-heading recording)",
+   "AB07/i10 (right ankle stretch where Vicon had alternate-branch frames)",
+   "AB08/d10 (decline: plate long axis flipped, low ankle correlation)",
+   "one clean recording drawn with a recorded seed (20261124) from the other 40"
+  ],
+  "why": "covers each failure the new code must survive: flipped plate axis, tilted belt both ways, reversed heading, former ankle branch, and an unexplained marker-versus-Vicon ankle mismatch.",
+  "bound_code": "runner, audit script, Q01 and R01 runners, T03/T04/Q01 receipts, and the committed pilot record; the full run uses identical bytes."
+ },
+ "job_structure": [
+  "0. Write contributor_tools/run_um21_s02_frame.py (pattern of run_um21_t04_signs.py: plan / run, bound spec, one recording at a time, new output root converted_datasets/reconversion_v2/um21_s02_frame_v1, source hashed before and after) and the audit script contributor_tools/audit_um21_s02_frame.py; synthetic tests first; both reviewed before launch. No data read.",
+  "1. Dry run, then S02 pilot (5 recordings), one guarded job.",
+  "2. Independent audit of the pilot output, one guarded job; stop for review if any check fails.",
+  "3. S02 full (44 recordings, one job; per-recording memory was about 80 MiB in the probe, R01 full peaked 280 MiB with 44 recordings; if a pilot peak exceeds 450 MiB split into 5 two-subject jobs).",
+  "4. Independent audit of the full output, one guarded job.",
+  "5. Q01 v3 assessment: pilot (2 recordings) then full, two guarded jobs, bound to the S02 receipts; coarse limits unchanged, foot angle L2 only, CoP unchecked (no limit).",
+  "6. R01 v3 bundle: pilot then full, two guarded jobs, new root um21_r01_review_v3 (the v2 root is kept and stays labeled legacy-zero), COLUMNS extended, ankle re-expression retired, exclusions re-accounted.",
+  "7. Read-only independent probe of the v3 bundle (counts, composition, CoP missing where unloaded), then regenerate the UMich page text."
+ ],
+ "estimated_guarded_jobs": "8 (pilot, pilot audit, full, full audit, Q01 pilot, Q01 full, R01 pilot, R01 full); up to 12 if the S02 full run is split by subject. Dry runs and read-only probes not counted.",
+ "undefined_in_the_standard": {
+  "agent_decides_and_logs": [
+   "Hip joint centre method (the standard defines the thigh axis but not its proximal end). Plan: Davis/Harrington regression as Vicon used; report the difference to the GT-based thigh.",
+   "Ankle joint centre method. Plan: midpoint of the two malleolus markers (ANK, ANKM), marker radius ignored; logged.",
+   "Foot orientation for the CoP frame is sagittal (planar) versus 3D heel-to-toe direction (toe-out up to about 10 deg moves up to 1.5 cm between forward and sideways). Plan: planar rotation about the sideways axis, sideways axis horizontal.",
+   "Walking direction per recording from the pelvis markers (not the lab axis).",
+   "No marker gap filling and no marker filtering before differencing (velocity method unchanged); a stride with a gap loses that column, not the whole stride.",
+   "CoP when the foot is unloaded: missing, with a 20 N threshold from the source README.",
+   "Foot-line landmarks: heel and toe markers as the heel-to-toe line (the marker heights above the sole are unknown, so the flat-foot angle is marker-defined, not sole-defined)."
+  ],
+  "source_limits_not_standard_gaps": [
+   "No plate position in the lab frame; vertical CoP depends on the unknown marker-to-sole offset (C03 fitted up shifts spread over 27 cm, so the vertical foot-frame coordinate is the weakest value)."
+  ],
+  "true_gap_for_jose": "None blocks the plan. The standard answers the zero and the CoP frame. One scientific call will be needed after the pilot, not before: whether a centre of pressure whose plate registration was fitted (not measured) may be published, and which pilot tolerance counts as verified. A decision will be drafted from pilot evidence; nothing is queued now (one decision, D-GT23-C05-3, is open for another dataset)."
+ },
+ "not_done": [
+  "No conversion or guarded job; no runner written.",
+  "Plate registration accuracy not measured in this plan.",
+  "Marker coverage only checked on two recordings.",
+  "Cause of the low Vicon-versus-marker ankle correlations not found."
+ ],
+ "changed_files": [
+  "docs/maintainers/handoffs/UM21-STD-plan.json",
+  "contributor_tools/audit_probes/2026_11_23/probe_um21_std_plan_source_check.py",
+  "docs/maintainers/backlog.json",
+  "docs/maintainers/backlog.html"
+ ],
+ "next_action": "Independent review of this plan; then write run_um21_s02_frame.py and the audit with synthetic tests."
+}
