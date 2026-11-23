@@ -344,12 +344,12 @@ def main():
     unread = len(tried) + len(pose)
     assert all(not t["admitted"] for t in tried) and all("rejected" in p for p in pose)
     probs.append({
-        "key": "joint_zero", "card": "It is not settled what 'zero' means for the joint angles",
-        "status": {"key": "open", "label": "Open", "detail": "", "needs": "Needs a decision from José (not yet raised), and a guarded job to measure the size."},
-        "wrong": "Joint angles come in two versions. One is zero at the model's own zero. The other is the trial angle minus the average of the participant's static standing trial (added by the authors in April 2024). The conversion code reads the relative version, our sign tests used the model zero, and the 2021 archive of AB17 has no relative version. No decision has been made, and the size of the difference is not measured.",
+        "key": "joint_zero", "card": "Joint-angle zero is now defined by the segment angles",
+        "status": {"key": "decided", "label": "Decided by José, fix not yet run", "detail": "José decided on 23 November 2026: joint angles are differences of segment angles, and segment angles are measured against gravity, so there is no separate joint zero (no static pose, no model zero). The conversion code has not been changed or run for this.", "needs": "Needs segment angles (thigh, shank, foot and pelvis) for every recording. Pelvis-marker tilt is available (the earlier pelvis decision); whether thigh, shank and foot angles can be built from the markers and the ankle centre found: not checked. A guarded job is needed to measure how far the old zeros differ from the new one."},
+        "wrong": "Joint angles come in two versions. One is zero at the model's own zero. The other is the trial angle minus the average of the participant's static standing trial (added by the authors in April 2024). The conversion code reads the relative version, our sign tests used the model zero, and the 2021 archive of AB17 has no relative version. José has now decided the zero (see the status above); the size of the difference between the old files and the new rule is not measured.",
         "how": "The README dates the relative files to 28 April 2024, and the authors' script subtracts the column average of the first static trial it finds, without wrapping angles. We then tried to measure the difference with our safe file reader: it refused all 20 files we tried (16 static-pose files and one relative file for each of the four tasks).",
         "example": "No measured example exists: the size of the difference has not been measured, so the figure is a made-up illustration, labelled as one.",
-        "total_line": "Every joint angle in all 2,301 local recordings (100%) has this open choice. The size of the difference is not measured.",
+        "total_line": "Every joint angle in all 2,301 local recordings (100%) is affected by the new zero rule. The size of the difference is not measured.",
         "total_numbers": {"recordings_affected": 2301, "recordings_total": 2301, "files_tried": unread, "files_read": 0, "static_files_tried": len(pose), "relative_files_tried": len(tried)},
         "denominator_text": "Recordings: 2,301 local ones. Participants: all 16 local and the six not yet converted. Samples are not counted. 'Affected' means the choice applies, not that the values are wrong.",
         "table": {"columns": ["What we tried", "Files", "Read"], "rows": [["Static-pose joint-angle files (one per local participant)", str(len(pose)), "0"], ["Relative joint-angle files (one per task, drawn at random)", str(len(tried)), "0"]], "fold": False},
@@ -361,7 +361,7 @@ def main():
             {"signal": "Hip, knee and ankle angles", "verdict": "Not checked", "line": "Every sample shifts by a constant that is not measured here.", "evidence": "", "ref": ""},
             {"signal": "Signs of hip, knee and ankle angles", "verdict": "Checked, not affected",
              "line": "A constant shift does not flip a sign; our sign test found none wrong.", "evidence": "0 wrong signs in 648 leg channels tested (305 applied, 216 suggested, 127 left undecided), using the model zero.", "ref": "core04-gt21-pilot counts"},
-            {"signal": "Reference ranges for the angles", "verdict": "Not checked", "line": "Ranges depend on which zero is chosen, so none can be set yet.", "evidence": "", "ref": ""},
+            {"signal": "Reference ranges for the angles", "verdict": "Not checked", "line": "Ranges depend on the zero. The zero is now decided, so ranges can be set only after the angles are recomputed.", "evidence": "", "ref": ""},
             {"signal": "Joint moments and powers", "verdict": "Checked, not affected",
              "line": "The authors' script only writes a new angle file; moments are read from their own files.", "evidence": "The authors' script writes the relative angle file only and leaves the moment files alone.", "ref": "gt21-ab17-local-processing-recipe static_recipe"},
             {"signal": "Thigh, shank, foot and trunk angles", "verdict": "Not checked", "line": "They are tied to the pelvis problem (see its card).", "evidence": "", "ref": ""},
@@ -562,13 +562,14 @@ def main():
 
     # ================= L2: centre of pressure origin =================
     probs.append({
-        "key": "cop_origin", "card": "Centre of pressure is measured from the outer ankle marker",
-        "status": {"key": "documented", "label": "Documented only, kept as published",
-                   "detail": "The origin is stated; the offset from the ankle joint is not measured.", "needs": ""},
+        "key": "cop_origin", "card": "Centre of pressure is measured from the outer ankle marker, not from the decided origin",
+        "status": {"key": "decided", "label": "Decided by José, fix not yet run",
+                   "detail": "José decided on 23 November 2026: the centre of pressure moves with the foot, with its origin 100 mm forward of the ankle joint centre along the foot's heel-to-toe direction. The conversion code has not been changed or run for this.",
+                   "needs": "Needs the ankle joint centre and the foot's direction for every sample, from markers. Whether the markers give them: not checked. The current offset from the outer ankle marker is not measured."},
         "wrong": "Centre of pressure is stored relative to the outer ankle marker, not the ankle joint centre. The distance between the two is not measured. The authors' own centre of pressure is also filtered at 15 Hz by default, and is set to the plate origin when the plate sees almost no load; our code leaves those samples missing.",
         "how": f"The authors' scripts were read line by line. In 8 sampled recordings the centre of pressure lies a median of {conv['pooled']['cop_to_nearer_foot_median_m'] * 100:.1f} cm from the nearer foot, so it lands near the foot.",
         "example": f"A median distance of {conv['pooled']['cop_to_nearer_foot_median_m'] * 100:.1f} cm to the nearer foot says the values land near the right foot. It does not say how far they sit from the ankle joint.",
-        "total_line": "All centre-of-pressure columns in all 2,301 local recordings (100%) are relative to the ankle marker. The offset to the joint is not measured.",
+        "total_line": "All centre-of-pressure columns in all 2,301 local recordings (100%) are relative to the ankle marker, not to the decided origin (100 mm forward of the ankle joint centre in the foot's frame). The offset to the joint is not measured.",
         "total_numbers": {"recordings_affected": 2301, "recordings_total": 2301, "median_cop_to_foot_cm": round(conv["pooled"]["cop_to_nearer_foot_median_m"] * 100, 1), "sampled_recordings": 8},
         "denominator_text": "Recordings: 2,301 local ones. Samples are not counted. 'Affected' means the stated origin applies.",
         "table": {"columns": ["Check", "Result"], "rows": [["Median distance from centre of pressure to the nearer foot, 8 recordings", f"{conv['pooled']['cop_to_nearer_foot_median_m'] * 100:.1f} cm"], ["Distance to the ankle joint centre", "Not measured"]], "fold": False},

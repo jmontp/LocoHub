@@ -53,7 +53,7 @@ V_WRONG, V_OK, V_LEFT, V_NC = "Also wrong, not fixed", "Checked, not affected", 
 VERDICTS = [V_WRONG, V_OK, V_LEFT, V_NC]
 STATUS = {
     "fixed": "Fixed in a checked pilot",
-    "decided": "Decided, fix not yet run",
+    "decided": "Decided by José, fix not yet run",
     "open_run": "Open, fix not yet run",
     "open_decide": "Open, needs a decision",
     "documented": "Documented only, kept as published",
@@ -221,12 +221,14 @@ def build_scope():
             used = f"{x['divisor_kg_best']:.1f}" + (f" ({owner[0]}'s mass)" if owner else "") if exact else f"about {x['divisor_kg_best']:.0f}"
             how_found = "worked out exactly" if exact else "estimated from force plates"
         mrows.append([s, f"{x['readme_mass_kg']}", used, how_found, f"{x['scale_factor_published_vs_readme_normalized']:.2f}"])
-    add(key="mass", section="Mass and units", status="documented",
+    add(key="mass", section="Mass and units", status="decided",
         title="Per-kg moments and powers were divided by another participant's body mass",
         short=f"{a_conf} of {N} recordings shown; {a_unk + a_prob} cannot be told or only probably",
         wrong=f"For {len(level_wrong)} of {len(SUBJECTS)} participants, the authors did not use the person's own body mass to turn moments and powers into per-kg values in level walking. For {len(exact_other)} of them the mass used is exactly another participant's listed body mass, and it can change between recordings of the same person.",
         how="The source gives some recordings in newton-metres as well as per kg. Dividing one by the other gives the mass that was used. Where that was not possible, the mass was estimated from force-plate moments.",
-        where=f"Decided by José on 2 November 2026: release every moment and power exactly as published, with no rescaling, and document the mismatch. Nothing has been rescaled or left out. The reason: correcting to the person's own mass clearly lowered the error in only {a_conf} of the {N} recordings.",
+        where=(f"Decided by José on 23 November 2026, replacing his 2 November decision of no rescaling: fix the {a_conf} recordings shown to carry another mass. Their moments and powers get rescaled to the person's own mass (multiplied by the mass used divided by the own mass). The other {N - a_conf} recordings, where the mass used cannot be told, stay as published, with a note. Fix not yet run. "
+          f"The {a_conf} are the recordings where rescaling lowers the error in every plausible case: 7 have the mass used worked out exactly and {a_conf - 7} have it estimated from force plates. Whether all {a_conf} or only the 7 exact ones are rescaled is an open question for José. "
+          "Needs: the mass used for each recording (exact for 7, estimated for the rest, both in the audit files) and the person's own mass from the source's participant table. Not checked: any rescaled output."),
         example=f"{ex['subject']}, {ex['task'].replace('_', ' ')}: the person's own mass is {et['own_mass_kg']} kg, but force-plate moments point to about {et['lever_kg']:.0f} kg being used. Published error against the person's own mass is {et['policy_T']['original_error_pct'][0]:.0f} to {et['policy_T']['original_error_pct'][1]:.0f}%. This recording was drawn at random from the {len(pool)} shown recordings with a validated walking estimate.",
         figures=[{"src": "reuse-gt23-mass.svg", "question": "Which mass was used for each participant in level walking?", "alt": "For each of 12 participants, the mass used compared with the person's own mass in level walking; 9 participants have another mass used.", "caption": "Level walking, one row per participant (the same figure as on the fixes page)."}],
         total_line=f"{a_conf} of {N} recordings ({pct(a_conf, N)}) are shown to carry another mass; {a_prob} more ({pct(a_prob, N)}) probably do; {a_own} are confirmed to use the person's own mass; {a_unk} cannot be told. In level walking, {len(level_wrong)} of {len(SUBJECTS)} participants are affected.",
@@ -235,7 +237,7 @@ def build_scope():
         grid={"cells": cells, "unit": "recordings", "caption": "Recordings shown to carry another mass. Hatched cells: none shown, but the mass could not be told for most recordings there, so they are not cleared."},
         table={"columns": ["Participant", "Own mass (kg)", "Mass used in level walking (kg)", "How it was found", "Published per-kg value relative to the own-mass value"], "rows": mrows, "fold": True},
         knock_on=[
-            K("Hip, knee and ankle moments (per kg)", V_WRONG, f"In the {a_conf} shown recordings they are off by the factors above; kept as published.", "In 8 level-walking recordings, moments recomputed in newton-metres match the published per-kg moments times one constant (correlation 1.0); the constant is another participant's mass in 7 of them."),
+            K("Hip, knee and ankle moments (per kg)", V_WRONG, f"In the {a_conf} shown recordings they are off by the factors above; they are to be rescaled to the own mass (decided, not yet run).", "In 8 level-walking recordings, moments recomputed in newton-metres match the published per-kg moments times one constant (correlation 1.0); the constant is another participant's mass in 7 of them."),
             K("Hip, knee and ankle powers (per kg)", V_WRONG, "Power carries the same mass, so it is off by the same factor in the same recordings.", "Published power equals the filtered moment times joint speed (ratio 1.0000, correlation 1.0000 in 12 columns checked by a second person)."),
             K("Joint angles and angle speeds", V_OK, "Mass divides only the moments, so angles do not change with it.", "Moments recomputed without any mass differ from the published ones only by one constant per recording, so the mass enters through that one number."),
             K("Ground forces and pressure point", V_OK, "They are not divided by this mass.", "Body masses from the force plates match the listed masses within 1% in all 12 participants."),
@@ -347,13 +349,13 @@ def build_scope():
 
     cells = cells_from(rec, lambda r: "a" if r["events"] else "n")
     a, n, u = sums(cells)
-    add(key="cop", section="Forces and pressure point", status="open_decide",
-        title="The pressure point is in the foot's own frame, not the ground frame",
+    add(key="cop", section="Forces and pressure point", status="decided",
+        title="The pressure point's origin is the heel bone, not a point 100 mm forward of the ankle centre",
         short=f"{a} of {N} recordings that the converters export",
-        wrong="The converters give the centre of pressure (where the force acts on the foot) in a frame attached to the heel bone, which turns with the foot. LocoHub's data reference defines it in the ground frame. The origin is the heel-bone frame origin, not the ankle as a code comment says.",
+        wrong="The converters give the centre of pressure (where the force acts on the foot) in a frame attached to the heel bone, which turns with the foot. The origin is the heel-bone frame origin, not the ankle as a code comment says. LocoHub's data reference now says the frame turns with the foot and its origin is 100 mm forward of the ankle joint centre along the heel-to-toe direction.",
         how="The calculation was read: the pressure point in the lab is turned into the foot frame using the foot's position and orientation, with no ankle offset.",
-        where="Open, needs a decision. The review proposes labelling these values as foot-frame, with correct origin notes, and changing no values. Which frame LocoHub should publish is a convention choice and has not been made.",
-        example="A foot that rotates during push-off changes the pressure point's forward and sideways values even if the pressure point does not move on the ground.",
+        where="Decided by José on 23 November 2026: the pressure point is given in a frame that turns with the foot, with its origin 100 mm forward of the ankle centre along the foot's heel-to-toe direction. Fix not yet run. Needs: the ankle centre and the foot's orientation. The converters already use the heel bone's position and orientation, and the mass audit located the ankle centre in the heel-bone frame for the recordings it checked. Whether the ankle centre and heel-to-toe direction are available for every recording: not checked.",
+        example="Moving the origin from the heel-bone frame origin to a point 100 mm forward of the ankle centre shifts every forward and up value by a fixed amount in the foot frame. The size of that shift was not measured.",
         figures=[],
         total_line=f"{a} of {N} recordings ({pct(a, N)}) have a pressure point in the foot frame; the other {N - a} are never exported.",
         denominator_text=f"Recordings in the source ({N}). Samples were not counted.",
@@ -361,12 +363,12 @@ def build_scope():
         grid={"cells": cells, "unit": "recordings", "caption": "Recordings whose pressure point would be in the foot's frame."},
         table=participant_table(cells, "recordings"),
         knock_on=[
-            K("Forward, up and sideways pressure point", V_WRONG, "Values are in the foot frame while the reference says ground frame.", "The calculation was read in both converters."),
+            K("Forward, up and sideways pressure point", V_WRONG, "Values use the heel-bone origin, while the reference uses a point 100 mm forward of the ankle centre.", "The calculation was read in both converters."),
             K("Published moments", V_OK, "The authors computed them from the plates and joint centres, not from the converters' pressure point.", "A moment rebuilt from plate force and position in the lab frame matches the published ankle moment (correlation 0.9975 to 0.9998)."),
             K("Ground forces", V_OK, "Forces are separate columns and the frame change does not touch them.", "Converter code read, not run."),
             K("Checks that use how the pressure point moves along the foot", V_NC, "Only run in 3 participants on walking and stairs; stairs gave no answer."),
         ],
-        direction="A frame error in the pressure point affects anything computed from it, such as moments about the ankle or how the pressure point moves along the foot. It does not change the force itself.")
+        direction="An origin error shifts every pressure-point value by a fixed amount in the foot frame, and affects anything computed from it, such as moments about the ankle or how the pressure point moves along the foot. It does not change the force itself.")
 
     # ---------------- C. joint signs and angles ----------------
     cnt = pilot["counts"]
@@ -399,13 +401,13 @@ def build_scope():
     cells = cells_from(rec, lambda r: "a")
     n_arch = sign_ev["publisher_vs_local_segments"]["publisher_archive_entries_examined"]
     assert sign_ev["publisher_vs_local_segments"]["Link_Angle_or_Link_Velocities_members"] == 0
-    add(key="segments", section="Joint signs and angles", status="open_decide",
+    add(key="segments", section="Joint signs and angles", status="decided",
         title="Pelvis, thigh and shank angles are not in the source",
         short=f"All {N} recordings",
         wrong="The publisher gives joint angles (hip, knee, ankle) but no pelvis, thigh or shank angles. The local files that have them were made by our own earlier processing (a fixed turn order with a quarter-turn offset for the pelvis), which is not the publisher's definition.",
         how=f"All {n_arch:,} entries in the publisher's archive were searched and none holds segment angles or segment speeds.",
-        where="Open, needs a decision. These angles are not released as standard columns until someone decides whether to compute them from the body model and checks them. Nothing is invented.",
-        example="Pelvis tilt for AB02's level walking could be computed from the local transform tables, but its sign and zero point have no source to check against.",
+        where="Decided by José on 23 November 2026: compute pelvis, thigh and shank angles as the data reference defines them (thigh and shank from straight down, pelvis from forward horizontal, all measured against gravity). Fix not yet run. Needs: the body segments' orientations. The local transform tables are said to allow pelvis tilt to be computed from them; whether every recording has them: not checked. Nothing is invented.",
+        example="Pelvis tilt for AB02's level walking could be computed from the local transform tables. Its sign and zero are now set by the data reference; no source value exists to check it against.",
         figures=[],
         total_line=f"All {N} recordings (100%) lack publisher segment angles.",
         denominator_text=f"Recordings in the source ({N}). Seven AB02 windows also have oversized transform tables (see the oversized-table card).",
@@ -413,8 +415,8 @@ def build_scope():
         grid={"cells": cells, "unit": "recordings", "caption": "Recordings without publisher pelvis, thigh and shank angles (all of them)."},
         table=participant_table(cells, "recordings"),
         knock_on=[
-            K("Pelvis, thigh and shank angles and speeds", V_LEFT, "Not released; no checked source definition.", "Search of the publisher archive found no segment angle or speed files."),
-            K("Hip, knee and ankle angles", V_OK, "They come straight from the publisher's joint angle files.", "Source file inventory."),
+            K("Pelvis, thigh and shank angles and speeds", V_LEFT, "To be computed per the data reference; not yet run.", "Search of the publisher archive found no segment angle or speed files."),
+            K("Hip, knee and ankle angles", V_NC, "They come straight from the publisher's joint angle files. The reference now defines joint angles as differences of segment angles; whether the publisher's angles equal those differences is not checked."),
             K("Facing direction used to turn forces", V_OK, "It is measured from pelvis markers, not from these angles.", "The sign-detector pilot measured it from markers on the front and back of the pelvis."),
         ],
         direction="Missing segment angles only remove those columns. Joint angles and forces do not depend on them.")
@@ -490,7 +492,7 @@ def build_scope():
         short=f"{totals['phase_dropped']:,} of {total_iv:,} event windows",
         wrong="For each task the phase converter keeps only the leg with more event windows and drops the other leg's. The dropped windows include running and stairs steps and hop contacts.",
         how="The converter code was read and the kept and dropped counts were recomputed from the authors' event files, task by task.",
-        where="Open, fix not yet run. The fix is to export each leg's windows with its own side.",
+        where="Open, fix not yet run. The fix is to export each leg's windows with its own side. Update, 23 November 2026: José decided that LocoHub segments every recording itself and checks against the authors' labelled strides, so event windows are expected to come from our scripts instead; not yet run.",
         example=f"{ex2.replace('_', ' ')}, drawn at random from the tasks that lose windows: {drop_by[ex2]} windows dropped, {kept_by[ex2]} kept.",
         figures=[],
         total_line=f"{totals['phase_dropped']:,} of {total_iv:,} event windows ({pct(totals['phase_dropped'], total_iv)}) never reach the phase export, in {sum(1 for x in drop_by.values() if x)} of 26 tasks, which hold {a} of {N} recordings ({pct(a, N)}). That includes {totals['phase_dropped_cycles']} single-leg gait cycles (running and stairs) and {totals['phase_dropped_hop_contacts']} hop contacts.",
@@ -512,12 +514,12 @@ def build_scope():
     assert a == 90 and sum(1 for r in no_ev if r["files"] == 0) == 85 == totals["recordings_without_parsing_files"]
     ex3 = rng.choice(sorted({r["family"] for r in no_ev}))
     examples["nowindows"] = ex3
-    add(key="nowindows", section="Events and task labels", status="open_decide",
+    add(key="nowindows", section="Events and task labels", status="decided",
         title="90 recordings have no event windows, so neither converter exports them",
         short=f"{a} of {N} recordings",
         wrong=f"The converters make their windows from the authors' event files. {a} recordings have none: 85 have no event file and 5 (AB01 stair descents) have only empty ones. The README says some AB07 treadmill trials were removed because they had no forward-back force.",
         how="The event file names and sizes were matched to every recording, and the counts agree with the full source listing.",
-        where="Open, needs a decision. They could be exported as continuous recordings or left out after a review; neither has been decided.",
+        where="Decided by José on 23 November 2026: LocoHub segments every recording itself, including these 90, with its own segmentation scripts, and checks the result against the authors' labelled strides. Fix not yet run. Needs: our segmentation run on these recordings. Whether it works on all tasks, and how closely it matches the authors' labelled strides: not checked.",
         example=f"One of the affected tasks, drawn at random: {ex3.replace('_', ' ')}.",
         figures=[],
         total_line=f"{a} of {N} recordings ({pct(a, N)}) have no event window and are never exported.",
@@ -543,7 +545,7 @@ def build_scope():
         short=f"{win_t:,} windows made from {total_iv:,} event windows",
         wrong="The time-based converter makes one window per event file, from the earliest start to the latest end of every field in it. Files that hold several conditions (such as sitting and standing, or forward and backward) become one window that includes the time between them. The reference leg is simply the first start.",
         how="The converter code was read, and its window count was compared with the authors' counts.",
-        where="Open, fix not yet run. The fix is one window per source interval, labelled by its field.",
+        where="Open, fix not yet run. The fix is one window per source interval, labelled by its field. Update, 23 November 2026: José decided that LocoHub segments every recording itself and checks against the authors' labelled strides, so event windows are expected to come from our scripts instead; not yet run.",
         example=f"The source holds {total_iv:,} event windows in {nonempty_files} non-empty files; the converter writes {win_t:,} windows.",
         figures=[],
         total_line=f"{win_t:,} windows replace {total_iv:,} event windows; {a} of {N} recordings ({pct(a, N)}) are exported this way.",
@@ -566,7 +568,7 @@ def build_scope():
         short=f"0 known; {u} recordings could be exposed",
         wrong="When an event file lacks left and right fields, the phase converter replaces the source events with its own segmentation using fixed force thresholds (600 and 400 N). Any output made that way is not source-defined.",
         how="The converter code was read, and every sit-to-stand and jump event file was found to have source fields, so the backup should never run.",
-        where="Open, fix not yet run. The fix is to remove the backup so the converter stops instead.",
+        where="Open, fix not yet run. The fix is to remove the backup so the converter stops instead. Update, 23 November 2026: José decided that LocoHub segments every recording itself and checks against the authors' labelled strides, so event windows are expected to come from our scripts instead; not yet run.",
         example="A jump recording whose event file has no left or right field would be cut at a 600 N threshold instead of the authors' pelvis-speed windows.",
         figures=[],
         total_line=f"0 of {N} recordings are known to be affected. {u} recordings in the two tasks that have a backup rule ({pct(u, N)}) could be, and nobody has checked whether it ever ran.",
@@ -591,7 +593,7 @@ def build_scope():
         short=f"{ol_files} of {nonempty_files} event files",
         wrong="On the treadmill the right plate was missing for many trials. Incline files carry left-leg events only, decline files right-leg only, and several walking tasks have one leg only.",
         how="The authors' event files were counted field by field, and the README notes about the missing plate were read.",
-        where="Documented, kept as published. Nothing is invented for the missing leg.",
+        where="Documented, kept as published. Nothing is invented for the missing leg. Update, 23 November 2026: José decided that LocoHub segments every recording itself and checks against the authors' labelled strides, so event windows are expected to come from our scripts instead; not yet run.",
         example=f"Drawn at random from the {len(ol_acts)} tasks with such files: {ex4.replace('_', ' ')}.",
         figures=[],
         total_line=f"{ol_files} of {nonempty_files} non-empty event files ({pct(ol_files, nonempty_files)}) hold events for one leg only, in {len(ol_acts)} tasks. {a} of {N} recordings ({pct(a, N)}) are in those tasks.",

@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-11-02T00:00:00Z",
+  "updated_at_utc": "2026-11-23T00:00:00Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-X01",
@@ -1828,7 +1828,7 @@
         "Create a local review bundle only; no upload or publication without the requested workflow.",
         "The UMich 2021 dataset page is rebuilt from the review bundle in plain words, shows what was fixed (original vs fixed) and what was left out and why, and is rendered at wide and phone width before José is pointed to it."
       ],
-      "next_action": "Bundle verified. Build the UMich 2021 documentation page from phase_preview.json and the original-vs-fixed list (separate step), then mark done.",
+      "next_action": "Bundle verified. Build the UMich 2021 documentation page from phase_preview.json and the original-vs-fixed list (separate step), then mark done. Update 2026-11-23: José decided that every dataset uses the standard's zero (joint angles are differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2). Files made under another zero or origin stay legacy until reconverted; whether UMich 2021 has what is needed (segment angles, ankle centre, foot orientation) is not checked.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/UM21-R01.json",
@@ -1840,8 +1840,8 @@
         "docs/maintainers/handoffs/UM21-R01-verify.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-06T18:49:10+00:00",
-        "summary": "Bundle built locally (documentation page not built; not scientific approval). Full variant 7,545 strides, filtered 7,544; 18 listed exclusions: 15 outside the stride rule (T04-2 = A), 2 AB07/i10 strides with sudden jumps (C03-2 = C), 1 AB08/i0 stride failing a coarse limit (in full, out of filtered). 20 AB07/i10 right-ankle strides re-expressed and re-checked clean; 3,000 samples logged. 15 stable signal columns; held power is present-but-missing with 'held: sign unsettled'; no contralateral columns; foot not released. Peak 279.9 MiB in job.",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Bundle built locally (documentation page not built; not scientific approval). Full variant 7,545 strides, filtered 7,544; 18 listed exclusions: 15 outside the stride rule (T04-2 = A), 2 AB07/i10 strides with sudden jumps (C03-2 = C), 1 AB08/i0 stride failing a coarse limit (in full, out of filtered). 20 AB07/i10 right-ankle strides re-expressed and re-checked clean; 3,000 samples logged. 15 stable signal columns; held power is present-but-missing with 'held: sign unsettled'; no contralateral columns; foot not released. Peak 279.9 MiB in job. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "checks": [
           "Pilot v1 stopped on a boundary-frame rule; fixed; pilot v2 (AB03/i10, AB07/i10) passed, then full v2 passed through the guarded launcher (dry run, one launch, cleanup proven).",
           "tests/test_um21_r01_bundle.py + tests/test_um21_q01_assessment.py: 23 passed (synthetic fixtures plus the committed ledger).",
@@ -1850,7 +1850,8 @@
         "remaining": [
           "Independent verification by a second agent.",
           "Documentation page from the bundle (separate step; needs original-vs-fixed list in the handoff).",
-          "Still unchecked: moments, powers, velocities; ankle offset; per-task ranges (see handoff)."
+          "Still unchecked: moments, powers, velocities; ankle offset; per-task ranges (see handoff).",
+          "Update 2026-11-23: José decided that every dataset uses the standard's zero (joint angles are differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2). Files made under another zero or origin stay legacy until reconverted; whether UMich 2021 has what is needed (segment angles, ankle centre, foot orientation) is not checked."
         ],
         "handoff_file": "docs/maintainers/handoffs/UM21-R01.json",
         "verification": "Independent verifier 2026-11-06: bundle PASS (hashes, receipts, counts, values bit-identical to T04 v2, re-expression, held power, decisions, 23 tests). Documentation page not yet built; task stays in review. Details: docs/maintainers/handoffs/UM21-R01-verify.json"
@@ -2109,7 +2110,7 @@
         "Distinguish missing anatomical projection from verified lab-axis values",
         "Preserve measured lab-axis values separately from unsupported anatomical projections; do not infer direction from waveform shape."
       ],
-      "next_action": "Done. Decisions D-GT21-C01-1 (sideways sign) and D-GT21-C01-2 (pelvis tilt) queued for José.",
+      "next_action": "Done. Decisions D-GT21-C01-1 (sideways sign) and D-GT21-C01-2 (pelvis tilt) queued for José. Update 2026-11-23: the open joint-angle zero is decided (D-REF-1) and the centre-of-pressure origin is decided (D-REF-2); both are for the full rebuild and not yet run.",
       "resource_class": "read_only",
       "evidence_paths": [
         "docs/quality/audits/gt21-force-geometry.json",
@@ -2126,8 +2127,8 @@
         "docs/maintainers/handoffs/GT21-C01-verify.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T23:53:00Z",
-        "summary": "Second revision after verifier return. Force and COP conventions and the sheet fixes stand as previously verified. Pelvis remedy re-tested at the stride level in every sampled mode (right-stride means, 120-600 samples, each stride centred). The source pelvis angles are Z-X-Y rotations (markers reproduce rotation within 0.5-1.3 deg RMS and tilt/list within 0.9-2.7 deg). The adapter's pelvis_sagittal = pelvis_tilt is wrong. No source-derived forward tilt validates at the stride level on treadmill. The heading-removed source tilt equals -pelvis_list there (sample r 0.989, 0.991), and its stride-mean r with marker tilt is 0.07 and -0.25. Overground it is partial: stride-mean r is levelground 0.46/0.38, ramp 0.57/0.30 and stair 0.79/0.81, from 8-13 mixed strides and amplitudes of 2-5 deg. The earlier sample-level r (0.54-0.97) is withdrawn as support for a remedy. Pelvis and the inherited thigh/shank/foot/trunk sagittal angles stay source-only/unresolved. D-GT21-C01-2 is revised accordingly. The treadmill panel is now in the figure.",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Second revision after verifier return. Force and COP conventions and the sheet fixes stand as previously verified. Pelvis remedy re-tested at the stride level in every sampled mode (right-stride means, 120-600 samples, each stride centred). The source pelvis angles are Z-X-Y rotations (markers reproduce rotation within 0.5-1.3 deg RMS and tilt/list within 0.9-2.7 deg). The adapter's pelvis_sagittal = pelvis_tilt is wrong. No source-derived forward tilt validates at the stride level on treadmill. The heading-removed source tilt equals -pelvis_list there (sample r 0.989, 0.991), and its stride-mean r with marker tilt is 0.07 and -0.25. Overground it is partial: stride-mean r is levelground 0.46/0.38, ramp 0.57/0.30 and stair 0.79/0.81, from 8-13 mixed strides and amplitudes of 2-5 deg. The earlier sample-level r (0.54-0.97) is withdrawn as support for a remedy. Pelvis and the inherited thigh/shank/foot/trunk sagittal angles stay source-only/unresolved. D-GT21-C01-2 is revised accordingly. The treadmill panel is now in the figure. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "checks": [
           "Publisher scripts re-read. Citations corrected: C3DtoMOT 74, 83-85 and createExternalLoads 91-96. Added C3DtoMOT 24, 44-45, 58-78 and 98: only the local Fz/Mx/My used for COP are filtered (default 15 Hz, filtfilt). Local COP is set to the plate origin when local Fz > -10 N. The exported F and M are unfiltered btk global wrenches. The adapter's 0.2 BW mask removes those COP samples.",
           "Pelvis composition test on all 8 sampled recordings (2 per mode). Marker frame: x = mean ASIS - mean PSIS, z = R - L ASIS orthogonalized. One constant Procrustes offset was fitted against Rz(tilt) Rx(list) Ry(rotation) from source IK, then decomposed in the same order. Wrapped, median-centred RMS: rotation 0.47-1.33 deg, tilt 0.9-2.7 deg, list 0.85-1.67 deg. Without the offset, tilt and list disagreed on overground recordings (list RMS 14-17 deg), because the marker-to-model offset projects with a heading-dependent sign. A 3-parameter constant fit cannot create time-varying agreement or choose a sign.",
@@ -2162,7 +2163,8 @@
           "Sample covers 8 recordings from 7 participants; AB17 not examined.",
           "Before José sees the decisions, sync backlog.json from the author handoff. D-GT21-C01-1 must be re-lettered (C = lab axis, recommended C) and D-GT21-C01-2 replaced with the pelvis question. The current backlog lettering is the opposite of the sheet's for D-GT21-C01-1. Run build_backlog_page.py --check afterwards.",
           "Minor: the handoff's third check still describes the superseded fig3 ('seeded random 6 s window, AB14 levelground'). Remove it when syncing.",
-          "Open, as the author recorded: the treadmill marker/IK pelvis disagreement (needs a guarded native residual check), joint-angle zero (queued decision), plate moment reference, Combined plate, ankle-marker COP origin offset, SubjectInfo.Weight unit, and AB17 not examined."
+          "Open, as the author recorded: the treadmill marker/IK pelvis disagreement (needs a guarded native residual check), joint-angle zero (queued decision), plate moment reference, Combined plate, ankle-marker COP origin offset, SubjectInfo.Weight unit, and AB17 not examined.",
+          "Update 2026-11-23: the open joint-angle zero is decided (D-REF-1) and the centre-of-pressure origin is decided (D-REF-2); both are for the full rebuild and not yet run."
         ],
         "changed_files": [
           "contributor_tools/review_gt21_c01_conventions.py",
@@ -2329,7 +2331,7 @@
         "Hash-bind per-record source, loaded helpers and audits; independent pair, joint, timing and force/COP readback covers final outputs.",
         "For gt21 local 16-participant scope, issue a scope-specific handoff for profile/limitations review and later release reconciliation. Do not treat source preservation, completed jobs or another dataset approval as satisfying these gates."
       ],
-      "next_action": "Prepare a fresh full-scope plan only after all four mode pilots and complete source ledgers pass review.",
+      "next_action": "Prepare a fresh full-scope plan only after all four mode pilots and complete source ledgers pass review. Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked.",
       "resource_class": "native",
       "evidence_paths": [
         "converted_datasets/reconversion_v2/gt21_memory_wait_20261021/status.json",
@@ -2337,13 +2339,14 @@
         "converted_datasets/reconversion_v2/gt21_events_serial_queue_20261021/plan.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
-        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "checks": [
           "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
         ],
         "remaining": [
-          "Prepare a fresh full-scope plan only after all four mode pilots and complete source ledgers pass review."
+          "Prepare a fresh full-scope plan only after all four mode pilots and complete source ledgers pass review.",
+          "Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked."
         ]
       },
       "legacy_ids": [
@@ -2562,7 +2565,7 @@
         "Force, COP and joint conventions traced to original models or source documentation",
         "Independent verification plan includes contact missingness and non-gait activities"
       ],
-      "next_action": "Done. Events per activity and frames consolidated; converter findings F1-F6 for GT23-F01; probes P1-P3 written, not run. D-GT23-C01-1 open.",
+      "next_action": "Done. Events per activity and frames consolidated; converter findings F1-F6 for GT23-F01; probes P1-P3 written, not run. D-GT23-C01-1 open. D-GT23-C01-2 answered 2026-11-23 (LocoHub segments every GT23 recording).",
       "resource_class": "read_only",
       "evidence_paths": [
         "docs/quality/audits/gt23-c01-events-and-frames.json",
@@ -2618,7 +2621,7 @@
         "Do not expand before actual source/model pilots and bounded oversized-file admission are reviewed.",
         "For gt23, issue a scope-specific handoff for profile/limitations review and later release reconciliation. Do not treat source preservation, completed jobs or another dataset approval as satisfying these gates."
       ],
-      "next_action": "Reconcile stopped AB01/AB03 receipts, validate one successor pilot, then prepare full scope with independent raw-source readback.",
+      "next_action": "Reconcile stopped AB01/AB03 receipts, validate one successor pilot, then prepare full scope with independent raw-source readback. Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/gt23-full-source-scope.json",
@@ -2626,13 +2629,14 @@
         "contributor_tools/audit_gt23_raw_kinematics.py"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:19:59.357565+00:00",
-        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "checks": [
           "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
         ],
         "remaining": [
-          "Reconcile stopped AB01/AB03 receipts, validate one successor pilot, then prepare full scope with independent raw-source readback."
+          "Reconcile stopped AB01/AB03 receipts, validate one successor pilot, then prepare full scope with independent raw-source readback.",
+          "Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked."
         ]
       },
       "legacy_ids": [
@@ -2817,7 +2821,7 @@
         "Unresolved units/frames are explicit and cannot be converted into passing canonical assessments.",
         "For gt24 mapped scope, issue a scope-specific handoff for profile/limitations review and later release reconciliation. Do not treat source preservation, completed jobs or another dataset approval as satisfying these gates."
       ],
-      "next_action": "Prepare the full coordinator only after actual pilot receipts; run per-record bounded production and independent audits.",
+      "next_action": "Prepare the full coordinator only after actual pilot receipts; run per-record bounded production and independent audits. Update 2026-11-23: José decided that every dataset uses the standard's zero (joint angles are differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2). Files made under another zero or origin stay legacy until reconverted; whether GT24 has what is needed (segment angles, ankle centre, foot orientation) is not checked.",
       "resource_class": "numerical",
       "evidence_paths": [
         "contributor_tools/run_gt24_full_reconstruction.py",
@@ -2826,14 +2830,15 @@
         "converted_datasets/reconversion_v2/gt24_torque_serial_queue_20261021/plan.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-02T00:20:00Z",
-        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval.",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Metadata-only backlog review. Existing plans and historical receipts are evidence to revalidate, not running jobs or scientific approval. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "checks": [
           "Read original task scope and acceptance; no scientific arrays loaded or jobs started."
         ],
         "remaining": [
           "Verifier GT24-C01 round 6 binding rule: take each trial's normalizing mass only from its own README row or its own folder Statics model, with the collection identity from the source archive, never the nearest README mass (other folders' masses fall inside the 0.05 % match tolerance for BT02, BT09, BT15, BT21, BT01 and BT22). Per-trial divisors come from the GT24-C01 E1 census. Resolve the BT18/BT24 README-vs-folder swap before body-mass option C of D-GT24-C01-1 can apply.",
-          "Prepare the full coordinator only after actual pilot receipts; run per-record bounded production and independent audits."
+          "Prepare the full coordinator only after actual pilot receipts; run per-record bounded production and independent audits.",
+          "Update 2026-11-23: José decided that every dataset uses the standard's zero (joint angles are differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2). Files made under another zero or origin stay legacy until reconverted; whether GT24 has what is needed (segment angles, ankle centre, foot orientation) is not checked."
         ]
       },
       "legacy_ids": [
@@ -4414,20 +4419,21 @@
         "Any phase or time profile states population, protocol, task, units and observation-type applicability and its evidence; no universal pass-rate threshold or range tuning to achieve a desired result.",
         "Record source measurement/model limitations separately from conversion fidelity. Unsupported anatomy or events remain unresolved; source preservation does not approve them."
       ],
-      "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision.",
+      "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision. Update 2026-11-23: José decided that every dataset uses the standard's zero (joint angles are differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2). Files made under another zero or origin stay legacy until reconverted; whether UMich 2021 has what is needed (segment angles, ankle centre, foot orientation) is not checked.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:23:49+00:00",
-        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task.",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "changed_files": [],
         "checks": [
           "Reviewed the retained project scope and declared dependencies only."
         ],
         "remaining": [
-          "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision."
+          "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision.",
+          "Update 2026-11-23: José decided that every dataset uses the standard's zero (joint angles are differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2). Files made under another zero or origin stay legacy until reconverted; whether UMich 2021 has what is needed (segment angles, ankle centre, foot orientation) is not checked."
         ]
       },
       "blocked_reason": "Required evidence is unfinished: UM21-T03, UM21-C02, UM21-S01, UM21-W01, UM21-B01, UM21-X02, CORE-01. Recheck the actual artifacts and resource conditions before execution; a task plan does not satisfy these prerequisites.",
@@ -4466,20 +4472,21 @@
         "The catalog, download variant and preview refer to this exact reviewed artifact or remain explicitly legacy/unreviewed.",
         "Record any release limitation and remaining source gaps. Publishing or uploading follows the user-requested destination/workflow and is separate from this local review."
       ],
-      "next_action": "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope.",
+      "next_action": "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope. Update 2026-11-23: José decided that every dataset uses the standard's zero (joint angles are differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2). Files made under another zero or origin stay legacy until reconverted; whether UMich 2021 has what is needed (segment angles, ankle centre, foot orientation) is not checked.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:23:49+00:00",
-        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task.",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "changed_files": [],
         "checks": [
           "Reviewed the retained project scope and declared dependencies only."
         ],
         "remaining": [
-          "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope."
+          "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope.",
+          "Update 2026-11-23: José decided that every dataset uses the standard's zero (joint angles are differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2). Files made under another zero or origin stay legacy until reconverted; whether UMich 2021 has what is needed (segment angles, ankle centre, foot orientation) is not checked."
         ]
       },
       "blocked_reason": "Required evidence is unfinished: UM21-Q02, CORE-02. Recheck the actual artifacts and resource conditions before execution; a task plan does not satisfy these prerequisites.",
@@ -4516,20 +4523,21 @@
         "Any phase or time profile states population, protocol, task, units and observation-type applicability and its evidence; no universal pass-rate threshold or range tuning to achieve a desired result.",
         "Record source measurement/model limitations separately from conversion fidelity. Unsupported anatomy or events remain unresolved; source preservation does not approve them."
       ],
-      "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision.",
+      "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision. Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:23:49+00:00",
-        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task.",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "changed_files": [],
         "checks": [
           "Reviewed the retained project scope and declared dependencies only."
         ],
         "remaining": [
-          "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision."
+          "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision.",
+          "Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked."
         ]
       },
       "blocked_reason": "Required evidence is unfinished: GT21-F02, CORE-01. Recheck the actual artifacts and resource conditions before execution; a task plan does not satisfy these prerequisites.",
@@ -4568,20 +4576,21 @@
         "The catalog, download variant and preview refer to this exact reviewed artifact or remain explicitly legacy/unreviewed.",
         "Record any release limitation and remaining source gaps. Publishing or uploading follows the user-requested destination/workflow and is separate from this local review."
       ],
-      "next_action": "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope.",
+      "next_action": "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope. Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:23:49+00:00",
-        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task.",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "changed_files": [],
         "checks": [
           "Reviewed the retained project scope and declared dependencies only."
         ],
         "remaining": [
-          "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope."
+          "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope.",
+          "Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked."
         ]
       },
       "blocked_reason": "Required evidence is unfinished: GT21-Q01, CORE-02. Recheck the actual artifacts and resource conditions before execution; a task plan does not satisfy these prerequisites.",
@@ -4618,20 +4627,21 @@
         "Any phase or time profile states population, protocol, task, units and observation-type applicability and its evidence; no universal pass-rate threshold or range tuning to achieve a desired result.",
         "Record source measurement/model limitations separately from conversion fidelity. Unsupported anatomy or events remain unresolved; source preservation does not approve them."
       ],
-      "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision.",
+      "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision. Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:23:49+00:00",
-        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task.",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "changed_files": [],
         "checks": [
           "Reviewed the retained project scope and declared dependencies only."
         ],
         "remaining": [
-          "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision."
+          "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision.",
+          "Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked."
         ]
       },
       "blocked_reason": "Required evidence is unfinished: GT23-F01, CORE-01. Recheck the actual artifacts and resource conditions before execution; a task plan does not satisfy these prerequisites.",
@@ -4670,20 +4680,21 @@
         "The catalog, download variant and preview refer to this exact reviewed artifact or remain explicitly legacy/unreviewed.",
         "Record any release limitation and remaining source gaps. Publishing or uploading follows the user-requested destination/workflow and is separate from this local review."
       ],
-      "next_action": "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope.",
+      "next_action": "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope. Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:23:49+00:00",
-        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task.",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "changed_files": [],
         "checks": [
           "Reviewed the retained project scope and declared dependencies only."
         ],
         "remaining": [
-          "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope."
+          "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope.",
+          "Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked."
         ]
       },
       "blocked_reason": "Required evidence is unfinished: GT23-Q01, CORE-02. Recheck the actual artifacts and resource conditions before execution; a task plan does not satisfy these prerequisites.",
@@ -4721,20 +4732,21 @@
         "Any phase or time profile states population, protocol, task, units and observation-type applicability and its evidence; no universal pass-rate threshold or range tuning to achieve a desired result.",
         "Record source measurement/model limitations separately from conversion fidelity. Unsupported anatomy or events remain unresolved; source preservation does not approve them."
       ],
-      "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision.",
+      "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision. Update 2026-11-23: José decided that every dataset uses the standard's zero (joint angles are differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2). Files made under another zero or origin stay legacy until reconverted; whether GT24 has what is needed (segment angles, ankle centre, foot orientation) is not checked.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:23:49+00:00",
-        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task.",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "changed_files": [],
         "checks": [
           "Reviewed the retained project scope and declared dependencies only."
         ],
         "remaining": [
-          "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision."
+          "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision.",
+          "Update 2026-11-23: José decided that every dataset uses the standard's zero (joint angles are differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2). Files made under another zero or origin stay legacy until reconverted; whether GT24 has what is needed (segment angles, ankle centre, foot orientation) is not checked."
         ]
       },
       "blocked_reason": "Required evidence is unfinished: GT24-F01, GT24-S01, CORE-01. Recheck the actual artifacts and resource conditions before execution; a task plan does not satisfy these prerequisites.",
@@ -4773,20 +4785,21 @@
         "The catalog, download variant and preview refer to this exact reviewed artifact or remain explicitly legacy/unreviewed.",
         "Record any release limitation and remaining source gaps. Publishing or uploading follows the user-requested destination/workflow and is separate from this local review."
       ],
-      "next_action": "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope.",
+      "next_action": "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope. Update 2026-11-23: José decided that every dataset uses the standard's zero (joint angles are differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2). Files made under another zero or origin stay legacy until reconverted; whether GT24 has what is needed (segment angles, ankle centre, foot orientation) is not checked.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-27T20:23:49+00:00",
-        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task.",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "changed_files": [],
         "checks": [
           "Reviewed the retained project scope and declared dependencies only."
         ],
         "remaining": [
-          "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope."
+          "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope.",
+          "Update 2026-11-23: José decided that every dataset uses the standard's zero (joint angles are differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2). Files made under another zero or origin stay legacy until reconverted; whether GT24 has what is needed (segment angles, ankle centre, foot orientation) is not checked."
         ]
       },
       "blocked_reason": "Required evidence is unfinished: GT24-Q01, CORE-02. Recheck the actual artifacts and resource conditions before execution; a task plan does not satisfy these prerequisites.",
@@ -6081,15 +6094,15 @@
         "No range tuned to change pass rates",
         "Legacy files checked against old ranges remain labeled legacy"
       ],
-      "next_action": "Done. Run pelvis band mirrored in the two active profiles only; docs snapshots kept as legacy records. Later: rebuild the run band from rule-B data with a stated zero.",
+      "next_action": "Done. Run pelvis band mirrored in the two active profiles only; docs snapshots kept as legacy records. Later: rebuild the run band from rule-B data with a stated zero. Update 2026-11-23: the run pelvis band's 'stated zero' is now the standard's zero (forward horizontal, D-REF-1); rebuilding the band is still later work.",
       "resource_class": "fixture",
       "evidence_paths": [
         "docs/maintainers/handoffs/CORE-07.json",
         "docs/maintainers/handoffs/CORE-07-verify.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-31T07:03:58Z",
-        "summary": "Classified every feature in contributor_tools/validation_ranges (7 files) from range values in context; the verifier agreed with every classification. Joints, joint moments, joint velocities, thigh/shank/foot segment angles and velocities, vertical and fore-aft GRF, and fore-aft CoP agree with rule B. Frontal/transverse features and sideways GRF/CoP are outside rule B. pelvis_sagittal_angle_rad: the sit-to-stand and stand-to-sit entries already read as rule B (the pelvis tips forward mid-transfer and the centre goes negative), and the transition entries are near-symmetric magnitude checks; both are unchanged. The run entries (phases 0, 25, 50, 75) were a constant band [-0.05, +0.63..0.68] centred near +0.3 rad, which is anterior-positive under every documented zero; running tilts the pelvis forward, which is negative under rule B. These 4 entries were mirrored exactly (negated, min and max swapped, digit text preserved) in the two active profiles, default_ranges.yaml and gtech_2024_ranges.yaml. Each changed file gained a top-level sign_rule_conversions provenance note (date, CORE-07, rule B / D-UM21-C03-1, reason, and that the band's zero is undocumented). No other byte changed. The docs/datasets/*_validation_ranges.yaml snapshots are records of legacy validation runs under the old pelvis sign. They are left unchanged on purpose and are byte-identical to 569ee8f. Per the verifier, the walking and stair pelvis entries in the 11 snapshots from 2025-11-25 consistently read anterior-positive, so each snapshot is an internally consistent old-convention record.",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Classified every feature in contributor_tools/validation_ranges (7 files) from range values in context; the verifier agreed with every classification. Joints, joint moments, joint velocities, thigh/shank/foot segment angles and velocities, vertical and fore-aft GRF, and fore-aft CoP agree with rule B. Frontal/transverse features and sideways GRF/CoP are outside rule B. pelvis_sagittal_angle_rad: the sit-to-stand and stand-to-sit entries already read as rule B (the pelvis tips forward mid-transfer and the centre goes negative), and the transition entries are near-symmetric magnitude checks; both are unchanged. The run entries (phases 0, 25, 50, 75) were a constant band [-0.05, +0.63..0.68] centred near +0.3 rad, which is anterior-positive under every documented zero; running tilts the pelvis forward, which is negative under rule B. These 4 entries were mirrored exactly (negated, min and max swapped, digit text preserved) in the two active profiles, default_ranges.yaml and gtech_2024_ranges.yaml. Each changed file gained a top-level sign_rule_conversions provenance note (date, CORE-07, rule B / D-UM21-C03-1, reason, and that the band's zero is undocumented). No other byte changed. The docs/datasets/*_validation_ranges.yaml snapshots are records of legacy validation runs under the old pelvis sign. They are left unchanged on purpose and are byte-identical to 569ee8f. Per the verifier, the walking and stair pelvis entries in the 11 snapshots from 2025-11-25 consistently read anterior-positive, so each snapshot is an internally consistent old-convention record. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "checks": [
           "{\"command\": \"OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_validation_ranges_rule_b.py\", \"result\": \"94 passed.\", \"coverage\": \"Each of the 20 snapshots is byte-identical to 569ee8f, compared as raw bytes from git show. In the 5 tracked range files, parsed values equal the baseline except MIRRORED, which is exactly the 4 run pelvis entries in default and gtech_2024 only and equal -old with bounds swapped. Task and top-level keys are unchanged; only the two active profiles carry the provenance note, and its content is checked. Textually, only the 8 pelvis min/max lines differ once the note is removed. The run band centres below -0.17 rad. A missing baseline commit fails. Also covered: loader, 8 sign signatures, mirror helper.\"}",
           "{\"command\": \"OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q -p no:cacheprovider tests/test_validation_ranges_rule_b_verify.py\", \"result\": \"26 passed (file not edited by the worker; the verifier has updated its run-band test since round 2).\"}",
@@ -6099,7 +6112,8 @@
           "Independent verifier: done, no residuals."
         ],
         "remaining": [
-          "None blocking."
+          "None blocking.",
+          "Update 2026-11-23: the run pelvis band's 'stated zero' is now the standard's zero (forward horizontal, D-REF-1); rebuilding the band is still later work."
         ],
         "changed_files": [
           "contributor_tools/validation_ranges/default_ranges.yaml",
@@ -6475,7 +6489,7 @@
         "Every applied sign logged and reversible",
         "Pilot of the bound build passes before full runs"
       ],
-      "next_action": "Design accepted (verifier round 4). Next: per-dataset bound-build pilots CORE-11-P-<DS> through the guarded launcher; their records and receipts must be committed, so this waits on a commit. AB04/i0 pelvis, thigh, shank, foot held until D-UM21-P01-1.",
+      "next_action": "Design accepted (verifier round 4). Next: per-dataset bound-build pilots CORE-11-P-<DS> through the guarded launcher; their records and receipts must be committed, so this waits on a commit. AB04/i0 pelvis, thigh, shank, foot held until D-UM21-P01-1. Update 2026-11-23: bound-build pilots must apply the decided zero (joint angles = differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2); GT23 also needs LocoHub segmentation (D-GT23-C01-2).",
       "resource_class": "fixture",
       "evidence_paths": [
         "docs/maintainers/handoffs/CORE-11.json",
@@ -6483,14 +6497,15 @@
         "docs/maintainers/sign-offset-detector-design.md"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-10-31T12:45:21Z",
-        "summary": "Converter hook with bound build, independent two-family guard, audited-sign table (linked by explicit backlog citations), per-recording exceptions, exact undo and a committed-receipt pilot gate. Publication rule applies José's standing preference (UM21-C01).",
+        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
+        "summary": "Converter hook with bound build, independent two-family guard, audited-sign table (linked by explicit backlog citations), per-recording exceptions, exact undo and a committed-receipt pilot gate. Publication rule applies José's standing preference (UM21-C01). Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
         "checks": [
           "Independent verifier rounds 1-3 back_to_worker (forgeable gate, masked arrays, family table, loose linking); round 4 design_phase_accepted. 351 tests pass. GT21 effect: 182 of 343 non-applied channels publish with the audited sign; 161 powers held."
         ],
         "remaining": [
           "Per-dataset pilots CORE-11-P-UM21/GT23/GT24/GT21",
-          "Release builder should verify sign-application log hashes"
+          "Release builder should verify sign-application log hashes",
+          "Update 2026-11-23: bound-build pilots must apply the decided zero (joint angles = differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2); GT23 also needs LocoHub segmentation (D-GT23-C01-2)."
         ]
       }
     },
@@ -6816,7 +6831,7 @@
         "Does not claim lower error where the estimator is unvalidated (e.g., non-gait tasks) without evidence",
         "Independent verification"
       ],
-      "next_action": "Done. Rescaled error is lower with confidence for 52 of 488 trials, not for everything. D-GT23-C05-1 open.",
+      "next_action": "Done. Rescaled error is lower with confidence for 52 of 488 trials, not for everything. D-GT23-C05-1 answered (no rescaling), superseded 2026-11-23 by D-GT23-C05-2 (fix the 52); D-GT23-C05-3 open (all 52 or only the 7 exact).",
       "resource_class": "read_only",
       "evidence_paths": [
         "docs/quality/audits/gt23-c05-rescale-error.json",
@@ -7754,7 +7769,8 @@
       "status": "answered",
       "answer": "other",
       "answered_at_utc": "2026-11-02T17:00:00Z",
-      "answer_text": "No rescaling: release every GT23 trial's moments and powers exactly as published (original weight), with the divisor mismatch documented"
+      "answer_text": "No rescaling: release every GT23 trial's moments and powers exactly as published (original weight), with the divisor mismatch documented",
+      "answer_note": "Superseded 2026-11-23 by D-GT23-C05-2 (fix the 52)."
     },
     {
       "id": "D-GT24-C01-1",
@@ -7938,6 +7954,147 @@
       "status": "answered",
       "answer": "B",
       "answered_at_utc": "2026-11-03T12:00:00Z"
+    },
+    {
+      "id": "D-GT23-C05-2",
+      "task_id": "GT23-C05",
+      "question": "Should GT23 moments and powers be rescaled to each person's own mass in the recordings where the mass the authors used is known to be another person's? This replaces the earlier answer of no rescaling.",
+      "options": [
+        {
+          "key": "A",
+          "label": "Rescale the recordings shown to carry another mass; keep the rest as published with a note",
+          "consequence": "In those 52 recordings, moments and powers are multiplied by (mass used ÷ own mass). The other 436 keep the published values with a note. Reversible by reconverting."
+        },
+        {
+          "key": "B",
+          "label": "Keep every recording as published (the earlier answer)",
+          "consequence": "No value changes and the mismatch is only documented, so the error stays in the 52 recordings. Reversible."
+        }
+      ],
+      "options_order": "By recordings rescaled: 52, 0.",
+      "cost_of_waiting": "GT23 moments and powers stay as published; nothing is rescaled.",
+      "recommended": "A",
+      "confidence": "medium",
+      "why": "Rescaling lowers the error in every plausible case for these 52 recordings only; for the others the mass used cannot be told apart from the own mass or from another recorded mass.",
+      "check": "GT23 problems page, mass card: 52 of 488 recordings are shown to carry another mass.",
+      "status": "answered",
+      "answer": "other",
+      "answered_at_utc": "2026-11-23T00:00:00Z",
+      "answer_text": "fix the 52",
+      "answer_note": "José 2026-11-23: rescale by (mass used ÷ own mass) where the mass used is known exactly to be another participant's; recordings where it cannot be told stay as published, with a note. Supersedes D-GT23-C05-1. The audit's 52 are the 'error lower in every plausible case' class: 7 have the mass used worked out exactly and 45 have it estimated from force plates; D-GT23-C05-3 asks which of them to rescale.",
+      "decide_before_recommendation": false
+    },
+    {
+      "id": "D-GT23-C05-3",
+      "task_id": "GT23-C05",
+      "question": "José said to fix the 52. Of those 52 recordings, only 7 have the mass the authors used worked out exactly; for the other 45 it was estimated from force plates and matched to the nearest recorded mass. Should all 52 be rescaled, or only the 7?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Rescale only the 7 with the mass used known exactly",
+          "consequence": "45 recordings stay as published with a note. No estimated mass enters the data. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Rescale all 52",
+          "consequence": "The 45 estimated recordings are rescaled by a nearest-recorded-mass match; earlier audit: remaining error at most 11% (median 4%) if the mass used is a recorded one. Reversible."
+        }
+      ],
+      "options_order": "By recordings rescaled: 7, 52.",
+      "cost_of_waiting": "Nothing is rescaled until answered; moments and powers stay as published. The conversion run for this fix waits.",
+      "recommended": "B",
+      "confidence": "medium",
+      "why": "His words were 'fix the 52', and the 52 are the recordings where rescaling lowers the error in every plausible case; but his stated rule was 'known exactly', which fits only 7.",
+      "check": "GT23 problems page, mass card table: each participant's mass is marked 'worked out exactly' or 'estimated from force plates'.",
+      "status": "open",
+      "decide_before_recommendation": false
+    },
+    {
+      "id": "D-GT23-C01-2",
+      "task_id": "GT23-C01",
+      "question": "Should GT23 strides come from the authors' event windows, or from LocoHub's own segmentation scripts?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Authors' event windows only",
+          "consequence": "The 90 recordings without event windows are not exported as strides; known converter faults still need fixing. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Our own segmentation for every recording, checked against the authors' labelled strides",
+          "consequence": "All 488 recordings, including the 90 without windows, get strides from our scripts; agreement with the authors' strides is reported. Needs a run on GT23 recordings. Reversible."
+        }
+      ],
+      "options_order": "By recordings segmented by LocoHub: 0, 488.",
+      "cost_of_waiting": "GT23 strides are not exported; continuous recordings are unaffected.",
+      "recommended": "B",
+      "confidence": "medium",
+      "why": "One method for every recording, including the 90 that have no windows, with the authors' labelled strides kept as the check.",
+      "check": "GT23 problems page, 'no event windows' card: 90 of 488 recordings have none.",
+      "status": "answered",
+      "answer": "other",
+      "answered_at_utc": "2026-11-23T00:00:00Z",
+      "answer_text": "We can totally segment ourselves. Instead of using their segmentation, use our segmentation scripts and validate against their labeled strides.",
+      "answer_note": "José 2026-11-23: applies to all GT23 recordings, including the 90 without event windows. Pelvis, thigh and shank angles are also to be computed for GT23; the standard already defines them (no separate decision).",
+      "decide_before_recommendation": false
+    },
+    {
+      "id": "D-REF-1",
+      "task_id": "CORE-07",
+      "question": "What defines the zero of joint angles in every dataset?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Each dataset keeps its own zero, stated in its notes",
+          "consequence": "No recomputation, but joint angles from different datasets differ by constant offsets. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Joint angles are differences of segment angles, and segment angles are measured against gravity",
+          "consequence": "Joint angles are recomputed in every dataset from its segment angles; earlier files stay legacy until reconverted; needs segment angles for every dataset. Reversible."
+        }
+      ],
+      "options_order": "By datasets recomputed: 0, all.",
+      "cost_of_waiting": "Joint-angle zero stays dataset-specific and ranges cannot be shared across datasets.",
+      "recommended": "B",
+      "confidence": "high",
+      "why": "One rule for every dataset: defining the segment angles also defines the joint angles, so there is no separate joint zero to document.",
+      "check": "Data reference, sign rule section: zero references line, dated 23 November 2026.",
+      "status": "answered",
+      "answer": "other",
+      "answered_at_utc": "2026-11-23T00:00:00Z",
+      "answer_text": "joint angles are differences of link angles. Defining link angles therefore defines joint angles.",
+      "answer_note": "José 2026-11-23: applies to all datasets. Hip = thigh − pelvis, knee = thigh − shank, ankle = foot − shank; recorded in the data reference.",
+      "decide_before_recommendation": false
+    },
+    {
+      "id": "D-REF-2",
+      "task_id": "CORE-07",
+      "question": "Where is the centre-of-pressure origin, in every dataset?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Each dataset keeps its own origin, stated in its notes",
+          "consequence": "No recomputation, but centre-of-pressure values from different datasets are not comparable. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "A frame that moves with the foot, origin 100 mm forward of the ankle centre along the foot",
+          "consequence": "Centre of pressure is recomputed in every dataset from the ankle centre and foot orientation; a dataset without them cannot publish it (never invented); earlier files stay legacy until reconverted. Reversible."
+        }
+      ],
+      "options_order": "By datasets recomputed: 0, all.",
+      "cost_of_waiting": "Centre-of-pressure origins stay dataset-specific.",
+      "recommended": "B",
+      "confidence": "high",
+      "why": "The origin turns with the foot, so values are comparable across datasets and across foot rotation.",
+      "check": "Data reference, centre-of-pressure row of the signal table.",
+      "status": "answered",
+      "answer": "other",
+      "answered_at_utc": "2026-11-23T00:00:00Z",
+      "answer_text": "The origin should rotate with the foot. Ie it should be 100mm from the ankle center pointing forward in the ankle-foot frame.",
+      "answer_note": "José 2026-11-23: applies to all datasets. Recorded in the data reference.",
+      "decide_before_recommendation": false
     }
   ]
 }

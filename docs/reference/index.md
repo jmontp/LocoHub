@@ -87,11 +87,12 @@ LocoHub uses one sign rule for every dataset. This section is the authoritative 
 - **Moments** are internal (net muscle and tissue) moments acting on the distal segment, as produced by inverse dynamics, and are positive in their named direction: hip flexor, knee flexor, ankle dorsiflexor (ankle plantarflexor negative). An external moment is the negative of the internal moment.
 - **Power** is moment × joint angular velocity, both in this convention. Generation is positive; absorption is negative.
 - **Sideways force and centre of pressure** are positive outward for each leg: toward +z for the right leg and toward −z for the left leg (mirrored), matching the name `lateral`.
+- **Zero references (23 November 2026).** Joint angles are differences of segment angles: hip = thigh − pelvis, knee = thigh − shank, ankle = foot − shank. Segment angles are measured against gravity: thigh and shank from straight down, foot (heel to toe) and pelvis (PSIS to ASIS) from forward horizontal. Defining the segment angles therefore defines the joint angles; there is no separate joint zero such as a static pose or a model's neutral position.
+- **Centre of pressure frame (23 November 2026).** The centre of pressure is expressed in a frame that moves with the foot: its origin is 100 mm forward of the ankle joint centre along the foot's heel-to-toe direction, forward is along the foot, up is perpendicular to it, and sideways is outward from that leg. Ground reaction force stays in the ground frame above.
 
 **LocoHub definitions.** These follow from the decided rule and existing usage; they are not separate decisions.
 
-- **Composition.** Segment and joint angles are related by thigh = pelvis + hip, shank = thigh − knee, foot = shank + ankle. These hold as equalities only up to each dataset's constant zero offsets.
-- **Zero references.** LocoHub measures thigh and shank from straight down, the foot (heel to toe) and pelvis (PSIS to ASIS) from forward horizontal. The trunk zero is not yet defined. Each dataset's notes state the zero its files actually use, for example subtraction of a static pose.
+- **Composition.** Segment and joint angles are related by thigh = pelvis + hip, shank = thigh − knee, foot = shank + ankle. Under the decided zero references these hold exactly. Files converted before 23 November 2026 may use another zero (for example subtraction of a static pose); each dataset's notes say so until it is reconverted. The trunk zero is not yet defined.
 - **Ground reaction force** is the force applied by the ground to the person.
 
 !!! warning "Pelvis anterior tilt is negative; knee flexion is positive"
@@ -101,11 +102,11 @@ LocoHub uses one sign rule for every dataset. This section is the authoritative 
 
 | Signal family | Columns | Positive direction | Physical definition | gait2392 equivalent |
 |---|---|---|---|---|
-| Pelvis tilt | `pelvis_sagittal_angle_rad` | Posterior tilt; **anterior tilt negative** | Angle of the PSIS-to-ASIS line; increases when the front of the pelvis rises. LocoHub zero: forward horizontal; dataset notes state the actual zero | `pelvis_tilt` |
+| Pelvis tilt | `pelvis_sagittal_angle_rad` | Posterior tilt; **anterior tilt negative** | Angle of the PSIS-to-ASIS line; increases when the front of the pelvis rises. Zero: forward horizontal | `pelvis_tilt` |
 | Trunk | `trunk_sagittal_angle_rad` | Leaning back; leaning forward negative | Orientation of the trunk long axis; increases when the shoulders move backward. Zero not yet defined | `pelvis_tilt` + `lumbar_extension` (same sense, up to zero offsets) |
-| Thigh | `thigh_sagittal_angle_*_rad` | Knee ahead of hip | Thigh long axis. LocoHub zero: straight down; dataset notes state the actual zero | `pelvis_tilt` + `hip_flexion_*` (same sense, up to zero offsets) |
-| Shank | `shank_sagittal_angle_*_rad` | Ankle ahead of knee | Shank long axis. LocoHub zero: straight down; dataset notes state the actual zero | thigh + `knee_angle_*` (same sense, up to zero offsets) |
-| Foot | `foot_sagittal_angle_*_rad` | Toes up | Heel-to-toe line. LocoHub zero: forward horizontal; dataset notes state the actual zero | shank + `ankle_angle_*` (same sense, up to zero offsets) |
+| Thigh | `thigh_sagittal_angle_*_rad` | Knee ahead of hip | Thigh long axis. Zero: straight down | `pelvis_tilt` + `hip_flexion_*` (same sense, up to zero offsets) |
+| Shank | `shank_sagittal_angle_*_rad` | Ankle ahead of knee | Shank long axis. Zero: straight down | thigh + `knee_angle_*` (same sense, up to zero offsets) |
+| Foot | `foot_sagittal_angle_*_rad` | Toes up | Heel-to-toe line. Zero: forward horizontal | shank + `ankle_angle_*` (same sense, up to zero offsets) |
 | Hip angle | `hip_flexion_angle_*_rad` | Flexion | Thigh rotates forward relative to the pelvis | `hip_flexion_r`, `hip_flexion_l` |
 | Knee angle | `knee_flexion_angle_*_rad` | Flexion | Shank rotates backward relative to the thigh; a straight knee is 0 | −`knee_angle_r`, −`knee_angle_l` (gait2392 knee is flexion-negative) |
 | Ankle angle | `ankle_dorsiflexion_angle_*_rad` | Dorsiflexion | Foot rotates toes-up relative to the shank | `ankle_angle_r`, `ankle_angle_l` |
@@ -115,7 +116,7 @@ LocoHub uses one sign rule for every dataset. This section is the authoritative 
 | Vertical ground reaction force | `grf_vertical_*` | Up (+y) | Force applied by the ground to the person (LocoHub definition); positive while the foot is supported | Ground-frame force y |
 | Forward ground reaction force | `grf_anterior_*` | Walking direction (+x) | Negative while braking, positive while propelling | Ground-frame force x |
 | Sideways ground reaction force | `grf_lateral_*` | Outward from that leg: +z for the right leg, −z for the left | Pushes the foot away from the body midline | Ground-frame force z (right leg), −z (left leg) |
-| Centre of pressure | `cop_anterior_*`, `cop_vertical_*`, `cop_lateral_*` | Forward (+x), up (+y), outward from that leg | Position of the centre of pressure; the origin is dataset-specific and stated in each dataset's notes | Ground-frame point x, y, ±z |
+| Centre of pressure | `cop_anterior_*`, `cop_vertical_*`, `cop_lateral_*` | Forward along the foot, up from the foot, outward from that leg | Position of the centre of pressure in the foot's moving frame; origin 100 mm forward of the ankle joint centre along the heel-to-toe direction | Ground-frame point moved to the foot frame (needs the ankle centre and foot orientation) |
 | Frontal and transverse signals | `*_adduction_*`, `*_rotation_*`, `*_frontal_*`, `*_transverse_*` | **Not yet adopted** | Files keep the source sign stated in each dataset's notes; do not combine across datasets until a rule is adopted | — |
 
 The rule applies to files converted after it was adopted. Downloads made earlier may use other signs, for example pelvis anterior tilt positive. Each dataset page states what its current files use; those files remain legacy until reconverted.
