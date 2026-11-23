@@ -1,0 +1,156 @@
+{
+  "task_id": "GT23-X01",
+  "status": "ready_for_independent_review",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-23T22:52:14+00:00",
+  "summary": "Python-only source reader, ledger and lossless Parquet companions for all 488 GT23 recordings. Counts equal the plan exactly: 488 recordings, 4,880 channel files, 787 event files (9 empty), 13,119 windows (7,721 left, 5,398 right), 398 recordings with windows, 90 without. Marker rows equal 200 Hz channel rows in all 488; Raw_EMGs is 2000 Hz (ten rows per 200 Hz row) and is checked that way. 17 recordings lack one of the 22 needed markers (named below). Independent audit of the 12 participant batches NOT yet done.",
+  "jobs": {
+    "pilots": [
+      "pilot-AB05-v2 (AB05 normal_walk_1): peak 180 MiB",
+      "pilot-AB02 (AB02 normal_walk_1, largest marker file): peak 180 MiB",
+      "pilot-AB11 (AB11 stairs_1_1): peak 140 MiB",
+      "pilot-audit-AB05-v3 (audit code on AB05 pilot): pass, peak 141 MiB"
+    ],
+    "batches_peak_rss_mib_launcher": {
+      "AB01": 206,
+      "AB02": 207,
+      "AB03": 200,
+      "AB05": 197,
+      "AB06": 199,
+      "AB07": 200,
+      "AB08": 203,
+      "AB09": 203,
+      "AB10": 202,
+      "AB11": 202,
+      "AB12": 201,
+      "AB13": 198
+    },
+    "batch_receipts": {
+      "AB01": "docs/quality/audits/gt23-x01-batch-AB01-r2-launcher-receipt.json",
+      "AB02": "docs/quality/audits/gt23-x01-batch-AB02-launcher-receipt.json",
+      "AB03": "docs/quality/audits/gt23-x01-batch-AB03-launcher-receipt.json",
+      "AB05": "docs/quality/audits/gt23-x01-batch-AB05-launcher-receipt.json",
+      "AB06": "docs/quality/audits/gt23-x01-batch-AB06-launcher-receipt.json",
+      "AB07": "docs/quality/audits/gt23-x01-batch-AB07-launcher-receipt.json",
+      "AB08": "docs/quality/audits/gt23-x01-batch-AB08-launcher-receipt.json",
+      "AB09": "docs/quality/audits/gt23-x01-batch-AB09-launcher-receipt.json",
+      "AB10": "docs/quality/audits/gt23-x01-batch-AB10-launcher-receipt.json",
+      "AB11": "docs/quality/audits/gt23-x01-batch-AB11-launcher-receipt.json",
+      "AB12": "docs/quality/audits/gt23-x01-batch-AB12-launcher-receipt.json",
+      "AB13": "docs/quality/audits/gt23-x01-batch-AB13-launcher-receipt.json"
+    },
+    "events": "docs/quality/audits/gt23-x01-events-launcher-receipt.json",
+    "summary": "docs/quality/audits/gt23-x01-summary-v2-launcher-receipt.json"
+  },
+  "counts": {
+    "recordings": 488,
+    "channel_files": 4880,
+    "recordings_with_issues": 17,
+    "recordings_failed": 0,
+    "event_files": 787,
+    "empty_event_files": 9,
+    "windows_left": 7721,
+    "windows_right": 5398,
+    "windows": 13119,
+    "with_windows": 398,
+    "without_windows": 90
+  },
+  "recordings_with_missing_needed_markers": {
+    "AB02/stairs_1_10": [
+      "needed markers missing: LPSI"
+    ],
+    "AB02/stairs_1_12": [
+      "needed markers missing: RPSI"
+    ],
+    "AB02/stairs_1_2": [
+      "needed markers missing: LPSI"
+    ],
+    "AB02/stairs_1_4": [
+      "needed markers missing: LPSI"
+    ],
+    "AB03/stairs_1_1": [
+      "needed markers missing: RTHC"
+    ],
+    "AB03/stairs_1_3": [
+      "needed markers missing: RTHC"
+    ],
+    "AB03/stairs_1_5": [
+      "needed markers missing: RTHC"
+    ],
+    "AB03/walk_backward_1": [
+      "needed markers missing: LASI"
+    ],
+    "AB03/weighted_walk_1": [
+      "needed markers missing: LASI"
+    ],
+    "AB07/lift_weight_1": [
+      "needed markers missing: LMANK"
+    ],
+    "AB07/lift_weight_2": [
+      "needed markers missing: LMANK"
+    ],
+    "AB07/normal_walk_1": [
+      "needed markers missing: LMANK"
+    ],
+    "AB07/obstacle_walk_1": [
+      "needed markers missing: LMANK"
+    ],
+    "AB07/side_shuffle_1": [
+      "needed markers missing: LMANK"
+    ],
+    "AB07/tire_run_1": [
+      "needed markers missing: LMANK"
+    ],
+    "AB07/weighted_walk_1": [
+      "needed markers missing: LMANK"
+    ],
+    "AB13/stairs_1_9": [
+      "needed markers missing: RKNE"
+    ]
+  },
+  "output_roots": {
+    "batches": "converted_datasets/reconversion_v2/gt23_x01_batch_<AB..> (AB01 is gt23_x01_batch_AB01_r2)",
+    "events": "converted_datasets/reconversion_v2/gt23_x01_events",
+    "summary": "converted_datasets/reconversion_v2/gt23_x01_summary_v2"
+  },
+  "evidence_of_attempts_kept": [
+    "pilot-AB05 (first pilot, marker-column index bug and a 200 Hz assumption for Raw_EMGs, fixed)",
+    "pilot-audit-AB05-v2 (audit crashed at the address-space cap on pyarrow threads, fixed in the audit code only)",
+    "batch-AB01 (output fine, receipt clean_success false because a polling shell of mine tripped the post-run census; rerun as batch-AB01-r2)",
+    "gt23-x01-batch-AB02-refused-1 (launch refused for another repo job; spec unchanged)",
+    "gt23-x01-summary (first summary job: window counts 7,767 of 13,119 because 5 of the authors file types hold <side>_<type> matrices; fixed, see code note)"
+  ],
+  "code_note": "Batches ran with gt23_source_reader.py / run_gt23_x01.py as bound in their specs. After the batches, parsing_file_facts was corrected (stride files with a types list hold <side>_<type> matrices) and an events subcommand was added; this changed only the stride-file counts. The ledger event_files field and each batch events.json are therefore superseded by the events root. Pilot and batch channel, marker and Euler results are unchanged by that edit.",
+  "checks": [
+    "tests/test_gt23_x01.py: 8 synthetic tests pass, also under ulimit -v 786432 with one thread (tamper test: the audit fails on a modified companion)",
+    "All 12 batches: 0 failed recordings; every companion reads back equal to the parsed values (parquet_readback_matches) and matches its own digest",
+    "Summary job: all nine acceptance counts equal the expected values",
+    "Every launched job: verify-cleanup proof, windows_new_workers empty; peak memory 140-207 MiB, far below the 768 MiB cap; one job at a time"
+  ],
+  "limits": [
+    "Companions store pandas round-trip float64 parses of the CSV text; the audit compares against a second parse to 1e-12 relative (default pandas parser is less exact).",
+    "Audit batches (12) not yet run: independent verifier needed; audit code was run on one pilot only, with the earlier events layout; it now reads the events root (--events-root).",
+    "Local RawData/Subject_masses.csv never read; the publisher README mass table matches the evidence csv for every participant (participant.json mass_kg.agree).",
+    "Link_Angle and Link_Velocities are our own earlier derived files; recorded by size only, never used."
+  ],
+  "remaining": [
+    "Independent sonnet audit of the 12 batches: for each subject run audit_gt23_x01.py audit with --batch-root (the batch root), --events-root converted_datasets/reconversion_v2/gt23_x01_events, new --output-root; spec helper: run_gt23_x01.py spec --kind audit --events-root ..."
+  ],
+  "next_action": "Independent verifier audits the 12 batches (guarded, one job at a time). Then GT23-M01. Prior read-only findings for later GT23 steps (C06 conventions, S01 segmentation) are in docs/maintainers/handoffs/ESML-crosswalk.json.",
+  "changed_files": [
+    "contributor_tools/gt23_source_reader.py",
+    "contributor_tools/run_gt23_x01.py",
+    "contributor_tools/audit_gt23_x01.py",
+    "contributor_tools/summarize_gt23_x01.py",
+    "tests/test_gt23_x01.py",
+    "docs/maintainers/handoffs/GT23-X01.json",
+    "docs/maintainers/backlog.json",
+    "docs/maintainers/backlog.html",
+    "docs/quality/audits/gt23-x01-*"
+  ],
+  "evidence_paths": [
+    "docs/quality/audits/gt23-x01-summary-v2-launcher-receipt.json",
+    "converted_datasets/reconversion_v2/gt23_x01_summary_v2/summary.json",
+    "converted_datasets/reconversion_v2/gt23_x01_events/events_summary.json"
+  ]
+}

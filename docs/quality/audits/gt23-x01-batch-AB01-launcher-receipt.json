@@ -1,0 +1,2423 @@
+{
+  "schema": "locohub.guarded_launcher.receipt/2",
+  "job_id": "GT23-X01-batch-AB01",
+  "status": "completed",
+  "scientific_approval": false,
+  "envelope": {
+    "path": "docs/quality/audits/pm01-um21-tread-pilot-handoff.json",
+    "reviewed_sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9",
+    "limits": {
+      "timeout_seconds_max": 3600,
+      "kill_after_seconds_max": 30,
+      "poll_seconds_max": 15,
+      "startup_memory_mib_min": {
+        "linux": 3584,
+        "windows": 2816
+      },
+      "runtime_memory_mib_min": {
+        "linux": 2048,
+        "windows": 2048
+      },
+      "output_volume_free_mib_min": 5120,
+      "c_drive_free_mib_min": 1024,
+      "c_drive_path": "/mnt/c",
+      "address_space_mib_max": 768
+    },
+    "sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+  },
+  "spec": {
+    "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+    "kill_after_seconds": 30,
+    "poll_seconds": 15,
+    "disk_admission": [],
+    "thread_env": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "ARROW_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    },
+    "expected_output_names": [
+      "run_summary.json"
+    ],
+    "address_space_mib": 768,
+    "job_id": "GT23-X01-batch-AB01",
+    "command": [
+      "python3",
+      "contributor_tools/run_gt23_x01.py",
+      "run",
+      "--output-root",
+      "converted_datasets/reconversion_v2/gt23_x01_batch_AB01",
+      "--subject",
+      "AB01",
+      "--source",
+      "/mnt/s/locomotion_data/Gtech_2023"
+    ],
+    "output_root": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt23_x01_batch_AB01",
+    "receipt_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/gt23-x01-batch-AB01-launcher-receipt.json",
+    "bindings": {
+      "contributor_tools/gt23_source_reader.py": "0dcec85ee3b5ddfa1f8fde490d3c4ea2ecb715b9f2b95665315502e30f01b7a9",
+      "contributor_tools/run_gt23_x01.py": "cdfa45c50918f7e35dc5633ef661a0c8fe60cef2bc3dcca8dd55fa706f3c4e63",
+      "contributor_tools/guarded_launcher.py": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b",
+      "docs/quality/audits/source_evidence/gt23/publisher-readme.txt": "4a5c8ef0a8d96ed3b81253e7fed2d8516b884fa2aa63e4340c0ab54cf2ac4752",
+      "docs/quality/audits/source_evidence/gt23/publisher-subject-masses.csv": "ff7f268497c0f2945374894005f68d647e869130e46e90194346752ea6508ab0"
+    },
+    "timeout_seconds": 3600,
+    "startup_memory_mib": {
+      "linux": 3584,
+      "windows": 2816
+    },
+    "runtime_memory_mib": {
+      "linux": 2048,
+      "windows": 2048
+    }
+  },
+  "spec_sha256": "ed7612ccffbf3651a397e7c48cbf4e8c8f7b7c0a7f7462c491df160ce25b41bc",
+  "launcher_sha256": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b",
+  "checked_at_utc": "2026-11-23T21:06:29+00:00",
+  "chaining": "none; no successor is started",
+  "bindings_before": {
+    "contributor_tools/gt23_source_reader.py": {
+      "expected": "0dcec85ee3b5ddfa1f8fde490d3c4ea2ecb715b9f2b95665315502e30f01b7a9",
+      "actual": "0dcec85ee3b5ddfa1f8fde490d3c4ea2ecb715b9f2b95665315502e30f01b7a9",
+      "bytes": 20145,
+      "matches": true
+    },
+    "contributor_tools/run_gt23_x01.py": {
+      "expected": "cdfa45c50918f7e35dc5633ef661a0c8fe60cef2bc3dcca8dd55fa706f3c4e63",
+      "actual": "cdfa45c50918f7e35dc5633ef661a0c8fe60cef2bc3dcca8dd55fa706f3c4e63",
+      "bytes": 11861,
+      "matches": true
+    },
+    "contributor_tools/guarded_launcher.py": {
+      "expected": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b",
+      "actual": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b",
+      "bytes": 51335,
+      "matches": true
+    },
+    "docs/quality/audits/source_evidence/gt23/publisher-readme.txt": {
+      "expected": "4a5c8ef0a8d96ed3b81253e7fed2d8516b884fa2aa63e4340c0ab54cf2ac4752",
+      "actual": "4a5c8ef0a8d96ed3b81253e7fed2d8516b884fa2aa63e4340c0ab54cf2ac4752",
+      "bytes": 14317,
+      "matches": true
+    },
+    "docs/quality/audits/source_evidence/gt23/publisher-subject-masses.csv": {
+      "expected": "ff7f268497c0f2945374894005f68d647e869130e46e90194346752ea6508ab0",
+      "actual": "ff7f268497c0f2945374894005f68d647e869130e46e90194346752ea6508ab0",
+      "bytes": 147,
+      "matches": true
+    }
+  },
+  "disk_admission": [
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt23_x01_batch_AB01",
+      "min_free_mib": 5120,
+      "source": "envelope: output volume (S:)",
+      "free_mib": 117336.42578125,
+      "passes": true
+    },
+    {
+      "path": "/mnt/c",
+      "min_free_mib": 1024,
+      "source": "envelope: C:",
+      "free_mib": 26623.6640625,
+      "passes": true
+    }
+  ],
+  "census_before": {
+    "linux": {
+      "checked_at_utc": "2026-11-23T21:06:29+00:00",
+      "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+      "process_count": 162,
+      "exempt": [
+        {
+          "pid": 1697587,
+          "start_ticks": 99403742,
+          "cwd": "/home/jmontp",
+          "cmdline": "/home/jmontp/.local/bin/pretty daemon",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1697596,
+          "start_ticks": 99403750,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2354851,
+          "start_ticks": 109454620,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude --resume",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2404490,
+          "start_ticks": 109822617,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2404508,
+          "start_ticks": 109822845,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/gt23-x01-batch-AB01-spec.json",
+          "why": "launcher itself (CLI)"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-23T21:06:30+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 365,
+      "free_physical_mib": 7219.41015625,
+      "workers": []
+    }
+  },
+  "startup_memory": {
+    "linux": {
+      "available_mib": 8157.15625,
+      "reserve_mib": 3584,
+      "passes": true
+    },
+    "windows": {
+      "available_mib": 7219.41015625,
+      "reserve_mib": 2816,
+      "passes": true
+    }
+  },
+  "launch_ledger": {
+    "parent": {
+      "pid": 2404490,
+      "ppid": 2354851,
+      "start_ticks": 109822617,
+      "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+      "interactive_terminal": false
+    },
+    "claimed": true,
+    "entries": [
+      "/tmp/locohub_guarded_launcher_uid1000/a81def3c-fa85-4161-b227-f59ffadc384d/2404490-109822617.json"
+    ],
+    "keys": [
+      {
+        "pid": 2404490,
+        "ppid": 2354851,
+        "start_ticks": 109822617,
+        "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+        "interactive_terminal": false
+      }
+    ]
+  },
+  "launched": true,
+  "process_identity": {
+    "leader_pid": 2404514,
+    "launched_at_utc": "2026-11-23T21:06:30+00:00",
+    "argv": [
+      "timeout",
+      "--signal=TERM",
+      "--kill-after=30s",
+      "3600",
+      "nice",
+      "-n",
+      "19",
+      "ionice",
+      "-c",
+      "3",
+      "python3",
+      "contributor_tools/run_gt23_x01.py",
+      "run",
+      "--output-root",
+      "converted_datasets/reconversion_v2/gt23_x01_batch_AB01",
+      "--subject",
+      "AB01",
+      "--source",
+      "/mnt/s/locomotion_data/Gtech_2023"
+    ],
+    "log_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/gt23-x01-batch-AB01-launcher-receipt.log",
+    "parent_death_signal": "SIGTERM",
+    "parent_death_signal_set": true,
+    "pgid": 2404514,
+    "sid": 2404514,
+    "own_session_verified": true,
+    "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+    "leader_start_ticks": 109822950
+  },
+  "job_outcome": "completed",
+  "finished_at_utc": "2026-11-23T21:09:37+00:00",
+  "exit_code": 0,
+  "wall_time_seconds": 183.175,
+  "peak_rss_kib_largest_process": 206852,
+  "peak_group_rss_kib_sampled": 182612,
+  "runtime_guard": {
+    "poll_seconds": 15,
+    "reserve_mib": {
+      "linux": 2048,
+      "windows": 2048
+    },
+    "polls": 12,
+    "min_linux_available_mib": 7437.9,
+    "min_windows_free_mib": 6698.2,
+    "breach": null,
+    "observed_address_space_limits": [
+      "805306368"
+    ],
+    "observed_address_space_by_process": [
+      {
+        "pid": 2404514,
+        "start_ticks": 109822950,
+        "limit": "805306368",
+        "cmdline": "timeout --signal=TERM --kill-after=30s 3600 nice -n 19 ionice -c 3 python3 contributor_tools/run_gt23_x01.py run --output-root converted_datasets/reconversion_v2/gt23_x01_batch_AB01 --subject AB01 --s"
+      },
+      {
+        "pid": 2404515,
+        "start_ticks": 109822951,
+        "limit": "805306368",
+        "cmdline": "python3 contributor_tools/run_gt23_x01.py run --output-root converted_datasets/reconversion_v2/gt23_x01_batch_AB01 --subject AB01 --source /mnt/s/locomotion_data/Gtech_2023"
+      }
+    ]
+  },
+  "stop_actions": [],
+  "orphans_at_leader_exit": [],
+  "launcher_errors": [],
+  "finalisation_errors": [],
+  "clean_success": false,
+  "retry": "never automatic",
+  "cleanup_proof": {
+    "checked_at_utc": "2026-11-23T21:09:37+00:00",
+    "basis": "same_boot_proc_scan",
+    "proven": true,
+    "boot_id_now": "a81def3c-fa85-4161-b227-f59ffadc384d",
+    "pgid_members": [],
+    "leader_pid_with_same_start_ticks_present": false,
+    "attempts": 1
+  },
+  "census_after": {
+    "linux": {
+      "checked_at_utc": "2026-11-23T21:09:37+00:00",
+      "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+      "process_count": 162,
+      "exempt": [
+        {
+          "pid": 1697587,
+          "start_ticks": 99403742,
+          "cwd": "/home/jmontp",
+          "cmdline": "/home/jmontp/.local/bin/pretty daemon",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1697596,
+          "start_ticks": 99403750,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2354851,
+          "start_ticks": 109454620,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude --resume",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2404490,
+          "start_ticks": 109822617,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2404508,
+          "start_ticks": 109822845,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/gt23-x01-batch-AB01-spec.json",
+          "why": "launcher itself (CLI)"
+        }
+      ],
+      "workers": [
+        {
+          "pid": 2405857,
+          "start_ticks": 109840908,
+          "cwd": "/tmp",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "ancestor": false
+        }
+      ]
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-23T21:09:38+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 365,
+      "free_physical_mib": 7470.171875,
+      "workers": []
+    }
+  },
+  "windows_new_workers": [],
+  "bindings_after": {
+    "contributor_tools/gt23_source_reader.py": {
+      "expected": "0dcec85ee3b5ddfa1f8fde490d3c4ea2ecb715b9f2b95665315502e30f01b7a9",
+      "actual": "0dcec85ee3b5ddfa1f8fde490d3c4ea2ecb715b9f2b95665315502e30f01b7a9",
+      "bytes": 20145,
+      "matches": true
+    },
+    "contributor_tools/run_gt23_x01.py": {
+      "expected": "cdfa45c50918f7e35dc5633ef661a0c8fe60cef2bc3dcca8dd55fa706f3c4e63",
+      "actual": "cdfa45c50918f7e35dc5633ef661a0c8fe60cef2bc3dcca8dd55fa706f3c4e63",
+      "bytes": 11861,
+      "matches": true
+    },
+    "contributor_tools/guarded_launcher.py": {
+      "expected": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b",
+      "actual": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b",
+      "bytes": 51335,
+      "matches": true
+    },
+    "docs/quality/audits/source_evidence/gt23/publisher-readme.txt": {
+      "expected": "4a5c8ef0a8d96ed3b81253e7fed2d8516b884fa2aa63e4340c0ab54cf2ac4752",
+      "actual": "4a5c8ef0a8d96ed3b81253e7fed2d8516b884fa2aa63e4340c0ab54cf2ac4752",
+      "bytes": 14317,
+      "matches": true
+    },
+    "docs/quality/audits/source_evidence/gt23/publisher-subject-masses.csv": {
+      "expected": "ff7f268497c0f2945374894005f68d647e869130e46e90194346752ea6508ab0",
+      "actual": "ff7f268497c0f2945374894005f68d647e869130e46e90194346752ea6508ab0",
+      "bytes": 147,
+      "matches": true
+    }
+  },
+  "outputs": [
+    {
+      "path": "ball_toss_1/Activity_Flag.parquet",
+      "bytes": 36707,
+      "sha256": "a354d799810038451ea32fbe5e40dc98a3fe5883993fc188ae6b02241aa63cc5"
+    },
+    {
+      "path": "ball_toss_1/GroundFrame_GRFs.parquet",
+      "bytes": 976347,
+      "sha256": "57959d92793c91677ca7d4a57d7c92b3d1231d41ee5a29508bea1c6a271bed69"
+    },
+    {
+      "path": "ball_toss_1/Joint_Angle.parquet",
+      "bytes": 1358084,
+      "sha256": "9d23db2afa8cff31f17af96e112b376d6e85ccd52fab59ccf2ef5665643cd670"
+    },
+    {
+      "path": "ball_toss_1/Joint_Moments.parquet",
+      "bytes": 1355240,
+      "sha256": "528528dd4301485e0573f8616698a099d27c1b2ae1a88412336ab162afad2f6d"
+    },
+    {
+      "path": "ball_toss_1/Joint_Powers.parquet",
+      "bytes": 1366459,
+      "sha256": "f449ed3629203b9d3add9534b92ad4693af2b3f791bcf124f722e1411742b9ad"
+    },
+    {
+      "path": "ball_toss_1/Joint_Velocities.parquet",
+      "bytes": 1372986,
+      "sha256": "1bbc78f8ef9a58c9c22a0bb0ac3130b928e67bec4718d467946ceac443009816"
+    },
+    {
+      "path": "ball_toss_1/Raw_EMGs.parquet",
+      "bytes": 14738995,
+      "sha256": "128eb03d15cc7ad05eb13c393598e1846ac5104d1f6cc534064ea84dd72cb6e2"
+    },
+    {
+      "path": "ball_toss_1/Real_IMUs.parquet",
+      "bytes": 4719243,
+      "sha256": "b7d57b2d46f2f8f9675b8cdaecf83906c13be25b61eb1669ba8a6b7e5d9c07e2"
+    },
+    {
+      "path": "ball_toss_1/Virtual_IMUs.parquet",
+      "bytes": 4672146,
+      "sha256": "154273b4757c7725344dc0064f867347a2b890a454a8fa386c0b69fb32c9abd6"
+    },
+    {
+      "path": "ball_toss_1/Virtual_Insoles.parquet",
+      "bytes": 1123267,
+      "sha256": "c32537d8df325cdf0f83283be9e79a62c80b5149c384b1e63ebf9b9213991444"
+    },
+    {
+      "path": "curb_down_1/Activity_Flag.parquet",
+      "bytes": 45665,
+      "sha256": "85fd6bb51cc6d3c50dd3a08d4d60f712547fb1895f638ffc5c1cf36173e0303c"
+    },
+    {
+      "path": "curb_down_1/GroundFrame_GRFs.parquet",
+      "bytes": 264873,
+      "sha256": "f2c763b7b0b7d54b967bef510de9079ec2e37f4d83a66f4d468ab4224d76e343"
+    },
+    {
+      "path": "curb_down_1/Joint_Angle.parquet",
+      "bytes": 1717906,
+      "sha256": "1d5922d3964a13d4909c2f79c6b82c1abde0c83d7e3d27b91736cf986f88bf88"
+    },
+    {
+      "path": "curb_down_1/Joint_Moments.parquet",
+      "bytes": 718789,
+      "sha256": "f3d0ac354820847ab011518ea209647ea6407bfadc7db87486e67ef6993660c4"
+    },
+    {
+      "path": "curb_down_1/Joint_Powers.parquet",
+      "bytes": 720345,
+      "sha256": "ba1d82bee54358b7098a9324adb2b73b0e13a89d76f574242272b92c18e1c49e"
+    },
+    {
+      "path": "curb_down_1/Joint_Velocities.parquet",
+      "bytes": 1717813,
+      "sha256": "74a8acd9e4bdcc5fa068b15848cb876c3c8975e518362d1ebeb556d6b2918c72"
+    },
+    {
+      "path": "curb_down_1/Raw_EMGs.parquet",
+      "bytes": 18554870,
+      "sha256": "d7a8fdc09c845517fc333b967718fe820dac836e0054fdf121e82beaa0333922"
+    },
+    {
+      "path": "curb_down_1/Real_IMUs.parquet",
+      "bytes": 6068303,
+      "sha256": "1c371f4c0cefe46ad5b07922d7eba85cac1f82407a87a7e660252028d4f08d30"
+    },
+    {
+      "path": "curb_down_1/Virtual_IMUs.parquet",
+      "bytes": 5898154,
+      "sha256": "f4a988cf08216f11b64a9bdf2f0c2820d361ab01d1ad75d3231ba1be053349e3"
+    },
+    {
+      "path": "curb_down_1/Virtual_Insoles.parquet",
+      "bytes": 253608,
+      "sha256": "0487fac7c96de53bf378f7348868a929a61aaf8ae2ee962729604c7edda5fe70"
+    },
+    {
+      "path": "curb_up_1/Activity_Flag.parquet",
+      "bytes": 52947,
+      "sha256": "177d2706f811c7c99e301af4d3d53addf41a804d099293c0065812fcbec21cfa"
+    },
+    {
+      "path": "curb_up_1/GroundFrame_GRFs.parquet",
+      "bytes": 286093,
+      "sha256": "b1c2c95f9f331bde498a06b8ae6e867498e12594a5556fce871178a9f4e86b9f"
+    },
+    {
+      "path": "curb_up_1/Joint_Angle.parquet",
+      "bytes": 2002155,
+      "sha256": "58f04579be3bd582b00351678848be94c0941c4887fc325d9d25fdf32491b57a"
+    },
+    {
+      "path": "curb_up_1/Joint_Moments.parquet",
+      "bytes": 801393,
+      "sha256": "fc702f4065113bc42f7389e6d43d8e6f3efd442216b6d7b7852b445c90a3eea3"
+    },
+    {
+      "path": "curb_up_1/Joint_Powers.parquet",
+      "bytes": 803617,
+      "sha256": "866befae93aac096ecf1e6979480e9594a210a3d6cb869688c82e0437c43d7a9"
+    },
+    {
+      "path": "curb_up_1/Joint_Velocities.parquet",
+      "bytes": 2002643,
+      "sha256": "e98387a097b99cac4b7d56fd2a01381399b1b3ff00966441f7d8ead7d86cfeae"
+    },
+    {
+      "path": "curb_up_1/Raw_EMGs.parquet",
+      "bytes": 21557128,
+      "sha256": "6666e8b878a803e7f4720b1978ee6a3f900d2140e88a932603803ccd80b4c485"
+    },
+    {
+      "path": "curb_up_1/Real_IMUs.parquet",
+      "bytes": 7040308,
+      "sha256": "ec94052684e74ac1f77f15f90c3d27ad7da64ec133d6c8f756f18812ca10ad63"
+    },
+    {
+      "path": "curb_up_1/Virtual_IMUs.parquet",
+      "bytes": 6870826,
+      "sha256": "d8b74568ced73a1c1b733e6ad06a6db87c85de7551cb475ae0e1729944dcea9b"
+    },
+    {
+      "path": "curb_up_1/Virtual_Insoles.parquet",
+      "bytes": 273487,
+      "sha256": "41e5c6c204ca0da3e0e88415609b190f611198bd7300955a1b01074bcc71d0ae"
+    },
+    {
+      "path": "cutting_1/Activity_Flag.parquet",
+      "bytes": 75831,
+      "sha256": "2a6523cc643b78287f374ce36d88ef9e8e71adf72ba0999f431b3aba7d571201"
+    },
+    {
+      "path": "cutting_1/GroundFrame_GRFs.parquet",
+      "bytes": 394221,
+      "sha256": "b80b25ce7b2d0182ece9b6a82dffdb9be78cd675c2d603a18609c6e3831561f8"
+    },
+    {
+      "path": "cutting_1/Joint_Angle.parquet",
+      "bytes": 2913920,
+      "sha256": "3848ac5092a0ef5af7949fb25baa3a43af306556381c033c19073890f7aad7ab"
+    },
+    {
+      "path": "cutting_1/Joint_Moments.parquet",
+      "bytes": 1243524,
+      "sha256": "3b82d864e683a9f6acd11ccaa6b19c7591c448ea8171981a96b3df52968ece8b"
+    },
+    {
+      "path": "cutting_1/Joint_Powers.parquet",
+      "bytes": 1246473,
+      "sha256": "ae80a10e176201cf2c1fb054368345bc183da4e10c25d5f59c69e9d8a04f3ac6"
+    },
+    {
+      "path": "cutting_1/Joint_Velocities.parquet",
+      "bytes": 2916773,
+      "sha256": "c63ff154a16fa2fa369b312c6a1f72cb22c3e191a0dbfe28080310c7b22e519b"
+    },
+    {
+      "path": "cutting_1/Raw_EMGs.parquet",
+      "bytes": 31753108,
+      "sha256": "5f2433675009a5fb9968c0e61ede98d28f4bd03c0196c116774109cf97b4e956"
+    },
+    {
+      "path": "cutting_1/Real_IMUs.parquet",
+      "bytes": 10339262,
+      "sha256": "66c2e94deb0d43bb93cf43ec6a11aa7cde9aaebf8141204abd340d2c4747ce2a"
+    },
+    {
+      "path": "cutting_1/Virtual_IMUs.parquet",
+      "bytes": 10026363,
+      "sha256": "2379f6142f2ca6bdf2a79c773f89b290a9e2400913c0c5f003cb3b63bdf05d15"
+    },
+    {
+      "path": "cutting_1/Virtual_Insoles.parquet",
+      "bytes": 376025,
+      "sha256": "1dff1e8fdd256e76c39887d3a288c0c5844fcb02277f53a10d3715e805fef412"
+    },
+    {
+      "path": "dynamic_walk_1/Activity_Flag.parquet",
+      "bytes": 76327,
+      "sha256": "28d8ba2304fa774696ca99d534f899684470ba0f010aa0c9db341772529c9aa3"
+    },
+    {
+      "path": "dynamic_walk_1/GroundFrame_GRFs.parquet",
+      "bytes": 582320,
+      "sha256": "3d49b5d3dd8e2fc3e7058b727cbdbc9167a282cc7e72f48a7f5cde84dfde6d12"
+    },
+    {
+      "path": "dynamic_walk_1/Joint_Angle.parquet",
+      "bytes": 2942836,
+      "sha256": "2a48df0291eb6d912661a52bec72efd6c9985077570f511cd2970e4120210cb4"
+    },
+    {
+      "path": "dynamic_walk_1/Joint_Moments.parquet",
+      "bytes": 1274213,
+      "sha256": "442482604a3ca8fd2b16033ac5073932e3a4c77793d81cfa55734c9ab21511b1"
+    },
+    {
+      "path": "dynamic_walk_1/Joint_Powers.parquet",
+      "bytes": 1279084,
+      "sha256": "38e2f610a1dda9ac49d1331176624d5cbcad512214f46c15cf8a7a1d12269943"
+    },
+    {
+      "path": "dynamic_walk_1/Joint_Velocities.parquet",
+      "bytes": 2948976,
+      "sha256": "24e935982f233eef20a12cd9ba1faa2ad25de7695293327f192d9079bd54475b"
+    },
+    {
+      "path": "dynamic_walk_1/Raw_EMGs.parquet",
+      "bytes": 32109248,
+      "sha256": "dc8712b23f1afa32764f0509e7b2ca25ce7b83d052eb10b06b46bd23698329d4"
+    },
+    {
+      "path": "dynamic_walk_1/Real_IMUs.parquet",
+      "bytes": 10389199,
+      "sha256": "f97e3a553e141e69d02d6abb12a53ca8fd81991d63ca66341ca4917952d39924"
+    },
+    {
+      "path": "dynamic_walk_1/Virtual_IMUs.parquet",
+      "bytes": 10125307,
+      "sha256": "69a98848e5c9111720bed62416af0c4a746b5c36f382e4ef1eb51cb37f8ec6b6"
+    },
+    {
+      "path": "dynamic_walk_1/Virtual_Insoles.parquet",
+      "bytes": 689531,
+      "sha256": "56af65d7bbaf03dfe2852f41efb17be366fcf352799dac0fdd37986f79d49da3"
+    },
+    {
+      "path": "events.json",
+      "bytes": 23146,
+      "sha256": "8a5d7d63fcdd791a94d53b382f468b9cb2b9198319565867d4bee260af5abc2b"
+    },
+    {
+      "path": "incline_walk_1/Activity_Flag.parquet",
+      "bytes": 53789,
+      "sha256": "de71c7cd213502ff42d3348e64f58e70e0964c779ffb08d73a084e0ccd22da7c"
+    },
+    {
+      "path": "incline_walk_1/GroundFrame_GRFs.parquet",
+      "bytes": 662039,
+      "sha256": "3ac9f0b96075ae38d02836c4bcd21449ae22a7ee4815864f63112f7882de147a"
+    },
+    {
+      "path": "incline_walk_1/Joint_Angle.parquet",
+      "bytes": 2041331,
+      "sha256": "f4494290877e92b2949137a78d8ef1359218ad7cfb36ef230029a1fbec7d17e3"
+    },
+    {
+      "path": "incline_walk_1/Joint_Moments.parquet",
+      "bytes": 954255,
+      "sha256": "96aa4fc7bc4f1c044979777c4c56d3f85e8a3c84eeb872adb2b63c09fd77e06f"
+    },
+    {
+      "path": "incline_walk_1/Joint_Powers.parquet",
+      "bytes": 957345,
+      "sha256": "6abab1aa29118733e415baa112eadf9cfaa6619896ba29a2c25f269d1618d551"
+    },
+    {
+      "path": "incline_walk_1/Joint_Velocities.parquet",
+      "bytes": 2048016,
+      "sha256": "e21bbd299be6663e08a1019d74438fc457660231fc0ae56717d2c0c74d3648eb"
+    },
+    {
+      "path": "incline_walk_1/Raw_EMGs.parquet",
+      "bytes": 22009669,
+      "sha256": "7f51a0f386d6cef92611e80609b6c568c40ad5cf4d6bdfd82fe4ce7e5bdc7ff7"
+    },
+    {
+      "path": "incline_walk_1/Real_IMUs.parquet",
+      "bytes": 7178235,
+      "sha256": "eacedd56ac2ce31d42a07ab1b933f0296b4740985986d6dd8f9128b5bcf2b194"
+    },
+    {
+      "path": "incline_walk_1/Virtual_IMUs.parquet",
+      "bytes": 7018187,
+      "sha256": "a9f5b9e439bcb2b2baf4e32253c98ee0b93d045c32e66cc2128793d23d009eda"
+    },
+    {
+      "path": "incline_walk_1/Virtual_Insoles.parquet",
+      "bytes": 587418,
+      "sha256": "7b173f82d2b64a57ced1a258c1fc89a605c1b867a7364b6a779cc0ecf1307f96"
+    },
+    {
+      "path": "incline_walk_2/Activity_Flag.parquet",
+      "bytes": 52889,
+      "sha256": "3eb2323a74aac5e9cc471bd4fcb6689374379120d307f2f2d86a74a711f771a4"
+    },
+    {
+      "path": "incline_walk_2/GroundFrame_GRFs.parquet",
+      "bytes": 657269,
+      "sha256": "24199469ed4181bf17740d47adc479bb235cab16a0b85c09e362154e371d9337"
+    },
+    {
+      "path": "incline_walk_2/Joint_Angle.parquet",
+      "bytes": 1996197,
+      "sha256": "683a2d46408657c1914d0af0a2b730c18d0c0312b2af36e3ccca5a6c2b40934b"
+    },
+    {
+      "path": "incline_walk_2/Joint_Moments.parquet",
+      "bytes": 943755,
+      "sha256": "bf5296d7c94fa735b9cdc5bf965c45cb8e87b21e071477abeeb6023d129536cd"
+    },
+    {
+      "path": "incline_walk_2/Joint_Powers.parquet",
+      "bytes": 946883,
+      "sha256": "495260f41737ec3cbb8bbb5b1b848949c72c22722c28d49c6f8b9c2875d4007f"
+    },
+    {
+      "path": "incline_walk_2/Joint_Velocities.parquet",
+      "bytes": 2005017,
+      "sha256": "dfa221581670dba6c49ab19db37db681e1090c4dad290eb68160350991a33bc5"
+    },
+    {
+      "path": "incline_walk_2/Raw_EMGs.parquet",
+      "bytes": 21751070,
+      "sha256": "a491ca4e02359f526c99d0487f4f7e2bd467e35df9f153da6399842afa32ebda"
+    },
+    {
+      "path": "incline_walk_2/Real_IMUs.parquet",
+      "bytes": 7063390,
+      "sha256": "3f738eb4feb8da76066c270b42f3e951b910f07092ff2eaad19e5c7c4b63ee91"
+    },
+    {
+      "path": "incline_walk_2/Virtual_IMUs.parquet",
+      "bytes": 6878223,
+      "sha256": "bebff273c5b0659a99a2e959985af9c5e91cc15cb300b867726886309d7cf416"
+    },
+    {
+      "path": "incline_walk_2/Virtual_Insoles.parquet",
+      "bytes": 581592,
+      "sha256": "109def2d51bdaf614a3bf683ec803f897ab96da2955d26b1eecd06d5af3fdc89"
+    },
+    {
+      "path": "jump_1/Activity_Flag.parquet",
+      "bytes": 34997,
+      "sha256": "10a8a8033de904bf0613f410b9b237ff686c00fb5168eafd5b0c612366a008c8"
+    },
+    {
+      "path": "jump_1/GroundFrame_GRFs.parquet",
+      "bytes": 826512,
+      "sha256": "cff3e8147d7cba1ff0fc5404ab3c96917db57c04d29cd71db11039b478e1b811"
+    },
+    {
+      "path": "jump_1/Joint_Angle.parquet",
+      "bytes": 1284242,
+      "sha256": "d61fab29d8cf51aecc095f7d274478ea6cce6039eb7c08f2e79c31a19b18340d"
+    },
+    {
+      "path": "jump_1/Joint_Moments.parquet",
+      "bytes": 1268314,
+      "sha256": "43284f6a9f9ddbd9afc05eda9b660b08ab5f149240e5baab407b61d4ddb229c0"
+    },
+    {
+      "path": "jump_1/Joint_Powers.parquet",
+      "bytes": 1275910,
+      "sha256": "0661f84f7c6268c1ac849be58afe63cd79df9f54225047440839a68e7c944331"
+    },
+    {
+      "path": "jump_1/Joint_Velocities.parquet",
+      "bytes": 1297685,
+      "sha256": "fbe2bd35e26510a1e461169549a3881798ce2adb1255c9947c570809d0629129"
+    },
+    {
+      "path": "jump_1/Raw_EMGs.parquet",
+      "bytes": 14131930,
+      "sha256": "f489bbf3d75df74367af3391dc850450ac94e371a5fe122950fbf8f8d7d98953"
+    },
+    {
+      "path": "jump_1/Real_IMUs.parquet",
+      "bytes": 4579881,
+      "sha256": "e296dbec88d33ffaf0f0e3ceb2d16f7a38b0caf16de6421d885a98f7a4ea7272"
+    },
+    {
+      "path": "jump_1/Virtual_IMUs.parquet",
+      "bytes": 4445378,
+      "sha256": "d7f66b7e6c065417d979b9b6661b98a1d9c98f2749b866eb6199b17efc59e4f3"
+    },
+    {
+      "path": "jump_1/Virtual_Insoles.parquet",
+      "bytes": 853133,
+      "sha256": "960934091909b02701ed4c8909246757d94ad37916502ec3efe490fc8c1d7787"
+    },
+    {
+      "path": "jump_2/Activity_Flag.parquet",
+      "bytes": 43034,
+      "sha256": "4c2485f03ba11bb18571e0f26ecbdb1ae963858009041f33da85643ccd63fc00"
+    },
+    {
+      "path": "jump_2/GroundFrame_GRFs.parquet",
+      "bytes": 1079418,
+      "sha256": "b68cd0eb09a56d8e4b4941a0df8d1a0397fa0c553f24aea4f1935ee1f3ebd67c"
+    },
+    {
+      "path": "jump_2/Joint_Angle.parquet",
+      "bytes": 1584782,
+      "sha256": "a5e004e706ae387ffa2decab55104c100aaada70a3ff19f4d4919ca2e591f0b3"
+    },
+    {
+      "path": "jump_2/Joint_Moments.parquet",
+      "bytes": 1590179,
+      "sha256": "a05865ba2f8a8770b56d64d38a9704338d241c28dc56ec9561cf908912e3dba2"
+    },
+    {
+      "path": "jump_2/Joint_Powers.parquet",
+      "bytes": 1598419,
+      "sha256": "9c0d1e38dca3942cfa5b6fe751500c653fdf74f3dd6781ee61f4250cadd9d9d3"
+    },
+    {
+      "path": "jump_2/Joint_Velocities.parquet",
+      "bytes": 1598954,
+      "sha256": "3d30b9feee6c4dfd30be703d53fa619a7b28a67bb8dd9051b250e7444191bb0b"
+    },
+    {
+      "path": "jump_2/Raw_EMGs.parquet",
+      "bytes": 17461190,
+      "sha256": "983474817b030665f5b7a345de2ace2b7aea312e3dba2d15d8dc548a5acc3610"
+    },
+    {
+      "path": "jump_2/Real_IMUs.parquet",
+      "bytes": 5640604,
+      "sha256": "43237e5133a563dba6d32ccc1f2a89fde17cf1ff06b455d1511779e696af1f1f"
+    },
+    {
+      "path": "jump_2/Virtual_IMUs.parquet",
+      "bytes": 5485945,
+      "sha256": "5cd104e9d33a22b2ce670345ca9903108a4b0cc8cac71bc1ce13a8fc058a1763"
+    },
+    {
+      "path": "jump_2/Virtual_Insoles.parquet",
+      "bytes": 1088493,
+      "sha256": "211b08bbd0b88a9dce58669c451d6edd8636609885aabd49a0998f268142074a"
+    },
+    {
+      "path": "ledger.jsonl",
+      "bytes": 513845,
+      "sha256": "ea646b4d17145ca8dd8b5cccdc8f398d3463b0d95ff9f3e4bbc02d757cc0526d"
+    },
+    {
+      "path": "lift_weight_1/Activity_Flag.parquet",
+      "bytes": 45186,
+      "sha256": "8ba05c21173a574543cdd0e4d72076dbedc439ec7ea6895162b7b92893f1efc3"
+    },
+    {
+      "path": "lift_weight_1/GroundFrame_GRFs.parquet",
+      "bytes": 1086595,
+      "sha256": "9efee21e6cd54777c3472d82474997607ce89d6f7505caf216e827cf25913cbb"
+    },
+    {
+      "path": "lift_weight_1/Joint_Angle.parquet",
+      "bytes": 1678152,
+      "sha256": "b34da4a7005a25e52706b6d6886951e44159ce86b3fe37098a5a0335c3d4491b"
+    },
+    {
+      "path": "lift_weight_1/Joint_Moments.parquet",
+      "bytes": 1678995,
+      "sha256": "1c2b4c13b605a9de104f3a1f59f598d338ac4bbd043e9ba7d3a8996079c211c7"
+    },
+    {
+      "path": "lift_weight_1/Joint_Powers.parquet",
+      "bytes": 1689861,
+      "sha256": "a4eafbfe11ec3831b45a85d0596386435c5c1141e1c780c648859ccc60066aca"
+    },
+    {
+      "path": "lift_weight_1/Joint_Velocities.parquet",
+      "bytes": 1693445,
+      "sha256": "f92b49b23d817f11c5ff4f1507c4d1cad17ceaaa27504d646a026582e29e1f47"
+    },
+    {
+      "path": "lift_weight_1/Raw_EMGs.parquet",
+      "bytes": 18441900,
+      "sha256": "5987e9a3a321656b45e787792e60a839278bcfd7637ba9e33fb93e85e8e31dbf"
+    },
+    {
+      "path": "lift_weight_1/Real_IMUs.parquet",
+      "bytes": 5855501,
+      "sha256": "6a38a9114069d012268e1ccd556cad6c14c8c8ce4ca1e818b6e18a5861263d42"
+    },
+    {
+      "path": "lift_weight_1/Virtual_IMUs.parquet",
+      "bytes": 5782358,
+      "sha256": "1d25bd65cfde65a3d330aafb1fb2f63f061355699fbcc3c4bb459fc6140d136e"
+    },
+    {
+      "path": "lift_weight_1/Virtual_Insoles.parquet",
+      "bytes": 1258820,
+      "sha256": "c6b28e931ad624e2d9e2a019f50fcc6ba6bf82d0d2cb0660f9644c4ba662fab5"
+    },
+    {
+      "path": "lift_weight_2/Activity_Flag.parquet",
+      "bytes": 42920,
+      "sha256": "2c6b146cca0477807acaf349044eabc2c091aaf92b68ddf2e37731f941e02d73"
+    },
+    {
+      "path": "lift_weight_2/GroundFrame_GRFs.parquet",
+      "bytes": 1016593,
+      "sha256": "7fadd017f15cff20f8bfbdd1bf0f41fc0c8b96c518909872f2b977ea02c461d1"
+    },
+    {
+      "path": "lift_weight_2/Joint_Angle.parquet",
+      "bytes": 1586851,
+      "sha256": "d5216777709276e1f09d0eb58f2b28aa274d3a80f0b2c696ccf8713ce611f48f"
+    },
+    {
+      "path": "lift_weight_2/Joint_Moments.parquet",
+      "bytes": 1581075,
+      "sha256": "42622098c21d3b2f0ceb6f02547dcbb09f68560ce619978351d801b6791bb36c"
+    },
+    {
+      "path": "lift_weight_2/Joint_Powers.parquet",
+      "bytes": 1590335,
+      "sha256": "bbaf974707a616f7cf928a9afb3ece82a1bc61f203f6a3b0bf94c9a04e51ec52"
+    },
+    {
+      "path": "lift_weight_2/Joint_Velocities.parquet",
+      "bytes": 1602364,
+      "sha256": "6c11b308debd7536f1acd262f0cf049ddbc5e12b9d467a91f7ca5b4229c26b27"
+    },
+    {
+      "path": "lift_weight_2/Raw_EMGs.parquet",
+      "bytes": 17404917,
+      "sha256": "63ad4ff5779b9c9cbbd2b57a8ed785ca5173905c91b272480039edc6566d3eab"
+    },
+    {
+      "path": "lift_weight_2/Real_IMUs.parquet",
+      "bytes": 5521774,
+      "sha256": "c28b36bc70a0c1f0e5f606564b3993e0292c0205003395c22c69c997a309c95a"
+    },
+    {
+      "path": "lift_weight_2/Virtual_IMUs.parquet",
+      "bytes": 5469943,
+      "sha256": "754bc50c7c6489c7cd35b610632a7a647f5283b1aef25382d4db003be8317eb3"
+    },
+    {
+      "path": "lift_weight_2/Virtual_Insoles.parquet",
+      "bytes": 1195032,
+      "sha256": "5f3fe50e3c5e58a65d6a22e6a7f8ca9f62dbcb128d88aedd674b4d80fc6a27d9"
+    },
+    {
+      "path": "lunges_1/Activity_Flag.parquet",
+      "bytes": 53812,
+      "sha256": "233113b56e9b7bb22bc3b7be242bae4822498c688de0452f8155ebb7ac92d76b"
+    },
+    {
+      "path": "lunges_1/GroundFrame_GRFs.parquet",
+      "bytes": 1277076,
+      "sha256": "7199f8d841c47c2d09828dcd41bbe148da661445d7626f94d585d399802abbbc"
+    },
+    {
+      "path": "lunges_1/Joint_Angle.parquet",
+      "bytes": 2027990,
+      "sha256": "ce31d4202d64aef1e63e8b349d514feb8057718996b7681550fd4d53198838e9"
+    },
+    {
+      "path": "lunges_1/Joint_Moments.parquet",
+      "bytes": 1964876,
+      "sha256": "0f79d5b0fe8b965ee78f25de6f6ff084e470ad5ddbad30c9958cff0949d2e93f"
+    },
+    {
+      "path": "lunges_1/Joint_Powers.parquet",
+      "bytes": 1971636,
+      "sha256": "1ec2085fd17435d145ce137276c9095e4591e09397f2dcce022efc6331270f41"
+    },
+    {
+      "path": "lunges_1/Joint_Velocities.parquet",
+      "bytes": 2041002,
+      "sha256": "6ada17b59ff72b5c30d8d9e0563c9d75b0cf257e4b1070f755f7b4b022f196eb"
+    },
+    {
+      "path": "lunges_1/Raw_EMGs.parquet",
+      "bytes": 22341528,
+      "sha256": "07788c7d5d654fc91f5932a4a83553685542881fb97fd91201782f48ea2b6a47"
+    },
+    {
+      "path": "lunges_1/Real_IMUs.parquet",
+      "bytes": 7139340,
+      "sha256": "4ae3acae1d38439c11a4c28587af0b6265b59b5d0676f2bd6dfc2badc8e300b2"
+    },
+    {
+      "path": "lunges_1/Virtual_IMUs.parquet",
+      "bytes": 6996295,
+      "sha256": "3bfc16fdd7ec1744c573f474faf24f06d6d82718c04ff72a12702f7eb484a972"
+    },
+    {
+      "path": "lunges_1/Virtual_Insoles.parquet",
+      "bytes": 1337815,
+      "sha256": "7b49b2c0a1852bfbb2855464eb12d4164c071acc1eadfd9283845cce9699134d"
+    },
+    {
+      "path": "lunges_2/Activity_Flag.parquet",
+      "bytes": 21327,
+      "sha256": "75c6b8d0f7ef9ca6413f38722bdb5e8e881186d638297f18cb6e5e1ad3ca5017"
+    },
+    {
+      "path": "lunges_2/GroundFrame_GRFs.parquet",
+      "bytes": 520556,
+      "sha256": "ccc755dd48d0d09465ed31a0f95b48f7f37ed83f4bc038ed4a0ffdd42828a5af"
+    },
+    {
+      "path": "lunges_2/Joint_Angle.parquet",
+      "bytes": 749956,
+      "sha256": "a618240ec35b3d68ca9c318b4b30c6591031afd8a185d35e21a5a8982e7e0386"
+    },
+    {
+      "path": "lunges_2/Joint_Moments.parquet",
+      "bytes": 753074,
+      "sha256": "0e6553bee4a07c46aa64b33903fdbb0032fa0a5020ea2c364aa2c2086eeaad30"
+    },
+    {
+      "path": "lunges_2/Joint_Powers.parquet",
+      "bytes": 756571,
+      "sha256": "8efd6878bc26474eeb615e43892f4f397db29d368db83bb98c0325eedd6fc22e"
+    },
+    {
+      "path": "lunges_2/Joint_Velocities.parquet",
+      "bytes": 757341,
+      "sha256": "7e6512cb4bc7c9c7d6a38477aaeaaf1830486815a226580a2ed95cb3133149d0"
+    },
+    {
+      "path": "lunges_2/Raw_EMGs.parquet",
+      "bytes": 8268694,
+      "sha256": "27c54b9c95370e4abb24c8b091d712f680b9113790d39a66c23cfd6d3c3611b7"
+    },
+    {
+      "path": "lunges_2/Real_IMUs.parquet",
+      "bytes": 2647090,
+      "sha256": "73438757b308b587316ca00d39d869f630b49b68e9b0f6b71fdc38e98f8fe630"
+    },
+    {
+      "path": "lunges_2/Virtual_IMUs.parquet",
+      "bytes": 2586846,
+      "sha256": "45073d92cd7e77e0fbc45dd696852af796d4d0fb0fc3731fe4a815d7485ab01b"
+    },
+    {
+      "path": "lunges_2/Virtual_Insoles.parquet",
+      "bytes": 555190,
+      "sha256": "d2a7a7d511fe4adcc2bba1a96578b4ed932ff5447b3fe37533f7e00b61a9b3a3"
+    },
+    {
+      "path": "meander_1/Activity_Flag.parquet",
+      "bytes": 33377,
+      "sha256": "bea6b6254f60198407dbf75e0693b68dccabd1d7f0410fe52b2e9d337ebbf859"
+    },
+    {
+      "path": "meander_1/GroundFrame_GRFs.parquet",
+      "bytes": 662035,
+      "sha256": "8f5e7d1cac015118de81243786716b99e0d793cb01304b3010f7ae82e7757350"
+    },
+    {
+      "path": "meander_1/Joint_Angle.parquet",
+      "bytes": 1230850,
+      "sha256": "329b9489850a4ca9234aa95feef1a8c1c84aab6a94b6d6a4876fb767ffe4e6e9"
+    },
+    {
+      "path": "meander_1/Joint_Moments.parquet",
+      "bytes": 1077000,
+      "sha256": "ef4e2af415f73ec3c773a611017bd29632f0e543366301211b49c023fb44346d"
+    },
+    {
+      "path": "meander_1/Joint_Powers.parquet",
+      "bytes": 1081942,
+      "sha256": "d1eba11cdd5dc185b1aaec34b11b97a7bb36904c9025fda80b55c6725f53b327"
+    },
+    {
+      "path": "meander_1/Joint_Velocities.parquet",
+      "bytes": 1237586,
+      "sha256": "9cea5d111658e44a50b73eb7988f44f00655dd6000fed4686e9ca3c485dfa804"
+    },
+    {
+      "path": "meander_1/Raw_EMGs.parquet",
+      "bytes": 12920077,
+      "sha256": "2773e30e97dc278b5a88b4e677d244f849f933361cfc2590a15dc0a6e2f4ec00"
+    },
+    {
+      "path": "meander_1/Real_IMUs.parquet",
+      "bytes": 4228771,
+      "sha256": "33866a7eb4bd9c469e228680dc08f0305818f09a831ce8e28879c97622ac9d4f"
+    },
+    {
+      "path": "meander_1/Virtual_IMUs.parquet",
+      "bytes": 4210292,
+      "sha256": "d98bd66ee7721b45d02ee72b029d0b616d0962db5d1a0b643363587e43591cc8"
+    },
+    {
+      "path": "meander_1/Virtual_Insoles.parquet",
+      "bytes": 669471,
+      "sha256": "a232b12c06cc7de20fe980e474d1398c94582874d20de2c450ea641804ce2f6c"
+    },
+    {
+      "path": "normal_walk_1/Activity_Flag.parquet",
+      "bytes": 138314,
+      "sha256": "99c236c01572e0bd92fd944cb2c2e7141622cc2e0e5977c1d422707a4fc1bea8"
+    },
+    {
+      "path": "normal_walk_1/GroundFrame_GRFs.parquet",
+      "bytes": 892240,
+      "sha256": "ea00123220aea531b4d446861a06d67f48b2793cbe4f041583cdecded58533ac"
+    },
+    {
+      "path": "normal_walk_1/Joint_Angle.parquet",
+      "bytes": 5486679,
+      "sha256": "b7e7c7a5da660c2ff980cc1a4d395db43404556f0d236383075fd0e1b669e674"
+    },
+    {
+      "path": "normal_walk_1/Joint_Moments.parquet",
+      "bytes": 2359068,
+      "sha256": "f032d60f218087c103f376d18180a98945fde8fec101039e00bfb45d2191d7b8"
+    },
+    {
+      "path": "normal_walk_1/Joint_Powers.parquet",
+      "bytes": 2365883,
+      "sha256": "fff51ee5539aa950352d7f235c9a0b8b7d66d9148fff6919485b3d8dd3f5f423"
+    },
+    {
+      "path": "normal_walk_1/Joint_Velocities.parquet",
+      "bytes": 5491887,
+      "sha256": "27b5be244e4610cb74f9ed7ebc374f88b1e77572de223b6ada800747c2e7bc93"
+    },
+    {
+      "path": "normal_walk_1/Raw_EMGs.parquet",
+      "bytes": 59857520,
+      "sha256": "8bdfd742c95fd0b0ffc0453db22c722a331a0df1b48a6ce7d9018819495b3607"
+    },
+    {
+      "path": "normal_walk_1/Real_IMUs.parquet",
+      "bytes": 19458173,
+      "sha256": "31a12f8dd55da176394a487cd82b237955b0ce7447538ce1b86cec93d43e4778"
+    },
+    {
+      "path": "normal_walk_1/Virtual_IMUs.parquet",
+      "bytes": 18874179,
+      "sha256": "176f088a619c78aa4af87ffbd4132be192a4f683219c56d37b40f15dc14944e1"
+    },
+    {
+      "path": "normal_walk_1/Virtual_Insoles.parquet",
+      "bytes": 1356542,
+      "sha256": "2966f6750edd046e107030aa8649557819bcaf2354df8ec84844b3c06f23dc75"
+    },
+    {
+      "path": "obstacle_walk_1/Activity_Flag.parquet",
+      "bytes": 47484,
+      "sha256": "94653a415434b616e99ed1a61c91d0467015ec78e68680a0c1faa96d2fc45f9f"
+    },
+    {
+      "path": "obstacle_walk_1/GroundFrame_GRFs.parquet",
+      "bytes": 449413,
+      "sha256": "8b41f3e8f3ced0e70915d4182b96c4287c1f8848109c00bde805518802d32f7a"
+    },
+    {
+      "path": "obstacle_walk_1/Joint_Angle.parquet",
+      "bytes": 1800946,
+      "sha256": "0b5023c4e8f80185a07d99b49b5f6dd939889498a16f2ffa68324cdc53b972de"
+    },
+    {
+      "path": "obstacle_walk_1/Joint_Moments.parquet",
+      "bytes": 780276,
+      "sha256": "8e61415741ffe0c05aa68a2d18f05f5f8c52562fc37622559d00a8cb910a5220"
+    },
+    {
+      "path": "obstacle_walk_1/Joint_Powers.parquet",
+      "bytes": 782335,
+      "sha256": "e2abe1611b02b72d0c39e74de8d6e2c152a40a4855d73da6e82c80f1ccecc3b4"
+    },
+    {
+      "path": "obstacle_walk_1/Joint_Velocities.parquet",
+      "bytes": 1802889,
+      "sha256": "2b00f979e59eaa0f10886192ac4081046a781253cc53d7f97d69a3aad6749f08"
+    },
+    {
+      "path": "obstacle_walk_1/Raw_EMGs.parquet",
+      "bytes": 19521689,
+      "sha256": "a90088087c28baa7eb833f32835ef4aff645e687ab8ba9a67fa5a4f803f47db1"
+    },
+    {
+      "path": "obstacle_walk_1/Real_IMUs.parquet",
+      "bytes": 6347340,
+      "sha256": "f6a79f02b3b2ffcbd4e99cbce9b7dec1f07625604c7a0136b8432298c3b04992"
+    },
+    {
+      "path": "obstacle_walk_1/Virtual_IMUs.parquet",
+      "bytes": 6188061,
+      "sha256": "8ac1dafdbc9aea1a1dc4f5e1403b07fb583f84c40695e882d8e42b72d356d500"
+    },
+    {
+      "path": "obstacle_walk_1/Virtual_Insoles.parquet",
+      "bytes": 526441,
+      "sha256": "e246fb1dca3810e5976b9a06edcecaf1b9fb440e1e1bba128c427d1dea8e8bd0"
+    },
+    {
+      "path": "participant.json",
+      "bytes": 1711,
+      "sha256": "bbf640a2b3e5bb864db0677a9b4856704a1b3e42597ca3c80e2fb87f6c55c03e"
+    },
+    {
+      "path": "poses_1/Activity_Flag.parquet",
+      "bytes": 86628,
+      "sha256": "6cd8a09fc049b12dd9edd712e7db3c98d57063eb78c6ff979a3412704f1fa775"
+    },
+    {
+      "path": "poses_1/GroundFrame_GRFs.parquet",
+      "bytes": 2408963,
+      "sha256": "49c24e2e71c23d97558c8d89cf58c568ef643e41b7fb80eda35eed8556021224"
+    },
+    {
+      "path": "poses_1/Joint_Angle.parquet",
+      "bytes": 3349609,
+      "sha256": "1c430fa0324c4a1d7b6cf1283e2af64d92b730fdd8192267a09578a5d00bfdac"
+    },
+    {
+      "path": "poses_1/Joint_Moments.parquet",
+      "bytes": 3346252,
+      "sha256": "e4219eab534f8331c389c8adffea754ebe15caaf13c9a07c59d2b698cd135d65"
+    },
+    {
+      "path": "poses_1/Joint_Powers.parquet",
+      "bytes": 3377322,
+      "sha256": "31c0f1ba5db214429121d4a2cc2e20e76f638bf8280ea5677a09218019d0bd9d"
+    },
+    {
+      "path": "poses_1/Joint_Velocities.parquet",
+      "bytes": 3404199,
+      "sha256": "b628989220964d68f26f039b04f945d0a3b62bfa532b98177201df48c062895f"
+    },
+    {
+      "path": "poses_1/Raw_EMGs.parquet",
+      "bytes": 36027514,
+      "sha256": "d3784dd4ef69662ccbeb067d45acfe11af6fb76be6573007f4fd329d79df6e63"
+    },
+    {
+      "path": "poses_1/Real_IMUs.parquet",
+      "bytes": 11501433,
+      "sha256": "17aed411471f5155a39392fbf8df1134ca08c7dfc951a09cac4fc221e79ea3a9"
+    },
+    {
+      "path": "poses_1/Virtual_IMUs.parquet",
+      "bytes": 11542353,
+      "sha256": "821c26ce77e8c6061e45c9ef9ebdd058ed55aa34c728d8e4dde52d102acc55ec"
+    },
+    {
+      "path": "poses_1/Virtual_Insoles.parquet",
+      "bytes": 2641590,
+      "sha256": "bcd33bb18462b00b519a7d006a198da68126e1ca79633667bf1193664663e2f2"
+    },
+    {
+      "path": "push_1/Activity_Flag.parquet",
+      "bytes": 28158,
+      "sha256": "ffe23017544f34009029100d975f114ae5d52344e78709abbde87ecb9fd4b75c"
+    },
+    {
+      "path": "push_1/GroundFrame_GRFs.parquet",
+      "bytes": 705531,
+      "sha256": "0b9ecf72605ff5e79549957228ce37e1a0239ebffc0b1a11e17038970c273082"
+    },
+    {
+      "path": "push_1/Joint_Angle.parquet",
+      "bytes": 999842,
+      "sha256": "1a8608111da3ead46e6840affe74de00640831562a24fcb20c13004ca0e9a5e5"
+    },
+    {
+      "path": "push_1/Joint_Moments.parquet",
+      "bytes": 1001692,
+      "sha256": "719517c49f218a2efd2c1fbff073ca0b4d8064a22d9f5c32f231ac305641f272"
+    },
+    {
+      "path": "push_1/Joint_Powers.parquet",
+      "bytes": 1006900,
+      "sha256": "50ada30346b2c76e740418fe08455f1f2f27e41ee0c6461cff1a9b7901fdbb1f"
+    },
+    {
+      "path": "push_1/Joint_Velocities.parquet",
+      "bytes": 1010738,
+      "sha256": "2e4c330e7f09ab953dad07745c220d0aa767ab9f12104ae4231f673ed6977207"
+    },
+    {
+      "path": "push_1/Raw_EMGs.parquet",
+      "bytes": 10913331,
+      "sha256": "fce1fe82cde073f0a8a26bbe097e2027041c94a76de4c76070f43b4a9d3bece4"
+    },
+    {
+      "path": "push_1/Real_IMUs.parquet",
+      "bytes": 3512761,
+      "sha256": "18fe8188e1de6a7e16449000cd33628d2913b48d785ec627fad53f94cde38e05"
+    },
+    {
+      "path": "push_1/Virtual_IMUs.parquet",
+      "bytes": 3448186,
+      "sha256": "b25f6502071eb7cd2847080b560f74e7aca0fc76d9d7888aed1a5cf926ce9fab"
+    },
+    {
+      "path": "push_1/Virtual_Insoles.parquet",
+      "bytes": 725515,
+      "sha256": "9ea996a1484bba304a0dfff44e314e0b39f48c0d1d4760ccd9ab700f4f3ca101"
+    },
+    {
+      "path": "run_summary.json",
+      "bytes": 322,
+      "sha256": "6e2382f6af4337154b4c6d987ee94852d6976baa0b008602a6641a9d50b0f64e"
+    },
+    {
+      "path": "side_shuffle_1/Activity_Flag.parquet",
+      "bytes": 15903,
+      "sha256": "d5c0dd7711f0c9d21851742485a7c5e42d19d1386ee55474408c9ae0a31f27b1"
+    },
+    {
+      "path": "side_shuffle_1/GroundFrame_GRFs.parquet",
+      "bytes": 353526,
+      "sha256": "b7985971530cb13b07605e96234f8615be20606efc067b5d0b977afa3fa6d1f3"
+    },
+    {
+      "path": "side_shuffle_1/Joint_Angle.parquet",
+      "bytes": 527360,
+      "sha256": "63ea81ac42dcdeaa366b655a4895bab144a25120f7583aac263ceb0084e41bec"
+    },
+    {
+      "path": "side_shuffle_1/Joint_Moments.parquet",
+      "bytes": 530989,
+      "sha256": "26134ec3efccf87c93666f98ac4665c35b49e2c96c9cfcd1a7e70d472551b7a3"
+    },
+    {
+      "path": "side_shuffle_1/Joint_Powers.parquet",
+      "bytes": 533458,
+      "sha256": "6d8b0f844f579ed7167618a4e1a10208b8ef8b8094a81dbef46f21fd97d2ddf2"
+    },
+    {
+      "path": "side_shuffle_1/Joint_Velocities.parquet",
+      "bytes": 535350,
+      "sha256": "b5348381b0f5ad0fa9c4d5bd1fe8055e4c9dff617932912d275acd680d6f16d4"
+    },
+    {
+      "path": "side_shuffle_1/Raw_EMGs.parquet",
+      "bytes": 5800710,
+      "sha256": "4254794e5b003d6a05e8690a655e061f7e8bca79450bd90046dc8af5ca87673f"
+    },
+    {
+      "path": "side_shuffle_1/Real_IMUs.parquet",
+      "bytes": 1856545,
+      "sha256": "6fe3dbad0be590a5e9e88e1d01a1f68388c9d379d6d7dbe9c36c2045654c0b82"
+    },
+    {
+      "path": "side_shuffle_1/Virtual_IMUs.parquet",
+      "bytes": 1824723,
+      "sha256": "956fd11b7fb4a2e3d86a01834caa5c893da0a3b4663344a5744a6b8f84d0907e"
+    },
+    {
+      "path": "side_shuffle_1/Virtual_Insoles.parquet",
+      "bytes": 360609,
+      "sha256": "f8e67029193b165da0fe462ab475b8348822f9c97e8455fe23a43ec62dfa4bd1"
+    },
+    {
+      "path": "sit_to_stand_1/Activity_Flag.parquet",
+      "bytes": 142137,
+      "sha256": "0c3a5aedf5ccff17f9ef62ab1917f5034cb8dc2bcb114af5b862c427525422f0"
+    },
+    {
+      "path": "sit_to_stand_1/GroundFrame_GRFs.parquet",
+      "bytes": 4135016,
+      "sha256": "063f7ffb25ec881aea7ba7634a1b9c6ab1f3ade930786aeef4858a8680c7064a"
+    },
+    {
+      "path": "sit_to_stand_1/Joint_Angle.parquet",
+      "bytes": 5493226,
+      "sha256": "803685e5365ceee54dfbbe08f1a7d73016630739457032135daab49e9cf18fe2"
+    },
+    {
+      "path": "sit_to_stand_1/Joint_Moments.parquet",
+      "bytes": 5532221,
+      "sha256": "85194e04469c952209694a96fbd22dad936672e0568d471bbec9464fdf0cb234"
+    },
+    {
+      "path": "sit_to_stand_1/Joint_Powers.parquet",
+      "bytes": 5589568,
+      "sha256": "cd9d4da9eb3aed5dfbc9366b8d456271e25b48db3de6d7f159c50d8c4a24216e"
+    },
+    {
+      "path": "sit_to_stand_1/Joint_Velocities.parquet",
+      "bytes": 5620405,
+      "sha256": "97749427bdc009001a63c6dbd8d3f217d1456045a17d6c3ddcd4876aee3669f4"
+    },
+    {
+      "path": "sit_to_stand_1/Raw_EMGs.parquet",
+      "bytes": 59570392,
+      "sha256": "2d62d74623dcf08fce0e7500eb8549f9710b8956b3e2277fcfb8859244bd9e50"
+    },
+    {
+      "path": "sit_to_stand_1/Real_IMUs.parquet",
+      "bytes": 19171051,
+      "sha256": "bc2bdd5f95a30751b81f0521f351a20f574396fdf0fde45d696d6bd3792bb92b"
+    },
+    {
+      "path": "sit_to_stand_1/Virtual_IMUs.parquet",
+      "bytes": 19104710,
+      "sha256": "c397f8b158da3bd770a19aae61c556f9a40c2a5beac465f8aa573252d11cbca5"
+    },
+    {
+      "path": "sit_to_stand_1/Virtual_Insoles.parquet",
+      "bytes": 4616205,
+      "sha256": "eba03cd5f6f281c78bbdb8812e38c71c4d097da6a1d72a1b53765a30aff4e82d"
+    },
+    {
+      "path": "sit_to_stand_2/Activity_Flag.parquet",
+      "bytes": 64843,
+      "sha256": "30339422b2eda9e342a24a3bd193e1e7c9d494de36348bc86b4ec816516fd49a"
+    },
+    {
+      "path": "sit_to_stand_2/GroundFrame_GRFs.parquet",
+      "bytes": 1792290,
+      "sha256": "542e726b2caae02289a194f57684a60798c6cc9a6bbd02e5ff828126e607455f"
+    },
+    {
+      "path": "sit_to_stand_2/Joint_Angle.parquet",
+      "bytes": 2432181,
+      "sha256": "cb086ff6e9f13b60c9deb31fb1e64c8f1428149d0fcf4604e5dc2378c591d72a"
+    },
+    {
+      "path": "sit_to_stand_2/Joint_Moments.parquet",
+      "bytes": 2447694,
+      "sha256": "98814c745ad836d073a7c6c53bdf9a6d1404e355459e2e1b550f7b3d26a14d91"
+    },
+    {
+      "path": "sit_to_stand_2/Joint_Powers.parquet",
+      "bytes": 2466514,
+      "sha256": "9701867efd239f00d2219c3ce95871257c47fff509fc73cd5e1d8560330598d5"
+    },
+    {
+      "path": "sit_to_stand_2/Joint_Velocities.parquet",
+      "bytes": 2479361,
+      "sha256": "958a430f9c09ddd3bf11a6b817014d8be844c98ef54cdc88d7e0b4b393985b29"
+    },
+    {
+      "path": "sit_to_stand_2/Raw_EMGs.parquet",
+      "bytes": 26421177,
+      "sha256": "11eb551590cc9d89ba9017a07a570bbb1525f996a1fb91b71612f841e9129ee0"
+    },
+    {
+      "path": "sit_to_stand_2/Real_IMUs.parquet",
+      "bytes": 8501150,
+      "sha256": "3ca175e00babdfec4401fb136e2ed7a33f731c59ddf4de6cfd3bc23a6010d3fa"
+    },
+    {
+      "path": "sit_to_stand_2/Virtual_IMUs.parquet",
+      "bytes": 8430735,
+      "sha256": "e418b3aaf332e01f06b8146b2ac8e822117b9b9df14326b06fda3a0a494cfba4"
+    },
+    {
+      "path": "sit_to_stand_2/Virtual_Insoles.parquet",
+      "bytes": 2039916,
+      "sha256": "83e283c2c45c86e87637547dd2f70d40e4f1caf7f3baca7bc9a8d3908375c31f"
+    },
+    {
+      "path": "squats_1/Activity_Flag.parquet",
+      "bytes": 37119,
+      "sha256": "e0ef4c8c06a15f0ac23391d965481a20786a1c11e7c9259fae014c887afb38ea"
+    },
+    {
+      "path": "squats_1/GroundFrame_GRFs.parquet",
+      "bytes": 749926,
+      "sha256": "edd77ff2d78bf5daca49465c12b7f012b655ca0c3cbd3d078155c2e443aed0f7"
+    },
+    {
+      "path": "squats_1/Joint_Angle.parquet",
+      "bytes": 1375560,
+      "sha256": "cc6f0effa7e8c96497c2749bad1376bb94f336ae186ce1ed946eb45adbe9f5b5"
+    },
+    {
+      "path": "squats_1/Joint_Moments.parquet",
+      "bytes": 1117604,
+      "sha256": "b08c2f124d8d163a6d801b550160399af7c767f694d7cc4048d07faf508a69a4"
+    },
+    {
+      "path": "squats_1/Joint_Powers.parquet",
+      "bytes": 1125346,
+      "sha256": "37f3d193ac39bb40e8e72b7e6539cf6c5ed2c515365b42e54ea7b0e9fe751e42"
+    },
+    {
+      "path": "squats_1/Joint_Velocities.parquet",
+      "bytes": 1393431,
+      "sha256": "01ef466b7a1e5345099837ecbb58cb04366731203f43a1dd9c7c4881ded57603"
+    },
+    {
+      "path": "squats_1/Raw_EMGs.parquet",
+      "bytes": 15103972,
+      "sha256": "e44e3cd607499fd1c0e6dc865fac154b508bd7fd89d4c609b2d6b49ceabe8d9f"
+    },
+    {
+      "path": "squats_1/Real_IMUs.parquet",
+      "bytes": 4802641,
+      "sha256": "2f46d81f9731d81c026e796d317d0a10e039e39ef97ac539b21de9b917221ce4"
+    },
+    {
+      "path": "squats_1/Virtual_IMUs.parquet",
+      "bytes": 4747633,
+      "sha256": "fec9eecc21d25d1b9f0e1a845cc9dfa79a8c5c868baa50a0fcdb97b0469236ef"
+    },
+    {
+      "path": "squats_1/Virtual_Insoles.parquet",
+      "bytes": 858830,
+      "sha256": "37372c303b09b20c6acd8870572b8fddaa264b75e76a9dfbcd14bd021a9588db"
+    },
+    {
+      "path": "stairs_1_1/Activity_Flag.parquet",
+      "bytes": 2505,
+      "sha256": "1effebc30e892dd6df20a495bd6e720fa352ea7b4a58879c27774b49f4e49c91"
+    },
+    {
+      "path": "stairs_1_1/GroundFrame_GRFs.parquet",
+      "bytes": 21264,
+      "sha256": "2391b40b5a0cf9fc5b9bc4f4e4256ba59d4956f4b95e8ff9fb4239b1f6ca6a50"
+    },
+    {
+      "path": "stairs_1_1/Joint_Angle.parquet",
+      "bytes": 56233,
+      "sha256": "a9bde96093810386b048d1716b20518e859f2f902e3149a994226dd041c5980a"
+    },
+    {
+      "path": "stairs_1_1/Joint_Moments.parquet",
+      "bytes": 38534,
+      "sha256": "2e1baf312bf96e78320cee9ba0eba0db087fcb5b305bc21ac2e72e1c2d91b055"
+    },
+    {
+      "path": "stairs_1_1/Joint_Powers.parquet",
+      "bytes": 38462,
+      "sha256": "bd795a7c3d9e07173d8360effaebba4c57bd28fc5b3e72ff940a0edd386461f1"
+    },
+    {
+      "path": "stairs_1_1/Joint_Velocities.parquet",
+      "bytes": 56811,
+      "sha256": "7a963acd25f125d75c335b5c43689d2ece90644166ab7f863c2cf22ffc106f90"
+    },
+    {
+      "path": "stairs_1_1/Raw_EMGs.parquet",
+      "bytes": 594308,
+      "sha256": "d643f839d37b753fdadd278cbf40c9914883780c31d6d28147f3724f3e2dc7fd"
+    },
+    {
+      "path": "stairs_1_1/Real_IMUs.parquet",
+      "bytes": 196382,
+      "sha256": "2ec70c86c7f3a565188225c4b535a53eb9edcd1bd988ce2f4cd05eb7dad18b11"
+    },
+    {
+      "path": "stairs_1_1/Virtual_IMUs.parquet",
+      "bytes": 193000,
+      "sha256": "ac2a4c94e029bbb99b6b258d83f60bc874bb9bf7dd343105b6d031400fb41b05"
+    },
+    {
+      "path": "stairs_1_1/Virtual_Insoles.parquet",
+      "bytes": 19647,
+      "sha256": "38c12b92b297bf1f26e0f56a7ca892747edc84ba5d590b05f8e24c96bc6cc8dc"
+    },
+    {
+      "path": "stairs_1_10/Activity_Flag.parquet",
+      "bytes": 2120,
+      "sha256": "931d5f3a271b42624991dedb2d03cddd8aeb9e1e77463ec6d191fb0ccd3c274c"
+    },
+    {
+      "path": "stairs_1_10/GroundFrame_GRFs.parquet",
+      "bytes": 14819,
+      "sha256": "f0a49448616d7c5076c3b151788a8773b63ff07133a5fa0349d6ecfdffeb94d6"
+    },
+    {
+      "path": "stairs_1_10/Joint_Angle.parquet",
+      "bytes": 42064,
+      "sha256": "9f1e8370c870c7d00058a1810e482adb4180971562cf8909b5d57e9f432b8052"
+    },
+    {
+      "path": "stairs_1_10/Joint_Moments.parquet",
+      "bytes": 25142,
+      "sha256": "c34265df6bd61b336759a324ab1ca3a65cb90f604141630e4ba90c33c2a334fb"
+    },
+    {
+      "path": "stairs_1_10/Joint_Powers.parquet",
+      "bytes": 24998,
+      "sha256": "22febc935f5fa00064380d061894cfe573f47bc9e80208f545fe9ad4cb8d6413"
+    },
+    {
+      "path": "stairs_1_10/Joint_Velocities.parquet",
+      "bytes": 42655,
+      "sha256": "5422ff18add25f195b9c208317deb9cbb72cac9d7b1f4a88e627632cb12f1f54"
+    },
+    {
+      "path": "stairs_1_10/Raw_EMGs.parquet",
+      "bytes": 434090,
+      "sha256": "a1cd65760f5adad7635eb39b8caa43be25f2a0b4a31cf0f3bcd98daead9d6952"
+    },
+    {
+      "path": "stairs_1_10/Real_IMUs.parquet",
+      "bytes": 149762,
+      "sha256": "bf11134bf081880af3d237a38482b739e8e25f197326f2dfa92b385251a291f5"
+    },
+    {
+      "path": "stairs_1_10/Virtual_IMUs.parquet",
+      "bytes": 144832,
+      "sha256": "d41da4b64223685b3a6486d214227b09618fc405162eb452126fe6db9891bb50"
+    },
+    {
+      "path": "stairs_1_10/Virtual_Insoles.parquet",
+      "bytes": 12891,
+      "sha256": "d824913e3d943b077a59819788c9b0e8e3cc38f686b764e5910e13ca63b292f7"
+    },
+    {
+      "path": "stairs_1_2/Activity_Flag.parquet",
+      "bytes": 2475,
+      "sha256": "e958cdaf028dcb3455711bedb3f91c86cbd54bddb7a75f321d2c9343779e5aba"
+    },
+    {
+      "path": "stairs_1_2/GroundFrame_GRFs.parquet",
+      "bytes": 21876,
+      "sha256": "b731fdc364150c23e4d417749bcc98971ab5e9b6ca61cb37f643f21053dc68ac"
+    },
+    {
+      "path": "stairs_1_2/Joint_Angle.parquet",
+      "bytes": 56184,
+      "sha256": "3363632a96c76acd064e08c2eb9aaa7990134f650af787b14e68d56b97c4dca2"
+    },
+    {
+      "path": "stairs_1_2/Joint_Moments.parquet",
+      "bytes": 38384,
+      "sha256": "3301b609a23c2544b762c08cb68e37d9673fdff0b48e3b77752380839a3bdf26"
+    },
+    {
+      "path": "stairs_1_2/Joint_Powers.parquet",
+      "bytes": 38424,
+      "sha256": "85533967429591ef44f477eff2cff7064616cc2f90a0d0b3f3fcdf2a4e2cdb87"
+    },
+    {
+      "path": "stairs_1_2/Joint_Velocities.parquet",
+      "bytes": 56749,
+      "sha256": "424831bc1a7da1569987433bfbab95c1aab099f6455ed37daed9e0f2d50e9e0f"
+    },
+    {
+      "path": "stairs_1_2/Raw_EMGs.parquet",
+      "bytes": 590189,
+      "sha256": "c71cc2ad65c1eb05659dcb725417c80e2c19f124247b0faee9ffa15e6a0eeef7"
+    },
+    {
+      "path": "stairs_1_2/Real_IMUs.parquet",
+      "bytes": 196428,
+      "sha256": "0a492aa9b0dcd4bfa964c81fbec518422a3fe04d249b70154a4e169120e80ecb"
+    },
+    {
+      "path": "stairs_1_2/Virtual_IMUs.parquet",
+      "bytes": 192979,
+      "sha256": "5b3f44c69d1cf4221202ac582b3d185528d0a5ca3dce4e79812eb5f84a280e74"
+    },
+    {
+      "path": "stairs_1_2/Virtual_Insoles.parquet",
+      "bytes": 19663,
+      "sha256": "503e8b63973e42e8b65703a2a5001e49bb4f92b1c6043bcf30b05dbdc2f8466e"
+    },
+    {
+      "path": "stairs_1_3/Activity_Flag.parquet",
+      "bytes": 2424,
+      "sha256": "18b91895f86a7d7e178e7d8cff9d532cf40503261e1ee8ab625d298c9ee61418"
+    },
+    {
+      "path": "stairs_1_3/GroundFrame_GRFs.parquet",
+      "bytes": 20410,
+      "sha256": "39612f320f917f5b3dc23b58bbd49c3d62a8bfcd8cfa58225049a57829ee0512"
+    },
+    {
+      "path": "stairs_1_3/Joint_Angle.parquet",
+      "bytes": 54544,
+      "sha256": "0b573d2b376087fe77427f7cad5b942495c2a4f4a3deb6073243f082d9759be4"
+    },
+    {
+      "path": "stairs_1_3/Joint_Moments.parquet",
+      "bytes": 37082,
+      "sha256": "6b53d1e750cddbee13617aa9ba897b331fff397825ba8fc8e9c75904f6c762e9"
+    },
+    {
+      "path": "stairs_1_3/Joint_Powers.parquet",
+      "bytes": 37000,
+      "sha256": "9a6c0dfd8152ea11c403017aee9dca7505f232aa4e3616f140e2fae861392e97"
+    },
+    {
+      "path": "stairs_1_3/Joint_Velocities.parquet",
+      "bytes": 55142,
+      "sha256": "ebbac4ae91c243d2f491b211b66fad8f5a490ab6517b7c48f1346c397195b4fb"
+    },
+    {
+      "path": "stairs_1_3/Raw_EMGs.parquet",
+      "bytes": 576556,
+      "sha256": "8737cdcc08dcbbdc3a694058cbb78eb401d28f3033c7d07c179f6f77fcde4aa3"
+    },
+    {
+      "path": "stairs_1_3/Real_IMUs.parquet",
+      "bytes": 191022,
+      "sha256": "578ad9f8d52acf433bb127a8875adf1fe817dafa71a7e0f347a6fb180a917bee"
+    },
+    {
+      "path": "stairs_1_3/Virtual_IMUs.parquet",
+      "bytes": 187403,
+      "sha256": "a920b05627b982fa761917ec56c304e5cb3ca5ec95b9d14192aa47f773ef7cff"
+    },
+    {
+      "path": "stairs_1_3/Virtual_Insoles.parquet",
+      "bytes": 18781,
+      "sha256": "ee902d67983e43ac89fc3766276a18cbe4e913a9d26fc03ad14d3c9d7acbb29b"
+    },
+    {
+      "path": "stairs_1_4/Activity_Flag.parquet",
+      "bytes": 2343,
+      "sha256": "2393301f489f317d076e788d995c0337f670dbc2f967787f71d6a63552456e9b"
+    },
+    {
+      "path": "stairs_1_4/GroundFrame_GRFs.parquet",
+      "bytes": 20733,
+      "sha256": "07cf17deeb3633a5b95fd2329dd67c937225fafc15946c319e6c62334480c3c0"
+    },
+    {
+      "path": "stairs_1_4/Joint_Angle.parquet",
+      "bytes": 52769,
+      "sha256": "3194bda61c00ea3f1ceace59dceec2c2a1763e9de090f15afb4f6dbaf0caa788"
+    },
+    {
+      "path": "stairs_1_4/Joint_Moments.parquet",
+      "bytes": 34214,
+      "sha256": "dc1998b6c0d9d20664d3a7485050d5f41dffbb8774e5c336d77ef72d065adbde"
+    },
+    {
+      "path": "stairs_1_4/Joint_Powers.parquet",
+      "bytes": 34303,
+      "sha256": "28a07919107bc03da11aaa3f348866489031f6b10dbe30bd3bd124a3cfdff284"
+    },
+    {
+      "path": "stairs_1_4/Joint_Velocities.parquet",
+      "bytes": 53372,
+      "sha256": "7d10469d1f613de34e5f04e66d2b17318f6c4c4260a3fa9b7ea2bd56ffc45066"
+    },
+    {
+      "path": "stairs_1_4/Raw_EMGs.parquet",
+      "bytes": 552799,
+      "sha256": "3e9bf159c69aa24ab35d2511393863f815536548e62f635a831499171b87ed5d"
+    },
+    {
+      "path": "stairs_1_4/Real_IMUs.parquet",
+      "bytes": 185713,
+      "sha256": "ec4bd1ccc1a41e4549778313fbc1cd222c51f3d20d857e4b657628b994105aef"
+    },
+    {
+      "path": "stairs_1_4/Virtual_IMUs.parquet",
+      "bytes": 181640,
+      "sha256": "5caccb1ceffb76ff880abe9e593595fe31fcfed29c05d6c4d2234a92f247978d"
+    },
+    {
+      "path": "stairs_1_4/Virtual_Insoles.parquet",
+      "bytes": 18280,
+      "sha256": "dc872da5c8e57189e93cc51266e23d7a2b0daa15380bf551cb46b4d5be0a0ae2"
+    },
+    {
+      "path": "stairs_1_5/Activity_Flag.parquet",
+      "bytes": 2366,
+      "sha256": "a6b8f7d88bd87722ef85d515f274445366eb178bb149559095b9c14138392aa7"
+    },
+    {
+      "path": "stairs_1_5/GroundFrame_GRFs.parquet",
+      "bytes": 19999,
+      "sha256": "4c3e84dac5933070e4c803748c4cdeac4d8b3024974df59021fceec0cac9a5e1"
+    },
+    {
+      "path": "stairs_1_5/Joint_Angle.parquet",
+      "bytes": 54017,
+      "sha256": "789415a5a6d07b330ac3691a928aa345cfde50a1b04cc100d9b73fce6fd3a827"
+    },
+    {
+      "path": "stairs_1_5/Joint_Moments.parquet",
+      "bytes": 36061,
+      "sha256": "da29d91bd5607832859499185af44fc0855286acf4d4767740e70db70e2689e4"
+    },
+    {
+      "path": "stairs_1_5/Joint_Powers.parquet",
+      "bytes": 35981,
+      "sha256": "59990c3f7b977572a59565e7da1d048bc43c646ccabca5a4981fa0dd85cfac3a"
+    },
+    {
+      "path": "stairs_1_5/Joint_Velocities.parquet",
+      "bytes": 54509,
+      "sha256": "ef66f13641763b056114ebfe583383b1148955e7fd26607a8ea71b62ddac8185"
+    },
+    {
+      "path": "stairs_1_5/Raw_EMGs.parquet",
+      "bytes": 568871,
+      "sha256": "782caf67d727275f12ae7e9e2c1008c66ded980b3e141a0f61ae0b3630210d69"
+    },
+    {
+      "path": "stairs_1_5/Real_IMUs.parquet",
+      "bytes": 188992,
+      "sha256": "21d1f320bc76335a52b7bf96f13b198761ddf4a12da4f3a2dfb9d18c8176f381"
+    },
+    {
+      "path": "stairs_1_5/Virtual_IMUs.parquet",
+      "bytes": 185516,
+      "sha256": "2ea0f575dbd22b1ddd89e67464a7efce66335d84e0fd2a86ebadb80482aee0f2"
+    },
+    {
+      "path": "stairs_1_5/Virtual_Insoles.parquet",
+      "bytes": 18451,
+      "sha256": "61a78c714f80ea2a825e14e40346942f941c66048de27e20c4b8851d2c42bab1"
+    },
+    {
+      "path": "stairs_1_6/Activity_Flag.parquet",
+      "bytes": 2348,
+      "sha256": "38fb7381b92405965bb6ad61a5d50217201bbf15f77e65cb51de65f2cf4b5056"
+    },
+    {
+      "path": "stairs_1_6/GroundFrame_GRFs.parquet",
+      "bytes": 20562,
+      "sha256": "84896451588178185daa64a22327016f7730438479dac352a6ee90aee2cfaf51"
+    },
+    {
+      "path": "stairs_1_6/Joint_Angle.parquet",
+      "bytes": 53121,
+      "sha256": "095991d0f5763c29250a3cf8c5e31217b6ddd1e2cd51c5c70c008184cf48be43"
+    },
+    {
+      "path": "stairs_1_6/Joint_Moments.parquet",
+      "bytes": 34414,
+      "sha256": "c9f3b8ea1b1f7b661bddfd99caea9105a045a709ec97bd96c4f42c5ae02d161f"
+    },
+    {
+      "path": "stairs_1_6/Joint_Powers.parquet",
+      "bytes": 34525,
+      "sha256": "19d4a22ac6cc90e79f98fe1369cd82734837424eee67a5d6872dd846c9fac3d8"
+    },
+    {
+      "path": "stairs_1_6/Joint_Velocities.parquet",
+      "bytes": 53679,
+      "sha256": "8702e6f1e7e1a5dd97a69607c3aa9049ff9352f8e97309e480dc4e43144cb9cb"
+    },
+    {
+      "path": "stairs_1_6/Raw_EMGs.parquet",
+      "bytes": 555420,
+      "sha256": "95c7d7604bcf301a2e0fe2fcf018afc4329a57e46ef407f1d95ce42612bc968b"
+    },
+    {
+      "path": "stairs_1_6/Real_IMUs.parquet",
+      "bytes": 187089,
+      "sha256": "9e6164e967c0555ff7024c22e70dd4af2c6873a08abc27d64f32b8a80954b2c6"
+    },
+    {
+      "path": "stairs_1_6/Virtual_IMUs.parquet",
+      "bytes": 182570,
+      "sha256": "32ca0d3dcc4e41021ee28190a0d2acbecd9575d0a0224d3881dcceee3a458b0b"
+    },
+    {
+      "path": "stairs_1_6/Virtual_Insoles.parquet",
+      "bytes": 18266,
+      "sha256": "d76713dfa1738b9ce12e095aac0bcd9efcecd65270fba57616b1f7a939c4b28b"
+    },
+    {
+      "path": "stairs_1_7/Activity_Flag.parquet",
+      "bytes": 2902,
+      "sha256": "8e0bb5efc8823b92df69edfd22f2d82d64e9f86d6d53973516bb5bf6a906611b"
+    },
+    {
+      "path": "stairs_1_7/GroundFrame_GRFs.parquet",
+      "bytes": 34244,
+      "sha256": "f943fb197897e9992804f7597af11acb28a9690a2e2cbe631c1b592027d693ac"
+    },
+    {
+      "path": "stairs_1_7/Joint_Angle.parquet",
+      "bytes": 77389,
+      "sha256": "885c2ec99baf2054d2ed5cc936f8379bb5c912e6d08bfa1150cdb4f081ef1e7b"
+    },
+    {
+      "path": "stairs_1_7/Joint_Moments.parquet",
+      "bytes": 57431,
+      "sha256": "250beb969f8ee71829303b4ac619d38ed3c86e4584adff4344d4b6489d99d9a7"
+    },
+    {
+      "path": "stairs_1_7/Joint_Powers.parquet",
+      "bytes": 57518,
+      "sha256": "b112ce9024035e4a9161ebffced3c18e50477d0e03e65f4f8a2b3d2267dc4e42"
+    },
+    {
+      "path": "stairs_1_7/Joint_Velocities.parquet",
+      "bytes": 78334,
+      "sha256": "2545824588b5b91700d9f2e3ae1e76a10f0b57d4eecbd8b70d1d851fb77526cd"
+    },
+    {
+      "path": "stairs_1_7/Raw_EMGs.parquet",
+      "bytes": 831088,
+      "sha256": "7bda7645d72c09d2470cd0429ee410a0210f2f0aa9d441c61f57aa517f0bd71d"
+    },
+    {
+      "path": "stairs_1_7/Real_IMUs.parquet",
+      "bytes": 268453,
+      "sha256": "3bf83729534c74c661af5eb56e66908292e2c280f10ca7db12d180797fff09a3"
+    },
+    {
+      "path": "stairs_1_7/Virtual_IMUs.parquet",
+      "bytes": 266555,
+      "sha256": "a8449df5ebb04339d7f9ce3f6de3ad7287a666dbcb171c381c3d74cc6d3a4857"
+    },
+    {
+      "path": "stairs_1_7/Virtual_Insoles.parquet",
+      "bytes": 29848,
+      "sha256": "01620e70f7329a5e92b829c78f0b230b174d9e9d569ebd158dd56143804ad10a"
+    },
+    {
+      "path": "stairs_1_8/Activity_Flag.parquet",
+      "bytes": 2725,
+      "sha256": "ee02b93eef8303bf7c1462772e9354c5c960e97164d55679b1ce2666624cc11a"
+    },
+    {
+      "path": "stairs_1_8/GroundFrame_GRFs.parquet",
+      "bytes": 27606,
+      "sha256": "d08474221789681024d11e6addc7873e8cb0eb9089670691c285e301bed775a6"
+    },
+    {
+      "path": "stairs_1_8/Joint_Angle.parquet",
+      "bytes": 69202,
+      "sha256": "9dfec0118f639368a94a03b944fd7251bb5a9a443344e10e84ed39c6ec9d17a8"
+    },
+    {
+      "path": "stairs_1_8/Joint_Moments.parquet",
+      "bytes": 47427,
+      "sha256": "d42c8d6eb7c4f569a63de7d378904a06966e77880c0a3c1e45701771a159d26a"
+    },
+    {
+      "path": "stairs_1_8/Joint_Powers.parquet",
+      "bytes": 47477,
+      "sha256": "4426d9646074cd657ce052f179eb5fb2e4b09ee8407becf438065d422c38289b"
+    },
+    {
+      "path": "stairs_1_8/Joint_Velocities.parquet",
+      "bytes": 69755,
+      "sha256": "4416f404eeadadab345f4266c095ee946df905b49fdc174da4b0a7aeafaa9cb1"
+    },
+    {
+      "path": "stairs_1_8/Raw_EMGs.parquet",
+      "bytes": 704466,
+      "sha256": "535eb9f8a5f1570ce8bcdaa003adc3c265addfee2bdb99b1b60a275d073d9848"
+    },
+    {
+      "path": "stairs_1_8/Real_IMUs.parquet",
+      "bytes": 240264,
+      "sha256": "43175ea8acd9d13a0f14c4fda1fcee26cf34edd89dcfc2b116e07fc99835dc42"
+    },
+    {
+      "path": "stairs_1_8/Virtual_IMUs.parquet",
+      "bytes": 237352,
+      "sha256": "3f8cc2a7bc2671422b3c779754dd4584ec80e50d41f08e9d84dbf6652c4a4577"
+    },
+    {
+      "path": "stairs_1_8/Virtual_Insoles.parquet",
+      "bytes": 25071,
+      "sha256": "74c633bcf02b3083da0407e467910272270252b5b9916b85be8c7837eec644ae"
+    },
+    {
+      "path": "stairs_1_9/Activity_Flag.parquet",
+      "bytes": 2108,
+      "sha256": "eb428fcdfdf603e487320ff39ae498411dbc4d485ae51b892564804f04769a1d"
+    },
+    {
+      "path": "stairs_1_9/GroundFrame_GRFs.parquet",
+      "bytes": 15595,
+      "sha256": "0f5f8a4215058f2109a96f32a952b1d5692d07dd646751d0c9515a11c0e5a0ba"
+    },
+    {
+      "path": "stairs_1_9/Joint_Angle.parquet",
+      "bytes": 44351,
+      "sha256": "10dbc85951fe54504a565f6032dbde27c7261aeb2ac1721bbe3e6aebeaf7bf71"
+    },
+    {
+      "path": "stairs_1_9/Joint_Moments.parquet",
+      "bytes": 27336,
+      "sha256": "4c720cc0f2ffc484d533e88b341e0c6f3b81fe942285dcf2d70fbb6e0d7c5bc5"
+    },
+    {
+      "path": "stairs_1_9/Joint_Powers.parquet",
+      "bytes": 27197,
+      "sha256": "110fd9b1a8645070a3af6a5dfcabbde7d9d9cd717c5167e30304a57c5d051a53"
+    },
+    {
+      "path": "stairs_1_9/Joint_Velocities.parquet",
+      "bytes": 44742,
+      "sha256": "446bdbc1dc33f45dd117866a466564ccc59335f49c192ac6f8e1878bfdc2a8dd"
+    },
+    {
+      "path": "stairs_1_9/Raw_EMGs.parquet",
+      "bytes": 461867,
+      "sha256": "50d64c0143132c850af6c399545cff1e25745d52c080f6f0d9fc8319042b3a7e"
+    },
+    {
+      "path": "stairs_1_9/Real_IMUs.parquet",
+      "bytes": 157018,
+      "sha256": "f43f37ee0eb3c98f76f169912a4b813609565a093846e4c47925eb2615cc30bb"
+    },
+    {
+      "path": "stairs_1_9/Virtual_IMUs.parquet",
+      "bytes": 152240,
+      "sha256": "4b6ab06267f114aabcca973e0169a2e505215f1288b3db61bba9f91fc024a217"
+    },
+    {
+      "path": "stairs_1_9/Virtual_Insoles.parquet",
+      "bytes": 13875,
+      "sha256": "1e3cb0f9909a95142f9c9eaa794bf8a78db264768606baaafbc146054326b377"
+    },
+    {
+      "path": "step_ups_2/Activity_Flag.parquet",
+      "bytes": 39883,
+      "sha256": "9ad24936d1023614ea8d4ff9fae4cc6bbdfbfaad37f8d93091737a95c659a1d6"
+    },
+    {
+      "path": "step_ups_2/GroundFrame_GRFs.parquet",
+      "bytes": 926889,
+      "sha256": "5a4453d428c7f9b5268127c9934a83eae6dfb67e5cbce83d71717d6e1ecb2dfd"
+    },
+    {
+      "path": "step_ups_2/Joint_Angle.parquet",
+      "bytes": 1459039,
+      "sha256": "b52fdc885c19a3a9f07fc91606711c5adf3a9bfb337e679169fd1704ef54ecad"
+    },
+    {
+      "path": "step_ups_2/Joint_Moments.parquet",
+      "bytes": 1458762,
+      "sha256": "a6621934baae14557abdd1f5ffd99027f84b878a1fd7a16d932cd193e7344ea4"
+    },
+    {
+      "path": "step_ups_2/Joint_Powers.parquet",
+      "bytes": 1467476,
+      "sha256": "642f90f8f4cedd7acd6ae8b3ce66bccec15806c7baaa75371583ff71a88b7bee"
+    },
+    {
+      "path": "step_ups_2/Joint_Velocities.parquet",
+      "bytes": 1472371,
+      "sha256": "3b839c02980428347ee266edd9335d7a442287664374515c0dd7156908f06aae"
+    },
+    {
+      "path": "step_ups_2/Raw_EMGs.parquet",
+      "bytes": 15707488,
+      "sha256": "e6e8053da18c506cecd35b5da65f14764319cc87a7071426f074d3f16d1bcbcb"
+    },
+    {
+      "path": "step_ups_2/Real_IMUs.parquet",
+      "bytes": 5091037,
+      "sha256": "1b6411b06761de36522f007cb9e39787f0a361c512a115cade94e95ef55d42c5"
+    },
+    {
+      "path": "step_ups_2/Virtual_IMUs.parquet",
+      "bytes": 5023446,
+      "sha256": "6f9bc1fea0091d18daeb918ba8b1e5a1acff724696bfbd420a83252fbc8b753a"
+    },
+    {
+      "path": "step_ups_2/Virtual_Insoles.parquet",
+      "bytes": 958762,
+      "sha256": "68fdc66afd92d2fad28bf4c0acc324b646774d8e27e966b60e4fe5ddc8aed79b"
+    },
+    {
+      "path": "tire_run_1/Activity_Flag.parquet",
+      "bytes": 34012,
+      "sha256": "4324401f11b68e724c202dfc7056b44804e9679938b1024e3a547e0b6eca2cf7"
+    },
+    {
+      "path": "tire_run_1/GroundFrame_GRFs.parquet",
+      "bytes": 305864,
+      "sha256": "2f98262d1e01a8215a37825a453219bf8a556b799f80fd7bcb3b2f9e50271f11"
+    },
+    {
+      "path": "tire_run_1/Joint_Angle.parquet",
+      "bytes": 1245530,
+      "sha256": "88c5ba03d7410f2ca5c5e542f7411192edc5a12a47325b69b2846b9694df0126"
+    },
+    {
+      "path": "tire_run_1/Joint_Moments.parquet",
+      "bytes": 813705,
+      "sha256": "1d639ab9c9d7cfc881067254cc653a2e2c627fb99ab76093d0aa898565e4c353"
+    },
+    {
+      "path": "tire_run_1/Joint_Powers.parquet",
+      "bytes": 816492,
+      "sha256": "bacd6caf814171bc8e5d083ee063a1f0cd2a0cd3ba3b34f825055a3783d104e4"
+    },
+    {
+      "path": "tire_run_1/Joint_Velocities.parquet",
+      "bytes": 1256127,
+      "sha256": "004a935e44f2fe2e823dfa9bf91ee77bd14ebd5eafa858f7a387224e48971ba6"
+    },
+    {
+      "path": "tire_run_1/Raw_EMGs.parquet",
+      "bytes": 13731068,
+      "sha256": "e8893d334a3bc69927c2344267d3f374a84e5d22911c8befa7e0cee4c0130796"
+    },
+    {
+      "path": "tire_run_1/Real_IMUs.parquet",
+      "bytes": 4436516,
+      "sha256": "2a56dfac7b2cf3f52d99c8e6053aa8fe6bcc7a882681ade20cb9db6945d1e3d4"
+    },
+    {
+      "path": "tire_run_1/Virtual_IMUs.parquet",
+      "bytes": 4306003,
+      "sha256": "6580bc567d6893716608ce0b334f8b54b0e6e9678782a0ef35b27efe2cb6bc96"
+    },
+    {
+      "path": "tire_run_1/Virtual_Insoles.parquet",
+      "bytes": 299993,
+      "sha256": "ac1806c8386c6019ff71b0c29b8de45edcf738618cb2978997a6bd3139b3c2d6"
+    },
+    {
+      "path": "tug_of_war_1/Activity_Flag.parquet",
+      "bytes": 36049,
+      "sha256": "ffad82d1eefc15a678bf36f21da70a68d1955ad565c76ad3726498965e7ad9b1"
+    },
+    {
+      "path": "tug_of_war_1/GroundFrame_GRFs.parquet",
+      "bytes": 973887,
+      "sha256": "e1ef1dd974b32385b20782a4109bf93fa6c62e80e69223bad35ec3c76ad7a95a"
+    },
+    {
+      "path": "tug_of_war_1/Joint_Angle.parquet",
+      "bytes": 1332727,
+      "sha256": "3c7adfb457512addc34da598f12bf50111c47cb6db0ead88c536acd42db526ef"
+    },
+    {
+      "path": "tug_of_war_1/Joint_Moments.parquet",
+      "bytes": 1335206,
+      "sha256": "984a9407bf108de6b07709b6a0efe1290297f970c646a47070383f46eaeb8e14"
+    },
+    {
+      "path": "tug_of_war_1/Joint_Powers.parquet",
+      "bytes": 1345932,
+      "sha256": "fc7e2448bfdcaa7724100bd4b0bace44a27f4a6127da0323877d64137fd3e55f"
+    },
+    {
+      "path": "tug_of_war_1/Joint_Velocities.parquet",
+      "bytes": 1353091,
+      "sha256": "2fc4260554de59b77b7fb60ddc1c88928730560e5f03b6b84d65f919eb3b75f3"
+    },
+    {
+      "path": "tug_of_war_1/Raw_EMGs.parquet",
+      "bytes": 14693721,
+      "sha256": "26b1ac024256d58aed96f97521b348995eb1b723a9fea1fe6b9f78bcbf707431"
+    },
+    {
+      "path": "tug_of_war_1/Real_IMUs.parquet",
+      "bytes": 4690883,
+      "sha256": "bbfc4c6ebd9705be3c2bdf88f45959953184a88534f29614149fe3ccffdd2063"
+    },
+    {
+      "path": "tug_of_war_1/Virtual_IMUs.parquet",
+      "bytes": 4614210,
+      "sha256": "b3159bb3969a99cccba7084acf509b68124e9c8f6cce78ad8a909fa295a06944"
+    },
+    {
+      "path": "tug_of_war_1/Virtual_Insoles.parquet",
+      "bytes": 1062324,
+      "sha256": "de6dbe71875f02c82e74923a6df19de161a6855ec9fb05865d790c0ce2df298a"
+    },
+    {
+      "path": "turn_and_step_1/Activity_Flag.parquet",
+      "bytes": 39248,
+      "sha256": "cbbd24d96854e78ba7d8bae182d766c3993ffa81d3a320931266464c4364fc99"
+    },
+    {
+      "path": "turn_and_step_1/GroundFrame_GRFs.parquet",
+      "bytes": 457842,
+      "sha256": "3485f07b723710a553d61a38edac649ab084ab3e75530bfd00da44ab0165773d"
+    },
+    {
+      "path": "turn_and_step_1/Joint_Angle.parquet",
+      "bytes": 1444685,
+      "sha256": "7c3484e685467c5c5c90b76b1dfaa5d6dfc599fc4bca86df31398f8a309d0b60"
+    },
+    {
+      "path": "turn_and_step_1/Joint_Moments.parquet",
+      "bytes": 921889,
+      "sha256": "d166c602dab3027c79dd4d478c607158f57d09957df28b3867016b8187951ce4"
+    },
+    {
+      "path": "turn_and_step_1/Joint_Powers.parquet",
+      "bytes": 923168,
+      "sha256": "9bba34f73d14c23b9ed3fde4c0315ec9b20cef6035e0dd614e655fa970e929dd"
+    },
+    {
+      "path": "turn_and_step_1/Joint_Velocities.parquet",
+      "bytes": 1446207,
+      "sha256": "80f7e74f3474595d0ed12ddf7e465250b3778da90435f7a9500f493435fe2ce4"
+    },
+    {
+      "path": "turn_and_step_1/Raw_EMGs.parquet",
+      "bytes": 15502799,
+      "sha256": "8b566068bce88f178b34ec7510e848f1669371180ca774ca9799fc230ce95733"
+    },
+    {
+      "path": "turn_and_step_1/Real_IMUs.parquet",
+      "bytes": 5072073,
+      "sha256": "1bcfdf8a6b360b83755b7d31b6be7016b27d60ebff094186b213adb6a87a7f45"
+    },
+    {
+      "path": "turn_and_step_1/Virtual_IMUs.parquet",
+      "bytes": 4955070,
+      "sha256": "86ce486ab01ebe36af9f9d29d7555886744202adb228946143edbf69730e1125"
+    },
+    {
+      "path": "turn_and_step_1/Virtual_Insoles.parquet",
+      "bytes": 463992,
+      "sha256": "2e80822e4d1a1a4a0dfe2a92e7494bb6d0a7903ccdcbac9ffe368650d1feef2f"
+    },
+    {
+      "path": "twister_1/Activity_Flag.parquet",
+      "bytes": 41225,
+      "sha256": "cd6270b965ad7ab7b2f0ee3bcf1a65e8fa4e3e5aea0d8dc2b76644cad6ead9b5"
+    },
+    {
+      "path": "twister_1/GroundFrame_GRFs.parquet",
+      "bytes": 1141614,
+      "sha256": "4b59b8c2e32ae1e7f6410c1ff7fac6a3f5e482a763f11ff7ccf51b138101744b"
+    },
+    {
+      "path": "twister_1/Joint_Angle.parquet",
+      "bytes": 1526647,
+      "sha256": "94bc83b6e9919449278dc6ea1f62ca4d6bb2c6e770e0edac578728e08e0aa38c"
+    },
+    {
+      "path": "twister_1/Joint_Moments.parquet",
+      "bytes": 1525087,
+      "sha256": "e8f329bf2a2c36f5be602893eea8c43fbfe9d2da4125bfd9298ea9a65dd013a9"
+    },
+    {
+      "path": "twister_1/Joint_Powers.parquet",
+      "bytes": 1538186,
+      "sha256": "1d2a3a167ddaa4cc3fc1a165ca61aa1a9d22c904c9174bb7f430b3f61c750021"
+    },
+    {
+      "path": "twister_1/Joint_Velocities.parquet",
+      "bytes": 1550125,
+      "sha256": "21b67aa3b124ba3c202b61dbb776f52853b19f8bf29e7cc9e6203b62ae5b76b4"
+    },
+    {
+      "path": "twister_1/Raw_EMGs.parquet",
+      "bytes": 16480602,
+      "sha256": "8044e1a3e8e91b5ec0fbae33ac4f30bd62850900d3a3c5a42f82634dc99d851e"
+    },
+    {
+      "path": "twister_1/Real_IMUs.parquet",
+      "bytes": 5280845,
+      "sha256": "cb7b3d0f988c7b14f34a3c5f414c801d22535c137316b39da52ae7e94a34fbb8"
+    },
+    {
+      "path": "twister_1/Virtual_IMUs.parquet",
+      "bytes": 5263391,
+      "sha256": "50252b52f07bf279ebd90f20e91dd3603ea28dbfb98ec898d460aabb48d10d32"
+    },
+    {
+      "path": "twister_1/Virtual_Insoles.parquet",
+      "bytes": 1199698,
+      "sha256": "2cbf63247a47d40ed756e250c81485df2cbea082247920c3ff47d194b6903f5b"
+    },
+    {
+      "path": "walk_backward_1/Activity_Flag.parquet",
+      "bytes": 39235,
+      "sha256": "9051ee30c59e5f1c0943812cbed01ba42ea9db842dd8dc91154de6494aac9e55"
+    },
+    {
+      "path": "walk_backward_1/GroundFrame_GRFs.parquet",
+      "bytes": 410472,
+      "sha256": "5140a2890de016c32b7061527bfc3d7a5caed97d088a69f1cf1d5a7d0060e985"
+    },
+    {
+      "path": "walk_backward_1/Joint_Angle.parquet",
+      "bytes": 1445242,
+      "sha256": "5f4ebb63ac02dc03238fbb56a01d8676fcda9830d42a27bad45ea62b94e2af07"
+    },
+    {
+      "path": "walk_backward_1/Joint_Moments.parquet",
+      "bytes": 626713,
+      "sha256": "170ad0149806cb36a303d058b862ee156ad36da53d3dc2563fba7343bb4237e5"
+    },
+    {
+      "path": "walk_backward_1/Joint_Powers.parquet",
+      "bytes": 632229,
+      "sha256": "26adb05f2c258e51fcc72e6221e232e65db1a6f6b03e09ce4c93d430130a8985"
+    },
+    {
+      "path": "walk_backward_1/Joint_Velocities.parquet",
+      "bytes": 1457343,
+      "sha256": "50259a6a33767c726ce09439120d8dab4f4b701e6a0b6dfe93ceb29fa8751b5b"
+    },
+    {
+      "path": "walk_backward_1/Raw_EMGs.parquet",
+      "bytes": 15502222,
+      "sha256": "9eb06c6c7ed18708a0b0d1a3464cb4667441a3815bfea37e8c9901c9ca320ad4"
+    },
+    {
+      "path": "walk_backward_1/Real_IMUs.parquet",
+      "bytes": 4940526,
+      "sha256": "f552ebb2a987d30f8cdf3a70fb683d568bcef0ed7005c4cbdf82f6801f08021e"
+    },
+    {
+      "path": "walk_backward_1/Virtual_IMUs.parquet",
+      "bytes": 4955828,
+      "sha256": "2ae675f26a09139dc0225c6eb39a78155223ca35ea812b4cd57fa76b66b3b950"
+    },
+    {
+      "path": "walk_backward_1/Virtual_Insoles.parquet",
+      "bytes": 499049,
+      "sha256": "1092534570bf82f20da64033d154d4f2005ee00beae44440ed6fad17f9d6e2ff"
+    },
+    {
+      "path": "walk_backward_2/Activity_Flag.parquet",
+      "bytes": 44261,
+      "sha256": "cddab1036c14f82f61ba6729b09957aa105887efa6be503b68dfccaed30d46e6"
+    },
+    {
+      "path": "walk_backward_2/GroundFrame_GRFs.parquet",
+      "bytes": 408044,
+      "sha256": "9f7812eb75b9d774c02c13d6cab251edd47b7b9ef980fc242ad260df1b3995cb"
+    },
+    {
+      "path": "walk_backward_2/Joint_Angle.parquet",
+      "bytes": 1659427,
+      "sha256": "5f1301d1c0765b905a96524e14b97b34cdba5766ae90045d0b799f18a30991d1"
+    },
+    {
+      "path": "walk_backward_2/Joint_Moments.parquet",
+      "bytes": 719547,
+      "sha256": "68f8f38f4739f244a0c6c83a1c13d7073e73c317fcaeb591b22e1db7a27776c6"
+    },
+    {
+      "path": "walk_backward_2/Joint_Powers.parquet",
+      "bytes": 721552,
+      "sha256": "1483449bbb31ed420321c71fe5cd2502e23ada5e247124b0dcc7a03e6fa88640"
+    },
+    {
+      "path": "walk_backward_2/Joint_Velocities.parquet",
+      "bytes": 1663236,
+      "sha256": "456ec9f360d44f6a5d62122a0a0a935d9ab3924b2a7f5a463d37fe1321716e74"
+    },
+    {
+      "path": "walk_backward_2/Raw_EMGs.parquet",
+      "bytes": 18032566,
+      "sha256": "320b8175043702375e6cc69a8972b275e6f6b71e9d451cc5ac522acb8b2c51fa"
+    },
+    {
+      "path": "walk_backward_2/Real_IMUs.parquet",
+      "bytes": 5811367,
+      "sha256": "affea0797d17b65f8606bbcca212b55b0bb1f58c4afa218bd681a5745929a21e"
+    },
+    {
+      "path": "walk_backward_2/Virtual_IMUs.parquet",
+      "bytes": 5698466,
+      "sha256": "7a2bda8559c67a5243fba3857dbd61add07aeef9582088fde5ea333c87ec9789"
+    },
+    {
+      "path": "walk_backward_2/Virtual_Insoles.parquet",
+      "bytes": 484195,
+      "sha256": "38feafc4b0a003648b8dd3fb22abbe7d35f85d7db7699d6cbf78bb2711ae8870"
+    },
+    {
+      "path": "weighted_walk_1/Activity_Flag.parquet",
+      "bytes": 30499,
+      "sha256": "95be3502ec3164e706ad6ea7298b4881a73ec74fa06eda0519759a07bb527882"
+    },
+    {
+      "path": "weighted_walk_1/GroundFrame_GRFs.parquet",
+      "bytes": 279153,
+      "sha256": "c4491ce10b42dc1826c467b0a7a7c8a29d106ce98c3d9dfe4b9470282b5072f9"
+    },
+    {
+      "path": "weighted_walk_1/Joint_Angle.parquet",
+      "bytes": 1115603,
+      "sha256": "90ce13f8abbf2cf27dbf8c71442a13838103feb609bddb73c7b2f76ee8e15e6c"
+    },
+    {
+      "path": "weighted_walk_1/Joint_Moments.parquet",
+      "bytes": 470568,
+      "sha256": "5e10ef51eb3d1260a81e64da60047428c1a0e83b6252787b825295831fbada36"
+    },
+    {
+      "path": "weighted_walk_1/Joint_Powers.parquet",
+      "bytes": 471984,
+      "sha256": "5a793ff8f0b9248d8ee473383bc31063cb29a531f50e4b4715ba0f263188ec79"
+    },
+    {
+      "path": "weighted_walk_1/Joint_Velocities.parquet",
+      "bytes": 1116165,
+      "sha256": "56d872aee90197c419b72864721c17fd7ff5c280e1d5422af8de928306c37494"
+    },
+    {
+      "path": "weighted_walk_1/Raw_EMGs.parquet",
+      "bytes": 12149737,
+      "sha256": "c242da1e73b47ba2d23fe5616d1f4161d4c62c9704eaa3f271e33e5c1a69cb8b"
+    },
+    {
+      "path": "weighted_walk_1/Real_IMUs.parquet",
+      "bytes": 3881685,
+      "sha256": "0cbd3065ca9552e727ca7bafdfd3577849d3652a1b4d4ab6a3aee3ac34d883c7"
+    },
+    {
+      "path": "weighted_walk_1/Virtual_IMUs.parquet",
+      "bytes": 3822034,
+      "sha256": "b1609419093cc7d7946a84dca2ae3e73a0880fea87af87bbbd0eb0d2719d93a4"
+    },
+    {
+      "path": "weighted_walk_1/Virtual_Insoles.parquet",
+      "bytes": 334911,
+      "sha256": "812ccceaac5f071d0489bb35398ca899a1ed1f95a6c93cb11791c959872b9f22"
+    }
+  ],
+  "expected_outputs_missing": [],
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "checks": {
+    "cleanup_proven": true,
+    "bindings_unchanged": true,
+    "envelope_unchanged": true,
+    "linux_no_new_worker": false,
+    "windows_no_new_worker": true,
+    "no_orphans_at_leader_exit": true,
+    "outputs_hashed": true,
+    "expected_outputs_present": true
+  }
+}

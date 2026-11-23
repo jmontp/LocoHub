@@ -1,0 +1,35 @@
+{
+  "job_id": "GT23-X01-events",
+  "command": [
+    "python3",
+    "contributor_tools/run_gt23_x01.py",
+    "events",
+    "--output-root",
+    "converted_datasets/reconversion_v2/gt23_x01_events",
+    "--source",
+    "/mnt/s/locomotion_data/Gtech_2023"
+  ],
+  "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+  "output_root": "converted_datasets/reconversion_v2/gt23_x01_events",
+  "receipt_path": "docs/quality/audits/gt23-x01-events-launcher-receipt.json",
+  "bindings": {
+    "contributor_tools/gt23_source_reader.py": "db36761467185584d148854f2fc4dfe0d7f168eb891e843017a2cb471e1ad09e",
+    "contributor_tools/run_gt23_x01.py": "dca50d405a21a5615f88043d4e837e3fa7ff68b4f6f988b1127908bd84a8e63f",
+    "contributor_tools/guarded_launcher.py": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b"
+  },
+  "timeout_seconds": 1800,
+  "kill_after_seconds": 30,
+  "poll_seconds": 15,
+  "startup_memory_mib": {
+    "linux": 3584,
+    "windows": 2816
+  },
+  "runtime_memory_mib": {
+    "linux": 2048,
+    "windows": 2048
+  },
+  "expected_output_names": [
+    "events_summary.json"
+  ],
+  "address_space_mib": 768
+}
