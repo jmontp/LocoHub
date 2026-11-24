@@ -7111,7 +7111,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Compute segment and joint angles, knee sign, forward frame and foot-frame pressure point",
-      "status": "blocked",
+      "status": "review",
       "stage": "conventions",
       "question": "Do the recomputed angles, signs, forward/sideways force and foot-frame pressure point agree with independently known values for every task class?",
       "scope": "28 guarded jobs: 4 pilots (AB05 normal_walk_1; AB12 normal_walk_1; AB11 squats_1; AB05 turn_and_step_1, random draw seed 20261123) + 12 batches + 12 audits. Pelvis from the PSIS-to-ASIS markers; thigh and shank from the authors' model segment axes (Transforms_Euler, order read from the file, not its column names); foot from heel to toe markers; joint angles as differences; knee negated for published speed and moment; pressure point in the foot frame (origin 100 mm forward of the midpoint of the two ankle markers); forward and sideways force and pressure point only in the 11 forward-walking tasks, lab axes in the other 15 (D-GT23-C01-1 = C). Agent defaults G1 to G5 in the plan are logged, not asked.",
@@ -7143,29 +7143,41 @@
         "Pilots show peak memory under the 768 MiB cap; one job at a time.",
         "Scaled1 model geometry (ankle centre about 35.7 mm below the ankle-marker midpoint, talus origin, calcn offset 0.04877 m) is re-implemented as LocoHub code with its own synthetic tests and checked against GT23 data before it is relied on; credit docs/maintainers/handoffs/ESML-crosswalk.json (energy-shaping-ML survey); no import from that project and none of its parquets opened. The values are that project's claims, not yet verified here."
       ],
-      "next_action": "After GT23-S01 is done: write the module and fixtures, then dry-run the AB05 normal_walk_1 pilot. Also read the GT23 items in docs/maintainers/handoffs/ESML-crosswalk.json (Scaled1 model geometry: talus origin, ankle centre 35.7 mm below the ankle-marker midpoint, calcn offset 0.04877 m); port as re-implemented code with tests and verify on GT23 data.",
+      "next_action": "Independent verifier for GT23-C06 (handoff docs/maintainers/handoffs/GT23-C06.json); then GT23-M01. Open item for review: stair pressure point is outside the foot in 62% of loaded samples.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT23-rebuild-plan.json",
-        "docs/quality/audits/gt23-rebuild-probes.json"
+        "docs/quality/audits/gt23-rebuild-probes.json",
+        "docs/maintainers/handoffs/GT23-C06.json",
+        "converted_datasets/reconversion_v2/gt23_c06_summary2/summary.json",
+        "docs/quality/audits/gt23-c06-summary2-launcher-receipt.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T20:38:07+00:00",
-        "summary": "Planned. Probes: knee agreement with IK, flat-foot mid-stance, foot-frame pressure point, and Euler order recovered from the pelvis.",
+        "last_checked_at_utc": "2026-11-24T02:22:42+00:00",
+        "summary": "Run complete: 6 pilots, 12 batches (488 recordings, 0 failed) and a summary under the guarded launcher, one at a time, peak 262 to 286 MiB. Composition error 4.4e-16 rad; second independent implementation agrees to 4e-15. Not self-verified.",
         "checks": [
-          "Plan written from read-only probes only (22 runs, one file at a time, peak RSS 150 to 241 MiB); no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+          "tests/test_gt23_c06.py 18 synthetic tests pass",
+          "composition to 1e-12 on all 488 recordings",
+          "second independent implementation on every 25th sample of all 488 recordings",
+          "per-participant offsets against the publisher, pelvis comparison, foot-flat angle, pressure-point shape, hold-out ankle moment per leg in summary2"
         ],
         "remaining": [
-          "Module; four pilots; 12 batches; 12 audits."
+          "Independent verifier",
+          "Decision on stair pressure point (frame looks inconsistent with markers)"
         ],
         "changed_files": [
-          "docs/maintainers/handoffs/GT23-rebuild-plan.json",
-          "docs/quality/audits/gt23-rebuild-probes.json",
+          "contributor_tools/gt23_conventions.py",
+          "contributor_tools/gt23_conventions_check.py",
+          "contributor_tools/run_gt23_c06.py",
+          "tests/test_gt23_c06.py",
+          "docs/maintainers/handoffs/GT23-C06.json",
+          "docs/quality/audits/gt23-c06-*",
           "docs/maintainers/backlog.json",
           "docs/maintainers/backlog.html"
         ]
       },
-      "blocked_reason": "Waits for GT23-S01 (strides and windows)."
+      "owner": "claude-worker-gt23-c06",
+      "started_at_utc": "2026-11-24T01:54:30+00:00"
     },
     {
       "id": "GT23-M01",

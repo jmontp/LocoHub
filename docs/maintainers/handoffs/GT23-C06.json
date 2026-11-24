@@ -1,0 +1,788 @@
+{
+ "task_id": "GT23-C06",
+ "status": "ready_for_independent_review",
+ "scientific_approval": false,
+ "last_checked_at_utc": "2026-11-24T02:22:31+00:00",
+ "summary": "Python-only conventions step for all 488 GT23 recordings: pelvis (PSIS-ASIS markers), thigh and shank (authors model axes from Transforms_Euler), foot (heel to toe markers) segment angles in the pelvis-heading plane; joint angles as differences; joint speeds recomputed by central difference (no smoothing); pressure point in the foot frame (origin 100 mm forward of the ankle-marker midpoint); lab-axis force everywhere plus forward/sideways force in the 11 forward-walking tasks only. 6 pilots + 12 batches + 1 summary under the guarded launcher, one at a time. Independent verifier NOT yet run.",
+ "decisions_applied": [
+  "D-GT23-C01-1 = C (forward/sideways force only in 11 forward-walking tasks; lab axes elsewhere)",
+  "D-REF-1/2 (23 Nov 2026): joint angles = differences of gravity-referenced segment angles; pressure point in the foot frame",
+  "knee flexion positive (standard)",
+  "plan defaults G1-G5, with G5 changed per the task brief: speeds recomputed from new angles, published speeds/powers kept only as a recorded comparison"
+ ],
+ "module": "contributor_tools/gt23_conventions.py (pure maths), contributor_tools/gt23_conventions_check.py (second independent implementation: scalar loops, scipy Rotation YZX, Gram-Schmidt basis, complex-number angles), contributor_tools/run_gt23_c06.py (run, spec, summary)",
+ "output_roots": {
+  "final_batches": "converted_datasets/reconversion_v2/gt23_c06_batch2_<AB..>",
+  "summary": "converted_datasets/reconversion_v2/gt23_c06_summary2",
+  "superseded_first_pass": "gt23_c06_batch_<AB..> and gt23_c06_summary (before contact-heading fallback and extra receipt fields; angles and pressure point identical; kept as evidence)",
+  "pilots": [
+   "gt23_c06_pilot_ab05_nw",
+   "gt23_c06_pilot_ab12_nw",
+   "gt23_c06_pilot_ab11_squats",
+   "gt23_c06_pilot_ab05_turn (first code)",
+   "gt23_c06_pilot2_ab01_stairs (found stairs have no stride span -> contact-heading fallback)",
+   "gt23_c06_pilot2_ab05_nw (final code)"
+  ]
+ },
+ "columns_per_recording_parquet": "time_s; pelvis_sagittal_angle_rad; {thigh,shank,foot}_sagittal_angle_{left,right}_rad; {hip_flexion,knee_flexion,ankle_dorsiflexion}_angle_{left,right}_rad and _velocity_{left,right}_rad_s; cop_{anterior,vertical,lateral}_{left,right}_m (foot frame); grf_lab_{x,y,z}_{left,right}_N and cop_lab_{x,z}_{left,right}_m (lab axes, loaded >=20 N only for the pressure point); grf_{anterior,lateral}_{left,right}_N and heading_lab_{x,z}_{left,right} (11 forward tasks only). Force stays in N here; body-weight scaling is M01.",
+ "method_notes": [
+  "Lab frame: +Y up, markers mm->m. Forward = up x (right ASIS - left ASIS) per sample (plan G4); right = forward x up.",
+  "Euler tables: intrinsic Y-Z-X, columns in file order (not their names), body-to-lab; verified on AB05 against markers (tibia/femur y axis along the bone, calcaneus x along heel-to-toe, pelvis x forward).",
+  "Pelvis angle = marker PSIS-mid to ASIS-mid; thigh/shank = Transforms_Euler body y axis (proximal to distal); foot = CAL to mean(MT1,MT5). Joint angles are differences, no other zero. Composition max abs error over all 488 recordings 4.4e-16 rad.",
+  "Speeds: central difference of the new angle (wrapped), 200 Hz, no smoothing; NaN at gaps and ends.",
+  "Pressure point: 3-D foot frame (anterior = heel-to-toe, up = vertical with its heel-to-toe part removed, no roll; lateral outward). Origin 100 mm forward of the midpoint of the two ankle markers. Plate vertical force < 20 N or missing -> pressure point NaN (zero lab COP is not a measurement). Foot-frame pressure point is computed in ALL tasks because the foot frame does not need a walking direction; the older acceptance line \"pressure point empty in the 15 no-forward tasks\" predates D-REF-2 (23 Nov) and is superseded by the standard.",
+  "Forward/sideways force: heading held fixed per S01 stride/window span of that leg (side L/R or both), whole recording for continuous start_stop; loaded samples not covered by any span (stairs single contacts, uncovered window samples) take the mean heading of their own contact (recorded per recording: heading_from_contact_when_no_span). Empty in the 15 no-forward tasks.",
+  "Model geometry (re-implemented from the .osim text, not imported): hip centre, ankle/talus centre via tibia markers and via calcaneus marker, used only as cross-checks. Models: AB01 -Scaled1_original, others -Scaled1 (hash-checked against the X01 participant file). AB03 model has no ASIS markers so its model hip-centre/thigh cross-check is unavailable (recorded).",
+  "Markers actually used in the primary columns: ASIS/PSIS, heel, MT1, MT5, ankle pair (pressure point only). Thigh clusters, knee markers and trochanters are not used, so the 3 AB03 stair recordings missing RTHC and AB13 stairs_1_9 missing RKNE hold no column."
+ ],
+ "checks": {
+  "unit_tests": "tests/test_gt23_c06.py: 18 synthetic tests pass (thigh 30, shank -10, foot 20, pelvis -12 -> hip 42, knee 40, ankle 30 at three headings; composition 1e-12 over 60 random poses; Euler order vs scipy; foot-frame known values incl. tilted foot; left/right mirror; quasi-static ankle moment sign; heading hold; contact fill; derivative incl. wrap; model parse and ankle/hip/talus recovery; missing marker stays missing)",
+  "composition_max_abs_err_rad": 4.440892098500626e-16,
+  "second_independent_implementation_max_abs_diff": {
+   "angles_rad": 3.552713678800501e-15,
+   "cop_m": 2.5916768731093498e-15
+  },
+  "second_implementation_note": "compared on every 25th sample of all 488 recordings (angles and foot-frame pressure point); radians and metres",
+  "per_subject_leg": {
+   "AB01/L": {
+    "hip_offset_deg": 9.37,
+    "knee_offset_deg": 0.01,
+    "ankle_offset_deg": 1.46,
+    "hip_offset_walking_deg": 9.22,
+    "knee_offset_walking_deg": 0.01,
+    "ankle_offset_walking_deg": 1.4,
+    "foot_flat_mid_stance_deg": -1.95,
+    "ankle_moment_r": 0.98,
+    "ankle_moment_slope": 1.05,
+    "cop_first_m_normal_walk": -0.12,
+    "cop_last_m_normal_walk": 0.13,
+    "cop_vertical_m_normal_walk": -0.1,
+    "cop_lateral_m_normal_walk": 0.01,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -2.18,
+     -32.42,
+     -1.45
+    ]
+   },
+   "AB01/R": {
+    "hip_offset_deg": 9.18,
+    "knee_offset_deg": 0.0,
+    "ankle_offset_deg": -0.99,
+    "hip_offset_walking_deg": 8.97,
+    "knee_offset_walking_deg": 0.0,
+    "ankle_offset_walking_deg": -0.12,
+    "foot_flat_mid_stance_deg": -4.59,
+    "ankle_moment_r": 0.97,
+    "ankle_moment_slope": 1.05,
+    "cop_first_m_normal_walk": null,
+    "cop_last_m_normal_walk": null,
+    "cop_vertical_m_normal_walk": null,
+    "cop_lateral_m_normal_walk": null,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -4.38,
+     -40.67,
+     2.24
+    ]
+   },
+   "AB02/L": {
+    "hip_offset_deg": 0.12,
+    "knee_offset_deg": -0.0,
+    "ankle_offset_deg": -5.57,
+    "hip_offset_walking_deg": 0.42,
+    "knee_offset_walking_deg": -0.0,
+    "ankle_offset_walking_deg": -4.73,
+    "foot_flat_mid_stance_deg": -12.25,
+    "ankle_moment_r": 0.99,
+    "ankle_moment_slope": 1.04,
+    "cop_first_m_normal_walk": -0.14,
+    "cop_last_m_normal_walk": 0.12,
+    "cop_vertical_m_normal_walk": -0.09,
+    "cop_lateral_m_normal_walk": 0.0,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     1.56,
+     -35.04,
+     -0.91
+    ]
+   },
+   "AB02/R": {
+    "hip_offset_deg": 0.22,
+    "knee_offset_deg": 0.01,
+    "ankle_offset_deg": 2.27,
+    "hip_offset_walking_deg": 0.42,
+    "knee_offset_walking_deg": 0.01,
+    "ankle_offset_walking_deg": 2.08,
+    "foot_flat_mid_stance_deg": -4.6,
+    "ankle_moment_r": 0.99,
+    "ankle_moment_slope": 1.04,
+    "cop_first_m_normal_walk": null,
+    "cop_last_m_normal_walk": null,
+    "cop_vertical_m_normal_walk": null,
+    "cop_lateral_m_normal_walk": null,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     0.69,
+     -24.32,
+     2.88
+    ]
+   },
+   "AB03/L": {
+    "hip_offset_deg": 9.17,
+    "knee_offset_deg": -0.01,
+    "ankle_offset_deg": -7.55,
+    "hip_offset_walking_deg": 9.41,
+    "knee_offset_walking_deg": -0.01,
+    "ankle_offset_walking_deg": -5.77,
+    "foot_flat_mid_stance_deg": -7.82,
+    "ankle_moment_r": 0.98,
+    "ankle_moment_slope": 1.43,
+    "cop_first_m_normal_walk": -0.09,
+    "cop_last_m_normal_walk": 0.11,
+    "cop_vertical_m_normal_walk": -0.1,
+    "cop_lateral_m_normal_walk": 0.0,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -5.05,
+     -40.63,
+     20.55
+    ]
+   },
+   "AB03/R": {
+    "hip_offset_deg": 8.97,
+    "knee_offset_deg": -0.05,
+    "ankle_offset_deg": -8.12,
+    "hip_offset_walking_deg": 9.32,
+    "knee_offset_walking_deg": -0.06,
+    "ankle_offset_walking_deg": -1.11,
+    "foot_flat_mid_stance_deg": -9.2,
+    "ankle_moment_r": 0.98,
+    "ankle_moment_slope": 1.44,
+    "cop_first_m_normal_walk": -0.2,
+    "cop_last_m_normal_walk": 0.13,
+    "cop_vertical_m_normal_walk": -0.09,
+    "cop_lateral_m_normal_walk": 0.0,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -2.24,
+     -31.92,
+     -15.7
+    ]
+   },
+   "AB05/L": {
+    "hip_offset_deg": 12.61,
+    "knee_offset_deg": -0.05,
+    "ankle_offset_deg": -2.63,
+    "hip_offset_walking_deg": 12.47,
+    "knee_offset_walking_deg": -0.03,
+    "ankle_offset_walking_deg": -2.46,
+    "foot_flat_mid_stance_deg": -5.02,
+    "ankle_moment_r": 0.99,
+    "ankle_moment_slope": 0.65,
+    "cop_first_m_normal_walk": -0.16,
+    "cop_last_m_normal_walk": 0.1,
+    "cop_vertical_m_normal_walk": -0.09,
+    "cop_lateral_m_normal_walk": 0.0,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -0.64,
+     -37.28,
+     5.96
+    ]
+   },
+   "AB05/R": {
+    "hip_offset_deg": 12.57,
+    "knee_offset_deg": -0.3,
+    "ankle_offset_deg": -1.49,
+    "hip_offset_walking_deg": 12.49,
+    "knee_offset_walking_deg": -0.25,
+    "ankle_offset_walking_deg": -0.95,
+    "foot_flat_mid_stance_deg": -4.37,
+    "ankle_moment_r": 0.99,
+    "ankle_moment_slope": 0.66,
+    "cop_first_m_normal_walk": null,
+    "cop_last_m_normal_walk": null,
+    "cop_vertical_m_normal_walk": null,
+    "cop_lateral_m_normal_walk": null,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -1.63,
+     -29.07,
+     -6.2
+    ]
+   },
+   "AB06/L": {
+    "hip_offset_deg": -0.36,
+    "knee_offset_deg": -0.0,
+    "ankle_offset_deg": -3.23,
+    "hip_offset_walking_deg": 0.68,
+    "knee_offset_walking_deg": -0.01,
+    "ankle_offset_walking_deg": -2.82,
+    "foot_flat_mid_stance_deg": -8.69,
+    "ankle_moment_r": 0.99,
+    "ankle_moment_slope": 1.11,
+    "cop_first_m_normal_walk": -0.12,
+    "cop_last_m_normal_walk": 0.13,
+    "cop_vertical_m_normal_walk": -0.09,
+    "cop_lateral_m_normal_walk": 0.0,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     0.23,
+     -37.05,
+     -4.77
+    ]
+   },
+   "AB06/R": {
+    "hip_offset_deg": -0.2,
+    "knee_offset_deg": -0.02,
+    "ankle_offset_deg": -3.37,
+    "hip_offset_walking_deg": 0.92,
+    "knee_offset_walking_deg": -0.04,
+    "ankle_offset_walking_deg": -3.31,
+    "foot_flat_mid_stance_deg": -10.74,
+    "ankle_moment_r": 0.99,
+    "ankle_moment_slope": 1.06,
+    "cop_first_m_normal_walk": -0.0,
+    "cop_last_m_normal_walk": 0.13,
+    "cop_vertical_m_normal_walk": -0.08,
+    "cop_lateral_m_normal_walk": 0.0,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     0.12,
+     -43.84,
+     3.04
+    ]
+   },
+   "AB07/L": {
+    "hip_offset_deg": 0.5,
+    "knee_offset_deg": -0.93,
+    "ankle_offset_deg": -13.39,
+    "hip_offset_walking_deg": 1.18,
+    "knee_offset_walking_deg": -0.51,
+    "ankle_offset_walking_deg": -12.77,
+    "foot_flat_mid_stance_deg": -7.67,
+    "ankle_moment_r": 0.98,
+    "ankle_moment_slope": 0.82,
+    "cop_first_m_normal_walk": null,
+    "cop_last_m_normal_walk": null,
+    "cop_vertical_m_normal_walk": null,
+    "cop_lateral_m_normal_walk": null,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -0.07,
+     -47.68,
+     8.78
+    ]
+   },
+   "AB07/R": {
+    "hip_offset_deg": 0.77,
+    "knee_offset_deg": -1.53,
+    "ankle_offset_deg": -9.74,
+    "hip_offset_walking_deg": 1.28,
+    "knee_offset_walking_deg": -0.83,
+    "ankle_offset_walking_deg": -8.57,
+    "foot_flat_mid_stance_deg": -6.89,
+    "ankle_moment_r": 0.97,
+    "ankle_moment_slope": 0.8,
+    "cop_first_m_normal_walk": -0.11,
+    "cop_last_m_normal_walk": 0.18,
+    "cop_vertical_m_normal_walk": -0.08,
+    "cop_lateral_m_normal_walk": -0.01,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     0.09,
+     -44.2,
+     -10.41
+    ]
+   },
+   "AB08/L": {
+    "hip_offset_deg": 6.2,
+    "knee_offset_deg": -0.35,
+    "ankle_offset_deg": -7.02,
+    "hip_offset_walking_deg": 6.28,
+    "knee_offset_walking_deg": -0.39,
+    "ankle_offset_walking_deg": -6.71,
+    "foot_flat_mid_stance_deg": -8.8,
+    "ankle_moment_r": 0.98,
+    "ankle_moment_slope": 1.31,
+    "cop_first_m_normal_walk": -0.14,
+    "cop_last_m_normal_walk": 0.12,
+    "cop_vertical_m_normal_walk": -0.08,
+    "cop_lateral_m_normal_walk": 0.01,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -1.91,
+     -35.64,
+     7.42
+    ]
+   },
+   "AB08/R": {
+    "hip_offset_deg": 6.31,
+    "knee_offset_deg": 0.03,
+    "ankle_offset_deg": -3.56,
+    "hip_offset_walking_deg": 6.4,
+    "knee_offset_walking_deg": 0.03,
+    "ankle_offset_walking_deg": -2.9,
+    "foot_flat_mid_stance_deg": -9.23,
+    "ankle_moment_r": 0.98,
+    "ankle_moment_slope": 1.34,
+    "cop_first_m_normal_walk": -0.16,
+    "cop_last_m_normal_walk": 0.11,
+    "cop_vertical_m_normal_walk": -0.08,
+    "cop_lateral_m_normal_walk": -0.0,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -0.66,
+     -36.77,
+     -8.35
+    ]
+   },
+   "AB09/L": {
+    "hip_offset_deg": 7.97,
+    "knee_offset_deg": -0.0,
+    "ankle_offset_deg": 3.51,
+    "hip_offset_walking_deg": 8.32,
+    "knee_offset_walking_deg": -0.0,
+    "ankle_offset_walking_deg": 3.87,
+    "foot_flat_mid_stance_deg": -1.7,
+    "ankle_moment_r": 0.99,
+    "ankle_moment_slope": 1.0,
+    "cop_first_m_normal_walk": -0.17,
+    "cop_last_m_normal_walk": 0.09,
+    "cop_vertical_m_normal_walk": -0.1,
+    "cop_lateral_m_normal_walk": -0.0,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -1.65,
+     -27.49,
+     7.48
+    ]
+   },
+   "AB09/R": {
+    "hip_offset_deg": 7.89,
+    "knee_offset_deg": -0.49,
+    "ankle_offset_deg": -0.01,
+    "hip_offset_walking_deg": 8.22,
+    "knee_offset_walking_deg": -0.35,
+    "ankle_offset_walking_deg": 0.17,
+    "foot_flat_mid_stance_deg": -4.66,
+    "ankle_moment_r": 0.99,
+    "ankle_moment_slope": 1.02,
+    "cop_first_m_normal_walk": -0.15,
+    "cop_last_m_normal_walk": 0.09,
+    "cop_vertical_m_normal_walk": -0.09,
+    "cop_lateral_m_normal_walk": 0.0,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -0.62,
+     -35.65,
+     -7.38
+    ]
+   },
+   "AB10/L": {
+    "hip_offset_deg": 4.07,
+    "knee_offset_deg": -0.0,
+    "ankle_offset_deg": -4.79,
+    "hip_offset_walking_deg": 4.29,
+    "knee_offset_walking_deg": -0.01,
+    "ankle_offset_walking_deg": -4.74,
+    "foot_flat_mid_stance_deg": -6.75,
+    "ankle_moment_r": 0.99,
+    "ankle_moment_slope": 0.83,
+    "cop_first_m_normal_walk": -0.18,
+    "cop_last_m_normal_walk": 0.08,
+    "cop_vertical_m_normal_walk": -0.08,
+    "cop_lateral_m_normal_walk": 0.01,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -7.56,
+     -28.01,
+     -1.94
+    ]
+   },
+   "AB10/R": {
+    "hip_offset_deg": 3.96,
+    "knee_offset_deg": -0.02,
+    "ankle_offset_deg": -5.66,
+    "hip_offset_walking_deg": 4.24,
+    "knee_offset_walking_deg": -0.04,
+    "ankle_offset_walking_deg": -5.46,
+    "foot_flat_mid_stance_deg": -7.24,
+    "ankle_moment_r": 0.98,
+    "ankle_moment_slope": 0.82,
+    "cop_first_m_normal_walk": null,
+    "cop_last_m_normal_walk": null,
+    "cop_vertical_m_normal_walk": null,
+    "cop_lateral_m_normal_walk": null,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -0.46,
+     -39.34,
+     0.05
+    ]
+   },
+   "AB11/L": {
+    "hip_offset_deg": 6.72,
+    "knee_offset_deg": -0.03,
+    "ankle_offset_deg": -5.8,
+    "hip_offset_walking_deg": 7.93,
+    "knee_offset_walking_deg": -0.07,
+    "ankle_offset_walking_deg": -5.03,
+    "foot_flat_mid_stance_deg": -4.78,
+    "ankle_moment_r": 0.98,
+    "ankle_moment_slope": 0.98,
+    "cop_first_m_normal_walk": -0.15,
+    "cop_last_m_normal_walk": 0.09,
+    "cop_vertical_m_normal_walk": -0.09,
+    "cop_lateral_m_normal_walk": 0.02,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -0.72,
+     -36.26,
+     6.3
+    ]
+   },
+   "AB11/R": {
+    "hip_offset_deg": 6.86,
+    "knee_offset_deg": 0.0,
+    "ankle_offset_deg": -3.0,
+    "hip_offset_walking_deg": 8.03,
+    "knee_offset_walking_deg": -0.01,
+    "ankle_offset_walking_deg": -2.39,
+    "foot_flat_mid_stance_deg": -3.95,
+    "ankle_moment_r": 0.98,
+    "ankle_moment_slope": 0.97,
+    "cop_first_m_normal_walk": -0.16,
+    "cop_last_m_normal_walk": 0.09,
+    "cop_vertical_m_normal_walk": -0.08,
+    "cop_lateral_m_normal_walk": -0.02,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -4.15,
+     -33.29,
+     -5.45
+    ]
+   },
+   "AB12/L": {
+    "hip_offset_deg": 3.29,
+    "knee_offset_deg": -0.03,
+    "ankle_offset_deg": -4.37,
+    "hip_offset_walking_deg": 3.98,
+    "knee_offset_walking_deg": -0.08,
+    "ankle_offset_walking_deg": -4.46,
+    "foot_flat_mid_stance_deg": -5.19,
+    "ankle_moment_r": 0.99,
+    "ankle_moment_slope": 0.93,
+    "cop_first_m_normal_walk": -0.16,
+    "cop_last_m_normal_walk": 0.08,
+    "cop_vertical_m_normal_walk": -0.08,
+    "cop_lateral_m_normal_walk": 0.01,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -9.35,
+     -33.16,
+     2.1
+    ]
+   },
+   "AB12/R": {
+    "hip_offset_deg": 3.43,
+    "knee_offset_deg": 0.01,
+    "ankle_offset_deg": -7.03,
+    "hip_offset_walking_deg": 3.93,
+    "knee_offset_walking_deg": 0.02,
+    "ankle_offset_walking_deg": -7.29,
+    "foot_flat_mid_stance_deg": -5.53,
+    "ankle_moment_r": 0.99,
+    "ankle_moment_slope": 0.96,
+    "cop_first_m_normal_walk": -0.14,
+    "cop_last_m_normal_walk": 0.08,
+    "cop_vertical_m_normal_walk": -0.07,
+    "cop_lateral_m_normal_walk": 0.01,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -9.9,
+     -38.26,
+     -6.28
+    ]
+   },
+   "AB13/L": {
+    "hip_offset_deg": 16.15,
+    "knee_offset_deg": -0.0,
+    "ankle_offset_deg": -0.95,
+    "hip_offset_walking_deg": 16.31,
+    "knee_offset_walking_deg": -0.01,
+    "ankle_offset_walking_deg": -0.51,
+    "foot_flat_mid_stance_deg": -7.68,
+    "ankle_moment_r": 0.99,
+    "ankle_moment_slope": 1.05,
+    "cop_first_m_normal_walk": -0.16,
+    "cop_last_m_normal_walk": 0.08,
+    "cop_vertical_m_normal_walk": -0.09,
+    "cop_lateral_m_normal_walk": 0.0,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -0.18,
+     -30.36,
+     3.65
+    ]
+   },
+   "AB13/R": {
+    "hip_offset_deg": 15.93,
+    "knee_offset_deg": -0.16,
+    "ankle_offset_deg": -1.94,
+    "hip_offset_walking_deg": 15.93,
+    "knee_offset_walking_deg": -0.26,
+    "ankle_offset_walking_deg": -1.98,
+    "foot_flat_mid_stance_deg": -7.47,
+    "ankle_moment_r": 0.98,
+    "ankle_moment_slope": 1.08,
+    "cop_first_m_normal_walk": -0.03,
+    "cop_last_m_normal_walk": 0.08,
+    "cop_vertical_m_normal_walk": -0.09,
+    "cop_lateral_m_normal_walk": -0.0,
+    "ankle_centre_model_minus_marker_midpoint_mm_tibia_frame_xyz": [
+     -1.0,
+     -35.75,
+     -2.62
+    ]
+   }
+  },
+  "pelvis_vs_model": {
+   "AB01": {
+    "r": 0.932,
+    "offset_deg": -9.29,
+    "model_landmark_angle_deg": -9.12,
+    "resid_sd_deg": 1.13
+   },
+   "AB02": {
+    "r": 0.967,
+    "offset_deg": -0.14,
+    "model_landmark_angle_deg": -0.31,
+    "resid_sd_deg": 1.29
+   },
+   "AB03": {
+    "r": 0.968,
+    "offset_deg": -9.11,
+    "model_landmark_angle_deg": null,
+    "resid_sd_deg": 1.02
+   },
+   "AB05": {
+    "r": 0.982,
+    "offset_deg": -12.55,
+    "model_landmark_angle_deg": -12.95,
+    "resid_sd_deg": 0.9
+   },
+   "AB06": {
+    "r": 0.949,
+    "offset_deg": 0.28,
+    "model_landmark_angle_deg": -1.88,
+    "resid_sd_deg": 1.62
+   },
+   "AB07": {
+    "r": 0.781,
+    "offset_deg": -0.64,
+    "model_landmark_angle_deg": -3.77,
+    "resid_sd_deg": 2.11
+   },
+   "AB08": {
+    "r": 0.975,
+    "offset_deg": -6.21,
+    "model_landmark_angle_deg": -3.87,
+    "resid_sd_deg": 0.97
+   },
+   "AB09": {
+    "r": 0.948,
+    "offset_deg": -8.07,
+    "model_landmark_angle_deg": -9.32,
+    "resid_sd_deg": 1.22
+   },
+   "AB10": {
+    "r": 0.955,
+    "offset_deg": -4.14,
+    "model_landmark_angle_deg": -4.1,
+    "resid_sd_deg": 1.27
+   },
+   "AB11": {
+    "r": 0.974,
+    "offset_deg": -6.78,
+    "model_landmark_angle_deg": -6.08,
+    "resid_sd_deg": 1.09
+   },
+   "AB12": {
+    "r": 0.959,
+    "offset_deg": -3.48,
+    "model_landmark_angle_deg": -2.29,
+    "resid_sd_deg": 1.23
+   },
+   "AB13": {
+    "r": 0.944,
+    "offset_deg": -16.31,
+    "model_landmark_angle_deg": -15.56,
+    "resid_sd_deg": 1.52
+   }
+  },
+  "speed_sign_agreement_by_task": "summary2/summary.json speed_sign_by_task (hip and knee ~0.98-1.0 everywhere; ankle 0.89-0.99 median, minimum 0.51 for one lunges leg)",
+  "cop_outside_foot_share_by_task": {
+   "ball_toss": 0.0,
+   "curb_down": 0.114,
+   "curb_up": 0.127,
+   "cutting": 0.181,
+   "dynamic_walk": 0.053,
+   "incline_walk": 0.13,
+   "jump": 0.02,
+   "lift_weight": 0.0,
+   "lunges": 0.016,
+   "meander": 0.031,
+   "normal_walk": 0.119,
+   "obstacle_walk": 0.065,
+   "poses": 0.001,
+   "push": 0.014,
+   "side_shuffle": 0.004,
+   "sit_to_stand": 0.0,
+   "squats": 0.0,
+   "stairs": 0.617,
+   "start_stop": 0.024,
+   "step_ups": 0.131,
+   "tire_run": 0.104,
+   "tug_of_war": 0.039,
+   "turn_and_step": 0.026,
+   "twister": 0.003,
+   "walk_backward": 0.013,
+   "weighted_walk": 0.075
+  },
+  "ankle_moment_slope_by_task": {
+   "ball_toss": 1.09,
+   "curb_down": 1.06,
+   "curb_up": 1.01,
+   "cutting": 1.12,
+   "dynamic_walk": 1.06,
+   "incline_walk": 0.95,
+   "jump": 1.08,
+   "lift_weight": 1.06,
+   "lunges": 1.08,
+   "meander": 0.99,
+   "normal_walk": 1.12,
+   "obstacle_walk": 1.04,
+   "poses": 1.06,
+   "push": 1.08,
+   "side_shuffle": 1.1,
+   "sit_to_stand": 0.96,
+   "squats": 1.17,
+   "stairs": 0.35,
+   "start_stop": 1.0,
+   "step_ups": 1.04,
+   "tire_run": 1.11,
+   "tug_of_war": 1.09,
+   "turn_and_step": 1.04,
+   "twister": 1.06,
+   "walk_backward": 1.05,
+   "weighted_walk": 1.04
+  }
+ },
+ "held_columns": {
+  "needs missing marker LASI": {
+   "walk_backward": 19,
+   "weighted_walk": 27
+  },
+  "needs missing marker LMANK": {
+   "lift_weight": 6,
+   "normal_walk": 3,
+   "obstacle_walk": 3,
+   "side_shuffle": 3,
+   "tire_run": 3,
+   "weighted_walk": 3
+  },
+  "needs missing marker LPSI": {
+   "stairs": 15
+  },
+  "needs missing marker RPSI": {
+   "stairs": 5
+  },
+  "plate never loaded above 20 N": {
+   "dynamic_walk": 10,
+   "obstacle_walk": 20,
+   "walk_backward": 25,
+   "weighted_walk": 15
+  },
+  "plate never loaded above 20 N within the spans": {
+   "dynamic_walk": 8,
+   "obstacle_walk": 16,
+   "weighted_walk": 12
+  },
+  "source plate force is missing for this leg in this recording": {
+   "dynamic_walk": 108,
+   "normal_walk": 48,
+   "obstacle_walk": 96,
+   "walk_backward": 64,
+   "weighted_walk": 92
+  },
+  "task has no single forward direction (D-GT23-C01-1 = C); lab-axis force columns hold the force": {
+   "ball_toss": 96,
+   "cutting": 96,
+   "jump": 264,
+   "lift_weight": 192,
+   "lunges": 192,
+   "meander": 96,
+   "poses": 96,
+   "push": 96,
+   "side_shuffle": 96,
+   "sit_to_stand": 208,
+   "squats": 104,
+   "tug_of_war": 96,
+   "turn_and_step": 96,
+   "twister": 96,
+   "walk_backward": 104
+  }
+ },
+ "recordings_with_missing_needed_markers": "17 (X01). Columns held: LASI -> all sagittal angles, speeds and forward/sideways force (AB03 walk_backward_1, weighted_walk_1); LPSI/RPSI -> pelvis and hip angles and speeds (AB02 stairs x4); LMANK -> left pressure point (AB07 x7); RTHC (AB03 stairs x3) and RKNE (AB13 stairs_1_9) hold nothing because they are not used.",
+ "peak_rss_mib": {
+  "pilots": {
+   "pilot_ab05_nw": 262.8,
+   "pilot_ab12_nw": 259.4,
+   "pilot_ab11_squats": 167.9,
+   "pilot_ab05_turn": 186.9,
+   "pilot2_ab01_stairs": 148.3,
+   "pilot2_ab05_nw": 265.9
+  },
+  "final_batches": {
+   "AB01": 277.3,
+   "AB02": 309.0,
+   "AB03": 264.5,
+   "AB05": 266.7,
+   "AB06": 276.2,
+   "AB07": 277.7,
+   "AB08": 269.7,
+   "AB09": 262.1,
+   "AB10": 268.5,
+   "AB11": 271.9,
+   "AB12": 262.3,
+   "AB13": 286.1
+  },
+  "first_pass_batches": {
+   "AB01": 272.2,
+   "AB02": 306.3,
+   "AB03": 263.3,
+   "AB05": 264.7,
+   "AB06": 274.0,
+   "AB07": 275.0,
+   "AB08": 265.3,
+   "AB09": 260.3,
+   "AB10": 265.3,
+   "AB11": 270.3,
+   "AB12": 260.7,
+   "AB13": 283.4
+  },
+  "summary_jobs": "ledger reading only (see receipts)"
+ },
+ "findings_odd": [
+  "Pelvis: marker pelvis angle and the model pelvis tilt correlate r 0.78-0.98 per participant over whole recordings (residual sd 0.9-2.1 deg), not near 0 as the plan probe found; the constant offset per participant (-16.3 to +0.3 deg) matches the model own PSIS-ASIS landmark angle within a few degrees. Hip offsets against the publisher equal minus that pelvis offset. No IK reference exists for the PSIS-ASIS definition; the model landmark angle is the reference used.",
+  "Foot/ankle: marker foot angle differs from the model calcaneus x axis by a per-subject constant that follows the model heel/toe landmark angle; this is the ankle offset against the publisher (AB07 about -9 to -13 deg is the largest).",
+  "Stairs: foot-frame pressure point is outside the foot (beyond 5 cm of heel or toe) in 62% of loaded samples and the published ankle moment is only 0.35 of the computed one; plate frame for stairs looks inconsistent with the markers. Values are written as converted, not masked; needs a decision before any release use of stair pressure point.",
+  "Ankle moment slope published/computed: AB03 1.43 and AB08 1.3 fit the known C05 mass issue (published per-kg moment used another mass); the other participants are 0.65 to 1.17 (AB05 0.65 is pulled down by non-walking tasks; AB05 turn_and_step pilot 0.66).",
+  "Walking-only ankle speed sign agreement is 0.9 to 0.97 (marker-derived ankle noise, rms difference about 17% of published rms).",
+  "Treadmill plates: right plate force is missing in 408 of the held plate columns; no right-leg pressure point exists for those recordings."
+ ],
+ "limits": [
+  "Pressure point and force forward/sideways rely on S01 spans or contact runs for heading; transient heading deviations inside a span are reported (median of per-span max about 6 deg, max about 18-23 deg).",
+  "Offsets against publisher angles mix marker (pelvis, foot) and model (thigh, shank) sources by design.",
+  "Model talus centre sits 29 to 39 mm below the ankle-marker midpoint along the tibia (AB05 L -37, R -29; the survey claimed 35.7 median), the decided marker midpoint is used.",
+  "Published speeds/powers are not stored; only the comparison is."
+ ],
+ "remaining": [
+  "Independent verifier (not self-verified): re-run the second implementation, check the 12 batches, 488 receipts and counts, and the summary numbers."
+ ],
+ "next_action": "Independent verifier for GT23-C06; then GT23-M01.",
+ "changed_files": [
+  "contributor_tools/gt23_conventions.py",
+  "contributor_tools/gt23_conventions_check.py",
+  "contributor_tools/run_gt23_c06.py",
+  "tests/test_gt23_c06.py",
+  "docs/maintainers/handoffs/GT23-C06.json",
+  "docs/maintainers/backlog.json",
+  "docs/quality/audits/gt23-c06-*"
+ ],
+ "evidence_paths": [
+  "converted_datasets/reconversion_v2/gt23_c06_summary2/summary.json",
+  "docs/quality/audits/gt23-c06-summary2-launcher-receipt.json",
+  "docs/quality/audits/gt23-c06-batch2-<AB..>-launcher-receipt.json",
+  "docs/maintainers/handoffs/ESML-crosswalk.json (credited; Scaled1 values are that project claims, compared here, nothing imported)"
+ ]
+}
