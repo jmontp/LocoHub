@@ -7655,7 +7655,7 @@
         "Label export agrees with the 1,680 ramp and stair terrain labels already checked; stair_1_l_01_02 window list recorded.",
         "Pilots (AB17 extraction, AB06 export) pass before the other jobs; one job at a time, nice 19, ionice idle, memory headroom checked before each; nothing under existing converted_datasets files is overwritten."
       ],
-      "next_action": "Independent reviewer checks the Python parts against the evidence report; label export waits for independent review of the native MATLAB extension.",
+      "next_action": "Worker applies the review changes in GT21-RB01-verify.json (B1, B2, SubjectInfo check); then re-review of the native extension. Python parts verified; task stays in review until the label export is done.",
       "resource_class": "numerical",
       "evidence_paths": [
         "converted_datasets/reconversion_v2/gt21_rb01_inventory_20261123/inventory_summary.json",
@@ -7666,17 +7666,19 @@
         "docs/quality/audits/gt21-s02-2024-copy.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T22:00:00+00:00",
+        "last_checked_at_utc": "2026-11-24T01:05:00+00:00",
         "summary": "Python parts done and checked: six zips extracted (CRC, size and sha256 against the zip directory, manifest and listing), inventory of all 22 (3,147 recordings, per-mode counts and 12 channel files as planned). Launcher blocker cleared (the docs server was stopped by its owner). Label export is pending: the native MATLAB extension draft awaits independent review.",
         "checks": [
           "6 extractions: member size, CRC32 and sha256 equal zip directory, manifest and bound listing (members 1,770/1,638/1,602/1,722/1,746/1,711)",
           "Inventory: 16 local 506/1015/665/115 and six 174/379/251/42, 3,147 recordings, all 12 channel files present",
           "14 synthetic tests pass",
-          "verify-cleanup proved for all 7 jobs; peak memory 21-24 MiB each"
+          "verify-cleanup proved for all 7 jobs; peak memory 21-24 MiB each",
+          "Independent verification (docs/maintainers/handoffs/GT21-RB01-verify.json): Part A pass: receipts clean or explained, 36 of 36 sampled members (seed 20261125) and all 10,189 ledger entries equal the zip directory, counts 506/1015/665/115 and 174/379/251/42 with 12 channel files each recounted from listings, local source folder unwritten (newest mtime 2025-08-11)",
+          "Part B code review: native extension NOT approved until two changes: census counts the module itself (every run would refuse), and a MATLAB stub that exits would leave the job unwatched"
         ],
         "remaining": [
-          "Independent review of the Python parts against docs/quality/audits/gt21-rb01-evidence.json",
-          "Label export (22 MATLAB starts, AB06 pilot first) after independent review of contributor_tools/guarded_launcher_native.py"
+          "Apply review changes B1 (census self-count) and B2 (adopt MATLAB by run nonce) and the SubjectInfo 'data' variable check, rebind hashes, second review of the diff",
+          "Label export (22 MATLAB starts, AB06 dry run then supervised pilot first); acceptance lines 3 to 5 depend on it"
         ],
         "changed_files": [
           "contributor_tools/run_gt21_rb01.py",
