@@ -1885,7 +1885,7 @@
       "priority": "P0",
       "dataset": "um21",
       "title": "Apply the gravity-referenced zero and foot-frame CoP",
-      "status": "working",
+      "status": "review",
       "stage": "conversion",
       "question": "Can the UMich 2021 treadmill bundle follow the standard's zero (joint angles are differences of gravity-referenced segment angles) and the foot-frame centre of pressure?",
       "scope": "44 treadmill recordings of the R01 bundle. Columns changed: hip, knee, ankle, thigh, shank angles and velocities; new foot angle and velocity; new centre of pressure. Not scientific approval; v2 bundle stays legacy-zero. Builds on the R01 bundle (in review) as the v2 reference; does not wait for R01 sign-off.",
@@ -1913,26 +1913,26 @@
         "Observation identities, 150-point inclusive phase grid and every exclusion are accounted for against the v2 bundle; full and filtered share lineage; Q01 re-run, not reused.",
         "Pilot of the same bound code passes before the full run; one numerical job at a time, peak memory recorded; v2 bundle untouched."
       ],
-      "next_action": "Ask José the fitted-plate publication question with the v3 endpoint numbers; then audit script.",
+      "next_action": "Independent verifier checks acceptance criteria against the full_run_v4 evidence.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/UM21-STD-plan.json",
         "contributor_tools/audit_probes/2026_11_23/probe_um21_std_plan_source_check.py"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T22:00:00+00:00",
-        "summary": "Runner, 45 synthetic tests and a 5-recording pilot (v1, receipt clean except other agents appeared; cleanup proven) done. Angles agree with v2 (r 0.97-1.0, offsets = zero change); CoP fit holds out the ankle moment (r 0.975-0.999) and agrees with the re-implemented ESML method within 19 mm on 9 of 10 plates. Runner then changed (endpoint check, pelvis hold limit) and the v3 pilot has not run. Pilot only; task stays working. Final-runner pilot v3 has now run: endpoints fail the provisional 3 cm gate on all ten plates (heel worst).",
+        "last_checked_at_utc": "2026-11-23T23:30:00+00:00",
+        "summary": "Runner v4 with the D-UM21-S02-1 = A gate; pilot v4 and full run of 44 recordings through the guarded launcher (clean, peak RSS 256.0 MiB). CoP published (labelled estimated plate position) on 48 of 88 legs; 19 recordings pass on both legs, 15 are held on both. Angles follow the new zero (composition 2e-16 rad). Ready for independent verification; Q01 v3 / R01 v3 and the audit script are later tasks.",
         "checks": [
-          "pytest tests/test_um21_s02_frame.py: 45 passed (synthetic only)",
-          "Guarded pilot v1: 5 recordings, peak RSS 231 MiB, 25.7 s, source unchanged, verify-cleanup proven",
-          "Composition error 2.2e-16 rad in all five written tables",
-          "Guarded pilot v3 (final runner): clean_success true, peak RSS 231.6 MiB, 21.6 s, cleanup proven"
+          "pytest tests/test_um21_s02_frame.py: 54 passed (synthetic only)",
+          "Pilot v4 and full v4 launcher receipts clean, cleanup proven",
+          "Composition error <= 2.2e-16 rad in all 44 tables; reload check clean"
         ],
         "remaining": [
-          "Decision: publish CoP from fitted registration, and endpoint tolerance (needs José)",
-          "Independent audit script, Q01 v3, R01 v3, full run"
+          "Independent verification of acceptance criteria",
+          "Independent audit script, Q01 v3, R01 v3 (later)",
+          "AB04/d10 heel offset explanation; single-leg publication rule"
         ],
-        "handoff_file": "docs/maintainers/handoffs/UM21-STD-plan.json (pilot_results)"
+        "handoff_file": "docs/maintainers/handoffs/UM21-STD-plan.json (pilot_results, full_run_v4)"
       },
       "owner": "agent (UM21-S02 worker)",
       "started_at_utc": "2026-11-23T00:00:00Z",
@@ -1944,7 +1944,12 @@
         "docs/quality/audits/um21-s02-pilot-spec-v3.json",
         "docs/quality/audits/um21-s02-pilot-launcher-receipt-v1.json",
         "docs/quality/audits/um21-s02-pilot-launcher-receipt-v2.json",
-        "docs/maintainers/handoffs/UM21-STD-plan.json"
+        "docs/maintainers/handoffs/UM21-STD-plan.json",
+        "docs/quality/audits/um21-s02-pilot-spec-v4.json",
+        "docs/quality/audits/um21-s02-full-spec-v4.json",
+        "docs/quality/audits/um21-s02-full-launcher-receipt-v4.json",
+        "docs/quality/audits/um21-s02-pilot-launcher-receipt-v4.json",
+        "docs/quality/audits/um21-s02-pilot-launcher-receipt-v3.json"
       ]
     },
     {
