@@ -7033,7 +7033,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Segment every GT23 recording with our own scripts and check against the authors' strides",
-      "status": "review",
+      "status": "done",
       "stage": "pilot",
       "question": "Do our own per-task rules reproduce the authors' labelled strides, and does every one of the 90 recordings without event windows get a stated disposition?",
       "scope": "28 guarded jobs: 4 pilots (AB12 normal_walk_1; AB01 stairs_1_2, an empty-event stair descent; AB12 poses_1, random draw seed 20261124; AB11 squats_1) + 12 batches + 12 audits. New GT23 module: gait tasks use the publisher's 20 N rising rule for each leg; window tasks use the documented 0.5 m/s speed-crossing rule; tasks with no defensible cycle become continuous recordings. The repo's common stride_segmentation.py covers 11 of 26 tasks in kind but is untested, uses 50 N and one leg, and filters silently, so it is not used as is. Labels such as speed come only from the authors' windows.",
@@ -7063,16 +7063,17 @@
         "Synthetic traces with known crossing times give those times exactly. Agreement is reported, never tuned to a pass rate.",
         "The phase reconstruction audit in docs/maintainers/handoffs/ESML-crosswalk.json (energy-shaping-ML survey) is used as a comparison for our own segmentation; credit the file; no import from that project and none of its parquets opened."
       ],
-      "next_action": "Independent verifier checks the acceptance criteria against the evidence (handoff GT23-S01.json), then GT23-C06.",
+      "next_action": "Done. Independent verifier passed it (handoff GT23-S01-verify.json). GT23-C06 is next. Note: gait end offsets are 0 ms only for most windows; 134 normal_walk windows differ at the end.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT23-rebuild-plan.json",
         "docs/quality/audits/gt23-rebuild-probes.json",
         "docs/maintainers/handoffs/GT23-S01.json",
-        "converted_datasets/reconversion_v2/gt23_s01_summary/summary.json"
+        "converted_datasets/reconversion_v2/gt23_s01_summary/summary.json",
+        "docs/maintainers/handoffs/GT23-S01-verify.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-24T00:13:55+00:00",
+        "last_checked_at_utc": "2026-11-24T00:45:00+00:00",
         "summary": "Own segmentation ran for all 488 recordings (4 pilots, 12 batches, 1 summary; peak 133-170 MiB). All 13,119 authors windows accounted; 90 no-window recordings = 23 gait + 3 window + 64 continuous. Gait tasks reproduce the authors strides at 0 ms where the plate exists; window-rule tasks agree on starts within 250 ms for most but ends differ by about 1 s; stairs and side_shuffle windows are not heel-to-heel strides. Independent audit not yet run.",
         "checks": [
           "tests/test_gt23_s01.py: 11 synthetic tests pass",
@@ -7080,8 +7081,7 @@
           "Every job clean_success and verify-cleanup proof true"
         ],
         "remaining": [
-          "Independent verification",
-          "GT23-C06 after review"
+          "GT23-C06"
         ],
         "changed_files": [
           "contributor_tools/gt23_segmentation.py",
@@ -7095,7 +7095,8 @@
         "evidence_paths": [
           "docs/maintainers/handoffs/GT23-S01.json",
           "converted_datasets/reconversion_v2/gt23_s01_summary/summary.json",
-          "docs/quality/audits/gt23-s01-summary-launcher-receipt.json"
+          "docs/quality/audits/gt23-s01-summary-launcher-receipt.json",
+          "docs/maintainers/handoffs/GT23-S01-verify.json"
         ]
       },
       "owner": "claude-worker-gt23-s01",
