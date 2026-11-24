@@ -115,6 +115,7 @@ def test_toe_out_15_degrees_known_foot_angle_and_pressure_point(side):
     seg, _, fl = angles(m, eul, side)
     # foot of true elevation 20 deg turned 15 deg out of the leg plane: in-plane angle atan2(sin e, cos e cos tau)
     assert seg['foot'][0] == pytest.approx(np.arctan2(np.sin(elev), np.cos(elev) * np.cos(tau)), abs=1e-12)
+    # D-REF-2 as ruled 2026-11-24: the pressure-point frame follows the leg plane, so toe-out is a sideways offset.
     # flat foot: a point 0.1 m ahead of the ankle along the (turned) foot is 0.1*cos(tau) - 0.1 anterior, 0.1*sin(tau) outward
     m, eul = person(0, 0, 0, 0, 0.4, 0.4, toe_out=tau)
     seg, _, fl = angles(m, eul, side)
