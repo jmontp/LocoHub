@@ -7626,7 +7626,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Preserve all 22 GT21 sources: extract the six, export labels, inventory",
-      "status": "working",
+      "status": "review",
       "stage": "source_inventory",
       "question": "Is every recording of all 22 participants present, unchanged and readable, with its terrain labels and mass on record?",
       "scope": "3,147 recordings: 2,301 local (16 participants) and 846 from the six in the authors' 2024 copy (AB12, AB15, AB17, AB19, AB23, AB28). 30 guarded jobs: 6 zip extractions (AB17 first), 22 MATLAB label and subject exports (AB06 first), 1 metadata inventory, 1 AB17 2021-versus-2024 comparison.",
@@ -7655,25 +7655,28 @@
         "Label export agrees with the 1,680 ramp and stair terrain labels already checked; stair_1_l_01_02 window list recorded.",
         "Pilots (AB17 extraction, AB06 export) pass before the other jobs; one job at a time, nice 19, ionice idle, memory headroom checked before each; nothing under existing converted_datasets files is overwritten."
       ],
-      "next_action": "Wait for the launcher census to clear (a docs http.server blocks it), then dry-run and launch the AB17 extraction pilot; native extension draft awaits independent review.",
+      "next_action": "Independent reviewer checks the Python parts against the evidence report; label export waits for independent review of the native MATLAB extension.",
       "resource_class": "numerical",
       "evidence_paths": [
+        "converted_datasets/reconversion_v2/gt21_rb01_inventory_20261123/inventory_summary.json",
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
-        "docs/quality/audits/gt21-s02-2024-copy.json",
+        "docs/quality/audits/gt21-ab17-recovery.json",
+        "docs/quality/audits/gt21-rb01-evidence.json",
         "docs/quality/audits/gt21-s01-cohort-crosswalk.json",
-        "docs/quality/audits/gt21-ab17-recovery.json"
+        "docs/quality/audits/gt21-s02-2024-copy.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T21:30:00+00:00",
-        "summary": "Python runner, specs, synthetic tests and a DRAFT native MATLAB launcher extension are written and their synthetic tests pass (14 passed). No guarded job has launched: the launcher census refuses every launch because of a long-running non-LocoHub process (python3 -m http.server 8000 --directory .../site/html, started about 4.7 days ago, parent init). It matches the census rule 'a python argument path inside the repository'. It was not stopped; stopping or restarting it is the host owner's call.",
+        "last_checked_at_utc": "2026-11-23T22:00:00+00:00",
+        "summary": "Python parts done and checked: six zips extracted (CRC, size and sha256 against the zip directory, manifest and listing), inventory of all 22 (3,147 recordings, per-mode counts and 12 channel files as planned). Launcher blocker cleared (the docs server was stopped by its owner). Label export is pending: the native MATLAB extension draft awaits independent review.",
         "checks": [
-          "14 synthetic tests pass (extraction, inventory, native launcher with fake host)",
-          "No guarded job launched: foreign_worker_linux on plain dry run"
+          "6 extractions: member size, CRC32 and sha256 equal zip directory, manifest and bound listing (members 1,770/1,638/1,602/1,722/1,746/1,711)",
+          "Inventory: 16 local 506/1015/665/115 and six 174/379/251/42, 3,147 recordings, all 12 channel files present",
+          "14 synthetic tests pass",
+          "verify-cleanup proved for all 7 jobs; peak memory 21-24 MiB each"
         ],
         "remaining": [
-          "All guarded jobs (6 extractions, inventory) once the launcher census clears",
-          "MATLAB export after independent review of the native extension",
-          "Evidence report with per-mode counts, AB17 comparison binding, mass-unit evidence"
+          "Independent review of the Python parts against docs/quality/audits/gt21-rb01-evidence.json",
+          "Label export (22 MATLAB starts, AB06 pilot first) after independent review of contributor_tools/guarded_launcher_native.py"
         ],
         "changed_files": [
           "contributor_tools/run_gt21_rb01.py",
@@ -7685,7 +7688,19 @@
           "docs/quality/audits/gt21-rb01-extract-AB17-spec.json (and AB12, AB15, AB19, AB23, AB28)",
           "docs/maintainers/handoffs/GT21-RB01.json",
           "docs/maintainers/backlog.json",
-          "docs/maintainers/backlog.html"
+          "docs/maintainers/backlog.html",
+          "docs/quality/audits/gt21-rb01-evidence.json",
+          "docs/quality/audits/gt21-rb01-inventory-spec.json",
+          "docs/quality/audits/gt21-rb01-extract-AB17-spec-r2.json",
+          "converted_datasets/reconversion_v2/gt21_rb01_inventory_20261123/",
+          "/mnt/s/locomotion_data/gt21_author_mirror_2024_extracted/ (new, outside repo)",
+          "docs/quality/audits/gt21-rb01-extract-AB17-launcher-receipt-r2.json",
+          "docs/quality/audits/gt21-rb01-extract-AB12-launcher-receipt.json",
+          "docs/quality/audits/gt21-rb01-extract-AB15-launcher-receipt.json",
+          "docs/quality/audits/gt21-rb01-extract-AB19-launcher-receipt.json",
+          "docs/quality/audits/gt21-rb01-extract-AB23-launcher-receipt.json",
+          "docs/quality/audits/gt21-rb01-extract-AB28-launcher-receipt.json",
+          "docs/quality/audits/gt21-rb01-inventory-launcher-receipt.json"
         ],
         "detail": "docs/maintainers/handoffs/GT21-RB01.json"
       },
