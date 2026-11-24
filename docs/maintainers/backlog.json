@@ -8132,7 +8132,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Rerun GT23 angles, export, holds and assessment under the side-view plane rule (D-REF-4)",
-      "status": "review",
+      "status": "done",
       "stage": "conventions",
       "question": "After measuring each leg's thigh, shank and foot in its own knee-axis plane and the pelvis in its own plane, do all angles stay defined and continuous (AB10 meander_1, AB11 turn_and_step_1), and do the exported tables and the Q01 assessment follow?",
       "scope": "Chain, each step on new output roots with superseded lists, one guarded job at a time: (1) C06 rerun: conventions code updated (knee axis from LKNE/LMKNE and RKNE/RMKNE lateral and medial knee markers, model femur z axis as cross-check; pelvis plane from mid-PSIS to mid-ASIS; foot frame and CoP follow the leg plane); pilots including AB10 meander_1 and AB11 turn_and_step_1, then code freeze, then all 488 recordings; ask Jose for an independent verifier. (2) E01 export rerun from the new angles (moments from M01 unchanged). (3) E02 holds and wraps rerun: unwrap only where a real branch cut remains (as AB13 dynamic_walk_1); step-up pressure point held as before. (4) Q01 v2 assessment rerun. Independent verifier after step 1 and again at the end. Held columns for a missing knee marker (AB13 stairs_1_9 RKNE) carry a reason, never filled.",
@@ -8163,7 +8163,7 @@
         "Unwrap in E02 only where a real branch cut remains; whole multiples of 360 degrees only, every changed sample logged",
         "Q01 v2 reports before and after failure counts; moments from M01 unchanged; code frozen between pilot and full run"
       ],
-      "next_action": "Independent verifier for step 1 (C06 rerun, handoff docs/maintainers/handoffs/GT23-PL01.json). Then E01 export rerun, E02 holds and wraps rerun, Q01 v2 rerun, and a final verifier.",
+      "next_action": "None. Follow-ups outside this task: pl README wording on the foot frame, the pytest address-space limit leak in tests/test_gt23_raw_kinematics.py, and a source-side look at AB03 side_shuffle_1 pressure point before any release use.",
       "resource_class": "numerical",
       "owner": "claude-worker-gt23-pl01",
       "started_at_utc": "2026-11-24T15:15:22+00:00",
@@ -8175,7 +8175,7 @@
         "docs/quality/audits/gt23-planes-superseded.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-24T15:29:17+00:00",
+        "last_checked_at_utc": "2026-11-24T17:09:07+00:00",
         "summary": "Step 1 done: side-view planes in the conventions code, 25 synthetic tests, 5 pilots, 12 batches (488 recordings, 0 failed, peak 271 to 322 MiB), summary and comparison report. AB10 meander_1 and AB11 turn_and_step_1 foot angles no longer jump (max one-sample change 1.3 and 4.8 deg, was 357 and 356). Only AB13 dynamic_walk_1 keeps a genuine branch cut. Steps 2 to 4 not started. Not self-verified.",
         "checks": [
           "pytest tests/test_gt23_c06.py 25 pass",
@@ -8200,7 +8200,8 @@
           "docs/quality/audits/gt23-planes-*",
           "docs/maintainers/backlog.json",
           "docs/maintainers/backlog.html"
-        ]
+        ],
+        "final_verification": "Independent verifier steps 1 to 4: pass_with_flags (docs/maintainers/handoffs/GT23-PL01-verify.json). Receipts clean and frozen; E01 recompute of 10 observations to 3e-13; counts 8,831 / 10,254 / 488 / 1,415 confirmed; E02 holds exactly 12 step-ups (foot-frame CoP only) and one AB13 dynamic_walk_1 sample (index 19258, one turn); AB10/AB11 unchanged; Q01 v2 L1/L2/L5 equal on AB03, AB05, AB01. L5 rise 90 to 108 is mostly marginal exceedances (median 1.3 cm); AB03 failures are real bad pressure points in every frame. Scientific approval none."
       }
     }
   ],
