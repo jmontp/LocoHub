@@ -7112,7 +7112,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Compute segment and joint angles, knee sign, forward frame and foot-frame pressure point",
-      "status": "review",
+      "status": "done",
       "stage": "conventions",
       "question": "Do the recomputed angles, signs, forward/sideways force and foot-frame pressure point agree with independently known values for every task class?",
       "scope": "28 guarded jobs: 4 pilots (AB05 normal_walk_1; AB12 normal_walk_1; AB11 squats_1; AB05 turn_and_step_1, random draw seed 20261123) + 12 batches + 12 audits. Pelvis from the PSIS-to-ASIS markers; thigh and shank from the authors' model segment axes (Transforms_Euler, order read from the file, not its column names); foot from heel to toe markers; joint angles as differences; knee negated for published speed and moment; pressure point in the foot frame (origin 100 mm forward of the midpoint of the two ankle markers); forward and sideways force and pressure point only in the 11 forward-walking tasks, lab axes in the other 15 (D-GT23-C01-1 = C). Agent defaults G1 to G5 in the plan are logged, not asked.",
@@ -7144,7 +7144,7 @@
         "Pilots show peak memory under the 768 MiB cap; one job at a time.",
         "Scaled1 model geometry (ankle centre about 35.7 mm below the ankle-marker midpoint, talus origin, calcn offset 0.04877 m) is re-implemented as LocoHub code with its own synthetic tests and checked against GT23 data before it is relied on; credit docs/maintainers/handoffs/ESML-crosswalk.json (energy-shaping-ML survey); no import from that project and none of its parquets opened. The values are that project's claims, not yet verified here."
       ],
-      "next_action": "Independent re-verification of GT23-C06 after rework (handoff docs/maintainers/handoffs/GT23-C06.json, section rework_after_first_review); then GT23-M01.",
+      "next_action": "Done (second verification v2: docs/maintainers/handoffs/GT23-C06-verify.json). Outputs: gt23_c06_batch3_* and gt23_c06_summary3. curb_up pressure point held (24 legs); then GT23-M01.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT23-rebuild-plan.json",
@@ -7177,7 +7177,8 @@
           "docs/quality/audits/gt23-c06-*",
           "docs/maintainers/backlog.json",
           "docs/maintainers/backlog.html"
-        ]
+        ],
+        "verification": "GT23-C06-verify.json v2: done"
       },
       "owner": "claude-worker-gt23-c06",
       "started_at_utc": "2026-11-24T01:54:30+00:00"

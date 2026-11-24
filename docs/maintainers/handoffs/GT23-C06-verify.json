@@ -1,9 +1,9 @@
 {
   "task_id": "GT23-C06",
   "verifier_role": "independent second agent; recomputed from source markers, Transforms_Euler and step-1 plate data with my own code (scripts in /tmp/gt23verify, not committed; no import of the worker's code); wrote nothing under converted_datasets/",
-  "verdict": "ready",
-  "last_checked_at_utc": "2026-11-24T02:32:39Z",
-  "summary": "Angles, speeds and held columns are correct and reproduce to rounding. The stairs foot-frame pressure point is wrong because of a bug: the code puts the plate pressure point at height 0, but on the stairs the plate surface is 0.35 to 0.83 m above the lab floor and the source gives that height in the COPY_Vertical column. Using it, the stairs pressure point falls back inside the foot (outside-by-5-cm share 0 to 3% instead of 25 to 100%). The 124 stairs recordings (and probably the curb ones, see below) need a rerun, so the task goes back to ready.",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-11-24T03:00:45Z",
+  "summary": "Re-verification after rework: PASS. The plate-height bug is fixed in batch3 and my independent recompute reproduces it to 5e-16 m; angles, speeds, force and held columns are identical to batch2; curb_up is held with a defensible, conservative rule. This approves the conversion arithmetic only, not any scientific range, and approves no dataset.",
   "receipts": {
     "batch2_all_12": "completed, exit 0, clean_success, all checks true, bindings equal the current sha256 of all five code files and the launcher",
     "summary2": "same, bindings equal current code",
@@ -78,5 +78,25 @@
     "curb, cutting and step_ups pressure-point plausibility",
     "force-plate height assumptions for right-plate treadmill recordings"
   ],
-  "next_action": "Fix the plate-height bug in contributor_tools/gt23_conventions.py / run_gt23_c06.py, add tests with a raised plate, pilot stairs at the bound code, rerun stairs (and review the other tasks with high outside-foot share), then request review again. GT23-Q01 keeps stairs pressure-point columns held until fixed."
+  "next_action": "GT23-M01 (and GT23-Q01 with its held stairs-CoP criterion no longer binding on a bug: stairs CoP columns are now valid as converted; Q01 may keep the hold until its own review).",
+  "v1": {
+    "verdict": "ready",
+    "last_checked_at_utc": "2026-11-24T02:32:39Z",
+    "summary": "Angles, speeds and held columns are correct and reproduce to rounding. The stairs foot-frame pressure point is wrong because of a bug: the code puts the plate pressure point at height 0, but on the stairs the plate surface is 0.35 to 0.83 m above the lab floor and the source gives that height in the COPY_Vertical column. Using it, the stairs pressure point falls back inside the foot (outside-by-5-cm share 0 to 3% instead of 25 to 100%). The 124 stairs recordings (and probably the curb ones, see below) need a rerun, so the task goes back to ready."
+  },
+  "version": 2,
+  "v2_rework_check": {
+    "bound_code": "All 3 pilots3 (AB12 stairs_1_10, AB03 curb_up_1, AB05 normal_walk_1), the 12 batch3 jobs and summary3 completed clean (exit 0, all checks true); every one binds the same six code hashes, equal to the current files. Pilots ran 02:43 before batches (02:44-02:52) and the summary (02:53). Peak RSS 151-310 MiB. pytest tests/test_gt23_c06.py: 20 passed.",
+    "cop_recompute": "16 recordings (my earlier 14 with the 2 held ones included, plus AB10 stairs_1_3 and AB13 stairs_1_5), my own code with COPY_Vertical as lab height: angles max diff 8.9e-16 rad, speeds 1.3e-13 rad/s, foot-frame pressure point 4.6e-16 m; finite patterns identical, except AB03 curb_up_1 where all loaded pressure-point samples are held (as designed). AB03 weighted_walk_1 (LASI missing) still has no finite angle or speed. Outside-foot share on stairs now 0 to 3% (was 25 to 100%).",
+    "curb_up_hold": "Independent check over 196 recordings (curb_up/down, step_ups, cutting, tire_run, stairs, normal and incline walk; 440 leg-recordings with load): median heel height above plate is 0.033-0.146 m for every non-curb_up leg-recording and 0.200-0.229 m for all 24 curb_up legs; every curb_up leg is held and nothing else above 0.17 m is unheld; the only other held legs are the 2 LMANK ones. The cut at 0.17 lies in an empty 5.4 cm gap, so the rule is a gap in the data rather than a fitted pass rate, and it hides nothing: force, plate pressure point, angles stay, the reason is written per column. Limit: the number is empirical and the real cause (curb height undocumented) is unresolved, so it should be dropped when the curb height is documented, and not reused for other datasets.",
+    "outside_foot_share": "Consistent with the marker-margin explanation. In my sample the outside samples are all beyond the toe side (100%), median 5-8 cm past the toe marker, and concentrated at low load: AB05 normal_walk L 53% below 0.1 of peak load, 38% at 0.1-0.2, 10% at 0.2-0.5, 7% above 0.5; cutting L 69/67/26/4%; curb_down L 78/56/16/2%. Marker foot length is 0.19-0.21 m, so the toe-marker margin ends at the metatarsal heads. One unexplained outlier: AB07 normal_walk right foot is 30% outside overall and 72% at 0.2-0.5 of peak (marker foot length 0.193 m); AB07 foot offset is already the largest in the ledger (ankle offset -9 to -13 deg). Not a stairs/plate issue; left as a limitation for GT23-Q01.",
+    "unchanged_columns": "All 488 recordings, batch3 vs batch2: time, all segment and joint angles, all speeds, lab-axis force and heading columns are bit-identical (0 differing columns); no held column was lost (0); lab pressure point x and z identical. Changes are only anterior and vertical foot-frame pressure point in tasks with a nonzero plate height (stairs up to 0.83 m; ball_toss etc. about 1 cm), the new cop_lab_y columns (plate height) with their own held reasons, and the 24 curb_up legs held.",
+    "peak_rss_mib_my_probes": "250.6 (16-recording probe, one process at a time), 176.2 (heel-height scan), 150.4 (batch2/batch3 comparison); nice 19, ionice idle; Linux available 8.3 GB before probing",
+    "not_checked": [
+      "quiet-standing pelvis tilt",
+      "all 488 by my own code (16 recorded samples plus ledger-wide column and held checks)",
+      "whether the curb height can be recovered",
+      "AB07 right-foot outside share"
+    ]
+  }
 }
