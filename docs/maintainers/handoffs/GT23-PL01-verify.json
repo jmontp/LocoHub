@@ -1,0 +1,35 @@
+{
+  "task_id": "GT23-PL01",
+  "step": 1,
+  "verifier_role": "independent second agent; own implementation of D-REF-4 in /tmp/gt23verify (pl.py, lat.py, heldp.py), no import of the worker's code; probes under prlimit --as 600 MiB, OMP_NUM_THREADS=1, nice 19; read-only",
+  "verdict_step1": "pass_with_one_flag",
+  "status_recommendation": "keep GT23-PL01 in review (steps 2-4 follow)",
+  "last_checked_at_utc": "2026-11-24T15:42:15Z",
+  "summary": "Step 1 passes: receipts clean with frozen code; my independent implementation of the side-view-plane rule reproduces 13 recordings to rounding (angles 9e-16 rad, speeds 1.3e-13 rad/s, planar CoP 5e-16 m); AB10 and AB11 foot angles are now continuous; held columns are exactly as reported with nothing filled. One flag for the standard owner: the planar foot frame puts the CoP origin on the projection of the heel-to-toe line into the leg plane, not on the foot's own heel-to-toe line, so it no longer matches the standard's CoP wording when the foot is toed out.",
+  "receipts": "5 pilots (15:15-15:17), 12 batches (15:17-15:26), summary (15:27) and report (15:28) all clean (exit 0, all checks true). Every pilot, batch and the summary bind the same code hashes (gt23_conventions.py 46ec8c, gt23_conventions_check.py aca414, run_gt23_c06.py 3a7f4b, plus segmentation, source reader, launcher), all equal to the current files; the report job binds only report_gt23_planes.py (separate by design). pytest tests/test_gt23_c06.py: 25 passed. build_backlog_page.py --check: valid. Worker peaks 148-322 MiB.",
+  "recompute": {
+    "sample": "seed 20261202: 10 random recordings (AB03 curb_up_1, AB09 stairs_1_7, AB05 tug_of_war_1, AB01 incline_walk_1, AB11 lift_weight_1, AB13 curb_down_1, AB02 stairs_1_12, AB13 normal_walk_1, AB08 poses_1, AB03 walk_backward_1) plus AB10 meander_1, AB11 turn_and_step_1, AB13 stairs_1_9 (RKNE missing)",
+    "my_rule": "knee axis: right RKNE-RMKNE, left LMKNE-LKNE (points to the person's right), horizontal part; leg-plane forward = up x axis; thigh and shank = Transforms_Euler y axes (YZX file order) measured in that plane from straight down; foot = heel to mean(MT1,MT5) measured from the plane forward; pelvis = elevation of mid-ASIS minus mid-PSIS above its horizontal part (own plane); joints as differences; speeds wrapped central difference at 200 Hz; planar CoP: frame axes anterior = cos t f + sin t up, vertical = -sin t f + cos t up (t = foot angle), lateral = plane normal outward, origin = ankle midpoint + 0.1 m along anterior, plate point (COPX, COPY_Vertical, COPZ) loaded at 20 N or more",
+    "result": "angles max difference 8.9e-16 rad, speeds 1.3e-13 rad/s, pressure point 5e-16 m in all 13; finite/missing patterns identical in all 13 (0 mismatches), including the pelvis and hip held in AB03 walk_backward_1 and the right leg held in AB13 stairs_1_9 with the left leg present",
+    "turn_continuity": "AB10 meander_1 foot angle largest one-sample step 1.6 deg (left) and 1.3 deg (right), no step above 90 deg (before 356.9 deg); AB11 turn_and_step_1 4.8 deg (left) and 3.6 deg (right), none above 90 deg (before 356.2 deg and one more). AB13 dynamic_walk_1 still has the one genuine 359.9 deg wrap at index 19258 (right foot and ankle), shank continuous (3.5 deg), as the worker says."
+  },
+  "planar_cop_judgement": {
+    "what_the_worker_did": "anterior axis = heel-to-toe projected into the leg plane; origin 100 mm along that planar axis from the ankle midpoint; lateral = plane normal outward; the 3-D heel-to-toe frame is retired",
+    "match_with_standard": "Does not fully match. The standard (index.md, CoP frame, 23 Nov 2026) puts the origin 100 mm forward of the ankle centre along the foot's heel-to-toe direction, forward along the foot, up perpendicular to it, sideways outward. With toe-out the planar axis is not the heel-to-toe line, so the origin leaves the foot's own line, and the toe-out appears as a sideways shift of the whole frame. It is consistent only when the foot's heel-to-toe line lies in the leg plane. The new side-view-plane line ('CoP and foot frame follow the new foot plane') is ambiguous and can be read as the worker did.",
+    "evidence": "Toe-out (heel-to-toe horizontal direction against the leg-plane forward) has median absolute values of 2 to 22 degrees by recording and leg (e.g. AB10 meander right 22, AB09 stairs left 20, AB13 normal_walk left 15), p95 higher. Distance between the planar origin and the 3-D heel-to-toe origin: median 0.4 to 3.6 cm, 95th percentile about 5 to 8 cm, maximum 9.4 cm (AB11 turn_and_step_1 right 9.5 cm, AB10 right 9.4 cm). Against the retired 3-D frame the planar CoP lateral coordinate moves outward by a median 1 to 2 cm (AB13 normal_walk left 0.5 to 2.5 cm median, right 0.0 to 1.1; AB05 left 0.3 to 1.8; AB10 meander left 0.3 to 2.4; AB03 right unchanged), while the anterior coordinate changes by only 0.0 to 0.5 cm. In the 3-D frame the lateral median was about 0.0 to 0.8 cm, i.e. the pressure point ran along the foot line; in the planar frame it carries the toe-out offset.",
+    "flag": "Flag for José / the standard owner: either amend the standard to say the CoP frame is planar (origin and axes in the leg plane), or keep the origin on the foot's own heel-to-toe line and use the plane only for the angles. Not changed here. Steps 2-4 inherit whichever is chosen."
+  },
+  "held_columns": {
+    "result": "pass",
+    "detail": "All 488 ledgers: held counts by reason and task equal gt23_planes_report/report.json; 2,636 held columns, none has a finite value. LASI-held: only AB03 walk_backward_1 and weighted_walk_1, now pelvis angle, hip angles and speeds, forward and sideways force and heading (13 columns in weighted_walk_1, 5 in walk_backward_1; 46 to 18 in total); their thigh, shank, foot, knee and ankle angles are present and match my recompute. New RKNE-held: AB13 stairs_1_9 right leg only, 12 columns (thigh, shank, foot, hip, knee, ankle angles; hip, knee, ankle speeds; the three pressure-point columns). LPSI, RPSI, LMANK and curb_up holds unchanged. Nothing filled."
+  },
+  "not_checked": [
+    "all 488 by my own code (13 recorded samples plus ledger-wide held and report checks)",
+    "the 12-participant offsets table in the handoff",
+    "knee-axis marker versus model femur cross-check (about +2 left, -0.4 right)",
+    "moment, force and BW columns (not part of step 1)",
+    "whether D-REF-4 pelvis plane wording (horizontal part of mid-PSIS to mid-ASIS) vs the hip offset change (up to 2-3 degrees in AB08) is intended"
+  ],
+  "resource_notes": "Peak RSS of my recompute script 362 MiB (above the 300 MiB probe rule, under the 600 MiB prlimit; it holds markers, Euler and the output of one recording); the other probes 165 MiB. The first run died at the address limit when OpenBLAS and arena threads were not capped and was rerun with MALLOC_ARENA_MAX=2. Nothing left running, nothing written under converted_datasets.",
+  "next_action": "Step 2 (E01 export rerun) after José or the standard owner answers the CoP frame flag, or proceed with the planar frame explicitly recorded as provisional. GT23-PL01 stays in review."
+}
