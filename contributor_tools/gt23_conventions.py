@@ -2,16 +2,23 @@
 
 Pure functions, no file access. The standard is docs/reference/index.md (decided 2026-11-23):
 
-* Lab frame of the source: +Y up, markers in mm. The person's right is  forward x up, so the forward direction is
-  up x (right ASIS - left ASIS), measured at every sample (plan default G4).
-* Segment angles are counterclockwise-positive in the (forward, up) plane. Thigh and shank are measured from straight
-  down (distal end forward positive), foot (heel to toe) and pelvis (PSIS to ASIS) from forward horizontal.
+* Lab frame of the source: +Y up, markers in mm. The person's right is forward x up.
+* Side-view planes (D-REF-4, 2026-11-24): each leg has its own body-fixed vertical plane, the one perpendicular to that
+  leg's knee flexion axis (lateral and medial knee markers; horizontal part), so its forward direction is
+  up x (horizontal knee axis pointing to the person's right). Thigh, shank and foot of that leg are measured in it. The
+  pelvis uses its own forward direction, the horizontal part of mid-PSIS to mid-ASIS. A joint angle is a difference of
+  segment angles even though the planes differ.
+* Segment angles are counterclockwise-positive in their plane's (forward, up) axes. Thigh and shank are measured from
+  straight down (distal end forward positive), foot (heel to toe) and pelvis (PSIS to ASIS) from forward horizontal.
+* The ASIS-line heading (up x (right ASIS - left ASIS)) is kept only as the walking direction for forward and sideways
+  ground force in the forward-walking tasks (D-GT23-C01-1 = C).
 * Joint angles are differences: hip = thigh - pelvis, knee = thigh - shank, ankle = foot - shank. There is no other zero.
 * Thigh and shank long axes come from the authors' scaled model (Transforms_Euler: body y axis points to the proximal
   joint). The Euler order that reproduces the authors' orientations is intrinsic Y-Z-X with the file's columns taken in
   file order (the column names are not the axis names); R = Ry(a1) Rz(a2) Rx(a3) maps body axes to the lab.
-* Pressure point in the foot's own frame: origin 100 mm forward of the ankle centre along heel to toe, anterior along
-  heel to toe, up perpendicular to it (the vertical with its heel-to-toe part removed, no roll), sideways outward.
+* Pressure point in the foot's own frame, which follows the foot plane: the frame is the leg's plane axes rotated by
+  the foot angle; origin 100 mm forward of the ankle centre along heel to toe, anterior along the foot, up perpendicular
+  to it in that plane, sideways outward (the plane normal). Toe-out therefore shows as a sideways offset.
 * Forward and sideways force are filled only where a heading is allowed (forward walking); lab axes elsewhere.
 
 Geometry of the authors' scaled model (talus origin, ankle centre, hip centre) is re-implemented here from the .osim
@@ -92,15 +99,39 @@ def euler_yzx(a1, a2, a3):
 
 
 # ------------------------------------------------------------------------------------------------ segment and joint angles
-def segment_angle_set(fwd, asis_mid, psis_mid, thigh_down, shank_down, heel, toe):
-    """Segment angles (radians) in the plane of ``fwd``.
+def knee_axis_to_right(lateral, medial, side):
+    """Knee flexion axis (n, 3) pointing to the person's right, from the lateral and medial knee markers.
+    Right knee: lateral is on the right (axis = lateral - medial); left knee: lateral is on the left (axis = medial - lateral)."""
+    lateral, medial = np.asarray(lateral, float), np.asarray(medial, float)
+    return lateral - medial if side == 'R' else medial - lateral
 
-    thigh_down, shank_down: lab vectors pointing proximal to distal (n, 3). heel, toe: lab points (n, 3).
-    """
-    return {'pelvis': angle_from_forward(sag(asis_mid - psis_mid, fwd)),
-            'thigh': angle_from_down(sag(thigh_down, fwd)),
-            'shank': angle_from_down(sag(shank_down, fwd)),
-            'foot': angle_from_forward(sag(toe - heel, fwd))}
+
+def plane_forward(axis_to_right):
+    """Forward direction of the vertical plane perpendicular to an axis: up x (the axis's horizontal part), unit (n, 3).
+    NaN where the horizontal part vanishes (an axis pointing straight up or down)."""
+    a = np.asarray(axis_to_right, float)
+    horizontal = a - (a @ UP)[:, None] * UP
+    return unit(np.cross(UP, horizontal))
+
+
+def pelvis_forward(asis_mid, psis_mid):
+    """Pelvis forward direction: the horizontal part of mid-PSIS to mid-ASIS, unit (n, 3)."""
+    v = np.asarray(asis_mid, float) - np.asarray(psis_mid, float)
+    return unit(v - (v @ UP)[:, None] * UP)
+
+
+def pelvis_angle(asis_mid, psis_mid):
+    """Pelvis angle in its own plane (radians): increases when the front of the pelvis rises; anterior tilt negative."""
+    return angle_from_forward(sag(np.asarray(asis_mid, float) - np.asarray(psis_mid, float), pelvis_forward(asis_mid, psis_mid)))
+
+
+def leg_segment_angles(fwd_leg, thigh_down, shank_down, heel, toe):
+    """Thigh, shank and foot angles (radians) of one leg in that leg's plane.
+
+    thigh_down, shank_down: lab vectors pointing proximal to distal (n, 3). heel, toe: lab points (n, 3)."""
+    return {'thigh': angle_from_down(sag(thigh_down, fwd_leg)),
+            'shank': angle_from_down(sag(shank_down, fwd_leg)),
+            'foot': angle_from_forward(sag(np.asarray(toe, float) - np.asarray(heel, float), fwd_leg))}
 
 
 def joint_angles(seg):
@@ -130,17 +161,19 @@ def central_derivative(x, dt=1.0 / RATE_HZ):
 
 
 # ------------------------------------------------------------------------------------------------ foot frame
-def foot_axes(heel, toe):
-    """Foot frame (n, 3) unit axes: anterior along heel to toe, up perpendicular to it (no roll), right = anterior x up."""
-    e_f = unit(np.asarray(toe, float) - np.asarray(heel, float))
-    up = UP - np.sum(UP * e_f, axis=-1, keepdims=True) * e_f
-    e_u = unit(up)
+def foot_axes(fwd_leg, foot_angle):
+    """Foot frame (n, 3) unit axes in the leg's plane: anterior = forward rotated up by the foot angle, up perpendicular
+    to it in the plane, right = anterior x up (the plane normal, to the person's right)."""
+    c, s = np.cos(foot_angle)[:, None], np.sin(foot_angle)[:, None]
+    e_f = c * fwd_leg + s * UP
+    e_u = -s * fwd_leg + c * UP
     return e_f, e_u, np.cross(e_f, e_u)
 
 
-def foot_frame_point(point, ankle, heel, toe, leg):
-    """Lab points (n, 3) in the foot frame: (anterior, vertical, lateral) metres, origin 100 mm forward of ankle."""
-    e_f, e_u, e_r = foot_axes(heel, toe)
+def foot_frame_point(point, ankle, fwd_leg, foot_angle, leg):
+    """Lab points (n, 3) in the foot frame: (anterior, vertical, lateral) metres, origin 100 mm forward of the ankle
+    along heel to toe in the leg's plane; lateral is outward from that leg."""
+    e_f, e_u, e_r = foot_axes(fwd_leg, foot_angle)
     q = np.asarray(point, float) - np.asarray(ankle, float)
     lateral = np.sum(q * e_r, axis=-1)
     return {'anterior': np.sum(q * e_f, axis=-1) - FOOT_ORIGIN_M, 'vertical': np.sum(q * e_u, axis=-1),
@@ -163,9 +196,9 @@ def heel_above_plate(heel, plate_height):
     return float(np.median(np.asarray(heel, float)[ok] - np.asarray(plate_height, float)[ok])) if ok.any() else None
 
 
-def foot_frame_force(force, heel, toe):
-    """Lab force (n, 3) as (anterior, vertical) foot-frame components (for the quasi-static ankle moment)."""
-    e_f, e_u, _ = foot_axes(heel, toe)
+def foot_frame_force(force, fwd_leg, foot_angle):
+    """Lab force (n, 3) as (anterior, vertical) foot-frame components in the leg's plane (for the quasi-static ankle moment)."""
+    e_f, e_u, _ = foot_axes(fwd_leg, foot_angle)
     force = np.asarray(force, float)
     return np.sum(force * e_f, axis=-1), np.sum(force * e_u, axis=-1)
 

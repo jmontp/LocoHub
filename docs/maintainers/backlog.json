@@ -4778,7 +4778,8 @@
       "scope": "Complete retained Georgia Tech 2023 source scope and every exported observation type; any smaller local bundle remains an explicitly separate scope. Rebuilt output only; the time table is about 20 million rows, so what a release contains is a scope question for José when this task starts.",
       "depends_on": [
         "GT23-Q01",
-        "CORE-02"
+        "CORE-02",
+        "GT23-PL01"
       ],
       "inputs": [
         "docs/maintainers/backlog.json",
@@ -8124,6 +8125,82 @@
           "GT23-R01"
         ],
         "verification": "GT23-E02-verify.json: done except the two recordings awaiting Jose"
+      }
+    },
+    {
+      "id": "GT23-PL01",
+      "priority": "P1",
+      "dataset": "gt23",
+      "title": "Rerun GT23 angles, export, holds and assessment under the side-view plane rule (D-REF-4)",
+      "status": "review",
+      "stage": "conventions",
+      "question": "After measuring each leg's thigh, shank and foot in its own knee-axis plane and the pelvis in its own plane, do all angles stay defined and continuous (AB10 meander_1, AB11 turn_and_step_1), and do the exported tables and the Q01 assessment follow?",
+      "scope": "Chain, each step on new output roots with superseded lists, one guarded job at a time: (1) C06 rerun: conventions code updated (knee axis from LKNE/LMKNE and RKNE/RMKNE lateral and medial knee markers, model femur z axis as cross-check; pelvis plane from mid-PSIS to mid-ASIS; foot frame and CoP follow the leg plane); pilots including AB10 meander_1 and AB11 turn_and_step_1, then code freeze, then all 488 recordings; ask Jose for an independent verifier. (2) E01 export rerun from the new angles (moments from M01 unchanged). (3) E02 holds and wraps rerun: unwrap only where a real branch cut remains (as AB13 dynamic_walk_1); step-up pressure point held as before. (4) Q01 v2 assessment rerun. Independent verifier after step 1 and again at the end. Held columns for a missing knee marker (AB13 stairs_1_9 RKNE) carry a reason, never filled.",
+      "depends_on": [
+        "GT23-E02"
+      ],
+      "inputs": [
+        "docs/reference/index.md",
+        "docs/maintainers/handoffs/GT23-C06.json",
+        "docs/maintainers/handoffs/GT23-C06-verify.json",
+        "docs/maintainers/handoffs/GT23-E01.json",
+        "docs/maintainers/handoffs/GT23-E02.json",
+        "docs/maintainers/handoffs/GT23-E02-verify.json",
+        "docs/maintainers/handoffs/GT23-Q01.json",
+        "docs/maintainers/handoffs/GT23-M01.json",
+        "contributor_tools/guarded_launcher.py"
+      ],
+      "deliverables": [
+        "Updated conventions module, second independent implementation and synthetic tests (turning walker, toe-out 15 deg, 42/40/30 in a rotated leg plane)",
+        "New C06 roots for all 488 recordings, then new E01 roots, E02 hold/wrap roots and Q01 v2 report, each with a superseded list",
+        "Handoff docs/maintainers/handoffs/GT23-PL01.json with before/after angle offsets per subject, AB10/AB11 near the turns, and Q01 failure counts"
+      ],
+      "acceptance": [
+        "Every sagittal angle of AB10 meander_1 and AB11 turn_and_step_1 is finite and has no jump near 90-degree foot turns (largest one-sample change reported)",
+        "42/40/30 holds in a rotated leg plane; a foot 90 degrees from the walking direction stays defined and continuous; toe-out of 15 degrees gives the closed-form foot angle and sideways pressure point",
+        "Composition thigh = pelvis + hip, shank = thigh - knee, foot = shank + ankle to 1e-12 on all 488; second independent implementation agrees",
+        "Recordings missing a knee marker keep present-but-missing columns with the reason; nothing filled",
+        "Unwrap in E02 only where a real branch cut remains; whole multiples of 360 degrees only, every changed sample logged",
+        "Q01 v2 reports before and after failure counts; moments from M01 unchanged; code frozen between pilot and full run"
+      ],
+      "next_action": "Independent verifier for step 1 (C06 rerun, handoff docs/maintainers/handoffs/GT23-PL01.json). Then E01 export rerun, E02 holds and wraps rerun, Q01 v2 rerun, and a final verifier.",
+      "resource_class": "numerical",
+      "owner": "claude-worker-gt23-pl01",
+      "started_at_utc": "2026-11-24T15:15:22+00:00",
+      "evidence_paths": [
+        "docs/reference/index.md",
+        "docs/maintainers/handoffs/GT23-PL01.json",
+        "converted_datasets/reconversion_v2/gt23_planes_report/report.json",
+        "converted_datasets/reconversion_v2/gt23_planes_summary/summary.json",
+        "docs/quality/audits/gt23-planes-superseded.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-24T15:29:17+00:00",
+        "summary": "Step 1 done: side-view planes in the conventions code, 25 synthetic tests, 5 pilots, 12 batches (488 recordings, 0 failed, peak 271 to 322 MiB), summary and comparison report. AB10 meander_1 and AB11 turn_and_step_1 foot angles no longer jump (max one-sample change 1.3 and 4.8 deg, was 357 and 356). Only AB13 dynamic_walk_1 keeps a genuine branch cut. Steps 2 to 4 not started. Not self-verified.",
+        "checks": [
+          "pytest tests/test_gt23_c06.py 25 pass",
+          "composition 4.4e-16 rad on 488",
+          "second implementation 8.9e-16 rad / 1.7e-16 m",
+          "code hashes frozen between pilots and batches"
+        ],
+        "remaining": [
+          "Independent verifier for step 1",
+          "E01 rerun",
+          "E02 rerun",
+          "Q01 v2",
+          "final verifier"
+        ],
+        "changed_files": [
+          "contributor_tools/gt23_conventions.py",
+          "contributor_tools/gt23_conventions_check.py",
+          "contributor_tools/run_gt23_c06.py",
+          "contributor_tools/report_gt23_planes.py",
+          "tests/test_gt23_c06.py",
+          "docs/maintainers/handoffs/GT23-PL01.json",
+          "docs/quality/audits/gt23-planes-*",
+          "docs/maintainers/backlog.json",
+          "docs/maintainers/backlog.html"
+        ]
       }
     }
   ],

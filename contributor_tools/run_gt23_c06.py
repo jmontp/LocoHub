@@ -167,8 +167,9 @@ def column_reasons(cols, absent, forward_task, n_spans, plate_has_data, raised):
                              else 'plate never loaded above 20 N')
             continue
         foot = {f'{side}CAL', f'{side}MT1', f'{side}MT5'} & set(absent) if side else set()
+        knee = {f'{side}KNE', f'{side}MKNE'} & set(absent) if side else set()
         if name.startswith('cop_'):
-            need = foot | ({f'{side}ANK', f'{side}MANK'} & set(absent))
+            need = foot | knee | ({f'{side}ANK', f'{side}MANK'} & set(absent))
             if raised.get(side) is not None and raised[side] > RAISED_GAP_M:
                 reasons[name] = (f'held: foot stands about {raised[side]:.2f} m above the recorded plate surface (raised surface of '
                                  'undocumented height), so the pressure point on the sole is not defensible')
@@ -176,21 +177,32 @@ def column_reasons(cols, absent, forward_task, n_spans, plate_has_data, raised):
             plate_note = '' if plate_has_data[side] else 'source plate force is missing for this leg in this recording'
             reasons[name] = ('needs missing marker ' + ','.join(sorted(need))) if need else (plate_note or 'plate never loaded above 20 N')
             continue
-        if name.startswith('pelvis') or name.startswith('hip'):
-            need = pelvis | (asis if name.startswith('hip') else set())
+        if name.startswith('pelvis'):
+            need = pelvis
+        elif name.startswith('hip'):
+            need = pelvis | knee      # hip = thigh (leg plane, needs the knee axis) - pelvis
         elif name.startswith(('thigh', 'shank', 'knee')):
-            need = asis
+            need = knee
         else:  # foot and ankle angle and speed
-            need = asis | foot
+            need = knee | foot
         reasons[name] = ('needs missing marker ' + ','.join(sorted(need))) if need else 'no finite samples'
     return reasons
 
 
 # ------------------------------------------------------------------------------------------------ one recording
-def model_checks(model_text, S, mk, rot, ankle_mid, fwd, cols):
+def model_checks(model_text, S, mk, rot, ankle_mid, fwd, fwd_pelvis, cols):
     s, w = S.lower(), WORD[S]
     geo = cv.model_geometry(model_text, s)
     out = {}
+    # knee flexion axis: marker axis (lateral/medial knee markers) against the model femur z axis, horizontal parts, signed angle
+    # about the vertical (deg); both point to the person's right
+    ax_m = cv.plane_forward(cv.knee_axis_to_right(mk[f'{S}KNE'], mk[f'{S}MKNE'], S))
+    ax_f = cv.plane_forward(rot[f'femur_{s}'][:, :, 2])
+    cosv, sinv = np.sum(ax_m * ax_f, axis=1), np.sum(np.cross(ax_f, ax_m) * cv.UP, axis=1)
+    dev = np.degrees(np.arctan2(sinv, cosv))
+    out['knee_axis_marker_vs_model_deg'] = ({'n': int(np.isfinite(dev).sum()), 'median': float(np.nanmedian(dev)),
+                                              'p95_abs': float(np.nanpercentile(np.abs(dev), 95)), 'max_abs': float(np.nanmax(np.abs(dev)))}
+                                             if np.isfinite(dev).any() else {'n': 0})
     via_tib = cv.model_ankle_centre_via_tibia(mk[f'{S}ANK'], mk[f'{S}MANK'], geo, rot[f'tibia_{s}'])
     via_cal = cv.model_talus_origin_via_calcn(mk[f'{S}CAL'], geo, rot[f'calcn_{s}'], rot[f'talus_{s}'])
     d_tib = np.einsum('nji,nj->ni', rot[f'tibia_{s}'], via_tib - ankle_mid)   # model minus marker midpoint, tibia frame
@@ -238,29 +250,30 @@ def process_recording(subject, rec, x01, spans_raw, mass_kg, model_text, source,
     if not (len(grf['time']) == n == len(eu['pelvis'])):
         raise RunError(f'{rec}: row counts differ (markers {n}, force {len(grf["time"])}, Euler {len(eu["pelvis"])})')
     dt_dev = float(np.max(np.abs(np.diff(grf['time']) - 1 / cv.RATE_HZ))) if n > 1 else 0.0
-    # --- plane of the pelvis heading, sample by sample
-    fwd = cv.heading(mk['LASI'], mk['RASI'])
+    # --- side-view planes (D-REF-4): the pelvis in its own plane; each leg in the plane perpendicular to its knee axis
+    fwd = cv.heading(mk['LASI'], mk['RASI'])      # ASIS-line heading, kept only as the walking direction of the force
     asis_mid = (mk['LASI'] + mk['RASI']) / 2
     psis_mid = (mk['LPSI'] + mk['RPSI']) / 2
     rot = {b: cv.euler_yzx(*[eu[b][:, k] for k in range(3)]) for b in BODIES}
     cols = {'time_s': grf['time']}
-    segs, joints, speeds = {}, {}, {}
-    pelvis = None
+    pelvis = cv.pelvis_angle(asis_mid, psis_mid)
+    fwd_pelvis = cv.pelvis_forward(asis_mid, psis_mid)
+    fwd_leg, seg_foot = {}, {}
     for S in 'LR':
         s = S.lower()
+        fwd_leg[S] = cv.plane_forward(cv.knee_axis_to_right(mk[f'{S}KNE'], mk[f'{S}MKNE'], S))
         heel, toe = mk[f'{S}CAL'], (mk[f'{S}MT1'] + mk[f'{S}MT5']) / 2
-        a = cv.segment_angle_set(fwd, asis_mid, psis_mid, -rot[f'femur_{s}'][:, :, 1], -rot[f'tibia_{s}'][:, :, 1], heel, toe)
+        a = cv.leg_segment_angles(fwd_leg[S], -rot[f'femur_{s}'][:, :, 1], -rot[f'tibia_{s}'][:, :, 1], heel, toe)
+        a['pelvis'] = pelvis
         j = cv.joint_angles(a)
-        pelvis = a['pelvis']
-        segs[S], joints[S] = a, j
+        seg_foot[S] = a['foot']
         for k in ('thigh', 'shank', 'foot'):
             cols[f'{k}_sagittal_angle_{WORD[S]}_rad'] = a[k]
         cols[f'hip_flexion_angle_{WORD[S]}_rad'] = j['hip']
         cols[f'knee_flexion_angle_{WORD[S]}_rad'] = j['knee']
         cols[f'ankle_dorsiflexion_angle_{WORD[S]}_rad'] = j['ankle']
         for k, nm in (('hip', 'hip_flexion'), ('knee', 'knee_flexion'), ('ankle', 'ankle_dorsiflexion')):
-            speeds[(S, k)] = cv.central_derivative(j[k])
-            cols[f'{nm}_velocity_{WORD[S]}_rad_s'] = speeds[(S, k)]
+            cols[f'{nm}_velocity_{WORD[S]}_rad_s'] = cv.central_derivative(j[k])
     cols['pelvis_sagittal_angle_rad'] = pelvis
     # --- composition from the written columns
     comp_err = 0.0
@@ -289,7 +302,7 @@ def process_recording(subject, rec, x01, spans_raw, mass_kg, model_text, source,
         ankle = (mk[f'{S}ANK'] + mk[f'{S}MANK']) / 2
         heel, toe = mk[f'{S}CAL'], (mk[f'{S}MT1'] + mk[f'{S}MT5']) / 2
         ankle_c[S], heel_p[S], toe_p[S] = ankle, heel, toe
-        ff = cv.foot_frame_point(cop, ankle, heel, toe, S)
+        ff = cv.foot_frame_point(cop, ankle, fwd_leg[S], seg_foot[S], S)
         gap = cv.heel_above_plate(heel[:, 1], cop[:, 1])
         raised[S] = gap
         if gap is not None and gap > RAISED_GAP_M:   # held: the load surface above the plate has no documented height
@@ -370,7 +383,7 @@ def process_recording(subject, rec, x01, spans_raw, mass_kg, model_text, source,
                 last.append(float(ant[good[-1]]))
                 vert.append(float(np.nanmedian(cols[f'cop_vertical_{w}_m'][a:b + 1])))
                 lat.append(float(np.nanmedian(cols[f'cop_lateral_{w}_m'][a:b + 1])))
-        e_f_, _, _ = cv.foot_axes(heel_p[S], toe_p[S])
+        e_f_, _, _ = cv.foot_axes(fwd_leg[S], seg_foot[S])
         heel_ant = np.sum((heel_p[S] - ankle_c[S]) * e_f_, axis=1) - cv.FOOT_ORIGIN_M
         toe_ant = np.sum((toe_p[S] - ankle_c[S]) * e_f_, axis=1) - cv.FOOT_ORIGIN_M
         ant = cols[f'cop_anterior_{w}_m']
@@ -384,7 +397,7 @@ def process_recording(subject, rec, x01, spans_raw, mass_kg, model_text, source,
         leg['cop_vertical_median_m'] = _median(vert)
         leg['cop_lateral_median_m'] = _median(lat)
         # hold-out ankle moment: quasi-static from the foot-frame pressure point against the published moment
-        Fa, Fu = cv.foot_frame_force(force_lab[S], heel_p[S], toe_p[S])
+        Fa, Fu = cv.foot_frame_force(force_lab[S], fwd_leg[S], seg_foot[S])
         m_calc = cv.ankle_moment_quasi_static(cols[f'cop_anterior_{w}_m'], cols[f'cop_vertical_{w}_m'], Fa, Fu)
         if mass_kg:
             calc = m_calc / mass_kg
@@ -402,13 +415,13 @@ def process_recording(subject, rec, x01, spans_raw, mass_kg, model_text, source,
         # model-based cross-checks (authors' scaled model geometry re-implemented)
         if model_text is not None:
             try:
-                leg.update(model_checks(model_text, S, mk, rot, ankle_c[S], fwd, cols))
+                leg.update(model_checks(model_text, S, mk, rot, ankle_c[S], fwd_leg[S], fwd_pelvis, cols))
             except KeyError as error:
                 leg['model_checks_unavailable'] = f'model lacks {error}'
         legs[S] = leg
     report['legs'] = legs
     # pelvis: marker angle against the authors' model pelvis tilt (x axis of the model pelvis in the same plane)
-    model_tilt = cv.angle_from_forward(cv.sag(rot['pelvis'][:, :, 0], fwd))
+    model_tilt = cv.angle_from_forward(cv.sag(rot['pelvis'][:, :, 0], fwd_pelvis))
     report['pelvis_vs_model'] = _finite_stats(pelvis, model_tilt)
     mm = cv.model_geometry(model_text, 'r')['markers'] if model_text is not None else {}
     foot_lm = {}
