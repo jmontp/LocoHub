@@ -42,6 +42,7 @@ from contributor_tools.run_gt21_rb_pass import (INVENTORY, LABELS, ROOTS, _json_
 
 pa.set_cpu_count(1)             # a 768 MiB address-space cap cannot hold extra worker threads (AB06 batch r1 aborted)
 pa.set_io_thread_count(1)
+LABELS_RB03 = 'converted_datasets/reconversion_v2/gt21_rb03_authors_fields_20261125'   # RB01 label export plus the RB03 additions
 PASS_ROOT = 'converted_datasets/reconversion_v2/gt21_rb_pass_batch_{subject}_20261124'
 CODE = ('contributor_tools/gt21_rb_segment.py', 'contributor_tools/run_gt21_rb_segment.py',
         'contributor_tools/gt21_numeric_source.py', 'contributor_tools/gt21_rb_pass.py', 'contributor_tools/run_gt21_rb_pass.py')
@@ -52,7 +53,7 @@ MATCH_S = 0.0051          # one 200 Hz sample: authors' interval start and our s
 
 def load_labels(subject, labels_root=None):
     rows = {}
-    path = Path(labels_root or ROOT / LABELS) / subject / f'labels_{subject}.jsonl'
+    path = Path(labels_root or ROOT / LABELS_RB03) / subject / f'labels_{subject}.jsonl'
     for line in path.read_text().splitlines():
         r = json.loads(line)
         rows[(r['mode'], r['recording'])] = r
@@ -107,7 +108,7 @@ def segment_recording(row, meta, gc, table, bw_n, mask_dir, steps_f, auth_f, out
         for k in range(len(rs) - 1):
             a, b = int(rs[k]), int(rs[k + 1])
             t0, t1 = float(h[a]), float(h[b])
-            c = sg.classify_step(mode, meta, t0, t1, h, pct, a, b, span)
+            c = sg.classify_step_authors(mode, meta, leg, t0, t1, h, pct, a, b, span)
             step = {'step_id': f'{subject}/{mode}/{rec}/{leg}/{k:04d}', 'subject': subject, 'mode': mode, 'recording': rec,
                     'leg': leg, 'k': k, 'start_s': t0, 'end_s': t1, 'duration_s': t1 - t0, 'gc_start_index': a,
                     'gc_end_index': b, 'gc_samples': b - a + 1, 'max_source_pct': float(np.nanmax(pct[a:b + 1])), **c}
@@ -151,11 +152,16 @@ def segment_recording(row, meta, gc, table, bw_n, mask_dir, steps_f, auth_f, out
         if ok:
             matched_ours.add(near)
             rec_line['end_offset_ms'] = float((right[near]['end_s'] - iv['end_s']) * 1000.0)
-        if mode in ('ramp', 'stair') and meta and meta.get('label_present'):
+        if mode == 'treadmill':
+            vals = sg.distinct_speed_values(meta, iv['start_s'], iv['end_s'])
+            rec_line['authors_class'] = sg.authors_class('treadmill', [], n_speed_values=None if vals is None else len(vals))
+        elif meta and meta.get('label_present'):
             seq = [w['label'] for w in sg.overlapped_windows(windows, iv['start_s'], iv['end_s'])]
-            rec_line['authors_class'] = sg.authors_class(mode, seq, meta.get('trans_leg_ascent'), meta.get('trans_leg_descent'))
+            rec_line['authors_class'] = sg.authors_class(mode, seq, meta.get('trans_leg_ascent'), meta.get('trans_leg_descent'),
+                                                         sg.as_list(meta.get('leading_leg_start')), sg.as_list(meta.get('leading_leg_stop')),
+                                                         sg.as_list(meta.get('turn')))
         else:
-            rec_line['authors_class'] = 'not_reproduced'
+            rec_line['authors_class'] = 'no_label_table'
         counts[rec_line['status']] += 1
         auth_f.write(json.dumps(rec_line, sort_keys=True, default=_json_default) + '\n')
     for j, s in enumerate(right):
@@ -261,7 +267,8 @@ def pilot_records(inv, seed=20261126):
     rng = random.Random(seed)
     out = ['AB06/levelground/levelground_ccw_fast_01_01', 'AB06/treadmill/treadmill_01_01',
            'AB06/stair/stair_1_l_01_02']
-    for subject, mode in (('AB06', 'ramp'), ('AB06', 'stair'), ('AB17', 'stair')):
+    for subject, mode in (('AB06', 'ramp'), ('AB06', 'stair'), ('AB17', 'stair'), ('AB17', 'levelground'), ('AB17', 'treadmill'),
+                          ('AB06', 'levelground')):
         names = sorted(r for (s, m, r) in inv if s == subject and m == mode and f'{s}/{m}/{r}' not in out)
         out.append(f'{subject}/{mode}/{rng.choice(names)}')
     return out
@@ -275,7 +282,7 @@ def make_spec(args):
     bindings = {c: gl.sha256_file(ROOT / c) for c in CODE + ('contributor_tools/guarded_launcher.py',)}
     bindings[INVENTORY] = gl.sha256_file(ROOT / INVENTORY)
     for s in subjects:
-        bindings[f'{LABELS}/{s}/labels_{s}.jsonl'] = gl.sha256_file(ROOT / LABELS / s / f'labels_{s}.jsonl')
+        bindings[f'{LABELS_RB03}/{s}/labels_{s}.jsonl'] = gl.sha256_file(ROOT / LABELS_RB03 / s / f'labels_{s}.jsonl')
         pr = PASS_ROOT.format(subject=s)
         bindings[f'{pr}/ledger.jsonl'] = gl.sha256_file(ROOT / pr / 'ledger.jsonl')
     command = ['python3', 'contributor_tools/run_gt21_rb_segment.py', 'run', '--out-root', args.out_root]

@@ -341,7 +341,9 @@ def _levelground_rules(seq, ctx):
         t = TURN()
         if t is None:
             raise AuthorsFieldMissing('turn')
-        t = t[0] if isinstance(t, (list, tuple)) and len(t) == 1 else t
+        # the export splits a char vector such as 'ccw' into ['c', 'c', 'w'] (cellstr of a column); joined it is the text
+        # the authors compare with strcmp; a one-cell {'ccw'} joins to the same text
+        t = ''.join(t) if isinstance(t, (list, tuple)) else t
         return t == v
     return [
         (lambda: _all(seq, 'idle'), 'discard'), (lambda: f == 'idle', 'discard'),

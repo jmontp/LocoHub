@@ -41,7 +41,7 @@ LABELS = ROOT / 'converted_datasets/reconversion_v2/gt21_rb03_authors_fields_202
 OLD_LABELS = ROOT / 'converted_datasets/reconversion_v2/gt21_rb01_labels_final_20261124'
 STRIDES = ROOT / 'contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/STRIDES.m'
 PASS = 'converted_datasets/reconversion_v2/gt21_rb_pass_batch_{s}_20261124'
-SEG = 'converted_datasets/reconversion_v2/gt21_rb_segment_batch_{s}_20261124'
+SEG = 'converted_datasets/reconversion_v2/gt21_rb_segment_batch_{s}_20261125'
 COVERAGE = ROOT / 'converted_datasets/reconversion_v2/gt21_event_eligibility_review_20261021/source_coverage.json'
 ROOTS = {'local_2024_copy_bundle': ROOT / 'contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET',
          'extracted_2024_copy_zip': Path('/mnt/s/locomotion_data/gt21_author_mirror_2024_extracted')}
@@ -105,7 +105,7 @@ def oracle_class(mode, seq, meta):
         v = lst(meta.get(key))
         if not v:
             raise Missing(key)
-        return v[0]
+        return ''.join(v) if name == 'turn' else v[0]
 
     def T(which, k):
         v = lst(meta.get('trans_leg_ascent' if which == 'ta' else 'trans_leg_descent'))

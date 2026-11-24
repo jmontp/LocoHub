@@ -239,6 +239,8 @@ def test_authors_levelground_rules_use_leading_leg_and_turn():
     assert sg.authors_class('levelground', ['stand', 'stand-walk'], [], [], ['l'], LP, []) == 'stand-walk'
     assert sg.authors_class('levelground', ['walk', 'turn1', 'turn2'], [], [], LS, LP, ['ccw']) == 'turnccw'
     assert sg.authors_class('levelground', ['turn1'], [], [], LS, LP, ['cw']) == 'turncw'
+    assert sg.authors_class('levelground', ['turn1'], [], [], LS, LP, ['c', 'c', 'w']) == 'turnccw'   # char vector split by the export
+    assert sg.authors_class('levelground', ['turn1'], [], [], LS, LP, ['c', 'w']) == 'turncw'
     assert sg.authors_class('levelground', ['walk'], [], [], LS, LP, ['cw']) == 'walk'
     assert sg.authors_class('levelground', ['walk', 'walk-stand'], [], [], LS, ['r'], []) == 'walk-stand'
     assert sg.authors_class('levelground', ['walk', 'walk-stand'], [], [], LS, ['l'], []) == 'walk-stand'
@@ -329,7 +331,7 @@ def test_authors_rules_equal_the_text_of_strides_m_on_random_sequences():
     for mode, names in labels.items():
         for _ in range(3000):
             seq = [rng.choice(names) for _ in range(rng.randint(1, 4))]
-            meta = {'leading_leg_start': [rng.choice('lr')], 'leading_leg_stop': [rng.choice('lr')], 'turn': [rng.choice(['ccw', 'cw'])],
+            meta = {'leading_leg_start': [rng.choice('lr')], 'leading_leg_stop': [rng.choice('lr')], 'turn': [rng.choice([['c', 'c', 'w'], ['c', 'w']])][0],
                     'trans_leg_ascent': [rng.choice('lr'), rng.choice('lr')], 'trans_leg_descent': [rng.choice('lr'), rng.choice('lr')]}
             mine = sg.authors_class(mode, seq, meta['trans_leg_ascent'], meta['trans_leg_descent'], meta['leading_leg_start'],
                                     meta['leading_leg_stop'], meta['turn'])
