@@ -25,7 +25,7 @@
 <h3><a href="#UM21-X01">UM21-X01 — Inventory omitted UMich markers, forceplates and transfer correspondence</a></h3><p>um21 · P1 · Source inventory</p><p>Which omitted source measurements can be restored without inventing clocks or pairing?</p><p><strong>Start here:</strong> Inventory source channel metadata and propose one bounded source-preserving pilot; defer bilateral pairing/derivatives until exact correspondence is proven.</p>
 <p>Read the task’s inputs and handoff before starting. This page does not start jobs or change task states.</p></section>
 <h2 id="tasks">All tasks</h2>
-<details><summary>View all 121 tasks — 8 ready, 0 in progress, 54 blocked, 4 awaiting review, 55 done</summary>
+<details><summary>View all 121 tasks — 8 ready, 0 in progress, 54 blocked, 3 awaiting review, 56 done</summary>
 <div class="table-scroll"><table><caption>Maintained task states, not live process monitoring</caption><thead><tr><th>Task</th><th>Dataset</th><th>Priority</th><th>Status</th><th>Stage</th><th>Depends on</th></tr></thead><tbody>
 <tr><th scope="row"><a href="#PM-01">PM-01: Inspect stopped jobs and prepare one safe pilot handoff</a></th><td>project</td><td>P0</td><td>Done</td><td>Operations</td><td>—</td></tr>
 <tr><th scope="row"><a href="#PM-02">PM-02: Reconcile every retained job with a current disposition</a></th><td>project</td><td>P0</td><td>Done</td><td>Operations</td><td>—</td></tr>
@@ -147,7 +147,7 @@
 <tr><th scope="row"><a href="#GT21-RB04">GT21-RB04: Apply conventions: marker segment angles, joint angles, foot-frame CoP, mass</a></th><td>gt21</td><td>P1</td><td>Blocked</td><td>Conventions</td><td><a href="#GT21-RB03">GT21-RB03</a></td></tr>
 <tr><th scope="row"><a href="#GT21-RB05">GT21-RB05: Export 150-sample observations with lineage and full accounting, then read back independently</a></th><td>gt21</td><td>P1</td><td>Blocked</td><td>Source readback</td><td><a href="#GT21-RB04">GT21-RB04</a></td></tr>
 <tr><th scope="row"><a href="#DOC-06">DOC-06: Fix the user-facing site and add a landing path for new dataset pages</a></th><td>all</td><td>P1</td><td>Review</td><td>Documentation</td><td>—</td></tr>
-<tr><th scope="row"><a href="#GT23-E02">GT23-E02: Fix angle wraps, hold step-up pressure point, re-assess</a></th><td>gt23</td><td>P1</td><td>Review</td><td>Conversion</td><td><a href="#GT23-E01">GT23-E01</a>, <a href="#GT23-Q01">GT23-Q01</a></td></tr>
+<tr><th scope="row"><a href="#GT23-E02">GT23-E02: Fix angle wraps, hold step-up pressure point, re-assess</a></th><td>gt23</td><td>P1</td><td>Done</td><td>Conversion</td><td><a href="#GT23-E01">GT23-E01</a>, <a href="#GT23-Q01">GT23-Q01</a></td></tr>
 </tbody></table></div></details>
 <h2 id="datasets">Dataset status</h2>
 <div class="table-scroll"><table><thead><tr><th>Dataset</th><th>Current state</th><th>Still needed</th></tr></thead><tbody>
@@ -2122,10 +2122,10 @@
 <p><strong>Checks completed</strong></p><ul><li>pytest tests/test_dataset_review_page.py and the docs tests; docs/build.py --check; dataset_status.py --check; screenshots at 1280 and 390 px</li></ul>
 <p><strong>Still needed</strong></p><ul><li>Audit JSON copies published on the site still contain bracketed folder placeholders (by design; the quality page explains them in plain words)</li></ul>
 </details>
-<details id="GT23-E02"><summary>GT23-E02 — Fix angle wraps, hold step-up pressure point, re-assess · Review</summary>
+<details id="GT23-E02"><summary>GT23-E02 — Fix angle wraps, hold step-up pressure point, re-assess · Done</summary>
 <p><strong>Question:</strong> After removing 360-degree angle wraps and holding the step-up pressure point, which GT23 observations still fail the coarse limits?</p>
 <p><strong>Scope:</strong> Whole GT23 export (GT23-E01, 19,573 observations). Only recordings whose angles change by an unwrap, plus the step_ups recordings, are re-exported to new roots; E01 roots are marked superseded for those recordings. Q01 assessment v2 covers all 19,573 observations.</p>
-<p><strong>Next action:</strong> Independent verifier checks GT23-E02 (docs/maintainers/handoffs/GT23-E02.json); open question for José on two multi-turn foot recordings; then GT23-R01.</p>
+<p><strong>Next action:</strong> Done except two recordings (verification: docs/maintainers/handoffs/GT23-E02-verify.json). AB10 meander_1 right foot/ankle and AB11 turn_and_step_1 left foot/ankle await Jose: the unwrap there creates -360/-720 degree offsets (published values are normal except 2% / 0.3% of samples where the foot is &gt;90 degrees from the pelvis heading); recommendation is to return to the published values. Then GT23-R01.</p>
 <p><strong>Depends on:</strong> <a href="#GT23-E01">GT23-E01</a>, <a href="#GT23-Q01">GT23-Q01</a> · <strong>Resources:</strong> Numerical</p>
 <h4>Inputs</h4><ul><li><a href="handoffs/GT23-E01.json"><code>docs/maintainers/handoffs/GT23-E01.json</code></a></li><li><a href="handoffs/GT23-E01-verify.json"><code>docs/maintainers/handoffs/GT23-E01-verify.json</code></a></li><li><a href="handoffs/GT23-Q01.json"><code>docs/maintainers/handoffs/GT23-Q01.json</code></a></li><li><a href="handoffs/GT23-Q01-verify.json"><code>docs/maintainers/handoffs/GT23-Q01-verify.json</code></a></li><li><code>docs/reference/index.md</code></li></ul>
 <h4>Deliverables</h4><ul><li>Fix rules module and runner with synthetic tests (a wrap case, a step-up hold)</li><li>New export roots for changed recordings only, with a per-sample change log per observation and independent readback</li><li>Q01 assessment v2 with L2 on the time table only (mapped to containing phase observations), before and after failure counts</li><li>Handoff docs/maintainers/handoffs/GT23-E02.json</li></ul>
