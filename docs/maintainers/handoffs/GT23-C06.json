@@ -2,7 +2,7 @@
  "task_id": "GT23-C06",
  "status": "ready_for_independent_review",
  "scientific_approval": false,
- "last_checked_at_utc": "2026-11-24T02:22:31+00:00",
+ "last_checked_at_utc": "2026-11-24T02:54:07+00:00",
  "summary": "Python-only conventions step for all 488 GT23 recordings: pelvis (PSIS-ASIS markers), thigh and shank (authors model axes from Transforms_Euler), foot (heel to toe markers) segment angles in the pelvis-heading plane; joint angles as differences; joint speeds recomputed by central difference (no smoothing); pressure point in the foot frame (origin 100 mm forward of the ankle-marker midpoint); lab-axis force everywhere plus forward/sideways force in the 11 forward-walking tasks only. 6 pilots + 12 batches + 1 summary under the guarded launcher, one at a time. Independent verifier NOT yet run.",
  "decisions_applied": [
   "D-GT23-C01-1 = C (forward/sideways force only in 11 forward-walking tasks; lab axes elsewhere)",
@@ -12,8 +12,8 @@
  ],
  "module": "contributor_tools/gt23_conventions.py (pure maths), contributor_tools/gt23_conventions_check.py (second independent implementation: scalar loops, scipy Rotation YZX, Gram-Schmidt basis, complex-number angles), contributor_tools/run_gt23_c06.py (run, spec, summary)",
  "output_roots": {
-  "final_batches": "converted_datasets/reconversion_v2/gt23_c06_batch2_<AB..>",
-  "summary": "converted_datasets/reconversion_v2/gt23_c06_summary2",
+  "final_batches": "converted_datasets/reconversion_v2/gt23_c06_batch3_<AB..>",
+  "summary": "converted_datasets/reconversion_v2/gt23_c06_summary3",
   "superseded_first_pass": "gt23_c06_batch_<AB..> and gt23_c06_summary (before contact-heading fallback and extra receipt fields; angles and pressure point identical; kept as evidence)",
   "pilots": [
    "gt23_c06_pilot_ab05_nw",
@@ -36,11 +36,11 @@
   "Markers actually used in the primary columns: ASIS/PSIS, heel, MT1, MT5, ankle pair (pressure point only). Thigh clusters, knee markers and trochanters are not used, so the 3 AB03 stair recordings missing RTHC and AB13 stairs_1_9 missing RKNE hold no column."
  ],
  "checks": {
-  "unit_tests": "tests/test_gt23_c06.py: 18 synthetic tests pass (thigh 30, shank -10, foot 20, pelvis -12 -> hip 42, knee 40, ankle 30 at three headings; composition 1e-12 over 60 random poses; Euler order vs scipy; foot-frame known values incl. tilted foot; left/right mirror; quasi-static ankle moment sign; heading hold; contact fill; derivative incl. wrap; model parse and ankle/hip/talus recovery; missing marker stays missing)",
+  "unit_tests": "tests/test_gt23_c06.py: 18 synthetic tests pass (thigh 30, shank -10, foot 20, pelvis -12 -> hip 42, knee 40, ankle 30 at three headings; composition 1e-12 over 60 random poses; Euler order vs scipy; foot-frame known values incl. tilted foot; left/right mirror; quasi-static ankle moment sign; heading hold; contact fill; derivative incl. wrap; model parse and ankle/hip/talus recovery; missing marker stays missing) ; now 20 tests incl. raised plate and heel-above-plate",
   "composition_max_abs_err_rad": 4.440892098500626e-16,
   "second_independent_implementation_max_abs_diff": {
    "angles_rad": 3.552713678800501e-15,
-   "cop_m": 2.5916768731093498e-15
+   "cop_m": 2.445960101127298e-15
   },
   "second_implementation_note": "compared on every 25th sample of all 488 recordings (angles and foot-frame pressure point); radians and metres",
   "per_subject_leg": {
@@ -602,62 +602,74 @@
   "speed_sign_agreement_by_task": "summary2/summary.json speed_sign_by_task (hip and knee ~0.98-1.0 everywhere; ankle 0.89-0.99 median, minimum 0.51 for one lunges leg)",
   "cop_outside_foot_share_by_task": {
    "ball_toss": 0.0,
-   "curb_down": 0.114,
-   "curb_up": 0.127,
-   "cutting": 0.181,
+   "curb_down": 0.104,
+   "curb_up": null,
+   "cutting": 0.151,
    "dynamic_walk": 0.053,
-   "incline_walk": 0.13,
-   "jump": 0.02,
+   "incline_walk": 0.06,
+   "jump": 0.015,
    "lift_weight": 0.0,
-   "lunges": 0.016,
-   "meander": 0.031,
+   "lunges": 0.007,
+   "meander": 0.025,
    "normal_walk": 0.119,
    "obstacle_walk": 0.065,
    "poses": 0.001,
-   "push": 0.014,
-   "side_shuffle": 0.004,
+   "push": 0.009,
+   "side_shuffle": 0.002,
    "sit_to_stand": 0.0,
    "squats": 0.0,
-   "stairs": 0.617,
-   "start_stop": 0.024,
-   "step_ups": 0.131,
-   "tire_run": 0.104,
-   "tug_of_war": 0.039,
-   "turn_and_step": 0.026,
-   "twister": 0.003,
+   "stairs": 0.007,
+   "start_stop": 0.015,
+   "step_ups": 0.125,
+   "tire_run": 0.072,
+   "tug_of_war": 0.021,
+   "turn_and_step": 0.02,
+   "twister": 0.002,
    "walk_backward": 0.013,
    "weighted_walk": 0.075
   },
   "ankle_moment_slope_by_task": {
-   "ball_toss": 1.09,
-   "curb_down": 1.06,
-   "curb_up": 1.01,
-   "cutting": 1.12,
-   "dynamic_walk": 1.06,
-   "incline_walk": 0.95,
-   "jump": 1.08,
-   "lift_weight": 1.06,
+   "ball_toss": 1.088,
+   "curb_down": 1.067,
+   "curb_up": null,
+   "cutting": 1.123,
+   "dynamic_walk": 1.063,
+   "incline_walk": 1.038,
+   "jump": 1.074,
+   "lift_weight": 1.063,
    "lunges": 1.08,
-   "meander": 0.99,
-   "normal_walk": 1.12,
-   "obstacle_walk": 1.04,
-   "poses": 1.06,
-   "push": 1.08,
-   "side_shuffle": 1.1,
-   "sit_to_stand": 0.96,
-   "squats": 1.17,
-   "stairs": 0.35,
-   "start_stop": 1.0,
+   "meander": 0.989,
+   "normal_walk": 1.119,
+   "obstacle_walk": 1.044,
+   "poses": 1.067,
+   "push": 1.075,
+   "side_shuffle": 1.099,
+   "sit_to_stand": 0.958,
+   "squats": 1.166,
+   "stairs": 1.085,
+   "start_stop": 1.009,
    "step_ups": 1.04,
-   "tire_run": 1.11,
-   "tug_of_war": 1.09,
-   "turn_and_step": 1.04,
-   "twister": 1.06,
-   "walk_backward": 1.05,
-   "weighted_walk": 1.04
+   "tire_run": 1.105,
+   "tug_of_war": 1.086,
+   "turn_and_step": 1.053,
+   "twister": 1.067,
+   "walk_backward": 1.054,
+   "weighted_walk": 1.045
   }
  },
  "held_columns": {
+  "held: foot stands about 0.20 m above the recorded plate surface (raised surface of undocumented height), so the pressure point on the sole is not defensible": {
+   "curb_up": 6
+  },
+  "held: foot stands about 0.21 m above the recorded plate surface (raised surface of undocumented height), so the pressure point on the sole is not defensible": {
+   "curb_up": 36
+  },
+  "held: foot stands about 0.22 m above the recorded plate surface (raised surface of undocumented height), so the pressure point on the sole is not defensible": {
+   "curb_up": 21
+  },
+  "held: foot stands about 0.23 m above the recorded plate surface (raised surface of undocumented height), so the pressure point on the sole is not defensible": {
+   "curb_up": 9
+  },
   "needs missing marker LASI": {
    "walk_backward": 19,
    "weighted_walk": 27
@@ -677,10 +689,10 @@
    "stairs": 5
   },
   "plate never loaded above 20 N": {
-   "dynamic_walk": 10,
-   "obstacle_walk": 20,
-   "walk_backward": 25,
-   "weighted_walk": 15
+   "dynamic_walk": 12,
+   "obstacle_walk": 24,
+   "walk_backward": 30,
+   "weighted_walk": 18
   },
   "plate never loaded above 20 N within the spans": {
    "dynamic_walk": 8,
@@ -688,11 +700,11 @@
    "weighted_walk": 12
   },
   "source plate force is missing for this leg in this recording": {
-   "dynamic_walk": 108,
-   "normal_walk": 48,
-   "obstacle_walk": 96,
-   "walk_backward": 64,
-   "weighted_walk": 92
+   "dynamic_walk": 117,
+   "normal_walk": 52,
+   "obstacle_walk": 104,
+   "walk_backward": 72,
+   "weighted_walk": 100
   },
   "task has no single forward direction (D-GT23-C01-1 = C); lab-axis force columns hold the force": {
    "ball_toss": 96,
@@ -755,10 +767,10 @@
  "findings_odd": [
   "Pelvis: marker pelvis angle and the model pelvis tilt correlate r 0.78-0.98 per participant over whole recordings (residual sd 0.9-2.1 deg), not near 0 as the plan probe found; the constant offset per participant (-16.3 to +0.3 deg) matches the model own PSIS-ASIS landmark angle within a few degrees. Hip offsets against the publisher equal minus that pelvis offset. No IK reference exists for the PSIS-ASIS definition; the model landmark angle is the reference used.",
   "Foot/ankle: marker foot angle differs from the model calcaneus x axis by a per-subject constant that follows the model heel/toe landmark angle; this is the ankle offset against the publisher (AB07 about -9 to -13 deg is the largest).",
-  "Stairs: foot-frame pressure point is outside the foot (beyond 5 cm of heel or toe) in 62% of loaded samples and the published ankle moment is only 0.35 of the computed one; plate frame for stairs looks inconsistent with the markers. Values are written as converted, not masked; needs a decision before any release use of stair pressure point.",
   "Ankle moment slope published/computed: AB03 1.43 and AB08 1.3 fit the known C05 mass issue (published per-kg moment used another mass); the other participants are 0.65 to 1.17 (AB05 0.65 is pulled down by non-walking tasks; AB05 turn_and_step pilot 0.66).",
   "Walking-only ankle speed sign agreement is 0.9 to 0.97 (marker-derived ankle noise, rms difference about 17% of published rms).",
-  "Treadmill plates: right plate force is missing in 408 of the held plate columns; no right-leg pressure point exists for those recordings."
+  "Treadmill plates: right plate force is missing in 408 of the held plate columns; no right-leg pressure point exists for those recordings.",
+  "Stairs pressure point fixed (outside share 62% -> 0.7%, moment ratio 0.35 -> 1.09). Curb_up pressure point held (see rework_after_first_review)."
  ],
  "limits": [
   "Pressure point and force forward/sideways rely on S01 spans or contact runs for heading; transient heading deviations inside a span are reported (median of per-span max about 6 deg, max about 18-23 deg).",
@@ -780,9 +792,201 @@
   "docs/quality/audits/gt23-c06-*"
  ],
  "evidence_paths": [
-  "converted_datasets/reconversion_v2/gt23_c06_summary2/summary.json",
-  "docs/quality/audits/gt23-c06-summary2-launcher-receipt.json",
-  "docs/quality/audits/gt23-c06-batch2-<AB..>-launcher-receipt.json",
-  "docs/maintainers/handoffs/ESML-crosswalk.json (credited; Scaled1 values are that project claims, compared here, nothing imported)"
- ]
+  "converted_datasets/reconversion_v2/gt23_c06_summary3/summary.json",
+  "docs/quality/audits/gt23-c06-summary3-launcher-receipt.json",
+  "docs/quality/audits/gt23-c06-batch3-<AB..>-launcher-receipt.json",
+  "docs/quality/audits/gt23-c06-superseded.json"
+ ],
+ "rework_after_first_review": {
+  "verify_file": "docs/maintainers/handoffs/GT23-C06-verify.json",
+  "bug": "pressure point used plate height 0; source COPY_Vertical (stairs 0.35-0.83 m, incline treadmill small nonzero, curb 0.009 m) is now used wherever finite (cv.plate_point); unknown height or load < 20 N gives NaN. Raised-plate synthetic test added.",
+  "curb_up": "AB03 curb_up_1 and all curb_up recordings: the recorded plate height is 0.009 m but the heel marker is 0.20-0.23 m above it while loaded (foot on a curb of undocumented height). Foot-frame pressure point (anterior, vertical, lateral) is HELD for those 24 leg-recordings with a reason (rule: median heel height above plate > 0.17 m; diagnostic over curb, cutting, step_ups, tire_run and stairs showed 0.05-0.146 m for every other leg-recording and 0.200-0.229 m for every curb_up one). Lab-axis force and plate COP are kept.",
+  "cutting_step_ups_curb_down": "not held. Residual outside-foot share 10-15% (cutting 15%, step_ups 12.5%, curb_down 10%) also exists in level walking (12%) and is a property of the 5 cm margin around heel and MT-head markers (marker foot length 0.20 m, real foot longer) plus low-load edges: in AB05 normal_walk 10% outside even at >= 0.2 BW, 51% below it; cutting 23% / 69%. Ankle-moment ratio 1.04-1.12 with r 0.99 supports the values.",
+  "process": "code frozen (sha256 of six files checked before pilots and again before the summary); pilots at the bound code: AB12 stairs_1_10, AB03 curb_up_1, AB05 normal_walk_1; then all 488 recordings as batch3 and summary3. A read-only diagnostic job (gt23_c06_diag_raised) ran before the freeze to choose the curb rule.",
+  "per_task_before_after": {
+   "ball_toss": {
+    "outside_before": 0.0,
+    "outside_after": 0.0,
+    "moment_ratio_before": 1.093,
+    "moment_ratio_after": 1.088
+   },
+   "curb_down": {
+    "outside_before": 0.114,
+    "outside_after": 0.104,
+    "moment_ratio_before": 1.055,
+    "moment_ratio_after": 1.067
+   },
+   "curb_up": {
+    "outside_before": 0.127,
+    "outside_after": null,
+    "moment_ratio_before": 1.013,
+    "moment_ratio_after": null
+   },
+   "cutting": {
+    "outside_before": 0.181,
+    "outside_after": 0.151,
+    "moment_ratio_before": 1.121,
+    "moment_ratio_after": 1.123
+   },
+   "dynamic_walk": {
+    "outside_before": 0.053,
+    "outside_after": 0.053,
+    "moment_ratio_before": 1.063,
+    "moment_ratio_after": 1.063
+   },
+   "incline_walk": {
+    "outside_before": 0.13,
+    "outside_after": 0.06,
+    "moment_ratio_before": 0.955,
+    "moment_ratio_after": 1.038
+   },
+   "jump": {
+    "outside_before": 0.02,
+    "outside_after": 0.015,
+    "moment_ratio_before": 1.077,
+    "moment_ratio_after": 1.074
+   },
+   "lift_weight": {
+    "outside_before": 0.0,
+    "outside_after": 0.0,
+    "moment_ratio_before": 1.064,
+    "moment_ratio_after": 1.063
+   },
+   "lunges": {
+    "outside_before": 0.016,
+    "outside_after": 0.007,
+    "moment_ratio_before": 1.079,
+    "moment_ratio_after": 1.08
+   },
+   "meander": {
+    "outside_before": 0.031,
+    "outside_after": 0.025,
+    "moment_ratio_before": 0.985,
+    "moment_ratio_after": 0.989
+   },
+   "normal_walk": {
+    "outside_before": 0.119,
+    "outside_after": 0.119,
+    "moment_ratio_before": 1.119,
+    "moment_ratio_after": 1.119
+   },
+   "obstacle_walk": {
+    "outside_before": 0.065,
+    "outside_after": 0.065,
+    "moment_ratio_before": 1.044,
+    "moment_ratio_after": 1.044
+   },
+   "poses": {
+    "outside_before": 0.001,
+    "outside_after": 0.001,
+    "moment_ratio_before": 1.063,
+    "moment_ratio_after": 1.067
+   },
+   "push": {
+    "outside_before": 0.014,
+    "outside_after": 0.009,
+    "moment_ratio_before": 1.077,
+    "moment_ratio_after": 1.075
+   },
+   "side_shuffle": {
+    "outside_before": 0.004,
+    "outside_after": 0.002,
+    "moment_ratio_before": 1.101,
+    "moment_ratio_after": 1.099
+   },
+   "sit_to_stand": {
+    "outside_before": 0.0,
+    "outside_after": 0.0,
+    "moment_ratio_before": 0.959,
+    "moment_ratio_after": 0.958
+   },
+   "squats": {
+    "outside_before": 0.0,
+    "outside_after": 0.0,
+    "moment_ratio_before": 1.168,
+    "moment_ratio_after": 1.166
+   },
+   "stairs": {
+    "outside_before": 0.617,
+    "outside_after": 0.007,
+    "moment_ratio_before": 0.353,
+    "moment_ratio_after": 1.085
+   },
+   "start_stop": {
+    "outside_before": 0.024,
+    "outside_after": 0.015,
+    "moment_ratio_before": 0.999,
+    "moment_ratio_after": 1.009
+   },
+   "step_ups": {
+    "outside_before": 0.131,
+    "outside_after": 0.125,
+    "moment_ratio_before": 1.037,
+    "moment_ratio_after": 1.04
+   },
+   "tire_run": {
+    "outside_before": 0.104,
+    "outside_after": 0.072,
+    "moment_ratio_before": 1.113,
+    "moment_ratio_after": 1.105
+   },
+   "tug_of_war": {
+    "outside_before": 0.039,
+    "outside_after": 0.021,
+    "moment_ratio_before": 1.089,
+    "moment_ratio_after": 1.086
+   },
+   "turn_and_step": {
+    "outside_before": 0.026,
+    "outside_after": 0.02,
+    "moment_ratio_before": 1.043,
+    "moment_ratio_after": 1.053
+   },
+   "twister": {
+    "outside_before": 0.003,
+    "outside_after": 0.002,
+    "moment_ratio_before": 1.064,
+    "moment_ratio_after": 1.067
+   },
+   "walk_backward": {
+    "outside_before": 0.013,
+    "outside_after": 0.013,
+    "moment_ratio_before": 1.054,
+    "moment_ratio_after": 1.054
+   },
+   "weighted_walk": {
+    "outside_before": 0.075,
+    "outside_after": 0.075,
+    "moment_ratio_before": 1.045,
+    "moment_ratio_after": 1.045
+   }
+  },
+  "new_roots": [
+   "converted_datasets/reconversion_v2/gt23_c06_batch3_<AB..>",
+   "converted_datasets/reconversion_v2/gt23_c06_summary3"
+  ],
+  "superseded": "docs/quality/audits/gt23-c06-superseded.json",
+  "peak_rss_mib": {
+   "diag": 276.9,
+   "pilots": {
+    "pilot3_ab12_stairs": 147.8,
+    "pilot3_ab03_curbup": 193.0,
+    "pilot3_ab05_nw": 267.9
+   },
+   "batches": {
+    "AB01": 278.5,
+    "AB02": 310.5,
+    "AB03": 267.3,
+    "AB05": 269.6,
+    "AB06": 277.7,
+    "AB07": 280.8,
+    "AB08": 272.4,
+    "AB09": 264.4,
+    "AB10": 270.0,
+    "AB11": 274.6,
+    "AB12": 265.0,
+    "AB13": 288.4
+   }
+  }
+ }
 }

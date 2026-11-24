@@ -52,6 +52,9 @@ G = 9.80665
 LOAD_BW = 0.2           # fixed in advance: samples with vertical force at least 0.2 body weight for the moment check
 SPEED_SIGN_MIN_DEG_S = 10.0   # fixed in advance: sign agreement counted where the published speed exceeds this
 MIN_STANCE_S, MAX_STANCE_S = 0.3, 3.0
+RAISED_GAP_M = 0.17   # median heel-marker height above the recorded plate surface while loaded; the diagnostic over curb, cutting,
+#   step-up, tire-run and stair recordings shows 0.05-0.146 m everywhere except curb_up (0.200-0.229 m): the foot stands on a curb
+#   of undocumented height, so the force line does not meet the sole at the recorded plate height. 0.17 sits in that gap.
 
 
 class RunError(RuntimeError):
@@ -138,7 +141,7 @@ def _median(x):
     return float(np.median(x)) if x else None
 
 
-def column_reasons(cols, absent, forward_task, n_spans, plate_has_data):
+def column_reasons(cols, absent, forward_task, n_spans, plate_has_data, raised):
     """For every all-missing output column, the reason (nothing is filled)."""
     asis = {'LASI', 'RASI'} & set(absent)
     pelvis = {'LASI', 'RASI', 'LPSI', 'RPSI'} & set(absent)
@@ -166,6 +169,10 @@ def column_reasons(cols, absent, forward_task, n_spans, plate_has_data):
         foot = {f'{side}CAL', f'{side}MT1', f'{side}MT5'} & set(absent) if side else set()
         if name.startswith('cop_'):
             need = foot | ({f'{side}ANK', f'{side}MANK'} & set(absent))
+            if raised.get(side) is not None and raised[side] > RAISED_GAP_M:
+                reasons[name] = (f'held: foot stands about {raised[side]:.2f} m above the recorded plate surface (raised surface of '
+                                 'undocumented height), so the pressure point on the sole is not defensible')
+                continue
             plate_note = '' if plate_has_data[side] else 'source plate force is missing for this leg in this recording'
             reasons[name] = ('needs missing marker ' + ','.join(sorted(need))) if need else (plate_note or 'plate never loaded above 20 N')
             continue
@@ -226,7 +233,7 @@ def process_recording(subject, rec, x01, spans_raw, mass_kg, model_text, source,
             raise RunError(f'{rec}: {ch} companion hash differs from the X01 ledger')
     mk, absent, n = read_markers(trc, MARKERS_USED)
     eu = read_euler(eul, BODIES)
-    grf_cols = ['time'] + [f'{s}{c}' for s in 'LR' for c in ('ForceX', 'ForceY_Vertical', 'ForceZ', 'COPX', 'COPZ')]
+    grf_cols = ['time'] + [f'{s}{c}' for s in 'LR' for c in ('ForceX', 'ForceY_Vertical', 'ForceZ', 'COPX', 'COPY_Vertical', 'COPZ')]
     grf = read_companion(comp / 'GroundFrame_GRFs.parquet', grf_cols)
     if not (len(grf['time']) == n == len(eu['pelvis'])):
         raise RunError(f'{rec}: row counts differ (markers {n}, force {len(grf["time"])}, Euler {len(eu["pelvis"])})')
@@ -265,23 +272,28 @@ def process_recording(subject, rec, x01, spans_raw, mass_kg, model_text, source,
                                                       cols[f'ankle_dorsiflexion_angle_{w}_rad']))
     # --- force and pressure point
     force_lab, cop_lab, loaded, ankle_c, heel_p, toe_p = {}, {}, {}, {}, {}, {}
+    raised = {}
     for S in 'LR':
         w = WORD[S]
         F = np.stack([grf[f'{S}ForceX'], grf[f'{S}ForceY_Vertical'], grf[f'{S}ForceZ']], axis=1)
         vert = grf[f'{S}ForceY_Vertical']
         load = np.isfinite(vert) & (vert >= cv.STANCE_N)
         loaded[S] = load
-        cop = np.stack([grf[f'{S}COPX'], np.zeros(n), grf[f'{S}COPZ']], axis=1)
-        cop[~load] = np.nan
+        cop = cv.plate_point(grf[f'{S}COPX'], grf[f'{S}COPY_Vertical'], grf[f'{S}COPZ'], vert)   # source plate height, never assumed 0
         force_lab[S], cop_lab[S] = F, cop
         for k, ax in zip('xyz', range(3)):
             cols[f'grf_lab_{k}_{w}_N'] = F[:, ax]
         cols[f'cop_lab_x_{w}_m'] = cop[:, 0]
+        cols[f'cop_lab_y_{w}_m'] = cop[:, 1]
         cols[f'cop_lab_z_{w}_m'] = cop[:, 2]
         ankle = (mk[f'{S}ANK'] + mk[f'{S}MANK']) / 2
         heel, toe = mk[f'{S}CAL'], (mk[f'{S}MT1'] + mk[f'{S}MT5']) / 2
         ankle_c[S], heel_p[S], toe_p[S] = ankle, heel, toe
         ff = cv.foot_frame_point(cop, ankle, heel, toe, S)
+        gap = cv.heel_above_plate(heel[:, 1], cop[:, 1])
+        raised[S] = gap
+        if gap is not None and gap > RAISED_GAP_M:   # held: the load surface above the plate has no documented height
+            ff = {k: np.full(n, np.nan) for k in ff}
         for k in ('anterior', 'vertical', 'lateral'):
             cols[f'cop_{k}_{w}_m'] = ff[k]
     # forward and sideways force: forward-walking tasks only; the heading is held fixed within each of that leg's own
@@ -308,13 +320,13 @@ def process_recording(subject, rec, x01, spans_raw, mass_kg, model_text, source,
         cols[f'heading_lab_x_{WORD[S]}'] = heading_used[:, 0]
         cols[f'heading_lab_z_{WORD[S]}'] = heading_used[:, 2]
     spans = list(range(n_spans))
-    reasons = column_reasons(cols, absent, forward_task, n_spans, {S: bool(np.isfinite(grf[f'{S}ForceY_Vertical']).any()) for S in 'LR'})
+    reasons = column_reasons(cols, absent, forward_task, n_spans, {S: bool(np.isfinite(grf[f'{S}ForceY_Vertical']).any()) for S in 'LR'}, raised)
     # --- checks against independent known values
     second, used = chk.compare(cols, mk, {k: eu[k] for k in ('femur_l', 'femur_r', 'tibia_l', 'tibia_r')}, cop_lab)
     report = {'subject': subject, 'recording': rec, 'task': task, 'forward_task': forward_task, 'rows': n,
               'absent_markers': absent, 'clock_max_dev_s': dt_dev, 'composition_max_abs_err_rad': comp_err,
               'second_implementation': {'max_abs_diff': second, 'samples': used},
-              'held_columns': reasons, 'span_count': n_spans, 'heading_from_contact_when_no_span': contact_fill,
+              'held_columns': reasons, 'heel_above_plate_median_m': raised, 'span_count': n_spans, 'heading_from_contact_when_no_span': contact_fill,
               'span_heading_dev_deg': {'median_of_span_max': _median([r['max_dev_deg'] for r in span_report]),
                                        'max': max([r['max_dev_deg'] for r in span_report if r['max_dev_deg'] is not None], default=None)}}
     pub_a = read_companion(comp / 'Joint_Angle.parquet', ['hip_flexion_r', 'knee_angle_r', 'ankle_angle_r', 'hip_flexion_l', 'knee_angle_l', 'ankle_angle_l'])
@@ -487,6 +499,12 @@ def make_spec(args):
                   f'{S01_ROOTS[args.subject]}/segments.jsonl'):
             bindings[p] = rd.sha256_file(ROOT / p)
         names = ['run_summary.json']
+    elif args.kind == 'diag':
+        command += ['--tasks', args.tasks, '--source', str(SOURCE)]
+        for sj in SUBJECTS:
+            for p_ in (f'{X01_ROOTS[sj]}/ledger.jsonl', f'{X01_ROOTS[sj]}/participant.json', f'{S01_ROOTS[sj]}/segments.jsonl'):
+                bindings[p_] = rd.sha256_file(ROOT / p_)
+        names = ['diag.json', 'run_summary.json']
     else:
         command += ['--roots'] + list(args.roots)
         for r in args.roots:
@@ -573,6 +591,47 @@ def summarize(args):
     return 0
 
 
+def diag(args):
+    """Diagnostic over the named tasks of every participant (one recording resident at a time): outside-foot share,
+    pressure-point height facts and ankle-moment ratio per recording and leg. Writes one JSON, no data arrays."""
+    out_root = ROOT / args.output_root
+    out_root.mkdir(parents=True, exist_ok=False)
+    tasks = set(args.tasks.split(','))
+    rows = []
+    for subject in SUBJECTS:
+        x01_root = X01_ROOTS[subject]
+        ledger = {}
+        for line in (ROOT / x01_root / 'ledger.jsonl').read_text().splitlines():
+            e = json.loads(line)
+            ledger[e['recording']] = e
+        part = json.loads((ROOT / x01_root / 'participant.json').read_text())
+        model_text = (SOURCE / 'RawData' / subject / 'Models' / MODEL_FILE[subject]).read_text()
+        spans_by_rec = load_spans(S01_ROOTS[subject])
+        for rec in sorted(ledger):
+            if seg.task_of(rec) not in tasks:
+                continue
+            cols, rep = process_recording(subject, rec, ledger[rec], spans_by_rec.get(rec, []), part['mass_kg']['readme'], model_text, args.source, x01_root)
+            mk, _, _ = read_markers(Path(args.source) / 'RawData' / subject / 'MarkerData' / f'{rec}.trc', ('LCAL', 'RCAL'))
+            for S in 'LR':
+                w = WORD[S]
+                y = cols[f'cop_lab_y_{w}_m']
+                ok = np.isfinite(y) & np.isfinite(mk[f'{S}CAL'][:, 1])
+                if not ok.any():
+                    continue
+                leg = rep['legs'][S]
+                rows.append({'subject': subject, 'recording': rec, 'task': rep['task'], 'leg': S, 'loaded_samples': int(ok.sum()),
+                             'outside_share': leg['cop_outside_foot_share']['share'], 'vertical_median_m': leg['cop_vertical_median_m'],
+                             'plate_height_median_m': float(np.median(y[ok])),
+                             'heel_minus_plate_median_m': float(np.median(mk[f'{S}CAL'][ok, 1] - y[ok])),
+                             'heel_height_range_in_load_m': float(np.ptp(mk[f'{S}CAL'][ok, 1])),
+                             'ankle_moment_slope': leg.get('ankle_moment_check', {}).get('slope_published_per_computed'),
+                             'ankle_moment_r': leg.get('ankle_moment_check', {}).get('r')})
+            del cols
+    _atomic_json(out_root / 'diag.json', {'tasks': sorted(tasks), 'rows': rows})
+    _atomic_json(out_root / 'run_summary.json', {'status': 'diag_done_unreviewed', 'rows': len(rows), 'peak_rss_mib': peak_rss_mib(), 'scientific_approval': False})
+    return 0
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     sub = p.add_subparsers(dest='cmd', required=True)
@@ -582,7 +641,8 @@ def main(argv=None):
     s.add_argument('--records', action='append')
     s.add_argument('--source', default=str(SOURCE))
     s = sub.add_parser('spec')
-    s.add_argument('--kind', choices=('run', 'summary'), required=True)
+    s.add_argument('--kind', choices=('run', 'summary', 'diag'), required=True)
+    s.add_argument('--tasks')
     s.add_argument('--job-id', required=True)
     s.add_argument('--output-root', required=True)
     s.add_argument('--receipt', required=True)
@@ -590,11 +650,15 @@ def main(argv=None):
     s.add_argument('--subject', choices=SUBJECTS)
     s.add_argument('--records', action='append')
     s.add_argument('--roots', nargs='*')
+    s = sub.add_parser('diag')
+    s.add_argument('--output-root', required=True)
+    s.add_argument('--tasks', required=True)
+    s.add_argument('--source', default=str(SOURCE))
     s = sub.add_parser('summary')
     s.add_argument('--output-root', required=True)
     s.add_argument('--roots', nargs='+', required=True)
     args = p.parse_args(argv)
-    return {'run': run, 'spec': make_spec, 'summary': summarize}[args.cmd](args)
+    return {'run': run, 'spec': make_spec, 'summary': summarize, 'diag': diag}[args.cmd](args)
 
 
 if __name__ == '__main__':

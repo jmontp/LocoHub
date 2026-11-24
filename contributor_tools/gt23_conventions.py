@@ -147,6 +147,22 @@ def foot_frame_point(point, ankle, heel, toe, leg):
             'lateral': lateral if leg == 'R' else -lateral}
 
 
+def plate_point(cop_x, cop_y, cop_z, vertical_force):
+    """Lab pressure point (n, 3) from the source plate columns. The height is the source's own COPY_Vertical (a raised
+    plate such as a stair or curb has a nonzero surface height), never assumed 0; a sample whose height is not finite,
+    or whose vertical force is missing or below 20 N, is NaN."""
+    p = np.stack([np.asarray(cop_x, float), np.asarray(cop_y, float), np.asarray(cop_z, float)], axis=1)
+    f = np.asarray(vertical_force, float)
+    p[~(np.isfinite(f) & (f >= STANCE_N))] = np.nan
+    return p
+
+
+def heel_above_plate(heel, plate_height):
+    """Median height of the heel marker above the recorded plate surface over samples where both are finite (None if none)."""
+    ok = np.isfinite(np.asarray(heel, float)) & np.isfinite(np.asarray(plate_height, float))
+    return float(np.median(np.asarray(heel, float)[ok] - np.asarray(plate_height, float)[ok])) if ok.any() else None
+
+
 def foot_frame_force(force, heel, toe):
     """Lab force (n, 3) as (anterior, vertical) foot-frame components (for the quasi-static ankle moment)."""
     e_f, e_u, _ = foot_axes(heel, toe)

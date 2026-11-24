@@ -273,3 +273,29 @@ def test_contact_heading_fills_only_uncovered_loaded_samples():
     assert (runs, filled, left) == (1, 3, 0)
     assert np.allclose(out[0], fwd[0]) and np.allclose(out[2], out[4]) and np.allclose(out[2], cv.unit(fwd[0:5].mean(axis=0)))   # the whole contact's mean heading
     assert np.all(np.isnan(out[5:]))               # unloaded samples are never filled
+
+
+def test_raised_plate_height_comes_from_the_source_not_zero():
+    # synthetic stair: plate surface 0.5 m above the lab floor; flat foot, ankle 0.08 above the sole, pressure point
+    # 5 cm ahead of the ankle on the sole. With the source height the vertical coordinate is -0.08; with height 0 it
+    # would be -0.58 (the converted-stairs bug).
+    ankle = np.array([[1.0, 0.58, 2.0]])
+    heel = np.array([[0.93, 0.50, 2.0]])
+    toe = np.array([[1.14, 0.50, 2.0]])
+    p = cv.plate_point([1.05], [0.5], [2.0], [700.0])
+    ff = cv.foot_frame_point(p, ankle, heel, toe, 'R')
+    assert ff['vertical'][0] == pytest.approx(-0.08, abs=1e-12)
+    assert ff['anterior'][0] == pytest.approx(0.05 - 0.1, abs=1e-12)
+    wrong = cv.foot_frame_point(cv.plate_point([1.05], [0.0], [2.0], [700.0]), ankle, heel, toe, 'R')
+    assert wrong['vertical'][0] == pytest.approx(-0.58, abs=1e-12)
+    # an unknown height or an unloaded plate is missing, not 0
+    assert np.isnan(cv.plate_point([1.05], [np.nan], [2.0], [700.0])[0, 1])
+    assert np.isnan(cv.plate_point([1.05], [0.5], [2.0], [10.0])).all()
+
+
+def test_heel_above_plate_separates_flat_plate_from_curb():
+    # synthetic: heel marker 0.07 above a flat plate (level walking) versus 0.22 above it on an undocumented curb
+    plate = np.array([0.0, 0.0, np.nan, 0.0])
+    assert cv.heel_above_plate(np.array([0.07, 0.08, 0.5, 0.06]), plate) == pytest.approx(0.07)
+    assert cv.heel_above_plate(np.array([0.22, 0.23, 0.5, 0.21]), plate) == pytest.approx(0.22)
+    assert cv.heel_above_plate(np.array([0.1]), np.array([np.nan])) is None
