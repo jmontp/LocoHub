@@ -1,0 +1,43 @@
+{
+  "task_id": "GT21-RB03 (+ RB02 force-mask fix)",
+  "status": "ready_for_independent_verification",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-24T23:11:00+00:00",
+  "summary": "Segmentation of every source step of both legs ran for all 22 participants (3,147 recordings, 107,367 steps) as a derived layer on the merged-pass tables; stance force mask built and applied as a separate layer (pass not rerun). Separate readback passed.",
+  "code_frozen_sha256": {
+    "contributor_tools/gt21_rb_segment.py": "c62e488ebaf6390d08fbc72a6dff43ed50ee7a9bf8977a57969a5d5bcc605dbb",
+    "contributor_tools/run_gt21_rb_segment.py": "2ec53c661ddb0e0dab7db7855e04e25e58e20391e92dd416c440a49aa63b555c"
+  },
+  "readback_code": "contributor_tools/run_gt21_rb_segment_readback.py (separate file; independent scalar code for steps and mask)",
+  "tests": "tests/test_gt21_rb_segment.py: 16 synthetic tests pass",
+  "force_mask_rule": "stance true and the foot's owned-plate vertical force below 20 N -> grf vertical/anterior/lateral missing. 20 N fixed before results: 1.5x the ~13 N levelground Treadmill-plate offset, same as GT23 rule, absolute not BW fraction. Stored as layer force_mask/<ID>/<mode>/<rec>.parquet (time_s, force_missing_left/right); apply_force_mask() sets NaN.",
+  "batches": "converted_datasets/reconversion_v2/gt21_rb_segment_batch_<ID>_20261124 (22), pilots gt21_rb_segment_pilot_20261124 (r1) and _r2; specs/receipts docs/quality/audits/gt21-rb03-*",
+  "readback": "docs/quality/audits/gt21-rb03-readback.json",
+  "events_of_the_run": [
+    "Pilot r1 passed; AB06 batch r1 aborted at the treadmill recordings (address-space cap, 'cannot allocate memory for thread-local data'; receipt gt21-rb03-batch-AB06-launcher-receipt.json kept); fixed by one Arrow thread and eager garbage collection; pilot r2 passed with the same bound code as all 22 batches; AB06 r1 partial output deleted by this worker (its own, incomplete)."
+  ],
+  "checks": {
+    "accounting": "inventory 3,147 = ledger 3,147; steps.jsonl lines = ledger; step ids unique; one disposition each; local 16: 83,206 resets and 78,604 steps reproduce exactly; six new: 30,455 resets, 28,763 steps",
+    "identity_36": "30 levelground recordings: 227 eligible = 227 old exported+opposite, 479 outside = 479 old outside, 0 disagreements step by step. Treadmill 6 recordings: 1,564 steps held (speed table not exported), 1,427 of them the old run exported; so 856+798=1654 and 616 hold only after adding the speed table",
+    "terrain": "11,947 eligible ramp/stair steps: label, incline sign, stair height equal source scalars and window; 0 mismatches; all 2,310 ramp/stair recordings (1,394 + 916) have a positive source value; none defaulted",
+    "mask": "layers for all 3,146 converted recordings equal an independent recomputation; 0 masked stance samples at or above 20 N; 0 unmasked stance samples below 20 N; scalar loop on 66 seeded recordings: 0 mismatches",
+    "authors": "right-leg intervals: 106,818 matched (start/end offset max 5 ms = one sample, median 0), extra 3,390 (partial first/last intervals, none interior), missed 0",
+    "peak_memory": "batches 160 MiB RSS (launcher largest process 160 MiB), readback 179 MiB under a 600 MiB cap"
+  },
+  "open_scope_question": "Stair (and ramp) steps that touch two label windows are listed as straddling, not labelled: 12,360 of 17,093 stair steps (72%), ramp 19,094 of 32,913 (58%) straddle. 119 of 916 stair recordings have no eligible step. The authors' own STRIDES.m keeps most of these by first/last-label rules. Needs a scope decision before RB05.",
+  "treadmill": "All 157 treadmill recordings / 41,157 steps are 'held': the RB01 label export did not capture the treadmill speed table, so steady speed cannot be assessed. Needs a small MATLAB speed export (22 starts) or a decision.",
+  "remaining": [
+    "Independent verifier",
+    "Scope decision on straddling stair/ramp steps",
+    "Treadmill speed export or decision"
+  ],
+  "next_action": "Independent verifier reviews acceptance against docs/quality/audits/gt21-rb03-readback.json and the ledgers.",
+  "changed_files": [
+    "contributor_tools/gt21_rb_segment.py",
+    "contributor_tools/run_gt21_rb_segment.py",
+    "contributor_tools/run_gt21_rb_segment_readback.py",
+    "tests/test_gt21_rb_segment.py",
+    "docs/quality/audits/gt21-rb03-*",
+    "docs/maintainers/handoffs/GT21-RB03.json"
+  ]
+}
