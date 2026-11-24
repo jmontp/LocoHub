@@ -1,0 +1,658 @@
+{
+  "schema": "locohub.guarded_launcher.receipt/2",
+  "job_id": "GT23-M01-batch-AB10",
+  "status": "completed",
+  "scientific_approval": false,
+  "envelope": {
+    "path": "docs/quality/audits/pm01-um21-tread-pilot-handoff.json",
+    "reviewed_sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9",
+    "limits": {
+      "timeout_seconds_max": 3600,
+      "kill_after_seconds_max": 30,
+      "poll_seconds_max": 15,
+      "startup_memory_mib_min": {
+        "linux": 3584,
+        "windows": 2816
+      },
+      "runtime_memory_mib_min": {
+        "linux": 2048,
+        "windows": 2048
+      },
+      "output_volume_free_mib_min": 5120,
+      "c_drive_free_mib_min": 1024,
+      "c_drive_path": "/mnt/c",
+      "address_space_mib_max": 768
+    },
+    "sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+  },
+  "spec": {
+    "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+    "kill_after_seconds": 30,
+    "poll_seconds": 15,
+    "disk_admission": [],
+    "thread_env": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "ARROW_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    },
+    "expected_output_names": [
+      "run_summary.json"
+    ],
+    "address_space_mib": 768,
+    "job_id": "GT23-M01-batch-AB10",
+    "command": [
+      "python3",
+      "contributor_tools/run_gt23_m01.py",
+      "run",
+      "--output-root",
+      "converted_datasets/reconversion_v2/gt23_m01_batch_AB10",
+      "--subject",
+      "AB10"
+    ],
+    "output_root": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt23_m01_batch_AB10",
+    "receipt_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/gt23-m01-batch-AB10-launcher-receipt.json",
+    "bindings": {
+      "contributor_tools/gt23_mass.py": "f7a94667a9152be7b8ab1246f8803aa46ad0e8a7f4e676165e61e27063db0ac2",
+      "contributor_tools/run_gt23_m01.py": "c42b020f442875449245023a095fca4f2279ab5d54586e348f33e3b4958055a7",
+      "contributor_tools/gt23_source_reader.py": "db36761467185584d148854f2fc4dfe0d7f168eb891e843017a2cb471e1ad09e",
+      "contributor_tools/guarded_launcher.py": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "docs/quality/audits/gt23-c05-rescale-error.json": "befedeae32d53244a510020e2b4e736ddec69b2932ee4024cd2b53a0ee081792",
+      "docs/quality/audits/source_evidence/gt23/publisher-readme.txt": "4a5c8ef0a8d96ed3b81253e7fed2d8516b884fa2aa63e4340c0ab54cf2ac4752",
+      "converted_datasets/reconversion_v2/gt23_x01_batch_AB10/ledger.jsonl": "b7c82b33292d72bae4c2880708b9b6ebf21873cb4af7f5f6848c9b9664209257",
+      "converted_datasets/reconversion_v2/gt23_x01_batch_AB10/participant.json": "686b10c3557a0950bb77f23f2bff81f15a61a18419c819fda2d2cada007b5b33",
+      "converted_datasets/reconversion_v2/gt23_c06_batch3_AB10/ledger.jsonl": "f85142492f8153d7f5f553666e3edfcf33841d389834c81ea7a22653cea520b1"
+    },
+    "timeout_seconds": 3600,
+    "startup_memory_mib": {
+      "linux": 3584,
+      "windows": 2816
+    },
+    "runtime_memory_mib": {
+      "linux": 2048,
+      "windows": 2048
+    }
+  },
+  "spec_sha256": "17d850acabd76b84ec1589ab3f9a261547281e0b1e540afd726c9209e0d236a3",
+  "launcher_sha256": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+  "checked_at_utc": "2026-11-24T03:22:22+00:00",
+  "chaining": "none; no successor is started",
+  "bindings_before": {
+    "contributor_tools/gt23_mass.py": {
+      "expected": "f7a94667a9152be7b8ab1246f8803aa46ad0e8a7f4e676165e61e27063db0ac2",
+      "actual": "f7a94667a9152be7b8ab1246f8803aa46ad0e8a7f4e676165e61e27063db0ac2",
+      "bytes": 6576,
+      "matches": true
+    },
+    "contributor_tools/run_gt23_m01.py": {
+      "expected": "c42b020f442875449245023a095fca4f2279ab5d54586e348f33e3b4958055a7",
+      "actual": "c42b020f442875449245023a095fca4f2279ab5d54586e348f33e3b4958055a7",
+      "bytes": 19815,
+      "matches": true
+    },
+    "contributor_tools/gt23_source_reader.py": {
+      "expected": "db36761467185584d148854f2fc4dfe0d7f168eb891e843017a2cb471e1ad09e",
+      "actual": "db36761467185584d148854f2fc4dfe0d7f168eb891e843017a2cb471e1ad09e",
+      "bytes": 20467,
+      "matches": true
+    },
+    "contributor_tools/guarded_launcher.py": {
+      "expected": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "actual": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "bytes": 51512,
+      "matches": true
+    },
+    "docs/quality/audits/gt23-c05-rescale-error.json": {
+      "expected": "befedeae32d53244a510020e2b4e736ddec69b2932ee4024cd2b53a0ee081792",
+      "actual": "befedeae32d53244a510020e2b4e736ddec69b2932ee4024cd2b53a0ee081792",
+      "bytes": 621777,
+      "matches": true
+    },
+    "docs/quality/audits/source_evidence/gt23/publisher-readme.txt": {
+      "expected": "4a5c8ef0a8d96ed3b81253e7fed2d8516b884fa2aa63e4340c0ab54cf2ac4752",
+      "actual": "4a5c8ef0a8d96ed3b81253e7fed2d8516b884fa2aa63e4340c0ab54cf2ac4752",
+      "bytes": 14317,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt23_x01_batch_AB10/ledger.jsonl": {
+      "expected": "b7c82b33292d72bae4c2880708b9b6ebf21873cb4af7f5f6848c9b9664209257",
+      "actual": "b7c82b33292d72bae4c2880708b9b6ebf21873cb4af7f5f6848c9b9664209257",
+      "bytes": 525745,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt23_x01_batch_AB10/participant.json": {
+      "expected": "686b10c3557a0950bb77f23f2bff81f15a61a18419c819fda2d2cada007b5b33",
+      "actual": "686b10c3557a0950bb77f23f2bff81f15a61a18419c819fda2d2cada007b5b33",
+      "bytes": 955,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt23_c06_batch3_AB10/ledger.jsonl": {
+      "expected": "f85142492f8153d7f5f553666e3edfcf33841d389834c81ea7a22653cea520b1",
+      "actual": "f85142492f8153d7f5f553666e3edfcf33841d389834c81ea7a22653cea520b1",
+      "bytes": 338690,
+      "matches": true
+    }
+  },
+  "disk_admission": [
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/gt23_m01_batch_AB10",
+      "min_free_mib": 5120,
+      "source": "envelope: output volume (S:)",
+      "free_mib": 87824.87890625,
+      "passes": true
+    },
+    {
+      "path": "/mnt/c",
+      "min_free_mib": 1024,
+      "source": "envelope: C:",
+      "free_mib": 26292.55859375,
+      "passes": true
+    }
+  ],
+  "census_before": {
+    "linux": {
+      "checked_at_utc": "2026-11-24T03:22:22+00:00",
+      "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+      "process_count": 167,
+      "exempt": [
+        {
+          "pid": 1697587,
+          "start_ticks": 99403742,
+          "cwd": "/home/jmontp",
+          "cmdline": "/home/jmontp/.local/bin/pretty daemon",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1697596,
+          "start_ticks": 99403750,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2354851,
+          "start_ticks": 109454620,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude --resume",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2631093,
+          "start_ticks": 112022164,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2631094,
+          "start_ticks": 112022164,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/gt23-m01-batch-AB10-spec.json",
+          "why": "launcher itself (CLI)"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-24T03:22:23+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 376,
+      "free_physical_mib": 3231.390625,
+      "workers": []
+    }
+  },
+  "startup_memory": {
+    "linux": {
+      "available_mib": 8741.05859375,
+      "reserve_mib": 3584,
+      "passes": true
+    },
+    "windows": {
+      "available_mib": 3231.390625,
+      "reserve_mib": 2816,
+      "passes": true
+    }
+  },
+  "launch_ledger": {
+    "parent": {
+      "pid": 2631093,
+      "ppid": 2354851,
+      "start_ticks": 112022164,
+      "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+      "interactive_terminal": false
+    },
+    "claimed": true,
+    "entries": [
+      "/tmp/locohub_guarded_launcher_uid1000/a81def3c-fa85-4161-b227-f59ffadc384d/2631093-112022164.json"
+    ],
+    "keys": [
+      {
+        "pid": 2631093,
+        "ppid": 2354851,
+        "start_ticks": 112022164,
+        "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+        "interactive_terminal": false
+      }
+    ]
+  },
+  "launched": true,
+  "process_identity": {
+    "leader_pid": 2631107,
+    "launched_at_utc": "2026-11-24T03:22:23+00:00",
+    "argv": [
+      "timeout",
+      "--signal=TERM",
+      "--kill-after=30s",
+      "3600",
+      "nice",
+      "-n",
+      "19",
+      "ionice",
+      "-c",
+      "3",
+      "python3",
+      "contributor_tools/run_gt23_m01.py",
+      "run",
+      "--output-root",
+      "converted_datasets/reconversion_v2/gt23_m01_batch_AB10",
+      "--subject",
+      "AB10"
+    ],
+    "log_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/gt23-m01-batch-AB10-launcher-receipt.log",
+    "parent_death_signal": "SIGTERM",
+    "parent_death_signal_set": true,
+    "pgid": 2631107,
+    "sid": 2631107,
+    "own_session_verified": true,
+    "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+    "leader_start_ticks": 112022273
+  },
+  "job_outcome": "completed",
+  "finished_at_utc": "2026-11-24T03:22:37+00:00",
+  "exit_code": 0,
+  "wall_time_seconds": 14.016,
+  "peak_rss_kib_largest_process": 226160,
+  "peak_group_rss_kib_sampled": 0,
+  "runtime_guard": {
+    "poll_seconds": 15,
+    "reserve_mib": {
+      "linux": 2048,
+      "windows": 2048
+    },
+    "polls": 0,
+    "min_linux_available_mib": null,
+    "min_windows_free_mib": null,
+    "breach": null,
+    "observed_address_space_limits": [
+      "805306368"
+    ],
+    "observed_address_space_by_process": [
+      {
+        "pid": 2631107,
+        "start_ticks": 112022273,
+        "limit": "805306368",
+        "cmdline": "timeout --signal=TERM --kill-after=30s 3600 nice -n 19 ionice -c 3 python3 contributor_tools/run_gt23_m01.py run --output-root converted_datasets/reconversion_v2/gt23_m01_batch_AB10 --subject AB10"
+      },
+      {
+        "pid": 2631108,
+        "start_ticks": 112022273,
+        "limit": "805306368",
+        "cmdline": "python3 contributor_tools/run_gt23_m01.py run --output-root converted_datasets/reconversion_v2/gt23_m01_batch_AB10 --subject AB10"
+      }
+    ]
+  },
+  "stop_actions": [],
+  "orphans_at_leader_exit": [],
+  "launcher_errors": [],
+  "finalisation_errors": [],
+  "clean_success": true,
+  "retry": "never automatic",
+  "cleanup_proof": {
+    "checked_at_utc": "2026-11-24T03:22:37+00:00",
+    "basis": "same_boot_proc_scan",
+    "proven": true,
+    "boot_id_now": "a81def3c-fa85-4161-b227-f59ffadc384d",
+    "pgid_members": [],
+    "leader_pid_with_same_start_ticks_present": false,
+    "attempts": 1
+  },
+  "census_after": {
+    "linux": {
+      "checked_at_utc": "2026-11-24T03:22:37+00:00",
+      "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+      "process_count": 160,
+      "exempt": [
+        {
+          "pid": 1697587,
+          "start_ticks": 99403742,
+          "cwd": "/home/jmontp",
+          "cmdline": "/home/jmontp/.local/bin/pretty daemon",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1697596,
+          "start_ticks": 99403750,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2354851,
+          "start_ticks": 109454620,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude --resume",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2631093,
+          "start_ticks": 112022164,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2631094,
+          "start_ticks": 112022164,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/gt23-m01-batch-AB10-spec.json",
+          "why": "launcher itself (CLI)"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-24T03:22:38+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 377,
+      "free_physical_mib": 3161.47265625,
+      "workers": []
+    }
+  },
+  "windows_new_workers": [],
+  "bindings_after": {
+    "contributor_tools/gt23_mass.py": {
+      "expected": "f7a94667a9152be7b8ab1246f8803aa46ad0e8a7f4e676165e61e27063db0ac2",
+      "actual": "f7a94667a9152be7b8ab1246f8803aa46ad0e8a7f4e676165e61e27063db0ac2",
+      "bytes": 6576,
+      "matches": true
+    },
+    "contributor_tools/run_gt23_m01.py": {
+      "expected": "c42b020f442875449245023a095fca4f2279ab5d54586e348f33e3b4958055a7",
+      "actual": "c42b020f442875449245023a095fca4f2279ab5d54586e348f33e3b4958055a7",
+      "bytes": 19815,
+      "matches": true
+    },
+    "contributor_tools/gt23_source_reader.py": {
+      "expected": "db36761467185584d148854f2fc4dfe0d7f168eb891e843017a2cb471e1ad09e",
+      "actual": "db36761467185584d148854f2fc4dfe0d7f168eb891e843017a2cb471e1ad09e",
+      "bytes": 20467,
+      "matches": true
+    },
+    "contributor_tools/guarded_launcher.py": {
+      "expected": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "actual": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "bytes": 51512,
+      "matches": true
+    },
+    "docs/quality/audits/gt23-c05-rescale-error.json": {
+      "expected": "befedeae32d53244a510020e2b4e736ddec69b2932ee4024cd2b53a0ee081792",
+      "actual": "befedeae32d53244a510020e2b4e736ddec69b2932ee4024cd2b53a0ee081792",
+      "bytes": 621777,
+      "matches": true
+    },
+    "docs/quality/audits/source_evidence/gt23/publisher-readme.txt": {
+      "expected": "4a5c8ef0a8d96ed3b81253e7fed2d8516b884fa2aa63e4340c0ab54cf2ac4752",
+      "actual": "4a5c8ef0a8d96ed3b81253e7fed2d8516b884fa2aa63e4340c0ab54cf2ac4752",
+      "bytes": 14317,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt23_x01_batch_AB10/ledger.jsonl": {
+      "expected": "b7c82b33292d72bae4c2880708b9b6ebf21873cb4af7f5f6848c9b9664209257",
+      "actual": "b7c82b33292d72bae4c2880708b9b6ebf21873cb4af7f5f6848c9b9664209257",
+      "bytes": 525745,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt23_x01_batch_AB10/participant.json": {
+      "expected": "686b10c3557a0950bb77f23f2bff81f15a61a18419c819fda2d2cada007b5b33",
+      "actual": "686b10c3557a0950bb77f23f2bff81f15a61a18419c819fda2d2cada007b5b33",
+      "bytes": 955,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/gt23_c06_batch3_AB10/ledger.jsonl": {
+      "expected": "f85142492f8153d7f5f553666e3edfcf33841d389834c81ea7a22653cea520b1",
+      "actual": "f85142492f8153d7f5f553666e3edfcf33841d389834c81ea7a22653cea520b1",
+      "bytes": 338690,
+      "matches": true
+    }
+  },
+  "outputs": [
+    {
+      "path": "ball_toss_1.parquet",
+      "bytes": 3437605,
+      "sha256": "a0953f99e10e09593b52c199cc83186dfd64e04ac629d3204165bc3827932c6b"
+    },
+    {
+      "path": "curb_down_1.parquet",
+      "bytes": 2072559,
+      "sha256": "c4c654a57d9cd4cf897f8527d5eab335d02f6457c0ecf7ce121d673309f6b6f3"
+    },
+    {
+      "path": "curb_up_1.parquet",
+      "bytes": 1944924,
+      "sha256": "24bb28c7c2acd490309b51b325c538b0cbeb6d96b489979153bc97ae0f5b8306"
+    },
+    {
+      "path": "cutting_1.parquet",
+      "bytes": 2986663,
+      "sha256": "473a6cfad45adfa3d46cb75eacd202fcb933befdcad433bfa2d5040b116ecbea"
+    },
+    {
+      "path": "dynamic_walk_1.parquet",
+      "bytes": 3591681,
+      "sha256": "284af8f3557e4b6a9320029d1657c892cc5f9d1182179233a50ba68169276bd0"
+    },
+    {
+      "path": "incline_walk_1.parquet",
+      "bytes": 2008973,
+      "sha256": "dd46e064600d0f0f4c6cbab07b75c24c8bfcf4ec395abc1eccb228d8da953bd9"
+    },
+    {
+      "path": "incline_walk_2.parquet",
+      "bytes": 2447734,
+      "sha256": "93abc782a7ce3a16b023033cf6a09c23cc6566882c7534c6e5a672320bfffc57"
+    },
+    {
+      "path": "jump_1.parquet",
+      "bytes": 2854746,
+      "sha256": "1c94dbcd9cd8fa857b7768739d07dc45102cd6eca26512ee2d1ab3b313fda35f"
+    },
+    {
+      "path": "jump_2.parquet",
+      "bytes": 2971600,
+      "sha256": "109a66c4fe5c9ecee49a6517c94c7d9441a62c5e391fdbeb09f4d587b3cb12d5"
+    },
+    {
+      "path": "jump_3.parquet",
+      "bytes": 1894276,
+      "sha256": "7940feec65eadf495467a989eb4ef263067ed2be0d6df500b49bfbc8bbb9b629"
+    },
+    {
+      "path": "ledger.jsonl",
+      "bytes": 189005,
+      "sha256": "cf8e400a52a85ebd78bb0978fae3a02ce9f2b48390300d1fb0bd4cfb08320b37"
+    },
+    {
+      "path": "lift_weight_1.parquet",
+      "bytes": 5363222,
+      "sha256": "bc46bfc0fb35088d622558047af0e8f12939de6094e63c8bdb7fb14836dd4616"
+    },
+    {
+      "path": "lift_weight_2.parquet",
+      "bytes": 4916927,
+      "sha256": "380dac0200731ec5d492e1cbf97ce6c8c20296be6b2ba9c1447f9e4f0f26b95e"
+    },
+    {
+      "path": "lunges_1.parquet",
+      "bytes": 5447494,
+      "sha256": "a8e6b150ba753f99c6232336368dc81c57fbadebaa877423cbf6b2e6f22578ad"
+    },
+    {
+      "path": "lunges_2.parquet",
+      "bytes": 2108606,
+      "sha256": "f0d2895735b3534ef292170eec4eabffe9311b006ea820d552314764d9bdcdf3"
+    },
+    {
+      "path": "meander_1.parquet",
+      "bytes": 2460879,
+      "sha256": "ad1bdf0a2b3a46ab773e9f992e9593ebad83608cd0f59956ce84ba253e392709"
+    },
+    {
+      "path": "normal_walk_1.parquet",
+      "bytes": 4084884,
+      "sha256": "65f6410e4198b4f67ab872b8575f21e8bbb8b2cd028e5e48745ba5e5d562300f"
+    },
+    {
+      "path": "obstacle_walk_1.parquet",
+      "bytes": 2085373,
+      "sha256": "ea1d4ffbbbf66fc0a819fe10c32c6d73d736fd43ac82f053e3d199d38d13313c"
+    },
+    {
+      "path": "poses_1.parquet",
+      "bytes": 7831536,
+      "sha256": "596719f1e1c893c13d9067b7f3a57985038ea9a86d9921b1ace1f606d3e996ee"
+    },
+    {
+      "path": "push_1.parquet",
+      "bytes": 2096551,
+      "sha256": "cb9673af1f935b875a753a74917eae73bf337fdf96ba8d185cd38bfb854ab39d"
+    },
+    {
+      "path": "run_summary.json",
+      "bytes": 213,
+      "sha256": "e9e50beaa095d49e3aaf31d13ef9cd611429d9d3dbfda4f4c41dfa8970ec2f2c"
+    },
+    {
+      "path": "side_shuffle_1.parquet",
+      "bytes": 457375,
+      "sha256": "116cb75dc5269829dfb01a2504a34daf2be61ef0753d5e7874143cfebf76da37"
+    },
+    {
+      "path": "sit_to_stand_1.parquet",
+      "bytes": 7279743,
+      "sha256": "56b7b877877926b6b5ce37e2b1a23fca98a6f8164fb448be3f5d6474347a2ec6"
+    },
+    {
+      "path": "sit_to_stand_2.parquet",
+      "bytes": 3906772,
+      "sha256": "2b575df233f9edd3c7b9ca9cda9585db507ea3ccf455b814cf582fbf0c509ad5"
+    },
+    {
+      "path": "squats_1.parquet",
+      "bytes": 2295164,
+      "sha256": "9b994b95c936c992a546e0dc9329d5d111b103e07480d0e1311b2966a774ea5c"
+    },
+    {
+      "path": "stairs_1_1.parquet",
+      "bytes": 163922,
+      "sha256": "91d618b49423b316ba205b956ae1e0770ae9737b85ba008309fb4a4d2855ed0f"
+    },
+    {
+      "path": "stairs_1_10.parquet",
+      "bytes": 102678,
+      "sha256": "6abea991392119ae8ddf58f7d12341a599e77f8baa2cfb0a8892713596c05bbf"
+    },
+    {
+      "path": "stairs_1_2.parquet",
+      "bytes": 141601,
+      "sha256": "72afd412f789d9ed8e5b51e1820f9464af260f01bfd609d5c1894e1c4b920a55"
+    },
+    {
+      "path": "stairs_1_3.parquet",
+      "bytes": 156866,
+      "sha256": "71f6e4babf970db72c264048947f7d29aaacafbd563efb54ba78def466e9a7ab"
+    },
+    {
+      "path": "stairs_1_4.parquet",
+      "bytes": 146311,
+      "sha256": "e1f8a50fc909a835511c45d49789853e77a29846c15eb2b072b2b52a9b7d8cbe"
+    },
+    {
+      "path": "stairs_1_5.parquet",
+      "bytes": 160591,
+      "sha256": "e27c2d492e18026245f9bd24cddc71ed7688fcf01fbde92b22eb1f88518c2b17"
+    },
+    {
+      "path": "stairs_1_6.parquet",
+      "bytes": 147638,
+      "sha256": "c046e0df34ec137cb9c428ef1c19033cad2f1eb57d86eaafca6f247bb463f1ab"
+    },
+    {
+      "path": "stairs_1_7.parquet",
+      "bytes": 234074,
+      "sha256": "edf7145880b1154fad7fd80d5c469b4fa2e35894761c3ead1b40cc7d10e7d903"
+    },
+    {
+      "path": "stairs_1_8.parquet",
+      "bytes": 235792,
+      "sha256": "bd005c3368f78218a8c4b03037f500f4f5efa3d60e5efc4a5bbf5dcb74a8aea9"
+    },
+    {
+      "path": "stairs_1_9.parquet",
+      "bytes": 117660,
+      "sha256": "0379436c7af38ecd8e1b0a7c676081908bd8142b0e2c07d6e3529fd51b68eb8b"
+    },
+    {
+      "path": "start_stop_1.parquet",
+      "bytes": 5500063,
+      "sha256": "dc0c2971b3447fc42fad4e4bc85172bfd5d289ea638d5b89093280bb885b547e"
+    },
+    {
+      "path": "step_ups.parquet",
+      "bytes": 2812509,
+      "sha256": "8d3780c43384ef7673f906f8735bd6713f4610a086d34fc544fc24c885fb24ad"
+    },
+    {
+      "path": "tire_run_1.parquet",
+      "bytes": 2226026,
+      "sha256": "d39b237766fabcaa0c5634290c80c7c69c1f94607148d5fc5c76000019e65596"
+    },
+    {
+      "path": "tug_of_war_1.parquet",
+      "bytes": 2630973,
+      "sha256": "0592f0c10c37c021762d8bf0cab8f9b9b3c5672b73c92edf4b397cafed6a958c"
+    },
+    {
+      "path": "turn_and_step_1.parquet",
+      "bytes": 1845646,
+      "sha256": "6ae1df1080165516fd2a742a5f6c62e1b5b9f625e1490990894f75c94cbfda16"
+    },
+    {
+      "path": "twister_1.parquet",
+      "bytes": 3679184,
+      "sha256": "f0900b89f847f5d32860c92ebf596c3b2ad427f78471bf373d0b80d0f6807804"
+    },
+    {
+      "path": "walk_backward_1.parquet",
+      "bytes": 2066405,
+      "sha256": "8c84b1722f1f7a30bf27ece37b85e4bb22a19ca82980d6cca1dc30f293616d25"
+    },
+    {
+      "path": "weighted_walk_1.parquet",
+      "bytes": 852031,
+      "sha256": "669a7ec477b3e07667cd584f4b75d9235d66da9d973bba6298dd7c30b74978a0"
+    }
+  ],
+  "expected_outputs_missing": [],
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "checks": {
+    "cleanup_proven": true,
+    "bindings_unchanged": true,
+    "envelope_unchanged": true,
+    "linux_no_new_worker": true,
+    "windows_no_new_worker": true,
+    "no_orphans_at_leader_exit": true,
+    "outputs_hashed": true,
+    "expected_outputs_present": true
+  }
+}

@@ -7188,7 +7188,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Rescale moments and powers of 52 recordings and fix AB03 body weight",
-      "status": "working",
+      "status": "review",
       "stage": "conversion",
       "question": "Are exactly the 52 recordings rescaled by (mass used / own mass), AB03 forces in body weights right, and everything else unchanged?",
       "scope": "27 guarded jobs: 3 pilots (AB05 normal_walk_1, exact, factor 1.1035; AB03 dynamic_walk_1, estimated, factor 0.741; an AB03 body-weight force check) + 12 batches + 12 audits. List and factors from the hash-bound gt23-c05-rescale-error.json (7 exact, 45 estimated and matched to the nearest recorded mass; estimate and interval kept in provenance). Other 436 recordings keep published moments and powers with a note. Body weights use the publisher's README mass table. Units are documented only (values already per kg).",
@@ -7218,26 +7218,31 @@
         "AB03 standing vertical force sums to about 1 BW with 113.5 kg (plates give 113.8 kg).",
         "Every moment and power column is labelled per kg."
       ],
-      "next_action": "Writing the mass-step runner and synthetic tests; then pilots, then 12 batches.",
+      "next_action": "Independent verifier: recompute factors, compare the 436 kept and 52 rescaled with the X01 companions, AB03 body weights, and the N*m comparison (3 of 7 exact miss 1e-3, 1 unavailable).",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT23-rebuild-plan.json",
-        "docs/quality/audits/gt23-rebuild-probes.json"
+        "docs/quality/audits/gt23-rebuild-probes.json",
+        "docs/maintainers/handoffs/GT23-M01.json",
+        "converted_datasets/reconversion_v2/gt23_m01_summary/summary.json",
+        "docs/quality/audits/gt23-m01-summary-launcher-receipt.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T20:38:07+00:00",
-        "summary": "Planned. Probe reproduced the authors' divisors from local N·m inverse dynamics.",
+        "last_checked_at_utc": "2026-11-24T03:25:03+00:00",
+        "summary": "52 rescaled (7 exact, 45 estimated; factor 0.695 to 1.587), 436 kept with notes, AB03 40 recordings use 113.5 kg for body weights. 3 pilots + 12 batches + summary, all clean.",
         "checks": [
-          "Plan written from read-only probes only (22 runs, one file at a time, peak RSS 150 to 241 MiB); no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+          "tests/test_gt23_m01.py 9 passed (synthetic)",
+          "all 488 outputs: rescale ratio equals factor to 2e-16, kept equal source, force in N equals plate",
+          "power vs moment x speed unchanged by rescale (diff 1.6e-15); N*m check: 3 of 7 exact within 1e-3, AB05/AB10 within 0.08 N*m, AB09 1.29 N*m, AB13 not checkable"
         ],
         "remaining": [
-          "Module; three pilots; 12 batches; 12 audits."
+          "Independent verification"
         ],
         "changed_files": [
-          "docs/maintainers/handoffs/GT23-rebuild-plan.json",
-          "docs/quality/audits/gt23-rebuild-probes.json",
-          "docs/maintainers/backlog.json",
-          "docs/maintainers/backlog.html"
+          "contributor_tools/gt23_mass.py",
+          "contributor_tools/run_gt23_m01.py",
+          "tests/test_gt23_m01.py",
+          "docs/maintainers/handoffs/GT23-M01.json"
         ]
       },
       "owner": "claude-worker-gt23-m01",
