@@ -106,7 +106,7 @@
     "tests": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_guarded_launcher_native.py tests/test_run_gt21_rb01.py -> 14 passed in 1.06 s (peak 96 MiB). Coverage limit: fake host for Linux census, Windows census and tree; no test uses the real linux_census."
   },
   "backlog_decision": "GT21-RB01 stays in 'review'. The backlog has one status per task and the label export (acceptance lines 3 to 5) is a deliverable of the same task, so the Python parts cannot be set done separately. Python-part verification result is recorded in the task handoff instead.",
-  "next_action": "MATLAB pilot on AB06",
+  "next_action": "None for GT21-RB01 (done).",
   "part_B_v2": {
     "reviewed_commit": "62af10a (diff against 8f34062)",
     "verdict": "APPROVED for the AB06 dry run and supervised pilot, with one condition and one non-blocking fix",
@@ -128,5 +128,17 @@
     "binding_condition": "The AB06 r5 receipt binds guarded_launcher_native.py sha fc40e592..., which equals neither 13f32b3 nor the current file (250e57fe..., the version I reviewed, differing from 13f32b3 by POLL_S 5 and the cmd.exe start). I cannot recover fc40e592; it was presumably the pre-POLL_S edit. Condition: the 21 remaining specs must bind the current module sha 250e57fe..., the .m 452fe668... and launcher 372519f9... (the .m and launcher equal the r5 receipt). Do not edit the module again without re-review.",
     "tests": "nice -n 19 python3 -m pytest -q tests/test_guarded_launcher_native.py -> 17 passed in 0.8 s. MATLAB not run; nothing left running.",
     "next_action": "Export the other 21 participants one at a time with specs binding the current hashes; then compare labels with the 1,680 checked ramp and stair labels and re-read the 22 Weight literals."
-  }
+  },
+  "part_C_final_label_export": {
+    "verified_at_utc": "2026-11-24",
+    "verdict": "PASS; GT21-RB01 set to done",
+    "1_receipts": "22 final label receipts (gt21-rb01-labels-final-<ID>): all completed, clean_success true, every check true, no adoptions, no stop actions, no launcher errors; each binds native module 250e57fe..., .m 452fe668..., launcher 372519f9... (spec bindings, module_sha256, launcher_sha256 and bindings_after all match), 2 output files each, peak tree working set 960 to 1000 MiB over 2 polls (cap 2048). AB06 final receipt is not byte-identical to r5 (timestamps and PIDs differ, as expected) but its two output files have identical sha256 to r5 (labels f2e57769..., subject_info 81687a2d...). Copy job receipt: completed, clean, cleanup proven, bindings runner 91914fd8... (equals current run_gt21_rb01.py) and SubjectInfo.mat bc990b2c....",
+    "2_copy_job": "The extracted-six root holds exactly one new file, SubjectInfo.mat (plus the record folder _subjectinfo_copy); participant folders and _ledgers have older mtimes. sha256 of the copy and of the local source are both bc990b2c182e0cfc7b405b99fb429026585c224ce6d1ff5249734ec89cb2ce08 = publisher record in the crosswalk.",
+    "3_labels": "Source format is MATLAB v5 with the label table stored as an opaque MCOS table, so scipy.io.loadmat alone returns only an opaque stub; I decoded the table by reading the embedded function workspace with scipy (one file at a time, no MATLAB). Sample seed 20261126: 12 non-treadmill recordings (4 per mode, across AB07, AB08, AB11, AB15, AB16, AB20, AB21, AB28, AB30; both local and extracted-six sources) + 2 treadmill + all 4 recordings with 8 windows (AB10 stair_1_r_01_02, AB11 ramp_3_r_01_01, AB15 ramp_3_r_01_01, AB15 stair_2_l_01_04). For the 16 labelled recordings: label runs (label, first and last Header, row count), n_rows, header first and last, trialStarts, trialEnds, rampIncline, stairHeight all equal the exported jsonl. The 2 treadmill recordings hold no labels table (only trialStarts, trialEnds and a 'speed' table), matching label_present false. 18 of 18 agree (my script flagged the two treadmill files only because its field filter skipped the opaque speed table; checked by hand). Not checked: the other ~3,100 recordings; the earlier 1,680-label cross-check is the worker's.",
+    "4_weights": "22 of 22 Weight literals equal the crosswalk (Weight_literal) and variable_units for Weight is 'kg' in all 22; 1 matching row each; g17 values consistent. Read from the MATLAB export, not independently decoded from SubjectInfo.mat by me.",
+    "5_totals": "3,147 unique rows, no duplicates, set equal to the inventory ledger; per mode 506/1015/665/115 (local) and 174/379/251/42 (six); read_ok everywhere, no errors; labels present for 680 levelground, 1,394 ramp, 916 stair recordings; treadmill 157 (115+42) none have a label table.",
+    "resources": "read-only; peak 103 MiB; nice 19; no MATLAB; nothing running; Linux available 8.3 GB",
+    "next_action": "None for RB01. RB02 onward may use the label exports and the extracted root; mass unit is kg from SubjectInfo VariableUnits."
+  },
+  "status": "done_verified"
 }
