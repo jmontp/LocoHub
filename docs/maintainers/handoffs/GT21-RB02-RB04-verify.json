@@ -1,0 +1,76 @@
+{
+ "task_id": "GT21-RB02+RB04",
+ "role": "independent verifier",
+ "verified_at_utc": "2026-11-24T21:55:00+00:00",
+ "scientific_approval": false,
+ "verdict": "data verified; tasks sent back to ready only because three listed acceptance items were never run",
+ "receipts": {
+  "result": "All 22 batch receipts and pilot r4, readback and supplement: bindings before and after contain the full frozen hashes b199962c, 50f61989, 23f7b5a0; the three files on disk today still hash to those values. Pilots r1-r3 bound only the reader (23f7b5a0) because the other two files were not yet frozen; r4 (same bound code as the batches) is the passing pilot.",
+  "AB27": "Three refusals (original, r2, r3), all foreign_worker_linux, launched nothing and burned their receipt names; r4 spec ran clean (exit 0, peak 333,580 KiB).",
+  "AB25": "clean_success false only because check linux_no_new_worker failed: the after-census lists one new zsh -c shell from another session in the same repo directory. launcher_errors empty, orphans none, cleanup proven, bindings unchanged, outputs hashed and present. I accept it as a census artifact, not a job fault.",
+  "peak_rss": "all batch peaks 281-350 MiB (largest AB19 349,880 KiB), over the 300 MiB probe limit but this is guarded-launcher work with a 768 MiB address-space cap, not a probe."
+ },
+ "inventory_and_exclusion": "Inventory 3,147 = ledger 3,147 with identical keys, no duplicates, 3,146 Parquet files on disk. The only non-converted recording is AB27/treadmill/Treadmill_06_01 with reason 'fewer than 3 fit markers on femur_r: have [R_Knee_Lat]' (listed in AB27 run_summary and ledger). Excluded properly.",
+ "rederivation": {
+  "sample": "seed 20261207, drawn with docs/quality/audits/gt21-rb02-rb04-verify-sample.json (script in the same folder): AB27 levelground_cw_fast_01_05; AB15 (new participant) levelground_ccw_normal_01_01; AB09 ramp_2_l_01_01; AB10 ramp_5_l_01_02; AB09 stair_3_r_01_01; AB21 stair_4_r_01_01; AB17 (new) treadmill_05_01; AB16 treadmill_07_01.",
+  "independence": "Own code (docs/quality/audits/gt21-rb02-rb04-verify-derive.py): own .osim parse, Horn quaternion rigid fit (the pass uses SVD), own contact runs, ownership vote, force sums, heading sign, plane, ankle-frame CoP. I did read the worker's source first to learn the stated rules and thresholds (50 N contact, 100 N vote, 1/3-2/3 band, 20 mm, 45 deg), then wrote the maths separately; nothing from the pass was imported. The only repo import is the source table reader (gt21_numeric_source.read_numeric_table), data access only, so a reader fault would be shared. Agreement to 1e-14 mostly shows the two implementations match the same rules, not that the rules are right; the physical sanity check and the AB27 marker diagnosis are the independent evidence on correctness.",
+  "results": "All 8 recordings, both legs: stored time = marker clock exactly; pelvis angle and pelvis forward identical (0.0); thigh, shank, foot, hip, knee, ankle angles max difference 2.6e-14 rad with no finite/NaN mismatch; speeds max 2.7e-12 rad/s; composition hip = thigh - pelvis exactly; vertical, anterior and lateral force max difference 0.0 BW with no mismatch; CoP anterior/vertical/lateral max 5.8e-15 m with no mismatch; moments (id/Weight, knee negated) 0 difference; hold code identical on every frame (e.g. 28,718 of 28,718). Plate ownership: my contact owners reproduce the stored force columns exactly (zero force difference), so every contact went to the same foot. Contacts in the 6 overground samples: 57 total, 56 by marker vote, 1 ambiguous (AB27 levelground), 0 events fallback.",
+  "weights": "Weight read from the RB01 subject_info and checked to be kg; BW = Weight x 9.81. Not independently re-verified against the source subject table (RB01 scope).",
+  "treadmill_signs": "Treadmill anterior equals -(sum vz)/BW and lateral equals +(sum vx)/BW for the right foot (correlation 1.0), and the negative of it for the left foot (-1.0), i.e. the prior ESML sign rule with the left side mirrored to outward, as decided.",
+  "physical_sanity": "On all 8 recordings: median pelvis tilt negative (anterior), knee flexion positive (p99 67-118 deg, stairs highest), vertical force positive (max 1.16-1.91 BW), ankle plantarflexor moment negative (min -1.55 to -3.42 Nm/kg), mean lateral force in stance has the same sign on both legs. This is a plausibility check, not the formal sign test.",
+  "memory": "Overground probes peaked 159-176 MiB under 600 MiB address space. Treadmill recordings needed 768 MiB address space and went through the guarded launcher (receipts r3 and r6, one launch per call; r2 refused foreign worker, r4 and r5 lost sample 7 to my own script's memory/stall problems, not to the pass). Peaks 255 and 282 MiB RSS.",
+  "my_tooling_notes": "derive.py changed between samples only in load order, chunk size and memory release; sample 1 was re-run afterwards and gave the same numbers. Samples 0-5 used the earlier version; 6 used the version at receipt r3; 7 the final version at receipt r6."
+ },
+ "bad_fit_rule": {
+  "recomputed": "Residual over 20 mm (pelvis, femur or tibia) or knee axis over 45 deg off the lateral knee marker. Held frames equal the stored hold code on every frame of all 8 recordings, both legs (1,3 or 2 bits identical). Force and moments are kept: my force sums ignore the hold and equal the stored force on every loaded sample (no finite/NaN mismatch), and the stored moments equal id/Weight on every finite pair.",
+  "AB27_right_leg": "In AB27 levelground_cw_fast_01_05 the right leg is held on 24.7 percent of frames (988 of 3,999; 988 by residual, 5 by axis) and the left on 4.7 percent. Cause found: the R_Thigh_Upper marker leaves the rigid thigh. In held frames its distance to the other three thigh markers differs from the model by 29-53 mm (median), against 1.3 mm in kept frames, while the other three markers stay rigid with each other (1.8-8 mm) in both groups. Femur residual p95 is 41.6 mm; pelvis and tibia are 5.8 and 4.7 mm. Held frames come in 34 short runs. Ledger-wide AB27 right is 22.1 percent, left 3.0 percent. So the hold is a real bad fit (a marker that moved or was mislabeled), not a threshold artifact. The three remaining thigh markers fit consistently, so a refit without R_Thigh_Upper could recover those frames; that is a method change and is left to the owner and Jos\u00e9, not done here."
+ },
+ "esml_comparison": {
+  "what_the_csv_counts": "Per segment (ESML rows, ipsi leg) counts against the OLD converter's single plate: reassigned (converter plate loaded but not this foot's), recovered (this foot loads another plate), flagged (no measured force for this foot), changed. They are differences from the old converter, which our outputs do not carry, so plate reassignment counts cannot be compared one for one.",
+  "coverage": "The CSV covers 15 participants (AB06-11, 13, 14, 16, 18, 20, 21, 24, 25, 30). It has no rows for AB12, 15, 17, 19, 23, 28 or AB27. Of my 8 recordings only AB09 ramp, AB10 ramp, AB09 stair, AB21 stair and AB16 treadmill_07_01 have a row.",
+  "closest_comparable": "Share of stance rows with no measured force for the foot. ESML flagged / ours (stance samples with no loaded plate): ramp_2_l 66% / 67%; ramp_5_l 50% / 65%; stair_3_r 34% / 60%; stair_4_r 34% / 57%; treadmill_07_01 0% / 0.4%. Treadmill agrees; overground ramp_2_l agrees; ramp_5_l and stairs differ by 15-26 points. Not like for like: ESML rows come from its segmentation (stance rows 755-1,333 versus ours 2,621-4,550 samples per recording on the whole recording, all walking bouts and both feet) so the gap is expected but not proven benign.",
+  "whole_table_context": "ESML across its 15 participants: changed rows over stance rows 38 percent levelground, 38 ramp, 49 stair, 3 treadmill. Treadmill assignments barely change versus the old converter, overground ones change a lot, which matches our finding that the marker vote disagrees with a fixed plate guess overground. Our ledger totals: 29,268 marker-vote contacts, 72 events fallback, 68 ambiguous, 80 unassigned, over all recordings.",
+  "conclusion": "Listed, not tuned. Direction agrees (treadmill almost no reassignment, overground heavy). A one-to-one per-contact comparison needs either the old converter plate column or the ESML parquet, which the port rule forbids opening. Remaining difference stays an open item for RB05 readback."
+ },
+ "extra_findings": [
+  "Combined plate: in AB30 levelground_cw_slow_01_01 the Combined plate is a separate walkway plate (loaded 860 samples, never overlaps another plate above 50 N, median 676 N, correlation with other plates 0.06-0.09). It is not a sum of the others, so owning it with an FP plate is not a double count. Ledger-wide it is owned by the right foot in 657 contacts and the left in 6 (position of the plate, not checked further).",
+  "Caveat for RB03/RB05: in levelground recordings the Treadmill_R and Treadmill_L plates carry a small offset (median about 13 N). Contacts on them can span a whole recording (AB30 levelground_cw_slow_01_01: contact 0-6340 samples), so the owning foot gets about 0.02 BW vertical force during swing and plate_loaded_left is true on 6,340 of 6,340 samples (right 6,325). plate_loaded is therefore not a contact indicator in such recordings; use stance events or a force threshold. Not an error in the method (the value is measured) but segmentation must not use plate_loaded as contact.",
+  "Ledger-wide simultaneously owned plates: levelground 17 right-leg and 6 left-leg recordings (3,456 and 3,140 samples), stairs 9 recordings (45 samples), ramp 2 recordings (2 samples). These are feet owning two plates at once (straddling or an offset plate), counted in the ledger, not checked individually."
+ ],
+ "checks_run": {
+  "pytest": "tests/test_gt21_rb_pass.py: 42 passed in 2.45 s",
+  "backlog": "build_backlog_page.py --check: Backlog valid; HTML current (122 tasks)"
+ },
+ "acceptance_status": {
+  "met": [
+   "Frozen code and receipts; one-job-at-a-time under launcher; memory within cap",
+   "Independent re-derivation of plates, forces, signs, fits, angles, speeds, CoP, pelvis (8 recordings, agreement to 1e-12 or better)",
+   "Composition to 1e-12; hold rule reproduced and force/moments kept",
+   "Single listed exclusion with reason",
+   "Mass: BW uses declared Weight x 9.81 and moments equal id/Weight (model mass not used); checked in the 8 recordings",
+   "Synthetic fixtures: 42 tests pass (not reviewed line by line here)",
+   "Unassigned/ambiguous contacts counted per recording in the ledger"
+  ],
+  "not_met_or_not_checked": [
+   "RB02: Python port against the MATLAB-fixed pilot forces of the 36 compared and 51 completed recordings within 1e-9. Not run; the worker deferred it to RB05 (needs phase resampling).",
+   "RB04: formal sign test on all leg channels of the six new participants (AB12, 15, 17, 19, 23, 28). Not built. I only ran a plausibility check on AB15 and AB17.",
+   "RB04: pelvis tilt versus the authors' marker fit within the GT21-C01 range. Not checked by the worker or by me.",
+   "RB02: per-contact plate-count comparison with the ESML CSV: only the coarse comparison above is possible without the forbidden parquet."
+  ]
+ },
+ "decision": {
+  "RB02": "ready",
+  "RB04": "ready",
+  "reasons": "Numbers in the tables are correct as far as an independent derivation can tell, but three acceptance items written into the tasks were never run (MATLAB-pilot 1e-9, six-participant sign test, pelvis range check). They are comparisons against references; a failure there would change the tables only if it exposes a systematic error. Suggest RB03 may start on these tables while the three items run, since RB03 reads the same Parquet and nothing found here changes them. That is a scope call for Jos\u00e9."
+ },
+ "evidence_paths": [
+  "docs/quality/audits/gt21-rb02-rb04-verify-results.json",
+  "docs/quality/audits/gt21-rb02-rb04-verify-derive.py",
+  "docs/quality/audits/gt21-rb02-rb04-verify-sample.json",
+  "docs/quality/audits/gt21-rb02-rb04-verify-treadmill-launcher-receipt-r3.json",
+  "docs/quality/audits/gt21-rb02-rb04-verify-treadmill-launcher-receipt-r6.json",
+  "docs/quality/audits/gt21-rb-pass-batch-AB25-launcher-receipt.json",
+  "docs/quality/audits/gt21-rb-pass-batch-AB27-launcher-receipt-r4.json"
+ ],
+ "left_running": "nothing"
+}

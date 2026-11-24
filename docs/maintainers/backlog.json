@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-11-23T00:00:00Z",
+  "updated_at_utc": "2026-11-24T21:49:51+00:00",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-X01",
@@ -7799,7 +7799,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Assign force plates and fix force signs on every source step",
-      "status": "working",
+      "status": "ready",
       "stage": "pilot",
       "question": "Does every leg-step of all 22 participants have the right plate, force sign and outward sideways sign, or an honest gap?",
       "scope": "37 guarded jobs: 4 mode pilots plus 33 batches of at most 100 recordings, over every heel-strike-to-heel-strike step of both legs. Python port of the checked plate assignment (markers close to the plate, more than 2/3, over 100 N; named treadmill plates) and the force-sign fix; sideways force positive outward for each leg.",
@@ -7832,14 +7832,16 @@
         "Memory: pilot shows the launcher peak under its cap (expected 150-300 MiB); one job at a time.",
         "Per-recording plate counts compared with the prior per-recording counts CSV (read as an independent comparison, not imported); differences listed, not tuned away"
       ],
-      "next_action": "Independent verifier checks acceptance against the readback and ledgers; then RB03 segmentation runs on the merged tables.",
+      "next_action": "Run the three open acceptance items: Python port versus the MATLAB-fixed pilot forces within 1e-9 (needs phase resampling), then re-ask the verifier. Verifier found the tables themselves correct (8 recordings re-derived to 1e-12); see docs/maintainers/handoffs/GT21-RB02-RB04-verify.json.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
         "docs/quality/audits/gt21-plate-assignment-fix.json",
         "docs/quality/audits/gt21-force-fix.json",
         "docs/maintainers/handoffs/GT21-RB02-RB04.json",
-        "converted_datasets/reconversion_v2/gt21_rb_pass_readback_20261124/readback.json"
+        "converted_datasets/reconversion_v2/gt21_rb_pass_readback_20261124/readback.json",
+        "docs/maintainers/handoffs/GT21-RB02-RB04-verify.json",
+        "docs/quality/audits/gt21-rb02-rb04-verify-results.json"
       ],
       "handoff": {
         "last_checked_at_utc": "2026-11-24T20:52:02+00:00",
@@ -7861,6 +7863,9 @@
           "contributor_tools/run_gt21_rb_readback.py",
           "tests/test_gt21_rb_pass.py",
           "docs/maintainers/handoffs/GT21-RB02-RB04.json"
+        ],
+        "evidence": [
+          "docs/maintainers/handoffs/GT21-RB02-RB04-verify.json"
         ]
       },
       "notes": [
@@ -7868,7 +7873,12 @@
       ],
       "owner": "claude-worker-gt21-rb02-rb04",
       "started_at_utc": "2026-11-24T20:00:37+00:00",
-      "merged_pass_note": "Merged pass RB02+RB04 (one read per recording), code in contributor_tools/gt21_rb_pass.py and run_gt21_rb_pass.py; no job run yet."
+      "merged_pass_note": "Merged pass RB02+RB04 (one read per recording), code in contributor_tools/gt21_rb_pass.py and run_gt21_rb_pass.py; no job run yet.",
+      "verifier": {
+        "checked_at_utc": "2026-11-24T21:49:51+00:00",
+        "verdict": "sent back to ready: three acceptance items not run; data re-derived and correct",
+        "evidence": "docs/maintainers/handoffs/GT21-RB02-RB04-verify.json"
+      }
     },
     {
       "id": "GT21-RB03",
@@ -7934,7 +7944,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Apply conventions: marker segment angles, joint angles, foot-frame CoP, mass",
-      "status": "working",
+      "status": "ready",
       "stage": "conventions",
       "question": "Are all angles, forces and moments in the data reference convention, with nothing invented?",
       "scope": "68 guarded jobs: 4 mode pilots, 1 sign and marker pilot on the six new participants, and 63 conversion batches of about 50 recordings. Pelvis from markers; thigh, shank, foot from markers; hip = thigh - pelvis, knee = thigh - shank, ankle = foot - shank; CoP in the foot frame (origin 100 mm forward of the ankle centre); Weight in kilograms for BW and Nm/kg; trunk stays missing (no source).",
@@ -7966,14 +7976,16 @@
         "All 28 named markers are checked per recording; a missing needed marker gives a listed exclusion; 15 Hz and plate-origin placeholder CoP samples stay missing; peak memory recorded (expected 250-400 MiB).",
         "Ankle centre per subject from the scaled model with its own check; the prior 8.6 mm median and 4.5-5.7 cm ankle height above the sole are compared, not copied"
       ],
-      "next_action": "Independent verifier checks acceptance against the readback and ledgers; then RB03 segmentation runs on the merged tables.",
+      "next_action": "Build the formal sign test on all leg channels of AB12, AB15, AB17, AB19, AB23 and AB28, and check pelvis tilt against the authors' marker fit range from GT21-C01. Verifier found the tables themselves correct; see docs/maintainers/handoffs/GT21-RB02-RB04-verify.json.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
         "docs/quality/audits/gt21-c01-conventions.json",
         "docs/quality/audits/gt21-force-geometry.json",
         "docs/maintainers/handoffs/GT21-RB02-RB04.json",
-        "converted_datasets/reconversion_v2/gt21_rb_pass_readback_20261124/readback.json"
+        "converted_datasets/reconversion_v2/gt21_rb_pass_readback_20261124/readback.json",
+        "docs/maintainers/handoffs/GT21-RB02-RB04-verify.json",
+        "docs/quality/audits/gt21-rb02-rb04-verify-results.json"
       ],
       "handoff": {
         "last_checked_at_utc": "2026-11-24T20:52:02+00:00",
@@ -7995,6 +8007,9 @@
           "contributor_tools/run_gt21_rb_readback.py",
           "tests/test_gt21_rb_pass.py",
           "docs/maintainers/handoffs/GT21-RB02-RB04.json"
+        ],
+        "evidence": [
+          "docs/maintainers/handoffs/GT21-RB02-RB04-verify.json"
         ]
       },
       "notes": [
@@ -8002,7 +8017,12 @@
       ],
       "owner": "claude-worker-gt21-rb02-rb04",
       "started_at_utc": "2026-11-24T20:00:37+00:00",
-      "merged_pass_note": "Merged pass RB02+RB04 (one read per recording), code in contributor_tools/gt21_rb_pass.py and run_gt21_rb_pass.py; no job run yet. RB03 dependency dropped per Jose 2026-11-24: RB03 now runs on the merged pass outputs."
+      "merged_pass_note": "Merged pass RB02+RB04 (one read per recording), code in contributor_tools/gt21_rb_pass.py and run_gt21_rb_pass.py; no job run yet. RB03 dependency dropped per Jose 2026-11-24: RB03 now runs on the merged pass outputs.",
+      "verifier": {
+        "checked_at_utc": "2026-11-24T21:49:51+00:00",
+        "verdict": "sent back to ready: three acceptance items not run; data re-derived and correct",
+        "evidence": "docs/maintainers/handoffs/GT21-RB02-RB04-verify.json"
+      }
     },
     {
       "id": "GT21-RB05",
