@@ -6,7 +6,13 @@
   "resource_record": {
     "before": "Linux available 8252 MiB (floor 3584), Windows free 5850 MiB (floor 2816); no MATLAB process; host otherwise idle for this turn",
     "probes": "all read-only, one file at a time, 1 MiB streamed, nice 19 / ionice idle, /usr/bin/time -v; nothing written under converted_datasets/ or source folders; scratch scripts in /tmp/v21 only",
-    "peak_rss_mib": {"receipt_check": 18.1, "member_sample": 24.1, "recount_and_channel_stat": 17.1, "powershell_text_probes": 18.4, "pytest_14_tests": 96.2},
+    "peak_rss_mib": {
+      "receipt_check": 18.1,
+      "member_sample": 24.1,
+      "recount_and_channel_stat": 17.1,
+      "powershell_text_probes": 18.4,
+      "pytest_14_tests": 96.2
+    },
     "left_running": "nothing; no MATLAB started; no Windows process other than short read-only PowerShell queries"
   },
   "part_A_python_outputs": {
@@ -25,8 +31,20 @@
     "3_recording_counts": {
       "result": "pass",
       "method": "directory listing only: conditions/*.mat per session/mode, then os.stat of the 11 other channel names; no file opened",
-      "local_16": {"levelground": 506, "ramp": 1015, "stair": 665, "treadmill": 115, "recordings": 2301},
-      "six_new": {"levelground": 174, "ramp": 379, "stair": 251, "treadmill": 42, "recordings": 846},
+      "local_16": {
+        "levelground": 506,
+        "ramp": 1015,
+        "stair": 665,
+        "treadmill": 115,
+        "recordings": 2301
+      },
+      "six_new": {
+        "levelground": 174,
+        "ramp": 379,
+        "stair": 251,
+        "treadmill": 42,
+        "recordings": 846
+      },
       "channels": "all 12 channel files exist for all 3,147 recordings (0 missing); every channel size equals recording_ledger.jsonl (0 mismatches); the set of (subject, session, mode, recording) equals the ledger's 3,147 rows exactly."
     },
     "4_source_folder": {
@@ -88,5 +106,15 @@
     "tests": "OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MPLBACKEND=Agg nice -n 19 ionice -c 3 python3 -m pytest -q tests/test_guarded_launcher_native.py tests/test_run_gt21_rb01.py -> 14 passed in 1.06 s (peak 96 MiB). Coverage limit: fake host for Linux census, Windows census and tree; no test uses the real linux_census."
   },
   "backlog_decision": "GT21-RB01 stays in 'review'. The backlog has one status per task and the label export (acceptance lines 3 to 5) is a deliverable of the same task, so the Python parts cannot be set done separately. Python-part verification result is recorded in the task handoff instead.",
-  "next_action": "Worker applies B1 and B2 (and the SubjectInfo 'data' check), reruns the 14 tests plus launcher tests, rebinds hashes; a second review of the diff; then AB06 dry run, supervised AB06 pilot, then the other 21 one at a time."
+  "next_action": "MATLAB pilot on AB06",
+  "part_B_v2": {
+    "reviewed_commit": "62af10a (diff against 8f34062)",
+    "verdict": "APPROVED for the AB06 dry run and supervised pilot, with one condition and one non-blocking fix",
+    "B1": "pass. Launcher diff is exactly the one is_launcher_cli line (plus docstring); nothing else in guarded_launcher.py changed. Look-alike argv tested: only python -m contributor_tools.guarded_launcher[_native] with exact module name is True; '..._native.x', '-m evil <name>', '-c ... -m <name>', non-python 'bash -m', and a script path named guarded_launcher_native.py are all False. The exemption applies only to pid == os.getpid() in linux_census, so no other process can be exempted by copying the argv.",
+    "B2": "pass. adopt_orphan only accepts Windows processes with name like 'matlab*' AND a command line containing the 16-hex random nonce of this run (PS_NONCE; nonce re-validated against the strict pattern). An unrelated MATLAB cannot match. Adopted identity (pid, creation time) is written to receipt 'adoptions', and tree_identity_ok then requires the nonce again before any taskkill. Missing root + no orphan + missing outputs now ends failed_outputs_missing (not clean). A start_matlab exception also searches by nonce and otherwise records launcher_error. Loop ends: adoption excludes the already-recorded pid, so it cannot spin.",
+    "other_fixes": "pass. .m uses info.data, else the single variable, else errors; jsonencode wrapped in try/catch writing a read_ok=false line. Script still reads only SubjectInfo.mat, dir listings and conditions/*.mat and writes only with fopen 'wx' in out_dir.",
+    "condition_found": "Root restrictions can be bypassed with '..': validate_native_spec uses Path parents without normalising, so source_root .../CAMARGO_ET_AL_J_BIOMECH_DATASET/../../../../../../etc and output_root .../converted_datasets/reconversion_v2/../../elsewhere were both ACCEPTED (tested). Condition: the AB06 spec and all later specs must use normalised absolute paths with no '..' (reviewed by hash). Non-blocking one-line fix: in validate_native_spec reject any path with '..' in Path(x).parts, or require os.path.normpath(x) == x for source_root, output_root and receipt_path.",
+    "tests": "nice -n 19 python3 -m pytest -q tests/test_guarded_launcher_native.py tests/test_guarded_launcher.py tests/test_guarded_launcher_verify.py -> 157 passed in 18.4 s, peak 98 MiB. MATLAB not run.",
+    "next_action": "MATLAB pilot on AB06 (preflight dry run first; spec paths normalised; report peak working set, adoptions and any new Windows matlab* helper processes)"
+  }
 }
