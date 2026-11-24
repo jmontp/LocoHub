@@ -7254,7 +7254,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Export GT23 phase and time tables and read them back independently",
-      "status": "review",
+      "status": "done",
       "stage": "conversion",
       "question": "Does every exported observation equal what the source, segmentation, conventions and mass steps say, and is every source recording and authors' window accounted for?",
       "scope": "27 guarded jobs: 3 pilots (AB05 normal_walk_1; AB01 stairs_1_1; AB12 poses_1, seed 20261124) + 12 batches + 12 independent full readbacks. One Parquet shard per participant for phase observations (150 inclusive samples) and for continuous time recordings; identity, task labels and task_info from the authors' grouping (2.0 and 2.5 m/s files as run, skipping files as skip, stair rise 0.152 m citing the paper, pass number renamed, no curb or step-up height); trunk missing; frontal and transverse signs kept and labelled. Closes GT23-F01.",
@@ -7282,7 +7282,7 @@
         "Labels: the 33 normal-walk event files are run or skip; no curb or step-up height unless a source gives one.",
         "Right-plate-missing recordings show the gap, not zeros; shards stream by row group under the 768 MiB cap."
       ],
-      "next_action": "Independent verifier checks GT23-E01 against the acceptance criteria (docs/maintainers/handoffs/GT23-E01.json); then GT23-F01 closes.",
+      "next_action": "Done (independent verification: docs/maintainers/handoffs/GT23-E01-verify.json). Flags for Q01/R01: 115 'shuffle' cycles are exported as level_walking; 2,463 unlabelled walking cycles are functional_task; both legs per window span; then GT23-F01 closes.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT23-rebuild-plan.json",
@@ -7309,7 +7309,8 @@
           "docs/maintainers/backlog.json",
           "docs/maintainers/backlog.html",
           "docs/quality/audits/gt23-e01-*"
-        ]
+        ],
+        "verification": "GT23-E01-verify.json: done"
       },
       "owner": "claude-worker-gt23-e01",
       "started_at_utc": "2026-11-24T03:33:48+00:00"
