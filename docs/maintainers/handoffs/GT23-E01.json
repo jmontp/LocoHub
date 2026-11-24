@@ -1,0 +1,154 @@
+{
+  "task_id": "GT23-E01",
+  "status": "ready_for_independent_review",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-24T04:25:00+00:00",
+  "summary": "Export of all 488 GT23 recordings to per-participant roots (phase.parquet and time.parquet plus lineage files) and a separate independent full readback of every observation. 8,831 gait cycles + 10,254 transfers (5,127 window-rule spans x 2 reference legs) + 488 continuous recordings; 1,415 S01 exclusions all listed with reasons; 9,378 of 13,119 authors' windows exported and the other 3,741 each carry S01's stated reason. Readback: all 12 participants pass 0 failed checks (max difference to the C06/M01 inputs 2.0e-9 absolute on forces of a thousand newtons, i.e. float precision). Independent verifier NOT yet run.",
+  "decisions_applied": [
+    "D-GT23-C01-1 = C (forward and sideways force only in the 11 forward-walking tasks; lab axes elsewhere)",
+    "D-GT23-C01-2 (own segmentation)",
+    "D-GT23-C05-2/3 (mass rescale of 52, AB03 113.5 kg) through M01",
+    "D-REF-1/2 (gravity-referenced segment angles, foot-frame pressure point) through C06",
+    "knee flexion and knee flexor moment positive: knee moment = minus the published knee_angle moment, applied here (M01 left the sign to E01); power unchanged"
+  ],
+  "agent_defaults_logged": [
+    "Window-rule spans have no single leg, so each accepted span is exported for the left AND the right reference leg with the same observation_id (observation_type transfer); contra columns are the other leg over the same absolute span. Doubles the 5,127 spans to 10,254 transfer observations; a release may keep one leg per span if J. prefers (scope question for R01, not decided here).",
+    "'The time series': every recording, including the 424 that also have strides, gets one continuous_recording observation in time.parquet (left/right column names, reference_side none); strides and spans cite it through source_start/end_time_s. The 64 recordings with no defensible cycle are continuous only.",
+    "Tasks must be in the contract's task registry. Authors' label -> family: normal_walk 0-6/1-2/1-8 level_walking, 2-0/2-5 run, shuffle level_walking (task_id level_shuffle), skip agility_drill/skip; incline up/down -> incline_walking/decline_walking (incline_deg negative for decline); jump hop -> hop. Spans with no authors' window (label unknown) in normal_walk, incline_walk and jump get task functional_task with task_id *_unlabelled because the label decides the family there; elsewhere the family follows the recording name (stairs up/down from the README pass list, odd pass up, even down). Source task name is always in task_info.source_task.",
+    "Speeds, inclines and weights appear only where the authors' label or the README states them (README task-level: incline_walk 1.2 m/s, obstacle_walk 1.0 m/s); weighted_walk gets no speed (README 1.0 vs plotting code 1.25 unresolved, noted); stair rise 0.152 m cites the paper Table 1 as in the plan; pass number renamed pass_number; no curb or step-up height.",
+    "Held columns: every exported column with no finite value in an observation is listed in held_signals with a reason (C06 reason where C06 held it; plate-missing reason for that leg's moments and powers; otherwise 'not a number' at observation or recording level). Columns are always present.",
+    "Extra frontal/transverse columns kept with the source sign (hip adduction and rotation, subtalar); trunk columns are not exported (no trunk angle exists)."
+  ],
+  "root_names": {
+    "batches": "converted_datasets/reconversion_v2/gt23_e01_batch_<AB..>",
+    "readbacks": "converted_datasets/reconversion_v2/gt23_e01_audit_<AB..>",
+    "export_summary": "converted_datasets/reconversion_v2/gt23_e01_summary/summary.json",
+    "readback_summary": "converted_datasets/reconversion_v2/gt23_e01_audit_summary/audit_summary.json",
+    "pilot": "converted_datasets/reconversion_v2/gt23_e01_pilot_AB05 (AB05 normal_walk_1 gait, jump_1 window-rule with no authors' windows, poses_1 continuous)",
+    "pilot_readbacks": "gt23_e01_pilot_audit_AB05 (failed on a too tight float tolerance, 1.4e-12 near a zero crossing; kept as evidence) and gt23_e01_pilot_audit_AB05_r2 (pass, with the tolerance made relative to the signal range, 1e-11)"
+  },
+  "files_per_root": [
+    "phase.parquet",
+    "time.parquet",
+    "observations.jsonl (lineage: identity, hashes of C06 and M01 inputs, indices, labels, held columns)",
+    "exclusions.jsonl",
+    "authors_windows.jsonl (fate of each authors' window)",
+    "recordings.jsonl (disposition and counts per recording)",
+    "README.md",
+    "run_summary.json"
+  ],
+  "counts": {
+    "recordings": 488,
+    "observations_by_kind": {
+      "continuous_recording": 488,
+      "individual_cycle": 8831,
+      "transfer": 10254
+    },
+    "phase_observations": 19085,
+    "phase_rows": 2862750,
+    "time_rows": 6397787,
+    "continuous_only_recordings": 64,
+    "exclusions": 1415,
+    "exclusions_by_reason": {
+      "force_not_a_number_inside_stride": 44,
+      "last_contact_has_no_following_contact": 389,
+      "longer_than_5_s": 16,
+      "shorter_than_0.25_s": 593,
+      "shorter_than_0.3_s": 6,
+      "span_boundary_next_to_missing_marker": 367
+    },
+    "authors_windows": 13119,
+    "authors_windows_exported": 9378,
+    "authors_windows_not_exported": 3741,
+    "mass_note_counts": {
+      "cannot_be_told": 434,
+      "own_mass_confirmed": 2,
+      "rescaled_estimated": 45,
+      "rescaled_exact": 7
+    },
+    "export_size_gib_approx": 4.06
+  },
+  "readback": {
+    "script": "contributor_tools/audit_gt23_e01.py (imports nothing from gt23_export.py or run_gt23_e01.py)",
+    "status": "pass",
+    "failures": {},
+    "observations_read_back": {
+      "continuous_recording": 488,
+      "individual_cycle": 8831,
+      "transfer": 10254
+    },
+    "export_counts_equal_readback": true,
+    "max_abs_diff_phase_values": 2.0177139958832413e-09,
+    "how_different": "names decoded by regex from the standard's naming (exporter: template table); phase values re-sampled by linear interpolation in TIME (exporter: integer index arithmetic); time table bit-equal; label rules from the README text; counts re-derived from S01 files",
+    "checks_per_observation": "identity and 150-sample grid, constant metadata, source clocks, all 92 columns against C06/M01, finite patterns, knee moment sign, BW x mass x g = N with README masses (AB03 113.5), held_signals = exactly the missing columns, labels only where S01 matched, speeds and inclines traceable to README text, stairs direction and 0.152 m, no curb or step height, mass note against the M01 ledger, AB09/AB07/curb_up notes, lineage hashes",
+    "accounting": "observation set equals S01 expected set exactly (both ways); exclusions equal S01 excluded list with reasons and none exported; every authors' window exported or has a reason; 488 recordings once each; 64 continuous-only have no phase rows",
+    "tolerance": "rtol 1e-9 + atol 1e-12 + 1e-11 x signal range inside the span (time vs index interpolation)"
+  },
+  "tamper_tests": "tests/test_gt23_e01.py has 23 synthetic tests; the readback fails on a changed value, an un-negated knee moment, a zero-filled missing plate, a dropped observation and an invented speed.",
+  "peak_rss_mib_launcher": {
+    "pilot": 205.0,
+    "pilot_audit_r2": 282.7,
+    "summary": 109.6,
+    "audit_summary": 66.6,
+    "batch_AB01": 233.3,
+    "audit_AB01": 302.5,
+    "batch_AB02": 244.1,
+    "audit_AB02": 319.0,
+    "batch_AB03": 228.3,
+    "audit_AB03": 339.1,
+    "batch_AB05": 224.2,
+    "audit_AB05": 317.3,
+    "batch_AB06": 223.2,
+    "audit_AB06": 327.6,
+    "batch_AB07": 228.5,
+    "audit_AB07": 329.4,
+    "batch_AB08": 219.2,
+    "audit_AB08": 289.2,
+    "batch_AB09": 221.0,
+    "audit_AB09": 311.6,
+    "batch_AB10": 220.7,
+    "audit_AB10": 311.9,
+    "batch_AB11": 221.6,
+    "audit_AB11": 279.5,
+    "batch_AB12": 219.6,
+    "audit_AB12": 311.8,
+    "batch_AB13": 223.6,
+    "audit_AB13": 310.8
+  },
+  "jobs": "1 pilot export, 2 pilot readbacks (first failed on tolerance), 12 batches, 1 export summary, 12 readbacks, 1 readback summary; every launched job: dry run first, memory checked before launch (Linux available about 8.8 GB, Windows free 3.0-3.3 GB), verify-cleanup proven, one job at a time. Receipts docs/quality/audits/gt23-e01-<job>-launcher-receipt.json and -spec.json.",
+  "code_frozen": {
+    "note": "export code unchanged between the pilot and the 12 batches (batches bind the same hashes); audit code changed once after the first pilot readback (tolerance) and the 12 readbacks bind the changed file",
+    "gt23_export.py": "e66e75b6082466a8...",
+    "run_gt23_e01.py": "316ba41efa19b785...",
+    "audit_gt23_e01.py": "477f3610fcb448aa..."
+  },
+  "odd_or_limits": [
+    "Pilot differs from the task scope's three-participant pilot: all three pilot recordings are from AB05 (one gait, one window-rule with no authors' windows, one continuous) so one job covers them; stairs, curb_up and AB03/AB07/AB09 rules were exercised only in the batches and the readback.",
+    "One ad hoc read-only contract probe of the AB05 pilot phase table reached 319 MiB peak RSS (limit for probes 300 MiB); the other probe 182 MiB. Readback jobs peaked 280-339 MiB under the launcher cap (768 MiB address space).",
+    "Contract check (inspect_contract) was run only on the pilot tables: phase table passes with 166 observations and no issues; one time recording (poses_1) passes. The full export has not been run through the contract or the release admission (R01).",
+    "Window-rule spans: see agent defaults (two legs). S01 limits carry over: our spans match the authors' windows poorly in curb and cutting; 3,741 authors' windows have no exported observation, each with S01's reason.",
+    "Unknown-label spans are labelled functional_task for normal_walk (1,716), incline_walk (747) and jump (119) so no profile will treat them as walking by accident.",
+    "Time table 6.40 M rows (not the plan's larger figure); phase table 2.86 M rows; about 4.1 GiB on disk. Release admission (256 MiB, 500,000 rows) is R01's question; no limit was raised.",
+    "The AB07 right-foot note and the AB09 divisor note are carried on every AB07 recording and exactly the two AB09 recordings (dynamic_walk_1, weighted_walk_1) respectively; the curb_up hold shows as held_signals on the foot-frame pressure point of curb_up observations."
+  ],
+  "remaining": [
+    "Independent verifier (second agent): re-derive from source a sample of observations with its own code, check the three decisions logged above, run the contract on a sample of shards, and check the counts."
+  ],
+  "next_action": "Independent verifier checks GT23-E01; then GT23-F01 closes and GT23-Q01/R01 unblock.",
+  "changed_files": [
+    "contributor_tools/gt23_export.py",
+    "contributor_tools/run_gt23_e01.py",
+    "contributor_tools/audit_gt23_e01.py",
+    "tests/test_gt23_e01.py",
+    "docs/maintainers/handoffs/GT23-E01.json",
+    "docs/maintainers/backlog.json",
+    "docs/maintainers/backlog.html",
+    "docs/quality/audits/gt23-e01-*"
+  ],
+  "evidence_paths": [
+    "converted_datasets/reconversion_v2/gt23_e01_summary/summary.json",
+    "converted_datasets/reconversion_v2/gt23_e01_audit_summary/audit_summary.json",
+    "docs/quality/audits/gt23-e01-audit-summary-launcher-receipt.json",
+    "docs/quality/audits/gt23-e01-summary-launcher-receipt.json"
+  ]
+}

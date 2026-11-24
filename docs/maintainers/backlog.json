@@ -7254,7 +7254,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Export GT23 phase and time tables and read them back independently",
-      "status": "blocked",
+      "status": "review",
       "stage": "conversion",
       "question": "Does every exported observation equal what the source, segmentation, conventions and mass steps say, and is every source recording and authors' window accounted for?",
       "scope": "27 guarded jobs: 3 pilots (AB05 normal_walk_1; AB01 stairs_1_1; AB12 poses_1, seed 20261124) + 12 batches + 12 independent full readbacks. One Parquet shard per participant for phase observations (150 inclusive samples) and for continuous time recordings; identity, task labels and task_info from the authors' grouping (2.0 and 2.5 m/s files as run, skipping files as skip, stair rise 0.152 m citing the paper, pass number renamed, no curb or step-up height); trunk missing; frontal and transverse signs kept and labelled. Closes GT23-F01.",
@@ -7282,29 +7282,37 @@
         "Labels: the 33 normal-walk event files are run or skip; no curb or step-up height unless a source gives one.",
         "Right-plate-missing recordings show the gap, not zeros; shards stream by row group under the 768 MiB cap."
       ],
-      "next_action": "After GT23-M01 is done: write the export module, then dry-run the AB05 normal_walk_1 pilot.",
+      "next_action": "Independent verifier checks GT23-E01 against the acceptance criteria (docs/maintainers/handoffs/GT23-E01.json); then GT23-F01 closes.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT23-rebuild-plan.json",
         "docs/quality/audits/gt23-rebuild-probes.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T20:38:07+00:00",
-        "summary": "Planned. Replaces the old MATLAB time and phase converters for GT23.",
+        "last_checked_at_utc": "2026-11-24T04:06:52+00:00",
+        "summary": "Exported 488 recordings: 8,831 cycles, 10,254 transfers (5,127 spans x 2 legs), 488 continuous; 1,415 S01 exclusions listed; 9,378 of 13,119 authors windows exported, rest carry S01 reasons. Independent readback of all 12 participants passes, 0 failed checks. Verifier not yet run.",
         "checks": [
-          "Plan written from read-only probes only (22 runs, one file at a time, peak RSS 150 to 241 MiB); no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+          "tests/test_gt23_e01.py 23 passed (synthetic; readback fails on tampered value, sign, zero fill, dropped observation, invented speed)",
+          "12 batches and 12 readbacks clean under the guarded launcher (export peak 219-244 MiB, readback 279-339 MiB)",
+          "pilot tables pass inspect_contract (phase 166 observations, one time recording)"
         ],
         "remaining": [
-          "Module; three pilots; 12 batches; 12 readbacks."
+          "Independent verifier",
+          "Contract and release admission on the full export belong to GT23-R01"
         ],
         "changed_files": [
-          "docs/maintainers/handoffs/GT23-rebuild-plan.json",
-          "docs/quality/audits/gt23-rebuild-probes.json",
+          "contributor_tools/gt23_export.py",
+          "contributor_tools/run_gt23_e01.py",
+          "contributor_tools/audit_gt23_e01.py",
+          "tests/test_gt23_e01.py",
+          "docs/maintainers/handoffs/GT23-E01.json",
           "docs/maintainers/backlog.json",
-          "docs/maintainers/backlog.html"
+          "docs/maintainers/backlog.html",
+          "docs/quality/audits/gt23-e01-*"
         ]
       },
-      "blocked_reason": "Waits for GT23-M01 (mass step)."
+      "owner": "claude-worker-gt23-e01",
+      "started_at_utc": "2026-11-24T03:33:48+00:00"
     },
     {
       "id": "HIST-05",
