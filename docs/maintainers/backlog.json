@@ -9185,6 +9185,35 @@
       "answer": "A",
       "answered_at_utc": "2026-11-24T00:00:00Z",
       "note": "José in chat: 'keep the hip as is'."
+    },
+    {
+      "id": "D-REF-4",
+      "task_id": "CORE-07",
+      "status": "answered",
+      "question": "A side-view angle is undefined when the body part points sideways from the walking direction (for example a turning foot). How should the side-view plane be defined?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Lab/walking-direction plane; leave the angle empty beyond 90°",
+          "consequence": "About 2% of samples in turning recordings are empty. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Keep whatever value the calculation gives",
+          "consequence": "Ill-defined values are published. Reversible."
+        }
+      ],
+      "options_order": "By how much is left empty, most first.",
+      "decide_before_recommendation": false,
+      "cost_of_waiting": "GT23 and UM21 angle steps wait.",
+      "recommended": "A",
+      "confidence": "medium",
+      "why": "Avoids publishing meaningless values.",
+      "check": "AB10 meander_1 foot yaw crosses 90° at sample 1954 and the angle sweeps through ±180°.",
+      "answer": "other",
+      "answer_text": "the sideview should be defined along the whole leg, not the lab. ... yup, go for it",
+      "answered_at_utc": "2026-11-24T00:00:00Z",
+      "note": "Implemented in docs/reference: each leg's own vertical plane, perpendicular to its knee flexion axis; the pelvis uses its own forward direction. UM21-S02 and the GT23 angle chain are rerun."
     }
   ]
 }
