@@ -1,0 +1,1164 @@
+{
+ "schema": 1,
+ "slug": "gt23",
+ "display_name": "Georgia Tech 2023",
+ "title": "Georgia Tech 2023 · LocoHub",
+ "css_class": "gt23d",
+ "r01_task_id": "GT23-R01",
+ "bundle": "converted_datasets/reconversion_v2/gt23_r01_review_v10",
+ "handoff": "docs/maintainers/handoffs/GT23-R01.json",
+ "scope": "docs/quality/audits/gt23-problem-scope.json",
+ "verified_date": "2026-11-24",
+ "meta_description": "Georgia Tech 2023 movement data: what we fixed, what we left out, what we checked and what is still limited.",
+ "heading_note": "Local review version, not yet released. Nothing on this page has been approved scientifically.",
+ "lead": "Movement recorded from {subjects} participants: {recordings} recordings of {tasks} tasks, from walking, running and stairs to jumping, lifting and squatting. This is a local review version and is not released. The full version has <strong>{full:,} observations</strong>; the cleaned version has <strong>{filtered:,}</strong>. An observation is one stride ({cycles:,} in the full version), one movement span ({transfers:,}; each of {spans:,} spans is exported once for the left and once for the right leg) or one whole recording ({continuous}). Strides and spans have exactly 150 samples from 0 to 100 percent; whole recordings keep their source sample times.",
+ "overview_figures": [
+  {
+   "src": "page-failures.svg",
+   "question": "How many observations fail each coarse limit, before and after the fixes?",
+   "alt": "Bars of observations failing each coarse limit. Pressure point: 590 before and 108 after. Angle jump: 189 before and 0 after. Angle range: 40 before and 9 after.",
+   "caption": "The limits are coarse physical limits written before any of these data were read. They are not reference ranges. An observation can fail more than one limit."
+  },
+  {
+   "src": "page-left-out.svg",
+   "question": "What was left out, and why?",
+   "alt": "Bars of items left out by reason. The largest are 3,150 authors' windows with no stride of ours near them and 593 strides shorter than 0.25 seconds.",
+   "caption": "Dark bars were left out of both versions at export; blue bars are authors' windows that were not exported; the orange bar is left out of the cleaned version only."
+  },
+  {
+   "src": "page-limitations.svg",
+   "question": "How many observations does each limitation touch?",
+   "alt": "Bars of the number of observations touched by each of 11 limitations; the largest is spans exported for both legs with 10,254.",
+   "caption": "One observation can carry several limitations."
+  }
+ ],
+ "status_words": {
+  "fixed": "Fixed and checked",
+  "documented": "Documented, not a data fix",
+  "not_checked_alone": "Read without failure; not checked on its own"
+ },
+ "status_key": {
+  "fixed": "A fix was run on real data and a second agent checked it. A fix is not scientific approval.",
+  "documented": "The problem is in the source or its description. Nothing in the data was changed to match a preferred shape, and the problem is written down.",
+  "not_checked_alone": "The recording was read without failure, but this card's own question was not checked."
+ },
+ "scope_questions": {
+  "mass": "Which recordings carry another participant's mass?",
+  "units": "Which recordings are covered by the wrong README units?",
+  "ab03mass": "Which recordings got the wrong mass for forces in body weights?",
+  "forceframe": "Which recordings had wrongly labelled horizontal force?",
+  "forward": "Which recordings are in tasks with no single forward direction?",
+  "cop": "Which recordings had a pressure point in the wrong frame?",
+  "signs": "Which recordings needed the knee sign flip?",
+  "segments": "Which recordings lacked pelvis, thigh and shank angles?",
+  "velocity": "Which recordings had a joint speed with an unconfirmed recipe?",
+  "labels": "Which event files carried the wrong task label?",
+  "secondleg": "Which recordings lost the second leg's windows?",
+  "nowindows": "Which recordings had no event window?",
+  "merged": "Which recordings were merged into one window per file?",
+  "fallback": "Which recordings could have used the backup segmentation?",
+  "oneleg": "Which recordings are in tasks with one-leg event files?",
+  "disagree": "Which recordings have a disputed description?",
+  "invented": "Which recordings carried invented heights?",
+  "oversized": "Which recording has the oversized table?",
+  "notreconverted": "Which recordings were still to be converted?"
+ },
+ "scope_note": "Counts in the grids describe the source recordings each problem touched, measured before the fix. Each card says what this version does about them.",
+ "card_updates": {
+  "mass": {
+   "status": "fixed",
+   "short": "52 of 488 recordings rescaled; 436 kept as published",
+   "did": "We multiplied the moments and powers of 52 recordings by the mass the authors used divided by the person's own mass (factors from 0.70 to 1.59, median 1.04). For 7 of the 52 the mass used was worked out exactly; for 45 it is estimated from the force plates. The other 436 recordings stay as published with a note: 434 where the mass used cannot be told and 2 that are confirmed to use the person's own mass. Nothing was refit.",
+   "checked": "A second agent recomputed the list of 52 and every factor from the audit files and the publisher's mass table. In 12 randomly drawn recordings (7 rescaled, 5 kept) the rescaled columns equal the factor times the published values to 2e-16, and the kept recordings are identical to the source.",
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Hip, knee and ankle moments (per kg)",
+     "line": "In the 52 recordings they are now scaled to the person's own mass.",
+     "evidence": "Factor times published value, to 2e-16, in the 7 rescaled recordings that were drawn."
+    },
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Hip, knee and ankle powers (per kg)",
+     "line": "Power carries the same mass, so it got the same factor in the same recordings.",
+     "evidence": "The match between power and moment times speed is the same before and after the rescale (largest difference 1.6e-15 in slope)."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Joint angles and angle speeds",
+     "line": "Mass divides only the moments, so angles do not change with it.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Ground forces in newtons and the pressure point",
+     "line": "They are not divided by this mass.",
+     "evidence": "Newton forces equal the plate columns exactly in all 488 recordings, so no mass is inside them."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "The 45 estimated factors",
+     "line": "They rest on force-plate estimates matched to the nearest listed mass: the remaining error is at most 11 percent (median 4 percent) if the mass used is a listed one. For two AB09 recordings the nearest listed mass is about 5 percent below the estimate.",
+     "evidence": "45 recordings, 3,253 observations carry this note; the 2 AB09 recordings hold 128 of them."
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Agreement with a local newton-metre re-run",
+     "line": "A local re-run exists for 7 recordings. The rescaled values match it to 0.001 N·m in 3 of them, miss by 0.02 to 0.5 percent of the peak in 3, and one could not be lined up. A recording that was never rescaled misses by the same relative amount, so this is a limit of the re-run, not of the mass.",
+     "evidence": "7 recordings, 1,817 observations carry this note."
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Moments and powers in the 436 kept recordings",
+     "line": "They are not shown to carry another mass; they are neither confirmed nor cleared.",
+     "evidence": ""
+    }
+   ]
+  },
+  "units": {
+   "status": "documented",
+   "short": "All 488 recordings; columns are named per kg",
+   "did": "Documented only. In this version the moment and power columns are named per kg (newton-metres per kg and watts per kg), the unit is recorded with every column, and nothing is divided by mass a second time.",
+   "knock_on": "keep"
+  },
+  "ab03mass": {
+   "status": "fixed",
+   "short": "AB03: 40 of 488 recordings now use 113.5 kg",
+   "did": "Forces in body weights for all 40 AB03 recordings now use the publisher's mass of 113.5 kg. The local table's 82.18 kg is never read. Every other participant uses the publisher's table mass.",
+   "checked": "In AB03's standing recording the total vertical force has a median of 1.004 body weights, which implies 113.9 kg; the old 82.18 kg would give 1.39. In 14 randomly drawn recordings the body-weight columns equal the newton columns divided by mass times gravity exactly.",
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Forces in body weights (up, forward, sideways)",
+     "line": "AB03's values are no longer 38 percent too large.",
+     "evidence": "Median 1.004 body weights standing; 0.92 to 1.08 in dynamic tasks with a loaded foot."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Forces in newtons",
+     "line": "They contain no mass.",
+     "evidence": "Newton columns equal the plate columns in all 488 recordings."
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Moments and powers",
+     "line": "They are per kg and are handled by the mass card, not by this mass.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Pressure point and joint angles",
+     "line": "Neither uses a body mass.",
+     "evidence": ""
+    }
+   ]
+  },
+  "forceframe": {
+   "status": "fixed",
+   "short": "Lab-axis force everywhere; forward and sideways force in 11 tasks",
+   "did": "Every recording now carries the horizontal force in lab axes under lab-axis names, in newtons and body weights. The forward and sideways columns are filled only in the 11 forward-walking tasks, turned by the facing direction measured from the pelvis markers, and left empty in the other 15 tasks.",
+   "checked": "A second implementation reproduced the angles, the pressure point and the force columns of the conversion step, and a separate readback compared every exported observation with its inputs (largest difference 2.0e-9 on forces of about a thousand newtons).",
+   "now": "In this version all 488 recordings are exported, not only the 398 that had event windows.",
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Forward and sideways force",
+     "line": "No longer lab-axis values under forward and sideways names: they are filled only where the person walks forward, and lab-axis values keep their own names.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Up-down force",
+     "line": "Up is a lab axis and positive means support.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Published moments and powers",
+     "line": "The authors computed them in the lab frame, so the labelling does not change them.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Facing direction inside a stride",
+     "line": "The person's heading is not constant inside a stride: the median of the largest heading deviation per stride is about 6° and the largest is about 18 to 23°.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Forces and heading",
+     "line": "No coarse limit exists for them, so the structured assessment did not check them.",
+     "evidence": ""
+    }
+   ]
+  },
+  "forward": {
+   "status": "fixed",
+   "short": "15 of 26 tasks keep lab-axis force and pressure point only",
+   "did": "As decided, forward and sideways force and pressure point are filled only for the 11 forward-walking tasks. The other 15 tasks keep lab-axis values only; their forward and sideways columns are empty.",
+   "checked": "The empty columns and their reasons are listed per observation, and a separate readback checked that exactly the missing columns are listed as empty.",
+   "knock_on": [
+    {
+     "verdict": "Left out",
+     "signal": "Forward and sideways force in the 15 tasks",
+     "line": "Empty; the lab-axis values are kept under lab-axis names.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Left out",
+     "signal": "Forward and sideways pressure point in the 15 tasks",
+     "line": "Empty for the same reason; the lab-axis pressure point stays.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Up-down force and joint angles",
+     "line": "Neither needs a forward direction.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Forward walking: stairs and curbs",
+     "line": "The checks of braking, push-off and pressure-point progression gave no answer on stairs, so the facing direction there is not confirmed.",
+     "evidence": ""
+    }
+   ]
+  },
+  "cop": {
+   "status": "fixed",
+   "short": "Foot-frame pressure point built; step-up and curb-up held empty",
+   "did": "The pressure point is now given in the ankle frame, which turns with the foot, inside that leg's side-view plane. Its origin is 100 mm forward of the ankle joint centre along the foot direction. Forward is along the foot, up is perpendicular to it in the plane, and sideways is out of the plane, so toe-out shows as a sideways offset. For step-ups and curb-ups the pressure point is left empty, because the foot is on a raised surface of unknown height.",
+   "checked": "A second implementation reproduced the pressure point to 2e-16 m. The rule was applied to the written values in a separate readback of every observation.",
+   "now": "In this version all 488 recordings are exported. The pressure point is empty where a plate was not loaded, a marker was missing, or the foot stood on a raised surface; each case has a stated reason.",
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Forward, up and sideways pressure point",
+     "line": "Now in the ankle frame with its origin 100 mm forward of the ankle joint centre.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Left out",
+     "signal": "Step-up and curb-up pressure point",
+     "line": "Empty. Step-ups: the foot stands on a step of about 0.5 m of undocumented height (506 observations in 12 recordings). Curb-ups: the heel is 0.20 to 0.23 m above the recorded plate surface (268 observations in 12 recordings). Force and the plate's own pressure point stay.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "AB03 side shuffle 1",
+     "line": "The plate's pressure point lies about half a metre sideways of the marker foot at high load. This is a plate and marker mismatch, not toe-out. 19 observations; 16 fail the limit and are left out of the cleaned version, 3 remain in it.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "AB07 right foot",
+     "line": "The pressure point lies outside the marker foot for about 30 percent of loaded normal-walk samples. The cause is unresolved. 1,711 observations in 40 recordings.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Ground forces",
+     "line": "Forces are separate columns and the frame change does not touch them.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Lab-axis pressure point",
+     "line": "No coarse limit exists for it, so the assessment did not check it.",
+     "evidence": ""
+    }
+   ]
+  },
+  "signs": {
+   "status": "fixed",
+   "short": "Knee flexion positive in angle, speed and moment",
+   "did": "Knee angle, knee speed and knee moment now follow LocoHub's rule (flexion positive). The angles come from our own segment angles, the speeds are recomputed from them, and the knee moment is the published knee moment times −1. Power keeps its sign. Hip and ankle moments are as published.",
+   "checked": "A separate readback of every exported observation checks that the knee moment is the negated published value; it fails if a knee moment is not negated.",
+   "now": "The sign evidence from the source (20 recordings, 141 of 180 channel checks right, 0 wrong, 39 no answer) is unchanged and still covers walking, inclines, declines and stairs in 3 participants only.",
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Knee angle, knee speed and knee moment",
+     "line": "Now flexion positive, as in LocoHub's rule.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Power",
+     "line": "Power keeps its sign when moment and speed flip together.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Tasks other than walking and stairs",
+     "line": "Signs are supported by the source for all tasks but were reproduced from data only for walking, incline, decline and stairs.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Hip sideways motion, hip rotation and the subtalar joint",
+     "line": "They are exported with the source sign as extra columns; no sign rule has been adopted for them.",
+     "evidence": ""
+    }
+   ]
+  },
+  "segments": {
+   "status": "fixed",
+   "short": "Pelvis, thigh, shank and foot angles computed",
+   "did": "We computed pelvis, thigh, shank and foot angles ourselves, as angles measured against gravity. The pelvis is measured in its own plane from the hip-bone markers; each leg is measured in the vertical plane perpendicular to its knee axis, found from the knee markers. Thigh and shank directions come from the authors' scaled body model, the foot from heel and toe markers. Hip, knee and ankle angles are the differences of these. Joint speeds are recomputed from the angles by central difference, without smoothing.",
+   "checked": "A second implementation reproduced the angles to 9e-16 radians. All 488 recordings were scanned for a one-sample jump of more than 90°: only AB13 dynamic walk 1 has one (one whole turn on the right foot and ankle), and it was unwrapped.",
+   "now": "17 recordings lack one of the 22 markers needed; the columns that need it are empty and name the marker.",
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Pelvis, thigh, shank and foot angles",
+     "line": "Computed as the data reference defines them.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Hip, knee and ankle angles and speeds",
+     "line": "Now differences of the segment angles; speeds recomputed.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Left out",
+     "signal": "Angles that need a missing marker",
+     "line": "Empty where a needed marker is missing, for example the right-leg angles of AB13 stairs 1 9 (right knee marker missing).",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Ankle zero point",
+     "line": "Where the ankle angle is zero has not been checked.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Mixed sources",
+     "line": "Pelvis and foot come from markers and thigh and shank from the authors' model, by design, so offsets against the publisher's angles mix the two.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Facing direction used to turn forces",
+     "line": "It is measured from pelvis markers, not from these angles.",
+     "evidence": ""
+    }
+   ]
+  },
+  "velocity": {
+   "status": "documented",
+   "short": "Speeds are recomputed by us; the recipe doubt stays open",
+   "did": "Not a data fix. The publisher's speeds are not stored. The joint speeds in this version are recomputed from our angles by central difference at the source sample rate, without smoothing, so they do not depend on which description is right. Moments and powers are the publisher's values.",
+   "knock_on": [
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Published powers",
+     "line": "Power matches the published moment times our speed.",
+     "evidence": "Median slope 0.99 and median correlation 0.98 in 2,519 leg-joints of recordings that were not rescaled."
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Joint speeds",
+     "line": "No coarse limit exists for them, so the assessment did not check them.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "The authors' own speed recipe",
+     "line": "Which description is right is still open.",
+     "evidence": ""
+    }
+   ]
+  },
+  "labels": {
+   "status": "fixed",
+   "short": "Run and skip follow the authors; shuffle is filed apart",
+   "did": "Task labels follow the authors' grouping. The 2.0 and 2.5 m/s cycles are labelled run (795 cycles in 9 recordings) and the skipping cycles are labelled skip (134 cycles). Shuffle cycles stay under level walking with their own task name (115 cycles in 11 recordings). Walking cycles with no speed or slope label are filed under functional task rather than guessed (2,463 cycles in 36 recordings). The source task name is kept with every observation.",
+   "checked": "The label rules were checked against the README text in a readback of all 19,573 observations. Of the 795 run cycles, 706 had force data for a flight check and all 706 show a flight phase (both feet off the plates).",
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Grouping of strides by task",
+     "line": "Running and skipping cycles are no longer pooled with level walking.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Signal values (angles, forces, moments)",
+     "line": "Only labels changed; values did not.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Shuffle filed as level walking",
+     "line": "The 115 shuffle cycles are not steady walking and should stay out of walking comparisons.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Run label",
+     "line": "The publisher's README describes the 2.0 and 2.5 m/s recordings as walking, while the authors' grouping and the flight check say running.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Labels of the other tasks",
+     "line": "Only the normal-walk labels were audited against the authors' grouping.",
+     "evidence": ""
+    }
+   ]
+  },
+  "secondleg": {
+   "status": "fixed",
+   "short": "Both legs exported; 9,378 of 13,119 authors' windows matched",
+   "did": "We cut the strides and movement spans ourselves, for every leg. Gait strides carry the foot that makes them. Each movement span is exported once for the left and once for the right leg. 9,378 of the authors' 13,119 event windows are matched and exported; each of the other 3,741 has a stated reason in the left-out list.",
+   "checked": "Where a plate is loaded, our strides reproduce the authors' strides exactly in the gait tasks (start and end offset 0 ms): normal walk 1,590 of 1,595 windows, dynamic walk 747 of 749, incline walk 744 of 744, backward walk 572 of 572, weighted walk 166 of 166. A separate readback re-derived the counts.",
+   "now": "This version has 8,831 strides, 10,254 span observations and 488 whole recordings.",
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Stride counts and averages",
+     "line": "Both legs are represented in the affected tasks.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Signal values inside the windows",
+     "line": "Nothing is altered.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Window-rule tasks",
+     "line": "Our spans start within 250 ms of the authors' windows for 60 to 87 percent of windows in jump, lift weight, lunges, sit to stand, squats, step-ups and tire run, but end about a second earlier in squats, lunges, sit to stand and lift weight, because our rule splits one authors' window into two spans. We do not claim our windows equal theirs.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Stairs, side shuffle, curbs and cutting",
+     "line": "Stairs: 136 of 343 authors' windows matched. Side shuffle: 5 of 300. Curb down: 1 of 270. Curb up: 18 of 258. Cutting: 36 of 496.",
+     "evidence": ""
+    }
+   ]
+  },
+  "nowindows": {
+   "status": "fixed",
+   "short": "All 488 recordings are in the package",
+   "did": "Every recording, including the 90 that have no authors' event windows, was given a segmentation rule by our own scripts: 23 use the gait rule, 3 the window rule, and 64 are kept as whole recordings only because no stride or span could be defended. All 488 recordings appear in the package as one whole recording each.",
+   "checked": "A separate readback found each of the 488 recordings exactly once and the 64 whole-recording-only recordings with no stride rows.",
+   "now": "Nothing is missing from the output any more because it lacked an event window.",
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Which tasks a participant did",
+     "line": "All 488 recordings are present, so no task looks as if it was never recorded.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Left out",
+     "signal": "Strides and spans of the 64 whole-recording-only recordings",
+     "line": "None is cut; the whole recording is kept.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Their source files",
+     "line": "All ten channel files exist for every one of them.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Quality of the AB07 treadmill trials",
+     "line": "The README says some were removed for missing force; they are still in the source and were not examined.",
+     "evidence": ""
+    }
+   ]
+  },
+  "merged": {
+   "status": "fixed",
+   "short": "One observation per stride or span",
+   "did": "No windows are merged. Each stride or movement span is its own observation with its own start and end in source time, and each recording appears once, whole, in the time file.",
+   "checked": "A separate readback found the exported set equal to the expected set in both directions, with no duplicate identities.",
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Window contents",
+     "line": "A window no longer includes the time between conditions.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Reference leg",
+     "line": "Gait strides carry the foot that makes them; spans carry both legs.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Signal values",
+     "line": "Only window edges were affected; values are copied.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Spans exported for both legs",
+     "line": "Contralateral columns cover the same absolute time span; no 50 percent shift is assumed. 10,254 observations in 200 recordings.",
+     "evidence": ""
+    }
+   ]
+  },
+  "fallback": {
+   "status": "fixed",
+   "short": "The old backup rule is not used",
+   "did": "The old converters and their backup segmentation are not used. This version is built from our own source reader, our own segmentation and our own conventions, and each step's output is bound by hash to the checked output of the step before.",
+   "checked": "The hashes of every input were checked against the guarded-job receipts by a second agent.",
+   "knock_on": [
+    {
+     "verdict": "Not checked",
+     "signal": "Any old output made with the backup",
+     "line": "Whether the backup ever ran in old output was never checked. None of that output is used.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Source event windows in these tasks",
+     "line": "Every file has source fields, so the source rule applies.",
+     "evidence": ""
+    }
+   ]
+  },
+  "oneleg": {
+   "status": "documented",
+   "short": "Where a plate is missing, that leg's force columns are empty",
+   "did": "Documented. Nothing is invented for a missing leg. Where a leg's plate force is missing in a recording, that leg's moments, powers and forces are empty and the reason is written in the file: this covers 3,241 observations for the second leg's ankle moment, for example.",
+   "knock_on": [
+    {
+     "verdict": "Left out",
+     "signal": "Forces, moments and powers of the missing leg",
+     "line": "Empty with a stated reason.",
+     "evidence": "The held-signal list in the package gives the reason per observation."
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Left-right comparisons",
+     "line": "They cannot be made in these tasks.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Joint angles of both legs",
+     "line": "Angles come from motion capture, not plates, but this was not checked per file.",
+     "evidence": ""
+    }
+   ]
+  },
+  "disagree": {
+   "status": "documented",
+   "short": "Three disputes stay open; weighted walk gets no speed",
+   "did": "Documented, nothing resolved. Weighted walking is given no speed in this version because the README says 1.0 m/s and the authors' plotting code says 1.25 m/s. Turn-and-step spans come from our own window rule.",
+   "knock_on": "keep"
+  },
+  "invented": {
+   "status": "fixed",
+   "short": "Stair rise 0.152 m from the paper; no curb or step height",
+   "did": "The stair rise is 0.152 m, citing the paper's Table 1. The pass number is named pass number. No curb or step-up height is written, because no source gives one. Speeds and inclines appear only where the authors' label or the README states them.",
+   "checked": "A separate readback of every observation checked the stair rise, the speeds and inclines, and that no curb or step height is present.",
+   "knock_on": [
+    {
+     "verdict": "Also wrong, fixed",
+     "signal": "Stair height",
+     "line": "0.152 m instead of 0.15 m.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Left out",
+     "signal": "Curb and step-up heights",
+     "line": "Not written; no local source gives them.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Checked, not affected",
+     "signal": "Signal values",
+     "line": "Only text fields were affected.",
+     "evidence": ""
+    }
+   ]
+  },
+  "oversized": {
+   "status": "not_checked_alone",
+   "short": "Read without failure; this question was not checked on its own",
+   "did": "All 488 recordings were read by the guarded jobs and none failed to read, and AB02 normal walk 1 is in the package. Whether the large transform table of this recording was read in full was not checked on its own.",
+   "knock_on": [
+    {
+     "verdict": "Not checked",
+     "signal": "The seven AB02 normal-walk windows",
+     "line": "Read without failure; whether the large table was used in full was not checked on its own.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Angles, forces and moments of AB02 normal walking",
+     "line": "Not examined separately from the other recordings.",
+     "evidence": ""
+    }
+   ]
+  },
+  "notreconverted": {
+   "status": "fixed",
+   "short": "All 488 recordings converted; local review version exists",
+   "did": "All 488 recordings (4,880 channel files) were read and converted in guarded jobs run one at a time, with the code frozen after pilots. The full run covered 12 participants, passed 28 checks, peaked at 418 MiB and took 769 seconds. The result is the local review version on this page: 19,573 observations in the full version and 19,448 in the cleaned version, with every file hash checked by a second agent.",
+   "checked": "A second agent recomputed all file hashes, checked that the cleaned version is the full version minus 125 failures and nothing else, and compared a random sample of 10 observations with the source.",
+   "knock_on": [
+    {
+     "verdict": "Left out",
+     "signal": "Muscle sensor channels",
+     "line": "The package has no muscle sensor columns.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Open limit",
+     "signal": "Quality ranges",
+     "line": "Only coarse physical limits were applied. They are a draft, not approved reference ranges.",
+     "evidence": ""
+    },
+    {
+     "verdict": "Not checked",
+     "signal": "Time files and the data contract",
+     "line": "The two time files were not run through the contract check.",
+     "evidence": ""
+    }
+   ]
+  }
+ },
+ "fixed_note": "One card per problem. Each card says what was wrong, how much of the source it touched, what we did, how it was checked, and what else it could affect. Example recordings were drawn at random with a recorded seed, not hand-picked. The earlier counts are source counts; the examples are from the source.",
+ "limits_intro": "Every limitation below stays in the data as a note. Nothing is resampled, filled in or relabelled to hide it. Counts come from the package's own limitations list.",
+ "limit_plain": {
+  "ab03_side_shuffle_1_foot_cop": "AB03, side shuffle 1: the force-plate pressure point lies about half a metre sideways of the marker foot at high load. The plate and the markers disagree; this is not toe-out. The values stay in the full version with the failure recorded; failing observations are left out of the cleaned version.",
+  "step_up_cop_held": "Step-ups: the foot stands on a step of about 0.5 m of undocumented height, so the pressure point on the sole is left empty. Force and the plate's own pressure point stay.",
+  "curb_up_cop_held": "Curb-ups: the heel stands 0.20 to 0.23 m above the recorded plate surface, a curb of undocumented height, so the pressure point on the sole is left empty. Force and the plate's own pressure point stay.",
+  "ab07_right_foot_offset": "AB07, right foot: the pressure point lies outside the marker foot for about 30 percent of loaded normal-walk samples, and AB07's ankle offset is the largest of the twelve participants (about −9 to −13°). The cause is unresolved. A missing left ankle marker affects some left-foot values.",
+  "mass_estimated": "Estimated mass factors: for 45 recordings the mass the authors used was estimated from the force plates and matched to the nearest listed mass, and moments and powers were multiplied by that mass divided by the person's own.",
+  "ab09_divisor": "AB09, dynamic and weighted walking: the authors divided by a mass that fits none of the listed masses. We used the nearest listed mass (87.6 kg), which may be off by up to about 5 percent.",
+  "nm_rerun_limit": "Exact mass factors come from a local newton-metre re-run that exists for 7 recordings only. Every other recording is estimated, kept as published, or cannot be told.",
+  "window_span_both_legs": "Movement spans have no single leg, so each accepted span is exported once for the left and once for the right leg, and the observations come in pairs. Opposite-leg columns cover the same absolute time span; no 50 percent shift is assumed.",
+  "shuffle_not_steady_walking": "Shuffle cycles are filed under level walking but are not steady walking.",
+  "unlabelled_walking_under_functional_task": "Walking cycles from recordings with no speed or slope label (normal walk 1 and the incline walks) are filed under functional task. Some show a flight phase (both feet off the plates).",
+  "run_label_check": "Cycles labelled run (2.0 and 2.5 m/s) follow the authors' label, but the publisher's README describes these recordings as walking. Some show a flight phase."
+ },
+ "limit_unchecked_intro": "Signal families with no limit, so not checked: ",
+ "limit_unchecked_plain": [
+  "joint speeds",
+  "joint moments",
+  "joint powers",
+  "ground forces (newtons and body weights)",
+  "lab-axis pressure point",
+  "heading",
+  "the subtalar joint",
+  "hip sideways and rotation moments and powers"
+ ],
+ "exclusion_mode": "manifest_paths",
+ "exclusion_rows": [
+  {
+   "what": "Strides shorter than 0.25 s",
+   "count": [
+    "exclusions_by_reason",
+    "export_exclusion",
+    "shorter_than_0.25_s"
+   ],
+   "where": "Neither version",
+   "why": "Too short to be a stride or span. Left out at export."
+  },
+  {
+   "what": "Strides shorter than 0.3 s",
+   "count": [
+    "exclusions_by_reason",
+    "export_exclusion",
+    "shorter_than_0.3_s"
+   ],
+   "where": "Neither version",
+   "why": "Too short for the gait rule. Left out at export."
+  },
+  {
+   "what": "Strides longer than 5 s",
+   "count": [
+    "exclusions_by_reason",
+    "export_exclusion",
+    "longer_than_5_s"
+   ],
+   "where": "Neither version",
+   "why": "Too long to be one stride. Left out at export."
+  },
+  {
+   "what": "Last foot contact has no next contact",
+   "count": [
+    "exclusions_by_reason",
+    "export_exclusion",
+    "last_contact_has_no_following_contact"
+   ],
+   "where": "Neither version",
+   "why": "Our stride runs from one contact to the same foot's next contact, so the last contact of a pass has no end and no stride can be cut."
+  },
+  {
+   "what": "Span edge next to a missing marker",
+   "count": [
+    "exclusions_by_reason",
+    "export_exclusion",
+    "span_boundary_next_to_missing_marker"
+   ],
+   "where": "Neither version",
+   "why": "The edge of the span sits next to samples with a needed marker missing."
+  },
+  {
+   "what": "Force missing inside the stride",
+   "count": [
+    "exclusions_by_reason",
+    "export_exclusion",
+    "force_not_a_number_inside_stride"
+   ],
+   "where": "Neither version",
+   "why": "The gait rule needs the plate force inside the stride and it has no value there."
+  },
+  {
+   "what": "Authors' windows: none of our strides or spans starts near them",
+   "count": [
+    "exclusions_by_reason",
+    "authors_window_not_exported",
+    "no_record_starts_within_tolerance"
+   ],
+   "where": "Neither version",
+   "why": "No stride or span of ours starts within the matching tolerance (250 ms for spans). Our rule and the authors' disagree here, and nothing was stretched to fit."
+  },
+  {
+   "what": "Authors' windows: the nearest stride or span was left out",
+   "count": [
+    "exclusions_by_reason",
+    "authors_window_not_exported",
+    "nearest_record_excluded"
+   ],
+   "where": "Neither version",
+   "why": "The nearest candidate of ours was itself left out for one of the reasons above."
+  },
+  {
+   "what": "Authors' windows: no stride or span for this leg",
+   "count": [
+    "exclusions_by_reason",
+    "authors_window_not_exported",
+    "no_record_for_this_leg"
+   ],
+   "where": "Neither version",
+   "why": "Our rule found no stride or span for this leg in the recording."
+  },
+  {
+   "what": "Failed a coarse limit",
+   "count": [
+    "exclusions_by_stage",
+    "filtered_variant_only"
+   ],
+   "where": "Cleaned version only",
+   "why": "Kept in the full version with the failure recorded; left out of the cleaned version only."
+  }
+ ],
+ "accounting_note": "Accounting: {total:,} rows. {upstream:,} items are left out of both versions: {export:,} strides or spans at export and {windows:,} authors' windows that were not exported (13,119 authors' windows in all, 9,378 exported). {failed} observations are left out of the cleaned version only. The full version has {full:,} observations and the cleaned version has {filtered:,}, which is the full version minus those {failed}. The list of every left-out item has one row each.",
+ "checked": {
+  "checked": [
+   "Every exported observation was read back by separate code and compared with its inputs: the largest difference is 2.0e-9, which is float precision on forces of about a thousand newtons.",
+   "All file hashes match; the cleaned version is the full version minus 125 failures and nothing else; every phase observation has exactly 150 samples from 0 to 100 percent, and the phase files pass the data contract with no issues.",
+   "Segment angles, joint angles and the pressure point were recomputed by a second implementation to 9e-16 radians and 2e-16 m.",
+   "Mass factors for 52 recordings and the 40 AB03 body-weight columns were recomputed independently.",
+   "Where a plate is loaded, our own strides reproduce the authors' strides exactly in the gait tasks.",
+   "Hip, knee and ankle angles against coarse limits (hip −50 to 150°, knee −30 to 165°, ankle −80 to 50°), angles for jumps of 30° or more between neighbouring samples, the pressure point against 0.5 m forward and 0.3 m up and sideways of the foot, and a left-right side check. 19,448 of 19,573 observations pass; 125 fail.",
+   "Every item left out of either version has a row and a reason in the left-out list: 5,281 rows."
+  ],
+  "not_checked": [
+   "Joint speeds, moments, powers, ground forces, the lab-axis pressure point and heading have no limit, so they were not assessed. A missing or unassessed signal is not evidence of passing.",
+   "Where the ankle angle is zero has not been checked.",
+   "The limits themselves are a draft written before any of these data were read. They are not approved reference ranges.",
+   "The two time files were not run through the data contract.",
+   "Source files were checked against the job receipts, not hashed again from the source.",
+   "The 45 estimated mass factors are estimates; their truth was not checked.",
+   "The cause of the AB07 right-foot offset and of the AB03 side-shuffle plate mismatch is unresolved.",
+   "The forward-direction and force-plate height assumptions for right-plate treadmill recordings were not checked."
+  ],
+  "note": "A passing check is not scientific approval. This page approves the conversion arithmetic and the file structure only."
+ },
+ "phase_note": "Mean (line) and spread of one standard deviation (band) of each signal over the stride, from the cleaned version, for the legs pooled. Colors are the task variants. Moments and ground force are shown as they are released: the assessment did not check them, and they do not mean the signals are scientifically approved.",
+ "phase_columns": [
+  "pelvis_sagittal_angle_rad",
+  "thigh_sagittal_angle_ipsi_rad",
+  "shank_sagittal_angle_ipsi_rad",
+  "foot_sagittal_angle_ipsi_rad",
+  "hip_flexion_angle_ipsi_rad",
+  "knee_flexion_angle_ipsi_rad",
+  "ankle_dorsiflexion_angle_ipsi_rad",
+  "hip_flexion_moment_ipsi_Nm_kg",
+  "knee_flexion_moment_ipsi_Nm_kg",
+  "ankle_dorsiflexion_moment_ipsi_Nm_kg",
+  "grf_vertical_ipsi_BW",
+  "cop_anterior_ipsi_m"
+ ],
+ "plain": {
+  "pelvis_sagittal_angle_rad": {
+   "name": "Pelvis tilt",
+   "unit": "radians"
+  },
+  "thigh_sagittal_angle_ipsi_rad": {
+   "name": "Thigh angle",
+   "unit": "radians"
+  },
+  "shank_sagittal_angle_ipsi_rad": {
+   "name": "Shank angle",
+   "unit": "radians"
+  },
+  "foot_sagittal_angle_ipsi_rad": {
+   "name": "Foot angle",
+   "unit": "radians"
+  },
+  "hip_flexion_angle_ipsi_rad": {
+   "name": "Hip angle",
+   "unit": "radians"
+  },
+  "knee_flexion_angle_ipsi_rad": {
+   "name": "Knee angle",
+   "unit": "radians"
+  },
+  "ankle_dorsiflexion_angle_ipsi_rad": {
+   "name": "Ankle angle",
+   "unit": "radians"
+  },
+  "hip_flexion_moment_ipsi_Nm_kg": {
+   "name": "Hip moment",
+   "unit": "newton-metres per kg body mass"
+  },
+  "knee_flexion_moment_ipsi_Nm_kg": {
+   "name": "Knee moment",
+   "unit": "newton-metres per kg body mass"
+  },
+  "ankle_dorsiflexion_moment_ipsi_Nm_kg": {
+   "name": "Ankle moment",
+   "unit": "newton-metres per kg body mass"
+  },
+  "grf_vertical_ipsi_BW": {
+   "name": "Up-down ground force",
+   "unit": "body weights"
+  },
+  "cop_anterior_ipsi_m": {
+   "name": "Pressure point, forward in the foot frame",
+   "unit": "metres"
+  }
+ },
+ "phase_panels": [
+  {
+   "label": "Level walking, three speeds",
+   "series": [
+    {
+     "label": "0.6 m/s",
+     "color": "#56B4E9",
+     "task": "level_walking",
+     "task_id": "level_0-6"
+    },
+    {
+     "label": "1.2 m/s",
+     "color": "#009E73",
+     "task": "level_walking",
+     "task_id": "level_1-2"
+    },
+    {
+     "label": "1.8 m/s",
+     "color": "#D55E00",
+     "task": "level_walking",
+     "task_id": "level_1-8"
+    }
+   ]
+  },
+  {
+   "label": "Walking on slopes",
+   "series": [
+    {
+     "label": "10° decline",
+     "color": "#0072B2",
+     "task": "decline_walking",
+     "task_id": "decline_10deg"
+    },
+    {
+     "label": "5° decline",
+     "color": "#56B4E9",
+     "task": "decline_walking",
+     "task_id": "decline_5deg"
+    },
+    {
+     "label": "5° incline",
+     "color": "#E69F00",
+     "task": "incline_walking",
+     "task_id": "incline_5deg"
+    },
+    {
+     "label": "10° incline",
+     "color": "#D55E00",
+     "task": "incline_walking",
+     "task_id": "incline_10deg"
+    }
+   ]
+  },
+  {
+   "label": "Running",
+   "series": [
+    {
+     "label": "2.0 m/s",
+     "color": "#009E73",
+     "task": "run",
+     "task_id": "run_2-0"
+    },
+    {
+     "label": "2.5 m/s",
+     "color": "#D55E00",
+     "task": "run",
+     "task_id": "run_2-5"
+    }
+   ]
+  },
+  {
+   "label": "Stairs",
+   "series": [
+    {
+     "label": "Up",
+     "color": "#D55E00",
+     "task": "stair_ascent",
+     "task_id": "stair_ascent"
+    },
+    {
+     "label": "Down",
+     "color": "#0072B2",
+     "task": "stair_descent",
+     "task_id": "stair_descent"
+    }
+   ]
+  },
+  {
+   "label": "Backward walking",
+   "series": [
+    {
+     "label": "0.6 m/s",
+     "color": "#56B4E9",
+     "task": "walk_backward",
+     "task_id": "backward_0-6"
+    },
+    {
+     "label": "0.8 m/s",
+     "color": "#009E73",
+     "task": "walk_backward",
+     "task_id": "backward_0-8"
+    },
+    {
+     "label": "1.0 m/s",
+     "color": "#D55E00",
+     "task": "walk_backward",
+     "task_id": "backward_1-0"
+    }
+   ]
+  }
+ ],
+ "status_text": {
+  "checked": {
+   "label": "Checked",
+   "note": "Checked against impossible angle ranges."
+  },
+  "offset_unverified": {
+   "label": "Checked; zero point not checked",
+   "note": "Checked only against clearly impossible values. Where the ankle angle is zero has not been checked."
+  },
+  "partly_checked": {
+   "label": "Partly checked",
+   "note": "Checked for sudden jumps only (time file); no plausible range exists to check against."
+  },
+  "pass": {
+   "label": "Checked",
+   "note": "Checked against the coarse limits for the pressure point."
+  },
+  "unchecked": {
+   "label": "Not checked",
+   "note": "No coarse limit exists, so no check was run."
+  }
+ },
+ "column_groups": [
+  {
+   "name": "Pelvis, thigh, shank and foot angles",
+   "unit": "radians",
+   "cols": [
+    "pelvis_sagittal_angle_rad",
+    "thigh_sagittal_angle_ipsi_rad",
+    "thigh_sagittal_angle_contra_rad",
+    "shank_sagittal_angle_ipsi_rad",
+    "shank_sagittal_angle_contra_rad",
+    "foot_sagittal_angle_ipsi_rad",
+    "foot_sagittal_angle_contra_rad"
+   ],
+   "note": "Computed by us against gravity in each leg's side-view plane."
+  },
+  {
+   "name": "Hip and knee angles",
+   "unit": "radians",
+   "cols": [
+    "hip_flexion_angle_ipsi_rad",
+    "hip_flexion_angle_contra_rad",
+    "knee_flexion_angle_ipsi_rad",
+    "knee_flexion_angle_contra_rad"
+   ],
+   "note": "Differences of the segment angles; flexion is positive."
+  },
+  {
+   "name": "Ankle angle",
+   "unit": "radians",
+   "cols": [
+    "ankle_dorsiflexion_angle_ipsi_rad",
+    "ankle_dorsiflexion_angle_contra_rad"
+   ],
+   "note": "Difference of the shank and foot angles."
+  },
+  {
+   "name": "Hip, knee and ankle angle speeds",
+   "unit": "radians per second",
+   "cols": [
+    "hip_flexion_velocity_ipsi_rad_s",
+    "hip_flexion_velocity_contra_rad_s",
+    "knee_flexion_velocity_ipsi_rad_s",
+    "knee_flexion_velocity_contra_rad_s",
+    "ankle_dorsiflexion_velocity_ipsi_rad_s",
+    "ankle_dorsiflexion_velocity_contra_rad_s"
+   ],
+   "note": "Recomputed from our angles by central difference, without smoothing."
+  },
+  {
+   "name": "Hip, knee and ankle moments",
+   "unit": "newton-metres per kg body mass",
+   "cols": [
+    "hip_flexion_moment_ipsi_Nm_kg",
+    "hip_flexion_moment_contra_Nm_kg",
+    "knee_flexion_moment_ipsi_Nm_kg",
+    "knee_flexion_moment_contra_Nm_kg",
+    "ankle_dorsiflexion_moment_ipsi_Nm_kg",
+    "ankle_dorsiflexion_moment_contra_Nm_kg"
+   ],
+   "note": "Published values; knee sign flipped; 52 recordings rescaled to the person's own mass."
+  },
+  {
+   "name": "Hip, knee and ankle powers",
+   "unit": "watts per kg body mass",
+   "cols": [
+    "hip_flexion_power_ipsi_W_kg",
+    "hip_flexion_power_contra_W_kg",
+    "knee_flexion_power_ipsi_W_kg",
+    "knee_flexion_power_contra_W_kg",
+    "ankle_dorsiflexion_power_ipsi_W_kg",
+    "ankle_dorsiflexion_power_contra_W_kg"
+   ],
+   "note": "Published values, with the same rescale as the moments."
+  },
+  {
+   "name": "Hip sideways, hip rotation and subtalar moments and powers",
+   "unit": "newton-metres or watts per kg body mass",
+   "cols": [
+    "hip_adduction_moment_ipsi_Nm_kg",
+    "hip_adduction_moment_contra_Nm_kg",
+    "hip_rotation_moment_ipsi_Nm_kg",
+    "hip_rotation_moment_contra_Nm_kg",
+    "subtalar_angle_moment_ipsi_Nm_kg",
+    "subtalar_angle_moment_contra_Nm_kg",
+    "hip_adduction_power_ipsi_W_kg",
+    "hip_adduction_power_contra_W_kg",
+    "hip_rotation_power_ipsi_W_kg",
+    "hip_rotation_power_contra_W_kg",
+    "subtalar_angle_power_ipsi_W_kg",
+    "subtalar_angle_power_contra_W_kg"
+   ],
+   "note": "Extra columns with the source sign; no sign rule adopted."
+  },
+  {
+   "name": "Ground force in newtons: up-down",
+   "unit": "newtons",
+   "cols": [
+    "grf_vertical_ipsi_N",
+    "grf_vertical_contra_N"
+   ],
+   "note": "Plate values; no mass inside."
+  },
+  {
+   "name": "Ground force in body weights: up-down",
+   "unit": "body weights",
+   "cols": [
+    "grf_vertical_ipsi_BW",
+    "grf_vertical_contra_BW"
+   ],
+   "note": "Newtons divided by body mass times gravity, with the publisher's mass table (AB03: 113.5 kg)."
+  },
+  {
+   "name": "Ground force, forward and sideways (newtons and body weights)",
+   "unit": "newtons or body weights",
+   "cols": [
+    "grf_anterior_ipsi_N",
+    "grf_anterior_contra_N",
+    "grf_lateral_ipsi_N",
+    "grf_lateral_contra_N",
+    "grf_anterior_ipsi_BW",
+    "grf_anterior_contra_BW",
+    "grf_lateral_ipsi_BW",
+    "grf_lateral_contra_BW"
+   ],
+   "note": "Filled only in the 11 forward-walking tasks."
+  },
+  {
+   "name": "Ground force in lab axes (newtons and body weights)",
+   "unit": "newtons or body weights",
+   "cols": [
+    "grf_lab_x_ipsi_N",
+    "grf_lab_x_contra_N",
+    "grf_lab_z_ipsi_N",
+    "grf_lab_z_contra_N",
+    "grf_lab_x_ipsi_BW",
+    "grf_lab_x_contra_BW",
+    "grf_lab_z_ipsi_BW",
+    "grf_lab_z_contra_BW"
+   ],
+   "note": "Horizontal force before any turn to the facing direction."
+  },
+  {
+   "name": "Pressure point in the foot frame",
+   "unit": "metres",
+   "cols": [
+    "cop_anterior_ipsi_m",
+    "cop_anterior_contra_m",
+    "cop_vertical_ipsi_m",
+    "cop_vertical_contra_m",
+    "cop_lateral_ipsi_m",
+    "cop_lateral_contra_m"
+   ],
+   "note": "Ankle frame, origin 100 mm forward of the ankle joint centre; empty for step-ups and curb-ups."
+  },
+  {
+   "name": "Pressure point in lab axes",
+   "unit": "metres",
+   "cols": [
+    "cop_lab_x_ipsi_m",
+    "cop_lab_x_contra_m",
+    "cop_lab_y_ipsi_m",
+    "cop_lab_y_contra_m",
+    "cop_lab_z_ipsi_m",
+    "cop_lab_z_contra_m"
+   ],
+   "note": "The plate's own pressure point."
+  },
+  {
+   "name": "Facing direction",
+   "unit": "unit vector",
+   "cols": [
+    "heading_lab_x_ipsi",
+    "heading_lab_x_contra",
+    "heading_lab_z_ipsi",
+    "heading_lab_z_contra"
+   ],
+   "note": "Measured from the pelvis markers; used to turn the forward and sideways force."
+  }
+ ],
+ "columns_note": "Columns are listed for the stride files; the time files carry the same signals with left and right names instead of this-leg and other-leg names. A column can be empty in an observation where a plate or marker is missing; the reason is written in the file's list of empty signals.",
+ "downloads_text": "<strong>Local review files, not published yet.</strong> The full version, the cleaned version (each as a stride table and a time table), the list of left-out items and the list of limitations exist only on the maintainer's computer. They will get download links when they are released."
+}

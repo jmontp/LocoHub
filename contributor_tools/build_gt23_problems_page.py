@@ -11,8 +11,9 @@ Stages (all run by default, in this order):
            is opened); writes docs/quality/audits/gt23-problem-scope.json
   figures  draws docs/datasets/gt23/figures/*.svg from the scope file (matplotlib, 4.5 in wide,
            fonts of at least 10 pt)
-  page     writes docs/datasets/gt23/problems.html from the scope file only, and copies the page and
-           its figures to site/html/datasets/gt23/
+  page     retired: the problem cards now live on the dataset page, which
+           contributor_tools/build_dataset_review_page.py builds from the scope file and
+           contributor_tools/page_specs/gt23.json (there is no separate problems page any more)
 
 The source listing is a read-only probe: run it alone, serialized with other workers:
   flock /tmp/locohub-probe.lock nice -n 19 ionice -c 3 /usr/bin/time -v python3 \
@@ -1071,8 +1072,9 @@ def main():
         build_scope()
     if stage in ("figures", "all"):
         build_figures()
-    if stage in ("page", "all"):
-        write_page()
+    if stage == "page":
+        print("the known-problems page was folded into the dataset page; run "
+              "python3 contributor_tools/build_dataset_review_page.py contributor_tools/page_specs/gt23.json")
 
 
 if __name__ == "__main__":
