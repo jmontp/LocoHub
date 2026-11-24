@@ -7832,31 +7832,35 @@
         "Memory: pilot shows the launcher peak under its cap (expected 150-300 MiB); one job at a time.",
         "Per-recording plate counts compared with the prior per-recording counts CSV (read as an independent comparison, not imported); differences listed, not tuned away"
       ],
-      "next_action": "José, 2026-11-23: merge the plate/force pass (RB02) and the model-fit/conventions pass (RB04) so each raw recording is read once; keep one job at a time. Segmentation (RB03) must therefore run on the merged pass's outputs or before it; replan job structure accordingly. After GT21-RB01 is done: dry-run the levelground pilot spec (levelground_ccw_fast_01_01) and read back against the existing bilateral pilot.",
+      "next_action": "Independent verifier checks acceptance against the readback and ledgers; then RB03 segmentation runs on the merged tables.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
         "docs/quality/audits/gt21-plate-assignment-fix.json",
-        "docs/quality/audits/gt21-force-fix.json"
+        "docs/quality/audits/gt21-force-fix.json",
+        "docs/maintainers/handoffs/GT21-RB02-RB04.json",
+        "converted_datasets/reconversion_v2/gt21_rb_pass_readback_20261124/readback.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-24T20:10:12+00:00",
-        "summary": "Merged RB02+RB04 pass code written (code only, no job run, no data read). Pilot spec written, not dry-run: docs/quality/audits/gt21-rb-pass-pilot-spec.json (regenerate if code changes; it binds code hashes).",
+        "last_checked_at_utc": "2026-11-24T20:52:02+00:00",
+        "summary": "Merged pass ran for all 22 participants: 3,146 of 3,147 recordings converted, 1 listed exclusion (AB27 treadmill_06_01, too few thigh markers); separate readback passed. Details: docs/maintainers/handoffs/GT21-RB02-RB04.json. Awaiting an independent verifier. Not done: six-participant sign test, plate-count comparison with the earlier CSV, 1e-9 comparison with MATLAB pilots (RB05 readback).",
         "checks": [
-          "tests/test_gt21_rb_pass.py: 38 synthetic tests pass at nice 19 (rigid fit, per-leg plane angles for any heading, composition to 1e-12, foot-frame CoP, plate ownership incl. left-right swap, force signs and outward lateral both legs, model parse, kg weight, whole synthetic recording, runner with fake reader)"
+          "42 synthetic tests pass (tests/test_gt21_rb_pass.py)",
+          "Readback over 3,146 recordings: 0 stored-data failures; 66 seeded independent re-derivations pass (pelvis 1e-16 rad, treadmill force 1e-13 N)",
+          "Pilots r1-r4 and 22 batches under the guarded launcher, one at a time; peak RSS about 310 MB"
         ],
         "remaining": [
-          "Pilot (5 recordings) after go",
-          "Real model file layout and real fp/gc column names are unverified until the pilot",
-          "Sign test of six new participants",
-          "Compare plate counts with prior counts CSV and MATLAB-fixed pilots within 1e-9 (needs phase resampling in readback)",
-          "Freeze, batches, readback"
+          "Independent verifier",
+          "Sign test on six new participants",
+          "Plate counts vs earlier CSV",
+          "1e-9 comparison with MATLAB-fixed pilots (RB05 readback)"
         ],
         "changed_files": [
           "contributor_tools/gt21_rb_pass.py",
           "contributor_tools/run_gt21_rb_pass.py",
+          "contributor_tools/run_gt21_rb_readback.py",
           "tests/test_gt21_rb_pass.py",
-          "docs/quality/audits/gt21-rb-pass-pilot-spec.json"
+          "docs/maintainers/handoffs/GT21-RB02-RB04.json"
         ]
       },
       "notes": [
@@ -7962,31 +7966,35 @@
         "All 28 named markers are checked per recording; a missing needed marker gives a listed exclusion; 15 Hz and plate-origin placeholder CoP samples stay missing; peak memory recorded (expected 250-400 MiB).",
         "Ankle centre per subject from the scaled model with its own check; the prior 8.6 mm median and 4.5-5.7 cm ankle height above the sole are compared, not copied"
       ],
-      "next_action": "José, 2026-11-23: merge the plate/force pass (RB02) and the model-fit/conventions pass (RB04) so each raw recording is read once; keep one job at a time. Segmentation (RB03) must therefore run on the merged pass's outputs or before it; replan job structure accordingly. After GT21-RB03 is done and D-GT21-REB-1 is answered: run the levelground pilot with the chosen centre method.",
+      "next_action": "Independent verifier checks acceptance against the readback and ledgers; then RB03 segmentation runs on the merged tables.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
         "docs/quality/audits/gt21-c01-conventions.json",
-        "docs/quality/audits/gt21-force-geometry.json"
+        "docs/quality/audits/gt21-force-geometry.json",
+        "docs/maintainers/handoffs/GT21-RB02-RB04.json",
+        "converted_datasets/reconversion_v2/gt21_rb_pass_readback_20261124/readback.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-24T20:10:12+00:00",
-        "summary": "Merged RB02+RB04 pass code written (code only, no job run, no data read). Pilot spec written, not dry-run: docs/quality/audits/gt21-rb-pass-pilot-spec.json (regenerate if code changes; it binds code hashes).",
+        "last_checked_at_utc": "2026-11-24T20:52:02+00:00",
+        "summary": "Merged pass ran for all 22 participants: 3,146 of 3,147 recordings converted, 1 listed exclusion (AB27 treadmill_06_01, too few thigh markers); separate readback passed. Details: docs/maintainers/handoffs/GT21-RB02-RB04.json. Awaiting an independent verifier. Not done: six-participant sign test, plate-count comparison with the earlier CSV, 1e-9 comparison with MATLAB pilots (RB05 readback).",
         "checks": [
-          "tests/test_gt21_rb_pass.py: 38 synthetic tests pass at nice 19 (rigid fit, per-leg plane angles for any heading, composition to 1e-12, foot-frame CoP, plate ownership incl. left-right swap, force signs and outward lateral both legs, model parse, kg weight, whole synthetic recording, runner with fake reader)"
+          "42 synthetic tests pass (tests/test_gt21_rb_pass.py)",
+          "Readback over 3,146 recordings: 0 stored-data failures; 66 seeded independent re-derivations pass (pelvis 1e-16 rad, treadmill force 1e-13 N)",
+          "Pilots r1-r4 and 22 batches under the guarded launcher, one at a time; peak RSS about 310 MB"
         ],
         "remaining": [
-          "Pilot (5 recordings) after go",
-          "Real model file layout and real fp/gc column names are unverified until the pilot",
-          "Sign test of six new participants",
-          "Compare plate counts with prior counts CSV and MATLAB-fixed pilots within 1e-9 (needs phase resampling in readback)",
-          "Freeze, batches, readback"
+          "Independent verifier",
+          "Sign test on six new participants",
+          "Plate counts vs earlier CSV",
+          "1e-9 comparison with MATLAB-fixed pilots (RB05 readback)"
         ],
         "changed_files": [
           "contributor_tools/gt21_rb_pass.py",
           "contributor_tools/run_gt21_rb_pass.py",
+          "contributor_tools/run_gt21_rb_readback.py",
           "tests/test_gt21_rb_pass.py",
-          "docs/quality/audits/gt21-rb-pass-pilot-spec.json"
+          "docs/maintainers/handoffs/GT21-RB02-RB04.json"
         ]
       },
       "notes": [

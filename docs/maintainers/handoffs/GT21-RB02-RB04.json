@@ -1,0 +1,48 @@
+{
+ "task_id": "GT21-RB02+RB04",
+ "status": "batches_and_readback_done_awaiting_verifier",
+ "scientific_approval": false,
+ "last_checked_at_utc": "2026-11-24T21:10:00+00:00",
+ "summary": "Merged plate/force + conventions pass ran for all 22 participants (3,147 inventory recordings): 3,146 converted, 1 listed exclusion (AB27 treadmill Treadmill_06_01: fewer than 3 thigh fit markers on femur_r). Continuous 200 Hz tables, 3.83 GB. Separate readback passed (see checks).",
+ "code_frozen_sha256": {
+  "contributor_tools/gt21_rb_pass.py": "b199962c508e05c12fdd376175a15acd5d8ad92c622ce74196044d1857db39eb",
+  "contributor_tools/run_gt21_rb_pass.py": "50f61989fcde730a49d68a40d6b8f7f3d306e6ba8311327041238af142c619b6",
+  "contributor_tools/gt21_numeric_source.py": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917"
+ },
+ "readback_code": "contributor_tools/run_gt21_rb_readback.py (separate file; not part of the frozen pass)",
+ "method_changes_found_by_pilots": [
+  "r1: knee centre from femur parent offset put the knee at the hip (models give no fixed femur-side knee location; the knee moves by spline translations). Fixed: knee = tibia fit at the knee child frame; femur route with spline kept as cross-check (knee_route_gap_mm).",
+  "r2: wrapped MultiplierFunction splines were read as unknown. Fixed.",
+  "r4: per-frame geometry hold added (below)."
+ ],
+ "geometry_hold_rule": "Per frame and leg: pelvis, femur or tibia rigid-fit residual over 20 mm, or knee-axis versus lateral-knee-marker angle over 45 degrees, sets that leg's segment and joint angles, speeds and CoP to missing; force and moments kept. Thresholds fixed from the r3 distributions (medians 1-5 mm and 4-10 deg; p95 at most 17 mm and 17 deg), not from pass rates. Ledger: geometry_hold held_frames, by_residual, by_axis per leg; per-frame column geometry_hold_<leg> (1 residual, 2 axis, 3 both).",
+ "outputs": {
+  "batches": "converted_datasets/reconversion_v2/gt21_rb_pass_batch_<ID>_20261124 (22; ledger.jsonl, run_summary.json, <ID>/<mode>/<recording>.parquet)",
+  "readback": "converted_datasets/reconversion_v2/gt21_rb_pass_readback_20261124 and ..._supplement_20261124",
+  "pilots": "gt21_rb_pass_pilot_20261124 (r1), _r2, _r3, _r4 (r4 = r3 five + AB27 and AB12 levelground)"
+ },
+ "receipts": "docs/quality/audits/gt21-rb-pass-batch-<ID>-launcher-receipt.json (AB27 used spec-r4 after three refusals for a foreign worker, docs builds); AB25 clean_success false only because another session's shell appeared in the after-census; cleanup proven.",
+ "checks": {
+  "dispositions": "inventory 3,147 = ledger 3,147; 3,146 converted + 1 excluded; no duplicate, no unlisted Parquet.",
+  "frozen_code": "every batch run_summary code hash equals the files at readback time.",
+  "stored_data": "3,146 recordings, 14,415,683 frames: rows equal ledger, time strictly increasing, no inf, composition hip/knee/ankle to 1e-12, no value inside a held frame, no CoP outside limits or under 0.2 BW; 0 failures.",
+  "independent_rederivation": "66 seeded recordings (3 per participant, 25 frames): pelvis angle from raw markers by scalar loops max diff 1.1e-16 rad; treadmill vertical force equals the named plate to 1.1e-13 N; overground feet never exceed all plates. AB12 treadmill_01_01 hit a MemoryError under the 768 MiB cap in the full readback process and was re-checked in a fresh process (supplement) and passed.",
+  "memory": "batches peak about 286-311 MB RSS; readback 300 MB; all under the 768 MiB address-space cap.",
+  "disk": "3.83 GB written; S: 34 GB free after."
+ },
+ "held_frames": "1,132,257 held leg-frames of 28,831,366 leg-frames (3.9%). By participant, percent of leg-frames: AB06 0.9, AB07 1.8, AB08 1.9, AB09 3.2, AB10 5.3, AB11 5.2, AB12 6.9, AB13 2.1, AB14 2.7, AB15 2.7, AB16 2.1, AB17 1.8, AB18 2.5, AB19 1.3, AB20 4.5, AB21 4.8, AB23 5.5, AB24 3.0, AB25 3.4, AB27 12.6, AB28 4.2, AB30 7.9.",
+ "findings": [
+  "Combined plate: in the three levelground pilot recordings it never overlaps another plate's contact in time and is owned by one foot (consistent with its own plate). Batch ledgers carry simultaneous_owned_plates_samples per leg.",
+  "Left/right ankle-centre height (flat foot, above plate): across 22 participants right minus left median +2.3 mm (range -15 to +14 mm, positive in 14 of 22). The pilot's 1 cm left-low gap was AB06 (+12 mm) and a few others, not systematic. Lateral ankle marker height gap median +4.4 mm, heel marker +0.4 mm. Model ankle offset is the same on both legs per participant. So the scatter is participant-specific; whether it is fit/model error or real posture is not resolved.",
+  "AB27 right thigh fit is poor in the levelground pilot recording (femur residual p95 36 mm, 29% of right-leg frames held)."
+ ],
+ "remaining": [
+  "Independent verifier (requested)",
+  "Sign test on the six new participants (not built)",
+  "Plate-count comparison with the earlier per-recording counts CSV",
+  "1e-9 comparison with MATLAB-fixed pilot forces (needs phase resampling; RB05 readback)",
+  "RB03 segmentation and RB05 export run on these tables",
+  "Combined plate overlap check beyond three recordings (ledger counts available for all)"
+ ],
+ "next_action": "Verifier reviews acceptance criteria against the readback and ledgers; then RB03 on the merged tables."
+}
