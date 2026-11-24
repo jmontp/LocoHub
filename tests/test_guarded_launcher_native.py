@@ -87,6 +87,7 @@ def test_command_text_is_strict():
         gn.matlab_expression('S:\\a', 'S:\\b', 'AB06', 'not-a-nonce')
     text = gn.start_script(gn.matlab_expression('S:\\a b', 'S:\\o', 'AB06', NONCE), 'S:\\scripts', 'S:\\l.log', NONCE)
     assert text.count('Start-Process') == 1 and '-batch' in text and 'gt21_rb01_label_export' in text
+    assert 'cmd.exe' in text and 'RedirectStandard' not in text and NONCE in text and "''S:\\a b''" in text
 
 
 def test_stop_refuses_unverified_identity():
@@ -259,3 +260,12 @@ def test_unrelated_python_process_is_still_counted(tmp_path, monkeypatch):
     census = census_with(tmp_path, monkeypatch, ['python3', '-m', 'contributor_tools.guarded_launcher_native', 's.json'],
                          others={999999: (['python3', '-c', 'print(1)'], str(gl.REPO_ROOT))})
     assert [w['pid'] for w in census['workers']] == [999999]
+
+
+def test_dotdot_paths_are_rejected(patched):
+    for key, value in (('source_root', str(patched / 'src' / '..' / 'src')),
+                       ('output_root', str(patched / 'out' / '..' / 'out' / 'AB06')),
+                       ('output_root', str(patched / 'out' / '..' / 'elsewhere' / 'AB06')),
+                       ('receipt_path', str(patched / 'r' / '..' / 'AB06.json'))):
+        with pytest.raises(gn.NativeSpecError):
+            gn.validate_native_spec(spec_for(patched, **{key: value}))

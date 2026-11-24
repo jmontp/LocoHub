@@ -1,7 +1,7 @@
 function gt21_rb01_label_export(source_root, out_dir, subject, nonce)
 % GT21-RB01 label and subject export for ONE participant. DRAFT: not run; waits for the native-launcher review.
 % Reads only: <source_root>/SubjectInfo.mat and <source_root>/<subject>/<session>/<mode>/conditions/*.mat.
-% Writes only (exclusively, never overwriting) into out_dir: labels_<subject>.jsonl and subject_info_<subject>.json.
+% Writes only (refusing an existing file, never overwriting) into out_dir: labels_<subject>.jsonl and subject_info_<subject>.json.
 % Nothing is converted, filtered, relabelled or inferred. Missing items are written as null, never filled.
 % nonce is only echoed so the launcher can find this MATLAB process in the Windows process list.
     if nargin ~= 4
@@ -49,7 +49,11 @@ function gt21_rb01_label_export(source_root, out_dir, subject, nonce)
     % ---- one JSON line per recording (conditions file) ----
     sessions = dir(fullfile(source_root, subject));
     sessions = sessions([sessions.isdir] & ~startsWith({sessions.name}, '.') & ~strcmp({sessions.name}, 'osimxml'));
-    fid = fopen(fullfile(out_dir, ['labels_' subject '.jsonl']), 'wx');
+    labels_path = fullfile(out_dir, ['labels_' subject '.jsonl']);
+    if isfile(labels_path)  % MATLAB fopen has no exclusive mode: refuse an existing file explicitly
+        error('gt21_rb01_label_export:out', 'labels file already exists: %s', labels_path);
+    end
+    fid = fopen(labels_path, 'w');
     if fid < 0
         error('gt21_rb01_label_export:out', 'labels file already exists or cannot be created');
     end
@@ -81,14 +85,25 @@ function rec = describe_recording(path)
     rec = struct('read_ok', false, 'top_level_fields', {{}}, 'condition_columns', {{}}, 'n_rows', [], ...
         'header_first', [], 'header_last', [], 'label_windows', [], 'label_present', false, ...
         'ramp_incline_column_unique', [], 'ramp_incline_top_level', [], 'stair_height_top_level', [], ...
-        'speed_min', [], 'speed_max', [], 'error', '');
+        'speed_min', [], 'speed_max', [], 'label_table_variable', '', 'trial_start', [], 'trial_end', [], ...
+        'trans_leg_ascent', {{}}, 'trans_leg_descent', {{}}, 'error', '');
     try
         data = load(path);
         rec.top_level_fields = fieldnames(data)';
         if isfield(data, 'stairHeight'), rec.stair_height_top_level = double(data.stairHeight); end
         if isfield(data, 'rampIncline'), rec.ramp_incline_top_level = double(data.rampIncline); end
-        if isfield(data, 'conditions') && istable(data.conditions)
-            c = data.conditions;
+        if isfield(data, 'trialStarts'), rec.trial_start = double(data.trialStarts); end
+        if isfield(data, 'trialEnds'), rec.trial_end = double(data.trialEnds); end
+        if isfield(data, 'transLegAscent'), rec.trans_leg_ascent = cellstr(data.transLegAscent(:))'; end
+        if isfield(data, 'transLegDescent'), rec.trans_leg_descent = cellstr(data.transLegDescent(:))'; end
+        % the source stores the label table in the variable 'labels'; the older converter renames it to conditions
+        c = [];
+        if isfield(data, 'labels') && istable(data.labels)
+            c = data.labels; rec.label_table_variable = 'labels';
+        elseif isfield(data, 'conditions') && istable(data.conditions)
+            c = data.conditions; rec.label_table_variable = 'conditions';
+        end
+        if ~isempty(c)
             rec.condition_columns = c.Properties.VariableNames;
             rec.n_rows = height(c);
             if ismember('Header', c.Properties.VariableNames) && height(c) > 0
@@ -127,7 +142,10 @@ function windows = run_windows(labels, header)
 end
 
 function write_text(path, text)
-    fid = fopen(path, 'wx');
+    if isfile(path)  % MATLAB fopen has no exclusive mode: refuse an existing file explicitly
+        error('gt21_rb01_label_export:out', 'file already exists: %s', path);
+    end
+    fid = fopen(path, 'w');
     if fid < 0
         error('gt21_rb01_label_export:out', 'file already exists or cannot be created: %s', path);
     end

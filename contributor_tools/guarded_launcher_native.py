@@ -7,6 +7,8 @@ hashes, disk floors, census, memory readings and receipt writer. It runs exactly
 
     matlab.exe -batch "gt21_rb01_label_export('<source>','<out>','<AB##>','<nonce>')" -singleCompThread
 
+(run under cmd.exe /c with the redirection done by cmd; the cmd.exe PID is the recorded root of the watched tree)
+
 Differences from run_job, and why each is needed:
 1. The command is NOT free-form. The spec names only subject, source root, output root and receipt; the executable,
    flags, script and function call are constants here, and the script must be bound by sha256. Every substituted
@@ -52,7 +54,7 @@ SCRIPT_DIR = "contributor_tools/conversion_scripts/Gtech_2021"
 SCHEMA = "locohub.guarded_launcher_native.receipt/1"
 TIMEOUT_MAX_S = 1800
 GRACE_S = 30
-POLL_S = 15
+POLL_S = 5
 WORKING_SET_CAP_MIB = 2048
 RUNTIME_FLOOR_MIB = {"linux": 2048, "windows": 2048}
 STARTUP_FLOOR_MIB = {"linux": 3584, "windows": 2816}
@@ -87,6 +89,9 @@ def validate_native_spec(spec, limits=gl.ENVELOPE_LIMITS):
     for key in ("source_root", "output_root", "receipt_path"):
         if not isinstance(s[key], str) or not os.path.isabs(s[key]):
             raise NativeSpecError(f"{key}: absolute path required")
+    for key in ("source_root", "output_root", "receipt_path"):
+        if ".." in Path(s[key]).parts:
+            raise NativeSpecError(f"{key}: '..' is not allowed (give a normalised path)")
     out, receipt, src = Path(s["output_root"]), Path(s["receipt_path"]), Path(s["source_root"])
     if receipt.suffix != ".json" or out == receipt or out in receipt.parents:
         raise NativeSpecError("receipt_path must be a .json outside output_root")
@@ -127,14 +132,19 @@ def matlab_expression(source_win, out_win, subject, nonce):
 
 
 def start_script(expression, script_dir_win, log_win, nonce):
-    """The one PowerShell text that starts MATLAB. Only values already matched against the strict patterns enter it."""
+    """The one PowerShell text that starts MATLAB. Only values already matched against the strict patterns enter it.
+
+    MATLAB runs under cmd.exe (the recorded root; its command line carries the nonce) with the redirection done by cmd,
+    not by Start-Process: Start-Process -Redirect* kept powershell.exe and the WSL pipe open until MATLAB exited, so the
+    first pilot could not be watched (GT21-RB01 AB06 pilot r1/r2, polls 0). Without those parameters it returns at once."""
     if not (NONCE.fullmatch(nonce) and WIN_PATH.fullmatch(script_dir_win) and WIN_PATH.fullmatch(log_win)):
         raise NativeSpecError("start script inputs outside the reviewed set")
-    arguments = f'-batch "addpath(\'{script_dir_win}\'); {expression}" -singleCompThread'
+    line = (f'/c ""{MATLAB_EXE}" -batch "addpath(\'{script_dir_win}\'); {expression}" -singleCompThread '
+            f'>"{log_win}" 2>"{log_win}.err""')
+    literal = "'" + line.replace("'", "''") + "'"
     return ("$ErrorActionPreference='Stop'\n"
-            f"$p = Start-Process -FilePath '{MATLAB_EXE}' -ArgumentList '{arguments.replace(chr(39), chr(39) * 2)}' "
-            f"-WindowStyle Hidden -PassThru -RedirectStandardOutput '{log_win}' "
-            f"-RedirectStandardError '{log_win}.err'\n"
+            f"$p = Start-Process -FilePath 'C:\\Windows\\System32\\cmd.exe' -ArgumentList {literal} "
+            "-WindowStyle Hidden -PassThru\n"
             "$c = Get-CimInstance Win32_Process -Filter \"ProcessId=$($p.Id)\"\n"
             "[pscustomobject]@{pid=[int]$p.Id; created=$c.CreationDate.ToUniversalTime().ToString('o')} "
             "| ConvertTo-Json -Compress")

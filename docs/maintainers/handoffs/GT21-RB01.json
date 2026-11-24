@@ -1,8 +1,8 @@
 {
   "task_id": "GT21-RB01",
-  "status": "review_python_parts_label_export_pending",
+  "status": "review_python_parts_label_export_ab06_pilot_done",
   "scientific_approval": false,
-  "last_checked_at_utc": "2026-11-24T01:10:00+00:00",
+  "last_checked_at_utc": "2026-11-24T01:35:00+00:00",
   "summary": "Python parts done and checked: six zips extracted (CRC, size and sha256 against the zip directory, manifest and listing), inventory of all 22 (3,147 recordings, per-mode counts and 12 channel files as planned). Launcher blocker cleared (the docs server was stopped by its owner). Label export is pending: the native MATLAB extension draft awaits independent review.",
   "code": {
     "runner": {
@@ -38,11 +38,11 @@
   },
   "inventory_design": "One stat-only job over the 16 local and 6 extracted participants; writes recording_ledger.jsonl (3,147 rows: subject, source, session, mode, recording, size of each of the 12 channel files) and inventory_summary.json with the per-mode count checks. This ledger is the index the merged plate/force plus model-fit pass can read once per recording. It does not open any MAT file.",
   "native_extension": {
-    "status": "DRAFT revised after review Part B (B1, B2, table names, hardening); NOT RUN; awaits re-review",
+    "status": "AB06 pilot run (r5 completed, clean); changes after the re-review need a short re-review; the other 21 not run",
     "module": "contributor_tools/guarded_launcher_native.py",
-    "module_sha256": "65d09c63d2b93686057012ea9998f446c0775574f321be8698c62d3893385131",
+    "module_sha256": "fc40e59247241948df8269840eb730bcafe68270fb88d04bd91eaea67c68bb98",
     "export_script": "contributor_tools/conversion_scripts/Gtech_2021/gt21_rb01_label_export.m",
-    "export_script_sha256": "6374b95561669c2a5ea25ea7a3c1e997a41424ae3a39b9488ec3bf7ab71a4768",
+    "export_script_sha256": "452fe6687226edeb94a77c96d0ec7194ca918dd53c84a942abac59a6769339a2",
     "exactly_what_it_will_run": "One MATLAB R2023b start per participant, via PowerShell Start-Process (hidden, stdout and stderr to a log on S:): C:\\Program Files\\MATLAB\\R2023b\\bin\\matlab.exe -batch \"addpath('<repo script dir>'); gt21_rb01_label_export('<source root>','<new output folder>','AB##','<run nonce>')\" -singleCompThread. The script reads SubjectInfo.mat and <source>/<ID>/<session>/<mode>/conditions/*.mat only, and writes labels_<ID>.jsonl (one line per recording: Label run windows with Header start/end, rampIncline, stairHeight, Speed range, column names) and subject_info_<ID>.json (all columns, VariableUnits, Weight literal to 17 digits) into the new folder, exclusively. It converts, filters and infers nothing. 22 starts, AB06 first (includes stair_1_l_01_02), local participants read from the repo source folder, the six from the extracted root.",
     "limits_enforced": "timeout <= 1800 s; poll 15 s; Windows working set of the process tree <= 2048 MiB (polled); Windows free >= 2816 MiB at start and >= 2048 MiB while running; Linux available >= 3584 / 2048 MiB; output volume >= 5 GiB; envelope sha, bindings, no Linux or Windows worker (any running MATLAB refuses), one launch per ancestor via the existing ledger. No existing limit is changed.",
     "stop_and_cleanup": "Only the recorded Windows PID tree, only after its creation time and the run nonce in its command line still match; taskkill /T, 30 s grace, then /F /T; afterwards the tree must be proven gone and the Windows census must show no new worker. Never stops by image name.",
@@ -60,6 +60,45 @@
       "table_names": "gt21_rb01_label_export.m reads SubjectInfo via info.data, else the single variable, else errors.",
       "hardening": "source_root restricted to the repo CAMARGO folder and the extracted-six root; output_root to converted_datasets/reconversion_v2; per-recording jsonencode wrapped in try/catch (an error line instead of aborting the participant).",
       "tests": "tests/test_guarded_launcher_native.py 16 passed; tests/test_guarded_launcher.py + tests/test_guarded_launcher_verify.py + tests/test_run_gt21_rb01.py 148 passed (nice 19, one at a time)"
+    },
+    "pilot_AB06": {
+      "attempts": {
+        "r1": "receipt docs/quality/audits/gt21-rb01-labels-AB06-launcher-receipt.json: script bug (MATLAB fopen has no exclusive mode \"wx\"); no data written",
+        "r2": "script fixed (explicit isfile check); completed with outputs but the launcher could not watch it: Start-Process -Redirect* kept powershell and the WSL pipe open until MATLAB exited, so the first tree query came after MATLAB had finished (polls 0). Output kept as evidence only.",
+        "r3": "start rewritten: MATLAB now runs under cmd.exe /c with cmd doing the redirection (cmd.exe is the recorded root, nonce in its command line). Watched (polls 1), but the label table was empty because the script looked for variable \"conditions\"; the source variable is \"labels\".",
+        "r4": "refused_precondition: my own neutral process sampler had \"MATLAB.exe\" in its arguments and tripped the census; receipt kept.",
+        "r5": "script reads \"labels\" (falls back to \"conditions\") and records trialStarts, trialEnds, transLegAscent, transLegDescent. Completed, clean_success true."
+      },
+      "result_r5": {
+        "receipt": "docs/quality/audits/gt21-rb01-labels-AB06-launcher-receipt-r5.json",
+        "wall_time_s": 25.3,
+        "adoptions": [],
+        "polls": 1,
+        "peak_tree_working_set_polled_mib": 216.1,
+        "peak_working_set_independent_sampler_mib": 960,
+        "sampler_note": "a separate neutral PowerShell sampler (1 Hz, MATLAB.exe plus matlab.exe stub, helpers excluded) saw 960 MiB at peak; the 15 s poll sampled once, early. Cap 2048 MiB not approached. Consider POLL_S = 5 before the other 21.",
+        "min_windows_free_mib": 4872.1,
+        "min_linux_available_mib": 8265.1,
+        "stop_actions": [],
+        "windows_new_workers": [],
+        "process_tree_observed": "matlab.exe stub stays alive as parent of the real MATLAB.exe for the whole run (B2 premise settled: no orphan); MathWorksServiceHost and CrashReporter are MathWorks helpers that outlive the job and are not flagged"
+      },
+      "verify_cleanup_note": "guarded_launcher verify-cleanup reports proven false for native receipts (it needs a Linux pgid identity). Cleanup evidence for native receipts is tree_gone and the Windows census in the receipt."
+    },
+    "outputs_AB06": {
+      "folder": "converted_datasets/reconversion_v2/gt21_rb01_labels_20261124_r5/AB06",
+      "files": [
+        "labels_AB06.jsonl",
+        "subject_info_AB06.json"
+      ],
+      "checks": {
+        "recordings": "143 (levelground 30, ramp 63, stair 42, treadmill 8) equal the inventory ledger for AB06, same (mode, recording) set; all read_ok",
+        "weight": "Weight 74.84; 17-digit literal 74.840000000000003; equals the crosswalk literal 74.84; VariableUnits for Weight is \"kg\" (new direct evidence of the mass unit); other columns Age 20, Gender M, Height 1.8 m",
+        "labels": "label table present in 135 recordings (variable \"labels\", columns Header and Label); the 8 treadmill recordings have none. levelground 9 or 10 label windows, every ramp and stair recording 9 windows",
+        "terrain": "every ramp recording has a top-level rampIncline and every stair recording a stairHeight (inches, e.g. 4,5,6,7); none missing",
+        "stair_1_l_01_02": "9 windows: idle, walk-stairascent, stairascent, stairascent-walk, idle, walk-stairdescent, stairdescent, stairdescent-walk, idle; stairHeight 4; trialStarts 40.915, trialEnds 55.445; transLeg l and r",
+        "not_compared": "the 1,680 earlier-checked ramp and stair terrain labels (their evidence file was not opened in this pilot)"
+      }
     }
   },
   "mass_unit_evidence_to_bind": "Weight literals for all 22 are in the cohort crosswalk (participants[].metadata.Weight_literal); the inventory binds that file. Re-reading them from SubjectInfo.mat needs the MATLAB export (pending). STRIDES.m evidence and plate-implied mass are in GT21-rebuild-plan.json probes.",
@@ -72,8 +111,8 @@
   "resource_checks_done": "Disk S: 116 GB free (limit 30). Linux available 8.3 GB, Windows free 6.7 GB at last check. Nothing running from this worker.",
   "jobs_run": 7,
   "remaining": [
-    "Independent review of the Python parts against docs/quality/audits/gt21-rb01-evidence.json",
-    "Label export (22 MATLAB starts, AB06 pilot first) after independent review of contributor_tools/guarded_launcher_native.py"
+    "Short re-review of changes made after the approval: dotdot rejection, start via cmd.exe, script reads \"labels\"",
+    "Decision by José after the pilot: run the other 21 participants (one launch each), then compare the 1,680 terrain labels"
   ],
   "changed_files": [
     "contributor_tools/run_gt21_rb01.py",
@@ -98,7 +137,14 @@
     "docs/quality/audits/gt21-rb01-extract-AB23-launcher-receipt.json",
     "docs/quality/audits/gt21-rb01-extract-AB28-launcher-receipt.json",
     "docs/quality/audits/gt21-rb01-inventory-launcher-receipt.json",
-    "contributor_tools/guarded_launcher.py"
+    "contributor_tools/guarded_launcher.py",
+    "docs/quality/audits/gt21-rb01-labels-AB06-spec.json (r1)",
+    "docs/quality/audits/gt21-rb01-labels-AB06-spec-r2.json",
+    "docs/quality/audits/gt21-rb01-labels-AB06-spec-r3.json",
+    "docs/quality/audits/gt21-rb01-labels-AB06-spec-r4.json",
+    "docs/quality/audits/gt21-rb01-labels-AB06-spec-r5.json",
+    "docs/quality/audits/gt21-rb01-labels-AB06-launcher-receipt*.json",
+    "converted_datasets/reconversion_v2/gt21_rb01_labels_20261124_r2/, _r3/ (kept, not final), _r5/ (final AB06)"
   ],
   "evidence_report": "docs/quality/audits/gt21-rb01-evidence.json",
   "receipts": [
