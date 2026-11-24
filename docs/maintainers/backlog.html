@@ -25,7 +25,7 @@
 <h3><a href="#UM21-X01">UM21-X01 — Inventory omitted UMich markers, forceplates and transfer correspondence</a></h3><p>um21 · P1 · Source inventory</p><p>Which omitted source measurements can be restored without inventing clocks or pairing?</p><p><strong>Start here:</strong> Inventory source channel metadata and propose one bounded source-preserving pilot; defer bilateral pairing/derivatives until exact correspondence is proven.</p>
 <p>Read the task’s inputs and handoff before starting. This page does not start jobs or change task states.</p></section>
 <h2 id="tasks">All tasks</h2>
-<details><summary>View all 120 tasks — 8 ready, 0 in progress, 54 blocked, 4 awaiting review, 54 done</summary>
+<details><summary>View all 120 tasks — 8 ready, 0 in progress, 54 blocked, 3 awaiting review, 55 done</summary>
 <div class="table-scroll"><table><caption>Maintained task states, not live process monitoring</caption><thead><tr><th>Task</th><th>Dataset</th><th>Priority</th><th>Status</th><th>Stage</th><th>Depends on</th></tr></thead><tbody>
 <tr><th scope="row"><a href="#PM-01">PM-01: Inspect stopped jobs and prepare one safe pilot handoff</a></th><td>project</td><td>P0</td><td>Done</td><td>Operations</td><td>—</td></tr>
 <tr><th scope="row"><a href="#PM-02">PM-02: Reconcile every retained job with a current disposition</a></th><td>project</td><td>P0</td><td>Done</td><td>Operations</td><td>—</td></tr>
@@ -87,7 +87,7 @@
 <tr><th scope="row"><a href="#UM21-R02">UM21-R02: Reconcile a local review release for UMich 2021</a></th><td>um21</td><td>P1</td><td>Blocked</td><td>Release</td><td><a href="#UM21-Q02">UM21-Q02</a>, <a href="#CORE-02">CORE-02</a></td></tr>
 <tr><th scope="row"><a href="#GT21-Q01">GT21-Q01: Review quality and scientific limitations for Georgia Tech 2021</a></th><td>gt21</td><td>P1</td><td>Blocked</td><td>Quality</td><td><a href="#GT21-F02">GT21-F02</a>, <a href="#CORE-01">CORE-01</a></td></tr>
 <tr><th scope="row"><a href="#GT21-R01">GT21-R01: Reconcile a local review release for Georgia Tech 2021</a></th><td>gt21</td><td>P1</td><td>Blocked</td><td>Release</td><td><a href="#GT21-Q01">GT21-Q01</a>, <a href="#CORE-02">CORE-02</a></td></tr>
-<tr><th scope="row"><a href="#GT23-Q01">GT23-Q01: Review quality and scientific limitations for Georgia Tech 2023</a></th><td>gt23</td><td>P1</td><td>Review</td><td>Quality</td><td><a href="#GT23-F01">GT23-F01</a>, <a href="#CORE-01">CORE-01</a></td></tr>
+<tr><th scope="row"><a href="#GT23-Q01">GT23-Q01: Review quality and scientific limitations for Georgia Tech 2023</a></th><td>gt23</td><td>P1</td><td>Done</td><td>Quality</td><td><a href="#GT23-F01">GT23-F01</a>, <a href="#CORE-01">CORE-01</a></td></tr>
 <tr><th scope="row"><a href="#GT23-R01">GT23-R01: Reconcile a local review release for Georgia Tech 2023</a></th><td>gt23</td><td>P1</td><td>Blocked</td><td>Release</td><td><a href="#GT23-Q01">GT23-Q01</a>, <a href="#CORE-02">CORE-02</a></td></tr>
 <tr><th scope="row"><a href="#GT24-Q01">GT24-Q01: Review quality and scientific limitations for Georgia Tech 2024</a></th><td>gt24</td><td>P1</td><td>Blocked</td><td>Quality</td><td><a href="#GT24-F01">GT24-F01</a>, <a href="#GT24-S01">GT24-S01</a>, <a href="#CORE-01">CORE-01</a></td></tr>
 <tr><th scope="row"><a href="#GT24-R01">GT24-R01: Reconcile a local review release for Georgia Tech 2024</a></th><td>gt24</td><td>P1</td><td>Blocked</td><td>Release</td><td><a href="#GT24-Q01">GT24-Q01</a>, <a href="#CORE-02">CORE-02</a></td></tr>
@@ -1215,10 +1215,10 @@
 <p><strong>Still needed</strong></p><ul><li>Review this dataset&#x27;s completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope.</li><li>Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked.</li></ul>
 <p><strong>Changed files</strong></p><p>None recorded.</p>
 </details>
-<details id="GT23-Q01"><summary>GT23-Q01 — Review quality and scientific limitations for Georgia Tech 2023 · Review</summary>
+<details id="GT23-Q01"><summary>GT23-Q01 — Review quality and scientific limitations for Georgia Tech 2023 · Done</summary>
 <p><strong>Question:</strong> Which signals and observations are supported, failed, missing, invalid or still unchecked?</p>
 <p><strong>Scope:</strong> Complete retained Georgia Tech 2023 source scope and every exported observation type; any smaller local bundle remains an explicitly separate scope. Rebuilt output only (GT23-E01); 13 guarded jobs: 1 pilot + 12 participant batches.</p>
-<p><strong>Next action:</strong> Independent verifier checks GT23-Q01 against docs/maintainers/handoffs/GT23-Q01.json and the summary; then GT23-R01.</p>
+<p><strong>Next action:</strong> Done (independent verification: docs/maintainers/handoffs/GT23-Q01-verify.json). For GT23-R01: do not filter on L2 in phase observations of long windows (resampling artifact); hold step_up foot-frame pressure point (foot on a ~0.5 m step, plate COPY_Vertical 0.009 m); right-foot angle wraps at +-180 deg are a representation issue.</p>
 <p><strong>Depends on:</strong> <a href="#GT23-F01">GT23-F01</a>, <a href="#CORE-01">CORE-01</a> · <strong>Resources:</strong> Numerical</p>
 <h4>Inputs</h4><ul><li><a href="backlog.json"><code>docs/maintainers/backlog.json</code></a></li><li><code>contributor_tools/common/data_contract.py</code></li><li><code>contributor_tools/DATA_CONTRACT.md</code></li></ul>
 <h4>Deliverables</h4><ul><li>GT23-Q01: scope-specific evidence report with exact source, code and output identities.</li><li>Updated handoff recording findings, coverage, unresolved cases and the next action.</li></ul>

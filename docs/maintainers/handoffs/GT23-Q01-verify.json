@@ -1,0 +1,40 @@
+{
+  "task_id": "GT23-Q01",
+  "verifier_role": "independent second agent; own code in /tmp/gt23verify (q.py, q2/q3.py, q4.py, fl.py, su.py, wrap2.py), not importing the worker's runner; every probe under prlimit --as=600 MiB, OMP_NUM_THREADS=1, nice 19, chunked; read-only",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-11-24T11:06:46Z",
+  "summary": "PASS with flags. Receipts and frozen code are right. My own L1/L2/L5 recompute reproduces the failing observation lists exactly for 3 whole participants plus the three named recordings, in degrees (the UM21 radians/degrees failure did not recur). The ~360 degree jumps are angle wraps. Flight and step-up claims hold; step-up cause found. One real weakness for R01: 185 of 189 L2 failures are on the 150-sample grid of long windows, where the limit is not meaningful. Approves the assessment as run; scientific approval none.",
+  "receipts": "Final jobs clean (exit 0, all checks true): pilot_v3, 12 batches, summary. All bind run_gt23_q01_assessment.py 79482156 (the summary also run_gt23_q01_jobs.py 339f12aa), equal to the current files. Pilot v1 (older hash 630f45b9, the S2 side-code bug) and pilot_v2 (same final hash, receipt not clean only for the expected-output name) are superseded as stated; v3 ran 10:31, batches 10:33-10:37, summary 10:37. pytest tests/test_gt23_q01_assessment.py: 10 passed. Peak RSS 235-279 MiB.",
+  "radians_vs_degrees": "Avoided. Columns are _rad in the export; the runner converts to degrees by the column suffix (unknown suffix refuses to run, tested). My recompute converted radians to degrees myself and reproduced every failing set; failure values are reported in degrees (e.g. -360.2 deg, ankle -80.9 deg for an L1 bound of -80).",
+  "recompute": {
+    "sample": "seed 20261130: AB03, AB11, AB01 whole shards (phase and time tables, all 4,886 observations) plus AB13 dynamic_walk_1, AB07 twister_1, AB12 cutting_1",
+    "method": "streamed row batches; L1 bounds hip -50..150, knee -30..165, ankle -80..50 deg; L2 adjacent finite samples change over 30 deg; L5 cop anterior within 0.5 m, vertical and lateral within 0.3 m; set of failing columns per observation",
+    "result": "failing observation counts equal and every per-observation failing column set identical: AB03 114/114, AB11 74/74, AB01 50/50, AB13 dynamic_walk_1 2/2, AB07 twister_1 1/1, AB12 cutting_1 8/8; no observation only on one side. AB13 dynamic_walk_1 sample 19259 is a genuine L2 fail (-360.2 deg at index 19259 in the right foot and ankle)."
+  },
+  "wraps": "AB13 dynamic_walk_1 (butt-kick type recording): the right foot angle sits at about -180 deg (shank about -135 deg, heel kicked up), crosses the +-180 branch between samples 19258 and 19259 (179.95 then -179.98 deg, wrapped step 0.07 deg), and the ankle angle, foot minus shank, jumps from -45 to +315 deg. That is a representation wrap, fixed by unwrapping; the underlying motion is continuous. Whole continuous tables: only 4 L2 samples exist in AB13, all wraps (wrapped step under 30 deg); 4 recordings in total carry L2 in the time table (AB10 meander_1, AB11 start_stop_1 and turn_and_step_1, AB13 dynamic_walk_1; I classified only AB13). L1 samples beyond +-180: 1 of 573 in AB13; the other L1 failures are within +-180, e.g. AB07 twister_1 ankle -80.9 vs -80 deg, which is a marginal real exceedance of a coarse bound (AB07's ankle offset is known), not a wrap.",
+  "l2_on_phase_grids": "185 of the 189 L2 failures are in phase observations. L2 treats adjacent samples as 5 ms apart, but a phase observation spreads 150 samples over its span. The failing phase observations have spacing min 6, median 69, max 392 ms (spans of 1 to 58 s; AB03 curb_down_1: 14-47 s windows, 315 ms spacing; AB12 cutting_1: 11-34 s, 193 ms). The source 5 ms series of those recordings never steps more than 2.7 deg (AB03 curb_down_1) or 3.4 deg (AB12 cutting_1). So the large phase steps are resampling over long authors' windows, not data errors. The 6-60 ms cases are not explained and may be real. Recommendation for R01: do not filter on L2 in phase observations of long windows; treat it as meaningful in the time tables (4 observations) only, or scale it by spacing.",
+  "flight": {
+    "sample": "AB03, AB11, AB01, AB06, all phase cycles with both vertical forces finite for all 150 samples",
+    "run_2-0": "148 of 148 show both legs under 20 N (median share 14 percent)",
+    "run_2-5": "155 of 155 (median 21 percent)",
+    "normal_walk_unlabelled": "152 of 152 (median 20 percent)",
+    "level_walking_labels": "0 cycles have both plates, so there is no walking control (the right plate is missing in treadmill walking); the claim is not calibrated against walking, as the worker says",
+    "worker_totals_not_rechecked": "347/347, 359/359 and 511/511 over all participants; my 4-participant sample is consistent with them. Correction to my GT23-E01 verification: the README calls these files walking at 2.0 and 2.5 m/s, they are not labelled run by the authors; the data support running"
+  },
+  "step_up_pressure_point": {
+    "fails_L5": "confirmed in AB05, AB03, AB10, AB12 step_ups: foot-frame vertical coordinate is far below the foot for the roughly 40 percent of loaded samples on the step (AB05 L 42 percent, R 42, AB10 L 41, R 39 with the heel more than 0.25 m above the plate); the whole-recording median is still -0.08 to -0.10 m because the other 60 percent are on the floor.",
+    "cause": "Not a missing value and not a wrong plate frame: COPY_Vertical is present for 100 percent of loaded samples and equals the plate surface, 0.009 m, in every recording; the heel marker rises to about 0.53 m (p95 0.529-0.547) while the plate reports load. The foot stands on a step or box of about 0.5 m that sits on the plate, so the plate surface height is the wrong contact surface. Same family as curb_up (undocumented raised surface); the step height is not given in the source. COPY_Vertical cannot fix it.",
+    "recommendation": "hold the step_up foot-frame pressure point (vertical, anterior, lateral), as the worker recommends; keep lab-axis force and plate pressure point"
+  },
+  "stairs": "Kept: 0 of 242,751 finite stairs pressure-point samples fail L5 in the assessor; my C06 check earlier gave 0-3 percent outside the foot. This satisfies the added criterion (explained and fixed), so the stairs columns need not be held.",
+  "unchecked_columns": "120 of 157 signal columns have no limit; none carries pass or fail anywhere (states: unchecked or not_checked_no_column only). The 37 columns with a limit have pass, pass_jump_only, pass_offset_unverified or fail. AB07: 34,582 held entries, 0 without a reason, 0 labelled pass. Overall label is no_failure_found, not pass. Totals equal: 19,573 observations, 18,758 no failure found, 815 failed (L5 590, L2 189, L1 40).",
+  "limits_of_this_verification": [
+    "only 3 of 12 shards recomputed in full (plus 3 named recordings); the other 9 rely on the identical code",
+    "flight totals checked on 4 participants, not all 12",
+    "L2 wrap versus resampling classification done for AB13, AB12, AB07, AB03 only",
+    "the 6-60 ms-spacing L2 phase failures were not examined",
+    "literature basis of L1 bounds not confirmed (carried from UM21, as the worker says)"
+  ],
+  "resource_notes": "All probes under prlimit 600 MiB; peak RSS 150-170 MiB (shard recompute 150, step-up scan 168). Two early probes hung at 100 percent CPU because OMP_NUM_THREADS was not set under the address limit and were killed; no result was taken from them. Nothing left running.",
+  "next_action": "GT23-R01. Carry: do not filter on phase L2 for long windows; hold step_up foot-frame pressure point; unwrap the right-foot and ankle angle at +-180 (4 time-table recordings); keep shuffle and functional_task limitations."
+}
