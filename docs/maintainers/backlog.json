@@ -4785,7 +4785,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Reconcile a local review release for Georgia Tech 2023",
-      "status": "review",
+      "status": "done",
       "stage": "release",
       "question": "Do this dataset's exact data files, review evidence and researcher-facing claims agree?",
       "scope": "Complete retained Georgia Tech 2023 source scope and every exported observation type; any smaller local bundle remains an explicitly separate scope. Rebuilt output only; the time table is about 20 million rows, so what a release contains is a scope question for José when this task starts.",
@@ -4811,17 +4811,18 @@
         "The catalog, download variant and preview refer to this exact reviewed artifact or remain explicitly legacy/unreviewed.",
         "Record any release limitation and remaining source gaps. Publishing or uploading follows the user-requested destination/workflow and is separate from this local review."
       ],
-      "next_action": "Second-agent verification of the GT23 local review package (docs/maintainers/handoffs/GT23-R01.json); then build the Georgia Tech 2023 dataset page.",
+      "next_action": "None for this task. Next: Georgia Tech 2023 dataset page naming this exact package (manifest sha256 8f24665a...). Non-blocking follow-ups in the verify file: README AB03 side_shuffle_1 16/3 split, note non-unique exclusion_id in the contract.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json",
         "docs/maintainers/handoffs/GT23-R01.json",
         "converted_datasets/reconversion_v2/gt23_r01_review_v10",
-        "docs/quality/audits/gt23-r01-full-launcher-receipt-v10.json"
+        "docs/quality/audits/gt23-r01-full-launcher-receipt-v10.json",
+        "docs/maintainers/handoffs/GT23-R01-verify.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-24T19:49:08Z",
-        "summary": "Local review package built through the shared streaming release builder (full and filtered, phase and time, 19,573 observations in full, 19,448 in filtered, 125 assessment failures, 5,281 exclusion rows) and read back by a separate script (31 checks pass). Awaiting independent verification. No scientific approval, nothing published.",
+        "last_checked_at_utc": "2026-11-24T20:08:20Z",
+        "summary": "Independently verified by a second agent: receipts clean and same frozen code, all file hashes equal manifest, full = filtered + 125 failures on both tables, exclusions 5,281 reconcile to sources, seeded sample bit-identical, contract clean on both phase files, tests pass. Not scientific approval, nothing published.",
         "changed_files": [
           "contributor_tools/common/release_package.py",
           "contributor_tools/run_gt23_r01_bundle.py",
@@ -4834,7 +4835,6 @@
           "pilot v10 (2 participants) and full v10 under the guarded launcher; 28 builder checks pass; separate readback 31 checks pass; 14 new tests pass"
         ],
         "remaining": [
-          "independent verification",
           "dataset page after verification"
         ]
       },
@@ -7799,7 +7799,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Assign force plates and fix force signs on every source step",
-      "status": "blocked",
+      "status": "working",
       "stage": "pilot",
       "question": "Does every leg-step of all 22 participants have the right plate, force sign and outward sideways sign, or an honest gap?",
       "scope": "37 guarded jobs: 4 mode pilots plus 33 batches of at most 100 recordings, over every heel-strike-to-heel-strike step of both legs. Python port of the checked plate assignment (markers close to the plate, more than 2/3, over 100 N; named treadmill plates) and the force-sign fix; sideways force positive outward for each leg.",
@@ -7840,24 +7840,31 @@
         "docs/quality/audits/gt21-force-fix.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
-        "summary": "Planned. The assignment and force-sign fix are already source-checked in MATLAB pilots; the port is new code and needs the pilots as independent references.",
+        "last_checked_at_utc": "2026-11-24T20:10:12+00:00",
+        "summary": "Merged RB02+RB04 pass code written (code only, no job run, no data read). Pilot spec written, not dry-run: docs/quality/audits/gt21-rb-pass-pilot-spec.json (regenerate if code changes; it binds code hashes).",
         "checks": [
-          "Plan written from read-only probes only; no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+          "tests/test_gt21_rb_pass.py: 38 synthetic tests pass at nice 19 (rigid fit, per-leg plane angles for any heading, composition to 1e-12, foot-frame CoP, plate ownership incl. left-right swap, force signs and outward lateral both legs, model parse, kg weight, whole synthetic recording, runner with fake reader)"
         ],
         "remaining": [
-          "All jobs."
+          "Pilot (5 recordings) after go",
+          "Real model file layout and real fp/gc column names are unverified until the pilot",
+          "Sign test of six new participants",
+          "Compare plate counts with prior counts CSV and MATLAB-fixed pilots within 1e-9 (needs phase resampling in readback)",
+          "Freeze, batches, readback"
         ],
         "changed_files": [
-          "docs/maintainers/handoffs/GT21-rebuild-plan.json",
-          "docs/maintainers/backlog.json",
-          "docs/maintainers/backlog.html"
+          "contributor_tools/gt21_rb_pass.py",
+          "contributor_tools/run_gt21_rb_pass.py",
+          "tests/test_gt21_rb_pass.py",
+          "docs/quality/audits/gt21-rb-pass-pilot-spec.json"
         ]
       },
-      "blocked_reason": "Waits for GT21-RB01 (extracted sources and label ledger).",
       "notes": [
         "Prior-work port rule (José, 2026-11-23): write LocoHub code with its own tests; credit each source file in the module docstring; never import from the energy-shaping-ML project and never open its parquets; its published per-recording counts are an independent comparison only."
-      ]
+      ],
+      "owner": "claude-worker-gt21-rb02-rb04",
+      "started_at_utc": "2026-11-24T20:00:37+00:00",
+      "merged_pass_note": "Merged pass RB02+RB04 (one read per recording), code in contributor_tools/gt21_rb_pass.py and run_gt21_rb_pass.py; no job run yet."
     },
     {
       "id": "GT21-RB03",
@@ -7923,12 +7930,12 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Apply conventions: marker segment angles, joint angles, foot-frame CoP, mass",
-      "status": "blocked",
+      "status": "working",
       "stage": "conventions",
       "question": "Are all angles, forces and moments in the data reference convention, with nothing invented?",
       "scope": "68 guarded jobs: 4 mode pilots, 1 sign and marker pilot on the six new participants, and 63 conversion batches of about 50 recordings. Pelvis from markers; thigh, shank, foot from markers; hip = thigh - pelvis, knee = thigh - shank, ankle = foot - shank; CoP in the foot frame (origin 100 mm forward of the ankle centre); Weight in kilograms for BW and Nm/kg; trunk stays missing (no source).",
       "depends_on": [
-        "GT21-RB03"
+        "GT21-RB01"
       ],
       "inputs": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
@@ -7963,24 +7970,31 @@
         "docs/quality/audits/gt21-force-geometry.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
-        "summary": "Planned. The standard fixes zeros and frames but not the landmarks for joint centres; the source has only lateral knee and ankle markers, so one decision is needed.",
+        "last_checked_at_utc": "2026-11-24T20:10:12+00:00",
+        "summary": "Merged RB02+RB04 pass code written (code only, no job run, no data read). Pilot spec written, not dry-run: docs/quality/audits/gt21-rb-pass-pilot-spec.json (regenerate if code changes; it binds code hashes).",
         "checks": [
-          "Plan written from read-only probes only; no conversion, MATLAB or write under converted_datasets/ or source folders ran."
+          "tests/test_gt21_rb_pass.py: 38 synthetic tests pass at nice 19 (rigid fit, per-leg plane angles for any heading, composition to 1e-12, foot-frame CoP, plate ownership incl. left-right swap, force signs and outward lateral both legs, model parse, kg weight, whole synthetic recording, runner with fake reader)"
         ],
         "remaining": [
-          "D-GT21-REB-1 answer; all jobs."
+          "Pilot (5 recordings) after go",
+          "Real model file layout and real fp/gc column names are unverified until the pilot",
+          "Sign test of six new participants",
+          "Compare plate counts with prior counts CSV and MATLAB-fixed pilots within 1e-9 (needs phase resampling in readback)",
+          "Freeze, batches, readback"
         ],
         "changed_files": [
-          "docs/maintainers/handoffs/GT21-rebuild-plan.json",
-          "docs/maintainers/backlog.json",
-          "docs/maintainers/backlog.html"
+          "contributor_tools/gt21_rb_pass.py",
+          "contributor_tools/run_gt21_rb_pass.py",
+          "tests/test_gt21_rb_pass.py",
+          "docs/quality/audits/gt21-rb-pass-pilot-spec.json"
         ]
       },
-      "blocked_reason": "Waits for GT21-RB03 and for decision D-GT21-REB-1 (how joint centres and the foot direction are found from the markers).",
       "notes": [
         "Prior-work port rule (José, 2026-11-23): write LocoHub code with its own tests; credit each source file in the module docstring; never import from the energy-shaping-ML project and never open its parquets; its published per-recording counts are an independent comparison only."
-      ]
+      ],
+      "owner": "claude-worker-gt21-rb02-rb04",
+      "started_at_utc": "2026-11-24T20:00:37+00:00",
+      "merged_pass_note": "Merged pass RB02+RB04 (one read per recording), code in contributor_tools/gt21_rb_pass.py and run_gt21_rb_pass.py; no job run yet. RB03 dependency dropped per Jose 2026-11-24: RB03 now runs on the merged pass outputs."
     },
     {
       "id": "GT21-RB05",
