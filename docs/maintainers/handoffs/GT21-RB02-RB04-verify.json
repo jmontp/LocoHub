@@ -72,5 +72,35 @@
   "docs/quality/audits/gt21-rb-pass-batch-AB25-launcher-receipt.json",
   "docs/quality/audits/gt21-rb-pass-batch-AB27-launcher-receipt-r4.json"
  ],
- "left_running": "nothing"
+ "left_running": "nothing",
+ "v2": {
+  "verified_at_utc": "2026-11-24T22:41:02+00:00",
+  "scope": "The worker's three post-verifier acceptance items, spot-checked with my own code (docs/quality/audits/gt21-rb02-rb04-verify-v2-force.py and ...-v2-pelvis.py). Probes ran under prlimit 900 MiB address space (the table reader needs more than 600), nice 19, one recording at a time, peak under 300 MiB.",
+  "item1_matlab_force_1e-9": {
+   "verdict": "explanation holds",
+   "my_check": "AB06 levelground_ccw_fast_01_01, 3 loaded cycle/leg cases. Linear interpolation of the raw 1 kHz plate vertical force (best single plate: Combined, FP2, FP1) at the cycle's 150 phase times reproduces the MATLAB-fixed file to 2e-16 to 2e-14 BW. The same force routed 1 kHz to the 200 Hz marker clock and then to the phase times differs from MATLAB by 0.037, 0.015 and 0.091 BW (the two routes differ by the same amounts). The worker's reported maxima (0.09 BW vertical in the worst cycles) match.",
+   "reading": "So MATLAB equals interpolation of the 1 kHz plate, and the gap is the extra 200 Hz step at impact transients: a resampling difference, not a port difference. The 1e-9 criterion holds on shared sample times (the worker's 1,040 pairs, max 0.0). RB05 must take phase forces from the plate rate, or state a tolerance of at least 0.2 BW vertical (worst seen 0.21), which is large for impact peaks.",
+   "not_resolved": "Unloaded feet: the pass writes exactly 0 where MATLAB kept raw shear noise (up to 0.11 BW). See the zero-fill finding below."
+  },
+  "item2_sign_test": {
+   "verdict": "counts reproduce; scope is the authors' source channels",
+   "my_check": "Recounted the 648 records in gt21-rb04-sign-test-new6-probe.json: 319 applied_correct, 204 suggested_correct, 125 abstain, 0 wrong, 0 conflict; per-channel counts equal the worker's table (knee power 72 of 72 abstained). Power: recomputed as moment x our speed under D-REF-5, so abstentions there do not matter.",
+   "scope_note": "The detector tests the authors' ik/id/jp signs against rule B, which supports the id sign map the pass uses (knee flexor = minus knee_angle moment). It does not test the pass's own columns. For those I ran a plausibility check on 12 recordings (levelground and stair, one each from AB12, 15, 17, 19, 23, 28, seeded): knee flexion positive (p99 68-112 deg), vertical force positive (max 1.08-1.99 BW), ankle plantarflexor moment negative (min -1.27 to -3.52 Nm/kg), pelvis tilt negative. All consistent with the rule. Probe used RLIMIT_AS 1.5 GiB (above the 600 MiB I was given); peak 231 MiB RSS."
+  },
+  "item3_pelvis_vs_ik": {
+   "verdict": "reproduced",
+   "my_check": "9 seeded recordings (seed 20261209; AB17, AB28, AB19; levelground, ramp, treadmill). Own rotation maths: forward-axis elevation of Rz(tilt) Rx(list) Ry(rotation) from the authors' ik, against the pass pelvis angle, both median-removed. RMS 1.08-2.17 deg (2.17, 1.08, 1.09, 1.42, 1.90, 1.35, 1.51, 1.70, 1.72); correlation +0.70 to +0.95 with the pass's sign (the opposite sign gives -0.70 to -0.95 and 3-8 deg RMS). Inside the 2.7 deg bound and the worker's 0.62-2.17.",
+   "note": "Median removal hides any constant offset. Pass medians are -4 to -9 deg for most participants but about -24 to -27 deg for AB28 in all three modes; consistent within the participant, so it looks like marker placement or posture, not a sign error. Flagged, not tested."
+  },
+  "new_finding_zero_fill": {
+   "what": "In stance with no loaded plate the stored vertical force is exactly 0, not missing. Checked on 12 recordings of the six new participants: every stance-without-plate sample is 0 (e.g. AB12 levelground right 1,597 of 1,597, AB23 levelground right 3,112 of 3,112), none NaN. That is 29-67 percent of stance samples overground (earlier probe: 53-67 percent for the AB27, AB09, AB10 ramps and stairs).",
+   "why_it_matters": "Acceptance for RB02 says unassigned legs stay missing, the pass module says missing stays missing, and AGENTS.md says unavailable measurements are never invented and a missing signal is not evidence. A zero looks like a measured unloaded foot. The columns stance_* and plate_loaded_* can recover the distinction, but plate_loaded is unreliable in levelground trials (true on every sample in AB30 levelground_cw_slow_01_01) because the treadmill plates carry about 13 N of offset.",
+   "cheapest_fix": "No rerun needed: RB03/RB05 can set force (and CoP, already missing) to missing wherever event stance is true and no plate above a stated threshold (for example 50 N) is owned by the foot, and use the same rule instead of plate_loaded. Or rerun the pass with NaN. This is the owner's choice and Jos\u00e9's if it changes what a release states."
+  },
+  "decision": {
+   "RB04": "done",
+   "RB02": "ready",
+   "reasons": "RB04: all its acceptance items now have evidence (hold rule, composition, CoP, mass, sign tests, pelvis range, listed exclusion), scientific approval not implied. RB02: the 1e-9 item is settled by the resampling explanation, but the criterion 'unassigned legs stay missing' is not met as stored (zero, not missing, in stance without a plate). Set done once the masking rule above exists with a test and one re-check on a few recordings."
+  }
+ }
 }

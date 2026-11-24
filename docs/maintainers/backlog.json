@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-11-24T22:10:51Z",
+  "updated_at_utc": "2026-11-24T22:41:02+00:00",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-X01",
@@ -7802,7 +7802,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Assign force plates and fix force signs on every source step",
-      "status": "review",
+      "status": "ready",
       "stage": "pilot",
       "question": "Does every leg-step of all 22 participants have the right plate, force sign and outward sideways sign, or an honest gap?",
       "scope": "37 guarded jobs: 4 mode pilots plus 33 batches of at most 100 recordings, over every heel-strike-to-heel-strike step of both legs. Python port of the checked plate assignment (markers close to the plate, more than 2/3, over 100 N; named treadmill plates) and the force-sign fix; sideways force positive outward for each leg.",
@@ -7835,7 +7835,7 @@
         "Memory: pilot shows the launcher peak under its cap (expected 150-300 MiB); one job at a time.",
         "Per-recording plate counts compared with the prior per-recording counts CSV (read as an independent comparison, not imported); differences listed, not tuned away"
       ],
-      "next_action": "Second agent verifies the three acceptance items against their evidence files, then marks done or returns with reasons.",
+      "next_action": "Make unassigned stance force missing instead of 0 (mask in RB03/RB05 by event stance and an owned plate above a stated force threshold, with a test, or rerun with NaN); then re-check a few recordings. The 1e-9 MATLAB comparison is settled (resampling difference, verified).",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
@@ -7876,8 +7876,8 @@
       "started_at_utc": "2026-11-24T20:00:37+00:00",
       "merged_pass_note": "Merged pass RB02+RB04 (one read per recording), code in contributor_tools/gt21_rb_pass.py and run_gt21_rb_pass.py; no job run yet.",
       "verifier": {
-        "checked_at_utc": "2026-11-24T21:49:51+00:00",
-        "verdict": "sent back to ready: three acceptance items not run; data re-derived and correct",
+        "checked_at_utc": "2026-11-24T22:41:02+00:00",
+        "verdict": "ready: zero-filled stance without plate contradicts \"unassigned stays missing\"",
         "evidence": "docs/maintainers/handoffs/GT21-RB02-RB04-verify.json"
       }
     },
@@ -7945,7 +7945,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Apply conventions: marker segment angles, joint angles, foot-frame CoP, mass",
-      "status": "review",
+      "status": "done",
       "stage": "conventions",
       "question": "Are all angles, forces and moments in the data reference convention, with nothing invented?",
       "scope": "68 guarded jobs: 4 mode pilots, 1 sign and marker pilot on the six new participants, and 63 conversion batches of about 50 recordings. Pelvis from markers; thigh, shank, foot from markers; hip = thigh - pelvis, knee = thigh - shank, ankle = foot - shank; CoP in the foot frame (origin 100 mm forward of the ankle centre); Weight in kilograms for BW and Nm/kg; trunk stays missing (no source).",
@@ -7977,7 +7977,7 @@
         "All 28 named markers are checked per recording; a missing needed marker gives a listed exclusion; 15 Hz and plate-origin placeholder CoP samples stay missing; peak memory recorded (expected 250-400 MiB).",
         "Ankle centre per subject from the scaled model with its own check; the prior 8.6 mm median and 4.5-5.7 cm ankle height above the sole are compared, not copied"
       ],
-      "next_action": "Second agent verifies the three acceptance items against their evidence files, then marks done or returns with reasons.",
+      "next_action": "Done (second verification, GT21-RB02-RB04-verify.json v2). Does not imply scientific approval of the dataset.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
@@ -8019,8 +8019,8 @@
       "started_at_utc": "2026-11-24T20:00:37+00:00",
       "merged_pass_note": "Merged pass RB02+RB04 (one read per recording), code in contributor_tools/gt21_rb_pass.py and run_gt21_rb_pass.py; no job run yet. RB03 dependency dropped per Jose 2026-11-24: RB03 now runs on the merged pass outputs.",
       "verifier": {
-        "checked_at_utc": "2026-11-24T21:49:51+00:00",
-        "verdict": "sent back to ready: three acceptance items not run; data re-derived and correct",
+        "checked_at_utc": "2026-11-24T22:41:02+00:00",
+        "verdict": "done: acceptance items checked with independent code",
         "evidence": "docs/maintainers/handoffs/GT21-RB02-RB04-verify.json"
       }
     },
