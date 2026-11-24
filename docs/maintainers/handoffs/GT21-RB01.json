@@ -2,7 +2,7 @@
   "task_id": "GT21-RB01",
   "status": "review_python_parts_label_export_pending",
   "scientific_approval": false,
-  "last_checked_at_utc": "2026-11-23T22:00:00+00:00",
+  "last_checked_at_utc": "2026-11-24T01:10:00+00:00",
   "summary": "Python parts done and checked: six zips extracted (CRC, size and sha256 against the zip directory, manifest and listing), inventory of all 22 (3,147 recordings, per-mode counts and 12 channel files as planned). Launcher blocker cleared (the docs server was stopped by its owner). Label export is pending: the native MATLAB extension draft awaits independent review.",
   "code": {
     "runner": {
@@ -38,22 +38,29 @@
   },
   "inventory_design": "One stat-only job over the 16 local and 6 extracted participants; writes recording_ledger.jsonl (3,147 rows: subject, source, session, mode, recording, size of each of the 12 channel files) and inventory_summary.json with the per-mode count checks. This ledger is the index the merged plate/force plus model-fit pass can read once per recording. It does not open any MAT file.",
   "native_extension": {
-    "status": "DRAFT, NOT RUN, marked for independent review",
+    "status": "DRAFT revised after review Part B (B1, B2, table names, hardening); NOT RUN; awaits re-review",
     "module": "contributor_tools/guarded_launcher_native.py",
-    "module_sha256": "be29b8f49d9fff14519188fc987e713848c79779386e63430017135d3ada109c",
+    "module_sha256": "65d09c63d2b93686057012ea9998f446c0775574f321be8698c62d3893385131",
     "export_script": "contributor_tools/conversion_scripts/Gtech_2021/gt21_rb01_label_export.m",
-    "export_script_sha256": "a32859f928e93626bbd52da78f8c98a1dba765ae15861259e00cf21d21b3f91b",
+    "export_script_sha256": "6374b95561669c2a5ea25ea7a3c1e997a41424ae3a39b9488ec3bf7ab71a4768",
     "exactly_what_it_will_run": "One MATLAB R2023b start per participant, via PowerShell Start-Process (hidden, stdout and stderr to a log on S:): C:\\Program Files\\MATLAB\\R2023b\\bin\\matlab.exe -batch \"addpath('<repo script dir>'); gt21_rb01_label_export('<source root>','<new output folder>','AB##','<run nonce>')\" -singleCompThread. The script reads SubjectInfo.mat and <source>/<ID>/<session>/<mode>/conditions/*.mat only, and writes labels_<ID>.jsonl (one line per recording: Label run windows with Header start/end, rampIncline, stairHeight, Speed range, column names) and subject_info_<ID>.json (all columns, VariableUnits, Weight literal to 17 digits) into the new folder, exclusively. It converts, filters and infers nothing. 22 starts, AB06 first (includes stair_1_l_01_02), local participants read from the repo source folder, the six from the extracted root.",
     "limits_enforced": "timeout <= 1800 s; poll 15 s; Windows working set of the process tree <= 2048 MiB (polled); Windows free >= 2816 MiB at start and >= 2048 MiB while running; Linux available >= 3584 / 2048 MiB; output volume >= 5 GiB; envelope sha, bindings, no Linux or Windows worker (any running MATLAB refuses), one launch per ancestor via the existing ledger. No existing limit is changed.",
     "stop_and_cleanup": "Only the recorded Windows PID tree, only after its creation time and the run nonce in its command line still match; taskkill /T, 30 s grace, then /F /T; afterwards the tree must be proven gone and the Windows census must show no new worker. Never stops by image name.",
     "known_gaps_for_reviewer": [
-      "The launcher census counts this module's own process as a worker (is_launcher_cli only accepts python -m contributor_tools.guarded_launcher), both before launch and in the post-run Linux census. Review must decide the one-line exemption or a 'native' subcommand on guarded_launcher.py; this draft does not edit the reviewed launcher.",
-      "Not exercised against a real MATLAB or real Windows process: PS_TREE parsing, Start-Process quoting with spaces and wslpath output are covered only by fake-host tests and character-set checks. A reviewer should dry-run start_script text in PowerShell without MATLAB (replace the exe with a harmless one) before the AB06 pilot.",
-      "Working-set cap is polled, not enforced; a fast allocation can overshoot between polls.",
-      "The .m script assumes the conditions variable is named 'conditions' and SubjectInfo holds a table with Subject and Weight (as the existing converter does); not run.",
-      "No hard Windows memory limit equivalent to the 768 MiB address-space cap."
+      "Working-set cap is polled every 15 s, not enforced.",
+      "Whether bin\\matlab.exe stays alive as parent for -batch is unverified (B2 covers both); the supervised AB06 pilot settles it.",
+      "After-run Windows census flags any new matlab* helper process; the pilot lists them before any exemption.",
+      "Earlier receipts record the pre-B1 launcher hash 8df6f115...; the launcher changed after those jobs only by the is_launcher_cli line."
     ],
-    "next_for_review": "Independent reviewer checks the module and script against this list, runs tests, and records pass or changes. Only then the AB06 pilot (preflight dry run first), then the other 21 one at a time."
+    "next_for_review": "Independent reviewer checks the module and script against this list, runs tests, and records pass or changes. Only then the AB06 pilot (preflight dry run first), then the other 21 one at a time.",
+    "launcher_sha256_after_b1": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+    "review_fixes": {
+      "B1": "guarded_launcher.is_launcher_cli now also accepts python -m contributor_tools.guarded_launcher_native (only through -m; -c, other modules and look-alike names stay counted). Census not overridden. Tests: real Host.linux_census over a fake /proc shows the native CLI exempt, the look-alikes counted, an unrelated python -c process counted; full launcher suites rerun (148 passed with the RB01 runner tests).",
+      "B2": "When the recorded root PID has no row, find_matlab_by_nonce looks for matlab* processes whose command line carries the run nonce (3 tries, 2 s apart), adopts the earliest root, records from/to PID and creation time in receipt field adoptions, and keeps watching and stopping the adopted identity. A start_matlab exception triggers the same search; none found = launcher_error. Root gone with no orphan and outputs missing = failed_outputs_missing (never completed). Fake-host tests for each.",
+      "table_names": "gt21_rb01_label_export.m reads SubjectInfo via info.data, else the single variable, else errors.",
+      "hardening": "source_root restricted to the repo CAMARGO folder and the extracted-six root; output_root to converted_datasets/reconversion_v2; per-recording jsonencode wrapped in try/catch (an error line instead of aborting the participant).",
+      "tests": "tests/test_guarded_launcher_native.py 16 passed; tests/test_guarded_launcher.py + tests/test_guarded_launcher_verify.py + tests/test_run_gt21_rb01.py 148 passed (nice 19, one at a time)"
+    }
   },
   "mass_unit_evidence_to_bind": "Weight literals for all 22 are in the cohort crosswalk (participants[].metadata.Weight_literal); the inventory binds that file. Re-reading them from SubjectInfo.mat needs the MATLAB export (pending). STRIDES.m evidence and plate-implied mass are in GT21-rebuild-plan.json probes.",
   "run_order_when_unblocked": [
@@ -90,7 +97,8 @@
     "docs/quality/audits/gt21-rb01-extract-AB19-launcher-receipt.json",
     "docs/quality/audits/gt21-rb01-extract-AB23-launcher-receipt.json",
     "docs/quality/audits/gt21-rb01-extract-AB28-launcher-receipt.json",
-    "docs/quality/audits/gt21-rb01-inventory-launcher-receipt.json"
+    "docs/quality/audits/gt21-rb01-inventory-launcher-receipt.json",
+    "contributor_tools/guarded_launcher.py"
   ],
   "evidence_report": "docs/quality/audits/gt21-rb01-evidence.json",
   "receipts": [
@@ -115,5 +123,6 @@
     "GT21-RB02",
     "GT21-RB04",
     "GT21-Q01"
-  ]
+  ],
+  "review_note": "docs/maintainers/handoffs/GT21-RB01-verify.json Part B addressed; first MATLAB run waits for a re-review of these changes."
 }

@@ -7666,7 +7666,7 @@
         "docs/quality/audits/gt21-s02-2024-copy.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-24T01:05:00+00:00",
+        "last_checked_at_utc": "2026-11-24T01:10:00+00:00",
         "summary": "Python parts done and checked: six zips extracted (CRC, size and sha256 against the zip directory, manifest and listing), inventory of all 22 (3,147 recordings, per-mode counts and 12 channel files as planned). Launcher blocker cleared (the docs server was stopped by its owner). Label export is pending: the native MATLAB extension draft awaits independent review.",
         "checks": [
           "6 extractions: member size, CRC32 and sha256 equal zip directory, manifest and bound listing (members 1,770/1,638/1,602/1,722/1,746/1,711)",
@@ -7674,11 +7674,12 @@
           "14 synthetic tests pass",
           "verify-cleanup proved for all 7 jobs; peak memory 21-24 MiB each",
           "Independent verification (docs/maintainers/handoffs/GT21-RB01-verify.json): Part A pass: receipts clean or explained, 36 of 36 sampled members (seed 20261125) and all 10,189 ledger entries equal the zip directory, counts 506/1015/665/115 and 174/379/251/42 with 12 channel files each recounted from listings, local source folder unwritten (newest mtime 2025-08-11)",
-          "Part B code review: native extension NOT approved until two changes: census counts the module itself (every run would refuse), and a MATLAB stub that exits would leave the job unwatched"
+          "Part B code review: native extension NOT approved until two changes: census counts the module itself (every run would refuse), and a MATLAB stub that exits would leave the job unwatched",
+          "Review Part B fixes applied (B1 launcher exemption, B2 orphan adoption, table names, root restrictions); 16 native tests and 148 launcher/runner tests pass"
         ],
         "remaining": [
-          "Apply review changes B1 (census self-count) and B2 (adopt MATLAB by run nonce) and the SubjectInfo 'data' variable check, rebind hashes, second review of the diff",
-          "Label export (22 MATLAB starts, AB06 dry run then supervised pilot first); acceptance lines 3 to 5 depend on it"
+          "Independent re-review of the native extension changes (guarded_launcher.py is_launcher_cli line, guarded_launcher_native.py, label export script); label export waits for it",
+          "Apply review changes B1 (census self-count) and B2 (adopt MATLAB by run nonce) and the SubjectInfo 'data' variable check, rebind hashes, second review of the diff"
         ],
         "changed_files": [
           "contributor_tools/run_gt21_rb01.py",
@@ -7702,7 +7703,8 @@
           "docs/quality/audits/gt21-rb01-extract-AB19-launcher-receipt.json",
           "docs/quality/audits/gt21-rb01-extract-AB23-launcher-receipt.json",
           "docs/quality/audits/gt21-rb01-extract-AB28-launcher-receipt.json",
-          "docs/quality/audits/gt21-rb01-inventory-launcher-receipt.json"
+          "docs/quality/audits/gt21-rb01-inventory-launcher-receipt.json",
+          "contributor_tools/guarded_launcher.py"
         ],
         "detail": "docs/maintainers/handoffs/GT21-RB01.json"
       },

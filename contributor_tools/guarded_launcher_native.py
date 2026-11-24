@@ -60,6 +60,9 @@ OUTPUT_FLOOR_MIB = 5 * 1024
 SUBJECT = re.compile(r"AB\d\d")
 WIN_PATH = re.compile(r"[A-Za-z]:\\[A-Za-z0-9_ .\-\\()]+")
 NONCE = re.compile(r"[0-9a-f]{16}")
+ALLOWED_SOURCE_ROOTS = (gl.REPO_ROOT / "contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET",
+                        Path("/mnt/s/locomotion_data/gt21_author_mirror_2024_extracted"))
+ALLOWED_OUTPUT_ROOTS = (gl.REPO_ROOT / "converted_datasets/reconversion_v2",)
 REQUIRED = ("job_id", "subject", "source_root", "output_root", "receipt_path", "bindings", "timeout_seconds")
 OPTIONAL = {"expected_output_names": []}
 
@@ -87,6 +90,10 @@ def validate_native_spec(spec, limits=gl.ENVELOPE_LIMITS):
     out, receipt, src = Path(s["output_root"]), Path(s["receipt_path"]), Path(s["source_root"])
     if receipt.suffix != ".json" or out == receipt or out in receipt.parents:
         raise NativeSpecError("receipt_path must be a .json outside output_root")
+    if not any(src == a or a in src.parents for a in ALLOWED_SOURCE_ROOTS):
+        raise NativeSpecError("source_root must be inside a reviewed source location")
+    if not any(a in out.parents for a in ALLOWED_OUTPUT_ROOTS):
+        raise NativeSpecError("output_root must be inside a reviewed output location")
     if out == src or src in out.parents or out in src.parents:
         raise NativeSpecError("output_root must not contain or sit inside source_root")
     if not isinstance(s["bindings"], dict) or not all(
@@ -155,6 +162,13 @@ while ($queue.Count -gt 0) {{
 [pscustomobject]@{{tree=$rows}} | ConvertTo-Json -Depth 4 -Compress"""
 
 
+PS_NONCE = r"""$ErrorActionPreference='Stop'
+$rows = @(Get-CimInstance Win32_Process | Where-Object {{ $_.Name -like 'matlab*' -and $_.CommandLine -and $_.CommandLine.Contains('{nonce}') }} |
+  ForEach-Object {{ [pscustomobject]@{{pid=[int]$_.ProcessId; ppid=[int]$_.ParentProcessId; name=$_.Name; cmdline=$_.CommandLine; ws=[long]$_.WorkingSetSize;
+    created=$(if ($_.CreationDate) {{ $_.CreationDate.ToUniversalTime().ToString('o') }} else {{ $null }})}} }})
+[pscustomobject]@{{rows=$rows}} | ConvertTo-Json -Depth 4 -Compress"""
+
+
 class NativeHost(gl.Host):
     """Adds the Windows tree queries and the taskkill stop. Tests replace every method that touches Windows."""
 
@@ -168,6 +182,14 @@ class NativeHost(gl.Host):
         if isinstance(tree, dict):
             tree = [tree]
         return tree
+
+    def find_matlab_by_nonce(self, nonce):
+        """matlab* processes whose command line contains the run nonce (an orphan that left the recorded tree)."""
+        if not NONCE.fullmatch(nonce):
+            raise NativeSpecError("nonce outside the reviewed set")
+        data = json.loads(self._powershell(PS_NONCE.format(nonce=nonce), timeout=60))
+        rows = data.get("rows") or []
+        return [rows] if isinstance(rows, dict) else rows
 
     def taskkill(self, pid, force):
         flags = "/F /T" if force else "/T"
@@ -201,6 +223,27 @@ def stop_tree(host, identity, grace=None, sleep=time.sleep):
         host.taskkill(identity["windows_pid"], force=True)
         actions.append({"action": "taskkill_tree_forced", "at_utc": gl.utcnow()})
     return actions
+
+
+def adopt_orphan(host, identity, adoptions, attempts=3, sleep=time.sleep):
+    """The recorded root has no row. If bin\\matlab.exe was only a stub, the real MATLAB carries the same nonce in its
+    command line: record it in ``adoptions`` and make it the watched root. Returns True when one was adopted."""
+    for attempt in range(attempts):
+        rows = host.find_matlab_by_nonce(identity["nonce"])
+        rows = [r for r in rows if r["pid"] != identity["windows_pid"]]
+        if rows:
+            ids = {r["pid"] for r in rows}
+            roots = sorted((r for r in rows if r["ppid"] not in ids), key=lambda r: r.get("created") or "")
+            root = roots[0]
+            adoptions.append({"at_utc": gl.utcnow(), "from_pid": identity["windows_pid"],
+                              "from_created_utc": identity["created_utc"], "to_pid": root["pid"],
+                              "to_created_utc": root["created"], "name": root.get("name"),
+                              "matches_found": len(rows)})
+            identity["windows_pid"], identity["created_utc"] = root["pid"], root["created"]
+            return True
+        if attempt + 1 < attempts:
+            sleep(2)
+    return False
 
 
 def prove_tree_gone(host, identity, attempts=20, sleep=time.sleep):
@@ -288,18 +331,31 @@ def run_native_job(spec, host=None, spec_sha256=None, dry_run=False, launch_ledg
     script_dir_win = to_windows_path(gl.REPO_ROOT / SCRIPT_DIR)
     expression = matlab_expression(source_win, out_win, s["subject"], nonce)
     t0 = time.monotonic()
-    launched = host.start_matlab(start_script(expression, script_dir_win, to_windows_path(log_path), nonce))
-    identity = {"windows_pid": launched["pid"], "created_utc": launched["created"], "nonce": nonce,
-                "launched_at_utc": gl.utcnow(), "log_path": str(log_path)}
-    r.update(status="running", launched=True, process_identity=identity)
+    identity = {"windows_pid": None, "created_utc": None, "nonce": nonce, "launched_at_utc": gl.utcnow(),
+                "log_path": str(log_path)}
+    adoptions, start_error = [], None
+    r.update(status="running", launched=True, process_identity=identity, adoptions=adoptions)
+    try:
+        launched = host.start_matlab(start_script(expression, script_dir_win, to_windows_path(log_path), nonce))
+        identity["windows_pid"], identity["created_utc"] = launched["pid"], launched["created"]
+    except BaseException as exc:  # a process may exist without a recorded identity: look for it by nonce
+        start_error = {"error": f"{type(exc).__name__}: {exc}", "during": "start_matlab"}
+        if not adopt_orphan(host, identity, adoptions, sleep=sleep):
+            r.update(status="launcher_error", job_outcome="launcher_error", launcher_errors=[start_error],
+                     clean_success=False, finished_at_utc=gl.utcnow(),
+                     note="start failed and no matlab process with the nonce was found")
+            gl.write_json(receipt_path, r, exclusive=True)
+            return r
     gl.write_json(receipt_path, r, exclusive=True)
     guard = {"polls": 0, "peak_tree_working_set_mib": 0.0, "min_linux_available_mib": None,
              "min_windows_free_mib": None, "breach": None}
-    actions, stop_reason, errors = [], None, []
+    actions, stop_reason, errors = [], None, [start_error] if start_error else []
     try:
         while True:
             tree = host.windows_tree(identity["windows_pid"])
             if not tree:
+                if adopt_orphan(host, identity, adoptions, sleep=sleep):  # recorded in the receipt; keep watching it
+                    continue
                 break
             guard["polls"] += 1
             if not tree_identity_ok(tree, identity):
@@ -352,6 +408,8 @@ def run_native_job(spec, host=None, spec_sha256=None, dry_run=False, launch_ledg
     missing = [n for n in required if n not in names]
     bindings_after = gl.hash_bindings(s["bindings"], gl.REPO_ROOT)
     outcome = stop_reason or ("completed" if not errors else "launcher_error")
+    if outcome == "completed" and missing:
+        outcome = "failed_outputs_missing"  # root vanished and no orphan took over, yet nothing was written
     checks = {"tree_gone_proven": gone["proven"], "bindings_unchanged": all(v["matches"] for v in bindings_after.values()),
               "linux_no_new_worker": "unavailable" not in after["linux"] and not after["linux"].get("workers"),
               "windows_no_new_worker": None if new_win is None else not new_win,
@@ -359,7 +417,7 @@ def run_native_job(spec, host=None, spec_sha256=None, dry_run=False, launch_ledg
               "no_stop_needed": not actions}
     r.update(status=outcome, job_outcome=outcome, finished_at_utc=gl.utcnow(),
              wall_time_seconds=round(time.monotonic() - t0, 3), runtime_guard=guard, stop_actions=actions,
-             launcher_errors=errors, tree_gone=gone, census_after=after, windows_new_workers=new_win,
+             launcher_errors=errors, adoptions=adoptions, tree_gone=gone, census_after=after, windows_new_workers=new_win,
              bindings_after=bindings_after, outputs=outputs, expected_outputs_missing=missing,
              log_sha256=gl.sha256_file(log_path) if log_path.exists() else None, checks=checks,
              clean_success=(outcome == "completed" and all(v is True for v in checks.values())),

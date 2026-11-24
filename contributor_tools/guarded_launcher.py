@@ -369,13 +369,15 @@ def _shell_mode(argv):
 
 
 def is_launcher_cli(argv):
-    """True only for ``python -m contributor_tools.guarded_launcher`` or the script path."""
+    """True only for ``python -m contributor_tools.guarded_launcher`` (or ``..._native``, the reviewed
+    native extension CLI, GT21-RB01 B1) or the script path."""
     if not _is_python(argv):
         return False
     args = argv[1:]
     for i, a in enumerate(args):
         if a == "-m":
-            return i + 1 < len(args) and args[i + 1] == "contributor_tools.guarded_launcher"
+            return i + 1 < len(args) and args[i + 1] in ("contributor_tools.guarded_launcher",
+                                                         "contributor_tools.guarded_launcher_native")
         if a in ("-c", "-"):
             return False
         if a in ("-W", "-X"):

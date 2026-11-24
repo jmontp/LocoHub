@@ -19,7 +19,13 @@ function gt21_rb01_label_export(source_root, out_dir, subject, nonce)
     % ---- subject row (all columns, units as stored; no unit is inferred) ----
     info = load(fullfile(source_root, 'SubjectInfo.mat'));
     names = fieldnames(info);
-    tbl = info.(names{1});
+    if isfield(info, 'data')
+        tbl = info.data;  % the variable name the existing converter reads
+    elseif numel(names) == 1
+        tbl = info.(names{1});
+    else
+        error('gt21_rb01_label_export:info', 'SubjectInfo.mat has %d variables and none is named data', numel(names));
+    end
     if ~istable(tbl)
         error('gt21_rb01_label_export:info', 'SubjectInfo.mat does not hold a table');
     end
@@ -58,7 +64,14 @@ function gt21_rb01_label_export(source_root, out_dir, subject, nonce)
                 rec = describe_recording(fullfile(folder, files(k).name));
                 rec.subject = subject; rec.session = sessions(s).name; rec.mode = modes{m};
                 rec.recording = erase(files(k).name, '.mat');
-                fprintf(fid, '%s\n', jsonencode(rec));
+                try
+                    line = jsonencode(rec);
+                catch err
+                    line = jsonencode(struct('subject', subject, 'session', sessions(s).name, 'mode', modes{m}, ...
+                        'recording', erase(files(k).name, '.mat'), 'read_ok', false, ...
+                        'error', ['jsonencode failed: ' err.message]));
+                end
+                fprintf(fid, '%s\n', line);
             end
         end
     end
