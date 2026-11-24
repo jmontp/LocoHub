@@ -112,8 +112,16 @@ def test_prepared_source_clipping_and_value_proof(tmp_path):
  write(prepared,cols,[[1,*([1]*6)],[3,*([3]*6)]])
  with pytest.raises(ValueError,match='skips'):m.verify_window_support(original,prepared)
 
+@pytest.fixture
+def restore_address_limit(monkeypatch):
+ # run() caps RLIMIT_AS (hard and soft) for the whole process, which an unprivileged process cannot undo;
+ # record the requested cap instead so later tests in the same pytest run are not starved.
+ requested=[]
+ monkeypatch.setattr(m.resource,'setrlimit',lambda kind,limits:requested.append((kind,limits)))
+ yield requested
+
 @pytest.mark.parametrize('mode',['time','phase'])
-def test_actual_receipt_shapes_prepare_and_persisted_run(tmp_path,monkeypatch,mode):
+def test_actual_receipt_shapes_prepare_and_persisted_run(tmp_path,monkeypatch,mode,restore_address_limit):
  import pyarrow as pa,pyarrow.parquet as pq
  pa.set_cpu_count(1);pa.set_io_thread_count(1)
  original,rows=fixture(tmp_path/'raw/RawData',mode);prepared=tmp_path/'prepared/RawData/AB03/CSV_Data/example';prepared.mkdir(parents=True)
