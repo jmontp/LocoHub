@@ -96,6 +96,8 @@ def test_side_check_and_flight():
 
 def test_parse_ids():
     assert q.parse_id("AB05/ball_toss_1/both/0002710", "phase")["start"] == 2710
+    assert q.parse_id("AB07/dynamic_walk_1/L/0000450", "phase")["side"] == "left"
+    assert q.parse_id("AB07/dynamic_walk_1/R/0000450", "phase")["side"] == "right"
     assert q.parse_id("AB01/ball_toss_1/continuous", "time")["side"] == "continuous"
     assert q.parse_id("AB01/ball_toss_1/continuous", "phase") is None
 

@@ -64,7 +64,7 @@ FAIL_LIST_CAP = 2000          # listed failed samples per (observation, channel,
 MISSING_RANGE_CAP = 200       # listed missing sample ranges per channel
 UNIT_EVIDENCE_TEXT = "Angles rad, speeds rad/s, moments N*m/kg, powers W/kg"
 
-ID_PHASE_RE = re.compile(r"^(AB\d{2})/([A-Za-z0-9_\-]+)/(left|right|both)/(\d+)$")
+ID_PHASE_RE = re.compile(r"^(AB\d{2})/([A-Za-z0-9_\-]+)/(left|right|both|L|R)/(\d+)$")
 ID_TIME_RE = re.compile(r"^(AB\d{2})/([A-Za-z0-9_\-]+)/continuous$")
 
 STR_META = ("subject", "source_recording_id", "observation_id", "reference_side", "observation_type", "task", "task_id",
@@ -206,7 +206,8 @@ def parse_id(oid, kind):
         m = ID_TIME_RE.match(oid or "")
         return None if not m else {"subject": m.group(1), "recording": m.group(2), "side": "continuous", "start": None}
     m = ID_PHASE_RE.match(oid or "")
-    return None if not m else {"subject": m.group(1), "recording": m.group(2), "side": m.group(3), "start": int(m.group(4))}
+    side = {"L": "left", "R": "right"}.get(m.group(3), m.group(3)) if m else None  # cycle ids use L/R, spans 'both'
+    return None if not m else {"subject": m.group(1), "recording": m.group(2), "side": side, "start": int(m.group(4))}
 
 
 def runs_of(mask):

@@ -4710,7 +4710,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Review quality and scientific limitations for Georgia Tech 2023",
-      "status": "working",
+      "status": "review",
       "stage": "quality",
       "question": "Which signals and observations are supported, failed, missing, invalid or still unchecked?",
       "scope": "Complete retained Georgia Tech 2023 source scope and every exported observation type; any smaller local bundle remains an explicitly separate scope. Rebuilt output only (GT23-E01); 13 guarded jobs: 1 pilot + 12 participant batches.",
@@ -4735,21 +4735,28 @@
         "Record source measurement/model limitations separately from conversion fidelity. Unsupported anatomy or events remain unresolved; source preservation does not approve them.",
         "Stairs centre-of-pressure columns are held (present but missing, with reason) unless the stairs plate-frame discrepancy is explained and fixed."
       ],
-      "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision. Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked. Rebuild plan: docs/maintainers/handoffs/GT23-rebuild-plan.json.",
+      "next_action": "Independent verifier checks GT23-Q01 against docs/maintainers/handoffs/GT23-Q01.json and the summary; then GT23-R01.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
-        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
-        "changed_files": [],
+        "last_checked_at_utc": "2026-11-24T10:39:10+00:00",
+        "summary": "GT23-Q01 assessment of all 19,573 E01 observations with structure plus coarse limits (D-UM21-Q01-1 = B applied as default): 18,758 no failure found, 815 failed (L5 590, L2 189, L1 40, S5 10). Stairs pressure point kept (0 of 242,751 samples fail). Step-up pressure point fails in 500 of 506 observations (hold recommended in the E01 relabel step). Run label supported by flight in 706 of 706 checkable cycles. Details in docs/maintainers/handoffs/GT23-Q01.json. scientific_approval false.",
+        "changed_files": [
+          "contributor_tools/run_gt23_q01_assessment.py",
+          "contributor_tools/run_gt23_q01_jobs.py",
+          "tests/test_gt23_q01_assessment.py",
+          "docs/maintainers/handoffs/GT23-Q01.json",
+          "docs/quality/audits/gt23-q01-*"
+        ],
         "checks": [
-          "Reviewed the retained project scope and declared dependencies only."
+          "tests/test_gt23_q01_assessment.py 10 passed",
+          "pilot_v3 + 12 batches + summary under the guarded launcher, all clean, cleanup proven, peak RSS 235-279 MiB"
         ],
         "remaining": [
-          "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision.",
-          "Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked."
+          "Independent verifier.",
+          "E01 relabel/hold step for step_up pressure point, level_shuffle, unlabelled walking, branch-wrapped angles."
         ]
       },
       "legacy_ids": [

@@ -26,7 +26,7 @@ def build_spec(job, stage, subjects, version):
             "cwd": str(ROOT), "output_root": out_root, "receipt_path": f"{AUDIT}/gt23-q01-{job}{version}-launcher-receipt.json",
             "bindings": b, "timeout_seconds": 3600, "kill_after_seconds": 30, "poll_seconds": 15,
             "startup_memory_mib": {"linux": 3584, "windows": 2816}, "runtime_memory_mib": {"linux": 2048, "windows": 2048},
-            "expected_output_names": [subjects[0]], "address_space_mib": q.ADDRESS_SPACE_MIB}
+            "expected_output_names": ["assessment.json"], "address_space_mib": q.ADDRESS_SPACE_MIB}
 
 
 def main():
