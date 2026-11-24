@@ -1,8 +1,8 @@
 {
  "task_id": "GT23-PL01",
- "status": "step1_ready_for_independent_review",
+ "status": "steps1to4_ready_for_final_independent_review",
  "scientific_approval": false,
- "last_checked_at_utc": "2026-11-24T15:29:17+00:00",
+ "last_checked_at_utc": "2026-11-24T16:49:43+00:00",
  "summary": "Step 1 of 4 (C06 rerun) done under D-REF-4: pelvis in its own plane (horizontal part of mid-PSIS to mid-ASIS), each leg in the vertical plane perpendicular to its knee flexion axis; thigh, shank and foot of that leg are measured in it; joint angles are differences; speeds recomputed; foot frame and pressure point follow the leg plane. 5 pilots, 12 batches (488 recordings, 0 failed), a summary and a comparison report under the guarded launcher, one at a time, code frozen between pilots and batches (six file hashes checked before the batches and before the summary). Steps 2 to 4 (E01 export, E02 holds and wraps, Q01 v2) NOT started. Independent verifier requested.",
  "markers_used_for_the_planes": {
   "knee_flexion_axis": "lateral and medial knee markers: RKNE and RMKNE (right), LKNE and LMKNE (left); axis points to the person right (right: RKNE - RMKNE; left: LMKNE - LKNE); plane forward = up x (horizontal part of the axis)",
@@ -608,5 +608,105 @@
   "Step 4: Q01 v2 assessment rerun",
   "Final verifier"
  ],
- "next_action": "Independent verifier for step 1; then E01 export rerun."
+ "next_action": "Final independent verifier on steps 1 to 4.",
+ "steps_2_to_4": {
+  "summary": "E01 export, E02 holds and unwrap, and Q01 v2 rerun on the step-1 (gt23_planes_batch_*) outputs under the guarded launcher, one job per call, code frozen between pilot and batches. Failed observations 815 (old v1) -> 125 (L5 590->108, L2 189->0, L1 40->9). Final independent verifier NOT yet run; no scientific approval.",
+  "code_changes": {
+   "root_names": "inputs re-pointed to gt23_planes_batch_<AB> and gt23_planes_summary; outputs gt23_pl_e01_*, gt23_pl_e02_*, gt23_pl_q01v2_*; q01v2 spec/job names now gt23-pl-q01v2-*; step-1 code (gt23_conventions.py, gt23_conventions_check.py, run_gt23_c06.py) untouched",
+   "files": [
+    "contributor_tools/run_gt23_e01.py",
+    "contributor_tools/audit_gt23_e01.py",
+    "contributor_tools/run_gt23_e02.py",
+    "contributor_tools/audit_gt23_e02.py",
+    "contributor_tools/run_gt23_q01_assessment.py",
+    "contributor_tools/run_gt23_q01_jobs.py",
+    "contributor_tools/run_gt23_q01v2.py",
+    "tests/test_gt23_pl_roots.py"
+   ],
+   "new_test": "tests/test_gt23_pl_roots.py (3 tests: inputs are plane roots, outputs are pl roots, q01v2 spec prefix)"
+  },
+  "e01": {
+   "roots": "converted_datasets/reconversion_v2/gt23_pl_e01_batch_<AB>, readbacks gt23_pl_e01_audit_<AB>, gt23_pl_e01_summary, gt23_pl_e01_audit_summary, pilot gt23_pl_e01_pilot_AB05 (+ _audit_AB05)",
+   "pilot": "AB05 normal_walk_1 (gait), jump_1 (window rule), poses_1 (continuous): 136 cycles, 30 transfers, 3 continuous; readback pass",
+   "counts": {
+    "cycles": 8831,
+    "transfers": 10254,
+    "continuous": 488,
+    "exclusions": 1415,
+    "authors_windows": 13119,
+    "authors_windows_exported": 9378,
+    "continuous_only_recordings": 64,
+    "phase_rows": 2862750,
+    "time_rows": 6397787
+   },
+   "readback": "all 12 participants pass, 0 failures; max abs diff to inputs 2.02e-9 (forces of about a thousand N); export counts equal readback counts"
+  },
+  "e02": {
+   "roots": "converted_datasets/reconversion_v2/gt23_pl_e02_batch_<AB>, gt23_pl_e02_audit_<AB>, gt23_pl_e02_summary, pilot AB13",
+   "step_up_hold": "12 recordings (AB01 step_ups_2, other 11 step_ups): foot-frame CoP held; force, plate CoP and angles untouched",
+   "unwrap_touched": {
+    "AB13/dynamic_walk_1": "1 time sample (index 19258) of right foot angle and right ankle angle was one whole turn off; 6 changed cells (2 time, 4 phase, 1 phase observation); no speed changed"
+   },
+   "not_touched": [
+    "AB10/meander_1",
+    "AB11/turn_and_step_1"
+   ],
+   "scan": "all 488 recordings scanned; no other recording has a changed sample or a published time-table jump over 30 deg",
+   "readbacks": "12 pass, 0 problems; exported recordings 13 (12 step_ups + AB13 dynamic_walk_1)"
+  },
+  "q01_v2": {
+   "roots": "converted_datasets/reconversion_v2/gt23_pl_q01v2_batch_<AB>, gt23_pl_q01v2_summary, pilot AB10+AB13",
+   "before_old_v1": {
+    "failed": 815,
+    "L5": 590,
+    "L2": 189,
+    "L1": 40
+   },
+   "after": {
+    "observations": 19573,
+    "failed": 125,
+    "no_failure_found": 19448,
+    "L5": 108,
+    "L2": 0,
+    "L1": 9,
+    "samples": {
+     "L5": 4579,
+     "L1": 308
+    }
+   },
+   "note": "earlier chain after-count was 156 (L5 90, L2 5, L1 58). L2 and L1 fall because plane angles have no wrap at AB10 meander_1 and AB11 turn_and_step_1; L5 rises 90 -> 108 with the leg-plane foot frame (not investigated further).",
+   "by_participant_after": {
+    "AB01": 12,
+    "AB02": 5,
+    "AB03": 71,
+    "AB05": 15,
+    "AB06": 3,
+    "AB07": 4,
+    "AB08": 2,
+    "AB09": 1,
+    "AB10": 6,
+    "AB11": 0,
+    "AB12": 0,
+    "AB13": 6
+   },
+   "observation_set_equals_e01": true
+  },
+  "peak_rss_mib_launcher_largest_process": {
+   "e01_batch": 241.2,
+   "e01_readback": 330.3,
+   "e01_summary": 109.9,
+   "e01_readback_summary": 66.6,
+   "e02_batch": 207.6,
+   "e02_readback": 343.4,
+   "e02_summary": 109.1,
+   "q01v2_batch": 243.9,
+   "q01v2_summary": 34.3
+  },
+  "odd": [
+   "Two launcher refusals (foreign_worker_linux_ancestor) came from calling the launcher through a bash wrapper script; kept as gt23-pl-e01-batch-AB01-refused*-receipt.json; later jobs called the launcher directly.",
+   "docs/quality/audits/gt23-pl-e01-pilot-AB10-launcher-receipt.json is a refused_precondition receipt from an earlier worker, no outputs.",
+   "A foreign job (wsp_ankle_kf) held the launcher for a while; not touched."
+  ],
+  "receipts": "docs/quality/audits/gt23-pl-{e01,e02,q01v2}-*-spec.json and -launcher-receipt.json"
+ }
 }

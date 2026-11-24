@@ -55,7 +55,7 @@ class ExportError(RuntimeError):
 
 
 def roots_for(subject, base=BASE):
-    return {'c06': f'{base}/gt23_c06_batch3_{subject}', 'm01': f'{base}/gt23_m01_batch_{subject}',
+    return {'c06': f'{base}/gt23_planes_batch_{subject}', 'm01': f'{base}/gt23_m01_batch_{subject}',
             's01': f'{base}/gt23_s01_batch_{subject}'}
 
 

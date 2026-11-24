@@ -386,14 +386,14 @@ def build_spec(job, stage, subjects, version):
         b[f"{e02_root(s)}/e02_summary.json"] = q.sha256_file(ROOT / e02_root(s) / "e02_summary.json")
         for p in (e02_audit(s), f"{BASE}/gt23_pl_e01_audit_{s}/audit_report.json"):
             b[p] = q.sha256_file(ROOT / p)
-    spec = {"job_id": f"gt23-q01v2-{job}{version}",
+    spec = {"job_id": f"gt23-pl-q01v2-{job}{version}",
             "command": ["python3", RUNNER, "run", "--output-root", out_root, "--stage", stage, "--subjects", ",".join(subjects)],
-            "cwd": str(ROOT), "output_root": out_root, "receipt_path": f"{audit_dir}/gt23-q01v2-{job}{version}-launcher-receipt.json",
+            "cwd": str(ROOT), "output_root": out_root, "receipt_path": f"{audit_dir}/gt23-pl-q01v2-{job}{version}-launcher-receipt.json",
             "bindings": b, "timeout_seconds": 3600, "kill_after_seconds": 30, "poll_seconds": 15,
             "startup_memory_mib": {"linux": 3584, "windows": 2816}, "runtime_memory_mib": {"linux": 2048, "windows": 2048},
             "expected_output_names": ["assessment.json"], "address_space_mib": q.ADDRESS_SPACE_MIB}
     validate_spec(spec)
-    return spec, Path(ROOT / audit_dir / f"gt23-q01v2-{job}{version}-spec.json")
+    return spec, Path(ROOT / audit_dir / f"gt23-pl-q01v2-{job}{version}-spec.json")
 
 
 def summarize(v2_pattern, v1_pattern, subjects, out_root):

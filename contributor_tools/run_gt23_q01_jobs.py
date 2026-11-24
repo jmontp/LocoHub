@@ -20,7 +20,7 @@ def build_spec(job, stage, subjects, version):
         root = q.root_for(s)
         for n in ("run_summary.json", "observations.jsonl"):
             b[f"{root}/{n}"] = q.sha256_file(ROOT / root / n)
-        b[f"{q.BASE}/gt23_e01_audit_{s}/audit_report.json"] = q.sha256_file(ROOT / q.BASE / f"gt23_e01_audit_{s}" / "audit_report.json")
+        b[f"{q.BASE}/gt23_pl_e01_audit_{s}/audit_report.json"] = q.sha256_file(ROOT / q.BASE / f"gt23_pl_e01_audit_{s}" / "audit_report.json")
     return {"job_id": f"gt23-q01-{job}{version}",
             "command": ["python3", q.RUNNER, "run", "--output-root", out_root, "--stage", stage, "--subjects", ",".join(subjects)],
             "cwd": str(ROOT), "output_root": out_root, "receipt_path": f"{AUDIT}/gt23-q01-{job}{version}-launcher-receipt.json",

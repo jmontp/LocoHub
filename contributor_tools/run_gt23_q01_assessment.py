@@ -50,9 +50,9 @@ BASE = "converted_datasets/reconversion_v2"
 SUBJECTS = ("AB01", "AB02", "AB03", "AB05", "AB06", "AB07", "AB08", "AB09", "AB10", "AB11", "AB12", "AB13")
 PILOT_SUBJECTS = ("AB07", "AB12")  # AB07: right-foot offset; AB12: stairs. Chosen before any limit was run.
 README = "docs/quality/audits/source_evidence/gt23/publisher-readme.txt"
-C06_SUMMARY = f"{BASE}/gt23_c06_summary3/summary.json"
-E01_SUMMARY = f"{BASE}/gt23_e01_summary/summary.json"
-E01_AUDIT_SUMMARY = f"{BASE}/gt23_e01_audit_summary/audit_summary.json"
+C06_SUMMARY = f"{BASE}/gt23_planes_summary/summary.json"
+E01_SUMMARY = f"{BASE}/gt23_pl_e01_summary/summary.json"
+E01_AUDIT_SUMMARY = f"{BASE}/gt23_pl_e01_audit_summary/audit_summary.json"
 RSS_CAP_MIB = 300.0
 ADDRESS_SPACE_MIB = 768
 MIN_AVAILABLE_BYTES = 2 * 1024 ** 3
@@ -598,7 +598,7 @@ def read_table(path, kind, subject, lineage, time_ranges, sink):
 
 # ---------------------------------------------------------------- one participant
 def root_for(subject):
-    return f"{BASE}/gt23_e01_batch_{subject}"
+    return f"{BASE}/gt23_pl_e01_batch_{subject}"
 
 
 def load_lineage(root):
@@ -623,7 +623,7 @@ def source_fidelity(subject, root):
         hashes[name] = {"sha256": got, "equals_e01_run_summary": got == rs["sha256"][name]}
         if got != rs["sha256"][name]:
             raise InputError(f"{root}/{name} differs from the E01 run summary hash")
-    audit_path = ROOT / BASE / f"gt23_e01_audit_{subject}" / "audit_report.json"
+    audit_path = ROOT / BASE / f"gt23_pl_e01_audit_{subject}" / "audit_report.json"
     audit = json.loads(audit_path.read_text())
     failed = sorted(k for k, v in audit["checks"].items() if not v.get("passed"))
     if audit.get("status") not in (None, "pass") and failed:

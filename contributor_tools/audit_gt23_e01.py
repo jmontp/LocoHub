@@ -251,7 +251,7 @@ def run_audit(args):
     out_root.mkdir(parents=True, exist_ok=True)
     base = args.base
     exp_root = ROOT / args.export_root
-    c06_root = ROOT / f'{base}/gt23_c06_batch3_{subject}'
+    c06_root = ROOT / f'{base}/gt23_planes_batch_{subject}'
     m01_root = ROOT / f'{base}/gt23_m01_batch_{subject}'
     s01_root = ROOT / f'{base}/gt23_s01_batch_{subject}'
     text = (ROOT / README).read_text()
@@ -541,7 +541,7 @@ def make_spec(args):
         for r in args.records or []:
             command += ['--records', r]
         bindings[f'{args.export_root}/run_summary.json'] = gl.sha256_file(ROOT / args.export_root / 'run_summary.json')
-        for k, p in (('c06', f'{BASE}/gt23_c06_batch3_{args.subject}'), ('m01', f'{BASE}/gt23_m01_batch_{args.subject}'),
+        for k, p in (('c06', f'{BASE}/gt23_planes_batch_{args.subject}'), ('m01', f'{BASE}/gt23_m01_batch_{args.subject}'),
                      ('s01', f'{BASE}/gt23_s01_batch_{args.subject}')):
             bindings[f'{p}/ledger.jsonl'] = gl.sha256_file(ROOT / p / 'ledger.jsonl')
         for n in ('segments.jsonl', 'authors_windows.jsonl'):

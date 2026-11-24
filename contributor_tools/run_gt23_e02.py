@@ -51,7 +51,7 @@ for _s in fx.SIDES:
     SCAN_COLUMNS += [f'{w}_angle_{_s}_rad' for _, w in fx.JOINTS] + [f'{w}_velocity_{_s}_rad_s' for _, w in fx.JOINTS]
 ANGLE_COLUMNS = [c for c in SCAN_COLUMNS if c.endswith('_rad')]
 EVIDENCE_NOTE = ('Superseded: the recordings listed in e02_summary.json are replaced by this root; the same recordings in the '
-                 'E01 root of this participant (gt23_e01_batch_<AB>) are superseded and kept as evidence.')
+                 'E01 root of this participant (gt23_pl_e01_batch_<AB>) are superseded and kept as evidence.')
 
 
 class FixError(RuntimeError):
@@ -126,7 +126,7 @@ _orig_readme = e01.readme_text
 
 def patched_read_all(path):
     d = _orig_read_all(path)
-    if 'gt23_c06_batch3_' not in str(path):
+    if 'gt23_planes_batch_' not in str(path):
         return d
     rec = Path(path).stem
     new, report = fx.fix_angles({c: d[c] for c in SCAN_COLUMNS if c in d})
@@ -303,7 +303,7 @@ def run(args):
         by_obs[(r['table'], r['observation_id'], r['reference_side'])] += 1
     summary = {'schema': SCHEMA_ID, 'subject': subject, 'recordings_scanned': len(wanted), 'recordings_exported': export,
                'recordings_unchanged_not_exported': [r['recording'] for r in scan_rows if not r['exported']],
-               'superseded_e01_recordings': export, 'superseded_e01_root': f'{BASE}/gt23_e01_batch_{subject}',
+               'superseded_e01_recordings': export, 'superseded_e01_root': f'{BASE}/gt23_pl_e01_batch_{subject}',
                'observations_with_changed_angle_samples': len(by_obs),
                'observations_with_changed_angle_samples_by_table': {t: sum(1 for k in by_obs if k[0] == t) for t in ('phase', 'time')},
                'changed_angle_sample_entries': len(STATE.changes),

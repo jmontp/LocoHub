@@ -192,7 +192,7 @@ def compare_table(kind, e01_path, e02_path, recordings, step_up_recs, changes, r
 
 def run(args):
     sub = args.subject
-    e01 = ROOT / (args.e01_root or f'{BASE}/gt23_e01_batch_{sub}')
+    e01 = ROOT / (args.e01_root or f'{BASE}/gt23_pl_e01_batch_{sub}')
     e02 = ROOT / args.e02_root
     out = ROOT / args.output_root
     out.mkdir(parents=True, exist_ok=False)
@@ -252,7 +252,7 @@ CODE = ('contributor_tools/audit_gt23_e02.py', 'contributor_tools/guarded_launch
 
 def make_spec(args):
     from contributor_tools import guarded_launcher as gl
-    e01 = f'{BASE}/gt23_e01_batch_{args.subject}'
+    e01 = f'{BASE}/gt23_pl_e01_batch_{args.subject}'
     command = ['python3', 'contributor_tools/audit_gt23_e02.py', 'run', '--subject', args.subject, '--e02-root', args.e02_root,
                '--output-root', args.output_root]
     bindings = {c: gl.sha256_file(ROOT / c) for c in CODE}
