@@ -9394,6 +9394,34 @@
       "answer": "B",
       "answered_at_utc": "2026-11-24T00:00:00Z",
       "note": "José in chat: 'Do B'."
+    },
+    {
+      "id": "D-REF-5",
+      "task_id": "CORE-07",
+      "status": "answered",
+      "question": "After joint angles and speeds are recomputed to the standard, should joint power be recomputed as published moment times the new joint speed?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Recompute power as moment × the new joint speed",
+          "consequence": "Power is exactly consistent with the published angles and moments; the authors' power values are replaced. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Keep the authors' power and state the gap",
+          "consequence": "Power differs from moment × speed by about 9–16% normalised RMS (UM21). Reversible."
+        }
+      ],
+      "options_order": "By how much changes, most first.",
+      "decide_before_recommendation": false,
+      "cost_of_waiting": "The UM21 page and the GT23 package wait.",
+      "recommended": "A",
+      "confidence": "medium",
+      "why": "The data is meant for regression; internal consistency matters.",
+      "check": "UM21 v3: power vs moment × new speed r about 0.99, normalised RMS gap 0.09–0.16.",
+      "answer": "A",
+      "answered_at_utc": "2026-11-24T00:00:00Z",
+      "note": "José in chat: 'yeah you can do A'. Applies to all datasets."
     }
   ]
 }
