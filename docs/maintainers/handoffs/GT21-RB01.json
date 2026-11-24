@@ -1,9 +1,9 @@
 {
   "task_id": "GT21-RB01",
-  "status": "review_python_parts_label_export_ab06_pilot_done",
+  "status": "review_all_parts_done",
   "scientific_approval": false,
-  "last_checked_at_utc": "2026-11-24T01:35:00+00:00",
-  "summary": "Python parts done and checked: six zips extracted (CRC, size and sha256 against the zip directory, manifest and listing), inventory of all 22 (3,147 recordings, per-mode counts and 12 channel files as planned). Launcher blocker cleared (the docs server was stopped by its owner). Label export is pending: the native MATLAB extension draft awaits independent review.",
+  "last_checked_at_utc": "2026-11-24T02:10:00+00:00",
+  "summary": "All of GT21-RB01 ran: six extractions, inventory of 22 (3,147 recordings), SubjectInfo copy beside the extracted six, and the label and subject export for all 22 (AB06 re-run first as the pilot, then 21 one at a time, all with the approved bound code). Labels and weights compared with the inventory, the crosswalk and the earlier 1,680-recording terrain check.",
   "code": {
     "runner": {
       "path": "contributor_tools/run_gt21_rb01.py",
@@ -111,8 +111,8 @@
   "resource_checks_done": "Disk S: 116 GB free (limit 30). Linux available 8.3 GB, Windows free 6.7 GB at last check. Nothing running from this worker.",
   "jobs_run": 7,
   "remaining": [
-    "Short re-review of changes made after the approval: dotdot rejection, start via cmd.exe, script reads \"labels\"",
-    "Decision by José after the pilot: run the other 21 participants (one launch each), then compare the 1,680 terrain labels"
+    "Independent verification of the label export (counts, weights, terrain comparison) against the evidence report",
+    "Optional nit for a later re-review: add the .err path to the existing-file refusal in guarded_launcher_native.py"
   ],
   "changed_files": [
     "contributor_tools/run_gt21_rb01.py",
@@ -144,7 +144,14 @@
     "docs/quality/audits/gt21-rb01-labels-AB06-spec-r4.json",
     "docs/quality/audits/gt21-rb01-labels-AB06-spec-r5.json",
     "docs/quality/audits/gt21-rb01-labels-AB06-launcher-receipt*.json",
-    "converted_datasets/reconversion_v2/gt21_rb01_labels_20261124_r2/, _r3/ (kept, not final), _r5/ (final AB06)"
+    "converted_datasets/reconversion_v2/gt21_rb01_labels_20261124_r2/, _r3/ (kept, not final), _r5/ (final AB06)",
+    "contributor_tools/build_gt21_rb01_label_spec.py",
+    "contributor_tools/run_gt21_rb01.py (subjectinfo subcommand)",
+    "tests/test_run_gt21_rb01.py",
+    "docs/quality/audits/gt21-rb01-labels-final-*-spec.json and -launcher-receipt.json (22)",
+    "docs/quality/audits/gt21-rb01-subjectinfo-copy-spec.json and -launcher-receipt.json",
+    "converted_datasets/reconversion_v2/gt21_rb01_labels_final_20261124/",
+    "/mnt/s/locomotion_data/gt21_author_mirror_2024_extracted/SubjectInfo.mat and _subjectinfo_copy/"
   ],
   "evidence_report": "docs/quality/audits/gt21-rb01-evidence.json",
   "receipts": [
@@ -170,5 +177,39 @@
     "GT21-RB04",
     "GT21-Q01"
   ],
-  "review_note": "docs/maintainers/handoffs/GT21-RB01-verify.json Part B addressed; first MATLAB run waits for a re-review of these changes."
+  "review_note": "docs/maintainers/handoffs/GT21-RB01-verify.json Part B addressed; first MATLAB run waits for a re-review of these changes.",
+  "label_export_final": {
+    "folder": "converted_datasets/reconversion_v2/gt21_rb01_labels_final_20261124/",
+    "receipts": [
+      "docs/quality/audits/gt21-rb01-labels-final-AB06-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB07-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB08-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB09-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB10-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB11-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB12-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB13-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB14-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB15-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB16-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB17-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB18-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB19-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB20-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB21-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB23-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB24-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB25-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB27-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB28-launcher-receipt.json",
+      "docs/quality/audits/gt21-rb01-labels-final-AB30-launcher-receipt.json"
+    ],
+    "evidence": "docs/quality/audits/gt21-rb01-evidence.json",
+    "specs": "docs/quality/audits/gt21-rb01-labels-final-<ID>-spec.json (built by contributor_tools/build_gt21_rb01_label_spec.py)",
+    "subjectinfo_copy": {
+      "receipt": "docs/quality/audits/gt21-rb01-subjectinfo-copy-launcher-receipt.json",
+      "why": "the export reads SubjectInfo.mat from its source root and the extracted six had none; copied (sha256 equals the publisher record) by a guarded job running run_gt21_rb01.py subjectinfo, which changed the runner hash after the earlier extraction receipts",
+      "target": "/mnt/s/locomotion_data/gt21_author_mirror_2024_extracted/SubjectInfo.mat"
+    }
+  }
 }

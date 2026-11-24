@@ -112,3 +112,16 @@ def test_inventory_reports_failed_status_for_wrong_counts(tmp_path):
     assert summary['checks']['local_mode_counts_equal_plan'] is False
     assert summary['checks']['all_12_channel_files_present_for_every_recording'] is True
     assert len((tmp_path / 'inv/recording_ledger.jsonl').read_text().splitlines()) == 1 + len(rb.SIX)
+
+
+def test_copy_subject_info_exact_and_exclusive(tmp_path):
+    src = tmp_path / 'SubjectInfo.mat'
+    src.write_bytes(b'synthetic bytes')
+    sha = hashlib.sha256(b'synthetic bytes').hexdigest()
+    rec = rb.copy_subject_info(src, tmp_path / 'copy.mat', tmp_path / 'rec', expected_sha256=sha)
+    assert (tmp_path / 'copy.mat').read_bytes() == b'synthetic bytes' and rec['sha256'] == sha
+    with pytest.raises(rb.Rb01Error):  # a source that is not the publisher record is refused before any write
+        rb.copy_subject_info(src, tmp_path / 'copy2.mat', tmp_path / 'rec2', expected_sha256='0' * 64)
+    assert not (tmp_path / 'copy2.mat').exists()
+    with pytest.raises(FileExistsError):
+        rb.copy_subject_info(src, tmp_path / 'copy3.mat', tmp_path / 'rec', expected_sha256=sha)

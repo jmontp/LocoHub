@@ -274,6 +274,29 @@ def inventory(local_root, extract_root, out_root, crosswalk_path=CROSSWALK):
     return summary
 
 
+PUBLISHER_SUBJECTINFO_SHA256 = 'bc990b2c182e0cfc7b405b99fb429026585c224ce6d1ff5249734ec89cb2ce08'
+
+
+def copy_subject_info(source, target, record_root, expected_sha256=PUBLISHER_SUBJECTINFO_SHA256):
+    """Copy SubjectInfo.mat next to the extracted six (the label export reads it from its source root).
+
+    The source must equal the publisher record hash (v1 and v2 manifests, also the authors' 2024 copy per GT21-S02);
+    the copy is exclusive and re-hashed; a small record is written into the new ``record_root``."""
+    source, target, record_root = Path(source), Path(target), Path(record_root)
+    if sha256_file(source) != expected_sha256:
+        raise Rb01Error('SubjectInfo.mat differs from the publisher record')
+    record_root.mkdir(parents=True)
+    with source.open('rb') as src, target.open('xb') as dst:
+        shutil.copyfileobj(src, dst, CHUNK)
+    if sha256_file(target) != expected_sha256:
+        raise Rb01Error('copied SubjectInfo.mat differs from the source')
+    record = {'schema': 'locohub.gt21_rb01_subjectinfo_copy/1', 'scientific_approval': False, 'source': str(source),
+              'target': str(target), 'sha256': expected_sha256, 'bytes': target.stat().st_size,
+              'basis': 'equals the publisher v1/v2 manifest sha256 (cohort crosswalk) and the authors 2024 copy file (GT21-S02)'}
+    write_json_exclusive(record_root / 'subjectinfo_copy.json', record)
+    return record
+
+
 def counts_by_mode_rows(rows):
     counts = {m: 0 for m in MODES}
     for r in rows:
@@ -290,10 +313,15 @@ def main(argv=None):
     ex.add_argument('--ledger', type=Path, required=True)
     inv = sub.add_parser('inventory')
     inv.add_argument('--out-root', type=Path, required=True)
+    si = sub.add_parser('subjectinfo')
+    si.add_argument('--record-root', type=Path, required=True)
     args = parser.parse_args(argv)
     if args.cmd == 'extract':
         summary = extract(args.subject, args.out_root, args.ledger)
         print(json.dumps({k: v for k, v in summary.items() if k != 'members'}, indent=2))
+        return 0
+    if args.cmd == 'subjectinfo':
+        print(json.dumps(copy_subject_info(LOCAL_ROOT / 'SubjectInfo.mat', EXTRACT_ROOT / 'SubjectInfo.mat', args.record_root), indent=2))
         return 0
     summary = inventory(LOCAL_ROOT, EXTRACT_ROOT, args.out_root)
     print(json.dumps({k: v for k, v in summary.items() if k not in ('per_subject', 'weight_literals_from_crosswalk')}, indent=2))

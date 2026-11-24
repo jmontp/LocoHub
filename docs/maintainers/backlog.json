@@ -7655,10 +7655,11 @@
         "Label export agrees with the 1,680 ramp and stair terrain labels already checked; stair_1_l_01_02 window list recorded.",
         "Pilots (AB17 extraction, AB06 export) pass before the other jobs; one job at a time, nice 19, ionice idle, memory headroom checked before each; nothing under existing converted_datasets files is overwritten."
       ],
-      "next_action": "José decides after the AB06 pilot (r5 clean): run the other 21 label exports one at a time after a short re-review of the post-approval changes; then compare the 1,680 terrain labels and the Weight literals.",
+      "next_action": "Independent reviewer checks the full task (extractions, inventory, label export for all 22) against the evidence report; then RB02 and RB04 use the inventory ledger and label files.",
       "resource_class": "numerical",
       "evidence_paths": [
         "converted_datasets/reconversion_v2/gt21_rb01_inventory_20261123/inventory_summary.json",
+        "converted_datasets/reconversion_v2/gt21_rb01_labels_final_20261124/AB06/labels_AB06.jsonl",
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
         "docs/quality/audits/gt21-ab17-recovery.json",
         "docs/quality/audits/gt21-rb01-evidence.json",
@@ -7666,21 +7667,18 @@
         "docs/quality/audits/gt21-s02-2024-copy.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-24T01:35:00+00:00",
-        "summary": "Python parts done and checked: six zips extracted (CRC, size and sha256 against the zip directory, manifest and listing), inventory of all 22 (3,147 recordings, per-mode counts and 12 channel files as planned). Launcher blocker cleared (the docs server was stopped by its owner). Label export is pending: the native MATLAB extension draft awaits independent review.",
+        "last_checked_at_utc": "2026-11-24T02:10:00+00:00",
+        "summary": "All of GT21-RB01 ran: six extractions, inventory of 22 (3,147 recordings), SubjectInfo copy beside the extracted six, and the label and subject export for all 22 (AB06 re-run first as the pilot, then 21 one at a time, all with the approved bound code). Labels and weights compared with the inventory, the crosswalk and the earlier 1,680-recording terrain check.",
         "checks": [
-          "6 extractions: member size, CRC32 and sha256 equal zip directory, manifest and bound listing (members 1,770/1,638/1,602/1,722/1,746/1,711)",
-          "Inventory: 16 local 506/1015/665/115 and six 174/379/251/42, 3,147 recordings, all 12 channel files present",
-          "14 synthetic tests pass",
-          "verify-cleanup proved for all 7 jobs; peak memory 21-24 MiB each",
-          "Independent verification (docs/maintainers/handoffs/GT21-RB01-verify.json): Part A pass: receipts clean or explained, 36 of 36 sampled members (seed 20261125) and all 10,189 ledger entries equal the zip directory, counts 506/1015/665/115 and 174/379/251/42 with 12 channel files each recounted from listings, local source folder unwritten (newest mtime 2025-08-11)",
-          "Part B code review: native extension NOT approved until two changes: census counts the module itself (every run would refuse), and a MATLAB stub that exits would leave the job unwatched",
-          "Review Part B fixes applied (B1 launcher exemption, B2 orphan adoption, table names, root restrictions); 16 native tests and 148 launcher/runner tests pass",
-          "AB06 label export pilot r5: 143 recordings equal the inventory, Weight 74.84 kg (units \"kg\" in SubjectInfo), 9 label windows per ramp and stair recording, clean receipt"
+          "6 extractions: size, CRC32 and sha256 equal zip directory, manifest and bound listing",
+          "Inventory: 16 local 506/1015/665/115 and six 174/379/251/42, 3,147 recordings, 12 channel files each",
+          "Label export 22 of 22 clean (peak working set max 1000 MiB, cap 2048); recordings equal the inventory; Weight equals the crosswalk for 22 of 22, unit kg",
+          "Terrain: local 1,015 ramp and 665 stair with 0 missing or invalid values (matches the earlier 1,680 check by count and validity)",
+          "Tests: 8 runner tests, 17 native launcher tests, 148 launcher tests earlier"
         ],
         "remaining": [
-          "Short re-review of changes made after the approval: dotdot rejection, start via cmd.exe, script reads \"labels\"",
-          "Decision by José after the pilot: run the other 21 participants (one launch each), then compare the 1,680 terrain labels"
+          "Independent verification of the label export (counts, weights, terrain comparison) against the evidence report",
+          "Optional nit for a later re-review: add the .err path to the existing-file refusal in guarded_launcher_native.py"
         ],
         "changed_files": [
           "contributor_tools/run_gt21_rb01.py",
@@ -7712,7 +7710,14 @@
           "docs/quality/audits/gt21-rb01-labels-AB06-spec-r4.json",
           "docs/quality/audits/gt21-rb01-labels-AB06-spec-r5.json",
           "docs/quality/audits/gt21-rb01-labels-AB06-launcher-receipt*.json",
-          "converted_datasets/reconversion_v2/gt21_rb01_labels_20261124_r2/, _r3/ (kept, not final), _r5/ (final AB06)"
+          "converted_datasets/reconversion_v2/gt21_rb01_labels_20261124_r2/, _r3/ (kept, not final), _r5/ (final AB06)",
+          "contributor_tools/build_gt21_rb01_label_spec.py",
+          "contributor_tools/run_gt21_rb01.py (subjectinfo subcommand)",
+          "tests/test_run_gt21_rb01.py",
+          "docs/quality/audits/gt21-rb01-labels-final-*-spec.json and -launcher-receipt.json (22)",
+          "docs/quality/audits/gt21-rb01-subjectinfo-copy-spec.json and -launcher-receipt.json",
+          "converted_datasets/reconversion_v2/gt21_rb01_labels_final_20261124/",
+          "/mnt/s/locomotion_data/gt21_author_mirror_2024_extracted/SubjectInfo.mat and _subjectinfo_copy/"
         ],
         "detail": "docs/maintainers/handoffs/GT21-RB01.json"
       },
