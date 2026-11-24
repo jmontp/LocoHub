@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-11-24T21:49:51+00:00",
+  "updated_at_utc": "2026-11-24T22:10:51Z",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-X01",
@@ -1821,7 +1821,7 @@
       "priority": "P0",
       "dataset": "um21",
       "title": "Build a trustworthy local treadmill review release",
-      "status": "review",
+      "status": "done",
       "stage": "release",
       "question": "Can users inspect the first treadmill subset with clear limitations and exact lineage?",
       "scope": "Explicit treadmill subset; not completion of all UM21 tasks.",
@@ -1846,7 +1846,7 @@
         "Create a local review bundle only; no upload or publication without the requested workflow.",
         "The UMich 2021 dataset page is rebuilt from the review bundle in plain words, shows what was fixed (original vs fixed) and what was left out and why, and is rendered at wide and phone width before José is pointed to it."
       ],
-      "next_action": "Bundle verified. Build the UMich 2021 documentation page from phase_preview.json and the original-vs-fixed list (separate step), then mark done. Update 2026-11-23: José decided that every dataset uses the standard's zero (joint angles are differences of segment angles) and the foot-frame centre of pressure (D-REF-1, D-REF-2). Files made under another zero or origin stay legacy until reconverted; whether UMich 2021 has what is needed (segment angles, ankle centre, foot orientation) is not checked.",
+      "next_action": "Done: v3 package independently verified (handoffs/UM21-R01-v3-verify.json). Remaining outside this task: build the UM21 dataset page from the v3 package; powers vs new joint speeds differ in amplitude (document or recompute).",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/UM21-R01.json",
@@ -1855,7 +1855,9 @@
         "docs/quality/audits/um21-r01-pilot-launcher-receipt-v2.json",
         "contributor_tools/run_um21_r01_bundle.py",
         "tests/test_um21_r01_bundle.py",
-        "docs/maintainers/handoffs/UM21-R01-verify.json"
+        "docs/maintainers/handoffs/UM21-R01-verify.json",
+        "docs/maintainers/handoffs/UM21-R01-v3-verify.json",
+        "converted_datasets/reconversion_v2/um21_r01_package_v3/manifest.json"
       ],
       "handoff": {
         "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
@@ -1885,7 +1887,7 @@
       "priority": "P0",
       "dataset": "um21",
       "title": "Apply the gravity-referenced zero and foot-frame CoP",
-      "status": "ready",
+      "status": "done",
       "stage": "conversion",
       "question": "Can the UMich 2021 treadmill bundle follow the standard's zero (joint angles are differences of gravity-referenced segment angles) and the foot-frame centre of pressure?",
       "scope": "44 treadmill recordings of the R01 bundle. Columns changed: hip, knee, ankle, thigh, shank angles and velocities; new foot angle and velocity; new centre of pressure. Not scientific approval; v2 bundle stays legacy-zero. Builds on the R01 bundle (in review) as the v2 reference; does not wait for R01 sign-off.",
@@ -1913,13 +1915,14 @@
         "Observation identities, 150-point inclusive phase grid and every exclusion are accounted for against the v2 bundle; full and filtered share lineage; Q01 re-run, not reused.",
         "Pilot of the same bound code passes before the full run; one numerical job at a time, peak memory recorded; v2 bundle untouched."
       ],
-      "next_action": "Produce Q01 v3 on the v7 table and the R01 v3 review bundle (full and filtered share lineage, every exclusion accounted); then re-submit for review. S02 v7 conversion evidence itself was independently verified (docs/maintainers/handoffs/UM21-S02-verify.json).",
+      "next_action": "Done: S02 v7 verified, Q01 v3 and R01 v3 package built and independently verified (handoffs/UM21-R01-v3-verify.json).",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/UM21-STD-plan.json",
         "contributor_tools/audit_probes/2026_11_23/probe_um21_std_plan_source_check.py",
         "docs/maintainers/handoffs/UM21-S02-verify.json",
-        "contributor_tools/audit_probes/2026_11_24"
+        "contributor_tools/audit_probes/2026_11_24",
+        "docs/maintainers/handoffs/UM21-R01-v3-verify.json"
       ],
       "handoff": {
         "last_checked_at_utc": "2026-11-24T22:00:00+00:00",
