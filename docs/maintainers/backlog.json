@@ -7188,7 +7188,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Rescale moments and powers of 52 recordings and fix AB03 body weight",
-      "status": "blocked",
+      "status": "working",
       "stage": "conversion",
       "question": "Are exactly the 52 recordings rescaled by (mass used / own mass), AB03 forces in body weights right, and everything else unchanged?",
       "scope": "27 guarded jobs: 3 pilots (AB05 normal_walk_1, exact, factor 1.1035; AB03 dynamic_walk_1, estimated, factor 0.741; an AB03 body-weight force check) + 12 batches + 12 audits. List and factors from the hash-bound gt23-c05-rescale-error.json (7 exact, 45 estimated and matched to the nearest recorded mass; estimate and interval kept in provenance). Other 436 recordings keep published moments and powers with a note. Body weights use the publisher's README mass table. Units are documented only (values already per kg).",
@@ -7218,7 +7218,7 @@
         "AB03 standing vertical force sums to about 1 BW with 113.5 kg (plates give 113.8 kg).",
         "Every moment and power column is labelled per kg."
       ],
-      "next_action": "After GT23-C06 is done: write the module, then dry-run the AB05 normal_walk_1 pilot.",
+      "next_action": "Writing the mass-step runner and synthetic tests; then pilots, then 12 batches.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT23-rebuild-plan.json",
@@ -7240,7 +7240,8 @@
           "docs/maintainers/backlog.html"
         ]
       },
-      "blocked_reason": "Waits for GT23-C06 (converted columns)."
+      "owner": "claude-worker-gt23-m01",
+      "started_at_utc": "2026-11-24T03:08:08+00:00"
     },
     {
       "id": "GT23-E01",
@@ -9033,6 +9034,62 @@
       "answer": "other",
       "answer_text": "José, 23 November 2026: \"remove some of the old datasets ... only keep the three that we are working with now. That way we have the updated 'stuff that we fixed' pages.\" Refinement: the other datasets still appear in the catalog, as plain text, in a closed collapsible section titled for later; their detail pages are not built.",
       "answered_at_utc": "2026-11-23T00:00:00Z"
+    },
+    {
+      "id": "D-UM21-S02-2",
+      "task_id": "UM21-S02",
+      "status": "answered",
+      "question": "In some UMich 2021 recordings only one leg's centre of pressure passes the checks. Should that leg be published?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Publish the passing leg",
+          "consequence": "The failing leg stays present but empty, with its reason. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Hold both legs of that recording",
+          "consequence": "Both legs stay empty. Reversible."
+        }
+      ],
+      "options_order": "By how much is published, most first.",
+      "decide_before_recommendation": false,
+      "cost_of_waiting": "Only those recordings' centre-of-pressure columns wait.",
+      "recommended": "A",
+      "confidence": "medium",
+      "why": "Each leg is checked on its own, so a passing leg is verified independently of the other.",
+      "check": "Each published leg has hold-out r of at least 0.95 and its toe end within 4 cm in 95% of strides.",
+      "answer": "A",
+      "answered_at_utc": "2026-11-24T00:00:00Z",
+      "note": "José in chat: 'yes publish the passing leg'."
+    },
+    {
+      "id": "D-REF-3",
+      "task_id": "CORE-07",
+      "status": "answered",
+      "question": "Under the gravity-referenced zero, a person standing straight shows about +10° hip flexion, because the pelvis line tilts forward. Keep it, or measure the pelvis from its standing tilt?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Keep the rule as written",
+          "consequence": "A standing hip reads about +10°, and the pelvis is measured from horizontal. No change."
+        },
+        {
+          "key": "B",
+          "label": "Measure the pelvis from its standing tilt",
+          "consequence": "A standing hip reads about 0°, the pelvis segment is no longer gravity-referenced, and a standing trial is needed. Reversible."
+        }
+      ],
+      "options_order": "By how much changes, least first.",
+      "decide_before_recommendation": false,
+      "cost_of_waiting": "Hip and pelvis columns wait.",
+      "recommended": "A",
+      "confidence": "medium",
+      "why": "It keeps one gravity-referenced rule for every segment.",
+      "check": "GT23 hip minus publisher hip equals the marker pelvis tilt to 0.1°.",
+      "answer": "A",
+      "answered_at_utc": "2026-11-24T00:00:00Z",
+      "note": "José in chat: 'keep the hip as is'."
     }
   ]
 }
