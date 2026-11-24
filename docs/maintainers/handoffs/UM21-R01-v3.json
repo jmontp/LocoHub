@@ -1,0 +1,20 @@
+{
+ "task_id": "UM21-R01 v3 (includes UM21-Q01 v3)",
+ "status": "ready_for_independent_review",
+ "scientific_approval": false,
+ "summary": "Q01 v3 composed and assessed the S02 v7 table (7,545 strides, 1,131,750 rows); R01 v3 built the package with the shared builder: full 7,545, filtered 7,523, 22 failed (L5 21, L1 1), 17 upstream exclusions (15 stride rule, 2 sudden jump). Separate readback: all 24 checks pass.",
+ "code": ["contributor_tools/run_um21_q01v3_assessment.py", "contributor_tools/run_um21_r01_package.py", "contributor_tools/readback_um21_r01_package.py", "tests/test_um21_q01v3_assessment.py", "tests/test_um21_r01_package.py"],
+ "receipts": ["docs/quality/audits/um21-q01v3-pilot-launcher-receipt.json", "docs/quality/audits/um21-q01v3-full-launcher-receipt.json", "docs/quality/audits/um21-r01-package-pilot-launcher-receipt-v3-a3.json", "docs/quality/audits/um21-r01-package-full-launcher-receipt-v3-a3.json", "docs/quality/audits/um21-r01-readback-launcher-receipt-v3.json"],
+ "evidence_paths": ["converted_datasets/reconversion_v2/um21_q01v3_full", "converted_datasets/reconversion_v2/um21_r01_package_v3", "converted_datasets/reconversion_v2/um21_r01_readback_v3/readback.json"],
+ "agent_choices_logged": [
+  "L2 runs on the 100 Hz marker frame series inside each stride window (not on the 150 resampled samples), mapped to the observation.",
+  "Plane-glitch rule P1 (60 degrees, chosen before results): held columns are thigh, shank, foot, hip, knee, ankle angle, thigh/shank/foot velocity and the three CoP columns; pelvis kept. The CoP inclusion is an agent choice. Result: 1 stride held (AB08/i0 left, frames 13899-14028), already all-missing in S02 v7.",
+  "L5 bounds as GT23 (0.5 m anterior, 0.3 m vertical and lateral).",
+  "The 2 sudden-jump strides of v2 stay excluded; they were judged on the Vicon ankle and are not re-evaluated (S02 v7 covers the v2 observation set).",
+  "Moments and powers carried from v2 unchanged; no time table (UM21 has none).",
+  "Pilot a2 of R01 was not clean (a foreign worker started during the run) and the README text was edited afterwards; a3 is the pilot of record."],
+ "findings": ["21 strides in 11 legs fail L5 (vertical CoP 0.30-0.36 m, mostly late stance); 1 stride (AB04/i5 left, 62 frames, next to excluded short strides) fails L1 ankle up to 85 degrees. Neither investigated.",
+  "CoP: 60 legs published, 28 held; 5,141 strides publish, 2,383 held. Held-back (ruling): i10 of AB01-AB03, AB04/d10, AB10/d5."],
+ "not_done": ["independent verifier", "dataset page", "backlog edit", "L2 not rechecked by the readback (needs markers)"],
+ "next_action": "Independent verifier on Q01 v3, R01 v3 package and readback; then the dataset page."
+}
