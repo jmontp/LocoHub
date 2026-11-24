@@ -4785,7 +4785,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Reconcile a local review release for Georgia Tech 2023",
-      "status": "blocked",
+      "status": "review",
       "stage": "release",
       "question": "Do this dataset's exact data files, review evidence and researcher-facing claims agree?",
       "scope": "Complete retained Georgia Tech 2023 source scope and every exported observation type; any smaller local bundle remains an explicitly separate scope. Rebuilt output only; the time table is about 20 million rows, so what a release contains is a scope question for José when this task starts.",
@@ -4811,27 +4811,38 @@
         "The catalog, download variant and preview refer to this exact reviewed artifact or remain explicitly legacy/unreviewed.",
         "Record any release limitation and remaining source gaps. Publishing or uploading follows the user-requested destination/workflow and is separate from this local review."
       ],
-      "next_action": "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope. Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked. Rebuild plan: docs/maintainers/handoffs/GT23-rebuild-plan.json.",
+      "next_action": "Second-agent verification of the GT23 local review package (docs/maintainers/handoffs/GT23-R01.json); then build the Georgia Tech 2023 dataset page.",
       "resource_class": "numerical",
       "evidence_paths": [
-        "docs/quality/audits/backlog-refresh-20261027.json"
+        "docs/quality/audits/backlog-refresh-20261027.json",
+        "docs/maintainers/handoffs/GT23-R01.json",
+        "converted_datasets/reconversion_v2/gt23_r01_review_v10",
+        "docs/quality/audits/gt23-r01-full-launcher-receipt-v10.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T00:00:00+00:00",
-        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
-        "changed_files": [],
+        "last_checked_at_utc": "2026-11-24T19:49:08Z",
+        "summary": "Local review package built through the shared streaming release builder (full and filtered, phase and time, 19,573 observations in full, 19,448 in filtered, 125 assessment failures, 5,281 exclusion rows) and read back by a separate script (31 checks pass). Awaiting independent verification. No scientific approval, nothing published.",
+        "changed_files": [
+          "contributor_tools/common/release_package.py",
+          "contributor_tools/run_gt23_r01_bundle.py",
+          "contributor_tools/DATA_CONTRACT.md",
+          "tests/test_release_package.py",
+          "tests/test_gt23_r01_bundle.py",
+          "docs/maintainers/handoffs/GT23-R01.json"
+        ],
         "checks": [
-          "Reviewed the retained project scope and declared dependencies only."
+          "pilot v10 (2 participants) and full v10 under the guarded launcher; 28 builder checks pass; separate readback 31 checks pass; 14 new tests pass"
         ],
         "remaining": [
-          "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope.",
-          "Update 2026-11-23: José decided (D-GT23-C05-2, D-GT23-C05-3 open, D-GT23-C01-2, D-REF-1, D-REF-2): (1) rescale per-kg moments and powers by (mass used ÷ own mass) for the 52 recordings shown to carry another mass (7 exact, 45 estimated from force plates; which of the 52 is open in D-GT23-C05-3), others stay as published with a note; (2) segment every GT23 recording with LocoHub's own scripts, including the 90 without event windows, and validate against the authors' labelled strides; (3) compute pelvis, thigh and shank angles per the standard (no separate decision); (4) joint angles are differences of segment angles and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run; whether our segmentation works on all GT23 tasks, and whether every recording has the ankle centre and foot orientation, is not checked."
+          "independent verification",
+          "dataset page after verification"
         ]
       },
-      "blocked_reason": "Required evidence is unfinished: GT23-Q01, CORE-02. Recheck the actual artifacts and resource conditions before execution; a task plan does not satisfy these prerequisites.",
       "legacy_ids": [
         "RELEASE-02"
-      ]
+      ],
+      "owner": "claude-worker-gt23-r01",
+      "started_at_utc": "2026-11-24T17:51:41+00:00"
     },
     {
       "id": "GT24-Q01",

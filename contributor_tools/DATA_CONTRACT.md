@@ -316,3 +316,99 @@ Tiny synthetic fixtures test the complete pipeline without production datasets:
 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
   python3 -m pytest -q tests/test_data_contract.py tests/test_dataset_release.py
 ```
+
+## Release package
+
+One layout for every dataset's local review package. `contributor_tools/common/release_package.py` writes it by streaming
+(row-group by row-group); a small per-dataset adapter supplies the inputs. `run_gt23_r01_bundle.py` is the first adapter
+(Georgia Tech 2023); UMich 2021 and Georgia Tech 2021 move to the same builder later. A package is written to a new
+directory and never replaces an existing one. `scientific_approval` is always false; a package is a review copy, not a
+publication.
+
+```text
+<release>/
+  full_phase.parquet        full_time.parquet          every exported observation
+  filtered_phase.parquet    filtered_time.parquet      full minus the observations the assessment failed, nothing else
+  exclusions.csv            every exclusion, with observation id, stage and reason
+  assessment.jsonl          the structured assessment, one line per observation
+  limitations.json          each known limitation with counts
+  dataset_index.json        files, counts, recordings, signal states, held columns
+  phase_preview.json        mean and SD per phase sample of the filtered phase file
+  test_summary.json         the builder's checks, with expected and observed values
+  README.md                 plain-words description
+  evidence/                 dataset-specific CSV evidence (optional, listed in the manifest)
+  manifest.json             sha256 and bytes of every other file, counts, inputs, resources
+  manifest.sha256           sha256 of manifest.json
+```
+
+A dataset without a time table omits `*_time.parquet`; `manifest.json` lists the tables that exist (`tables`).
+
+**Tables.** Every table file holds the source columns of the observation contract unchanged plus six string columns:
+`source_export` (which source part supplied the row), `quality_status` (`no_failure_found` or `failed`; filtered files hold
+only `no_failure_found`), `failed_limits` (JSON list), `limitations` (JSON list), `lineage_id` and `assessment_id` (the same
+value on every row of every file). Phase observations keep exactly 150 samples on the inclusive 0-100 grid; time
+observations keep their source clock. Nothing is resampled, filled or re-labelled. Full and filtered write identical
+column lists. Row groups are 12,000 rows.
+
+**Replacement.** An adapter may name source recordings that a later part replaces (for example a corrected re-export). The
+replaced rows are dropped from the earlier part, the replacing part may contain only those recordings, and every replaced
+observation is accounted for in the checks.
+
+**assessment.jsonl.** One JSON object per observation with `observation_id`, `reference_side`, `table`, `observation_type`,
+`subject`, `source_recording_id`, `task`, `task_id`, `rows`, `status` (`failed` removes the observation from filtered;
+anything else keeps it), `failed_limits`, `failed_channels`, `failed_samples`, `limitations`, `flight`, `attributes`,
+`held_signals` (column to reason), `channel_states` (state to columns, using the states of the table above), plus
+`in_full_variant` and `in_filtered_variant`. A missing or unchecked signal appears here as such; it is never evidence of
+passing.
+
+**exclusions.csv.** Columns: `exclusion_id, observation_id, subject, source_recording_id, reference_side, stage, kind,
+reason_code, reason, decision, in_full_variant, in_filtered_variant, task, task_id, start_s, end_s, detail`. `stage` is one of
+`upstream_not_released` (left out before the export table: source or export exclusions, source windows not exported),
+`release_membership` (left out of both variants at packaging) and `filtered_variant_only` (in full, left out of filtered:
+the assessment failures, which the builder adds itself). `kind` is the dataset's own name for the class. Every observation,
+segment or window that is not in a variant is listed once.
+
+**limitations.json.** `limitations` (each with `id`, `title`, a plain statement and counts: observations by type,
+recordings, participants, how many remain in filtered, how many failed), `unchecked_signal_families` and
+`unchecked_columns_by_assessment`.
+
+**manifest.json.** `schema` (`locohub.release_package/1`), `dataset_id`, `release_id`, `stage`, `tables`, `binding`, `counts`,
+`inputs_sha256` (every source file read, each checked against its producing receipt before the build), `bound_files_sha256`
+(code, receipts and handoffs the launcher spec binds), `files` (sha256 and bytes of every file except the manifest) and
+`resources` (peak RSS, address-space limit, niceness, wall time, row-group sizes). `binding` holds the sha256 of each table
+file, `exclusions.csv` and `assessment.jsonl`, the counts, `lineage_id` and `assessment_id`. The same `binding` object is
+copied into `dataset_index.json`, `phase_preview.json`, `test_summary.json` and `limitations.json`; a reader checks that all
+five agree. `lineage_id` hashes the source files and bound files (not the builder), so the full and filtered variants and
+any later rebuild from the same inputs share it; `assessment_id` hashes the assessment files.
+
+**Checks.** `test_summary.json` always records: grid and order of every observation, identical columns, the written
+observations equal the assessed ones with their row counts, full = filtered + failed with no gap or overlap, filtered rows =
+full rows minus the failed rows, every failed observation listed in `exclusions.csv`, no finite value in held columns, one
+lineage and assessment id on every row, and one assessment line per observation. Adapters add their own (for example
+expected totals from the verified source chain).
+
+**Memory rules.** One numerical worker through the guarded launcher; one table at a time, so two writers are open at once
+(an open writer keeps about 80 KB of metadata per row group); source files are read in batches of at most 3,000 rows with
+Arrow threads off; only compact assessment entries stay resident. The 256 MiB / 500,000-row admission of
+`build_dataset_release.py` is unchanged and is not raised; the streaming builder is for exports above it.
+
+**Adapter.** A subclass of `ReleaseAdapter` provides the table parts and the replacements, the assessment entries, the
+source exclusions, optional evidence tables, the limitation entries, README sections, extra checks and the input hashes.
+Nothing else is per dataset.
+
+**Relation to the other two builders.**
+
+| `build_dataset_release.py` (in-memory) | UMich 2021 bundle `um21_r01_review_v2` (legacy layout) | Release package |
+| --- | --- | --- |
+| `full.parquet` (source export, byte for byte) | `full.parquet` | `full_phase.parquet`, `full_time.parquet` |
+| `filtered.parquet` | `filtered.parquet` | `filtered_phase.parquet`, `filtered_time.parquet` |
+| `exclusions.parquet` | `exclusions.csv` (`recording`, `stage`, `reason_code`) | `exclusions.csv` (`source_recording_id`, `stage`, `kind`, `reason_code`) |
+| `quality.json` | `assessment_amendments.jsonl`, `held_signals.csv` | `assessment.jsonl` (held columns and states per observation) |
+| limitations inside `manifest.json` and `quality.json` | in the handoff | `limitations.json` |
+| `manifest.json`, `manifest.sha256` | same | same, with `binding` and per-file bytes |
+| `README.md` data card | short README | plain-words README |
+| none | `dataset_index.json`, `phase_preview.json`, `test_summary.json` | same names, same `binding` |
+
+The in-memory builder, its tests and the UMich 2021 bundle keep their layouts: the UM21 review page
+(`build_dataset_review_page.py`) reads `manifest.json`, `dataset_index.json`, `exclusions.csv`, `held_signals.csv` and
+`phase_preview.json` of the legacy bundle and is updated when UM21 is rebuilt through the package builder.
