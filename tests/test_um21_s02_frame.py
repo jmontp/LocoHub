@@ -17,69 +17,193 @@ spec.loader.exec_module(s02)
 RAD = np.radians
 
 
-def sag_points(thigh, shank, foot, pelvis, hip=(0.0, 1.0), thigh_len=0.45, shank_len=0.45):
-    """Sagittal (forward, up) points built from chosen segment angles in degrees (synthetic, by construction)."""
-    hip = np.array(hip)
-    knee = hip + thigh_len * np.array([np.sin(RAD(thigh)), -np.cos(RAD(thigh))])
-    ankle = knee + shank_len * np.array([np.sin(RAD(shank)), -np.cos(RAD(shank))])
-    heel = ankle + np.array([-0.07, -0.08])
-    e = np.array([np.cos(RAD(foot)), np.sin(RAD(foot))])
-    heel = ankle - 0.07 * e
-    toe = heel + 0.21 * e
-    psi = np.array([-0.05, 1.05])
-    asi = psi + 0.1 * np.array([np.cos(RAD(pelvis)), np.sin(RAD(pelvis))])
-    return {k: v[None, :] for k, v in dict(asi=asi, psi=psi, hip=hip, knee=knee, ankle=ankle, heel=heel, toe=toe).items()}
+UPV = np.array([0.0, 0.0, 1.0])   # UMich marker frame: z up
 
 
-def test_known_value_segments_and_joints():
-    # synthetic: thigh +30, shank -10, foot +20, pelvis -12 deg -> hip 42, knee 40, ankle 30 deg
-    seg = s02.segment_angles(sag_points(30, -10, 20, -12))
-    assert np.degrees(seg["thigh"][0]) == pytest.approx(30, abs=1e-9)
-    assert np.degrees(seg["shank"][0]) == pytest.approx(-10, abs=1e-9)
-    assert np.degrees(seg["foot"][0]) == pytest.approx(20, abs=1e-9)
-    assert np.degrees(seg["pelvis"][0]) == pytest.approx(-12, abs=1e-9)
-    j = s02.joint_angles(seg)
+def fwd_of(yaw):
+    """Horizontal forward unit vector for a heading angle (z up, counterclockwise seen from above)."""
+    return np.array([np.cos(yaw), np.sin(yaw), 0.0])
+
+
+def person(thigh, shank, foot, pelvis, pelvis_yaw, leg_yaw=None, toe_out=0.0):
+    """One SYNTHETIC pose (single sample, z up). The pelvis faces ``pelvis_yaw``; both legs lie in vertical planes facing
+    ``leg_yaw`` (default: pelvis yaw) with the stated segment angles (degrees) measured in THEIR OWN plane; the feet turn
+    ``toe_out`` radians outward of the leg plane keeping the true elevation ``foot``. Returns lab markers (metres)."""
+    leg_yaw = pelvis_yaw if leg_yaw is None else leg_yaw
+    fp, fl = fwd_of(pelvis_yaw), fwd_of(leg_yaw)
+    rp, rl = np.cross(fp, UPV), np.cross(fl, UPV)
+
+    def pelvis_pt(a, b, lateral=0.0):
+        return a * fp + b * UPV + lateral * rp
+    psis = np.array([-0.05, 1.05])
+    asis = psis + 0.1 * np.array([np.cos(RAD(pelvis)), np.sin(RAD(pelvis))])
+    m = {"LASI": pelvis_pt(*asis, -0.13), "RASI": pelvis_pt(*asis, 0.13), "LPSI": pelvis_pt(*psis, -0.05),
+         "RPSI": pelvis_pt(*psis, 0.05)}
+    hip = np.array([0.0, 1.0])
+    knee = hip + 0.45 * np.array([np.sin(RAD(thigh)), -np.cos(RAD(thigh))])
+    ankle = knee + 0.45 * np.array([np.sin(RAD(shank)), -np.cos(RAD(shank))])
+    for side, sgn in (("L", -1.0), ("R", 1.0)):
+        def leg_pt(a, b, lateral=0.0, sgn=sgn):
+            return a * fl + b * UPV + (sgn * 0.1 + lateral) * rl
+        m[side + "KNE"], m[side + "KNEM"] = leg_pt(*knee, sgn * 0.05), leg_pt(*knee, -sgn * 0.05)   # lateral, medial
+        m[side + "ANK"], m[side + "ANKM"] = leg_pt(*ankle, sgn * 0.015), leg_pt(*ankle, -sgn * 0.015)
+        f_foot = np.cos(toe_out) * fl + np.sin(toe_out) * sgn * rl
+        heel = np.array(leg_pt(*ankle)) + np.array([0.0, 0.0, -0.08])
+        m[side + "HEE"] = heel
+        m[side + "TOE"] = heel + 0.21 * (np.cos(RAD(foot)) * f_foot + np.sin(RAD(foot)) * UPV)
+    return {k: np.asarray(v, float)[None, :] for k, v in m.items()}
+
+
+def angles(m, side):
+    """Segment and joint angles of one leg and the pelvis with the runner's per-leg plane functions."""
+    knee = (m[side + "KNE"] + m[side + "KNEM"]) / 2
+    ankle = (m[side + "ANK"] + m[side + "ANKM"]) / 2
+    rasi, lasi, rpsi, lpsi = m["RASI"], m["LASI"], m["RPSI"], m["LPSI"]
+    hip = s02.hip_centres(rasi, lasi, rpsi, lpsi)["right" if side == "R" else "left"]
+    fl = s02.plane_forward(s02.knee_axis_to_right(m[side + "KNE"], m[side + "KNEM"], side))
+    seg = s02.leg_segment_angles(fl, knee - hip, ankle - knee, m[side + "HEE"], m[side + "TOE"])
+    seg["pelvis"] = s02.pelvis_angle_own_plane((rasi + lasi) / 2, (rpsi + lpsi) / 2)
+    return seg, s02.joint_angles(seg), fl
+
+
+def posed(thigh, shank, foot, pelvis, pelvis_yaw, leg_yaw=None, toe_out=0.0, side="R"):
+    """Pose with the thigh, shank, foot angles realised about the HIP CENTRE of the runner's regression, so the stated
+    thigh and shank angles are exact (the synthetic hip sits where hip_centres puts it)."""
+    m = person(thigh, shank, foot, pelvis, pelvis_yaw, leg_yaw, toe_out)
+    hip = s02.hip_centres(m["RASI"], m["LASI"], m["RPSI"], m["LPSI"])["right" if side == "R" else "left"][0]
+    leg_yaw = pelvis_yaw if leg_yaw is None else leg_yaw
+    fl = fwd_of(leg_yaw)
+    sgn = 1.0 if side == "R" else -1.0
+    rl = np.cross(fl, UPV)
+    knee = hip + 0.45 * (np.sin(RAD(thigh)) * fl - np.cos(RAD(thigh)) * UPV)
+    ankle = knee + 0.45 * (np.sin(RAD(shank)) * fl - np.cos(RAD(shank)) * UPV)
+    m[side + "KNE"], m[side + "KNEM"] = (knee + sgn * 0.05 * rl)[None, :], (knee - sgn * 0.05 * rl)[None, :]
+    m[side + "ANK"], m[side + "ANKM"] = (ankle + sgn * 0.015 * rl)[None, :], (ankle - sgn * 0.015 * rl)[None, :]
+    f_foot = np.cos(toe_out) * fl + np.sin(toe_out) * sgn * rl
+    heel = ankle - 0.08 * UPV
+    m[side + "HEE"] = heel[None, :]
+    m[side + "TOE"] = (heel + 0.21 * (np.cos(RAD(foot)) * f_foot + np.sin(RAD(foot)) * UPV))[None, :]
+    return m
+
+
+@pytest.mark.parametrize("side", ["L", "R"])
+@pytest.mark.parametrize("pelvis_yaw,leg_yaw", [(0.0, 0.0), (0.3, 1.2), (-2.4, 0.9)])
+def test_known_values_42_40_30_in_a_rotated_leg_plane(side, pelvis_yaw, leg_yaw):
+    # synthetic: thigh +30, shank -10, foot +20 (in the leg plane), pelvis -12 (own plane) -> hip 42, knee 40, ankle 30,
+    # whatever the leg plane's heading relative to the pelvis
+    seg, j, _ = angles(posed(30, -10, 20, -12, pelvis_yaw, leg_yaw, side=side), side)
+    assert np.degrees([seg["thigh"][0], seg["shank"][0], seg["foot"][0], seg["pelvis"][0]]) == pytest.approx(
+        [30, -10, 20, -12], abs=1e-9)
     assert np.degrees([j["hip"][0], j["knee"][0], j["ankle"][0]]) == pytest.approx([42, 40, 30], abs=1e-9)
 
 
 def test_straight_standing_pose_gives_zero_knee_and_ankle():
-    j = s02.joint_angles(s02.segment_angles(sag_points(0, 0, 0, 0)))
+    _, j, _ = angles(posed(0, 0, 0, 0, 0.7), "R")
     assert j["knee"][0] == pytest.approx(0, abs=1e-12) and j["ankle"][0] == pytest.approx(0, abs=1e-12)
 
 
-def test_composition_to_1e12():
+def test_turning_walker_foot_90_degrees_from_walking_direction_stays_defined_and_continuous():
+    # synthetic: the walker turns through 180 degrees over 400 samples, the leg keeps its pose, and the pelvis heading is
+    # up to 90 degrees away from the leg heading. Every angle stays defined, constant and continuous.
+    rows = []
+    for yaw in np.linspace(0.0, np.pi, 400):
+        pelvis_yaw = yaw - np.pi / 2 * np.sin(yaw)
+        seg, j, _ = angles(posed(25, -15, 10, -10, pelvis_yaw, yaw), "R")
+        rows.append([seg["thigh"][0], seg["shank"][0], seg["foot"][0], seg["pelvis"][0], j["hip"][0], j["knee"][0], j["ankle"][0]])
+    a = np.degrees(np.array(rows))
+    assert np.all(np.isfinite(a))
+    assert np.max(np.abs(a - a[0])) < 1e-9 and np.max(np.abs(np.diff(a, axis=0))) < 1e-9
+    assert a[0] == pytest.approx([25, -15, 10, -10, 35, 40, 25], abs=1e-9)
+
+
+def test_foot_90_degrees_from_the_walking_direction_other_plane_gives_wrong_angle():
+    # the retired shared plane (the recording walking direction) with the leg heading 90 degrees away reads the foot
+    # wrongly; the leg's own plane reads the stated 10 degrees
+    m = posed(0, 0, 10, 0, 0.0, 0.0)
+    shared = s02.angle_from_forward(s02.sagittal((m["RTOE"] - m["RHEE"])[0], fwd_of(-np.pi / 2)))
+    assert abs(np.degrees(shared) - 10) > 60
+    seg, _, _ = angles(m, "R")
+    assert np.degrees(seg["foot"][0]) == pytest.approx(10, abs=1e-9)
+
+
+@pytest.mark.parametrize("side", ["L", "R"])
+def test_toe_out_15_degrees_known_foot_angle_and_ankle_frame_point(side):
+    tau, elev = RAD(15), RAD(20)
+    seg, _, fl = angles(posed(0, 0, 20, 0, 0.4, 0.4, toe_out=tau, side=side), side)
+    # true elevation 20 deg turned 15 deg out of the leg plane: in-plane angle atan2(sin e, cos e cos tau)
+    assert seg["foot"][0] == pytest.approx(np.arctan2(np.sin(elev), np.cos(elev) * np.cos(tau)), abs=1e-12)
+    # flat foot: a point 0.1 m ahead of the ankle along the turned foot is 0.1 cos(tau) - 0.1 anterior and 0.1 sin(tau)
+    # outward (sideways), for both legs; the plane rule makes toe-out a sideways offset
+    m = posed(0, 0, 0, 0, 0.4, 0.4, toe_out=tau, side=side)
+    seg, _, fl = angles(m, side)
+    ankle = (m[side + "ANK"] + m[side + "ANKM"]) / 2
+    sgn = 1.0 if side == "R" else -1.0
+    f_foot = np.cos(tau) * fwd_of(0.4) + np.sin(tau) * sgn * np.cross(fwd_of(0.4), UPV)
+    got = s02.foot_frame_point(ankle + 0.1 * f_foot[None, :], ankle, fl, seg["foot"], "right" if side == "R" else "left")
+    assert got[0][0] == pytest.approx(0.1 * np.cos(tau) - 0.1, abs=1e-12)
+    assert got[2][0] == pytest.approx(0.1 * np.sin(tau), abs=1e-12)
+    assert got[1][0] == pytest.approx(0.0, abs=1e-12)
+
+
+def test_knee_axis_and_plane_forward_directions():
+    f = fwd_of(0.7)
+    r = np.cross(f, UPV)
+    lat_r, med_r = np.array([[0, 0, 0.5]]) + 0.05 * r, np.array([[0, 0, 0.5]]) - 0.05 * r
+    assert s02.knee_axis_to_right(lat_r, med_r, "R")[0] == pytest.approx(0.1 * r)
+    assert s02.knee_axis_to_right(med_r, lat_r, "L")[0] == pytest.approx(0.1 * r)   # left: lateral is on the left
+    assert s02.plane_forward(0.1 * r[None, :] + 0.03 * UPV)[0] == pytest.approx(f)  # tilted axis keeps its horizontal part
+    assert np.isnan(s02.plane_forward(UPV[None, :])).all()
+
+
+def test_missing_knee_marker_leaves_leg_columns_missing_not_filled():
+    m = posed(30, -10, 20, -12, 0.3)
+    m["RKNE"] = np.full((1, 3), np.nan)
+    seg, j, _ = angles(m, "R")
+    assert all(np.isnan(seg[k]).all() for k in ("thigh", "shank", "foot"))
+    assert all(np.isnan(j[k]).all() for k in ("hip", "knee", "ankle"))
+    assert np.isfinite(seg["pelvis"]).all()
+    left, _, _ = angles(posed(30, -10, 20, -12, 0.3, side="L"), "L")
+    assert np.degrees(left["thigh"][0]) == pytest.approx(30, abs=1e-9)
+
+
+def test_composition_to_1e12_with_different_planes():
     rng = np.random.default_rng(7)  # recorded seed
-    t, s, f, p = (rng.uniform(-60, 60, 50) for _ in range(4))
-    pts = [sag_points(*a) for a in zip(t, s, f, p)]
-    seg = {k: np.concatenate([s02.segment_angles(q)[k] for q in pts]) for k in ("pelvis", "thigh", "shank", "foot")}
-    j = s02.joint_angles(seg)
-    assert np.max(np.abs(seg["thigh"] - seg["pelvis"] - j["hip"])) < 1e-12
-    assert np.max(np.abs(seg["thigh"] - j["knee"] - seg["shank"])) < 1e-12
-    assert np.max(np.abs(seg["shank"] + j["ankle"] - seg["foot"])) < 1e-12
+    cols = {k: [] for k in ("pelvis", "thigh", "shank", "foot", "hip", "knee", "ankle")}
+    for t, sh, f, p, y, z in rng.uniform(-60, 60, (60, 6)):
+        seg, j, _ = angles(posed(t, sh, f, p, y / 20, z / 20, side="L"), "L")
+        for k, v in {**seg, **j}.items():
+            cols[k].append(v[0])
+    a = {k: np.array(v) for k, v in cols.items()}
+    assert np.max(np.abs(a["thigh"] - a["pelvis"] - a["hip"])) < 1e-12
+    assert np.max(np.abs(a["thigh"] - a["knee"] - a["shank"])) < 1e-12
+    assert np.max(np.abs(a["shank"] + a["ankle"] - a["foot"])) < 1e-12
 
 
-def test_second_independent_implementation_with_reversed_heading():
-    """Rotation-matrix / complex-number implementation on 3D lab points with the person facing -Y."""
-    rng = np.random.default_rng(11)
-    f_lab, u_lab = np.array([0.0, -1.0, 0.0]), np.array([0.0, 0.0, 1.0])
+def test_second_independent_implementation_in_rotated_planes_with_toe_out():
+    """Rotation-matrix / complex-number implementation: rotate the 3-D points into the leg plane with an explicit matrix
+    built from the knee-marker axis, then use complex arguments."""
+    rng = np.random.default_rng(11)   # recorded seed
     for _ in range(20):
-        a = rng.uniform(-50, 50, 4)
-        pts = sag_points(*a)
-        lab = {k: v[0, 0] * f_lab + v[0, 1] * u_lab for k, v in pts.items()}
-        fwd = s02.heading(np.array([lab["asi"]]), np.array([lab["psi"]]))
-        assert fwd == pytest.approx(f_lab, abs=1e-9)
-        seg = s02.segment_angles({k: s02.sagittal(v[None, :], fwd) for k, v in lab.items()})
-        # independent: rotate into the person's frame with an explicit matrix, then use complex arguments
-        rot = np.array([f_lab, u_lab])
-        loc = {k: rot @ v for k, v in lab.items()}
-        c = lambda v: v[0] + 1j * v[1]
-        thigh = np.angle(1j * c(loc["knee"] - loc["hip"]) * -1j * 1j) if False else np.angle(complex(-(loc["knee"] - loc["hip"])[1], (loc["knee"] - loc["hip"])[0]))
-        shank = np.angle(complex(-(loc["ankle"] - loc["knee"])[1], (loc["ankle"] - loc["knee"])[0]))
-        foot = np.angle(c(loc["toe"] - loc["heel"]))
-        pel = np.angle(c(loc["asi"] - loc["psi"]))
-        assert (seg["thigh"][0], seg["shank"][0], seg["foot"][0], seg["pelvis"][0]) == pytest.approx(
-            (thigh, shank, foot, pel), abs=1e-12)
-        assert np.degrees((seg["thigh"][0], seg["shank"][0], seg["foot"][0], seg["pelvis"][0])) == pytest.approx(a[[0, 1, 2, 3]], abs=1e-9)
+        t, sh, f, p = rng.uniform(-50, 50, 4)
+        yaw, leg_yaw, tau = rng.uniform(-3, 3), rng.uniform(-3, 3), rng.uniform(-0.3, 0.3)
+        for side in ("L", "R"):
+            m = posed(t, sh, f, p, yaw, leg_yaw, toe_out=tau, side=side)
+            seg, _, _ = angles(m, side)
+            lat, med = m[side + "KNE"][0], m[side + "KNEM"][0]
+            axis = (lat - med) if side == "R" else (med - lat)
+            axis[2] = 0.0
+            e_r = axis / np.linalg.norm(axis)
+            e_f = np.cross(UPV, e_r)          # plane forward, independent of the runner's helper
+            rot = np.array([e_f, UPV])
+            hip = s02.hip_centres(m["RASI"], m["LASI"], m["RPSI"], m["LPSI"])["right" if side == "R" else "left"][0]
+            knee, ankle = (lat + med) / 2, (m[side + "ANK"][0] + m[side + "ANKM"][0]) / 2
+            loc = lambda v: rot @ v
+            thigh = np.angle(complex(-loc(knee - hip)[1], loc(knee - hip)[0]))
+            shank = np.angle(complex(-loc(ankle - knee)[1], loc(ankle - knee)[0]))
+            foot = np.angle(complex(*loc(m[side + "TOE"][0] - m[side + "HEE"][0])))
+            assert (seg["thigh"][0], seg["shank"][0], seg["foot"][0]) == pytest.approx((thigh, shank, foot), abs=1e-12)
+            assert np.degrees(seg["thigh"][0]) == pytest.approx(t, abs=1e-9)
+            assert np.degrees(seg["shank"][0]) == pytest.approx(sh, abs=1e-9)
 
 
 def test_hip_centre_hand_computed():
@@ -129,7 +253,10 @@ def test_cop_round_trip(axis, sign, tilt_deg, leg):
     else:
         plate[0], plate[1] = sign * long_b, -sign * right
     person = s02.plate_to_person(plate, axis, sign, tilt, shifts)
-    got = s02.foot_frame(person, ankle, foot, leg)
+    # person frame (forward, up, right) -> lab 3-D point for a leg plane facing lab +x (z up, right = forward x up)
+    fl = np.array([1.0, 0.0, 0.0])
+    to_lab = lambda v: v[0] * fl + v[1] * UPV + v[2] * np.cross(fl, UPV)
+    got = s02.foot_frame_point(to_lab(person), to_lab(ankle), fl, np.asarray(foot), leg)
     assert got == pytest.approx(target, abs=1e-9)
 
 
@@ -140,8 +267,7 @@ def test_reversed_heading_gives_positive_anterior():
     assert fwd == pytest.approx(f_lab)
     ankle_lab = np.array([0.0, 0.0, 0.1])
     cop_lab = ankle_lab + (0.1 + 0.15) * f_lab
-    a, c = s02.sagittal(ankle_lab, fwd), s02.sagittal(cop_lab, fwd)
-    got = s02.foot_frame(np.array([c[0], c[1], 0.0]), np.array([a[0], a[1], 0.0]), 0.0, "right")
+    got = s02.foot_frame_point(cop_lab, ankle_lab, fwd, np.asarray(0.0), "right")   # leg plane faces the same way
     assert got[0] == pytest.approx(0.15)
 
 
@@ -228,7 +354,8 @@ def synthetic_trial(drop_marker=None):
         e_f = np.cos(th_f)[:, None] * F + np.sin(th_f)[:, None] * U
         heel = ank - 0.07 * e_f
         toe = heel + 0.21 * e_f
-        mk.update({side + "KNE": knee + 0.05 * out * R, side + "KNEM": knee - 0.05 * out * R,
+        # UM21 naming (from the data): KNEM is the lateral knee marker, KNE the medial one
+        mk.update({side + "KNEM": knee + 0.05 * out * R, side + "KNE": knee - 0.05 * out * R,
                    side + "ANK": ank + 0.035 * out * R, side + "ANKM": ank - 0.035 * out * R,
                    side + "HEE": heel, side + "TOE": toe, side + "GT": hip + 0.02 * out * R})
         # plate (person frame truth): loaded for the first 60 percent of the cycle
@@ -328,7 +455,8 @@ def test_marker_gap_holds_columns_not_fills():
     assert gap
     for i in gap:
         assert np.isnan(arrays["thigh_angle"][i]).all() and np.isnan(arrays["hip_angle"][i]).all()
-        assert np.isfinite(arrays["foot_angle"][i]).all()
+        # the leg plane needs the knee markers, so the foot angle is missing too (heel and toe alone do not define it)
+        assert np.isnan(arrays["foot_angle"][i]).all() and np.isnan(arrays["ankle_angle"][i]).all()
     # the other leg is untouched by the right knee gap
     assert np.isfinite(arrays["knee_angle"][[i for i, o in enumerate(ids) if ":left:" in o]]).all()
 
@@ -522,3 +650,68 @@ def test_endpoint_report_gives_vertical_offsets():
     heel, toe = np.full((1, 150), -0.17), np.full((1, 150), 0.04)
     r = s02.endpoint_report(ant, heel, toe, None, 0.03, "t", vert=vert, heel_vert=heel_v, toe_vert=toe_v)
     assert r["vertical_offset_heel_m"]["median"] == pytest.approx(-0.03) and r["vertical_offset_toe_m"]["median"] == pytest.approx(-0.01)
+
+
+def test_each_leg_is_published_on_its_own():
+    """D-UM21-S02-2 = A: a leg that fails the gate is held, the other leg of the same recording is still published.
+    Synthetic: scramble only the left leg's hold-out ankle moment so only the left leg fails the r >= 0.95 check."""
+    trial, v2, truth, mass = synthetic_trial()
+    rng = np.random.default_rng(9)   # recorded seed
+    for oid, row in v2.items():
+        if ":left:" in oid:
+            row[s02.V2_COLUMNS["ankle_moment"]] = rng.normal(0, 1.0, 150)
+    ids, sides, arrays, unheld, summary, ledger = s02.process_recording(trial, "AB99/i0", v2, mass, 0.0)
+    gl, gr = summary["legs"]["left"]["cop_gate"], summary["legs"]["right"]["cop_gate"]
+    assert gl["verdict"] == "held" and any("hold-out ankle moment" in r for r in gl["reasons"])
+    left = [i for i, o in enumerate(ids) if ":left:" in o]
+    right = [i for i, o in enumerate(ids) if ":right:" in o]
+    assert np.isnan(arrays["cop_anterior"][left]).all()
+    assert np.isfinite(unheld["cop_anterior"][left]).any()          # the unheld table still carries the left values
+    if gr["verdict"] == "pass":
+        assert np.isfinite(arrays["cop_anterior"][right]).any()
+    else:  # the synthetic marker height may fail the toe check for the right leg; then it fails for its own reasons only
+        assert not any("hold-out ankle moment" in r for r in gr["reasons"])
+    assert all(o in ledger["strides"] and "cop" in ledger["strides"][o].get("held", {}) for o in [ids[i] for i in left])
+
+
+def test_leg_plane_follows_a_turned_knee_axis_in_a_recording():
+    """Synthetic: rotating the right knee markers' axis by 20 degrees about vertical turns the right leg plane by 20
+    degrees, so the right foot angle (heel and toe unchanged) is read in that turned plane; the left leg is unchanged."""
+    base, v2, truth, mass = synthetic_trial()
+    turned, _, _, _ = synthetic_trial()
+    knee = (turned["markers"]["RKNE"].a[:3] + turned["markers"]["RKNEM"].a[:3]) / 2
+    half = (turned["markers"]["RKNE"].a[:3] - turned["markers"]["RKNEM"].a[:3]) / 2
+    c, sn = np.cos(RAD(20)), np.sin(RAD(20))
+    rot = np.array([[c, -sn, 0], [sn, c, 0], [0, 0, 1.0]])
+    for name, sgn in (("RKNE", 1), ("RKNEM", -1)):
+        turned["markers"][name].a[:3] = knee + sgn * (rot @ half)
+    r0 = s02.process_recording(base, "AB99/i0", v2, mass, 0.0)
+    r1 = s02.process_recording(turned, "AB99/i0", v2, mass, 0.0)
+    ids = r0[0]
+    left = [i for i, o in enumerate(ids) if ":left:" in o]
+    right = [i for i, o in enumerate(ids) if ":right:" in o]
+    assert np.allclose(r0[2]["foot_angle"][left], r1[2]["foot_angle"][left], atol=1e-12)
+    # the synthetic foot is in the walking plane; read 20 degrees off, a foot of small pitch changes by a known closed form
+    th = r0[2]["foot_angle"][right]
+    expect = np.arctan2(np.sin(th), np.cos(th) * np.cos(RAD(20)))
+    ok = np.isfinite(expect) & np.isfinite(r1[2]["foot_angle"][right])
+    assert ok.mean() > 0.9 and np.max(np.abs(r1[2]["foot_angle"][right][ok] - expect[ok])) < 1e-4
+    assert np.max(np.abs(expect[ok] - th[ok])) > 1e-3    # the turned plane really changed the angle
+
+
+def test_knee_marker_names_checked_against_the_data_and_swapped_leg_is_held():
+    """Synthetic: if a leg's KNE and KNEM are exchanged (so KNE is lateral, against the UM21 naming from the data), that
+    leg has no plane and its segment and joint angles are missing, never guessed; the other leg is unaffected."""
+    trial, v2, truth, mass = synthetic_trial()
+    ok = s02.process_recording(trial, "AB99/i0", v2, mass, 0.0)
+    assert all(ok[4]["legs"][leg]["knee_marker_check"]["valid"] for leg in ("right", "left"))
+    mk = trial["markers"]
+    a, b = mk["RKNE"].a.copy(), mk["RKNEM"].a.copy()
+    mk["RKNE"].a, mk["RKNEM"].a = b, a
+    ids, sides, arrays, unheld, summary, ledger = s02.process_recording(trial, "AB99/i0", v2, mass, 0.0)
+    assert not summary["legs"]["right"]["knee_marker_check"]["valid"]
+    right = [i for i, o in enumerate(ids) if ":right:" in o]
+    left = [i for i, o in enumerate(ids) if ":left:" in o]
+    for col in ("thigh_angle", "shank_angle", "foot_angle", "knee_angle", "ankle_angle", "hip_angle"):
+        assert np.isnan(arrays[col][right]).all()
+    assert np.isfinite(arrays["knee_angle"][left]).all()

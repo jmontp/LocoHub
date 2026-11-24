@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""UM21-S02: apply the gravity-referenced zero and the foot-frame centre of pressure (docs/reference/index.md).
+"""UM21-S02: apply the gravity-referenced zero, the per-leg side-view planes and the ankle-frame centre of pressure
+(docs/reference/index.md; side-view plane and centre of pressure frame, 24 November 2026).
+
+v6/v7 (per-leg planes; v6 pilot had the knee marker sides reversed and is kept only as history): each leg's thigh, shank and foot are measured in that leg's own vertical plane, perpendicular to
+the knee flexion axis (lateral and medial knee markers, horizontal part); the pelvis uses mid-PSIS to mid-ASIS (horizontal
+part), per frame. The centre of pressure is expressed in the ankle frame within the leg plane (foot direction = leg-plane
+forward rotated by the foot angle; origin 100 mm forward of the ankle centre along it; toe-out is a sideways offset). The
+plate registration (axis, sign, belt tilt, forward shift from the moments, up shift from the foot-on-belt rule, lateral
+shift) is the v5 registration, done in the recording's walking-direction frame, unchanged. The gate is unchanged and each
+leg is published on its own (D-UM21-S02-2 = A). The older text below describes the shared-plane v5 and is kept for the
+parts that did not change.
 
 Per recording (UMich 2021 treadmill, Streaming.mat) and for every observation of the v2 review bundle
 (um21_r01_review_v2, read only):
@@ -68,15 +78,21 @@ um21, sa = t04.um21, t04.sa
 
 TASK_ID = "UM21-S02"
 RUNNER = "contributor_tools/run_um21_s02_frame.py"
-VERSION = "v5"
+VERSION = "v7"
 V2_ROOT = "converted_datasets/reconversion_v2/um21_r01_review_v2"
 V2_FULL = f"{V2_ROOT}/full.parquet"
 V2_MANIFEST = f"{V2_ROOT}/manifest.json"
 PILOT_FIXED = ("AB03/i10", "AB04/i0", "AB07/i10", "AB08/d10")
-PILOT_SEED = 20261124
+PILOT_SEED = 20261204
 N = 150
 FRAME_HZ = 100.0
 PLATE_PER_FRAME = 10
+# UM21 knee marker naming, from the data (AB08/i5, AB03/i10, AB04/i0, AB07/i10, both legs, 2026-11-24 probe): KNEM lies on the
+# lateral side (median 0.12-0.17 m from the pelvis midline, beside GT, THI and TIB), KNE on the medial side (0.01-0.05 m).
+# That is the reverse of the usual reading of the names, so it is checked on every recording and leg (a leg whose markers
+# do not agree is held, never guessed).
+KNEE_LATERAL_MARKER, KNEE_MEDIAL_MARKER = "KNEM", "KNE"
+KNEE_SEPARATION_MIN_M = 0.02   # lateral marker must lie at least this much farther from the pelvis midline than the medial one
 FOOT_ORIGIN_M = 0.100          # standard: origin 100 mm forward of the ankle centre along heel-to-toe
 LOAD_THRESHOLD_N = 20.0        # source README noise level (agent default, logged)
 UP = np.array([0.0, 0.0, 1.0])  # marker frame is gravity-aligned, z up (UM21-C03, C01)
@@ -90,7 +106,8 @@ PELVIS_HOLD_DEG = 1.0          # above this the pelvis (and the hip) is held: a 
 GATE = {"toe_endpoint_tolerance_m": 0.04, "toe_endpoint_threshold": "0.2 body weight", "toe_endpoint_fraction_min": 0.95,
         "ankle_holdout_r_min": 0.95, "plate_assignment_fraction_min": 0.95,
         "heel_endpoint": "reported, not a gate: the heel marker sits above and behind the sole",
-        "status": "D-UM21-S02-1 = A (Jose): publish the CoP built on the estimated plate position when both checks pass"}
+        "status": "D-UM21-S02-1 = A (Jose): publish the CoP built on the estimated plate position when both checks pass; "
+                  "D-UM21-S02-2 = A (Jose): each leg is judged and published on its own"}
 HELD_UNTIL_EXPLAINED = {"AB04/d10": "held until the 20 cm heel-end offset is explained (D-UM21-S02-1)"}
 COP_LABEL = "estimated plate position"
 FIT_MIN_FORCE_BW = 0.3         # samples loaded above this fraction of body weight enter the shift fit
@@ -102,7 +119,9 @@ DEFAULTS = {
     "ankle_centre": "midpoint of the two malleolus markers (ANK, ANKM); marker radius ignored",
     "knee_centre": "midpoint of the two knee markers (KNE, KNEM)",
     "foot_line": "heel marker to toe marker (marker-defined, not sole-defined)",
-    "projection": "planar: foot direction from its forward and up components; sideways axis horizontal",
+    "projection": "per-leg side-view plane: vertical plane perpendicular to the leg's knee flexion axis (lateral and medial "
+                  "knee markers, horizontal part), per frame; pelvis in the plane of mid-PSIS to mid-ASIS (horizontal part); "
+                  "foot direction = leg-plane forward rotated up by the foot angle; sideways axis is the plane normal",
     "walking_direction": "per recording, mean horizontal PSIS-to-ASIS direction (the person's facing)",
     "marker_gaps": "no gap filling, no marker filtering; a stride with a gap in its window loses every column that "
                    "needs that marker",
@@ -170,19 +189,83 @@ def angle_from_forward(v):
     return np.arctan2(v[..., 1], v[..., 0])
 
 
-def segment_angles(p):
-    """p: sagittal (n, 2) points asi, psi (pelvis markers, midpoints), hip, knee, ankle, heel, toe centres.
-    Returns the four segment angles in radians."""
-    return {"pelvis": angle_from_forward(p["asi"] - p["psi"]),
-            "thigh": angle_from_down(p["knee"] - p["hip"]),
-            "shank": angle_from_down(p["ankle"] - p["knee"]),
-            "foot": angle_from_forward(p["toe"] - p["heel"])}
-
-
 def joint_angles(seg):
     """The standard's zero: joint angles are differences of segment angles."""
     return {"hip": seg["thigh"] - seg["pelvis"], "knee": seg["thigh"] - seg["shank"],
             "ankle": seg["foot"] - seg["shank"]}
+
+
+# ---- per-leg side-view planes (ported from the GT23 rule, not imported; marker frame here is z up)
+def unit_rows(v):
+    """Row-wise unit vectors (n, 3); a zero or non-finite row becomes NaN."""
+    v = np.asarray(v, float)
+    n = np.linalg.norm(v, axis=-1, keepdims=True)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        out = v / n
+    out[n[..., 0] == 0] = np.nan
+    return out
+
+
+def plane_sag(v, fwd):
+    """Forward and up components of lab vectors (n, 3) for per-sample forward directions (n, 3)."""
+    v = np.asarray(v, float)
+    return np.stack([np.sum(v * fwd, axis=-1), v @ UP], axis=-1)
+
+
+def knee_axis_to_right(lateral, medial, side):
+    """Knee flexion axis (n, 3) pointing to the person's right. Right knee: lateral marker is on the right
+    (lateral - medial); left knee: lateral marker is on the left (medial - lateral)."""
+    lateral, medial = np.asarray(lateral, float), np.asarray(medial, float)
+    return lateral - medial if side == "R" else medial - lateral
+
+
+def plane_forward(axis_to_right):
+    """Forward direction of the vertical plane perpendicular to a knee axis: up x (horizontal part of the axis), unit
+    rows. NaN where the horizontal part vanishes."""
+    a = np.asarray(axis_to_right, float)
+    horizontal = a - (a @ UP)[:, None] * UP
+    return unit_rows(np.cross(UP, horizontal))
+
+
+def pelvis_forward(asi_mid, psi_mid):
+    """Pelvis forward direction per frame: horizontal part of mid-PSIS to mid-ASIS, unit rows."""
+    v = np.asarray(asi_mid, float) - np.asarray(psi_mid, float)
+    return unit_rows(v - (v @ UP)[:, None] * UP)
+
+
+def pelvis_angle_own_plane(asi_mid, psi_mid):
+    """Pelvis angle from forward horizontal in the pelvis's own plane (anterior tilt negative)."""
+    d = np.asarray(asi_mid, float) - np.asarray(psi_mid, float)
+    return angle_from_forward(plane_sag(d, pelvis_forward(asi_mid, psi_mid)))
+
+
+def leg_segment_angles(fwd_leg, thigh_down, shank_down, heel, toe):
+    """Thigh, shank and foot angles of one leg in that leg's plane. thigh_down, shank_down: proximal-to-distal lab
+    vectors (n, 3); heel, toe: lab points (n, 3)."""
+    return {"thigh": angle_from_down(plane_sag(thigh_down, fwd_leg)),
+            "shank": angle_from_down(plane_sag(shank_down, fwd_leg)),
+            "foot": angle_from_forward(plane_sag(np.asarray(toe, float) - np.asarray(heel, float), fwd_leg))}
+
+
+def foot_axes(fwd_leg, foot_angle):
+    """Ankle-frame unit axes (..., 3) in the leg plane: anterior = leg forward rotated up by the foot angle, up
+    perpendicular to it in the plane, right = anterior x up (the plane normal, to the person's right)."""
+    c, s = np.cos(foot_angle)[..., None], np.sin(foot_angle)[..., None]
+    e_f = c * fwd_leg + s * UP
+    e_u = -s * fwd_leg + c * UP
+    return e_f, e_u, np.cross(e_f, e_u)
+
+
+def foot_frame_point(point, ankle, fwd_leg, foot_angle, leg):
+    """Lab points (..., 3) in the ankle frame within the leg plane: (anterior, vertical, lateral) metres, origin
+    100 mm forward of the ankle centre along the foot direction; lateral is outward from that leg (leg is 'right' or
+    'left'). Toe-out shows as a sideways offset."""
+    e_f, e_u, e_r = foot_axes(fwd_leg, foot_angle)
+    q = np.asarray(point, float) - np.asarray(ankle, float)
+    lateral = np.sum(q * e_r, axis=-1)
+    return np.stack([np.sum(q * e_f, axis=-1) - FOOT_ORIGIN_M, np.sum(q * e_u, axis=-1),
+                     lateral if leg == "right" else -lateral])
+
 
 
 HARRINGTON = {"x": (-0.24, -0.0099), "y": (-0.30, -0.0109), "z": (0.33, 0.0073)}  # (slope, offset m)
@@ -258,20 +341,6 @@ def force_to_person(force, axis, sign, tilt_rad):
     gn = -fz
     gr = -(sign * (-f1)) if axis == 0 else -(sign * f0)
     return np.stack([gl * np.cos(tilt_rad) - gn * np.sin(tilt_rad), gl * np.sin(tilt_rad) + gn * np.cos(tilt_rad), gr])
-
-
-def foot_frame(point, ankle, foot_angle, leg):
-    """(forward, up, right) lab-frame points -> foot-frame (anterior, vertical, lateral) metres. The frame's origin
-    is 0.1 m forward of the ankle centre along the heel-to-toe direction (planar), anterior along the foot,
-    vertical perpendicular to it (up when the foot is flat), lateral outward from that leg (+ right for the right
-    leg, + left for the left leg)."""
-    point, ankle = np.asarray(point, float), np.asarray(ankle, float)
-    c, s = np.cos(foot_angle), np.sin(foot_angle)
-    q = point - ankle
-    anterior = q[0] * c + q[1] * s - FOOT_ORIGIN_M
-    vertical = -q[0] * s + q[1] * c
-    lateral = q[2] if leg == "right" else -q[2]
-    return np.stack([anterior, vertical, lateral])
 
 
 def joint_moment_from_force(cop_fu, force_fu, joint_fu, which):
@@ -441,7 +510,8 @@ def process_recording(trial, recording, v2, mass_kg, nominal_slope_deg, debug=No
         return np.asarray(p, float) @ rvec
 
     pelvis_pts = {"asi": sag(asi_mid), "psi": sag(psi_mid)}
-    pelvis_frame = angle_from_forward(pelvis_pts["asi"] - pelvis_pts["psi"])
+    pelvis_own = pelvis_angle_own_plane(asi_mid, psi_mid)   # pelvis in its own plane, per frame
+    pelvis_fwd_frames = pelvis_forward(asi_mid, psi_mid)
     vis = {k: np.isfinite(v).all(axis=1) for k, v in mk.items()}
     all_pelvis = vis["LASI"] & vis["RASI"] & vis["LPSI"] & vis["RPSI"]
     meta = {"fwd_lab": np.round(fwd, 4).tolist(), "pelvis_axis_vs_foot_axis_deg": round(agreement, 2),
@@ -467,15 +537,24 @@ def process_recording(trial, recording, v2, mass_kg, nominal_slope_deg, debug=No
         needed = {"pelvis": ["LASI", "RASI", "LPSI", "RPSI"],
                   "thigh": ["LASI", "RASI", "LPSI", "RPSI", side + "KNE", side + "KNEM"],
                   "shank": [side + "KNE", side + "KNEM", side + "ANK", side + "ANKM"],
-                  "foot": [side + "HEE", side + "TOE"], "ankle": [side + "ANK", side + "ANKM"]}
+                  "foot": [side + "HEE", side + "TOE", side + "KNE", side + "KNEM"],   # the leg plane needs the knee markers
+                  "ankle": [side + "ANK", side + "ANKM"]}
         hip = hjc["right" if side == "R" else "left"]
         knee = (mk[side + "KNE"] + mk[side + "KNEM"]) / 2
         ankle = (mk[side + "ANK"] + mk[side + "ANKM"]) / 2
         pts = {"asi": pelvis_pts["asi"], "psi": pelvis_pts["psi"], "hip": sag(hip), "knee": sag(knee),
                "ankle": sag(ankle), "heel": sag(mk[side + "HEE"]), "toe": sag(mk[side + "TOE"])}
-        seg = segment_angles(pts)
-        alt_foot = angle_from_forward(sag(mk[side + "TOE"]) - sag(ankle))
-        thigh_gt = angle_from_down(sag(mk[side + "KNE"] / 2 + mk[side + "KNEM"] / 2) - sag(mk[side + "GT"]))
+        # per-leg side-view plane: perpendicular to this leg's knee flexion axis; thigh, shank and foot are measured in it
+        fl = plane_forward(knee_axis_to_right(mk[side + KNEE_LATERAL_MARKER], mk[side + KNEE_MEDIAL_MARKER], side))
+        away = lambda name: np.abs((mk[side + name] - asi_mid) @ rvec)
+        knee_sep = float(np.nanmedian(away(KNEE_LATERAL_MARKER)) - np.nanmedian(away(KNEE_MEDIAL_MARKER)))
+        plane_valid = bool(np.isfinite(knee_sep) and knee_sep > KNEE_SEPARATION_MIN_M)
+        seg = {"pelvis": pelvis_own,
+               **leg_segment_angles(fl, knee - hip, ankle - knee, mk[side + "HEE"], mk[side + "TOE"])}
+        alt_foot = angle_from_forward(plane_sag(mk[side + "TOE"] - ankle, fl))
+        thigh_gt = angle_from_down(plane_sag((mk[side + "KNE"] + mk[side + "KNEM"]) / 2 - mk[side + "GT"], fl))
+        plane_vs_walking = np.degrees(np.arccos(np.clip(np.sum(fl * fwd, axis=1), -1, 1)))
+        plane_vs_pelvis = np.degrees(np.arccos(np.clip(np.sum(fl * pelvis_fwd_frames, axis=1), -1, 1)))
         # frame-rate series resampled together on every stride's grid: (units, 150, k)
         stack = np.stack([seg["pelvis"], seg["thigh"], seg["shank"], seg["foot"], alt_foot, thigh_gt], axis=1)
         grid = um21.resample(stack, pairs)
@@ -483,6 +562,9 @@ def process_recording(trial, recording, v2, mass_kg, nominal_slope_deg, debug=No
                         pts["hip"][:, 0], pts["hip"][:, 1], pts["heel"][:, 0], pts["heel"][:, 1], rt(mk[side + "HEE"]),
                         pts["toe"][:, 0], pts["toe"][:, 1], rt(mk[side + "TOE"])], axis=1)
         geo_g = um21.resample(geo, pairs)
+        # lab-frame 3-D series for the ankle frame in the leg plane: plane forward, ankle, heel, toe
+        geo3_g = um21.resample(np.concatenate([fl, ankle, mk[side + "HEE"], mk[side + "TOE"]], axis=1), pairs)
+        fl_g = unit_rows(geo3_g[:, :, 0:3].reshape(-1, 3)).reshape(geo3_g.shape[:2] + (3,))
         # per-stride gap gating (no filling): a column needs every frame of the stride window
         def stride_ok(cols):
             ok = np.ones(len(pairs), bool)
@@ -494,6 +576,9 @@ def process_recording(trial, recording, v2, mass_kg, nominal_slope_deg, debug=No
                         ok[j] = False
             return ok, why
         gate = {k: stride_ok(v) for k, v in needed.items()}
+        if not plane_valid:   # the knee marker names disagree with the data: no leg plane, so no leg segment angles
+            for k in ("thigh", "shank", "foot"):
+                gate[k] = (np.zeros(len(pairs), bool), [["knee marker sides disagree with the data"] for _ in pairs])
         v2_pelvis = np.stack([v2[ids[i]][V2_COLUMNS["pelvis_tilt"]] for i in rows])
         pel_marker = _nan_rows(grid[:, :, 0].copy(), gate["pelvis"][0])
         diff_deg = np.degrees(v2_pelvis - pel_marker)
@@ -530,6 +615,10 @@ def process_recording(trial, recording, v2, mass_kg, nominal_slope_deg, debug=No
                                                  "not_checked": int((~np.isfinite(pel_med)).sum()),
                                                  "median_diff_deg": _quantiles(pel_med)},
                                 "hip_centre_vs_gt_marker_thigh_deg": _quantiles(d_gt),
+                                "knee_marker_check": {"lateral_marker": side + KNEE_LATERAL_MARKER, "medial_marker": side + KNEE_MEDIAL_MARKER,
+                                                      "lateral_minus_medial_distance_from_midline_m": knee_sep, "valid": plane_valid},
+                                "leg_plane_vs_walking_heading_deg": _quantiles(plane_vs_walking),
+                                "leg_plane_vs_pelvis_heading_deg": _quantiles(plane_vs_pelvis),
                                 "marker_gap_strides": {k: int((~v[0]).sum()) for k, v in gate.items()}}
         # ---- plate and centre of pressure
         f_raw = np.asarray(trial["forceplates"][side + "Force"][...], dtype=np.float64)
@@ -672,12 +761,15 @@ def process_recording(trial, recording, v2, mass_kg, nominal_slope_deg, debug=No
             _record_hold(ledger, ids, rows, ["cop"], reg["held_reason"])
             continue
         shifted_lab = cop_lab_g + np.array(shift)[:, None, None]
-        ank_g = np.stack([geo_g[:, :, 0], geo_g[:, :, 1], geo_g[:, :, 2]])
+        # the shifted plate point is in the walking-direction frame (forward, up, right); make it a lab 3-D point, then
+        # express it in the ankle frame within this leg's plane
+        lab_pt = (shifted_lab[0][..., None] * fwd + shifted_lab[1][..., None] * UP + shifted_lab[2][..., None] * rvec)
+        ank3, heel3, toe3 = geo3_g[:, :, 3:6], geo3_g[:, :, 6:9], geo3_g[:, :, 9:12]
         cop_ok_grid = cop_ok[:, None] & np.isfinite(foot[:, :])
-        pt = np.where(cop_ok_grid[None], shifted_lab, np.nan)
-        cf = foot_frame(pt, ank_g, foot, leg)                                         # (3, units, 150)
-        heel_f = foot_frame(np.stack([geo_g[:, :, 7], geo_g[:, :, 8], geo_g[:, :, 9]]), ank_g, foot, leg)
-        toe_f = foot_frame(np.stack([geo_g[:, :, 10], geo_g[:, :, 11], geo_g[:, :, 12]]), ank_g, foot, leg)
+        pt = np.where(cop_ok_grid[..., None], lab_pt, np.nan)
+        cf = foot_frame_point(pt, ank3, fl_g, foot, leg)                              # (3, units, 150)
+        heel_f = foot_frame_point(heel3, ank3, fl_g, foot, leg)
+        toe_f = foot_frame_point(toe3, ank3, fl_g, foot, leg)
         # endpoint check (not used in the fit): first loaded sample of the stance that starts the stride against the
         # heel marker, last sample of that stance against the toe marker, at two load thresholds
         tol = 0.03

@@ -1913,24 +1913,25 @@
         "Observation identities, 150-point inclusive phase grid and every exclusion are accounted for against the v2 bundle; full and filtered share lineage; Q01 re-run, not reused.",
         "Pilot of the same bound code passes before the full run; one numerical job at a time, peak memory recorded; v2 bundle untouched."
       ],
-      "next_action": "Independent verifier checks the v5 evidence (handoff toe_error_investigation and full_v5_per_recording).",
+      "next_action": "Independent verifier checks the v7 evidence (per-leg planes): full_v7 output, compare report, and pilot v7.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/UM21-STD-plan.json",
         "contributor_tools/audit_probes/2026_11_23/probe_um21_std_plan_source_check.py"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-24T00:30:00+00:00",
-        "summary": "Runner v5: up shift from the foot-on-belt marker rule, forward shift fitted with it fixed (the free up shift was the cause of the toe-off gate failures). Full run v5: CoP published on 59 of 88 legs (24 recordings on both legs), was 48. Three 10-degree incline recordings (AB01, AB02, AB03) still fail the toe-off check, cause not found. Ready for independent verification of the v5 evidence.",
+        "last_checked_at_utc": "2026-11-24T22:00:00+00:00",
+        "summary": "Runner v7: each leg in its own side-view plane (knee axis from lateral/medial knee markers; UM21 names are reversed: KNEM is lateral, KNE medial, checked on data and per recording), pelvis in own plane, centre of pressure in the ankle frame within the leg plane. Plate registration, gate and per-leg publication (D-UM21-S02-2 = A) unchanged. Pilot v7 (5 recordings, seed 20261204 drew AB08/i5) and full v7 (44) through the guarded launcher, clean, cleanup proven, peak 260.8 MiB. CoP published on 60 of 88 legs (v5: 59). AB01/AB02/AB03 i10 stay held. v6 pilot was wrong (knee marker sides reversed) and is history only.",
         "checks": [
-          "pytest tests/test_um21_s02_frame.py: 56 passed (synthetic only)",
-          "Read-only probes (peak 247 MiB) on 14 recordings; recheck v5 (7 recordings) and full v5 (44) through the guarded launcher, clean, cleanup proven, peak 256 MiB",
-          "Composition error <= 2.2e-16 rad, reload clean, all 44"
+          "pytest tests/test_um21_s02_frame.py: 70 passed (synthetic only: turning walker, 15 deg toe-out, 42/40/30 in rotated planes, swapped knee names held, per-leg publication)",
+          "pilot v7 and full v7 clean_success, verify-cleanup proven; composition error <= 2.2e-16 rad; reload clean; source unchanged",
+          "v5 vs v7 comparison: docs/quality/audits/um21-s02-v5-vs-v7-compare.json"
         ],
         "remaining": [
-          "Independent verification (v5 evidence in the handoff: toe_error_investigation)",
-          "AB01/AB02/AB03 10-degree inclines: toe-off error unexplained; AB04/d10 heel offset",
-          "Single-leg publication rule; audit script, Q01 v3, R01 v3"
+          "Independent verification",
+          "Leg-plane outlier frames (max 100-180 deg from walking heading on some frames; p95 10-25 deg): check their effect on angles",
+          "AB01/AB02/AB03 10-degree inclines toe-off unexplained; AB04/d10 heel offset",
+          "Audit script, Q01 v3, R01 v3"
         ],
         "handoff_file": "docs/maintainers/handoffs/UM21-STD-plan.json (pilot_results, full_run_v4)"
       },
@@ -1953,7 +1954,15 @@
         "docs/quality/audits/um21-s02-recheck-spec-v5.json",
         "docs/quality/audits/um21-s02-recheck-launcher-receipt-v5.json",
         "docs/quality/audits/um21-s02-full-spec-v5.json",
-        "docs/quality/audits/um21-s02-full-launcher-receipt-v5.json"
+        "docs/quality/audits/um21-s02-full-launcher-receipt-v5.json",
+        "contributor_tools/compare_um21_s02_versions.py",
+        "docs/quality/audits/um21-s02-pilot-spec-v6.json",
+        "docs/quality/audits/um21-s02-pilot-launcher-receipt-v6.json",
+        "docs/quality/audits/um21-s02-pilot-spec-v7.json",
+        "docs/quality/audits/um21-s02-pilot-launcher-receipt-v7.json",
+        "docs/quality/audits/um21-s02-full-spec-v7.json",
+        "docs/quality/audits/um21-s02-full-launcher-receipt-v7.json",
+        "docs/quality/audits/um21-s02-v5-vs-v7-compare.json"
       ]
     },
     {
@@ -9292,6 +9301,39 @@
       "answer_text": "the sideview should be defined along the whole leg, not the lab. ... yup, go for it",
       "answered_at_utc": "2026-11-24T00:00:00Z",
       "note": "Implemented in docs/reference: each leg's own vertical plane, perpendicular to its knee flexion axis; the pelvis uses its own forward direction. UM21-S02 and the GT23 angle chain are rerun."
+    },
+    {
+      "id": "D-GT23-R01-1",
+      "task_id": "GT23-R01",
+      "status": "answered",
+      "question": "The Georgia Tech 2023 export holds about 9 million rows (about 4 GB). What goes in the local release?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Strides and movements only",
+          "consequence": "About 2.9 million phase rows; continuous recordings are left out. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "Strides plus continuous recordings, in separate files",
+          "consequence": "The full 4 GB: one phase file and one time file. Reversible."
+        },
+        {
+          "key": "C",
+          "label": "As B, split per participant",
+          "consequence": "Same content as B, in 12 per-participant files. Reversible."
+        }
+      ],
+      "options_order": "By how much is released, least first.",
+      "decide_before_recommendation": false,
+      "cost_of_waiting": "GT23-R01 waits.",
+      "recommended": "C",
+      "confidence": "medium",
+      "why": "Nothing is dropped and each download stays manageable.",
+      "check": "E01 rows: 2,862,750 phase and 6,397,787 time.",
+      "answer": "B",
+      "answered_at_utc": "2026-11-24T00:00:00Z",
+      "note": "José in chat: 'Do B'."
     }
   ]
 }
