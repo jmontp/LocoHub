@@ -1,0 +1,118 @@
+{
+ "task_id": "UM21-S02",
+ "version": "v7",
+ "verifier": "independent agent (did not write the work; runner not imported)",
+ "verified_at_utc": "2026-11-24",
+ "scientific_approval": false,
+ "verdict": "stage evidence PASS; task returned to ready because acceptance item 4 and deliverable 3 (Q01 v3 assessment, R01 v3 bundle, filtered/full lineage re-accounted) are not produced yet",
+ "receipts": {
+  "pilot_v7": "completed, clean_success, cleanup proven, exit 0, no launcher/finalisation errors, no orphans, peak 231 MiB",
+  "full_v7": "completed, clean_success, cleanup proven, exit 0, peak 260.8 MiB (largest process 267008 KiB)",
+  "same_bound_code": "pilot and full specs have identical bindings (15 files); runner sha 5ffef968...; bindings_before and bindings_after match in both receipts",
+  "bindings_equal_current_files": "all 15 bound files hash to the recorded values now",
+  "outputs": "90 full-run outputs re-hashed: 0 mismatches",
+  "note": "pilot v7 ran 5 recordings (AB03/i10, AB04/i0, AB07/i10, AB08/d10, AB08/i5); full is the 44 reviewed recordings"
+ },
+ "knee_marker_names": {
+  "verdict": "CONFIRMED: KNEM is the lateral marker, KNE the medial one",
+  "method": "outward distance from the pelvis midline along the ASIS-to-ASIS direction (independent of heading), median per recording and leg, compared with GT, THI, TIB, ANK, ANKM",
+  "recordings": [
+   "AB03/i10",
+   "AB04/i0",
+   "AB07/i10",
+   "AB08/i5",
+   "AB05/i0",
+   "AB02/i5",
+   "AB09/d5"
+  ],
+  "legs_checked": 14,
+  "legs_agreeing": 14,
+  "typical_m": {
+   "KNEM": "0.13-0.20",
+   "KNE": "0.006-0.061",
+   "GT": "0.17-0.21",
+   "THI": "0.17-0.20",
+   "TIB": "0.13-0.20"
+  },
+  "KNEM_minus_KNE_outward_m": "0.117-0.141 in all 14",
+  "distance_to_thigh_marker": "KNEM is nearer to GT and THI than KNE in every one of the 14 legs",
+  "ankle_for_contrast": "ANK lateral, ANKM medial (names normal at the ankle): ANK-ANKM 0.072-0.087 m",
+  "all_44_recordings_88_legs": "runner summary lateral-minus-medial separation minimum 0.110 m, every leg valid",
+  "caveat": "marker positions only; no photo or marker-set document seen"
+ },
+ "recompute": {
+  "sample_seed": 20261205,
+  "drawn": [
+   "AB01/i0",
+   "AB07/d10",
+   "AB10/d5",
+   "AB01/i10",
+   "AB10/d10",
+   "AB06/i5"
+  ],
+  "added": [
+   "AB03/i10",
+   "AB08/i5"
+  ],
+  "draw_rule": "random.Random(20261205).sample of the 44 recordings minus the two fixed ones (rule chosen by the verifier; the brief did not fix it)",
+  "what_was_recomputed": "knee axis, per-leg plane, thigh/shank/foot angles, joint differences, v2 pelvis check (1 deg hold), velocities, planar ankle-frame CoP using the runner's recorded axis, sign, belt tilt and forward/up/lateral shifts",
+  "angles_and_velocities": "16 legs x 11 columns = 176 column-legs: NaN pattern identical, max abs difference 0.0 rad",
+  "cop_unheld": "max abs difference 6.7e-16 m, NaN pattern identical, all 16 legs",
+  "cop_released": "released values present only for passing legs (matches verdicts)",
+  "forward_shift_refit": "refitting the forward shift from hip and knee moments with the recorded up shift reproduces the recorded value to the printed digits on all 16 legs",
+  "not_independent": "plate axis, sign, tilt, up shift and lateral shift were taken from the runner's summary, not re-derived; the heading-frame plate registration therefore is checked only for the forward shift refit and the gate numbers"
+ },
+ "gate_verdicts": {
+  "rule": "hold-out ankle moment r >= 0.95, toe-off end within 4 cm in >= 95 percent of strides (0.2 BW), plate loaded at heel strikes >= 95 percent, AB04/d10 held by rule, each leg alone",
+  "agreement": "16 of 16 legs, verdicts identical to the runner",
+  "per_leg": {
+   "AB01/i0": "R pass, L pass",
+   "AB07/d10": "R held (toe 90.4 percent), L pass",
+   "AB10/d5": "R held, L held (plate assignment 94.7 and 94.6 percent, just below 95)",
+   "AB01/i10": "R held, L held (toe 0 percent)",
+   "AB10/d10": "R held (toe 91.9 percent), L pass",
+   "AB06/i5": "R pass, L pass",
+   "AB03/i10": "R held, L held (toe 0 percent)",
+   "AB08/i5": "R pass, L pass"
+  },
+  "AB04_d10": "both legs held by rule in the summary, reason text matches D-UM21-S02-1",
+  "full_run_tally_from_summary": "60 legs pass, 28 held (not recomputed beyond the sample)",
+  "observation": "i10 recordings fail toe-off in a bimodal way (0 percent of strides, median offset 6-11 cm) while i0/i5 pass at 100 percent; the gate behaves as written, the cause is still open (already listed as remaining)"
+ },
+ "plane_glitch_frames": {
+  "scope": "all 44 recordings, 88 legs, 1,531,347 frames with all three plane markers visible",
+  "frames_over_100_deg": 2504,
+  "frames_over_90_deg": 3150,
+  "frames_over_60_deg": 6670,
+  "leg_recordings_affected": "16 of 88 (AB04/i0, AB05/d10, AB06/d10, AB06/i0, AB06/i5, AB06/i10, AB07/i10, AB08/d10, AB08/i0)",
+  "inside_published_stride_windows": "2 frames, in 1 stride (AB08/i0 left, frames 13899-14028); the other 2502 frames lie outside every observation window",
+  "that_stride": "all angle columns are missing in the published table (runner ledger: columns_all_missing), so nothing spikes; CoP is missing for that stride too",
+  "strides_with_plane_over_60_deg": 0,
+  "strides_with_plane_over_45_deg": 2,
+  "largest_in_stride_plane_deviation_deg": 58.9,
+  "published_angle_spikes": "none: largest adjacent-sample step in any published thigh angle is 0.077 rad, thigh range at most 1.00 rad; no stride with plane > 30 deg shows a step above 0.045 rad",
+  "cop_spikes": "the single touched stride has no CoP (missing); strides outside the glitch frames were not examined for CoP spikes beyond the exact recompute agreement",
+  "recommendation": "no hold needed for the published table. Optional hardening: the runner has no explicit rule for plane glitches; if future strides include frames over about 60 deg, hold them, because the current outcome depends on those frames falling outside the stride windows",
+  "caveat": "spike test used adjacent-sample steps and ranges, not a frame-level comparison against an unglitched reference"
+ },
+ "tests": {
+  "pytest_tests_test_um21_s02_frame.py": "70 passed",
+  "backlog_check": "Backlog valid; HTML current (122 tasks)"
+ },
+ "resources": {
+  "peak_rss_mib": 217.6,
+  "method": "prlimit --as=600 MiB, OMP_NUM_THREADS=1, nice 19, one recording or sample per process after an early address-space failure; read-only; nothing under converted_datasets written; no process left running",
+  "full_data_load": "never; one recording at a time"
+ },
+ "remaining_before_done": [
+  "Q01 v3 assessment on the v7 table (re-run, not reused)",
+  "R01 v3 review bundle with full and filtered variants sharing lineage and every exclusion accounted",
+  "Audit script: the verifier's second implementation is saved under contributor_tools/audit_probes/2026_11_24/ (um21_s02_v7_verify_*.py) and can serve as it, pending the worker's or Jos\u00e9's acceptance",
+  "Open science items already listed: i10 toe-off cause, AB04/d10 heel offset"
+ ],
+ "files": [
+  "contributor_tools/audit_probes/2026_11_24/um21_s02_v7_verify_ver.py",
+  "contributor_tools/audit_probes/2026_11_24/um21_s02_v7_verify_run1.py",
+  "contributor_tools/audit_probes/2026_11_24/um21_s02_v7_verify_run3.py"
+ ]
+}

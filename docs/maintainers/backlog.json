@@ -1885,7 +1885,7 @@
       "priority": "P0",
       "dataset": "um21",
       "title": "Apply the gravity-referenced zero and foot-frame CoP",
-      "status": "review",
+      "status": "ready",
       "stage": "conversion",
       "question": "Can the UMich 2021 treadmill bundle follow the standard's zero (joint angles are differences of gravity-referenced segment angles) and the foot-frame centre of pressure?",
       "scope": "44 treadmill recordings of the R01 bundle. Columns changed: hip, knee, ankle, thigh, shank angles and velocities; new foot angle and velocity; new centre of pressure. Not scientific approval; v2 bundle stays legacy-zero. Builds on the R01 bundle (in review) as the v2 reference; does not wait for R01 sign-off.",
@@ -1913,11 +1913,13 @@
         "Observation identities, 150-point inclusive phase grid and every exclusion are accounted for against the v2 bundle; full and filtered share lineage; Q01 re-run, not reused.",
         "Pilot of the same bound code passes before the full run; one numerical job at a time, peak memory recorded; v2 bundle untouched."
       ],
-      "next_action": "Independent verifier checks the v7 evidence (per-leg planes): full_v7 output, compare report, and pilot v7.",
+      "next_action": "Produce Q01 v3 on the v7 table and the R01 v3 review bundle (full and filtered share lineage, every exclusion accounted); then re-submit for review. S02 v7 conversion evidence itself was independently verified (docs/maintainers/handoffs/UM21-S02-verify.json).",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/UM21-STD-plan.json",
-        "contributor_tools/audit_probes/2026_11_23/probe_um21_std_plan_source_check.py"
+        "contributor_tools/audit_probes/2026_11_23/probe_um21_std_plan_source_check.py",
+        "docs/maintainers/handoffs/UM21-S02-verify.json",
+        "contributor_tools/audit_probes/2026_11_24"
       ],
       "handoff": {
         "last_checked_at_utc": "2026-11-24T22:00:00+00:00",
@@ -1928,12 +1930,14 @@
           "v5 vs v7 comparison: docs/quality/audits/um21-s02-v5-vs-v7-compare.json"
         ],
         "remaining": [
-          "Independent verification",
-          "Leg-plane outlier frames (max 100-180 deg from walking heading on some frames; p95 10-25 deg): check their effect on angles",
-          "AB01/AB02/AB03 10-degree inclines toe-off unexplained; AB04/d10 heel offset",
-          "Audit script, Q01 v3, R01 v3"
+          "Q01 v3 assessment on the v7 table",
+          "R01 v3 review bundle with exclusions re-accounted",
+          "i10 toe-off cause and AB04/d10 heel offset (open science items)",
+          "Optional: explicit hold rule for leg-plane glitch frames over about 60 degrees"
         ],
-        "handoff_file": "docs/maintainers/handoffs/UM21-STD-plan.json (pilot_results, full_run_v4)"
+        "handoff_file": "docs/maintainers/handoffs/UM21-STD-plan.json (pilot_results, full_run_v4)",
+        "verified_at_utc": "2026-11-24",
+        "verification": "docs/maintainers/handoffs/UM21-S02-verify.json: receipts clean and same bound code; knee names confirmed (KNEM lateral); independent recompute of 8 recordings agrees (angles exactly, CoP 7e-16 m); 16/16 gate verdicts agree; 2504 plane-glitch frames lie outside published strides except 2 in one stride whose angles are all missing; 70 tests pass."
       },
       "owner": "agent (UM21-S02 worker)",
       "started_at_utc": "2026-11-23T00:00:00Z",
