@@ -1,0 +1,29 @@
+{
+  "task_id": "GT23-M01",
+  "verifier_role": "independent second agent; own code in /tmp/gt23verify (m01.py, nm.py, m01b.py), no import of the worker's code; read-only, chunked, nice 19",
+  "verdict": "done",
+  "last_checked_at_utc": "2026-11-24T03:29:05Z",
+  "summary": "PASS. The 52 list and factors recompute exactly from the audits; rescaled columns are factor times the published values to 2e-16 and kept ones are bit-identical; AB03 body weights are right. The N*m misses are not a mass problem: a kept recording (AB01, own mass) misses by the same relative amount and the best-fit mass equals the table mass. Approves arithmetic only; the 45 estimated factors remain estimates (audit limits).",
+  "receipts": "17 receipts: 12 batches, summary and the 3 final-code pilots completed clean (exit 0, all checks true). All bind gt23_mass.py f7a94667... and run_gt23_m01.py c42b020f..., both equal to the current files; input audit hashes match. Final pilots ran 03:17:42-03:18:19, batches 03:18:46-03:23:41, summary 03:24:16 (code frozen between). The first pilot (03:17:02) bound older code and is superseded as stated. Peak RSS 116-231 MiB. pytest tests/test_gt23_m01.py: 9 passed.",
+  "list_and_factors": "The 52 rescaled recordings in the 12 ledgers equal exactly the 52 trials with class lower_confident in docs/quality/audits/gt23-c05-rescale-error.json (sha256 befedeae...). Independent factor = (README table mass nearest the C05 exact slope, or nearest the lever estimate for estimated ones) / README own mass: equals the ledger factor to 1e-12 and the audit policy_T factor to the audit rounding for all 52. The 7 exact: AB05 1.1035, AB06 0.9039, AB08 0.7112, AB09 1.0416, AB10 1.2459, AB12 1.0172, AB13 0.9467. README masses match the participant table. Limit: for AB09 dynamic_walk_1 and weighted_walk_1 the audit lists no plausible table mass inside the interval (lever 92.4 and 92.0 kg); 87.6 kg (AB08's mass) is the nearest table mass, 5% below the lever. They are rescaled on the nearest-mass policy only; error up to about 5%, within the audit's stated bound.",
+  "rescaling_sample": "Seed 20261128: 7 rescaled (AB08 incline_walk_2, AB03 turn_and_step_1, AB10 turn_and_step_1, AB03 tire_run_1, AB03 dynamic_walk_1, AB09 weighted_walk_1, AB07 walk_backward_1) and 5 kept (AB07 sit_to_stand_2, AB07 curb_up_1, AB09 walk_backward_1, AB12 curb_down_1, AB01 stairs_1_7), 24 moment and power columns each. Compared with the X01 published columns (the C06 batch3 files hold no moments or powers): rescaled ratio minus factor max 2.2e-16 on every column; kept recordings bit-identical; finite patterns identical; time identical. Column names carry _Nm_kg and _W_kg.",
+  "ab03_and_body_weight": "M01 BW columns equal the C06 batch3 N columns divided by (README mass x 9.80665) exactly (0 difference) in all 14 sampled recordings; the N columns themselves contain no mass. AB03 poses_1: median total vertical force 1.004 BW, implied 113.9 kg (README 113.5; the C02 audit said 113.8). Other participants, poses_1: AB05 1.003 BW (71.7 kg), AB06 1.001 (79.2), AB12 1.000 (64.0). AB03 dynamic tasks 0.99-1.04 BW.",
+  "nm_mismatches": {
+    "result": "not a conversion or mass problem; a difference between the local inverse-dynamics re-run and the publisher's values",
+    "evidence": "Local inverse_dynamics.sto vs published per-kg x mass (normal_walk_1): AB06, AB08, AB12 agree to 1e-5 to 1e-13 N*m. AB01 (kept, own mass 78.9, never rescaled) misses by 0.10 N*m (0.039% of peak), the same size as AB10 0.03 N*m (0.02%), AB05 0.03 N*m (0.016%) in my pass at the table mass (the worker reports up to 0.08 N*m over all columns). For AB01, AB05 and AB10 the least-squares divisor is exactly the table mass (78.9, 78.9, 84.1) and the residual with the best-fit mass equals the residual at the table mass, so the mass is right and what is left is shape noise from the re-run. AB09: fitted divisor 87.49-87.58 (table 87.6, audit slope 87.57), residual 0.09-0.37% of peak at either divisor; the same kind of difference, larger. The .sto prints 8 decimals, so rounding is not the cause. AB02 and AB03 .sto files do not match their normal_walk_1 published moments at all (nRows equal but residual ~90% of peak), and AB13 has 50002 rows vs 52903, so those are not alignable and not in the 7 exact set.",
+    "judgement": "Acceptance wording 1e-3 N*m is too tight for a re-run; it fails for a kept recording too. The mass check holds at the level that matters (divisor to 5 significant figures for AB05, AB10; 0.03% for AB09). Treat the 3 misses as a limitation of the local re-run, recorded; nothing to change.",
+    "caveat": "AB09 is the least tight (0.37% of peak at the worst column); its factor depends on the divisor 87.57-87.6, which differs by 0.03%."
+  },
+  "checks_run": {
+    "pytest": "9 passed",
+    "build_backlog_page.py --check": "see below",
+    "peak_rss_mib_my_probes": "175 (N*m comparison), 158 (sample); nice 19; Linux available 8.8 GB before probing"
+  },
+  "not_checked": [
+    "all 488 by my own code (14 recordings plus the audit-list and factor recompute of all 52)",
+    "the 45 estimated factors' truth (audit-bound estimates, not independently validated)",
+    "Parquet metadata units text",
+    "AB13 N*m comparison (not alignable)"
+  ],
+  "next_action": "GT23 review chain: next task per backlog; GT23-Q01 should record the 45 estimated factors, AB09 dynamic/weighted walk divisor, and the re-run N*m limitation."
+}

@@ -7188,7 +7188,7 @@
       "priority": "P1",
       "dataset": "gt23",
       "title": "Rescale moments and powers of 52 recordings and fix AB03 body weight",
-      "status": "review",
+      "status": "done",
       "stage": "conversion",
       "question": "Are exactly the 52 recordings rescaled by (mass used / own mass), AB03 forces in body weights right, and everything else unchanged?",
       "scope": "27 guarded jobs: 3 pilots (AB05 normal_walk_1, exact, factor 1.1035; AB03 dynamic_walk_1, estimated, factor 0.741; an AB03 body-weight force check) + 12 batches + 12 audits. List and factors from the hash-bound gt23-c05-rescale-error.json (7 exact, 45 estimated and matched to the nearest recorded mass; estimate and interval kept in provenance). Other 436 recordings keep published moments and powers with a note. Body weights use the publisher's README mass table. Units are documented only (values already per kg).",
@@ -7218,7 +7218,7 @@
         "AB03 standing vertical force sums to about 1 BW with 113.5 kg (plates give 113.8 kg).",
         "Every moment and power column is labelled per kg."
       ],
-      "next_action": "Independent verifier: recompute factors, compare the 436 kept and 52 rescaled with the X01 companions, AB03 body weights, and the N*m comparison (3 of 7 exact miss 1e-3, 1 unavailable).",
+      "next_action": "Done (independent verification: docs/maintainers/handoffs/GT23-M01-verify.json). Limits for GT23-Q01: 45 estimated factors; AB09 dynamic_walk/weighted_walk use the nearest table mass; local N*m re-run differs by up to 0.4% of peak for AB09 and 0.04% elsewhere (also in a kept recording).",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT23-rebuild-plan.json",
@@ -7243,7 +7243,8 @@
           "contributor_tools/run_gt23_m01.py",
           "tests/test_gt23_m01.py",
           "docs/maintainers/handoffs/GT23-M01.json"
-        ]
+        ],
+        "verification": "GT23-M01-verify.json: done"
       },
       "owner": "claude-worker-gt23-m01",
       "started_at_utc": "2026-11-24T03:08:08+00:00"
