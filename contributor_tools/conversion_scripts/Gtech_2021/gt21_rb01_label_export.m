@@ -86,7 +86,9 @@ function rec = describe_recording(path)
         'header_first', [], 'header_last', [], 'label_windows', [], 'label_present', false, ...
         'ramp_incline_column_unique', [], 'ramp_incline_top_level', [], 'stair_height_top_level', [], ...
         'speed_min', [], 'speed_max', [], 'label_table_variable', '', 'trial_start', [], 'trial_end', [], ...
-        'trans_leg_ascent', {{}}, 'trans_leg_descent', {{}}, 'error', '');
+        'trans_leg_ascent', {{}}, 'trans_leg_descent', {{}}, 'error', '', ...
+        'leading_leg_start', {{}}, 'leading_leg_stop', {{}}, 'turn', {{}}, ...
+        'speed_table_present', false, 'speed_has_nan', false, 'speed_runs', []);
     try
         data = load(path);
         rec.top_level_fields = fieldnames(data)';
@@ -96,6 +98,16 @@ function rec = describe_recording(path)
         if isfield(data, 'trialEnds'), rec.trial_end = double(data.trialEnds); end
         if isfield(data, 'transLegAscent'), rec.trans_leg_ascent = cellstr(data.transLegAscent(:))'; end
         if isfield(data, 'transLegDescent'), rec.trans_leg_descent = cellstr(data.transLegDescent(:))'; end
+        % GT21-RB03 additions (read only, nothing inferred): the fields the authors' STRIDES.m reads for levelground
+        % (leadingLegStart, leadingLegStop, turn) and the treadmill speed table (run-length encoded, exact values).
+        if isfield(data, 'leadingLegStart'), rec.leading_leg_start = cellstr(data.leadingLegStart(:))'; end
+        if isfield(data, 'leadingLegStop'), rec.leading_leg_stop = cellstr(data.leadingLegStop(:))'; end
+        if isfield(data, 'turn'), rec.turn = cellstr(data.turn(:))'; end
+        if isfield(data, 'speed') && istable(data.speed) && all(ismember({'Header', 'Speed'}, data.speed.Properties.VariableNames))
+            rec.speed_table_present = true;
+            rec.speed_has_nan = any(isnan(data.speed.Speed));
+            rec.speed_runs = run_values(data.speed.Speed, data.speed.Header);
+        end
         % the source stores the label table in the variable 'labels'; the older converter renames it to conditions
         c = [];
         if isfield(data, 'labels') && istable(data.labels)
@@ -135,6 +147,21 @@ function windows = run_windows(labels, header)
     for i = 2:n + 1
         if i == n + 1 || labels(i) ~= labels(first)
             windows(end + 1) = struct('label', char(labels(first)), 'start_header', header(first), ...
+                'end_header', header(i - 1), 'rows', i - first); %#ok<AGROW>
+            first = i;
+        end
+    end
+end
+
+function runs = run_values(values, header)
+% Consecutive runs of the same value: value, first and last Header value, row count (NaN rows each form their own run).
+    runs = struct('value', {}, 'start_header', {}, 'end_header', {}, 'rows', {});
+    n = numel(values);
+    if n == 0, return; end
+    first = 1;
+    for i = 2:n + 1
+        if i == n + 1 || isnan(values(i)) || isnan(values(first)) || values(i) ~= values(first)
+            runs(end + 1) = struct('value', values(first), 'start_header', header(first), ...
                 'end_header', header(i - 1), 'rows', i - first); %#ok<AGROW>
             first = i;
         end

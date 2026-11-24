@@ -166,7 +166,7 @@ def test_authors_class_ramp_and_stair_known_cases():
     assert sg.authors_class('stair', ['stairdescent'], ['l', 'r'], ['l', 'r']) == 'stairdescent'
     assert sg.authors_class('stair', ['stairascent'], [], []) == 'stairascent'
     assert sg.authors_class('stair', ['walk-stairdescent', 'stairdescent', 'idle'], [], []) == 'case_not_found'
-    assert sg.authors_class('levelground', ['walk'], [], []) == 'not_reproduced'
+    assert sg.authors_class('levelground', ['walk'], [], []) == 'walk'
 
 
 # ---- end to end on a made-up recording like the failed stair recording ---------------------------------------
@@ -226,5 +226,111 @@ def test_recording_with_no_eligible_step_is_a_listed_exclusion(tmp_path):
             'label_windows': [{'label': 'idle', 'start_header': 0.0, 'end_header': 99.0}]}
     row = {'subject': 'ABxx', 'session': 's', 'mode': 'stair', 'recording': 'stair_idle', 'source': 'synthetic'}
     entry = rn.segment_recording(row, meta, gc, None, None, tmp_path / 'mask', io.StringIO(), io.StringIO())
-    assert entry['status'] == 'excluded_no_eligible_step' and 'label_not_mapped_to_a_task: idle' in entry['reason']
+    assert entry['status'] == 'excluded_no_eligible_step' and 'authors_rule_discard' in entry['reason']
     assert entry['table_available'] is False and 'force_mask' not in entry
+
+
+# ---- rule A: the authors' decision for levelground, treadmill and crossing steps ---------------------------------
+def test_authors_levelground_rules_use_leading_leg_and_turn():
+    LS, LP = ['l'], ['r']
+    assert sg.authors_class('levelground', ['idle', 'stand'], [], [], LS, LP, ['ccw']) == 'discard'
+    assert sg.authors_class('levelground', ['stand-walk', 'walk'], [], [], ['l'], LP, []) == 'stand-walk'
+    assert sg.authors_class('levelground', ['stand', 'stand-walk'], [], [], ['r'], LP, []) == 'discard'
+    assert sg.authors_class('levelground', ['stand', 'stand-walk'], [], [], ['l'], LP, []) == 'stand-walk'
+    assert sg.authors_class('levelground', ['walk', 'turn1', 'turn2'], [], [], LS, LP, ['ccw']) == 'turnccw'
+    assert sg.authors_class('levelground', ['turn1'], [], [], LS, LP, ['cw']) == 'turncw'
+    assert sg.authors_class('levelground', ['walk'], [], [], LS, LP, ['cw']) == 'walk'
+    assert sg.authors_class('levelground', ['walk', 'walk-stand'], [], [], LS, ['r'], []) == 'walk-stand'
+    assert sg.authors_class('levelground', ['walk', 'walk-stand'], [], [], LS, ['l'], []) == 'walk-stand'
+    assert sg.authors_class('levelground', ['walk-stand', 'stand'], [], [], LS, ['r'], []) == 'stand'
+    assert sg.authors_class('levelground', ['walk-stand', 'stand'], [], [], LS, ['l'], []) == 'discard'
+    assert sg.authors_class('levelground', ['stand-walk', 'walk'], [], [], ['r'], LP, []) == 'walk'
+    assert sg.authors_class('levelground', ['walk', 'walk-stand', 'idle'], [], [], LS, ['r'], []) == 'discard'
+    assert sg.authors_class('levelground', ['walk', 'stand-walk'], [], [], LS, LP, []) == 'case_not_found'
+
+
+def test_authors_levelground_missing_field_is_reported_not_guessed():
+    assert sg.authors_class('levelground', ['stand-walk'], [], [], None, None, None) == 'field_missing:leadingLegStart'
+    assert sg.authors_class('levelground', ['turn1'], [], [], ['l'], ['r'], None) == 'field_missing:turn'
+    assert sg.authors_class('levelground', ['walk'], [], [], None, None, None) == 'walk'      # rule reached before any field is read
+
+
+def test_authors_treadmill_two_speeds_kept_three_discarded():
+    assert sg.authors_class('treadmill', [], n_speed_values=1) == 'treadmill'
+    assert sg.authors_class('treadmill', [], n_speed_values=2) == 'treadmill'
+    assert sg.authors_class('treadmill', [], n_speed_values=3) == 'discard'
+    assert sg.authors_class('treadmill', [], n_speed_values=None) == 'field_missing:speed'
+    meta = {'speed_table_present': True, 'speed_has_nan': False,
+            'speed_runs': [{'value': 1.0, 'start_header': 0.0, 'end_header': 4.0, 'rows': 4001},
+                           {'value': 1.1, 'start_header': 4.001, 'end_header': 8.0, 'rows': 4000},
+                           {'value': 1.2, 'start_header': 8.001, 'end_header': 12.0, 'rows': 4000}]}
+    assert sg.distinct_speed_values(meta, 1.0, 3.0) == [1.0]
+    assert sg.distinct_speed_values(meta, 3.0, 5.0) == [1.0, 1.1]
+    assert sg.distinct_speed_values(meta, 3.0, 9.0) == [1.0, 1.1, 1.2]
+    assert sg.distinct_speed_values({'speed_table_present': False}, 0, 1) is None
+    assert sg.distinct_speed_values(dict(meta, speed_has_nan=True), 0, 1) is None
+
+
+def test_rule_a_labels_a_crossing_step_the_way_the_authors_do_and_keeps_terrain_and_gates():
+    wins = [{'label': 'walk-stairascent', 'start_header': 0.0, 'end_header': 3.0},
+            {'label': 'stairascent', 'start_header': 3.005, 'end_header': 8.0}]
+    meta = {'read_ok': True, 'label_present': True, 'label_windows': wins, 'stair_height_top_level': 5, 'trans_leg_ascent': ['l', 'r'],
+            'trans_leg_descent': ['l', 'r']}
+    n = 4000
+    h = np.arange(n) * 0.005
+    a, b = 500, 700                                    # 2.5 s to 3.5 s: crosses the two windows
+    p = np.zeros(n)
+    p[a - 1] = 99.0
+    p[a:b] = 100.0 * np.arange(b - a) / (b - a)
+    r = sg.classify_step_authors('stair', meta, 'right', float(h[a]), float(h[b]), h, p, a, b, (0.0, 20.0))
+    assert r['disposition'] == 'eligible' and r['label'] == 'stairascent' and r['authors_class'] == 'stairascent'
+    assert r['stair_height_m'] == 0.127 and r['direction'] == 'ascent' and r['rule_origin'] == 'authors_right_leg'
+    assert r['window_rule']['reason'] == 'straddles_label_windows'               # the earlier rule is kept for audit
+    r = sg.classify_step_authors('stair', meta, 'left', float(h[a]), float(h[b]), h, p, a, b, (0.0, 20.0))
+    assert r['rule_origin'] == 'authors_rule_extended_to_left_leg'
+    r = sg.classify_step_authors('stair', dict(meta, stair_height_top_level=None), 'right', float(h[a]), float(h[b]), h, p, a, b, (0.0, 20.0))
+    assert r['reason'] == 'source_stair_height_missing_or_not_positive' and r['stair_height_m'] is None
+    r = sg.classify_step_authors('stair', dict(meta, trans_leg_ascent=['r', 'l']), 'right', float(h[a]), float(h[b]), h, p, a, b, (0.0, 20.0))
+    assert r['disposition'] == 'eligible'                                       # first='walk-stairascent', last='stairascent', transLegAscent(1)='r'
+    r = sg.classify_step_authors('stair', meta, 'right', float(h[a]), float(h[b]), h, p, a, b, None)
+    assert r['reason'] == 'recording_not_converted_in_pass'
+
+
+def test_rule_a_treadmill_held_without_speed_and_discarded_with_three_speeds():
+    n = 4000
+    h = np.arange(n) * 0.005
+    a, b = 400, 600
+    p = np.zeros(n)
+    p[a - 1] = 99.0
+    p[a:b] = 100.0 * np.arange(b - a) / (b - a)
+    meta = {'read_ok': True, 'label_present': False, 'speed_table_present': False}
+    assert sg.classify_step_authors('treadmill', meta, 'right', 2.0, 3.0, h, p, a, b, (0, 20))['disposition'] == 'held'
+    runs = [{'value': v, 'start_header': s0, 'end_header': s0 + 0.4, 'rows': 400} for v, s0 in ((1.0, 2.0), (1.1, 2.4), (1.2, 2.8))]
+    meta = {'read_ok': True, 'speed_table_present': True, 'speed_has_nan': False, 'speed_runs': runs}
+    r = sg.classify_step_authors('treadmill', meta, 'right', 2.0, 3.0, h, p, a, b, (0, 20))
+    assert r['disposition'] == 'excluded' and r['reason'].startswith('authors_rule_discard')
+    meta['speed_runs'] = runs[:1]
+    r = sg.classify_step_authors('treadmill', meta, 'right', 2.0, 3.0, h, p, a, b, (0, 20))
+    assert r['disposition'] == 'eligible' and r['label'] == 'treadmill' and r['speed_values_m_s'] == [1.0]
+
+
+def test_authors_rules_equal_the_text_of_strides_m_on_random_sequences():
+    """Independent oracle: the readback parses the elseif chain out of the authors' STRIDES.m and evaluates it."""
+    import importlib.util
+    import random
+    root = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location('rb_readback', root / 'contributor_tools/run_gt21_rb_segment_readback.py')
+    rb = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rb)
+    rng = random.Random(7)
+    labels = {'levelground': ['idle', 'stand', 'stand-walk', 'walk', 'walk-stand', 'turn1', 'turn2'],
+              'ramp': ['idle', 'rampascent', 'rampdescent', 'walk-rampascent', 'rampascent-walk', 'walk-rampdescent', 'rampdescent-walk'],
+              'stair': ['idle', 'stairascent', 'stairdescent', 'walk-stairascent', 'stairascent-walk', 'walk-stairdescent', 'stairdescent-walk']}
+    for mode, names in labels.items():
+        for _ in range(3000):
+            seq = [rng.choice(names) for _ in range(rng.randint(1, 4))]
+            meta = {'leading_leg_start': [rng.choice('lr')], 'leading_leg_stop': [rng.choice('lr')], 'turn': [rng.choice(['ccw', 'cw'])],
+                    'trans_leg_ascent': [rng.choice('lr'), rng.choice('lr')], 'trans_leg_descent': [rng.choice('lr'), rng.choice('lr')]}
+            mine = sg.authors_class(mode, seq, meta['trans_leg_ascent'], meta['trans_leg_descent'], meta['leading_leg_start'],
+                                    meta['leading_leg_stop'], meta['turn'])
+            assert rb.oracle_class(mode, seq, meta) == mine, (mode, seq, meta)

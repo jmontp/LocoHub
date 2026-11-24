@@ -30,6 +30,15 @@ last label inside them. ``authors_intervals`` reproduces the cutting; ``authors_
 classification. Levelground and treadmill classes need fields that were not exported (leadingLegStart, leadingLegStop,
 turn, treadmill speed) and are not reproduced.
 
+Rule A (José, D-GT21-RB03-1): steps that cross label windows follow the authors' own labelling. ``classify_step_authors``
+applies the authors' STRIDES.m decision (class or discard) to the ordered labels inside a step for levelground, ramp and
+stair, and their treadmill rule (more than two distinct speed values inside the step discards it). It uses exactly the fields
+their script reads (leadingLegStart, leadingLegStop, turn, transLegAscent, transLegDescent, the treadmill speed table, read
+from the RB03 additions to the RB01 label export). Where the script would stop with an error the step is excluded as
+``authors_rule_case_not_found`` or ``authors_rule_field_missing``. The authors apply their rule to right-leg strides only; for
+left-leg steps the same rule is applied unchanged and the step is marked ``authors_rule_extended_to_left_leg``. The
+earlier within-one-window rule stays on every step as ``window_rule`` for audit and for the old-run identity check.
+
 No scientific approval.
 """
 import math
@@ -142,7 +151,7 @@ def _runs(mask):
 
 # ------------------------------------------------------------------------------------------------ label windows
 def overlapped_windows(windows, t0, t1):
-    return [w for w in windows if w['end_header'] >= t0 - TOL and w['start_header'] <= t1 + TOL]
+    return [w for w in as_list(windows) if w['end_header'] >= t0 - TOL and w['start_header'] <= t1 + TOL]
 
 
 def label_of_step(windows, t0, t1):
@@ -305,11 +314,65 @@ def _all(seq, label):
     return bool(seq) and all(x == label for x in seq)
 
 
-def authors_class(mode, seq, trans_asc, trans_desc):
-    """STRIDES.m ramp and stair classification from the ordered labels inside a stride. Returns a class name, 'discard',
-    'case_not_found' (the authors' script stops with an error there), or 'not_reproduced' for other modes."""
-    if mode not in ('ramp', 'stair') or not seq:
-        return 'not_reproduced' if mode not in ('ramp', 'stair') else 'case_not_found'
+class AuthorsFieldMissing(Exception):
+    """The authors' script reads a field that the label export does not hold (their script would stop with an error)."""
+
+
+def _first(value, name):
+    """MATLAB ``c.field{1}``: the first element of an exported text list."""
+    if value is None:
+        raise AuthorsFieldMissing(name)
+    if isinstance(value, dict) or isinstance(value, (list, tuple)) is False:
+        value = [value]
+    if not len(value):
+        raise AuthorsFieldMissing(name)
+    return value[0]
+
+
+def _levelground_rules(seq, ctx):
+    f, l = seq[0], seq[-1]
+    anyturn = any('turn' in x for x in seq)
+    anystand = any('stand' in x for x in seq)
+    LS = lambda: _first(ctx.get('leading_leg_start'), 'leadingLegStart')       # noqa: E731
+    LP = lambda: _first(ctx.get('leading_leg_stop'), 'leadingLegStop')         # noqa: E731
+    TURN = lambda: ctx.get('turn')                                              # noqa: E731
+
+    def turn_is(v):
+        t = TURN()
+        if t is None:
+            raise AuthorsFieldMissing('turn')
+        t = t[0] if isinstance(t, (list, tuple)) and len(t) == 1 else t
+        return t == v
+    return [
+        (lambda: _all(seq, 'idle'), 'discard'), (lambda: f == 'idle', 'discard'),
+        (lambda: f == 'stand-walk' and LS() == 'l', 'stand-walk'),
+        (lambda: f == 'stand' and l == 'stand-walk' and LS() == 'r', 'discard'),
+        (lambda: f == 'stand' and l == 'stand-walk' and LS() == 'l', 'stand-walk'),
+        (lambda: anyturn and turn_is('ccw'), 'turnccw'), (lambda: anyturn and turn_is('cw'), 'turncw'),
+        (lambda: _all(seq, 'walk'), 'walk'),
+        (lambda: l == 'walk-stand' and LP() == 'r', 'walk-stand'),
+        (lambda: f == 'walk-stand' and l == 'stand' and LP() == 'r', 'stand'),
+        (lambda: f == 'stand-walk' and l == 'walk' and LS() == 'r', 'walk'),
+        (lambda: f == 'walk' and l == 'walk-stand' and LP() == 'l', 'walk-stand'),
+        (lambda: f == 'walk-stand' and LP() == 'l', 'discard'),
+        (lambda: f == 'walk-stand' and l == 'idle' and LP() == 'r' and anystand, 'discard'),
+        (lambda: f == 'walk-stand' and l == 'idle' and LP() == 'l' and anystand, 'discard'),
+        (lambda: f == 'walk-stand' and l == 'stand' and LP() == 'l', 'stand'),
+        (lambda: f == 'walk' and l == 'idle' and LP() == 'r' and 'walk-stand' in seq and anystand, 'discard'),
+        (lambda: f == 'stand' and LS() == 'l', 'stand-walk')]
+
+
+def authors_class(mode, seq, trans_asc=None, trans_desc=None, leading_leg_start=None, leading_leg_stop=None, turn=None,
+                  n_speed_values=None):
+    """STRIDES.m classification from the ordered labels inside a stride (levelground, ramp, stair) or from the number of
+    distinct speed values (treadmill: more than two discards). Returns a class name, 'discard', 'case_not_found' (their script
+    stops with an error), or 'field_missing:<name>' when a field their rule reads is absent from the export."""
+    if mode == 'treadmill':
+        if n_speed_values is None:
+            return 'field_missing:speed'
+        return 'discard' if n_speed_values > 2 else 'treadmill'
+    if mode not in ('levelground', 'ramp', 'stair') or not seq:
+        return 'case_not_found'
     f, l = seq[0], seq[-1]
     anyidle = 'idle' in seq
     A = list(trans_asc or [])
@@ -317,6 +380,15 @@ def authors_class(mode, seq, trans_asc, trans_desc):
 
     def at(x, i):
         return x[i] if len(x) > i else None
+    if mode == 'levelground':
+        ctx = {'leading_leg_start': leading_leg_start, 'leading_leg_stop': leading_leg_stop, 'turn': turn}
+        try:
+            for cond, name in _levelground_rules(seq, ctx):
+                if cond():
+                    return name
+        except AuthorsFieldMissing as exc:
+            return f'field_missing:{exc}'
+        return 'case_not_found'
     if mode == 'ramp':
         rules = [
             (_all(seq, 'idle'), 'discard'), (f == 'idle', 'discard'),
@@ -359,3 +431,91 @@ def authors_class(mode, seq, trans_asc, trans_desc):
         if cond:
             return name
     return 'case_not_found'
+
+
+# ------------------------------------------------------------------------------------------------ rule A: authors' decision
+def as_list(value):
+    """A JSON value from the MATLAB export as a list (a one-element struct array or text arrives as a bare object)."""
+    if value is None or value == []:
+        return []
+    return value if isinstance(value, list) else [value]
+
+
+def distinct_speed_values(meta, t0, t1):
+    """Distinct Speed values among treadmill speed-table rows with Header in [t0, t1] (the authors count
+    numel(unique(c.speed.Speed)) per stride). None when the table was not exported or holds NaN rows (MATLAB's unique counts
+    every NaN as a value, which a run list cannot reproduce)."""
+    if not meta or not meta.get('speed_table_present') or meta.get('speed_has_nan'):
+        return None
+    runs = as_list(meta.get('speed_runs'))
+    vals = {r['value'] for r in runs if r['end_header'] >= t0 - TOL and r['start_header'] <= t1 + TOL}
+    return sorted(vals)
+
+
+def classify_step_authors(mode, meta, leg, t0, t1, header, pct, a, b, table_span):
+    """Rule A disposition of one step (see the module note). Keeps the earlier within-one-window result as ``window_rule``."""
+    base = classify_step(mode, meta, t0, t1, header, pct, a, b, table_span)
+    out = {'disposition': 'excluded', 'reason': None, 'label': None, 'step_class': None, 'direction': None,
+           'incline_deg': None, 'stair_height_m': None, 'labels_overlapped': base['labels_overlapped'],
+           'window_status': base['window_status'], 'authors_class': None,
+           'rule_origin': 'authors_right_leg' if leg == 'right' else 'authors_rule_extended_to_left_leg',
+           'window_rule': {'disposition': base['disposition'], 'reason': base['reason'], 'label': base['label']}}
+    gate = base['reason'] if base['reason'] and base['reason'].startswith(('source_phase_issue', 'fewer_than', 'source_gait')) else None
+    if gate or not meta or not meta.get('read_ok'):
+        out['reason'] = gate or 'label_export_unreadable'
+        return out
+    if mode == 'treadmill':
+        vals = distinct_speed_values(meta, t0, t1)
+        if vals is None:
+            out.update(disposition='held', reason='treadmill_speed_table_missing_or_holds_nan')
+            return out
+        cls = authors_class('treadmill', [], n_speed_values=len(vals))
+        out.update(authors_class=cls, speed_values_m_s=vals)
+        if cls == 'discard':
+            out['reason'] = 'authors_rule_discard: more than 2 distinct treadmill speeds inside the step'
+            return out
+        out.update(label='treadmill', step_class='treadmill')
+    else:
+        if not meta.get('label_present'):
+            out['reason'] = 'no_label_table'
+            return out
+        ov = overlapped_windows(meta.get('label_windows') or [], t0, t1)
+        if not ov:
+            out['reason'] = 'outside_every_label_window'
+            return out
+        seq = [w['label'] for w in ov]
+        cls = authors_class(mode, seq, meta.get('trans_leg_ascent'), meta.get('trans_leg_descent'),
+                            as_list(meta.get('leading_leg_start')), as_list(meta.get('leading_leg_stop')),
+                            as_list(meta.get('turn')))
+        out['authors_class'] = cls
+        if cls == 'discard':
+            out['reason'] = 'authors_rule_discard'
+            return out
+        if cls == 'case_not_found':
+            out['reason'] = 'authors_rule_case_not_found'
+            return out
+        if cls.startswith('field_missing:'):
+            out['reason'] = 'authors_rule_field_missing: ' + cls.split(':', 1)[1]
+            return out
+        out.update(label=cls, step_class='authors_class')
+        if mode == 'ramp':
+            inc = positive_number(meta.get('ramp_incline_top_level'))
+            if inc is None:
+                out.update(reason='source_incline_missing_or_not_positive', label=None, step_class=None)
+                return out
+            down = 'descent' in cls
+            out.update(direction='descent' if down else 'ascent', incline_deg=-inc if down else inc)
+        elif mode == 'stair':
+            h = positive_number(meta.get('stair_height_top_level'))
+            if h is None:
+                out.update(reason='source_stair_height_missing_or_not_positive', label=None, step_class=None)
+                return out
+            out.update(direction='descent' if 'descent' in cls else 'ascent', stair_height_m=round(h * 0.0254, 3))
+    if table_span is None:
+        out['reason'] = 'recording_not_converted_in_pass'
+        return out
+    if t0 < table_span[0] - TOL or t1 > table_span[1] + TOL:
+        out['reason'] = 'step_outside_continuous_table'
+        return out
+    out['disposition'] = 'eligible'
+    return out

@@ -37,7 +37,9 @@ from contributor_tools import gt21_numeric_source as src  # noqa: E402
 pa.set_cpu_count(1)
 pa.set_io_thread_count(1)
 INVENTORY = ROOT / 'converted_datasets/reconversion_v2/gt21_rb01_inventory_20261123/recording_ledger.jsonl'
-LABELS = ROOT / 'converted_datasets/reconversion_v2/gt21_rb01_labels_final_20261124'
+LABELS = ROOT / 'converted_datasets/reconversion_v2/gt21_rb03_authors_fields_20261125'
+OLD_LABELS = ROOT / 'converted_datasets/reconversion_v2/gt21_rb01_labels_final_20261124'
+STRIDES = ROOT / 'contributor_tools/conversion_scripts/Gtech_2021/CAMARGO_ET_AL_J_BIOMECH_DATASET/scripts (1)/STRIDES.m'
 PASS = 'converted_datasets/reconversion_v2/gt21_rb_pass_batch_{s}_20261124'
 SEG = 'converted_datasets/reconversion_v2/gt21_rb_segment_batch_{s}_20261124'
 COVERAGE = ROOT / 'converted_datasets/reconversion_v2/gt21_event_eligibility_review_20261021/source_coverage.json'
@@ -48,6 +50,84 @@ NEW = ('AB12 AB15 AB17 AB19 AB23 AB28').split()
 MAPPED = {'levelground': {'walk', 'stand-walk', 'walk-stand'},
           'ramp': {'rampascent', 'rampdescent', 'walk-rampascent', 'rampascent-walk', 'walk-rampdescent', 'rampdescent-walk'},
           'stair': {'stairascent', 'stairdescent', 'walk-stairascent', 'stairascent-walk', 'walk-stairdescent', 'stairdescent-walk'}}
+
+import re  # noqa: E402
+
+
+def _blocks():
+    """Read the authors' STRIDES.m itself: for each mode, the ordered (condition, action) pairs of its elseif chain."""
+    text = STRIDES.read_text().replace('...\n', ' ')
+    marks = {m: text.index(f"strcmp(ambulationMode,'{m}')") for m in ('levelground', 'ramp', 'stair')}
+    end = text.index('[u_labels,~,u_labels_idx]')
+    order = sorted(marks.items(), key=lambda kv: kv[1])
+    out = {}
+    for i, (m, a) in enumerate(order):
+        b = order[i + 1][1] if i + 1 < len(order) else end
+        body = text[a:b].split('\n', 1)[1]
+        pairs = re.findall(r"(?:^|\n)\s*(?:if|elseif)\s+(.*?)\n\s*(?:alllabels\{j\}='([^']+)';|(continue);)", body, flags=re.S)
+        out[m] = [(c.strip().split('\n')[0].strip(), act or 'discard') for c, act, _ in pairs]
+    return out
+
+
+def _translate(cond):
+    c = cond
+    c = re.sub(r"all\(strcmp\(labels\.Label\{1\},'([^']*)'\)\)", r"(seq[0]=='\1')", c)
+    c = re.sub(r"all\(strcmp\(labels\.Label,'([^']*)'\)\)", r"all(x=='\1' for x in seq)", c)
+    c = re.sub(r"strcmp\(labels\.Label\{1\},'([^']*)'\)", r"(seq[0]=='\1')", c)
+    c = re.sub(r"strcmp\(labels\.Label\{end\},'([^']*)'\)", r"(seq[-1]=='\1')", c)
+    c = re.sub(r"any\(contains\(labels\.Label,'([^']*)'\)\)", r"any('\1' in x for x in seq)", c)
+    c = re.sub(r"any\(strcmp\(labels\.Label,'([^']*)'\)\)", r"('\1' in seq)", c)
+    c = re.sub(r"c\.leadingLegStart\{1\}=='(.)'", r"(F('lls')=='\1')", c)
+    c = re.sub(r"c\.leadingLegStop\{1\}=='(.)'", r"(F('llp')=='\1')", c)
+    c = re.sub(r"c\.transLegAscent\((\d)\)=='(.)'", r"(T('ta',\1)=='\2')", c)
+    c = re.sub(r"c\.transLegDescent\((\d)\)=='(.)'", r"(T('td',\1)=='\2')", c)
+    c = re.sub(r"strcmp\(c\.turn,'([^']*)'\)", r"(F('turn')=='\1')", c)
+    return c.replace('&&', ' and ').replace('||', ' or ')
+
+
+_RULES = None
+
+
+def oracle_class(mode, seq, meta):
+    """The authors' class evaluated straight from their script text. Returns class, 'case_not_found' or 'field_missing:x'."""
+    global _RULES
+    if _RULES is None:
+        _RULES = {m: [(_translate(c), a) for c, a in v] for m, v in _blocks().items()}
+
+    def lst(v):
+        return [] if v in (None, []) else (v if isinstance(v, list) else [v])
+
+    class Missing(Exception):
+        pass
+
+    def F(name):
+        key = {'lls': 'leading_leg_start', 'llp': 'leading_leg_stop', 'turn': 'turn'}[name]
+        v = lst(meta.get(key))
+        if not v:
+            raise Missing(key)
+        return v[0]
+
+    def T(which, k):
+        v = lst(meta.get('trans_leg_ascent' if which == 'ta' else 'trans_leg_descent'))
+        return v[k - 1] if len(v) >= k else None
+    for cond, act in _RULES[mode]:
+        try:
+            if eval(cond, {'__builtins__': {'all': all, 'any': any}}, {'seq': seq, 'F': F, 'T': T}):
+                return act
+        except Missing as exc:
+            return f'field_missing:{exc}'
+    return 'case_not_found'
+
+
+def oracle_treadmill(meta, t0, t1):
+    if not meta.get('speed_table_present') or meta.get('speed_has_nan'):
+        return None
+    runs = meta.get('speed_runs') or []
+    runs = runs if isinstance(runs, list) else [runs]
+    n = len({r['value'] for r in runs if r['end_header'] >= t0 - 1e-9 and r['start_header'] <= t1 + 1e-9})
+    return 'discard' if n > 2 else 'treadmill'
+
+
 DISPOSITIONS = {'eligible', 'excluded', 'held'}
 
 
@@ -93,6 +173,9 @@ def main():
     auth = Counter()
     auth_off = []
     auth_class = Counter()
+    rule_origin = Counter()
+    agree = Counter()
+    agree_reasons = defaultdict(Counter)
     stair = {'recordings': 0, 'recordings_with_eligible': 0, 'steps': 0, 'eligible': 0, 'straddle': 0, 'idle_or_unmapped': 0}
     rec_status = Counter()
     rec_by_mode = defaultdict(Counter)
@@ -133,7 +216,15 @@ def main():
                 fail.append(f"eligible with reason {st['step_id']}")
             if st['disposition'] != 'eligible' and not st['reason']:
                 fail.append(f"no reason {st['step_id']}")
-            per_rec[(st['mode'], st['recording'])].append({k: st[k] for k in ('step_id', 'leg', 'start_s', 'end_s', 'disposition', 'reason', 'label', 'incline_deg', 'stair_height_m')})
+            if st.get('authors_class') is not None and st['mode'] != 'treadmill':
+                if oracle_class(st['mode'], st['labels_overlapped'], labels_s[(st['mode'], st['recording'])]) != st['authors_class']:
+                    fail.append(f"authors class differs from STRIDES.m text: {st['step_id']}")
+            if st.get('authors_class') is not None and st['mode'] == 'treadmill':
+                want = oracle_treadmill(labels_s[(st['mode'], st['recording'])], st['start_s'], st['end_s'])
+                if want != st['authors_class']:
+                    fail.append(f"treadmill class differs: {st['step_id']}")
+            rule_origin[st['rule_origin']] += 1
+            per_rec[(st['mode'], st['recording'])].append({k: st[k] for k in ('step_id', 'leg', 'start_s', 'end_s', 'disposition', 'reason', 'label', 'incline_deg', 'stair_height_m', 'window_rule', 'authors_class', 'labels_overlapped', 'rule_origin')})
             by_mode[st['mode']][st['disposition']] += 1
             reasons[st['mode']][st['reason'] or 'eligible'] += 1
             part[st['disposition']] += 1
@@ -147,6 +238,7 @@ def main():
             if st['mode'] == 'stair':
                 stair['steps'] += 1
                 stair['eligible'] += st['disposition'] == 'eligible'
+                stair['eligible_under_window_rule'] = stair.get('eligible_under_window_rule', 0) + (st['window_rule']['disposition'] == 'eligible')
                 stair['straddle'] += st['reason'] == 'straddles_label_windows'
                 stair['idle_or_unmapped'] += bool(st['reason'] and st['reason'].startswith('label_not_mapped'))
         if n_lines != n_steps_led:
@@ -158,9 +250,26 @@ def main():
             if a['status'] == 'matched':
                 auth_off.append(abs(a['start_offset_ms']))
                 auth_off.append(abs(a['end_offset_ms']))
-            if a['mode'] in ('ramp', 'stair') and a['status'] == 'matched' and a['kind'] == 'interior':
-                ours = a['our_label'] or ('excluded' if a['our_disposition'] != 'eligible' else '?')
-                auth_class[(a['mode'], a['authors_class'] == 'discard', a['our_disposition'] == 'eligible')] += 1
+            if a['status'] == 'missed':
+                continue
+            meta_a = labels_s[(a['mode'], a['recording'])]
+            if a['mode'] == 'treadmill':
+                want = oracle_treadmill(meta_a, a['start_s'], a['end_s']) or 'field_missing:speed'
+            else:
+                seq = [w['label'] for w in meta_a['label_windows'] if w['end_header'] >= a['start_s'] - 1e-9 and w['start_header'] <= a['end_s'] + 1e-9] \
+                    if not isinstance(meta_a['label_windows'], dict) else [meta_a['label_windows']['label']]
+                want = oracle_class(a['mode'], seq, meta_a) if seq else 'no_label_table'
+            if want != a['authors_class']:
+                fail.append(f"authors interval class differs from STRIDES.m text: {a['recording']} {a['start_s']}")
+            if a['status'] == 'matched' and a['kind'] == 'interior':
+                dec = 'authors_dropped' if want == 'discard' else ('authors_case_not_found' if want == 'case_not_found' else
+                      ('authors_field_missing' if want.startswith('field_missing') else 'authors_kept'))
+                ours = 'ours_eligible' if a['our_disposition'] == 'eligible' else 'ours_' + a['our_disposition'] + ':' + (a['our_reason'] or '').split(':')[0]
+                agree[(a['mode'], dec, 'ours_eligible' if a['our_disposition'] == 'eligible' else 'ours_not_eligible')] += 1
+                if dec == 'authors_kept' and a['our_disposition'] != 'eligible':
+                    agree_reasons[a['mode']][ours] += 1
+                if dec == 'authors_dropped' and a['our_disposition'] == 'eligible':
+                    fail.append(f"authors dropped but ours eligible: {a['recording']} {a['start_s']}")
         # per recording
         for e in led:
             key = (e['mode'], e['recording'])
@@ -181,29 +290,23 @@ def main():
                 resets_new += sum(e['resets'].values())
                 pairs_new += e['steps']
             meta = labels_s[key]
-            # terrain
+            # terrain and class (oracle from the authors' script text)
             if e['mode'] in ('ramp', 'stair'):
                 tv = meta.get('ramp_incline_top_level' if e['mode'] == 'ramp' else 'stair_height_top_level')
                 terrain['recordings_with_terrain_value'] += isinstance(tv, (int, float)) and tv > 0
-                for st in per_rec[key]:
-                    if st['disposition'] != 'eligible':
-                        continue
+            for st in per_rec[key]:
+                if st['disposition'] != 'eligible' or e['mode'] == 'treadmill':
+                    continue
+                want = oracle_class(e['mode'], st['labels_overlapped'], meta)
+                ok = want == st['label'] and want not in ('discard', 'case_not_found') and not want.startswith('field_missing')
+                if e['mode'] == 'ramp':
                     terrain['eligible_ramp_stair_steps'] += 1
-                    wins = [w for w in meta['label_windows'] if w['start_header'] <= st['start_s'] + 1e-9 and w['end_header'] >= st['end_s'] - 1e-9]
-                    ok = len(wins) == 1 and wins[0]['label'] == st['label'] and wins[0]['label'] in MAPPED[e['mode']]
-                    if e['mode'] == 'ramp':
-                        sign = -1 if 'rampdescent' in st['label'] else 1
-                        ok = ok and st['incline_deg'] == sign * tv
-                    else:
-                        ok = ok and abs(st['stair_height_m'] - round(tv * 0.0254, 3)) < 1e-12
-                    if not ok:
-                        terrain['mismatches'].append(st['step_id'])
-            elif e['mode'] == 'levelground':
-                for st in per_rec[key]:
-                    if st['disposition'] == 'eligible':
-                        wins = [w for w in meta['label_windows'] if w['start_header'] <= st['start_s'] + 1e-9 and w['end_header'] >= st['end_s'] - 1e-9]
-                        if not (len(wins) == 1 and wins[0]['label'] == st['label'] and st['label'] in MAPPED['levelground']):
-                            terrain['mismatches'].append(st['step_id'])
+                    ok = ok and st['incline_deg'] == (-1 if 'descent' in st['label'] else 1) * tv
+                elif e['mode'] == 'stair':
+                    terrain['eligible_ramp_stair_steps'] += 1
+                    ok = ok and abs(st['stair_height_m'] - round(tv * 0.0254, 3)) < 1e-12
+                if not ok:
+                    terrain['mismatches'].append(st['step_id'])
             # identity with the old report
             okey = (s, e['mode'], e['recording'])
             if okey in old:
@@ -220,11 +323,11 @@ def main():
                         ident['treadmill_steps'] += 1
                         ident['treadmill_old_exported_or_opposite'] += old_in
                         continue
-                    ident['eligible_levelground'] += st['disposition'] == 'eligible'
+                    ident['eligible_levelground'] += st['window_rule']['disposition'] == 'eligible'
                     ident['old_exported_or_opposite'] += old_in
                     ident['old_outside'] += not old_in
-                    if (st['disposition'] == 'eligible') != old_in:
-                        ident['disagree'].append(f"{st['step_id']}: ours {st['disposition']} {st['reason']}, old {r}")
+                    if (st['window_rule']['disposition'] == 'eligible') != old_in:
+                        ident['disagree'].append(f"{st['step_id']}: window rule {st['window_rule']}, old {r}")
                 if len(oldpairs) != len(per_rec[key]):
                     ident['disagree'].append(f"{e['recording']}: old {len(oldpairs)} pairs, ours {len(per_rec[key])}")
             # mask totals and layer comparison, one recording at a time
@@ -305,7 +408,9 @@ def main():
                reasons={m: dict(c.most_common()) for m, c in reasons.items()},
                stair=stair, identity_36_recordings=ident, terrain=terrain, mask=mask_check,
                mask_totals={'by_leg': {l: dict(c) for l, c in mask_tot.items()}, 'by_mode': {m: dict(c) for m, c in mask_by_mode.items()}},
-               scalar_recomputation=scalar,
+               scalar_recomputation=scalar, rule_origin=dict(rule_origin),
+               authors_agreement={f'{m} | {d} | {o}': n for (m, d, o), n in sorted(agree.items())},
+               authors_kept_but_ours_not_eligible={m: dict(c.most_common()) for m, c in agree_reasons.items()},
                force_check={'by_mode_status': {m: dict(c) for m, c in fcheck.items()},
                             'heel_strike_offset_ms': _pct(offs_hs), 'toe_off_offset_ms': _pct(offs_to)},
                authors={'by_mode_status': {f'{m}/{st}': n for (m, st), n in sorted(auth.items())},
