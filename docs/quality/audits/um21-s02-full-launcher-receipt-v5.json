@@ -1,0 +1,975 @@
+{
+  "schema": "locohub.guarded_launcher.receipt/2",
+  "job_id": "UM21-S02-full-v5",
+  "status": "completed",
+  "scientific_approval": false,
+  "envelope": {
+    "path": "docs/quality/audits/pm01-um21-tread-pilot-handoff.json",
+    "reviewed_sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9",
+    "limits": {
+      "timeout_seconds_max": 3600,
+      "kill_after_seconds_max": 30,
+      "poll_seconds_max": 15,
+      "startup_memory_mib_min": {
+        "linux": 3584,
+        "windows": 2816
+      },
+      "runtime_memory_mib_min": {
+        "linux": 2048,
+        "windows": 2048
+      },
+      "output_volume_free_mib_min": 5120,
+      "c_drive_free_mib_min": 1024,
+      "c_drive_path": "/mnt/c",
+      "address_space_mib_max": 768
+    },
+    "sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+  },
+  "spec": {
+    "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+    "kill_after_seconds": 30,
+    "poll_seconds": 15,
+    "disk_admission": [],
+    "thread_env": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "ARROW_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    },
+    "expected_output_names": [
+      "s02_summary.json"
+    ],
+    "address_space_mib": 768,
+    "job_id": "UM21-S02-full-v5",
+    "command": [
+      "python3",
+      "contributor_tools/run_um21_s02_frame.py",
+      "run",
+      "--output-root",
+      "converted_datasets/reconversion_v2/um21_s02_frame_full_v5",
+      "--stage",
+      "full",
+      "--recordings",
+      "AB01/i0,AB01/i10,AB02/d10,AB02/d5,AB02/i0,AB02/i10,AB02/i5,AB03/d10,AB03/d5,AB03/i0,AB03/i10,AB03/i5,AB04/d10,AB04/d5,AB04/i0,AB04/i10,AB04/i5,AB05/d10,AB05/d5,AB05/i0,AB05/i10,AB05/i5,AB06/d10,AB06/d5,AB06/i0,AB06/i10,AB06/i5,AB07/d10,AB07/d5,AB07/i0,AB07/i10,AB07/i5,AB08/d10,AB08/d5,AB08/i0,AB08/i5,AB09/d10,AB09/d5,AB09/i0,AB09/i5,AB10/d10,AB10/d5,AB10/i10,AB10/i5"
+    ],
+    "output_root": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/um21_s02_frame_full_v5",
+    "receipt_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/um21-s02-full-launcher-receipt-v5.json",
+    "bindings": {
+      "contributor_tools/run_um21_s02_frame.py": "6fde30078050fee6482d6d93ed39325bd309daf103b579640c1d45957c26cbf3",
+      "contributor_tools/run_um21_t04_signs.py": "96ca293258ba4293f6fc7b317b964d29ab33a3f71b580d804d9c0e515299b3a2",
+      "converted_datasets/reconversion_v2/um21_r01_review_v2/full.parquet": "2a819a8d04ee94b9f972048fd2feb747beff3d98b998b58ed2c990ff4bebc8fb",
+      "converted_datasets/reconversion_v2/um21_r01_review_v2/manifest.json": "11f2ee877adb69db17c3cfe3041ef6dbf51e67a776a34d62f021152c695aa369",
+      "docs/quality/audits/um21-c03-conventions.json": "244e3c354b6439edf1181aceee735e51b536b017593a982f27d318b256c1f4c3",
+      "contributor_tools/adapters/um21_sign_adapter.py": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
+      "contributor_tools/common/sign_application.py": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "docs/quality/audits/um21-t03-batch0-launcher-receipt.json": "046a3bb4193530c893093b24e7d5ce2dee50c9d5496af155d8eb8b06ac9f8110",
+      "docs/quality/audits/um21-t03-batch1-launcher-receipt.json": "e290eaea8de83e0927dbc7e36395da71280ae1801ec45e228f41285d1075d343",
+      "docs/quality/audits/um21-t03-v2-batch2-launcher-receipt.json": "fccfc3e203fed22d0de3fde01169cb62da3037549e659a220e25e83664f5fb43",
+      "docs/quality/audits/um21-t03-v2-batch3-launcher-receipt.json": "1dd7537e5503b4e087420c40265296820309a21c7f0b402bbcbf23df95b4d89d",
+      "docs/quality/audits/um21-t03-v2-batch4-launcher-receipt.json": "ba68bf1a7d441a21e5fd064d9ea85684202d855b6a49fe38edf462fc8f7d7028",
+      "docs/quality/audits/um21-t03-v2-batch5-launcher-receipt.json": "a1b045cecb125758203b82e5314e87875a03c09ede351e37cc2ff1ea04bf04b0",
+      "docs/quality/audits/um21-t03-v2-batch6-launcher-receipt.json": "bc33329df7f004d37a75798b7a99eb7a20dc3cd70684b5525bd5b28eab6ca60f",
+      "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531"
+    },
+    "timeout_seconds": 3600,
+    "startup_memory_mib": {
+      "linux": 3584,
+      "windows": 2816
+    },
+    "runtime_memory_mib": {
+      "linux": 2048,
+      "windows": 2048
+    }
+  },
+  "spec_sha256": "d7df4d2dbea5cb51df87ddf2ea6d32d3df3890c2eb52f7b3f520146483da3fb3",
+  "launcher_sha256": "8df6f11529b0c5280a95259e73caeeb41c1a9db5b757f189bafde109c6321b7b",
+  "checked_at_utc": "2026-11-24T00:37:08+00:00",
+  "chaining": "none; no successor is started",
+  "bindings_before": {
+    "contributor_tools/run_um21_s02_frame.py": {
+      "expected": "6fde30078050fee6482d6d93ed39325bd309daf103b579640c1d45957c26cbf3",
+      "actual": "6fde30078050fee6482d6d93ed39325bd309daf103b579640c1d45957c26cbf3",
+      "bytes": 75343,
+      "matches": true
+    },
+    "contributor_tools/run_um21_t04_signs.py": {
+      "expected": "96ca293258ba4293f6fc7b317b964d29ab33a3f71b580d804d9c0e515299b3a2",
+      "actual": "96ca293258ba4293f6fc7b317b964d29ab33a3f71b580d804d9c0e515299b3a2",
+      "bytes": 44771,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/um21_r01_review_v2/full.parquet": {
+      "expected": "2a819a8d04ee94b9f972048fd2feb747beff3d98b998b58ed2c990ff4bebc8fb",
+      "actual": "2a819a8d04ee94b9f972048fd2feb747beff3d98b998b58ed2c990ff4bebc8fb",
+      "bytes": 155727730,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/um21_r01_review_v2/manifest.json": {
+      "expected": "11f2ee877adb69db17c3cfe3041ef6dbf51e67a776a34d62f021152c695aa369",
+      "actual": "11f2ee877adb69db17c3cfe3041ef6dbf51e67a776a34d62f021152c695aa369",
+      "bytes": 28470,
+      "matches": true
+    },
+    "docs/quality/audits/um21-c03-conventions.json": {
+      "expected": "244e3c354b6439edf1181aceee735e51b536b017593a982f27d318b256c1f4c3",
+      "actual": "244e3c354b6439edf1181aceee735e51b536b017593a982f27d318b256c1f4c3",
+      "bytes": 66448,
+      "matches": true
+    },
+    "contributor_tools/adapters/um21_sign_adapter.py": {
+      "expected": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
+      "actual": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
+      "bytes": 24823,
+      "matches": true
+    },
+    "contributor_tools/common/sign_application.py": {
+      "expected": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "actual": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "bytes": 56217,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-batch0-launcher-receipt.json": {
+      "expected": "046a3bb4193530c893093b24e7d5ce2dee50c9d5496af155d8eb8b06ac9f8110",
+      "actual": "046a3bb4193530c893093b24e7d5ce2dee50c9d5496af155d8eb8b06ac9f8110",
+      "bytes": 59150,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-batch1-launcher-receipt.json": {
+      "expected": "e290eaea8de83e0927dbc7e36395da71280ae1801ec45e228f41285d1075d343",
+      "actual": "e290eaea8de83e0927dbc7e36395da71280ae1801ec45e228f41285d1075d343",
+      "bytes": 59140,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch2-launcher-receipt.json": {
+      "expected": "fccfc3e203fed22d0de3fde01169cb62da3037549e659a220e25e83664f5fb43",
+      "actual": "fccfc3e203fed22d0de3fde01169cb62da3037549e659a220e25e83664f5fb43",
+      "bytes": 41637,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch3-launcher-receipt.json": {
+      "expected": "1dd7537e5503b4e087420c40265296820309a21c7f0b402bbcbf23df95b4d89d",
+      "actual": "1dd7537e5503b4e087420c40265296820309a21c7f0b402bbcbf23df95b4d89d",
+      "bytes": 41640,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch4-launcher-receipt.json": {
+      "expected": "ba68bf1a7d441a21e5fd064d9ea85684202d855b6a49fe38edf462fc8f7d7028",
+      "actual": "ba68bf1a7d441a21e5fd064d9ea85684202d855b6a49fe38edf462fc8f7d7028",
+      "bytes": 38478,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch5-launcher-receipt.json": {
+      "expected": "a1b045cecb125758203b82e5314e87875a03c09ede351e37cc2ff1ea04bf04b0",
+      "actual": "a1b045cecb125758203b82e5314e87875a03c09ede351e37cc2ff1ea04bf04b0",
+      "bytes": 38485,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch6-launcher-receipt.json": {
+      "expected": "bc33329df7f004d37a75798b7a99eb7a20dc3cd70684b5525bd5b28eab6ca60f",
+      "actual": "bc33329df7f004d37a75798b7a99eb7a20dc3cd70684b5525bd5b28eab6ca60f",
+      "bytes": 38490,
+      "matches": true
+    },
+    "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat": {
+      "expected": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+      "actual": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+      "bytes": 2195168300,
+      "matches": true
+    }
+  },
+  "disk_admission": [
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/converted_datasets/reconversion_v2/um21_s02_frame_full_v5",
+      "min_free_mib": 5120,
+      "source": "envelope: output volume (S:)",
+      "free_mib": 98193.14453125,
+      "passes": true
+    },
+    {
+      "path": "/mnt/c",
+      "min_free_mib": 1024,
+      "source": "envelope: C:",
+      "free_mib": 26291.234375,
+      "passes": true
+    }
+  ],
+  "census_before": {
+    "linux": {
+      "checked_at_utc": "2026-11-24T00:37:16+00:00",
+      "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+      "process_count": 156,
+      "exempt": [
+        {
+          "pid": 1697587,
+          "start_ticks": 99403742,
+          "cwd": "/home/jmontp",
+          "cmdline": "/home/jmontp/.local/bin/pretty daemon",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1697596,
+          "start_ticks": 99403750,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2354851,
+          "start_ticks": 109454620,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude --resume",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2546109,
+          "start_ticks": 111055442,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2546179,
+          "start_ticks": 111056348,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/um21-s02-full-spec-v5.json",
+          "why": "launcher itself (CLI)"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-24T00:37:16+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 375,
+      "free_physical_mib": 5789.171875,
+      "workers": []
+    }
+  },
+  "startup_memory": {
+    "linux": {
+      "available_mib": 8297.2890625,
+      "reserve_mib": 3584,
+      "passes": true
+    },
+    "windows": {
+      "available_mib": 5789.171875,
+      "reserve_mib": 2816,
+      "passes": true
+    }
+  },
+  "launch_ledger": {
+    "parent": {
+      "pid": 2546109,
+      "ppid": 2354851,
+      "start_ticks": 111055442,
+      "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+      "interactive_terminal": false
+    },
+    "claimed": true,
+    "entries": [
+      "/tmp/locohub_guarded_launcher_uid1000/a81def3c-fa85-4161-b227-f59ffadc384d/2546109-111055442.json"
+    ],
+    "keys": [
+      {
+        "pid": 2546109,
+        "ppid": 2354851,
+        "start_ticks": 111055442,
+        "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+        "interactive_terminal": false
+      }
+    ]
+  },
+  "launched": true,
+  "process_identity": {
+    "leader_pid": 2546256,
+    "launched_at_utc": "2026-11-24T00:37:16+00:00",
+    "argv": [
+      "timeout",
+      "--signal=TERM",
+      "--kill-after=30s",
+      "3600",
+      "nice",
+      "-n",
+      "19",
+      "ionice",
+      "-c",
+      "3",
+      "python3",
+      "contributor_tools/run_um21_s02_frame.py",
+      "run",
+      "--output-root",
+      "converted_datasets/reconversion_v2/um21_s02_frame_full_v5",
+      "--stage",
+      "full",
+      "--recordings",
+      "AB01/i0,AB01/i10,AB02/d10,AB02/d5,AB02/i0,AB02/i10,AB02/i5,AB03/d10,AB03/d5,AB03/i0,AB03/i10,AB03/i5,AB04/d10,AB04/d5,AB04/i0,AB04/i10,AB04/i5,AB05/d10,AB05/d5,AB05/i0,AB05/i10,AB05/i5,AB06/d10,AB06/d5,AB06/i0,AB06/i10,AB06/i5,AB07/d10,AB07/d5,AB07/i0,AB07/i10,AB07/i5,AB08/d10,AB08/d5,AB08/i0,AB08/i5,AB09/d10,AB09/d5,AB09/i0,AB09/i5,AB10/d10,AB10/d5,AB10/i10,AB10/i5"
+    ],
+    "log_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/um21-s02-full-launcher-receipt-v5.log",
+    "parent_death_signal": "SIGTERM",
+    "parent_death_signal_set": true,
+    "pgid": 2546256,
+    "sid": 2546256,
+    "own_session_verified": true,
+    "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+    "leader_start_ticks": 111057157
+  },
+  "job_outcome": "completed",
+  "finished_at_utc": "2026-11-24T00:40:35+00:00",
+  "exit_code": 0,
+  "wall_time_seconds": 192.447,
+  "peak_rss_kib_largest_process": 262248,
+  "peak_group_rss_kib_sampled": 223336,
+  "runtime_guard": {
+    "poll_seconds": 15,
+    "reserve_mib": {
+      "linux": 2048,
+      "windows": 2048
+    },
+    "polls": 12,
+    "min_linux_available_mib": 8107.7,
+    "min_windows_free_mib": 5707.2,
+    "breach": null,
+    "observed_address_space_limits": [
+      "805306368"
+    ],
+    "observed_address_space_by_process": [
+      {
+        "pid": 2546256,
+        "start_ticks": 111057157,
+        "limit": "805306368",
+        "cmdline": "timeout --signal=TERM --kill-after=30s 3600 nice -n 19 ionice -c 3 python3 contributor_tools/run_um21_s02_frame.py run --output-root converted_datasets/reconversion_v2/um21_s02_frame_full_v5 --stage f"
+      },
+      {
+        "pid": 2546257,
+        "start_ticks": 111057157,
+        "limit": "805306368",
+        "cmdline": "python3 contributor_tools/run_um21_s02_frame.py run --output-root converted_datasets/reconversion_v2/um21_s02_frame_full_v5 --stage full --recordings AB01/i0,AB01/i10,AB02/d10,AB02/d5,AB02/i0,AB02/i10"
+      }
+    ]
+  },
+  "stop_actions": [],
+  "orphans_at_leader_exit": [],
+  "launcher_errors": [],
+  "finalisation_errors": [],
+  "clean_success": true,
+  "retry": "never automatic",
+  "cleanup_proof": {
+    "checked_at_utc": "2026-11-24T00:40:35+00:00",
+    "basis": "same_boot_proc_scan",
+    "proven": true,
+    "boot_id_now": "a81def3c-fa85-4161-b227-f59ffadc384d",
+    "pgid_members": [],
+    "leader_pid_with_same_start_ticks_present": false,
+    "attempts": 1
+  },
+  "census_after": {
+    "linux": {
+      "checked_at_utc": "2026-11-24T00:40:35+00:00",
+      "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+      "process_count": 160,
+      "exempt": [
+        {
+          "pid": 1697587,
+          "start_ticks": 99403742,
+          "cwd": "/home/jmontp",
+          "cmdline": "/home/jmontp/.local/bin/pretty daemon",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1697596,
+          "start_ticks": 99403750,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2354851,
+          "start_ticks": 109454620,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude --resume",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2546109,
+          "start_ticks": 111055442,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2546179,
+          "start_ticks": 111056348,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/um21-s02-full-spec-v5.json",
+          "why": "launcher itself (CLI)"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-24T00:40:36+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 377,
+      "free_physical_mib": 5719.1171875,
+      "workers": []
+    }
+  },
+  "windows_new_workers": [],
+  "bindings_after": {
+    "contributor_tools/run_um21_s02_frame.py": {
+      "expected": "6fde30078050fee6482d6d93ed39325bd309daf103b579640c1d45957c26cbf3",
+      "actual": "6fde30078050fee6482d6d93ed39325bd309daf103b579640c1d45957c26cbf3",
+      "bytes": 75343,
+      "matches": true
+    },
+    "contributor_tools/run_um21_t04_signs.py": {
+      "expected": "96ca293258ba4293f6fc7b317b964d29ab33a3f71b580d804d9c0e515299b3a2",
+      "actual": "96ca293258ba4293f6fc7b317b964d29ab33a3f71b580d804d9c0e515299b3a2",
+      "bytes": 44771,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/um21_r01_review_v2/full.parquet": {
+      "expected": "2a819a8d04ee94b9f972048fd2feb747beff3d98b998b58ed2c990ff4bebc8fb",
+      "actual": "2a819a8d04ee94b9f972048fd2feb747beff3d98b998b58ed2c990ff4bebc8fb",
+      "bytes": 155727730,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/um21_r01_review_v2/manifest.json": {
+      "expected": "11f2ee877adb69db17c3cfe3041ef6dbf51e67a776a34d62f021152c695aa369",
+      "actual": "11f2ee877adb69db17c3cfe3041ef6dbf51e67a776a34d62f021152c695aa369",
+      "bytes": 28470,
+      "matches": true
+    },
+    "docs/quality/audits/um21-c03-conventions.json": {
+      "expected": "244e3c354b6439edf1181aceee735e51b536b017593a982f27d318b256c1f4c3",
+      "actual": "244e3c354b6439edf1181aceee735e51b536b017593a982f27d318b256c1f4c3",
+      "bytes": 66448,
+      "matches": true
+    },
+    "contributor_tools/adapters/um21_sign_adapter.py": {
+      "expected": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
+      "actual": "81c14488ee0e88b6121073604e039f712c28c94cd8dc33c10a0f25e0525f5aec",
+      "bytes": 24823,
+      "matches": true
+    },
+    "contributor_tools/common/sign_application.py": {
+      "expected": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "actual": "aa3232d74ccf075e0d8feccc40811749f8e3dfb36d235baf3924b8db22ab38bc",
+      "bytes": 56217,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-batch0-launcher-receipt.json": {
+      "expected": "046a3bb4193530c893093b24e7d5ce2dee50c9d5496af155d8eb8b06ac9f8110",
+      "actual": "046a3bb4193530c893093b24e7d5ce2dee50c9d5496af155d8eb8b06ac9f8110",
+      "bytes": 59150,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-batch1-launcher-receipt.json": {
+      "expected": "e290eaea8de83e0927dbc7e36395da71280ae1801ec45e228f41285d1075d343",
+      "actual": "e290eaea8de83e0927dbc7e36395da71280ae1801ec45e228f41285d1075d343",
+      "bytes": 59140,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch2-launcher-receipt.json": {
+      "expected": "fccfc3e203fed22d0de3fde01169cb62da3037549e659a220e25e83664f5fb43",
+      "actual": "fccfc3e203fed22d0de3fde01169cb62da3037549e659a220e25e83664f5fb43",
+      "bytes": 41637,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch3-launcher-receipt.json": {
+      "expected": "1dd7537e5503b4e087420c40265296820309a21c7f0b402bbcbf23df95b4d89d",
+      "actual": "1dd7537e5503b4e087420c40265296820309a21c7f0b402bbcbf23df95b4d89d",
+      "bytes": 41640,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch4-launcher-receipt.json": {
+      "expected": "ba68bf1a7d441a21e5fd064d9ea85684202d855b6a49fe38edf462fc8f7d7028",
+      "actual": "ba68bf1a7d441a21e5fd064d9ea85684202d855b6a49fe38edf462fc8f7d7028",
+      "bytes": 38478,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch5-launcher-receipt.json": {
+      "expected": "a1b045cecb125758203b82e5314e87875a03c09ede351e37cc2ff1ea04bf04b0",
+      "actual": "a1b045cecb125758203b82e5314e87875a03c09ede351e37cc2ff1ea04bf04b0",
+      "bytes": 38485,
+      "matches": true
+    },
+    "docs/quality/audits/um21-t03-v2-batch6-launcher-receipt.json": {
+      "expected": "bc33329df7f004d37a75798b7a99eb7a20dc3cd70684b5525bd5b28eab6ca60f",
+      "actual": "bc33329df7f004d37a75798b7a99eb7a20dc3cd70684b5525bd5b28eab6ca60f",
+      "bytes": 38490,
+      "matches": true
+    },
+    "contributor_tools/conversion_scripts/Umich_2021/Streaming.mat": {
+      "expected": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+      "actual": "df8b3e31d2fe6869b95b4776a8f77639da476685b4c0ccb86c985bee3f01b531",
+      "bytes": 2195168300,
+      "matches": true
+    }
+  },
+  "outputs": [
+    {
+      "path": "components/AB01/i0/cop_unheld.parquet",
+      "bytes": 489775,
+      "sha256": "c09b4010741b678c901cb35dc371d8fa54d9fb900df439fd28a4762f2b46aeb6"
+    },
+    {
+      "path": "components/AB01/i0/s02.parquet",
+      "bytes": 2619314,
+      "sha256": "2579d89b83d0f7468ddca6dd5e345d93ee46ed3b3c6507a97ce51e2d58ea4f8c"
+    },
+    {
+      "path": "components/AB01/i10/cop_unheld.parquet",
+      "bytes": 473932,
+      "sha256": "2bc5069798688da9dc0f83a940076ad4c9f68dca9e6c9cdb9185714fb16ccf26"
+    },
+    {
+      "path": "components/AB01/i10/s02.parquet",
+      "bytes": 2166480,
+      "sha256": "3c1745a9c9a0c6c84db413e0f406e100504c3fa7d98bb9d6949a00f74e81e31e"
+    },
+    {
+      "path": "components/AB02/d10/cop_unheld.parquet",
+      "bytes": 537848,
+      "sha256": "33397e5d210148e1cdb6c0981dacae503dbd41c84f02c8d85cd13c82d8c4b3cf"
+    },
+    {
+      "path": "components/AB02/d10/s02.parquet",
+      "bytes": 2475145,
+      "sha256": "0a5d85217ed9c7a2a9cb90c88eb3d60dc15bdb2c7aa84cdb226e23f9556fee1e"
+    },
+    {
+      "path": "components/AB02/d5/cop_unheld.parquet",
+      "bytes": 506462,
+      "sha256": "cfb8727cb76c486b59d3865e0c10662030dbb6432efee75bd849d01b20d540ed"
+    },
+    {
+      "path": "components/AB02/d5/s02.parquet",
+      "bytes": 2730453,
+      "sha256": "60e11b0afba2e2719701407b951b9f723143996469af8e2c8e1957ef7554af6b"
+    },
+    {
+      "path": "components/AB02/i0/cop_unheld.parquet",
+      "bytes": 483652,
+      "sha256": "29dc5afa4840c00a6f7219abd7b28441c160cd4b3c7a727e5ffea44c7c00c4d6"
+    },
+    {
+      "path": "components/AB02/i0/s02.parquet",
+      "bytes": 2586791,
+      "sha256": "9c34ea972165f936d1fffda1f3035f0ecd0b162c2db726a8666bc868d840341a"
+    },
+    {
+      "path": "components/AB02/i10/cop_unheld.parquet",
+      "bytes": 467027,
+      "sha256": "7920a904c1c21e26e2af6d1b6ca7f6ba304742520a3e6cebbb8f38b6d754406f"
+    },
+    {
+      "path": "components/AB02/i10/s02.parquet",
+      "bytes": 2124875,
+      "sha256": "81513096ecd34555816edd2320b7e87b8ceea89f47ae5e6645db55f202a3f4f5"
+    },
+    {
+      "path": "components/AB02/i5/cop_unheld.parquet",
+      "bytes": 454334,
+      "sha256": "dbd1e29cfe3168f765676c0e497aa1e6a805f99accb7c46e0614a129ba27d71c"
+    },
+    {
+      "path": "components/AB02/i5/s02.parquet",
+      "bytes": 2425462,
+      "sha256": "abf90c3b8189961c55ed8f24740a8999b8b18918951630d7f222b5378c54955a"
+    },
+    {
+      "path": "components/AB03/d10/cop_unheld.parquet",
+      "bytes": 530241,
+      "sha256": "a1d1fdb56988f5aa8930999039745b5dedcc0844c08183be931a351ab6f1c84a"
+    },
+    {
+      "path": "components/AB03/d10/s02.parquet",
+      "bytes": 2461529,
+      "sha256": "9463e152917bfe704b0dcb887898940b1f4585d07891338b69727358f63c8bb9"
+    },
+    {
+      "path": "components/AB03/d5/cop_unheld.parquet",
+      "bytes": 526775,
+      "sha256": "4e8cffce4484638878472be3df1557735cd4368bd2699555660e11a007e30ec8"
+    },
+    {
+      "path": "components/AB03/d5/s02.parquet",
+      "bytes": 2829966,
+      "sha256": "b24dccbbf51f74635d84701798a5f43cad234646e17df3f4e472406289032cba"
+    },
+    {
+      "path": "components/AB03/i0/cop_unheld.parquet",
+      "bytes": 475261,
+      "sha256": "9e6d1a5e72e0b7d5380b68ca992371026b287557bfc9d4912d1f01e55df20faa"
+    },
+    {
+      "path": "components/AB03/i0/s02.parquet",
+      "bytes": 2591600,
+      "sha256": "09012d4497a6cc0e90b6364d85eb287ebda322bdd62afb424f714216ae7adddd"
+    },
+    {
+      "path": "components/AB03/i10/cop_unheld.parquet",
+      "bytes": 517680,
+      "sha256": "eecae56714bd8868f50d373e82f4d18c79d31726177aa7bf26086f925030e026"
+    },
+    {
+      "path": "components/AB03/i10/s02.parquet",
+      "bytes": 2295610,
+      "sha256": "7755400eacf95d20721b5474f30184501cb21d24eab747e9c068bfdb762d708a"
+    },
+    {
+      "path": "components/AB03/i5/cop_unheld.parquet",
+      "bytes": 478953,
+      "sha256": "042049ab67819e76ef54a2bd109e16056f435ce7f0f3d46b697995871f36f23a"
+    },
+    {
+      "path": "components/AB03/i5/s02.parquet",
+      "bytes": 2595292,
+      "sha256": "d8b5017c49524cdee5682d0242c34515fec9b418e356d91562d34e7c1554a54d"
+    },
+    {
+      "path": "components/AB04/d10/cop_unheld.parquet",
+      "bytes": 541373,
+      "sha256": "264fd49609b6cfa49b787ade0d7ad5954b5f74f8251928f0da3b6c38dee6e020"
+    },
+    {
+      "path": "components/AB04/d10/s02.parquet",
+      "bytes": 2530966,
+      "sha256": "b4c0db85dfd22cebe29928ecbccd2b6e5b285990f187d1fe605737a2097b0d92"
+    },
+    {
+      "path": "components/AB04/d5/cop_unheld.parquet",
+      "bytes": 534705,
+      "sha256": "b9f2ca860134f729a4a569b1f6cb7ddbd848c04e5fa811551a10060e39e49986"
+    },
+    {
+      "path": "components/AB04/d5/s02.parquet",
+      "bytes": 2877507,
+      "sha256": "21a1149efe66ca5d9576a8d684e6dec736b97debdfe3ba1ef40546b02e7424aa"
+    },
+    {
+      "path": "components/AB04/i0/cop_unheld.parquet",
+      "bytes": 505598,
+      "sha256": "274b5567a276d71be3e171174996f25ad70e7f5b783d3b34039969d71828abb3"
+    },
+    {
+      "path": "components/AB04/i0/s02.parquet",
+      "bytes": 2508254,
+      "sha256": "47c02e0074b0f53644f7592429d8c1f572f1e60d428913aae8503bad714452ea"
+    },
+    {
+      "path": "components/AB04/i10/cop_unheld.parquet",
+      "bytes": 449552,
+      "sha256": "6b1b50bdcac23c92c03545983d1739ba86d585f94124cee5b903f7b3635663fd"
+    },
+    {
+      "path": "components/AB04/i10/s02.parquet",
+      "bytes": 2290197,
+      "sha256": "9cdbd371f0b31f1ad9b11ef7f2196daa0cc654ae048f3c2e1c08a6f2e2f5ae2a"
+    },
+    {
+      "path": "components/AB04/i5/cop_unheld.parquet",
+      "bytes": 421172,
+      "sha256": "80f37f2a5f2ff377fb6ed99a75ce3570dde342c74df4f39a758cd036b9b70d2a"
+    },
+    {
+      "path": "components/AB04/i5/s02.parquet",
+      "bytes": 2032653,
+      "sha256": "a04be7a00af5d0f46559a7cf7a22cf8c55ef068f089d609cc0dd1a2b12f7e302"
+    },
+    {
+      "path": "components/AB05/d10/cop_unheld.parquet",
+      "bytes": 517204,
+      "sha256": "553b56b7038bbc0a9a90ee3859eedb073cc16754b0a69eb9425794eead11be7f"
+    },
+    {
+      "path": "components/AB05/d10/s02.parquet",
+      "bytes": 2814034,
+      "sha256": "e7ed551383a6c775ea6a31010ea05284309d3bbc9b721dc499766fc2f96fca43"
+    },
+    {
+      "path": "components/AB05/d5/cop_unheld.parquet",
+      "bytes": 564741,
+      "sha256": "767e763be19923891f7b9e2203cafa30afb08986535f728e719278aad7ad83ab"
+    },
+    {
+      "path": "components/AB05/d5/s02.parquet",
+      "bytes": 3001920,
+      "sha256": "de05e23f076f3dee99ed18dc05aaa2fc9555ec69c30076308c3303ec25656afd"
+    },
+    {
+      "path": "components/AB05/i0/cop_unheld.parquet",
+      "bytes": 541143,
+      "sha256": "aaa08ee9f19460b026e599aa4d12188d8e1ab5f936d78f08d1920e84bc751ecc"
+    },
+    {
+      "path": "components/AB05/i0/s02.parquet",
+      "bytes": 2848335,
+      "sha256": "cd3994cd195188d37c046462e65e4f15c66adea433be1fe1e478f0e45b2ed935"
+    },
+    {
+      "path": "components/AB05/i10/cop_unheld.parquet",
+      "bytes": 512004,
+      "sha256": "866cce1f42dc0499b56e55eb7cac5fb90d7fb352be8a35d76f0ddbea66126e39"
+    },
+    {
+      "path": "components/AB05/i10/s02.parquet",
+      "bytes": 2696351,
+      "sha256": "a3aa14cb6d143222dae3707b554fba23754770df99088d51f490c10e5a11ef1d"
+    },
+    {
+      "path": "components/AB05/i5/cop_unheld.parquet",
+      "bytes": 523827,
+      "sha256": "6c26941f43c76b17ff625cf42abbee02a73235e187f22baa0ccbf7a491a53aaf"
+    },
+    {
+      "path": "components/AB05/i5/s02.parquet",
+      "bytes": 2389995,
+      "sha256": "ce3b8993adb363f72f8dceccdfffcf0ca98dc118ca57328e1b13d3653fff8d1a"
+    },
+    {
+      "path": "components/AB06/d10/cop_unheld.parquet",
+      "bytes": 578902,
+      "sha256": "4050ad35585e14f2f64e4ba7b649ab8ad54795d11a8f8126ef770f1c222ecbf3"
+    },
+    {
+      "path": "components/AB06/d10/s02.parquet",
+      "bytes": 2983875,
+      "sha256": "006a798524bea6146146110d1dc84a408da62e035576a394fab74f384c0fd706"
+    },
+    {
+      "path": "components/AB06/d5/cop_unheld.parquet",
+      "bytes": 543827,
+      "sha256": "cfbf7fd274de7a1855fa095e1578d8c81b9a005205f708ab52bf0e098c8be787"
+    },
+    {
+      "path": "components/AB06/d5/s02.parquet",
+      "bytes": 2994237,
+      "sha256": "6e8ed9010467fd43ac1032364640b1ad271eaefd7d7706cb9c36617da3c51d58"
+    },
+    {
+      "path": "components/AB06/i0/cop_unheld.parquet",
+      "bytes": 507328,
+      "sha256": "7c32fdb3071221b77447845ac7e3fd042920167568b0e761bc4da01bd249621f"
+    },
+    {
+      "path": "components/AB06/i0/s02.parquet",
+      "bytes": 2757719,
+      "sha256": "0a8499b9b4e6f13d20f233326a87d1c4e10e144597327c7f094a61c14a41addd"
+    },
+    {
+      "path": "components/AB06/i10/cop_unheld.parquet",
+      "bytes": 506956,
+      "sha256": "b23d6e00efb84ee486a08faf88d4c4f5e4d1fe9fd7504fc3f7b8f05bfea351e2"
+    },
+    {
+      "path": "components/AB06/i10/s02.parquet",
+      "bytes": 2757347,
+      "sha256": "46148db3c52ce06dc7aa0b889bffd41b46003b52ee7f61f7d1069166472ac6a8"
+    },
+    {
+      "path": "components/AB06/i5/cop_unheld.parquet",
+      "bytes": 468779,
+      "sha256": "4ba53bfc0a99f905f16b536373edeed4c308c01852f403853400f02878e80090"
+    },
+    {
+      "path": "components/AB06/i5/s02.parquet",
+      "bytes": 2558718,
+      "sha256": "9e47e663eb58fe757d4fb9195df1f539199f9f4e4e82e1498b7783a04e83a38a"
+    },
+    {
+      "path": "components/AB07/d10/cop_unheld.parquet",
+      "bytes": 603810,
+      "sha256": "7e9be39f6a547224b37e2df76c590847012b59cd88709cb038d98b32a76724da"
+    },
+    {
+      "path": "components/AB07/d10/s02.parquet",
+      "bytes": 2954229,
+      "sha256": "234378da16ba539f89e9dfbd4d30a2dbff168883aaf2e295fb1837d83c7b6b31"
+    },
+    {
+      "path": "components/AB07/d5/cop_unheld.parquet",
+      "bytes": 575613,
+      "sha256": "0ada3a1d7732ae8c494da43921338609318c7290f26647607e981bbd489589a9"
+    },
+    {
+      "path": "components/AB07/d5/s02.parquet",
+      "bytes": 3052423,
+      "sha256": "b104f301466e57d114379a693a0780d7708d52d5d14b6c034115edb1c0b15777"
+    },
+    {
+      "path": "components/AB07/i0/cop_unheld.parquet",
+      "bytes": 568779,
+      "sha256": "5b4ac2a9651f286837717fcaa586bb96a7214f21bf93b4f0635a4665c5963707"
+    },
+    {
+      "path": "components/AB07/i0/s02.parquet",
+      "bytes": 2731348,
+      "sha256": "2f82a68a7f4536678de31f5424bce0703cb6667e9c9efea292332dc9d0e6be3a"
+    },
+    {
+      "path": "components/AB07/i10/cop_unheld.parquet",
+      "bytes": 531000,
+      "sha256": "8c427dccb99e7473fe0b9bed1c945cf62938a74f5aef00c4d91734165c018b32"
+    },
+    {
+      "path": "components/AB07/i10/s02.parquet",
+      "bytes": 2548127,
+      "sha256": "d8bcf3a94456f0f1d61dc424dff654162313db2f1e101585109a5d7a1cb19289"
+    },
+    {
+      "path": "components/AB07/i5/cop_unheld.parquet",
+      "bytes": 515042,
+      "sha256": "bcf80880ce567dce742d8223a08cb5999b088e675e170876f49c50e1e57308fd"
+    },
+    {
+      "path": "components/AB07/i5/s02.parquet",
+      "bytes": 2728421,
+      "sha256": "cd2b70c8e1b7473b900151a6a8e28209c40c27d1fe5230a481eeffb910fc7a67"
+    },
+    {
+      "path": "components/AB08/d10/cop_unheld.parquet",
+      "bytes": 555897,
+      "sha256": "e732b31dc9a2d733d312d3d9d4d80221399b1811bc2613de1078fc2c7feb48de"
+    },
+    {
+      "path": "components/AB08/d10/s02.parquet",
+      "bytes": 2979893,
+      "sha256": "38fc5a2e656df913898d46752b6b325f85dea90ccde1a2ab646a76e5036855e0"
+    },
+    {
+      "path": "components/AB08/d5/cop_unheld.parquet",
+      "bytes": 502490,
+      "sha256": "f78960c189b2207b13065b5d74cb78d2eb4f9a06e4f9f979025c4941dfafbb05"
+    },
+    {
+      "path": "components/AB08/d5/s02.parquet",
+      "bytes": 2700037,
+      "sha256": "845e1972f23d40dafe2baa530d42def75764377651694c1e95d46257ec6c1d8f"
+    },
+    {
+      "path": "components/AB08/i0/cop_unheld.parquet",
+      "bytes": 497587,
+      "sha256": "23cad9b77e41d458f7a62e5ca1b03162df7eae753a7ca23e2faa07149e980a87"
+    },
+    {
+      "path": "components/AB08/i0/s02.parquet",
+      "bytes": 2563183,
+      "sha256": "e338ee4d319d8679141f2bbfeac5d6198b3eacac30a647f9311a2f1ac5ad5b37"
+    },
+    {
+      "path": "components/AB08/i5/cop_unheld.parquet",
+      "bytes": 473457,
+      "sha256": "6ba08b7d7234245cc00e3a5e62254a5abd82790d5c4c61d51644fb9f0e9c00dd"
+    },
+    {
+      "path": "components/AB08/i5/s02.parquet",
+      "bytes": 2329836,
+      "sha256": "d513761c8f874e8f8de3fae70e792bd1f236a384f7c2705bfdfaf70e66d3abe9"
+    },
+    {
+      "path": "components/AB09/d10/cop_unheld.parquet",
+      "bytes": 656407,
+      "sha256": "08c39777763f39b4b7caa6f21ce57ecd7fca9849f23421a21f9d502d19929552"
+    },
+    {
+      "path": "components/AB09/d10/s02.parquet",
+      "bytes": 3504937,
+      "sha256": "d867794e8d8bd92cacd277fbbc2a662b83ec3e2192fd28b88b6dcc71745d6dd1"
+    },
+    {
+      "path": "components/AB09/d5/cop_unheld.parquet",
+      "bytes": 588652,
+      "sha256": "7717a2e1b2f3368e7e5a55359d20c23ac9e12ec63b142fe98c8410effcbae401"
+    },
+    {
+      "path": "components/AB09/d5/s02.parquet",
+      "bytes": 3157906,
+      "sha256": "6be124651d35ec3e4c97cb4398d0bb2a566477f958c5e3f25cc945601743379c"
+    },
+    {
+      "path": "components/AB09/i0/cop_unheld.parquet",
+      "bytes": 572879,
+      "sha256": "84df49336a7a9abf57b25ec601055edcf50d11b2347113e40cfe0eda752a2029"
+    },
+    {
+      "path": "components/AB09/i0/s02.parquet",
+      "bytes": 3036471,
+      "sha256": "532db0042c278fca1ecfde10bd21ffce11afaddb2b81e17da49a62173e4c0edd"
+    },
+    {
+      "path": "components/AB09/i5/cop_unheld.parquet",
+      "bytes": 547106,
+      "sha256": "757b37b0532f16b9386df029b8808030731efe6ee64a16826b89b20a61e709d1"
+    },
+    {
+      "path": "components/AB09/i5/s02.parquet",
+      "bytes": 2903110,
+      "sha256": "feb948cb57ce2372c813c29d6c866597ead6c093afddb40fb86fa404f986801b"
+    },
+    {
+      "path": "components/AB10/d10/cop_unheld.parquet",
+      "bytes": 568994,
+      "sha256": "d32095384e4baad2d187f4ddc9cb76d6a17a7374aecdaa8994b32cd3b253c411"
+    },
+    {
+      "path": "components/AB10/d10/s02.parquet",
+      "bytes": 2776552,
+      "sha256": "2811212e97ab02174c1fd7b40df24b6d8b9e2dabe01c4243fe3a016a6f1e0e6e"
+    },
+    {
+      "path": "components/AB10/d5/cop_unheld.parquet",
+      "bytes": 566942,
+      "sha256": "2b447b4fb802d253905c1a586f1a09ff4c86a377b4cb0e1cc6ef1f6504014009"
+    },
+    {
+      "path": "components/AB10/d5/s02.parquet",
+      "bytes": 2546988,
+      "sha256": "52c4bfe2084013ca2e3509887fde275ac8f49b9b86758cfd7b79ca2952eee158"
+    },
+    {
+      "path": "components/AB10/i10/cop_unheld.parquet",
+      "bytes": 514042,
+      "sha256": "ad69f2265c4f161f90ccaebe02f718f49116983805b8903df6bbec9e4080ac7c"
+    },
+    {
+      "path": "components/AB10/i10/s02.parquet",
+      "bytes": 2446570,
+      "sha256": "fb43838ae3a027dfe834769be4ee755d210173f59ec4d16f11401bbec36b78df"
+    },
+    {
+      "path": "components/AB10/i5/cop_unheld.parquet",
+      "bytes": 547830,
+      "sha256": "74c612bfa8d0caa2626ba8c1f245e29d2af23d75585aa7e20a10374ff7173ed5"
+    },
+    {
+      "path": "components/AB10/i5/s02.parquet",
+      "bytes": 2597974,
+      "sha256": "3d877261376c6d9a5dcbcf9a706059ad82061a20bf4993bc789689140fd8f710"
+    },
+    {
+      "path": "s02_ledger.json",
+      "bytes": 408246,
+      "sha256": "6015a89b09684322d803b596a0764b4c59c238490744f822ce3b9a83e223b02a"
+    },
+    {
+      "path": "s02_summary.json",
+      "bytes": 1108422,
+      "sha256": "9d3b732d56356e7852cbe04268c45de38da5452a3458919dbe32739b73c62306"
+    }
+  ],
+  "expected_outputs_missing": [],
+  "log_sha256": "ed2200950a6879b16629a06ddc7431666a3f62b48f068bcf5fe76debbb83dcfd",
+  "checks": {
+    "cleanup_proven": true,
+    "bindings_unchanged": true,
+    "envelope_unchanged": true,
+    "linux_no_new_worker": true,
+    "windows_no_new_worker": true,
+    "no_orphans_at_leader_exit": true,
+    "outputs_hashed": true,
+    "expected_outputs_present": true
+  }
+}

@@ -68,7 +68,7 @@ um21, sa = t04.um21, t04.sa
 
 TASK_ID = "UM21-S02"
 RUNNER = "contributor_tools/run_um21_s02_frame.py"
-VERSION = "v4"
+VERSION = "v5"
 V2_ROOT = "converted_datasets/reconversion_v2/um21_r01_review_v2"
 V2_FULL = f"{V2_ROOT}/full.parquet"
 V2_MANIFEST = f"{V2_ROOT}/manifest.json"
@@ -114,8 +114,11 @@ DEFAULTS = {
                   "position with each plate axis in mid-stance); sideways axis from right-handedness (plate z up)",
     "belt_tilt": "magnitude from the nominal condition slope (README), sign from the heel path in mid-stance; "
                  "plate tilted by it about the sideways axis",
-    "plate_shift": "forward and up shifts fitted by least squares so that quasi-static ground-force moments about the "
-                   "hip and knee match the v2 hip and knee moments (loaded samples above 30 percent body weight); "
+    "plate_shift": "forward shift fitted by least squares so that quasi-static ground-force moments about the "
+                   "hip and knee match the v2 hip and knee moments (loaded samples above 30 percent body weight); the up "
+                   "shift is NOT fitted (not identifiable from the moments) but set by the foot-on-belt rule: the centre "
+                   "of pressure lies at the height of the lowest heel or toe marker in mid-stance (the marker height above "
+                   "the sole is unknown and not subtracted); the unconstrained two-parameter fit is kept as a diagnostic; "
                    "the lateral shift sets the mean centre-of-pressure lateral position to the mean heel-toe "
                    "midpoint lateral position. The ankle moment is held out for checking.",
     "pelvis": "v2 (Vicon) pelvis kept; per-stride median difference to the marker pelvis above "
@@ -293,6 +296,17 @@ def fit_shifts(cop_fu, force_fu, hip_fu, knee_fu, m_hip, m_knee):
     return sol, int(len(m_knee)), float(np.linalg.cond(big))
 
 
+def fit_forward_shift(cop_fu, force_fu, hip_fu, knee_fu, m_hip, m_knee, dy):
+    """Forward shift dx only, with the up shift dy given (not fitted): least squares of the same hip and knee moment
+    equations as fit_shifts, Fy*dx = (target) + Fx*dy. Returns (dx, samples)."""
+    tau0_h = -joint_moment_from_force(cop_fu, force_fu, hip_fu, "hip")
+    tau0_k = joint_moment_from_force(cop_fu, force_fu, knee_fu, "knee")
+    fx = np.concatenate([force_fu[0], force_fu[0]])
+    a = np.concatenate([force_fu[1], force_fu[1]])
+    t = np.concatenate([m_knee - tau0_k, -(m_hip + tau0_h)]) + fx * dy
+    return float(a @ t / (a @ a)), int(len(m_knee))
+
+
 def loaded_runs(loaded, min_len=300):
     idx = np.flatnonzero(loaded)
     if idx.size == 0:
@@ -405,7 +419,7 @@ def _quantiles(x):
             "p95": float(np.percentile(x, 95)), "p95_abs": float(np.percentile(np.abs(x), 95))}
 
 
-def process_recording(trial, recording, v2, mass_kg, nominal_slope_deg):
+def process_recording(trial, recording, v2, mass_kg, nominal_slope_deg, debug=None):
     """One recording. trial: mapping with markers/forceplates/events like the h5py group; v2: {observation_id:
     {v2 column: (150,)}} from read_v2_rows. Returns (obs_ids, sides, out (column -> (N, 150)), cop_unheld, summary,
     ledger). Pure given its inputs (no file access)."""
@@ -584,6 +598,11 @@ def process_recording(trial, recording, v2, mass_kg, nominal_slope_deg):
         cop_g = np.stack([plate_at(cop[0], pos), plate_at(cop[1], pos)])              # (2, units, 150)
         frc_g = np.stack([plate_at(frc_lab[k], pos) for k in range(3)])               # (3, units, 150) lab, N
         cop_lab_g = plate_to_person(cop_g, axis, sign, tilt)                           # (3, units, 150)
+        if debug is not None:  # read-only probes: the inputs of the registration, nothing else changes
+            debug[leg] = {"cop_g": cop_g, "fp_g": np.stack([plate_at(force[k], pos) for k in range(3)]), "axis": axis,
+                          "sign": sign, "tilt": tilt, "geo_g": geo_g, "foot": foot, "cop_ok": cop_ok, "d_lat": d_lat,
+                          "mid_rule": mid_rule, "mass": mass_kg, "geo_ok": gate["thigh"][0] & gate["shank"][0],
+                          "mom": {j: np.stack([v2[ids[i]][V2_COLUMNS[j + "_moment"]] for i in rows]) for j in ("hip", "knee", "ankle")}}
         # ---- moment fit (hip and knee only); ankle held out
         mom = {j: np.stack([v2[ids[i]][V2_COLUMNS[j + "_moment"]] for i in rows]) for j in ("hip", "knee", "ankle")}
         geo_ok = gate["thigh"][0] & gate["shank"][0]
@@ -598,17 +617,33 @@ def process_recording(trial, recording, v2, mass_kg, nominal_slope_deg):
                 hip_fu, knee_fu = geo_g[:, :, 5:7], geo_g[:, :, 3:5]
                 d, nfit, cond = fit_shifts(cop_lab_g[:2, use], per_kg[:2, use], hip_fu[use].T, knee_fu[use].T,
                                            mom["hip"][use], mom["knee"][use])
-                shift = (float(d[0]), float(d[1]), d_lat if d_lat is not None else 0.0)
+                if mid_rule is not None:
+                    # the up (plate-normal) shift is not identifiable from the moments (probe 2026-11-23: it left the
+                    # centre of pressure 3-30 cm above the foot); it comes from the foot-on-belt marker rule and only
+                    # the forward shift is fitted from the moments
+                    dy_used = mid_rule["up"]
+                    dx_used, nfit = fit_forward_shift(cop_lab_g[:2, use], per_kg[:2, use], hip_fu[use].T, knee_fu[use].T,
+                                                      mom["hip"][use], mom["knee"][use], dy_used)
+                    up_source = "foot-on-belt marker rule (lowest heel/toe marker height in mid-stance)"
+                else:
+                    dx_used, dy_used = float(d[0]), float(d[1])
+                    up_source = "moment fit (marker rule unavailable)"
+                shift = (float(dx_used), float(dy_used), d_lat if d_lat is not None else 0.0)
                 reg["fit"] = {"forward_m": shift[0], "up_m": shift[1], "lateral_m": d_lat, "samples": nfit,
-                              "condition_number": cond}
-                # per-stride spread of the two shifts
+                              "condition_number": cond, "up_source": up_source,
+                              "free_two_parameter_fit_forward_m": float(d[0]), "free_two_parameter_fit_up_m": float(d[1])}
+                # per-stride spread of the forward shift (up fixed)
                 per = []
                 for j in range(len(rows)):
                     uj = use[j]
                     if uj.sum() >= 30:
-                        dj, _, cj = fit_shifts(cop_lab_g[:2, j][:, uj], per_kg[:2, j][:, uj], hip_fu[j][uj].T,
-                                               knee_fu[j][uj].T, mom["hip"][j][uj], mom["knee"][j][uj])
-                        per.append(dj)
+                        if mid_rule is not None:
+                            per.append([fit_forward_shift(cop_lab_g[:2, j][:, uj], per_kg[:2, j][:, uj], hip_fu[j][uj].T,
+                                                          knee_fu[j][uj].T, mom["hip"][j][uj], mom["knee"][j][uj], dy_used)[0], dy_used])
+                        else:
+                            dj, _, cj = fit_shifts(cop_lab_g[:2, j][:, uj], per_kg[:2, j][:, uj], hip_fu[j][uj].T,
+                                                   knee_fu[j][uj].T, mom["hip"][j][uj], mom["knee"][j][uj])
+                            per.append(dj)
                 per = np.array(per)
                 reg["fit"]["per_stride_forward_m"] = _quantiles(per[:, 0]) if len(per) else None
                 reg["fit"]["per_stride_up_m"] = _quantiles(per[:, 1]) if len(per) else None
@@ -646,10 +681,11 @@ def process_recording(trial, recording, v2, mass_kg, nominal_slope_deg):
         # endpoint check (not used in the fit): first loaded sample of the stance that starts the stride against the
         # heel marker, last sample of that stance against the toe marker, at two load thresholds
         tol = 0.03
-        reg["endpoint_check"] = endpoint_report(cf[0], heel_f[0], toe_f[0], None, tol, f"{LOAD_THRESHOLD_N:.0f} N")
+        reg["endpoint_check"] = endpoint_report(cf[0], heel_f[0], toe_f[0], None, tol, f"{LOAD_THRESHOLD_N:.0f} N",
+                                                vert=cf[1], heel_vert=heel_f[1], toe_vert=toe_f[1])
         if per_kg is not None:
             reg["endpoint_check_0p2bw"] = endpoint_report(cf[0], heel_f[0], toe_f[0], per_kg[1] / GRAVITY > 0.2, tol,
-                                                          "0.2 body weight")
+                                                          "0.2 body weight", vert=cf[1], heel_vert=heel_f[1], toe_vert=toe_f[1])
         # plate assignment check: this leg's plate loaded at this leg's heel strikes, the other plate not
         reg["plate_assignment"] = None  # filled by the caller (needs both plates and the events)
         reg["_loaded"] = loaded
@@ -735,12 +771,12 @@ def cop_gate_reasons(reg, recording):
     return reasons
 
 
-def endpoint_report(ant, heel_ant, toe_ant, extra_mask, tol, label, max_start=8):
+def endpoint_report(ant, heel_ant, toe_ant, extra_mask, tol, label, max_start=8, vert=None, heel_vert=None, toe_vert=None):
     """ant/heel_ant/toe_ant: (strides, 150) foot-frame anterior positions. Per stride, the first contiguous run of
     finite (and extra_mask) samples is the stance that starts the stride; its first sample is compared with the heel
     marker and its last sample with the toe marker. Skipped (not checked): the run starts after max_start samples
     (stance not at the stride start) or runs to the last sample (no toe-off inside the window)."""
-    eh, et, skip = [], [], 0
+    eh, et, skip, vh, vt = [], [], 0, [], []
     for j in range(ant.shape[0]):
         ok = np.isfinite(ant[j]) & np.isfinite(heel_ant[j]) & np.isfinite(toe_ant[j])
         if extra_mask is not None:
@@ -757,11 +793,15 @@ def endpoint_report(ant, heel_ant, toe_ant, extra_mask, tol, label, max_start=8)
             continue
         eh.append(float(ant[j, k0] - heel_ant[j, k0]))
         et.append(float(ant[j, k1] - toe_ant[j, k1]))
+        if vert is not None:
+            vh.append(float(vert[j, k0] - heel_vert[j, k0]))
+            vt.append(float(vert[j, k1] - toe_vert[j, k1]))
     eh, et = np.array(eh), np.array(et)
     frac = lambda x, t: float(np.mean(np.abs(x) <= t)) if len(x) else None
     return {"threshold": label, "strides_checked": int(len(eh)), "strides_not_checked": skip,
             "first_loaded_minus_heel_m": _quantiles(eh), "last_loaded_minus_toe_m": _quantiles(et),
             "fraction_within_tolerance_heel": frac(eh, tol), "fraction_within_tolerance_toe": frac(et, tol),
+            "vertical_offset_heel_m": _quantiles(vh), "vertical_offset_toe_m": _quantiles(vt),
             "fraction_within_4cm_heel": frac(eh, 0.04), "fraction_within_4cm_toe": frac(et, 0.04),
             "fraction_within_5cm_heel": frac(eh, 0.05), "fraction_within_5cm_toe": frac(et, 0.05), "tolerance_m": tol}
 
@@ -1098,6 +1138,8 @@ def pilot_recordings():
 def stage_recordings(stage):
     if stage == "pilot":
         return pilot_recordings()
+    if stage == "recheck":  # failing legs of the toe-off gate plus two passing recordings (up-shift fix)
+        return ["AB01/i0", "AB01/i10", "AB02/d10", "AB03/i10", "AB08/d10", "AB09/d10", "AB09/i0"]
     if stage == "full":
         return sorted(t04.t03_records())
     raise ValueError(f"unknown stage {stage}")
@@ -1218,10 +1260,10 @@ def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="step", required=True)
     pp = sub.add_parser("plan", help="write and validate the job spec")
-    pp.add_argument("--stage", choices=("pilot", "full"), required=True)
+    pp.add_argument("--stage", choices=("pilot", "recheck", "full"), required=True)
     pr = sub.add_parser("run", help="the job; only through contributor_tools.guarded_launcher")
     pr.add_argument("--output-root", required=True)
-    pr.add_argument("--stage", choices=("pilot", "full"), required=True)
+    pr.add_argument("--stage", choices=("pilot", "recheck", "full"), required=True)
     pr.add_argument("--recordings", required=True)
     args = p.parse_args(argv)
     if args.step == "plan":

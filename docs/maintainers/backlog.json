@@ -1913,24 +1913,24 @@
         "Observation identities, 150-point inclusive phase grid and every exclusion are accounted for against the v2 bundle; full and filtered share lineage; Q01 re-run, not reused.",
         "Pilot of the same bound code passes before the full run; one numerical job at a time, peak memory recorded; v2 bundle untouched."
       ],
-      "next_action": "Independent verifier checks acceptance criteria against the full_run_v4 evidence.",
+      "next_action": "Independent verifier checks the v5 evidence (handoff toe_error_investigation and full_v5_per_recording).",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/UM21-STD-plan.json",
         "contributor_tools/audit_probes/2026_11_23/probe_um21_std_plan_source_check.py"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T23:30:00+00:00",
-        "summary": "Runner v4 with the D-UM21-S02-1 = A gate; pilot v4 and full run of 44 recordings through the guarded launcher (clean, peak RSS 256.0 MiB). CoP published (labelled estimated plate position) on 48 of 88 legs; 19 recordings pass on both legs, 15 are held on both. Angles follow the new zero (composition 2e-16 rad). Ready for independent verification; Q01 v3 / R01 v3 and the audit script are later tasks.",
+        "last_checked_at_utc": "2026-11-24T00:30:00+00:00",
+        "summary": "Runner v5: up shift from the foot-on-belt marker rule, forward shift fitted with it fixed (the free up shift was the cause of the toe-off gate failures). Full run v5: CoP published on 59 of 88 legs (24 recordings on both legs), was 48. Three 10-degree incline recordings (AB01, AB02, AB03) still fail the toe-off check, cause not found. Ready for independent verification of the v5 evidence.",
         "checks": [
-          "pytest tests/test_um21_s02_frame.py: 54 passed (synthetic only)",
-          "Pilot v4 and full v4 launcher receipts clean, cleanup proven",
-          "Composition error <= 2.2e-16 rad in all 44 tables; reload check clean"
+          "pytest tests/test_um21_s02_frame.py: 56 passed (synthetic only)",
+          "Read-only probes (peak 247 MiB) on 14 recordings; recheck v5 (7 recordings) and full v5 (44) through the guarded launcher, clean, cleanup proven, peak 256 MiB",
+          "Composition error <= 2.2e-16 rad, reload clean, all 44"
         ],
         "remaining": [
-          "Independent verification of acceptance criteria",
-          "Independent audit script, Q01 v3, R01 v3 (later)",
-          "AB04/d10 heel offset explanation; single-leg publication rule"
+          "Independent verification (v5 evidence in the handoff: toe_error_investigation)",
+          "AB01/AB02/AB03 10-degree inclines: toe-off error unexplained; AB04/d10 heel offset",
+          "Single-leg publication rule; audit script, Q01 v3, R01 v3"
         ],
         "handoff_file": "docs/maintainers/handoffs/UM21-STD-plan.json (pilot_results, full_run_v4)"
       },
@@ -1949,7 +1949,11 @@
         "docs/quality/audits/um21-s02-full-spec-v4.json",
         "docs/quality/audits/um21-s02-full-launcher-receipt-v4.json",
         "docs/quality/audits/um21-s02-pilot-launcher-receipt-v4.json",
-        "docs/quality/audits/um21-s02-pilot-launcher-receipt-v3.json"
+        "docs/quality/audits/um21-s02-pilot-launcher-receipt-v3.json",
+        "docs/quality/audits/um21-s02-recheck-spec-v5.json",
+        "docs/quality/audits/um21-s02-recheck-launcher-receipt-v5.json",
+        "docs/quality/audits/um21-s02-full-spec-v5.json",
+        "docs/quality/audits/um21-s02-full-launcher-receipt-v5.json"
       ]
     },
     {

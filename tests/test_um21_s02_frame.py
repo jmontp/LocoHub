@@ -303,8 +303,11 @@ def test_whole_recording_synthetic():
     # the fitted registration recovers the forward and up shifts of the synthetic plate (0.25 m, 0.02 m)
     for leg in ("right", "left"):
         fit = summary["legs"][leg]["plate"]["fit"]
-        assert fit["forward_m"] == pytest.approx(0.25, abs=3e-3)
-        assert fit["up_m"] == pytest.approx(0.02, abs=1.5e-2)
+        assert fit["forward_m"] == pytest.approx(0.25, abs=8e-3)   # synthetic markers sit 10 cm above the floor, so the marker-rule up is 8 cm off
+        # the up shift now comes from the marker rule, the free two-parameter fit is only a diagnostic
+        assert fit["up_m"] == pytest.approx(summary["legs"][leg]["plate"]["midpoint_rule_shift_m"]["up"])
+        assert fit["free_two_parameter_fit_up_m"] == pytest.approx(0.02, abs=1.5e-2)
+        assert "marker rule" in fit["up_source"]
         assert summary["legs"][leg]["plate"]["axis"] == 1 and summary["legs"][leg]["plate"]["sign"] == 1
         assert summary["legs"][leg]["plate"]["ankle_holdout"]["r"] > 0.99
     # unloaded samples carry no centre of pressure; loaded ones match the foot-frame truth
@@ -495,3 +498,27 @@ def test_quantiles_store_p95():
 
 def test_full_stage_lists_44_recordings():
     assert len(s02.stage_recordings("full")) == 44
+
+
+def test_forward_shift_with_up_fixed_recovers_forward_and_ignores_wrong_free_up():
+    # synthetic: with the up shift fixed the forward shift is recovered and is insensitive to an up error
+    rng = np.random.default_rng(21)
+    n = 400
+    fy = rng.uniform(4, 10, n); fx = 0.12 * fy * np.cos(np.linspace(0, 2 * np.pi, n))
+    cop_true = np.stack([rng.uniform(0, .2, n), np.full(n, 0.02)])
+    hip = np.stack([rng.uniform(-.1, .1, n), np.full(n, 0.95)]); knee = np.stack([rng.uniform(-.1, .1, n), np.full(n, 0.5)])
+    m_h = s02.joint_moment_from_force(cop_true, [fx, fy], hip, "hip") + rng.normal(0, 0.15, n)   # model error
+    m_k = s02.joint_moment_from_force(cop_true, [fx, fy], knee, "knee") + rng.normal(0, 0.15, n)
+    pre = cop_true - np.array([[0.25], [0.03]])
+    dx, _ = s02.fit_forward_shift(pre, [fx, fy], hip, knee, m_h, m_k, 0.03)
+    assert dx == pytest.approx(0.25, abs=0.01)
+    dx_wrong, _ = s02.fit_forward_shift(pre, [fx, fy], hip, knee, m_h, m_k, 0.03 + 0.10)   # up wrong by 10 cm
+    assert abs(dx_wrong - dx) < 0.01                       # forward shift barely depends on the up shift
+
+
+def test_endpoint_report_gives_vertical_offsets():
+    ant = np.full((1, 150), np.nan); ant[0, 2:91] = np.linspace(-0.16, 0.05, 89)
+    vert = np.full((1, 150), 0.0); heel_v = np.full((1, 150), 0.03); toe_v = np.full((1, 150), 0.01)
+    heel, toe = np.full((1, 150), -0.17), np.full((1, 150), 0.04)
+    r = s02.endpoint_report(ant, heel, toe, None, 0.03, "t", vert=vert, heel_vert=heel_v, toe_vert=toe_v)
+    assert r["vertical_offset_heel_m"]["median"] == pytest.approx(-0.03) and r["vertical_offset_toe_m"]["median"] == pytest.approx(-0.01)
