@@ -7802,7 +7802,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Assign force plates and fix force signs on every source step",
-      "status": "ready",
+      "status": "review",
       "stage": "pilot",
       "question": "Does every leg-step of all 22 participants have the right plate, force sign and outward sideways sign, or an honest gap?",
       "scope": "37 guarded jobs: 4 mode pilots plus 33 batches of at most 100 recordings, over every heel-strike-to-heel-strike step of both legs. Python port of the checked plate assignment (markers close to the plate, more than 2/3, over 100 N; named treadmill plates) and the force-sign fix; sideways force positive outward for each leg.",
@@ -7835,7 +7835,7 @@
         "Memory: pilot shows the launcher peak under its cap (expected 150-300 MiB); one job at a time.",
         "Per-recording plate counts compared with the prior per-recording counts CSV (read as an independent comparison, not imported); differences listed, not tuned away"
       ],
-      "next_action": "Run the three open acceptance items: Python port versus the MATLAB-fixed pilot forces within 1e-9 (needs phase resampling), then re-ask the verifier. Verifier found the tables themselves correct (8 recordings re-derived to 1e-12); see docs/maintainers/handoffs/GT21-RB02-RB04-verify.json.",
+      "next_action": "Second agent verifies the three acceptance items against their evidence files, then marks done or returns with reasons.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
@@ -7844,21 +7844,19 @@
         "docs/maintainers/handoffs/GT21-RB02-RB04.json",
         "converted_datasets/reconversion_v2/gt21_rb_pass_readback_20261124/readback.json",
         "docs/maintainers/handoffs/GT21-RB02-RB04-verify.json",
-        "docs/quality/audits/gt21-rb02-rb04-verify-results.json"
+        "docs/quality/audits/gt21-rb02-rb04-verify-results.json",
+        "docs/quality/audits/gt21-rb02-matlab-force-comparison.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-24T20:52:02+00:00",
-        "summary": "Merged pass ran for all 22 participants: 3,146 of 3,147 recordings converted, 1 listed exclusion (AB27 treadmill_06_01, too few thigh markers); separate readback passed. Details: docs/maintainers/handoffs/GT21-RB02-RB04.json. Awaiting an independent verifier. Not done: six-participant sign test, plate-count comparison with the earlier CSV, 1e-9 comparison with MATLAB pilots (RB05 readback).",
+        "last_checked_at_utc": "2026-11-24T22:33:58+00:00",
+        "summary": "Force match run: exact (1e-9) on shared sample times for all loaded samples, both legs and three channels, 102 MATLAB-fixed AB06 files; off-grid phase times differ by the 1 kHz-versus-200 Hz interpolation step (max 0.21 BW at impact), so 1e-9 cannot hold there from a 200 Hz table; RB05 should resample from the plate or state a tolerance. Plate counts versus the old CSV were listed by the verifier, not tuned.",
         "checks": [
           "42 synthetic tests pass (tests/test_gt21_rb_pass.py)",
           "Readback over 3,146 recordings: 0 stored-data failures; 66 seeded independent re-derivations pass (pelvis 1e-16 rad, treadmill force 1e-13 N)",
           "Pilots r1-r4 and 22 batches under the guarded launcher, one at a time; peak RSS about 310 MB"
         ],
         "remaining": [
-          "Independent verifier",
-          "Sign test on six new participants",
-          "Plate counts vs earlier CSV",
-          "1e-9 comparison with MATLAB-fixed pilots (RB05 readback)"
+          "Second verification of the three acceptance items run after the first verifier (details in docs/maintainers/handoffs/GT21-RB02-RB04.json, key acceptance_items_run_after_verifier)"
         ],
         "changed_files": [
           "contributor_tools/gt21_rb_pass.py",
@@ -7918,7 +7916,7 @@
         "Every source step and recording has exactly one disposition; counts sum to source totals.",
         "If stair steps that straddle two label windows would be excluded in large numbers, stop and put the measured counts to José as a scope question."
       ],
-      "next_action": "After GT21-RB02 is done: run the stair pilot on stair_1_l_01_02 and the label windows from the RB01 ledger.",
+      "next_action": "After GT21-RB02 is done: run the stair pilot on stair_1_l_01_02 and the label windows from the RB01 ledger. | Verifier caveats (2026-11-24) for the merged tables: in levelground recordings the Treadmill_R and Treadmill_L plates carry about 13 N offset, so use a force threshold (for example 20 N or 0.03 BW), not plate_loaded; the Combined plate is a separate walkway plate (never a sum of the others).",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
@@ -7947,7 +7945,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Apply conventions: marker segment angles, joint angles, foot-frame CoP, mass",
-      "status": "ready",
+      "status": "review",
       "stage": "conventions",
       "question": "Are all angles, forces and moments in the data reference convention, with nothing invented?",
       "scope": "68 guarded jobs: 4 mode pilots, 1 sign and marker pilot on the six new participants, and 63 conversion batches of about 50 recordings. Pelvis from markers; thigh, shank, foot from markers; hip = thigh - pelvis, knee = thigh - shank, ankle = foot - shank; CoP in the foot frame (origin 100 mm forward of the ankle centre); Weight in kilograms for BW and Nm/kg; trunk stays missing (no source).",
@@ -7979,7 +7977,7 @@
         "All 28 named markers are checked per recording; a missing needed marker gives a listed exclusion; 15 Hz and plate-origin placeholder CoP samples stay missing; peak memory recorded (expected 250-400 MiB).",
         "Ankle centre per subject from the scaled model with its own check; the prior 8.6 mm median and 4.5-5.7 cm ankle height above the sole are compared, not copied"
       ],
-      "next_action": "Build the formal sign test on all leg channels of AB12, AB15, AB17, AB19, AB23 and AB28, and check pelvis tilt against the authors' marker fit range from GT21-C01. Verifier found the tables themselves correct; see docs/maintainers/handoffs/GT21-RB02-RB04-verify.json.",
+      "next_action": "Second agent verifies the three acceptance items against their evidence files, then marks done or returns with reasons.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
@@ -7988,21 +7986,20 @@
         "docs/maintainers/handoffs/GT21-RB02-RB04.json",
         "converted_datasets/reconversion_v2/gt21_rb_pass_readback_20261124/readback.json",
         "docs/maintainers/handoffs/GT21-RB02-RB04-verify.json",
-        "docs/quality/audits/gt21-rb02-rb04-verify-results.json"
+        "docs/quality/audits/gt21-rb02-rb04-verify-results.json",
+        "docs/quality/audits/gt21-rb04-sign-test-new6-probe.json",
+        "docs/quality/audits/gt21-rb04-pelvis-vs-ik.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-24T20:52:02+00:00",
-        "summary": "Merged pass ran for all 22 participants: 3,146 of 3,147 recordings converted, 1 listed exclusion (AB27 treadmill_06_01, too few thigh markers); separate readback passed. Details: docs/maintainers/handoffs/GT21-RB02-RB04.json. Awaiting an independent verifier. Not done: six-participant sign test, plate-count comparison with the earlier CSV, 1e-9 comparison with MATLAB pilots (RB05 readback).",
+        "last_checked_at_utc": "2026-11-24T22:33:58+00:00",
+        "summary": "Sign test on the six new participants: 523 of 648 leg channels decided, all agree with rule B, 0 wrong, 125 abstained (counted as not passed). Pelvis tilt from markers agrees with the authors own pelvis orientation within 0.92-1.63 deg RMS on the GT21-C01 recordings (C01 range 0.9-2.7) and 0.62-2.17 deg on 24 seeded new-participant recordings.",
         "checks": [
           "42 synthetic tests pass (tests/test_gt21_rb_pass.py)",
           "Readback over 3,146 recordings: 0 stored-data failures; 66 seeded independent re-derivations pass (pelvis 1e-16 rad, treadmill force 1e-13 N)",
           "Pilots r1-r4 and 22 batches under the guarded launcher, one at a time; peak RSS about 310 MB"
         ],
         "remaining": [
-          "Independent verifier",
-          "Sign test on six new participants",
-          "Plate counts vs earlier CSV",
-          "1e-9 comparison with MATLAB-fixed pilots (RB05 readback)"
+          "Second verification of the three acceptance items run after the first verifier (details in docs/maintainers/handoffs/GT21-RB02-RB04.json, key acceptance_items_run_after_verifier)"
         ],
         "changed_files": [
           "contributor_tools/gt21_rb_pass.py",

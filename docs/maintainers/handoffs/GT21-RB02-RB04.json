@@ -1,6 +1,6 @@
 {
  "task_id": "GT21-RB02+RB04",
- "status": "batches_and_readback_done_awaiting_verifier",
+ "status": "all_acceptance_items_run_awaiting_second_verification",
  "scientific_approval": false,
  "last_checked_at_utc": "2026-11-24T21:10:00+00:00",
  "summary": "Merged plate/force + conventions pass ran for all 22 participants (3,147 inventory recordings): 3,146 converted, 1 listed exclusion (AB27 treadmill Treadmill_06_01: fewer than 3 thigh fit markers on femur_r). Continuous 200 Hz tables, 3.83 GB. Separate readback passed (see checks).",
@@ -44,5 +44,49 @@
   "RB03 segmentation and RB05 export run on these tables",
   "Combined plate overlap check beyond three recordings (ledger counts available for all)"
  ],
- "next_action": "Verifier reviews acceptance criteria against the readback and ledgers; then RB03 on the merged tables."
+ "next_action": "Verifier reviews acceptance criteria against the readback and ledgers; then RB03 on the merged tables.",
+ "acceptance_items_run_after_verifier": {
+  "rb02_force_match": {
+   "script": "contributor_tools/compare_gt21_rb02_matlab_forces.py",
+   "evidence": "docs/quality/audits/gt21-rb02-matlab-force-comparison.json",
+   "scope": "all 102 MATLAB-fixed AB06 phase files (1,299 cycles; levelground 30, ramp 63, stair 1, treadmill 8) against the pass batch for AB06; vertical, anterior, lateral, both legs; sideways mapped to outward with the sign of the pelvis forward lab-Z; CoP not compared (old files hold the lateral-malleolus lab offset).",
+   "resampling": "Python 200 Hz table linearly interpolated at each cycle's linspace(source_start_time_s, source_end_time_s, 150), the MATLAB grid.",
+   "result_within_1e-9": "Cycles whose 150 target times all fall on the 200 Hz grid (5 cycles): loaded samples 1,040 pairs per channel, all within 1e-9 (max 0.0). Loaded-sample vertical, anterior and lateral agree exactly wherever both are sampled at the same time; sign mapping confirmed for both legs. Cycle end samples on the grid: 12,999 of 13,080 pairs within 1e-9.",
+   "result_not_within_1e-9": "Over all cycles only 2.5% of loaded pairs are within 1e-9 (max 0.21 BW vertical, 0.18 lateral, 0.08 anterior, at impact transients; median of cycle medians 5e-6 to 1e-3 BW). Cause: MATLAB interpolated the 1000 Hz plate at the phase times; the pass interpolates the plate to the 200 Hz marker clock first, and a second linear step to the phase grid differs where force changes within 5 ms. This is a resampling difference, not a port difference (exact on shared sample times). The 1e-9 criterion cannot be met for off-grid times from a 200 Hz table. RB05 should resample from the 1 kHz plate or accept a stated tolerance.",
+   "unloaded_feet": "On unloaded samples 87% are within 1e-9; the rest differ by up to 0.11 BW in the off-grid case and 1.9e-3 BW on grid: MATLAB keeps raw shear noise from an unloaded plate, the pass reports 0 for a foot that owns no loaded plate (a stated choice, not a measurement).",
+   "missing": "Wherever MATLAB has a value the pass has one (0 present-to-missing pairs). MATLAB missing but pass present: levelground 90,000 and ramp 98,100 pairs (MATLAB had no supported plate for the leg; the per-contact ownership recovers it), none on treadmill or stair."
+  },
+  "rb04_sign_test": {
+   "script": "contributor_tools/probe_core04_gt21_new6.py (wraps the unchanged CORE-04 probe contributor_tools/probe_core04_gt21.py and the detector contributor_tools/common/sign_offset_detector.py)",
+   "evidence": "docs/quality/audits/gt21-rb04-sign-test-new6-probe.json",
+   "scope": "AB12, AB15, AB17, AB19, AB23, AB28; the authors' ik, id and jp channels, plates and markers, 140 recordings read one at a time; peak 231 MiB RSS under a 600 MiB address-space limit. Same seed and selection rule as the 16-participant pilot (core04-gt21-pilot.json). It applies nothing.",
+   "result": "648 leg channels: 523 decided and all agree with rule B (319 applied, 204 suggested), 0 wrong, 0 conflicts, 125 abstained (counted as not passed). The 16-participant pilot: 305 applied, 216 suggested, 127 abstained, 0 wrong.",
+   "per_channel_applied_suggested_abstained_of_72": {
+    "hip_angle": "49/23/0",
+    "knee_angle": "43/28/1",
+    "ankle_angle": "58/14/0",
+    "hip_moment": "39/31/2",
+    "knee_moment": "0/70/2",
+    "ankle_moment": "70/1/1",
+    "hip_power": "15/24/33",
+    "knee_power": "0/0/72",
+    "ankle_power": "45/13/14"
+   },
+   "per_participant_applied_suggested_abstained_of_108": {
+    "AB12": "52/36/20",
+    "AB15": "49/38/21",
+    "AB17": "58/31/19",
+    "AB19": "54/33/21",
+    "AB23": "48/35/25",
+    "AB28": "58/31/19"
+   },
+   "notes": "Knee power is undecided on every leg (no evidence test applies), as in the earlier pilot's pattern. The authors' ik pelvis tilt is not sagittal (model heading about +-90 deg) so the pelvis channel stays unchecked, as before; the pass's pelvis angle comes from markers. The id moment signs the pass uses (knee flexor = minus knee_angle moment, hip and ankle as is) are the detector's truth table for these channels, so the sign test supports them."
+  },
+  "rb04_pelvis_tilt": {
+   "script": "contributor_tools/compare_gt21_rb04_pelvis_ik.py",
+   "evidence": "docs/quality/audits/gt21-rb04-pelvis-vs-ik.json",
+   "method": "The authors' pelvis orientation Rz(tilt) Rx(list) Ry(rotation) from ik; its forward-axis elevation (front up positive, the pass's sign) against the pass's marker pelvis angle, both median-removed, wrapped RMS.",
+   "result": "The eight GT21-C01 recordings: RMS 0.92-1.63 deg (GT21-C01 range for the authors' marker fit 0.9-2.7 deg); correlation 0.53-0.97, median 0.90. They also reproduce GT21-C01's 'heading-removed source vs marker' RMS values (1.34, 1.59, 1.22, 1.52, 0.92, 1.53, 1.66, 1.02 deg) to within 0.05 deg. 24 seeded recordings from the six new participants (one per mode each): RMS 0.62-2.17 deg, correlation 0.61-0.89 median. All within the C01 upper bound of 2.7 deg. Pass pelvis angle medians are -9 to -18 deg (anterior tilt negative)."
+  }
+ }
 }
