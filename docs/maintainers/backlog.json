@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at_utc": "2026-11-25T00:01:19+00:00",
+  "updated_at_utc": "2026-11-25T02:41:31+00:00",
   "snapshot_notice": "Reviewed planning snapshot for sequential agent handoffs. All 33 replacement watchers are stopped; prepared work needs a fresh reviewed handoff. No dataset has final scientific approval. Task states are not live process monitoring.",
   "previous_snapshot": "docs/maintainers/backlog-history/pre-handoff-refresh-2026-10-27.json",
   "next_task_id": "UM21-X01",
@@ -7835,7 +7835,7 @@
         "Memory: pilot shows the launcher peak under its cap (expected 150-300 MiB); one job at a time.",
         "Per-recording plate counts compared with the prior per-recording counts CSV (read as an independent comparison, not imported); differences listed, not tuned away"
       ],
-      "next_action": "Done (second verification, GT21-RB02-RB04-verify.json v3: force mask). Does not imply scientific approval. RB05 must carry force_missing_stance_samples; 22 eligible treadmill left-leg steps have most of the stance missing.",
+      "next_action": "Done (second verification, GT21-RB02-RB04-verify.json v3: force mask). Does not imply scientific approval. RB05 must carry force_missing_stance_samples; 22 eligible treadmill left-leg steps have most of the stance missing. Update (GT21-RB05 verify): against the AB06 phase export the MATLAB forces agree to 1e-9 for every loaded sample inside an owned contact (98.3 percent of 933,959 pairs); the other 1.7 percent are unloaded samples and contact-edge tails (see handoffs/GT21-RB05-verify.json).",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
@@ -7845,7 +7845,8 @@
         "converted_datasets/reconversion_v2/gt21_rb_pass_readback_20261124/readback.json",
         "docs/maintainers/handoffs/GT21-RB02-RB04-verify.json",
         "docs/quality/audits/gt21-rb02-rb04-verify-results.json",
-        "docs/quality/audits/gt21-rb02-matlab-force-comparison.json"
+        "docs/quality/audits/gt21-rb02-matlab-force-comparison.json",
+        "docs/maintainers/handoffs/GT21-RB05-verify.json"
       ],
       "handoff": {
         "last_checked_at_utc": "2026-11-24T22:33:58+00:00",
@@ -8048,7 +8049,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Export 150-sample observations with lineage and full accounting, then read back independently",
-      "status": "review",
+      "status": "done",
       "stage": "source_readback",
       "question": "Does the exported file match the source value for value, with every exclusion listed?",
       "scope": "45 guarded jobs: 22 per-participant exports, 1 streaming merge, 22 independent readbacks. Output in a new root; existing converted files never overwritten. Expected about 11 million rows (roughly 4 GB compressed).",
@@ -8074,7 +8075,7 @@
         "A second code path re-derives seeded recordings from the source for every participant and every exported value agrees.",
         "Streaming by row group within 256 MiB; the admission estimate is not raised."
       ],
-      "next_action": "Independent verifier: check acceptance against the readback files and handoff GT21-RB05.json.",
+      "next_action": "Done (independent verification, handoffs/GT21-RB05-verify.json). Does not imply scientific approval. Known limits: left-leg treadmill stance in RB03 is wrong (GT21-RB06), so left treadmill force masks and flags under-report; forces differ from the MATLAB-fixed pilot only at unloaded samples and contact-edge tails (unloaded foot = 0, ownership only inside contact).",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json",
@@ -8082,7 +8083,8 @@
         "converted_datasets/reconversion_v2/gt21_rb05_readback_c1/readback.json",
         "converted_datasets/reconversion_v2/gt21_rb05_readback_c2/readback.json",
         "converted_datasets/reconversion_v2/gt21_rb05_readback_c3/readback.json",
-        "converted_datasets/reconversion_v2/gt21_rb05_readback_c4/readback.json"
+        "converted_datasets/reconversion_v2/gt21_rb05_readback_c4/readback.json",
+        "docs/maintainers/handoffs/GT21-RB05-verify.json"
       ],
       "handoff": {
         "last_checked_at_utc": "2026-11-25T02:19:06+00:00",
@@ -8097,7 +8099,12 @@
         "handoff_file": "docs/maintainers/handoffs/GT21-RB05.json"
       },
       "owner": "gt21-rb05-worker",
-      "started_at_utc": "2026-11-25T01:04:55+00:00"
+      "started_at_utc": "2026-11-25T01:04:55+00:00",
+      "verifier": {
+        "checked_at_utc": "2026-11-25T02:41:31+00:00",
+        "verdict": "done: 12 phase observations and 2 continuous recordings recomputed from the pass tables and the 1 kHz plate with 0 disagreements; counts, flags, contract and tests check out",
+        "evidence": "docs/maintainers/handoffs/GT21-RB05-verify.json"
+      }
     },
     {
       "id": "DOC-06",
@@ -8344,6 +8351,52 @@
         ],
         "handoff_file": "docs/maintainers/handoffs/CORE-PW01.json",
         "verification": "Not yet verified."
+      }
+    },
+    {
+      "id": "GT21-RB06",
+      "priority": "P1",
+      "dataset": "gt21",
+      "title": "Find why left-leg treadmill stance is only about 10 percent of the cycle, then fix or decide the reexport",
+      "status": "ready",
+      "stage": "source_readback",
+      "question": "Are the left-leg treadmill toe-off events (or their pairing with heel strikes) wrong, since the left belt stays loaded for about 65 percent of the cycle while stance is about 10 percent?",
+      "scope": "Read-only diagnosis on one recording per participant: compare source left and right heel-strike and toe-off events with the belt loads; then propose the smallest fix. Affects the stance force mask and the incomplete_stance_force flag of left-leg treadmill steps; no force, angle, moment or count changes expected. A rerun of RB03 masks and RB05 export needs its own guarded launches.",
+      "depends_on": [
+        "GT21-RB05"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/GT21-RB05-verify.json",
+        "docs/quality/audits/gt21-rb05-verify-missing.json",
+        "contributor_tools/gt21_rb_pass.py",
+        "converted_datasets/reconversion_v2/gt21_rb_segment_batch_AB06_20261125/steps.jsonl"
+      ],
+      "deliverables": [
+        "Short evidence report naming the cause (source events, pairing, or leg labelling) with one recording per participant",
+        "Proposed fix or an explicit keep-as-is decision with consequences"
+      ],
+      "acceptance": [
+        "Left and right treadmill stance fractions are shown for all 22 participants against the belt loads; the cause is stated with evidence.",
+        "No numbers are tuned: any fix follows the source events or the documented rule.",
+        "If a reexport is needed, the affected masks and flags are listed per participant before any launch."
+      ],
+      "next_action": "Read-only probe first (one recording at a time, under 300 MiB).",
+      "resource_class": "read_only",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/GT21-RB05-verify.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-25T02:41:37+00:00",
+        "summary": "Found by the RB05 verifier: left-leg treadmill stance is about 0.10 of the cycle in all 22 participants (right 0.60); AB06 treadmill_01_01 left belt loaded 139 of 204 samples per step vs stance 23. Cause not yet determined.",
+        "checks": [
+          "Stance fractions from RB03 steps.jsonl for all 22 participants",
+          "AB06 treadmill_01_01 stance vs plate-loaded pattern"
+        ],
+        "remaining": [
+          "Diagnose cause",
+          "Propose fix or keep-as-is"
+        ],
+        "handoff_file": "docs/maintainers/handoffs/GT21-RB05-verify.json"
       }
     }
   ],
