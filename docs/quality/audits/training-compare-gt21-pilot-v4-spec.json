@@ -1,0 +1,54 @@
+{
+  "job_id": "tc-gt21-pilot-v4",
+  "command": [
+    "python3",
+    "contributor_tools/compare_training_vs_locohub.py",
+    "run",
+    "--dataset",
+    "gt21",
+    "--partition",
+    "gate",
+    "--out-dir",
+    "docs/quality/audits/training-compare-gt21-pilot",
+    "--his-file",
+    "/mnt/s/workspace_docs/energy shaping ml/esml_research/LocoHub/es_prepared/gate/gtech_2021_time.parquet",
+    "--cop-shift-m",
+    "0.1",
+    "--align-rms-tol",
+    "0.1",
+    "--subject",
+    "AB06"
+  ],
+  "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+  "output_root": "docs/quality/audits/training-compare-gt21-pilot",
+  "receipt_path": "docs/quality/audits/training-compare-gt21-pilot-v4-receipt.json",
+  "bindings": {
+    "contributor_tools/compare_training_vs_locohub.py": "2a982a90d9bd10b296e5fd5b44faa30f94a4d4de1986af981909d8b35a3b3d0b",
+    "contributor_tools/guarded_launcher.py": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+    "/mnt/s/workspace_docs/energy shaping ml/esml_research/LocoHub/es_prepared/gate/gtech_2021_time.parquet": "35a5b6e92a2932713f1c58456b18fac6496898e3c5c668c2229fa1bb65cb41d5",
+    "converted_datasets/reconversion_v2/gt21_rb07_export_AB06/time.parquet": "251d9f45ed98e88ecf8210cc19d9ad602112ad25c6e0aa0db415dc071a6613f2",
+    "converted_datasets/reconversion_v2/gt21_rb07_export_AB06/run_summary.json": "211919fa0b2f3a724df39e5d0d2aaec84b9804f4aad0896274161cf33b28e79f"
+  },
+  "timeout_seconds": 3600,
+  "kill_after_seconds": 30,
+  "poll_seconds": 15,
+  "startup_memory_mib": {
+    "linux": 3584,
+    "windows": 2816
+  },
+  "runtime_memory_mib": {
+    "linux": 2048,
+    "windows": 2048
+  },
+  "expected_output_names": [
+    "summary.json",
+    "comparison.csv"
+  ],
+  "address_space_mib": 768,
+  "disk_admission": [
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/docs",
+      "min_free_mib": 5120
+    }
+  ]
+}

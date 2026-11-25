@@ -1,0 +1,440 @@
+{
+  "schema": "locohub.guarded_launcher.receipt/2",
+  "job_id": "tc-um21-all",
+  "status": "completed",
+  "scientific_approval": false,
+  "envelope": {
+    "path": "docs/quality/audits/pm01-um21-tread-pilot-handoff.json",
+    "reviewed_sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9",
+    "limits": {
+      "timeout_seconds_max": 3600,
+      "kill_after_seconds_max": 30,
+      "poll_seconds_max": 15,
+      "startup_memory_mib_min": {
+        "linux": 3584,
+        "windows": 2816
+      },
+      "runtime_memory_mib_min": {
+        "linux": 2048,
+        "windows": 2048
+      },
+      "output_volume_free_mib_min": 5120,
+      "c_drive_free_mib_min": 1024,
+      "c_drive_path": "/mnt/c",
+      "address_space_mib_max": 768
+    },
+    "sha256": "9f204cfd9ba6b2beb256e4d962778183ec2dd4895fd5009591680cb479a8dee9"
+  },
+  "spec": {
+    "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+    "kill_after_seconds": 30,
+    "poll_seconds": 15,
+    "disk_admission": [
+      {
+        "path": "/mnt/s/workspace/locomotion-data-standardization/docs",
+        "min_free_mib": 5120
+      }
+    ],
+    "thread_env": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "ARROW_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    },
+    "expected_output_names": [
+      "summary.json",
+      "comparison.csv"
+    ],
+    "address_space_mib": 768,
+    "job_id": "tc-um21-all",
+    "command": [
+      "python3",
+      "contributor_tools/compare_training_vs_locohub.py",
+      "run",
+      "--dataset",
+      "um21",
+      "--partition",
+      "gate",
+      "--out-dir",
+      "docs/quality/audits/training-compare-um21-all",
+      "--his-file",
+      "/mnt/s/workspace_docs/energy shaping ml/esml_research/LocoHub/es_prepared/gate/umich_2021_time.parquet",
+      "--cop-shift-m",
+      "0.1",
+      "--align-rms-tol",
+      "0.1"
+    ],
+    "output_root": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/training-compare-um21-all",
+    "receipt_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/training-compare-um21-all-receipt.json",
+    "bindings": {
+      "contributor_tools/compare_training_vs_locohub.py": "dea9a23f03370898ddf005f4643de4499b9933d79f9683b7313f89df3a5fd3d7",
+      "contributor_tools/guarded_launcher.py": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "/mnt/s/workspace_docs/energy shaping ml/esml_research/LocoHub/es_prepared/gate/umich_2021_time.parquet": "fbfe967303690d92b45b1852a1781ffce2cdb4c64b23938004a06e9359a2cd36",
+      "converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet": "681ecfd5e78fd8f309f4bb5fbd119547af68dc08dabb9ba66a163c5a235039e7",
+      "converted_datasets/reconversion_v2/um21_r01_package_v4/manifest.json": "44c7090cb6e2b5d20cd6aff9a932bea975adc011e0945a1db34e44de7f9aba2f"
+    },
+    "timeout_seconds": 3600,
+    "startup_memory_mib": {
+      "linux": 3584,
+      "windows": 2816
+    },
+    "runtime_memory_mib": {
+      "linux": 2048,
+      "windows": 2048
+    }
+  },
+  "spec_sha256": "a5db61b009e652864884da482d20fe1f489075b7999cf719452db73e20c87d70",
+  "launcher_sha256": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+  "checked_at_utc": "2026-11-25T20:56:42+00:00",
+  "chaining": "none; no successor is started",
+  "bindings_before": {
+    "contributor_tools/compare_training_vs_locohub.py": {
+      "expected": "dea9a23f03370898ddf005f4643de4499b9933d79f9683b7313f89df3a5fd3d7",
+      "actual": "dea9a23f03370898ddf005f4643de4499b9933d79f9683b7313f89df3a5fd3d7",
+      "bytes": 51347,
+      "matches": true
+    },
+    "contributor_tools/guarded_launcher.py": {
+      "expected": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "actual": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "bytes": 51512,
+      "matches": true
+    },
+    "/mnt/s/workspace_docs/energy shaping ml/esml_research/LocoHub/es_prepared/gate/umich_2021_time.parquet": {
+      "expected": "fbfe967303690d92b45b1852a1781ffce2cdb4c64b23938004a06e9359a2cd36",
+      "actual": "fbfe967303690d92b45b1852a1781ffce2cdb4c64b23938004a06e9359a2cd36",
+      "bytes": 80968332,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet": {
+      "expected": "681ecfd5e78fd8f309f4bb5fbd119547af68dc08dabb9ba66a163c5a235039e7",
+      "actual": "681ecfd5e78fd8f309f4bb5fbd119547af68dc08dabb9ba66a163c5a235039e7",
+      "bytes": 194073494,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/um21_r01_package_v4/manifest.json": {
+      "expected": "44c7090cb6e2b5d20cd6aff9a932bea975adc011e0945a1db34e44de7f9aba2f",
+      "actual": "44c7090cb6e2b5d20cd6aff9a932bea975adc011e0945a1db34e44de7f9aba2f",
+      "bytes": 12509,
+      "matches": true
+    }
+  },
+  "disk_admission": [
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/training-compare-um21-all",
+      "min_free_mib": 5120,
+      "source": "envelope: output volume (S:)",
+      "free_mib": 28016.55078125,
+      "passes": true
+    },
+    {
+      "path": "/mnt/c",
+      "min_free_mib": 1024,
+      "source": "envelope: C:",
+      "free_mib": 21213.0234375,
+      "passes": true
+    },
+    {
+      "path": "/mnt/s/workspace/locomotion-data-standardization/docs",
+      "min_free_mib": 5120,
+      "source": "spec",
+      "free_mib": 28016.55078125,
+      "passes": true
+    }
+  ],
+  "census_before": {
+    "linux": {
+      "checked_at_utc": "2026-11-25T20:56:43+00:00",
+      "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+      "process_count": 170,
+      "exempt": [
+        {
+          "pid": 65100,
+          "start_ticks": 126654388,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 65101,
+          "start_ticks": 126654389,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/training-compare-um21-all-spec.json",
+          "why": "launcher itself (CLI)"
+        },
+        {
+          "pid": 1697587,
+          "start_ticks": 99403742,
+          "cwd": "/home/jmontp",
+          "cmdline": "/home/jmontp/.local/bin/pretty daemon",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1697596,
+          "start_ticks": 99403750,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2354851,
+          "start_ticks": 109454620,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude --resume",
+          "why": "non-interpreter ancestor"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-25T20:56:43+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 325,
+      "free_physical_mib": 6835.30078125,
+      "workers": []
+    }
+  },
+  "startup_memory": {
+    "linux": {
+      "available_mib": 10043.2109375,
+      "reserve_mib": 3584,
+      "passes": true
+    },
+    "windows": {
+      "available_mib": 6835.30078125,
+      "reserve_mib": 2816,
+      "passes": true
+    }
+  },
+  "launch_ledger": {
+    "parent": {
+      "pid": 65100,
+      "ppid": 2354851,
+      "start_ticks": 126654388,
+      "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+      "interactive_terminal": false
+    },
+    "claimed": true,
+    "entries": [
+      "/tmp/locohub_guarded_launcher_uid1000/a81def3c-fa85-4161-b227-f59ffadc384d/65100-126654388.json"
+    ],
+    "keys": [
+      {
+        "pid": 65100,
+        "ppid": 2354851,
+        "start_ticks": 126654388,
+        "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+        "interactive_terminal": false
+      }
+    ]
+  },
+  "launched": true,
+  "process_identity": {
+    "leader_pid": 65158,
+    "launched_at_utc": "2026-11-25T20:56:43+00:00",
+    "argv": [
+      "timeout",
+      "--signal=TERM",
+      "--kill-after=30s",
+      "3600",
+      "nice",
+      "-n",
+      "19",
+      "ionice",
+      "-c",
+      "3",
+      "python3",
+      "contributor_tools/compare_training_vs_locohub.py",
+      "run",
+      "--dataset",
+      "um21",
+      "--partition",
+      "gate",
+      "--out-dir",
+      "docs/quality/audits/training-compare-um21-all",
+      "--his-file",
+      "/mnt/s/workspace_docs/energy shaping ml/esml_research/LocoHub/es_prepared/gate/umich_2021_time.parquet",
+      "--cop-shift-m",
+      "0.1",
+      "--align-rms-tol",
+      "0.1"
+    ],
+    "log_path": "/mnt/s/workspace/locomotion-data-standardization/docs/quality/audits/training-compare-um21-all-receipt.log",
+    "parent_death_signal": "SIGTERM",
+    "parent_death_signal_set": true,
+    "pgid": 65158,
+    "sid": 65158,
+    "own_session_verified": true,
+    "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+    "leader_start_ticks": 126654564
+  },
+  "job_outcome": "completed",
+  "finished_at_utc": "2026-11-25T20:57:31+00:00",
+  "exit_code": 0,
+  "wall_time_seconds": 46.964,
+  "peak_rss_kib_largest_process": 213712,
+  "peak_group_rss_kib_sampled": 212024,
+  "runtime_guard": {
+    "poll_seconds": 15,
+    "reserve_mib": {
+      "linux": 2048,
+      "windows": 2048
+    },
+    "polls": 3,
+    "min_linux_available_mib": 9906.6,
+    "min_windows_free_mib": 6854.0,
+    "breach": null,
+    "observed_address_space_limits": [
+      "805306368"
+    ],
+    "observed_address_space_by_process": [
+      {
+        "pid": 65158,
+        "start_ticks": 126654564,
+        "limit": "805306368",
+        "cmdline": "timeout --signal=TERM --kill-after=30s 3600 nice -n 19 ionice -c 3 python3 contributor_tools/compare_training_vs_locohub.py run --dataset um21 --partition gate --out-dir docs/quality/audits/training-c"
+      },
+      {
+        "pid": 65159,
+        "start_ticks": 126654564,
+        "limit": "805306368",
+        "cmdline": "python3 contributor_tools/compare_training_vs_locohub.py run --dataset um21 --partition gate --out-dir docs/quality/audits/training-compare-um21-all --his-file /mnt/s/workspace_docs/energy shaping ml/"
+      }
+    ]
+  },
+  "stop_actions": [],
+  "orphans_at_leader_exit": [],
+  "launcher_errors": [],
+  "finalisation_errors": [],
+  "clean_success": true,
+  "retry": "never automatic",
+  "cleanup_proof": {
+    "checked_at_utc": "2026-11-25T20:57:31+00:00",
+    "basis": "same_boot_proc_scan",
+    "proven": true,
+    "boot_id_now": "a81def3c-fa85-4161-b227-f59ffadc384d",
+    "pgid_members": [],
+    "leader_pid_with_same_start_ticks_present": false,
+    "attempts": 1
+  },
+  "census_after": {
+    "linux": {
+      "checked_at_utc": "2026-11-25T20:57:31+00:00",
+      "boot_id": "a81def3c-fa85-4161-b227-f59ffadc384d",
+      "process_count": 176,
+      "exempt": [
+        {
+          "pid": 65100,
+          "start_ticks": 126654388,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "/usr/bin/zsh -c source /home/jmontp/.claude/shell-snapshots/snapshot-zsh-1795464455432-zuopx8.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \\builtin unalias -- 'which'; \\builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \\builtin unalias -- 'un",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 65101,
+          "start_ticks": 126654389,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "python3 -m contributor_tools.guarded_launcher run docs/quality/audits/training-compare-um21-all-spec.json",
+          "why": "launcher itself (CLI)"
+        },
+        {
+          "pid": 1697587,
+          "start_ticks": 99403742,
+          "cwd": "/home/jmontp",
+          "cmdline": "/home/jmontp/.local/bin/pretty daemon",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 1697596,
+          "start_ticks": 99403750,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "-zsh",
+          "why": "non-interpreter ancestor"
+        },
+        {
+          "pid": 2354851,
+          "start_ticks": 109454620,
+          "cwd": "/mnt/s/workspace/locomotion-data-standardization",
+          "cmdline": "claude --resume",
+          "why": "non-interpreter ancestor"
+        }
+      ],
+      "workers": []
+    },
+    "windows": {
+      "checked_at_utc": "2026-11-25T20:57:32+00:00",
+      "last_boot_utc": "2026-09-07T21:16:10.5000000Z",
+      "process_count": 325,
+      "free_physical_mib": 6838.078125,
+      "workers": []
+    }
+  },
+  "windows_new_workers": [],
+  "bindings_after": {
+    "contributor_tools/compare_training_vs_locohub.py": {
+      "expected": "dea9a23f03370898ddf005f4643de4499b9933d79f9683b7313f89df3a5fd3d7",
+      "actual": "dea9a23f03370898ddf005f4643de4499b9933d79f9683b7313f89df3a5fd3d7",
+      "bytes": 51347,
+      "matches": true
+    },
+    "contributor_tools/guarded_launcher.py": {
+      "expected": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "actual": "372519f9dd1f52510f747eed3779044765fdc158b08ca007deb8d6d8708c844f",
+      "bytes": 51512,
+      "matches": true
+    },
+    "/mnt/s/workspace_docs/energy shaping ml/esml_research/LocoHub/es_prepared/gate/umich_2021_time.parquet": {
+      "expected": "fbfe967303690d92b45b1852a1781ffce2cdb4c64b23938004a06e9359a2cd36",
+      "actual": "fbfe967303690d92b45b1852a1781ffce2cdb4c64b23938004a06e9359a2cd36",
+      "bytes": 80968332,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/um21_r01_package_v4/full_phase.parquet": {
+      "expected": "681ecfd5e78fd8f309f4bb5fbd119547af68dc08dabb9ba66a163c5a235039e7",
+      "actual": "681ecfd5e78fd8f309f4bb5fbd119547af68dc08dabb9ba66a163c5a235039e7",
+      "bytes": 194073494,
+      "matches": true
+    },
+    "converted_datasets/reconversion_v2/um21_r01_package_v4/manifest.json": {
+      "expected": "44c7090cb6e2b5d20cd6aff9a932bea975adc011e0945a1db34e44de7f9aba2f",
+      "actual": "44c7090cb6e2b5d20cd6aff9a932bea975adc011e0945a1db34e44de7f9aba2f",
+      "bytes": 12509,
+      "matches": true
+    }
+  },
+  "outputs": [
+    {
+      "path": "alignment.csv",
+      "bytes": 97448,
+      "sha256": "9558263c09c239188b5844aa5cea2f00a3b22b97740963f59228bb6321c5f54e"
+    },
+    {
+      "path": "comparison.csv",
+      "bytes": 64597,
+      "sha256": "de39030e9f773b43eb3f989e869be1ed05e0aebca4ec3d9928e5aa39db430c81"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 10837,
+      "sha256": "6e0d7471adc4176c8657a5a2674bbd63efb838cb2be58c866b148fc211f32f46"
+    },
+    {
+      "path": "unmatched.csv",
+      "bytes": 45799,
+      "sha256": "70ee0c2d672fe33e562562af6031dfdb01e99f56c25e79b90f80f2f86536ef23"
+    }
+  ],
+  "expected_outputs_missing": [],
+  "log_sha256": "f281f372d7ebec8ca7aa07dfe2ca2f95f8adf45329744064320d441f11d06270",
+  "checks": {
+    "cleanup_proven": true,
+    "bindings_unchanged": true,
+    "envelope_unchanged": true,
+    "linux_no_new_worker": true,
+    "windows_no_new_worker": true,
+    "no_orphans_at_leader_exit": true,
+    "outputs_hashed": true,
+    "expected_outputs_present": true
+  }
+}
