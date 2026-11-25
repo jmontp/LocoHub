@@ -4616,12 +4616,12 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Review quality and scientific limitations for Georgia Tech 2021",
-      "status": "blocked",
+      "status": "done",
       "stage": "quality",
       "question": "Which signals and observations are supported, failed, missing, invalid or still unchecked?",
       "scope": "Complete retained Georgia Tech 2021 source scope and every exported observation type; any smaller local bundle remains an explicitly separate scope.",
       "depends_on": [
-        "GT21-F02",
+        "GT21-RB07",
         "CORE-01"
       ],
       "inputs": [
@@ -4643,24 +4643,39 @@
         "Record source measurement/model limitations separately from conversion fidelity. Unsupported anatomy or events remain unresolved; source preservation does not approve them.",
         "Outliers and dropouts are reported and accounted for, never silently removed or tuned to a pass rate"
       ],
-      "next_action": "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision. Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked. Update 2026-11-23 (GT21-REB-PLAN): 5 guarded jobs (1 pilot plus 4 per-mode streaming assessments) after GT21-RB05 and GT21-F02; row-group streaming, no raised admission, legacy tuner file is not an approved profile.",
+      "next_action": "None; verified. Release-step filtering and reference ranges remain separate.",
       "resource_class": "numerical",
       "evidence_paths": [
-        "docs/quality/audits/backlog-refresh-20261027.json"
+        "docs/quality/audits/backlog-refresh-20261027.json",
+        "docs/maintainers/handoffs/GT21-Q01.json",
+        "docs/quality/audits/gt21-q01-summary.json",
+        "docs/quality/audits/gt21-q01-readback.json",
+        "converted_datasets/reconversion_v2/gt21_q01_batch_b1_v2",
+        "docs/maintainers/handoffs/GT21-Q01-verify.json"
       ],
       "handoff": {
-        "last_checked_at_utc": "2026-11-23T20:30:15+00:00",
-        "summary": "Added during backlog restructuring; no new scientific checks or conversion have run for this task. Update 2026-11-23: José's decisions recorded (docs and bookkeeping only; no data job or conversion ran).",
-        "changed_files": [],
+        "last_checked_at_utc": "2026-11-25T23:30:00+00:00",
+        "summary": "GT21-Q01 assessment of all 84,793 RB07 observations (22 participants; 81,647 phase cycles, 3,146 time recordings) with the same coarse limits as UM21 and GT23: 83,547 no failure found, 1,246 failed (L2 jump 1,134, L1 range 186 mostly ankle angle, side check 16, pressure point 4). Plane glitch unchecked; missing data never counted as pass. The AB24 ramp_1 wraps and the AB07 2.2 rad angle are not in this export (no angle beyond 180 degrees). Plate dropout flagged in 689 observations (not a failure). The 22 listed short left stances are accounted (18 flagged, 2 without toe-off flagged, 2 excluded by the authors rule). Independent readback passed. scientific_approval false.",
+        "changed_files": [
+          "contributor_tools/run_gt21_q01_assessment.py",
+          "contributor_tools/readback_gt21_q01.py",
+          "tests/test_gt21_q01_assessment.py",
+          "tests/test_gt21_q01_readback.py",
+          "docs/maintainers/handoffs/GT21-Q01.json",
+          "docs/quality/audits/gt21-q01-*"
+        ],
         "checks": [
-          "Reviewed the retained project scope and declared dependencies only."
+          "15 synthetic tests pass (assessment and readback, with known injected values)",
+          "pilot (AB24), 6 batches, summary and readback under the guarded launcher; all receipts clean, cleanup proven; peak RSS 165-185 MiB (readback 405 MiB)",
+          "readback recomputed 177 phase and 15 time observations independently and recounted all 84,793 lines: 0 mismatches"
         ],
         "remaining": [
-          "Read the completed source-comparison index and review one actual signal/observation group at a time, recording a dataset-specific quality decision.",
-          "Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked."
-        ]
+          "None; verified by independent agent (see verify_file). scientific_approval false."
+        ],
+        "verification": "passed",
+        "verified": true,
+        "verify_file": "docs/maintainers/handoffs/GT21-Q01-verify.json"
       },
-      "blocked_reason": "Required evidence is unfinished: GT21-F02, CORE-01. Recheck the actual artifacts and resource conditions before execution; a task plan does not satisfy these prerequisites.",
       "legacy_ids": [
         "SCI-01",
         "QA-01"
@@ -4699,7 +4714,7 @@
         "The catalog, download variant and preview refer to this exact reviewed artifact or remain explicitly legacy/unreviewed.",
         "Record any release limitation and remaining source gaps. Publishing or uploading follows the user-requested destination/workflow and is separate from this local review."
       ],
-      "next_action": "Review this dataset's completed evidence and prepare one fresh immutable local bundle using the existing bounded release workflow; record all unsupported scope. Update 2026-11-23: José decided (D-REF-1, D-REF-2): joint angles are differences of segment angles measured against gravity (no static-pose or model zero), and the centre of pressure uses the foot frame with its origin 100 mm forward of the ankle centre. Not yet run. Pelvis markers are available for the pelvis (earlier decision D-GT21-C01-2 C); whether thigh, shank and foot segment angles, the ankle centre and the foot direction can be built from GT21 markers is not checked. Update 2026-11-23 (GT21-REB-PLAN): 2 jobs (bundle build and independent readback); limits to state: forward force on lab Z axis, no-plate legs, 2021 ramp-moment rewrite unmeasured for 21 participants, moments from model inverse dynamics with marker angles.",
+      "next_action": "After GT21-Q01: build the package with contributor_tools/common/release_package.py and a GT21 adapter (phase + time, full + filtered).",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/quality/audits/backlog-refresh-20261027.json"
@@ -8477,6 +8492,49 @@
       "legacy_ids": [],
       "owner": "worker agent (claude)",
       "started_at_utc": "2026-11-25T16:44:37+00:00"
+    },
+    {
+      "id": "UM21-T05",
+      "priority": "P1",
+      "dataset": "um21",
+      "title": "Export UMich 2021 continuous time series (angles, moments, plate force and CoP) and add them to the package",
+      "status": "ready",
+      "stage": "conversion",
+      "question": "Can the treadmill recordings be exported as continuous time series in the current standard, with plate force, so the UM21 package has phase and time files like GT21 and GT23?",
+      "scope": "The 44 treadmill recordings already in package v4. Same angle frames (S02 per-leg), same CoP rule and held-back list as v4; source sample rates kept (100 Hz signals, plates as in the source); no resampling.",
+      "depends_on": [
+        "UM21-R01",
+        "UM21-S02"
+      ],
+      "inputs": [
+        "docs/maintainers/handoffs/UM21-S02.json",
+        "contributor_tools/run_um21_s02_frame.py",
+        "contributor_tools/run_um21_r01_package.py",
+        "contributor_tools/common/release_package.py"
+      ],
+      "deliverables": [
+        "Time runner reusing S02 geometry over whole recordings",
+        "Pilot then guarded batches",
+        "Time assessment (same limits) and package v5 with phase + time",
+        "Readback and independent verifier"
+      ],
+      "acceptance": [
+        "Time samples at stride windows reproduce the v4 phase values (after resampling) within numeric tolerance",
+        "Phase files unchanged from v4 except where documented",
+        "Every exclusion accounted for"
+      ],
+      "next_action": "Plan and code (no data runs) while GT21-Q01 holds the launcher; then pilot.",
+      "resource_class": "numerical",
+      "evidence_paths": [],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-25T18:00:00Z",
+        "summary": "Opened from D-UM21-TIME-1 (A).",
+        "checks": [],
+        "remaining": [
+          "Everything in deliverables"
+        ]
+      },
+      "legacy_ids": []
     }
   ],
   "decisions": [
@@ -9683,6 +9741,34 @@
       "answer": "A",
       "answered_at_utc": "2026-11-25T00:00:00Z",
       "note": "José in chat: 'yeah do option A'."
+    },
+    {
+      "id": "D-UM21-TIME-1",
+      "task_id": "UM21-T05",
+      "status": "answered",
+      "question": "Should UMich 2021 also get time-series files (with real plate force) so it matches the other two datasets?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Yes, after Georgia Tech 2021 is finished",
+          "consequence": "About 12-15 guarded jobs; the package gains time files and force. Reversible."
+        },
+        {
+          "key": "B",
+          "label": "No, per-stride files only for now",
+          "consequence": "No new work; UMich 2021 cannot be used where time series are needed. Reversible."
+        }
+      ],
+      "options_order": "By how much is added, most first.",
+      "decide_before_recommendation": false,
+      "cost_of_waiting": "UMich 2021 stays per-stride only.",
+      "recommended": "A",
+      "confidence": "medium",
+      "why": "The source has continuous 100 Hz data and 1 kHz plates; all three datasets then have the same package.",
+      "check": "The UMich 2021 package manifest lists only the phase table.",
+      "answer": "A",
+      "answered_at_utc": "2026-11-25T18:00:00Z",
+      "note": "José in chat: 'do your picks. keep going until all three datasets have their phase and time datasets.'"
     }
   ]
 }
