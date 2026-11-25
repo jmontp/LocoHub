@@ -8358,7 +8358,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Find why left-leg treadmill stance is only about 10 percent of the cycle, then fix or decide the reexport",
-      "status": "review",
+      "status": "done",
       "stage": "source_readback",
       "question": "Are the left-leg treadmill toe-off events (or their pairing with heel strikes) wrong, since the left belt stays loaded for about 65 percent of the cycle while stance is about 10 percent?",
       "scope": "Read-only diagnosis on one recording per participant: compare source left and right heel-strike and toe-off events with the belt loads; then propose the smallest fix. Affects the stance force mask and the incomplete_stance_force flag of left-leg treadmill steps; no force, angle, moment or count changes expected. A rerun of RB03 masks and RB05 export needs its own guarded launches.",
@@ -8380,14 +8380,15 @@
         "No numbers are tuned: any fix follows the source events or the documented rule.",
         "If a reexport is needed, the affected masks and flags are listed per participant before any launch."
       ],
-      "next_action": "Independent verifier: check cause evidence, fix, 22 reruns and bit-identity audit.",
+      "next_action": "None. Verified; the r2 exports (gt21_rb06_export_<ID>_r2) replace r1 as the current RB05 export.",
       "resource_class": "read_only",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-RB05-verify.json",
         "docs/maintainers/handoffs/GT21-RB06.json",
         "docs/quality/audits/gt21-rb06-belt-evidence.json",
         "docs/quality/audits/gt21-rb06-seg-before-after.json",
-        "docs/quality/audits/gt21-rb06-export-before-after.json"
+        "docs/quality/audits/gt21-rb06-export-before-after.json",
+        "docs/maintainers/handoffs/GT21-RB06-verify.json"
       ],
       "handoff": {
         "last_checked_at_utc": "2026-11-25T04:49:32+00:00",
@@ -8399,11 +8400,10 @@
           "Export before/after streamed compare, 0 unexpected differences",
           "Readback c1,c2,c3,c5,c6 passed"
         ],
-        "remaining": [
-          "Independent verification",
-          "Decide that rb06 exports replace r1 as current export"
-        ],
-        "handoff_file": "docs/maintainers/handoffs/GT21-RB06.json"
+        "remaining": [],
+        "handoff_file": "docs/maintainers/handoffs/GT21-RB06.json",
+        "verified": "Independent verifier confirmed the copy (157/157 treadmill, 0/2,990 other), clean receipts, bit-identity outside left-foot treadmill force, unchanged counts, 43 tests pass. r2 replaces r1 as current RB05 export.",
+        "verify_file": "docs/maintainers/handoffs/GT21-RB06-verify.json"
       }
     }
   ],
