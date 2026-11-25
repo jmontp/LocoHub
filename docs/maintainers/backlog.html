@@ -25,7 +25,7 @@
 <h3><a href="#UM21-X01">UM21-X01 — Inventory omitted UMich markers, forceplates and transfer correspondence</a></h3><p>um21 · P1 · Source inventory</p><p>Which omitted source measurements can be restored without inventing clocks or pairing?</p><p><strong>Start here:</strong> Inventory source channel metadata and propose one bounded source-preserving pilot; defer bilateral pairing/derivatives until exact correspondence is proven.</p>
 <p>Read the task’s inputs and handoff before starting. This page does not start jobs or change task states.</p></section>
 <h2 id="tasks">All tasks</h2>
-<details><summary>View all 123 tasks — 8 ready, 0 in progress, 50 blocked, 1 awaiting review, 64 done</summary>
+<details><summary>View all 123 tasks — 8 ready, 0 in progress, 49 blocked, 2 awaiting review, 64 done</summary>
 <div class="table-scroll"><table><caption>Maintained task states, not live process monitoring</caption><thead><tr><th>Task</th><th>Dataset</th><th>Priority</th><th>Status</th><th>Stage</th><th>Depends on</th></tr></thead><tbody>
 <tr><th scope="row"><a href="#PM-01">PM-01: Inspect stopped jobs and prepare one safe pilot handoff</a></th><td>project</td><td>P0</td><td>Done</td><td>Operations</td><td>—</td></tr>
 <tr><th scope="row"><a href="#PM-02">PM-02: Reconcile every retained job with a current disposition</a></th><td>project</td><td>P0</td><td>Done</td><td>Operations</td><td>—</td></tr>
@@ -145,7 +145,7 @@
 <tr><th scope="row"><a href="#GT21-RB02">GT21-RB02: Assign force plates and fix force signs on every source step</a></th><td>gt21</td><td>P1</td><td>Done</td><td>Pilot</td><td><a href="#GT21-RB01">GT21-RB01</a></td></tr>
 <tr><th scope="row"><a href="#GT21-RB03">GT21-RB03: Segment steps of both legs with strict terrain labels and account for every step</a></th><td>gt21</td><td>P1</td><td>Done</td><td>Conversion</td><td><a href="#GT21-RB02">GT21-RB02</a></td></tr>
 <tr><th scope="row"><a href="#GT21-RB04">GT21-RB04: Apply conventions: marker segment angles, joint angles, foot-frame CoP, mass</a></th><td>gt21</td><td>P1</td><td>Done</td><td>Conventions</td><td><a href="#GT21-RB01">GT21-RB01</a></td></tr>
-<tr><th scope="row"><a href="#GT21-RB05">GT21-RB05: Export 150-sample observations with lineage and full accounting, then read back independently</a></th><td>gt21</td><td>P1</td><td>Blocked</td><td>Source readback</td><td><a href="#GT21-RB04">GT21-RB04</a></td></tr>
+<tr><th scope="row"><a href="#GT21-RB05">GT21-RB05: Export 150-sample observations with lineage and full accounting, then read back independently</a></th><td>gt21</td><td>P1</td><td>Review</td><td>Source readback</td><td><a href="#GT21-RB04">GT21-RB04</a></td></tr>
 <tr><th scope="row"><a href="#DOC-06">DOC-06: Fix the user-facing site and add a landing path for new dataset pages</a></th><td>all</td><td>P1</td><td>Review</td><td>Documentation</td><td>—</td></tr>
 <tr><th scope="row"><a href="#GT23-E02">GT23-E02: Fix angle wraps, hold step-up pressure point, re-assess</a></th><td>gt23</td><td>P1</td><td>Done</td><td>Conversion</td><td><a href="#GT23-E01">GT23-E01</a>, <a href="#GT23-Q01">GT23-Q01</a></td></tr>
 <tr><th scope="row"><a href="#GT23-PL01">GT23-PL01: Rerun GT23 angles, export, holds and assessment under the side-view plane rule (D-REF-4)</a></th><td>gt23</td><td>P1</td><td>Done</td><td>Conventions</td><td><a href="#GT23-E02">GT23-E02</a></td></tr>
@@ -2090,21 +2090,19 @@
 <p><strong>Still needed</strong></p><ul><li>Second verification of the three acceptance items run after the first verifier (details in docs/maintainers/handoffs/GT21-RB02-RB04.json, key acceptance_items_run_after_verifier)</li></ul>
 <p><strong>Changed files</strong></p><ul><li><code>contributor_tools/gt21_rb_pass.py</code></li><li><code>contributor_tools/run_gt21_rb_pass.py</code></li><li><code>contributor_tools/run_gt21_rb_readback.py</code></li><li><code>tests/test_gt21_rb_pass.py</code></li><li><a href="handoffs/GT21-RB02-RB04.json"><code>docs/maintainers/handoffs/GT21-RB02-RB04.json</code></a></li></ul>
 </details>
-<details id="GT21-RB05"><summary>GT21-RB05 — Export 150-sample observations with lineage and full accounting, then read back independently · Blocked</summary>
+<details id="GT21-RB05"><summary>GT21-RB05 — Export 150-sample observations with lineage and full accounting, then read back independently · Review</summary>
 <p><strong>Question:</strong> Does the exported file match the source value for value, with every exclusion listed?</p>
 <p><strong>Scope:</strong> 45 guarded jobs: 22 per-participant exports, 1 streaming merge, 22 independent readbacks. Output in a new root; existing converted files never overwritten. Expected about 11 million rows (roughly 4 GB compressed).</p>
-<p><strong>Next action:</strong> After GT21-RB04 is done: export AB06 and read it back.</p>
+<p><strong>Next action:</strong> Independent verifier: check acceptance against the readback files and handoff GT21-RB05.json.</p>
 <p><strong>Depends on:</strong> <a href="#GT21-RB04">GT21-RB04</a> · <strong>Resources:</strong> Numerical</p>
-<p><strong>Blocked:</strong> Waits for GT21-RB04.</p>
 <h4>Inputs</h4><ul><li><a href="handoffs/GT21-rebuild-plan.json"><code>docs/maintainers/handoffs/GT21-rebuild-plan.json</code></a></li><li><a href="../datasets/gt21/problems.html"><code>docs/datasets/gt21/problems.html</code></a></li><li><a href="../quality/audits/gt21-problem-scope.json"><code>docs/quality/audits/gt21-problem-scope.json</code></a></li><li><code>docs/reference/index.md</code></li><li><code>docs/maintainers/handoffs/GT21-RB04.json</code></li><li><code>contributor_tools/run_um21_r01_bundle.py</code></li><li><code>contributor_tools/DATA_CONTRACT.md</code></li></ul>
 <h4>Deliverables</h4><ul><li>Full converted file with observation identities, source lineage and exclusion table</li><li>Independent readback per participant</li></ul>
 <h4>Acceptance checks</h4><ul><li>Every observation has exactly 150 samples on linspace(0,100,150) inclusive and constant metadata; observations x 150 equals rows.</li><li>Observations plus listed exclusions equal source steps for every recording; 2,301 and 846 recordings each have a disposition.</li><li>A second code path re-derives seeded recordings from the source for every participant and every exported value agrees.</li><li>Streaming by row group within 256 MiB; the admission estimate is not raised.</li></ul>
-<h4>Evidence</h4><ul><li><a href="handoffs/GT21-rebuild-plan.json"><code>docs/maintainers/handoffs/GT21-rebuild-plan.json</code></a></li></ul>
-<h4>Latest handoff</h4><p>Planned.</p>
-<p>Checked <time datetime="2026-11-23T20:30:15+00:00">2026-11-23T20:30:15+00:00</time>.</p>
-<p><strong>Checks completed</strong></p><ul><li>Plan written from read-only probes only; no conversion, MATLAB or write under converted_datasets/ or source folders ran.</li></ul>
-<p><strong>Still needed</strong></p><ul><li>All jobs.</li></ul>
-<p><strong>Changed files</strong></p><ul><li><a href="handoffs/GT21-rebuild-plan.json"><code>docs/maintainers/handoffs/GT21-rebuild-plan.json</code></a></li><li><a href="backlog.json"><code>docs/maintainers/backlog.json</code></a></li><li><a href="backlog.html"><code>docs/maintainers/backlog.html</code></a></li></ul>
+<h4>Evidence</h4><ul><li><a href="handoffs/GT21-rebuild-plan.json"><code>docs/maintainers/handoffs/GT21-rebuild-plan.json</code></a></li><li><a href="handoffs/GT21-RB05.json"><code>docs/maintainers/handoffs/GT21-RB05.json</code></a></li><li><code>converted_datasets/reconversion_v2/gt21_rb05_readback_c1/readback.json</code></li><li><code>converted_datasets/reconversion_v2/gt21_rb05_readback_c2/readback.json</code></li><li><code>converted_datasets/reconversion_v2/gt21_rb05_readback_c3/readback.json</code></li><li><code>converted_datasets/reconversion_v2/gt21_rb05_readback_c4/readback.json</code></li></ul>
+<h4>Latest handoff</h4><p>22 exports and independent readback done: 81,647 phase observations, 3,146 continuous, 25,720 steps and 1 recording listed as exclusions; readback 0 failures. Not scientific approval.</p>
+<p>Checked <time datetime="2026-11-25T02:19:06+00:00">2026-11-25T02:19:06+00:00</time>.</p>
+<p><strong>Checks completed</strong></p><ul><li>tests/test_gt21_rb_export.py 19 passed</li><li>readback c1-c4 passed</li></ul>
+<p><strong>Still needed</strong></p><ul><li>Independent verifier</li></ul>
 </details>
 <details id="DOC-06"><summary>DOC-06 — Fix the user-facing site and add a landing path for new dataset pages · Review</summary>
 <p><strong>Question:</strong> Does the site build, say honestly what state each dataset is in, and can a rebuilt dataset get its page with one command?</p>

@@ -1,0 +1,81 @@
+{
+  "task_id": "GT21-RB05",
+  "status": "ready_for_independent_verification",
+  "scientific_approval": false,
+  "last_checked_at_utc": "2026-11-25T02:19:06+00:00",
+  "summary": "22 per-participant exports (no streaming merge built; not requested) and an independent readback. 81,647 phase observations (150 samples, one leg each) and 3,146 continuous observations; 1 recording and 25,720 steps listed as exclusions. Readback passed with 0 failures.",
+  "code_frozen_sha256": {
+    "contributor_tools/gt21_numeric_source.py": "23f7b5a05a75464efd3d2f0ac3f767c927a31411af5941c339924fc5034a8917",
+    "contributor_tools/gt21_rb_export.py": "309f8008936aebb03961d8c1c8e7e6e8aebb2057385cf98cda65364251131746",
+    "contributor_tools/gt21_rb_pass.py": "b199962c508e05c12fdd376175a15acd5d8ad92c622ce74196044d1857db39eb",
+    "contributor_tools/run_gt21_rb_export.py": "a0181b0dd2c55c3ccade0f4abafdb1d0bb75586ef274f61b0027ed96792e5b56",
+    "contributor_tools/run_gt21_rb_pass.py": "50f61989fcde730a49d68a40d6b8f7f3d306e6ba8311327041238af142c619b6"
+  },
+  "readback_code": "contributor_tools/run_gt21_rb_export_readback.py (does not import the export or pass code; shares only the MAT table reader)",
+  "tests": "tests/test_gt21_rb_export.py: 19 synthetic tests pass",
+  "decisions_made_before_results": {
+    "phase_forces": "re-derived from the 1 kHz plate at the 150 phase times with the pass ownership/sign/body-weight rules (RB02 verifier: a second 200 Hz linear step differs by up to 0.2 BW; the 1 kHz route matches MATLAB to 2e-14). Plate ownership at a phase time = recorded contact interval [t[a], t[b-1]]; lab-Z sign = that of the foot loaded run on the 200 Hz clock. 200 Hz reconstruction of the pass forces from these rules equals the stored table (max diff 0.0) in every recording.",
+    "mask_in_phase": "phase sample missing when either neighbouring 200 Hz sample is masked (the sample itself when on the clock); continuous table applies the layer sample by sample",
+    "power": "moment x joint speed row by row in each table",
+    "incomplete_flag": "incomplete_stance_force when at least 0.5 of a step stance samples have no force (all modes); treadmill count is 22 (all left leg, AB12 16)",
+    "labels": "rule A label and authors terrain from RB03 steps; ramp incline signed (descent negative); treadmill speed values from authors speed table (single speed only when one value)"
+  },
+  "results": {
+    "phase_observations_by_mode": {
+      "levelground": 14252,
+      "ramp": 19953,
+      "stair": 10059,
+      "treadmill": 37383
+    },
+    "continuous_by_mode": {
+      "levelground": 680,
+      "ramp": 1394,
+      "stair": 916,
+      "treadmill": 156
+    },
+    "phase_rows": 12247050,
+    "time_rows": 14415683,
+    "exclusions_by_reason": {
+      "authors_rule_discard": 19870,
+      "authors_rule_case_not_found (left leg)": 2076,
+      "more_than_2_speeds (treadmill)": 3523,
+      "recording_not_converted_in_pass (AB27 Treadmill_06_01 steps)": 251,
+      "recording excluded: fewer than 3 fit markers on femur_r (AB27 Treadmill_06_01)": 1
+    },
+    "left_leg_extension_observations": 39868,
+    "incomplete_stance_force": {
+      "levelground": 10766,
+      "ramp": 12533,
+      "stair": 3961,
+      "treadmill": 22
+    },
+    "disk_gb": 7.6,
+    "peak_rss_mib_export": 319.1,
+    "peak_rss_mib_readback": 334.0
+  },
+  "readback": {
+    "files": "converted_datasets/reconversion_v2/gt21_rb05_readback_{c1..c4}/readback.json (22 participants in 4 jobs; one 3,600 s cap)",
+    "pilot": "gt21_rb05_readback_pilot_r1",
+    "status": "passed, 0 failures",
+    "covered": "all 81,647 phase observations and 3,146 continuous recordings: 150-sample inclusive grid, constant metadata, rows = observations x 150, values vs pass tables (max diff 5.7e-14 interpolated, bit equal continuous), masked force missing, force at the two on-clock phase samples vs pass (979,764 pairs), power = moment x speed in 160 M rows, held_signals = all-missing columns, flags and labels = RB03 fields, counts against RB03 per recording (107,367 steps = 81,647 + 25,720 listed; 3,147 recordings = 3,146 + 1), file and input hashes; seeded one recording per mode per participant (88): every force of every observation re-derived from the 1 kHz plate source, max diff 1.6e-12 BW"
+  },
+  "odd": [
+    "475,592 phase force samples are missing without being masked: anterior/lateral are missing where a loaded foot fails the 45 degree heading gate (or all plates missing); the independent re-derivation agrees. Not diagnosed per cause.",
+    "RB03 stance_samples on AB06 treadmill steps looks short (23 samples for a step with about 0.5 s of load); stance comes from source toe-off events, not examined here.",
+    "Launcher clean_success false on AB06 export and readback c2/c3 only because a foreign process appeared in the after-census; cleanup proven.",
+    "Not compared: the MATLAB-fixed AB06 phase files at 1e-9 (RB02 item) now that forces come from the 1 kHz plate; compare_gt21_rb02_matlab_forces.py could be re-run against the AB06 export."
+  ],
+  "changed_files": [
+    "contributor_tools/gt21_rb_export.py",
+    "contributor_tools/run_gt21_rb_export.py",
+    "contributor_tools/run_gt21_rb_export_readback.py",
+    "tests/test_gt21_rb_export.py",
+    "docs/quality/audits/gt21-rb05-*",
+    "docs/maintainers/handoffs/GT21-RB05.json"
+  ],
+  "outputs": "converted_datasets/reconversion_v2/gt21_rb05_export_<ID>_r1 (22; phase.parquet, time.parquet, observations/exclusions/recordings jsonl, README, run_summary); pilots gt21_rb05_pilot_r3 (r1, r2 failed and removed)",
+  "events": [
+    "pilot r1 stopped on signed incline (fixed); r2 hit the 768 MiB address-space cap after several recordings (heap fragmentation; fixed with mmap threshold and malloc_trim); r3 passed with the bound code of all batches"
+  ],
+  "next_action": "Independent verifier."
+}
