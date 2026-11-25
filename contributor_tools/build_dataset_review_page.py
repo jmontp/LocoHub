@@ -67,7 +67,7 @@ def load_inputs(spec: dict, root: Path = ROOT):
             held = list(csv.DictReader(fh))
     preview = json.loads((bundle / "phase_preview.json").read_text(encoding="utf-8"))
     r01 = json.loads((root / spec["handoff"]).read_text(encoding="utf-8"))
-    if r01["task_id"] != spec["r01_task_id"]:
+    if r01["task_id"].split()[0] != spec["r01_task_id"]:  # a rerun handoff may read "UM21-R01 v3 (...)"
         raise ValueError(f"handoff is for {r01['task_id']}, spec expects {spec['r01_task_id']}")
     scope = json.loads((root / spec["scope"]).read_text(encoding="utf-8"))
     return manifest, index, excl, held, preview, r01, scope
@@ -254,7 +254,8 @@ def exclusion_table_paths(spec, manifest, excl):
     body = "".join(f'<tr><td>{esc(a)}</td><td class="num">{b:,}</td><td>{esc(c)}</td><td>{esc(d)}</td></tr>' for a, b, c, d in rows)
     note = spec["accounting_note"].format(
         total=n["exclusions_total"], upstream=n["exclusions_by_stage"]["upstream_not_released"], failed=n["exclusions_by_stage"]["filtered_variant_only"],
-        export=n["exclusions_by_kind"]["export_exclusion"], windows=n["exclusions_by_kind"]["authors_window_not_exported"],
+        export=n["exclusions_by_kind"].get("export_exclusion", 0), windows=n["exclusions_by_kind"].get("authors_window_not_exported", 0),
+        both=sum(v for k, v in n["exclusions_by_stage"].items() if k != "filtered_variant_only"),
         full=n["observations_full"], filtered=n["observations_filtered"])
     return (f'<div class="table-scroll" role="region" aria-label="What we left out" tabindex="0"><table class="plain-table">{head}<tbody>{body}</tbody></table></div>'
             f'<p class="note">{esc(note)}</p>')
@@ -378,7 +379,8 @@ def fix_cards(spec, scope, figs_dir, figinfo):
 
 
 # ---------- sections for packages that carry their own limitations, columns and problem cards ----------
-STATE_KEY = {"pass": "pass", "pass_offset_unverified": "offset_unverified", "pass_jump_only_time_table": "partly_checked", "unchecked": "unchecked"}
+STATE_KEY = {"pass": "pass", "pass_offset_unverified": "offset_unverified", "pass_jump_only_time_table": "partly_checked",
+             "pass_jump_only": "partly_checked", "unchecked": "unchecked"}
 
 
 def column_groups_table(spec, index):
@@ -391,7 +393,7 @@ def column_groups_table(spec, index):
         for c in g["cols"]:
             st = states[f"phase:{c}"]
             for k, v in st.items():
-                if k == "not_checked_no_column":
+                if k in ("not_checked_no_column", "unchecked_all_missing"):
                     empty += v
                 elif k == "fail":
                     failed += v
@@ -418,13 +420,14 @@ def limitations_section(spec, bundle: Path):
     if missing:
         raise ValueError(f"limitations with no plain text in the spec: {sorted(missing)}")
     rows = []
+    dash = lambda v: "—" if v is None else f"{v:,}"  # noqa: E731  (a note without a count has no number to show)
     for x in lim["limitations"]:
         obs = x.get("observations", x.get("observations_in_recording"))
-        recs = x.get("recordings", 1)
+        recs = x.get("recordings", 1 if "observations_in_recording" in x else None)
         failed = x.get("failed_in_assessment", x.get("failed_observations"))
-        kept = x["in_filtered_variant"]
-        rows.append(f'<tr><td>{esc(spec["limit_plain"][x["id"]])}</td><td class="num">{obs:,}</td><td class="num">{recs}</td>'
-                    f'<td class="num">{kept:,}</td><td class="num">{failed:,}</td></tr>')
+        kept = x.get("in_filtered_variant")
+        rows.append(f'<tr><td>{esc(spec["limit_plain"][x["id"]])}</td><td class="num">{dash(obs)}</td><td class="num">{dash(recs)}</td>'
+                    f'<td class="num">{dash(kept)}</td><td class="num">{dash(failed)}</td></tr>')
     head = ("<thead><tr><th>Limitation</th><th>Observations</th><th>Recordings</th><th>Still in the cleaned version</th>"
             "<th>Failed a limit</th></tr></thead>")
     if len(lim["unchecked_signal_families"]) != len(spec["limit_unchecked_plain"]):
@@ -460,6 +463,10 @@ def problem_cards(spec, scope, figs_dir):
             u = upd[c["key"]]
             figs = ""
             for f in c["figures"]:
+                if f.get("kind") == "published":  # a before or after figure kept under docs/quality/fixes
+                    figs += ('<div class="fix-figures fix-figures-single">'
+                             + fig(f["src"], f["side"], f["label"], f["alt"], f.get("caption", "")) + "</div>")
+                    continue
                 figs += ('<div class="fix-figures fix-figures-single">'
                          + local_fig(figs_dir, f["src"], f["question"], f["alt"], f.get("caption", "")) + "</div>")
             if c["key"] == "secondleg":
@@ -496,6 +503,34 @@ def glance_table(spec, scope):
     return (f'<div class="table-scroll" role="region" aria-label="All problems" tabindex="0"><table class="plain-table"><thead><tr><th>Problem</th>'
             f'<th>Where it stands</th><th>How much</th></tr></thead><tbody>{rows}</tbody></table></div><ul class="status-key">{key}</ul>')
 
+
+
+def power_section(spec, bundle: Path):
+    """The joint-power recompute: the gap between the source's power and moment times speed, per joint, from limitations.json."""
+    ps = spec["power_section"]
+    lim = json.loads((bundle / "limitations.json").read_text(encoding="utf-8"))["limitations"]
+    entry = next(x for x in lim if x["id"] == ps["limitation_id"])
+    gap = next(v for k, v in entry.items() if k.startswith("gap_source_power"))
+    cols = {k: v for k, v in gap.items() if isinstance(v, dict)}
+    meds = [v["median_nrms"] for v in cols.values()]
+    rows = []
+    for r in ps["rows"]:
+        g = cols[r["column"]]
+        rows.append(f'<tr><td>{esc(r["label"])}</td><td class="num">{100 * g["median_nrms"]:.0f}%</td><td class="num">{100 * g["p90_nrms"]:.0f}%</td>'
+                    f'<td class="num">{g["observations_compared"]:,} of {g["observations"]:,}</td></tr>')
+    head = ("<thead><tr><th>Joint</th><th>Typical gap (median)</th><th>Large gap (90th percentile)</th>"
+            "<th>Observations compared</th></tr></thead>")
+    note = ps["note"].format(median_min=f"{100 * min(meds):.0f}", median_max=f"{100 * max(meds):.0f}")
+    figure = ps["figure"]
+    return (f'<section id="power" aria-labelledby="power-h"><h2 id="power-h">{esc(ps["title"])}</h2>'
+            f'<p class="note">{esc(ps["intro"])}</p>'
+            f'<div class="fix-figures fix-figures-single">{local_fig(spec_figs_dir(spec), figure["src"], figure["question"], figure["alt"], figure.get("caption", ""))}</div>'
+            f'<div class="table-scroll" role="region" aria-label="Power gap per joint" tabindex="0"><table class="plain-table">{head}<tbody>{"".join(rows)}</tbody></table></div>'
+            f'<p class="note">{esc(note)}</p></section>\n\n      ')
+
+
+def spec_figs_dir(spec: dict, root: Path = ROOT) -> Path:
+    return root / "docs/datasets" / spec["slug"] / "figures"
 
 
 CSS_TEMPLATE = """
@@ -545,7 +580,9 @@ CSS_CARDS = """
 .review-page .status-key li { margin: .3rem 0; }
 .review-page .status-pill { display: inline-block; font-size: .78rem; font-weight: 600; padding: .05rem .45rem; border-radius: 3px; border: 1px solid currentColor; margin-right: .3rem; }
 .review-page .s-fixed { color: #1b7a43; } .review-page .s-documented { color: #8a5a00; } .review-page .s-not_checked_alone { color: #a3361a; }
-@media (prefers-color-scheme: dark) { .review-page .s-fixed { color: #5cc98a; } .review-page .s-documented { color: #e0a93b; } .review-page .s-not_checked_alone { color: #f08a6e; } }
+.review-page .s-left_out { color: #1f6aa5; } .review-page .s-retired { color: #5b6672; } .review-page .s-held { color: #8a5a00; }
+@media (prefers-color-scheme: dark) { .review-page .s-fixed { color: #5cc98a; } .review-page .s-documented { color: #e0a93b; } .review-page .s-not_checked_alone { color: #f08a6e; }
+  .review-page .s-left_out { color: #6db3e8; } .review-page .s-retired { color: #a8b3bf; } .review-page .s-held { color: #e0a93b; } }
 """
 
 
@@ -559,8 +596,12 @@ def build(spec: dict, root: Path = ROOT, backlog_path: Path = BACKLOG, allow_rev
     if own_cards:
         full_by_type = n["full"]["observations_by_type"]
         full, filtered = n["observations_full"], n["observations_filtered"]
-        extra = {"tasks": scope["denominators"]["tasks"], "cycles": full_by_type["individual_cycle"], "transfers": full_by_type["transfer"],
-                 "spans": full_by_type["transfer"] // 2, "continuous": full_by_type["continuous_recording"]}
+        extra = {"tasks": scope["denominators"].get("tasks", ""), "cycles": full_by_type.get("individual_cycle", 0), "transfers": full_by_type.get("transfer", 0),
+                 "spans": full_by_type.get("transfer", 0) // 2, "continuous": full_by_type.get("continuous_recording", 0)}
+        lim_path = root / spec["bundle"] / "limitations.json"
+        for x in json.loads(lim_path.read_text(encoding="utf-8"))["limitations"] if lim_path.exists() else []:
+            if "legs_total" in x:  # a package that judges each leg on its own says how many legs passed
+                extra.update(legs_published=x["legs_published"], legs_held=x["legs_held"], legs_total=x["legs_total"])
     else:
         full, filtered, extra = n["full"], n["filtered"], {}
     recordings = len(index["recordings"])
@@ -584,6 +625,9 @@ def build(spec: dict, root: Path = ROOT, backlog_path: Path = BACKLOG, allow_rev
         fixed_h = "What we fixed and what we did not (original vs fixed)"
         fixed_body = problem_cards(spec, scope, figs_dir)
         columns_html = column_groups_table(spec, index)
+    power_html, nav_power = "", ""
+    if "power_section" in spec:
+        power_html, nav_power = power_section(spec, root / spec["bundle"]), '<a href="#power">Joint power</a>'
     if fixed_body is None:
         fixed_body = fix_cards(spec, scope, figs_dir, figinfo)
     if columns_html is None:
@@ -622,7 +666,7 @@ def build(spec: dict, root: Path = ROOT, backlog_path: Path = BACKLOG, allow_rev
       <div class="page-kicker"><a href="../../index.html">LocoHub</a><span aria-hidden="true">/</span>{esc(name)}</div>
       <header class="dataset-heading"><h1 id="{h1_id}">{esc(name)}</h1>{status_block}
 <p class="dataset-note">{esc(spec['heading_note'])}</p></header>
-      <nav class="dataset-section-nav" aria-label="Sections"><a href="#what-this-is">What this is</a>{nav_extra_glance}<a href="#fixed">What we fixed</a><a href="#left-out">What we left out</a>{nav_extra_limits}<a href="#checked">What we checked</a><a href="#phase-plots">Phase plots</a><a href="#columns">Columns</a><a href="#downloads">Downloads</a></nav>
+      <nav class="dataset-section-nav" aria-label="Sections"><a href="#what-this-is">What this is</a>{nav_extra_glance}<a href="#fixed">What we fixed</a>{nav_power}<a href="#left-out">What we left out</a>{nav_extra_limits}<a href="#checked">What we checked</a><a href="#phase-plots">Phase plots</a><a href="#columns">Columns</a><a href="#downloads">Downloads</a></nav>
 
       <section id="what-this-is" aria-labelledby="what-h"><h2 id="what-h">What this is</h2>
       <p class="lead">{lead}</p></section>
@@ -631,7 +675,7 @@ def build(spec: dict, root: Path = ROOT, backlog_path: Path = BACKLOG, allow_rev
       <p class="note">{esc(spec['fixed_note'])}</p>
       {fixed_body}</section>
 
-      <section id="left-out" aria-labelledby="left-h"><h2 id="left-h">What we left out and why</h2>
+      {power_html}<section id="left-out" aria-labelledby="left-h"><h2 id="left-h">What we left out and why</h2>
       {exclusion_table(spec, manifest, excl, held)}</section>
 
       {limits}<section id="checked" aria-labelledby="checked-h"><h2 id="checked-h">What we checked and what we did not</h2>

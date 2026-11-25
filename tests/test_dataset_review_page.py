@@ -114,16 +114,16 @@ def test_main_returns_error_and_writes_nothing_when_not_done(tmp_path, monkeypat
 
 
 # ---------- UMich 2021 reproduces ----------
-UM21_BUNDLE = ROOT / "converted_datasets/reconversion_v2/um21_r01_review_v2"
+UM21_BUNDLE = ROOT / "converted_datasets/reconversion_v2/um21_r01_package_v4"
 
 
 @pytest.mark.skipif(not (UM21_BUNDLE / "manifest.json").exists(), reason="local bundle absent")
 def test_um21_page_is_reproduced_from_its_inputs():
     spec = json.loads((ROOT / "contributor_tools/page_specs/um21.json").read_text(encoding="utf-8"))
-    built = B.build(spec, allow_review=True)
+    built = B.build(spec)
     assert built == (ROOT / "docs/datasets/um21/index.html").read_text(encoding="utf-8")
     c = json.loads((UM21_BUNDLE / "manifest.json").read_text())["counts"]
-    assert f"{c['full']:,} strides" in built
+    assert f"{c['observations_full']:,} strides" in built
 
 
 # ---------- status label rule ----------
@@ -163,7 +163,7 @@ def test_known_problems_page_for_gt21_and_cards_inside_the_gt23_page():
 
 
 # ---------- Georgia Tech 2023 reproduces ----------
-GT23_BUNDLE = ROOT / "converted_datasets/reconversion_v2/gt23_r01_review_v10"
+GT23_BUNDLE = ROOT / "converted_datasets/reconversion_v2/gt23_r01_review_v11"
 
 
 @pytest.mark.skipif(not (GT23_BUNDLE / "manifest.json").exists(), reason="local bundle absent")

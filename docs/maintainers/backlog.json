@@ -152,7 +152,7 @@
         ]
       },
       "gate_evidence": {},
-      "rebuild_in_progress": true
+      "rebuild_in_progress": false
     },
     {
       "id": "gt21",
@@ -8048,7 +8048,7 @@
       "priority": "P1",
       "dataset": "gt21",
       "title": "Export 150-sample observations with lineage and full accounting, then read back independently",
-      "status": "blocked",
+      "status": "working",
       "stage": "source_readback",
       "question": "Does the exported file match the source value for value, with every exclusion listed?",
       "scope": "45 guarded jobs: 22 per-participant exports, 1 streaming merge, 22 independent readbacks. Output in a new root; existing converted files never overwritten. Expected about 11 million rows (roughly 4 GB compressed).",
@@ -8074,7 +8074,7 @@
         "A second code path re-derives seeded recordings from the source for every participant and every exported value agrees.",
         "Streaming by row group within 256 MiB; the admission estimate is not raised."
       ],
-      "next_action": "After GT21-RB04 is done: export AB06 and read it back.",
+      "next_action": "Write runner and synthetic tests, pilot, freeze, run 22 participant batches, readback.",
       "resource_class": "numerical",
       "evidence_paths": [
         "docs/maintainers/handoffs/GT21-rebuild-plan.json"
@@ -8094,7 +8094,8 @@
           "docs/maintainers/backlog.html"
         ]
       },
-      "blocked_reason": "Waits for GT21-RB04."
+      "owner": "gt21-rb05-worker",
+      "started_at_utc": "2026-11-25T01:04:55+00:00"
     },
     {
       "id": "DOC-06",

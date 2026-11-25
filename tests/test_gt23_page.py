@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-BUNDLE = ROOT / "converted_datasets/reconversion_v2/gt23_r01_review_v10"
+BUNDLE = ROOT / "converted_datasets/reconversion_v2/gt23_r01_review_v11"
 PAGE = ROOT / "docs/datasets/gt23/index.html"
 SCOPE = ROOT / "docs/quality/audits/gt23-problem-scope.json"
 SPEC = ROOT / "contributor_tools/page_specs/gt23.json"
@@ -74,7 +74,7 @@ def test_every_exclusion_count_is_listed_and_adds_up():
 
 def test_every_limitation_and_its_counts_show():
     lim = json.loads((BUNDLE / "limitations.json").read_text())["limitations"]
-    assert len(lim) == 11
+    assert len(lim) == 13
     spec = json.loads(SPEC.read_text())
     text = visible_text()
     for x in lim:

@@ -5,10 +5,10 @@
  "title": "Georgia Tech 2023 · LocoHub",
  "css_class": "gt23d",
  "r01_task_id": "GT23-R01",
- "bundle": "converted_datasets/reconversion_v2/gt23_r01_review_v10",
+ "bundle": "converted_datasets/reconversion_v2/gt23_r01_review_v11",
  "handoff": "docs/maintainers/handoffs/GT23-R01.json",
  "scope": "docs/quality/audits/gt23-problem-scope.json",
- "verified_date": "2026-11-24",
+ "verified_date": "2026-11-25",
  "meta_description": "Georgia Tech 2023 movement data: what we fixed, what we left out, what we checked and what is still limited.",
  "heading_note": "Local review version, not yet released. Nothing on this page has been approved scientifically.",
  "lead": "Movement recorded from {subjects} participants: {recordings} recordings of {tasks} tasks, from walking, running and stairs to jumping, lifting and squatting. This is a local review version and is not released. The full version has <strong>{full:,} observations</strong>; the cleaned version has <strong>{filtered:,}</strong>. An observation is one stride ({cycles:,} in the full version), one movement span ({transfers:,}; each of {spans:,} spans is exported once for the left and once for the right leg) or one whole recording ({continuous}). Strides and spans have exactly 150 samples from 0 to 100 percent; whole recordings keep their source sample times.",
@@ -80,8 +80,8 @@
     {
      "verdict": "Also wrong, fixed",
      "signal": "Hip, knee and ankle powers (per kg)",
-     "line": "Power carries the same mass, so it got the same factor in the same recordings.",
-     "evidence": "The match between power and moment times speed is the same before and after the rescale (largest difference 1.6e-15 in slope)."
+     "line": "Power is recomputed from the rescaled moment, so it carries the same factor in the same recordings.",
+     "evidence": "Power is the published moment, rescaled, times our joint speed."
     },
     {
      "verdict": "Checked, not affected",
@@ -272,7 +272,7 @@
   "signs": {
    "status": "fixed",
    "short": "Knee flexion positive in angle, speed and moment",
-   "did": "Knee angle, knee speed and knee moment now follow LocoHub's rule (flexion positive). The angles come from our own segment angles, the speeds are recomputed from them, and the knee moment is the published knee moment times −1. Power keeps its sign. Hip and ankle moments are as published.",
+   "did": "Knee angle, knee speed and knee moment now follow LocoHub's rule (flexion positive). The angles come from our own segment angles, the speeds are recomputed from them, and the knee moment is the published knee moment times −1. Power is moment times speed, so it keeps its sign when both flip together. Hip and ankle moments are as published.",
    "checked": "A separate readback of every exported observation checks that the knee moment is the negated published value; it fails if a knee moment is not negated.",
    "now": "The sign evidence from the source (20 recordings, 141 of 180 channel checks right, 0 wrong, 39 no answer) is unchanged and still covers walking, inclines, declines and stairs in 3 participants only.",
    "knock_on": [
@@ -285,7 +285,7 @@
     {
      "verdict": "Checked, not affected",
      "signal": "Power",
-     "line": "Power keeps its sign when moment and speed flip together.",
+     "line": "Power is moment times speed, so it keeps its sign when both flip together.",
      "evidence": ""
     },
     {
@@ -350,13 +350,13 @@
   "velocity": {
    "status": "documented",
    "short": "Speeds are recomputed by us; the recipe doubt stays open",
-   "did": "Not a data fix. The publisher's speeds are not stored. The joint speeds in this version are recomputed from our angles by central difference at the source sample rate, without smoothing, so they do not depend on which description is right. Moments and powers are the publisher's values.",
+   "did": "Not a data fix. The publisher's speeds are not stored. The joint speeds in this version are recomputed from our angles by central difference at the source sample rate, without smoothing, so they do not depend on which description is right. Moments are the publisher's values; hip, knee and ankle power are recomputed from them and these speeds.",
    "knock_on": [
     {
-     "verdict": "Checked, not affected",
-     "signal": "Published powers",
-     "line": "Power matches the published moment times our speed.",
-     "evidence": "Median slope 0.99 and median correlation 0.98 in 2,519 leg-joints of recordings that were not rescaled."
+     "verdict": "Also wrong, fixed",
+     "signal": "Hip, knee and ankle powers",
+     "line": "Power is now the published moment times our speed, so it matches by construction.",
+     "evidence": "The source's own power differed from this by a median of 17% to 28% per stride, this leg in the stride files (see the joint power section)."
     },
     {
      "verdict": "Not checked",
@@ -644,7 +644,9 @@
   "window_span_both_legs": "Movement spans have no single leg, so each accepted span is exported once for the left and once for the right leg, and the observations come in pairs. Opposite-leg columns cover the same absolute time span; no 50 percent shift is assumed.",
   "shuffle_not_steady_walking": "Shuffle cycles are filed under level walking but are not steady walking.",
   "unlabelled_walking_under_functional_task": "Walking cycles from recordings with no speed or slope label (normal walk 1 and the incline walks) are filed under functional task. Some show a flight phase (both feet off the plates).",
-  "run_label_check": "Cycles labelled run (2.0 and 2.5 m/s) follow the authors' label, but the publisher's README describes these recordings as walking. Some show a flight phase."
+  "run_label_check": "Cycles labelled run (2.0 and 2.5 m/s) follow the authors' label, but the publisher's README describes these recordings as walking. Some show a flight phase.",
+  "power_from_moment_and_speed": "Hip, knee and ankle power are the published moment times our own joint speed of the same leg, and are missing wherever the moment or the speed is missing. The source's power is not carried over.",
+  "other_powers_source_values": "Hip sideways, hip rotation and subtalar power are the published source values: the package has no joint speed for them, so they were not recomputed."
  },
  "limit_unchecked_intro": "Signal families with no limit, so not checked: ",
  "limit_unchecked_plain": [
@@ -766,6 +768,7 @@
    "All file hashes match; the cleaned version is the full version minus 125 failures and nothing else; every phase observation has exactly 150 samples from 0 to 100 percent, and the phase files pass the data contract with no issues.",
    "Segment angles, joint angles and the pressure point were recomputed by a second implementation to 9e-16 radians and 2e-16 m.",
    "Mass factors for 52 recordings and the 40 AB03 body-weight columns were recomputed independently.",
+   "Hip, knee and ankle power equals moment times joint speed to 1e-12 in a separate readback of every observation, and to 1e-9 in an independent check of 10 observations drawn with a recorded seed.",
    "Where a plate is loaded, our own strides reproduce the authors' strides exactly in the gait tasks.",
    "Hip, knee and ankle angles against coarse limits (hip −50 to 150°, knee −30 to 165°, ankle −80 to 50°), angles for jumps of 30° or more between neighbouring samples, the pressure point against 0.5 m forward and 0.3 m up and sideways of the foot, and a left-right side check. 19,448 of 19,573 observations pass; 125 fail.",
    "Every item left out of either version has a row and a reason in the left-out list: 5,281 rows."
@@ -1160,5 +1163,31 @@
   }
  ],
  "columns_note": "Columns are listed for the stride files; the time files carry the same signals with left and right names instead of this-leg and other-leg names. A column can be empty in an observation where a plate or marker is missing; the reason is written in the file's list of empty signals.",
- "downloads_text": "<strong>Local review files, not published yet.</strong> The full version, the cleaned version (each as a stride table and a time table), the list of left-out items and the list of limitations exist only on the maintainer's computer. They will get download links when they are released."
+ "downloads_text": "<strong>Local review files, not published yet.</strong> The full version, the cleaned version (each as a stride table and a time table), the list of left-out items and the list of limitations exist only on the maintainer's computer. They will get download links when they are released.",
+ "power_section": {
+  "limitation_id": "power_from_moment_and_speed",
+  "title": "Joint power recomputed as moment times speed",
+  "intro": "Hip, knee and ankle power are now the published moment times our own joint speed of the same leg. The source's power values are not carried over, and power is missing wherever the moment or the speed is missing. Moments are unchanged. Hip sideways, hip rotation and subtalar power stay as published, because the package has no joint speed for them. The table shows how far the source's power was from the new power, per stride, before this version; after it the gap is zero.",
+  "rows": [
+   {
+    "label": "Hip (this leg)",
+    "column": "hip_flexion_power_ipsi_W_kg"
+   },
+   {
+    "label": "Knee (this leg)",
+    "column": "knee_flexion_power_ipsi_W_kg"
+   },
+   {
+    "label": "Ankle (this leg)",
+    "column": "ankle_dorsiflexion_power_ipsi_W_kg"
+   }
+  ],
+  "figure": {
+   "src": "power-gap.svg",
+   "question": "How far was the source's power from moment times joint speed?",
+   "alt": "Bars of the typical and large gap between the source's power and moment times speed for the hip, knee and ankle.",
+   "caption": "Stride files, this leg, before this version. After it the gap is zero by construction."
+  },
+  "note": "The gap is the size of the difference relative to the size of the new power, per stride, over the samples where both exist. Medians for the other leg in the stride files and for the time files run from {median_min}% to {median_max}% across hip, knee and ankle. The gap comes from the speed definition, which is ours; we did not test the authors' model coordinate directly."
+ }
 }
