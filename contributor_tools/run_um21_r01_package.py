@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""UM21-R01 v3: build the local UMich 2021 treadmill review package with the shared streaming builder.
+"""UM21-R01 v4 (v3 with joint power recomputed, D-REF-5): build the local UMich 2021 treadmill review package with the shared streaming builder.
 
 This file is the UMich 2021 adapter and its launcher interface. The package layout and the builder are shared by every dataset:
 contributor_tools/common/release_package.py, layout in contributor_tools/DATA_CONTRACT.md ("Release package"). What is UM21
 specific here: the input roots and their hash checks against the launcher receipt, the exclusions inherited from the v2 bundle,
 the structured assessment entries (UM21-Q01 v3) and the limitation entries. The legacy builder run_um21_r01_bundle.py (layout
 um21_r01_review_v2) is kept as history and is not used.
+
+v4 changes only the three joint power columns (and what the assessment says about them): hip, knee and ankle power are the
+published moment times LocoHub's own joint angular velocity (hip = thigh - pelvis speed, knee = thigh - shank speed, ankle =
+foot - shank speed, from the package's own segment velocity columns); missing moment or speed gives missing power; source
+power values are not carried over. The recomputation is applied through Part.transform with contributor_tools/common/joint_power.py.
 
 Inputs (all hash-checked against the clean launcher receipt of the UM21-Q01 v3 full job before the build):
   UM21-Q01 v3 root   um21_q01v3_full: the composed table parts (one per recording, v2 identity/moments/powers plus S02 v7
@@ -46,14 +51,27 @@ def _load_shared():
     return mod
 
 
+JOINT_POWER = "contributor_tools/common/joint_power.py"
 rp = _load_shared()
+
+
+def _load_power():
+    path = ROOT / JOINT_POWER
+    spec = importlib.util.spec_from_file_location("joint_power", path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["joint_power"] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+jp = _load_power()
 
 TASK_ID = "UM21-R01"
 RUNNER = "contributor_tools/run_um21_r01_package.py"
 SHARED = "contributor_tools/common/release_package.py"
 Q01_RUNNER = "contributor_tools/run_um21_q01v3_assessment.py"
-VERSION = "v3"
-ATTEMPT = "a3"  # job file names only; a1 stopped before reading data (receipt root comparison); a2 not clean (a foreign worker started during the run) and text edited after
+VERSION = "v4"
+ATTEMPT = "a1"  # job file names only; a1 stopped before reading data (receipt root comparison); a2 not clean (a foreign worker started during the run) and text edited after
 BASE = "converted_datasets/reconversion_v2"
 AUDITS = "docs/quality/audits"
 Q01_ROOT = f"{BASE}/um21_q01v3_full"
@@ -69,11 +87,24 @@ EXPECTED_FULL = {"observations": 7545, "phase_rows": 1131750, "recordings": 44, 
                  "sudden_jump_exclusions": 2, "upstream_total_observations": 7562, "cop_legs_published": 60,
                  "cop_legs_held": 28}
 
+POWER_SPECS = (
+    jp.PowerSpec("hip_flexion_power_ipsi_W_kg", "hip_flexion_moment_ipsi_Nm_kg",
+                 (("thigh_sagittal_velocity_ipsi_rad_s", 1), ("pelvis_sagittal_velocity_rad_s", -1))),
+    jp.PowerSpec("knee_flexion_power_ipsi_W_kg", "knee_flexion_moment_ipsi_Nm_kg",
+                 (("thigh_sagittal_velocity_ipsi_rad_s", 1), ("shank_sagittal_velocity_ipsi_rad_s", -1))),
+    jp.PowerSpec("ankle_dorsiflexion_power_ipsi_W_kg", "ankle_dorsiflexion_moment_ipsi_Nm_kg",
+                 (("foot_sagittal_velocity_ipsi_rad_s", 1), ("shank_sagittal_velocity_ipsi_rad_s", -1))))
+POWER_COLUMNS = tuple(x.power for x in POWER_SPECS)
+POWER_MISSING_REASON = "power missing: the moment or the joint speed is missing in this observation"
+GAP_FIELDS = ["power_column", "observations", "observations_compared", "median_nrms", "p90_nrms", "pooled_nrms", "rows_both_finite",
+              "rows_source_finite", "rows_new_finite", "rows_source_only_finite", "rows_new_only_finite",
+              "observations_source_finite_new_all_missing", "observations_source_all_missing_new_finite"]
+
 PREVIEW_COLUMNS = ("pelvis_sagittal_angle_rad", "thigh_sagittal_angle_ipsi_rad", "shank_sagittal_angle_ipsi_rad",
                    "foot_sagittal_angle_ipsi_rad", "hip_flexion_angle_ipsi_rad", "knee_flexion_angle_ipsi_rad",
                    "ankle_dorsiflexion_angle_ipsi_rad", "hip_flexion_moment_ipsi_Nm_kg", "knee_flexion_moment_ipsi_Nm_kg",
                    "ankle_dorsiflexion_moment_ipsi_Nm_kg", "cop_anterior_ipsi_m", "cop_vertical_ipsi_m", "cop_lateral_ipsi_m")
-UNCHECKED_FAMILIES = ("joint velocities", "joint moments", "joint powers",
+UNCHECKED_FAMILIES = ("joint velocities", "joint moments", "joint powers (recomputed as moment times speed, not limit-checked)",
                       "range of pelvis, thigh, shank and foot angles (jump check only)")
 COP_FIELDS = ["recording", "leg", "status", "strides", "reasons", "holdout_ankle_moment_r", "toe_off_within_4cm_fraction",
               "plate_assignment_same_plate_fraction", "loaded_fraction", "pending_by_ruling", "label"]
@@ -96,8 +127,13 @@ CORRECTED_COP_TEXT = (
     "held_signals.")
 
 LIMITATION_TEXT = {
-    "moments_powers_from_v2": ("Moments and powers are carried from the earlier v2 bundle unchanged. They were not recomputed "
-                               "from the new marker angles."),
+    "moments_from_v2": ("Moments are carried from the earlier v2 bundle unchanged. They were not recomputed from the new "
+                        "marker angles (moments do not depend on the angles)."),
+    "power_from_moment_and_speed": ("Hip, knee and ankle power are the published moment times LocoHub's own joint angular "
+                                    "velocity (hip = thigh minus pelvis speed, knee = thigh minus shank speed, ankle = foot minus "
+                                    "shank speed; knee moment is the flexor moment, knee speed is flexion-positive), as decided on "
+                                    "24 November 2026 (D-REF-5). The v2 source power values are not carried over. Power is missing "
+                                    "wherever the moment or a speed is missing; held centre of pressure does not hold power."),
     "knee_marker_labels_swapped": ("Knee marker names: in this source the marker named KNEM lies on the lateral side of the knee "
                                    "and KNE on the medial side (checked on every leg of every recording; lateral minus medial "
                                    "distance from the pelvis midline at least 0.110 m). This is the reverse of the usual reading of the "
@@ -110,8 +146,6 @@ LIMITATION_TEXT = {
                      "pass the gate (reason in held_signals)."),
     "cop_held_pending_ruling": ("Held-back data stays pending as it is (ruling): the i10 recordings of AB01, AB02 and AB03, "
                                 "AB04/d10 and AB10/d5 are not investigated further; their centre of pressure stays held."),
-    "powers_held_sign_unsettled": ("Joint powers are held (present but missing) where only one evidence family agreed on the sign "
-                                   "layout (D-UM21-T04-3 = B)."),
     "angle_columns_missing_in_stride": ("Some angle columns are missing for this stride because a marker is not visible in its "
                                         "window, or the pelvis disagrees with the marker pelvis by more than 1 degree; nothing "
                                         "is filled."),
@@ -119,11 +153,15 @@ LIMITATION_TEXT = {
                           "from the walking direction, so the leg's plane-dependent columns are held."),
 }
 LIMITATION_TITLES = {
-    "moments_powers_from_v2": "Moments and powers carried from the v2 bundle", "knee_marker_labels_swapped": "Knee marker names reversed in the source",
+    "moments_from_v2": "Moments carried from the v2 bundle", "power_from_moment_and_speed": "Power recomputed as moment times joint speed", "knee_marker_labels_swapped": "Knee marker names reversed in the source",
     "cop_estimated_plate_position": "Centre of pressure on an estimated plate position",
     "cop_held_leg": "Centre of pressure held (leg did not pass the gate)",
-    "cop_held_pending_ruling": "Held-back recordings left pending", "powers_held_sign_unsettled": "Joint powers held (sign unsettled)",
+    "cop_held_pending_ruling": "Held-back recordings left pending",
     "angle_columns_missing_in_stride": "Angle columns missing for a stride", "plane_glitch_hold": "Plane-glitch hold (rule P1)"}
+
+
+def _obsolete(reason):
+    return reason.startswith("held: sign unsettled")
 
 
 # ------------------------------------------------------------------ small helpers
@@ -151,7 +189,7 @@ def verify_inputs():
 
 
 def bound_files():
-    b = [RUNNER, SHARED, Q01_RUNNER, Q01_RECEIPT, S02_RECEIPT, V2_EXCLUSIONS, *HANDOFFS]
+    b = [RUNNER, SHARED, JOINT_POWER, Q01_RUNNER, Q01_RECEIPT, S02_RECEIPT, V2_EXCLUSIONS, *HANDOFFS]
     return {k: rp.sha256_file(ROOT / k) for k in b}
 
 
@@ -236,6 +274,7 @@ class UM21Adapter(rp.ReleaseAdapter):
         self.release_id = VERSION
         self._inputs, self._bound = {}, {}
         self.assessment, self._v2_rows = {}, []
+        self.stats, self.presence = jp.GapStats(), {}
 
     def prepare(self):
         self._inputs = verify_inputs()
@@ -248,6 +287,8 @@ class UM21Adapter(rp.ReleaseAdapter):
         if not set(self.recordings) <= have:
             raise ValueError("a requested recording is not in the Q01 v3 job")
         print("inputs verified against the Q01 v3 receipt", flush=True)
+        self.presence = jp.merge_presence([jp.scan_presence(p.path, POWER_SPECS) for p in self.table_parts("phase")])
+        print(f"power presence scanned for {len(self.presence)} observations", flush=True)
 
     def input_hashes(self):
         return self._inputs
@@ -259,7 +300,12 @@ class UM21Adapter(rp.ReleaseAdapter):
         return {k: v for k, v in self._inputs.items() if k.endswith(("observations.jsonl", "failures.jsonl", "assessment.json"))}
 
     def table_parts(self, table):
-        return [rp.Part(ROOT / Q01_ROOT / "parts" / f"{r.replace('/', '_')}.parquet", SOURCE_LABEL) for r in self.recordings]
+        return [rp.Part(ROOT / Q01_ROOT / "parts" / f"{r.replace('/', '_')}.parquet", SOURCE_LABEL, transform=self._transform)
+                for r in self.recordings]
+
+    def _transform(self, t):
+        t = jp.recompute(t, POWER_SPECS, self.stats)
+        return jp.rewrite_held_column(t, POWER_COLUMNS, self.presence, POWER_MISSING_REASON, json.dumps, _obsolete)
 
     def _selected(self, oid_recording):
         return oid_recording in {recording_id(r) for r in self.recordings}   # small set (at most 44)
@@ -267,7 +313,16 @@ class UM21Adapter(rp.ReleaseAdapter):
     def assessment_entries(self):
         for e in read_jsonl(ROOT / Q01_ROOT / "observations.jsonl"):
             if self._selected(e["source_recording_id"]):
-                yield e
+                yield self._power_entry(e)
+
+    def _power_entry(self, e):
+        pres = self.presence[(e["observation_id"], e["reference_side"])]
+        e = dict(e)
+        e["held_signals"] = jp.adjust_held(e["held_signals"], pres, POWER_COLUMNS, POWER_MISSING_REASON, _obsolete)
+        e["channel_states"] = jp.adjust_states(e["channel_states"], pres, POWER_COLUMNS, "unchecked", "unchecked_all_missing")
+        lims = [x for x in e["limitations"] if x not in ("moments_powers_from_v2", "powers_held_sign_unsettled")]
+        e["limitations"] = ["moments_from_v2", "power_from_moment_and_speed"] + lims
+        return e
 
     def exclusion_rows(self):
         return [x for x in inherited_exclusion_rows(self._v2_rows) if self._selected(x["source_recording_id"])]
@@ -281,7 +336,8 @@ class UM21Adapter(rp.ReleaseAdapter):
         sel = set(self.recordings)
         return {"cop_legs.csv": (COP_FIELDS, [r for r in cop_leg_rows(self.assessment) if r["recording"] in sel]),
                 "plane_glitch_legs.csv": (GLITCH_FIELDS, [r for r in glitch_leg_rows(self.assessment) if r["recording"] in sel]),
-                "assessment_failure_samples.csv": (FAILURE_FIELDS, failures())}
+                "assessment_failure_samples.csv": (FAILURE_FIELDS, failures()),
+                "power_recompute_gap.csv": (GAP_FIELDS, [{"power_column": c, **v} for c, v in self.stats.summary().items()])}
 
     def limitations(self, entries):
         out = []
@@ -292,6 +348,11 @@ class UM21Adapter(rp.ReleaseAdapter):
                 x["legs_published"], x["legs_held"], x["legs_total"] = n_pub, n_held, n_legs
             if flag == "cop_held_pending_ruling":
                 x["recordings_named"] = sorted(self.assessment["cop_legs"]["pending_by_ruling_recordings"])
+            if flag == "power_from_moment_and_speed":
+                x["gap_source_power_vs_moment_times_speed"] = {
+                    "definition": "per observation sqrt(sum (source - new)^2 / sum new^2) over rows where both are finite; median "
+                                  "over observations; after the change the gap is zero by construction (checked to 1e-12 by the readback)",
+                    **self.stats.summary()}
             out.append(x)
         out.append({"id": "plate_position_fitted", "title": "Plate position fitted, not measured", "text": CORRECTED_COP_TEXT,
                     "observations": len(entries), "gate": self.assessment["cop_legs"]["rule"]})
@@ -300,8 +361,9 @@ class UM21Adapter(rp.ReleaseAdapter):
     def readme_sections(self):
         return [("Foot-frame centre of pressure", CORRECTED_COP_TEXT),
                 ("Where the data come from",
-                 "UMich 2021 treadmill recordings (Streaming.mat). Identity, task labels, source clocks, joint moments and joint "
-                 "powers come from the earlier v2 review bundle unchanged. Segment and joint angles, velocities and the foot-frame "
+                 "UMich 2021 treadmill recordings (Streaming.mat). Identity, task labels, source clocks and joint moments "
+                 "come from the earlier v2 review bundle unchanged. Joint powers are recomputed here as the moment times the "
+                 "joint angular velocity (D-REF-5, 24 November 2026); the v2 power values are not carried over. Segment and joint angles, velocities and the foot-frame "
                  "centre of pressure come from the verified S02 v7 conversion (angles measured from markers in each leg's own "
                  "side-view plane; joint angles are differences of segment angles). The structured assessment is UM21-Q01 v3 "
                  "(coarse limits written before any data were read; draft, not approved reference ranges; D-UM21-Q01-1 = B). "
@@ -328,6 +390,9 @@ class UM21Adapter(rp.ReleaseAdapter):
             ("U3", "legs with a published centre of pressure and legs held equal the Q01 v3 verdicts", [a_pub, a_held], [n_pub, n_held]),
             ("U4", "no time table in the package (UMich 2021 has no time-indexed export)", ["phase"], counts["tables"]),
             ("U5", "every observation has exactly 150 rows (phase table)", counts["observations_full"] * 150, counts["full"]["phase_rows"]),
+            ("U7", "finite power rows in the written full table equal the rows where moment and joint speed were both finite",
+             {c: v["rows_new_finite"] for c, v in sorted(self.stats.summary().items())},
+             {c: ctx["readback"][("full", "phase")]["finite"][c] for c in sorted(POWER_COLUMNS)}),
         ]
         if self.stage == "full":
             checks.append(("U6", "the causes of the assessment failures equal the causes recorded by the Q01 v3 job",
@@ -388,7 +453,7 @@ def check_pilot(rel):
     cmd = r["spec"]["command"]
     if "--stage" not in cmd or cmd[cmd.index("--stage") + 1] != "pilot":
         raise SystemExit("refused: the receipt is not a pilot run")
-    for f in (RUNNER, SHARED, Q01_RUNNER):
+    for f in (RUNNER, SHARED, Q01_RUNNER, JOINT_POWER):
         if r["spec"]["bindings"].get(f) != rp.sha256_file(ROOT / f):
             raise SystemExit(f"refused: the pilot ran different code than the current {f}")
 

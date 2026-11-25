@@ -59,8 +59,8 @@ def test_cop_leg_rows_and_glitch_rows_from_an_assessment_shape():
 
 def test_limitation_texts_exist_for_every_flag_the_assessment_can_emit():
     from contributor_tools import run_um21_q01v3_assessment as q
-    emitted = {"moments_powers_from_v2", "knee_marker_labels_swapped", "cop_estimated_plate_position", "cop_held_leg",
-               "cop_held_pending_ruling", "powers_held_sign_unsettled", "angle_columns_missing_in_stride", "plane_glitch_hold"}
+    emitted = {"moments_from_v2", "power_from_moment_and_speed", "knee_marker_labels_swapped", "cop_estimated_plate_position",
+               "cop_held_leg", "cop_held_pending_ruling", "angle_columns_missing_in_stride", "plane_glitch_hold"}
     assert emitted == set(r01.LIMITATION_TEXT) == set(r01.LIMITATION_TITLES)
     assert q.PENDING_BY_RULING == {"AB01/i10", "AB02/i10", "AB03/i10", "AB04/d10", "AB10/d5"}
 

@@ -25,7 +25,7 @@
 <h3><a href="#UM21-X01">UM21-X01 — Inventory omitted UMich markers, forceplates and transfer correspondence</a></h3><p>um21 · P1 · Source inventory</p><p>Which omitted source measurements can be restored without inventing clocks or pairing?</p><p><strong>Start here:</strong> Inventory source channel metadata and propose one bounded source-preserving pilot; defer bilateral pairing/derivatives until exact correspondence is proven.</p>
 <p>Read the task’s inputs and handoff before starting. This page does not start jobs or change task states.</p></section>
 <h2 id="tasks">All tasks</h2>
-<details><summary>View all 122 tasks — 8 ready, 0 in progress, 50 blocked, 1 awaiting review, 63 done</summary>
+<details><summary>View all 123 tasks — 8 ready, 0 in progress, 50 blocked, 2 awaiting review, 63 done</summary>
 <div class="table-scroll"><table><caption>Maintained task states, not live process monitoring</caption><thead><tr><th>Task</th><th>Dataset</th><th>Priority</th><th>Status</th><th>Stage</th><th>Depends on</th></tr></thead><tbody>
 <tr><th scope="row"><a href="#PM-01">PM-01: Inspect stopped jobs and prepare one safe pilot handoff</a></th><td>project</td><td>P0</td><td>Done</td><td>Operations</td><td>—</td></tr>
 <tr><th scope="row"><a href="#PM-02">PM-02: Reconcile every retained job with a current disposition</a></th><td>project</td><td>P0</td><td>Done</td><td>Operations</td><td>—</td></tr>
@@ -149,6 +149,7 @@
 <tr><th scope="row"><a href="#DOC-06">DOC-06: Fix the user-facing site and add a landing path for new dataset pages</a></th><td>all</td><td>P1</td><td>Review</td><td>Documentation</td><td>—</td></tr>
 <tr><th scope="row"><a href="#GT23-E02">GT23-E02: Fix angle wraps, hold step-up pressure point, re-assess</a></th><td>gt23</td><td>P1</td><td>Done</td><td>Conversion</td><td><a href="#GT23-E01">GT23-E01</a>, <a href="#GT23-Q01">GT23-Q01</a></td></tr>
 <tr><th scope="row"><a href="#GT23-PL01">GT23-PL01: Rerun GT23 angles, export, holds and assessment under the side-view plane rule (D-REF-4)</a></th><td>gt23</td><td>P1</td><td>Done</td><td>Conventions</td><td><a href="#GT23-E02">GT23-E02</a></td></tr>
+<tr><th scope="row"><a href="#CORE-PW01">CORE-PW01: Recompute joint power as moment x joint velocity in the UM21 (v4) and GT23 (v11) packages (D-REF-5)</a></th><td>core</td><td>P1</td><td>Review</td><td>Release</td><td><a href="#UM21-R01">UM21-R01</a>, <a href="#GT23-R01">GT23-R01</a></td></tr>
 </tbody></table></div></details>
 <h2 id="datasets">Dataset status</h2>
 <div class="table-scroll"><table><thead><tr><th>Dataset</th><th>Current state</th><th>Still needed</th></tr></thead><tbody>
@@ -2148,6 +2149,20 @@
 <p><strong>Checks completed</strong></p><ul><li>pytest tests/test_gt23_c06.py 25 pass</li><li>composition 4.4e-16 rad on 488</li><li>second implementation 8.9e-16 rad / 1.7e-16 m</li><li>code hashes frozen between pilots and batches</li></ul>
 <p><strong>Still needed</strong></p><ul><li>Independent verifier for step 1</li><li>E01 rerun</li><li>E02 rerun</li><li>Q01 v2</li><li>final verifier</li></ul>
 <p><strong>Changed files</strong></p><ul><li><code>contributor_tools/gt23_conventions.py</code></li><li><code>contributor_tools/gt23_conventions_check.py</code></li><li><code>contributor_tools/run_gt23_c06.py</code></li><li><code>contributor_tools/report_gt23_planes.py</code></li><li><code>tests/test_gt23_c06.py</code></li><li><a href="handoffs/GT23-PL01.json"><code>docs/maintainers/handoffs/GT23-PL01.json</code></a></li><li><code>docs/quality/audits/gt23-planes-*</code></li><li><a href="backlog.json"><code>docs/maintainers/backlog.json</code></a></li><li><a href="backlog.html"><code>docs/maintainers/backlog.html</code></a></li></ul>
+</details>
+<details id="CORE-PW01"><summary>CORE-PW01 — Recompute joint power as moment x joint velocity in the UM21 (v4) and GT23 (v11) packages (D-REF-5) · Review</summary>
+<p><strong>Question:</strong> Do the UM21 and GT23 packages carry power equal to the published moment times LocoHub&#x27;s own joint velocity?</p>
+<p><strong>Scope:</strong> Hip, knee and ankle flexion power only; every other column, the variants, exclusions and assessment verdicts unchanged.</p>
+<p><strong>Next action:</strong> Independent verifier: check acceptance against the two readback receipts and the handoff.</p>
+<p><strong>Depends on:</strong> <a href="#UM21-R01">UM21-R01</a>, <a href="#GT23-R01">GT23-R01</a> · <strong>Resources:</strong> Numerical</p>
+<h4>Inputs</h4><ul><li><code>contributor_tools/common/release_package.py</code></li><li><code>contributor_tools/run_um21_r01_package.py</code></li><li><code>contributor_tools/run_gt23_r01_bundle.py</code></li></ul>
+<h4>Deliverables</h4><ul><li>contributor_tools/common/joint_power.py and a Part.transform hook in the shared builder</li><li>UM21 package v4 and GT23 package v11 (new directories; v3 and v10 marked superseded, not deleted)</li><li>Independent readback of each package against its predecessor</li></ul>
+<h4>Acceptance checks</h4><ul><li>power equals moment x velocity to 1e-12 wherever both inputs are finite, and is missing otherwise</li><li>every non-power source column is bit-identical to the previous package</li><li>hashes in the manifest match the files</li><li>before/after power gap per joint recorded in limitations.json</li></ul>
+<h4>Evidence</h4><ul><li><a href="handoffs/CORE-PW01.json"><code>docs/maintainers/handoffs/CORE-PW01.json</code></a></li><li><code>converted_datasets/reconversion_v2/um21_r01_package_v4/manifest.json</code></li><li><code>converted_datasets/reconversion_v2/gt23_r01_review_v11/manifest.json</code></li><li><a href="../quality/audits/core-pw01-readback-um21-v4-a2-launcher-receipt.json"><code>docs/quality/audits/core-pw01-readback-um21-v4-a2-launcher-receipt.json</code></a></li><li><a href="../quality/audits/core-pw01-readback-gt23-v11-a3-launcher-receipt.json"><code>docs/quality/audits/core-pw01-readback-gt23-v11-a3-launcher-receipt.json</code></a></li></ul>
+<h4>Latest handoff</h4><p>UM21 v4 and GT23 v11 built through the shared builder (pilot, freeze, full, all clean); both readbacks pass.</p>
+<p>Checked <time datetime="2026-11-25T00:10:27.823646+00:00">2026-11-25T00:10:27.823646+00:00</time>.</p>
+<p><strong>Checks completed</strong></p><ul><li>Synthetic unit tests pass (tests/test_joint_power.py).</li><li>UM21 v4 pilot, full and readback: clean, all checks pass.</li><li>GT23 v11 pilot, full and readback: clean, all checks pass.</li></ul>
+<p><strong>Still needed</strong></p><ul><li>Independent verification by a second agent.</li></ul>
 </details>
 <section id="workflow"><h2>Working rules</h2>
 <h3>Choosing work</h3>

@@ -155,6 +155,7 @@ class Part:
     label: str
     drop_recordings: frozenset = frozenset()
     expect_recordings: Optional[frozenset] = None
+    transform: Optional[Any] = None  # optional callable(pyarrow Table) -> Table with the same schema, applied to the kept rows
 
 
 class ReleaseAdapter:
@@ -360,6 +361,10 @@ def stream_part(part, table_name, q, ctx, sinks, state):
             if not keep.any():
                 continue
             t = pa.Table.from_batches([batch]).filter(pa.array(keep))
+            if part.transform is not None:
+                t = part.transform(t)
+                if not t.schema.equals(batch.schema):
+                    raise PackageError(f"{part.path}: the part transform changed the schema")
             ql = [x for x, k in zip(quality, keep) if k]
             cl = [x for x, k in zip(causes, keep) if k]
             ll = [x for x, k in zip(lims, keep) if k]
@@ -609,7 +614,7 @@ def build_package(adapter, out_dir, *, stage, started=None, rss_cap_mib=RSS_CAP_
     fe = lambda v, t: rb[(v, t)]  # noqa: E731
     failed_rows = {t: sum(e["rows"] for e in failed_entries if e["table"] == t) for t in tables}
     q_rows = {t: sum(e["rows"] for e in entries if e["table"] == t) for t in tables}
-    ctx_checks = {"counts": counts, "by_kind": dict(by_kind), "part_observations": dict(part_obs), "entries": entries,
+    ctx_checks = {"readback": rb, "counts": counts, "by_kind": dict(by_kind), "part_observations": dict(part_obs), "entries": entries,
                   "problems": problems}
     checks = [
         ("T1", "every phase observation has exactly 150 rows on the inclusive 0-100 grid, every time observation is sorted with "

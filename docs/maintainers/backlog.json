@@ -8288,6 +8288,59 @@
         ],
         "final_verification": "Independent verifier steps 1 to 4: pass_with_flags (docs/maintainers/handoffs/GT23-PL01-verify.json). Receipts clean and frozen; E01 recompute of 10 observations to 3e-13; counts 8,831 / 10,254 / 488 / 1,415 confirmed; E02 holds exactly 12 step-ups (foot-frame CoP only) and one AB13 dynamic_walk_1 sample (index 19258, one turn); AB10/AB11 unchanged; Q01 v2 L1/L2/L5 equal on AB03, AB05, AB01. L5 rise 90 to 108 is mostly marginal exceedances (median 1.3 cm); AB03 failures are real bad pressure points in every frame. Scientific approval none."
       }
+    },
+    {
+      "id": "CORE-PW01",
+      "priority": "P1",
+      "dataset": "core",
+      "title": "Recompute joint power as moment x joint velocity in the UM21 (v4) and GT23 (v11) packages (D-REF-5)",
+      "status": "review",
+      "stage": "release",
+      "question": "Do the UM21 and GT23 packages carry power equal to the published moment times LocoHub's own joint velocity?",
+      "scope": "Hip, knee and ankle flexion power only; every other column, the variants, exclusions and assessment verdicts unchanged.",
+      "depends_on": [
+        "UM21-R01",
+        "GT23-R01"
+      ],
+      "inputs": [
+        "contributor_tools/common/release_package.py",
+        "contributor_tools/run_um21_r01_package.py",
+        "contributor_tools/run_gt23_r01_bundle.py"
+      ],
+      "deliverables": [
+        "contributor_tools/common/joint_power.py and a Part.transform hook in the shared builder",
+        "UM21 package v4 and GT23 package v11 (new directories; v3 and v10 marked superseded, not deleted)",
+        "Independent readback of each package against its predecessor"
+      ],
+      "acceptance": [
+        "power equals moment x velocity to 1e-12 wherever both inputs are finite, and is missing otherwise",
+        "every non-power source column is bit-identical to the previous package",
+        "hashes in the manifest match the files",
+        "before/after power gap per joint recorded in limitations.json"
+      ],
+      "next_action": "Independent verifier: check acceptance against the two readback receipts and the handoff.",
+      "resource_class": "numerical",
+      "evidence_paths": [
+        "docs/maintainers/handoffs/CORE-PW01.json",
+        "converted_datasets/reconversion_v2/um21_r01_package_v4/manifest.json",
+        "converted_datasets/reconversion_v2/gt23_r01_review_v11/manifest.json",
+        "docs/quality/audits/core-pw01-readback-um21-v4-a2-launcher-receipt.json",
+        "docs/quality/audits/core-pw01-readback-gt23-v11-a3-launcher-receipt.json"
+      ],
+      "handoff": {
+        "last_checked_at_utc": "2026-11-25T00:10:27.823646+00:00",
+        "summary": "UM21 v4 and GT23 v11 built through the shared builder (pilot, freeze, full, all clean); both readbacks pass.",
+        "checks": [
+          "Synthetic unit tests pass (tests/test_joint_power.py).",
+          "UM21 v4 pilot, full and readback: clean, all checks pass.",
+          "GT23 v11 pilot, full and readback: clean, all checks pass."
+        ],
+        "remaining": [
+          "Independent verification by a second agent."
+        ],
+        "handoff_file": "docs/maintainers/handoffs/CORE-PW01.json",
+        "verification": "Not yet verified."
+      }
     }
   ],
   "decisions": [

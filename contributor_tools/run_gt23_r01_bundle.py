@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GT23-R01: build the local Georgia Tech 2023 review package (package only; no documentation page).
+"""GT23-R01 (v11: joint power recomputed as moment x joint velocity, D-REF-5): build the local Georgia Tech 2023 review package (package only; no documentation page).
 
 This file is the GT23 adapter and its launcher interface. The package layout and the streaming builder are shared by every
 dataset: contributor_tools/common/release_package.py, layout in contributor_tools/DATA_CONTRACT.md ("Release package").
@@ -8,6 +8,12 @@ authors' windows, the structured assessment entries (GT23-Q01 v2) in package for
 
 Decision D-GT23-R01-1 = B: strides and movements plus the continuous recordings, as separate files (one phase file and one
 time file per variant), not split per participant.
+
+v11 changes only the hip, knee and ankle (flexion) power columns and what the assessment says about them: power is the
+published moment times the package's own joint angular velocity column of the same leg (flexion-positive; the knee moment is the
+flexor moment); missing moment or velocity gives missing power; source power values are not carried over. Applied through
+Part.transform with contributor_tools/common/joint_power.py. Hip adduction, hip rotation and subtalar power stay as published
+(the package has no joint speed for them).
 
 Inputs (all hash-checked against the clean launcher receipts of the chain GT23-PL01):
   GT23-E01 batch roots   gt23_pl_e01_batch_ABxx
@@ -49,11 +55,24 @@ def _load_shared():
 
 
 rp = _load_shared()
+JOINT_POWER = "contributor_tools/common/joint_power.py"
+
+
+def _load_power():
+    path = ROOT / JOINT_POWER
+    spec = importlib.util.spec_from_file_location("joint_power", path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["joint_power"] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+jp = _load_power()
 
 TASK_ID = "GT23-R01"
 RUNNER = "contributor_tools/run_gt23_r01_bundle.py"
 SHARED = "contributor_tools/common/release_package.py"
-VERSION = "v10"  # v1-v9 were earlier pilots or failed full builds (memory); roots are not the frozen code
+VERSION = "v11"  # v1-v9 were earlier pilots or failed full builds (memory); roots are not the frozen code
 BASE = "converted_datasets/reconversion_v2"
 SUBJECTS = ("AB01", "AB02", "AB03", "AB05", "AB06", "AB07", "AB08", "AB09", "AB10", "AB11", "AB12", "AB13")
 PILOT_SUBJECTS = ("AB03", "AB13")  # AB03: side_shuffle_1 failures and E02 step_ups; AB13: E02 dynamic_walk_1 and a held right leg
@@ -79,6 +98,18 @@ EXPECTED_FULL = {"phase_rows": 2862750, "time_rows": 6397787, "phase_observation
                  "authors_windows_exported": 9378, "estimated_mass_recordings": 45, "exact_mass_recordings": 7,
                  "recordings_replaced_by_e02": 13}
 
+JOINTS = ("hip_flexion", "knee_flexion", "ankle_dorsiflexion")
+POWER_SPECS = {"phase": tuple(jp.PowerSpec(f"{j}_power_{sd}_W_kg", f"{j}_moment_{sd}_Nm_kg", ((f"{j}_velocity_{sd}_rad_s", 1),))
+                              for sd in ("ipsi", "contra") for j in JOINTS),
+               "time": tuple(jp.PowerSpec(f"{j}_power_{sd}_W_kg", f"{j}_moment_{sd}_Nm_kg", ((f"{j}_velocity_{sd}_rad_s", 1),))
+                             for sd in ("left", "right") for j in JOINTS)}
+POWER_COLUMNS = {t: tuple(x.power for x in v) for t, v in POWER_SPECS.items()}
+POWER_MISSING_REASON = "power missing: the moment or the joint velocity is missing in this observation"
+HELD_DUMP = lambda d: json.dumps(d, sort_keys=True, separators=(",", ":"))  # noqa: E731  (the source format)
+GAP_FIELDS = ["table", "power_column", "observations", "observations_compared", "median_nrms", "p90_nrms", "pooled_nrms",
+              "rows_both_finite", "rows_source_finite", "rows_new_finite", "rows_source_only_finite", "rows_new_only_finite",
+              "observations_source_finite_new_all_missing", "observations_source_all_missing_new_finite"]
+
 PREVIEW_COLUMNS = ("pelvis_sagittal_angle_rad", "thigh_sagittal_angle_ipsi_rad", "shank_sagittal_angle_ipsi_rad",
                    "foot_sagittal_angle_ipsi_rad", "hip_flexion_angle_ipsi_rad", "knee_flexion_angle_ipsi_rad",
                    "ankle_dorsiflexion_angle_ipsi_rad", "hip_flexion_moment_ipsi_Nm_kg", "knee_flexion_moment_ipsi_Nm_kg",
@@ -94,6 +125,13 @@ CORRECTED_COP_TEXT = (
     "are kept unchanged as evidence and are superseded on this line only. The data were built under the 24 November rule.")
 
 LIMITATION_TEXT = {
+    "power_from_moment_and_speed": ("Hip, knee and ankle (flexion) power are the published moment times LocoHub's own joint angular "
+                                    "velocity of the same leg, as decided on 24 November 2026 (D-REF-5); the knee moment is the "
+                                    "flexor moment and the knee velocity is flexion-positive. The source power values are not "
+                                    "carried over. Power is missing wherever the moment or the velocity is missing; held centre "
+                                    "of pressure or angles do not hold power unless a velocity is missing."),
+    "other_powers_source_values": ("Hip adduction, hip rotation and subtalar power are the published source values: the package "
+                                   "carries no joint velocity for them, so they were not recomputed."),
     "step_up_cop_held": ("Step-up foot-frame pressure point is held (all missing): the foot stands on a step of about 0.5 m of "
                          "undocumented height on the plate, and the recorded plate height is the plate surface. Force and plate "
                          "pressure point stay."),
@@ -104,13 +142,13 @@ LIMITATION_TEXT = {
                                "AB07 ankle offset is the largest of the twelve participants (about -9 to -13 degrees); the cause "
                                "is unresolved. Left-foot values of AB07 are affected by a missing LMANK marker as listed per "
                                "recording."),
-    "mass_estimated": ("Per-kg moments and powers were multiplied by (mass used / own mass) for recordings where the publisher "
+    "mass_estimated": ("Per-kg moments (and so the recomputed powers) were multiplied by (mass used / own mass) for recordings where the publisher "
                        "divided by another participant's listed mass; the mass used is estimated from the force plates and matched "
                        "to the nearest listed mass (45 recordings)."),
     "ab09_divisor": ("AB09 divisor: the publisher divided these recordings by a mass the audit could not place among the listed "
                      "masses (no plausible listed mass inside the force-plate interval); the rescale used the nearest listed mass "
                      "(87.6 kg) and may be off by up to about 5 percent."),
-    "nm_rerun_limit": ("N*m re-run limit: moments and powers of these recordings were rescaled with an exact mass found by a "
+    "nm_rerun_limit": ("N*m re-run limit: moments (and so the recomputed powers) of these recordings were rescaled with an exact mass found by a "
                        "local N*m inverse-dynamics re-run; that re-run exists for 7 recordings only. Every other recording is "
                        "estimated, kept as published, or cannot be told."),
     "window_span_both_legs": ("Window-rule spans (transfers) have no single leg: each accepted span is exported for the left and "
@@ -123,7 +161,7 @@ LIMITATION_TEXT = {
     "run_label_check": ("Cycles with task run (2.0 and 2.5 m/s) are labelled run, while the publisher README describes these "
                         "recordings as walking; some of these cycles show a flight phase (both feet unloaded)."),
 }
-UNCHECKED_FAMILIES = ("joint velocities", "joint moments", "joint powers", "ground reaction forces (N and body weight)",
+UNCHECKED_FAMILIES = ("joint velocities", "joint moments", "joint powers (flexion powers recomputed as moment times velocity, not limit-checked)", "ground reaction forces (N and body weight)",
                       "lab-axis pressure point", "heading", "subtalar angle, moment and power",
                       "hip adduction/rotation moments and powers")
 
@@ -178,7 +216,7 @@ def verify_inputs(subject):
 
 
 def bound_files():
-    b = [RUNNER, SHARED, Q01_SUMMARY, *CHAIN_SUMMARIES, *HANDOFFS]
+    b = [RUNNER, SHARED, JOINT_POWER, Q01_SUMMARY, *CHAIN_SUMMARIES, *HANDOFFS]
     for s in SUBJECTS:
         b += [E01_RECEIPT.format(s), E02_RECEIPT.format(s), Q01_RECEIPT.format(s)]
     return {k: rp.sha256_file(ROOT / k) for k in b}
@@ -253,6 +291,7 @@ class GT23Adapter(rp.ReleaseAdapter):
         self._inputs, self._bound = {}, {}
         self.sup, self.windows, self.recordings, self.replaced = {}, [], [], {}
         self._excl, self._window_rows, self.problems = [], [], []
+        self.stats, self.presence = jp.GapStats(), {}
 
     def prepare(self):
         """Hash and check every input against its receipt, then load the small evidence files."""
@@ -284,6 +323,28 @@ class GT23Adapter(rp.ReleaseAdapter):
                                           "row": w["row"], "key": w["key"], "side": w["side"], "segment_index": w["segment_index"],
                                           "start_s": w["start"], "end_s": w["end"], "status": w["status"], "fate": w["fate"],
                                           "reason": w["reason"] or "", "observation_ids": ";".join(w["observations"])})
+        self._scan()
+
+    def _scan(self):
+        for table in ("phase", "time"):
+            maps = [jp.scan_presence(p.path, POWER_SPECS[table], skip_recordings=p.drop_recordings) for p in self.table_parts(table)]
+            self.presence[table] = jp.merge_presence(maps)
+            print(f"power presence scanned for {len(self.presence[table])} {table} observations", flush=True)
+
+    def _transform(self, table):
+        def f(t):
+            t = jp.recompute(t, POWER_SPECS[table], self.stats)
+            return jp.rewrite_held_column(t, POWER_COLUMNS[table], self.presence[table], POWER_MISSING_REASON, HELD_DUMP)
+        return f
+
+    def _power_entry(self, e):
+        pres = self.presence[e["table"]][(e["observation_id"], e["reference_side"])]
+        cols = POWER_COLUMNS[e["table"]]
+        e = dict(e)
+        e["held_signals"] = jp.adjust_held(e["held_signals"], pres, cols, POWER_MISSING_REASON)
+        e["channel_states"] = jp.adjust_states(e["channel_states"], pres, cols, "unchecked", "not_checked_no_column")
+        e["limitations"] = ["power_from_moment_and_speed", "other_powers_source_values"] + list(e["limitations"])
+        return e
 
     def input_hashes(self):
         return self._inputs
@@ -300,15 +361,17 @@ class GT23Adapter(rp.ReleaseAdapter):
         parts = []
         for s in self.subjects:
             full = frozenset(f"{s}/{n}" for n in self.sup[s])
-            parts.append(rp.Part(ROOT / rec_path(s, "e01") / f"{table}.parquet", "GT23-E01", drop_recordings=full))
-            parts.append(rp.Part(ROOT / rec_path(s, "e02") / f"{table}.parquet", "GT23-E02", expect_recordings=full))
+            parts.append(rp.Part(ROOT / rec_path(s, "e01") / f"{table}.parquet", "GT23-E01", drop_recordings=full,
+                                 transform=self._transform(table)))
+            parts.append(rp.Part(ROOT / rec_path(s, "e02") / f"{table}.parquet", "GT23-E02", expect_recordings=full,
+                                 transform=self._transform(table)))
         return parts
 
     def assessment_entries(self):
         for s in self.subjects:
             with open(ROOT / rec_path(s, "q01") / "observations.jsonl") as f:
                 for line in f:
-                    yield package_entry(json.loads(line))
+                    yield self._power_entry(package_entry(json.loads(line)))
 
     def exclusion_rows(self):
         return self._excl
@@ -322,7 +385,10 @@ class GT23Adapter(rp.ReleaseAdapter):
                         if set(r) - set(FAILURE_FIELDS):
                             raise ValueError(f"{s}: unexpected failure fields {sorted(set(r) - set(FAILURE_FIELDS))}")
                         yield {k: r.get(k, "") for k in FAILURE_FIELDS}
+        gap = [{"table": t, "power_column": c, **v} for c, v in self.stats.summary().items()
+               for t in ("phase", "time") if c in POWER_COLUMNS[t]]
         return {"authors_windows.csv": (WINDOW_FIELDS, self._window_rows),
+                "power_recompute_gap.csv": (GAP_FIELDS, gap),
                 "assessment_failure_samples.csv": (FAILURE_FIELDS, failures())}
 
     def limitations(self, entries):
@@ -345,7 +411,9 @@ class GT23Adapter(rp.ReleaseAdapter):
                 "failed_samples_by_channel": dict(samples),
                 "observations_with_foot_frame_cop_held": sum(1 for e in ab03 if e["attributes"].get("foot_cop_held")),
                 "in_filtered_variant": len(ab03) - len(ab03_failed)}]
-        titles = [("step_up_cop_held", "Step-up foot-frame pressure point held"), ("curb_up_cop_held", "curb_up foot-frame pressure point held"),
+        titles = [("power_from_moment_and_speed", "Flexion power recomputed as moment times velocity"),
+                  ("other_powers_source_values", "Hip adduction, hip rotation and subtalar power kept as published"),
+                  ("step_up_cop_held", "Step-up foot-frame pressure point held"), ("curb_up_cop_held", "curb_up foot-frame pressure point held"),
                   ("ab07_right_foot_offset", "AB07 right-foot marker offset"), ("mass_estimated", "Estimated mass factors"),
                   ("ab09_divisor", "AB09 divisor"), ("nm_rerun_limit", "N*m re-run limit"),
                   ("window_span_both_legs", "Window spans exported for both legs"),
@@ -354,6 +422,11 @@ class GT23Adapter(rp.ReleaseAdapter):
                   ("run_label_check", "Cycles labelled run (2.0 and 2.5 m/s)")]
         for flag, title in titles:
             x = {"id": flag, "title": title, "text": LIMITATION_TEXT[flag], **lim[flag]}
+            if flag == "power_from_moment_and_speed":
+                x["gap_source_power_vs_moment_times_velocity"] = {
+                    "definition": "per observation sqrt(sum (source - new)^2 / sum new^2) over rows where both are finite; median "
+                                  "over observations; after the change the gap is zero by construction (checked to 1e-12 by the readback)",
+                    **self.stats.summary()}
             if flag == "mass_estimated":
                 x["recordings_from_recordings_jsonl"] = n_est
             if flag == "nm_rerun_limit":
@@ -386,6 +459,9 @@ class GT23Adapter(rp.ReleaseAdapter):
              n_windows - n_exported, ctx["by_kind"].get("authors_window_not_exported", 0)),
             ("G3", "E02 supplied exactly the observations of the recordings it replaced, and no E01 row of those recordings was kept",
              e02_expected, ctx["part_observations"].get("GT23-E02", 0)),
+            ("G6", "finite power rows in the written full tables equal the rows where moment and joint velocity were both finite",
+             {c: v["rows_new_finite"] for c, v in sorted(self.stats.summary().items())},
+             {c: ctx["readback"][("full", t)]["finite"][c] for t in ("phase", "time") for c in sorted(POWER_COLUMNS[t])}),
             ("G4", "E01 and E02 agree on authors windows, export exclusions and recording lists for the replaced recordings",
              [], self.problems),
         ]
@@ -450,7 +526,7 @@ def check_pilot(rel):
     cmd = r["spec"]["command"]
     if "--stage" not in cmd or cmd[cmd.index("--stage") + 1] != "pilot":
         raise SystemExit("refused: the receipt is not a pilot run")
-    for f in (RUNNER, SHARED):
+    for f in (RUNNER, SHARED, JOINT_POWER):
         if r["spec"]["bindings"].get(f) != rp.sha256_file(ROOT / f):
             raise SystemExit(f"refused: the pilot ran different code than the current {f}")
 
