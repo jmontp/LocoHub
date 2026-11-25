@@ -336,3 +336,45 @@ def test_authors_rules_equal_the_text_of_strides_m_on_random_sequences():
             mine = sg.authors_class(mode, seq, meta['trans_leg_ascent'], meta['trans_leg_descent'], meta['leading_leg_start'],
                                     meta['leading_leg_stop'], meta['turn'])
             assert rb.oracle_class(mode, seq, meta) == mine, (mode, seq, meta)
+
+
+# ---- GT21-RB06: treadmill left ToeOff copied from the right leg (synthetic) ---------------------------------------
+def _treadmill_recording(copy_toe):
+    gc, table = make_recording(None)
+    _, to_r = sawtooth([550, 850, 1150, 1450, 1750, 2050], 4000)           # made-up toe-off percentage with drops
+    gc['right']['ToeOff'] = to_r
+    gc['left']['ToeOff'] = to_r.copy() if copy_toe else sawtooth([620, 920, 1220, 1520, 1820, 2120], 4000)[1]
+    return gc, table
+
+
+def test_left_toe_off_copy_is_detected_only_for_treadmill_and_only_when_identical():
+    gc, _ = _treadmill_recording(True)
+    assert sg.left_toe_off_copied_from_right('treadmill', gc['left'], gc['right'])
+    assert not sg.left_toe_off_copied_from_right('levelground', gc['left'], gc['right'])
+    gc2, _ = _treadmill_recording(False)
+    assert not sg.left_toe_off_copied_from_right('treadmill', gc2['left'], gc2['right'])
+    gc['left']['ToeOff'] = np.zeros(4000)                                    # no events: nothing to call a copy
+    gc['right']['ToeOff'] = np.zeros(4000)
+    assert not sg.left_toe_off_copied_from_right('treadmill', gc['left'], gc['right'])
+
+
+def test_treadmill_left_stance_unavailable_when_copied_and_right_unchanged(tmp_path):
+    row = {'subject': 'ABxx', 'session': 's', 'mode': 'treadmill', 'recording': 'tm', 'source': 'synthetic'}
+    out = {}
+    for tag, mode, copy in (('copy', 'treadmill', True), ('own', 'treadmill', False), ('copy_overground', 'levelground', True)):
+        gc, table = _treadmill_recording(copy)
+        f = io.StringIO()
+        entry = rn.segment_recording({**row, 'mode': mode}, None, gc, table, 700.0, tmp_path / tag, f, io.StringIO())
+        out[tag] = (entry, [json.loads(x) for x in f.getvalue().splitlines()])
+    entry, steps = out['copy']
+    left = [s for s in steps if s['leg'] == 'left']
+    assert entry['stance_unavailable'] == {'left': sg.STANCE_UNAVAILABLE_LEFT_TREADMILL}
+    assert left and all(s['stance_samples'] is None and s['force_missing_stance_samples'] is None for s in left)
+    assert all('toe_off_offset_ms' not in s['force_check'] for s in left)
+    assert entry['force_mask']['left']['masked'] == 0 and entry['force_mask']['left']['stance_samples'] == 0
+    for tag in ('own', 'copy_overground'):                                     # no detection: left stance as before
+        assert 'stance_unavailable' not in out[tag][0]
+        assert all(s['stance_samples'] in (180, 181) for s in out[tag][1] if s['leg'] == 'left')
+    # right leg identical in every case
+    assert [s for s in steps if s['leg'] == 'right'] == [s for s in out['own'][1] if s['leg'] == 'right']
+    assert entry['force_mask']['right'] == out['own'][0]['force_mask']['right']

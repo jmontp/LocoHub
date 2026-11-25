@@ -84,9 +84,16 @@ def segment_recording(row, meta, gc, table, bw_n, mask_dir, steps_f, auth_f, out
              'resets': {}, 'steps_by_disposition': {}, 'steps_by_reason': {}, 'table_available': table is not None}
     span = (float(table['time_s'][0]), float(table['time_s'][-1])) if table is not None else None
     masks, mask_stats, vertical_n = {}, {}, {}
+    # GT21-RB06: a treadmill gcLeft ToeOff column that is the right leg's copy gives no left stance (nothing is invented)
+    no_stance = {'left': sg.STANCE_UNAVAILABLE_LEFT_TREADMILL} if sg.left_toe_off_copied_from_right(mode, gc['left'], gc['right']) else {}
+    if no_stance:
+        entry['stance_unavailable'] = dict(no_stance)
     if table is not None:
         for leg in LEGS:
-            m, st = sg.force_missing_mask(table[f'stance_{leg}'], table[f'grf_vertical_{leg}_BW'], bw_n)
+            stance_in = np.zeros(len(table['time_s']), bool) if leg in no_stance else table[f'stance_{leg}']
+            m, st = sg.force_missing_mask(stance_in, table[f'grf_vertical_{leg}_BW'], bw_n)
+            if leg in no_stance:
+                st['stance_unavailable'] = no_stance[leg]
             masks[leg], mask_stats[leg] = m, st
             vertical_n[leg] = table[f'grf_vertical_{leg}_BW'] * bw_n
         entry['force_mask'] = mask_stats
@@ -115,13 +122,15 @@ def segment_recording(row, meta, gc, table, bw_n, mask_dir, steps_f, auth_f, out
             if table is not None:
                 t = table['time_s']
                 i0, i1 = int(np.searchsorted(t, t0 - 1e-9)), int(np.searchsorted(t, t1 + 1e-9, side='right'))
-                stance = np.asarray(table[f'stance_{leg}'], bool)[i0:i1]
-                mk = masks[leg][i0:i1]
-                step['stance_samples'] = int(stance.sum())
-                step['force_missing_stance_samples'] = int(mk.sum())
+                if leg in no_stance:
+                    step['stance_samples'] = step['force_missing_stance_samples'] = None
+                    step['stance_unavailable'] = no_stance[leg]
+                else:
+                    step['stance_samples'] = int(np.asarray(table[f'stance_{leg}'], bool)[i0:i1].sum())
+                    step['force_missing_stance_samples'] = int(masks[leg][i0:i1].sum())
                 step['force_check'] = sg.force_check(t, vertical_n[leg], t0, t0, t1)
                 to_in = toe[(toe > t0) & (toe < t1)]
-                if to_in.size:
+                if to_in.size and leg not in no_stance:
                     crossing = _falling(t, vertical_n[leg], float(to_in[0]))
                     step['force_check']['toe_off_offset_ms'] = crossing
             steps.append(step)

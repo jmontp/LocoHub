@@ -82,6 +82,23 @@ def event_times(header, col, drop=EVENT_DROP):
         return h[np.flatnonzero(np.diff(x) < -drop) + 1]
 
 
+def left_toe_off_copied_from_right(mode, gc_left, gc_right):
+    """True for a treadmill recording whose gcLeft ToeOff column is the same array as gcRight's (same Header, same values,
+    at least one toe off). In all 157 treadmill recordings of the 22 participants the two columns are identical while the
+    heel strikes differ, and the shared toe offs fall at the right belt's load offsets (GT21-RB06), so the column is the right
+    leg's. It is not a left-leg measurement; the left stance is then unavailable, never rebuilt from another signal. No other
+    mode has identical columns (0 of 2,990 recordings)."""
+    if mode != 'treadmill':
+        return False
+    l, r = np.asarray(gc_left['ToeOff'], float), np.asarray(gc_right['ToeOff'], float)
+    if l.shape != r.shape or not np.array_equal(np.asarray(gc_left['Header'], float), np.asarray(gc_right['Header'], float)):
+        return False
+    return bool(np.array_equal(l, r, equal_nan=True) and event_times(gc_left['Header'], l).size > 0)
+
+
+STANCE_UNAVAILABLE_LEFT_TREADMILL = 'source_left_toe_off_is_copy_of_right_toe_off'
+
+
 def phase_issues(phase, start, end):
     """Same checks as the source-phase audit, on the pair of reset indices."""
     issues = []

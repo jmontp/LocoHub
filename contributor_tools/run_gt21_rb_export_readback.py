@@ -275,7 +275,7 @@ def const_and_first(t, name, per):
 def readback_subject(subject, export_root, seeds, fails, inv, partial=False):
     export_root = Path(export_root)
     proot = BASE / f'gt21_rb_pass_batch_{subject}_20261124'
-    sroot = BASE / f'gt21_rb_segment_batch_{subject}_20261125'
+    sroot = BASE / f'gt21_rb_segment_batch_{subject}_20261126'
     prows = {(r['mode'], r['recording']): r for r in jsonl(proot / 'ledger.jsonl')}
     srows = {(r['mode'], r['recording']): r for r in jsonl(sroot / 'ledger.jsonl')}
     steps_by_rec = defaultdict(list)

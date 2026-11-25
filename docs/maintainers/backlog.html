@@ -25,7 +25,7 @@
 <h3><a href="#UM21-X01">UM21-X01 — Inventory omitted UMich markers, forceplates and transfer correspondence</a></h3><p>um21 · P1 · Source inventory</p><p>Which omitted source measurements can be restored without inventing clocks or pairing?</p><p><strong>Start here:</strong> Inventory source channel metadata and propose one bounded source-preserving pilot; defer bilateral pairing/derivatives until exact correspondence is proven.</p>
 <p>Read the task’s inputs and handoff before starting. This page does not start jobs or change task states.</p></section>
 <h2 id="tasks">All tasks</h2>
-<details><summary>View all 124 tasks — 9 ready, 0 in progress, 49 blocked, 1 awaiting review, 65 done</summary>
+<details><summary>View all 124 tasks — 8 ready, 0 in progress, 49 blocked, 2 awaiting review, 65 done</summary>
 <div class="table-scroll"><table><caption>Maintained task states, not live process monitoring</caption><thead><tr><th>Task</th><th>Dataset</th><th>Priority</th><th>Status</th><th>Stage</th><th>Depends on</th></tr></thead><tbody>
 <tr><th scope="row"><a href="#PM-01">PM-01: Inspect stopped jobs and prepare one safe pilot handoff</a></th><td>project</td><td>P0</td><td>Done</td><td>Operations</td><td>—</td></tr>
 <tr><th scope="row"><a href="#PM-02">PM-02: Reconcile every retained job with a current disposition</a></th><td>project</td><td>P0</td><td>Done</td><td>Operations</td><td>—</td></tr>
@@ -150,7 +150,7 @@
 <tr><th scope="row"><a href="#GT23-E02">GT23-E02: Fix angle wraps, hold step-up pressure point, re-assess</a></th><td>gt23</td><td>P1</td><td>Done</td><td>Conversion</td><td><a href="#GT23-E01">GT23-E01</a>, <a href="#GT23-Q01">GT23-Q01</a></td></tr>
 <tr><th scope="row"><a href="#GT23-PL01">GT23-PL01: Rerun GT23 angles, export, holds and assessment under the side-view plane rule (D-REF-4)</a></th><td>gt23</td><td>P1</td><td>Done</td><td>Conventions</td><td><a href="#GT23-E02">GT23-E02</a></td></tr>
 <tr><th scope="row"><a href="#CORE-PW01">CORE-PW01: Recompute joint power as moment x joint velocity in the UM21 (v4) and GT23 (v11) packages (D-REF-5)</a></th><td>core</td><td>P1</td><td>Done</td><td>Release</td><td><a href="#UM21-R01">UM21-R01</a>, <a href="#GT23-R01">GT23-R01</a></td></tr>
-<tr><th scope="row"><a href="#GT21-RB06">GT21-RB06: Find why left-leg treadmill stance is only about 10 percent of the cycle, then fix or decide the reexport</a></th><td>gt21</td><td>P1</td><td>Ready</td><td>Source readback</td><td><a href="#GT21-RB05">GT21-RB05</a></td></tr>
+<tr><th scope="row"><a href="#GT21-RB06">GT21-RB06: Find why left-leg treadmill stance is only about 10 percent of the cycle, then fix or decide the reexport</a></th><td>gt21</td><td>P1</td><td>Review</td><td>Source readback</td><td><a href="#GT21-RB05">GT21-RB05</a></td></tr>
 </tbody></table></div></details>
 <h2 id="datasets">Dataset status</h2>
 <div class="table-scroll"><table><thead><tr><th>Dataset</th><th>Current state</th><th>Still needed</th></tr></thead><tbody>
@@ -2163,19 +2163,19 @@
 <p><strong>Checks completed</strong></p><ul><li>Synthetic unit tests pass (tests/test_joint_power.py).</li><li>UM21 v4 pilot, full and readback: clean, all checks pass.</li><li>GT23 v11 pilot, full and readback: clean, all checks pass.</li></ul>
 <p><strong>Still needed</strong></p><ul><li>Independent verification by a second agent.</li></ul>
 </details>
-<details id="GT21-RB06"><summary>GT21-RB06 — Find why left-leg treadmill stance is only about 10 percent of the cycle, then fix or decide the reexport · Ready</summary>
+<details id="GT21-RB06"><summary>GT21-RB06 — Find why left-leg treadmill stance is only about 10 percent of the cycle, then fix or decide the reexport · Review</summary>
 <p><strong>Question:</strong> Are the left-leg treadmill toe-off events (or their pairing with heel strikes) wrong, since the left belt stays loaded for about 65 percent of the cycle while stance is about 10 percent?</p>
 <p><strong>Scope:</strong> Read-only diagnosis on one recording per participant: compare source left and right heel-strike and toe-off events with the belt loads; then propose the smallest fix. Affects the stance force mask and the incomplete_stance_force flag of left-leg treadmill steps; no force, angle, moment or count changes expected. A rerun of RB03 masks and RB05 export needs its own guarded launches.</p>
-<p><strong>Next action:</strong> Read-only probe first (one recording at a time, under 300 MiB).</p>
+<p><strong>Next action:</strong> Independent verifier: check cause evidence, fix, 22 reruns and bit-identity audit.</p>
 <p><strong>Depends on:</strong> <a href="#GT21-RB05">GT21-RB05</a> · <strong>Resources:</strong> Read only</p>
 <h4>Inputs</h4><ul><li><a href="handoffs/GT21-RB05-verify.json"><code>docs/maintainers/handoffs/GT21-RB05-verify.json</code></a></li><li><a href="../quality/audits/gt21-rb05-verify-missing.json"><code>docs/quality/audits/gt21-rb05-verify-missing.json</code></a></li><li><code>contributor_tools/gt21_rb_pass.py</code></li><li><code>converted_datasets/reconversion_v2/gt21_rb_segment_batch_AB06_20261125/steps.jsonl</code></li></ul>
 <h4>Deliverables</h4><ul><li>Short evidence report naming the cause (source events, pairing, or leg labelling) with one recording per participant</li><li>Proposed fix or an explicit keep-as-is decision with consequences</li></ul>
 <h4>Acceptance checks</h4><ul><li>Left and right treadmill stance fractions are shown for all 22 participants against the belt loads; the cause is stated with evidence.</li><li>No numbers are tuned: any fix follows the source events or the documented rule.</li><li>If a reexport is needed, the affected masks and flags are listed per participant before any launch.</li></ul>
-<h4>Evidence</h4><ul><li><a href="handoffs/GT21-RB05-verify.json"><code>docs/maintainers/handoffs/GT21-RB05-verify.json</code></a></li></ul>
-<h4>Latest handoff</h4><p>Found by the RB05 verifier: left-leg treadmill stance is about 0.10 of the cycle in all 22 participants (right 0.60); AB06 treadmill_01_01 left belt loaded 139 of 204 samples per step vs stance 23. Cause not yet determined.</p>
-<p>Checked <time datetime="2026-11-25T02:41:37+00:00">2026-11-25T02:41:37+00:00</time>.</p>
-<p><strong>Checks completed</strong></p><ul><li>Stance fractions from RB03 steps.jsonl for all 22 participants</li><li>AB06 treadmill_01_01 stance vs plate-loaded pattern</li></ul>
-<p><strong>Still needed</strong></p><ul><li>Diagnose cause</li><li>Propose fix or keep-as-is</li></ul>
+<h4>Evidence</h4><ul><li><a href="handoffs/GT21-RB05-verify.json"><code>docs/maintainers/handoffs/GT21-RB05-verify.json</code></a></li><li><a href="handoffs/GT21-RB06.json"><code>docs/maintainers/handoffs/GT21-RB06.json</code></a></li><li><a href="../quality/audits/gt21-rb06-belt-evidence.json"><code>docs/quality/audits/gt21-rb06-belt-evidence.json</code></a></li><li><a href="../quality/audits/gt21-rb06-seg-before-after.json"><code>docs/quality/audits/gt21-rb06-seg-before-after.json</code></a></li><li><a href="../quality/audits/gt21-rb06-export-before-after.json"><code>docs/quality/audits/gt21-rb06-export-before-after.json</code></a></li></ul>
+<h4>Latest handoff</h4><p>Cause: source defect. gcLeft ToeOff equals gcRight ToeOff in all 157 treadmill recordings (0 of 2,990 others). Fix: left treadmill stance unavailable (no invented timing). RB03 (22) and RB05 (22) rerun with new roots; readback passed. Left treadmill incomplete_stance_force 22 -&gt; 0, masked stance samples 1,677 -&gt; 0; nothing else changed (bit-identical audit).</p>
+<p>Checked <time datetime="2026-11-25T04:49:32+00:00">2026-11-25T04:49:32+00:00</time>.</p>
+<p><strong>Checks completed</strong></p><ul><li>Belt evidence 22 participants</li><li>43 tests pass incl. 3 synthetic</li><li>Seg before/after audit</li><li>Export before/after streamed compare, 0 unexpected differences</li><li>Readback c1,c2,c3,c5,c6 passed</li></ul>
+<p><strong>Still needed</strong></p><ul><li>Independent verification</li><li>Decide that rb06 exports replace r1 as current export</li></ul>
 </details>
 <section id="workflow"><h2>Working rules</h2>
 <h3>Choosing work</h3>

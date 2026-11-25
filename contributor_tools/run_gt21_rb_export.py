@@ -60,7 +60,7 @@ pa.set_io_thread_count(1)
 BASE = 'converted_datasets/reconversion_v2'
 AUTHORS = f'{BASE}/gt21_rb03_authors_fields_20261125'
 PASS_ROOT = f'{BASE}/gt21_rb_pass_batch_{{subject}}_20261124'
-SEG_ROOT = f'{BASE}/gt21_rb_segment_batch_{{subject}}_20261125'
+SEG_ROOT = f'{BASE}/gt21_rb_segment_batch_{{subject}}_20261126'
 CODE = ('contributor_tools/gt21_rb_export.py', 'contributor_tools/run_gt21_rb_export.py', 'contributor_tools/gt21_rb_pass.py',
         'contributor_tools/run_gt21_rb_pass.py', 'contributor_tools/gt21_numeric_source.py')
 SCHEMA_ID = 'locohub.gt21_rb05/1'
